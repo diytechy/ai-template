@@ -10,6 +10,8 @@ at creation the same consent-first way as gate-policy; the CI trigger and the
 log template carry their one-line pieces of the ritual. The scrub/collate
 steps themselves are LLM judgment verified by recorded §5 verdicts, not
 pytest (the honesty stance the thread spec states).
+
+Implements: TC-031
 """
 
 from conftest import KIT, SCRIPTS, process_key, run_py

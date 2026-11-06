@@ -19,6 +19,8 @@ a reviewer cannot hold by reading:
 
 Also pinned here: the vocabulary duplicated across `spine_rules.py` and
 `check.py` under the F5 no-shared-module rule, which nothing else compares.
+
+Implements: TC-163
 """
 
 import re

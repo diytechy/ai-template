@@ -22,6 +22,8 @@ The cases that call the generator's functions in-process (the renderers, the
 theme guards, the deferral declarations) live in test_gen_open_items_render.py,
 in the per-commit smoke tier; this module drives the generator as a subprocess
 over git-committed fixtures and runs at slice/phase close and in CI.
+
+Implements: TC-123
 """
 
 import csv

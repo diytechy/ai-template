@@ -21,6 +21,8 @@ Fixtures are built by copying THIS repo's real registries into a tmp tree
 rather than by writing miniature ones: the mechanism's failure modes are about
 carriers, whole-file copying and cell classification, and a hand-rolled
 two-row fixture would exercise none of them honestly.
+
+Implements: TC-167, TC-218, TC-240
 """
 
 import inspect
@@ -323,7 +325,10 @@ def test_each_act_is_a_typed_ledger_entry_naming_what_it_approved_and_re_atteste
 def test_an_act_that_copies_nothing_adds_no_ledger_entry(tmp_path):
     """An act that copies no registry appends no entry, so a copy set is never
     empty. Adequacy witness: a writer that appended an entry for a no-copy act,
-    with `copied = []` or without it, fails the count."""
+    with `copied = []` or without it, fails the count.
+
+    Implements: TC-400
+    """
     root = _seeded(tmp_path)
     before = SNAP.read_acts(root)
     SNAP.copy_live(root)  # a traced-only refresh: nothing moved, nothing copied
@@ -1288,6 +1293,7 @@ def _git_tree(tmp_path, prepare=None):
 
 
 def test_a_clean_copy_satisfies_the_mirror_invariant(tmp_path):
+    """Implements: TC-173"""
     # Green first, and it must be green by CONSTRUCTION: a legitimate copy is
     # byte-for-byte and rides the same commit, so this can never warn.
     root, run_git = _git_tree(tmp_path)
@@ -1325,6 +1331,7 @@ def test_a_SCOPED_refresh_leaves_the_UNTOUCHED_offspine_mirror_GREEN(tmp_path):
 
 
 def test_a_HAND_EDITED_snapshot_fails_the_mirror_invariant(tmp_path):
+    """Implements: TC-173"""
     root, run_git = _git_tree(tmp_path)
     snap_sr = SNAP.snapshot_root(root) / SR_REL
     snap_sr.write_text(
@@ -1337,6 +1344,7 @@ def test_a_HAND_EDITED_snapshot_fails_the_mirror_invariant(tmp_path):
 
 
 def test_a_PARTIAL_copy_fails_the_mirror_invariant(tmp_path):
+    """Implements: TC-173"""
     # The realistic slip: the live registry is amended and one snapshot file is
     # refreshed by hand while its sibling is forgotten.
     root, run_git = _git_tree(tmp_path)
@@ -1357,7 +1365,10 @@ def test_a_snapshot_file_DELETED_while_the_record_STANDS_fails_the_mirror(tmp_pa
     """The erasure the invariant did not watch (adversarial round 2, 2026-08-15).
     The deletion path exited silently, so the cheapest laundering was not to
     forge the record but to remove the page: `unanchored_findings` reports a row
-    whose copy reads below it, and deleting the copy deletes that evidence."""
+    whose copy reads below it, and deleting the copy deletes that evidence.
+
+    Implements: TC-173
+    """
     root, run_git = _git_tree(tmp_path)
     (SNAP.snapshot_root(root) / SR_REL).unlink()
     run_git("add", "-A")
@@ -1369,7 +1380,10 @@ def test_deleting_the_WHOLE_record_is_SILENT(tmp_path):
     """The other side of the same rule, and why it is 'while the rest stands'
     rather than 'never delete': retiring the mechanism, and the wholesale
     replacement §A1 describes, both remove files legitimately and neither leaves
-    a hole. A rule that fired here would make its own design undeployable."""
+    a hole. A rule that fired here would make its own design undeployable.
+
+    Implements: TC-173
+    """
     root, run_git = _git_tree(tmp_path)
     shutil.rmtree(SNAP.snapshot_root(root))
     run_git("add", "-A")
@@ -1627,6 +1641,7 @@ def test_approval_stamp_names_the_commit_that_MOVED_A_STATUS_CELL(tmp_path):
 
 
 def test_the_README_is_prose_and_is_exempt_from_the_mirror(tmp_path):
+    """Implements: TC-173"""
     # Design §F8 / repo-lock D-10's tripwire: the stamp is rendered, never
     # parsed, and has no live counterpart to mirror. If it were not exempt, a
     # signing commit would warn about its own README every time.
@@ -1710,6 +1725,7 @@ _BAD_LEDGERS.update(_COPIED_DEFECTS)
 
 @pytest.mark.parametrize("defect", sorted(_BAD_LEDGERS))
 def test_a_malformed_act_ledger_is_refused_whole(defect):
+    """Implements: TC-400"""
     text = _BAD_LEDGERS[defect]
     assert SNAP.acts_problems(text), defect
     with pytest.raises(SNAP.ActLedgerError):
@@ -1746,7 +1762,10 @@ def test_a_ledger_entry_may_name_the_verdict_that_ruled_it():
 def test_a_reattesting_act_records_its_verdict_and_refuses_a_bad_one(tmp_path):
     """`copy_live(..., verdict=)` writes the verdict into the act's ledger entry.
     A verdict needs re-attested rows to rule, and must name a file in the tree:
-    a typo would otherwise land a ruling nobody can open in the record."""
+    a typo would otherwise land a ruling nobody can open in the record.
+
+    Implements: TC-240
+    """
     root, _run_git = _git_tree(tmp_path)
     sid, row = _first_row_at(root, "approved")
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (clarified)")
@@ -1773,7 +1792,10 @@ def test_a_verdict_path_is_recorded_repo_relative_with_forward_slashes(tmp_path)
     """Sol review 1, MINOR 1 (WI-791): the merge slot reads the recorded verdict
     with `git show <rev>:<path>`, which resolves only the repository's own
     forward-slash spelling. A Windows-spelt or absolute path that names the file
-    is recorded in that spelling, so a valid CLARITY act is not refused."""
+    is recorded in that spelling, so a valid CLARITY act is not refused.
+
+    Implements: TC-240
+    """
     root, _run_git = _git_tree(tmp_path)
     sid, row = _first_row_at(root, "approved")
     verdict = root / "docs" / "reviews" / "v.md"
@@ -1789,7 +1811,10 @@ def test_a_verdict_path_is_recorded_repo_relative_with_forward_slashes(tmp_path)
 def test_a_verdict_outside_the_repository_is_refused(tmp_path):
     """LLR-245: the act ledger records a verdict by its repository path, so a
     verdict file outside the repository is refused although it exists, and
-    the ledger does not move."""
+    the ledger does not move.
+
+    Implements: TC-240
+    """
     root, _run_git = _git_tree(tmp_path)
     sid, row = _first_row_at(root, "approved")
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (clarified)")
@@ -1888,7 +1913,10 @@ def test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip(tmp_path):
     baseline derived from that seam, or from the git walk that keyed off the
     flip, therefore cannot see the very change a sitting exists to judge. The
     snapshot is a baseline that is provably NOT the text under judgement,
-    because the mirror invariant proves it was copied in an approval commit."""
+    because the mirror invariant proves it was copied in an approval commit.
+
+    Implements: TC-153
+    """
     root, run_git = _git_tree(tmp_path)
     sid, row = _first_row_at(root, "approved")
     # Amend an approved cell AND flip the row, in one staged change.
@@ -2042,6 +2070,7 @@ def _cli_ok(root, *args):
 
 
 def test_an_approval_act_records_the_registry_it_copied(tmp_path):
+    """Implements: TC-400"""
     root = _seeded_with_a_drafted_sr(tmp_path)
     draft_id, _row = _first_row_at(root, "drafted")
     _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')
@@ -2052,6 +2081,7 @@ def test_an_approval_act_records_the_registry_it_copied(tmp_path):
 
 
 def test_a_reattesting_act_records_the_registry_it_copied(tmp_path):
+    """Implements: TC-400"""
     root = _seeded(tmp_path)
     sid, row = _first_row_at(root, "approved")
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
@@ -2063,7 +2093,10 @@ def test_a_reattesting_act_records_the_registry_it_copied(tmp_path):
 
 def test_a_traced_reanchor_naming_no_row_records_its_registry(tmp_path):
     """The shape whose row lists are both empty: the entry's only evidence
-    that the act copied a registry is the record of what it copied."""
+    that the act copied a registry is the record of what it copied.
+
+    Implements: TC-400
+    """
     root = _seeded(tmp_path)
     _rewrite(root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO)
     _cli_ok(root, "--approves", "interfaces.toml=sitting-9")
@@ -2073,6 +2106,7 @@ def test_a_traced_reanchor_naming_no_row_records_its_registry(tmp_path):
 
 
 def test_a_mixed_approves_and_reattests_act_records_both_registries(tmp_path):
+    """Implements: TC-400"""
     root = _seeded(tmp_path)
     sid, row = _first_row_at(root, "approved")
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
@@ -2084,7 +2118,10 @@ def test_a_mixed_approves_and_reattests_act_records_both_registries(tmp_path):
 
 
 def test_a_reseed_records_every_registry_it_copied(tmp_path):
-    """A registry with no live carrier is not written, so it is not named."""
+    """A registry with no live carrier is not written, so it is not named.
+
+    Implements: TC-400
+    """
     root = _tree(tmp_path)
     _without_the_registry(root)
     expected = sorted(r for r in SNAP.SNAPSHOTTED if r != ASSUMPTIONS_REL)
@@ -2104,6 +2141,7 @@ _NEEDS_MD = """## Core needs
 
 
 def test_the_needs_file_is_recorded_by_its_canonical_path(tmp_path):
+    """Implements: TC-400"""
     root = _tree(tmp_path)
     (root / SNAP.NEEDS_REL).unlink()
     needs_md = root / "docs" / "requirements" / "stakeholder-needs.md"
@@ -2117,6 +2155,7 @@ def test_the_needs_file_is_recorded_by_its_canonical_path(tmp_path):
 
 
 def test_a_legacy_entry_parses_unchanged_and_names_no_copy_set():
+    """Implements: TC-400"""
     assert SNAP.parse_acts(_GOOD_ACT) == [
         {"seq": 1, "date": "2026-09-26", "approved": ["SR-001"], "reattested": []}
     ]
@@ -2164,6 +2203,7 @@ def _naming(findings, needle):
 
 
 def test_a_commit_adding_an_entry_without_copied_is_refused(tmp_path):
+    """Implements: TC-400"""
     root, run_git = _git_tree(tmp_path)
     _legacy_ledger(root, run_git)
     _stage_entry(root, run_git, 2)
@@ -2176,6 +2216,7 @@ def test_a_commit_adding_an_entry_without_copied_is_refused(tmp_path):
 
 
 def test_a_commit_adding_an_entry_naming_a_foreign_registry_is_refused(tmp_path):
+    """Implements: TC-400"""
     root, run_git = _git_tree(tmp_path)
     _legacy_ledger(root, run_git)
     for foreign in ("docs/notes.toml", "docs/requirements/stakeholder-needs.md"):
@@ -2192,7 +2233,10 @@ def test_legacy_entries_a_commit_does_not_add_are_never_refused(tmp_path):
     """A commit that adds no entry is never refused for the legacy entries
     already committed. Adequacy witness: a rule that read every entry in the
     file, rather than only those the commit adds, would refuse the legacy
-    history of every ledger written before the copied-registry record."""
+    history of every ledger written before the copied-registry record.
+
+    Implements: TC-400
+    """
     root, run_git = _git_tree(tmp_path)
     _legacy_ledger(root, run_git)
     (root / "notes.txt").write_bytes(b"another file\n")
@@ -2202,6 +2246,7 @@ def test_legacy_entries_a_commit_does_not_add_are_never_refused(tmp_path):
 
 
 def test_the_writers_own_entry_passes_both_rules(tmp_path):
+    """Implements: TC-400"""
     root, run_git = _git_tree(tmp_path)
     _legacy_ledger(root, run_git)
     sid, row = _first_row_at(root, "approved")
@@ -2218,7 +2263,10 @@ def test_an_old_writers_uncommitted_act_is_recovered_by_abandoning_it(tmp_path):
     `copied`. Taking the act again on top keeps that entry, so the commit is
     still refused; abandoning it, by restoring the record to its committed
     state while keeping the live registry edit, then retaking it with the
-    current writer, clears the refusal."""
+    current writer, clears the refusal.
+
+    Implements: TC-400
+    """
     root, run_git = _git_tree(tmp_path)
     _legacy_ledger(root, run_git)
     sid, row = _first_row_at(root, "approved")
@@ -2249,6 +2297,7 @@ def test_an_old_writers_uncommitted_act_is_recovered_by_abandoning_it(tmp_path):
 
 
 def test_a_merge_counts_no_entry_its_other_parent_holds_as_added(tmp_path):
+    """Implements: TC-400"""
     root, run_git = _git_tree(tmp_path)
     _legacy_ledger(root, run_git)
     run_git("checkout", "-q", "-b", "other")
@@ -2268,6 +2317,7 @@ def test_a_merge_counts_no_entry_its_other_parent_holds_as_added(tmp_path):
 
 
 def test_readers_carry_copied_without_loss(tmp_path):
+    """Implements: TC-400"""
     root, run_git = _git_tree(tmp_path)
     _legacy_ledger(root, run_git)
     base = _head(run_git)

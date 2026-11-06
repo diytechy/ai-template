@@ -219,6 +219,7 @@ def _state(root):
 def test_a_second_coordinator_adjudication_resumes_the_first(
     tmp_path, monkeypatch, launched, capsys
 ):
+    """Implements: TC-321"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch)
     assert _adjudicate(root) == 0
@@ -242,6 +243,7 @@ def test_a_second_coordinator_adjudication_resumes_the_first(
 def test_the_coordinator_route_writes_one_session_log_per_call(
     tmp_path, monkeypatch, launched
 ):
+    """Implements: TC-321"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch)
     _adjudicate(root)
@@ -255,6 +257,7 @@ def test_the_coordinator_route_writes_one_session_log_per_call(
 def test_a_session_at_the_dial_drains_and_retires_at_the_next_clear_point(
     tmp_path, monkeypatch, launched
 ):
+    """Implements: TC-321"""
     root = _repo(tmp_path, dial=50)
     _signed_in(monkeypatch)
     launched["streams"] += [_claude_stream(60), _claude_stream(10)]
@@ -273,6 +276,7 @@ def test_a_session_at_the_dial_drains_and_retires_at_the_next_clear_point(
 def test_an_unknown_route_or_one_off_the_enable_list_is_refused(
     tmp_path, monkeypatch, launched, capsys
 ):
+    """Implements: TC-321"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch)
     assert _adjudicate(root, "WI-1", "--route", "NO-SUCH-ROW") == 2
@@ -284,6 +288,7 @@ def test_an_unknown_route_or_one_off_the_enable_list_is_refused(
 def test_a_missing_or_malformed_verdict_is_reported_and_fails(
     tmp_path, monkeypatch, launched, capsys
 ):
+    """Implements: TC-321"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch)
 
@@ -345,7 +350,10 @@ def test_the_loop_composes_the_same_keep_request_as_before(
     unchanged by moving it into the shared step, except the template identity,
     which since round 4 covers every class the dial retains (the shipped
     default: amendment, disposition, red-tc), each by its override text when
-    one is loaded, else its shipped path."""
+    one is loaded, else its shipped path.
+
+    Implements: TC-322
+    """
     al = load_script("agent_loop")
     prompts = load_script("prompts")
     seen = []
@@ -385,7 +393,10 @@ def test_the_loop_composes_the_same_keep_request_as_before(
 def test_the_identity_covers_each_class_and_nothing_for_a_class_without_a_template():
     """Pins the no-template clause: a brief class with no template adds
     neither a path nor a text; each other class adds its override text when
-    one is wired, else its shipped path."""
+    one is wired, else its shipped path.
+
+    Implements: TC-322
+    """
     ab = cli.adjudicate_brief
     assert ab.governing_templates(["no-such-class"]) == ([], [])
     assert ab.governing_templates([]) == ([], [])
@@ -410,7 +421,10 @@ def test_the_identity_covers_the_act_brief_for_an_actable_retained_class():
     """WI-912: the act turn is launched on the session that retains the
     verdict's class, so the act brief governs every actable retained class,
     and an edit to it drains a retained session as any retained template's
-    does; an operator override under its key counts by its text."""
+    does; an operator override under its key counts by its text.
+
+    Implements: TC-322
+    """
     ab = cli.adjudicate_brief
     act_path = ab.prompts.template_path(ab.prompts.ADJUDICATE_ACT)
     for cls in ("amendment", "first-approval", "combined"):
@@ -454,6 +468,7 @@ def _home(root, account="CODEXACCT"):
 def test_the_probe_reports_signed_in_missing_or_unknown(
     tmp_path, family, code, text, expected
 ):
+    """Implements: TC-323"""
     home = _home(tmp_path)
     seen = []
 
@@ -470,6 +485,7 @@ def test_the_probe_reports_signed_in_missing_or_unknown(
 
 @pytest.mark.parametrize("error", [OSError, TimeoutError, ValueError])
 def test_a_probe_that_fails_or_times_out_reports_unknown(tmp_path, error):
+    """Implements: TC-323"""
     _home(tmp_path)
 
     def run(argv, env):
@@ -479,6 +495,7 @@ def test_a_probe_that_fails_or_times_out_reports_unknown(tmp_path, error):
 
 
 def test_the_probe_resolves_the_home_without_creating_it(tmp_path):
+    """Implements: TC-323"""
     ran = []
     token = cli.agent_route.Account(
         ACCOUNT, "claude", token_file_variable="AGENT_CLAUDE_TOKEN_FILE"
@@ -495,6 +512,7 @@ def test_the_probe_resolves_the_home_without_creating_it(tmp_path):
 
 
 def test_the_signin_command_prints_the_probe_result(tmp_path, monkeypatch, capsys):
+    """Implements: TC-323"""
     root = _inputs(tmp_path)
     _signed_in(monkeypatch, "missing")
     code = cli.main(["signin", "--root", str(root), "--route", ENTRY])
@@ -509,6 +527,7 @@ def test_the_signin_command_prints_the_probe_result(tmp_path, monkeypatch, capsy
 def test_the_coordinator_route_refuses_a_retained_launch_not_signed_in(
     tmp_path, monkeypatch, launched, capsys, status
 ):
+    """Implements: TC-324"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch, status)
     assert _adjudicate(root) == svc.agent_common.EXIT_NEEDS_HUMAN
@@ -523,6 +542,7 @@ def test_the_coordinator_route_refuses_a_retained_launch_not_signed_in(
 def test_the_loop_route_refuses_a_retained_launch_not_signed_in(
     tmp_path, monkeypatch, capsys, status
 ):
+    """Implements: TC-324"""
     al = load_script("agent_loop")
     root = _repo(tmp_path)
     monkeypatch.setattr(al.session_service, "cli_version", lambda *a, **k: "")
@@ -544,7 +564,10 @@ def test_the_loop_route_refuses_a_retained_launch_not_signed_in(
 def test_an_unretained_call_is_never_probed(tmp_path, monkeypatch, launched):
     """The probe guards only a retained launch: at the off dial, or for a
     brief class the dial does not retain, nothing is probed and the call
-    launches fresh as before."""
+    launches fresh as before.
+
+    Implements: TC-324
+    """
     calls = _signed_in(monkeypatch, "missing")
     root = _repo(tmp_path, dial=0)
     assert _adjudicate(root) == 0
@@ -558,7 +581,10 @@ def test_an_unretained_call_is_never_probed(tmp_path, monkeypatch, launched):
 def test_the_shipped_entry_point_defaults_to_the_strong_anthropic_route():
     """WI-798: the default is the strong Anthropic route on the declared
     token account ADJUDICATOR, and this repository's own registry and enable
-    list resolve it (its table names the OI-110 (b) variable)."""
+    list resolve it (its table names the OI-110 (b) variable).
+
+    Implements: TC-321
+    """
     assert cli.DEFAULT_ROUTE == ENTRY
     registry, why = cli.resolve_route(ROOT, cli.DEFAULT_ROUTE)
     assert why is None
@@ -588,6 +614,7 @@ def test_the_shipped_entry_point_defaults_to_the_strong_anthropic_route():
     ],
 )
 def test_an_undocumented_probe_answer_is_unknown(tmp_path, family, code, text):
+    """Implements: TC-323"""
     _home(tmp_path)
     assert svc.signin_status(tmp_path, CODEX, run=lambda a, e: (code, text)) == (
         "unknown"
@@ -602,7 +629,10 @@ def test_a_primary_checkout_root_is_refused_before_launch(
 ):
     """A run from the primary checkout would commit its session log onto
     trunk, which the integrator's audit refuses: it is refused before launch
-    and writes nothing."""
+    and writes nothing.
+
+    Implements: TC-321
+    """
     primary = _repo(tmp_path, where="primary")
     calls = _signed_in(monkeypatch)
     head = _git(primary, "rev-parse", "HEAD")
@@ -617,6 +647,7 @@ def test_a_primary_checkout_root_is_refused_before_launch(
 def test_a_worktree_whose_branch_holds_no_claim_is_refused(
     tmp_path, monkeypatch, launched, capsys
 ):
+    """Implements: TC-321"""
     root = _repo(tmp_path)
     _git(root, "checkout", "-q", "-b", "not-a-lane")
     _signed_in(monkeypatch)
@@ -629,7 +660,10 @@ def test_a_root_outside_any_repository_is_refused(
     tmp_path, monkeypatch, launched, capsys
 ):
     """Otherwise valid inputs (policy, enabled route, brief): only the lane
-    check can refuse, so removing it turns this red."""
+    check can refuse, so removing it turns this red.
+
+    Implements: TC-321
+    """
     root = _inputs(tmp_path / "plain")
     _signed_in(monkeypatch)
     assert _adjudicate(root) == 2
@@ -640,7 +674,10 @@ def test_a_root_outside_any_repository_is_refused(
 def test_lane_refusal_is_unchanged_by_the_shared_worktree_index(tmp_path):
     """The worktree index moves to `agent_common` beside the records it reads
     (WI-960 P3), shared with the session service's lane reading, and
-    `lane_refusal`'s five cases read exactly as before."""
+    `lane_refusal`'s five cases read exactly as before.
+
+    Implements: TC-384
+    """
     shared = getattr(cli.agent_common, "worktree_index", None)
     assert callable(shared), "agent_common has no shared worktree_index"
     assert not hasattr(cli, "_worktree_index"), "a second copy of the reader"
@@ -666,7 +703,10 @@ def test_a_failed_call_reusing_a_verdict_path_does_not_return_success(
 ):
     """Sol's sequence: a successful run, then a failing call naming the same
     verdict path. The path already holds a verdict, so the second call is
-    refused before launch; a failing call on a fresh path fails too."""
+    refused before launch; a failing call on a fresh path fails too.
+
+    Implements: TC-321
+    """
     root = _repo(tmp_path)
     _signed_in(monkeypatch)
     assert _adjudicate(root) == 0
@@ -694,6 +734,7 @@ def test_a_failed_call_reusing_a_verdict_path_does_not_return_success(
 def test_a_nonzero_exit_or_a_timeout_fails_whatever_file_exists(
     tmp_path, monkeypatch, launched, capsys, code, timed_out
 ):
+    """Implements: TC-321"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch)
 
@@ -712,6 +753,7 @@ def test_a_nonzero_exit_or_a_timeout_fails_whatever_file_exists(
 def test_an_undecodable_brief_is_refused_with_the_usage_exit(
     tmp_path, monkeypatch, launched, capsys
 ):
+    """Implements: TC-321"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch)
     (root / "brief.md").write_bytes(b"judge \xff this")
@@ -745,7 +787,10 @@ def test_two_calls_naming_one_verdict_path_never_share_its_verdict(
     """Sol's sequence, with retention on: call A passes its input check;
     call B, naming the same absent path, starts while A runs; A's session
     exits 0 without writing a verdict. B is refused at the reservation and
-    never launches, and A reads its own empty reservation as no verdict."""
+    never launches, and A reads its own empty reservation as no verdict.
+
+    Implements: TC-321
+    """
     root = _repo(tmp_path, dial=50)
     _signed_in(monkeypatch)
     verdict = root / "shared-verdict.md"
@@ -770,6 +815,7 @@ def test_two_calls_naming_one_verdict_path_never_share_its_verdict(
 def test_a_call_whose_session_writes_into_its_reservation_succeeds(
     tmp_path, monkeypatch, launched
 ):
+    """Implements: TC-321"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch)
     verdict = root / "own-verdict.md"
@@ -786,6 +832,7 @@ def test_a_call_whose_session_writes_into_its_reservation_succeeds(
 def test_a_call_refused_before_launch_releases_its_reservation(
     tmp_path, monkeypatch, launched
 ):
+    """Implements: TC-321"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch, "missing")
     verdict = root / "refused-verdict.md"
@@ -796,6 +843,7 @@ def test_a_call_refused_before_launch_releases_its_reservation(
 def test_a_verdict_path_that_cannot_be_reserved_is_refused(
     tmp_path, monkeypatch, launched, capsys
 ):
+    """Implements: TC-321"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch)
     (root / "a-file").write_text("x", encoding="utf-8")
@@ -811,7 +859,10 @@ def test_a_verdict_path_under_a_missing_directory_is_reserved_and_launches(
     tmp_path, monkeypatch, launched
 ):
     """A work item's first adjudication names a review directory that does
-    not exist yet: the reservation creates it, and the call launches."""
+    not exist yet: the reservation creates it, and the call launches.
+
+    Implements: TC-321
+    """
     root = _repo(tmp_path)
     _signed_in(monkeypatch)
     verdict = root / "docs" / "reviews" / "wi-1-new" / "001-ADJUDICATE.md"
@@ -837,6 +888,7 @@ def _retaining(tmp_path):
 def test_switching_retained_classes_with_nothing_edited_keeps_the_session(
     tmp_path, monkeypatch, launched
 ):
+    """Implements: TC-322"""
     root = _retaining(tmp_path)
     _signed_in(monkeypatch)
     _adjudicate(root, "WI-1", brief="amendment")
@@ -850,7 +902,10 @@ def test_editing_another_retained_class_template_drains_the_session(
     tmp_path, monkeypatch, launched
 ):
     """The governing identity covers every retained class's template, so an
-    edit to one the call does not use still drains the session."""
+    edit to one the call does not use still drains the session.
+
+    Implements: TC-322
+    """
     root = _retaining(tmp_path)
     _signed_in(monkeypatch)
     prompts = cli.adjudicate_brief.prompts
@@ -872,7 +927,10 @@ def test_editing_another_retained_class_template_drains_the_session(
 
 def test_an_operator_override_still_drains_the_session(tmp_path, monkeypatch, launched):
     """The coordinator's call mints under the shipped templates; the loop's
-    next call of the same class under an operator override drains it."""
+    next call of the same class under an operator override drains it.
+
+    Implements: TC-322
+    """
     al = load_script("agent_loop")
     root = _retaining(tmp_path)
     _signed_in(monkeypatch)
@@ -890,7 +948,10 @@ def test_a_family_with_no_dedicated_home_passes_require_signin_unprobed(
     tmp_path, monkeypatch
 ):
     """Re-pointed by WI-798: an ambient entry (no account) has no kit-held
-    home and no sign-in gate, so nothing is probed and nothing is refused."""
+    home and no sign-in gate, so nothing is probed and nothing is refused.
+
+    Implements: TC-324
+    """
     calls = _signed_in(monkeypatch, "missing")
     assert svc.require_signin(tmp_path, SimpleNamespace(account=None)) is None
     assert calls == []
@@ -915,6 +976,7 @@ def _dispute_call(tmp_path, monkeypatch, verdict_text, brief=DISPUTE_BRIEF):
 
 
 def test_the_entry_point_accepts_the_dispute_class():
+    """Implements: TC-334"""
     args = cli._parser().parse_args(
         ["adjudicate", "--brief-file", "b", "--brief", "dispute", "--wi", "WI-1"]
         + ["--verdict", "v"]
@@ -925,6 +987,7 @@ def test_the_entry_point_accepts_the_dispute_class():
 def test_a_dispute_verdict_ruling_every_finding_is_valid_and_bound(
     tmp_path, monkeypatch, launched, capsys
 ):
+    """Implements: TC-334"""
     text = "RULING: F1 FIX real\nRULING: R2 DISMISS refuted it does not hold\n"
     _root, code = _dispute_call(tmp_path, monkeypatch, text)
     assert code == 0
@@ -938,7 +1001,10 @@ def test_a_dispute_verdict_ruling_a_finding_successor_is_valid_and_bound(
     tmp_path, monkeypatch, launched, capsys
 ):
     """WI-911: SUCCESSOR is a ruling of the one grammar, so the entry point
-    binds a verdict carrying it `accepted` (the smoke tier's grammar pin)."""
+    binds a verdict carrying it `accepted` (the smoke tier's grammar pin).
+
+    Implements: TC-334
+    """
     text = "RULING: F1 SUCCESSOR file a row for the retry bound\nRULING: R2 FIX real\n"
     _root, code = _dispute_call(tmp_path, monkeypatch, text)
     assert code == 0
@@ -950,6 +1016,7 @@ def test_a_dispute_verdict_ruling_a_finding_successor_is_valid_and_bound(
 def test_a_dispute_verdict_leaving_a_finding_unruled_fails(
     tmp_path, monkeypatch, launched, capsys
 ):
+    """Implements: TC-334"""
     _root, code = _dispute_call(tmp_path, monkeypatch, "RULING: F1 FIX real\n")
     assert code == 1
     out = capsys.readouterr().out
@@ -961,6 +1028,7 @@ def test_a_dispute_verdict_leaving_a_finding_unruled_fails(
 def test_a_dispute_brief_naming_no_findings_is_refused_before_launch(
     tmp_path, monkeypatch, launched, capsys
 ):
+    """Implements: TC-334"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch)
     (root / "brief.md").write_text("Rule each finding.\n", encoding="utf-8")
@@ -986,7 +1054,10 @@ def test_a_dispute_binding_records_its_findings_file_through_the_outcome(
 ):
     """The brief's findings-file line is bound beside the verdict and kept
     through the outcome rewrite, accepted or failed; a brief without the
-    line binds no record."""
+    line binds no record.
+
+    Implements: TC-327
+    """
     line = "findings_file = {}".format(RECORDED)
     text = "RULING: F1 FIX real\nRULING: R2 DISMISS refuted it does not hold\n"
     _root, code = _dispute_call(tmp_path / "a", monkeypatch, text, RECORDED_BRIEF)
@@ -1015,7 +1086,10 @@ def test_the_entry_points_dispute_binding_resolves_only_its_own_rounds_finding(
     """End to end: a brief composed over the lane's round-1 findings file,
     sat through the entry point and dismissed, then a later round's file
     reusing F1 beside it. The citation resolves round 1's F1 and refuses the
-    later round's."""
+    later round's.
+
+    Implements: TC-069
+    """
     ab = load_script("adjudicate_brief")
     coverage = load_script("plan_coverage")
     root = _repo(tmp_path)
@@ -1077,6 +1151,7 @@ def _keep_request_templates(monkeypatch, tmp_path, role, templates):
 
 
 def test_a_retained_reviewers_identity_is_its_own_template(tmp_path, monkeypatch):
+    """Implements: TC-322"""
     # F3: a REVIEW call's governing identity is the template text its brief
     # is built from, the phase's override text else the shipped reviewer
     # template's (read per round, review 002 F2), so a changed reviewer
@@ -1109,7 +1184,10 @@ def test_the_adjudicator_resolves_its_enabled_entry(tmp_path, monkeypatch):
     """WI-798: `--route` names an enable-list entry. The row is read through
     the entry's route, the account through its qualifier, and consent is the
     entry's own line: the qualified line never consents to the unqualified
-    entry, and an unqualified entry is its route id."""
+    entry, and an unqualified entry is its route id.
+
+    Implements: TC-321
+    """
     root = _inputs(tmp_path)
     registry, why = cli.resolve_route(root, ENTRY)
     assert why is None and cli.agent_route.entry_route(ENTRY) == ROUTE

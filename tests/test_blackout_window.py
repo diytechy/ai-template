@@ -86,6 +86,7 @@ def at(docs, t):
 
 
 def test_the_end_minute_is_exclusive_and_the_last_end_inclusive(root):
+    """Implements: TC-335"""
     docs = root / "docs"
     assert at(docs, MON.replace(hour=11, minute=59)).inside is False
     inside = at(docs, MON.replace(hour=12))
@@ -100,6 +101,7 @@ def test_the_end_minute_is_exclusive_and_the_last_end_inclusive(root):
 
 
 def test_a_friday_night_window_runs_into_saturday(tmp_path):
+    """Implements: TC-335"""
     write_policy(tmp_path, blackout="22:00-06:00")
     fri = datetime.datetime(2026, 7, 17)  # a Friday
     sat_two = fri + datetime.timedelta(days=1, hours=2)
@@ -108,6 +110,7 @@ def test_a_friday_night_window_runs_into_saturday(tmp_path):
 
 
 def test_a_sunday_night_window_does_not_exist(tmp_path):
+    """Implements: TC-335"""
     write_policy(tmp_path, blackout="22:00-06:00")
     sun_late = datetime.datetime(2026, 7, 19, 23)  # a Sunday
     mon_two = datetime.datetime(2026, 7, 20, 2)
@@ -126,12 +129,14 @@ def test_a_weekend_daytime_is_clear_and_remembers_fridays_end(root):
 
 @pytest.mark.parametrize("value", ["", "12:00-12:00", "garbage", "24:00-19:00"])
 def test_a_disabled_window_answers_neither_question(tmp_path, value):
+    """Implements: TC-335"""
     write_policy(tmp_path, blackout=value)
     reading = at(tmp_path / "docs", INSIDE)
     assert (reading.inside, reading.last_end, reading.window) == (False, None, value)
 
 
 def test_a_changed_value_applies_from_the_next_call(root):
+    """Implements: TC-335"""
     assert at(root / "docs", INSIDE).inside
     write_policy(root, blackout="")
     assert not at(root / "docs", INSIDE).inside
@@ -142,7 +147,10 @@ def test_a_changed_value_applies_from_the_next_call(root):
 def test_the_window_function_is_the_only_reader_of_the_dial():
     """No kit script names the dial's key or legacy file but the policy
     module that defines the window function (the migration tables excepted:
-    bootstrap's converter and the key table are not readers)."""
+    bootstrap's converter and the key table are not readers).
+
+    Implements: TC-335
+    """
     scripts = Path(guard.__file__).parent
     readers = []
     for path in sorted(scripts.rglob("*.py")):
@@ -156,6 +164,7 @@ def test_the_window_function_is_the_only_reader_of_the_dial():
 
 
 def test_a_claim_inside_the_window_is_refused_with_the_guard_off(root, clock):
+    """Implements: TC-317, TC-339"""
     refusal = guard.claim_refusal(root, env={})
     assert "blackout window 12:00-19:00 UTC is open until 2026-07-13 19:00" in refusal
     clock(AFTER)
@@ -163,6 +172,8 @@ def test_a_claim_inside_the_window_is_refused_with_the_guard_off(root, clock):
 
 
 def test_the_dispatchers_claim_is_refused_inside_the_window(root, monkeypatch, capsys):
+    """Implements: TC-317, TC-338, TC-339"""
+
     def boom(*a, **k):
         raise AssertionError("the dispatcher's route consulted the context guard")
 
@@ -173,6 +184,7 @@ def test_the_dispatchers_claim_is_refused_inside_the_window(root, monkeypatch, c
 
 
 def test_the_dispatchers_context_guard_exemption_is_unchanged(tmp_path, clock):
+    """Implements: TC-317"""
     root = tmp_path / "repo"
     write_policy(root, guard_pct=50)  # on, and no lease is held
     clock(AFTER)
@@ -181,6 +193,7 @@ def test_the_dispatchers_context_guard_exemption_is_unchanged(tmp_path, clock):
 
 
 def test_the_dispatcher_holds_its_claim_and_waits_out_an_idle_window(root, monkeypatch):
+    """Implements: TC-338"""
     dispatch = load_script("dispatch")
     waits, said = [], []
     monkeypatch.setattr(dispatch.ac, "blackout_wait", lambda *a: waits.append(a[:3]))
@@ -225,6 +238,7 @@ def call(root, role, run, wi=""):
 
 @pytest.mark.parametrize("role", ["BUILD", "REVIEW", "PROBE", "KEEP-WARM", "PLAN"])
 def test_a_non_adjudication_launch_is_refused_inside_the_window(root, role):
+    """Implements: TC-336"""
     active_claim(root)
     calls, run = _ran()
     with pytest.raises(svc.BlackoutRefused, match="open until 2026-07-13 19:00"):
@@ -233,6 +247,7 @@ def test_a_non_adjudication_launch_is_refused_inside_the_window(root, role):
 
 
 def test_an_adjudication_without_an_active_claim_is_refused(root):
+    """Implements: TC-336"""
     calls, run = _ran()
     with pytest.raises(svc.BlackoutRefused):
         svc.act(call(root, "ADJUDICATE", run, wi="WI-7"))  # no claim at all
@@ -243,6 +258,7 @@ def test_an_adjudication_without_an_active_claim_is_refused(root):
 
 
 def test_a_wrap_up_adjudication_of_an_active_claim_launches(root):
+    """Implements: TC-336"""
     active_claim(root)
     calls, run = _ran()
     svc.act(call(root, "ADJUDICATE", run, wi="WI-7"))
@@ -250,6 +266,7 @@ def test_a_wrap_up_adjudication_of_an_active_claim_launches(root):
 
 
 def test_a_refused_call_records_nothing(root, monkeypatch):
+    """Implements: TC-336"""
     written = []
     monkeypatch.setattr(svc, "record", lambda *a, **k: written.append(a))
     calls, run = _ran()
@@ -260,7 +277,10 @@ def test_a_refused_call_records_nothing(root, monkeypatch):
 
 def test_the_loop_waits_out_a_refused_launch_and_resumes_after_it(root, clock):
     """The loop's route: a lane claimed before the window starts no session
-    inside it; the refusal is waited out and the launch resumes."""
+    inside it; the refusal is waited out and the launch resumes.
+
+    Implements: TC-336, TC-337
+    """
     calls, run = _ran()
     waited = []
 
@@ -276,6 +296,7 @@ def test_the_loop_waits_out_a_refused_launch_and_resumes_after_it(root, clock):
 
 
 def test_the_loops_pre_session_wait_asks_the_window_function(root, monkeypatch):
+    """Implements: TC-337"""
     waits = []
     monkeypatch.setattr(loop, "blackout_wait", lambda *a: waits.append(a[:3]))
     loop.wait_out_blackout(root / "docs")
@@ -284,7 +305,10 @@ def test_the_loops_pre_session_wait_asks_the_window_function(root, monkeypatch):
 
 def test_the_coordinators_adjudication_reports_a_refusal(root, monkeypatch, capsys):
     """The coordinator's route: a refused launch is reported, its verdict
-    reservation released, and nothing waits."""
+    reservation released, and nothing waits.
+
+    Implements: TC-321
+    """
     released = []
     registry = coadj.agent_route.Registry({_Row.id: _Row()})
     monkeypatch.setattr(coadj, "_inputs", lambda r, a: (registry, "brief", None))
@@ -351,7 +375,10 @@ def test_each_loop_route_waits_out_a_refused_launch_and_retries(
 ):
     """The loop's three launch routes, each driven whole through a refusal: a
     worker session, the interactive sitting and a recovery probe each wait
-    the window out to its end and then launch once."""
+    the window out to its end and then launch once.
+
+    Implements: TC-337
+    """
     ctx = SimpleNamespace(
         root=root,
         args=SimpleNamespace(
@@ -386,7 +413,10 @@ def test_each_loop_route_waits_out_a_refused_launch_and_retries(
 
 def test_a_refused_retained_call_releases_its_lease(root, clock, retained):
     """A retained call the window refuses releases its lease and keeps its
-    session's record, then raises: the retry after the window plans afresh."""
+    session's record, then raises: the retry after the window plans afresh.
+
+    Implements: TC-336
+    """
     cfg, prepared = retained
     seed(root, MON.replace(hour=11))
     kept = first_keep(root, cfg, prepared)  # inside: the lease is taken
@@ -447,6 +477,7 @@ ALLOWED = [
 
 @pytest.mark.parametrize("payload", DENIED)
 def test_the_hooks_deny_each_launch_form_with_the_guard_off(root, payload):
+    """Implements: TC-317, TC-339"""
     out = guard.hook(payload, root, env={})
     assert denial(out)
     assert "19:00 UTC" in out["hookSpecificOutput"]["permissionDecisionReason"]
@@ -454,6 +485,7 @@ def test_the_hooks_deny_each_launch_form_with_the_guard_off(root, payload):
 
 @pytest.mark.parametrize("payload", ALLOWED)
 def test_the_hooks_allow_everything_else(root, payload):
+    """Implements: TC-339"""
     assert not denial(guard.hook(payload, root, env={}))
 
 
@@ -529,18 +561,23 @@ def _decisions(root, cases):
 
 
 def test_a_quoted_launch_form_is_denied(root):
+    """Implements: TC-339"""
     wrong = [c for c, out in _decisions(root, QUOTED_DENIED) if not denial(out)]
     assert wrong == []
 
 
 def test_a_quoted_operator_is_not_a_command_boundary(root):
+    """Implements: TC-339"""
     wrong = [c for c, out in _decisions(root, QUOTED_ALLOWED) if denial(out)]
     assert wrong == []
 
 
 def test_an_unreadable_command_line_is_denied_inside_the_window(root, clock):
     """A line the hook cannot read is refused, naming why, rather than read as
-    no launch (decision D-010); outside the window it is not read at all."""
+    no launch (decision D-010); outside the window it is not read at all.
+
+    Implements: TC-339
+    """
     for command, out in _decisions(root, UNREADABLE):
         reason = out.get("hookSpecificOutput", {}).get("permissionDecisionReason", "")
         assert denial(out) and "cannot read" in reason, command
@@ -551,7 +588,10 @@ def test_an_unreadable_command_line_is_denied_inside_the_window(root, clock):
 def test_the_one_reading_keeps_quoted_text_in_its_word():
     """`kitlib.shell_line.segments`, the hook's one reading of a command
     line: quotes stay inside their word, operators split only unquoted, and
-    a substitution's command line is read as a further command."""
+    a substitution's command line is read as a further command.
+
+    Implements: TC-339
+    """
     segments = sys.modules["kitlib.shell_line"].segments
     assert segments('FOO="two words" claude -p x') == [
         ["FOO=two words", "claude", "-p", "x"]
@@ -564,7 +604,10 @@ def test_the_one_reading_keeps_quoted_text_in_its_word():
 
 def test_a_json_array_template_names_its_cli(root):
     """The CLI names are read by the kit's one template reader, so the
-    declared JSON-array form names its executable too."""
+    declared JSON-array form names its executable too.
+
+    Implements: TC-339
+    """
     (root / "docs" / "agents.toml").write_text(
         AGENTS.replace(
             'cmd_template = "codex exec --model {model}"',
@@ -576,10 +619,12 @@ def test_a_json_array_template_names_its_cli(root):
 
 
 def test_a_subagents_call_is_never_denied(root):
+    """Implements: TC-339"""
     assert not denial(guard.hook({**bash("claude -p x"), "agent_id": "a1"}, root, {}))
 
 
 def test_the_cli_names_come_from_the_route_registry(root):
+    """Implements: TC-339"""
     assert guard.model_clis(root) == {"claude", "codex"}
     (root / "docs" / "agents.toml").write_text(
         AGENTS.replace("codex exec", "gpt-runner exec"), encoding="utf-8"
@@ -589,12 +634,14 @@ def test_the_cli_names_come_from_the_route_registry(root):
 
 
 def test_outside_the_window_with_the_guard_off_the_hooks_do_nothing(root, clock):
+    """Implements: TC-317"""
     clock(AFTER)
     for payload in DENIED + [ev("SessionStart"), ev("Stop")]:
         assert guard.hook(payload, root, env={}) is None
 
 
 def test_session_start_and_the_monitored_events_tell_the_close_down(root):
+    """Implements: TC-339"""
     start = guard.hook(ev("SessionStart"), root, env={})
     text = start["hookSpecificOutput"]["additionalContext"]
     assert "BLACKOUT WINDOW" in text and "next obligation" in text
@@ -623,7 +670,10 @@ def _pre_tool_use_matcher(settings):
 
 def test_every_denied_launch_reaches_the_pre_tool_use_matcher():
     """Each tool a blackout denial names still runs the guard before its
-    call: a full match also matches under an unanchored reading."""
+    call: a full match also matches under an unanchored reading.
+
+    Implements: TC-339
+    """
     matcher = _pre_tool_use_matcher(json.loads(KIT_SETTINGS.read_text("utf-8")))
     assert matcher, "the guard's PreToolUse group carries no matcher"
     missed = [
@@ -636,7 +686,10 @@ def test_every_denied_launch_reaches_the_pre_tool_use_matcher():
 def test_a_tool_outside_the_matcher_hears_the_close_down_after_the_call(root, event):
     """Inside the window, with the guard off, a tool the matcher leaves out
     is told the close-down at its post-call event, at the reminder cadence,
-    and nothing is denied."""
+    and nothing is denied.
+
+    Implements: TC-339
+    """
     read = ev(event, tool_name="Read", tool_input={"file_path": "x"})
     told = [guard.hook(read, root, env={}) for _ in range(guard.REMINDER_EVERY + 1)]
     assert [t is not None for t in told] == (
@@ -648,6 +701,7 @@ def test_a_tool_outside_the_matcher_hears_the_close_down_after_the_call(root, ev
 
 
 def test_the_window_check_subcommand_exits_nonzero_inside(root, clock, capsys):
+    """Implements: TC-318, TC-340"""
     assert guard.main(["--root", str(root), "window-check"]) == 1
     assert "blackout window" in capsys.readouterr().err
     clock(AFTER)
@@ -668,6 +722,7 @@ def _held(root, tmp_path):
 
 
 def test_no_relaunch_is_written_inside_the_window(tmp_path, clock):
+    """Implements: TC-318, TC-340"""
     root = tmp_path / "repo"
     write_policy(root, guard_pct=50)
     handoff = _held(root, tmp_path)
@@ -680,6 +735,7 @@ def test_no_relaunch_is_written_inside_the_window(tmp_path, clock):
 def test_a_pending_relaunch_at_session_end_inside_the_window_is_cancelled(
     tmp_path, clock, guard_pct
 ):
+    """Implements: TC-318, TC-340"""
     root = tmp_path / "repo"
     write_policy(root, guard_pct=50)
     handoff = _held(root, tmp_path)
@@ -712,7 +768,10 @@ def test_reopening_the_same_session_with_both_drains_needs_the_owners_clear(
     """The context latch tripped inside the window (round 035 F2): it is
     recorded, but a new latch and the latched holder's resumed start each get
     the one blackout close-down, never the relaunch request the window
-    refuses; after the window the latch still needs the owner's clear."""
+    refuses; after the window the latch still needs the owner's clear.
+
+    Implements: TC-316
+    """
     root = tmp_path / "repo"
     write_policy(root, guard_pct=50)
     _held(root, tmp_path)
@@ -747,7 +806,10 @@ def test_reopening_the_same_session_with_both_drains_needs_the_owners_clear(
 def test_a_review_next_or_rework_launch_is_refused_for_an_active_claim(root, role):
     """A review, build or critique launch for a work item whose claim is
     active is refused inside the window: an active claim admits only a
-    wrap-up adjudication."""
+    wrap-up adjudication.
+
+    Implements: TC-336
+    """
     active_claim(root)
     calls, run = _ran()
     with pytest.raises(svc.BlackoutRefused):
@@ -804,7 +866,10 @@ def test_a_wrap_up_verdict_asking_for_rework_leaves_the_rework_waiting(
     BUILD and REVIEW launches) is refused until the window ends, then
     admitted. Writing the handoff that names the obligation is the
     coordinator's prose, not code: the close-down instruction asking for it
-    is pinned in test_session_start_and_the_monitored_events_tell_the_close_down."""
+    is pinned in test_session_start_and_the_monitored_events_tell_the_close_down.
+
+    Implements: TC-336
+    """
     lane = paused_lane
     assert _git(lane, "status", "--porcelain", "--", "docs/reviews") == ""
     service = coadj.session_service
@@ -910,6 +975,7 @@ def state(root):
 def test_the_first_keep_call_after_a_window_retires_by_the_predicate(
     root, clock, retained, last_used, retired
 ):
+    """Implements: TC-267, TC-341"""
     cfg, prepared = retained
     seed(root, last_used)
     clock(AFTER)
@@ -919,6 +985,7 @@ def test_the_first_keep_call_after_a_window_retires_by_the_predicate(
 
 
 def test_a_draining_sessions_chain_does_not_survive_the_window(root, clock, retained):
+    """Implements: TC-267, TC-341"""
     cfg, prepared = retained
     seed(root, MON.replace(hour=11), state="draining", reset_reason="crest")
     rows = {"WI-9": {"Status": "active", "SafetyClass": "", "Predecessors": ""}}
@@ -930,6 +997,7 @@ def test_a_draining_sessions_chain_does_not_survive_the_window(root, clock, reta
 def test_a_wrap_up_inside_the_window_resumes_the_retained_session(
     root, clock, retained
 ):
+    """Implements: TC-267, TC-341"""
     cfg, prepared = retained
     seed(root, MON.replace(hour=11))  # used before this window, after Friday's
     kept = first_keep(root, cfg, prepared)  # inside: the wrap-up
@@ -937,6 +1005,7 @@ def test_a_wrap_up_inside_the_window_resumes_the_retained_session(
 
 
 def test_no_keep_warm_ping_fires_inside_the_window(root, clock, retained):
+    """Implements: TC-267, TC-341"""
     cfg, prepared = retained
     seed(root, MON.replace(hour=11))
     ping, reason = keep.take_warm_lease(
@@ -998,6 +1067,7 @@ def _wrap_up_across_the_end(root, cfg, prepared, clock, mp):
 def test_a_keep_warm_tick_first_after_the_window_retires_and_never_refreshes(
     root, clock, retained
 ):
+    """Implements: TC-267, TC-341"""
     cfg, prepared = retained
     seed(root, MON.replace(hour=11))
     # A tick meeting a session another call's live lease holds leaves it to
@@ -1029,6 +1099,7 @@ def test_a_keep_warm_tick_first_after_the_window_retires_and_never_refreshes(
 
 
 def test_the_sign_in_reading_is_off_while_retention_is_off(root, capsys):
+    """Implements: TC-344"""
     args = coadj._parser().parse_args(["signin", "--root", str(root), "--retained"])
     assert coadj.signin(args) == 0
     assert capsys.readouterr().out.strip() == "signin [-] retained: off"
@@ -1043,6 +1114,7 @@ ADJUDICATOR = (
 
 
 def test_the_sign_in_reading_names_signed_in_and_missing(root, monkeypatch, capsys):
+    """Implements: TC-344"""
     write_policy(root, reset_pct=55)
     (root / "docs" / "agents.toml").write_text(AGENTS + ADJUDICATOR, encoding="utf-8")
     entry = "ANTHROPIC-ROUTE@ADJUDICATOR"
@@ -1113,7 +1185,10 @@ def test_a_user_command_beside_the_guards_reads_occupied_and_nothing_is_written(
     group, and a user command that merely names the guard's file, make the
     guard events occupied. The install is never asked, writes nothing, and
     the report exits 1 naming the commands; the committed settings are left
-    alone."""
+    alone.
+
+    Implements: TC-345
+    """
     root = tmp_path / "repo"
     local = root / ".claude" / "settings.local.json"
     local.parent.mkdir(parents=True)
@@ -1182,7 +1257,10 @@ def test_each_occupied_shape_refuses_and_writes_nothing(tmp_path, capsys, shape,
     """A second group on a guard event, a guard event missing while the
     others are installed, and a file that does not parse: each refuses at
     the install and at the report, names what is in the way, and leaves the
-    file byte for byte as it was."""
+    file byte for byte as it was.
+
+    Implements: TC-345
+    """
     root = tmp_path / "repo"
     local = root / ".claude" / "settings.local.json"
     local.parent.mkdir(parents=True)
@@ -1203,6 +1281,7 @@ def test_each_occupied_shape_refuses_and_writes_nothing(tmp_path, capsys, shape,
 
 
 def test_the_hook_opt_in_with_no_guard_hooks_changes_nothing(tmp_path, capsys):
+    """Implements: TC-345"""
     # the take refuses a checkout without hooks
     root = hooked_checkout(tmp_path / "repo")
     source = tmp_path / "plain.example"
@@ -1215,7 +1294,10 @@ def test_the_hook_opt_in_with_no_guard_hooks_changes_nothing(tmp_path, capsys):
 
 
 def test_the_hooks_command_refuses_enable(tmp_path):
-    """There is no re-enable path: the report's parser refuses `--enable`."""
+    """There is no re-enable path: the report's parser refuses `--enable`.
+
+    Implements: TC-345
+    """
     with pytest.raises(SystemExit) as raised:
         _guard_cli(tmp_path, example(tmp_path), "--enable")
     assert raised.value.code == 2
@@ -1256,7 +1338,10 @@ def _kit_example(tmp_path):
 @pytest.mark.parametrize("before", list(ABSENT))
 def test_an_absent_install_binds_every_group_and_keeps_other_keys(tmp_path, before):
     """From absent, a yes writes each guard event one group, bound to this
-    interpreter; every other key and event is kept, and the reading is on."""
+    interpreter; every other key and event is kept, and the reading is on.
+
+    Implements: TC-345
+    """
     root = tmp_path / "repo"
     local = root / ".claude" / "settings.local.json"
     if ABSENT[before] is not None:
@@ -1282,7 +1367,10 @@ def test_an_absent_install_binds_every_group_and_keeps_other_keys(tmp_path, befo
 @pytest.mark.parametrize("before", ["no file", "permissions only"])
 def test_the_consented_install_writes_the_pre_tool_use_matcher(tmp_path, before):
     """Settings holding no guard group take the example's PreToolUse matcher
-    from a yes, and the post-call groups stay unmatched."""
+    from a yes, and the post-call groups stay unmatched.
+
+    Implements: TC-345
+    """
     root = tmp_path / "repo"
     local = root / ".claude" / "settings.local.json"
     if before == "permissions only":
@@ -1303,6 +1391,7 @@ def test_the_consented_install_writes_the_pre_tool_use_matcher(tmp_path, before)
 def test_a_declined_or_empty_or_eof_answer_writes_nothing_and_asks_again(
     tmp_path, answer
 ):
+    """Implements: TC-345"""
     root = tmp_path / "repo"
     root.mkdir()
     source = _kit_example(tmp_path)
@@ -1325,7 +1414,10 @@ def test_a_declined_or_empty_or_eof_answer_writes_nothing_and_asks_again(
 def test_an_on_file_is_left_byte_for_byte_and_nothing_is_asked(tmp_path, bound):
     """A file already holding the guard's groups, by name, whether bound to
     an interpreter path or run by the example's bare `python`, reads on and
-    is never rewritten or asked about."""
+    is never rewritten or asked about.
+
+    Implements: TC-345
+    """
     root = tmp_path / "repo"
     source = _kit_example(tmp_path)
     local = root / ".claude" / "settings.local.json"

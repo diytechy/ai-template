@@ -4,6 +4,8 @@ The hook is a thin POSIX wrapper around the kit's fast process checks, so we tes
 its *underlying logic* directly (run the same checks the hook runs) rather than
 shelling out to `git commit`. Where a POSIX shell is available we also run the
 hook script end-to-end to confirm the wiring.
+
+Implements: TC-019, TC-242
 """
 
 import json
@@ -431,7 +433,10 @@ def test_every_hook_refuses_a_kit_scripts_dir_naming_a_missing_directory(
 ):
     """TC-021 (SR-019, LLR-021): one scripts-directory rule for every hook. A
     KIT_SCRIPTS_DIR naming no directory refuses even though the scaffold's
-    scripts/ is there to fall back on; the override is never second-guessed."""
+    scripts/ is there to fall back on; the override is never second-guessed.
+
+    Implements: TC-021
+    """
     skip_without_env_gates("posix-shell", "git")
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
     pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
@@ -442,6 +447,7 @@ def test_every_hook_refuses_a_kit_scripts_dir_naming_a_missing_directory(
 
 
 def test_hook_refuses_clearly_when_no_working_python3(scaffold):
+    """Implements: TC-021"""
     # SN-013 / SR-019: python3 may resolve on PATH yet exit nonzero (the Windows
     # Store app-execution alias). The hook probes by *running* a candidate, so it
     # never crashes; and with no interpreter passing the 3.11 floor it refuses
@@ -479,7 +485,10 @@ def test_hook_never_runs_the_checks_on_an_older_python(scaffold):
     """WI-880, real interpreters only: with a real Python below the 3.11
     floor the only one on PATH, the hook neither runs the checks on it (no
     traceback from a kit script) nor skips them: it refuses the commit and
-    names dev-setup's install as the fix."""
+    names dev-setup's install as the fix.
+
+    Implements: TC-021
+    """
     env = _older_first(scaffold)
     proc = subprocess.run(
         [shutil.which("sh"), HOOK],
@@ -495,7 +504,10 @@ def test_hook_never_runs_the_checks_on_an_older_python(scaffold):
 
 def test_hook_runs_on_the_project_venv_over_an_older_python(scaffold):
     """The other direction: a real 3.11+ virtual environment in the project
-    beside the same older-only PATH is the interpreter the checks run on."""
+    beside the same older-only PATH is the interpreter the checks run on.
+
+    Implements: TC-021
+    """
     env = _older_first(scaffold)
     subprocess.run(
         [sys.executable, "-m", "venv", "--without-pip", str(scaffold / ".venv")],
@@ -539,6 +551,7 @@ def test_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
 
 
 def test_commit_msg_hook_fails_closed_when_no_python(scaffold):
+    """Implements: TC-021"""
     # M-42, commit-msg twin: the message scan must fail closed rather than
     # skip when no working python is found (WI-880: whatever the privacy dial).
     skip_without_env_gates("posix-shell", "git")
@@ -573,7 +586,10 @@ def test_commit_msg_hook_fails_closed_when_no_python(scaffold):
 def test_commit_msg_hook_never_runs_on_an_older_python(scaffold):
     """WI-880, real interpreters only: with a real Python below the 3.11 floor
     the only one on PATH, the commit-msg hook neither runs its scans on it nor
-    skips them: it refuses the commit and names dev-setup's install."""
+    skips them: it refuses the commit and names dev-setup's install.
+
+    Implements: TC-021
+    """
     env = _older_first(scaffold)
     (scaffold / "MSG.txt").write_text("an innocent message\n", encoding="utf-8")
     proc = subprocess.run(
@@ -594,7 +610,10 @@ HOOKS = ("pre-commit", "commit-msg", "pre-push")
 def test_every_hook_reads_the_one_interpreter_probe(scaffold):
     """WI-880: the three shipped git hooks resolve kit Python through ONE
     probe, the shared file shipped beside them, and none carries a candidate
-    loop of its own (the copy that drifts). The scaffold ships the file."""
+    loop of its own (the copy that drifts). The scaffold ships the file.
+
+    Implements: TC-021
+    """
     for name in HOOKS:
         text = (KIT / "hooks" / name).read_text(encoding="utf-8")
         assert "for cand in" not in text, name

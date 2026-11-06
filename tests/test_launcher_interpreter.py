@@ -259,7 +259,10 @@ def test_the_fake_is_runnable_and_only_its_version_is_fake(tmp_path):
 
 @pytest.mark.parametrize("which", sorted(POSIX_LAUNCHERS))
 def test_sh_prefers_the_project_venv_over_a_below_floor_ambient_python(which, tmp_path):
-    """H-01 itself: a valid `.venv` beside a below-floor ambient `python`."""
+    """H-01 itself: a valid `.venv` beside a below-floor ambient `python`.
+
+    Implements: TC-188
+    """
     skip_without_env_gates("posix-shell")
     launcher, engine = POSIX_LAUNCHERS[which]
     path = _repo(tmp_path / "repo", launcher, engine)
@@ -279,7 +282,10 @@ def test_sh_refuses_a_below_floor_interpreter_and_names_what_it_rejected(
 ):
     """No venv, nothing on PATH above the floor: refuse, and say which candidates
     lost and why — the diagnostic the review asked for, since "not found" would
-    be a lie about a python that is sitting right there."""
+    be a lie about a python that is sitting right there.
+
+    Implements: TC-188
+    """
     skip_without_env_gates("posix-shell")
     launcher, engine = POSIX_LAUNCHERS[which]
     path = _repo(tmp_path / "repo", launcher, engine)
@@ -298,7 +304,10 @@ def test_sh_refuses_a_below_floor_interpreter_and_names_what_it_rejected(
 @pytest.mark.parametrize("which", sorted(POSIX_LAUNCHERS))
 def test_sh_takes_a_path_python_that_satisfies_the_floor(which, tmp_path):
     """The other direction, without which the refusal above could be a launcher
-    that simply never selects anything."""
+    that simply never selects anything.
+
+    Implements: TC-188
+    """
     skip_without_env_gates("posix-shell")
     launcher, engine = POSIX_LAUNCHERS[which]
     path = _repo(tmp_path / "repo", launcher, engine)
@@ -311,7 +320,10 @@ def test_sh_takes_a_path_python_that_satisfies_the_floor(which, tmp_path):
 def test_sh_falls_back_when_the_venv_itself_is_below_the_floor(which, tmp_path):
     """The venv is PREFERRED, not exempt. A stale `.venv` built on an old python
     must lose to a good PATH python rather than wedge the launcher — otherwise
-    "prefer the venv" trades one silent breakage for another."""
+    "prefer the venv" trades one silent breakage for another.
+
+    Implements: TC-188
+    """
     skip_without_env_gates("posix-shell")
     launcher, engine = POSIX_LAUNCHERS[which]
     path = _repo(tmp_path / "repo", launcher, engine)
@@ -330,7 +342,10 @@ def test_sh_falls_back_when_the_venv_itself_is_below_the_floor(which, tmp_path):
 def test_the_command_wrapper_inherits_the_venv_preference(which, tmp_path):
     """The launcher set's one exception, executed rather than asserted in prose:
     the Finder wrapper holds no probe because it `exec`s the .sh twin, so the
-    same H-01 scenario must resolve the same way THROUGH it."""
+    same H-01 scenario must resolve the same way THROUGH it.
+
+    Implements: TC-188
+    """
     skip_without_env_gates("posix-shell")
     wrapper, twin = COMMAND_WRAPPERS[which]
     engine = POSIX_LAUNCHERS[which][1]
@@ -345,7 +360,10 @@ def test_the_command_wrapper_inherits_the_venv_preference(which, tmp_path):
 def test_the_command_wrapper_declares_the_inheritance_and_holds_no_copy(which):
     """One home for the policy: the wrapper must not grow a probe of its own (a
     second copy is what drifts), and must SAY that it inherits one — a reader
-    who finds no probe here has to be told where it lives."""
+    who finds no probe here has to be told where it lives.
+
+    Implements: TC-188
+    """
     wrapper, _ = COMMAND_WRAPPERS[which]
     text = wrapper.read_text(encoding="utf-8")
     assert "pick_py" not in text, "the wrapper carries a second copy of the probe"
@@ -364,6 +382,7 @@ def test_the_command_wrapper_declares_the_inheritance_and_holds_no_copy(which):
 def test_cmd_prefers_the_project_venv_over_a_below_floor_ambient_python(
     which, tmp_path
 ):
+    """Implements: TC-188"""
     launcher, engine = CMD_LAUNCHERS[which]
     path = _repo(tmp_path / "repo", launcher, engine)
     _make_venv(path.parent)
@@ -381,6 +400,7 @@ def test_cmd_prefers_the_project_venv_over_a_below_floor_ambient_python(
 def test_cmd_refuses_a_below_floor_interpreter_and_names_what_it_rejected(
     which, tmp_path
 ):
+    """Implements: TC-188"""
     launcher, engine = CMD_LAUNCHERS[which]
     path = _repo(tmp_path / "repo", launcher, engine)
     done = _run_cmd(path, _write_fake_bin(tmp_path / "bin", OLD, "OLD"))
@@ -401,7 +421,10 @@ def test_cmd_refuses_a_below_floor_interpreter_and_names_what_it_rejected(
 def test_cmd_takes_a_path_python_that_satisfies_the_floor(which, tmp_path):
     """Also the shim-transfer regression: the fakes are `.cmd` files, and without
     `call` cmd.exe hands control to such a shim and never returns — the launcher
-    would exit silently instead of running the engine."""
+    would exit silently instead of running the engine.
+
+    Implements: TC-188
+    """
     launcher, engine = CMD_LAUNCHERS[which]
     path = _repo(tmp_path / "repo", launcher, engine)
     done = _run_cmd(path, _write_fake_bin(tmp_path / "bin", NEW, "NEW"))
@@ -414,7 +437,10 @@ def test_cmd_takes_a_path_python_that_satisfies_the_floor(which, tmp_path):
 def test_cmd_falls_back_when_the_venv_is_present_but_unusable(which, tmp_path):
     """The Windows shape of "preferred, not exempt": a `.venv` whose python.exe
     exists but cannot execute (a stale or half-copied environment — the one an
-    `if exist` test would happily select) falls back to a good PATH python."""
+    `if exist` test would happily select) falls back to a good PATH python.
+
+    Implements: TC-188
+    """
     launcher, engine = CMD_LAUNCHERS[which]
     path = _repo(tmp_path / "repo", launcher, engine)
     broken = path.parent / ".venv" / "Scripts"
@@ -433,7 +459,10 @@ def test_cmd_walks_past_an_alias_stub_to_the_py_launcher(which, tmp_path):
     guard (repo-review 2026-07-21 M-16) this change had to keep — and `py -3`,
     the one candidate carrying a FLAG, which is where a batch subroutine's
     quoting goes wrong. Only `py` is a working fake here, so reaching the engine
-    at all is proof both were handled."""
+    at all is proof both were handled.
+
+    Implements: TC-188
+    """
     launcher, engine = CMD_LAUNCHERS[which]
     path = _repo(tmp_path / "repo", launcher, engine)
     fake = _write_fake_bin(tmp_path / "bin", NEW, "NEW")

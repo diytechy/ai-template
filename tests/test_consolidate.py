@@ -67,7 +67,10 @@ def test_the_queue_digest_covers_the_four_fields_that_change_the_question():
     """A row's title, needs and safety_class change what a consolidation would
     decide; its Deliverable and BuildTier do not. Hashing the whole row would
     re-arm the census on an edit that changes no answer, and hashing too little
-    would let a genuinely new queue read as already judged."""
+    would let a genuinely new queue read as already judged.
+
+    Implements: TC-208
+    """
     base = [_row("WI-001", Title="Alpha"), _row("WI-002", Title="Beta")]
     first = consolidate.queue_digest(base)
 
@@ -133,7 +136,10 @@ def test_an_absent_registry_hashes_as_empty_rather_than_being_skipped(tmp_path):
 def test_the_spine_digest_hashes_whichever_carrier_is_live(tmp_path):
     """The digest resolves each registry through the spine carrier rather than
     assuming its TOML path: a repo whose spine lives in CSV moves the digest
-    when a CSV row changes, and one holding both carriers is refused."""
+    when a CSV row changes, and one holding both carriers is refused.
+
+    Implements: TC-208
+    """
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True)
     csv_path = req / "system-requirements.csv"
@@ -151,7 +157,10 @@ def test_the_spine_digest_hashes_whichever_carrier_is_live(tmp_path):
 )
 def test_a_malformed_digests_cell_reads_as_no_recorded_digest(cell):
     """It fails OPEN — into "this state has not been judged". The alternative
-    direction is worse: a typo'd cell that silences the census forever."""
+    direction is worse: a typo'd cell that silences the census forever.
+
+    Implements: TC-208
+    """
     assert consolidate.parse_digests(cell) == ("", "")
 
 
@@ -166,7 +175,10 @@ def test_a_shared_open_item_edge_is_a_commissioning_signal(tmp_path):
     """Two rows cut from ONE ruling routinely carry different specrefs — one
     points at the plan, one at the open-items registry — while the thing that
     makes them one question is the OI id they both wait on. The shared-SpecRef
-    signal cannot see that; this one can."""
+    signal cannot see that; this one can.
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", SpecRef="docs/plans/a.md", Predecessors="OI-077"),
         _row(
@@ -189,7 +201,10 @@ def test_two_sections_of_one_plan_are_two_commissioning_specs(tmp_path):
     own section were commissioned by two specs, so they do not pair on this
     signal — the anchor-blind reading clustered all twenty-two lane-lifecycle
     rows of one design plan on it alone. The rule is the validator's
-    (`kitlib.registry.shared_spec`), not a second reading of it."""
+    (`kitlib.registry.shared_spec`), not a second reading of it.
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", SpecRef="docs/plans/p.md#section-a"),
         _row("WI-002", SpecRef="docs/plans/p.md#section-b"),
@@ -212,6 +227,7 @@ def test_two_sections_of_one_plan_are_two_commissioning_specs(tmp_path):
 def test_one_section_or_a_whole_file_still_pairs_on_the_commissioning_signal(
     tmp_path, first, second, shared
 ):
+    """Implements: TC-208"""
     rows = [_row("WI-001", SpecRef=first), _row("WI-002", SpecRef=second)]
     repo = _repo(tmp_path, rows)
     found = _commissioned(consolidate.pair_findings(repo, rows))
@@ -220,7 +236,10 @@ def test_one_section_or_a_whole_file_still_pairs_on_the_commissioning_signal(
 
 def test_the_commissioning_spec_half_is_the_shared_spec_rule(tmp_path):
     """One rule, not a second reading beside it: over every pairing shape the
-    signal's spec half answers exactly what `shared_spec` answers."""
+    signal's spec half answers exactly what `shared_spec` answers.
+
+    Implements: TC-208
+    """
     from kitlib import registry as kitregistry
 
     refs = ["", "docs/a.md", "docs/a.md#x", "docs/a.md#y", "docs/b.md#x"]
@@ -233,7 +252,10 @@ def test_the_commissioning_spec_half_is_the_shared_spec_rule(tmp_path):
 
 def test_the_open_item_edge_is_unchanged_by_section_awareness(tmp_path):
     """Two sections of one plan do not pair on the spec half, and the OI id the
-    rows both wait on still pairs them — reported once, by its id."""
+    rows both wait on still pairs them — reported once, by its id.
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", SpecRef="docs/plans/p.md#a", Predecessors="OI-077"),
         _row("WI-002", SpecRef="docs/plans/p.md#b", Predecessors="~OI-077"),
@@ -249,7 +271,10 @@ def test_the_module_signal_reads_both_the_llr_join_and_the_row_prose(tmp_path):
     """Both halves, because each is blind where the other sees: the LLR join is
     traceable but says nothing about a row citing no SR (most process rows), and
     the prose scan sees those. Compared by BASENAME — a row writes `intake.py`
-    where an LLR's Module cell writes the full path."""
+    where an LLR's Module cell writes the full path.
+
+    Implements: TC-208
+    """
     llrs = (
         "[design.LLR-001]\n"
         'sr_refs = ["SR-001"]\n'
@@ -268,7 +293,10 @@ def test_the_module_signal_reads_both_the_llr_join_and_the_row_prose(tmp_path):
 def test_the_module_signal_does_not_fire_on_a_bare_module_name(tmp_path):
     """Anchored on the `.py` suffix: a sentence mentioning `intake` is not a
     claim about a file, and a pre-filter that fires on everything selects
-    nothing."""
+    nothing.
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", Title="rework the intake mint"),
         _row("WI-002", Title="rework the intake sweep"),
@@ -302,7 +330,10 @@ def test_two_disjoint_overlapping_pairs_make_one_candidate_set(tmp_path):
     """Plan §4: five rows with two overlapping pairs mint EXACTLY ONE row. Two
     disjoint pairs are still one question — "which of these are the same work
     item?" — and guard 1 means a second judgement could not run beside the first
-    anyway, so the census hands one judge the whole picture."""
+    anyway, so the census hands one judge the whole picture.
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", SpecRef="docs/plans/a.md"),
         _row("WI-002", SpecRef="docs/plans/a.md"),
@@ -320,7 +351,10 @@ def test_a_pair_only_the_queue_conflict_detector_sees_seeds_a_cluster(tmp_path):
     """The census reads the validator's detector, not a copy of it: two rows
     with near-identical titles, different specs, no open-item edge and no
     shared module pair through `queue_conflict_pairs` alone, since neither of
-    the census's own signals sees them."""
+    the census's own signals sees them.
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", Title="harden widget parser", SpecRef="docs/plans/a.md"),
         _row("WI-002", Title="harden widget parser", SpecRef="docs/plans/b.md"),
@@ -354,7 +388,10 @@ def test_no_row_is_minted_while_a_judgement_is_in_progress(tmp_path):
     would refuse by drift after a strong-tier session had been spent on it.
     (`active/` has no directory in `wi_convert.STATUS_DIRS` - a claimed spec
     lives under `active/<branch>/` - so the rows are handed to the guard
-    directly rather than written.)"""
+    directly rather than written.)
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", SpecRef="docs/plans/a.md"),
         _row("WI-002", SpecRef="docs/plans/a.md"),
@@ -369,7 +406,10 @@ def test_no_row_is_minted_while_a_judgement_is_in_progress(tmp_path):
 def test_no_row_is_minted_beside_a_pending_consolidation(tmp_path):
     """Two consolidations never share the frontier, even over disjoint rows:
     the first one's close compares the queue it judged, and the second one's
-    successor would move it."""
+    successor would move it.
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", SpecRef="docs/plans/a.md"),
         _row("WI-002", SpecRef="docs/plans/a.md"),
@@ -383,7 +423,10 @@ def test_no_row_is_minted_beside_a_pending_consolidation(tmp_path):
 
 def test_a_queued_judgement_naming_a_candidate_refuses_by_name(tmp_path):
     """The guard's purpose at row grain: a consolidation never judges a row
-    another pending judgement is about to judge."""
+    another pending judgement is about to judge.
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", SpecRef="docs/plans/a.md"),
         _row("WI-002", SpecRef="docs/plans/a.md"),
@@ -400,7 +443,10 @@ def test_a_queued_judgement_naming_no_candidate_holds_nothing_back(tmp_path):
     repository's own loop kept the census from ever running. A queued judgement
     cannot run beside the consolidation (judgements are exclusive and the
     consolidation's priority puts it first), so one that names none of the
-    candidates changes nothing the consolidation would judge."""
+    candidates changes nothing the consolidation would judge.
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", SpecRef="docs/plans/a.md"),
         _row("WI-002", SpecRef="docs/plans/a.md"),
@@ -421,7 +467,10 @@ def test_a_judgement_row_is_never_a_candidate_and_never_moves_the_queue_digest(
     queue digest is over the same population, so a judgement minted or closed
     beside an unchanged work queue does not re-arm the census over it. (Every
     digest recorded before this rule was taken with no judgement queued, so it
-    is unchanged by it.)"""
+    is unchanged by it.)
+
+    Implements: TC-208
+    """
     work = [_row("WI-001", Title="Alpha"), _row("WI-002", Title="Beta")]
     judgements = [
         _judge("WI-003", SpecRef="docs/plans/a.md"),
@@ -435,7 +484,10 @@ def test_a_judgement_row_is_never_a_candidate_and_never_moves_the_queue_digest(
 def test_the_example_row_is_never_a_candidate(tmp_path):
     """The `-000` example is the format's documentation, inert everywhere else;
     a census that paired it would hand a judge the template's own example to
-    absorb (it paired with seven rows of this repository's queue)."""
+    absorb (it paired with seven rows of this repository's queue).
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-000", SpecRef="docs/plans/a.md"),
         _row("WI-001", SpecRef="docs/plans/a.md"),
@@ -447,7 +499,10 @@ def test_the_example_row_is_never_a_candidate(tmp_path):
 def test_a_queue_state_that_has_been_judged_is_never_judged_again(tmp_path):
     """And the ARCHIVED arm is the load-bearing half: an active-only guard reads
     "nobody has judged this" the moment the consolidation closes, and mints the
-    identical row on the very next idle tick."""
+    identical row on the very next idle tick.
+
+    Implements: TC-208
+    """
     queue = [
         _row("WI-001", SpecRef="docs/plans/a.md"),
         _row("WI-002", SpecRef="docs/plans/a.md"),
@@ -527,7 +582,10 @@ def test_a_consolidations_own_successor_does_not_seed_the_next_census(tmp_path):
     consolidation's own successor". A successor is recognisable from the
     registry alone (it supersedes a `restructured` row that a consolidation
     judgement's `Adjudicates` names), so the census can decline to re-litigate
-    the judgement it just enacted."""
+    the judgement it just enacted.
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", Status="restructured", SpecRef="docs/plans/a.md"),
         _row("WI-002", Status="restructured", SpecRef="docs/plans/a.md"),
@@ -549,7 +607,10 @@ def test_a_hand_consolidations_host_is_not_read_as_judged(tmp_path):
     judgement. Reading its host as judged would switch guard 3 on for a
     question no judge answered, so the host is an ordinary row: it seeds a
     candidate set, and a verdict may absorb it without the refusal that
-    protects a judged successor."""
+    protects a judged successor.
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", Status="restructured", SpecRef="docs/plans/a.md"),
         _row("WI-002", Status="restructured", SpecRef="docs/plans/a.md"),
@@ -578,7 +639,10 @@ def test_a_judgement_that_enacted_no_consolidation_makes_no_successor(outcome, s
     """Guard 3 reads the OUTCOME, never the question: a consolidation row whose
     scope named these rows but which queued them, returned them or was
     cancelled absorbed nothing, so a host a hand commit later made over the
-    same rows is still unjudged."""
+    same rows is still unjudged.
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", Status="restructured"),
         _row("WI-002", Status="restructured"),
@@ -591,6 +655,7 @@ def test_a_judgement_that_enacted_no_consolidation_makes_no_successor(outcome, s
 
 
 def test_a_consolidation_scope_with_no_recorded_verdict_makes_no_successor():
+    """Implements: TC-208"""
     rows = [
         _row("WI-001", Status="restructured"),
         _row("WI-010", Supersedes="WI-001"),
@@ -605,7 +670,10 @@ def test_a_queued_judgement_that_would_run_first_refuses_by_name(tmp_path):
     consolidation before it. An operator priority equal to the
     consolidation's (the id breaks the tie, and the older row wins) or above
     it puts that judgement first, and its landing would move what the
-    consolidation judged."""
+    consolidation judged.
+
+    Implements: TC-208
+    """
     work = [
         _row("WI-001", SpecRef="docs/plans/a.md"),
         _row("WI-002", SpecRef="docs/plans/a.md"),
@@ -624,7 +692,10 @@ def test_a_queued_judgement_that_would_run_first_refuses_by_name(tmp_path):
 def test_prior_labels_a_hand_consolidation_as_unjudged():
     """The judge reads `{prior}` before absorbing anything, and the brief tells
     it that overturning an earlier consolidation pages the owner. A hand
-    consolidation carries no judgement to overturn, so its line says so."""
+    consolidation carries no judgement to overturn, so its line says so.
+
+    Implements: TC-208
+    """
     brief = load_script("adjudicate_brief")
     judge, bodies = _judged("WI-008", "WI-002;WI-003")
     rows = [
@@ -666,7 +737,10 @@ def test_re_absorbing_a_row_a_consolidation_minted_is_refused_by_name():
     """Overturning a consolidation is a RETURN-TO-DRAFT of THAT judgement (plan
     §1.3) — the owner's to rule, never a second machine mint. Distinct from
     `intake._supersedes_refusal`'s absorbed arm, which refuses continuing a row
-    somebody already absorbed (a lineage chain)."""
+    somebody already absorbed (a lineage chain).
+
+    Implements: TC-208
+    """
     rows = [
         _row("WI-001", Status="restructured"),
         _row("WI-010", Supersedes="WI-001"),
@@ -680,6 +754,7 @@ def test_re_absorbing_a_row_a_consolidation_minted_is_refused_by_name():
 
 
 def test_prior_absorbs_reports_each_consolidations_absorbed_set():
+    """Implements: TC-208"""
     rows = [
         _row("WI-001", Status="restructured"),
         _row("WI-002", Status="restructured"),
@@ -703,7 +778,10 @@ def test_prior_keeps_an_absorption_after_its_successor_is_itself_absorbed():
     Both events are earlier absorptions, so both reach `{prior}`, each absorbed
     row marked with its own provenance. Dropping the first because its
     successor went `restructured` would hide from the judge the very hand
-    consolidation it may be about to re-litigate."""
+    consolidation it may be about to re-litigate.
+
+    Implements: TC-208
+    """
     brief = load_script("adjudicate_brief")
     judge, bodies = _judged("WI-015", "WI-003;WI-010")
     rows = [
@@ -867,7 +945,10 @@ def test_a_malformed_verdict_block_refuses_and_never_defaults(block, expect):
     """Reading a malformed block as `queue` would silently discard a judgement
     that closes rows — so every arm names what is wrong instead. Both DIRECTIONS
     of the shape rule are here: an outcome that names nothing to enact, and an
-    outcome carrying targets it would quietly ignore."""
+    outcome carrying targets it would quietly ignore.
+
+    Implements: TC-208
+    """
     record, why = consolidate.parse_verdict(_spec(_verdict(block)), "at")
     assert record is None, record
     assert expect in why, why
@@ -937,7 +1018,10 @@ def test_the_close_refuses_a_row_that_left_the_queue_by_name(tmp_path):
     ORDER IS THE MESSAGE: claiming a row also moves the queue digest, so the
     drift rung would fire on the same fixture. The by-name rung runs first
     because "WI-402 is no longer queued" is actionable and "the queue has moved"
-    is the same fact with the row filed off."""
+    is the same fact with the row filed off.
+
+    Implements: TC-208
+    """
     rows = [_row("WI-401"), _row("WI-402", Status="active")]
     why = _close(
         tmp_path,
@@ -1143,7 +1227,10 @@ def test_an_absorbed_rows_scope_text_is_byte_identical_and_specref_kept():
     the successor's lineage is worth nothing if the thread it continues has
     already been cut. The ONLY edit is the one-line Deliverable, and it sits
     BEFORE `## Context` — after it, `parse_spec_deliverable` clips the body and
-    the cell reads EMPTY (R-A hard error)."""
+    the cell reads EMPTY (R-A hard error).
+
+    Implements: TC-208
+    """
     original = _spec(
         "\n## Context\n\nThe original scope, untouched.\n"
         "\n## Done-when\n\n1. Deliver it.\n"
@@ -1178,7 +1265,10 @@ def test_the_edge_write_is_surgical_and_idempotent():
     Adequacy witness: an implementation that took the insert arm for every
     spec (adding a second `needs` line rather than extending the first) fails
     the one-line check; one that rewrote the line in another place or form
-    fails the byte comparison."""
+    fails the byte comparison.
+
+    Implements: TC-208
+    """
     text = _spec("\n## Context\n\nkeep me\n", needs='["WI-300"]')
     edged = consolidate.edged_text(text, "WI-401")
     needs_lines = [ln for ln in edged.splitlines() if ln.startswith("needs")]
@@ -1226,7 +1316,10 @@ def _no_needs_spec(eol):
 def test_the_edge_write_inserts_a_missing_needs_line(eol):
     """A waiter filed without a `needs` line gains one holding just the
     blocker, inside its frontmatter and in the file's own line ending, and the
-    spec with that one line removed is the input byte for byte."""
+    spec with that one line removed is the input byte for byte.
+
+    Implements: TC-208
+    """
     text = _no_needs_spec(eol)
     edged = consolidate.edged_text(text, "WI-401")
     assert edged is not None, "a spec with no needs line was refused"
@@ -1254,7 +1347,10 @@ def test_the_inserted_needs_line_is_top_level_before_any_table():
 
     Adequacy witness: an implementation that inserts the line just before the
     closing fence gives `extra.needs` and no top-level `needs`, and fails both
-    assertions."""
+    assertions.
+
+    Implements: TC-208
+    """
     text = (
         '+++\nid = "WI-404"\ntitle = "filed by hand"\n'
         '[extra]\nnote = "x"\n+++\n\n## Context\n\nkeep me\n'
@@ -1287,7 +1383,10 @@ def test_the_edge_write_refuses_a_frontmatter_it_cannot_read(text):
     whenever no complete `needs` line matches) returns text for the first two
     and fails the `is None`; one that appends a second `needs` line, or
     rewrites only the first line of a multi-line list, returns text for the
-    third and fails it too."""
+    third and fails it too.
+
+    Implements: TC-208
+    """
     assert consolidate.edged_text(text, "WI-401") is None
 
 

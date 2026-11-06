@@ -1,4 +1,7 @@
-"""The observation rubric-reference advisory (TC-307), without git or scaffolds."""
+"""The observation rubric-reference advisory (TC-307), without git or scaffolds.
+
+Implements: TC-307
+"""
 
 from conftest import load_script
 

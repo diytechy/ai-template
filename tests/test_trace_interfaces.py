@@ -13,6 +13,8 @@ What stays in tests/test_trace.py is the SN->SR->LLR->TC spine: the orphan /
 strict gates, the verification-category buckets, the schema-safe extra columns,
 the SN status vocabulary, the Drafted exemptions and the approved-phase
 completeness rule.
+
+Implements: TC-244
 """
 
 import pytest
@@ -98,6 +100,7 @@ def _report(scaffold):
 
 
 def test_if_tier_integrity(scaffold):
+    """Implements: TC-044"""
     make_minimal_project(scaffold)
     # A clean seam: the owner is a module path LLR-001's `Module` names.
     _write_ifs(
@@ -361,6 +364,7 @@ def test_an_empty_retired_cell_and_a_nested_sub_table_are_refused_by_the_carrier
 
 
 def test_channel_refuses_an_unknown_value_as_a_warn(scaffold):
+    """Implements: TC-182"""
     # The owner's ruled typing is a CLOSED vocabulary — `Channel` since OI-67,
     # which subsumed `Signal`'s discrete/variable pair (`exit-code` and `env` are
     # the discrete kinds; the rest are unbounded). Written straight to TOML:
@@ -469,6 +473,7 @@ def test_every_declared_sn_status_leaves_the_enum_floor_silent(scaffold):
 
 
 def test_missing_required_if_field_is_a_warn(scaffold):
+    """Implements: TC-189"""
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
         "[interface.IF-001]\n"

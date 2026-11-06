@@ -31,6 +31,8 @@ Three things this module pins, each because a cut got it wrong:
     `DevStg-Release`. What it DID add is a migration window exactly as wide as
     the migration: a legacy 0-4 int is translated and warned about, and NOTHING
     else int-shaped is.
+
+Implements: TC-151
 """
 
 import ast
@@ -360,6 +362,7 @@ def test_every_malformed_dial_falls_back_to_the_conservative_end(tmp_path, value
 
 @pytest.mark.parametrize("value", [-1, 7, True, "4", "", "DevStg-Nope", "arch"])
 def test_a_malformed_dial_is_REFUSED_not_silently_defaulted(tmp_path, value):
+    """Implements: TC-150"""
     # The fallback above keeps a caller working; the refusal is what makes the
     # typo visible. Both are needed: a value nobody can honour must not read as
     # a deliberate setting, and it must not be silent either.
@@ -869,7 +872,10 @@ def test_the_RELEASE_rung_has_EXACTLY_ONE_PRODUCER_and_it_is_the_EVIDENCE_VERDIC
     the name. So this now asserts on the VALUE, and then stops grepping
     altogether: `_returns_provably_below_release` walks the AST and demands
     every return be provably a rung below the top. Both arms below are driven
-    against both mutants at the close (see the fragment)."""
+    against both mutants at the close (see the fragment).
+
+    Implements: TC-187
+    """
     func = _spine_stage_ast()
     # ARM 1 — THE VALUE, not the constant name. Comments and the docstring name
     # the rung legitimately and repeatedly; `ast.unparse` over the body MINUS

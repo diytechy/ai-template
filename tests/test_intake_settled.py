@@ -242,6 +242,7 @@ def _assert_refused(refusal, carrier, rev, kind):
 
 
 def test_a_row_reattested_in_range_and_equal_to_its_copy_mints_nothing(tmp_path):
+    """Implements: TC-403"""
     root, before, after = _settled(tmp_path)
     # The hand landing's route first: today it mints the redundant row.
     proc, head, new_head = _sweep(root, before, after)
@@ -263,7 +264,10 @@ def test_a_row_reattested_in_range_and_equal_to_its_copy_mints_nothing(tmp_path)
 def test_a_row_amended_again_after_its_act_still_mints(tmp_path):
     """Guard: a row re-attested in the range and then amended again still
     mints. Catches a filter that reads only the ledger and skips the snapshot
-    comparison: the ledger alone says SR-001 was settled."""
+    comparison: the ledger alone says SR-001 was settled.
+
+    Implements: TC-403
+    """
     root, before, _act_sha = _settled(tmp_path)
     _write_srs(root, requirement=AMENDED + " Again.")
     after = _commit(root, "amend SR-001 after its act")
@@ -279,7 +283,10 @@ def test_an_amendment_with_no_act_in_range_still_mints(tmp_path):
     text B; the range restores A. At `after` the row equals its copy and the
     WHOLE ledger re-attests it, but no entry the range added does. Catches a
     filter that reads the whole ledger rather than the entries the range
-    added."""
+    added.
+
+    Implements: TC-403
+    """
     root, _seed = _repo(tmp_path)
     _write_srs(root, requirement=AMENDED)
     _commit(root, "amend SR-001")
@@ -305,7 +312,10 @@ def test_an_absent_ledger_filters_nothing(tmp_path):
     """Guard: a fresh adopter has no ledger before its first signing, and that
     is no acts, never a refusal. Catches an absent ledger read as a refusal,
     and a tri-state reader that treats "the tree does not list it" as a read
-    failure. The contrast the unreadable-blob refusal is measured against."""
+    failure. The contrast the unreadable-blob refusal is measured against.
+
+    Implements: TC-403
+    """
     root, before = _repo(tmp_path, seed=False)
     _write_srs(root, requirement=AMENDED)
     after = _commit(root, "amend SR-001")
@@ -351,7 +361,10 @@ def _close_report(root, wi):
 def test_the_filter_is_not_consulted_without_amendment_records(tmp_path, broken):
     """Guard: a range that amends no approved row never reads the ledger, so a
     broken one cannot refuse an unrelated mint, and the other arms still run.
-    Catches a filter consulted unconditionally."""
+    Catches a filter consulted unconditionally.
+
+    Implements: TC-403
+    """
     root, before = _repo(tmp_path)
     _close_report(root, "WI-005")
     if broken == "malformed":
@@ -375,7 +388,10 @@ def test_the_filter_is_not_consulted_without_amendment_records(tmp_path, broken)
 def test_a_malformed_ledger_refuses_the_mint_by_name(tmp_path):
     """...and the recovery the refusal states works: the same range re-reads
     the same blob and refuses again, while a sweep whose `--after` is the
-    reviewed commit that fixes the ledger passes."""
+    reviewed commit that fixes the ledger passes.
+
+    Implements: TC-403
+    """
     root, before, act_sha = _settled(tmp_path)
     good = _git(root, "show", "{}:{}".format(act_sha, ACTS_REL)) + "\n"
     (root / ACTS_REL).write_bytes(b"[[act]\nseq = \n")
@@ -397,7 +413,10 @@ def test_a_malformed_ledger_refuses_the_mint_by_name(tmp_path):
 def test_an_unreadable_ledger_blob_refuses_the_mint_by_name(tmp_path, side):
     """A ledger the tree lists but whose blob cannot be read is never read as
     absent: absent would mint, as the absent-ledger guard does. The two sides'
-    blobs differ, since the act appended seq 2."""
+    blobs differ, since the act appended seq 2.
+
+    Implements: TC-403
+    """
     root, before, after = _settled(tmp_path)
     _trunk_moves_on(root)
     rev = after if side == "after" else before
@@ -412,6 +431,7 @@ def test_an_unreadable_ledger_blob_refuses_the_mint_by_name(tmp_path, side):
 
 
 def test_a_malformed_snapshot_copy_refuses_the_mint_by_name(tmp_path):
+    """Implements: TC-403"""
     root, before, _act_sha = _settled(tmp_path)
     copy = root / COPY_REL
     copy.write_bytes(copy.read_bytes() + b"\n[requirement.SR-001\n")
@@ -427,7 +447,10 @@ def test_an_unreadable_snapshot_copy_blob_refuses_the_mint_by_name(tmp_path):
     walk: the filter would never be consulted and the test would pass
     vacuously. The range therefore ends by adding a Drafted row to the live
     registry, so the live blob differs from the copy's and SR-001 stays
-    settled."""
+    settled.
+
+    Implements: TC-403
+    """
     root, before, _act_sha = _settled(tmp_path)
     _write_srs(
         root,
@@ -452,7 +475,10 @@ def test_a_reattested_row_missing_from_its_copy_still_mints(tmp_path, copy):
     holds it, and an absent copy is not a refusal. Catches a missing copy (or a
     missing row in it) read as settled, and an absent copy read as a refusal.
     The copy is broken by hand: no supported act writes either shape, but the
-    filter's answer to them is part of its contract."""
+    filter's answer to them is part of its contract.
+
+    Implements: TC-403
+    """
     root, before, _act_sha = _settled(tmp_path)
     if copy == "absent":
         _git(root, "rm", "-q", COPY_REL)
@@ -473,7 +499,10 @@ def test_a_cell_restored_after_the_act_still_mints(tmp_path):
     """Guard: the range moves two approved cells, the act copies the row, and
     one cell is then restored to its pre-range text. The net diff reports only
     the other cell, which equals its copy, but the restored cell differs from
-    the copy. Catches a filter that compares only the net diff's cells."""
+    the copy. Catches a filter that compares only the net diff's cells.
+
+    Implements: TC-403
+    """
     root, before = _repo(tmp_path)
     _write_srs(root, requirement=AMENDED, acceptance=AC_AMENDED)
     _commit(root, "amend two cells of SR-001")
@@ -493,7 +522,10 @@ def test_a_routed_traced_cell_moved_after_the_act_still_mints(tmp_path):
     `SN-Refs`, a traced cell the mint routes to adjudication, is re-pointed.
     Every approved cell still equals the copy, but the routed cell does not.
     Catches a filter whose whole-row comparison reads only the approved
-    cells."""
+    cells.
+
+    Implements: TC-403
+    """
     root, before, _act_sha = _settled(tmp_path)
     _write_srs(root, requirement=AMENDED, sn_refs="SN-002")
     after = _commit(root, "re-point SR-001 after its act")
@@ -507,7 +539,10 @@ def test_an_unrouted_traced_cell_moved_after_the_act_still_settles(tmp_path):
     """Guard, the contrast: as above, but the cell moved after the act is
     `Phase`, a traced cell the mint does not route. The routed half compares
     the routed cells only, so the row is still settled. Catches a filter that
-    compares every traced cell."""
+    compares every traced cell.
+
+    Implements: TC-403
+    """
     root, before, _act_sha = _settled(tmp_path)
     _write_srs(root, requirement=AMENDED, phase=2)
     after = _commit(root, "re-phase SR-001 after its act")
@@ -578,7 +613,10 @@ def test_a_later_act_copying_the_registry_does_not_settle_a_row_it_did_not_reatt
     registry carries SR-001's re-point. SR-001 still mints, SR-002 settles.
     Over a squashed landing the one commit holds both acts, so the copy at
     `after` is act B's either way: only the ledger's record of what each act
-    copied tells the two acts apart."""
+    copied tells the two acts apart.
+
+    Implements: TC-403
+    """
     root, before = _repo(tmp_path, extra=_sr002(SR2_ORIGINAL))
     if squashed:
         _lane(root)
@@ -602,7 +640,10 @@ def test_a_later_act_copying_another_registry_leaves_the_row_settled(
 ):
     """Guard, the contrast: act B re-attests an LLR row and copies only the LLR
     registry, and SR-001 is untouched after act A. Both rows settle. Catches a
-    filter that reads any later act as unsettling, whatever it copied."""
+    filter that reads any later act as unsettling, whatever it copied.
+
+    Implements: TC-403
+    """
     root, before = _repo(tmp_path, llrs=_llr001(LLR_ORIGINAL))
     if squashed:
         _lane(root)
@@ -629,7 +670,10 @@ def test_a_later_legacy_act_leaves_the_row_unsettled(tmp_path):
     copy set is unknown, so it may have written SR-001's registry, and SR-001's
     routed `SN-Refs` moved over the range (judged by act A, but a later writer
     could have absorbed a move after it), so SR-001 is not proven settled.
-    Act B's own row is re-attested by the last act, so it still settles."""
+    Act B's own row is re-attested by the last act, so it still settles.
+
+    Implements: TC-403
+    """
     root, before = _repo(tmp_path, llrs=_llr001(LLR_ORIGINAL))
     _strip_copied(root)
     before = _commit(root, "the ledger as a kit before copied wrote it")
@@ -657,7 +701,10 @@ def test_a_later_writer_leaves_a_row_with_unmoved_routed_cells_settled(tmp_path)
     cannot carry an unjudged approved-cell change (the snapshot refuses to copy
     approved drift no act blesses), and SR-001's routed `SN-Refs` are the same
     at the range's two ends: both rows settle. Catches a filter that reads
-    every later writer of the registry as unsettling."""
+    every later writer of the registry as unsettling.
+
+    Implements: TC-403
+    """
     root, before = _repo(tmp_path, extra=_sr002(SR2_ORIGINAL))
     _write_srs(root, requirement=AMENDED, extra=_sr002(SR2_ORIGINAL))
     _commit(root, "amend SR-001")
@@ -680,7 +727,10 @@ def test_a_later_writer_leaves_a_row_with_moved_routed_cells_unsettled(tmp_path)
     re-pointed BEFORE act A, which judges it. The cells moved over the range
     and a later act copied the registry, so the ledger cannot tell a move act A
     judged from one act B absorbed: SR-001 mints. Catches a routed-cell arm
-    that reads the copy rather than the range's two ends."""
+    that reads the copy rather than the range's two ends.
+
+    Implements: TC-403
+    """
     root, before = _repo(tmp_path, extra=_sr002(SR2_ORIGINAL))
     _write_srs(root, requirement=AMENDED, sn_refs="SN-002", extra=_sr002(SR2_ORIGINAL))
     _commit(root, "amend and re-point SR-001")
@@ -721,7 +771,10 @@ def test_a_routed_cell_restored_between_two_acts_copying_the_registry_settles(
     moved before the re-attesting act and restored after it is re-anchored by
     a later act's copy of the registry, as any traced refresh is, so the row
     settles. The arm proves only that the routed traced cells are the same at
-    the range's two ends, and here they are."""
+    the range's two ends, and here they are.
+
+    Implements: TC-403
+    """
     root, before, after = _restored_between_acts(tmp_path, squashed, True)
     walk = acceptance_record.staged_spine_amendments(root, before, after)
     assert sorted(rec["id"] for rec in walk) == ["SR-001", "SR-002"]
@@ -737,7 +790,10 @@ def test_a_routed_cell_restored_after_the_act_with_no_later_copy_still_mints(
     """Guard, the contrast: the same restore with no later act copying the
     registry. The copy at `after` is act A's own, which holds the re-pointed
     `SN-Refs`, so the restored row differs from it and mints. Catches an arm
-    that settles on equality at the range's two ends without a later writer."""
+    that settles on equality at the range's two ends without a later writer.
+
+    Implements: TC-403
+    """
     root, before, after = _restored_between_acts(tmp_path, squashed, False)
     minted, refusal = intake.intake_after_merge(root, before, after, {}, "")
     assert refusal is None, refusal
@@ -793,7 +849,10 @@ def test_the_two_real_redundant_landings_mint_nothing():
     fixture amended after its act that still mints. The premise is the walk's
     records with an approved or routed traced change, the rows the redundant
     mint named: the walk also returns traced-only records (a moved `Evidence`
-    or `CodeSymbol` cell), which are silent by ruling."""
+    or `CodeSymbol` cell), which are silent by ruling.
+
+    Implements: TC-403
+    """
     reason = _landings_unavailable()
     if reason:
         pytest.skip("the real landings are unavailable: " + reason)

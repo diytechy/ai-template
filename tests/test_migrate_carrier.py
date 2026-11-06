@@ -5,6 +5,8 @@ are the ones proving the loss detector can actually fail. A round-trip check
 that cannot report a dropped cell is worth nothing, and a green from it would
 be exactly the "a green never hides a skipped check" failure SN-008 forbids —
 so every corruption class is driven here, not just the happy path.
+
+Implements: TC-159
 """
 
 import subprocess

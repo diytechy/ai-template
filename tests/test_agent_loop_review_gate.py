@@ -322,6 +322,7 @@ def _build_prompts(ctl):
 def test_red_bar_draws_no_review_records_a_red_round_and_rebuilds_with_the_tail(
     tmp_path,
 ):
+    """Implements: TC-375"""
     # TC-375. A committed build whose review bar is red draws no review: the
     # red is written into that build's committed session log, keyed by its
     # sha, and the next build's prompt carries the bar's failure tail.
@@ -358,6 +359,7 @@ sys.exit(1)
 
 
 def test_a_resumed_build_receives_the_tail_of_a_long_recorded_refusal(tmp_path):
+    """Implements: TC-375"""
     # TC-375. A red bar whose output runs far past the recorded summary's
     # bound, its diagnostic last: a fresh process resuming the lane reads the
     # failure from the committed record alone, and the build it routes still
@@ -390,6 +392,7 @@ def test_a_resumed_build_receives_the_tail_of_a_long_recorded_refusal(tmp_path):
 
 
 def test_green_bar_attests_once_then_draws_the_review(tmp_path):
+    """Implements: TC-376"""
     # TC-376. A committed build whose review bar is green gets exactly one
     # `review` attestation commit, and the review round is drawn after it.
     lane, ctl, cmd = _lane(tmp_path)
@@ -422,6 +425,7 @@ def test_green_bar_attests_once_then_draws_the_review(tmp_path):
 
 @pytest.mark.parametrize("bar", ["green", "red"])
 def test_resumed_round_on_an_unattested_tip_runs_the_producer_once(tmp_path, bar):
+    """Implements: TC-377"""
     # TC-377. A resumed lane whose committed build owes a round but carries no
     # attestation runs the review bar once at the draw: green draws the round
     # and an ATTEST log records the result, red draws no reviewer.
@@ -511,6 +515,7 @@ def _adjudication_round(tmp_path):
 def test_post_narrow_and_adjudication_rounds_draw_only_over_a_verified_attestation(
     tmp_path, route
 ):
+    """Implements: TC-377"""
     # TC-377. The rounds `complete_review_round` and
     # `schedule_adjudication_round` queue pass the same draw: every review
     # session's reviewed commit carries a verified `review` attestation, and
@@ -537,6 +542,7 @@ def test_post_narrow_and_adjudication_rounds_draw_only_over_a_verified_attestati
 
 
 def test_red_count_survives_a_resume_and_a_green_resets_it(tmp_path):
+    """Implements: TC-378"""
     # TC-378. The red count is read from the lane's committed logs: a fresh
     # process continues it, and its first build carries the recorded failure
     # tail. A verified green attestation resets it.
@@ -561,6 +567,7 @@ def test_red_count_survives_a_resume_and_a_green_resets_it(tmp_path):
 
 
 def test_red_count_survives_a_resume_to_the_cap_and_exits_12(tmp_path):
+    """Implements: TC-378"""
     # TC-378. Two reds in one run and a third in a fresh process reach a cap
     # of 3: the resumed worker ends with the cap's own code and banner.
     lane, ctl, cmd = _lane(tmp_path)
@@ -576,6 +583,7 @@ def test_red_count_survives_a_resume_to_the_cap_and_exits_12(tmp_path):
 
 @pytest.mark.parametrize("reds", ["at-the-cap", "one-fewer"])
 def test_a_lane_resumed_at_the_cap_exits_12_before_any_session(tmp_path, reds):
+    """Implements: TC-378, TC-381"""
     # TC-378, TC-381. A lane resumed with the cap's count of red records
     # already committed (a stop after the record and before the exit) ends at
     # run start: no builder, reviewer or bar runs and nothing is committed,
@@ -615,6 +623,7 @@ def test_a_lane_resumed_at_the_cap_exits_12_before_any_session(tmp_path, reds):
 
 
 def test_an_interrupted_red_is_rechecked_once_at_the_draw_and_counted_once(tmp_path):
+    """Implements: TC-379"""
     # TC-379. A build commit left with neither an attestation nor a red record
     # is re-checked once at the next draw, and the ATTEST log records its red;
     # the same red recorded twice for one build commit counts once.
@@ -644,6 +653,7 @@ def test_an_interrupted_red_is_rechecked_once_at_the_draw_and_counted_once(tmp_p
 def test_a_build_ending_in_a_record_only_commit_is_recorded_and_counted_once(
     tmp_path,
 ):
+    """Implements: TC-379"""
     # TC-379. A build session whose last commit touches only records (its log
     # fragment) is the same build commit at the event and at the draw: the red
     # recorded at the event is found again on resume, so the bar does not run
@@ -668,6 +678,7 @@ def test_a_build_ending_in_a_record_only_commit_is_recorded_and_counted_once(
 
 
 def test_attest_phase_is_inert_to_every_phase_reader(tmp_path):
+    """Implements: TC-379"""
     # TC-379. The loop's own ATTEST log is no build for the heterogeneity key,
     # no review round for the round evidence, and still a session number.
     lane, ctl, cmd = _lane(tmp_path)
@@ -757,6 +768,7 @@ def _reader_green(repo):
 def test_red_rounds_counts_distinct_red_builds_and_a_green_attestation_resets_it(
     tmp_path,
 ):
+    """Implements: TC-378"""
     # TC-378. The count is read from the committed logs alone, so a fresh
     # process reads what an earlier one recorded; the newest verified review
     # attestation resets it, and the last summary is the newest red's.
@@ -782,6 +794,7 @@ def test_red_rounds_counts_distinct_red_builds_and_a_green_attestation_resets_it
 
 
 def test_a_long_red_summary_keeps_its_cause_and_its_final_diagnostic():
+    """Implements: TC-375"""
     # TC-375. The one persisted summary of a red result is bounded, and a
     # refusal longer than the bound keeps both ends: the cause at its head and
     # the diagnostic a bar prints last. A short one is kept whole.
@@ -800,6 +813,7 @@ def test_a_long_red_summary_keeps_its_cause_and_its_final_diagnostic():
 
 
 def test_red_rounds_counts_one_build_recorded_twice_once(tmp_path):
+    """Implements: TC-379"""
     # TC-379. A red recorded for one build commit in two logs (the build's own
     # and a later re-check's) counts once; the record's grammar round-trips,
     # its summary folded to one line, and a transcript line is no record.
@@ -821,6 +835,7 @@ def test_red_rounds_counts_one_build_recorded_twice_once(tmp_path):
 def test_red_rounds_counts_an_unreadable_log_and_answers_none_for_no_history(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-378"""
     # TC-378. A log git cannot show counts as one red keyed by its path,
     # toward the cap; a range git cannot list answers None.
     repo = _reader_lane(tmp_path)
@@ -855,6 +870,7 @@ _NON_TABLE = 'build = 3\n\n[policies]\ntrunk = "main"\n'
 def test_unparseable_process_toml_and_a_non_table_build_refuse_at_preflight(
     tmp_path, text, cause
 ):
+    """Implements: TC-380"""
     # TC-380. A `docs/process.toml` that does not parse, and one whose `build`
     # is not a table, are refused by the worker's preflight (exit 2, no
     # session) and by the dispatcher's pre-claim rung, each naming the file
@@ -882,6 +898,7 @@ def test_unparseable_process_toml_and_a_non_table_build_refuse_at_preflight(
 
 @pytest.mark.parametrize("value", ["0", "-1", "true", '"3"', "3.0"])
 def test_a_bad_red_rounds_max_refuses_before_any_session(tmp_path, value):
+    """Implements: TC-380"""
     # TC-380. A declared `red_rounds_max` that is not an int, is a bool, or is
     # below 1 is refused at the loop's preflight, naming its line, before any
     # session starts.
@@ -902,6 +919,7 @@ def test_a_bad_red_rounds_max_refuses_before_any_session(tmp_path, value):
 
 
 def test_red_cap_exits_with_its_own_code_and_one_fewer_does_not(tmp_path):
+    """Implements: TC-381"""
     # TC-381. Two consecutive reds under a cap of 2 end the worker with exit
     # 12 and the RED CAP banner; the same two reds under a cap of 3 end on
     # the iteration budget instead. The cap closes partial rather than

@@ -24,6 +24,8 @@ Asserting that one list "contains" the other is deliberately NOT done: the
 redactor's threshold is allowed to stay looser than the floor's (recorded in
 `SECRET_CLASSES`'s own comments), so the pin here is per-class coverage against
 the table's declared decision, not blanket equality between the two sides.
+
+Implements: TC-201
 """
 
 import re

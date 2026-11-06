@@ -9,6 +9,8 @@ the always-on **secrets floor** (key/token shapes, every repo — opt out with
 `docs/privacy-check` toggle. A privacy-off repo with the floor opted out must
 cost zero — that fast-exit keeps the step wireable unconditionally in check.py
 and the pre-commit hook.
+
+Implements: TC-017, TC-018
 """
 
 import os

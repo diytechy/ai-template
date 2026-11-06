@@ -72,6 +72,7 @@ def assert_refused(text, cause, fix=ACTIVATE):
 
 
 def test_unset_hooks_path_is_not_on(tmp_path):
+    """Implements: TC-370"""
     root = make_repo(tmp_path / "r")
     write_hooks(root)
     assert_refused(commit_hooks.hooks_refusal(root), "unset or names .git/hooks")
@@ -85,6 +86,7 @@ def test_git_hooks_dir_is_not_on(tmp_path):
 
 
 def test_another_directory_is_not_on(tmp_path):
+    """Implements: TC-370"""
     root = make_repo(tmp_path / "r")
     other = tmp_path / "manager-hooks"
     other.mkdir()
@@ -106,6 +108,7 @@ def test_an_empty_hooks_path_is_not_on(tmp_path):
 
 @pytest.mark.parametrize("missing", ["pre-commit", "commit-msg"])
 def test_a_missing_hook_is_not_on(tmp_path, missing):
+    """Implements: TC-370"""
     root = make_repo(tmp_path / "r")
     present = [n for n in commit_hooks.REQUIRED_HOOKS if n != missing]
     write_hooks(root, names=present)
@@ -119,6 +122,7 @@ def test_a_missing_hook_is_not_on(tmp_path, missing):
 
 @pytest.mark.skipif(os.name == "nt", reason="the executable bit is POSIX-only")
 def test_a_non_executable_hook_is_not_on(tmp_path):
+    """Implements: TC-370"""
     root = make_repo(tmp_path / "r")
     write_hooks(root)
     (root / ".githooks" / "commit-msg").chmod(0o644)
@@ -134,6 +138,7 @@ def test_a_directory_that_is_not_a_work_tree_is_not_on(tmp_path):
 
 
 def test_an_unanswering_git_is_not_on(tmp_path, monkeypatch):
+    """Implements: TC-370"""
     root = make_repo(tmp_path / "r")
     write_hooks(root)
     git(root, "config", "core.hooksPath", ".githooks")
@@ -145,6 +150,7 @@ def test_an_unanswering_git_is_not_on(tmp_path, monkeypatch):
 
 
 def test_a_relative_githooks_is_on(tmp_path):
+    """Implements: TC-370"""
     root = make_repo(tmp_path / "r")
     write_hooks(root)
     git(root, "config", "core.hooksPath", ".githooks")
@@ -152,6 +158,7 @@ def test_a_relative_githooks_is_on(tmp_path):
 
 
 def test_an_absolute_githooks_is_on(tmp_path):
+    """Implements: TC-370"""
     root = make_repo(tmp_path / "r")
     hooks = write_hooks(root)
     git(root, "config", "core.hooksPath", str(hooks))
@@ -159,6 +166,7 @@ def test_an_absolute_githooks_is_on(tmp_path):
 
 
 def test_a_linked_worktree_is_on_with_a_tracked_relative_githooks(tmp_path):
+    """Implements: TC-370"""
     root = make_repo(tmp_path / "r")
     write_hooks(root)
     git(root, "config", "core.hooksPath", ".githooks")
@@ -184,6 +192,7 @@ def test_a_linked_worktree_is_on_with_the_main_worktrees_absolute_githooks(tmp_p
 
 
 def test_the_check_reads_no_override():
+    """Implements: TC-370"""
     # Nothing turns the check off: no environment read anywhere in the module,
     # and the one public function takes the checkout's root and nothing else.
     path = SCRIPTS / "kitlib" / "commit_hooks.py"

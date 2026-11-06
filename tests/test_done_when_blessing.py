@@ -210,6 +210,7 @@ def _merge_refusal(trunk, lane):
 
 
 def test_an_edit_with_no_verdict_holds_the_dispatch_and_the_close(tmp_path):
+    """Implements: TC-325"""
     trunk, lane = _lane(tmp_path)
     held = _dispatch_hold(lane)
     assert held is not None and held[:2] == (agent_loop.EXIT_NEEDS_HUMAN, "HELD")
@@ -224,6 +225,7 @@ def test_an_edit_with_no_verdict_holds_the_dispatch_and_the_close(tmp_path):
 
 
 def test_an_unchanged_or_only_ticked_done_when_holds_nothing(tmp_path):
+    """Implements: TC-325"""
     ticked = DONE_WHEN.replace("- The", "- [x] The").replace(
         "box.", "box. — LANDED tests/test_widget.py::test_fps"
     )
@@ -243,7 +245,10 @@ def test_an_unchanged_or_only_ticked_done_when_holds_nothing(tmp_path):
 )
 def test_a_hand_close_into_any_terminal_home_is_held(tmp_path, dest):
     """Round 2, MAJOR 1: `spec_move` closes into the archive, so a hand close
-    there is the ordinary one and must be held like the legacy home."""
+    there is the ordinary one and must be held like the legacy home.
+
+    Implements: TC-325
+    """
     _trunk_root, lane = _lane(tmp_path)
     _stage_close(lane, dest)
     assert kdone.staged_changes(lane) == ([("close", BRANCH, WI)], None)
@@ -251,6 +256,7 @@ def test_a_hand_close_into_any_terminal_home_is_held(tmp_path, dest):
 
 
 def test_the_edit_commit_itself_is_not_held_by_the_hook(tmp_path):
+    """Implements: TC-325"""
     _trunk_root, lane = _lane(tmp_path, body=None)
     _write(lane, "docs/work/active/{}/{}".format(BRANCH, SPEC), _spec(NARROWED))
     _git(lane, "add", "-A")
@@ -259,6 +265,7 @@ def test_the_edit_commit_itself_is_not_held_by_the_hook(tmp_path):
 
 @pytest.mark.parametrize("outcome", ("CLARITY", "BLESSED", "SUCCESSOR"))
 def test_a_covering_verdict_releases_the_dispatch_and_the_close(tmp_path, outcome):
+    """Implements: TC-326"""
     trunk, lane = _lane(tmp_path)
     _bless(lane, "DONE-WHEN: {} changes=2 digest={}".format(outcome, _digest()))
     assert _dispatch_hold(lane) is None
@@ -271,6 +278,7 @@ def test_a_covering_verdict_releases_the_dispatch_and_the_close(tmp_path, outcom
 def test_an_owner_ruling_binding_the_digest_releases_and_an_unseen_one_does_not(
     tmp_path,
 ):
+    """Implements: TC-326"""
     trunk, lane = _lane(tmp_path)
     entry = (
         "[decision.D-001]\n"
@@ -292,7 +300,10 @@ def test_a_confirmed_ruling_still_carrying_the_retired_reviewed_key_does_not_rel
 ):
     """An entry still carrying the retired `reviewed` key reads as NOT YET
     SEEN whatever its `owner` says (kitlib.decisions), so its matching digest
-    covers nothing and the hold stands."""
+    covers nothing and the hold stands.
+
+    Implements: TC-326
+    """
     from kitlib import decisions as kdecisions
 
     trunk, lane = _lane(tmp_path)
@@ -312,6 +323,7 @@ def test_a_confirmed_ruling_still_carrying_the_retired_reviewed_key_does_not_rel
 
 
 def test_changing_the_text_after_a_verdict_holds_again(tmp_path):
+    """Implements: TC-326"""
     trunk, lane = _lane(tmp_path)
     _bless(lane, "DONE-WHEN: BLESSED changes=2 digest={}".format(_digest()))
     assert _dispatch_hold(lane) is None
@@ -324,6 +336,7 @@ def test_changing_the_text_after_a_verdict_holds_again(tmp_path):
 
 
 def test_an_adjudication_row_is_never_held_at_dispatch(tmp_path):
+    """Implements: TC-325"""
     _trunk_root, lane = _lane(tmp_path)
     worker = _worker(lane)
     worker["rows"][WI]["SafetyClass"] = "adjudication"
@@ -338,6 +351,7 @@ def _row(brief, scope):
 
 
 def test_the_done_when_brief_binds_the_digest_the_holds_compute(tmp_path):
+    """Implements: TC-327"""
     _trunk_root, lane = _lane(tmp_path)
     text, why = ab.compose(lane, _row("done-when", WI), "docs/reviews/v.md")
     assert why is None, why
@@ -348,7 +362,10 @@ def test_the_done_when_brief_binds_the_digest_the_holds_compute(tmp_path):
 
 def test_the_done_when_brief_carries_the_specs_context(tmp_path):
     """Round 2, MAJOR 4: the template asks whether the change keeps the purpose
-    the Context states, so two specs with opposite purposes brief differently."""
+    the Context states, so two specs with opposite purposes brief differently.
+
+    Implements: TC-327
+    """
     _trunk_root, lane = _lane(tmp_path)
     text, why = ab.compose(lane, _row("done-when", WI), "v.md")
     assert why is None, why
@@ -365,12 +382,14 @@ def test_the_done_when_brief_carries_the_specs_context(tmp_path):
 
 
 def test_the_done_when_brief_refuses_an_unchanged_done_when(tmp_path):
+    """Implements: TC-327"""
     _trunk_root, lane = _lane(tmp_path, body=None)
     _text, why = ab.compose(lane, _row("done-when", WI), "v.md")
     assert "no change to judge" in why
 
 
 def test_the_done_when_verdict_grammar(tmp_path):
+    """Implements: TC-327"""
     good = tmp_path / "good.md"
     good.write_text("DONE-WHEN: CLARITY changes=1 digest=sha256:ab\n", "utf-8")
     assert ab.verdict_refusal("done-when", good) is None
@@ -413,6 +432,7 @@ def _fake_spine_assemblers(monkeypatch):
 def test_a_combined_sitting_composes_each_kind_from_its_own_brief(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-327"""
     _trunk_root, lane = _lane(tmp_path)
     seen = _fake_spine_assemblers(monkeypatch)
     scope = "amendment:LLR-1;first-approval:TC-1;done-when:{}".format(WI)
@@ -430,6 +450,7 @@ def test_a_combined_sitting_composes_each_kind_from_its_own_brief(
 def test_a_combined_sitting_refuses_whole_when_a_section_cannot_compose(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-327"""
     _trunk_root, lane = _lane(tmp_path, body=None)
     _fake_spine_assemblers(monkeypatch)
     scope = "amendment:LLR-1;done-when:{}".format(WI)
@@ -452,6 +473,7 @@ KINDS = ("amendment", "first-approval", "done-when")
 
 
 def test_a_combined_verdict_is_parsed_section_by_section(tmp_path):
+    """Implements: TC-327"""
     path = tmp_path / "s.md"
     path.write_text(SITTING.format(_digest()), "utf-8")
     assert ab.verdict_refusal("combined", path, kinds=KINDS) is None
@@ -469,7 +491,10 @@ def test_a_combined_verdict_must_judge_exactly_the_kinds_its_sitting_requested(
 ):
     """Round 2, MAJOR 5: an empty sitting line no longer validates vacuously,
     and a verdict that drops a requested kind from both its line and its
-    headings is refused against what the sitting asked."""
+    headings is refused against what the sitting asked.
+
+    Implements: TC-327
+    """
     path = tmp_path / "s.md"
     path.write_text("SITTING: JUDGED kinds=;\n", "utf-8")
     assert ab.verdict_refusal("combined", path, kinds=KINDS)
@@ -487,6 +512,7 @@ def test_a_combined_verdict_must_judge_exactly_the_kinds_its_sitting_requested(
 def test_the_coordinator_reads_the_requested_kinds_from_the_composed_brief(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-327"""
     _trunk_root, lane = _lane(tmp_path)
     _fake_spine_assemblers(monkeypatch)
     scope = "amendment:LLR-1;done-when:{}".format(WI)
@@ -497,7 +523,10 @@ def test_the_coordinator_reads_the_requested_kinds_from_the_composed_brief(
 
 def test_a_combined_verdicts_done_when_section_is_acted_on(tmp_path):
     """The done-when section's line is the blessing: the holds read it from the
-    one sitting's file as from a sitting of its own."""
+    one sitting's file as from a sitting of its own.
+
+    Implements: TC-327
+    """
     trunk, lane = _lane(tmp_path)
     _bind(lane, KINDS)
     _bless(lane, SITTING.format(_digest()))
@@ -506,6 +535,7 @@ def test_a_combined_verdicts_done_when_section_is_acted_on(tmp_path):
 
 
 def test_both_new_classes_are_accepted_by_the_coordinator_entry_point():
+    """Implements: TC-327"""
     cli = load_script("coordinator_adjudicate")
     args = cli._parser().parse_args(
         ["adjudicate", "--brief-file", "b", "--brief", "combined", "--wi", WI]
@@ -517,6 +547,7 @@ def test_both_new_classes_are_accepted_by_the_coordinator_entry_point():
 
 
 def test_this_repo_retains_both_new_classes():
+    """Implements: TC-327"""
     keep = load_script("session_keep")
     from conftest import ROOT
 
@@ -550,6 +581,7 @@ def _intake(root, before, after):
 
 
 def test_at_merge_an_uncovered_close_mints_the_goalposts_row(tmp_path):
+    """Implements: TC-257, TC-328"""
     root, before, after = _merged(tmp_path)
     minted, refusal = _intake(root, before, after)
     assert refusal is None, refusal
@@ -559,6 +591,7 @@ def test_at_merge_an_uncovered_close_mints_the_goalposts_row(tmp_path):
 
 
 def test_at_merge_a_covered_close_mints_nothing(tmp_path):
+    """Implements: TC-257, TC-328"""
     line = "DONE-WHEN: CLARITY changes=2 digest={}\n".format(_digest())
     root, before, after = _merged(tmp_path, verdict=line)
     minted, refusal = _intake(root, before, after)
@@ -566,6 +599,7 @@ def test_at_merge_a_covered_close_mints_nothing(tmp_path):
 
 
 def test_at_merge_a_successor_verdict_mints_its_own_draft(tmp_path):
+    """Implements: TC-328"""
     verdict = (
         "DONE-WHEN: SUCCESSOR changes=2 digest={}\n\n## Dispositions\n\n"
         '```toml\ntitle = "Render the widget at 60 fps"\n```\n\n'
@@ -586,7 +620,10 @@ def test_at_merge_a_successor_verdict_mints_its_own_draft(tmp_path):
 def test_the_hold_points_share_one_predicate():
     """No hold point re-derives the rule: each reads `lane_hold`. The hand
     close's point is the reader `integrate.staged_done_when_refusal` hands
-    the index to (WI-921), `kitlib.done_when.staged_hold`."""
+    the index to (WI-921), `kitlib.done_when.staged_hold`.
+
+    Implements: TC-325
+    """
     for module, name in (
         (agent_loop, "build_hold"),
         (integrate, "_done_when_refusal"),
@@ -609,7 +646,10 @@ def test_at_merge_a_combined_successor_mints_the_done_when_sections_own_draft(
 ):
     """Round 2, MAJOR 3: a combined verdict whose first-approval section
     carries a RETURN draft BEFORE the done-when section's SUCCESSOR draft. The
-    merge mints the done-when section's own draft, never the first one."""
+    merge mints the done-when section's own draft, never the first one.
+
+    Implements: TC-328
+    """
     verdict = (
         "## first-approval\n\nOUTCOME: RETURN rows=1\n\n"
         + _draft("Rework TC-1")
@@ -630,7 +670,10 @@ def test_at_merge_a_combined_successor_mints_the_done_when_sections_own_draft(
 
 def test_at_merge_an_ambiguous_successor_section_refuses(tmp_path):
     """Two Dispositions sections in the done-when section of a valid sitting
-    are ambiguous: the mint refuses rather than pick one."""
+    are ambiguous: the mint refuses rather than pick one.
+
+    Implements: TC-328
+    """
     twice = (
         "## done-when\n\nDONE-WHEN: SUCCESSOR changes=2 digest={}\n\n".format(_digest())
         + _draft("One")
@@ -646,7 +689,10 @@ def test_at_merge_a_successor_line_outside_its_section_blesses_nothing(tmp_path)
     """Round 9: a SUCCESSOR line under another kind's heading leaves the
     `## done-when` section without its machine line, so the sitting is
     invalid and blesses nothing (SR-232): the close is uncovered and the merge
-    mints the goalposts row, never the stray line's draft."""
+    mints the goalposts row, never the stray line's draft.
+
+    Implements: TC-328
+    """
     misplaced = (
         "## amendment\n\nVERDICT: CLARITY rows=1\n"
         "DONE-WHEN: SUCCESSOR changes=2 digest={}\n\n".format(_digest())
@@ -663,7 +709,10 @@ def test_at_merge_a_successor_line_outside_its_section_blesses_nothing(tmp_path)
 def test_a_combined_rows_tokens_scope_each_kinds_act():
     """Round 2, MAJOR 2: the act scopes read a combined row's `<kind>:<id>`
     tokens for their own kind through the same readers a single-kind row
-    uses; the act-taking cases are in tests/test_snapshot_readers.py."""
+    uses; the act-taking cases are in tests/test_snapshot_readers.py.
+
+    Implements: TC-327
+    """
     ar = load_script("acceptance_record")
     combined = [
         (
@@ -689,7 +738,10 @@ UNREADABLE = "0" * 40  # a revision no repository holds
 def test_an_absent_claim_is_released_at_every_hold_point(tmp_path):
     """ABSENT: the revision reads, and no spec of the row sits under
     `active/<branch>/` there (a row never claimed through this lane): there is
-    no claimed Done-when, so there is nothing to bless."""
+    no claimed Done-when, so there is nothing to bless.
+
+    Implements: TC-325
+    """
     trunk, lane = _lane(tmp_path)
     base = agent_loop.default_base(lane)
     assert kdone.claim_copy(lane, base, "wi-999", WI) == (None, None)
@@ -699,7 +751,10 @@ def test_an_absent_claim_is_released_at_every_hold_point(tmp_path):
 def test_an_unreadable_claim_is_held_naming_why(tmp_path):
     """UNREADABLE: the claim's revision (or its copy) cannot be read, so
     whether the lane moved its Done-when is unknown: every hold point holds,
-    naming why, rather than failing open."""
+    naming why, rather than failing open.
+
+    Implements: TC-325
+    """
     _trunk_root, lane = _lane(tmp_path)
     text, why = kdone.claim_copy(lane, UNREADABLE, BRANCH, WI)
     assert text is None and "cannot be read" in why
@@ -716,7 +771,10 @@ def test_an_unreadable_claim_is_held_naming_why(tmp_path):
 
 def test_a_review_session_is_never_held(tmp_path):
     """The next session is a review (the review queue is open): it reads the
-    Done-when as evidence, and is not held; the build after it is."""
+    Done-when as evidence, and is not held; the build after it is.
+
+    Implements: TC-325
+    """
     _trunk_root, lane = _lane(tmp_path)
     review = dict(_BUILD_PLAN, is_review=True)
     assert _dispatch_hold(lane, plan=review) is None
@@ -726,6 +784,7 @@ def test_a_review_session_is_never_held(tmp_path):
 
 
 def test_the_merge_refusal_names_the_digest_and_the_changes(tmp_path):
+    """Implements: TC-325"""
     trunk, lane = _lane(tmp_path)
     refusal = _merge_refusal(trunk, lane)
     assert refusal and _digest() in refusal
@@ -734,12 +793,14 @@ def test_the_merge_refusal_names_the_digest_and_the_changes(tmp_path):
 
 
 def test_at_merge_an_unreadable_claim_refuses_the_mint(tmp_path):
+    """Implements: TC-328"""
     root, _before, after = _merged(tmp_path)
     minted, refusal = _intake(root, UNREADABLE, after)
     assert minted == [] and refusal and "cannot be read" in refusal
 
 
 def test_at_merge_an_absent_claim_mints_nothing_and_says_so(tmp_path, capsys):
+    """Implements: TC-328"""
     root, before, after = _merged(tmp_path)
     minted, refusal = intake.intake_after_merge(
         root, before, after, {WI: "merged"}, "wi-999"
@@ -749,6 +810,7 @@ def test_at_merge_an_absent_claim_mints_nothing_and_says_so(tmp_path, capsys):
 
 
 def test_the_done_when_brief_refuses_an_unreadable_claim(tmp_path, monkeypatch):
+    """Implements: TC-327"""
     _trunk_root, lane = _lane(tmp_path)
     monkeypatch.setattr(ab.ac, "default_base", lambda _root: UNREADABLE)
     text, why = ab.compose(lane, _row("done-when", WI), "v.md")
@@ -756,6 +818,7 @@ def test_the_done_when_brief_refuses_an_unreadable_claim(tmp_path, monkeypatch):
 
 
 def test_the_done_when_brief_refuses_a_spec_with_no_context(tmp_path):
+    """Implements: TC-327"""
     _trunk_root, lane = _lane(tmp_path)
     path = lane / "docs/work/active/{}/{}".format(BRANCH, SPEC)
     path.write_text(
@@ -772,7 +835,10 @@ def test_the_done_when_brief_reads_a_closed_rows_claim_from_its_claim_commit(
     tmp_path,
 ):
     """After the merge (the goalposts row a merge minted) the claim is the copy
-    the claim commit added, the newest commit adding the spec under active/."""
+    the claim commit added, the newest commit adding the spec under active/.
+
+    Implements: TC-327
+    """
     root, _before, _after = _merged(tmp_path)
     claim = _git(root, "log", "-1", "--format=%H", "--grep=claim: ")
     text, why = ab.compose(root, _row("done-when", WI), "v.md")
@@ -782,6 +848,7 @@ def test_the_done_when_brief_reads_a_closed_rows_claim_from_its_claim_commit(
 
 
 def test_the_done_when_brief_clips_a_long_context_at_its_stated_limit(tmp_path):
+    """Implements: TC-327"""
     _trunk_root, lane = _lane(tmp_path)
     long_context = "\n".join("line {}".format(n) for n in range(1, 151))
     path = lane / "docs/work/active/{}/{}".format(BRANCH, SPEC)
@@ -805,7 +872,10 @@ def test_the_done_when_brief_clips_a_long_context_at_its_stated_limit(tmp_path):
 
 def test_an_unreadable_current_spec_is_held_naming_why(tmp_path):
     """The lane's own copy read at a revision that cannot be read: whether the
-    Done-when changed is unknown, so the hold holds, as for an unreadable claim."""
+    Done-when changed is unknown, so the hold holds, as for an unreadable claim.
+
+    Implements: TC-325
+    """
     _trunk_root, lane = _lane(tmp_path)
     base = agent_loop.default_base(lane)
     path, text, why = kdone.spec_at(lane, UNREADABLE, BRANCH, WI)
@@ -817,7 +887,10 @@ def test_an_unreadable_current_spec_is_held_naming_why(tmp_path):
 def test_a_claimed_row_whose_spec_is_gone_from_the_lane_is_held(tmp_path):
     """A claim present, and no copy of the spec in the lane at all (neither
     under active/<branch>/ nor in a closed folder): the claimed Done-when is
-    gone, which no close accounts for, so the lane is held, naming it."""
+    gone, which no close accounts for, so the lane is held, naming it.
+
+    Implements: TC-325
+    """
     _trunk_root, lane = _lane(tmp_path)
     _git(lane, "rm", "-q", "docs/work/active/{}/{}".format(BRANCH, SPEC))
     _commit(lane, "the spec deleted")
@@ -827,7 +900,10 @@ def test_a_claimed_row_whose_spec_is_gone_from_the_lane_is_held(tmp_path):
 
 def test_a_lane_that_deletes_its_done_when_section_owes_a_blessing(tmp_path):
     """Every claimed item reads as changed, so the deletion is a scope move the
-    holds see, with its own digest."""
+    holds see, with its own digest.
+
+    Implements: TC-325
+    """
     _trunk_root, lane = _lane(tmp_path, body="\n## Deliverable\n\nNone.\n")
     held = _dispatch_hold(lane)
     assert held is not None
@@ -841,7 +917,10 @@ def test_a_lane_that_deletes_its_done_when_section_owes_a_blessing(tmp_path):
 def test_a_test_run_is_never_held(tmp_path):
     """A held lane (an unblessed edit, its next build held) still runs its
     tests: nothing in the test runner reads the hold, so the suite's evidence
-    stays free to gather."""
+    stays free to gather.
+
+    Implements: TC-325
+    """
     _trunk_root, lane = _lane(tmp_path)
     assert _dispatch_hold(lane) is not None
     _write(lane, "tests/test_evidence.py", "def test_runs():\n    assert True\n")
@@ -857,6 +936,7 @@ def test_a_test_run_is_never_held(tmp_path):
 
 
 def test_at_merge_a_blessed_cover_mints_nothing(tmp_path):
+    """Implements: TC-328"""
     line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
     root, before, after = _merged(tmp_path, verdict=line)
     minted, refusal = _intake(root, before, after)
@@ -864,6 +944,7 @@ def test_at_merge_a_blessed_cover_mints_nothing(tmp_path):
 
 
 def test_at_merge_a_successor_verdict_with_no_draft_refuses(tmp_path):
+    """Implements: TC-328"""
     line = "DONE-WHEN: SUCCESSOR changes=2 digest={}\n".format(_digest())
     root, before, after = _merged(tmp_path, verdict=line)
     minted, refusal = _intake(root, before, after)
@@ -882,7 +963,10 @@ REJECTED_SITTING = (
 def test_a_rejected_combined_sitting_blesses_nothing(tmp_path):
     """Sol final MAJOR 1: the done-when section's line matches, but the
     amendment section has no machine line, so the sitting is refused whole
-    (SR-232) and its Done-when line releases no hold and covers no close."""
+    (SR-232) and its Done-when line releases no hold and covers no close.
+
+    Implements: TC-326
+    """
     trunk, lane = _lane(tmp_path)
     text = REJECTED_SITTING.format(_digest())
     probe = tmp_path / "probe.md"
@@ -904,7 +988,10 @@ def test_a_rejected_combined_sitting_blesses_nothing(tmp_path):
 def test_an_unrequested_section_refuses_the_combined_verdict(tmp_path):
     """Sol final MAJOR 2: a sitting that requested `amendment` alone, whose
     verdict also carries a `## red-tc` section, is refused: any `## <kind>`
-    heading counts, and every section not requested refuses."""
+    heading counts, and every section not requested refuses.
+
+    Implements: TC-327
+    """
     path = tmp_path / "s.md"
     path.write_text(
         "## amendment\n\nVERDICT: CLARITY rows=1\n\n"
@@ -919,7 +1006,10 @@ def test_an_unrequested_section_refuses_the_combined_verdict(tmp_path):
 def test_a_valid_sitting_with_an_unrequested_section_blesses_nothing(tmp_path):
     """The same rule at the hold: a done-when section inside a sitting that
     carries an extra kind's section is not a valid verdict, so it covers
-    nothing."""
+    nothing.
+
+    Implements: TC-326
+    """
     _trunk_root, lane = _lane(tmp_path)
     _bless(
         lane,
@@ -948,7 +1038,10 @@ def _bind(lane, kinds, brief="combined", outcome="accepted"):
 def test_a_sitting_missing_a_requested_kind_blesses_nothing(tmp_path):
     """Sol final2 MAJOR 1: the brief requested `amendment;done-when`; the
     verdict judges only the done-when section and names only it. Against its
-    BOUND requested kinds it is invalid, so it releases nothing."""
+    BOUND requested kinds it is invalid, so it releases nothing.
+
+    Implements: TC-326
+    """
     _trunk_root, lane = _lane(tmp_path)
     _bind(lane, ("amendment", "done-when"))
     _bless(
@@ -963,7 +1056,10 @@ def test_a_sitting_missing_a_requested_kind_blesses_nothing(tmp_path):
 def test_an_incomplete_second_machine_line_blesses_nothing(tmp_path):
     """Sol final2 MAJOR 2: two DONE-WHEN lines, the first complete with an old
     digest, the second the current digest without `changes=`. A verdict
-    carries exactly one complete machine line, so neither line counts."""
+    carries exactly one complete machine line, so neither line counts.
+
+    Implements: TC-326
+    """
     _trunk_root, lane = _lane(tmp_path)
     _bless(
         lane,
@@ -982,7 +1078,10 @@ def test_an_incomplete_second_machine_line_blesses_nothing(tmp_path):
 
 
 def test_a_bound_sitting_that_judges_every_requested_kind_blesses(tmp_path):
-    """The positive arm: the bound kinds are judged, each section complete."""
+    """The positive arm: the bound kinds are judged, each section complete.
+
+    Implements: TC-326
+    """
     _trunk_root, lane = _lane(tmp_path)
     _bind(lane, ("amendment", "done-when"))
     _bless(
@@ -998,7 +1097,10 @@ def test_a_bound_sitting_that_judges_every_requested_kind_blesses(tmp_path):
 
 def test_an_unbound_sitting_blesses_nothing(tmp_path):
     """A combined sitting whose requested kinds were never bound cannot be
-    judged against what was asked, so it covers nothing."""
+    judged against what was asked, so it covers nothing.
+
+    Implements: TC-326
+    """
     _trunk_root, lane = _lane(tmp_path)
     _bless(lane, SITTING.format(_digest()), bound=False)
     assert _digest() not in kdone.covering(lane, "HEAD")
@@ -1007,7 +1109,10 @@ def test_an_unbound_sitting_blesses_nothing(tmp_path):
 def test_the_entry_point_binds_the_requested_kinds_beside_the_verdict(tmp_path):
     """Round 10: at reservation the entry point writes the sitting's brief and
     requested kinds beside the verdict, exclusively; a combined brief naming
-    no kinds refuses, and a refused call's release removes both files."""
+    no kinds refuses, and a refused call's release removes both files.
+
+    Implements: TC-327
+    """
     cli = load_script("coordinator_adjudicate")
     verdict = tmp_path / "reviews" / "001-ADJUDICATE-x.md"
     assert cli.reserve_verdict(verdict) is None
@@ -1079,7 +1184,10 @@ def test_a_failed_calls_verdict_releases_nothing(
 ):
     """Sol final3 MAJOR 2, through the real entry point: the session committed
     a matching BLESSED verdict, then the call failed or timed out. The route
-    records the binding FAILED, so the verdict covers nothing."""
+    records the binding FAILED, so the verdict covers nothing.
+
+    Implements: TC-326
+    """
     _trunk_root, lane = _lane(tmp_path)
     line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
     returned, verdict = _entry_point_call(lane, monkeypatch, code, timed_out, line)
@@ -1094,7 +1202,10 @@ def test_a_failed_calls_verdict_releases_nothing(
 
 def test_an_accepted_calls_verdict_releases(tmp_path, monkeypatch):
     """The positive arm: a call that exits 0 with a valid verdict is recorded
-    ACCEPTED by the route that ran it, and only then covers."""
+    ACCEPTED by the route that ran it, and only then covers.
+
+    Implements: TC-326
+    """
     _trunk_root, lane = _lane(tmp_path)
     line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
     returned, verdict = _entry_point_call(lane, monkeypatch, 0, False, line)
@@ -1110,7 +1221,10 @@ def test_an_accepted_calls_verdict_releases(tmp_path, monkeypatch):
 def test_another_brief_classes_verdict_covers_nothing_and_never_raises(tmp_path):
     """Sol final3 MAJOR 3: a valid DISPOSITION verdict, bound and accepted,
     whose prose carries a fenced Done-when example. A class the reader does
-    not cover is simply not a Done-when blessing - no KeyError at dispatch."""
+    not cover is simply not a Done-when blessing - no KeyError at dispatch.
+
+    Implements: TC-326
+    """
     _trunk_root, lane = _lane(tmp_path)
     _bind(lane, ("disposition",), brief="disposition")
     _bless(
@@ -1126,7 +1240,10 @@ def test_another_brief_classes_verdict_covers_nothing_and_never_raises(tmp_path)
 def test_the_loop_route_records_its_verdicts_outcome(tmp_path, valid, outcome):
     """The loop is the other route that runs adjudications: after validating
     its session's verdict it records the outcome through the same writer and
-    commits the binding, so the holds read the recorded fact."""
+    commits the binding, so the holds read the recorded fact.
+
+    Implements: TC-326
+    """
     _trunk_root, lane = _lane(tmp_path)
     line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
     _write(lane, _VERDICT_REL, line if valid else "no machine line\n")
@@ -1146,7 +1263,10 @@ def test_the_loop_route_records_its_verdicts_outcome(tmp_path, valid, outcome):
 def test_the_loop_records_a_failed_calls_verdict_failed(tmp_path, code, timed_out):
     """Sol final4 MAJOR 1, through `session_bookkeeping`: the session committed
     a matching BLESSED verdict, then exited 1 or timed out. One rule for both
-    routes: accepted only when the CALL succeeded and the verdict validates."""
+    routes: accepted only when the CALL succeeded and the verdict validates.
+
+    Implements: TC-326
+    """
     from types import SimpleNamespace
 
     _trunk_root, lane = _lane(tmp_path)
@@ -1186,7 +1306,10 @@ def test_a_call_reporting_an_error_is_failed_on_both_routes(tmp_path, monkeypatc
     """Sol final5 MAJOR 1: exit 0, a committed valid BLESSED verdict, and the
     CLI's result reporting `is_error`. `classify_outcome` shows COMMITTED, but
     the call failed: `session_service.call_succeeded`, the one derivation both
-    routes share, reads the real signals, so both record FAILED."""
+    routes share, reads the real signals, so both record FAILED.
+
+    Implements: TC-326
+    """
     from types import SimpleNamespace
 
     svc = agent_loop.session_service
@@ -1239,7 +1362,10 @@ def test_a_refused_reservation_leaves_a_binding_it_does_not_own(tmp_path):
     """Sol final5 MAJOR 2: a binding already sits beside an absent verdict
     path. The reservation succeeds, the exclusive binding creation refuses,
     and the cleanup removes only what THIS call created - its empty
-    reservation - leaving the other binding untouched."""
+    reservation - leaving the other binding untouched.
+
+    Implements: TC-327
+    """
     cli = load_script("coordinator_adjudicate")
     verdict = tmp_path / "reviews" / "001-ADJUDICATE-x.md"
     verdict.parent.mkdir(parents=True)
@@ -1257,7 +1383,10 @@ def test_a_failed_call_is_recorded_failed_without_reading_its_verdict(
     tmp_path, monkeypatch
 ):
     """LLR-306's narration made true: on a failed call the route records
-    FAILED and never reads the verdict the call left behind."""
+    FAILED and never reads the verdict the call left behind.
+
+    Implements: TC-327
+    """
     _trunk_root, lane = _lane(tmp_path)
     _write(lane, _VERDICT_REL, "DONE-WHEN: BLESSED changes=2 digest=x\n")
     _commit(lane, "the verdict")
@@ -1289,7 +1418,10 @@ def test_a_failed_loop_call_keeps_its_obligation_and_reads_no_verdict(
     a valid Done-when verdict. Completion uses the SAME decision the route
     records: the obligation stays owed (so the worker cannot finish DONE and
     the re-sit is not lost), the binding records failed, and the verdict the
-    failed call left behind is never read."""
+    failed call left behind is never read.
+
+    Implements: TC-326
+    """
     _trunk_root, lane = _lane(tmp_path)
     line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
     _write(lane, _VERDICT_REL, line)
@@ -1314,7 +1446,10 @@ def test_the_loop_route_accepts_a_combined_sitting_on_its_bound_kinds(
     requested kinds `amendment;done-when`. It binds those kinds beside the
     verdict at composition, as the coordinator's entry point does at
     reservation, and records the call against the SAME binding, so a valid
-    combined verdict is accepted, clears the obligation and blesses."""
+    combined verdict is accepted, clears the obligation and blesses.
+
+    Implements: TC-326, TC-327
+    """
     _trunk_root, lane = _lane(tmp_path)
     _fake_spine_assemblers(monkeypatch)
     for kind in ("amendment", "first-approval"):  # the loop's own module copy
@@ -1351,7 +1486,10 @@ def test_the_loop_route_accepts_a_combined_sitting_on_its_bound_kinds(
 def test_a_build_after_a_dirty_completed_lane_is_held_at_dispatch(tmp_path):
     """Sol final9 MAJOR (a): a completed `WI:` trailer plus substantive
     uncommitted residue - `worker_endstate` defers (the dirty-tree arm) and
-    routing selects a BUILD; the hold at the dispatch point holds it."""
+    routing selects a BUILD; the hold at the dispatch point holds it.
+
+    Implements: TC-325
+    """
     _trunk_root, lane = _lane(tmp_path)
     _write(lane, "src/work.py", "x = 1\n")
     _git(lane, "add", "-A")
@@ -1366,7 +1504,10 @@ def test_a_build_after_a_dirty_completed_lane_is_held_at_dispatch(tmp_path):
 def test_a_resumed_blocked_lanes_first_build_is_held_at_dispatch(tmp_path):
     """Sol final9 MAJOR (b): a resumed lane carrying a `Blocked-WI:` trailer
     is not short-circuited on its first iteration, so routing selects a BUILD;
-    the hold at the dispatch point holds it."""
+    the hold at the dispatch point holds it.
+
+    Implements: TC-325
+    """
     _trunk_root, lane = _lane(tmp_path)
     _write(lane, "src/work.py", "x = 1\n")
     _git(lane, "add", "-A")
@@ -1407,7 +1548,10 @@ def test_a_malformed_machine_line_invalidates_the_verdict(tmp_path, kind, shape)
     """Sol final10 MAJOR: a keyword whose label sits on the next line, or a
     bare second keyword line, makes the verdict invalid - single-kind and
     inside a combined sitting - because every physical line whose first token
-    is a machine keyword counts, complete or not."""
+    is a machine keyword counts, complete or not.
+
+    Implements: TC-327
+    """
     single = tmp_path / "single.md"
     single.write_text(shape(kind), encoding="utf-8")
     assert ab.verdict_refusal(kind, single), shape.__name__
@@ -1426,7 +1570,10 @@ def test_a_malformed_machine_line_invalidates_the_verdict(tmp_path, kind, shape)
 @pytest.mark.parametrize("shape", (_split_line, _with_bare_extra))
 def test_a_malformed_done_when_line_releases_no_hold(tmp_path, shape):
     """The same shapes through the holds: recorded ACCEPTED is not enough -
-    the one parser every reader uses rejects them, so nothing is covered."""
+    the one parser every reader uses rejects them, so nothing is covered.
+
+    Implements: TC-326
+    """
     _trunk_root, lane = _lane(tmp_path)
     _bless(lane, shape("done-when").rstrip("\n"))
     assert _digest() not in kdone.covering(lane, "HEAD")
@@ -1435,7 +1582,10 @@ def test_a_malformed_done_when_line_releases_no_hold(tmp_path, shape):
 
 def test_a_machine_keyword_outside_every_section_invalidates_a_sitting(tmp_path):
     """A complete DONE-WHEN line placed before the first section heading is
-    still a machine line of a requested kind: a second one invalidates."""
+    still a machine line of a requested kind: a second one invalidates.
+
+    Implements: TC-327
+    """
     path = tmp_path / "s.md"
     line = _COMPLETE["done-when"].format(_digest())
     path.write_text(
@@ -1482,7 +1632,10 @@ def test_a_two_commit_landing_is_held_at_its_first_commit_until_blessed(
     commit; trunk lands the squash up to the commit before the close, then
     the close. The first commit carries the unblessed edit into trunk's claim
     copy, so it is judged against its parent and held until its own tree
-    carries a blessing; the close then compares against the blessed copy."""
+    carries a blessing; the close then compares against the blessed copy.
+
+    Implements: TC-325
+    """
     trunk, lane = _lane(tmp_path)
     edited = _git(lane, "rev-parse", "HEAD")
     _stage_close(lane)
@@ -1502,6 +1655,7 @@ def test_a_two_commit_landing_is_held_at_its_first_commit_until_blessed(
 def test_a_trunk_amendment_of_a_claimed_done_when_is_held_and_one_that_changes_none_is_not(
     tmp_path,
 ):
+    """Implements: TC-325"""
     trunk = _trunk(tmp_path)
     _write(trunk, _ACTIVE_REL, _spec(DONE_WHEN).replace("A widget.", "A gadget."))
     _git(trunk, "add", "-A")
@@ -1520,7 +1674,10 @@ def test_a_trunk_commit_deleting_a_claim_copy_is_held_and_no_blessing_releases_i
     """A trunk commit whose delta only deletes the claim copy under
     `active/<branch>/` leaves the claimed row with no copy, so it is held
     naming why, and neither a covering verdict nor an owner ruling releases
-    it: the kit has no route that returns a claimed spec to the queue."""
+    it: the kit has no route that returns a claimed spec to the queue.
+
+    Implements: TC-325
+    """
     trunk = _trunk(tmp_path)
     _git(trunk, "rm", "-q", _ACTIVE_REL)
     held = integrate.staged_done_when_refusal(trunk)
@@ -1534,7 +1691,10 @@ def test_a_trunk_commit_deleting_a_claim_copy_is_held_and_no_blessing_releases_i
 def test_an_index_delta_git_cannot_list_holds_naming_why(tmp_path, monkeypatch):
     """An index git cannot parse: whether this commit changes a claimed
     Done-when is unknown, so the step holds, naming the delta read. Off any
-    git work tree no commit is being made, and nothing is judged."""
+    git work tree no commit is being made, and nothing is judged.
+
+    Implements: TC-325
+    """
     _trunk_root, lane = _lane(tmp_path)
     _stage_close(lane)
     index = _git(lane, "rev-parse", "--git-path", "index")
@@ -1553,7 +1713,10 @@ def test_an_index_delta_git_cannot_list_holds_naming_why(tmp_path, monkeypatch):
 def test_a_branch_identity_git_cannot_read_holds_naming_why(tmp_path, monkeypatch):
     """The current branch decides which reading applies; a read git cannot
     complete holds, naming it, rather than reading git's error text as a
-    branch name and judging the close against the lane's own edited copy."""
+    branch name and judging the close against the lane's own edited copy.
+
+    Implements: TC-325
+    """
     _trunk_root, lane = _lane(tmp_path)
     _stage_close(lane)
     real = integrate.ac.git
@@ -1581,7 +1744,10 @@ def test_a_claim_copy_whose_path_git_quotes_is_judged_like_any_other(tmp_path):
     non-ASCII slug) is judged like any other: an unblessed trunk amendment of
     its Done-when is held, by the reader and by the registered step, and a
     covering verdict releases both. The step reads every path losslessly, so
-    a quoted path never reaches the classifier as another path."""
+    a quoted path never reaches the classifier as another path.
+
+    Implements: TC-325
+    """
     trunk = _trunk(tmp_path, spec=_QUOTED_SPEC)
     _git(trunk, "config", "core.quotePath", "true")
     _write(
@@ -1612,7 +1778,10 @@ def test_the_shipped_hooks_floor_holds_an_unblessed_hand_close(tmp_path):
     Done-when nothing blesses, releases it once the lane's verdict is
     committed, and never holds the lane's commit that edits the Done-when.
     Other floor steps may fail on this minimal fixture, so each case reads
-    the step's own result line."""
+    the step's own result line.
+
+    Implements: TC-325
+    """
     _trunk_root, lane = _lane(tmp_path, body=None)
     _write(lane, _ACTIVE_REL, _spec(NARROWED))
     _git(lane, "add", "-A")
@@ -1633,7 +1802,10 @@ def test_the_shipped_hooks_floor_holds_an_unblessed_hand_close(tmp_path):
 def test_the_scaffold_hooks_floor_resolves_and_passes_on_a_clean_tree(scaffold):
     """A bootstrapped scaffold's hook copy carries the step in its floor,
     every floor name resolves in the scaffold's own check.py, and the floor
-    passes with nothing staged."""
+    passes with nothing staged.
+
+    Implements: TC-325
+    """
     skip_without_env_gates("git")
     make_minimal_project(scaffold)
     _init(scaffold)
@@ -1704,7 +1876,10 @@ def test_a_squash_landing_that_relinks_another_claims_done_when_link_is_not_held
     Y's claim copy; landing that lane by the squash recipe stages Y's copy as
     modified on trunk. Its staged bytes are exactly the inbound relink of
     X's move, which the same delta carries, so it is not a Done-when change
-    and the landing is not held."""
+    and the landing is not held.
+
+    Implements: TC-325
+    """
     trunk, _y_claim = _two_claims(tmp_path)
     _x_closed_in_its_lane(tmp_path, trunk)
     _git(trunk, "merge", "--squash", "wi-x")
@@ -1714,7 +1889,10 @@ def test_a_squash_landing_that_relinks_another_claims_done_when_link_is_not_held
 def test_a_relink_with_no_move_in_the_same_delta_is_still_a_change(tmp_path):
     """Y's copy staged on trunk with the relinked bytes alone, X's spec not
     moved in the same delta: there is no move for the relink to belong to,
-    so it is a Done-when change, held naming Y."""
+    so it is a Done-when change, held naming Y.
+
+    Implements: TC-325
+    """
     trunk, _y_claim = _two_claims(tmp_path)
     lane = _x_closed_in_its_lane(tmp_path, trunk)
     relinked = (lane / _Y_ACTIVE).read_bytes()
@@ -1726,7 +1904,10 @@ def test_a_relink_with_no_move_in_the_same_delta_is_still_a_change(tmp_path):
 
 def test_a_squash_landing_with_a_real_edit_beside_the_relink_is_held(tmp_path):
     """The same landing with Y's Done-when item reworded on trunk beside the
-    relink: a real edit, held naming Y."""
+    relink: a real edit, held naming Y.
+
+    Implements: TC-325
+    """
     trunk, _y_claim = _two_claims(tmp_path)
     _x_closed_in_its_lane(tmp_path, trunk)
     _git(trunk, "merge", "--squash", "wi-x")
@@ -1765,6 +1946,8 @@ def test_a_relink_reaching_an_existing_lanes_claim_copy_across_the_landing(
     (relinked) with the closed copy, whose own link the ritual rebased to its
     new folder, and MINTS the goalposts row; the direct read of the pair
     (`y_claim`'s copy, the closed copy) owes a blessing too.
+
+    Implements: TC-325
     """
     trunk, y_claim = _two_claims(tmp_path)
     lane_y = tmp_path / "lane-y"
@@ -1830,7 +2013,10 @@ def test_a_linked_worktree_on_the_declared_trunk_holds_an_unblessed_done_when_ch
     """The primary checkout sits on `side`; a linked worktree is on `main`,
     the declared trunk. A trunk commit there that changes a claim copy's
     Done-when and closes nothing is judged as trunk's, and held until its own
-    index carries a covering verdict or ruling."""
+    index carries a covering verdict or ruling.
+
+    Implements: TC-325, TC-369
+    """
     trunk = _trunk(tmp_path)
     _git(trunk, "checkout", "-q", "-b", "side")
     on_trunk = tmp_path / "on-trunk"
@@ -1848,7 +2034,10 @@ def test_a_single_checkout_on_a_branch_not_named_for_its_claim_does_not_judge_a_
 ):
     """A single checkout switched to `side`, a branch no claim is named for:
     it is not the declared trunk, so a Done-when change that closes nothing
-    is not judged there."""
+    is not judged there.
+
+    Implements: TC-325, TC-369
+    """
     trunk = _trunk(tmp_path)
     _git(trunk, "checkout", "-q", "-b", "side")
     _write(trunk, _ACTIVE_REL, _spec(NARROWED))
@@ -1879,7 +2068,10 @@ def test_an_undeclared_trunk_refuses_each_caller_naming_the_key(
     """With the trunk's line absent, not a string, empty or naming no local
     branch, every route that reads the trunk refuses in turn, naming it: the
     done-when step on a claim-copy change, the worker preflight, the
-    reviewer's brief, the rollup write and an adjudication row's close."""
+    reviewer's brief, the rollup write and an adjudication row's close.
+
+    Implements: TC-206, TC-325, TC-369
+    """
     import argparse
 
     key = "[policies] trunk"
@@ -1918,7 +2110,10 @@ def test_an_undeclared_trunk_refuses_each_caller_naming_the_key(
 
 def test_a_commit_touching_no_claim_copy_is_not_refused_over_the_key(tmp_path):
     """With no trunk declared, a trunk commit that changes no claim copy asks
-    for no trunk: neither the done-when step nor the plan gate refuses it."""
+    for no trunk: neither the done-when step nor the plan gate refuses it.
+
+    Implements: TC-325, TC-369
+    """
     trunk = _trunk(tmp_path)
     _undeclare(trunk, "absent")
     _write(trunk, "notes.txt", "a note\n")

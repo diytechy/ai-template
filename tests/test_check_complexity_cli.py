@@ -7,6 +7,8 @@ into conftest.SLOW_MODULES: each case pays interpreter startup, so this is the
 subprocess-dominated class that the per-commit smoke bar drops and the
 slice/phase-close + CI run exercises in full. The counting metric itself is
 pinned in-process next door, where it is cheap.
+
+Implements: TC-203
 """
 
 from conftest import SCRIPTS, run_py

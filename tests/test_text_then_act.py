@@ -96,6 +96,7 @@ def _step(root):
 
 
 def test_a_mixed_commit_is_refused_at_pre_commit(tmp_path):
+    """Implements: TC-173"""
     root = _base(tmp_path)
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
     _act(root)
@@ -110,6 +111,7 @@ def test_a_mixed_commit_is_refused_at_pre_commit(tmp_path):
 
 
 def test_the_two_commit_form_is_accepted(tmp_path):
+    """Implements: TC-173"""
     root = _base(tmp_path)
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
     _git(root, "add", "-A")
@@ -124,6 +126,7 @@ def test_the_two_commit_form_is_accepted(tmp_path):
 
 
 def test_a_row_added_or_removed_beside_the_act_is_refused(tmp_path):
+    """Implements: TC-173"""
     root = _base(tmp_path)
     _rows(
         root,
@@ -144,6 +147,7 @@ def test_a_row_added_or_removed_beside_the_act_is_refused(tmp_path):
 
 
 def test_a_traced_cell_beside_the_act_is_text_too(tmp_path):
+    """Implements: TC-173"""
     # "No spine cell except Status": a re-pointed traced cell is committed
     # before the act like any other text.
     root = _base(tmp_path)
@@ -160,6 +164,7 @@ def test_a_traced_cell_beside_the_act_is_text_too(tmp_path):
 
 
 def test_a_commit_that_writes_no_record_is_never_judged(tmp_path):
+    """Implements: TC-173"""
     root = _base(tmp_path)
     _rows(root, ("SR-001", "One amended", "Approved"), ("SR-009", "New", "Drafted"))
     _git(root, "add", "-A")
@@ -167,6 +172,7 @@ def test_a_commit_that_writes_no_record_is_never_judged(tmp_path):
 
 
 def test_a_no_verify_lane_commit_is_refused_at_the_landing(tmp_path):
+    """Implements: TC-173"""
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-001")
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
@@ -189,6 +195,7 @@ def test_a_no_verify_lane_commit_is_refused_at_the_landing(tmp_path):
 
 
 def test_the_merge_ladder_consults_the_text_then_act_rung(tmp_path, monkeypatch):
+    """Implements: TC-173"""
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-001")
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
@@ -211,6 +218,7 @@ def test_the_merge_ladder_consults_the_text_then_act_rung(tmp_path, monkeypatch)
 
 
 def test_a_refresh_merge_is_judged_by_what_neither_side_carried(tmp_path):
+    """Implements: TC-173"""
     # Trunk took its text and its act in two commits; a lane that merges trunk
     # in carries both in one first-parent diff, and that is not the lane's own.
     root = _base(tmp_path)
@@ -245,6 +253,7 @@ def test_a_refresh_merge_is_judged_by_what_neither_side_carried(tmp_path):
 
 
 def test_a_squash_landing_is_admitted_only_when_its_lane_commits_pass(tmp_path):
+    """Implements: TC-173"""
     # The landing's own squash carries text and act together and is exempt
     # because the rule held on every commit it squashes - which the hook
     # checks rather than assumes, since a hand landing never meets the slot.
@@ -276,6 +285,7 @@ def test_a_squash_landing_is_admitted_only_when_its_lane_commits_pass(tmp_path):
 
 
 def test_a_first_commit_has_nothing_before_it(tmp_path):
+    """Implements: TC-173"""
     root = _repo(tmp_path / "repo")
     _rows(root, ("SR-001", "One", "Approved"))
     _act(root)
@@ -286,6 +296,7 @@ def test_a_first_commit_has_nothing_before_it(tmp_path):
 
 
 def test_the_pre_commit_hook_runs_the_text_then_act_step():
+    """Implements: TC-173"""
     hook = (SCRIPTS.parent / "hooks" / "pre-commit").read_text(encoding="utf-8")
     line = next(
         ln for ln in hook.splitlines() if ln.startswith('"$PY"') and "--run-steps" in ln
@@ -312,6 +323,7 @@ def test_no_refusal_text_offers_amend_plus_flip(tmp_path):
 
 
 def test_a_commit_whose_parent_cannot_be_read_is_refused_by_name(tmp_path):
+    """Implements: TC-173"""
     # A shallow clone holds the commit but not its parent: an unread parent is
     # never read as a root (which would pass), it is named.
     root = _base(tmp_path)
@@ -324,12 +336,14 @@ def test_a_commit_whose_parent_cannot_be_read_is_refused_by_name(tmp_path):
 
 
 def test_a_diff_git_cannot_read_is_reported_not_skipped(tmp_path):
+    """Implements: TC-173"""
     root = _base(tmp_path)
     (line,) = tta.text_then_act_lines(root, ["0" * 40])
     assert "0" * 40 in line and "unknown" in line
 
 
 def test_a_row_only_one_parent_carried_is_judged_by_its_cell_values(tmp_path):
+    """Implements: TC-173"""
     # Sol REVIEW-A BLOCKER: a row on the second parent alone reads "added"
     # against the first and "Title" against the second; intersecting those
     # labels hid a Title the merge itself wrote beside the record.
@@ -376,6 +390,7 @@ def test_a_row_only_one_parent_carried_is_judged_by_its_cell_values(tmp_path):
 
 
 def test_a_stale_squash_message_exempts_no_other_commit(tmp_path):
+    """Implements: TC-173"""
     # Sol REVIEW-A MAJOR: `git restore` abandons a squash but leaves git's
     # SQUASH_MSG behind. The exemption holds only while the squashed tip
     # contains HEAD and the staged spine and record are the tip's own, so a
@@ -452,6 +467,7 @@ def _combined_cell_lanes(tmp_path):
 
 
 def test_a_squash_combining_two_judged_cells_into_a_third_is_refused(tmp_path):
+    """Implements: TC-173"""
     # Sol REVIEW-A r2 BLOCKER: git cleanly squashes the lane into trunk as a
     # Requirement value holding both edits, live and recorded alike, which no
     # judged commit carried. A lane not containing HEAD gets no exemption.
@@ -470,6 +486,7 @@ def test_a_squash_combining_two_judged_cells_into_a_third_is_refused(tmp_path):
 def test_a_squash_of_a_lane_not_containing_head_is_refused_with_the_rebase_hint(
     tmp_path,
 ):
+    """Implements: TC-173"""
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-002")
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
@@ -489,6 +506,7 @@ def test_a_squash_of_a_lane_not_containing_head_is_refused_with_the_rebase_hint(
 
 
 def test_a_refreshed_lanes_squash_is_admitted(tmp_path):
+    """Implements: TC-173"""
     # Rebased onto trunk, the lane's own commits carry the combined cell, each
     # judged against its parent; its squash is exactly its tip for the spine
     # and the record, so the landing is exempt.
@@ -506,6 +524,7 @@ def test_a_refreshed_lanes_squash_is_admitted(tmp_path):
 def test_a_refresh_merge_combining_two_text_commits_beside_trunks_act_passes(
     tmp_path,
 ):
+    """Implements: TC-173"""
     # M15 (adjudication 003): a merge writes the record only when the record
     # differs from EVERY parent. Lane and trunk each amend a different line of
     # one multiline LLR cell, text alone; trunk then takes an act on the SR
@@ -564,7 +583,10 @@ def _spy_shared_walk(monkeypatch):
 
 def test_a_squash_landing_is_judged_through_the_shared_walk(tmp_path, monkeypatch):
     """The admitted rebased-lane squash is judged by `kitlib.git`'s walk over
-    HEAD..tip with text then act's own rider alone, and is still admitted."""
+    HEAD..tip with text then act's own rider alone, and is still admitted.
+
+    Implements: TC-173
+    """
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-002")
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))

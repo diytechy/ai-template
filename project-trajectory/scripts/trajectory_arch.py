@@ -13,8 +13,9 @@ of record in docs/requirements/interfaces.toml).
 Contract IF-263: ``check_trajectory`` imports and re-exports this module's
 architecture rule surface. Inputs are a repository root, the spine/config
 files beneath it and, for `tc_tag_findings`, the test files under the declared
-tests root; outputs are normalized inventories or finding strings. The module
-performs no writes and exposes no command-line entry point.
+tests root, whose tags it holds equal to the TC rows' `Evidence` cells; outputs
+are normalized inventories or finding strings. The module performs no writes and
+exposes no command-line entry point.
 """
 
 import ast
@@ -1061,28 +1062,64 @@ def codesymbol_crosscheck_findings(root):
     return findings
 
 
+# Test-file tags and `Evidence` cells are two homes of one fact, and this check
+# holds them equal only until the evidence column is generated from the tags.
+# That work deletes this helper and its one call in `tc_tag_findings`. Nothing
+# here builds the retirement.
+def _tag_evidence_findings(rows, tags, refused, tests_dir):
+    """Each difference between a live TC's tags and its `Evidence` parts under
+    `tests_dir`, as `<TC>: evidence without a tag: <node>` or `<TC>: tag without
+    evidence: <node>`, sorted by TC, then node.
+
+    `rows` are the live TC rows, `tags` is `read_test_tags`' map, and `refused`
+    holds the files it could not read, whose parts name nothing it could see, so
+    they add no finding here. A part is its path, or its path and node with any
+    `[case]` dropped; a part outside `tests_dir` is outside the rule.
+
+    Implements: SR-157, LLR-366"""
+    prefix = "".join(p + "/" for p in Path(tests_dir.replace("\\", "/")).parts)
+    found = []
+    for row in rows:
+        tc = (row.get("TC-ID") or "").strip()
+        parts = {
+            path + "::" + node.split("[", 1)[0] if node else path
+            for path, node in _kitspine.evidence_items(row.get("Evidence"))
+            if path.startswith(prefix) and path not in refused
+        }
+        declared = set(tags.get(tc, ()))
+        found += [(tc, n, "evidence without a tag") for n in parts - declared]
+        found += [(tc, n, "tag without evidence") for n in declared - parts]
+    return ["{}: {}: {}".format(tc, kind, n) for tc, n, kind in sorted(found)]
+
+
 def tc_tag_findings(root, tests_dir):
     """Each refused test-file tag under `tests_dir`, the declared tests root, as
-    a `<file>:<line>: <shape>: <detail>` string. `check_trajectory` owns the
-    declared-root read, so the value is handed in.
+    a `<file>:<line>: <shape>: <detail>` string, then each difference between the
+    tags and the `Evidence` cells (`_tag_evidence_findings`). `check_trajectory`
+    owns the declared-root read, so the value is handed in.
 
     `[]` (vacuous) with no TC registry, and with no tests root, which
-    `read_test_tags` walks as no files. `[arch-map] mode = files` is no reason to
-    be vacuous: this reads test files, not the source surface. A registry holding
-    only `-000` rows is not vacuous either, so every tag there is unknown. No
-    `hasattr` guard, unlike this module's other `gen_arch_map` reads: a stale
-    sibling must fail loudly, since "no tags" is the reading this rule refuses.
+    `read_test_tags` walks as no files and the comparison must not read as every
+    part untagged. `[arch-map] mode = files` is no reason to be vacuous: this
+    reads test files, not the source surface. A registry holding only `-000` rows
+    is not vacuous either, so every tag there is unknown. No `hasattr` guard,
+    unlike this module's other `gen_arch_map` reads: a stale sibling must fail
+    loudly, since "no tags" is the reading this rule refuses.
 
-    Implements: SR-157, LLR-365"""
+    Implements: SR-157, LLR-365, LLR-366"""
     if gen_arch_map is None or spine_carrier.resolve(root / TC_CSV) is None:
         return []
     rows = spine_carrier.load(root / TC_CSV, "TC-ID", False)
     live_tcs = {(r.get("TC-ID") or "").strip() for r in rows}
-    _tags, findings = gen_arch_map.read_test_tags(root, tests_dir, live_tcs)
-    return [
+    tags, findings = gen_arch_map.read_test_tags(root, tests_dir, live_tcs)
+    lines = [
         "{}:{}: {}: {}".format(f["file"], f["line"], f["shape"], f["detail"])
         for f in findings
     ]
+    if (root / tests_dir).is_dir():
+        refused = {f["file"] for f in findings if f["shape"] == "unreadable"}
+        lines += _tag_evidence_findings(rows, tags, refused, tests_dir)
+    return lines
 
 
 # --- the How-SW top-view right-sizing rule (WI-073/FB5) ------------------------

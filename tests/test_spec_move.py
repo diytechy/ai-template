@@ -16,6 +16,8 @@ the TARGET redirected, `#fragment`s carried, external/protocol-relative/bare-
 anchor targets left alone, root-relative targets excused only in the rebase
 half, and line endings preserved via `newline=''` so a CRLF checkout is not
 silently relaid to LF (the WI-234/WI-337 lesson).
+
+Implements: TC-139
 """
 
 import subprocess

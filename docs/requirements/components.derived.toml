@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 331
+design_rows = 332
 seam_rows = 255
 requirements_placed = 133
 requirements_unplaced = 5
@@ -199,6 +199,7 @@ llr_refs = [
   "LLR-361",
   "LLR-362",
   "LLR-365",
+  "LLR-366",
 ]
 hat_refs = [
   "CONSISTENCY",

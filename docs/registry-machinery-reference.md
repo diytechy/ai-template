@@ -401,9 +401,13 @@ it runs on the `Implements:` line; `PROCESS.md` §3 states the rule.
 through `gen_arch_map.read_test_tags`: a misplaced tag, a malformed tag, an
 unknown TC and an unreadable file are each a finding naming file, line and
 shape, a WARN and under `--strict` an ERROR. A `Drafted` row is live, so a test
-may be tagged before its TC is approved. An untagged test or TC is no finding,
-and tags and the `Evidence` cell are not compared: `trace.py` still reads the
-cell.
+may be tagged before its TC is approved. The same read holds the tags equal to
+the `Evidence` cells, the rule `PROCESS.md` §3 states: `tc_tag_findings` reads each cell
+through `kitlib.spine.evidence_items`, as `trace.py` does, and reports each
+difference by TC and node, `evidence without a tag` or `tag without evidence`, at
+the same severity. A test no cell names and a TC with neither a tag nor a part
+under the tests root are no finding. The comparison retires when the `Evidence`
+column is generated.
 
 ### 5.1 The SR/LLR/TC triangle rule
 

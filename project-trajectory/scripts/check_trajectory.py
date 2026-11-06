@@ -116,10 +116,13 @@ no longer resolves), so the burn-down is visible rather than silently absorbed.
 test cases it runs on the back-link line, in its module docstring or a test's
 docstring (`gen_arch_map.read_test_tags`). `tc_tag_findings` reports a tag that
 is misplaced, malformed or unknown, and a file under the declared tests root
-that is unreadable, each by file, line and shape. It reads no tag as a pass: an
-untagged file is no finding, and with no tests root or no TC registry it is
-vacuous. An adopter's gate refuses from `DevStg-Impl`, where `check.py` first
-adds `--strict`.
+that is unreadable, each by file, line and shape. It holds the tags equal to
+each live TC's `Evidence` parts under that root, a Drafted TC included: a part
+no tag declares reads `evidence without a tag`, and a tag no part names `tag
+without evidence`, each naming the TC and the node. A part outside the root and
+a file refused as unreadable add no such finding. It reads no tag as a pass, and
+with no tests root or no TC registry it is vacuous. An adopter's gate refuses
+from `DevStg-Impl`, where `check.py` first adds `--strict`.
 
 **How-SW top-view right-sizing** (WI-073/FB5; process-options.md "Component
 layer"). The software-architecture diagram's *first view* must show at most

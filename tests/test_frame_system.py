@@ -10,6 +10,8 @@ and a project with no crossing (or no frame at all) hears nothing.
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: every case bootstraps a
 scaffold and runs the checker as a subprocess. The pure rules are in
 `tests/test_frame_rules.py`, in the per-commit tier.
+
+Implements: TC-212
 """
 
 import tomllib

@@ -18,6 +18,7 @@ CT = load_script("check_trajectory")
 
 
 def test_a_approved_cell_moving_under_an_approved_row_is_DRIFT(tmp_path):
+    """Implements: TC-153"""
     root = _seeded(tmp_path)
     sid, _row = _first_row_at(root, "approved")
     snapshot = SNAP.load_all(root)
@@ -37,6 +38,7 @@ def test_a_approved_cell_moving_under_an_approved_row_is_DRIFT(tmp_path):
 
 
 def test_a_TRACED_cell_moving_is_NOT_drift(tmp_path):
+    """Implements: TC-153"""
     # The WI-388 ruling, unchanged by the new baseline: re-pointing what a
     # requirement answers to routes to ADJUDICATION and never arms a re-attest
     # window. If this ever flips, the re-tier campaign arms a window on every
@@ -51,6 +53,7 @@ def test_a_TRACED_cell_moving_is_NOT_drift(tmp_path):
 
 
 def test_a_row_below_approval_can_never_be_drifted(tmp_path):
+    """Implements: TC-153"""
     # It has made no claim to fall from. A Drafted row differing from its snapshot
     # copy is work in progress, not a broken attestation. The live registries
     # carry no Drafted row since the 2026-08-20 signing, so the fixture makes
@@ -67,6 +70,7 @@ def test_a_row_below_approval_can_never_be_drifted(tmp_path):
 
 
 def test_status_itself_is_never_the_amendment(tmp_path):
+    """Implements: TC-153"""
     # `Status` is the MARKER, not the content: folding it into the comparison
     # would make every flip look like an amendment and every real amendment
     # invisible behind its own flip.

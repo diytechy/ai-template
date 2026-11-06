@@ -9,6 +9,8 @@ The ruled matrix: a need's `need` and `acceptance`, a requirement's
 `Requirement` and `AcceptanceCriteria`, a design row's `Detail`; the waiver in
 the tier's reason cell (`why`, `Rationale`); a test case never, because it
 states a method, not an obligation.
+
+Implements: TC-273
 """
 
 import inspect

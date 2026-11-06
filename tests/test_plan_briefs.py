@@ -6,6 +6,8 @@ registries, plus the caller-passed goal/coverage/plan/rubric strings) and NEVER
 status.md / log.md content — redaction BY CONSTRUCTION. Also covers the strict
 slot-fill errors, dispatcher-block stripping, the prompt-map override winning
 over the kit template, and hat-key vocabulary stability.
+
+Implements: TC-071
 """
 
 import csv
@@ -172,6 +174,7 @@ def _slots_for(hat, surface):
 
 # --- build_surface: the allowlist boundary ------------------------------------
 def test_build_surface_reads_only_the_two_registries(tmp_path):
+    """Implements: TC-171"""
     root = _fixture_repo(tmp_path)
     surface = pb.build_surface(root)
     assert set(surface) == {"SR_SURFACE", "IF_REGISTRY"}
@@ -443,6 +446,7 @@ def _not_a_round():
 def test_a_sitting_with_no_first_approval_sr_and_no_amended_need_says_it_is_no_decomposition_round(
     tmp_path,
 ):
+    """Implements: TC-399"""
     # The work item's own SR-Refs do not make a sitting a round: only the
     # judged SRs and amended needs passed in do.
     root = _round_repo(tmp_path)
@@ -454,12 +458,14 @@ def test_a_sitting_with_no_first_approval_sr_and_no_amended_need_says_it_is_no_d
 
 
 def test_outside_a_round_the_roster_is_not_read(tmp_path):
+    """Implements: TC-399"""
     root = _round_repo(tmp_path, roster=MALFORMED_ROSTER)
     block = _round_fn("sitting_hat_block")(root, {"WI-ID": "WI-1"}, [], [])
     assert block == _not_a_round()
 
 
 def test_an_amended_need_is_a_parent_the_work_items_refs_do_not_reach(tmp_path):
+    """Implements: TC-399"""
     root = _round_repo(tmp_path)
     surface = pb.hat_surface_for_work_item
     assert "needs" in inspect.signature(surface).parameters, (
@@ -475,6 +481,7 @@ def test_an_amended_need_is_a_parent_the_work_items_refs_do_not_reach(tmp_path):
 
 
 def test_a_judged_sr_reaches_hats_through_the_need_it_names(tmp_path):
+    """Implements: TC-399"""
     # The row's own SR-Refs (SR-2) and its SpecRef (SN-3) both reach OTHER; the
     # judged SR-1 reaches NEED-A. The judged SRs replace the row's anchors.
     root = _round_repo(tmp_path)
@@ -490,6 +497,7 @@ def test_a_judged_sr_reaches_hats_through_the_need_it_names(tmp_path):
 
 
 def test_the_work_items_tags_widen_each_need_and_sibling_needs_never_merge(tmp_path):
+    """Implements: TC-399"""
     root = _round_repo(tmp_path)
     fn = _round_fn("sitting_hat_block")
     apart = fn(root, {"WI-ID": "WI-1"}, [], ["SN-4", "SN-5"])
@@ -515,6 +523,7 @@ def test_the_authoring_cell_widens_each_need_and_sibling_needs_never_merge(tmp_p
 
 
 def test_an_absent_roster_yields_the_opt_out_line_in_a_round(tmp_path):
+    """Implements: TC-399"""
     root = _round_repo(tmp_path, roster=None)
     block = _round_fn("sitting_hat_block")(root, {"WI-ID": "WI-1"}, [], ["SN-1"])
     assert hats_roster.NO_HATS in block
@@ -522,6 +531,7 @@ def test_an_absent_roster_yields_the_opt_out_line_in_a_round(tmp_path):
 
 
 def test_a_malformed_roster_refuses_a_round_naming_the_roster(tmp_path):
+    """Implements: TC-399"""
     root = _round_repo(tmp_path, roster=MALFORMED_ROSTER)
     fn = _round_fn("sitting_hat_block")
     with pytest.raises(pb.HatsError) as caught:
@@ -532,6 +542,7 @@ def test_a_malformed_roster_refuses_a_round_naming_the_roster(tmp_path):
 def test_the_round_block_asks_one_outcome_line_per_hat_in_a_non_ruling_form(
     tmp_path,
 ):
+    """Implements: TC-399"""
     root = _round_repo(tmp_path)
     block = _round_fn("round_hat_block")(root, {"WI-ID": "WI-1"}, needs=("SN-1",))
     assert "always-on question?" in block and "need-a question?" in block

@@ -205,6 +205,7 @@ def _take_approval_act(repo, ids, registries):
 
 
 def test_a_MEANING_BLESS_row_reads_MEANING_and_blessed():
+    """Implements: TC-368"""
     text = "- [MEANING+BLESS] SR-001 Requirement -> a -> b -> differs\n"
     assert kverdict.row_rulings(text, "amendment") == {"SR-001": "MEANING"}
     assert kverdict.verdict_rulings(text) == {"SR-001": "MEANING"}
@@ -212,12 +213,14 @@ def test_a_MEANING_BLESS_row_reads_MEANING_and_blessed():
 
 
 def test_an_unmarked_MEANING_row_is_not_blessed():
+    """Implements: TC-368"""
     text = "- [MEANING] SR-001 Requirement -> a -> b -> differs\n"
     assert kverdict.row_rulings(text, "amendment") == {"SR-001": "MEANING"}
     assert kverdict.blessed_rows(text) == frozenset()
 
 
 def test_a_row_tagged_both_ways_is_not_blessed():
+    """Implements: TC-368"""
     for other in ("MEANING", "CLARITY"):
         text = (
             "- [MEANING+BLESS] SR-001 Requirement -> a -> b -> differs\n"
@@ -234,6 +237,7 @@ def _parsed(text, brief):
 
 
 def test_judged_rows_admits_an_amendment_MEANING_row_only_with_its_bless_mark():
+    """Implements: TC-368"""
     amendment = _parsed(
         "- [MEANING] SR-001 Requirement -> a -> b -> differs\n"
         "- [MEANING+BLESS] SR-002 Requirement -> a -> b -> differs\n"
@@ -259,6 +263,7 @@ def test_judged_rows_admits_an_amendment_MEANING_row_only_with_its_bless_mark():
 
 
 def test_the_bless_mark_has_one_reader_shared_by_the_merge_and_the_act():
+    """Implements: TC-368"""
     holders = {
         p.relative_to(SCRIPTS).as_posix()
         for p in SCRIPTS.rglob("*.py")
@@ -322,6 +327,7 @@ def _disposition(repo):
 def test_each_unaccepted_or_unreadable_verdict_is_refused_naming_why(
     tmp_path, state, words
 ):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _amend(repo)
     state(repo)
@@ -340,6 +346,7 @@ def test_each_unaccepted_or_unreadable_verdict_is_refused_naming_why(
 def test_a_mixed_first_approval_verdict_approves_only_its_approved_rows_registries(
     tmp_path,
 ):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _draft(repo)
     _verdict(repo, FIRST_APPROVAL_MIXED, "first-approval")
@@ -355,6 +362,7 @@ def test_a_mixed_first_approval_verdict_approves_only_its_approved_rows_registri
 
 
 def test_a_MEANING_row_without_the_bless_mark_is_left_unacted(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _amend(repo)
     _verdict(
@@ -370,6 +378,7 @@ def test_a_MEANING_row_without_the_bless_mark_is_left_unacted(tmp_path):
 
 
 def test_a_blessed_MEANING_row_on_a_released_rung_is_reattested(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _amend(repo)
     _verdict(
@@ -384,6 +393,7 @@ def test_a_blessed_MEANING_row_on_a_released_rung_is_reattested(tmp_path):
 
 
 def test_a_blessed_MEANING_row_on_a_held_rung_is_left_unacted(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path, dial="DevStg-Release")
     _amend(repo)
     _verdict(
@@ -399,6 +409,7 @@ def test_a_blessed_MEANING_row_on_a_held_rung_is_left_unacted(tmp_path):
 
 
 def test_a_held_rung_CLARITY_row_is_reattested_naming_its_verdict(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path, dial="DevStg-Release")
     _amend(repo)
     _verdict(repo, AMENDMENT_CLARITY, "amendment")
@@ -412,6 +423,7 @@ def test_a_held_rung_CLARITY_row_is_reattested_naming_its_verdict(tmp_path):
 
 
 def test_a_held_rung_APPROVE_row_owes_no_act(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path, dial="DevStg-Release")
     _draft(repo)
     _verdict(repo, FIRST_APPROVAL_MIXED, "first-approval")
@@ -447,6 +459,7 @@ def _bound_verdict(repo, identities):
 
 
 def test_a_held_CLARITY_act_bound_to_the_exact_text_is_owed(tmp_path, monkeypatch):
+    """Implements: TC-398"""
     # The owed result is today's (the act this verdict authorizes); what is
     # new is that the derivation read the bound identity to reach it, which
     # the spy on the one reader of a binding's identities records.
@@ -468,6 +481,7 @@ def test_a_held_CLARITY_act_bound_to_the_exact_text_is_owed(tmp_path, monkeypatc
 
 
 def test_a_held_CLARITY_act_whose_text_changed_after_the_verdict_is_refused(tmp_path):
+    """Implements: TC-398"""
     repo = _repo(tmp_path, dial="DevStg-Release")
     _amend(repo)
     bound = _sr_digest(repo)
@@ -482,6 +496,7 @@ def test_a_held_CLARITY_act_whose_text_changed_after_the_verdict_is_refused(tmp_
 
 
 def test_a_held_CLARITY_act_whose_binding_has_no_identity_is_refused(tmp_path):
+    """Implements: TC-398"""
     # A binding written before the identity existed binds no text, so a
     # verdict sat then is re-sat before its held act.
     repo = _repo(tmp_path, dial="DevStg-Release")
@@ -507,6 +522,7 @@ def _combined_repo(tmp_path):
 def test_a_combined_verdict_lists_the_amendment_act_before_the_first_approval_act(
     tmp_path,
 ):
+    """Implements: TC-368"""
     repo = _combined_repo(tmp_path)
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None
@@ -519,6 +535,7 @@ def test_a_combined_verdict_lists_the_amendment_act_before_the_first_approval_ac
 def test_a_combined_act_interrupted_between_its_commits_lists_only_the_first_approval_act(
     tmp_path,
 ):
+    """Implements: TC-368"""
     repo = _combined_repo(tmp_path)
     _take_amendment_act(repo, ["SR-001"])
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
@@ -530,6 +547,7 @@ def test_a_combined_act_interrupted_between_its_commits_lists_only_the_first_app
 
 
 def test_a_flip_committed_without_its_copy_is_refused_naming_the_row(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _draft(repo)
     _verdict(repo, FIRST_APPROVAL_MIXED, "first-approval")
@@ -541,6 +559,7 @@ def test_a_flip_committed_without_its_copy_is_refused_naming_the_row(tmp_path):
 
 
 def test_a_Drafted_row_present_unchanged_in_a_whole_registry_copy_is_owed(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _draft(repo)
     copy = repo / baseline_snapshot.SNAPSHOT_DIR / LLRS
@@ -553,6 +572,7 @@ def test_a_Drafted_row_present_unchanged_in_a_whole_registry_copy_is_owed(tmp_pa
 
 
 def test_a_reattest_of_a_row_below_Approved_is_refused_naming_the_row(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _draft(repo)
     _verdict(
@@ -566,6 +586,7 @@ def test_a_reattest_of_a_row_below_Approved_is_refused_naming_the_row(tmp_path):
 
 
 def test_a_completed_act_owes_none_and_is_refused(tmp_path):
+    """Implements: TC-368"""
     repo = _combined_repo(tmp_path)
     values, why = act.act_values(repo, VERDICT, WI)
     assert why is None
@@ -588,6 +609,7 @@ def _shell_command_count(line):
 
 
 def test_the_rendered_act_commands_survive_a_shell(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _draft(repo)
     _verdict(
@@ -609,6 +631,7 @@ def test_the_rendered_act_commands_survive_a_shell(tmp_path):
 
 
 def test_the_act_reads_HEAD_not_the_working_tree(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _draft(repo)
     _verdict(repo, FIRST_APPROVAL_MIXED, "first-approval")
@@ -622,6 +645,7 @@ def test_the_act_reads_HEAD_not_the_working_tree(tmp_path):
 
 
 def test_the_composed_act_brief_names_its_verdict_and_trailer(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _amend(repo)
     _verdict(repo, AMENDMENT_CLARITY, "amendment")
@@ -633,6 +657,7 @@ def test_the_composed_act_brief_names_its_verdict_and_trailer(tmp_path):
 
 
 def test_a_two_registry_act_says_which_rows_each_approves_token_covers(tmp_path):
+    """Implements: TC-368"""
     # Moved from the judging brief (WI-572 REVIEW-A round 7, MAJOR 3), where
     # the `--approves` argument was fixed at composition and the session had
     # to drop a returned registry's token by hand. The act derives it from
@@ -656,6 +681,7 @@ def test_a_two_registry_act_says_which_rows_each_approves_token_covers(tmp_path)
 
 
 def test_a_row_ruled_on_two_lines_is_listed_once(tmp_path):
+    """Implements: TC-368"""
     # Moved from the judging brief's two-SR token test: a row named twice
     # reads as two rows, and the act's lists are what the session counts.
     repo = _repo(tmp_path)
@@ -701,6 +727,7 @@ def _retire(repo, draft=True):
 def test_a_retired_row_ruled_CLARITY_beside_a_first_approval_is_listed_in_the_reattests(
     tmp_path,
 ):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _retire(repo)
     _verdict(repo, RETIRE_COMBINED, "combined", COMBINED_KINDS)
@@ -719,6 +746,7 @@ def test_a_retired_row_ruled_CLARITY_beside_a_first_approval_is_listed_in_the_re
 def test_a_retirement_and_its_first_approval_taken_through_the_snapshot_writer_leave_nothing_owed(
     tmp_path,
 ):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _retire(repo)
     _verdict(repo, RETIRE_COMBINED, "combined", COMBINED_KINDS)
@@ -735,6 +763,7 @@ def test_a_retirement_and_its_first_approval_taken_through_the_snapshot_writer_l
 
 
 def test_a_retirement_on_a_held_rung_owes_no_act(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path, dial="DevStg-Release")
     _retire(repo, draft=False)
     _verdict(
@@ -761,6 +790,7 @@ def test_a_retirement_on_a_held_rung_owes_no_act(tmp_path):
 def test_a_first_approval_of_a_row_absent_from_the_committed_tree_is_refused_naming_it(
     tmp_path,
 ):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _verdict(
         repo,
@@ -776,6 +806,7 @@ def test_a_first_approval_of_a_row_absent_from_the_committed_tree_is_refused_nam
 
 
 def test_an_approval_owed_where_no_approval_record_exists_is_refused(tmp_path):
+    """Implements: TC-368"""
     repo = tmp_path / "repo"
     repo.mkdir()
     _git(repo, "init", "-q")
@@ -795,6 +826,7 @@ def test_an_approval_owed_where_no_approval_record_exists_is_refused(tmp_path):
 
 
 def test_a_ruled_row_no_compared_tier_holds_is_refused_naming_it(tmp_path):
+    """Implements: TC-368"""
     # CLARITY, since an APPROVE of such a row reads as held and owes no act.
     repo = _repo(tmp_path)
     _verdict(
@@ -808,6 +840,7 @@ def test_a_ruled_row_no_compared_tier_holds_is_refused_naming_it(tmp_path):
 
 
 def test_a_verdict_path_outside_the_root_is_refused(tmp_path):
+    """Implements: TC-368"""
     repo = _repo(tmp_path)
     _amend(repo)
     _verdict(repo, AMENDMENT_CLARITY, "amendment")
@@ -821,6 +854,7 @@ def test_a_verdict_path_outside_the_root_is_refused(tmp_path):
 
 
 def test_each_rows_act_arm_follows_the_adjudication_action_policy_on_every_rung():
+    """Implements: TC-368"""
     # Every (held, ruling) pair the verdict grammar admits: the assembler's arm
     # is read from `intake.adjudication_action`, so a change there moves both
     # together. The bless mark is not the arm's: it is read with the verdict

@@ -2,6 +2,8 @@
 the SN->SR->LLR->TC spine but stay traceable — each back-links a real
 SR/LLR/Module, and a malformed PB id or a dangling ref fails --strict. The
 registry is optional, so its -000 placeholder never blocks a gate.
+
+Implements: TC-015
 """
 
 from conftest import make_minimal_project, run_py, record_ids

@@ -12,6 +12,7 @@ from test_trace_hats import write_roster
 
 
 def test_an_undeclared_hat_reds_a_real_run_under_strict(scaffold):
+    """Implements: TC-178"""
     make_minimal_project(scaffold)
     write_roster(scaffold)
     csv = scaffold / "docs" / "requirements" / "system-requirements.csv"

@@ -1,5 +1,8 @@
 """gen_arch_map.py: map content, flow entry resolution, the Mermaid dependency
-diagram, and splice safety."""
+diagram, and splice safety.
+
+Implements: TC-023
+"""
 
 import ast
 import inspect
@@ -378,6 +381,7 @@ def test_zero_modules_from_a_hidden_only_src_warns(scaffold):
 
 
 def test_contracts_and_if_edges(tmp_path):
+    """Implements: TC-081"""
     src = tmp_path / "src"
     src.mkdir()
     # The marker OPENS its own line since OI-66: the mid-line form this fixture
@@ -490,7 +494,10 @@ def test_module_bindings_covers_every_rendered_public_item():
     pins them: every public item the map RENDERS for a module must be a name
     `module_bindings` reports for that module, across every module in this repo.
     A node type one walk learns and the other does not then reds here instead of
-    silently reporting "that symbol does not exist" on the spine."""
+    silently reporting "that symbol does not exist" on the spine.
+
+    Implements: TC-175
+    """
     import ast
 
     from conftest import KIT
@@ -521,7 +528,10 @@ def test_module_bindings_covers_every_rendered_public_item():
 
 def test_module_bindings_sees_what_the_rendered_map_cannot(tmp_path):
     """The whole reason this function exists: private helpers, module constants
-    and class methods are real code the PUBLIC map deliberately drops."""
+    and class methods are real code the PUBLIC map deliberately drops.
+
+    Implements: TC-175
+    """
     import ast
 
     tree = ast.parse(
@@ -548,7 +558,10 @@ def test_module_bindings_sees_what_the_rendered_map_cannot(tmp_path):
 def test_module_bindings_stops_at_module_scope():
     """A function LOCAL is not a name the module offers. The census found
     `budget_findings` and `tier_legend` cited as symbols when both are locals;
-    reporting them as bound would make the spine's answer meaningless."""
+    reporting them as bound would make the spine's answer meaningless.
+
+    Implements: TC-175
+    """
     import ast
 
     bound = gen_arch_map.module_bindings(
@@ -609,7 +622,10 @@ def test_prose_ids_near_a_symbol_are_no_longer_harvested(tmp_path):
 def test_backlink_ids_is_the_one_definition_of_a_declaration():
     """The shared grammar itself, driven directly — `implements()` and
     `scan_backlinks()` both read it, so a divergence here is a divergence
-    between the map's column and the coverage percentage."""
+    between the map's column and the coverage percentage.
+
+    Implements: TC-200
+    """
     f = gen_arch_map.backlink_ids
     assert f("    Implements: SR-007, LLR-014") == ["SR-007", "LLR-014"]
     assert f("# Implements: TC-003 and SN-004") == ["TC-003", "SN-004"]
@@ -747,7 +763,10 @@ def test_backlink_cli_is_warn_first_and_strict_only_on_demand(scaffold):
     report never needs a --doc target, a below-bar reading WARNS at exit 0, and
     only --strict-backlinks turns it into a failure. check.py appends that flag
     from DevStg-Tests on, which is what makes the dial a gate an adopter opts
-    into rather than one the kit arms for them."""
+    into rather than one the kit arms for them.
+
+    Implements: TC-200
+    """
     from conftest import run_py
 
     (scaffold / "docs" / "requirements" / "low-level-requirements.toml").write_text(
@@ -1498,6 +1517,7 @@ def test_two_ids():
 
 
 def test_the_tag_reader_reads_each_python_read_position(tmp_path):
+    """Implements: TC-404"""
     _write_tag_tree(
         tmp_path,
         {
@@ -1544,6 +1564,7 @@ def test_adds_its_own():
 
 
 def test_tags_at_both_levels_union_and_a_repeat_is_clean(tmp_path):
+    """Implements: TC-404"""
     _write_tag_tree(tmp_path, {"tests/test_levels.py": TAG_LEVELS})
     node = "tests/test_levels.py"
     assert _tags_and_sites(tmp_path) == (
@@ -1556,6 +1577,7 @@ def test_tags_at_both_levels_union_and_a_repeat_is_clean(tmp_path):
 
 
 def test_a_non_python_test_file_is_read_at_file_level(tmp_path):
+    """Implements: TC-404"""
     _write_tag_tree(
         tmp_path,
         {
@@ -1673,6 +1695,7 @@ FIXTURE_METHOD = (
     ],
 )
 def test_each_misplaced_shape_is_named(tmp_path, rel, text, line):
+    """Implements: TC-405"""
     _write_tag_tree(tmp_path, {rel: text})
     assert _tags_and_sites(tmp_path) == ({}, [(rel, line, "misplaced")])
 
@@ -1701,6 +1724,7 @@ def test_prose():
 
 
 def test_a_comment_tag_above_a_test_is_misplaced(tmp_path):
+    """Implements: TC-405"""
     _write_tag_tree(
         tmp_path,
         {
@@ -1832,13 +1856,17 @@ def test_a_comment_tag_above_a_test_is_misplaced(tmp_path):
     ],
 )
 def test_each_malformed_shape_is_named(tmp_path, rel, text, line, tags):
+    """Implements: TC-406"""
     _write_tag_tree(tmp_path, {rel: text})
     assert _tags_and_sites(tmp_path) == (tags, [(rel, line, "malformed")])
 
 
 def test_the_malformed_advice_for_python_repairs_to_a_clean_result(tmp_path):
     """Every Python comment is refused as misplaced, so a Python author is sent
-    to a docstring, and any comment advice is qualified as another language's."""
+    to a docstring, and any comment advice is qualified as another language's.
+
+    Implements: TC-406
+    """
     rel = "tests/test_m.py"
     _write_tag_tree(tmp_path, {rel: _tagged_test("Implements: TC-1, because prose")})
     tags, findings = _read_tags(tmp_path)
@@ -1867,6 +1895,7 @@ def test_the_malformed_advice_for_python_repairs_to_a_clean_result(tmp_path):
     ids=["and-then-words", "and-inside-a-word", "comma-after-a-word"],
 )
 def test_prose_after_a_tag_naming_an_id_later_is_no_wrap(tmp_path, prose):
+    """Implements: TC-406"""
     _write_tag_tree(
         tmp_path, {"tests/test_m.py": _tagged_test("Implements: TC-1", prose)}
     )
@@ -1889,6 +1918,7 @@ def test_y():
 
 
 def test_a_one_line_docstring_with_the_token_after_prose_is_malformed(tmp_path):
+    """Implements: TC-406"""
     _write_tag_tree(tmp_path, {"tests/test_one.py": TAG_ONE_LINERS})
     tags, findings = _read_tags(tmp_path)
     assert (tags, [(f["line"], f["shape"]) for f in findings]) == (
@@ -1909,6 +1939,7 @@ TAG_MENTIONS = '''def test_x():
 
 
 def test_a_backticked_token_is_a_mention(tmp_path):
+    """Implements: TC-404, TC-406"""
     _write_tag_tree(tmp_path, {"tests/test_mention.py": TAG_MENTIONS})
     assert _tags_and_sites(tmp_path) == (
         {"TC-1": ["tests/test_mention.py::test_x"]},
@@ -1937,6 +1968,7 @@ def test_x():
 
 
 def test_a_fixture_string_opening_a_line_with_the_token_is_no_tag(tmp_path):
+    """Implements: TC-404"""
     _write_tag_tree(tmp_path, {"tests/test_fixture.py": TAG_FIXTURE_STRINGS})
     assert _tags_and_sites(tmp_path) == (
         {"TC-1": ["tests/test_fixture.py::test_x"]},
@@ -1966,6 +1998,7 @@ def test_mixed():
 
 
 def test_a_tag_naming_no_live_tc_is_unknown(tmp_path):
+    """Implements: TC-407"""
     _write_tag_tree(tmp_path, {"tests/test_unknown.py": TAG_UNKNOWN})
     node = "tests/test_unknown.py"
     assert _tags_and_sites(tmp_path) == (
@@ -1975,6 +2008,7 @@ def test_a_tag_naming_no_live_tc_is_unknown(tmp_path):
 
 
 def test_a_file_that_cannot_be_read_is_refused(tmp_path):
+    """Implements: TC-408"""
     # A syntax error names the line the parser stopped on; a file that cannot
     # be decoded has no line to name, so its finding names line 1.
     _write_tag_tree(
@@ -1999,6 +2033,7 @@ def test_a_file_that_cannot_be_read_is_refused(tmp_path):
 
 
 def test_a_bom_file_reads_its_tags(tmp_path):
+    """Implements: TC-404"""
     bom = b"\xef\xbb\xbf"
     _write_tag_tree(
         tmp_path,
@@ -2073,7 +2108,10 @@ def _frozen_implements_report(root):
 
 def test_backlink_ids_applies_the_tag_readers_opening_rule(monkeypatch):
     """One application of the opening rule: the code side's line reader takes
-    its answer from the helper the tag reader calls, in both directions."""
+    its answer from the helper the tag reader calls, in both directions.
+
+    Implements: TC-404
+    """
     monkeypatch.setattr(gen_arch_map, "_opens_declaration", lambda line: False)
     assert gen_arch_map.backlink_ids("Implements: SR-1") == []
     monkeypatch.setattr(gen_arch_map, "_opens_declaration", lambda line: True)
@@ -2086,7 +2124,10 @@ def test_the_code_side_readers_keep_their_output_over_the_scripts_tree():
     Adequacy witness: a test-tag reader that loosens `_DECL_OPENING` for its own
     use, or widens `scan_backlinks` to read test ids from anywhere the frozen
     rule above does not, makes the live report differ from the frozen one, and
-    so does any change to the four signatures pinned here."""
+    so does any change to the four signatures pinned here.
+
+    Implements: TC-404
+    """
     assert gen_arch_map.scan_backlinks([SCRIPTS]) == _frozen_scan_backlinks(SCRIPTS)
     assert gen_arch_map.implements_report([SCRIPTS]) == _frozen_implements_report(
         SCRIPTS

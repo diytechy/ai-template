@@ -405,7 +405,10 @@ def test_a_verdict_reattestation_stays_listed_on_the_owner_surface(tmp_path):
     """OI-100 (WI-791): on a held rung an adjudicator's CLARITY verdict carries
     the owner's signature over, so every act that names a verdict stays listed
     on the owner's surface, for audit after the fact. An act naming no verdict
-    is the owner's own or a released rung's, and is not listed here."""
+    is the owner's own or a released rung's, and is not listed here.
+
+    Implements: TC-123
+    """
     gi = load_script("gen_open_items")
     acts = [
         {"seq": 1, "date": "2026-10-03", "approved": ["SR-001"], "reattested": []},
@@ -428,7 +431,10 @@ def test_a_verdict_reattestation_stays_listed_on_the_owner_surface(tmp_path):
 
 def test_the_verdict_audit_list_is_newest_first():
     """LLR-118: the owner's audit list shows the newest verdict-naming act
-    first."""
+    first.
+
+    Implements: TC-123
+    """
     gi = load_script("gen_open_items")
     acts = [
         {

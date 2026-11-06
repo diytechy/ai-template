@@ -189,10 +189,12 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    statuses unchanged; interface rows have no approval status. Verify and
    commit the set without a sitting yet. These rows give the builder the
    tests to write and reviewers the obligations the code is meant to meet.
-   Fill the prompt's `HATS` slot as `references/recipes.md`, "Terra, first
-   turn", defines it.
+   A TC row's `Evidence` cell follows `references/in-lane.md`, "Author it
+   before the build". Fill the prompt's `HATS` slot as
+   `references/recipes.md`, "Terra, first turn", defines it.
 2. Build round 1's first deliverable is the tests, committed alone before
-   the code, each under one evidence class (plan item 13's typed evidence):
+   the code, with their tags and `Evidence` parts by that same rule, each
+   under one evidence class (plan item 13's typed evidence):
    - **New or corrected executable behaviour:** a strict expected assertion
      failure (Python:
      `@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))`).

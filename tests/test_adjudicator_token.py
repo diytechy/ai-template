@@ -96,6 +96,7 @@ def _files_text(*roots):
 
 
 def test_the_token_is_read_at_launch_and_never_logged(tmp_path, monkeypatch, capsys):
+    """Implements: TC-330, TC-365"""
     seen = {"argv": [], "env": []}
 
     def run(argv, root, timeout, **kw):
@@ -130,6 +131,7 @@ def test_the_token_is_read_at_launch_and_never_logged(tmp_path, monkeypatch, cap
 def test_a_token_that_cannot_be_read_refuses_before_launch(
     tmp_path, monkeypatch, capsys, problem
 ):
+    """Implements: TC-324"""
     launched = []
     monkeypatch.setattr(coord.svc, "run_session", lambda *a, **k: launched.append(a))
     monkeypatch.setattr(coord.svc, "cli_version", lambda *a, **k: "")
@@ -151,6 +153,7 @@ def test_a_token_that_cannot_be_read_refuses_before_launch(
 
 
 def test_the_claude_probe_reads_the_token_file_and_runs_nothing(tmp_path, monkeypatch):
+    """Implements: TC-323"""
     ran = []
 
     account = coord.cli.agent_route.Account(
@@ -175,6 +178,7 @@ def test_the_claude_probe_reads_the_token_file_and_runs_nothing(tmp_path, monkey
 def test_a_keep_warm_ping_passes_the_token_or_skips_and_keeps_the_session(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-268"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10), account=TOK)
     minted = sk._state(tmp_path, TOK)["session_id"]
@@ -202,6 +206,7 @@ def test_a_keep_warm_ping_passes_the_token_or_skips_and_keeps_the_session(
 def test_an_auth_failure_records_the_call_failed_and_keeps_the_session(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-267"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10), account=TOK)
     before = sk._state(tmp_path, TOK)
@@ -224,6 +229,7 @@ def test_an_auth_failure_records_the_call_failed_and_keeps_the_session(
 
 
 def test_an_auth_failure_on_a_first_mint_leaves_no_record(tmp_path, monkeypatch):
+    """Implements: TC-267"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     outcome = sk._adjudicate(
         tmp_path, sk.ON, _auth_failed_stream(), code=1, account=TOK
@@ -235,7 +241,10 @@ def test_an_auth_failure_on_a_first_mint_leaves_no_record(tmp_path, monkeypatch)
 def test_another_failure_still_retires_the_session(tmp_path, monkeypatch):
     """Only the CLI's `authentication_failed` tag keeps the session: the
     2026-10-06 OAuth-refresh failure was tagged `server_error`, and that, like
-    any other failure, still retires it."""
+    any other failure, still retires it.
+
+    Implements: TC-267
+    """
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10), account=TOK)
     stream = _auth_failed_stream().replace("authentication_failed", "server_error")
@@ -279,6 +288,7 @@ def _plan(tmp_path, monkeypatch, template=None, env=None):
 def test_competing_ambient_credentials_never_reach_the_retained_launch(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-330"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     for name in COMPETING:
         monkeypatch.setenv(name, "ambient-" + name)
@@ -299,6 +309,7 @@ def test_competing_ambient_credentials_never_reach_the_retained_launch(
 def test_a_route_declaring_a_competing_credential_is_refused_before_launch(
     tmp_path, monkeypatch, declared
 ):
+    """Implements: TC-330"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     if declared == "--bare":  # the route's own registry row carries it
         _registry(tmp_path, template=sk.TEMPLATES["ANTHROPIC"] + " --bare")
@@ -311,6 +322,7 @@ def test_a_route_declaring_a_competing_credential_is_refused_before_launch(
 
 
 def test_an_echoed_token_is_redacted_from_every_sink(tmp_path, monkeypatch):
+    """Implements: TC-330"""
     monkeypatch.setattr(sk.svc.agent_common, "commit_telemetry", lambda *a, **k: None)
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     kept = _plan(tmp_path, monkeypatch)
@@ -381,6 +393,7 @@ def _registry(tmp_path, env="", template=None):
 
 
 def test_the_name_key_folds_case_on_windows_semantics_only(tmp_path, monkeypatch):
+    """Implements: TC-330"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     _registry(tmp_path, env="Anthropic_Api_Key=declared")
     rule = sk.svc.agent_route  # the one home of the name rule
@@ -412,6 +425,7 @@ def test_the_name_key_folds_case_on_windows_semantics_only(tmp_path, monkeypatch
 
 
 def test_a_route_declaring_the_ambient_value_is_still_refused(tmp_path, monkeypatch):
+    """Implements: TC-330"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     monkeypatch.setenv("ANTHROPIC_API_KEY", "shared-config-value")
     _registry(tmp_path, env="ANTHROPIC_API_KEY=shared-config-value")
@@ -422,6 +436,7 @@ def test_a_route_declaring_the_ambient_value_is_still_refused(tmp_path, monkeypa
 
 
 def test_keep_warm_with_a_bare_route_is_refused_before_any_lease(tmp_path, monkeypatch):
+    """Implements: TC-330"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10), account=TOK)
     _registry(tmp_path, template=sk.TEMPLATES["ANTHROPIC"] + " --bare")
@@ -457,7 +472,10 @@ def test_a_keep_warm_ping_launches_one_route_snapshot(tmp_path, monkeypatch):
     """The warmer selected its routes from the row as it stood; the row on
     disk then changed its model and its declared endpoint. The ping launches
     the row the warmer SELECTED, whole: its model with its endpoint, never a
-    mix with the changed row."""
+    mix with the changed row.
+
+    Implements: TC-330
+    """
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     _registry(tmp_path, env="ANTHROPIC_BASE_URL=https://old.invalid")
     sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10), account=TOK)
@@ -488,6 +506,7 @@ def test_a_keep_warm_ping_launches_one_route_snapshot(tmp_path, monkeypatch):
 def test_a_retained_call_launches_its_prepared_route_not_the_callers(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-330"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     _registry(tmp_path)
     kept = sk._keep(tmp_path, sk.ON, account=TOK)
@@ -547,6 +566,7 @@ def _row_text(model="m", env="", family="ANTHROPIC"):
 
 
 def test_a_row_changed_after_selection_launches_the_selected_row(tmp_path, monkeypatch):
+    """Implements: TC-330"""
     al = load_agent_loop()
     monkeypatch.setattr(al.session_service, "cli_version", lambda *a, **k: "")
     ctx, plan = _selected(tmp_path, monkeypatch, _row_text(model="selected"))
@@ -573,6 +593,7 @@ def test_a_row_changed_after_selection_launches_the_selected_row(tmp_path, monke
 
 
 def test_the_version_probe_runs_under_the_prepared_environment(tmp_path, monkeypatch):
+    """Implements: TC-330"""
     al = load_agent_loop()
     probed = []
     monkeypatch.setattr(
@@ -593,6 +614,7 @@ def test_the_version_probe_runs_under_the_prepared_environment(tmp_path, monkeyp
 
 
 def test_keep_warm_never_warms_a_record_of_another_family(tmp_path, monkeypatch):
+    """Implements: TC-330"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10), account=TOK)  # ANTHROPIC
     _registry(tmp_path)
@@ -677,6 +699,7 @@ def _plan_real(tmp_path, wi="WI-1", account=TOK):
 def test_the_probe_and_the_launch_run_the_one_prepared_executable(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-330"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     ambient = os.environ.get("PATH", "")
     _shim(tmp_path / "old", "old")
@@ -700,6 +723,7 @@ def test_the_probe_and_the_launch_run_the_one_prepared_executable(
 
 
 def test_the_version_probe_never_receives_the_credential(tmp_path, monkeypatch):
+    """Implements: TC-330"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "ambient-" + PLAIN)
     ambient = os.environ.get("PATH", "")
@@ -735,6 +759,7 @@ def test_the_version_probe_never_receives_the_credential(tmp_path, monkeypatch):
 def test_a_runner_not_on_the_launch_path_is_refused_before_any_lease(
     tmp_path, monkeypatch, declared
 ):
+    """Implements: TC-330"""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     template = sk.TEMPLATES["ANTHROPIC"].replace("claude", "no-such-runner-846", 1)
     _registry(tmp_path, template=template)
@@ -758,7 +783,10 @@ def test_a_runner_not_on_the_launch_path_is_refused_before_any_lease(
 
 def test_the_runner_resolves_after_the_template_substitution(tmp_path, monkeypatch):
     """Sol r6 MAJOR 3: a `{model}` in the runner's own token is substituted
-    exactly as the launch argv substitutes it before the runner resolves."""
+    exactly as the launch argv substitutes it before the runner resolves.
+
+    Implements: TC-330
+    """
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     runner = _shim(tmp_path / "runners" / "m", "v1")
     template = sk.TEMPLATES["ANTHROPIC"].replace(

@@ -11,6 +11,8 @@ Critique record only after its `shall`, is still judged.
 
 The rest of the advisory's contract (the case split, the scanned cells, the one
 direction) is pinned in `tests/test_trace_rules.py`.
+
+Implements: TC-275
 """
 
 from conftest import load_script

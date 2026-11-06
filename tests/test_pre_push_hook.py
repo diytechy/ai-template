@@ -7,6 +7,8 @@ reviewer slot with fake approve/block scripts — no CI dependency on a real
 agent CLI. The Q12 ruling is pinned here: a missing reviewer FAILS CLOSED —
 with WI-1.30's one declared opt-down (docs/privacy-review: warn-unwired),
 which softens only the unwired case and is pinned just as hard.
+
+Implements: TC-020
 """
 
 import os
@@ -352,7 +354,10 @@ def test_the_review_posture_follows_the_one_parse(
     section, whatever its value and whatever the legacy docs/privacy-review
     says. The key's name inside a string is text, not a copy: it declares
     nothing, so the legacy file answers as for an absent key. Privacy off:
-    the posture is moot and the push proceeds."""
+    the posture is moot and the push proceeds.
+
+    Implements: TC-031
+    """
     root, base, head = repo
     set_privacy(root, "true" if privacy else "false")
     _declare_posture(root, value, legacy, decoy)
@@ -370,7 +375,10 @@ def test_the_review_posture_follows_the_one_parse(
 def test_pre_push_refuses_a_kit_scripts_dir_naming_a_missing_directory(repo):
     """TC-021 (SR-020, LLR-021): one scripts-directory rule for every hook. A
     KIT_SCRIPTS_DIR naming no directory refuses the push even though the
-    scaffold's scripts/ is there to fall back on."""
+    scaffold's scripts/ is there to fall back on.
+
+    Implements: TC-021
+    """
     root, base, head = repo
     assert (root / "scripts").is_dir()
     proc = run_hook(
@@ -521,7 +529,10 @@ def older():
 def test_pre_push_never_runs_on_an_older_python(repo, older):
     """WI-880, real interpreters only: with a real Python below the 3.11 floor
     the only one on PATH, the pre-push hook neither scans the outgoing range on
-    it nor skips the scan: it refuses the push and names dev-setup's install."""
+    it nor skips the scan: it refuses the push and names dev-setup's install.
+
+    Implements: TC-021
+    """
     root, base, head = repo
     env = dict(os.environ, PATH=older_only_path(older))
     env.pop("VIRTUAL_ENV", None)

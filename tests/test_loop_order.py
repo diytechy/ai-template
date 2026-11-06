@@ -22,6 +22,8 @@ into `census.py`, so the formatter and the parser are now in one module — the
 round-trip pin stays because the SEAM is still a seam (the mint reads lines the
 census wrote), and it now also asserts the dispatcher's re-export, which is what
 keeps every existing caller of `dispatch.parse_red_tc` honest.
+
+Implements: TC-154, TC-155
 """
 
 import pytest
@@ -38,6 +40,7 @@ ct = load_script("check_trajectory")
 
 
 def test_an_adjudication_row_outranks_a_spine_work_item():
+    """Implements: TC-154"""
     # The one place the loop-order contract and §A1's rank table disagree.
     # Spine is rank 0 and adjudication rank 1, so the FRONTIER hands them over
     # spine-first; admission re-orders. Why: an adjudication row exists because
@@ -149,6 +152,7 @@ def _spine(root, *, tc_status, wi_status="done", verifies="SR-001"):
 
 
 def test_a_red_tc_under_a_closed_row_is_named(tmp_path):
+    """Implements: TC-183"""
     # The contradiction the registries state plainly and nothing was reading:
     # the work item is CLOSED and the evidence for it is not green.
     _spine(tmp_path, tc_status="Failed")
@@ -159,6 +163,7 @@ def test_a_red_tc_under_a_closed_row_is_named(tmp_path):
 
 @pytest.mark.parametrize("status", ["Approved", "Drafted", "Founded"])
 def test_the_three_exempt_statuses_are_never_red(tmp_path, status):
+    """Implements: TC-183"""
     # Stated as EXEMPTIONS rather than as a list of red words: anything else is
     # red, so the rule fails toward naming a gap rather than missing one, and it
     # keeps working for a downstream repo mid-migration.
@@ -172,6 +177,7 @@ def test_the_three_exempt_statuses_are_never_red(tmp_path, status):
 
 
 def test_an_OPEN_row_never_makes_a_tc_red(tmp_path):
+    """Implements: TC-183"""
     # The whole premise is "a closed row CLAIMS the work". A queued row claims
     # nothing, so its TC being red is simply work not started — which the
     # orphan/status rungs already name, and a second row would double-count.
@@ -180,6 +186,7 @@ def test_an_OPEN_row_never_makes_a_tc_red(tmp_path):
 
 
 def test_a_partial_close_never_makes_a_tc_red(tmp_path):
+    """Implements: TC-183"""
     # `partial` and `cancelled` are precisely the outcomes that say the work is
     # NOT delivered, so a red TC under one of them is expected rather than a
     # contradiction — and that close already earned a disposition row of its
@@ -189,6 +196,7 @@ def test_a_partial_close_never_makes_a_tc_red(tmp_path):
 
 
 def test_a_tc_verifying_a_MIX_of_claimed_and_unclaimed_is_not_red(tmp_path):
+    """Implements: TC-183"""
     # "All of whose targets are implemented" is the rule, and the reason is the
     # premise: if any target is still open the TC is legitimately not green yet.
     _spine(tmp_path, tc_status="Failed", verifies="SR-001;SR-999")
@@ -196,6 +204,7 @@ def test_a_tc_verifying_a_MIX_of_claimed_and_unclaimed_is_not_red(tmp_path):
 
 
 def test_the_red_tc_line_grammar_round_trips():
+    """Implements: TC-183"""
     # A STRING CONTRACT BETWEEN TWO MODULES — the seam carries finding strings,
     # so the formatter and the parser are pinned against each other. The
     # alternative (intake re-splitting the prose) is prose carrying control
@@ -211,6 +220,7 @@ def test_the_red_tc_line_grammar_round_trips():
 
 
 def test_parse_red_tc_returns_None_for_every_other_census_line():
+    """Implements: TC-183"""
     # The router must not match by accident: an ordinary gap line that merely
     # mentions a TC id is NOT a red-TC event.
     assert dsp.parse_red_tc("SN-002 is a draft need (unapproved)") is None
@@ -220,6 +230,7 @@ def test_parse_red_tc_returns_None_for_every_other_census_line():
 
 
 def test_the_red_tc_census_rides_the_gap_census_seam(tmp_path):
+    """Implements: TC-183"""
     # The census hands ONE list of strings to intake; the new class travels
     # on it rather than growing the seam a second shape.
     _spine(tmp_path, tc_status="Failed")

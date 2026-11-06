@@ -16,6 +16,8 @@ kit performs one (`baseline_snapshot.copy_live`, then a commit), so the
 module is registered in `tests/conftest.py`'s `SLOW_MODULES`. The pure state
 rule is `assumption_rules.accepted_risk_state`; the act is read from history by
 `baseline_snapshot.risk_acceptance_act`.
+
+Implements: TC-234
 """
 
 import datetime

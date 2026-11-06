@@ -122,6 +122,7 @@ def _disjoint(records):
 
 
 def test_first_reservation_seeds_the_carrier_from_trunk(tmp_path):
+    """Implements: TC-401"""
     root = _trunk(tmp_path)
     lane = _lane(root, 1)
     assert _tip(root) is None
@@ -144,6 +145,7 @@ def test_first_reservation_seeds_the_carrier_from_trunk(tmp_path):
 def test_a_lost_race_refuses_with_nothing_written(
     tmp_path, monkeypatch, capsys, first_use
 ):
+    """Implements: TC-401"""
     root = _trunk(tmp_path)
     lane_a, lane_b = _lane(root, 1), _lane(root, 2)
     if not first_use:
@@ -176,6 +178,7 @@ def test_a_lost_race_refuses_with_nothing_written(
 
 
 def test_sequential_reservations_are_disjoint(tmp_path):
+    """Implements: TC-401"""
     root = _trunk(tmp_path)
     lane_a, lane_b = _lane(root, 1), _lane(root, 2)
     _reserved(lane_a, "WI-001", "SR=2,TC=1")
@@ -197,6 +200,7 @@ def test_sequential_reservations_are_disjoint(tmp_path):
 
 
 def test_stale_base_reservations_are_disjoint(tmp_path):
+    """Implements: TC-401"""
     root = _trunk(tmp_path)
     lane_a = _lane(root, 1)  # cut while trunk's SR mark is 5
     write_lf(root, WATERMARK, reserved_watermark({"SR": 8, "TC": 3, "WI": 2, "OI": 7}))
@@ -213,6 +217,7 @@ def test_stale_base_reservations_are_disjoint(tmp_path):
 
 
 def test_a_reservation_after_a_ruled_correction_starts_above_it(tmp_path):
+    """Implements: TC-401"""
     root = _trunk(tmp_path)
     lane_a = _lane(root, 1)
     _reserved(lane_a, "WI-001", "SR=1")  # the carrier exists, SR at 6
@@ -234,6 +239,7 @@ def test_a_reservation_after_a_ruled_correction_starts_above_it(tmp_path):
 def test_a_reservation_in_a_lane_behind_trunk_commits_through_the_integrity_floor(
     tmp_path,
 ):
+    """Implements: TC-401"""
     # Trunk mints a work item and raises a carrier-space mark with no record
     # after the lane is cut. The lane's folded watermark carries only what its
     # records justify, so the commit the recipe orders passes the floor the
@@ -260,6 +266,7 @@ def test_a_reservation_in_a_lane_behind_trunk_commits_through_the_integrity_floo
 
 
 def test_the_claim_folder_reader_reads_each_lanes_work_items_at_a_revision(tmp_path):
+    """Implements: TC-401"""
     # The one reader the reserve verb's claim check and the hand squash's
     # work-item read share: a spec under a slashed lane name is that lane's,
     # and a file the claim never writes names no work item.
@@ -285,6 +292,7 @@ def test_the_claim_folder_reader_reads_each_lanes_work_items_at_a_revision(tmp_p
 
 
 def test_fold_ids_on_a_conflicted_watermark(tmp_path):
+    """Implements: TC-401"""
     root = _trunk(tmp_path)
     lane = _lane(root, 1)
     _reserved(lane, "WI-001", "SR=2")

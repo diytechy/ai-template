@@ -70,6 +70,7 @@ def repo(tmp_path):
 
 
 def test_list_is_stable_name_tab_desc(repo):
+    """Implements: TC-047"""
     # --list is the agent surface: one `name<TAB>desc` line per capability in
     # declaration order; a capability with no .desc renders a trailing tab.
     proc = _run(["--list"], repo)
@@ -78,6 +79,7 @@ def test_list_is_stable_name_tab_desc(repo):
 
 
 def test_direct_launch_runs_command_and_passes_args(repo):
+    """Implements: TC-047"""
     # `run_menu.py <name>` runs that capability; trailing args pass through
     # (the old `exec $RUN_CMD "$@"` contract).
     proc = _run(["serve", "extra"], repo)
@@ -87,6 +89,7 @@ def test_direct_launch_runs_command_and_passes_args(repo):
 
 
 def test_direct_launch_passes_exit_code(repo):
+    """Implements: TC-047"""
     # Exit-code passthrough: a nonzero from the launched command is the script's
     # exit code.
     _write_stack(repo, 'fail = {py} -c "import sys; sys.exit(7)"\n'.format(py=PY))
@@ -95,12 +98,14 @@ def test_direct_launch_passes_exit_code(repo):
 
 
 def test_unknown_name_exits_2(repo):
+    """Implements: TC-047"""
     proc = _run(["nope"], repo)
     assert proc.returncode == 2
     assert "no capability named" in proc.stderr
 
 
 def test_menu_launches_from_piped_stdin(repo):
+    """Implements: TC-047"""
     # No args = the numbered menu; feeding "1" selects the first capability and
     # runs it non-interactively.
     proc = _run([], repo, stdin="1\n")
@@ -112,6 +117,7 @@ def test_menu_launches_from_piped_stdin(repo):
 
 
 def test_menu_does_not_hang_on_closed_stdin(repo):
+    """Implements: TC-047"""
     # An unattended invocation (stdin closed) must exit, not block on the prompt.
     proc = _run([], repo)  # stdin=DEVNULL
     assert proc.returncode == 1
@@ -125,6 +131,7 @@ def test_menu_quit_is_clean(repo):
 
 
 def test_absent_run_section_prints_guidance_and_exits_1(tmp_path):
+    """Implements: TC-047"""
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "stack.ini").write_text(
         "[paths]\nsrc = src\n", encoding="utf-8"
@@ -210,7 +217,10 @@ def test_a_capabilitys_python_is_the_menus_own_interpreter(tmp_path):
     """WI-880: a declared line's `python` runs on the interpreter the menu
     runs on, the one its launcher floor-resolved, not whichever is first on
     PATH. Real interpreters only: a real Python below the 3.11 floor is the
-    only one on PATH, and the line still reports the menu's own."""
+    only one on PATH, and the line still reports the menu's own.
+
+    Implements: TC-047
+    """
     older = sub_floor_interpreter()
     if older is None:
         pytest.skip("no Python below 3.11 is installed on this host")
@@ -241,7 +251,10 @@ def test_a_capabilitys_python_is_exact_where_its_directory_holds_another(tmp_pat
     directory's `python` is another program (a system install's /usr/bin
     beside a different `python`), and a line's `python` is still the menu's
     own. Built here as a directory holding the menu's interpreter under
-    another name next to a `python` that must never run."""
+    another name next to a `python` that must never run.
+
+    Implements: TC-047
+    """
     if os.name == "nt":
         pytest.skip("POSIX: on Windows the interpreter's directory is exact")
     bindir = tmp_path / "bin"
@@ -277,7 +290,10 @@ def test_the_posix_shim_runs_exactly_the_interpreter_it_names(tmp_path, name):
     any platform: the shim the menu puts first on a line's PATH runs exactly
     the interpreter it names, by that path, so a virtual environment stays
     itself (a symlink in another directory would lose the environment's
-    configuration, which is why the menu writes a shim instead)."""
+    configuration, which is why the menu writes a shim instead).
+
+    Implements: TC-047
+    """
     skip_without_env_gates("posix-shell")
     venv = tmp_path / "venv"
     subprocess.run(

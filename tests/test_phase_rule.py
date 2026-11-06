@@ -117,6 +117,7 @@ def _stage(root):
 
 # --- the baseline the four directions move from -------------------------------
 def test_the_committed_baseline_is_a_settled_IMPL_spine(repo):
+    """Implements: TC-207"""
     srs, llrs, tcs = _settled("SR-001", "1")
     _write(repo, srs, llrs, tcs)
     _commit(repo)
@@ -127,7 +128,10 @@ def test_the_committed_baseline_is_a_settled_IMPL_spine(repo):
 # --- DIRECTION 1: a stage-lowering edit with NO new phase tag FIRES ------------
 def test_a_lowering_edit_in_the_STANDING_phase_FIRES(repo):
     """The rule's whole purpose: scope added to the phase you are standing in,
-    which drops the reading, with nothing saying the scope moved."""
+    which drops the reading, with nothing saying the scope moved.
+
+    Implements: TC-207
+    """
     srs, llrs, tcs = _settled("SR-001", "1")
     _write(repo, srs, llrs, tcs)
     _commit(repo)
@@ -147,7 +151,10 @@ def test_a_lowering_edit_in_the_STANDING_phase_FIRES(repo):
 def test_the_same_edit_with_a_NEW_phase_tag_PASSES(repo):
     """Identical decrease, identical row, one cell different. That the two tests
     differ ONLY in the `Phase` cell is the point — it is what shows the rule
-    grades the phase signal and not the decrease."""
+    grades the phase signal and not the decrease.
+
+    Implements: TC-207
+    """
     srs, llrs, tcs = _settled("SR-001", "1")
     _write(repo, srs, llrs, tcs)
     _commit(repo)
@@ -159,7 +166,10 @@ def test_the_same_edit_with_a_NEW_phase_tag_PASSES(repo):
 
 def test_an_ALREADY_OPEN_LOWER_phase_also_satisfies_the_rule(repo):
     """The plan's second permitted answer: "a NEW (or already-open lower) phase
-    tag". Work returning to an earlier phase is a declared scope move too."""
+    tag". Work returning to an earlier phase is a declared scope move too.
+
+    Implements: TC-207
+    """
     srs = _settled("SR-001", "1")[0] + _settled("SR-002", "2")[0]
     llrs = _settled("SR-001", "1")[1] + _settled("SR-002", "2")[1]
     tcs = _settled("SR-001", "1")[2] + _settled("SR-002", "2")[2]
@@ -183,7 +193,10 @@ def test_the_LLREQS_to_ARCH_decrease_is_EXEMPT(repo):
     Driven through the COMPONENT registry, because that is what the Arch rung
     reads — and it is why the rule's before-state re-reads the whole frame at
     HEAD rather than pinning it to the live tree. With the frame held constant
-    this transition is unreachable and the exemption would be dead code."""
+    this transition is unreachable and the exemption would be dead code.
+
+    Implements: TC-207
+    """
     req = repo / "docs" / "requirements"
     cmp_h = "CMP-ID,Name,Status,Standing\n"
     (req / "components.csv").write_text(
@@ -213,7 +226,10 @@ def test_the_LLREQS_to_ARCH_decrease_is_EXEMPT(repo):
 def test_a_TWO_RUNG_decrease_that_merely_ENDS_at_Arch_is_NOT_exempt(repo):
     """The exemption is a PAIR, not a predicate over the Arch rung (§6.2 declined
     a wider Arch-tier exemption). A drop from Impl that happens to land on Arch
-    is not the decomposition cycle and must still be declared."""
+    is not the decomposition cycle and must still be declared.
+
+    Implements: TC-207
+    """
     req = repo / "docs" / "requirements"
     cmp_h = "CMP-ID,Name,Status,Standing\n"
     (req / "components.csv").write_text(
@@ -262,7 +278,10 @@ def test_a_COMPONENT_ONLY_decrease_FIRES(repo):
     The frame registries carry no `Phase` cell — the boundary and partition
     rungs are repo-global, which is exactly why they can drop every phase at
     once — so the finding cannot ask for a phase tag. It reports the decrease
-    and names the row that caused it."""
+    and names the row that caused it.
+
+    Implements: TC-207
+    """
     req = repo / "docs" / "requirements"
     cmp_h = "CMP-ID,Name,Status,Standing\n"
     (req / "components.csv").write_text(
@@ -290,7 +309,10 @@ def test_a_BOUNDARY_ONLY_decrease_FIRES(repo):
     the frame settled drops every phase to DevStg-Boundary, and no spine row
     moves. Included because the two rungs share one applies-when shape, so a fix
     that closed only the components half would leave the same defect one rung
-    down."""
+    down.
+
+    Implements: TC-207
+    """
     req = repo / "docs" / "requirements"
     ext_h = "B-ID,Entity,Direction,Carries,Status\n"
     (req / "external.csv").write_text(
@@ -317,7 +339,10 @@ def test_a_REDRAFTED_child_in_the_standing_phase_FIRES(repo):
     """The OTHER shape that actually lowers the effective stage, and the reason
     the trigger set is "added, or Status moved" rather than the plan's literal
     "newly drafted". Redrafting an LLR removes it from the settled fold, which
-    leaves its SR undecomposed."""
+    leaves its SR undecomposed.
+
+    Implements: TC-207
+    """
     srs, llrs, tcs = _settled("SR-001", "1")
     _write(repo, srs, llrs, tcs)
     _commit(repo)
@@ -342,7 +367,10 @@ def test_a_NEW_DRAFT_cannot_lower_the_effective_stage_AT_ALL(repo):
 
     This is not a defect in either slice: it is slice 1's C-01 fix working, and
     recording it here stops a future reader from "restoring" the literal wording
-    and shipping a rule with no reachable trigger."""
+    and shipping a rule with no reachable trigger.
+
+    Implements: TC-207
+    """
     srs, llrs, tcs = _settled("SR-001", "1")
     _write(repo, srs, llrs, tcs)
     _commit(repo)
@@ -358,7 +386,10 @@ def test_a_NEW_DRAFT_cannot_lower_the_effective_stage_AT_ALL(repo):
 def test_without_git_the_rule_has_NOTHING_TO_SAY(tmp_path):
     """The silent-no-op degrade every two-tree rule in the kit shares: no HEAD
     means no before-state, and a rule that cannot see the past reports nothing
-    rather than complaining about it."""
+    rather than complaining about it.
+
+    Implements: TC-207
+    """
     (tmp_path / "docs" / "requirements").mkdir(parents=True)
     (tmp_path / "docs" / "test").mkdir(parents=True)
     (tmp_path / "docs" / "requirements" / "stakeholder-needs.md").write_text(
@@ -372,7 +403,10 @@ def test_the_CLI_is_WARN_FIRST_and_STRICT_promotes(repo):
     """Tier decision, pinned: findings WARN and exit 0; `--strict` FAILs and
     exits 1. New rules arm warn-first here unless a ruling says otherwise, and
     OI-51 ruled that the rule EXISTS, not that it blocks a commit on day one.
-    The promotion is a call-site change, not a second predicate."""
+    The promotion is a call-site change, not a second predicate.
+
+    Implements: TC-207
+    """
     srs, llrs, tcs = _settled("SR-001", "1")
     _write(repo, srs, llrs, tcs)
     _commit(repo)
@@ -398,6 +432,9 @@ def test_THIS_repo_does_not_fire_the_rule(repo):
     stage has not decreased, so the rule has nothing to fire on. Its 15 Drafted
     rows are all phase 5 and — per the test above — cannot lower the reading
     anyway, and the two repo-global frame rungs pin every phase at
-    `DevStg-Arch` while the partition is in work."""
+    `DevStg-Arch` while the partition is in work.
+
+    Implements: TC-207
+    """
     del repo  # this test is about ROOT, and takes the fixture only to stay in tier
     assert DS.phase_rule_findings(ROOT) == []

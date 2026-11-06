@@ -6,6 +6,8 @@ one session log and commits it. These tests drive both in memory with an
 injected runner, over the recorded fixtures `tests/test_session_adapters.py`
 describes (`tests/golden/sessions/`; all three are LIVE: the claude one
 recorded 2026-09-28, the codex and opencode ones 2026-09-30, WI-541).
+
+Implements: TC-264, TC-265
 """
 
 import ast
@@ -341,7 +343,10 @@ def test_call_runs_the_callers_seam_between_act_and_record(tmp_path, monkeypatch
     raised), and the record's report is filled for the caller; an
     interrupted call still runs the seam and is recorded INTERRUPTED.
     Adequacy witness: a seam run after the record, or skipped when the
-    launch raised, sees a log or no call here."""
+    launch raised, sees a log or no call here.
+
+    Implements: TC-384
+    """
     lane = claimed_lane(tmp_path)
     committed = []
     monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture(committed))
@@ -444,7 +449,10 @@ def test_a_call_outside_a_lane_spools_its_log_and_commits_nothing(
     tmp_path, monkeypatch
 ):
     """The primary checkout is never a lane: its log goes to the primary's
-    spool and nothing is committed, by `call` and by `record` alike."""
+    spool and nothing is committed, by `call` and by `record` alike.
+
+    Implements: TC-384
+    """
     committed = []
     monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture(committed))
     svc.call(_plain_call(tmp_path))
@@ -464,7 +472,10 @@ def test_the_shipped_gitignore_template_ignores_the_spool(tmp_path):
     spool is written to (`spool_dir`, relative to the primary checkout), so
     a spooled log never reads as the primary checkout's uncommitted change.
     Adequacy witness: a template naming only the older `out/` runtime files
-    has no such line."""
+    has no such line.
+
+    Implements: TC-384
+    """
     spool = svc.spool_dir(tmp_path).relative_to(tmp_path).as_posix() + "/"
     lines = (KIT / "gitignore.template").read_text(encoding="utf-8").splitlines()
     entries = [ln.strip() for ln in lines if ln.strip() and not ln.startswith("#")]
@@ -488,7 +499,10 @@ def test_an_unreadable_lane_reading_spools(tmp_path, monkeypatch, reader):
     not a lane; when its claim reads (the branch's tree and trunk's, both
     through `agent_common.git`'s `ls-tree`) both fail, each adds no claim, so
     neither readable tree shows it claimed and it is not a lane either: the
-    direction that never writes to trunk."""
+    direction that never writes to trunk.
+
+    Implements: TC-384
+    """
     lane = claimed_lane(tmp_path)
     committed = []
     monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture(committed))
@@ -505,7 +519,10 @@ def test_an_unreadable_lane_reading_spools(tmp_path, monkeypatch, reader):
 @pytest.mark.usefixtures("hooked")
 def test_an_unwritable_spool_raises_and_commits_nothing(tmp_path, monkeypatch):
     """A spool that cannot be created raises: the log is never dropped
-    silently and never committed elsewhere."""
+    silently and never committed elsewhere.
+
+    Implements: TC-384
+    """
     committed = []
     monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture(committed))
     (tmp_path / "out").mkdir()
@@ -519,7 +536,10 @@ def test_an_unwritable_spool_raises_and_commits_nothing(tmp_path, monkeypatch):
 
 def test_a_refused_telemetry_commit_is_reported_to_the_caller(tmp_path, monkeypatch):
     """In a lane, `record` keeps `commit_telemetry`'s refusal text and hands
-    it to its caller; a commit that lands reports none."""
+    it to its caller; a commit that lands reports none.
+
+    Implements: TC-384
+    """
     lane = claimed_lane(tmp_path)
     veto = "telemetry commit refused: the pre-commit hook vetoed it"
     answers = [veto, None]
@@ -559,7 +579,10 @@ def _argv_runner(seen):
 @pytest.mark.usefixtures("hooked")
 def test_a_resumed_call_launches_the_resume_form_and_logs_resumed(tmp_path):
     """An unretained call naming a thread launches the runner's resume form
-    and is accounted `session-mode = resumed`, with no retained session."""
+    and is accounted `session-mode = resumed`, with no retained session.
+
+    Implements: TC-384
+    """
     seen = []
     call = svc.Call(
         root=tmp_path,
@@ -585,7 +608,10 @@ def test_a_call_with_both_keep_and_resume_is_refused_before_accounting(
     tmp_path, monkeypatch
 ):
     """A thread named twice (a retained session and an unretained resume) is
-    refused before anything is accounted or launched."""
+    refused before anything is accounted or launched.
+
+    Implements: TC-384
+    """
     monkeypatch.setattr(keep, "keep_bookkeep", lambda *a, **k: {})
     prepared = svc.Prepared(
         family="OPENAI",
@@ -625,7 +651,10 @@ def test_a_call_with_both_keep_and_resume_is_refused_before_accounting(
 def test_the_standard_call_log_name_is_never_a_gate_log_name(tmp_path):
     """The name `_call_row` gives, as the log writer spells it, is a standard
     call log and never a gate log; a gate log, a renamed or a train-prefixed
-    name is not a standard call log."""
+    name is not a standard call log.
+
+    Implements: TC-384
+    """
     for _ in range(3):
         row = svc._call_row({"invocation-id": uuid.uuid4().hex}, "COMPLETED")
         path = common.write_session_log(tmp_path, row, "")
@@ -967,6 +996,7 @@ def test_the_retired_shell_launchers_are_referred_to_nowhere():
 def test_a_credential_in_a_raw_usage_line_is_redacted_in_the_log_header(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-172"""
     root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     # The claude usage line is its result event, which carries the result
     # text; the header is committed history, so it passes the same redaction

@@ -3,6 +3,8 @@
 The kit's `skills/` folder holds agent-neutral SKILL.md definitions; INDEX.csv is
 a generated scan surface over their frontmatter (like the code map). These tests
 pin the frontmatter contract and the generator's behavior.
+
+Implements: TC-025
 """
 
 import re
@@ -84,6 +86,7 @@ def test_generator_rejects_name_dir_mismatch(tmp_path):
 
 
 def test_check_refuses_a_description_under_the_floor(tmp_path, capsys, monkeypatch):
+    """Implements: TC-291"""
     # The description is the only text an agent reads to decide whether to load
     # a skill, so one too short to say WHEN to use it is a skill that never
     # triggers. `--check` refuses it by name; one at the floor passes.
@@ -110,12 +113,14 @@ def test_check_refuses_a_description_under_the_floor(tmp_path, capsys, monkeypat
 
 
 def test_every_shipped_description_clears_the_floor():
+    """Implements: TC-291"""
     gen = load_script("gen_skills_index")
     rows = gen.collect_skills(SKILLS)
     assert gen.short_descriptions(rows) == []
 
 
 def test_gate_advance_names_the_stage_gate_rejudge_step():
+    """Implements: TC-248"""
     text = (SKILLS / "gate-advance" / "SKILL.md").read_text(encoding="utf-8")
     body = text.split("---", 2)[2]
     assert "python scripts/intake.py rejudge --checkpoint stage-gate" in body

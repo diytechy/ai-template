@@ -243,6 +243,7 @@ def _trace(name):
 def test_the_extracted_sweep_equals_the_working_sweep_for_every_carrier_space(
     tmp_path,
 ):
+    """Implements: TC-402"""
     # On this repository. The working tree's two registry directories are
     # staged into a private index and written as a tree, so the comparison is
     # exact whatever is uncommitted: a carrier-space reader that reads outside
@@ -266,6 +267,7 @@ def test_the_extracted_sweep_equals_the_working_sweep_for_every_carrier_space(
 
 
 def test_a_minus_000_placeholder_is_never_added(tmp_path):
+    """Implements: TC-402"""
     root = _trunk(tmp_path, harness=False)
     base = _rev(root, "HEAD")
     write_lf(root, SR_REGISTRY, _rows(0))
@@ -280,6 +282,7 @@ def test_a_minus_000_placeholder_is_never_added(tmp_path):
 
 
 def test_landing_fold_lag_reads_a_commit_and_an_index_tree(tmp_path):
+    """Implements: TC-402"""
     root = _trunk(tmp_path, harness=False)
     held = reserved_watermark({"WI": 401, "SR": 7}, [OWN])
     plant_id_carrier(root, held)
@@ -301,6 +304,7 @@ EXPORT_IGNORE = "docs/requirements/** export-ignore\n"
 
 
 def test_a_registry_an_export_ignore_rule_hides_is_still_judged(tmp_path):
+    """Implements: TC-402"""
     # The judgement reads the committed registries, not an archive of them: an
     # attribute that drops a file from `git archive` must not hide an
     # unreserved id from the landing check, at the lane's tip or in a staged
@@ -320,12 +324,14 @@ def test_a_registry_an_export_ignore_rule_hides_is_still_judged(tmp_path):
 
 @pytest.mark.parametrize("case", sorted(REFUSED))
 def test_the_slot_refuses_each_unreserved_landing(tmp_path, case):
+    """Implements: TC-402"""
     root = _case(tmp_path, case)
     refusal = refused(root, "wi-401", "smoke")
     assert all(word in refusal for word in _named(case)), (case, refusal)
 
 
 def test_the_slot_refuses_an_unreserved_id_an_export_ignore_rule_hides(tmp_path):
+    """Implements: TC-402"""
     root = _trunk(tmp_path, attributes=EXPORT_IGNORE)
     _close(root, {SR_REGISTRY: _rows(6)})
     refusal = refused(root, "wi-401", "smoke")
@@ -333,6 +339,7 @@ def test_the_slot_refuses_an_unreserved_id_an_export_ignore_rule_hides(tmp_path)
 
 
 def test_the_slot_rung_refuses_ids_added_under_an_unreadable_claim(tmp_path):
+    """Implements: TC-402"""
     # The ladder's first rung refuses an empty claim before this one, so the
     # row is driven on the rung itself.
     root = _case(tmp_path, "no-record")
@@ -344,6 +351,7 @@ def test_the_slot_rung_refuses_ids_added_under_an_unreadable_claim(tmp_path):
 
 
 def test_the_slot_lands_a_lane_whose_ids_sit_in_its_own_record(tmp_path):
+    """Implements: TC-402"""
     # Adequacy witness: an implementation that refused every added
     # carrier-space id, or judged the records of a work item other than the
     # lane's claim, would refuse this lane.
@@ -357,6 +365,7 @@ def test_the_slot_lands_a_lane_whose_ids_sit_in_its_own_record(tmp_path):
 
 
 def test_a_code_only_lane_with_no_carrier_lands(tmp_path):
+    """Implements: TC-402"""
     # Adequacy witness: an implementation that demanded a carrier, or a
     # reservation, of every landing would refuse this lane, which adds no id.
     root = _trunk(tmp_path)
@@ -368,6 +377,7 @@ def test_a_code_only_lane_with_no_carrier_lands(tmp_path):
 def test_the_slot_lands_a_code_only_lane_after_trunk_deletes_an_id_it_based_on(
     tmp_path,
 ):
+    """Implements: TC-402"""
     # The slot reaches this lane unrefreshed (the second branch of a drain):
     # an id trunk deleted after the lane's base is still live at the lane's
     # tip, and it is trunk's change, never one the lane adds.
@@ -384,6 +394,7 @@ def test_the_slot_lands_a_code_only_lane_after_trunk_deletes_an_id_it_based_on(
 def test_the_slot_refuses_a_retired_id_re_authored_inside_its_own_reservation(
     tmp_path,
 ):
+    """Implements: TC-402"""
     # Range membership alone would admit it: SR-006 sits in the lane's own
     # record, and only its retirement record says the number is spent.
     root = _trunk(tmp_path)
@@ -393,6 +404,7 @@ def test_the_slot_refuses_a_retired_id_re_authored_inside_its_own_reservation(
 
 
 def test_the_slot_refuses_an_id_its_base_held_retired_and_re_authored(tmp_path):
+    """Implements: TC-402"""
     # SR-003 is live at the lane's base and live again at its tip, so it is
     # never an added id; only the retirement record the lane adds says the
     # number is spent.
@@ -405,6 +417,7 @@ def test_the_slot_refuses_an_id_its_base_held_retired_and_re_authored(tmp_path):
 def test_the_slot_lands_a_lane_beside_a_retired_id_trunk_already_holds_live(
     tmp_path,
 ):
+    """Implements: TC-402"""
     # Adequacy witness: an implementation that refused every live id a
     # retirement record names would refuse every landing after such a pair
     # reached trunk; this lane changes nothing about SR-003.
@@ -419,6 +432,7 @@ def test_the_slot_lands_a_lane_beside_a_retired_id_trunk_already_holds_live(
 def test_the_dispatchers_drain_refreshes_a_lane_whose_watermark_lags_the_carrier(
     tmp_path, capfd
 ):
+    """Implements: TC-402"""
     # The station's speculative half asks the slot's own readiness question:
     # a lane refreshed before another lane reserved lags the carrier, so the
     # drain refreshes it outside the slot and the slot never refreshes it in
@@ -439,6 +453,7 @@ def test_the_dispatchers_drain_refreshes_a_lane_whose_watermark_lags_the_carrier
 
 
 def test_the_slot_folds_a_carrier_moved_after_the_lanes_refresh(tmp_path):
+    """Implements: TC-402"""
     root = _trunk(tmp_path)
     folded = reserved_watermark({"WI": 401, "SR": 7}, [OWN])
     plant_id_carrier(root, folded)
@@ -454,6 +469,7 @@ def test_the_slot_folds_a_carrier_moved_after_the_lanes_refresh(tmp_path):
 
 
 def test_a_code_only_lane_lands_with_the_carriers_fold(tmp_path):
+    """Implements: TC-402"""
     root = _trunk(tmp_path)
     plant_id_carrier(root, reserved_watermark({"WI": 401, "SR": 9}, [OTHER]))
     _close(root, {"widget.txt": "1\n"})
@@ -482,6 +498,7 @@ def _watermark_conflict(root):
 def test_a_refresh_conflicting_only_on_the_watermark_is_resolved_by_the_fold(
     tmp_path,
 ):
+    """Implements: TC-402"""
     root = _trunk(tmp_path)
     wt = _watermark_conflict(root)
     _sha, refusal = integ.refresh(root, "wi-401", "smoke")
@@ -494,6 +511,7 @@ def test_a_refresh_conflicting_only_on_the_watermark_is_resolved_by_the_fold(
 
 
 def test_a_watermark_conflict_beside_another_conflict_still_refuses(tmp_path):
+    """Implements: TC-402"""
     # Adequacy witness: an implementation that treated any conflict set
     # holding the watermark as settled once the watermark was folded would
     # commit over the product file's conflict here instead of refusing.
@@ -513,6 +531,7 @@ def test_a_watermark_conflict_beside_another_conflict_still_refuses(tmp_path):
 def test_a_registry_conflict_beside_the_watermark_refuses_with_the_merge_undone(
     tmp_path,
 ):
+    """Implements: TC-402"""
     # Two lanes appending rows to one registry conflict there as well as on the
     # watermark: the refresh refuses and undoes the merge rather than folding
     # the watermark over a conflicted registry.
@@ -534,6 +553,7 @@ def test_a_registry_conflict_beside_the_watermark_refuses_with_the_merge_undone(
 
 @pytest.mark.parametrize("case", sorted(REFUSED))
 def test_the_hand_squash_refuses_each_unreserved_landing(tmp_path, case):
+    """Implements: TC-402"""
     root = _case(tmp_path, case, harness=False)
     _squash(root)
     code, out = _step(root)
@@ -542,6 +562,7 @@ def test_the_hand_squash_refuses_each_unreserved_landing(tmp_path, case):
 
 
 def test_the_hand_squash_passes_ids_in_its_own_record(tmp_path):
+    """Implements: TC-402"""
     root = _trunk(tmp_path, harness=False)
     folded = reserved_watermark({"WI": 401, "SR": 7}, [OWN])
     plant_id_carrier(root, folded)
@@ -552,6 +573,7 @@ def test_the_hand_squash_passes_ids_in_its_own_record(tmp_path):
 
 
 def test_the_hand_squash_refuses_ids_added_under_an_unreadable_claim(tmp_path):
+    """Implements: TC-402"""
     # No local branch contains the squashed tip, so no claim can be read.
     root = _trunk(tmp_path, harness=False)
     folded = reserved_watermark({"WI": 401, "SR": 7}, [OWN])
@@ -568,6 +590,7 @@ def test_the_hand_squash_refuses_ids_added_under_an_unreadable_claim(tmp_path):
 def test_the_hand_squash_refuses_a_retired_id_re_authored_inside_its_own_reservation(
     tmp_path,
 ):
+    """Implements: TC-402"""
     root = _trunk(tmp_path, harness=False)
     _reauthored_retired_id(root)
     _squash(root)
@@ -578,6 +601,7 @@ def test_the_hand_squash_refuses_a_retired_id_re_authored_inside_its_own_reserva
 def test_the_hand_squash_refuses_an_id_its_base_held_retired_and_re_authored(
     tmp_path,
 ):
+    """Implements: TC-402"""
     root = _trunk(tmp_path, harness=False, sr_rows=(3,))
     _reauthored_retired_id(root, number=3)
     _squash(root)
@@ -588,6 +612,7 @@ def test_the_hand_squash_refuses_an_id_its_base_held_retired_and_re_authored(
 def test_the_hand_squash_refuses_another_lanes_number_after_that_lane_landed(
     tmp_path,
 ):
+    """Implements: TC-402"""
     # A stale-base lane (SR 8-8 reserved) drafted SR-007, another lane's
     # number. That lane lands SR-006 and SR-007 first; the squash conflicts on
     # the registry and is resolved keeping this lane's SR-007. Over HEAD the
@@ -616,6 +641,7 @@ def test_the_hand_squash_refuses_another_lanes_number_after_that_lane_landed(
 
 
 def test_a_hand_squash_folds_a_carrier_moved_after_the_lanes_fold(tmp_path):
+    """Implements: TC-402"""
     root = _trunk(tmp_path, harness=False)
     folded = reserved_watermark({"WI": 401, "SR": 7}, [OWN])
     plant_id_carrier(root, folded)
@@ -637,6 +663,7 @@ def test_a_hand_squash_folds_a_carrier_moved_after_the_lanes_fold(tmp_path):
 
 
 def test_a_code_only_squash_passes_with_no_reservation(tmp_path):
+    """Implements: TC-402"""
     root = _trunk(tmp_path, harness=False)
     _close(root, {"widget.txt": "1\n"})
     _squash(root)
@@ -654,6 +681,7 @@ def test_a_code_only_squash_passes_with_no_reservation(tmp_path):
 
 
 def test_the_pre_commit_hook_runs_the_reserved_ids_step():
+    """Implements: TC-402"""
     # The squash step only guards a hand landing if the shipped hook's batched
     # floor runs it, beside held-status.
     hook = (SCRIPTS.parent / "hooks" / "pre-commit").read_text(encoding="utf-8")

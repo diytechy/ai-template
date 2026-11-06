@@ -57,7 +57,10 @@ def _prompt(tmp_path):
 
 def test_each_role_launches_its_enabled_roster_row(tmp_path, capsys):
     """Adequacy witness: an entry point that launched one fixed model, or
-    that read a disabled row off the registry, gives the wrong row here."""
+    that read a disabled row off the registry, gives the wrong row here.
+
+    Implements: TC-384
+    """
     root = fx.write_route_files(tmp_path / "root")
     expected = {
         "REVIEW-A": ("OPENAI-SOL", fx.SOL_MODEL, "strong"),
@@ -93,7 +96,10 @@ def _c_values(argv):
 def test_the_launch_keeps_the_wrappers_sandbox(tmp_path):
     """Adequacy witness: a launch on the roster row's own template (which
     bypasses the sandbox) or with the scratch root taken from the script's
-    own location fails here."""
+    own location fails here.
+
+    Implements: TC-384
+    """
     lane = claimed_lane(tmp_path, files=fx.route_files())
     scratch = (tmp_path / "primary.wt" / "review-tmp").resolve()
     launch, why = cc.resolve_role(lane, "REVIEW-A", effort="high")
@@ -122,7 +128,10 @@ def test_the_launch_keeps_the_wrappers_sandbox(tmp_path):
 
 def test_sol_reads_any_change_but_the_discount_as_an_edit():
     """Adequacy witness: a judge that compared HEAD alone, or that discounted
-    every log-shaped name, reads one of these edits as clean."""
+    every log-shaped name, reads one of these edits as clean.
+
+    Implements: TC-384
+    """
     for role in SOL_ROLES:
         assert judged(role, snap(), snap()) == cc.CLEAN
         verdict = cc.judge_changes(role, snap(), snap(**{"work.txt": "h1"}), span())
@@ -139,7 +148,10 @@ def test_sol_reads_any_change_but_the_discount_as_an_edit():
 
 def test_only_a_commit_adding_standard_call_logs_is_discounted():
     """Adequacy witness: a discount over any commit touching
-    `docs/iteration/`, or over a merge, passes one of these edits."""
+    `docs/iteration/`, or over a merge, passes one of these edits.
+
+    Implements: TC-384
+    """
     moved = snap(B)
     added = ("A", CALL_LOG, "b1")
     for role in (*SOL_ROLES, "AUTHOR"):
@@ -161,7 +173,10 @@ def test_only_a_commit_adding_standard_call_logs_is_discounted():
 def test_an_uncommitted_call_log_committed_during_the_call_is_discounted_only_unchanged():
     """Adequacy witness: a judge that discounted any vanished call log, or
     did not compare the committed blob with the waiting log's identity,
-    passes the modified or deleted variant."""
+    passes the modified or deleted variant.
+
+    Implements: TC-384
+    """
     before = snap_of(A, {CALL_LOG: "blob1"})
     for role in SOL_ROLES:
         own = span(commit(("A", CALL_LOG, "blob1")))
@@ -176,7 +191,10 @@ def test_an_uncommitted_call_log_committed_during_the_call_is_discounted_only_un
 
 def test_terra_keeps_uncommitted_output_and_reads_only_an_undiscounted_head_move():
     """Adequacy witness: a judge that applied Sol's rule to Terra reads its
-    output as an edit; one that ignored HEAD for Terra misses its commit."""
+    output as an edit; one that ignored HEAD for Terra misses its commit.
+
+    Implements: TC-384
+    """
     assert judged("AUTHOR", snap(), snap(**{"work.txt": "h1"})) == cc.CLEAN
     assert judged("AUTHOR", snap(**{"a.md": "h0"}), snap(**{"a.md": "h1"})) == cc.CLEAN
     discounted = span(commit(("A", CALL_LOG, "b1")))
@@ -188,14 +206,20 @@ def test_terra_keeps_uncommitted_output_and_reads_only_an_undiscounted_head_move
 
 def test_a_head_that_is_not_a_descendant_is_an_edit():
     """Adequacy witness: a judge that read only the commits listed in the
-    range (none, after a rewrite) reads a rewritten history as clean."""
+    range (none, after a rewrite) reads a rewritten history as clean.
+
+    Implements: TC-384
+    """
     for role in (*SOL_ROLES, "AUTHOR"):
         assert judged(role, snap(), snap(C), span(descendant=False)) == cc.EDIT
 
 
 def test_an_unreadable_snapshot_never_reads_clean():
     """Adequacy witness: a judge that treated an unreadable read as empty
-    reads these as clean."""
+    reads these as clean.
+
+    Implements: TC-384
+    """
     for role in (*SOL_ROLES, "AUTHOR"):
         assert judged(role, cc.Snapshot(None, {}), snap()) == cc.UNABLE
         assert judged(role, snap(), cc.Snapshot(A, None)) == cc.UNABLE
@@ -210,7 +234,10 @@ def test_an_index_only_change_is_an_edit_for_sol_and_output_for_terra():
     (staged, unstaged, or staged with other content) is an edit for Sol and
     uncommitted output for Terra; an unreadable index reading never reads
     clean. Adequacy witness: a judge that compared only the files on disk
-    reads every Sol case here as clean."""
+    reads every Sol case here as clean.
+
+    Implements: TC-384
+    """
     disk = {"work.txt": "h1"}
     tracked = frozenset(disk)
     unstaged = cc.Snapshot(A, disk, tracked, {"work.txt": " M " + "0" * 40})
@@ -234,7 +261,10 @@ def test_an_interrupted_call_is_recorded_as_the_service_records_it(
     call's log is still written and committed in the lane, recorded
     INTERRUPTED, as the service's own act-then-record records one.
     Adequacy witness: an act-then-record of the entry point's own that
-    caught only `Exception` leaves no log here."""
+    caught only `Exception` leaves no log here.
+
+    Implements: TC-384
+    """
     lane = claimed_lane(tmp_path, files=fx.route_files())
 
     def interrupted(*_args, **_kwargs):
@@ -313,7 +343,10 @@ BAD_CARRIERS = (
 @pytest.mark.parametrize("case", BAD_CARRIERS)
 def test_the_resume_walk_refuses_each_bad_carrier(tmp_path, case):
     """Adequacy witness: a walk that stepped over a log it cannot classify,
-    or took the first log whose role reads AUTHOR, continues a thread here."""
+    or took the first log whose role reads AUTHOR, continues a thread here.
+
+    Implements: TC-384
+    """
     committed, uncommitted, named = _bad_carrier(tmp_path, case)
     carrier = _walk(committed, uncommitted)
     assert carrier.session_id == ""
@@ -324,7 +357,10 @@ def test_the_resume_walk_refuses_each_bad_carrier(tmp_path, case):
 
 def test_an_older_valid_carrier_behind_a_newer_damaged_log_is_never_continued(tmp_path):
     """Adequacy witness: a walk that found candidates by content (`# role:
-    AUTHOR`) never sees the damaged log and continues the older thread."""
+    AUTHOR`) never sees the damaged log and continues the older thread.
+
+    Implements: TC-384
+    """
     older = _log(tmp_path, stamp="20261022-100000", session_id="T-OLD")
     path, text = _log(tmp_path, stamp="20261022-110000", session_id="T-NEW")
     cut = fx.cut_before(text, "role")
@@ -339,7 +375,10 @@ def test_an_older_valid_carrier_behind_a_newer_damaged_log_is_never_continued(tm
 
 def test_newer_well_formed_logs_of_other_roles_or_lanes_are_skipped(tmp_path):
     """Adequacy witness: a walk that refused every newer log, or took the
-    newest AUTHOR log of any lane, does not continue the lane's own thread."""
+    newest AUTHOR log of any lane, does not continue the lane's own thread.
+
+    Implements: TC-384
+    """
     older = _log(tmp_path, stamp="20261022-100000", session_id="T-OLD")
     review = _log(
         tmp_path, role="REVIEW-A", route="OPENAI-SOL", stamp="20261022-110000"

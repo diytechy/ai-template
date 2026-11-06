@@ -154,6 +154,7 @@ def _run_step(kit, name, cwd):
 
 
 def test_prompt_catalog_step_reds_when_a_template_changes(tmp_path):
+    """Implements: TC-192"""
     # The real failure mode: someone edits a shipped prompt template and does not
     # regenerate the catalogue, so every later `prompt-sha` lookup resolves to a
     # template that no longer exists. Green first (the copy is faithful), then
@@ -179,6 +180,7 @@ def test_prompt_catalog_step_reds_when_a_template_changes(tmp_path):
 
 
 def test_prompt_catalog_step_reds_when_the_composed_question_home_changes(tmp_path):
+    """Implements: TC-192"""
     # WI-882: `prompts/spine-questions.md` is composed into the first-approval
     # and amendment briefs at render time, so it is a source of a launched
     # brief's text like any template. An edit to it that leaves the catalogue

@@ -62,6 +62,7 @@ def test_wi750_station_build_outcome_curves_do_not_cross(tmp_path):
 
 
 def test_knowledge_tab_renders_from_bundle(tmp_path):
+    """Implements: TC-078"""
     # C4: with a committed docs/okf/ bundle the dashboard gains the Knowledge tab
     # — typed concepts, each concept's DESCRIPTION embedded and a link-OUT to its
     # docs/okf/<tier>/<id>.md full body (the middle-path embedding, ruling #15).
@@ -91,6 +92,7 @@ def test_knowledge_tab_renders_from_bundle(tmp_path):
 
 
 def test_knowledge_tab_omitted_and_byte_identical_without_bundle(tmp_path):
+    """Implements: TC-078"""
     # The vacuity guarantee: with no docs/okf/ the tab is omitted and the artifact
     # is byte-for-byte what it was before this view existed. Proven by round-trip:
     # render bundle-less, add the bundle (tab appears), remove it, re-render ==
@@ -187,6 +189,7 @@ def _know_section(text):
 
 
 def test_knowledge_graph_collapses_above_type_threshold(tmp_path):
+    """Implements: TC-102"""
     # > 3 OKF types (the make_repo bundle spans SN/SR/LLR/TC) -> the Knowledge tab
     # opens as the shared type-tiered drill, reusing the When/How collapse
     # mechanism (`class="drill"`, one descend container per OKF type), NOT the flat
@@ -225,6 +228,7 @@ def test_knowledge_graph_stays_flat_at_or_below_type_threshold(tmp_path):
 
 
 def test_process_tab_renders_three_panels_from_live_data(tmp_path):
+    """Implements: TC-051"""
     # SR-050: with a docs/stage the dashboard gains the Process tab — the three
     # linked panels, each joining a canonical data source (docs/stage, the spine
     # registries, the docs/work/ registry) rather than restating hand-set numbers.
@@ -265,6 +269,7 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
 
 
 def test_process_current_stage_highlight_follows_docs_stage(tmp_path):
+    """Implements: TC-051"""
     # RE-KEYED FROM THE BAR AXIS (WI-498 slice 5), name and all: the concern is
     # unchanged — a lifecycle tier is `now` iff the DERIVED value falls in its
     # declared span — but the value read from `docs/stage` is one of the eight
@@ -319,6 +324,7 @@ def test_process_now_marker_carries_a_worded_cue_not_border_alone(tmp_path):
 
 
 def test_process_link_outs_prefer_the_scaffolded_docs(tmp_path):
+    """Implements: TC-051"""
     # Link-outs resolve in THIS repo: the scaffolded docs/ copies win when
     # present (the downstream case); with neither present the scaffolded
     # default is emitted (what bootstrap writes).
@@ -335,6 +341,7 @@ def test_process_link_outs_prefer_the_scaffolded_docs(tmp_path):
 
 
 def test_process_wi_counts_join_work_items(tmp_path):
+    """Implements: TC-051"""
     # Panel 3's numbers are a live join over the WI registry (total + done counts).
     with_stage(tmp_path, "DevStg-Tests", SMALL_WIS)
     assert gen(tmp_path).returncode == 0
@@ -343,6 +350,7 @@ def test_process_wi_counts_join_work_items(tmp_path):
 
 
 def test_process_tab_omitted_and_byte_identical_without_stage(tmp_path):
+    """Implements: TC-051"""
     # The vacuity guarantee (the Knowledge-tab idiom): with no docs/stage the tab
     # is omitted and the artifact is byte-for-byte what it was before this view
     # existed. Proven by round-trip: render stage-less, add the stage file (tab
@@ -362,6 +370,7 @@ def test_process_tab_omitted_and_byte_identical_without_stage(tmp_path):
 
 
 def test_process_tab_is_byte_deterministic_and_check_stable(tmp_path):
+    """Implements: TC-051"""
     # Sorted inputs, no clocks -> a second render is byte-identical and --check
     # passes fresh / trips stale (no new freshness exclusion).
     with_stage(tmp_path)
@@ -378,6 +387,7 @@ def test_process_tab_is_byte_deterministic_and_check_stable(tmp_path):
 
 
 def test_meta_process_tab_smoke():
+    """Implements: TC-051"""
     # Over the real meta repo: the panel renders, the banner matches the real
     # docs/stage, and every link-out resolves (here the kit masters, since the
     # meta-repo scaffolds no docs/process.md).
@@ -426,6 +436,7 @@ def _station_div(text):
 
 
 def test_process_tab_renders_the_station_cycle(tmp_path):
+    """Implements: TC-056"""
     # WI-389: the Process tab draws the station/lane model as one self-contained
     # SVG — the ring claim → lane build → (terminal outcomes) → station refresh
     # → merge slot → trunk advance → intake mint → dispatcher tick, drawn as a
@@ -463,6 +474,7 @@ def test_process_tab_renders_the_station_cycle(tmp_path):
 
 
 def test_station_outcomes_derive_from_the_integrator(tmp_path):
+    """Implements: TC-056"""
     # THE SYNC PIN for §A3: the three terminal-outcome cards are DERIVED from
     # integrate.OUTCOME_DIRS — the same one-home read the merge slot uses — and
     # all three converge on the station refresh (three arrows into one merge:
@@ -486,6 +498,7 @@ def test_station_outcomes_derive_from_the_integrator(tmp_path):
 
 
 def test_station_slot_is_the_serial_waist(tmp_path):
+    """Implements: TC-056"""
     # The merge slot renders exactly once, as the emphasized (filled) node, and
     # says what makes it the waist: serial, one branch at a time, the ancestor
     # check. The slot fill is the theme-invariant --slot token (the A4 lesson).
@@ -500,6 +513,7 @@ def test_station_slot_is_the_serial_waist(tmp_path):
 
 
 def test_station_refresh_pins_the_bar_attestation(tmp_path):
+    """Implements: TC-056"""
     # THE SYNC PIN for §A2: the refresh card carries the shipped attestation
     # label (integrate.BAR_GREEN, the trailer the merge slot verifies) and the
     # refresh sequence the integrator actually runs (merge trunk in, trunk_step,
@@ -514,6 +528,7 @@ def test_station_refresh_pins_the_bar_attestation(tmp_path):
 
 
 def test_station_barrier_and_admission_arms_pin_to_the_dispatcher(tmp_path):
+    """Implements: TC-056"""
     # THE SYNC PIN for §A4/§A8: the spine barrier is visible, its exclusive-kind
     # vocabulary is derived from schedule's ruled tables, and the admission-arm
     # labels the panel hardcodes (they have no exported constant) are pinned to
@@ -549,6 +564,7 @@ def test_station_barrier_and_admission_arms_pin_to_the_dispatcher(tmp_path):
 
 
 def test_station_intake_arm_pins_to_the_intake_mint(tmp_path):
+    """Implements: TC-056"""
     # THE SYNC PIN for §A5.2: the intake arm's trigger labels mirror intake.py's
     # shipped mint machinery. The pins are behavioral where a name is only a
     # literal inside the module: tier_signal must RECOGNIZE the amendment and
@@ -585,6 +601,7 @@ def test_station_intake_arm_pins_to_the_intake_mint(tmp_path):
 
 
 def test_station_links_resolve():
+    """Implements: TC-056"""
     # Over the real meta repo (where every canonical home exists): each linked
     # stage resolves, and the station's canonical homes are the ones the flow
     # actually lands on — the WI registry (claim/intake), the log (the merged
@@ -600,6 +617,7 @@ def test_station_links_resolve():
 
 
 def test_station_byte_identical_without_data(tmp_path):
+    """Implements: TC-056"""
     # The station structure is the method's, not the repo's data: the block
     # renders byte-for-byte the same whether the registry is minimal or
     # work-item-rich (a data-less repo renders byte-identically).
@@ -670,6 +688,7 @@ def test_station_narrow_width_scrolls_instead_of_blurring(tmp_path):
 
 
 def test_a4_no_sub_label_opacity_discount(tmp_path):
+    """Implements: TC-119"""
     # A4: the emitted CSS must not discount sub-label text opacity (which dropped
     # the effective contrast below the floor). No `.sub`/`.bsub`/`.slotsub`
     # `{ ... opacity }` — the rule the old `.hubsub` joined in WI-293 (a
@@ -693,6 +712,8 @@ def test_a4_theme_token_fills_behind_white_text_meet_the_floor(tmp_path):
     which is exactly how the Process hub (now the merge slot, WI-389) shipped
     white-on-#818cf8 at 2.98:1 in dark while measuring 6.29:1 in light. Any token
     used as a fill behind white text is checked against both declarations here.
+
+    Implements: TC-119
     """
     with_stage(tmp_path, "DevStg-Tests")  # the Process tab's render condition
     assert gen(tmp_path).returncode == 0
@@ -710,7 +731,10 @@ def test_a4_theme_token_fills_behind_white_text_meet_the_floor(tmp_path):
 def test_a4_slot_fill_is_not_the_page_accent(tmp_path):
     """WI-293 regression guard: --accent is tuned as INK on the page background
     and lightens in dark theme, so re-pointing the slot fill at it silently
-    reintroduces the 2.98:1 defect. The merge slot keeps its own token."""
+    reintroduces the 2.98:1 defect. The merge slot keeps its own token.
+
+    Implements: TC-119
+    """
     with_stage(tmp_path, "DevStg-Tests")  # the Process tab's render condition
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
@@ -806,6 +830,7 @@ def _hero_of(root):
 
 
 def test_t1_next_work_names_the_ready_frontier_with_zero_active(tmp_path):
+    """Implements: TC-120"""
     # The exact critique bad case: nothing is active, yet the next work must be
     # named ON THE LANDING VIEW (zero tab switches), not buried in the When drill.
     wis = (
@@ -827,6 +852,7 @@ def test_t1_next_work_names_the_ready_frontier_with_zero_active(tmp_path):
 
 
 def test_t1_next_work_annotates_the_blocking_predecessor(tmp_path):
+    """Implements: TC-120"""
     # A queued WI whose hard predecessor is not yet done is surfaced WITH the
     # predecessor that blocks it (the critique's "named, with their blocking
     # predecessor").
@@ -843,6 +869,7 @@ def test_t1_next_work_annotates_the_blocking_predecessor(tmp_path):
 
 
 def test_t1_next_work_says_all_done_when_drained(tmp_path):
+    """Implements: TC-120"""
     # A drained registry does not render an empty surface — it says so, so the
     # landing view still answers "what's next" (nothing).
     wis = (
@@ -897,6 +924,7 @@ def _nw_items(root):
 
 
 def test_t4_next_work_title_is_not_budgeted_by_character_count(tmp_path):
+    """Implements: TC-124"""
     # The reported shape: a clause the old fixed budget cut at 60 characters now
     # renders WHOLE, with no ellipsis anywhere in the list.
     wis = 'WI-001,"{}",docs,SR-001,,queued,d,ordinary\n'.format(_NW_LONG)
@@ -909,6 +937,7 @@ def test_t4_next_work_title_is_not_budgeted_by_character_count(tmp_path):
 
 
 def test_t4_an_over_bound_next_work_title_discloses_operably(tmp_path):
+    """Implements: TC-124"""
     # Past the bound the card still does not dead-end: a native disclosure, a
     # VISIBLE cue on it, and the whole clause present — head and remainder
     # rejoining exactly, so opening it reads continuously.
@@ -969,6 +998,7 @@ def _landing_dashboard(root):
 
 
 def test_t1_three_core_reading_tasks_reach_labelled_entry_points(tmp_path):
+    """Implements: TC-120"""
     hero, navbar = _landing_dashboard(tmp_path)
     # The exact 119-CRITIQUE state: nothing is active, so the "you are here" line
     # is absent — yet every task below must still reach a labelled entry point.

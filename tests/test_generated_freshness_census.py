@@ -23,6 +23,7 @@ from test_generated_freshness_wiring import (
 
 
 def test_every_declared_generated_artifact_has_an_enforcer():
+    """Implements: TC-206"""
     # The rule SN-010 states, mechanized. A new `[generated]` row must gain an
     # enforcer in the same breath: either a check.py step (add it to WIRED) or,
     # for an artifact with no mechanical regenerator, a named non-step enforcer
@@ -65,6 +66,7 @@ def test_the_cli_reference_path_has_one_spelling_in_three_places():
 
 
 def test_every_wired_enforcer_is_a_real_step_and_runs_in_the_commit_floor():
+    """Implements: TC-206"""
     # Naming a step is not wiring it: the name must resolve in check.py's
     # built-in plan (a typo would otherwise "enforce" nothing), and — unless
     # explicitly exempted — must be in the hook's batched --run-steps line, so a

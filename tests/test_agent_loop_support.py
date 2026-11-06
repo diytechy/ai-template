@@ -188,6 +188,7 @@ def test_regenerate_index_renders_the_ctx_pct_column(tmp_path):
 
 
 def test_session_log_redacts_credential_shapes(tmp_path):
+    """Implements: TC-172"""
     # M-19: session transcripts are committed to tracked history; well-known
     # credential shapes must not land there verbatim (a CLI auth error echoing
     # a key was permanent history with only push-policy in the way).
@@ -208,6 +209,7 @@ def test_session_log_redacts_credential_shapes(tmp_path):
 
 
 def test_session_log_redacts_credential_shapes_in_header_values(tmp_path):
+    """Implements: TC-172"""
     # The header is committed history too, and a verbatim raw-usage line can
     # carry the result text: header values pass the same redaction seam, and
     # the finding is still named by class and count, never by value.

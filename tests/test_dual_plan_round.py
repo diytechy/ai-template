@@ -199,6 +199,7 @@ def _queued_specs(root):
 
 
 def test_full_round_unattended_selects_and_files(tmp_path):
+    """Implements: TC-076, TC-098"""
     root, fake = make_fixture(tmp_path)
     # The round records from a claimed lane, where its logs are committed
     # (WI-960); rooted at the primary checkout they spool instead.
@@ -253,6 +254,7 @@ def test_full_round_unattended_selects_and_files(tmp_path):
 
 
 def test_worker_path_refuses_a_dual_wi(tmp_path):
+    """Implements: TC-097"""
     root, fake = make_fixture(tmp_path)
     # The worker branch-guard runs first; satisfy it so the refusal under test
     # (the PlanMode=dual fail-closed check) is the one that fires.
@@ -289,6 +291,7 @@ def test_worker_path_refuses_a_dual_wi(tmp_path):
 
 
 def test_flag_on_a_non_dual_wi_is_refused(tmp_path):
+    """Implements: TC-097"""
     root, fake = make_fixture(tmp_path, plan_mode="")
     proc = run_dualplan(root, fake)
     assert proc.returncode == 2
@@ -296,6 +299,7 @@ def test_flag_on_a_non_dual_wi_is_refused(tmp_path):
 
 
 def test_arbiter_disagreement_pages(tmp_path):
+    """Implements: TC-076, TC-098"""
     root, fake = make_fixture(tmp_path)
     # A label-keyed (position-biased) fake arbiter always answers SELECT A, so
     # the swapped runs pick different underlying plans -> position-unstable.
@@ -312,6 +316,7 @@ def test_arbiter_disagreement_pages(tmp_path):
 
 
 def test_arbiter_disagreement_on_a_loop_held_tier_stalls_not_pages(tmp_path):
+    """Implements: TC-098"""
     # The same position-unstable PAGE on a LOOP-HELD tier must NOT hard-gate
     # a human: the single-shot flag reaches the pause-free end state —
     # EXIT_STALL (attention), never NEEDS-HUMAN.
@@ -332,6 +337,7 @@ def test_arbiter_disagreement_on_a_loop_held_tier_stalls_not_pages(tmp_path):
 
 
 def test_arbiter_disagreement_with_keep_nondependent_stalls_not_pages(tmp_path):
+    """Implements: TC-098"""
     # single-approve rides the SAME pause-free else-arm as autonomous (both are
     # non-stop-needs-human page actions), so the flag path must reach
     # EXIT_STALL, never NEEDS-HUMAN. Braces SR-108's "autonomous/
@@ -352,6 +358,7 @@ def test_arbiter_disagreement_with_keep_nondependent_stalls_not_pages(tmp_path):
 
 
 def test_missing_rubric_pages_honestly(tmp_path):
+    """Implements: TC-076"""
     root, fake = make_fixture(tmp_path)
     (root / "docs" / "rubrics" / "plan-decomposition.md").unlink()
     proc = run_dualplan(root, fake)

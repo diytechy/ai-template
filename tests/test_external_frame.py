@@ -160,7 +160,10 @@ def test_the_live_frame_approval_state_is_pinned():
 
 def test_a_clean_frame_produces_no_finding(scaffold):
     """The fixture floor every mutation below stands on: if a resolving frame
-    already reported something, none of the bite-proofs would mean anything."""
+    already reported something, none of the bite-proofs would mean anything.
+
+    Implements: TC-182
+    """
     make_minimal_project(scaffold)
     _frame(scaffold)
     proc = _run(scaffold, "--strict")
@@ -174,6 +177,7 @@ def test_a_clean_frame_produces_no_finding(scaffold):
 
 
 def test_a_crossing_naming_an_undeclared_entity_is_a_FINDING(scaffold):
+    """Implements: TC-182"""
     make_minimal_project(scaffold)
     _frame(scaffold, CLEAN_FRAME.replace('entity = "EXT-001"', 'entity = "EXT-009"'))
     proc = _run(scaffold, "--strict")
@@ -182,6 +186,7 @@ def test_a_crossing_naming_an_undeclared_entity_is_a_FINDING(scaffold):
 
 
 def test_a_relationship_naming_an_undeclared_entity_is_a_FINDING(scaffold):
+    """Implements: TC-182"""
     make_minimal_project(scaffold)
     _frame(scaffold, CLEAN_FRAME.replace('to = "EXT-001"', 'to = "EXT-009"'))
     proc = _run(scaffold, "--strict")
@@ -190,6 +195,7 @@ def test_a_relationship_naming_an_undeclared_entity_is_a_FINDING(scaffold):
 
 
 def test_an_IF_tieback_naming_an_undeclared_crossing_is_a_FINDING(scaffold):
+    """Implements: TC-182"""
     make_minimal_project(scaffold)
     _frame(scaffold)
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
@@ -223,7 +229,10 @@ def test_crossings_with_NO_entity_declared_is_a_FINDING_not_a_vacuous_pass(scaff
     an entity block leaves behind.
 
     An empty frame stays vacuous; an empty entity set UNDER crossings or
-    relationships is the finding."""
+    relationships is the finding.
+
+    Implements: TC-182
+    """
     make_minimal_project(scaffold)
     entity, rest = CLEAN_FRAME.split("[boundary.B-01]", 1)
     _frame(scaffold, "[boundary.B-01]" + rest)  # crossings + relationship, no entity
@@ -239,7 +248,10 @@ def test_crossings_with_NO_entity_declared_is_a_FINDING_not_a_vacuous_pass(scaff
 def test_a_frame_declaring_NOTHING_stays_vacuous(scaffold):
     """The other side of the rule above, so the fix cannot over-correct into "an
     empty external.toml is broken" — an adopter who creates the file before
-    filling it is mid-authoring, not in error."""
+    filling it is mid-authoring, not in error.
+
+    Implements: TC-182
+    """
     make_minimal_project(scaffold)
     _frame(scaffold, "# nothing declared yet\n")
     proc = _run(scaffold, "--strict")
@@ -251,7 +263,10 @@ def test_the_frame_rules_are_VACUOUS_without_the_registry(scaffold):
     """The applies-when, at the checker tier. A project that declares no boundary
     has no `external.toml`, and every rule above must then say nothing at all —
     not "no entities declared", which would make the frame mandatory by the back
-    door for every adopter who never wanted it."""
+    door for every adopter who never wanted it.
+
+    Implements: TC-182
+    """
     make_minimal_project(scaffold)
     # bootstrap SCAFFOLDS the file (inert, `-000` rows only). Deleting it is what
     # "a project that never adopts the tier" actually looks like — the same act
@@ -313,7 +328,10 @@ def _srs(scaffold, extra_keys=""):
 
 def test_an_SR_naming_an_undeclared_crossing_is_a_HARD_finding(scaffold):
     """The half of SN-037 that can be true today, and the only half that is an
-    error: a dangling reference, exactly like an SR citing a deleted SN."""
+    error: a dangling reference, exactly like an SR citing a deleted SN.
+
+    Implements: TC-182
+    """
     make_minimal_project(scaffold)
     _frame(scaffold)
     _srs(scaffold, 'boundary_refs = ["B-99"]\n')
@@ -323,6 +341,7 @@ def test_an_SR_naming_an_undeclared_crossing_is_a_HARD_finding(scaffold):
 
 
 def test_an_SR_naming_a_DECLARED_crossing_is_clean(scaffold):
+    """Implements: TC-182"""
     make_minimal_project(scaffold)
     _frame(scaffold)
     _srs(scaffold, 'boundary_refs = ["B-01"]\n')
@@ -340,7 +359,10 @@ def test_SR_boundary_COVERAGE_is_a_summary_advisory_and_never_an_error(scaffold)
     gate that is 100% red on day one is a gate someone turns off.
 
     So: ONE line carrying the count the campaign has to move, on the advisory
-    pipe, with the exit code untouched."""
+    pipe, with the exit code untouched.
+
+    Implements: TC-182
+    """
     make_minimal_project(scaffold)
     _frame(scaffold)
     _srs(scaffold)  # no boundary_refs at all
@@ -359,7 +381,10 @@ def test_the_realization_gap_is_REPORTED_and_never_gated(scaffold):
     RULING to post-schema. It is visible (a deferral nobody can see is a
     deferral nobody honours) and it changes no exit code, which is the same
     restraint that keeps `boundary_incomplete` reading approval rather than
-    realization coverage."""
+    realization coverage.
+
+    Implements: TC-182
+    """
     make_minimal_project(scaffold)
     _frame(scaffold)
     _srs(scaffold, 'boundary_refs = ["B-01"]\n')
@@ -369,6 +394,7 @@ def test_the_realization_gap_is_REPORTED_and_never_gated(scaffold):
 
 
 def test_the_SR_boundary_rule_is_vacuous_without_a_frame(scaffold):
+    """Implements: TC-182"""
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "external.toml").unlink()
     _srs(scaffold, 'boundary_refs = ["B-99"]\n')

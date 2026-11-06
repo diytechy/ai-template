@@ -23,6 +23,7 @@ def _registry(tmp_path):
 
 
 def test_load_registry_parses_columns_not_the_id(tmp_path):
+    """Implements: TC-046"""
     # REGISTRY_CSV uses the LEGACY `Provider` header (no Family/Env) — proving a
     # legacy registry reads Provider as Family, byte-identical selection behavior.
     reg, errors = _registry(tmp_path)
@@ -80,6 +81,7 @@ def test_enable_list_is_ordered_and_skips_comments(tmp_path):
 
 
 def test_select_honors_preference_order_and_tier(tmp_path):
+    """Implements: TC-046"""
     reg, _ = _registry(tmp_path)
     enabled = ["OPENAI-GPT-5.2", "ANTHROPIC-OPUS-4.8", "GOOGLE-GEMINI-3-PRO"]
     chosen, reason = route.select(enabled, reg, "strong")
@@ -114,6 +116,7 @@ def test_select_phase_preference_is_within_tier_and_cooling_falls_through(tmp_pa
 
 
 def test_select_reviewer_heterogeneity_wins_over_phase_preference(tmp_path):
+    """Implements: TC-046"""
     reg, _ = _registry(tmp_path)
     chosen, reason = route.select(
         ["ANTHROPIC-OPUS-4.8", "OPENAI-GPT-5.2"],
@@ -145,6 +148,7 @@ def test_select_prefers_a_different_provider_but_degrades(tmp_path):
 
 
 def test_select_tiers_up_never_down(tmp_path):
+    """Implements: TC-046"""
     reg, _ = _registry(tmp_path)
     # Only a strong model enabled; asking for medium bumps UP to strong.
     chosen, reason = route.select(["ANTHROPIC-OPUS-4.8"], reg, "medium")
@@ -213,6 +217,7 @@ def test_load_constants_parses_margin_as_float(monkeypatch):
 
 
 def test_escalate_swap_then_tier_up_then_page():
+    """Implements: TC-084"""
     c = route.DEFAULT_CONSTANTS
 
     def cr(tier="medium"):
@@ -230,6 +235,7 @@ def test_escalate_swap_then_tier_up_then_page():
 
 
 def test_escalate_pages_on_top_tier_shared_failure():
+    """Implements: TC-084"""
     c = route.DEFAULT_CONSTANTS
     rounds = [
         {"verdict": "CHANGES-REQUESTED", "tier": "strong", "margin": 0},
@@ -267,6 +273,7 @@ def test_escalate_shared_failure_tally_rearms_after_dispatch():
 
 
 def test_escalate_pages_on_tripwire_and_double_contradiction():
+    """Implements: TC-084"""
     c = route.DEFAULT_CONSTANTS
     assert (
         route.escalate([{"verdict": "APPROVE", "tier": "weak", "tripwire": True}], c)[
@@ -297,7 +304,10 @@ def test_failure_action_keyed_to_the_approval_level():
 
     The three old values collapse to (human_held, keep_nondependent):
     `attended` = (True, False), `single-approve` = (True, True), `autonomous` =
-    (False, *). The fourth cell was unreachable under the enum."""
+    (False, *). The fourth cell was unreachable under the enum.
+
+    Implements: TC-084
+    """
     held_alone = route.failure_action(True)
     assert held_alone["mode"] == "human-held"
     assert held_alone["pause_wi"] is True
@@ -386,6 +396,7 @@ def _pair_registry(tmp_path):
 
 
 def test_family_column_and_env_parse(tmp_path):
+    """Implements: TC-046"""
     reg, _ = _pair_registry(tmp_path)
     m = reg["ANTHROPIC-OPUS-4.9-ROUTER"]
     assert m.family == "ANTHROPIC" and m.model == "opus" and m.version == "4.9"
@@ -461,6 +472,7 @@ def test_resolve_exact_id_precedence(tmp_path):
 
 
 def test_resolve_versionless_newest_skips_preview(tmp_path):
+    """Implements: TC-046"""
     reg, tr = _pair_registry(tmp_path)
     # Version-less: newest GA (4.9) wins; the numerically-higher 5.0-preview is
     # SKIPPED (preview), and among the equal-key 4.9 route pairs the FIRST in
@@ -515,6 +527,7 @@ def test_resolve_token_unresolvable(tmp_path):
 
 
 def test_acct2_row_cools_down_independently(tmp_path):
+    """Implements: TC-046"""
     # A second account is an account table and a qualified entry (WI-798,
     # README change 21, retiring "a second account is a second pair row"); its
     # entry is its own cooldown key, so cooling the primary leaves the second
@@ -626,6 +639,7 @@ def _reg_from(tmp_path, text):
 
 
 def test_planner_pair_two_family_branch(tmp_path):
+    """Implements: TC-072"""
     # Two families enabled -> the two hats route to DIFFERENT Family lines, the
     # happy (non-degraded) path with the PAIR_TWO_FAMILY reason recorded as data.
     reg = _reg_from(tmp_path, PLANNER_TWO_FAMILY_CSV)
@@ -641,6 +655,7 @@ def test_planner_pair_two_family_branch(tmp_path):
 
 
 def test_planner_pair_one_family_pool_degrades_at_selection(tmp_path):
+    """Implements: TC-072"""
     # Only ANTHROPIC enabled -> degraded AT SELECTION: two fresh same-family
     # sessions, the machine-readable reason recorded, fresh-session identity held.
     reg = _reg_from(tmp_path, PLANNER_ONE_FAMILY_CSV)
@@ -655,6 +670,7 @@ def test_planner_pair_one_family_pool_degrades_at_selection(tmp_path):
 
 
 def test_planner_pair_single_row_pool_yields_two_fresh_same_id_sessions(tmp_path):
+    """Implements: TC-072"""
     # The narrowest pool: one row, one family. Both hats are fresh same-family
     # sessions of the same model_id (independent runs, weaker corroboration) —
     # still two DISTINCT objects.
@@ -667,6 +683,7 @@ def test_planner_pair_single_row_pool_yields_two_fresh_same_id_sessions(tmp_path
 
 
 def test_planner_pair_no_model_available(tmp_path):
+    """Implements: TC-072"""
     # Nothing routable at/above tier -> a no-model pair the coordinator pages on.
     reg = _reg_from(tmp_path, PLANNER_TWO_FAMILY_CSV)
     cooldowns = {}
@@ -679,6 +696,7 @@ def test_planner_pair_no_model_available(tmp_path):
 
 
 def test_planner_fallback_runtime_nonresponse_branch(tmp_path):
+    """Implements: TC-072"""
     # Two families were routed; ANTHROPIC proves NONRESPONSIVE at launch. The
     # fallback returns two FRESH same-family sessions from the RESPONDING family
     # (OPENAI), with the degraded-availability reason recorded as data.
@@ -701,6 +719,7 @@ def test_planner_fallback_runtime_nonresponse_branch(tmp_path):
 
 
 def test_planner_fallback_no_responding_family(tmp_path):
+    """Implements: TC-072"""
     # The other family is also unavailable -> a no-responder pair (page).
     reg = _reg_from(tmp_path, PLANNER_TWO_FAMILY_CSV)
     enabled = ["ANTHROPIC-FABLE", "OPENAI-SOL"]
@@ -1354,6 +1373,7 @@ def test_winstay_invalid_next_primary_degrades_to_the_weighted_draw(tmp_path):
 
 
 def test_an_unqualified_entry_is_keyed_by_its_route_id(tmp_path):
+    """Implements: TC-046"""
     reg, _ = _registry(tmp_path)
     # An exact id and a version-less Family-Model token each yield one entry.
     entries, errors = route.resolve_enabled(["OPENAI-GPT-5.2", "ANTHROPIC-OPUS"], reg)
@@ -1363,6 +1383,7 @@ def test_an_unqualified_entry_is_keyed_by_its_route_id(tmp_path):
 
 
 def test_cooldowns_key_on_the_entry_not_its_route(tmp_path, monkeypatch):
+    """Implements: TC-046"""
     reg, _ = _registry(tmp_path)
     enabled = ["OPENAI-GPT-5.2@W", "OPENAI-GPT-5.2@P"]  # two entries, one route
     cooldowns = {}
@@ -1378,6 +1399,7 @@ def test_cooldowns_key_on_the_entry_not_its_route(tmp_path, monkeypatch):
 
 
 def test_selection_and_preference_return_entries(tmp_path, monkeypatch):
+    """Implements: TC-046"""
     reg, _ = _registry(tmp_path)
     enabled = ["ANTHROPIC-OPUS-4.8@W", "OPENAI-GPT-5.2@W", "OPENAI-GPT-5.2@P"]
     pin = route.select(enabled, reg, "strong", preferred_ids=["OPENAI-GPT-5.2@P"])
@@ -1393,6 +1415,7 @@ def test_selection_and_preference_return_entries(tmp_path, monkeypatch):
 
 
 def test_planner_sessions_carry_their_entry(tmp_path, monkeypatch):
+    """Implements: TC-072"""
     reg, _ = _registry(tmp_path)
     enabled = ["ANTHROPIC-OPUS-4.8@W", "OPENAI-GPT-5.2@W"]
     pair = route.planner_pair(enabled, reg, "strong")

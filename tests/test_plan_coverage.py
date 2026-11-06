@@ -520,7 +520,10 @@ def write_dispute(
 
 def test_the_shared_step_turns_a_real_verdict_into_F_clauses():
     """A real REVIEW-A verdict's finding lines become F1..Fn, in order, each
-    carrying the finding as written."""
+    carrying the finding as written.
+
+    Implements: TC-069
+    """
     import plan_coverage
 
     text = (ROOT / "docs" / "reviews" / "054-REVIEW-A.md").read_text(encoding="utf-8")
@@ -535,7 +538,10 @@ def test_the_shared_step_turns_a_real_verdict_into_F_clauses():
 
 def test_a_bracketed_word_that_is_not_a_severity_never_shifts_the_F_ids():
     """WI-888: a reviewer's `- [run] lines:` coverage bullet is prose, so the
-    three findings after it are F1..F3, not F2..F4."""
+    three findings after it are F1..F3, not F2..F4.
+
+    Implements: TC-069
+    """
     import plan_coverage
 
     text = (
@@ -548,12 +554,14 @@ def test_a_bracketed_word_that_is_not_a_severity_never_shifts_the_F_ids():
 
 
 def test_a_findings_file_mixing_both_shapes_is_malformed(tmp_path):
+    """Implements: TC-069"""
     proc = write_single(tmp_path, plan=REWORK_PLAN, findings=FINDINGS + REVIEW)
     assert proc.returncode == 2, proc.stdout + proc.stderr
     assert "both" in proc.stdout
 
 
 def test_an_uncovered_review_finding_refuses_the_dispatch(tmp_path):
+    """Implements: TC-069"""
     proc = write_single(tmp_path, plan=REWORK_PLAN, findings=REVIEW)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert (
@@ -564,6 +572,7 @@ def test_an_uncovered_review_finding_refuses_the_dispatch(tmp_path):
 
 
 def test_covered_or_excluded_review_findings_pass(tmp_path):
+    """Implements: TC-069"""
     covered = REWORK_PLAN.replace("D2; TC-002", "D2; F2; TC-002")
     proc = write_single(tmp_path, plan=covered, findings=REVIEW)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -574,6 +583,7 @@ def test_covered_or_excluded_review_findings_pass(tmp_path):
 
 
 def test_a_dismissed_dispute_citing_its_ruling_passes(tmp_path):
+    """Implements: TC-069"""
     write_dispute(
         tmp_path,
         "RULING: F2 DISMISS refuted the wording matches",
@@ -585,7 +595,10 @@ def test_a_dismissed_dispute_citing_its_ruling_passes(tmp_path):
 
 
 def test_a_dispute_ruling_cited_by_its_own_id_passes(tmp_path):
-    """A dispute sitting may name the finding by its own id: `<verdict>#<id>`."""
+    """A dispute sitting may name the finding by its own id: `<verdict>#<id>`.
+
+    Implements: TC-069
+    """
     write_dispute(
         tmp_path,
         "RULING: B DISMISS out-of-scope contrived",
@@ -600,7 +613,10 @@ def test_a_dispute_ruling_cited_by_its_own_id_passes(tmp_path):
 def test_a_ruling_of_the_same_finding_passes_through_typographic_drift(tmp_path):
     """The sitting's copy of the finding may differ from the review only in
     list marker, severity tag, whitespace and typographic quotes, dashes and
-    arrows (a hand copy); it is still the same finding."""
+    arrows (a hand copy); it is still the same finding.
+
+    Implements: TC-069
+    """
     drifted = "[MINOR]  docs/brief.md:3 → stale\n  wording → reword it → @owner"
     write_dispute(
         tmp_path,
@@ -616,7 +632,10 @@ def test_a_ruling_of_the_same_finding_passes_through_typographic_drift(tmp_path)
 def test_a_dismissal_of_an_unrelated_finding_refuses(tmp_path):
     """REVIEW-A WI-853 round 1 (Sol): F1 concerns the launcher budget, F2 the
     wording; the sitting dismissed only F1. Citing that ruling by its id to
-    exclude F2 must not resolve F2."""
+    exclude F2 must not resolve F2.
+
+    Implements: TC-069
+    """
     write_dispute(
         tmp_path,
         "RULING: F1 DISMISS refuted the budget is enforced\n"
@@ -632,7 +651,10 @@ def test_a_dismissal_of_an_unrelated_finding_refuses(tmp_path):
 
 def test_a_dismissal_from_another_round_under_the_same_id_refuses(tmp_path):
     """A sitting that dismissed round 1's F2 does not resolve round 2's
-    different F2, cited with or without the fragment."""
+    different F2, cited with or without the fragment.
+
+    Implements: TC-069
+    """
     round_one = "- [MINOR] docs/other.md:9 -> an old typo -> fix it -> @owner"
     for cite in ("", "#F2"):
         root = tmp_path / ("x" + cite[1:])
@@ -655,7 +677,10 @@ def test_a_dismissal_whose_finding_cannot_be_shown_refuses(tmp_path):
     matching one: correspondence is not shown.
 
     Adequacy witness: a gate that accepted any agreeing findings file beside
-    the verdict would pass the "two" case on 002's matching WORDING."""
+    the verdict would pass the "two" case on 002's matching WORDING.
+
+    Implements: TC-069
+    """
     write_dispute(tmp_path / "none", "RULING: F2 DISMISS refuted no")
     write_dispute(
         tmp_path / "two",
@@ -677,7 +702,10 @@ def test_a_cited_ruling_that_does_not_dismiss_refuses(tmp_path):
     """A FIX or ESCALATE ruling, an unaccepted call, a ruling of another
     finding and a missing verdict each refuse the exclusion that cites them.
     The refusal of a ruling that resolves nothing names the set this gate
-    accepts (WI-911: a DISMISS or a SUCCESSOR)."""
+    accepts (WI-911: a DISMISS or a SUCCESSOR).
+
+    Implements: TC-069
+    """
     accepts = "only a DISMISS or a SUCCESSOR resolves a finding"
     cases = (
         ("RULING: F2 FIX the wording is wrong", "accepted", "F2", "rules F2 FIX"),
@@ -705,7 +733,10 @@ def test_a_cited_ruling_that_does_not_dismiss_refuses(tmp_path):
 def test_a_successor_ruling_citing_its_verdict_passes(tmp_path):
     """WI-911: an accepted verdict ruling the finding SUCCESSOR resolves its
     exclusion on the rework gate, as a dismissal does: the finding becomes
-    its own row, filed on trunk at the landing."""
+    its own row, filed on trunk at the landing.
+
+    Implements: TC-069
+    """
     write_dispute(
         tmp_path,
         "RULING: F2 SUCCESSOR file a row that rewords the brief",
@@ -719,7 +750,10 @@ def test_a_successor_ruling_citing_its_verdict_passes(tmp_path):
 
 def test_a_successor_ruling_of_another_finding_refuses(tmp_path):
     """A SUCCESSOR of F1 cited for F2, and another round's F2 ruled SUCCESSOR
-    under the same id, each leave F2 open."""
+    under the same id, each leave F2 open.
+
+    Implements: TC-069
+    """
     round_one = "- [MINOR] docs/other.md:9 -> an old typo -> fix it -> @owner"
     cases = (
         (
@@ -752,7 +786,10 @@ def test_a_successor_ruling_of_another_finding_refuses(tmp_path):
 
 def test_a_real_dispute_verdict_ruling_FIX_refuses_its_exclusion(tmp_path):
     """WI-852's recorded dispute verdict ruled A FIX: citing it to exclude a
-    finding refuses, read through the real verdict and binding."""
+    finding refuses, read through the real verdict and binding.
+
+    Implements: TC-069
+    """
     src = ROOT / "docs" / "reviews" / "wi-852-coordinator-renders-kit-briefs"
     rel = "docs/reviews/wi-852/006-ADJUDICATE-cb444fd.md"
     dest = tmp_path / rel
@@ -805,7 +842,10 @@ def test_two_dispute_rounds_reusing_ids_each_resolve_their_own_finding(
     tmp_path, verdict, review
 ):
     """Each round's plan, citing its own round's verdict for its F2, passes:
-    the gate reads the one findings file that verdict's binding records."""
+    the gate reads the one findings file that verdict's binding records.
+
+    Implements: TC-069
+    """
     write_two_rounds(tmp_path)
     plan = REWORK_PLAN + "Excludes: F2 — dismissed: {}\n".format(verdict)
     proc = write_single(tmp_path, plan=plan, findings=review)
@@ -818,7 +858,10 @@ def test_round_ones_verdict_cited_for_round_twos_same_id_finding_refuses(tmp_pat
 
     Adequacy witness: a gate that resolved by the ruled id alone, or that
     accepted any agreeing findings file beside the verdict (004 records the
-    wording), would pass it."""
+    wording), would pass it.
+
+    Implements: TC-069
+    """
     write_two_rounds(tmp_path)
     plan = REWORK_PLAN + "Excludes: F2 — dismissed: {}\n".format(DISPUTE_VERDICT)
     proc = write_single(tmp_path, plan=plan, findings=REVIEW)
@@ -830,7 +873,10 @@ def test_a_binding_without_the_findings_record_refuses_and_reads_no_sibling(
     tmp_path,
 ):
     """A binding recording no findings file refuses the citation by name,
-    though a findings file beside the verdict records the matching finding."""
+    though a findings file beside the verdict records the matching finding.
+
+    Implements: TC-069
+    """
     write_dispute(
         tmp_path,
         "RULING: F2 DISMISS refuted the wording matches",
@@ -860,7 +906,10 @@ def test_a_recorded_findings_file_that_cannot_show_the_finding_refuses(
 ):
     """The binding records `RECORDED`, which is missing, a directory, not
     TOML, or records only F1 while the verdict rules F2; a findings file
-    beside the verdict records the matching F2. Each refuses by name."""
+    beside the verdict records the matching F2. Each refuses by name.
+
+    Implements: TC-069
+    """
     findings = [findings_toml({"F2": WORDING}, name="004-DISPUTE-findings.toml")]
     name = RECORDED.rsplit("/", 1)[1]
     if arm == "not-toml":

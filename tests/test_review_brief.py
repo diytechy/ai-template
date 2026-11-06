@@ -67,6 +67,7 @@ def _round(scope="full", findings=None, rubric=None, **stance):
 
 
 def test_a_rendered_review_brief_carries_the_kit_clauses_and_the_lane_facts(tmp_path):
+    """Implements: TC-333"""
     text, verdict = rb.render_review(_lane(tmp_path), _round())
     # The kit reviewer template's two clauses the hand brief lacked.
     assert "worst failure classes THIS change admits" in text
@@ -115,6 +116,7 @@ def test_a_rendered_review_brief_carries_the_kit_clauses_and_the_lane_facts(tmp_
 
 
 def test_a_narrow_round_names_the_findings_it_answers(tmp_path):
+    """Implements: TC-333"""
     root = _lane(tmp_path)
     prior = root / "docs" / "reviews" / "wi-900" / "001-REVIEW-A-1111111.md"
     prior.parent.mkdir(parents=True)
@@ -128,6 +130,7 @@ def test_a_narrow_round_names_the_findings_it_answers(tmp_path):
 
 
 def test_a_narrow_round_without_findings_and_a_full_one_with_them_are_refused():
+    """Implements: TC-333"""
     with pytest.raises(rb.BriefError, match="narrow"):
         _round("narrow")
     with pytest.raises(rb.BriefError, match="full"):
@@ -137,6 +140,7 @@ def test_a_narrow_round_without_findings_and_a_full_one_with_them_are_refused():
 
 
 def test_a_named_input_that_is_not_there_refuses(tmp_path):
+    """Implements: TC-333"""
     root = _lane(tmp_path)
     with pytest.raises(rb.BriefError, match="rubric"):
         rb.render_review(root, _round(rubric="docs/rubrics/nope.md"))
@@ -157,6 +161,7 @@ def _past_the_git_reads(monkeypatch):
 def test_an_unfilled_slot_refuses_and_no_brief_is_written(
     tmp_path, monkeypatch, capsys
 ):
+    """Implements: TC-333"""
     # A template edit that adds a slot the render does not fill must stop the
     # brief, never send it with a hole.
     real = rb.prompts.load
@@ -179,6 +184,7 @@ def test_an_unfilled_slot_refuses_and_no_brief_is_written(
 
 
 def test_the_loop_full_lane_brief_states_its_range_and_binding(tmp_path):
+    """Implements: TC-082"""
     # WI-884: the loop's full-lane round states the whole lane from the claim
     # base, reads the reviewed commit (never `HEAD`), and asks for the
     # `Reviewed:` opener the gate's filing check requires.
@@ -206,6 +212,7 @@ def _loop_narrow(root, templates=None):
 
 
 def test_the_loop_narrow_round_renders_its_delta_through_the_one_render(tmp_path):
+    """Implements: TC-082"""
     # WI-847: a loop round that answers an earlier round reads only the round's
     # delta, rendered from the shipped reviewer template through `prompts.fill`
     # with the same narrow range sentence the attended render states.
@@ -230,6 +237,7 @@ def test_the_loop_narrow_round_renders_its_delta_through_the_one_render(tmp_path
 def test_a_loop_narrow_round_refuses_an_override_that_cannot_carry_its_range(
     tmp_path,
 ):
+    """Implements: TC-082"""
     # An override without the range slots would send a narrow round the wrong
     # reading scope; the strict fill refuses it instead.
     with pytest.raises(rb.prompts.PromptError, match="unfilled|unknown"):
@@ -240,6 +248,7 @@ def test_a_loop_narrow_round_refuses_an_override_that_cannot_carry_its_range(
 
 
 def test_the_scope_critique_carries_ruling_twos_questions_and_its_rubric(tmp_path):
+    """Implements: TC-333"""
     root = _lane(tmp_path)
     rubric = root / "docs" / "rubrics" / "scope-critique.md"
     rubric.parent.mkdir(parents=True)
@@ -268,6 +277,7 @@ CRITIQUE_REGISTRIES = (
 
 
 def test_the_scope_critique_names_the_registries_beside_the_spec(tmp_path):
+    """Implements: TC-333"""
     root = _lane(tmp_path)
     rubric = root / "docs" / "rubric.md"
     rubric.write_text("# Rubric\n\nS1 - one deliverable.\n", encoding="utf-8")
@@ -293,6 +303,7 @@ CONVERGENCE_LINE = (
 
 
 def test_a_convergence_round_renders_the_one_fixed_stance_line(tmp_path):
+    """Implements: TC-333"""
     text, _v = rb.render_review(_lane(tmp_path), _round(stance="convergence"))
     assert "\n" not in rb._CONVERGENCE_ROUND
     assert rb._CONVERGENCE_ROUND == CONVERGENCE_LINE
@@ -309,6 +320,7 @@ def test_a_convergence_round_renders_the_one_fixed_stance_line(tmp_path):
 
 
 def test_an_absent_stance_renders_the_ordinary_round(tmp_path, monkeypatch):
+    """Implements: TC-333"""
     root = _lane(tmp_path)
     assert _round().stance == "ordinary"
     absent, _v = rb.render_review(root, _round())
@@ -326,6 +338,7 @@ def test_an_absent_stance_renders_the_ordinary_round(tmp_path, monkeypatch):
 
 
 def test_a_narrow_round_refuses_the_convergence_stance(tmp_path, monkeypatch, capsys):
+    """Implements: TC-333"""
     rel = "docs/reviews/wi-900/001-REVIEW-A-1111111.md"
     with pytest.raises(rb.BriefError, match="convergence"):
         _round("narrow", findings=rel, stance="convergence")
@@ -351,6 +364,7 @@ def test_a_narrow_round_refuses_the_convergence_stance(tmp_path, monkeypatch, ca
 
 
 def test_a_convergence_brief_carries_the_stance_and_its_marking(tmp_path):
+    """Implements: TC-333"""
     root = _lane(tmp_path)
     paragraph = "CONVERGENCE STANCE, only for a round whose round facts below say"
     converging, _v = rb.render_review(root, _round(stance="convergence"))
@@ -380,6 +394,7 @@ def _reading_scope(text):
 def test_only_a_convergence_brief_leaves_the_decisions_record_and_critiques_out_of_its_reading_scope(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-333"""
     # WI-911 (review-churn revision 8): the anchoring rule binds the convergence
     # round only, so an ordinary (and loop) reviewer's command keeps the
     # delegated-decisions record and the plan's critiques, and only the
@@ -401,6 +416,7 @@ def test_only_a_convergence_brief_leaves_the_decisions_record_and_critiques_out_
 
 
 def test_a_convergence_tagged_finding_files_with_its_count_unchanged(tmp_path):
+    """Implements: TC-333"""
     tagged = (
         "Reviewed: {}\n\nVerified: drove it.\n\n"
         "- [MAJOR] project-trajectory/scripts/x.py:3 -> wrong -> fix it -> @owner "
@@ -424,6 +440,7 @@ S5_QUESTION = (
 
 
 def test_the_scope_rubric_names_every_registry_the_critique_brief_renders(tmp_path):
+    """Implements: TC-333"""
     # The live rubric's artifact line names each registry the brief renders,
     # and the rubric declares the anchors the review-churn rulings added.
     live = (ROOT / "docs" / "rubrics" / "scope-critique.md").read_text(encoding="utf-8")
@@ -486,6 +503,7 @@ VERDICT: CHANGES-REQUESTED findings=2
 
 
 def test_a_filed_coordinator_review_appears_in_the_rollup(tmp_path):
+    """Implements: TC-333"""
     full = rb.file_review(tmp_path, "wi-900", REVIEW.format(sha=SHA), SHA, "full")
     assert full.as_posix().endswith("docs/reviews/wi-900/001-REVIEW-A-abcdef0.md")
     approve = "Reviewed: {}\n\nVERDICT: APPROVE findings=0\n".format(SHA)
@@ -520,6 +538,7 @@ def test_a_filed_coordinator_review_appears_in_the_rollup(tmp_path):
 
 
 def test_a_bracketed_word_that_is_not_a_severity_never_refuses_a_filing(tmp_path):
+    """Implements: TC-333"""
     # WI-888 (the WI-880 round-004 refusal): a `- [run] lines:` coverage bullet
     # beside three findings is a findings=3 review, filed as written.
     text = (
@@ -554,6 +573,7 @@ def test_a_bracketed_word_that_is_not_a_severity_never_refuses_a_filing(tmp_path
     ],
 )
 def test_a_malformed_review_is_refused_and_nothing_is_filed(tmp_path, text, why):
+    """Implements: TC-333"""
     with pytest.raises(rb.BriefError, match=why):
         rb.file_review(tmp_path, "wi-900", text, SHA, "full")
     assert not (tmp_path / "docs" / "reviews").exists()
@@ -563,11 +583,13 @@ def test_a_malformed_review_is_refused_and_nothing_is_filed(tmp_path, text, why)
 
 
 def test_a_round_with_no_tests_refuses():
+    """Implements: TC-333"""
     with pytest.raises(rb.BriefError, match="tests"):
         rb.dataclasses.replace(_round(), tests=())
 
 
 def test_an_empty_or_missing_named_input_refuses(tmp_path):
+    """Implements: TC-333"""
     root = _lane(tmp_path)
     empty = root / "docs" / "empty.md"
     empty.write_text("  \n", encoding="utf-8")
@@ -584,6 +606,7 @@ def test_an_empty_or_missing_named_input_refuses(tmp_path):
 
 
 def test_the_critique_render_refuses_a_missing_spec(tmp_path):
+    """Implements: TC-333"""
     root = _lane(tmp_path)
     rubric = root / "docs" / "rubric.md"
     rubric.write_text("# Rubric\n\nS1 - one.\n", encoding="utf-8")
@@ -592,6 +615,7 @@ def test_the_critique_render_refuses_a_missing_spec(tmp_path):
 
 
 def test_the_reviewer_prompts_trunk_slot_renders_the_declared_name(tmp_path):
+    """Implements: TC-369"""
     # WI-925: in a linked worktree on a lane, with the primary checkout on
     # `side` and the trunk declared as `main`, the brief's reading scope is
     # read against `main`, never against the branch a checkout is on.

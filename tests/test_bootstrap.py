@@ -1,4 +1,7 @@
-"""Bootstrap must produce a scaffold that is green out of the box."""
+"""Bootstrap must produce a scaffold that is green out of the box.
+
+Implements: TC-010, TC-011
+"""
 
 import ast
 import re
@@ -602,6 +605,7 @@ def test_fresh_scaffold_passes_trace(scaffold):
 
 
 def test_scaffold_ships_no_declared_kernel_surface(scaffold):
+    """Implements: TC-067"""
     # OI-48 (d) / WI-494's fail-safe default, proven in a REAL scaffold rather
     # than a synthetic fixture: `docs/kernel-modules-allow` is a this-repo
     # declared surface (the `docs/provenance-allow`, `docs/if-tc-coverage-allow`
@@ -806,7 +810,10 @@ def test_scaffold_pins_hook_line_endings(scaffold):
 def test_a_fresh_scaffold_ships_the_probe_and_commits_through_its_hooks(scaffold):
     """TC-021 (LLR-021): a fresh scaffold ships the shared probe and the three
     hooks byte-for-byte, the probe carries the one policy read, and a first
-    commit passes through both commit hooks."""
+    commit passes through both commit hooks.
+
+    Implements: TC-021
+    """
     skip_without_env_gates("posix-shell", "git")
     for name in ("kit-python.sh", "pre-commit", "commit-msg", "pre-push"):
         shipped = (scaffold / ".githooks" / name).read_bytes()
@@ -896,6 +903,7 @@ def _git_at(root, *args):
 
 
 def test_a_scaffold_declares_the_branch_it_was_scaffolded_on(tmp_path):
+    """Implements: TC-369"""
     # WI-925: the trunk is one declared name, written at scaffold from the
     # branch being scaffolded on. An unborn repository names the branch git
     # creates at the first commit; a repository with history names its
@@ -954,6 +962,7 @@ def test_resync_never_reruns_the_scaffold_initializers(tmp_path):
 
 
 def test_run_launchers_delegate_to_run_menu(scaffold):
+    """Implements: TC-047"""
     # The evaluator's rungs (WI-067): the root launchers are thin delegates to
     # scripts/run_menu.py, which reads the docs/stack.ini [run] section — the
     # duplicated RUN_CMD is retired, so the launch commands live in one place.
@@ -1234,6 +1243,7 @@ def _refusal(call):
     ids=["privacy-check", "push-policy"],
 )
 def test_a_scaffold_flag_refuses_an_inline_policies_table(tmp_path, flag, value):
+    """Implements: TC-152"""
     dest = tmp_path / "repo"
     path = _policy_repo(dest, _INLINE_POLICIES)
     proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest, flag, value], tmp_path)
@@ -1245,6 +1255,7 @@ def test_a_scaffold_flag_refuses_an_inline_policies_table(tmp_path, flag, value)
 
 
 def test_a_scaffold_flag_names_a_key_the_file_does_not_declare(tmp_path):
+    """Implements: TC-152"""
     # A hand-trimmed file with no `privacy_check` line: the flag writes
     # nothing (an absent key was removed on purpose), so it must not report
     # the value it did not write.
@@ -1266,6 +1277,7 @@ def test_a_scaffold_flag_names_a_key_the_file_does_not_declare(tmp_path):
     ids=["inline-table", "dotted-key"],
 )
 def test_set_process_key_refuses_a_dial_it_cannot_edit_in_place(tmp_path, text):
+    """Implements: TC-152"""
     path = _policy_repo(tmp_path, text)
     message = _refusal(
         lambda boot: boot.set_process_key(tmp_path, "policies", "privacy_check", True)
@@ -1287,6 +1299,8 @@ def test_the_writer_refuses_a_policy_file_that_does_not_parse(tmp_path):
     answers `missing` (the CLI then exits 0 with a NOTE), and one that falls
     back to a line edit rewrites the `privacy_check` line the scan still
     finds; either fails here.
+
+    Implements: TC-152
     """
     path = _policy_repo(tmp_path / "unit", _UNPARSEABLE_POLICIES)
     message = _refusal(
@@ -1320,6 +1334,7 @@ def test_set_process_key_never_appends_a_second_table_header(tmp_path):
 
 
 def test_migration_keeps_the_legacy_file_when_its_write_is_refused(tmp_path):
+    """Implements: TC-152"""
     path = _policy_repo(tmp_path, _INLINE_POLICIES, {"privacy-check": "true"})
     moved, notes = load_script("bootstrap").migrate_legacy_config(tmp_path)
     assert moved == []
@@ -1330,6 +1345,7 @@ def test_migration_keeps_the_legacy_file_when_its_write_is_refused(tmp_path):
 
 
 def test_migration_writes_the_real_key_never_a_line_inside_a_string(tmp_path):
+    """Implements: TC-152"""
     _policy_repo(tmp_path, _DECOY_POLICIES, {"privacy-check": "true"})
     moved, _notes = load_script("bootstrap").migrate_legacy_config(tmp_path)
     policies = process_toml(tmp_path)["policies"]
@@ -1342,6 +1358,7 @@ def test_migration_writes_the_real_key_never_a_line_inside_a_string(tmp_path):
 def test_the_ordinal_migration_reads_the_dial_never_a_line_inside_a_string(
     tmp_path,
 ):
+    """Implements: TC-152"""
     text = (
         "[attestation]\n"
         "note = '''\n"
@@ -1363,6 +1380,8 @@ def test_the_dial_key_rename_refuses_an_old_key_held_in_an_inline_table(tmp_path
     not confirmed (as the line-scan rename did, finding no line under a
     bare header) leaves no note; one that keeps an unconfirmed edit appends
     a second `[attestation]` table and changes the bytes; either fails here.
+
+    Implements: TC-150
     """
     boot = load_script("bootstrap")
     old = boot.LEGACY_ATTESTATION_KEY
@@ -1376,6 +1395,7 @@ def test_the_dial_key_rename_refuses_an_old_key_held_in_an_inline_table(tmp_path
 
 
 def test_an_ordinary_policy_file_still_migrates_and_sets_in_place(tmp_path):
+    """Implements: TC-152"""
     # The characterization: one `key = value` line per dial under its header
     # is rewritten on that line, and a new key lands under its own header.
     text = (
@@ -1555,7 +1575,10 @@ def test_a_spooled_session_log_leaves_a_stock_scaffolds_status_clean(scaffold):
     keep-warm records read as the primary checkout's cleanliness. No `out/`
     line is added here: the scaffold's own ignore file is under test.
     Adequacy witness: a template that names only the older runtime files
-    under `out/` shows the spooled log as untracked."""
+    under `out/` shows the spooled log as untracked.
+
+    Implements: TC-384
+    """
     _git_at(scaffold, "init", "-q")
     pin_autocrlf(scaffold)
     for key, value in (("user.email", "t@example.com"), ("user.name", "T")):
@@ -1651,6 +1674,8 @@ def test_the_common_package_ships_complete(scaffold):
     `schedule.py` omission stated for a package — a partial copy would pass
     every in-repo test, because this repo's `scripts/` holds every file, and
     would ImportError on an adopter's first check.
+
+    Implements: TC-176, TC-193, TC-199
     """
     kit_modules = sorted(p.name for p in (SCRIPTS / "kitlib").glob("*.py"))
     assert "__init__.py" in kit_modules, "kitlib is not a package in the kit"
@@ -1689,6 +1714,8 @@ def test_bootstrap_imports_only_the_common_package():
     dependency of the installer. `kitlib` is safe to depend on precisely
     because it ships and is import-clean of the rest of `scripts/`; a second
     sibling would not be.
+
+    Implements: TC-176
     """
     kit_modules = {p.stem for p in SCRIPTS.glob("*.py")} - {"bootstrap"}
     kit_modules |= {p.parent.name for p in SCRIPTS.glob("*/__init__.py")}
@@ -1721,7 +1748,10 @@ def test_bootstrap_imports_only_the_common_package():
 
 
 def test_bootstrap_reexports_the_manifest_behavior_module():
-    """The scaffold inventory has one package-owned behavior seam."""
+    """The scaffold inventory has one package-owned behavior seam.
+
+    Implements: TC-199
+    """
     from kitlib import bootstrap_manifest
 
     bootstrap = load_script("bootstrap")
@@ -1744,6 +1774,8 @@ def test_every_sibling_imported_module_is_shipped_by_mapping():
     Guards the CLASS, not the instance: any future sibling extraction (WI-280
     alone added six) that forgets its MAPPING row fails here instead of in an
     adopter's repo.
+
+    Implements: TC-176, TC-199
     """
     # Read the MAPPING LITERAL, not the file text: a whole-file regex also
     # matches script names in docstrings and comments, which would silently

@@ -26,6 +26,7 @@ agent_loop = load_script("agent_loop")
 
 
 def test_session_brief_surface_is_reexported_from_its_behavior_module():
+    """Implements: TC-048"""
     agent_brief = load_script("agent_brief")
     for name in ("critique_brief", "worker_prompt", "reviewer_prompt"):
         exported = getattr(agent_loop, name)
@@ -268,6 +269,7 @@ def _set_critique_control(repo, budget, exhaustion):
 
 
 def test_critique_scheduled_when_critique_sr_in_scope(critique_repo):
+    """Implements: TC-048"""
     repo, ctl, cmd = critique_repo
     (ctl / "done_after").write_text(
         "2", encoding="utf-8"
@@ -284,6 +286,7 @@ def test_critique_scheduled_when_critique_sr_in_scope(critique_repo):
 
 
 def test_no_critique_when_no_critique_sr(critique_repo):
+    """Implements: TC-048"""
     # Same setup but SR-050 is Test, not Critique -> the layer is vacuous.
     repo, ctl, cmd = critique_repo
     (repo / "docs" / "requirements" / "system-requirements.csv").write_text(
@@ -299,6 +302,7 @@ def test_no_critique_when_no_critique_sr(critique_repo):
 
 
 def test_critique_prompt_is_redacted_and_carries_rubric_and_intent(critique_repo):
+    """Implements: TC-048"""
     repo, ctl, cmd = critique_repo
     (ctl / "done_after").write_text("2", encoding="utf-8")
     proc = _loop(repo, cmd)
@@ -331,6 +335,7 @@ def test_prompt_map_slots_a_custom_critique_template(critique_repo):
 
 
 def test_critique_budget_exhaustion_pages_human(critique_repo):
+    """Implements: TC-085"""
     # A perpetually CHANGES-REQUESTED critique trips the budget after
     # AGENT_CRITIQUE_MAX rounds and pages the human (attended -> NEEDS-HUMAN, 7).
     import os
@@ -386,6 +391,7 @@ def test_per_wi_infinite_budget_keeps_iterating(critique_repo):
 def test_per_wi_exhaustion_disposition_overrides_autonomous(
     critique_repo, disposition, expected
 ):
+    """Implements: TC-085"""
     repo, ctl, cmd = critique_repo
     _set_critique_control(repo, "1", disposition)
     # SN-029: the loop-held end of the ladder. `DevStg-Below` is the sentinel
@@ -481,6 +487,7 @@ assert FAKE_CRITIC_NOCOMMIT != FAKE_PER_MODEL, "the critic block moved; re-ancho
 
 
 def test_an_uncommitted_critique_verdict_is_never_routed_on(critique_repo, tmp_path):
+    """Implements: TC-257"""
     # critb writes CHANGES-REQUESTED and leaves it uncommitted. The merge gate
     # reads committed files only, so routing on the file on disk would drive a
     # rework build on a verdict nothing downstream can see. The draw fails, the

@@ -13,6 +13,8 @@ the routing-ON round with real `--output-format stream-json` templates:
 
 The kit's own DP-001 ran a plain-text, routing-off template, so neither fired in
 the kit's tests — this file closes that coverage gap.
+
+Implements: TC-076
 """
 
 from conftest import claimed_lane, fixture_git, hooked_checkout, load_script
@@ -121,7 +123,10 @@ def test_failed_planning_invocations_keep_attribution_and_unknown_usage(
 def test_a_hat_rooted_at_the_primary_checkout_spools_its_log(tmp_path, monkeypatch):
     """A dual-plan round run from the primary checkout records each hat there,
     and the primary is never a lane (WI-960): the hat's log goes to the
-    primary's spool, nothing is committed and trunk's HEAD does not move."""
+    primary's spool, nothing is committed and trunk's HEAD does not move.
+
+    Implements: TC-384
+    """
     claimed_lane(tmp_path)
     primary = tmp_path / "primary"
     head = fixture_git(primary, "rev-parse", "HEAD")

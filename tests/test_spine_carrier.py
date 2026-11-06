@@ -429,7 +429,10 @@ def test_needs_from_text_takes_the_carrier_from_the_file_not_the_text():
 
     The comment-only case passed before the fix too (it spells no table row, so
     the markdown fallback found nothing); the table-in-a-string case is the one
-    the sniff misread."""
+    the sniff misread.
+
+    Implements: TC-272
+    """
     for text in (_COMMENT_ONLY_TOML, _TABLE_IN_A_STRING, ""):
         assert sc.needs_from_text(text, ".toml") == [], text
     assert [n["id"] for n in sc.needs_from_text(_TABLE_IN_A_STRING, ".md")] == [
@@ -442,6 +445,7 @@ def test_needs_from_text_takes_the_carrier_from_the_file_not_the_text():
 
 
 def test_needs_or_refuse_names_the_file_it_cannot_read(tmp_path):
+    """Implements: TC-272"""
     path = tmp_path / "stakeholder-needs.toml"
     with pytest.raises(SystemExit, match="stakeholder-needs.toml.*does not parse"):
         sc.needs_or_refuse(path, _UNPARSEABLE)
@@ -453,7 +457,10 @@ def test_every_needs_text_caller_takes_the_carrier_from_the_file(tmp_path):
     (`trace._sn_prose`) read no need out of a TOML needs file that declares
     none, and the README floor refuses an unparseable one by name. The
     snapshot's history reader is driven over git in
-    `tests/test_snapshot_readers.py`."""
+    `tests/test_snapshot_readers.py`.
+
+    Implements: TC-272
+    """
     check_docs = load_script("check_docs")
     trace = load_script("trace")
     reg = tmp_path / "stakeholder-needs.toml"

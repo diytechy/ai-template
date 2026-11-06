@@ -29,6 +29,8 @@ repos, a real claim, a real lane worktree, real commits. What each group pins:
 
 Mutation notes are inline where a green could be vacuous — a revert that
 reverted nothing, or a "blocked" assertion that would pass on an unblocked row.
+
+Implements: TC-138, TC-156, TC-184
 """
 
 import json
@@ -499,6 +501,7 @@ def test_a_disposition_rows_own_handback_is_refused_structurally(tmp_path):
 
 
 def test_an_unreadable_claim_is_never_closed_early(tmp_path):
+    """Implements: TC-331"""
     # WI-849 (Sol r1 MAJOR 1's class): the no-recursion read once SKIPPED a
     # claimed spec it could not read, and nothing later in the partial close
     # re-reads it (the move rebases links; the commit is --no-verify), so an
@@ -666,6 +669,7 @@ def test_the_mechanical_adjudication_close_archives_terminal_and_finishes(tmp_pa
 
 
 def test_the_close_the_writer_lands_is_one_the_attestor_peels(tmp_path):
+    """Implements: TC-205"""
     # THE WRITER↔VERIFIER LOOP, closed on a REAL close rather than a
     # hand-composed one. `verdict.mechanical_close_attestation` re-derives this
     # subject from the one row the diff moves and compares it exactly, so the
@@ -831,6 +835,7 @@ def _assert_nothing_closed(root, head, ids, refusal, reason):
 def test_an_adoption_of_a_superseding_row_closes_and_writes_the_record(
     tmp_path, brief, outcome, title
 ):
+    """Implements: TC-156, TC-360"""
     root = adjudication_repo(
         tmp_path,
         brief=brief,
@@ -879,6 +884,7 @@ def test_an_adoption_of_a_superseding_row_closes_and_writes_the_record(
 def test_an_adoption_that_is_not_accepted_refuses_the_close(
     tmp_path, dispositions, seed, reason
 ):
+    """Implements: TC-156"""
     root = adopting_repo(tmp_path, dispositions=dispositions, seed=[seed])
     head = _git(lane(root), "rev-parse", "HEAD").strip()
     ids, refusal = hb.close_adjudication(root, "wi-401")
@@ -886,6 +892,7 @@ def test_an_adoption_that_is_not_accepted_refuses_the_close(
 
 
 def test_an_adoption_without_a_disposition_event_token_refuses(tmp_path):
+    """Implements: TC-156"""
     # The disposed row is read from the title's event token, never guessed.
     root = adopting_repo(tmp_path, title="dispose: the WI-005 close")
     head = _git(lane(root), "rev-parse", "HEAD").strip()
@@ -894,6 +901,7 @@ def test_an_adoption_without_a_disposition_event_token_refuses(tmp_path):
 
 
 def test_a_repeated_adoption_refuses_the_close(tmp_path):
+    """Implements: TC-156"""
     root = adopting_repo(tmp_path, dispositions=adopts("WI-450", "WI-450"))
     head = _git(lane(root), "rev-parse", "HEAD").strip()
     ids, refusal = hb.close_adjudication(root, "wi-401")
@@ -902,6 +910,7 @@ def test_a_repeated_adoption_refuses_the_close(tmp_path):
 
 
 def test_a_drafted_successor_beside_an_adoption_still_mints(tmp_path):
+    """Implements: TC-156"""
     waiter = (
         "docs/work/queued/WI-021-waiter.md",
         '+++\nid = "WI-021"\ntitle = "the waiter"\nworkstream = "process"\n'
@@ -936,6 +945,7 @@ def test_a_drafted_successor_beside_an_adoption_still_mints(tmp_path):
     ids=["adoption", "draft"],
 )
 def test_a_valid_block_then_an_unclosed_one_refuses_the_close(tmp_path, dispositions):
+    """Implements: TC-360"""
     root = adopting_repo(tmp_path, dispositions=dispositions)
     head = _git(lane(root), "rev-parse", "HEAD").strip()
     ids, refusal = hb.close_adjudication(root, "wi-401")
@@ -952,6 +962,7 @@ def test_a_valid_block_then_an_unclosed_one_refuses_the_close(tmp_path, disposit
     ids=["indented-unclosed", "indented-complete"],
 )
 def test_a_valid_adoption_then_an_indented_block_refuses_the_close(tmp_path, tail):
+    """Implements: TC-360"""
     # A second block off column zero is a fence the section refuses by name:
     # never prose folded into the first block's scope, its successor lost.
     root = adopting_repo(tmp_path, dispositions=adopts() + tail)
@@ -1049,6 +1060,7 @@ def _assert_two_spec_claim_untouched(root, wt, lane_head):
 
 
 def test_an_adjudication_close_of_a_two_spec_claim_refuses_before_any_move(tmp_path):
+    """Implements: TC-138"""
     # A lane closes exactly one claimed work item. The mechanical close of a
     # lane whose trunk claim holds two specs refuses, naming the claimed ids,
     # before it reads either row: nothing archived, nothing committed.
@@ -1316,6 +1328,7 @@ def test_the_git_dependency_is_declared_for_this_module():
 
 
 def test_a_partial_close_of_a_two_spec_claim_refuses_before_any_report(tmp_path):
+    """Implements: TC-138"""
     # The other close, the same contract: a partial close of a lane whose
     # trunk claim holds two specs refuses, naming the claimed ids, before any
     # report, residue commit or move.
@@ -1337,6 +1350,7 @@ def test_a_partial_close_of_a_two_spec_claim_refuses_before_any_report(tmp_path)
 def test_a_partial_close_restores_the_single_report_after_move_refusal(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-156"""
     # The close writes its one report, then the move refuses: the report is
     # restored and the claim and terminal state are left as they were.
     # Adequacy witness: a close that kept the report it had written, or left

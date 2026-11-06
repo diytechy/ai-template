@@ -23,6 +23,8 @@ The one frame rule they need, a recorded mediation resolving, is
 `frame_rules.mediation_findings`, called here beside them. Which pipe those
 three join is pinned here too, by calling `trace.analyze` in-process on an
 empty registry: no scaffold, no subprocess.
+
+Implements: TC-214, TC-219, TC-220, TC-221, TC-223, TC-224, TC-228, TC-233, TC-238, TC-246
 """
 
 import copy
@@ -1001,7 +1003,10 @@ def test_a_registry_row_id_is_a_legal_declared_input(rules, name):
     """TC-276: an input may name a registry row by its id rather than a file,
     the row's cells being what the judgment reads. An id is inside the
     repository by construction, so it is never judged as an escaping path,
-    alone or beside a path entry."""
+    alone or beside a path entry.
+
+    Implements: TC-276
+    """
     assert rules.input_escape(name) is None
     assert rules.observation_tc_findings([_obs(Inputs=name)]) == ([], [])
     assert rules.observation_tc_findings(

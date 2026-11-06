@@ -5,6 +5,8 @@ schema" — a comparative with no named predicate — and it sailed through DevS
 The advisory flags comparative/absolute terms in AcceptanceCriteria cells that
 lack a nearby pinned predicate. It is a heuristic, so it WARNS and never joins
 any failure set: the DevStg-Reqs consistency review (process.md §4) makes the call.
+
+Implements: TC-004
 """
 
 from conftest import make_minimal_project, run_py

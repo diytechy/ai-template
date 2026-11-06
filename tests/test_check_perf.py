@@ -3,6 +3,8 @@
 registry + a committed baseline — absolute breach and regression — gating only
 hard (Gate=fail) breaches in the run tier, and degrades to a skip when metrics
 or budgets are absent.
+
+Implements: TC-014
 """
 
 import json
@@ -160,6 +162,7 @@ def test_update_baseline_writes_file(scaffold):
 
 
 def test_harness_runs_perf_at_g3(scaffold):
+    """Implements: TC-014"""
     # A hard-gated breach must fail the DevStg-Impl gate through check.py's perf step.
     make_minimal_project(scaffold)
     write_budgets(scaffold, pb_row("PB-001", 500, gate="fail", tier="Full"))
@@ -319,6 +322,7 @@ def test_update_baseline_merges_and_preserves(tmp_path):
 
 
 def test_release_checklist_lists_perf_budgets(scaffold):
+    """Implements: TC-033"""
     # The warn-tier runtime budgets never fail the gate, so the human release
     # checklist is where they get a tick-box (gen_release_checklist.py §9).
     write_budgets(scaffold, pb_row("PB-001", 512, gate="warn", tier="Release"))

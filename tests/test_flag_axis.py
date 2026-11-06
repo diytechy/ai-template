@@ -10,6 +10,8 @@ report's real change reading is TC-249's, over real repositories.
 The measure's two counts are candidates for an enum state: a function taking
 two or more boolean parameters, and a call site passing a boolean literal
 positionally, where the reader cannot tell what `True` switches.
+
+Implements: TC-256
 """
 
 import configparser

@@ -23,6 +23,8 @@ refuses as an unknown one. What stays pinned ON PURPOSE is the refusal: a row
 whose declared brief cannot be filled in full is HELD for a human rather than
 composed, because a test that accepted a brief with a slot filled by something
 would be asserting the failure mode.
+
+Implements: TC-161
 """
 
 import csv
@@ -859,6 +861,7 @@ def _need_amendment_repo(tmp_path):
 
 
 def test_a_need_scoped_amendment_row_composes_with_its_before_and_after(tmp_path):
+    """Implements: TC-161"""
     # OI-100 gap 1 (WI-791): the mint now routes need amendments, so the brief
     # must render them. The SR-chain model holds no need, so before WI-791 a
     # need-scoped row refused as "nothing in scope" and held for a human.
@@ -893,7 +896,10 @@ def test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_sco
 ):
     """LLR-167: an assumption- or surrogate-scoped amendment row composes with
     the drifted row's approved cells before and after, and only the rows its
-    Adjudicates scope names are rendered."""
+    Adjudicates scope names are rendered.
+
+    Implements: TC-161
+    """
     repo = _spine_repo(tmp_path)
     path = repo / "docs" / "requirements" / "assumptions.toml"
     path.write_text(
@@ -929,7 +935,10 @@ def test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_sco
 def test_the_held_aftermath_gives_each_verdict_its_own_arm(tmp_path):
     """LLR-167: on a held rung the aftermath tells a CLARITY verdict that the
     later act turn re-attests it naming the verdict, and a MEANING verdict
-    that it stops for the owner, never the other way round (WI-912)."""
+    that it stops for the owner, never the other way round (WI-912).
+
+    Implements: TC-161
+    """
     repo = _need_amendment_repo(tmp_path)
     set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
     values, why = ab.amendment_brief.amendment_values(
@@ -961,6 +970,7 @@ def _committed_digest(repo, rel, id_col, rid):
 
 
 def test_the_amendment_brief_states_each_shown_rows_digest(tmp_path):
+    """Implements: TC-398"""
     # A requirement-chain row and a need-tier row, both amended and committed,
     # so the brief's digests are those of the rows the rule will read.
     repo = _spine_repo(tmp_path)
@@ -994,6 +1004,7 @@ _PROMPT_LINES = "".join(
 
 
 def test_bind_pending_records_the_briefs_identities(tmp_path):
+    """Implements: TC-398"""
     read = ksitting.read_identities
     amendment = tmp_path / "amendment.md"
     ab.bind_pending(amendment, "amendment", "the brief\n" + _PROMPT_LINES)
@@ -1020,6 +1031,7 @@ def test_bind_pending_records_the_briefs_identities(tmp_path):
 
 @pytest.mark.parametrize("call_ok", [True, False], ids=["accepted", "failed"])
 def test_record_outcome_keeps_the_identity_cell(tmp_path, call_ok):
+    """Implements: TC-398"""
     # Dropping the cell on the rewrite would refuse every held CLARITY act.
     write = ksitting.write_binding
     read = ksitting.read_identities
@@ -1242,6 +1254,7 @@ def _removal_block(rows, kind, rid):
 
 
 def test_a_removed_scoped_tc_is_briefed_as_a_removal(tmp_path):
+    """Implements: TC-161"""
     repo = _removed_tc_repo(tmp_path)
     values, why = ab.amendment_brief.amendment_values(
         repo, _am_row(Adjudicates="TC-002")
@@ -1257,6 +1270,7 @@ def test_a_removed_scoped_tc_is_briefed_as_a_removal(tmp_path):
 
 
 def test_a_removed_scoped_assumption_is_briefed_as_a_removal(tmp_path):
+    """Implements: TC-161"""
     repo = _removed_da_repo(tmp_path)
     values, why = ab.amendment_brief.amendment_values(
         repo, _am_row(Adjudicates="DA-001")
@@ -1277,6 +1291,7 @@ def test_a_removed_scoped_assumption_is_briefed_as_a_removal(tmp_path):
     ids=["chained", "unchained"],
 )
 def test_a_combined_sitting_briefs_a_removed_scoped_row(tmp_path, repo_of, kind, rid):
+    """Implements: TC-161"""
     repo = repo_of(tmp_path)
     row = _am_row(Brief="combined", Adjudicates="amendment:" + rid)
     text = _composed(repo, row)
@@ -1286,6 +1301,7 @@ def test_a_combined_sitting_briefs_a_removed_scoped_row(tmp_path, repo_of, kind,
 
 
 def test_a_scope_token_in_neither_home_refuses_naming_it(tmp_path):
+    """Implements: TC-161"""
     repo = _removed_tc_repo(tmp_path)
     values, why = ab.amendment_brief.amendment_values(
         repo, _am_row(Adjudicates="TC-002;TC-404")
@@ -1296,6 +1312,7 @@ def test_a_scope_token_in_neither_home_refuses_naming_it(tmp_path):
 
 
 def test_a_present_undrifted_scoped_row_still_drops_beside_a_removal(tmp_path):
+    """Implements: TC-161"""
     repo = _removed_tc_repo(tmp_path)
     values, why = ab.amendment_brief.amendment_values(
         repo, _am_row(Adjudicates="SR-001;TC-002")
@@ -1523,6 +1540,7 @@ def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
 
 
 def test_the_first_approval_anchor_names_the_copied_registrys_own_copy(tmp_path):
+    """Implements: TC-271"""
     # The first-approval brief named the directory's newest write as the record
     # the act moves, whichever registry that write copied. It names, for each
     # registry the act copies, the commit that last wrote THAT copy.
@@ -1571,6 +1589,7 @@ def _composed_judging_brief(tmp_path, case):
     "case", ["first-approval", "amendment-released", "amendment-held", "combined"]
 )
 def test_no_judging_brief_orders_an_act(tmp_path, case):
+    """Implements: TC-161"""
     # WI-912 (revisions 32 and 36): a sitting ends at its committed verdict,
     # and its act is a later turn taken from that verdict. So no composed
     # judging brief tells its session to flip a Status, take the copy, or
@@ -1802,7 +1821,10 @@ def test_a_well_formed_typed_line_is_accepted_for_every_brief(tmp_path, brief, l
 )
 def test_an_unusable_verdict_is_refused_and_says_which_way(tmp_path, line, expect):
     """Four ways to fail, four distinct reasons. "The verdict is invalid" is not
-    something a human can act on at 3am, so each arm names what is wrong."""
+    something a human can act on at 3am, so each arm names what is wrong.
+
+    Implements: TC-327
+    """
     path = tmp_path / "v.md"
     if line is not None:
         path.write_text(line + "\n")
@@ -2090,6 +2112,7 @@ def _heads(text):
 
 
 def test_a_first_approval_brief_carries_the_questions_for_its_rows_tiers(tmp_path):
+    """Implements: TC-161"""
     # The row judged is an LLR, so the brief carries the every-row questions,
     # the LLR/TC tier's and the architecture stage's, and neither the need
     # tier's nor the requirement tier's.
@@ -2101,6 +2124,7 @@ def test_a_first_approval_brief_carries_the_questions_for_its_rows_tiers(tmp_pat
 
 
 def test_an_amendment_brief_carries_the_questions_for_its_rows_tiers(tmp_path):
+    """Implements: TC-161"""
     repo = _amendment_repo(tmp_path)
     text, why = ab.compose(repo, _am_row(), repo / "docs/reviews/v.md")
     assert why is None, why
@@ -2113,6 +2137,7 @@ def test_an_amendment_brief_carries_the_questions_for_its_rows_tiers(tmp_path):
 
 
 def test_each_combined_section_carries_its_own_rows_tier_questions(tmp_path):
+    """Implements: TC-161"""
     repo = _first_approval_repo(tmp_path)
     row = _fa_row(Brief="combined", Adjudicates="first-approval:LLR-001")
     text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
@@ -2127,6 +2152,7 @@ def _home(path, body):
 
 
 def test_a_change_to_the_home_changes_the_brief(tmp_path, monkeypatch):
+    """Implements: TC-161"""
     repo = _first_approval_repo(tmp_path)
     home = _home(
         tmp_path / "home.md",
@@ -2148,6 +2174,7 @@ def test_a_change_to_the_home_changes_the_brief(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("make", ["absent", "directory", "undecodable"])
 def test_an_absent_or_unreadable_home_refuses_the_render(tmp_path, monkeypatch, make):
+    """Implements: TC-161"""
     repo = _first_approval_repo(tmp_path)
     home = tmp_path / "home.md"
     if make == "directory":
@@ -2175,6 +2202,7 @@ def test_an_absent_or_unreadable_home_refuses_the_render(tmp_path, monkeypatch, 
 def test_a_home_that_cannot_answer_the_rows_tiers_refuses(
     tmp_path, monkeypatch, body, expect
 ):
+    """Implements: TC-161"""
     repo = _first_approval_repo(tmp_path)
     monkeypatch.setattr(
         ab.amendment_brief, "QUESTIONS_HOME", _home(tmp_path / "home.md", body)
@@ -2195,6 +2223,7 @@ def _question_lines(text):
 
 
 def test_no_second_copy_of_the_questions_exists(tmp_path):
+    """Implements: TC-161"""
     # The skill and the templates read the home; none of them restates it. A
     # question whose opening reappears in any of them is the second home this
     # change removed.
@@ -2327,6 +2356,7 @@ def _composed(repo, row, prompt_templates=None):
 
 
 def test_a_first_approval_of_a_drafted_sr_carries_the_hat_block(tmp_path):
+    """Implements: TC-399"""
     repo = _hat_repo(tmp_path, drafted_sr=True)
     text = _composed(repo, _fa_row(Adjudicates="SR-002"))
     assert "SR-002 [AWAITING FIRST APPROVAL]" in text
@@ -2340,6 +2370,7 @@ def test_a_first_approval_of_a_drafted_sr_carries_the_hat_block(tmp_path):
 def test_a_first_approval_of_llr_and_tc_rows_only_says_no_decomposition_round(
     tmp_path,
 ):
+    """Implements: TC-399"""
     repo = _write_roster(_first_approval_repo(tmp_path), _HAT_ROSTER)
     text = _composed(repo, _fa_row())
     assert _not_a_round() in text
@@ -2347,6 +2378,7 @@ def test_a_first_approval_of_llr_and_tc_rows_only_says_no_decomposition_round(
 
 
 def test_an_amendment_of_an_approved_need_carries_the_hat_block(tmp_path):
+    """Implements: TC-399"""
     repo = _hat_repo(tmp_path, amend_need=True)
     text = _composed(repo, _am_row(Adjudicates="SN-001"))
     assert "always-on question?" in text
@@ -2356,6 +2388,7 @@ def test_an_amendment_of_an_approved_need_carries_the_hat_block(tmp_path):
 
 
 def test_an_amendment_of_an_sr_only_says_no_decomposition_round(tmp_path):
+    """Implements: TC-399"""
     repo = _write_roster(_amendment_repo(tmp_path), _HAT_ROSTER)
     text = _composed(repo, _am_row())
     assert _not_a_round() in text
@@ -2363,6 +2396,7 @@ def test_an_amendment_of_an_sr_only_says_no_decomposition_round(tmp_path):
 
 
 def test_an_amendment_round_reaches_the_need_of_every_sr_it_judges(tmp_path):
+    """Implements: TC-399"""
     # SN-001 (need-a) is amended, which makes the round; SR-002, amended in
     # the same sitting, names SN-002 (need-b), which joins the round's
     # parents although an amended SR alone makes no round.
@@ -2377,6 +2411,7 @@ def test_an_amendment_round_reaches_the_need_of_every_sr_it_judges(tmp_path):
 def test_a_combined_round_reaches_the_need_of_an_sr_another_section_amends(
     tmp_path,
 ):
+    """Implements: TC-399"""
     # The first-approval section's drafted SR-002 (under SN-002) makes the
     # round; the amendment section's SR-001 names SN-001, whose hat the
     # sitting's one perspectives part carries too.
@@ -2444,6 +2479,7 @@ _OVERRIDE = (
 
 
 def test_an_override_without_the_hats_slot_composes_unchanged(tmp_path):
+    """Implements: TC-399"""
     # Over a malformed roster, in a round: the override declares no slot, so
     # its brief is the plain fill of the assembler's values and the roster is
     # never read.
@@ -2468,6 +2504,7 @@ _SECTION_HEAD = "=== SECTION `## "
 
 
 def test_a_combined_sitting_carries_the_hat_questions_once_over_the_union(tmp_path):
+    """Implements: TC-399"""
     # The amendment section amends SN-001 (need-a); the first-approval section
     # drafts SR-002 under SN-002 (need-b). One perspectives part follows the
     # last section and carries the union, each question once.
@@ -2487,6 +2524,7 @@ def test_a_combined_sitting_carries_the_hat_questions_once_over_the_union(tmp_pa
 
 
 def test_a_combined_sitting_that_is_no_round_states_it_once(tmp_path):
+    """Implements: TC-399"""
     # An amended SR and a drafted LLR: neither section is a decomposition
     # round, and the sitting says so once.
     repo = _first_approval_repo(tmp_path)
@@ -2501,6 +2539,7 @@ def test_a_combined_sitting_that_is_no_round_states_it_once(tmp_path):
 
 
 def test_a_malformed_roster_refuses_a_round_sitting_by_name(tmp_path):
+    """Implements: TC-399"""
     repo = _hat_repo(tmp_path, roster=_MALFORMED_ROSTER, drafted_sr=True)
     text, why = ab.compose(
         repo, _fa_row(Adjudicates="SR-002"), repo / "docs/reviews/v.md"
@@ -2521,7 +2560,10 @@ def test_no_other_brief_declares_the_hats_slot(key):
     done-when, red-TC, rejudge, disposition, consolidate, dispute, act and
     combined templates do not. Adequacy witness: a `{hats}` slot added to the
     done-when template (or a combined template that declared it beside its
-    sections' own) fails here."""
+    sections' own) fails here.
+
+    Implements: TC-399
+    """
     assert "hats" not in ab.prompts.slots(ab.prompts.load(key))
 
 
@@ -2569,7 +2611,10 @@ def test_hat_outcome_lines_change_no_ruling(brief, kinds, verdict):
     same verdict without them: the outcome lines are neither row lines nor
     machine lines. Adequacy witness: a reader counting any `- ` line under a
     kind as a row line would add a ruling for `ALWAYS-ON` or `NEED-A`, and a
-    reader taking `HAT` as a keyword would refuse the verdict."""
+    reader taking `HAT` as a keyword would refuse the verdict.
+
+    Implements: TC-399
+    """
     plain = _rulings(verdict, brief, kinds)
     with_hats = _rulings(verdict + _HAT_LINES, brief, kinds)
     assert with_hats == plain

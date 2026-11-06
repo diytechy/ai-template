@@ -43,6 +43,7 @@ def write_toml(root, text):
 def test_red_rounds_max_reads_3_when_absent_and_refuses_each_bad_value(
     tmp_path, body, value
 ):
+    """Implements: TC-382"""
     # TC-382. An absent `[build]` table or key reads the shipped 3; a value
     # that is not an int, is a bool, or is below 1 is refused, naming the
     # file, its line and the key.

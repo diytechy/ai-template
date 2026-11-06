@@ -225,6 +225,7 @@ def test_no_pause_file_projects_no_bullet(tmp_path):
 
 
 def test_tracked_pause_projects_reason_and_declared_since(tmp_path):
+    """Implements: TC-136"""
     _init(tmp_path)
     _pause(tmp_path, 'reason = "draining for the audit"\nsince = "2026-07-29"\n')
     body = _block(tmp_path)
@@ -241,6 +242,7 @@ def test_tracked_pause_without_since_omits_the_stamp(tmp_path):
 
 
 def test_malformed_pause_still_projects_fail_closed(tmp_path):
+    """Implements: TC-194"""
     # A pause file we cannot read is still a pause: it projects the same loud
     # message the coordinator's reader returns, routing the owner to the fix.
     pending = load_script("pending")
@@ -251,6 +253,7 @@ def test_malformed_pause_still_projects_fail_closed(tmp_path):
 
 
 def test_pause_malformed_text_matches_the_coordinator_reader():
+    """Implements: TC-136"""
     # One message, two readers: pending owns the copy consumed by the status
     # projection, so pin it to the coordinator's source value.
     assert (
@@ -260,6 +263,7 @@ def test_pause_malformed_text_matches_the_coordinator_reader():
 
 
 def test_pause_projection_is_deterministic(tmp_path):
+    """Implements: TC-194"""
     # No clock anywhere in the derivation: two reads of the same tree are
     # byte-identical, which is what the freshness gate depends on.
     _init(tmp_path)
@@ -275,6 +279,7 @@ def test_pause_projection_is_deterministic(tmp_path):
 
 
 def test_the_typed_model_kinds_every_pending_item(tmp_path):
+    """Implements: TC-194"""
     # `kind` is a FIELD, so a caller filtering by source never parses prose.
     pending = load_script("pending")
     _init(tmp_path)
@@ -286,6 +291,7 @@ def test_the_typed_model_kinds_every_pending_item(tmp_path):
 
 
 def test_owner_cards_is_pending_items_minus_the_pause(tmp_path):
+    """Implements: TC-194"""
     # The dispatcher's drained-queue arm: a paused station has its own earlier
     # exit, so the pause must never inflate the approvals-waiting count — and
     # the exclusion is DECLARED in the read model, not re-derived at the banner.
@@ -299,6 +305,7 @@ def test_owner_cards_is_pending_items_minus_the_pause(tmp_path):
 
 
 def test_the_block_renders_exactly_the_model(tmp_path):
+    """Implements: TC-194"""
     # One derivation, one rendering: every item's line appears in the block, so
     # the banner's count and the owner surface can never disagree.
     pending = load_script("pending")
@@ -310,6 +317,7 @@ def test_the_block_renders_exactly_the_model(tmp_path):
 
 
 def test_the_dispatcher_reads_the_model_not_the_render_facade(tmp_path):
+    """Implements: TC-194"""
     # THE EDGE, asserted at the behaviour rather than only in the import
     # census: the banner's card count is the read model's `owner_cards`, so a
     # future rewrite cannot go back to two private names in a render module
@@ -325,6 +333,7 @@ def test_the_dispatcher_reads_the_model_not_the_render_facade(tmp_path):
 
 
 def test_the_owner_surface_reads_the_model_not_the_render_facade(tmp_path):
+    """Implements: TC-194"""
     # The other documented bad edge: gen_open_items reused `pending_block` by
     # importing the ~1,000-line facade. Same text, one module down.
     goi = load_script("gen_open_items")

@@ -63,6 +63,7 @@ def clean(lane):
 def test_a_critique_outside_the_verdict_format_is_refused_and_nothing_is_written(
     tmp_path, shape
 ):
+    """Implements: TC-333"""
     lane, sha = planned(tmp_path)
     text = {
         "unbound": critique_text("f" * 40),
@@ -79,6 +80,7 @@ def test_a_critique_outside_the_verdict_format_is_refused_and_nothing_is_written
 
 @pytest.mark.parametrize("delta", ["", "DELTA: beyond\n"])
 def test_a_plan_with_a_missing_or_beyond_delta_is_never_filed(tmp_path, delta):
+    """Implements: TC-333"""
     lane, sha = planned(tmp_path, PLAN.replace("DELTA: none\n", delta))
     verdict = write(tmp_path, "scratch/v.md", critique_text(sha))
     assert file_cli(lane, verdict, sha) == 2
@@ -86,6 +88,7 @@ def test_a_plan_with_a_missing_or_beyond_delta_is_never_filed(tmp_path, delta):
 
 
 def test_a_filed_critique_exits_zero_and_writes_only_its_record(tmp_path):
+    """Implements: TC-333"""
     lane, sha = planned(tmp_path)
     verdict = write(tmp_path, "scratch/v.md", critique_text(sha))
     assert file_cli(lane, verdict, sha) == 0
@@ -96,6 +99,7 @@ def test_a_filed_critique_exits_zero_and_writes_only_its_record(tmp_path):
 
 
 def test_the_pass_form_refuses_while_head_lacks_the_critique_it_cites(tmp_path):
+    """Implements: TC-333"""
     lane, sha = planned(tmp_path)
     rb.file_plan_critique(lane, WI, critique_text(sha), sha)
     argv = ["plan-file", "--root", str(lane), "--wi", WI, "--pass"]
@@ -109,6 +113,7 @@ def test_the_pass_form_refuses_while_head_lacks_the_critique_it_cites(tmp_path):
 def test_the_pass_form_reads_a_committed_critique_through_line_ending_conversion(
     tmp_path,
 ):
+    """Implements: TC-333"""
     # Fable REVIEW-B F1 (round 2): a re-checkout under core.autocrlf=true
     # leaves CRLF in the working tree of a committed critique; HEAD holds it
     # all the same. A real uncommitted edit still refuses.
@@ -126,6 +131,7 @@ def test_the_pass_form_reads_a_committed_critique_through_line_ending_conversion
 
 
 def test_a_plan_the_coverage_gate_fails_never_passes(tmp_path):
+    """Implements: TC-333"""
     lane, sha = planned(tmp_path, PLAN.replace("| D2 |", "| SR-001 |"))
     rb.file_plan_critique(lane, WI, critique_text(sha), sha)
     commit(lane, "critique")
@@ -135,6 +141,7 @@ def test_a_plan_the_coverage_gate_fails_never_passes(tmp_path):
 
 
 def test_a_minor_only_change_request_passes(tmp_path):
+    """Implements: TC-333"""
     lane, sha = planned(tmp_path)
     text = critique_text(sha, "CHANGES-REQUESTED", [MINOR])
     rb.file_plan_critique(lane, WI, text, sha)
@@ -144,6 +151,7 @@ def test_a_minor_only_change_request_passes(tmp_path):
 
 
 def test_a_first_change_request_allows_one_revision_and_never_passes(tmp_path):
+    """Implements: TC-333"""
     lane, sha = planned(tmp_path)
     rb.file_plan_critique(
         lane, WI, critique_text(sha, "CHANGES-REQUESTED", [MAJOR]), sha
@@ -204,6 +212,7 @@ def blocking(text):
 
 
 def test_at_the_cap_an_accepted_dismissal_of_every_blocking_finding_passes(tmp_path):
+    """Implements: TC-333"""
     lane, _sha = cap(tmp_path)
     assert rb.write_pass(lane, WI, VERDICT).is_file()
     assert staged(lane) == []
@@ -227,6 +236,7 @@ def test_at_the_cap_an_accepted_dismissal_of_every_blocking_finding_passes(tmp_p
 def test_at_the_cap_anything_but_an_accepted_dismissal_is_refused(
     tmp_path, ruling, outcome
 ):
+    """Implements: TC-333"""
     lane, _sha = cap(tmp_path, ruling, outcome)
     with pytest.raises(rb.BriefError):
         rb.write_pass(lane, WI, VERDICT)
@@ -238,7 +248,10 @@ def test_at_the_cap_anything_but_an_accepted_dismissal_is_refused(
 def test_at_the_cap_a_successor_ruling_never_passes(tmp_path):
     """WI-911: SUCCESSOR resolves a finding on the rework gate only. At the
     plan cap only an accepted dismissal writes a pass record (SR-154), so a
-    verdict ruling the blocking finding SUCCESSOR writes none."""
+    verdict ruling the blocking finding SUCCESSOR writes none.
+
+    Implements: TC-333
+    """
     lane, _sha = cap(tmp_path, "RULING: F1 SUCCESSOR file a row for the test")
     with pytest.raises(rb.BriefError) as refused:
         rb.write_pass(lane, WI, VERDICT)
@@ -251,7 +264,10 @@ def test_at_the_cap_a_successor_ruling_never_passes(tmp_path):
 def test_at_the_cap_a_dismissal_bound_without_its_findings_file_is_refused(tmp_path):
     """The pass-record route reads the dispute at HEAD: a binding that records
     no findings file refuses the dismissal by name, though `FINDINGS` beside
-    the verdict records the ruled finding, and no pass record is written."""
+    the verdict records the ruled finding, and no pass record is written.
+
+    Implements: TC-069
+    """
     lane, _sha = cap(tmp_path, recorded=False)
     with pytest.raises(rb.BriefError, match="records no findings file"):
         rb.write_pass(lane, WI, VERDICT)
@@ -259,6 +275,7 @@ def test_at_the_cap_a_dismissal_bound_without_its_findings_file_is_refused(tmp_p
 
 
 def test_at_the_cap_a_major_after_a_minor_is_disputed_under_its_own_number(tmp_path):
+    """Implements: TC-333"""
     # Opus REVIEW-B F1 (round 1): a finding's number is its position among
     # ALL the critique's findings, so a MAJOR after a MINOR is F2, and the
     # findings file the filing step writes says so.
@@ -270,6 +287,7 @@ def test_at_the_cap_a_major_after_a_minor_is_disputed_under_its_own_number(tmp_p
 
 
 def test_at_the_cap_two_blocking_findings_with_one_dismissed_are_refused(tmp_path):
+    """Implements: TC-333"""
     ruling = "RULING: F1 DISMISS refuted yes\nRULING: F2 FIX the plan needs it"
     lane, _sha = cap(tmp_path, ruling, second=(MAJOR, MAJOR2))
     with pytest.raises(rb.BriefError, match="F2: the dispute verdict rules it FIX"):
@@ -281,6 +299,7 @@ def test_at_the_cap_two_blocking_findings_with_one_dismissed_are_refused(tmp_pat
 def test_the_dispute_findings_file_refuses_ids_other_than_the_blocking_ones(
     tmp_path, positions
 ):
+    """Implements: TC-333"""
     lane, _text = second_critique(tmp_path, (MINOR, MAJOR))
     argv = ["plan-file", "--root", str(lane), "--wi", WI]
     argv += ["--dispute-findings", FINDINGS]
@@ -293,6 +312,7 @@ def test_the_dispute_findings_file_refuses_ids_other_than_the_blocking_ones(
 
 
 def test_at_the_cap_an_uncommitted_dispute_verdict_is_refused(tmp_path):
+    """Implements: TC-333"""
     lane, _sha = cap(tmp_path)
     (lane / VERDICT).write_text(
         "Judged.\n\nRULING: F1 DISMISS refuted later\n", encoding="utf-8"
@@ -305,6 +325,7 @@ def test_at_the_cap_an_uncommitted_dispute_verdict_is_refused(tmp_path):
 
 
 def test_the_plan_critique_renders_over_the_committed_plan_and_its_coverage(tmp_path):
+    """Implements: TC-333"""
     lane, sha = planned(tmp_path)
     brief, verdict = rb.render_plan_critique(lane, WI, RUBRIC, sha, str(tmp_path / "s"))
     assert verdict.endswith("WI-950-plan-critique-1.md")
@@ -325,6 +346,7 @@ REACH_GATE = (
 
 
 def test_the_plan_critique_brief_ties_severity_to_reachability(tmp_path):
+    """Implements: TC-333"""
     # WI-911 (review-churn item 4): the live rubric's verdict section carries
     # the severity rule into the plan critique's brief by render, so no
     # by-hand addendum is needed once the trial recipe retired.
@@ -340,6 +362,7 @@ def test_the_plan_critique_brief_ties_severity_to_reachability(tmp_path):
 
 
 def test_the_second_plan_critique_is_in_convergence_and_never_sees_the_first(tmp_path):
+    """Implements: TC-333"""
     lane, sha = planned(tmp_path)
     first = critique_text(sha, "CHANGES-REQUESTED", [MAJOR])
     rb.file_plan_critique(lane, WI, first, sha)
@@ -362,6 +385,7 @@ def test_the_second_plan_critique_is_in_convergence_and_never_sees_the_first(tmp
 
 
 def test_the_second_critique_refuses_a_revision_that_misses_a_first_finding(tmp_path):
+    """Implements: TC-333"""
     # Opus REVIEW-B F5 (round 1): the revision is gated against the first
     # critique's findings before the second critic's run is spent on it.
     lane, sha = planned(tmp_path)
@@ -383,6 +407,7 @@ def test_the_second_critique_refuses_a_revision_that_misses_a_first_finding(tmp_
 def test_the_plan_critique_refuses_a_missing_input_and_writes_nothing(
     tmp_path, missing
 ):
+    """Implements: TC-333"""
     lane, sha = planned(tmp_path)
     out = tmp_path / "out" / "brief.md"
     argv = ["critique", "--plan", "--root", str(lane), "--wi", WI, "--sha", sha]

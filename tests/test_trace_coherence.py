@@ -26,6 +26,8 @@ by `tests/test_trace.py` and `tests/test_trace_rules.py`; the split was proven
 byte-identical by a before/after compare of the console, `test/report.md` and
 the gap census. These tests are about the boundary, not about re-asserting the
 rules through a second door.
+
+Implements: TC-225
 """
 
 import ast
@@ -56,6 +58,7 @@ def _sr(sid, **cells):
 
 
 def test_the_orphan_rules_emit_sr_then_llr_then_tc_then_sn(coherence):
+    """Implements: TC-197"""
     # The order is what the report and the console compare, so it is a
     # property of the composer and not of where an append happened to sit.
     srs = [_sr("SR-001", **{"SN-Refs": "SN-001"})]
@@ -71,6 +74,7 @@ def test_the_orphan_rules_emit_sr_then_llr_then_tc_then_sn(coherence):
 
 
 def test_a_drafted_row_stands_the_child_rules_down_but_not_its_sn_link(coherence):
+    """Implements: TC-197"""
     drafted = _sr("SR-002", Status="Drafted")
     orphans, _ = coherence.spine_orphan_findings(
         [drafted], [], [], [], {"SR-002"}, set(), {"SN-001"}, set()
@@ -80,6 +84,7 @@ def test_a_drafted_row_stands_the_child_rules_down_but_not_its_sn_link(coherence
 
 
 def test_off_spine_backlinks_resolve_against_ids_and_llr_module_paths(coherence):
+    """Implements: TC-197"""
     llrs = [{"LLR-ID": "LLR-001", "Module": "scripts/thing.py"}]
     assert coherence.llr_module_ids(llrs) == {"scripts/thing.py"}
     targets = {"SR-001", "LLR-001", "scripts/thing.py"}
@@ -101,6 +106,7 @@ def test_off_spine_backlinks_resolve_against_ids_and_llr_module_paths(coherence)
 
 
 def test_component_membership_is_checked_from_the_primitive_side(coherence):
+    """Implements: TC-197"""
     cmps = [{"CMP-ID": "CMP-001", "PartOf": "", "SupersededBy": ""}]
     assert coherence.component_membership_findings(cmps, [], [], [], []) == []
     bad = coherence.component_membership_findings(
@@ -118,6 +124,7 @@ def test_component_membership_is_checked_from_the_primitive_side(coherence):
 
 
 def test_the_knowledge_ref_resolves_only_the_pack_prefix(tmp_path, coherence):
+    """Implements: TC-197"""
     (tmp_path / "knowledge").mkdir()
     (tmp_path / "knowledge" / "real.md").write_text("pack", encoding="utf-8")
     rows = [
@@ -136,6 +143,7 @@ def test_the_knowledge_ref_resolves_only_the_pack_prefix(tmp_path, coherence):
 
 
 def test_the_phase_scope_always_covers_the_foundation_phase(coherence):
+    """Implements: TC-197"""
     srs = [_sr("SR-001", Phase="1"), _sr("SR-002", Phase="5")]
     scope = coherence.PhaseScope.of(srs, "5")
     assert scope.covers(srs[0]), "the minimum phase is in scope for every filter"
@@ -149,6 +157,7 @@ def test_the_phase_scope_always_covers_the_foundation_phase(coherence):
 def test_the_status_criterion_defers_out_of_phase_and_stands_down_for_drafted(
     coherence,
 ):
+    """Implements: TC-197"""
     srs = [
         _sr("SR-001", Status="Implemented", Phase="1"),
         _sr("SR-002", Status="Drafted", Phase="1"),
@@ -165,6 +174,7 @@ def test_the_status_criterion_defers_out_of_phase_and_stands_down_for_drafted(
 
 
 def test_registries_is_frozen_and_total(trace):
+    """Implements: TC-197"""
     reg = trace.load_registries(pathlib.Path("docs"))
     assert dataclasses.is_dataclass(reg)
     with pytest.raises(dataclasses.FrozenInstanceError):
@@ -176,6 +186,7 @@ def test_registries_is_frozen_and_total(trace):
 
 
 def test_the_loader_is_the_only_construction_site_of_registries():
+    """Implements: TC-197"""
     # A frozen record is only a guarantee while the loader is the one place
     # that fills it; a second construction site is a second schema.
     sites = []
@@ -191,6 +202,7 @@ def test_the_loader_is_the_only_construction_site_of_registries():
 
 
 def test_findings_list_defaults_are_per_instance(trace):
+    """Implements: TC-197"""
     # The dataclass trap this bag would otherwise walk into: two analyses
     # sharing one findings list. `field(default_factory=list)`, not `= []`.
     a, b = trace.Findings(), trace.Findings()
@@ -200,6 +212,7 @@ def test_findings_list_defaults_are_per_instance(trace):
 
 
 def test_the_two_post_analyze_fields_are_declared_not_conjured(trace):
+    """Implements: TC-197"""
     # `watermark_advisories` and `snapshot_findings` are filled AFTER analyze
     # returns, because their rules read the filesystem and git. That is real
     # mutable runtime state and it is DECLARED, so a reader of the class knows
@@ -209,6 +222,7 @@ def test_the_two_post_analyze_fields_are_declared_not_conjured(trace):
 
 
 def test_analysis_flags_takes_a_record_or_a_namespace(trace):
+    """Implements: TC-197"""
     import argparse
 
     ns = argparse.Namespace(
@@ -225,6 +239,7 @@ def test_analysis_flags_takes_a_record_or_a_namespace(trace):
 
 
 def test_no_caller_forges_an_argparse_namespace_for_the_engine():
+    """Implements: TC-197"""
     # The reason AnalysisFlags exists: census.gap_census imported argparse to
     # build a four-field Namespace, because the CLI namespace WAS the config
     # type. A future caller reaching for the same trick should red here.
@@ -243,6 +258,7 @@ def test_no_caller_forges_an_argparse_namespace_for_the_engine():
 
 
 def test_the_coherence_rules_import_no_sibling_of_scripts():
+    """Implements: TC-197"""
     # What keeps the join rules BELOW the engine that composes them. kitlib is
     # allowed (it is the shipped row vocabulary); a sibling is not.
     tree = ast.parse(pathlib.Path(SCRIPTS, "coherence.py").read_text(encoding="utf-8"))
@@ -259,6 +275,7 @@ def test_the_coherence_rules_import_no_sibling_of_scripts():
 
 
 def test_trace_re_exports_every_moved_name(trace, coherence):
+    """Implements: TC-197"""
     # The move cost no caller a line: trace.py still answers to each name, and
     # to the SAME object rather than to a re-implementation.
     for name in (
@@ -282,6 +299,7 @@ def test_trace_re_exports_every_moved_name(trace, coherence):
 
 
 def test_analyze_is_a_composer_and_stays_one():
+    """Implements: TC-197"""
     # The regression this slice exists to prevent: rules accreting back into
     # the engine. `analyze` is measured, not described — if it grows past the
     # composer it now is, that is the 553-line function coming back.

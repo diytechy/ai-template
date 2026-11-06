@@ -41,6 +41,8 @@ The helper is reached THROUGH its two callers (`integ.bookkeeping`, never a
 second `load_script` copy), because the claim of the design is that both
 callers share one module object - a private copy would test something neither
 caller runs.
+
+Implements: TC-145
 """
 
 import ast

@@ -8,6 +8,8 @@ never blocks a gate. An external/reused part referenced only via the IF-###
 catalog may delegate nothing, so an empty back-link is allowed here (unlike PB).
 The registry was formerly modules.csv / MOD-### — the legacy file + ids are
 still read (never breaking), pinned below.
+
+Implements: TC-005
 """
 
 from conftest import make_minimal_project, run_py, record_ids

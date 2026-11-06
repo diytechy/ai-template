@@ -356,6 +356,7 @@ def _routes(stdout, phase):
 
 
 def test_review_policy_1_dispatches_one_heterogeneous_reviewer(managed_repo):
+    """Implements: TC-082"""
     repo, ctl, cmd = managed_repo
     (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
     (ctl / "done_after").write_text("2", encoding="utf-8")
@@ -391,6 +392,7 @@ def test_invalid_prefer_map_id_fails_preflight(managed_repo):
 
 
 def test_review_policy_2_schedules_two_providers(managed_repo):
+    """Implements: TC-082"""
     repo, ctl, cmd = managed_repo
     (repo / "docs" / "review-policy").write_text("2\n", encoding="utf-8")
     (ctl / "done_after").write_text("2", encoding="utf-8")
@@ -405,6 +407,7 @@ def test_review_policy_2_schedules_two_providers(managed_repo):
 
 
 def test_review_policy_0_schedules_no_reviewer(managed_repo):
+    """Implements: TC-082"""
     repo, ctl, cmd = managed_repo
     (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
     (ctl / "done_after").write_text("2", encoding="utf-8")
@@ -416,6 +419,7 @@ def test_review_policy_0_schedules_no_reviewer(managed_repo):
 
 
 def test_reviewer_prompt_is_redacted_by_construction(managed_repo):
+    """Implements: TC-082"""
     repo, ctl, cmd = managed_repo
     (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
     (ctl / "done_after").write_text("2", encoding="utf-8")
@@ -533,6 +537,7 @@ def test_prompt_map_slots_a_custom_reviewer_template(managed_repo):
 def test_a_review_template_that_cannot_carry_the_round_fails_preflight(
     managed_repo,
 ):
+    """Implements: TC-082"""
     # A template missing the slots would raise at the first review session,
     # mid-run; it is refused before iteration 1 instead, by name (WI-884).
     repo, ctl, cmd = managed_repo
@@ -547,6 +552,7 @@ def test_a_review_template_that_cannot_carry_the_round_fails_preflight(
 
 
 def test_prompt_map_missing_file_fails_preflight(managed_repo):
+    """Implements: TC-082"""
     repo, ctl, cmd = managed_repo
     proc = _loop(repo, cmd, "--prompt-map", "REVIEW-A=docs/prompts/nope.md")
     assert proc.returncode == 2, proc.stdout + proc.stderr
@@ -608,6 +614,7 @@ def test_changes_requested_rework_finding_reaches_the_next_build(managed_repo):
 
 
 def test_absent_enable_list_keeps_legacy_behavior(managed_repo):
+    """Implements: TC-082"""
     # No agents-enabled -> routing off -> the base --agent-cmd runs and NO review
     # is scheduled (the never-breaking guarantee; managed banner absent).
     repo, ctl, cmd = managed_repo
@@ -688,6 +695,7 @@ def test_preflight_missing_cli_carries_notes_hint(managed_repo):
 
 
 def test_changes_requested_swaps_implementer_family(managed_repo):
+    """Implements: TC-084"""
     # Two consecutive medium-tier CHANGES-REQUESTED rounds -> agent_route.escalate
     # returns swap-implementer (a non-top tier, so the shared-failure page never
     # fires first). The loop applies impl_exclude and the NEXT build routes a
@@ -711,6 +719,7 @@ def test_changes_requested_swaps_implementer_family(managed_repo):
 
 
 def test_escalation_tiers_up_after_swap(managed_repo):
+    """Implements: TC-084"""
     # One CHANGES-REQUESTED round beyond the swap -> escalate returns tier-up; the
     # loop sets impl_tier_override=strong (tier-up-never-down) and the next BUILD
     # routes the strong-tier registry row at the strong tier. Only a same-family
@@ -1229,6 +1238,7 @@ def test_review_owed_survives_a_failed_marker_write(managed_repo, tmp_path):
 def test_default_base_keeps_the_trunk_boundary_after_a_single_checkout_resume(
     tmp_path,
 ):
+    """Implements: TC-369"""
     # The lane's integration base is its merge base with the DECLARED trunk,
     # in a linked worktree and, after that worktree is gone and the primary
     # checkout has switched to the lane branch, in the single checkout too:
@@ -1311,6 +1321,7 @@ def test_default_base_keeps_the_trunk_boundary_after_a_single_checkout_resume(
 
 
 def test_default_base_lets_an_undeclared_trunk_refusal_through(tmp_path):
+    """Implements: TC-369"""
     # With no trunk declared there is no integration base to compute, and
     # nothing is guessed from the branch the checkout is on.
     ac = load_script("agent_common")
@@ -1442,6 +1453,7 @@ def _builds(ctl):
 
 
 def test_a_clean_review_session_is_accepted(managed_repo):
+    """Implements: TC-257"""
     repo, ctl, proc = _misbehaving_round(managed_repo, "")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "outside its verdict" not in proc.stdout + proc.stderr
@@ -1453,6 +1465,7 @@ def test_a_clean_review_session_is_accepted(managed_repo):
 def test_a_review_session_committing_beside_its_verdict_is_refused_by_name(
     managed_repo,
 ):
+    """Implements: TC-257"""
     repo, ctl, proc = _misbehaving_round(managed_repo, "extra")
     assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
     out = proc.stdout + proc.stderr
@@ -1465,6 +1478,7 @@ def test_a_review_session_committing_beside_its_verdict_is_refused_by_name(
 def test_a_dirty_tree_after_a_review_fails_the_draw_and_it_reruns_clean(
     managed_repo,
 ):
+    """Implements: TC-257"""
     repo, ctl, proc = _misbehaving_round(managed_repo, "stray")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "left the tree dirty" in proc.stdout and "stray.txt" in proc.stdout
@@ -1482,6 +1496,7 @@ def test_a_dirty_tree_after_a_review_fails_the_draw_and_it_reruns_clean(
 def test_a_review_whose_leftovers_cannot_be_stashed_stops_and_is_not_redrawn(
     managed_repo,
 ):
+    """Implements: TC-257"""
     # END TO END, through the coordinator's own ladder: the reviewer commits its
     # verdict, leaves a stray file, and holds the index lock, so the stash that
     # would clear the tree fails. A redraw on that tree would record the residue
@@ -1500,6 +1515,7 @@ def test_a_review_whose_leftovers_cannot_be_stashed_stops_and_is_not_redrawn(
 
 
 def test_an_uncommitted_review_verdict_is_never_routed_on(managed_repo):
+    """Implements: TC-257"""
     # The reviewer writes a CHANGES-REQUESTED verdict and commits nothing. The
     # merge gate reads committed round files only, so a loop routing on the file
     # on DISK would re-work the lane on a verdict the gate can never see.
@@ -1567,6 +1583,7 @@ def _brief(repo, worker):
 
 
 def test_the_reviewer_is_told_the_lane_reworded_its_done_when(tmp_path):
+    """Implements: TC-257"""
     repo, worker = _claimed_lane(tmp_path, SPEC_AT_CLAIM.replace("60 fps", "30 fps"))
     brief = _brief(repo, worker)
     assert "DONE-WHEN CHANGED SINCE CLAIM" in brief
@@ -1576,6 +1593,7 @@ def test_the_reviewer_is_told_the_lane_reworded_its_done_when(tmp_path):
 
 
 def test_a_lane_that_only_ticked_its_done_when_tells_the_reviewer_nothing(tmp_path):
+    """Implements: TC-257"""
     ticked = SPEC_AT_CLAIM.replace("- The", "- [x] The").replace(
         "refusal.", "refusal. (tests/test_widget.py::test_empty)"
     )
@@ -1599,6 +1617,7 @@ class _RoutingSpy:
 def test_a_failed_stash_stops_for_a_human_and_redraws_nothing(
     tmp_path, monkeypatch, capsys
 ):
+    """Implements: TC-257"""
     # The failed draw is only sound if the re-drawn review starts clean. When
     # the leftovers cannot be moved aside, a redraw would run on the dirty tree
     # and record the residue as pre-existing - so the run stops, by name, and

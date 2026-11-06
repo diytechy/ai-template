@@ -79,6 +79,7 @@ def _step(root):
 
 @pytest.mark.parametrize("pair", sorted(PAIRS), ids=sorted(PAIRS))
 def test_staging_an_approved_child_under_a_drafted_parent_is_refused(tmp_path, pair):
+    """Implements: TC-397"""
     child, parent = PAIRS[pair]
     root = _repo(tmp_path)
     _commit(root, "drafts", (parent, "Drafted"), (child, "Drafted", parent))
@@ -89,6 +90,7 @@ def test_staging_an_approved_child_under_a_drafted_parent_is_refused(tmp_path, p
 
 
 def test_demoting_a_parent_under_an_approved_child_is_refused(tmp_path):
+    """Implements: TC-397"""
     root = _repo(tmp_path)
     _commit(root, "approved", ("SR-001", "Approved"), ("LLR-001", "Approved", "SR-001"))
     _stage(root, ("SR-001", "Drafted"))
@@ -98,6 +100,7 @@ def test_demoting_a_parent_under_an_approved_child_is_refused(tmp_path):
 
 
 def test_a_founded_child_flipped_under_a_drafted_parent_is_refused(tmp_path):
+    """Implements: TC-397"""
     root = _repo(tmp_path)
     _commit(root, "drafts", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
     _stage(root, ("LLR-001", "Founded", "SR-001"))
@@ -107,6 +110,7 @@ def test_a_founded_child_flipped_under_a_drafted_parent_is_refused(tmp_path):
 
 
 def test_an_act_approving_parent_and_child_together_passes(tmp_path):
+    """Implements: TC-397"""
     root = _repo(tmp_path)
     _commit(root, "drafts", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
     _stage(root, ("SR-001", "Approved"), ("LLR-001", "Approved", "SR-001"))
@@ -115,6 +119,7 @@ def test_an_act_approving_parent_and_child_together_passes(tmp_path):
 
 
 def test_a_commit_moving_neither_row_passes_over_a_standing_case(tmp_path):
+    """Implements: TC-397"""
     root = _repo(tmp_path)
     _commit(root, "standing", ("SR-001", "Drafted"), ("LLR-001", "Approved", "SR-001"))
     _stage(root, ("LLR-001", "Approved", "SR-001"), ("LLR-002", "Drafted", "SR-001"))
@@ -124,7 +129,10 @@ def test_a_commit_moving_neither_row_passes_over_a_standing_case(tmp_path):
 
 def test_a_commit_touching_no_registry_is_not_read(tmp_path):
     """HEAD's SR registry does not parse, so a judgement that read the
-    registries of a commit touching none of them would refuse it."""
+    registries of a commit touching none of them would refuse it.
+
+    Implements: TC-397
+    """
     root = _repo(tmp_path)
     _commit(
         root, "standing", ("LLR-001", "Approved", "SR-001"), files={SR_PATH: BROKEN}
@@ -135,6 +143,7 @@ def test_a_commit_touching_no_registry_is_not_read(tmp_path):
 
 
 def test_a_registry_added_with_a_violation_is_refused(tmp_path):
+    """Implements: TC-397"""
     root = _repo(tmp_path)
     _stage(root, ("SR-001", "Drafted"), ("LLR-001", "Approved", "SR-001"))
     code, out = _step(root)
@@ -145,6 +154,7 @@ def test_a_registry_added_with_a_violation_is_refused(tmp_path):
 def test_a_commit_repairing_an_unparseable_registry_is_judged_on_its_own_rows(
     tmp_path,
 ):
+    """Implements: TC-397"""
     root = _repo(tmp_path)
     _commit(root, "broken", ("LLR-001", "Approved", "SR-001"), files={SR_PATH: BROKEN})
     _stage(root, ("SR-001", "Approved"))
@@ -162,7 +172,10 @@ def test_a_merge_assembling_a_violation_from_two_sides_is_refused(tmp_path):
     leaves the approved child under the Drafted parent. The LLR's status moves
     against HEAD here, so a judgement against HEAD alone refuses this merge
     too: it pins the refusal of an assembled case, not that MERGE_HEAD is read
-    as a base, which the next case pins."""
+    as a base, which the next case pins.
+
+    Implements: TC-397
+    """
     root = _repo(tmp_path)
     _commit(root, "base", ("SR-001", "Approved"), ("LLR-001", "Drafted", "SR-001"))
     fixture_git(root, "checkout", "-q", "-b", "side")
@@ -180,7 +193,10 @@ def test_a_merge_bringing_a_standing_case_to_the_other_side_is_refused(tmp_path)
     the merge; the merged side holds the LLR Drafted. Against HEAD neither
     status moved, so only a judgement that reads MERGE_HEAD as a base sees the
     merge move the LLR's status into the case. Adequacy witness: a staged
-    judgement against HEAD alone passes this merge."""
+    judgement against HEAD alone passes this merge.
+
+    Implements: TC-397
+    """
     root = _repo(tmp_path)
     _commit(root, "base", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
     fixture_git(root, "checkout", "-q", "-b", "side")
@@ -194,6 +210,7 @@ def test_a_merge_bringing_a_standing_case_to_the_other_side_is_refused(tmp_path)
 
 
 def test_a_no_verify_lane_commit_with_a_violation_is_refused_at_the_slot(tmp_path):
+    """Implements: TC-397"""
     root = _repo(tmp_path)
     _commit(root, "drafts", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
     fixture_git(root, "checkout", "-q", "-b", "wi-001")
@@ -207,6 +224,7 @@ def test_a_no_verify_lane_commit_with_a_violation_is_refused_at_the_slot(tmp_pat
 
 
 def test_the_first_commit_is_not_judged(tmp_path):
+    """Implements: TC-397"""
     root = tmp_path / "repo"
     root.mkdir()
     fixture_git(root, "init", "-q")
@@ -218,6 +236,7 @@ def test_the_first_commit_is_not_judged(tmp_path):
 
 
 def test_a_legacy_csv_carrier_is_judged_like_toml(tmp_path):
+    """Implements: TC-397"""
     root = _repo(tmp_path)
     sr = "docs/requirements/system-requirements.csv"
     llr = "docs/requirements/low-level-requirements.csv"
@@ -258,7 +277,10 @@ def test_a_lane_merge_commit_is_judged_against_every_parent(tmp_path):
     """The merge commit leaves the approved LLR-001 under the Drafted SR-001
     unchanged against its first parent and moved against its second, so it is
     refused. Adequacy witness: a judgement against the first parent alone
-    passes it."""
+    passes it.
+
+    Implements: TC-397
+    """
     root = _repo(tmp_path)
     merge = _standing_case_on_main_merged_with_a_side(root)
     assert ar.commit_parent_first_lines(root, merge) == [
@@ -270,7 +292,10 @@ def test_each_line_names_its_tree_before_the_relationship(tmp_path):
     """A staged line reads `the index: ` and a lane-commit line `commit
     <sha10>: `, each followed by the whole relationship and its remedy.
     Adequacy witness: a judgement that dropped the tree, or named a commit by
-    another abbreviation, fails the equality."""
+    another abbreviation, fails the equality.
+
+    Implements: TC-397
+    """
     root = _repo(tmp_path)
     _commit(root, "drafts", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
     _stage(root, ("LLR-001", "Approved", "SR-001"))
@@ -290,7 +315,10 @@ def test_a_parent_with_a_missing_or_unknown_status_refuses_the_commit(
     """A staged commit that approves LLR-001 under an SR-001 with no `Status`
     cell, or with a word outside the vocabulary, is refused: neither claims
     approval. Adequacy witness: a judgement that read only `Drafted` as
-    unapproved passes both."""
+    unapproved passes both.
+
+    Implements: TC-397
+    """
     root = _repo(tmp_path)
     _commit(root, "drafts", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
     _stage(
@@ -307,7 +335,10 @@ def test_a_root_commit_is_not_judged(tmp_path):
     """A commit with no parent in its object, carrying an approved child under
     a Drafted parent, is not refused. Adequacy witness: a judgement that read a
     root commit against the empty tree counts both rows as moved and refuses
-    it."""
+    it.
+
+    Implements: TC-397
+    """
     root = tmp_path / "repo"
     root.mkdir()
     fixture_git(root, "init", "-q")

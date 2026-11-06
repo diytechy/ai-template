@@ -83,6 +83,7 @@ def _honest(root, bar="landing", subject="WI-401: a work commit"):
 
 @pytest.mark.parametrize("bar", ["review", "landing", "no-bar"])
 def test_a_trailer_naming_its_own_tree_and_parent_verifies_for_each_bar(tmp_path, bar):
+    """Implements: TC-205"""
     # The writer and the verifier agree: what `format_bar_green` writes, on the
     # commit whose tree and parent it names, reads back field for field.
     root = _repo(tmp_path)
@@ -100,6 +101,7 @@ def test_a_trailer_naming_its_own_tree_and_parent_verifies_for_each_bar(tmp_path
 
 
 def test_a_wrong_tree_is_not_an_attestation(tmp_path):
+    """Implements: TC-205"""
     # `tree=` names the parent's tree, a real tree but not this commit's: the
     # line rode onto content it does not describe.
     root = _repo(tmp_path)
@@ -110,6 +112,7 @@ def test_a_wrong_tree_is_not_an_attestation(tmp_path):
 
 
 def test_a_wrong_parent_is_not_an_attestation(tmp_path):
+    """Implements: TC-205"""
     # `work=` names the grandparent, a real commit but not this one's parent:
     # what a rebase or a cherry-pick carries the line onto.
     root = _repo(tmp_path)
@@ -121,6 +124,7 @@ def test_a_wrong_parent_is_not_an_attestation(tmp_path):
 
 
 def test_a_trailer_without_bar_is_not_an_attestation(tmp_path):
+    """Implements: TC-205"""
     # The old grammar, on a refresh subject, with a true tree and parent: it is
     # not read at all (no legacy path), so the refresh verifier refuses it too.
     root = _repo(tmp_path)
@@ -136,6 +140,7 @@ def test_a_trailer_without_bar_is_not_an_attestation(tmp_path):
 
 
 def test_an_unknown_bar_is_not_an_attestation(tmp_path):
+    """Implements: TC-205"""
     # The bar set is closed: a bar outside it is refused even with a true tree
     # and parent and the refresh subject.
     root = _repo(tmp_path)
@@ -148,6 +153,7 @@ def test_an_unknown_bar_is_not_an_attestation(tmp_path):
 
 
 def test_a_trailer_without_tests_is_not_an_attestation(tmp_path):
+    """Implements: TC-205"""
     root = _repo(tmp_path)
     assert kv.bar_attestation(root, _honest(root)) is not None
     sha, _tree, _parent = _commit_naming(root, lambda t, p: _line(t, p, tests=None))
@@ -158,6 +164,7 @@ def test_a_trailer_without_tests_is_not_an_attestation(tmp_path):
     "lead", ["see ", "> ", "  "], ids=["after-text", "quoted", "indented"]
 )
 def test_a_trailer_quoted_mid_line_is_not_an_attestation(tmp_path, lead):
+    """Implements: TC-205"""
     # A true line that does not start at column 0 is a quotation of an
     # attestation, not one: the label counts only as the line's first bytes.
     root = _repo(tmp_path)
@@ -167,6 +174,7 @@ def test_a_trailer_quoted_mid_line_is_not_an_attestation(tmp_path, lead):
 
 
 def test_two_label_lines_are_not_an_attestation(tmp_path):
+    """Implements: TC-205"""
     # Two true lines naming two bars: the message attests no single bar, so it
     # attests none.
     root = _repo(tmp_path)
@@ -194,6 +202,7 @@ NAMED = ["tests/test_a.py", "tests/test_b.py"]
     ids=["reordered", "duplicated", "dot-slash", "backslash"],
 )
 def test_the_tests_digest_is_the_same_for_the_same_set_in_any_order(spelling):
+    """Implements: TC-205"""
     digest = kv.tests_digest(NAMED)
     assert HEX64.fullmatch(digest), digest
     assert kv.tests_digest(spelling) == digest
@@ -209,6 +218,7 @@ def test_the_tests_digest_is_the_same_for_the_same_set_in_any_order(spelling):
     ids=["one-added", "one-swapped", "empty"],
 )
 def test_the_tests_digest_differs_for_a_different_set(other):
+    """Implements: TC-205"""
     digest = kv.tests_digest(NAMED)
     assert HEX64.fullmatch(digest), digest
     assert kv.tests_digest(other) != digest
@@ -235,6 +245,7 @@ def _is_verified_review(root, sha):
 
 
 def test_work_tip_never_peels_a_review_attestation(tmp_path):
+    """Implements: TC-205"""
     # `work_tip` feeds `reset --hard`: peeling the review commit would drop the
     # build round it recorded. The peel is asserted first, then that what was
     # not peeled really is a verified review attestation.
@@ -245,6 +256,7 @@ def test_work_tip_never_peels_a_review_attestation(tmp_path):
 
 
 def test_governing_rev_never_peels_a_review_attestation(tmp_path):
+    """Implements: TC-205"""
     # The same commit carries a work change, so the verdict governs at it, not
     # at its parent.
     root = _repo(tmp_path)
@@ -259,7 +271,10 @@ def test_a_verified_refresh_still_peels_under_the_new_grammar(tmp_path, bar):
     survive the narrowing. Adequacy witness: a verifier that stopped reading
     the `bar=` field as part of a refresh line, or that admitted only one of
     `landing` and `no-bar`, leaves the refresh on the tip, and both readers
-    then answer the refresh commit instead of the work commit under it."""
+    then answer the refresh commit instead of the work commit under it.
+
+    Implements: TC-205
+    """
     root = _repo(tmp_path)
     work, _tree, _parent = _commit_naming(root, lambda t, p: "no trailer")
     refresh, _tree, parent = _commit_naming(

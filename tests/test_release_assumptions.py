@@ -1,4 +1,7 @@
-"""Release recalls falsifiers without changing assumption standing."""
+"""Release recalls falsifiers without changing assumption standing.
+
+Implements: TC-310
+"""
 
 import sys
 

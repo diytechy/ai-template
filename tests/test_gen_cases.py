@@ -1,5 +1,8 @@
 """gen_cases.py: the spec grammar, the pairwise cover, and — critically — that
-every dimensional spec shown in the kit's own docs actually parses."""
+every dimensional spec shown in the kit's own docs actually parses.
+
+Implements: TC-024
+"""
 
 import csv
 import itertools

@@ -105,6 +105,7 @@ PAIRS = {
 
 
 def test_the_approval_pair_has_one_home():
+    """Implements: TC-396"""
     assert getattr(spine, "claims_approval", None) is ar._claims_approval
 
 
@@ -113,6 +114,7 @@ def test_the_approval_pair_has_one_home():
 
 @pytest.mark.parametrize("pair", sorted(PAIRS), ids=sorted(PAIRS))
 def test_an_approved_child_under_an_unapproved_parent_is_found(pair):
+    """Implements: TC-396"""
     child, parent = PAIRS[pair]
     found = spine.parent_first_findings(
         tiers(row(parent, "Drafted"), row(child, "Approved", parent))
@@ -121,6 +123,7 @@ def test_an_approved_child_under_an_unapproved_parent_is_found(pair):
 
 
 def test_founded_counts_as_approved_on_either_side():
+    """Implements: TC-396"""
     founded_child = tiers(row("SR-001", "Drafted"), row("LLR-001", "Founded", "SR-001"))
     assert spine.parent_first_findings(founded_child) == [
         ("LLR-001", "Founded", "SR-001", "Drafted")
@@ -132,6 +135,7 @@ def test_founded_counts_as_approved_on_either_side():
 
 
 def test_an_entry_names_the_child_the_parent_and_both_statuses():
+    """Implements: TC-396"""
     line = spine.parent_first_line(("LLR-281", "Approved", "SR-224", "Drafted"))
     assert line == (
         "LLR-281 (Approved) is approved under SR-224 (Drafted), which is not: "
@@ -141,6 +145,7 @@ def test_an_entry_names_the_child_the_parent_and_both_statuses():
 
 @pytest.mark.parametrize("status", [None, "Bananas"], ids=["no-status", "unknown"])
 def test_a_parent_with_no_status_or_an_unknown_word_is_not_approved(status):
+    """Implements: TC-396"""
     found = spine.parent_first_findings(
         tiers(row("SR-001", status), row("LLR-001", "Approved", "SR-001"))
     )
@@ -151,7 +156,10 @@ def test_only_declared_tier_parents_are_judged():
     """One real violation beside every id the rule must not judge: an IF id, a
     DA id, an id no row declares, a Drafted SN a TC cites (a TC's parents are
     SRs and LLRs only) and the `-000` example rows. Exactly the one real entry,
-    so an over-reporting rule fails too."""
+    so an over-reporting rule fails too.
+
+    Implements: TC-396
+    """
     found = spine.parent_first_findings(
         tiers(
             row("SN-001", "Approved"),
@@ -172,7 +180,10 @@ def test_the_shipped_templates_example_rows_raise_no_finding():
     """The shipped registry templates yield no entry, so a freshly scaffolded
     project is not red. Adequacy witness: a rule that does not skip the `-000`
     example rows reports the template's `LLR-000` (Approved) under its `SR-000`
-    (Drafted)."""
+    (Drafted).
+
+    Implements: TC-396
+    """
     shipped = {}
     for label, (path, _table, _key) in TIERS.items():
         name = path.rsplit("/", 1)[1].replace(".toml", ".template.toml")
@@ -228,6 +239,7 @@ def _fake_git(monkeypatch, trees, diff):
 def test_a_commit_side_registry_that_cannot_be_read_or_does_not_parse_is_refused_by_name(
     tmp_path, monkeypatch, broken, failure
 ):
+    """Implements: TC-397"""
     clean = registries(("SR-001", "Approved"), ("LLR-001", "Approved", "SR-001"))
     index = dict(clean, **{SR_PATH: broken})
     _fake_git(monkeypatch, {"BASE:": clean, ":": index}, [SR_PATH])
@@ -236,6 +248,7 @@ def test_a_commit_side_registry_that_cannot_be_read_or_does_not_parse_is_refused
 
 
 def test_a_diff_git_cannot_produce_is_a_refusal_not_a_skip(tmp_path, monkeypatch):
+    """Implements: TC-397"""
     clean = registries(("SR-001", "Approved"), ("LLR-001", "Approved", "SR-001"))
     _fake_git(monkeypatch, {"BASE:": clean, ":": clean}, None)
     lines = ar.parent_first_lines(tmp_path, ["BASE"])
@@ -245,6 +258,7 @@ def test_a_diff_git_cannot_produce_is_a_refusal_not_a_skip(tmp_path, monkeypatch
 def test_a_parent_side_that_does_not_parse_counts_every_status_as_moved(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-397"""
     index = registries(("SR-001", "Drafted"), ("LLR-001", "Approved", "SR-001"))
     base = dict(index, **{SR_PATH: BROKEN})
     _fake_git(monkeypatch, {"BASE:": base, ":": index}, [SR_PATH])
@@ -263,7 +277,10 @@ def test_a_parent_side_that_does_not_parse_counts_every_status_as_moved(
 def test_a_parent_with_no_status_is_rendered_as_no_status():
     """A parent whose `Status` cell is missing reads "no status" in the line,
     never an empty pair of brackets. Adequacy witness: a line that printed the
-    raw cell would read `SR-001 ()`."""
+    raw cell would read `SR-001 ()`.
+
+    Implements: TC-396
+    """
     (entry,) = spine.parent_first_findings(
         tiers(row("SR-001", None), row("LLR-001", "Approved", "SR-001"))
     )
@@ -277,7 +294,10 @@ def test_an_unreadable_parent_side_counts_every_status_as_moved(tmp_path, monkey
     """A base whose registry is listed but cannot be read counts every status
     on the commit side as moved, so a standing pair the commit carries is
     reported. Adequacy witness: a judgement that skipped a base it cannot read
-    would find no base against which anything moved, and pass."""
+    would find no base against which anything moved, and pass.
+
+    Implements: TC-397
+    """
     index = registries(("SR-001", "Drafted"), ("LLR-001", "Approved", "SR-001"))
     base = dict(index, **{SR_PATH: _UNREADABLE})
     _fake_git(monkeypatch, {"BASE:": base, ":": index}, [SR_PATH])
@@ -290,7 +310,10 @@ def test_an_example_parent_and_a_boundary_id_raise_no_finding():
     """A child citing a `-000` example row, and a parent column naming a `B-##`
     boundary id, are not judged. Adequacy witness: a rule that kept `-000` rows
     as parents reports LLR-001 under the Drafted SR-000; one that read every
-    cited id no approved row declares as unapproved reports SR-001 under B-01."""
+    cited id no approved row declares as unapproved reports SR-001 under B-01.
+
+    Implements: TC-396
+    """
     found = spine.parent_first_findings(
         tiers(
             row("SN-001", "Approved"),
@@ -306,7 +329,10 @@ def test_a_child_with_a_word_outside_the_vocabulary_is_not_approved():
     """Only `Approved` and `Founded` claim approval on the child side too: a
     child reading a word outside the vocabulary raises no finding (its own
     integrity finding names the word). Adequacy witness: a rule that read any
-    status but `Drafted` as approved reports LLR-001 under SR-001."""
+    status but `Drafted` as approved reports LLR-001 under SR-001.
+
+    Implements: TC-396
+    """
     found = spine.parent_first_findings(
         tiers(row("SR-001", "Drafted"), row("LLR-001", "Bananas", "SR-001"))
     )
@@ -324,7 +350,10 @@ def test_when_both_carriers_of_a_tier_exist_the_first_listed_decides(
     """`spine_carrier.tier_carriers` lists `.toml` before `.csv`, and a tree
     holding both reads the tier from the first. Adequacy witness: a reader
     that let the last listed carrier win reads SR-001 from the CSV, so each
-    case flips."""
+    case flips.
+
+    Implements: TC-397
+    """
     assert spine_carrier.tier_carriers(SR_PATH, "SR-ID")[0] == SR_PATH
     csv = SR_PATH[: -len(".toml")] + ".csv"
     index = registries(("SR-001", toml_status), ("LLR-001", "Approved", "SR-001"))
@@ -341,7 +370,10 @@ def test_approval_is_read_in_any_letter_case():
     child reading `approved` under a Drafted parent is found, and a child under
     a parent reading `FOUNDED` is not. Adequacy witness: a case-sensitive
     comparison misses the lower-case child and reports the child under the
-    upper-case parent."""
+    upper-case parent.
+
+    Implements: TC-396
+    """
     found = spine.parent_first_findings(
         tiers(row("SR-001", "Drafted"), row("LLR-001", "approved", "SR-001"))
     )
@@ -356,7 +388,10 @@ def test_a_tier_absent_on_the_commit_side_supplies_no_rows(tmp_path, monkeypatch
     absent tier supplies no rows and no refusal (an undeclared parent is the
     orphan rules'), and the parent tree's rows are not read in its place.
     Adequacy witness: a judgement that read a missing commit-side tier from the
-    parent tree finds LLR-001 under the Drafted SR-001 and refuses."""
+    parent tree finds LLR-001 under the Drafted SR-001 and refuses.
+
+    Implements: TC-397
+    """
     base = registries(("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
     index = registries(("LLR-001", "Approved", "SR-001"))
     _fake_git(monkeypatch, {"BASE:": base, ":": index}, [SR_PATH, LLR_PATH])
@@ -367,11 +402,13 @@ def test_a_tier_absent_on_the_commit_side_supplies_no_rows(tmp_path, monkeypatch
 
 
 def test_the_rule_rides_the_lane_commit_walk():
+    """Implements: TC-397"""
     names = [rider.__name__ for rider in tta.LANE_COMMIT_RIDERS]
     assert "commit_parent_first_lines" in names, names
 
 
 def test_the_pre_commit_hook_runs_the_parent_first_step():
+    """Implements: TC-397"""
     hook = (KIT / "hooks" / "pre-commit").read_text(encoding="utf-8")
     (batched,) = [
         ln for ln in hook.splitlines() if "--run-steps" in ln and not ln.startswith("#")

@@ -122,6 +122,7 @@ def _rows(root):
 
 
 def test_retiring_a_live_row_removes_it_and_writes_its_record(repo):
+    """Implements: TC-299"""
     before = _rows(repo)
     proc = _retire(
         repo,
@@ -164,6 +165,7 @@ def test_retiring_a_live_row_removes_it_and_writes_its_record(repo):
 
 
 def test_a_retirement_without_a_successor_records_none(repo):
+    """Implements: TC-299"""
     proc = _retire(repo, "SN-001", "--reason", "No longer asked for.")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     data = rt.parse_fragment(
@@ -202,6 +204,7 @@ def test_a_retirement_without_a_successor_records_none(repo):
     ],
 )
 def test_each_refusal_writes_nothing(repo, args):
+    """Implements: TC-299"""
     before = (repo / SR_PATH).read_bytes()
     proc = _retire(repo, *args)
     assert proc.returncode == 1, proc.stdout + proc.stderr
@@ -211,6 +214,7 @@ def test_each_refusal_writes_nothing(repo, args):
 
 
 def test_an_id_already_recorded_is_refused(repo):
+    """Implements: TC-299"""
     # A record is written once; a second retirement of the id never overwrites it.
     existing = _write(
         repo,
@@ -229,6 +233,7 @@ def test_an_id_already_recorded_is_refused(repo):
 
 
 def test_the_log_fold_leaves_retirement_records_in_place(repo):
+    """Implements: TC-299"""
     assert (
         _retire(repo, "SR-001", "--reason", "Gone.", "--date", "2026-09-28").returncode
         == 0
@@ -255,6 +260,7 @@ def test_the_log_fold_leaves_retirement_records_in_place(repo):
 
 
 def test_the_seed_declares_the_spent_ids_once(repo):
+    """Implements: TC-299"""
     assert (
         _retire(repo, "SR-001", "--reason", "Gone.", "--date", "2026-09-28").returncode
         == 0
@@ -277,6 +283,7 @@ def test_the_seed_declares_the_spent_ids_once(repo):
 
 
 def test_a_spent_id_without_a_record_is_reported(repo):
+    """Implements: TC-299"""
     found = rt.retirement_findings(repo)
     assert len(found) == 1
     assert "SR-004" in found[0] and "SR-005" in found[0]
@@ -305,6 +312,7 @@ def test_a_spent_id_without_a_record_is_reported(repo):
 
 
 def test_legacy_registry_rows_are_live_and_only_a_spent_id_is_reported(scaffold):
+    """Implements: TC-299"""
     make_minimal_project(scaffold)
     record_ids(scaffold)
     watermark = scaffold / "docs" / "id-watermark"
@@ -323,6 +331,7 @@ def test_legacy_registry_rows_are_live_and_only_a_spent_id_is_reported(scaffold)
 
 
 def test_the_missing_rule_is_pure_over_its_four_sets():
+    """Implements: TC-299"""
     marks = {"SR": 6, "TC": 2, "IF": 9}
     live = {"SR": {1, 2}, "TC": {1, 2}}
     recorded = {"SR": {3}}
@@ -336,6 +345,7 @@ def test_the_missing_rule_is_pure_over_its_four_sets():
 
 
 def test_an_unreadable_record_is_reported(repo):
+    """Implements: TC-299"""
     _write(repo, "docs/log.d/retired/SR-004.md", "no front matter here\n")
     _write(
         repo,
@@ -351,6 +361,7 @@ def test_an_unreadable_record_is_reported(repo):
 
 
 def test_a_record_changed_after_it_landed_is_reported(repo):
+    """Implements: TC-299"""
     assert _retire(repo, "--seed").returncode == 0
     assert (
         _retire(repo, "SR-002", "--reason", "Gone.", "--date", "2026-09-28").returncode
@@ -388,6 +399,7 @@ def test_a_record_changed_after_it_landed_is_reported(repo):
 
 
 def test_an_uncommitted_record_is_not_an_edit(repo):
+    """Implements: TC-299"""
     assert _retire(repo, "--seed").returncode == 0
     _commit(repo, "seed the census")
     assert _retire(repo, "SR-003", "--reason", "Gone.").returncode == 0
@@ -395,6 +407,7 @@ def test_an_uncommitted_record_is_not_an_edit(repo):
 
 
 def test_off_git_the_edit_report_is_silent(tmp_path):
+    """Implements: TC-299"""
     _write(tmp_path, SR_PATH, SR_TOML)
     _write(tmp_path, "docs/id-watermark", "SR = 3\n")
     _write(
@@ -409,6 +422,7 @@ def test_off_git_the_edit_report_is_silent(tmp_path):
 
 
 def test_the_reports_never_change_the_exit_code():
+    """Implements: TC-299"""
     findings = tr.Findings(retired_advisories=["a spent id has no record"])
 
     class Args:
@@ -419,6 +433,7 @@ def test_the_reports_never_change_the_exit_code():
 
 
 def test_trace_prints_the_reports_as_advisories(scaffold):
+    """Implements: TC-299"""
     sr = scaffold / SR_PATH
     sr.write_text(
         sr.read_text(encoding="utf-8")
@@ -449,6 +464,7 @@ def test_trace_prints_the_reports_as_advisories(scaffold):
 
 
 def test_the_seed_never_declares_an_excluded_id(repo):
+    """Implements: TC-299"""
     # SR-005 is reserved by a lane still building: it is not yet a row, and it
     # is not retired either, so the census must not say it is.
     proc = _retire(repo, "--seed", "--exclude", "SR-005,TC-009")
@@ -462,6 +478,7 @@ def test_the_seed_never_declares_an_excluded_id(repo):
 
 
 def test_a_malformed_exclusion_is_refused(repo):
+    """Implements: TC-299"""
     proc = _retire(repo, "--seed", "--exclude", "SR-005,not-an-id")
     assert proc.returncode == 1
     assert "retire: REFUSED" in proc.stderr
@@ -469,6 +486,7 @@ def test_a_malformed_exclusion_is_refused(repo):
 
 
 def test_the_census_is_replaced_only_before_it_lands(repo):
+    """Implements: TC-299"""
     census = repo / "docs" / "log.d" / "retired" / rt.CENSUS
     assert _retire(repo, "--seed").returncode == 0
     # Not yet committed: a re-seed with --replace rewrites it, and nothing else.
@@ -492,6 +510,7 @@ def test_the_census_is_replaced_only_before_it_lands(repo):
 
 
 def test_a_shallow_clone_says_the_record_is_unverifiable(repo, tmp_path):
+    """Implements: TC-299"""
     assert _retire(repo, "--seed").returncode == 0
     assert _retire(repo, "SR-002", "--reason", "Gone.").returncode == 0
     _commit(repo, "retire SR-002")
@@ -525,6 +544,7 @@ _FENCED = rt.fragment_text("SR-004", "2026-09-28", "", "Gone.")
 
 
 def test_the_final_newline_alone_is_not_a_body():
+    """Implements: TC-299"""
     assert rt.parse_fragment(_FENCED, "SR-004.md")["id"] == "SR-004"
     assert rt.parse_fragment(_FENCED.rstrip("\n"), "SR-004.md")["id"] == "SR-004"
 
@@ -565,6 +585,7 @@ def _plant(repo, row_id, text):
     ],
 )
 def test_a_record_outside_the_declared_format_is_unreadable(repo, text, why):
+    """Implements: TC-299"""
     with pytest.raises(ValueError, match=why):
         rt.parse_fragment(text, "SR-004.md")
     _plant(repo, "SR-004", text)
@@ -577,6 +598,7 @@ def test_a_record_outside_the_declared_format_is_unreadable(repo, text, why):
 
 
 def test_an_exclusion_run_excludes_every_id_in_it_and_nothing_else(repo):
+    """Implements: TC-299"""
     # SR-004 to SR-009 are spent; the run SR-005..007 is reserved by a lane
     # still building, and SR-004, SR-008 and SR-009 are genuinely spent.
     _write(repo, "docs/id-watermark", "LLR = 1\nSN = 1\nSR = 9\nTC = 1\n")

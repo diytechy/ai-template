@@ -87,6 +87,7 @@ def _base(tmp_path):
 
 
 def test_a_ruling_with_the_citing_rows_done_when_untouched_is_refused(tmp_path):
+    """Implements: TC-313"""
     root = _base(tmp_path)
     _items(root, OI_5="ruled", OI_6="pending")  # one of the two items is ruled
     _git(root, "add", "-A")
@@ -101,6 +102,7 @@ def test_a_ruling_with_the_citing_rows_done_when_untouched_is_refused(tmp_path):
 
 
 def test_the_same_ruling_with_the_done_when_updated_is_accepted(tmp_path):
+    """Implements: TC-313"""
     root = _base(tmp_path)
     _items(root, OI_5="ruled", OI_6="pending")
     _spec(
@@ -116,6 +118,7 @@ def test_the_same_ruling_with_the_done_when_updated_is_accepted(tmp_path):
 
 
 def test_removing_the_token_in_the_ruling_commit_does_not_discharge_it(tmp_path):
+    """Implements: TC-313"""
     root = _base(tmp_path)
     _items(root, OI_5="ruled", OI_6="pending")
     _spec(root, "WI-001", ["OI-6"], "- OI-5 and OI-6 are ruled.")
@@ -125,6 +128,7 @@ def test_removing_the_token_in_the_ruling_commit_does_not_discharge_it(tmp_path)
 
 
 def test_a_row_closed_in_the_ruling_commit_is_accepted(tmp_path):
+    """Implements: TC-313"""
     root = _base(tmp_path)
     _items(root, OI_5="ruled", OI_6="pending")
     path = root / "docs/work/queued/WI-001-row.md"
@@ -147,6 +151,7 @@ def test_a_row_closed_in_the_ruling_commit_is_accepted(tmp_path):
 
 
 def test_a_citing_row_whose_path_git_would_quote_is_still_judged(tmp_path):
+    """Implements: TC-313"""
     # core.quotePath quotes a non-ASCII path in plain listings; the sync lists
     # the diff and each tree NUL-delimited, so the row is found and judged at
     # the commit and at the merge slot.
@@ -168,6 +173,7 @@ def test_a_citing_row_whose_path_git_would_quote_is_still_judged(tmp_path):
 
 
 def test_a_first_commit_has_nothing_to_close(tmp_path):
+    """Implements: TC-313"""
     root = _repo(tmp_path / "repo")
     _items(root, OI_5="ruled")
     _spec(root, "WI-001", ["OI-5"], "- done.")
@@ -178,6 +184,7 @@ def test_a_first_commit_has_nothing_to_close(tmp_path):
 
 
 def test_a_no_verify_lane_commit_is_refused_at_the_merge_slot(tmp_path):
+    """Implements: TC-313"""
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-001")
     _items(root, OI_5="ruled", OI_6="pending")
@@ -210,6 +217,7 @@ def _dated(when):
 
 
 def test_a_registry_specref_is_clocked_per_cited_item(tmp_path):
+    """Implements: TC-314"""
     # WI-790: backlog staleness reads a placeholder's registry specref per
     # cited item, so a NEW unrelated item filed later warns no placeholder,
     # while an edit to the item it cites does.
@@ -250,6 +258,7 @@ def _shallow_ruling(tmp_path):
 
 
 def test_a_shallow_boundary_is_judged_never_read_as_a_root_commit(tmp_path):
+    """Implements: TC-313"""
     # MAJOR 1: `rev^1` does not resolve at a shallow boundary, yet the commit
     # object carries a parent; reading that as "a root commit closes nothing"
     # skipped the rule. The parent is read off the commit object instead.
@@ -260,6 +269,7 @@ def test_a_shallow_boundary_is_judged_never_read_as_a_root_commit(tmp_path):
 
 
 def test_a_parent_the_repository_cannot_read_is_refused_by_name(tmp_path):
+    """Implements: TC-313, TC-319"""
     # ...and where the parent object is genuinely absent (a depth-one clone),
     # the commit is refused by name: never a skip, never a degraded pass.
     root, sha, parent = _shallow_ruling(tmp_path)
@@ -276,6 +286,7 @@ def test_a_parent_the_repository_cannot_read_is_refused_by_name(tmp_path):
 
 
 def test_the_csv_carrier_is_judged_like_the_toml_one(tmp_path):
+    """Implements: TC-313"""
     # MAJOR 2: the registry is read through whichever carrier each tree uses.
     root = _repo(tmp_path / "repo")
     csv = root / "docs/requirements/open-items.csv"
@@ -293,6 +304,7 @@ def test_the_csv_carrier_is_judged_like_the_toml_one(tmp_path):
 
 
 def test_an_added_criterion_carrying_a_path_counts_as_an_update(tmp_path):
+    """Implements: TC-313"""
     # MAJOR 4: the raw Done-when section is compared (A1); the claim-time
     # evidence-stripping reading took the added path for completion evidence.
     root = _base(tmp_path)
@@ -309,6 +321,7 @@ def test_an_added_criterion_carrying_a_path_counts_as_an_update(tmp_path):
 
 
 def test_removing_a_pending_items_row_takes_it_out_of_pending_too(tmp_path):
+    """Implements: TC-313"""
     # LLR-298: the trigger is an item leaving `pending`, and deleting its
     # pending row leaves it; each citing row's Done-when is owed the update.
     root = _base(tmp_path)
@@ -319,6 +332,7 @@ def test_removing_a_pending_items_row_takes_it_out_of_pending_too(tmp_path):
 
 
 def test_the_merge_ladder_consults_the_ruling_sync_rung(tmp_path, monkeypatch):
+    """Implements: TC-313"""
     # TC-313: merge admission itself refuses a lane's --no-verify ruling
     # commit. The cheaper rungs ahead of this one are passed so the ladder
     # reaches it on a minimal repository; the rung is the real one.
@@ -343,6 +357,7 @@ def test_the_merge_ladder_consults_the_ruling_sync_rung(tmp_path, monkeypatch):
 
 
 def test_the_pre_commit_hook_runs_the_ruling_sync_step(tmp_path):
+    """Implements: TC-313"""
     # TC-313: the staged check is in the pre-commit hook's failing set, and the
     # step the hook names refuses a staged ruling that leaves its citer stale.
     hook = (SCRIPTS.parent / "hooks" / "pre-commit").read_text(encoding="utf-8")
@@ -407,6 +422,7 @@ def _unreadable_citing_spec_blob_is_refused(tmp_path):
 
 
 def test_a_citing_row_whose_path_is_not_utf8_is_refused_never_skipped(tmp_path):
+    """Implements: TC-313"""
     # The open-item arm lists the specs through the same lossless reader and
     # reads them through the same blob reader: a citing row git names with a
     # non-UTF-8 byte is refused by name, never dropped from the citing set.

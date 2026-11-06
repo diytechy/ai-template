@@ -101,7 +101,10 @@ def _commit(run_git, message):
 
 def test_a_drifted_approved_need_is_reported_and_briefed_with_its_diff(scaffold):
     """The comparison reports the need and the approval brief shows its moved
-    cell before and after; a need whose text did not move is not reported."""
+    cell before and after; a need whose text did not move is not reported.
+
+    Implements: TC-269
+    """
     root = scaffold
     _append(root, NEEDS_REL, _NEED)
     SNAP.copy_live(root, seed=True)
@@ -130,7 +133,10 @@ def test_a_drifted_need_refuses_the_snapshot_until_it_is_reattested(scaffold):
     """On a scaffold, through the scaffold's own `intake.py snapshot`: an act
     naming the needs registry is refused while an approved need's text moved,
     naming the need and the cell; `--reattests SN-001` re-anchors it, the copy
-    then equals the live file, the act ledger names it, and it owes nothing."""
+    then equals the live file, the act ledger names it, and it owes nothing.
+
+    Implements: TC-269
+    """
     root = scaffold
     _append(root, NEEDS_REL, _NEED)
     run_git = _git(root)
@@ -160,7 +166,10 @@ def test_a_drifted_need_refuses_the_snapshot_until_it_is_reattested(scaffold):
 def test_an_approved_stakeholder_is_recorded_by_the_act_that_approves_it(scaffold):
     """The act ledger names a stakeholder the act carried into approval, as it
     names every other tier's rows, so the approval is recorded in a typed field
-    and not only in the snapshot's prose stamp."""
+    and not only in the snapshot's prose stamp.
+
+    Implements: TC-269
+    """
     root = scaffold
     _append(
         root,
@@ -178,7 +187,10 @@ def test_an_approved_stakeholder_is_recorded_by_the_act_that_approves_it(scaffol
 def test_the_snapshot_history_reader_takes_the_needs_carrier_from_the_file(tmp_path):
     """At a commit whose needs file is TOML declaring no need, no need is read
     (a markdown table row in a string is not one), and at a commit whose needs
-    file does not parse the reader refuses, naming the commit and the file."""
+    file does not parse the reader refuses, naming the commit and the file.
+
+    Implements: TC-297
+    """
     root = tmp_path / "repo"
     (root / "docs" / "requirements").mkdir(parents=True)
     run_git = _git(root)
@@ -203,7 +215,10 @@ def test_the_snapshot_history_reader_takes_the_needs_carrier_from_the_file(tmp_p
 def test_a_row_missing_its_status_or_phase_cell_is_an_integrity_finding(scaffold):
     """Once the spine is phased, a test case with neither `status` nor `phase`,
     and a need with no `status`, each fail the integrity floor naming the row
-    and the cell; the approval brief lists every one of them as owing an act."""
+    and the cell; the approval brief lists every one of them as owing an act.
+
+    Implements: TC-270
+    """
     root = scaffold
     _append(root, SR_REL, _SR.format(rid="SR-001", title="the phased row"))
     _append(
@@ -273,6 +288,7 @@ def _two_copy_scaffold(root):
 
 
 def test_the_owners_brief_and_open_items_name_each_registrys_own_copy(scaffold):
+    """Implements: TC-271"""
     root = scaffold
     seeded, later = _two_copy_scaffold(root)
     proc = _script(root, "trace.py", "--approve", "modified")
@@ -407,6 +423,7 @@ _AMENDMENT = [("WI-900.md", {"brief": "amendment", "adjudicates": ["SR-001"]})]
 
 
 def test_a_reattestation_outside_the_amendment_scope_is_refused_by_name(scaffold):
+    """Implements: TC-278"""
     base, head = _amendment_act(scaffold, {"SR-001", "SR-002"})
     refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
     assert refusal and "SR-002" in refusal and "OUTSIDE" in refusal, refusal
@@ -414,6 +431,7 @@ def test_a_reattestation_outside_the_amendment_scope_is_refused_by_name(scaffold
 
 
 def test_a_reattestation_inside_the_amendment_scope_merges(scaffold):
+    """Implements: TC-278"""
     base, head = _amendment_act(scaffold, {"SR-001"})
     assert (
         AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head) is None
@@ -429,7 +447,10 @@ def test_a_held_rung_is_read_from_trunk_not_from_the_lane(scaffold):
     checkout's HEAD, which is trunk at the merge slot: a lane that forked while
     the rung was released, and whose own tree still releases it, is refused
     once trunk holds the rung. Its CLARITY verdict binds no text, so the act
-    is no exception."""
+    is no exception.
+
+    Implements: TC-278
+    """
     run_git = _git(scaffold)
     _release(scaffold)
     _append(scaffold, SR_REL, _SR.format(rid="SR-001", title="row one"))
@@ -461,7 +482,10 @@ def test_a_released_plain_MEANING_reattestation_is_refused_naming_the_row_and_th
 ):
     """An amendment verdict ruling a row plain MEANING says the adjudicator
     would not bless its new text, so it authorizes no re-attestation of it,
-    whether or not the lane is scoped to that amendment."""
+    whether or not the lane is scoped to that amendment.
+
+    Implements: TC-278
+    """
     base, head = _amendment_act(scaffold, {"SR-001"}, tags={"SR-001": ["MEANING"]})
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
     assert "SR-001 (amendment) is authorized by no accepted verdict" in refusal, refusal
@@ -470,6 +494,7 @@ def test_a_released_plain_MEANING_reattestation_is_refused_naming_the_row_and_th
 
 @_SCOPES
 def test_a_released_MEANING_BLESS_reattestation_merges(scaffold, metas):
+    """Implements: TC-278"""
     tags = {"SR-001": ["MEANING+BLESS"]}
     base, head = _amendment_act(scaffold, {"SR-001"}, tags=tags)
     assert AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head) is None
@@ -481,6 +506,7 @@ def test_a_released_MEANING_BLESS_reattestation_merges(scaffold, metas):
     ids=["bless-and-clarity", "bless-and-meaning"],
 )
 def test_a_released_row_tagged_two_ways_is_refused(scaffold, tags):
+    """Implements: TC-278"""
     base, head = _amendment_act(scaffold, {"SR-001"}, tags={"SR-001": tags})
     refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
     assert refusal and "SR-001 (amendment)" in refusal, refusal
@@ -489,6 +515,7 @@ def test_a_released_row_tagged_two_ways_is_refused(scaffold, tags):
 def test_a_named_verdict_ruling_the_row_plain_MEANING_is_refused_naming_the_verdict(
     scaffold,
 ):
+    """Implements: TC-278"""
     text = "- [MEANING] SR-001 title -> moved\n\nVERDICT: MEANING rows=1\n"
     base, head = _amendment_act(scaffold, {"SR-001"}, verdict=text)
     refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
@@ -498,6 +525,7 @@ def test_a_named_verdict_ruling_the_row_plain_MEANING_is_refused_naming_the_verd
 
 
 def test_a_named_verdict_blessing_the_row_merges(scaffold):
+    """Implements: TC-278"""
     text = "- [MEANING+BLESS] SR-001 title -> moved\n\nVERDICT: MEANING rows=1\n"
     base, head = _amendment_act(scaffold, {"SR-001"}, verdict=text)
     assert (
@@ -541,7 +569,10 @@ _RETIRE = [("WI-900.md", {"brief": "amendment", "adjudicates": ["SR-002"]})]
 def test_a_retirement_alone_in_its_registry_merges(scaffold):
     """A retired row's re-attestation authorizes its own registry's copy, so
     an act whose registry carries no other act is not WIDENED, on a lane
-    scoped to the amendment and on an unscoped lane alike."""
+    scoped to the amendment and on an unscoped lane alike.
+
+    Implements: TC-278
+    """
     base, head, _written = _retirement_act(scaffold)
     for metas in (_RETIRE, []):
         refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
@@ -550,7 +581,10 @@ def test_a_retirement_alone_in_its_registry_merges(scaffold):
 
 def test_the_acted_set_names_a_retired_rows_registry(scaffold):
     """The acted set places a retired row in the registry its id's tier
-    names, though the head no longer holds the row."""
+    names, though the head no longer holds the row.
+
+    Implements: TC-278
+    """
     base, head, written = _retirement_act(scaffold)
     assert written == ["docs/archive/last_approved/" + SR_REL], written
     acted = AR.lane_acted_set(
@@ -563,7 +597,10 @@ def test_a_retirement_beside_another_act_in_its_registry_merges(scaffold):
     """A retired row's re-attestation authorizes its registry's copy whether
     or not another act moved that registry: beside a second act re-attesting
     another row of the same registry, both ruled by the accepted verdict and
-    inside the amendment scope, the merge is admitted."""
+    inside the amendment scope, the merge is admitted.
+
+    Implements: TC-278
+    """
     base, head, _written = _retirement_act(
         scaffold, judged=("SR-001", "SR-002"), beside=True
     )
@@ -589,12 +626,14 @@ def test_a_lone_retirement_on_a_held_rung_is_refused_by_row(scaffold):
 
 
 def test_a_retirement_outside_the_amendment_scope_is_refused(scaffold):
+    """Implements: TC-278"""
     base, head, _written = _retirement_act(scaffold)
     refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
     assert refusal and "SR-002 re-attested OUTSIDE" in refusal, refusal
 
 
 def test_a_retirement_no_accepted_verdict_rules_is_refused(scaffold):
+    """Implements: TC-278"""
     base, head, _written = _retirement_act(scaffold, judged=("SR-001",))
     refusal = AR.merge_approval_refusal(scaffold, base, head, _RETIRE, trunk=head)
     assert refusal and "no ACCEPTED verdict" in refusal and "SR-002" in refusal, refusal
@@ -626,7 +665,10 @@ def test_a_markdown_needs_file_is_compared_like_a_toml_one(scaffold):
     """The legacy markdown carrier is still a supported needs file: its
     approved need is recorded, its drift reported naming the cell, an act
     copying it refused until the need is re-attested, and nothing is reported
-    unanchored while it matches its copy."""
+    unanchored while it matches its copy.
+
+    Implements: TC-297
+    """
     root = scaffold
     (root / NEEDS_REL).unlink()
     md = root / "docs" / "requirements" / "stakeholder-needs.md"
@@ -653,7 +695,10 @@ def test_a_markdown_needs_file_is_compared_like_a_toml_one(scaffold):
 
 
 def test_a_drifted_approved_stakeholder_is_reported_and_briefed(scaffold):
-    """The stakeholder tier drifts like the need tier beside it."""
+    """The stakeholder tier drifts like the need tier beside it.
+
+    Implements: TC-269
+    """
     root = scaffold
     _append(
         root,
@@ -708,7 +753,10 @@ def _drifted_need(root):
 def test_a_drifted_need_has_its_card_on_the_open_items_page(scaffold):
     """The page reads the same detector as the brief: a drifted need gets a
     card in the approval and re-attestation section with its moved cell
-    before and after, and the section no longer says nothing is owed."""
+    before and after, and the section no longer says nothing is owed.
+
+    Implements: TC-269
+    """
     root = scaffold
     _drifted_need(root)
     page = load_script("gen_open_items").render(root)
@@ -724,7 +772,10 @@ def test_a_drifted_need_has_its_card_on_the_open_items_page(scaffold):
 def test_a_first_approval_need_and_stakeholder_show_their_cells_in_full(scaffold):
     """A `Drafted` need and a stakeholder with no Status cell each get a card
     showing every cell whole: a first approval rules on all of the row's
-    text, so a cell past the page's context clip is shown to its end."""
+    text, so a cell past the page's context clip is shown to its end.
+
+    Implements: TC-269
+    """
     root = scaffold
     trace = load_script("trace")
     long_why = "x " * (trace.CELL_TRUNCATE_LIMIT // 2 + 50) + "END-OF-WHY"
@@ -753,7 +804,10 @@ def test_a_first_approval_need_and_stakeholder_show_their_cells_in_full(scaffold
 
 def test_the_open_items_counts_include_the_needs_that_owe(scaffold):
     """The page's header counts the needs owing an act, and its drifted count
-    takes in a drifted need beside the drifted SR chains."""
+    takes in a drifted need beside the drifted SR chains.
+
+    Implements: TC-269
+    """
     root = scaffold
     _drifted_need(root)
     reg = load_script("trace").load_registries(root / "docs")
@@ -786,7 +840,10 @@ def _complete(label, rid, phase=True):
 def test_each_tiers_missing_cell_is_named(label, cell):
     """Every tier's missing Status, and every phased tier's missing Phase once
     the spine is phased, is one finding naming the row and the cell; the same
-    missing Phase in an unphased spine is none."""
+    missing Phase in an unphased spine is none.
+
+    Implements: TC-270
+    """
     spine = load_script("trace")._spine
     tiers = {t: [_complete(t, t + "-001")] for t in ("SN", "SR", "LLR", "TC")}
     broken = _complete(label, label + "-002")
@@ -839,11 +896,15 @@ def _mixed_act(root, approve_scope, amend_scope, metas=None, amend_tag="CLARITY"
 
 def test_a_mixed_approval_and_reattestation_act_merges(scaffold):
     """The legitimate case stays legitimate: each half of the act inside the
-    scope of the row that claims it."""
+    scope of the row that claims it.
+
+    Implements: TC-278
+    """
     assert _mixed_act(scaffold, ["SR-002"], ["SR-001"]) is None
 
 
 def test_a_mixed_act_reattesting_outside_its_amendment_scope_is_refused(scaffold):
+    """Implements: TC-278"""
     refusal = _mixed_act(scaffold, ["SR-002"], ["SR-009"])
     assert refusal and "SR-001 re-attested OUTSIDE" in refusal, refusal
 
@@ -852,7 +913,10 @@ def test_a_combined_act_carrying_a_plain_MEANING_reattestation_is_refused_whole(
     scaffold,
 ):
     """The first approval is backed, the re-attestation is not: the merge
-    takes nothing of the act, and names only the unauthorized row."""
+    takes nothing of the act, and names only the unauthorized row.
+
+    Implements: TC-278
+    """
     refusal = _mixed_act(scaffold, ["SR-002"], ["SR-001"], amend_tag="MEANING")
     assert refusal and "SR-001 (amendment)" in refusal, refusal
     assert "SR-002 (first-approval)" not in refusal, refusal
@@ -860,6 +924,7 @@ def test_a_combined_act_carrying_a_plain_MEANING_reattestation_is_refused_whole(
 
 
 def test_a_combined_act_with_a_blessed_reattestation_merges(scaffold):
+    """Implements: TC-278"""
     refusal = _mixed_act(scaffold, ["SR-002"], ["SR-001"], amend_tag="MEANING+BLESS")
     assert refusal is None, refusal
 
@@ -871,14 +936,20 @@ def _combined(tokens):
 def test_a_combined_sittings_sections_each_take_their_own_act(scaffold):
     """WI-841 round 2, MAJOR 2: one combined sitting judged a first approval
     and an amendment; the one act approving SR-002 and re-attesting SR-001 is
-    inside the scope each section's `<kind>:<id>` tokens give it."""
+    inside the scope each section's `<kind>:<id>` tokens give it.
+
+    Implements: TC-278
+    """
     tokens = ["first-approval:SR-002", "amendment:SR-001", "done-when:WI-682"]
     assert _mixed_act(scaffold, [], [], metas=_combined(tokens)) is None
 
 
 def test_a_combined_sittings_act_outside_its_kinds_tokens_is_refused(scaffold):
     """The tokens bind per kind: SR-001 named for first approval does not
-    authorise its re-attestation."""
+    authorise its re-attestation.
+
+    Implements: TC-278
+    """
     tokens = ["first-approval:SR-002", "first-approval:SR-001"]
     refusal = _mixed_act(scaffold, [], [], metas=_combined(tokens))
     assert refusal and "SR-001 re-attested OUTSIDE" in refusal, refusal
@@ -934,7 +1005,10 @@ _SPLIT = ["amendment:SR-001", "first-approval:SN-091", "done-when:WI-682"]
 
 def test_a_combined_act_in_two_registries_merges(scaffold):
     """The re-attested SR registry's copy is the amendment section's act, not
-    a widening of the first-approval section's."""
+    a widening of the first-approval section's.
+
+    Implements: TC-278
+    """
     base, head = _split_act(scaffold, approve=True)
     assert (
         AR.merge_approval_refusal(scaffold, base, head, _combined(_SPLIT), trunk=head)
@@ -945,7 +1019,10 @@ def test_a_combined_act_in_two_registries_merges(scaffold):
 def test_a_combined_act_whose_first_approval_returned_everything_merges(scaffold):
     """The first-approval section returned its row and flipped nothing; the
     amendment section's re-attestation alone is accepted, as it is for an
-    amendment-only sitting (the control)."""
+    amendment-only sitting (the control).
+
+    Implements: TC-278
+    """
     base, head = _split_act(scaffold, approve=False)
     lane_verdict = "docs/reviews/lane/000-ADJUDICATE-x.md"
     parsed = SITTING_MOD.accepted_at(scaffold, head, lane_verdict)
@@ -971,7 +1048,10 @@ def test_a_combined_act_copying_a_registry_neither_section_moved_is_widened(
     scaffold,
 ):
     """The union is of what each section legitimately moves: a needs copy with
-    no approved need and no re-attested need is still WIDENED."""
+    no approved need and no re-attested need is still WIDENED.
+
+    Implements: TC-278
+    """
     base, head = _split_act(scaffold, approve=False, copy_needs=True)
     refusal = AR.merge_approval_refusal(
         scaffold, base, head, _combined(_SPLIT), trunk=head
@@ -1014,7 +1094,10 @@ def _csv_sr_carrier(root):
 def test_a_combined_act_on_a_csv_carrier_authorizes_the_copy_it_writes(scaffold):
     """WI-841 round 5 (Sol r3): the re-attested registry is named by the
     carrier the row actually sits in, so the CSV copy the act writes is the
-    one it is authorized for, not the canonical TOML path."""
+    one it is authorized for, not the canonical TOML path.
+
+    Implements: TC-278
+    """
     append = _csv_sr_carrier(scaffold)
     base, head = _split_act(scaffold, True, sr_rel=SR_CSV_REL, append=append)
     # Named by registry identity (round 7): the CSV copy is that registry's.
@@ -1033,7 +1116,10 @@ def test_a_combined_act_on_a_markdown_needs_carrier_authorizes_its_copy(scaffold
     markdown carrier. A combined act re-attesting SN-001 (drifted, approved)
     and approving SR-001 (Drafted) writes the markdown copy, which is the one
     its re-attestation is authorized for, resolved through the kit's one
-    tier-carrier reader rather than a format list of this module's own."""
+    tier-carrier reader rather than a format list of this module's own.
+
+    Implements: TC-278
+    """
     root = scaffold
     run_git = _git(root)
     _release(root)
@@ -1117,7 +1203,10 @@ def test_a_combined_act_across_a_needs_carrier_conversion_merges(scaffold):
     """Sol r5's sequence: the act re-attests SN-001 and approves SR-002; the
     snapshot writer writes the TOML needs copy and deletes the obsolete
     markdown one. The registry is authorized by IDENTITY, so both of its
-    carrier paths are its own act, not a widening."""
+    carrier paths are its own act, not a widening.
+
+    Implements: TC-278
+    """
     run_git, base = _converted_needs(scaffold)
     _rewrite(
         scaffold,
@@ -1137,7 +1226,10 @@ def test_a_combined_act_across_a_needs_carrier_conversion_merges(scaffold):
 
 def test_a_plain_flip_across_a_needs_carrier_conversion_merges(scaffold):
     """The same conversion under a plain first approval of a need: the flip's
-    registry is the needs file, whose obsolete markdown copy the act deletes."""
+    registry is the needs file, whose obsolete markdown copy the act deletes.
+
+    Implements: TC-278
+    """
     run_git, base = _converted_needs(scaffold, extra=_TOML_DRAFT_NEED)
     _rewrite(
         scaffold,
@@ -1161,7 +1253,10 @@ def test_an_unauthorized_registrys_obsolete_copy_is_still_widened(scaffold):
     SR-002 alone, after a pure (text-preserving) conversion of the needs file,
     that also copies the needs file (writing its TOML copy, deleting the
     markdown one) copies a registry it neither flipped nor re-attested in:
-    WIDENED, on both of that registry's carrier paths."""
+    WIDENED, on both of that registry's carrier paths.
+
+    Implements: TC-278
+    """
     run_git, base = _converted_needs(scaffold, amend=False)
     _rewrite(
         scaffold,
@@ -1192,7 +1287,10 @@ def test_a_released_tier_act_naming_an_unaccepted_verdict_is_refused(scaffold):
     """WI-841 round 12 (Sol final4 MAJOR 2): on a RELEASED rung, a
     re-attestation naming a verdict its route recorded FAILED (a rejected
     sitting) is refused like a held one: every act a merge adds that names a
-    verdict must name an accepted one."""
+    verdict must name an accepted one.
+
+    Implements: TC-278
+    """
     binding = SITTING_MOD.render_requested(
         "combined", ("amendment", "done-when"), "failed"
     )
@@ -1253,7 +1351,10 @@ def test_a_first_approval_in_an_act_naming_an_unaccepted_verdict_is_refused(
     tool refuses `--verdict` without `--reattests`), so Sol's case is one act
     approving SR-002 and re-attesting SR-001 on a released rung, naming a
     rejected sitting its route recorded FAILED. The whole act is refused, its
-    first approval with it."""
+    first approval with it.
+
+    Implements: TC-278
+    """
     base, head = _rejected_mixed_act(scaffold, name_verdict=True)
     metas = _combined(["first-approval:SR-002", "amendment:SR-001"])
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
@@ -1264,7 +1365,10 @@ def test_an_act_omitting_its_verdict_is_still_tied_to_an_accepted_one(scaffold):
     """Sol final6 MAJOR: the same act with `--verdict` OMITTED. Its authority
     is the adjudication the lane claims, so it must be covered by an ACCEPTED
     verdict of each kind it takes among the bindings the branch carries; the
-    only binding here records FAILED, so the act is refused."""
+    only binding here records FAILED, so the act is refused.
+
+    Implements: TC-278
+    """
     base, head = _rejected_mixed_act(scaffold, name_verdict=False)
     metas = _combined(["first-approval:SR-002", "amendment:SR-001"])
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
@@ -1276,7 +1380,10 @@ def test_an_accepted_sitting_over_other_rows_does_not_authorize_this_act(scaffol
     judgement of ITS rows): a failed sitting's act approves SR-002 and
     re-attests SR-001 without naming a verdict; a second, ACCEPTED sitting
     judged SR-003 and SR-004 in the same kinds. Kind coverage would pass it;
-    row coverage refuses it, naming each unjudged row and its kind."""
+    row coverage refuses it, naming each unjudged row and its kind.
+
+    Implements: TC-278
+    """
     base, head = _rejected_mixed_act(scaffold, name_verdict=False)
     _bind_branch(
         scaffold,
@@ -1292,7 +1399,10 @@ def test_an_accepted_sitting_over_other_rows_does_not_authorize_this_act(scaffol
 
 def test_a_single_kind_verdict_over_other_rows_does_not_authorize(scaffold):
     """An accepted amendment verdict of the right kind that judged SR-002
-    does not authorize re-attesting SR-001."""
+    does not authorize re-attesting SR-001.
+
+    Implements: TC-278
+    """
     base, head = _amendment_act(scaffold, {"SR-001"}, judged=["SR-002"])
     refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
     assert refusal and "SR-001 (amendment)" in refusal, refusal
@@ -1300,7 +1410,10 @@ def test_a_single_kind_verdict_over_other_rows_does_not_authorize(scaffold):
 
 def test_a_named_verdict_must_judge_the_rows_it_reattests(scaffold):
     """A named `--verdict` that is accepted but rules a different row does
-    not carry the re-attestation of SR-001."""
+    not carry the re-attestation of SR-001.
+
+    Implements: TC-278
+    """
     text = "- [CLARITY] SR-002 title -> same obligation\n\nVERDICT: CLARITY rows=1\n"
     base, head = _amendment_act(scaffold, {"SR-001"}, verdict=text)
     refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
@@ -1309,7 +1422,10 @@ def test_a_named_verdict_must_judge_the_rows_it_reattests(scaffold):
 
 def test_a_single_kind_first_approval_of_its_judged_row_merges(scaffold):
     """The ordinary happy path: a first-approval verdict APPROVES SR-002 and
-    the act flips exactly it."""
+    the act flips exactly it.
+
+    Implements: TC-278
+    """
     run_git = _git(scaffold)
     _release(scaffold)
     drafted = _SR.format(rid="SR-002", title="row two").replace(

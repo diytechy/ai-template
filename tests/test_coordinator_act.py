@@ -364,6 +364,7 @@ def _dirty(tmp_path, primary, lane):
 def test_the_act_command_refuses_each_trust_input_before_launch(
     tmp_path, launched, capsys, state, words
 ):
+    """Implements: TC-321"""
     primary, lane = _amendment(tmp_path)
     got = state(tmp_path, primary, lane)
     root = got if hasattr(got, "is_dir") else None
@@ -379,6 +380,7 @@ def test_the_act_command_refuses_each_trust_input_before_launch(
 def test_the_act_turn_refuses_before_launch_when_held_text_moved(
     tmp_path, launched, capsys
 ):
+    """Implements: TC-398"""
     # A held CLARITY verdict bound to SR-001's text at the sitting; the text
     # is edited after it, so the act it would take re-attests text nobody
     # judged. The entry point refuses before launching an adjudicator.
@@ -408,6 +410,7 @@ def _head_rows(lane):
 def test_a_retained_and_a_fresh_act_turn_take_the_same_act_from_one_verdict(
     tmp_path, launched, capsys
 ):
+    """Implements: TC-321"""
     results = {}
     for name, retained in (("kept", True), ("fresh", False)):
         _primary, lane = _amendment(tmp_path / name, retained=retained)
@@ -426,6 +429,7 @@ def test_a_retained_and_a_fresh_act_turn_take_the_same_act_from_one_verdict(
 def test_a_combined_act_commits_its_amendment_act_before_its_first_approval_act(
     tmp_path, launched
 ):
+    """Implements: TC-321"""
     _primary, lane = _combined(tmp_path)
     assert _act(launched, lane) == 0
     subjects = _git(lane, "log", "--format=%s", "-4").splitlines()
@@ -436,6 +440,7 @@ def test_a_combined_act_commits_its_amendment_act_before_its_first_approval_act(
 def test_the_act_turn_reports_success_only_when_no_listed_act_is_left(
     tmp_path, launched, capsys
 ):
+    """Implements: TC-321"""
     _primary, lane = _combined(tmp_path)
     launched["act"] = skip_flip
     assert _act(launched, lane) == 1
@@ -446,6 +451,7 @@ def test_the_act_turn_reports_success_only_when_no_listed_act_is_left(
 def test_an_act_turn_that_writes_under_docs_reviews_does_not_succeed(
     tmp_path, launched, capsys
 ):
+    """Implements: TC-321"""
     _primary, lane = _combined(tmp_path)
     launched["act"] = full_and_edit_verdict
     assert _act(launched, lane) == 1
@@ -456,6 +462,7 @@ def test_an_act_turn_that_writes_under_docs_reviews_does_not_succeed(
 def test_an_act_interrupted_between_flip_and_snapshot_is_refused_dirty_then_rerun_in_full(
     tmp_path, launched, capsys
 ):
+    """Implements: TC-321"""
     _primary, lane = _first_approval(tmp_path)
     launched["act"] = flip_uncommitted
     assert _act(launched, lane) == 1
@@ -473,6 +480,7 @@ def test_an_act_interrupted_between_flip_and_snapshot_is_refused_dirty_then_reru
 def test_a_combined_act_interrupted_between_commits_reruns_with_only_its_first_approval_act(
     tmp_path, launched
 ):
+    """Implements: TC-321"""
     _primary, lane = _combined(tmp_path)
     launched["act"] = skip_flip
     assert _act(launched, lane) == 1
@@ -492,6 +500,7 @@ def _amendment_part(prompt):
 
 
 def test_the_act_turn_writes_no_binding_and_reserves_no_path(tmp_path, launched):
+    """Implements: TC-321"""
     _primary, lane = _combined(tmp_path)
     before = _git(lane, "ls-files", "docs/reviews")
     binding = _git(lane, "show", "HEAD:" + ksitting.requested_path(VERDICT))
@@ -511,6 +520,7 @@ AMBIENT_KEY = "ANTHROPIC_API_KEY"
 def test_an_act_turn_on_the_default_entry_launches_under_its_accounts_environment(
     tmp_path, launched, monkeypatch, retained
 ):
+    """Implements: TC-321"""
     monkeypatch.setenv(AMBIENT_KEY, "canary-ambient-key")
     _primary, lane = _amendment(tmp_path, retained=retained)
     assert _act(launched, lane) == 0
@@ -525,6 +535,7 @@ def test_an_act_turn_on_the_default_entry_launches_under_its_accounts_environmen
 def test_an_act_turn_resumes_the_session_its_sitting_keyed_under_the_entrys_account(
     tmp_path, launched, capsys
 ):
+    """Implements: TC-321"""
     _primary, lane = _amendment(tmp_path)
     launched["act"] = nothing
     _launch(launched, lane, "amendment", 1)  # the sitting mints the session
@@ -572,6 +583,7 @@ CLASSES = sorted(cli.adjudicate_brief.BRIEF_PROMPTS) + ["act"]
 def test_under_the_loop_marker_every_launched_prompt_ends_with_the_loop_session_line(
     tmp_path, launched, monkeypatch, brief
 ):
+    """Implements: TC-321"""
     _primary, lane = _amendment(tmp_path)
     launched["act"] = nothing if brief != "act" else full
     monkeypatch.setenv(kprovenance.LOOP_SESSION_ENV, SESSION)
@@ -584,6 +596,7 @@ def test_under_the_loop_marker_every_launched_prompt_ends_with_the_loop_session_
 
 @pytest.mark.parametrize("brief", CLASSES)
 def test_without_the_marker_no_prompt_carries_the_line(tmp_path, launched, brief):
+    """Implements: TC-321"""
     _primary, lane = _amendment(tmp_path)
     launched["act"] = nothing if brief != "act" else full
     composed = _launch(launched, lane, brief, 1)

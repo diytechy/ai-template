@@ -22,6 +22,8 @@ Fixture provenance, stated because the two kinds differ:
   the two token_count events (the account ids, injected instructions and rate
   limits are dropped). The opencode run is `opencode run --format json` on
   `opencode-go/kimi-k3`, working path rewritten to a neutral `work` directory.
+
+Implements: TC-262, TC-263
 """
 
 import json

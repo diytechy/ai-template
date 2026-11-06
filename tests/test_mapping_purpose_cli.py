@@ -45,6 +45,7 @@ def test_cli_mapping_purpose_gates_when_destinations_are_absent(tmp_path):
 
 
 def test_cli_mapping_purpose_gates_when_real_shipped_row_is_removed():
+    """Implements: TC-274"""
     # REVIEW-A round 2: the manifest must not define its own coverage universe.
     # Remove one REAL row in the child process, then drive main() exactly as the
     # command does. The physical `process.toml.template` source remains in the

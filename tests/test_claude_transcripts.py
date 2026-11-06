@@ -52,6 +52,7 @@ def _usage(inv):
 def test_a_session_with_nested_agents_yields_four_invocations_with_their_identities(
     tmp_path,
 ):
+    """Implements: TC-386"""
     home = fx.home_copy(tmp_path)
     read = _read(home)
     identities = [
@@ -121,6 +122,7 @@ def test_a_session_with_nested_agents_yields_four_invocations_with_their_identit
 
 
 def test_each_invocation_usage_is_its_unique_message_sum(tmp_path):
+    """Implements: TC-387"""
     home = fx.home_copy(tmp_path)
     found = {
         agent: (fx.four(_usage(inv)), _usage(inv)["gen_ai.usage.input_tokens"])
@@ -147,6 +149,7 @@ def test_each_invocation_usage_is_its_unique_message_sum(tmp_path):
 
 
 def test_a_repeated_record_adds_nothing(tmp_path):
+    """Implements: TC-387"""
     home = fx.home_copy(tmp_path)
     path = fx.transcript(home, fx.NESTED, fx.A23)
     lines = fx.read_lines(path)
@@ -169,6 +172,7 @@ def test_a_repeated_record_adds_nothing(tmp_path):
 
 
 def test_the_parents_tool_result_summary_is_never_read(tmp_path):
+    """Implements: TC-387"""
     home = fx.home_copy(tmp_path)
     path = fx.transcript(home, fx.CHAIN)
     summaries = [r for r in fx.records(path) if "toolUseResult" in r]
@@ -211,6 +215,7 @@ def _edit_records_of(path, message_id, edit):
 
 
 def test_the_response_model_is_the_last_counted_model_not_named_synthetic(tmp_path):
+    """Implements: TC-386"""
     # Adequacy witness: the session's last message is renamed `<synthetic>`
     # and the one before it given a model of its own, so a reader that took
     # the last message's model regardless (`<synthetic>`) or the first
@@ -228,6 +233,7 @@ def test_the_response_model_is_the_last_counted_model_not_named_synthetic(tmp_pa
 
 
 def test_the_main_sum_equals_the_clis_own_result(tmp_path):
+    """Implements: TC-387"""
     home = fx.home_copy(tmp_path)
     session, usage = fx.result_usage()
     assert session == fx.CHAIN
@@ -244,6 +250,7 @@ def test_the_main_sum_equals_the_clis_own_result(tmp_path):
 
 
 def test_an_open_last_message_is_named_and_not_counted(tmp_path):
+    """Implements: TC-388"""
     home = fx.home_copy(tmp_path)
     path = fx.transcript(home, fx.NESTED, fx.AF7)
     removed = fx.cut_after_first_record(path, fx.AF7_LAST)
@@ -263,6 +270,7 @@ def test_an_open_last_message_is_named_and_not_counted(tmp_path):
 def test_a_message_without_a_stop_record_is_final_once_a_later_message_follows(
     tmp_path,
 ):
+    """Implements: TC-388"""
     home = fx.home_copy(tmp_path)
     inv = _inv(home, fx.AF7)
     held = [m for m in inv.messages if m.id == fx.AF7_NO_STOP]
@@ -281,6 +289,7 @@ def test_a_message_without_a_stop_record_is_final_once_a_later_message_follows(
 def test_a_finished_agents_unstopped_hand_back_is_counted_at_its_last_record(
     tmp_path,
 ):
+    """Implements: TC-388"""
     # The unmodified CHAIN fixture: each agent's hand-back has no stop record
     # and no later message, but its parent's tool result for the agent's call
     # follows it, so the agent finished and the message is final.
@@ -307,6 +316,7 @@ def test_a_finished_agents_unstopped_hand_back_is_counted_at_its_last_record(
 def test_an_agent_with_no_evidence_of_finishing_keeps_its_last_message_open(
     tmp_path,
 ):
+    """Implements: TC-388"""
     home = fx.home_copy(tmp_path)
     parent = fx.transcript(home, fx.CHAIN, fx.C2)
     lines = fx.read_lines(parent)
@@ -327,6 +337,7 @@ def test_an_agent_with_no_evidence_of_finishing_keeps_its_last_message_open(
 
 
 def test_a_background_agents_task_notice_makes_its_last_message_final(tmp_path):
+    """Implements: TC-388"""
     home = fx.home_copy(tmp_path)
     path = fx.transcript(home, fx.NESTED, fx.AF7)
     fx.cut_after_message(path, fx.AF7_NO_STOP)
@@ -342,6 +353,7 @@ def test_a_background_agents_task_notice_makes_its_last_message_final(tmp_path):
 
 
 def test_no_finish_notice_finishes_the_sessions_own_last_message(tmp_path):
+    """Implements: TC-388"""
     # The session's own last message loses its stop reason, and the session's
     # transcript then holds, after it, a task notice naming the session's own
     # id, a task notice naming a sub-agent, and a tool result. The sub-agent's
@@ -597,6 +609,7 @@ SHAPES = [
 def test_an_unknown_shape_is_refused_naming_file_and_field(
     tmp_path, change, refused, file_token, field
 ):
+    """Implements: TC-391"""
     home = fx.home_copy(tmp_path)
     change(home)
     read = _read(home)
@@ -613,6 +626,7 @@ def test_an_unknown_shape_is_refused_naming_file_and_field(
 def test_a_depth_two_agent_whose_parent_is_absent_is_kept_and_named_unresolved(
     tmp_path,
 ):
+    """Implements: TC-391"""
     home = fx.home_copy(tmp_path)
     fx.transcript(home, fx.NESTED, fx.A23).unlink()
     fx.meta(home, fx.NESTED, fx.A23).unlink()
@@ -632,6 +646,7 @@ def test_a_depth_two_agent_whose_parent_is_absent_is_kept_and_named_unresolved(
 
 
 def test_any_spawn_depth_is_accepted_and_recorded(tmp_path):
+    """Implements: TC-391"""
     home = fx.home_copy(tmp_path)
     read = _read(home, fx.CHAIN)
     found = [
@@ -647,6 +662,7 @@ def test_any_spawn_depth_is_accepted_and_recorded(tmp_path):
 
 
 def test_a_session_held_in_two_project_directories_is_refused_naming_both(tmp_path):
+    """Implements: TC-391"""
     home = fx.home_copy(tmp_path)
     first = fx.transcript(home, fx.CHAIN)
     other = home / "projects" / "elsewhere"

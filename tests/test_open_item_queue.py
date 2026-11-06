@@ -6,6 +6,8 @@ open-items and Blocked lists and the checker's uncited-pending error. A pending
 open item shows only when a queued work item cites it in `needs`, beside the
 rows it holds; a pending item no queued row cites is named in an integrity
 notice instead, and the page then never claims the queue is empty.
+
+Implements: TC-123
 """
 
 import re
@@ -91,6 +93,7 @@ def test_a_cited_pending_item_is_a_card_beside_the_rows_it_holds(tmp_path):
 
 
 def test_an_uncited_pending_item_is_a_notice_not_a_card(tmp_path):
+    """Implements: TC-314"""
     _registry(tmp_path, [("OI-5", "pending"), ("OI-6", "pending")])
     _spec(tmp_path, "WI-001", ["OI-5"])
     section = _section1(tmp_path)
@@ -115,6 +118,7 @@ def test_only_uncited_items_never_claim_an_empty_queue(tmp_path):
 
 
 def test_the_status_snapshot_lists_the_same_projection(tmp_path):
+    """Implements: TC-314"""
     _registry(tmp_path, [("OI-5", "pending"), ("OI-6", "pending"), ("OI-7", "ruled")])
     _spec(tmp_path, "WI-001", ["OI-5"])
     block = status.status_block(tmp_path)

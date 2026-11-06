@@ -12,6 +12,8 @@ in-memory rows in `tests/test_assumption_rules.py`.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: every case bootstraps a
 scaffold and runs the checker as a subprocess.
+
+Implements: TC-217
 """
 
 import pytest

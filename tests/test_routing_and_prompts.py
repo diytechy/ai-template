@@ -14,6 +14,8 @@ Three things this pins, all from plan §7 and §11.7:
   * **A prompt is auditable after the fact.** The catalogue names each shipped
     template by digest and each session log records the digest of what it
     actually launched, so "which instruction did this session see" is a lookup.
+
+Implements: TC-157
 """
 
 import pytest
@@ -216,6 +218,7 @@ def test_the_prompt_source_names_an_override_rather_than_hiding_it():
 
 
 def test_the_catalogue_lists_every_shipped_prompt_with_its_digest():
+    """Implements: TC-192"""
     text = catalog.render()
     for key in prompts.KIT_PROMPTS:
         assert "`{}`".format(key) in text, key
@@ -224,6 +227,7 @@ def test_the_catalogue_lists_every_shipped_prompt_with_its_digest():
 
 
 def test_the_act_brief_is_a_shipped_prompt_with_strict_slots():
+    """Implements: TC-192"""
     # WI-912: a sitting's act is a later adjudicator turn with its own brief.
     # The act brief is a shipped, catalogued prompt like the judging briefs,
     # and its fill is strict: a slot left unfilled refuses rather than
@@ -247,6 +251,7 @@ def test_the_act_brief_is_a_shipped_prompt_with_strict_slots():
 
 
 def test_the_catalogue_on_disk_is_FRESH():
+    """Implements: TC-192"""
     # A generated artifact nobody regenerates is a document that lies, and a
     # lying catalogue is worse than none: it invites the operator to conclude
     # the wrong thing about the session they are debugging.
@@ -254,6 +259,7 @@ def test_the_catalogue_on_disk_is_FRESH():
 
 
 def test_a_template_edit_moves_its_digest_and_so_the_catalogue():
+    """Implements: TC-192"""
     # The property the whole scheme rests on. If a template could change
     # without its digest changing, a session log's `prompt-sha` would name a
     # prompt that no longer exists.
@@ -289,6 +295,7 @@ def prompts_copy(tmp_path, monkeypatch):
 
 
 def test_an_edit_to_the_composed_question_home_stales_the_catalogue(prompts_copy):
+    """Implements: TC-192"""
     home = prompts_copy / HOME_NAME
     home.write_text(
         home.read_text(encoding="utf-8") + "\n- a question the catalogue missed\n",
@@ -300,6 +307,7 @@ def test_an_edit_to_the_composed_question_home_stales_the_catalogue(prompts_copy
 
 
 def test_a_line_ending_difference_in_the_home_is_not_an_edit(prompts_copy):
+    """Implements: TC-192"""
     home = prompts_copy / HOME_NAME
     text = home.read_text(encoding="utf-8").replace("\r\n", "\n")
     home.write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
@@ -310,6 +318,7 @@ def test_a_line_ending_difference_in_the_home_is_not_an_edit(prompts_copy):
 def test_an_unreadable_home_fails_generation_and_the_check(
     prompts_copy, defect, capsys
 ):
+    """Implements: TC-192"""
     # Never listed as skipped, never digested as empty: the catalogue cannot
     # name the source of a brief it cannot read.
     home = prompts_copy / HOME_NAME

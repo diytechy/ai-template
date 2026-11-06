@@ -150,6 +150,7 @@ def _review_argv(root, base, sha, out, tests=TESTS):
 def test_the_command_line_refuses_a_lane_the_git_reads_reject(
     git_lane, capsys, case, why
 ):
+    """Implements: TC-333"""
     root, base, tip, side, out = git_lane
     if case == "detached":
         _git(root, "checkout", "-q", "--detach", tip)
@@ -164,6 +165,7 @@ def test_the_command_line_refuses_a_lane_the_git_reads_reject(
 
 
 def test_a_review_render_exits_zero_and_writes_only_the_brief(git_lane):
+    """Implements: TC-333"""
     root, base, tip, _side, out = git_lane
     assert rb.main(_review_argv(root, base[:8], "HEAD", out)) == 0
     assert [p.name for p in out.iterdir()] == ["brief.md"]
@@ -184,6 +186,7 @@ def test_a_review_render_exits_zero_and_writes_only_the_brief(git_lane):
 
 
 def test_filing_a_review_exits_zero_and_writes_only_the_round_file(git_lane):
+    """Implements: TC-333"""
     root, _base, tip, _side, out = git_lane
     verdict = out / "v.md"
     verdict.write_text(
@@ -203,6 +206,7 @@ def test_filing_a_review_exits_zero_and_writes_only_the_round_file(git_lane):
 
 
 def test_the_reading_scope_never_shows_a_record_of_earlier_findings(git_lane):
+    """Implements: TC-333"""
     # WI-911: a convergence round never sees earlier
     # verdicts (review-churn revision 8). The brief's own diff command keeps
     # every record that summarizes them out of its output: the review round
@@ -232,6 +236,7 @@ def test_the_reading_scope_never_shows_a_record_of_earlier_findings(git_lane):
 
 
 def test_an_ordinary_review_reads_the_decisions_record(git_lane):
+    """Implements: TC-333"""
     # WI-911 (review-churn revision 8): only a convergence round sets the
     # earlier findings' records aside. An ordinary round's own diff command,
     # the one a loop reviewer reads too, still shows the delegated-decisions
@@ -278,6 +283,7 @@ def _attested_line(stdout, sha, tests=TESTS):
 
 
 def test_a_tip_with_no_attestation_refuses_naming_the_attest_command(git_lane, capsys):
+    """Implements: TC-371"""
     # TC-371. Adequacy witness: a render that ignores the record (today's)
     # writes the brief and exits 0.
     root, base, _tip, _side, out = git_lane
@@ -320,6 +326,7 @@ def _unverified_commit(root, case, tip):
 def test_an_attestation_that_does_not_name_the_tip_refuses_naming_the_cause(
     git_lane, capsys, case
 ):
+    """Implements: TC-371"""
     # TC-371. Adequacy witness: a render that reads only the label, or trusts
     # a record's `tree=`/`work=` without comparing them, renders here.
     root, base, tip, _side, out = git_lane
@@ -333,6 +340,7 @@ def test_an_attestation_that_does_not_name_the_tip_refuses_naming_the_cause(
 
 
 def test_a_landing_attestation_refuses_naming_both_bars(git_lane, capsys):
+    """Implements: TC-371"""
     # TC-371. A refresh's verified landing record is another bar, never a
     # review one. Adequacy witness: a render that accepts any verified
     # record renders here.
@@ -348,6 +356,7 @@ def test_a_landing_attestation_refuses_naming_both_bars(git_lane, capsys):
 def test_a_review_attestation_for_other_tests_refuses_naming_both_digests(
     git_lane, capsys
 ):
+    """Implements: TC-371"""
     # TC-371. Adequacy witness: a render that checks the bar but not the
     # tests digest renders here.
     root, base, tip, _side, out = git_lane
@@ -359,6 +368,7 @@ def test_a_review_attestation_for_other_tests_refuses_naming_both_digests(
 
 
 def test_a_matching_review_attestation_renders_and_names_it(git_lane, capsys):
+    """Implements: TC-371"""
     # TC-371. Another spelling of the same set has the same digest. Adequacy
     # witness: a render that compares the paths as typed refuses here, and
     # one that never reads the record names no attested commit.
@@ -371,6 +381,7 @@ def test_a_matching_review_attestation_renders_and_names_it(git_lane, capsys):
 
 
 def test_record_only_commits_above_the_attested_one_render(git_lane, capsys):
+    """Implements: TC-371"""
     # TC-371. An empty commit, a round file and a telemetry fragment above
     # the attested commit force no new bar. Adequacy witness: a render that
     # reads only the reviewed commit's own record refuses here.
@@ -409,6 +420,7 @@ def _empty_commits(root, count):
 
 
 def test_a_search_past_the_walk_bound_refuses(git_lane, capsys):
+    """Implements: TC-371"""
     # TC-371. The walk below the reviewed commit is bounded: one bound short
     # of it the attested commit still stands, one past it the render refuses
     # naming the bound. Adequacy witness: an unbounded walk renders past the
@@ -427,6 +439,7 @@ def test_a_search_past_the_walk_bound_refuses(git_lane, capsys):
 
 @pytest.mark.parametrize("rel", ["src/app.py", "docs/decisions/wi-900.toml"])
 def test_a_work_commit_above_the_attested_one_refuses(git_lane, capsys, rel):
+    """Implements: TC-371"""
     # TC-371. The decisions record is not a record path, so it needs the bar
     # too. Adequacy witness: a walk that steps over any commit renders here.
     root, base, _tip, _side, out = git_lane

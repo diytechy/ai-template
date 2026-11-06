@@ -8,6 +8,8 @@ SN-033 exempts acceptance and engineering-requirement cells by its own text —
 and is warn-first (exit 0) unless --strict. The live-registry case is the WI's
 whole point: the check landed while the tier was measured clean, to lock that
 state in ahead of the SR re-tier's churn.
+
+Implements: TC-164
 """
 
 from conftest import ROOT, SCRIPTS, run_py

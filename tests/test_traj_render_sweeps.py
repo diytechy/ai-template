@@ -59,6 +59,8 @@ def test_u2_every_concept_fill_comes_from_one_declared_vocabulary(tmp_path):
     (U5's collision sweep and `_ring_ink`'s enumeration both walk the DICTS).
     The How-SW `component` badge was exactly that — a four-kind vocabulary
     declaring three, with the fourth a bare `#475569` inside `cmp_block`.
+
+    Implements: TC-109
     """
     gt = load_script("gen_trajectory")
 
@@ -125,6 +127,8 @@ def test_u4_one_interaction_idiom_per_node_role_across_every_emitter(tmp_path):
     on the group. The failure this forbids is a new emitter inventing `data-key`
     or a hand-rolled focus mechanism: two spellings of one interaction, which is
     what U4 exists to catch.
+
+    Implements: TC-110
     """
     roles = {
         "cell": "data-id",
@@ -287,6 +291,8 @@ def test_a1_every_wired_interaction_selector_matches_only_focusable_elements(
     classified); asserting every declared selector is seen and every control
     selector matches somewhere closes it from the other (a stale entry, or a
     sweep gone blind, also fails).
+
+    Implements: TC-117
     """
     seen_selectors = set()
     matched = collections.Counter()
@@ -336,6 +342,8 @@ def test_a1_focus_walk_follows_document_order(tmp_path):
     where the WI-273 roving-tabindex controller owns the order via arrow keys.
     Whether that order FEELS sensible is the perceptual half the ruling dropped,
     stated in LLR-112 as the scope narrowing.
+
+    Implements: TC-117
     """
     for label, page in _every_emitter_document(tmp_path):
         seen = 0
@@ -388,6 +396,8 @@ def test_a3_every_painted_vocabulary_member_is_explained_in_words(tmp_path):
     this does not re-assert. The JS-rendered detail-panel badge is out of scope
     because its background carries its concept as the badge's own visible text
     (`esc(d.kind)`), so that colour never carries the information alone.
+
+    Implements: TC-118
     """
     gt = load_script("gen_trajectory")
     vocabs = _palette_vocabularies(gt)
@@ -431,7 +441,10 @@ def test_a3_icicle_tier_legend_swatches_are_the_painted_tier_palette(tmp_path):
     `test_every_multifill_panel_emits_a_palette_bijection_legend` pins the
     phase legend's. Expected is built from the DICT, not a key tuple, so a
     fifth tier member missing from the legend also fails (adversarial-review
-    hardening — emitter and test previously shared the same literal tuple)."""
+    hardening — emitter and test previously shared the same literal tuple).
+
+    Implements: TC-118
+    """
     gt = load_script("gen_trajectory")
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
@@ -460,7 +473,10 @@ def test_a3_js_detail_maps_mirror_the_declared_palettes(tmp_path):
     vocabulary (WI-384: `retired` -> `cancelled`) reds through the stale copy
     while the emitter under test is clean, which is the exact mis-triage that
     note warns about. No replacement fixture is owed: every fresh document emits
-    both maps, and the per-document `seen >= 2` floor below keeps that honest."""
+    both maps, and the per-document `seen >= 2` floor below keeps that honest.
+
+    Implements: TC-118
+    """
     gt = load_script("gen_trajectory")
     for label, page in _every_emitter_document(tmp_path):
         if label == "shipped":
@@ -493,7 +509,10 @@ def test_a3_css_status_tokens_mirror_status_fill(tmp_path):
     between the CSS token block and the Python dict mislabels the legend the
     same way the hardcoded tier legend did. Holds the four status tokens equal
     to STATUS_FILL in `:root` and asserts the dark block does NOT override them
-    (they are theme-invariant by design)."""
+    (they are theme-invariant by design).
+
+    Implements: TC-118
+    """
     gt = load_script("gen_trajectory")
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
@@ -553,7 +572,10 @@ def test_a1_every_wired_control_pairs_click_with_focus_or_keydown(tmp_path):
     `keydown`). Runtime behaviour equivalence is still not driven — that
     narrowing stands — but mouse-only wiring can no longer ship silently.
     Runtime-created controls (the breadcrumb buttons) are native <button>s,
-    where a click listener IS keyboard-operable, and stay out of scope."""
+    where a click listener IS keyboard-operable, and stay out of scope.
+
+    Implements: TC-117
+    """
     paired = 0
     for label, page in _every_emitter_document(tmp_path):
         for script in re.findall(r"<script\b[^>]*>(.*?)</script>", page, re.S):
@@ -607,6 +629,8 @@ def test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors():
     REFLECTED set must clear both floors — 4.5:1 for its label ink and 3:1 for
     its computed focus ring — so a new vocabulary enters the arithmetic by
     existing, not by being remembered.
+
+    Implements: TC-119
     """
     gt = load_script("gen_trajectory")
 
@@ -699,7 +723,10 @@ def test_a4_every_css_fill_token_is_classified_and_floor_checked(tmp_path):
     in A4_FILL_TOKEN_ROLES; `white-text-fill` roles clear 4.5:1 under white in
     BOTH themes (the WI-293 lesson — a per-theme token passed light and shipped
     2.98:1 in dark), and `container-fill` roles keep the page's own `--text`
-    readable on them in both themes."""
+    readable on them in both themes.
+
+    Implements: TC-119
+    """
     with_gate(
         tmp_path, "DevStg-Tests"
     )  # the Process tab renders --slot, the widest set
@@ -911,7 +938,10 @@ def test_t5_a_deemphasised_node_keeps_body_text_contrast_in_both_themes(tmp_path
     either page surface, in both themes.
 
     Swept over the FRESH emitter documents only: the committed dashboard is an
-    older renderer's markup, and this asserts the current emitter."""
+    older renderer's markup, and this asserts the current emitter.
+
+    Implements: TC-296
+    """
     kinds, shapes, rules = collections.Counter(), set(), set()
     for label, page in _every_emitter_document(tmp_path):
         if label == "shipped":

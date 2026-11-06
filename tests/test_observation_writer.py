@@ -13,6 +13,8 @@ checker fails `--strict` naming the file.
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: every case drives the
 writer or the checker as a subprocess over a bootstrapped scaffold. The
 record's own format is pinned in memory in `tests/test_observation_record.py`.
+
+Implements: TC-230, TC-231
 """
 
 import datetime

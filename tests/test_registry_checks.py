@@ -1,5 +1,7 @@
 """trace.py integrity / placeholder / schema checks and their harness wiring
 (template-review findings F3 'placeholders → false green' and F4 'data quality').
+
+Implements: TC-002, TC-003
 """
 
 from conftest import load_script, make_minimal_project, record_ids, run_py

@@ -17,10 +17,16 @@ child returned for want of a parent, then a TC for an arm its LLR states).
   whose text the change makes untrue. New rows stay `Drafted`; interface rows
   carry no approval status. Leave existing statuses unchanged while authoring.
 - **Author it before the build.** TC rows are authored with their LLRs before
-  the build, so the build's first deliverable is the tests they name. Their
-  trace fields (TC `Evidence`, LLR `Module` and symbols) name the tests and
-  symbols the build will create, and bind when the set is reconciled. Row
-  text is still reconciled and judged against settled code, as below.
+  the build, so the build's first deliverable is the tests they call for.
+  LLR `Module` and symbols name what the build will create, and bind when the
+  set is reconciled. A TC's `Evidence` cell names a test only from the commit
+  that writes that test and its `Implements:` tag, because
+  `scripts/check_trajectory.py --strict` refuses any difference between them,
+  a `Drafted` row included. Until then a new row's cell holds a parenthetical
+  note, `(owed by the tests commit)`, which supplies no part, and an amended
+  row's cell stays as it is; the tests commit replaces the note with the node,
+  beside the tag. Row text is still reconciled and judged against settled
+  code, as below.
 - **Map the arms.** For each LLR, list what it states (each outcome, refusal
   and exemption) and the TC clause that verifies each. Structural checks do
   not establish this coverage.
@@ -37,6 +43,7 @@ child returned for want of a parent, then a TC for an arm its LLR states).
   - Each row's parent is in the set or already approved.
   - Each TC names its LLR and that LLR's SR.
   - Each interface row the change adds or alters has a citing TC.
+  - No `(owed by the tests commit)` note remains.
   - `scripts/check_trajectory.py --strict` passes, and so does
     `scripts/trace.py --strict` from DevStg-Impl. Below that rung
     `trace.py --strict-integrity` stands in, because an SR still lacking its

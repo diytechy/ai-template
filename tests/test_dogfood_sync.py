@@ -237,6 +237,7 @@ def test_process_toml_declares_the_templates_keys_section_by_section():
 
 
 def test_the_policy_home_declares_the_trunk_as_a_string():
+    """Implements: TC-369"""
     # The trunk's name is one declared line every trunk reader reads (WI-925):
     # the template ships it and this repo declares its own, both a string.
     for rel in ("project-trajectory/process.toml.template", "docs/process.toml"):
@@ -713,6 +714,7 @@ def _mapping_unaccounted():
 
 
 def test_scaffold_mapping_covered_or_declared():
+    """Implements: TC-199"""
     missing = _mapping_unaccounted()
     assert not missing, (
         "bootstrap MAPPING destination(s) neither present, kit-served in place, "
@@ -722,6 +724,7 @@ def test_scaffold_mapping_covered_or_declared():
 
 
 def test_scaffold_omissions_list_is_current():
+    """Implements: TC-199"""
     # The honesty half: a declared omission whose destination now EXISTS is a
     # stale entry — remove it, so the list documents only real absences.
     # LIFECYCLE rows are exempt while present (their presence is the declared
@@ -753,6 +756,7 @@ def test_the_lifecycle_rows_carry_the_marker():
 
 
 def test_bite_scaffold_walk_catches_an_undeclared_absence():
+    """Implements: TC-199"""
     # Bite-proof: drop a declared omission and the walk must flag its dest.
     bootstrap = load_script("bootstrap")
     dests = {row[1] for row in bootstrap.MAPPING}

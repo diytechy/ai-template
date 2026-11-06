@@ -17,6 +17,8 @@ asserted alongside its opposite:
     rounds refuses — the trailer alone never clears anything;
   * the dial's three values, and the case the whole row exists for: an
     adjudication lane merging with NO verdict file anywhere.
+
+Implements: TC-205
 """
 
 import sys
@@ -70,6 +72,7 @@ def _listing(*paths):
 
 
 def test_the_identity_ignores_every_record_path():
+    """Implements: TC-205"""
     # The three record directories are the process writing about ITSELF. If a
     # round file, a log fragment or a session log could change the identity,
     # the very act of recording a verdict would invalidate it — which is
@@ -84,6 +87,7 @@ def test_the_identity_ignores_every_record_path():
 
 
 def test_the_identity_notices_work_and_notices_docs_work():
+    """Implements: TC-205"""
     # The other answer, without which the test above would pass on a fold that
     # ignored everything. `docs/work/` is IN the identity deliberately (WI-378
     # measured the price): a spec's safety_class, needs and Deliverable are the
@@ -102,6 +106,7 @@ def test_the_identity_notices_work_and_notices_docs_work():
 
 
 def test_a_record_path_is_excluded_whatever_characters_it_holds(tmp_path):
+    """Implements: TC-205"""
     # ROUND 007, FINDING 3, driven through git rather than asserted about it.
     # Without `-z`, git QUOTES a path holding a non-ASCII character
     # (`"docs/log.d/WI-401-café.md"`), the leading quote defeats every
@@ -132,6 +137,7 @@ def test_a_record_path_is_excluded_whatever_characters_it_holds(tmp_path):
 
 
 def test_distinct_invalid_utf8_work_paths_have_distinct_identities(monkeypatch):
+    """Implements: TC-205"""
     # ROUND 019: replacement-decoding the complete NUL stream made one blob at
     # byte-distinct work paths look identical, so a R100 rename could leave a
     # stale APPROVE governing. Drive the exact collision without asking a
@@ -150,6 +156,7 @@ def test_distinct_invalid_utf8_work_paths_have_distinct_identities(monkeypatch):
 
 
 def test_the_trailer_round_trips_and_the_last_one_governs():
+    """Implements: TC-205"""
     tree = "a" * 64
     line = kv.format_trailer("APPROVE", 2, tree)
     assert line == "Review-Verdict: APPROVE rounds=2 tree=" + tree
@@ -173,12 +180,14 @@ def test_the_trailer_round_trips_and_the_last_one_governs():
     ],
 )
 def test_a_malformed_trailer_is_no_trailer(line):
+    """Implements: TC-205"""
     # Fail to PARSE rather than parse to something. An unrecognized verdict word
     # arriving downstream as a third outcome is a state nobody wrote a rule for.
     assert kv.parse_trailer("subject\n\n" + line) is None
 
 
 def test_round_and_session_names_parse_including_the_relaxed_tag():
+    """Implements: TC-205"""
     assert kv.round_file("docs/reviews/wi-401/003-REVIEW-A-abc1234.md") == (
         "wi-401",
         3,
@@ -209,6 +218,7 @@ def test_round_and_session_names_parse_including_the_relaxed_tag():
 
 
 def test_round_count_counts_cycles_not_reviewers():
+    """Implements: TC-205"""
     entries = [
         ("REVIEW-A", 3, "CHANGES-REQUESTED"),
         ("REVIEW-B", 4, "CHANGES-REQUESTED"),
@@ -333,6 +343,7 @@ def add_round(
 
 
 def test_a_logged_reviewer_round_naming_this_tree_clears_the_gate(tmp_path):
+    """Implements: TC-205"""
     # The whole point of the row: no hand-authored rollup exists anywhere, and
     # the branch merges anyway. Before this, `docs/reviews/WI-401-REVIEW-A.md`
     # was required and nothing in the kit wrote it, so every mechanized lane
@@ -344,6 +355,7 @@ def test_a_logged_reviewer_round_naming_this_tree_clears_the_gate(tmp_path):
 
 
 def test_policy_two_requires_both_independent_verdicts(tmp_path):
+    """Implements: TC-205"""
     root = rounds_repo(tmp_path, policy="2")
     add_round(root, 3)
 
@@ -356,6 +368,7 @@ def test_policy_two_requires_both_independent_verdicts(tmp_path):
 
 
 def test_a_half_drawn_round_owes_its_missing_phase_and_only_that(tmp_path):
+    """Implements: TC-205"""
     # THE WEDGE the round-022 fix opened, driven from both sides. Making the
     # gate demand every declared phase left the loop's derivation still reading
     # "any entry at this tree means the round was served" — and the phase queue
@@ -397,6 +410,7 @@ def test_a_half_drawn_round_owes_its_missing_phase_and_only_that(tmp_path):
 
 
 def test_the_declared_phase_span_is_read_the_same_length_by_both_readers():
+    """Implements: TC-205"""
     # The pure half: a policy the gate and the scheduler slice to different
     # lengths is a lane that draws what cannot clear, or refuses what will
     # never be drawn. Includes the values neither caller can reach today — a
@@ -429,6 +443,7 @@ def test_the_declared_phase_span_is_read_the_same_length_by_both_readers():
 
 
 def test_an_implementer_authored_file_in_the_review_path_is_not_a_round(tmp_path):
+    """Implements: TC-205"""
     # THE PLAN'S FINDING K, closed. A BUILD session on WI-538 really did write
     # `010-REVIEW-A-e26ab03.md` — an implementer authoring its own approval.
     # Harmless while the gate ignored round files; a counted round under a naive
@@ -442,6 +457,7 @@ def test_an_implementer_authored_file_in_the_review_path_is_not_a_round(tmp_path
 
 
 def test_one_session_cannot_serve_a_phase_its_log_does_not_declare(tmp_path):
+    """Implements: TC-205"""
     # THE CROSS-PHASE CLASS, sibling of the implementer-authored round above and
     # not reached by it: the file's session log DOES declare a review phase, so
     # the provenance join is satisfied — it just declares a DIFFERENT one. While
@@ -474,6 +490,7 @@ def test_one_session_cannot_serve_a_phase_its_log_does_not_declare(tmp_path):
 
 
 def test_two_logs_at_one_key_declaring_two_phases_serve_no_round(tmp_path):
+    """Implements: TC-205"""
     # THE OTHER SIDE OF THE JOIN, and the one no fixture reached: the file's
     # phase comes from the LOG, so a key whose logs disagree has no phase to
     # give and `logged_rounds` yields nothing rather than letting the last log
@@ -517,6 +534,7 @@ def test_two_logs_at_one_key_declaring_two_phases_serve_no_round(tmp_path):
 
 
 def test_a_round_that_judged_an_earlier_tree_does_not_count(tmp_path):
+    """Implements: TC-205"""
     # Identity, not ordering: the round is the LATEST thing on the branch by
     # commit time and still does not count, because the tree it named is gone.
     root = rounds_repo(tmp_path)
@@ -533,6 +551,7 @@ def test_a_round_that_judged_an_earlier_tree_does_not_count(tmp_path):
 
 
 def test_a_record_only_commit_after_the_round_leaves_it_governing(tmp_path):
+    """Implements: TC-205"""
     # The other answer to the test above, and the defect it retires: the loop's
     # own telemetry, the scoreboard and a log fragment all land AFTER a round
     # and none of them changed the work. Under the retired time comparison each
@@ -552,6 +571,7 @@ def test_a_record_only_commit_after_the_round_leaves_it_governing(tmp_path):
 
 
 def test_the_governing_round_can_refuse(tmp_path):
+    """Implements: TC-205"""
     root = rounds_repo(tmp_path)
     add_round(root, 3, text=CHANGES)
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
@@ -562,6 +582,7 @@ def test_the_governing_round_can_refuse(tmp_path):
 def test_a_later_session_rewriting_a_round_cannot_change_what_the_gate_counts(
     tmp_path,
 ):
+    """Implements: TC-257"""
     # WI-608 (review pack C4), REPRODUCED FIRST. The round files sit under
     # `docs/reviews/`, a record path, so a commit that only rewrites one moves
     # neither the governing identity nor the implementer-touch tripwire (which
@@ -592,6 +613,7 @@ def test_a_later_session_rewriting_a_round_cannot_change_what_the_gate_counts(
 
 
 def test_a_verdict_its_session_did_not_commit_is_not_a_round(tmp_path):
+    """Implements: TC-257"""
     # The other half of "as its session committed it": a reviewer that wrote its
     # file and committed NOTHING records an empty range, and a later session
     # committing the file for it does not make it that reviewer's round.
@@ -615,6 +637,7 @@ def test_a_verdict_its_session_did_not_commit_is_not_a_round(tmp_path):
 
 
 def test_a_later_session_rewriting_a_session_log_cannot_launder_its_round(tmp_path):
+    """Implements: TC-257"""
     # THE LOG IS EVIDENCE TOO, and it is append-only. A reviewer commits a
     # CHANGES-REQUESTED verdict AND an edit to the work in one range, and its
     # session log records that range. A later session then commits a
@@ -654,6 +677,7 @@ def test_a_later_session_rewriting_a_session_log_cannot_launder_its_round(tmp_pa
 
 
 def test_the_merge_ladder_refuses_a_review_range_beyond_its_verdict(tmp_path):
+    """Implements: TC-257"""
     # S9 at the merge slot, RE-DERIVED from the committed session logs rather
     # than trusted from the loop's live check: a REVIEW session's recorded range
     # may change exactly its own verdict file. Asserted beside the clean round,
@@ -690,6 +714,7 @@ def test_the_merge_ladder_refuses_a_review_range_beyond_its_verdict(tmp_path):
 
 
 def test_a_trailer_contradicting_the_rounds_refuses(tmp_path):
+    """Implements: TC-205"""
     # The trailer is the machine half and a CROSS-CHECK, never an accept path.
     # A merge slot that saw an attestation disagreeing with the evidence and
     # merged anyway would be trusting the summary over the evidence all over
@@ -727,6 +752,7 @@ def _count_stamped(root, tree, rounds):
 
 
 def test_a_trailer_OVERSTATING_the_governing_round_count_refuses(tmp_path):
+    """Implements: TC-205"""
     root = rounds_repo(tmp_path)
     add_round(root, 3)
     _git(root, "checkout", "-q", "wi-401")
@@ -739,6 +765,7 @@ def test_a_trailer_OVERSTATING_the_governing_round_count_refuses(tmp_path):
 
 
 def test_a_trailer_UNDERSTATING_the_governing_round_count_does_not(tmp_path):
+    """Implements: TC-205"""
     # ROUND 033, FINDING 4 — the opposite direction, and the asymmetry is the
     # rule. The cross-check refused any inequality, so a second honest round at
     # one governing tree whose attestation FAILED TO LAND left the newest stamp
@@ -786,6 +813,7 @@ def _stamp(root, tree, word, rounds, when):
 
 
 def test_the_newest_attestation_at_a_tree_governs_the_cross_check(tmp_path):
+    """Implements: TC-205"""
     # ROUND 007, FINDING 1. `git log` is NEWEST-first, so a last-write-wins map
     # handed the gate the OLDEST stamp: two honest rounds at one governing tree
     # (`rounds=1`, then `rounds=2`) made the cross-check report the attestation
@@ -814,6 +842,7 @@ def test_the_newest_attestation_at_a_tree_governs_the_cross_check(tmp_path):
 
 
 def test_an_attestation_riding_a_commit_that_changed_the_work_is_not_read(tmp_path):
+    """Implements: TC-205"""
     # THE ANTI-FORGERY HALF of "the trailer cannot create an approval", which
     # every other trailer case leaves unexercised by stamping only on carriers
     # whose identity already matches. The words are copyable: nothing stops a
@@ -883,6 +912,7 @@ def _refresh_commit(root, branch, when):
 
 
 def test_a_station_refresh_owes_no_round_and_the_two_readers_agree(tmp_path):
+    """Implements: TC-205"""
     # ROUND 007, FINDING 2. The gate measured the identity at the PEELED work
     # tip and the loop's derivation at HEAD, so "one definition, two readers"
     # (WI-560 DW1) held for every commit class except the one the peel exists
@@ -932,6 +962,7 @@ def _record_commit(root, ordinal, when):
 
 
 def test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel(tmp_path):
+    """Implements: TC-205"""
     # The peel used to be TIP-ONLY, because it is shared with the `reset --hard`
     # in `integrate.refresh`, where peeling one commit too far destroys work. So
     # a telemetry commit landing on top of a refresh made the tip stop being a
@@ -1018,6 +1049,7 @@ def test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel(tmp_path):
 
 
 def test_the_empty_carrier_commits_its_own_paths_and_never_the_index(tmp_path):
+    """Implements: TC-205"""
     # ROUND 015, FINDING 2. The empty-carrier arm SWAPPED the commit's pathspec
     # for `--allow-empty`, and a `git commit` with no pathspec reads THE INDEX.
     # So one unrelated staged file — a state this function's own `pre_staged`
@@ -1081,6 +1113,7 @@ def test_the_empty_carrier_commits_its_own_paths_and_never_the_index(tmp_path):
 
 
 def test_a_round_drawn_after_a_refresh_is_visible_to_both_readers(tmp_path):
+    """Implements: TC-205"""
     # ROUND 015, THE BLOCKER — and the OTHER ORDER of the test above, which is
     # the whole reason it was invisible. That one refreshes AFTER the round;
     # this one draws the round AFTER the refresh, which is what the shipped
@@ -1186,10 +1219,12 @@ def _docs(tmp_path, mode):
 def test_the_dial_decides_when_an_adjudication_owes_a_round(
     tmp_path, mode, brief, drafts, owed
 ):
+    """Implements: TC-205"""
     assert ac.adjudication_review_owed(_docs(tmp_path, mode), brief, drafts) is owed
 
 
 def test_an_unreadable_dial_falls_to_when_minting_not_to_never(tmp_path):
+    """Implements: TC-205"""
     # The failure that matters is silently reviewing NOTHING. A typo is a `str`,
     # so the type check cannot see it; `config_conflicts` refuses it loudly
     # upstream and this reader falls back conservatively for anyone who did not
@@ -1239,6 +1274,7 @@ def adjudication_repo(tmp_path, mode, drafts_class="ordinary", block=None):
 def test_an_adjudication_lane_owing_no_round_merges_with_no_verdict_file(
     tmp_path, mode
 ):
+    """Implements: TC-205"""
     # THE MEASUREMENT THE WHOLE ROW EXISTS FOR (OI-76's acceptance). Before the
     # dial, `_verdict_gate` demanded `docs/reviews/WI-401-REVIEW-A.md` from a
     # lane whose phase is in NON_BUILD_PHASES — so nothing produced one, and
@@ -1265,7 +1301,10 @@ def test_the_scheduler_and_the_gate_read_an_adoption_by_its_shape(
     refusal reads as review owed). The `malformed` case is a characterization.
     Adequacy witness: a reader that took any parsed section as drafting
     nothing (an `adopts` key beside `title` treated as a clean adoption)
-    would answer no review owed and fail it."""
+    would answer no review owed and fail it.
+
+    Implements: TC-360
+    """
     al = _al()
     root = adjudication_repo(tmp_path, "when-minting", block=block)
     _git(root, "checkout", "-q", "wi-401")
@@ -1285,7 +1324,10 @@ def test_the_peel_still_refuses_a_close_whose_relink_leaves_docs_work(tmp_path):
     A characterization, green before and after the shared close shape lands.
     Adequacy witness: an attestor that handed the shared close shape the relink
     oracle (`spec_move.exact_relink`), widening the peel, would return the
-    close's parent here and fail it."""
+    close's parent here and fail it.
+
+    Implements: TC-205
+    """
     import test_handback as thb
 
     root = thb.adjudication_repo(tmp_path)
@@ -1354,6 +1396,7 @@ def _adjudication_ctx(root, plan_brief="amendment"):
 def test_a_committing_adjudication_schedules_its_round_under_the_dial(
     tmp_path, mode, drafts_class, brief, queued
 ):
+    """Implements: TC-205"""
     # WI-559 DW2's SCHEDULING half, driven through the shipped arm rather than
     # asserted about it. `adjudication_review_owed` and `_verdict_owed` were
     # each covered; the loop path that consults the dial and then queues the
@@ -1376,6 +1419,7 @@ def test_a_committing_adjudication_schedules_its_round_under_the_dial(
 
 
 def test_the_scheduler_and_the_gate_read_one_spec_copy(tmp_path):
+    """Implements: TC-205"""
     # The dial has ONE reader, but its INPUT did not: the drafts came from a
     # `## Dispositions` block each side looked up in its own home order — the
     # loop `docs/work` first, the gate `docs/archive/work` first. A branch
@@ -1417,6 +1461,7 @@ def test_the_scheduler_and_the_gate_read_one_spec_copy(tmp_path):
 
 
 def test_a_minting_adjudication_still_owes_its_round(tmp_path):
+    """Implements: TC-205"""
     # The other answer: a spine successor runs exclusive and touches the
     # registries, which is where a second opinion earns its cost.
     root = adjudication_repo(tmp_path, "when-minting", drafts_class="spine")
@@ -1433,6 +1478,7 @@ def _al():
 
 
 def test_the_done_banner_states_the_rounds_it_actually_drew(tmp_path):
+    """Implements: TC-205"""
     # WI-559 DW2's second half. The banner used to read "review round approved"
     # whenever managed routing ran at policy >= 1 — true of a build, false of
     # every adjudication, which drew no round at all. Three lanes on the
@@ -1471,6 +1517,7 @@ def test_the_done_banner_states_the_rounds_it_actually_drew(tmp_path):
 
 
 def test_the_trailer_count_is_derived_at_the_governing_tree(tmp_path):
+    """Implements: TC-205"""
     al = _al()
     root = rounds_repo(tmp_path)
     add_round(root, 3)
@@ -1496,6 +1543,7 @@ def test_the_trailer_count_is_derived_at_the_governing_tree(tmp_path):
 
 
 def test_the_review_owed_derivation_and_the_gate_share_one_definition(tmp_path):
+    """Implements: TC-205"""
     # WI-560 DW1, driven on the class it exists to kill. The loop's own
     # telemetry and log fragments moved HEAD past a verdict on WI-547 and this
     # derivation re-owed a round it had already been served, drawing two
@@ -1540,6 +1588,7 @@ def test_the_review_owed_derivation_and_the_gate_share_one_definition(tmp_path):
 
 
 def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
+    """Implements: TC-206"""
     # DW3: the rollup dies as an INPUT and is reborn generated. `--check` is
     # what keeps it honest — a generated artifact nobody regenerates is a
     # document that lies, and this one is read by humans deciding whether a
@@ -1623,6 +1672,7 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
 
 
 def test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can(tmp_path, capsys):
+    """Implements: TC-206"""
     # LLR-208's exclusive-writer clause, DRIVEN in the shape that broke it
     # (WI-590 round 005, 2026-09-04): in a LINKED worktree on a claimed branch
     # the generator wrote `docs/reviews/rollup/` and returned 0, and the
@@ -1657,6 +1707,7 @@ def test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can(tmp_path, 
 
 
 def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path, capsys):
+    """Implements: TC-205"""
     # WI-558 DONE-WHEN 2's WRITER, end to end — the arm no test had ever
     # reached (ROUND 033, FINDING 1). Every trailer test above calls
     # `review_verdict_trailer` with a hand-built worker dict and then commits
@@ -1711,6 +1762,7 @@ def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path, c
 
 
 def test_a_stale_owed_marker_over_served_evidence_redraws_nothing(tmp_path):
+    """Implements: TC-205"""
     # ROUND 033, FINDING 2. `resume_owed_round` proceeded when the marker
     # existed OR the evidence owed a phase, and `schedule_review_round` then
     # read the empty owed list as "the caller named nothing" and queued EVERY
@@ -1918,6 +1970,7 @@ def _mechanical_close(
 
 
 def test_the_mechanical_close_does_not_stale_the_round_it_follows(tmp_path):
+    """Implements: TC-205"""
     root = rounds_repo(tmp_path)
     _claim_commit(root)
     add_round(root, 3)
@@ -1946,6 +1999,7 @@ def test_the_mechanical_close_does_not_stale_the_round_it_follows(tmp_path):
 
 
 def test_only_the_machinerys_own_close_subject_peels(tmp_path):
+    """Implements: TC-205"""
     # A hand-written close is an ordinary work commit: it moved the tree and the
     # round no longer names it. Fails toward MORE review, which is the direction
     # every unverified step here takes.
@@ -1958,6 +2012,7 @@ def test_only_the_machinerys_own_close_subject_peels(tmp_path):
 
 
 def test_a_forged_mechanical_close_middle_does_not_peel(tmp_path):
+    """Implements: TC-205"""
     # The outer vocabulary is public and therefore forgeable. The owning
     # attestor binds its middle to the WI id the real active/ -> complete/ move
     # carries, so affix-shaped prose cannot turn an ordinary work commit into a
@@ -1973,6 +2028,7 @@ def test_a_forged_mechanical_close_middle_does_not_peel(tmp_path):
 
 
 def test_a_close_that_reached_outside_docs_work_does_not_peel(tmp_path):
+    """Implements: TC-205"""
     # The path confinement: a close whose relink (or anything else) touched a
     # product file changed something a reviewer could conclude differently
     # about, so it is not disposable.
@@ -1985,6 +2041,7 @@ def test_a_close_that_reached_outside_docs_work_does_not_peel(tmp_path):
 
 
 def test_a_close_that_smuggles_a_new_spec_in_does_not_peel(tmp_path):
+    """Implements: TC-205"""
     # INSIDE docs/work/ is not enough. An addition that is not one half of the
     # move is a brand-new spec entering the tree, and peeling would measure it
     # at the parent, where no reviewer ever saw it.
@@ -1998,6 +2055,7 @@ def test_a_close_that_smuggles_a_new_spec_in_does_not_peel(tmp_path):
 
 
 def test_a_close_that_destroys_an_archived_record_does_not_peel(tmp_path):
+    """Implements: TC-205"""
     # The same clause on the destructive side, which is the sharper one: the
     # close deletes an ALREADY-TERMINAL row that no part of this move is
     # about, so peeling would carry unreviewed data loss past the gate.
@@ -2012,6 +2070,7 @@ def test_a_close_that_destroys_an_archived_record_does_not_peel(tmp_path):
 
 
 def test_a_close_reaching_into_a_second_lanes_claims_does_not_peel(tmp_path):
+    """Implements: TC-205"""
     # A close that also archived ANOTHER lane's claimed row: every path is
     # under docs/work/, every deletion is paired with its own addition, and
     # the subject is the one the writer composes for the lane's own row. It is
@@ -2028,6 +2087,7 @@ def test_a_close_reaching_into_a_second_lanes_claims_does_not_peel(tmp_path):
 
 
 def test_a_mechanical_close_moving_two_rows_does_not_peel(tmp_path):
+    """Implements: TC-205"""
     # The peel admits a mechanical close moving exactly one row. A close that
     # archived two rows out of the lane's own claim, under the joined subject
     # the earlier multi-row writer composed, is not one the one-item writer
@@ -2051,6 +2111,7 @@ def test_a_mechanical_close_moving_two_rows_does_not_peel(tmp_path):
 
 
 def test_a_two_row_close_under_the_one_id_subject_does_not_peel(tmp_path):
+    """Implements: TC-205"""
     # The same two-row move out of the lane's own claim, now under the subject
     # the current writer composes for the lane's first row. The subject
     # matches what the one-id composer writes, so the row count is the only
@@ -2099,6 +2160,7 @@ def _empty_close(root, when=T_LATER + 300):
 
 
 def test_an_empty_close_is_refused_and_the_walk_covers_it_regardless(tmp_path):
+    """Implements: TC-205"""
     root = rounds_repo(tmp_path)
     _claim_commit(root)
     add_round(root, 3)
@@ -2293,6 +2355,7 @@ def _gate(root):
 
 
 def test_a_lane_with_only_narrow_rounds_does_not_clear_the_gate(tmp_path):
+    """Implements: TC-205"""
     root = rounds_repo(tmp_path)
     add_round(root, 3, kind="narrow")
     # The legacy window it used to fall through to: a hand-authored APPROVE
@@ -2317,6 +2380,7 @@ def test_a_lane_with_only_narrow_rounds_does_not_clear_the_gate(tmp_path):
 
 
 def test_a_full_round_from_a_retained_session_does_not_clear_the_gate(tmp_path):
+    """Implements: TC-205"""
     # "From a session minted for that review": the service records a retained
     # session's generation, and such a session is not fresh.
     root = rounds_repo(tmp_path)
@@ -2336,6 +2400,7 @@ PERSISTED = '[reviewer]\ncontext_reset_pct = 50\nfinal_reviewer = "persisted"\n'
 def test_in_persisted_mode_the_final_reviewers_resumed_round_clears_the_gate(
     tmp_path,
 ):
+    """Implements: TC-205"""
     # WI-887's Trust ruling: in persisted mode the gate accepts a session
     # resumed from the persisted final reviewer's own scope. The coordinator
     # records that fact itself: the loop renders the `final` kind only for a
@@ -2350,6 +2415,7 @@ def test_in_persisted_mode_the_final_reviewers_resumed_round_clears_the_gate(
 
 
 def test_a_retained_full_round_never_clears_the_gate_in_persisted_mode(tmp_path):
+    """Implements: TC-205"""
     # Review 001 F1: a `full` round from a retained session is not the final
     # reviewer's by inference from the mode word; only the recorded `final`
     # kind says so. A fresh full round still clears it in either mode.
@@ -2370,6 +2436,7 @@ def test_a_retained_full_round_never_clears_the_gate_in_persisted_mode(tmp_path)
     ],
 )
 def test_a_final_round_clears_the_gate_only_with_both_dials_on(tmp_path, body):
+    """Implements: TC-205"""
     root = rounds_repo(tmp_path)
     _final_reviewer(root, body)
     add_round(root, 3, kind="final", gen="2")
@@ -2377,6 +2444,7 @@ def test_a_final_round_clears_the_gate_only_with_both_dials_on(tmp_path, body):
 
 
 def test_a_resumed_iteration_sessions_verdict_does_not_clear_the_gate(tmp_path):
+    """Implements: TC-205"""
     # In either mode: an iteration reviewer's resumed session serves a narrow
     # round, and a narrow verdict steers iteration and never gates.
     root = rounds_repo(tmp_path)
@@ -2395,6 +2463,7 @@ def test_a_resumed_iteration_sessions_verdict_does_not_clear_the_gate(tmp_path):
     ],
 )
 def test_in_fresh_mode_a_resumed_full_round_still_holds_the_gate(tmp_path, body):
+    """Implements: TC-205"""
     root = rounds_repo(tmp_path)
     _final_reviewer(root, body)
     add_round(root, 3, gen="2")
@@ -2404,6 +2473,7 @@ def test_in_fresh_mode_a_resumed_full_round_still_holds_the_gate(tmp_path, body)
 
 
 def test_a_lane_with_no_claim_commit_holds_and_names_it(tmp_path):
+    """Implements: TC-205"""
     root = git_repo(tmp_path)
     docs = root / "docs"
     docs.mkdir(exist_ok=True)
@@ -2421,6 +2491,7 @@ def test_a_lane_with_no_claim_commit_holds_and_names_it(tmp_path):
 
 
 def test_the_gate_range_survives_a_trunk_refresh(tmp_path):
+    """Implements: TC-205"""
     root = rounds_repo(tmp_path)
     claimed = claim(root)
     # Trunk moves on (another lane lands), and the lane refreshes onto it.
@@ -2458,6 +2529,7 @@ def test_the_gate_range_survives_a_trunk_refresh(tmp_path):
 def test_a_partial_or_refusable_round_file_does_not_clear_the_gate(
     tmp_path, text, reviewed
 ):
+    """Implements: TC-205"""
     root = rounds_repo(tmp_path)
     add_round(root, 3)  # an earlier APPROVE at the same tree
     assert _gate(root) is None
@@ -2473,6 +2545,7 @@ def test_a_partial_or_refusable_round_file_does_not_clear_the_gate(
 
 
 def test_the_filing_check_is_the_one_the_gate_applies():
+    """Implements: TC-205"""
     sha = "a" * 40
     good = "Reviewed: {}\n\n{}".format(sha, APPROVE)
     assert kv.filing_refusal(good, sha, score.parse_verdict) is None
@@ -2492,6 +2565,7 @@ def test_the_filing_check_is_the_one_the_gate_applies():
 def test_a_narrow_approve_at_the_tip_does_not_raise_the_unchanged_rework_page(
     tmp_path, capsys
 ):
+    """Implements: TC-205"""
     # A full round refused; the rework moved the tree; a NARROW round approved
     # the rework at the tip. The fresh full-lane round is now owed and must be
     # drawn: no page, and nothing reads the narrow APPROVE as a served tree.
@@ -2508,12 +2582,14 @@ def test_a_narrow_approve_at_the_tip_does_not_raise_the_unchanged_rework_page(
 
 
 def test_an_invalid_round_file_at_the_tip_raises_no_page_either(tmp_path):
+    """Implements: TC-205"""
     root = _built_lane_with_a_round(tmp_path, text="# Review A\n\n- [MAJOR] x")
     assert not kv.tree_already_judged(root, "wi-401", claim(root), score.parse_verdict)
 
 
 @pytest.mark.parametrize("text", [APPROVE, CHANGES, "# Review A\n\n- [MAJOR] x"])
 def test_with_no_base_nothing_is_judged_and_only_a_verdict_judges(tmp_path, text):
+    """Implements: TC-205"""
     # LLR-207's two arms, each beside its opposite: a logged round sits at the
     # lane's current tree in every case. With the claim base, the tree reads
     # judged exactly when that round's entry CARRIES a verdict (APPROVE or
@@ -2533,6 +2609,7 @@ def test_with_no_base_nothing_is_judged_and_only_a_verdict_judges(tmp_path, text
 
 
 def test_the_loop_draws_narrow_rounds_and_then_the_fresh_full_lane_round(tmp_path):
+    """Implements: TC-082"""
     # The loop's iteration, driven through its own round ladder: a refused
     # FULL round leaves its reviewed sha and round file, so the round after the
     # rework is NARROW over the rework, briefed through the narrow renderer; a
@@ -2592,6 +2669,7 @@ def test_the_loop_draws_narrow_rounds_and_then_the_fresh_full_lane_round(tmp_pat
 def test_only_a_full_round_drawn_under_the_final_stage_records_the_final_kind(
     tmp_path,
 ):
+    """Implements: TC-205"""
     # WI-887 D-001: the `final` kind is derived from the stage the loop's draw
     # settled (`session_keep.review_retention`), never composed by hand, so a
     # narrow round, and a full round drawn under no stage, cannot carry it.
@@ -2650,6 +2728,7 @@ def _next_brief_kind(al, root, st, worker):
 def test_another_verdict_and_a_resume_draw_a_full_lane_round(
     tmp_path, narrow_first, text
 ):
+    """Implements: TC-082"""
     # LLR-045's "another verdict draws full next, and a resume draws full":
     # neither a CHANGES-REQUESTED (which draws NARROW) nor a narrow APPROVE
     # (which queues the full round at once). Driven through the loop's own
@@ -2687,6 +2766,7 @@ def test_another_verdict_and_a_resume_draw_a_full_lane_round(
 
 
 def test_the_session_log_records_the_review_scope(tmp_path):
+    """Implements: TC-082, TC-205"""
     meta = {"session": "007", "stamp": "20260101-000000", "train": "t1"}
     meta["review-scope"] = kv.format_scope(kv.FULL, "a" * 40, "b" * 40)
     ac.write_session_log(tmp_path, meta, "transcript")

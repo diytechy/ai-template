@@ -10,6 +10,8 @@ The mutation proof lives INSIDE this suite (the standing vacuous-guard rule):
 `test_scanner_detects_undeclared_import` drives the scanner over a fixture
 tree containing a genuinely undeclared import and asserts it is CAUGHT, so the
 guard is demonstrated able to fail before it is trusted to pass.
+
+Implements: TC-034
 """
 
 from __future__ import annotations

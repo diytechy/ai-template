@@ -13,6 +13,8 @@ agree on that, and this module pins both on a small registry under tmp_path
 
 The declaration half (an id is never an escaping path) is pinned beside the
 other input rules in `tests/test_assumption_rules.py`.
+
+Implements: TC-276
 """
 
 from conftest import load_script

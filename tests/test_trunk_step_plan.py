@@ -44,6 +44,7 @@ def _declared_steps():
 
 
 def test_regen_skips_absent_artifact_families(tmp_path, capsys):
+    """Implements: TC-135"""
     # A repo that carries none of the generated surfaces pays nothing — and the
     # skip is PRINTED, so "nothing regenerated" is never mistaken for "all fresh".
     # Every row prints either its `ok` line or its skip with the reason the
@@ -62,6 +63,7 @@ def test_regen_skips_absent_artifact_families(tmp_path, capsys):
 
 
 def test_regen_runs_in_declared_dependency_order(tmp_path, capsys):
+    """Implements: TC-170"""
     # The EXECUTED order (the printed per-step lines of a real run) is the
     # DECLARED order, across every row: one line per row, none missing, none
     # extra, none reordered.

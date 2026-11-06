@@ -63,6 +63,7 @@ def _sr_row(**cells):
 
 
 def test_the_digest_ignores_the_id_status_and_traced_cells():
+    """Implements: TC-398"""
     digest = ar.approved_text_digest
     base = digest(SR_REL, "SR-ID", _sr_row())
     for cells in (
@@ -91,6 +92,7 @@ _CSV_SR = (
 
 
 def test_the_digest_is_carrier_blind_and_empty_equals_absent():
+    """Implements: TC-398"""
     # The CSV twin carries an empty `Area` the TOML row does not name at all,
     # so the pair is also the empty-versus-absent case read off real carriers.
     digest = ar.approved_text_digest
@@ -102,6 +104,7 @@ def test_the_digest_is_carrier_blind_and_empty_equals_absent():
 
 
 def test_the_digest_has_the_done_when_shape():
+    """Implements: TC-398"""
     digest = ar.approved_text_digest
     assert re.fullmatch(r"sha256:[0-9a-f]{16}", digest(SR_REL, "SR-ID", _sr_row()))
 
@@ -113,6 +116,7 @@ _BINDING = "brief = amendment\nkinds = amendment\noutcome = accepted\n"
 
 
 def test_a_binding_round_trips_its_identities():
+    """Implements: TC-398"""
     render = ksitting.render_requested
     read = ksitting.read_identities
     text = render("amendment", ("amendment",), "accepted", identities=_IDS)
@@ -120,6 +124,7 @@ def test_a_binding_round_trips_its_identities():
 
 
 def test_read_requested_ignores_the_identity_cell():
+    """Implements: TC-398"""
     # Every other reader of a binding reads brief, kinds and outcome only, so
     # the cell must neither change that answer nor appear without identities.
     render = ksitting.render_requested
@@ -139,6 +144,7 @@ def test_read_requested_ignores_the_identity_cell():
     ids=["no cell", "bad token", "short hex", "repeated id"],
 )
 def test_a_malformed_or_absent_identity_cell_reads_as_no_identity(cell):
+    """Implements: TC-398"""
     read = ksitting.read_identities
     identities, why = read(_BINDING + cell)
     assert identities is None
@@ -176,6 +182,7 @@ def _held_everywhere(_registry):
     ids=["Approved", "Founded", "born Approved"],
 )
 def test_a_live_flip_into_approval_is_a_claim(before, after):
+    """Implements: TC-241"""
     claims = held_status.held_claims
     got = claims({SR: (after, {})}, {SR: (before, {})}, _held_everywhere)
     assert got == {("SR-001", SR_REL, "SR-ID"): "a"}
@@ -204,6 +211,7 @@ _LIVE = _rows(_row("SR-001", "Approved", "new"))
     ids=["entered", "approved cell moved", "Status moved", "retired"],
 )
 def test_a_copy_entry_move_or_retirement_is_a_claim(before, after):
+    """Implements: TC-241"""
     claims = held_status.held_claims
     got = claims({SR: after}, {SR: before}, _held_everywhere)
     assert got == {("SR-001", SR_REL, "SR-ID"): "b"}
@@ -284,6 +292,7 @@ _NOT_JUDGED = {
 
 @pytest.mark.parametrize("case", sorted(_NOT_JUDGED))
 def test_not_judged(case):
+    """Implements: TC-241"""
     claims = held_status.held_claims
     before, after = _beside_the_claim(*_NOT_JUDGED[case])
 
@@ -295,6 +304,7 @@ def test_not_judged(case):
 
 
 def test_an_unmapped_registry_is_held():
+    """Implements: TC-241"""
     held_by = held_status.registry_held
     claims = held_status.held_claims
     unmapped = "docs/requirements/widgets.toml"
@@ -309,10 +319,12 @@ def test_an_unmapped_registry_is_held():
 
 
 def test_HELD_TIERS_equals_the_snapshotted_tiers():
+    """Implements: TC-241"""
     assert tuple(held_status.HELD_TIERS) == tuple(snap.SNAPSHOT_TIERS)
 
 
 def test_the_rule_rides_the_lane_commit_walk():
+    """Implements: TC-241"""
     names = [rider.__name__ for rider in tta.LANE_COMMIT_RIDERS]
     assert "commit_held_approval_lines" in names, names
     assert names.index("commit_held_approval_lines") > names.index(
@@ -321,6 +333,7 @@ def test_the_rule_rides_the_lane_commit_walk():
 
 
 def test_the_slot_no_longer_runs_a_loop_lane_held_status_rung():
+    """Implements: TC-241"""
     # The lane rule judges every lane alike, so the loop-lane rung retires.
     assert not hasattr(integ, "_held_status_refusal")
     ladder = inspect.getsource(integ._merge_refusal)
@@ -328,6 +341,7 @@ def test_the_slot_no_longer_runs_a_loop_lane_held_status_rung():
 
 
 def test_the_ledger_clarity_arm_is_retired():
+    """Implements: TC-278"""
     # The held CLARITY exception reads the bound identity, never the ledger.
     assert not hasattr(ar, "held_reattest_refusal")
     assert "held_reattest_refusal" not in inspect.getsource(ar.merge_approval_refusal)

@@ -6,6 +6,8 @@ AI-content disclosure), license, attribution, contract/release link, and a
 pointer + hash. Like PART, trace.py integrity-checks the ASSET- id only. The
 registry is optional: an absent file is a no-op and the bootstrapped ASSET-000
 placeholder never blocks a gate.
+
+Implements: TC-005
 """
 
 from conftest import make_minimal_project, run_py, record_ids

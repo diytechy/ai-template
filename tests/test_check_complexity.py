@@ -9,6 +9,8 @@ white paper's own worked examples (the only external check on a metric with no
 reference test suite). The CLI drives — every mode as a subprocess — live in the
 sibling test_check_complexity_cli.py, re-tiered SLOW because each pays interpreter
 startup; the metric itself is pinned here, in-process and cheap.
+
+Implements: TC-202
 """
 
 import ast

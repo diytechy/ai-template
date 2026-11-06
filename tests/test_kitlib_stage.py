@@ -65,7 +65,10 @@ def test_DevStg_Below_participates_in_ordering_without_raising():
     ladder has no rung below Needs and must not grow one. But per-phase values
     genuinely carry it, so the ordering those values need lives here, degrading
     the sentinel to -1 in exactly ONE place. (The bar axis grew three private
-    tables doing this; that is the shape being avoided.)"""
+    tables doing this; that is the shape being avoided.)
+
+    Implements: TC-180
+    """
     with pytest.raises(ValueError):
         ladder.stage_ord(stage.BELOW)
 
@@ -93,7 +96,10 @@ def test_a_hyphenated_label_is_REFUSED_not_truncated_to_a_valid_rung(label):
 
     The refusal must be a REFUSAL, not a different truncation: assert both that it
     raises AND that no valid rung is a prefix-answer anywhere in the message
-    path."""
+    path.
+
+    Implements: TC-180
+    """
     assert label.split("-")[0] + "-" + label.split("-")[1] in ladder.LADDER_RUNGS
     with pytest.raises(ValueError) as excinfo:
         stage.require_rung(label)
@@ -122,7 +128,10 @@ def test_a_token_that_is_not_a_rung_is_refused_by_the_stage_reader(token):
     retired bar ladder and this one with DIFFERENT ordinals, so no value-level
     guard can separate them — the deep-check's Q2(iii-b). What contains that is
     carriage (distinct keys in distinct files) until slice 2 deletes the other
-    axis."""
+    axis.
+
+    Implements: TC-180
+    """
     with pytest.raises(ValueError):
         stage.require_rung(token)
 
@@ -138,7 +147,10 @@ def test_the_sentinel_is_refused_as_a_HEADLINE_but_legal_per_phase():
 def test_a_phase_with_nothing_settled_does_not_lower_the_fold():
     """The core of corner case 1, at the fold level: a phase carrying the
     sentinel has earned no rung and therefore holds no opinion. Folding it in
-    would drop the repo to the floor the moment one draft opened a phase."""
+    would drop the repo to the floor the moment one draft opened a phase.
+
+    Implements: TC-180
+    """
     got, floored = stage.effective_stage({"1": ladder.STAGE_TESTS, "2": stage.BELOW})
     assert (got, floored) == (ladder.STAGE_TESTS, False)
 
@@ -156,7 +168,10 @@ def test_an_empty_fold_is_the_FLOOR_and_never_raises():
     """Corner case 3 at the fold level — a fresh scaffold, an empty spine and an
     all-draft repo all arrive here, and all three need a defined SELECTION
     meaning. Below the floor nothing is selected by an at-or-above rule, so the
-    run would go green because no check ran."""
+    run would go green because no check ran.
+
+    Implements: TC-180
+    """
     assert stage.effective_stage({}) == (stage.FLOOR, True)
     assert stage.effective_stage({"1": stage.BELOW}) == (stage.FLOOR, True)
 
@@ -262,7 +277,10 @@ def test_the_fingerprint_is_INVARIANT_under_CRLF_working_tree_churn(tmp_path):
     """A Windows working tree carries CRLF where the index holds LF. A
     fingerprint that flipped on line endings would report every cross-platform
     checkout stale — stale-noise, on a mechanism whose whole value is that a
-    mismatch means something."""
+    mismatch means something.
+
+    Implements: TC-180
+    """
     lf = _tree(
         tmp_path / "lf", **{"docs/requirements/stakeholder-needs": b"a = 1\nb = 2\n"}
     )
@@ -407,7 +425,10 @@ def test_the_reader_returns_FRESH_values_when_an_input_changes_mid_process(tmp_p
     read the stage once per run and thread it down, so a mid-session approval
     was invisible for the rest of the run. Verification per CALL is what removes
     that window — including across the per-process memo, which is keyed on
-    path+size+mtime and must never be mistaken for the freshness truth."""
+    path+size+mtime and must never be mistaken for the freshness truth.
+
+    Implements: TC-180
+    """
     root = _tree(tmp_path)
     calls = []
 
@@ -438,7 +459,10 @@ def test_the_reader_returns_FRESH_values_when_an_input_changes_mid_process(tmp_p
 def test_the_fingerprint_FAST_PATH_actually_skips_the_derivation(tmp_path):
     """The cost argument the plan makes — the fingerprint is a fast path that lets
     a fresh reader SKIP the parse, so the net scan count goes DOWN — is only true
-    if the skip is real. Counted, not assumed."""
+    if the skip is real. Counted, not assumed.
+
+    Implements: TC-180
+    """
     root = _tree(tmp_path)
     calls = []
 
@@ -460,7 +484,10 @@ def test_READERS_NEVER_WRITE(tmp_path):
     """The committed file is load-bearing HISTORY (the phase-drop and tier signals
     are deltas of it), so a reader that healed it on disk would rewrite that
     history from whichever process happened to look first — on claimed branches
-    and in CI, where the freshness step is deliberately stood down."""
+    and in CI, where the freshness step is deliberately stood down.
+
+    Implements: TC-180
+    """
     root = _tree(tmp_path)
     path = root / stage.STAGE_FILE
     path.parent.mkdir(parents=True, exist_ok=True)

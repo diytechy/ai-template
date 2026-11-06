@@ -105,6 +105,7 @@ def _run(argv, root, stdin=""):
 
 @pytest.mark.parametrize("entry", ["run.sh", "run.command"])
 def test_a_bare_run_calls_the_check_once_from_the_root_before_the_menu(tmp_path, entry):
+    """Implements: TC-342"""
     sh = _sh()
     root = _launcher_root(tmp_path)
     proc = _run([sh, entry], root, stdin="1\n")
@@ -116,6 +117,7 @@ def test_a_bare_run_calls_the_check_once_from_the_root_before_the_menu(tmp_path,
 
 
 def test_a_bare_run_stops_with_the_step_when_the_runtime_stays_missing(tmp_path):
+    """Implements: TC-342"""
     sh = _sh()
     root = _launcher_root(tmp_path, devsetup_exit=1)
     proc = _run([sh, "run.sh"], root, stdin="1\n")
@@ -126,6 +128,7 @@ def test_a_bare_run_stops_with_the_step_when_the_runtime_stays_missing(tmp_path)
 
 @pytest.mark.parametrize("args", [["--list"], ["hello"]])
 def test_the_direct_and_list_forms_never_call_the_check(tmp_path, args):
+    """Implements: TC-342"""
     sh = _sh()
     root = _launcher_root(tmp_path)
     proc = _run([sh, "run.sh", *args], root)
@@ -142,6 +145,7 @@ def _cmd(root, *args, stdin=""):
 
 @pytest.mark.skipif(not WINDOWS, reason="run.cmd is the Windows launcher")
 def test_a_bare_run_cmd_calls_the_check_once_from_the_root_before_the_menu(tmp_path):
+    """Implements: TC-342"""
     _powershell()
     root = _launcher_root(tmp_path)
     proc = _cmd(root, stdin="1\r\n\r\n")
@@ -154,6 +158,7 @@ def test_a_bare_run_cmd_calls_the_check_once_from_the_root_before_the_menu(tmp_p
 
 @pytest.mark.skipif(not WINDOWS, reason="run.cmd is the Windows launcher")
 def test_a_bare_run_cmd_stops_with_the_step_when_the_runtime_stays_missing(tmp_path):
+    """Implements: TC-343"""
     _powershell()
     root = _launcher_root(tmp_path, devsetup_exit=1)
     proc = _cmd(root, stdin="\r\n")
@@ -165,6 +170,7 @@ def test_a_bare_run_cmd_stops_with_the_step_when_the_runtime_stays_missing(tmp_p
 @pytest.mark.skipif(not WINDOWS, reason="run.cmd is the Windows launcher")
 @pytest.mark.parametrize("args", [["--list"], ["hello"]])
 def test_the_direct_and_list_forms_of_run_cmd_never_check_or_pause(tmp_path, args):
+    """Implements: TC-342"""
     root = _launcher_root(tmp_path)
     proc = _cmd(root, *args)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -203,7 +209,10 @@ def test_a_bare_run_hands_the_check_the_interpreter_its_menu_runs_on(tmp_path, e
     """The launcher's one resolution: the readiness step is handed the
     interpreter whose floor it checks, and the menu runs on exactly that
     interpreter. Deterministic on every host: the host's own 3.11+ is what
-    gets resolved, and the menu stub reports where it really ran."""
+    gets resolved, and the menu stub reports where it really ran.
+
+    Implements: TC-342
+    """
     root = _launcher_root(tmp_path, menu_stub=True)
     if entry == "run.cmd":
         if not WINDOWS:
@@ -239,7 +248,10 @@ def test_no_form_of_run_starts_the_menu_below_the_floor(tmp_path, entry, args):
     """With only sub-floor interpreters to find, no form starts the menu:
     the bare form hands the readiness step no interpreter (and so ends with
     its step), and the direct and list forms exit 1 naming the floor, without
-    the readiness step."""
+    the readiness step.
+
+    Implements: TC-342
+    """
     root = _launcher_root(tmp_path, devsetup_exit=1, menu_stub=True)
     if entry == "run.cmd":
         if not WINDOWS:
@@ -321,7 +333,10 @@ def _devsetup_search(path):
 def test_each_run_launcher_searches_what_its_dev_setup_searches(launcher, devsetup):
     """Whenever a dev-setup check reports a runtime, its run launcher resolves
     one: after the .venv entries, the launcher probes the same interpreters, in
-    the same order, as that dev-setup's own runtime search."""
+    the same order, as that dev-setup's own runtime search.
+
+    Implements: TC-021, TC-342
+    """
     ours = _launcher_search(launcher)
     theirs = _devsetup_search(devsetup)
     assert theirs, devsetup
@@ -335,7 +350,10 @@ def test_an_installed_hook_denies_with_an_older_python_first(scaffold_root, tmp_
     interpreter on any day: exit 0, no traceback. When the real clock is
     inside the window it arms (judged by the guard's own window reader, the
     window being weekday-only), it denies a new subagent; outside it, it
-    prints no decision. Skipped where no such Python exists."""
+    prints no decision. Skipped where no such Python exists.
+
+    Implements: TC-345
+    """
     older = sub_floor_interpreter()
     if older is None:
         pytest.skip("no Python below 3.11 is installed on this host")
@@ -452,7 +470,10 @@ def test_the_injected_guard_command_names_the_hooks_own_interpreter(
     working directory (round 035 F1): each emitted line, run in the shell it
     is written for (PowerShell, and POSIX sh through its declared gate) from a
     directory outside the repository, exits 0. Both the plain form and, for
-    an interpreter path holding a space, the quoted Bash and PowerShell forms."""
+    an interpreter path holding a space, the quoted Bash and PowerShell forms.
+
+    Implements: TC-340
+    """
     guard = load_script("coordinator_guard")
     ran = []
     try:
@@ -501,7 +522,10 @@ def _run_each_emitted_line(guard, tmp_path, monkeypatch, ran):
 
 def test_a_scaffold_keeps_the_machine_local_settings_out_of_git(scaffold_root):
     """The opt-in's file names this machine's interpreter, so the scaffold's
-    ignore list keeps it out of every commit."""
+    ignore list keeps it out of every commit.
+
+    Implements: TC-345
+    """
     lines = (scaffold_root / ".gitignore").read_text(encoding="utf-8").splitlines()
     assert ".claude/settings.local.json" in lines
 
@@ -582,6 +606,7 @@ def _adjudicator(root, kind="token", verified=""):
 
 
 def test_the_check_for_run_offers_nothing_without_a_terminal(scaffold_root):
+    """Implements: TC-342, TC-343"""
     sh = _sh()
     proc = subprocess.run(
         [sh, "scripts/dev-setup.sh", "--for-run", "--python", sys.executable],
@@ -604,7 +629,10 @@ def test_the_check_for_run_checks_only_the_interpreter_it_is_handed(
     """The readiness operation keeps no interpreter search of its own: handed
     none, it reports the runtime missing and exits 1 although a 3.11+ (this
     one) is on PATH; handed this interpreter, it reports it ready and exits 0.
-    Its result therefore speaks for the interpreter the launcher runs."""
+    Its result therefore speaks for the interpreter the launcher runs.
+
+    Implements: TC-343
+    """
     if family == "sh":
         argv, flag = [_sh(), "scripts/dev-setup.sh", "--for-run"], "--python"
     elif WINDOWS:
@@ -635,6 +663,7 @@ def test_the_check_for_run_checks_only_the_interpreter_it_is_handed(
 
 
 def test_piped_menu_input_survives_the_check(scaffold_root):
+    """Implements: TC-342, TC-343"""
     sh = _sh()
     proc = subprocess.run(
         [sh, "run.sh"],
@@ -651,6 +680,7 @@ def test_piped_menu_input_survives_the_check(scaffold_root):
 
 
 def test_the_sign_in_is_reported_signed_in_missing_or_off(scaffold_root, tmp_path):
+    """Implements: TC-344, TC-365"""
     sh = _sh()
 
     def check(**env):
@@ -690,7 +720,10 @@ def test_a_login_account_is_named_its_provisioning_and_offered_no_token(
 ):
     """WI-798: when the adjudicator's account is a LOGIN account, dev-setup
     names the command that provisions its home and runs nothing; the
-    `claude setup-token` step is only ever offered to a token account."""
+    `claude setup-token` step is only ever offered to a token account.
+
+    Implements: TC-344, TC-365
+    """
     if family == "sh":
         argv = [_sh(), "scripts/dev-setup.sh", "--check"]
     elif WINDOWS:
@@ -759,7 +792,10 @@ def test_a_signed_in_login_account_is_reported_ok_on_its_own_home(
 ):
     """When the adjudicator's account is a LOGIN account whose own home reads
     signed in, dev-setup reports it ok on its own home and offers no token
-    step; while its login-isolation check has not passed, it says so."""
+    step; while its login-isolation check has not passed, it says so.
+
+    Implements: TC-344
+    """
     if family == "sh":
         argv = [_sh(), "scripts/dev-setup.sh", "--check"]
     elif WINDOWS:
@@ -801,7 +837,10 @@ def test_the_sign_in_report_never_prints_or_stores_the_token(
     scaffold_root, tmp_path, family
 ):
     """Signed in, the report names the token's variable and never its value:
-    the canary is in neither stream nor in any file under the repository."""
+    the canary is in neither stream nor in any file under the repository.
+
+    Implements: TC-344
+    """
     if family == "sh":
         argv = [_sh(), "scripts/dev-setup.sh", "--check"]
     elif WINDOWS:
@@ -838,6 +877,7 @@ def test_the_sign_in_report_never_prints_or_stores_the_token(
 
 @pytest.mark.skipif(WINDOWS, reason="fake interpreters are POSIX shell scripts")
 def test_the_sign_in_reads_unknown_without_a_runtime(scaffold_root, tmp_path):
+    """Implements: TC-344"""
     sh = _sh()
     fakebin = tmp_path / "fakebin"
     fakebin.mkdir()
@@ -894,7 +934,10 @@ def test_without_git_the_check_reports_it_missing_and_the_run_reaches_its_menu(
 ):
     """Round 024 F2: with a working runtime and no Git, the shipped readiness
     operation reports git missing and still returns the runtime result, the
-    standalone check still exits 0, and a bare run reaches its menu."""
+    standalone check still exits 0, and a bare run reaches its menu.
+
+    Implements: TC-342, TC-343
+    """
     shell = [_powershell(), "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]
     devsetup = shell + ["scripts/dev-setup.ps1"]
     code, out = _without_git(
@@ -910,7 +953,10 @@ def test_without_git_the_check_reports_it_missing_and_the_run_reaches_its_menu(
 
 @pytest.mark.skipif(not WINDOWS, reason="the PowerShell dev-setup on Windows")
 def test_without_git_this_repos_check_and_run_still_work():
-    """The same for this repository's own dev-setup and actions menu."""
+    """The same for this repository's own dev-setup and actions menu.
+
+    Implements: TC-342
+    """
     shell = [_powershell(), "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]
     code, out = _without_git(shell + ["scripts/dev-setup.ps1", "-Check"], ROOT, "")
     assert code == 0 and "[missing] git" in out, out
@@ -921,6 +967,7 @@ def test_without_git_this_repos_check_and_run_still_work():
 
 @pytest.mark.skipif(not WINDOWS, reason="the PowerShell dev-setup on Windows")
 def test_the_powershell_check_reports_the_sign_in(scaffold_root, tmp_path):
+    """Implements: TC-344"""
     shell = _powershell()
 
     def check(**env):
@@ -967,7 +1014,10 @@ def test_the_powershell_check_reports_the_sign_in(scaffold_root, tmp_path):
 @pytest.mark.skipif(WINDOWS, reason="a consent prompt needs a pseudo-terminal")
 def test_a_denial_changes_no_configuration_or_credential(scaffold_root, tmp_path):
     """At a terminal every offer is declined: the hooks stay off, the token
-    variable and git configuration are untouched."""
+    variable and git configuration are untouched.
+
+    Implements: TC-345
+    """
     import pty
 
     sh = _sh()
@@ -1052,7 +1102,10 @@ def test_at_a_terminal_each_missing_item_is_offered_consent_first(
     scaffold_root, tmp_path
 ):
     """The bare run's check, at a terminal: a missing role is reported, then
-    its install is offered, and the install runs only on a yes."""
+    its install is offered, and the install runs only on a yes.
+
+    Implements: TC-343
+    """
     root = tmp_path / "repo"
     (root / "scripts").mkdir(parents=True)
     marker = tmp_path / "installed"
@@ -1080,7 +1133,10 @@ def test_the_standalone_check_at_a_terminal_offers_and_writes_nothing(
 ):
     """--check, even at a terminal with the sign-in step and the hooks both
     offerable: no prompt, no change to the repository or its git config, no
-    `claude` run, exit 0. (The interpreter's __pycache__ is not the report's.)"""
+    `claude` run, exit 0. (The interpreter's __pycache__ is not the report's.)
+
+    Implements: TC-343
+    """
     example = scaffold_root / ".claude" / "settings.json.example"
     example.parent.mkdir(exist_ok=True)
     shutil.copyfile(KIT / "agent-hooks" / "claude.settings.json", example)
@@ -1207,7 +1263,10 @@ def test_at_a_windows_console_the_missing_runtime_is_offered_consent_first(
     console and handed no interpreter, offers the missing runtime
     consent-first through the install it declares; a decline runs nothing, an
     accept runs it, and either way the result is still the handed
-    interpreter's (exit 1, the step to run again)."""
+    interpreter's (exit 1, the step to run again).
+
+    Implements: TC-343
+    """
     root = tmp_path / "repo"
     (root / "scripts").mkdir(parents=True)
     marker = tmp_path / "runtime-installed"
@@ -1248,7 +1307,10 @@ def test_at_a_windows_console_install_offers_the_missing_runtime(tmp_path):
     provisioner it declares, then searches again. Real interpreters only: a
     real Python below the floor is the only one on PATH. A decline runs
     nothing, an accept runs the provisioner, and with still no 3.11+ found
-    either way ends with the step (exit 1)."""
+    either way ends with the step (exit 1).
+
+    Implements: TC-350
+    """
     older = sub_floor_interpreter()
     if older is None:
         pytest.skip("no Python below 3.11 is installed on this host")
@@ -1280,7 +1342,10 @@ def test_at_a_windows_console_install_offers_the_missing_runtime(tmp_path):
 def test_this_repos_readiness_report_names_the_hooks_opt_in(family):
     """WI-880 (owner ruling 2026-10-10): this repository commits no guard
     hooks, so a machine runs them only after the machine-local opt-in, and
-    dev-setup's readiness report says which state this machine is in."""
+    dev-setup's readiness report says which state this machine is in.
+
+    Implements: TC-345
+    """
     if family == "sh":
         argv = [_sh(), "scripts/dev-setup.sh", "--check"]
     elif WINDOWS:
@@ -1324,7 +1389,10 @@ def _with_fake_claude(tmp_path):
 def test_the_hooks_command_reports_each_state_and_writes_nothing(tmp_path):
     """The read-only report, as a subprocess: absent (no file is created),
     on, occupied (exit 1, the event named on stderr) and none; the file's
-    bytes never change across report runs."""
+    bytes never change across report runs.
+
+    Implements: TC-345
+    """
     root = tmp_path / "repo"
     (root / ".claude").mkdir(parents=True)
     example = root / ".claude" / "settings.json.example"
@@ -1451,7 +1519,10 @@ def test_a_failing_or_silent_hooks_reader_is_reported_missing_never_none(
     """A hooks reader that exits non-zero, or exits 0 printing nothing, is one
     `[missing]` line naming its error (or that it printed nothing), counted
     with the other missing components where the copy counts them; it is never
-    read as none, which prints no line."""
+    read as none, which prints no line.
+
+    Implements: TC-345
+    """
     out = _check_copy(scaffold_root, tmp_path, copy, FAILING_READERS[reader])
     lines = [x for x in out.splitlines() if "coordinator Claude Code hooks" in x]
     assert len(lines) == 1, out
@@ -1518,7 +1589,10 @@ def test_at_a_terminal_a_yes_installs_every_guard_group_keeping_other_keys(
     scaffold_root, tmp_path, before
 ):
     """The bare run's offer at a terminal: a yes writes every guard group,
-    bound to the handed interpreter, keeping every other key."""
+    bound to the handed interpreter, keeping every other key.
+
+    Implements: TC-345
+    """
     root = tmp_path / "scaffold"
     local = _hooks_scaffold(scaffold_root, root, ABSENT_SETTINGS[before])
     code, out = _at_a_terminal(
@@ -1624,7 +1698,10 @@ def test_at_a_real_terminal_the_take_shows_its_question_before_the_answer(tmp_pa
 def test_at_a_windows_console_a_yes_installs_every_guard_group_keeping_other_keys(
     scaffold_root, tmp_path, family, before
 ):
-    """The same offer through each Windows dev-setup at a real console."""
+    """The same offer through each Windows dev-setup at a real console.
+
+    Implements: TC-345
+    """
     script, local, path = _console_tree(
         scaffold_root, tmp_path, family, ABSENT_SETTINGS[before]
     )
@@ -1685,7 +1762,10 @@ def test_at_a_windows_console_a_failed_install_names_the_file_error_and_fix(
     scaffold_root, tmp_path, family
 ):
     """A yes whose write fails (a read-only settings file) leaves the file as
-    it was, and the offer's `[missing]` line says what to do."""
+    it was, and the offer's `[missing]` line says what to do.
+
+    Implements: TC-345
+    """
     import stat
 
     script, local, path = _console_tree(
@@ -1711,7 +1791,10 @@ def test_at_a_real_terminal_a_failed_install_names_the_file_error_and_fix(
 ):
     """The sh offer, with a yes whose write fails (the settings folder is
     read-only): the file keeps its bytes and the `[missing]` line says what
-    to do."""
+    to do.
+
+    Implements: TC-345
+    """
     import stat
 
     root = tmp_path / "scaffold"
@@ -1766,6 +1849,7 @@ def _assert_taken(root, local, answer, code, out):
 @pytest.mark.skipif(WINDOWS, reason="a consent prompt needs a pseudo-terminal")
 @pytest.mark.parametrize("answer", ["y", "n"])
 def test_the_cli_take_at_a_pseudo_terminal_asks_and_installs(tmp_path, answer):
+    """Implements: TC-345"""
     import pty
 
     root, local = _take_root(tmp_path, answer)
@@ -1792,6 +1876,7 @@ def test_the_cli_take_at_a_pseudo_terminal_asks_and_installs(tmp_path, answer):
 @pytest.mark.skipif(not WINDOWS, reason="a real Windows console")
 @pytest.mark.parametrize("answer", ["y", "n"])
 def test_the_cli_take_at_a_windows_console_asks_and_installs(tmp_path, answer):
+    """Implements: TC-345"""
     root, local = _take_root(tmp_path, answer)
     args = ["'{}'".format(SCRIPTS / "coordinator_guard.py"), "--root"]
     args += ["'{}'".format(root), "take", "--session", TAKER]
@@ -1804,7 +1889,10 @@ def test_the_cli_take_at_a_windows_console_asks_and_installs(tmp_path, answer):
 @pytest.mark.skipif(WINDOWS, reason="a consent prompt needs a pseudo-terminal")
 def test_an_on_file_is_unchanged_and_not_offered_at_a_terminal(scaffold_root, tmp_path):
     """A file already holding the guard's groups by name is never offered,
-    asked about or rewritten."""
+    asked about or rewritten.
+
+    Implements: TC-345
+    """
     root = tmp_path / "scaffold"
     local = _hooks_scaffold(scaffold_root, root)
     guard = load_script("coordinator_guard")
@@ -1852,7 +1940,10 @@ OCCUPIED_SHAPES = ["mixed", "second group", "missing event", "unparseable"]
 def test_an_occupied_slot_is_reported_and_never_offered(scaffold_root, tmp_path, shape):
     """Occupied: the check reports one `[missing]` naming the events and
     commands in the way and the fix, writes nothing and goes on to its later
-    sections; at a terminal, nothing is offered."""
+    sections; at a terminal, nothing is offered.
+
+    Implements: TC-345
+    """
     root = tmp_path / "scaffold"
     text, named = _occupied(shape)
     local = _hooks_scaffold(scaffold_root, root, text)
@@ -1897,6 +1988,7 @@ def test_an_occupied_slot_is_reported_and_never_offered(scaffold_root, tmp_path,
 
 
 def test_this_repos_run_shows_its_menu_after_the_check():
+    """Implements: TC-342"""
     if WINDOWS:
         _powershell()
         argv = ["cmd", "/d", "/c", str(ROOT / "run.cmd")]

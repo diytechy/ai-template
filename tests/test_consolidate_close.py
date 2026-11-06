@@ -251,7 +251,10 @@ def _merge(root, branch):
 def test_the_census_mints_one_row_and_refuses_a_second_while_it_is_pending(tmp_path):
     """Plan §4's first two measurements, on a real tree: a queue with an
     overlapping cluster mints EXACTLY ONE `consolidate` row, and running the
-    census again on that same queue mints nothing."""
+    census again on that same queue mints nothing.
+
+    Implements: TC-254
+    """
     root = cluster_repo(tmp_path)
     minted, refusal = intake.mint_consolidation(root, busy=False)
     assert refusal is None, refusal
@@ -293,7 +296,10 @@ def test_a_consolidate_verdict_absorbs_its_cluster_end_to_end(tmp_path):
     """THE WHOLE ARC. Mint over three queued rows, claim, record a CONSOLIDATE
     verdict, close, merge, mint — then assert the queue ended where the plan
     says: three rows in `restructured/` naming the successor, one successor
-    superseding all three, and the census silent afterwards."""
+    superseding all three, and the census silent afterwards.
+
+    Implements: TC-254
+    """
     root = cluster_repo(tmp_path)
     queued = root / "docs" / "work" / "queued"
     originals = {
@@ -359,7 +365,10 @@ def test_a_consolidate_verdict_absorbs_its_cluster_end_to_end(tmp_path):
 def test_the_close_refuses_by_name_when_an_absorbed_row_was_claimed(tmp_path):
     """The census guard makes this a race only a hand claim can produce (plan
     §1.5) — and when it happens the close refuses rather than archiving a row a
-    lane is building."""
+    lane is building.
+
+    Implements: TC-254
+    """
     root = cluster_repo(tmp_path)
     minted, _ = intake.mint_consolidation(root, busy=False)
     judge_id = minted[0][0]
@@ -373,7 +382,10 @@ def test_the_close_refuses_by_name_when_an_absorbed_row_was_claimed(tmp_path):
 
 
 def test_queue_with_edge_writes_the_hard_needs_edge(tmp_path):
-    """The reader the retired conflict brief promised and never got."""
+    """The reader the retired conflict brief promised and never got.
+
+    Implements: TC-254
+    """
     root = cluster_repo(tmp_path)
     minted, _ = intake.mint_consolidation(root, busy=False)
     judge_id = minted[0][0]
@@ -398,7 +410,10 @@ def test_queue_with_edge_writes_the_hard_needs_edge(tmp_path):
 def test_several_edges_on_one_waiter_all_land_in_its_needs(tmp_path):
     """WI-866 (docs/decisions/wi-864.toml D-003): a verdict naming several
     edges on ONE waiter used to keep only the last, because each planned write
-    was computed from the waiter's pre-write text. Every blocker must land."""
+    was computed from the waiter's pre-write text. Every blocker must land.
+
+    Implements: TC-254
+    """
     root = cluster_repo(tmp_path)
     minted, _ = intake.mint_consolidation(root, busy=False)
     judge_id = minted[0][0]
@@ -420,6 +435,7 @@ def test_several_edges_on_one_waiter_all_land_in_its_needs(tmp_path):
 
 
 def test_return_to_draft_moves_the_row_back_with_the_finding_quoted(tmp_path):
+    """Implements: TC-254"""
     root = cluster_repo(tmp_path)
     minted, _ = intake.mint_consolidation(root, busy=False)
     judge_id = minted[0][0]
@@ -446,7 +462,10 @@ def test_return_to_draft_moves_the_row_back_with_the_finding_quoted(tmp_path):
 def test_a_link_one_close_move_redirects_survives_the_later_writes(tmp_path):
     """WI-866's sweep: a return's move relinks inbound links in EVERY markdown
     file, so a later write composed from the pre-move text put the stale link
-    back - in the second returned row and in the adjudication spec itself."""
+    back - in the second returned row and in the adjudication spec itself.
+
+    Implements: TC-254
+    """
     root = cluster_repo(tmp_path)
     w403 = root / "docs" / "work" / "queued" / "WI-403-wi-403.md"
     w403.write_text(
@@ -602,7 +621,10 @@ def test_a_consolidation_verdict_that_adopts_refuses_the_close(tmp_path):
     """WI-969: an absorption reconciles against drafts' `supersedes` only, so a
     consolidation's successor is drafted, never adopted, and the arm refuses
     an adoption before its first write. New behaviour: trunk refuses the block
-    as an unknown draft key, not by this reason."""
+    as an unknown draft key, not by this reason.
+
+    Implements: TC-254
+    """
     root = cluster_repo(tmp_path)
     _judge_id, branch = _minted_judge(root)
     adopting = DISPOSITIONS + '\n```toml\nadopts = "WI-409"\n```\n'
@@ -621,7 +643,10 @@ def test_a_row_claimed_between_close_and_merge_refuses_the_whole_mint(tmp_path):
     """`archive_absorbed` used to SKIP it: two `restructured` lines instead of
     three, no message about the third, and a successor whose `Supersedes` named
     a row still `active` on its own lane — two live rows covering one scope,
-    with the ABSENCE of one line among three as the only signal."""
+    with the ABSENCE of one line among three as the only signal.
+
+    Implements: TC-254
+    """
     root = cluster_repo(tmp_path)
     judge_id, branch = _minted_judge(root)
     _record_verdict(root, branch, DISPOSITIONS + VERDICT, machine=MACHINE)
@@ -670,7 +695,10 @@ def test_a_refused_edge_leaves_the_lane_tree_byte_identical(tmp_path):
     not parse (an unterminated `needs = [` line): `consolidate.edged_text`
     answers None on a frontmatter it cannot read, which is the refusal this
     drives. A row that does not parse on trunk never reaches the cluster, so
-    the close would refuse it earlier, on membership."""
+    the close would refuse it earlier, on membership.
+
+    Implements: TC-254
+    """
     root = cluster_repo(
         tmp_path, extra_rows=[("queued/WI-404-no-needs.md", NO_NEEDS_SPEC)]
     )
@@ -713,7 +741,10 @@ def test_queue_with_edge_gives_a_waiter_with_no_needs_line_one(tmp_path):
     """A waiter filed without a `needs` line, as a hand-filed row commonly is,
     is edged rather than refusing the whole verdict: the close succeeds, the
     waiter stays queued with `needs = ["WI-401"]` inside its frontmatter, and
-    the rest of its spec is byte-identical."""
+    the rest of its spec is byte-identical.
+
+    Implements: TC-254
+    """
     root = cluster_repo(
         tmp_path, extra_rows=[("queued/WI-404-no-needs.md", NO_NEEDS_SPEC)]
     )
@@ -747,7 +778,10 @@ def test_queue_with_edge_gives_a_waiter_with_no_needs_line_one(tmp_path):
 
 def test_a_refused_return_leaves_the_lane_tree_byte_identical(tmp_path):
     """The same preflight, over the other loop: a `returns` list whose second
-    target is not a queued spec writes nothing at all."""
+    target is not a queued spec writes nothing at all.
+
+    Implements: TC-254
+    """
     root = cluster_repo(tmp_path)
     _judge_id, branch = _minted_judge(root)
     _record_verdict(

@@ -141,6 +141,7 @@ def unbuild(lane):
 def test_a_build_without_a_pass_record_is_refused_at_the_hook_and_the_landing(
     tmp_path,
 ):
+    """Implements: TC-367"""
     trunk, lane = make_lane(tmp_path)
     (line,) = build(lane)
     assert WI in line and "src/app.py" in line and "no plan at" in line
@@ -155,6 +156,7 @@ def test_a_build_without_a_pass_record_is_refused_at_the_hook_and_the_landing(
 
 
 def test_a_build_after_its_pass_record_is_not_refused_anywhere(tmp_path):
+    """Implements: TC-367"""
     trunk, lane = make_lane(tmp_path)
     plan_and_pass(lane)
     assert build(lane) == []
@@ -176,6 +178,7 @@ _EARLIER_RUNGS = (
 
 
 def test_the_merge_slot_asks_the_gate_of_each_lane_commit(tmp_path, monkeypatch):
+    """Implements: TC-367"""
     # Fable REVIEW-B F3 (round 1): drive the slot's ladder itself, its other
     # rungs passing, rather than reading its source.
     trunk, lane = make_lane(tmp_path)
@@ -197,6 +200,7 @@ def test_the_merge_slot_asks_the_gate_of_each_lane_commit(tmp_path, monkeypatch)
 
 @pytest.mark.parametrize("raw", ["false", "0", "[]", "{}"])
 def test_a_non_string_planmode_holds_at_the_hook_and_the_landing(tmp_path, raw):
+    """Implements: TC-367"""
     # Sol REVIEW-A F1 (round 1): these failed open as the ungated empty value.
     trunk = make_trunk(tmp_path)
     spec = (trunk / SPEC_REL).read_text(encoding="utf-8")
@@ -213,6 +217,7 @@ def test_a_non_string_planmode_holds_at_the_hook_and_the_landing(tmp_path, raw):
 
 @pytest.mark.parametrize("mode, held", [("single", True), ("dual", False)])
 def test_a_squash_no_local_branch_contains_is_held_by_name(tmp_path, mode, held):
+    """Implements: TC-367"""
     # Fable REVIEW-B F1 (round 1): a squashed tip no local branch contains
     # (its branch deleted) was judged by nothing at the hook.
     trunk, lane = make_lane(tmp_path, mode)
@@ -233,6 +238,7 @@ def test_a_squash_no_local_branch_contains_is_held_by_name(tmp_path, mode, held)
 def test_a_plan_edited_after_its_record_is_refused_until_a_new_record_binds_it(
     tmp_path,
 ):
+    """Implements: TC-367"""
     _trunk, lane = make_lane(tmp_path)
     plan_and_pass(lane)
     edited = PLAN.replace("Release it", "Release it later")
@@ -253,6 +259,7 @@ def test_a_plan_edited_after_its_record_is_refused_until_a_new_record_binds_it(
 
 
 def test_a_done_when_edit_unbinds_and_a_tick_does_not(tmp_path):
+    """Implements: TC-367"""
     _trunk, lane = make_lane(tmp_path)
     plan_and_pass(lane)
     spec = (lane / SPEC_REL).read_text(encoding="utf-8")
@@ -267,6 +274,7 @@ def test_a_done_when_edit_unbinds_and_a_tick_does_not(tmp_path):
 
 
 def test_absent_unreadable_and_malformed_records_hold(tmp_path, monkeypatch):
+    """Implements: TC-367"""
     _trunk, lane = make_lane(tmp_path)
     write(lane, pp.plan_path(WI), PLAN)
     commit(lane, "plan")
@@ -291,6 +299,7 @@ def test_absent_unreadable_and_malformed_records_hold(tmp_path, monkeypatch):
 
 
 def test_a_record_naming_another_row_or_digest_holds(tmp_path):
+    """Implements: TC-367"""
     _trunk, lane = make_lane(tmp_path)
     plan_and_pass(lane)
     record = (lane / pp.record_path(WI)).read_text(encoding="utf-8")
@@ -313,6 +322,7 @@ def test_a_record_naming_another_row_or_digest_holds(tmp_path):
 def test_a_pass_record_committed_with_its_critique_is_refused_and_the_two_commit_order_passes(
     tmp_path,
 ):
+    """Implements: TC-367"""
     _trunk, lane = make_lane(tmp_path)
     write(lane, pp.plan_path(WI), PLAN)
     sha = commit(lane, "plan")
@@ -335,6 +345,7 @@ def test_a_pass_record_committed_with_its_critique_is_refused_and_the_two_commit
 
 
 def test_a_pass_record_whose_digests_its_parent_does_not_support_is_refused(tmp_path):
+    """Implements: TC-367"""
     _trunk, lane = make_lane(tmp_path)
     write(lane, pp.plan_path(WI), PLAN)
     sha = commit(lane, "plan")
@@ -353,6 +364,7 @@ def test_a_pass_record_whose_digests_its_parent_does_not_support_is_refused(tmp_
 
 
 def test_a_pass_record_whose_critique_reviewed_another_plan_is_refused(tmp_path):
+    """Implements: TC-367"""
     _trunk, lane = make_lane(tmp_path)
     write(lane, pp.plan_path(WI), PLAN)
     old = commit(lane, "plan")
@@ -375,6 +387,7 @@ def test_a_pass_record_whose_critique_reviewed_another_plan_is_refused(tmp_path)
 
 
 def test_a_pass_record_whose_critique_reviewed_another_done_when_is_refused(tmp_path):
+    """Implements: TC-367"""
     # Opus REVIEW-B F2 (round 2): the Done-when-digest arm, at the pass form
     # and at the pass-record commit, beside the plan-bytes arm above.
     _trunk, lane = make_lane(tmp_path)
@@ -413,6 +426,7 @@ def hook_floor():
 
 
 def test_the_shipped_hooks_floor_refuses_an_unplanned_build(tmp_path):
+    """Implements: TC-367"""
     # Sol REVIEW-A F1 (round 2): the step was registered but the shipped
     # hook never selected it, so an unplanned build passed the hook.
     _trunk, lane = make_lane(tmp_path)
@@ -438,12 +452,14 @@ def test_the_shipped_hooks_floor_refuses_an_unplanned_build(tmp_path):
     ],
 )
 def test_each_record_home_passes_before_any_record(tmp_path, rel):
+    """Implements: TC-367"""
     _trunk, lane = make_lane(tmp_path)
     write(lane, rel, "a record\n")
     assert staged(lane) == []
 
 
 def test_a_close_of_the_row_passes_before_any_record(tmp_path):
+    """Implements: TC-367"""
     spec_move = load_script("spec_move")
     station_report = "docs/handbacks/WI-950-wi-950.md"
     linker = (
@@ -462,6 +478,7 @@ def test_a_close_of_the_row_passes_before_any_record(tmp_path):
 
 
 def test_a_refresh_merge_of_a_partial_closed_lane_passes(tmp_path):
+    """Implements: TC-367"""
     # Opus REVIEW-B F1 (round 2): the station refresh merges trunk in,
     # compiles the log fragments into docs/log.md and regenerates the views
     # trunk_step lists; those are the merge's own changes, and a lane closed
@@ -491,6 +508,7 @@ def test_a_refresh_merge_of_a_partial_closed_lane_passes(tmp_path):
 
 
 def test_a_rebased_lanes_record_still_binds(tmp_path):
+    """Implements: TC-367"""
     trunk, lane = make_lane(tmp_path)
     plan_and_pass(lane)
     write(trunk, "other.txt", "trunk moved\n")
@@ -502,6 +520,7 @@ def test_a_rebased_lanes_record_still_binds(tmp_path):
 
 
 def test_a_merge_is_judged_by_what_neither_parent_carried(tmp_path):
+    """Implements: TC-367"""
     trunk, lane = make_lane(tmp_path)
     write(lane, pp.plan_path(WI), PLAN)
     commit(lane, "plan")
@@ -518,6 +537,7 @@ def test_a_merge_is_judged_by_what_neither_parent_carried(tmp_path):
 
 
 def test_a_lane_editing_its_own_planmode_is_still_held(tmp_path):
+    """Implements: TC-367"""
     _trunk, lane = make_lane(tmp_path)
     spec = (lane / SPEC_REL).read_text(encoding="utf-8")
     write(lane, SPEC_REL, spec.replace('planmode = "single"', 'planmode = "none"'))
@@ -527,6 +547,7 @@ def test_a_lane_editing_its_own_planmode_is_still_held(tmp_path):
 
 
 def test_another_lanes_single_claim_copy_does_not_hold_this_lane(tmp_path):
+    """Implements: TC-367"""
     other = (
         "docs/work/active/wi-951/WI-951-other.md",
         SPEC.format(mode="single").replace("WI-950", "WI-951"),
@@ -547,6 +568,7 @@ def test_another_lanes_single_claim_copy_does_not_hold_this_lane(tmp_path):
     ],
 )
 def test_the_planmode_set_is_closed(tmp_path, mode, held):
+    """Implements: TC-367"""
     trunk = make_trunk(tmp_path, mode)
     if mode == "absent":
         spec = (trunk / SPEC_REL).read_text(encoding="utf-8")
@@ -560,6 +582,7 @@ def test_the_planmode_set_is_closed(tmp_path, mode, held):
 
 
 def test_trunk_commits_and_a_lane_with_no_single_row_are_not_judged(tmp_path):
+    """Implements: TC-367"""
     trunk, _lane = make_lane(tmp_path / "single")
     assert build(trunk) == []
     _trunk, lane = make_lane(tmp_path / "dual", mode="dual")
@@ -572,6 +595,7 @@ def test_trunk_commits_and_a_lane_with_no_single_row_are_not_judged(tmp_path):
 def test_a_claimed_single_lane_with_the_trunk_undeclared_gets_one_hold_naming_it(
     tmp_path,
 ):
+    """Implements: TC-367"""
     # The lane's claim base needs the trunk: with its line gone, the build is
     # held by one line naming the declaration, not judged against a guess.
     _trunk, lane = make_lane(tmp_path)
@@ -585,6 +609,7 @@ def test_a_claimed_single_lane_with_the_trunk_undeclared_gets_one_hold_naming_it
 def test_a_branch_holding_no_claim_folder_is_judged_at_head_with_the_trunk_undeclared(
     tmp_path,
 ):
+    """Implements: TC-367"""
     # A branch whose HEAD holds no claim folder needs no trunk: it is judged
     # at HEAD, and the answer equals the one the declared trunk gives.
     trunk, _lane = make_lane(tmp_path)
@@ -616,7 +641,10 @@ def _spy_shared_walk(monkeypatch):
 
 def test_a_squash_landing_is_judged_through_the_shared_walk(tmp_path, monkeypatch):
     """An unbound build squashed onto trunk is held through `kitlib.git`'s
-    walk over the topo-ordered HEAD..tip, the lane's own rider its one rider."""
+    walk over the topo-ordered HEAD..tip, the lane's own rider its one rider.
+
+    Implements: TC-367
+    """
     trunk, lane = make_lane(tmp_path)
     build(lane)
     commit(lane, "build")

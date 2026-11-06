@@ -1,5 +1,8 @@
 """check.py end-to-end: the documented flow must be green on a minimal project,
-and the tier/coverage wiring must not silently skip tests."""
+and the tier/coverage wiring must not silently skip tests.
+
+Implements: TC-006, TC-237
+"""
 
 import os
 

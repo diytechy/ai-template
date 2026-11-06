@@ -1,4 +1,7 @@
-"""A sensor follows relevant changes even before its stage rung."""
+"""A sensor follows relevant changes even before its stage rung.
+
+Implements: TC-304
+"""
 
 import configparser
 from pathlib import Path
@@ -101,6 +104,7 @@ def test_lane_range_or_unknown(monkeypatch, base, raw, expected):
 def test_an_undeclared_trunk_reads_as_unknown_and_runs_every_opted_in_step(
     monkeypatch,
 ):
+    """Implements: TC-369"""
     # On a claimed lane whose trunk is undeclared, the lane's change cannot be
     # read, so it is unknown: a path-triggered step runs below its rung rather
     # than being dropped.

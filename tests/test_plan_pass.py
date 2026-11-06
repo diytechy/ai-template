@@ -50,6 +50,7 @@ DELTA_QUESTION = (
 
 
 def test_a_record_renders_and_reads_back_through_one_grammar():
+    """Implements: TC-367"""
     text = pp.render(FIELDS)
     data, why = pp.parse(text)
     assert why is None and data == FIELDS
@@ -69,6 +70,7 @@ def test_a_record_renders_and_reads_back_through_one_grammar():
     ],
 )
 def test_a_record_outside_its_grammar_is_malformed_and_never_written(change):
+    """Implements: TC-367"""
     data, why = pp.parse(pp.render(FIELDS).replace("\n", "\n", 1) + "")
     assert why is None and data
     fields = {**FIELDS, **change}
@@ -80,6 +82,7 @@ def test_a_record_outside_its_grammar_is_malformed_and_never_written(change):
 
 
 def test_a_partial_or_extra_keyed_record_is_malformed():
+    """Implements: TC-367"""
     whole = pp.render(FIELDS)
     assert pp.parse(whole[: len(whole) // 2])[0] is None
     assert pp.parse(whole + 'extra = "x"\n')[0] is None
@@ -98,18 +101,21 @@ def test_a_partial_or_extra_keyed_record_is_malformed():
     ],
 )
 def test_the_delta_line_is_one_typed_line_from_a_closed_set(text, value):
+    """Implements: TC-367"""
     found, why = pp.delta(text)
     assert found == value
     assert (why is None) == (value is not None)
 
 
 def test_a_critique_round_is_read_only_under_its_own_plan_home():
+    """Implements: TC-367"""
     assert pp.critique_round(WI, "docs/plans/WI-950/critique-2.md") == 2
     assert pp.critique_round(WI, "docs/plans/WI-951/critique-2.md") is None
     assert pp.critique_round(WI, "docs/plans/WI-950/plan.md") is None
 
 
 def test_a_critique_round_past_the_cap_is_no_critique():
+    """Implements: TC-367"""
     # Fable REVIEW-B F2 (round 1): the grammar admitted critique-3..9.
     beyond = "docs/plans/WI-950/critique-{}.md".format(pp.MAX_CRITIQUES + 1)
     assert pp.critique_round(WI, beyond) is None
@@ -119,6 +125,7 @@ def test_a_critique_round_past_the_cap_is_no_critique():
 
 @pytest.mark.parametrize("raw", ["false", "0", "[]", "{}", "true"])
 def test_a_non_string_planmode_is_outside_the_set_and_named(raw):
+    """Implements: TC-367"""
     # Sol REVIEW-A F1 (round 1): a raw TOML false, 0, [] or {} read as absent.
     text = SPEC.replace('planmode = "single"', "planmode = " + raw)
     mode, why = pp.planmode(text, "spec.md")
@@ -150,6 +157,7 @@ CRITIQUE = (
 def test_the_planner_brief_carries_the_clauses_the_contract_and_the_delta_question(
     tmp_path,
 ):
+    """Implements: TC-333"""
     root = _lane(tmp_path)
     text = rb.render_plan(root, WI, "scratch/WI-950-plan.md")
     assert "- D1: The gate holds the build." in text
@@ -166,6 +174,7 @@ def test_the_planner_brief_carries_the_clauses_the_contract_and_the_delta_questi
 def test_the_revision_brief_asks_the_delta_question_again_and_labels_its_inputs(
     tmp_path,
 ):
+    """Implements: TC-333"""
     root = _lane(tmp_path, plan="| Plan-WI |\nDELTA: none\n", critique=CRITIQUE)
     text = rb.render_plan(root, WI, "scratch/WI-950-plan-r2.md", revise=True)
     flat = " ".join(text.split())
@@ -188,6 +197,7 @@ PLANNER_INPUTS = (
 
 
 def test_the_planner_brief_names_each_input_by_its_registry(tmp_path):
+    """Implements: TC-333"""
     root = _lane(tmp_path)
     held = root / "docs" / "requirements" / "interfaces.toml"
     held.parent.mkdir(parents=True, exist_ok=True)
@@ -206,6 +216,7 @@ def test_the_planner_brief_names_each_input_by_its_registry(tmp_path):
 
 @pytest.mark.parametrize("missing", ["spec", "plan", "critique"])
 def test_the_planner_brief_refuses_a_missing_input(tmp_path, missing):
+    """Implements: TC-333"""
     if missing == "spec":
         root = tmp_path
     elif missing == "plan":
@@ -217,6 +228,7 @@ def test_the_planner_brief_refuses_a_missing_input(tmp_path, missing):
 
 
 def test_the_planner_brief_refuses_an_unfilled_slot(tmp_path, monkeypatch):
+    """Implements: TC-333"""
     root = _lane(tmp_path)
     real = pr.load
     monkeypatch.setattr(
@@ -229,6 +241,7 @@ def test_the_planner_brief_refuses_an_unfilled_slot(tmp_path, monkeypatch):
 
 
 def test_the_command_writes_nothing_when_the_brief_refuses(tmp_path):
+    """Implements: TC-333"""
     out = tmp_path / "out" / "brief.md"
     argv = ["plan", "--root", str(tmp_path), "--wi", WI]
     assert rb.main(argv + ["--scratch", str(tmp_path), "--out", str(out)]) == 2
@@ -242,7 +255,10 @@ def test_the_shipped_planner_template_names_the_architecture_skill_by_its_agent_
 
     Adequacy: a line naming only one agent's directory sends the other agents'
     planners to a file their scaffold does not have; a line between "two
-    outcomes:" and its bullets opens that list with an unrelated sentence."""
+    outcomes:" and its bullets opens that list with an unrelated sentence.
+
+    Implements: TC-333
+    """
     text = pr.load(pr.PLAN_SINGLE)
     raw = (KIT / "prompts" / "plan-single.template.md").read_text(encoding="utf-8")
     assert "architecture-decomposition/SKILL.md" in raw
@@ -283,5 +299,6 @@ def test_the_plan_rubric_judges_the_delta_line_against_the_shared_rubric():
 
 
 def test_the_planner_template_is_in_the_generated_catalogue():
+    """Implements: TC-333"""
     catalog = (KIT / "prompts" / "CATALOG.md").read_text(encoding="utf-8")
     assert "`PLAN-SINGLE`" in catalog and "plan-single.template.md" in catalog

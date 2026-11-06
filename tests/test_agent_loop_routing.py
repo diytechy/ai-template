@@ -271,6 +271,7 @@ def test_routingstate_schedule_critique_new_scope_resets_same_scope_preserves():
 
 
 def test_routingstate_schedule_review_round_by_policy():
+    """Implements: TC-082"""
     # A FRESH round is the declared span, which its caller names explicitly:
     # rp 1 queues REVIEW-A only, rp 2 adds REVIEW-B, and both clear
     # round_verdicts.
@@ -554,7 +555,10 @@ def test_a_probe_from_the_primary_checkout_spools_its_log_and_commits_nothing(
 ):
     """A loop run on the primary checkout probes from there, and the primary
     is never a lane (WI-960): the probe's log goes to the primary's spool,
-    and HEAD and the tracked tree are unchanged."""
+    and HEAD and the tracked tree are unchanged.
+
+    Implements: TC-384
+    """
     claimed_lane(tmp_path)
     primary = tmp_path / "primary"
     ctx, al = _probe_ctx(primary, [("A", "FA", "ok")])

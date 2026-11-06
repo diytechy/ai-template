@@ -1,5 +1,8 @@
 """check_flows.py: the authored Runtime-flows section is present, diagrammed,
-and cites only real requirement ids (process.md §3 'Design-time runtime flows')."""
+and cites only real requirement ids (process.md §3 'Design-time runtime flows').
+
+Implements: TC-013
+"""
 
 from conftest import make_minimal_project, run_py
 

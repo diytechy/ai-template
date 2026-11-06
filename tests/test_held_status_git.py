@@ -281,6 +281,7 @@ def _reattest(named=True):
 
 
 def test_a_lane_approving_a_held_SN_with_its_copy_is_refused(tmp_path, monkeypatch):
+    """Implements: TC-241"""
     # Backed by an accepted APPROVE verdict, so the approval-act rung admits
     # it: the gap is that nothing held the rung.
     root = _trunk(tmp_path, monkeypatch)
@@ -299,6 +300,7 @@ def _rider_lines(root, commit):
 def test_a_lane_flipping_a_held_rows_status_without_its_copy_is_refused(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-241"""
     # The slot's copy check refuses this lane before the walk; the rider, run
     # on the lane commit, refuses it too, by row, rung and dial.
     root = _trunk(tmp_path, monkeypatch)
@@ -310,6 +312,7 @@ def test_a_lane_flipping_a_held_rows_status_without_its_copy_is_refused(
 
 
 def test_loop_coordinator_and_reclaimed_lanes_are_judged_alike(tmp_path, monkeypatch):
+    """Implements: TC-241"""
     for kind in ("loop", "ordinary", "reclaimed"):
         root = _trunk(tmp_path / kind, monkeypatch)
         steps = [("WI-401: approve SN-001", _approve_sn1_with_its_copy)]
@@ -326,6 +329,7 @@ def _clarity_lane(home, monkeypatch, *steps, needs=APPROVED):
 def test_a_held_CLARITY_reattestation_bound_to_the_exact_text_lands(
     tmp_path, monkeypatch, named
 ):
+    """Implements: TC-241"""
     # Naming the verdict is for audit only: both acts land.
     _the_rule_rides_the_walk()
     root = _clarity_lane(
@@ -341,6 +345,7 @@ def test_a_held_CLARITY_reattestation_bound_to_the_exact_text_lands(
 def test_held_text_changed_after_its_CLARITY_verdict_is_refused_at_the_slot(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-241"""
     root = _clarity_lane(
         tmp_path,
         monkeypatch,
@@ -353,6 +358,7 @@ def test_held_text_changed_after_its_CLARITY_verdict_is_refused_at_the_slot(
 
 
 def test_a_binding_with_no_identity_cell_is_refused(tmp_path, monkeypatch):
+    """Implements: TC-241, TC-278"""
     # A verdict sat before the identity existed binds no text: it is re-sat.
     root = _clarity_lane(
         tmp_path,
@@ -365,6 +371,7 @@ def test_a_binding_with_no_identity_cell_is_refused(tmp_path, monkeypatch):
 
 
 def test_a_held_MEANING_BLESS_reattestation_is_refused(tmp_path, monkeypatch):
+    """Implements: TC-241, TC-278"""
     # A blessing is a released rung's act; on a held rung only CLARITY is.
     root = _clarity_lane(
         tmp_path,
@@ -415,7 +422,10 @@ def test_an_unaccepted_or_unruled_CLARITY_binding_is_no_exception(
     """Characterization: already-correct behaviour of the bound-CLARITY
     exception (the case's witness names the wrong implementation it would
     catch). The copy claim on SN-001 is refused by the lane rule, naming the
-    row, its rung and the dial."""
+    row, its rung and the dial.
+
+    Implements: TC-241, TC-278
+    """
     text, outcome = _UNEXCEPTED[case]
 
     def verdict(root):
@@ -443,6 +453,8 @@ def test_an_unaccepted_or_unruled_CLARITY_binding_is_no_exception(
 
 
 def test_a_held_retirement_is_refused(tmp_path, monkeypatch):
+    """Implements: TC-241, TC-278"""
+
     def retire(root):
         rows = dict(APPROVED)
         del rows["SN-001"]
@@ -464,6 +476,7 @@ def test_a_held_retirement_is_refused(tmp_path, monkeypatch):
 def test_a_held_CLARITY_act_carrying_an_edited_Drafted_sibling_lands(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-241"""
     # The whole-registry copy carries SN-002, Drafted and edited in the lane;
     # it claims approval nowhere, so it is not judged.
     root = _clarity_lane(
@@ -477,6 +490,7 @@ def test_a_held_CLARITY_act_carrying_an_edited_Drafted_sibling_lands(
 
 
 def test_a_traced_only_copy_move_lands(tmp_path, monkeypatch):
+    """Implements: TC-241"""
     # SN-002 is approved and moves only its traced `source` in the copy.
     needs = _with(APPROVED, "SN-002", status="Approved")
     root = _clarity_lane(
@@ -498,7 +512,10 @@ def test_a_refresh_merge_carrying_trunks_approvals_lands(tmp_path, monkeypatch):
     lane takes it in by a refresh merge. The merge claims SN-002 against its
     lane parent but not against its trunk parent, so it claims nothing.
     Adequacy witness: a rule judging a merge against its first parent alone
-    would read trunk's approval as the lane's and refuse this lane."""
+    would read trunk's approval as the lane's and refuse this lane.
+
+    Implements: TC-241
+    """
     root = _trunk(tmp_path, monkeypatch)
     assert integ.claim(root, "WI-401", "wi-401") == 0
     _git(root, "checkout", "-q", "wi-401")
@@ -542,6 +559,7 @@ def _copy_unparseable(root):
 def test_an_unreadable_or_unparseable_registry_or_copy_is_refused_by_name(
     tmp_path, monkeypatch, write, rel
 ):
+    """Implements: TC-241"""
     # The slot refuses each such lane at an earlier rung today; the rider,
     # run on the lane commit, names the file and the commit it was read at.
     root = _trunk(tmp_path, monkeypatch)
@@ -555,6 +573,7 @@ def test_an_unreadable_or_unparseable_registry_or_copy_is_refused_by_name(
 def test_an_off_spine_demotion_and_a_born_Drafted_row_land_from_a_loop_lane(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-241"""
     # What loop lanes lose: a held status move that claims no approval is no
     # longer refused at the slot.
     frame = {"B-01": "Drafted", "B-02": "Approved"}
@@ -587,7 +606,10 @@ def test_an_unmarked_plain_trunk_commit_approving_a_held_row_passes(
 ):
     """Characterization: the ruled residual. A person's plain trunk commit
     is not judged where it is made. Adequacy witness: a step that judged every
-    commit, marked or not, would exit 1 here."""
+    commit, marked or not, would exit 1 here.
+
+    Implements: TC-241
+    """
     root = _trunk(tmp_path, monkeypatch)
     _stage_sn1_approval(root)
     proc = run_py(STEP, cwd=root)
@@ -595,6 +617,7 @@ def test_an_unmarked_plain_trunk_commit_approving_a_held_row_passes(
 
 
 def test_the_same_commit_marked_is_refused_by_the_hook_step(tmp_path, monkeypatch):
+    """Implements: TC-241"""
     root = _trunk(tmp_path, monkeypatch)
     _stage_sn1_approval(root)
     monkeypatch.setenv(MARK, SESSION)
@@ -606,6 +629,7 @@ def test_the_same_commit_marked_is_refused_by_the_hook_step(tmp_path, monkeypatc
 
 
 def test_a_marked_held_SN_demotion_outside_a_lane_is_refused(tmp_path, monkeypatch):
+    """Implements: TC-241"""
     root = _trunk(tmp_path, monkeypatch, needs=APPROVED)
     _write_needs(root, BASE)
     _git(root, "add", "-A")
@@ -674,6 +698,7 @@ def _telemetry_writer(root, monkeypatch, capsys):
 def test_each_loop_writer_outside_a_lane_refuses_a_held_approval(
     tmp_path, monkeypatch, capsys, writer
 ):
+    """Implements: TC-241"""
     root = _trunk(tmp_path, monkeypatch)
     head = _rev(root, "HEAD")
     refusal = writer(root, monkeypatch, capsys)
@@ -686,6 +711,7 @@ def test_each_loop_writer_outside_a_lane_refuses_a_held_approval(
 def test_a_marked_commit_inside_a_lane_passes_at_commit_and_is_judged_at_landing(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-241"""
     # A session in its lane approves the held frame row B-01: the hook step
     # and the handback residue writer pass it, and the slot refuses the lane.
     root = _trunk(tmp_path, monkeypatch, frame={"B-01": "Drafted", "B-02": "Approved"})
@@ -727,6 +753,7 @@ def _born_drafted_sn3(root):
 
 @pytest.mark.parametrize("marked", [True, False], ids=["marked", "unmarked"])
 def test_a_squash_landing_is_judged_by_its_lane_commits(tmp_path, monkeypatch, marked):
+    """Implements: TC-241"""
     root = _trunk(tmp_path / "held", monkeypatch)
     commit = _squash(root, monkeypatch, _approve_sn1_with_its_copy, marked)
     proc = run_py(STEP, cwd=root)
@@ -742,6 +769,7 @@ def test_a_squash_landing_is_judged_by_its_lane_commits(tmp_path, monkeypatch, m
 
 
 def test_a_squash_not_admitted_is_judged_as_one_commit(tmp_path, monkeypatch):
+    """Implements: TC-241"""
     # The staged needs file differs from the squashed tip's, so the squash is
     # not admitted on its commits: the index is judged as one lane commit.
     root = _trunk(tmp_path, monkeypatch)
@@ -786,7 +814,10 @@ def test_a_first_draft_under_a_bound_CLARITY_verdict_is_no_exception(
     CLARITY verdict bound to its exact text, is refused: a first draft carries
     no signature to re-attest. Witness: an exception that admitted any claim
     whose row an accepted CLARITY binding names at its digest, without
-    requiring the row approving on both sides, would admit it."""
+    requiring the row approving on both sides, would admit it.
+
+    Implements: TC-241, TC-278
+    """
     rows = _with(BASE, "SN-002", status="Approved")
 
     def act(root):
@@ -809,7 +840,10 @@ def test_a_copy_unequal_to_its_live_row_is_no_exception(tmp_path, monkeypatch):
     """The act writes a copy whose approved text differs from the live row's,
     under a CLARITY verdict bound to the live row's text: refused. Witness: an
     exception that did not compare the live row with its copy at the commit
-    would admit it, since the binding matches the live row."""
+    would admit it, since the binding matches the live row.
+
+    Implements: TC-241
+    """
 
     def other_copy(root):
         text = _needs_text(_with(APPROVED, "SN-001", need="a text nobody judged"))
@@ -855,7 +889,10 @@ def test_an_absent_or_unreadable_CLARITY_verdict_is_no_exception(
     the lane rule. Witnesses: an exception reading a binding's identity cell
     without its verdict being accepted would admit the undecodable verdict;
     one reading "no candidate binding" as no objection would admit the
-    absent one."""
+    absent one.
+
+    Implements: TC-241, TC-278
+    """
     root = _clarity_lane(
         tmp_path,
         monkeypatch,
@@ -881,7 +918,10 @@ def test_a_marked_commit_adding_or_removing_a_held_status_row_is_refused(
     """Under the loop marker outside a lane, a staged frame row added with a
     status, or removed with one, is a held status move: the hook step refuses
     it, naming the row, its rung and the dial. Witness: a status walk that
-    compared only the rows both sides carry would pass it."""
+    compared only the rows both sides carry would pass it.
+
+    Implements: TC-241
+    """
     root = _trunk(tmp_path, monkeypatch, frame={"B-01": "Drafted", "B-02": "Approved"})
     _write(root, FRAME, _frame_text(frame))
     _git(root, "add", "--", FRAME)
@@ -898,7 +938,10 @@ def test_a_handback_commit_outside_a_lane_refuses_a_held_status_move(
     """The handback writers' one commit (`handback._loop_commit`), made under
     the loop marker in a worktree no lane claimed, refuses a staged held
     status move before it commits. Witness: a handback commit that skipped
-    the marker arm would commit it."""
+    the marker arm would commit it.
+
+    Implements: TC-241
+    """
     root = _trunk(tmp_path, monkeypatch, frame={"B-01": "Drafted", "B-02": "Approved"})
     wt = tmp_path / "scratch-wt"
     _git(root, "worktree", "add", "-q", "-b", "scratch", str(wt))
@@ -928,7 +971,10 @@ def test_a_malformed_identity_cell_refuses_the_held_act_by_row(
     """The act turn's derivation refuses a held CLARITY act whose binding's
     identity cell is malformed, naming the row and its committed digest.
     Witness: an act turn reading a malformed cell as no objection (owing the
-    act) would owe it."""
+    act) would owe it.
+
+    Implements: TC-398
+    """
     root = _clarity_lane(
         tmp_path,
         monkeypatch,
@@ -949,7 +995,10 @@ def test_an_unparseable_act_ledger_at_the_head_is_refused_by_name(
 ):
     """A lane whose head carries an act ledger that does not parse is refused
     at the merge's approval rung, naming the ledger. Witness: a ledger reader
-    taking an unparseable side for an empty one would admit the lane."""
+    taking an unparseable side for an empty one would admit the lane.
+
+    Implements: TC-278
+    """
     root = _trunk(tmp_path, monkeypatch)
     base = _rev(root, "HEAD")
     ledger = "{}/{}".format(snap.SNAPSHOT_DIR, ar.SNAPSHOT_ACTS)
@@ -966,7 +1015,10 @@ def test_an_act_already_on_trunk_is_not_re_read(tmp_path, monkeypatch):
     act ledger) is in the merge base; a lane that adds one act of its own,
     backed by an accepted verdict, is admitted at the approval rung. Witness:
     a ledger reader taking the head's every entry, not only those the base
-    lacks, would refuse the lane for trunk's unbacked act."""
+    lacks, would refuse the lane for trunk's unbacked act.
+
+    Implements: TC-278
+    """
     both = _with(APPROVED, "SN-002", status="Approved")
     root = _trunk(tmp_path, monkeypatch, needs=both)
     _write_needs(root, _with(both, "SN-001", need="the owner's own wording"))

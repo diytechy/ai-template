@@ -9,6 +9,8 @@ the plan listing) run the delivered commands as subprocesses.
 
 Each `History` commit rewrites the three registries whole from the rows declared
 so far, so a commit's diff is exactly the rows the case changed in it.
+
+Implements: TC-250
 """
 
 import subprocess

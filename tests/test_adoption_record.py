@@ -157,6 +157,7 @@ def _squash(root, branch=BRANCH):
 
 
 def test_the_closes_own_commit_passes(tmp_path):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     close = _real_close(root)
     assert ar.commit_adoption_record_lines(root, close) == []
@@ -164,6 +165,7 @@ def test_the_closes_own_commit_passes(tmp_path):
 
 
 def test_a_later_commit_carrying_the_record_unchanged_passes(tmp_path):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     _real_close(root)
 
@@ -195,6 +197,7 @@ def test_a_later_commit_carrying_the_record_unchanged_passes(tmp_path):
 def test_a_real_close_relinking_a_file_outside_docs_work_passes_the_rider_and_the_squash_hook(
     tmp_path,
 ):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     review = link_the_active_spec_from_a_review(root)
     close = _real_close(root)
@@ -213,6 +216,7 @@ def test_a_real_close_relinking_a_file_outside_docs_work_passes_the_rider_and_th
     "case", ["hand-subject", "relink-plus-one-byte", "record-unequal"]
 )
 def test_a_hand_written_record_beside_the_same_relink_is_refused(tmp_path, case):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     review = link_the_active_spec_from_a_review(root)
     shape = {
@@ -241,6 +245,7 @@ def _record_in_the_active_spec(wt):
 
 
 def test_a_record_written_in_a_lane_commit_is_refused_at_the_slot(tmp_path):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     sha = _lane_commit(root, _record_in_the_active_spec, "record the adoption")
     assert ar.commit_adoption_record_lines(root, sha) != []
@@ -248,6 +253,7 @@ def test_a_record_written_in_a_lane_commit_is_refused_at_the_slot(tmp_path):
 
 
 def test_a_hand_close_writing_a_record_is_refused(tmp_path):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     wt = _hand_close(root, subject="close WI-401 by hand")
     sha = _git(wt, "rev-parse", "HEAD").strip()
@@ -256,6 +262,7 @@ def test_a_hand_close_writing_a_record_is_refused(tmp_path):
 
 
 def test_a_record_staged_on_trunk_is_refused_by_the_hook_step(tmp_path):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     _edit_record(root / ACTIVE_SPEC, ("WI-450",))
     _git(root, "add", "-A")
@@ -271,6 +278,7 @@ def test_a_record_staged_on_trunk_is_refused_by_the_hook_step(tmp_path):
 def test_a_close_shaped_commit_whose_record_differs_from_the_request_is_refused(
     tmp_path,
 ):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     wt = _hand_close(root, record=("WI-451",))
     sha = _git(wt, "rev-parse", "HEAD").strip()
@@ -281,6 +289,7 @@ def test_a_close_shaped_commit_whose_record_differs_from_the_request_is_refused(
 def test_a_close_shaped_commit_whose_adoption_fails_in_the_parent_tree_is_refused(
     tmp_path,
 ):
+    """Implements: TC-383"""
     # The adopted row is already closed in the parent, so the close itself
     # would refuse; the commit is built by hand so the close shape holds.
     root = adopting_repo(tmp_path, seed=[successor_seed(state="complete")])
@@ -304,15 +313,18 @@ def _record_changed_later(tmp_path, change):
 
 
 def test_a_record_changed_later_is_refused(tmp_path):
+    """Implements: TC-383"""
     _record_changed_later(tmp_path, ("WI-451",))
 
 
 def test_a_record_removed_later_is_refused(tmp_path):
+    """Implements: TC-383"""
     _record_changed_later(tmp_path, None)
 
 
 @pytest.mark.parametrize("where", ["slot", "hook"])
 def test_a_request_rewritten_under_a_carried_record_is_refused(tmp_path, where):
+    """Implements: TC-383"""
     # The record is carried unchanged, but the request it was recorded with
     # is rewritten: the record is admitted only with its request unchanged.
     root = adopting_repo(tmp_path)
@@ -347,6 +359,7 @@ def test_a_request_rewritten_under_a_carried_record_is_refused(tmp_path, where):
 def test_a_requesting_spec_moved_into_complete_without_a_record_is_refused(
     tmp_path, where
 ):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     if where == "hook":
         wt = _hand_close(root, record=None, commit=False)
@@ -362,6 +375,7 @@ def test_a_requesting_spec_moved_into_complete_without_a_record_is_refused(
 
 
 def test_a_refresh_merge_carrying_trunks_record_passes(tmp_path):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     _git(root, "branch", "wi-402", "main")
     other = tmp_path / "wt-402"
@@ -378,6 +392,7 @@ def test_a_refresh_merge_carrying_trunks_record_passes(tmp_path):
 
 
 def test_a_parent_behind_a_shallow_boundary_is_refused_by_name(tmp_path):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     sha = _lane_commit(root, _record_in_the_active_spec, "record the adoption")
     parent = _git(root, "rev-parse", sha + "^").strip()
@@ -401,6 +416,7 @@ def test_a_parent_behind_a_shallow_boundary_is_refused_by_name(tmp_path):
 
 
 def test_a_rebased_lanes_squash_landing_is_admitted(tmp_path):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     _real_close(root)
     (root / "trunk-moved.txt").write_text("moved\n", encoding="utf-8", newline="\n")
@@ -412,6 +428,7 @@ def test_a_rebased_lanes_squash_landing_is_admitted(tmp_path):
 
 
 def test_a_squash_whose_index_edits_the_tips_record_is_refused(tmp_path):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     _real_close(root)
     _squash(root)
@@ -424,6 +441,7 @@ def test_a_squash_whose_index_edits_the_tips_record_is_refused(tmp_path):
 
 
 def test_the_pre_commit_hook_runs_the_adoption_record_step():
+    """Implements: TC-383"""
     hook = (SCRIPTS.parent / "hooks" / "pre-commit").read_text(encoding="utf-8")
     line = next(
         ln for ln in hook.splitlines() if ln.startswith('"$PY"') and "--run-steps" in ln
@@ -434,6 +452,7 @@ def test_the_pre_commit_hook_runs_the_adoption_record_step():
 
 
 def test_the_record_rule_rides_the_lane_commit_walk():
+    """Implements: TC-383"""
     riders = [getattr(rule, "__name__", "") for rule in tta.LANE_COMMIT_RIDERS]
     assert "commit_adoption_record_lines" in riders
 
@@ -441,6 +460,7 @@ def test_the_record_rule_rides_the_lane_commit_walk():
 def test_a_record_refusal_at_the_slot_does_not_carry_the_text_then_act_remedy(
     tmp_path,
 ):
+    """Implements: TC-383"""
     root = adopting_repo(tmp_path)
     _lane_commit(root, _record_in_the_active_spec, "record the adoption")
     refusal = integ._text_then_act_refusal(root, BRANCH)
@@ -467,7 +487,10 @@ def _spy_shared_walk(monkeypatch):
 
 def test_a_squash_landing_is_judged_through_the_shared_walk(tmp_path, monkeypatch):
     """A rebased lane's squash landing is judged by `kitlib.git`'s walk over
-    HEAD..tip with the record rule as its one rider, and is still admitted."""
+    HEAD..tip with the record rule as its one rider, and is still admitted.
+
+    Implements: TC-383
+    """
     root = adopting_repo(tmp_path)
     _real_close(root)
     (root / "trunk-moved.txt").write_text("moved\n", encoding="utf-8", newline="\n")
@@ -496,6 +519,8 @@ def test_each_spec_view_keeps_its_shape_over_one_tree(tmp_path):
     for the adoption record, so the "2 specs carry one id" refusal never
     fires; serving the adoption record's view sends the `-000` example and
     the duplicate list to the ruling sync.
+
+    Implements: TC-383
     """
     acceptance = load_script("acceptance_record")
     root = tmp_path / "repo"

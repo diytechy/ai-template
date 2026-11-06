@@ -23,6 +23,8 @@ drafts-not-mints arm:
 
 Every trigger below is driven red-then-green against the real git plumbing and
 the real spec folder — no seam is stubbed.
+
+Implements: TC-147, TC-156, TC-248
 """
 
 import pathlib
@@ -1541,6 +1543,7 @@ def _merge_sweep(root, before, after):
 def test_a_replay_re_points_a_late_dependent_to_the_full_successor_set(
     tmp_path, adopts
 ):
+    """Implements: TC-147"""
     # The first sweep consumes the disposition; a dependent filed AFTER it
     # still needs the disposed WI-005; a bare sweep replays the disposition
     # and must re-point that dependent to the WHOLE successor set - the draft
@@ -1595,6 +1598,7 @@ def _title_collision(root, *colliders):
     ids=["other-lineage", "duplicate-title"],
 )
 def test_a_title_match_off_the_drafts_lineage_refuses_the_mint(tmp_path, colliders):
+    """Implements: TC-147"""
     # A registry row is the draft's earlier mint only when it is the ONE row
     # with that title AND records the draft's own `supersedes`. A same-title
     # row of another lineage, or two rows with the title, refuses the whole
@@ -1616,6 +1620,7 @@ def test_a_title_match_off_the_drafts_lineage_refuses_the_mint(tmp_path, collide
 
 
 def test_a_drafts_title_match_on_its_own_lineage_stays_standing(tmp_path):
+    """Implements: TC-147"""
     # ...while the ONE same-title row recording the draft's `supersedes` is its
     # earlier mint: no id is allocated, and it is the successor the disposed
     # row's dependents are re-pointed to.
@@ -1635,7 +1640,10 @@ def test_a_replay_with_nothing_left_to_re_point_commits_nothing(tmp_path):
 
     A characterization (green at trunk for drafts). Adequacy witness: a
     replay that committed its bookkeeping, or rewrote an already re-pointed
-    `needs` line, whether or not anything changed would move HEAD here."""
+    `needs` line, whether or not anything changed would move HEAD here.
+
+    Implements: TC-147
+    """
     root = git_repo(tmp_path)
     before, after = _adopted_lineage(root, drafts=_DRAFTED, adopts=False)
     minted, refusal = _merge_sweep(root, before, after)
@@ -1648,6 +1656,7 @@ def test_a_replay_with_nothing_left_to_re_point_commits_nothing(tmp_path):
 
 
 def test_a_recorded_adoption_re_points_a_dependents_needs(tmp_path):
+    """Implements: TC-147, TC-360"""
     # The record joins the one lineage operation, so WI-021's hard edge on the
     # partial WI-005 moves to the adopted WI-020, as for a drafted successor.
     root = git_repo(tmp_path)
@@ -1660,6 +1669,7 @@ def test_a_recorded_adoption_re_points_a_dependents_needs(tmp_path):
 
 
 def test_drafts_and_adoptions_together_hold_the_full_successor_set(tmp_path):
+    """Implements: TC-147"""
     root = git_repo(tmp_path)
     before, after = _adopted_lineage(root, drafts=_DRAFTED)
     minted, refusal = _merge_sweep(root, before, after)
@@ -1685,6 +1695,7 @@ def _all_wi_ids(root):
 
 
 def test_a_consumed_adoption_replays_after_its_successor_completes(tmp_path):
+    """Implements: TC-360"""
     # The merge's sweep consumes the adoption while WI-020 is open; WI-020 then
     # completes, and only AFTER that does a dependent of the disposed WI-005
     # appear (WI-030). A bare sweep must still replay the record and re-point
@@ -1722,6 +1733,7 @@ def test_a_consumed_adoption_replays_after_its_successor_completes(tmp_path):
 
 
 def test_a_shallow_clone_sweeps_a_recorded_adoption(tmp_path):
+    """Implements: TC-360"""
     # The sweep reads the record and no git history, so a depth-1 clone of the
     # landed fixture re-points the dependent exactly as the full history does.
     (tmp_path / "src").mkdir()
@@ -1763,6 +1775,7 @@ def test_a_shallow_clone_sweeps_a_recorded_adoption(tmp_path):
 def test_the_sweep_refuses_a_request_and_record_mismatch(
     tmp_path, drafts, adopts, record
 ):
+    """Implements: TC-360"""
     root = git_repo(tmp_path)
     before, after = _adopted_lineage(root, drafts=drafts, adopts=adopts, record=record)
     minted, refusal = _merge_sweep(root, before, after)
@@ -1774,6 +1787,7 @@ def test_the_sweep_refuses_a_request_and_record_mismatch(
 
 
 def test_an_unreadable_merged_adjudication_spec_refuses_the_sweep(tmp_path):
+    """Implements: TC-360"""
     # It used to be skipped, and a skipped early close vanishes without a
     # successor: the merge stands and the sweep says why.
     root = git_repo(tmp_path)
@@ -1799,6 +1813,7 @@ def test_an_unreadable_merged_adjudication_spec_refuses_the_sweep(tmp_path):
 def test_a_valid_block_then_an_unclosed_one_refuses_the_sweep(
     tmp_path, drafts, adopts, tail
 ):
+    """Implements: TC-360"""
     root = git_repo(tmp_path)
     before, _after = _adopted_lineage(root, drafts=drafts, adopts=adopts, land=False)
     spec = root / "docs" / "work" / "complete" / "WI-008-adjudicate.md"
@@ -1822,6 +1837,7 @@ def test_a_valid_block_then_an_unclosed_one_refuses_the_sweep(
     ids=["indented-unclosed", "indented-complete"],
 )
 def test_a_valid_adoption_then_an_indented_block_refuses_the_sweep(tmp_path, tail):
+    """Implements: TC-360"""
     # The recorded adoption is valid; a second block off column zero is a
     # fence the section refuses by name, so nothing re-points to a subset.
     root = git_repo(tmp_path)
@@ -1838,6 +1854,7 @@ def test_a_valid_adoption_then_an_indented_block_refuses_the_sweep(tmp_path, tai
 
 
 def test_a_successor_done_when_verdict_with_an_unclosed_block_is_refused(tmp_path):
+    """Implements: TC-360"""
     # A SUCCESSOR Done-when verdict's own section reads through the same
     # parser, so its unpaired fence is refused there too, never dropped.
     root = git_repo(tmp_path)
@@ -3045,6 +3062,7 @@ def _subject(root):
 
 
 def test_a_range_sweep_mints_the_range_and_touches_no_terminal_folder(tmp_path, capsys):
+    """Implements: TC-261"""
     root, before, after = sweep_repo(tmp_path)
     assert _sweep(root, "--before", before, "--after", after) == 0
     out = capsys.readouterr().out
@@ -3085,6 +3103,7 @@ def test_a_custom_branch_label_names_the_mint_subject(tmp_path):
 
 
 def test_a_bare_sweep_still_walks_the_terminal_folders(tmp_path, capsys):
+    """Implements: TC-261"""
     root, _before, _after = sweep_repo(tmp_path)
     assert _sweep(root) == 0
     assert "sweep minted 1 row(s)." in capsys.readouterr().out
@@ -3112,6 +3131,7 @@ def hand_merged_repo(tmp_path):
 
 
 def test_merged_mints_what_the_named_rows_owe_and_nothing_else(tmp_path, capsys):
+    """Implements: TC-261"""
     root, before, after = hand_merged_repo(tmp_path)
     argv = ("--before", before, "--after", after, "--branch", "wi-005")
     argv += ("--merged", "WI-005")
@@ -3129,6 +3149,7 @@ def test_merged_mints_what_the_named_rows_owe_and_nothing_else(tmp_path, capsys)
 
 
 def test_merged_refuses_a_row_no_terminal_folder_holds(tmp_path, capsys):
+    """Implements: TC-261"""
     root, before, after = hand_merged_repo(tmp_path)
     head = _rev(root)
     argv = ("--before", before, "--after", after, "--branch", "wi-005")
@@ -3140,7 +3161,10 @@ def test_merged_refuses_a_row_no_terminal_folder_holds(tmp_path, capsys):
 
 def test_merged_refuses_a_row_two_terminal_folders_hold(tmp_path, capsys):
     """Two folders holding one row is two outcomes for one close; reading the
-    first found would judge a close the merge may not have made."""
+    first found would judge a close the merge may not have made.
+
+    Implements: TC-261
+    """
     root, before, after = hand_merged_repo(tmp_path)
     write_spec(root, "complete", "WI-005", slug="returned", specref="seed.txt")
     _commit(root, "the same row closed twice", when=T_LATER + 20)
@@ -3153,6 +3177,7 @@ def test_merged_refuses_a_row_two_terminal_folders_hold(tmp_path, capsys):
 
 
 def test_merged_and_with_terminal_are_one_question_asked_two_ways(tmp_path):
+    """Implements: TC-261"""
     root, before, after = hand_merged_repo(tmp_path)
     with pytest.raises(SystemExit):
         _sweep(root, "--merged", "WI-005", "--with-terminal")
@@ -3162,7 +3187,10 @@ def test_merged_needs_a_real_range_and_the_lane_branch(tmp_path, capsys):
     """`--merged` judges ONE merge: the range it landed and the lane it landed
     from. A zero-length range judges no merge at all, and without the branch the
     Done-when arm could not look for the claim, so both refuse before anything
-    is read."""
+    is read.
+
+    Implements: TC-261
+    """
     root, before, after = hand_merged_repo(tmp_path)
     head = _rev(root)
     for argv in (
@@ -3255,6 +3283,7 @@ def _titles(root):
 
 
 def test_merged_mints_every_arm_the_slot_would_have_for_a_hand_merge(tmp_path, capsys):
+    """Implements: TC-261"""
     root, before, after = hand_lane_repo(tmp_path)
     argv = ("--before", before, "--after", after, "--branch", "wi-007")
     assert _sweep(root, *argv, "--merged", "WI-007;WI-008;WI-009") == 0
@@ -3276,6 +3305,7 @@ def test_merged_mints_every_arm_the_slot_would_have_for_a_hand_merge(tmp_path, c
 
 
 def test_merged_says_by_name_when_the_done_when_arm_cannot_run(tmp_path, capsys):
+    """Implements: TC-261"""
     root, before, after = hand_lane_repo(tmp_path)
     argv = ("--before", before, "--after", after, "--branch", "build/wi-007")
     assert _sweep(root, *argv, "--merged", "WI-007") == 0
@@ -3321,6 +3351,7 @@ def _consolidate(root, *extra):
 def test_the_consolidation_census_dry_run_names_the_cluster_and_mints_nothing(
     tmp_path, capsys
 ):
+    """Implements: TC-260"""
     root = overlap_repo(tmp_path)
     head = _rev(root)
     assert _consolidate(root, "--dry-run") == 0
@@ -3333,6 +3364,7 @@ def test_the_consolidation_census_dry_run_names_the_cluster_and_mints_nothing(
 def test_the_consolidation_census_mints_one_row_then_says_why_not_again(
     tmp_path, capsys
 ):
+    """Implements: TC-260"""
     root = overlap_repo(tmp_path)
     assert _consolidate(root) == 0
     out = capsys.readouterr().out
@@ -3352,7 +3384,10 @@ def test_the_consolidation_census_mints_one_row_then_says_why_not_again(
 def test_a_refused_consolidation_mint_says_why_on_stderr_and_exits_1(tmp_path, capsys):
     """A mint refusal is a failure, not an answer: the census found a cluster
     and nothing was filed. An uncommitted edit to a path the mint must write
-    (the id watermark) is the refusal the bookkeeping commit makes."""
+    (the id watermark) is the refusal the bookkeeping commit makes.
+
+    Implements: TC-260
+    """
     root = overlap_repo(tmp_path)
     mark = root / "docs" / "id-watermark"
     mark.write_text(mark.read_text(encoding="utf-8") + "# edit\n", encoding="utf-8")
@@ -3364,6 +3399,7 @@ def test_a_refused_consolidation_mint_says_why_on_stderr_and_exits_1(tmp_path, c
 
 
 def test_the_consolidation_census_says_why_it_proposes_nothing(tmp_path, capsys):
+    """Implements: TC-260"""
     root = overlap_repo(tmp_path, overlap=False)
     assert _consolidate(root) == 0
     assert "no queued rows overlap" in capsys.readouterr().out
@@ -3476,7 +3512,10 @@ def test_a_sweep_after_a_hand_merge_runs_the_merge_checkpoint(tmp_path, capsys):
     """A merge made outside the slot runs no checkpoint, so a changed
     observation input files nothing until someone sweeps the range. The sweep's
     range shape runs the checkpoint at `--after`, which is the command a person
-    who merged by hand runs."""
+    who merged by hand runs.
+
+    Implements: TC-261
+    """
     root = observed_repo(tmp_path)
     before = _rev(root)
     (root / "src" / "page.txt").write_text("changed\n", encoding="utf-8", newline="\n")
@@ -3530,6 +3569,7 @@ def done_when_merge(tmp_path, closed_body, wid="WI-007", branch="wi-007"):
 
 
 def test_a_lane_that_rewords_its_own_done_when_mints_an_adjudication(tmp_path):
+    """Implements: TC-257"""
     reworded = DONE_WHEN_AT_CLAIM.replace("- The", "- [x] The").replace(
         "60 fps", "30 fps"
     )
@@ -3554,6 +3594,7 @@ def test_a_lane_that_rewords_its_own_done_when_mints_an_adjudication(tmp_path):
 
 
 def test_a_lane_that_only_ticks_its_done_when_with_evidence_mints_nothing(tmp_path):
+    """Implements: TC-257"""
     ticked = (
         DONE_WHEN_AT_CLAIM.replace("- The", "- [x] The")
         .replace("box.", "box. — measured 61 fps (docs/log.d/widget.md)")

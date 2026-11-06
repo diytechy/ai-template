@@ -9,6 +9,8 @@ is a shell **smoke test** (syntax-valid onboarder; `dev-setup --check` runs and
 reports) plus content assertions on the contract the spec pins (the end banner +
 agent handoff, the templated clone URL, the EDIT-FOR-YOUR-STACK block). Deeper
 cross-platform/GUI/auth behavior is verified manually per OS (see the plan).
+
+Implements: TC-032
 """
 
 import os

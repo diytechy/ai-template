@@ -4,6 +4,8 @@ Drives the pure lifecycle library with injected fake step results (the P1
 done-condition): the happy path, the coverage bounce-once-then-page ladder,
 the n=1 critique / one-revision caps as raised errors, the position-swap
 agreement rule, the budget ledger, and the gate-policy page-action map.
+
+Implements: TC-070
 """
 
 import json

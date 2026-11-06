@@ -21,6 +21,8 @@ without its record is driven on a scaffold in `test_decision_record_merge.py`.
     `-000` entry is inert and the shipped template sound; every close owes a
     record under a recording dial; and the note reaches a build and an
     adjudication session and never a review session.
+
+Implements: TC-293
 """
 
 import sys
@@ -84,12 +86,14 @@ def _one_entry(key, literal):
 
 @pytest.mark.parametrize("mode", ["off", "record", "escalate-first"])
 def test_each_declared_value_reads_as_itself(tmp_path, mode):
+    """Implements: TC-292"""
     docs = _dial(tmp_path, '"{}"'.format(mode))
     assert ac.decision_recording(docs) == mode
     assert ac.config_conflicts(docs) == []
 
 
 def test_an_undeclared_dial_reads_off(tmp_path):
+    """Implements: TC-292"""
     # The template's shipped value and the reading of a repo that never set it:
     # no obligation until an owner asks for one.
     assert ac.decision_recording(_docs(tmp_path, "[attestation]\n")) == "off"
@@ -97,6 +101,7 @@ def test_an_undeclared_dial_reads_off(tmp_path):
 
 
 def test_an_unrecognized_value_is_refused_and_read_as_record(tmp_path):
+    """Implements: TC-292"""
     # A misspelling is a `str`, so the type check cannot see it. It is refused
     # loudly where the policy file is checked, naming the legal values, and the
     # reader keeps the obligation rather than silently recording nothing.
@@ -121,6 +126,7 @@ def test_an_unrecognized_value_is_refused_and_read_as_record(tmp_path):
 def test_a_padded_or_mixed_case_value_is_accepted_as_the_reader_reads_it(
     tmp_path, declared, reads
 ):
+    """Implements: TC-292"""
     # ONE normalization for the reader and the validator: a value the reader
     # honours is never refused, and one it would not honour is.
     docs = _dial(tmp_path, declared)
@@ -129,18 +135,21 @@ def test_a_padded_or_mixed_case_value_is_accepted_as_the_reader_reads_it(
 
 
 def test_the_reader_and_the_validator_share_one_normalization():
+    """Implements: TC-292"""
     for raw in (" record ", "RECORD", "Escalate-First", "\toff\n"):
         assert ac.mode_word(raw) == raw.strip().lower()
     assert ac.mode_word(3) is None
 
 
 def test_a_wrong_typed_value_is_refused(tmp_path):
+    """Implements: TC-292"""
     docs = _dial(tmp_path, "true")
     assert any("decision_recording" in c for c in ac.config_conflicts(docs))
     assert ac.decision_recording(docs) == "record"
 
 
 def test_the_template_ships_off_and_this_repo_records():
+    """Implements: TC-292"""
     template = tomllib.loads((KIT / "process.toml.template").read_text("utf-8"))
     live = tomllib.loads((ROOT / "docs" / "process.toml").read_text("utf-8"))
     assert template["attestation"]["decision_recording"] == "off"

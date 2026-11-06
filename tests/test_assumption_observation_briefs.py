@@ -38,6 +38,7 @@ def assert_chain(text):
 
 
 def test_first_approval_shows_assumption_only_case(tmp_path):
+    """Implements: TC-308"""
     root = assumption_repo(tmp_path)
     text, reason = ab.compose(
         root,
@@ -53,6 +54,7 @@ def test_first_approval_shows_assumption_only_case(tmp_path):
 
 
 def test_rejudge_shows_assumption_only_case(tmp_path, monkeypatch):
+    """Implements: TC-309"""
     root = assumption_repo(tmp_path)
     case = carrier.load(root / "docs/test/test-cases.toml", "TC-ID")[0]
     monkeypatch.setattr(ab.rejudge, "checkpoint_for", lambda *a: "release")
@@ -83,6 +85,7 @@ def test_rejudge_shows_assumption_only_case(tmp_path, monkeypatch):
 def test_rejudge_refuses_an_unresolved_assumption_or_a_missing_cell(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-309"""
     root = assumption_repo(tmp_path)
     case = carrier.load(root / "docs/test/test-cases.toml", "TC-ID")[0]
     monkeypatch.setattr(ab.rejudge, "checkpoint_for", lambda *a: "release")

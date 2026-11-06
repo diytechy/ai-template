@@ -323,6 +323,8 @@ def test_the_graph_sees_imports_inside_function_bodies():
     slice CUT. A self-test pinned to an edge the program is paid to remove
     cannot survive the program; this one names an edge slice 7 ruled KEPT
     (see `LIFECYCLE_RANK`), so it is a stable pin rather than a countdown.
+
+    Implements: TC-177, TC-184
     """
     graph = import_graph()
     assert graph["integrate"].get("intake") == "function", (
@@ -450,7 +452,10 @@ def test_the_graph_sees_imports_inside_function_bodies():
 
 
 def test_no_new_import_cycle():
-    """The ratchet. Cycles may shrink or vanish, never grow or appear."""
+    """The ratchet. Cycles may shrink or vanish, never grow or appear.
+
+    Implements: TC-177, TC-183, TC-184
+    """
     found = strongly_connected(import_graph())
     baseline = sorted(tuple(sorted(entry)) for entry in CYCLES)
     assert found == baseline, (
@@ -527,7 +532,10 @@ FACADES = frozenset({"gen_trajectory"})
 
 
 def test_a_facade_is_an_entry_point_and_nothing_imports_it():
-    """A re-export layer is for a CLI, never for reaching a sibling's state."""
+    """A re-export layer is for a CLI, never for reaching a sibling's state.
+
+    Implements: TC-194
+    """
     graph = import_graph()
     offenders = sorted(
         "{} -> {} [{}]".format(module, target, kind)
@@ -552,6 +560,8 @@ def test_a_view_never_imports_a_lifecycle_service():
     merges branches or moves specs. This is stricter than the cycle ratchet on
     purpose: an edge from a view into a lifecycle service is wrong even when it
     closes no cycle.
+
+    Implements: TC-177, TC-183, TC-194
     """
     graph = import_graph()
     offenders = sorted(

@@ -252,6 +252,7 @@ def write_if(root, component):
 
 
 def test_if_component_tag_must_resolve(scaffold):
+    """Implements: TC-044"""
     make_minimal_project(scaffold)
     write_cmps(scaffold, row("CMP-001"))
     write_if(scaffold, "CMP-404")

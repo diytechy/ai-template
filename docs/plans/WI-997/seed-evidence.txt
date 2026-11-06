@@ -1,0 +1,65 @@
+WI-997 seed evidence
+command: python docs/plans/WI-997/check_seed.py --seed-commit 753c793e86c7e1501ac98359aab42cef83d090fa --scratch <scratch> --out <file>
+
+1. AST, docstrings stripped, against the parent
+files changed: 216
+AST differences: 0
+
+2. Collected test ids, sorted
+before: 7720 ids, sha256 5ae914910423dc7c78421473e3462d9d36820e3d8a84be2f5ced74b1c1533df7
+after: 7720 ids, sha256 5ae914910423dc7c78421473e3462d9d36820e3d8a84be2f5ced74b1c1533df7
+
+3. Tags against reduced evidence parts
+live test cases: 363
+tags: 2172
+test-case and node pairs: 2297
+reader findings: 0
+missing: 0
+extra: 0
+
+4. check_complexity
+check_complexity: OK - 183 row(s) over 15, unchanged from baseline.
+
+Sample: file | target | ids | the evidence parts each id answers
+tests/test_traj_panels.py | test_station_outcomes_derive_from_the_integrator | TC-056 | TC-056: tests/test_traj_panels.py::test_station_outcomes_derive_from_the_integrator
+tests/test_text_then_act.py | test_the_merge_ladder_consults_the_text_then_act_rung | TC-173 | TC-173: tests/test_text_then_act.py::test_the_merge_ladder_consults_the_text_then_act_rung
+tests/test_loop_order.py | test_a_tc_verifying_a_MIX_of_claimed_and_unclaimed_is_not_red | TC-183 | TC-183: tests/test_loop_order.py::test_a_tc_verifying_a_MIX_of_claimed_and_unclaimed_is_not_red
+tests/test_intake_settled.py | test_a_later_writer_leaves_a_row_with_moved_routed_cells_unsettled | TC-403 | TC-403: tests/test_intake_settled.py::test_a_later_writer_leaves_a_row_with_moved_routed_cells_unsettled
+tests/test_decision_overrule.py | test_the_run_name_alphabet_is_what_git_refuses_plus_two_delimiters | TC-319 | TC-319: tests/test_decision_overrule.py::test_the_run_name_alphabet_is_what_git_refuses_plus_two_delimiters
+tests/test_retire.py | test_an_id_already_recorded_is_refused | TC-299 | TC-299: tests/test_retire.py::test_an_id_already_recorded_is_refused
+tests/test_done_when_blessing.py | test_a_rejected_combined_sitting_blesses_nothing | TC-326 | TC-326: tests/test_done_when_blessing.py::test_a_rejected_combined_sitting_blesses_nothing
+tests/test_push_policy.py | (module) | TC-031 | TC-031: tests/test_push_policy.py
+tests/test_done_when_blessing.py | test_a_squash_landing_that_relinks_another_claims_done_when_link_is_not_held | TC-325 | TC-325: tests/test_done_when_blessing.py::test_a_squash_landing_that_relinks_another_claims_done_when_link_is_not_held
+tests/test_agent_route.py | test_planner_pair_two_family_branch | TC-072 | TC-072: tests/test_agent_route.py::test_planner_pair_two_family_branch
+tests/test_bootstrap.py | test_a_scaffold_declares_the_branch_it_was_scaffolded_on | TC-369 | TC-369: tests/test_bootstrap.py::test_a_scaffold_declares_the_branch_it_was_scaffolded_on
+tests/test_wi_convert.py | test_the_authoring_tags_cell_round_trips_through_the_spec_form | TC-399 | TC-399: tests/test_wi_convert.py::test_the_authoring_tags_cell_round_trips_through_the_spec_form
+tests/test_traj_views.py | test_t4_no_block_label_renders_outside_its_own_box | TC-124 | TC-124: tests/test_traj_views.py::test_t4_no_block_label_renders_outside_its_own_box
+tests/test_smoke_budget_meter.py | test_a_joined_job_counts_an_exited_grandchild | TC-374 | TC-374: tests/test_smoke_budget_meter.py::test_a_joined_job_counts_an_exited_grandchild
+tests/test_accounts.py | test_the_provisioning_hint_names_each_variable_in_prose_with_its_value_quoted | TC-365 | TC-365: tests/test_accounts.py::test_the_provisioning_hint_names_each_variable_in_prose_with_its_value_quoted
+tests/test_trace_hats_driven.py | test_an_undeclared_hat_reds_a_real_run_under_strict | TC-178 | TC-178: tests/test_trace_hats_driven.py::test_an_undeclared_hat_reds_a_real_run_under_strict
+tests/test_rule_sync.py | test_the_fragment_link_rebase_is_the_spec_moves | TC-130, TC-139 | TC-130: tests/test_rule_sync.py::test_the_fragment_link_rebase_is_the_spec_moves | TC-139: tests/test_rule_sync.py::test_the_fragment_link_rebase_is_the_spec_moves
+tests/test_accepted_risk.py | (module) | TC-234 | TC-234: tests/test_accepted_risk.py
+tests/test_done_when_blessing.py | test_an_unchanged_or_only_ticked_done_when_holds_nothing | TC-325 | TC-325: tests/test_done_when_blessing.py::test_an_unchanged_or_only_ticked_done_when_holds_nothing
+tests/test_run_menu.py | test_unknown_name_exits_2 | TC-047 | TC-047: tests/test_run_menu.py::test_unknown_name_exits_2
+tests/test_parent_first_git.py | test_staging_an_approved_child_under_a_drafted_parent_is_refused | TC-397 | TC-397: tests/test_parent_first_git.py::test_staging_an_approved_child_under_a_drafted_parent_is_refused
+tests/test_verdict_record.py | test_two_logs_at_one_key_declaring_two_phases_serve_no_round | TC-205 | TC-205: tests/test_verdict_record.py::test_two_logs_at_one_key_declaring_two_phases_serve_no_round
+tests/test_adjudicate_act.py | test_a_mixed_first_approval_verdict_approves_only_its_approved_rows_registries | TC-368 | TC-368: tests/test_adjudicate_act.py::test_a_mixed_first_approval_verdict_approves_only_its_approved_rows_registries
+tests/test_accounts.py | test_a_qualified_opencode_launch_keeps_the_kit_owned_names | TC-362 | TC-362: tests/test_accounts.py::test_a_qualified_opencode_launch_keeps_the_kit_owned_names
+tests/test_plan_coverage.py | test_a_real_dispute_verdict_ruling_FIX_refuses_its_exclusion | TC-069 | TC-069: tests/test_plan_coverage.py::test_a_real_dispute_verdict_ruling_FIX_refuses_its_exclusion
+tests/test_check_flows.py | (module) | TC-013 | TC-013: tests/test_check_flows.py
+tests/test_snapshot_readers.py | test_a_plain_flip_across_a_needs_carrier_conversion_merges | TC-278 | TC-278: tests/test_snapshot_readers.py::test_a_plain_flip_across_a_needs_carrier_conversion_merges
+tests/test_adoption_record.py | test_the_record_rule_rides_the_lane_commit_walk | TC-383 | TC-383: tests/test_adoption_record.py::test_the_record_rule_rides_the_lane_commit_walk
+tests/test_baseline_snapshot.py | test_a_clean_copy_satisfies_the_mirror_invariant | TC-173 | TC-173: tests/test_baseline_snapshot.py::test_a_clean_copy_satisfies_the_mirror_invariant
+tests/test_done_when_blessing.py | test_the_entry_point_binds_the_requested_kinds_beside_the_verdict | TC-327 | TC-327: tests/test_done_when_blessing.py::test_the_entry_point_binds_the_requested_kinds_beside_the_verdict
+tests/test_text_then_act.py | test_a_mixed_commit_is_refused_at_pre_commit | TC-173 | TC-173: tests/test_text_then_act.py::test_a_mixed_commit_is_refused_at_pre_commit
+tests/test_done_when_blessing.py | test_a_combined_sitting_composes_each_kind_from_its_own_brief | TC-327 | TC-327: tests/test_done_when_blessing.py::test_a_combined_sitting_composes_each_kind_from_its_own_brief
+tests/test_trace_hats.py | test_a_hat_no_row_is_attributable_to_is_reported | TC-178 | TC-178: tests/test_trace_hats.py::test_a_hat_no_row_is_attributable_to_is_reported
+tests/test_codex_call_git.py | test_concurrent_calls_from_one_detached_checkout_each_spool_their_own_log | TC-384 | TC-384: tests/test_codex_call_git.py::test_concurrent_calls_from_one_detached_checkout_each_spool_their_own_log
+tests/test_held_status.py | test_the_ledger_clarity_arm_is_retired | TC-278 | TC-278: tests/test_held_status.py::test_the_ledger_clarity_arm_is_retired
+tests/test_open_item_queue.py | test_an_uncited_pending_item_is_a_notice_not_a_card | TC-314 | TC-314: tests/test_open_item_queue.py::test_an_uncited_pending_item_is_a_notice_not_a_card
+tests/test_gen_components.py | test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited | TC-195 | TC-195: tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited
+tests/test_disposition_adoption.py | test_acceptance_is_read_against_the_registry_with_distinct_refusals | TC-360 | TC-360: tests/test_disposition_adoption.py::test_acceptance_is_read_against_the_registry_with_distinct_refusals
+tests/test_red_rounds_max.py | test_red_rounds_max_reads_3_when_absent_and_refuses_each_bad_value | TC-382 | TC-382: tests/test_red_rounds_max.py::test_red_rounds_max_reads_3_when_absent_and_refuses_each_bad_value
+tests/test_coordinator_guard.py | test_a_recorded_compaction_reads_the_reply_after_the_boundary | TC-315 | TC-315: tests/test_coordinator_guard.py::test_a_recorded_compaction_reads_the_reply_after_the_boundary
+
+result: PASS

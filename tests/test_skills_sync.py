@@ -160,6 +160,7 @@ def test_sync_is_vacuous_without_per_agent_dirs(tmp_path):
 
 
 def test_drifted_copy_fails_and_sync_restores(tmp_path):
+    """Implements: TC-045"""
     # TC-045 headline, over the real kit source + the production commands: a
     # drifted copy fails --check-agents; --sync restores byte-identity; green.
     name = "gate-advance"

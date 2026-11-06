@@ -145,6 +145,7 @@ def write_spec(root, rel, *headings):
 
 
 def test_absent_registry_is_vacuously_clean(tmp_path):
+    """Implements: TC-037"""
     # No docs/work/ at all (a repo that never touched the layer) -> pass.
     (tmp_path / "docs" / "requirements").mkdir(parents=True)
     proc = run_traj(tmp_path)
@@ -153,6 +154,7 @@ def test_absent_registry_is_vacuously_clean(tmp_path):
 
 
 def test_placeholder_only_is_vacuously_clean(tmp_path):
+    """Implements: TC-037"""
     # A fresh scaffold ships only the inert WI-000 example row -> pass.
     write_wis(tmp_path, PLACEHOLDER_ROW)
     proc = run_traj(tmp_path)
@@ -161,6 +163,7 @@ def test_placeholder_only_is_vacuously_clean(tmp_path):
 
 
 def test_opt_out_silences_even_a_broken_registry(tmp_path):
+    """Implements: TC-037"""
     # docs/trajectory-check `off` short-circuits before any validation, so even a
     # registry with a cycle passes — the deliberate exit for a repo that opts out.
     write_wis(
@@ -177,6 +180,7 @@ def test_opt_out_silences_even_a_broken_registry(tmp_path):
 
 
 def test_valid_graph_passes(tmp_path):
+    """Implements: TC-037"""
     # A small acyclic DAG with mixed statuses. Open rows carry an EMPTY
     # Deliverable (R-A: filled only at close). No SR registry is written, so the
     # SR-ref warn is suppressed (the known_srs-empty guard) and it still passes.
@@ -198,6 +202,7 @@ def test_valid_graph_passes(tmp_path):
 
 
 def test_cycle_fails(tmp_path):
+    """Implements: TC-037"""
     write_wis(
         tmp_path,
         "WI-001,A,t,,WI-002,queued,d\nWI-002,B,t,,WI-001,queued,d\n",
@@ -215,6 +220,7 @@ def test_self_loop_is_a_cycle(tmp_path):
 
 
 def test_unresolved_predecessor_fails(tmp_path):
+    """Implements: TC-037"""
     write_wis(tmp_path, "WI-001,A,t,,WI-099,queued,d\n")
     proc = run_traj(tmp_path)
     assert proc.returncode == 1
@@ -232,6 +238,7 @@ def test_duplicate_id_fails(tmp_path):
 
 
 def test_malformed_id_fails(tmp_path):
+    """Implements: TC-037"""
     write_wis(tmp_path, "WI-abc,A,t,,,queued,d\n")
     proc = run_traj(tmp_path)
     assert proc.returncode == 1
@@ -419,6 +426,7 @@ def test_deep_cycle_reported_cleanly_not_recursionerror(tmp_path):
 
 
 def test_ra_open_wi_with_deliverable_fails_plain(tmp_path):
+    """Implements: TC-077"""
     # R-A: an open WI's Deliverable is filled only at close — a filled one on an
     # open row is an incoherent handoff, a hard error even without --strict.
     write_wis_sr(tmp_path, "WI-001,A,scripts,,,queued,shipped it,\n")
@@ -428,6 +436,7 @@ def test_ra_open_wi_with_deliverable_fails_plain(tmp_path):
 
 
 def test_ra_done_wi_with_empty_deliverable_fails_plain(tmp_path):
+    """Implements: TC-077"""
     # R-A: a done WI must record what shipped — an empty Deliverable is a hard
     # error, the mirror of the open case.
     write_wis_sr(tmp_path, "WI-001,A,scripts,,,done,,\n")
@@ -477,6 +486,7 @@ def test_blocked_is_a_queued_spec_carrying_a_blockref(tmp_path):
 
 
 def test_re_empty_specref_warns_plain_fails_strict(tmp_path):
+    """Implements: TC-077"""
     # R-E: an open WI must name a SpecRef — warn plain, ERROR under --strict.
     write_wis_sr(tmp_path, "WI-001,A,scripts,,,active,,\n")
     plain = run_traj(tmp_path)
@@ -488,6 +498,7 @@ def test_re_empty_specref_warns_plain_fails_strict(tmp_path):
 
 
 def test_re_dangling_specref_warns_plain_fails_strict(tmp_path):
+    """Implements: TC-077"""
     # R-E: a SpecRef whose path part does not exist in the repo is dangling.
     write_wis_sr(tmp_path, "WI-001,A,scripts,,,active,,docs/specs/WI-999.md#gone\n")
     plain = run_traj(tmp_path)
@@ -808,6 +819,7 @@ def test_specref_anchor_on_a_non_markdown_target_is_not_judged(tmp_path):
 
 
 def test_rf_done_wi_with_specref_warns_plain_fails_strict(tmp_path):
+    """Implements: TC-100"""
     # R-F (WI-251): close clears the SpecRef — a done row still carrying one is
     # the close-side incoherence R-E's open half never saw. Warn plain, ERROR
     # under --strict. The spec file itself is also flagged (no open citer).
@@ -822,6 +834,7 @@ def test_rf_done_wi_with_specref_warns_plain_fails_strict(tmp_path):
 
 
 def test_rf_orphan_live_spec_warns_plain_fails_strict(tmp_path):
+    """Implements: TC-100"""
     # R-F: a live docs/specs file no open WI cites belongs in the archive — the
     # residue rot the sweep clears must not silently re-grow.
     write_spec(tmp_path, "docs/specs/WI-009.md")
@@ -834,6 +847,7 @@ def test_rf_orphan_live_spec_warns_plain_fails_strict(tmp_path):
 
 
 def test_rf_shared_doc_lives_while_any_open_citer_remains(tmp_path):
+    """Implements: TC-100"""
     # R-F negative: a shared effort doc archives only at its LAST open citer's
     # close — a deferred WI is open, so the doc (cited via #anchor) stays live
     # even though a done sibling once shipped from it (SpecRef duly cleared).
@@ -848,6 +862,7 @@ def test_rf_shared_doc_lives_while_any_open_citer_remains(tmp_path):
 
 
 def test_rf_scaffold_boilerplate_excluded(tmp_path):
+    """Implements: TC-100"""
     # R-F negative: the scaffolded README + -000 exemplar are permanent (the
     # WI-251 banner fix) and never read as archivable residue — a fresh scaffold
     # stays vacuously green.
@@ -1006,6 +1021,7 @@ def test_cancelled_id_in_status_md_is_not_forward_only_finding(tmp_path):
 
 
 def test_compliant_registry_and_status_passes_strict(tmp_path):
+    """Implements: TC-077"""
     # The whole model, coherent: a done row with a Deliverable and no SpecRef, an
     # open row with an empty Deliverable + resolvable SpecRef -> --strict is fully
     # green (R-A + R-E). status.md names only the open WI-002, so the restored
@@ -1062,6 +1078,7 @@ FORWARD_ONLY = "status.md is forward-only"
 
 
 def test_clean_status_has_no_forward_only_finding(tmp_path):
+    """Implements: TC-075"""
     # A done WI whose id is NOT echoed in status.md is clean (the file names only
     # the open work ahead), under --strict too.
     write_wis_sr(tmp_path, "WI-001,Shipped,scripts,,,done,shipped it,\n")
@@ -1072,6 +1089,7 @@ def test_clean_status_has_no_forward_only_finding(tmp_path):
 
 
 def test_done_id_in_status_warns_plain_errors_strict(tmp_path):
+    """Implements: TC-075"""
     # A closed WI id lingering in status.md: WARN plain (exit 0), ERROR --strict.
     write_wis_sr(tmp_path, "WI-001,Shipped,scripts,,,done,shipped it,\n")
     write_status(tmp_path, "## Recently closed\n- WI-001 landed the thing.\n")
@@ -1086,6 +1104,7 @@ def test_done_id_in_status_warns_plain_errors_strict(tmp_path):
 
 
 def test_open_ids_in_status_are_not_a_finding(tmp_path):
+    """Implements: TC-075"""
     # queued/active/deferred ids are legal in status.md (they ARE the next work);
     # only `done` ids flag. A done id absent from the file stays silent.
     write_spec(tmp_path, "docs/specs/WI-002.md")
@@ -1103,6 +1122,7 @@ def test_open_ids_in_status_are_not_a_finding(tmp_path):
 
 
 def test_generated_marker_stands_the_rule_down(tmp_path):
+    """Implements: TC-075"""
     # A done id INSIDE a generated block does not flag: the block is spliced by
     # gen_trajectory --status and its freshness is the status-map byte-compare
     # step's job, so the token rule yields there (and only there — see the
@@ -1149,6 +1169,7 @@ def test_generated_marker_exempts_only_the_block(tmp_path):
 
 
 def test_forward_only_opt_out_silences(tmp_path):
+    """Implements: TC-075"""
     # docs/trajectory-check: off silences the whole check, done id and all.
     write_wis_sr(tmp_path, "WI-001,Shipped,scripts,,,done,shipped it,\n")
     write_status(tmp_path, "## Recently closed\n- WI-001 landed.\n")
@@ -1159,6 +1180,7 @@ def test_forward_only_opt_out_silences(tmp_path):
 
 
 def test_forward_only_vacuous_on_placeholder_registry(tmp_path):
+    """Implements: TC-075"""
     # A placeholder-only registry has no real (let alone done) WIs, so even a
     # status.md echoing the inert WI-000 id triggers nothing.
     write_wis(tmp_path, PLACEHOLDER_ROW)

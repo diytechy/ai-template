@@ -12,6 +12,8 @@ The fixture's two functions score 21 each (threshold 15). Only `tangled` has a
 baseline row. `other` is unstamped debt in the SAME file, so a report that
 measured the whole touched file instead of the touched functions would name it:
 that is what makes "untouched functions are not measured" observable.
+
+Implements: TC-249
 """
 
 import subprocess
@@ -287,6 +289,7 @@ def test_on_a_claimed_branch_the_change_is_read_from_the_merge_base(
 def test_an_undeclared_trunk_on_a_claimed_lane_skips_naming_the_declaration(
     tmp_path, cr, capsys, gating
 ):
+    """Implements: TC-369"""
     # A claimed lane whose trunk line is gone: the lane's base cannot be read,
     # so each measure is a SKIP that names the declaration to add, never an
     # unreadable history, and the exit stays 0 (no worsening was measured).

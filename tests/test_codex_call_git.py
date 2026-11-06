@@ -126,7 +126,10 @@ def test_a_sol_review_in_a_lane_commits_one_call_log_with_codex_usage(
     tmp_path, standin
 ):
     """Adequacy witness: a route that left the log uncommitted, recorded no
-    usage, or wrote the stream instead of the final text fails here."""
+    usage, or wrote the stream instead of the final text fails here.
+
+    Implements: TC-384
+    """
     lane = _lane(tmp_path)
     base = _head(lane)
     code, text, out = _run(tmp_path, standin, "REVIEW-A", lane)
@@ -159,7 +162,10 @@ def test_a_committed_work_file_is_an_edit_and_the_log_is_still_recorded(
     tmp_path, standin
 ):
     """Adequacy witness: a check that compared only the status, or a route
-    that skipped the record after an edit, fails here."""
+    that skipped the record after an edit, fails here.
+
+    Implements: TC-384
+    """
     lane = _lane(tmp_path)
     code, text, _ = _run(tmp_path, standin, "REVIEW-A", lane, act="commit-work")
     assert code == 3, text
@@ -171,7 +177,10 @@ def test_a_committed_work_file_is_an_edit_and_the_log_is_still_recorded(
 def test_an_uncommitted_work_file_is_an_edit_for_sol_and_output_for_terra(
     tmp_path, standin
 ):
-    """Adequacy witness: one rule for both roles reads one of them wrong."""
+    """Adequacy witness: one rule for both roles reads one of them wrong.
+
+    Implements: TC-384
+    """
     sol = _lane(tmp_path / "sol")
     code, text, _ = _run(tmp_path, standin, "REVIEW-A", sol, act="leave-work")
     assert code == 3 and "work.txt" in text, text
@@ -199,7 +208,10 @@ def test_an_index_only_change_is_an_edit_for_sol_and_output_for_terra(
     by the model: its content on disk is unchanged and its index entry is
     not. For Sol that is an edit, named; for Terra it is uncommitted output.
     Adequacy witness: a check that compared only the files on disk reads the
-    Sol cases as clean."""
+    Sol cases as clean.
+
+    Implements: TC-384
+    """
     lane = _lane(tmp_path)
     (lane / "work.txt").write_text("work\n", encoding="utf-8", newline="\n")
     fixture_commit(lane, "a work file", "work.txt")
@@ -230,7 +242,10 @@ def test_another_calls_log_commit_during_the_run_is_not_an_edit(
     """Another call's `record` committing its own standard-call log during
     this call is not an edit; a commit of any other shape is. Adequacy
     witness: a check without the discount reads the first as an edit, and a
-    discount by subject line or directory passes the others."""
+    discount by subject line or directory passes the others.
+
+    Implements: TC-384
+    """
     lane = _lane(tmp_path)
     old = fx.call_log(lane / "docs" / "iteration", role="CRITIQUE", route="OPENAI-SOL")
     fixture_commit(lane, "telemetry: an older call", fx.rel(lane, old))
@@ -254,7 +269,10 @@ def test_a_waiting_call_log_committed_by_its_own_record_is_not_an_edit(
     """A second call's log, uncommitted at the first snapshot and committed
     unchanged by its own record during the run, is not an edit; modified or
     deleted instead, it is. Adequacy witness: a judge that discounted any
-    vanished call log passes the modified and deleted variants."""
+    vanished call log passes the modified and deleted variants.
+
+    Implements: TC-384
+    """
     lane = _lane(tmp_path)
     waiting = fx.call_log(
         lane / "docs" / "iteration", role="CRITIQUE", route="OPENAI-SOL"
@@ -301,7 +319,10 @@ def _carrier_case(lane, case):
 )
 def test_a_resumed_turn_with_a_bad_carrier_never_launches(tmp_path, standin, case):
     """Adequacy witness: a resume that fell back to a fresh thread, or to the
-    newest readable log, launches here."""
+    newest readable log, launches here.
+
+    Implements: TC-384
+    """
     lane = _lane(tmp_path)
     named = _carrier_case(lane, case)
     code, text, _ = _run(tmp_path, standin, "AUTHOR", lane, "--wi", "WI-1", "--resume")
@@ -319,7 +340,10 @@ def test_an_author_turn_naming_a_work_item_outside_the_lane_is_refused(
     refused before launch, naming the id and the lane's ids; another role's
     work item is attribution only. Adequacy witness: an entry point that
     took the typed id on trust launches the AUTHOR turn here, and its log is
-    one the next resumed turn skips as another lane's."""
+    one the next resumed turn skips as another lane's.
+
+    Implements: TC-384
+    """
     lane = _lane(tmp_path)
     code, text, out = _run(tmp_path, standin, role, lane, "--wi", "WI-9")
     assert code == expected, text
@@ -333,7 +357,10 @@ def test_an_author_turn_naming_a_work_item_outside_the_lane_is_refused(
 
 def test_a_second_terra_turn_resumes_the_first_turns_thread(tmp_path, standin):
     """Adequacy witness: a resume that read the id typed into the decisions
-    record, or started a fresh thread, launches the wrong form here."""
+    record, or started a fresh thread, launches the wrong form here.
+
+    Implements: TC-384
+    """
     lane = _lane(tmp_path)
     code, text, _ = _run(
         tmp_path, standin, "AUTHOR", lane, "--wi", "WI-1", thread="T-FIRST"
@@ -374,7 +401,10 @@ def test_a_second_terra_turn_resumes_the_first_turns_thread(tmp_path, standin):
 
 def test_a_rewritten_history_is_an_edit(tmp_path, standin):
     """Adequacy witness: a check that listed only `before..after` (empty after
-    a reset) reads a rewritten history as clean."""
+    a reset) reads a rewritten history as clean.
+
+    Implements: TC-384
+    """
     lane = _lane(tmp_path)
     (lane / "extra.txt").write_text("x\n", encoding="utf-8")
     fixture_commit(lane, "an extra lane commit", "extra.txt")
@@ -384,7 +414,10 @@ def test_a_rewritten_history_is_an_edit(tmp_path, standin):
 
 def test_git_unreadable_after_the_call_is_never_success(tmp_path, standin):
     """Adequacy witness: a check that read a failed git call as an empty
-    answer exits 0 here."""
+    answer exits 0 here.
+
+    Implements: TC-384
+    """
     lane = _lane(tmp_path)
     code, text, _ = _run(tmp_path, standin, "REVIEW-A", lane, act="break-git")
     assert code == 5, text
@@ -415,7 +448,10 @@ def _outside_roots(tmp_path):
 
 def test_a_call_outside_a_lane_spools_and_changes_nothing(tmp_path, standin):
     """Adequacy witness: a record that committed wherever it was rooted
-    moves a ref or HEAD here, and one that refused leaves no log."""
+    moves a ref or HEAD here, and one that refused leaves no log.
+
+    Implements: TC-384
+    """
     for label, root in _outside_roots(tmp_path).items():
         before, spooled = _state(root), _spooled(root)
         code, text, _ = _run(tmp_path, standin, "CRITIQUE", root)
@@ -430,7 +466,10 @@ def test_concurrent_calls_from_one_detached_checkout_each_spool_their_own_log(
     tmp_path, standin
 ):
     """Adequacy witness: a spool keyed by anything but the call's own name
-    loses two of the three logs."""
+    loses two of the three logs.
+
+    Implements: TC-384
+    """
     primary = _primary(_lane(tmp_path))
     detached = tmp_path / "detached"
     fixture_git(primary, "worktree", "add", "-q", "--detach", str(detached), "main")
@@ -464,7 +503,10 @@ def test_concurrent_calls_from_one_detached_checkout_each_spool_their_own_log(
 
 def test_a_refused_telemetry_commit_exits_nonzero_naming_the_log(tmp_path, standin):
     """Adequacy witness: a route that discarded `commit_telemetry`'s refusal
-    exits 0 with the log left dangling."""
+    exits 0 with the log left dangling.
+
+    Implements: TC-384
+    """
     lane = _lane(tmp_path)
     head = _head(lane)
     code, text, _ = _run(tmp_path, standin, "REVIEW-A", lane, act="lock-index")
@@ -484,7 +526,10 @@ def test_a_call_inside_the_blackout_window_is_refused_before_launch(
     """Each role is refused before launch inside the window, as every
     non-adjudication call is. In process, so the window's clock can be set.
     Adequacy witness: a route that bypassed the service's launch refusal
-    launches the stand-in here."""
+    launches the stand-in here.
+
+    Implements: TC-384
+    """
     lane = _lane(tmp_path)
     (lane / "docs" / "process.toml").write_text(
         '[policies]\ntrunk = "main"\nblackout = "12:00-19:00"\n',
@@ -576,7 +621,10 @@ def test_lane_ness_follows_the_written_predicate_and_the_close_first_case(tmp_pa
     reading of B's tree alone misses the close-first row, one of trunk's
     tree alone misses the dropped-from-trunk row, and one that lets an
     unreadable trunk read decide "not a lane" misses the trunk-unreadable
-    row whose claim is on the branch."""
+    row whose claim is on the branch.
+
+    Implements: TC-384
+    """
     expected = {
         "primary on trunk": None,
         "primary on claimed B": None,

@@ -72,6 +72,7 @@ def _write(root, **over):
 
 # --- the record ---------------------------------------------------------------
 def test_the_record_round_trips_through_its_own_parser(tmp_path):
+    """Implements: TC-187"""
     root = _repo(tmp_path)
     _write(root)
     parsed = kitevidence.read(root)
@@ -84,7 +85,10 @@ def test_a_file_that_is_not_a_record_reads_as_ABSENT_and_never_raises(tmp_path):
     """The deliberate divergence from `stage.parse`, which RAISES on a bad value.
     This file is a CLAIM; every way it can be wrong has the same right answer —
     the claim does not hold — and a crashed reader would be worse than a doubted
-    one."""
+    one.
+
+    Implements: TC-187
+    """
     root = _repo(tmp_path)
     path = root / kitevidence.EVIDENCE_FILE
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -95,12 +99,14 @@ def test_a_file_that_is_not_a_record_reads_as_ABSENT_and_never_raises(tmp_path):
 
 # --- the verdict --------------------------------------------------------------
 def test_no_record_means_the_claim_does_not_hold(tmp_path):
+    """Implements: TC-187"""
     holds, reason = kitstage.evidence_verdict(_repo(tmp_path), memo=None)
     assert holds is False
     assert kitevidence.EVIDENCE_FILE in reason
 
 
 def test_a_matching_record_HOLDS(tmp_path):
+    """Implements: TC-187"""
     root = _repo(tmp_path)
     _write(root)
     holds, reason = kitstage.evidence_verdict(root, memo=None)
@@ -110,7 +116,10 @@ def test_a_matching_record_HOLDS(tmp_path):
 def test_a_SMOKE_tier_record_is_refused_by_the_READER(tmp_path):
     """Two refusals for one rule. The producer refuses to WRITE a partial tier;
     this is the second half — the reader refuses to BELIEVE one — because the file
-    is committed state and a consumer must not have to trust its writer."""
+    is committed state and a consumer must not have to trust its writer.
+
+    Implements: TC-187
+    """
     root = _repo(tmp_path)
     _write(root, tier="smoke")
     holds, reason = kitstage.evidence_verdict(root, memo=None)
@@ -119,6 +128,7 @@ def test_a_SMOKE_tier_record_is_refused_by_the_READER(tmp_path):
 
 
 def test_an_outcome_other_than_pass_is_refused(tmp_path):
+    """Implements: TC-187"""
     root = _repo(tmp_path)
     _write(root, outcome="fail")
     assert kitstage.evidence_verdict(root, memo=None)[0] is False
@@ -157,7 +167,10 @@ def test_an_outcome_other_than_pass_is_refused(tmp_path):
 def test_the_claim_is_bound_to_the_TREE_it_was_measured_on(tmp_path, edit):
     """The WI-492 precedent, applied: value-bound, never space-bound. A record
     that survived any of these edits would be a green measured on a tree that no
-    longer exists — the exact failure the stage unification exists to prevent."""
+    longer exists — the exact failure the stage unification exists to prevent.
+
+    Implements: TC-187
+    """
     root = _repo(tmp_path)
     _write(root)
     assert kitstage.evidence_verdict(root, memo=None)[0] is True
@@ -169,7 +182,10 @@ def test_the_claim_is_bound_to_the_TREE_it_was_measured_on(tmp_path, edit):
 
 def test_build_residue_is_NOT_part_of_the_binding(tmp_path):
     """A `__pycache__` entry changes on every interpreter run, so folding it would
-    make every record stale the moment anything imported the tree."""
+    make every record stale the moment anything imported the tree.
+
+    Implements: TC-187
+    """
     root = _repo(tmp_path)
     _write(root)
     cache = root / "src" / "__pycache__"
@@ -195,7 +211,10 @@ def test_a_WIDE_declared_surface_still_binds(tmp_path):
 
 def test_an_UNDECLARED_source_surface_binds_to_nothing_and_is_refused(tmp_path):
     """A binding over an empty surface would be a digest of nothing: it would
-    match forever. The producer refuses by name rather than writing one."""
+    match forever. The producer refuses by name rather than writing one.
+
+    Implements: TC-186
+    """
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "stack.ini").write_text("[product]\ntest = pytest\n", "utf-8")
     assert kitevidence.source_paths(tmp_path) == []
@@ -211,7 +230,10 @@ def test_the_STAGE_fingerprint_moves_with_the_SOURCE_only_while_a_record_exists(
     — so `read_stage` would return the RECORDED `DevStg-Release` without ever
     asking whether the evidence still held, and `derive_stage --check` would call
     the committed file fresh. With no record, the source is not folded at all, so
-    an adopter below the rung pays nothing."""
+    an adopter below the rung pays nothing.
+
+    Implements: TC-187
+    """
     root = _repo(tmp_path)
     before = kitstage.fingerprint(root, memo=None)
     (root / "src" / "app.py").write_text("VALUE = 99\n", encoding="utf-8")
@@ -229,6 +251,7 @@ def test_the_STAGE_fingerprint_moves_with_the_SOURCE_only_while_a_record_exists(
 
 
 def test_the_evidence_file_is_a_declared_stage_input(tmp_path):
+    """Implements: TC-187"""
     declared = [d for d, _s in kitstage.DECLARED_INPUTS]
     assert kitevidence.EVIDENCE_FILE in declared
 
@@ -236,7 +259,10 @@ def test_the_evidence_file_is_a_declared_stage_input(tmp_path):
 def test_the_binding_does_not_fold_the_record_itself(tmp_path):
     """It cannot: a record would have to contain its own digest. Editing an
     unrelated field of the file must therefore leave the binding computable and
-    unchanged — what catches a doctored file is the field check, not the fold."""
+    unchanged — what catches a doctored file is the field check, not the fold.
+
+    Implements: TC-187
+    """
     root = _repo(tmp_path)
     binding = kitstage.evidence_binding(root, memo=None)
     _write(root, revision="deadbee")
@@ -267,6 +293,7 @@ def _stage(evidence_passed):
 
 
 def test_a_settled_spine_reaches_RELEASE_only_with_the_evidence_verdict():
+    """Implements: TC-187"""
     assert _stage(False) == kitladder.STAGE_IMPL
     assert _stage(True) == kitladder.STAGE_RELEASE
 
@@ -274,7 +301,10 @@ def test_a_settled_spine_reaches_RELEASE_only_with_the_evidence_verdict():
 def test_the_evidence_argument_cannot_lift_an_UNSETTLED_spine():
     """Evidence is the LAST condition, not an override. A repo whose test cases
     are still Drafted does not reach Release because a suite went green — the
-    green was measured over a spine that is still being written."""
+    green was measured over a spine that is still being written.
+
+    Implements: TC-187
+    """
     drafted = RULES.spine_stage(
         [dict(SR)],
         [dict(LLR)],
@@ -288,7 +318,10 @@ def test_the_evidence_argument_cannot_lift_an_UNSETTLED_spine():
 
 def test_the_derivation_reaches_RELEASE_end_to_end(tmp_path, monkeypatch):
     """The whole chain in one place: a holding record -> `evidence_passed` ->
-    `spine_stage` -> the recorded `stage =` field."""
+    `spine_stage` -> the recorded `stage =` field.
+
+    Implements: TC-187
+    """
     root = _repo(tmp_path)
     monkeypatch.setattr(
         DERIVE.spine_rules,
@@ -325,6 +358,7 @@ def _fake_harness(exit_code):
 
 
 def test_a_GREEN_run_writes_a_record_that_HOLDS(tmp_path, monkeypatch):
+    """Implements: TC-186"""
     root = _repo(tmp_path)
     monkeypatch.setattr(PRODUCER, "harness_command", _fake_harness(0))
     assert PRODUCER.main(["--root", str(root), "--tier", "full"]) == 0
@@ -334,7 +368,10 @@ def test_a_GREEN_run_writes_a_record_that_HOLDS(tmp_path, monkeypatch):
 def test_a_RED_run_writes_NOTHING(tmp_path, monkeypatch):
     """There is no `outcome = fail` state and no flag that records without
     running: a red run leaves the committed state exactly as it was (OI-30 D2 —
-    only the harness's own exit may be the source of the claim)."""
+    only the harness's own exit may be the source of the claim).
+
+    Implements: TC-186
+    """
     root = _repo(tmp_path)
     monkeypatch.setattr(PRODUCER, "harness_command", _fake_harness(1))
     assert PRODUCER.main(["--root", str(root), "--tier", "full"]) == 1
@@ -342,6 +379,7 @@ def test_a_RED_run_writes_NOTHING(tmp_path, monkeypatch):
 
 
 def test_a_RED_run_does_not_overwrite_an_existing_record(tmp_path, monkeypatch):
+    """Implements: TC-186"""
     root = _repo(tmp_path)
     monkeypatch.setattr(PRODUCER, "harness_command", _fake_harness(0))
     PRODUCER.main(["--root", str(root), "--tier", "full"])
@@ -352,6 +390,7 @@ def test_a_RED_run_does_not_overwrite_an_existing_record(tmp_path, monkeypatch):
 
 
 def test_the_writer_refuses_a_PARTIAL_tier(tmp_path, monkeypatch):
+    """Implements: TC-186"""
     root = _repo(tmp_path)
     monkeypatch.setattr(PRODUCER, "harness_command", _fake_harness(0))
     assert PRODUCER.main(["--root", str(root), "--tier", "smoke"]) == 2
@@ -359,6 +398,7 @@ def test_the_writer_refuses_a_PARTIAL_tier(tmp_path, monkeypatch):
 
 
 def test_dry_run_runs_nothing_and_writes_nothing(tmp_path, monkeypatch):
+    """Implements: TC-186"""
     root = _repo(tmp_path)
     marker = tmp_path / "the-harness-ran"
     monkeypatch.setattr(
@@ -378,6 +418,7 @@ def test_dry_run_runs_nothing_and_writes_nothing(tmp_path, monkeypatch):
 def test_check_reports_the_verdict_and_exits_nonzero_when_it_does_not_hold(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-186"""
     root = _repo(tmp_path)
     assert PRODUCER.main(["--root", str(root), "--check"]) == 1
     _write(root)
@@ -388,7 +429,10 @@ def test_check_reports_the_verdict_and_exits_nonzero_when_it_does_not_hold(
 
 def test_the_producer_names_the_documented_harness_entry_point():
     """SR-151/SR-152's one-definition-of-passing rule reaches the driver too: it
-    invokes `check.py` at a declared tier, never a test command of its own."""
+    invokes `check.py` at a declared tier, never a test command of its own.
+
+    Implements: TC-186
+    """
     argv = PRODUCER.harness_command(".", "full")
     assert argv[1].endswith("check.py")
     assert argv[2:] == ["--tier", "full"]
@@ -397,7 +441,10 @@ def test_the_producer_names_the_documented_harness_entry_point():
 
 def test_the_binding_written_is_the_one_the_reader_recomputes(tmp_path, monkeypatch):
     """The producer and the verdict must fold identically — a mismatch here would
-    make every freshly written record read stale."""
+    make every freshly written record read stale.
+
+    Implements: TC-186
+    """
     root = _repo(tmp_path)
     monkeypatch.setattr(PRODUCER, "harness_command", _fake_harness(0))
     PRODUCER.main(["--root", str(root), "--tier", "full"])
@@ -410,5 +457,8 @@ def test_the_binding_written_is_the_one_the_reader_recomputes(tmp_path, monkeypa
 def test_the_shipped_harness_the_driver_names_actually_exists():
     """Not a unit-test artifact: the shipped driver spawns the kit's own
     `check.py`, so a rename of the harness reddens here rather than at an
-    adopter's first attempt to earn the rung."""
+    adopter's first attempt to earn the rung.
+
+    Implements: TC-186
+    """
     assert PRODUCER.harness_path().is_file()

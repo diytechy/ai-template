@@ -4,6 +4,8 @@ WARN-ONLY FOREVER, by the D-7 ruling this reactivates a narrower half of:
 never gates, not even under --strict. Fixtures build tiny synthetic
 `project-trajectory/scripts/` trees so the tests never depend on this repo's
 own live population (which drifts every commit).
+
+Implements: TC-190
 """
 
 from conftest import SCRIPTS, run_py

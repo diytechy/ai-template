@@ -843,7 +843,7 @@ _The --status snapshot (WI-280 split of gen_trajectory.py)._
 ### `scripts/trajectory_arch`
 _Architecture seams, components, contracts, and spec-boundary decisions._
 
-**IF-263** — ``check_trajectory`` imports and re-exports this module's architecture rule surface. Inputs are a repository root, the spine/config files beneath it and, for `tc_tag_findings`, the test files under the declared tests root; outputs are normalized inventories or finding strings. The module performs no writes and exposes no command-line entry point.
+**IF-263** — ``check_trajectory`` imports and re-exports this module's architecture rule surface. Inputs are a repository root, the spine/config files beneath it and, for `tc_tag_findings`, the test files under the declared tests root, whose tags it holds equal to the TC rows' `Evidence` cells; outputs are normalized inventories or finding strings. The module performs no writes and exposes no command-line entry point.
 
 ### `scripts/trunk_step`
 _The serial trunk step — compile the log fragments, regenerate the trunk artifacts._

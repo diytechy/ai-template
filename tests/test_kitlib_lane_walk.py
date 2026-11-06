@@ -10,6 +10,8 @@ record what they were asked.
 
 What an unlistable range means is the caller's own: `squash_lines` hands back
 the line the caller passed in, or None when it passed None.
+
+Implements: TC-383
 """
 
 from kitlib import git as kgit

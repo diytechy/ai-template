@@ -106,18 +106,22 @@ def _plant_scaffold():
 
 
 def test_checker_catches_unmapped_file():
+    """Implements: TC-204"""
     assert "docs/bare" in _plant_scaffold().get("unmapped_file", [])
 
 
 def test_checker_catches_unresolved_reference():
+    """Implements: TC-204"""
     assert "docs/bogus" in _plant_scaffold().get("unresolved_reference", [])
 
 
 def test_checker_catches_missing_file():
+    """Implements: TC-204"""
     assert "docs/gone" in _plant_scaffold().get("missing_file", [])
 
 
 def test_checker_catches_stale_entry():
+    """Implements: TC-204"""
     assert "docs/present-exclusion" in _plant_scaffold().get("stale_entry", [])
 
 
@@ -128,6 +132,7 @@ def test_checker_clears_the_control_row():
 
 
 def test_stale_arm_exempts_the_lifecycle_marker():
+    """Implements: TC-204"""
     # A present, LIFECYCLE-marked exclusion is a legal state, never stale;
     # a legitimately-absent exclusion never fires either.
     stale = _plant_scaffold().get("stale_entry", [])
@@ -139,6 +144,7 @@ def test_stale_arm_exempts_the_lifecycle_marker():
 
 
 def test_policy_is_warn_first_for_the_reference_classes():
+    """Implements: TC-204"""
     policy = gen_arch_map.MAPPING_FINDING_POLICY
     assert policy["unmapped_file"] == "warn"
     assert policy["unresolved_reference"] == "warn"
@@ -160,6 +166,7 @@ def test_report_gates_only_on_gate_classed_findings():
 
 
 def test_generated_output_inherits_its_generator_mapping():
+    """Implements: TC-204"""
     delivery = (
         {"generator.tmpl"},
         {},
@@ -187,6 +194,7 @@ def _real_mapping_findings():
 
 
 def test_real_mapping_has_no_gate_class_findings():
+    """Implements: TC-204"""
     # The every-file-maps standing evidence: over the physical package, MAPPING,
     # conditional/generated deliveries and exclusions, no gate finding survives.
     # Unmapped entries remain warn-only — the burn-down, not a failure.
@@ -202,6 +210,7 @@ def test_real_mapping_has_no_gate_class_findings():
 
 
 def test_every_filled_reference_resolves():
+    """Implements: TC-204"""
     # Each reference the burn-down has filled must resolve SR -> live need;
     # an unresolved one is the class the checker exists to surface.
     sr_by_id, sn_ids = gen_arch_map.load_spine_index(ROOT)
@@ -231,6 +240,7 @@ def test_burndown_has_begun_and_the_baseline_is_measurable():
 
 
 def test_delivery_census_classifies_every_physical_package_source():
+    """Implements: TC-204"""
     sources, exclusions, conditional, _generated = bootstrap.delivery_inventory()
     classified = {src for src, _dst, _ref in bootstrap.mapping_entries()}
     classified.update(exclusions)

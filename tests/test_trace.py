@@ -7,6 +7,8 @@ the generated report/HTML render. WI-521 slice 3 moved the IF-### interface-seam
 tier to tests/test_trace_interfaces.py; the pure in-process rule decisions moved
 to tests/test_trace_rules.py, the git-backed re-attestation brief to
 tests/test_trace_briefs.py.
+
+Implements: TC-001
 """
 
 import pytest
@@ -385,6 +387,7 @@ def make_critique_project(scaffold):
 
 
 def test_critique_verification_value(scaffold):
+    """Implements: TC-086"""
     make_critique_project(scaffold)
     # 1) Critique is in the closed Verification vocabulary: --strict-schema does
     #    not flag it as out-of-vocabulary.
@@ -601,6 +604,7 @@ def test_aspect_values_yield_report_section(scaffold):
 
 
 def test_out_of_vocabulary_aspect_is_a_schema_finding(scaffold):
+    """Implements: TC-189"""
     # THE CLOSED VOCABULARY, DRIVEN (sitting-2 decision 10, executed by the
     # WI-451 re-tier). The point of closing it is that the retired free-text
     # `Area` let 31 values accrete, 25 of which were a component by another

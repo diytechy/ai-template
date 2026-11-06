@@ -30,6 +30,7 @@ from traj_fixtures import (
 
 
 def test_dag_layers_by_dependency_rank(tmp_path):
+    """Implements: TC-038"""
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
     dag = (
@@ -361,6 +362,7 @@ def _endpoint_of(point, rect, pad):
 
 
 def test_t8_no_wire_passes_through_an_unrelated_node_box(tmp_path):
+    """Implements: TC-125"""
     gt = load_script("gen_trajectory")
     pad = gt.PORT_R + 4.0  # a wire legitimately starts/ends ON its own port circle
     swept = detoured = 0

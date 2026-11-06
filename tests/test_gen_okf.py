@@ -6,6 +6,8 @@ real registry row, frontmatter typed, graph links resolving), self-pruning
 (a deleted row's file goes away; a stray hand-added file reads as stale), and
 free for non-adopters (placeholder-only registries are vacuous; [checks] okf_export
 `off` silences). Exercised over the conftest minimal project.
+
+Implements: TC-042
 """
 
 from conftest import SCRIPTS, make_minimal_project, run_py, set_process_key

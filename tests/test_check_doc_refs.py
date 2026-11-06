@@ -4,6 +4,8 @@ False-positive control is the design center: only path-shaped backticked
 tokens and the explicit `sym:` convention are validated — never every
 backticked word. Warn-first (exit 0) unless --strict; the sym: tier skips
 cleanly without a module-map inventory. Exercised over temp repos.
+
+Implements: TC-041
 """
 
 from conftest import SCRIPTS, load_script, run_py
@@ -502,6 +504,7 @@ def test_registry_placeholder_rows_and_symbol_joins_stay_out_of_scope(tmp_path):
 
 
 def test_llr_symbol_anchor_reds_on_a_planted_defect(tmp_path):
+    """Implements: TC-175"""
     # NON-VACUITY, planted: a real module and a real LLR naming a real symbol
     # is silent; the same fixture plus one row naming a symbol nothing defines
     # is a DANGLING finding that gates under --strict.
@@ -523,6 +526,7 @@ def test_llr_symbol_anchor_reds_on_a_planted_defect(tmp_path):
 
 
 def test_llr_symbol_anchor_needs_only_one_resolving_token(tmp_path):
+    """Implements: TC-175"""
     # The anchor, stated as a test: a cell whose OTHER members are a local, a
     # CSS custom property and free prose is still founded on its one real
     # symbol — and the misses are COUNTED as untraced, never silently dropped.
@@ -542,6 +546,7 @@ def _nonpy_repo(root, module="hooks/pre-commit"):
 
 
 def test_llr_symbol_anchor_skips_a_non_python_module(tmp_path):
+    """Implements: TC-175"""
     # A hook or a shell template has no Python name to bind, so the rule has
     # nothing to say — it must skip, not convict.
     _nonpy_repo(tmp_path)
@@ -550,6 +555,7 @@ def test_llr_symbol_anchor_skips_a_non_python_module(tmp_path):
 
 
 def test_llr_symbol_anchor_reports_the_non_python_skip_as_an_advisory(tmp_path):
+    """Implements: TC-175"""
     # WI-449 / OI-20's OI-28 guard: the skip is CORRECT and unchanged, but it
     # used to be SILENT, which is a fail-open now that template paths are ruled
     # admissible in Module as realization artifacts. The row must be named,
@@ -569,6 +575,7 @@ def test_llr_symbol_anchor_reports_the_non_python_skip_as_an_advisory(tmp_path):
 
 
 def test_llr_symbol_anchor_binds_through_the_py_half_of_a_mixed_module_cell(tmp_path):
+    """Implements: TC-175"""
     # A row naming BOTH a hook and a `.py` module is checkable through its `.py`
     # half, so the rule runs normally: it founds on the binding token and stays
     # silent. The advisory is for rows with NO Python module at all.
@@ -586,6 +593,7 @@ def test_llr_symbol_anchor_binds_through_the_py_half_of_a_mixed_module_cell(tmp_
 
 
 def test_the_non_python_advisory_folds_to_one_line_when_the_list_is_long():
+    """Implements: TC-175"""
     # Legibility is the point of making the skip visible, so past the threshold
     # the per-row report folds to ONE line — which still names every row id, so
     # nothing is dropped, only the repetition.
@@ -615,6 +623,7 @@ def test_the_codesymbol_grammar_is_stated_where_the_rule_binds():
 
 
 def test_llr_symbol_anchor_sees_private_names_and_constants(tmp_path):
+    """Implements: TC-175"""
     # The reason the oracle is gen_arch_map.module_bindings and NOT the rendered
     # module map: the map is a public-API view that drops `_`-names and every
     # constant, and 41 of this repo's 149 live LLR rows name exactly those.
@@ -632,6 +641,7 @@ def test_llr_symbol_anchor_sees_private_names_and_constants(tmp_path):
 
 
 def test_llr_symbol_anchor_does_not_double_report_a_missing_module(tmp_path):
+    """Implements: TC-175"""
     # A Module that is not on disk is the PATH tier's finding. Reporting it here
     # too would count one rot twice and make the anchor's number unreadable.
     spine_repo(tmp_path, "scripts/real.py", module="scripts/gone.py", symbol="load")
@@ -641,6 +651,7 @@ def test_llr_symbol_anchor_does_not_double_report_a_missing_module(tmp_path):
 
 
 def test_llr_symbol_anchor_skips_placeholder_rows(tmp_path):
+    """Implements: TC-175"""
     # `*-000` example rows keep a scaffolded template copy-ready.
     spine_repo(tmp_path, "scripts/real.py")
     llr = tmp_path / "docs" / "requirements" / "low-level-requirements.csv"
@@ -684,6 +695,7 @@ def _add_llr(root, line):
 def test_a_listed_module_none_of_the_row_symbols_binds_in_is_counted_untraced(
     tmp_path,
 ):
+    """Implements: TC-175"""
     _two_module_row(tmp_path, "load", "def unrelated():\n    pass\n")
     proc = refs(tmp_path, "--strict", "--show-untraced")
     assert proc.returncode == 0, "never the exit code: " + proc.stdout + proc.stderr
@@ -702,6 +714,7 @@ def test_a_listed_module_none_of_the_row_symbols_binds_in_is_counted_untraced(
 
 
 def test_a_generic_main_does_not_bind_a_listed_module_for_the_count(tmp_path):
+    """Implements: TC-175"""
     # LLR-235's shape: the row names `main` beside its real symbol, and a second
     # listed module happens to define `main` too. The union anchor is unchanged
     # (the row is founded on `load`), but `main` no longer vouches for the
@@ -726,6 +739,7 @@ def test_a_generic_main_does_not_bind_a_listed_module_for_the_count(tmp_path):
 
 
 def test_a_name_every_cli_module_defines_does_not_bind_for_the_count(tmp_path):
+    """Implements: TC-175"""
     # Beyond `main`: a helper every entry point defines (here `parse_args`) is
     # as uninformative. `other.py` binds only the shared CLI names, so it is
     # counted; the registry names three CLI modules, and the shared set is
@@ -749,6 +763,7 @@ def test_a_name_every_cli_module_defines_does_not_bind_for_the_count(tmp_path):
 
 
 def test_the_unbound_total_counts_entries_not_the_phrase_in_other_prose(tmp_path):
+    """Implements: TC-175"""
     # The total is carried from the unbound entries themselves. A row whose own
     # CodeSymbol prose happens to contain the phrase renders an ordinary
     # untraced miss that quotes it, and that entry is not an unbound module.

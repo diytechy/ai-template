@@ -149,6 +149,7 @@ def _lines(out, word):
 
 
 def test_one_ingest_records_four_logs_with_the_usage_vocabulary(home, root, capsys):
+    """Implements: TC-387"""
     adapters = ui.session_adapters
     assert _ingest(root) == 0
     out = capsys.readouterr().out
@@ -203,6 +204,7 @@ def test_one_ingest_records_four_logs_with_the_usage_vocabulary(home, root, caps
 
 
 def test_the_invocation_id_is_derived_from_the_transcript_identity():
+    """Implements: TC-386"""
     ids = [ui.invocation_id(fx.NESTED, agent) for agent in AGENTS]
     assert all(re.fullmatch(r"[0-9a-f]{32}", i) for i in ids), ids
     assert len(set(ids)) == 4
@@ -214,6 +216,7 @@ def test_the_invocation_id_is_derived_from_the_transcript_identity():
 def test_ingesting_one_session_twice_records_nothing_the_second_time(
     home, root, capsys
 ):
+    """Implements: TC-389"""
     assert _ingest(root) == 0
     first = _logs(root)
     assert len(first) == 4
@@ -228,6 +231,7 @@ def test_ingesting_one_session_twice_records_nothing_the_second_time(
 def test_appended_messages_are_recorded_alone_under_the_same_identity(
     home, root, capsys
 ):
+    """Implements: TC-389"""
     path = fx.transcript(home, fx.NESTED, fx.A7B)
     rest = fx.cut_after_message(path, A7B_SECOND)
     assert _ingest(root) == 0
@@ -257,6 +261,7 @@ def test_appended_messages_are_recorded_alone_under_the_same_identity(
 def test_initial_resumed_and_repeated_ingests_give_two_contributions_summing_to_the_whole(
     home, root
 ):
+    """Implements: TC-389"""
     path = fx.transcript(home, fx.NESTED, fx.AF7)
     rest = fx.cut_after_message(path, AF7_FOURTH)
     assert _ingest(root) == 0
@@ -275,6 +280,7 @@ def test_initial_resumed_and_repeated_ingests_give_two_contributions_summing_to_
 def test_an_open_message_is_recorded_once_final_and_the_contributions_equal_the_completed_transcript(
     home, root, capsys
 ):
+    """Implements: TC-389"""
     path = fx.transcript(home, fx.NESTED, fx.A23)
     rest = fx.cut_after_first_record(path, fx.A23_THIRD)
     assert _ingest(root) == 0
@@ -305,7 +311,10 @@ def test_recorded_unchanged_and_open_lines_name_each_invocations_role_type_and_i
     """Each per-invocation line opens with that invocation's own role, agent
     type and agent id. Catches a line that drops the agent id or type, the
     session's prefix printed on a sub-agent's line, or an `open` or
-    `unchanged` line printed bare or under another invocation's prefix."""
+    `unchanged` line printed bare or under another invocation's prefix.
+
+    Implements: TC-389
+    """
     fx.cut_after_first_record(fx.transcript(home, fx.NESTED, fx.A23), fx.A23_THIRD)
     session = "COORDINATOR - -: "
     agent = "SUBAGENT general-purpose {}: ".format(fx.A23)
@@ -330,6 +339,7 @@ def test_recorded_unchanged_and_open_lines_name_each_invocations_role_type_and_i
 
 
 def test_two_contributions_whose_last_messages_share_a_second_both_survive(home, root):
+    """Implements: TC-389"""
     path = fx.transcript(home, fx.NESTED, fx.A7B)
     rest = fx.cut_after_message(path, A7B_SECOND)
     first_end = fx.last_timestamp(path)
@@ -356,6 +366,7 @@ def test_two_contributions_whose_last_messages_share_a_second_both_survive(home,
 def test_a_run_killed_after_some_logs_then_rerun_records_each_invocation_once(
     home, root, monkeypatch
 ):
+    """Implements: TC-389"""
     real = ui.session_service.record
     calls = []
 
@@ -379,6 +390,7 @@ def test_a_run_killed_after_some_logs_then_rerun_records_each_invocation_once(
 
 
 def test_a_torn_earlier_log_refuses_that_invocation_naming_it(home, root, capsys):
+    """Implements: TC-389"""
     path = fx.transcript(home, fx.NESTED, fx.A7B)
     rest = fx.cut_after_message(path, A7B_SECOND)
     assert _ingest(root) == 0
@@ -396,6 +408,7 @@ def test_a_torn_earlier_log_refuses_that_invocation_naming_it(home, root, capsys
 
 
 def test_a_cursor_missing_from_the_transcript_refuses(home, root, capsys):
+    """Implements: TC-389"""
     assert _ingest(root) == 0
     assert len(_of(root, fx.A7B)) == 1
     (log,) = [p for p in _logs(root) if _meta(p)["agent-id"] == fx.A7B]
@@ -410,6 +423,7 @@ def test_a_cursor_missing_from_the_transcript_refuses(home, root, capsys):
 def test_an_unknown_shape_exits_nonzero_and_records_nothing_for_that_transcript(
     home, root, capsys
 ):
+    """Implements: TC-391"""
     path = fx.transcript(home, fx.NESTED, fx.A7B)
     recs = fx.records(path)
     for rec in recs:
@@ -442,6 +456,7 @@ SERVICE_ARMS = [
 def test_a_service_recorded_session_skips_its_main_transcript(
     home, root, capsys, monkeypatch, source, covers, recorded, skipped
 ):
+    """Implements: TC-390"""
     monkeypatch.setattr(ui.session_adapters, "CLAUDE_RESULT_COUNTS_SUBAGENTS", covers)
     planted = ac.write_session_log(
         _spool(root),
@@ -467,6 +482,7 @@ def test_a_service_recorded_session_skips_its_main_transcript(
 
 
 def test_no_transcript_text_reaches_any_written_log(home, root):
+    """Implements: TC-392"""
     plant = "PLANTED-TRANSCRIPT-TEXT-5c1e9a"
 
     def rewrite(path, edit):
@@ -514,11 +530,13 @@ def test_no_transcript_text_reaches_any_written_log(home, root):
 
 
 def test_no_session_is_a_usage_error(home, root, capsys):
+    """Implements: TC-391, TC-394"""
     assert ui.main(["--root", str(root)]) == 2
     assert _logs(root) == []
 
 
 def test_an_absent_transcript_is_named(home, root, capsys):
+    """Implements: TC-391, TC-394"""
     absent = "00000000-0000-4000-8000-000000000000"
     assert _ingest(root, absent) == 1
     out = capsys.readouterr().out
@@ -527,6 +545,7 @@ def test_an_absent_transcript_is_named(home, root, capsys):
 
 
 def test_a_finished_agents_hand_back_is_recorded_once(home, root, capsys):
+    """Implements: TC-388"""
     # The unmodified CHAIN fixture: every agent's last message is a hand-back
     # with no stop record, and each agent finished. Each is recorded at the
     # last-record sum over every unique message id, and nothing stays open.
@@ -553,6 +572,7 @@ def _log_of(root, agent):
 
 
 def test_an_unreadable_header_refuses_that_invocation_naming_it(home, root, capsys):
+    """Implements: TC-389"""
     # A directory under a log's name holds the invocation's one prior
     # contribution, and it cannot be opened. Adequacy witness: an ingest that
     # skipped an unreadable log as no record would record A7B again from its
@@ -574,6 +594,7 @@ def test_an_unreadable_header_refuses_that_invocation_naming_it(home, root, caps
 def test_a_header_without_its_cursor_or_key_refuses_that_invocation(
     home, root, capsys, key
 ):
+    """Implements: TC-389"""
     # Adequacy witness: an ingest that read a missing cursor as no prior
     # record would write a second A7B log of the same messages, and one that
     # checked only the cursor would report the keyless log unchanged.
@@ -596,6 +617,7 @@ def test_a_header_without_its_cursor_or_key_refuses_that_invocation(
 def test_a_log_in_the_roots_own_record_directory_counts_and_a_name_held_twice_is_read_once(
     home, root, capsys
 ):
+    """Implements: TC-389"""
     # Adequacy witness: an ingest that read only the spool would record all
     # four invocations again once their logs sit in the root's own record
     # directory, and one that kept every path rather than every name would
@@ -631,6 +653,7 @@ def test_a_log_in_the_roots_own_record_directory_counts_and_a_name_held_twice_is
 def test_an_unreadable_service_record_refuses_every_transcript_it_governs(
     home, root, capsys, monkeypatch, covers, refused, recorded
 ):
+    """Implements: TC-390"""
     # A log not named for one of the session's own invocations, cut short
     # before its header ends, could be the service's record of the session.
     # Adequacy witness: an ingest that passed over it would record the
@@ -670,6 +693,7 @@ def test_an_unreadable_service_record_refuses_every_transcript_it_governs(
 def test_the_home_is_the_config_variable_else_the_default_never_an_account_home(
     tmp_path, root, capsys, monkeypatch
 ):
+    """Implements: TC-394"""
     # The session sits in an account home under the user config directory,
     # and in a home the config variable names; the user's own `~/.claude`
     # starts empty. Adequacy witness: a selection that ignored the variable,
@@ -709,6 +733,7 @@ def test_the_home_is_the_config_variable_else_the_default_never_an_account_home(
 def test_the_ambient_session_id_is_ingested_when_none_is_named(
     home, root, capsys, monkeypatch
 ):
+    """Implements: TC-394"""
     # Adequacy witness: a command that ignored the ambient id would exit 2
     # with nothing recorded, and one that let it override `--session` would
     # record the CHAIN session in the second root.
@@ -725,6 +750,7 @@ def test_the_ambient_session_id_is_ingested_when_none_is_named(
 def test_an_absent_main_transcript_is_named_and_its_sub_agents_are_recorded(
     home, root, capsys
 ):
+    """Implements: TC-394"""
     # Adequacy witness: a command that refused the whole session for its
     # missing main transcript would record no sub-agent, and one that passed
     # over the absence would exit 0 without naming it.
@@ -739,6 +765,7 @@ def test_an_absent_main_transcript_is_named_and_its_sub_agents_are_recorded(
 
 
 def test_each_log_body_is_the_fixed_summary_of_counts_ids_and_timestamps(home, root):
+    """Implements: TC-392"""
     # Adequacy witness: the body must equal these lines exactly, so a body
     # holding transcript text, a raw usage object or any further line, or
     # one whose counts, ids or timestamps were not the contribution's, fails.
@@ -766,6 +793,7 @@ def test_each_log_body_is_the_fixed_summary_of_counts_ids_and_timestamps(home, r
 
 
 def test_an_unresolved_parent_is_named_on_its_agents_lines(home, root, capsys):
+    """Implements: TC-391"""
     # Adequacy witness: a command that dropped the reader's unresolved mark
     # would print no such line, and one that refused the orphaned agents
     # would record neither and exit 1.

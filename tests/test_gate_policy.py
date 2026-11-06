@@ -10,6 +10,8 @@ WI-437 (OI-25) adds the second tripwire: the name `gate_policy` belongs to the
 RETIRED enum alone. The live runtime label — who is holding the session,
 `human-held`/`loop-held` — is `session_hold`, and nothing may take the spent
 name back.
+
+Implements: TC-031
 """
 
 import re

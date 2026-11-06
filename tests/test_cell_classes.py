@@ -9,6 +9,8 @@ it is drift owed a re-attestation.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: its fixture builds and
 commits a real git repository, which the per-commit tier does not run.
+
+Implements: TC-222
 """
 
 import subprocess

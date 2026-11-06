@@ -20,6 +20,8 @@ it is forbidden to fix. This module pins the two halves of that rule:
      byte-identical to the one the merge produces, so it owes the trunk lane's
      gates. Opt-IN, so a caller that forgets the flag gets the stricter-for-the-
      trunk answer this module's fail-closed direction already prefers.
+
+Implements: TC-134
 """
 
 import os
@@ -279,6 +281,7 @@ def test_freshness_step_is_skipped_with_notice_on_a_work_branch(
 
 
 def test_every_declared_freshness_step_is_skipped(check, tmp_path, monkeypatch):
+    """Implements: TC-206"""
     # The set is a contract with §5.2, so assert it whole rather than sampling:
     # a step quietly added to or dropped from _TRUNK_FRESHNESS_STEPS changes
     # which gates a branch answers for.

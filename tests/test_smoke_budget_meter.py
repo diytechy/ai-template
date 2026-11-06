@@ -91,6 +91,7 @@ def _read_grandchild_tier(tmp_path):
 
 @windows_only
 def test_a_windows_reading_counts_the_exited_grandchild(tmp_path):
+    """Implements: TC-374"""
     assert _read_grandchild_tier(tmp_path) >= 1.0
 
 
@@ -112,6 +113,7 @@ JOINED_JOB_DRIVER = (
 
 @windows_only
 def test_a_joined_job_counts_an_exited_grandchild(tmp_path):
+    """Implements: TC-374"""
     # The driver burns, then waits on a child that waits on a burning
     # grandchild; both have exited when the driver reads its job.
     grandchild = BURN + "burn(0.4)\n"
@@ -176,6 +178,7 @@ def _wait_for(path, proc, seconds=60):
 
 @windows_only
 def test_an_outside_process_cannot_raise_a_reading(tmp_path):
+    """Implements: TC-374"""
     name = "ai-template-pytest-outsider-{}".format(uuid.uuid4().hex)
     ready, go = tmp_path / "ready", tmp_path / "go"
     tier = CAPPED_TIER.format(

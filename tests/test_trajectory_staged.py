@@ -794,6 +794,7 @@ _NEED_TOML = (
 
 
 def test_an_approved_needs_amendment_is_recorded_and_warned(tmp_path):
+    """Implements: TC-153"""
     # OI-100 gap 1 (WI-791): the amendment walk covers the need tier, and the
     # pre-commit warn reads the SAME walk, so what the author is warned about at
     # the commit is exactly what the merge mints an adjudication for. The hat
@@ -861,6 +862,7 @@ def test_staged_spine_amendments_read_a_commit_range_not_only_the_index(tmp_path
 
 
 def test_amending_approved_cells_without_moving_hat_refs_warns(tmp_path):
+    """Implements: TC-198"""
     # The fire case. `Requirement` moves, `Hat-Refs` does not.
     run_git = _init_spine_repo(tmp_path)
     _amend_sr(tmp_path, "the AMENDED text", "Approved")
@@ -878,6 +880,7 @@ def test_amending_approved_cells_without_moving_hat_refs_warns(tmp_path):
 
 
 def test_hat_refs_arm_is_silent_when_only_traced_cells_move(tmp_path):
+    """Implements: TC-198"""
     # THE REGRESSION CASE, and it is a MEASURED one: WI-484's phase-2 backfill
     # wrote `Hat-Refs` on 55 SR rows and raised seven warns on a neighbouring
     # check that blames the registry by LINE, because a blame time cannot tell
@@ -904,6 +907,7 @@ def test_hat_refs_arm_is_silent_when_only_traced_cells_move(tmp_path):
 
 
 def test_hat_refs_arm_is_silent_when_the_cell_moves_with_the_amendment(tmp_path):
+    """Implements: TC-198"""
     # The discharged case: substance and perspective record move together, which
     # is the behaviour the warn asks for. The WI-316 arm still fires (the prose
     # amendment still owes a human read) — the two arms answer different
@@ -920,6 +924,7 @@ def test_hat_refs_arm_is_silent_when_the_cell_moves_with_the_amendment(tmp_path)
 
 
 def test_hat_refs_arm_is_vacuous_where_a_row_has_no_baseline(tmp_path):
+    """Implements: TC-198"""
     # HONEST VACUITY, both shapes, inherited from the amendment set rather than
     # re-litigated: a row minted in this very commit has nothing to compare, and
     # a row below approval has blessed nothing to amend behind a human's back.
@@ -949,6 +954,7 @@ def test_hat_refs_arm_is_vacuous_where_a_row_has_no_baseline(tmp_path):
 
 
 def test_hat_refs_arm_is_silent_on_a_tier_that_carries_no_such_column(tmp_path):
+    """Implements: TC-198"""
     # STRUCTURAL SCOPE, not an allowlist. `Hat-Refs` is classified at the SR and
     # LLR tiers; the TC tier has no such column, and an absent column classes
     # `approved` under the fail-safe residual — so without this scoping every
@@ -993,6 +999,7 @@ def _cutover(root, run_git, message="cut the carrier over to TOML"):
 def test_the_cutover_commit_is_checked_by_the_amendment_guard_not_exempt_from_it(
     tmp_path,
 ):
+    """Implements: TC-160"""
     # Because each side resolves its carrier independently, a diff ACROSS the
     # cutover reads CSV on the old side and TOML on the new one and compares
     # cells. A lossless cutover is therefore SILENT here - and that silence is
@@ -1005,6 +1012,7 @@ def test_the_cutover_commit_is_checked_by_the_amendment_guard_not_exempt_from_it
 
 
 def test_text_smuggled_into_the_cutover_commit_is_caught(tmp_path):
+    """Implements: TC-160"""
     # The mutation that proves the silence above is not vacuous. Same cutover,
     # with one approved cell quietly rewritten in the same commit - the exact
     # shape a carrier migration invites, because 400-odd rows all change at once
@@ -1082,6 +1090,7 @@ def _init_critique_close_repo(tmp_path, verdict="CHANGES-REQUESTED findings=2"):
 
 
 def test_critique_ratchet_warns_and_holds(tmp_path):
+    """Implements: TC-086"""
     # Closing a Critique WI while the latest CRITIQUE verdict is CHANGES-REQUESTED,
     # touching neither the TC registry, the tests dir, nor a docs/rubrics/ file ->
     # warn (the fix landed in the artifact, not the chain).
@@ -1103,6 +1112,7 @@ def test_critique_ratchet_warns_and_holds(tmp_path):
 
 
 def test_critique_ratchet_silent_when_verdict_approves(tmp_path):
+    """Implements: TC-086"""
     # The latest CRITIQUE verdict is APPROVE -> no warn even with no chain delta.
     run_git = _init_critique_close_repo(tmp_path, verdict="APPROVE findings=0")
     run_git("add", "docs/work")

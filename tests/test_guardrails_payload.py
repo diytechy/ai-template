@@ -31,6 +31,7 @@ def _vendor(root):
 
 
 def test_the_longest_matching_substring_selects_the_payload(tmp_path):
+    """Implements: TC-290"""
     al = load_script("agent_loop")
     _vendor(tmp_path)
     narrow = al.guardrails_core(tmp_path, "claude-sonnet-5")
@@ -43,6 +44,7 @@ def test_the_longest_matching_substring_selects_the_payload(tmp_path):
 def test_a_guarded_session_carries_its_payload_and_the_policy_still_decides(
     tmp_path,
 ):
+    """Implements: TC-290"""
     al = load_script("agent_loop")
     _vendor(tmp_path)
     prompt, guarded = al.compose_session_prompt(
@@ -58,6 +60,7 @@ def test_a_guarded_session_carries_its_payload_and_the_policy_still_decides(
 
 
 def test_the_kit_ships_no_payload_so_every_model_gets_the_default_core(tmp_path):
+    """Implements: TC-290"""
     # The selector reads model-name substrings only from payload file names, so
     # a kit that ships no `core.<substring>.md` names no model to it. Pinned
     # over the delivered-package universe (every physical kit source, every

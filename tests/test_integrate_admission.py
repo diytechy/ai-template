@@ -40,6 +40,8 @@ of `test_integrate_station.py` gets to move it:
     claim, the mint and the telemetry commit) and the pre-commit step refuse a
     held status move outside a lane before writing, under the loop marker
     only. The rest of the lane rule is `tests/test_held_status_git.py`'s.
+
+Implements: TC-132, TC-241
 """
 
 import os
@@ -560,6 +562,7 @@ def test_a_scoped_adjudication_lane_may_land_its_flip_and_snapshot(tmp_path):
 
 
 def test_an_in_lane_act_backed_by_an_accepted_verdict_merges_at_the_slot(tmp_path):
+    """Implements: TC-331"""
     # The act is an independent adjudicator's, taken in the authoring lane: an
     # ORDINARY lane's flip and snapshot, backed by an accepted first-approval
     # verdict that judged SR-001, clear the rung, and the slot reaches the
@@ -588,14 +591,17 @@ def _unbacked(tmp_path, name, verdict):
 
 
 def test_an_in_lane_act_with_no_verdict_is_refused(tmp_path):
+    """Implements: TC-331"""
     _unbacked(tmp_path, "none", None)
 
 
 def test_an_in_lane_act_whose_verdict_failed_is_refused(tmp_path):
+    """Implements: TC-331"""
     _unbacked(tmp_path, "failed", ("failed", ["SR-001"]))
 
 
 def test_an_in_lane_act_whose_verdict_judged_other_rows_is_refused(tmp_path):
+    """Implements: TC-331"""
     _unbacked(tmp_path, "other-rows", ("accepted", ["SR-002"]))
 
 
@@ -686,6 +692,7 @@ def test_an_adjudication_snapshot_cannot_widen_beyond_its_flips(tmp_path):
 
 
 def test_unreadable_claimed_frontmatter_is_refused_at_the_approval_rung(tmp_path):
+    """Implements: TC-331"""
     # Sol r1 MAJOR 1 (WI-849): the claim records which scope bounds the lane's
     # acts, so a claim the rung cannot read is refused by name. Read as "no
     # claim" it would drop the bound: this act is backed by an accepted verdict
@@ -709,6 +716,7 @@ def test_unreadable_claimed_frontmatter_is_refused_at_the_approval_rung(tmp_path
 
 
 def test_a_mixed_lane_keeps_its_adjudication_rows_scope(tmp_path):
+    """Implements: TC-331"""
     # Sol r1 MAJOR 1's second shape: an ORDINARY row claimed beside the
     # adjudication row once made the lane read as ordinary, so the adjudication
     # row's `Adjudicates` scope stopped bounding the act. Any claimed row that
@@ -760,6 +768,7 @@ def _flip_claimed(tmp_path, name, *cells, safety="ordinary"):
 
 
 def test_a_brief_spelled_unlike_its_kind_still_bounds_the_lane(tmp_path):
+    """Implements: TC-331"""
     # Sol r2 MAJOR 1: the route normalizes the brief (stripped, lower-cased),
     # so the merge reads it the same way. Read raw, ` FIRST-APPROVAL ` scoped
     # nothing and the act outside SR-002 was admitted.
@@ -811,6 +820,7 @@ def _merge_reading(root, brief):
 
 
 def test_the_route_and_the_merge_read_one_scope_cell_alike(tmp_path):
+    """Implements: TC-331"""
     # Sol r3 MAJOR 1: the route read the claimed row's `adjudicates` through
     # the registry's list join, the merge through its own token reader, and
     # they disagreed on non-strings, a bare string and an inline table. ONE
@@ -839,6 +849,7 @@ def test_the_route_and_the_merge_read_one_scope_cell_alike(tmp_path):
 
 
 def test_a_combined_row_with_only_malformed_tokens_is_refused(tmp_path):
+    """Implements: TC-331"""
     # The route refuses to compose such a row; the merge refuses it by name too,
     # rather than dropping the tokens and reading the lane as unbounded.
     cells = ('brief = "combined"', 'adjudicates = ["SR-001"]')
@@ -847,6 +858,7 @@ def test_a_combined_row_with_only_malformed_tokens_is_refused(tmp_path):
 
 
 def test_an_act_free_lane_with_an_empty_scope_is_admitted(tmp_path):
+    """Implements: TC-331"""
     # Sol r2 MAJOR 2: scope judges the acts needing authorization, so a lane
     # that only authors `Drafted` text meets no scope refusal, however empty.
     root = _spine_lane(tmp_path / "act-free")
@@ -855,6 +867,7 @@ def test_an_act_free_lane_with_an_empty_scope_is_admitted(tmp_path):
 
 
 def test_a_bounded_lane_writing_only_the_snapshot_is_refused(tmp_path):
+    """Implements: TC-331"""
     # The opposite gap: a lane with no first-approval scope that copies a
     # registry it took no act in re-blesses its live text, so the copy meets
     # WIDENED whatever scope the lane records.
@@ -916,6 +929,7 @@ def _ledger_lane(home, *, flip, verdict_rows, scope=None):
 
 
 def test_a_ledger_only_approval_outside_the_scope_is_refused(tmp_path):
+    """Implements: TC-278, TC-331"""
     # Sol r3 MAJOR 2, case A: the lane flips SR-001 (its scope) and its
     # snapshot act records SR-002 approved too. Judged over the live flips
     # alone, SR-002 was approved outside a non-empty scope and admitted.
@@ -928,6 +942,7 @@ def test_a_ledger_only_approval_outside_the_scope_is_refused(tmp_path):
 
 
 def test_a_backed_ledger_only_approval_on_an_ordinary_lane_is_admitted(tmp_path):
+    """Implements: TC-278, TC-331"""
     # Case B: the lane takes only SR-002's anchoring approval, backed by an
     # accepted verdict that judged it. With no live flip it read as "no act"
     # and its copy was refused as unbacked.
@@ -936,6 +951,7 @@ def test_a_backed_ledger_only_approval_on_an_ordinary_lane_is_admitted(tmp_path)
 
 
 def test_an_unbacked_ledger_only_approval_is_refused_by_name(tmp_path):
+    """Implements: TC-278, TC-331"""
     # The same act judged by a verdict over other rows backs nothing.
     root = _ledger_lane(tmp_path / "c", flip=False, verdict_rows=["SR-001"])
     refusal = integ._approval_act_refusal(root, "wi-401")
@@ -1102,6 +1118,7 @@ def test_a_required_verdict_absent_from_the_branch_refuses_by_name(tmp_path):
 
 @pytest.mark.parametrize("text", [VERDICT_APPROVE, VERDICT_CHANGES])
 def test_a_legacy_rollup_never_clears_the_gate(tmp_path, capsys, text):
+    """Implements: TC-205"""
     # THE MIGRATION WINDOW IS CLOSED (WI-884's Trust ruling): a hand-authored
     # `docs/reviews/WI-<n>-REVIEW-A.md` is no logged round from a fresh session
     # over the lane, so even an APPROVE naming this very tree holds the merge,

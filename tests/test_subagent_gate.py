@@ -15,6 +15,8 @@ the same decision either: a present-but-unparseable process.toml now asks
 gen_okf.py. Covering them with a single assertion is what let this module's
 header claim "deny-by-default" for as long as it did -- nothing forced a
 reader to look at what the failure paths actually do.
+
+Implements: TC-043
 """
 
 import json

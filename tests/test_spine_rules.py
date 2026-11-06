@@ -26,6 +26,8 @@ the exhaustive rung sweep over the closed Status enum is
 `tests/test_approval_level.py`; the pure carrier half is
 `tests/test_kitlib_stage.py`; the equal-predicate pins against `trace.py` are
 `tests/test_rule_sync.py`.
+
+Implements: TC-050, TC-141
 """
 
 # --- TOMBSTONE: what WI-498 slice 5 deleted from this file, and where it went --

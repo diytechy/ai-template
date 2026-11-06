@@ -24,6 +24,8 @@ loop around it is tests/test_dispatch.py's, on real repos):
 `schedule.kind_of` is pinned beside it because the admission table is keyed by
 KIND: the resolution must agree with `classify` (one home, not a re-parse of
 reason codes).
+
+Implements: TC-143
 """
 
 import argparse
@@ -205,6 +207,7 @@ def test_an_empty_frontier_answers_empty():
 
 
 def test_gap_census_names_the_three_gap_classes_mechanically(tmp_path):
+    """Implements: TC-183"""
     # Ladder rung 1 (§A4 amendment, 2026-08-01): the census is DERIVED from
     # what trace.py already names — unverified in-scope SRs, orphan rows,
     # draft SNs — with no model anywhere near it. WI-388's intake mint helper
@@ -234,6 +237,7 @@ def test_gap_census_names_the_three_gap_classes_mechanically(tmp_path):
 
 
 def test_gap_census_is_empty_on_a_repo_with_no_registries(tmp_path):
+    """Implements: TC-183"""
     (tmp_path / "docs").mkdir()
     assert dsp.gap_census(tmp_path) == []
 

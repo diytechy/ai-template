@@ -1,0 +1,88 @@
+# docs/decisions/wi-997.toml — delegated calls in WI-997's lane.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane stops at its committed plan, held on OI-127 (coordinator-2026-11-04 D-007). The stale-part Done-when item stops the row where no test verifies a case, and two cases have none: TC-166 and TC-165's token-scan half. Step for the owner: rule OI-127. Evidence: the plan's opening section, OI-127's statement, and a measure through the shipped evidence reader at 913ac5bb7 (363 live TCs, 2290 parts, 8 outside the tests root, 4 stale nodes). Nothing was built: no pass record exists, so the plan gate refuses any build commit, and no critique ran, so the plan cap is unspent."
+alternative = "Run the critique now, which spends the cap on a plan the ruling may reshape."
+reversal_cost = "Low: one plan commit; a fresh critique follows the ruling."
+why_not_escalated = "Escalated: OI-127."
+review = ""
+
+[decision.D-002]
+decided = "TC-079's evidence part tests/test_traj_parse.py::test_asof_stamp_from_git_and_excluded_from_check is repointed to tests/test_gen_trajectory.py::test_asof_stamp_from_git_and_excluded_from_check. Evidence: the same test under the same name, moved at cde260dd0, whose diff removes the def from the first file and adds it to the second. The old name appears in no TC's method or expected, so this is a traced-only change."
+alternative = "Leave the part naming no def, which the spec's stale-part Done-when forbids."
+reversal_cost = "Low: one traced cell, re-anchored by the lane's act."
+why_not_escalated = "The spec orders the repoint and the test verifying the case exists; the plan's table named it and the history confirms it."
+review = ""
+
+[decision.D-003]
+decided = "TC-079's evidence part tests/test_traj_parse.py::test_no_git_means_no_stamp_and_stays_deterministic is repointed to tests/test_gen_trajectory.py::test_no_git_means_no_stamp_and_stays_deterministic. Evidence: the same test under the same name, moved at cde260dd0, whose diff removes the def from the first file and adds it to the second. The old name appears in no TC's method or expected, so this is a traced-only change."
+alternative = "Leave the part naming no def, which the spec's stale-part Done-when forbids."
+reversal_cost = "Low: one traced cell, re-anchored by the lane's act."
+why_not_escalated = "The spec orders the repoint and the test verifying the case exists; the plan's table named it and the history confirms it."
+review = ""
+
+[decision.D-004]
+decided = "TC-194's evidence part tests/test_gen_trajectory_pending.py::test_the_dashboard_still_answers_to_the_former_private_names is repointed to tests/test_gen_trajectory.py::test_facade_reexports_pending_compatibility_names. Evidence: moved and renamed at cde260dd0, whose diff removes the old def and adds the new one with the same loop over the three former names TC-194's method lists. Both the old and the new part sit in slow modules, so the tier reading does not move: TC-194 is tier Smoke and its smoke-tier evidence is its part in tests/test_import_layers.py, and tests/test_evidence_join.py stayed green with the change. The old name appears in no TC's method or expected, so this is a traced-only change."
+alternative = "Leave the part naming no def, which the spec's stale-part Done-when forbids."
+reversal_cost = "Low: one traced cell, re-anchored by the lane's act."
+why_not_escalated = "The spec orders the repoint and the test verifying the case exists; the plan's table named it and the history confirms it."
+review = ""
+
+[decision.D-005]
+decided = "TC-333's evidence part tests/test_plan_pass.py::test_the_shipped_planner_template_names_no_skill_and_no_row_of_this_repo is repointed to tests/test_plan_pass.py::test_the_shipped_planner_template_names_the_architecture_skill_by_its_agent_paths_and_no_row_of_this_repo. Evidence: renamed and widened in place at 489678a52, whose diff replaces the one def line with the other in the same file. The old name appears in no TC's method or expected, so this is a traced-only change."
+alternative = "Leave the part naming no def, which the spec's stale-part Done-when forbids."
+reversal_cost = "Low: one traced cell, re-anchored by the lane's act."
+why_not_escalated = "The spec orders the repoint and the test verifying the case exists; the plan's table named it and the history confirms it."
+review = ""
+
+[decision.D-006]
+decided = "The spec's 19 nodes naming no def are 4 stale nodes (D-002 to D-005) and 15 parts of cells that separate items by whitespace, which a split on semicolons alone misreads: TC-051, TC-056, TC-057, TC-102, TC-104, TC-105, TC-106, TC-113, TC-115, TC-117, TC-118, TC-119, TC-120, TC-121 and TC-124. Those 15 cells are read correctly and left alone, as OI-127's text records. Evidence, measured at 692eee20d: a split on semicolons alone gives 19 and kitlib.spine.evidence_items, the reader the spec requires, gives 4 over 2311 parts; after the four repoints that reader gives 0 and the semicolon split exactly these 15."
+alternative = "Normalize the 15 cells to one separator, which edits 15 Approved rows for no behaviour."
+reversal_cost = "Low: a later row can normalize the separators; nothing depends on the choice."
+why_not_escalated = "The spec names the reader the check uses, and through it these cells name real defs, so no case lacks a test and nothing is left to stop on."
+review = ""
+
+[decision.D-007]
+decided = "TC-165's evidence cell becomes `(owed by WI-1000)` and TC-166's `(owed by WI-999)`, the form confirmed at this head with both cells edited, uncommitted, over 692eee20d. Each command exited 0 before and after the edit: trace.py --strict; trace.py --strict-integrity --strict-schema (schema-findings=1 both times); check_trajectory.py --strict; check_docs.py --root . --stale; check_doc_refs.py; pytest tests/test_evidence_join.py (16 passed both times, warnings 18 to 20). The output of the first five is unchanged, and the two new warnings are the expected advisories: TC-165 and TC-166, tier Full, but none of its evidence is slow (no evidence). The reader gives no part for either cell, so parts go from 2311 to 2309 and file-only parts from 169 to 167. The parenthetical beat the bare id because the reader drops a parenthetical by definition (LLR-260, a parenthetical note dropped), so the cell names its debt row in the one form that is not a path. A bare id reads as a part with the path WI-1000, the false reading the stale-part Done-when removes, and it would pass only by sitting outside the tests root. Both forms cost the same two advisories, which clear with WI-999 and WI-1000. No tag goes on either test file for these cases, and method, expected and automated stay."
+alternative = "The bare id, evidence = WI-1000, measured passing by the plan and held as the fallback if a check refused the parenthetical. An explicit empty cell is refused by the carrier, and an absent key is a schema finding."
+reversal_cost = "Low: two traced cells; WI-999 and WI-1000 replace them with real evidence when they build."
+why_not_escalated = "OI-127, as ruled, orders the two cells to name their debt rows and the spec orders the build to confirm the form and record it; only the form was left to the build."
+review = ""
+
+[decision.D-008]
+decided = "Each round's REVIEW-B is a Claude Opus (high) stand-in (ruling 7; coordinator-2026-10-16 D-008). The lane's count starts at zero at its first round. The fix for a tests root of `.` (the prefix built from the path's parts, with a `repo-root` test case) was found by the builder at C5 and built before any round. The lane rebased onto trunk at C5, so its RESYNC entry anchors at fb2bb4e5a and P7a's evidence names the rebased seed commit."
+alternative = "Commit the plan's prefix formula and leave the `.` root to a round."
+reversal_cost = "Low: one line and one test case."
+why_not_escalated = "Ruling 7 and the plan settle the slot; the fix sits inside the spec's surface."
+review = ""
+
+[decision.D-009]
+decided = "Round 1's triage. REVIEW-A: APPROVE, no findings. REVIEW-B F1 (MAJOR, the recipe against the intent step) is confirmed and costs a fix round: the procedure text moves so a test's evidence part arrives with its tag. F2 (MAJOR, TC-333's expected against the repointed test) names no code defect: its remedy is row text, which the checkpoint's reconcile and sitting take, so it costs no fix round and rides the spine change list. F3 (MINOR, a `./` spelling inside a cell) is a follow-up for status.md's unfiled list: no live cell uses it, and its remedy reaches the one cell reader, outside this row's surface. F4 (MINOR, LLR-365's repeat sentence beside LLR-366) rides the spine change list, with one line in the RESYNC entry."
+alternative = "Send F2 to a dispute sitting, or treat D2's stop clause as met and close the lane partial."
+reversal_cost = "Low: text only, judged at the sitting."
+why_not_escalated = "A test verifies TC-333's case as widened at 489678a52, so D2's stop does not apply; the stale cell is approved text the lane's sitting may amend."
+review = "F2 is judged at the checkpoint sitting."
+
+[decision.D-010]
+decided = "Round 2's triage: no code BLOCKER or MAJOR, so the checkpoint follows. REVIEW-A's one MAJOR is TC-333's stale `expected`, the row text D-009 routed to this checkpoint; it names no code defect, so it costs no fix round, and REVIEW-B grades the same clause MINOR. REVIEW-A's MINOR and REVIEW-B's on LLR-365 ride the same reconcile. REVIEW-B's two text MINORs (a closing edge for an unreplaced intent note; RESYNC naming both this-repo skills) are applied at the checkpoint. REVIEW-B's two code MINORs (a `./` spelling inside a cell; the tests-root prefix repeated beside `kitlib.spine.module_tests`) go to status.md's follow-ups: neither is reachable from a live cell or root, and their remedy reaches the one cell reader and another module's rule. D-005's reading of TC-333 as traced-only is corrected here: the repoint stands, and the row's `expected` owes its sitting."
+alternative = "A fix round for the code MINORs."
+reversal_cost = "Low: each MINOR can be filed as its own row."
+why_not_escalated = "A MINOR never costs a round, and the sitting judges the row text."
+review = ""
+
+[decision.D-011]
+decided = "The convergence map for the gate. Round 1 F1 (procedure text): tests/test_prompts.py::test_a_tests_evidence_arrives_with_its_tag_stated_at_one_home, red before the fix (3 failed in that module). Round 1 F2 and round 2's MAJOR (TC-333's expected): the corrected cell and the sitting 005-ADJUDICATE, MEANING and blessed; its act follows the gate. Round 1 F4 and round 2's LLR-365 MINORs: the added LLR-365 and LLR-366 sentences, the RESYNC sentence, and test_a_test_repeating_its_modules_case_needs_its_own_part. Round 2's text MINORs: the closing edge in in-lane.md and the RESYNC entry's plural, each read at its site. The `.` tests root: the `repo-root` case, red before its fix. Round 1 F3 and round 2's two code MINORs are follow-ups, not accepted fixes (D-009, D-010)."
+alternative = "Hold the gate for a broader map."
+reversal_cost = "Low."
+why_not_escalated = "The convergence map is the coordinator's record (SKILL section 3)."
+review = ""
+
+[decision.D-012]
+decided = "The gate: REVIEW-A APPROVE with no findings; REVIEW-B CHANGES-REQUESTED on two MINORs only. Neither is fixed after the gate: a fix would move the tip off the gated one. TC-333's cut sentence is what the sitting blessed, so restoring its tested `no repository row` clause needs a row that states it; it goes to status.md's follow-ups, with the tests-root prefix repeated beside `kitlib.spine.module_tests`. Nothing is open at BLOCKER or MAJOR, so the act turn follows."
+alternative = "One more fix round and a re-sit."
+reversal_cost = "Low: each follow-up can be filed as its own row."
+why_not_escalated = "A gate MINOR is a follow-up (recipes section 3)."
+review = ""

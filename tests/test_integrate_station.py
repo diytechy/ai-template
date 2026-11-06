@@ -46,6 +46,8 @@ slowly. The real bar is still the one that decides green, in the e2e.
 `tests/test_integrate.py` states: it takes the process-global coordinator lock
 fd, so an in-process call would leak a held descriptor into the rest of the
 suite.
+
+Implements: TC-132, TC-146, TC-148
 """
 
 import inspect
@@ -349,6 +351,7 @@ def test_the_refresh_merges_trunk_in_regenerates_bars_then_commits(tmp_path):
 
 
 def test_the_refresh_attests_the_bar_to_the_sha_it_produced(tmp_path):
+    """Implements: TC-205"""
     # "Attested to a TREE, not to a run" (§A2): the trailer lives in the commit,
     # so the slot verifies a property of the sha rather than someone's claim
     # about a run. A later commit on the branch therefore REVOKES it, because
@@ -802,6 +805,7 @@ FORGED_TRAILER = (
 
 
 def test_a_forged_bar_green_trailer_does_not_make_a_branch_merge_ready(tmp_path):
+    """Implements: TC-205"""
     # Exploit (a), three ways, because the fix has three independent checks and
     # a test that only drove one would let the other two rot. An ordinary
     # subject; the refresh SUBJECT with names that belong to nothing; and the
@@ -859,6 +863,7 @@ def test_the_queue_refuses_to_land_a_forged_attestation_unbarred(tmp_path):
 
 
 def test_amending_a_refresh_commit_revokes_its_attestation(tmp_path):
+    """Implements: TC-205"""
     # Exploit (b): `commit --amend --no-edit` keeps the message while the tree
     # moves, so round 1 landed the amended-in file with the bar not re-run. The
     # trailer names the tree, so an amend that changes content cannot keep it.
@@ -887,6 +892,7 @@ def test_amending_a_refresh_commit_revokes_its_attestation(tmp_path):
 
 
 def test_a_work_commit_that_quotes_the_trailer_is_never_peeled_away(tmp_path):
+    """Implements: TC-205"""
     # The data-loss half. `_work_tip` feeds a `reset --hard`, so peeling one
     # commit too far DESTROYS committed work: in round 1 a commit carrying
     # `Bar-Green: I ran it locally, honest` was peeled and its file left the
@@ -968,6 +974,7 @@ def test_a_directory_the_bar_itself_created_is_pruned(tmp_path):
 
 
 def test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence(tmp_path):
+    """Implements: TC-205"""
     # The honest bound, pinned so nobody re-reads the guarantee as stronger than
     # it is (REVIEW-A round 2 drove it). Naming the tree and the parent by hand
     # is four git invocations and no bar, and it VERIFIES — this test asserts the
@@ -1343,6 +1350,7 @@ def _producer_spy(monkeypatch):
 
 
 def test_the_refresh_trailer_names_the_landing_bar(tmp_path):
+    """Implements: TC-205"""
     # A refresh that ran the declared bar attests the `landing` bar, with no
     # named tests, on its own tree and first parent.
     root = station_repo(tmp_path)
@@ -1356,6 +1364,7 @@ def test_the_refresh_trailer_names_the_landing_bar(tmp_path):
 
 
 def test_the_adjudication_refresh_names_no_bar(tmp_path):
+    """Implements: TC-205"""
     # The adjudication arm runs no bar (§A5.2), and its attestation says so in
     # the bar field rather than only in the free-text summary.
     root, _wt = _adjudication_station(tmp_path)
@@ -1367,6 +1376,7 @@ def test_the_adjudication_refresh_names_no_bar(tmp_path):
 
 
 def test_the_refresh_commits_through_the_shared_producer(tmp_path, monkeypatch):
+    """Implements: TC-205"""
     # Both refresh arms reach the one producer and name their bar to it, so
     # the refresh keeps no commit-and-verify block of its own.
     bars = _producer_spy(monkeypatch)
@@ -1384,6 +1394,7 @@ def test_the_refresh_commits_through_the_shared_producer(tmp_path, monkeypatch):
 
 
 def test_the_refresh_and_attest_commit_through_one_producer(tmp_path, monkeypatch):
+    """Implements: TC-205"""
     # The two routes that write an attestation share one producer: `attest`
     # names `review` to it, and the refresh that follows names `landing`.
     bars = _producer_spy(monkeypatch)

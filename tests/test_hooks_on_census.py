@@ -143,6 +143,7 @@ def _route_id(route):
 
 @pytest.mark.parametrize("route", ROUTES, ids=_route_id)
 def test_each_route_calls_the_check_first(route):
+    """Implements: TC-370"""
     path, name, root_expr, preamble = route
     assert judge(_function(path, name), root_expr, preamble) is None
 
@@ -179,6 +180,7 @@ def _moved_down(fn):
 @pytest.mark.parametrize("route", ROUTES, ids=_route_id)
 @pytest.mark.parametrize("mutate", [_deleted, _moved_down], ids=["deleted", "moved"])
 def test_the_census_fails_when_an_entry_stops_calling_first(route, mutate):
+    """Implements: TC-370"""
     path, name, root_expr, preamble = route
     finding = judge(mutate(_function(path, name)), root_expr, preamble)
     assert finding is not None and finding.startswith(name)

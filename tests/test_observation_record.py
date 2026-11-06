@@ -9,6 +9,8 @@ write that never leaves half a record where a reader looks. Driven here in a
 temporary directory, with no scaffold, subprocess or git, so the module stays in
 the per-commit tier. The writer's command and the checker's reading of records
 on disk are pinned in `tests/test_observation_writer.py`.
+
+Implements: TC-229
 """
 
 import pytest

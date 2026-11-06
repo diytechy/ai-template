@@ -348,7 +348,10 @@ def test_every_hook_refuses_an_unreadable_policy_file(tmp_path, hook, case, cont
     """TC-021, TC-031: a present but unreadable or unparseable
     `docs/process.toml` refuses the commit or push at every hook, naming the
     file, and for a parse error carrying the parser's message; it never
-    reads as a default and never reaches the reviewer check."""
+    reads as a default and never reaches the reviewer check.
+
+    Implements: TC-021, TC-031
+    """
     root = hook_repo(tmp_path)
     write_unreadable(root, content)
     proc = run_shipped_hook(root, hook)
@@ -368,7 +371,10 @@ def _write_mixed(root):
 def test_every_hook_refuses_a_mixed_config_with_one_text(tmp_path):
     """TC-021, TC-031: `[policies] privacy_check` and the legacy
     `docs/privacy-check` both present refuse at all three hooks, naming both
-    files and the migrator, in one text once the hook's name is removed."""
+    files and the migrator, in one text once the hook's name is removed.
+
+    Implements: TC-021, TC-031
+    """
     root = hook_repo(tmp_path)
     _write_mixed(root)
     texts = {}
@@ -402,7 +408,10 @@ POLICY_STUBS = [
 def test_every_hook_refuses_a_failed_or_foreign_policy_answer(tmp_path, hook, stub):
     """TC-021: a policy read that exits nonzero, prints nothing, or prints
     anything outside its tokens (a near-token with a stray carriage return
-    included) refuses the commit or push, naming the read."""
+    included) refuses the commit or push, naming the read.
+
+    Implements: TC-021
+    """
     root = hook_repo(tmp_path)
     stub_dir = tmp_path / "stub_scripts"
     stub_dir.mkdir()
@@ -418,7 +427,10 @@ def test_the_mixed_refusal_runs_after_the_interpreter_probe(tmp_path, hook):
     """TC-021: with a mixed config and no runnable Python on PATH, each hook
     refuses for the interpreter, naming dev-setup's install and the 3.11
     floor, and never reaches the mixed-config refusal (the policy is read
-    once, after the probe)."""
+    once, after the probe).
+
+    Implements: TC-021
+    """
     root = hook_repo(tmp_path)
     _write_mixed(root)
     proc = run_shipped_hook(root, hook, path_prefix=python_stand_ins(tmp_path))
@@ -465,6 +477,7 @@ def test_the_hook_answer_and_the_checker_agree_in_process(
 
 
 def test_a_mixed_config_is_refused_by_name(tmp_path):
+    """Implements: TC-031, TC-150"""
     write_toml(tmp_path, "[policies]\nprivacy_check = false\n")
     (tmp_path / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
     refusals = ac.config_conflicts(tmp_path / "docs")
@@ -481,6 +494,7 @@ def test_a_mixed_config_reads_ON_in_the_hooks_which_cannot_refuse(tmp_path):
 
 
 def test_a_wrong_typed_dial_is_refused_not_defaulted(tmp_path):
+    """Implements: TC-150"""
     # `review_rounds = "2"` is a plausible hand edit — every other value in
     # [policies] is quoted — and it once meant NO review verdict was required.
     write_toml(tmp_path, '[policies]\nreview_rounds = "2"\n')
@@ -489,6 +503,7 @@ def test_a_wrong_typed_dial_is_refused_not_defaulted(tmp_path):
 
 
 def test_a_non_string_trunk_is_refused_by_the_config_check(tmp_path):
+    """Implements: TC-369"""
     # The trunk reader refuses a bare `trunk = 1` only on the routes that read
     # the trunk; the config check refuses it at every guarded entry point,
     # naming the key and the type, as for every dial.
@@ -643,7 +658,10 @@ def test_valid_toml_policy_shapes_reach_every_reader(tmp_path, text, legacy):
     parser reads as one declaration as mixed (`...-legacy-declares`), and
     demands the reviewer the legacy record opted down (`...-posture-key-...`);
     a reader that matched the policy by line text misses the dotted key and
-    the inline table, reading the gate absent where the parser reads it."""
+    the inline table, reading the gate absent where the parser reads it.
+
+    Implements: TC-031
+    """
     root = hook_repo(tmp_path)
     write_toml(root, text)
     for name, line in legacy.items():
@@ -719,7 +737,10 @@ def test_a_privacy_key_under_another_table_fails_closed_in_every_reader(
     Adequacy witness: a reader that took the parse's placement alone reads
     the misplaced gate absent (off, or the legacy file's answer) and lets the
     legacy opt-down warn; one that took the misplaced value reads
-    `gate-key-under-checks-false` off."""
+    `gate-key-under-checks-false` off.
+
+    Implements: TC-031
+    """
     root = hook_repo(tmp_path)
     write_toml(root, text)
     for name, line in legacy.items():
@@ -752,7 +773,10 @@ def test_an_unreadable_policy_file_is_refused(tmp_path):
 
     Adequacy witness: a configuration layer that took a file it cannot parse
     or decode as "nothing declared" returns no refusal here, and every dial
-    would read its default."""
+    would read its default.
+
+    Implements: TC-031
+    """
     for case, content in UNREADABLE:
         if content is None:
             continue  # a directory at the path: see the build report
@@ -772,7 +796,10 @@ def test_an_out_of_range_dial_is_refused_not_defaulted(tmp_path, value):
     `test_a_malformed_dial_is_REFUSED_not_silently_defaulted`.)
 
     Adequacy witness: a check that clamped the value into range, or let the
-    reader's report-only default stand, returns no refusal."""
+    reader's report-only default stand, returns no refusal.
+
+    Implements: TC-150
+    """
     write_toml(tmp_path, "[checks]\nbacklink_coverage_min = {}\n".format(value))
     refusals = ac.config_conflicts(tmp_path / "docs")
     assert len(refusals) == 1, refusals
@@ -798,7 +825,10 @@ def test_every_guarded_entry_point_refuses_a_mixed_config(tmp_path):
 
     Adequacy witness: an entry point that resolved the two homes by
     precedence instead (read the policy file and went on) returns no
-    refusal, or one that does not name both homes."""
+    refusal, or one that does not name both homes.
+
+    Implements: TC-150
+    """
     _write_mixed(tmp_path)
     for entry, refusal in _entry_point_refusals(tmp_path).items():
         assert refusal, entry
@@ -839,7 +869,10 @@ def test_valid_toml_policy_shapes_cause_no_configuration_refusal(
     and each dial reads as the parser places it.
 
     Adequacy witness: a configuration check that still refused a form for
-    its line shape returns a refusal for each of these files."""
+    its line shape returns a refusal for each of these files.
+
+    Implements: TC-150
+    """
     write_toml(tmp_path, text)
     docs = tmp_path / "docs"
     for legacy_name, value in values.items():
@@ -897,6 +930,7 @@ def _migrated(tmp_path, legacy):
 
 
 def test_migration_folds_every_dial_in_and_deletes_the_file(tmp_path):
+    """Implements: TC-152"""
     moved, notes = _migrated(
         tmp_path,
         {
@@ -949,7 +983,10 @@ def test_migration_never_deletes_a_file_it_could_not_write(tmp_path):
 
     The fix makes the write TOTAL (the key is appended under its section), so
     the honest assertion is that the value SURVIVES — either folded in or left
-    on disk — never that it is silently gone."""
+    on disk — never that it is silently gone.
+
+    Implements: TC-152
+    """
     _docs(tmp_path)
     write_toml(tmp_path, '# my customized file\n[policies]\npush = "human"\n')
     (tmp_path / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
@@ -963,6 +1000,7 @@ def test_migration_never_deletes_a_file_it_could_not_write(tmp_path):
 
 
 def test_migration_leaves_an_unparseable_value_in_place(tmp_path):
+    """Implements: TC-152"""
     moved, notes = _migrated(tmp_path, {"review-policy": "sometimes"})
     assert moved == []
     assert any("not a valid value" in n for n in notes)

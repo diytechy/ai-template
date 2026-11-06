@@ -108,6 +108,7 @@ def _row(cell="findings.toml"):
 def test_the_dispute_brief_carries_each_finding_its_position_range_and_scope_link(
     tmp_path,
 ):
+    """Implements: TC-334"""
     repo, span = _lane(tmp_path)
     (repo / "findings.toml").write_text(_findings_toml(span), encoding="utf-8")
     text, why = ab.compose(repo, _row(), "docs/reviews/wi-9/001-DISPUTE.md")
@@ -131,7 +132,10 @@ def test_the_dispute_brief_carries_each_finding_its_position_range_and_scope_lin
 def test_the_dispute_brief_names_the_findings_file_it_was_composed_over(tmp_path):
     """The composed brief names the row's findings file on its own line, after
     the `DISPUTE:` line and before the first finding, and the grammar reads
-    the path back; the requested ids read as before."""
+    the path back; the requested ids read as before.
+
+    Implements: TC-334
+    """
     repo, span = _lane(tmp_path)
     (repo / "findings.toml").write_text(_findings_toml(span), encoding="utf-8")
     text, why = ab.compose(repo, _row(), "docs/reviews/wi-9/001-DISPUTE.md")
@@ -172,6 +176,7 @@ def test_the_dispute_brief_names_the_findings_file_it_was_composed_over(tmp_path
     ],
 )
 def test_a_malformed_findings_file_refuses_the_brief(tmp_path, body, cell, needle):
+    """Implements: TC-334"""
     repo, span = _lane(tmp_path)
     bodies = {
         "DUP": _findings_toml(
@@ -230,6 +235,7 @@ RULING: R2-3 DISMISS out-of-scope it needs a fake runner binary
 
 
 def test_a_well_formed_verdict_is_accepted_and_parsed(tmp_path):
+    """Implements: TC-334"""
     dispute = _dispute()
     rulings, why = dispute.parse(VALID, ("F1", "R2-3", "R4"), "v.md")
     assert why is None, why
@@ -268,6 +274,7 @@ def test_a_well_formed_verdict_is_accepted_and_parsed(tmp_path):
     ],
 )
 def test_a_malformed_or_incomplete_verdict_is_refused(tmp_path, text, needle):
+    """Implements: TC-334"""
     dispute = _dispute()
     rulings, why = dispute.parse(text, ("F1", "R2"), "v.md")
     assert rulings is None and why and needle in why, why
@@ -278,7 +285,10 @@ def test_a_malformed_or_incomplete_verdict_is_refused(tmp_path, text, needle):
 
 def test_a_successor_ruling_is_accepted_and_parsed(tmp_path):
     """WI-911: the sitting may rule a finding SUCCESSOR, a row of its own filed
-    on trunk at the landing (the owner's ruling of 2026-10-14, in session)."""
+    on trunk at the landing (the owner's ruling of 2026-10-14, in session).
+
+    Implements: TC-334
+    """
     text = "RULING: F1 SUCCESSOR file a row that bounds the retry loop\n"
     rulings, why = _dispute().parse(text, ("F1",), "v.md")
     assert why is None, why
@@ -289,6 +299,7 @@ def test_a_successor_ruling_is_accepted_and_parsed(tmp_path):
 
 
 def test_an_unknown_ruling_is_refused_naming_the_four_rulings():
+    """Implements: TC-334"""
     dispute = _dispute()
     rulings, why = dispute.parse("RULING: F1 WONTFIX no\n", ("F1",), "v.md")
     assert rulings is None
@@ -296,12 +307,16 @@ def test_an_unknown_ruling_is_refused_naming_the_four_rulings():
 
 
 def test_a_verdict_judged_against_no_requested_findings_is_refused():
+    """Implements: TC-334"""
     assert _dispute().parse(VALID, (), "v.md")[1]
 
 
 def test_an_accepted_dispute_verdict_authorizes_no_approval_act():
     """The binding records the finding ids a dispute was asked to rule; no
-    approval act reads a ruling on a finding as a judgement of a row."""
+    approval act reads a ruling on a finding as a judgement of a row.
+
+    Implements: TC-334
+    """
     from kitlib import sitting
 
     binding = sitting.render_requested("dispute", ("F1", "R2-3", "R4"), "accepted")
@@ -309,6 +324,7 @@ def test_an_accepted_dispute_verdict_authorizes_no_approval_act():
 
 
 def test_the_dispute_class_is_routed_and_its_template_ships():
+    """Implements: TC-334"""
     assert "dispute" in ab.BRIEF_PROMPTS and "dispute" in ab.ROUTED
     assert prompts.load(ab.BRIEF_PROMPTS["dispute"])
 

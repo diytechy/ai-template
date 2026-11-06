@@ -7,6 +7,8 @@ rows carry an empty Deliverable), the end-to-end `check_trajectory.py`-passes
 fixture, header-safe optional-column handling, and the log append. Every test
 builds its scaffolding under `tmp_path`
 — the real `docs/` is never written.
+
+Implements: TC-074
 """
 
 import csv

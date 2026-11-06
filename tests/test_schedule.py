@@ -4,7 +4,10 @@ SR-058 (deterministic safety classification). Verifies TC-058 / TC-059.
 Unit-level and fast (in the smoke tier by default): the scheduler is a pure
 library over in-memory registry rows, so these never bootstrap a scaffold. Two
 CLI tests exercise `schedule.py ready --format json` end-to-end over a temp
-registry to pin the shared decision across the CLI surface."""
+registry to pin the shared decision across the CLI surface.
+
+Implements: TC-058, TC-097, TC-146
+"""
 
 import json
 
@@ -233,6 +236,7 @@ status = "ruled"
 
 
 def test_load_oi_status_resolves_a_real_open_items_registry(tmp_path):
+    """Implements: TC-253"""
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True)
     (req / "open-items.toml").write_text(_OI_REGISTRY, encoding="utf-8")
@@ -246,6 +250,7 @@ def test_load_oi_status_resolves_a_real_open_items_registry(tmp_path):
 
 
 def test_load_oi_status_answers_empty_where_the_repo_has_no_registry(tmp_path):
+    """Implements: TC-253"""
     # The owner draws absent apart from empty; the requestor collapses absent
     # to an empty map at its own boundary, so every OI edge fails closed.
     assert load_script("trace").open_item_states(tmp_path) is None
@@ -411,7 +416,10 @@ RULED_TABLE = {
 
 
 def test_classify_every_declared_value_is_deterministic():
-    """Both axes, for every kind, twice — the table verbatim from §A1."""
+    """Both axes, for every kind, twice — the table verbatim from §A1.
+
+    Implements: TC-059
+    """
     for declared, (concurrency, rank) in RULED_TABLE.items():
         # `critique` is a flag on an ordinary row, not a SafetyClass cell.
         wi = (
@@ -519,7 +527,10 @@ def test_rank_outranks_every_tiebreaker_in_the_order_key():
 def test_critique_is_parallel_and_ranks_ahead_of_ordinary():
     """§A1: a critique WI may share the station — nothing about a critique
     touches product code — and still sorts ahead of ordinary work. It was
-    `single-wi` only to keep it out of a packed session; packing is gone."""
+    `single-wi` only to keep it out of a packed session; packing is gone.
+
+    Implements: TC-091
+    """
     concurrency, rank, reasons = sched.classify(
         {"safetyclass": "ordinary", "critique": True}
     )
@@ -534,6 +545,7 @@ def test_critique_is_parallel_and_ranks_ahead_of_ordinary():
 
 
 def test_missing_and_unknown_safetyclass_fail_closed_only_for_that_wi():
+    """Implements: TC-059, TC-091"""
     wis = sched.load_wis(
         [row("WI-001", safety=""), row("WI-002", safety="bogus"), row("WI-003")]
     )
@@ -563,6 +575,7 @@ def test_unclassified_ranks_behind_every_real_kind():
 
 
 def test_ordinary_declaration_with_structural_spine_fails_closed():
+    """Implements: TC-091"""
     concurrency, rank, reasons = sched.classify(
         {"safetyclass": "ordinary"}, structural="spine"
     )
@@ -605,6 +618,7 @@ def _write_registry(root, rows):
 
 
 def test_cli_ready_json_matches_library(tmp_path):
+    """Implements: TC-059"""
     _write_registry(
         tmp_path,
         [
@@ -726,6 +740,7 @@ def test_planmode_dual_derives_the_high_risk_kind_from_the_signal():
 
 
 def test_planmode_dual_contradicting_safetyclass_quarantines():
+    """Implements: TC-091"""
     # A second hand-set cell that contradicts the derivation fails closed —
     # the same cross-check posture as declared-ordinary-vs-structural.
     for declared in ("ordinary", "spine", "gate", "attestation", "protected"):

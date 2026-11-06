@@ -98,6 +98,7 @@ def _specs(root):
 
 
 def test_an_overrule_with_no_citing_row_is_refused_at_the_commit(tmp_path):
+    """Implements: TC-319"""
     root = _base(tmp_path)
     _record(root, "overruled")
     _git(root, "add", "-A")
@@ -109,6 +110,7 @@ def test_an_overrule_with_no_citing_row_is_refused_at_the_commit(tmp_path):
 
 
 def test_a_citation_in_an_untouched_row_does_not_discharge_it(tmp_path):
+    """Implements: TC-319"""
     # The citing row must be filed or amended IN the overrule's commit: a row
     # that already cited the entry, left untouched, is not the act.
     root = _base(tmp_path)
@@ -121,6 +123,7 @@ def test_a_citation_in_an_untouched_row_does_not_discharge_it(tmp_path):
 
 
 def test_an_overrule_filed_with_a_new_citing_row_passes(tmp_path):
+    """Implements: TC-319"""
     root = _base(tmp_path)
     _record(root, "overruled")
     _spec(root, "WI-060", "Restore the export flag ({}).".format(CITE))
@@ -131,6 +134,7 @@ def test_an_overrule_filed_with_a_new_citing_row_passes(tmp_path):
 
 
 def test_an_overrule_amending_its_queued_row_passes_with_nothing_minted(tmp_path):
+    """Implements: TC-319"""
     root = _base(tmp_path)
     before = _specs(root)
     _record(root, "overruled")
@@ -141,6 +145,7 @@ def test_an_overrule_amending_its_queued_row_passes_with_nothing_minted(tmp_path
 
 
 def test_an_active_row_counts_and_a_terminal_one_does_not(tmp_path):
+    """Implements: TC-319"""
     root = _base(tmp_path)
     _record(root, "overruled")
     _spec(root, "WI-061", "Undo {}.".format(CITE), where="active/wi-061")
@@ -157,6 +162,7 @@ def test_an_active_row_counts_and_a_terminal_one_does_not(tmp_path):
 
 
 def test_a_citation_of_another_entry_does_not_match(tmp_path):
+    """Implements: TC-319"""
     root = _base(tmp_path)
     _record(root, "overruled")
     _spec(root, "WI-051", "See {}0 and {}.".format(CITE, RECORD + "#D-001"))
@@ -166,6 +172,7 @@ def test_a_citation_of_another_entry_does_not_match(tmp_path):
 
 
 def test_an_entry_already_overruled_owes_nothing_again(tmp_path):
+    """Implements: TC-319"""
     root = _base(tmp_path)
     _record(root, "overruled")
     _spec(root, "WI-051", "Kept, per {}.".format(CITE))
@@ -177,6 +184,7 @@ def test_an_entry_already_overruled_owes_nothing_again(tmp_path):
 
 
 def test_a_no_verify_overrule_is_refused_at_the_merge_slot(tmp_path):
+    """Implements: TC-319"""
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-070")
     _record(root, "overruled")
@@ -204,6 +212,7 @@ def test_a_no_verify_overrule_is_refused_at_the_merge_slot(tmp_path):
 def test_a_record_that_does_not_parse_is_refused_at_the_commit_and_the_merge_slot(
     tmp_path,
 ):
+    """Implements: TC-319"""
     # Fail closed (owner rule: no degenerate path): an overrule behind a syntax
     # error is unreadable, never "no overrule". Both admission points refuse,
     # naming the record and the parse error, and a later commit that repairs
@@ -225,6 +234,7 @@ def test_a_record_that_does_not_parse_is_refused_at_the_commit_and_the_merge_slo
 
 
 def test_a_repair_of_an_unparseable_parent_owes_every_overrule_it_shows(tmp_path):
+    """Implements: TC-319"""
     # The parent side unreadable reads as overruling nothing, so the commit
     # that makes the record readable owes the work for each overrule in it.
     root = _base(tmp_path)
@@ -238,6 +248,7 @@ def test_a_repair_of_an_unparseable_parent_owes_every_overrule_it_shows(tmp_path
 
 
 def test_an_overrule_beside_the_retired_key_still_owes_its_work(tmp_path):
+    """Implements: TC-319"""
     # The surface reads such an entry as not yet seen, but the coupling reads
     # the `owner` key as written: a stale key never lets an overrule skip it.
     root = _base(tmp_path)
@@ -250,6 +261,7 @@ def test_an_overrule_beside_the_retired_key_still_owes_its_work(tmp_path):
 
 
 def test_an_unparseable_record_beside_a_cited_overrule_is_still_refused(tmp_path):
+    """Implements: TC-319"""
     # A parse refusal is never dropped because the same commit's owed
     # overrules are all cited, and it comes before any missing-citer line.
     root = _base(tmp_path)
@@ -273,6 +285,7 @@ def test_an_unparseable_record_beside_a_cited_overrule_is_still_refused(tmp_path
 
 
 def test_an_example_spec_does_not_discharge_an_overrule(tmp_path):
+    """Implements: TC-319"""
     # The `-000` example is never a work item, so its citation acts on nothing.
     root = _base(tmp_path)
     _record(root, "overruled")
@@ -285,6 +298,7 @@ def test_an_example_spec_does_not_discharge_an_overrule(tmp_path):
 
 @pytest.mark.parametrize("broken", [False, True])
 def test_a_record_path_git_would_quote_is_still_judged(tmp_path, broken):
+    """Implements: TC-319"""
     # core.quotePath (git's default) quotes and escapes a non-ASCII path in
     # plain `--name-only` output; the sync reads paths NUL-delimited, so such
     # a record is judged like any other at the commit and at the merge slot.
@@ -307,6 +321,7 @@ def test_a_record_path_git_would_quote_is_still_judged(tmp_path, broken):
 
 
 def test_a_citing_spec_path_git_would_quote_discharges_the_overrule(tmp_path):
+    """Implements: TC-319"""
     root = _base(tmp_path)
     _git(root, "config", "core.quotePath", "true")
     _record(root, "overruled")
@@ -327,6 +342,7 @@ def test_a_citing_spec_path_git_would_quote_discharges_the_overrule(tmp_path):
     ],
 )
 def test_the_citation_reads_every_run_name_the_record_path_writes(tmp_path, run):
+    """Implements: TC-319"""
     # One alphabet: whatever `record_path` keeps of a valid branch name, the
     # citation reader matches, so the exact generated citation discharges.
     rel = decisions.record_path(run)
@@ -344,6 +360,7 @@ def test_the_citation_reads_every_run_name_the_record_path_writes(tmp_path, run)
 
 
 def test_the_citation_reader_takes_no_surrounding_prose():
+    """Implements: TC-319"""
     text = "(see docs/decisions/a+b.toml#D-002), [docs/decisions/c@d.toml#D-3]."
     assert decisions.citations(text) == {
         "docs/decisions/a+b.toml#D-002",
@@ -366,6 +383,7 @@ NON_ASCII = ["\u0085", " ", " ", "　", "é"]
 
 
 def test_the_run_name_alphabet_is_what_git_refuses_plus_two_delimiters():
+    """Implements: TC-319"""
     # Pinned against git itself for every ASCII punctuation mark, the space,
     # DEL, three controls and whitespace Unicode adds (which git permits), so
     # the set is git's, matched ASCII-only, and never a guess. Only `/` is
@@ -391,6 +409,7 @@ def test_the_run_name_alphabet_is_what_git_refuses_plus_two_delimiters():
 
 
 def test_a_run_name_carrying_the_citation_delimiter_has_no_record(tmp_path):
+    """Implements: TC-319"""
     # `owner#cleanup` and `owner.toml#D-002` are valid branches. No record is
     # named by either: `#` is refused, never folded into `owner-cleanup`'s file.
     for run in ("owner#cleanup", "owner.toml#D-002"):
@@ -427,6 +446,7 @@ def _index_only(root, raw, text):
 
 
 def test_a_record_path_that_is_not_utf8_is_refused_never_read_as_absent(tmp_path):
+    """Implements: TC-319"""
     # Git keeps a path's raw bytes. Read through a replacing decoder, the path
     # `owner-\xff.toml` came back as another path that no tree lists, so the
     # overrule escaped the sync. The listing is read losslessly, and a path
@@ -449,6 +469,7 @@ def test_a_record_path_that_is_not_utf8_is_refused_never_read_as_absent(tmp_path
 
 
 def test_a_path_that_is_not_utf8_and_never_read_is_not_refused(tmp_path):
+    """Implements: TC-319"""
     # The sync reads only the records and specs it judges: a non-UTF-8 path
     # elsewhere in the diff is listed losslessly and left alone.
     root = _base(tmp_path)
@@ -487,6 +508,7 @@ reviewed = "maybe"
 
 
 def test_the_migrator_rewrites_the_retired_key_keeping_each_note():
+    """Implements: TC-320"""
     text, left = decisions.migrate_text(FIXTURE)
     assert left == ["D-003"]  # outside the retired vocabulary: left, still a finding
     assert "reviewed = true" not in text and "reviewed = false" not in text
@@ -507,12 +529,14 @@ ENTRY += 'why_not_escalated = "w"\n'
 
 
 def test_the_migrator_drops_a_retired_line_beside_an_existing_owner():
+    """Implements: TC-320"""
     text = 'high_risk = []\n\n{}review = "Undo."\nowner = "overruled"\n'.format(ENTRY)
     new, left = decisions.migrate_text(text + "reviewed = true\n")
     assert (new, left) == (text, [])
 
 
 def test_the_migrator_never_rewrites_inside_a_multiline_note():
+    """Implements: TC-320"""
     note = '"""\nThe old example was:\nreviewed = true\nKeep this note.\n"""'
     head = "high_risk = []\n\n{}review = {}\n".format(ENTRY, note)
     text = head + "reviewed = true\n"
@@ -524,6 +548,7 @@ def test_the_migrator_never_rewrites_inside_a_multiline_note():
 
 
 def test_the_migrator_rewrites_a_multiline_string_verdict_whole():
+    """Implements: TC-320"""
     for literal in ('"""\ntrue\n"""', "'''\nyes\n'''"):
         text = 'high_risk = []\n\n{}review = "r"\nreviewed = {}\n# after\n'.format(
             ENTRY, literal
@@ -535,6 +560,7 @@ def test_the_migrator_rewrites_a_multiline_string_verdict_whole():
 
 
 def test_the_migrator_refuses_what_it_cannot_rewrite_in_place():
+    """Implements: TC-320"""
     # An inline-table record carries the retired key where no top-level
     # assignment can be rewritten: the re-parse would differ, so it refuses.
     text = 'high_risk = []\ndecision = { D-001 = { decided = "d", reviewed = true } }\n'
@@ -543,6 +569,7 @@ def test_the_migrator_refuses_what_it_cannot_rewrite_in_place():
 
 
 def test_the_migrator_keeps_a_trailing_comment_on_the_line_it_rewrites():
+    """Implements: TC-320"""
     head = 'high_risk = []\n\n{}review = "r"\n'.format(ENTRY)
     note = "# Owner confirmed after discussing the rollback"
     new, left = decisions.migrate_text(head + "  reviewed = true  {}\r\n".format(note))
@@ -559,6 +586,7 @@ def test_the_migrator_keeps_a_trailing_comment_on_the_line_it_rewrites():
 
 @pytest.mark.parametrize("nan", ["nan", "+nan", "-nan"])
 def test_the_migrator_accepts_a_record_carrying_nan(tmp_path, nan):
+    """Implements: TC-320"""
     clean = 'high_risk = []\n\n{}review = "r"\nextra = {}\n'.format(ENTRY, nan)
     assert decisions.record_findings(clean) == []
     assert decisions.migrate_text(clean) == (clean, [])
@@ -571,6 +599,7 @@ def test_the_migrator_accepts_a_record_carrying_nan(tmp_path, nan):
 
 
 def test_the_migrator_cli_rewrites_the_records_and_check_reports_them(tmp_path):
+    """Implements: TC-320"""
     folder = tmp_path / "docs/decisions"
     folder.mkdir(parents=True)
     path = folder / "old.toml"
@@ -593,6 +622,7 @@ OLD_HEAD = 'high_risk = []\n\n{}review = "r"\n'.format(ENTRY)
 
 
 def test_the_migrator_reads_a_numeric_retired_value():
+    """Implements: TC-320"""
     assert decisions.migrate_text(OLD_HEAD + "reviewed = 1\n") == (
         OLD_HEAD + 'owner = "confirmed"\n',
         [],
@@ -601,6 +631,7 @@ def test_the_migrator_reads_a_numeric_retired_value():
 
 
 def test_the_migrator_reads_a_multiline_note_holding_a_lone_quote():
+    """Implements: TC-320"""
     # The note's lone `"` must not end the multiline string, or the note's own
     # `reviewed = true` line would read as a statement and be rewritten.
     note = '"""a "quoted\nreviewed = true\n"""'
@@ -613,6 +644,7 @@ def test_the_migrator_reads_a_multiline_note_holding_a_lone_quote():
 
 
 def test_the_migrator_reads_past_a_comment_holding_a_quote_or_bracket():
+    """Implements: TC-320"""
     text = OLD_HEAD + "# the owner's \"call [see\nreviewed = true\n"
     new, left = decisions.migrate_text(text)
     assert (new, left) == (
@@ -623,6 +655,7 @@ def test_the_migrator_reads_past_a_comment_holding_a_quote_or_bracket():
 
 @pytest.mark.parametrize("line", ['"reviewed" = true', "'reviewed' = \"yes\""])
 def test_the_migrator_rewrites_a_quoted_retired_key(line):
+    """Implements: TC-320"""
     new, left = decisions.migrate_text(OLD_HEAD + line + "\n")
     assert (new, left) == (OLD_HEAD + 'owner = "confirmed"\n', [])
 
@@ -636,6 +669,7 @@ def _records(tmp_path, **texts):
 
 
 def test_the_migrator_cli_keeps_a_records_line_endings(tmp_path):
+    """Implements: TC-320"""
     old = (OLD_HEAD + "reviewed = true\n").replace("\n", "\r\n")
     clean = (OLD_HEAD + 'owner = "confirmed"\n').replace("\n", "\r\n")
     folder = _records(tmp_path, old=old, clean=clean)
@@ -647,6 +681,7 @@ def test_the_migrator_cli_keeps_a_records_line_endings(tmp_path):
 def test_the_migrator_cli_names_what_it_leaves_and_fails_on_an_unparseable_record(
     tmp_path, capsys
 ):
+    """Implements: TC-320"""
     folder = _records(tmp_path, odd=OLD_HEAD + 'reviewed = "maybe"\n')
     assert migrate.main(["--root", str(tmp_path)]) == 0
     out = capsys.readouterr().out

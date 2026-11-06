@@ -6,6 +6,8 @@ row's IF-Ref names the interface row that is its owner-of-record (MULTI_REPO.md
 only (malformed/duplicate id) — deliberately minimal, "no more than PB". The
 registry is optional: an absent file is a no-op and the bootstrapped PART-000
 placeholder never blocks a gate.
+
+Implements: TC-005
 """
 
 from conftest import make_minimal_project, run_py, record_ids

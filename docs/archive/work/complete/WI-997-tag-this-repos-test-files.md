@@ -3,13 +3,25 @@ id = "WI-997"
 title = "This repository's test files carry their test-case tags, seeded from the evidence cells, and a strict finding holds tags and evidence cells equal until the evidence column is generated"
 workstream = "process"
 sr_refs = ["SR-157"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#13-review-only-a-green-tip-review-test-cases-in-stages"
+specref = ""
 needs = ["WI-994", "OI-125", "OI-127"]
 buildtier = "medium"
 safety_class = "ordinary"
 planmode = "single"
 priority = 5
 +++
+
+## Deliverable
+
+This repository's test files carry their test-case tags: 2151 written by an
+unshipped seed across 216 files, shown equivalent by its checker
+(`docs/plans/WI-997/seed-evidence.txt`). `check_trajectory.py` now holds tags
+and evidence cells equal, a WARN and an ERROR under `--strict`, at 0 findings
+on trunk, and the check names the generated evidence column as its end. Four
+stale nodes are repointed, TC-165 and TC-166 name their debt rows, and an
+intent row's evidence cell holds a note until the tests commit. LLR-366 and
+TC-410 to TC-412 are approved, and LLR-365 and TC-333 re-attested, at the
+lane's acts.
 
 ## Context
 
@@ -65,54 +77,54 @@ cell; no second parse of the cell.
 
 ## Done-when
 
-- [ ] **The tags.** Every evidence part under the tests root is seeded by the
+- [x] **The tags.** Every evidence part under the tests root is seeded by the
       seed rule, by a scripted edit that is not shipped. The script's before
       and after are shown equivalent: each changed file's AST, docstrings
       aside, is unchanged, and the collected test count is unchanged. The
       result is stated in the log.
-- [ ] **The stale parts.** No live TC's `evidence` holds a node naming no def,
+- [x] **The stale parts.** No live TC's `evidence` holds a node naming no def,
       or a part that is not a path, TC-165 and TC-166 aside. Each of the 19
       nodes is repointed at the test that verifies the case (a traced-only
       change, re-anchored in the lane), and each is recorded in the lane's
       decisions. Where no test verifies the case, the row stops and reports
       it: that is a finding about the TC, not a cell edit.
-- [ ] **The two moved cases** (OI-127 ruled (b), revised, 2026-11-05). TC-165's
+- [x] **The two moved cases** (OI-127 ruled (b), revised, 2026-11-05). TC-165's
       and TC-166's `evidence` cells drop the test-file path and name their
       debt rows, WI-1000 and WI-999, and neither file takes a tag for them. An
       automated TC with an empty cell is a trace finding, so the build first
       confirms the form the checks accept, and records it in the lane's
       decisions. The row does not stop for these two cases.
-- [ ] **The check.** `check_trajectory.py`, through `trajectory_arch.py` beside
+- [x] **The check.** `check_trajectory.py`, through `trajectory_arch.py` beside
       row 1's findings, reports the equality rule's two findings: a WARN, and
       an ERROR under `--strict`, the idiom row 1 uses. It is vacuous with no
       tests root or no TC registry. It lands green on trunk: 0 findings.
-- [ ] **Regressions.** Each finding is named; a parametrized part matches its
+- [x] **Regressions.** Each finding is named; a parametrized part matches its
       test's tag; a part outside the tests root is ignored; a file-only part
       matches a module-docstring tag and not a test's tag; a Draft TC is
       judged.
-- [ ] **The lane's own routine.** The recipes state that a lane writes a
+- [x] **The lane's own routine.** The recipes state that a lane writes a
       test's tag and its evidence part in one commit, since the bar runs the
       check under `--strict`.
-- [ ] **Sizes.** A size or complexity row the tags move is re-stamped per row
+- [x] **Sizes.** A size or complexity row the tags move is re-stamped per row
       in the commit that moves it, never by a full `--restamp`.
-- [ ] **Spine.** One LLR under SR-157 states the equality rule in contract
+- [x] **Spine.** One LLR under SR-157 states the equality rule in contract
       voice, with no code named in the row text, and TCs verify each arm. The
       set passes in-lane adjudication.
-- [ ] **RESYNC entry** in `project-trajectory/RESYNC_PACK.md`, anchored at the
+- [x] **RESYNC entry** in `project-trajectory/RESYNC_PACK.md`, anchored at the
       trunk commit carrying the check: what changed, the two findings, that
       the check retires when the evidence column is generated, and what to do:
       seed your tags by the seed rule before re-syncing past this entry, since
       a repository with evidence cells and no tags reads one finding per part
       from `DevStg-Impl`. That is the forced migration OI-120 call 2 accepted;
       no second one. No setting and no schema changes.
-- [ ] **The retirement** is written where item 5's work will read it: the
+- [x] **The retirement** is written where item 5's work will read it: the
       check's own header comment names the generated evidence column as its
       end. This row builds no retirement.
-- [ ] Coverage bound: the promise reaches the tags and evidence cells supported
+- [x] Coverage bound: the promise reaches the tags and evidence cells supported
       workflows produce: a builder or an LLM-applied re-sync writing a tag, and
       a TC row authored through a lane (`project-trajectory/PROCESS.md` §6
       "Review threat model"). Row 1's bound holds for the tags.
-- [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B). The reviewers
+- [x] Review bar: A+B (REVIEW-A plus an independent REVIEW-B). The reviewers
       judge the seed script's result through its equivalence evidence, the
       check, and a sample of the tags, not each of about 2100 edits.
 

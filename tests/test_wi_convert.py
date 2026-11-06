@@ -204,6 +204,8 @@ def test_the_live_registry_round_trips_in_whichever_home_is_authoritative(
     converter's own output shape, so the bytes are assertable here even though
     `verify` only ever REPORTS them in general). Folder home: the same claim in
     the direction that home can make it — folder -> CSV -> folder, parse-equal.
+
+    Implements: TC-129
     """
     if REGISTRY.exists():
         assert wi_convert.verify(REGISTRY) is True
@@ -721,7 +723,10 @@ def test_an_adopted_cell_round_trips_through_the_converter(tmp_path):
     converter writes it as the front-matter list the close writes and the
     registry reader reads it back cell-exact, as `Adjudicates` and `Digests`
     do. New behaviour: trunk's column list has no `Adopted`, so the writer
-    drops it."""
+    drops it.
+
+    Implements: TC-360
+    """
     from kitlib import registry
 
     row = dict.fromkeys(wi_convert.COLUMNS, "")

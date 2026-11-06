@@ -312,7 +312,10 @@ def test_interactive_launch_error_is_recorded_then_raised(tmp_path):
 def test_an_interactive_sitting_on_the_primary_checkout_spools_its_log(tmp_path):
     """A hands-on sitting is started from the primary checkout, which is never
     a lane (WI-960): its log goes to the primary's spool, recorded even when
-    the launch raised, and trunk's HEAD and tracked tree are unchanged."""
+    the launch raised, and trunk's HEAD and tracked tree are unchanged.
+
+    Implements: TC-384
+    """
     claimed_lane(tmp_path)
     primary = tmp_path / "primary"
     head = fixture_git(primary, "rev-parse", "HEAD")
@@ -437,6 +440,7 @@ def _kernel32():
     ],
 )
 def test_a_deadline_kill_ends_the_grandchild(tmp_path, parent):
+    """Implements: TC-026"""
     # WI-881 on repo-review 2026-07-21 H-2: a deadline kill ends the session's
     # whole tree, not just the direct child, on real processes — the grandchild
     # holds the work (and the stdout pipe) a `.cmd` shim's node would.
@@ -476,6 +480,7 @@ def test_a_deadline_kill_ends_the_grandchild(tmp_path, parent):
     ],
 )
 def test_an_interruption_ends_the_grandchild(tmp_path, parent):
+    """Implements: TC-026"""
     # WI-881 (sitting 001's return): a KeyboardInterrupt in the coordinator
     # while _wait_for_exit waits takes the interrupt path, not the deadline
     # path: it ends the whole tree and propagates. interrupt_main() is raised
@@ -508,6 +513,7 @@ def test_an_interruption_ends_the_grandchild(tmp_path, parent):
 
 @pytest.mark.skipif(os.name != "nt", reason="job containment is Windows")
 def test_an_uncontainable_child_errors_before_it_runs(tmp_path, monkeypatch):
+    """Implements: TC-026"""
     # WI-881 (sitting 001's return): a child that cannot be put in a job is
     # killed while still suspended, so it never runs, and the session ends as
     # a session error; there is no uncontained fallback (D-001).
@@ -532,6 +538,7 @@ def test_an_uncontainable_child_errors_before_it_runs(tmp_path, monkeypatch):
 
 
 def test_a_tree_not_ended_within_the_bound_raises(tmp_path, monkeypatch):
+    """Implements: TC-026, TC-374"""
     # D-003: the kill waits for the session's group (POSIX) or job (Windows)
     # to empty, and past the stated bound it raises, naming the survivor,
     # instead of letting the coordinator continue. The probe is made to report
@@ -570,6 +577,7 @@ def test_a_tree_not_ended_within_the_bound_raises(tmp_path, monkeypatch):
 
 
 def test_an_ordinary_launch_error_still_returns_the_session_error(tmp_path):
+    """Implements: TC-026"""
     # A launch that never created a child (a missing executable) returns
     # the ordinary session-error result.
     code, output, timed_out = agent_session.run_session(
@@ -581,6 +589,7 @@ def test_an_ordinary_launch_error_still_returns_the_session_error(tmp_path):
 
 @pytest.mark.skipif(os.name != "nt", reason="the job snapshot is Windows")
 def test_a_member_the_kill_cannot_open_makes_it_raise(monkeypatch):
+    """Implements: TC-026, TC-374"""
     # WI-881 S3 (D-004): a live member that denies the kill SYNCHRONIZE cannot
     # be waited on, so the kill terminates the job and then raises naming it,
     # rather than counting the member as already gone. A pid that no longer
@@ -614,6 +623,7 @@ SLEEPY_AFTER_ONE_LINE = [
 
 
 def test_run_session_idle_deadline_kills_a_silent_child(tmp_path):
+    """Implements: TC-026"""
     # C3 (docs/plans/2026-08-30-stall-guard-plan.md): a child that stops
     # emitting is killed at the IDLE deadline, not discovered at the wall —
     # two silent hangs on 2026-08-30 each burned a 7200 s wall slot.

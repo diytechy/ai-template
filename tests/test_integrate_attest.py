@@ -18,6 +18,8 @@ named in another order.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES` with its station
 siblings: real repositories and lane worktrees.
+
+Implements: TC-132
 """
 
 import json
@@ -454,6 +456,7 @@ title = "A widget under review"
 
 
 def test_the_review_render_accepts_what_attest_writes(tmp_path, capsys):
+    """Implements: TC-371"""
     # TC-371 (WI-957): the record's producer and the review render agree on
     # the tests digest whatever order the round names the set in. Adequacy
     # witness: a render that never reads the record names no attested commit,

@@ -33,6 +33,8 @@ Every git fixture is a real repository and the loop's own entry points run for
 real; the only stand-ins are the two harness scripts a lane's refresh runs,
 which record nothing and pass, because what is asserted is the message the
 refresh commits, not the bar it ran.
+
+Implements: TC-242, TC-243
 """
 
 import os
@@ -1126,6 +1128,7 @@ def test_the_dial_is_read_from_a_parsed_policy_and_fails_toward_most_held(capsys
 
 
 def test_the_rung_map_names_every_off_spine_status_registry():
+    """Implements: TC-241"""
     # The assumptions registry joins the frame at DevStg-Boundary; the shared
     # coordinator re-exports the one table rather than keeping a copy.
     assert authority.APPROVAL_RUNGS["assumptions"] == ladder.STAGE_BOUNDARY
@@ -1183,6 +1186,7 @@ def test_the_needs_file_is_read_at_the_needs_rung_by_the_authority_alone():
 def test_the_live_dial_reads_every_legacy_spelling_silently_from_a_chosen_tree(
     tmp_path, capsys
 ):
+    """Implements: TC-241"""
     root = _bare(tmp_path / "dials")
     cases = (
         ('[attestation]\nhuman_approval_through = "DevStg-Arch"\n', "DevStg-Arch"),

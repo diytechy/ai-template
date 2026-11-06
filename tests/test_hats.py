@@ -20,6 +20,8 @@ Four things are checked, and the fourth is the one that makes the layer real:
 The vacuous-guard rule applies here as everywhere: the malformed cases drive the
 reader over trees built to break it, so the green above is demonstrated able to
 fail before it is trusted to pass.
+
+Implements: TC-162, TC-245
 """
 
 from __future__ import annotations

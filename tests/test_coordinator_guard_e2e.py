@@ -59,6 +59,7 @@ def draining(tmp_path):
 
 
 def test_the_cli_claim_refuses_while_draining(draining):
+    """Implements: TC-317"""
     proc = subprocess.run(
         [
             sys.executable,
@@ -79,6 +80,7 @@ def test_the_cli_claim_refuses_while_draining(draining):
 
 
 def test_a_wrapper_importing_integrate_is_refused(draining, tmp_path):
+    """Implements: TC-317"""
     wrapper = tmp_path / "wrapper.py"
     wrapper.write_text(
         "import sys\nsys.path.insert(0, {!r})\nimport integrate\n"
@@ -97,6 +99,7 @@ def test_a_wrapper_importing_integrate_is_refused(draining, tmp_path):
 
 
 def test_a_lane_worktree_shares_the_primary_checkouts_lease(tmp_path):
+    """Implements: TC-317"""
     root = make_root(tmp_path)
     # `make_root` made the repository, hooks on; the branch is named here.
     _git(root, "symbolic-ref", "HEAD", "refs/heads/main")
@@ -132,7 +135,10 @@ def test_the_cli_take_with_the_hooks_absent_and_no_terminal_refuses(tmp_path):
     """Without a terminal the take cannot ask: with the guard hooks absent it
     exits 1 naming dev-setup's consent step, and records and writes nothing.
     Its stdin is the null device, as an agent's shell tool gives it, and CI is
-    unset, so only the terminal test can refuse the question."""
+    unset, so only the terminal test can refuse the question.
+
+    Implements: TC-345
+    """
     root = make_root(tmp_path)
     example = root / ".claude" / "settings.json.example"
     example.parent.mkdir(parents=True)
@@ -149,6 +155,7 @@ def test_the_cli_take_with_the_hooks_absent_and_no_terminal_refuses(tmp_path):
 
 
 def test_the_guard_cli_takes_requests_releases_and_clears(tmp_path):
+    """Implements: TC-318"""
     root = make_root(tmp_path)
     directory = guard.lease_dir(root)
     tx = Transcript(tmp_path / "coord.jsonl")
@@ -196,6 +203,7 @@ def test_the_guard_cli_takes_requests_releases_and_clears(tmp_path):
 
 
 def test_the_hook_cli_reads_stdin_and_prints_its_output(draining, tmp_path):
+    """Implements: TC-317, TC-318"""
     payload = {
         "hook_event_name": "SessionStart",
         "session_id": COORD,
@@ -239,7 +247,10 @@ def test_the_no_op_hook_imports_no_route_or_cli_module(case, tmp_path):
     """A hook call with nothing to do (the shipped default, or a guard-on call
     from a session that does not hold the lease) loads neither the agent
     launcher's modules nor the command-line parser: the hook runs on every
-    tool call, so what it imports is paid on every call."""
+    tool call, so what it imports is paid on every call.
+
+    Implements: TC-317
+    """
     root = make_root(tmp_path, pct=0 if case == "off" else 50)
     tx = Transcript(tmp_path / "coord.jsonl")
     tx.user()
@@ -268,7 +279,10 @@ def test_the_no_op_hook_imports_no_route_or_cli_module(case, tmp_path):
 
 def test_close_out_git_operations_pass_while_draining(draining, tmp_path):
     """A verification worktree and its removal, a landing (squash), an
-    archive ref, and the scoped-unpause restore all run while latched."""
+    archive ref, and the scoped-unpause restore all run while latched.
+
+    Implements: TC-317
+    """
     root = draining
     verify = tmp_path / "verify"
     _git(root, "worktree", "add", "--detach", str(verify), "HEAD")
@@ -297,6 +311,7 @@ def _launcher(tmp_path, name):
 
 @env_gate_skipif("posix-shell")
 def test_the_posix_launcher_runs_claude_in_the_root_with_the_prompt(tmp_path):
+    """Implements: TC-318"""
     bindir = tmp_path / "bin"
     bindir.mkdir()
     record = tmp_path / "record.txt"
@@ -336,6 +351,7 @@ def test_the_posix_launcher_runs_claude_in_the_root_with_the_prompt(tmp_path):
 
 @pytest.mark.skipif(os.name != "nt", reason="the .cmd launcher is Windows-only")
 def test_the_windows_launcher_runs_the_guards_claude_step_in_the_root(tmp_path):
+    """Implements: TC-318"""
     work = tmp_path / "root with spaces"
     scripts = work / "project-trajectory" / "scripts"
     scripts.mkdir(parents=True)

@@ -3,6 +3,8 @@ no-stub / substance criterion (process.md §4). It lists public symbols whose bo
 does nothing (`pass`/`...`/`raise NotImplementedError`/bare `return None`/
 docstring-only), warns by default (exit 0) and gates only with `--strict`, and
 never over-flags a substantive tiny pure function.
+
+Implements: TC-016
 """
 
 import ast

@@ -31,6 +31,8 @@ import both, so the two paths are pinned equal here.
 Every green below is demonstrated able to fail: the vacuity cases are driven
 over a tree that reds when the roster is present, so "reported nothing" is never
 confused with "looked at nothing".
+
+Implements: TC-245
 """
 
 from __future__ import annotations
@@ -74,6 +76,7 @@ def llr(lid, hat_refs="", sr_refs=""):
 
 
 def test_an_undeclared_hat_name_is_a_finding():
+    """Implements: TC-178"""
     findings, _ = trace.hat_findings(
         [sr("SR-001", "SECURITY"), sr("SR-002", "SECRUITY")],
         [],
@@ -88,6 +91,7 @@ def test_an_undeclared_hat_name_is_a_finding():
 
 
 def test_the_design_tier_is_checked_too_and_names_its_own_id():
+    """Implements: TC-178"""
     findings, _ = trace.hat_findings([], [llr("LLR-009", "NOSUCH")], {"SECURITY"})
     assert len(findings) == 1, findings
     assert findings[0].startswith("LLR LLR-009"), findings[0]
@@ -104,6 +108,7 @@ def test_a_declared_name_is_silent():
 
 
 def test_the_rule_is_vacuous_without_a_roster():
+    """Implements: TC-178"""
     # The SAME rows that red above report nothing when no roster is declared:
     # absence is opt-out for the whole hats layer, so there is no declared name
     # a row could fail to cite.
@@ -113,10 +118,12 @@ def test_the_rule_is_vacuous_without_a_roster():
 
 
 def test_an_absent_roster_file_reads_as_no_names(tmp_path):
+    """Implements: TC-178"""
     assert trace.load_hat_names(tmp_path) == (set(), {})
 
 
 def test_an_unparseable_roster_is_vacuous_not_loud(tmp_path):
+    """Implements: TC-178"""
     write_roster(tmp_path, "[hat.SECURITY\nthis will not parse = = =\n")
     # Deliberately NOT a raise: this is a findings pass, not the roster's load
     # path. `hats.py` is what refuses a broken roster, loudly, to every composer.
@@ -137,6 +144,7 @@ def test_a_roster_whose_hat_table_is_not_a_table_is_vacuous(tmp_path):
 
 
 def test_coverage_is_one_advisory_and_never_a_finding():
+    """Implements: TC-178"""
     findings, advisories = trace.hat_findings(
         [sr("SR-001"), sr("SR-002"), sr("SR-003", "SECURITY")],
         [llr("LLR-001")],
@@ -152,6 +160,7 @@ def test_coverage_is_one_advisory_and_never_a_finding():
 
 
 def test_a_spine_that_uses_the_cell_nowhere_gets_NO_advisories():
+    """Implements: TC-178"""
     # The first-run-adopter case, and the reason both advisories are gated: a
     # freshly bootstrapped project ships the roster and no Hat-Refs anywhere.
     # Greeting a stranger with "every row records nothing" plus sixteen hats
@@ -196,6 +205,7 @@ def test_a_fully_covered_spine_reports_no_coverage_line():
 
 
 def test_a_hat_no_row_is_attributable_to_is_reported():
+    """Implements: TC-178"""
     _, advisories = trace.hat_findings(
         [sr("SR-001", "SECURITY")], [], {"SECURITY", "MAINTAINER"}
     )
@@ -209,12 +219,14 @@ def test_a_hat_no_row_is_attributable_to_is_reported():
 
 
 def test_effective_hats_unions_the_parents():
+    """Implements: TC-178"""
     parents = {"SR-001": sr("SR-001", "SECURITY")}
     row = llr("LLR-001", hat_refs="MAINTAINER", sr_refs="SR-001")
     assert trace.effective_hats(row, parents) == ["MAINTAINER", "SECURITY"]
 
 
 def test_a_parent_re_ruling_moves_the_child_with_no_child_cell_edited():
+    """Implements: TC-178"""
     row = llr("LLR-001", hat_refs="MAINTAINER", sr_refs="SR-001")
     before = trace.effective_hats(row, {"SR-001": sr("SR-001", "SECURITY")})
     # The SR is re-ruled. THE CHILD ROW IS NOT TOUCHED — `row` is the same dict.
@@ -233,6 +245,7 @@ def test_multiple_parents_all_contribute_and_duplicates_collapse():
 
 
 def test_a_dangling_parent_contributes_nothing_rather_than_raising():
+    """Implements: TC-178"""
     # Parentage is already a reported finding of its own; a derivation that
     # crashed here would report the same defect twice, the second time as a
     # stack trace.
@@ -248,6 +261,7 @@ def test_a_row_with_no_refs_anywhere_derives_the_empty_set():
 
 
 def test_the_roster_path_matches_the_hats_module():
+    """Implements: TC-178"""
     # `trace.py` may not import `hats` (the declared crossing between those two
     # components runs the other way), so nothing in the SHIPPED code holds these
     # two constants together. A test may import both, and does.

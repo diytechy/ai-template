@@ -182,8 +182,12 @@ Stable, zero-padded, never reused.
   test; a test file in another language declares it on a comment line, for the
   whole file. `check_trajectory.py` reports a tag anywhere else, a list that is
   not TC ids alone, an id no live TC row carries, and a test file it cannot
-  read, as errors under `--strict`; an untagged test is no finding. The
-  registry rows are authoritative. The code-side obligation is a DIAL, not a
+  read, as errors under `--strict`. It holds each live TC's tags equal to the
+  `Evidence` parts under the tests root, until that column is generated from
+  the tags: a file part matches a file-level tag, a test part that test's tag
+  (a `[case]` dropped), and each difference is a finding naming the TC and the
+  node, `evidence without a tag` or `tag without evidence`. The registry rows
+  are authoritative. The code-side obligation is a DIAL, not a
   blanket rule:
   `docs/process.toml` `[checks] backlink_coverage_min` is the minimum share of
   live LLR rows a literal `Implements:` declaration must name, and the harness

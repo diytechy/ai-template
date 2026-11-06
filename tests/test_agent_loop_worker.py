@@ -22,6 +22,8 @@ corrupt a parallel dispatch run:
   - the retired --track flag is refused as an unknown flag (TC-061), and
     managed review evidence in worker mode lands at
     reviews/<train>/NNN-<PHASE>-<sha7>.md naming the reviewed HEAD.
+
+Implements: TC-061
 """
 
 import argparse
@@ -233,6 +235,7 @@ def _setup(tmp_path, train="t1", wis=("WI-201",)):
     ],
 )
 def test_the_worker_refuses_any_assignment_but_one_id(tmp_path, value):
+    """Implements: TC-061"""
     # The worker's assignment is exactly one well-formed work-item id. Any
     # other value (empty, separator-only, a list in any separator, a repeated
     # id, a malformed token) is one preflight failure naming the value, before
@@ -257,6 +260,7 @@ def test_the_worker_accepts_one_well_formed_id(tmp_path):
 
 
 def test_a_list_assignment_exits_preflight_before_a_provider_launches(tmp_path):
+    """Implements: TC-061"""
     # The CLI's assignment argument takes one id; a list exits on the preflight
     # code, naming the value, and the fake provider records no launch at all.
     repo, base, ctl, fake = _setup(tmp_path, wis=("WI-201", "WI-204"))
@@ -334,6 +338,7 @@ _ONE_ROW_GOLDEN = (
 
 
 def test_the_one_row_prompt_renders_as_today(tmp_path):
+    """Implements: TC-061"""
     # The one-row worker prompt renders byte for byte as the golden file
     # tests/golden/worker-prompt-one-row.txt, with the integration base written
     # there as <BASE>.

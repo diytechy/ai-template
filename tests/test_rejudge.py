@@ -12,6 +12,8 @@ work item. The check hashes files; it runs no model.
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: every case builds and
 commits a real git repository, because the decision reads the inputs at a
 revision, and the release half drives the intake mint's bookkeeping commit.
+
+Implements: TC-247, TC-248, TC-306
 """
 
 import datetime
@@ -384,6 +386,7 @@ def test_existing_archive_edits_do_not_count_as_new_closed_work(tmp_path):
 
 
 def test_trajectory_rubric_warning_survives_strict_and_no_work_items(tmp_path):
+    """Implements: TC-311"""
     _write(tmp_path, TC_CSV, TEST_CASES)
     proc = run_py([SCRIPTS / "check_trajectory.py", "--strict"], tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr

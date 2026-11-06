@@ -49,7 +49,10 @@ def test_svg_nodes_carry_escaped_title_tooltips(tmp_path):
     changed assertion made <title> optional, so a regression dropping it from
     any of the four emitters stayed green. Pin each emitter: every node <g>
     carries a <title> child, and the tip renders markup-hostile row content
-    escaped."""
+    escaped.
+
+    Implements: TC-104
+    """
     make_repo(
         tmp_path,
         wis_body=(
@@ -242,6 +245,7 @@ def test_tab_button_and_panel_helpers_emit_the_aria_pattern():
 
 
 def test_a4_node_fills_meet_the_wcag_floor():
+    """Implements: TC-119"""
     # dashboard-accessibility.md A4: every node fill keeps >= 4.5:1 for its label
     # text. Node text is #fff except the queued status (dark #0f172a on the light
     # gray), so every fill in the shared palette must clear the floor with one of
@@ -259,7 +263,10 @@ def test_a4_node_fills_meet_the_wcag_floor():
 
 
 def test_a4_every_emitted_dashboard_contrast_pair_meets_floor():
-    """TC-HARDEN: computed colors must catch badge/boundary/focus regressions."""
+    """TC-HARDEN: computed colors must catch badge/boundary/focus regressions.
+
+    Implements: TC-119
+    """
     gt = load_script("gen_trajectory")
     for status, fill in gt.STATUS_FILL.items():
         ink = "#0f172a" if status == "queued" else "#ffffff"
@@ -339,7 +346,10 @@ def test_u3_phase_legend_renders_through_the_shared_legend_component(tmp_path):
     placement inside the drill's summary paragraph rather than below the card
     like every other legend (the status legend on the SAME tab, and the
     Knowledge/How-SW legends). It now renders through the identical
-    `.legend`/`<i>` component those use."""
+    `.legend`/`<i>` component those use.
+
+    Implements: TC-106
+    """
     tiered_repo(tmp_path, TIER_UNION_WIS)
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
@@ -386,6 +396,8 @@ def test_u1_every_font_size_resolves_to_a_declared_scale_step(tmp_path):
     steps for ONE role, 3-7% apart. No reader distinguishes those; no rule
     justified them; and "do the sizes read as uniform?" cannot be answered about
     a scale nobody wrote down.
+
+    Implements: TC-116
     """
     declared = {t for fam in TYPE_SCALE_FAMILIES.values() for t in fam}
 
@@ -445,6 +457,8 @@ def test_u3_every_weight_value_resolves_to_a_declared_token(tmp_path):
     `stroke-opacity` is checked under `opacity` deliberately — it is the same
     scale applied to a stroke, and letting it keep its own literals would leave
     the exact hole this closes.
+
+    Implements: TC-115
     """
     for label, page in _every_emitter_document(tmp_path):
         for prop, tokens in WEIGHT_TOKENS.items():
@@ -483,6 +497,8 @@ def test_u3_svg_corner_radii_match_the_declared_scale(tmp_path):
     and this closes the loop — asserting the DECLARATION against both the source
     literals and every rendered document, so the tuple cannot quietly disagree
     with what the emitters actually draw.
+
+    Implements: TC-115
     """
     gt = load_script("gen_trajectory")
     declared = set(gt.SVG_RX)
@@ -544,6 +560,8 @@ def test_u5_pairwise_deltae_holds_within_and_across_every_vocabulary():
     the identity check misses" could be written off as perceptual. It is not: it
     is the same formula on the set nobody widened. When this was first run it
     found three real conflations, worst 8.6.
+
+    Implements: TC-114
     """
     gt = load_script("gen_trajectory")
     vocabs = _palette_vocabularies(gt)
@@ -612,6 +630,8 @@ def test_a2_every_control_name_is_present_and_not_a_bare_id(tmp_path):
     everywhere: a control must HAVE a name, and that name must not be a bare
     registry id — `IF-001` tells a screen-reader user nothing about what the
     control is or does.
+
+    Implements: TC-113
     """
     for label, page in _every_emitter_document(tmp_path):
         controls = _named_controls(page)
@@ -647,6 +667,8 @@ def test_a2_landmark_names_are_distinct(tmp_path):
     renders a single drill, so only a document with two or more navs exercises
     it (the `< 2` skip). That is a real coverage limit — verified by reverting
     the fix, which fails here only once the dashboard is regenerated.
+
+    Implements: TC-113
     """
     for label, page in _every_emitter_document(tmp_path):
         names = re.findall(r"<nav\b[^>]*aria-label=\"([^\"]*)\"", page)
@@ -666,7 +688,10 @@ def test_u1_process_tab_type_scale_matches_the_shared_tokens(tmp_path):
     and reuse them directly; `.slotname` (WI-389: the station cycle's emphasized
     merge-slot node, the successor of the hoops' `.hubname` headline role) gets
     the ONE documented scale step --nhead — never an independently drifting
-    magic number."""
+    magic number.
+
+    Implements: TC-107
+    """
     with_stage(tmp_path, "DevStg-Tests")  # the Process tab's render condition
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
@@ -734,7 +759,10 @@ def test_u5_no_hex_reused_across_unrelated_colour_vocabularies():
     SN/SR/LLR/TC mirror (one concept, two label systems) and the CSS `--accent`
     token, which PHASE_ACCENTS must also never equal (the focus/hover ring is
     painted in `--accent`, so a phase sharing it makes that phase's ring
-    invisible — 119-CRITIQUE A4/T5)."""
+    invisible — 119-CRITIQUE A4/T5).
+
+    Implements: TC-105
+    """
     gt = load_script("gen_trajectory")
     tier_to_type = {
         "sn": "Stakeholder Need",
@@ -772,7 +800,10 @@ def test_u5_phase_accents_clear_a_pairwise_deltae_floor():
     every swatch can sit beside every other one, so the floor is PAIRWISE, not
     merely adjacent-in-declaration-order — the exact metric gap (WI-247's
     validator checked adjacent pairs only) that let two indistinguishable violets
-    ship (075-CRITIQUE T5 / 119-CRITIQUE precursor)."""
+    ship (075-CRITIQUE T5 / 119-CRITIQUE precursor).
+
+    Implements: TC-105
+    """
     gt = load_script("gen_trajectory")
     accents = gt.PHASE_ACCENTS
     worst = min(
@@ -788,7 +819,10 @@ def test_a4_ring_ink_clears_the_3to1_floor_against_every_node_fill():
     dashboard-usability.md T5: `_ring_ink` picks whichever of white/near-black
     contrasts more against a fill, so it must clear the 3:1 UI-boundary floor for
     EVERY fill the dashboard actually uses — not just the ones a hand-picked
-    example happened to check."""
+    example happened to check.
+
+    Implements: TC-108
+    """
     gt = load_script("gen_trajectory")
     fills = (
         set(gt.STATUS_FILL.values())
@@ -841,7 +875,10 @@ def test_t5_containment_arrow_clears_the_3to1_floor_against_every_host_fill(tmp_
     match it — measured 1.06:1 in light (#4f46e5 on the phase-1 #0369a1) and
     1.99:1 in dark (#818cf8 on the same fill). The paint must derive from the
     host fill's contrast-safe control token (`--ring`, LLR-105's machinery), and
-    the arithmetic must close over EVERY declared fill, not a sampled one."""
+    the arithmetic must close over EVERY declared fill, not a sampled one.
+
+    Implements: TC-108
+    """
     gt = load_script("gen_trajectory")
     shaft = re.search(r"\.drill \.cedge\{[^}]*stroke:([^;]+);", gt.DRILL_STYLE).group(1)
     head = re.search(r"\.drill \.cedgehead\{fill:([^;]+);", gt.DRILL_STYLE).group(1)
@@ -974,7 +1011,10 @@ def test_t6_theme_lock_has_one_mechanism_and_no_mixed_family_pair(tmp_path):
 
     Swept over EVERY emitter, not one fixture, for the A2 review's reason: a
     document walk judges only what its fixture renders, and the emitter that
-    does not render is where the violation hides."""
+    does not render is where the violation hides.
+
+    Implements: TC-122
+    """
     gt = load_script("gen_trajectory")
     vocabulary = (
         set(gt.STATUS_FILL.values())
@@ -1130,7 +1170,10 @@ def test_u3_ring_token_is_the_one_highlight_idiom_across_every_emitter(tmp_path)
     two idioms for the same "this node is highlighted" concept. All four now
     read the SAME `--ring` custom property (with each emitter's old hue kept
     only as the CSS fallback), and each node carries its own computed `--ring`
-    value inline so the ring clears contrast against ITS fill specifically."""
+    value inline so the ring clears contrast against ITS fill specifically.
+
+    Implements: TC-106
+    """
     tiered_repo(tmp_path / "drill", TIER_UNION_WIS)
     assert gen(tmp_path / "drill").returncode == 0
     css = html_of(tmp_path / "drill")
@@ -1168,6 +1211,7 @@ def test_a3_flat_dag_fallback_also_prefixes_the_status_glyph(tmp_path):
 
 
 def test_a1_drill_leaf_blocks_are_keyboard_focusable(tmp_path):
+    """Implements: TC-090"""
     # dashboard-accessibility A1 (048 BLOCKER): a leaf drill block carries a
     # click/focus detail handler (`.block[data-wi]`/`[data-node]`), so it must be
     # keyboard-focusable — not only the descend containers. Every block is now
@@ -1213,6 +1257,7 @@ def _named(tag, body):
 
 
 def test_a2_no_focusable_node_sits_inside_a_children_presentational_svg(tmp_path):
+    """Implements: TC-104"""
     # dashboard-accessibility A2 (WI-297): role="img" is CHILDREN-PRESENTATIONAL —
     # ARIA expects the subtree pruned — so a graph holding focusable nodes must not
     # declare it, or the per-node <title>s A2 rests on may never reach a screen
@@ -1239,6 +1284,7 @@ def test_a2_no_focusable_node_sits_inside_a_children_presentational_svg(tmp_path
 
 
 def test_a2_role_predicate_counts_native_links_as_focusable():
+    """Implements: TC-104"""
     # The unit half, and the regression guard for the defect adversarial review
     # found in the first draft: focusability is NOT only `tabindex`. An SVG <a> with
     # an href is natively tab-ordered and so carries none, and a tabindex-only
@@ -1262,6 +1308,7 @@ def test_a2_role_predicate_counts_native_links_as_focusable():
 
 
 def test_a2_the_repos_own_shipped_dashboard_holds_the_invariant():
+    """Implements: TC-104"""
     # The document walk above can only judge the emitters its FIXTURE renders —
     # adversarial review measured that at 2 of 6, and the one genuine violation
     # lived in an emitter the fixture never rendered. This asserts the same

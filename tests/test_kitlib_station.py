@@ -4,6 +4,8 @@ The half of `SR-144` that is a DECISION rather than an effect. `integrate`
 reads the branch tree; what the read MEANS is this module, and the point of
 extracting it is that the meaning is now assertable without building a git
 repository, a branch and a claim first.
+
+Implements: TC-184
 """
 
 from kitlib import station
@@ -17,6 +19,8 @@ def test_outcome_of_names_one_outcome_or_none():
     folders names two outcomes, and a dict keyed on the basename once let the
     last `ls-tree` line win — plain alphabetical precedence, which put a
     handback ahead of a merge. `None` is the fail-closed answer, not a pick.
+
+    Implements: TC-177
     """
     for status_dir, outcome in station.OUTCOME_DIRS.items():
         assert station.outcome_of({status_dir}) == outcome

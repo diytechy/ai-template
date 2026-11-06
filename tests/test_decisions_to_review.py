@@ -9,6 +9,8 @@ reader never reads `reviewed` beside `owner` (the migrator rewrites it). An
 overruled entry states the direction instead in its `review` note (a blank
 note is a finding) and is listed under its own heading with the work item
 that cites it, so an overrule never disappears silently.
+
+Implements: TC-293
 """
 
 import pytest
@@ -197,6 +199,7 @@ def test_the_shipped_template_entry_leaves_the_owner_key_unset():
 
 
 def test_a_malformed_hoist_is_shown_as_a_finding_not_a_crash(tmp_path):
+    """Implements: TC-293"""
     folder = tmp_path / "docs/decisions"
     folder.mkdir(parents=True)
     (folder / "run.toml").write_text(

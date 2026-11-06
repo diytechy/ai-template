@@ -9,6 +9,8 @@ presence, never truth. The three false figures of 2026-08-01 (WI-380's stale
 mutation ledger, WI-391's unreproducible link count, WI-384's self-falsifying
 "two false positives") are the fixtures: each would have been flagged.
 Exercised over temp repos, warn-first (exit 0) unless --strict.
+
+Implements: TC-140
 """
 
 from conftest import SCRIPTS, run_py

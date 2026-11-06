@@ -9,6 +9,8 @@ Each rule is driven beside its opposite, because a comparison that never flags
 and one that flags every tick are both useless, and ticking with evidence is the
 normal convention: `- [x] item` and `~~item~~ - LANDED ...` must read as the
 item unchanged, while a reworded, deleted or added item must not.
+
+Implements: TC-259
 """
 
 import sys
@@ -155,7 +157,10 @@ def test_the_staged_delta_classifies_each_claim_copy_change():
     change, a close when the same delta adds the item's spec in a closed
     home; a lone `A` (a new claim copy, every entry on an unborn HEAD) and a
     path outside a claim folder are not listed. The entries are `(status,
-    path)` pairs, as the lossless delta read hands them over."""
+    path)` pairs, as the lossless delta read hands them over.
+
+    Implements: TC-325
+    """
     copy = "docs/work/active/wi-7/WI-007-thing.md"
 
     def listing(*entries):

@@ -302,7 +302,10 @@ def test_the_three_crash_paths_actually_run():
 
     `docs / "some-file".open(...)` parses as `docs / ("some-file".open(...))`, so
     three writers raised AttributeError on live paths while ruff passed and the
-    full suite passed — nothing called them. Behaviour, not syntax."""
+    full suite passed — nothing called them. Behaviour, not syntax.
+
+    Implements: TC-191
+    """
     import json
     import tempfile
     from pathlib import Path

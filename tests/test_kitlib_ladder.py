@@ -34,7 +34,10 @@ def test_the_ladder_is_the_ruled_EIGHT_RUNGS_in_the_ruled_ORDER():
     """The order is the OI-21 ruling — requirements before architecture, the
     boundary once, LLReqs terminal — and it is asserted whole rather than
     spot-checked, because an insertion in the wrong place is the failure this
-    vocabulary exists to make visible."""
+    vocabulary exists to make visible.
+
+    Implements: TC-179
+    """
     assert ladder.STAGE_ORDER == [
         "DevStg-Needs",
         "DevStg-Boundary",
@@ -65,7 +68,10 @@ def test_every_rung_has_a_description_and_nothing_else_does():
 def test_stage_ord_is_the_position_and_RAISES_on_an_unknown_label():
     """The label is the identifier; position is derived. And an unknown label
     means the ladder moved under a cached value — the wrong-answer direction of
-    a silent default is LESS human involvement, so it fails loudly."""
+    a silent default is LESS human involvement, so it fails loudly.
+
+    Implements: TC-179
+    """
     for i, rung in enumerate(ladder.STAGE_ORDER):
         assert ladder.stage_ord(rung) == i
     # The retired spellings are the INPUTS under test here: a cached tag or a
@@ -100,6 +106,8 @@ def test_the_module_imports_NOTHING():
     for anything, and having nothing to reach for is what makes it safe for the
     scaffolder and for a render leaf. Asserted from the SOURCE, because that is
     the property a reader can check.
+
+    Implements: TC-179
     """
     tree = ast.parse((SCRIPTS / "kitlib" / "ladder.py").read_text(encoding="utf-8"))
     imports = [
@@ -121,6 +129,8 @@ def test_every_reader_resolves_to_this_one_object():
     statement available here and the cheapest: it says there is nothing left to
     drift, which is what makes deleting the old equality pins safe rather than
     merely convenient.
+
+    Implements: TC-179
     """
     dg = load_script("spine_rules")
     ac = load_script("agent_common")

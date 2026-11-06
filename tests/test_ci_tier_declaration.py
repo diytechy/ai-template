@@ -33,6 +33,8 @@ local run are equivalent on all inputs, which is not mechanizable at any price.
 The parsing is stdlib string work on two small, hand-written, kit-owned YAML
 files. A real YAML parser is not stdlib and would be a dependency row for a job
 that is four regexes.
+
+Implements: TC-185, TC-186
 """
 
 import configparser

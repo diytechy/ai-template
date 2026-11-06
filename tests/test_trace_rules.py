@@ -7,12 +7,15 @@ optional LLR Rationale column), the parent-first standing finding (which
 retired the WI-129 LLR/TC status-coherence lint), the WI-146(a)
 --approve hierarchy view, and the WI-081 Slice C render/exit helpers
 (_bucket_by_ref pre-indexing + the exit_code gate policy).
+
+Implements: TC-216
 """
 
 from conftest import load_script, make_minimal_project, run_py
 
 
 def test_a_spine_row_states_the_system_not_its_own_history():
+    """Implements: TC-126"""
     # Owner-raised at the first re-attestation sitting, on LLR-050's `WI-316:`
     # changelog prefix: a spine row must be stand-alone — a reader with none of
     # this repo's history reads one row and knows what the system does and why.
@@ -360,6 +363,7 @@ def test_a_work_item_citation_is_found_whatever_its_capitalisation():
 
 
 def test_a_condition_stated_outside_the_ears_patterns_warns_but_never_gates():
+    """Implements: TC-174"""
     # process.md section 3, "The statement pattern is EARS". Measured over this
     # repo's 70 SRs before shipping: two rows opened on a non-EARS condition
     # ("Before ...", "For ..."), both re-worded in the same change, so the rule
@@ -409,6 +413,7 @@ def test_a_condition_stated_outside_the_ears_patterns_warns_but_never_gates():
 
 
 def test_a_requirement_states_one_testable_obligation():
+    """Implements: TC-127"""
     # WI-328. The stand-alone rule says a row must not carry its own HISTORY;
     # this says what is left must be DECIDABLE — 29148's individual-requirement
     # characteristics, restricted to the half a checker settles without judgement.
@@ -501,6 +506,7 @@ def test_a_requirement_states_one_testable_obligation():
 
 
 def test_a_child_that_rewords_its_parent_warns_but_never_gates():
+    """Implements: TC-128"""
     # WI-328. 'Decompose, don't paraphrase' made visible. Lexical overlap is a
     # HEURISTIC — 38 of 118 LLRs trip it and most are legitimate, which is
     # precisely why it warns forever instead of gating.
@@ -642,7 +648,10 @@ def test_an_approved_sr_under_a_drafted_sn_reds_strict_integrity(scaffold):
     """The need tier is a parent tier too: an Approved SR citing a Drafted SN
     reds the integrity floor, naming both rows and statuses. Adequacy witness:
     a standing finding that read only the SR, LLR and TC tiers (the need tier's
-    rows not passed to the rule) would leave this run at exit 0."""
+    rows not passed to the rule) would leave this run at exit 0.
+
+    Implements: TC-396
+    """
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
     (req / "stakeholder-needs.md").unlink()
@@ -659,6 +668,7 @@ def test_an_approved_sr_under_a_drafted_sn_reds_strict_integrity(scaffold):
 
 
 def test_an_approved_llr_under_a_drafted_sr_reds_strict_integrity(scaffold):
+    """Implements: TC-396"""
     make_minimal_project(scaffold)
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
     _set_status(srs, ",M,Test,Approved", ",M,Test,Drafted")
@@ -672,6 +682,7 @@ def test_an_approved_llr_under_a_drafted_sr_reds_strict_integrity(scaffold):
 def test_a_drafted_llr_whose_citing_tcs_are_approved_is_an_integrity_finding(
     scaffold,
 ):
+    """Implements: TC-396"""
     make_minimal_project(scaffold)
     llrs = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
     _set_status(llrs, ",(see TC),Approved", ",(see TC),Drafted")
@@ -682,6 +693,7 @@ def test_a_drafted_llr_whose_citing_tcs_are_approved_is_an_integrity_finding(
 
 
 def test_the_llr_status_advisory_is_retired(scaffold):
+    """Implements: TC-396"""
     trace = load_script("trace")
     assert not hasattr(trace, "llr_status_advisories")
     make_minimal_project(scaffold)

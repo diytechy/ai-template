@@ -15,6 +15,8 @@ is exactly one of:
 A new step in none of them, a name in two, or a listed name that is not a step
 fails here, in the smoke tier, at the commit that registered it. In process:
 the hook is read as text and `steps()` is called, nothing is spawned.
+
+Implements: TC-019
 """
 
 from conftest import KIT, hook_check_lines, load_script

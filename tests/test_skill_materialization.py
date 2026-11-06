@@ -29,6 +29,7 @@ def _plant_skill(root, name="two"):
 
 
 def test_a_multi_file_skill_materializes_whole_and_passes_the_drift_check(tmp_path):
+    """Implements: TC-289"""
     boot = load_script("bootstrap")
     gen = load_script("gen_skills_index")
     skill = _plant_skill(tmp_path / "kit")
@@ -45,6 +46,7 @@ def test_a_multi_file_skill_materializes_whole_and_passes_the_drift_check(tmp_pa
 
 
 def test_the_delivery_inventory_lists_a_skills_companion_file(tmp_path, monkeypatch):
+    """Implements: TC-289"""
     # The inventory is the universe the delivered-package check grades MAPPING
     # against. A kit-scope skill's files are conditional deliveries, one per
     # agent skills directory; listing only its SKILL.md would leave the

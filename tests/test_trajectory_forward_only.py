@@ -12,6 +12,7 @@ from conftest import ROOT, load_script
 
 
 def test_forward_only_unit_over_the_real_meta_repo():
+    """Implements: TC-075"""
     # Prove the pruned meta-repo status.md passes: its named WI ids (WI-194..200
     # open, the deferred backlog) carry no `done` id, so the rule finds nothing.
     ct = load_script("check_trajectory")

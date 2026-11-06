@@ -77,6 +77,7 @@ def _ladder(root):
 @pytest.mark.parametrize("dial", ["record", "escalate-first"])
 @pytest.mark.parametrize("directory", ["complete", "cancelled"])
 def test_a_recording_dial_refuses_a_close_without_its_record(tmp_path, dial, directory):
+    """Implements: TC-294"""
     root = _lane(tmp_path, directory, dial=dial)
     refusal = _ladder(root)
     assert refusal is not None and RECORD in refusal
@@ -85,6 +86,7 @@ def test_a_recording_dial_refuses_a_close_without_its_record(tmp_path, dial, dir
 
 @pytest.mark.parametrize("dial", [None, "off"])
 def test_the_off_dial_reads_nothing(tmp_path, dial):
+    """Implements: TC-294"""
     root = _lane(tmp_path, "complete", dial=dial)
     refusal = _ladder(root)
     assert refusal is None or RECORD not in refusal
@@ -93,6 +95,7 @@ def test_the_off_dial_reads_nothing(tmp_path, dial):
 
 @pytest.mark.parametrize("dial", ["record", "escalate-first"])
 def test_a_lane_carrying_its_record_passes_the_rung(tmp_path, dial, capsys):
+    """Implements: TC-294"""
     root = _lane(tmp_path, "complete", record=SOUND, dial=dial)
     refusal = _ladder(root)
     assert refusal is None or RECORD not in refusal
@@ -101,6 +104,7 @@ def test_a_lane_carrying_its_record_passes_the_rung(tmp_path, dial, capsys):
 
 
 def test_a_malformed_entry_is_reported_and_does_not_refuse(tmp_path, capsys):
+    """Implements: TC-294"""
     malformed = SOUND.replace('alternative = "renamed it"\n', "")
     root = _lane(tmp_path, "complete", record=malformed, dial="record")
     assert integ._decision_record_refusal(root, "wi-401", {"WI-401": "merged"}) is None
@@ -110,6 +114,7 @@ def test_a_malformed_entry_is_reported_and_does_not_refuse(tmp_path, capsys):
 
 @pytest.mark.parametrize("dial", ["record", "escalate-first"])
 def test_a_partial_close_without_its_record_is_refused_too(tmp_path, dial):
+    """Implements: TC-294"""
     root = _lane(tmp_path, "partial", dial=dial)
     refusal = integ._decision_record_refusal(root, "wi-401", {"WI-401": "partial"})
     assert refusal is not None and RECORD in refusal
@@ -117,11 +122,13 @@ def test_a_partial_close_without_its_record_is_refused_too(tmp_path, dial):
 
 
 def test_a_partial_close_carrying_its_record_passes_the_rung(tmp_path):
+    """Implements: TC-294"""
     root = _lane(tmp_path, "partial", record=SOUND, dial="record")
     assert integ._decision_record_refusal(root, "wi-401", {"WI-401": "partial"}) is None
 
 
 def test_a_dial_typo_is_refused_as_configuration_before_any_record(tmp_path):
+    """Implements: TC-294"""
     root = _lane(tmp_path, "complete", dial="recrod")
     refusal = _ladder(root)
     assert refusal is not None and "decision_recording" in refusal
@@ -130,6 +137,7 @@ def test_a_dial_typo_is_refused_as_configuration_before_any_record(tmp_path):
 
 @pytest.mark.parametrize("dial", ['" record "', '"Record"', '"ESCALATE-FIRST"'])
 def test_a_padded_or_mixed_case_dial_reads_as_its_word(tmp_path, dial):
+    """Implements: TC-294"""
     root = _lane(tmp_path, "complete", dial=dial)
     refusal = _ladder(root)
     assert refusal is not None and RECORD in refusal, refusal
@@ -143,6 +151,7 @@ def test_a_padded_or_mixed_case_dial_reads_as_its_word(tmp_path, dial):
 
 
 def test_a_branch_name_no_record_can_carry_is_refused(tmp_path):
+    """Implements: TC-294"""
     # WI-818 dispute 1: `#` is a valid branch character, and no record name
     # carries it. The lane's tree holds `owner-cleanup.toml`, another run's
     # record, which must not meet the rung: a name no record can carry is an

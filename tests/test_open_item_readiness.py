@@ -4,6 +4,8 @@ The `OI-###` token in a row's `needs` is the one edge between a work item and
 an owner decision: the row reads `blocked`, the item named, until the item
 leaves `pending`, and the open item carries no pointer back. An open item's
 historical `wi_refs` cell is read by nothing.
+
+Implements: TC-301
 """
 
 from copy import deepcopy
@@ -185,6 +187,7 @@ def _check(root, *flags):
 
 
 def test_a_placeholder_row_passes_every_check_and_is_blocked(tmp_path):
+    """Implements: TC-314"""
     # The minimum: a title, a safety class, the `needs` token and a specref
     # naming the item's own registry record (which R-E resolves). No Done-when.
     _items(tmp_path, ("OI-5", "pending"))
@@ -196,6 +199,7 @@ def test_a_placeholder_row_passes_every_check_and_is_blocked(tmp_path):
 
 
 def test_an_uncited_pending_item_is_an_error_even_with_no_work_items(tmp_path):
+    """Implements: TC-314"""
     # Evaluated before the "vacuously clean" return, and without --strict.
     _items(tmp_path, ("OI-5", "pending"), ("OI-6", "ruled"))
     proc = _check(tmp_path)
@@ -215,6 +219,7 @@ def test_an_uncited_pending_item_is_an_error_even_with_no_work_items(tmp_path):
 
 
 def test_a_ruled_items_row_may_not_keep_the_registry_as_its_specref(tmp_path):
+    """Implements: TC-314"""
     _items(tmp_path, ("OI-5", "ruled"), ("OI-6", "pending"))
     _spec(tmp_path, "WI-001", needs=["OI-5", "OI-6"], specref=OI + "#OI-5")
     assert (
@@ -241,6 +246,7 @@ def test_a_needs_token_naming_no_open_item_is_reported(tmp_path):
 
 
 def test_a_registry_specref_must_name_an_item_the_row_cites(tmp_path):
+    """Implements: TC-314"""
     # Sol review 1, MAJOR 5 (LLR-299, A6): a placeholder citing pending OI-5
     # whose specref anchors OI-6 is an ERROR, as is the CSV carrier's spelling.
     _items(tmp_path, ("OI-5", "pending"), ("OI-6", "ruled"))
@@ -255,6 +261,7 @@ def test_a_registry_specref_must_name_an_item_the_row_cites(tmp_path):
 
 
 def test_the_csv_carriers_registry_specref_is_judged_too(tmp_path):
+    """Implements: TC-314"""
     # Sol review 1, MAJOR 2: the state check reads the registry's stem.
     path = tmp_path / "docs/requirements/open-items.csv"
     path.parent.mkdir(parents=True)
@@ -303,6 +310,7 @@ def _specref_findings(root):
 
 
 def test_specref_integrity_judges_every_open_row(tmp_path):
+    """Implements: TC-314"""
     # LLR-299: a deferred (or draft, active) row keeping the registry SpecRef
     # after its items are ruled is reported as a queued one is.
     _items(tmp_path, ("OI-5", "ruled"))
@@ -312,6 +320,7 @@ def test_specref_integrity_judges_every_open_row(tmp_path):
 
 
 def test_a_cited_item_missing_from_the_registry_is_not_ruled(tmp_path):
+    """Implements: TC-314"""
     # LLR-299: an item absent from the registry is not ruled (the dangling-edge
     # error reports it), so the row may keep its registry SpecRef.
     _items(tmp_path, ("OI-5", "ruled"))
@@ -320,6 +329,7 @@ def test_a_cited_item_missing_from_the_registry_is_not_ruled(tmp_path):
 
 
 def test_a_registry_specref_on_a_row_citing_no_item_is_reported(tmp_path):
+    """Implements: TC-314"""
     # LLR-299: with no item cited, none is pending, so the registry SpecRef is
     # reported, and its anchor names an item the row does not cite.
     _items(tmp_path, ("OI-5", "pending"))

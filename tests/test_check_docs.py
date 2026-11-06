@@ -2,7 +2,10 @@
 links fail, orphan docs warn (fail only with --strict-orphans), the root README
 must state the `PROJECT-VISION:` tag exactly once (process.md §4 DevStg-Reqs's
 mechanizable half), and the git-gated staleness pass degrades to a clean skip
-(process.md §3 "The doc set must stay navigable")."""
+(process.md §3 "The doc set must stay navigable").
+
+Implements: TC-012
+"""
 
 from conftest import ROOT, SCRIPTS, load_script, pin_autocrlf, run_py
 

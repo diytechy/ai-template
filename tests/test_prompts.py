@@ -26,6 +26,8 @@ paid for:
 The downstream path the declared-absence line promises (a bootstrapped
 scaffold gets every template, and `prompts.py` loads them from there) is
 driven in test_prompts_driven.py.
+
+Implements: TC-157
 """
 
 import re
@@ -184,6 +186,7 @@ CONVERGENCE_BOUND = (
 
 
 def test_the_reviewer_brief_links_the_review_threat_model_and_restates_nothing():
+    """Implements: TC-332"""
     # The review threat model has one home, PROCESS.md §6: a finding whose
     # reproduction needs a compromised or contrived host is dismissed, never
     # answered with code. The reviewer brief points at it by its bold-lead
@@ -223,6 +226,7 @@ def test_the_reviewer_brief_links_the_review_threat_model_and_restates_nothing()
 
 
 def test_the_review_threat_model_dismisses_contrived_scenarios_and_gates_every_class():
+    """Implements: TC-332"""
     # The owner's ruling of 2026-10-13: a contrived, improbable scenario is
     # dismissed like a contrived host, severity tracks plausibility and
     # impact, and reachability gates a fail-open, data-loss or security path
@@ -247,6 +251,7 @@ def test_the_review_threat_model_dismisses_contrived_scenarios_and_gates_every_c
 
 
 def test_a_spec_promise_reaches_only_what_supported_routes_produce():
+    """Implements: TC-332"""
     # The owner's ruling of 2026-10-15: a spec's promise over an input space
     # is bounded by what supported workflows and the kit's own routes
     # produce, stated once in the review threat model; the dispute brief
@@ -337,7 +342,7 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
         .split()
     )
     assert "TC rows are authored with their LLRs before the build" in in_lane
-    assert "the tests and symbols the build will create" in in_lane
+    assert "LLR `Module` and symbols name what the build will create" in in_lane
     assert "Write the row text against settled code" not in in_lane
     assert in_lane.index("**Author it before the build.**") < in_lane.index(
         "**Amend the row text against settled code.**"
@@ -388,6 +393,7 @@ CYCLE_COPIES = tuple(
 
 
 def test_the_cycle_says_sol_and_terra_calls_are_refused_in_the_blackout_window():
+    """Implements: TC-385"""
     # Pins WI-960's Done-when item on the coordinator-cycle skill text: the
     # skill's roles and its recipes name the entry point every Sol and Terra
     # call runs through, and say the blackout window refuses those calls
@@ -410,6 +416,7 @@ _SOL_OR_TERRA = ("gpt-6.1-sol", "gpt-5.6-terra", "resume")
 
 
 def test_no_recipe_launches_sol_or_terra_outside_the_entry_point():
+    """Implements: TC-385"""
     # Pins WI-960's Done-when item: no recipe or skill text launches `codex
     # exec` for Sol or Terra, or a resume, outside the entry point, and none
     # names a retired shell launcher, in any of the three skill copies.
@@ -440,6 +447,7 @@ def _cycle_section(text, number):
 
 
 def test_the_close_out_and_headless_leg_run_the_usage_ingest():
+    """Implements: TC-395"""
     # Pins WI-961's Done-when item on the coordinator-cycle skill text: the
     # close-out (section 6) and a headless leg's end (section 7) run the usage
     # ingest for this session and, with `--session`, for the session the
@@ -463,6 +471,7 @@ def test_the_close_out_and_headless_leg_run_the_usage_ingest():
 
 
 def test_the_close_out_and_headless_leg_ingest_before_the_handoff_is_written():
+    """Implements: TC-395"""
     # The cycle skill's close-out (section 6) and a headless leg's end
     # (section 7) order the usage ingest BEFORE the handoff is written, so
     # the handoff can record the run's exit and lines. Checked in all three
@@ -487,10 +496,46 @@ def test_the_close_out_and_headless_leg_ingest_before_the_handoff_is_written():
             )
 
 
+def test_a_tests_evidence_arrives_with_its_tag_stated_at_one_home():
+    """The rule that a test case's `Evidence` cell names a test only from the
+    commit that writes the test and its tag has one home, the shipped in-lane
+    reference, and each procedure beside it points there.
+
+    Adequacy: a site still telling the intent turn to name the build's tests
+    sends a lane to a commit the strict check refuses, one `evidence without a
+    tag` per part; a site restating the rule is a second home that can drift.
+    """
+
+    def flat(path):
+        return " ".join(path.read_text(encoding="utf-8").split())
+
+    home = flat(KIT / "skills" / "spine-authoring" / "references" / "in-lane.md")
+    for clause in (
+        "A TC's `Evidence` cell names a test only from the commit that writes that "
+        "test and its `Implements:` tag",
+        "a new row's cell holds a parenthetical note",
+        "the tests commit replaces the note with the node, beside the tag",
+    ):
+        assert clause in home, clause
+    assert "name the tests and symbols the build will create" not in home
+    cycle = KIT / "skills" / "coordinator-cycle"
+    brief = flat(ROOT / "scripts" / "coordinator" / "terra-spine-prompt.template.md")
+    for site in (
+        flat(cycle / "SKILL.md"),
+        flat(cycle / "references" / "recipes.md"),
+        brief,
+    ):
+        assert 'in-lane.md`, "Author it before the build"' in site
+        assert "names a test only from the commit" not in site
+    assert "the tests and code your rows name" not in brief
+    assert "the tests and symbols your rows name" not in brief
+
+
 def test_the_terra_brief_has_an_intent_form_before_build_round_1():
     # The spine author's brief serves the intent turn, before any build, as
     # well as the checkpoint: at intent it presumes no built code, no change
-    # list and no diff, and its trace fields name what the build will create.
+    # list and no diff, and its `code_symbol` cells name what the build will
+    # create.
     # The checkpoint form keeps its slots, so its fill is unchanged.
     path = ROOT / "scripts" / "coordinator" / "terra-spine-prompt.template.md"
     text = path.read_text(encoding="utf-8")
@@ -501,8 +546,7 @@ def test_the_terra_brief_has_an_intent_form_before_build_round_1():
         "There is no builder's change list and no code diff to read",
         "At a checkpoint turn, a Claude Opus builder has built the code, tests "
         "and docs in this lane",
-        "At intent, a test-case row's evidence and an LLR's `code_symbol` name "
-        "the tests and symbols the build will create",
+        "an LLR's `code_symbol` names the symbols the build will create",
         "they bind at the checkpoint's reconcile",
         "At a checkpoint, a test-case row's evidence names test functions that exist",
         "`check_doc_refs --strict` binds the symbol and fails on a row none of "
@@ -760,6 +804,7 @@ def test_both_builder_briefs_search_before_minting_a_file_or_function():
 
 
 def test_the_dispute_brief_offers_successor_and_never_for_a_convergence_class_finding():
+    """Implements: TC-332, TC-334"""
     # WI-911: the sitting may move a real finding to a row of its own, filed
     # on trunk at the landing, but never a convergence-class one.
     text = " ".join(pr.load(pr.ADJUDICATE_DISPUTE).split())
@@ -776,6 +821,7 @@ def test_the_dispute_brief_offers_successor_and_never_for_a_convergence_class_fi
 
 
 def test_the_reviewer_brief_ties_severity_to_reachability_and_classifies_out_of_set_inputs():
+    """Implements: TC-332"""
     # WI-911 (review-churn rulings 1 and 4): a BLOCKER or MAJOR needs a
     # reachable scenario, and the reviewer, not the set's author, decides
     # whether an out-of-set input is a note (fail-closed) or a finding.
@@ -799,6 +845,7 @@ def test_the_reviewer_brief_ties_severity_to_reachability_and_classifies_out_of_
 
 
 def test_the_reviewer_brief_states_the_convergence_stance():
+    """Implements: TC-332"""
     # WI-911 (revisions 8 and 33): a convergence round reads no earlier
     # verdict, confirms each fix by its pre-fix-failing test or checkable
     # evidence, checks Done-when coverage and regressions, and tags each new
@@ -839,6 +886,7 @@ def test_the_reviewer_brief_states_the_convergence_stance():
 
 
 def test_the_convergence_render_excludes_every_record_of_earlier_findings():
+    """Implements: TC-332"""
     # WI-911 (review-churn revision 8): the records that
     # summarize earlier findings are outside a convergence brief's own diff
     # command, the way the round files are outside every round's, so a

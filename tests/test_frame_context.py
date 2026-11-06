@@ -21,6 +21,7 @@ from traj_core_fixtures import FRAME, write_frame
 
 
 def test_frame_context_is_none_without_a_declared_frame(tmp_path):
+    """Implements: TC-196"""
     # The registry's own applies-when: a project that never declares a boundary
     # simply does not create the file, and the reader says so with None rather
     # than an empty-but-present frame the view would render as a blank picture.
@@ -29,6 +30,7 @@ def test_frame_context_is_none_without_a_declared_frame(tmp_path):
 
 
 def test_frame_context_drops_the_blank_form_s_example_rows(tmp_path):
+    """Implements: TC-196"""
     # A freshly bootstrapped scaffold HAS the file — the blank form, all of whose
     # rows end `-000`. Same rule as every other tier: example rows are not data.
     tp = load_script("traj_parse")
@@ -42,6 +44,7 @@ def test_frame_context_drops_the_blank_form_s_example_rows(tmp_path):
 
 
 def test_frame_context_joins_the_tie_backs_and_keeps_id_order(tmp_path):
+    """Implements: TC-196"""
     tp = load_script("traj_parse")
     write_frame(tmp_path, FRAME)
     (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
@@ -79,6 +82,7 @@ notes = "No tie-back: git is not a party of its own here."
 
 
 def test_frame_context_reads_this_repo_s_own_locked_frame():
+    """Implements: TC-196"""
     # The meta repo's own frame, pinned as data rather than as a picture: the
     # locked depth-0 table is 5 parties, 7 crossings and 1 relationship since the
     # C1 sitting (WI-643) redrew it (4, 4 and 3 before), `B-02` is the crossing

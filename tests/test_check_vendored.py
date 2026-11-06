@@ -1,7 +1,10 @@
 """check_vendored.py: vendored copies stay in sync with a pinned upstream
 (process-options.md "Tier-conditional guardrails"). A local file:// base serves
 the "upstream" so no test touches the network; the offline test points at an
-unreachable base to prove the clean degrade."""
+unreachable base to prove the clean degrade.
+
+Implements: TC-022
+"""
 
 from conftest import SCRIPTS, load_script, run_py
 import pathlib

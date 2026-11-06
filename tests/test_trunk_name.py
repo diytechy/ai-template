@@ -33,6 +33,7 @@ def _two_branch_repo(tmp_path):
 
 
 def test_a_repository_with_the_key_reads_it_and_one_without_refuses(tmp_path):
+    """Implements: TC-369"""
     root = _two_branch_repo(tmp_path)
     assert ac.trunk_name(root) == "main"
     (root / "docs" / "process.toml").unlink()
@@ -41,6 +42,7 @@ def test_a_repository_with_the_key_reads_it_and_one_without_refuses(tmp_path):
 
 
 def test_the_reader_reads_no_worktree_list_and_no_current_branch(tmp_path, monkeypatch):
+    """Implements: TC-369"""
     root = _two_branch_repo(tmp_path)
     real = ac.git
 
@@ -64,6 +66,7 @@ _SHAPES = {
 
 @pytest.mark.parametrize("shape", sorted(_SHAPES))
 def test_each_undeclared_shape_is_refused_naming_the_key(tmp_path, shape):
+    """Implements: TC-369"""
     root = _two_branch_repo(tmp_path)
     path = root / "docs" / "process.toml"
     if _SHAPES[shape] is None:

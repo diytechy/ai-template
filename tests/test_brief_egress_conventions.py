@@ -39,6 +39,7 @@ AUTHORSHIP_TOKENS = re.compile(r"%an|%ae|%ad|--author\b|git blame|git show\b")
 
 
 def test_no_authorship_token_in_the_prompt_composing_path():
+    """Implements: TC-171"""
     surfaces = [SCRIPTS / name for name in COMPOSING_MODULES]
     templates = sorted(PROMPTS.glob("*.md"))
     assert templates, "no shipped prompt templates found -- sweep would be vacuous"

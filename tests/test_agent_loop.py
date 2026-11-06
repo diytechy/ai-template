@@ -10,6 +10,8 @@ zero-commit effect tests. The pure declared-policy/dial parsers
 moved to tests/test_agent_loop_policy.py, the RoutingState transitions and the
 outcome ladder to tests/test_agent_loop_routing.py, and the worker end-state /
 assignment seam to tests/test_agent_loop_worker.py (its own leg's module).
+
+Implements: TC-026, TC-027, TC-028, TC-029, TC-030
 """
 
 import datetime
@@ -265,6 +267,7 @@ def _invocations(ctl):
 
 
 def test_done_exit_writes_logs_and_index(loop_repo):
+    """Implements: TC-191"""
     # DONE ends the loop (exit 0), the banner surfaces status.md's pending
     # asks, and each session left a tracked bounded log + a regenerated index
     # carrying outcome / commit range / tokens / cost.
@@ -309,6 +312,7 @@ def test_blocked_exit(loop_repo):
 
 
 def test_stall_guard_aborts_after_no_commit_sessions(loop_repo):
+    """Implements: TC-169"""
     repo, ctl, template = loop_repo  # no actions file -> every session noops
     proc = _loop(repo, template, "--stall-limit", "2", "--max-iterations", "6")
     assert proc.returncode == 4, proc.stdout + proc.stderr
@@ -317,6 +321,7 @@ def test_stall_guard_aborts_after_no_commit_sessions(loop_repo):
 
 
 def test_budget_ceiling(loop_repo):
+    """Implements: TC-169"""
     # Commits every session (never stalls, never ends) -> the MaxIterations
     # budget ceiling is what stops the run.
     repo, ctl, template = loop_repo
@@ -354,6 +359,7 @@ def test_blackout_present_but_inactive_does_not_block(loop_repo):
 
 
 def test_cmd_map_broken_entry_fails_preflight(loop_repo):
+    """Implements: TC-040"""
     # A broken REVIEW-B entry must fail before iteration 1 (the preflight
     # contract), not at the first review session mid-run.
     repo, ctl, template = loop_repo
@@ -365,6 +371,7 @@ def test_cmd_map_broken_entry_fails_preflight(loop_repo):
 
 
 def test_review_policy_surfaced_in_banner(loop_repo):
+    """Implements: TC-040"""
     # WI-042: docs/review-policy (the reviewer dial) is surfaced at run start —
     # and only surfaced: the loop never enforces it (R2's zero-code convention).
     repo, ctl, template = loop_repo
@@ -595,6 +602,7 @@ def test_guardrails_all_except_guards_non_frontier(loop_repo):
 
 
 def test_limit_hit_backs_off_without_counting_stall(loop_repo):
+    """Implements: TC-168, TC-169"""
     # A throttled session must read WAITING, not a stall: with stall-limit 1 a
     # no-commit session would abort STALL (exit 4); the limit message must
     # instead exit WAITING (5) naming the reset time, and the index must
@@ -612,6 +620,7 @@ def test_limit_hit_backs_off_without_counting_stall(loop_repo):
 
 
 def test_error_session_reads_error_not_no_commit(loop_repo):
+    """Implements: TC-168"""
     # Thread 45: a session the CLI reports as errored (is_error, not a rate
     # limit) is logged ERROR, distinct from a healthy no-commit session — so the
     # index tells "agent failed" apart from "ran and idled". The run continues
@@ -639,6 +648,7 @@ def test_plain_text_nonzero_exit_reads_error(loop_repo):
 
 
 def test_all_error_stall_names_an_agent_error(loop_repo):
+    """Implements: TC-169"""
     # When every session that trips the stall guard errored before working, the
     # abort banner names an unavailable agent (not a work stall) and points at
     # the model/auth fix — the misreport Thread 45 removes.
@@ -652,6 +662,7 @@ def test_all_error_stall_names_an_agent_error(loop_repo):
 
 
 def test_commit_resets_the_stall_counter(loop_repo):
+    """Implements: TC-169"""
     # SR-172: the stall window is CONSECUTIVE no-progress sessions — a session
     # that commits resets the counter, so interleaved progress is never ended
     # by the limit. noop commit noop noop at --stall-limit 2: without the reset
@@ -666,6 +677,7 @@ def test_commit_resets_the_stall_counter(loop_repo):
 
 
 def test_mixed_no_commit_and_error_stall_stays_generic(loop_repo):
+    """Implements: TC-169"""
     # A stall of mixed causes (a healthy idle + an error) is not purely an agent
     # failure, so it keeps the generic work-stall banner — the agent-error
     # wording is reserved for an all-ERROR run.
@@ -678,6 +690,7 @@ def test_mixed_no_commit_and_error_stall_stays_generic(loop_repo):
 
 
 def test_unparseable_reset_falls_back_and_retries(loop_repo):
+    """Implements: TC-168"""
     # A reset wording neither clock format matches must not kill a walk-away
     # run: with --wait-on-limit set, the loop naps --limit-retry-fallback
     # seconds (capped at the wait ceiling) and retries instead of exiting.
@@ -762,6 +775,7 @@ def _nosleep_loop(tmp_path, repo, template, *extra, freeze_now=None):
 
 
 def test_fallback_nap_is_capped_at_the_wait_ceiling(loop_repo, tmp_path):
+    """Implements: TC-168"""
     # Round-2 F5 pin (a), RE-PINNED ON THE SERVED SLEEP (2026-08-17 desk round,
     # F13). With the declared fallback ABOVE the ceiling (5 > 1) the nap must be
     # the ceiling — min(fallback, ceiling) is load-bearing.
@@ -789,6 +803,7 @@ def test_fallback_nap_is_capped_at_the_wait_ceiling(loop_repo, tmp_path):
 
 
 def test_parsed_reset_within_ceiling_sleeps_and_retries(loop_repo, tmp_path):
+    """Implements: TC-168"""
     # Round-2 F5 pin (b): a PARSEABLE reset wording ("resets 3:45pm") within
     # the ceiling drives the wait through seconds_until_reset — the loop prints
     # the parsed wait with its reset time, sleeps it, and RETRIES the session,
@@ -865,6 +880,7 @@ def test_a_reset_ONE_SECOND_past_the_ceiling_abandons_the_run(loop_repo, tmp_pat
 
 
 def test_limit_retry_fallback_defaults_to_3600(loop_repo, tmp_path):
+    """Implements: TC-168"""
     # Round-2 F5 pin (c): LLR-174 declares the fallback dial's default 3600 —
     # with --wait-on-limit above it and NO --limit-retry-fallback flag, the
     # unparseable-reset nap must be exactly 3600s (the declared default, not an
@@ -879,6 +895,7 @@ def test_limit_retry_fallback_defaults_to_3600(loop_repo, tmp_path):
 
 
 def test_stall_limit_defaults_to_three_no_commit_sessions(loop_repo):
+    """Implements: TC-169"""
     # Round-2 F6 pin: LLR-175 declares --stall-limit's default 3. No flag
     # passed, every session noops: the SECOND no-commit session must not end
     # the run (a third invocation happens) and the THIRD must — EXIT_STALL (4)
@@ -891,6 +908,7 @@ def test_stall_limit_defaults_to_three_no_commit_sessions(loop_repo):
 
 
 def test_healthy_transcript_mentioning_limits_is_not_a_throttle(loop_repo):
+    """Implements: TC-168"""
     # The limit regex is gated on an error signal (is_error / nonzero exit):
     # the fake's commit action succeeds (exit 0) while its transcript says
     # "usage limit resets 3:45pm" — that session must read COMMITTED, never
@@ -908,6 +926,7 @@ def test_healthy_transcript_mentioning_limits_is_not_a_throttle(loop_repo):
 
 
 def test_session_timeout_cannot_wedge_the_loop(loop_repo):
+    """Implements: TC-169"""
     # A hung session is cut off at --session-timeout, logged as TIMEOUT, and
     # counts toward the stall guard (it produced no commit).
     repo, ctl, template = loop_repo
@@ -1262,6 +1281,7 @@ def test_cmd_shim_cli_spawns_on_windows(loop_repo, tmp_path):
 
 
 def test_stream_json_echo_and_result_parse(loop_repo):
+    """Implements: TC-191"""
     # WI-125: a stream-json session's events render live on the coordinator
     # console (assistant text as '  > ...', tool calls as '  * <name>'), and
     # the type:result event is parsed for outcome/telemetry even when a
@@ -1442,6 +1462,7 @@ def test_live_status_falls_back_to_scroll_on_non_tty(loop_repo):
 
 
 def test_model_map_entry_without_equals_fails_preflight(loop_repo):
+    """Implements: TC-040"""
     # A --model-map entry lacking '=' is a parse error -> EXIT_PREFLIGHT before any
     # session runs, with the message on stderr (the preflight contract).
     repo, ctl, template = loop_repo

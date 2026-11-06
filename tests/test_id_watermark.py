@@ -404,6 +404,7 @@ def _wi_repo(tmp_path, existing=(), mark=None):
 
 
 def test_the_mint_does_not_reissue_a_deleted_id(tmp_path):
+    """Implements: TC-158"""
     # THE POINT OF THE WHOLE MECHANISM. Under D-4 a superseded row is DELETED,
     # so `max(live) + 1` hands its number straight back out — and a reused id
     # silently re-points every commit message and archived document citing it.
@@ -505,6 +506,7 @@ def test_the_mint_refuses_when_the_mark_is_missing(tmp_path):
 
 
 def test_the_rules_are_actually_WIRED_INTO_the_integrity_floor(tmp_path):
+    """Implements: TC-158"""
     # THE GAP THE REVIEW FOUND. Every other test here calls `watermark_findings`
     # directly, so deleting the one line in `main()` that appends it to
     # `findings.integrity` left all of them green — and the whole argument for
@@ -863,6 +865,7 @@ def _strict_integrity(monkeypatch, capsys, root):
 def test_an_unchanged_committed_baseline_passes_the_floor(
     tmp_path, monkeypatch, capsys
 ):
+    """Implements: TC-158"""
     # The control for the cases below: the fixture tree is clean on the floor,
     # so each case's exit code is its own rule's, not the tree's. Adequacy
     # witness: a fixture missing a file the floor requires would red here
@@ -873,6 +876,7 @@ def test_an_unchanged_committed_baseline_passes_the_floor(
 
 
 def test_bump_ids_keeps_every_reservation_record(tmp_path):
+    """Implements: TC-158"""
     root = _repo(tmp_path, srs=("SR-001", "SR-004"))
     _write_wm(root, reserved_watermark({"SR": 3, "TC": 1}, RECORDS))
     TRACE.bump_watermark(root)
@@ -882,6 +886,7 @@ def test_bump_ids_keeps_every_reservation_record(tmp_path):
 
 
 def test_correct_mark_keeps_every_reservation_record(tmp_path):
+    """Implements: TC-158"""
     root = _repo(tmp_path, ruling=True)
     _write_wm(root, reserved_watermark({"SR": 3, "TC": 1, "B": 7, "OI": 47}, RECORDS))
     TRACE.correct_watermark(root, "B", 8, "OI-47")
@@ -891,6 +896,7 @@ def test_correct_mark_keeps_every_reservation_record(tmp_path):
 
 
 def test_a_rise_covered_by_a_reservation_record_passes(tmp_path, monkeypatch, capsys):
+    """Implements: TC-158"""
     root = _committed(tmp_path, {"SR": 1})
     _write_wm(root, reserved_watermark({"SR": 3, "TC": 1}, RECORDS))
     code, out = _strict_integrity(monkeypatch, capsys, root)
@@ -898,6 +904,7 @@ def test_a_rise_covered_by_a_reservation_record_passes(tmp_path, monkeypatch, ca
 
 
 def test_a_rise_above_every_record_is_refused(tmp_path, monkeypatch, capsys):
+    """Implements: TC-158"""
     # Adequacy witness: an implementation that lets any well-formed record
     # excuse any rise in its space (rather than only up to the record's high
     # end) would pass this mark of 9 on a record ending at 3.
@@ -909,6 +916,7 @@ def test_a_rise_above_every_record_is_refused(tmp_path, monkeypatch, capsys):
 
 
 def test_an_altered_committed_record_is_refused(tmp_path, monkeypatch, capsys):
+    """Implements: TC-158"""
     root = _committed(tmp_path, {"SR": 3, "TC": 1}, RECORDS)
     altered = [("SR", 2, 4, "WI-001"), RECORDS[1]]
     _write_wm(root, reserved_watermark({"SR": 3, "TC": 1}, altered))
@@ -918,6 +926,7 @@ def test_an_altered_committed_record_is_refused(tmp_path, monkeypatch, capsys):
 
 
 def test_a_deleted_committed_record_is_refused(tmp_path, monkeypatch, capsys):
+    """Implements: TC-158"""
     root = _committed(tmp_path, {"SR": 3, "TC": 1}, RECORDS)
     _write_wm(root, reserved_watermark({"SR": 3, "TC": 1}, RECORDS[1:]))
     code, out = _strict_integrity(monkeypatch, capsys, root)
@@ -926,6 +935,7 @@ def test_a_deleted_committed_record_is_refused(tmp_path, monkeypatch, capsys):
 
 
 def test_a_merge_dropping_one_parents_record_is_refused(tmp_path, monkeypatch, capsys):
+    """Implements: TC-158"""
     # Two branches each take their own record; the merge's resolution keeps
     # only one side's. A longest-wins read across parents would miss it: the
     # committed records are a UNION over every parent.
@@ -951,6 +961,7 @@ def test_a_merge_dropping_one_parents_record_is_refused(tmp_path, monkeypatch, c
 
 
 def test_a_reservation_line_never_reads_as_a_correction():
+    """Implements: TC-158"""
     # Adequacy witness: a correction grammar loosened to any `# <word>:` line
     # carrying a range would read the record as a correction, and the one-shot
     # and authority arms would then judge a reservation as a ruling.
@@ -970,6 +981,7 @@ def test_a_reservation_line_never_reads_as_a_correction():
 def test_a_malformed_reservation_line_justifies_nothing(
     tmp_path, monkeypatch, capsys, line
 ):
+    """Implements: TC-158"""
     # Adequacy witness: a record reader that searched rather than matched the
     # whole stripped line, or that did not hold low <= high, would read this
     # line as a record and let it justify the rise to 3.
@@ -982,6 +994,7 @@ def test_a_malformed_reservation_line_justifies_nothing(
 
 
 def test_the_live_id_finding_points_a_lane_at_the_reserve_verb(tmp_path):
+    """Implements: TC-158"""
     root = _repo(
         tmp_path,
         marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"SR": 1},

@@ -28,6 +28,8 @@ ACCOUNTING_FIELDS = [
 
 
 def test_the_job_helpers_import_without_loading_kernel32(monkeypatch):
+    """Implements: TC-374"""
+
     def refuse(*args, **kwargs):
         raise OSError("kernel32 must not load at import")
 
@@ -39,6 +41,7 @@ def test_the_job_helpers_import_without_loading_kernel32(monkeypatch):
 
 
 def test_agent_session_reaches_the_shared_helpers():
+    """Implements: TC-374"""
     from kitlib import winjob
 
     agent_session = load_script("agent_session")
@@ -48,6 +51,7 @@ def test_agent_session_reaches_the_shared_helpers():
 
 
 def test_the_cpu_reader_sums_user_and_kernel_time(monkeypatch):
+    """Implements: TC-374"""
     from kitlib import winjob
 
     class FakeKernel32:

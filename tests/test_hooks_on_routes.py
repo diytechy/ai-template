@@ -57,6 +57,7 @@ pathlib.Path(sys.argv[1]).write_text("ran", encoding="utf-8")
 
 
 def test_the_loop_refuses_a_hookless_checkout(tmp_path):
+    """Implements: TC-370"""
     root = hookless_repo(tmp_path)
     (root / "docs").mkdir(exist_ok=True)
     (root / "docs" / "status.md").write_text("# Status\n", encoding="utf-8")
@@ -92,6 +93,7 @@ def _ran():
 
 
 def test_act_refuses_a_hookless_checkout(tmp_path, monkeypatch):
+    """Implements: TC-370"""
     root = hookless_repo(tmp_path)
     released, written = [], []
     monkeypatch.setattr(
@@ -110,6 +112,7 @@ def test_act_refuses_a_hookless_checkout(tmp_path, monkeypatch):
 
 
 def test_act_runs_as_today_with_hooks_on(tmp_path):
+    """Implements: TC-370"""
     root = tmp_path / "repo"
     root.mkdir()
     git_repo(root)
@@ -121,6 +124,7 @@ def test_act_runs_as_today_with_hooks_on(tmp_path):
 
 
 def test_through_blackout_does_not_wait_out_a_hooks_refusal(tmp_path):
+    """Implements: TC-370"""
     root = hookless_repo(tmp_path)
     slept = []
     calls, run = _ran()
@@ -139,6 +143,7 @@ def test_through_blackout_does_not_wait_out_a_hooks_refusal(tmp_path):
 
 
 def test_bookkeeping_commit_refuses_a_hookless_checkout(tmp_path):
+    """Implements: TC-370"""
     root = hookless_repo(tmp_path)
     head = _rev(root, "HEAD")
     wrote = []
@@ -165,6 +170,7 @@ def _claim_state(root):
 
 
 def test_claim_refuses_a_hookless_checkout_first(tmp_path, capsys):
+    """Implements: TC-370"""
     root = hooks_off(claim_repo(tmp_path))
     before = _claim_state(root)
     assert integ.claim(root, "WI-401", "wi-401") == 1
@@ -174,6 +180,7 @@ def test_claim_refuses_a_hookless_checkout_first(tmp_path, capsys):
 
 
 def test_the_hooks_refusal_comes_before_the_coordinator_guards(tmp_path, capsys):
+    """Implements: TC-370"""
     # A checkout the context guard also refuses (the guard on, no lease held):
     # with the hooks on the guard's refusal is what the claim says, and with
     # them off the hooks refusal is, because it is the first rung.
@@ -191,6 +198,7 @@ def test_the_hooks_refusal_comes_before_the_coordinator_guards(tmp_path, capsys)
 
 
 def test_refresh_refuses_a_hookless_checkout(tmp_path):
+    """Implements: TC-370"""
     # The station fixture declares a product bar and a green stub harness, so
     # with the hooks on this refresh runs its bar and commits; with them off it
     # refuses before the lane is touched.
@@ -205,6 +213,7 @@ def test_refresh_refuses_a_hookless_checkout(tmp_path):
 
 
 def test_attest_refuses_a_hookless_checkout(tmp_path):
+    """Implements: TC-370"""
     # The attest fixture declares the review bar and a green stub harness, so
     # with the hooks on this attest runs its bar and commits the staged file;
     # with them off it refuses before the bar, leaving branch and index.
@@ -223,6 +232,7 @@ def test_attest_refuses_a_hookless_checkout(tmp_path):
 
 
 def test_merge_slot_refuses_a_hookless_checkout(tmp_path, capsys):
+    """Implements: TC-370"""
     # The same declared bar lets the slot refresh and merge this branch with
     # the hooks on; with them off it takes no lock and trunk does not move.
     root = station_repo(tmp_path)
@@ -243,6 +253,7 @@ COORD = "c0c0c0c0-0000-4000-8000-0000000000b1"
 
 
 def test_take_refuses_a_hookless_checkout_and_records_no_holder(tmp_path):
+    """Implements: TC-370"""
     root = hookless_repo(tmp_path)
     refusal = guard.take(root, COORD)
     assert refusal and SETUP in refusal
@@ -268,6 +279,7 @@ def legs(tmp_path, monkeypatch):
 def test_overnight_legs_refuses_a_hookless_checkout_before_any_log_dir(
     legs, tmp_path, capsys
 ):
+    """Implements: TC-370"""
     repo = hooks_off(handoff_repo(tmp_path / "repo"))
     assert legs.main(["--repo", str(repo), "--dry-run"]) == 2
     err = capsys.readouterr().err
@@ -276,6 +288,7 @@ def test_overnight_legs_refuses_a_hookless_checkout_before_any_log_dir(
 
 
 def test_overnight_legs_runs_as_today_with_hooks_on(legs, tmp_path):
+    """Implements: TC-370"""
     repo = handoff_repo(tmp_path / "repo")
     assert legs.main(["--repo", str(repo), "--dry-run"]) == 0
     assert (tmp_path / "overnight-logs").is_dir()
@@ -285,6 +298,7 @@ def test_overnight_legs_runs_as_today_with_hooks_on(legs, tmp_path):
 
 
 def test_a_fresh_repo_reads_hookless_and_hooks_on_admits_it(tmp_path):
+    """Implements: TC-370"""
     root = tmp_path / "plain"
     root.mkdir()
     subprocess.run(["git", "init", "-q", str(root)], check=True)

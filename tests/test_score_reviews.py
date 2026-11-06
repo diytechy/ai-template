@@ -1,6 +1,9 @@
 """The substance scorer + anti-gaming tripwires + the decayed scoreboard
 (score_reviews.py, WI-059). Every scored component is in [0,1]; severity hygiene
-and the tripwires are GATES, never scores; length never scores positively."""
+and the tripwires are GATES, never scores; length never scores positively.
+
+Implements: TC-083
+"""
 
 from pathlib import Path
 
@@ -74,7 +77,10 @@ def test_the_gate_reads_a_malformed_verdict_line_as_no_verdict(text):
     """WI-870: the merge gate reads a round's VERDICT line through the one
     strict per-line reader the filing boundary uses, so each of these rounds
     is unreadable, and the gate's fail-closed map holds no verdict for the
-    phase, never an APPROVE."""
+    phase, never an APPROVE.
+
+    Implements: TC-083
+    """
     v = score.parse_verdict(text)
     assert v.verdict is None and v.declared_n is None
     word = score.effective_verdict(v.verdict, v.findings)
@@ -382,6 +388,7 @@ COVERAGE_REVIEW = (
 
 
 def test_a_bracketed_word_that_is_not_a_severity_is_prose():
+    """Implements: TC-083"""
     v = score.parse_verdict(COVERAGE_REVIEW)
     assert [f.severity for f in v.findings] == ["MAJOR", "MAJOR", "MINOR"]
     assert v.declared_n == 3
@@ -395,6 +402,7 @@ def test_a_bracketed_word_that_is_not_a_severity_is_prose():
 
 
 def test_every_declared_severity_reads_as_a_finding():
+    """Implements: TC-083"""
     for sev in score.SEVERITIES:
         for word in (sev, sev.lower()):
             found = score.parse_verdict("- [{}] src/a.py:1 -> x -> y".format(word))

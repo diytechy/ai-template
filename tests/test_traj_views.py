@@ -8,6 +8,8 @@ phase→workstream→work-item tiering (WI-272 status carry, the drill/breadcrum
 descent, the collapse thresholds), and the What icicle's own scale-earned
 collapse plus the T7/T4 fit contracts — scale-to-fit with a legibility floor,
 and no label ink outside the block it belongs to.
+
+Implements: TC-251
 """
 
 import html
@@ -93,6 +95,7 @@ def _real_repo_snapshot(tmp_path):
 
 
 def test_how_sw_view_renders_from_the_module_map(tmp_path):
+    """Implements: TC-078"""
     # WI-039: with a committed symbol-mode module map, PROJECT_STATE gains the
     # How (SW architecture) view — a view of the code-map view; without one
     # (files-mode / absent) the tab is simply omitted.
@@ -120,6 +123,7 @@ def test_cycle_refuses_to_render(tmp_path):
 
 
 def test_how_sw_graph_renders_seams(tmp_path):
+    """Implements: TC-081"""
     # With a committed module map AND declared seams, the How-SW panel gains the
     # interface graph (module + file + external nodes, IF-labeled edges); the
     # render is byte-deterministic so --check stays stable.
@@ -141,6 +145,7 @@ def test_how_sw_graph_renders_seams(tmp_path):
 
 
 def test_how_sw_stays_a_table_without_seams(tmp_path):
+    """Implements: TC-081"""
     # No IF rows -> the panel keeps the bare module table (graph earned by seams);
     # no graph marker leaks into the render.
     make_repo(tmp_path)
@@ -327,6 +332,7 @@ def test_wi750_when_trunks_clear_sibling_output_fans(tmp_path):
 
 
 def test_context_view_renders_the_declared_frame(tmp_path):
+    """Implements: TC-196"""
     make_repo(tmp_path)
     write_arch_src(tmp_path)
     write_frame(tmp_path)
@@ -368,6 +374,7 @@ def test_context_view_renders_the_declared_frame(tmp_path):
 
 
 def test_context_view_states_an_untied_external_endpoint_with_its_reason(tmp_path):
+    """Implements: TC-196"""
     # The adjudicated absences (WI-455 slice 2) are part of the boundary record:
     # an `external:` endpoint that realizes NO crossing renders with the reason
     # its own row states, rather than being silently dropped from the frame.
@@ -386,6 +393,7 @@ def test_context_view_states_an_untied_external_endpoint_with_its_reason(tmp_pat
 
 
 def test_context_view_renders_above_the_derived_structure(tmp_path):
+    """Implements: TC-196"""
     # Reading order is the point: what is outside and what crosses is settled
     # before what the inside is built of, so the context view splices in at the
     # TOP of the How panel — above the module map, not appended after it.
@@ -398,6 +406,7 @@ def test_context_view_renders_above_the_derived_structure(tmp_path):
 
 
 def test_context_view_omitted_and_byte_identical_without_a_frame(tmp_path):
+    """Implements: TC-196"""
     # The vacuity guarantee (the Knowledge-tab idiom): a project that declares no
     # boundary does not create the file, and the artifact is byte-for-byte what
     # it was before this view existed. Proven by round-trip.
@@ -417,6 +426,7 @@ def test_context_view_omitted_and_byte_identical_without_a_frame(tmp_path):
 
 
 def test_a_template_only_frame_renders_the_vacuous_view(tmp_path):
+    """Implements: TC-196"""
     # A freshly bootstrapped scaffold HAS an external.toml — the blank form, whose
     # rows all end `-000`. Those are example rows everywhere else in the kit and
     # they are here too: the view stays vacuous rather than rendering the
@@ -436,6 +446,7 @@ def test_a_template_only_frame_renders_the_vacuous_view(tmp_path):
 
 
 def test_context_view_alone_earns_the_how_tab(tmp_path):
+    """Implements: TC-196"""
     # No symbol inventory yet (files-mode / pre-code) but a declared frame: the
     # tab still renders, for the flows block's reason — a boundary is architecture
     # before there is an inside to map, and it is the earliest of the three.
@@ -458,6 +469,7 @@ def _sw_layer_with(sw, marker):
 
 
 def test_how_sw_containerizes_when_components_contain_modules(tmp_path):
+    """Implements: TC-087"""
     # With a CMP layer that contains modules, the How-SW panel becomes the
     # containerized Simulink-style drill top view (≤10 items), not the flat table.
     containerize(tmp_path)
@@ -476,6 +488,7 @@ def test_how_sw_containerizes_when_components_contain_modules(tmp_path):
 
 
 def test_boundary_aggregation_dedupes_cross_component_edges(tmp_path):
+    """Implements: TC-087, TC-089"""
     # IF-001 and IF-002 both cross CMP-001 -> CMP-002; at the top level they
     # aggregate to ONE deduplicated component-to-component wire naming both ids.
     containerize(tmp_path)
@@ -487,6 +500,7 @@ def test_boundary_aggregation_dedupes_cross_component_edges(tmp_path):
 
 
 def test_no_cmp_renders_flat_view_byte_identical(tmp_path):
+    """Implements: TC-078, TC-087, TC-088"""
     # The vacuity guarantee: render flat (no CMP layer), add the containment
     # (panel changes), remove it, re-render == the original flat bytes exactly.
     make_repo(tmp_path)
@@ -520,6 +534,7 @@ def test_containerized_view_is_deterministic_and_check_stable(tmp_path):
 
 
 def test_nested_components_render_inside_their_parent(tmp_path):
+    """Implements: TC-087"""
     # A CMP with PartOf renders as a nested component block inside its parent's
     # descend layer, and only the top-level root is a first-view item.
     containerize(tmp_path)
@@ -670,6 +685,7 @@ def test_wi272_status_is_carried_through_the_tiered_drill_too(tmp_path):
 
 
 def test_when_view_tiers_by_phase_above_threshold(tmp_path):
+    """Implements: TC-052"""
     # > 3 phases -> the When view starts at a layer of 4 phase blocks, each a
     # descend container carrying the per-phase color accent; the count is surfaced.
     tiered_repo(tmp_path, TIER_UNION_WIS)
@@ -685,6 +701,7 @@ def test_when_view_tiers_by_phase_above_threshold(tmp_path):
 
 
 def test_when_view_parent_edge_is_deduped_union_of_child_edges(tmp_path):
+    """Implements: TC-052"""
     # The two v1->v2 child edges (WI-001->WI-003 and WI-002->WI-003) aggregate to
     # ONE parent block wire equal to their deduped union, carried as the wire title.
     tiered_repo(tmp_path, TIER_UNION_WIS)
@@ -699,6 +716,7 @@ def test_when_view_parent_edge_is_deduped_union_of_child_edges(tmp_path):
 
 
 def test_when_view_nests_workstream_tier_inside_a_phase(tmp_path):
+    """Implements: TC-052"""
     # Within a phase that holds > 3 workstreams the workstream tier fires, nesting
     # phase -> workstream -> work item as descend layers; below the threshold flat.
     body = (
@@ -801,6 +819,7 @@ def test_when_view_is_deterministic_and_check_stable(tmp_path):
 
 
 def test_when_view_seams_wire_to_block_ports(tmp_path):
+    """Implements: TC-089"""
     # Each block carries an input port (left-middle) and an output port
     # (right-middle); each aggregated edge is a wire whose endpoints ATTACH to those
     # ports (Simulink-style), not free-floating text.
@@ -838,6 +857,7 @@ def test_when_view_seams_wire_to_block_ports(tmp_path):
 
 
 def test_when_view_double_click_descends_a_layer(tmp_path):
+    """Implements: TC-090"""
     # A container block descends one layer on double-click (keyboard alt: Enter /
     # Space on the focused block); its data-descend names a real child layer.
     tiered_repo(tmp_path, TIER_UNION_WIS)
@@ -852,6 +872,7 @@ def test_when_view_double_click_descends_a_layer(tmp_path):
 
 
 def test_when_view_breadcrumb_restores_parent(tmp_path):
+    """Implements: TC-090, TC-103"""
     # The drill carries a breadcrumb whose crumb click truncates the trail back to
     # that ancestor (restoring the parent view); the root crumb is declared.
     tiered_repo(tmp_path, TIER_UNION_WIS)
@@ -865,6 +886,7 @@ def test_when_view_breadcrumb_restores_parent(tmp_path):
 
 
 def test_decomposition_one_arrow_per_containment_edge(tmp_path):
+    """Implements: TC-057"""
     # Each descend container (a containment edge) renders EXACTLY one horizontal
     # parent->child arrow (class="cedge"), making containment explicit rather than
     # implied by the descend interaction alone.
@@ -877,6 +899,7 @@ def test_decomposition_one_arrow_per_containment_edge(tmp_path):
 
 
 def test_tier_column_honors_declared_width_bound(tmp_path):
+    """Implements: TC-057, TC-088"""
     # The tier column is a declared value (MAX_TIER_COL), not an adjective: every
     # block honours it, and a content-light layer renders NARROWER than the bound
     # (right-sized, not the former uniform column).
@@ -897,6 +920,7 @@ def test_tier_column_honors_declared_width_bound(tmp_path):
 
 
 def test_persistent_hover_highlight_keyed_to_last_node(tmp_path):
+    """Implements: TC-057"""
     # The persistent-highlight contract: every block is keyed by a data-node id; the
     # controller records the last-hovered/focused node (data-hl) and never clears on
     # exit (no mouseleave/mouseout in the drill controller) -> no flash-on-exit.
@@ -1028,6 +1052,7 @@ def test_when_and_how_drills_use_bounded_orthogonal_wires_and_explicit_ports(
 
 
 def test_leaf_wi_block_surfaces_delivery_phase(tmp_path):
+    """Implements: TC-052"""
     # OI-10 fix: the leaf work-item block's hover title carries the delivery Phase,
     # so it stays visible when the phase tier is flat but a workstream tier drills in.
     body = (
@@ -1059,6 +1084,7 @@ FOUR_CMPS = (
 
 
 def test_how_sw_collapses_above_component_threshold(tmp_path):
+    """Implements: TC-088, TC-102"""
     # > 3 top-level components -> the root layer holds four component blocks, each a
     # descend container (double-click / Enter to explode into its modules).
     containerize(tmp_path)
@@ -1157,6 +1183,7 @@ def _spine_with_sns(root, n):
 
 
 def test_t2_what_icicle_starts_collapsed_above_the_sn_threshold(tmp_path):
+    """Implements: TC-102"""
     # Above the `>3` rule the What view is a start-collapsed drill: one descend
     # block per SN in the root layer, one child layer each, and the deep TC cells
     # sit in HIDDEN child layers - not in the initially-shown root, which is the
@@ -1174,6 +1201,7 @@ def test_t2_what_icicle_starts_collapsed_above_the_sn_threshold(tmp_path):
 
 
 def test_t2_small_spine_keeps_the_flat_icicle(tmp_path):
+    """Implements: TC-102"""
     # At or below 3 SNs the tiering is NOT earned: the flat icicle renders, so a
     # small project never pays for a drill it cannot need - the same symmetry the
     # When and Knowledge views hold to.
@@ -1317,6 +1345,7 @@ def test_t4_seam_node_labels_fit_their_rectangles(tmp_path):
 
 
 def test_t7_every_emitted_svg_scales_to_fit(tmp_path):
+    """Implements: TC-121"""
     # Derived from the emitted document, not a hand list: EVERY <svg> must carry
     # the responsive style, and none may keep a bare fixed width. A new emitter
     # that forgets it fails here.
@@ -1333,6 +1362,7 @@ def test_t7_every_emitted_svg_scales_to_fit(tmp_path):
 
 
 def test_t7_shrink_floor_keeps_labels_legible(tmp_path):
+    """Implements: TC-121"""
     # Measure the emitted type at the emitted floor, not the implementation's
     # formula: the first build's sub-label was below 9px even at natural size.
     make_repo(tmp_path)
@@ -1446,6 +1476,7 @@ def _spine_with_a_long_need(root, n=8):
 
 
 def test_t4_no_block_label_renders_outside_its_own_box(tmp_path):
+    """Implements: TC-124"""
     make_repo(tmp_path)
     _spine_with_a_long_need(tmp_path)
     assert gen(tmp_path).returncode == 0
@@ -1463,6 +1494,7 @@ def test_t4_no_block_label_renders_outside_its_own_box(tmp_path):
 
 
 def test_t4_a_sentence_length_sub_label_wraps_and_ellipsizes(tmp_path):
+    """Implements: TC-124"""
     # The fix path itself: too long for one line -> a second line, then an
     # ellipsis. (The full string keeps its homes on the block: <title>,
     # aria-label, data-summary.)
@@ -1482,6 +1514,7 @@ def test_t4_a_sentence_length_sub_label_wraps_and_ellipsizes(tmp_path):
 
 
 def test_t4_a_short_sub_label_keeps_the_two_line_grid(tmp_path):
+    """Implements: TC-124"""
     # The wrap is earned by length, not applied to everything: a sub that already
     # fits renders on the untouched two-line grid.
     make_repo(tmp_path)
@@ -1495,6 +1528,7 @@ def test_t4_a_short_sub_label_keeps_the_two_line_grid(tmp_path):
 
 
 def test_fit_lines_breaks_on_words_then_ellipsizes():
+    """Implements: TC-124"""
     gt = load_script("gen_trajectory")
     assert gt._fit_lines("", 10, 2) == []
     assert gt._fit_lines("short", 10, 2) == ["short"]  # untouched when it fits

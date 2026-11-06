@@ -1727,6 +1727,7 @@ from demo import add
 
 @pytest.mark.smoke
 def test_add_sr001():
+    """Implements: TC-001"""
     assert add(1, 2) == 3
 '''
 

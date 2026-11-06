@@ -110,6 +110,7 @@ def _rounds(lane, base):
 
 
 def test_an_ingested_log_in_a_lane_is_no_round_no_build_and_no_draw(tmp_path, home):
+    """Implements: TC-393"""
     lane = _lane(tmp_path)
     base = fixture_git(lane, "rev-parse", "HEAD")
     iter_dir = lane / ITER
@@ -153,6 +154,7 @@ def test_an_ingested_log_in_a_lane_is_no_round_no_build_and_no_draw(tmp_path, ho
 
 
 def test_a_log_in_another_worktree_counts_toward_exactly_once(tmp_path, home, capsys):
+    """Implements: TC-389"""
     lane = _lane(tmp_path)
     assert _ingest(lane) == 0
     assert len(_tracked_call_logs(lane)) == 4
@@ -168,6 +170,7 @@ def test_a_log_in_another_worktree_counts_toward_exactly_once(tmp_path, home, ca
 def test_from_the_primary_checkout_the_logs_spool_and_nothing_is_committed(
     tmp_path, home
 ):
+    """Implements: TC-389"""
     primary = _primary(_lane(tmp_path))
     before = _state(primary)
     assert _ingest(primary) == 0
@@ -180,6 +183,7 @@ def test_from_the_primary_checkout_the_logs_spool_and_nothing_is_committed(
 def test_a_refused_record_commit_exits_one_and_names_the_refusal(
     tmp_path, home, capsys
 ):
+    """Implements: TC-394"""
     # The lane's pre-commit hook vetoes every commit. Adequacy witness: a
     # command that read a refused commit as recorded would exit 0, and one
     # that hid it would print `committed`.

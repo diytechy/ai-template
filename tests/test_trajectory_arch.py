@@ -39,6 +39,7 @@ check_trajectory = load_script("check_trajectory")
 
 
 def test_architecture_rules_are_reexported_from_their_behavior_module():
+    """Implements: TC-080"""
     trajectory_arch = load_script("trajectory_arch")
     for name in (
         "interface_findings",
@@ -340,6 +341,7 @@ def write_ifs(root, body):
 
 
 def test_interface_coverage_warns(tmp_path):
+    """Implements: TC-080"""
     # Multi-module arch-map with NO interfaces.csv -> "connectivity undeclared"
     # (the ruled opt-out, default-on posture), and the exit code is still 0.
     write_arch(tmp_path, ARCH_2MOD)
@@ -349,6 +351,7 @@ def test_interface_coverage_warns(tmp_path):
 
 
 def test_interface_check_off_silences(tmp_path):
+    """Implements: TC-080"""
     write_arch(tmp_path, ARCH_2MOD)
     (tmp_path / "docs" / "interfaces-check").write_text("off\n", encoding="utf-8")
     proc = run_traj(tmp_path)
@@ -365,6 +368,7 @@ def test_single_module_inventory_is_vacuous(tmp_path):
 
 
 def test_uncovered_direction_warns(tmp_path):
+    """Implements: TC-080"""
     # One Provides seam a->b: a has no Consumes, b has no Provides -> both
     # missing-direction warns fire (exit 0).
     write_arch(tmp_path, ARCH_2MOD)
@@ -379,6 +383,7 @@ def test_uncovered_direction_warns(tmp_path):
 
 
 def test_source_sink_marker_suppresses_direction_warn(tmp_path):
+    """Implements: TC-080"""
     # mod_a marked source (consumes nothing), mod_b marked sink (provides nothing)
     # -> both missing-direction warns suppressed by the honesty valve.
     write_arch(tmp_path, ARCH_2MOD)
@@ -394,6 +399,7 @@ def test_source_sink_marker_suppresses_direction_warn(tmp_path):
 
 
 def test_seam_tc_citation_warn(tmp_path):
+    """Implements: TC-080"""
     # A symmetric pair covers both directions, so only the seam-TC warn fires; a
     # TC that cites IF-001 suppresses its warn, IF-002 still warns.
     #
@@ -434,6 +440,7 @@ def test_seam_tc_citation_warn(tmp_path):
 
 
 def test_contracts_docstring_citation_warns(tmp_path):
+    """Implements: TC-080"""
     # A module's `Contracts (interfaces):` arch-map line names IF-003 (absent from
     # the registry) -> forward warn; and once the convention is in use, a registry
     # IF declared by no module warns in reverse.
@@ -476,6 +483,7 @@ def test_a_seam_declared_on_the_wrong_module_is_named(tmp_path):
 
 
 def test_interface_warns_never_fail_strict(tmp_path):
+    """Implements: TC-080"""
     # Even under --strict, the REMAINING connectivity warns never change the
     # exit code (they are warns, not the R-B..R-E coherence rules --strict
     # promotes). With no work-items registry the run is vacuously clean once
@@ -1064,6 +1072,7 @@ def write_tagged_llrs(root, pairs):
 
 
 def test_top_view_over_bound_warns_plain_fails_strict(tmp_path):
+    """Implements: TC-049"""
     # 12 modules, no CMP rows -> 12 uncontained top items > 10.
     write_arch(tmp_path, _arch_n(12))
     plain = run_traj(tmp_path)
@@ -1075,6 +1084,7 @@ def test_top_view_over_bound_warns_plain_fails_strict(tmp_path):
 
 
 def test_declaring_components_below_bound_clears_it(tmp_path):
+    """Implements: TC-049"""
     # 3 components containing all 12 modules -> top view = 3 <= 10.
     write_arch(tmp_path, _arch_n(12))
     write_cmps(
@@ -1093,6 +1103,7 @@ def test_declaring_components_below_bound_clears_it(tmp_path):
 
 
 def test_nested_cmp_counts_only_at_top_level_root(tmp_path):
+    """Implements: TC-049"""
     # CMP-003 nests under CMP-001 (PartOf); its members count under CMP-001, so
     # the roots are {CMP-001, CMP-002} = 2 top items, well under the bound.
     write_arch(tmp_path, _arch_n(12))
@@ -1123,6 +1134,7 @@ def test_uncontained_modules_count_toward_the_bound(tmp_path):
 
 
 def test_top_view_off_switch_silences(tmp_path):
+    """Implements: TC-049"""
     write_arch(tmp_path, _arch_n(12))
     (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
     proc = run_traj(tmp_path, "--strict")
@@ -1131,6 +1143,7 @@ def test_top_view_off_switch_silences(tmp_path):
 
 
 def test_ten_module_inventory_is_vacuous(tmp_path):
+    """Implements: TC-049"""
     # Exactly at the bound with no CMP rows -> passes trivially (the bound, not
     # the registry, is the rule).
     write_arch(tmp_path, _arch_n(10))
@@ -1140,6 +1153,7 @@ def test_ten_module_inventory_is_vacuous(tmp_path):
 
 
 def test_absent_inventory_top_view_is_vacuous(tmp_path):
+    """Implements: TC-049"""
     # No source tree at all -> nothing to bound (pre-code / files-mode).
     (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
     proc = run_traj(tmp_path, "--strict")
@@ -1593,6 +1607,7 @@ def _cross_cmp_repo(tmp_path, cmp_b="CMP-002"):
 
 
 def test_cross_cmp_import_without_seam_warns_plain_fails_strict(tmp_path):
+    """Implements: TC-067"""
     _cross_cmp_repo(tmp_path)
     plain = run_traj(tmp_path)
     assert plain.returncode == 0, plain.stdout + plain.stderr
@@ -1621,6 +1636,7 @@ def _write_tc_citing(tmp_path, if_id):
 
 
 def test_cross_cmp_import_with_declared_seam_is_silent(tmp_path):
+    """Implements: TC-067"""
     _cross_cmp_repo(tmp_path)
     write_ifs(
         tmp_path,
@@ -1633,6 +1649,7 @@ def test_cross_cmp_import_with_declared_seam_is_silent(tmp_path):
 
 
 def test_cross_cmp_seam_covers_either_direction(tmp_path):
+    """Implements: TC-067"""
     # The seam row authored from mod_b's side (b -> a) still covers the a -> b
     # import edge — a seam is one declared relationship, not a directed pair.
     _cross_cmp_repo(tmp_path)
@@ -1679,6 +1696,7 @@ def test_cross_cmp_no_imports_lines_is_vacuous(tmp_path):
 
 
 def test_components_check_off_silences_cross_cmp(tmp_path):
+    """Implements: TC-067"""
     _cross_cmp_repo(tmp_path)
     (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
     proc = run_traj(tmp_path, "--strict")
@@ -1812,6 +1830,7 @@ def write_kernel_allow(root, body):
 
 
 def test_declared_kernel_destination_is_not_a_seam(tmp_path):
+    """Implements: TC-067"""
     # mod_a (CMP-001) imports mod_b (CMP-002); mod_b is declared kernel — no
     # finding, no advisory, clean even under --strict.
     _cross_cmp_repo(tmp_path)
@@ -1823,6 +1842,7 @@ def test_declared_kernel_destination_is_not_a_seam(tmp_path):
 
 
 def test_undeclared_module_still_fires_the_hard_finding(tmp_path):
+    """Implements: TC-067"""
     # The fail-safe default AND the "still fully live for every other edge"
     # half: a kernel-modules-allow file that declares OTHER modules does not
     # blanket-exempt an edge into a module it does not name.
@@ -1836,6 +1856,7 @@ def test_undeclared_module_still_fires_the_hard_finding(tmp_path):
 
 
 def test_absent_kernel_allow_file_exempts_nothing(tmp_path):
+    """Implements: TC-067"""
     # No file at all: read_kernel_modules answers {} and the ordinary rule
     # runs exactly as it did before OI-48 — the fail-safe default.
     _cross_cmp_repo(tmp_path)
@@ -1845,6 +1866,7 @@ def test_absent_kernel_allow_file_exempts_nothing(tmp_path):
 
 
 def test_kernel_exemption_also_silences_the_overlap_advisory(tmp_path):
+    """Implements: TC-067"""
     # A declared kernel module that still carries a residual multi-tag is not
     # ALSO advised about: the advisory exists to surface undeclared
     # candidates, and a declared one is a settled candidate, not an open one.
@@ -1856,6 +1878,7 @@ def test_kernel_exemption_also_silences_the_overlap_advisory(tmp_path):
 
 
 def test_kernel_exemption_is_one_directional(tmp_path):
+    """Implements: TC-067"""
     # Declaring mod_a (the SOURCE) kernel does not exempt ITS OWN outbound
     # edge — the exemption keys on the destination only.
     _cross_cmp_repo(tmp_path)
@@ -1866,6 +1889,7 @@ def test_kernel_exemption_is_one_directional(tmp_path):
 
 
 def test_kernel_allow_entry_without_a_reason_is_dropped_and_reported(tmp_path):
+    """Implements: TC-067"""
     # No ` — <reason>` separator: the entry DECLARES NOTHING (OI-41 ARM
     # precedent) — no exemption, AND the malformed line is reported rather
     # than silently read as an empty file.
@@ -1881,6 +1905,7 @@ def test_kernel_allow_entry_without_a_reason_is_dropped_and_reported(tmp_path):
 
 
 def test_kernel_allow_entry_with_empty_reason_is_dropped_and_reported(tmp_path):
+    """Implements: TC-067"""
     # A separator present but nothing after it — same fail-safe: dropped,
     # reported, no exemption.
     _cross_cmp_repo(tmp_path)
@@ -1891,6 +1916,7 @@ def test_kernel_allow_entry_with_empty_reason_is_dropped_and_reported(tmp_path):
 
 
 def test_kernel_allow_hygiene_shares_the_components_check_opt_out(tmp_path):
+    """Implements: TC-067"""
     _cross_cmp_repo(tmp_path)
     write_kernel_allow(tmp_path, "scripts/mod_b\n")  # malformed, no reason
     (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
@@ -1927,6 +1953,7 @@ def _spec_repo(root, spec_name, spec_body, ifs=SPEC_IFS_ONE):
 
 
 def test_spec_interfaces_unarmed_is_vacuous(tmp_path):
+    """Implements: TC-068"""
     _spec_repo(tmp_path, "WI-001.md", "# WI-001\n\n## Approach\n\nNo section.\n")
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -1934,6 +1961,7 @@ def test_spec_interfaces_unarmed_is_vacuous(tmp_path):
 
 
 def test_spec_interfaces_resolvable_passes(tmp_path):
+    """Implements: TC-068"""
     _spec_repo(
         tmp_path,
         "WI-001.md",
@@ -1946,6 +1974,7 @@ def test_spec_interfaces_resolvable_passes(tmp_path):
 
 
 def test_spec_interfaces_unresolvable_warns_then_errors_under_strict(tmp_path):
+    """Implements: TC-068"""
     body = "# WI-001\n\n## Interfaces\n\n- IF-999: no such seam.\n\n## Done-when\n"
     _spec_repo(tmp_path, "WI-001.md", body)
     proc = run_traj(tmp_path)  # WARN plain, exit 0
@@ -1971,7 +2000,10 @@ def test_the_anti_duplication_rationale_arm_is_RETIRED_not_re_keyed(tmp_path):
 
     So a bare citation of a `draft` seam is CLEAN, and the resolution arm below
     it still bites. If sitting 3 wants the forced search back, it needs a value
-    that means "proposed" — a vocabulary decision, not a checker's to invent."""
+    that means "proposed" — a vocabulary decision, not a checker's to invent.
+
+    Implements: TC-068
+    """
     bare = "# WI-001\n\n## Interfaces\n\n- IF-050 (Proposed)\n\n## Done-when\n"
     _spec_repo(tmp_path, "WI-001.md", bare, ifs=SPEC_IFS_PROPOSED)
     proc = run_traj(tmp_path)
@@ -1992,6 +2024,7 @@ def test_spec_interfaces_empty_section_warns(tmp_path):
 
 
 def test_spec_interfaces_intra_module_escape_passes(tmp_path):
+    """Implements: TC-068"""
     body = (
         "# WI-001\n\n## Interfaces\n\nIntra-module: acts only within scripts/mod_a; "
         "no cross-module seam (PROCESS.md §8).\n"
@@ -2018,6 +2051,7 @@ def test_spec_interfaces_readme_and_example_not_armed(tmp_path):
 # A finding prints as `<level> - <repo-relative file>:<line>: <shape>`, so one
 # prefix proves all three, and a path that is not repo-relative fails it.
 
+TAGGED_FILE = "tests/test_tagged.py"
 TAG_CLEAN_FILE = '"""Module text.\n\nImplements: TC-001\n"""\n'
 TAG_MISPLACED_FILE = '"""Module text."""\n\n# Implements: TC-001\n'
 TAG_UNKNOWN_FILE = '"""Module text.\n\nImplements: TC-404\n"""\n'
@@ -2029,20 +2063,20 @@ def _tag_finding(proc, level, rel, line, shape):
     return [ln for ln in proc.stderr.splitlines() if ln.startswith(prefix)]
 
 
-def _tc_rows(statuses):
-    """TC registry text holding one row per `{id: status}`."""
+def _tc_rows(statuses, evidence=TAGGED_FILE):
+    """TC registry text holding one row per `{id: status}`, each citing `evidence`."""
     return "".join(
         '[test.{}]\nverifies = ["SR-001"]\nlevel = "Unit"\nmethod = "m"\n'
         'tier = "Full"\nexpected = "e"\nautomated = "Yes"\n'
-        'evidence = "tests/test_tagged.py"\nstatus = "{}"\n\n'.format(tc, status)
+        'evidence = "{}"\nstatus = "{}"\n\n'.format(tc, evidence, status)
         for tc, status in statuses.items()
     )
 
 
-def _write_tc_rows(root, statuses):
+def _write_tc_rows(root, statuses, evidence=TAGGED_FILE):
     path = root / "docs" / "test" / "test-cases.toml"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(_tc_rows(statuses), encoding="utf-8")
+    path.write_text(_tc_rows(statuses, evidence), encoding="utf-8")
 
 
 def _write_test_file(root, rel, text):
@@ -2055,6 +2089,7 @@ def _write_test_file(root, rel, text):
     "work_items", [False, True], ids=["no-work-items", "with-work-items"]
 )
 def test_tag_findings_warn_plain_and_error_under_strict(tmp_path, work_items):
+    """Implements: TC-409"""
     if work_items:
         write_wis(tmp_path, "WI-001,A,scripts,,,done,Shipped it.\n")
     _write_tc_rows(tmp_path, {"TC-001": "Approved"})
@@ -2074,6 +2109,7 @@ def test_tag_findings_warn_plain_and_error_under_strict(tmp_path, work_items):
 
 @pytest.mark.parametrize("wrap", [", TC-002", "and TC-002"], ids=["comma", "and"])
 def test_a_wrapped_tag_list_is_refused_under_strict(tmp_path, wrap):
+    """Implements: TC-409"""
     _write_tc_rows(tmp_path, {"TC-001": "Approved", "TC-002": "Approved"})
     rel = "tests/test_tagged.py"
     text = '"""Module text.\n\nImplements: TC-001\n{}\n"""\n'.format(wrap)
@@ -2084,6 +2120,7 @@ def test_a_wrapped_tag_list_is_refused_under_strict(tmp_path, wrap):
 
 
 def test_the_tag_check_is_vacuous_with_no_tests_root_or_no_registry(tmp_path):
+    """Implements: TC-409"""
     rel = "tests/test_tagged.py"
     _write_test_file(tmp_path, rel, TAG_UNKNOWN_FILE)
     no_registry = run_traj(tmp_path, "--strict")
@@ -2102,6 +2139,7 @@ def test_the_tag_check_is_vacuous_with_no_tests_root_or_no_registry(tmp_path):
 
 
 def test_a_nested_tests_root_reports_repo_relative_paths(tmp_path):
+    """Implements: TC-409"""
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "stack.ini").write_text(
         "[paths]\nsrc = src\ntests = qa/tests\n", encoding="utf-8"
@@ -2117,6 +2155,7 @@ def test_a_nested_tests_root_reports_repo_relative_paths(tmp_path):
 
 
 def test_a_draft_tc_is_clean_and_an_absent_one_is_refused(tmp_path):
+    """Implements: TC-407"""
     rel = "tests/test_tagged.py"
     example = '"""Module text.\n\nImplements: TC-000\n"""\n'
     _write_tc_rows(tmp_path, {"TC-000": "Drafted", "TC-001": "Drafted"})
@@ -2143,6 +2182,7 @@ def test_a_draft_tc_is_clean_and_an_absent_one_is_refused(tmp_path):
 
 
 def test_the_tag_check_on_a_bootstrapped_scaffold(scaffold):
+    """Implements: TC-409"""
     registry = scaffold / "docs" / "test" / "test-cases.toml"
     registry.write_text(
         registry.read_text(encoding="utf-8") + "\n" + _tc_rows({"TC-001": "Approved"}),
@@ -2168,3 +2208,329 @@ def test_the_tag_check_on_a_bootstrapped_scaffold(scaffold):
     assert at_rung.returncode != 0, at_rung.stdout + at_rung.stderr
     assert "=== trajectory" in at_rung.stdout, at_rung.stdout
     assert "ERROR - {}:3: misplaced".format(rel) in at_rung.stdout + at_rung.stderr
+
+
+# --- Tags and evidence cells are one fact: the equality check's surface -------
+# A finding prints as `<level> - <TC>: <kind>: <node>`, and every comparison is
+# of the whole list of them, which pins their number and order as well as their
+# text.
+
+TAGGED_NODE = TAGGED_FILE + "::test_a"
+UNTAGGED_TEST = "def test_a():\n    pass\n"
+TAGGED_TEST = 'def test_a():\n    """Implements: TC-001"""\n'
+SECOND_TAGGED_TEST = '\n\ndef test_b():\n    """Implements: TC-001"""\n'
+TAGGED_METHOD = (
+    'class TestC:\n    def test_m(self):\n        """Implements: TC-001"""\n'
+)
+
+
+def _no_tag(node):
+    """The finding for a part of TC-001's cell that no tag declares."""
+    return "TC-001: evidence without a tag: {}".format(node)
+
+
+def _no_evidence(node):
+    """The finding for a tag naming TC-001 that no part of its cell names."""
+    return "TC-001: tag without evidence: {}".format(node)
+
+
+def _equality_findings(proc, level):
+    """`proc`'s equality findings at `level` in print order, prefix dropped."""
+    prefix = "check_trajectory: {} - ".format(level)
+    kinds = (": evidence without a tag: ", ": tag without evidence: ")
+    return [
+        line[len(prefix) :]
+        for line in proc.stderr.splitlines()
+        if line.startswith(prefix) and any(kind in line for kind in kinds)
+    ]
+
+
+def _write_equality_tree(root, evidence, text, status="Approved", rel=TAGGED_FILE):
+    """TC-001 citing `evidence`, and the one test file `text` beside it."""
+    _write_tc_rows(root, {"TC-001": status}, evidence)
+    _write_test_file(root, rel, text)
+
+
+@pytest.mark.parametrize(
+    "work_items", [False, True], ids=["no-work-items", "with-work-items"]
+)
+def test_evidence_without_a_tag_is_named(tmp_path, work_items):
+    """Implements: TC-410"""
+    if work_items:
+        write_wis(tmp_path, "WI-001,A,scripts,,,done,Shipped it.\n")
+    _write_equality_tree(tmp_path, TAGGED_NODE, TAGGED_TEST)
+    clean = run_traj(tmp_path, "--strict")
+    assert clean.returncode == 0, clean.stdout + clean.stderr
+
+    _write_equality_tree(tmp_path, TAGGED_NODE, UNTAGGED_TEST)
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert _equality_findings(plain, "WARN") == [_no_tag(TAGGED_NODE)], plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert _equality_findings(strict, "ERROR") == [_no_tag(TAGGED_NODE)], strict.stderr
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+
+
+def test_a_tag_without_evidence_is_named(tmp_path):
+    """Implements: TC-410"""
+    _write_equality_tree(tmp_path, TAGGED_NODE, TAGGED_TEST + SECOND_TAGGED_TEST)
+    second = TAGGED_FILE + "::test_b"
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert _equality_findings(plain, "WARN") == [_no_evidence(second)], plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert _equality_findings(strict, "ERROR") == [_no_evidence(second)], strict.stderr
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+
+
+def test_a_draft_tc_is_judged(tmp_path):
+    """Implements: TC-410"""
+    _write_equality_tree(tmp_path, TAGGED_NODE, UNTAGGED_TEST, status="Drafted")
+    proc = run_traj(tmp_path, "--strict")
+    assert _equality_findings(proc, "ERROR") == [_no_tag(TAGGED_NODE)], proc.stderr
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+
+
+def test_the_equality_check_on_a_bootstrapped_scaffold(scaffold):
+    """Implements: TC-410"""
+    registry = scaffold / "docs" / "test" / "test-cases.toml"
+    rows = _tc_rows({"TC-001": "Approved"}, TAGGED_NODE)
+    registry.write_text(
+        registry.read_text(encoding="utf-8") + "\n" + rows, encoding="utf-8"
+    )
+
+    def trajectory_at(stage):
+        return run_py(
+            ["scripts/check.py", "--stage", stage, "--run-steps", "trajectory"],
+            cwd=scaffold,
+        )
+
+    _write_test_file(scaffold, TAGGED_FILE, TAGGED_TEST)
+    clean = trajectory_at("DevStg-Impl")
+    assert clean.returncode == 0, clean.stdout + clean.stderr
+
+    _write_test_file(scaffold, TAGGED_FILE, UNTAGGED_TEST)
+    below = trajectory_at("DevStg-Tests")
+    assert below.returncode == 0, below.stdout + below.stderr
+    assert _no_tag(TAGGED_NODE) in below.stdout + below.stderr
+    at_rung = trajectory_at("DevStg-Impl")
+    assert at_rung.returncode != 0, at_rung.stdout + at_rung.stderr
+    assert "=== trajectory" in at_rung.stdout, at_rung.stdout
+    finding = "ERROR - " + _no_tag(TAGGED_NODE)
+    assert finding in at_rung.stdout + at_rung.stderr
+
+
+def test_a_parametrized_part_matches_its_tests_tag(tmp_path):
+    """Implements: TC-411"""
+    case = TAGGED_NODE + "[case one]"
+    _write_equality_tree(tmp_path, case, TAGGED_TEST)
+    tagged = run_traj(tmp_path, "--strict")
+    assert tagged.returncode == 0, tagged.stdout + tagged.stderr
+
+    _write_equality_tree(tmp_path, case, UNTAGGED_TEST)
+    untagged = run_traj(tmp_path, "--strict")
+    assert _equality_findings(untagged, "ERROR") == [_no_tag(TAGGED_NODE)], (
+        untagged.stderr
+    )
+    assert untagged.returncode == 1, untagged.stdout + untagged.stderr
+
+
+def test_a_file_only_part_matches_a_module_tag_and_not_a_tests_tag(tmp_path):
+    """Implements: TC-411"""
+    _write_equality_tree(tmp_path, TAGGED_FILE, TAG_CLEAN_FILE)
+    module_tag = run_traj(tmp_path, "--strict")
+    assert module_tag.returncode == 0, module_tag.stdout + module_tag.stderr
+
+    _write_equality_tree(tmp_path, TAGGED_FILE, TAGGED_TEST)
+    test_tag = run_traj(tmp_path, "--strict")
+    assert _equality_findings(test_tag, "ERROR") == [
+        _no_tag(TAGGED_FILE),
+        _no_evidence(TAGGED_NODE),
+    ], test_tag.stderr
+    assert test_tag.returncode == 1, test_tag.stdout + test_tag.stderr
+
+
+def test_a_test_part_does_not_match_a_module_tag(tmp_path):
+    """Implements: TC-411"""
+    # Adequacy witness: a comparison letting a test part fall back to its file's
+    # declaration reads this cell as clean, and this test fails.
+    text = TAG_CLEAN_FILE + "\n\n" + UNTAGGED_TEST
+    _write_equality_tree(tmp_path, TAGGED_NODE, text)
+    proc = run_traj(tmp_path, "--strict")
+    assert _equality_findings(proc, "ERROR") == [
+        _no_evidence(TAGGED_FILE),
+        _no_tag(TAGGED_NODE),
+    ], proc.stderr
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+
+
+def test_a_test_repeating_its_modules_case_needs_its_own_part(tmp_path):
+    """Implements: TC-411"""
+    # Adequacy witness: a comparison letting a file-level tag cover the tests
+    # beneath it reads the file-only cell below as clean, and this test fails.
+    text = TAG_CLEAN_FILE + "\n\n" + TAGGED_TEST
+    _write_equality_tree(tmp_path, TAGGED_FILE, text)
+    file_only = run_traj(tmp_path, "--strict")
+    assert _equality_findings(file_only, "ERROR") == [_no_evidence(TAGGED_NODE)], (
+        file_only.stderr
+    )
+    assert file_only.returncode == 1, file_only.stdout + file_only.stderr
+
+    both_parts = "{} {}".format(TAGGED_FILE, TAGGED_NODE)
+    _write_equality_tree(tmp_path, both_parts, text)
+    named = run_traj(tmp_path, "--strict")
+    assert named.returncode == 0, named.stdout + named.stderr
+
+
+def test_a_class_method_part_matches_its_tag(tmp_path):
+    """Implements: TC-411"""
+    method = TAGGED_FILE + "::TestC::test_m"
+    _write_equality_tree(tmp_path, method, TAGGED_METHOD)
+    matched = run_traj(tmp_path, "--strict")
+    assert matched.returncode == 0, matched.stdout + matched.stderr
+
+    other_class = TAGGED_FILE + "::TestD::test_m"
+    _write_equality_tree(tmp_path, other_class, TAGGED_METHOD)
+    mismatched = run_traj(tmp_path, "--strict")
+    assert _equality_findings(mismatched, "ERROR") == [
+        _no_evidence(method),
+        _no_tag(other_class),
+    ], mismatched.stderr
+    assert mismatched.returncode == 1, mismatched.stdout + mismatched.stderr
+
+
+def test_a_whitespace_separated_cell_reads_as_its_items(tmp_path):
+    """Implements: TC-411"""
+    second = TAGGED_FILE + "::test_b"
+    cell = "{} {}".format(TAGGED_NODE, second)
+    text = TAGGED_TEST + "\n\ndef test_b():\n    pass\n"
+    _write_equality_tree(tmp_path, cell, text)
+    proc = run_traj(tmp_path, "--strict")
+    assert _equality_findings(proc, "ERROR") == [_no_tag(second)], proc.stderr
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+
+
+def test_a_non_python_node_part_reads_both_findings(tmp_path):
+    """Implements: TC-411"""
+    rel = "tests/test_export.rs"
+    text = "// Implements: TC-001\n"
+    _write_equality_tree(tmp_path, rel, text, rel=rel)
+    whole_file = run_traj(tmp_path, "--strict")
+    assert whole_file.returncode == 0, whole_file.stdout + whole_file.stderr
+
+    node = rel + "::test_export"
+    _write_equality_tree(tmp_path, node, text, rel=rel)
+    proc = run_traj(tmp_path, "--strict")
+    assert _equality_findings(proc, "ERROR") == [
+        _no_evidence(rel),
+        _no_tag(node),
+    ], proc.stderr
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+
+
+@pytest.mark.parametrize(
+    "tests_dir, also_inside",
+    [
+        ("qa/tests", []),
+        ("qa/tests/", []),
+        ("./qa/tests", []),
+        (".", ["docs/notes.md", TAGGED_NODE]),
+    ],
+    ids=["plain", "trailing-slash", "dot-slash", "repo-root"],
+)
+def test_a_part_outside_the_tests_root_is_ignored(tmp_path, tests_dir, also_inside):
+    """Implements: TC-412"""
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = src\ntests = {}\n".format(tests_dir), encoding="utf-8"
+    )
+    inside = "qa/tests/test_tagged.py::test_a"
+    cell = "docs/notes.md#anchor; {}; {}".format(TAGGED_NODE, inside)
+    _write_equality_tree(tmp_path, cell, UNTAGGED_TEST, rel="qa/tests/test_tagged.py")
+    proc = run_traj(tmp_path, "--strict")
+    expected = [_no_tag(part) for part in sorted(also_inside + [inside])]
+    assert _equality_findings(proc, "ERROR") == expected, proc.stderr
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+
+
+def test_a_declaration_outside_the_tests_root_is_not_read(tmp_path):
+    """Implements: TC-412"""
+    # Adequacy witness: a reading that walks the repository rather than the
+    # declared root finds the outside test's tag, and this test fails.
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = src\ntests = qa/tests\n", encoding="utf-8"
+    )
+    inside = "qa/tests/test_tagged.py"
+    _write_equality_tree(tmp_path, inside + "::test_a", TAGGED_TEST, rel=inside)
+    _write_test_file(tmp_path, TAGGED_FILE, TAGGED_TEST)
+    proc = run_traj(tmp_path, "--strict")
+    assert _equality_findings(proc, "ERROR") == [], proc.stderr
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_a_placeholder_row_is_outside_the_equality_rule(tmp_path):
+    """Implements: TC-412"""
+    # Adequacy witness: a comparison judging every registry row reads TC-000's
+    # untagged part as a difference, and this test fails in both phases.
+    _write_test_file(tmp_path, TAGGED_FILE, UNTAGGED_TEST)
+    _write_tc_rows(tmp_path, {"TC-000": "Approved"}, TAGGED_NODE)
+    placeholder_only = run_traj(tmp_path, "--strict")
+    assert _equality_findings(placeholder_only, "ERROR") == [], placeholder_only.stderr
+    assert placeholder_only.returncode == 0, (
+        placeholder_only.stdout + placeholder_only.stderr
+    )
+
+    _write_tc_rows(tmp_path, {"TC-000": "Approved", "TC-001": "Approved"}, TAGGED_NODE)
+    beside_a_live_row = run_traj(tmp_path, "--strict")
+    assert _equality_findings(beside_a_live_row, "ERROR") == [_no_tag(TAGGED_NODE)], (
+        beside_a_live_row.stderr
+    )
+    assert beside_a_live_row.returncode == 1, (
+        beside_a_live_row.stdout + beside_a_live_row.stderr
+    )
+
+
+def test_the_equality_check_is_vacuous_with_no_tests_root_or_no_registry(tmp_path):
+    """Implements: TC-412"""
+    _write_test_file(tmp_path, TAGGED_FILE, UNTAGGED_TEST)
+    no_registry = run_traj(tmp_path, "--strict")
+    assert no_registry.returncode == 0, no_registry.stdout + no_registry.stderr
+    assert _equality_findings(no_registry, "ERROR") == [], no_registry.stderr
+
+    _write_tc_rows(tmp_path, {"TC-001": "Approved"}, TAGGED_NODE)
+    paired = run_traj(tmp_path, "--strict")
+    assert _equality_findings(paired, "ERROR") == [_no_tag(TAGGED_NODE)], paired.stderr
+    assert paired.returncode == 1, paired.stdout + paired.stderr
+
+    shutil.rmtree(tmp_path / "tests")
+    no_tests = run_traj(tmp_path, "--strict")
+    assert no_tests.returncode == 0, no_tests.stdout + no_tests.stderr
+    assert _equality_findings(no_tests, "ERROR") == [], no_tests.stderr
+
+
+def test_an_unreadable_file_adds_no_equality_finding(tmp_path):
+    """Implements: TC-412"""
+    broken = "tests/test_broken.py"
+    cell = "{}::test_x; {}".format(broken, TAGGED_NODE)
+    _write_equality_tree(tmp_path, cell, UNTAGGED_TEST)
+    _write_test_file(tmp_path, broken, "def broken(:\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert len(_tag_finding(proc, "ERROR", broken, 1, "unreadable")) == 1, proc.stderr
+    assert _equality_findings(proc, "ERROR") == [_no_tag(TAGGED_NODE)], proc.stderr
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+
+
+def test_a_note_only_cell_has_no_part_and_a_tag_on_it_is_a_finding(tmp_path):
+    """Implements: TC-412"""
+    note = "(owed by WI-900)"
+    _write_equality_tree(tmp_path, note, UNTAGGED_TEST)
+    untagged = run_traj(tmp_path, "--strict")
+    assert untagged.returncode == 0, untagged.stdout + untagged.stderr
+
+    _write_equality_tree(tmp_path, note, TAG_CLEAN_FILE)
+    tagged = run_traj(tmp_path, "--strict")
+    assert _equality_findings(tagged, "ERROR") == [_no_evidence(TAGGED_FILE)], (
+        tagged.stderr
+    )
+    assert tagged.returncode == 1, tagged.stdout + tagged.stderr

@@ -12,6 +12,8 @@ fresh scaffold reads — C-01 reproduced), no floor (so ord 0 was reachable, bel
 every runnable rung), no per-phase reading at all, and a fresh scaffold that
 answered `None`. This module is the record that each of those now has a defined,
 driven answer.
+
+Implements: TC-142, TC-226, TC-236
 """
 
 import shutil
@@ -116,7 +118,10 @@ def test_ONE_drafted_row_does_not_drop_the_effective_stage(scaffold):
     drafted row that has nothing to do with the repo's maturity.
 
     The effective stage is derived over the SETTLED subset, so the draft is
-    reported BESIDE it (`live-stage`, `drafted`) and never instead of it."""
+    reported BESIDE it (`live-stage`, `drafted`) and never instead of it.
+
+    Implements: TC-181
+    """
     make_minimal_project(scaffold)
     _no_frame(scaffold)
     srs, llrs, tcs = _settled_phase("001", "SR-001", "1")
@@ -145,7 +150,10 @@ def test_a_draft_that_OPENS_A_NEW_PHASE_does_not_drop_it_either(scaffold):
     delivery phase begins as drafted rows. The new phase has earned no rung, so it
     contributes no opinion to the fold — and it is still REPORTED, as the
     sentinel, because "this phase exists and has nothing settled" and "there is no
-    such phase" are different facts."""
+    such phase" are different facts.
+
+    Implements: TC-181
+    """
     make_minimal_project(scaffold)
     _no_frame(scaffold)
     srs, llrs, tcs = _settled_phase("001", "SR-001", "1")
@@ -170,7 +178,10 @@ def test_per_phase_stages_exist_and_the_global_reading_is_defined_over_them(scaf
     current phase's stage" did not exist — the deep-check's sharpest gap. It
     exists now, and the headline is the MIN over the phases that have earned
     something, so it is a fold of the breakdown rather than a second opinion
-    beside it."""
+    beside it.
+
+    Implements: TC-181
+    """
     make_minimal_project(scaffold)
     _no_frame(scaffold)
     srs1, llrs1, tcs1 = _settled_phase("001", "SR-001", "1")
@@ -196,7 +207,10 @@ def test_the_need_coverage_rung_stays_REPO_GLOBAL_across_phases(scaffold):
     approved need have a requirement answering it — is repo-wide: a need answered
     by phase 1's requirements is answered. Without the seam, running the
     derivation over one phase's rows reads every OTHER phase's needs as uncovered
-    and reports DevStg-Needs for every phase but the first."""
+    and reports DevStg-Needs for every phase but the first.
+
+    Implements: TC-181
+    """
     make_minimal_project(scaffold)
     _no_frame(scaffold)
     srs1, llrs1, tcs1 = _settled_phase("001", "SR-001", "1")
@@ -263,7 +277,10 @@ def test_a_fresh_scaffold_reads_a_DEFINED_non_raising_selection_value(scaffold):
     repo is green because its checks PASSED.
 
     The floor is the answer, and the honest ord-0 reading is reported beside
-    it."""
+    it.
+
+    Implements: TC-181
+    """
     got = DS.derive(scaffold)
     assert got["stage"] == kitstage.FLOOR
     assert got["floored"] is True
@@ -364,7 +381,10 @@ def test_on_a_CLAIMED_BRANCH_the_reader_derives_from_the_branch_s_own_registries
     branch's derived result IS the trunk's next value.
 
     It also must not WRITE there: a work branch never commits a generated
-    artifact, and a self-healing reader would make it do exactly that."""
+    artifact, and a self-healing reader would make it do exactly that.
+
+    Implements: TC-181
+    """
     make_minimal_project(scaffold)
     _no_frame(scaffold)
     srs, llrs, tcs = _settled_phase("001", "SR-001", "1")
@@ -442,7 +462,10 @@ def test_the_check_py_STEP_goes_red_on_a_stale_cache(scaffold):
     `--check` is driven above, but what the commit bar runs is `check.py`'s
     `derived-stage` STEP — a step can be wired and still be unable to fail (the
     exact silent green SN-008 forbids). So: plant the defect, run the step, and
-    require a non-zero exit."""
+    require a non-zero exit.
+
+    Implements: TC-181
+    """
     make_minimal_project(scaffold)
     _no_frame(scaffold)
     run_py([SCRIPTS / "derive_stage.py", "--root", scaffold], cwd=scaffold)
@@ -467,7 +490,10 @@ def test_a_freshly_scaffolded_repo_is_GREEN_on_the_placeholder(scaffold):
     placeholder rather than invented values, and `--check` passes it with a note
     — the same smooth-transition path `docs/gate` gives a legacy hand-set marker.
     Green because there is genuinely nothing to be stale against, not because the
-    check was sanctioned."""
+    check was sanctioned.
+
+    Implements: TC-181
+    """
     assert (scaffold / kitstage.STAGE_FILE).exists()
     assert (
         kitstage.parse((scaffold / kitstage.STAGE_FILE).read_text(encoding="utf-8"))

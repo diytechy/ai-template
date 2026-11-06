@@ -6,6 +6,8 @@ findings run bounces to a repair for exactly the implicated plan, and a repaired
 file re-runs clean and advances; a findings run that repeats after its one repair
 pages the round. Plus the exit-2 malformed outcome, single-plan implicated
 parsing, and the captured report payload.
+
+Implements: TC-073
 """
 
 from conftest import load_script
@@ -209,6 +211,7 @@ def test_report_payload_is_captured(tmp_path, capsys):
 
 # --- WI-803: an unexplained DUAL gap bounces only the plan that has it ---------
 def test_an_unexcluded_gap_in_plan_a_alone_bounces_only_a(tmp_path):
+    """Implements: TC-069"""
     goal, plans = write_case(tmp_path, PLAN_B_GOOD_GATED, plan_a=PLAN_A)
     state = pr.new_round("dp-gap")
     drive_to_coverage1(state)

@@ -14,6 +14,8 @@ A missing module or symbol is turned into `pytest.fail`, so a red is this
 file's own, never an import error. The real-repository cases (a lost race,
 two worktrees, a conflicted fold, the landings) are in test_id_carrier_git.py
 and test_id_landing.py, outside the smoke tier.
+
+Implements: TC-401
 """
 
 import sys

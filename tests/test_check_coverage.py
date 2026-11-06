@@ -11,6 +11,8 @@ These tests exercise the pure functions in-process and drive the CLI end-to-end
 over crafted report/floors files. The proof that the step wires into the
 harness bootstraps a scaffold, so it lives in test_check_coverage_driven.py,
 outside the per-commit smoke tier.
+
+Implements: TC-101
 """
 
 import json

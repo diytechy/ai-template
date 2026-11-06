@@ -10465,6 +10465,79 @@ now owe the line, and a missing one is a finding for the verdict's review.
 `prompts/adjudicate-first-approval.template.md`,
 `prompts/adjudicate-amendment.template.md`.
 
+### Test-file tags and evidence cells are held equal [since fb2bb4e5a]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `Implements:` tags in test files and `evidence` cells state
+one fact, and `check_trajectory.py` now holds them equal. For each live test
+case, a Drafted one included, the tags under the declared `[paths] tests` root
+must equal the parts of its `evidence` cell under that root.
+
+- **A part** is its file, or its file and test (`path::name`,
+  `path::Class::name`) with any `[case]` suffix dropped. The cell is read as
+  `trace.py` reads it, so `;` or whitespace between items changes nothing, and
+  a parenthetical note is no part.
+- **A file part** matches a file-level tag only: a Python module docstring, or
+  any tag in another stack's file. **A test part** matches a tag on that test
+  only.
+- **A part outside the tests root** (a CI, inspection, review or text record) is
+  outside the rule.
+
+Each difference is one finding naming the test case and the node, a WARN, and an
+ERROR under `--strict`, so your gate refuses from `DevStg-Impl`:
+
+- **`<TC>: evidence without a tag: <node>`:** a part no tag declares.
+- **`<TC>: tag without evidence: <node>`:** a tag no part names.
+
+A file refused as unreadable keeps its one `unreadable` finding and adds none
+here. With no tests root or no test-case registry the check is vacuous.
+
+**It retires** when the evidence column is generated from the tags.
+
+**What to do (forced migration).** Overwrite the kit-owned files below and
+regenerate `docs/process.md` (§2.2). **Seed your tags by the seed rule before
+re-syncing past this entry**, because a repository with evidence cells and no
+tags reads one finding per part from `DevStg-Impl`. The seed rule:
+
+- a file-only part becomes a tag in that file's module docstring;
+- a `file::node` part becomes a tag in that test's docstring;
+- a part naming a parametrized case seeds its test, since a test's tag covers
+  all its cases;
+- a test-case mention in free text is never a source.
+
+Some parts have no tag form, so each reads a finding until its cell changes:
+
+- a `path::node` in a non-Python file, which is read at file level, so it reads
+  both findings: name the file whole;
+- a part in a file type the reader does not read, or in a helper module, whose
+  docstrings are refused as misplaced: name a test file instead;
+- a part naming a test that no longer exists: point it at the test that
+  verifies the case.
+
+A test repeating its module's test case, no finding when the tags entry above
+shipped, now needs its own evidence part: name the test beside the file, or
+drop its tag.
+
+`spine-authoring`'s in-lane reference changes with the check: a test case's
+`Evidence` cell names a test only from the commit that writes that test and its
+tag, and an intent row holds a parenthetical note until then. This replaces an
+earlier entry's line that those cells name the tests the build will create. A
+procedure or brief of your own that says so moves with it.
+
+This is the one forced migration for test-file tags; no second one follows. No
+setting and no schema changes.
+
+**Kit-owned files — overwrite:** `scripts/check_trajectory.py`,
+`scripts/trajectory_arch.py`,
+`skills/spine-authoring/references/in-lane.md`. Two `scope: this-repo` skills
+changed too, only if you vendored them: `skills/coordinator-cycle/` and
+`skills/byte-budget-guard/SKILL.md`.
+
+**Regenerated files:** `docs/process.md`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

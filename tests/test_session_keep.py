@@ -7,6 +7,8 @@ calls through `session_service`, and the layer is INERT at the shipped
 `session_keep`'s. Driven in memory with an injected launch over the recorded
 fixtures in `tests/golden/sessions/` (all three LIVE: the claude one
 recorded 2026-09-28, the codex and opencode ones 2026-09-30, WI-541). The store lives under a temporary repository root.
+
+Implements: TC-266, TC-268, TC-303
 """
 
 import errno
@@ -631,6 +633,7 @@ def test_records_are_written_through_their_own_temporary_file(tmp_path):
 
 
 def test_the_store_lock_excludes_a_second_holder(tmp_path):
+    """Implements: TC-317"""
     with keep.store_lock(tmp_path):
         with pytest.raises(keep.StoreBusy):
             with keep.store_lock(tmp_path, wait=0.1):
@@ -666,7 +669,10 @@ def test_a_lock_create_refused_once_as_access_denied_is_retried_and_taken(
 ):
     """Windows refuses the create as access denied while a holder's delete
     of the lock is still running (WI-923): the lock reads as held, and the
-    next attempt takes it."""
+    next attempt takes it.
+
+    Implements: TC-267
+    """
     attempts = _refuse_lock_creates(monkeypatch, errno.EACCES, times=1)
     store = tmp_path / "store"
     with keep.dir_lock(store) as directory:
@@ -678,6 +684,7 @@ def test_a_lock_create_refused_once_as_access_denied_is_retried_and_taken(
 def test_a_lock_create_refused_as_access_denied_past_the_wait_is_busy_and_named(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-267"""
     attempts = _refuse_lock_creates(monkeypatch, errno.EACCES)
     store = tmp_path / "store"
     with pytest.raises(keep.StoreBusy) as busy:
@@ -689,6 +696,7 @@ def test_a_lock_create_refused_as_access_denied_past_the_wait_is_busy_and_named(
 
 
 def test_any_other_lock_create_refusal_is_raised_at_once(tmp_path, monkeypatch):
+    """Implements: TC-267"""
     attempts = _refuse_lock_creates(monkeypatch, errno.ENOSPC, times=1)
     with pytest.raises(OSError) as refused:
         with keep.dir_lock(tmp_path / "store"):
@@ -812,6 +820,7 @@ def _first_calls(tmp_path, count=2):
 def test_two_concurrent_first_calls_mint_one_session_and_run_one_unretained(
     tmp_path, capsys
 ):
+    """Implements: TC-329"""
     _route(tmp_path)  # the registry exists before the two calls race
     kept = _first_calls(tmp_path)
     minting = [k for k in kept if k is not None]
@@ -833,6 +842,7 @@ def test_two_concurrent_first_calls_mint_one_session_and_run_one_unretained(
 
 
 def test_a_crashed_first_calls_lease_expires_and_is_retired(tmp_path, monkeypatch):
+    """Implements: TC-329"""
     crashed = _keep(tmp_path, ON, lease_seconds=5)  # minted, never bookkept
     assert crashed is not None and crashed.session_id == ""
     assert _keep(tmp_path, ON) is None  # its lease holds while it is live
@@ -852,6 +862,7 @@ def test_a_crashed_first_calls_lease_expires_and_is_retired(tmp_path, monkeypatc
 def test_a_late_first_mint_never_replaces_the_session_that_took_its_lease_over(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-329"""
     crashed = _keep(tmp_path, ON, lease_seconds=5)  # minted, never bookkept
     later = keep.time.time() + 60
     monkeypatch.setattr(keep.time, "time", lambda: later)  # the lease expired
@@ -867,6 +878,7 @@ def test_a_late_first_mint_never_replaces_the_session_that_took_its_lease_over(
 
 
 def test_a_first_mint_that_raises_removes_its_lease_only_record(tmp_path):
+    """Implements: TC-329"""
     kept = _keep(tmp_path, ON)
     assert _state(tmp_path)["lease"]["holder"] == kept.holder
 
@@ -886,7 +898,10 @@ def test_a_first_call_whose_lock_create_is_refused_as_access_denied_runs_unretai
 ):
     """The observed path (WI-923): a second first call meeting an access
     refusal at the store lock retries it, takes the lock, meets the first
-    call's lease and runs unretained, naming why; nothing escapes."""
+    call's lease and runs unretained, naming why; nothing escapes.
+
+    Implements: TC-329
+    """
     first = _keep(tmp_path, ON)
     assert first is not None and first.session_id == ""
     capsys.readouterr()
@@ -903,6 +918,7 @@ def test_a_first_call_whose_lock_create_is_refused_as_access_denied_runs_unretai
 
 
 def test_at_dial_zero_a_first_call_writes_no_lease(tmp_path):
+    """Implements: TC-329"""
     assert _keep(tmp_path, keep.KeepConfig()) is None
     assert not keep.store_dir(tmp_path).exists()
 
@@ -1104,7 +1120,10 @@ def test_a_keep_warm_ping_from_the_primary_checkout_spools_its_log(
     """The dispatcher's warmer is rooted at the primary checkout, which is
     never a lane (WI-960): the ping's log is written to the primary's spool,
     nothing is committed, and trunk's HEAD does not move, even with a claimed
-    lane beside it."""
+    lane beside it.
+
+    Implements: TC-384
+    """
     claimed_lane(tmp_path)
     primary = tmp_path / "primary"
     head = fixture_git(primary, "rev-parse", "HEAD")
@@ -1228,6 +1247,7 @@ def _logged_outcomes(tmp_path):
 def test_a_ping_whose_tree_cannot_be_ended_is_recorded_then_raised(
     tmp_path, monkeypatch, end
 ):
+    """Implements: TC-268"""
     root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     warmer, exc, committed = _tree_ping(root, monkeypatch, dirty=False)
     with pytest.raises(svc.agent_session.TreeNotEnded) as raised:
@@ -1244,6 +1264,7 @@ def test_a_ping_whose_tree_cannot_be_ended_is_recorded_then_raised(
 def test_over_a_dirty_trunk_the_unended_tree_is_raised_unrecorded(
     tmp_path, monkeypatch, capsys, end
 ):
+    """Implements: TC-268"""
     warmer, exc, committed = _tree_ping(tmp_path, monkeypatch, dirty=True)
     with pytest.raises(svc.agent_session.TreeNotEnded) as raised:
         if end == "tick":
@@ -1260,6 +1281,7 @@ def test_over_a_dirty_trunk_the_unended_tree_is_raised_unrecorded(
 
 
 def test_a_failed_recording_never_replaces_the_unended_tree(tmp_path, monkeypatch):
+    """Implements: TC-268"""
     warmer, exc, _ = _tree_ping(tmp_path, monkeypatch, dirty=False)
     broken = OSError("the log could not be written")
 
@@ -1276,6 +1298,7 @@ def test_a_failed_recording_never_replaces_the_unended_tree(tmp_path, monkeypatc
 def test_an_ordinary_ping_failure_is_still_recorded_and_swallowed(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-268"""
     root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     warmer, _, committed = _tree_ping(
         root, monkeypatch, dirty=False, exc=RuntimeError("launch broke")
@@ -1699,6 +1722,7 @@ def _reviewer_toml(root, body):
 
 
 def test_two_iteration_rounds_resume_one_review_session(tmp_path):
+    """Implements: TC-351"""
     seen = []
     first = _review(tmp_path, REVIEW_ON, LANE_A, seen=seen)
     second = _review(tmp_path, REVIEW_ON, LANE_A, seen=seen)
@@ -1713,6 +1737,7 @@ def test_two_iteration_rounds_resume_one_review_session(tmp_path):
 
 
 def test_a_second_lane_on_the_same_route_does_not_resume_the_first(tmp_path):
+    """Implements: TC-351"""
     seen = []
     _review(tmp_path, REVIEW_ON, LANE_A, seen=seen)
     _review(tmp_path, REVIEW_ON, LANE_B, seen=seen)
@@ -1725,6 +1750,7 @@ def test_a_second_lane_on_the_same_route_does_not_resume_the_first(tmp_path):
 
 
 def test_the_empty_scope_keeps_the_adjudicators_file_name(tmp_path):
+    """Implements: TC-351"""
     import hashlib
 
     key = hashlib.sha256(b"ANTHROPIC-ROUTE").hexdigest()[:24]
@@ -1756,6 +1782,7 @@ def test_the_empty_scope_keeps_the_adjudicators_file_name(tmp_path):
 
 
 def test_a_record_naming_another_scope_reads_as_no_record(tmp_path):
+    """Implements: TC-351"""
     seen = []
     _review(tmp_path, REVIEW_ON, LANE_A, seen=seen)
     a = keep._store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
@@ -1815,6 +1842,7 @@ def test_the_shipped_reviewer_dial_is_off_and_fresh():
 
 
 def test_keep_warm_never_pings_a_reviewer_record(tmp_path):
+    """Implements: TC-351"""
     _review(tmp_path, REVIEW_ON, LANE_A)
     record = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
     warm = keep.KeepConfig(
@@ -1832,6 +1860,7 @@ def _final_worker():
 def test_the_gating_round_in_fresh_mode_mints_fresh_and_retires_the_iteration(
     tmp_path,
 ):
+    """Implements: TC-351"""
     _reviewer_toml(tmp_path, "[reviewer]\ncontext_reset_pct = 50\n")
     worker = _final_worker()
     scope, stage, pin = keep.review_retention(tmp_path, worker, "REVIEW-A", True)
@@ -1854,6 +1883,7 @@ def test_the_gating_round_in_fresh_mode_mints_fresh_and_retires_the_iteration(
 
 
 def test_persisted_mode_resumes_only_the_final_reviewers_scope(tmp_path):
+    """Implements: TC-351"""
     _reviewer_toml(
         tmp_path, '[reviewer]\ncontext_reset_pct = 50\nfinal_reviewer = "persisted"\n'
     )
@@ -1877,12 +1907,14 @@ def test_persisted_mode_resumes_only_the_final_reviewers_scope(tmp_path):
 
 
 def test_a_lane_with_no_claim_base_retains_no_reviewer(tmp_path):
+    """Implements: TC-351"""
     _reviewer_toml(tmp_path, "[reviewer]\ncontext_reset_pct = 50\n")
     worker = {"train": "wi-1", "claim": None}
     assert keep.review_retention(tmp_path, worker, "REVIEW-A", True) == NO_RETENTION
 
 
 def test_an_unretained_call_logs_a_fresh_unscoped_session(tmp_path):
+    """Implements: TC-351"""
     out = svc.act(_call(tmp_path, "ANTHROPIC", None, _launch(_claude_stream(20))))
     assert out.metrics["session-mode"] == "fresh" and out.metrics["keep-scope"] == ""
     meta = {"session": "001", "stamp": "20260101-000000", **out.metrics}
@@ -1894,6 +1926,7 @@ def test_an_unretained_call_logs_a_fresh_unscoped_session(tmp_path):
 def test_the_loop_draw_pins_a_narrow_round_and_its_launch_keeps_its_scope(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-351"""
     from types import SimpleNamespace
 
     al = load_script("agent_loop")
@@ -1947,6 +1980,7 @@ def test_a_persisted_final_reviewer_reads_fresh_with_retention_off(tmp_path):
 
 
 def test_review_retention_names_the_stage_it_settled(tmp_path):
+    """Implements: TC-351"""
     # F1: the stage is a typed fact of the draw, which the session log's
     # review-scope kind is derived from.
     worker = _final_worker()
@@ -1970,6 +2004,7 @@ def _store_file(tmp_path, name, body):
 
 
 def test_a_malformed_scoped_record_is_no_record_and_the_draw_mints(tmp_path):
+    """Implements: TC-351"""
     # F2: the reviewer's object, a scope and a state but no identity, read as
     # no record by the store's one reader: the draw pins nothing and the
     # round mints, where it raised KeyError 'family' before.
@@ -2009,6 +2044,7 @@ def test_a_malformed_scoped_record_is_no_record_and_the_draw_mints(tmp_path):
     ],
 )
 def test_a_record_of_the_wrong_shape_is_no_record_at_its_own_name(tmp_path, record):
+    """Implements: TC-351"""
     # F2: filed under its own name, a record whose identity or shape is not
     # one the store declares still reads as no record, so nothing pins,
     # resumes or crashes on it.
@@ -2020,6 +2056,7 @@ def test_a_record_of_the_wrong_shape_is_no_record_at_its_own_name(tmp_path, reco
 
 
 def test_a_misfiled_or_non_object_record_is_no_record_for_every_scan(tmp_path):
+    """Implements: TC-351"""
     # F2: discovery, the pin and keep-warm read through the one reader.
     _review(tmp_path, REVIEW_ON, LANE_A)
     a = keep._store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
@@ -2064,6 +2101,7 @@ def _gating_draws(ctx, st, al, count):
 def test_consecutive_gating_draws_resume_the_persisted_final_reviewer(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-351"""
     # F4: with two available weighted routes, the gating round's draw pins the
     # live final reviewer's route, so the next gate resumes it instead of
     # minting another reviewer on the other route.
@@ -2085,6 +2123,7 @@ def test_consecutive_gating_draws_resume_the_persisted_final_reviewer(
 
 
 def test_an_unavailable_final_route_falls_back_and_mints(tmp_path, monkeypatch):
+    """Implements: TC-351"""
     # F4: the pin is a preference: a cooling final route falls back through
     # the ordinary selection, and the record there is another route's: it mints.
     al = load_script("agent_loop")
@@ -2113,6 +2152,7 @@ def test_an_unavailable_final_route_falls_back_and_mints(tmp_path, monkeypatch):
 
 
 def test_a_changed_reviewer_template_drains_the_retained_reviewer(tmp_path):
+    """Implements: TC-351"""
     # F3, end to end through the keep operation: a reviewer minted under the
     # shipped reviewer template retires at its next round once the operator
     # wires an override for its phase, and that round mints; another phase's
@@ -2173,6 +2213,7 @@ def _rewrite_record(tmp_path, scope, edit, family="ANTHROPIC"):
     ],
 )
 def test_a_live_record_missing_a_field_its_consumers_read_mints_fresh(tmp_path, edit):
+    """Implements: TC-351"""
     # F1 (review 002), end to end: a live scoped record whose session fields
     # are incomplete or mistyped is no record at the store's one reader, so
     # the next round mints, and the service's bookkeeping lands the new
@@ -2190,6 +2231,7 @@ def test_a_live_record_missing_a_field_its_consumers_read_mints_fresh(tmp_path, 
 
 
 def test_every_record_variant_the_store_writes_reads_back(tmp_path):
+    """Implements: TC-351"""
     # F1 (review 002): the declared variants are the writers' own: a first
     # call's lease-only record, the retired-first record a stale first lease
     # leaves (with the next call's lease on it), and the full live record.
@@ -2230,6 +2272,7 @@ def _add_rule(template, rule):
 def test_an_edited_shipped_reviewer_template_reaches_the_next_rounds_brief(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-351"""
     # F2 (review 002): an ordinary edit of the shipped reviewer template
     # between two rounds changes the next round's governing identity AND its
     # brief: the reviewer is never drained onto a template it is not sent.
@@ -2262,6 +2305,7 @@ def test_an_edited_shipped_reviewer_template_reaches_the_next_rounds_brief(
 def test_a_review_rounds_brief_and_identity_share_one_template_read(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-351"""
     # F2 (review 002): the loop resolves the reviewer template once per round,
     # at its draw; the launch's governing identity is that same content, so a
     # file edit after the brief rendered is neither half-seen nor hashed new.
@@ -2311,6 +2355,7 @@ def _codex_review(tmp_path, seen):
 def test_a_mistyped_optional_field_is_no_record_and_the_resumed_review_mints(
     tmp_path, monkeypatch, field
 ):
+    """Implements: TC-351"""
     # F1 (gate review 007, dispute DA): a live scoped record whose optional
     # field is of a type no writer produces is no record at the store's one
     # reader, so the next review round mints instead of resuming it and
@@ -2500,6 +2545,7 @@ def _marker_path(tmp_path, tag):
 def test_a_bookkept_call_under_contention_keeps_its_observation_and_resumes(
     tmp_path, short_apply
 ):
+    """Implements: TC-267"""
     _adjudicate(tmp_path, ON, _claude_stream(10))
     held = _keep(tmp_path, ON, wi="WI-2")
     sid = held.session_id
@@ -2520,6 +2566,7 @@ def test_a_bookkept_call_under_contention_keeps_its_observation_and_resumes(
 def test_a_draining_call_under_contention_drains_and_is_not_retired(
     tmp_path, short_apply
 ):
+    """Implements: TC-267"""
     _adjudicate(tmp_path, ON, _claude_stream(10), wi="WI-1")
     held = _keep(tmp_path, ON, wi="WI-1")
     with keep.store_lock(tmp_path):
@@ -2537,7 +2584,10 @@ def test_an_auth_failure_release_under_contention_never_retires_the_session(
 ):
     """WI-846 round 1 MAJOR 3: the lock held across an authentication
     failure's release left the lease; once it expired the next call retired
-    the session 'lease expired unreleased'."""
+    the session 'lease expired unreleased'.
+
+    Implements: TC-267
+    """
     _adjudicate(tmp_path, ON, _claude_stream(10))
     held = _keep(tmp_path, ON, lease_seconds=5)
     runner = _launch(_auth_stream(held.session_id), code=1)
@@ -2552,6 +2602,7 @@ def test_an_auth_failure_release_under_contention_never_retires_the_session(
 def test_a_keep_warm_ping_under_contention_leaves_no_lease_and_stays_warm(
     tmp_path, short_apply, monkeypatch
 ):
+    """Implements: TC-267"""
     _adjudicate(tmp_path, ON, _claude_stream(10))
     sid = _state(tmp_path)["session_id"]
     warmer = _warmer(tmp_path, _launch(_claude_stream(11, sid=sid)))
@@ -2579,7 +2630,10 @@ def test_a_keep_warm_ping_under_contention_leaves_no_lease_and_stays_warm(
 
 def test_a_release_marker_never_makes_keep_warm_skip_the_record(tmp_path, short_apply):
     """WI-846 round 2 MAJOR 4: a release published under contention made
-    `due_routes` skip the record, so keep-warm never applied it."""
+    `due_routes` skip the record, so keep-warm never applied it.
+
+    Implements: TC-267
+    """
     _adjudicate(tmp_path, ON, _claude_stream(10))
     held = _keep(tmp_path, ON)
     with keep.store_lock(tmp_path):
@@ -2604,7 +2658,10 @@ def test_a_reader_that_saw_expiry_after_a_release_was_published_does_not_retire(
     """WI-846 round 2 MAJOR 5: a locked reader that read the markers before a
     release was published, then read the clock and saw the lease expired,
     retired it. Here the release is published at the instant of the reader's
-    clock read: the reader reads the clock first, so it lists the release."""
+    clock read: the reader reads the clock first, so it lists the release.
+
+    Implements: TC-267
+    """
     _adjudicate(tmp_path, ON, _claude_stream(10))
     held = _keep(tmp_path, ON, lease_seconds=5)
     later, published = keep.time.time() + 60, []
@@ -2624,7 +2681,10 @@ def test_a_reader_that_saw_expiry_after_a_release_was_published_does_not_retire(
 def test_a_reader_never_deletes_a_marker_it_did_not_apply(tmp_path, monkeypatch):
     """WI-846 round 3 MAJOR 2: a reader holding an older marker unlinked a
     newer release published while it held the lock, without applying it,
-    and the current session was retired."""
+    and the current session was retired.
+
+    Implements: TC-267
+    """
     _adjudicate(tmp_path, ON, _claude_stream(10))
     current = _keep(tmp_path, ON, lease_seconds=5)
     old = keep.Keep(**{**current.__dict__, "holder": "adjudicate:old"})
@@ -2646,6 +2706,7 @@ def test_a_reader_never_deletes_a_marker_it_did_not_apply(tmp_path, monkeypatch)
 
 
 def test_retire_scope_under_contention_retires_on_the_next_read(tmp_path, short_apply):
+    """Implements: TC-267"""
     _review(tmp_path, REVIEW_ON, LANE_A)
     assert keep.scoped_route(tmp_path, LANE_A) == "ANTHROPIC-ROUTE"
     with keep.store_lock(tmp_path):
@@ -2665,6 +2726,7 @@ def test_retire_scope_under_contention_retires_on_the_next_read(tmp_path, short_
 
 
 def test_a_retire_marker_spares_a_newer_session_and_a_lease_it_does_not_hold():
+    """Implements: TC-267"""
     record = {
         "family": "ANTHROPIC",
         "route_id": "R",
@@ -2696,6 +2758,7 @@ def test_a_retire_marker_spares_a_newer_session_and_a_lease_it_does_not_hold():
 def test_a_malformed_marker_is_deleted_with_one_line_and_read_as_absent(
     tmp_path, capsys
 ):
+    """Implements: TC-267"""
     _adjudicate(tmp_path, ON, _claude_stream(10))
     before = _state(tmp_path)
     bad = _marker_path(tmp_path, "0123456789abcdef")
@@ -2712,6 +2775,7 @@ def test_a_malformed_marker_is_deleted_with_one_line_and_read_as_absent(
 def test_an_unreadable_marker_stays_and_holds_back_the_expired_lease(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-267"""
     _adjudicate(tmp_path, ON, _claude_stream(10))
     held = _keep(tmp_path, ON, lease_seconds=5)
     unreadable = _marker_path(tmp_path, "fedcba9876543210")
@@ -2727,6 +2791,7 @@ def test_an_unreadable_marker_stays_and_holds_back_the_expired_lease(
 
 
 def test_a_failed_publication_raises_to_the_caller(tmp_path, monkeypatch):
+    """Implements: TC-267"""
     _adjudicate(tmp_path, ON, _claude_stream(10))
     held = _keep(tmp_path, ON)
 
@@ -2763,7 +2828,10 @@ def test_a_replayed_bookkeep_marker_never_frees_a_newer_holders_lease(
 ):
     """F1: call 2 completes and its marker's deletion fails; call 3 takes the
     session; call 4's locked read replays call 2's marker. It must not drop
-    call 3's lease (call 4 runs unretained) nor overwrite newer observations."""
+    call 3's lease (call 4 runs unretained) nor overwrite newer observations.
+
+    Implements: TC-267
+    """
     _adjudicate(tmp_path, ON, _claude_stream(10))  # call 1 mints
     second = _keep(tmp_path, ON, wi="WI-2")
     sid = second.session_id
@@ -2782,6 +2850,7 @@ def test_a_replayed_bookkeep_marker_never_frees_a_newer_holders_lease(
 def test_after_a_failed_unlink_two_competing_resumed_calls_get_one_session(
     tmp_path, stuck_markers
 ):
+    """Implements: TC-267"""
     _adjudicate(tmp_path, ON, _claude_stream(10))
     second = _keep(tmp_path, ON, wi="WI-2")
     svc.act(_call(tmp_path, "ANTHROPIC", second, _launch(_claude_stream(20))))
@@ -2802,6 +2871,7 @@ def test_after_a_failed_unlink_two_competing_resumed_calls_get_one_session(
 
 
 def test_a_replayed_release_is_inert(tmp_path, stuck_markers):
+    """Implements: TC-267"""
     _adjudicate(tmp_path, ON, _claude_stream(10))
     second = _keep(tmp_path, ON, wi="WI-2")
     keep.keep_release(tmp_path, second)  # e.g. an authentication failure
@@ -2812,6 +2882,7 @@ def test_a_replayed_release_is_inert(tmp_path, stuck_markers):
 
 
 def test_a_replayed_retire_is_inert(tmp_path, stuck_markers):
+    """Implements: TC-267"""
     _adjudicate(tmp_path, ON, _claude_stream(10))
     second = _keep(tmp_path, ON, wi="WI-2")
     keep.keep_abandon(tmp_path, second, "launch raised")
@@ -2827,6 +2898,7 @@ def test_a_replayed_retire_is_inert(tmp_path, stuck_markers):
 
 
 def test_a_replayed_scope_retirement_spares_the_next_reviewer(tmp_path, stuck_markers):
+    """Implements: TC-267"""
     _review(tmp_path, REVIEW_ON, LANE_A)
     keep.retire_scope(tmp_path, LANE_A, "gating round drawn")
     _review(tmp_path, REVIEW_ON, LANE_A)  # the next iteration mints
@@ -2839,7 +2911,10 @@ def test_an_overrun_calls_late_bookkeep_never_frees_its_successors_lease(
 ):
     """The same class without a failed unlink: call 2 overran its lease, call
     3 retired the session and took the route; call 2's bookkeeping then lands
-    late. It must not touch the record call 3 now holds."""
+    late. It must not touch the record call 3 now holds.
+
+    Implements: TC-267
+    """
     _adjudicate(tmp_path, ON, _claude_stream(10))
     second = _keep(tmp_path, ON, wi="WI-2", lease_seconds=5)
     _later(monkeypatch)

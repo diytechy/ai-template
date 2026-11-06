@@ -64,6 +64,7 @@ def _seeded(root):
 
 
 def test_a_landed_record_reads_its_landing_commit(tmp_path):
+    """Implements: TC-300"""
     _seeded(tmp_path)
     _record(tmp_path, "SR-002", "SR-003")
     sha = _commit(tmp_path, "retire SR-002")
@@ -78,12 +79,14 @@ def test_a_landed_record_reads_its_landing_commit(tmp_path):
 
 
 def test_an_uncommitted_record_reads_unknown(tmp_path):
+    """Implements: TC-300"""
     _seeded(tmp_path)
     _record(tmp_path, "SR-002")
     assert rt.records(tmp_path)[0]["commit"] == rt.UNKNOWN
 
 
 def test_a_record_in_a_root_commit_reads_unknown(tmp_path):
+    """Implements: TC-300"""
     # A commit with no parent deleted nothing: a squashed history's single
     # commit is not the deleting commit, however the record arrived in it.
     _init(tmp_path)
@@ -93,6 +96,7 @@ def test_a_record_in_a_root_commit_reads_unknown(tmp_path):
 
 
 def test_a_shallow_clone_reads_unknown(tmp_path):
+    """Implements: TC-300"""
     origin = tmp_path / "origin"
     origin.mkdir()
     _seeded(origin)
@@ -104,6 +108,7 @@ def test_a_shallow_clone_reads_unknown(tmp_path):
 
 
 def test_records_come_in_tier_then_number_order(tmp_path):
+    """Implements: TC-300"""
     for row_id in ("TC-002", "SR-010", "SN-004", "SR-002", "LLR-001"):
         _record(tmp_path, row_id)
     assert [r["id"] for r in rt.records(tmp_path)] == [
@@ -119,11 +124,13 @@ def test_records_come_in_tier_then_number_order(tmp_path):
 
 
 def test_no_record_renders_no_tab():
+    """Implements: TC-300"""
     assert views.retired_panel([], 0) is None
     assert views.retired_panel([], 12) is None
 
 
 def test_the_panel_renders_one_escaped_row_per_record():
+    """Implements: TC-300"""
     rows = [
         {
             "id": "SR-002",
@@ -159,6 +166,7 @@ def test_the_panel_renders_one_escaped_row_per_record():
 
 
 def test_the_caption_counts_the_ids_retired_before_the_record():
+    """Implements: TC-300"""
     rows = [{"id": "SR-2", "date": "d", "successor": "", "reason": "r", "commit": "c"}]
     _tab, panel = views.retired_panel(rows, 108)
     assert "108 ids retired before the record began" in panel
@@ -168,6 +176,7 @@ def test_the_caption_counts_the_ids_retired_before_the_record():
 
 
 def test_the_dashboard_carries_the_tab_only_when_a_record_exists(tmp_path):
+    """Implements: TC-300"""
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
     assert 'id="tab-retired"' not in html_of(tmp_path)
@@ -194,6 +203,7 @@ def _rendered_history(root):
 
 
 def test_a_fabricated_deleting_commit_is_stale_where_history_answers(tmp_path):
+    """Implements: TC-300"""
     sha = _rendered_history(tmp_path)
     text = html_of(tmp_path)
     resolved = '<code class="retcommit" data-id="SR-009">{}</code>'.format(sha[:7])
@@ -212,6 +222,7 @@ def test_a_fabricated_deleting_commit_is_stale_where_history_answers(tmp_path):
 
 
 def test_a_checkout_that_cannot_resolve_the_commit_accepts_the_page(tmp_path):
+    """Implements: TC-300"""
     # Rendered with the full history, checked in a depth-one clone that cannot
     # name the landing: the page is fresh, since no source moved.
     origin = tmp_path / "origin"
@@ -225,6 +236,7 @@ def test_a_checkout_that_cannot_resolve_the_commit_accepts_the_page(tmp_path):
 
 
 def test_any_other_change_to_a_record_is_stale(tmp_path):
+    """Implements: TC-300"""
     _rendered_history(tmp_path)
     text = html_of(tmp_path)
     (tmp_path / "PROJECT_STATE.html").write_text(

@@ -15,6 +15,8 @@ the pair that pins the facade's own guarded sibling import. Everything below the
 facade moved to the module named for its production sibling —
 `test_traj_{parse,graph,views,panels,render,render_sweeps,status}.py` — and the
 fixture builders more than one of them needs live in `tests/traj_fixtures.py`.
+
+Implements: TC-060
 """
 
 import re
@@ -31,6 +33,7 @@ from traj_fixtures import (
 
 
 def test_asof_stamp_from_git_and_excluded_from_check(tmp_path):
+    """Implements: TC-079"""
     # WI-039: the as-of line derives from the last source-touching COMMIT
     # (never now(), so generation stays deterministic), is visible in the
     # shell, and is excluded from the --check byte-compare — a stamp-only
@@ -68,6 +71,7 @@ def test_asof_stamp_from_git_and_excluded_from_check(tmp_path):
 
 
 def test_no_git_means_no_stamp_and_stays_deterministic(tmp_path):
+    """Implements: TC-079"""
     # Outside a git repo the stamp is simply absent — no crash, no wall clock.
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
@@ -78,7 +82,10 @@ def test_no_git_means_no_stamp_and_stays_deterministic(tmp_path):
 
 
 def test_facade_reexports_pending_compatibility_names():
-    """The supported HTML facade retains its pending-state compatibility seam."""
+    """The supported HTML facade retains its pending-state compatibility seam.
+
+    Implements: TC-194
+    """
     gt = load_script("gen_trajectory")
     pending = load_script("pending")
     # load_script creates fresh module objects, so assert the exported target's
@@ -94,6 +101,7 @@ def test_facade_reexports_pending_compatibility_names():
 
 
 def test_generates_self_contained_dashboard(tmp_path):
+    """Implements: TC-038"""
     make_repo(tmp_path)
     proc = gen(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -171,7 +179,10 @@ def test_draft_renders_as_its_own_status_inside_the_not_started_bucket(tmp_path)
 def test_mobile_responsive_shell(tmp_path):
     """SR-038: the dashboard is usable on mobile viewports — the responsive
     shell markers must be present in the generated HTML (viewport meta,
-    narrow-viewport single-column collapse, scrolling panels)."""
+    narrow-viewport single-column collapse, scrolling panels).
+
+    Implements: TC-079
+    """
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
@@ -317,6 +328,7 @@ def test_drill_focus_ring_is_distinct_from_the_active_accent(tmp_path):
 
 
 def test_generation_is_deterministic(tmp_path):
+    """Implements: TC-079"""
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
     first = (tmp_path / "PROJECT_STATE.html").read_bytes()
@@ -338,6 +350,7 @@ def test_renders_without_readme_uses_fallbacks(tmp_path):
 
 
 def test_check_passes_fresh_and_trips_stale(tmp_path):
+    """Implements: TC-079"""
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
     fresh = gen(tmp_path, "--check")
@@ -352,6 +365,7 @@ def test_check_passes_fresh_and_trips_stale(tmp_path):
 
 
 def test_check_missing_html_is_stale(tmp_path):
+    """Implements: TC-079"""
     # Real work items but no generated HTML yet must FAIL --check (not vacuous),
     # so CI catches a repo that forgot to commit its dashboard.
     make_repo(tmp_path)

@@ -11,6 +11,8 @@ one advisory, and the stakeholder rows never leak into the need universe.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: every case bootstraps a
 scaffold and runs the checker as a subprocess.
+
+Implements: TC-215
 """
 
 import tomllib

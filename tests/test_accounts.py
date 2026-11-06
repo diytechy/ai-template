@@ -109,6 +109,7 @@ def _registry(tmp_path, agents=ROWS + ACCOUNTS):
 
 
 def test_account_tables_load_and_a_qualified_entry_carries_its_account(tmp_path):
+    """Implements: TC-361"""
     registry, errors = _registry(tmp_path)
     assert errors == []
     work = registry.accounts["WORK"]
@@ -152,6 +153,7 @@ def test_account_tables_load_and_a_qualified_entry_carries_its_account(tmp_path)
 def test_a_malformed_account_table_is_an_error_naming_it_and_is_dropped(
     tmp_path, table, why
 ):
+    """Implements: TC-361"""
     registry, errors = _registry(tmp_path, ROWS + table)
     named = [e for e in errors if "[account.BAD]" in e or "[account.bad]" in e]
     assert named and why in named[0], errors
@@ -160,6 +162,7 @@ def test_a_malformed_account_table_is_an_error_naming_it_and_is_dropped(
 
 
 def test_two_accounts_naming_one_token_variable_are_both_dropped(tmp_path):
+    """Implements: TC-361"""
     shared = (
         '[account.T1]\ncli = "claude"\ntoken_file_variable = "SAME_798"\n'
         '[account.T2]\ncli = "claude"\ntoken_file_variable = "SAME_798"\n'
@@ -176,6 +179,7 @@ def test_two_accounts_naming_one_token_variable_are_both_dropped(tmp_path):
 def test_a_malformed_qualifier_is_an_enable_list_error_never_the_unqualified_entry(
     tmp_path, token
 ):
+    """Implements: TC-361"""
     registry, _ = _registry(tmp_path)
     entries, errors = route.resolve_enabled([token], registry)
     assert entries == []  # never stripped to CLAUDE-A
@@ -183,6 +187,7 @@ def test_a_malformed_qualifier_is_an_enable_list_error_never_the_unqualified_ent
 
 
 def test_route_and_account_environments_that_collide_are_refused(tmp_path):
+    """Implements: TC-361"""
     rows = ROWS + (
         '[agent.CLAUDE-HOME]\nfamily = "F"\nmodel = "m"\nversion = "1"\n'
         'tier = "strong"\ncmd_template = "claude -p"\nenv = "CLAUDE_CONFIG_DIR=/elsewhere"\n'
@@ -200,6 +205,7 @@ def test_route_and_account_environments_that_collide_are_refused(tmp_path):
 def test_an_unreadable_enable_list_is_an_error_and_an_absent_one_is_routing_off(
     tmp_path,
 ):
+    """Implements: TC-361"""
     docs = _docs(tmp_path)
     assert route.load_enabled_entries(docs / "agents-enabled") == ([], [])  # absent
     (docs / "agents-enabled").mkdir()  # exists, cannot be read as a file
@@ -210,6 +216,7 @@ def test_an_unreadable_enable_list_is_an_error_and_an_absent_one_is_routing_off(
 
 
 def test_keep_warm_is_off_on_an_unreadable_enable_list(tmp_path, capsys):
+    """Implements: TC-361"""
     docs = _docs(tmp_path)
     (docs / "agents-enabled").mkdir()
     on = keep.KeepConfig(context_reset_pct=50, keepwarm_minutes=50)
@@ -219,6 +226,7 @@ def test_keep_warm_is_off_on_an_unreadable_enable_list(tmp_path, capsys):
 
 
 def test_the_route_cli_exits_1_on_an_unreadable_enable_list(tmp_path, capsys):
+    """Implements: TC-361"""
     docs = _docs(tmp_path)
     (docs / "agents-enabled").mkdir()
     argv = ["--registry", str(docs / "agents.toml"), "--enabled"]
@@ -230,6 +238,7 @@ def test_the_route_cli_exits_1_on_an_unreadable_enable_list(tmp_path, capsys):
 def test_an_empty_registry_declares_nothing_and_an_unparseable_one_is_an_error(
     tmp_path,
 ):
+    """Implements: TC-365"""
     registry, errors = _registry(tmp_path, "")
     assert (dict(registry), registry.accounts, errors) == ({}, {}, [])
     registry, errors = _registry(tmp_path, "[account.X\ncli = 'claude'\n")
@@ -240,6 +249,7 @@ def test_an_empty_registry_declares_nothing_and_an_unparseable_one_is_an_error(
 
 
 def test_the_loop_routes_on_an_unreadable_enable_list_and_fails_preflight(tmp_path):
+    """Implements: TC-365"""
     docs = _docs(tmp_path)
     (docs / "agents-enabled").mkdir()
     setup = loop.resolve_routing_setup(docs)
@@ -248,6 +258,7 @@ def test_the_loop_routes_on_an_unreadable_enable_list_and_fails_preflight(tmp_pa
 
 
 def test_the_loop_fails_preflight_on_an_account_or_qualifier_error(tmp_path):
+    """Implements: TC-361"""
     agents = ROWS + ACCOUNTS + '[account.BAD]\ncli = "nope"\n'
     docs = _docs(tmp_path, agents, enabled=["CLAUDE-A@WORK", "CLAUDE-A@BAD"])
     setup = loop.resolve_routing_setup(docs)
@@ -257,6 +268,7 @@ def test_the_loop_fails_preflight_on_an_account_or_qualifier_error(tmp_path):
 
 
 def test_an_absent_registry_with_an_enable_list_fails_preflight(tmp_path):
+    """Implements: TC-365"""
     docs = tmp_path / "docs"
     docs.mkdir()
     (docs / "agents-enabled").write_text("CLAUDE-A@WORK\n", encoding="utf-8")
@@ -265,6 +277,7 @@ def test_an_absent_registry_with_an_enable_list_fails_preflight(tmp_path):
 
 
 def test_a_preference_may_name_a_qualified_entry():
+    """Implements: TC-361"""
     assert route.ENTRY_RE.match("CLAUDE-A@WORK")
     assert route.ENTRY_RE.match("CLAUDE-A")
     assert not route.ENTRY_RE.match("CLAUDE-A@WORK@X")
@@ -349,6 +362,7 @@ def _launched_env(root, registry, entry):
 def test_two_accounts_of_one_cli_launch_under_two_homes(
     tmp_path, config_dir, fixture_clis, cli
 ):
+    """Implements: TC-362"""
     registry, errors = _registry(tmp_path)
     assert errors == []
     prefix = cli[:2].upper()
@@ -372,6 +386,7 @@ def test_two_accounts_of_one_cli_launch_under_two_homes(
 def test_an_ambient_entry_has_no_kit_held_home(
     tmp_path, config_dir, fixture_clis, monkeypatch
 ):
+    """Implements: TC-362"""
     monkeypatch.delenv("CLAUDE_CONFIG_DIR", raising=False)
     registry, _ = _registry(tmp_path)
     seen = _launched_env(tmp_path, registry, "CLAUDE-A")
@@ -395,7 +410,10 @@ def test_a_qualified_entry_launches_on_every_template_form_the_launcher_reads(
 ):
     """The CLI a route launches is read by the launcher's own template parse,
     so a qualified entry is recognised on a JSON-array template and on a
-    quoted executable path with a space, as its ambient entry is."""
+    quoted executable path with a space, as its ambient entry is.
+
+    Implements: TC-361, TC-362
+    """
     template = {
         "json-array": '["claude", "-p", "--model", "{model}"]',
         "quoted-path": '"{}" -p --model {{model}}'.format(_spaced_claude(fixture_clis)),
@@ -415,6 +433,7 @@ def test_a_qualified_entry_launches_on_every_template_form_the_launcher_reads(
 
 
 def test_a_template_the_launcher_refuses_names_no_cli(tmp_path):
+    """Implements: TC-361"""
     row = SimpleNamespace(
         id="CLAUDE-J", cmd_template='["claude", 3]', model="m", env=""
     )
@@ -427,6 +446,7 @@ def test_a_template_the_launcher_refuses_names_no_cli(tmp_path):
 def test_the_launch_rule_refuses_a_route_env_that_names_the_home_or_a_shared_key(
     tmp_path, config_dir
 ):
+    """Implements: TC-362"""
     registry, _ = _registry(tmp_path)
     row = SimpleNamespace(**vars_of(registry["CLAUDE-A"]))
     for env in ("CLAUDE_CONFIG_DIR=/x", "ACCOUNT_ONLY=route"):
@@ -442,6 +462,7 @@ def vars_of(row):
 def test_a_login_account_with_no_home_is_refused_naming_its_provisioning(
     tmp_path, config_dir
 ):
+    """Implements: TC-362"""
     registry, _ = _registry(tmp_path)
     with pytest.raises(svc.SigninRefused) as refused:
         svc.entry_env(tmp_path, registry, "CODEX-A@CO1")
@@ -472,6 +493,7 @@ ASSIGNMENT = re.compile(r"\b[A-Za-z_][A-Za-z0-9_]*=")
 def test_the_provisioning_hint_names_each_variable_in_prose_with_its_value_quoted(
     tmp_path, monkeypatch, cli, expected
 ):
+    """Implements: TC-365"""
     base = tmp_path / "user config"  # a home holding a space
     monkeypatch.setenv("APPDATA" if os.name == "nt" else "XDG_CONFIG_HOME", str(base))
     hint = svc.provision_command(SimpleNamespace(id="A1", cli=cli))
@@ -483,6 +505,7 @@ def test_the_provisioning_hint_names_each_variable_in_prose_with_its_value_quote
 def test_a_token_account_home_is_created_empty_and_carries_the_token(
     tmp_path, config_dir, monkeypatch
 ):
+    """Implements: TC-362"""
     token = tmp_path / "outside" / "token"
     token.parent.mkdir()
     token.write_text("canary-798\n", encoding="utf-8")
@@ -498,6 +521,7 @@ def test_a_token_account_home_is_created_empty_and_carries_the_token(
 def test_a_token_account_whose_token_cannot_be_read_is_refused_before_its_home(
     tmp_path, config_dir
 ):
+    """Implements: TC-362"""
     registry, _ = _registry(tmp_path)
     with pytest.raises(svc.SigninRefused) as refused:
         svc.entry_env(tmp_path, registry, "CLAUDE-A@TOK")
@@ -510,6 +534,7 @@ def test_a_token_account_whose_token_cannot_be_read_is_refused_before_its_home(
 def test_an_unresolvable_user_config_dir_refuses_every_qualified_launch(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-362"""
     registry, _ = _registry(tmp_path)
     monkeypatch.setattr(keep, "user_config_dir", lambda environ=None: None)
     with pytest.raises(svc.SigninRefused, match="cannot be resolved"):
@@ -518,6 +543,7 @@ def test_an_unresolvable_user_config_dir_refuses_every_qualified_launch(
 
 
 def test_the_user_config_dir_follows_the_platform_rule():
+    """Implements: TC-362"""
     if os.name == "nt":
         assert keep.user_config_dir({"APPDATA": r"C:\Users\x\AppData\Roaming"}) == Path(
             r"C:\Users\x\AppData\Roaming"
@@ -534,6 +560,7 @@ def test_the_user_config_dir_follows_the_platform_rule():
 def test_a_probe_on_an_account_that_cannot_launch_fails_with_the_refusal(
     tmp_path, config_dir
 ):
+    """Implements: TC-362"""
     registry, _ = _registry(tmp_path)
     ok, transcript = loop.probe_route(
         registry["CODEX-A"], tmp_path, account=registry.accounts["CO1"]
@@ -545,6 +572,7 @@ def test_a_probe_on_an_account_that_cannot_launch_fails_with_the_refusal(
 
 
 def test_two_accounts_on_one_route_cool_and_select_independently(tmp_path):
+    """Implements: TC-363"""
     registry, _ = _registry(tmp_path)
     enabled = ["CLAUDE-A@WORK", "CLAUDE-A@HOME2"]
     cooldowns = {}
@@ -560,6 +588,7 @@ def test_two_accounts_on_one_route_cool_and_select_independently(tmp_path):
 def test_the_dual_plan_fallback_carries_the_failed_entry_and_refuses_errors(
     tmp_path, config_dir
 ):
+    """Implements: TC-363"""
     rows = ROWS + (
         '[agent.OTHER-A]\nfamily = "OTHER"\nmodel = "m"\nversion = "1"\n'
         'tier = "strong"\ncmd_template = "claude -p"\nnotes = "row"\n'
@@ -583,6 +612,7 @@ def test_the_dual_plan_fallback_carries_the_failed_entry_and_refuses_errors(
 
 
 def test_the_dual_plan_routes_page_on_an_unreadable_enable_list(tmp_path):
+    """Implements: TC-363"""
     docs = _docs(tmp_path)
     (docs / "agents-enabled").mkdir()
     routes, registry, note = runner._dp_routes(tmp_path, "strong")
@@ -590,6 +620,7 @@ def test_the_dual_plan_routes_page_on_an_unreadable_enable_list(tmp_path):
 
 
 def test_the_dual_plan_hats_launch_under_their_accounts(tmp_path, config_dir):
+    """Implements: TC-362"""
     for name in ("CL1", "CO1"):
         _home(config_dir, name).mkdir(parents=True)
     _docs(tmp_path, enabled=["CLAUDE-A@CL1", "CODEX-A@CO1"])
@@ -642,6 +673,7 @@ def _full_record(root, account, session="S1"):
 
 
 def test_a_record_written_before_accounts_is_not_its_own_and_mints_once(tmp_path):
+    """Implements: TC-364"""
     legacy = _full_record(tmp_path, None)
     path = keep.store_dir(tmp_path) / keep._record_name("FCLAUDE", "CLAUDE-A")
     path.parent.mkdir(parents=True)
@@ -654,6 +686,7 @@ def test_a_record_written_before_accounts_is_not_its_own_and_mints_once(tmp_path
 
 
 def test_another_accounts_record_is_never_resumed(tmp_path):
+    """Implements: TC-364"""
     with keep.store_lock(tmp_path):
         keep.store_save(tmp_path, _full_record(tmp_path, "WORK"))
     assert keep.store_load(tmp_path, "FCLAUDE", "CLAUDE-A", account="WORK")
@@ -665,6 +698,7 @@ def test_another_accounts_record_is_never_resumed(tmp_path):
 
 
 def test_a_marker_names_its_account_and_another_accounts_read_ignores_it(tmp_path):
+    """Implements: TC-364"""
     with keep.store_lock(tmp_path):
         keep.store_save(tmp_path, _full_record(tmp_path, "WORK"))
     kept = _keep_for(tmp_path, "WORK")
@@ -676,6 +710,7 @@ def test_a_marker_names_its_account_and_another_accounts_read_ignores_it(tmp_pat
 
 
 def test_a_scoped_records_pin_is_its_qualified_entry(tmp_path):
+    """Implements: TC-364"""
     record = {**_full_record(tmp_path, "WORK"), "scope": "lane@base:REVIEW-A:iteration"}
     with keep.store_lock(tmp_path):
         keep.store_save(tmp_path, record)
@@ -686,6 +721,7 @@ def test_a_scoped_records_pin_is_its_qualified_entry(tmp_path):
 
 
 def test_keep_warm_pings_only_enabled_entries_whose_account_resolves(tmp_path):
+    """Implements: TC-364"""
     registry, _ = _registry(tmp_path)
     routes = svc._warm_routes(
         registry, ["CLAUDE-A@WORK", "CLAUDE-A", "CODEX-A@CO1", "CLAUDE-A@GONE"]
@@ -703,6 +739,7 @@ def test_keep_warm_pings_only_enabled_entries_whose_account_resolves(tmp_path):
 def test_the_adjudicator_refuses_a_registry_error_an_undeclared_account_or_an_unreadable_list(
     tmp_path,
 ):
+    """Implements: TC-365"""
     _docs(tmp_path, enabled=["CLAUDE-A@TOK", "CLAUDE-A"])
     registry, why = coord.resolve_route(tmp_path, "CLAUDE-A@TOK")
     assert why is None and route.account_of(registry, "CLAUDE-A@TOK").id == "TOK"
@@ -728,6 +765,7 @@ def _signin(root, entry, capsys):
 def test_the_signin_probe_reads_a_token_account_from_its_file_only(
     tmp_path, config_dir, monkeypatch, capsys
 ):
+    """Implements: TC-365"""
     _docs(tmp_path, enabled=["CLAUDE-A@TOK"])
     lines = _signin(tmp_path, "CLAUDE-A@TOK", capsys)
     assert lines == [
@@ -747,6 +785,7 @@ def test_the_signin_probe_reads_a_token_account_from_its_file_only(
 def test_the_signin_probe_reads_a_login_account_from_its_own_home(
     tmp_path, config_dir, fixture_clis, capsys
 ):
+    """Implements: TC-365, TC-366"""
     _docs(tmp_path, enabled=["CLAUDE-A@WORK", "CLAUDE-A@HOME2", "CODEX-A@CO1"])
     lines = _signin(tmp_path, "CLAUDE-A@WORK", capsys)
     assert lines[0] == "signin [WORK] login: missing (unverified)"
@@ -773,6 +812,7 @@ def test_the_signin_probe_reads_a_login_account_from_its_own_home(
 
 
 def test_the_signin_probe_names_an_ambient_or_unresolved_entry(tmp_path, capsys):
+    """Implements: TC-365"""
     _docs(tmp_path, enabled=["CLAUDE-A"])
     assert _signin(tmp_path, "CLAUDE-A", capsys) == ["signin [-] ambient: ambient"]
     lines = _signin(tmp_path, "CLAUDE-A@WORK", capsys)
@@ -792,12 +832,14 @@ def test_the_signin_probe_names_an_ambient_or_unresolved_entry(tmp_path, capsys)
     ],
 )
 def test_the_claude_status_reader_takes_only_its_documented_pairs(code, text, expected):
+    """Implements: TC-365"""
     assert svc._claude_signin(code, text) == expected
 
 
 def test_a_retained_login_account_not_signed_in_is_refused_with_its_provisioning(
     tmp_path, config_dir, fixture_clis
 ):
+    """Implements: TC-365"""
     registry, _ = _registry(tmp_path)
     _home(config_dir, "WORK").mkdir(parents=True)
     prepared = svc.prepare_launch(
@@ -815,6 +857,7 @@ def test_a_retained_login_account_not_signed_in_is_refused_with_its_provisioning
 
 
 def test_preflight_prints_each_enabled_unverified_account_only(tmp_path):
+    """Implements: TC-366"""
     registry, _ = _registry(tmp_path)
     lines = route.unverified_lines(
         registry,
@@ -830,6 +873,7 @@ def test_preflight_prints_each_enabled_unverified_account_only(tmp_path):
 def test_the_loop_preflight_prints_the_unverified_account_and_passes_it(
     tmp_path, capsys, monkeypatch
 ):
+    """Implements: TC-366"""
     docs = _docs(tmp_path, enabled=["CLAUDE-A@WORK"])
     setup = loop.resolve_routing_setup(docs)
     monkeypatch.setattr(loop, "preflight", lambda root, template, args: [])
@@ -903,6 +947,7 @@ def _carried(env):
 def test_a_qualified_login_launch_withholds_every_ambient_credential_its_cli_ranks_above_the_home(
     tmp_path, config_dir, fixture_clis, monkeypatch, cli
 ):
+    """Implements: TC-362"""
     _canaries(monkeypatch)
     registry, errors = _registry(tmp_path)
     assert errors == []
@@ -936,6 +981,7 @@ def test_a_qualified_login_launch_withholds_every_ambient_credential_its_cli_ran
 def test_a_token_account_launch_carries_only_its_own_token(
     tmp_path, config_dir, monkeypatch
 ):
+    """Implements: TC-362"""
     _canaries(monkeypatch, AMBIENT_SOURCES["claude"])
     token = tmp_path / "outside" / "token"
     token.parent.mkdir()
@@ -948,6 +994,7 @@ def test_a_token_account_launch_carries_only_its_own_token(
 
 
 def test_an_ambient_entry_keeps_the_ambient_environment(tmp_path, monkeypatch):
+    """Implements: TC-362"""
     _canaries(monkeypatch)
     registry, _ = _registry(tmp_path)
     bare = SimpleNamespace(**vars_of(registry["CLAUDE-A"]))
@@ -982,6 +1029,7 @@ def _folded(env):
 def test_a_qualified_opencode_launch_starts_from_the_declared_base(
     tmp_path, config_dir, fixture_clis, monkeypatch
 ):
+    """Implements: TC-362"""
     _opencode_ambient(monkeypatch)
     registry, errors = _registry(tmp_path)
     assert errors == []
@@ -1017,7 +1065,10 @@ def test_a_qualified_opencode_launch_keeps_the_kit_owned_names(
 ):
     """The loop marks its own process, and every session it launches inherits
     the mark, whatever the account's declared base keeps: a commit the child
-    makes is read as the loop's by the floors that rely on it."""
+    makes is read as the loop's by the floors that rely on it.
+
+    Implements: TC-362
+    """
     _opencode_ambient(monkeypatch)
     marker = provenance.mark_loop_process()
     registry, errors = _registry(tmp_path)
@@ -1033,6 +1084,7 @@ def test_a_qualified_opencode_launch_keeps_the_kit_owned_names(
 def test_an_unqualified_opencode_entry_keeps_the_ambient_environment(
     tmp_path, monkeypatch
 ):
+    """Implements: TC-362"""
     _opencode_ambient(monkeypatch)
     registry, _ = _registry(tmp_path)
     folded = _folded(svc.entry_env(tmp_path, registry, "OPENCODE-A"))
@@ -1045,6 +1097,7 @@ def test_an_unqualified_opencode_entry_keeps_the_ambient_environment(
 def test_a_key_declared_for_a_qualified_opencode_launch_is_carried(
     tmp_path, config_dir, monkeypatch, side
 ):
+    """Implements: TC-362"""
     _opencode_ambient(monkeypatch)
     keyed = '\n[account.OPKEY]\ncli = "opencode"\nnotes = "k"\n'
     if side == "account":
@@ -1064,6 +1117,7 @@ def test_a_key_declared_for_a_qualified_opencode_launch_is_carried(
 def test_a_login_account_whose_route_or_account_declares_a_competing_source_is_refused(
     tmp_path, config_dir, side
 ):
+    """Implements: TC-362"""
     keyed = '\n[account.KEYED]\ncli = "claude"\nnotes = "k"\n'
     if side == "account":
         keyed += 'env = "Anthropic_Api_Key=declared"\n'
@@ -1091,6 +1145,7 @@ def test_a_login_account_whose_route_or_account_declares_a_competing_source_is_r
 def test_a_gemini_login_account_whose_route_declares_a_vertex_source_is_refused(
     tmp_path, config_dir
 ):
+    """Implements: TC-362"""
     registry, errors = _registry(tmp_path)
     assert errors == []
     row = SimpleNamespace(**vars_of(registry["GEMINI-A"]))
@@ -1108,6 +1163,7 @@ def test_a_gemini_login_account_whose_route_declares_a_vertex_source_is_refused(
 
 @pytest.mark.parametrize("aid", ["WORK.", "A.B", "CON", "NUL", "COM1", "LPT9", "AUX"])
 def test_an_account_id_a_platform_would_alias_is_a_registry_error(tmp_path, aid):
+    """Implements: TC-365"""
     table = '[account."{}"]\ncli = "claude"\nnotes = "x"\n'.format(aid)
     registry, errors = _registry(tmp_path, ROWS + table)
     named = [e for e in errors if "[account.{}]".format(aid) in e]
@@ -1118,6 +1174,7 @@ def test_an_account_id_a_platform_would_alias_is_a_registry_error(tmp_path, aid)
 
 
 def test_two_ids_that_alias_one_windows_directory_cannot_both_load(tmp_path):
+    """Implements: TC-365"""
     tables = '[account.WORK]\ncli = "claude"\n\n[account."WORK."]\ncli = "claude"\n'
     registry, errors = _registry(tmp_path, ROWS + tables)
     assert list(registry.accounts) == ["WORK"]
@@ -1125,6 +1182,7 @@ def test_two_ids_that_alias_one_windows_directory_cannot_both_load(tmp_path):
 
 
 def test_token_locators_the_platform_resolves_as_one_name_drop_both_accounts(tmp_path):
+    """Implements: TC-365"""
     tables = (
         '[account.T1]\ncli = "claude"\ntoken_file_variable = "X_TOKEN_FILE_798"\n'
         '[account.T2]\ncli = "claude"\ntoken_file_variable = "x_token_file_798"\n'
@@ -1155,6 +1213,7 @@ def test_token_locators_the_platform_resolves_as_one_name_drop_both_accounts(tmp
     ],
 )
 def test_a_non_string_account_field_is_the_named_table_error(tmp_path, cells, key):
+    """Implements: TC-365"""
     table = "[account.BAD]\n{}\n".format(cells)
     registry, errors = _registry(tmp_path, ROWS + table)
     assert registry.accounts == {}
@@ -1169,6 +1228,7 @@ def test_a_non_string_account_field_is_the_named_table_error(tmp_path, cells, ke
 def test_a_qualified_opencode_entry_declaring_its_auth_content_is_refused(
     tmp_path, config_dir, side
 ):
+    """Implements: TC-362"""
     keyed = '\n[account.OPAUTH]\ncli = "opencode"\nnotes = "k"\n'
     if side == "account":
         keyed += 'env = "Opencode_Auth_Content={}"\n'

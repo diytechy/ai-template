@@ -16,6 +16,8 @@ Registered in `tests/conftest.py`'s `SLOW_MODULES`: every case runs the
 harness of a bootstrapped scaffold as a subprocess (one bootstrap per module,
 copied per case), and the release half commits an approval act to a real git
 repository. The pure rules live in `assumption_rules.py`.
+
+Implements: TC-237, TC-238, TC-239
 """
 
 import datetime

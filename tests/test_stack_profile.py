@@ -7,6 +7,8 @@ pinned here are the thread's own acceptance tests: the scaffolded profile
 behaves byte-identically to check.py's built-in defaults, `--list` reflects the
 profile, a malformed profile fails loudly, tier expressions thread through to
 the test step, and a profile naming a missing binary hits the run_step guard.
+
+Implements: TC-007, TC-008
 """
 
 import configparser

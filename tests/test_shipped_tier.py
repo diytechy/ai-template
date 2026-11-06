@@ -33,6 +33,8 @@ to fail before it is trusted to pass.
 Enforcement-audit note (docs/enforcement-audit.md): this is the EVAL/test-class
 enforcer for SR-034's shipped-tier clause, which had **no** mechanical enforcer
 before WI-420 — it was carried by prose in docs/dependencies.md alone.
+
+Implements: TC-149
 """
 
 from __future__ import annotations

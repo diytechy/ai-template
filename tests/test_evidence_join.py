@@ -48,6 +48,7 @@ def _tiers(table):
 
 
 def test_evidence_items_read_every_spelling_the_registry_uses():
+    """Implements: TC-255"""
     # Separators seen in the live cells: `;`, `; `, and a bare space between
     # node ids. A parenthetical note and a `#anchor` are not paths.
     cell = (
@@ -67,6 +68,7 @@ def test_evidence_items_read_every_spelling_the_registry_uses():
 
 
 def test_a_spaced_parametrization_stays_one_node():
+    """Implements: TC-255"""
     # A separator inside a node's brackets belongs to the node: pytest ids may
     # carry spaces and `;`, and splitting there would invent two paths.
     cell = "tests/test_a.py::test_x[param one]; tests/test_b.py::test_y[a;b c]"
@@ -80,6 +82,7 @@ def test_a_spaced_parametrization_stays_one_node():
 
 
 def test_a_smoke_case_with_slow_only_evidence_is_reported():
+    """Implements: TC-255"""
     tier_of = _tiers({"tests/test_heavy.py": "slow", "tests/test_other.py": "slow"})
     case = _case("Smoke", "tests/test_heavy.py::test_a; tests/test_other.py")
     errors, advisories = spine.tier_findings([case], tier_of)
@@ -88,6 +91,7 @@ def test_a_smoke_case_with_slow_only_evidence_is_reported():
 
 
 def test_a_smoke_case_with_fast_evidence_is_not_reported():
+    """Implements: TC-255"""
     # One evidence item running per commit is enough: the case's in-memory
     # clauses keep fast evidence while its driven clauses run at close.
     tier_of = _tiers({"tests/test_heavy.py": "slow", "tests/test_fast.py": "smoke"})
@@ -96,6 +100,7 @@ def test_a_smoke_case_with_fast_evidence_is_not_reported():
 
 
 def test_a_smoke_case_whose_evidence_is_no_test_is_reported():
+    """Implements: TC-255"""
     # A document runs in no tier, so it cannot be what makes a case per-commit.
     errors, _advisories = spine.tier_findings(
         [_case("Smoke", "docs/review.md")], _tiers({})
@@ -104,6 +109,7 @@ def test_a_smoke_case_whose_evidence_is_no_test_is_reported():
 
 
 def test_a_full_case_none_of_whose_evidence_is_slow_is_an_advisory():
+    """Implements: TC-255"""
     # Advisory, never a failure: the full tier runs everything, so a Full case
     # whose evidence runs per commit, or names no test at all, understates where
     # its evidence runs and is never false about it.
@@ -118,6 +124,7 @@ def test_a_full_case_none_of_whose_evidence_is_slow_is_an_advisory():
 
 
 def test_a_full_case_with_slow_evidence_or_a_release_case_is_silent():
+    """Implements: TC-255"""
     tier_of = _tiers({"tests/test_fast.py": "smoke", "tests/test_heavy.py": "slow"})
     cases = [
         _case("Full", "tests/test_fast.py; tests/test_heavy.py", cid="TC-001"),
@@ -127,6 +134,7 @@ def test_a_full_case_with_slow_evidence_or_a_release_case_is_silent():
 
 
 def test_a_case_below_approval_is_not_judged():
+    """Implements: TC-255"""
     # A Drafted row's tier is a proposal still in work; the tier cell the rule
     # holds true is the one a human approved.
     case = _case("Smoke", "tests/test_heavy.py", status="Drafted")
@@ -211,6 +219,7 @@ def _rows(root):
 
 
 def test_the_module_map_follows_design_rows_not_file_names(tmp_path):
+    """Implements: TC-258"""
     # src/pay.py's tests are named for checkout and the ledger, not for `pay`:
     # the map reaches them through LLR-001 and the cases that verify it, a
     # Drafted case included (a builder iterating runs the case being written).
@@ -226,6 +235,7 @@ def test_the_module_map_follows_design_rows_not_file_names(tmp_path):
 
 
 def test_a_module_resolves_by_path_suffix_or_stem(tmp_path):
+    """Implements: TC-258"""
     llrs, _tcs = _rows(_spine(tmp_path))
     assert spine.resolve_modules(llrs, "src/ledger.py") == ["src/ledger.py"]
     assert spine.resolve_modules(llrs, "ledger.py") == ["src/ledger.py"]
@@ -248,6 +258,7 @@ def _tests_for(monkeypatch, root, module, *extra):
 
 
 def test_the_command_prints_one_test_file_per_line(tmp_path, capsys, monkeypatch):
+    """Implements: TC-258"""
     root = _spine(tmp_path)
     assert _tests_for(monkeypatch, root, "src/pay") == 0
     assert capsys.readouterr().out.splitlines() == [
@@ -257,6 +268,7 @@ def test_the_command_prints_one_test_file_per_line(tmp_path, capsys, monkeypatch
 
 
 def test_the_command_reads_the_declared_test_root(tmp_path, capsys, monkeypatch):
+    """Implements: TC-258"""
     root = _spine(tmp_path, stack="[paths]\nsrc = src\ntests = spec\n")
     assert _tests_for(monkeypatch, root, "src/pay.py") == 0
     assert capsys.readouterr().out == ""
@@ -265,6 +277,7 @@ def test_the_command_reads_the_declared_test_root(tmp_path, capsys, monkeypatch)
 def test_the_command_reads_the_docs_directory_it_is_pointed_at(
     tmp_path, capsys, monkeypatch
 ):
+    """Implements: TC-258"""
     # `--docs` names the registries and `stack.ini` wherever they are; the
     # unrelated `--root` holds nothing, so a listing can only come from them.
     docs = _docs(
@@ -285,6 +298,7 @@ def test_the_command_reads_the_docs_directory_it_is_pointed_at(
 def test_the_command_refuses_an_unknown_or_ambiguous_module(
     tmp_path, capsys, monkeypatch
 ):
+    """Implements: TC-258"""
     root = _spine(tmp_path)
     assert _tests_for(monkeypatch, root, "nothing") == 1
     assert "no module a design row declares" in capsys.readouterr().err
@@ -294,6 +308,7 @@ def test_the_command_refuses_an_unknown_or_ambiguous_module(
 
 
 def test_the_live_map_reaches_tests_not_named_for_their_module():
+    """Implements: TC-258"""
     # coherence.py's design rows are verified by `test_trace_coherence.py`, and
     # no test file is named `test_coherence*`: a file-name match finds nothing
     # for this module, while the spine reaches its suite. frame_rules.py shows
@@ -320,6 +335,7 @@ def _live_tier_of(path):
 
 
 def test_every_approved_smoke_case_has_evidence_in_the_smoke_tier():
+    """Implements: TC-255"""
     _llrs, tcs = _rows(ROOT)
     errors, advisories = spine.tier_findings(tcs, _live_tier_of)
     for advisory in advisories:

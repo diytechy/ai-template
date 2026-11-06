@@ -10,6 +10,8 @@ logs; both ask `kitlib.verdict.scope_offenders`, so they cannot disagree.
 
 In-memory only - the git-driven halves are in tests/test_verdict_record.py
 (the merge ladder) and tests/test_agent_loop_review.py (the loop).
+
+Implements: TC-259
 """
 
 import sys

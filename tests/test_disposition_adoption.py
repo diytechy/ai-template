@@ -62,6 +62,7 @@ _DRAFT = 'title = "t"\nsupersedes = "WI-005"\n'
 
 
 def test_an_adoption_block_is_parsed_apart_from_the_drafts():
+    """Implements: TC-360"""
     text = _section('adopts = "WI-450"\n', _DRAFT)
     drafts, adoptions, refusal = intake.parse_disposition_section(text, "w")
     assert refusal is None, refusal
@@ -84,6 +85,7 @@ def test_an_adoption_block_is_parsed_apart_from_the_drafts():
     ids=["beside-title", "beside-supersedes", "joined", "list", "padded"],
 )
 def test_a_malformed_adoption_block_is_a_parse_refusal(block, reason):
+    """Implements: TC-360"""
     drafts, adoptions, refusal = intake.parse_disposition_section(_section(block), "w")
     assert refusal is not None and reason in refusal, refusal
     assert drafts == [] and adoptions == []
@@ -112,6 +114,7 @@ def test_a_malformed_adoption_block_is_a_parse_refusal(block, reason):
 def test_the_disposed_row_is_read_from_either_minted_title_form(
     title, disposition, wanted
 ):
+    """Implements: TC-360"""
     wid, refusal = adoption.disposed_id(title, disposition=disposition)
     if wanted:
         assert (wid, refusal) == (wanted, None)
@@ -180,6 +183,7 @@ _OTHER = _entry("queued", "WI-460", supersedes='"WI-005"')
 def test_acceptance_is_read_against_the_registry_with_distinct_refusals(
     listing, reason
 ):
+    """Implements: TC-360"""
     refusal = adoption.row_refusal(listing, "WI-450", "WI-005")
     if reason is None:
         assert refusal is None, refusal
@@ -192,7 +196,10 @@ def test_an_adoption_never_counts_as_an_absorption():
     consolidate outcome's drafts' `supersedes`, and an adoption carries none.
 
     Adequacy witness: a reader that took any id-valued cell of a block,
-    `adopts` included, as an absorbed row would answer `["WI-450"]` here."""
+    `adopts` included, as an absorbed row would answer `["WI-450"]` here.
+
+    Implements: TC-360
+    """
     text = '\n## Consolidation\n\n```toml\noutcome = "consolidate"\n```\n' + _section(
         'adopts = "WI-450"\n'
     )
@@ -200,6 +207,7 @@ def test_an_adoption_never_counts_as_an_absorption():
 
 
 def test_a_repeated_adoption_is_a_parse_refusal():
+    """Implements: TC-360"""
     text = _section('adopts = "WI-450"\n', 'adopts = "WI-450"\n')
     drafts, adoptions, refusal = intake.parse_disposition_section(text, "w")
     assert refusal is not None and "repeat" in refusal.lower(), refusal
@@ -216,6 +224,7 @@ def test_a_repeated_adoption_is_a_parse_refusal():
     ids=["adoption", "draft"],
 )
 def test_a_valid_block_then_an_unclosed_one_is_refused(valid, unclosed):
+    """Implements: TC-360"""
     text = _section(valid) + "```toml\n" + unclosed + "\nmore prose\n"
     drafts, adoptions, refusal = intake.parse_disposition_section(text, "w")
     assert refusal is not None and "fence" in refusal.lower(), refusal
@@ -226,6 +235,7 @@ def test_a_valid_block_then_an_unclosed_one_is_refused(valid, unclosed):
 
 @pytest.mark.parametrize("fence", ["```text", "````"], ids=["text", "four"])
 def test_a_fence_that_is_not_toml_or_a_bare_close_is_refused(fence):
+    """Implements: TC-360"""
     text = _section(_DRAFT) + fence + "\nsome lines\n" + fence + "\n"
     drafts, adoptions, refusal = intake.parse_disposition_section(text, "w")
     assert refusal is not None and "fence" in refusal.lower(), refusal
@@ -349,7 +359,10 @@ def test_every_dispositions_section_in_the_repository_passes_the_fence_grammar(
     does any tracked section holding a fence line off column zero, which the
     parser refuses. The planted cases are the census's live instruments: an
     unpaired copy of a real section, and one with a bullet-nested block, must
-    be refused, or the census proves nothing."""
+    be refused, or the census proves nothing.
+
+    Implements: TC-360
+    """
     files = _census_files()
     assert files, "the census found no Dispositions section to judge"
     if case == "repository":
@@ -392,6 +405,7 @@ def test_every_dispositions_section_in_the_repository_passes_the_fence_grammar(
     ],
 )
 def test_the_record_reader_accepts_only_a_list_of_distinct_ids(data, wanted):
+    """Implements: TC-360"""
     ids, refusal = adoption.record_ids(data, "w.md")
     if wanted is None:
         assert (ids, refusal) == (None, None)
@@ -405,6 +419,7 @@ def test_the_record_reader_accepts_only_a_list_of_distinct_ids(data, wanted):
 
 
 def test_an_adopted_cell_survives_the_spec_row_reader():
+    """Implements: TC-360"""
     text = '+++\nid = "WI-401"\ntitle = "t"\nadopted = ["WI-450", "WI-451"]\n+++\n'
     row, _order = registry.parse_spec_row(text, "complete/WI-401-t.md")
     assert row.get("Adopted") == "WI-450;WI-451"
@@ -472,6 +487,7 @@ _NONE, _ASKED, _HELD = (None, None), (None, _A), (_A, _A)
 def test_the_record_change_table(
     parents, record, asked, moved, close, invalid, refused
 ):
+    """Implements: TC-360"""
     got = adoption.record_change(parents, record, asked, moved, close, invalid)
     if refused:
         assert got is not None and "adopted" in got, got
@@ -491,6 +507,7 @@ def _fields(*entries):
 
 
 def test_the_close_shape_admits_outside_paths_only_through_the_oracle():
+    """Implements: TC-383"""
     moved = (("D", _ACTIVE), ("A", _COMPLETE))
     outside = _fields(*moved, ("M", _REVIEW))
     calls = []

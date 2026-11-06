@@ -109,7 +109,10 @@ def test_no_hook_reads_the_policy_as_text():
     """TC-031 (SR-031: one parse, one answer): no shipped hook and not the
     probe touches docs/process.toml, docs/privacy-check or
     docs/privacy-review with a text tool. Every code line naming one of them
-    is an echo or printf message, piped into no text tool."""
+    is an echo or printf message, piped into no text tool.
+
+    Implements: TC-031
+    """
     bad = []
     for name in HOOK_NAMES + ("kit-python.sh",):
         for n, line in _code_lines(HOOKS_DIR / name):
@@ -142,7 +145,10 @@ def test_each_hook_runs_the_one_read_once_after_the_probe():
     """TC-021 (LLR-021): each hook calls the probe's one policy read exactly
     once, after its interpreter probe, and resolves neither the read nor the
     scripts directory itself; the probe holds the one read and the one
-    interpreter candidate loop."""
+    interpreter candidate loop.
+
+    Implements: TC-021
+    """
     for name in HOOK_NAMES:
         lines = list(_code_lines(HOOKS_DIR / name))
         probe = _call_lines(lines, "kit_python", name)

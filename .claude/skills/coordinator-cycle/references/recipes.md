@@ -1084,6 +1084,10 @@ lane commit being replayed.
   "No tie-back" reason.
 - A row split leaves `Implements:` tags on the old id; retag them in a
   coordinator commit.
+- A lane writes a test's `Implements:` tag and its `evidence` part in one
+  commit, since the bar runs `check_trajectory.py --strict`; an intent row's
+  cell follows `spine-authoring`, `references/in-lane.md`, "Author it before
+  the build". A renamed test moves both.
 - When a move makes an approved cell's module-qualified name false, drop
   the qualifier and keep the approved symbol: a swapped qualifier adds a
   name to row text, which a sitting returns (wi-976 sitting 015).

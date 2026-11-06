@@ -12,6 +12,8 @@ No repository is built: `kitlib.git.git_paths` is replaced by a fake answering
 the argv the listing sends, and for the views the listing itself is replaced
 by a recording fake. The same tree read through real git is characterized in
 test_adoption_record.py.
+
+Implements: TC-313, TC-383
 """
 
 import pytest

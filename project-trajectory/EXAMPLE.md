@@ -144,7 +144,7 @@ tier = "Smoke"
 parameters = "field=set{plain,comma,quote,newline}"
 expected = "Satisfies SR-001 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_export.py::test_to_csv_roundtrip"
+evidence = "tests/test_export.rs"
 status = "Approved"
 
 [test.TC-002]
@@ -155,7 +155,7 @@ tier = "Full"
 parameters = "interrupt=set{during-write,before-rename}"
 expected = "Satisfies SR-002 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_export.py::test_atomic_interrupt"
+evidence = "tests/test_export.rs"
 status = "Approved"
 ```
 
@@ -222,17 +222,18 @@ pub fn to_csv(schema: &Schema, records: &[Record]) -> String { /* ... */ }
 
 ```rust
 // tests/test_export.rs
-// Implements: TC-001
+// Implements: TC-001, TC-002
 
 #[test]
 fn to_csv_quotes_special_fields() { /* ...asserts SR-001 AC... */ }
 ```
 
 The item is annotated `Implements:` with what it satisfies, and the test file
-names its test case on the same line, file-level because this is not Python (the
-rule: process.md §3). The test sits in its own file because a tag is read only
-under the declared tests root. The registry rows are authoritative; these
-annotations keep code and registries honest and greppable.
+names its test cases on the same line, file-level because this is not Python (the
+rule: process.md §3), so each `Evidence` cell names the file whole. The test sits
+in its own file because a tag is read only under the declared tests root. The
+registry rows are authoritative; these annotations keep code and registries
+honest and greppable.
 
 ## 6. The traceability result
 

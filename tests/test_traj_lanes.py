@@ -1,4 +1,7 @@
-"""TC-305: lane separation in freshly emitted dashboard SVG, not router inputs."""
+"""TC-305: lane separation in freshly emitted dashboard SVG, not router inputs.
+
+Implements: TC-305
+"""
 
 from html.parser import HTMLParser
 from itertools import combinations

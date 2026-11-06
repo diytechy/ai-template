@@ -37,6 +37,8 @@ exactly the vacuous green the integrator exists to make impossible. Git
 fixtures are real repositories for the same reason as tests/test_integrate.py
 (the queue derives everything from history), and the helper shapes are copied
 from that module per this suite's no-cross-test-import idiom.
+
+Implements: TC-137, TC-144, TC-148
 """
 
 import argparse
@@ -737,6 +739,7 @@ def red_capped_worker(reds):
 def test_a_red_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_drain_quarantines_it(
     tmp_path, capfd
 ):
+    """Implements: TC-381"""
     # TC-381. The red cap is a decided worker outcome: the dispatcher closes
     # the lane partial with typed fields, its reason naming the count and the
     # last bar summary, and the drain's red refresh quarantines the lane.
@@ -1342,6 +1345,7 @@ def test_plain_agent_loop_launch_enters_the_drive_mode(tmp_path, monkeypatch):
 
 
 def test_an_explicit_empty_assignment_is_refused_not_driven(tmp_path):
+    """Implements: TC-061"""
     # An explicit --wi names the worker role whatever its value. An empty one is
     # an assignment naming no work item, so it is refused by the assignment
     # preflight, by name, and never read as a plain launch: no dispatch lock,

@@ -5,6 +5,8 @@ omitting what the declared profile turns off. The properties pinned here are
 the ruling's own constraints: § labels never renumber, omissions leave
 resolvable stubs, every permutation scaffolds fully green, the default profile
 changes nothing, and a re-sync regenerates from the recorded docs/kit-profile.
+
+Implements: TC-009
 """
 
 import itertools
@@ -323,7 +325,10 @@ def test_the_scaffolded_oi3_is_filed_with_its_queued_placeholder(tmp_path):
     non-Python profile's OI-3 lands together with a queued WI-001 whose `needs`
     cites it and whose `specref` is the item's own registry record, both
     watermarks cover what was allocated, the row reads blocked, and the fresh
-    scaffold's checker is green under --strict (no uncited pending item)."""
+    scaffold's checker is green under --strict (no uncited pending item).
+
+    Implements: TC-010
+    """
     dest = _bootstrap(tmp_path, "--stack", "node")
     (spec,) = (dest / "docs" / "work" / "queued").glob("WI-001-*.md")
     text = spec.read_text(encoding="utf-8")

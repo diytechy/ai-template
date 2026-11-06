@@ -155,11 +155,13 @@ ENV = {guard.SESSION_ENV: COORD}
 
 
 def test_occupancy_counts_input_cache_read_and_cache_creation(tx):
+    """Implements: TC-315"""
     reading = guard.read_occupancy(str(tx.path), WINDOW)
     assert (reading.tokens, reading.pct, reading.note) == (200, 20.0, "")
 
 
 def test_a_branched_transcript_reads_the_live_branch(tmp_path):
+    """Implements: TC-315"""
     t = Transcript(tmp_path / "b.jsonl")
     fork = t.user()
     t.reply(900)  # the abandoned branch, written first
@@ -169,6 +171,7 @@ def test_a_branched_transcript_reads_the_live_branch(tmp_path):
 
 
 def test_a_sidechain_record_is_never_the_live_tip(tmp_path):
+    """Implements: TC-315"""
     t = Transcript(tmp_path / "s.jsonl")
     t.user()
     t.reply(300)
@@ -181,6 +184,7 @@ def test_a_sidechain_record_is_never_the_live_tip(tmp_path):
 
 
 def test_after_compaction_only_usage_after_the_last_boundary_counts(tmp_path):
+    """Implements: TC-315"""
     t = Transcript(tmp_path / "c.jsonl")
     t.user()
     t.reply(900)
@@ -206,6 +210,7 @@ def _recorded_prefix(tmp_path, upto):
 
 
 def test_the_recorded_compaction_fixture_is_claude_code_2_1_289():
+    """Implements: TC-315"""
     records = _recorded()
     assert {r["version"] for r in records if "version" in r} == {"2.1.289"}
     (boundary,) = [r for r in records if r.get("subtype") == "compact_boundary"]
@@ -214,6 +219,7 @@ def test_the_recorded_compaction_fixture_is_claude_code_2_1_289():
 
 
 def test_a_recorded_compaction_reads_the_reply_after_the_boundary():
+    """Implements: TC-315"""
     reading = guard.read_occupancy(str(REAL_COMPACTION), 200_000)
     assert reading.tokens == 10 + 30430 + 5723  # the post-compaction reply
 
@@ -222,7 +228,10 @@ def test_a_recorded_compaction_never_reads_a_preserved_messages_old_usage(tmp_pa
     """Until the first reply after the boundary, the messages the compaction
     preserved (named by uuid, not rewritten) keep their pre-compaction usage;
     the live branch stops at the boundary, so the reading is unknown rather
-    than that stale number."""
+    than that stale number.
+
+    Implements: TC-315
+    """
     records = _recorded()
     at = next(
         i for i, r in enumerate(records) if r.get("subtype") == "compact_boundary"
@@ -240,6 +249,7 @@ def test_a_recorded_compaction_never_reads_a_preserved_messages_old_usage(tmp_pa
 
 
 def test_after_a_resume_the_newest_usage_counts_whatever_session_wrote_it(tmp_path):
+    """Implements: TC-315"""
     t = Transcript(tmp_path / "r.jsonl", session="before-resume")
     t.user()
     t.reply(700)
@@ -250,6 +260,7 @@ def test_after_a_resume_the_newest_usage_counts_whatever_session_wrote_it(tmp_pa
 
 
 def test_malformed_and_partial_usage_is_skipped_to_the_newest_valid(tmp_path):
+    """Implements: TC-315"""
     t = Transcript(tmp_path / "m.jsonl")
     t.user()
     t.reply(400)
@@ -269,6 +280,7 @@ def test_malformed_and_partial_usage_is_skipped_to_the_newest_valid(tmp_path):
 
 
 def test_no_valid_usage_reads_unknown_never_zero(tmp_path):
+    """Implements: TC-315"""
     t = Transcript(tmp_path / "n.jsonl")
     t.user()
     t.reply(0)
@@ -279,6 +291,7 @@ def test_no_valid_usage_reads_unknown_never_zero(tmp_path):
 
 
 def test_admission_compares_unrounded_occupancy(tmp_path):
+    """Implements: TC-315"""
     root = make_root(tmp_path, pct=50, window=1_000_000)
     t = Transcript(tmp_path / "edge.jsonl")
     t.user()
@@ -291,6 +304,7 @@ def test_admission_compares_unrounded_occupancy(tmp_path):
 
 
 def test_a_mismatched_window_is_flagged_with_its_percent(tmp_path):
+    """Implements: TC-315"""
     t = Transcript(tmp_path / "w.jsonl")
     t.user()
     t.reply(1500)
@@ -299,6 +313,7 @@ def test_a_mismatched_window_is_flagged_with_its_percent(tmp_path):
 
 
 def test_the_reader_reads_the_tail_and_widens_only_to_resolve(tmp_path, monkeypatch):
+    """Implements: TC-315"""
     t = Transcript(tmp_path / "big.jsonl")
     t.user()
     t.reply(333)
@@ -336,6 +351,7 @@ def test_the_dials_are_declared_here_and_in_the_template():
 
 
 def test_a_malformed_threshold_leaves_the_guard_off(tmp_path):
+    """Implements: TC-317"""
     root = tmp_path / "r"
     (root / "docs").mkdir(parents=True)
     (root / "docs" / "process.toml").write_text(
@@ -346,6 +362,7 @@ def test_a_malformed_threshold_leaves_the_guard_off(tmp_path):
 
 
 def test_off_means_off_claims_pass_and_hooks_do_nothing(tmp_path, tx):
+    """Implements: TC-317"""
     root = make_root(tmp_path, pct=0)
     assert guard.claim_refusal(root, env={}) is None
     for name in sorted(guard.MONITORED | {"SessionStart", "PreCompact", "SessionEnd"}):
@@ -360,6 +377,7 @@ def test_off_means_off_claims_pass_and_hooks_do_nothing(tmp_path, tx):
 
 
 def test_a_subagent_and_another_sessions_hook_calls_are_no_ops(root, tx):
+    """Implements: TC-316"""
     held(root, tx)
     tx.reply(900)  # over the threshold
     sub = ev("PostToolUse", transcript=tx.path, agent_id="a1", agent_type="Explore")
@@ -375,6 +393,7 @@ def test_a_subagent_and_another_sessions_hook_calls_are_no_ops(root, tx):
 
 
 def test_a_silent_live_holder_keeps_the_lease_however_long_it_is_quiet(root, tx):
+    """Implements: TC-316"""
     lease = held(root, tx)
     lease["taken_at"] = "2000-01-01T00:00:00Z"  # silent for decades
     guard._save(guard.lease_dir(root), lease)
@@ -384,6 +403,7 @@ def test_a_silent_live_holder_keeps_the_lease_however_long_it_is_quiet(root, tx)
 
 
 def test_a_non_holders_claim_refuses_naming_the_holder_and_the_release(root, tx):
+    """Implements: TC-316"""
     held(root, tx)
     refusal = guard.claim_refusal(root, env={guard.SESSION_ENV: OTHER})
     assert COORD in refusal and "coordinator_guard.py release" in refusal
@@ -391,6 +411,7 @@ def test_a_non_holders_claim_refuses_naming_the_holder_and_the_release(root, tx)
 
 
 def test_a_claim_names_its_caller_by_claude_code_session_id(root, tx):
+    """Implements: TC-316"""
     # The literal key the agent CLI exports, never guard.SESSION_ENV, so a
     # renamed constant fails here.
     held(root, tx)
@@ -399,16 +420,19 @@ def test_a_claim_names_its_caller_by_claude_code_session_id(root, tx):
 
 
 def test_with_no_lease_held_a_claim_refuses_naming_the_take(root):
+    """Implements: TC-316"""
     refusal = guard.claim_refusal(root, env=ENV)
     assert "no coordinator lease" in refusal and "coordinator_guard.py take" in refusal
 
 
 def test_the_holders_claim_below_threshold_passes(root, tx):
+    """Implements: TC-316"""
     held(root, tx)
     assert guard.claim_refusal(root, env=ENV) is None
 
 
 def test_the_owners_release_frees_the_lease_and_is_recorded(root, tx):
+    """Implements: TC-316"""
     held(root, tx)
     assert guard.release(root, "") is not None
     assert guard.release(root, "the session crashed before SessionEnd") is None
@@ -420,6 +444,7 @@ def test_the_owners_release_frees_the_lease_and_is_recorded(root, tx):
 
 
 def test_the_relaunched_successor_takes_the_lease_at_session_start(root, tx):
+    """Implements: TC-316"""
     lease = held(root, tx)
     lease.update(draining=True, successor_token="tok")
     guard._save(guard.lease_dir(root), lease)
@@ -443,6 +468,7 @@ def test_the_relaunched_successor_takes_the_lease_at_session_start(root, tx):
 
 
 def test_the_successor_takes_the_lease_through_pt_coordinator_take(root, tx):
+    """Implements: TC-318"""
     # The literal key both launchers export, never guard.TAKE_ENV.
     lease = held(root, tx)
     lease.update(successor_token="tok")
@@ -457,6 +483,7 @@ def test_the_successor_takes_the_lease_through_pt_coordinator_take(root, tx):
 
 
 def test_the_latch_holds_after_a_compaction_drops_the_reading(root, tx):
+    """Implements: TC-316"""
     held(root, tx)
     tx.reply(600)
     assert "drain mode is latched" in guard.claim_refusal(root, env=ENV)
@@ -472,6 +499,7 @@ def test_the_latch_holds_after_a_compaction_drops_the_reading(root, tx):
 
 
 def test_the_latch_survives_a_resumed_session_and_is_restated(root, tx):
+    """Implements: TC-316"""
     held(root, tx)
     tx.reply(600)
     guard.hook(ev("PreToolUse", transcript=tx.path), root, env={})
@@ -486,6 +514,7 @@ def test_the_latch_survives_a_resumed_session_and_is_restated(root, tx):
 
 
 def test_only_the_owners_recorded_clear_or_the_successor_unlatches(root, tx):
+    """Implements: TC-316"""
     held(root, tx)
     tx.reply(600)
     guard.claim_refusal(root, env=ENV)
@@ -505,6 +534,7 @@ def test_only_the_owners_recorded_clear_or_the_successor_unlatches(root, tx):
 def test_the_instruction_comes_once_at_the_latch_then_bounded_reminders(
     root, tx, event, monkeypatch
 ):
+    """Implements: TC-316"""
     monkeypatch.setattr(guard, "REMINDER_EVERY", 3)
     held(root, tx)
     assert guard.hook(ev(event, transcript=tx.path), root, env={}) is None  # 20%
@@ -525,7 +555,10 @@ def test_the_instruction_comes_once_at_the_latch_then_bounded_reminders(
 def test_a_tool_outside_the_matcher_latches_at_its_post_tool_event(root, tx, event):
     """A tool the PreToolUse matcher leaves out runs no guard before the call,
     so its call's PostToolUse (or PostToolUseFailure) is where the context is
-    measured and the latch instruction injected."""
+    measured and the latch instruction injected.
+
+    Implements: TC-316
+    """
     matcher = _guard_matcher(KIT_EXAMPLE)
     assert matcher and re.search(matcher, "Read") is None
     held(root, tx)
@@ -554,6 +587,7 @@ def _crossing(root, tx):
 def test_the_crossing_replys_claim_refuses_via_the_pre_tool_use_reading(
     root, tx, monkeypatch, capsys
 ):
+    """Implements: TC-317"""
     _crossing(root, tx)
     out = guard.hook(
         ev("PreToolUse", transcript=tx.path, tool_name="Bash"), root, env={}
@@ -571,6 +605,7 @@ def test_the_crossing_replys_claim_refuses_via_the_pre_tool_use_reading(
 def test_the_crossing_replys_claim_refuses_with_no_hook_run(
     root, tx, monkeypatch, capsys
 ):
+    """Implements: TC-317"""
     _crossing(root, tx)
     monkeypatch.setenv(guard.SESSION_ENV, COORD)
     assert integ.claim(root, "WI-001", "wi-001") == 1
@@ -579,6 +614,7 @@ def test_the_crossing_replys_claim_refuses_with_no_hook_run(
 
 
 def test_the_live_dispatchers_claim_route_is_untouched(root, tx, monkeypatch, capsys):
+    """Implements: TC-317"""
     held(root, tx)
     tx.reply(900)
 
@@ -603,7 +639,10 @@ def _guard_calls(fn):
 def test_only_the_claim_consults_the_guard_so_close_out_passes():
     """Landing, archive, sweep, the scoped-unpause restore and verification
     worktrees never reach the guard: no kit script but `integrate.claim`
-    calls it, and the PreToolUse hook never denies a call."""
+    calls it, and the PreToolUse hook never denies a call.
+
+    Implements: TC-317
+    """
     sources = {p.stem: p.read_text(encoding="utf-8") for p in SCRIPTS.rglob("*.py")}
     callers = [
         (stem, fn.name)
@@ -616,6 +655,7 @@ def test_only_the_claim_consults_the_guard_so_close_out_passes():
 
 
 def test_a_draining_pre_tool_use_never_denies_a_close_out_command(root, tx):
+    """Implements: TC-317"""
     held(root, tx)
     tx.reply(900)
     for command in (
@@ -639,6 +679,7 @@ def test_a_draining_pre_tool_use_never_denies_a_close_out_command(root, tx):
 
 
 def test_pre_compact_records_trigger_occupancy_and_guard_state(root, tx):
+    """Implements: TC-316"""
     held(root, tx)
     guard.hook(ev("PreCompact", transcript=tx.path, trigger="auto"), root, env={})
     entry = guard._load(guard.lease_dir(root))["compactions"][-1]
@@ -665,6 +706,7 @@ def test_pre_compact_records_trigger_occupancy_and_guard_state(root, tx):
     ],
 )
 def test_the_handoff_classifies_each_compaction(entry, expected):
+    """Implements: TC-316"""
     assert guard.classify_compaction(entry, guard.GuardConfig(50)) == expected
 
 
@@ -696,6 +738,7 @@ class Launches:
 
 
 def test_the_session_prompt_is_the_fenced_block_under_its_heading(tmp_path):
+    """Implements: TC-318"""
     path = tmp_path / "h.md"
     path.write_text(HANDOFF, encoding="utf-8")
     assert (
@@ -706,6 +749,7 @@ def test_the_session_prompt_is_the_fenced_block_under_its_heading(tmp_path):
 
 
 def test_a_heading_inside_the_prompt_fence_is_prompt_text(tmp_path):
+    """Implements: TC-318"""
     path = tmp_path / "h.md"
     path.write_text(
         "# Handoff\n\n```sh\n# Session prompt (a comment, not a heading)\n```\n\n"
@@ -719,6 +763,7 @@ def test_a_heading_inside_the_prompt_fence_is_prompt_text(tmp_path):
 
 
 def test_only_the_holder_requests_a_relaunch_naming_a_real_handoff(root, tx, tmp_path):
+    """Implements: TC-318"""
     held(root, tx)
     handoff = tmp_path / "h.md"
     handoff.write_text(HANDOFF, encoding="utf-8")
@@ -739,6 +784,7 @@ def _handoff(tmp_path, text=HANDOFF):
 
 
 def test_the_holders_hand_back_frees_the_lease_for_the_next_take(root, tx, tmp_path):
+    """Implements: TC-316"""
     held(root, tx)
     handoff = _handoff(tmp_path)
     assert guard.hand_back(root, handoff, COORD) is None
@@ -750,6 +796,7 @@ def test_the_holders_hand_back_frees_the_lease_for_the_next_take(root, tx, tmp_p
 
 
 def test_another_sessions_or_a_promptless_hand_back_is_refused(root, tx, tmp_path):
+    """Implements: TC-316"""
     lease = held(root, tx)
     handoff = _handoff(tmp_path)
     bare = tmp_path / "bare.md"
@@ -766,6 +813,7 @@ def test_another_sessions_or_a_promptless_hand_back_is_refused(root, tx, tmp_pat
 
 
 def test_a_drained_holder_hands_back_and_the_next_take_is_unlatched(root, tx, tmp_path):
+    """Implements: TC-316"""
     held(root, tx)
     tx.reply(600)
     guard.claim_refusal(root, env=ENV)
@@ -777,6 +825,7 @@ def test_a_drained_holder_hands_back_and_the_next_take_is_unlatched(root, tx, tm
 
 
 def test_a_hand_back_with_a_relaunch_requested_is_refused(root, tx, tmp_path):
+    """Implements: TC-316"""
     handoff = _ready(root, tx, tmp_path)
     assert "relaunch is requested" in guard.hand_back(root, handoff, COORD)
     assert guard._load(guard.lease_dir(root))["holder"] == COORD
@@ -785,6 +834,7 @@ def test_a_hand_back_with_a_relaunch_requested_is_refused(root, tx, tmp_path):
 def test_a_previous_holders_request_never_blocks_the_current_holders_hand_back(
     root, tx, tmp_path
 ):
+    """Implements: TC-316"""
     # A requests the relaunch and crashes before SessionEnd; the owner
     # releases A; B takes the lease and closes out without a relaunch.
     handoff = _ready(root, tx, tmp_path)
@@ -800,6 +850,7 @@ def test_a_previous_holders_request_never_blocks_the_current_holders_hand_back(
 
 
 def test_with_the_guard_off_a_hand_back_reads_and_writes_nothing(tmp_path):
+    """Implements: TC-317"""
     root = make_root(tmp_path, pct=0)
     assert guard.hand_back(root, tmp_path / "absent.md", COORD) is None
     assert not (root / "out").exists()
@@ -808,6 +859,7 @@ def test_with_the_guard_off_a_hand_back_reads_and_writes_nothing(tmp_path):
 def test_the_hand_back_command_line_maps_its_result_to_the_exit_code(
     root, tx, tmp_path, capsys
 ):
+    """Implements: TC-318"""
     held(root, tx)
     handoff = str(_handoff(tmp_path))
     argv = ["--root", str(root), "handback", "--handoff", handoff]
@@ -819,6 +871,7 @@ def test_the_hand_back_command_line_maps_its_result_to_the_exit_code(
 
 @pytest.mark.parametrize("reason", ["clear", "resume", "", None])
 def test_clear_and_resume_never_launch(root, tx, tmp_path, reason):
+    """Implements: TC-318"""
     _ready(root, tx, tmp_path)
     launch = Launches()
     guard.hook(ev("SessionEnd", reason=reason), root, env={}, launch=launch)
@@ -829,6 +882,7 @@ def test_clear_and_resume_never_launch(root, tx, tmp_path, reason):
 def test_an_exit_launches_once_in_the_declared_root_with_the_prompt(
     root, tx, tmp_path, reason
 ):
+    """Implements: TC-318"""
     _ready(root, tx, tmp_path)
     launch = Launches()
     assert (
@@ -844,6 +898,7 @@ def test_an_exit_launches_once_in_the_declared_root_with_the_prompt(
 
 
 def test_a_non_holders_or_subagents_end_never_launches(root, tx, tmp_path):
+    """Implements: TC-318"""
     _ready(root, tx, tmp_path)
     launch = Launches()
     guard.session_end(
@@ -856,6 +911,7 @@ def test_a_non_holders_or_subagents_end_never_launches(root, tx, tmp_path):
 
 
 def test_two_concurrent_end_handlers_launch_once(root, tx, tmp_path):
+    """Implements: TC-318"""
     _ready(root, tx, tmp_path)
     launch = Launches()
     barrier = threading.Barrier(2)
@@ -873,6 +929,7 @@ def test_two_concurrent_end_handlers_launch_once(root, tx, tmp_path):
 
 
 def test_a_failed_launch_restores_the_request(root, tx, tmp_path, capsys):
+    """Implements: TC-318"""
     _ready(root, tx, tmp_path)
     assert (
         guard.session_end(
@@ -892,6 +949,7 @@ def test_a_failed_launch_restores_the_request(root, tx, tmp_path, capsys):
 
 
 def test_a_launch_failing_with_any_error_restores_the_request(root, tx, tmp_path):
+    """Implements: TC-318"""
     _ready(root, tx, tmp_path)
 
     def broken(repo_root, prompt_file, token):
@@ -914,6 +972,7 @@ def _assert_restored(root):
 def test_a_failed_launch_restores_while_another_handler_wants_the_lock(
     root, tx, tmp_path, monkeypatch
 ):
+    """Implements: TC-318"""
     # Sol round 3: restoration that has to reacquire the store lock strands
     # the request when another handler holds it past the wait. The guard's own
     # lock waits are shortened so the contention shows in a fraction of a
@@ -956,6 +1015,7 @@ def test_a_failed_launch_restores_while_another_handler_wants_the_lock(
 
 
 def test_a_failed_prompt_write_restores_the_request(root, tx, tmp_path, monkeypatch):
+    """Implements: TC-318"""
     _ready(root, tx, tmp_path)
     real = Path.write_text
 
@@ -1001,6 +1061,7 @@ def _real_launch(code):
 
 
 def test_a_launcher_that_exits_non_zero_restores_the_request(root, tx, tmp_path):
+    """Implements: TC-318"""
     _ready(root, tx, tmp_path)
     (root / "scripts").mkdir()
     (root / "scripts" / "coordinator-relaunch.cmd").write_text("", encoding="utf-8")
@@ -1022,6 +1083,7 @@ def test_a_launcher_that_exits_non_zero_restores_the_request(root, tx, tmp_path)
 def test_a_foreign_request_is_refused_and_reported(
     root, tx, tmp_path, capsys, field, value
 ):
+    """Implements: TC-318"""
     _ready(root, tx, tmp_path)
     path = guard.lease_dir(root) / "relaunch.json"
     request = json.loads(path.read_text("utf-8"))
@@ -1049,6 +1111,7 @@ def test_a_windows_root_with_spaces_keeps_every_part_quoted(tmp_path):
 
 
 def test_a_failed_token_save_restores_the_request(root, tx, tmp_path, monkeypatch):
+    """Implements: TC-318"""
     _ready(root, tx, tmp_path)
     real = guard._save
 
@@ -1076,6 +1139,7 @@ def test_a_failed_token_save_restores_the_request(root, tx, tmp_path, monkeypatc
 def test_the_launcher_runs_detached_in_the_repo_root(
     tmp_path, os_name, shell, launcher
 ):
+    """Implements: TC-318"""
     (tmp_path / "scripts").mkdir()
     (tmp_path / "scripts" / launcher).write_text("", encoding="utf-8")
     seen = []
@@ -1126,6 +1190,7 @@ def test_the_launcher_runs_detached_in_the_repo_root(
 
 
 def test_exec_claude_passes_the_prompt_as_one_argument(tmp_path):
+    """Implements: TC-318"""
     prompt = tmp_path / "p.txt"
     prompt.write_text('line one "quoted" & more\nline two %PATH%', encoding="utf-8")
     seen = []
@@ -1140,7 +1205,10 @@ def test_the_guard_hooks_are_this_repos_opt_in_not_its_tracked_settings():
     """Owner ruling 2026-10-10 (WI-880): the committed project settings carry
     no guard hook, so a machine runs the guard only after the machine-local
     opt-in; the inert example that opt-in reads registers the guard on every
-    event it serves, at this repository's own script path."""
+    event it serves, at this repository's own script path.
+
+    Implements: TC-345
+    """
     from kitlib import guard_hooks
 
     tracked = json.loads((ROOT / ".claude" / "settings.json").read_text("utf-8"))
@@ -1222,7 +1290,10 @@ def test_the_pre_tool_use_matcher_names_exactly_the_launch_and_shell_tools(
     """The guard runs before a call only for the tools it can deny: the
     matcher's alternatives are exactly the two tool tables' keys, so a tool
     added to either cannot be left unmatched. PostToolUse, PostToolUseFailure
-    and every other guard group stay unmatched."""
+    and every other guard group stay unmatched.
+
+    Implements: TC-345
+    """
     matcher = _guard_matcher(example_path)
     assert matcher, "the guard's PreToolUse group carries no matcher"
     names = matcher.split("|")
@@ -1339,7 +1410,10 @@ def _read(lib, case):
 @pytest.mark.parametrize("case", list(READINGS))
 def test_the_hooks_reading_is_none_absent_on_or_occupied(case):
     """The guard events are the example's; each holds nothing, exactly the
-    guard's own command by name, or something else (named)."""
+    guard's own command by name, or something else (named).
+
+    Implements: TC-345
+    """
     lib = _hooks_lib()
     _, _, word, named = READINGS[case]
     reading = _read(lib, case)
@@ -1357,7 +1431,10 @@ def test_the_hooks_reading_is_none_absent_on_or_occupied(case):
 def test_a_user_command_ending_in_the_guards_name_reads_as_the_guards():
     """The stated residue: a command whose last words are the guard's file
     name and `hook` is read as the guard's, whatever comes before; a command
-    that only names the guard's file, or ends otherwise, is not."""
+    that only names the guard's file, or ends otherwise, is not.
+
+    Implements: TC-345
+    """
     lib = _hooks_lib()
     assert lib.is_guard_command('python "${X}/scripts/coordinator_guard.py" hook')
     assert lib.is_guard_command(
@@ -1393,6 +1470,7 @@ def _no_holder(root):
 
 
 def test_with_the_hooks_absent_and_no_terminal_the_take_refuses_naming_dev_setup(root):
+    """Implements: TC-345"""
     local = _with_example(root)
     refusal = guard.take(root, COORD, ask=None)
     assert isinstance(refusal, str)
@@ -1404,6 +1482,7 @@ def test_with_the_hooks_absent_and_no_terminal_the_take_refuses_naming_dev_setup
 
 @pytest.mark.parametrize("state", ["on", "none"])
 def test_the_take_goes_on_at_on_and_at_none(root, state):
+    """Implements: TC-345"""
     if state == "on":
         local = _with_example(root)
         lib = _hooks_lib()
@@ -1420,6 +1499,7 @@ def _never_asked(prompt):
 
 
 def test_an_occupied_slot_refuses_the_take(root):
+    """Implements: TC-345"""
     local = _with_example(root)
     local.write_text(json.dumps(_installed(PreToolUse=_beside_the_guard)), "utf-8")
     before = local.read_bytes()
@@ -1459,6 +1539,7 @@ def test_a_json_null_in_the_settings_refuses_the_take_and_is_never_asked(
 def test_at_a_terminal_the_take_asks_installs_and_takes_after_a_yes_and_refuses_after_a_no(
     root, capsys, answer
 ):
+    """Implements: TC-345"""
     local = _with_example(root)
     asked = []
 
@@ -1495,6 +1576,7 @@ def _writes_a_partial_file(path, text):
 def test_a_consented_install_whose_write_fails_refuses_the_take(
     root, monkeypatch, write, named
 ):
+    """Implements: TC-345"""
     _with_example(root)
     monkeypatch.setattr(_hooks_lib(), "write_atomic", write)
     refusal = guard.take(root, COORD, ask=lambda prompt: "y")
@@ -1507,7 +1589,10 @@ def test_a_consented_install_whose_write_fails_refuses_the_take(
 def test_a_failed_offer_names_the_file_the_error_and_the_fix(root, monkeypatch, capsys):
     """`hooks --offer` after a yes whose write fails exits 1 with the file,
     the error and the fix on stderr, the text every dev-setup offer prints
-    on its `[missing]` line."""
+    on its `[missing]` line.
+
+    Implements: TC-345
+    """
     local = _with_example(root)
     monkeypatch.setattr(_hooks_lib(), "write_atomic", _raises_disk_full)
     monkeypatch.setattr(guard, "_terminal_ask", lambda: lambda prompt: "y")
@@ -1523,7 +1608,10 @@ def test_a_failed_offer_names_the_file_the_error_and_the_fix(root, monkeypatch, 
 def test_a_stdin_on_the_null_device_is_no_terminal(monkeypatch):
     """The null device is a character device, which Windows `isatty` reads as
     a terminal; an agent's shell tool hands it to a child. Nobody can be
-    asked there."""
+    asked there.
+
+    Implements: TC-345
+    """
     monkeypatch.delenv("CI", raising=False)
     with open(os.devnull, encoding="utf-8") as null:
         monkeypatch.setattr(sys, "stdin", null)
@@ -1532,7 +1620,10 @@ def test_a_stdin_on_the_null_device_is_no_terminal(monkeypatch):
 
 def test_guard_hooks_holds_no_merge_or_ownership_code():
     """The slot is never shared, so nothing merges beside another hook and
-    nothing owns commands inside a shared group; nothing re-enables."""
+    nothing owns commands inside a shared group; nothing re-enables.
+
+    Implements: TC-345
+    """
     lib = _hooks_lib()
     for name in ("merged", "command_shapes", "_owns", "_without_guard"):
         assert not hasattr(lib, name), name
@@ -1542,7 +1633,10 @@ def test_guard_hooks_holds_no_merge_or_ownership_code():
 
 def test_end_to_end_dry_run(root, tx, tmp_path, monkeypatch):
     """Over the threshold: the latch, the instruction and a refused claim;
-    then a stubbed exit launches exactly once, and the successor takes over."""
+    then a stubbed exit launches exactly once, and the successor takes over.
+
+    Implements: TC-318
+    """
     held(root, tx)
     tx.reply(700)
     out = guard.hook(ev("PreToolUse", transcript=tx.path), root, env={})

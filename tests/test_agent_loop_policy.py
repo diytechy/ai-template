@@ -79,6 +79,7 @@ def test_tracked_pause_fails_closed_on_malformation(tmp_path):
 
 
 def test_pause_reason_reads_the_tracked_home(tmp_path):
+    """Implements: TC-131"""
     al, ac = load_script("agent_loop"), load_script("agent_common")
     assert al.pause_reason(tmp_path) is None  # neither home -> not paused
     _tracked_pause(
@@ -93,6 +94,7 @@ def test_pause_reason_reads_the_tracked_home(tmp_path):
 
 
 def test_legacy_pause_file_no_longer_pauses(tmp_path):
+    """Implements: TC-131"""
     # The legacy untracked `lane/pause` retired at Phase 5: a stray local file
     # must NOT pause (the one meaning lives in the tracked home), and the
     # tracked declaration still does.
@@ -249,6 +251,7 @@ def test_seconds_until_reset_weekly_same_weekday():
 
 
 def test_seconds_until_reset_parses_both_clock_formats():
+    """Implements: TC-168"""
     # The reset wording is locale-dependent: am/pm and 24-hour clocks must
     # both parse; anything else returns None (the fallback-nap signal).
     agent_loop = load_script("agent_loop")

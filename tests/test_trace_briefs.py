@@ -14,6 +14,8 @@ override, and no history to be off. The properties those tests bought are now
 structural rather than checked. The BOM case survives, re-aimed at the snapshot
 file, because a BOM is a property of bytes on disk and the snapshot is bytes on
 disk.
+
+Implements: TC-235, TC-252
 """
 
 # The git-backed tests below guard with `pytest.skip("needs git on PATH")`, and

@@ -94,6 +94,7 @@ import kitlib.spine as KITSPINE  # noqa: E402  (after the load_script calls abov
 
 
 def test_the_spine_row_vocabulary_is_one_home():
+    """Implements: TC-193"""
     # The deletion's warrant, asserted by IDENTITY rather than by value: a value
     # battery over one shared function is exactly the vacuous shape above.
     # `is_drafted`/`is_example`/`refs` reach trace.py through `trace_text`, which
@@ -131,6 +132,7 @@ def test_the_spine_row_vocabulary_is_one_home():
 
 
 def test_the_status_predicates_answer_by_value():
+    """Implements: TC-193"""
     # The half of the deleted batteries that was never about sameness: what the
     # rules ANSWER. The RETIRED SPELLINGS ARE IN HERE DELIBERATELY (D-9 step 5 /
     # step 7 / OI-30 D1) — `Draft`, `Verified`, `Planned` and `Modified` must all
@@ -172,6 +174,7 @@ def test_the_status_predicates_answer_by_value():
 
 
 def test_the_llr_exemption_answers_by_value():
+    """Implements: TC-193"""
     # Review 017's case, kept: the two former copies disagreed on a
     # whitespace-padded valid method (one stripped, one did not), which is a
     # false green on one surface and a false red on the other for ONE registry
@@ -372,6 +375,7 @@ def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
 
 
 def test_the_sn_scrapes_answer_by_value():
+    """Implements: TC-193"""
     # The surviving half of `test_sn_all_ids_agrees` (WI-408),
     # `test_sn_cited_ids_agrees` (WI-401) and `test_sn_draft_ids_agrees`. Their
     # equality loops retired with the copies; these are the SEMANTICS each
@@ -450,6 +454,7 @@ def test_the_sn_scrapes_answer_by_value():
 
 
 def test_the_legacy_approval_translation_agrees():
+    """Implements: TC-152"""
     # SN-029. `bootstrap.py` imports no kit sibling — it is the one script an
     # adopter may run from a bare download — so it carries its own copy of the
     # retired gate-authority enum's translation. This is duplicated POLICY, not
@@ -488,6 +493,7 @@ def test_the_legacy_approval_translation_agrees():
 
 
 def test_the_retired_enum_key_is_no_longer_shipped():
+    """Implements: TC-152"""
     # The shadowing defect, pinned so it cannot come back: the template used to
     # ship BOTH `gate_policy = "attended"` and `human_approval_through = 4`,
     # and since `approval_through` prefers the explicit dial, every repo that
@@ -613,6 +619,7 @@ MIGRATE = load_script("migrate_carrier")
 
 
 def test_the_two_spine_carrier_readers_agree():
+    """Implements: TC-160"""
     # trace.py owns the approve brief's baseline read; check_trajectory.py owns
     # the two-tree amendment scan. Both resolve a registry to a tier and a
     # column vocabulary, and both are consulted about the SAME commit.
@@ -627,6 +634,7 @@ def test_the_two_spine_carrier_readers_agree():
 
 
 def test_the_readers_are_the_exact_inverse_of_the_writer():
+    """Implements: TC-160"""
     # The reader map is `migrate_carrier.KEY` turned around. Asserting the
     # INVERSE rather than "every reader key is known to the writer" is what
     # catches the asymmetric half: a column the writer emits under a key no
@@ -1469,6 +1477,7 @@ import kitlib.station as KITSTATION  # noqa: E402
 
 
 def test_the_toml_text_read_is_one_home():
+    """Implements: TC-176"""
     for mod in (load_script("agent_policy"), AGENT_COMMON):
         assert mod.read_toml_text is KITCONFIG.read_toml_text, mod.__name__
     assert not hasattr(KITSPINE, "_toml_tables")
@@ -1490,6 +1499,7 @@ def test_the_toml_text_read_is_one_home():
 
 
 def test_the_list_cell_split_is_one_home():
+    """Implements: TC-193"""
     frame = load_script("frame_rules")
     assert frame._entries is KITSPINE.seam_endpoints
     split = KITSPINE.seam_endpoints
@@ -1519,7 +1529,10 @@ def string_second():
 def test_the_leading_docstring_test_is_the_stdlibs():
     """`check_stubs` and `check_dupes_census` each carried the same four-line
     docstring predicate. Both now read `ast.get_docstring`, so the copies are
-    gone and the two answer by value as before."""
+    gone and the two answer by value as before.
+
+    Implements: TC-016, TC-190
+    """
     stubs = load_script("check_stubs")
     census = load_script("check_dupes_census")
     assert not hasattr(stubs, "_is_docstring")
@@ -1539,6 +1552,7 @@ def _oi(oid, status, **cells):
 
 
 def test_the_open_items_status_filter_is_one_home():
+    """Implements: TC-314"""
     rows = [
         _oi("OI-001", "pending"),
         _oi("OI-000", "pending"),  # the example row
@@ -1559,6 +1573,7 @@ def test_the_open_items_status_filter_is_one_home():
 
 
 def test_the_open_items_readers_answer_by_value(tmp_path):
+    """Implements: TC-314"""
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True)
     brief = "Approve the [p]-[DevStg-Reqs] batch: a human approval"
@@ -1586,7 +1601,10 @@ def test_the_open_items_stage_keeps_duplicate_rows_in_sequence(tmp_path):
     returns `(id, row)` pairs in row order, never a map that drops the first.
     The brief lint read rows in sequence before WI-821 and still warns on the
     first; the readers that want a by-id map build it, so the last row wins
-    there exactly as it did in their own loops."""
+    there exactly as it did in their own loops.
+
+    Implements: TC-314
+    """
     rows = [
         _oi("OI-001", "pending", OneLine="first"),
         _oi("OI-001", "pending", OneLine="second"),
@@ -1622,7 +1640,10 @@ def test_the_open_items_stage_keeps_duplicate_rows_in_sequence(tmp_path):
 def test_the_brief_lint_reports_a_duplicate_row_in_either_position(tmp_path):
     """Two pending rows sharing an id are both read by the brief lint: the
     link-less approval row warns whether it comes first or second, so no
-    by-id map that keeps only one of them can hide it."""
+    by-id map that keeps only one of them can hide it.
+
+    Implements: TC-314
+    """
     approval = "Approve the [p]-[DevStg-Reqs] batch"
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True)
@@ -1640,6 +1661,7 @@ def test_the_brief_lint_reports_a_duplicate_row_in_either_position(tmp_path):
 
 
 def test_the_one_line_clip_is_one_home():
+    """Implements: TC-193"""
     clip = KITSPINE.clip_line
     assert clip("  a \n b  ", 10) == "a b"
     assert clip("abcdef", 6) == "abcdef"
@@ -1671,6 +1693,7 @@ Intro | not a table header
 
 
 def test_the_plan_table_walk_is_one_home():
+    """Implements: TC-176"""
     pc, pa = load_script("plan_coverage"), load_script("plan_artifacts")
     rows = KITREGISTRY.plan_table_rows(PLAN)
     assert [r["plan-wi"] for r in rows] == ["P1", "P2"]
@@ -1701,7 +1724,10 @@ def test_the_if_citation_sweep_is_the_shared_engine():
 def test_the_if_citation_advisory_keeps_its_own_wording():
     """The IF sweep runs on the shared engine but its sentence is the IF
     copy's, verbatim: a seam, not the system, and a closing period. A filter
-    matching the former phrase must keep matching (WI-821, D-002)."""
+    matching the former phrase must keep matching (WI-821, D-002).
+
+    Implements: TC-126
+    """
     ifs = [{"IF-ID": "IF-101", "Notes": "Minted 2026-08-15."}]
     assert TRACE.if_note_advisories(ifs) == [
         "IF IF-101 Notes carries a citation frame (edit-history stamp 'Minted 2026-08-15') "
@@ -1719,6 +1745,7 @@ def test_the_if_citation_advisory_keeps_its_own_wording():
 
 
 def test_the_fragment_link_rebase_is_the_spec_moves():
+    """Implements: TC-130, TC-139"""
     ts, sm = load_script("trunk_step"), load_script("spec_move")
     text = (
         "[a](../plans/x.md) [b](#here) [c](https://e.org/p) [d](/abs.md) "
@@ -1734,6 +1761,7 @@ def test_the_fragment_link_rebase_is_the_spec_moves():
 
 
 def test_the_reference_doc_argv_differs_only_by_its_doc(tmp_path):
+    """Implements: TC-060"""
     ts = load_script("trunk_step")
     steps = {step[0]: step[2] for step in ts.REGEN_STEPS}
     cli = steps["cli-reference"](tmp_path)
@@ -1751,7 +1779,10 @@ def test_the_two_held_status_predicates_agree_by_value(tmp_path):
     `human_approves_spine` the READER-side one, two contracts that today share
     one body. This file's rule licenses a second copy of a decision only with
     a behavioural pin, so they are held equal BY VALUE over every registry
-    spelling at every dial. A deliberate divergence edits this pin."""
+    spelling at every dial. A deliberate divergence edits this pin.
+
+    Implements: TC-151
+    """
     registries = [
         "docs/requirements/system-requirements",
         "docs/requirements/low-level-requirements.toml",

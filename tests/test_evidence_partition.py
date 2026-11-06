@@ -10,6 +10,8 @@ answer "is this requirement verified" keep reading `Verifies` alone.
 In memory throughout: the spine is plain row dicts in the carrier's column
 names, and the census's one file read (which work items are closed) is
 replaced by the set it would return.
+
+Implements: TC-227
 """
 
 import copy

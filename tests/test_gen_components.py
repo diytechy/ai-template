@@ -111,6 +111,7 @@ def _view(root):
 
 
 def test_membership_and_the_requirement_reach(repo):
+    """Implements: TC-195"""
     view = _view(repo)["component_view"]
     assert view["CMP-001"]["llr_refs"] == ["LLR-001"]
     assert view["CMP-002"]["llr_refs"] == ["LLR-002"]
@@ -121,6 +122,7 @@ def test_membership_and_the_requirement_reach(repo):
 
 
 def test_the_hat_union_is_DERIVED_from_the_parent_not_copied(repo):
+    """Implements: TC-195"""
     # The anti-staleness decision, one tier up: LLR-001 carries no hat cell at
     # all, and its component still records SECURITY because its SR parent does.
     view = _view(repo)["component_view"]
@@ -129,6 +131,7 @@ def test_the_hat_union_is_DERIVED_from_the_parent_not_copied(repo):
 
 
 def test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited(repo):
+    """Implements: TC-195"""
     # The whole point of deriving rather than copying: re-rule ONE requirement
     # and every component that reaches it follows on the next regeneration.
     srs = repo / "docs" / "requirements" / "system-requirements.toml"
@@ -145,6 +148,7 @@ def test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited(repo):
 
 
 def test_a_childless_requirement_is_listed_ONCE_and_never_dropped(repo):
+    """Implements: TC-195"""
     doc = _view(repo)
     assert doc["unplaced"]["sr_refs"] == ["SR-003"]
     assert doc["derived"]["requirements_unplaced"] == 1
@@ -160,6 +164,7 @@ def test_a_childless_requirement_is_listed_ONCE_and_never_dropped(repo):
 
 
 def test_a_shared_requirement_appears_in_EVERY_component_it_reaches(repo):
+    """Implements: TC-195"""
     view = _view(repo)["component_view"]
     assert "SR-001" in view["CMP-001"]["sr_refs"]
     assert "SR-001" in view["CMP-002"]["sr_refs"]
@@ -175,6 +180,7 @@ def test_a_shared_requirement_appears_in_EVERY_component_it_reaches(repo):
 
 
 def test_seams_enter_the_view_split_internal_from_boundary(repo):
+    """Implements: TC-195"""
     view = _view(repo)["component_view"]
     # IF-002's endpoints are both inside CMP-001 -> internal to it.
     assert view["CMP-001"]["seam_internal_refs"] == ["IF-002"]
@@ -185,6 +191,7 @@ def test_seams_enter_the_view_split_internal_from_boundary(repo):
 
 
 def test_an_untagged_seam_is_placed_by_its_ENDPOINTS(repo):
+    """Implements: TC-195"""
     # None of the three IF rows carries a `Component` cell; two of them are
     # placed anyway, through the same endpoint -> LLR.Module normalizer
     # trace.interface_findings already joins on. Excluding untagged rows would
@@ -197,6 +204,7 @@ def test_an_untagged_seam_is_placed_by_its_ENDPOINTS(repo):
 
 
 def test_an_unplaceable_seam_is_REPORTED_not_silently_excluded(repo):
+    """Implements: TC-195"""
     # IF-003 is external at both ends: no tag, no resolvable module. It cannot
     # be placed — and it is named, because a seam that vanishes reads exactly
     # like a seam the generator failed on.
@@ -209,6 +217,7 @@ def test_an_unplaceable_seam_is_REPORTED_not_silently_excluded(repo):
 
 
 def test_the_generated_view_carries_NO_approval_cell(repo):
+    """Implements: TC-195"""
     # OI-30 D3. `components.toml` says CMP-001 is Approved and CMP-002 Drafted;
     # neither word may appear here in any cell, because a generator that wrote
     # one would route around the very dial human_approval_through governs.
@@ -224,6 +233,7 @@ def test_the_generated_view_carries_NO_approval_cell(repo):
 
 
 def test_check_reds_on_a_stale_view_and_greens_once_regenerated(repo):
+    """Implements: TC-195"""
     gen = load_script(GEN)
     assert gen.main(["--root", str(repo)]) == 0
     assert gen.main(["--root", str(repo), "--check"]) == 0
@@ -240,10 +250,12 @@ def test_check_reds_on_a_stale_view_and_greens_once_regenerated(repo):
 
 
 def test_check_reds_when_the_view_is_missing_entirely(repo):
+    """Implements: TC-195"""
     assert load_script(GEN).main(["--root", str(repo), "--check"]) == 1
 
 
 def test_the_written_file_is_LF_and_reproducible(repo):
+    """Implements: TC-195"""
     gen = load_script(GEN)
     assert gen.main(["--root", str(repo)]) == 0
     out = repo / "docs" / "requirements" / "components.derived.toml"
@@ -254,6 +266,7 @@ def test_the_written_file_is_LF_and_reproducible(repo):
 
 
 def test_a_repo_with_no_real_component_is_VACUOUS(tmp_path):
+    """Implements: TC-195"""
     # The layer is optional and off-spine: a fresh scaffold ships only the inert
     # CMP-000 row, and the gate must not red it over something it never adopted.
     _write(
@@ -268,6 +281,7 @@ def test_a_repo_with_no_real_component_is_VACUOUS(tmp_path):
 
 
 def test_the_cli_runs_out_of_process(repo):
+    """Implements: TC-195"""
     # The step check.py wires is a subprocess, so the import path has to hold
     # there too (a sibling import that only resolves in-process is a green here
     # and a red in the gate).

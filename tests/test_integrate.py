@@ -33,6 +33,8 @@ something that merely looks like one:
 process-global coordinator lock fd (`agent_common.acquire_lock`), so calling it
 in-process would leak a held descriptor into the rest of the suite. The
 in-process tests call the pure-ish helpers, which take no lock.
+
+Implements: TC-132, TC-145
 """
 
 import shutil
@@ -275,6 +277,7 @@ def test_a_historical_joined_claim_still_reads_as_a_claim(tmp_path):
 
 
 def test_a_claim_of_a_row_with_no_done_when_warns_by_name(tmp_path, capsys):
+    """Implements: TC-257"""
     # S13 (review pack B3): every claimable work item has a Done-when, written
     # before claim by whoever files it. WARN-FIRST: the intake mint still files
     # its rows without one, so a refusal today would park every minted row off
@@ -286,6 +289,7 @@ def test_a_claim_of_a_row_with_no_done_when_warns_by_name(tmp_path, capsys):
 
 
 def test_a_claim_of_a_row_with_a_done_when_is_silent_about_it(tmp_path, capsys):
+    """Implements: TC-257"""
     git_repo(tmp_path)
     spec = write_spec(tmp_path, "queued", "WI-401", specref="seed.txt")
     with spec.open("a", encoding="utf-8", newline="\n") as fh:
