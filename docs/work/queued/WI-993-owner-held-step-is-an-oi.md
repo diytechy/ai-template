@@ -55,10 +55,8 @@ last of them and is not a fourth.
    its citer is a queued row, and it lands third only to keep the lane's
    review in one order.
 
-One row or several is the owner's answer (rubric S1), recorded here before
-the claim. Recommended: one lane, in this order, one commit each; deliverables
-1 and 2 cannot usefully separate, and a split of deliverable 3 is filed on
-trunk before the claim.
+One lane, in this order, one commit each (OI-126 Q1 (a), 2026-11-05):
+deliverables 1 and 2 cannot usefully separate.
 
 ## Done-when
 
@@ -74,6 +72,10 @@ trunk before the claim.
   "partial is the only stop" are amended to say so; a re-scoping owner
   answer still closes the lane partial (call 1). A planned step is one the
   claim copy's Done-when names.
+- OI-126 ruled 2026-11-05, Q1 (a) and Q2 (a): a held-rung approval is never
+  such a step. The lane lands its text and the act is ruled on trunk, on
+  `open-items.html`; an approval on a released rung, or one delegated to the
+  adjudicator, stays in the lane. The text sites say so.
 - A sitting verdict that rules MEANING on a held-rung row writes the
   pending open item for its owner act (the row, the verdict, the command),
   so no coordinator files it by hand (call 1, mechanized). The writer is the

@@ -46,3 +46,10 @@ Advisory registry joins (WI-388; never gating):
 - IF-056 scripts/check_trajectory <- scripts/gen_trajectory: call check_trajectory loaders: validate, read_registry_rows, load_wis, load_known_srs, read_trajectory_enabled, WI…
 - IF-071 scripts/schedule <- scripts/gen_trajectory: call load_registry_rows, load_wis, frontier, evaluate; empty when the module is absent
 - IF-083 scripts/check_trajectory <- scripts/rendering/traj_views: call check_trajectory joins: read_rows, load_seams, component_top_view, _norm_module, _split_refs, SR_CSV, TOP_VIE…
+
+## Done-when
+
+- OI-128 ruled 2026-11-05: the tool's pinned install is restored in the primary
+  checkout, and a lane reaches it by the recipes' junction, never a new install.
+- TC-055 is re-judged by its Method and the observation recorded; a fail is
+  recorded as a fail.

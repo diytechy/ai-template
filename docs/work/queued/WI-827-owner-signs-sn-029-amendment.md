@@ -33,4 +33,6 @@ same sitting. Its Done-when follows.
 - SN-029 sits on a held rung, so the owner, or an attended session on the
   owner's explicit delegation recorded in the commit, lands it on trunk: the
   text first, then the act in its own commit. It never lands from a lane.
+- OI-121 ruled 2026-11-05 (a): an attended session drafts and sits the text,
+  then the owner takes the act on trunk. No leg claims this row.
 - `trace.py --strict-integrity` and `check_trajectory.py --strict` pass.

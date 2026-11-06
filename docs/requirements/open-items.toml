@@ -4215,10 +4215,12 @@ ruled_date = "2026-11-02"
 
 [open_item.OI-121]
 title = "WI-827: the owner takes SN-029's re-attestation act on trunk after its sitting"
-status = "pending"
+status = "ruled"
 raised = "2026-11-02"
-one_line = "WI-827's SN-029 amendment ends in an act only the owner may take (a held rung); take it on trunk once its sitting has judged the text, or return the text."
-decision = """Filed by the attended coordinator on 2026-11-02 under the owner's 2026-10-25 ruling that an owner-held step is an open item (coordinator-2026-11-02 D-004), call (5): pending items for the owner-held rows WI-827, WI-908 and WI-964.
+one_line = "RULED 2026-11-05 (a) RUN IT ATTENDED: an attended session drafts and sits SN-029's text, then the owner takes the act on trunk. Written into WI-827."
+decision = """RULED 2026-11-05 by the owner, verbatim: "OI 121 - Follow recommendation". Option (a), as recommended, in an attended session. WI-827 is released to an attended session only; no leg claims it.
+
+Filed by the attended coordinator on 2026-11-02 under the owner's 2026-10-25 ruling that an owner-held step is an open item (coordinator-2026-11-02 D-004), call (5): pending items for the owner-held rows WI-827, WI-908 and WI-964.
 
 WHAT IS TRUE. OI-106 ruled (2026-10-07) how SN-029's cells are amended; WI-827 carries the amendment, its sitting and the act. SN-029 sits on a held rung, so the act is the owner's, or an attended session's on the owner's explicit delegation, on trunk, text first; it never lands from a lane. The handoffs listed WI-827 as never claimed by a leg, while the generated status read it as ready, since its only cited item (OI-106) is ruled.
 
@@ -4227,6 +4229,7 @@ blast_radius = """WI-827 only. Until it lands, SN-029's acceptance keeps the two
 options = """- (a) RUN IT ATTENDED: an attended session drafts and sits the text, then the owner takes the act on trunk; ruling this item releases WI-827 to that session.
 - (b) RETURN THE TEXT: name what is wrong with OI-106's ruled text; the row is re-scoped."""
 recommendation = "(a): the text is already ruled (OI-106), and only the act needs the owner."
+ruled_date = "2026-11-05"
 
 [open_item.OI-122]
 title = "WI-908: the owner provisions a second Claude login and attends the isolation check"
@@ -4295,10 +4298,16 @@ ruled_date = "2026-11-03"
 
 [open_item.OI-126]
 title = "WI-993: one row or several, and whether a held-rung item appears at the landing or at the sitting"
-status = "pending"
+status = "ruled"
 raised = "2026-11-04"
-one_line = "WI-993's scope critique needs two owner answers before its claim: one row or several for its three deliverables, and whether the minted open item for a held-rung MEANING ruling appears at the row's landing or at the sitting."
-decision = """Filed by headless leg 32 (loop session 20261104T181017Z-49d2cc) under the owner's 2026-10-25 ruling that a decision only the owner can make, and that holds a row, is a pending open item its row's needs cite (coordinator-2026-11-04 D-006).
+one_line = "RULED 2026-11-05 Q1 (a) one lane, Q2 (a) the item appears at the landing. A lane never parks for an owner-held approval: it lands its text, and the act is ruled on trunk. Written into WI-993."
+decision = """RULED 2026-11-05 by the owner, attended. Verbatim: "if the approval is truly only for the operator, it must return to the trunk as a handback for the operator to rule on in a single location. If the state of the modified items is beyond the operator approval level or the operator has deligated approval to the adjudicator, then it can happen in lane." Asked to confirm the reading that a lane never parks for an approval: "Right now the mechanism that surfaces spine approvals only flows through the trunk, so I don't see another path."
+
+Q2 (a): the item appears at the landing. This narrows the 2026-10-25 ruling's call 1: a lane keeps its claim only at an owner-held step that is not a held-rung approval (a decision, a credential, the owner's presence). The held-rung lane rule already refuses a MEANING act from a lane (wi-976 D-023), so nothing changes in the machinery.
+
+Q1 (a): one lane, in ordered commits. The owner did not address Q1 in words; asked to commit "all three rulings" with Q1 (a) named, the owner answered "You can commit". Recorded as taken on that answer; the owner may overrule it, at low cost, before the row's claim.
+
+Filed by headless leg 32 (loop session 20261104T181017Z-49d2cc) under the owner's 2026-10-25 ruling that a decision only the owner can make, and that holds a row, is a pending open item its row's needs cite (coordinator-2026-11-04 D-006).
 
 WHAT IS TRUE. WI-993's fresh scope critique found four MAJORs. Three are answered in the row (planmode, a Trust section, the architectural delta). The rubric's S1 leaves keeping deliverables together to the owner. The writer's shape had to be re-derived, because the draft holding the owner-confirmed writer details was lost (coordinator-2026-11-02 D-004).
 
@@ -4308,13 +4317,18 @@ options = """Each call is ruled separately; (a) is the drafter's proposal.
 - Q1 ONE ROW OR SEVERAL. (a) One lane, in ordered commits: the claimed citer, the policy text, the mint arm. (b) Split the mint arm into its own row, filed on trunk before the claim. FOR (a): the first two cannot usefully separate, and the third is small. AGAINST (a): the mint arm is independently landable and touches the merge slot's post-merge step.
 - Q2 WHEN THE ITEM APPEARS. (a) At the landing that brings the verdict and the row's text to trunk, written by the merge slot's intake mint in its one commit. (b) At the sitting, as a plain reading of call 1's 'writes' may have meant. FOR (a): one commit writes item, queued row and watermark, so no half-filed state exists, and the verdict gains no hold on a lane. AGAINST (a): the owner learns of the held step only at the landing."""
 recommendation = "Q1 (a) and Q2 (a), the drafter's proposals; Q2 (b) needs a new write route from a sitting to trunk."
+ruled_date = "2026-11-05"
 
 [open_item.OI-127]
 title = "WI-997: two approved test cases have no test behind them, so the row stopped as its Done-when orders"
-status = "pending"
+status = "ruled"
 raised = "2026-11-04"
-one_line = "WI-997's Done-when stops the row where no test verifies a case, and two cases have none: TC-166 (no test and no code for its rule) and TC-165's token-scan half. Choose how the tag migration proceeds; recommendation (b), the two cases move to their own rows and take no tag."
-decision = """Raised by the coordinator in headless leg 33 of loop session 20261104T181017Z-49d2cc (coordinator-2026-11-04 D-007).
+one_line = "RULED 2026-11-05 (b), revised: TC-166 and TC-165's token-scan half move to their own rows (WI-999, WI-1000), their evidence cells name those rows instead of a test file, and neither file gets a tag. WI-1001 files the check that closes the class. Written into WI-997."
+decision = """RULED 2026-11-05 by the owner, verbatim: "I'm okay with moving these out to keep the rest of the lane moving". Option (b), in the revised form put to the owner, after asking whether the two cases predate the lane (they do: created 2026-08-14 and 2026-08-15, approved at the 2026-08-20 signing, LLR-172 stating "NOT BUILT YET").
+
+The revision. Option (b) as filed emptied the two cells, but a TC with automated = "Yes" and no evidence is a trace finding. So each cell names its debt row instead, and the build confirms the form the checks accept. WI-1001 adds what would have caught this: an approved automated TC with no tagged test is a strict finding. Whether SR-165 and SR-035's token scan are built or retired is OI-129.
+
+Raised by the coordinator in headless leg 33 of loop session 20261104T181017Z-49d2cc (coordinator-2026-11-04 D-007).
 
 WHAT IS TRUE. WI-997's Done-when item on the stale parts repoints each stale evidence part at the test that verifies the case, and says: where no test verifies the case, the row stops and reports it, a finding about the TC and not a cell edit. Its planner found two such cases, and the coordinator confirmed both against the lane at 913ac5bb7.
 
@@ -4331,14 +4345,17 @@ options = """- (a) CLOSE PARTIAL: WI-997 closes partial at its stale-part step, 
 - (b) MOVE THE TWO CASES OUT AND CONTINUE: the two cases are filed as their own rows first, and this ruling amends the stale-part item so they stop being claimed by this row. Their cells drop the test-file path, so neither file gets a tag and neither case reads as verified by tests that do not verify it. The build then runs the seed and the check as planned. FOR: the 2100 tags and two rows behind them stop waiting on an old defect unrelated to tags; the plan cap is unspent, so the edit costs no round. AGAINST: it edits two Approved evidence cells, which the Done-when calls not the remedy, so it needs this ruling; and it is unchecked whether any bar expects an automated TC to name a test file, which the build would confirm first. A narrower form keeps the cells and seeds the two tags, which the planner proposed, but it records a false statement in two more places and WI-995 would read both cases as covered, so it is not recommended.
 - (c) REPAIR FIRST: preparatory rows build LLR-172's derivation-record rule and TC-165's token scan, or retire what is no longer wanted, and they land first. WI-997 then rebases and repoints both cells exactly as its Done-when says. FOR: no text changes, and the trace ends true. AGAINST: an unscoped build of a rule nobody has asked for since it was approved stands ahead of the tag migration and the two rows behind it."""
 recommendation = "(b), with the cells dropping the path: it keeps the migration moving and states no false verification. The two new rows then decide whether SR-165's derivation record and SR-035's token scan get built or retired, which is the larger question this finding raises and is yours in either case."
-wi_refs = ["WI-997", "WI-999"]
+wi_refs = ["WI-997", "WI-999", "WI-1000", "WI-1001"]
+ruled_date = "2026-11-05"
 
 [open_item.OI-128]
 title = "WI-991: TC-055's re-judge cannot render, because the dashboard tool's Playwright install is gone"
-status = "pending"
+status = "ruled"
 raised = "2026-11-04"
-one_line = "scripts/dashboard-shots/node_modules is empty, so shoot.mjs cannot render the PNG matrix TC-055's method requires, and a leg may not install software its handoff does not name. Restore the pinned install, or name npm ci in the handoff; recommendation (b)."
-decision = """Raised by the coordinator in headless leg 33 of loop session 20261104T181017Z-49d2cc (coordinator-2026-11-04 D-009), under the owner's 2026-10-25 ruling that anything keeping a lane from building forward is an open item.
+one_line = "RULED 2026-11-05: the owner allowed the install, and npm ci ran in scripts/dashboard-shots in the attended session (playwright 1.61.1, Chromium launches). Written into WI-991."
+decision = """RULED 2026-11-05 by the owner, verbatim: "it's fine to install playwright as well to satisfy the constraints of the test infra." The attended session ran npm ci in scripts/dashboard-shots, the tool's documented prerequisite, pinned by its package-lock.json, and confirmed Chromium launches. So no leg installs anything: a lane reaches this install by the recipes' junction. The cause of the empty folder stays unknown.
+
+Raised by the coordinator in headless leg 33 of loop session 20261104T181017Z-49d2cc (coordinator-2026-11-04 D-009), under the owner's 2026-10-25 ruling that anything keeping a lane from building forward is an open item.
 
 WHAT IS TRUE. WI-991 re-judges TC-055 by its method, which takes the rendered matrix from scripts/dashboard-shots/shoot.mjs and makes no judgment on a failed run or an incomplete matrix. shoot.mjs imports playwright. The folder scripts/dashboard-shots/node_modules exists but is empty, last changed 2026-11-01 at 17:29 local. Its cause is not known: no commit near that time touches it, and it was last known working at WI-920's re-judge on 2026-10-25. The pinned Chromium build 1228 is still installed for the user, so only the npm package is missing.
 
@@ -4351,3 +4368,24 @@ options = """- (a) THE OWNER RESTORES IT: run npm ci in scripts/dashboard-shots,
 - (c) DROP THE RE-JUDGE FOR NOW: WI-991 waits until the pass nears its expiry. FOR: nothing to do today. AGAINST: the declared trigger has fired, and the row stays open."""
 recommendation = "(b): the same pinned install at no cost of the owner's time, and the row then runs in a leg."
 wi_refs = ["WI-991"]
+ruled_date = "2026-11-05"
+
+[open_item.OI-129]
+title = "SR-165's derivation record and SR-035's token scan: approved obligations with nothing behind them, built or retired"
+status = "pending"
+raised = "2026-11-05"
+one_line = "OI-127 moved two undelivered test cases to their own rows. Rule each: build what the approved chain states, or retire it; recommendation build both."
+decision = """Filed by the attended coordinator on 2026-11-05 with OI-127's ruling, whose option (b) left this call to the owner.
+
+WHAT IS TRUE. Both obligations were approved at the 2026-08-20 signing and no work item has ever delivered them.
+
+- SR-165, LLR-172 and TC-166: a component partition carries a machine-readable derivation record. LLR-172 states "NOT BUILT YET": the record cells do not exist on the component schema. Building it means those cells, the check beside the existing component findings, and a record for each live component.
+- SR-035's token-scan clause, LLR-171 and TC-165's second half: a scan of the shipped registry templates and ID vocabulary finds no language-specific token. TC-165's first half is covered by a test in tests/test_profile.py; the scan has no test.
+
+WHAT IS HELD. WI-999 and WI-1000, not the tag migration behind OI-127."""
+blast_radius = """WI-999 and WI-1000 only. Retiring either moves approved rows: SR-165 realizes SN-040, on the held needs rung, so retiring it reaches that need too."""
+options = """Each call is ruled separately.
+- Q1 SR-165's DERIVATION RECORD. (a) Build it (WI-999). (b) Retire SR-165, LLR-172 and TC-166, and rule what happens to SN-040. FOR (a): the need stands and the requirement is approved. AGAINST (a): new schema cells and a backfilled record for a partition that rarely changes.
+- Q2 SR-035's TOKEN SCAN. (a) Build it (WI-1000). (b) Amend SR-035, LLR-171 and TC-165 to drop the scan, keeping the scaffold check. FOR (a): a small test, and it is what makes the stack-neutral claim falsifiable. AGAINST (a): a token list is itself a judgement that needs upkeep."""
+recommendation = """Q2 (a): small, and LLR-171's rationale rests on it. Q1 (a), held lightly: retiring reopens a held need, but the scope critique may show the backfill costs more than the record is worth, and the owner can then revisit it."""
+wi_refs = ["WI-999", "WI-1000"]

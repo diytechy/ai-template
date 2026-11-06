@@ -71,11 +71,17 @@ cell; no second parse of the cell.
       aside, is unchanged, and the collected test count is unchanged. The
       result is stated in the log.
 - [ ] **The stale parts.** No live TC's `evidence` holds a node naming no def,
-      or a part that is not a path. Each of the 19 nodes, and TC-165's and
-      TC-166's parentheticals, is repointed at the test that verifies the case
-      (a traced-only change, re-anchored in the lane), and each is recorded in
-      the lane's decisions. Where no test verifies the case, the row stops and
-      reports it: that is a finding about the TC, not a cell edit.
+      or a part that is not a path, TC-165 and TC-166 aside. Each of the 19
+      nodes is repointed at the test that verifies the case (a traced-only
+      change, re-anchored in the lane), and each is recorded in the lane's
+      decisions. Where no test verifies the case, the row stops and reports
+      it: that is a finding about the TC, not a cell edit.
+- [ ] **The two moved cases** (OI-127 ruled (b), revised, 2026-11-05). TC-165's
+      and TC-166's `evidence` cells drop the test-file path and name their
+      debt rows, WI-1000 and WI-999, and neither file takes a tag for them. An
+      automated TC with an empty cell is a trace finding, so the build first
+      confirms the form the checks accept, and records it in the lane's
+      decisions. The row does not stop for these two cases.
 - [ ] **The check.** `check_trajectory.py`, through `trajectory_arch.py` beside
       row 1's findings, reports the equality rule's two findings: a WARN, and
       an ERROR under `--strict`, the idiom row 1 uses. It is vacuous with no

@@ -1,0 +1,28 @@
+# docs/decisions/coordinator-2026-11-05.toml — calls the attended coordinator
+# recorded on trunk on 2026-11-05, with the owner, after headless leg 33 stopped.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "OI-127's ruling commit amends WI-997's claimed Done-when: its stale-parts item sets TC-165 and TC-166 aside, and a new item moves the two cases' evidence cells to their debt rows, WI-1000 and WI-999. The owner read the exact text in session and confirmed it (\"Yes the wording is fine\")."
+alternative = "Close WI-997 partial and carry the tag work to a successor (OI-127's option (a))."
+reversal_cost = "Low: two Done-when items on an unbuilt row with no pass record."
+why_not_escalated = "Escalated: the owner confirmed the text in session, 2026-11-05."
+review = ""
+owner = "confirmed"
+done_when = "sha256:332f7f304d074a47"
+
+[decision.D-002]
+decided = "OI-126 Q1 is recorded as (a), one lane, on the owner's answer \"You can commit\" to a question naming Q1 (a) among the rulings to commit. The owner's words addressed Q2 and not Q1."
+alternative = "Leave OI-126 pending until the owner states Q1, holding WI-993."
+reversal_cost = "Low: a queued row; an overrule files the mint arm as its own row before the claim."
+why_not_escalated = "The recommendation stood, the answer was affirmative and the row is unclaimed; recorded for confirm or overrule."
+review = ""
+
+[decision.D-003]
+decided = "The new handoff drops the Overnight: stop line, at the owner's request to run the overnight leg: OI-121, OI-126, OI-127 and OI-128 are ruled, and queue rows can move. WI-997's lane is rebased onto the commit carrying this record; its pre-rebase tip is 519d6bc21, for the landing's archive step."
+alternative = "Keep the stop line and run the rows attended."
+reversal_cost = "Low: a later handoff restores the line."
+why_not_escalated = "The session prompt's close-out step leaves the line to the owner's asking, and the owner asked."
+review = ""
