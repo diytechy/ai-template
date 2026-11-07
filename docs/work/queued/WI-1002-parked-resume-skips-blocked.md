@@ -50,3 +50,5 @@ Round 1 (fresh Codex session, 2026-11-07): CHANGES-REQUESTED, two MINORs.
   one filter on the parked-lane list, reading a disposition that already
   exists, and the Done-when's `tests/test_dispatch.py` case fully specifies it,
   which is S4's stated exception.
+
+Round 2 (fresh Codex session, confirming, 2026-11-07): APPROVE, no findings; both dispositions confirmed.

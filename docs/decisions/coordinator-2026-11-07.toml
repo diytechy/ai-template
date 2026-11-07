@@ -10,3 +10,10 @@ alternative = "planmode single, a planner and a plan critique for a one-filter c
 reversal_cost = "Low: the row is unclaimed."
 why_not_escalated = "Pre-claim disposition of two MINORs, on the routes the critic offered."
 review = ""
+
+[decision.D-002]
+decided = "WI-996 and WI-1002 are claimed under one scoped unpause. WI-996 lands first, as the queue table orders; WI-1002 touches only the dispatcher's parked-lane read, so it builds beside WI-996 and lands after it, each landing alone under the machinery rule."
+alternative = "Claim WI-1002 only once WI-996 has landed, leaving a confirmed row idle through WI-996's whole cycle."
+reversal_cost = "Low: an unbuilt lane can be returned to the queue."
+why_not_escalated = "The queue table orders the rows, and the skill makes parallel lanes normal and claims a batch under one unpause."
+review = ""
