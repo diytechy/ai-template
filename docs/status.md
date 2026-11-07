@@ -25,9 +25,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-11-07b-attended-coordinator.md](handoff-2026-11-07b-attended-coordinator.md).
-  Headless leg 36 stopped on the owner's weekly usage limit with two rows
-  claimed and one mid-build; that handoff says how to continue them.
+  [handoff-2026-11-07c-attended-coordinator.md](handoff-2026-11-07c-attended-coordinator.md).
+  Headless leg 37 was killed by a machine crash with both claimed rows
+  mid-build (tests first committed, code uncommitted); that handoff says how
+  to continue them.
   The tag-migration row and the dashboard re-judge have landed: test files
   carry their test-case tags, and a strict finding holds them equal to the
   evidence cells, so an intent row's evidence cell holds a note until the
