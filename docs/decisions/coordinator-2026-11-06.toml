@@ -17,3 +17,10 @@ alternative = "Disposition WI-1001 now and spend the leg's remaining context on 
 reversal_cost = "Low: the findings are recorded and no row moved."
 why_not_escalated = "Nothing is held: the row is last in the queue table."
 review = ""
+
+[decision.D-003]
+decided = "WI-1001's round-1 critique takes its dispositions, on the route the last handoff told the owner a leg would take: WI-1000 and WI-999 join its `needs`, so the row waits on OI-129 and debt evidence exempts nothing, with no exception mechanism. The drafter also found TC-035 a third automated case with no tag, and drafted its `automated` cell to No as a Done-when item, a traced change; the confirming round judges it. Reusing the WI-997 gating means an adopter goes strict-red at DevStg-Impl until every case is tagged, listed for the owner with the second forced migration it brings."
+alternative = "Name exceptions in the row, adding a mechanism."
+reversal_cost = "Low: the row is unclaimed."
+why_not_escalated = "Pre-claim disposition, and the owner was told the default; the row now waits on the owner's OI-129 anyway."
+review = ""
