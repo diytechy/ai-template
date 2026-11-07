@@ -3,12 +3,22 @@ id = "WI-1002"
 title = "The dispatcher's parked-lane resume leaves out a lane whose claimed row reads blocked, so a filed owner-held step launches no worker"
 workstream = "process"
 sr_refs = ["SR-026", "SR-148"]
-specref = "docs/reviews/wi-993/012-ADJUDICATE-26b4d09.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 planmode = "none"
 priority = 5
 +++
+
+## Deliverable
+
+The unattended dispatcher's parked-lane resume leaves out a claimed lane whose
+row reads `blocked` in the shared schedule (an unmet open-item edge): the lane
+draws no worker and keeps its claim, and the run goes on to claim the next
+ready row with no stall. Every other disposition resumes as before, a lane
+citing a ruled item included. The filter reads the schedule's own disposition,
+no second predicate. LLR-143 and TC-137 re-attested at the lane's act under
+sitting 003; the RESYNC entry states it, with no forced migration.
 
 ## Context
 
@@ -24,7 +34,7 @@ critique before its claim.
 
 ## Done-when
 
-- [ ] The parked-lane resume leaves out a lane whose claimed row reads blocked in
+- [x] The parked-lane resume leaves out a lane whose claimed row reads blocked in
       the shared schedule: it launches no worker, keeps the claim, goes on to
       claim the next ready row and ends without a stall. A parked lane whose
       claimed row reads anything else keeps today's resume admission. The
@@ -32,11 +42,11 @@ critique before its claim.
       PROCESS.md §6 "Review threat model" bounds a spec's promise; hand-edited
       kit-written state, hand-chosen aliases and sub-second timing windows are
       outside it.
-- [ ] The resume LLR is amended to say so.
-- [ ] A `tests/test_dispatch.py` case over a parked blocked lane beside a ready
+- [x] The resume LLR is amended to say so.
+- [x] A `tests/test_dispatch.py` case over a parked blocked lane beside a ready
       row asserts no launch, the claim kept and the next row claimed.
-- [ ] RESYNC entry, if the behaviour reaches adopters.
-- [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
+- [x] RESYNC entry, if the behaviour reaches adopters.
+- [x] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
 
 ## Critique dispositions
 

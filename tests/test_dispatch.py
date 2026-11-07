@@ -143,14 +143,19 @@ def write_watermark(root, **marks):
 
 
 def spec_text(
-    wid, safety="ordinary", specref=None, deliverable="A widget, shipped.", bar=None
+    wid,
+    safety="ordinary",
+    specref=None,
+    deliverable="A widget, shipped.",
+    bar=None,
+    needs=(),
 ):
     lines = [
         'id = "{}"'.format(wid),
         'title = "Widget"',
         'workstream = "ws"',
         'sr_refs = ["SR-001"]',
-        "needs = []",
+        "needs = [{}]".format(", ".join('"{}"'.format(n) for n in needs)),
         'safety_class = "{}"'.format(safety),
         "order = 0",
     ]
@@ -482,6 +487,95 @@ def test_a_parked_lane_claimed_with_two_specs_stops_the_run(tmp_path, capfd):
     active = root / "docs" / "work" / "active" / "wi-401"
     assert (active / "WI-401-alpha.md").is_file()
     assert (active / "WI-402-beta.md").is_file()
+
+
+# --- a parked lane at a filed owner-held step (LLR-143) -----------------------
+#
+# A claimed row whose `needs` cites a pending open item reads `blocked` in the
+# shared schedule (LLR-288), and the worker brief composes no assignment for
+# it. The resume must agree: the blocked lane keeps its claim and draws no
+# worker, while the ready row beside it is claimed and driven.
+
+
+def parked_beside_ready_repo(tmp_path, oi_status):
+    """WI-401 queued and ready (the stub harness), beside WI-402 parked on
+    `wi-402` with `needs` citing OI-005, whose registry row reads
+    `oi_status`."""
+    root = stub_harness_repo(tmp_path)
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "open-items.toml").write_text(
+        '[open_item.OI-005]\ntitle = "The owner\'s call"\nstatus = "{}"\n'.format(
+            oi_status
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    write_spec(
+        root,
+        "active/wi-402",
+        "WI-402",
+        slug="parked",
+        specref="seed.txt",
+        needs=("OI-005",),
+    )
+    _commit(root, "claim: WI-402 -> active/wi-402, citing OI-005", when=T_LATER)
+    _git(root, "branch", "wi-402")
+    return root
+
+
+def test_a_parked_blocked_lane_draws_no_worker_and_the_ready_row_is_claimed(
+    tmp_path, capfd
+):
+    root = parked_beside_ready_repo(tmp_path, "pending")
+    disp = {
+        r["id"]: r["disposition"]
+        for r in drv.schedule.evaluate(
+            drv.schedule._load(root), oi_status=drv.schedule.load_oi_status(root)
+        )
+    }
+    assert disp == {"WI-401": "ready", "WI-402": "blocked"}, disp
+    worker = closing_all_worker()
+
+    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+
+    captured = capfd.readouterr()
+    # No worker launch for the blocked lane; the ready row is claimed and driven.
+    assert worker.calls == [("wi-401-widget", "WI-401")], worker.calls
+    assert "resuming parked branch wi-402" not in captured.out, captured.out
+    # The blocked lane keeps its claim: spec still in active/, branch still there.
+    active = root / "docs" / "work" / "active" / "wi-402" / "WI-402-parked.md"
+    assert active.is_file()
+    assert "wi-402" in _git(root, "branch", "--format=%(refname:short)").split()
+    assert not list((root / "docs" / "handbacks").glob("WI-402-*.md"))
+    # The ready row merged, and the run ended without a stall.
+    assert (root / "docs" / "work" / "complete" / "WI-401-widget.md").is_file()
+    assert "STALL" not in captured.err, captured.err
+    assert rc == 0, captured.out + captured.err
+
+
+def test_a_parked_lane_citing_a_ruled_item_still_resumes_first(tmp_path, capfd):
+    # Already-correct behaviour, pinned beside the blocked case: a parked lane
+    # whose claimed row reads anything but `blocked` keeps today's resume
+    # admission, first and ahead of the ready row. Adequacy witness: an
+    # implementation that excluded every parked lane, or every lane whose
+    # `needs` cites an open item (rather than reading the row's `blocked`
+    # disposition), would claim WI-401 first and never resume WI-402 here.
+    root = parked_beside_ready_repo(tmp_path, "ruled")
+    worker = closing_all_worker()
+
+    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+
+    captured = capfd.readouterr()
+    assert "resuming parked branch wi-402 (WI-402)" in captured.out, captured.out
+    assert worker.calls == [
+        ("wi-402", "WI-402"),
+        ("wi-401-widget", "WI-401"),
+    ], worker.calls
+    complete = root / "docs" / "work" / "complete"
+    assert (complete / "WI-402-parked.md").is_file()
+    assert (complete / "WI-401-widget.md").is_file()
+    assert rc == 0, captured.out + captured.err
 
 
 # --- the third terminal outcome: HANDBACK (WI-387, §A3) -----------------------

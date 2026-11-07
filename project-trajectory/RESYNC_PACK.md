@@ -10655,6 +10655,27 @@ and nothing else is owed. Stop typing `--tests` in your own scripts and notes.
 `stack.ini.template` (comments only). One `scope: this-repo` skill changed too,
 only if you vendored it: `skills/coordinator-cycle/`.
 
+### A parked lane whose claimed row reads blocked is not resumed [since 36476624e]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The unattended dispatcher's parked-lane resume now leaves out
+a claimed lane whose row reads `blocked` in the shared schedule, the open-item
+hold the scheduler already derives. Such a lane draws no worker and keeps its
+claim, and the tick goes on to claim the next ready row; it is not a stall.
+Before, a lane holding a row that cites a pending open item was relaunched
+first, against the worker brief's "no worker assignment" for a held row. A
+parked lane whose row reads anything else resumes as before, a lane citing a
+ruled item included. Once the item is ruled the row stops reading `blocked`
+and the next run resumes the lane.
+
+**What to do (no forced migration).** Overwrite the kit-owned file below. No
+setting, schema, registry row or record format changes. A lane you held by
+filing and citing a pending open item now stays parked on the unattended route
+until the item is ruled.
+
+**Kit-owned files — overwrite:** `scripts/dispatch.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

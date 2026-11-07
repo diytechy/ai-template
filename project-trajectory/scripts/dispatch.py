@@ -178,7 +178,13 @@ def _parked_branches(root):
     review round at its current tree (`_round_owed`): the round is work only a
     worker can do, and the merge slot refuses the branch until it is drawn.
     Reuses the integrator's own finished-branch read so the two never disagree
-    about "finished"."""
+    about "finished".
+
+    A lane whose claimed row reads `blocked` in the shared schedule (an
+    open-item edge still unmet) is not resumable: it is left out, so it draws
+    no worker, keeps its claim, and the tick goes on to the next ready row. The
+    disposition is the schedule's own (`schedule.evaluate`), never a second
+    reading of the row's edges; every other disposition resumes as before."""
     active = root / "docs" / "work" / "active"
     if not active.is_dir():
         return []
@@ -190,11 +196,21 @@ def _parked_branches(root):
         and any(p.glob("WI-*.md"))
         and (p.name not in finished or _round_owed(root, p.name))
     ]
-    return [
+    parked = [
         b
         for b in candidates
         if ac.git(root, "rev-parse", "--verify", "--quiet", "refs/heads/" + b)[0] == 0
     ]
+    if not parked:
+        return []
+    blocked = {
+        r["id"]
+        for r in schedule.evaluate(
+            schedule._load(root), oi_status=schedule.load_oi_status(root)
+        )
+        if r["disposition"] == "blocked"
+    }
+    return [b for b in parked if blocked.isdisjoint(integrate._claimed_wi_ids(root, b))]
 
 
 def _session_config_refusal(root, args):

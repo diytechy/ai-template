@@ -1,0 +1,32 @@
+# docs/decisions/wi-1002.toml — delegated calls in WI-1002's lane.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The tests-first commit adds two `tests/test_dispatch.py` cases over a fixture with a parked lane whose claimed row cites a pending item beside a ready row: the blocked lane draws no worker, keeps its claim, and the ready row is claimed and merged with no stall (strict expected failure; under `--runxfail` it fails at its own assertion), and a parked lane citing a ruled item still resumes first (characterization, unmarked, its witness naming an implementation that excludes every parked lane or every lane citing an open item). TC-137's Evidence cell already names the module, and the module docstring carries the tag as the file's other TC-137 cases do, so the cell is unchanged. Each round's REVIEW-B is a Claude Opus (high) stand-in (ruling 7; coordinator-2026-10-16 D-008), and the lane's count starts at zero."
+alternative = "Per-test tags listing each node in TC-137's Evidence."
+reversal_cost = "Low."
+why_not_escalated = "The file's own convention; the strict lints pass."
+review = ""
+
+[decision.D-002]
+decided = "Round 1 (counted, at c873dcf; files 001 and 002): REVIEW-A APPROVE with no findings, REVIEW-B (Claude Opus high stand-in) APPROVE with three MINORs, so the checkpoint follows. Triage, no round owed: F1 (a stray `import pytest` inside the `STUB_CHECK` string, added by the tests-first commit) is confirmed against the patch history and removed in the checkpoint commit, a one-line test-fixture fix the uncounted gate reviews; F2 (the blocked-ids read composed both here and in the worker brief, through the private schedule loader) is a consolidation outside the spec's named surface (SKILL section 3, Iterate step 8), so it goes to the handoff's follow-ups as a candidate row, not built here; F3 (TC-137's added sentence names the lane as the claimant and omits the no-stall and ruled-item halves) went to the spine change list and Terra's checkpoint reconcile adopted the reviewer's wording. Terra's note that the two new tests carry no function-scoped tag is the file's module-level convention (D-001), so nothing is owed. Sol's scoped run read 4 failures that it reproduced at the base inside its own sandbox (Git sh CreateFileMapping); the attested bar and REVIEW-B's run read none, so nothing is charged to the lane."
+alternative = "Build F2's shared reader in this lane."
+reversal_cost = "Low: F2 is a follow-up row either way."
+why_not_escalated = "MINORs cost no round (ruling 4), and the rule for a consolidation outside the named surface is the skill's."
+review = ""
+
+[decision.D-003]
+decided = "Rebased onto trunk 36476624e (trunk moved only by docs commits the lane does not touch: two handoffs, two log fragments, status.md, the stage and the dashboard); the pre-rebase tip is 4a6b9aeea and the verdict commit there 455b4d3ee. The rebase changed no lane code or row: the range's patch-id (docs/iteration excluded) is 4c1e1be0 before and after, and LLR-143 and TC-137 at the rebased tip equal their text at the verdict commit, so no post-rebase round is owed and the act may follow the gate. The RESYNC entry is re-anchored at the new base. Convergence map for the gate (uncounted, convergence stance), one entry per accepted finding of round 1: F1 (the stray pytest import in `STUB_CHECK`) maps to independently checkable evidence, the corrected text at the string's head in tests/test_dispatch.py, which now opens `import pathlib`, `import sys`, a blank line, then the broken.py check (a fixture string, so no test fails pre-fix; revision 33); F3 (TC-137's claimant and missing halves) maps to the corrected method sentence at TC-137 and sitting 003's MEANING+BLESS of it. F2 is not accepted in this lane (D-002: a follow-up), so it maps to nothing here. Round 1 raised no BLOCKER or MAJOR, so no regression test is owed beyond the lane's own TC-137 cases."
+alternative = "Leave the RESYNC anchor for the squash on trunk."
+reversal_cost = "Low."
+why_not_escalated = "The skill's rebase, unchanged-rows and convergence-map steps."
+review = ""
+
+[decision.D-004]
+decided = "The gate over the checkpoint tip (uncounted, convergence stance, at 564bb25; files 004 and 005): REVIEW-A APPROVE with no findings, REVIEW-B (Claude Opus high stand-in) APPROVE with two MINORs, so the act turn follows. Both MINORs are follow-ups for status.md's unfiled list, never a fix after the gate (recipes section 3, 'A gate MINOR'): G-1, a held lane the resume filter leaves out prints no line, and with `final_review = \"always\"` the run's final banner still reads 'nothing is blocked' while the held claim remains (a report, not a launch: the lane draws no worker); G-2, the schedule-evaluation composition through the private loader now has four copies (agent_brief, integrate, traj_status and this filter), round 1's F2 widened, for one public schedule reader."
+alternative = "Fix G-1 in the lane and re-run the gate."
+reversal_cost = "Low: both are follow-up rows."
+why_not_escalated = "MINORs cost no round (ruling 4); a gate MINOR is a follow-up by the recipe."
+review = ""
