@@ -765,6 +765,9 @@ MAPPING = [
     # An attended launcher's review and critique briefs, rendered from the
     # kit templates, and its review filed as a round file (WI-852).
     ("scripts/review_brief.py", "scripts/review_brief.py"),
+    # A lane's review test set, derived from its row (WI-995): `integrate.py`,
+    # `agent_loop.py` and `review_brief.py` import it unguarded.
+    ("scripts/review_set.py", "scripts/review_set.py"),
     # The plan gate (WI-913): `check.py`'s plan-gate step runs it, and
     # `integrate.py` and `review_brief.py` import it unguarded.
     ("scripts/plan_gate.py", "scripts/plan_gate.py"),

@@ -367,6 +367,22 @@ def test_the_cycle_reviews_only_an_attested_tip():
         assert "`git log -1` moved" not in flat, name
 
 
+def test_no_cycle_copy_types_a_review_test_list():
+    # No TC row names this case; it pins WI-995's Done-when item on the
+    # coordinator-cycle text in all three copies: every `--tests` is gone, the
+    # trap about it is retired, and the spine-step order and each refusal's fix
+    # are stated. Adequacy witness: a copy still typing the list fails here.
+    for copy in CYCLE_COPIES:
+        text = (copy / "SKILL.md").read_text(encoding="utf-8")
+        text += (copy / "references" / "recipes.md").read_text(encoding="utf-8")
+        assert not re.search(r"--tests\b(?!-for)", text), copy
+        flat = " ".join(text.split())
+        assert "names test files that exist" not in flat, copy
+        assert "must hold their tagged tests, or it refuses as partial" in flat, copy
+        for refusal in ("`partial`", "`names no SR`", "`empty`", "`malformed`"):
+            assert refusal in flat, (copy, refusal)
+
+
 def test_coordinator_cycle_states_the_red_round_cap_citing_the_key():
     # No TC row names this case yet; it pins WI-958's Done-when item on the
     # coordinator-cycle skill text. Its section on rounds and the cap counts

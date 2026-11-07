@@ -223,7 +223,7 @@ def test_attest_refuses_a_hookless_checkout(tmp_path):
     _git(wt, "add", "staged.txt")
     tip, index = _rev(root, "wi-401"), _git(wt, "write-tree").strip()
     hooks_off(root)
-    sha, refusal = integ.attest(root, "wi-401", "review", ["tests/test_widget.py"])
+    sha, refusal = integ.attest(root, "wi-401", "review")
     assert sha is None, "the attest ran and committed {}".format(sha)
     assert refusal and SETUP in refusal, refusal
     assert _rev(root, "wi-401") == tip

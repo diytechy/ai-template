@@ -220,9 +220,9 @@ record that as a decision in its decisions record.
 Each round:
 
 1. **The tip carries the review bar's attestation** before any review:
-   commit lane work through `integrate.py attest` with the round's
-   `--tests`, and `review_brief.py review` refuses any other tip. A
-   hook-refused commit or a red bar attests nothing, and the render then
+   commit lane work through `integrate.py attest`, which derives the
+   row's review test set, and `review_brief.py review` refuses any other
+   tip. A hook-refused commit or a red bar attests nothing, and the render then
    refuses.
 2. **Run the lints after the build round** (ruling 6): `trace.py --strict`
    and `check_trajectory.py --strict`, with the commit bar. They run here,

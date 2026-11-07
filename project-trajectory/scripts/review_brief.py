@@ -53,21 +53,24 @@ Contracts: IF-288, IF-289 — the seams this module declares (process.md §8; ro
 of record in docs/requirements/interfaces.toml).
 
 Contract IF-288: the attended launcher's command line, its arguments.
-    `review --wi WI-N --base REV --sha REV --scope narrow|full --tests T...
+    `review --wi WI-N --base REV --sha REV --scope narrow|full
     --scratch DIR --out FILE [--findings ROUND] [--rubric RUBRIC] [--stance
     ordinary|convergence] [--python EXE] [--root DIR]` writes one review
     round's brief to FILE: the shipped reviewer template strictly filled with
     the work item's spec, the range BASE..SHA (both resolved to full commits
-    on DIR's branch, BASE an ancestor of SHA), the scope, the tests, the
-    scratch area and the verdict path under it. A narrow round names the round
+    on DIR's branch, BASE an ancestor of SHA), the scope, the row's derived
+    test set (`review_set.derive` over DIR, its refusal refusing the render;
+    an empty set renders no test command and says why), the scratch area and
+    the verdict path under it. A narrow round names the round
     file ROUND whose findings it answers; a full-lane round names none. The
     stance is `ordinary` by default, which adds nothing; `convergence` adds
     one fixed ROUND FACTS line after the range line, and its reading-scope
     command also leaves out `docs/decisions` and `docs/plans/*/critique-*`
     (WI-911). The brief is written only when SHA, or a commit beneath it
     that only record-only commits separate from it, carries a verified
-    `bar=review` attestation whose tests digest is that of the tests; the
-    command then prints the attested commit and that digest. `critique --wi
+    `bar=review` attestation whose tests digest is that of the derived set,
+    a record for another set refusing with both digests; the command then
+    prints the attested commit and that digest. `critique --wi
     WI-N --rubric RUBRIC --scratch DIR --out FILE [--root DIR]` writes the
     shipped critique template strictly filled with the work item's spec,
     RUBRIC and the registries the critic reads beside the spec, each named by
@@ -122,7 +125,7 @@ Contract IF-289: the command's exit codes. 0 when the brief is written or the
 
 Usage:
     python scripts/review_brief.py review --wi WI-123 --base <sha> --sha <sha> \\
-        --scope full --scratch <dir> --tests tests/test_a.py --out <brief.md>
+        --scope full --scratch <dir> --out <brief.md>
     python scripts/review_brief.py review ... --scope narrow \\
         --findings docs/reviews/<lane>/001-REVIEW-A-<sha7>.md
     python scripts/review_brief.py review ... --scope full --stance convergence
@@ -154,6 +157,7 @@ import agent_common  # noqa: E402
 import plan_coverage  # noqa: E402
 import plan_gate  # noqa: E402
 import prompts  # noqa: E402
+import review_set  # noqa: E402
 import score_reviews  # noqa: E402
 from kitlib import dispute as kdispute  # noqa: E402
 from kitlib import done_when as kdone  # noqa: E402
@@ -183,6 +187,13 @@ _CONVERGENCE_EXCLUDES = (
 PHASES = ("REVIEW-A", "REVIEW-B")
 REVIEWS = "docs/reviews"
 _ORDINAL_RE = re.compile(r"^(\d+)-")
+# The step that records a passing review bar, closing every render refusal
+# that lacks one. Filled with the scripts directory and the lane.
+_ATTEST_STEP = (
+    'Run "$PY" {}/integrate.py attest --branch {} --bar review from the primary '
+    "checkout (staging the work it attests, or nothing for an empty attestation "
+    "commit), then render again"
+)
 
 
 class BriefError(Exception):
@@ -196,7 +207,8 @@ class Round:
     A narrow round answers a named round file's findings; a full-lane round is
     fresh and answers none. The two are refused in each other's shape, so a
     round that claims to be the fresh full-lane review cannot carry an earlier
-    verdict into its brief.
+    verdict into its brief. `tests` is the row's derived set, empty for a row
+    touching no code, and `notes` the facts beside it.
 
     Implements: SR-146, LLR-313
     """
@@ -212,6 +224,7 @@ class Round:
     findings: str | None = None
     rubric: str | None = None
     stance: str = "ordinary"
+    notes: tuple = ()
 
     def __post_init__(self):
         if self.scope not in SCOPES:
@@ -226,8 +239,6 @@ class Round:
             raise BriefError(
                 "a full-lane round is fresh: it answers no earlier findings"
             )
-        if not self.tests:
-            raise BriefError("a round names the tests the reviewer runs")
         if self.stance not in STANCES:
             raise BriefError(
                 "stance {!r} is not one of {}".format(self.stance, ", ".join(STANCES))
@@ -303,9 +314,29 @@ def _ps(value):
     return "'{}'".format(str(value).replace("'", "''"))
 
 
+def _test_lines(rnd, python):
+    """The round's test command, or the line saying why it has none: a pytest
+    line with no paths would run the whole suite. The set's notes follow.
+
+    Implements: SR-146, LLR-313
+    """
+    if rnd.tests:
+        basetemp = "{}/{}".format(rnd.scratch.rstrip("/"), rnd.lane)
+        lines = [
+            "      {} -m pytest -q -p no:cacheprovider -n 2 --basetemp {} {}".format(
+                python, _ps(basetemp), " ".join(_ps(t) for t in rnd.tests)
+            )
+        ]
+    else:
+        lines = [
+            "      (no test command: this row's review test set is empty because "
+            "the row touches no code)"
+        ]
+    return lines + ["      " + note for note in rnd.notes]
+
+
 def _run_lines(rnd, scripts):
     """How the reviewer runs things inside the launcher's scratch area."""
-    basetemp = "{}/{}".format(rnd.scratch.rstrip("/"), rnd.lane)
     ceiling = _posix(Path(rnd.scratch).parent)
     python = "& " + _ps(rnd.python)
     return [
@@ -316,9 +347,7 @@ def _run_lines(rnd, scripts):
         "report that the checkout is not the reviewed commit. In PowerShell, "
         "from this worktree:".format(rnd.sha),
         "      $env:GIT_CEILING_DIRECTORIES = {}".format(_ps(ceiling)),
-        "      {} -m pytest -q -p no:cacheprovider -n 2 --basetemp {} {}".format(
-            python, _ps(basetemp), " ".join(_ps(t) for t in rnd.tests)
-        ),
+        *_test_lines(rnd, python),
         "      {} {}".format(python, _ps(scripts + "/check_trajectory.py"))
         + " --strict",
         "  Pass that literal `--basetemp` path, never a temporary-directory "
@@ -1055,24 +1084,32 @@ def _review_bar_refusal(root, lane, sha, tests):
     if attested is not None:
         return attested
     raise BriefError(
-        "{} carries no review bar attestation for the round's tests: {}. Run "
-        '"$PY" {}/integrate.py attest --branch {} --bar review --tests {} from '
-        "the primary checkout (staging the work it attests, or nothing for an "
-        "empty attestation commit), then render again".format(
-            sha, cause, agent_brief.scripts_dir(root), lane, " ".join(tests)
+        "{} carries no review bar attestation for the round's tests: {}. {}".format(
+            sha, cause, _ATTEST_STEP.format(agent_brief.scripts_dir(root), lane)
         )
     )
 
 
 def _cmd_review(args):
     lane, base, sha = lane_commits(args.root, args.base, args.sha)
+    derived, refusal = review_set.derive(args.root, lane)
+    if refusal:
+        raise BriefError(
+            "{} can carry no review bar attestation, its test set being refused: "
+            "{}\nClear that, then: {}".format(
+                sha,
+                refusal,
+                _ATTEST_STEP.format(agent_brief.scripts_dir(args.root), lane),
+            )
+        )
     rnd = Round(
         wi=args.wi,
         lane=lane,
         base=base,
         sha=sha,
         scope=args.scope,
-        tests=tuple(args.tests),
+        tests=derived.files,
+        notes=tuple(derived.notes()),
         scratch=_posix(args.scratch),
         python=_posix(args.python),
         findings=args.findings,
@@ -1165,9 +1202,6 @@ def _parser():
     rev.add_argument("--base", required=True, help="the range's base commit")
     rev.add_argument("--sha", required=True, help="the reviewed commit (the lane tip)")
     rev.add_argument("--scope", required=True, choices=SCOPES)
-    rev.add_argument(
-        "--tests", required=True, nargs="+", help="tests the reviewer runs"
-    )
     rev.add_argument("--scratch", required=True, help="the reviewer's writable area")
     rev.add_argument("--findings", help="narrow: the round file this range answers")
     rev.add_argument("--rubric", help="a repository review rubric to judge too")

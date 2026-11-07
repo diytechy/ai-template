@@ -10600,6 +10600,61 @@ you vendored them: `skills/coordinator-cycle/`, `skills/session-protocol/` and
 **Regenerated files:** `docs/process.md`, `docs/process-options.md`,
 `prompts/CATALOG.md`.
 
+### The review test set is derived from the row's SRs [since 08d6f535c]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A review bar's named tests are no longer typed by whoever asks
+for the attestation. `integrate.py attest` and `review_brief.py review` lose
+`--tests`, and `integrate.attest` loses its list. The row's `sr_refs` reach
+every LLR naming them, both reach every test case verifying them, and the test
+files whose `Implements:` lines name those cases are the set. `attest` derives
+the set before any bar runs, runs `[bars] review` and then the files through
+`[product] test`, records their digest in the unchanged `Bar-Green:` grammar,
+and prints the set, the evidence listed beside it and any reported gaps. A
+closed lane reads its closed copy.
+
+The unattended loop's review bar now runs the set too, so **`[product] test` is
+load-bearing there**: the loop used to pass no tests and never reached that
+line, and a non-empty set with no `[product] test` is refused. The shipped
+template declares the key. The step appends the set's paths and a `--basetemp=`
+argument to that command, so the declared runner must accept both; a runner that
+does not reds the review bar.
+
+The answer is the set or one refusal, and the set never widens to the whole bar.
+A row whose lane changed a path under `[paths] src` or `[paths] tests` since its
+merge base with the declared trunk is refused when it names no SR, when any gap
+stands (`partial`, naming each: an SR or an LLR no test case verifies, a case
+whose evidence names a test no file tags, a case with no evidence or a missing
+path), and when it reaches no tagged file with no gap (`empty`). A gap reaches
+every LLR under the row's SRs, so a row building one LLR waits for its
+siblings' failing tests. A row touching no code reports its gaps and may be
+empty: an empty set runs `[bars] review` alone, and the brief says why it has no
+test command. An input that cannot be read refuses as `malformed`, naming it.
+The render refuses a record for another set, naming both digests, and refuses a
+derivation refusal with that text whole, the reviewed commit and the attest step.
+At the loop's draw a refusal takes the
+existing red route: no round, rework naming it, counted by `[build]
+red_rounds_max`.
+
+**What to do (no forced migration while your `[product] test` runner accepts
+appended paths and `--basetemp=`).** A runner that rejects either is forced to
+migrate: every code-touching row's review bar is red, and the unattended loop
+closes such a row partial at its red cap. Declare a command that accepts both
+before you take this entry. Otherwise no data, key or record format migrates.
+The entry "Test files name their test cases on the `Implements:` line" is the
+precondition: until your test files are tagged, every code row is refused as
+partial. Name the SRs on each row that touches code. An open lane re-attests
+once, since a record made from a hand list digests another set; it fails closed
+and nothing else is owed. Stop typing `--tests` in your own scripts and notes.
+
+**Kit-owned files — overwrite:** `scripts/review_set.py` (new),
+`scripts/integrate.py`, `scripts/agent_loop.py`, `scripts/review_brief.py`,
+`scripts/gen_arch_map.py`, `scripts/spine_carrier.py`,
+`scripts/kitlib/spine.py`, `scripts/kitlib/bootstrap_manifest.py`,
+`stack.ini.template` (comments only). One `scope: this-repo` skill changed too,
+only if you vendored it: `skills/coordinator-cycle/`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

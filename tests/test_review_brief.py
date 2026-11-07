@@ -148,6 +148,13 @@ def test_a_named_input_that_is_not_there_refuses(tmp_path):
         rb.render_review(root, rb.dataclasses.replace(_round(), wi="WI-901"))
 
 
+def _derives_a_set(monkeypatch):
+    """The row's set as a stand-in: the real derivation is pinned in
+    `tests/test_review_brief_git.py` and `tests/test_review_set.py`."""
+    answer = rb.review_set.ReviewSet(("tests/test_a.py",), (), (), True)
+    monkeypatch.setattr(rb.review_set, "derive", lambda root, lane: (answer, None))
+
+
 def _past_the_git_reads(monkeypatch):
     """Drive the command line in process past its git reads: the lane's
     commits, and the review bar's attestation the render requires (the real
@@ -155,6 +162,7 @@ def _past_the_git_reads(monkeypatch):
     monkeypatch.setattr(
         rb, "lane_commits", lambda root, base, sha: ("wi-900", BASE, SHA)
     )
+    _derives_a_set(monkeypatch)
     monkeypatch.setattr(rb, "_review_bar_refusal", lambda root, lane, sha, t: sha)
 
 
@@ -177,7 +185,7 @@ def test_an_unfilled_slot_refuses_and_no_brief_is_written(
     out = tmp_path / "brief.md"
     argv = ["review", "--root", str(tmp_path), "--wi", "WI-900", "--base", BASE]
     argv += ["--sha", SHA, "--scope", "full", "--scratch", "C:/scratch"]
-    argv += ["--tests", "tests/test_a.py", "--out", str(out)]
+    argv += ["--out", str(out)]
     assert rb.main(argv) == 2
     assert "lane_budget" in capsys.readouterr().err
     assert not out.exists()
@@ -330,7 +338,6 @@ def test_an_absent_stance_renders_the_ordinary_round(tmp_path, monkeypatch):
     _past_the_git_reads(monkeypatch)
     argv = ["review", "--root", str(root), "--wi", "WI-900", "--base", BASE]
     argv += ["--sha", SHA, "--scope", "full", "--scratch", "C:/scratch"]
-    argv += ["--tests", "tests/test_a.py"]
     out_absent, out_ordinary = tmp_path / "a.md", tmp_path / "o.md"
     assert rb.main(argv + ["--out", str(out_absent)]) == 0
     assert rb.main(argv + ["--stance", "ordinary", "--out", str(out_ordinary)]) == 0
@@ -348,10 +355,11 @@ def test_a_narrow_round_refuses_the_convergence_stance(tmp_path, monkeypatch, ca
     monkeypatch.setattr(
         rb, "lane_commits", lambda root, base, sha: ("wi-900", BASE, SHA)
     )
+    _derives_a_set(monkeypatch)
     out = tmp_path / "brief.md"
     argv = ["review", "--root", str(root), "--wi", "WI-900", "--base", BASE]
     argv += ["--sha", SHA, "--scope", "narrow", "--findings", rel]
-    argv += ["--scratch", "C:/scratch", "--tests", "tests/test_a.py"]
+    argv += ["--scratch", "C:/scratch"]
     argv += ["--stance", "convergence", "--out", str(out)]
     assert rb.main(argv) == 2
     err = capsys.readouterr().err
@@ -582,10 +590,23 @@ def test_a_malformed_review_is_refused_and_nothing_is_filed(tmp_path, text, why)
 # --- the input refusals the render owns -------------------------------------------
 
 
-def test_a_round_with_no_tests_refuses():
+def test_an_empty_set_renders_no_pytest_line_and_says_why(tmp_path):
     """Implements: TC-333"""
-    with pytest.raises(rb.BriefError, match="tests"):
-        rb.dataclasses.replace(_round(), tests=())
+    # A pytest line with no paths would run the whole suite.
+    empty = rb.dataclasses.replace(_round(), tests=())
+    text, _verdict = rb.render_review(_lane(tmp_path), empty)
+    assert "-m pytest" not in text
+    assert "touches no code" in text
+
+
+def test_the_sets_notes_render_beside_its_test_command(tmp_path):
+    """Implements: TC-333"""
+    noted = rb.dataclasses.replace(
+        _round(), notes=("listed: TC-325: hooks/pre-commit",)
+    )
+    text, _verdict = rb.render_review(_lane(tmp_path), noted)
+    assert "-m pytest" in text
+    assert "listed: TC-325: hooks/pre-commit" in text
 
 
 def test_an_empty_or_missing_named_input_refuses(tmp_path):

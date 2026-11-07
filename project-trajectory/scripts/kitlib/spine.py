@@ -90,6 +90,9 @@ __all__ = [
     "evidence_items",
     "resolve_modules",
     "module_tests",
+    "root_prefix",
+    "llrs_under",
+    "review_scope",
     "tier_findings",
     "missing_cell_findings",
     "SPINE_TIER_KEYS",
@@ -729,7 +732,7 @@ def module_tests(llrs, tcs, module, test_root="tests"):
       Outputs: list[str] — test file paths, sorted and distinct
     """
     design = {r.get("LLR-ID") for r in llrs if module in refs(r.get("Module"))}
-    prefix = test_root.strip().replace("\\", "/").strip("/") + "/"
+    prefix = root_prefix(test_root)
     return sorted(
         {
             path
@@ -739,6 +742,103 @@ def module_tests(llrs, tcs, module, test_root="tests"):
             if path.startswith(prefix)
         }
     )
+
+
+def root_prefix(root):
+    """The prefix every repo-relative path under the declared root `root`
+    starts with, `""` for the repo's own root.
+
+    Implements: SR-241, LLR-367
+    """
+    name = root.strip().replace("\\", "/").strip("/")
+    return "" if name in ("", ".") else name + "/"
+
+
+def llrs_under(srs, llrs):
+    """The LLR rows reached from the SR ids `srs`, in row order: every row
+    naming one of them. THE ONE HOME OF THE SR-TO-LLR WALK, so a parent link
+    between LLRs extends it here and a child's tests cannot drop out of a set
+    unseen.
+
+    Implements: SR-241, LLR-367
+
+    Contract:
+      Inputs:  srs: iterable of SR ids; llrs: iterable of LLR row mappings
+      Outputs: list — the rows reached
+    """
+    wanted = set(srs)
+    return [r for r in llrs if wanted.intersection(refs(r.get("SR-Refs")))]
+
+
+def _case_answer(row, tags, prefix, exists):
+    """`(files, listed, gap or None)` for one test case in scope, in the order
+    of its four classes, so each case falls in exactly one: tagged, untagged
+    with evidence under the tests root, declared non-executable, no evidence.
+
+    Implements: SR-241, LLR-367
+    """
+    tc, cell = row.get("TC-ID"), row.get("Evidence")
+    paths = sorted({path for path, _node in evidence_items(cell)})
+    outside = [path for path in paths if not path.startswith(prefix)]
+    listed = ["{}: {}".format(tc, path) for path in outside]
+    nodes = tags.get(tc)
+    if nodes:
+        return [node.partition("::")[0] for node in nodes], listed, None
+    if len(outside) < len(paths):
+        named = ", ".join(path for path in paths if path not in outside)
+        return [], [], "{}: no test file tags it (evidence names {})".format(tc, named)
+    missing = [path for path in paths if not exists(path)]
+    if paths and not missing:
+        return [], listed, None
+    said = ", ".join(missing) or (cell or "").strip("() ") or "an empty cell"
+    return [], [], "{}: no evidence ({})".format(tc, said)
+
+
+def _unverified(srs, reached, cases):
+    """The gap line of each SR, then each reached LLR, that no case in `cases`
+    verifies. An SR counts as verified directly or through one of its LLRs.
+
+    Implements: SR-241, LLR-367
+    """
+    verified = {ref for r in cases for ref in refs(r.get("Verifies"))}
+    llr_srs = [(r.get("LLR-ID"), refs(r.get("SR-Refs"))) for r in reached]
+    through = {sr for llr, named in llr_srs if llr in verified for sr in named}
+    bare = [sr for sr in srs if sr not in verified and sr not in through]
+    bare += [llr for llr, _named in llr_srs if llr not in verified]
+    return ["{}: no test case verifies it".format(rid) for rid in bare]
+
+
+def review_scope(srs, llrs, tcs, tags, test_root, exists):
+    """`(files, listed, gaps)` for the SR ids `srs`: the sorted test files the
+    tags reach, the evidence listed beside them and never run, and every gap.
+
+    The scope is the SRs, the LLRs `llrs_under` reaches, and every test case of
+    any status verifying either. A tagged case joins its files, a node id
+    naming its file, and lists its evidence outside the tests root. An untagged
+    case whose evidence names a path under the tests root is a gap. An untagged
+    case whose evidence names only existing paths outside it is listed. Any
+    other is a gap: no path, or a path the tree lacks. An SR or an LLR no case
+    verifies is a gap too. Rows only: whether a path exists is `exists`'s.
+
+    Implements: SR-241, LLR-367
+
+    Contract:
+      Inputs:  srs: list of SR ids; llrs, tcs: LLR and TC row mappings; tags:
+               {TC id: node ids}; test_root: the declared tests root; exists:
+               a predicate over repo-relative paths
+      Outputs: (list[str], list[str], list[str]) — files, listed, gaps
+    """
+    reached = llrs_under(srs, llrs)
+    scope = set(srs) | {r.get("LLR-ID") for r in reached}
+    cases = [r for r in tcs if scope.intersection(refs(r.get("Verifies")))]
+    prefix = root_prefix(test_root)
+    files, listed, gaps = set(), set(), _unverified(srs, reached, cases)
+    for row in cases:
+        found, beside, gap = _case_answer(row, tags, prefix, exists)
+        files.update(found)
+        listed.update(beside)
+        gaps += [gap] if gap else []
+    return sorted(files), sorted(listed), gaps
 
 
 def tier_findings(tcs, tier_of):

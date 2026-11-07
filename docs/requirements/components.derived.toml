@@ -18,8 +18,8 @@
 
 [derived]
 components = 4
-design_rows = 332
-seam_rows = 255
+design_rows = 333
+seam_rows = 258
 requirements_placed = 133
 requirements_unplaced = 5
 seams_unplaced = 0
@@ -428,6 +428,9 @@ seam_boundary_refs = [
   "IF-297",
   "IF-303",
   "IF-304",
+  "IF-309",
+  "IF-310",
+  "IF-311",
 ]
 
 [component_view.CMP-007]
@@ -826,6 +829,7 @@ llr_refs = [
   "LLR-360",
   "LLR-363",
   "LLR-364",
+  "LLR-367",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -907,6 +911,7 @@ modules = [
   "project-trajectory/scripts/prompts.py",
   "project-trajectory/scripts/rejudge.py",
   "project-trajectory/scripts/review_brief.py",
+  "project-trajectory/scripts/review_set.py",
   "project-trajectory/scripts/schedule.py",
   "project-trajectory/scripts/score_reviews.py",
   "project-trajectory/scripts/session_adapters.py",
@@ -999,6 +1004,7 @@ seam_internal_refs = [
   "IF-303",
   "IF-304",
   "IF-308",
+  "IF-309",
 ]
 seam_boundary_refs = [
   "IF-002",
@@ -1128,6 +1134,8 @@ seam_boundary_refs = [
   "IF-305",
   "IF-306",
   "IF-307",
+  "IF-310",
+  "IF-311",
 ]
 
 [component_view.CMP-009]
@@ -1389,6 +1397,7 @@ seam_boundary_refs = [
   "IF-293",
   "IF-296",
   "IF-297",
+  "IF-310",
 ]
 
 [unplaced]

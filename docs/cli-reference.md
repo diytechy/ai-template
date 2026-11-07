@@ -380,7 +380,7 @@ Contracts (interfaces): IF-239, IF-240
 
 ### `scripts/gen_arch_map`
 _The module/function AST walk behind the DERIVED architecture (WI-455)._
-Contracts (interfaces): IF-010, IF-028, IF-117, IF-131, IF-132, IF-150, IF-199
+Contracts (interfaces): IF-010, IF-028, IF-117, IF-131, IF-132, IF-150, IF-199, IF-310
 
 | Option | Help |
 |---|---|
@@ -536,7 +536,6 @@ Contracts (interfaces): IF-080, IF-154, IF-173
 | `--tier` | declared bar tier for the refresh bar (default: all - the full gate bar) |
 | `--branch` |  |
 | `--bar` |  |
-| `--tests` |  |
 | `--message-file` |  |
 | `--tier` | declared bar tier for an in-slot refresh (default: all - the full gate bar) |
 | `--since` | the window's base revision |
@@ -653,7 +652,6 @@ Contracts (interfaces): IF-288, IF-289
 | `--base` | the range's base commit |
 | `--sha` | the reviewed commit (the lane tip) |
 | `--scope` |  |
-| `--tests` | tests the reviewer runs |
 | `--scratch` | the reviewer's writable area |
 | `--findings` | narrow: the round file this range answers |
 | `--rubric` | a repository review rubric to judge too |

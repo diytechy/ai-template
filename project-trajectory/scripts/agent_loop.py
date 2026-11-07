@@ -181,6 +181,7 @@ try:
     import integrate
     import plan_runner
     import prompts
+    import review_set
     import score_reviews
     import session_service
 except ImportError:  # pragma: no cover - in-process fallback
@@ -193,6 +194,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import integrate
     import plan_runner
     import prompts
+    import review_set
     import score_reviews
     import session_service
 
@@ -2495,7 +2497,7 @@ def attest_build(ctx, plan, outcome, meta):
     if not all(w in built for w in worker["assigned"]):
         return
     build = kverdict.governing_rev(ctx.root, lane_branch(ctx.root))
-    attested, red = integrate.attest(ctx.root, lane_branch(ctx.root), "review", [])
+    attested, red = integrate.attest(ctx.root, lane_branch(ctx.root), "review")
     plan["attested"], plan["bar_red"] = attested, red
     if red:
         meta.update(kverdict.format_red_record(build, red))
@@ -3362,26 +3364,31 @@ def session_commit_range(root, before):
 def review_draw_gate(ctx):
     """The one choke point every queued review round passes before it is drawn
     (fresh, post-narrow, resumed and adjudication rounds alike): the round is
-    drawn only over a tip carrying a verified `review` attestation, and its
-    range is pointed at that attested commit. Without one, a red already
-    recorded for the governing build commit drops the round and rebuilds with
-    its summary, running no bar; with no record, the review bar runs once here
-    and `record_bar_result` records it, green drawing the round and red
-    dropping it. Returns the red cap's exit code after a red (`red_cap_check`),
-    else None: the session is routed next.
+    drawn only over a tip carrying a verified `review` attestation for the
+    row's derived set, and its range is pointed at that attested commit.
+    Without one, a red already recorded for the governing build commit drops
+    the round and rebuilds with its summary, running no bar; with no record,
+    the review bar runs once here and `record_bar_result` records it, green
+    drawing the round and red dropping it. A derivation refusal leaves no
+    record to compare, so `integrate.attest` refuses with the same text and it
+    is recorded as any red is. Returns the red cap's exit code after a red
+    (`red_cap_check`), else None: the session is routed next.
 
     Implements: SR-154, LLR-344
     """
     st, root, worker = ctx.run.routing, ctx.root, ctx.worker
     if not (st.review_queue and worker):
         return None
-    attested, _cause = kverdict.review_attestation(root, "HEAD", [])
+    branch = lane_branch(root)
+    derived, refused = review_set.derive(root, branch)
+    attested = None
+    if not refused:
+        attested, _cause = kverdict.review_attestation(root, "HEAD", derived.files)
     if attested is None:
-        branch = lane_branch(root)
         build = kverdict.governing_rev(root, branch)
         red = kverdict.red_record(root, "HEAD", worker["base"], build)
         if red is None:
-            attested, red = integrate.attest(root, branch, "review", [])
+            attested, red = integrate.attest(root, branch, "review")
             record_bar_result(ctx, build, red)
         if red is not None:
             st.refuse_round()

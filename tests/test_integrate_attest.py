@@ -3,9 +3,10 @@
 `attest` commits the lane's staged work (or, with nothing staged, an empty
 commit on the tip) carrying a `Bar-Green:` line that names the `review` bar and
 the digest of the tests it ran, through the one producer the station refresh
-also commits through. It runs the review bar declared in `docs/stack.ini`
-`[bars] review`, then the named tests through `[product] test` under the
-lane's own `--basetemp`, and commits only when both are green.
+also commits through. It derives the row's review test set, runs the review bar
+declared in `docs/stack.ini` `[bars] review`, then the derived files through
+`[product] test` under the lane's own `--basetemp`, and commits only when both
+are green.
 
 Every failed write leaves the branch and the index exactly as they were: a
 red bar or a red named test, a dirty worktree (refused before the bar), an
@@ -13,8 +14,7 @@ undeclared review bar (refused before the bar), a message that already carries
 the label, a commit a hook refuses, and a commit a hook rewrites. The merge
 seam reads the record too: a tip carrying only a `review` attestation is not
 merge-ready, and the refusal names both bars. The review render reads it as
-its gate (WI-957): it renders over what `attest` writes, for the same tests
-named in another order.
+its gate (WI-957): it renders over what `attest` writes, deriving the same set.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES` with its station
 siblings: real repositories and lane worktrees.
@@ -27,7 +27,14 @@ import sys
 from pathlib import Path
 
 import pytest
-from conftest import SCRIPTS, env_gate_skipif, load_script, run_py
+from conftest import (
+    SCRIPTS,
+    env_gate_skipif,
+    load_script,
+    run_py,
+    seed_row,
+    write_lf,
+)
 from integrate_fixtures import T_LATER, _commit, _git, _rev, integ
 from test_integrate_station import (
     STUB_CHECK_GREEN,
@@ -88,8 +95,8 @@ def _declare(wt, text):
     _git(wt, "add", "docs/stack.ini")
 
 
-def _attest(root, named=NAMED, message_file=None):
-    return integ.attest(root, BRANCH, "review", named, message_file=message_file)
+def _attest(root, message_file=None):
+    return integ.attest(root, BRANCH, "review", message_file=message_file)
 
 
 # --- the record a green build round leaves ------------------------------------
@@ -194,7 +201,7 @@ def test_attest_refuses_the_branch_the_main_checkout_holds(tmp_path):
     trunk = _git(root, "rev-parse", "--abbrev-ref", "HEAD").strip()
     _stage(root)
     tip = _rev(root, trunk)
-    sha, refusal = integ.attest(root, trunk, "review", NAMED)
+    sha, refusal = integ.attest(root, trunk, "review")
     assert sha is None
     assert "MAIN checkout" in (refusal or "") and trunk in refusal, refusal
     assert _rev(root, trunk) == tip
@@ -430,14 +437,14 @@ def test_the_attest_cli_is_the_route_a_builder_calls(tmp_path):
     root = attest_repo(tmp_path)
     wt = _lane(root, BRANCH)
     argv = [SCRIPTS / "integrate.py", "attest", "--branch", BRANCH, "--bar"]
-    proc = run_py(argv + ["review", "--tests"] + NAMED, cwd=root)
+    proc = run_py(argv + ["review"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     attested = kv.bar_attestation(root, BRANCH)
     assert attested is not None and attested.bar == "review"
 
     tip = _rev(root, BRANCH)
     (wt / "loose.txt").write_text("not staged\n", encoding="utf-8", newline="\n")
-    proc = run_py(argv + ["review", "--tests"] + NAMED, cwd=root)
+    proc = run_py(argv + ["review"], cwd=root)
     assert proc.returncode == 1 and "loose.txt" in proc.stderr, proc.stderr
     # `landing` and `no-bar` are the refresh's alone.
     proc = run_py(argv + ["landing"], cwd=root)
@@ -457,10 +464,9 @@ title = "A widget under review"
 
 def test_the_review_render_accepts_what_attest_writes(tmp_path, capsys):
     """Implements: TC-371"""
-    # TC-371 (WI-957): the record's producer and the review render agree on
-    # the tests digest whatever order the round names the set in. Adequacy
-    # witness: a render that never reads the record names no attested commit,
-    # and one that digests the paths in their given order refuses here.
+    # TC-371 (WI-957): the set `attest` derived and the set the render derives
+    # agree. Adequacy witness: a render that never reads the record names no
+    # attested commit, and one that derives another set refuses here.
     root = attest_repo(tmp_path)
     wt = _lane(root, BRANCH)
     spec = wt / "docs" / "work" / "active" / BRANCH / "WI-401-widget.md"
@@ -475,12 +481,145 @@ def test_the_review_render_accepts_what_attest_writes(tmp_path, capsys):
     out.mkdir()
     argv = ["review", "--root", str(wt), "--wi", "WI-401", "--base", base]
     argv += ["--sha", sha, "--scope", "full", "--scratch", str(out)]
-    argv += ["--tests", *reversed(NAMED), "--out", str(out / "brief.md")]
+    argv += ["--out", str(out / "brief.md")]
     assert review_brief.main(argv) == 0, capsys.readouterr().err
     assert [p.name for p in out.iterdir()] == ["brief.md"]
     digest = kv.tests_digest(NAMED)
     shown = capsys.readouterr().out.splitlines()
     assert [line for line in shown if sha in line and digest in line], shown
+
+
+# --- the set the row derives (WI-995) -----------------------------------------
+
+TEST_A = "tests/test_a.py"
+TEST_B = "tests/test_b.py"
+
+
+def _cli(root, *extra):
+    argv = [SCRIPTS / "integrate.py", "attest", "--branch", BRANCH, "--bar", "review"]
+    return run_py(argv + list(extra), cwd=root)
+
+
+def _seeded(tmp_path, code=True, **seed):
+    """The closed lane with `seed` staged as its spine, and code staged beside
+    it when `code`. Returns `(root, wt)`."""
+    root = attest_repo(tmp_path, row=False)
+    wt = _lane(root, BRANCH)
+    seed_row(wt, **seed)
+    if code:
+        write_lf(wt, "src/app.py", "work\n")
+    _git(wt, "add", "-A")
+    return root, wt
+
+
+def _derived():
+    """A row whose two cases are tagged, one with evidence outside the tests
+    root: the set is both files, with `docs/hook.txt` listed beside it."""
+    return {
+        "srs": ["SR-001"],
+        "tcs": {
+            "TC-001": (["SR-001"], TEST_B + "; docs/hook.txt"),
+            "TC-002": (["SR-001"], TEST_A),
+        },
+        "tags": {TEST_A: ["TC-002"], TEST_B: ["TC-001"]},
+        "sr_refs": ["SR-001"],
+    }
+
+
+def test_attest_takes_no_tests_argument(tmp_path):
+    """Implements: TC-417"""
+    root, wt = _seeded(tmp_path, **_derived())
+    before = _state(root, wt)
+    proc = _cli(root, "--tests", TEST_A)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "--tests" in proc.stderr, proc.stderr
+    assert _state(root, wt) == before
+
+
+def _no_sr():
+    return {"sr_refs": []}
+
+
+def _partial():
+    return {
+        "srs": ["SR-001"],
+        "tcs": {"TC-001": (["SR-001"], TEST_A)},
+        "tags": {TEST_A: []},
+        "sr_refs": ["SR-001"],
+    }
+
+
+def _empty():
+    return {
+        "srs": ["SR-001"],
+        "tcs": {"TC-001": (["SR-001"], "docs/stack.ini")},
+        "sr_refs": ["SR-001"],
+    }
+
+
+@pytest.mark.parametrize(
+    "seed, kind",
+    [(_no_sr, "names no SR"), (_partial, "partial"), (_empty, "empty")],
+    ids=["no-sr", "partial", "empty"],
+)
+def test_a_derivation_refusal_runs_no_bar_and_leaves_branch_and_index(
+    tmp_path, seed, kind
+):
+    """Implements: TC-417"""
+    root, wt = _seeded(tmp_path, **seed())
+    before = _state(root, wt)
+    proc = _cli(root)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert kind in proc.stderr, proc.stderr
+    assert _ran(wt) == [], "a bar ran before the derivation refused"
+    assert _state(root, wt) == before
+
+
+def test_attest_runs_the_review_bar_then_the_derived_files(tmp_path):
+    """Implements: TC-417"""
+    root, wt = _seeded(tmp_path, **_derived())
+    proc = _cli(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    ran = _ran(wt)
+    assert ran and ran[0].startswith("check ") and ran[1:] == ["named"], ran
+    args = _named_args(wt)
+    assert TEST_A in args and TEST_B in args, args
+    attested = kv.bar_attestation(root, BRANCH)
+    assert attested is not None and attested.bar == "review"
+    assert attested.tests == kv.tests_digest([TEST_A, TEST_B])
+
+
+def test_attest_prints_the_set_and_the_listed_evidence(tmp_path):
+    """Implements: TC-417"""
+    root, _wt = _seeded(tmp_path, **_derived())
+    proc = _cli(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    for named in (TEST_A, TEST_B, "docs/hook.txt"):
+        assert named in proc.stdout, proc.stdout
+
+
+def test_attest_prints_the_gaps_a_row_touching_no_code_reports(tmp_path):
+    """Implements: TC-417"""
+    root, _wt = _seeded(tmp_path, code=False, srs=["SR-001"], sr_refs=["SR-001"])
+    proc = _cli(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "SR-001: no test case verifies it" in proc.stdout, proc.stdout
+
+
+def test_a_row_touching_no_code_runs_the_bar_alone(tmp_path):
+    """Implements: TC-417"""
+    # TC-417. Characterization: a row touching no code and naming no SR has an
+    # empty set, so the review bar runs alone and the record digests `none`, as
+    # it does before the derivation exists. Adequacy witness: an implementation
+    # that widened an empty set to the whole bar runs `[product] test` with no
+    # paths here, and `_ran` then ends in `named`.
+    root, wt = _seeded(tmp_path, code=False, sr_refs=[])
+    proc = _cli(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    ran = _ran(wt)
+    assert len(ran) == 1 and ran[0].startswith("check "), ran
+    attested = kv.bar_attestation(root, BRANCH)
+    assert attested is not None and attested.tests == "none"
 
 
 # --- the merge seam reads the record ------------------------------------------

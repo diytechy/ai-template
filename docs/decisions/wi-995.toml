@@ -1,0 +1,53 @@
+# docs/decisions/wi-995.toml — delegated calls in WI-995's lane.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-003"]
+
+[decision.D-001]
+decided = "Each round's REVIEW-B is a Claude Opus (high) stand-in (ruling 7; coordinator-2026-10-16 D-008), and the lane's count starts at zero at its first round. The intent turn ran as a first turn and one resume. Its second turn left TC-333 unapplied, and the coordinator applied the three clauses its report stated by a guarded replace, with two repairs: LLR-313's stray comma, and LLR-344's approved sentence on the tip without a record, restored verbatim with the refusal in a sentence of its own. SR-154 joined TC-419's `verifies`, since LLR-313 names it. IF-309 to IF-311 and their citations on TC-415 and TC-416 ride the build commit that creates their owner: `test_seam_resolution` refuses the row before the module exists, the plan's named route."
+alternative = "A third Terra turn for one cell."
+reversal_cost = "Low: each edit is row text a sitting judges."
+why_not_escalated = "Each follows the accepted plan or the recipes."
+review = ""
+
+[decision.D-002]
+decided = "The tests commit carries the smoke ceiling's re-stamp, 3410 to 3550: its in-process walk cases take the tier to 3412, past the plan's measured headroom, since WI-993's landing added six. Stages P3 to P9 are built and committed together: the plan's C3 and C4 differ only by the skill text, which the same builder writes, and the plan's order within them stands."
+alternative = "Two commits by a staged builder."
+reversal_cost = "Low."
+why_not_escalated = "The recipes' re-stamp rule; the commit shape binds no row."
+review = ""
+
+[decision.D-003]
+decided = "Round 1 triage. REVIEW-B's MAJOR is confirmed: the named-tests step appends paths and a basetemp argument to `[product] test`, and the unattended draw now reaches it, so a runner refusing them reds every code-touching row. wi-956 D-002 left the remedy as the owner's call (a declared placeholder, or a pytest-only note). This round takes the note, in the shipped template's comment and the RESYNC entry, which also drops its no-forced-migration claim for such an adopter: it fails closed, changes no code, and forecloses nothing, since a placeholder can still follow. The render's derivation refusal now names the reviewed commit and the step that clears it, with the derivation's text whole inside it, keeping SR-241's approved sentence true. A walk case pins the through-its-LLRs arm. The row-text MINORs (LLR-367's references, TC-420's overlap, the eight planned-tests methods) go to the checkpoint's change list."
+alternative = "Build the placeholder now, or hold the row for the owner."
+reversal_cost = "Low: text; the placeholder remains open."
+why_not_escalated = "Text only, fail-closed, and listed for the owner to confirm or overrule; it needs no ruling to stand."
+review = ""
+
+[decision.D-004]
+decided = "Round 2 holds no BLOCKER or MAJOR, so the checkpoint follows at two counted rounds. Its MINORs: the render's fix sentence no longer says the lane, so a names-no-SR refusal keeps its own home for the fix (a one-line wording change, applied by the coordinator with the scaffold tag's move out of TC-416); SR-241's scoping of the empty and partial refusals, the eight TC methods, TC-420's overlap and LLR-367's references go to the reconcile."
+alternative = "A builder dispatch for one string."
+reversal_cost = "Low."
+why_not_escalated = "A byte-exact fix inside the row's surface."
+review = ""
+
+[decision.D-005]
+decided = "Sitting 005 blessed six amendments and approved seven TCs, and returned LLR-207, TC-333, LLR-367 and TC-414, text only: the attest route owns the run sentence, TC-333 states the notes clause, LLR-367 states the through-its-LLRs arm, and TC-414 takes tier Full, its cited set holding slow nodes. Terra amended the four cells. Both dispositions are answered in the lane, so their headings moved, and the whole set re-sits in one combined sitting, one verdict for the act (wi-958 D-014)."
+alternative = "Re-sit the returned rows alone."
+reversal_cost = "Low."
+why_not_escalated = "The recipes' re-sit rule."
+review = ""
+
+[decision.D-006]
+decided = "Convergence map for the gate, which sees no verdicts. Round 1: the runner's appended arguments -> the corrected sentences in the shipped template's `[product]` comment and the RESYNC entry; the render's refusal -> the render-refusal test asserting the commit, the cause and the step, red before; the through-its-LLRs arm -> test_an_sr_verified_only_through_its_llr_has_no_gap, red under the mutant that removes the arm; the row-text MINORs -> sitting 006's whole-set blessing. Round 2: the fix sentence -> the corrected string in review_brief; SR-241's scoping, the eight methods, TC-420's overlap and LLR-367's references -> sitting 006. Sitting 005's four returns -> sitting 006. Trunk has not moved since the lane's rebase, so the gate reviews the tip that lands."
+alternative = "None: the gate cannot start unmapped."
+reversal_cost = "Low."
+why_not_escalated = "The cycle's own step."
+review = ""
+
+[decision.D-007]
+decided = "The gate passes: REVIEW-A approves, REVIEW-B approves with one MINOR (an empty-set brief keeps the literal-basetemp sentence), a follow-up under status.md, since the fix would move the gated tip (wi-935 D-005). WI-993's changed step, the mint's new arm, ran at its own landing's sweep; no held row exercised it, and no scheduled row draws one, so this machinery lane lands after it as the handoff's order holds."
+alternative = "Hold the landing for a held row."
+reversal_cost = "Low."
+why_not_escalated = "The handoff states the same reading for WI-983's step."
+review = ""

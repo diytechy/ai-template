@@ -106,7 +106,7 @@ Marker pairs (the templates ship with them):
     <!-- BEGIN GENERATED CLI REFERENCE -->  ... <!-- END GENERATED CLI REFERENCE -->  (required per --cli-doc)
     <!-- BEGIN GENERATED INTERFACE REFERENCE --> ... <!-- END GENERATED INTERFACE REFERENCE --> (required per --contracts-doc)
 
-Contracts: IF-010, IF-028, IF-117, IF-131, IF-132, IF-150, IF-199 — the
+Contracts: IF-010, IF-028, IF-117, IF-131, IF-132, IF-150, IF-199, IF-310 — the
 interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
@@ -152,6 +152,11 @@ Contract IF-132: the dashboard's How-SW module source — `scan_inventory(src_ro
     at least one public function symbol. Files mode and an absent src root
     yield no inventory, and the view omits itself rather than rendering half a
     picture.
+Contract IF-310: `read_test_tags(root, tests_dir, live_tcs)` for `review_set`,
+    which reads a row's tagged files from the lane checkout. The answer is
+    `({TC id: sorted node ids}, [finding])`; the requestor refuses on any
+    finding, passing its file, line and detail through unchanged.
+
 Contract IF-150: the freshness and parse verdict the harness reads back. 0 says
     every named target is current; 1 is returned when a `--doc`, `--cli-doc` or
     `--contracts-doc` target is stale under `--check`, when a module in the

@@ -38,6 +38,7 @@ from conftest import (
     declare_trunk,
     hooks_on,
     env_gate_skipif,
+    claim_on_branch,
     claim_on_trunk,
     lane_checkout,
     relocate_as_lane,
@@ -559,7 +560,7 @@ def test_worker_review_evidence_names_exact_reviewed_commit(tmp_path):
     # tip), and the scoreboard is train-scoped too.
     repo, base, ctl, fake = _setup(tmp_path)
     # The worker runs in its lane worktree, `main` staying in the primary.
-    repo = lane_checkout(repo, "llm/train/t1")
+    repo = claim_on_branch(lane_checkout(repo, "llm/train/t1"), "WI-201")
     declare_review_bar(repo, ctl)
     template = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
         sys.executable, fake, ctl

@@ -87,8 +87,9 @@ Five operations here; the two lane closes that are NOT a merge (`hand_back`,
              this script's call.
   attest     a build round's own record of green (WI-956): in the lane
              worktree, refuse a worktree that holds work the index does not,
-             run the review bar declared at docs/stack.ini `[bars] review`
-             and then the round's named tests, and commit the staged work (or
+             derive the row's review test set (`review_set.derive`), run the
+             review bar declared at docs/stack.ini `[bars] review` and then
+             the derived files, and commit the staged work (or
              an empty commit on the tip) carrying a `bar=review` attestation,
              through the one producer the refresh commits through. A
              `review` attestation is never peeled and never makes a branch
@@ -153,8 +154,8 @@ Contract IF-154: the argv surface, one required subcommand deep. `--root`
     one id; an empty value or a list in any separator is refused by name) and
     `--branch`; `refresh` requires `--branch` and
     takes `--tier` (default `all`, the full gate bar); `attest` requires
-    `--branch` and `--bar review` and takes `--tests` (the named test paths)
-    and `--message-file`; `integrate` takes
+    `--branch` and `--bar review` and takes `--message-file`, and its tests are
+    the row's derived set, never an argument; `integrate` takes
     `--tier` alone and drains every finished claimed branch there is;
     `done-when-hold` takes nothing and judges the index; `audit`
     requires `--since`, the window's base revision. Nothing here accepts a
@@ -185,11 +186,13 @@ import sys
 import tempfile
 import tomllib
 from pathlib import Path
+from typing import NamedTuple
 
 import agent_common as ac
 import bookkeeping
 import coordinator_guard
 import plan_gate
+import review_set
 import score_reviews
 import spec_move
 import text_then_act
@@ -3034,11 +3037,11 @@ def _unstaged_dirt(wt):
 
 
 def _run_review_bar(wt, root, command, tests, branch):
-    """The review bar, then the named tests: `(ok, output, summary)`.
+    """The review bar, then the derived tests: `(ok, output, summary)`.
 
     The declared shell line runs in the lane worktree with the harness
     interpreter's directory first on PATH, so its `python` is the harness's
-    (the rule `run_menu` states for `[run]` lines). Green, the named tests run
+    (the rule `run_menu` states for `[run]` lines). Green, the derived tests run
     through the lane checkout's `[product] test` (the staged tree's
     declaration, as the bar is) with their paths appended and a `--basetemp`
     of this lane's own, outside the worktree. The interpreter stays the
@@ -3092,86 +3095,95 @@ def _attest_message(branch, message_file):
     return text, None
 
 
+class _AttestPlan(NamedTuple):
+    """What `attest`'s preflight settled: the lane worktree, the row's review
+    set, the review bar command and the commit message.
+
+    Implements: SR-156, LLR-207
+    """
+
+    wt: Path
+    derived: review_set.ReviewSet
+    command: str
+    message: str
+
+
 def _attest_preflight(root, branch, bar, message_file):
-    """Everything `attest` refuses before any bar runs: `(lane worktree,
-    review bar command, commit message, None)`, or a refusal last.
+    """Everything `attest` refuses before any bar runs: `(_AttestPlan, None)`,
+    or `(None, refusal)`.
 
     The lane comes through the refresh's boundary (`_lane_off_trunk`), and the
-    review bar is read from that lane's checkout once it is known to equal the
-    index, so the declaration read is the staged one.
+    row's set and the review bar are read from that lane's checkout once it is
+    known to equal the index, so what they read is what is staged.
 
     Implements: SR-156, LLR-207
     """
     if bar != "review":
-        return (
-            None,
-            None,
-            None,
-            (
-                "attest writes only the review bar (`landing` and `no-bar` are "
-                "the refresh's)"
-            ),
+        return None, (
+            "attest writes only the review bar (`landing` and `no-bar` are "
+            "the refresh's)"
         )
     wt, refusal = _lane_off_trunk(root, branch)
     refusal = refusal or _harness_floor_refusal(root)
     if refusal:
-        return None, None, None, refusal
+        return None, refusal
     dirt = _unstaged_dirt(wt)
     if dirt is None or dirt:
-        return (
-            None,
-            None,
-            None,
-            (
-                "the worktree {} holds work the index does not ({}) - the bar runs "
-                "on the index as staged; stage or remove it first".format(
-                    wt, ", ".join(dirt) if dirt else "git status failed"
-                )
-            ),
+        return None, (
+            "the worktree {} holds work the index does not ({}) - the bar runs "
+            "on the index as staged; stage or remove it first".format(
+                wt, ", ".join(dirt) if dirt else "git status failed"
+            )
         )
     command, refusal = _review_bar_command(wt)
     if refusal:
-        return None, None, None, refusal
+        return None, refusal
     message, refusal = _attest_message(branch, message_file)
     if refusal:
-        return None, None, None, refusal
-    return wt, command, message, None
+        return None, refusal
+    derived, refusal = review_set.derive(wt, branch)
+    if refusal:
+        return None, refusal
+    return _AttestPlan(wt, derived, command, message), None
 
 
-def attest(root, branch, bar, tests, message_file=None):
+def attest(root, branch, bar, message_file=None):
     """`integrate.py attest`: commit the lane's staged work (or, with nothing
     staged, an empty commit on the tip) carrying a `review` attestation.
     Returns `(sha, None)` or `(None, refusal)`, like `refresh`.
 
     The commit hooks first, then the lane worktree (the refresh's boundary,
     which refuses the branch the main checkout holds), a clean worktree, the
-    review bar the lane declares and the message, all before anything runs.
-    Then the shared producer runs the review bar and the named `tests`, and commits
-    only when both are green. Every refusal leaves the branch and the index
-    as they were.
+    review bar the lane declares, the message and the row's derived review set,
+    all before anything runs. Then the shared producer runs the review bar and
+    the derived files, and commits only when both are green; an empty set runs
+    the bar alone. The set's lines are printed. Every refusal leaves the branch
+    and the index as they were.
 
     Implements: SR-156, LLR-207
     """
     hooks_off = _kitcommit_hooks.hooks_refusal(root)
     if hooks_off:
         return None, "attest REFUSED for {} - {}".format(branch, hooks_off)
-    wt, command, message, refusal = _attest_preflight(root, branch, bar, message_file)
+    plan, refusal = _attest_preflight(root, branch, bar, message_file)
     if refusal:
         return None, "attest REFUSED for {} - {}".format(branch, refusal)
+    wt, tests = plan.wt, list(plan.derived.files)
     sha, refused = _attest_commit(
         wt,
         root,
         branch,
         bar=bar,
-        tests=list(tests),
-        run_bar=lambda: _run_review_bar(wt, root, command, tests, branch),
-        message=message,
+        tests=tests,
+        run_bar=lambda: _run_review_bar(wt, root, plan.command, tests, branch),
+        message=plan.message,
     )
     if refused:
         return None, "attest REFUSED for {} - {}:\n{}".format(
             branch, refused[0], ac._failure_tail(refused[1])
         )
     print("integrate: attested {} - review bar @ {}".format(branch, sha[:10]))
+    print("\n".join("integrate: " + line for line in plan.derived.lines()))
     return sha, None
 
 
@@ -3754,7 +3766,6 @@ def main(argv=None):
     )
     p_att.add_argument("--branch", required=True)
     p_att.add_argument("--bar", required=True, choices=["review"])
-    p_att.add_argument("--tests", nargs="*", default=[])
     p_att.add_argument("--message-file")
     p_int = sub.add_parser("integrate", help="the merge slot")
     p_int.add_argument(
@@ -3779,9 +3790,7 @@ def main(argv=None):
         _sha, refusal = refresh(root, args.branch, args.tier)
         return fail(refusal) if refusal else 0
     if args.op == "attest":
-        _sha, refusal = attest(
-            root, args.branch, args.bar, args.tests, args.message_file
-        )
+        _sha, refusal = attest(root, args.branch, args.bar, args.message_file)
         return fail(refusal) if refusal else 0
     if args.op == "integrate":
         return integrate(root, args.tier)

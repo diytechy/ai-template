@@ -23,7 +23,15 @@ import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, load_script, pin_autocrlf
+from conftest import (
+    SCRIPTS,
+    claimed_lane,
+    fixture_commit,
+    fixture_git,
+    load_script,
+    pin_autocrlf,
+    seed_row,
+)
 
 if str(SCRIPTS) not in sys.path:  # the kit's script-sibling import idiom
     sys.path.insert(0, str(SCRIPTS))
@@ -108,11 +116,19 @@ def _work(root, rel, text="work\n"):
     _git(root, "add", "-A")
 
 
+def _derives(monkeypatch, tests):
+    """The row's set as a stand-in naming `tests`, for a case about the record:
+    the render's real derivation is pinned below, on a claimed lane."""
+    answer = rb.review_set.ReviewSet(tuple(tests), (), (), True)
+    monkeypatch.setattr(rb.review_set, "derive", lambda root, lane: (answer, None))
+
+
 @pytest.fixture
-def git_lane(tmp_path):
+def git_lane(tmp_path, monkeypatch):
     """A real lane: branch `wi-900` holding the spec at `base` and one more
     commit at `tip`, attested green for the review bar over `TESTS`, and a
-    `side` commit off `base` that is not on the lane."""
+    `side` commit off `base` that is not on the lane. The row derives `TESTS`."""
+    _derives(monkeypatch, TESTS)
     root = _lane(tmp_path / "lane")
     _git(root, "init", "-q", "-b", "wi-900")
     pin_autocrlf(root)
@@ -133,10 +149,10 @@ def git_lane(tmp_path):
     return root, base, tip, side, out
 
 
-def _review_argv(root, base, sha, out, tests=TESTS):
+def _review_argv(root, base, sha, out):
     argv = ["review", "--root", str(root), "--wi", "WI-900", "--base", base]
     argv += ["--sha", sha, "--scope", "full", "--scratch", str(out)]
-    return argv + ["--tests", *tests, "--out", str(out / "brief.md")]
+    return argv + ["--out", str(out / "brief.md")]
 
 
 @pytest.mark.parametrize(
@@ -262,16 +278,16 @@ def test_an_ordinary_review_reads_the_decisions_record(git_lane):
 # --- the review renders only over an attested tip (WI-957, TC-371) ------------------
 
 
-def _refused(root, out, capsys, sha, tests=TESTS):
+def _refused(root, out, capsys, sha):
     """The render refused `sha`: exit 2 (asserted by the caller), no brief,
     an untouched lane, and a refusal naming the reviewed commit and the step
-    that records a green review bar for the round's own tests. Returns the
-    refusal text for the cause the caller asserts."""
+    that records a green review bar. Returns the refusal text for the cause
+    the caller asserts."""
     err = capsys.readouterr().err
     assert list(out.iterdir()) == []
     assert _git(root, "status", "--porcelain", "--untracked-files=all") == ""
     assert sha in err, err
-    for named in ("integrate.py attest", "--branch wi-900", "--bar review", *tests):
+    for named in ("integrate.py attest", "--branch wi-900", "--bar review"):
         assert named in err, (named, err)
     return err
 
@@ -354,28 +370,32 @@ def test_a_landing_attestation_refuses_naming_both_bars(git_lane, capsys):
 
 
 def test_a_review_attestation_for_other_tests_refuses_naming_both_digests(
-    git_lane, capsys
+    git_lane, capsys, monkeypatch
 ):
     """Implements: TC-371"""
     # TC-371. Adequacy witness: a render that checks the bar but not the
     # tests digest renders here.
     root, base, tip, _side, out = git_lane
     other = ("tests/test_b.py",)
-    assert rb.main(_review_argv(root, base, tip, out, tests=other)) == 2
-    err = _refused(root, out, capsys, tip, tests=other)
+    _derives(monkeypatch, other)
+    assert rb.main(_review_argv(root, base, tip, out)) == 2
+    err = _refused(root, out, capsys, tip)
     assert kverdict.tests_digest(TESTS) in err, err
     assert kverdict.tests_digest(other) in err, err
 
 
-def test_a_matching_review_attestation_renders_and_names_it(git_lane, capsys):
+def test_a_matching_review_attestation_renders_and_names_it(
+    git_lane, capsys, monkeypatch
+):
     """Implements: TC-371"""
     # TC-371. Another spelling of the same set has the same digest. Adequacy
     # witness: a render that compares the paths as typed refuses here, and
     # one that never reads the record names no attested commit.
     root, base, tip, _side, out = git_lane
     spelled = ("./tests\\test_a.py",)
+    _derives(monkeypatch, spelled)
     assert kverdict.bar_attestation(root, tip).bar == "review"
-    assert rb.main(_review_argv(root, base, tip, out, tests=spelled)) == 0
+    assert rb.main(_review_argv(root, base, tip, out)) == 0
     assert [p.name for p in out.iterdir()] == ["brief.md"]
     assert _attested_line(capsys.readouterr().out, tip), "no attested-commit line"
 
@@ -449,3 +469,130 @@ def test_a_work_commit_above_the_attested_one_refuses(git_lane, capsys, rel):
     assert rb.main(_review_argv(root, base, sha, out)) == 2
     err = _refused(root, out, capsys, sha)
     assert "changes non-record paths over its parent" in err, err
+
+
+# --- the render takes its list from the row (WI-995) -------------------------------
+
+DERIVED = ("tests/test_a.py",)
+ROW_COPY = "docs/work/active/wi-900/WI-900-x.md"
+
+
+def _render(argv):
+    """`main`'s exit code, a parser's refusal included."""
+    try:
+        return rb.main(argv)
+    except SystemExit as exc:
+        return exc.code
+
+
+def _derived_argv(lane, base, sha, out):
+    argv = ["review", "--root", str(lane), "--wi", "WI-900", "--base", base]
+    argv += ["--sha", sha, "--scope", "full", "--scratch", str(out)]
+    return argv + ["--out", str(out / "brief.md")]
+
+
+def _row_lane(tmp_path, **seed):
+    """A claimed lane whose seeded spine is on the trunk. Returns `(lane, base,
+    out)`, the lane's tip being `base`."""
+    lane = claimed_lane(
+        tmp_path / "derived", files={ROW_COPY: SPEC}, branch="wi-900", wi="WI-900"
+    )
+    seed_row(lane, **seed)
+    fixture_commit(lane, "seed the row")
+    fixture_git(lane.with_name("primary"), "merge", "-q", "--ff-only", "wi-900")
+    out = tmp_path / "derived-out"
+    out.mkdir()
+    return lane, _git(lane, "rev-parse", "HEAD"), out
+
+
+def _tagged():
+    return {
+        "srs": ["SR-001"],
+        "tcs": {"TC-001": (["SR-001"], DERIVED[0])},
+        "tags": {DERIVED[0]: ["TC-001"]},
+        "sr_refs": ["SR-001"],
+    }
+
+
+def test_the_render_takes_no_tests_argument(tmp_path, capsys):
+    """Implements: TC-419"""
+    lane, base, out = _row_lane(tmp_path, **_tagged())
+    _work(lane, "src/app.py")
+    tip = _attest_tip(lane, "tip", tests=DERIVED)
+    argv = _derived_argv(lane, base, tip, out)
+    assert _render(argv) == 0, capsys.readouterr().err
+    assert _render(argv + ["--tests", *DERIVED]) == 2
+    assert "--tests" in capsys.readouterr().err
+
+
+def test_the_render_lists_the_derived_files(tmp_path, capsys):
+    """Implements: TC-419"""
+    lane, base, out = _row_lane(tmp_path, **_tagged())
+    _work(lane, "src/app.py")
+    tip = _attest_tip(lane, "tip", tests=DERIVED)
+    assert _render(_derived_argv(lane, base, tip, out)) == 0, capsys.readouterr().err
+    brief = (out / "brief.md").read_text(encoding="utf-8")
+    assert [ln for ln in brief.splitlines() if "-m pytest" in ln and DERIVED[0] in ln]
+    assert _attested_line(capsys.readouterr().out, tip, DERIVED)
+
+
+def test_a_working_tree_tag_edit_refuses_naming_both_digests(tmp_path, capsys):
+    """Implements: TC-419"""
+    # A tag moved in the working tree changes the derived list, so the record
+    # no longer matches it: the edit can refuse, never render another set.
+    lane, base, out = _row_lane(tmp_path, **_tagged())
+    _work(lane, "src/app.py")
+    tip = _attest_tip(lane, "tip", tests=DERIVED)
+    moved = ("tests/test_b.py",)
+    seed_row(
+        lane,
+        srs=["SR-001"],
+        tcs={"TC-001": (["SR-001"], moved[0])},
+        tags={DERIVED[0]: [], moved[0]: ["TC-001"]},
+        sr_refs=["SR-001"],
+    )
+    assert _render(_derived_argv(lane, base, tip, out)) == 2
+    err = capsys.readouterr().err
+    assert kverdict.tests_digest(DERIVED) in err, err
+    assert kverdict.tests_digest(moved) in err, err
+    assert list(out.iterdir()) == []
+
+
+def test_a_derivation_refusal_refuses_the_render_with_its_text(tmp_path, capsys):
+    """Implements: TC-419"""
+    seed = _tagged()
+    seed["tags"] = {DERIVED[0]: []}
+    lane, base, out = _row_lane(tmp_path, **seed)
+    _work(lane, "src/app.py")
+    tip = _attest_tip(lane, "tip", tests=DERIVED)
+    assert _render(_derived_argv(lane, base, tip, out)) == 2
+    err = capsys.readouterr().err
+    reason = "partial: 1 gap(s) in WI-900's review set:\n"
+    reason += "  TC-001: no test file tags it (evidence names {})".format(DERIVED[0])
+    assert reason in err, err
+    assert tip in err, err
+    assert "integrate.py attest --branch wi-900 --bar review" in err, err
+    assert list(out.iterdir()) == []
+
+
+def test_the_refusal_hint_names_attest_without_tests(tmp_path, capsys):
+    """Implements: TC-419"""
+    lane, base, out = _row_lane(tmp_path, **_tagged())
+    _work(lane, "src/app.py")
+    _git(lane, "commit", "-q", "-m", "unattested work")
+    sha = _git(lane, "rev-parse", "HEAD")
+    assert _render(_derived_argv(lane, base, sha, out)) == 2
+    err = capsys.readouterr().err
+    assert "integrate.py attest --branch wi-900 --bar review" in err, err
+    assert "--tests" not in err, err
+
+
+def test_an_empty_set_renders_no_pytest_line_and_says_why(tmp_path, capsys):
+    """Implements: TC-419"""
+    lane, base, out = _row_lane(tmp_path)
+    _work(lane, "docs/note.md")
+    tip = _attest_tip(lane, "tip", tests=())
+    assert _render(_derived_argv(lane, base, tip, out)) == 0, capsys.readouterr().err
+    brief = (out / "brief.md").read_text(encoding="utf-8")
+    assert "-m pytest" not in brief
+    assert "touches no code" in brief

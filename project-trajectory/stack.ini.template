@@ -33,6 +33,9 @@ format = {py} -m ruff format --check {src} {tests}
 lint = {py} -m ruff check {src} {tests}
 # The BASE test command. check.py appends the [coverage] args at the covered
 # tiers and the [tiers] selector below, so keep this just the runner invocation.
+# The review bar's named tests append the set's paths and a `--basetemp=` argument
+# to it too, so the declared runner must accept both; a runner that does not reds
+# the review bar.
 test = {py} -m pytest -q
 # Parallel execution is an OPT-IN: appending `-n auto` runs the suite across all
 # cores via pytest-xdist (a big win on a slow suite), but a suite with
@@ -245,7 +248,8 @@ lanes = 2
 # --- The review bar (a build round's record of green) ------------------------
 # `integrate.py attest` runs this command on a lane's staged work before it
 # commits the work carrying a `Bar-Green: ... bar=review` attestation, then the
-# round's named tests through [product] test. A full SHELL line, run in the
+# row's derived review test set through [product] test (an empty set runs this
+# command alone). A full SHELL line, run in the
 # lane worktree; its `python` is the harness interpreter (a directory whose
 # `python` is it comes first on PATH, as for [run]). There is NO default: an
 # absent section or key, or an empty value, makes `attest` refuse. Shipped as

@@ -209,11 +209,12 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   REVIEW-B in parallel, each from its own render with its own scratch
   directory (so its own verdict path and `--basetemp`).
   1. Render from the lane root, once per reviewer:
-     `"$PY" "$SCRIPTS/review_brief.py" review --wi WI-NNN --base <trunk base> --sha <tip> --scope full --tests <files> --scratch <dated root>/<reviewer> --rubric docs/rubrics/kit-change-review.md --out <brief>`.
-     `--tests` takes the files as separate arguments; one quoted string
-     renders as a single bogus path in the brief's pytest line.
-     `--tests` is the list the tip was attested with: the render refuses a
-     tip with no verified `review` attestation for that list, looking
+     `"$PY" "$SCRIPTS/review_brief.py" review --wi WI-NNN --base <trunk base> --sha <tip> --scope full --scratch <dated root>/<reviewer> --rubric docs/rubrics/kit-change-review.md --out <brief>`.
+     The render derives the row's review test set from the lane, as `attest`
+     does, and a derivation refusal refuses it with that text whole, the
+     reviewed commit and the attest step. It
+     refuses a tip with no verified `review` attestation for that set, naming
+     both digests when the record is for another, looking
      beneath it only through record-only commits (round files, log
      fragments, empty commits), and names the `integrate.py attest` command
      to run. A spine-checkpoint commit and a decisions-record commit change
@@ -1217,9 +1218,9 @@ lane commit being replayed.
   interpreter; a records-only commit may go by hand (2026-10-22c).
 - Run the commit bar on every commit, docs-only ones included. A lane
   commit runs it through `"$PY" "$SCRIPTS/integrate.py" attest --branch
-  <lane> --bar review --tests <files> --message-file <msg>` from the
-  primary checkout, which runs `[bars] review` and the named tests, refuses
-  red, and commits the staged work with the attestation the review render
+  <lane> --bar review --message-file <msg>` from the
+  primary checkout, which runs `[bars] review` and the row's derived test
+  set, refuses red, and commits the staged work with the attestation the review render
   requires (SKILL §3, Iterate step 1). A trunk commit runs the one
   declared command by hand, `run.cmd smoke` (`"$PY" "$SCRIPTS/run_menu.py" smoke` from
   a shell), whose steps are `docs/stack.ini` `[run] smoke`. Read the summary
@@ -1231,7 +1232,7 @@ lane commit being replayed.
   budget step in warn mode, so it refuses only a red bar, never the
   tier's seconds. Run it from the primary checkout, `"$PY"
   "$SCRIPTS/integrate.py" --root "$REPO" attest --branch <lane> --bar
-  review --tests <files> --message-file <file>`: it finds the lane by
+  review --message-file <file>`: it finds the lane by
   branch and runs the bar there under the primary checkout's
   interpreter. Run from the lane with the default root, its harness floor
   reads the lane's own root, finds no `.venv` and refuses (wi-957 D-007).
@@ -1300,9 +1301,22 @@ lane commit being replayed.
   copy the later stage's file aside, check it out at HEAD, attest the
   first stage, then restore the file and attest the second (wi-977
   D-014).
-- `attest --tests` names test files that exist: a missing one
-  collects no tests, and the bar refuses with pytest's exit 5, which
-  is a bad argument, not a red round (2026-10-23b).
+- `attest` derives its tests from the row: its `sr_refs`, every LLR under
+  them, the test cases verifying either, and the test files whose
+  `Implements:` lines name those cases. It refuses before any bar, and the
+  render and the loop's draw refuse with that text. Each refusal has its
+  fix:
+  - `partial` names every gap: tag the test or write it, in the lane.
+  - `names no SR`: the lane touches code and the row names no requirement.
+    Amend the row's `sr_refs` on trunk and rebase the lane, since the set
+    reads the lane's own copy.
+  - `empty`: a code row whose SRs reach only non-executable evidence. Name an
+    SR with a test, or add one.
+  - `malformed`: fix the input it names.
+- A spine step that adds TC rows before their tests exist commits without an
+  attestation (registry text), or is staged into the attest that carries
+  those tests. The first attest after it must hold their tagged tests, or it
+  refuses as partial.
 - `attest`'s refusal prints only the bar's last lines, never the
   failing test: run `"$PY" "$SCRIPTS/run_menu.py" smoke` in the lane,
   to a log, to name it. A red that run passes is load-sensitive: file

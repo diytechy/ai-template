@@ -3,13 +3,24 @@ id = "WI-995"
 title = "The review test set is derived from the row's SRs through the test-file tags; an empty or partial set, or a code-touching row naming no SR, refuses"
 workstream = "process"
 sr_refs = ["SR-241", "SR-156", "SR-154"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#13-review-only-a-green-tip-review-test-cases-in-stages"
+specref = ""
 needs = ["WI-994", "WI-997", "OI-125"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 +++
+
+## Deliverable
+
+The review test set is derived, never typed: `review_set.py` walks the row's
+SRs, their LLRs and every TC verifying either to the tagged test files, and
+refuses a code-touching row naming no SR, an empty or a partial set, and an
+unreadable input, by name. `attest` and `review_brief.py review` lose `--tests`,
+the unattended draw compares against the derived set, and an empty set renders
+no pytest line. LLR-367 and TC-413 to TC-420 are approved; SR-241, LLR-207,
+LLR-313, LLR-341, LLR-344, TC-132, TC-333 and TC-371 re-attested, at the lane's
+acts under sitting 006.
 
 ## Context
 
@@ -270,17 +281,17 @@ item 13: "The scoped set is the gate's addition, not a replacement").
 
 ## Done-when
 
-- [ ] One derivation, with one home for its SR → LLR walk, returns the set
+- [x] One derivation, with one home for its SR → LLR walk, returns the set
       or exactly one of the refusals above, from the lane's claim copy, the
       SR, LLR and TC registries, row 1's tag reader, `[paths]` and the
       lane's changed paths since its merge base with the declared trunk.
       A TC in T falls in exactly one of the four classes. An SR verified
       only by a direct TC, as SR-034 and SR-184 are, yields that TC's
       tagged files (or its listed non-executable evidence) with no gap.
-- [ ] A code-touching row whose claim copy names no SR is refused by name
+- [x] A code-touching row whose claim copy names no SR is refused by name
       and never runs the whole bar. A row that is not code-touching and
       names no SR runs `[bars] review` alone with an empty set.
-- [ ] A code-touching row is refused as **partial** by name for each gap:
+- [x] A code-touching row is refused as **partial** by name for each gap:
       an SR in scope that no TC verifies, directly or through its LLRs;
       an LLR in scope that no TC verifies; a TC in scope whose evidence
       names a test path but that no test file's `Implements:` line names;
@@ -291,37 +302,37 @@ item 13: "The scoped set is the gate's addition, not a replacement").
       CI file or document (TC-035, TC-036, TC-209) is listed, not run,
       and is not a gap. Scope is every LLR under the row's SRs, sibling
       LLRs the row does not build included (OI-125 Q2 (a)).
-- [ ] For a row that is not code-touching, gaps are reported and never
+- [x] For a row that is not code-touching, gaps are reported and never
       refused.
-- [ ] `integrate.py attest` takes no `--tests`. It derives the set before
+- [x] `integrate.py attest` takes no `--tests`. It derives the set before
       any bar runs (a refusal leaves the branch and index unchanged), runs
       `[bars] review` and then the derived files, records their digest in
       the unchanged `Bar-Green:` grammar, and prints the set and the
       listed evidence.
-- [ ] `agent_loop.review_draw_gate` compares the tip's record against the
+- [x] `agent_loop.review_draw_gate` compares the tip's record against the
       derived set. A derivation refusal takes the existing red route
       (rework naming it, counted by the red cap). A regression shows a
       draw over a code-touching lane with an untagged TC drawing no round.
-- [ ] `review_brief.py review` takes no `--tests`. It renders the derived
+- [x] `review_brief.py review` takes no `--tests`. It renders the derived
       list, refuses a record whose digest differs (naming both digests)
       and a derivation refusal, and renders an empty set with no pytest
       line. Its refusal hint names `attest` without `--tests`.
-- [ ] The coordinator-cycle skill and its recipes (both synced copies)
+- [x] The coordinator-cycle skill and its recipes (both synced copies)
       drop every `--tests`, retire the "`attest --tests` names test files
       that exist" trap, and state the spine-step order and how each
       refusal is fixed.
-- [ ] The row's spine change set (the derivation's LLR under SR-241, or
+- [x] The row's spine change set (the derivation's LLR under SR-241, or
       SR-241's amendment, as the in-lane adjudicator rules; LLR-207,
       LLR-341 and LLR-344 amended for the retired list; IF-154, IF-288
       and, if touched, IF-173 data cells; TCs for each refusal arm)
       passes in-lane adjudication.
-- [ ] RESYNC_PACK: one entry anchored at the landing commit. `attest` and
+- [x] RESYNC_PACK: one entry anchored at the landing commit. `attest` and
       `review_brief.py review` lose `--tests`; the review bar runs the
       row's tagged tests; a code-touching row names its SRs or is
       refused, and an empty or partial set refuses. No data, key or
       record format migrates. Row 1's entry (the tags) is the
       precondition. Kit-owned overwrite: the touched scripts.
-- [ ] Coverage bound: the promise reaches the claim copies, registries,
+- [x] Coverage bound: the promise reaches the claim copies, registries,
       tags, `[paths]` declarations and lane diffs that supported workflows
       and the kit's own routes produce (filing and claiming a row, in-lane
       spine authoring and acts, tagging tests, `attest`, the loop's
@@ -330,7 +341,7 @@ item 13: "The scoped set is the gate's addition, not a replacement").
       or a `Bar-Green:` line edited by hand), hand-chosen path aliases
       (case or separator spellings of a tests root) and sub-second timing
       windows are outside it.
-- [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
+- [x] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
 
 ## Critique dispositions
 

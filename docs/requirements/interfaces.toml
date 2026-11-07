@@ -1126,7 +1126,7 @@ bridged_by = ["DA-013"]
 owner = "scripts/integrate"
 requestors = ["scripts/lane", "external:downstream adopter"]
 channel = "cli"
-data = "claim --wi --branch · refresh --branch --tier · attest --branch --bar --tests --message-file · integrate --tier · done-when-hold (no arguments) · audit --since, each with --root"
+data = "claim --wi --branch · refresh --branch --tier · attest --branch --bar --message-file · integrate --tier · done-when-hold (no arguments) · audit --since, each with --root"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2787,3 +2787,36 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = "Reads the staged commit and its parent records; writes nothing."
+
+[interface.IF-309]
+rationale = "The three consumers need one derivation so a recorded, drawn, or rendered review cannot disagree about its test set or refusal."
+owner = "scripts/review_set"
+requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/review_brief"]
+channel = "call"
+data = "derive -> review set or named refusal; the set supplies files, listed evidence, gaps, and printed lines"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "Requestors do not interpret the derivation or create a hand list."
+
+[interface.IF-310]
+rationale = "The derivation needs one test-declaration reader so malformed declarations have one interpretation and refusal."
+owner = "scripts/gen_arch_map"
+requestors = ["scripts/review_set"]
+channel = "call"
+data = "read test declarations over the lane tests root and live test cases -> declarations or refusal findings"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "The requestor passes the owner's refusal through unchanged."
+
+[interface.IF-311]
+rationale = "The derivation needs the live requirement tiers from one carrier so its scope has one registry interpretation."
+owner = "scripts/spine_carrier"
+requestors = ["scripts/review_set"]
+channel = "call"
+data = "resolve and load over the SR, LLR, and TC tiers -> live rows or carrier refusal"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "The requestor does not create a second registry interpretation."

@@ -9,6 +9,7 @@ scaffold in a temp dir and run the actual commands.
 import collections
 import hashlib
 import importlib.util
+import json
 import os
 import re
 import shutil
@@ -447,6 +448,8 @@ SLOW_MODULES = frozenset(
         # The id carrier and the reserved-only landing on real repositories.
         "test_id_carrier_git",  # a tmp git repo with linked worktrees per case driven through trace.py's reserve and fold verbs; its in-process pin is test_id_carrier
         "test_id_landing",  # a tmp git repo and claimed lane per case driven through the merge slot, a hand squash and check.py; its in-process pins are test_id_carrier's landing and fold-lag cases
+        # WI-995: the review test set read from real lanes.
+        "test_review_set",  # a tmp git repo and lane per case, a bootstrap in one; its in-process pin is test_review_set_walk
     }
 )
 
@@ -1468,6 +1471,70 @@ def declare_review_bar(repo, ctl):
     with path.open("a", encoding="utf-8", newline="\n") as fh:
         fh.write("[bars]\nreview = {}\n".format(command))
     return command
+
+
+def _row_copy(root):
+    """The one work-item copy a lane's row reads from: its claim copy, or its
+    closed copy once the lane has closed it."""
+    work = Path(root) / "docs" / "work"
+    found = sorted(work.glob("active/**/WI-*.md")) or sorted(
+        work.glob("complete/WI-*.md")
+    )
+    assert len(found) == 1, found
+    return found[0]
+
+
+def _set_row_refs(root, sr_refs):
+    """Rewrite the row's `sr_refs` line as `sr_refs`, any TOML value a list or
+    string writes, or drop the line for None."""
+    path = _row_copy(root)
+    lines = path.read_text(encoding="utf-8").split("\n")
+    lines = [line for line in lines if not line.startswith("sr_refs")]
+    if sr_refs is not None:
+        lines.insert(1, "sr_refs = {}".format(json.dumps(sr_refs)))
+    write_lf(path.parent, path.name, "\n".join(lines))
+
+
+def _spine_toml(table, rows):
+    """`rows` (`{id: {key: value}}`) as one registry's TOML text. A value of
+    None writes no key: the carrier refuses an explicit empty cell."""
+    blocks = []
+    for row_id, cells in rows.items():
+        lines = ["[{}.{}]".format(table, row_id)]
+        for key, value in cells.items():
+            if value is not None:
+                lines.append("{} = {}".format(key, json.dumps(value)))
+        blocks.append("\n".join(lines) + "\n")
+    return "\n".join(blocks)
+
+
+def seed_row(root, srs=(), llrs=None, tcs=None, tags=None, sr_refs=None):
+    """Write a work item's spine into the checkout `root`: the three registries,
+    the test files and the row's `sr_refs`, for a fixture that derives a review
+    test set. The caller commits or stages them.
+
+    `srs` are SR ids, `llrs` is `{LLR id: [SR id]}`, `tcs` is `{TC id: (verifies
+    ids, evidence cell or None)}` and `tags` is `{test path: [TC id]}`, an empty
+    list writing a file no tag reads. Every registry is written, empty when it
+    has no rows, and a checkout with no `docs/stack.ini` gets one declaring the
+    default roots."""
+    design = {k: {"sr_refs": list(v)} for k, v in (llrs or {}).items()}
+    cases = {
+        k: {"verifies": list(v[0]), "evidence": v[1], "status": "Approved"}
+        for k, v in (tcs or {}).items()
+    }
+    for rel, table, rows in (
+        (SPINE_TOML_RELS[1], "requirement", {k: {"title": k} for k in srs}),
+        (SPINE_TOML_RELS[2], "design", design),
+        (SPINE_TOML_RELS[3], "test", cases),
+    ):
+        write_lf(root, rel, _spine_toml(table, rows))
+    for rel, ids in (tags or {}).items():
+        doc = "Implements: " + ", ".join(ids) if ids else "A file with no tag."
+        write_lf(root, rel, '"""{}"""\n\n\ndef test_it():\n    pass\n'.format(doc))
+    if not (Path(root) / "docs" / "stack.ini").is_file():
+        write_lf(root, "docs/stack.ini", "[paths]\nsrc = src\ntests = tests\n")
+    _set_row_refs(root, sr_refs)
 
 
 # --- WI-428/WI-433: a test scaffold must not inherit a LIVE policy window -----

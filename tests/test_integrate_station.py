@@ -54,7 +54,7 @@ import inspect
 import re
 import sys
 
-from conftest import SCRIPTS, env_gate_skipif, run_py
+from conftest import SCRIPTS, env_gate_skipif, run_py, seed_row
 from integrate_fixtures import (
     T_CODE,
     T_LATER,
@@ -226,6 +226,9 @@ ATTEST_STACK_INI = (
     "[bars]\nreview = python scripts/check.py --jobs 0 --tier smoke\n"
 )
 
+# The derived set of `attest_repo`'s row, in its sorted order.
+ATTEST_FILES = ("tests/test_gadget.py", "tests/test_widget.py")
+
 STUB_NAMED_TESTS = """import json
 import pathlib
 import sys
@@ -247,15 +250,29 @@ def attest_repo(
     check_src=STUB_CHECK_GREEN,
     named_src=STUB_NAMED_TESTS_GREEN,
     stack_ini=ATTEST_STACK_INI,
+    row=True,
 ):
     """`station_repo` with the review bar declared and the named-test stub in
-    the harness: the closed `wi-401` lane an `attest` call commits on."""
-    return station_repo(
+    the harness: the closed `wi-401` lane an `attest` call commits on. When
+    `row`, the lane carries a spine whose derived set is `ATTEST_FILES`."""
+    root = station_repo(
         tmp_path,
         check_src=check_src,
         stack_ini=stack_ini,
         extra_scripts={"named_tests.py": named_src},
     )
+    if row:
+        wt = _lane(root, "wi-401")
+        seed_row(
+            wt,
+            srs=["SR-001"],
+            tcs={"TC-001": (["SR-001"], " ".join(ATTEST_FILES))},
+            tags={path: ["TC-001"] for path in ATTEST_FILES},
+            sr_refs=["SR-001"],
+        )
+        _git(wt, "add", "-A")
+        _commit(wt, "WI-401: the row's spine", when=T_VERDICT)
+    return root
 
 
 def _lane(root, branch):
@@ -1399,7 +1416,7 @@ def test_the_refresh_and_attest_commit_through_one_producer(tmp_path, monkeypatc
     # names `review` to it, and the refresh that follows names `landing`.
     bars = _producer_spy(monkeypatch)
     root = attest_repo(tmp_path)
-    _sha, refusal = integ.attest(root, "wi-401", "review", ["tests/test_widget.py"])
+    _sha, refusal = integ.attest(root, "wi-401", "review")
     assert refusal is None, refusal
     _sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal

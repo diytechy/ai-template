@@ -37,6 +37,7 @@ from conftest import (
     load_script,
     pin_autocrlf,
     run_py,
+    seed_row,
     write_wi_registry,
 )
 
@@ -54,9 +55,10 @@ TRAIN = "llm/train/t1"
 # brief names a verdict path) writes the next scripted verdict body and
 # commits. Anything else builds: before committing, the n-th build sets the
 # stand-in bar red or green from `bar_plan` (one R or G per build), commits
-# `work.txt` with the WI trailer and records its sha; under `record_last` it
-# then commits a record-only log fragment on top; under `no_commit` it records
-# the launch and commits nothing.
+# `work.txt` with the WI trailer and records its sha; under `code_work` it
+# writes `src/work.py` beside it; under `record_last` it then commits a
+# record-only log fragment on top; under `no_commit` it records the launch and
+# commits nothing.
 FAKE = r"""
 import argparse, json, pathlib, re, subprocess, sys
 ap = argparse.ArgumentParser()
@@ -112,6 +114,10 @@ else:
         elif red.exists():
             red.unlink()
     pathlib.Path("work.txt").write_text("build " + str(n), encoding="utf-8")
+    if (ctl / "code_work").exists():
+        pathlib.Path("src").mkdir(exist_ok=True)
+        pathlib.Path("src/work.py").write_text("n = " + str(n) + "\n",
+                                               encoding="utf-8")
     commit("build " + str(n) + "\n\nWI: WI-201")
     sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True,
                          text=True, check=True).stdout.strip()
@@ -280,13 +286,14 @@ def _out(proc):
     return proc.stdout + proc.stderr
 
 
-def _hand_build(lane, ctl, red):
+def _hand_build(lane, ctl, red, rel="work.txt"):
     """A build commit carrying the WI trailer, with no attestation and no red
     record: the state a run stopped between the build and its bar leaves.
     Returns its sha."""
     if red:
         (ctl / "bar_red").write_text("on\n", encoding="utf-8")
-    (lane / "work.txt").write_text("built by hand\n", encoding="utf-8")
+    (lane / rel).parent.mkdir(parents=True, exist_ok=True)
+    (lane / rel).write_text("built by hand\n", encoding="utf-8")
     _git(lane, "add", "-A")
     _git(lane, "commit", "-q", "-m", "build by hand\n\nWI: WI-201")
     return _git(lane, "rev-parse", "HEAD")
@@ -852,6 +859,117 @@ def test_red_rounds_counts_an_unreadable_log_and_answers_none_for_no_history(
     monkeypatch.setattr(kverdict, "git_out", real)
 
     assert kverdict.red_rounds(str(repo), "t1", "no-such-base") is None
+
+
+# --- the draw over the row's derived set (WI-995) --------------------------------
+
+TEST_A = "tests/test_a.py"
+
+NAMED_STUB = r"""
+import json, pathlib, sys
+pathlib.Path(sys.argv[1], "named_args.json").write_text(
+    json.dumps(sys.argv[2:]), encoding="utf-8"
+)
+"""
+
+
+def _row_lane(tmp_path, tags):
+    """`_lane` with the claimed row naming SR-001, verified by TC-001 whose
+    evidence is `TEST_A`, `tags` writing the test files, and a `[product] test`
+    recording the files it is handed in `ctl/named_args.json`. Each build
+    touches code. Returns `(lane, ctl, cmd)`."""
+    lane, ctl, cmd = _lane(tmp_path)
+    seed_row(
+        lane,
+        srs=["SR-001"],
+        tcs={"TC-001": (["SR-001"], TEST_A)},
+        tags=tags,
+        sr_refs=["SR-001"],
+    )
+    stub = ctl / "named.py"
+    stub.write_text(NAMED_STUB, encoding="utf-8")
+    with (lane / "docs" / "stack.ini").open("a", encoding="utf-8", newline="\n") as fh:
+        fh.write(
+            '[product]\ntest = {{py}} "{}" "{}"\n'.format(
+                stub.as_posix(), ctl.as_posix()
+            )
+        )
+    (ctl / "code_work").write_text("on\n", encoding="utf-8")
+    return lane, ctl, cmd
+
+
+def _records(lane):
+    """The verified attestations on the lane, newest first."""
+    found = [
+        kverdict.bar_attestation(str(lane), sha)
+        for sha in _git(lane, "rev-list", "main..HEAD").split()
+    ]
+    return [att for att in found if att is not None]
+
+
+def _named_args(ctl):
+    path = ctl / "named_args.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+
+
+def test_a_code_lane_with_an_untagged_tc_draws_no_round(tmp_path):
+    """Implements: TC-418"""
+    lane, ctl, cmd = _row_lane(tmp_path, {TEST_A: []})
+    _configure(lane, _cap(5))
+
+    proc = _run(lane, cmd, 2)
+
+    models = _lines(ctl, "models.txt")
+    assert "revb" not in models and "revc" not in models, _out(proc)
+    assert "partial" in _red_count(lane).last_summary, _out(proc)
+    prompts = _build_prompts(ctl)
+    assert len(prompts) >= 2 and "TC-001" in prompts[1], _out(proc)
+
+
+def test_a_derivation_refusal_counts_toward_the_red_cap(tmp_path):
+    """Implements: TC-418"""
+    lane, ctl, cmd = _row_lane(tmp_path, {TEST_A: []})
+    _configure(lane, _cap(2))
+
+    proc = _run(lane, cmd, 3)
+
+    assert proc.returncode == 12, _out(proc)
+    assert "RED CAP" in proc.stdout, _out(proc)
+    assert _red_count(lane).count == 2, _out(proc)
+
+
+def test_the_draw_runs_the_derived_files_and_compares_their_digest(tmp_path):
+    """Implements: TC-418"""
+    # The tip carries a verified record for no tests, which is not this row's
+    # set, so the draw attests again rather than trusting it.
+    lane, ctl, cmd = _row_lane(tmp_path, {TEST_A: ["TC-001"]})
+    _configure(lane)
+    _hand_build(lane, ctl, red=False, rel="src/work.py")
+    _reader_green(lane)
+
+    proc = _run(lane, cmd, 2)
+
+    assert len(_lines(ctl, "bar_runs.txt")) == 1, _out(proc)
+    assert TEST_A in _named_args(ctl), _out(proc)
+    assert _records(lane)[0].tests == kverdict.tests_digest([TEST_A]), _out(proc)
+    logs = _committed_logs(lane).values()
+    assert any(_phase(text) == "REVIEW-A" for text in logs), _out(proc)
+
+
+def test_a_closed_lane_draws_over_its_closed_copy(tmp_path):
+    """Implements: TC-418"""
+    lane, ctl, cmd = _row_lane(tmp_path, {TEST_A: ["TC-001"]})
+    _configure(lane)
+    claim = next((lane / "docs" / "work" / "active").rglob("WI-9-*.md"))
+    closed = lane / "docs" / "archive" / "work" / "complete" / claim.name
+    closed.parent.mkdir(parents=True)
+    _git(lane, "mv", str(claim), str(closed))
+    _hand_build(lane, ctl, red=False, rel="src/work.py")
+
+    proc = _run(lane, cmd, 2)
+
+    records = _records(lane)
+    assert records and records[0].tests == kverdict.tests_digest([TEST_A]), _out(proc)
 
 
 # --- D7 and D9: the setting is refused before any session -----------------------
