@@ -1,0 +1,12 @@
+# docs/decisions/coordinator-2026-11-07.toml — calls headless leg 36 recorded on
+# trunk on 2026-11-07.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-1002's round-1 critique (two MINORs) takes its dispositions before the claim: the first Done-when item states the default for every other disposition and carries the coverage bound, and the row records planmode none, since one filter over an existing disposition is a diff its named test case fully specifies (rubric S4's exception)."
+alternative = "planmode single, a planner and a plan critique for a one-filter change."
+reversal_cost = "Low: the row is unclaimed."
+why_not_escalated = "Pre-claim disposition of two MINORs, on the routes the critic offered."
+review = ""
