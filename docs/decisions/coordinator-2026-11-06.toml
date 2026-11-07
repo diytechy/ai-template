@@ -24,3 +24,10 @@ alternative = "Name exceptions in the row, adding a mechanism."
 reversal_cost = "Low: the row is unclaimed."
 why_not_escalated = "Pre-claim disposition, and the owner was told the default; the row now waits on the owner's OI-129 anyway."
 review = ""
+
+[decision.D-004]
+decided = "Leg 35 closes at 38 percent with no stop line: WI-993 and WI-995 landed, WI-1002 is filed and WI-1001's critique is confirmed, and the red-mark row needs a full cycle, more than the two points left before the 40 percent close. WI-1002 takes the queue's slot after the red-mark row, since both are machinery and it owes its scope critique."
+alternative = "Claim the red-mark row and leave a lane at its plan."
+reversal_cost = "Low: the next leg claims it."
+why_not_escalated = "The session prompt sets the close-out reading, and the queue's order stands."
+review = ""

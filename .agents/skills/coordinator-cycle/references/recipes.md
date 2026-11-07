@@ -1513,6 +1513,15 @@ lane commit being replayed.
   repo-wide grep returned two of its lines (leg 34).
 - A long registry cell is a triple-quoted string: a guarded append matches
   the cell's own quote form and parses before it writes (leg 34).
+- A lane that retires a command flag the cycle uses runs on trunk's scripts
+  until it lands: render its briefs with the primary checkout's
+  `review_brief.py review --root <lane>`, since the lane's own copy refuses the
+  flag; `file` from the lane is unchanged (wi-995, leg 35).
+- Chain a guarded script to its `git add` and commit with `&&`. A script that
+  stopped on its guard left a commit whose message named edits it never made,
+  and a resumed Terra was told they were applied (wi-993 D-006, wi-995 D-004).
+  A backslash escape in a heredoc's Python reached the file as a real newline:
+  match on text holding no escape, or write the script with the file tool.
 
 ## 8. Re-judge and consolidation recipes
 
