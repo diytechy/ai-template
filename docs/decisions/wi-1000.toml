@@ -1,0 +1,54 @@
+# docs/decisions/wi-1000.toml — calls the coordinator made in the wi-1000 lane
+# (headless leg 39, 2026-11-08).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "No Terra turn and no sitting are owed: the row adds no spine row, amends no row text and leaves its Done-when unchanged; its one registry edit is TC-165's traced `evidence` cell, which the builder keeps with the tests (SKILL section 3: traced-only updates owe no sitting). The tests are a characterization of already-correct behaviour (the shipped surface scans clean today), so they carry no expected-failure mark, with the adequacy witness written in the test module."
+alternative = "A Terra intent turn to restate LLR-171 or TC-165."
+reversal_cost = "Low: a later sitting can amend either row if the checkpoint finds text owed."
+why_not_escalated = "The skill's rule for traced-only changes."
+review = ""
+
+[decision.D-002]
+decided = "REVIEW-B is a Claude Opus (high) stand-in for the Gemini slot (ruling 7; coordinator-2026-10-16 D-008), in every round of this lane."
+alternative = "A Gemini reviewer, which has no verified launch yet."
+reversal_cost = "None."
+why_not_escalated = "The standing substitution the skill records per lane."
+review = ""
+
+[decision.D-003]
+decided = "Round 1 triage. REVIEW-A F1 (MAJOR: the scan accepts `tests/*.py` and a backslash path `src\\check.py`, both of which the spec's contract says are reported) is accepted and costs a fix round. REVIEW-B F1 (MINOR: the planted cases reach only some surface classes) rides that fix round as added cases, since it is test-only and in the same module. REVIEW-B F2 (MINOR: `python3`, `pip3`, `python_requires` defeat the word boundary): its glob half is covered by REVIEW-A F1's fix; its digit/underscore-suffix half lies outside the spec's closed matching rule and is listed as a follow-up for the handoff, not built here. REVIEW-B F3 (MINOR: on an unmodified scaffold the schema tier sweeps no real row, so TC-165's schema half cannot fail as worded) is a sharpening of TC-165's method outside this row's scope: a follow-up for the handoff."
+alternative = "Widen the matching rule in-lane for REVIEW-B F2, or amend TC-165's method here for F3."
+reversal_cost = "Low: each follow-up can be filed as its own row."
+why_not_escalated = "MINORs never cost a round (ruling 4); the scope stays the spec's closed contract."
+review = ""
+
+[decision.D-004]
+decided = "The first attest of the round-1 fix was refused with review bar exit 4294967295 (-1) and no pytest summary line: a terminated run, not a red tier. The same staged tree ran green in the lane (smoke 3483 passed, 3 skipped) and the re-attest passed. It is not counted as a red round; it is listed as a load-sensitive follow-up in the handoff."
+alternative = "Count it as a red round."
+reversal_cost = "None."
+why_not_escalated = "The recipes' rule for a red that a quiet re-run passes (recipes section 6)."
+review = ""
+
+[decision.D-005]
+decided = "Round 2 triage. REVIEW-A F1 (MAJOR) and REVIEW-B F1 (MINOR) are one class: the round-1 fix made a declared extension count only when it ends a separator-delimited token, so an extension followed by a non-name character outside that separator set (Markdown emphasis `**src/app.py**`, a `path#L3` link, an em dash, a curly apostrophe, a query string) is no longer reported, against the spec's matching rule (a name character before the dot and none after it). Accepted at MAJOR: a template's authored prose reaches it by an ordinary Markdown edit. It costs fix round 2; the next counted round is the cap's third and runs in convergence stance."
+alternative = "Grade it MINOR, as REVIEW-B did, and defer it."
+reversal_cost = "Low."
+why_not_escalated = "Severity tracks reachability (PROCESS.md section 6); an ordinary authored edit reaches it."
+review = ""
+
+[decision.D-006]
+decided = "Convergence map before the third counted round (convergence stance). 001-REVIEW-A F1 maps to tests/test_language_neutral_scheme.py::test_a_py_path_beyond_the_exemption_is_reported, its cases tests/*.py, tests/test_*.py and src\\check.py, which failed on 000862e's scan (3 failed, 21 passed) and pass after. 002-REVIEW-B F1 (adopted MINOR) maps to test_a_planted_token_is_reported_with_file_and_line, parametrized over the six surface classes; it closes a test-adequacy gap, so its evidence is the parametrized case ids themselves (independently checkable at the cited site), not a pre-fix failure. 003-REVIEW-A F1 and 004-REVIEW-B F1 (one class) map to test_an_extension_ends_at_any_non_name_character, whose eight cases (emphasis, single emphasis, a #L3 link, a trailing star, a curly apostrophe, an em dash, an ampersand, a query string) failed on addb2ee's scan (8 failed, 29 passed) and pass after. 002-REVIEW-B F2's suffix half and F3 are excluded as follow-ups (D-003). Every accepted finding is mapped."
+alternative = "Run the third round without a map."
+reversal_cost = "None."
+why_not_escalated = "SKILL section 3's convergence-map rule."
+review = ""
+
+[decision.D-007]
+decided = "Round 3 (the cap's third counted round, convergence stance, after the D-006 map): REVIEW-A APPROVE with no findings; REVIEW-B APPROVE with one MINOR (upper-case extensions and kit-script names are not pinned by a case), a follow-up for the handoff, not a fix after the round. No checkpoint is owed (D-001: no row text, no new row, no Done-when change), so no reconcile, sitting or act moves the tip; trunk has not moved since the lane was cut, and the lane regenerated no trunk-only view. Round 3 therefore reviewed, in convergence stance, the tip that lands (only record-only commits follow it), which is what the gate exists to secure; no separate gate round is run."
+alternative = "Run an uncounted gate round over the same tree."
+reversal_cost = "Low: a gate round can still run over the landed squash's parent if a later reading asks for one."
+why_not_escalated = "The gate reviews the checkpoint's changes and the landing tip; with no checkpoint, the third round already reviewed that tip in the gate's stance."
+review = ""

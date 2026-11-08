@@ -3,12 +3,26 @@ id = "WI-1000"
 title = "SR-035's token scan is built: a test scans the shipped registry templates and ID vocabulary for language-specific tokens"
 workstream = "process"
 sr_refs = ["SR-035"]
-specref = "docs/requirements/low-level-requirements.toml#LLR-171"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 planmode = "none"
 priority = 5
 +++
+
+## Deliverable
+
+A standing in-process test, `tests/test_language_neutral_scheme.py`, scans the
+shipped registry templates, the work-item scaffold, the id-watermark template
+and the ID vocabulary's three declarations for the declared language tokens
+and source extensions, under the spec's closed matching rule: a path-like run
+read whole (globs and Windows separators included), ending at any non-name
+character, with the kit's own script names exempt. Planted cases cover every
+surface class and the decorations Markdown prose carries. The profile
+permutation test now runs `trace.py --strict --strict-schema` and carries the
+TC-165 tag, and TC-165's evidence names both. No shipped file changed, so no
+RESYNC entry. Three counted rounds (the third in convergence stance) ended
+with no open BLOCKER or MAJOR; no row text changed, so no sitting was owed.
 
 ## Context
 
@@ -90,23 +104,23 @@ The test does not claim to detect arbitrary language-specific free text.
 
 ## Done-when
 
-- [ ] A new in-process module, `tests/test_language_neutral_scheme.py`
+- [x] A new in-process module, `tests/test_language_neutral_scheme.py`
       (tagged `Implements: TC-165`), declares the two constants and one scan
       function over the surface above. The shipped surface scans clean.
-- [ ] Planted cases run against a temp copy of the surface:
+- [x] Planted cases run against a temp copy of the surface:
       - `pytest` and `src/app.py` planted into a template copy are each
         reported with file and line;
       - `scripts/trace.py` is not reported;
       - `src/check.py` is reported;
       - a removed §2 heading fails the test.
-- [ ] `test_every_profile_permutation_scaffolds_green` runs
+- [x] `test_every_profile_permutation_scaffolds_green` runs
       `trace.py --strict --strict-schema` (`--strict` includes the integrity
       tier) and carries the node-level tag `Implements: TC-165`.
-- [ ] TC-165's `evidence` reads
+- [x] TC-165's `evidence` reads
       `tests/test_profile.py::test_every_profile_permutation_scaffolds_green; tests/test_language_neutral_scheme.py`,
       and `check_trajectory --strict` finds tags and evidence equal.
-- [ ] No shipped file changes, so no RESYNC entry is owed.
-- [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
+- [x] No shipped file changes, so no RESYNC entry is owed.
+- [x] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
 
 ## Architectural delta
 

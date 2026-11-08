@@ -1792,7 +1792,7 @@ method = """Scaffold with a non-Python bootstrap profile into a temp dir and run
 tier = "Full"
 expected = "Satisfies SR-035 AcceptanceCriteria"
 automated = "Yes"
-evidence = "(owed by WI-1000)"
+evidence = "tests/test_profile.py::test_every_profile_permutation_scaffolds_green; tests/test_language_neutral_scheme.py"
 status = "Approved"
 phase = 1
 

@@ -152,6 +152,10 @@ def test_default_scaffold_keeps_all_gated_sections(scaffold):
     ids=lambda v: (",".join(v) or "none") if isinstance(v, tuple) else v,
 )
 def test_every_profile_permutation_scaffolds_green(tmp_path, omit, stack):
+    """Every profile, the non-Python stacks among them, scaffolds a repo the
+    strict registry checks pass unmodified, schema tier included.
+
+    Implements: TC-165"""
     # The permutation matrix that holds the Q8 line: every profile must
     # scaffold green (docs + trace), keep every § label, and leave a stub
     # exactly where a section was omitted.
@@ -169,7 +173,7 @@ def test_every_profile_permutation_scaffolds_green(tmp_path, omit, stack):
                 "{}: wrong stub count for {} under omit={}".format(rel, axis, omit)
             )
     _zero_findings(dest)
-    proc = run_py(["scripts/trace.py", "--strict"], cwd=dest)
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=dest)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # THE OWNER DECISION SURFACE IS ALWAYS ON (OI-41, ruled 2026-08-20): the
     # registry AND its generated view land in every permutation, so `check_docs`
