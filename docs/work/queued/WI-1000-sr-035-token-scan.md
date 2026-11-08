@@ -141,3 +141,6 @@ two MINORs.
 - **S5, the architectural delta: adopted.** "Architectural delta" states:
   "The row adds no mode class, no adopter-facing value domain and no
   boundary."
+
+Round 2 (fresh Codex session, confirming, 2026-11-08): APPROVE, no findings;
+every adopted disposition confirmed.

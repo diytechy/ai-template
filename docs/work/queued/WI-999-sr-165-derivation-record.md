@@ -237,3 +237,6 @@ one MINOR.
   The evidence in Context shows that the ruling and the objective are
   ambiguous. "The owner-held step (B4)" holds the row through `needs`. Only
   the backfill needs the owner's answer.
+
+Round 2 (fresh Codex session, confirming, 2026-11-08): APPROVE, no findings;
+every adopted disposition confirmed.
