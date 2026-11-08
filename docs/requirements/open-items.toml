@@ -4377,10 +4377,13 @@ ruled_date = "2026-11-05"
 
 [open_item.OI-129]
 title = "SR-165's derivation record and SR-035's token scan: approved obligations with nothing behind them, built or retired"
-status = "pending"
+status = "ruled"
 raised = "2026-11-05"
-one_line = "OI-127 moved two undelivered test cases to their own rows. Rule each: build what the approved chain states, or retire it; recommendation build both."
-decision = """Filed by the attended coordinator on 2026-11-05 with OI-127's ruling, whose option (b) left this call to the owner.
+ruled_date = "2026-11-08"
+one_line = "RULED 2026-11-08 Q1 (a) and Q2 (a): both are built. An approved row with nothing behind it is build debt, built by default; only evidence of substantial work makes retiring it a question. Written into WI-999 and WI-1000."
+decision = """RULED 2026-11-08 by the owner, attended. Verbatim: "OI-129 - How is this an open item?  Those SRs were approved, they should be built unless evidence indicates there is some substantial work in constructing that path.  That is necessary for full implimentation to spine interlinks", then "Yes, please do." to recording Q1 (a) and Q2 (a). The evidence below shows no substantial work: Q2 is a small test, and Q1 is LLR-172's specified rule over a four-component registry whose derivation was already worked in the 2026-08-16 derivation plans. So both are built, and the item should not have been filed: OI-127's recommendation called build-or-retire the owner's call, and the coordinator filed that framing as a pending item instead of routing the build. WI-999 and WI-1000 drop their needs on this item and carry the build in their Done-when; WI-1001 follows them.
+
+Filed by the attended coordinator on 2026-11-05 with OI-127's ruling, whose option (b) left this call to the owner.
 
 WHAT IS TRUE. Both obligations were approved at the 2026-08-20 signing and no work item has ever delivered them.
 

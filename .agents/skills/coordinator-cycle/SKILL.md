@@ -532,6 +532,12 @@ treated the same way. For each such step, the leg:
    (`project-trajectory/PROCESS.md` §5, "Open items");
 4. moves to the next row.
 
+**Not an owner-held step: an approved row with nothing built behind it.**
+That is build debt, and the coordinator files a work item that builds it, with
+no `needs` on an open item. Retiring an approved row becomes the owner's
+question only when evidence shows substantial work to build it, and the open
+item then states that evidence (owner, 2026-11-08, OI-129).
+
 When no row can move without the owner, the leg closes out with the
 `Overnight: stop` line in the new handoff. A Codex limit is answered with a
 `Resume-not-before:` line, as the launcher reads it.
