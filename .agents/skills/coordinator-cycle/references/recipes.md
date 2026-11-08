@@ -137,7 +137,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     `mkprompt.py` puts the applicable hats' questions in the prompt,
     computed from the lane's roster, needs and work item. `HATS=none`
     for any other set states that the turn is no decomposition round. A
-    missing or empty `HATS` refuses.
+    missing or empty `HATS` refuses. A set that only amends an SR (no need
+    amended, no SR added) is no round: give `HATS=none` (wi-996 D-006).
   - Commit a turn's log before the next turn: the call commits it in the
     lane, and after an exit 4 commit the named log yourself. A builder's
     unstaged regenerated view (`docs/open-items.html`) makes the log
@@ -483,7 +484,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   2026-10-22).
 - **Coverage plan (rework):** from the lane root,
   `"$PY" "$SCRIPTS/plan_coverage.py" --item <spec> --findings <round file> <plan>`.
-  Dispatch the fix only on exit 0. A finding a dispute sitting dismissed, or
+  Dispatch the fix only on exit 0. The gate judges each plan file on its own,
+  so a `single` row's accepted plan passed beside the coverage plan fails on
+  its own lines: gate the coverage plan alone, its `Excludes:` lines naming
+  the Done-when items the accepted plan covers (wi-996 D-004). A finding a dispute sitting dismissed, or
   ruled SUCCESSOR, is excluded citing that verdict:
   `Excludes: F2 — dismissed: docs/reviews/<lane>/NNN-ADJUDICATE-<sha7>.md#<its id there>`, or
   `Excludes: F2 — successor: docs/reviews/<lane>/NNN-ADJUDICATE-<sha7>.md#<its id there>`.
@@ -992,6 +996,9 @@ lane commit being replayed.
   `RESERVED`. The ranges are disjoint from every other lane's, whatever its
   base; the landing refuses an added id outside the lane's own records, so
   a lane holding unreserved rows reserves and renumbers before it lands.
+  A landing's carrier fold writes an open lane's reserved ids into trunk's
+  watermark, so that lane's reservation commit drops on its next rebase as
+  already upstream; that is expected (wi-996 D-003).
 - A lane whose spine set amends rows another open lane is amending, or
   whose code edits the same functions, waits for that lane's landing and
   rebases onto it before its spine turn and first round. Its text then
@@ -1320,7 +1327,8 @@ lane commit being replayed.
   To commit two stages a builder built together on disjoint files,
   copy the later stage's file aside, check it out at HEAD, attest the
   first stage, then restore the file and attest the second (wi-977
-  D-014).
+  D-014). Set the files aside with `cp --parents`: Git Bash's `tar` reads
+  the `C:` of a path as a remote host and fails (leg 38).
 - `attest` derives its tests from the row: its `sr_refs`, every LLR under
   them, the test cases verifying either, and the test files whose
   `Implements:` lines name those cases. It refuses before any bar, and the

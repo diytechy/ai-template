@@ -1,0 +1,26 @@
+# docs/decisions/coordinator-2026-11-08.toml — calls headless leg 38 recorded on
+# trunk on 2026-11-07 and 2026-11-08.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-1002 landed first and alone, then WI-996 (each changes machinery the cycle runs on). WI-1002's change reaches only the unattended dispatcher's parked-lane resume, a step this coordinator's attended and headless lanes never run, so the cycle had nothing of it to run through before WI-996's landing; WI-996's lane was rebased onto WI-1002's landing before its next attest. WI-996's own changed steps (attest's mark check, the refresh's landing arm and the hand landing's staged-squash check) ran at its own landing: the new recipes step read no red mark on the staged squash."
+alternative = "Hold WI-996's landing for a later leg until another lane runs through WI-1002's change."
+reversal_cost = "Low: both landings are fixed forward if a defect shows."
+why_not_escalated = "The skill's machinery rule asks that the cycle run through the last landing's changed step; WI-1002 changes no step the coordinator's cycle runs."
+review = ""
+
+[decision.D-002]
+decided = "The landed lanes' worktrees and branches are removed after their tips were archived to archive/lanes (wi-1002 with its pre-rebase tip 4a6b9aeea, wi-996 with 28a9a114e), and leg 36's and leg 37's scratch roots are deleted now that both lanes they served have landed, as the replaced handoff asked."
+alternative = "Keep the branches beside the archive."
+reversal_cost = "Low: each tip is a parent of archive/lanes."
+why_not_escalated = "Housekeeping the replaced handoff and the recipes direct."
+review = ""
+
+[decision.D-003]
+decided = "The leg closes out with the `Overnight: stop` line: the queue table's two remaining rows are held (WI-910 on OI-124, WI-1001 on OI-129 through WI-999 and WI-1000), and every other open row is on the never-claimed list, so no row can move without the owner."
+alternative = "Claim a row outside the table."
+reversal_cost = "None: the owner restarts the run once an item is ruled."
+why_not_escalated = "The headless block's own rule for the stop line."
+review = ""
