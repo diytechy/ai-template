@@ -47,6 +47,7 @@ import subprocess
 import sys
 
 from conftest import (
+    BARS_RED_MARK,
     hooks_on,
     SCRIPTS,
     declare_trunk,
@@ -614,7 +615,8 @@ def stub_harness_repo(tmp_path):
     # gives for the claim.
     (root / "docs" / "stack.ini").write_text(
         "[product]\ntest = {py} -m pytest -q\n"
-        "[generated]\nPROJECT_STATE.html = trajectory\n",
+        + BARS_RED_MARK
+        + "[generated]\nPROJECT_STATE.html = trajectory\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -1325,7 +1327,8 @@ def census_repo(tmp_path):
     (root / "docs").mkdir(exist_ok=True)
     (root / "docs" / "stack.ini").write_text(
         "[product]\ntest = {py} -m pytest -q\n"
-        "[generated]\nPROJECT_STATE.html = trajectory\n",
+        + BARS_RED_MARK
+        + "[generated]\nPROJECT_STATE.html = trajectory\n",
         encoding="utf-8",
         newline="\n",
     )

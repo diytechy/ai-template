@@ -154,7 +154,7 @@ sequenceDiagram
     end
 ```
 
-### Flow 4 — Station cycle: admission, lane, refresh, merge slot, intake (LLR-058, LLR-059, LLR-123, LLR-138, LLR-140, LLR-363)
+### Flow 4 — Station cycle: admission, lane, refresh, merge slot, intake (LLR-058, LLR-059, LLR-123, LLR-138, LLR-140, LLR-363, LLR-368)
 
 One tick of `dispatch.run`. The three properties hardest to read off the rows:
 the **spine barrier** is a property of admission (nothing slips past an
@@ -194,7 +194,7 @@ sequenceDiagram
         Disp->>Lane: spawn the refresh — mechanical, no agent
         Lane->>Lane: merge trunk in, a conflict on docs/id-watermark alone settled by the fold (LLR-363)
         Lane->>Lane: while an id carrier exists, fold its tip into the lane's watermark (LLR-363)
-        Lane->>Lane: then trunk_step, then the check.py bar
+        Lane->>Lane: then trunk_step, then the red-mark refusal (a tree whose tests hold a declared mark is refused, LLR-368), then the check.py bar
         Lane->>Lane: commit a Bar-Green trailer naming the landing bar (or no-bar), the tree it barred and its work parent
         alt refresh red
             Note over Disp,Hand: a branch asserting DONE stops the run; one that merges<br/>nothing is quarantined once (code reverted, diff kept<br/>as a bar-inert patch) and refreshed again

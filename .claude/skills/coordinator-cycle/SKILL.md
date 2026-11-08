@@ -193,11 +193,15 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    before the build". Fill the prompt's `HATS` slot as
    `references/recipes.md`, "Terra, first turn", defines it.
 2. Build round 1's first deliverable is the tests, committed alone before
-   the code, with their tags and `Evidence` parts by that same rule, each
-   under one evidence class (plan item 13's typed evidence):
+   the code through `integrate.py attest` (recipes §6), with their tags and
+   `Evidence` parts by that same rule, each under one evidence class (plan
+   item 13's typed evidence):
    - **New or corrected executable behaviour:** a strict expected assertion
-     failure (Python:
+     failure, the mark `[bars] red_mark` declares (Python:
      `@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))`).
+     The mark is written as the declared text verbatim, with no added
+     arguments: `attest` and the refresh count only that text, so a mark
+     carrying an added `reason=` is not counted and its test can land red.
      Its red reaches the test's own assertion, never an import error; a
      stub is the builder's choice. The code commit removes the marks.
    - **Characterization of already-correct behaviour:** unmarked, with a
@@ -208,6 +212,16 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
 
    A test that fits none is named, with its disposition, in the lane's
    decisions record before the code commit.
+
+   The tests-first commit goes through `integrate.py attest` with a test
+   set that names each marked file: the file carries a tag to a TC in the
+   row's scope, and `attest` refuses a marked file the set does not name.
+   The code commit that removes the marks names the same set: change no
+   tag, TC row or `sr_refs` between the two, and attest a set that must
+   change with the marks kept first. A refresh or a hand landing (recipes
+   §3) refused for a mark ends in the code commit or a quarantine. A test the bar skips takes no mark,
+   because a skip is never evidence: it is named, with its disposition,
+   in the lane's decisions record.
 3. The builder then builds the code. Re-run its claimed results yourself,
    then verify, regenerate and commit through `integrate.py attest`
    (recipes §6).

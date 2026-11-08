@@ -319,6 +319,18 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
         "the independently checkable evidence its declared method names",
         "A test that fits none is named, with its disposition, in the lane's "
         "decisions record before the code commit.",
+        # WI-996: the order runs through `attest`, which judges the mark
+        # `[bars] red_mark` declares, and the refresh refuses a landing mark.
+        "a strict expected assertion failure, the mark `[bars] red_mark` declares",
+        "The mark is written as the declared text verbatim, with no added "
+        "arguments: `attest` and the refresh count only that text",
+        "The tests-first commit goes through `integrate.py attest` with a test "
+        "set that names each marked file",
+        "The code commit that removes the marks names the same set",
+        "A refresh or a hand landing (recipes §3) refused for a mark ends in "
+        "the code commit or a quarantine.",
+        "A test the bar skips takes no mark, because a skip is never evidence: "
+        "it is named, with its disposition, in the lane's decisions record.",
     ):
         assert clause in skill, clause
     for gone in (
@@ -346,6 +358,42 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
     assert "Write the row text against settled code" not in in_lane
     assert in_lane.index("**Author it before the build.**") < in_lane.index(
         "**Amend the row text against settled code.**"
+    )
+    # WI-996: the method states the same proof once, in DevStg-Impl.
+    process = " ".join((KIT / "PROCESS.md").read_text(encoding="utf-8").split())
+    assert (
+        "(red → green → refactor). In a lane, the failing test is proven by the "
+        "mark `[bars] red_mark` declares, attested before the code and removed "
+        "by it, and never landed." in process
+    )
+
+
+def test_the_hand_landing_checks_the_staged_squash_for_a_red_mark():
+    # WI-996: the landing arm runs inside the refresh, and the coordinator's
+    # hand landing squashes without one, so recipes §3 runs the same arm on
+    # the staged squash before the commit bar and resets the squash on a
+    # refusal. Adequacy witness: a recipe that lands the squash on the smoke
+    # bar alone, where a strictly marked red test reads green, lacks the step.
+    recipes = " ".join(
+        (KIT / "skills" / "coordinator-cycle" / "references" / "recipes.md")
+        .read_text(encoding="utf-8")
+        .split()
+    )
+    step = "**Check the staged squash for the red mark** before the landing commit"
+    for clause in (
+        step,
+        '"$PY" -c "import sys; sys.path.insert(0, \'$SCRIPTS\'); from '
+        "kitlib.red_mark import landing_refusal; r = landing_refusal('.'); "
+        "print(r or 'no red mark staged'); sys.exit(1 if r else 0)\"",
+        "reset the squash with `git reset --hard HEAD`, never a stash",
+        "a hand landing (§3) refused for a mark ends in the code commit or a "
+        "quarantine",
+    ):
+        assert clause in recipes, clause
+    assert (
+        recipes.index("**Squash** on trunk with `git merge --squash <lane>`")
+        < recipes.index(step)
+        < recipes.index('**Run the commit bar, `"$PY" "$SCRIPTS/run_menu.py" smoke`')
     )
 
 

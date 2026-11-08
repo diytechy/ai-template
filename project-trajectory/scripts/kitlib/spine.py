@@ -63,12 +63,16 @@ Stdlib only, and import-clean of the rest of `scripts/`, like every module here.
 import csv
 import io
 import re
+from pathlib import PurePath
 
 from . import config as _kitconfig
 
 __all__ = [
     "LLR_EXEMPT",
     "MODULE_EXTS",
+    "BACKLINK_EXTS",
+    "hidden_rel",
+    "is_test_file",
     "load_csv",
     "csv_body",
     "csv_reader",
@@ -91,6 +95,7 @@ __all__ = [
     "resolve_modules",
     "module_tests",
     "root_prefix",
+    "declared_roots",
     "llrs_under",
     "review_scope",
     "tier_findings",
@@ -349,6 +354,65 @@ def _id_number(rid):
 # (`project-trajectory/scripts/check.py`), an LLR `Module` cell and an arch-map
 # node name (`scripts/check`) all collapse to one key.
 MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
+# The file types `--backlink-coverage` reads (OI-42's declared extension list),
+# and the types a test file is (`is_test_file`): `MODULE_EXTS` — the kit's
+# existing answer to "what is a source module" — extended with the families
+# that list half-covers. `--backlink-coverage` takes `--backlink-ext`, which
+# REPLACES this list rather than adding to it.
+#
+# WIDEN THIS WITH CARE, and the asymmetry is the reason: the denominator is the
+# LLR row count, never the file count, so adding an extension can only RAISE the
+# measured percentage and never lower it. Over-inclusion therefore produces
+# false PASSES — a stray `LLR-040` in a config comment scores as a carrier — so
+# the conservative list is the tight one.
+BACKLINK_EXTS = MODULE_EXTS + (
+    ".tsx",
+    ".jsx",
+    ".mjs",
+    ".cjs",
+    ".java",
+    ".kt",
+    ".c",
+    ".h",
+    ".cpp",
+    ".hpp",
+    ".cs",
+    ".rb",
+    ".php",
+    ".swift",
+    ".scala",
+    ".lua",
+    ".sql",
+)
+
+
+def hidden_rel(rel):
+    """Whether a path RELATIVE TO ITS SCAN ROOT is hidden (a dot- or
+    `__pycache__` part) and so neither source nor a test file.
+
+    Root-relative is load-bearing, not incidental: the same test against the
+    path's *absolute* parts made every repo whose checkout sits under a
+    dot-prefixed directory (`~/.local/src`, a CI cache, a dot-prefixed pytest
+    temp root) scan to an empty map with exit 0 (WI-363). Where the caller keeps
+    the repo is not the caller's hidden-file intent; only what is inside the
+    root they pointed at is.
+
+    Implements: SR-156, LLR-368
+    """
+    return any(part.startswith((".", "__pycache__")) for part in PurePath(rel).parts)
+
+
+def is_test_file(rel):
+    """Whether `rel`, a path relative to the declared tests root, is a test
+    file: no part of it is hidden (`hidden_rel`), and its suffix, in any case,
+    is one of `BACKLINK_EXTS`. THE ONE HOME OF THAT DOMAIN: the test-file tag
+    reader, and so the review set, reads exactly these files, and the red mark
+    is counted in exactly these, so a declaration or a document under a tests
+    root of `.` is never a test file.
+
+    Implements: SR-156, LLR-368
+    """
+    return not hidden_rel(rel) and PurePath(rel).suffix.lower() in BACKLINK_EXTS
 
 
 def norm_module(path):
@@ -752,6 +816,20 @@ def root_prefix(root):
     """
     name = root.strip().replace("\\", "/").strip("/")
     return "" if name in ("", ".") else name + "/"
+
+
+def declared_roots(profile):
+    """`(src, tests)`: the source and test roots the parsed `docs/stack.ini`
+    `profile` declares under `[paths]`, each defaulting as a bar's command
+    reads it (`src`, `tests`) when absent or blank. The one home of that
+    reading, so the review set and the red-mark check resolve one test root.
+
+    Implements: SR-156, LLR-368
+    """
+    return (
+        profile.get("paths", "src", fallback="").strip() or "src",
+        profile.get("paths", "tests", fallback="").strip() or "tests",
+    )
 
 
 def llrs_under(srs, llrs):

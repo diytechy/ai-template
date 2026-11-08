@@ -44,6 +44,7 @@ import sys
 
 import pytest
 from conftest import (
+    BARS_RED_MARK,
     ROOT,
     SCRIPTS,
     claim_on_trunk,
@@ -820,7 +821,9 @@ def _station_repo(tmp_path):
     root = claim_repo(tmp_path)
     (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
     (root / "docs" / "stack.ini").write_text(
-        "[product]\ntest = {py} -m pytest -q\n", encoding="utf-8", newline="\n"
+        "[product]\ntest = {py} -m pytest -q\n" + BARS_RED_MARK,
+        encoding="utf-8",
+        newline="\n",
     )
     declare_generated(root)
     (root / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")

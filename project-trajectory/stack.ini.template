@@ -257,6 +257,24 @@ lanes = 2
 # line).
 [bars]
 review = python scripts/check.py --jobs 0 --tier smoke
+# The red mark: the text of the strict expected-failure mark a lane's tests
+# go in under before the code that turns them green. `integrate.py attest`
+# lets a test file's count of it rise only when the round's test set names
+# the file, and fall only against the lane's last review record over the same
+# set; the refresh refuses a tree whose test files still hold it, so a mark
+# never lands. It is matched with whitespace ignored, so a formatter that
+# wraps the call still counts, and it carries no `@`, so a
+# `pytest.param(..., marks=...)` mark counts too. Required, with no default:
+# an absent section or key, or an empty value, makes `attest` and the refresh
+# refuse. Every adopter declares it, including one that never marks a test.
+# On another stack, declare that stack's strict expected-failure form
+# restricted to assertion failures. Jest's `test.failing` accepts any thrown
+# error, so wrap it in a project helper that re-throws anything but an
+# assertion failure, and declare the helper's call text; a stack with no
+# such form writes that helper. The mark is counted only in the files the
+# review set reads as tests (non-hidden, of a test-file type the kit
+# declares), so a stack whose test files use another suffix is not covered.
+red_mark = pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 
 # --- Project-specific gate steps ---------------------------------------------
 # Add gates your DOMAIN needs (duplicate-code, license-lint, capability or

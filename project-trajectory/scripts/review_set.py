@@ -173,10 +173,7 @@ def _roots(lane):
         raise _Refused("malformed: {}".format(exc)) from None
     if profile is None:
         raise _Refused("malformed: docs/stack.ini is absent")
-    return (
-        profile.get("paths", "src", fallback="").strip() or "src",
-        profile.get("paths", "tests", fallback="").strip() or "tests",
-    )
+    return kspine.declared_roots(profile)
 
 
 def _registry(lane, rel, id_col):

@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,992 | 2026-11-04 | -6: WI-994 — test files carry TC ids, linked to process.md §3, paid for in the same bullet |
 | `CLAUDE.md` | **8,500** | 8,004 | 2026-10-21 | -155: WI-940 — the bar reports the smoke tier's seconds; the audit judges them |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,560 | 2026-11-06 | Restamps the PROCESS.md and PROCESS_OPTIONS.md rows |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,548 | 2026-11-07 | Restamps the PROCESS.md row |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -45,7 +45,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 100,273 | 2026-11-06 | **+1057** WI-993: §5 states what an open item is and when a lane keeps its claim |
+| `project-trajectory/PROCESS.md` | 100,417 | 2026-11-07 | **+144** WI-996: §4 DevStg-Impl says a lane proves its failing test by the declared red mark |
 | `project-trajectory/PROCESS_OPTIONS.md` | 199,541 | 2026-11-06 | **+63** WI-993: a stopped lane's one exception points at process.md §5 |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped

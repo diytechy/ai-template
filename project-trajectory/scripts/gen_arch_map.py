@@ -268,35 +268,10 @@ IF_ID_RE = re.compile(r"IF-\d+")
 # the real pair, and the retired comment here claimed sync with `trace.py` too,
 # which has never carried the name.
 _MODULE_EXTS = _kitspine.MODULE_EXTS
-# The file types `--backlink-coverage` reads (OI-42's declared extension list):
-# `_MODULE_EXTS` — the kit's existing answer to "what is a source module" —
-# extended with the families that list half-covers. Overridable per repo with
-# `--backlink-ext`, which REPLACES this list rather than adding to it.
-#
-# WIDEN THIS WITH CARE, and the asymmetry is the reason: the denominator is the
-# LLR row count, never the file count, so adding an extension can only RAISE the
-# measured percentage and never lower it. Over-inclusion therefore produces
-# false PASSES — a stray `LLR-040` in a config comment scores as a carrier — so
-# the conservative list is the tight one.
-BACKLINK_EXTS = _MODULE_EXTS + (
-    ".tsx",
-    ".jsx",
-    ".mjs",
-    ".cjs",
-    ".java",
-    ".kt",
-    ".c",
-    ".h",
-    ".cpp",
-    ".hpp",
-    ".cs",
-    ".rb",
-    ".php",
-    ".swift",
-    ".scala",
-    ".lua",
-    ".sql",
-)
+# The file types `--backlink-coverage` reads, and the types a test file is.
+# ONE HOME: `kitlib.spine.BACKLINK_EXTS`, where the list and its widening
+# caution live, so the tag reader and the red-mark count read one domain.
+BACKLINK_EXTS = _kitspine.BACKLINK_EXTS
 # Comment tokens the file-level fallback (--mode files) reads a summary from.
 # The three most common line-comment markers; override with --comment-prefix.
 DEFAULT_COMMENT_PREFIXES = ("#", "//", "--")
@@ -903,17 +878,10 @@ def _module_files(src_roots):
     return files, names
 
 
-def _is_hidden_rel(rel):
-    """Whether a path RELATIVE TO ITS SCAN ROOT is hidden (a dot- or
-    `__pycache__` part) and so not source.
-
-    Root-relative is load-bearing, not incidental: the same test against the
-    path's *absolute* parts made every repo whose checkout sits under a
-    dot-prefixed directory (`~/.local/src`, a CI cache, a dot-prefixed pytest
-    temp root) scan to an empty map with exit 0 (WI-363). Where the caller keeps
-    the repo is not the caller's hidden-file intent; only what is inside the
-    root they pointed at is."""
-    return any(part.startswith((".", "__pycache__")) for part in rel.parts)
+# Whether a path relative to its scan root is hidden, so not source: the
+# rule's one home is `kitlib.spine.hidden_rel`, which the test-file domain
+# shares.
+_is_hidden_rel = _kitspine.hidden_rel
 
 
 def _walk_roots(src_roots, pattern):
@@ -2127,8 +2095,10 @@ def read_test_tags(root, tests_dir, live_tcs):
     Implements: SR-157, LLR-365"""
     root = Path(root)
     tags, findings = {}, []
-    for _scan_root, _base, path in _walk_roots([root / tests_dir], "*"):
-        if not path.is_file() or path.suffix.lower() not in BACKLINK_EXTS:
+    for scan_root, _base, path in _walk_roots([root / tests_dir], "*"):
+        if not path.is_file() or not _kitspine.is_test_file(
+            path.relative_to(scan_root)
+        ):
             continue
         rel = path.relative_to(root).as_posix()
         sites, problems = _read_test_file(path, rel)

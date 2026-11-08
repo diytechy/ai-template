@@ -10676,6 +10676,68 @@ until the item is ruled.
 
 **Kit-owned files — overwrite:** `scripts/dispatch.py`.
 
+### A red mark is attested before the code, removed by it, and never landed [since f24a68ca2]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A lane proves a new test's red-before with a strict
+expected-failure mark, declared once as `[bars] red_mark` beside `[bars]
+review`. The tests go in under the mark through `integrate.py attest`, whose
+green review bar is then their red-before, and the code commit removes the
+marks. A file's count of the mark is taken from its bytes with ASCII
+whitespace removed, so a formatter-wrapped mark counts. A test file is one
+the review set reads as a test file: under `[paths] tests`, with no part
+led by a dot or `__pycache__`, and of a test-file type. So the declaration
+and a document quoting the mark are never counted, even with `tests = .`.
+
+- **`attest`'s mark check.** Before any bar runs, `attest` compares each test
+  file's count in the staged tree with its count at the lane's last review
+  record (the newest verified `review` attestation since the lane's base, else
+  the base itself). A raised count needs the round's derived test set to name
+  the file. A lowered count on a file still present needs that record, over
+  the same test set, and the set naming the file; otherwise the refusal names
+  the file and the failed condition. A file gone from the staged tree is not
+  judged. A range or tree git cannot read refuses, naming the read. Every
+  refusal leaves the branch and the index as they were.
+- **The refresh's landing arm.** On the tree it bars, before either refresh
+  bar (`landing` and `no-bar`), the refresh refuses a tests root holding the
+  mark, naming each file and its count. The way out is the code commit that
+  removes the marks, or a quarantine. A tree with no marks refreshes as
+  before. This repository's coordinator hand squash, which runs no
+  refresh, runs the same arm on its staged tree (the `coordinator-cycle`
+  recipes, §3).
+- **The required key.** `[bars] red_mark` has no default and no fallback key.
+  An absent `docs/stack.ini`, one that does not parse, an absent section or
+  key, or an empty value refuses `attest` and the refresh alike, naming
+  `docs/stack.ini [bars] red_mark` and the cause; when `[bars] review` is
+  undeclared too, `attest` names both. `check_test_first.py` and `[checks]
+  test_first_since` are unchanged.
+
+**What to do (forced migration, OI-120 Q2 (a)).**
+
+1. Add `[bars] red_mark` to `docs/stack.ini`, with the Python reference
+   `pytest.mark.xfail(strict=True, raises=(AssertionError,
+   pytest.fail.Exception))` (no `@`, so a `pytest.param(..., marks=...)` mark
+   counts too) or your stack's form, as the template's comment states it.
+   Without it, `attest` and the refresh refuse, naming the key. There is no
+   default. Declare it even if you never mark a test.
+2. Search your test root for the declared text, ignoring whitespace (a
+   formatter-wrapped mark counts). A file that already carries it must lose
+   it before your next landing refresh.
+3. In-flight lanes carry the key only after a rebase or refresh onto the
+   trunk that has it. Until then their `attest` refuses.
+
+**Kit-owned files — overwrite:** `scripts/integrate.py`,
+`scripts/kitlib/red_mark.py` (new), `scripts/review_set.py`,
+`scripts/kitlib/git.py`, `scripts/kitlib/verdict.py`,
+`scripts/kitlib/spine.py`, `scripts/kitlib/bootstrap_manifest.py`,
+`scripts/gen_arch_map.py`, `stack.ini.template`, `PROCESS.md`. Two
+`scope: this-repo` skills changed
+too, only if you vendored them: `skills/coordinator-cycle/` and
+`skills/byte-budget-guard/SKILL.md`.
+
+**Regenerated files:** `docs/process.md`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

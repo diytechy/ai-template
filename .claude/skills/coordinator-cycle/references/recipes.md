@@ -847,6 +847,17 @@ commit of its own, move it to trunk's tip
   change a Done-when or drop a blessing: an amend is judged against the
   commit it replaces, not its real parent (WI-921's stated residue).
   Ruling-sync needs an open item citing the overrule.
+- **Check the staged squash for the red mark** before the landing commit,
+  from the checkout that holds it:
+  `"$PY" -c "import sys; sys.path.insert(0, '$SCRIPTS'); from kitlib.red_mark import landing_refusal; r = landing_refusal('.'); print(r or 'no red mark staged'); sys.exit(1 if r else 0)"`.
+  It runs the refresh's landing arm on the staged tree: exit 0 when no test
+  file holds the mark `[bars] red_mark` declares; exit 1, printing the
+  refusal, when one does (each file named with its count), when the key is
+  undeclared, or when git cannot read the staged tree. A hand squash runs no
+  refresh, so this is its only mark check. On exit 1, reset the squash with
+  `git reset --hard HEAD`, never a stash; the lane takes the code commit
+  that removes the marks, or a quarantine, before it is squashed again
+  (SKILL §3, Intent step 2).
 - **Regenerate** with `"$PY" "$SCRIPTS/trunk_step.py" --regen`. By hand, the traps are:
   - pass `--src project-trajectory/scripts` to both `gen_arch_map.py` forms (a
     bare `--contracts-doc` wipes the interface reference);
@@ -1236,6 +1247,15 @@ lane commit being replayed.
   branch and runs the bar there under the primary checkout's
   interpreter. Run from the lane with the default root, its harness floor
   reads the lane's own root, finds no `.venv` and refuses (wi-957 D-007).
+- The tests-first commit goes through `integrate.py attest` with a test
+  set that names each marked file, and the code commit that removes the
+  marks names the same set (SKILL §3, Intent step 2). `attest` judges each
+  test file's count of the mark `[bars] red_mark` declares against the
+  lane's last review record, and the refresh and the hand landing's check
+  (§3) refuse a tree that still holds one: a refresh or a hand landing (§3)
+  refused for a mark ends in the code commit or a quarantine. A test the bar skips takes no mark, because a skip is never
+  evidence: it is named, with its disposition, in the lane's decisions
+  record.
 - The declared bar runs the tier once: the lints run first, then the
   budget step's run, which exits with the tier's own code on a red tier
   and prints its CPU-seconds and wall time, with a WARN line for a limit

@@ -536,7 +536,9 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   Engineer, Test Engineer.
 - **DevStg-Impl — Implementation (test-first).** Code is written **test-first**: each DevStg-Tests
   TC becomes a *failing* test before the code that satisfies it, then the minimal
-  code to pass, then refactor (red → green → refactor). TDD is *how* DevStg-Impl code gets
+  code to pass, then refactor (red → green → refactor). In a lane, the failing
+  test is proven by the mark `[bars] red_mark` declares, attested before the
+  code and removed by it, and never landed. TDD is *how* DevStg-Impl code gets
   written; the SN→SR→LLR→TC spine is *what* it must satisfy — it operates within
   the traceability discipline, not instead of it. The exit criteria below
   (coverage, every in-scope SR Approved) are what that loop drives toward.

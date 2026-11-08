@@ -4185,3 +4185,69 @@ automated = "Yes"
 evidence = "tests/test_review_set.py::test_a_bootstrapped_scaffold_derives_the_set"
 status = "Approved"
 phase = 6
+
+[test.TC-421]
+verifies = ["SR-156", "LLR-368", "IF-022"]
+level = "Unit"
+method = "Run declaration unit cases for the declared expected-failure mark."
+tier = "Smoke"
+expected = "A non-empty stripped declaration is accepted; every unavailable state names the declaration, key, and cause; both unavailable keys are named; one parse supplies both values; and the shipped declaration carries the stated reference and guidance."
+automated = "Yes"
+evidence = "tests/test_red_mark.py::test_a_declared_value_is_the_stripped_text; tests/test_red_mark.py::test_both_keys_undeclared_are_both_named; tests/test_red_mark.py::test_each_undeclared_state_names_the_key_and_the_cause; tests/test_red_mark.py::test_the_bar_and_the_mark_come_from_one_parse; tests/test_red_mark.py::test_the_contract_names_the_key_and_its_refusal; tests/test_red_mark.py::test_the_template_comment_states_the_rule; tests/test_red_mark.py::test_the_template_declares_the_reference_value_with_no_at_sign; tests/test_red_mark.py::test_this_repo_declares_the_templates_value"
+status = "Approved"
+phase = 6
+
+[test.TC-422]
+verifies = ["SR-156", "LLR-368"]
+level = "Unit"
+method = "Run test-root and mark-counting unit cases."
+tier = "Smoke"
+expected = "Only files the review set reads count: relative paths with no dot-led or __pycache__ part and a declared test-file suffix, including a tests = . root; counting is byte-based, whitespace-insensitive, non-overlapping, and the repository landing tree has no mark."
+automated = "Yes"
+evidence = "tests/test_red_mark.py::test_a_count_is_non_overlapping_occurrences; tests/test_red_mark.py::test_a_file_that_is_not_utf8_counts_as_bytes; tests/test_red_mark.py::test_a_formatter_wrapped_mark_counts_the_same; tests/test_red_mark.py::test_a_param_mark_counts; tests/test_red_mark.py::test_a_tests_root_of_dot_counts_only_the_files_the_review_set_reads; tests/test_red_mark.py::test_the_tests_root_resolves_as_the_review_set_resolves_it; tests/test_red_mark.py::test_this_repos_tests_root_holds_no_mark; tests/test_red_mark.py::test_tree_counts_read_the_tests_root_and_leave_a_link_out"
+status = "Approved"
+phase = 6
+
+[test.TC-423]
+verifies = ["SR-156", "LLR-368"]
+level = "Unit"
+method = "Run reference-selection and mark-transition unit cases."
+tier = "Smoke"
+expected = "The reference, normalized test-set naming, count transitions, unreadable reads, and their stated refusals follow the low-level contract."
+automated = "Yes"
+evidence = "tests/test_red_mark.py::test_a_file_gone_from_the_staged_tree_is_not_judged; tests/test_red_mark.py::test_a_lowered_count_passes_on_a_matching_record; tests/test_red_mark.py::test_a_lowered_count_refuses_naming_the_condition; tests/test_red_mark.py::test_a_node_id_or_a_directory_does_not_name_the_file; tests/test_red_mark.py::test_a_raised_count_passes_when_the_set_names_the_file; tests/test_red_mark.py::test_a_raised_count_unnamed_is_refused_naming_the_file; tests/test_red_mark.py::test_a_rename_is_a_deletion_plus_an_addition; tests/test_red_mark.py::test_a_spelling_of_the_set_still_names_the_file; tests/test_red_mark.py::test_an_equal_count_is_not_judged; tests/test_red_mark.py::test_an_unread_tree_refuses_naming_the_read; tests/test_red_mark.py::test_each_refused_file_is_named_in_one_refusal"
+status = "Approved"
+phase = 6
+
+[test.TC-424]
+verifies = ["SR-156", "LLR-368", "LLR-207", "IF-154"]
+level = "Integration"
+method = "Run attestation integration cases for declaration, reference, transition, and refusal behavior."
+tier = "Full"
+expected = "Attestation refuses the stated declaration and mark-transition cases before its bar and preserves branch and index on refusal."
+automated = "Yes"
+evidence = "tests/test_red_mark_lane.py::test_a_deleted_marked_file_is_not_judged; tests/test_red_mark_lane.py::test_a_wrapped_mark_is_judged_as_the_one_line_form; tests/test_red_mark_lane.py::test_an_unreadable_range_or_tree_refuses; tests/test_red_mark_lane.py::test_attest_passes_a_removal_over_the_same_set; tests/test_red_mark_lane.py::test_attest_passes_an_added_mark_the_set_names; tests/test_red_mark_lane.py::test_attest_reads_the_mark_its_lane_stages_not_the_primarys; tests/test_red_mark_lane.py::test_attest_refuses_a_removal_after_the_set_changed; tests/test_red_mark_lane.py::test_attest_refuses_a_removal_the_set_does_not_name; tests/test_red_mark_lane.py::test_attest_refuses_a_removal_with_no_record_in_the_range; tests/test_red_mark_lane.py::test_attest_refuses_an_added_mark_the_set_does_not_name; tests/test_red_mark_lane.py::test_attest_refuses_each_undeclared_state_before_the_bar; tests/test_red_mark_lane.py::test_every_mark_refusal_leaves_branch_and_index"
+status = "Approved"
+phase = 6
+
+[test.TC-425]
+verifies = ["SR-156", "LLR-368", "IF-080", "IF-173"]
+level = "Integration"
+method = "Run refresh integration cases for its declaration and landing-tree checks."
+tier = "Full"
+expected = "Each refresh bar refuses the stated declaration and marked-tree cases before its bar, while a mark-free tree and a merged declaration behave as specified."
+automated = "Yes"
+evidence = "tests/test_red_mark_lane.py::test_a_lane_without_the_key_refreshes_on_the_merged_key; tests/test_red_mark_lane.py::test_a_refused_refresh_leaves_the_lane_at_its_work_tip; tests/test_red_mark_lane.py::test_a_tree_with_no_marks_refreshes_as_today; tests/test_red_mark_lane.py::test_refresh_refuses_a_marked_tree_naming_each_file_and_count; tests/test_red_mark_lane.py::test_refresh_refuses_each_undeclared_state_before_the_bar"
+status = "Approved"
+phase = 6
+
+[test.TC-426]
+verifies = ["SR-156", "LLR-368"]
+level = "Integration"
+method = "Run lane integration cases for plain-commit, merge-refresh, partial-close, rebase, and scaffold cases."
+tier = "Full"
+expected = "The stated reference, exclusion, quarantine, rebase, and bootstrapped-scaffold outcomes hold."
+automated = "Yes"
+evidence = "tests/test_red_mark_lane.py::test_a_bootstrapped_scaffold_refreshes_on_its_template_declaration; tests/test_red_mark_lane.py::test_a_partial_close_holding_a_mark_quarantines_then_refreshes; tests/test_red_mark_lane.py::test_a_plain_commit_removal_over_a_matching_record_passes; tests/test_red_mark_lane.py::test_a_plain_commit_removal_then_an_empty_attest_is_judged; tests/test_red_mark_lane.py::test_a_rebase_makes_the_new_base_the_reference; tests/test_red_mark_lane.py::test_a_trunk_file_merged_in_is_not_judged"
+status = "Approved"
+phase = 6

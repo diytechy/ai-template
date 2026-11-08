@@ -188,8 +188,10 @@ __all__ = [
     "LANDING_BARS",
     "BarAttestation",
     "tests_digest",
+    "normal_test_paths",
     "format_bar_green",
     "bar_attestation",
+    "last_review_record",
     "mechanical_close_attestation",
     "mechanical_close",
     "work_tip",
@@ -541,16 +543,28 @@ def tests_digest(paths):
 
     Implements: SR-156, LLR-207
     """
+    normalized = normal_test_paths(paths)
+    if not normalized:
+        return "none"
+    joined = "\n".join(sorted(normalized)) + "\n"
+    return hashlib.sha256(joined.encode("utf-8")).hexdigest()
+
+
+def normal_test_paths(paths):
+    """The set of named test paths as `tests_digest` reads it: each path with a
+    backslash turned to `/` and any leading `./` dropped. The one home of that
+    normalisation, so "the set names this file" and the set's digest can never
+    disagree about a spelling.
+
+    Implements: SR-156, LLR-207, LLR-368
+    """
     normalized = set()
     for path in paths or ():
         text = str(path).replace("\\", "/")
         while text.startswith("./"):
             text = text[2:]
         normalized.add(text)
-    if not normalized:
-        return "none"
-    joined = "\n".join(sorted(normalized)) + "\n"
-    return hashlib.sha256(joined.encode("utf-8")).hexdigest()
+    return normalized
 
 
 def format_bar_green(tree, work, bar, tests, summary):
@@ -1492,6 +1506,21 @@ def _last_review_green(root, branch, base):
         if attested is not None and attested.bar == "review":
             return sha.strip()
     return ""
+
+
+def last_review_record(root, branch, base):
+    """The lane's last review record in `base..branch`: `(sha, BarAttestation)`
+    for the newest commit there carrying a verified `review` attestation,
+    `("", None)` when none does, or None when git cannot list the range. The
+    public reader of what `_last_review_green` finds, so a caller outside this
+    module never reaches for a private name.
+
+    Implements: SR-156, LLR-207, LLR-368
+    """
+    sha = _last_review_green(root, branch, base)
+    if sha is None:
+        return None
+    return (sha, bar_attestation(root, sha)) if sha else ("", None)
 
 
 def _is_ancestor(root, rev, of):

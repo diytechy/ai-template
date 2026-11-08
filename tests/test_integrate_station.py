@@ -54,7 +54,14 @@ import inspect
 import re
 import sys
 
-from conftest import SCRIPTS, env_gate_skipif, run_py, seed_row
+from conftest import (
+    BARS_RED_MARK,
+    RED_MARK,
+    SCRIPTS,
+    env_gate_skipif,
+    run_py,
+    seed_row,
+)
 from integrate_fixtures import (
     T_CODE,
     T_LATER,
@@ -137,7 +144,7 @@ print("RESULT: FAIL (1 step(s) failed)")
 sys.exit(1)
 """
 
-STATION_STACK_INI = "[product]\ntest = {py} -m pytest -q\n"
+STATION_STACK_INI = "[product]\ntest = {py} -m pytest -q\n" + BARS_RED_MARK
 
 
 def station_repo(
@@ -224,6 +231,7 @@ def close_branch(
 ATTEST_STACK_INI = (
     "[product]\ntest = {py} scripts/named_tests.py\n"
     "[bars]\nreview = python scripts/check.py --jobs 0 --tier smoke\n"
+    "red_mark = " + RED_MARK + "\n"
 )
 
 # The derived set of `attest_repo`'s row, in its sorted order.
@@ -432,7 +440,8 @@ def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
     )
     (root / "docs" / "stack.ini").write_text(
         "[product]\ntest = {py} -m pytest -q\n"
-        "[generated]\nPROJECT_STATE.html = trajectory\n",
+        + BARS_RED_MARK
+        + "[generated]\nPROJECT_STATE.html = trajectory\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -569,7 +578,7 @@ def test_a_lane_whose_one_row_is_ordinary_runs_the_bar(tmp_path):
         "out/\nbar-cache/\n", encoding="utf-8", newline="\n"
     )
     (root / "docs" / "stack.ini").write_text(
-        "[product]\ntest = {py} -m pytest -q\n", encoding="utf-8", newline="\n"
+        STATION_STACK_INI, encoding="utf-8", newline="\n"
     )
     declare_generated(root)
     scripts = root / "scripts"

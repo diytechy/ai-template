@@ -1,0 +1,51 @@
+Reviewed: 8c3c7a7c7be8549ab6dc9ee4469fcb02a6e4fc43
+
+Full-lane review of WI-996 (f24a68ca2..8c3c7a7c7), REVIEW-B, rubric docs/rubrics/kit-change-review.md.
+
+Verified. I hunted these failure classes, worst first: (1) fail-open, where a marked test lands on trunk or a mark is removed with no record standing for it; (2) silent wrong content, where the wrong reference, the wrong tests root or a wrong count is used; (3) a refusal that moves the branch or the index. I read the code end to end: kitlib/red_mark.py, the integrate.py attest preflight and refresh hunk, and the spine.py, verdict.py, git.py, review_set.py and gen_arch_map.py extractions. What I found right:
+
+- `_lane_base` is the merge base with trunk, so merged trunk commits fall outside `base..branch` and the reference stays the lane's own. `last_review_record` returns only an attestation whose recorded tree equals its commit's own tree. A removal needs digest(T) to equal the record's digest and T to name P, which together mean the reference's bar ran P.
+- The refresh hunk runs `landing_refusal` after `add -A` and before `_attest_commit`, on both the `landing` and the `no-bar` bar. A refusal goes through `undo`, which leaves the lane at its work tip.
+- `refusal or _lane_mark_refusal(...)` short-circuits, so a refused derive never reaches `derived.files`.
+- The `read_blobs`/`write_blobs` split leaves write_blobs's behaviour unchanged. The new `is_test_file` filter in `read_test_tags` changes no behaviour, because `_walk_roots` already drops hidden paths relative to the same root.
+- I drove the real primitives on this checkout. `read_bars('.')` gives the prefix `tests/` and no causes. `tree_counts` over HEAD reads 284 test files and finds a total count of 0. `landing_refusal('.')` returns None, so this repository's own landing arm is at 0.
+- Red-before, checked from exported trees in my scratch dir:
+  - At the tests-first commit e8d782ddb, `tests/test_red_mark.py` ran 45 xfailed. Under `--runxfail` all 45 fail, through the stand-in rather than an import error.
+  - The fix-round regression test `test_a_tests_root_of_dot_counts_only_the_files_the_review_set_reads` fails on the pre-fix code fed479aec, which reports `README.md`, `docs/stack.ini`, `notes.txt` and `pkg/__pycache__/test_cached.py` as 1 marked. It passes at the tip.
+- Done-when map:
+  - D1 (template value, comment, docs/stack.ini, IF-022 header) is covered by TC-421. `docs/interface-reference.md` is a `[generated]` trunk-owned view, so the trunk step regenerates it and its absence from the lane is correct.
+  - D2 (one parse, five refusal states on attest and refresh) is covered by TC-421, TC-424 and TC-425.
+  - D3 (every row of the table, the plain-commit route, the wrapped mark, the unread range, branch and index preserved) is covered by TC-423, TC-424 and TC-426. The range case is a monkeypatched stub, and its docstring says so.
+  - D4 (the refresh on both bars) is covered by TC-425.
+  - D5 (the fixtures, and RED_MARK built by concatenation) is checked by `test_this_repos_tests_root_holds_no_mark` and by D-003's census.
+  - D6 (the skill text, three copies synced by `diff -r`, the test_prompts pins, the PROCESS.md sentence, the byte-budget row at +144) is met.
+  - D7 (the RESYNC entry anchored at f24a68ca2, with its three steps and the kit-owned list) is met.
+  - D8 (the landing consequence) is recorded in D-005.
+  - D9 (the coverage bound) is covered by TC-426: the merge-refresh case, the partial close, the rebase and the scaffold.
+  - D10: check_test_first.py is not in the diff.
+  - D11: no SN changed. SR-156 and LLR-207 are amended by addition only, which I checked with a word diff (their approved text is kept), and no Status flipped.
+
+I found no fail-open, data-loss or crash path in the shipped code. The findings below are row-text accuracy (K1, K3) and one spec-bounded coverage note.
+
+Coverage-extension notes (fail-closed, no severity):
+- `[paths] tests = ./tests` passes `ls-tree`, but `tree_counts` then slices each path by `len("./tests/")`. That can only over-count a hidden path, which fails closed.
+- With `tests = .`, `read_blobs` reads every blob in the tree before filtering by `is_test_file`. On this repository that is 108 MB in about 1 s, so it costs time but not correctness.
+
+Commands:
+- `git rev-parse HEAD` -> 8c3c7a7c7be8549ab6dc9ee4469fcb02a6e4fc43
+- `python -m pytest -q -p no:cacheprovider -n 2 --basetemp .../wi996-r2-B/wi-996 <the 36 listed modules>` -> `1857 passed, 78 skipped in 2193.85s (0:36:33)`. Of the 78 skips, 76 are environment-gated on posix-shell.
+- `python project-trajectory/scripts/check_trajectory.py --strict` -> `check_trajectory: clean (999 work item(s), 889 done (89%), 34 cancelled, graph acyclic).`
+- `python project-trajectory/scripts/trace.py --strict-integrity` -> `Traceability: SN=31 SR=138 LLR=334 TC=380 orphans=0 integrity=0 ... drafts=7 ... interface-findings=0 ac-advisories=1 paraphrase-advisories=2.` It rewrote the gitignored docs/test/report.md, and `git status` stayed clean.
+- `git archive e8d782ddb` to scratch, then `pytest tests/test_red_mark.py` -> `45 xfailed`, and with `--runxfail` -> `45 failed`.
+- `git archive fed479aec` to scratch with the tip's `tests/test_red_mark.py` copied in, then `pytest -k tests_root_of_dot` -> FAILED. The pre-fix refusal lists `README.md: 1 marked`, `docs/stack.ini: 1 marked`, `notes.txt: 1 marked` and `pkg/__pycache__/test_cached.py: 1 marked`.
+- An in-process probe of `read_bars`, `tree_counts` and `landing_refusal` on the checkout -> prefix `tests/`, 284 files, total count 0, refusal None.
+
+- [MINOR] docs/requirements/low-level-requirements.toml:3822 -> K1: LLR-368's detail defines test files as "regular files beneath the declared test root as resolved for the review set, excluding links and submodules", and TC-422's expected says the same. Since fix round 1 the code counts only paths that `kspine.is_test_file` admits (project-trajectory/scripts/kitlib/red_mark.py:151): no dot-led or `__pycache__` part, and a `BACKLINK_EXTS` suffix. A `.txt` or `.md` file under the root that holds the mark is uncounted, so the row is untrue against its code -> restate the domain in LLR-368's detail and TC-422's expected as the review set's test-file predicate (non-hidden, of a declared test-file type) -> @owner
+- [MINOR] docs/requirements/low-level-requirements.toml:3822 -> K1: LLR-368's detail ends "Coverage bound: D31 to D35 are inside and driven by TC-421 to TC-426; D37 to D41 are outside and not tested here; D42 is the rebase case". D31 to D42 are decision labels of docs/plans/WI-996/plan.md, so the registry row means nothing without that plan file -> state the inside and outside sets in the row's own words, as the spec's Done-when coverage bound lists them -> @owner
+- [MINOR] docs/requirements/system-requirements.toml:742 -> K1, for clarity: SR-156's appended sentence says "a mark is removed only against the lane's last review record over the same test set". LLR-368 and the spec's table leave a lowered count on a file absent from the staged tree unjudged, so deleting or renaming a marked file removes its marks against no record. The parent states a stricter rule than its child and code keep -> qualify the sentence, for example "a mark is removed from a test file that remains only against ...", or state the deletion case -> @owner
+- [MINOR] docs/requirements/low-level-requirements.toml:2226 -> overlap: LLR-207's appended sentence "Its mark-transition refusal reads the newest verified review attestation in the lane range, or the lane base when none exists, and preserves branch and index on every refusal" restates LLR-368's reference and refusal-preservation clauses almost word for word. One fact now has two homes in two LLRs under SR-156 -> keep in LLR-207 only that the attest route refuses before the bar on an undeclared mark or a refused mark transition, citing LLR-368, and drop the restated reference and preservation clause -> @owner
+- [MINOR] docs/test/test-cases.toml:1307 -> K1/K3: TC-132's amended method says its integrator suite runs "an unavailable declared expected-failure mark or an invalid mark transition refuses before the bar, leaving branch and index unchanged". None of its Evidence files (tests/test_integrate.py, test_integrate_admission.py, test_integrate_station.py, test_integrate_attest.py) drive a mark transition: grep finds only RED_MARK fixture declarations there. The cases live in TC-424's tests/test_red_mark_lane.py, so the approved TC claims a method its evidence does not carry, and it duplicates TC-424 -> drop the "invalid mark transition" clause from TC-132, since TC-424 is its home, or keep only the declaration refusal its fixtures do drive -> @owner
+- [MINOR] project-trajectory/scripts/kitlib/red_mark.py:89 -> K3: `_cause` (:89), `_removal_failures` (:155), `_staged_tree` (:199), `_read_counts` (:208) and `_refusal` (:222) carry `Implements: SR-156, LLR-368`, but LLR-368's code_symbol (docs/requirements/low-level-requirements.toml:3821) does not list them. Conversely, that code_symbol lists `write_blobs`, whose tag names only LLR-181 (project-trajectory/scripts/kitlib/git.py:457-467) and which implements nothing of the mark -> add the five helpers to LLR-368's code_symbol and drop `write_blobs` from it -> @owner
+- [MINOR] project-trajectory/scripts/kitlib/red_mark.py:125 -> the count matches only the declared text, so a strict mark written with one added argument passes the landing arm with count 0, and its still-red test lands green. The shipped skill concedes this at project-trajectory/skills/coordinator-cycle/SKILL.md:204 ("its test can land red"). Writing `reason=` on an xfail is ordinary practice. The spec's coverage bound puts the case outside, and before this row any xfail could already land, so this is spec-bounded and not a regression -> either have the landing arm also count the declared text's call head, the text before its argument list's closing delimiter, so an appended argument still counts, or state the bound in SR-156's sentence. This widens a match, not a guard: it cannot be made unrepresentable because the mark is free text in the adopter's own test sources, which no kit type owns -> @owner
+
+VERDICT: CHANGES-REQUESTED findings=7

@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 from conftest import (
+    RED_MARK,
     SCRIPTS,
     env_gate_skipif,
     load_script,
@@ -231,9 +232,11 @@ def test_an_unreadable_message_file_is_a_named_refusal(tmp_path, content):
     [
         None,
         "[product]\ntest = {py} scripts/named_tests.py\n",
-        "[bars]\nother = python scripts/check.py\n",
-        "[bars]\nreview =    \n",
-        "[bars]\nreview = python scripts/check.py\n[bars]\nreview = python x.py\n",
+        "[bars]\nother = python scripts/check.py\nred_mark = " + RED_MARK + "\n",
+        "[bars]\nreview =    \nred_mark = " + RED_MARK + "\n",
+        "[bars]\nreview = python scripts/check.py\nred_mark = "
+        + RED_MARK
+        + "\n[bars]\nreview = python x.py\n",
     ],
     ids=["no-file", "no-section", "no-key", "whitespace-value", "unparseable"],
 )
@@ -264,7 +267,8 @@ def test_attest_runs_the_declarations_staged_in_the_lane_not_the_primarys(tmp_pa
     _declare(
         wt,
         "[product]\ntest = {py} scripts/named_tests.py --lane-declared\n"
-        "[bars]\nreview = python scripts/check.py --lane-declared\n",
+        "[bars]\nreview = python scripts/check.py --lane-declared\n"
+        "red_mark = " + RED_MARK + "\n",
     )
     sha, refusal = _attest(root)
     assert refusal is None, refusal

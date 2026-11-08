@@ -80,6 +80,7 @@ __all__ = [
     "grep_files",
     "lane_commit_walk",
     "lanes_containing",
+    "read_blobs",
     "squash_commits",
     "squash_lines",
     "staged_heads",
@@ -424,33 +425,48 @@ def _listed_blobs(root, rev, paths):
     return blobs
 
 
-def write_blobs(root, rev, paths, dest):
-    """Write every file the tree-ish `rev` holds under `paths` to `dest`, each
-    at its own relative path and byte for byte as committed: each blob is read
-    by object id (`ls-tree`, then one `cat-file --batch`), so no attribute can
-    drop or rewrite one. A link or a submodule is not written, and a path
-    `rev` does not hold writes nothing. Raises `ArchiveError` when git cannot
-    list or read them.
+def read_blobs(root, rev, paths):
+    """`{path: bytes}` of every file the tree-ish `rev` holds under `paths`,
+    byte for byte as committed: each blob is read by object id (`ls-tree`,
+    then one `cat-file --batch`), so no attribute can drop or rewrite one, and
+    no worktree, ignored file or cache is ever read. A link or a submodule is
+    not file content and is left out; a path `rev` does not hold reads
+    nothing, and an empty `paths` reads the whole tree. Raises `ArchiveError`
+    when git cannot list or read them.
 
-    Implements: SR-166, LLR-181
+    Implements: SR-156, LLR-368
     """
     blobs = _listed_blobs(root, rev, paths)
     if not blobs:
-        return
+        return {}
     out = git_bytes(
         root, ["cat-file", "--batch"], stdin=b"".join(oid + b"\n" for oid, _p in blobs)
     )
-    at = 0
+    read, at = {}, 0
     for oid, rel in blobs:
         end = out.find(b"\n", at) if out is not None else -1
         header = out[at:end].split() if end >= 0 else []
         if len(header) != 3 or header[0] != oid or header[1] != b"blob":
             raise ArchiveError("git could not read {} at {}".format(rel, rev[:10]))
         size = int(header[2])
+        read[rel] = out[end + 1 : end + 1 + size]
+        at = end + 2 + size
+    return read
+
+
+def write_blobs(root, rev, paths, dest):
+    """Write every file the tree-ish `rev` holds under `paths` to `dest`, each
+    at its own relative path and byte for byte as committed, through
+    `read_blobs`: a link or a submodule is not written, and a path `rev` does
+    not hold writes nothing. Raises `ArchiveError` when git cannot list or
+    read them.
+
+    Implements: SR-166, LLR-181
+    """
+    for rel, data in read_blobs(root, rev, paths).items():
         target = Path(dest) / rel
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(out[end + 1 : end + 1 + size])
-        at = end + 2 + size
+        target.write_bytes(data)
 
 
 def lanes_containing(root, tip):

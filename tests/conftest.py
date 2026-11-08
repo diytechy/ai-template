@@ -93,6 +93,9 @@ os.environ["CODEX_HOME"] = str(ROOT / "tests" / "_no-codex-home")
 # docs/stack.ini [smoke-budget] and tests/test_smoke_budget.py.
 SLOW_MODULES = frozenset(
     {
+        # WI-996: the red mark's attest and refresh arms on real lanes;
+        # its in-process pin is tests/test_red_mark.py.
+        "test_red_mark_lane",
         # P9R selector tests create/commit real Git fixtures and invoke the
         # existing generators (45 cases, 11.57s alone); they are integration
         # assurance at Full/CI, not in-process smoke units. No existing module
@@ -1451,11 +1454,23 @@ def claim_on_branch(lane, wi="WI-9"):
     return lane
 
 
+# The red mark's reference text, built by concatenation so `tests/` never
+# holds it whole: this repository's own landing tree counts 0 (WI-996).
+RED_MARK = (
+    "pytest.mark.xfail(strict=True, raises=(Assertion"
+    + "Error, pytest.fail.Exception))"
+)
+# The section a `docs/stack.ini` fixture that reaches `attest` or the refresh
+# declares, the key being required with no default.
+BARS_RED_MARK = "[bars]\nred_mark = {}\n".format(RED_MARK)
+
+
 def declare_review_bar(repo, ctl):
     """Declare `docs/stack.ini [bars] review` under `repo` as a stand-in bar
     driven from the control directory `ctl`: each run appends one line to
     `ctl/bar_runs.txt`, and the bar is red (exit 1, printing
     `BAR-FAIL-MARKER`) while `ctl/bar_red` exists, green (exit 0) otherwise.
+    `[bars] red_mark` is declared beside it, as a real declaration must.
     The caller commits the file with the rest of its configuration. Returns
     the declared command."""
     control = Path(ctl).resolve().as_posix()
@@ -1469,7 +1484,7 @@ def declare_review_bar(repo, ctl):
     path = Path(repo) / "docs" / "stack.ini"
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8", newline="\n") as fh:
-        fh.write("[bars]\nreview = {}\n".format(command))
+        fh.write("[bars]\nreview = {}\nred_mark = {}\n".format(command, RED_MARK))
     return command
 
 

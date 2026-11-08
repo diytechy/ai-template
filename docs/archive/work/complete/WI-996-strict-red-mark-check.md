@@ -3,13 +3,27 @@ id = "WI-996"
 title = "A removed red mark is proven red by the lane's last review record, no red mark lands, and `[bars] red_mark` declares the mark"
 workstream = "process"
 sr_refs = ["SR-156"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#13-review-only-a-green-tip-review-test-cases-in-stages"
+specref = ""
 needs = ["WI-995", "OI-125"]
 buildtier = "medium"
 safety_class = "ordinary"
 planmode = "single"
 priority = 5
 +++
+
+## Deliverable
+
+`[bars] red_mark` declares the strict expected-failure mark (template and this
+repo), read in one parse with `[bars] review`. `attest` judges each test file's
+mark count against the lane's last review record (or the base): an added mark
+passes only when the set names the file, a removed mark from a file that
+remains only over a same-set record, and every refusal leaves branch and index
+unchanged. The refresh refuses a tree holding a mark, on both bars, and the
+coordinator's hand landing runs the same check on its staged squash. The mark
+is counted only in the files the review set reads as tests. LLR-368 and
+TC-421 to TC-426 approved, SR-156 and LLR-207 re-attested, at the lane's acts
+under sitting 005; dispute sitting 008's FIX built in the lane. RESYNC entry:
+a forced migration (declare the key).
 
 ## Context
 
@@ -305,7 +319,7 @@ Nothing else is added.
 
 ## Done-when
 
-- [ ] `[bars] red_mark` is declared in `project-trajectory/stack.ini.template`.
+- [x] `[bars] red_mark` is declared in `project-trajectory/stack.ini.template`.
       The value is `pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))`,
       with no `@`, so a `pytest.param(..., marks=...)` mark counts too. Its
       comment says:
@@ -321,12 +335,12 @@ Nothing else is added.
       `docs/stack.ini` declares the same value, and IF-022's contract text
       (the header of `docs/stack.ini`) names the key and its refusal.
       `docs/interface-reference.md` is regenerated.
-- [ ] One parse reads `[bars] review` and `[bars] red_mark`, from the tree
+- [x] One parse reads `[bars] review` and `[bars] red_mark`, from the tree
       each verb runs on. Each of the five refusal states in "The
       declaration" refuses `attest` before any bar runs, and refuses the
       refresh before its bar, naming `docs/stack.ini [bars] red_mark` and
       the cause. A test drives each state.
-- [ ] `attest` judges the staged tree against the reference by the table in
+- [x] `attest` judges the staged tree against the reference by the table in
       "The attest arms". A test drives each row:
       - added marks, named and unnamed;
       - removed marks: with a matching record; with no record in the range
@@ -339,10 +353,10 @@ Nothing else is added.
 
       An unchanged count is not judged. Every refusal leaves the branch and
       the index as they were (the existing `attest` contract).
-- [ ] The refresh refuses a tree whose tests root holds a mark, naming each
+- [x] The refresh refuses a tree whose tests root holds a mark, naming each
       file and count. This holds on both `landing` and `no-bar`. A tree with
       no marks refreshes exactly as today.
-- [ ] Every fixture that declares `[bars]` also declares `red_mark`:
+- [x] Every fixture that declares `[bars]` also declares `red_mark`:
       `tests/conftest.py` `declare_review_bar`,
       `tests/test_integrate_attest.py` and `tests/test_integrate_station.py`.
       The build re-greps `tests/` for `[bars]` and `stack.ini` writers and
@@ -350,7 +364,7 @@ Nothing else is added.
       build the mark's text from the declaration or by concatenation, so
       `tests/` never holds it whole and this repository's own landing arm
       stays at 0.
-- [ ] The coordinator-cycle skill (`project-trajectory/skills/coordinator-cycle/SKILL.md`,
+- [x] The coordinator-cycle skill (`project-trajectory/skills/coordinator-cycle/SKILL.md`,
       Intent step 2, and `references/recipes.md` §6, with the `.claude`
       and `.agents` copies synced) says:
       - the tests-first commit goes through `integrate.py attest` with a
@@ -367,7 +381,7 @@ Nothing else is added.
       in a lane, the failing test is proven by the mark `[bars] red_mark`
       declares, attested before the code and removed by it, and never
       landed. Byte-budget-guard is run and its delta reported.
-- [ ] RESYNC_PACK: one entry anchored at a trunk commit. Under **What
+- [x] RESYNC_PACK: one entry anchored at a trunk commit. Under **What
       changed**, it covers `attest`'s mark check, the refresh's landing arm
       and the required key. Under **What to do**:
       1. Add `[bars] red_mark` to `docs/stack.ini`, with the Python
@@ -382,10 +396,10 @@ Nothing else is added.
       **Kit-owned files to overwrite:** `scripts/integrate.py`, the new or
       changed `scripts/kitlib/` module, and `stack.ini.template`. This is
       the forced adopter migration OI-120 Q2 (a) accepted.
-- [ ] Landing consequence, stated in the lane's decisions record: every
+- [x] Landing consequence, stated in the lane's decisions record: every
       lane cut before this row lands refuses at `attest` until it carries
       the key. `git worktree list` shows one lane today, `wi-902`.
-- [ ] Coverage bound: the promise reaches the trees, declarations and
+- [x] Coverage bound: the promise reaches the trees, declarations and
       attestations that supported workflows and the kit's own routes
       produce, as `project-trajectory/PROCESS.md` §6 "Review threat model"
       bounds a spec's promise:
@@ -412,10 +426,10 @@ Nothing else is added.
       becomes the new lane base. Marks added and removed before the rebase
       are then not judged, and the pre-rebase review rounds stand as their
       record.
-- [ ] `check_test_first.py` and its `[checks] test_first_since` key are
+- [x] `check_test_first.py` and its `[checks] test_first_since` key are
       unchanged; the mark check does not replace its judgement of test-case
       approval order (OI-125 Q3 (a)).
-- [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
+- [x] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
 
 ## Critique dispositions
 

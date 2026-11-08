@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 333
+design_rows = 334
 seam_rows = 258
 requirements_placed = 133
 requirements_unplaced = 5
@@ -830,6 +830,7 @@ llr_refs = [
   "LLR-363",
   "LLR-364",
   "LLR-367",
+  "LLR-368",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -891,6 +892,7 @@ modules = [
   "project-trajectory/scripts/kitlib/git.py",
   "project-trajectory/scripts/kitlib/plan_pass.py",
   "project-trajectory/scripts/kitlib/provenance.py",
+  "project-trajectory/scripts/kitlib/red_mark.py",
   "project-trajectory/scripts/kitlib/registry.py",
   "project-trajectory/scripts/kitlib/shell_line.py",
   "project-trajectory/scripts/kitlib/sitting.py",

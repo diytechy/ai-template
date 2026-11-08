@@ -87,7 +87,10 @@ Five operations here; the two lane closes that are NOT a merge (`hand_back`,
              this script's call.
   attest     a build round's own record of green (WI-956): in the lane
              worktree, refuse a worktree that holds work the index does not,
-             derive the row's review test set (`review_set.derive`), run the
+             derive the row's review test set (`review_set.derive`), judge
+             each test file's count of the red mark declared at
+             docs/stack.ini `[bars] red_mark` against the lane's last review
+             record (`kitlib.red_mark`, WI-996), run the
              review bar declared at docs/stack.ini `[bars] review` and then
              the derived files, and commit the staged work (or
              an empty commit on the tip) carrying a `bar=review` attestation,
@@ -129,11 +132,15 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     off-frontier row. The owner's notes (the owner-only paths) are never
     rewritten: the move's relink passes them by, so they are never a path the
     claim must write and never a reason it refuses.
-    `refresh` runs the station refresh on a claimed branch. `attest` commits a
+    `refresh` runs the station refresh on a claimed branch, refusing before
+    its bar an undeclared red mark or a tree whose test files hold it, naming
+    each file and its count. `attest` commits a
     lane's staged work carrying a `review` attestation, refusing before any
-    bar runs on missing hooks, an undeclared review bar or a worktree that
-    holds work the index does not, and committing nothing on a red bar or a
-    named test's red. `integrate` is the
+    bar runs on missing hooks, an undeclared review bar or red mark, a
+    worktree that holds work the index does not, or a test file whose red
+    mark count rose outside the round's test set or fell without the lane's
+    last review record over the same set naming it, and committing nothing on
+    a red bar or a named test's red. `integrate` is the
     serial fail-closed merge queue: a `--no-ff` merge onto a candidate
     worktree, the trunk step folded in, then the DECLARED bar on the composed
     tree — a missing or empty declaration, or any SKIP in it, refuses — and
@@ -200,6 +207,7 @@ from kitlib import commit_hooks as _kitcommit_hooks
 from kitlib import config as _kitconfig
 from kitlib import decisions as kdecisions
 from kitlib import provenance as _kitprovenance
+from kitlib import red_mark as _kitredmark
 from kitlib import registry as kregistry
 from kitlib import done_when as kdone
 from kitlib import verdict as kverdict
@@ -2757,13 +2765,18 @@ def refresh(root, branch, tier):
 
     Mechanical - no agent, no judgement. In the branch's own lane worktree:
 
-        merge trunk IN  ->  trunk_step (compile, then regen)  ->  bar  ->  commit
+        merge trunk IN  ->  trunk_step (compile, then regen)  ->  red mark
+            ->  bar  ->  commit
 
     That order is fixed and load-bearing (§A2.1): the compile has to see the
     trunk's log before it appends, and the bar has to see what the compile and
-    the regen wrote. The commit carries a `Bar-Green:` trailer NAMING the tree
-    it barred and the work commit it sits on, and refuses to exist unless it
-    verifies against git - see `refresh_attestation`.
+    the regen wrote. The red mark (`kitlib.red_mark.landing_refusal`) is read
+    from that staged tree before either bar: an undeclared `[bars] red_mark`,
+    an unreadable tree or a test file holding the mark refuses, naming each
+    file and its count, since a marked test passes the bar while it is red.
+    The commit carries a `Bar-Green:` trailer NAMING the tree it barred and
+    the work commit it sits on, and refuses to exist unless it verifies
+    against git - see `refresh_attestation`.
 
     EVERY failure path leaves the branch back at its last work commit, clean.
     That is the disposable-commit rule doing double duty: it is what makes a
@@ -2780,6 +2793,8 @@ def refresh(root, branch, tier):
     bar must not hold the exclusive turn to advance trunk), and `integrate_one`
     runs it INSIDE the slot for any branch that arrives un-refreshed or stale,
     which is the pessimistic sequence and is why that sequence never rots.
+
+    Implements: SR-156, LLR-368
     """
     # The commit hooks are on before anything is read (WI-926). Then the
     # claimed rows' say over the bar (WI-388): the adjudication no-bar arm
@@ -2823,8 +2838,13 @@ def refresh(root, branch, tier):
     # `attest` also commits through. The bar is the last thing to touch this
     # tree, and a declared bar is the adopter's command: staging first means
     # whatever it writes (a coverage report, a cache) can never be swept into
-    # the attested commit by an `add -A` that ran after it.
+    # the attested commit by an `add -A` that ran after it. The staged tree is
+    # the first that holds the merged declaration and everything regenerated,
+    # so the red mark is read and counted there, before either bar.
     ac.git(wt, "add", "-A")
+    marked = _kitredmark.landing_refusal(wt)
+    if marked:
+        return undo(marked, "")
     _sha, refused = _attest_commit(
         wt,
         root,
@@ -2981,35 +3001,15 @@ def _bar_refusal(wt, tree, bar, ok, summary):
     )
 
 
-def _review_bar_command(wt):
-    """The review bar's declared shell line, `[bars] review` in the lane
-    checkout's `docs/stack.ini` - the declaration the staged tree carries, so
-    the record binds the bar that tree declares: `(command, None)` or
-    `(None, refusal)`.
-
-    Its one reader, through the one parse of the file. There is no default and
-    no fallback to another bar: an absent file, section or key, an empty
-    value, or a file that does not parse refuses, naming the file, the key and
-    the cause (D-002).
+def _lane_mark_refusal(root, wt, branch, bars, tests):
+    """The red-mark check on the tree `wt` stages, against the lane's last
+    review record over its own base, for the round's test set `tests`: a
+    refusal, or None. An unknowable base refuses, as an unread range does.
 
     Implements: SR-156, LLR-207
     """
-    try:
-        cp = _kitconfig.read_stack_ini(wt / "docs" / "stack.ini")
-    except _kitconfig.StackIniError as exc:
-        cp, cause = None, "it cannot be read ({})".format(exc)
-    else:
-        cause = "the file is absent"
-    if cp is not None:
-        command = cp.get("bars", "review", fallback="").strip()
-        if command:
-            return command, None
-        cause = "the section or key is absent, or its value empty"
-    return None, (
-        "the review bar is undeclared in {}: docs/stack.ini [bars] review - {}. "
-        "Declare the command a review attestation runs; there is no "
-        "default".format(wt, cause)
-    )
+    base, refusal = _lane_base(root, branch, "the lane's last review record")
+    return refusal or _kitredmark.attest_refusal(root, wt, branch, base, bars, tests)
 
 
 def _unstaged_dirt(wt):
@@ -3113,8 +3113,11 @@ def _attest_preflight(root, branch, bar, message_file):
     or `(None, refusal)`.
 
     The lane comes through the refresh's boundary (`_lane_off_trunk`), and the
-    row's set and the review bar are read from that lane's checkout once it is
-    known to equal the index, so what they read is what is staged.
+    row's set, the review bar and the red mark are read from that lane's
+    checkout once it is known to equal the index, so what they read is what is
+    staged. Both `[bars]` keys come from one parse and are required with no
+    default; an undeclared one is named with its cause. The red-mark check
+    runs last, on the derived set, before any bar.
 
     Implements: SR-156, LLR-207
     """
@@ -3135,16 +3138,18 @@ def _attest_preflight(root, branch, bar, message_file):
                 wt, ", ".join(dirt) if dirt else "git status failed"
             )
         )
-    command, refusal = _review_bar_command(wt)
+    bars = _kitredmark.read_bars(wt)
+    refusal = bars.refusal("review", "red_mark")
     if refusal:
         return None, refusal
     message, refusal = _attest_message(branch, message_file)
     if refusal:
         return None, refusal
     derived, refusal = review_set.derive(wt, branch)
+    refusal = refusal or _lane_mark_refusal(root, wt, branch, bars, derived.files)
     if refusal:
         return None, refusal
-    return _AttestPlan(wt, derived, command, message), None
+    return _AttestPlan(wt, derived, bars.review, message), None
 
 
 def attest(root, branch, bar, message_file=None):
@@ -3154,11 +3159,12 @@ def attest(root, branch, bar, message_file=None):
 
     The commit hooks first, then the lane worktree (the refresh's boundary,
     which refuses the branch the main checkout holds), a clean worktree, the
-    review bar the lane declares, the message and the row's derived review set,
-    all before anything runs. Then the shared producer runs the review bar and
-    the derived files, and commits only when both are green; an empty set runs
-    the bar alone. The set's lines are printed. Every refusal leaves the branch
-    and the index as they were.
+    review bar and red mark the lane declares, the message, the row's derived
+    review set and the red-mark check over it, all before anything runs.
+    Then the shared producer runs the review bar and the derived files, and
+    commits only when both are green; an empty set runs the bar alone. The
+    set's lines are printed. Every refusal leaves the branch and the index
+    as they were.
 
     Implements: SR-156, LLR-207
     """
