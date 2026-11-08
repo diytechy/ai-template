@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-11-08a-leg38-coordinator.md](handoff-2026-11-08a-leg38-coordinator.md).
+  [handoff-2026-11-08b-attended-coordinator.md](handoff-2026-11-08b-attended-coordinator.md).
   Headless leg 38 landed both claimed rows; every row left in the queue waits
   on the owner, so the handoff carries the stop line and its owner list.
   The tag-migration row and the dashboard re-judge have landed: test files

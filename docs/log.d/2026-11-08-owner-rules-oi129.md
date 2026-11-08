@@ -12,3 +12,5 @@
   states the rule: an approved row with nothing behind it is build debt, filed
   as a work item, and retiring one is the owner's question only on evidence of
   substantial work.
+- **The stop line:** at the owner's request the new handoff (2026-11-08b)
+  drops it and queues WI-1000, WI-999 and WI-1001 ahead of the held WI-910.
