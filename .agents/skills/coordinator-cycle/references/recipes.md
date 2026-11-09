@@ -356,7 +356,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   it at close. Delegate drafting to planner sub-agents writing into scratch,
   and read their Done-when, Trust and Scope answers before filing. Ask a
   Trust drafter to read the code and report any consumer that fails open:
-  WI-921's found the very step it arms failing open (2026-10-15). Once the
+  WI-921's found the very step it arms failing open (2026-10-15). Ask a
+  drafter answering a row an open item's ruling released to check the
+  ruling's stated evidence against the history it cites: WI-999's found
+  the derivation the ruling named was the requirement's, not the
+  partition's, so its backfill became an owner-held step (OI-130, leg 39). Once the
   owner rules a draft's calls, resume the same drafter with the decision ids
   to fold them into a final copy: it keeps its reading (2026-10-15i).
   Drafts have come back CRLF: normalize to LF as you place them. An open
@@ -700,6 +704,11 @@ commit of its own, move it to trunk's tip
   module-size stamp (`linecounts` in `tests/test_module_size_ratchet.py`),
   and any view the lane's Done-when names: WI-922 kept the interface
   reference its Done-when required fresh (wi-922 D-006).
+- **A lane that owes no checkpoint** (no new row, no row text, no
+  Done-when change) has no checkpoint tip to gate. When its last counted
+  round ran in convergence stance, after the map, over the tip that lands,
+  with only record-only commits after it, leg 39 ran no separate gate round
+  (wi-1000 D-007, for the owner to confirm or overrule).
 - **Rebase, even when trunk moved only by the pause restore.** Text-then-act
   exempts a squash only of a tip that contains HEAD. Conflicts: §4. When
   trunk moved only by commits the lane does not touch, rebase before the
@@ -1550,6 +1559,10 @@ lane commit being replayed.
   and a resumed Terra was told they were applied (wi-993 D-006, wi-995 D-004).
   A backslash escape in a heredoc's Python reached the file as a real newline:
   match on text holding no escape, or write the script with the file tool.
+  A TOML decision appended through a quoted heredoc lost one backslash of
+  `src\\check.py`, and the hook's `ruling-sync` step refused the
+  unparseable record (wi-1000, leg 39): append text holding a backslash
+  through a file-tool script, and parse it with `tomllib` before staging.
 
 ## 8. Re-judge and consolidation recipes
 

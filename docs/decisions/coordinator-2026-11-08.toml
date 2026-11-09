@@ -38,3 +38,17 @@ alternative = "Claim WI-999 now, build the schema, rules and tests, and park the
 reversal_cost = "Low: the owner's ruling releases the row; nothing is built against an unruled record."
 why_not_escalated = "The skill's owner-held-step rule (SKILL section 7) files the step as an open item and moves to the next row; it is not build debt, because the record's content is a ruling the coordinator cannot make. A parked lane would hold a claim whose landing needs the ruling anyway (the strict check reds on four unrecorded rows)."
 review = ""
+
+[decision.D-006]
+decided = "The scoped unpause claimed WI-1000 alone (976c43094 deletion, 0f90241f9 claim, b683375ad byte-identical restore). The deletion commit was made before the commit bar was run on it; the bar run before the restore commit, over the same tree plus the claim, was green (smoke 3459 passed, 3 skipped; both strict lints clean), and the restore's sha256 equals the pre-deletion bytes."
+alternative = "Run the bar before the deletion commit as well."
+reversal_cost = "None: the deletion and restore are byte-checked and the next bar covered the tree."
+why_not_escalated = "A procedural slip with its evidence recorded; the recipe already states the bar comes first."
+review = ""
+
+[decision.D-007]
+decided = "The leg closes out with the `Overnight: stop` line: WI-1000 landed, WI-999 is held on OI-130, WI-1001 needs WI-999, WI-910 is held on OI-124, and every other open row is on the never-claimed list, so no row can move without the owner."
+alternative = "Claim a row outside the queue table."
+reversal_cost = "None: the owner restarts the run once an item is ruled."
+why_not_escalated = "The headless block's own rule for the stop line."
+review = ""
