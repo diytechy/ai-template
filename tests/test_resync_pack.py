@@ -34,7 +34,7 @@ PACK = KIT / "RESYNC_PACK.md"
 # that carries its anchor is checkable with a regex and liftable into a registry
 # row without re-reading the prose under it. `pre-<sha>` is the honest escape for
 # a change whose landing commit predates the earliest recoverable history. Its
-# one home is the commit bar's RESYNC entry check, which reads the same grammar.
+# one home is the commit checks' RESYNC entry check, which reads the same grammar.
 #
 # A change that has NOT LANDED has no SHA, and inventing one would defeat the
 # whole discipline — so a reserved placeholder is the one anchor-free heading
@@ -217,7 +217,7 @@ def test_bite_the_grammar_rejects_a_planted_unanchored_entry():
 
 
 def test_the_entry_grammar_has_one_home():
-    """The commit bar's RESYNC entry check and these shape tests read one grammar.
+    """The commit checks' RESYNC entry check and these shape tests read one grammar.
 
     The check owns it; this module imports it, so a change to the grammar
     cannot leave the bar and the shape tests disagreeing about what an entry is.

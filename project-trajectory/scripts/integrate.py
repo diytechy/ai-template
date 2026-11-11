@@ -88,10 +88,10 @@ Five operations here; the two lane closes that are NOT a merge (`hand_back`,
   attest     a build round's own record of green (WI-956): in the lane
              worktree, refuse a worktree that holds work the index does not,
              derive the row's review test set (`review_set.derive`), judge
-             each test file's count of the red mark declared at
-             docs/stack.ini `[bars] red_mark` against the lane's last review
+             each test file's count of the expected-failure marker declared at
+             docs/stack.ini `[product] expected_failure_marker` against the lane's last review
              record (`kitlib.red_mark`, WI-996), run the
-             review bar declared at docs/stack.ini `[bars] review` and then
+             commit checks declared at docs/stack.ini `[required-checks] commit` and then
              the derived files, and commit the staged work (or
              an empty commit on the tip) carrying a `bar=review` attestation,
              through the one producer the refresh commits through. A
@@ -133,12 +133,12 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     rewritten: the move's relink passes them by, so they are never a path the
     claim must write and never a reason it refuses.
     `refresh` runs the station refresh on a claimed branch, refusing before
-    its bar an undeclared red mark or a tree whose test files hold it, naming
+    its bar an undeclared expected-failure marker or a tree whose test files hold it, naming
     each file and its count. `attest` commits a
     lane's staged work carrying a `review` attestation, refusing before any
-    bar runs on missing hooks, an undeclared review bar or red mark, a
-    worktree that holds work the index does not, or a test file whose red
-    mark count rose outside the round's test set or fell without the lane's
+    bar runs on missing hooks, an undeclared commit checks or expected-failure marker, a
+    worktree that holds work the index does not, or a test file whose expected-failure
+    marker count rose outside the round's test set or fell without the lane's
     last review record over the same set naming it, and committing nothing on
     a red bar or a named test's red. `integrate` is the
     serial fail-closed merge queue: a `--no-ff` merge onto a candidate
@@ -160,7 +160,7 @@ Contract IF-154: the argv surface, one required subcommand deep. `--root`
     (default the cwd) precedes the subcommand; `claim` requires `--wi` (exactly
     one id; an empty value or a list in any separator is refused by name) and
     `--branch`; `refresh` requires `--branch` and
-    takes `--tier` (default `all`, the full gate bar); `attest` requires
+    takes `--tier` (default `all`, the full gate checks); `attest` requires
     `--branch` and `--bar review` and takes `--message-file`, and its tests are
     the row's derived set, never an argument; `integrate` takes
     `--tier` alone and drains every finished claimed branch there is;
@@ -1808,7 +1808,7 @@ def _harness_floor_refusal(root):
 def _run(argv, cwd, **kw):
     """One captured child run: (returncode, stdout+stderr folded). The single
     subprocess seam for the bars and the trunk step, so the capture keywords
-    have one home in this file; `kw` carries the review bar's `shell` and
+    have one home in this file; `kw` carries the commit checks' `shell` and
     `env`."""
     proc = subprocess.run(
         argv,
@@ -2765,13 +2765,13 @@ def refresh(root, branch, tier):
 
     Mechanical - no agent, no judgement. In the branch's own lane worktree:
 
-        merge trunk IN  ->  trunk_step (compile, then regen)  ->  red mark
+        merge trunk IN  ->  trunk_step (compile, then regen)  ->  expected-failure marker
             ->  bar  ->  commit
 
     That order is fixed and load-bearing (§A2.1): the compile has to see the
     trunk's log before it appends, and the bar has to see what the compile and
-    the regen wrote. The red mark (`kitlib.red_mark.landing_refusal`) is read
-    from that staged tree before either bar: an undeclared `[bars] red_mark`,
+    the regen wrote. The expected-failure marker (`kitlib.red_mark.landing_refusal`) is read
+    from that staged tree before either bar: an undeclared `[product] expected_failure_marker`,
     an unreadable tree or a test file holding the mark refuses, naming each
     file and its count, since a marked test passes the bar while it is red.
     The commit carries a `Bar-Green:` trailer NAMING the tree it barred and
@@ -2840,7 +2840,7 @@ def refresh(root, branch, tier):
     # whatever it writes (a coverage report, a cache) can never be swept into
     # the attested commit by an `add -A` that ran after it. The staged tree is
     # the first that holds the merged declaration and everything regenerated,
-    # so the red mark is read and counted there, before either bar.
+    # so the expected-failure marker is read and counted there, before either bar.
     ac.git(wt, "add", "-A")
     marked = _kitredmark.landing_refusal(wt)
     if marked:
@@ -3002,7 +3002,7 @@ def _bar_refusal(wt, tree, bar, ok, summary):
 
 
 def _lane_mark_refusal(root, wt, branch, bars, tests):
-    """The red-mark check on the tree `wt` stages, against the lane's last
+    """The expected-failure marker check on the tree `wt` stages, against the lane's last
     review record over its own base, for the round's test set `tests`: a
     refusal, or None. An unknowable base refuses, as an unread range does.
 
@@ -3037,7 +3037,7 @@ def _unstaged_dirt(wt):
 
 
 def _run_review_bar(wt, root, command, tests, branch):
-    """The review bar, then the derived tests: `(ok, output, summary)`.
+    """The commit checks, then the derived tests: `(ok, output, summary)`.
 
     The declared shell line runs in the lane worktree with the harness
     interpreter's directory first on PATH, so its `python` is the harness's
@@ -3054,9 +3054,9 @@ def _run_review_bar(wt, root, command, tests, branch):
     env["PATH"] = os.path.dirname(py) + os.pathsep + env.get("PATH", "")
     code, out = _run(command, wt, shell=True, env=env)
     if code != 0:
-        return False, out, "review bar exit {}".format(code)
+        return False, out, "commit checks exit {}".format(code)
     if not tests:
-        return True, out, "review bar PASS (0 named tests)"
+        return True, out, "commit checks PASS (0 named tests)"
     try:
         argv = ac._declared_test_command(wt / "docs" / "stack.ini", py=py)
     except ValueError as exc:
@@ -3069,7 +3069,7 @@ def _run_review_bar(wt, root, command, tests, branch):
     code, named = _run(argv + list(tests) + ["--basetemp=" + str(basetemp)], wt)
     if code != 0:
         return False, out + named, "named tests exit {}".format(code)
-    return True, out + named, "review bar PASS ({} named tests)".format(len(tests))
+    return True, out + named, "commit checks PASS ({} named tests)".format(len(tests))
 
 
 def _attest_message(branch, message_file):
@@ -3097,7 +3097,7 @@ def _attest_message(branch, message_file):
 
 class _AttestPlan(NamedTuple):
     """What `attest`'s preflight settled: the lane worktree, the row's review
-    set, the review bar command and the commit message.
+    set, the commit checks command and the commit message.
 
     Implements: SR-156, LLR-207
     """
@@ -3113,18 +3113,18 @@ def _attest_preflight(root, branch, bar, message_file):
     or `(None, refusal)`.
 
     The lane comes through the refresh's boundary (`_lane_off_trunk`), and the
-    row's set, the review bar and the red mark are read from that lane's
+    row's set, the commit checks and the expected-failure marker are read from that lane's
     checkout once it is known to equal the index, so what they read is what is
-    staged. Both `[bars]` keys come from one parse and are required with no
-    default; an undeclared one is named with its cause. The red-mark check
+    staged. Both are declared values (`kitlib.red_mark.read_bars`), required
+    with no default; an undeclared one is named with its cause. The expected-failure marker check
     runs last, on the derived set, before any bar.
 
     Implements: SR-156, LLR-207
     """
     if bar != "review":
         return None, (
-            "attest writes only the review bar (`landing` and `no-bar` are "
-            "the refresh's)"
+            "attest writes only the commit checks' attestation, `review` "
+            "(`landing` and `no-bar` are the refresh's)"
         )
     wt, refusal = _lane_off_trunk(root, branch)
     refusal = refusal or _harness_floor_refusal(root)
@@ -3159,9 +3159,9 @@ def attest(root, branch, bar, message_file=None):
 
     The commit hooks first, then the lane worktree (the refresh's boundary,
     which refuses the branch the main checkout holds), a clean worktree, the
-    review bar and red mark the lane declares, the message, the row's derived
-    review set and the red-mark check over it, all before anything runs.
-    Then the shared producer runs the review bar and the derived files, and
+    commit checks and expected-failure marker the lane declares, the message, the row's derived
+    review set and the expected-failure marker check over it, all before anything runs.
+    Then the shared producer runs the commit checks and the derived files, and
     commits only when both are green; an empty set runs the bar alone. The
     set's lines are printed. Every refusal leaves the branch and the index
     as they were.
@@ -3188,7 +3188,7 @@ def attest(root, branch, bar, message_file=None):
         return None, "attest REFUSED for {} - {}:\n{}".format(
             branch, refused[0], ac._failure_tail(refused[1])
         )
-    print("integrate: attested {} - review bar @ {}".format(branch, sha[:10]))
+    print("integrate: attested {} - commit checks @ {}".format(branch, sha[:10]))
     print("\n".join("integrate: " + line for line in plan.derived.lines()))
     return sha, None
 
@@ -3765,10 +3765,10 @@ def main(argv=None):
     p_ref.add_argument(
         "--tier",
         default="all",
-        help="declared bar tier for the refresh bar (default: all - the full gate bar)",
+        help="declared bar tier for the refresh bar (default: all - the full gate checks)",
     )
     p_att = sub.add_parser(
-        "attest", help="commit the staged work carrying a review bar attestation"
+        "attest", help="commit the staged work carrying a commit-checks attestation"
     )
     p_att.add_argument("--branch", required=True)
     p_att.add_argument("--bar", required=True, choices=["review"])
@@ -3777,7 +3777,7 @@ def main(argv=None):
     p_int.add_argument(
         "--tier",
         default="all",
-        help="declared bar tier for an in-slot refresh (default: all - the full gate bar)",
+        help="declared bar tier for an in-slot refresh (default: all - the full gate checks)",
     )
     sub.add_parser(
         "done-when-hold",

@@ -15,8 +15,8 @@
 # in CI, not in any one agent's hook config, so it holds for Claude, Gemini,
 # Codex, and bare git alike.
 #
-# This is the universal *floor*; the full gate bar (placeholder rejection, schema
-# checks, tests, coverage) is gate-scoped and lives in check.py / CI. Those
+# This is the universal *floor*; the full gate checks (placeholder rejection, schema
+# checks, tests, coverage) are gate-scoped and live in check.py / CI. Those
 # heavier checks are deliberately NOT here: they would block legitimate
 # early-stage (stage 0/1) commits. See process.md §7 (process vs product checks).
 #

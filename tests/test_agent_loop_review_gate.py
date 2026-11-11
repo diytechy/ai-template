@@ -1,21 +1,22 @@
 """The loop's review gate and its red-round cap (WI-958).
 
-A managed worker draws a review only over a tip its declared review bar
+A managed worker draws a review only over a tip its declared commit checks
 attested green. A red bar draws no review: the red is recorded in the build's
 committed session log, keyed by the build commit, and the next build carries
 the bar's failure tail. The red count lives in those committed logs, so it
 survives a resume and resets at a verified green attestation; at
-`[build] red_rounds_max` consecutive reds the worker ends with its own exit
-code, and the dispatcher closes the lane partial
-(`tests/test_dispatch.py`).
+`[build] stop_lane_after_consecutive_commit_check_failures` consecutive reds
+the worker ends with its own exit code, and the dispatcher closes the lane
+partial (`tests/test_dispatch.py`).
 
 Driven end to end against a fake CLI that plays builder, reviewer and
 adjudicator, on the topology a dispatched worker meets: the train branch in
-a linked lane worktree, `main` in the primary, a stand-in review bar declared
-in `docs/stack.ini` (`conftest.declare_review_bar`). Every case runs the real
-loop as a subprocess, so the module is filed in `SLOW_MODULES`; the family's
-in-process pins are the setting's reader in `tests/test_process_config.py`
-and the count reader, called in-process here against the committed logs.
+a linked lane worktree, `main` in the primary, stand-in commit checks declared
+in `docs/stack.ini` and named in `docs/process.toml`
+(`conftest.declare_review_bar`). Every case runs the real loop as a
+subprocess, so the module is filed in `SLOW_MODULES`; the family's in-process
+pins are the setting's reader in `tests/test_process_config.py` and the count
+reader, called in-process here against the committed logs.
 """
 
 import csv
@@ -28,9 +29,11 @@ from types import SimpleNamespace
 
 import pytest
 from conftest import (
+    COMMIT_SUITE,
     SCRIPTS,
     claim_on_branch,
     declare_review_bar,
+    declare_stack_key,
     declare_trunk,
     hooks_on,
     lane_checkout,
@@ -170,7 +173,7 @@ def _wi_201():
 
 def _lane(tmp_path, rows=None):
     """A managed-routing repo whose train branch is checked out in a linked
-    lane worktree, with the stand-in review bar declared and WI-201 queued
+    lane worktree, with the stand-in commit checks declared and WI-201 queued
     (or `rows`, written through `rows(repo)`). Returns `(lane, ctl, cmd)`;
     nothing is committed past the seed until `_configure`."""
     repo = tmp_path / "repo"
@@ -236,18 +239,30 @@ def _configure(lane, toml=""):
     _git(lane, "update-ref", "refs/heads/main", "HEAD")
 
 
-def _cap(value):
-    return "\n[build]\nred_rounds_max = {}\n".format(value)
+# The commit-check failure cap's key, under `[build]`.
+CAP_KEY = "stop_lane_after_consecutive_commit_check_failures"
+# The stop banner's label: the count's words follow a dash.
+CAP_BANNER = "COMMIT-CHECK FAILURE CAP"
+
+
+def _cap(value, key=CAP_KEY):
+    return "\n[build]\n{} = {}\n".format(key, value)
+
+
+def _capped(count):
+    """The words the stop banner counts the lane's failed rounds in."""
+    return "{} consecutive failed rounds".format(count)
 
 
 def _set_cap(lane, value):
-    """Rewrite the declared `red_rounds_max` and commit it."""
+    """Rewrite the declared cap and commit it."""
     path = lane / "docs" / "process.toml"
-    text = re.sub(
-        r"(?m)^red_rounds_max = .*$",
-        "red_rounds_max = {}".format(value),
+    text, found = re.subn(
+        r"(?m)^{} = .*$".format(CAP_KEY),
+        "{} = {}".format(CAP_KEY, value),
         path.read_text(encoding="utf-8"),
     )
+    assert found == 1, text
     path.write_text(text, encoding="utf-8", newline="\n")
     _git(lane, "commit", "-q", "-am", "the cap, re-declared")
 
@@ -330,7 +345,7 @@ def test_red_bar_draws_no_review_records_a_red_round_and_rebuilds_with_the_tail(
     tmp_path,
 ):
     """Implements: TC-375"""
-    # TC-375. A committed build whose review bar is red draws no review: the
+    # TC-375. A committed build whose commit checks are red draws no review: the
     # red is written into that build's committed session log, keyed by its
     # sha, and the next build's prompt carries the bar's failure tail.
     lane, ctl, cmd = _lane(tmp_path)
@@ -378,11 +393,12 @@ def test_a_resumed_build_receives_the_tail_of_a_long_recorded_refusal(tmp_path):
     declared = '"{}" "{}" "{}"'.format(
         Path(sys.executable).as_posix(), script.as_posix(), ctl.as_posix()
     )
-    text = re.sub(
-        r"(?m)^review = .*$",
-        lambda _m: "review = " + declared,
+    text, found = re.subn(
+        r"(?m)^{} = .*$".format(COMMIT_SUITE),
+        lambda _m: "{} = {}".format(COMMIT_SUITE, declared),
         stack.read_text(encoding="utf-8"),
     )
+    assert found == 1, text
     stack.write_text(text, encoding="utf-8", newline="\n")
     _configure(lane, _cap(5))
     first = _run(lane, cmd, 1)
@@ -400,7 +416,7 @@ def test_a_resumed_build_receives_the_tail_of_a_long_recorded_refusal(tmp_path):
 
 def test_green_bar_attests_once_then_draws_the_review(tmp_path):
     """Implements: TC-376"""
-    # TC-376. A committed build whose review bar is green gets exactly one
+    # TC-376. A committed build whose commit checks are green gets exactly one
     # `review` attestation commit, and the review round is drawn after it.
     lane, ctl, cmd = _lane(tmp_path)
     _configure(lane)
@@ -434,7 +450,7 @@ def test_green_bar_attests_once_then_draws_the_review(tmp_path):
 def test_resumed_round_on_an_unattested_tip_runs_the_producer_once(tmp_path, bar):
     """Implements: TC-377"""
     # TC-377. A resumed lane whose committed build owes a round but carries no
-    # attestation runs the review bar once at the draw: green draws the round
+    # attestation runs the commit checks once at the draw: green draws the round
     # and an ATTEST log records the result, red draws no reviewer.
     lane, ctl, cmd = _lane(tmp_path)
     _configure(lane)
@@ -585,7 +601,7 @@ def test_red_count_survives_a_resume_to_the_cap_and_exits_12(tmp_path):
     proc = _run(lane, cmd, 1)
 
     assert proc.returncode == 12, _out(proc)
-    assert "RED CAP" in proc.stdout and "3 consecutive red rounds" in proc.stdout
+    assert CAP_BANNER in proc.stdout and _capped(3) in proc.stdout
 
 
 @pytest.mark.parametrize("reds", ["at-the-cap", "one-fewer"])
@@ -616,7 +632,7 @@ def test_a_lane_resumed_at_the_cap_exits_12_before_any_session(tmp_path, reds):
 
     if reds == "at-the-cap":
         assert proc.returncode == 12, _out(proc)
-        assert "RED CAP" in proc.stdout and "3 consecutive red rounds" in proc.stdout
+        assert CAP_BANNER in proc.stdout and _capped(3) in proc.stdout
         assert _lines(ctl, "models.txt") == models
         assert _lines(ctl, "bar_runs.txt") == runs
         assert _git(lane, "rev-list", "--count", "HEAD") == commits
@@ -888,12 +904,13 @@ def _row_lane(tmp_path, tags):
     )
     stub = ctl / "named.py"
     stub.write_text(NAMED_STUB, encoding="utf-8")
-    with (lane / "docs" / "stack.ini").open("a", encoding="utf-8", newline="\n") as fh:
-        fh.write(
-            '[product]\ntest = {{py}} "{}" "{}"\n'.format(
-                stub.as_posix(), ctl.as_posix()
-            )
-        )
+    # `[product]` already holds the marker `_lane` declared: the key joins it.
+    declare_stack_key(
+        lane,
+        "product",
+        "test",
+        '{{py}} "{}" "{}"'.format(stub.as_posix(), ctl.as_posix()),
+    )
     (ctl / "code_work").write_text("on\n", encoding="utf-8")
     return lane, ctl, cmd
 
@@ -934,7 +951,7 @@ def test_a_derivation_refusal_counts_toward_the_red_cap(tmp_path):
     proc = _run(lane, cmd, 3)
 
     assert proc.returncode == 12, _out(proc)
-    assert "RED CAP" in proc.stdout, _out(proc)
+    assert CAP_BANNER in proc.stdout, _out(proc)
     assert _red_count(lane).count == 2, _out(proc)
 
 
@@ -974,8 +991,10 @@ def test_a_closed_lane_draws_over_its_closed_copy(tmp_path):
 
 # --- D7 and D9: the setting is refused before any session -----------------------
 
-_UNPARSEABLE = '[policies]\ntrunk = "main"\n[build\nred_rounds_max = 3\n'
+_UNPARSEABLE = '[policies]\ntrunk = "main"\n[build\n{} = 3\n'.format(CAP_KEY)
 _NON_TABLE = 'build = 3\n\n[policies]\ntrunk = "main"\n'
+# The cap's key before it was renamed: refused where it is still declared.
+RETIRED_CAP_KEY = "red_rounds_max"
 
 
 @pytest.mark.parametrize(
@@ -1014,22 +1033,38 @@ def test_unparseable_process_toml_and_a_non_table_build_refuse_at_preflight(
     assert _git(lane, "rev-parse", "HEAD") == head
 
 
-@pytest.mark.parametrize("value", ["0", "-1", "true", '"3"', "3.0"])
-def test_a_bad_red_rounds_max_refuses_before_any_session(tmp_path, value):
+@pytest.mark.parametrize(
+    "key, value",
+    [
+        (CAP_KEY, "0"),
+        (CAP_KEY, "-1"),
+        (CAP_KEY, "true"),
+        (CAP_KEY, '"3"'),
+        (CAP_KEY, "3.0"),
+        (RETIRED_CAP_KEY, "3"),
+    ],
+    ids=["0", "-1", "true", '"3"', "3.0", "retired-key"],
+)
+def test_a_bad_red_rounds_max_refuses_before_any_session(tmp_path, key, value):
     """Implements: TC-380"""
-    # TC-380. A declared `red_rounds_max` that is not an int, is a bool, or is
-    # below 1 is refused at the loop's preflight, naming its line, before any
-    # session starts.
+    # TC-380. A declared cap that is not an int, is a bool, or is below 1 is
+    # refused at the loop's preflight, naming its line and the key, before any
+    # session starts. So is a usable value still declared under the key's
+    # retired name, which names the key to rename it to: read as absent, it
+    # would start the session under the shipped cap instead.
     lane, ctl, cmd = _lane(tmp_path)
     path = lane / "docs" / "process.toml"
     line = len(path.read_text(encoding="utf-8").splitlines()) + 3
-    _configure(lane, _cap(value))
+    _configure(lane, _cap(value, key))
 
     proc = _run(lane, cmd, 2)
 
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT, _out(proc)
     assert "docs/process.toml:{}".format(line) in proc.stderr, proc.stderr
-    assert "red_rounds_max" in proc.stderr
+    assert CAP_KEY in proc.stderr
+    if key == RETIRED_CAP_KEY:
+        renamed = "[build] {} was renamed {}".format(RETIRED_CAP_KEY, CAP_KEY)
+        assert renamed in proc.stderr, proc.stderr
     assert not (ctl / "models.txt").exists()
 
 
@@ -1039,7 +1074,8 @@ def test_a_bad_red_rounds_max_refuses_before_any_session(tmp_path, value):
 def test_red_cap_exits_with_its_own_code_and_one_fewer_does_not(tmp_path):
     """Implements: TC-381"""
     # TC-381. Two consecutive reds under a cap of 2 end the worker with exit
-    # 12 and the RED CAP banner; the same two reds under a cap of 3 end on
+    # 12 and the cap's stop banner, which names the count, the declared key
+    # and its value; the same two reds under a cap of 3 end on
     # the iteration budget instead. The cap closes partial rather than
     # escalating through the declared approval level: the worker never
     # consults the page ladder (no failure-action line, no PAGE-HUMAN stop)
@@ -1050,7 +1086,9 @@ def test_red_cap_exits_with_its_own_code_and_one_fewer_does_not(tmp_path):
     _configure(lane, _cap(2))
     proc = _run(lane, cmd, 2)
     assert proc.returncode == 12, _out(proc)
-    assert "RED CAP" in proc.stdout and "2 consecutive red rounds" in proc.stdout
+    assert CAP_BANNER in proc.stdout and _capped(2) in proc.stdout
+    assert "[build] {} = 2; last run: ".format(CAP_KEY) in proc.stdout, _out(proc)
+    assert "The lane closes partial." in proc.stdout, _out(proc)
     assert "route/failure" not in proc.stdout, _out(proc)
     assert "PAGE-HUMAN" not in proc.stdout, _out(proc)
 
@@ -1059,4 +1097,4 @@ def test_red_cap_exits_with_its_own_code_and_one_fewer_does_not(tmp_path):
     _configure(lane, _cap(3))
     proc = _run(lane, cmd, 2)
     assert proc.returncode == agent_loop.EXIT_BUDGET, _out(proc)
-    assert "RED CAP" not in proc.stdout
+    assert CAP_BANNER not in proc.stdout

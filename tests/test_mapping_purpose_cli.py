@@ -9,7 +9,7 @@ reachable only from the test suite, adding an inventory defect or omitting a
 shipped source from the manifest would produce no SR-163 report or gate, and
 these assertions would fail. Kept SEPARATE and re-tiered into conftest.SLOW_MODULES for
 the same reason test_check_complexity_cli.py is: each case pays interpreter
-startup, so it is the subprocess-dominated class the per-commit bar drops and the
+startup, so it is the subprocess-dominated class the per-commit checks drop and the
 slice/phase-close + CI run exercises in full.
 """
 

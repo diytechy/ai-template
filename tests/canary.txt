@@ -1,0 +1,26 @@
+# The canary set: is every capability still basically alive?
+#
+# One end-to-end happy path per capability, run by the iterate checks beside the
+# tests a change names (scripts/check_iterate.py). The set is FIXED-SIZE: its
+# cap is tests/conftest.py CANARY_MAX, and a new entry past the cap replaces
+# one already here. It is chosen for breadth, so a subprocess- or
+# scaffold-driven test belongs here when it is the one that shows a capability
+# working; cost is held by the cap, not by excluding a kind of test.
+#
+# One node id per line, then `#` and the capability it stands for.
+tests/test_bootstrap.py::test_scaffold_contains_expected_files  # bootstrap.py: a scaffold carries every shipped file
+tests/test_check_harness.py::test_minimal_project_is_green  # check.py: the gate harness passes a fresh scaffold
+tests/test_trace_golden.py::test_golden_clean_spine  # trace.py: a clean spine traces with no orphan
+tests/test_pre_commit_hook.py::test_hook_checks_pass_on_clean_project  # the shipped pre-commit floor
+tests/test_check_docs.py::test_clean_scaffold_passes  # check_docs.py: links and reachability
+tests/test_derive_stage.py::test_an_UNMODIFIED_bootstrap_reaches_Impl_on_a_settled_spine  # derive_stage.py: the stage ladder
+tests/test_gen_trajectory.py::test_generates_self_contained_dashboard  # gen_trajectory.py: the dashboard renders
+tests/test_gen_arch_map.py::test_map_harvests_summaries_and_implements  # gen_arch_map.py: the code map
+tests/test_trajectory.py::test_valid_graph_passes  # check_trajectory.py: the work-item graph
+tests/test_run_menu.py::test_direct_launch_runs_command_and_passes_args  # run_menu.py: the launchers
+tests/test_prompts_driven.py::test_a_scaffold_gets_every_template_and_loads_them_from_there  # the prompt templates
+tests/test_agent_loop.py::test_done_exit_writes_logs_and_index  # agent_loop.py: a session loop runs to done
+tests/test_integrate.py::test_a_spine_claim_succeeds_on_an_idle_station  # integrate.py: a lane claim
+tests/test_intake.py::test_a_approved_cell_diff_mints_one_adjudication_row  # intake.py: the adjudication mint
+tests/test_dispatch.py::test_drive_empty_frontier_drains_and_exits_zero  # dispatch.py: the queue drains
+tests/test_dogfood_sync.py::test_stack_ini_declares_every_template_section  # this repo matches the template it ships

@@ -23,7 +23,7 @@ Two detectors, two very different starting conditions:
     the static header — so it answered False unconditionally and
     `tier_signal`'s `strong` arm was unreachable.
 
-THIS MODULE IS THE IN-PROCESS HALF and stays in the commit bar by the
+THIS MODULE IS THE IN-PROCESS HALF and stays in the commit checks by the
 in-process default. Its sibling `test_stage_event_detectors_driven.py` carries
 everything that needs a real bootstrapped scaffold or a real git repo — the
 `test_kitlib_stage` / `test_derive_stage` split of slice 1, applied again for

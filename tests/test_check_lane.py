@@ -143,7 +143,7 @@ def test_slashed_branch_needs_the_nested_dir_not_a_flattened_one(check, tmp_path
 
 def test_the_closing_commit_does_not_un_claim_its_own_branch(check, tmp_path):
     # WI-357, hit three times in the Phase 4 acceptance. The close commit stages
-    # active/<branch>/ -> complete/, so at the moment its own pre-commit bar runs
+    # active/<branch>/ -> complete/, so at the moment its own pre-commit checks run
     # the working tree holds no claim and the trunk-freshness gates re-arm inside
     # the very commit that closes the WI — demanding artifacts §5.2 forbids the
     # branch to commit. The signal has to outlive the move, and history does.

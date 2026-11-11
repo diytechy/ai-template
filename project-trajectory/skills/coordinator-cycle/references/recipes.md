@@ -74,7 +74,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   (2026-10-22c). A sub-agent's write of a file named `report.md` was
   refused by the harness; ask for a `*-notes.md` or the reply inline.
   A stage that changes a shared signature before the stage
-  that moves its callers has a red bar alone: commit the two stages
+  that moves its callers fails the commit checks alone: commit the two stages
   together, never bridge them with a default (wi-918 D-001). A blank line ends a `Contract IF-NNN:` body for the
   interface reference, so text added to a contract continues the body
   without one (wi-922 D-003).
@@ -657,7 +657,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 2. Commit the deletion of `docs/work/pause`, carrying the regenerated
    `docs/open-items.html`. Run `trunk_step.py --regen` first: right after
    a landing the deletion commit was refused for a stale status block and
-   `docs/ratify/CURRENT.md` (2026-10-21d). It counts as reviewed when it passes the commit bar
+   `docs/ratify/CURRENT.md` (2026-10-21d). It counts as reviewed when it passes the commit checks
    and cites the owner's authorization.
 3. Confirm HEAD moved. `claim` reads the **working-tree** pause.
 4. Run `"$PY" "$SCRIPTS/integrate.py" claim --wi WI-NNN --branch wi-NNN`
@@ -810,7 +810,7 @@ commit of its own, move it to trunk's tip
   compose the whole-set sitting in the same leg: every row an
   `amendment:` token, with the checkpoint's arms map appended. Never hand
   off a list of act turns, one per partial verdict.
-- **Run the commit bar in the lane after the act turn,** before the
+- **Run the commit checks in the lane after the act turn,** before the
   squash. When trunk still equals the lane's base (no rebase was owed),
   the staged squash's tree is the lane tip's, so the bar on the staged
   squash below is that run; a red there resets the squash and is fixed in
@@ -860,11 +860,11 @@ commit of its own, move it to trunk's tip
   change a Done-when or drop a blessing: an amend is judged against the
   commit it replaces, not its real parent (WI-921's stated residue).
   Ruling-sync needs an open item citing the overrule.
-- **Check the staged squash for the red mark** before the landing commit,
+- **Check the staged squash for the expected-failure marker** before the landing commit,
   from the checkout that holds it:
-  `"$PY" -c "import sys; sys.path.insert(0, '$SCRIPTS'); from kitlib.red_mark import landing_refusal; r = landing_refusal('.'); print(r or 'no red mark staged'); sys.exit(1 if r else 0)"`.
+  `"$PY" -c "import sys; sys.path.insert(0, '$SCRIPTS'); from kitlib.red_mark import landing_refusal; r = landing_refusal('.'); print(r or 'no expected-failure marker staged'); sys.exit(1 if r else 0)"`.
   It runs the refresh's landing arm on the staged tree: exit 0 when no test
-  file holds the mark `[bars] red_mark` declares; exit 1, printing the
+  file holds the mark `[product] expected_failure_marker` declares; exit 1, printing the
   refusal, when one does (each file named with its count), when the key is
   undeclared, or when git cannot read the staged tree. A hand squash runs no
   refresh, so this is its only mark check. On exit 1, reset the squash with
@@ -876,7 +876,7 @@ commit of its own, move it to trunk's tip
     bare `--contracts-doc` wipes the interface reference);
   - regenerate `docs/ratify/CURRENT.md` with
     `"$PY" "$SCRIPTS/trace.py" --approve modified --out docs/ratify/CURRENT.md`.
-- **Run the commit bar, `"$PY" "$SCRIPTS/run_menu.py" smoke`, on the staged
+- **Run the commit checks, `"$PY" "$SCRIPTS/run_menu.py" smoke`, on the staged
   squash before the landing commit** (ruling 6). Its strict lints catch what the hook's
   non-strict forms pass: R-F (a closed row's `specref`) and a traced cell off
   its anchor. A lane that adds a doc also runs
@@ -1243,10 +1243,10 @@ lane commit being replayed.
   DECLARED CHECK DID NOT RUN": commit every Python change through
   `integrate.py attest` (below), which runs under the primary checkout's
   interpreter; a records-only commit may go by hand (2026-10-22c).
-- Run the commit bar on every commit, docs-only ones included. A lane
+- Run the commit checks on every commit, docs-only ones included. A lane
   commit runs it through `"$PY" "$SCRIPTS/integrate.py" attest --branch
   <lane> --bar review --message-file <msg>` from the
-  primary checkout, which runs `[bars] review` and the row's derived test
+  primary checkout, which runs `[required-checks] commit` and the row's derived test
   set, refuses red, and commits the staged work with the attestation the review render
   requires (SKILL §3, Iterate step 1). A trunk commit runs the one
   declared command by hand, `run.cmd smoke` (`"$PY" "$SCRIPTS/run_menu.py" smoke` from
@@ -1255,8 +1255,8 @@ lane commit being replayed.
   gated only on the command's exit code inside `$(...)` committed a red tier
   (2026-10-10). The commit hook does not run it: run it yourself, before a
   landing commit rather than after it.
-- `integrate.py attest` runs `[bars] review`, the smoke action with its
-  budget step in warn mode, so it refuses only a red bar, never the
+- `integrate.py attest` runs `[required-checks] commit`, the smoke action with its
+  budget step in warn mode, so it refuses only failed checks, never the
   tier's seconds. Run it from the primary checkout, `"$PY"
   "$SCRIPTS/integrate.py" --root "$REPO" attest --branch <lane> --bar
   review --message-file <file>`: it finds the lane by
@@ -1266,7 +1266,7 @@ lane commit being replayed.
 - The tests-first commit goes through `integrate.py attest` with a test
   set that names each marked file, and the code commit that removes the
   marks names the same set (SKILL §3, Intent step 2). `attest` judges each
-  test file's count of the mark `[bars] red_mark` declares against the
+  test file's count of the mark `[product] expected_failure_marker` declares against the
   lane's last review record, and the refresh and the hand landing's check
   (§3) refuse a tree that still holds one: a refresh or a hand landing (§3)
   refused for a mark ends in the code commit or a quarantine. A test the bar skips takes no mark, because a skip is never
@@ -1283,7 +1283,7 @@ lane commit being replayed.
   records a red tier.
 - A build whose in-process tests take the smoke tier past `max-tests`
   re-stamps the ceiling in that commit, with its reason, fig line and a
-  decision, not at the landing: a red bar is not left standing (wi-911
+  decision, not at the landing: failed checks are not left standing (wi-911
   D-005).
 - A commit sometimes exits 1 with every hook step passing. Read the hook
   output and retry with `-F`; never skip the hook.

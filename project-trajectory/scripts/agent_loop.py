@@ -136,8 +136,8 @@ Contract IF-015: the unattended coordinator's effect on the repository it runs
     BLOCKED, 4 stall abort, 5 WAITING on a rate limit, 6 iteration budget
     exhausted while still running, 7 NEEDS-HUMAN, 8 paused on the tracked pause
     file, 9 REVIEW-OWED, 11 RESTART after the imported Python source moves, 12
-    RED-CAP when the lane's red build rounds reach the declared cap, checked at
-    run start for a resumed lane and after each red record (10 remains
+    the commit-check failure cap when the lane's consecutive failed rounds reach
+    it, checked at run start for a resumed lane and after each recorded failure (10 remains
     retired). A restart stops at the session/admission boundary and
     preserves the branch evidence for a fresh launcher invocation. Preflight
     refuses to start iteration 1 — rather than hanging or committing under a
@@ -217,7 +217,7 @@ from kitlib import provenance as kprovenance
 # before the lock, and a hookless checkout never starts the loop.
 from kitlib import commit_hooks as kcommit_hooks
 
-# The red-round cap's one reader (SR-242): read at preflight, before any
+# The commit-check failure cap's one reader (SR-242): read at preflight, before any
 # session, and carried on `LoopContext`.
 from kitlib import config as kconfig
 
@@ -727,7 +727,7 @@ class RoutingState:
         return list(self.review_queue)
 
     def refuse_round(self):
-        """Drop the queued review round, whose tip the review bar refused, and
+        """Drop the queued review round, whose tip the commit checks refused, and
         route the next session to BUILD.
 
         Implements: SR-154, LLR-344
@@ -2448,7 +2448,7 @@ def committed_build_rounds(ctx, plan, commits, after, wi_label):
     The design-check arm had all three in duplicate — a committing design-check
     IS the rework, so it owes exactly what a build owes (WI-579, measured
     2026-09-03) — and a rule kept in two copies is a rule that drifts.
-    A build whose review bar refused it (`attest_build`) owes no review round:
+    A build whose commit checks refused it (`attest_build`) owes no review round:
     the refusal is the next build's rework, as a round's findings would be.
     Returns `schedule_review_round`'s exit code, the red cap's after a red
     (`red_cap_check`), or None.
@@ -2459,7 +2459,7 @@ def committed_build_rounds(ctx, plan, commits, after, wi_label):
     paged = None
     if plan.get("bar_red"):
         ctx.worker["rework"] = plan["bar_red"]
-        print("dispatch: review bar red -> no review round; rework carries its tail")
+        print("dispatch: commit checks failed -> no review; rework carries the tail")
         paged = red_cap_check(ctx)
     else:
         paged = schedule_review_round(ctx, plan.get("attested") or after)
@@ -2476,9 +2476,9 @@ def lane_branch(root):
 
 
 def attest_build(ctx, plan, outcome, meta):
-    """The review bar at the event: a committed build (or design-check) that
+    """The commit checks at the event: a committed build (or design-check) that
     completes the assignment, under managed routing with a reviewer dial, runs
-    the lane's review bar once through its one producer, `integrate.attest`,
+    the lane's commit checks once through its one producer, `integrate.attest`,
     before the session's log is written. A refusal of any kind is red, its
     text the cause. Green leaves the attested commit on `plan` for the round's
     range; red writes the red record into this session's own log header and
@@ -3368,7 +3368,7 @@ def review_draw_gate(ctx):
     row's derived set, and its range is pointed at that attested commit.
     Without one, a red already recorded for the governing build commit drops
     the round and rebuilds with its summary, running no bar; with no record,
-    the review bar runs once here and `record_bar_result` records it, green
+    the commit checks run once here and `record_bar_result` records it, green
     drawing the round and red dropping it. A derivation refusal leaves no
     record to compare, so `integrate.attest` refuses with the same text and it
     is recorded as any red is. Returns the red cap's exit code after a red
@@ -3393,16 +3393,17 @@ def review_draw_gate(ctx):
         if red is not None:
             st.refuse_round()
             worker["rework"] = red
-            print("dispatch: review bar red at the draw -> no round; rebuilding")
+            print("dispatch: commit checks failed at the draw -> no round; rebuilding")
             return red_cap_check(ctx)
     st.set_train_range("{}..{}".format(worker["base"], attested))
     return None
 
 
 def red_cap_check(ctx):
-    """`EXIT_RED_CAP` with its stop banner once the lane's committed red
-    records, counted from the worker's base (its merge base with trunk, as the
-    dispatcher reads it), reach `[build] red_rounds_max` or cannot be read;
+    """`EXIT_RED_CAP` with its stop banner once the lane's committed
+    failed-check records, counted from the worker's base (its merge base with
+    trunk, as the dispatcher reads it), reach the declared commit-check
+    failure cap (`kconfig.RED_ROUNDS_KEY`) or cannot be read;
     else None. Armed where a review is drawn; run at the run's start and after
     each committed red record.
 
@@ -3413,12 +3414,12 @@ def red_cap_check(ctx):
     red = kverdict.red_rounds(ctx.root, "HEAD", ctx.worker["base"])
     if red is not None and red.count < ctx.red_rounds_max:
         return None
-    count = "unreadable" if red is None else red.count
+    count, last = (red.count, red.last_summary) if red else ("unreadable", "-")
     stop_banner(
         ctx.status_path,
-        "RED CAP — {} consecutive red rounds".format(count),
-        "[build] red_rounds_max = {}; last bar: {}. The lane closes partial.".format(
-            ctx.red_rounds_max, red.last_summary if red else "-"
+        "COMMIT-CHECK FAILURE CAP — {} consecutive failed rounds".format(count),
+        "[build] {} = {}; last run: {}. The lane closes partial.".format(
+            kconfig.RED_ROUNDS_KEY, ctx.red_rounds_max, last
         ),
     )
     return EXIT_RED_CAP
@@ -3755,7 +3756,7 @@ def resolve_session_setup(args, root):
     when a map is malformed, a preflight check fails, or the worker assignment
     is not a legal one — the three refusals that used to be inline arms of
     `main`. Every refusal prints exactly what it printed before. A
-    `[build] red_rounds_max` its reader refuses is one more preflight
+    `[build] stop_lane_after_consecutive_commit_check_failures` its reader refuses is one more preflight
     failure, so no session starts under a cap nobody declared.
 
     Implements: SR-242, LLR-343

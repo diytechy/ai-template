@@ -406,7 +406,7 @@ def is_test_file(rel):
     """Whether `rel`, a path relative to the declared tests root, is a test
     file: no part of it is hidden (`hidden_rel`), and its suffix, in any case,
     is one of `BACKLINK_EXTS`. THE ONE HOME OF THAT DOMAIN: the test-file tag
-    reader, and so the review set, reads exactly these files, and the red mark
+    reader, and so the review set, reads exactly these files, and the expected-failure marker
     is counted in exactly these, so a declaration or a document under a tests
     root of `.` is never a test file.
 
@@ -822,7 +822,7 @@ def declared_roots(profile):
     """`(src, tests)`: the source and test roots the parsed `docs/stack.ini`
     `profile` declares under `[paths]`, each defaulting as a bar's command
     reads it (`src`, `tests`) when absent or blank. The one home of that
-    reading, so the review set and the red-mark check resolve one test root.
+    reading, so the review set and the expected-failure marker check resolve one test root.
 
     Implements: SR-156, LLR-368
     """

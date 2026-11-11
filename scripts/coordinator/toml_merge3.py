@@ -68,7 +68,9 @@ def norm_tail(chunk):
 
 def merge(branch, path):
     base_rev = subprocess.run(
-        ["git", "merge-base", "HEAD", branch], capture_output=True, text=True,
+        ["git", "merge-base", "HEAD", branch],
+        capture_output=True,
+        text=True,
         check=True,
     ).stdout.strip()
     bp, bb, _ = split(show(base_rev, path))

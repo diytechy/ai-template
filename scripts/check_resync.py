@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The commit bar's RESYNC entry check: a shipped kit change carries its entry.
+"""The commit checks' RESYNC entry check: a shipped kit change carries its entry.
 
 A change, from its trunk base to the working tree (untracked files included),
 that touches a file the kit ships must add at least one `RESYNC_PACK.md` §3/§4

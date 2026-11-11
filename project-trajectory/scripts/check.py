@@ -18,7 +18,7 @@ Contracts: IF-267
 
 Contract IF-267: --path-triggered runs only steps declaring nonempty paths,
     except smoke, selected by the same rung-or-path rule as ordinary gates.
-    Unknown changes run them. Smoke remains in the manually run commit bar
+    Unknown changes run them. Smoke remains in the manually run commit checks
     and ordinary gate plans. The hook reads the normal results and exit status.
 
 Design choices that keep it honest and CI-friendly:
@@ -2562,7 +2562,7 @@ def _clear_stale_coverage_report(plan):
 
 
 def _invocation_plan(args, coverage, profile):
-    """Resolve the gate bar, restricting the hook to opted-in sensors."""
+    """Resolve the gate checks, restricting the hook to opted-in sensors."""
     if args.path_triggered and not step_paths(profile):
         return ALL, []
     stage = resolve_stage(args.stage)

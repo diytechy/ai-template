@@ -888,7 +888,7 @@ def process_panel(root, wis, stats, stage_record=None):
     the repo currently stands at is highlighted), the station cycle (WI-389 — the
     concurrency-v2 station/lane model as shipped, its vocabulary derived
     from the flow modules' own constants), and slices -> phase -> the check bars
-    (commit bar vs gate bar). Fully self-contained (style inside the panel, no
+    (commit checks vs gate checks). Fully self-contained (style inside the panel, no
     script needed — the shared tab switcher handles it); sorted inputs, no
     clocks."""
     stage = (
@@ -971,8 +971,8 @@ def process_panel(root, wis, stats, stage_record=None):
     # pass — not the retired three-value axis; the heading says which.
     wi_done = sum(1 for w in wis if w["status"] == "done")
     bars = [
-        ("per-WI slice", "one scoped work item; ends at the commit bar"),
-        ("commit bar", "the per-commit suite + doc checks — every commit"),
+        ("per-WI slice", "one scoped work item; ends at the commit checks"),
+        ("commit checks", "the per-commit suite + doc checks — every commit"),
         ("phase close", "a phase's slices batch to one re-attestation sitting"),
         ("rung bar", "the full check.py --stage run at phase close / advance"),
         ("CI", "runs the same bar on every push"),
@@ -1099,7 +1099,7 @@ def process_panel(root, wis, stats, stage_record=None):
         + station_html
         + "\n"
         "<h3>3 · Slices → phase → the check bars</h3>\n"
-        '<p class="cap">A per-WI slice ends at the <strong>commit bar</strong>; '
+        '<p class="cap">A per-WI slice ends at the <strong>commit checks</strong>; '
         "a phase closes at the <strong>rung bar</strong> — the commit-bar-vs-rung-bar "
         'cadence lives in <a href="'
         + esc(opts_doc)

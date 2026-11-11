@@ -7,7 +7,7 @@ In-process throughout: synthetic registries under `tmp_path` and the live
 registries read as data, with no scaffold, subprocess or git, so the module
 rides the per-commit smoke tier. That placement is the point of its last case:
 the tier check over the live registry, bound to this repository's module
-tiering, runs in the commit bar itself, so an approved Smoke case whose
+tiering, runs in the commit checks themselves, so an approved Smoke case whose
 evidence moved to a slow module (or whose slow module carries a stale pin
 nobody runs per commit) fails the next commit rather than waiting for a close
 run to notice.

@@ -260,8 +260,11 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     # `--gate` spelling (ROUND-OPUS 9) — invisible to check_vocab, which
     # refuses retired TAGS and exempts generated files, so this assertion was
     # the only thing holding the string and it was holding the wrong one.
-    assert "commit bar" in text and "rung bar" in text
-    assert "gate bar" not in text, "the deleted bar axis is back on the dashboard"
+    # "gate checks" is that deleted name as the bar-to-checks rename would
+    # spell it, so neither spelling may come back.
+    assert "commit checks" in text and "rung bar" in text
+    for deleted in ("gate bar", "gate checks"):
+        assert deleted not in text, "the deleted bar axis is back on the dashboard"
     assert "4 work items · 1 done." in text
     # still fully offline with the new tab present
     low = text.lower()

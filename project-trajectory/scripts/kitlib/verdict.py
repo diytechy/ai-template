@@ -134,7 +134,7 @@ Contract IF-175: the verdict record, as functions two independent readers call
     first verified record deciding, so another bar or another digest refuses
     rather than being walked past; `format_red_record` / `parse_red_record`
     the red record a build's session log header carries, keyed by the build
-    sha a red review bar refused, `red_record` whether a build already has
+    sha a failed run of the commit checks refused, `red_record` whether a build already has
     one, and `red_rounds` the count: the distinct red builds since the last
     verified `review` attestation, an unreadable log counting toward the cap,
     never away from it; and `mechanical_close` the one close-shape reader,
@@ -1364,7 +1364,7 @@ def review_logs(root, branch, base, paths):
     return found
 
 
-# --- the red record: a review bar that refused a build, and the count -----------
+# --- the red record: the commit checks that refused a build, and the count -----------
 
 # A red result is written into a session log's header, keyed by the build
 # commit whose tip the bar refused:
@@ -1459,7 +1459,7 @@ def red_rounds(root, branch, base):
 
 def red_record(root, branch, base, sha):
     """The summary of the red record `base..branch`'s session logs hold for the
-    build commit `sha`, or None when none does: whether a review bar already
+    build commit `sha`, or None when none does: whether the commit checks already
     refused that build, so a draw over it rebuilds without running the bar
     again. A log git cannot show names no build, so it answers nothing here.
 

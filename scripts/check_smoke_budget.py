@@ -53,7 +53,7 @@ mode, whose count) failed exits 2. Callers test only for nonzero; the lines
 name the cause.
 
 THE CALLERS. Every bar runs warn mode, so no bar fails on the tier's seconds:
-docs/stack.ini [run] smoke (the commit bar, which [bars] review runs through
+docs/stack.ini [run] smoke (the commit checks, which [required-checks] commit runs through
 the run menu), the [step:smoke] harness step, and the CI workflow's
 smoke-budget job. Only the run menu's audit, [run] audit, runs enforce mode,
 by hand and at phase close; a breach there is filed as a re-tier row.

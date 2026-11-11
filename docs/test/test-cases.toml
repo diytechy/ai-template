@@ -3896,7 +3896,7 @@ method = "Read absent and invalid red-round settings, including zero, negative, 
 tier = "Smoke"
 expected = "An absent setting reads 3; zero, negative, boolean, text, and floating values each refuse naming their line and key."
 automated = "Yes"
-evidence = "tests/test_red_rounds_max.py::test_red_rounds_max_reads_3_when_absent_and_refuses_each_bad_value"
+evidence = "tests/test_red_rounds_max.py::test_red_rounds_max_reads_3_when_absent_and_refuses_each_bad_value; tests/test_red_rounds_max.py::test_the_retired_key_is_refused_naming_the_new_one"
 status = "Approved"
 phase = 6
 
@@ -4193,7 +4193,7 @@ method = "Run declaration unit cases for the declared expected-failure mark."
 tier = "Smoke"
 expected = "A non-empty stripped declaration is accepted; every unavailable state names the declaration, key, and cause; both unavailable keys are named; one parse supplies both values; and the shipped declaration carries the stated reference and guidance."
 automated = "Yes"
-evidence = "tests/test_red_mark.py::test_a_declared_value_is_the_stripped_text; tests/test_red_mark.py::test_both_keys_undeclared_are_both_named; tests/test_red_mark.py::test_each_undeclared_state_names_the_key_and_the_cause; tests/test_red_mark.py::test_the_bar_and_the_mark_come_from_one_parse; tests/test_red_mark.py::test_the_contract_names_the_key_and_its_refusal; tests/test_red_mark.py::test_the_template_comment_states_the_rule; tests/test_red_mark.py::test_the_template_declares_the_reference_value_with_no_at_sign; tests/test_red_mark.py::test_this_repo_declares_the_templates_value"
+evidence = "tests/test_red_mark.py::test_a_declared_value_is_the_stripped_text; tests/test_red_mark.py::test_a_retired_bars_section_is_never_read_and_is_named; tests/test_red_mark.py::test_both_keys_undeclared_are_both_named; tests/test_red_mark.py::test_each_undeclared_state_names_the_key_and_the_cause; tests/test_red_mark.py::test_the_bar_and_the_mark_come_from_one_parse; tests/test_red_mark.py::test_the_commit_checks_are_the_suite_the_policy_file_names; tests/test_red_mark.py::test_the_contract_names_the_key_and_its_refusal; tests/test_red_mark.py::test_the_shipped_templates_name_a_suite_they_declare; tests/test_red_mark.py::test_the_template_comment_states_the_rule; tests/test_red_mark.py::test_the_template_declares_the_reference_value_with_no_at_sign; tests/test_red_mark.py::test_this_repo_declares_the_templates_value"
 status = "Approved"
 phase = 6
 

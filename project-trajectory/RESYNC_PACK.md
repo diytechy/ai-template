@@ -10738,6 +10738,75 @@ too, only if you vendored them: `skills/coordinator-cycle/` and
 
 **Regenerated files:** `docs/process.md`.
 
+### The commit checks and the expected-failure marker are renamed and re-homed [since 7fa851f33]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Three declared settings have new names, and one of them a
+new file. Nothing about what they do changed.
+
+- **`[bars] review` becomes two declarations.** It held a shell line, but
+  what it declared was policy: which set of checks a commit on a lane must
+  pass. `docs/process.toml` now says which, by name, as `[required-checks]
+  commit`, and `docs/stack.ini` says how this stack runs it, as a line of that
+  name under `[check-suites]`. `integrate.py attest` runs the named suite
+  exactly as it ran the old line, then the row's derived review tests.
+- **`[bars] red_mark` is `[product] expected_failure_marker`.** It is the
+  text your test framework uses to mark a test that is expected to fail, so
+  it sits beside `[product] test`. `attest` and the refresh count it as
+  before.
+- **`[build] red_rounds_max` is `[build]
+  stop_lane_after_consecutive_commit_check_failures`.** It was never a count
+  of review rounds: it is the number of consecutive build rounds whose commit
+  checks fail before the worker stops and the dispatcher closes the lane
+  partial. Value, default (3) and refusals are unchanged.
+- **The old names are refused, never read.** A `[bars]` section is ignored;
+  when it still declares `review` or `red_mark` and the new value is absent,
+  the refusal says so. A `[build] red_rounds_max` still declared is refused
+  at the loop's preflight and before a lane is claimed, naming the new key:
+  read as absent, it would silently restore the shipped 3.
+- **The words in the prose and the messages follow.** "Commit bar" and
+  "review bar" read "commit checks", "landing bar" reads "landing checks",
+  "gate bar" reads "gate checks", and "red mark" reads "expected-failure
+  marker". The attestation itself is unchanged: the trailer still reads
+  `Bar-Green: ... bar=review`, the verb is still `attest --bar review`, and
+  the session log's `# bar-red:` header keeps its name, so a lane in flight
+  and the history both read as before.
+
+**What to do (forced migration).** `docs/stack.ini` is yours, so these are
+hand edits; `attest` and the refresh refuse until they are made.
+
+1. In `docs/stack.ini`, move the marker: delete `red_mark = ...` from
+   `[bars]` and add `expected_failure_marker = ...` with the same value under
+   `[product]`.
+2. In `docs/stack.ini`, replace what is left of `[bars]` with a
+   `[check-suites]` section, and give your old `review` line a name there.
+   The shipped name is `smoke`:
+   `smoke = python scripts/check.py --jobs 0 --tier smoke`.
+3. In `docs/process.toml`, add `[required-checks]` with `commit = "smoke"`
+   (or the name you chose). A name `[check-suites]` does not declare is
+   refused, naming both files.
+4. In `docs/process.toml`, rename `red_rounds_max` under `[build]` if you
+   declared it. An absent key needs nothing.
+5. In-flight lanes carry the new declarations only after a rebase or refresh
+   onto the trunk that has them. Until then their `attest` refuses.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/red_mark.py`,
+`scripts/kitlib/config.py`, `scripts/integrate.py`, `scripts/agent_loop.py`,
+`scripts/dispatch.py`, `scripts/agent_common.py`, `scripts/review_brief.py`,
+`scripts/review_set.py`, `scripts/check.py`, `scripts/check_trajectory.py`,
+`scripts/gen_arch_map.py`, `scripts/kitlib/spine.py`,
+`scripts/kitlib/stage.py`, `scripts/kitlib/verdict.py`,
+`scripts/rendering/traj_panels.py`, `hooks/pre-commit`,
+`prompts/worker.template.md`, `specs/README.template.md`,
+`stack.ini.template`, `process.toml.template`, `PROCESS.md`,
+`PROCESS_OPTIONS.md`, `README.md`, `GLOSSARY.md` (it gains a Checks section
+defining these terms). Three `scope: this-repo` skills changed
+too, only if you vendored them: `skills/coordinator-cycle/`,
+`skills/session-protocol/SKILL.md` and `skills/byte-budget-guard/SKILL.md`.
+
+**Regenerated files:** `docs/process.md`, `PROJECT_STATE.html`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

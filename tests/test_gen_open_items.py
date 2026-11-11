@@ -830,7 +830,7 @@ def test_the_all_clear_prints_MEASURED_counts_not_a_literal(tmp_path):
 
 def test_the_deferral_arms_print_but_never_move_the_exit_code(tmp_path):
     # Warn-first by the ruling. The exit code of this step stays the FRESHNESS
-    # verdict; a contradiction that redded the commit bar would be switched off.
+    # verdict; a contradiction that redded the commit checks would be switched off.
     root = repo(tmp_path, oi_rows=RULED_OI)
     (root / "docs" / "provenance-allow").write_text(
         "SR-001 Rationale added 2026-08-16 — OI-5: ruled, execution owed.\n",

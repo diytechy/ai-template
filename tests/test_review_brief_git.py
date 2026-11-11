@@ -9,7 +9,7 @@ exit 2 and no output file, and a review render and a filing each exit 0 and
 write only their requested file. They spawn git, so this module is registered
 in `tests/conftest.py`'s `SLOW_MODULES`.
 
-A review renders only over a commit whose review bar is attested green for
+A review renders only over a commit whose commit checks are attested green for
 the round's named tests (WI-957, TC-371): the fixture's reviewed commits carry
 that attestation, written by the kit's own `Bar-Green:` writer, and the gate's
 cases commit the absent, unverified, malformed, other-bar and other-tests
@@ -95,7 +95,7 @@ def _attest_tip(root, message, tests=TESTS, bar="review", tree=None, work=None):
 def _malformed_attest_tip(root, message, tests=TESTS):
     """Commit the staged work carrying the older `Bar-Green:` grammar, with no
     `bar=` field: a line no reader verifies."""
-    line = "{} tree={} work={} tests={} review bar PASS".format(
+    line = "{} tree={} work={} tests={} commit checks PASS".format(
         kverdict.BAR_GREEN,
         _git(root, "write-tree"),
         _git(root, "rev-parse", "HEAD"),
@@ -126,7 +126,7 @@ def _derives(monkeypatch, tests):
 @pytest.fixture
 def git_lane(tmp_path, monkeypatch):
     """A real lane: branch `wi-900` holding the spec at `base` and one more
-    commit at `tip`, attested green for the review bar over `TESTS`, and a
+    commit at `tip`, attested green for the commit checks over `TESTS`, and a
     `side` commit off `base` that is not on the lane. The row derives `TESTS`."""
     _derives(monkeypatch, TESTS)
     root = _lane(tmp_path / "lane")
@@ -281,7 +281,7 @@ def test_an_ordinary_review_reads_the_decisions_record(git_lane):
 def _refused(root, out, capsys, sha):
     """The render refused `sha`: exit 2 (asserted by the caller), no brief,
     an untouched lane, and a refusal naming the reviewed commit and the step
-    that records a green review bar. Returns the refusal text for the cause
+    that records green commit checks. Returns the refusal text for the cause
     the caller asserts."""
     err = capsys.readouterr().err
     assert list(out.iterdir()) == []

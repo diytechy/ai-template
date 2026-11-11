@@ -301,8 +301,9 @@ EXIT_REVIEW_OWED = 9
 EXIT_RESTART = 11
 
 
-# RED CAP: the lane's build stayed red at its review bar for the declared
-# `[build] red_rounds_max` consecutive rounds. A decided worker outcome, after
+# COMMIT-CHECK FAILURE CAP: the lane's build failed its commit checks for the
+# declared number of consecutive rounds (`[build]
+# stop_lane_after_consecutive_commit_check_failures`). A decided worker outcome, after
 # the permanently retired 10 and RESTART.
 EXIT_RED_CAP = 12
 
@@ -1496,7 +1497,7 @@ def write_session_log(iter_dir, meta, transcript):
         # `full|narrow <base>..<reviewed sha>` (kitlib.verdict.gating_span):
         # the reviewed range, base and tip.
         "review-scope",
-        # WI-958: a red review bar's record, keyed by the build commit it
+        # WI-958: a red commit checks' record, keyed by the build commit it
         # refused (kitlib.verdict.format_red_record); empty on every other log.
         "bar-red",
         "bar-summary",

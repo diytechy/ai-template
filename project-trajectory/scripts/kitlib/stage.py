@@ -149,7 +149,7 @@ DECLARED_INPUTS = (
     # `process.toml` is DELIBERATELY NOT an input (owner ruling 2026-08-21,
     # amending the plan's §2 list): the derivation does not read it, and the
     # original "over-inclusion costs milliseconds" argument priced the wrong
-    # cost — the real price was a RED commit bar after every policy-dial edit,
+    # cost — the real price was RED commit checks after every policy-dial edit,
     # because the committed fingerprint went stale over a file whose value never
     # reaches the stage. Dials govern who may approve, not what stage is derived.
     # If a dial ever DOES enter the derivation, add its file here in the same

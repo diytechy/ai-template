@@ -379,7 +379,7 @@ def test_worker_brief_names_the_one_turn_close_bar_scratch_and_amendments(tmp_pa
     #   3. scratch has a home, so the lane unload stops refusing it by name.
     row = {"WI-ID": "WI-005", "Title": "t", "SR-Refs": "", "Predecessors": ""}
     prompt = agent_loop.worker_prompt(tmp_path, {"WI-005": row}, "WI-005", "w", "0" * 7)
-    assert "THE CLOSE BAR IS THE COMMIT BAR, and it must fit in ONE turn" in prompt
+    assert "THE CLOSE BAR IS THE COMMIT CHECKS, and it must fit in ONE turn" in prompt
     assert "You do NOT owe the full unfiltered suite at close" in prompt
     assert "NEVER end a turn waiting on one" in prompt
     assert "AMENDED THE TEXT OF AN ALREADY-APPROVED CELL" in prompt
@@ -590,7 +590,7 @@ def test_worker_review_evidence_names_exact_reviewed_commit(tmp_path):
     verdicts = list((repo / "docs" / "reviews" / "t1").glob("*-REVIEW-A-*.md"))
     assert len(verdicts) == 1, "expected one train-scoped verdict"
     sha7 = verdicts[0].stem.rsplit("-", 1)[1]
-    # The named sha is the exact reviewed commit: the review bar's attestation
+    # The named sha is the exact reviewed commit: the commit checks' attestation
     # of the implementer's commit, sitting directly on it with its tree.
     subjects = _git(repo, "log", "--format=%h %s", "HEAD")
     build_line = [ln for ln in subjects.splitlines() if "build WI-201" in ln][0]

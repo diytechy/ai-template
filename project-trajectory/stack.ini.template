@@ -33,9 +33,9 @@ format = {py} -m ruff format --check {src} {tests}
 lint = {py} -m ruff check {src} {tests}
 # The BASE test command. check.py appends the [coverage] args at the covered
 # tiers and the [tiers] selector below, so keep this just the runner invocation.
-# The review bar's named tests append the set's paths and a `--basetemp=` argument
-# to it too, so the declared runner must accept both; a runner that does not reds
-# the review bar.
+# The commit checks' named tests append the set's paths and a `--basetemp=`
+# argument to it too, so the declared runner must accept both; a runner that
+# does not fails the commit checks.
 test = {py} -m pytest -q
 # Parallel execution is an OPT-IN: appending `-n auto` runs the suite across all
 # cores via pytest-xdist (a big win on a slow suite), but a suite with
@@ -43,6 +43,25 @@ test = {py} -m pytest -q
 # knowing act. When your suite is isolated (each test in tmp_path, no shared
 # mutable files), uncomment the line below and add pytest-xdist to your dev-setup:
 # test = {py} -m pytest -q -n auto
+# The expected-failure marker: the text this test framework uses to mark a
+# test that is expected to fail. A lane's new tests go in under it before the
+# code that makes them pass. `integrate.py attest` lets a test file's count of
+# it rise only when the round's test set names the file, and fall only against
+# the lane's last review record over the same set; the refresh refuses a tree
+# whose test files still hold it, so a marked test never lands. It is matched
+# with whitespace ignored, so a formatter that wraps the call still counts,
+# and it carries no `@`, so a `pytest.param(..., marks=...)` marker counts
+# too. Required, with no default: an absent key or an empty value makes
+# `attest` and the refresh refuse. Every adopter declares it, including one
+# that never marks a test. On another stack, declare that stack's strict
+# expected-failure form restricted to assertion failures. Jest's
+# `test.failing` accepts any thrown error, so wrap it in a project helper that
+# re-throws anything but an assertion failure, and declare the helper's call
+# text; a stack with no such form writes that helper. The marker is counted
+# only in the files the review set reads as tests (non-hidden, of a test-file
+# type the kit declares), so a stack whose test files use another suffix is
+# not covered.
+expected_failure_marker = pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 
 [tiers]
 # The kit tiers are fixed (smoke | full | release | all); their *expressions*
@@ -55,8 +74,8 @@ full = -m "not release"
 release =
 all =
 
-# --- CI moment -> tier: the ONE home for "which bar runs when" ---------------
-# The human bar is tiered BY MOMENT, and the reference CI workflow
+# --- CI moment -> tier: the ONE home for "which checks run when" ---------------
+# What a person runs is tiered BY MOMENT, and the reference CI workflow
 # (ci/check.yml -> .github/workflows/check.yml) mirrors it BY TRIGGER. That
 # correspondence is what makes "CI runs the same harness you run" true PER
 # MOMENT rather than as one command, so the table is declared HERE instead of
@@ -74,7 +93,7 @@ all =
 # kit ships can reach YOUR copy of the workflow once you edit it — if that
 # correspondence matters to you, add the equivalent pin to your own suite.
 [ci-tiers]
-push = smoke | the per-commit bar (CI sees the pushed tip)
+push = smoke | the per-commit checks (CI sees the pushed tip)
 pull_request = full | a work-item / slice close
 tag = release | a release
 
@@ -104,7 +123,7 @@ mode = symbols
 # globs, comma/whitespace separated; `*` also spans `/`. Rung OR matching
 # change selects it. Unknown changes run it. Include its baseline, script and
 # config. Blank/absent paths preserves rung-only selection. The hook excludes
-# smoke, already run by hand at the commit bar; gates retain it. For example:
+# smoke, already run by hand at the commit checks; gates retain it. For example:
 # [step:complexity]
 # command = <your complexity command>
 # from-stage = DevStg-Impl
@@ -245,36 +264,20 @@ lanes = 2
 # iso = ./build_iso.sh
 # iso.desc = build the bootable ISO and launch the burner
 
-# --- The review bar (a build round's record of green) ------------------------
-# `integrate.py attest` runs this command on a lane's staged work before it
-# commits the work carrying a `Bar-Green: ... bar=review` attestation, then the
-# row's derived review test set through [product] test (an empty set runs this
-# command alone). A full SHELL line, run in the
-# lane worktree; its `python` is the harness interpreter (a directory whose
-# `python` is it comes first on PATH, as for [run]). There is NO default: an
-# absent section or key, or an empty value, makes `attest` refuse. Shipped as
-# the kit's commit bar; set it to your own if you declare one (e.g. a [run]
-# line).
-[bars]
-review = python scripts/check.py --jobs 0 --tier smoke
-# The red mark: the text of the strict expected-failure mark a lane's tests
-# go in under before the code that turns them green. `integrate.py attest`
-# lets a test file's count of it rise only when the round's test set names
-# the file, and fall only against the lane's last review record over the same
-# set; the refresh refuses a tree whose test files still hold it, so a mark
-# never lands. It is matched with whitespace ignored, so a formatter that
-# wraps the call still counts, and it carries no `@`, so a
-# `pytest.param(..., marks=...)` mark counts too. Required, with no default:
-# an absent section or key, or an empty value, makes `attest` and the refresh
-# refuse. Every adopter declares it, including one that never marks a test.
-# On another stack, declare that stack's strict expected-failure form
-# restricted to assertion failures. Jest's `test.failing` accepts any thrown
-# error, so wrap it in a project helper that re-throws anything but an
-# assertion failure, and declare the helper's call text; a stack with no
-# such form writes that helper. The mark is counted only in the files the
-# review set reads as tests (non-hidden, of a test-file type the kit
-# declares), so a stack whose test files use another suffix is not covered.
-red_mark = pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
+# --- Check suites (the named sets of checks this project can run) ------------
+# One `<name> = <command>` line per suite. docs/process.toml [required-checks]
+# says, by name, which suite a commit on a work branch must pass, so this file
+# says only how this stack runs it. `integrate.py attest` runs that suite on a
+# lane's staged work before it commits the work carrying a
+# `Bar-Green: ... bar=review` attestation, then the row's derived review test
+# set through [product] test (an empty set runs the suite alone). Each value
+# is a full SHELL line, run in the lane worktree; its `python` is the harness
+# interpreter (a directory whose `python` is it comes first on PATH, as for
+# [run]). There is NO default: when the suite docs/process.toml names is
+# absent here or empty, `attest` refuses. Shipped with the kit's own smoke
+# run; add a line for a suite of your own and name it in docs/process.toml.
+[check-suites]
+smoke = python scripts/check.py --jobs 0 --tier smoke
 
 # --- Project-specific gate steps ---------------------------------------------
 # Add gates your DOMAIN needs (duplicate-code, license-lint, capability or

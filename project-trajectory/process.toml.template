@@ -129,7 +129,7 @@ final_review = "always"
 keep_nondependent = false
 # How a CLEAN (`complete/`) lane close is adjudicated. `partial` and
 # `cancelled` closes are ALWAYS adjudicated — they carry a claim about what was
-# not delivered. A green close already passed the declared bar and the review
+# not delivered. A green close already passed its required checks and the review
 # rounds, so adjudicating every one of them prices a strong-tier session onto
 # work two gates already judged.
 #   "off"    — never (the review rounds are the judgement)
@@ -304,18 +304,18 @@ subagent_gate = "off"
 # WHY IT SHIPS AT 0 AND NOT AT THE TARGET. The convention this measures is
 # stated in `process.md` and `AGENTS.template.md`, and the kit's own scripts
 # followed it at 2 of 781 public symbols when it was measured: 0.6% of live LLR
-# rows. Shipping the bar at the 50% target would fire on the FIRST RUN in the
-# kit's own repo and in every fresh scaffold, failing a bar its own author
+# rows. Shipping the minimum at the 50% target would fire on the FIRST RUN in the
+# kit's own repo and in every fresh scaffold, failing a minimum its own author
 # misses by roughly 80x — which trains readers to silence the warning rather
-# than to write the tags. So the measurement ships and the bar does not.
+# than to write the tags. So the measurement ships and the minimum does not.
 #
 # 50 IS THE RECORDED TARGET, and the ONLY sanctioned way to reach it is to
-# write the declarations and then raise this number to a bar the tree already
-# clears. The number goes up because the tags landed; never because the bar
+# write the declarations and then raise this number to a level the tree already
+# clears. The number goes up because the tags landed; never because the minimum
 # came down. WHERE THE STEP RUNS, stated exactly (corrected 2026-08-20): the
 # `backlink-coverage` step exists from DevStg-Tests on and NOT below it, so a
 # plain run does not warn — it does not run the step at all. From DevStg-Tests
-# the step reports, and `--strict-backlinks` (which `check.py` adds at that bar
+# the step reports, and `--strict-backlinks` (which `check.py` adds at that rung
 # and above) turns a below-minimum reading into a failure. Born here, so unlike
 # those six it has no legacy one-word file and cannot be double-declared.
 #
@@ -323,7 +323,7 @@ subagent_gate = "off"
 # position restriction, so a spine id inside a string literal or a negated
 # example counts as a carrier. Because the denominator is your live LLR count,
 # that error can only RAISE the score — false passes, never false failures — so
-# a number near your bar deserves a look at what is carrying it.
+# a number near your minimum deserves a look at what is carrying it.
 backlink_coverage_min = 0
 # THE TEST-FIRST ORDER'S DECLARED START (SR-217), a commit id. The `test-first`
 # step (`check_test_first.py`, warn-only, at every rung) reports each
@@ -465,18 +465,35 @@ context_guard_pct = 0            # e.g. 50
 # model declares 1000000).
 context_window_tokens = 200000
 
+[required-checks]
+# WHAT A CHANGE MUST PASS, AND WHEN. Each value names a check suite, and
+# docs/stack.ini [check-suites] holds that suite's command: this file says
+# which suite is required, the stack file says how this stack runs it.
+#
+#   commit   every commit a lane attests. `integrate.py attest` runs the named
+#            suite on the staged work, then the row's derived review tests,
+#            and records the green in the commit. Required, with no default:
+#            an absent table or key, a value that is not a name, or a name
+#            docs/stack.ini does not declare makes `attest` refuse.
+#
+# A landing is not a setting: the merge slot runs the full gate
+# (`check.py --tier all`) on the refreshed tree whatever this table says.
+commit = "smoke"
+
 [build]
-# THE RED-ROUND CAP. A managed loop draws a review only over a tip its
-# declared review bar attested green; a red bar draws no review and hands the
-# bar's failure tail to the next build instead. Each red is recorded in the
-# lane's committed session log, keyed by the build commit it refused, so the
-# count survives a resume, and a verified green attestation resets it. At this
-# many consecutive red rounds the worker stops with its own exit code, and the
-# dispatcher closes the lane partial through the existing red arm.
+# THE COMMIT-CHECK FAILURE CAP. A managed loop draws a review only over a tip
+# whose required commit checks were attested green; a failed run draws no
+# review and hands the failure's tail to the next build instead. Each failure
+# is recorded in the lane's committed session log, keyed by the build commit
+# it refused, so the count survives a resume, and a verified green attestation
+# resets it. At this many consecutive failures the worker stops with its own
+# exit code, and the dispatcher closes the lane partial through its existing
+# failed-build arm.
 #
 # A positive integer. An absent [build] table or key reads the shipped 3. Any
 # other value (0, a negative, a bool, a string, a float) is refused at the
 # loop's preflight and before a lane is claimed, naming its line. There is no
-# "off": an unbounded cap would rebuild a red tip forever, since a red build
-# still commits and the stall guard never trips.
-red_rounds_max = 3
+# "off": an unbounded cap would rebuild a failing tip forever, since a failed
+# build still commits and the stall guard never trips. The key's earlier name,
+# `red_rounds_max`, is refused where it is still declared, never read.
+stop_lane_after_consecutive_commit_check_failures = 3

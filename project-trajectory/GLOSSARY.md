@@ -1,7 +1,7 @@
 # Glossary
 
-The kit's working terms for lanes, sessions and adjudication, each defined once
-here. Other docs link to a term rather than restating it. One term names one
+The kit's working terms for lanes, sessions, adjudication and checks, each
+defined once here. Other docs link to a term rather than restating it. One term names one
 concept: where two words were used for the same thing, the entry says which one
 is kept.
 
@@ -188,6 +188,58 @@ outcome folder the lane moved its work item into is the merge intent.
 **Planned.** The one squash commit per lane (a batch of work items lands as
 one, naming every item); the lane tip is kept on `archive/lanes`. **Today:** a
 lane lands as a `--no-ff` merge of its refreshed branch.
+
+## Checks
+
+### required checks
+
+The checks a change must pass at a given moment. `docs/process.toml`
+`[required-checks]` names, for a moment, the [check suite](#check-suite) that
+is required; it declares one moment today, `commit`. Formerly a "bar";
+**required checks** is kept.
+
+### commit checks
+
+The [required checks](#required-checks) for a commit a lane attests.
+`integrate.py attest` runs the named [check suite](#check-suite), then the
+row's derived review tests, and records the green in the commit. Formerly the
+"commit bar" and the "review bar", two words for one thing; **commit checks**
+is kept. The attestation's recorded name is still `review` (the trailer reads
+`Bar-Green: ... bar=review`).
+
+### landing checks
+
+The checks a lane's refreshed tree must pass before its
+[landing](#landing): the full gate, run by the station refresh on the tree
+that becomes trunk. Not a declared setting. Formerly the "landing bar";
+**landing checks** is kept.
+
+### gate checks
+
+The full gate for a stage: `check.py` at that stage, with the unfiltered suite
+and coverage. Formerly the "gate bar"; **gate checks** is kept.
+
+### check suite
+
+A named set of checks and the shell line that runs it on this stack: one line
+under `docs/stack.ini` `[check-suites]`. The policy file names a suite; the
+stack file says how to run it.
+
+### expected-failure marker
+
+The text a test framework uses to mark a test that is expected to fail,
+declared as `docs/stack.ini` `[product] expected_failure_marker`. A lane's new
+tests go in under it before the code that makes them pass, and none may remain
+at a [landing](#landing). Formerly the "red mark"; **expected-failure marker**
+is kept.
+
+### commit-check failure cap
+
+The number of consecutive build rounds whose [commit checks](#commit-checks)
+fail before the worker stops and the lane is closed partial:
+`docs/process.toml` `[build]
+stop_lane_after_consecutive_commit_check_failures`. Formerly the "red-round
+cap"; **commit-check failure cap** is kept.
 
 ## Planning
 

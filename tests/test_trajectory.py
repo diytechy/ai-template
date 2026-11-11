@@ -558,7 +558,7 @@ def _need_registry(root):
 @pytest.mark.parametrize("need_id", ["SN-1", "SN-404"])
 def test_specref_on_a_registry_carrier_resolves_a_bare_row_id(tmp_path, path, need_id):
     # 2026-09-06: the dual-plan composer refuses any need-carrier fragment that
-    # is not an exact row id, so R-E must hold the same line at the commit bar.
+    # is not an exact row id, so R-E must hold the same line at the commit checks.
     _need_registry(tmp_path)
     write_wis_sr(
         tmp_path,

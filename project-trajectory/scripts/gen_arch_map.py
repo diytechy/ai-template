@@ -270,7 +270,7 @@ IF_ID_RE = re.compile(r"IF-\d+")
 _MODULE_EXTS = _kitspine.MODULE_EXTS
 # The file types `--backlink-coverage` reads, and the types a test file is.
 # ONE HOME: `kitlib.spine.BACKLINK_EXTS`, where the list and its widening
-# caution live, so the tag reader and the red-mark count read one domain.
+# caution live, so the tag reader and the expected-failure marker count read one domain.
 BACKLINK_EXTS = _kitspine.BACKLINK_EXTS
 # Comment tokens the file-level fallback (--mode files) reads a summary from.
 # The three most common line-comment markers; override with --comment-prefix.

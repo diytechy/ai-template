@@ -829,11 +829,12 @@ control input — was retired):
   that failed earlier in the run must answer a 30 s `OK` liveness probe on
   its own command template before another real session is spent on it; a
   route with a clean history is never probed (recovery aid, not a tax).
-- **RED-CAP** is **exit code 12** (`EXIT_RED_CAP`): a red review bar draws no
-  review, and the lane's red build rounds reached `[build] red_rounds_max`
-  (`docs/process.toml`, shipped `3`). Checked at run start and after each red
-  record; unlike exit 9 it is a decided outcome, so the dispatcher closes the
-  lane `partial` through the handback's red arm.
+- **The commit-check failure cap** is **exit code 12** (`EXIT_RED_CAP`): failed
+  commit checks draw no review, and the lane's consecutive failed rounds reached
+  `[build] stop_lane_after_consecutive_commit_check_failures`
+  (`docs/process.toml`, shipped `3`). Checked at run start and after each
+  recorded failure; unlike exit 9 it is a decided outcome, so the dispatcher
+  closes the lane `partial` through the handback's failed-build arm.
 - **The resume-from-`status.md` prompt is retired** with the path: the
   generated `status.md` block (`gen_trajectory.py --status`) is a snapshot for
   humans, never a session's input — the hand-authored remainder stays the
@@ -844,7 +845,7 @@ control input — was retired):
 stop claiming. Everything in flight finishes, integrates, and archives** — a
 full stop is a *drained and unloaded* stop; finished work is never stranded on
 a branch. The only thing that stops an unload is the integrator's own refusal
-(red bar, missing required verdict) — that is the gate working, not the pause:
+(failed landing checks, missing required verdict) — that is the gate working, not the pause:
 a pause ends either fully merged and quiet, or fully merged except N branches
 parked red, each red a finding to work. The file is **tracked and committed**
 by the bookkeeping lane: it survives clones, its reason is diffable history,
@@ -2171,7 +2172,7 @@ owner sitting** covers each re-attestation, rather than paying for several
 state the sitting reads via `trace.py --approve modified`, never commit-message
 prose). A
 phase's spec is one shared `docs/specs/` doc with a `#anchor` per WI. **Its
-cadence:** mid-phase WI sessions end at the **commit bar** (the pre-commit
+cadence:** mid-phase WI sessions end at the **commit checks** (the pre-commit
 hook floor + the project's test command + `check_docs --stale`), not the full
 gate; the full `check.py --gate <gate>` runs **once at phase close** (the
 coordinating close), and CI runs the gate job on every push regardless — a
@@ -2184,7 +2185,7 @@ guessed subset. A WI's phase is **derived** from the delivery `Phase` of the SRs
 it delivers (§4 "Phased delivery"), and the When-view dashboard tiers the WI DAG
 by **phase ⊃ workstream ⊃ work-item** — there is no separate grouping column.
 
-**Whole-registry contradiction audit (WI-206).** The per-commit reviewer sweep is change-scoped — it checks each new SN/SR/TC row against the whole registry as it lands (inductive pairwise coverage), but never re-audits **old-vs-old** drift between rows that both predate it. *Applies when* the registry is mature enough for that to bite (>= 2 closed phases or >= 30 SRs). *Occasion:* at **phase close** (with the gate bar) and **before the owner's final read**. *Execution:* one independent fresh-context session, redacted to the registries + `docs/rubrics/registry-contradiction-audit.md`, writing a recorded `docs/reviews/<phase-or-scope>-AUDIT.md` verdict (scope-named, not serial-numbered). *Disposition:* findings route as WIs through change-intake; the audit never edits the spine. Per-commit coverage stays the change-scoped reviewer sweep — unchanged.
+**Whole-registry contradiction audit (WI-206).** The per-commit reviewer sweep is change-scoped — it checks each new SN/SR/TC row against the whole registry as it lands (inductive pairwise coverage), but never re-audits **old-vs-old** drift between rows that both predate it. *Applies when* the registry is mature enough for that to bite (>= 2 closed phases or >= 30 SRs). *Occasion:* at **phase close** (with the gate checks) and **before the owner's final read**. *Execution:* one independent fresh-context session, redacted to the registries + `docs/rubrics/registry-contradiction-audit.md`, writing a recorded `docs/reviews/<phase-or-scope>-AUDIT.md` verdict (scope-named, not serial-numbered). *Disposition:* findings route as WIs through change-intake; the audit never edits the spine. Per-commit coverage stays the change-scoped reviewer sweep — unchanged.
 
 **Parallel test execution.** Running the suite across cores is a **`docs/stack.ini`
 concern**, not a process rule: append `-n auto` to `[product] test` and the harness,

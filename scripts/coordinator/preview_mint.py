@@ -31,9 +31,14 @@ def main(argv):
         print("preview_mint: nothing would be minted")
         return 0
     for d in drafts:
-        print("brief={} adjudicates={} sr_refs={} specref={}".format(
-            d.get("brief"), ";".join(d.get("adjudicates") or []),
-            ";".join(d.get("sr_refs") or []), d.get("specref")))
+        print(
+            "brief={} adjudicates={} sr_refs={} specref={}".format(
+                d.get("brief"),
+                ";".join(d.get("adjudicates") or []),
+                ";".join(d.get("sr_refs") or []),
+                d.get("specref"),
+            )
+        )
         print("  title: " + d.get("title", ""))
     return 0
 

@@ -18,7 +18,7 @@ it before your first claim and when a step below points there.
 
 Read beside it:
 
-- `session-protocol`: standing rules (§2), commit bar (§3), records and
+- `session-protocol`: standing rules (§2), commit checks (§3), records and
   coordinator close-out (§4), commit style (§5).
 - `spine-authoring`: "Three ways a spine grows" and its
   `references/in-lane.md`.
@@ -197,7 +197,7 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    `Evidence` parts by that same rule, each under one evidence class (plan
    item 13's typed evidence):
    - **New or corrected executable behaviour:** a strict expected assertion
-     failure, the mark `[bars] red_mark` declares (Python:
+     failure, the mark `[product] expected_failure_marker` declares (Python:
      `@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))`).
      The mark is written as the declared text verbatim, with no added
      arguments: `attest` and the refresh count only that text, so a mark
@@ -233,13 +233,13 @@ record that as a decision in its decisions record.
 
 Each round:
 
-1. **The tip carries the review bar's attestation** before any review:
+1. **The tip carries the commit checks' attestation** before any review:
    commit lane work through `integrate.py attest`, which derives the
    row's review test set, and `review_brief.py review` refuses any other
-   tip. A hook-refused commit or a red bar attests nothing, and the render then
+   tip. A hook-refused commit or failed commit checks attest nothing, and the render then
    refuses.
 2. **Run the lints after the build round** (ruling 6): `trace.py --strict`
-   and `check_trajectory.py --strict`, with the commit bar. They run here,
+   and `check_trajectory.py --strict`, with the commit checks. They run here,
    at the closure check and at the landing check, never in the commit hook.
 3. **The full-lane reviewers, in parallel** (the shape under Roles), each
    from its own brief rendered by `review_brief.py review --scope full` from
@@ -311,10 +311,10 @@ this hold (`project-trajectory/PROCESS.md` §4).
 - **The cap** (ruling 4, revision 7): at most three counted full rounds
   before the checkpoint. Rounds run until one has no BLOCKER or MAJOR code
   finding, and the checkpoint follows it.
-- **The red cap** (revisions 17 and 18): a red bar draws no review. Count
-  each red `integrate.py attest` as a red round in the lane's decisions
-  record; at `[build] red_rounds_max` consecutive red rounds, close the lane
-  partial (recipes §8, "Close a lane partial"), never a new stop.
+- **The commit-check failure cap** (revisions 17 and 18): failed commit checks
+  draw no review. Count each failed `integrate.py attest` as a failed round in
+  the lane's decisions record; at `[build] stop_lane_after_consecutive_commit_check_failures`
+  consecutive failed rounds, close the lane partial (recipes §8, "Close a lane partial"), never a new stop.
 - **Which rounds run in convergence stance.** The third counted round, the
   last the cap allows, renders `review --scope full --stance convergence`
   (ruling 4: the last allowed round runs in convergence mode). The gate over
@@ -428,7 +428,7 @@ Two landing rules for the machinery itself (owner, 2026-10-14; revision 37):
    `coordinator_adjudicate.py act --verdict <path> --wi WI-NNN` (recipes §3).
    Its act is the lane's last **spine** commit: Status flips and the snapshot
    only, with verdicts committed first. Telemetry may follow.
-3. Squash, regenerate, run the commit bar on the staged squash, close the
+3. Squash, regenerate, run the commit checks on the staged squash, close the
    row, archive the tips, and sweep. Every step and its trap is in recipes
    §3.
 4. File one successor row on trunk per SUCCESSOR ruling of an accepted

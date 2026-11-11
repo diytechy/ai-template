@@ -2,11 +2,11 @@
 
 Runs in the SLOW tier (`conftest.SLOW_MODULES`), so the hard stop lands at slice
 close and in CI — where a gate result is actually claimed — while the per-commit
-bar stays passable on a machine that has not been provisioned yet. It is the one
+checks stay passable on a machine that has not been provisioned yet. It is the one
 place an environment shortfall is reported as what it is: named once and loudly,
 rather than ~50 downstream skips-and-reds that read like branch defects. The
 `pytest_sessionstart` banner in `conftest.py` still fires on EVERY run including
-`-m smoke`, so the commit bar keeps the warning and loses only the failure.
+`-m smoke`, so the commit checks keep the warning and lose only the failure.
 
 Two shortfalls live here, on the same division of labour with `conftest.py`:
 

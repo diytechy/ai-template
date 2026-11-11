@@ -1,11 +1,15 @@
-"""The red mark's rule in process (WI-996): the declaration, the count and the
-per-file table `integrate.py attest` and the refresh both apply.
+"""The expected-failure marker's rule in process (WI-996): the declaration, the
+count and the per-file table `integrate.py attest` and the refresh both apply.
 
 A test's red-before is proven by a strict expected-failure mark. The mark is
-declared once, as `[bars] red_mark`; a file's count of it is taken from its
-bytes with ASCII whitespace removed; and the table compares each test file's
-count at the lane's last attested tree with its count in the staged tree. The
-real-lane cases are in `tests/test_red_mark_lane.py`.
+declared once, as `docs/stack.ini` `[product] expected_failure_marker`; a
+file's count of it is taken from its bytes with ASCII whitespace removed; and
+the table compares each test file's count at the lane's last attested tree
+with its count in the staged tree. The same reader answers the commit checks'
+shell line, the other value an attestation needs: `docs/process.toml`
+`[required-checks] commit` names a check suite and `docs/stack.ini`
+`[check-suites]` holds that suite's line. The real-lane cases are in
+`tests/test_red_mark_lane.py`.
 
 The cases that pin the rule's text build the mark from `conftest.RED_MARK`, so
 `tests/` never holds it whole.
@@ -26,18 +30,56 @@ from kitlib import verdict as kv
 
 REPO = SCRIPTS.parent.parent
 TEMPLATE = SCRIPTS.parent / "stack.ini.template"
+POLICY_TEMPLATE = SCRIPTS.parent / "process.toml.template"
 OWN_DECLARATION = REPO / "docs" / "stack.ini"
 P = "tests/test_a.py"
 Q = "tests/test_b.py"
 OTHER = "tests/test_other.py"
+# The fixtures' check suite. Not the name the templates ship, so no case
+# passes on a reader that looks `smoke` up whatever the policy file names.
+SUITE = "fast"
+# A `docs/process.toml` naming it as the suite a commit must pass.
+NAMED = '[required-checks]\ncommit = "{}"\n'.format(SUITE)
+# An undeclared value's line opens with where the value belongs, then why it
+# is not there.
+MARKER_AT = "docs/stack.ini [product] expected_failure_marker - "
+NAME_AT = "docs/process.toml [required-checks] commit - "
+SUITE_AT = "docs/stack.ini [check-suites] {} - ".format(SUITE)
+UNPARSED = "the file does not parse ("
+NO_TABLE = "the table is absent"
+NO_KEY = "the key is absent"
+NO_NAME = "the value is not a suite's name"
+# What a cause gains while the retired section still declares the old key.
+RETIRED = "; the retired [bars] {} still declares it and is no longer read"
 
 
 def _declare(root, text):
     write_lf(root, "docs/stack.ini", text)
 
 
-def _bars(*lines):
-    return "[bars]\n" + "".join(line + "\n" for line in lines)
+def _policy(root, text):
+    write_lf(root, "docs/process.toml", text)
+
+
+def _section(name, *lines):
+    return "[{}]\n".format(name) + "".join(line + "\n" for line in lines)
+
+
+def _marker(value):
+    """A `[product]` section declaring `value` as the marker."""
+    return _section("product", "expected_failure_marker = " + value)
+
+
+def _suite(line, name=SUITE):
+    """A `[check-suites]` section whose suite `name` runs `line`."""
+    return _section("check-suites", "{} = {}".format(name, line))
+
+
+# A whole `docs/stack.ini`: the marker, and two suites, the shipped name's
+# line beside the fixtures'.
+WHOLE = _marker("mark(here)") + _section(
+    "check-suites", "smoke = another suite", SUITE + " = run the bar"
+)
 
 
 def _marked(*marks):
@@ -77,15 +119,20 @@ def _text(path):
 
 
 def _declared(path):
-    """`[bars] red_mark` as declared in `path`, `""` when it declares none."""
-    return kconfig.read_stack_ini(path).get("bars", "red_mark", fallback="")
+    """`[product] expected_failure_marker` as declared in `path`, `""` when
+    it declares none."""
+    return kconfig.read_stack_ini(path).get(
+        "product", "expected_failure_marker", fallback=""
+    )
 
 
 def _mark_comment():
-    """The comment block above the template's `red_mark` line, as one line of
-    lower-case words; `""` when the template has no such key."""
+    """The comment block above the template's `expected_failure_marker` line,
+    as one line of lower-case words; `""` when the template has no such key."""
     lines = TEMPLATE.read_text(encoding="utf-8").splitlines()
-    keys = [n for n, line in enumerate(lines) if line.startswith("red_mark")]
+    keys = [
+        n for n, line in enumerate(lines) if line.startswith("expected_failure_marker")
+    ]
     if not keys:
         return ""
     above = []
@@ -101,32 +148,122 @@ def _mark_comment():
 
 def test_a_declared_value_is_the_stripped_text(tmp_path):
     """Implements: TC-421"""
-    _declare(tmp_path, _bars("review = run the bar", "red_mark =   mark(here)   "))
+    _declare(tmp_path, _marker("  mark(here)   ") + _suite("  run the bar  "))
+    _policy(tmp_path, NAMED)
     bars = krm.read_bars(tmp_path)
     assert bars.red_mark == "mark(here)"
     assert bars.review == "run the bar"
     assert bars.refusal("review", "red_mark") is None
 
 
-@pytest.mark.parametrize(
-    "text, cause",
-    [
-        (None, "the file is absent"),
-        (_bars("red_mark = a") + _bars("red_mark = b"), "the file does not parse"),
-        ("[product]\ntest = pytest\n", "the section is absent"),
-        (_bars("review = run the bar"), "the key is absent"),
-        (_bars("red_mark ="), "the value is empty"),
-        (_bars("red_mark =     "), "the value is empty"),
-    ],
-    ids=["absent", "unparseable", "no-section", "no-key", "empty", "blank"],
-)
-def test_each_undeclared_state_names_the_key_and_the_cause(tmp_path, text, cause):
+def test_the_commit_checks_are_the_suite_the_policy_file_names(tmp_path):
     """Implements: TC-421"""
-    if text is not None:
-        _declare(tmp_path, text)
-    refusal = krm.read_bars(tmp_path).refusal("red_mark")
-    assert "docs/stack.ini [bars] red_mark" in refusal
-    assert cause in refusal
+    # Two suites are declared, the shipped name among them: the line read is
+    # the one `[required-checks] commit` names, and renaming it reads the other.
+    _declare(tmp_path, WHOLE)
+    _policy(tmp_path, NAMED)
+    assert krm.read_bars(tmp_path).review == "run the bar"
+    _policy(tmp_path, NAMED.replace(SUITE, "smoke"))
+    assert krm.read_bars(tmp_path).review == "another suite"
+
+
+@pytest.mark.parametrize(
+    "stack, policy, key, at",
+    [
+        # The marker: `docs/stack.ini` `[product]`.
+        (None, NAMED, "red_mark", MARKER_AT + "the file is absent"),
+        (_marker("a") + _marker("b"), NAMED, "red_mark", MARKER_AT + UNPARSED),
+        (_suite("run the bar"), NAMED, "red_mark", MARKER_AT + "the section is absent"),
+        (_section("product", "test = x"), NAMED, "red_mark", MARKER_AT + NO_KEY),
+        (_marker(""), NAMED, "red_mark", MARKER_AT + "the value is empty"),
+        (_marker("    "), NAMED, "red_mark", MARKER_AT + "the value is empty"),
+        # The suite's name: `docs/process.toml` `[required-checks]`. Without it
+        # no declared suite's line is read, the shipped name's included.
+        (WHOLE, None, "review", NAME_AT + "the file is absent"),
+        (WHOLE, "[required-checks\n", "review", NAME_AT + UNPARSED),
+        (WHOLE, '[policies]\ntrunk = "main"\n', "review", NAME_AT + NO_TABLE),
+        (WHOLE, 'required-checks = "fast"\n', "review", NAME_AT + NO_TABLE),
+        (WHOLE, "[required-checks]\n", "review", NAME_AT + NO_KEY),
+        (WHOLE, '[required-checks]\ncommit = ""\n', "review", NAME_AT + NO_NAME),
+        (WHOLE, '[required-checks]\ncommit = "  "\n', "review", NAME_AT + NO_NAME),
+        (WHOLE, "[required-checks]\ncommit = 3\n", "review", NAME_AT + NO_NAME),
+        # The named suite's line: `docs/stack.ini` `[check-suites]`.
+        (None, NAMED, "review", SUITE_AT + "the file is absent"),
+        (_suite("a") + _suite("b"), NAMED, "review", SUITE_AT + UNPARSED),
+        (_marker("mark(here)"), NAMED, "review", SUITE_AT + "the section is absent"),
+        (_suite("another suite", "smoke"), NAMED, "review", SUITE_AT + NO_KEY),
+        (_suite(""), NAMED, "review", SUITE_AT + "the value is empty"),
+        (_suite("    "), NAMED, "review", SUITE_AT + "the value is empty"),
+    ],
+    ids=[
+        "marker-no-file",
+        "marker-unparseable",
+        "marker-no-section",
+        "marker-no-key",
+        "marker-empty",
+        "marker-blank",
+        "name-no-file",
+        "name-unparseable",
+        "name-no-table",
+        "name-not-a-table",
+        "name-no-key",
+        "name-empty",
+        "name-blank",
+        "name-not-text",
+        "suite-no-file",
+        "suite-unparseable",
+        "suite-no-section",
+        "suite-no-key",
+        "suite-empty",
+        "suite-blank",
+    ],
+)
+def test_each_undeclared_state_names_the_key_and_the_cause(
+    tmp_path, stack, policy, key, at
+):
+    """Implements: TC-421"""
+    if stack is not None:
+        _declare(tmp_path, stack)
+    if policy is not None:
+        _policy(tmp_path, policy)
+    bars = krm.read_bars(tmp_path)
+    assert getattr(bars, key) == ""
+    assert bars.causes[key].startswith(at)
+    assert at in bars.refusal(key)
+
+
+@pytest.mark.parametrize(
+    "key, policy, at",
+    [
+        ("red_mark", None, MARKER_AT + "the section is absent"),
+        ("review", None, NAME_AT + "the file is absent"),
+        ("review", NAMED, SUITE_AT + "the section is absent"),
+    ],
+    ids=["the-marker", "the-suites-name", "the-suites-line"],
+)
+def test_a_retired_bars_section_is_never_read_and_is_named(tmp_path, key, policy, at):
+    """Implements: TC-421"""
+    # `[bars]`, where both values lived, still declares them: neither is
+    # read, and each cause says the old key is what stopped counting.
+    retired = _section("bars", "review = the old bar", "red_mark = old_mark(")
+    _declare(tmp_path, retired)
+    if policy is not None:
+        _policy(tmp_path, policy)
+    bars = krm.read_bars(tmp_path)
+    assert (bars.review, bars.red_mark) == ("", "")
+    assert bars.causes[key].startswith(at)
+    assert RETIRED.format(key) in bars.causes[key]
+    assert RETIRED.format(key) in bars.refusal(key)
+    # A `[bars]` holding only the other key says nothing about this one.
+    other = "red_mark" if key == "review" else "review"
+    _declare(tmp_path, _section("bars", other + " = the old value"))
+    assert "[bars]" not in krm.read_bars(tmp_path).causes[key]
+    # Declared where they now belong, the new values are the ones read.
+    _declare(tmp_path, retired + WHOLE)
+    _policy(tmp_path, NAMED)
+    bars = krm.read_bars(tmp_path)
+    assert (bars.review, bars.red_mark) == ("run the bar", "mark(here)")
+    assert bars.refusal("review", "red_mark") is None
 
 
 def test_the_bar_and_the_mark_come_from_one_parse(tmp_path, monkeypatch):
@@ -139,7 +276,8 @@ def test_the_bar_and_the_mark_come_from_one_parse(tmp_path, monkeypatch):
         return parse(path, **kwargs)
 
     monkeypatch.setattr(kconfig, "read_stack_ini", counted)
-    _declare(tmp_path, _bars("review = run the bar", "red_mark = mark(here)"))
+    _declare(tmp_path, WHOLE)
+    _policy(tmp_path, NAMED)
     bars = krm.read_bars(tmp_path)
     assert calls == [tmp_path / "docs" / "stack.ini"]
     assert (bars.review, bars.red_mark) == ("run the bar", "mark(here)")
@@ -147,14 +285,16 @@ def test_the_bar_and_the_mark_come_from_one_parse(tmp_path, monkeypatch):
 
 def test_both_keys_undeclared_are_both_named(tmp_path):
     """Implements: TC-421"""
-    _declare(tmp_path, "[product]\ntest = pytest\n")
+    _declare(tmp_path, "[paths]\ntests = tests\n")
     refusal = krm.read_bars(tmp_path).refusal("review", "red_mark")
-    assert "docs/stack.ini [bars] review" in refusal
-    assert "docs/stack.ini [bars] red_mark" in refusal
-    _declare(tmp_path, _bars("review = run the bar"))
+    assert "docs/process.toml [required-checks] commit" in refusal
+    assert "docs/stack.ini [product] expected_failure_marker" in refusal
+    _declare(tmp_path, _suite("run the bar"))
+    _policy(tmp_path, NAMED)
     refusal = krm.read_bars(tmp_path).refusal("review", "red_mark")
-    assert "docs/stack.ini [bars] red_mark" in refusal
-    assert "docs/stack.ini [bars] review" not in refusal
+    assert "docs/stack.ini [product] expected_failure_marker" in refusal
+    assert "[required-checks] commit" not in refusal
+    assert "[check-suites]" not in refusal
 
 
 def test_the_template_declares_the_reference_value_with_no_at_sign():
@@ -186,15 +326,27 @@ def test_this_repo_declares_the_templates_value():
     assert _declared(OWN_DECLARATION) == _declared(TEMPLATE) == RED_MARK
 
 
+def test_the_shipped_templates_name_a_suite_they_declare(tmp_path):
+    """Implements: TC-421"""
+    # The declaration is two files: the suite the policy template names is
+    # one the stack template gives a line, and this repository's pair agree.
+    _declare(tmp_path, TEMPLATE.read_text(encoding="utf-8"))
+    _policy(tmp_path, POLICY_TEMPLATE.read_text(encoding="utf-8"))
+    for root in (tmp_path, REPO):
+        bars = krm.read_bars(root)
+        assert bars.refusal("review", "red_mark") is None
+        assert bars.review and bars.red_mark == RED_MARK
+
+
 def test_the_contract_names_the_key_and_its_refusal():
     """Implements: TC-421"""
     header = _text(OWN_DECLARATION)
     contract = header[
         header.index("Contract IF-022:") : header.index("Contract IF-049:")
     ]
-    assert "`[bars] red_mark`" in contract
+    assert "`[product] expected_failure_marker`" in contract
     assert "whitespace ignored" in contract
-    assert "a review attestation and a refresh alike" in contract
+    assert "the marker refuses an attestation and a refresh alike" in contract
 
 
 # --- the count ----------------------------------------------------------------
@@ -257,7 +409,7 @@ def test_tree_counts_read_the_tests_root_and_leave_a_link_out(tmp_path):
 def test_a_tests_root_of_dot_counts_only_the_files_the_review_set_reads(tmp_path):
     """Implements: TC-422"""
     repo = _git_repo(tmp_path / "repo")
-    _declare(repo, "[paths]\ntests = .\n" + _bars("red_mark = " + RED_MARK))
+    _declare(repo, "[paths]\ntests = .\n" + _marker(RED_MARK))
     quoted = _marked(RED_MARK).decode("utf-8")
     write_lf(repo, "README.md", quoted)
     write_lf(repo, "notes.txt", quoted)
@@ -284,7 +436,7 @@ def test_a_tests_root_of_dot_counts_only_the_files_the_review_set_reads(tmp_path
 )
 def test_the_tests_root_resolves_as_the_review_set_resolves_it(tmp_path, paths, prefix):
     """Implements: TC-422"""
-    _declare(tmp_path, paths + _bars("red_mark = mark(here)"))
+    _declare(tmp_path, paths + _marker("mark(here)"))
     resolved = load_script("review_set")._roots(tmp_path)[1]
     assert krm.read_bars(tmp_path).tests_prefix == kspine.root_prefix(resolved)
     assert kspine.root_prefix(resolved) == prefix
@@ -394,7 +546,7 @@ def test_each_refused_file_is_named_in_one_refusal():
 def test_an_unread_tree_refuses_naming_the_read(tmp_path):
     """Implements: TC-423"""
     repo = _git_repo(tmp_path / "repo")
-    _declare(repo, _bars("red_mark = mark(here)"))
+    _declare(repo, _marker("mark(here)"))
     write_lf(repo, "tests/test_a.py", "plain\n")
     _git(repo, "add", "-A")
     blob = _git(repo, "rev-parse", ":tests/test_a.py")

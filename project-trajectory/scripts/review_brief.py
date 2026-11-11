@@ -187,7 +187,7 @@ _CONVERGENCE_EXCLUDES = (
 PHASES = ("REVIEW-A", "REVIEW-B")
 REVIEWS = "docs/reviews"
 _ORDINAL_RE = re.compile(r"^(\d+)-")
-# The step that records a passing review bar, closing every render refusal
+# The step that records a passing commit checks, closing every render refusal
 # that lacks one. Filled with the scripts directory and the lane.
 _ATTEST_STEP = (
     'Run "$PY" {}/integrate.py attest --branch {} --bar review from the primary '
@@ -1084,7 +1084,7 @@ def _review_bar_refusal(root, lane, sha, tests):
     if attested is not None:
         return attested
     raise BriefError(
-        "{} carries no review bar attestation for the round's tests: {}. {}".format(
+        "{} carries no commit-checks attestation for the round's tests: {}. {}".format(
             sha, cause, _ATTEST_STEP.format(agent_brief.scripts_dir(root), lane)
         )
     )
@@ -1095,7 +1095,7 @@ def _cmd_review(args):
     derived, refusal = review_set.derive(args.root, lane)
     if refusal:
         raise BriefError(
-            "{} can carry no review bar attestation, its test set being refused: "
+            "{} can carry no commit-checks attestation, its test set being refused: "
             "{}\nClear that, then: {}".format(
                 sha,
                 refusal,
@@ -1120,7 +1120,7 @@ def _cmd_review(args):
     text, verdict = render_review(args.root, rnd)
     _write(args.out, text)
     print(
-        "review_brief: {} renders over the review bar's attestation at {} "
+        "review_brief: {} renders over the commit checks' attestation at {} "
         "(tests={})".format(sha, attested, kverdict.tests_digest(rnd.tests))
     )
     print("review_brief: wrote {}; the reviewer writes {}".format(args.out, verdict))

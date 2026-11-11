@@ -1,27 +1,38 @@
-"""The red mark: the strict expected-failure mark that proves a test's
-red-before, as `docs/stack.ini` `[bars] red_mark` declares it, and the two
-checks `integrate.py attest` and its refresh make of it (WI-996).
+"""The expected-failure marker: the strict mark that proves a test failed
+before its code existed, as `docs/stack.ini` `[product]
+expected_failure_marker` declares it, and the two checks `integrate.py attest`
+and its refresh make of it (WI-996). It is read beside the commit checks'
+command, the other value an attestation needs.
 
 WHY THIS EXISTS. A lane's tests-first commit lands each new test under the
-declared mark, and its review attestation's green bar is that test's
-red-before: a strictly marked test the bar runs passes it only by failing at
-an assertion. The code commit removes the mark. So a mark may be added only
-where the round's test set will run it, removed only against the lane's last
-review record over the same test set, and never landed: a marked test passes
-the landing bar while it is red. One home holds the declaration's states, the
-count and the per-file table, so the two verbs that ask cannot disagree.
+declared marker, and its attestation's green commit checks are that test's
+failing-first proof: a strictly marked test the checks run passes them only by
+failing at an assertion. The code commit removes the marker. So a marker may
+be added only where the round's test set will run it, removed only against the
+lane's last review record over the same test set, and never landed: a marked
+test passes the landing checks while it is failing. One home holds the
+declaration's states, the count and the per-file table, so the two verbs that
+ask cannot disagree.
 
-The declaration is read with `[bars] review` through the one parse of
-`docs/stack.ini`, from the tree the verb runs on. There is no default and no
-fallback key. A count is the number of non-overlapping occurrences of the
-declared text in a file's bytes, ASCII whitespace removed from both, so a
-formatter-wrapped mark counts and no file is ever decoded. The trees are read
-by object id from git, never from a worktree, so an ignored file or a stale
-cache is never counted. Every unread tree or range refuses, naming the read:
-an unread delta is not an empty one. Nothing here writes a ref or the index
-(`git write-tree` only adds the object naming what is staged).
+WHERE THE TWO VALUES ARE DECLARED, each read from the tree the verb runs on.
+The marker is `[product] expected_failure_marker` in `docs/stack.ini`, a fact
+about the test framework. The commit checks are named, not spelled:
+`docs/process.toml` `[required-checks] commit` names a check suite, and
+`docs/stack.ini` `[check-suites]` holds that suite's shell line, so the policy
+file says which suite a commit must pass and the stack file says how this
+stack runs it. There is no default and no fallback key: a `[bars]` section,
+the retired home of both, is named in the refusal and never read.
+
+A count is the number of non-overlapping occurrences of the declared text in a
+file's bytes, ASCII whitespace removed from both, so a formatter-wrapped
+marker counts and no file is ever decoded. The trees are read by object id
+from git, never from a worktree, so an ignored file or a stale cache is never
+counted. Every unread tree or range refuses, naming the read: an unread delta
+is not an empty one. Nothing here writes a ref or the index (`git write-tree`
+only adds the object naming what is staged).
 """
 
+import tomllib
 from pathlib import Path
 from typing import NamedTuple
 
@@ -41,21 +52,31 @@ __all__ = [
 ]
 
 DECLARATION = "docs/stack.ini"
+POLICY = "docs/process.toml"
+# Where each value is declared, as a refusal names it.
+MARKER = ("product", "expected_failure_marker")
+REQUIRED = ("required-checks", "commit")
+SUITES = "check-suites"
+# The section both values lived in before they were renamed and moved, and
+# the key each had there. Never read; named when it is still declared.
+RETIRED = "bars"
 # ASCII whitespace, removed from the file and the declared text alike.
 _ASCII_WS = b" \t\n\r\x0b\x0c"
-_KEYS = ("review", "red_mark")
-# What each key declares, for the refusal that names it undeclared.
-_MEANS = {
-    "review": "the shell line a review attestation runs",
-    "red_mark": "the text of the strict expected-failure mark, as the shipped "
-    "template's comment states it",
-}
+_MARKER_MEANS = (
+    "the text of the strict expected-failure marker, as the shipped template's "
+    "comment states it"
+)
+_SUITE_MEANS = "the shell line of the check suite {} [{}] {} names".format(
+    POLICY, *REQUIRED
+)
 
 
 class Bars(NamedTuple):
-    """`[bars]` as the lane at `lane` declares it: each key's stripped value
-    (`""` when undeclared), the tests root's path prefix and the cause per
-    undeclared key.
+    """What an attestation needs from the lane at `lane`: `review`, the shell
+    line of the check suite a commit must pass; `red_mark`, the declared
+    expected-failure marker; the tests root's path prefix; and, per value that
+    is undeclared (`""`), the line naming where it belongs and why it is not
+    there.
 
     Implements: SR-156, LLR-368
     """
@@ -72,54 +93,116 @@ class Bars(NamedTuple):
 
         Implements: SR-156, LLR-368
         """
-        named = [key for key in keys if key in self.causes]
+        named = [self.causes[key] for key in keys if key in self.causes]
         if not named:
             return None
         return "undeclared in {}, each required with no default: {}".format(
-            self.lane,
-            "; ".join(
-                "{} [bars] {} - {} (declare {})".format(
-                    DECLARATION, key, self.causes[key], _MEANS[key]
-                )
-                for key in named
-            ),
+            self.lane, "; ".join(named)
         )
 
 
-def _cause(profile, key):
-    """Why `[bars] <key>` is undeclared in the parsed `profile`, or None.
+def _cause(profile, section, key):
+    """Why `[section] key` is undeclared in the parsed `profile`, or None.
 
     Implements: SR-156, LLR-368
     """
-    if not profile.has_section("bars"):
+    if not profile.has_section(section):
         return "the section is absent"
-    if not profile.has_option("bars", key):
+    if not profile.has_option(section, key):
         return "the key is absent"
-    if not profile.get("bars", key).strip():
+    if not profile.get(section, key).strip():
         return "the value is empty"
     return None
 
 
+def _moved(profile, old):
+    """The note that the retired `[bars]` section still declares a value under
+    its old key `old`, or `""`. A re-synced repository reads why its
+    declaration stopped counting in the refusal itself.
+
+    Implements: SR-156, LLR-368
+    """
+    if profile is None or not profile.has_option(RETIRED, old):
+        return ""
+    return "; the retired [{}] {} still declares it and is no longer read".format(
+        RETIRED, old
+    )
+
+
+def _required_suite(lane):
+    """`(name, None)` for the check suite `docs/process.toml`
+    `[required-checks] commit` names in `lane`, or `(None, cause)`.
+
+    Implements: SR-156, LLR-368
+    """
+    try:
+        text = (Path(lane) / POLICY).read_text(encoding="utf-8-sig")
+        data = tomllib.loads(text)
+    except FileNotFoundError:
+        return None, "the file is absent"
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
+        return None, "the file does not parse ({})".format(exc)
+    table = data.get(REQUIRED[0])
+    if not isinstance(table, dict):
+        return None, "the table is absent"
+    if REQUIRED[1] not in table:
+        return None, "the key is absent"
+    name = table[REQUIRED[1]]
+    if not isinstance(name, str) or not name.strip():
+        return None, "the value is not a suite's name"
+    return name.strip(), None
+
+
+def _at(path, section, key, cause, means):
+    """One undeclared value's line: where it belongs, why it is not there and
+    what to declare.
+
+    Implements: SR-156, LLR-368
+    """
+    return "{} [{}] {} - {} (declare {})".format(path, section, key, cause, means)
+
+
 def read_bars(lane):
-    """`[bars] review` and `[bars] red_mark`, with the tests root, from the
-    one parse of `lane`'s `docs/stack.ini`, as a `Bars`. An absent file, one
-    that does not parse, an absent section or key, or a value empty after
-    stripping is undeclared, and its cause is kept for `Bars.refusal`.
+    """The commit checks' shell line and the expected-failure marker, with the
+    tests root, as the lane at `lane` declares them, as a `Bars`: the marker
+    from `[product] expected_failure_marker` and the suite's line from
+    `[check-suites]`, both through the one parse of `lane`'s `docs/stack.ini`,
+    and the suite's name from `docs/process.toml` `[required-checks] commit`.
+    An absent file, one that does not parse, an absent section, table or key,
+    or a value empty after stripping is undeclared, and its line is kept for
+    `Bars.refusal`.
 
     Implements: SR-156, LLR-368
     """
     try:
         profile = kconfig.read_stack_ini(Path(lane) / DECLARATION)
     except kconfig.StackIniError as exc:
-        profile, cause = None, "the file does not parse ({})".format(exc)
+        profile, unread = None, "the file does not parse ({})".format(exc)
     else:
-        cause = "the file is absent"
+        unread = "the file is absent"
+    causes = {}
+    name, why = _required_suite(lane)
+    if name is None:
+        why += _moved(profile, "review")
+        means = "the name of the check suite a commit must pass"
+        causes["review"] = _at(POLICY, *REQUIRED, why, means)
     if profile is None:
-        return Bars(str(lane), "", "", "", {key: cause for key in _KEYS})
-    causes = {key: _cause(profile, key) for key in _KEYS}
-    values = [profile.get("bars", key, fallback="").strip() for key in _KEYS]
+        if name:
+            causes["review"] = _at(DECLARATION, SUITES, name, unread, _SUITE_MEANS)
+        causes["red_mark"] = _at(DECLARATION, *MARKER, unread, _MARKER_MEANS)
+        return Bars(str(lane), "", "", "", causes)
+    marker_cause = _cause(profile, *MARKER)
+    if marker_cause:
+        why = marker_cause + _moved(profile, "red_mark")
+        causes["red_mark"] = _at(DECLARATION, *MARKER, why, _MARKER_MEANS)
+    suite_cause = _cause(profile, SUITES, name) if name else None
+    if suite_cause:
+        why = suite_cause + _moved(profile, "review")
+        causes["review"] = _at(DECLARATION, SUITES, name, why, _SUITE_MEANS)
+    review = "" if "review" in causes else profile.get(SUITES, name).strip()
+    marker = "" if marker_cause else profile.get(*MARKER).strip()
     prefix = kspine.root_prefix(kspine.declared_roots(profile)[1])
-    return Bars(str(lane), *values, prefix, {k: c for k, c in causes.items() if c})
+    return Bars(str(lane), review, marker, prefix, causes)
 
 
 def count(data, mark):
@@ -184,8 +267,9 @@ def findings(before, after, tests, digest):
         m0, m1 = before.get(path, 0), after[path]
         if m1 > m0 and path not in named:
             failed = [
-                "marks added, but the round's test set does not name it, so the "
-                "bar would not run its marked tests and their red is unproven"
+                "markers added, but the round's test set does not name it, so "
+                "the commit checks would not run its marked tests and their "
+                "failing first is unproven"
             ]
         elif m1 < m0:
             failed = _removal_failures(path, named, tests, digest)
@@ -224,8 +308,8 @@ def _refusal(lead, found):
 
     Implements: SR-156, LLR-368
     """
-    return "{} ({} [bars] red_mark):\n{}".format(
-        lead, DECLARATION, "\n".join("  " + line for line in found)
+    return "{} ({} [{}] {}):\n{}".format(
+        lead, DECLARATION, *MARKER, "\n".join("  " + line for line in found)
     )
 
 
@@ -261,17 +345,18 @@ def attest_refusal(root, wt, branch, base, bars, tests):
         else "the lane base {}, which carries no review record".format(base[:10])
     )
     return _refusal(
-        "a test file's count of the declared red mark changed against {}, and "
+        "a test file's count of the declared expected-failure marker changed "
+        "against {}, and "
         "the change is not proven".format(where),
         found,
     )
 
 
 def landing_refusal(wt):
-    """Why the tree `wt` stages may not land, or None: the red mark is
-    undeclared there, the tree cannot be read, or a file under its tests
-    root holds the mark, each named with its count. The way out is the code
-    commit that removes the marks, or a quarantine.
+    """Why the tree `wt` stages may not land, or None: the expected-failure
+    marker is undeclared there, the tree cannot be read, or a file under its
+    tests root holds the marker, each named with its count. The way out is
+    the code commit that removes the markers, or a quarantine.
 
     Implements: SR-156, LLR-368
     """
@@ -286,7 +371,8 @@ def landing_refusal(wt):
     if not marked:
         return None
     return _refusal(
-        "the tree holds the declared red mark, and a landing tree holds none: "
+        "the tree holds the declared expected-failure marker, and a landing "
+        "tree holds none: "
         "remove each in the code commit that turns its tests green, or "
         "quarantine the lane",
         marked,

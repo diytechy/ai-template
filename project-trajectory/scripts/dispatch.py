@@ -218,7 +218,7 @@ def _session_config_refusal(root, args):
     managed-routing enable-list means every worker would refuse at its own
     preflight - AFTER the claim had already parked a branch. Refuse here
     instead, with nothing claimed yet. Returns the refusal string, or None.
-    A `[build] red_rounds_max` its reader refuses is refused here too, so no
+    A `[build] stop_lane_after_consecutive_commit_check_failures` its reader refuses is refused here too, so no
     lane is claimed for a worker that could never start.
 
     Implements: SR-242, LLR-343
@@ -605,9 +605,10 @@ _WORKER_OUTCOMES = frozenset(
 
 
 def _red_cap_close(root, branch):
-    """`(reason, not_delivered)` for a lane whose worker hit the red cap: the
-    count and the last bar summary read through `kverdict.red_rounds` from the
-    lane's merge base with trunk, and the declared `[build] red_rounds_max`.
+    """`(reason, not_delivered)` for a lane whose worker hit the commit-check
+    failure cap: the count and the last run's summary read through
+    `kverdict.red_rounds` from the lane's merge base with trunk, and the
+    declared cap (`kconfig.RED_ROUNDS_KEY`).
 
     Implements: SR-242, LLR-343
     """
@@ -615,12 +616,14 @@ def _red_cap_close(root, branch):
     red = kverdict.red_rounds(root, branch, base.strip()) if code == 0 else None
     count, last = (red.count, red.last_summary) if red else ("unreadable", "-")
     reason = (
-        "red bar cap: {} consecutive red rounds ([build] red_rounds_max = {}); "
-        "last bar: {}".format(count, kconfig.red_rounds_max(root)[0], last)
+        "commit-check failure cap: {} consecutive failed rounds ([build] {} = "
+        "{}); last run: {}".format(
+            count, kconfig.RED_ROUNDS_KEY, kconfig.red_rounds_max(root)[0], last
+        )
     )
     return reason, (
-        "The lane's review bar stayed red, so its build is not delivered: "
-        "last bar: {}".format(last)
+        "The lane's commit checks kept failing, so its build is not delivered: "
+        "last run: {}".format(last)
     )
 
 
@@ -1485,7 +1488,7 @@ def run(root, args, worker=None, tier="all"):
     injection seam (tests): a callable `(root, branch, wi_id, args) -> exit
     code` standing in for the worker session launch, run synchronously at
     admission; None means lane.py's real subprocess launch. `tier` is the bar
-    tier the §A2 refresh runs (default: the full gate bar).
+    tier the §A2 refresh runs (default: the full gate checks).
 
     EACH TICK: poll the live lanes (a worker exit decides an outcome; a
     finished branch refreshes in its own subprocess; a green refresh merges

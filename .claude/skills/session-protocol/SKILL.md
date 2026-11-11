@@ -90,7 +90,7 @@ run.cmd smoke                                          # Windows launcher
 python project-trajectory/scripts/run_menu.py smoke    # from a shell
 ```
 
-It must pass before **each** commit — this is the **commit bar**. Its steps
+It must pass before **each** commit — this is the **commit checks**. Its steps
 are declared once, in `docs/stack.ini` `[run] smoke`, so a build round's bar
 cannot skip the strict lints it carries (review-churn ruling 6, 2026-10-11;
 they never run in the commit hook). The lints run first; the budget check runs
@@ -115,10 +115,10 @@ deterministic ratchet against `max-tests`, `tests/test_smoke_budget.py`
 reason in the log). Run the **full** unfiltered suite (`pytest -q -n auto`)
 once at phase close; mid-phase, only when it demonstrably fits inside one turn,
 and never end a turn waiting on one. The
-full `check.py --gate <gate>` is the **gate bar** (unfiltered suite + coverage):
+full `check.py --gate <gate>` is the **gate checks** (unfiltered suite + coverage):
 it belongs to gate advancement, phase close, and CI, not to each
 mid-phase slice; `--jobs 0` runs its independent steps concurrently. A per-WI
-slice inside a phase ends at the commit bar (PROCESS_OPTIONS.md, "Phase
+slice inside a phase ends at the commit checks (PROCESS_OPTIONS.md, "Phase
 cadence"). New behavior needs new tests
 (`tests/`); update `test_bootstrap.py` file lists and `README.md` kit-contents /
 `bootstrap.py` `MAPPING` when the scaffold surface changes.
@@ -157,7 +157,7 @@ session's results are recorded.
   `docs/log.d/`) — `trunk_step.py` compiles fragments into the log in merge
   order and deletes them. Never hand-edit `docs/log.md` on a work branch. A
   session that ends owing the owner a decision **declares it** in the fragment —
-  `Deferred open items: OI-45` (or `… none — <why>`), checked at the commit bar
+  `Deferred open items: OI-45` (or `… none — <why>`), checked at the commit checks
   by `gen_open_items.py --check` (process.md §5, OI-41 ARM 2).
 - **A delegated decisions record is the owner's to rule.** Write each entry
   of `docs/decisions/<run>.toml` with `review` empty and no `owner` key. The

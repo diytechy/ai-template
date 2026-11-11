@@ -1,6 +1,6 @@
-"""WI-281 — the smoke commit bar stays a smoke test (its membership ratchet).
+"""WI-281 — the smoke commit checks stay a smoke test (their membership ratchet).
 
-The per-commit bar runs `-m smoke`; WI-122 keeps that tier OPT-OUT (a new test
+The per-commit checks run `-m smoke`; WI-122 keeps that tier OPT-OUT (a new test
 is in the bar by default). WI-281 gave the tier a BUDGET — the bar must answer
 "is it basically alive?" — and split the budget item in two, because a timing
 assert is machine-/core-count-dependent and flaky:
@@ -57,7 +57,7 @@ def test_smoke_tier_stays_within_its_membership_budget():
     count = smoke_count()
     assert _within_budget(count, ceiling), (
         "smoke tier collects {} tests, over its {}-test membership budget "
-        "(docs/stack.ini [smoke-budget] max-tests). The per-commit bar must stay "
+        "(docs/stack.ini [smoke-budget] max-tests). The per-commit checks must stay "
         "a smoke test. If a heavy subprocess/scaffold module "
         "slipped back into the bar, re-tier it into conftest.SLOW_MODULES; if "
         "this is legitimate in-process growth, re-stamp max-tests with the reason "

@@ -1894,7 +1894,7 @@ def completion_reconciliation_findings(root, wis):
 
     **Why the done side is scoped to LIVE specs**, measured rather than assumed:
     run over the archive it produced **40** findings (36 with no box ticked at
-    all, 4 partly ticked) and neither class was actionable. Some are a self-referential terminal box (`Commit bar green; row
+    all, 4 partly ticked) and neither class was actionable. Some are a self-referential terminal box (`Commit checks green; row
     done, spec archived` — untickable at the moment you would tick it); the rest
     are closes that never ticked. For a WI closed weeks ago, whose Deliverable and
     log entry carry the record, the only available action is cosmetic — and a
@@ -2577,7 +2577,7 @@ def holdbyrename_findings(root):
     resolves by closing the lane (never by deleting the claim copy on trunk,
     which the trunk floor holds and no blessing releases).
 
-    WARN at the commit bar, ERROR under `--strict` (the DevStg-Impl gate) — the
+    WARN at the commit checks, ERROR under `--strict` (the DevStg-Impl gate) — the
     warn-plain / error-under-strict tier the rest of this module's promotable
     findings ride (no new branch in `main`). Degrades silently off-git (a
     checkout with no history has no refs to match), the module's warn-tier
@@ -3085,7 +3085,7 @@ def _critique_git_times(root, names):
     the log walks newest-first, so the FIRST sighting of a path is its last-touched
     time — what `_path_commit_time` answers per path. {} on any git failure, the
     silent degrade every git call here makes. Batched rather than one
-    `_path_commit_time` per file because this runs at the commit bar and the
+    `_path_commit_time` per file because this runs at the commit checks and the
     reviews dir only grows: 20 critiques cost ~1.3s in per-path subprocesses
     here, ~0.1s as one call, whatever the count."""
     out = _git(root, ["log", "--format=%ct", "--name-only", "--", REVIEWS_DIR])
@@ -3160,7 +3160,7 @@ def critique_staleness_findings(root):
     gate is stale and the dashboard critique should be re-run against the current
     render. Returns finding strings ([] when not applicable).
 
-    TIERED severity (set by the caller): WARN at the commit bar, ERROR under
+    TIERED severity (set by the caller): WARN at the commit checks, ERROR under
     `--strict` (the DevStg-Impl gate) — fail-closed per the owner's 2026-07-20 ruling, a
     stale render surface cannot reach a green gate; main() routes it through the
     strict-promotable findings loop (the R-E warn tier). Silent off-git
@@ -3488,7 +3488,7 @@ def main():
     findings.extend(("dead-dep", False, msg) for msg in dead_dependency_findings(wis))
     # Perceptual re-fire (WI-243) — a Verification=Critique SR whose latest CRITIQUE
     # evidence predates a dashboard render-surface change is judging an older render.
-    # WARN at the commit bar; **fail-closed under --strict** (the DevStg-Impl gate) per the
+    # WARN at the commit checks; **fail-closed under --strict** (the DevStg-Impl gate) per the
     # owner's 2026-07-20 ruling — a stale render surface cannot reach a green gate.
     # hard=False rides the same warn-plain / error-under-strict tier as R-E,
     # so main() gains no branch. Vacuous when no perceptual SR / evidence / render

@@ -55,7 +55,7 @@ that easier to achieve in a real project — or get out of the way.
   registry rows, enabled sets); STRUCTURE must not (schema headers, launcher
   command contracts, declared-section shapes) — `tests/test_dogfood_sync.py`
   enforces it.
-- **Self-test before claiming done.** The per-commit bar is one declared
+- **Self-test before claiming done.** The per-commit checks are one declared
   command, `run.cmd smoke` (`run_menu.py smoke` from a shell; its steps are
   [`docs/stack.ini`](docs/stack.ini) `[run]`). It runs the smoke tier once: a
   red tier FAILS the bar; its CPU-seconds and wall time are only reported
@@ -63,7 +63,7 @@ that easier to achieve in a real project — or get out of the way.
   count, against `[smoke-budget]`, by hand and at phase close; a breach is
   filed as a re-tier row, never charged to the lane that ran it. Heavy cases
   live in `tests/conftest.py` `SLOW_MODULES`, every script family keeping an
-  in-process pin. A mid-phase WI/slice ends at that commit bar. Run the **full**
+  in-process pin. A mid-phase WI/slice ends at those commit checks. Run the **full**
   unfiltered suite (`python -m pytest -q -n auto`, ~10 min on a quiet box,
   3–4× that while other sessions load it) once at phase close; the lane refresh
   runs the full bar declared for its current stage in the merge slot. The
@@ -72,7 +72,7 @@ that easier to achieve in a real project — or get out of the way.
   Commit hooks are on before any work (`core.hooksPath` at `.githooks`, which
   dev-setup sets); every agent route refuses without them, and no commit
   bypasses them.
-  (Commit bar vs gate bar, and what the smoke tier drops: the
+  (Commit checks vs gate checks, and what the smoke tier drops: the
   `session-protocol` skill §3.)
 - **Edit conservatively.** This is a foundation many projects inherit; prefer the
   smallest change that fixes the problem, and flag anything that would force

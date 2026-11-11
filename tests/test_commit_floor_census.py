@@ -23,9 +23,9 @@ from conftest import KIT, hook_check_lines, load_script
 
 HOOK = KIT / "hooks" / "pre-commit"
 
-# The hook header's rule, cited below as GATE-SCOPED: "the full gate bar
-# (placeholder rejection, schema checks, tests, coverage) is gate-scoped and
-# lives in check.py / CI ... they would block legitimate early-stage commits".
+# The hook header's rule, cited below as GATE-SCOPED: "the full gate checks
+# (placeholder rejection, schema checks, tests, coverage) are gate-scoped and
+# live in check.py / CI ... they would block legitimate early-stage commits".
 # The FLOOR RULE is the one the hook states at `trajectory-map`: a check joins
 # the floor when regenerating is one stdlib command and it is vacuous for a
 # non-adopter; "checks needing the product toolchain or gate context (tests,

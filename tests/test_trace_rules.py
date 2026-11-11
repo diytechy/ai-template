@@ -830,7 +830,7 @@ def _exit_code_attrs(trace):
     defaults, so the two were independent schemas. It drifted the moment
     `exit_code` gained an arm (WI-484): the stub lacked the attribute and the
     tests below raised `AttributeError` instead of testing the rule — and
-    because this module is outside the smoke tier, the commit bar stayed green
+    because this module is outside the smoke tier, the commit checks stayed green
     and the FULL suite found it later. Deriving the set means a new arm can no
     longer crash these tests, and `test_the_stub_matches_what_exit_code_reads`
     makes the addition visible rather than silent."""

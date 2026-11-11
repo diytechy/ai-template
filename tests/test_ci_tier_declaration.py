@@ -206,7 +206,7 @@ def test_declared_rows_name_real_tiers_and_known_triggers():
 def test_the_shipped_table_is_the_documented_human_bar():
     # The three moments the process documents, in the order the bar rises. This
     # asserts the shipped VALUES, which is the point of declaring them: the
-    # per-commit bar must be the cheap tier and a release must claim the top one,
+    # per-commit checks must be the cheap tier and a release must claim the top one,
     # so "CI got faster" can never quietly mean "CI got weaker".
     rows = declared(STACK_TEMPLATE)
     assert {t: v[0] for t, v in rows.items()} == {

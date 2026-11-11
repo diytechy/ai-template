@@ -1321,7 +1321,7 @@ def _init_critique_staleness_repo(
 
 def test_critique_staleness_warns_at_commit_bar_when_render_surface_newer(tmp_path):
     # The render surface changed after the latest CRITIQUE -> the perceptual stamp
-    # is stale. At the commit bar (non-strict) it is a WARN, not an error (exit 0).
+    # is stale. At the commit checks (non-strict) it is a WARN, not an error (exit 0).
     _init_critique_staleness_repo(tmp_path)
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr

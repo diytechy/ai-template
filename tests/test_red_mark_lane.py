@@ -1,6 +1,6 @@
-"""The red mark on real lanes (WI-996): `integrate.py attest` judges the staged
-tree against the lane's last attested tree, and the refresh refuses a tree whose
-tests root holds the mark.
+"""The expected-failure marker on real lanes (WI-996): `integrate.py attest`
+judges the staged tree against the lane's last attested tree, and the refresh
+refuses a tree whose tests root holds the mark.
 
 Each case drives `integ.attest` or `integ.refresh` through the station's
 fixtures. A case that holds today is a characterization case, unmarked, with its
@@ -17,8 +17,8 @@ import stat
 
 import pytest
 from conftest import (
-    BARS_RED_MARK,
     RED_MARK,
+    declare_stack_key,
     env_gate_skipif,
     load_script,
     run_py,
@@ -50,16 +50,28 @@ GADGET, WIDGET = ATTEST_FILES
 LOOSE = "tests/test_loose.py"  # untagged, so the row's set never names it
 LEGACY = "tests/test_legacy.py"
 TAG = "TC-001"  # the fixture row's test case
-REVIEW = "review = python scripts/check.py\n"
+# A `[product]` section that declares no marker.
+PRODUCT = "[product]\ntest = {py} -m pytest -q\n"
+MARKER_KEY = "expected_failure_marker"
+# An undeclared marker's line opens with where it belongs, then the cause.
+MARKER_AT = "docs/stack.ini [product] {} - ".format(MARKER_KEY)
 
+# Each state of a lane's `[product]` section that leaves the marker
+# undeclared (`None` is no `docs/stack.ini` at all), with the cause named.
 UNDECLARED = [
     (None, "the file is absent"),
-    ("[bars]\n" + REVIEW + "[bars]\n" + REVIEW, "the file does not parse"),
+    (PRODUCT + PRODUCT, "the file does not parse ("),
     ("", "the section is absent"),
-    ("[bars]\n" + REVIEW, "the key is absent"),
-    ("[bars]\n" + REVIEW + "red_mark =    \n", "the value is empty"),
+    (PRODUCT, "the key is absent"),
+    (PRODUCT + MARKER_KEY + " =    \n", "the value is empty"),
+    # The retired section still declaring the mark is named, never read.
+    (
+        PRODUCT + "[bars]\nred_mark = " + RED_MARK + "\n",
+        "the key is absent; the retired [bars] red_mark still declares it and "
+        "is no longer read",
+    ),
 ]
-UNDECLARED_IDS = ["absent", "unparseable", "no-section", "no-key", "empty"]
+UNDECLARED_IDS = ["absent", "unparseable", "no-section", "no-key", "empty", "retired"]
 
 
 def _source(tag=None, mark=RED_MARK, cases=1):
@@ -115,18 +127,20 @@ def _mark_at_base(root, wt, tag=None):
     _merge_trunk(root, wt)
 
 
-def _no_bars(wt):
+def _no_product(wt):
+    """The lane's declaration without its `[product]` section: the check
+    suites and every other section stay as the fixture declared them."""
     text = (wt / "docs" / "stack.ini").read_text(encoding="utf-8")
-    return re.sub(r"\[bars\]\n(?:[^\[\n].*\n)*", "", text)
+    return re.sub(r"\[product\]\n(?:[^\[\n].*\n)*", "", text)
 
 
 def _undeclare(wt, section):
-    """Stage the lane's declaration with `section` as its `[bars]`, `None`
+    """Stage the lane's declaration with `section` as its `[product]`, `None`
     removing the file."""
     if section is None:
         _git(wt, "rm", "-q", "docs/stack.ini")
     else:
-        _declare(wt, _no_bars(wt) + section)
+        _declare(wt, _no_product(wt) + section)
 
 
 def _drop_object(root, sha):
@@ -173,8 +187,7 @@ def test_attest_refuses_each_undeclared_state_before_the_bar(tmp_path, section, 
     _undeclare(wt, section)
     tip = _rev(root, BRANCH)
     refusal = _refused(root)
-    assert "docs/stack.ini [bars] red_mark" in refusal
-    assert cause in refusal
+    assert MARKER_AT + cause in refusal
     assert _ran(wt) == [] and _rev(root, BRANCH) == tip
 
 
@@ -182,7 +195,7 @@ def test_attest_reads_the_mark_its_lane_stages_not_the_primarys(tmp_path):
     """Implements: TC-424"""
     root = attest_repo(tmp_path)
     wt = _lane(root, BRANCH)
-    _declare(wt, _no_bars(wt) + "[bars]\n" + REVIEW + "red_mark = lane_mark(\n")
+    _declare(wt, _no_product(wt) + PRODUCT + MARKER_KEY + " = lane_mark(\n")
     _stage(wt, LOOSE, '"""A file no tag reads."""\n\nlane_mark()\n')
     assert LOOSE in _refused(root)
 
@@ -317,7 +330,7 @@ def test_an_unreadable_range_or_tree_refuses(tmp_path, monkeypatch, read):
 
 
 def _undeclared_arm(root, wt):
-    _undeclare(wt, "[bars]\n" + REVIEW)
+    _undeclare(wt, PRODUCT)
 
 
 def _added_arm(root, wt):
@@ -369,8 +382,7 @@ def test_refresh_refuses_each_undeclared_state_before_the_bar(tmp_path, section,
     _commit(wt, "the lane's declaration", when=T_LATER)
     tip = _rev(root, BRANCH)
     refusal = _refresh_refused(root)
-    assert "docs/stack.ini [bars] red_mark" in refusal
-    assert cause in refusal
+    assert MARKER_AT + cause in refusal
     assert not _bar_ran(wt)
     assert _rev(root, BRANCH) == tip
 
@@ -381,9 +393,8 @@ def test_a_lane_without_the_key_refreshes_on_the_merged_key(tmp_path):
 
     Implements: TC-425
     """
-    root = station_repo(tmp_path, stack_ini="[product]\ntest = {py} -m pytest -q\n")
-    declared = (root / "docs" / "stack.ini").read_text(encoding="utf-8")
-    write_lf(root, "docs/stack.ini", declared + BARS_RED_MARK)
+    root = station_repo(tmp_path, stack_ini=PRODUCT)
+    declare_stack_key(root, "product", MARKER_KEY, RED_MARK)
     _commit(root, "trunk declares the key", when=T_LATER)
     sha, refusal = _refresh(root)
     assert refusal is None, refusal
@@ -508,7 +519,7 @@ def test_a_bootstrapped_scaffold_refreshes_on_its_template_declaration(tmp_path)
     """Implements: TC-426"""
     repo, _claim_sha = scaffolded_closed_branch(tmp_path)
     declared = kconfig.read_stack_ini(repo / "docs" / "stack.ini")
-    assert declared.get("bars", "red_mark", fallback="") == RED_MARK
+    assert declared.get("product", MARKER_KEY, fallback="") == RED_MARK
     proc = run_py(
         [repo / "scripts" / "integrate.py", "integrate", "--tier", "smoke"], cwd=repo
     )

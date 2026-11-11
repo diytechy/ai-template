@@ -307,8 +307,8 @@ def test_content_still_moves_the_fingerprint(tmp_path):
 
 def test_process_toml_is_NOT_an_input(tmp_path):
     """Owner ruling 2026-08-21 (amending plan §2): dials govern who may approve,
-    not what stage is derived — and an over-inclusive fingerprint costs a red
-    commit bar after every policy-dial edit, not "milliseconds". A process.toml
+    not what stage is derived — and an over-inclusive fingerprint costs red
+    commit checks after every policy-dial edit, not "milliseconds". A process.toml
     edit must not move the fingerprint."""
     root = _tree(tmp_path)
     before = stage.fingerprint(root, memo=None)
@@ -348,7 +348,7 @@ def test_every_file_the_DERIVATION_READS_is_a_declared_input(tmp_path):
     The existing pin is one-directional by construction: `test_process_toml_is_
     NOT_an_input` proves a NAMED file is not an input. Nothing proved an UNNAMED
     file is not one — and that is the expensive direction. The over-inclusive
-    error costs a spurious re-derivation (a red commit bar, which is how the
+    error costs a spurious re-derivation (red commit checks, which is how the
     process.toml ruling got made). The under-inclusive error costs a PERMANENT
     false green: the moment `load_spine` reads a registry `DECLARED_INPUTS` does
     not name, the fingerprint stops covering it, `read_stage` matches on a hash

@@ -56,9 +56,10 @@ import sys
 
 from conftest import (
     BARS_RED_MARK,
-    RED_MARK,
+    COMMIT_SUITE,
     SCRIPTS,
     env_gate_skipif,
+    require_commit_suite,
     run_py,
     seed_row,
 )
@@ -155,6 +156,7 @@ def station_repo(
     product=True,
     stack_ini=STATION_STACK_INI,
     extra_scripts=None,
+    commit_suite=None,
     **spec_kw,
 ):
     """A trunk with WI-401 claimed onto `wi-401` and CLOSED, plus a stub harness.
@@ -165,16 +167,20 @@ def station_repo(
     shapes the claimed spec (the WI-388 bar/no-bar tests declare `bar=` or
     `safety=` on it); `product=False` closes the lane WITHOUT the product
     file, the pure-registry shape an honest adjudication lane has.
-    `stack_ini` is the declared profile and `extra_scripts` maps further
-    `scripts/` stubs to their source, both committed before the claim so the
-    trunk and the lane carry the same ones (the attest tests declare the
-    review bar and a recording `[product] test` this way).
+    `stack_ini` is the declared profile, `extra_scripts` maps further
+    `scripts/` stubs to their source and `commit_suite` is the check suite
+    `docs/process.toml` names as the one a commit must pass (None names
+    none), all committed before the claim so the trunk and the lane carry the
+    same ones (the attest tests declare the commit checks and a recording
+    `[product] test` this way).
     """
     root = claim_repo(tmp_path, **spec_kw)
     (root / ".gitignore").write_text(
         "out/\nbar-cache/\n", encoding="utf-8", newline="\n"
     )
     (root / "docs" / "stack.ini").write_text(stack_ini, encoding="utf-8", newline="\n")
+    if commit_suite:
+        require_commit_suite(root, commit_suite)
     declare_generated(root)
     (root / "docs" / "review-policy").write_text(
         policy + "\n", encoding="utf-8", newline="\n"
@@ -222,16 +228,20 @@ def close_branch(
     return wt
 
 
-# The `attest` route's harness (WI-956). The review bar is declared the way the
-# shipped template declares it, so the station's recording `check.py` stub is
-# what it runs, and `[product] test` is a stub that records the named tests it
-# was handed: their order in `harness-order.txt` beside the bar's, and their
-# exact argv in `named-args.json`, both OUTSIDE the worktree for the reason
+# The `attest` route's harness (WI-956). The commit checks are declared the way
+# the shipped templates declare them: the suite's line here, under
+# `[check-suites]`, and the suite's name in `docs/process.toml`
+# (`attest_repo`). So the station's recording `check.py` stub is what they
+# run, and `[product] test` is a stub that records the named tests it was
+# handed: their order in `harness-order.txt` beside the bar's, and their exact
+# argv in `named-args.json`, both OUTSIDE the worktree for the reason
 # `STUB_TRUNK_STEP` states.
+ATTEST_SUITE = COMMIT_SUITE + " = python scripts/check.py --jobs 0 --tier smoke\n"
 ATTEST_STACK_INI = (
     "[product]\ntest = {py} scripts/named_tests.py\n"
-    "[bars]\nreview = python scripts/check.py --jobs 0 --tier smoke\n"
-    "red_mark = " + RED_MARK + "\n"
+    + BARS_RED_MARK
+    + "[check-suites]\n"
+    + ATTEST_SUITE
 )
 
 # The derived set of `attest_repo`'s row, in its sorted order.
@@ -260,14 +270,17 @@ def attest_repo(
     stack_ini=ATTEST_STACK_INI,
     row=True,
 ):
-    """`station_repo` with the review bar declared and the named-test stub in
-    the harness: the closed `wi-401` lane an `attest` call commits on. When
-    `row`, the lane carries a spine whose derived set is `ATTEST_FILES`."""
+    """`station_repo` with the commit checks declared, the suite's name in
+    `docs/process.toml` and its line in `docs/stack.ini`, and the named-test
+    stub in the harness: the closed `wi-401` lane an `attest` call commits
+    on. When `row`, the lane carries a spine whose derived set is
+    `ATTEST_FILES`."""
     root = station_repo(
         tmp_path,
         check_src=check_src,
         stack_ini=stack_ini,
         extra_scripts={"named_tests.py": named_src},
+        commit_suite=COMMIT_SUITE,
     )
     if row:
         wt = _lane(root, "wi-401")

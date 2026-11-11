@@ -235,7 +235,7 @@ def _wi_201_row(tier):
 def managed_repo(tmp_path):
     """A git repo wired for managed routing: docs/agents.csv (all rows point at
     ONE fake, distinguished by Provider/Model/Tier) + docs/agents-enabled +
-    run-phase=BUILD, with a stand-in review bar declared. The train branch is
+    run-phase=BUILD, with stand-in commit checks declared. The train branch is
     checked out in a linked lane worktree and `main` stays in the primary, as
     a dispatched worker meets it; `repo` is the lane. Returns (repo,
     control-dir, cmd-template)."""

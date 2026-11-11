@@ -321,8 +321,12 @@ def reviewer_dials(root):
     return pct, FINAL_PERSISTED if persisted else FINAL_FRESH
 
 
-# `[build] red_rounds_max`'s shipped value: read only for an absent `[build]`
-# table or an absent key, never for a value this reader cannot use.
+# The commit-check failure cap's key, `[build]
+# stop_lane_after_consecutive_commit_check_failures`, and its shipped value:
+# read only for an absent `[build]` table or an absent key, never for a value
+# this reader cannot use. The key's earlier name is refused, never read.
+RED_ROUNDS_KEY = "stop_lane_after_consecutive_commit_check_failures"
+RED_ROUNDS_RETIRED_KEY = "red_rounds_max"
 RED_ROUNDS_MAX_DEFAULT = 3
 _TOML_HEADER_RE = re.compile(r"^\s*\[\[?\s*([A-Za-z0-9_-]+)\s*\]\]?\s*(#.*)?$")
 
@@ -350,16 +354,20 @@ def _process_toml_at(text, section, key):
 
 
 def red_rounds_max(root):
-    """`(maximum, None)` for `<root>/docs/process.toml`'s
-    `[build] red_rounds_max`, or `(None, refusal)`. THE ONE READER of the key:
+    """`(maximum, None)` for `<root>/docs/process.toml`'s `[build]
+    stop_lane_after_consecutive_commit_check_failures`, the number of
+    consecutive failed commit-check rounds at which a lane stops, or
+    `(None, refusal)`. THE ONE READER of the key:
     the worker's preflight and the dispatcher's pre-claim rung both call it,
     so a setting one of them refuses never starts a session through the other.
 
     An absent `[build]` table or key reads the shipped 3. Everything else this
     reader cannot use is refused, naming the file and the cause: an absent,
     unreadable or unparseable file, a `build` that is not a table (naming its
-    line), and a value that is not an int, is a bool, or is below 1 (naming
-    its line and the key). Never read as off: an unbounded cap is the
+    line), a value that is not an int, is a bool, or is below 1 (naming
+    its line and the key), and the key's earlier name, `red_rounds_max`,
+    still declared: a renamed dial read as absent would silently restore
+    the shipped value. Never read as off: an unbounded cap is the
     fail-open side. tomllib reports no position for a valid key, so the line
     is found by scanning the text.
 
@@ -377,13 +385,23 @@ def red_rounds_max(root):
         return None, "{}: `build` is a {}, not a table".format(
             _process_toml_at(text, None, "build"), type(table).__name__
         )
-    value = table.get("red_rounds_max", RED_ROUNDS_MAX_DEFAULT)
+    if RED_ROUNDS_RETIRED_KEY in table:
+        return None, (
+            "{}: [build] {} was renamed {}; rename the key (the old name is "
+            "refused, never read)".format(
+                _process_toml_at(text, "build", RED_ROUNDS_RETIRED_KEY),
+                RED_ROUNDS_RETIRED_KEY,
+                RED_ROUNDS_KEY,
+            )
+        )
+    value = table.get(RED_ROUNDS_KEY, RED_ROUNDS_MAX_DEFAULT)
     if type(value) is int and value >= 1:
         return value, None
     return None, (
-        "{}: [build] red_rounds_max = {!r} is refused; it must be an integer "
-        "of at least 1 (an absent key reads {})".format(
-            _process_toml_at(text, "build", "red_rounds_max"),
+        "{}: [build] {} = {!r} is refused; it must be an integer of at least "
+        "1 (an absent key reads {})".format(
+            _process_toml_at(text, "build", RED_ROUNDS_KEY),
+            RED_ROUNDS_KEY,
             value,
             RED_ROUNDS_MAX_DEFAULT,
         )

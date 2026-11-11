@@ -214,7 +214,7 @@ def test_refresh_refuses_a_hookless_checkout(tmp_path):
 
 def test_attest_refuses_a_hookless_checkout(tmp_path):
     """Implements: TC-370"""
-    # The attest fixture declares the review bar and a green stub harness, so
+    # The attest fixture declares the commit checks and a green stub harness, so
     # with the hooks on this attest runs its bar and commits the staged file;
     # with them off it refuses before the bar, leaving branch and index.
     root = attest_repo(tmp_path)

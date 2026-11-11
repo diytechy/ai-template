@@ -803,7 +803,7 @@ def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path,
 
 
 def red_capped_worker(reds):
-    """A worker whose build stayed red at its review bar for `reds` rounds:
+    """A worker whose build stayed red at its commit checks for `reds` rounds:
     each round commits a red build and then the loop's own record of it, a
     session log keyed by that build's sha with the bar's summary. It then ends
     with the red cap's exit code, specs still in active/."""
@@ -848,7 +848,16 @@ def test_a_red_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_drain_
     assert report.is_file(), captured.out + captured.err
     text = report.read_text(encoding="utf-8")
     assert 'claimed_outcome = "partial"' in text
-    assert "3 consecutive red rounds" in text and "BAR-FAIL-MARKER 3" in text, text
+    reason = (
+        "commit-check failure cap: 3 consecutive failed rounds ([build] "
+        "stop_lane_after_consecutive_commit_check_failures = 3); "
+        "last run: BAR-FAIL-MARKER 3"
+    )
+    assert 'reason = "{}"'.format(reason) in text, text
+    assert (
+        "The lane's commit checks kept failing, so its build is not delivered: "
+        "last run: BAR-FAIL-MARKER 3"
+    ) in text, text
     assert 'split_decided_by = "adjudicator"' in text
     # Not the approval-level escalation a NEEDS-HUMAN exit gets: a dispatcher
     # that closed the cap as a judgement call would tier it strong and label

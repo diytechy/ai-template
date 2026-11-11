@@ -459,7 +459,7 @@ def test_the_written_file_is_LF_and_parses_back(scaffold):
 
 def test_the_check_py_STEP_goes_red_on_a_stale_cache(scaffold):
     """NON-VACUITY, at the level the claim is actually made. The script's own
-    `--check` is driven above, but what the commit bar runs is `check.py`'s
+    `--check` is driven above, but what the commit checks run is `check.py`'s
     `derived-stage` STEP — a step can be wired and still be unable to fail (the
     exact silent green SN-008 forbids). So: plant the defect, run the step, and
     require a non-zero exit.

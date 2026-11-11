@@ -3,14 +3,15 @@
 `attest` commits the lane's staged work (or, with nothing staged, an empty
 commit on the tip) carrying a `Bar-Green:` line that names the `review` bar and
 the digest of the tests it ran, through the one producer the station refresh
-also commits through. It derives the row's review test set, runs the review bar
-declared in `docs/stack.ini` `[bars] review`, then the derived files through
-`[product] test` under the lane's own `--basetemp`, and commits only when both
-are green.
+also commits through. It derives the row's review test set, runs the commit
+checks (the check suite `docs/process.toml` `[required-checks] commit` names,
+by the line `docs/stack.ini` `[check-suites]` gives it), then the derived
+files through `[product] test` under the lane's own `--basetemp`, and commits
+only when both are green.
 
 Every failed write leaves the branch and the index exactly as they were: a
-red bar or a red named test, a dirty worktree (refused before the bar), an
-undeclared review bar (refused before the bar), a message that already carries
+red bar or a red named test, a dirty worktree (refused before the bar),
+undeclared commit checks (refused before the bar), a message that already carries
 the label, a commit a hook refuses, and a commit a hook rewrites. The merge
 seam reads the record too: a tip carrying only a `review` attestation is not
 merge-ready, and the refusal names both bars. The review render reads it as
@@ -28,16 +29,19 @@ from pathlib import Path
 
 import pytest
 from conftest import (
-    RED_MARK,
+    BARS_RED_MARK,
+    COMMIT_SUITE,
     SCRIPTS,
     env_gate_skipif,
     load_script,
+    require_commit_suite,
     run_py,
     seed_row,
     write_lf,
 )
 from integrate_fixtures import T_LATER, _commit, _git, _rev, integ
 from test_integrate_station import (
+    ATTEST_STACK_INI,
     STUB_CHECK_GREEN,
     STUB_CHECK_RED,
     STUB_NAMED_TESTS_RED,
@@ -57,10 +61,13 @@ review_brief = load_script("review_brief")
 
 BRANCH = "wi-401"
 NAMED = ["tests/test_widget.py", "tests/test_gadget.py"]
+# The two files the commit checks are declared in: the suite's line, and the
+# suite's name.
+STACK, POLICY = "docs/stack.ini", "docs/process.toml"
 
 
 def _ran(wt):
-    """What the harness ran, in order: `check ...` for the review bar (the
+    """What the harness ran, in order: `check ...` for the commit checks (the
     station stub records its argv) and `named` for `[product] test`."""
     path = wt.parent / "harness-order.txt"
     return path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
@@ -89,11 +96,11 @@ def _hook(root, name, body):
     hook.chmod(0o755)
 
 
-def _declare(wt, text):
-    """Stage `text` as the lane's `docs/stack.ini`: the declaration the
-    attested tree carries."""
-    (wt / "docs" / "stack.ini").write_text(text, encoding="utf-8", newline="\n")
-    _git(wt, "add", "docs/stack.ini")
+def _declare(wt, text, rel=STACK):
+    """Stage `text` as the lane's `docs/stack.ini` (or `rel`): the
+    declaration the attested tree carries."""
+    (wt / rel).write_text(text, encoding="utf-8", newline="\n")
+    _git(wt, "add", rel)
 
 
 def _attest(root, message_file=None):
@@ -131,7 +138,7 @@ def test_attest_with_nothing_staged_writes_an_empty_commit_that_verifies(tmp_pat
 @pytest.mark.parametrize(
     "arm, check_src, named_src, ran",
     [
-        ("the review bar", STUB_CHECK_RED, None, "check"),
+        ("the commit checks", STUB_CHECK_RED, None, "check"),
         ("a named test", None, STUB_NAMED_TESTS_RED, "named"),
     ],
     ids=["red-bar", "red-named-test"],
@@ -227,49 +234,119 @@ def test_an_unreadable_message_file_is_a_named_refusal(tmp_path, content):
     assert _ran(wt) == [] and _rev(root, BRANCH) == tip
 
 
+# A lane's `docs/stack.ini` up to its check suites: `[product]` with the marker
+# declared, so the commit checks are all a case leaves undeclared.
+PRODUCT = "[product]\ntest = {py} scripts/named_tests.py\n" + BARS_RED_MARK
+# An undeclared value's line opens with where the value belongs: the suite's
+# line under the suite's name, or the name itself.
+SUITE_AT = "docs/stack.ini [check-suites] {} - ".format(COMMIT_SUITE)
+NAME_AT = "docs/process.toml [required-checks] commit - "
+RETIRED_REVIEW = "; the retired [bars] review still declares it and is no longer read"
+
+
 @pytest.mark.parametrize(
-    "declared",
+    "rel, declared, named",
     [
-        None,
-        "[product]\ntest = {py} scripts/named_tests.py\n",
-        "[bars]\nother = python scripts/check.py\nred_mark = " + RED_MARK + "\n",
-        "[bars]\nreview =    \nred_mark = " + RED_MARK + "\n",
-        "[bars]\nreview = python scripts/check.py\nred_mark = "
-        + RED_MARK
-        + "\n[bars]\nreview = python x.py\n",
+        # The suite's line: `docs/stack.ini` `[check-suites]`, under the name
+        # the lane's policy file gives.
+        (STACK, None, [SUITE_AT + "the file is absent"]),
+        (STACK, PRODUCT, [SUITE_AT + "the section is absent"]),
+        (
+            STACK,
+            PRODUCT + "[check-suites]\nother = python scripts/check.py\n",
+            [SUITE_AT + "the key is absent"],
+        ),
+        (
+            STACK,
+            PRODUCT + "[check-suites]\n" + COMMIT_SUITE + " =    \n",
+            [SUITE_AT + "the value is empty"],
+        ),
+        (
+            STACK,
+            ATTEST_STACK_INI + "[check-suites]\nother = python x.py\n",
+            [SUITE_AT + "the file does not parse ("],
+        ),
+        # The retired home of that line is named, and never run.
+        (
+            STACK,
+            PRODUCT + "[bars]\nreview = python scripts/check.py\n",
+            [SUITE_AT + "the section is absent", RETIRED_REVIEW],
+        ),
+        # The suite's name: `docs/process.toml` `[required-checks] commit`.
+        (POLICY, None, [NAME_AT + "the file is absent"]),
+        (POLICY, "[required-checks\n", [NAME_AT + "the file does not parse ("]),
+        (POLICY, "", [NAME_AT + "the table is absent"]),
+        (POLICY, "[required-checks]\n", [NAME_AT + "the key is absent"]),
+        (
+            POLICY,
+            '[required-checks]\ncommit = ""\n',
+            [NAME_AT + "the value is not a suite's name"],
+        ),
+        # A name no line of `[check-suites]` carries.
+        (
+            POLICY,
+            '[required-checks]\ncommit = "nightly"\n',
+            ["docs/stack.ini [check-suites] nightly - the key is absent"],
+        ),
     ],
-    ids=["no-file", "no-section", "no-key", "whitespace-value", "unparseable"],
+    ids=[
+        "no-stack-file",
+        "no-section",
+        "no-suite-line",
+        "whitespace-value",
+        "unparseable-stack-file",
+        "retired-bars-section",
+        "no-policy-file",
+        "unparseable-policy-file",
+        "no-table",
+        "no-key",
+        "not-a-name",
+        "a-name-with-no-line",
+    ],
 )
-def test_attest_refuses_a_missing_review_bar_key_naming_it(tmp_path, declared):
+def test_attest_refuses_a_missing_review_bar_key_naming_it(
+    tmp_path, rel, declared, named
+):
     # No default and no fallback to another bar: the declaration staged in the
-    # lane the record is for is absent or unusable, so attest names the file
-    # and the key and runs nothing, though the primary checkout's own
-    # declaration is whole.
+    # lane the record is for is absent or unusable, so attest names the file,
+    # the key and the cause and runs nothing, though the primary checkout's
+    # own declaration is whole. `declared` is the lane's `rel`, None removing
+    # it; of the policy file it is what follows the trunk's line.
     root = attest_repo(tmp_path)
     wt = _lane(root, BRANCH)
     if declared is None:
-        _git(wt, "rm", "-q", "docs/stack.ini")
+        _git(wt, "rm", "-q", rel)
+    elif rel == POLICY:
+        kept = (wt / POLICY).read_text(encoding="utf-8")
+        _declare(wt, kept[: kept.index("[required-checks]")] + declared, POLICY)
     else:
         _declare(wt, declared)
     tip = _rev(root, BRANCH)
     sha, refusal = _attest(root)
     assert sha is None
-    assert "[bars] review" in (refusal or "") and "docs/stack.ini" in refusal
+    for text in named:
+        assert text in (refusal or ""), refusal
     assert _ran(wt) == [] and _rev(root, BRANCH) == tip
 
 
 def test_attest_runs_the_declarations_staged_in_the_lane_not_the_primarys(tmp_path):
     # The record binds the staged tree, so the bar and the named-tests command
-    # it runs are the ones that tree declares. The primary checkout declares
-    # others; neither of them runs.
+    # it runs are the ones that tree declares: the suite the lane's policy
+    # file names, by the line the lane's stack file gives it. The primary
+    # checkout declares others; neither of them runs.
     root = attest_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _declare(
         wt,
         "[product]\ntest = {py} scripts/named_tests.py --lane-declared\n"
-        "[bars]\nreview = python scripts/check.py --lane-declared\n"
-        "red_mark = " + RED_MARK + "\n",
+        + BARS_RED_MARK
+        + "[check-suites]\n"
+        + COMMIT_SUITE
+        + " = python scripts/check.py --the-primarys-name\n"
+        "lane = python scripts/check.py --lane-declared\n",
     )
+    require_commit_suite(wt, "lane")
+    _git(wt, "add", POLICY)
     sha, refusal = _attest(root)
     assert refusal is None, refusal
     assert _ran(wt) == ["check --lane-declared", "named"], _ran(wt)
@@ -613,7 +690,7 @@ def test_attest_prints_the_gaps_a_row_touching_no_code_reports(tmp_path):
 def test_a_row_touching_no_code_runs_the_bar_alone(tmp_path):
     """Implements: TC-417"""
     # TC-417. Characterization: a row touching no code and naming no SR has an
-    # empty set, so the review bar runs alone and the record digests `none`, as
+    # empty set, so the commit checks run alone and the record digests `none`, as
     # it does before the derivation exists. Adequacy witness: an implementation
     # that widened an empty set to the whole bar runs `[product] test` with no
     # paths here, and `_ran` then ends in `named`.
@@ -637,7 +714,7 @@ def test_a_row_touching_no_code_runs_the_bar_alone(tmp_path):
 def test_merge_ready_refuses_a_tip_carrying_only_a_review_attestation(
     tmp_path, subject
 ):
-    # A build round's record of green is not the landing bar: the slot refuses
+    # A build round's record of green is not the landing checks: the slot refuses
     # it and names the bar it found and the one it needs.
     root = station_repo(tmp_path)
     wt = _lane(root, BRANCH)
@@ -645,7 +722,7 @@ def test_merge_ready_refuses_a_tip_carrying_only_a_review_attestation(
     tree = _git(wt, "write-tree").strip()
     parent = _rev(root, BRANCH)
     line = kv.format_bar_green(
-        tree, parent, "review", kv.tests_digest(NAMED), "review bar PASS"
+        tree, parent, "review", kv.tests_digest(NAMED), "commit checks PASS"
     )
     _commit(wt, subject + "\n\n" + line, when=T_LATER)
     ready, why = integ._merge_ready(root, BRANCH)

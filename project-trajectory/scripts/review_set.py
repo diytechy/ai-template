@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """review_set.py - a lane's review test set, derived from its row (WI-995).
 
-A review bar's named tests come from the spine, never from whoever asks for the
+The commit checks' named tests come from the spine, never from whoever asks for the
 attestation. The row's SRs reach their LLRs, both reach their test cases, and
 the test-file tags reach the files: `derive` reads those inputs from one lane
 and `kitlib.spine.review_scope` walks them. `integrate.attest`, the loop's draw
 and the review render all call `derive`, so a record, a draw and a brief cannot
 disagree about what a row's set is. The answer is the set or one named refusal,
-and the set never widens to the whole bar: an empty set runs the review bar
-alone, and the floor (`[bars] review`, the landing bar) stays as it is.
+and the set never widens to the whole bar: an empty set runs the commit checks
+alone, and the floor (`[required-checks] commit`, the landing checks) stays as it is.
 
 WHAT IS READ FROM WHERE. The claim listing and the row's text come from git
 (HEAD, the merge base, the index), the changed paths from the index against the

@@ -53,7 +53,9 @@
 # Contract IF-037: the one home for this repo's policy dials. `[attestation]`
 #     carries the human-approval rung and the review holds, `[policies]` the
 #     push, review-round, privacy and secrets dials, `[checks]` the
-#     check-enablement toggles, and `[build]` the red-round cap. Every reader, the git hooks included,
+#     check-enablement toggles, `[required-checks]` the check suite a commit
+#     must pass, by the name docs/stack.ini `[check-suites]` gives it, and
+#     `[build]` the commit-check failure cap. Every reader, the git hooks included,
 #     takes one TOML parse of the file, so a dotted key, an inline table or a
 #     multi-line string reads as the parser reads it; a file that does not parse
 #     is refused rather than defaulted. A dial
@@ -149,7 +151,7 @@ final_review = "always"
 keep_nondependent = false
 # How a CLEAN (`complete/`) lane close is adjudicated. `partial` and
 # `cancelled` closes are ALWAYS adjudicated — they carry a claim about what was
-# not delivered. A green close already passed the declared bar and the review
+# not delivered. A green close already passed its required checks and the review
 # rounds, so adjudicating every one of them prices a strong-tier session onto
 # work two gates already judged.
 #   "off"    — never (the review rounds are the judgement)
@@ -259,7 +261,7 @@ live_status = false
 # Opt-in, off: "ask" / "deny" arm the subagent-spawn gate. This repo runs
 # subagents freely under a human-launched loop, so the gate stays a no-op.
 subagent_gate = "off"
-# The reverse back-link coverage bar, as a PERCENTAGE of live LLR rows (OI-42
+# The reverse back-link coverage minimum, as a PERCENTAGE of live LLR rows (OI-42
 # ruled (b)+(e), 2026-08-20). `0` = report the number, gate nothing, and that
 # was the shipped/honest position through WI-486 (measured 1 of 165 live LLR
 # rows, 0.6%). WI-487's campaign then wrote the tags with a code-review pass —
@@ -267,7 +269,7 @@ subagent_gate = "off"
 # `python project-trajectory/scripts/gen_arch_map.py --backlink-coverage
 # --src project-trajectory/scripts --root .` — clearing the recorded 50%
 # target, so the dial rises here because the tags landed, never because the
-# bar came down. READ THE NUMBER
+# minimum came down. READ THE NUMBER
 # WITH ITS ONE CAVEAT: the scan has no position restriction, so a spine id in a
 # string literal or a negated example counts as a carrier — and since the
 # denominator is the LLR count, that error can only RAISE the score. False
@@ -324,7 +326,14 @@ final_reviewer = "fresh"         # or "persisted"
 context_guard_pct = 50
 context_window_tokens = 1000000
 
+[required-checks]
+# What a commit must pass (the shipped template's [required-checks] header
+# carries the full reasoning). `smoke` is this repo's lints and its
+# in-process test tier. docs/stack.ini [check-suites] also declares
+# `iterate`, the lints beside the tests a change names.
+commit = "smoke"
+
 [build]
-# The red-round cap (WI-958). The shipped template's [build] header carries
-# the full reasoning. This repo keeps the shipped value.
-red_rounds_max = 3
+# The commit-check failure cap (WI-958). The shipped template's [build]
+# header carries the full reasoning. This repo keeps the shipped value.
+stop_lane_after_consecutive_commit_check_failures = 3

@@ -756,8 +756,8 @@ def _stale_stage_repo(tmp_path):
 
 def test_the_PLAN_STEP_refuses_a_regenerated_but_unstaged_derived_stage(tmp_path):
     # THE CRITICAL THIS CLOSES (OI-31's ruled promotion, taken at the WI-498
-    # close). Before it, this exact tree — the one Sol drove — passed the whole
-    # commit bar: `derived-stage --check` reads the WORKING TREE and sees the
+    # close). Before it, this exact tree — the one Sol drove — passed all the
+    # commit checks: `derived-stage --check` reads the WORKING TREE and sees the
     # fresh bytes, the divergence detector warned and exited 0, and the commit
     # landed the edited registry beside the OLD derived stage.
     #

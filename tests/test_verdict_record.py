@@ -1839,7 +1839,7 @@ def test_a_resume_that_cannot_read_its_evidence_still_draws_the_parked_round(
     # IN-PROCESS, and that is the point. The end-to-end test that caught this
     # lives in `test_agent_loop_review`, which `conftest.SLOW_MODULES` drops
     # from the smoke tier — so the inversion sat red on the branch for five
-    # commits under a green commit bar. The guard belongs where the bar runs.
+    # commits under green commit checks. The guard belongs where the bar runs.
     al = _al()
     root = rounds_repo(tmp_path)
     _git(root, "checkout", "-q", "wi-401")
