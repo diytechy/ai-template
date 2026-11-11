@@ -1,0 +1,31 @@
+G2.1 _blank: project-trajectory/scripts/gen_components.py:190  project-trajectory/scripts/session_adapters.py:228
+G2.2 _checked: project-trajectory/scripts/bookkeeping.py:298  project-trajectory/scripts/kitlib/decisions.py:664
+G2.3 _cmd_list: project-trajectory/scripts/hats.py:863  project-trajectory/scripts/prompts.py:348
+G2.4 _context: project-trajectory/scripts/consolidate.py:842  project-trajectory/scripts/coordinator_guard.py:647  project-trajectory/scripts/rejudge.py:482
+G2.5 _digest: project-trajectory/scripts/kitlib/stage.py:220  project-trajectory/scripts/rejudge.py:305
+G2.6 _git: project-trajectory/scripts/bookkeeping.py:278  project-trajectory/scripts/derive_stage.py:103  project-trajectory/scripts/traj_parse.py:382
+G2.7 _held: project-trajectory/scripts/adjudicate_act.py:196  project-trajectory/scripts/check_test_first.py:166
+G2.8 _install: project-trajectory/scripts/bookkeeping.py:525  project-trajectory/scripts/coordinator_guard.py:495
+G2.9 _load: project-trajectory/scripts/coordinator_guard.py:428  project-trajectory/scripts/gen_components.py:130  project-trajectory/scripts/schedule.py:853
+G2.10 _parsed: project-trajectory/scripts/kitlib/decisions.py:328  project-trajectory/scripts/kitlib/guard_hooks.py:233
+G2.11 _queued_spec: project-trajectory/scripts/handback.py:757  project-trajectory/scripts/integrate.py:294
+G2.12 _record_lines: project-trajectory/scripts/adoption_record.py:233  project-trajectory/scripts/plan_gate.py:433  project-trajectory/scripts/review_brief.py:359
+G2.13 _report: project-trajectory/scripts/check_complexity.py:465  project-trajectory/scripts/check_readability.py:351  project-trajectory/scripts/check_test_first.py:546  project-trajectory/scripts/coordinator_adjudicate.py:305  project-trajectory/scripts/flag_axis.py:218
+G2.14 _ruling_sync_refusal: project-trajectory/scripts/check.py:2114  project-trajectory/scripts/integrate.py:1340
+G2.15 _skip: project-trajectory/scripts/plan_briefs.py:196  project-trajectory/scripts/usage_ingest.py:334
+G2.16 _spend: project-trajectory/scripts/plan_round.py:177  project-trajectory/scripts/session_keep.py:868
+G2.17 _text_then_act_refusal: project-trajectory/scripts/check.py:2146  project-trajectory/scripts/integrate.py:1369
+G2.18 _tree_text: project-trajectory/scripts/adoption_record.py:133  project-trajectory/scripts/plan_coverage.py:488
+G2.19 adjudication_keep: project-trajectory/scripts/agent_loop.py:2755  project-trajectory/scripts/session_service.py:975
+G2.20 context_block: project-trajectory/scripts/intake.py:517  project-trajectory/scripts/rendering/traj_context.py:352
+G2.21 evaluate: project-trajectory/scripts/check_coverage.py:170  project-trajectory/scripts/check_perf.py:181  project-trajectory/scripts/hats.py:417  project-trajectory/scripts/schedule.py:597
+G2.22 git: project-trajectory/scripts/agent_common.py:1004  project-trajectory/scripts/check_privacy.py:394
+G2.23 lane_branch: project-trajectory/scripts/agent_loop.py:2470  project-trajectory/scripts/session_service.py:764
+G2.24 load_registry_rows: project-trajectory/scripts/agent_common.py:710  project-trajectory/scripts/schedule.py:286
+G2.25 open_item_queue: project-trajectory/scripts/kitlib/spine.py:265  project-trajectory/scripts/pending.py:309
+G2.26 parse_verdict: project-trajectory/scripts/consolidate.py:910  project-trajectory/scripts/score_reviews.py:202
+G2.27 read_baseline: project-trajectory/scripts/check_complexity.py:405  project-trajectory/scripts/flag_axis.py:181
+G2.28 record_findings: project-trajectory/scripts/baseline_snapshot.py:1791  project-trajectory/scripts/kitlib/decisions.py:275
+G2.29 scan: project-trajectory/scripts/check_need_form.py:323  project-trajectory/scripts/check_vocab.py:378
+G2.30 source_paths: project-trajectory/scripts/check_complexity.py:376  project-trajectory/scripts/kitlib/evidence.py:79
+G2.31 write_baseline: project-trajectory/scripts/check_complexity.py:421  project-trajectory/scripts/flag_axis.py:198

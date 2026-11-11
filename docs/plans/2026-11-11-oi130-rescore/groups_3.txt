@@ -1,0 +1,30 @@
+G3.1 _cell: project-trajectory/scripts/assumption_rules.py:259  project-trajectory/scripts/consolidate.py:188  project-trajectory/scripts/plan_briefs.py:192  project-trajectory/scripts/rejudge.py:438  project-trajectory/scripts/trace.py:3334
+G3.2 _clip: project-trajectory/scripts/adjudicate_brief.py:404  project-trajectory/scripts/agent_common.py:787  project-trajectory/scripts/hats.py:584  project-trajectory/scripts/intake.py:365
+G3.3 _coerce: project-trajectory/scripts/agent_policy.py:244  project-trajectory/scripts/kitlib/stage.py:571
+G3.4 _context_block: project-trajectory/scripts/gen_open_items.py:525  project-trajectory/scripts/intake.py:547
+G3.5 _finding: project-trajectory/scripts/kitlib/dispute.py:141  project-trajectory/scripts/score_reviews.py:179
+G3.6 _git_stdout: project-trajectory/scripts/handback.py:162  project-trajectory/scripts/kitlib/git.py:91
+G3.7 _id_number: project-trajectory/scripts/kitlib/decisions.py:719  project-trajectory/scripts/kitlib/spine.py:346  project-trajectory/scripts/wi_convert.py:700
+G3.8 _judge: project-trajectory/scripts/rejudge.py:355  project-trajectory/scripts/retire.py:392
+G3.9 _named: project-trajectory/scripts/assumption_rules.py:1532  project-trajectory/scripts/held_status.py:602
+G3.10 _parser: project-trajectory/scripts/coordinator_adjudicate.py:601  project-trajectory/scripts/coordinator_guard.py:1634  project-trajectory/scripts/review_brief.py:1195
+G3.11 _read: project-trajectory/scripts/adjudicate_brief.py:413  project-trajectory/scripts/plan_coverage.py:729  project-trajectory/scripts/retire.py:134
+G3.12 _recorded: project-trajectory/scripts/adjudicate_act.py:421  project-trajectory/scripts/retire.py:240
+G3.13 _restore: project-trajectory/scripts/bookkeeping.py:567  project-trajectory/scripts/coordinator_guard.py:1367  project-trajectory/scripts/handback.py:341
+G3.14 _say: project-trajectory/scripts/dispatch.py:103  project-trajectory/scripts/intake.py:361
+G3.15 _span: project-trajectory/scripts/check_readability.py:152  project-trajectory/scripts/check_test_first.py:151  project-trajectory/scripts/handback.py:305
+G3.16 _squash_lines: project-trajectory/scripts/plan_gate.py:519  project-trajectory/scripts/text_then_act.py:214
+G3.17 _tokens: project-trajectory/scripts/gen_open_items.py:332  project-trajectory/scripts/score_reviews.py:356
+G3.18 _walk: project-trajectory/scripts/coordinator_guard.py:358  project-trajectory/scripts/review_set.py:223
+G3.19 census: project-trajectory/scripts/check_complexity.py:390  project-trajectory/scripts/flag_axis.py:163
+G3.20 declared_brief: project-trajectory/scripts/adjudicate_brief.py:232  project-trajectory/scripts/kitlib/sitting.py:160
+G3.21 field_block: project-trajectory/scripts/kitlib/evidence.py:243  project-trajectory/scripts/kitlib/stage.py:506
+G3.22 interface_findings: project-trajectory/scripts/trace.py:1810  project-trajectory/scripts/trajectory_arch.py:269
+G3.23 live_ids: project-trajectory/scripts/retire.py:253  project-trajectory/scripts/trace.py:1059
+G3.24 load_wis: project-trajectory/scripts/check_trajectory.py:584  project-trajectory/scripts/schedule.py:307
+G3.25 parse: project-trajectory/scripts/kitlib/dispute.py:249  project-trajectory/scripts/kitlib/evidence.py:258  project-trajectory/scripts/kitlib/observation.py:194  project-trajectory/scripts/kitlib/plan_pass.py:198  project-trajectory/scripts/kitlib/sitting.py:521  project-trajectory/scripts/kitlib/stage.py:544
+G3.26 preflight: project-trajectory/scripts/agent_common.py:1976  project-trajectory/scripts/prompts.py:305
+G3.27 read_rows: project-trajectory/scripts/check_trajectory.py:508  project-trajectory/scripts/consolidate.py:192  project-trajectory/scripts/gen_okf.py:129
+G3.28 record_path: project-trajectory/scripts/kitlib/decisions.py:191  project-trajectory/scripts/kitlib/plan_pass.py:128
+G3.29 scopes: project-trajectory/scripts/gen_verdict_rollup.py:73  project-trajectory/scripts/kitlib/sitting.py:116
+G3.30 strip_dispatcher_block: project-trajectory/scripts/plan_briefs.py:177  project-trajectory/scripts/prompts.py:183

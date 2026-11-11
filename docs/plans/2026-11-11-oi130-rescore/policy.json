@@ -1,0 +1,21 @@
+{
+ "B1 is_example (agree)": ["kitlib/spine","check_docs","kitlib/decisions","plan_briefs"],
+ "B3 value_to_cell (DIVERGED on None)": ["migrate_carrier","spine_carrier"],
+ "B4 status predicates (agree)": ["kitlib/spine","spine_carrier","gen_release_checklist"],
+ "B5 SN-id universe (DIVERGED on TOML)": ["kitlib/spine","check_docs","check_flows"],
+ "B6 SN prose fold (agree)": ["spine_carrier","trace"],
+ "B8a WI row selection (agent_common 3rd rule)": ["check_trajectory","schedule","agent_common"],
+ "B8b spec-file parse (DIVERGED)": ["kitlib/registry","wi_convert"],
+ "B9 column<->key vocabulary (agree)": ["migrate_carrier","spine_carrier"],
+ "B10 ref split (DIVERGED ;-only)": ["kitlib/spine","agent_common","adjudicate_brief","consolidate","intake"],
+ "B12 module key (DIVERGED)": ["kitlib/spine","migrate_carrier"],
+ "module->component join (agree)": ["gen_components","trajectory_arch"],
+ "queued-spec lookup (DIVERGED)": ["handback","integrate","consolidate"],
+ "id number from id (DIVERGED)": ["kitlib/spine","kitlib/decisions","wi_convert","kitlib/registry"],
+ "RR13.13 spec precedence (DIVERGED)": ["agent_policy","kitlib/done_when","adoption_record"],
+ "RR13.14 generator freshness arm (DIVERGED)": ["gen_arch_map","gen_components","gen_open_items","gen_skills_index"],
+ "RR13.16 declared-file grammar (DIVERGED)": ["check_need_form","trace","trajectory_arch","check_doc_refs"],
+ "RR13.22 command tokenizer (DIVERGED)": ["check","agent_session"],
+ "RR13.22 retired-bar table (agree)": ["integrate","intake"],
+ "RR13.22 dial ordinals (agree)": ["bootstrap","kitlib/authority"]
+}

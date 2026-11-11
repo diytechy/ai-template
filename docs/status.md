@@ -24,12 +24,13 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE:** start with the coordinator's
-  [handoff-2026-11-08c-leg39-coordinator.md](handoff-2026-11-08c-leg39-coordinator.md).
-  Headless leg 39 landed the token-scan row; the derivation-record row waits
-  on OI-130 (which ruling adopted the component partition, and which
-  objective its record declares), and every other queued row waits on the
-  owner, so the handoff carries the stop line and its owner list.
+- **RESUME HERE:** start with
+  [handoff-2026-11-11a-attended-oi130-rescore.md](handoff-2026-11-11a-attended-oi130-rescore.md).
+  An attended session re-scored the component partition on today's tree
+  ([record](plans/2026-11-11-oi130-rescore/README.md)): P5 ranks first on
+  every measure, so OI-130 is re-walked with the owner on that evidence,
+  together with the derivation record's shape, before WI-999 builds; every
+  other queued row waits on the owner, so the handoff carries the stop line.
   The tag-migration row and the dashboard re-judge have landed: test files
   carry their test-case tags, and a strict finding holds them equal to the
   evidence cells, so an intent row's evidence cell holds a note until the

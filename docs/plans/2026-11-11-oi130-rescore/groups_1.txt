@@ -1,0 +1,31 @@
+G1.1 _advance: project-trajectory/scripts/dispatch.py:795  project-trajectory/scripts/plan_round.py:187
+G1.2 _changed: project-trajectory/scripts/bookkeeping.py:318  project-trajectory/scripts/review_set.py:150
+G1.3 _clip_title: project-trajectory/scripts/check_trajectory.py:1601  project-trajectory/scripts/traj_status.py:446
+G1.4 _collect: project-trajectory/scripts/check_complexity.py:324  project-trajectory/scripts/session_adapters.py:919
+G1.5 _count: project-trajectory/scripts/id_carrier.py:152  project-trajectory/scripts/session_adapters.py:169
+G1.6 _fmt: project-trajectory/scripts/kitlib/evidence.py:211  project-trajectory/scripts/kitlib/stage.py:496
+G1.7 _has: project-trajectory/scripts/check.py:332  project-trajectory/scripts/trunk_step.py:395
+G1.8 _identity: project-trajectory/scripts/amendment_brief.py:361  project-trajectory/scripts/session_keep.py:909  project-trajectory/scripts/session_service.py:389
+G1.9 _launch: project-trajectory/scripts/dispatch.py:755  project-trajectory/scripts/session_service.py:301
+G1.10 _now: project-trajectory/scripts/coordinator_guard.py:441  project-trajectory/scripts/session_service.py:285
+G1.11 _pget: project-trajectory/scripts/check.py:341  project-trajectory/scripts/trunk_step.py:381
+G1.12 _real: project-trajectory/scripts/assumption_rules.py:264  project-trajectory/scripts/trace_text.py:803
+G1.13 _refusal: project-trajectory/scripts/bootstrap.py:1088  project-trajectory/scripts/kitlib/red_mark.py:222
+G1.14 _rev: project-trajectory/scripts/integrate.py:1483  project-trajectory/scripts/kitlib/verdict.py:1056
+G1.15 _shown: project-trajectory/scripts/kitlib/adoption.py:227  project-trajectory/scripts/kitlib/git.py:176  project-trajectory/scripts/usage_ingest.py:273
+G1.16 _spec_paths: project-trajectory/scripts/adoption_record.py:279  project-trajectory/scripts/check_trajectory.py:2285
+G1.17 _status: project-trajectory/scripts/coordinator_guard.py:1617  project-trajectory/scripts/schedule.py:448  project-trajectory/scripts/session_service.py:411
+G1.18 _touched: project-trajectory/scripts/consolidate.py:1227  project-trajectory/scripts/held_status.py:475
+G1.19 act: project-trajectory/scripts/coordinator_adjudicate.py:492  project-trajectory/scripts/session_service.py:461
+G1.20 compare: project-trajectory/scripts/check_complexity.py:432  project-trajectory/scripts/flag_axis.py:136  project-trajectory/scripts/migrate_carrier.py:619
+G1.21 derive: project-trajectory/scripts/derive_stage.py:258  project-trajectory/scripts/review_set.py:279
+G1.22 findings_for: project-trajectory/scripts/check_doc_refs.py:818  project-trajectory/scripts/check_figures.py:239  project-trajectory/scripts/check_vocab.py:352
+G1.23 landing_refusal: project-trajectory/scripts/id_carrier.py:603  project-trajectory/scripts/kitlib/red_mark.py:270  project-trajectory/scripts/plan_gate.py:500
+G1.24 load_csv: project-trajectory/scripts/gen_release_checklist.py:132  project-trajectory/scripts/kitlib/spine.py:177  project-trajectory/scripts/wi_convert.py:573
+G1.25 module_components: project-trajectory/scripts/gen_components.py:142  project-trajectory/scripts/trajectory_arch.py:1180
+G1.26 parse_spec: project-trajectory/scripts/gen_cases.py:79  project-trajectory/scripts/wi_convert.py:475
+G1.27 read: project-trajectory/scripts/derive_stage.py:299  project-trajectory/scripts/kitlib/evidence.py:280
+G1.28 record: project-trajectory/scripts/plan_round.py:208  project-trajectory/scripts/session_service.py:668
+G1.29 render_report: project-trajectory/scripts/check_perf.py:267  project-trajectory/scripts/check_stubs.py:185  project-trajectory/scripts/kitlib/station.py:238  project-trajectory/scripts/trace.py:5927
+G1.30 slugify: project-trajectory/scripts/check_docs.py:206  project-trajectory/scripts/wi_convert.py:321
+G1.31 value_to_cell: project-trajectory/scripts/migrate_carrier.py:556  project-trajectory/scripts/spine_carrier.py:579

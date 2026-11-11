@@ -1,0 +1,20 @@
+{
+ "B2 declared line (gen_okf DIVERGED)": ["kitlib/config","kitlib/authority","gen_okf"],
+ "B7 process.toml [checks] parse": ["kitlib/config","subagent_gate","gen_arch_map"],
+ "B11 registry CSV read (DIVERGED encoding)": ["kitlib/spine","gen_release_checklist","check_trajectory","gen_okf","agent_common"],
+ "WI registry rows (agree)": ["agent_common","schedule","pending"],
+ "one-line clip (DIVERGED)": ["kitlib/spine","traj_status"],
+ "line-count clip (DIVERGED)": ["adjudicate_brief","agent_common"],
+ "git runner (DIVERGED)": ["kitlib/git","agent_common","check_privacy","bookkeeping","traj_parse","handback"],
+ "rev-parse (agree)": ["integrate","kitlib/verdict"],
+ "utc now (agree)": ["coordinator_guard","session_service"],
+ "profile get (agree)": ["check","trunk_step"],
+ "real rows filter (agree)": ["assumption_rules","trace_text"],
+ "cell strip (DIVERGED latent)": ["assumption_rules","consolidate","plan_briefs","trace","rejudge"],
+ "text-or-None (agree)": ["adjudicate_brief","retire"],
+ "key=value record reader (agree)": ["kitlib/evidence","kitlib/stage"],
+ "text at rev (DIVERGED)": ["adoption_record","plan_coverage"],
+ "live spine ids (agree)": ["retire","trace"],
+ "prefixed say (agree)": ["dispatch","intake"],
+ "splice marker region (RR13.18)": ["traj_status","gen_arch_map"]
+}
