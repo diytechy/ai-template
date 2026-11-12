@@ -63,7 +63,7 @@ next tick unless something remembers. All three are read off typed cells:
      reasons may legitimately contain one; what they never do is SEED a cluster.
      Re-absorbing one is refused outright at the mint (`reabsorption_refusal`),
      which is the RETURN-TO-DRAFT-that-pages-the-owner the plan asks for: the
-     judgement to overturn is the earlier consolidation's, and that is a human's
+     judgement to overturn is the earlier consolidation's, and that is an operator's
      call, not a second machine mint.
 
 ONE ROW PER CENSUS, over the UNION of every candidate cluster. Two disjoint
@@ -717,7 +717,7 @@ def reabsorption_refusal(rows, absorbed, bodies):
 
     Overturning a consolidation is a RETURN-TO-DRAFT of THAT judgement (plan
     §1.3), and this refusal is what makes it one: the mint stops, the run pages
-    the owner, and the earlier verdict is re-opened by a human rather than
+    the owner, and the earlier verdict is re-opened by an operator rather than
     silently replaced by a second machine mint. `intake._supersedes_refusal`
     covers the adjacent case — absorbing a row already ABSORBED — which is a
     lineage chain rather than an overturned judgement."""
@@ -870,7 +870,7 @@ def _context(ids, findings, cell):
 #: adjudication row's OWN spec. Not in the verdict file, for two reasons:
 #: `handback.close_adjudication` is handed `(root, branch)` and nothing else, so
 #: it reads the lane's tree rather than a path only `agent_loop` knows; and an
-#: outcome recovered from prose is the `NEEDS-HUMAN` fold (WI-417).
+#: outcome recovered from prose is the `NEEDS-OPERATOR` fold (WI-417).
 VERDICT_SECTION = "## Consolidation"
 #: The enum, lower-cased — the same four alternatives as
 #: `adjudicate_brief.VERDICT_GRAMMAR["consolidate"]`, which is where the session

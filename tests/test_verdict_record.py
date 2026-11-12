@@ -347,7 +347,7 @@ def test_a_logged_reviewer_round_naming_this_tree_clears_the_gate(tmp_path):
     # The whole point of the row: no hand-authored rollup exists anywhere, and
     # the branch merges anyway. Before this, `docs/reviews/WI-401-REVIEW-A.md`
     # was required and nothing in the kit wrote it, so every mechanized lane
-    # stopped at a human.
+    # stopped at an operator.
     root = rounds_repo(tmp_path)
     add_round(root, 3)
     assert not (root / "docs" / "reviews" / "WI-401-REVIEW-A.md").exists()
@@ -1591,7 +1591,7 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
     """Implements: TC-206"""
     # DW3: the rollup dies as an INPUT and is reborn generated. `--check` is
     # what keeps it honest — a generated artifact nobody regenerates is a
-    # document that lies, and this one is read by humans deciding whether a
+    # document that lies, and this one is read by the operator deciding whether a
     # lane was reviewed.
     gen = load_script("gen_verdict_rollup")
     root = rounds_repo(tmp_path)

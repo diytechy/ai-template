@@ -35,7 +35,7 @@ TWO RULES GOVERN EVERYTHING BELOW, and both are load-bearing.
      the worker assignment — that would put the judge back in the builder's
      chair, and a builder session ends DONE like any other, so the miss would
      be silent. `agent_loop.session_body` returns the reason and
-     `route_session` pages (`EXIT_NEEDS_HUMAN`), which `dispatch._lane_close`
+     `route_session` pages (`EXIT_NEEDS_OPERATOR`), which `dispatch._lane_close`
      turns into an immutable per-close report and a move to the TERMINAL
      partial/ — a durable record, not a line in a terminal buffer. A row that
      declares NO brief is
@@ -50,7 +50,7 @@ would cost no schema, and is unsound: `intake._amendment_drafts` sets
 red-TC census row BOTH read `docs/test/test-cases.toml` — and those two briefs
 give contradictory instructions (one forbids touching a registry, the other
 asks for a `Status` cell to be judged). Deriving it from the TITLE instead is
-the `NEEDS-HUMAN` fold this repo wrote in blood (WI-417): prose that carries
+the `NEEDS-OPERATOR` fold this repo wrote in blood (WI-417): prose that carries
 control flow must be a typed field. So it is a typed field.
 
 ALL NINE BRIEFS ARE NOW ROUTED (`ROUTED`), which they were not for most of this
@@ -99,7 +99,7 @@ Contract IF-115: `compose(root, row, verdict_path, prompt_templates)` returns
     evidence cannot fill is a refusal too, and the caller therefore never
     receives a partially-filled judge's brief. The reason is named so the caller
     can act on it, and what the caller owes in return is the fail-closed half: a
-    row declaring a brief this cannot compose is HELD for a human, never
+    row declaring a brief this cannot compose is HELD for an operator, never
     dispatched as ordinary work, because a judge briefed as a builder ends its
     session done like any other and the miss is silent. The amendment brief
     states the identity of each row's approved text it shows, one
@@ -252,7 +252,7 @@ def verdict_refusal(brief, verdict_path, kinds=None):
     Checked in the order a reader would: is the file there, does it carry the
     line, is the label one of the declared alternatives, are the counters
     present. Every arm names what is wrong, because "the verdict is invalid" is
-    not something a human can act on at 3am.
+    not something an operator can act on at 3am.
 
     A COMBINED verdict is judged against `kinds`, the kinds its sitting
     requested (`requested_kinds` of the composed brief): without them it is
@@ -773,7 +773,7 @@ def first_approval_values(root, row):
     filtered out downstream — it is never constructible, because no code path
     turns a repo-wide `Drafted` row into a `yours` label. A row declaring NO
     scope REFUSES: an empty cell is an unstated boundary, and reading it as
-    "everything" is exactly the widening, so it fails toward the human.
+    "everything" is exactly the widening, so it fails toward the operator.
 
     WHAT IS RENDERED is the WHOLE CHAIN of each selected SR, through
     `trace.spine_chain` — NOT the model's own `rows`. That list carries only the
@@ -800,7 +800,7 @@ def first_approval_values(root, row):
     including the shipped `DevStg-Release` default) the brief therefore rendered
     the owner's HELD rows as this session's to approve and derived a
     `--approves` argument for their registry: a prompt instructing an
-    adjudicator to perform a signature the owner owes. So `human_approves_spine`
+    adjudicator to perform a signature the owner owes. So `operator_accepts_spine`
     is consulted PER CHAIN ROW here, from the same table the mint reads. The
     dial is checked as well as the scope, not instead of it: the mint filtered
     by the dial AT THE MINT, and a dial the owner tightens afterwards must bind
@@ -862,7 +862,7 @@ def first_approval_values(root, row):
     awaiting |= drafted_here
     if not lines:
         # WHICH of the three filters emptied it, named. "Nothing to rule on" is
-        # a HOLD a human then has to diagnose, and the three causes take
+        # a HOLD an operator then has to diagnose, and the three causes take
         # opposite actions: the rows were ruled on already (drop the row), the
         # owner holds their rung (sign, or move the dial), or the scope names
         # rows this spine no longer has (the mint and the tree disagree).
@@ -877,7 +877,7 @@ def first_approval_values(root, row):
         return None, (
             "every row in this adjudication's scope that still awaits a first "
             "approval ({}) sits on a rung the declared gate authority HOLDS for "
-            "a human (`operator_accepts_through` = {}), so the signature is the "
+            "an operator (`operator_accepts_through` = {}), so the signature is the "
             "owner's and this arm has nothing to rule on".format(
                 ", ".join(live), ac.approval_through(root / "docs")
             )
@@ -1560,7 +1560,7 @@ def _add_act_template(classes, prompt_templates, paths, texts):
 def compose(root, row, verdict_path, prompt_templates=None, sitting=None):
     """`(prompt_text, None)` when this adjudication row's declared brief could
     be filled IN FULL, else `(None, reason)` — on which the caller HOLDS the
-    row for a human (rule 3), never quietly downgrading it to a build.
+    row for an operator (rule 3), never quietly downgrading it to a build.
 
     An operator override wired through `--prompt-map` under the brief's prompt
     key wins over the shipped template, exactly as it does for the reviewer and

@@ -134,7 +134,7 @@ REM Exit 11 = RESTART: the coordinator's own Python moved under it (in this
 REM repo nearly every trunk merge touches project-trajectory\scripts\) and it
 REM drained to a safe boundary with the assignment preserved in the tree. A
 REM fresh process reconstructs everything from git, so the launcher relaunches
-REM it instead of handing the walk-away run back to a human; 50 bounds a
+REM it instead of handing the walk-away run back to an operator; 50 bounds a
 REM pathological loop. Keep agent-resume.sh in sync (its while loop).
 set "RELAUNCHES=0"
 :again

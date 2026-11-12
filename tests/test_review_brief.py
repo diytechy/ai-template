@@ -572,7 +572,7 @@ def test_a_bracketed_word_that_is_not_a_severity_never_refuses_a_filing(tmp_path
         # count that is not a whole number, a label outside the enum on a
         # second line, and a label that only starts like one all refuse.
         (REVIEW.format(sha=SHA).replace("findings=2", "findings=2.5"), "2.5"),
-        (REVIEW.format(sha=SHA) + "VERDICT: NEEDS-HUMAN findings=0\n", "2 VERDICT"),
+        (REVIEW.format(sha=SHA) + "VERDICT: NEEDS-OPERATOR findings=0\n", "2 VERDICT"),
         (REVIEW.format(sha=SHA).replace("REQUESTED f", "REQUESTEDX f"), "REQUESTEDX"),
         (
             "Reviewed: {}\n\nVERDICT: CHANGES-REQUESTED findings=0\n".format(SHA),

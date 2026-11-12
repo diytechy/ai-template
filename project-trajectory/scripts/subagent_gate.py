@@ -15,8 +15,8 @@ resolves to the MORE RESTRICTIVE of `ask` and whatever the legacy
 `docs/subagent-gate` declares, so a repo carrying both surfaces keeps an
 explicit `deny` when the newer file breaks (2026-08-21 review, C-2). "Closes
 relative to `allow`" was the whole claim; taking the maximum is what makes it
-true in both directions. Nothing here denies until a human writes `deny`, or the
-gate cannot tell what the human wrote. The old headline described the opposite
+true in both directions. Nothing here denies until an operator writes `deny`, or the
+gate cannot tell what the operator wrote. The old headline described the opposite
 posture, which is the most expensive kind of comment to be wrong: a reader
 budgeting risk would have credited this module with a refusal it never makes.
 Whether the fail posture on a genuine ABSENCE should also invert stays an owner
@@ -26,7 +26,7 @@ A Claude Code `PreToolUse` hook (SR-043; realizes SN-006 "a walk-away run stays
 safe" + SN-012 "opt-in"). During an unattended coordinator run a driver session
 can spawn subagents freely, which multiplies cost and loosens oversight; this
 gate refuses or defers each spawn per a declared policy, with the override held
-by the human who launched the run — not the model.
+by the operator who launched the run — not the model.
 
 **Supervision, not security** (stated honestly, like every hook in this kit): a
 model that can edit files can remove this. It is a bounded-fan-out guardrail for
@@ -152,7 +152,7 @@ def read_process_policy(root):
     the legacy one-word file (or, absent that too, to a quiet `allow`) — the
     ruled fail-open asymmetry. It now returns UNPARSEABLE instead, which
     `decide()` resolves to `ask`: a garbled `docs/process.toml` is exactly the
-    place SN-006's relaxed wording means to bite ("surface to the human only
+    place SN-006's relaxed wording means to bite ("surface to the operator only
     where it cannot proceed"), not a place to keep moving.
     `tests/test_rule_sync.py` pins all three copies by value (D-7), now
     including the aligned direction rather than the retired divergence.
@@ -226,7 +226,7 @@ def decide(tool_name, policy, override, legacy=""):
     if tool_name not in SPAWN_TOOLS:
         return "defer", "not a spawn tool"
     if override == "allow":
-        return "allow", "SUBAGENT_GATE=allow override (human-set)"
+        return "allow", "SUBAGENT_GATE=allow override (operator-set)"
     if policy is UNPARSEABLE:
         # MORE RESTRICTIVE OF THE TWO, not "the newer surface wins". Relative
         # to `allow` this arm closes, which is what OI-46 (1a) ruled and what
@@ -234,7 +234,7 @@ def decide(tool_name, policy, override, legacy=""):
         # would OPEN — an explicit refusal becoming unreachable the moment
         # process.toml fails to parse, in exactly the both-surfaces-live state
         # `bootstrap.py --migrate-config` exists to serve. A fail-closed arm
-        # never loosens a decision the human already wrote down.
+        # never loosens a decision the operator already wrote down.
         if legacy == "deny":
             return "deny", (
                 "docs/process.toml is present but did not parse; {} still "

@@ -36,7 +36,7 @@ approved AXES artifact spec — formerly `docs/trajectory.html`):
      the artifact lifecycle x gates flow (live tier counts from the spine, the
      current derived stage highlighted from `docs/stage`), the agent-resume loop,
      the slice -> phase -> check-bar cadence, and (WI-142/LLR-056) the two circular working loops —
-     intake and human-decision — sharing one LLM_Agent entry. Data-derived where
+     intake and operator-decision — sharing one LLM_Agent entry. Data-derived where
      a canonical source exists; links out to the process docs and the canonical
      working surfaces. Omitted when there is no `docs/stage`, so a stage-less
      repo renders byte-identically.

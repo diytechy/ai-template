@@ -11,7 +11,7 @@ loop around it is tests/test_dispatch.py's, on real repos):
   * the §A8 kind x gate-policy table exactly as ruled: ordinary/critique
     parallel at every level, high-risk/protected exclusive at every level,
     spine dispatches at every level (building a scope change is WORK, not an
-    approval), attestation/gate does NOT dispatch on a human-held tier
+    approval), attestation/gate does NOT dispatch on an operator-held tier
     (drain, surface the cards, exit 0; with `keep_nondependent` other work
     keeps running and the held rows surface once nothing else remains), and
     dispatches one at a time, exclusive, on a loop-held tier (a recorded
@@ -77,7 +77,7 @@ def test_kind_of_fails_closed_exactly_where_classify_quarantines():
 def test_the_kind_action_table_is_a8_verbatim():
     """The §A8 table, both columns. SN-029 replaced the three-value gate-policy
     enum with ONE BOOL — is the tier the spine is currently in process at still
-    the human's to approve — so the table is two columns wide, not three. The
+    the operator's to approve — so the table is two columns wide, not three. The
     column that went (`single-approve`) was never a third ANSWER to this
     question: it differed only in whether OTHER work kept running, which is an
     orthogonal dial and now lives in `_admission`, where it belongs."""
@@ -87,8 +87,8 @@ def test_the_kind_action_table_is_a8_verbatim():
     for kind in ("high-risk", "protected", "adjudication", "spine"):
         for held in (True, False):
             assert dsp._kind_action(kind, held) == "exclusive", (kind, held)
-    # The one arm the level decides: a window-CLOSING row is the human's act
-    # while the tier is human-held, and dispatches once it is not.
+    # The one arm the level decides: a window-CLOSING row is the operator's act
+    # while the tier is operator-held, and dispatches once it is not.
     for kind in ("attestation", "gate"):
         assert dsp._kind_action(kind, True) == "surface", kind
         assert dsp._kind_action(kind, False) == "exclusive", kind
@@ -142,7 +142,7 @@ def test_parallel_rows_fill_free_lanes_in_frontier_order():
     assert payload == [["WI-401"], ["WI-402"]]
 
 
-def test_a_human_held_tier_surfaces_an_attestation_instead_of_dispatching():
+def test_an_operator_held_tier_surfaces_an_attestation_instead_of_dispatching():
     # §A8 attended row: do not dispatch — drain the lanes, surface the cards,
     # exit 0 into the owner's queue. Ordinary rows behind it do NOT slip past:
     # today's behaviour the owner confirmed must keep working is "no work can
@@ -155,7 +155,7 @@ def test_a_human_held_tier_surfaces_an_attestation_instead_of_dispatching():
 
 def test_keep_nondependent_keeps_non_dependent_work_running():
     # SN-029 split the retired `single-approve` level into its two independent
-    # bits. This is the second one: the tier is HUMAN-HELD (so an approval
+    # bits. This is the second one: the tier is OPERATOR-HELD (so an approval
     # row surfaces rather than dispatching), and the `keep_nondependent` dial
     # says other work keeps going around it; the held rows surface at the
     # close, when nothing else remains. Under the enum these two facts
@@ -171,11 +171,11 @@ def test_keep_nondependent_keeps_non_dependent_work_running():
     #
     # This arm used to admit them, inherited from the retired `single-approve`
     # word ("dispatches only as the queued batch once nothing else remains").
-    # Under the ordinal that is a contradiction: `human_held=True` IS the
-    # statement that this tier is the human's to approve, and
+    # Under the ordinal that is a contradiction: `operator_held=True` IS the
+    # statement that this tier is the operator's to approve, and
     # `keep_nondependent` answers a different question entirely — may other
     # lanes keep running meanwhile. Letting the second dial override the first
-    # is a machine approving what a human declared theirs, reached by a
+    # is a machine approving what an operator declared theirs, reached by a
     # combination the enum could not even express (level 4 + keep_nondependent,
     # the fourth cell).
     verb, payload = dsp._admission(

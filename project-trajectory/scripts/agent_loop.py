@@ -22,8 +22,8 @@ immune to the OS command-line caps; see build_argv/run_session).
 Empty template -> guidance and exit 2 (the launchers ship inert, like run.*).
 
 CONSENT: an unattended run typically wires the agent CLI's permission-bypass
-flag into AGENT_CMD — sessions then run with no permission prompts. The human
-consents by filling the slot, declaring how far a human approves
+flag into AGENT_CMD — sessions then run with no permission prompts. The operator
+consents by filling the slot, declaring how far an operator approves
 (docs/process.toml [authority]), and running this; git + CI remain the
 enforcement floor. The banner restates this every run.
 
@@ -113,7 +113,7 @@ coordinator per checkout; the OS releases it on process death).
 Exit codes: 0 DONE · 2 preflight/config failure (incl. the inert unfilled
 slot) · 3 BLOCKED · 4 stall abort (work stall or an all-ERROR agent-unavailable
 run — the banner distinguishes them) · 5 WAITING on a rate limit · 6 iteration
-budget exhausted while still RUNNING · 7 NEEDS-HUMAN (act, then re-run) · 8
+budget exhausted while still RUNNING · 7 NEEDS-OPERATOR (act, then re-run) · 8
 paused (the tracked docs/work/pause present — unpause and re-run to resume) · 9
 REVIEW-OWED · 11 RESTART with freshly imported coordinator code.
 
@@ -129,12 +129,12 @@ Contracts: IF-015, IF-253 — the interface seams this module declares (process.
 Contract IF-015: the unattended coordinator's effect on the repository it runs
     in. A plain launch drives the claim / work / merge cycle by COMMITTING to
     its own checkout and never pushing while the declared push policy is
-    `human`, which is what ships — advancing the remote stays a human act. A
+    `operator`, which is what ships — advancing the remote stays an operator act. A
     per-checkout kernel advisory lock refuses a second coordinator in the same
     worktree rather than letting two of them interleave commits. The stop is
     always named by an exit code: 0 DONE, 2 preflight or config failure, 3
     BLOCKED, 4 stall abort, 5 WAITING on a rate limit, 6 iteration budget
-    exhausted while still running, 7 NEEDS-HUMAN, 8 paused on the tracked pause
+    exhausted while still running, 7 NEEDS-OPERATOR, 8 paused on the tracked pause
     file, 9 REVIEW-OWED, 11 RESTART after the imported Python source moves, 12
     the commit-check failure cap when the lane's consecutive failed rounds reach
     it, checked at run start for a resumed lane and after each recorded failure (10 remains
@@ -246,7 +246,7 @@ EXIT_BLOCKED = agent_common.EXIT_BLOCKED
 EXIT_STALL = agent_common.EXIT_STALL
 EXIT_WAITING = agent_common.EXIT_WAITING
 EXIT_BUDGET = agent_common.EXIT_BUDGET
-EXIT_NEEDS_HUMAN = agent_common.EXIT_NEEDS_HUMAN
+EXIT_NEEDS_OPERATOR = agent_common.EXIT_NEEDS_OPERATOR
 EXIT_PAUSED = agent_common.EXIT_PAUSED
 EXIT_REVIEW_OWED = agent_common.EXIT_REVIEW_OWED
 EXIT_RESTART = agent_common.EXIT_RESTART
@@ -398,7 +398,7 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
     A row that declares NO brief keeps the ordinary assignment: that is not a
     claim the kit failed to honour, it is an adjudication class the kit has
     never authored a brief for (the clean-close spot check, a cancellation that
-    owes no report), and holding those would page a human for routine work."""
+    owes no report), and holding those would page an operator for routine work."""
     row = worker["rows"].get(current_wi) if worker and current_wi else None
     brief = adjudicate_brief.declared_brief(row) if row and adjudicating(row) else ""
     if brief:
@@ -660,7 +660,7 @@ class RoutingState:
         (fail-open), and refreshed every round — a win sets the family, a
         loss/page/swap/tier-up returns None and clears it (lose-shift)."""
         self.next_primary = next_primary
-        if action == "page-human":
+        if action == "page-operator":
             # Re-arm the shared-failure tally so already-paged strong-tier fails
             # can't re-page every subsequent round — only NEW fails accumulate.
             self.page_fails_since = len(self.rounds)
@@ -988,7 +988,7 @@ def routed_session(ctx, i, current_wi, session, resume_reconcile, now):
 
 
 def build_hold(root, worker):
-    """`(EXIT_NEEDS_HUMAN, "HELD", reason)` when the lane's next build session
+    """`(EXIT_NEEDS_OPERATOR, "HELD", reason)` when the lane's next build session
     would build on a Done-when that differs from the claimed one with no
     verdict or owner ruling binding its exact text, else None. Asked of the
     lane's committed HEAD against the claim copy at its integration base,
@@ -1001,7 +1001,7 @@ def build_hold(root, worker):
     rows = worker.get("rows") or {}
     ids = [w for w in worker["assigned"] if not adjudicating(rows.get(w) or {})]
     reason = kdone.lane_hold(root, "HEAD", worker["base"], lane_branch(root), ids)
-    return (EXIT_NEEDS_HUMAN, "HELD", reason) if reason else None
+    return (EXIT_NEEDS_OPERATOR, "HELD", reason) if reason else None
 
 
 def _done_endstate(worker, managed, rp_int, rounds):
@@ -1570,7 +1570,7 @@ def print_run_banner(
         )
     print(
         "session-hold: {} | push-policy: {} (the coordinator never pushes "
-        "under 'human') | review-policy: {} (docs/process.toml [policies] "
+        "under 'operator') | review-policy: {} (docs/process.toml [policies] "
         "review_rounds — the reviewer dial: {})".format(
             session_hold,
             push_policy,
@@ -1658,9 +1658,9 @@ class LoopContext:
     populated as an attribute bag, which hid three things a declaration makes
     plain: that nothing in the loop ever re-resolves a dial mid-run; that
     `session_hold` was carried for no reader at all (dropped); and that
-    `human_held` / `keep_nondependent` were read through
+    `operator_held` / `keep_nondependent` were read through
     `getattr(ctx, ..., <default>)`, so a field the constructor forgot would
-    have silently become "human-held, don't keep going" instead of failing.
+    have silently become "operator-held, don't keep going" instead of failing.
     A total record cannot be missing a field, so those two reads are now
     direct. Everything a session may WRITE lives behind `.run`, the one
     mutable field.
@@ -1683,7 +1683,7 @@ class LoopContext:
     prefer_map: dict
     weight_map: dict
     guardrails_policy: str
-    human_held: bool
+    operator_held: bool
     keep_nondependent: bool
     start_dirty: list
     raw_dir: Path
@@ -1702,7 +1702,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     """Pick the phase + model + prompt for this worker session (managed
     routing or the single-model path; WI-210 — every loop session is a
     claimed worker session). Returns an int exit code to end the
-    run (no routable model -> EXIT_NEEDS_HUMAN; a {model} template with no
+    run (no routable model -> EXIT_NEEDS_OPERATOR; a {model} template with no
     model -> EXIT_PREFLIGHT) or a `plan` dict the caller launches."""
     args = ctx.args
     root = ctx.root
@@ -1789,7 +1789,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             session_env = session_service.entry_env(root, registry, entry)
         except session_service.SigninRefused as refused:
             stop_banner(status_path, SIGNIN_HOLD, str(refused))
-            return EXIT_NEEDS_HUMAN
+            return EXIT_NEEDS_OPERATOR
         if not is_review and (phase == "BUILD" or phase == ""):
             st.note_build_tier(tier)
         # A worker's verdict filename names the exact reviewed code HEAD
@@ -1856,10 +1856,12 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         # instructions. The exit code is what makes the hold durable.
         stop_banner(
             status_path,
-            "NEEDS-HUMAN — adjudication row {} has no usable brief".format(current_wi),
+            "NEEDS-OPERATOR — adjudication row {} has no usable brief".format(
+                current_wi
+            ),
             hold + "\n\n" + ADJUDICATION_HOLD_NOTE,
         )
-        return EXIT_NEEDS_HUMAN
+        return EXIT_NEEDS_OPERATOR
     prompt, guarded = compose_session_prompt(
         model,
         body,
@@ -1949,9 +1951,9 @@ def adjudication_bookkeeping(plan, worker, st, managed, entry, now, root=None):
 
 @dataclass(frozen=True)
 class PageConsequence:
-    """What a page-human ruling MEANS for this run — the ONE rule both S8 page
+    """What a page-operator ruling MEANS for this run — the ONE rule both S8 page
     paths (a review escalation, an exhausted critique budget) obey, stated once
-    (WI-483 slice 6). `stop` ends the run with EXIT_NEEDS_HUMAN; `design_check`
+    (WI-483 slice 6). `stop` ends the run with EXIT_NEEDS_OPERATOR; `design_check`
     re-arms the design-check phase instead, and is only ever true when the run
     is NOT stopping (the stop path returns before that arm, as it always did).
     """
@@ -1965,13 +1967,15 @@ def page_consequence(fa, force_block=False):
     ordinal produced, not on the retired enum word. `force_block` is the
     critique arm's declared `exhaustion = block`, which stops the run whatever
     the hold says."""
-    stop = (fa["mode"] == "human-held" and not fa["keep_nondependent"]) or force_block
+    stop = (
+        fa["mode"] == "operator-held" and not fa["keep_nondependent"]
+    ) or force_block
     return PageConsequence(
         stop=stop, design_check=(not stop) and bool(fa.get("design_check"))
     )
 
 
-def page_human(ctx, title, reason, fa=None, force_block=False):
+def page_operator(ctx, title, reason, fa=None, force_block=False):
     """DECIDE + ENACT one page: the two lines every caller of the page ladder
     had in duplicate (`agent_route.failure_action` -> `page_consequence` ->
     `apply_page_consequence`, and the `reason | note` detail the banner carries).
@@ -1981,7 +1985,7 @@ def page_human(ctx, title, reason, fa=None, force_block=False):
     not, the ladder is consulted here and its posture printed — so a page says
     which mode decided it exactly once, whoever asked."""
     if fa is None:
-        fa = agent_route.failure_action(ctx.human_held, ctx.keep_nondependent)
+        fa = agent_route.failure_action(ctx.operator_held, ctx.keep_nondependent)
         print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
     cons = page_consequence(fa, force_block=force_block)
     return apply_page_consequence(ctx, cons, title, reason + " | " + fa["note"])
@@ -1989,11 +1993,11 @@ def page_human(ctx, title, reason, fa=None, force_block=False):
 
 def apply_page_consequence(ctx, cons, title, detail):
     """The EFFECT half of a page: a worker has no lane files, so its exit code
-    and the stop banner carry the page. Returns EXIT_NEEDS_HUMAN to end the
+    and the stop banner carry the page. Returns EXIT_NEEDS_OPERATOR to end the
     run, else None."""
     if cons.stop:
         stop_banner(ctx.status_path, title, detail)
-        return EXIT_NEEDS_HUMAN
+        return EXIT_NEEDS_OPERATOR
     if cons.design_check:
         ctx.run.routing.set_design_check()
     return None
@@ -2122,7 +2126,7 @@ def apply_rework_scope(worker, st, merged):
 
 def complete_review_round(ctx, session):
     """The round is full: merge, score, record, escalate, and apply. Returns an
-    int exit code (a page-human) or None."""
+    int exit code (a page-operator) or None."""
     st = ctx.run.routing
     scoreboard = ctx.scoreboard
     # C2: a completed round IS the owed review landing — drop the parked
@@ -2199,9 +2203,9 @@ def complete_review_round(ctx, session):
     # the I/O (failure_action / banner / run-state). apply_decision first is
     # safe — failure_action does not read page_fails_since.
     st.apply_decision(decision["action"], merged, decision.get("next_primary"))
-    if decision["action"] != "page-human":
+    if decision["action"] != "page-operator":
         return None
-    return page_human(ctx, "PAGE-HUMAN — review escalation", decision["reason"])
+    return page_operator(ctx, "PAGE-OPERATOR — review escalation", decision["reason"])
 
 
 def review_bookkeeping(ctx, plan, outcome, session, now):
@@ -2215,21 +2219,21 @@ def review_bookkeeping(ctx, plan, outcome, session, now):
 
 
 def critique_budget_page(ctx, pre_rounds):
-    """The critique budget is spent -> the S8 page-the-human semantics, keyed
+    """The critique budget is spent -> the S8 page-the-operator semantics, keyed
     to the session hold (the same failure_action the review round uses). The
     critic gates iteration; the operator owns final acceptance at gate
     closure."""
     st = ctx.run.routing
-    fa = agent_route.failure_action(ctx.human_held, ctx.keep_nondependent)
+    fa = agent_route.failure_action(ctx.operator_held, ctx.keep_nondependent)
     print(
         "critique/budget ({}): {} CHANGES-REQUESTED round(s) >= "
-        "{} -> page-human: {}".format(
+        "{} -> page-operator: {}".format(
             fa["mode"], pre_rounds + 1, st.critique_limit, fa["note"]
         )
     )
-    return page_human(
+    return page_operator(
         ctx,
-        "PAGE-HUMAN — critique budget exhausted",
+        "PAGE-OPERATOR — critique budget exhausted",
         "the critique loop hit its {}-round budget still CHANGES-REQUESTED".format(
             st.critique_limit
         ),
@@ -2303,7 +2307,7 @@ def schedule_review_round(ctx, after):
     `docs/reviews/` — a record path — so the identity never moved; the redrawn
     round approved the very tree the first had refused and the merge slot
     refused the pair as a reroll-until-green. The page uses the existing ladder,
-    so a human-held run stops and a loop-held one degrades to DESIGN-CHECK
+    so an operator-held run stops and a loop-held one degrades to DESIGN-CHECK
     (owner ruling 2026-09-03 leaves that degrade uncapped); what this arm adds
     is the CAUSE line, without which an operator re-runs the same rework.
 
@@ -2319,7 +2323,7 @@ def schedule_review_round(ctx, after):
         ctx.root, worker["train"], worker.get("claim"), score_reviews.parse_verdict
     ):
         print("dispatch: no review round scheduled — " + kverdict.UNCHANGED_REWORK)
-        return page_human(ctx, kverdict.UNCHANGED_PAGE, kverdict.UNCHANGED_REWORK)
+        return page_operator(ctx, kverdict.UNCHANGED_PAGE, kverdict.UNCHANGED_REWORK)
     st.set_train_range("{}..{}".format(worker["base"], after))
     queued = st.schedule_review_round(kverdict.declared_phases(ctx.rp_int))
     print(
@@ -2547,7 +2551,7 @@ def session_bookkeeping(
     (S8): cool+re-route, review-round merge/scoreboard/escalation, critique
     arbitration, committed-build scheduling, design-check reset. Returns None
     (fall through), "reroute" (the managed-WAITING re-route), or an int exit
-    code (a page-human).
+    code (a page-operator).
 
     WI-483 slice 6 decomposed this OUTWARD into the four arms below plus the
     decisions each of them makes; what is left is the ladder itself, so a
@@ -2607,11 +2611,11 @@ def judging_session_integrity(ctx, plan, commits, session, now):
       * a REVIEW session whose range changed anything but its own verdict file
         is REFUSED, by name: its commits are in the lane now, and the merge
         slot will refuse the same range from the committed log, so the run
-        stops for a human rather than build on it (`stop` = NEEDS-HUMAN);
+        stops for an operator rather than build on it (`stop` = NEEDS-OPERATOR);
       * a session that left the tree DIRTY fails its draw through the existing
         failed-draw path - cooled, the same phase re-drawn - with the leftovers
         stashed so the re-drawn session starts clean; when the stash fails the
-        run stops needing a human instead, since a redraw on that tree would
+        run stops needing an operator instead, since a redraw on that tree would
         record the residue as pre-existing. Checked now because only
         now can they be attributed: left in place, the next build session would
         commit them under its own name. An uncommitted verdict is such dirt,
@@ -2630,7 +2634,7 @@ def judging_session_integrity(ctx, plan, commits, session, now):
     if offenders:
         stop_banner(
             ctx.status_path,
-            "NEEDS-HUMAN — {} session {} committed outside its verdict".format(
+            "NEEDS-OPERATOR — {} session {} committed outside its verdict".format(
                 phase, session
             ),
             "range {} changed {} beside its own verdict file; the merge slot "
@@ -2638,7 +2642,7 @@ def judging_session_integrity(ctx, plan, commits, session, now):
                 commits, ", ".join(offenders)
             ),
         )
-        return True, EXIT_NEEDS_HUMAN
+        return True, EXIT_NEEDS_OPERATOR
     # The coordinator's own session log is not the session's dirt: it is
     # written and committed before this runs, and a vetoed telemetry commit
     # (best-effort by contract) must not fail every later draw.
@@ -2661,11 +2665,11 @@ def judging_session_integrity(ctx, plan, commits, session, now):
         # over the leftovers and record them as already there.
         stop_banner(
             ctx.status_path,
-            "NEEDS-HUMAN — {} session {} left the tree dirty".format(phase, session),
+            "NEEDS-OPERATOR — {} session {} left the tree dirty".format(phase, session),
             "leftovers {} could not be stashed ({}); no review is re-drawn on "
             "them".format(left, failure),
         )
-        return True, EXIT_NEEDS_HUMAN
+        return True, EXIT_NEEDS_OPERATOR
     st.cool(plan["entry"], now)
     if plan["is_review"]:
         st.note_review_draw_failure()
@@ -2727,7 +2731,7 @@ def resolve_idle_timeout(args):
     return idle if idle and idle > 0 else None
 
 
-SIGNIN_HOLD = "NEEDS-HUMAN — the drawn entry's account cannot authenticate"
+SIGNIN_HOLD = "NEEDS-OPERATOR — the drawn entry's account cannot authenticate"
 
 
 def review_keep_scope(ctx, plan):
@@ -2787,7 +2791,7 @@ def launch_session(ctx, plan, wi=None):
     emitting JSON (spawn failure, timeout, crash). The loop hands over only
     the route's data and the console renderer. A launch whose account
     cannot authenticate launches nothing: the run stops needing
-    a human (EXIT_NEEDS_HUMAN is returned in place of an Outcome). A launch
+    an operator (EXIT_NEEDS_OPERATOR is returned in place of an Outcome). A launch
     the blackout window refuses waits the window out and is retried
     (`session_service.through_blackout`); the call carries its work item, so
     a wrap-up adjudication of an active claim is admitted inside it.
@@ -2832,7 +2836,7 @@ def launch_session(ctx, plan, wi=None):
         outcome = session_service.through_blackout(attempt)
     except session_service.SigninRefused as refused:
         stop_banner(ctx.status_path, SIGNIN_HOLD, str(refused))
-        return EXIT_NEEDS_HUMAN
+        return EXIT_NEEDS_OPERATOR
     if live is not None:
         live.finish()
     return outcome
@@ -2916,7 +2920,7 @@ def session_meta(
 @dataclass(frozen=True)
 class LimitWait:
     """What a throttled session's reset hint BUYS: either a bounded nap and a
-    retry, or nothing — in which case the run stops and the human resumes it
+    retry, or nothing — in which case the run stops and the operator resumes it
     after the reset. `nap` is the discriminator, so a zero-second wait is not
     mistaken for "no wait" (WI-483 slice 6)."""
 
@@ -2934,7 +2938,7 @@ def rate_limit_wait(args, reset_hint):
     wait = seconds_until_reset(reset_hint)
     if args.wait_on_limit and wait is None:
         # Unrecognized reset wording (locale/format drift): a bounded fallback
-        # nap keeps the walk-away run alive, capped at the ceiling the human
+        # nap keeps the walk-away run alive, capped at the ceiling the operator
         # already consented to waiting.
         wait = min(args.limit_retry_fallback, args.wait_on_limit)
         return LimitWait(
@@ -3049,7 +3053,7 @@ def draw_session_route(
     for a review phase whose cross-family pool is exhausted, the RELAXED retry
     (heterogeneity dropped, recorded by the caller off the typed family fact);
     and, when nothing is routable at all for a worker's review, the REVIEW
-    OWED park — never a NEEDS-HUMAN page the dispatcher would turn into a
+    OWED park — never a NEEDS-OPERATOR page the dispatcher would turn into a
     handback of finished work. Returns `(entry, reason, exit_code)`; a
     non-None exit_code ends the run (the banner is already written). A review
     round's keep scope is settled here (`session_keep.review_retention`,
@@ -3102,12 +3106,12 @@ def draw_session_route(
         # declared home for the provider's sign-in/install hint, WI-109.)
         stop_banner(
             ctx.status_path,
-            "NEEDS-HUMAN — no routable model",
+            "NEEDS-OPERATOR — no routable model",
             reason + " (add/enable a model of this tier, or wait for a "
             "cooldown; the loop never silently drops to a weaker tier).\n"
             + agent_route.pool_context(ctx.enabled, ctx.registry, st.cooldowns, now),
         )
-        return None, reason, EXIT_NEEDS_HUMAN
+        return None, reason, EXIT_NEEDS_OPERATOR
     return entry, reason, None
 
 
@@ -3313,7 +3317,7 @@ def after_session(ctx, i, outcome, reset_hint, committed, judging=False):
     the post-session worker end state, the stall guard, and the inter-session
     pause. Returns an int exit code to END the run, else None.
 
-    (The run-state DONE/BLOCKED/NEEDS-HUMAN ladder retired with the serial
+    (The run-state DONE/BLOCKED/NEEDS-OPERATOR ladder retired with the serial
     driver, WI-210: a worker's state is always RUNNING here — its end states
     are judged from committed evidence, and the coordinator generates the root
     run-state.)"""
@@ -3823,11 +3827,11 @@ class SessionPolicies:
     home (docs/process.toml, legacy one-word file as the SN-028 migration
     fallback). SN-029: the three-value gate-authority enum retired for an
     ORDINAL comparison — is the tier the spine is in process at still the
-    human's to approve? `human_held` answers it once; `keep_nondependent` is
+    operator's to approve? `operator_held` answers it once; `keep_nondependent` is
     the orthogonal dial the enum bundled. WI-437 (OI-25): `session_hold` is the
     derived label — WHO HOLDS this run."""
 
-    human_held: bool
+    operator_held: bool
     keep_nondependent: bool
     session_hold: str
     push: str
@@ -3837,19 +3841,19 @@ class SessionPolicies:
 
 
 def resolve_session_policies(root, docs):
-    human_held = agent_common.human_holds(docs, agent_common.spine_stage_of(root))
+    operator_held = agent_common.operator_holds(docs, agent_common.spine_stage_of(root))
     # Spelled as its own statement, not folded into the constructor call below:
     # the WI-437 / OI-25 one-name-one-meaning rule reads this module's SOURCE for
     # the exact `session_hold = <the two derived values>` form, so that the
     # derived hold can be checked to mean one thing across every module that
     # derives it (the rule also forbids the retired enum's name appearing here at
     # all, which is why this comment does not spell the test module either).
-    session_hold = "human-held" if human_held else "loop-held"
+    session_hold = "operator-held" if operator_held else "loop-held"
     return SessionPolicies(
-        human_held=human_held,
+        operator_held=operator_held,
         keep_nondependent=agent_common.keep_nondependent(docs),
         session_hold=session_hold,
-        push=declared_policy(docs, "push-policy", "human"),
+        push=declared_policy(docs, "push-policy", "operator"),
         review=declared_policy(docs, "review-policy", "1"),
         guardrails=declared_policy(docs, "guardrails-policy", "off"),
         blackout=blackout_at(docs).window,
@@ -3945,24 +3949,24 @@ def _dual_plan_entry(root, docs, args, setup, policies):
     if outcome == "SELECTED":
         print("agent_loop: dual-plan {}: {}".format(wid, detail))
         return EXIT_DONE
-    action = _plan_round.page_action(policies.human_held, policies.keep_nondependent)
+    action = _plan_round.page_action(policies.operator_held, policies.keep_nondependent)
     print(
         "agent_loop: dual-plan {} PAGED: {} (session-hold {} -> {})".format(
             wid, detail, policies.session_hold, action
         ),
         file=sys.stderr,
     )
-    if action == "stop-needs-human":
-        stop_banner(docs / "status.md", "NEEDS-HUMAN", detail)
-        return EXIT_NEEDS_HUMAN
+    if action == "stop-needs-operator":
+        stop_banner(docs / "status.md", "NEEDS-OPERATOR", detail)
+        return EXIT_NEEDS_OPERATOR
     # Every other action honors the pause-free invariant (WI-204, WI-209):
-    # an attention-only outcome lands on EXIT_STALL, never a NEEDS-HUMAN
+    # an attention-only outcome lands on EXIT_STALL, never a NEEDS-OPERATOR
     # gate. The PAGE evidence is on disk under docs/plans/DP-*; relaunching
-    # re-runs the round. (page_action's non-stop-needs-human strings are
+    # re-runs the round. (page_action's non-stop-needs-operator strings are
     # intent labels.)
     stop_banner(
         docs / "status.md",
-        "dual-plan round paged — attention (no human hold on this tier)",
+        "dual-plan round paged — attention (no operator hold on this tier)",
         detail,
     )
     return EXIT_STALL
@@ -4222,7 +4226,7 @@ def main():
             prefer_map=setup.prefer_map,
             weight_map=setup.routing.weight_map,
             guardrails_policy=policies.guardrails,
-            human_held=policies.human_held,
+            operator_held=policies.operator_held,
             keep_nondependent=policies.keep_nondependent,
             start_dirty=start_dirty,
             raw_dir=root / "out" / "run-logs",

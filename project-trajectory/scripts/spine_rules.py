@@ -183,7 +183,7 @@ sn_draft_ids = spine_carrier.draft_ids_from_text
 #
 # THE RULED MODEL (owner 2026-08-12, re-ruled 2026-08-13 as OI-21, unified at
 # OI-51): **stages are the rungs of the decomposition, and a repo is IN exactly
-# one.** Certification is an EVENT at a rung boundary — a named human's reviewed
+# one.** Certification is an EVENT at a rung boundary — a named operator's reviewed
 # Status-change commit — recorded where events are, not as a rival value. The
 # stage is state; approval is what moves it.
 #
@@ -634,7 +634,7 @@ def spine_stage(
     `DevStg-<Label>` from STAGE_ORDER.
 
     Read as the LOWEST unfinished rung — the one work is happening at, and
-    therefore the one a human boundary has to be compared against.
+    therefore the one an operator boundary has to be compared against.
 
       DevStg-Needs      a need is a draft, none is approved, or an approved one
                         has no SR answering it
@@ -694,7 +694,7 @@ def spine_stage(
     is an LLR. Reading it as DevStg-Reqs (the older shape) made the lower rungs
     unreachable during exactly the period they describe — every SR had to be fully
     decomposed before a Drafted child could be seen at all — which left the axis
-    unable to express "TCs are human-held but LLRs are not", the distinction the
+    unable to express "TCs are operator-held but LLRs are not", the distinction the
     axis exists for.
 
     WHICH RUNG OWNS AN UNBLESSED SR: it is checked LAST, after the children. An

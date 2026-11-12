@@ -128,9 +128,9 @@
 #
 #                    FLIP AUTHORITY IS DERIVED, NOT DECLARED: a `status` cell
 #                    here may be machine-flipped only when this registry's stage
-#                    rung — DevStg-Arch — is not human-held under the
+#                    rung — DevStg-Arch — is not operator-held under the
 #                    `[authority] operator_accepts_through` dial; the predicate
-#                    is `agent_common.human_approves(docs, "interfaces")`. READ
+#                    is `agent_common.operator_accepts(docs, "interfaces")`. READ
 #                    THE DIAL, DO NOT ASSUME IT: this repo runs `DevStg-Needs`-
 #                    held only, so the predicate answers FALSE here. What keeps
 #                    the cells the owner's today is that the kit ships NO
@@ -148,7 +148,7 @@
 #                    ONE CROSSING IS DELIBERATELY REALIZED BY NOTHING: `B-02`
 #                    (authority in — rulings, attestations and Status flips)
 #                    has no port of its own. Authority enters as CONTENT on
-#                    B-01's write path: a human edits a Status cell and commits,
+#                    B-01's write path: an operator edits a Status cell and commits,
 #                    and the hook floor admits that write as it admits any
 #                    other. The condition that changes the answer is concrete —
 #                    when the recorder requiring an acceptance to be stamped on
@@ -383,7 +383,7 @@ bridged_by = ["DA-002", "DA-009", "DA-014"]
 owner = "scripts/agent_loop"
 consumers = ["external:downstream adopter"]
 channel = "git"
-data = "0 DONE · 2 preflight · 3 BLOCKED · 4 stall · 5 WAITING · 6 budget · 7 NEEDS-HUMAN · 8 paused · 9 REVIEW-OWED · 11 RESTART · 12 RED-CAP"
+data = "0 DONE · 2 preflight · 3 BLOCKED · 4 stall · 5 WAITING · 6 budget · 7 NEEDS-OPERATOR · 8 paused · 9 REVIEW-OWED · 11 RESTART · 12 RED-CAP"
 version = "v5"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -582,7 +582,7 @@ status = "Drafted"
 component = "CMP-006"
 interface_to_external = "B-05"
 coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
-notes = """sink - the coverage report feeds the dual-plan round's critique/arbiter sessions and the human, not a kit module (the agent_loop consumer seam is IF-060's to declare). Published contract, not a single consumer: 11 kit scripts join interfaces.toml directly (baseline_snapshot, check_trajectory, gen_arch_map, gen_okf, gen_release_checklist, intake, migrate_carrier, plan_briefs, trace, traj_status, traj_views, plus this row), and every downstream adopter fills in their own IF registry. Ties to B-05 as the template's own delivered spine-registry format."""
+notes = """sink - the coverage report feeds the dual-plan round's critique/arbiter sessions and the operator, not a kit module (the agent_loop consumer seam is IF-060's to declare). Published contract, not a single consumer: 11 kit scripts join interfaces.toml directly (baseline_snapshot, check_trajectory, gen_arch_map, gen_okf, gen_release_checklist, intake, migrate_carrier, plan_briefs, trace, traj_status, traj_views, plus this row), and every downstream adopter fills in their own IF registry. Ties to B-05 as the template's own delivered spine-registry format."""
 
 [interface.IF-024]
 owner = "docs/work/"
@@ -1523,7 +1523,7 @@ data = "ADJUDICATE-AMENDMENT · ADJUDICATE-DISPOSITION · ADJUDICATE-RED-TC · A
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """intra-component: both endpoints are CMP-008 under the narrow-waist partition, which puts the coordinator and the prompt loader in one unit, so the architecture rule no longer demands this row; it stands as the declared consumption of the loader contract, whose provider side is IF-097. Sibling of IF-099 (the session engine's own use of the same loader): the difference is that a failed fill here HOLDS the work item for a human rather than degrading, because the alternative brief would be the implementer's."""
+notes = """intra-component: both endpoints are CMP-008 under the narrow-waist partition, which puts the coordinator and the prompt loader in one unit, so the architecture rule no longer demands this row; it stands as the declared consumption of the loader contract, whose provider side is IF-097. Sibling of IF-099 (the session engine's own use of the same loader): the difference is that a failed fill here HOLDS the work item for an operator rather than degrading, because the alternative brief would be the implementer's."""
 
 [interface.IF-114]
 rationale = """Read through the carrier rather than a path with a suffix because the brief must assemble identically either side of the carrier cutover. Every listed cell is required rather than dash-filled, since a dash in an evidence listing reads as "checked, not applicable" when the truth is "the registry never said"."""
@@ -1569,7 +1569,7 @@ component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006. Added by the batch-2 carrier sweep (repo-lock section 8.1), which moved open-items onto the spine's carrier."""
 
 [interface.IF-119]
-rationale = """The CSV branch keeps its own header check because a declared-header schema is a property of that carrier and TOML's analogue is a decode failure. An empty pool is refused rather than returned because {} under managed routing reads as a consent decision rather than a broken file, so the human is never paged."""
+rationale = """The CSV branch keeps its own header check because a declared-header schema is a property of that carrier and TOML's analogue is a decode failure. An empty pool is refused rather than returned because {} under managed routing reads as a consent decision rather than a broken file, so the operator is never paged."""
 owner = "scripts/spine_carrier"
 requestors = ["scripts/agent_route"]
 channel = "call"
@@ -2071,11 +2071,11 @@ rationale = """The owner's approval brief sets apart the owing chains the operat
 owner = "scripts/agent_common"
 requestors = ["scripts/trace", "scripts/intake"]
 channel = "call"
-data = "human_approves_spine(docs, registry) -> True when the dial holds the registry's rung or no rung map names it; False when the dial releases it; trunk_name(root) -> declared trunk or TrunkUndeclared; parse_wi_id(value, source) -> one WI id or ValueError"
+data = "operator_accepts_spine(docs, registry) -> True when the dial holds the registry's rung or no rung map names it; False when the dial releases it; trunk_name(root) -> declared trunk or TrunkUndeclared; parse_wi_id(value, source) -> one WI id or ValueError"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """Cross-component crossing: trace is CMP-006 and agent_common is CMP-008. The imports are deferred: approval-brief rendering reads human_approves_spine, while a reservation reads trunk_name and parse_wi_id; trace paths outside those uses load nothing from the coordinator's primitives. The shipped dial holds every rung, so a repo that has released none sees the brief it saw before."""
+notes = """Cross-component crossing: trace is CMP-006 and agent_common is CMP-008. The imports are deferred: approval-brief rendering reads operator_accepts_spine, while a reservation reads trunk_name and parse_wi_id; trace paths outside those uses load nothing from the coordinator's primitives. The shipped dial holds every rung, so a repo that has released none sees the brief it saw before."""
 
 [interface.IF-226]
 rationale = """An assumption is approved for what it lets the requirements claim, so the brief an approver reads must show, for each one, the requirements citing it, the needs they reach, where its outcome lands, the test cases that can falsify it and its falsifier. Gathering that chain in the pure join layer that judges the tier keeps the approver reading the same rows, joined the same way, as the checker judges, and keeps the brief's module growing by rendering lines alone."""

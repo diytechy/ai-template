@@ -1,10 +1,10 @@
 """The operator-acceptance DIAL, and the two axes it compares (SN-029, OI-21,
 WI-493).
 
-`human_holds(docs, stage)` is the one comparison every consumer in the loop
+`operator_holds(docs, stage)` is the one comparison every consumer in the loop
 makes — the dispatcher's admission table, the adjudication flip arm, the
 page-escalation, the dual-plan round. Getting it wrong in the permissive
-direction means a machine approving something a human meant to hold, which is
+direction means a machine approving something an operator meant to hold, which is
 the one failure this kit's whole discipline exists to prevent. So the input
 matrix is driven here rather than reasoned about at four call sites.
 
@@ -13,11 +13,11 @@ Three things this module pins, each because a cut got it wrong:
   * **ONE VOCABULARY, AND THE COMPARISON IS AN ORDINAL ON IT.** Until OI-21 this
     was `stage < level` over two integer ladders, correct only while they
     happened to line up — the 2026-08-12 rung insert nearly broke it silently, in
-    the direction of LESS human involvement. OI-21 shape (i) bridged the two with
+    the direction of LESS operator involvement. OI-21 shape (i) bridged the two with
     a declared `agent_common.DIAL_HOLDS` table; WI-493 executed shape (ii) and
     RE-KEYED the dial itself to a `DevStg-*` rung, so the table retired with the
-    second vocabulary it existed to bridge. The dial names the HIGHEST rung a
-    human still approves and every rung AT OR BELOW it is held — the mirror of
+    second vocabulary it existed to bridge. The dial names the HIGHEST rung an
+    operator still approves and every rung AT OR BELOW it is held — the mirror of
     check selection's at-or-above rule.
   * **THE DIAL MOVED, AND EVERY PRE-EXISTING ANSWER SURVIVED IT.** The retired
     0-4 ordinal's five settings hold precisely the same rung sets under the
@@ -26,7 +26,7 @@ Three things this module pins, each because a cut got it wrong:
     the code under test, so the equivalence is PINNED rather than assumed.
   * **AN UNREADABLE DIAL IS MALFORMED, NOT COERCED.** `max(0, ...)` looked kind
     and was the one arithmetic that failed permissively: `-1` clamped to 0, which
-    reads as "nothing is human-held" and disarms every hold in the repo. The
+    reads as "nothing is operator-held" and disarms every hold in the repo. The
     re-key did not soften that — a misspelled rung guesses at nothing and takes
     `DevStg-Release`. What it DID add is a migration window exactly as wide as
     the migration: a legacy 0-4 int is translated and warned about, and NOTHING
@@ -73,9 +73,9 @@ def _docs(tmp_path, dial=None, **extra):
 
 # THE AT-OR-BELOW RULE, STATED AS A TABLE — the dial's meaning written out rather
 # than recomputed with the arithmetic under test. Each row is a legal dial value
-# and the rungs a human still approves at it, in LADDER ORDER.
+# and the rungs an operator still approves at it, in LADDER ORDER.
 #
-# `DevStg-Below` is the sentinel for "nothing is human-held", not a rung; it is
+# `DevStg-Below` is the sentinel for "nothing is operator-held", not a rung; it is
 # the value the retired ordinal spelled `0`, and setting the dial below the
 # ladder means no rung is at or below it. `DevStg-Release` is the shipped default
 # and holds everything including the close, because it is the top rung.
@@ -127,7 +127,7 @@ LADDER = {
 # rides Reqs. The two rungs OI-21 inserted are not APPROVABLE tiers (the ordinal
 # named SN/SR/LLR/TC), so each was held with the rung BELOW it — attaching them
 # to the rung above would have let a level-1 repo do its boundary work unattended,
-# and the wrong-answer direction that matters here is always "less human". Under
+# and the wrong-answer direction that matters here is always "less operator". Under
 # the at-or-below rule that choice falls out of LADDER ORDER for free, because
 # each inserted rung sits immediately above the rung it was made to ride. A
 # hand-reasoned property became a structural one, and this table is how we know
@@ -157,7 +157,7 @@ def test_each_dial_rung_holds_exactly_the_rungs_AT_OR_BELOW_it(tmp_path, dial):
     # table's rows by position rather than being silently unheld — the failure
     # the retired `DIAL_HOLDS` map could suffer and this rule cannot.
     docs = _docs(tmp_path, dial)
-    held = [s for s in dg.STAGE_ORDER if ac.human_holds(docs, s)]
+    held = [s for s in dg.STAGE_ORDER if ac.operator_holds(docs, s)]
     assert held == LADDER[dial]
 
 
@@ -165,7 +165,7 @@ def test_each_dial_rung_holds_exactly_the_rungs_AT_OR_BELOW_it(tmp_path, dial):
 def test_each_RETIRED_level_holds_exactly_what_DIAL_HOLDS_held(tmp_path, level):
     """THE RE-KEY'S EQUIVALENCE, PERMUTATION BY PERMUTATION (WI-493).
 
-    The template's own words for the retired ordinal: 0 = nothing; 1 = the human
+    The template's own words for the retired ordinal: 0 = nothing; 1 = the operator
     approves SNs; 2 = ...and SRs; 3 = ...and LLRs; 4 = ...and TCs. Cumulative
     counts, with the two inserted rungs riding the tier below them.
 
@@ -179,7 +179,7 @@ def test_each_RETIRED_level_holds_exactly_what_DIAL_HOLDS_held(tmp_path, level):
     rung = ac.LEGACY_DIAL_ORDINALS[level]
     for i, dial in enumerate((level, rung)):
         docs = _docs(tmp_path / str(i), dial)
-        held = [s for s in dg.STAGE_ORDER if ac.human_holds(docs, s)]
+        held = [s for s in dg.STAGE_ORDER if ac.operator_holds(docs, s)]
         assert held == expected, (level, dial)
 
 
@@ -194,7 +194,7 @@ def test_the_four_APPROVABLE_rungs_answer_exactly_as_they_did_before_the_ladder(
     holds needs; 2 adds requirements; 3 adds LLRs; 4 adds tests.
 
     RE-KEYED, NOT WEAKENED: this used to read the answer out of the
-    `ac.DIAL_HOLDS` lookup, which is deleted. It now asks `human_holds` itself —
+    `ac.DIAL_HOLDS` lookup, which is deleted. It now asks `operator_holds` itself —
     a STRICTLY stronger question, because the table was only ever the input to
     the predicate the loop actually calls."""
     was = {
@@ -206,7 +206,10 @@ def test_the_four_APPROVABLE_rungs_answer_exactly_as_they_did_before_the_ladder(
     for rung, first_level in was.items():
         for level in range(5):
             docs = _docs(tmp_path / str(level), ac.LEGACY_DIAL_ORDINALS[level])
-            assert ac.human_holds(docs, rung) is (level >= first_level), (rung, level)
+            assert ac.operator_holds(docs, rung) is (level >= first_level), (
+                rung,
+                level,
+            )
 
 
 @pytest.mark.parametrize("stage", [dg.STAGE_IMPL, dg.STAGE_RELEASE])
@@ -218,7 +221,7 @@ def test_the_top_two_rungs_are_held_by_the_TOP_OF_THE_RETIRED_DIAL_ALONE(
 
     `DevStg-Impl` and `DevStg-Release` cover PRECISELY the states a bar-advance
     row runs in. With the top rung reading as not-held, the SHIPPED DEFAULT
-    (documented as "every tier human-held; the most conservative setting") let
+    (documented as "every tier operator-held; the most conservative setting") let
     the loop dispatch and self-approve the final bar. Below the top, the retired
     ordinal was about which SPINE tier is being worked, and neither of these two
     is one — so no setting under it reached them.
@@ -230,12 +233,12 @@ def test_the_top_two_rungs_are_held_by_the_TOP_OF_THE_RETIRED_DIAL_ALONE(
     reader who met only the paragraph above would think it impossible."""
     for level in range(4):
         docs = _docs(tmp_path / str(level), ac.LEGACY_DIAL_ORDINALS[level])
-        assert ac.human_holds(docs, stage) is False, level
-    assert ac.human_holds(_docs(tmp_path / "top", dg.STAGE_RELEASE), stage) is True
+        assert ac.operator_holds(docs, stage) is False, level
+    assert ac.operator_holds(_docs(tmp_path / "top", dg.STAGE_RELEASE), stage) is True
     # The setting the old five notches could not name.
     impl = _docs(tmp_path / "impl", dg.STAGE_IMPL)
-    assert ac.human_holds(impl, dg.STAGE_IMPL) is True
-    assert ac.human_holds(impl, dg.STAGE_RELEASE) is False
+    assert ac.operator_holds(impl, dg.STAGE_IMPL) is True
+    assert ac.operator_holds(impl, dg.STAGE_RELEASE) is False
 
 
 def test_the_shipped_default_holds_a_bar_advance(tmp_path):
@@ -243,7 +246,7 @@ def test_the_shipped_default_holds_a_bar_advance(tmp_path):
     # verified spine, a `gate` row must SURFACE rather than dispatch.
     dispatch = load_script("dispatch")
     docs = _docs(tmp_path, dg.STAGE_RELEASE)
-    held = ac.human_holds(docs, dg.STAGE_RELEASE)
+    held = ac.operator_holds(docs, dg.STAGE_RELEASE)
     assert held is True
     assert dispatch._kind_action("gate", held) == "surface"
     assert dispatch._admission([("WI-500", "gate")], held, busy=False, free=1) == (
@@ -289,7 +292,7 @@ def test_BOTH_shipped_homes_declare_the_dial_as_a_RUNG_STRING():
 # --- the failure directions ----------------------------------------------------
 
 
-def test_an_unreadable_stage_is_human_held(tmp_path):
+def test_an_unreadable_stage_is_operator_held(tmp_path):
     """The conservative direction, and it now covers one MORE case than it did.
 
     `None` is what `spine_stage_of` returns for a docs/gate predating the field —
@@ -301,14 +304,14 @@ def test_an_unreadable_stage_is_human_held(tmp_path):
     unknown label. There the question is "where is this on the ladder" and a
     silent default hides that the ladder moved; here the question is "who
     approves" and the only safe answer to "I do not recognize this" is "the
-    human"."""
+    operator"."""
     docs = _docs(tmp_path, dg.STAGE_ARCH)
     for stage in (None, 2, 0, 2.0, object(), "DevStg-Nonsense", ""):
-        assert ac.human_holds(docs, stage) is True, stage
+        assert ac.operator_holds(docs, stage) is True, stage
 
 
 def test_the_BELOW_dial_is_absolute_even_against_an_unreadable_stage(tmp_path):
-    # "Nothing is human-held" is a statement the owner made outright, and the
+    # "Nothing is operator-held" is a statement the owner made outright, and the
     # upgrade-time repo (no readable stage record) is precisely when it must
     # still hold — otherwise the dial reads as its own opposite on the one day
     # it matters.
@@ -319,7 +322,7 @@ def test_the_BELOW_dial_is_absolute_even_against_an_unreadable_stage(tmp_path):
     # vocabulary in the one place this program exists to remove one.
     docs = _docs(tmp_path, BELOW)
     for stage in (None, 0, 3, "DevStg-Nonsense", dg.STAGE_RELEASE):
-        assert ac.human_holds(docs, stage) is False, stage
+        assert ac.operator_holds(docs, stage) is False, stage
 
 
 @pytest.mark.parametrize("dial", sorted(LADDER, key=kit_stage.order))
@@ -784,7 +787,7 @@ def _returns_provably_below_release(func):
 
     That deliberately reds on a legitimate refactor that returns a computed
     rung. It should: the rung is evidence-gated with NO producer, so a
-    `spine_stage` that computes its answer is exactly the change a human must
+    `spine_stage` that computes its answer is exactly the change an operator must
     look at. Widening this helper is an act, the same as deleting it."""
     module = vars(dg)
     unproven, release = [], []
@@ -899,7 +902,7 @@ def test_the_RELEASE_rung_has_EXACTLY_ONE_PRODUCER_and_it_is_the_EVIDENCE_VERDIC
     assert not unproven, (
         "spine_stage has return(s) that cannot be proven to be a rung below "
         "{}: {}. The rung is evidence-gated; a computed return is the exact "
-        "change that needs a human.".format(dg.STAGE_RELEASE, unproven)
+        "change that needs an operator.".format(dg.STAGE_RELEASE, unproven)
     )
     # ARM 3 — exactly one Release producer, and it is the harness verdict.
     assert len(release) == 1, (
@@ -1267,13 +1270,13 @@ def test_final_review_defaults_to_HOLDING_and_reads_off(tmp_path):
 
 
 def test_final_review_is_INDEPENDENT_of_the_DIAL(tmp_path):
-    # The whole reason it is its own dial: "which tier is the human's" and "do I
+    # The whole reason it is its own dial: "which tier is the operator's" and "do I
     # get a last look" are different questions, and conflating them would mean
     # you could not ask for a closing read without also holding every tier. It is
     # also where the retired `G-Final` tag's meaning actually lives.  check_vocab: allow
     docs = _docs(tmp_path, BELOW, final_review="always")
     assert ac.approval_through(docs) == BELOW
-    assert ac.human_holds(docs, dg.STAGE_REQS) is False
+    assert ac.operator_holds(docs, dg.STAGE_REQS) is False
     assert ac.final_review(docs) is True
 
 
@@ -1313,7 +1316,7 @@ def test_the_clean_close_sample_is_DETERMINISTIC(tmp_path):
 def test_APPROVAL_RUNGS_is_the_off_spine_sibling_of_THE_DIAL(tmp_path):
     """The map is small, closed, and every value is a REAL rung of the ladder.
 
-    A typo'd rung would send `human_approves` through `human_holds`' unrecognized
+    A typo'd rung would send `operator_accepts` through `operator_holds`' unrecognized
     arm, which answers True — safe, but silently: the registry would read as held
     for a reason nobody intended. Pin the values against the ladder itself."""
     assert set(ac.APPROVAL_RUNGS) == {
@@ -1333,15 +1336,15 @@ def test_APPROVAL_RUNGS_is_the_off_spine_sibling_of_THE_DIAL(tmp_path):
     # WI-636 (LLR-246): the assumptions registry joins at the frame's rung, the
     # boundary its assumptions land on.
     assert ac.APPROVAL_RUNGS["assumptions"] == dg.STAGE_BOUNDARY
-    # NO NEW KEY: the ruling's whole point. `human_approves` must answer from the
+    # NO NEW KEY: the ruling's whole point. `operator_accepts` must answer from the
     # existing dial, so a repo that never declares anything new still gets it.
     # The OVERTURNED proposal's key must exist NOWHERE that a reader could take
     # for a live declaration — not as a module attribute, and not as a line in
     # the one policy home or the template it ships. (It is NAMED in prose, in
     # `agent_common`'s comment and in `docs/process.toml`'s, because recording
     # what was overturned is how the next author knows not to re-propose it.)
-    assert not hasattr(ac, "human_approval_registries")
-    assert not hasattr(ac, "HUMAN_APPROVAL_REGISTRIES")
+    assert not hasattr(ac, "operator_acceptance_registries")
+    assert not hasattr(ac, "OPERATOR_ACCEPTANCE_REGISTRIES")
     root = _Path(__file__).resolve().parents[1]
     # BOTH paths must EXIST. The template's was spelled `process.template.toml`
     # here — the file is `process.toml.template` — under an `if not exists:
@@ -1353,34 +1356,34 @@ def test_APPROVAL_RUNGS_is_the_off_spine_sibling_of_THE_DIAL(tmp_path):
         assert path.is_file(), rel
         for line in path.read_text(encoding="utf-8").splitlines():
             code = line.split("#", 1)[0]
-            assert "human_approval_registries" not in code, (rel, line)
+            assert "operator_acceptance_registries" not in code, (rel, line)
 
 
-def test_human_approves_MAPPED_and_HELD_at_this_repos_dial(tmp_path):
+def test_operator_accepts_MAPPED_and_HELD_at_this_repos_dial(tmp_path):
     """Arm 1 — the state this repo is in. At `DevStg-Release` every rung is at or
     below the dial, so every mapped registry's approval cells are the owner's."""
     docs = _docs(tmp_path, dial=dg.STAGE_RELEASE)
     for registry in ac.APPROVAL_RUNGS:
-        assert ac.human_approves(docs, registry) is True, registry
+        assert ac.operator_accepts(docs, registry) is True, registry
 
 
-def test_human_approves_MAPPED_and_FREE_at_a_low_dial(tmp_path):
+def test_operator_accepts_MAPPED_and_FREE_at_a_low_dial(tmp_path):
     """Arm 2 — the arm that proves the predicate is DERIVED rather than a
     constant `True` wearing a lookup. At a `DevStg-Boundary` dial only
-    Needs/Boundary are held, so `external` (DevStg-Boundary) stays the human's
+    Needs/Boundary are held, so `external` (DevStg-Boundary) stays the operator's
     while `interfaces` and `components` (DevStg-Arch) become machine-flippable."""
     docs = _docs(tmp_path, dial=dg.STAGE_BOUNDARY)
-    assert ac.human_approves(docs, "external") is True
-    assert ac.human_approves(docs, "interfaces") is False
-    assert ac.human_approves(docs, "components") is False
+    assert ac.operator_accepts(docs, "external") is True
+    assert ac.operator_accepts(docs, "interfaces") is False
+    assert ac.operator_accepts(docs, "components") is False
     # ...and at `DevStg-Below` nothing is held at all, which is what "no new
     # enum" buys: the off-spine axis moves with the one dial, never independently.
     docs0 = _docs(tmp_path / "zero", dial=BELOW)
     for registry in ac.APPROVAL_RUNGS:
-        assert ac.human_approves(docs0, registry) is False, registry
+        assert ac.operator_accepts(docs0, registry) is False, registry
 
 
-def test_human_approves_UNMAPPED_is_HELD_fail_safe(tmp_path):
+def test_operator_accepts_UNMAPPED_is_HELD_fail_safe(tmp_path):
     """Arm 3 — the fail-safe direction, ruled explicitly: an approval-carrying
     registry with no rung mapping is HELD, because a registry nobody has
     associated with a rung is one nobody has ruled on."""
@@ -1390,13 +1393,13 @@ def test_human_approves_UNMAPPED_is_HELD_fail_safe(tmp_path):
         # lookup normalises — an unmapped answer there would be a false hold
         # hiding a real one.)
         expected = unknown is not None and unknown.strip().lower() in ac.APPROVAL_RUNGS
-        assert ac.human_approves(docs, unknown) is (not expected), unknown
+        assert ac.operator_accepts(docs, unknown) is (not expected), unknown
 
 
 # --- WI-572: the SPINE sibling of the same table, and its two readers ---------
 def test_SPINE_APPROVAL_RUNGS_is_the_spine_sibling_of_THE_DIAL(tmp_path):
     """Same pin as its off-spine twin above, for the same reason: a typo'd rung
-    would send `human_approves_spine` through `human_holds`' unrecognized arm,
+    would send `operator_accepts_spine` through `operator_holds`' unrecognized arm,
     which answers True — safe, but silently, so a whole spine tier would read as
     the owner's forever and no first-approval adjudication would ever be minted
     for it. Pin the values against the ladder itself.
@@ -1430,7 +1433,7 @@ def test_SPINE_APPROVAL_RUNGS_is_the_spine_sibling_of_THE_DIAL(tmp_path):
     assert not hasattr(load_script("adjudicate_brief"), "_APPROVAL_RUNG_OF")
 
 
-def test_human_approves_spine_is_DERIVED_and_fails_safe(tmp_path):
+def test_operator_accepts_spine_is_DERIVED_and_fails_safe(tmp_path):
     """The three arms, same as the off-spine predicate's.
 
     Arm 2 is the load-bearing one: at `DevStg-Reqs` the SR tier is HELD and the
@@ -1444,25 +1447,25 @@ def test_human_approves_spine_is_DERIVED_and_fails_safe(tmp_path):
     # Arm 1 — this repo's shipped default: every rung at or below, all held.
     docs = _docs(tmp_path, dial=dg.STAGE_RELEASE)
     for registry in ac.SPINE_APPROVAL_RUNGS:
-        assert ac.human_approves_spine(docs, registry) is True, registry
+        assert ac.operator_accepts_spine(docs, registry) is True, registry
 
     # Arm 2 — MIXED, and derived rather than a constant wearing a lookup.
     mixed = _docs(tmp_path / "mixed", dial=dg.STAGE_REQS)
-    assert ac.human_approves_spine(mixed, srs) is True
-    assert ac.human_approves_spine(mixed, llrs) is False
-    assert ac.human_approves_spine(mixed, tcs) is False
+    assert ac.operator_accepts_spine(mixed, srs) is True
+    assert ac.operator_accepts_spine(mixed, llrs) is False
+    assert ac.operator_accepts_spine(mixed, tcs) is False
     below = _docs(tmp_path / "below", dial=BELOW)
     for registry in ac.SPINE_APPROVAL_RUNGS:
-        assert ac.human_approves_spine(below, registry) is False, registry
+        assert ac.operator_accepts_spine(below, registry) is False, registry
 
     # Arm 3 — UNMAPPED is HELD, at the MOST permissive dial there is.
     for unknown in ("", None, "SR"):
-        assert ac.human_approves_spine(below, unknown) is True, unknown
+        assert ac.operator_accepts_spine(below, unknown) is True, unknown
     # A carrier path is not a near-miss any more: the predicate reads the one
     # map through `kitlib.authority.rung_for`, which strips either suffix, so
     # a caller that forgot `spine_carrier.stem` gets the row's real rung.
-    assert ac.human_approves_spine(mixed, srs + ".toml") is True
-    assert ac.human_approves_spine(mixed, llrs + ".csv") is False
+    assert ac.operator_accepts_spine(mixed, srs + ".toml") is True
+    assert ac.operator_accepts_spine(mixed, llrs + ".csv") is False
 
 
 def test_the_needs_file_is_approved_at_the_needs_rung_by_both_predicates(tmp_path):
@@ -1477,13 +1480,13 @@ def test_the_needs_file_is_approved_at_the_needs_rung_by_both_predicates(tmp_pat
     below = _docs(tmp_path / "below", dial=BELOW)
     for registry in (needs, needs + ".toml", needs + ".csv"):
         # SN, the spine tier.
-        assert ac.human_approves_spine(held, registry) is True, registry
-        assert ac.human_approves_spine(below, registry) is False, registry
+        assert ac.operator_accepts_spine(held, registry) is True, registry
+        assert ac.operator_accepts_spine(below, registry) is False, registry
         # STK, the stakeholder list, which shares the file and so the rung.
-        assert ac.human_approves(held, registry) is True, registry
-        assert ac.human_approves(below, registry) is False, registry
-    assert ac.human_approves(held, "stakeholder-needs") is True
-    assert ac.human_approves(below, "stakeholder-needs") is False
+        assert ac.operator_accepts(held, registry) is True, registry
+        assert ac.operator_accepts(below, registry) is False, registry
+    assert ac.operator_accepts(held, "stakeholder-needs") is True
+    assert ac.operator_accepts(below, "stakeholder-needs") is False
 
 
 def test_no_shipped_loop_module_WRITES_an_approval_cell():
@@ -1494,7 +1497,7 @@ def test_no_shipped_loop_module_WRITES_an_approval_cell():
     rather than dressed up. What CAN be enforced now is the premise that makes
     that acceptable: the kit ships NO automated writer of an off-spine approval
     cell. The moment one is added this fails, and whoever adds it has to route it
-    through `agent_common.human_approves` first.
+    through `agent_common.operator_accepts` first.
 
     RE-KEYED 2026-08-17, and this is the trap the registry status unification was
     written to walk around. The cell used to be spelled `approval`; it is
@@ -1528,7 +1531,7 @@ def test_no_shipped_loop_module_WRITES_an_approval_cell():
                 offenders.append("{}:{}: {}".format(path.name, n, line.strip()))
     assert not offenders, (
         "a shipped script writes an off-spine `approval` cell — route it through "
-        "`agent_common.human_approves(docs, registry)` and REFUSE when it "
+        "`agent_common.operator_accepts(docs, registry)` and REFUSE when it "
         "answers True (OI-30 D3):\n" + "\n".join(offenders)
     )
 

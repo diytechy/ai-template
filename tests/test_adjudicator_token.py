@@ -142,7 +142,7 @@ def test_a_token_that_cannot_be_read_refuses_before_launch(
         monkeypatch.setenv(TOKEN_FILE, str(tmp_path))  # a directory
     elif problem == "empty":
         _token_file(tmp_path, monkeypatch, text="  ")
-    assert coord._adjudicate(root) == coord.svc.agent_common.EXIT_NEEDS_HUMAN
+    assert coord._adjudicate(root) == coord.svc.agent_common.EXIT_NEEDS_OPERATOR
     out = capsys.readouterr().out
     assert "dev-setup" in out and "setup-token" in out and TOKEN_FILE in out
     assert str(tmp_path) not in out  # the variable is named, never its path

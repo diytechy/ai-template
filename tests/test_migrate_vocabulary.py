@@ -197,6 +197,23 @@ def test_a_quoted_header_cell_and_a_byte_order_mark_are_kept(tmp_path):
     )
 
 
+def test_a_csv_registrys_comment_preamble_is_kept_and_the_row_after_it_renamed(
+    tmp_path,
+):
+    """Implements: TC-427"""
+    preamble = "\ufeff# Contracts: IF-001\r\n#   a declaration header\r\n\r\n"
+    rows = SR_CSV + "# SR-003,not a comment,a data line,Attest,Drafted\r\n"
+    path = _write(
+        tmp_path, "docs/requirements/performance-budgets.csv", preamble + rows
+    )
+    assert _run(tmp_path) == 0
+    expected = rows.replace(",Verification,", ",VerificationMethod,").replace(
+        ",Attest,Drafted", ",Vouch,Drafted"
+    )
+    assert expected.count(",Vouch,Drafted") == 2
+    assert path.read_bytes() == (preamble + expected).encode("utf-8")
+
+
 # --- the policy file -----------------------------------------------------------
 
 POLICY = """# Policy dials.
@@ -249,14 +266,50 @@ def test_a_policy_file_declaring_both_spellings_is_named_and_left(tmp_path, caps
     assert path.read_bytes() == keys.encode("utf-8")
 
 
+PUSH = """# Who may publish.
+[policies]
+review_rounds = 1
+push = "human"  # the default
+
+[checks]
+push = "human"
+"""
+
+
+def test_the_push_authoritys_earlier_default_is_respelled_in_place(tmp_path):
+    """Implements: TC-427"""
+    path = _write(tmp_path, "docs/process.toml", PUSH.replace("\n", "\r\n"))
+    assert _run(tmp_path) == 0
+    expected = PUSH.replace(
+        'push = "human"  # the default', 'push = "operator"  # the default'
+    )
+    # A key of the same name in another table is that table's own, and stays.
+    assert expected.endswith('[checks]\npush = "human"\n')
+    assert path.read_bytes() == expected.replace("\n", "\r\n").encode("utf-8")
+    assert tomllib.loads(expected)["policies"]["push"] == "operator"
+    for other in ("agent", "agent-iteration", "operator"):
+        text = '[policies]\npush = "{}"\n'.format(other)
+        path = _write(tmp_path, "docs/process.toml", text)
+        assert _run(tmp_path) == 0
+        assert path.read_bytes() == text.encode("utf-8")
+
+
 @pytest.mark.parametrize(
     "text",
     (
         'attestation = { human_approval_through = "DevStg-Reqs" }\n',
         'attestation.human_approval_through = "DevStg-Reqs"\n',
         '[policies]\nnote = """\n[attestation]\n"""\n\n[attestation]\nfinal_review = "off"\n',
+        'policies = { push = "human" }\n',
+        '[policies]\npush = """human"""\n',
     ),
-    ids=("inline-table", "dotted-key", "look-alike-header-in-a-string"),
+    ids=(
+        "inline-table",
+        "dotted-key",
+        "look-alike-header-in-a-string",
+        "push-in-an-inline-table",
+        "push-in-a-multi-line-string",
+    ),
 )
 def test_a_dial_the_line_edit_cannot_reach_is_refused_not_guessed(tmp_path, text):
     """Implements: TC-427"""

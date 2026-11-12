@@ -21,7 +21,7 @@ steers automation, and each one is a rule the templates now carry:
   * The reviewer brief's redaction-by-construction (diff + requirements only)
     exists because a leaked self-assessment collapses review finding rates
     several-fold — and a test pins the exact clause that says so.
-  * WI-417 — `NEEDS-HUMAN`, a prose token, silently selected the review tier,
+  * WI-417 — `NEEDS-OPERATOR`, a prose token, silently selected the review tier,
     and a typo downgraded it. So: **prose that carries control flow must be a
     typed field, never a magic substring.**
 

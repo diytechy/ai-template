@@ -2,8 +2,8 @@
 iteration branch & sync").
 
 Who may publish (`git push`) is a one-word `docs/push-policy` value scaffolded
-into every repo: `human` (default — an agent never pushes, even if asked
-mid-session; it prepares the branch and requests), `agent-iteration` (only the
+into every repo: `operator` (default — only the operator or their delegate
+pushes, even if asked mid-session), `agent-iteration` (only the
 scrubbed llm/<branch> iteration branch), or `agent`. These tests mechanize the
 mechanical half of the layer — the policy file scaffolds, parses, and is set
 at creation the same consent-first way as gate-policy; the CI trigger and the
@@ -23,11 +23,11 @@ def _push(root):
     return process_key(root, "policies", "push")
 
 
-def test_scaffold_push_policy_defaults_human(scaffold):
-    # The scaffolded authority is `human` — an agent never pushes — so every
-    # default scaffold starts with publication as a deliberate human act.
+def test_scaffold_push_policy_defaults_operator(scaffold):
+    # The scaffolded authority is `operator` — no undelegated agent pushes — so every
+    # default scaffold starts with publication as a deliberate operator act.
     policy = scaffold / "docs" / "process.toml"
-    assert _push(scaffold) == "human"
+    assert _push(scaffold) == "operator"
     assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
     assert not (scaffold / "docs" / "push-policy").exists(), "one policy home"
 
@@ -46,9 +46,9 @@ def test_push_policy_flag_sets_value(tmp_path):
     assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
 
 
-def test_push_policy_explicit_human_matches_default(tmp_path):
-    dest = _bootstrap(tmp_path, "--push-policy", "human")
-    assert _push(dest) == "human"
+def test_push_policy_explicit_operator_matches_default(tmp_path):
+    dest = _bootstrap(tmp_path, "--push-policy", "operator")
+    assert _push(dest) == "operator"
 
 
 def test_ci_floor_runs_on_iteration_branch():

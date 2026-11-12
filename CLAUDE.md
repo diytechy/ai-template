@@ -12,7 +12,7 @@ and scripts, not a downstream application.
 > using the kit.
 
 > **`OWNER_SCRATCHPAD.md` is owner-only** — never read, cite, or act on it. It
-> holds the human owner's free-form notes; the working surfaces are
+> holds the operator's free-form notes; the working surfaces are
 > `docs/status.md`, the registries, and `docs/log.md`.
 
 ---
@@ -113,7 +113,7 @@ Entry points only — read the directories for the rest.
   `docs/status.md` under the policies declared in
   [`docs/process.toml`](docs/process.toml) — the operator-acceptance hold is the
   `operator_accepts_through` dial there (do not paraphrase its value here;
-  read it), and `push = "human"`.
+  read it), and `push = "operator"`.
 - **Reference, not working surfaces:**
   [`docs/registry-machinery-reference.md`](docs/registry-machinery-reference.md)
   (what the scripts enforce on the spine, field by field),

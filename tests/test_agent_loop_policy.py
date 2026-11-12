@@ -70,7 +70,7 @@ def test_tracked_pause_reads_reason_and_since(tmp_path):
 def test_tracked_pause_fails_closed_on_malformation(tmp_path):
     # A pause file we cannot read is STILL a pause: unparseable TOML and a
     # missing `reason` both return a paused dict carrying the loud message that
-    # routes the human to the fix — never None, which would resume the loop.
+    # routes the operator to the fix — never None, which would resume the loop.
     ac = load_script("agent_common")
     for body in ("this is not toml at all\n", 'since = "2026-07-29"\n', "reason = 7\n"):
         _tracked_pause(tmp_path, body)
@@ -598,7 +598,7 @@ def test_loop_context_is_frozen_and_total():
         f.default is dataclasses.MISSING and f.default_factory is dataclasses.MISSING
         for f in fields.values()
     ), "LoopContext fields must not carry defaults"
-    assert "human_held" in fields and "keep_nondependent" in fields
+    assert "operator_held" in fields and "keep_nondependent" in fields
     ctx = al.LoopContext(**{name: None for name in fields})
     with pytest.raises(dataclasses.FrozenInstanceError):
         ctx.root = "elsewhere"
@@ -668,8 +668,8 @@ def _fa(mode, keep, design_check=False):
 def test_page_consequence_is_the_one_rule_both_page_paths_obey():
     al = load_script("agent_loop")
     # SN-029: keyed on the MODE the ordinal produced, never on the retired enum.
-    assert al.page_consequence(_fa("human-held", False)).stop
-    assert not al.page_consequence(_fa("human-held", True)).stop
+    assert al.page_consequence(_fa("operator-held", False)).stop
+    assert not al.page_consequence(_fa("operator-held", True)).stop
     assert not al.page_consequence(_fa("loop-held", False)).stop
     # The critique arm's declared `exhaustion = block` stops whatever the hold
     # says — the one asymmetry between the two callers, stated as an argument
@@ -681,7 +681,7 @@ def test_a_stopping_page_never_also_re_arms_the_design_check():
     al = load_script("agent_loop")
     # The original returned before the design-check arm on every stop path;
     # that ordering is now a field of the record rather than a `return`'s luck.
-    stopping = al.page_consequence(_fa("human-held", False, design_check=True))
+    stopping = al.page_consequence(_fa("operator-held", False, design_check=True))
     assert stopping.stop and not stopping.design_check
     going = al.page_consequence(_fa("loop-held", True, design_check=True))
     assert not going.stop and going.design_check
@@ -696,7 +696,7 @@ def test_rate_limit_wait_naps_only_within_the_consented_ceiling():
         )
 
     # Unrecognized reset wording -> the bounded fallback, capped at the ceiling
-    # the human already consented to.
+    # the operator already consented to.
     unknown = al.rate_limit_wait(args(600), "in a little while")
     assert unknown.nap and unknown.seconds == 600
     assert "--limit-retry-fallback" in unknown.message

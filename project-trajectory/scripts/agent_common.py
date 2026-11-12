@@ -50,7 +50,7 @@ Contract IF-189: `default_base(root)`, the integration base a claimed branch's
     HEAD on an unrelated history, None on an unborn HEAD — which the caller
     treats as an unreadable change rather than an empty one; and
     `TrunkUndeclared` when the trunk's declaration cannot be read.
-Contract IF-224: `human_approves_spine(docs, registry)`, read by the owner's
+Contract IF-224: `operator_accepts_spine(docs, registry)`, read by the owner's
     approval brief to set apart the owing chains the operator-acceptance dial
     releases to an adjudicator: True (held) for a spine registry whose rung the
     dial holds and for one no rung map names, False for a released one. The
@@ -145,9 +145,9 @@ _retired_dial_note = agent_policy._retired_dial_note
 LADDER_RUNGS = agent_policy.LADDER_RUNGS
 APPROVAL_RUNGS = agent_policy.APPROVAL_RUNGS
 SPINE_APPROVAL_RUNGS = agent_policy.SPINE_APPROVAL_RUNGS
-human_holds = agent_policy.human_holds
-human_approves = agent_policy.human_approves
-human_approves_spine = agent_policy.human_approves_spine
+operator_holds = agent_policy.operator_holds
+operator_accepts = agent_policy.operator_accepts
+operator_accepts_spine = agent_policy.operator_accepts_spine
 loop_held_status_refusal = agent_policy.loop_held_status_refusal
 final_review = agent_policy.final_review
 complete_review = agent_policy.complete_review
@@ -249,9 +249,9 @@ LOG_MAX_BYTES = 65536
 # The terminal end states a session/loop outcome may carry. (Their old durable
 # home, the dispatcher-generated `docs/run-state` file, retired with the
 # dispatcher at concurrency-restructure Phase 5 — the stop banner and exit
-# codes carry the outcome now.) NEEDS-HUMAN's one-line ask is the stop
+# codes carry the outcome now.) NEEDS-OPERATOR's one-line ask is the stop
 # banner's headline (WI-127).
-END_STATES = ("DONE", "BLOCKED", "NEEDS-HUMAN")
+END_STATES = ("DONE", "BLOCKED", "NEEDS-OPERATOR")
 
 
 EXIT_DONE = 0
@@ -272,7 +272,7 @@ EXIT_WAITING = 5
 EXIT_BUDGET = 6
 
 
-EXIT_NEEDS_HUMAN = 7
+EXIT_NEEDS_OPERATOR = 7
 
 
 EXIT_PAUSED = 8
@@ -309,7 +309,7 @@ EXIT_RED_CAP = 12
 
 
 # The FB3 owner-only path(s): OWNER_SCRATCHPAD.md is free-form owner notes the
-# human edits continuously (check_docs.py drops it from doc discovery the same
+# operator edits continuously (check_docs.py drops it from doc discovery the same
 # way — check_docs.SCRATCHPAD). Because it is tracked and perpetually edited, an
 # owner-only-dirty tree is NOT interrupted-session residue: it must not fire the
 # WI-076 resume note or flip the done detection (WI-203). Mirrored, not imported
@@ -1748,7 +1748,7 @@ def commit_telemetry(root, session, label, paths, trailer=None):
     stands unchanged: no empty commits for bookkeeping.
 
     UNDER THE LOOP MARKER the commit carries the loop's provenance trailer
-    (SR-209), and a tree that would change a status the dial holds for a human
+    (SR-209), and a tree that would change a status the dial holds for an operator
     is refused before it is written (SR-208) — telemetry names its paths, so
     that tree is HEAD plus exactly those paths. A refused commit, that way or
     by a hook's veto, is RETURNED as well as printed, so a caller can tell the

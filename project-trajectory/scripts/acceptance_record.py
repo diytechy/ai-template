@@ -569,7 +569,7 @@ def traced_cells(csv_path):
 # `planned` because the pair split one rung ("text blessed, evidence
 # established" vs "text blessed, evidence pending"), and OI-30 D1 folded them
 # into the single `Approved`. `Drafted` does not belong: nothing has been
-# blessed, so there is nothing to amend behind a human's back. `Founded`
+# blessed, so there is nothing to amend behind an operator's back. `Founded`
 # does not either, and its exclusion is DELIBERATE rather than pending: the rung
 # is COMPUTED from a row's children existing, so a cell reading it is not a
 # second attestation of the row's own text — the `Approved` claim underneath it
@@ -687,7 +687,7 @@ def _spine_row_sides(root, base, head, registries=SPINE_CSVS):
         # constant: the constant carries a suffix, and reporting
         # `system-requirements.toml` for a repo whose staged diff touched
         # `system-requirements.csv` names a file that does not exist — in a
-        # record an adjudication row quotes back to a human.
+        # record an adjudication row quotes back to an operator.
         touched = [c for c in _tier_carriers(csv_path, id_col) if c in staged_names]
         if not touched:
             continue
@@ -835,7 +835,7 @@ def approval_acts_between(registry, before_rows, after_rows):
 
 # How `git diff --name-status` letters read as the ACT a branch performed on the
 # snapshot. Worded from the letter rather than assumed, because the record is
-# read by a human deciding why their merge stopped, and a branch that DELETES a
+# read by an operator deciding why their merge stopped, and a branch that DELETES a
 # stale `SNAPSHOT_DIR` file reported as one it "wrote" is a false sentence in the
 # one artifact that explains the stop. An unrecognised letter is still named —
 # the file changed, and which way is the part this does not know.
@@ -1637,7 +1637,7 @@ def staged_spine_findings(root):
     rev arguments; the post-commit view is `staged_spine_amendments`'s."""
     return [
         "{}: approved cell(s) {} amended while Status stays put — a "
-        "post-attestation amendment owes a fresh human read (process.md §7). "
+        "post-attestation amendment owes a fresh operator read (process.md §7). "
         "Since D-9 step 7 there is no marker to set: either commit the amendment "
         "on its own and re-attest it in the NEXT commit with `intake.py "
         "snapshot --reattests {}` (text first, the act second: a commit that "
@@ -1684,7 +1684,7 @@ def staged_hat_refs_findings(root):
 
       * A row with NO baseline is not guarded. A row absent from HEAD (newly
         minted, this commit) has nothing to compare, and a row below approval
-        has blessed nothing to amend behind a human's back — the same population
+        has blessed nothing to amend behind an operator's back — the same population
         rule `staged_spine_amendments` documents, inherited rather than
         re-litigated here.
       * A TIER with no `Hat-Refs` column is silent structurally (the TC tier
@@ -1793,7 +1793,7 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
     > that file must be byte-identical to its live counterpart in that same
     > commit.
 
-    The snapshot is the record of what a human blessed, and it is just files —
+    The snapshot is the record of what an operator blessed, and it is just files —
     nothing about a text file stops someone editing it. This is the guard, and
     it is exact rather than heuristic: a legitimate `copy_live` satisfies it
     ALWAYS, by construction, because the copy is byte-for-byte and rides the
@@ -1872,7 +1872,7 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
         elif snap_text != live_text:
             out.append(
                 "{} is NOT byte-identical to {} in this commit — the snapshot is "
-                "the record of what a human blessed, so it may only ever be "
+                "the record of what an operator blessed, so it may only ever be "
                 "written by copying the live file (`intake.py snapshot`). A hand "
                 "edit, a partial copy and a copy-then-amend-live all land "
                 "here. {}".format(name, live_rel, _mirror_repair(live_rel))
@@ -1915,7 +1915,7 @@ def committed_snapshot_findings(root):
     stale copy has LANDED — hooks bypassed, or a commit made outside them — no
     later run stages a snapshot file, so nothing ever looks at it again. The
     divergence is silent forever, which is the opposite of what a record of what
-    a human blessed is for.
+    an operator blessed is for.
 
     So this asks the same question of history rather than of the index: for every
     file under the snapshot root, **was it a copy of its live counterpart at the
@@ -1980,7 +1980,7 @@ def committed_snapshot_findings(root):
         elif snap_id != live_id:
             out.append(
                 "{} is NOT byte-identical to {} at {}, the commit that last "
-                "wrote it — the snapshot is the record of what a human blessed, "
+                "wrote it — the snapshot is the record of what an operator blessed, "
                 "so it may only ever be written by copying the live file "
                 "(`intake.py snapshot`). This divergence has LANDED. {}".format(
                     name, live_rel, rev[:8], _mirror_repair(live_rel)

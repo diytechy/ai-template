@@ -74,7 +74,7 @@ REGISTRIES = {
     # Status/Raised/OneLine in the template passed all 23 dogfood tests, and a
     # scaffold on that template then rendered "the owner queue is empty" for a
     # registry holding two pending decisions: exit 0, gate green, silent wrong
-    # content on the surface a human rules from.)
+    # content on the surface an operator rules from.)
     #
     # THIS CENSUS IS NOW EMPTY, and that is the carrier migration finishing
     # rather than a rule being dropped: every registry with a shipped template

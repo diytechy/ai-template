@@ -553,7 +553,7 @@ def parse(text):
     the file is generated and marked do-not-hand-edit, so a bad value there means
     either a hand edit or a ladder that moved under a cached value, and the ruled
     direction for both (`ladder.stage_ord`'s own docstring) is to fail loudly
-    rather than degrade toward less human involvement."""
+    rather than degrade toward less operator involvement."""
     record = {}
     for line in text.splitlines():
         stripped = line.strip()
@@ -627,8 +627,8 @@ class DerivationError(Exception):
     RAISED, NOT HANDLED HERE, because the two production callers want OPPOSITE
     failure policies and both are right: `check.py` exits with a message (a CLI
     that cannot select its plan must not guess one), while
-    `agent_common.spine_stage_of` answers None, which `human_holds` reads as
-    HUMAN-HELD (a coordinator that cannot establish the stage must not let an
+    `agent_common.spine_stage_of` answers None, which `operator_holds` reads as
+    OPERATOR-HELD (a coordinator that cannot establish the stage must not let an
     agent approve). One mechanism, one home; the policy stays at the call site."""
 
 
@@ -686,7 +686,7 @@ def read_stage(root, derive, memo=_DEFAULT):
     path it took can, and so the fast path is observable to a test.
 
     IT NEVER WRITES. On a mismatch the file on disk is left exactly as it was; the
-    trunk regen points and the human's post-approval run are the only writers,
+    trunk regen points and the operator's post-approval run are the only writers,
     and the commit-bar `--check` is what stops a stale copy from being committed.
 
     THIS CLOSES BOTH STALE WINDOWS THE SCHEDULE MAP FOUND, BY CONSTRUCTION rather

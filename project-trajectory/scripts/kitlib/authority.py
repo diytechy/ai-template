@@ -1,5 +1,5 @@
 """Approval authority: which rung a registry's status cells are approved into,
-whether a declared approval level holds that rung for a human, and what the
+whether a declared approval level holds that rung for an operator, and what the
 dial a chosen tree declares is.
 
 WHY IT IS A MODULE OF ITS OWN (LLR-249). Every reader that asks "does the dial
@@ -30,7 +30,7 @@ THE RUNG MAPS, and the fail-safe they share:
     drafted - so `rung_for` answers it for the file without widening the
     mint's table.
   * A registry none of them names is held (`rung_for` answers None and every
-    caller reads None as the human's), because a status nobody has associated
+    caller reads None as the operator's), because a status nobody has associated
     with a rung is one nobody has released.
 
 THE DIAL, READ TWO WAYS, for two different questions:
@@ -74,7 +74,7 @@ Contract IF-195: the approval-authority vocabulary, by importer.
     operator_accepts_through` rung of a parsed policy, `DevStg-Below` included,
     or the most-held rung for anything absent, legacy or unrecognised,
     printing nothing. `holds_under(dial, rung)` is True when the dial holds the
-    rung for a human: never at `DevStg-Below`, always for an unrecognised dial
+    rung for an operator: never at `DevStg-Below`, always for an unrecognised dial
     or rung, otherwise when the rung sits at or below the dial on the ladder.
 """
 
@@ -184,7 +184,7 @@ def read_dial(policy, gate_policy=None):
     retired 0-4 ordinal is translated (`LEGACY_DIAL_ORDINALS`); the retired key
     name is read when the live key is absent. Any other declared value is
     MALFORMED and reads as the most-held rung, never a best guess, because
-    every wrong guess fails toward less human involvement. With no dial
+    every wrong guess fails toward less operator involvement. With no dial
     declared, the retired gate-policy enum decides: `[authority] gate_policy`
     when it is a string, else `gate_policy` - the one-word file's value, or a
     zero-argument callable returning it, called only then, so a caller reads
@@ -242,7 +242,7 @@ def dial_at(root, rev="HEAD"):
     policy file git cannot show, or that does not parse, declares nothing, so
     the retired gate-policy file in the same tree decides; with neither the
     answer is the most-held rung, so no git, no repository and an unknown rev
-    all fail toward the human.
+    all fail toward the operator.
 
     Implements: SR-208, LLR-246
     """
@@ -260,10 +260,10 @@ def dial_at(root, rev="HEAD"):
 
 
 def holds_under(dial, rung):
-    """Does `dial` hold `rung` for a human? Nothing at `DevStg-Below`; every
+    """Does `dial` hold `rung` for an operator? Nothing at `DevStg-Below`; every
     rung at or below the dial otherwise; and an unrecognised dial or rung is
     HELD, because the only safe answer to "I do not recognise this" is "the
-    human approves it".
+    operator approves it".
 
     Implements: SR-210, LLR-249
     """

@@ -49,10 +49,10 @@ standing = "active"
 
 [assumption.DA-003]
 effect_at = ["B-02"]
-assumption = """A changed Status cell on a rung the declared approval level holds for a human means a human actually exercised the judgement that Status asserts."""
-holds_when = """The row's rung is at or below the rung the declared approval level holds for a human, and the change is committed by a person rather than by an unattended run."""
-obstacle = """A Status change on a human-held rung arrives in a commit an unattended run authored, or a person flips the cell without reading the row it approves."""
-falsifier = """A commit carrying the loop's provenance trailer that changes a Status cell on a human-held rung."""
+assumption = """A changed Status cell on a rung the declared approval level holds for an operator means an operator actually exercised the judgement that Status asserts."""
+holds_when = """The row's rung is at or below the rung the declared approval level holds for an operator, and the change is committed by a person rather than by an unattended run."""
+obstacle = """A Status change on an operator-held rung arrives in a commit an unattended run authored, or a person flips the cell without reading the row it approves."""
+falsifier = """A commit carrying the loop's provenance trailer that changes a Status cell on an operator-held rung."""
 obstacle_hats = ["SECURITY"]
 status = "Drafted"
 standing = "active"

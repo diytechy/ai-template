@@ -510,7 +510,7 @@ def test_a_hand_edited_record_RAISES_rather_than_healing_silently(tmp_path):
     field is a file this kit did not write and re-derives; a file that carries a
     stage which is not a rung is a hand edit or a ladder that moved under a cached
     value, and both are the loud case (`ladder.stage_ord`'s ruled direction: the
-    wrong-answer direction of a silent default is LESS human involvement)."""
+    wrong-answer direction of a silent default is LESS operator involvement)."""
     root = _tree(tmp_path)
     path = root / stage.STAGE_FILE
     path.parent.mkdir(parents=True, exist_ok=True)

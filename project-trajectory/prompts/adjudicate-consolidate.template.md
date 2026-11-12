@@ -45,7 +45,7 @@
      TOML block in the ROW'S OWN SPEC, not in the verdict file, for two reasons.
      `handback.close_adjudication` is handed `(root, branch)` and nothing else,
      so it can read the lane's tree and not a path only `agent_loop` knows; and
-     an outcome recovered from prose is the `NEEDS-HUMAN` fold (WI-417) —
+     an outcome recovered from prose is the `NEEDS-OPERATOR` fold (WI-417) —
      control flow must be a typed field. The `absorbs` set is deliberately NOT
      in that block: it is the `supersedes` list of the `## Dispositions` draft,
      which is the value the mint actually uses.

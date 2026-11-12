@@ -123,7 +123,7 @@ Contract IF-186: the shared trunk bookkeeping commit, by importer.
     refusal from `scope`, `write` or `before_advance`, a failed regeneration, a
     git failure, an in-scope path edited in the checkout or a trunk that moved
     while the step or `before_advance` ran (nothing installed), or - under the loop marker - a
-    tree that would change a status the approval level holds for a human,
+    tree that would change a status the approval level holds for an operator,
     judged before `commit-tree`; an exception from the step propagates with a
     note saying what it left. `scope` is the paths the step may write, or a
     callable `scope(scratch) -> (paths, refusal)` that plans them over HEAD in

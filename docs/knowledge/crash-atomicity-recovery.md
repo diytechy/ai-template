@@ -55,7 +55,7 @@ from a run that finished" as the general test: silence must not be a success
 signal. `baseline_snapshot.refresh_refusal` is the same instinct one tier up — a
 refresh that would absorb a row's drifted approved text is refused unless that
 row's own `Status` flip or an explicit `--reattests` naming it authorises it, so
-the record of what a human blessed cannot be quietly rewritten.
+the record of what an operator blessed cannot be quietly rewritten.
 
 ## Application
 
@@ -70,7 +70,7 @@ the record of what a human blessed cannot be quietly rewritten.
   not assume the write.
 - **A recovery path must exist for the ATTENDED reach of a corruption too.** The
   charter's third listen — "a recovery path written only for the unattended run
-  when the same corruption is reachable attended" — means: if a human running the
+  when the same corruption is reachable attended" — means: if an operator running the
   same command by hand can produce the torn state, the guard must fire for them,
   not only inside `agent_loop`. The snapshot guards run on the always-on
   `--strict-integrity` floor and the pre-commit hook, which is the right altitude.

@@ -164,7 +164,7 @@ def _existing_wi_nums(csv_path):
     plus any stray legacy CSV (the inert `-000` example included — a real max
     floor of 0, never a collision). The CSV home retired at Phase 5, but a
     stray file's ids still count: an allocator that ignored them could mint a
-    collision while the validator routes the human to delete the file."""
+    collision while the validator routes the operator to delete the file."""
     nums = set()
     if csv_path.exists():
         # utf-8-sig: a BOM'd registry (Excel) renamed the first header key, so

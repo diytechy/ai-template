@@ -294,7 +294,7 @@ TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a 
 ```
 
 `Tier=Release` keeps this slow, environment-heavy test out of the per-push and
-pre-merge runs; it executes at `DevStg-Release`, where the human signs the generated
+pre-merge runs; it executes at `DevStg-Release`, where the operator signs the generated
 checklist. Same registries, same traceability join, same gates — only the
 verification method and the owning hat change.
 
@@ -546,7 +546,7 @@ records the owner's current version and each consumer's pin. That mapping is wha
 the coordinator catch **drift**: if the `export` repo ships its row at `v3` while
 `delivery`'s `IF-010` still pins `v2`, the coordinator flags the stale pin (weighted by `Status`) and
 sequences `delivery`'s contract-test re-run against v3 — the interface's own §8 fixture
-judges actual compatibility, the human signs a real break. The catalog registry and
+judges actual compatibility, the operator signs a real break. The catalog registry and
 that check are deferred tooling (`MULTI_REPO.md` §3.3, §3.7, §7).
 
 **Two requirement scopes.** `SR-010` is *module-scoped* — verified inside the delivery

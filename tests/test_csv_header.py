@@ -61,6 +61,16 @@ RAW_CSV_EXCEPTIONS = {
         "raw lines by `csv.reader.line_num` and re-emits them into the TOML "
         "carrier, so a reader that dropped the leading block would drop content"
     ),
+    "migrate_vocabulary.py": (
+        "it imports nothing from the kit, so that it runs whatever state the "
+        "kit's own scripts are in; it cuts the same leading `#` preamble off "
+        "itself (`_csv_preamble`) before any CSV parse, and keeps its bytes"
+    ),
+}
+# The words each exception's own code argues its case in.
+RAW_CSV_ARGUED = {
+    "migrate_carrier.py": ("WHY NOT `csv.DictReader`", "line_num"),
+    "migrate_vocabulary.py": ("_csv_preamble", "tests/test_csv_header.py"),
 }
 
 
@@ -87,7 +97,7 @@ def test_ONE_reader_is_a_census_not_a_claim():
     for name in RAW_CSV_EXCEPTIONS:
         src = (SCRIPTS / name).read_text(encoding="utf-8")
         assert CSV_CALL.search(src), "{} no longer parses CSV at all".format(name)
-        assert "WHY NOT `csv.DictReader`" in src and "line_num" in src, name
+        assert all(word in src for word in RAW_CSV_ARGUED[name]), name
 
 
 def test_the_blank_line_after_the_comment_block_is_preamble_too():

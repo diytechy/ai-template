@@ -46,7 +46,7 @@ def test_off_and_absent_allow():
 
 
 def test_launcher_override_beats_deny():
-    # The human-set env override wins even under the strictest policy.
+    # The operator-set env override wins even under the strictest policy.
     assert gate.decide("Task", "deny", "allow")[0] == "allow"
 
 
@@ -189,7 +189,7 @@ def test_corruption_keeps_an_explicit_legacy_deny(tmp_path):
     # explicit `deny` (exit 2, the run halts) into `ask` at exit 0. Under a
     # non-interactive harness where `ask` degrades to proceed, the spawn
     # happens. A fail-closed arm takes the MORE RESTRICTIVE of the two; it
-    # never loosens a decision the human already wrote down.
+    # never loosens a decision the operator already wrote down.
     _write_process_toml(tmp_path, "this is not toml {{{")
     _write_policy(tmp_path, "deny")
     proc = run_hook({"tool_name": "Task"}, tmp_path)

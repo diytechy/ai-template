@@ -164,7 +164,7 @@ PROCESS_KEY_RANGES = {
 # Dials whose value must come from a CLOSED VOCABULARY. This replaced
 # `operator_accepts_through`'s `(0, 4)` range row at WI-493, and it is the
 # same guarantee carried on the new value's own terms: the retired range refused
-# `-1` because that single input reads as LESS human involvement than the owner
+# `-1` because that single input reads as LESS operator involvement than the owner
 # asked for, and a misspelled rung does exactly the same thing — it is
 # unrecognized, so it falls to a default rather than to what was meant. Refused
 # here, loudly, and fallen back on conservatively at the reader
@@ -181,7 +181,7 @@ PROCESS_KEY_VOCAB = {}
 # was tried first and was wrong in a way worth recording: it accepted every
 # int, so `operator_accepts_through = -1` — the single input the retired
 # `(0, 4)` range row existed to refuse, because it is the one that reads as
-# LESS human involvement than the owner asked for — stopped being refused at
+# LESS operator involvement than the owner asked for — stopped being refused at
 # all. A migration window must be exactly as wide as the migration.
 #
 # Without the window at all, `config_conflicts` — a HARD refusal consulted by
@@ -416,7 +416,7 @@ def blackout_at(docs, t=None):
 # autonomous` answered "who approves" with three words that four independent
 # tables then re-interpreted, each with its own fail-safe direction. What the
 # dispatcher actually needs is an ORDINAL comparison — is the tier this row sits
-# at still human-held? — and an enum cannot express "TCs are human-held but LLRs
+# at still operator-held? — and an enum cannot express "TCs are operator-held but LLRs
 # are not", which is the distinction the eight-rung stage ladder exists to make.
 #
 # THE LEGACY TRANSLATION, stated as all THREE dials rather than as a level.
@@ -426,8 +426,8 @@ def blackout_at(docs, t=None):
 # three facts — the shape of the original SN-029 bug, where `single-approve`
 # became "level 2" and so silently acquired a per-tier hold it never had.
 #
-#   attended       every tier is the human's; lanes drain at an approval
-#   single-approve  LLM review through DevStg-Reqs+DevStg-Tests, ONE human sitting
+#   attended       every tier is the operator's; lanes drain at an approval
+#   single-approve  LLM review through DevStg-Reqs+DevStg-Tests, ONE operator sitting
 #                  at the close — so NO per-tier hold (level 0), a final read,
 #                  and the non-dependent work kept running that distinguished it
 #   autonomous     every bar but the owner's final read closes on a recorded
@@ -464,14 +464,14 @@ LEGACY_APPROVAL = {
 # `stage < level` arithmetic was that it compared two different ladders that
 # happened to line up. Under one vocabulary there is only one ladder, so the
 # comparison stops being a coincidence and becomes the definition: the dial names
-# the HIGHEST rung a human still approves, and every rung AT OR BELOW it is held.
+# the HIGHEST rung an operator still approves, and every rung AT OR BELOW it is held.
 # That is the exact mirror of the at-or-above rule slice 2 gave check selection.
 #
 # EQUIVALENCE DRIVEN BEFORE THE TABLE WAS DELETED, not asserted after: all five
 # former levels hold precisely the same rung sets under the ordinal rule
 # (0 -> 0 rungs, 1 -> 2, 2 -> 4, 3 -> 5, 4 -> 8). The old table's most
 # hand-reasoned property — that `DevStg-Boundary` rides `DevStg-Needs` and
-# `DevStg-Arch` rides `DevStg-Reqs`, chosen because it errs toward MORE human
+# `DevStg-Arch` rides `DevStg-Reqs`, chosen because it errs toward MORE operator
 # involvement — falls out of the ordering for free, because each inserted rung
 # sits immediately above the rung it was made to ride. `tests/test_approval_
 # level.py` pins the equivalence permutation by permutation.
@@ -483,7 +483,7 @@ LEGACY_APPROVAL = {
 # notches for eight rungs and the three it could not name were unreachable
 # rather than forbidden.
 #
-# "NOTHING IS HUMAN-HELD" IS `DevStg-Below`, not a fourth kind of value. It is
+# "NOTHING IS OPERATOR-HELD" IS `DevStg-Below`, not a fourth kind of value. It is
 # the sentinel `kitlib.stage` already declares for "below every rung", used here
 # in exactly that sense: set the dial below the ladder and no rung is at or below
 # it. A magic word like `"none"` would have been a second vocabulary in the one
@@ -511,7 +511,7 @@ PROCESS_KEY_LEGACY_VALUES[("authority", "operator_accepts_through")] = frozenset
     LEGACY_DIAL_ORDINALS
 )
 
-# Fail toward MORE human involvement on anything unreadable: a dial nobody can
+# Fail toward MORE operator involvement on anything unreadable: a dial nobody can
 # parse must not silently hand approval authority to the loop. The top rung
 # is the conservative end — it holds every rung there is.
 APPROVAL_FALLBACK = _kitladder.STAGE_RELEASE
@@ -535,8 +535,8 @@ def legacy_approval(word, key):
 def approval_through(docs):
     """`[authority] operator_accepts_through` as a `DevStg-*` rung.
 
-    The HIGHEST rung a human still approves; every rung at or below it is held
-    (`human_holds`). `DevStg-Below` means nothing is held — the loop approves
+    The HIGHEST rung an operator still approves; every rung at or below it is held
+    (`operator_holds`). `DevStg-Below` means nothing is held — the loop approves
     every rung itself. `DevStg-Release`, the shipped default, holds everything.
 
     Falls back through the legacy `gate-policy` enum, then to `DevStg-Release`.
@@ -550,7 +550,7 @@ def approval_through(docs):
     out-of-range int always took, and it matters more now that the vocabulary is
     open-looking. `"devstg-arch"`, `"Arch"` or a rung from a newer kit takes the
     conservative fallback rather than a best guess, because every wrong guess
-    here fails in the direction of LESS human involvement.
+    here fails in the direction of LESS operator involvement.
     (`config_conflicts` refuses it loudly upstream; this is the behaviour for
     callers that did not run that gate.)
 
@@ -612,10 +612,10 @@ def _retired_dial_note(legacy, rung):
 # the re-key block above `APPROVAL_DIAL_RUNGS`.
 #
 # WHAT DID *NOT* MOVE, and this is the part OI-21 was emphatic about: the dial
-# still says WHICH SPINE RUNGS a human approves. It was NOT re-keyed to artifact
+# still says WHICH SPINE RUNGS an operator approves. It was NOT re-keyed to artifact
 # DEPTH. Re-keying approval to the depth and tier of the artifact touched is a
-# change to WHEN A HUMAN IS RE-ENGAGED whose wrong-answer direction is silently
-# LESS human involvement, so it is decided on its own — once IF/CMP maturity
+# change to WHEN An OPERATOR IS RE-ENGAGED whose wrong-answer direction is silently
+# LESS operator involvement, so it is decided on its own — once IF/CMP maturity
 # joins the approvable fold — and never defaulted here.
 #
 # WHERE THE TWO INSERTED RUNGS LAND is no longer a decision this module makes.
@@ -623,13 +623,13 @@ def _retired_dial_note(legacy, rung):
 # are not approvable TIERS, so the old ordinal had no notch for them and the
 # table had to choose: each was held whenever the rung BELOW it was held —
 # Boundary rides Needs, Arch rides Reqs — chosen because it errs toward MORE
-# human involvement. Under the at-or-below rule that choice falls out of the
+# operator involvement. Under the at-or-below rule that choice falls out of the
 # LADDER ORDER for free, because each inserted rung sits immediately above the
 # rung it was made to ride. The hand-reasoned property became a structural one.
 #
 # `LADDER_RUNGS` names the whole closed vocabulary — not just the held subset —
 # because "is this a rung I recognize" and "is this rung held" are different
-# questions, and `human_holds` must answer the first CONSERVATIVELY. Without it
+# questions, and `operator_holds` must answer the first CONSERVATIVELY. Without it
 # an unrecognized label (`""`, a typo, a rung from a newer kit) would compare as
 # an ordinal lookup failure rather than as a hold.
 #
@@ -653,7 +653,7 @@ LADDER_RUNGS = _kitladder.LADDER_RUNGS
 #
 # THE RULED SHAPE IS DERIVED, NOT DECLARED, and the owner's question is why:
 # *"I thought this would follow the dev-stage directly? Why build a new enum?"*
-# The proposal on the table was a new `[authority] human_approval_registries`
+# The proposal on the table was a new `[authority] operator_acceptance_registries`
 # list; it was OVERTURNED because the registry-to-rung association ALREADY
 # EXISTS in `spine_rules` — `boundary_incomplete` gates DevStg-Boundary on
 # `external.toml`'s approvals, and `arch_incomplete` gates DevStg-Arch on the
@@ -661,13 +661,13 @@ LADDER_RUNGS = _kitladder.LADDER_RUNGS
 # declaration of it would be a rival answer that agrees until someone edits one.
 #
 # NO NEW KEY AND NO NEW ENUM: authority over a status cell in registry R is
-# whether R's stage rung is human-held under the EXISTING dial — derived rather
+# whether R's stage rung is operator-held under the EXISTING dial — derived rather
 # than declared. WHICH registries that holds is the dial's answer, not a fixed
 # list: at a dial holding every rung it is all of them, at this repo's none.
 #
 # AN UNMAPPED APPROVAL-CARRYING REGISTRY IS HELD. The map is small and the
 # registries are optional, so "I do not know which rung governs this" must
-# resolve toward more human involvement, exactly as `human_holds` resolves an
+# resolve toward more operator involvement, exactly as `operator_holds` resolves an
 # unreadable dial and an unrecognized rung.
 #
 # THE TABLE LIVES IN `kitlib.authority` NOW (LLR-249) and this is the same
@@ -704,27 +704,27 @@ APPROVAL_RUNGS = _kitauthority.APPROVAL_RUNGS
 SPINE_APPROVAL_RUNGS = _kitauthority.SPINE_APPROVAL_RUNGS
 
 
-def human_holds(docs, stage):
-    """Is work at spine `stage` still the HUMAN's to approve?
+def operator_holds(docs, stage):
+    """Is work at spine `stage` still the OPERATOR's to approve?
 
     The one comparison every consumer makes, stated once. `stage` is
     `spine_rules.spine_stage`'s `DevStg-<Label>` answer — the rung currently in
     work — and a rung the declared level holds surfaces rather than dispatching.
 
     THE COMPARISON IS AN ORDINAL ON THE ONE LADDER (OI-21 -> WI-493). It reads through
-    the ONE ladder. The dial names the highest rung a human still approves, so
+    the ONE ladder. The dial names the highest rung an operator still approves, so
     every rung AT OR BELOW it is held — the mirror of the at-or-above rule that
     selects checks. The form retired at OI-21 was `stage < level` over two
     DIFFERENT integer ladders, correct only while they happened to line up, and
     the shape retired at WI-493 was the table that bridged them; what makes the
     comparison sound now is that there is one ladder. That old coincidence is what
     the 2026-08-12 rung insert nearly broke, silently, in the direction of less
-    human involvement.
+    operator involvement.
 
     BOTH ENDS OF THE LADDER ARE ABSOLUTE, and they are now spelled as the values
     they always meant. `DevStg-Release` — the shipped default — holds everything
     including the close, because it is the top rung and everything is at or below
-    it. `DevStg-Below` is the sentinel for "nothing is human-held": set below the
+    it. `DevStg-Below` is the sentinel for "nothing is operator-held": set below the
     ladder, no rung is at or below it. Only a dial between the two consults the
     stage at all.
 
@@ -733,7 +733,7 @@ def human_holds(docs, stage):
     with `kitlib.ladder.stage_ord`, which RAISES on an unknown label: there, an
     unknown stage means the ladder moved under a cached value and the operator
     must see it; here, the question is who approves, and the only safe answer to
-    "I do not recognize this rung" is "the human does".
+    "I do not recognize this rung" is "the operator does".
 
     THE COMPARISON ITSELF IS `kitlib.authority.holds_under` (LLR-249), the
     one the history check also makes against a past commit's dial; this
@@ -744,11 +744,11 @@ def human_holds(docs, stage):
     return _kitauthority.holds_under(approval_through(docs), stage)
 
 
-def human_approves(docs, registry):
-    """May only a HUMAN move the `status` cell of this off-spine `registry`?
+def operator_accepts(docs, registry):
+    """May only an OPERATOR move the `status` cell of this off-spine `registry`?
 
     True means HELD — the cell is the owner's, in a reviewed Status-change
-    commit. The mirror of `human_holds`, and deliberately the same shape: one
+    commit. The mirror of `operator_holds`, and deliberately the same shape: one
     predicate, one home, consulting one table.
 
     `registry` is the registry's stem as the repo names it — `"interfaces"`,
@@ -757,13 +757,13 @@ def human_approves(docs, registry):
     which also answers the needs file's stakeholder list at `DevStg-Needs`.
 
     THREE ARMS, and only the third is new thinking:
-      * MAPPED and its rung is human-held under `operator_accepts_through`
+      * MAPPED and its rung is operator-held under `operator_accepts_through`
         -> True (held). At a `DevStg-Needs` dial that is the needs file alone.
       * MAPPED and its rung is not held -> False (a loop session may write it,
         because the project has declared that rung machine-approvable).
       * UNMAPPED -> True (held), FAIL-SAFE. A status-carrying registry nobody has
         associated with a rung is one nobody has ruled on, and the only safe
-        answer to that is "the human does".
+        answer to that is "the operator does".
 
     THE WRITER-SIDE CONTRACT, stated here because this predicate is the only
     home for it. Any path that would set an off-spine `status` to `Approved` MUST
@@ -778,25 +778,25 @@ def human_approves(docs, registry):
     rung = _kitauthority.rung_for(registry)
     if rung is None:
         return True
-    return human_holds(docs, rung)
+    return operator_holds(docs, rung)
 
 
-def human_approves_spine(docs, registry):
-    """May only a HUMAN flip this SPINE `registry`'s rows `Drafted` ->
+def operator_accepts_spine(docs, registry):
+    """May only an OPERATOR flip this SPINE `registry`'s rows `Drafted` ->
     `Approved`? True means HELD.
 
-    The spine mirror of `human_approves`, and deliberately the same three arms
+    The spine mirror of `operator_accepts`, and deliberately the same three arms
     and the same fail-safe: mapped-and-held -> True, mapped-and-released ->
     False, UNMAPPED -> True. An approval-carrying registry nobody has associated
     with a rung is one nobody has ruled on, and the only safe answer to that is
-    "the human does".
+    "the operator does".
 
     `registry` is the registry's path or stem, read through
     `kitlib.authority.rung_for` — the one map the held-status judgement reads
     too, so the needs file (SN and its stakeholder list) is approved at
     `DevStg-Needs` here as there, not unmapped and held at every dial.
 
-    THE READER-SIDE CONTRACT, the half `human_approves` states for writers.
+    THE READER-SIDE CONTRACT, the half `operator_accepts` states for writers.
     Anything that tells a session which rows it may approve MUST filter through
     this — not only the path that mints the row, but every path that later
     re-resolves the population and renders it. The two are separated by a merge
@@ -806,7 +806,7 @@ def human_approves_spine(docs, registry):
     rung = _kitauthority.rung_for(registry)
     if rung is None:
         return True
-    return human_holds(docs, rung)
+    return operator_holds(docs, rung)
 
 
 def loop_held_status_refusal(
@@ -843,7 +843,7 @@ def loop_held_status_refusal(
 
 
 def final_review(docs):
-    """Does the run stop for a FINAL human read even when the level let it
+    """Does the run stop for a FINAL operator read even when the level let it
     close? `True` for the declared `"always"`, `False` for anything else.
 
     The separate end-of-run hold, split out from the ordinal because it is
@@ -1054,7 +1054,7 @@ def keep_nondependent(docs):
 
 def spine_stage_of(root):
     """This repo's EFFECTIVE stage, through the common reader
-    (`kitlib.stage.read_stage`) — the value `human_holds` compares the declared
+    (`kitlib.stage.read_stage`) — the value `operator_holds` compares the declared
     approval dial against, i.e. the input to who may approve.
 
     THE TRUST INVARIANT IS NOW TRUE BY CONSTRUCTION, and that is the whole point
@@ -1072,8 +1072,8 @@ def spine_stage_of(root):
 
     Returns None when the stage cannot be established at all — no `docs/stage`,
     an unparseable or hand-edited record, or a derivation that would not run.
-    `human_holds` reads None as HUMAN-HELD, so every failure direction here ends
-    in MORE human involvement, never less. That fail-safe is why this reader
+    `operator_holds` reads None as OPERATOR-HELD, so every failure direction here ends
+    in MORE operator involvement, never less. That fail-safe is why this reader
     swallows the derivation error the CLI callers surface."""
     path = Path(root) / _kitstage.STAGE_FILE
     if not path.exists():
@@ -1145,7 +1145,7 @@ def _key_value_findings(data, section, key, kind):
             "docs/{} [{}] {} = {!r} is the RETIRED 0-4 ordinal, out of range. "
             "There is no rung it meant, so it reads as the most conservative "
             "setting. Set it to a DevStg-* rung (or `{}` for 'nothing is "
-            "human-held'); `bootstrap.py --migrate-config` converts an "
+            "operator-held'); `bootstrap.py --migrate-config` converts an "
             "IN-range one for you.".format(
                 PROCESS_TOML, section, key, value, _kitstage.BELOW
             )
@@ -1163,7 +1163,7 @@ def _key_value_findings(data, section, key, kind):
         return [
             "docs/{} [{}] {} = {!r} is outside {}-{}. It falls back to the "
             "most conservative setting rather than being clamped: clamping a "
-            "negative value would read as 'nothing is human-held' and "
+            "negative value would read as 'nothing is operator-held' and "
             "silently disarm every approval hold in the repo.".format(
                 PROCESS_TOML, section, key, value, low_high[0], low_high[1]
             )
@@ -1191,9 +1191,9 @@ def _vocab_findings(section, key, value):
         return []
     return [
         "docs/{} [{}] {} = {!r} names no rung. Legal values are {} (and "
-        "`{}` for 'nothing is human-held'). It falls back to the most "
+        "`{}` for 'nothing is operator-held'). It falls back to the most "
         "conservative setting rather than to what was probably meant: an "
-        "unrecognized dial that guessed would read as LESS human "
+        "unrecognized dial that guessed would read as LESS operator "
         "involvement than the owner asked for.".format(
             PROCESS_TOML,
             section,
@@ -1350,7 +1350,7 @@ def resolve_coordinator_dials(args, docs):
 
 
 # What a `docs/work/pause` we cannot parse says. Fail-CLOSED: a broken pause
-# file must never read as "not paused", and the message routes the human to the
+# file must never read as "not paused", and the message routes the operator to the
 # only two fixes. gen_trajectory.py carries a byte-identical copy (it does not
 # import this coordinator layer); a test pins the two equal.
 
@@ -1379,9 +1379,9 @@ __all__ = (
     "LADDER_RUNGS",
     "APPROVAL_RUNGS",
     "SPINE_APPROVAL_RUNGS",
-    "human_holds",
-    "human_approves",
-    "human_approves_spine",
+    "operator_holds",
+    "operator_accepts",
+    "operator_accepts_spine",
     "loop_held_status_refusal",
     "final_review",
     "complete_review",

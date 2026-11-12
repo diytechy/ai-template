@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """baseline_snapshot.py — the `last_approved` snapshot: what the spine looked
-like when a human last blessed it.
+like when an operator last blessed it.
 
 Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX).
 
@@ -17,7 +17,7 @@ the rows a sitting exists to judge.
 
 So the baseline moves OUT of git history and onto disk: when an approval lands,
 the registries are COPIED, byte for byte, into `docs/archive/last_approved/`.
-Every comparison — the adjudicator, the human re-attest read, the HTML
+Every comparison — the adjudicator, the operator re-attest read, the HTML
 generators — diffs the live registries against that copy. No hashes, no anchor
 columns, no commit-id walk. The baseline becomes something a human can open in
 an editor and diff with `git diff`, which is itself an argument for the design.
@@ -281,8 +281,8 @@ _ACTS_HEADER = (
 
 # The registries a signing copies. FOUR SPINE plus THREE OFF-SPINE, and the
 # second group is not padding: `interfaces.toml` and `external.toml` carry
-# `approval` cells and `components.toml` a `state` cell that only a human may
-# move. A human-only approval cell with no baseline reopens the
+# `approval` cells and `components.toml` a `state` cell that only an operator may
+# move. An operator-only approval cell with no baseline reopens the
 # "approved text moved and nobody saw" hole exactly one tier down from the one
 # this mechanism closes.
 #
@@ -293,13 +293,13 @@ _ACTS_HEADER = (
 # question only of rows that CLAIM approval, and a row below approval has made no
 # claim to fall from. So the protection those tiers get is currently ZERO, and it
 # begins — with no code change at all — at their first approval. The copy is
-# taken at the SEED so that the day a human moves one of those cells, the
+# taken at the SEED so that the day an operator moves one of those cells, the
 # record of what they blessed already exists to compare against. Stated here
 # because "we snapshot the off-spine tiers" reads like live protection, and for
 # one more registry-approval cycle it is not.
 #
 # SCOPED SINCE WI-571: after the seed, an off-spine registry's snapshot copy is
-# refreshed ONLY when a `Status` cell moves in it (a human approval — the exact
+# refreshed ONLY when a `Status` cell moves in it (an operator approval — the exact
 # event this baseline exists to record), `--approves` names it or `--reattests`
 # names one of its rows. A spine-only approval no longer re-copies these files,
 # so it can no longer re-seal whatever off-spine drift happened to be live at
@@ -557,7 +557,7 @@ def exists(root):
     letting `copy_live` refuse: before the first signing there is no directory,
     and a mechanical flip that HARD-FAILED for want of a snapshot would break
     the adjudication path in every repo that has not signed yet, including a
-    fresh adopter's. `copy_live`'s refusal is for the HUMAN path, where "you
+    fresh adopter's. `copy_live`'s refusal is for the REVIEWED-COMMIT path, where "you
     meant `--seed`" is the useful answer."""
     return snapshot_root(root).is_dir()
 
@@ -709,7 +709,7 @@ def _claims_approval(row):
     as a design but because three registries spelled one axis three ways, and
     the cost was concrete: a predicate that read `Status` alone answered False
     for every off-spine row, so the copies `SNAPSHOTTED` takes precisely because
-    those cells move only by human hand were never compared to anything. The
+    those cells move only by the operator's hand were never compared to anything. The
     registry status unification collapsed the spellings, so the OR over three
     cells collapses with them.
 
@@ -889,7 +889,7 @@ def refresh_ledger(root, snapshot=None):
 
     A REMOVED ROW IS ABSORBED TOO, keyed by the single pseudo-cell
     `ROW_REMOVED`. The copy is the whole file, so refreshing it after a recorded
-    approved row was deleted drops the text a human blessed from the record as
+    approved row was deleted drops the text an operator blessed from the record as
     surely as rewriting it would — and a ledger that walked the live rows alone
     could not see a row that is not there, so a flip elsewhere in the file
     carried the deletion in unnamed. The recorded rows are walked as well, and a
@@ -969,7 +969,7 @@ def refresh_refusal(root, approves=None, snapshot=None, *, seed=False, reattests
          `CodeSymbol`, `TestRefs` or ref pointer re-point) and Drafted-row work
          stay exactly as cheap as they were — this is the common case, and the
          review verified the WI-482/WI-452 class of the same day was clean.
-      2. **Its own `Status` moved into approval.** A human moved THAT row's
+      2. **Its own `Status` moved into approval.** An operator moved THAT row's
          maturity cell in the reviewed commit the copy rides, over text an
          earlier commit already carried (WI-806: text first, the act second;
          amend-plus-flip is no longer approval). It blesses that row and no
@@ -981,7 +981,7 @@ def refresh_refusal(root, approves=None, snapshot=None, *, seed=False, reattests
          prose stamp, so the record says which rows the act re-read.
 
     `--approves <registry>=<ref>` NAMES THE ACT AND CLEARS NO ROW. It still puts
-    its registry in the act's scope and records the ref — a HUMAN's citation of
+    its registry in the act's scope and records the ref — an OPERATOR's citation of
     the sitting, log fragment or commit, not validated because nothing can
     validate it. What it no longer does is pass the registry's drift: the record
     is a copy of the whole file, so refreshing it for one row copies every row
@@ -1097,7 +1097,7 @@ def _refusal_text(blocked, scope):
     apart cleanly (WI-584)."""
     lines = [
         "baseline_snapshot: REFUSED — this refresh would ABSORB approved text "
-        "into the record of what a human blessed, for rows this act neither "
+        "into the record of what an operator blessed, for rows this act neither "
         "approves nor re-attests:"
     ]
     for rel, rows in blocked:
@@ -1211,7 +1211,7 @@ def _authorised_registries(root, approves, snapshot, reattests=frozenset()):
     `unanchored_findings` ERROR. A de-approval is not an approving transition:
     its Status differs but cannot authorise an unrelated amendment. An amendment
     that moved no `Status` is deliberately NOT here: that is the case
-    `refresh_refusal` gates, and naming its row in `--reattests` is how a human
+    `refresh_refusal` gates, and naming its row in `--reattests` is how an operator
     re-attests it — which puts the row's registry in scope here, or a
     re-attestation would copy nothing and exit 0 over the drift it names.
     Being IN scope clears no row; `refresh_refusal` still judges every row of
@@ -1404,7 +1404,7 @@ def copy_live(root, *, seed=False, approves=None, reattests=None, verdict=None):
     **NOTHING SHOULD EVER WIRE THIS INTO A FRESHNESS STEP.** Exactly two callers
     are sanctioned: `intake._apply_flips` (the mechanical path, called AFTER the
     status write so the copy captures the flip — which is what makes the
-    unanchored rule decidable) and `intake.py snapshot` (the human path). Not
+    unanchored rule decidable) and `intake.py snapshot` (the reviewed-commit path). Not
     `agent_loop`, not `dispatch`, not the hooks, not `check.py`. A step that
     REGENERATED the snapshot would defeat the whole mechanism: the snapshot is
     deliberately behind live whenever an amendment is pending, and that lag IS

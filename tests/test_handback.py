@@ -203,7 +203,7 @@ def test_the_partial_close_lands_terminal_with_its_report_and_finishes_the_branc
     assert not list((root / "docs" / "work" / "active").rglob("WI-*.md"))
 
     # The REPORT is the event's identity, and it carries typed fields — not a
-    # magic substring inside prose (the `NEEDS-HUMAN` defect).
+    # magic substring inside prose (the `NEEDS-OPERATOR` defect).
     report = report_path(root).read_text(encoding="utf-8")
     assert 'wi = "WI-401"' in report
     assert 'claimed_outcome = "partial"' in report
@@ -481,7 +481,7 @@ def test_a_disposition_rows_own_handback_is_refused_structurally(tmp_path):
     # only outcomes are cancel / defer / re-queue with drafted follow-up /
     # surface an open item. The refusal is structural (the function that would
     # perform the act refuses), never prose, and it leaves the claim exactly
-    # where it was for a human to read.
+    # where it was for an operator to read.
     root = claimed_repo(tmp_path)
     spec = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
     spec.write_text(
@@ -493,7 +493,7 @@ def test_a_disposition_rows_own_handback_is_refused_structurally(tmp_path):
     )
     _commit(root, "fixture: the claim is an adjudication row", when=T_CODE)
 
-    ids, refusal = hb.close_partial(root, "wi-401", "worker exit 7 (NEEDS-HUMAN)")
+    ids, refusal = hb.close_partial(root, "wi-401", "worker exit 7 (NEEDS-OPERATOR)")
     assert ids is None
     assert "never closes early" in refusal and "R3" in refusal
     assert spec.is_file()  # the claim did not move
@@ -712,7 +712,7 @@ def test_the_refusal_invariant_stops_a_disposition_with_no_successor(tmp_path):
     ids, refusal = hb.close_adjudication(root, "wi-401")
     assert ids is None
     assert refusal is not None and "no successor" in refusal.lower()
-    # The claim did NOT move: the row stays in active/ for a human.
+    # The claim did NOT move: the row stays in active/ for an operator.
     assert (
         root / "docs" / "work" / "active" / "wi-401" / "WI-401-dispose.md"
     ).is_file()
@@ -727,7 +727,7 @@ def test_the_refusal_invariant_stops_a_cancelled_close_with_no_successor(tmp_pat
     ids, refusal = hb.close_adjudication(root, "wi-401")
     assert ids is None
     assert refusal is not None and "no successor" in refusal.lower()
-    # The claim did NOT move: the row stays in active/ for a human.
+    # The claim did NOT move: the row stays in active/ for an operator.
     assert (
         root / "docs" / "work" / "active" / "wi-401" / "WI-401-dispose.md"
     ).is_file()

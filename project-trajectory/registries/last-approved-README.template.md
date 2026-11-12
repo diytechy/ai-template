@@ -1,4 +1,4 @@
-# `last_approved` — what the spine looked like when a human last blessed it
+# `last_approved` — what the spine looked like when an operator last blessed it
 
 **This file is prose. Nothing parses it.** Every machine fact about the
 snapshot comes from the copied registry files beside it, from the act ledger
@@ -10,7 +10,7 @@ approval acts lives in its own file.
 ## What is in here
 
 Byte-for-byte copies of the requirement spine and the registries that carry
-human-only approval cells, at the commit where an approval was last written:
+operator-only approval cells, at the commit where an approval was last written:
 
 ```
 docs/requirements/stakeholder-needs.toml

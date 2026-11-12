@@ -1108,7 +1108,7 @@ def _minted_id_refusal(root, branch, claimed):
     WHAT IS READ. The branch's OWN `docs/work/` delta - `merge-base(trunk,
     branch)` to the tip - so trunk-side minting stays exactly as free as it is
     today (the claim's bookkeeping commit, WI-388's mechanical adjudication
-    mint, a human commit): whatever trunk did sits in the BASE, not in the diff.
+    mint, a trunk commit): whatever trunk did sits in the BASE, not in the diff.
     Only ADDS count, and only of a spec FILENAME (`_spec_id`), which is what
     leaves every allowed move alone without a second policy engine to say so:
 
@@ -1521,7 +1521,7 @@ def _verdict_owed(root, branch, metas):
     FAIL TOWARD REVIEW at every unreadable step: an unreadable frontmatter, a
     spec the branch does not carry, a malformed `## Dispositions`. `owed` is
     what the caller then has to satisfy, and demanding a verdict nobody drew is
-    a stop a human can read, where waiving one silently is not."""
+    a stop an operator can read, where waiving one silently is not."""
     import intake  # a sibling reader; deferred so the cheap rungs stay cheap
 
     if not _adjudication_lane(root, branch, metas=metas):
@@ -2782,7 +2782,7 @@ def refresh(root, branch, tier):
     That is the disposable-commit rule doing double duty: it is what makes a
     retry safe (a second merge stacked on the first would conflict on
     docs/log.md's appended end), and it is why a failed refresh parks nothing
-    for a human to unpick. Reproduce a red by running the refresh again - it is
+    for an operator to unpick. Reproduce a red by running the refresh again - it is
     deterministic given the same trunk. The refusal carries the failing step's
     own output window and NAMES the retained full log (`_keep_refused_output`),
     because the undo erases the tree that produced the evidence (WI-398).
@@ -3486,7 +3486,7 @@ def integrate_one(root, branch, tier, held=None):
     routed spine diff, a returned spec's `## Handback`, a merged adjudication
     row's `## Dispositions` drafts) and mints the rows the event forces, as
     ONE bookkeeping commit on trunk, inside this same held slot (serial by
-    construction; rulings R1/R3: a WI id is created only by a human trunk
+    construction; rulings R1/R3: a WI id is created only by a trunk
     commit or that helper). A mint refusal stops the run LOUDLY but the merge
     stands; recovery is a trunk-side fix plus `python intake.py sweep`.
 
@@ -3543,7 +3543,7 @@ def integrate_one(root, branch, tier, held=None):
         return (
             "the --no-ff merge of {} FAILED although trunk is an ancestor of "
             "it - that should be impossible, so this run repairs nothing and "
-            "stops for a human to read:\n{}".format(branch, ac._failure_tail(out))
+            "stops for an operator to read:\n{}".format(branch, ac._failure_tail(out))
         )
     unloaded, note = _unload_branch(root, branch)
     print(

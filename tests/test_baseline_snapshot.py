@@ -192,7 +192,7 @@ def test_the_mechanical_flip_TOUCHES_NO_SNAPSHOT_AT_ALL(tmp_path):
     assert {p: p.read_bytes() for p in SNAP.snapshot_root(root).rglob("*.toml")} == (
         stamped
     ), "the mechanical path re-blessed text"
-    # The ONE live `copy_live` caller in intake is the human path, and it is not
+    # The ONE live `copy_live` caller in intake is the reviewed-commit path, and it is not
     # behind an `exists` guard — the guard belongs to the writer now.
     intake_src = (SCRIPTS / "intake.py").read_text(encoding="utf-8")
     assert intake_src.count("baseline_snapshot.copy_live(") == 1
@@ -243,7 +243,7 @@ def test_a_APPROVED_amendment_with_no_flip_and_no_ref_is_REFUSED(tmp_path):
 
 
 def test_a_FLIP_authorises_ITS_OWN_row_and_no_other(tmp_path):
-    """Approval is a human moving a maturity cell in a reviewed commit, and the
+    """Approval is an operator moving a maturity cell in a reviewed commit, and the
     copy rides it — for THE ROW THAT MOVED. Until SR-207 this test pinned the
     wider reading: one flip anywhere in a registry authorised every approved
     amendment in it, so approving one row silently blessed another row's
@@ -270,7 +270,7 @@ def test_a_FLIP_authorises_ITS_OWN_row_and_no_other(tmp_path):
 def test_an_explicit_APPROVES_ref_authorises_it_and_is_RECORDED(tmp_path):
     """The escape for the shape the D-9 ladder actually has: a sitting amends an
     Approved row's text without moving its Status. The ref is not validated —
-    it is a human's citation of the act — but it is NAMED, and it lands in the
+    it is an operator's citation of the act — but it is NAMED, and it lands in the
     snapshot's prose stamp, which is the difference between a deliberate
     re-blessing and a helper that always said yes."""
     root = _seeded(tmp_path)
@@ -624,7 +624,7 @@ def test_the_SEED_still_copies_the_WHOLE_tree(tmp_path):
 
 
 def test_the_refusal_reaches_the_CLI_and_the_flag_clears_it(tmp_path):
-    """End-to-end over the public path — `intake.py snapshot` is what a human
+    """End-to-end over the public path — `intake.py snapshot` is what an operator
     and a worker actually run, and the review's laundering path went through it.
     A tmp tree carrying only the registries is enough: the command touches
     nothing else."""
@@ -877,7 +877,7 @@ def test_a_reattested_id_that_names_NO_row_is_refused(tmp_path):
 @pytest.mark.parametrize("rel,id_col", _TIERS)
 def test_a_REMOVED_approved_row_is_absorbed_like_an_amendment(tmp_path, rel, id_col):
     """Deleting an approved row changes the record as surely as rewriting it:
-    the copy drops the text a human blessed. The ledger reads the recorded rows
+    the copy drops the text an operator blessed. The ledger reads the recorded rows
     as well as the live ones, so a removal is absorbed in every compared tier,
     those sharing a file included."""
     (b,) = _ids(id_col, 1)
@@ -958,7 +958,7 @@ def test_an_UNREADABLE_record_takes_no_reattests_either(tmp_path):
 
 
 def test_seed_is_unreachable_from_every_loop_module_and_hook():
-    """THE SEED PIN (design §F1). `--seed` writes the record that a human
+    """THE SEED PIN (design §F1). `--seed` writes the record that an operator
     blessed the spine. Nothing that runs unattended may be able to reach it —
     not the loop, not the dispatcher, not a hook, not `check.py`. A grep, and
     deliberately a grep: the property is "this token does not appear", which no
@@ -1037,7 +1037,7 @@ def test_a_stale_other_carrier_file_is_DELETED_in_the_same_act(tmp_path):
 # --- the OFF-SPINE tiers, which carry no `Status` at all -----------------------
 #
 # `SNAPSHOTTED` copies interfaces/external/components precisely because their
-# maturity cells move only by human hand. Until adversarial round 2 (2026-08-15)
+# maturity cells move only by the operator's hand. Until adversarial round 2 (2026-08-15)
 # `_claims_approval` read `Status` alone, so every one of those rows answered
 # False, was never drift-compared, and the copies recorded nothing anyone would
 # ever look at. These tests are the pin that this cannot silently return.

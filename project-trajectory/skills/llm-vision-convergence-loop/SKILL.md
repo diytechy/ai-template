@@ -24,5 +24,5 @@ images); a single APPROVE is a coin flip near the bar.
    contradicted-by-evidence → decide-and-log the contradiction; lottery re-draw on multiply-approved
    content → decide-and-log citing the approval history. Every dismissal gets a written rationale.
 5. **Done when:** the recorder (not you) prints converged, the noise-floor caveat is disclosed to the
-   human owner, and every probe that guarded a fixed defect class is pinned so it can't silently
+   operator, and every probe that guarded a fixed defect class is pinned so it can't silently
    regress.

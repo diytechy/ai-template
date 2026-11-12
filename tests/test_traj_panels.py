@@ -253,7 +253,7 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     # escalation bullets do not survive the redraw (their successors are the
     # handback outcome and the surface arm, asserted by the station tests).
     assert "The resume loop" not in text
-    assert "Page the human" not in text
+    assert "Page the operator" not in text
     # panel 3 states the two bars and joins the WI registry (4 WIs, 1 done).
     # "rung bar", not "gate bar": the dashboard is the kit's highest-traffic
     # surface and was still teaching the deleted axis and the deprecated

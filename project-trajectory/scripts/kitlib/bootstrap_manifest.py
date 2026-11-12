@@ -169,7 +169,7 @@ MAPPING = [
     # them: it reads the adopting repo's own `docs/<file>`, so the templates
     # are documentation, not an input.)
     ("STATUS.template.md", "docs/status.md"),
-    # The owner decision briefs status.md's Needs-<human> bullets link to
+    # The owner decision briefs status.md's Needs-<operator> bullets link to
     # (process-options.md "Trajectory / work-items layer"): one OI-N section
     # per pending decision, deleted when the ruling lands in log.md Decisions.
     ("registries/open-items.template.toml", "docs/requirements/open-items.toml"),
@@ -182,7 +182,7 @@ MAPPING = [
     # The `last_approved` snapshot's prose stamp. THE DIRECTORY IS SCAFFOLDED
     # WITH ONLY THIS FILE, deliberately: an empty snapshot is the HONEST state
     # for a repo that has approved nothing yet, and shipping pre-filled copies
-    # would hand every new project a record claiming a human blessed text they
+    # would hand every new project a record claiming an operator blessed text they
     # have never seen. The registries land in it at the project's first signing
     # (`intake.py snapshot --seed`), and not before.
     (
@@ -644,7 +644,7 @@ MAPPING = [
     # folder and click" — one hop shallower matters for a non-code evaluator.
     ("README.template.md", "README.md"),
     # The owner's private scratchpad (FB3, owner-feedback-2026-07-11): a root
-    # file for the human owner to keep free-form notes. Its loud header tells LLM
+    # file for the operator to keep free-form notes. Its loud header tells LLM
     # agents not to read/cite/act on it, and check_docs.py exempts it entirely
     # (links, orphans, stale hints) — owner notes never gate. Always scaffolded
     # like the README front door; a repo that doesn't want it just deletes it.
@@ -689,7 +689,7 @@ MAPPING = [
     # scaffold without it cannot claim or mint.
     ("scripts/bookkeeping.py", "scripts/bookkeeping.py"),
     # The unified trunk-side intake mint (WI-388, concurrency-v2 §A5.2;
-    # rulings R1/R3): a WI id is created only by a human trunk commit or this
+    # rulings R1/R3): a WI id is created only by a trunk commit or this
     # helper. integrate.py's post-merge arm and dispatch.py's empty-frontier
     # ladder import it unguarded, so a scaffold without it cannot merge or
     # run the walk-away loop; agent_loop.py imports it lazily (the worker

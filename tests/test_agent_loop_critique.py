@@ -87,7 +87,7 @@ STATUS_MD = """# Status
 ## Current State
 
 - **Open items:**
-  - **Needs <human>**: OI-9 — a pending ask
+  - **Needs <operator>**: OI-9 — a pending ask
 """
 
 # SR-050 is Critique; its Requirement carries a marker so the redaction test can
@@ -334,10 +334,10 @@ def test_prompt_map_slots_a_custom_critique_template(critique_repo):
     assert "RUBRIC-MARKER" in prompts  # {brief} still slotted
 
 
-def test_critique_budget_exhaustion_pages_human(critique_repo):
+def test_critique_budget_exhaustion_pages_the_operator(critique_repo):
     """Implements: TC-085"""
     # A perpetually CHANGES-REQUESTED critique trips the budget after
-    # AGENT_CRITIQUE_MAX rounds and pages the human (attended -> NEEDS-HUMAN, 7).
+    # AGENT_CRITIQUE_MAX rounds and pages the operator (attended -> NEEDS-OPERATOR, 7).
     import os
 
     repo, ctl, cmd = critique_repo
@@ -395,7 +395,7 @@ def test_per_wi_exhaustion_disposition_overrides_autonomous(
     repo, ctl, cmd = critique_repo
     _set_critique_control(repo, "1", disposition)
     # SN-029: the loop-held end of the ladder. `DevStg-Below` is the sentinel
-    # BELOW every rung, so no rung is at-or-below it and nothing is human-held
+    # BELOW every rung, so no rung is at-or-below it and nothing is operator-held
     # (WI-498 slice 5 / WI-493 re-keyed this dial off the 0-4 ordinal; the
     # retired `0` still reads through the migration window, but a fixture that
     # spells it leaves the re-key untested exactly here).

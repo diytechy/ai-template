@@ -1007,7 +1007,7 @@ def paraphrase_advisories(srs, llrs):
 # All three are ADVISORY and stay advisory. They report a TIERING smell — a row
 # that decided which artifact carries a capability, or a row that merged several
 # decisions and grew a fan of children to cover them — and a smell is exactly
-# what a human decides. None ever joins the exit code under any flag. R2's
+# what an operator decides. None ever joins the exit code under any flag. R2's
 # no-concrete-artifact rule reaches the SN tier too (`sn_artifact_advisories`,
 # owner directive 2026-08-18); the fan-out rule is SR-only by construction.
 

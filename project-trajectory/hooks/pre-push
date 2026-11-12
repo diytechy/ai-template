@@ -20,7 +20,7 @@
 # iteration-branch sync ritual's scrub step (process-options.md "Agent
 # iteration branch & sync"). This backstop still catches direct-to-dev-branch
 # edits in clones that ran setup. `git push --no-verify` remains git's own
-# escape hatch for a human — by design, we do not pretend otherwise.
+# escape hatch for an operator — by design, we do not pretend otherwise.
 #
 # Two layers per outgoing ref:
 #   1. Deterministic lint: scripts/check_privacy.py --range over the outgoing

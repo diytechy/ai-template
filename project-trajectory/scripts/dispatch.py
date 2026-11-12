@@ -16,7 +16,7 @@ of refusing, and the dispatcher composes the independently-proven parts:
     integrate.py integrate (IF-080) -> the merge slot
 
 The frontier is re-derived from the registry at the top of EVERY tick, so a
-WI filed mid-run (by a worker, a review, or a human) is picked up in the same
+WI filed mid-run (by a worker, a review, or an operator) is picked up in the same
 run — no restart needed. Up to `lanes` worker lanes run at once (the §A4.3
 dial: CLI --lanes > AGENT_LANES > docs/stack.ini [agent-loop] lanes > 1; the
 template seeds 2, an absent key means 1 so no adopter is upgraded into
@@ -34,16 +34,16 @@ back in the station, then admits the first spine row ALONE (one branch, one
 `agent_loop --wi WI-###` worker, one re-attest window); the remaining spine
 rows stay queued for later exclusive turns. A lane carries exactly one work
 item. An `attestation`/`gate` row does NOT dispatch while the tier in process
-is still HUMAN-HELD: the lanes drain, the cards stay on open-items.html, and
+is still OPERATOR-HELD: the lanes drain, the cards stay on open-items.html, and
 the run exits 0 — the machine finished everything it was allowed to do
-(`agent_route.failure_action(human_held=True)` is the contract this
+(`agent_route.failure_action(operator_held=True)` is the contract this
 implements). `keep_nondependent` never releases that hold: once nothing else
 remains, those rows still surface; on a LOOP-HELD tier they dispatch outright,
 one at a time and exclusive (a recorded fresh-context reviewer verdict
 approves). The three retired enum words
 (`attended` / `single-approve` / `autonomous`) each named one cell of that
 two-dial table, which is why they could not express the fourth. The fixed
-points hold at every level: the owner's final read is the human's, no un-run greens, the
+points hold at every level: the final read is the operator's, no un-run greens, the
 harness is still the bar, approved owner decisions are never re-decided.
 
 Beyond admission it adds ORDERING only, no authority: every refusal stays
@@ -341,39 +341,39 @@ def _refresh_or_quarantine(root, branch, tier):
     return refusal
 
 
-def _kind_action(kind, human_held, approval_held=False):
+def _kind_action(kind, operator_held, approval_held=False):
     """The §A8 policy table — what the dispatcher does with a frontier row of
     `kind`, and the one place this module must not invent policy:
 
-        kind                  human-held tier      loop-held tier
+        kind                  operator-held tier      loop-held tier
         ordinary, critique    parallel             parallel
         high-risk, protected  exclusive            exclusive
         spine                 exclusive            exclusive
         attestation, gate     surface              exclusive
 
-    `human_held` is the SN-029 comparison already made: is the tier this repo's
-    spine is currently in process at still the human's to approve
-    (`agent_common.human_holds`)? It replaces the three-value gate-authority enum,
-    which could not express "TCs are human-held but LLRs are not" — the whole
+    `operator_held` is the SN-029 comparison already made: is the tier this repo's
+    spine is currently in process at still the operator's to approve
+    (`agent_common.operator_holds`)? It replaces the three-value gate-authority enum,
+    which could not express "TCs are operator-held but LLRs are not" — the whole
     reason the approval dial became an ordinal read against the 0-5 spine
     stage ladder (the dial's own levels stay 0-4: the four SPINE tiers plus
     "nothing", and implementation is not an approval tier).
 
     A `spine` row dispatches EITHER WAY because building a scope change is
     WORK, not an approval — it opens a window; closing it is the next row's
-    job. `attestation`/`gate` close a window, which on a human-held tier is the
-    human's act (drain, surface the cards, exit 0) and otherwise dispatches — a
+    job. `attestation`/`gate` close a window, which on an operator-held tier is the
+    operator's act (drain, surface the cards, exit 0) and otherwise dispatches — a
     recorded fresh-context reviewer verdict approves. The last arm also covers
     `adjudication`: exclusive, like every non-parallel kind.
 
     `approval_held` IS THE OFF-SPINE AXIS (owner ruling OI-30 D3, 2026-08-15),
     and it is a SECOND reason to surface rather than a widening of the first.
-    `human_held` answers about the SPINE tier the repo is in; a WI whose action
+    `operator_held` answers about the SPINE tier the repo is in; a WI whose action
     would move an `approval` cell in an off-spine registry is governed by THAT
-    registry's own rung — `agent_common.human_approves(docs, registry)`, which
+    registry's own rung — `agent_common.operator_accepts(docs, registry)`, which
     reads the same `operator_accepts_through` dial through
     `agent_common.APPROVAL_RUNGS`. Either hold surfaces: a loop session must not
-    write an approval a human owes, even on a spine tier the project has
+    write an approval an operator owes, even on a spine tier the project has
     declared machine-approvable.
 
     IT DEFAULTS FALSE AND EVERY CALLER IN THIS MODULE PASSES THE DEFAULT, which
@@ -393,7 +393,7 @@ def _kind_action(kind, human_held, approval_held=False):
     if kind == "spine":
         return "exclusive"
     if kind in ("attestation", "gate"):
-        return "surface" if (human_held or approval_held) else "exclusive"
+        return "surface" if (operator_held or approval_held) else "exclusive"
     return "exclusive"
 
 
@@ -418,12 +418,12 @@ def _judgement_first(ready_kinds):
     return sorted(ready_kinds, key=lambda wk: wk[1] != "adjudication")
 
 
-def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
+def _admission(ready_kinds, operator_held, busy, free, keep_nondependent=False):
     """THE SPINE BARRIER, as a pure decision (§A4/§A8): what may start now?
 
     `ready_kinds` is the ordered frontier as `(wi_id, kind)` pairs (rank
-    already sorted spine first), `human_held` the SN-029 comparison (is the
-    tier in process still the human's to approve?), `busy` whether any lane is
+    already sorted spine first), `operator_held` the SN-029 comparison (is the
+    tier in process still the operator's to approve?), `busy` whether any lane is
     out, `free` how many lanes are open, and `keep_nondependent` the orthogonal
     dial an ordinal cannot carry — may other work keep running while an
     approval is queued? Returns `(verb, payload)`:
@@ -449,12 +449,14 @@ def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
     if not ready_kinds:
         return "empty", []
     ready_kinds = _judgement_first(ready_kinds)
-    surfaced = [w for w, k in ready_kinds if _kind_action(k, human_held) == "surface"]
+    surfaced = [
+        w for w, k in ready_kinds if _kind_action(k, operator_held) == "surface"
+    ]
     dispatchable = [
-        (w, k) for w, k in ready_kinds if _kind_action(k, human_held) != "surface"
+        (w, k) for w, k in ready_kinds if _kind_action(k, operator_held) != "surface"
     ]
     if surfaced and not keep_nondependent:
-        # The human-held stop (§A8 premise: once an approval is pending, no
+        # The operator-held stop (§A8 premise: once an approval is pending, no
         # work can be taken): drain and exit 0 into the owner's queue.
         return "surface", surfaced
     if not dispatchable:
@@ -466,24 +468,24 @@ def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
         # This arm used to admit them, inherited from the retired
         # `single-approve` word — "dispatches only as the queued batch once
         # nothing else remains". Under the ordinal that is a contradiction:
-        # `human_held` is TRUE here, which is the statement that this tier is
-        # the human's to approve, and `keep_nondependent` answers an entirely
+        # `operator_held` is TRUE here, which is the statement that this tier is
+        # the operator's to approve, and `keep_nondependent` answers an entirely
         # different question — may OTHER lanes keep running while a
         # approval is queued. Letting the second dial override the first is
-        # the machine approving what a human declared theirs, reached by a
+        # the machine approving what an operator declared theirs, reached by a
         # combination the enum could not even express (level 4 +
         # keep_nondependent, the fourth cell).
         if busy:
             return "wait", []
         return "surface", surfaced
     first_w, first_k = dispatchable[0]
-    action = _kind_action(first_k, human_held)
+    action = _kind_action(first_k, operator_held)
     if action == "exclusive":
         if busy:
             return "wait", []
         return "admit-exclusive", [first_w]
     assignments = [
-        [w] for w, k in dispatchable if _kind_action(k, human_held) == "parallel"
+        [w] for w, k in dispatchable if _kind_action(k, operator_held) == "parallel"
     ]
     assignments = assignments[: max(0, free)]
     if not assignments:
@@ -571,7 +573,7 @@ def _branch_exclusive(root, branch):
 # ready), so an unattended run can never pick that WI up again until a successor
 # is minted. §A3's ruling is "any non-zero worker exit that is not a crash", and
 # its justification (the dominant shape is green-but-not-approved or
-# cannot-proceed-for-config-reasons) is about EXIT_NEEDS_HUMAN, not about a
+# cannot-proceed-for-config-reasons) is about EXIT_NEEDS_OPERATOR, not about a
 # ceiling. The alternative — a handback that stays resumable — re-opens the
 # claim/return/re-claim loop this row closed, bounded then only by
 # --max-iterations, so it is an owner call rather than a builder's: filed as a
@@ -587,7 +589,7 @@ def _branch_exclusive(root, branch):
 # handback then committed the lane's uncommitted residue as "the work so far,
 # committed as-is (partial close)" and moved rows to the TERMINAL `partial/` -
 # recording an outcome for a failure the lane could not have caused and no
-# human had read. A lane whose worker never started is parked exactly like a
+# operator had read. A lane whose worker never started is parked exactly like a
 # CRASHED one: the claim stays in `active/`, the next cycle resumes it, and a
 # worker that keeps refusing trips the stall guard. Nothing is committed on its
 # behalf.
@@ -597,7 +599,7 @@ _WORKER_OUTCOMES = frozenset(
         ac.EXIT_STALL,
         ac.EXIT_WAITING,
         ac.EXIT_BUDGET,
-        ac.EXIT_NEEDS_HUMAN,
+        ac.EXIT_NEEDS_OPERATOR,
         ac.EXIT_PAUSED,
         ac.EXIT_RED_CAP,
     }
@@ -631,9 +633,9 @@ def _lane_close(root, branch, code):
     """What a non-DONE worker outcome does to the lane: None to keep driving,
     else the exit code the run ends with (§A3).
 
-    THE RUN-STOPS THIS REPLACES. `EXIT_NEEDS_HUMAN` used to end the whole drive
+    THE RUN-STOPS THIS REPLACES. `EXIT_NEEDS_OPERATOR` used to end the whole drive
     loop and any other non-zero exit stopped it with the branch parked — so one
-    WI wanting a human froze a walk-away run, and its partial work sat where
+    WI wanting an operator froze a walk-away run, and its partial work sat where
     nobody would find it. Neither is an exceptional outcome that deserves an
     exceptional path: the lane hands back, the WI returns to trunk blocked and
     visible on the owner surface, and the dispatcher moves to the next one.
@@ -699,19 +701,19 @@ def _lane_close(root, branch, code):
         )
         return None
     reason = "worker exit {}{}".format(
-        code, " (NEEDS-JUDGEMENT)" if code == ac.EXIT_NEEDS_HUMAN else ""
+        code, " (NEEDS-JUDGEMENT)" if code == ac.EXIT_NEEDS_OPERATOR else ""
     )
     # SR-144: the dispatcher's own close carries the TYPED fields the report
     # schema declares, rather than smuggling them through the reason string.
     # (SR-144 owns the report's SHAPE; LLR-161 owns what the disposition row
     # minted from it may then do — lineage, not fields.)
     # The tier is keyed off the EXIT-CODE CLASS — a fact the dispatcher already
-    # holds — not off a substring of prose: `NEEDS_HUMAN`, `needs human` or any
+    # holds — not off a substring of prose: `NEEDS_OPERATOR`, `needs operator` or any
     # typo used to downgrade a disposition silently, because a case-folded
-    # search for `NEEDS-HUMAN` was the tier's only input. The label in the
+    # search for `NEEDS-OPERATOR` was the tier's only input. The label in the
     # reason is now decoration; the field is the contract.
     fields = {
-        "suggested_tier": "strong" if code == ac.EXIT_NEEDS_HUMAN else "medium",
+        "suggested_tier": "strong" if code == ac.EXIT_NEEDS_OPERATOR else "medium",
         # THE DISPATCHER CANNOT JUDGE THE KEEP/DISCARD SPLIT and says so, in a
         # typed field, rather than leaving the report silent. It has no view of
         # the work at all — the worker exited or crashed — so the honest answer
@@ -1176,7 +1178,7 @@ def _admit(
     args,
     worker,
     tier,
-    human_held,
+    operator_held,
     keep_going,
     lanes_total,
     config_refusal,
@@ -1242,7 +1244,7 @@ def _admit(
         args,
         worker,
         tier,
-        human_held,
+        operator_held,
         keep_going,
         free,
         busy,
@@ -1284,7 +1286,7 @@ def _admit_frontier(
     args,
     worker,
     tier,
-    human_held,
+    operator_held,
     keep_going,
     free,
     busy,
@@ -1310,7 +1312,7 @@ def _admit_frontier(
     kinds = {w["id"]: schedule.kind_of(w) for w in wis}
     verb, payload = _admission(
         [(r["id"], kinds.get(r["id"])) for r in ready],
-        human_held,
+        operator_held,
         busy,
         free,
         keep_going,
@@ -1440,7 +1442,7 @@ def _station_exit(root, tier, verb, payload, state):
         )
     )
     # SN-029's separate end-of-run hold. The ordinal answers "which TIER is the
-    # human's"; this answers "do I get a last look before the run walks away",
+    # operator's"; this answers "do I get a last look before the run walks away",
     # and they are different questions — which is exactly why it is its own
     # dial. Without a reader it was a declared, type-checked promise that
     # nothing kept: a run at level 0 with `final_review = "always"` closed
@@ -1448,7 +1450,7 @@ def _station_exit(root, tier, verb, payload, state):
     _say(drained)
     if ac.final_review(root / "docs"):
         # EXIT_DONE, deliberately, and this is the part worth being careful
-        # about. `NEEDS-HUMAN` means BLOCKED — something is owed before work can
+        # about. `NEEDS-OPERATOR` means BLOCKED — something is owed before work can
         # continue — and a clean drain is the opposite of that: everything
         # merged, the bar is green, nothing is owed by the machine. Returning 7
         # here would make every successful walk-away run report failure to the
@@ -1457,11 +1459,11 @@ def _station_exit(root, tier, verb, payload, state):
         #
         # What the dial actually buys is that the run does not close SILENTLY:
         # the loop stops (this IS the end of the run) and says so loudly enough
-        # that a human reads it rather than discovering it in a log later.
+        # that the operator reads it rather than discovering it in a log later.
         _say(
             "FINAL REVIEW - the run is COMPLETE and nothing is blocked, but "
             "docs/process.toml [authority] final_review is not 'off', so it "
-            "ends here for a human read rather than closing quietly. Read the "
+            "ends here for an operator read rather than closing quietly. Read the "
             "run; set the dial to 'off' when you no longer want the stop."
         )
     return ac.EXIT_DONE
@@ -1524,9 +1526,9 @@ def run(root, args, worker=None, tier="all"):
     lanes_total = _lane_count(args, root)
     # SN-029: one ordinal comparison, made once per run, threaded down exactly
     # as the enum was. `spine_stage_of` reads the tier currently in process
-    # through `kitlib.stage.read_stage`; `human_holds` compares it against the
+    # through `kitlib.stage.read_stage`; `operator_holds` compares it against the
     # declared `operator_accepts_through`.
-    human_held = ac.human_holds(root / "docs", ac.spine_stage_of(root))
+    operator_held = ac.operator_holds(root / "docs", ac.spine_stage_of(root))
     keep_going = ac.keep_nondependent(root / "docs")
     # Computed once, APPLIED lazily: admission refuses on it only when work
     # actually needs a worker, so an empty queue still drains to exit 0 on an
@@ -1579,7 +1581,7 @@ def run(root, args, worker=None, tier="all"):
                 args,
                 worker,
                 tier,
-                human_held,
+                operator_held,
                 keep_going,
                 lanes_total,
                 config_refusal,

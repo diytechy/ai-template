@@ -243,7 +243,7 @@ def _markdown_files(root):
     (`planned_writes`), so the two cannot disagree about which files exist.
 
     The owner-only paths (`agent_common.OWNER_ONLY_PATHS`) are not visited:
-    they are the human owner's free-form notes, and no kit step rewrites them.
+    they are the operator's free-form notes, and no kit step rewrites them.
     A stale link there is the owner's to fix. Relinking it put the scratchpad
     in a claim's write set, so an owner mid-edit had the claim refused by name
     over their own notes. Excluded HERE, in the one traversal, the plan and the

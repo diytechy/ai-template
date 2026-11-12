@@ -43,7 +43,7 @@
 # `Drafted` | `Approved`. `Founded` is NOT APPLICABLE to this tier and never
 # will be — it means settled AND DEMONSTRATED, and an approval says the
 # crossing is AGREED, not that it was demonstrated. Flipping a row to
-# `Approved` is a HUMAN act recorded as a reviewed Status-change commit; no
+# `Approved` is an OPERATOR act recorded as a reviewed Status-change commit; no
 # loop and no script may do it.
 #
 # APPLIES-WHEN: a project that never declares a boundary simply does not create

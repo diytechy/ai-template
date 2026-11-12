@@ -135,7 +135,7 @@ Two tables ship, with **different columns**.
 **Note the asymmetry:** SN gets *no* required-field check and *no* enum check —
 `--strict-schema` covers SR/LLR/TC only. An SN row with an empty
 `Why it matters` and a blank `Acceptance intent` passes every gate. Prose tier,
-prose enforcement; the DevStg-Reqs consistency review is the human backstop.
+prose enforcement; the DevStg-Reqs consistency review is the operator backstop.
 
 ---
 
@@ -201,7 +201,7 @@ two scripts disagreeing about the gate.
 |---|---|---|---|
 | `Drafted` | `is_drafted` | **DevStg-Below — drops the repo gate** | Exempt from *child-completeness*: needs no LLR, no TC. SN linkage and all integrity rules still apply. Exempt from `--require-verified`. |
 | `Approved` | `is_approved` | doesn't hold a rung open (`is_drafted` is what does) | The row's TEXT is blessed. It makes NO claim that tests passed: the 2026-08-15 ruling (OI-30 D2) carried onto the stage axis at WI-498 slice 3. **No cell reaches DevStg-Release**, and since WI-500 that is structural rather than vacuous — the rung's one input is `spine_stage`'s `evidence_passed` parameter, fed only by `kitlib.stage.evidence_verdict` over the harness-written `docs/test/evidence` record, and the pin demands that return be guarded by the bare parameter so a row-computed guard is unrepresentable. |
-| `Founded` | `is_founded` | same as `Approved` (settled, never caps) | `Approved` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it — whether a tool ever will is D-9 consequence 2's still-open half — but whether an AGENT-authored `Founded` is itself an error is answered: OI-45 (ruled 2026-08-20) sanctions it for spine content past the declared operator-acceptance level (`agent_common.human_holds`) — NARROWED 2026-09-01 to an ADJUDICATION session on the serial trunk side: a worker lane's merge is refused if its delta writes any approval claim (`integrate._approval_act_refusal`). |
+| `Founded` | `is_founded` | same as `Approved` (settled, never caps) | `Approved` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it — whether a tool ever will is D-9 consequence 2's still-open half — but whether an AGENT-authored `Founded` is itself an error is answered: OI-45 (ruled 2026-08-20) sanctions it for spine content past the declared operator-acceptance level (`agent_common.operator_holds`) — NARROWED 2026-09-01 to an ADJUDICATION session on the serial trunk side: a worker lane's merge is refused if its delta writes any approval claim (`integrate._approval_act_refusal`). |
 | anything else | — | (an integrity finding — see §3.2's closure) | Not inert: reported. |
 
 **There is no value for a post-approval amendment.** A transitional `Modified`
@@ -560,7 +560,7 @@ on any lane. **The display surfaces are the named exception**, by design:
 directly, without the fingerprint check, so a generated artifact describes the
 commit it ships with. On a tree whose declared inputs have moved,
 `PROJECT_STATE.html` and the generated status block therefore render the
-recorded rung while `check.py` and `human_holds` derive fresh. Only three call
+recorded rung while `check.py` and `operator_holds` derive fresh. Only three call
 sites reach `read_stage` — `check.py`, `agent_common.py`, `check_trajectory.py`
 — and those are exactly the deciding ones.
 
@@ -760,7 +760,7 @@ Four things separate them, only the first of which is a test run:
 4. **Release admin and different sign-offs** — version bump, changed `Approved`
    interface versions communicated to counterparts, changelog. DevStg-Impl signs off
    System Engineer + Test Engineer; DevStg-Release adds the active domain hats and the
-   **Human**.
+   **Operator**.
 
 **How a Release-tier TC is authored** — two populations, built nothing alike:
 
@@ -829,9 +829,9 @@ four readers share one two-tree walk, so no row is visible to only one.
 
 WHICH of those drafted rows an adjudicator may actually flip is the DIAL's
 answer, from one table: `agent_common.SPINE_APPROVAL_RUNGS` names the DevStg
-rung each spine registry's rows are approved into, and `human_approves_spine`
+rung each spine registry's rows are approved into, and `operator_accepts_spine`
 compares it against `operator_accepts_through` — unmapped is HELD, the same
-fail-safe its off-spine sibling `human_approves` takes. Both ends read it: the
+fail-safe its off-spine sibling `operator_accepts` takes. Both ends read it: the
 mint hands over only released rows, and `adjudicate_brief.
 first_approval_values`, which RE-RESOLVES the population live at composition
 time (the row is claimed long after the merge), re-applies the same filter to

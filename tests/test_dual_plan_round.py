@@ -318,8 +318,8 @@ def test_arbiter_disagreement_pages(tmp_path):
 def test_arbiter_disagreement_on_a_loop_held_tier_stalls_not_pages(tmp_path):
     """Implements: TC-098"""
     # The same position-unstable PAGE on a LOOP-HELD tier must NOT hard-gate
-    # a human: the single-shot flag reaches the pause-free end state —
-    # EXIT_STALL (attention), never NEEDS-HUMAN.
+    # an operator: the single-shot flag reaches the pause-free end state —
+    # EXIT_STALL (attention), never NEEDS-OPERATOR.
     root, fake = make_fixture(tmp_path)
     # SN-029: the loop-held tier — `DevStg-Below`, the sentinel below every
     # rung, where a recorded verdict carries approval authority. Declared
@@ -339,11 +339,11 @@ def test_arbiter_disagreement_on_a_loop_held_tier_stalls_not_pages(tmp_path):
 def test_arbiter_disagreement_with_keep_nondependent_stalls_not_pages(tmp_path):
     """Implements: TC-098"""
     # single-approve rides the SAME pause-free else-arm as autonomous (both are
-    # non-stop-needs-human page actions), so the flag path must reach
-    # EXIT_STALL, never NEEDS-HUMAN. Braces SR-108's "autonomous/
+    # non-stop-needs-operator page actions), so the flag path must reach
+    # EXIT_STALL, never NEEDS-OPERATOR. Braces SR-108's "autonomous/
     # single-approve" clause at the --dual-plan entry (113-REVIEW-A follow-up).
     root, fake = make_fixture(tmp_path)
-    # The retired `single-approve` level was two facts: a human-held tier PLUS
+    # The retired `single-approve` level was two facts: an operator-held tier PLUS
     # `keep_nondependent`. Both are declared now, separately.
     set_process_key(root, "authority", "operator_accepts_through", "DevStg-Release")
     set_process_key(root, "authority", "keep_nondependent", True)

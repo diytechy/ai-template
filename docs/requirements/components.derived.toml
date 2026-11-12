@@ -8,7 +8,7 @@
 #
 # NO APPROVAL CELL APPEARS HERE, EVER: maturity lives on the
 # hand-authored components.toml row, and nothing in this file is evidence
-# that a human blessed anything.
+# that an operator blessed anything.
 #
 # An `[unplaced] sr_refs` entry reaches no component because it has no design
 # child — either a decomposition not yet written, or a constraint over EVERY

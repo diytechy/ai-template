@@ -19,7 +19,7 @@ Its three rules, straight from §5.5, are the whole design brief:
       lesson applied to the new machinery on day one).
 
 It never commits. Staging and committing belong to the caller (the integrator,
-the Action, or a human), so this step composes with whatever wraps it.
+the Action, or an operator), so this step composes with whatever wraps it.
 
 Compile-log (`--compile-log`)
     Every fragment is validated BEFORE anything is written — all-or-nothing, so a

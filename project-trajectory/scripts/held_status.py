@@ -82,7 +82,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 _git = acceptance_record._git
 
 
-# The approval level names the rungs a human still approves, and the approval
+# The approval level names the rungs an operator still approves, and the approval
 # act (`acceptance_record`) is already refused for the SPINE. The off-spine
 # registries carry status cells of their own that no automated path was stopped from changing,
 # so a declared hold on their rung was a claim rather than a control. The two
@@ -223,14 +223,14 @@ def pending_status_moves(root):
 
 
 def held_status_lines(dial, moves):
-    """One line per move whose registry's rung `dial` holds for a human, naming
+    """One line per move whose registry's rung `dial` holds for an operator, naming
     the registry, the row, the move and the rung — THE judgement both the
     refusal below and the history check read, so the two cannot disagree about
     which move is held.
 
     A registry the rung map does not name is HELD whatever the dial says:
     nobody has ruled which rung governs it, and the only safe answer to that is
-    the human's (the `agent_common.human_approves` fail-safe, applied to a
+    the operator's (the `agent_common.operator_accepts` fail-safe, applied to a
     delta instead of an intent)."""
     lines = []
     for move in moves:
@@ -257,7 +257,7 @@ def held_status_refusal(dial, moves):
     if not held:
         return None
     return (
-        "the loop may not change a status the approval level holds for a human "
+        "the loop may not change a status the approval level holds for an operator "
         "(operator_accepts_through = {}): {} - a held status moves only in a "
         "person's own reviewed commit".format(dial, "; ".join(held))
     )
@@ -659,7 +659,7 @@ def marked_refusal(root, base, head, dial, paths=None):
         return None
     return (
         "the loop may not change a status or claim an approval the approval "
-        "level holds for a human (operator_accepts_through = {}): {} - a held "
+        "level holds for an operator (operator_accepts_through = {}): {} - a held "
         "status moves only in a person's own reviewed commit, and a held "
         "approval lands from a lane only as a CLARITY re-attestation bound to "
         "its judged text".format(dial, "; ".join(lines))

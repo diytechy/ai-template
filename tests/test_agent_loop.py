@@ -2,7 +2,7 @@
 "Unattended operation") — exercised end-to-end against a fake agent command,
 so no test depends on any real agent CLI. The fake pops one action per
 invocation from a control dir outside the repo: commit / noop / done /
-blocked / needs-human / limit / sleep.
+blocked / needs-operator / limit / sleep.
 
 WI-277 split this module by behavior boundary. What stays here is everything
 that needs the FAKE_AGENT/loop_repo subprocess harness, plus the git-helper and
@@ -155,7 +155,7 @@ STATUS_MD = """# Project Status
 
 - **Active gate:** DevStg-Reqs
 - **Open items:**
-  - **Needs <human>**:
+  - **Needs <operator>**:
     - OI-1 — decide: approve the demo gate (blocks: DevStg-Reqs)
 
 ## Scope
@@ -862,7 +862,7 @@ def test_a_reset_ONE_SECOND_past_the_ceiling_abandons_the_run(loop_repo, tmp_pat
     """The other arm of the same fork, so the boundary pin above cannot be
     satisfied by a predicate that simply always sleeps. Same frozen clock, same
     13500s parsed wait, ceiling one second lower: the run must stop at
-    EXIT_WAITING (5) rather than sleep past what the human consented to."""
+    EXIT_WAITING (5) rather than sleep past what the operator consented to."""
     repo, ctl, template = loop_repo
     frozen = datetime.datetime(2026, 1, 1, 12, 0, 0)
     exact = 3 * 3600 + 45 * 60

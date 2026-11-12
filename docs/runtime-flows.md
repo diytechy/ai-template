@@ -185,7 +185,7 @@ sequenceDiagram
             Disp->>Lane: spawn the worker subprocess on the lane worktree
         end
         Lane-->>Disp: worker exit
-        alt decided non-DONE exit (NEEDS-HUMAN, blocked, budget, stall, commit-check failure cap)
+        alt decided non-DONE exit (NEEDS-OPERATOR, blocked, budget, stall, commit-check failure cap)
             Disp->>Hand: close_partial — commit as-is, spec to terminal partial/ with a per-close report
             Note over Disp,Hand: the lane still closes into trunk and the run<br/>continues; only a FAILED handback stops it (LLR-144)
         else crash (traceback, signal)

@@ -20,7 +20,7 @@ unreproducible number is the failure mode.
    (`INSUFFICIENT OVERLAP`, "met, but saturated") — honest nonzero exits are recorded facts.
 4. Record findings with numbers, negative results first-class; flag interpreted defaults as
    veto-able; when metrics change, keep the old number as a reference column.
-5. Maintain the resume surface every session: where it stands, exact resume commands, the human's
+5. Maintain the resume surface every session: where it stands, exact resume commands, the operator's
    bench errands as copy-pasteable blocks with consequences stated.
 6. **Done when:** a fresh clone can run the headless set and reproduce the cited numbers, and a cold
    session can resume from the surface without re-surveying the repo.

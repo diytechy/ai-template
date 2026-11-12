@@ -127,7 +127,7 @@ def test_routingstate_apply_decision_page_rearms_fail_tally():
     st.rounds = [{}, {}, {}]
     st.next_phase = "BUILD"
     st.critique_queue = ["CRITIQUE"]
-    st.apply_decision("page-human", "CHANGES-REQUESTED")
+    st.apply_decision("page-operator", "CHANGES-REQUESTED")
     # Re-armed to the current round count; nothing else touched (the page path's
     # I/O — failure_action / banner / run-state — stays with the caller).
     assert st.page_fails_since == 3
@@ -365,8 +365,8 @@ def test_routingstate_note_session_and_stall_verdict():
         ((None, False, "DONE", True, {"is_error": False}, 0), ("DONE", False)),
         ((None, False, "BLOCKED", True, {"is_error": False}, 0), ("BLOCKED", False)),
         (
-            (None, False, "NEEDS-HUMAN", True, {"is_error": False}, 0),
-            ("NEEDS-HUMAN", False),
+            (None, False, "NEEDS-OPERATOR", True, {"is_error": False}, 0),
+            ("NEEDS-OPERATOR", False),
         ),
         # A commit with no end-state -> COMMITTED, not errored.
         ((None, False, "RUNNING", True, {}, 0), ("COMMITTED", False)),

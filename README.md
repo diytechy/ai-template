@@ -36,7 +36,7 @@ limitations and protection against publishing secrets or private information.
 <a id="objective-o4"></a>
 ### (O4) Explicit authority
 
-Advance through clear approval boundaries, keeping human and delegated
+Advance through clear approval boundaries, keeping the operator's own and delegated
 decisions visible and preventing automation from granting itself more authority.
 
 <a id="objective-o5"></a>
@@ -138,7 +138,7 @@ chasing it.
     requirement's perceptual acceptance is judged by a fresh, independent
     **critic** against a written [`docs/rubrics/`](project-trajectory/rubrics/README.template.md)
     rubric with numbered good/bad anchors derived from the SN/SR intent. Family
-    heterogeneity is required on the unattended path; the human chooses the
+    heterogeneity is required on the unattended path; the operator chooses the
     reviewer for attended acceptance. Rework iterates toward the bar and
     escalates on budget exhaustion; a lax-TC ratchet keeps the fix landing in
     the chain (SN-024).
@@ -146,7 +146,7 @@ chasing it.
     injects a vendored discipline core into weaker-tier sessions, drift-checked
     by `check_vendored.py`.
   - Consent is explicit via the dials scaffolded into `docs/process.toml`:
-    `operator_accepts_through` (which tiers a human approves — the row
+    `operator_accepts_through` (which tiers an operator approves — the row
     below; the retired `gate_policy` enum is **not** shipped), `push`
     (who may push), and
     `privacy_check` (the PII/identity gate, enforced by the git hooks +
@@ -498,8 +498,8 @@ set:
 |---|---|---|---|
 | `stage` | **generated** — `derive_stage.py` computes it from artifact states (a fresh scaffold reads `DevStg-Reqs`) | never hand-edited; advances by *approving* artifacts | see the [generated current state](docs/status.md#current-state) |
 | `process.toml` `gate_policy` | **not shipped** — SN-029 retired the enum for the dial below; a legacy key is read only as a migration fallback | `bootstrap.py --gate-policy <word>` still takes `"attended"` / `"single-approve"` / `"autonomous"`, but **translates** it to the dials rather than storing it (and scaffolds a deviation register) | not declared; the `"autonomous"` posture is recorded in its [register](docs/gate-policy.md) |
-| `process.toml` `operator_accepts_through` | `"DevStg-Release"` (every rung human-held) | name a lower rung — every rung **at or below** the value is human-held, down to `"DevStg-Below"` (nothing human-held) | `"DevStg-Needs"` — higher rungs use the delegated artifact approval route; read the live [dial](docs/process.toml) |
-| `process.toml` `push` | `"human"` | opt-in `"agent-iteration"` / `"agent"` | `"human"` |
+| `process.toml` `operator_accepts_through` | `"DevStg-Release"` (every rung operator-held) | name a lower rung — every rung **at or below** the value is operator-held, down to `"DevStg-Below"` (nothing operator-held) | `"DevStg-Needs"` — higher rungs use the delegated artifact approval route; read the live [dial](docs/process.toml) |
+| `process.toml` `push` | `"operator"` | opt-in `"agent-iteration"` / `"agent"` | `"operator"` |
 | `process.toml` `review_rounds` | `1` | reviewer dial `0`–`2` (an **int**, not a word) | `1` |
 | `process.toml` `privacy_check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
 | `process.toml` `secrets_scan` | `true` | **opt-out** `false` | `true` |
@@ -527,7 +527,7 @@ What each approval gate certifies — full criteria in
 [`PROCESS.md`](project-trajectory/PROCESS.md) §4, which also carries the ruled
 **stage** model: a repo is *in* exactly one stage (one of the eight rungs of
 §4's `DevStg-*` ladder), and there is no second axis — a certified rung boundary
-is simply one a named human signs. The value in `docs/stage` is *derived*, not
+is simply one a named operator signs. The value in `docs/stage` is *derived*, not
 declared — `derive_stage.py` computes it from the artifact states over the
 SETTLED spine (so drafting cannot lower it) and records it, generated and never
 hand-edited, as **the rung the repo is in**, which is also what the harness

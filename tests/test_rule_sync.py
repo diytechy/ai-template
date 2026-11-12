@@ -922,7 +922,7 @@ _CHECK_TOML_CASES = [
     ("[checks]\ntrajectory_check = true\n", True),
     ("[checks]\ntrajectory_check = false\n", False),
     # Undeclared, in every shape that is not a declaration.
-    ('[policies]\npush = "human"\n', None),
+    ('[policies]\npush = "operator"\n', None),
     ("[checks]\ninterfaces_check = false\n", None),
     ("", None),
     ("# trajectory_check = false\n", None),
@@ -1579,7 +1579,7 @@ def test_the_open_items_readers_answer_by_value(tmp_path):
     """Implements: TC-314"""
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True)
-    brief = "Approve the [p]-[DevStg-Reqs] batch: a human approval"
+    brief = "Approve the [p]-[DevStg-Reqs] batch: an operator approval"
     (req / "open-items.toml").write_text(
         "[open_item.OI-000]\n"
         'status = "pending"\n'
@@ -1778,8 +1778,8 @@ def test_the_reference_doc_argv_differs_only_by_its_doc(tmp_path):
 def test_the_two_held_status_predicates_agree_by_value(tmp_path):
     """DUPLICATED POLICY, KEPT DELIBERATELY (the duplicated-stage research,
     docs/plans/2026-09-28-duplicated-stage-detection.md §7 and its appendix's
-    M0 sample): `human_approves` states the WRITER-side contract and
-    `human_approves_spine` the READER-side one, two contracts that today share
+    M0 sample): `operator_accepts` states the WRITER-side contract and
+    `operator_accepts_spine` the READER-side one, two contracts that today share
     one body. This file's rule licenses a second copy of a decision only with
     a behavioural pin, so they are held equal BY VALUE over every registry
     spelling at every dial. A deliberate divergence edits this pin.
@@ -1807,8 +1807,8 @@ def test_the_two_held_status_predicates_agree_by_value(tmp_path):
             encoding="utf-8",
         )
         for registry in registries:
-            writer = AGENT_COMMON.human_approves(docs, registry)
-            reader = AGENT_COMMON.human_approves_spine(docs, registry)
+            writer = AGENT_COMMON.operator_accepts(docs, registry)
+            reader = AGENT_COMMON.operator_accepts_spine(docs, registry)
             assert writer == reader, (dial, registry, writer, reader)
             seen.add((registry, writer))
     # Not vacuous: the dial moves the answer for a mapped registry, and an

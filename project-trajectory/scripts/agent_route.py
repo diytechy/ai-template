@@ -66,7 +66,7 @@ weaker one**.
 The escalation policy is **fixed and declared, not a learned router**
 (per-project sample sizes are far too small for a bandit): win-stay/lose-shift
 with a margin, an implementer-family swap after consecutive failed review
-gates, a tier rise only after the swap also fails, and paging the human on the
+gates, a tier rise only after the swap also fails, and paging the operator on the
 shared-failure regime, contradictory verdicts, or any tripwire. The constants
 ship as legible per-repo-overridable defaults (calibration values, not spine
 facts); the scoreboard (`score_reviews.py`) stays **advisory** — the declared
@@ -179,7 +179,7 @@ DEFAULT_CONSTANTS = {
     # the whole win-stay half arithmetic fiction (repo-review 2026-07-21 M-34).
     "margin": 0.15,
     "swap_after": 2,  # consecutive failed review gates before the implementer family swaps
-    "page_top_tier_fails": 2,  # top-tier failed gates before paging the human (shared-failure regime)
+    "page_top_tier_fails": 2,  # top-tier failed gates before paging the operator (shared-failure regime)
 }
 _CONST_ENV = {
     "margin": "AGENT_ROUTE_MARGIN",
@@ -511,7 +511,7 @@ def load_registry(path):
     the router quietly reading the stale half. An unparseable TOML registry is
     an ERROR, never an empty pool: `{}` here means "no models are enabled",
     which under managed routing reads as a consent decision rather than a
-    broken file — a page the human never gets.
+    broken file — a page the operator never gets.
 
     Implements: SR-154, SR-222, LLR-044, LLR-336
     """
@@ -1200,11 +1200,11 @@ def winstay_preferred_ids(next_primary, enabled, registry, cooldowns=None, now=0
 
 
 def pool_context(enabled, registry, cooldowns=None, now=0.0):
-    """The enabled pool, one line per entry, for a page-human/failure banner:
+    """The enabled pool, one line per entry, for a page-operator/failure banner:
     the entry, its row's tier + Family, the entry's cooling-vs-available
     state, and the row's `Notes` cell.
     Notes is the declared home for the provider's install/sign-in hint (e.g.
-    `sign in: opencode auth login`), so an exhausted pool tells the human what
+    `sign in: opencode auth login`), so an exhausted pool tells the operator what
     to actually DO — the kit itself stays provider-neutral. Lenient: an enabled
     id missing from the registry (can't happen past preflight) still renders."""
     cooldowns = cooldowns or {}
@@ -1277,7 +1277,7 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False, fails_sin
     pass no index).
 
     Returns {'action', 'reason', 'next_primary'} with action in
-    {continue, swap-implementer, tier-up, page-human}.
+    {continue, swap-implementer, tier-up, page-operator}.
 
     Implements: SR-154, LLR-081
     """
@@ -1290,10 +1290,10 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False, fails_sin
         }
     last = rounds[-1]
 
-    # --- page-the-human conditions (the shared-failure / distrust regime) ------
+    # --- page-the-operator conditions (the shared-failure / distrust regime) ------
     if last.get("tripwire"):
         return {
-            "action": "page-human",
+            "action": "page-operator",
             "reason": "a tripwire fired — anti-gaming stop, never absorbed silently",
             "next_primary": None,
         }
@@ -1303,7 +1303,7 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False, fails_sin
         and rounds[-2].get("contradiction")
     ):
         return {
-            "action": "page-human",
+            "action": "page-operator",
             "reason": "reviewers gave opposite verdicts twice running — the spec is likely ambiguous",
             "next_primary": None,
         }
@@ -1315,7 +1315,7 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False, fails_sin
     )
     if top_tier_fails >= c["page_top_tier_fails"]:
         return {
-            "action": "page-human",
+            "action": "page-operator",
             "reason": "{} top-tier review failures — the shared-failure regime (the spec is wrong, not the model)".format(
                 top_tier_fails
             ),
@@ -1340,8 +1340,8 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False, fails_sin
                 "next_primary": None,
             }
         return {
-            "action": "page-human",
-            "reason": "swap and tier-up both exhausted at the top tier — page the human",
+            "action": "page-operator",
+            "reason": "swap and tier-up both exhausted at the top tier — page the operator",
             "next_primary": None,
         }
 
@@ -1362,14 +1362,14 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False, fails_sin
     }
 
 
-def failure_action(human_held, keep_nondependent=False):
-    """What a page-the-human escalation does, keyed to SN-029's ordinal
+def failure_action(operator_held, keep_nondependent=False):
+    """What a page-the-operator escalation does, keyed to SN-029's ordinal
     comparison rather than the retired three-value enum.
 
     In every mode the causing WI and its hard-edge dependents PAUSE; what
     differs is what happens AROUND that — and those are two genuinely separate
     questions, which is why the enum needed three values to express two bits.
-    Is the tier in process still the human's to approve (`human_held`), and may
+    Is the tier in process still the operator's to approve (`operator_held`), and may
     other work keep running meanwhile (`keep_nondependent`)? The old
     `single-approve` and `autonomous` differed only in the design-check leg while
     sharing the second answer; splitting them makes each dial mean one thing.
@@ -1379,14 +1379,14 @@ def failure_action(human_held, keep_nondependent=False):
 
     Implements: SR-154, LLR-081
     """
-    if human_held:
+    if operator_held:
         return {
-            "mode": "human-held",
+            "mode": "operator-held",
             "pause_wi": True,
             "keep_nondependent": bool(keep_nondependent),
             "design_check": False,
             "note": (
-                "human-held tier: surface the block for approval"
+                "operator-held tier: surface the block for approval"
                 + (
                     "; keep working non-dependent work items to completion"
                     if keep_nondependent

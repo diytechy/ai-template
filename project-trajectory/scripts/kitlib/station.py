@@ -197,9 +197,9 @@ REPORTS = "docs/handbacks"
 CLAIMED_OUTCOMES = ("complete", "partial", "cancelled")
 
 # The review tier a close SUGGESTS for its disposition — a TYPED field, which is
-# the whole point. Before LLR-161 this rode as the magic substring `NEEDS-HUMAN`
+# the whole point. Before LLR-161 this rode as the magic substring `NEEDS-OPERATOR`
 # inside a free-prose reason, and `tier_signal` case-folded a search for it: so
-# `NEEDS_HUMAN`, `needs human`, or a typo silently downgraded the judgement, with
+# `NEEDS_OPERATOR`, `needs operator`, or a typo silently downgraded the judgement, with
 # no constant, no validation and no refusal on a miss. Prose that carries control
 # flow must be a typed field.
 SUGGESTED_TIERS = ("quick", "medium", "strong")

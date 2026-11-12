@@ -99,8 +99,8 @@ def test_a3_diff_marks_keep_a_shape_cue_not_colour_alone(tmp_path):
 
 def test_unsafe_link_target_is_not_clickable():
     """122-REVIEW-A: `md_inline` emitted a raw href with no scheme allow-list, so
-    an agent-authored cell could ship a `javascript:` URL onto the one document a
-    human reads. The text still shows — degraded, not dropped."""
+    an agent-authored cell could ship a `javascript:` URL onto the one document the
+    operator reads. The text still shows — degraded, not dropped."""
     gi = load_script("gen_open_items")
     out = gi.md_inline("[click](javascript:alert(1)) and [ok](docs/x.md)")
     assert 'href="javascript:' not in out
@@ -138,7 +138,7 @@ def test_brief_cells_render_BLOCK_structure_not_one_wall():
 def test_block_renderer_still_escapes_and_still_refuses_unsafe_links():
     """The block path must not become an escape hatch around the two guarantees
     the inline path already makes — 122-REVIEW-A's `javascript:` refusal is on
-    the one document a human reads, and it has to hold per-line too."""
+    the one document the operator reads, and it has to hold per-line too."""
     gi = load_script("gen_open_items")
     out = gi.md_block("- <script>alert(1)</script>\n- [click](javascript:alert(1))")
     assert "<script>" not in out and "&lt;script&gt;" in out

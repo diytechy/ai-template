@@ -349,7 +349,7 @@ def test_the_hold_is_read_per_registry_not_from_the_stage(tmp_path):
     after = _commit(root, "amend both rows and sit them")
     # The premise: the stage's answer is the wrong one for the SN row.
     assert ac.spine_stage_of(root) == kit_ladder.STAGE_TESTS
-    assert not ac.human_holds(root / "docs", ac.spine_stage_of(root))
+    assert not ac.operator_holds(root / "docs", ac.spine_stage_of(root))
     minted, refusal = _mint(root, before, after)
     assert refusal is None, refusal
     _rel, _meta, _oi, cells = _one_owner_row(root)

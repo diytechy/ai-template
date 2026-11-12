@@ -5,7 +5,7 @@ WHY THIS EXISTS (OI-76, ruled 2026-08-31 — "B with C and the generated rollup;
 governing = TREE IDENTITY"). The merge gate used to read a hand-authored
 `docs/reviews/WI-<n>-REVIEW-A.md` rollup that **nothing in the kit wrote**, and
 it judged that rollup's freshness by comparing commit TIMES. Three defects rode
-together: nobody wrote it, so every mechanized lane stopped at a human; it
+together: nobody wrote it, so every mechanized lane stopped at an operator; it
 paraphrased evidence that already existed; and the trust was inverted — the
 round files carry the anti-forgery story and the gate ignored them. The ruling
 re-points the gate at the evidence and replaces the time comparison with an
@@ -248,7 +248,7 @@ UNCHANGED_REWORK = (
     "rework changed no non-record path; a round on the same tree would be "
     "refused as a reroll"
 )
-UNCHANGED_PAGE = "PAGE-HUMAN — rework left the reviewed tree unchanged"
+UNCHANGED_PAGE = "PAGE-OPERATOR — rework left the reviewed tree unchanged"
 
 # The machine half. Anchored per-line (`re.M`) exactly like the `Bar-Green:`
 # reader, and the verdict word is a CLOSED alternation rather than `\S+`: an

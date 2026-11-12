@@ -1,7 +1,7 @@
 """intake.py — the unified trunk-side intake mint (WI-388, concurrency-v2 §A5.2).
 
 The invariant under test is R1 + R3 (log.md Decisions, 2026-08-01): a WI id is
-created ONLY by a human trunk commit or this helper — lanes never mint. The
+created ONLY by a trunk commit or this helper — lanes never mint. The
 helper has three triggers, all trunk-side, serial by construction, plus the
 drafts-not-mints arm:
 
@@ -525,7 +525,7 @@ def test_a_held_rung_mints_no_first_approval_row(tmp_path):
     # signature the owner owes: the adjudicator acts only on rungs the dial
     # RELEASES. A held tier still surfaces through the approval brief, exactly
     # as it does today, and minting here would either duplicate that surface or
-    # invite a session to approve past the human.
+    # invite a session to approve past the operator.
     root, before, after = amended_repo(
         tmp_path, lambda r: write_sr(r, requirement="fresh draft", status="Drafted")
     )
@@ -1445,7 +1445,7 @@ def test_a_disposition_row_with_no_successor_is_refused(tmp_path):
     # OI-70/OI-73 refusal invariant: an adjudication row judging a partial/
     # cancelled close that queues NO successor is refused at the close — an OI
     # alone no longer discharges it, and there is no third exit. The merge
-    # stands; the mint refuses and the run stops for a human.
+    # stands; the mint refuses and the run stops for an operator.
     root = git_repo(tmp_path)
     _adjudicated_early_close(root, "partial", brief="disposition")
     before = after = _rev(root)
@@ -1902,7 +1902,7 @@ _OPEN_ITEM_TABLE = "\n[open_item]\n" + "".join(
     for key, text in _BRIEF.items()
 )
 
-_HUMAN_OWED_HEAD = """
+_OPERATOR_OWED_HEAD = """
 ## Deliverable
 
 Adjudicated: the remaining question is the owner's to answer.
@@ -1916,7 +1916,7 @@ buildtier = "medium"
 supersedes = "WI-005"
 """
 
-_HUMAN_OWED = _HUMAN_OWED_HEAD + _OPEN_ITEM_TABLE + "```\n"
+_OPERATOR_OWED = _OPERATOR_OWED_HEAD + _OPEN_ITEM_TABLE + "```\n"
 
 
 def test_the_close_mints_a_pending_oi_that_gates_the_successor(tmp_path):
@@ -1937,7 +1937,7 @@ def test_the_close_mints_a_pending_oi_that_gates_the_successor(tmp_path):
         "WI-008",
         slug="adjudicate",
         safety_class="adjudication",
-        body=_HUMAN_OWED,
+        body=_OPERATOR_OWED,
     )
     _commit(root, "setup", when=T_CODE)
     before = after = _rev(root)
@@ -1997,7 +1997,7 @@ def test_the_minted_open_item_carries_the_adjudicators_brief_verbatim(tmp_path):
         "WI-008",
         slug="adjudicate",
         safety_class="adjudication",
-        body=_HUMAN_OWED,
+        body=_OPERATOR_OWED,
     )
     _commit(root, "setup", when=T_CODE)
     before = after = _rev(root)
@@ -2037,7 +2037,7 @@ def test_the_bare_scalar_open_item_is_refused_by_name():
     # not tolerated - a thin card must be unrepresentable at the mint rather
     # than caught by a reviewer.
     scalar = (
-        _HUMAN_OWED_HEAD
+        _OPERATOR_OWED_HEAD
         + 'open_item = "Does the retention window include partial closes?"\n```\n'
     )
     drafts, refusal = intake.parse_dispositions(scalar, _WHERE)
@@ -2066,7 +2066,7 @@ def test_an_open_item_table_missing_a_cell_is_refused_by_name(cell, thin):
         "{} = {}\n".format(k, wi_convert.toml_string(v)) for k, v in brief.items()
     )
     drafts, refusal = intake.parse_dispositions(
-        _HUMAN_OWED_HEAD + table + "```\n", _WHERE
+        _OPERATOR_OWED_HEAD + table + "```\n", _WHERE
     )
     assert drafts == []
     assert refusal is not None and "[open_item]" in refusal
@@ -2102,7 +2102,7 @@ def test_an_open_item_cell_that_is_not_a_string_is_refused_by_name(kind):
         for key, text in _BRIEF.items()
     )
     drafts, refusal = intake.parse_dispositions(
-        _HUMAN_OWED_HEAD + table + "```\n", _WHERE
+        _OPERATOR_OWED_HEAD + table + "```\n", _WHERE
     )
     assert drafts == []
     assert refusal is not None and "not strings" in refusal
@@ -2116,7 +2116,7 @@ def test_a_non_string_cell_mints_nothing_and_renders_nothing(tmp_path):
     write_sr(root)
     registry = write_open_items(root)
     before_bytes = registry.read_bytes()
-    body = _HUMAN_OWED.replace(
+    body = _OPERATOR_OWED.replace(
         "options = " + wi_convert.toml_string(_BRIEF["options"]), "options = 7"
     )
     assert "options = 7" in body
@@ -2150,13 +2150,13 @@ def test_an_open_item_table_with_an_unknown_cell_is_refused():
     # watching - refused, exactly as an unknown top-level draft key is.
     table = _OPEN_ITEM_TABLE + 'blast_radus = "typo"\n'
     drafts, refusal = intake.parse_dispositions(
-        _HUMAN_OWED_HEAD + table + "```\n", _WHERE
+        _OPERATOR_OWED_HEAD + table + "```\n", _WHERE
     )
     assert drafts == [] and refusal is not None and "blast_radus" in refusal
 
 
 def test_the_typed_open_item_table_is_accepted_whole():
-    drafts, refusal = intake.parse_dispositions(_HUMAN_OWED, _WHERE)
+    drafts, refusal = intake.parse_dispositions(_OPERATOR_OWED, _WHERE)
     assert refusal is None, refusal
     assert len(drafts) == 1 and drafts[0]["open_item"] == _BRIEF
     assert drafts[0]["supersedes"] == "WI-005"
@@ -2180,7 +2180,7 @@ def test_the_oi_mint_refuses_on_a_non_toml_registry(tmp_path):
         "WI-008",
         slug="adjudicate",
         safety_class="adjudication",
-        body=_HUMAN_OWED,
+        body=_OPERATOR_OWED,
     )
     _commit(root, "setup", when=T_CODE)
     before = after = _rev(root)
@@ -2512,8 +2512,8 @@ def _declare_dial(root, dial):
     the generated `docs/gate`; it now goes through `kitlib.stage.read_stage`,
     which re-fingerprints the declared derivation inputs on EVERY call and trusts
     a recorded value only on a match. A fixture still writing `docs/gate`
-    therefore declared no stage at all: the reader answered None, `human_holds`
-    reads None as HUMAN-HELD (its documented fail-safe), and both arms of the
+    therefore declared no stage at all: the reader answered None, `operator_holds`
+    reads None as OPERATOR-HELD (its documented fail-safe), and both arms of the
     comparison silently collapsed onto the same answer — a below-the-dial test
     passing for the reason a held one does.
 
@@ -2537,7 +2537,7 @@ def _declare_dial(root, dial):
 
 def test_under_attended_adjudication_recommends_and_never_flips(tmp_path, capsys):
     # Ruled decision 2: under `attended` the flip is a Status change that
-    # RECOVERS THE GATE — an approval, and approval is the human's act.
+    # RECOVERS THE GATE — an approval, and approval is the operator's act.
     # The helper prepares the brief and touches NOTHING.
     root = _policy_repo(tmp_path, kit_ladder.STAGE_RELEASE)
     before = (root / "docs" / "requirements" / "system-requirements.csv").read_bytes()
@@ -2552,10 +2552,10 @@ def test_under_attended_adjudication_recommends_and_never_flips(tmp_path, capsys
     ).read_bytes() == before
 
 
-def test_below_the_human_dial_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_path):
+def test_below_the_operator_dial_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_path):
     """D-9 STEP 7, and this test replaces a capability rather than losing one.
 
-    It used to prove the other arm of ruled decision 2: below the human's
+    It used to prove the other arm of ruled decision 2: below the operator's
     approval dial a recorded LLM verdict carries approval authority, so
     the helper enacted `Modified` -> `Approved`. Step 7 retired `Modified`, the
     ONE state that act ever moved from, and the guard it left behind — a silent
@@ -2574,13 +2574,13 @@ def test_below_the_human_dial_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_path)
     sentinel that holds nothing, and `DevStg-Arch` is BELOW the fixture's
     recorded `DevStg-Tests`, so neither holds this repo and both reach the
     writer's guard. Driving both is what keeps the arm honest — a single
-    `DevStg-Below` case would also pass against a `human_holds` that had
+    `DevStg-Below` case would also pass against a `operator_holds` that had
     collapsed to a constant False.
     """
     for i, dial in enumerate((kit_stage.BELOW, kit_ladder.STAGE_ARCH)):
         (tmp_path / str(i)).mkdir()
         root = _policy_repo(tmp_path / str(i), dial)
-        assert ac.human_holds(root / "docs", ac.spine_stage_of(root)) is False, dial
+        assert ac.operator_holds(root / "docs", ac.spine_stage_of(root)) is False, dial
         sr_csv = root / "docs" / "requirements" / "system-requirements.csv"
         llr_csv = root / "docs" / "requirements" / "low-level-requirements.csv"
         before = (sr_csv.read_bytes(), llr_csv.read_bytes())
@@ -2857,10 +2857,10 @@ def test_an_unknown_row_id_refuses_the_flip(tmp_path):
 
 
 def test_an_unreadable_dial_or_stage_fails_toward_recommend(tmp_path):
-    # Fail toward the human, never toward a machine approval. Every input
+    # Fail toward the operator, never toward a machine approval. Every input
     # this rung can fail on resolves the same way: an out-of-vocabulary dial, a
     # stage record with no stage field (a repo that predates the carrier), and
-    # an unparseable one all read as HUMAN-HELD.
+    # an unparseable one all read as OPERATOR-HELD.
     root = _policy_repo(tmp_path, kit_ladder.STAGE_RELEASE)
     action, _flipped, refusal = intake.flip_verified(root, ["SR-001"])
     assert refusal is None, refusal
@@ -2876,25 +2876,25 @@ def test_an_unreadable_dial_or_stage_fails_toward_recommend(tmp_path):
     assert intake.adjudication_action(False, "CLARITY") == "flip"
 
     # The upstream comparison's own failure directions, driven at a MIDDLE dial.
-    # THAT IS NOT A DETAIL: at `DevStg-Release` `human_holds` answers True before
+    # THAT IS NOT A DETAIL: at `DevStg-Release` `operator_holds` answers True before
     # it ever looks at the stage, so an unreadable-stage assertion made there is
-    # VACUOUS — it would pass against a `human_holds` with the fail-safe deleted.
+    # VACUOUS — it would pass against a `operator_holds` with the fail-safe deleted.
     # At `DevStg-Arch` the fixture's own recorded rung is NOT held, so a True can
     # only have come from the unreadable-stage arm.
     (tmp_path / "middle").mkdir()
     middle = _policy_repo(tmp_path / "middle", kit_ladder.STAGE_ARCH)
     docs = middle / "docs"
     assert ac.spine_stage_of(middle) == FIXTURE_STAGE, "the record must be READ"
-    assert ac.human_holds(docs, FIXTURE_STAGE) is False, "the baseline: not held"
-    assert ac.human_holds(docs, None) is True, "an unknown stage is human-held"
-    assert ac.human_holds(docs, "3") is True, "a non-rung stage is human-held"
+    assert ac.operator_holds(docs, FIXTURE_STAGE) is False, "the baseline: not held"
+    assert ac.operator_holds(docs, None) is True, "an unknown stage is operator-held"
+    assert ac.operator_holds(docs, "3") is True, "a non-rung stage is operator-held"
     # ...and an unreadable DIAL holds every rung, whatever the stage says. The
     # rung is named rather than read back through `spine_stage_of` because the
     # write above moves the fingerprint, which would send the reader off to
     # re-derive — a different question than the one under test.
     set_process_key(middle, "authority", "operator_accepts_through", "four")
     assert ac.approval_through(docs) == kit_ladder.STAGE_RELEASE
-    assert ac.human_holds(docs, FIXTURE_STAGE) is True, "a wrong-typed dial holds"
+    assert ac.operator_holds(docs, FIXTURE_STAGE) is True, "a wrong-typed dial holds"
 
 
 def test_a_row_that_absorbed_a_sibling_is_still_re_pointed_for_the_rest(tmp_path):

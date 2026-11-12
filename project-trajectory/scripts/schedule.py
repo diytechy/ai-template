@@ -450,7 +450,7 @@ def _status(wis):
 
 
 # The one open-item state that does NOT satisfy a hard OI edge (OI-73): a
-# `pending` open item is an unanswered human question, so a row that cites it
+# `pending` open item is an unanswered operator question, so a row that cites it
 # reads `blocked` until the item is ruled (WI-790). Any other PRESENT
 # state — `ruled` — satisfies the edge; an OI id absent from the states map
 # (never minted, the row gone, or no registry) is NOT satisfied (fails closed,

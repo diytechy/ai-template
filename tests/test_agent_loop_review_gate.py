@@ -1078,8 +1078,8 @@ def test_red_cap_exits_with_its_own_code_and_one_fewer_does_not(tmp_path):
     # and its value; the same two reds under a cap of 3 end on
     # the iteration budget instead. The cap closes partial rather than
     # escalating through the declared approval level: the worker never
-    # consults the page ladder (no failure-action line, no PAGE-HUMAN stop)
-    # and its exit is not the NEEDS-HUMAN code. A cap that paged the human
+    # consults the page ladder (no failure-action line, no PAGE-OPERATOR stop)
+    # and its exit is not the NEEDS-OPERATOR code. A cap that paged the operator
     # first, then exited 12 whatever the hold decided, fails here.
     lane, ctl, cmd = _lane(tmp_path / "capped")
     (ctl / "bar_red").write_text("on\n", encoding="utf-8")
@@ -1090,7 +1090,7 @@ def test_red_cap_exits_with_its_own_code_and_one_fewer_does_not(tmp_path):
     assert "[build] {} = 2; last run: ".format(CAP_KEY) in proc.stdout, _out(proc)
     assert "The lane closes partial." in proc.stdout, _out(proc)
     assert "route/failure" not in proc.stdout, _out(proc)
-    assert "PAGE-HUMAN" not in proc.stdout, _out(proc)
+    assert "PAGE-OPERATOR" not in proc.stdout, _out(proc)
 
     lane, ctl, cmd = _lane(tmp_path / "below")
     (ctl / "bar_red").write_text("on\n", encoding="utf-8")

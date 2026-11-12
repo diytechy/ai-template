@@ -4,7 +4,7 @@ process.md §4 holds the one statement that a held rung's approval is the
 owner's act (the owner, or an attended session on the owner's explicit
 delegation; never a mechanically triggered session) and which half of that is
 mechanical. The dial's comments and the gate-advance skill point at it. A
-second home would drift from the first the way the dial's "the human approves"
+second home would drift from the first the way the dial's "the operator approves"
 comments already had, so these tests pin one statement and its pointers.
 
 In-memory: they read files and nothing else, so they sit in the smoke tier.

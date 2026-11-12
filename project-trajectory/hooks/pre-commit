@@ -88,7 +88,7 @@ kit_policy pre-commit commit || exit 1
 #                        compare uses the one the FILE declares, never a re-derived
 #                        one. Doubly self-arming: silent with no brief, and silent
 #                        once the window is closed. Here rather than only at the
-#                        gate because a stale brief is read by a HUMAN about to
+#                        gate because a stale brief is read by an OPERATOR about to
 #                        attest, and the sitting can happen between gate runs.
 #      - status-map      docs/status.md's GENERATED STATUS block fresh (WI-202):
 #                        the derived snapshot (spine + derived gate + open-items
@@ -134,8 +134,8 @@ kit_policy pre-commit commit || exit 1
 #                        non-adopter pays nothing.
 #      - approval-immutable  refuses a STAGED change (other than a brand-new add)
 #                        to an existing docs/ratify/<date>-*.md (WI-503): a
-#                        dated re-attestation brief is the record of what a
-#                        human was shown at a sitting, and rewriting it in
+#                        dated re-attestation brief is the record of what an
+#                        operator was shown at a sitting, and rewriting it in
 #                        place is the defect the CURRENT.md/dated split fixes.
 #                        Mint a new one with `trace.py --mint-approval-brief
 #                        SLUG`; regenerate the live surface at

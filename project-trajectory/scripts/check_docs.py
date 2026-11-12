@@ -5,7 +5,7 @@ The harness already gates the freshness of *generated* blocks (the code map —
 `gen_arch_map.py --check`), but nothing checks that the **hand-written** docs
 stay navigable: that every intra-repo link resolves, every doc is reachable,
 and a doc hasn't been frozen beside churning code. This operationalizes the
-"verify no broken intra-doc links" step several gates ask a human to do by hand,
+"verify no broken intra-doc links" step several gates ask an operator to do by hand,
 extending the "the map must stay honest" guarantee from code to docs
 (process.md §3 "Reviewability").
 
@@ -65,7 +65,7 @@ finding classes:
     disables S-1..S-3); (S-2) its Open-items marker must precede the `## Scope`
     heading (open items surface at the top); (S-3) with
     `docs/requirements/open-items.toml` present, every `OI-N` inside the
-    Needs-<human> block has a PENDING row there (no undocumented owner ask) and
+    Needs-<operator> block has a PENDING row there (no undocumented owner ask) and
     every pending id appears in status.md (no orphan brief). S-3 **retires under
     a generated snapshot** (WI-202): once status.md carries the
     `<!-- BEGIN GENERATED STATUS -->` block, its open-items list is PROJECTED
@@ -76,7 +76,7 @@ finding classes:
     status.md (or, for S-3, the registry) is absent.
 
 The root `OWNER_SCRATCHPAD.md` is exempt from all of the above: it holds the
-human owner's free-form private notes and is dropped from doc discovery entirely
+operator's free-form private notes and is dropped from doc discovery entirely
 (agents must not read or act on it; its own header says so).
 
 Scope (the high-value 80%): inline links `[text](dest)` and same-file/`file#frag`
@@ -165,7 +165,7 @@ MD_SUFFIXES = (".md", ".markdown")
 # generated output (the gen_arch_map/gen_trajectory/check_doc_refs idiom); the
 # path constant matches gen_okf's own OUT_DIR.
 OKF_DIR = "docs/okf"
-# The root owner scratchpad: free-form notes the human owner keeps, off-limits to
+# The root owner scratchpad: free-form notes the operator keeps, off-limits to
 # agents (its own loud header says so). Dropped from doc discovery entirely — its
 # links, orphanhood, and staleness never gate a commit (owner notes aren't a
 # working surface) — via the same "never lint this file" idiom as OKF_DIR. It
@@ -735,7 +735,7 @@ def find_stale(parsed, root, lookup):
 
 STATUS_BUDGET_DEFAULT = 120
 _OI_RE = re.compile(r"\bOI-\d+\b")
-_NEEDS_HUMAN_RE = re.compile(r"needs\s*\\?<human>", re.I)
+_NEEDS_OPERATOR_RE = re.compile(r"needs\s*\\?<operator>", re.I)
 _SCOPE_HEADING_RE = re.compile(r"^##\s+scope\b", re.I | re.M)
 _OPEN_ITEMS_MARKER_RE = re.compile(r"open items", re.I)
 # The kit's generated-block sentinel (gen_arch_map / gen_trajectory --status):
@@ -761,15 +761,15 @@ def _status_lint_policy(root, docs_dir):
         return None
 
 
-def _needs_human_block(text):
-    """The Needs-<human> block of status.md, best-effort over the template's
+def _needs_operator_block(text):
+    """The Needs-<operator> block of status.md, best-effort over the template's
     mandated shape: from the marker line, a bullet's block runs while lines are
     blank or indented deeper than the marker; a heading's block runs to the next
     heading. Returns "" when no marker is found (S-3 then only checks the
     orphan-brief direction)."""
     lines = text.splitlines()
     for i, line in enumerate(lines):
-        if not _NEEDS_HUMAN_RE.search(line):
+        if not _NEEDS_OPERATOR_RE.search(line):
             continue
         block = [line]
         if line.lstrip().startswith("#"):
@@ -840,7 +840,7 @@ OPEN_ITEMS_NAME = "requirements/open-items.toml"
 
 
 def _oi_coherence_warns(open_items, text):
-    """S-3 alone: the open-items registry against status.md's Needs-<human>
+    """S-3 alone: the open-items registry against status.md's Needs-<operator>
     block, both directions. Split out of `check_status_surface` when the
     always-on arm pushed that function over the complexity ratchet —
     decomposition rather than a baseline bump, which is the escape the ratchet
@@ -888,10 +888,10 @@ def _oi_coherence_warns(open_items, text):
         and (r.get("Status") or "").strip().lower() == "pending"
     }
     warns = [
-        "{}: a Needs-<human> item in status.md with no pending `{}` row in "
+        "{}: a Needs-<operator> item in status.md with no pending `{}` row in "
         "requirements/open-items.toml (every owner ask carries its "
         "brief)".format(oid, oid)
-        for oid in sorted(set(_OI_RE.findall(_needs_human_block(text))) - briefed)
+        for oid in sorted(set(_OI_RE.findall(_needs_operator_block(text))) - briefed)
         if not oid.endswith("-000")  # the template's inert example (WI-790)
     ]
     warns += [

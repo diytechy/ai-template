@@ -2914,7 +2914,7 @@ def approval_brief_findings(root):
         )
         # `approv` (not `ratif`, WI-499): live prose no longer uses the retired
         # spelling, so a freshly-authored row's own text is the "this decision
-        # is about a human approval" signal now.
+        # is about an operator approval" signal now.
         is_approval = APPROVAL_ANCHOR_RE.search(body) and re.search(
             r"approv", body, re.IGNORECASE
         )
@@ -3203,14 +3203,14 @@ def critique_staleness_findings(root):
     ]
 
 
-# --- A loop commit that changed a human-held status (SR-210) -----------------
-# A changed status on a held rung is supposed to mean a human judged. The one
+# --- A loop commit that changed an operator-held status (SR-210) -----------------
+# A changed status on a held rung is supposed to mean an operator judged. The one
 # observation that would show otherwise is such a change arriving in a commit
 # the LOOP made, and the provenance floor makes every loop commit say so (its
 # `Loop-Session` trailer). So the committed history can falsify the premise
 # rather than the harness trusting it: each loop commit that moved a status
 # its own tree's dial held is one advisory line. Advisory, never the exit code:
-# the change has already landed, and what it asks for is a human's look.
+# the change has already landed, and what it asks for is an operator's look.
 POLICY_REL = "docs/process.toml"
 
 
@@ -3257,7 +3257,7 @@ def loop_held_status_findings(root):
         for line in held_status.held_status_lines(dial, moves):
             out.append(
                 "loop commit {} ({!r}, Loop-Session {}) moved {}, a rung its own "
-                "approval level ({}) holds for a human".format(
+                "approval level ({}) holds for an operator".format(
                     sha[:10], subject, session, line, dial
                 )
             )
@@ -3347,7 +3347,7 @@ def main():
     # PROMOTABLE half of seam-TC coverage is `if_tc_coverage_findings`, below,
     # deliberately kept out of this loop.
     # ...and the loop-commit held-status report (SR-210) rides it too: the
-    # change has already landed, so it asks for a human's look, never a red.
+    # change has already landed, so it asks for an operator's look, never a red.
     for w in (
         interface_findings(root)
         + cross_component_advisories(root)

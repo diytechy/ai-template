@@ -100,7 +100,7 @@
 # status — the one maturity field, the SPINE'S words: `Drafted` | `Approved`,
 # shared with external.toml. `Founded` is NOT APPLICABLE to this tier — it
 # means settled AND DEMONSTRATED, and an approval says the seam is AGREED.
-# Flipping a cell to `Approved` is a human act in a reviewed commit.
+# Flipping a cell to `Approved` is an operator act in a reviewed commit.
 #
 # component — OPTIONAL `CMP-###` membership tag.
 #

@@ -16,7 +16,7 @@ What this module pins is the loop's own contract — the joints, not the parts
     before the merge slot ever sees it (2026-09-04, WI-590);
   * a worker that reports DONE without finishing its branch trips the drive
     loop's own stall guard (the trunk-unmoved counter);
-  * a worker that could not finish HANDS BACK (WI-387, §A3) — NEEDS-HUMAN no
+  * a worker that could not finish HANDS BACK (WI-387, §A3) — NEEDS-OPERATOR no
     longer stops the run, the WI returns to trunk blocked, and the loop drives
     on to the drained banner; a red handback is reverted to a bar-inert
     artefact and merges anyway; a CRASHED worker is not a handback and keeps
@@ -699,7 +699,7 @@ Re-land the reviewed parts.
     return worker
 
 
-def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd):
+def test_a_needs_operator_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd):
     # THE RUN-STOP THIS DELETES. Exit 7 used to end the whole walk-away run
     # with the branch parked. Now the lane closes into trunk and the driver
     # carries on to the drained banner — asserted at exit 0, not just by the
@@ -859,7 +859,7 @@ def test_a_red_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_drain_
         "last run: BAR-FAIL-MARKER 3"
     ) in text, text
     assert 'split_decided_by = "adjudicator"' in text
-    # Not the approval-level escalation a NEEDS-HUMAN exit gets: a dispatcher
+    # Not the approval-level escalation a NEEDS-OPERATOR exit gets: a dispatcher
     # that closed the cap as a judgement call would tier it strong and label
     # it NEEDS-JUDGEMENT.
     assert 'suggested_tier = "medium"' in text, text

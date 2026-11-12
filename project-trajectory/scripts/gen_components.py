@@ -19,7 +19,7 @@ exists, its name, its category, its knowledge refs, its approval); this file
 DESCRIBES it. A GENERATED FILE NEVER CARRIES AN APPROVAL (OI-30 D3) — machine
 flipping an approval routes around the very dial `operator_accepts_through`
 governs — so no maturity, standing or approval cell appears here, and nothing
-here may be cited as evidence that a human blessed anything.
+here may be cited as evidence that an operator blessed anything.
 
 WHAT IT DOES NOT SHOW, stated because the owner's own ruling states it: NOT
 INTERNALS. A requirement list says what a component is obliged to do and nothing
@@ -79,7 +79,7 @@ Contract IF-140: the derived view itself — a TOML document carrying one
     collection is sorted and nothing reads a clock or the environment, so the
     byte-compare behind `--check` is stable in any clone. It carries no
     maturity, standing or approval cell, ever, and nothing in it may be cited
-    as evidence that a human blessed anything.
+    as evidence that an operator blessed anything.
 """
 
 import argparse
@@ -117,7 +117,7 @@ BANNER = (
     "#\n"
     "# NO APPROVAL CELL APPEARS HERE, EVER: maturity lives on the\n"
     "# hand-authored components.toml row, and nothing in this file is evidence\n"
-    "# that a human blessed anything.\n"
+    "# that an operator blessed anything.\n"
     "#\n"
     "# An `[unplaced] sr_refs` entry reaches no component because it has no design\n"
     "# child — either a decomposition not yet written, or a constraint over EVERY\n"

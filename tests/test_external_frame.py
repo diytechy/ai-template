@@ -4,7 +4,7 @@ Three tiers on one path — entities (`EXT-###`), boundary crossings (`B-##`) an
 external-to-external relationships (`REL-###`) — plus the directional tie-back an
 `IF-###` row carries when it REALIZES a crossing.
 
-The frame's *content* is a human ruling and nothing here judges it. What is
+The frame's *content* is an operator ruling and nothing here judges it. What is
 mechanized, and what this module pins, is the joining: a crossing names a
 declared entity, a relationship names two, a tie-back names a declared crossing,
 and every row carries the one maturity field the boundary rung reads

@@ -568,7 +568,7 @@ def is_drafted(row):
 
 
 def is_approved(row):
-    """The `Approved` state: the row's TEXT is blessed by a human.
+    """The `Approved` state: the row's TEXT is blessed by an operator.
 
     RENAMED FROM `is_verified` AT D-9 STEP 5, and the rename carries a RULING.
     `Verified` made TWO claims at once — the text is approved AND the evidence

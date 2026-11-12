@@ -79,7 +79,7 @@ Contract IF-137: the terminal-outcome WRITES for the two lane closes that are
     is the caller's — so decision and write stay in separate modules and every
     lane still ends in a merge. Under the loop marker every commit either makes
     carries the `Loop-Session` trailer, and a staged tree that would change a
-    status the approval level holds for a human is refused before it is
+    status the approval level holds for an operator is refused before it is
     written.
 """
 
@@ -316,7 +316,7 @@ def _no_recursion_refusal(root, branch):
     """THE NO-RECURSION INVARIANT (WI-388, ruling R3): a DISPOSITION row — the
     adjudication kind — may never itself close early. Enforced HERE, at the
     machinery that would perform the act, not by prose: the refusal stops the
-    run for a human, because a disposition that cannot dispose is the one
+    run for an operator, because a disposition that cannot dispose is the one
     state the outcome model cannot express. Read off the TRUNK's claimed copy
     through the slot's one reader (`integrate._claimed_spec_frontmatters`). An
     UNREADABLE claim is refused by name (WI-849): nothing later in the partial
@@ -330,7 +330,7 @@ def _no_recursion_refusal(root, branch):
             refusal = (
                 "{} claims the adjudication row {} - a disposition row never "
                 "closes early (ruling R3, no recursion: its outcomes are {}). "
-                "The run stops for a human to read the lane".format(
+                "The run stops for an operator to read the lane".format(
                     branch, name, DISPOSITION_OUTCOMES
                 )
             )
@@ -564,12 +564,12 @@ def close_partial(root, branch, reason, fields=None):
 
 # The Deliverable a mechanical adjudication close writes when the row itself has
 # not — a valid `## Deliverable` cell that records what happened and points at
-# where the successors and any human-owed answer land.
+# where the successors and any operator-owed answer land.
 _ADJUDICATION_CLOSE_DELIVERABLE = (
     "Adjudication verdict recorded on the lane; this row is closed MECHANICALLY "
     "at its DONE (OI-70/OI-73). Its `## Dispositions` successors mint at this "
     "row's own merge (drafts-not-mints), the mint replaces the superseded row's "
-    "inbound hard edges, and any human-owed answer becomes a `pending` open "
+    "inbound hard edges, and any operator-owed answer becomes a `pending` open "
     "item the successor depends on. The verdict artifact is under "
     "`docs/reviews/`."
 )
@@ -917,7 +917,7 @@ def _archive_one_adjudication_row(root, wt, branch, name):
             "{} judged a partial/cancelled close but drafted NO successor and "
             "adopted none in its ## Dispositions section — such a close must "
             "queue at least one successor (OI-70/OI-73, no third exit). The run "
-            "stops for a human to draft the continuation".format(name)
+            "stops for an operator to draft the continuation".format(name)
         )
     # THE CONSOLIDATION ARM (restructure plan §1.5), before the row is archived:
     # it acts on the QUEUE this verdict judged, and the guards it runs read the

@@ -129,12 +129,12 @@ into a straitjacket. Four points, one voice:
   omitting a tier required by the selected verification method or replacing
   real verification with a count.
 - **(e) Decision-surfacing rate is a setup dial, not a constant.** How often the
-  driver pauses for the human to **approve a decision** is project-specific:
+  driver pauses for the operator to **approve a decision** is project-specific:
   calibrate it **at project setup** on the same risk axis as review-depth triage
   (PROCESS.md §6) and record the setting in `AGENTS.md` (Project section). In
   specialized or high-consequence domains — where safety is a risk even an
   *ancillary* one, money, privacy, anything irreversible — surface decisions
-  **often**: bring even medium calls to the human to approve. In low-risk domains
+  **often**: bring even medium calls to the operator to approve. In low-risk domains
   (creative content is the archetype), where a wrong call is cheap to revert and
   carries little tech debt, a **confident** agent may decide **autonomously** —
   and the non-negotiable price of that autonomy is that every autonomous
@@ -404,8 +404,8 @@ the set when the scope needs them.
 
 *Referenced from PROCESS.md §4.* **Applies when** a repo lowers
 `[authority] operator_accepts_through` below its shipped `"DevStg-Release"`
-— i.e. wants some rung's gate accepted by something other than a per-gate human
-pause. The default (`"DevStg-Release"`, every rung **human-held**) needs none of
+— i.e. wants some rung's gate accepted by something other than a per-gate operator
+pause. The default (`"DevStg-Release"`, every rung **operator-held**) needs none of
 this section — it is exactly the §4/§5 flow. Generalized from a field adoption's
 approved deviation register (a spatial-capture pilot), this layer's worked
 reference.
@@ -433,7 +433,7 @@ harness is the bar everywhere; a red check is a red check.
 
 ### Who performs the approval act
 
-*Referenced from PROCESS.md §4.* The dial above says **which rungs** a human
+*Referenced from PROCESS.md §4.* The dial above says **which rungs** an operator
 still accepts. It never said **who acts** on the rungs it releases, and for a
 single-lane repo the question does not arise — the session that authors a row
 is the only session there is. It arises the moment work runs in parallel lanes.
@@ -515,7 +515,7 @@ driving it:
    that claims it besides.
 
 **What this is not.** It is not a change to the dial or to which rungs are
-human-held — a held rung still surfaces to the owner exactly as before, and the
+operator-held — a held rung still surfaces to the owner exactly as before, and the
 adjudicator acts only where the dial has released. The owner's approval brief
 (`trace.py --approve modified`) still shows every owing chain: one whose every
 owing row sits on a released rung renders in full under "Waiting for automated
@@ -530,16 +530,16 @@ The three words are `--gate-policy` **presets**: each *translates* into the
 `[authority]` dials (`operator_accepts_through`, `keep_nondependent`,
 `final_review`) and is never stored. The dials are what the machinery reads.
 
-- **`attended`** *(default)* — a human approves each gate (DevStg-Reqs/DevStg-Tests/DevStg-Impl/DevStg-Release)
+- **`attended`** *(default)* — an operator approves each gate (DevStg-Reqs/DevStg-Tests/DevStg-Impl/DevStg-Release)
   and the owner's final read. The standard §4/§5 flow; nothing else here applies.
 - **`single-approve`** — the driver advances through DevStg-Reqs+DevStg-Tests with LLM-gate review
-  (below), **queuing every human call** instead of pausing: each becomes a
-  `Needs <human>` Open-items bullet in `status.md` plus, where the driver had
+  (below), **queuing every operator call** instead of pausing: each becomes a
+  `Needs <operator>` Open-items bullet in `status.md` plus, where the driver had
   to proceed, a provisional decision. At the **approval point — fixed at
-  DevStg-Tests close** — the human reviews the accumulated list + gate evidence in one
+  DevStg-Tests close** — the operator reviews the accumulated list + gate evidence in one
   sitting and approves or amends (approved decisions move to `log.md`'s
   Decisions log, §5); DevStg-Impl→DevStg-Release then run under `autonomous` rules. The owner's final read
-  stays human. *Why DevStg-Tests close:* every requirement/design ambiguity is resolved
+  stays the operator's. *Why DevStg-Tests close:* every requirement/design ambiguity is resolved
   exactly once, over cheap artifacts (registries and docs, not code), before
   the expensive autonomous implementation stretch. An adopting repo *may*
   relocate the approval point by amending its own register — the kit does
@@ -548,7 +548,7 @@ The three words are `--gate-policy` **presets**: each *translates* into the
   level's value): LOW → decide + record in the Decisions log; MEDIUM/HIGH →
   the Blocked register.
 - **`autonomous`** — every bar except the owner's final read closes on the LLM verdict;
-  mid-run human escalation is replaced by the Blocked register, ask-the-human
+  mid-run operator escalation is replaced by the Blocked register, ask-the-operator
   by the Decisions log (HIGH revert-cost decisions get an independent
   peer-tier second opinion *before* execution), a person's `Vouch` by a delegated one.
   The **gate-closure** reviewer tier is the strong-model floor (§6 tiering) and
@@ -646,7 +646,7 @@ what, why, rounds spent, the driver's best-judgment recommendation — and
 in the end-of-run report; a block that gates the deliverable itself downgrades
 it honestly (partial + explanation), never silently.
 
-### The Decisions log (replaces ask-the-human)
+### The Decisions log (replaces ask-the-operator)
 
 Where the process says *ask / pause / solicit clarification*, an autonomous
 driver decides and appends to the `log.md` Decisions log (§5): what was
@@ -679,7 +679,7 @@ work happens on an **iteration branch — `llm/{branch}`** (slash namespacing
 groups every agent branch under one prefix in git tooling): the pre-commit
 floor runs there per commit, cheap and unchanged, and the §3 commit-often
 cadence lives there, where granularity is free. What lands on the development
-branch is scrubbed and curated **by construction** — the branch a human pushes
+branch is scrubbed and curated **by construction** — the branch an operator pushes
 never contained the leak or the noise. Hooks cannot carry this guarantee
 (they are per-clone and tool-circumventable: a user pushing with a different
 tool may never hit them); the branch structure can.
@@ -717,23 +717,25 @@ gate closes, or the project's scope is complete. Five steps:
    rebase/cherry-pick — dev history stays linear, no merge bubbles; a
    conflict during landing is a **Blocked item**, never a silent
    force-through. After landing, the iteration branch resets onto the new dev
-   head for the next leg. The human pushes at their leisure (the default
+   head for the next leg. The operator pushes at their leisure (the default
    policy) — or the agent does, iff the policy says so. **Landing is not a
    stopping point:** under an autonomous gate authority the loop syncs and
    rolls straight into the next leg — unpushed landed legs accumulate, and
-   the human may push several at once; the run pauses only when intervention
+   the operator may push several at once; the run pauses only when intervention
    is *required*, never merely because a sync happened.
 
 **Push authority is a declared policy — `[policies] push`** in
-`docs/process.toml` (one word, tracked; scaffolded `human` in every repo):
+`docs/process.toml` (one word, tracked; scaffolded `operator` in every repo):
 
-- **`human`** *(default)* — the agent **never pushes, even if asked
-  mid-session**; it prepares the branch and requests the push. Publication is
-  a deliberate human act, immune to hook/tool circumvention by construction;
-  the human is a cheap bottleneck, because pushing is rare and takes seconds.
+- **`operator`** *(default)* — the operator pushes: a person, or a session
+  that person delegated the push to, with the delegation recorded. Any other
+  agent **never pushes, even if asked mid-session**; it prepares the branch and
+  requests the push. Publication is a deliberate operator act, immune to
+  hook/tool circumvention by construction; the operator is a cheap bottleneck,
+  because pushing is rare and takes seconds.
 - **`agent-iteration`** — the agent may push only the *scrubbed iteration
   branch* (remote backup + visibility); the development branch stays
-  human-pushed.
+  operator-pushed.
 - **`agent`** — full delegation: the agent may push the development branch
   after a landed sync, still gated by the sync ritual.
 
@@ -767,7 +769,7 @@ wants a coordinator to grind work from a single entry point while nobody
 watches. The loop runs under **every** gate authority level — what differs is
 where it stops: fully walk-away under `autonomous` (or `single-approve` after
 its approval point), while an `attended` repo's run grinds the in-gate
-work and stops *at* each human act with the ask stated, rather than being
+work and stops *at* each operator act with the ask stated, rather than being
 refused or, worse, inferring its way past. Generalized from a field adoption's
 proven coordinator (a spatial-capture pilot's `trigger.ps1`), which
 `scripts/agent_loop.py` supersedes — the protocol here is agent-neutral repo
@@ -792,7 +794,7 @@ SpecRef + predecessor context + branch diff), never a "resume from
 stall guard trips (N consecutive sessions without a commit), or an iteration
 budget ceiling hits. Work happens on claimed branches (never the development
 branch), merging is the serial fail-closed queue and honors the declared
-`push` policy — under the default `human` the coordinator never pushes,
+`push` policy — under the default `operator` the coordinator never pushes,
 even if asked. At worker start a dirty worktree (residue from an interrupted
 run) is surfaced into the first session's prompt as a reconcile instruction;
 stash/rollback is deliberately *not* automated — that judgment belongs to the
@@ -802,13 +804,13 @@ session.
 serial resume driver — the loop that read `status.md`/`run-state` back as its
 control input — was retired):
 
-- **Intake/triage of new scope** belongs to the **human + the gate-stage
+- **Intake/triage of new scope** belongs to the **operator + the gate-stage
   sessions**: new WIs enter the registry at planning/approval (or through
   a dual-plan round's filed children), never by a session inventing scope
   mid-run.
 - **Drained-queue handling** is the run's **end-state banner** — the run
   reports what integrated, what needs attention, and what remains queued.
-- **NEEDS-HUMAN surfacing** is the **stop banner + exit code 7**, with one
+- **NEEDS-OPERATOR surfacing** is the **stop banner + exit code 7**, with one
   `ask: <one-line ask>` headline (the dispatcher-era generated
   `docs/run-state` file retired with the dispatcher at
   concurrency-restructure Phase 5 — git history and the integrator's own
@@ -951,7 +953,7 @@ mechanized, but it can be steered:
   PLAN session reads the recent rows before re-chunking and coarsens or splits
   against the evidence, not a guess.
 
-The cadence needs no coordinator to be useful — an attended human alternating
+The cadence needs no coordinator to be useful — an attended operator alternating
 "plan on the strong tier, execute on the cheap one" across hands-on sessions is
 the same protocol with a person as the model map.
 
@@ -1093,7 +1095,7 @@ behavior**, so a fresh scaffold pays nothing.
   preferred tier is available the loop walks the **next tier up — never a weaker
   one**, and pages rather than silently downgrade. **Every selection and
   cooldown is logged before launch** (consent = the enabled set + these declared
-  rules). Failure context rides the registry's `Notes` column: the page-human
+  rules). Failure context rides the registry's `Notes` column: the page-operator
   banner renders the enabled pool per row (tier, family, cooling state, Notes),
   and a cooled or preflight-failed row's Notes is echoed at the failure point —
   put the provider's install/sign-in hint there (e.g. `opencode auth login`),
@@ -1150,7 +1152,7 @@ behavior**, so a fresh scaffold pays nothing.
   are gates, never scores; length never scores positively.** The tripwires
   (finding-cap pinning / count gaming, near-duplicate review text, an
   implementer diff touching a review or policy path, mass finding-rejection) are
-  **non-scored hard stops** that page the human. The scoreboard is one small
+  **non-scored hard stops** that page the operator. The scoreboard is one small
   decayed-tally text file (`docs/reviews/scoreboard.txt`: per-provider substance
   + the round history) — the declared policy picks, nothing auto-optimizes.
 - **A fixed escalation policy, not a learned router** (per-project sample sizes
@@ -1158,17 +1160,17 @@ behavior**, so a fresh scaffold pays nothing.
   family becomes the next round's primary feedback source only on a **margin
   >= 2**; the implementer's family **swaps after 2 consecutive failed review
   gates**; the tier rises **only after the swap also fails**; and the loop
-  **pages the human** on 2 top-tier failures (the shared-failure regime — the
+  **pages the operator** on 2 top-tier failures (the shared-failure regime — the
   spec is wrong, not the model), on opposite verdicts twice running, or on any
   tripwire. The constants ship as legible **per-repo-overridable defaults**
   (`AGENT_ROUTE_MARGIN`, `AGENT_ROUTE_SWAP_AFTER`, `AGENT_ROUTE_PAGE_TOP_TIER_FAILS`)
   — calibration values, not spine facts.
-- **Failure semantics follow the session hold.** On a page-the-human condition
+- **Failure semantics follow the session hold.** On a page-the-operator condition
   the causing WI **and its hard-edge dependents pause** either way; the hold
-  (is the tier still **human-held**, and `keep_nondependent`) decides the rest —
-  **human-held, `keep_nondependent = false`:** start nothing new, let
-  in-flight sessions close out, then the loop stops `NEEDS-HUMAN` and alerts;
-  **human-held, `keep_nondependent = true`:** keep working non-dependent WIs to
+  (is the tier still **operator-held**, and `keep_nondependent`) decides the rest —
+  **operator-held, `keep_nondependent = false`:** start nothing new, let
+  in-flight sessions close out, then the loop stops `NEEDS-OPERATOR` and alerts;
+  **operator-held, `keep_nondependent = true`:** keep working non-dependent WIs to
   completion, surface the block for approval; **loop-held:** schedule a
   fresh **design-check session** (different provider, strong tier) to rule
   grind-through vs. genuine redesign, document every assumption, and continue —
@@ -1233,7 +1235,7 @@ distinct from `NO-COMMIT` (a healthy session that simply idled). It still counts
 toward the stall guard, but when a whole stall run was `ERROR`s the abort banner
 names an **unavailable agent**, not a stuck task, and points at the fix — an
 unsupported model is repointed by hand (`--model` / the model map). Auto-fallback
-to a substitute model is deliberately **not** done: the human consented to a
+to a substitute model is deliberately **not** done: the operator consented to a
 specific tier, and a silent swap could run an unlisted (unguarded) model.
 
 **A reviewer outage is not the builder's stall** (2026-08-30): the stall
@@ -1246,7 +1248,7 @@ default 900 s; 0 disables) that kills a child this long after its LAST output
 line — a silent hang is discovered in minutes, not at the two-hour wall.
 
 **Consent is unmissable.** Unattended mode passes the agent CLI's
-permission-bypass flag. The human consents by (1) filling the launcher's
+permission-bypass flag. The operator consents by (1) filling the launcher's
 `AGENT_CMD` slot, (2) declaring the gate policy, and (3) running it — and the
 loop banner and README say so plainly. git + CI remain the enforcement floor.
 The coordinator's preflight refuses to start iteration 1 while
@@ -1344,7 +1346,7 @@ redacted prompts, verdict files, hold-keyed escalation).
 - **The existing critique record carries its provenance.** The verdict identifies
   the fresh non-author session. In unattended use, the assigned verdict
   path/round binds to the coordinator's session log; in attended use, identify
-  the human-chosen fresh reviewer and its sitting/review record supplied by the
+  the operator-chosen fresh reviewer and its sitting/review record supplied by the
   invocation. A provider session id is included when supplied but is not a
   hidden prerequisite. It names the rubric path/revision
   and applicable SN/SR intent sources, then records the numbered anchors judged;
@@ -1361,10 +1363,10 @@ redacted prompts, verdict files, hold-keyed escalation).
   available (`agent_route`), strong-tier by default.
 - **The optimization loop, bounded.** BUILD → CRITIQUE → rework, iterating until
   `APPROVE` or the budget (`AGENT_CRITIQUE_MAX`, default **3**, env-overridable
-  like the S8 knobs) trips the session-hold page-the-human path. A WI row may
+  like the S8 knobs) trips the session-hold page-the-operator path. A WI row may
   override that run-wide default with `CritiqueBudget=n|inf` (`inf` means iterate
   until `APPROVE`) and set `CritiqueExhaustion=move-on|block`; absent/invalid cells
-  preserve the global default + move-on, while `block` forces `NEEDS-HUMAN` under
+  preserve the global default + move-on, while `block` forces `NEEDS-OPERATOR` under
   either hold. `inf` remains bounded operationally by `--max-iterations`,
   the per-session CLI limits, and the declared pause/blackout controls. In a
   batched build, `inf` and `block` win; otherwise the largest budget wins. The trigger is a
@@ -1445,7 +1447,7 @@ files, `agent_route` family heterogeneity, budgets) — **no new engine**:
    (an arbiter sharing a family with a planner is recorded and mitigated —
    self-preference bias): **provenance-anonymized, position-swapped** pairwise
    comparison — run the arbiter prompt twice with the plan order swapped; the
-   verdicts must agree, disagreement is a position-bias page-the-human —
+   verdicts must agree, disagreement is a position-bias page-the-operator —
    against the rubric + the coverage report + the owner's original prompt,
    warned that **more WIs ≠ better** (verbosity bias). It selects **one** plan
    and **ports named loser-WIs** that close coverage gaps, each port a cited
@@ -1474,7 +1476,7 @@ and the stronger-isolation option (empty-cwd sessions).
 specs and their generated OKF/dashboard views must validate together: if a
 present generator rejects the new registry, the round pages with the
 generator/validator tail and the `docs/plans/DP-*` evidence stays on disk for
-the human. Committing evidence with stale views is not a portable fallback —
+the operator. Committing evidence with stale views is not a portable fallback —
 the shipped freshness hook would reject it — and bypassing the hook would
 make a known-invalid registry authoritative.
 
@@ -1852,7 +1854,7 @@ repo**: record a decision in `status.md` *Open items* (approved: `log.md`'s
 constraint to `status.md`'s constraints block, update `AGENTS.md` if it changes
 how contributors should behave, or amend the relevant registry row. This is the
 flip side of the *Assumptions* log (§4, Thread 3): an unattended assumption is
-logged to `status.md` so a human can confirm or revert it; a confirmed finding is
+logged to `status.md` so an operator can confirm or revert it; a confirmed finding is
 committed into the appropriate artifact and drops out of the assumptions list.
 
 **No agent-memory tooling is installed or required.** Dev-setup provisions the
@@ -1864,7 +1866,7 @@ references across a large tree — but both are optional, downstream, and orthog
 to the promote rule.
 
 **The owner scratchpad is human scratch, not a working surface.** Bootstrap
-scaffolds a root `OWNER_SCRATCHPAD.md` — the human owner's counterpart to the
+scaffolds a root `OWNER_SCRATCHPAD.md` — the operator's counterpart to the
 agent scratch above: free-form notes that may be old, contradictory, augmented, or
 half-formed. **LLM agents must not read, index, summarize, cite, or act on it**;
 its own loud header says so and is the primary defense (the meta repo's `CLAUDE.md`
@@ -2069,7 +2071,7 @@ becomes an **integrator-generated reference snapshot** — regenerated only on t
 integration branch after a successful integration and gated by generated
 freshness (like `PROJECT_STATE.html`), never written on a worker branch. It
 carries only: the derived gate/bar pointers; queued/deferred/blocked counts + a
-link to the WI dashboard; pending `Needs <human>` items linked to the owner
+link to the WI dashboard; pending `Needs <operator>` items linked to the owner
 decision surface; the ready frontier; and
 project scope/constraints whose canonical homes are linked, not copied. The
 former **R-B/R-C** rules — every open WI repeated as a token in `status.md` —
@@ -2082,7 +2084,7 @@ generated snapshot block, which cannot accrete prose.
 **The owner decision surface's depth + the status-surface lint.** The surface
 itself is **not a layer here** — registry and generated view are always-shipped
 process ([`process.md`](process.md) §5), scaffolded into every profile; what
-stays here is the depth. The Needs-\<human> bullets in `status.md` stay
+stays here is the depth. The Needs-\<operator> bullets in `status.md` stay
 **one-liners** (id + one-line recommendation), or the blackboard re-bloats; the
 *depth* of each pending decision — blast radius, options with pros/cons, the
 driver's recommendation — is what the row carries, so the review is **one page
@@ -2103,7 +2105,7 @@ never the exit code** (content quality is reviewer-class, and gate promotion is
 this layer's un-defer trigger for a spine SR): **S-1** `status.md` over its line
 budget (default 120; `docs/status-lint` overrides with an integer, `off`
 disables S-1..S-3); **S-2** the Open-items marker must precede `## Scope`;
-**S-3** every Needs-\<human> `OI-N` has a pending row in the registry and every
+**S-3** every Needs-\<operator> `OI-N` has a pending row in the registry and every
 pending id appears in `status.md`. S-3 is **no longer vacuous without the
 registry**: the layer is always on, so an absent `open-items.toml` is the finding
 rather than the opt-out (it stands down only under a generated status block,
@@ -2361,7 +2363,7 @@ secrets floor above still runs).
   unwired case (lint findings and a wired reviewer's BLOCK still block; the
   hook's failure message names this escape at the moment it fires). Honesty:
   hooks are per-clone and tool-circumventable, and `git push --no-verify`
-  remains git's own escape hatch for a human; that is why the primary home is
+  remains git's own escape hatch for an operator; that is why the primary home is
   the branch structure, not this hook. Cost note: review runs **per push**,
   never per commit — an LLM call in every commit would tax the commit-often
   cadence into batching, which is worse for privacy *and* review.
@@ -2930,8 +2932,8 @@ threat model is bugs and fail-open, not malice). The second-approver-identity
 question is forge-mode-only and deferred until approval-required lanes are
 used there.
 
-**Throughput caution.** Under `attended` gate authority, every branch's human
+**Throughput caution.** Under `attended` gate authority, every branch's operator
 asks converge on **one** approver; parallel branches multiply the
-`NEEDS-HUMAN` queue. Two to three concurrently *active* branches is the
+`NEEDS-OPERATOR` queue. Two to three concurrently *active* branches is the
 realistic ceiling while one approver works the queue — a queued spec costs nothing
 until claimed.

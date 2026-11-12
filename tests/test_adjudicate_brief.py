@@ -15,12 +15,12 @@ importantly — the two properties that make the seam safe to have at all:
   - **the discriminator is DECLARED.** `Brief` is a typed cell, not a shape
     inferred from `SpecRef` — because that inference is provably ambiguous
     (an amended test-case row and a red-TC census row both cite the TC
-    registry) and inferring from the Title is the `NEEDS-HUMAN` fold.
+    registry) and inferring from the Title is the `NEEDS-OPERATOR` fold.
 
 Every shipped brief is routed, and that is pinned both ways: the routed set
 equals the shipped set, and a row declaring a brief the kit no longer ships
 refuses as an unknown one. What stays pinned ON PURPOSE is the refusal: a row
-whose declared brief cannot be filled in full is HELD for a human rather than
+whose declared brief cannot be filled in full is HELD for an operator rather than
 composed, because a test that accepted a brief with a slot filled by something
 would be asserting the failure mode.
 
@@ -473,14 +473,14 @@ def test_every_routed_brief_names_a_shipped_template():
 def test_no_mint_can_declare_a_brief_the_kit_does_not_ship():
     """The declaration is written where the knowledge is — the mint knows which
     judgement it is asking for — and it is now LOAD-BEARING in the expensive
-    direction: a declared brief the kit cannot compose HOLDS the row for a
-    human. So a typo'd or invented value would not degrade quietly, it would
+    direction: a declared brief the kit cannot compose HOLDS the row for an
+    operator. So a typo'd or invented value would not degrade quietly, it would
     stop an unattended run.
 
     Deliberately NOT asserted: that every mint site declares one. Two arms
     (the report-less cancellation, the clean-close spot check) declare none on
     purpose, because the kit ships no brief for them and a false declaration
-    would page a human for routine work.
+    would page an operator for routine work.
 
     EVERY MINT SOURCE IS SCANNED, not just `intake`: the consolidation census
     lives in its own module (its decision half is testable with no repository)
@@ -648,7 +648,7 @@ def test_an_unfillable_declared_brief_HOLDS_rather_than_dispatching_a_builder(
     This is the property the whole seam turns on. Falling back to the ordinary
     assignment here would re-open the defect WI-424 exists to close — the judge
     briefed as a builder — on a routinely minted path, and it would do it
-    QUIETLY, since a builder session ends DONE like any other. `EXIT_NEEDS_HUMAN`
+    QUIETLY, since a builder session ends DONE like any other. `EXIT_NEEDS_OPERATOR`
     is also what makes the hold durable: `dispatch._lane_close` turns it into a
     `handback.close_partial`, whose `blockref` keeps an unattended run from
     re-picking the row."""
@@ -656,7 +656,7 @@ def test_an_unfillable_declared_brief_HOLDS_rather_than_dispatching_a_builder(
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "registry")
     proc, prompts = _session(tmp_path, repo, "WI-301", "unused")
-    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    assert proc.returncode == agent_loop.EXIT_NEEDS_OPERATOR, proc.stdout + proc.stderr
     # No session ran at all — not a judge's, and emphatically not a builder's.
     assert prompts == ""
     assert "no usable brief" in proc.stdout
@@ -669,7 +669,7 @@ def test_an_unfillable_declared_brief_HOLDS_rather_than_dispatching_a_builder(
 def test_the_live_amendment_mint_is_now_BRIEFED_not_held(tmp_path):
     """THE CAPABILITY UNLOCK (D-9 step 4b). `intake._amendment_drafts` mints
     `brief = "amendment"` routinely, and until the snapshot landed every one of
-    those rows HELD for a human — the largest live hold in the machinery. Two
+    those rows HELD for an operator — the largest live hold in the machinery. Two
     things blocked it, and the snapshot answers both: the `{rows}` producer
     selected on a status literal that the minting condition excluded by
     construction, and `{baseline}` resolved to the amendment commit itself, i.e.
@@ -750,7 +750,7 @@ def _am_row(**over):
 
 
 def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
-    # Rule 1, mechanized for this brief: the anchor must be the text a human
+    # Rule 1, mechanized for this brief: the anchor must be the text an operator
     # blessed BEFORE the change, never the change itself. Both halves are
     # asserted — the before text is present, and it is labelled as not being
     # the thing under judgement.
@@ -821,7 +821,7 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
     set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Release")
     values, why = ab.amendment_brief.amendment_values(repo, row)
     assert why is None, why
-    assert "still HOLDS for a human" in values["aftermath"]
+    assert "still HOLDS for an operator" in values["aftermath"]
     assert "the signature is the owner's" in values["aftermath"]
 
     # ...and the retired sentence never reaches the JUDGE, which is the property
@@ -864,7 +864,7 @@ def test_a_need_scoped_amendment_row_composes_with_its_before_and_after(tmp_path
     """Implements: TC-161"""
     # OI-100 gap 1 (WI-791): the mint now routes need amendments, so the brief
     # must render them. The SR-chain model holds no need, so before WI-791 a
-    # need-scoped row refused as "nothing in scope" and held for a human.
+    # need-scoped row refused as "nothing in scope" and held for an operator.
     repo = _need_amendment_repo(tmp_path)
     values, why = ab.amendment_brief.amendment_values(
         repo, _am_row(Adjudicates="SN-001")
@@ -1139,7 +1139,7 @@ def test_a_one_row_amendment_mint_renders_that_row_alone(tmp_path):
 def test_an_amendment_row_with_no_declared_scope_is_REFUSED_not_widened(tmp_path):
     # `first_approval_values`' WI-572 rule, applied to this arm: an empty cell
     # is an unstated boundary, and reading it as "every drifted row in the tree"
-    # is the widening itself. So it fails toward the human, naming the cell.
+    # is the widening itself. So it fails toward the operator, naming the cell.
     repo = _amendment_repo(tmp_path)
     values, why = ab.amendment_brief.amendment_values(repo, _am_row(Adjudicates=""))
     assert values is None
@@ -1154,7 +1154,7 @@ def test_an_amendment_scope_that_no_longer_differs_REFUSES_by_naming_it(tmp_path
     # since the mint (re-anchored, or its amendment reverted) while ANOTHER row,
     # outside the scope, still drifts: the repo-wide model is not empty, so only
     # the intersection can tell that this act's question has no subject left.
-    # The refusal names the scope, so a human can tell "already ruled" from "the
+    # The refusal names the scope, so an operator can tell "already ruled" from "the
     # mint and the tree disagree".
     repo = _spine_repo(tmp_path)
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
@@ -1665,7 +1665,7 @@ def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
     set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Release")
     values, why = ab.first_approval_values(repo, row)
     assert values is None
-    assert "HOLDS for a human" in why, why
+    assert "HOLDS for an operator" in why, why
 
 
 def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over(
@@ -1721,7 +1721,7 @@ def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over
 def test_an_adjudication_with_no_declared_scope_is_REFUSED_not_widened(tmp_path):
     # The unstated boundary. An empty `Adjudicates` cell cannot be read as
     # "every `Drafted` row in the repo" — that IS the widening — so it fails
-    # toward the human (rule 3) and the reason names the cell.
+    # toward the operator (rule 3) and the reason names the cell.
     repo = _first_approval_repo(tmp_path)
     values, why = ab.first_approval_values(repo, _fa_row(Adjudicates=""))
     assert values is None
@@ -1748,7 +1748,7 @@ def test_a_scope_whose_rows_are_all_settled_REFUSES_by_naming_them(tmp_path):
 
 def test_the_first_approval_brief_is_ROUTED_and_demands_its_own_verdict(tmp_path):
     # The seam, both halves. The brief has an assembler (so a row declaring it
-    # is DISPATCHED, not held for a human), and its verdict grammar is its own:
+    # is DISPATCHED, not held for an operator), and its verdict grammar is its own:
     # the amendment arm's MEANING/CLARITY cannot answer "approve or return", and
     # a checker still expecting the old enum is exactly the drift the table
     # prevents.
@@ -1769,7 +1769,7 @@ def test_an_adjudication_row_declaring_no_brief_still_builds(tmp_path):
     """The complement, and the reason the hold keys on the DECLARATION rather
     than on `adjudicating()`: a clean-close spot check and a report-less
     cancellation are adjudication classes the kit has never authored a brief
-    for. Holding those would page a human for routine work, and their empty
+    for. Holding those would page an operator for routine work, and their empty
     `brief` cell is an honest statement rather than an unhonoured claim."""
     repo = _disposition_repo(tmp_path, with_report=False)
     spec = next((repo / "docs" / "work").rglob("WI-301-*.md"))
@@ -1821,7 +1821,7 @@ def test_a_well_formed_typed_line_is_accepted_for_every_brief(tmp_path, brief, l
 )
 def test_an_unusable_verdict_is_refused_and_says_which_way(tmp_path, line, expect):
     """Four ways to fail, four distinct reasons. "The verdict is invalid" is not
-    something a human can act on at 3am, so each arm names what is wrong.
+    something an operator can act on at 3am, so each arm names what is wrong.
 
     Implements: TC-327
     """
@@ -1993,7 +1993,7 @@ def test_a_consolidation_declaring_no_scope_refuses(tmp_path):
 def test_a_consolidation_with_no_digests_cell_refuses(tmp_path):
     """Without the pair, the verdict cannot be told stale from fresh and the
     census cannot tell that this queue state has been judged — so the row is
-    HELD for a human rather than briefed."""
+    HELD for an operator rather than briefed."""
     repo, rows = _consolidate_repo(tmp_path, digests="")
     values, why = ab.consolidate_values(repo, rows["WI-420"])
     assert values is None and "no usable `Digests` cell" in why

@@ -24,7 +24,8 @@ words they were written in.
                                    `Attest`  ->  `Vouch`
     docs/process.toml              the table `[attestation]`  ->  `[authority]`,
                                    and in it `human_approval_through`  ->
-                                   `operator_accepts_through`
+                                   `operator_accepts_through`; in `[policies]`,
+                                   `push = "human"`  ->  `push = "operator"`
 
 A registry is a `.toml` or `.csv` file directly under `docs/requirements/` or
 `docs/test/`, and the acceptance record's copy of each. A registry is rewritten
@@ -264,6 +265,10 @@ def _csv_records(text):
 
 
 def _csv_parsed(text):
+    """The records of CSV `text` as the csv module reads them. A raw reader
+    on purpose, named in tests/test_csv_header.py: this script imports
+    nothing from the kit, and `_csv_preamble` has already cut off the
+    comment preamble the kit's reader would drop."""
     return list(csv.reader(io.StringIO(text, newline="")))
 
 
@@ -306,15 +311,30 @@ def _csv_edits(body, records):
     return edits
 
 
+def _csv_preamble(text):
+    """The length of the leading run of blank and `#` comment lines in
+    `text`: the preamble the kit's CSV reader drops before the header row.
+    Only the leading run counts; a `#` opening a data line, or one inside a
+    quoted cell, is data."""
+    end = 0
+    for line in text.splitlines(keepends=True):
+        if line.strip() and not line.lstrip().startswith("#"):
+            break
+        end += len(line)
+    return end
+
+
 def migrate_csv(text):
     """`text` with its header cells and its cells' values in the current
-    vocabulary. Raises `Unsafe` when the result would not parse as exactly
-    that.
+    vocabulary. A byte-order mark and a leading comment preamble are kept as
+    they are, and the header row is the first line after them. Raises
+    `Unsafe` when the result would not parse as exactly that.
 
     Implements: SR-247, LLR-369
     """
-    body = text.lstrip("\ufeff")
-    offset = len(text) - len(body)
+    offset = len(text) - len(text.lstrip("\ufeff"))
+    offset += _csv_preamble(text[offset:])
+    body = text[offset:]
     records = _csv_records(body)
     edits = _csv_edits(body, records) if records else []
     if not edits:
@@ -358,14 +378,42 @@ def registries(root, check):
 
 # TABLES: an earlier table name and the current one. KEYS: within a table
 # (named as it is AFTER the rename), an earlier key and the current one.
+# VALUES: within a table and key (both named as they are after the rename), an
+# earlier string value and the current one. The push authority's default was
+# spelled `human`; the role is now the operator, a person or a session that
+# person delegated the push to.
 POLICY_REL = "docs/process.toml"
 POLICY_TABLES = {"attestation": "authority"}
 POLICY_KEYS = {"authority": {"human_approval_through": "operator_accepts_through"}}
+POLICY_VALUES = {"policies": {"push": {"human": "operator"}}}
 
 _TABLE_HEADER = re.compile(
     r"^(?P<lead>[ \t]*\[)(?P<name>[A-Za-z0-9_-]+)(?P<tail>\][ \t]*(?:#[^\r\n]*)?\r?)$"
 )
 _KEY_LINE = re.compile(r"^(?P<lead>[ \t]*)(?P<key>[A-Za-z0-9_-]+)(?P<rest>[ \t]*=.*)$")
+# The `= value` part of a key line when the value is a one-line quoted string.
+_QUOTED = re.compile(
+    r"^(?P<eq>[ \t]*=[ \t]*)(?P<quote>[\"'])(?P<value>[^\"'\r\n]*)(?P=quote)(?P<tail>.*)$"
+)
+
+
+def _policy_value(table, key, value):
+    """`value` as the current vocabulary spells it, for `key` in `table`."""
+    if not isinstance(value, str):
+        return value
+    return POLICY_VALUES.get(table, {}).get(key, {}).get(value, value)
+
+
+def _policy_rest(table, key, rest):
+    """The `= value` part of a key line with its quoted value respelled. A value
+    written any other way is left as it is, and the re-parse refuses it."""
+    match = _QUOTED.match(rest)
+    if not match:
+        return rest
+    value = _policy_value(table, key, match["value"])
+    return "{}{}{}{}{}".format(
+        match["eq"], match["quote"], value, match["quote"], match["tail"]
+    )
 
 
 def _policy_table(name, table, declared):
@@ -382,7 +430,7 @@ def _policy_table(name, table, declared):
         new_key = keys.get(key, key)
         if new_key != key and new_key in table:
             raise Unsafe("`[{}]` carries both `{}` and `{}`".format(name, key, new_key))
-        renamed[new_key] = value
+        renamed[new_key] = _policy_value(new_name, new_key, value)
     return new_name, renamed
 
 
@@ -397,14 +445,15 @@ def _policy_line(line, table):
     if line.lstrip().startswith("["):
         return line, None
     cell = _KEY_LINE.match(line)
-    if cell and table in POLICY_KEYS:
-        key = POLICY_KEYS[table].get(cell["key"], cell["key"])
-        return cell["lead"] + key + cell["rest"], table
+    if cell and (table in POLICY_KEYS or table in POLICY_VALUES):
+        key = POLICY_KEYS.get(table, {}).get(cell["key"], cell["key"])
+        return cell["lead"] + key + _policy_rest(table, key, cell["rest"]), table
     return line, table
 
 
 def migrate_policy(text):
-    """Policy-file `text` with its tables and keys in the current vocabulary.
+    """Policy-file `text` with its tables, keys and values in the current
+    vocabulary.
     Raises `Unsafe` when the result would not parse as exactly that.
 
     Implements: SR-247, LLR-369
@@ -433,8 +482,8 @@ def migrate_policy(text):
 
 
 def policy(root, check):
-    """The policy file, when it names a table or a key by an earlier name,
-    rewritten: `([repo-relative path], [problem])`.
+    """The policy file, when it names a table, a key or a value by an earlier
+    name, rewritten: `([repo-relative path], [problem])`.
 
     Implements: SR-247, LLR-369
     """

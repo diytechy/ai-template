@@ -750,13 +750,13 @@ def test_approval_phase_scope_and_rubric(scaffold):
     # hardening it fell through to a brief that read "there is nothing to
     # approve" at exit 0 — the most expensive way for this tool to be wrong,
     # because a typo, a retired phase tag or an unknown reserved word all
-    # produced a document a human then signed.
+    # produced a document an operator then signed.
     empty = run_py(["scripts/trace.py", "--approve", "v1"], cwd=scaffold)
     assert empty.returncode != 0
     combined = empty.stdout + empty.stderr
     assert "matches no SR" in combined and "refusing to emit an empty" in combined
     # ...and NOTHING is written to stdout: the old behaviour emitted a document
-    # whose own body said "no SR matched this scope", which is a brief a human
+    # whose own body said "no SR matched this scope", which is a brief an operator
     # can read and act on. A refusal must leave no artifact at all.
     assert empty.stdout == ""
 

@@ -1208,7 +1208,7 @@ JUDGING = (
 )
 
 # A machine line: one closed enum, on its own line, with a typed counter. The
-# rule exists because a magic substring in free prose (`NEEDS-HUMAN`) was once
+# rule exists because a magic substring in free prose (`NEEDS-OPERATOR`) was once
 # the ONLY input selecting a disposition's review tier — no constant, no
 # validation, and a typo silently downgraded the judgement.
 MACHINE_LINE = re.compile(r"^\s*(VERDICT|OUTCOME): [A-Z-]+(\|[A-Z-]+)+ [a-z]+=", re.M)

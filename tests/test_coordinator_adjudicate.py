@@ -530,7 +530,7 @@ def test_the_coordinator_route_refuses_a_retained_launch_not_signed_in(
     """Implements: TC-324"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch, status)
-    assert _adjudicate(root) == svc.agent_common.EXIT_NEEDS_HUMAN
+    assert _adjudicate(root) == svc.agent_common.EXIT_NEEDS_OPERATOR
     out = capsys.readouterr().out
     assert "dev-setup" in out and status in out
     assert launched["argv"] == []  # no launch, fresh or otherwise
@@ -555,10 +555,10 @@ def test_the_loop_route_refuses_a_retained_launch_not_signed_in(
     ctx.use_live = False
     ctx.args.no_session_echo = True
     plan = dict(PLAN, route_id=ROUTE, entry=ENTRY, session_env=None)
-    assert al.launch_session(ctx, plan, "WI-1") == al.EXIT_NEEDS_HUMAN
+    assert al.launch_session(ctx, plan, "WI-1") == al.EXIT_NEEDS_OPERATOR
     assert ran == []
     out = capsys.readouterr().out
-    assert "NEEDS-HUMAN" in out and "dev-setup" in out
+    assert "NEEDS-OPERATOR" in out and "dev-setup" in out
 
 
 def test_an_unretained_call_is_never_probed(tmp_path, monkeypatch, launched):
@@ -836,7 +836,7 @@ def test_a_call_refused_before_launch_releases_its_reservation(
     root = _repo(tmp_path)
     _signed_in(monkeypatch, "missing")
     verdict = root / "refused-verdict.md"
-    assert cli.main(_argv(root, verdict)) == svc.agent_common.EXIT_NEEDS_HUMAN
+    assert cli.main(_argv(root, verdict)) == svc.agent_common.EXIT_NEEDS_OPERATOR
     assert not verdict.exists() and launched["argv"] == []
 
 

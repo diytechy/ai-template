@@ -120,7 +120,7 @@ class PendingItem(NamedTuple):
     `kind` is one of `spine`, `pause` — a field rather than a prefix
     test on `line`, because the one caller that discriminates (`dispatch`,
     which excludes the pause) would otherwise be parsing prose to make a
-    control-flow decision, which is the `NEEDS-HUMAN` lesson (LLR-161)."""
+    control-flow decision, which is the `NEEDS-OPERATOR` lesson (LLR-161)."""
 
     kind: str
     line: str

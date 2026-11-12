@@ -65,7 +65,7 @@ closed-vocabulary, and "Automated=Yes cites Evidence" checks over the real rows;
 --approve SCOPE emits ONLY the batch-scoped approval hierarchy (a phase tag or
 an SR-id list) to stdout or --out and runs no checks (WI-146); the reserved scope
 `modified` (WI-316) emits the re-attestation brief instead — per-cell
-before/after for every row owing a human act, against its copy in the
+before/after for every row owing an operator act, against its copy in the
 `docs/archive/last_approved/` snapshot (`baseline_snapshot.py`); regenerate it
 to `docs/ratify/CURRENT.md`, the one file this path ever rewrites; the
 reserved scope `assumptions`, or a DA-/SUR-id list, emits the assumption
@@ -98,7 +98,7 @@ Contract IF-042: the always-valid integrity floor, run over staged content.
     floor is safe to run on every commit at any stage.
 Contract IF-075: `reattest_model(root, srs, llrs, tcs, snapshot=...)`, reached
     through `load_registries(docs)` — the ONE computation of what a spine row
-    owing a human act looks like against its copy in
+    owing an operator act looks like against its copy in
     `docs/archive/last_approved/`: the chain rows, each row's changed cells
     before and after, and the baseline revision and date. It returns structured
     entries rather than text, so every renderer consumes this model and none
@@ -158,7 +158,7 @@ Contract IF-145: the gate verdict the harness reads back from this CLI. Every
     status, integrity, placeholder, schema or off-spine finding exists;
     `--strict-integrity` exits 1 on an integrity finding alone, leaving the
     gate-scoped classes ungated; `--approve modified --check` exits 1 only when
-    a brief exists, a row still owes a human act, and the rendered text differs
+    a brief exists, a row still owes an operator act, and the rendered text differs
     from the file. Without a strict flag a checking run exits 0 having still
     printed every finding, so a harness reading the code alone must pass one.
     The writer arms (`--bump-ids`, `--reserve-ids`, `--fold-ids`,
@@ -2199,7 +2199,7 @@ def frame_findings(exts, bifs, rels):
     It checks three reference fields — a boundary row's `Entity`, and a
     relationship's `From` and `To` — and they are the only structural claims the
     ruled schema makes. Everything else about the frame — is it the RIGHT frame,
-    are the crossings complete — is a human ruling, and a check that pretended
+    are the crossings complete — is an operator ruling, and a check that pretended
     otherwise would be inventing a rule nobody wrote.
 
     FAILURE CLASS, not advisory, unlike the schema tier beside it. A tie-back to
@@ -3613,7 +3613,7 @@ def _scope_srs(scope, srs):
             "trace: --approve {!r} matches no SR — refusing to emit an empty "
             "brief. A scope is an SR-id list, a DA/SUR-id list, a phase tag, or "
             "one of the reserved scopes ({}); an empty brief reads as 'nothing "
-            "to approve' to the human about to sign it.".format(
+            "to approve' to the operator about to sign it.".format(
                 scope, ", ".join(sorted(_RESERVED_APPROVAL_SCOPES | {ASSUMPTION_SCOPE}))
             )
         )
@@ -3647,7 +3647,7 @@ def _sn_prose(sn_text, carrier):
 
 
 # --- the re-attestation brief (--approve modified, WI-316) ----------------------
-# A sitting cannot bless a delta it cannot see: for each SR owing a human act the
+# A sitting cannot bless a delta it cannot see: for each SR owing an operator act the
 # brief shows every chain row's changed cells as BEFORE (the row in the
 # `docs/archive/last_approved/` snapshot) vs AFTER (the working tree).
 #
@@ -3743,7 +3743,7 @@ def _anchor_lines(sr_row):
     THE GAP THIS CLOSES: an `Approved`, undrifted SR whose amendment lives
     entirely in a `Drafted` child never appeared in `entry["rows"]` at all (see
     `reattest_model`'s `if cells or drafted:` gate) — so the brief showed the
-    chain row a human must bless with no statement of the requirement it hangs
+    chain row an operator must bless with no statement of the requirement it hangs
     from. The owner's report, verbatim (2026-08-24): opening the surface and
     looking at an owing SR, the requirement text itself was nowhere on the
     page. `_full_row_bullets`/`_cell_diff_lines` already rendered a CHANGED or
@@ -3920,7 +3920,7 @@ def _spine_stamps(root, snapshot):
 
 
 def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
-    """The STRUCTURED attestation model: one entry per SR owing a human act,
+    """The STRUCTURED attestation model: one entry per SR owing an operator act,
     with its chain rows and each row's changed cells.
 
     Split out of `reattest_lines` (WI-322) so the computation runs ONCE and two
@@ -3990,7 +3990,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
         # above tests the SR row ONLY, and `sr_chain_drifts` below cannot see
         # this case either (a row below approval has made no claim to fall
         # from, and one absent from the snapshot is unanchored, not drifted).
-        # Without this arm the row is invisible to the brief a human approves
+        # Without this arm the row is invisible to the brief an operator approves
         # from (the OI-61-sitting finding).
         if any(_owes_first(row) for _kind, _rid, row in chain):
             return True
@@ -4194,7 +4194,7 @@ def approval_check(root, srs, llrs, tcs, out_path):
     """`(code, message)` for `--approve modified --check` — a plain
     regenerate-and-compare, like every other freshness gate in the kit.
 
-    Fails CLOSED on a difference — a stale brief is read by a human about to
+    Fails CLOSED on a difference — a stale brief is read by an operator about to
     attest, and the cost of a false green here is an owner blessing rows they
     were never shown.
 
@@ -4401,7 +4401,7 @@ def released_tiers(root):
     """The spine tiers (`SR`, `LLR`, `TC`) whose rows the dial `root` declares
     RELEASES to an adjudicator — the rows the owner no longer signs.
 
-    The dial is read ONLY through `agent_common.human_approves_spine`, the
+    The dial is read ONLY through `agent_common.operator_accepts_spine`, the
     predicate the mint (`intake._released_drafted_rows`) and the adjudicator's
     brief (`adjudicate_brief.first_approval_values`) filter through: a copy of
     the rung table here would be a third answer to one question. Each tier's
@@ -4417,7 +4417,7 @@ def released_tiers(root):
     return frozenset(
         kind
         for kind, ix in _KIND_IX.items()
-        if not ac.human_approves_spine(docs, SPINE_FILES[ix][0])
+        if not ac.operator_accepts_spine(docs, SPINE_FILES[ix][0])
     )
 
 
@@ -4429,7 +4429,7 @@ def dial_releases_chain(entry, released):
     whole chain on the owner's section: the owner's signature is still owed on
     it, and a row is read with its chain. A chain with no owing row is held
     too: nothing released it, and the conservative answer to "who approves" is
-    the human.
+    the operator.
 
     Implements: SR-139, LLR-259
     """
@@ -4533,7 +4533,7 @@ def _entry_lines(entry, srs_by_id):
     if not entry["rows"]:
         out.append(
             "_No cell differs from the approved snapshot. The row is here"
-            " because its own `Status` asks for a human, not because its"
+            " because its own `Status` asks for an operator, not because its"
             " text moved._"
         )
     return out
@@ -4788,7 +4788,7 @@ def need_brief_lines(root):
 
 def reattest_lines(root, srs, llrs, tcs):
     """Markdown for the re-attestation brief (`--approve modified`, WI-316): one
-    section per SR owing a human act (grouped by SR for reading) with per-cell
+    section per SR owing an operator act (grouped by SR for reading) with per-cell
     before/after for every chain row (the SR + its LLRs + their/its TCs) that
     differs from the `docs/archive/last_approved/` snapshot, plus rows ADDED to
     or REMOVED from the chain.
@@ -6778,7 +6778,7 @@ def main():
         "(e.g. 'SR-052,SR-053'); a DevStg-Reqs/DevStg-Tests brief links this instead of hand-copying "
         "rows (WI-146). The reserved scope 'modified' (WI-316) emits the "
         "RE-ATTESTATION brief instead: per-cell before/after for every row owing "
-        "a human act, against its copy in docs/archive/last_approved/. The "
+        "an operator act, against its copy in docs/archive/last_approved/. The "
         "reserved scope 'assumptions', or a DA-/SUR-id list, emits the "
         "assumption section: each assumption or surrogate owing an approval, "
         "or each one named, with the requirements citing it first. A scope "
@@ -6847,8 +6847,8 @@ def main():
     # approval hierarchy and exit 0 without running any orphan/integrity pass
     # (WI-146a). It reuses the loaded, example-filtered working sets above.
     # A RESERVED scope (`_RESERVED_APPROVAL_SCOPES` — `modified` today) emits the
-    # re-attestation brief instead: per-cell before/after for every row owing a
-    # human act, against its copy in the `last_approved` snapshot. Anything else
+    # re-attestation brief instead: per-cell before/after for every row owing an
+    # operator act, against its copy in the `last_approved` snapshot. Anything else
     # is a phase tag or an id list, and `_scope_srs` REFUSES one that matches
     # nothing rather than rendering an empty brief.
     if args.approve is not None:

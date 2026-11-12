@@ -46,7 +46,7 @@ not to invent one.
   should say what bounds it.
 
 - **A failure that pages nobody.** When a lane cannot proceed, the exit is
-  `EXIT_NEEDS_HUMAN` (`agent_common.py:134`, value 7). `agent_loop.py`
+  `EXIT_NEEDS_OPERATOR` (`agent_common.py:134`, value 7). `agent_loop.py`
   (~:640-641) turns it into `handback.close_partial` — an immutable per-close
   report and a move to the terminal `partial/`, which `schedule._disposition`
   reads as `partial` (never ready) — so the hold is a visible, durable page

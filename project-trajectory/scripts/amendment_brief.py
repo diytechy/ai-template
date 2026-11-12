@@ -301,7 +301,7 @@ def _scoped_chain_rows(model, scope):
 # WI-791): the need tier and the assumption registry's two tiers, each
 # `(kind, registry, id column)`. The mint routes their amendments since WI-791,
 # so the brief must render them or every such row would refuse as "nothing in
-# scope" and hold for a human.
+# scope" and hold for an operator.
 _UNCHAINED_TIERS = (
     ("SN", "docs/requirements/stakeholder-needs.toml", "SN-ID"),
     ("DA", "docs/requirements/assumptions.toml", "DA-ID"),
@@ -391,7 +391,7 @@ def _amendment_baseline(root, tiers):
     the text actually under judgement, in spine order."""
     rels = list(dict.fromkeys(r for tier, r in _REGISTRY_OF.items() if tier in tiers))
     return (
-        "{} — the approved text as a human last blessed it, each registry's copy "
+        "{} — the approved text as an operator last blessed it, each registry's copy "
         "as last written:\n{}\nThis is the text BEFORE the change below; it is "
         "not the change under judgement, and it could only have been written by "
         "copying a live registry in an approval commit.".format(
@@ -424,7 +424,7 @@ def _copy_stamp_lines(root, rels):
 # The spine tier a chain row's `kind` names -> the registry it lives in. The
 # ONE join this module owns: a rendered chain row carries its tier, and both
 # questions asked of it downstream — "is this tier's approval mine or the
-# owner's" (`agent_common.human_approves_spine`, keyed by registry stem) and
+# owner's" (`agent_common.operator_accepts_spine`, keyed by registry stem) and
 # "what `--approves` argument does the act owe" (keyed by registry path) — are
 # registry-keyed. A second, tier-keyed rung table lived here until WI-572's
 # rework; it answered the same question as `agent_common.SPINE_APPROVAL_RUNGS`
@@ -445,11 +445,11 @@ def _loop_approves(root, kind):
 
     The one place this module turns a rendered chain row's tier into the dial's
     answer. An unrecognised tier has no registry, so it is HELD — the same
-    direction `human_approves_spine` fails an unmapped one."""
+    direction `operator_accepts_spine` fails an unmapped one."""
     registry = _REGISTRY_OF.get(kind)
     if registry is None:
         return False
-    return not ac.human_approves_spine(
+    return not ac.operator_accepts_spine(
         Path(root) / "docs", spine_carrier.stem(registry)
     )
 
@@ -473,7 +473,7 @@ def _aftermath(root, tiers):
     DERIVED, NOT LEFT TO THE SESSION. The dial is a repo-level declaration the
     judge would otherwise have to go read and interpret mid-verdict, which is
     the shape that produces a session confidently doing the owner's act. An
-    unrecognised tier is reported as HELD, the same direction `human_holds`
+    unrecognised tier is reported as HELD, the same direction `operator_holds`
     fails."""
     import intake  # ruled decision 2's one home; deferred, a leaf read
 
@@ -506,7 +506,7 @@ _RELEASED_AFTERMATH = (
 )
 _HELD_AFTERMATH = (
     "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared gate "
-    "authority still HOLDS for a human. A CLARITY verdict on them {}. A MEANING "
+    "authority still HOLDS for an operator. A CLARITY verdict on them {}. A MEANING "
     "verdict on them {}."
 )
 _HELD_ARMS = {

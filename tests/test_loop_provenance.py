@@ -1,8 +1,8 @@
 """Loop provenance: the `Loop-Session` trailer, the loop marker, and the history
-check for a loop commit that changed a human-held status (TC-242, TC-243).
+check for a loop commit that changed an operator-held status (TC-242, TC-243).
 
-A status change on a rung the approval level holds for a human is supposed to
-mean a human judged. The loop's commits can be told apart from a person's only
+A status change on a rung the approval level holds for an operator is supposed to
+mean an operator judged. The loop's commits can be told apart from a person's only
 if every one of them says it is the loop's, so the pieces pinned here are one
 chain rather than four features:
 
@@ -1102,7 +1102,7 @@ def test_the_dial_comparison_holds_every_rung_at_or_below_it():
             assert authority.holds_under(dial, rung) is (j <= i), (dial, rung)
     for rung in rungs:
         assert authority.holds_under(kitstage.BELOW, rung) is False, rung
-    # The two unreadable ends fail toward the human.
+    # The two unreadable ends fail toward the operator.
     assert authority.holds_under(ladder.STAGE_NEEDS, "DevStg-Nowhere") is True
     assert authority.holds_under("devstg-needs", ladder.STAGE_RELEASE) is True
     assert authority.holds_under(ladder.STAGE_RELEASE, None) is True

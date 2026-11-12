@@ -714,7 +714,7 @@ def test_the_release_checklist_carries_the_required_rejudge_item(tmp_path):
 
 def test_a_minted_rejudge_row_composes_its_brief_and_demands_its_verdict(tmp_path):
     """The kind the draft declares requires a routed brief: an adjudication row
-    declaring a brief the kit cannot compose is held for a human, so the
+    declaring a brief the kit cannot compose is held for an operator, so the
     re-judge brief is filled from the live decision and ends in a typed
     verdict line."""
     root, _ = judged_repo(tmp_path, expired=("TC-003",))

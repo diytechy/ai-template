@@ -188,7 +188,7 @@ def _dispatch_hold(lane, plan=None, worker=None):
         agent_loop.route_session = original
     if out is plan:
         return None
-    assert out == agent_loop.EXIT_NEEDS_HUMAN, out
+    assert out == agent_loop.EXIT_NEEDS_OPERATOR, out
     return agent_loop.build_hold(lane, worker)
 
 
@@ -213,7 +213,7 @@ def test_an_edit_with_no_verdict_holds_the_dispatch_and_the_close(tmp_path):
     """Implements: TC-325"""
     trunk, lane = _lane(tmp_path)
     held = _dispatch_hold(lane)
-    assert held is not None and held[:2] == (agent_loop.EXIT_NEEDS_HUMAN, "HELD")
+    assert held is not None and held[:2] == (agent_loop.EXIT_NEEDS_OPERATOR, "HELD")
     assert _digest() in held[2] and "60 fps" in held[2] and "30 fps" in held[2]
     _stage_close(lane)
     staged = integrate.staged_done_when_refusal(lane)
@@ -765,7 +765,7 @@ def test_an_unreadable_claim_is_held_naming_why(tmp_path):
     worker = _worker(lane)
     worker["base"] = UNREADABLE
     end = agent_loop.build_hold(lane, worker)
-    assert end and end[:2] == (agent_loop.EXIT_NEEDS_HUMAN, "HELD")
+    assert end and end[:2] == (agent_loop.EXIT_NEEDS_OPERATOR, "HELD")
     assert "cannot be read" in end[2]
 
 
@@ -1498,7 +1498,7 @@ def test_a_build_after_a_dirty_completed_lane_is_held_at_dispatch(tmp_path):
     worker = _worker(lane)
     assert agent_loop.worker_endstate(lane, worker, False, False, 0) is None
     held = _dispatch_hold(lane, worker=worker)
-    assert held and held[:2] == (agent_loop.EXIT_NEEDS_HUMAN, "HELD")
+    assert held and held[:2] == (agent_loop.EXIT_NEEDS_OPERATOR, "HELD")
 
 
 def test_a_resumed_blocked_lanes_first_build_is_held_at_dispatch(tmp_path):
@@ -1518,7 +1518,7 @@ def test_a_resumed_blocked_lanes_first_build_is_held_at_dispatch(tmp_path):
     )
     assert end is None
     held = _dispatch_hold(lane, worker=worker)
-    assert held and held[:2] == (agent_loop.EXIT_NEEDS_HUMAN, "HELD")
+    assert held and held[:2] == (agent_loop.EXIT_NEEDS_OPERATOR, "HELD")
 
 
 # --- round 19: machine lines are parsed strictly per physical line ----------

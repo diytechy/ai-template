@@ -251,7 +251,7 @@ def parse_red_tc(line):
     line. The ONE reader of `_red_tc_line`'s grammar — `intake._census_drafts`
     routes through this rather than re-splitting the prose, because prose that
     carries control flow has to be a parsed field with a refusal, not a
-    substring search that silently matches nothing (the `NEEDS-HUMAN` lesson,
+    substring search that silently matches nothing (the `NEEDS-OPERATOR` lesson,
     LLR-161)."""
     matched = _RED_TC_RE.match(line or "")
     if not matched:

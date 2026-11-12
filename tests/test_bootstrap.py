@@ -1006,7 +1006,7 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
     assert "gate_policy" not in cfg["authority"]
     assert cfg["authority"]["operator_accepts_through"] == "DevStg-Release"
     assert cfg["policies"] == {
-        "push": "human",
+        "push": "operator",
         "review_rounds": 1,
         "privacy_check": False,
         "secrets_scan": True,
@@ -1208,8 +1208,8 @@ def test_privacy_check_flag_sets_toggle(tmp_path):
 # string. These drive the writer's real callers, the scaffold flags and the
 # migration, and read the result back through the parse.
 
-_INLINE_POLICIES = 'policies = { push = "human", privacy_check = false }\n'
-_DOTTED_POLICIES = 'policies.push = "human"\npolicies.privacy_check = false\n'
+_INLINE_POLICIES = 'policies = { push = "operator", privacy_check = false }\n'
+_DOTTED_POLICIES = 'policies.push = "operator"\npolicies.privacy_check = false\n'
 _DECOY_POLICIES = (
     '[policies]\nnote = """\nprivacy_check = false\n"""\nprivacy_check = false\n'
 )
@@ -1260,7 +1260,7 @@ def test_a_scaffold_flag_names_a_key_the_file_does_not_declare(tmp_path):
     # nothing (an absent key was removed on purpose), so it must not report
     # the value it did not write.
     dest = tmp_path / "repo"
-    path = _policy_repo(dest, '[policies]\npush = "human"\n')
+    path = _policy_repo(dest, '[policies]\npush = "operator"\n')
     proc = run_py(
         [SCRIPTS / "bootstrap.py", "--dest", dest, "--privacy-check", "true"],
         tmp_path,
@@ -1268,7 +1268,7 @@ def test_a_scaffold_flag_names_a_key_the_file_does_not_declare(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "privacy-check: true" not in proc.stdout
     assert "NOTE: privacy-check not written" in proc.stdout
-    assert path.read_text(encoding="utf-8") == '[policies]\npush = "human"\n'
+    assert path.read_text(encoding="utf-8") == '[policies]\npush = "operator"\n'
 
 
 @pytest.mark.parametrize(
@@ -1287,7 +1287,7 @@ def test_set_process_key_refuses_a_dial_it_cannot_edit_in_place(tmp_path, text):
 
 
 _UNPARSEABLE_POLICIES = (
-    '[policies]\npush = "human"\nprivacy_check = false\nunfinished =\n'
+    '[policies]\npush = "operator"\nprivacy_check = false\nunfinished =\n'
 )
 
 
@@ -1398,9 +1398,7 @@ def test_an_ordinary_policy_file_still_migrates_and_sets_in_place(tmp_path):
     """Implements: TC-152"""
     # The characterization: one `key = value` line per dial under its header
     # is rewritten on that line, and a new key lands under its own header.
-    text = (
-        '# header kept\n[policies]\npush = "human"\nprivacy_check = false\n\n[checks]\n'
-    )
+    text = '# header kept\n[policies]\npush = "operator"\nprivacy_check = false\n\n[checks]\n'
     path = _policy_repo(tmp_path, text, {"privacy-check": "true", "review-policy": "2"})
     boot = load_script("bootstrap")
     moved, notes = boot.migrate_legacy_config(tmp_path)

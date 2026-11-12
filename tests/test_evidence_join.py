@@ -136,7 +136,7 @@ def test_a_full_case_with_slow_evidence_or_a_release_case_is_silent():
 def test_a_case_below_approval_is_not_judged():
     """Implements: TC-255"""
     # A Drafted row's tier is a proposal still in work; the tier cell the rule
-    # holds true is the one a human approved.
+    # holds true is the one an operator approved.
     case = _case("Smoke", "tests/test_heavy.py", status="Drafted")
     assert spine.tier_findings([case], _tiers({"tests/test_heavy.py": "slow"})) == (
         [],

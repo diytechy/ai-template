@@ -5,7 +5,7 @@ Replaces the hand-maintained `docs/open-items.md`. Two inputs, one output:
 
   docs/requirements/open-items.toml   pending decision briefs, one row per OI
   the spine registries + git         rows owing an approval or a re-attest
-  -> docs/open-items.html            the ONLY surface a human reads
+  -> docs/open-items.html            the ONLY surface the operator reads
 
 Why HTML and not markdown: the depth an owner needs to rule a re-attest is a
 WORD-LEVEL DIFF — of a 1,500-character cell, which forty words moved — and
@@ -72,7 +72,7 @@ Contracts: IF-074 — the interface seam this module declares (process.md §8; r
 of record in docs/requirements/interfaces.toml).
 
 Contract IF-074: the generated owner decision surface at `docs/open-items.html` —
-    the one document a human reads to rule. It carries, in this order: a card
+    the one document the operator reads to rule. It carries, in this order: a card
     per `Status=pending` open-item row a queued or claimed work item's `needs`
     cites (the one-line, the blast radius, the options, the recommendation and
     the queued or claimed rows it holds), with an integrity notice naming each
@@ -434,7 +434,7 @@ def md_block(text):
 
 # A link target is emitted as an anchor ONLY when it is a fragment, a relative
 # path, or http(s). These cells are agent-authored prose landing on the one
-# document a human reads, so an unrestricted target ships a clickable
+# document the operator reads, so an unrestricted target ships a clickable
 # `javascript:` URL onto the owner's decision surface (122-REVIEW-A). An unsafe
 # target is not silently dropped — it degrades to visible literal text, so the
 # reader still sees what the brief said.
@@ -715,7 +715,7 @@ def _chain_row(row):
             inner.append(
                 '<p class="empty">No cell differs from the approved snapshot. '
                 "This row is here because its own <code>Status</code> asks for "
-                "a human, not because its text moved.</p>"
+                "an operator, not because its text moved.</p>"
             )
         inner.append(
             _full_cells_html(
@@ -894,8 +894,8 @@ def _attestation_cards(model, srs_by_id=None):
             # exactly what it says.
             body.append(
                 '<p class="empty">No cell differs from the approved snapshot. '
-                "This row is here because its own <code>Status</code> asks for a "
-                "human, not because its text moved.</p>"
+                "This row is here because its own <code>Status</code> asks for an "
+                "operator, not because its text moved.</p>"
             )
         cards.append(
             '<article class="card" id="{i}">{h}{a}{b}{c}{rows}</article>'.format(
@@ -1630,7 +1630,7 @@ def main(argv=None):
             "in the kit's RESYNC_PACK.md)."
         )
     # The DEFERRAL arms run on both paths — the check a commit passes and the
-    # regeneration a human runs — because the misreading they exist to stop
+    # regeneration an operator runs — because the misreading they exist to stop
     # ("up to date" read as "the queue is empty") happens on both.
     report_deferrals(root)
     if args.check:

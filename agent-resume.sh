@@ -141,7 +141,7 @@ fi
 # nearly every trunk merge touches project-trajectory/scripts/) and it drained
 # to a safe boundary with the assignment preserved in the tree. A fresh process
 # reconstructs everything from git, so the launcher relaunches it instead of
-# handing the walk-away run back to a human; 50 bounds a pathological loop.
+# handing the walk-away run back to an operator; 50 bounds a pathological loop.
 # The engine still `exec`s — in a subshell, so this launcher survives to
 # relaunch it. Keep agent-resume.cmd in sync (its :again loop).
 engine() {

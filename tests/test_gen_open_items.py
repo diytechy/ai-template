@@ -9,7 +9,7 @@ What these guard, in the order the surface can fail a reader:
 
   * the briefs render, and a RULED row does not (it is history, not a decision);
   * `Drafted` AND `Modified` both surface — "new or changed requirement rows
-    awaiting a human" is the whole point, and an earlier draft covered only one;
+    awaiting an operator" is the whole point, and an earlier draft covered only one;
   * an empty section says CHECK THE BASELINE rather than reading as a confident
     "nothing changed" (the failure that shipped a brief missing 2 of 6 rows);
   * the freshness gate bites on drift, MASKS the machine-local region, and
@@ -386,8 +386,8 @@ def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_p
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
     _approve(root)
-    # Move the Status DOWN without amending anything else: the row asks for a
-    # human by its own Status (`Drafted` owes a first approval) while no cell
+    # Move the Status DOWN without amending anything else: the row asks for an
+    # operator by its own Status (`Drafted` owes a first approval) while no cell
     # has moved away from the snapshotted text — which is the exact state this
     # empty section describes. It was reached with `Modified` until D-9 step 7
     # retired that marker; `Drafted` is the surviving value that puts a row in
@@ -398,7 +398,7 @@ def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_p
     assert gen(root).returncode == 0
     page = html_of(root)
     assert "No cell differs from the approved snapshot" in page
-    assert "its own <code>Status</code> asks for a human" in page
+    assert "its own <code>Status</code> asks for an operator" in page
     # The negative halves: neither the retired advice nor a settled reading.
     assert "check the baseline" not in page.lower()
     assert "nothing changed" not in page.lower()

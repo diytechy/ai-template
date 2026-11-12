@@ -843,7 +843,7 @@ def test_git_commit_lookup_runs_one_history_process(tmp_path, monkeypatch):
 _STATUS_SHAPED = """# Status
 
 - **Open items:**
-  - **Needs <human>**:
+  - **Needs <operator>**:
     - OI-1 - decide the flag
     - OI-9 - decide the port
   - **In flight**:
@@ -869,7 +869,7 @@ def test_scaffold_status_surface_is_clean(scaffold):
     assert proc.returncode == 0
     assert "status.md is" not in proc.stdout  # S-1
     assert "Open items" not in proc.stdout  # S-2 (warn text)
-    assert "Needs-<human> item" not in proc.stdout  # S-3
+    assert "Needs-<operator> item" not in proc.stdout  # S-3
     assert "orphan brief" not in proc.stdout  # S-3 reverse
 
 
@@ -931,13 +931,13 @@ def _oi(oid, status="pending", title="decide the flag"):
 
 
 def test_oi_coherence_both_directions(scaffold):
-    # S-3: a Needs-<human> OI with no brief warns; a briefed OI never named in
+    # S-3: a Needs-<operator> OI with no brief warns; a briefed OI never named in
     # status.md warns; an In-flight OI needs NO brief; all warn-only (exit 0).
     _write_status(scaffold, _STATUS_SHAPED)
     _write_open_items(scaffold, _oi("OI-1") + _oi("OI-8", title="stale ruled item"))
     proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "OI-9: a Needs-<human> item" in proc.stdout  # missing brief
+    assert "OI-9: a Needs-<operator> item" in proc.stdout  # missing brief
     assert "OI-8: briefed in requirements/open-items.toml" in proc.stdout  # orphan
     assert "OI-1" not in proc.stdout  # coherent id is quiet
     assert "OI-2" not in proc.stdout  # in-flight needs no brief
@@ -978,7 +978,7 @@ def test_oi_coherence_retires_under_generated_marker(scaffold):
     proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # both S-3 directions stand down under the marker
-    assert "Needs-<human> item" not in proc.stdout
+    assert "Needs-<operator> item" not in proc.stdout
     assert "orphan brief" not in proc.stdout
     # S-1/S-2 still guard the hand-authored region: an order violation still warns
     _write_status(

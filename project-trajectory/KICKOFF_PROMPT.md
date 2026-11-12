@@ -122,7 +122,7 @@ design expectation (links SR, names module/symbol) → `TC-###` test case
 
 Each gate closes per the repo's **declared gate authority** — the
 `[authority] operator_accepts_through` dial in `docs/process.toml`, the one home for every
-process dial (default `attended`: pause for human approval at each
+process dial (default `attended`: pause for operator approval at each
 gate; the `single-approve`/`autonomous` levels and their mechanics:
 `PROCESS.md` §4 + `PROCESS_OPTIONS.md` "Gate authority levels").
 

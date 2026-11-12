@@ -111,7 +111,7 @@ REM Exit 11 = RESTART: the coordinator's own Python moved under it (a trunk
 REM merge that touched scripts\) and it drained to a safe boundary with the
 REM assignment preserved in the tree. A fresh process reconstructs everything
 REM from git, so the launcher relaunches it instead of handing the walk-away
-REM run back to a human; 50 bounds a pathological loop. Keep agent-resume.sh
+REM run back to an operator; 50 bounds a pathological loop. Keep agent-resume.sh
 REM in sync (its while loop).
 set "RELAUNCHES=0"
 :again

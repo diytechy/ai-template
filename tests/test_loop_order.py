@@ -86,8 +86,8 @@ def test_judgement_first_is_a_STABLE_partition_not_a_sort():
     ]
 
 
-def test_judgement_first_does_not_smuggle_work_past_a_human_held_stop():
-    # The preference reorders; it never CHANGES what may run. A human-held
+def test_judgement_first_does_not_smuggle_work_past_an_operator_held_stop():
+    # The preference reorders; it never CHANGES what may run. An operator-held
     # attestation still drains and surfaces, with the adjudication row waiting
     # behind the stop rather than being admitted ahead of it.
     frontier = [("WI-001", "attestation"), ("WI-002", "adjudication")]
@@ -208,7 +208,7 @@ def test_the_red_tc_line_grammar_round_trips():
     # A STRING CONTRACT BETWEEN TWO MODULES — the seam carries finding strings,
     # so the formatter and the parser are pinned against each other. The
     # alternative (intake re-splitting the prose) is prose carrying control
-    # flow, which is exactly the `NEEDS-HUMAN` defect SR-145 removed.
+    # flow, which is exactly the `NEEDS-OPERATOR` defect SR-145 removed.
     line = cns._red_tc_line("TC-042", "failed", ["SR-007", "LLR-009"])
     assert cns.parse_red_tc(line) == ("TC-042", ["SR-007", "LLR-009"])
     assert line.startswith(cns.RED_TC_PREFIX)
@@ -286,7 +286,7 @@ def test_the_red_tc_draft_declares_NO_planmode():
 
 def test_every_MINTED_row_is_one_the_scheduler_can_actually_classify():
     """The structural half, and the reason this is a test rather than a fixed
-    cell: `_draft_refusal` validated only the follow-ups a HUMAN wrote into a
+    cell: `_draft_refusal` validated only the follow-ups an OPERATOR wrote into a
     `## Dispositions` block. Every DERIVED draft went straight to `_draft_row`
     and was validated by nothing — so the mint could emit a row that is not
     work at all, with nobody watching at either end."""

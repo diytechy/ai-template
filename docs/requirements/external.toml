@@ -80,9 +80,9 @@
 #
 #                  FLIP AUTHORITY IS DERIVED, NOT DECLARED: a `status` cell may
 #                  be machine-flipped only when this registry's stage rung —
-#                  DevStg-Boundary — is not human-held under the `[authority]
+#                  DevStg-Boundary — is not operator-held under the `[authority]
 #                  operator_accepts_through` dial, the predicate being
-#                  `agent_common.human_approves(docs, "external")`. READ THE
+#                  `agent_common.operator_accepts(docs, "external")`. READ THE
 #                  DIAL, DO NOT ASSUME IT: whether DevStg-Boundary is held is
 #                  that value's to say, never this comment's. What keeps these
 #                  values the owner's, whatever the dial says, is that the kit

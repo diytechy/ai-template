@@ -51,7 +51,7 @@ check_privacy = load_script("check_privacy")
 
 def test_declared_policy_surface_is_reexported_from_its_behavior_module():
     policy = load_script("agent_policy")
-    for name in ("process_config", "config_conflicts", "human_holds"):
+    for name in ("process_config", "config_conflicts", "operator_holds"):
         exported = getattr(ac, name)
         owned = getattr(policy, name)
         assert exported.__module__ == "agent_policy"
@@ -841,19 +841,19 @@ def test_every_guarded_entry_point_refuses_a_mixed_config(tmp_path):
 # the config layer must read}).
 VALID_CONFIG_SHAPES = [
     pytest.param(
-        'policies.review_rounds = 2\npolicies.push = "human"\n',
-        {"review-policy": "2", "push-policy": "human"},
+        'policies.review_rounds = 2\npolicies.push = "operator"\n',
+        {"review-policy": "2", "push-policy": "operator"},
         id="dotted-key",
     ),
     pytest.param(
-        'policies = { review_rounds = 2, push = "human" }\n',
-        {"review-policy": "2", "push-policy": "human"},
+        'policies = { review_rounds = 2, push = "operator" }\n',
+        {"review-policy": "2", "push-policy": "operator"},
         id="inline-table",
     ),
     pytest.param(
-        '[policies]\nreview_rounds = 2\npush = """human"""\n'
+        '[policies]\nreview_rounds = 2\npush = """operator"""\n'
         'note = """\nfirst line\nsecond line\n"""\n',
-        {"review-policy": "2", "push-policy": "human"},
+        {"review-policy": "2", "push-policy": "operator"},
         id="multiline-string",
     ),
 ]
@@ -887,13 +887,13 @@ def test_declared_policy_prefers_the_toml_then_the_legacy_file_then_the_default(
     tmp_path,
 ):
     docs = _docs(tmp_path)
-    assert ac.declared_policy(docs, "push-policy", "human") == "human"
+    assert ac.declared_policy(docs, "push-policy", "operator") == "operator"
 
     (docs / "push-policy").write_text("# note\nagent\n", encoding="utf-8")
-    assert ac.declared_policy(docs, "push-policy", "human") == "agent"
+    assert ac.declared_policy(docs, "push-policy", "operator") == "agent"
 
     write_toml(tmp_path, '[policies]\npush = "agent-iteration"\n')
-    assert ac.declared_policy(docs, "push-policy", "human") == "agent-iteration"
+    assert ac.declared_policy(docs, "push-policy", "operator") == "agent-iteration"
 
 
 def test_a_typed_value_renders_in_the_legacy_string_vocabulary(tmp_path):
@@ -950,13 +950,13 @@ def test_migration_folds_every_dial_in_and_deletes_the_file(tmp_path):
     # posture while running with another.
     # WI-493 re-keyed the dial to the DevStg-* rung it always meant: the
     # loop-held end that used to be the ordinal `0` is now `DevStg-Below`, the
-    # sentinel for "no rung is a human's to approve".
+    # sentinel for "no rung is an operator's to approve".
     assert cfg["authority"]["operator_accepts_through"] == "DevStg-Below"
     assert cfg["authority"]["keep_nondependent"] is True
     assert cfg["authority"]["final_review"] == "off"
     assert "gate_policy" not in cfg["authority"]
     assert ac.approval_through(tmp_path / "docs") == "DevStg-Below"
-    assert ac.human_holds(tmp_path / "docs", "DevStg-Needs") is False, (
+    assert ac.operator_holds(tmp_path / "docs", "DevStg-Needs") is False, (
         "the whole point: `autonomous` must actually read as loop-held"
     )
     assert cfg["policies"] == {
@@ -988,7 +988,7 @@ def test_migration_never_deletes_a_file_it_could_not_write(tmp_path):
     Implements: TC-152
     """
     _docs(tmp_path)
-    write_toml(tmp_path, '# my customized file\n[policies]\npush = "human"\n')
+    write_toml(tmp_path, '# my customized file\n[policies]\npush = "operator"\n')
     (tmp_path / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
     (tmp_path / "docs" / "review-policy").write_text("2\n", encoding="utf-8")
 

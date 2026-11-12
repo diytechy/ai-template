@@ -1397,7 +1397,7 @@ def test_audit_passes_a_trunk_commit_of_every_regen_output_under_the_shipped_lis
 
 # --- 6. the HELD STATUS (SR-208, TC-241) ---------------------------------------
 #
-# Where the approval level holds an off-spine registry's rung for a human, a
+# Where the approval level holds an off-spine registry's rung for an operator, a
 # row of it moves into approval only by the owner. The frame and assumptions
 # registries sit at DevStg-Boundary, which the dial below holds. The merge slot
 # refuses such a move in ANY lane, whoever built it, by the lane rule riding
@@ -1575,7 +1575,7 @@ def test_a_registry_missing_from_the_rung_map_is_held(tmp_path, monkeypatch):
     refusal = integ.integrate_one(root, "wi-401", "smoke")
     assert "no [product] test declaration" in refusal, refusal
     # ...until nobody has ruled which rung governs the frame: then it is the
-    # human's, because an unmapped status is one nobody has released.
+    # operator's, because an unmapped status is one nobody has released.
     monkeypatch.delitem(integ.ac.APPROVAL_RUNGS, "external")
     refusal = refused(root, "wi-401", "smoke")
     assert "external" in refusal and "B-01" in refusal, refusal

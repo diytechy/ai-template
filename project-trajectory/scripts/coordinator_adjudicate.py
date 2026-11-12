@@ -73,8 +73,8 @@ Contract IF-284: the command's exit codes. `adjudicate` exits 0 for a valid
     is not a lane, an unusable route, a brief file that cannot be read or
     decoded, a PATH that exists or cannot be reserved, or a launch the
     blackout window refuses (the session service admits only an
-    adjudication of a work item whose claim is active there); and 7 (needs a
-    human) when the launch is refused because its account cannot
+    adjudication of a work item whose claim is active there); and 7 (needs an
+    operator) when the launch is refused because its account cannot
     authenticate (a token that cannot be read, a login home absent or not
     signed in) or its environment conflicts. `act` exits 0 only when
     the call succeeded, HEAD then carries in full every act the verdict
@@ -394,7 +394,7 @@ def adjudicate(args):
     except session_service.SigninRefused as refused:
         _release(args.verdict)
         print("adjudicate: {}".format(refused))
-        return agent_common.EXIT_NEEDS_HUMAN
+        return agent_common.EXIT_NEEDS_OPERATOR
     print(_keep_line(kept))
     try:
         outcome = _call(root, row, request, kept, prompt, env)
@@ -516,7 +516,7 @@ def act(args):
         env = session_service.launch_env(root, row, request.account)
     except session_service.SigninRefused as refused:
         print("act: {}".format(refused))
-        return agent_common.EXIT_NEEDS_HUMAN
+        return agent_common.EXIT_NEEDS_OPERATOR
     print(_keep_line(kept))
     before = (git_out(root, ["rev-parse", "HEAD"]) or "").strip()
     try:

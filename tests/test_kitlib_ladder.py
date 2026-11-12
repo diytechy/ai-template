@@ -68,7 +68,7 @@ def test_every_rung_has_a_description_and_nothing_else_does():
 def test_stage_ord_is_the_position_and_RAISES_on_an_unknown_label():
     """The label is the identifier; position is derived. And an unknown label
     means the ladder moved under a cached value — the wrong-answer direction of
-    a silent default is LESS human involvement, so it fails loudly.
+    a silent default is LESS operator involvement, so it fails loudly.
 
     Implements: TC-179
     """

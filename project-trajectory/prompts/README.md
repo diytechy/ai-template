@@ -69,9 +69,9 @@ OUTCOME: QUEUE|QUEUE-WITH-EDGE|RETURN-TO-DRAFT needs=<id or ->
 ```
 
 **Prose that carries control flow must be a typed field.** The rule is written
-in blood: `NEEDS-HUMAN`, a magic substring inside a free-text handback reason,
+in blood: `NEEDS-OPERATOR`, a magic substring inside a free-text handback reason,
 was the *only* input selecting a disposition row's review tier — so a typo
-(`NEEDS_HUMAN`, `needs human`) silently downgraded the judgement, with no
+(`NEEDS_OPERATOR`, `needs operator`) silently downgraded the judgement, with no
 constant, no validation and no refusal on a miss. A closed enum on its own line
 is parseable, testable, and impossible to typo silently.
 

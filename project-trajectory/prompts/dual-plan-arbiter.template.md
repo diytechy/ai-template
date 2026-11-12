@@ -12,7 +12,7 @@ headers you recognize) and label them only "Plan A" / "Plan B" by coin flip.
 
 POSITION SWAP (required): run this prompt TWICE — second run with A and B
 swapped. The selections must agree; if they differ, the round is
-position-unstable: page the human, do not average or re-roll.
+position-unstable: page the operator, do not average or re-roll.
 
 Slots: {{OWNER_PROMPT}} = the owner's original goal prompt, verbatim;
 {{GOAL_BRIEF}}, {{RUBRIC}} as for the critic; {{COVERAGE_REPORT}} = the

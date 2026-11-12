@@ -17,18 +17,18 @@ credits a hook with a refusal it cannot enforce has mis-priced the risk.
 
 - **An irreversible action with no requirement naming its authority.** This is
   the charter's `listens_for` verbatim, and the repo already has the canonical
-  answers. Publishing is human: `docs/process.toml` sets `push = "human"` (an
-  agent never pushes, even if asked). Fan-out is dialled: `subagent_gate.py`
+  answers. Publishing is the operator's: `docs/process.toml` sets
+  `push = "operator"` (no other agent pushes, even if asked). Fan-out is dialled: `subagent_gate.py`
   refuses/defers spawns of `Task`/`Agent` per `[checks] subagent_gate`
   (`off|ask|deny`, absent = off), and the only bypass is `SUBAGENT_GATE=allow`
   set in the **launcher environment the model cannot write** (SR-043; realizes
-  SN-006's "override a human provides — never one the model can set"). If a new
+  SN-006's "override an operator provides — never one the model can set"). If a new
   decomposition adds an undoable action, look for the row that names its
   authority the way SR-043 names the gate's.
 
-- **The human-held override, and whether anything lets the model reach it.**
+- **The operator-held override, and whether anything lets the model reach it.**
   SN-006 makes this the load-bearing invariant: declared limits bound spawned
-  workers and irreversible actions, and *only* a human-provided override may
+  workers and irreversible actions, and *only* an operator-provided override may
   relax them. The one thing the gate's deliberate fail-open must never relax is
   that override itself (SR-043 rationale). Scrutinize any change that reads a
   policy dial, an env var, or a launch flag for whether the model could set the
@@ -62,7 +62,7 @@ credits a hook with a refusal it cannot enforce has mis-priced the risk.
   applied, and SR-043 is the worked example of a single such action getting its
   own row.
 - Treat "the hook will stop it" as false by default. Every control here is
-  supervision; ask what a human still holds (push, the `SUBAGENT_GATE` override)
+  supervision; ask what an operator still holds (push, the `SUBAGENT_GATE` override)
   and confirm the model cannot reach it.
 - For any new provider dispatch, check it against SR-175's declared inclusion
   set, not against convention — and remember the **pull channel** cannot be

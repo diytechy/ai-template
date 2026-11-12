@@ -78,8 +78,8 @@ def claim_dir(root, branch, wid="WI-999"):
 
 def test_claim_refuses_while_the_tracked_pause_is_present(tmp_path, capsys):
     # §5.6: pause = STOP CLAIMING. The refusal quotes the declaration's own
-    # reason and stamp, because a pause a human cannot attribute is a pause a
-    # human deletes. Nothing moves and no branch is cut — the whole point is
+    # reason and stamp, because a pause an operator cannot attribute is a pause an
+    # operator deletes. Nothing moves and no branch is cut — the whole point is
     # that a paused repo drains rather than accumulating fresh claims.
     root = claim_repo(tmp_path)
     (root / "docs" / "work" / "pause").write_text(

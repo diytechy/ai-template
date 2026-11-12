@@ -41,7 +41,7 @@ the ladder, and the ID scheme. The short version needed every session:
   test before the code that satisfies it: red → green → refactor — within the
   traceability spine, not instead of it.
 - **The stage ladder:** `DevStg-` Needs · Boundary · Reqs · Arch · LLReqs ·
-  Tests · Impl · Release. You are IN one; a human signs three rung boundaries,
+  Tests · Impl · Release. You are IN one; an operator signs three rung boundaries,
   per `docs/process.toml` and process.md §4. Never self-advance; log it.
 - **The check harness is the bar:** `python scripts/check.py` runs format,
   lint, tests, coverage, traceability, flows and freshness at or above the
@@ -63,7 +63,7 @@ the ladder, and the ID scheme. The short version needed every session:
   changed, next action). **Commit hooks on before any work** (`sh
   scripts/setup.sh`, or `scripts\setup.ps1`); never bypass them.
   **Commit early and often**, small and green per step; the `push` dial says
-  who publishes (default: human). End with a clean tree.
+  who publishes (default: operator). End with a clean tree.
 
 ## Code we want (readability for humans *and* agents)
 

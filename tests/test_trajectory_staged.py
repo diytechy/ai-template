@@ -910,7 +910,7 @@ def test_hat_refs_arm_is_silent_when_the_cell_moves_with_the_amendment(tmp_path)
     """Implements: TC-198"""
     # The discharged case: substance and perspective record move together, which
     # is the behaviour the warn asks for. The WI-316 arm still fires (the prose
-    # amendment still owes a human read) — the two arms answer different
+    # amendment still owes an operator read) — the two arms answer different
     # questions and must not be collapsed.
     run_git = _init_spine_repo(tmp_path)
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
@@ -927,7 +927,7 @@ def test_hat_refs_arm_is_vacuous_where_a_row_has_no_baseline(tmp_path):
     """Implements: TC-198"""
     # HONEST VACUITY, both shapes, inherited from the amendment set rather than
     # re-litigated: a row minted in this very commit has nothing to compare, and
-    # a row below approval has blessed nothing to amend behind a human's back.
+    # a row below approval has blessed nothing to amend behind an operator's back.
     # Neither is coverage, and neither is a hole this arm can close.
     run_git = _init_spine_repo(tmp_path)
     csv_path = tmp_path / "docs" / "requirements" / "system-requirements.csv"

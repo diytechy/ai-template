@@ -1045,7 +1045,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # here is freshness-gated; docs/ratify/*.md is generated the same way and
         # was gated by nothing, so it silently drifted behind the registry it
         # summarizes — twice in one day, both times caught only by a human
-        # noticing. It fails CLOSED because a stale brief is read by a HUMAN
+        # noticing. It fails CLOSED because a stale brief is read by an OPERATOR
         # ABOUT TO ATTEST: a short brief means an owner blesses rows they were
         # never shown. The comparison uses the baseline the brief itself
         # DECLARES, never a re-derived one (re-deriving is the WI-322 BLOCKER,
@@ -1063,7 +1063,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # Modified (the window is closed, so the brief is a record).
         #   AT EVERY RUNG SINCE WI-498 slice 2, and the re-derivation is the
         # clearest case in the table. The question this step asks — "is the brief
-        # a human is about to attest FROM still the brief the registry supports?"
+        # an operator is about to attest FROM still the brief the registry supports?"
         # — is asked at the moment of an ATTESTATION, and attestation happens at
         # every rung of the ladder, not only near the end of it. The old
         # `{DevStg-Tests, DevStg-Impl}` tag put it out of reach for exactly the
@@ -1494,7 +1494,7 @@ def _warn_retired_flag_spelling(argv=None):
 # and 5. The last four were the three DISPLAY readers (`traj_parse`,
 # `traj_panels`, `traj_status`), which now render the stage vocabulary, and
 # `agent_common.spine_stage_of` — not display at all, but the input to
-# `human_holds`, i.e. APPROVAL AUTHORITY — which now comes through the common
+# `operator_holds`, i.e. APPROVAL AUTHORITY — which now comes through the common
 # reader above. That one is why the freshness step could not retire earlier: a
 # stale value there decides who may approve.
 STAGE_FILE = Path(_kitstage.STAGE_FILE)
@@ -1863,7 +1863,7 @@ def staged_divergence(root=".", strict=False):
 
 # --- WI-503: the re-attestation brief's immutability enforcer -----------------
 # The defect this closes: `docs/ratify/<date>-*.md` is read as the record of
-# what a human was shown at a sitting, but a regeneration used to find and
+# what an operator was shown at a sitting, but a regeneration used to find and
 # rewrite whichever dated file was newest — ten rewrites on one file, none of
 # them about the WI it was named for. The split (`current_approval_brief`,
 # `mint_approval_brief` in trace.py) makes `docs/ratify/CURRENT.md` the only
@@ -1906,7 +1906,7 @@ def approval_immutability(root=".", strict=True):
     is no warn-first promotion path here, because the property this guards —
     "a dated brief never changes after the sitting it recorded" — has no
     honest partial-compliance state to warn through; every rewrite it lets
-    through undermines the same "what did the human see" question the split
+    through undermines the same "what did the operator see" question the split
     exists to answer.
 
     DEGRADES like `staged_divergence`, for the same reason: no git, no

@@ -143,7 +143,7 @@ NON_BUILD_PHASES = frozenset(kverdict.REVIEW_PHASES) | {
 
 
 # (read_ask retired with the serial driver, WI-210: the engine composes
-# its NEEDS-HUMAN banners from the ask it just generated — the `ask:` line in
+# its NEEDS-OPERATOR banners from the ask it just generated — the `ask:` line in
 # docs/run-state remains the WI-127 contract for humans and launchers.)
 
 
@@ -718,9 +718,9 @@ def decision_record_note(root, worker):
     return kdecisions.session_note(mode, worker["train"])
 
 
-# What a held adjudication row tells the human, appended to the stop banner.
+# What a held adjudication row tells the operator, appended to the stop banner.
 # The exit code is the DURABLE half: `dispatch._lane_close` turns
-# EXIT_NEEDS_HUMAN into a `handback.close_partial` — an immutable per-close
+# EXIT_NEEDS_OPERATOR into a `handback.close_partial` — an immutable per-close
 # report and a move to the TERMINAL partial/, which `schedule._disposition`
 # reads as `partial` (never ready) — so an unattended run can never re-pick the
 # row until a successor is minted. A print alone would be gone with the terminal

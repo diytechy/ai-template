@@ -79,18 +79,18 @@
 # Note what that makes visible: the enum's words were never one axis. Each
 # bundled a tier hold, a drain policy and an end-of-run hold, which is exactly
 # why four separate tables had to re-interpret the same word.
-# THE HIGHEST STAGE RUNG A HUMAN STILL APPROVES, cumulatively ("through" this
+# THE HIGHEST STAGE RUNG An OPERATOR STILL APPROVES, cumulatively ("through" this
 # rung). The dispatcher compares the rung a row is IN against this value: AT OR
-# BELOW it, work SURFACES for the human; above it, the loop dispatches and an
+# BELOW it, work SURFACES for the operator; above it, the loop dispatches and an
 # LLM verdict carries approval authority. It is the exact mirror of the rule
-# that selects checks — a check runs at or ABOVE its `from-stage`, a human
+# that selects checks — a check runs at or ABOVE its `from-stage`, an operator
 # approves at or BELOW this dial.
 #
 # The value is one of the eight ladder rungs (process.md §4), or `DevStg-Below`
-# for "nothing is human-held; the loop approves every rung itself":
+# for "nothing is operator-held; the loop approves every rung itself":
 #
-#   DevStg-Below      nothing is human-held
-#   DevStg-Needs      the human approves stakeholder needs
+#   DevStg-Below      nothing is operator-held
+#   DevStg-Needs      the operator approves stakeholder needs
 #   DevStg-Boundary   ... and the system frame
 #   DevStg-Reqs       ... and the requirements
 #   DevStg-Arch       ... and the partition
@@ -99,8 +99,8 @@
 #   DevStg-Impl       ... and the implementation
 #   DevStg-Release    everything (the most conservative setting)
 #
-# WHO "THE HUMAN" ABOVE MAY BE on a held rung (the owner, and which sessions
-# may take the owner's act) is stated once, with its enforcer, in process.md
+# WHO THE OPERATOR MAY BE on a held rung (a person, and which sessions may
+# take the act for them) is stated once, with its enforcer, in process.md
 # §4 "A held rung's approval is the owner's act". Read it there.
 #
 # IT WAS A 0-4 ORDINAL UNTIL WI-493 (OI-21 shape (ii)). A repo that still
@@ -114,7 +114,7 @@
 operator_accepts_through = "DevStg-Release"
 # The separate "always show me the full breakdown at the end" hold, split out
 # because it is flipped far more often than the level itself.
-#   "always" — the loop stops for a final human read even when the level would
+#   "always" — the loop stops for a final operator read even when the level would
 #              have let it close
 #   "off"    — no final hold
 final_review = "always"
@@ -167,10 +167,12 @@ decision_recording = "off"
 
 [policies]
 # Who may publish (`git push`) this repo — was docs/push-policy.
-#   "human"           the default: an agent never pushes, even if asked
+#   "operator"        the default: the operator pushes, or a session they
+#                     delegated the push to; never the loop, and never an agent
+#                     merely asked mid-session
 #   "agent-iteration" an agent may push only the scrubbed llm/<branch>
 #   "agent"           full delegation, still gated by the sync ritual
-push = "human"
+push = "operator"
 # How many independent fresh-context review verdicts a completed work item gets
 # before the integrator accepts it — was docs/review-policy. 0 | 1 | 2.
 review_rounds = 1

@@ -144,9 +144,9 @@ side, each pinning its own module versions.
 
 The coordinator (as agent) runs the **mechanical** cross-module gate — every module
 passed its own gates, integration/plant tests are green, the interface catalog is
-consistent — and surfaces only the **judgment** gates to the human. The human signs
-the **integration** gate; module agents (and their humans) gate the modules. This is
-the §6 review-depth triage at the coordinator level; it **does not remove the human**,
+consistent — and surfaces only the **judgment** gates to the operator. The operator signs
+the **integration** gate; module agents (and their operators) gate the modules. This is
+the §6 review-depth triage at the coordinator level; it **does not remove the operator**,
 it routes the mechanical part away from them.
 
 ### 3.6 Cross-repo communication = async text + PR
@@ -177,12 +177,12 @@ same way §3.5 splits gating:
   backs every interface. The coordinator doesn't judge semantics; on a divergence it
   **sequences** the dependent's re-verification (async text + PR: open a
   bump-and-re-run in the dependent repo, §3.6) and escalates a genuine break to the
-  human.
+  operator.
 
 So "the parent changed — can every dependent adjust?" becomes a pipeline:
 *coordinator detects the version divergence → triggers each dependent's contract test
-against the new version → human signs any real break.* Same three layers as §3.5
-(mechanical aggregation · existing test · human judgment). The reconciliation tool is
+against the new version → operator signs any real break.* Same three layers as §3.5
+(mechanical aggregation · existing test · operator judgment). The reconciliation tool is
 deferred (§7); the **design decision that makes it buildable** is §3.3's
 coordinator-level id carrying the owner + consumer versions.
 

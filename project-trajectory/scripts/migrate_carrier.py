@@ -25,7 +25,7 @@ WHAT THIS DELIBERATELY DOES NOT DO. Carrier only. `Status` keeps whatever
 vocabulary the tree it converts already uses — `Drafted` / `Approved` /
 `Founded` since D-9 steps 5/7/8 — and a value this converter does not recognize
 is COPIED, never mapped. That is the rule, not an omission: a downstream tree
-still carrying `Modified` (or `Draft`, or `Verified`) owes a human ruling on
+still carrying `Modified` (or `Draft`, or `Verified`) owes an operator ruling on
 each such row, and a carrier conversion that stamped them clean would launder
 exactly the re-blessing they owe (repo-lock Q11). The always-on integrity floor
 names them after the conversion, which is where they should be named. No anchor
@@ -52,7 +52,7 @@ Contract IF-103: this CLI rewrites the registries under
     later. `--check` performs that same conversion and comparison in memory and
     writes nothing. Carrier only: a Status word the converter does not
     recognize is COPIED, never mapped, so a conversion can never launder a
-    re-blessing a human still owes.
+    re-blessing an operator still owes.
 
 Requirements: SR-147 (one machine-parseable carrier for the spine).
 """

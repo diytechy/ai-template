@@ -71,7 +71,7 @@ different-family planners → mechanical coverage diff → **one** rubric-anchor
 cross-critique + revision → a fresh third-family arbiter (provenance-anonymized,
 position-swapped, rubric-anchored, warned against more-WIs-is-better) selects
 one plan and ports named loser-WIs that close coverage gaps, each port a cited
-delta. Human attestation closes acceptance per the gate philosophy.
+delta. Operator attestation closes acceptance per the gate philosophy.
 
 **Transfer caveat (state it wherever this is applied):** the debate/selection
 evidence comes from QA, math, and code with objective verifiers — nothing

@@ -224,7 +224,7 @@ def test_reattest_brief_owes_a_drafted_llr_under_an_approved_undrifted_sr(tmp_pa
     """`trace.reattest_model`'s `owes()` used to test the SR row's own `Status`
     alone: `is_drafted(sr)` never looked at the chain, and `sr_chain_drifts`
     cannot see a `Drafted` child either (it has made no claim to fall from the
-    snapshot). Widened so the brief a human approves from actually shows the
+    snapshot). Widened so the brief an operator approves from actually shows the
     row."""
     import shutil as _sh
     import subprocess as _sp
@@ -753,7 +753,7 @@ def test_a_closed_window_is_a_no_op(tmp_path):
 
     THE COPY NAMES ITS AUTHORITY SINCE 2026-08-20. This amendment moves approved
     text under a row that is already `Approved` — the D-9 ladder's own shape, and
-    the one the authority gate makes a human declare, because it is
+    the one the authority gate makes an operator declare, because it is
     indistinguishable from laundering without the declaration. Since SR-207 the
     declaration names the ROW (`--reattests`); the registry's ref alone clears
     none of its rows."""
@@ -777,7 +777,7 @@ def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
     claim without moving the record of what the claim is about. Under the old
     git-derived baseline that closed the window — the row read `Approved`, so
     the walk stopped at HEAD and the diff was empty. Under the snapshot the row
-    still differs from the text a human actually read, so it stays in the brief
+    still differs from the text an operator actually read, so it stays in the brief
     until the copy rides with it."""
     _run_git, _rev, write = _approval_repo(tmp_path)
     write("Approved", sr_req="The system shall do the AMENDED thing.")
@@ -792,7 +792,7 @@ def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
     # ...and the copy is what clears it — naming the row it re-attests (SR-207;
     # a ref for the act rides beside it since 2026-08-20): absorbing approved
     # text under a standing approval is the one refresh that cannot be told from
-    # laundering without a human saying so.
+    # laundering without an operator saying so.
     load_script("baseline_snapshot").copy_live(
         tmp_path,
         approves={"docs/requirements/system-requirements.toml": "the sitting"},
@@ -1108,10 +1108,10 @@ def test_a_released_rungs_chain_renders_in_full_collapsed_under_its_label(tmp_pa
     assert "**Detail**: the mixed detail" in before
     assert "SR-001" not in inside and "SR-003" not in inside
     # The page's own framing does not tell the owner to sign what the block
-    # holds: the title claims no human act, and the signing instruction is
+    # holds: the title claims no operator act, and the signing instruction is
     # scoped to the sections outside the block.
     head = before.split("\n## ", 1)[0]
-    assert "owing a human act" not in head
+    assert "owing an operator act" not in head
     assert "Rule on each section:" not in head
     assert "Rule on each section outside the collapsed" in head
     assert "not this sitting's" in head

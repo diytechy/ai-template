@@ -74,18 +74,18 @@
 #     the declaration for a deliberately supervised run.
 
 [authority]
-# THE HIGHEST STAGE RUNG A HUMAN STILL APPROVES, cumulatively ("through" this
+# THE HIGHEST STAGE RUNG An OPERATOR STILL APPROVES, cumulatively ("through" this
 # rung). The dispatcher compares the rung a row is IN against this value: AT OR
-# BELOW it, work SURFACES for the human; above it, the loop dispatches and an
+# BELOW it, work SURFACES for the operator; above it, the loop dispatches and an
 # LLM verdict carries approval authority. It is the exact mirror of the rule
-# that selects checks — a check runs at or ABOVE its `from-stage`, a human
+# that selects checks — a check runs at or ABOVE its `from-stage`, an operator
 # approves at or BELOW this dial.
 #
 # The value is one of the eight ladder rungs (process.md §4), or `DevStg-Below`
-# for "nothing is human-held; the loop approves every rung itself":
+# for "nothing is operator-held; the loop approves every rung itself":
 #
-#   DevStg-Below      nothing is human-held
-#   DevStg-Needs      the human approves stakeholder needs
+#   DevStg-Below      nothing is operator-held
+#   DevStg-Needs      the operator approves stakeholder needs
 #   DevStg-Boundary   ... and the system frame
 #   DevStg-Reqs       ... and the requirements
 #   DevStg-Arch       ... and the partition
@@ -94,8 +94,8 @@
 #   DevStg-Impl       ... and the implementation
 #   DevStg-Release    everything (the most conservative setting)
 #
-# WHO "THE HUMAN" ABOVE MAY BE on a held rung (the owner, and which sessions
-# may take the owner's act) is stated once, with its enforcer, in process.md
+# WHO THE OPERATOR MAY BE on a held rung (a person, and which sessions may
+# take the act for them) is stated once, with its enforcer, in process.md
 # §4 "A held rung's approval is the owner's act". Read it there.
 #
 # IT WAS A 0-4 ORDINAL UNTIL WI-493 (OI-21 shape (ii)). A repo that still
@@ -108,12 +108,12 @@
 # level held before.
 #
 # THIS REPO'S OWN VALUE IS THE LINE BELOW — read it, don't paraphrase it, here
-# or anywhere else. Every rung at or below it is human-held; approval and
+# or anywhere else. Every rung at or below it is operator-held; approval and
 # amendment above it proceed under ordinary review. Its history, for the
 # record and not as a second statement of the value: the owner set it to hold
 # the Needs rung alone on 2026-08-21
 # (docs/log.d/2026-08-21-owner-session-dial-and-folds.md), superseding the
-# 2026-08-14 every-tier-human-held directive (itself superseding the spent
+# 2026-08-14 every-tier-operator-held directive (itself superseding the spent
 # 2026-07-15 loop-held charge-through directive); the C1 sitting of the
 # assumption-tier plan then raised it one rung to hold the system frame too
 # (docs/plans/2026-09-25-c1-sitting-package.md §4, on the owner's 2026-09-25
@@ -127,17 +127,17 @@ operator_accepts_through = "DevStg-Boundary"
 # cell (interfaces, external, components) are governed by the DEV-STAGE RUNG
 # each one already gates: `external` -> DevStg-Boundary, `interfaces` and
 # `components` -> DevStg-Arch. An `approval` cell may be machine-flipped only
-# when its registry's rung is not human-held by the dial above; an
+# when its registry's rung is not operator-held by the dial above; an
 # approval-carrying registry with NO rung mapping is HELD. A declared list was
 # proposed and OVERTURNED — the registry-to-rung association already exists in
 # `spine_rules` (`boundary_incomplete`, `arch_incomplete`), so a second
 # declaration would be a rival answer to a question already answered. The map
-# lives beside `human_holds` in `agent_common.py` as `APPROVAL_RUNGS`, read by
-# `agent_common.human_approves`. THIS IS A COMMENT, NOT A KEY: there is nothing
+# lives beside `operator_holds` in `agent_common.py` as `APPROVAL_RUNGS`, read by
+# `agent_common.operator_accepts`. THIS IS A COMMENT, NOT A KEY: there is nothing
 # here to configure, which is the point of deriving it.
 # The separate "always show me the full breakdown at the end" hold, split out
 # because it is flipped far more often than the level itself.
-#   "always" — the loop stops for a final human read even when the level would
+#   "always" — the loop stops for a final operator read even when the level would
 #              have let it close
 #   "off"    — no final hold
 final_review = "always"
@@ -193,10 +193,12 @@ decision_recording = "record"
 
 [policies]
 # Who may publish (`git push`) this repo — was docs/push-policy.
-#   "human"           the default: an agent never pushes, even if asked
+#   "operator"        the default: the operator pushes, or a session they
+#                     delegated the push to; never the loop, and never an agent
+#                     merely asked mid-session
 #   "agent-iteration" an agent may push only the scrubbed llm/<branch>
 #   "agent"           full delegation, still gated by the sync ritual
-push = "human"
+push = "operator"
 # How many independent fresh-context review verdicts a completed work item gets
 # before the integrator accepts it — was docs/review-policy. 0 | 1 | 2.
 review_rounds = 1
@@ -256,7 +258,7 @@ okf_export = false
 # Opt-in, off: this repo's coordinator console keeps the append-only scroll.
 live_status = false
 # Opt-in, off: "ask" / "deny" arm the subagent-spawn gate. This repo runs
-# subagents freely under a human-launched loop, so the gate stays a no-op.
+# subagents freely under an operator-launched loop, so the gate stays a no-op.
 subagent_gate = "off"
 # The reverse back-link coverage minimum, as a PERCENTAGE of live LLR rows (OI-42
 # ruled (b)+(e), 2026-08-20). `0` = report the number, gate nothing, and that

@@ -113,7 +113,7 @@ Method:
 - Read the BEFORE text and write down, for yourself, the concrete obligation it imposes — what a builder must do, what a test must check.
 - Read the AFTER text and do the same, independently.
 - Compare the two obligations, not the two paragraphs. Diff noise is not the subject; the obligation is.
-- When the two obligations differ AT ALL, the answer is `meaning`. Fail toward `meaning`: a wrongly-kept attestation is a silent false claim that a human blessed this text, and that is the failure this rung exists to prevent. A wrongly-owed re-attest costs one sitting.
+- When the two obligations differ AT ALL, the answer is `meaning`. Fail toward `meaning`: a wrongly-kept attestation is a silent false claim that an operator blessed this text, and that is the failure this rung exists to prevent. A wrongly-owed re-attest costs one sitting.
 - If the diff is mixed — one cell clarified, another moved the obligation — the answer for the ROW is `meaning`, and you say which cell carried it.
 
 Whether a `MEANING` row's new text is one you would bless — or recommend to the owner — is judged by the questions for its tier, the same ones a first approval puts. A `CLARITY` verdict owes them nothing new: the obligation is the one already blessed.
@@ -138,7 +138,7 @@ Then exactly one machine line:
 
 Your verdict is this turn's whole output: stop once it is committed. Every row you judged still reads as approved text that drifted from its anchor until an act re-anchors it, and that act is a later act turn taken from your committed verdict, so each row line says what the act needs:
 
-- A `CLARITY` row keeps its attestation: the owner's signature still describes it. The later act turn re-anchors it so the record stops drifting. Where the dial still HOLDS the rung for a human, your verdict is bound to the text shown above (its JUDGED TEXT identities), so an edit to that text after your verdict refuses the act; that act names your verdict, so the act ledger records it and the owner's surface lists it for audit; the merge refuses a held-rung re-attestation your verdict does not rule CLARITY.
+- A `CLARITY` row keeps its attestation: the owner's signature still describes it. The later act turn re-anchors it so the record stops drifting. Where the dial still HOLDS the rung for an operator, your verdict is bound to the text shown above (its JUDGED TEXT identities), so an edit to that text after your verdict refuses the act; that act names your verdict, so the act ledger records it and the owner's surface lists it for audit; the merge refuses a held-rung re-attestation your verdict does not rule CLARITY.
 - A `MEANING` row's attestation is now a false claim, and it owes a fresh one. Where the rung is RELEASED, mark each row whose new text you would bless `[MEANING+BLESS]`: the later act turn re-attests exactly those. If a row's new text is NOT one you would bless, mark it `[MEANING]` and draft the corrective work in a `## Dispositions` section of this row's own spec, which intake mints at this row's merge. Where the dial HOLDS the rung, stop at the verdict and recommend the row to the owner: the row surfaces on the owner's approval brief and the signature is theirs.
 - Never approve a first draft on a held rung. A held rung's `Drafted` row is the owner's alone.
 
