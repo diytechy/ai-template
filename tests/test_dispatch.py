@@ -1352,7 +1352,7 @@ def census_repo(tmp_path):
     req.mkdir(parents=True)
     (req / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status,Phase,Area,SupersededBy\n"
+        "Permutations,Priority,VerificationMethod,Status,Phase,Area,SupersededBy\n"
         "SR-001,Widget,SN-001,Shall widget.,Because.,Widgets.,,1,Test,"
         "Approved,,,\n",
         encoding="utf-8",
@@ -1419,7 +1419,7 @@ def test_empty_frontier_rung_two_banner_derives_from_the_shared_pending_read(
     req.mkdir(parents=True, exist_ok=True)
     (req / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status,Phase,Area\n"
+        "Permutations,Priority,VerificationMethod,Status,Phase,Area\n"
         "SR-700,Waiting,SN-001,Shall wait.,Because.,Waits.,,1,Test,Drafted,,\n",
         encoding="utf-8",
         newline="\n",

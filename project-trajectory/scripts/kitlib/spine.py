@@ -3,7 +3,7 @@
 THE PAIR THAT HAD TWO HOMES (WI-448 slice 3; census 2026-08-12, `repo-lock.md`
 §8.2). `trace.py` ENFORCES the spine and `spine_rules.py` DERIVES its stage from
 the same rows, so every question either one asks of a single cell was asked
-twice: what `Drafted`/`Approved`/`Founded` mean, which `Verification` methods
+twice: what `Drafted`/`Approved`/`Founded` mean, which `VerificationMethod` methods
 decompose to a TC but no LLR, what integer a free-form `Phase` cell parses to,
 which `SN-###` tokens a needs registry mentions, and which of them the SRs cite.
 Nine duplicated function bodies, held equal by nine `tests/test_rule_sync.py`
@@ -115,7 +115,7 @@ __all__ = [
     "toml_fields",
 ]
 
-# SR Verification methods with no code to decompose, so they need a TC but no
+# SR verification methods with no code to decompose, so they need a TC but no
 # LLR: the orphan rule exempts them and the LLReqs rung does not hold open for
 # them. Critique is NOT here — its artifact is produced by code, only its
 # acceptance is subjective.
@@ -127,7 +127,7 @@ __all__ = [
 # spec-folder extraction found. Immutable is the right answer for a closed
 # vocabulary a shared kernel hands out: a caller that mutated the `set` copy
 # would have moved the gate for every other reader in the process.
-LLR_EXEMPT = frozenset({"Analysis", "Inspection", "Attest"})
+LLR_EXEMPT = frozenset({"Analysis", "Inspection", "Vouch"})
 
 
 def csv_body(text):
@@ -616,7 +616,7 @@ def claims_approval(row):
 
 
 def llr_exempt(row):
-    """SR `Verification` method in `LLR_EXEMPT`, matched on the STRIPPED cell.
+    """SR `VerificationMethod` method in `LLR_EXEMPT`, matched on the STRIPPED cell.
 
     The stripping is load-bearing and was once a live divergence: review 017
     caught the two former copies disagreeing on a whitespace-padded valid method
@@ -627,7 +627,7 @@ def llr_exempt(row):
       Inputs:  row: an SR row mapping
       Outputs: bool
     """
-    return (row.get("Verification") or "").strip() in LLR_EXEMPT
+    return (row.get("VerificationMethod") or "").strip() in LLR_EXEMPT
 
 
 def phase_num(row):
@@ -1185,7 +1185,7 @@ SPINE_TIER_KEYS = {
         "acceptance_criteria",
         "permutations",
         "priority",
-        "verification",
+        "verification_method",
         "status",
         "phase",
         "aspect",
@@ -1308,7 +1308,7 @@ OFFSPINE_KEYS = {
         # OPTIONAL, and its EMPTINESS is the ordinary answer: "this seam is
         # verified in its own right". Filled, it names the parent whose tests
         # cover a low-level seam — a `TC-###` or an `LLR-###` — which is the
-        # position the `Verification` vocabulary cannot state (OI-61's
+        # position the `VerificationMethod` vocabulary cannot state (OI-61's
         # sub-question, sanctioned 2026-08-23). Warn-first that it resolves.
         "verified_by",
         "carried_by",

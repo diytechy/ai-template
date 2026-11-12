@@ -75,7 +75,7 @@ def _base(tmp_path):
     # (tests/test_held_status_git.py), which an absent dial would arm.
     (root / "docs").mkdir()
     (root / "docs" / "process.toml").write_text(
-        '[attestation]\nhuman_approval_through = "DevStg-Below"\n', encoding="utf-8"
+        '[authority]\noperator_accepts_through = "DevStg-Below"\n', encoding="utf-8"
     )
     _commit(root, "first")
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two", "Drafted"))

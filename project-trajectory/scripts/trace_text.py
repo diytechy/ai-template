@@ -203,7 +203,7 @@ def _inspects_critique_record(row):
     record: the text before its first `shall` (the EARS subject, with any
     fronted condition) names both "Critique" and a "record". A requirement with
     no `shall` has no subject to read, so nothing is exempt."""
-    if (row.get("Verification") or "").strip() != "Inspection":
+    if (row.get("VerificationMethod") or "").strip() != "Inspection":
         return False
     requirement = row.get("Requirement") or ""
     shall = _SHALL_RE.search(requirement)
@@ -215,10 +215,10 @@ def _inspects_critique_record(row):
 
 def verification_coherence_advisories(srs):
     """Warn-only: a real SR row whose PROSE names a critique instrument while its
-    `Verification` field declares some other method.
+    `VerificationMethod` field declares some other method.
 
     **Two cells describing one thing, compared by nothing.** A row states its
-    verification method twice — once as the `Verification` enum, once in the
+    verification method twice — once as the `VerificationMethod` enum, once in the
     prose that says how anyone would know the row is satisfied. Nothing checked
     that the two agreed, and the failure is silent by construction: the enum
     still validates, the joins still resolve, every strict gate passes at rc=0
@@ -259,7 +259,7 @@ def verification_coherence_advisories(srs):
     names a Critique record without being about one would be exempted, an
     under-detect accepted knowingly.
 
-    ONE DIRECTION ONLY. A `Verification=Critique` row that names no instrument is
+    ONE DIRECTION ONLY. A `VerificationMethod=Critique` row that names no instrument is
     NOT reported: the rubric it is judged against is the `docs/rubrics/`
     convention's business and a row may legitimately leave the naming to its TC,
     so the reverse check would fire on correct rows. Warn-only, never the exit
@@ -273,7 +273,7 @@ def verification_coherence_advisories(srs):
     match would put false accusations in the report."""
     out = []
     for rid, r in _real(srs, "SR-ID"):
-        method = (r.get("Verification") or "").strip()
+        method = (r.get("VerificationMethod") or "").strip()
         if not method or method == "Critique" or _inspects_critique_record(r):
             continue
         hits = [
@@ -284,11 +284,11 @@ def verification_coherence_advisories(srs):
         if hits:
             out.append(
                 "SR {} {} names a CRITIQUE instrument (a CRITIQUE, an APPROVE, a "
-                "VERDICT or a rubric) while Verification is {!r} — one row must "
+                "VERDICT or a rubric) while VerificationMethod is {!r} — one row must "
                 "not state two verification methods: a reader told to obtain a "
                 "verdict cannot, and the row's real acceptance is invisible. "
                 "Re-word the cell to the method the row actually uses, or flip "
-                "Verification to Critique (warn-only, never the exit code)".format(
+                "VerificationMethod to Critique (warn-only, never the exit code)".format(
                     rid, "/".join(hits), method
                 )
             )
@@ -610,7 +610,7 @@ def provenance_findings(srs, llrs, tcs):
     Narrow BY MEASUREMENT, not by taste. It flags exactly two token shapes. A
     SCRIPT name (65 SR rows), an ARTIFACT PATH (6) and a RUBRIC (5) are NOT
     flagged and must never be: this kit's product IS its scripts, so the name is
-    the system under specification, and for a `Verification=Critique` row the
+    the system under specification, and for a `VerificationMethod=Critique` row the
     rubric is the acceptance instrument. A rule that cries wolf on 65 legitimate
     rows is a rule that gets scrolled past — the `check_doc_refs` lesson.
 

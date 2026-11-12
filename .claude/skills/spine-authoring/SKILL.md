@@ -23,7 +23,7 @@ amend any cell of any row, approved ones included. It never flips a `Status` to
 `docs/archive/last_approved/` — that act is an independent adjudicator's, never
 the session's that authored the rows, taken in the authoring lane or on trunk
 after reading the row's whole chain, and a lane's merge is refused by name for
-any act no accepted verdict judging its own rows backs. So use the question list to make a row *ready*; the answer to "is
+any act no recorded verdict judging its own rows backs. So use the question list to make a row *ready*; the answer to "is
 it approved" comes from elsewhere.
 
 **Authority, not restated here:** `docs/process.md` §3 (one fact one home;
@@ -100,7 +100,7 @@ purpose without adding a registry tier, approval stage or completion percentage.
 
 ## Three ways a spine grows
 
-Choose the mode before writing. The `human_approval_through` dial in
+Choose the mode before writing. The `operator_accepts_through` dial in
 `docs/process.toml` holds rungs at or below it for the owner (`docs/process.md`
 §4).
 
@@ -152,9 +152,9 @@ file: change it there.
   shared-artifact, fan-out and EARS sections as a worklist of rows to
   re-adjudicate. The
   **verification-coherence** section joins the same sweep: it names a row whose
-  prose claims an instrument its `Verification` field contradicts.
+  prose claims an instrument its `VerificationMethod` field contradicts.
 - **The method-flip sweep — do this by hand, no checker covers it whole.** When
-  a row's `Verification` changes, EVERY prose cell it owns is suspect, not just
+  a row's `VerificationMethod` changes, EVERY prose cell it owns is suspect, not just
   the one you came for. A row mechanized out of `Critique` typically leaves the
   claim in three places: the AC (the instrument), the rationale (the argument
   that the instrument was *necessary* — often phrased as "a mechanized
@@ -208,7 +208,7 @@ One line each, each one seen in a real spine:
   clause in many rows and as the subject of none is uncovered, however many
   citations it has.
 - **Acceptance rot after a method flip** — a row states one verification method
-  in its `Verification` field and a different one in its prose. Every strict
+  in its `VerificationMethod` field and a different one in its prose. Every strict
   gate passes at rc=0 while the row instructs a reader to obtain a verdict its
   own method cannot produce. (Seen: two rows mechanized out of `Critique`, whose
   acceptance went on demanding an APPROVE verdict from rubrics whose own headers

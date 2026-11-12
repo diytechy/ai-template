@@ -966,7 +966,7 @@ def _write(root, rel, text):
 
 
 def _dial(value):
-    return '[attestation]\nhuman_approval_through = "{}"\n'.format(value)
+    return '[authority]\noperator_accepts_through = "{}"\n'.format(value)
 
 
 def _rows(table, **statuses):
@@ -1081,7 +1081,7 @@ def test_a_commit_with_no_dial_is_judged_most_held_and_warns_nothing(tmp_path, c
     no_dial = _commit_all(root, _trailered("loop: approve IF-001"), T_BASE + 1)
     # A LEGACY ordinal reads as most-held too. The live reader would translate
     # `1` to DevStg-Boundary and release Arch; the history check must not guess.
-    _write(root, POLICY, "[attestation]\nhuman_approval_through = 1\n")
+    _write(root, POLICY, "[authority]\noperator_accepts_through = 1\n")
     _write(root, INTERFACES, _rows("interface", IF_001="Drafted"))
     legacy = _commit_all(root, _trailered("loop: reopen IF-001"), T_BASE + 2)
     capsys.readouterr()
@@ -1110,18 +1110,18 @@ def test_the_dial_comparison_holds_every_rung_at_or_below_it():
 
 def test_the_dial_is_read_from_a_parsed_policy_and_fails_toward_most_held(capsys):
     def table(**att):
-        return {"attestation": att}
+        return {"authority": att}
 
     read = authority.dial_from_config
     for rung in list(ladder.STAGE_ORDER) + [kitstage.BELOW]:
-        assert read(table(human_approval_through=rung)) == rung
+        assert read(table(operator_accepts_through=rung)) == rung
     most = ladder.STAGE_RELEASE
     for policy in (
         {},
-        {"attestation": "not a table"},
+        {"authority": "not a table"},
         table(),
-        table(human_approval_through=1),
-        table(human_approval_through="devstg-arch"),
+        table(operator_accepts_through=1),
+        table(operator_accepts_through="devstg-arch"),
         table(human_ratification_through="DevStg-Arch"),
         None,
     ):
@@ -1192,15 +1192,15 @@ def test_the_live_dial_reads_every_legacy_spelling_silently_from_a_chosen_tree(
     """Implements: TC-241"""
     root = _bare(tmp_path / "dials")
     cases = (
-        ('[attestation]\nhuman_approval_through = "DevStg-Arch"\n', "DevStg-Arch"),
+        ('[authority]\noperator_accepts_through = "DevStg-Arch"\n', "DevStg-Arch"),
         # the retired 0-4 ordinal, translated rather than guessed
-        ("[attestation]\nhuman_approval_through = 1\n", "DevStg-Boundary"),
+        ("[authority]\noperator_accepts_through = 1\n", "DevStg-Boundary"),
         # the retired key name
-        ('[attestation]\nhuman_ratification_through = "DevStg-Reqs"\n', "DevStg-Reqs"),
+        ('[authority]\nhuman_ratification_through = "DevStg-Reqs"\n', "DevStg-Reqs"),
         # the retired enum, where no dial is declared at all
-        ('[attestation]\ngate_policy = "autonomous"\n', "DevStg-Below"),
+        ('[authority]\ngate_policy = "autonomous"\n', "DevStg-Below"),
         # a value no reader recognises, and no policy at all: the most held
-        ('[attestation]\nhuman_approval_through = "devstg-arch"\n', "DevStg-Release"),
+        ('[authority]\noperator_accepts_through = "devstg-arch"\n', "DevStg-Release"),
         ("", "DevStg-Release"),
     )
     for i, (text, rung) in enumerate(cases):
@@ -1214,7 +1214,7 @@ def test_the_live_dial_reads_every_legacy_spelling_silently_from_a_chosen_tree(
     _commit_all(root, "the old gate-policy file", T_LATER)
     assert authority.dial_at(root, "HEAD") == "DevStg-Below"
     # An explicitly chosen tree: the index answers for itself.
-    _write(root, POLICY, "[attestation]\nhuman_approval_through = 1\n")
+    _write(root, POLICY, "[authority]\noperator_accepts_through = 1\n")
     _git(root, "add", "--", POLICY)
     assert authority.dial_at(root, None) == "DevStg-Boundary"
     assert authority.dial_at(root, "HEAD") == "DevStg-Below"

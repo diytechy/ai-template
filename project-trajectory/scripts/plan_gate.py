@@ -275,7 +275,7 @@ def record_problems(root, at, fields, branch, wi, claimed_text, deep=True):
     commit it reviewed and in the verdict format; that critique reads as an
     APPROVE (`kitlib.verdict.effective_verdict`), or, as the second critique
     at the cap, every BLOCKER and MAJOR finding of it is ruled DISMISS by the
-    accepted dispute verdict the record cites. With `deep`, the reviewed
+    recorded dispute verdict the record cites. With `deep`, the reviewed
     commit's tree holds the same plan bytes and Done-when digest.
 
     Implements: SR-154, LLR-337
@@ -364,7 +364,7 @@ def blocking_ids(findings):
 
 def _cap_problems(root, at, fields, findings):
     """A critique that does not read as an APPROVE passes only as the second
-    one, at the cap, whose every BLOCKER and MAJOR finding the cited accepted
+    one, at the cap, whose every BLOCKER and MAJOR finding the cited recorded
     dispute verdict rules DISMISS.
 
     The set of BLOCKER and MAJOR findings is never empty here. The only
@@ -401,7 +401,7 @@ def _cap_problems(root, at, fields, findings):
 
 def _dismissals(root, at, fields, blocking):
     """Why the cited dispute verdict, read at `at` with its binding, is not
-    an ACCEPTED dispute verdict ruling each blocking finding DISMISS, or [].
+    a RECORDED dispute verdict ruling each blocking finding DISMISS, or [].
     A FIX or an ESCALATE is the owner's, never the build's. Which finding the
     sitting ruled, as the findings file beside it records it, is checked once,
     at the filing step (`plan_coverage.ruling_problem`); this re-reads what a
@@ -415,7 +415,7 @@ def _dismissals(root, at, fields, blocking):
     bound = binding and _sitting.read_requested(binding.decode("utf-8", "replace"))
     if not bound or bound[0] != _dispute.BRIEF:
         return ["{} is not a dispute verdict with its binding".format(path)]
-    if bound[2] != "accepted":
+    if bound[2] != "recorded":
         return ["the dispute call {} has outcome {}".format(path, bound[2])]
     rulings, why = _dispute.parse(verdict.decode("utf-8", "replace"), bound[1], path)
     if why:

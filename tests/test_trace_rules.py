@@ -608,7 +608,7 @@ def test_the_llr_carries_a_rationale_column_and_it_is_optional():
         "Rationale": "",
         "AcceptanceCriteria": "a",
         "Priority": "1",
-        "Verification": "Test",
+        "VerificationMethod": "Test",
         "Status": "Approved",
     }
     (found,) = trace.schema_findings("SR", [sr])
@@ -711,7 +711,7 @@ def test_the_llr_status_advisory_is_retired(scaffold):
 # An SR with a Phase cell and a rubric citation, still traced to LLR-001/TC-001.
 PHASED_RUBRIC_SR = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status,Phase\n"
+    "Permutations,Priority,VerificationMethod,Status,Phase\n"
     'SR-001,Addition,SN-001,"The system shall add two numbers.",'
     '"Realizes SN-001.","Judged against docs/rubrics/adder.md",,'
     "M,Critique,Approved,v9\n"
@@ -907,20 +907,20 @@ def test_a_row_stating_two_verification_methods_warns():
     rows flipped `Critique`->`Test` when their anchors were bound to tests, and
     their prose went on demanding an APPROVE verdict from rubrics that by then
     declared themselves RETIRED. Every strict gate passed at rc=0 for three
-    weeks, because nothing compared the `Verification` field against the prose
+    weeks, because nothing compared the `VerificationMethod` field against the prose
     that says how anyone would know the row is satisfied."""
     trace = load_script("trace")
 
     # The defect, in both cells that can carry it.
     ac_rot = {
         "SR-ID": "SR-101",
-        "Verification": "Test",
+        "VerificationMethod": "Test",
         "AcceptanceCriteria": "A fresh CRITIQUE session returns APPROVE citing "
         "numbered anchors.",
     }
     rationale_rot = {
         "SR-ID": "SR-102",
-        "Verification": "Test",
+        "VerificationMethod": "Test",
         "Rationale": "Acceptance is adjudicated by an independent critical eye "
         "against a written rubric instead.",
     }
@@ -933,7 +933,7 @@ def test_a_row_stating_two_verification_methods_warns():
     # itself — the lint runs one direction only.
     assert (
         trace.verification_coherence_advisories(
-            [dict(ac_rot, **{"Verification": "Critique"})]
+            [dict(ac_rot, **{"VerificationMethod": "Critique"})]
         )
         == []
     )
@@ -947,7 +947,7 @@ def test_a_row_stating_two_verification_methods_warns():
         "Refusals fire at the integrator's verdict gate and intake's adjudication arm.",
         "The owner approves the split before it lands.",
     ):
-        clean = {"SR-ID": "SR-103", "Verification": "Test", "Rationale": prose}
+        clean = {"SR-ID": "SR-103", "VerificationMethod": "Test", "Rationale": prose}
         assert trace.verification_coherence_advisories([clean]) == []
 
     # `Requirement` is deliberately NOT scanned: SR-040's shall enumerates the
@@ -955,7 +955,7 @@ def test_a_row_stating_two_verification_methods_warns():
     # word NAMES a phase rather than claiming a verdict.
     phase_list = {
         "SR-ID": "SR-104",
-        "Verification": "Test",
+        "VerificationMethod": "Test",
         "Requirement": "The coordinator shall route each phase "
         "(PLAN/BUILD/REVIEW-A/CRITIQUE) through its declared template.",
     }
@@ -963,7 +963,9 @@ def test_a_row_stating_two_verification_methods_warns():
 
     # A row with no declared method cannot contradict one.
     assert (
-        trace.verification_coherence_advisories([dict(ac_rot, **{"Verification": ""})])
+        trace.verification_coherence_advisories(
+            [dict(ac_rot, **{"VerificationMethod": ""})]
+        )
         == []
     )
     # A `-000` example row is a blank form, not a requirement.

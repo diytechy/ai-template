@@ -924,7 +924,7 @@ def is_observation_tc(tc):
     rerun, recorded as such by its `Automated` cell reading No.
 
     THE ONE MARKER, and deliberately not the `Level` or the requirement's
-    `Verification`: those cells disagree across rows (a manual inspection is
+    `VerificationMethod`: those cells disagree across rows (a manual inspection is
     filed at more than one level), while every case the harness cannot rerun
     says so in `Automated`. So manual and demonstration cases are observations
     too, and declare how long their results hold.

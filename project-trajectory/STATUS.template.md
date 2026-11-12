@@ -64,7 +64,7 @@ decisions, session notes — appends to the log this header points at, never her
 
 - **Goal:**
 - **Stakeholders / end user(s):** _(who or what the system serves — humans,
-  operators, or another system, represented by its owner)_
+  product operators, or another system, represented by its owner)_
 - **Active hats:** Stakeholder, UX/Docs, System Engineer, Software Engineer, Test
   Engineer _(+ any domain hats this scope needs, e.g. Network / Security / Data /
   Hardware — see process.md §1)_

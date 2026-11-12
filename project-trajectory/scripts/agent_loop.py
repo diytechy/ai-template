@@ -24,7 +24,7 @@ Empty template -> guidance and exit 2 (the launchers ship inert, like run.*).
 CONSENT: an unattended run typically wires the agent CLI's permission-bypass
 flag into AGENT_CMD — sessions then run with no permission prompts. The human
 consents by filling the slot, declaring how far a human approves
-(docs/process.toml [attestation]), and running this; git + CI remain the
+(docs/process.toml [authority]), and running this; git + CI remain the
 enforcement floor. The banner restates this every run.
 
 During worker/review sessions this module:
@@ -2217,7 +2217,7 @@ def review_bookkeeping(ctx, plan, outcome, session, now):
 def critique_budget_page(ctx, pre_rounds):
     """The critique budget is spent -> the S8 page-the-human semantics, keyed
     to the session hold (the same failure_action the review round uses). The
-    critic gates iteration; the human owns final acceptance via Attest at gate
+    critic gates iteration; the operator owns final acceptance at gate
     closure."""
     st = ctx.run.routing
     fa = agent_route.failure_action(ctx.human_held, ctx.keep_nondependent)
@@ -2295,7 +2295,7 @@ def schedule_review_round(ctx, after):
     review scope (WI-183, LLR-140): a worker schedules the round only once
     EVERY assigned WI is built, and the round covers the combined train diff
     base..HEAD — never a per-WI slice of it. An intermediate constituent commit
-    is accepted-on-train (locally green and committed), not reviewed; the cycle
+    is admitted-on-train (locally green and committed), not reviewed; the cycle
     comes once, at the end.
 
     NO ROUND IS DRAWN ON A TREE A VERDICT ALREADY NAMED (measured 2026-09-03).
@@ -2384,7 +2384,7 @@ def schedule_adjudication_round(ctx, plan, commits, after, wi_label):
     if not agent_common.adjudication_review_owed(ctx.docs, plan.get("brief"), drafts):
         print(
             "dispatch: adjudication review not owed "
-            "([attestation] adjudication_review = {!r}) -> no round".format(
+            "([authority] adjudication_review = {!r}) -> no round".format(
                 agent_common.adjudication_review(ctx.docs)
             )
         )

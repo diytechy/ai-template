@@ -42,8 +42,8 @@ stage, while orphans are a DevStg-Tests+ gate criterion).
 
 The method rules this script mechanizes are stated ONCE elsewhere — they are NOT
 restated here (the kit's decompose-don't-paraphrase rule applied to itself):
-    - the orphan rules (an SR needs an LLR unless Verification is
-      Analysis/Inspection/Attest, a TC, and — when a needs file exists — an SN;
+    - the orphan rules (an SR needs an LLR unless the verification method is
+      Analysis/Inspection/Vouch, a TC, and — when a needs file exists — an SN;
       LLR/TC parentage), the Drafted child-completeness exemption, and the
       Drafted->Approved ladder: process.md §4 + the derived-gate model
       (docs/archive/specs/derived-gate-model.2026-07-20.md §3, and §4a for section-as-state SN
@@ -55,7 +55,7 @@ restated here (the kit's decompose-don't-paraphrase rule applied to itself):
       process-options.md.
     - phased delivery (--phase scopes --require-verified to listed/blank-Phase
       SRs and reports the rest as phase-deferred; orphan rules stay phase-blind)
-      and the closed vocabularies --strict-schema enforces (SR Verification, TC
+      and the closed vocabularies --strict-schema enforces (SR VerificationMethod, TC
       Tier): process.md §4.
 
 Flags in brief: --require-verified adds the DevStg-Impl criterion "an SR is
@@ -77,7 +77,7 @@ advisories (loud on stdout + in the report, never gating): an unpinned
 comparative acceptance-criterion, an LLR reading below Approved while every
 citing TC is Approved (WI-129), a missing knowledge pack, and an interface
 endpoint that resolves to no LLR Module. The report always carries the
-attested-vs-mechanized approval split (process.md §4 "Attest") and, when the SR
+vouched-vs-mechanized approval split (process.md §4 "Vouch") and, when the SR
 registry tags Aspect, a per-aspect count.
 
 Contracts: IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146, IF-166, IF-176, IF-233
@@ -167,7 +167,7 @@ Contract IF-145: the gate verdict the harness reads back from this CLI. Every
 Contract IF-146: `docs/test/report.md`, rewritten whole on every checking run
     under `--docs`. It carries the metric counts, the SR -> LLR -> TC matrix,
     the orphan, integrity, status and advisory sections, the flag-gated
-    off-spine, draft, area and status sections, the attested-vs-mechanized
+    off-spine, draft, area and status sections, the vouched-vs-mechanized
     approval split, and two renderings of one join: a line-reviewable
     SN -> SR -> LLR -> TC outline and a small, diff-friendly Mermaid DAG
     coloured by orphan and draft state. It is a composite artifact written for
@@ -519,7 +519,7 @@ REQUIRED_FIELDS = {
         "Rationale",
         "AcceptanceCriteria",
         "Priority",
-        "Verification",
+        "VerificationMethod",
         "Status",
     ],
     "LLR": ["LLR-ID", "SR-Refs", "Title", "Module", "CodeSymbol", "Detail", "Status"],
@@ -631,13 +631,13 @@ ENUM_FIELDS = {
             "perf",
             "portability",
         },
-        "Verification": {
+        "VerificationMethod": {
             "Test",
             "Demonstration",
             "Manual",
             "Analysis",
             "Inspection",
-            "Attest",
+            "Vouch",
             "Critique",
         },
     },
@@ -763,17 +763,17 @@ _IF_FILE_TAILS = frozenset(
 # a failure set; the DevStg-Reqs consistency review (process.md §4) makes the call.
 
 
-# Verification methods whose approval rests on a recorded human judgment,
-# not a runnable check (process.md §4 "Attest"). --require-verified accepts these
+# Verification methods whose approval rests on the operator's recorded word,
+# not a runnable check (process.md §4 "Vouch"). --require-verified accepts these
 # as legitimately approved but the report surfaces them distinctly (the
 # verification-basis split), so an audit can always see how much rests on trust.
-ATTESTED_METHODS = {"Attest"}
+VOUCHED_METHODS = {"Vouch"}
 # The one method whose approval rests on a runnable, re-executable check
-# (process.md §4 "Test"). Everything that is neither Test nor an ATTESTED_METHOD
+# (process.md §4 "Test"). Everything that is neither Test nor a VOUCHED_METHOD
 # (Demonstration/Manual/Analysis/Inspection/Critique) rests on a human observing
 # an outcome — repeatable, but not a runnable check — and is reported as its own
 # "demonstrated/observed" category, so the audit never over-counts what rests on
-# runnable checks (WI-259: the split is three-way, not attested-vs-everything-else).
+# runnable checks (WI-259: the split is three-way, not vouched-vs-everything-else).
 MECHANIZED_METHODS = {"Test"}
 
 
@@ -2111,7 +2111,7 @@ def _tc_verifies_required(row):
 
 
 def schema_findings(label, rows):
-    """Empty required fields and out-of-vocabulary Verification/Tier values, over
+    """Empty required fields and out-of-vocabulary VerificationMethod/Tier values, over
     the real (non-placeholder) rows of one registry.
 
     Implements: SR-157, LLR-003
@@ -3102,10 +3102,10 @@ def if_verified_by_advisories(ifs, tc_ids, llr_ids):
     (OI-61's sub-question, sanctioned 2026-08-23).
 
     THE POSITION IT MAKES SAYABLE did not exist anywhere in the vocabulary
-    before. `Verification` is `Test | Demonstration | Manual | Analysis |
-    Inspection | Attest | Critique`, its only exemption is LLR-exemption on an
+    before. `VerificationMethod` is `Test | Demonstration | Manual | Analysis |
+    Inspection | Vouch | Critique`, its only exemption is LLR-exemption on an
     SR, process.md states "Every SR needs >=1 TC row regardless of method", and
-    an IF row carries no `Verification` cell at all — so a low-level seam whose
+    an IF row carries no `VerificationMethod` cell at all — so a low-level seam whose
     honest answer is *verified by the parent functionality's tests* could only
     be silent about it, or invent a per-seam test nobody wanted.
 
@@ -3564,7 +3564,7 @@ RUBRIC_RE = re.compile(r"[\w./-]*rubrics/[\w./-]+\.md")
 
 def _rubrics_cited(*cells):
     """Sorted unique `docs/rubrics/*.md` paths named anywhere in the given SR
-    prose cells — the approve view names the rubric a Critique/Attest SR is judged
+    prose cells — the approve view names the rubric a Critique/Vouch SR is judged
     against (there is no dedicated Rubric column; the path lives in the prose)."""
     found = set()
     for c in cells:
@@ -4452,7 +4452,7 @@ def _waiting_lines(entries, srs_by_id):
         "## {}".format(WAITING_FOR_ADJUDICATION),
         "",
         "_Every owing row of these chains sits on a rung"
-        " `[attestation] human_approval_through` releases, so an adjudication"
+        " `[authority] operator_accepts_through` releases, so an adjudication"
         " session approves them and this sitting does not. Shown in full for"
         " sight; collapsed by default._",
         "",
@@ -4891,7 +4891,7 @@ def reattest_lines(root, srs, llrs, tcs):
     if released and not held:
         lines += [
             "",
-            "_No chain on a rung the human-approval dial holds owes an act;"
+            "_No chain on a rung the operator-acceptance dial holds owes an act;"
             " every chain in this brief waits for automated adjudication._",
         ]
     if released:
@@ -4949,7 +4949,7 @@ def approval_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
                 sid,
                 _cell(s, "Title") or "(untitled)",
                 _cell(s, "Status") or "?",
-                _cell(s, "Verification") or "?",
+                _cell(s, "VerificationMethod") or "?",
             )
         ]
         if _cell(s, "Requirement"):
@@ -5286,7 +5286,7 @@ class Findings:
     phases: set = None
     mechanized_verified: list = field(default_factory=list)
     demonstrated_verified: list = field(default_factory=list)
-    attested_verified: list = field(default_factory=list)
+    vouched_verified: list = field(default_factory=list)
     draft_srs: list = field(default_factory=list)
     draft_llrs: list = field(default_factory=list)
     draft_tcs: list = field(default_factory=list)
@@ -5492,8 +5492,8 @@ def verification_basis(srs):
     reports Approved, how was each reached? Three kinds, most-to-least runnable —
     Test rests on a runnable check (mechanized); Demonstration/Manual/Analysis/
     Inspection/Critique rest on a human observing an outcome (demonstrated/
-    observed — repeatable, but not a runnable check); Attest rests on a named
-    human's recorded judgment (attested — trust-based). Split three ways, not
+    observed — repeatable, but not a runnable check); Vouch rests on the
+    operator's recorded word (vouched — trust-based). Split three ways, not
     binary (WI-259): once non-Test methods are gate-required, folding them into
     "mechanized" would overstate how much rests on runnable checks. Independent
     of --require-verified so the footprint is always visible. The cell is
@@ -5504,18 +5504,18 @@ def verification_basis(srs):
 
     Returns `(mechanized, demonstrated, attested)` id lists. Pure; extracted
     outward from `analyze` at WI-483."""
-    mechanized_verified, demonstrated_verified, attested_verified = [], [], []
+    mechanized_verified, demonstrated_verified, vouched_verified = [], [], []
     for r in srs:
         if not is_approved(r):
             continue
-        method = (r.get("Verification") or "").strip()
+        method = (r.get("VerificationMethod") or "").strip()
         if method in MECHANIZED_METHODS:
             mechanized_verified.append(r["SR-ID"])
-        elif method in ATTESTED_METHODS:
-            attested_verified.append(r["SR-ID"])
+        elif method in VOUCHED_METHODS:
+            vouched_verified.append(r["SR-ID"])
         else:
             demonstrated_verified.append(r["SR-ID"])
-    return mechanized_verified, demonstrated_verified, attested_verified
+    return mechanized_verified, demonstrated_verified, vouched_verified
 
 
 def integrity_sweep(reg, raw):
@@ -5796,7 +5796,7 @@ def analyze(reg, args):
     # runs unconditionally (the footprint is always visible); the status
     # criterion is what `--require-verified` turns on.
     scope = PhaseScope.of(srs, flags.phase)
-    mechanized_verified, demonstrated_verified, attested_verified = verification_basis(
+    mechanized_verified, demonstrated_verified, vouched_verified = verification_basis(
         srs
     )
     status_findings, phase_deferred = (
@@ -5867,7 +5867,7 @@ def analyze(reg, args):
     ) + off_spine_advisories(cmps, exts, prov_allow)
     sr_fanout_advis = sr_fanout_advisories(srs, llrs)
     # Warn-only, always on: a row whose prose names a critique instrument while
-    # its Verification says otherwise. Its own pipe for the same reason the two
+    # its verification method says otherwise. Its own pipe for the same reason the two
     # above have theirs — this is a METHOD-coherence finding, not a wording one,
     # and reporting it under the acceptance-criteria counter would mis-name it
     # (it scans Requirement and Rationale too). Never joins a failure set.
@@ -5915,7 +5915,7 @@ def analyze(reg, args):
         phases=scope.phases,
         mechanized_verified=mechanized_verified,
         demonstrated_verified=demonstrated_verified,
-        attested_verified=attested_verified,
+        vouched_verified=vouched_verified,
         draft_srs=draft_srs,
         draft_llrs=draft_llrs,
         draft_tcs=draft_tcs,
@@ -5960,7 +5960,7 @@ def render_report(reg, findings, args, forest):
     phases = findings.phases
     mechanized_verified = findings.mechanized_verified
     demonstrated_verified = findings.demonstrated_verified
-    attested_verified = findings.attested_verified
+    vouched_verified = findings.vouched_verified
     draft_srs = findings.draft_srs
     draft_llrs = findings.draft_llrs
     draft_tcs = findings.draft_tcs
@@ -5986,7 +5986,7 @@ def render_report(reg, findings, args, forest):
             f"| Integrity findings | {len(integrity)} |",
             f"| Approved SRs — mechanized (Test) | {len(mechanized_verified)} |",
             f"| Approved SRs — demonstrated/observed | {len(demonstrated_verified)} |",
-            f"| Approved SRs — attested (human, §4) | {len(attested_verified)} |",
+            f"| Approved SRs — vouched (operator, §4) | {len(vouched_verified)} |",
         ]
         + (
             [f"| Drafted artifacts (decomposition-exempt) | {n_draft} |"]
@@ -6180,17 +6180,17 @@ def render_report(reg, findings, args, forest):
     # Verification-basis surface (process.md §4): make the project's trust
     # footprint auditable — of what is `Approved`, how much rests on a runnable
     # check (Test), on a human observing an outcome (Demonstration/Manual/Analysis/
-    # Inspection/Critique), or on a named human's recorded judgment (Attest)? Split
+    # Inspection/Critique), or on the operator's recorded word (Vouch)? Split
     # three ways (WI-259) so non-Test approval claims are never folded into
-    # "mechanized"; the demonstrated and attested ids are listed so an audit can
+    # "mechanized"; the demonstrated and vouched ids are listed so an audit can
     # see exactly which rows rest on something other than a runnable check.
-    lines += ["", "## Verification basis (mechanized / demonstrated / attested)", ""]
+    lines += ["", "## Verification basis (mechanized / demonstrated / vouched)", ""]
     lines += [
         "_Of the SRs reported `Approved`: `Test` rows rest on a runnable, "
         "re-executable check (mechanized); `Demonstration`/`Manual`/`Analysis`/"
         "`Inspection`/`Critique` rows rest on a human observing an outcome "
-        "(demonstrated/observed — repeatable, but not a runnable check); `Attest` "
-        "rows rest on a named human's recorded judgment (trust-based — the box can "
+        "(demonstrated/observed — repeatable, but not a runnable check); `Vouch` "
+        "rows rest on the operator's recorded word (trust-based — the box can "
         "be checked without the work having happened, process.md §4). Only the "
         "first is a runnable check. A row whose method is blank or unrecognized is "
         "counted as demonstrated/observed, never as mechanized (the conservative "
@@ -6200,8 +6200,8 @@ def render_report(reg, findings, args, forest):
         "- Demonstrated/observed (Demonstration/Manual/Analysis/Inspection/"
         f"Critique, or unspecified): {len(demonstrated_verified)}"
         + (f" — {', '.join(demonstrated_verified)}" if demonstrated_verified else ""),
-        f"- Attested (Attest): {len(attested_verified)}"
-        + (f" — {', '.join(attested_verified)}" if attested_verified else ""),
+        f"- Vouched (Vouch): {len(vouched_verified)}"
+        + (f" — {', '.join(vouched_verified)}" if vouched_verified else ""),
     ]
     if n_draft:
         lines += ["", "## Drafted artifacts (decomposition-exempt)", ""]
@@ -6300,7 +6300,7 @@ def render_report(reg, findings, args, forest):
     if args.strict_schema:
         lines += ["", "## Schema findings (--strict-schema)", ""]
         lines += (
-            ["None. Required fields present; Verification/Tier in vocabulary."]
+            ["None. Required fields present; VerificationMethod/Tier in vocabulary."]
             if not schema
             else [f"- {f}" for f in schema]
         )
@@ -6342,7 +6342,7 @@ def render_console(reg, findings, args, out, html_out):
     snapshot_findings = findings.snapshot_findings
     mechanized_verified = findings.mechanized_verified
     demonstrated_verified = findings.demonstrated_verified
-    attested_verified = findings.attested_verified
+    vouched_verified = findings.vouched_verified
     status_findings = findings.status_findings
     n_draft = findings.n_draft
     placeholders = findings.placeholders
@@ -6422,13 +6422,13 @@ def render_console(reg, findings, args, out, html_out):
         + (
             f" verified-mechanized={len(mechanized_verified)}"
             f" verified-demonstrated={len(demonstrated_verified)}"
-            f" verified-attested={len(attested_verified)}"
+            f" verified-vouched={len(vouched_verified)}"
             # WI-466: the guard used to read `(demonstrated_verified or
-            # attested_verified)`, so a nonzero mechanized-only count (the
+            # vouched_verified)`, so a nonzero mechanized-only count (the
             # common case) silently dropped the whole triple the moment the
             # other two legs drained to zero (re-tier v2 S3, log
             # 2026-08-16e). Any nonzero leg now prints all three.
-            if (mechanized_verified or demonstrated_verified or attested_verified)
+            if (mechanized_verified or demonstrated_verified or vouched_verified)
             else ""
         )
         + (f" status-findings={len(status_findings)}" if args.require_verified else "")
@@ -6761,7 +6761,7 @@ def main():
         "--strict-schema",
         action="store_true",
         help="also require non-empty required fields and valid "
-        "Verification/Tier values on the real rows",
+        "VerificationMethod/Tier values on the real rows",
     )
     ap.add_argument(
         "--html",

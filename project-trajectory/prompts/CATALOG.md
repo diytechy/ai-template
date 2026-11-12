@@ -32,7 +32,7 @@ is a refusal rather than a silently empty instruction.
 | `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:58eb6e1b0a8f` | `{brief}`, `{verdict}` |
 | `PLAN-SINGLE` | [plan-single.template.md](plan-single.template.md) | `sha256:b240ed4cb2a3` | `{clauses}`, `{inputs}`, `{plan}`, `{revision}`, `{spec}`, `{title}`, `{wi}` |
 | `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:e125a41b7023` | `{head}`, `{process_doc}`, `{round_facts}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
-| `WORKER` | [worker.template.md](worker.template.md) | `sha256:aa222eac5de1` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
+| `WORKER` | [worker.template.md](worker.template.md) | `sha256:8868d1c836e8` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
 
 ## Composed fragments
 
@@ -44,7 +44,7 @@ no key and no override. An absent or unreadable fragment fails generation and
 
 | File | Digest | Fills |
 |---|---|---|
-| [spine-questions.md](spine-questions.md) | `sha256:b91f850e0727` | `{questions}` |
+| [spine-questions.md](spine-questions.md) | `sha256:f5fb5c5c6cfb` | `{questions}` |
 
 An operator override replaces a template per phase (`--prompt-map`); an
 overridden session's `# prompt-template:` names the override path, so the

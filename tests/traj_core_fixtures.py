@@ -19,7 +19,7 @@ SN_MD = """# Stakeholder Needs (SN-###)
 |---|---|---|---|---|
 | SN-001 | Do the thing well. | Users need it. | M | works end to end. |
 """
-SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Core add,SN-001,"Shall add.",R,"add works",,M,Test,Approved
 SR-002,Core sub,SN-001,"Shall sub.",R,"sub works",,M,Test,Drafted
 """

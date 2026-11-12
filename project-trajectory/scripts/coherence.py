@@ -147,8 +147,8 @@ def _sr_orphan_findings(srs, llr_sr_refs, tc_refs, sn_ids):
             out.append(
                 (
                     sid,
-                    f"SR {sid} has no LLR (and Verification not in "
-                    "Analysis/Inspection/Attest)",
+                    f"SR {sid} has no LLR (and VerificationMethod not in "
+                    "Analysis/Inspection/Vouch)",
                 )
             )
         if not draft and sid not in tc_refs:
@@ -448,9 +448,9 @@ def status_criterion_findings(srs, scope):
         # ("this word is not in the vocabulary" vs "this row is not blessed").
         if not (is_approved(r) or is_founded(r)):
             val = (r.get("Status") or "").strip()
-            method = (r.get("Verification") or "").strip() or "(blank)"
+            method = (r.get("VerificationMethod") or "").strip() or "(blank)"
             status_findings.append(
-                f"SR {r['SR-ID']} is Verification={method} but Status="
+                f"SR {r['SR-ID']} is VerificationMethod={method} but Status="
                 f"{val or '(blank)'} (DevStg-Impl requires Approved for every approved "
                 "SR regardless of method — the magic Status values are matched "
                 "case-insensitively, so this is a real mismatch, not a casing "

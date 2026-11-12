@@ -100,7 +100,7 @@ def test_judgement_first_does_not_smuggle_work_past_a_human_held_stop():
 
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
-    "Priority,Verification,Status,Phase,Area,SupersededBy\n"
+    "Priority,VerificationMethod,Status,Phase,Area,SupersededBy\n"
 )
 LLR_HEADER = (
     "LLR-ID,SR-Refs,Title,Design,Rationale,Module,CodeSymbol,TestRefs,Status,"

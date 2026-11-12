@@ -742,7 +742,7 @@ commit of its own, move it to trunk's tip
      - 1: the call failed, an act is still owed (printed), or the call wrote
        under `docs/reviews/`;
      - 2: refused before launch: not a lane, uncommitted changes (named), a
-       verdict not accepted at HEAD, one that owes no act (a re-run after a
+       verdict not recorded at HEAD, one that owes no act (a re-run after a
        completed act), or a judged row in a state no act explains (named);
      - 7: as for `adjudicate`.
   4. An act that stopped between its flip and its snapshot leaves the flip
@@ -938,9 +938,9 @@ commit of its own, move it to trunk's tip
   re-attested the row and its text is unchanged since, close the row citing
   that act. Every other row it mints is real work and stays open.
 - **Successor rows:** for each SUCCESSOR ruling of an accepted dispute
-  verdict (its `.requested` binding reads `outcome = accepted`), file one row
+  verdict (its `.requested` binding reads `outcome = recorded`), file one row
   on trunk after the landing, its scope the ruling's reason, citing the
-  verdict by the name read from disk. A verdict not accepted files nothing,
+  verdict by the name read from disk. A verdict not recorded files nothing,
   and its finding holds the landing. Bump the mark as for any hand-filed row
   (§1, "Filing a row by hand").
 - **A gate MINOR** whose fix would move the tip off the gated one, or
@@ -1625,7 +1625,7 @@ lane commit being replayed.
     directory junction (PowerShell `New-Item -ItemType Junction`), never
     a new install, and never another project's: an empty primary install
     is an open item (OI-128);
-  - a Claude operator sub-agent may render, tile, brief, launch the six
+  - a Claude sub-agent may render, tile, brief, launch the six
     judges (`codex exec -m gpt-6-luna -c model_reasoning_effort=high -s
     read-only`, each verdict captured with `-o`, all six children of
     one foreground command that waits) and compile the record; it

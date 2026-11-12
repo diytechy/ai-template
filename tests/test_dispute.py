@@ -311,7 +311,7 @@ def test_a_verdict_judged_against_no_requested_findings_is_refused():
     assert _dispute().parse(VALID, (), "v.md")[1]
 
 
-def test_an_accepted_dispute_verdict_authorizes_no_approval_act():
+def test_a_recorded_dispute_verdict_authorizes_no_approval_act():
     """The binding records the finding ids a dispute was asked to rule; no
     approval act reads a ruling on a finding as a judgement of a row.
 
@@ -319,8 +319,8 @@ def test_an_accepted_dispute_verdict_authorizes_no_approval_act():
     """
     from kitlib import sitting
 
-    binding = sitting.render_requested("dispute", ("F1", "R2-3", "R4"), "accepted")
-    assert sitting.accepted(VALID, binding) is None
+    binding = sitting.render_requested("dispute", ("F1", "R2-3", "R4"), "recorded")
+    assert sitting.recorded(VALID, binding) is None
 
 
 def test_the_dispute_class_is_routed_and_its_template_ships():

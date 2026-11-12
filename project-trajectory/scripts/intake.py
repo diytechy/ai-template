@@ -32,7 +32,7 @@ Five triggers, plus the drafts-not-mints arm:
       `acceptance_record.staged_drafted_rows`, the other side of (a)'s coin
       (owner ruling 2026-09-01). A work lane AUTHORS `Drafted` spine rows and
       approves none itself — `integrate._approval_act_refusal` refuses an act
-      no independent adjudicator's accepted verdict backs (owner ruling 6,
+      no independent adjudicator's recorded verdict backs (owner ruling 6,
       2026-10-07) — so every merge that adds or amends one and leaves it
       `Drafted` leaves rows waiting on an approval nobody has given. One `first-approval` adjudication row per
       merge lists them; its session reads each row's whole chain and either
@@ -62,7 +62,7 @@ Five triggers, plus the drafts-not-mints arm:
       has none, and none while that case's row is open. The decision is
       `rejudge.checkpoint_drafts`, which hashes files at the commit and runs
       no model.
-  (f) **a held row a sitting ruled MEANING** — an accepted verdict in the
+  (f) **a held row a sitting ruled MEANING** — a recorded verdict in the
       merged range whose latest amendment ruling on a row is MEANING, on a
       rung the dial holds, with the row differing from its snapshot copy
       (`acceptance_record.unanchored_rows`) and still at the text the verdict
@@ -884,13 +884,13 @@ def _amendment_drafts(root, before, after, authoring_tags=(), carried=()):
 def _latest_rulings(root, before, after):
     """`{row id: (ruling, verdict path)}`: each row's last amendment ruling
     among the verdicts `before..after` brought, read in `branch_verdicts`' path
-    order, which is sitting order within a lane. A verdict `accepted_at` does
-    not read as accepted at `after` rules nothing.
+    order, which is sitting order within a lane. A verdict `recorded_at` does
+    not read as recorded at `after` rules nothing.
 
     Implements: SR-174, LLR-153"""
     latest = {}
     for path in ksitting.branch_verdicts(root, before, after):
-        part = (ksitting.accepted_at(root, after, path) or {}).get("amendment")
+        part = (ksitting.recorded_at(root, after, path) or {}).get("amendment")
         if part:
             latest.update({rid: (word, path) for rid, word in part[3].items()})
     return latest
@@ -1511,7 +1511,7 @@ def _is_adjudication(meta):
 
 
 def _complete_spot_checks(root, outcomes):
-    """Disposition drafts for CLEAN closes, per `[attestation] complete_review`.
+    """Disposition drafts for CLEAN closes, per `[authority] complete_review`.
 
     `"off"` -> none. `"always"` -> every one. `"sample"` -> a DETERMINISTIC
     every-Nth over the sorted ids, not a random draw: a walk-away loop must
@@ -1557,7 +1557,7 @@ def _complete_spot_checks(root, outcomes):
                     "This close was GREEN: the merge slot ran the declared bar "
                     "on the composed tree and the review rounds judged the "
                     "work. Nothing is alleged. It is here because "
-                    "`docs/process.toml [attestation] complete_review` is "
+                    "`docs/process.toml [authority] complete_review` is "
                     "{mode!r}, and a process that only ever looks at its "
                     "failures learns nothing about its successes.\n\n"
                     "Read `{spec}` and ask ONE question: does what shipped "
@@ -3153,7 +3153,7 @@ def adjudication_action(human_held, verdict=""):
         the act for audit (`intake.py snapshot --reattests <ROW-ID> --verdict
         <file>`): the act ledger records it and the owner's surface lists it.
         The merge slot's lane rule (`held_status`) admits the act only when an
-        accepted verdict rules the row CLARITY and its binding records the
+        recorded verdict rules the row CLARITY and its binding records the
         row's approved text as it stands at the act.
       * **human-held tier otherwise -> `recommend`**: a MEANING verdict, or a
         first draft (no verdict), is the owner's to sign. The session prepares
@@ -3215,7 +3215,7 @@ def flip_verified(root, ids):
         return "recommend", [], conflicts[0]
     # SN-029: the ordinal comparison, not the retired enum. `spine_stage_of`
     # reads the tier currently in process through `kitlib.stage.read_stage`;
-    # `human_holds` compares it against `human_approval_through`.
+    # `human_holds` compares it against `operator_accepts_through`.
     human_held = ac.human_holds(root / "docs", ac.spine_stage_of(root))
     session_hold = "human-held" if human_held else "loop-held"
     action = adjudication_action(human_held)
@@ -3462,7 +3462,7 @@ def _apply_flips(root, tables, located):
     approval — a scripted path moving a Status cell with no judgment behind
     it. It does not say no agent may ever move a Status cell. An LLM session or
     adjudicator is fully expected to flip a row to `Approved`, and further to
-    `Founded`, for spine content past the declared human-approval level
+    `Founded`, for spine content past the declared operator-acceptance level
     (`agent_common.human_holds` says which) — at the human's request, or when
     working through content the level does not hold to human approval. The
     dial says who holds what; this function's refusal says only that no SCRIPT
@@ -3665,7 +3665,7 @@ def _cmd_snapshot(args):
     refreshes (the common case) still need no flag at all. `--verdict <path>`
     names the verdict file that ruled the re-attested rows, and the act ledger
     records it for audit; it stays optional and no rule requires it. On a held
-    rung a session re-attests only a row an accepted verdict rules CLARITY,
+    rung a session re-attests only a row a recorded verdict rules CLARITY,
     bound to the row's text, and the merge slot's lane rule (`held_status`)
     refuses the act otherwise.
 
@@ -3757,8 +3757,8 @@ def main(argv=None):
         "adjudicate",
         help="recommend re-verify for spine rows judged no-scope-moved — "
         "mechanical enactment is RETIRED (OI-45); approval stays a human "
-        "reviewed-commit act (docs/process.toml [attestation] "
-        "human_approval_through)",
+        "reviewed-commit act (docs/process.toml [authority] "
+        "operator_accepts_through)",
     )
     adj.add_argument(
         "--rows", required=True, help="spine row id(s), ;-joined (SR-/LLR-/TC-)"

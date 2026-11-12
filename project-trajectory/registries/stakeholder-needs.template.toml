@@ -11,8 +11,8 @@
 # is a finding. (The link is kept in markdown form so the pointer stays
 # checkable and a human following it lands in the right place.)
 #
-# Owned by the Stakeholder hat — whoever the system serves: an end user, an
-# operator, or ANOTHER SYSTEM (represented by its owner/integrator).
+# Owned by the Stakeholder hat — whoever the system serves: an end user, a
+# product operator, or ANOTHER SYSTEM (represented by its owner/integrator).
 # Plain-language needs — a failure-mode expectation ("never hand me a
 # half-written file") is a need like any other. Engineering translations live
 # in system-requirements.toml (referenced by its `sn_refs`); do not restate

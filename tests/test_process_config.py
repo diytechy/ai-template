@@ -232,8 +232,8 @@ OTHER_TOML_FORMS = [
         '[policies]\nnote = """\nprivacy_check = false\n"""\n',
         None,
     ),
-    ("wrong-section-true", "[attestation]\nprivacy_check = true\n", True),
-    ("wrong-section-false", "[attestation]\nprivacy_check = false\n", True),
+    ("wrong-section-true", "[authority]\nprivacy_check = true\n", True),
+    ("wrong-section-false", "[authority]\nprivacy_check = false\n", True),
 ]
 
 # A dial that is not the boolean `false` reads ON.
@@ -951,10 +951,10 @@ def test_migration_folds_every_dial_in_and_deletes_the_file(tmp_path):
     # WI-493 re-keyed the dial to the DevStg-* rung it always meant: the
     # loop-held end that used to be the ordinal `0` is now `DevStg-Below`, the
     # sentinel for "no rung is a human's to approve".
-    assert cfg["attestation"]["human_approval_through"] == "DevStg-Below"
-    assert cfg["attestation"]["keep_nondependent"] is True
-    assert cfg["attestation"]["final_review"] == "off"
-    assert "gate_policy" not in cfg["attestation"]
+    assert cfg["authority"]["operator_accepts_through"] == "DevStg-Below"
+    assert cfg["authority"]["keep_nondependent"] is True
+    assert cfg["authority"]["final_review"] == "off"
+    assert "gate_policy" not in cfg["authority"]
     assert ac.approval_through(tmp_path / "docs") == "DevStg-Below"
     assert ac.human_holds(tmp_path / "docs", "DevStg-Needs") is False, (
         "the whole point: `autonomous` must actually read as loop-held"

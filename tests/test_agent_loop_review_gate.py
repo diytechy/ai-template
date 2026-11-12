@@ -530,7 +530,7 @@ def _adjudication_round(tmp_path):
         "+++\n\n## What happened\n\nDelivered half of it.\n".format(seed),
         encoding="utf-8",
     )
-    _configure(lane, '\n[attestation]\nadjudication_review = "always"\n')
+    _configure(lane, '\n[authority]\nadjudication_review = "always"\n')
     return lane, ctl, _run(lane, cmd, 4, wi="WI-301")
 
 

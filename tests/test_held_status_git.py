@@ -139,7 +139,7 @@ def _trunk(home, monkeypatch, needs=BASE, frame=None):
     _write(
         root,
         "docs/process.toml",
-        '[attestation]\nhuman_approval_through = "{}"\n'.format(DIAL),
+        '[authority]\noperator_accepts_through = "{}"\n'.format(DIAL),
     )
     _write_needs(root, needs)
     if frame is not None:
@@ -162,10 +162,10 @@ def _verdict(root, kind, rows, identities=None, tag=None):
     )
     _write(root, VERDICT, text + "\n{}: {} rows={}\n".format(line, label, len(rows)))
     if identities is None:
-        binding = ksitting.render_requested(kind, (kind,), "accepted")
+        binding = ksitting.render_requested(kind, (kind,), "recorded")
     else:
         render = ksitting.render_requested
-        binding = render(kind, (kind,), "accepted", identities=identities)
+        binding = render(kind, (kind,), "recorded", identities=identities)
     _write(root, ksitting.requested_path(VERDICT), binding)
 
 
@@ -393,13 +393,13 @@ _UNEXCEPTED = {
     # CLARITY tag) would admit this.
     "ruled MEANING then CLARITY": (
         _RULED_TWICE.format("MEANING") + _RULED_TWICE.format("CLARITY"),
-        "accepted",
+        "recorded",
     ),
     # Witness: an exception reading the last tag a row carries would admit
     # this.
     "ruled CLARITY then MEANING": (
         _RULED_TWICE.format("CLARITY") + _RULED_TWICE.format("MEANING"),
-        "accepted",
+        "recorded",
     ),
     # Witness: an exception reading the verdict text without its binding's
     # recorded outcome would admit these two.
@@ -410,13 +410,13 @@ _UNEXCEPTED = {
     # admit this.
     "another row ruled": (
         "- [CLARITY] SN-002 -> judged -> judged -> same\n",
-        "accepted",
+        "recorded",
     ),
 }
 
 
 @pytest.mark.parametrize("case", sorted(_UNEXCEPTED))
-def test_an_unaccepted_or_unruled_CLARITY_binding_is_no_exception(
+def test_an_unrecorded_or_unruled_CLARITY_binding_is_no_exception(
     tmp_path, monkeypatch, case
 ):
     """Characterization: already-correct behaviour of the bound-CLARITY
@@ -870,7 +870,7 @@ def _undecodable_verdict(root):
     binding = ksitting.render_requested(
         "amendment",
         ("amendment",),
-        "accepted",
+        "recorded",
         identities={"SN-001": _digest(root, "SN-001")},
     )
     _write(root, ksitting.requested_path(VERDICT), binding)
@@ -1013,7 +1013,7 @@ def test_an_unparseable_act_ledger_at_the_head_is_refused_by_name(
 def test_an_act_already_on_trunk_is_not_re_read(tmp_path, monkeypatch):
     """Trunk's own unbacked act (an owner's re-attestation, recorded in the
     act ledger) is in the merge base; a lane that adds one act of its own,
-    backed by an accepted verdict, is admitted at the approval rung. Witness:
+    backed by a recorded verdict, is admitted at the approval rung. Witness:
     a ledger reader taking the head's every entry, not only those the base
     lacks, would refuse the lane for trunk's unbacked act.
 

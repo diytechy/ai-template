@@ -92,7 +92,7 @@ PROCESS_KEYS = {
     # legacy `docs/gate-policy` FILE is still read (an un-migrated repo keeps
     # working), and the enum key is still type-checked if a repo hand-wrote it,
     # but nothing SHIPS it any more — see PROCESS_ONLY_KEYS.
-    "gate-policy": ("attestation", "gate_policy", "str"),
+    "gate-policy": ("authority", "gate_policy", "str"),
     # The six CHECK-ENABLEMENT toggles, folded in by the 2026-08-11 overturn of
     # WI-423 ("far better to tie those into process.toml and key them all to on
     # / true"). They belong in THIS table, not PROCESS_ONLY_KEYS: each had a
@@ -117,7 +117,7 @@ PROCESS_KEYS = {
 # never be double-declared and appear here rather than in PROCESS_KEYS. They
 # still need the type check: the failure PROCESS_KEYS' check exists to stop (a
 # quoted `review_rounds` reading as "no review required") applies verbatim to a
-# `human_approval_through`, whose wrong value reads as the conservative
+# `operator_accepts_through`, whose wrong value reads as the conservative
 # default with no diagnostic and looks exactly like a repo that never set it.
 #
 # IT IS A `str` SINCE WI-493: the dial names a `DevStg-*` rung, not a 0-4 tier
@@ -125,13 +125,13 @@ PROCESS_KEYS = {
 # typo is still a `str` — which is why the VOCABULARY check below exists and
 # why it, not the type, is now the arm that catches a bad dial.
 PROCESS_ONLY_KEYS = {
-    ("attestation", "human_approval_through"): "str",
-    ("attestation", "keep_nondependent"): "bool",
-    ("attestation", "final_review"): "str",
-    ("attestation", "complete_review"): "str",
-    ("attestation", "complete_sample_rate"): "int",
-    ("attestation", "adjudication_review"): "str",
-    ("attestation", "decision_recording"): "str",
+    ("authority", "operator_accepts_through"): "str",
+    ("authority", "keep_nondependent"): "bool",
+    ("authority", "final_review"): "str",
+    ("authority", "complete_review"): "str",
+    ("authority", "complete_sample_rate"): "int",
+    ("authority", "adjudication_review"): "str",
+    ("authority", "decision_recording"): "str",
     # The reverse back-link coverage bar (OI-42 ruled (e), WI-486). It sits in
     # `[checks]` beside six BOOLEANS and is an INT, which is exactly why it
     # needs the type check: its reader
@@ -162,7 +162,7 @@ PROCESS_KEY_RANGES = {
 }
 
 # Dials whose value must come from a CLOSED VOCABULARY. This replaced
-# `human_approval_through`'s `(0, 4)` range row at WI-493, and it is the
+# `operator_accepts_through`'s `(0, 4)` range row at WI-493, and it is the
 # same guarantee carried on the new value's own terms: the retired range refused
 # `-1` because that single input reads as LESS human involvement than the owner
 # asked for, and a misspelled rung does exactly the same thing — it is
@@ -179,14 +179,14 @@ PROCESS_KEY_VOCAB = {}
 #
 # WHY A VALUE SET AND NOT A TYPE. Declaring "the old TYPE is still accepted"
 # was tried first and was wrong in a way worth recording: it accepted every
-# int, so `human_approval_through = -1` — the single input the retired
+# int, so `operator_accepts_through = -1` — the single input the retired
 # `(0, 4)` range row existed to refuse, because it is the one that reads as
 # LESS human involvement than the owner asked for — stopped being refused at
 # all. A migration window must be exactly as wide as the migration.
 #
 # Without the window at all, `config_conflicts` — a HARD refusal consulted by
 # dispatch, intake and integrate — would refuse an adopter's committed
-# `human_approval_through = 4` the moment they took the kit upgrade, on a
+# `operator_accepts_through = 4` the moment they took the kit upgrade, on a
 # dial `approval_through` reads perfectly well. The signal for a legacy
 # value is the reader's WARNING, once per run, naming the migrator; the refusal
 # stays reserved for values nothing can honour.
@@ -411,7 +411,7 @@ def blackout_at(docs, t=None):
     return Blackout(window=line, at=t, end=end, last_end=last_end)
 
 
-# --- SN-029: the human-approval level, as an ORDINAL ----------------------
+# --- SN-029: the operator-acceptance level, as an ORDINAL ----------------------
 # THE DIAL, and why it replaces a three-value enum. `attended | single-approve |
 # autonomous` answered "who approves" with three words that four independent
 # tables then re-interpreted, each with its own fail-safe direction. What the
@@ -434,17 +434,17 @@ def blackout_at(docs, t=None):
 #                  LLM verdict
 LEGACY_APPROVAL = {
     "attended": {
-        "human_approval_through": _kitauthority.LEGACY_GATE_DIALS["attended"],
+        "operator_accepts_through": _kitauthority.LEGACY_GATE_DIALS["attended"],
         "keep_nondependent": False,
         "final_review": "always",
     },
     "single-approve": {
-        "human_approval_through": _kitauthority.LEGACY_GATE_DIALS["single-approve"],
+        "operator_accepts_through": _kitauthority.LEGACY_GATE_DIALS["single-approve"],
         "keep_nondependent": True,
         "final_review": "always",
     },
     "autonomous": {
-        "human_approval_through": _kitauthority.LEGACY_GATE_DIALS["autonomous"],
+        "operator_accepts_through": _kitauthority.LEGACY_GATE_DIALS["autonomous"],
         "keep_nondependent": True,
         "final_review": "off",
     },
@@ -493,7 +493,7 @@ APPROVAL_DIAL_RUNGS = frozenset(_kitladder.LADDER_RUNGS) | {_kitstage.BELOW}
 # Declared UP THERE with the other dial tables and filled HERE, because the
 # vocabulary is this module's own and the table is read by the shared
 # validator. One value, one home.
-PROCESS_KEY_VOCAB[("attestation", "human_approval_through")] = APPROVAL_DIAL_RUNGS
+PROCESS_KEY_VOCAB[("authority", "operator_accepts_through")] = APPROVAL_DIAL_RUNGS
 
 # The 0-4 ordinal an unmigrated repo still declares. READ, TRANSLATED AND
 # WARNED — not refused: the value is a dial in an adopter's committed
@@ -507,7 +507,7 @@ PROCESS_KEY_VOCAB[("attestation", "human_approval_through")] = APPROVAL_DIAL_RUN
 # and the validator.
 LEGACY_DIAL_ORDINALS = _kitauthority.LEGACY_DIAL_ORDINALS
 
-PROCESS_KEY_LEGACY_VALUES[("attestation", "human_approval_through")] = frozenset(
+PROCESS_KEY_LEGACY_VALUES[("authority", "operator_accepts_through")] = frozenset(
     LEGACY_DIAL_ORDINALS
 )
 
@@ -518,11 +518,11 @@ APPROVAL_FALLBACK = _kitladder.STAGE_RELEASE
 
 # The dial's RETIRED KEY NAME (WI-499, owner-ruled 2026-08-21). A repo
 # scaffolded before this rename still carries this spelling in
-# `[attestation]`; `approval_through` below reads it as a loud fallback,
+# `[authority]`; `approval_through` below reads it as a loud fallback,
 # mirroring the read-translate-warn shape WI-493 used for the retired 0-4
 # ordinal. `bootstrap.py --migrate-config` (`_migrate_dial_key_name`) is the
 # one-time fix that ends the warning.
-LEGACY_ATTESTATION_KEY = _kitauthority.LEGACY_DIAL_KEY
+LEGACY_DIAL_KEY = _kitauthority.LEGACY_DIAL_KEY
 
 
 def legacy_approval(word, key):
@@ -533,7 +533,7 @@ def legacy_approval(word, key):
 
 
 def approval_through(docs):
-    """`[attestation] human_approval_through` as a `DevStg-*` rung.
+    """`[authority] operator_accepts_through` as a `DevStg-*` rung.
 
     The HIGHEST rung a human still approves; every rung at or below it is held
     (`human_holds`). `DevStg-Below` means nothing is held — the loop approves
@@ -583,15 +583,15 @@ def _retired_dial_note(legacy, rung):
         "Run `python project-trajectory/scripts/bootstrap.py --migrate-config "
         "--dest .` from your kept kit checkout to rewrite {}."
     )
-    retired_key = legacy["key"] == LEGACY_ATTESTATION_KEY
+    retired_key = legacy["key"] == LEGACY_DIAL_KEY
     if legacy["ordinal"] is None:
         return (
-            "agent_common: [attestation] {} is RETIRED - reading it as "
-            "`human_approval_through` (WI-499). ".format(LEGACY_ATTESTATION_KEY)
+            "agent_common: [authority] {} is RETIRED - reading it as "
+            "`operator_accepts_through` (WI-499). ".format(LEGACY_DIAL_KEY)
             + fix.format("the key")
         )
     return (
-        "agent_common: [attestation] {} = {} is the RETIRED 0-4 ordinal{} - reading it as `{}` (WI-493{}). ".format(
+        "agent_common: [authority] {} = {} is the RETIRED 0-4 ordinal{} - reading it as `{}` (WI-493{}). ".format(
             legacy["key"],
             legacy["ordinal"],
             " under a RETIRED key name too (WI-499)" if retired_key else "",
@@ -645,7 +645,7 @@ LADDER_RUNGS = _kitladder.LADDER_RUNGS
 
 # THE OFF-SPINE SIBLING OF THE DIAL (owner ruling OI-30 D3, 2026-08-15).
 #
-# `human_approval_through` governs the SPINE tiers. The off-spine registries
+# `operator_accepts_through` governs the SPINE tiers. The off-spine registries
 # that carry an off-spine `status` cell — `interfaces.toml`, `external.toml`,
 # `components.toml` — were governed by PROSE ONLY: their headers said the cells
 # were the owner's to flip, and at any dial below 4 nothing refused a loop
@@ -653,7 +653,7 @@ LADDER_RUNGS = _kitladder.LADDER_RUNGS
 #
 # THE RULED SHAPE IS DERIVED, NOT DECLARED, and the owner's question is why:
 # *"I thought this would follow the dev-stage directly? Why build a new enum?"*
-# The proposal on the table was a new `[attestation] human_approval_registries`
+# The proposal on the table was a new `[authority] human_approval_registries`
 # list; it was OVERTURNED because the registry-to-rung association ALREADY
 # EXISTS in `spine_rules` — `boundary_incomplete` gates DevStg-Boundary on
 # `external.toml`'s approvals, and `arch_incomplete` gates DevStg-Arch on the
@@ -757,7 +757,7 @@ def human_approves(docs, registry):
     which also answers the needs file's stakeholder list at `DevStg-Needs`.
 
     THREE ARMS, and only the third is new thinking:
-      * MAPPED and its rung is human-held under `human_approval_through`
+      * MAPPED and its rung is human-held under `operator_accepts_through`
         -> True (held). At a `DevStg-Needs` dial that is the needs file alone.
       * MAPPED and its rung is not held -> False (a loop session may write it,
         because the project has declared that rung machine-approvable).
@@ -852,7 +852,7 @@ def final_review(docs):
     tier. Defaults to holding: the shipped template declares `"always"`, and an
     unreadable value takes the same conservative direction every other dial in
     this module takes."""
-    table = process_config(docs).get("attestation")
+    table = process_config(docs).get("authority")
     if isinstance(table, dict):
         value = table.get("final_review")
         if isinstance(value, str):
@@ -877,7 +877,7 @@ def complete_review(docs):
     An unreadable mode falls to `"sample"` (the shipped default) and a
     non-positive or unreadable rate to 4, because the failure that matters here
     is silently adjudicating NOTHING."""
-    table = process_config(docs).get("attestation")
+    table = process_config(docs).get("authority")
     mode, rate = "sample", 4
     if isinstance(table, dict):
         declared = table.get("complete_review")
@@ -904,9 +904,7 @@ ADJUDICATION_REVIEW_MODES = ("never", "when-minting", "always")
 # verdict, with no diagnostic and no way to tell it from a repo that never set
 # the dial. This one is safe to arm at birth: the dial has no legacy value
 # anywhere, so nothing an adopter already carries can be refused by it.
-PROCESS_KEY_VOCAB[("attestation", "adjudication_review")] = set(
-    ADJUDICATION_REVIEW_MODES
-)
+PROCESS_KEY_VOCAB[("authority", "adjudication_review")] = set(ADJUDICATION_REVIEW_MODES)
 
 # The successor classes whose drafting earns a second opinion under
 # `when-minting`, and the brief that always does. A verdict that only recommends
@@ -918,13 +916,13 @@ _REVIEW_OWED_BRIEFS = ("consolidate",)
 
 
 def adjudication_review(docs):
-    """The `[attestation] adjudication_review` dial as one of
+    """The `[authority] adjudication_review` dial as one of
     `ADJUDICATION_REVIEW_MODES`.
 
     An unreadable or unrecognized value falls to the shipped `"when-minting"`,
     not to `"never"`: the failure that matters is silently reviewing NOTHING,
     the same fail-direction `complete_review` takes for the same reason."""
-    table = process_config(docs).get("attestation")
+    table = process_config(docs).get("authority")
     if isinstance(table, dict):
         declared = table.get("adjudication_review")
         if isinstance(declared, str) and declared.strip().lower() in (
@@ -939,11 +937,11 @@ def adjudication_review(docs):
 # way. Safe to arm at birth, like `adjudication_review`: no legacy value exists.
 # Implements: SR-225, LLR-282
 DECISION_RECORDING_MODES = _kitdecisions.MODES
-PROCESS_KEY_VOCAB[("attestation", "decision_recording")] = set(DECISION_RECORDING_MODES)
+PROCESS_KEY_VOCAB[("authority", "decision_recording")] = set(DECISION_RECORDING_MODES)
 
 
 def decision_recording(docs):
-    """The `[attestation] decision_recording` dial as one of
+    """The `[authority] decision_recording` dial as one of
     `DECISION_RECORDING_MODES`.
 
     UNDECLARED reads `"off"`, the template's shipped value: no repo owes a
@@ -956,7 +954,7 @@ def decision_recording(docs):
 
     Implements: SR-225, LLR-282
     """
-    table = process_config(docs).get("attestation")
+    table = process_config(docs).get("authority")
     if not (isinstance(table, dict) and "decision_recording" in table):
         return "off"
     declared = mode_word(table.get("decision_recording"))
@@ -1045,7 +1043,7 @@ def keep_nondependent(docs):
     running while an approval is queued? Defaults FALSE — a queued
     approval drains the station, which is what `attended` and `autonomous`
     both did; only the retired `single-approve` level did otherwise."""
-    table = process_config(docs).get("attestation")
+    table = process_config(docs).get("authority")
     if isinstance(table, dict) and isinstance(table.get("keep_nondependent"), bool):
         return table["keep_nondependent"]
     legacy = legacy_approval(
@@ -1374,7 +1372,7 @@ __all__ = (
     "APPROVAL_DIAL_RUNGS",
     "LEGACY_DIAL_ORDINALS",
     "APPROVAL_FALLBACK",
-    "LEGACY_ATTESTATION_KEY",
+    "LEGACY_DIAL_KEY",
     "legacy_approval",
     "approval_through",
     "_retired_dial_note",

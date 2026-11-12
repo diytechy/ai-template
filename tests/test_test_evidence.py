@@ -273,7 +273,7 @@ def test_the_binding_does_not_fold_the_record_itself(tmp_path):
 SR = {
     "SR-ID": "SR-001",
     "Status": "Founded",
-    "Verification": "Test",
+    "VerificationMethod": "Test",
     "SN-Refs": "SN-001",
     "Phase": "1",
 }

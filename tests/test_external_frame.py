@@ -89,10 +89,10 @@ def test_the_live_frame_is_the_LOCKED_one():
     assumption-tier plan (docs/plans/2026-09-25-c1-sitting-package.md §1,
     ruled 2026-09-25), which redrew the frame sitting-2 §1R.7 locked at
     2026-08-13o (4/4/3 after the 13u removal of B-03 and the 2026-08-16q
-    hosted-CI cut): the human operator and hosted CI drawn as parties, the
+    hosted-CI cut): the person and hosted CI drawn as parties, the
     read set returned as a crossing, the model runner promoted from a
-    relationship to a crossing, and the Adopter folded into the human
-    operator. A count is a weak assertion about most registries and a strong
+    relationship to a crossing, and the Adopter folded into the
+    person. A count is a weak assertion about most registries and a strong
     one here, because this frame is closed by a ruling: a row appearing or
     vanishing without a sitting is the defect, not a growth curve. THIS TEST
     IS EXPECTED TO BE EDITED BY A SITTING and by nothing else — it red-flagged
@@ -106,8 +106,8 @@ def test_the_live_frame_is_the_LOCKED_one():
     # alone would be satisfied by any five entities. Each gap is load-bearing:
     # it keeps id and frame name aligned 1:1 rather than renumbering a locked
     # table, and `docs/id-watermark` keeps a mint from landing on one. EXT-003
-    # (the Adopter) was dropped at C1 — an adopting team is the human operator
-    # of the kit in its own repository (EXT-006); EXT-004 (the cut hosted-CI
+    # (the Adopter) was dropped at C1 — an adopting team is the person operating
+    # the kit in its own repository (EXT-006); EXT-004 (the cut hosted-CI
     # entity) stays spent although hosted CI is drawn again, as EXT-007.
     for gone in ("EXT-003", "EXT-004"):
         assert gone not in tables["entity"], gone
@@ -320,7 +320,7 @@ def _srs(scaffold, extra_keys=""):
         'rationale = "Realizes SN-001."\n'
         'acceptance_criteria = "add(1,2) == 3"\n'
         'priority = "M"\n'
-        'verification = "Test"\n'
+        'verification_method = "Test"\n'
         'status = "Approved"\n'.format(extra_keys),
         encoding="utf-8",
     )

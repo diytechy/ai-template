@@ -38,7 +38,7 @@ ability to answer "which sittings did a human actually attend?".
 | Decomposition & Test Coverage | `DevStg-Arch` → `DevStg-Tests` | n/a | n/a | PENDING | PENDING | PENDING |
 | Implementation | `DevStg-Impl` | n/a | n/a | PENDING | PENDING | PENDING |
 | Release readiness | `DevStg-Release` | n/a | n/a | n/a | PENDING | PENDING |
-| Acceptance | `DevStg-Release` (the owner's final read) | PENDING | n/a | n/a | (evidence) | PENDING |
+| Final read | `DevStg-Release` (the operator's final read) | PENDING | n/a | n/a | (evidence) | PENDING |
 
 ## Decisions log
 

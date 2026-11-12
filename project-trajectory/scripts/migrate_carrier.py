@@ -191,7 +191,7 @@ KEY = {
     "AcceptanceCriteria": "acceptance_criteria",
     "Permutations": "permutations",
     "Priority": "priority",
-    "Verification": "verification",
+    "VerificationMethod": "verification_method",
     "Status": "status",
     "Need": "need",
     "Why": "why",

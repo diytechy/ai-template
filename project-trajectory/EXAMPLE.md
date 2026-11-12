@@ -53,7 +53,7 @@ rationale = "Realizes SN-001 so the file opens cleanly in any spreadsheet."
 acceptance_criteria = """Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180."""
 permutations = "field=set{plain,comma,quote,newline}"
 priority = "M"
-verification = "Test"
+verification_method = "Test"
 status = "Approved"
 
 [requirement.SR-002]
@@ -64,7 +64,7 @@ rationale = "Realizes SN-013 so an interrupted run never leaves a complete-looki
 acceptance_criteria = """A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally."""
 permutations = "interrupt=set{during-write,before-rename}"
 priority = "M"
-verification = "Demonstration"
+verification_method = "Demonstration"
 status = "Approved"
 ```
 
@@ -260,7 +260,7 @@ Say the **SRE/Ops** hat owns availability and the **DBA** hat owns the data
 store. A reliability need (`SN-020`) becomes an SR verified by demonstration:
 
 ```csv
-SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Lifecycle
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Phase,Lifecycle
 SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Approved,,Runtime
 ```
 
@@ -283,8 +283,8 @@ that writes only the failover SR has silently skipped two:
 Each is a real SR with its own LLR + TC; tagging them by lifecycle is what makes
 the missing Provision/Startup rows obvious at DevStg-Reqs. The failover *logic* is still
 real code, so `SR-101` keeps an LLR (`LLR-101 reconnect/promote-on-primary-loss`,
-owned by the same hat) — only `Analysis`/`Inspection`/`Attest` SRs skip the LLR
-(§7.1 shows an `Attest` one). The TC
+owned by the same hat) — only `Analysis`/`Inspection`/`Vouch` SRs skip the LLR
+(§7.1 shows a `Vouch` one). The TC
 records the **procedure**, not an assertion, and is `Automated=No`, so the release
 checklist (`gen_release_checklist.py`) finds it:
 
@@ -298,31 +298,31 @@ pre-merge runs; it executes at `DevStg-Release`, where the human signs the gener
 checklist. Same registries, same traceability join, same gates — only the
 verification method and the owning hat change.
 
-### 7.1 The honest floor — an `Attest` requirement (human judgment, not a check)
+### 7.1 The honest floor — a `Vouch` requirement (human judgment, not a check)
 
 Some acceptance criteria can't be mechanized *at all* — a subjective, mostly
 binary asset judged by a person: does this cutscene land emotionally, does the
 main theme fit the game's mood, did the voice actor deliver the line. For these
-the honest verification method is **`Attest`**: a **named human's recorded
-judgment** (process.md §4 "Verification methods" + the Proportionality doctrine).
+the honest verification method is **`Vouch`**: the **operator's recorded
+word** (process.md §4 "Verification methods" + the Proportionality doctrine).
 It is trust-based — the box can be checked without the work having happened — so
-the process makes the attestation *explicit, named, and auditable* rather than
-pretending it's a check. An `Attest` SR is **LLR-exempt** (there's no code symbol
+the process makes the vouch *explicit, named, and auditable* rather than
+pretending it's a check. A `Vouch` SR is **LLR-exempt** (there's no code symbol
 to decompose — the deliverable is the asset itself), but like every SR it still
-needs ≥1 TC, whose cell records **who attested and when**:
+needs ≥1 TC, whose cell records **who vouched and when**:
 
 ```csv
-SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Aspect
-SR-201,Main-theme mood fit,SN-040,"The main theme shall match the game's established mood (heroic, wistful undertone) as judged by the creative lead.","Realizes SN-040: the score sets the emotional tone; no automated check can judge 'fit'.","The creative lead reviews the rendered track against the mood brief and records a pass/fail with notes.",,H,Attest,Approved,,
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Phase,Aspect
+SR-201,Main-theme mood fit,SN-040,"The main theme shall match the game's established mood (heroic, wistful undertone) as judged by the creative lead.","Realizes SN-040: the score sets the emotional tone; no automated check can judge 'fit'.","The creative lead reviews the rendered track against the mood brief and records a pass/fail with notes.",,H,Vouch,Approved,,
 ```
 
 ```csv
 TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
-TC-201,SR-201,System,"Creative review of the rendered main theme against the mood brief",Release,"attested-by=A. Rivera (creative lead); attested-on=2026-07-02","Recorded judgment that SR-201's mood-fit criterion is met (pass, with notes)",No,docs/reviews/main-theme-signoff.md,Approved,
+TC-201,SR-201,System,"Creative review of the rendered main theme against the mood brief",Release,"vouched-by=A. Rivera (creative lead); vouched-on=2026-07-02","Recorded judgment that SR-201's mood-fit criterion is met (pass, with notes)",No,docs/reviews/main-theme-signoff.md,Approved,
 ```
 
 `trace.py` accepts `SR-201` as legitimately `Approved` but reports it under
-**"Verification basis (attested vs mechanized)"** — so an audit always sees how
+**"Verification basis (vouched vs mechanized)"** — so an audit always sees how
 much of the project rests on trust versus a runnable check. Note the spine here
 stays at **high altitude**: `SN-040 → SR-201` ensures the theme's mood isn't
 missed or silently broken, and it deliberately *doesn't* decompose "is it
@@ -381,7 +381,7 @@ rationale = "Realizes SN-001."
 acceptance_criteria = """Output parses as CSV; columns match the schema; special-char fields quoted per RFC-4180."""
 permutations = "field=set{plain,comma,quote,newline}"
 priority = "M"
-verification = "Test"
+verification_method = "Test"
 status = "Approved"
 
 [requirement.SR-050]
@@ -392,7 +392,7 @@ rationale = "Realizes SN-030: the file is useless until it reaches the target."
 acceptance_criteria = """A completed export reaches the destination and receipt is confirmed; a failed upload is retried and surfaced, never silently dropped."""
 permutations = "dest=set{local,s3,sftp}"
 priority = "M"
-verification = "Test"
+verification_method = "Test"
 status = "Approved"
 ```
 
@@ -552,7 +552,7 @@ that check are deferred tooling (`MULTI_REPO.md` §3.3, §3.7, §7).
 **Two requirement scopes.** `SR-010` is *module-scoped* — verified inside the delivery
 repo. But "an exported file arrives intact at the destination end-to-end" is
 *composition-scoped*: it exists only for the assembled whole and no single module owns
-it. It is a coordinator SR (`SR-011`, `Verification=Demonstration`) delegated to the
+it. It is a coordinator SR (`SR-011`, `VerificationMethod=Demonstration`) delegated to the
 **plant repo** (`REPO-003`), which assembles export + delivery + a virtualized
 destination and runs the demonstration — "the module whose deliverable is a runnable
 verification of the assembly."
@@ -576,7 +576,7 @@ coordinator sequences and reads status; it never builds or runs anything.
 - Tests **cite** acceptance criteria by id; code **annotates** the ids; the matrix
   is **generated**, never hand-kept.
 - **Operational requirements use the same spine** (§7) — a domain hat owns them,
-  `Verification=Demonstration`/`Manual`, and a
+  `VerificationMethod=Demonstration`/`Manual`, and a
   procedure-recording `Release`-tier TC the release checklist finds.
 - **Tag the lifecycle phase** (§7) so the phase your product tends to neglect
   gets written — Provision/Startup for tools, the Runtime *operating environment*

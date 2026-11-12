@@ -119,7 +119,7 @@ def _lane(tmp_path, dial="DevStg-Needs", retained=True):
     taa._write(lane, taa.TCS, taa.SPINE_TCS)
     taa._write(lane, "docs/agents.toml", AGENTS)
     taa._write(lane, "docs/agents-enabled", ENTRY + "\n")
-    set_process_key(lane, "attestation", "human_approval_through", dial)
+    set_process_key(lane, "authority", "operator_accepts_through", dial)
     _dial(lane, retained)
     baseline_snapshot.copy_live(lane, seed=True)
     _commit(lane, "claim and seed")

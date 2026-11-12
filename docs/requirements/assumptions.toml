@@ -17,8 +17,8 @@
 # interface-bridging reports read them already, warn-only.
 #
 # WHERE THEY LAND. An assumption's outcome lands where a person meets the kit in
-# use: the human operator's own crossings (B-02 authority, B-09 read) or the
-# development session's, which mediates for that operator (B-01 writes, B-04
+# use: the person's own crossings (B-02 authority, B-09 read) or the
+# development session's, which mediates for that person (B-01 writes, B-04
 # verdicts). A fidelity assumption lands on a crossing of the party its
 # surrogate emulates instead. The delivered package's crossing, B-05, is never a
 # landing: no stakeholder meets the kit there.

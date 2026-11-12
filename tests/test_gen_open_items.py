@@ -36,7 +36,7 @@ from conftest import ROOT, SCRIPTS, load_script, pin_autocrlf, run_py
 
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Notes,"
-    "SafetyClass,Verification,Status,Phase,Workstream\n"
+    "SafetyClass,VerificationMethod,Status,Phase,Workstream\n"
 )
 LLR_HEADER = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component,Phase\n"

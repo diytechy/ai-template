@@ -54,7 +54,7 @@ theme and says so in its own docstring:
                  sibling this package may not import.
   * `spine`    — the spine ROW vocabulary, one tier over `ladder`: what a
                  `Status` word means (`Drafted`/`Approved`/`Founded`), which
-                 `Verification` methods decompose to a TC but no LLR, what a
+                 `VerificationMethod` methods decompose to a TC but no LLR, what a
                  free-form `Phase` cell parses to, which `SN-###` ids a needs
                  registry mentions and which of them the SRs cite, plus the ref
                  split, the `-000` placeholder test, the module-path key a

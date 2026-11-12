@@ -575,7 +575,7 @@ def test_status_is_working_surface_history_lives_in_log(scaffold):
     # The sittings table moved intact, and each row names the RUNG RANGE it
     # certifies (OI-21 break 6) rather than being one row per boundary.
     assert "| Sitting | Rungs certified |" in log
-    assert "| Acceptance | `DevStg-Release` (the owner's final read)" in log
+    assert "| Final read | `DevStg-Release` (the operator's final read)" in log
 
 
 def test_plan_build_cadence_surfaces(scaffold):
@@ -1001,10 +1001,10 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
     # orthogonal dials, not a stored enum word. The default is the conservative
     # end — WI-493 re-keyed the dial from the 0-4 ordinal to the DevStg-* rung
     # string it always meant, and `4` is now `"DevStg-Release"`.
-    assert cfg["attestation"]["human_approval_through"] == "DevStg-Release"
-    assert cfg["attestation"]["keep_nondependent"] is False
-    assert "gate_policy" not in cfg["attestation"]
-    assert cfg["attestation"]["human_approval_through"] == "DevStg-Release"
+    assert cfg["authority"]["operator_accepts_through"] == "DevStg-Release"
+    assert cfg["authority"]["keep_nondependent"] is False
+    assert "gate_policy" not in cfg["authority"]
+    assert cfg["authority"]["operator_accepts_through"] == "DevStg-Release"
     assert cfg["policies"] == {
         "push": "human",
         "review_rounds": 1,
@@ -1360,11 +1360,11 @@ def test_the_ordinal_migration_reads_the_dial_never_a_line_inside_a_string(
 ):
     """Implements: TC-152"""
     text = (
-        "[attestation]\n"
+        "[authority]\n"
         "note = '''\n"
-        "human_approval_through = 2\n"
+        "operator_accepts_through = 2\n"
         "'''\n"
-        'human_approval_through = "DevStg-Arch"\n'
+        'operator_accepts_through = "DevStg-Arch"\n'
     )
     path = _policy_repo(tmp_path, text)
     load_script("bootstrap").migrate_legacy_config(tmp_path)
@@ -1379,18 +1379,18 @@ def test_the_dial_key_rename_refuses_an_old_key_held_in_an_inline_table(tmp_path
     Adequacy witness: a rename that returns silently when its line edit is
     not confirmed (as the line-scan rename did, finding no line under a
     bare header) leaves no note; one that keeps an unconfirmed edit appends
-    a second `[attestation]` table and changes the bytes; either fails here.
+    a second `[authority]` table and changes the bytes; either fails here.
 
     Implements: TC-150
     """
     boot = load_script("bootstrap")
-    old = boot.LEGACY_ATTESTATION_KEY
-    text = 'attestation = {{ {} = "DevStg-Arch" }}\n'.format(old)
+    old = boot.LEGACY_DIAL_KEY
+    text = 'authority = {{ {} = "DevStg-Arch" }}\n'.format(old)
     path = _policy_repo(tmp_path, text)
     _moved, notes = boot.migrate_legacy_config(tmp_path)
     assert path.read_bytes() == text.encode("utf-8"), "wrote anyway"
-    attestation = process_toml(tmp_path)["attestation"]
-    assert attestation == {old: "DevStg-Arch"}, "the old declaration was lost"
+    authority = process_toml(tmp_path)["authority"]
+    assert authority == {old: "DevStg-Arch"}, "the old declaration was lost"
     assert any(old in n and "LEFT IN PLACE" in n for n in notes), notes
 
 

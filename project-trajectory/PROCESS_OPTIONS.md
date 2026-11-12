@@ -24,11 +24,11 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Derived gate model | **not opt-in** — the model is core ([`process.md`](process.md) §4 "Stages and gates"); this expands the mechanics | `docs/stage` (generated) + `derive_stage.py` |
 | Phased delivery | a roadmap ships phase 1 before 2/3 (a single-shot deliverable skips it) | a `Phase` on every approved SR/LLR/TC + a derived current phase + a per-phase gate |
 | Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
-| Gate authority levels | a repo approves fewer tiers by hand than the default | `docs/process.toml` `[attestation] human_approval_through` + a deviation register |
+| Gate authority levels | a repo approves fewer tiers by hand than the default | `docs/process.toml` `[authority] operator_accepts_through` + a deviation register |
 | Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
 | Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py` + `dispatch.py`/`lane.py`, `integrate.py`, `agents.toml`, the launchers |
-| Delegated decisions record | a run acts on the owner's behalf while the owner is away (unattended or delegated) | `docs/process.toml` `[attestation] decision_recording` + one `docs/decisions/<run>.toml` per run |
-| Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Attest`/critique TCs |
+| Delegated decisions record | a run acts on the owner's behalf while the owner is away (unattended or delegated) | `docs/process.toml` `[authority] decision_recording` + one `docs/decisions/<run>.toml` per run |
+| Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Vouch`/critique TCs |
 | Dual-plan decomposition | a goal is design-shaping enough that one planner's WI decomposition should not go unchallenged | two rival plans + a coverage diff + one critique round + an arbiter verdict (`docs/plans/`) |
 | Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/process.toml` `[policies] guardrails` |
 | Enforcement audit | your process outgrew one reader's head and you want to know which rules actually bind | `docs/enforcement-audit.md` |
@@ -49,7 +49,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Parallel work — the integration seam (multi-lane operation) | one repo runs many WIs concurrently — git + the serial integrator (the track-lane and dispatcher machinery are retired) | claims + the fail-closed merge queue |
 
 **Where the dials live.** Every *process* dial this file names — gate authority,
-the human-approval level, push authority, the reviewer count, the privacy
+the operator-acceptance level, push authority, the reviewer count, the privacy
 and secrets gates, guardrails, the blackout window — is declared once in
 **`docs/process.toml`**, read as TOML; the file's own header explains why
 every reader takes one parse of it (since the git hooks refuse without Python
@@ -92,17 +92,17 @@ into a straitjacket. Four points, one voice:
   *about* it in text** — provenance, license, version, a content hash (§8
   "Binary assets") — so the *record* is change-tracked even when the *asset*
   isn't. The ideal is a direction, not an admission ticket.
-- **(b) Attestation is the honest floor — and honestly trust-based.** Where
-  verification cannot be mechanized, the floor is a **recorded human
-  attestation**: a named person's recorded judgment that the acceptance
+- **(b) A vouch is the honest floor — and honestly trust-based.** Where
+  verification cannot be mechanized, the floor is the **operator's recorded
+  word**: a named person's recorded judgment that the acceptance
   criterion is met (a playtest, a creative review, a physical action). Be honest
   about what this is: **the box can be checked without the work having
-  happened.** Attestation is trust; a mechanized check is proof. The process does
-  **not** pretend they are equivalent — its job is to make the attestation
+  happened.** A vouch is trust; a mechanized check is proof. The process does
+  **not** pretend they are equivalent — its job is to make the vouch
   **explicit** (a real verification kind, not a silent "Verified"), **named** (who
-  attested), and **auditable** (when, against which criterion), so a reader can
-  always see how much of the project rests on trust. That is the `Attest`
-  verification kind (§4) and the "attested vs mechanized" split in the trace
+  vouched), and **auditable** (when, against which criterion), so a reader can
+  always see how much of the project rests on trust. That is the `Vouch`
+  verification kind (§4) and the "vouched vs mechanized" split in the trace
   report.
 - **(c) Over-aggressive traceability is a failure mode.** Traceability founds
   sustainability — *and* pushed past what a scope earns, it becomes an overly
@@ -121,7 +121,7 @@ into a straitjacket. Four points, one voice:
   check earns its keep** — a save-file schema, an audio-loudness bound, a
   build-size budget — and stop there. Decomposing a subjective judgment ("is this
   scene moving?") into finer rows a script still can't check adds process weight
-  with no verification return; mark it `Attest` and move on.
+  with no verification return; mark it `Vouch` and move on.
 - **(d2) Record the stopping boundary.** In the existing scoped decomposition or
   review record, name the independent decision or verification purpose of each
   retained child and state why further splitting would add no independent value.
@@ -180,7 +180,7 @@ yet — a fold value, never a rung a repo sits at (§4):
   approved row whose text later moves stays `Approved`; the change is caught
   by diffing it against `docs/archive/last_approved/`. Per-artifact stage: an SR is **DevStg-Below** while
   `Drafted`, **DevStg-Reqs** once approved (Status past `Drafted`), **DevStg-Tests** once decomposed (its
-  LLR — unless the Verification is LLR-exempt Analysis/Inspection/Attest — plus a
+  LLR — unless the verification method is LLR-exempt Analysis/Inspection/Vouch — plus a
   TC). **DevStg-Release is not reachable from a cell** (the 2026-08-15 ruling,
   carried onto this axis at WI-498 slice 3): release is what the harness computes
   from test evidence. The carrier landed at WI-500 — `record_test_evidence.py`
@@ -403,7 +403,7 @@ the set when the scope needs them.
 ## Gate authority levels
 
 *Referenced from PROCESS.md §4.* **Applies when** a repo lowers
-`[attestation] human_approval_through` below its shipped `"DevStg-Release"`
+`[authority] operator_accepts_through` below its shipped `"DevStg-Release"`
 — i.e. wants some rung's gate accepted by something other than a per-gate human
 pause. The default (`"DevStg-Release"`, every rung **human-held**) needs none of
 this section — it is exactly the §4/§5 flow. Generalized from a field adoption's
@@ -416,7 +416,7 @@ owner, with an agent recommendation from the project brief
 KICKOFF_PROMPT.md carries the recommendation step). Calibrate on the §6
 risk axis: safety, money, privacy, or irreversibility ⇒ `attended`; low-risk
 creative/tooling scopes are `autonomous`-eligible. Changing it later is a
-reviewed commit that edits the `[attestation]` dials in `docs/process.toml`
+reviewed commit that edits the `[authority]` dials in `docs/process.toml`
 and the register below.
 
 **The deviation register (`docs/gate-policy.md`).** The kit-owned process doc
@@ -453,7 +453,7 @@ driving it:
   it — and deciding the row belongs where it sits. The authoring session holds
   its own scope; the adjudicator's brief carries the chain.
 - **Independence.** The writer does not judge its own writes. An act is admitted
-  only when an accepted verdict judged that act's rows, and the snapshot copies
+  only when a recorded verdict judged that act's rows, and the snapshot copies
   only the registries those rows sit in, so an act cannot seal text nobody
   judged. **Independence is established by route, and that is its honest
   bound:** a verdict's binding (`<verdict>.requested`) records `accepted` only
@@ -470,7 +470,7 @@ driving it:
 |---|---|---|
 | Authors spine rows | Yes — new rows are written `Drafted`, chain links, rationale and evidence cells filled. | No. |
 | Amends spine text | Yes — any cell, on any row, `Approved` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
-| Flips `Status` | **Never on a spine row** (SN/SR/LLR/TC). | Yes, on the rungs the dial releases, backed by its accepted verdict over exactly those rows, in the authoring lane or on trunk. |
+| Flips `Status` | **Never on a spine row** (SN/SR/LLR/TC). | Yes, on the rungs the dial releases, backed by its recorded verdict over exactly those rows, in the authoring lane or on trunk. |
 | Writes `docs/archive/last_approved/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
 | Judges a post-approval amendment | No; it records what it changed and why. | Yes — meaning or clarity; its act is a later adjudicator turn taken from the committed verdict, which re-attests a *meaning* row on a released rung only when the verdict blesses it; on a held rung the row goes to the owner. |
 | Where | Its own lane, beside other lanes. | In the authoring lane, where the act merges with that lane; or as a trunk-side adjudication lane, which runs alone. A verdict may be sat at any time; its act keeps landing order (WI-912). |
@@ -479,7 +479,7 @@ driving it:
 
 1. The merge slot REFUSES a branch whose spine delta flips a `Status` into
    `Approved`/`Founded`, mints a row already claiming one, records one
-   approved in its act ledger, or re-attests one, unless every such act is backed by an accepted verdict among the branch's
+   approved in its act ledger, or re-attests one, unless every such act is backed by a recorded verdict among the branch's
    bindings that judged that act's own rows (a meaning row's re-attestation
    only by a verdict that blesses it); it names each unbacked act and
    why. The copies must match the acts: each flip carries its registry's copy,
@@ -488,7 +488,7 @@ driving it:
    cannot be invisible to both.
 
    **"Spine" here is SN/SR/LLR/TC — all four tiers**, needs included: a need is
-   a spine row, and `DevStg-Reqs` is the rung the human-approval dial most often
+   a spine row, and `DevStg-Reqs` is the rung the operator-acceptance dial most often
    holds, so a lane flipping one is the worst case of this act rather than an
    exempt one. The OFF-SPINE three — interfaces, the frame registry, components
    — are outside this rule and are not refused; their approval cells are
@@ -527,7 +527,7 @@ a *session's* reviewed commit, and what changed is which session may take it.
 ### The three presets
 
 The three words are `--gate-policy` **presets**: each *translates* into the
-`[attestation]` dials (`human_approval_through`, `keep_nondependent`,
+`[authority]` dials (`operator_accepts_through`, `keep_nondependent`,
 `final_review`) and is never stored. The dials are what the machinery reads.
 
 - **`attended`** *(default)* — a human approves each gate (DevStg-Reqs/DevStg-Tests/DevStg-Impl/DevStg-Release)
@@ -550,7 +550,7 @@ The three words are `--gate-policy` **presets**: each *translates* into the
 - **`autonomous`** — every bar except the owner's final read closes on the LLM verdict;
   mid-run human escalation is replaced by the Blocked register, ask-the-human
   by the Decisions log (HIGH revert-cost decisions get an independent
-  peer-tier second opinion *before* execution), human `Attest` by LLM-Attest.
+  peer-tier second opinion *before* execution), a person's `Vouch` by a delegated one.
   The **gate-closure** reviewer tier is the strong-model floor (§6 tiering) and
   is never delegated down. (This floor governs a **gate advance** only. The
   cheaper *iteration-loop* reviewers the coordinator schedules between builds
@@ -656,12 +656,12 @@ approved owner decision is a Blocked item, not a new decision. Under a
 recording `decision_recording` dial, a call the owner should see is disclosed
 in the run's "Delegated decisions record" as well.
 
-### LLM-Attest (replaces human Attest at `autonomous`)
+### Delegated `Vouch` (in place of a person's at `autonomous`)
 
 For subjective judgments that must not fake being tests: the TC records
-`Attest` with **which model** attested, when, and the one-line judgment —
-reported in the attested-vs-mechanized split as *machine* attestation, never
-disguised as `Test`. The owner's final read is where the owner's eyes replace these.
+`Vouch` with **which model** vouched, when, and the one-line judgment —
+reported in the vouched-vs-mechanized split as a *delegated* vouch, never
+disguised as `Test`. The operator's final read is where a person's eyes replace these.
 
 ## Agent iteration branch & sync
 
@@ -1268,7 +1268,7 @@ doesn't want the entry point deletes the launchers; the protocol stands alone.
 **Applies when** a run acts on the owner's behalf while the owner is away — the
 unattended loop's build and adjudication sessions, or a supervising session
 handed the owner's authority for a run. Governed by `docs/process.toml`
-`[attestation] decision_recording`: `"off"` (shipped), `"record"`, or
+`[authority] decision_recording`: `"off"` (shipped), `"record"`, or
 `"escalate-first"`.
 
 **The record.** One TOML file per delegated run at `docs/decisions/<run>.toml`
@@ -1329,10 +1329,10 @@ and drives rework toward a written bar. Built on the S8 chassis (fresh sessions,
 redacted prompts, verdict files, hold-keyed escalation).
 
 - **`Critique` is a first-class Verification value** (PROCESS.md §4). A perceptual
-  TC declares `Verification=Critique`; its `Method` names the critique procedure and
+  TC declares `VerificationMethod=Critique`; its `Method` names the critique procedure and
   its `Parameters` name a **rubric** (`docs/rubrics/<name>.md`) plus the **artifact
   recipe** (the command/steps that produce the render/output under judgment). The
-  `CRITIQUE` leg is its mechanization; human **`Attest`** stays a distinct, unmixed
+  `CRITIQUE` leg is its mechanization; **`Vouch`** stays a distinct, unmixed
   value — that separation is the point of the ruling.
 - **The rubric derives from the SN/SR intent, never the TC** — the inversion that
   catches a lax TC instead of inheriting it. A rubric carries **numbered good
@@ -1376,9 +1376,9 @@ redacted prompts, verdict files, hold-keyed escalation).
   (`check_trajectory --staged`): the fix must land in the chain, not just the
   artifact. This is the specific mechanism that stops "shipped it because nothing
   judged it" from recurring.
-- **The arbiter split.** Working default: **the critic gates iteration; the human
+- **The arbiter split.** Working default: **the critic gates iteration; the operator
   owns acceptance.** A critic `APPROVE` ends rework; gate closure still carries the
-  human `Attest` (the strong-model floor and the attested-vs-mechanized split
+  operator's `Vouch` (the strong-model floor and the vouched-vs-mechanized split
   stand). On a **loop-held** tier the critic verdict closes
   iteration-level acceptance and the recorded-verdict rules govern the gate as they
   do today. (This does not contradict the S8 "no LLM-judge tiebreaker" ruling —
@@ -1455,7 +1455,7 @@ files, `agent_route` family heterogeneity, budgets) — **no new engine**:
    (goal brief, both plans and revisions, critiques, `coverage.md`,
    `verdict.md` with the ports), the verdict summarized in `log.md`. The
    selected plan's rows are then filed as real WIs through normal intake.
-7. **Acceptance:** human `Attest` closes the round per the gate philosophy;
+7. **Acceptance:** the operator's acceptance closes the round per the gate philosophy;
    on a **loop-held** tier the recorded-verdict rules govern, as they
    do for the critique loop.
 
@@ -2457,7 +2457,7 @@ binary; the **record of it** is text, tracked, and reviewable.
     (e.g. `sha256:…`) + **`Version`** make that pointer **verifiable** — you can
     confirm the bytes on the store match the row even though you can't diff them.
   - **`Refs`** back-link the SR/LLR the asset realizes, keeping it on the spine's
-    high-altitude thread (usually an `Attest` SR — this file, "Proportionality
+    high-altitude thread (usually a `Vouch` SR — this file, "Proportionality
     doctrine" (d)); `trace.py` integrity-checks the `ASSET-` id only, off-spine
     like `PART-###`.
 - **Privacy advisory:** binary assets carry **EXIF/author metadata** (camera
@@ -2877,7 +2877,7 @@ the merge is trivially clean and its tree is byte-identical to the branch tip)
 — with the trunk step folded into the merge commit, and the **declared bar**
 already run ONCE, on the branch itself at refresh, read fail-closed — a
 missing or empty check declaration is a **refusal**, never a skip, and any SKIP
-in the report refuses (the fail-open lesson, stated as a contract). The `[attestation]` dials
+in the report refuses (the fail-open lesson, stated as a contract). The `[authority]` dials
 (RULING-7) are enforced by requiring the corresponding **verdict artifact**
 (review file `docs/reviews/WI-<n>-<PHASE>.md`, critique, attestation) with
 git-derived freshness before the trunk fast-forwards; a red queue parks

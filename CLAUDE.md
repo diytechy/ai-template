@@ -111,8 +111,8 @@ Entry points only — read the directories for the rest.
   `agent-resume.{cmd,sh,command}` run
   `project-trajectory/scripts/agent_loop.py --root .`, resuming from
   `docs/status.md` under the policies declared in
-  [`docs/process.toml`](docs/process.toml) — the human-approval hold is the
-  `human_approval_through` dial there (do not paraphrase its value here;
+  [`docs/process.toml`](docs/process.toml) — the operator-acceptance hold is the
+  `operator_accepts_through` dial there (do not paraphrase its value here;
   read it), and `push = "human"`.
 - **Reference, not working surfaces:**
   [`docs/registry-machinery-reference.md`](docs/registry-machinery-reference.md)

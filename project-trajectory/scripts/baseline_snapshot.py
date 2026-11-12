@@ -1304,7 +1304,7 @@ def _refuse_verdict(root, verdict, reattests):
     ledger records the path, and a typo would land a ruling nobody can open.
     The ledger records it for audit; no rule requires it. Whether a held
     re-attestation lands is the merge slot's lane rule
-    (`held_status.commit_held_approval_lines`): an accepted verdict ruling
+    (`held_status.commit_held_approval_lines`): a recorded verdict ruling
     the row CLARITY whose binding records the row's text.
 
     Implements: SR-207, LLR-245"""

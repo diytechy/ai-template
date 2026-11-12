@@ -17,7 +17,7 @@ that column was pointing at, so the column retires with this file.
 THE SPLIT, and it is the ruling's: the hand file DECLARES a component (that it
 exists, its name, its category, its knowledge refs, its approval); this file
 DESCRIBES it. A GENERATED FILE NEVER CARRIES AN APPROVAL (OI-30 D3) — machine
-flipping an approval routes around the very dial `human_approval_through`
+flipping an approval routes around the very dial `operator_accepts_through`
 governs — so no maturity, standing or approval cell appears here, and nothing
 here may be cited as evidence that a human blessed anything.
 

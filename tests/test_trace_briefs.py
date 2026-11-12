@@ -48,7 +48,7 @@ from conftest import (
 
 _REATTEST_SR_H = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status,Phase\n"
+    "Permutations,Priority,VerificationMethod,Status,Phase\n"
 )
 _REATTEST_LLR_H = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
 _REATTEST_TC_H = (
@@ -593,7 +593,7 @@ def _approval_repo(tmp_path):
     ):
         (req / "system-requirements.csv").write_text(
             "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-            "Permutations,Priority,Verification,Status\n"
+            "Permutations,Priority,VerificationMethod,Status\n"
             'SR-001,Thing,SN-001,"{}",R,AC,,M,Test,{}\n'.format(sr_req, sr_status),
             encoding="utf-8",
         )
@@ -1019,7 +1019,7 @@ def test_offspine_census_renders_nothing_when_no_offspine_tier_changed(tmp_path)
 
 
 # --- OI-82, ruled (a) as the owner refined it: every unapproved chain stays on
-# --- the owner's brief, and a chain the human-approval dial releases to an
+# --- the owner's brief, and a chain the operator-acceptance dial releases to an
 # --- adjudicator renders in full under its own label, collapsed by default.
 
 _WAITING = "Waiting for automated adjudication"
@@ -1066,7 +1066,7 @@ def _dial_split_tree(root, dial=None):
     )
     if dial is not None:
         (root / "docs" / "process.toml").write_text(
-            '[attestation]\nhuman_approval_through = "{}"\n'.format(dial),
+            '[authority]\noperator_accepts_through = "{}"\n'.format(dial),
             encoding="utf-8",
         )
 
@@ -1149,7 +1149,7 @@ def test_a_dial_releasing_every_rung_leaves_the_owner_a_stated_empty_ask(tmp_pat
     assert proc.returncode == 0, proc.stdout + proc.stderr
     text = (tmp_path / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
     before, inside = _collapsed_block(text)
-    assert "No chain on a rung the human-approval dial holds" in before
+    assert "No chain on a rung the operator-acceptance dial holds" in before
     summary = inside.split("</summary>")[0]
     for sid in ("SR-001", "SR-002", "SR-003"):
         assert "## {} —".format(sid) in inside
@@ -1206,7 +1206,7 @@ def _amended_split_tree(root):
     load_script("baseline_snapshot").copy_live(root, seed=True)
     write("the AMENDED held text", "the AMENDED released detail", False)
     (root / "docs" / "process.toml").write_text(
-        '[attestation]\nhuman_approval_through = "DevStg-Reqs"\n', encoding="utf-8"
+        '[authority]\noperator_accepts_through = "DevStg-Reqs"\n', encoding="utf-8"
     )
 
 
@@ -1264,7 +1264,7 @@ requirement = "The system shall print each run's verdict."
 rationale = "why"
 acceptance_criteria = "the verdict is printed"
 priority = "M"
-verification = "Test"
+verification_method = "Test"
 status = "Approved"
 da_refs = ["DA-001"]
 
@@ -1275,7 +1275,7 @@ requirement = "The system shall call the vendor's lookup."
 rationale = "why"
 acceptance_criteria = "the lookup is called"
 priority = "M"
-verification = "Test"
+verification_method = "Test"
 status = "Approved"
 da_refs = ["DA-002"]
 """

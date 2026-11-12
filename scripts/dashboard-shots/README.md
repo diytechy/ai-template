@@ -3,7 +3,7 @@
 Turns the generated dashboard [`PROJECT_STATE.html`](../../PROJECT_STATE.html)
 into **rendered pixels** an agent (or human) can actually look at, so a critique
 judges what a viewer sees — not ~790 KB of source markup. It also serves as the
-**artifact recipe** for a future `Verification=Critique` TC on dashboard quality
+**artifact recipe** for a future `VerificationMethod=Critique` TC on dashboard quality
 (the critique-loop contract in
 [`PROCESS_OPTIONS.md`](../../project-trajectory/PROCESS_OPTIONS.md), *"Critique
 verification"*, requires a perceptual TC to name its render recipe).

@@ -58,7 +58,7 @@ Findings (exit 1):
     - an `Excludes:` line with no reason, or naming an undeclared clause;
     - an `F#` exclusion whose reason cites a dispute verdict
       (`.../NNN-ADJUDICATE-<sha>.md`, optionally `#<the sitting's id>`) that
-      is not an accepted dispute verdict ruling that finding DISMISS or
+      is not a recorded dispute verdict ruling that finding DISMISS or
       SUCCESSOR — only a dismissal, or a successor row filed at the landing
       (WI-911, the owner's ruling of 2026-10-14), resolves a finding; a FIX
       is covered by a row — or whose
@@ -544,7 +544,7 @@ def ruling_problem(root, cite, fid, text, rev=None, resolving=("DISMISS",)):
     (clause text `text`), or None when it does. `cite` is a `RULING_CITE_RE`
     match: the verdict's path under `root` and, optionally, the sitting's own
     id for the finding (default `fid`). It resolves only as a recorded,
-    ACCEPTED dispute verdict (its binding beside it) whose ruling of that id is
+    RECORDED dispute verdict (its binding beside it) whose ruling of that id is
     one its consumer accepts, `resolving`: DISMISS by default, as the plan cap
     reads it, and `RESOLVING` on the rework gate's path, which adds SUCCESSOR
     (WI-911, the owner's ruling of 2026-10-14) - a FIX ruling is work a row
@@ -568,7 +568,7 @@ def ruling_problem(root, cite, fid, text, rev=None, resolving=("DISMISS",)):
     bound = _sitting.read_requested(binding_text)
     if bound is None or bound[0] != _dispute.BRIEF:
         return "cites {}, which is not a dispute verdict".format(path)
-    if bound[2] != "accepted":
+    if bound[2] != "recorded":
         return "cites {}, whose call has outcome {}".format(path, bound[2])
     rulings, why = _dispute.parse(verdict_text, bound[1], path)
     if why:

@@ -1,4 +1,4 @@
-"""The human-approval DIAL, and the two axes it compares (SN-029, OI-21,
+"""The operator-acceptance DIAL, and the two axes it compares (SN-029, OI-21,
 WI-493).
 
 `human_holds(docs, stage)` is the one comparison every consumer in the loop
@@ -58,11 +58,11 @@ BELOW = kit_stage.BELOW
 
 def _docs(tmp_path, dial=None, **extra):
     for key, value in (
-        {} if dial is None else {"human_approval_through": dial}
+        {} if dial is None else {"operator_accepts_through": dial}
     ).items():
-        set_process_key(tmp_path, "attestation", key, value)
+        set_process_key(tmp_path, "authority", key, value)
     for key, value in extra.items():
-        set_process_key(tmp_path, "attestation", key, value)
+        set_process_key(tmp_path, "authority", key, value)
     if dial is None and not extra:
         (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
     return tmp_path / "docs"
@@ -276,7 +276,7 @@ def test_BOTH_shipped_homes_declare_the_dial_as_a_RUNG_STRING():
         declared = [
             line.split("=", 1)[1].strip()
             for line in path.read_text(encoding="utf-8").splitlines()
-            if line.split("#", 1)[0].strip().startswith("human_approval_through")
+            if line.split("#", 1)[0].strip().startswith("operator_accepts_through")
         ]
         assert len(declared) == 1, (rel, declared)
         if expect is None:
@@ -373,7 +373,7 @@ def test_a_malformed_dial_is_REFUSED_not_silently_defaulted(tmp_path, value):
     # as a type error and once as an unknown rung) and read as two defects.
     conflicts = ac.config_conflicts(_docs(tmp_path, value))
     assert len(conflicts) == 1, conflicts
-    assert "human_approval_through" in conflicts[0]
+    assert "operator_accepts_through" in conflicts[0]
     # ...and it never reads as a value the migration window HONOURS. An
     # out-of-range int is refused BY A MESSAGE THAT NAMES THE MIGRATION (the
     # only person who meets it is someone whose 0-4 dial was already out of
@@ -431,14 +431,14 @@ def test_a_wrong_TYPED_dial_is_refused_too(tmp_path):
         docs = tmp_path / "raw{}".format(i) / "docs"
         docs.mkdir(parents=True)
         (docs / "process.toml").write_text(
-            "[attestation]\nhuman_approval_through = {}\n".format(literal),
+            "[authority]\noperator_accepts_through = {}\n".format(literal),
             encoding="utf-8",
         )
         found = ac.config_conflicts(docs)  # MUST NOT RAISE — that is the claim
         # Exactly one: an inline table is valid TOML, so the wrong type is the
         # only problem each of these files has.
         assert len(found) == 1, (literal, found)
-        assert any("human_approval_through" in f for f in found), (literal, found)
+        assert any("operator_accepts_through" in f for f in found), (literal, found)
         assert ac.approval_through(docs) == dg.STAGE_RELEASE, literal
 
 
@@ -500,7 +500,7 @@ def test_the_dial_VOCABULARY_is_the_LADDER_plus_the_BELOW_sentinel():
     assert dg.stage_ord is kit_ladder.stage_ord
     assert ac.APPROVAL_DIAL_RUNGS == set(dg.STAGE_ORDER) | {BELOW}
     assert BELOW not in ac.LADDER_RUNGS  # the sentinel is not a rung
-    key = ("attestation", "human_approval_through")
+    key = ("authority", "operator_accepts_through")
     assert ac.PROCESS_KEY_VOCAB[key] is ac.APPROVAL_DIAL_RUNGS
     # ...and the retired table is GONE rather than renamed: a reader who finds it
     # has found a revert, not a rename.
@@ -516,7 +516,7 @@ def test_a_legacy_ORDINAL_is_translated_and_WARNED_but_never_REFUSED(
 ):
     """THE MIGRATION WINDOW (WI-493), and every clause of it is load-bearing.
 
-    An adopter's committed `human_approval_through = 4` must not stop their
+    An adopter's committed `operator_accepts_through = 4` must not stop their
     loop dead on a kit upgrade over a spelling the kit knows how to read — so the
     reader TRANSLATES. But a dial nobody re-keyed is still a dial nobody
     re-keyed, so it WARNS, naming the command that fixes it. And
@@ -540,21 +540,21 @@ def test_a_legacy_ORDINAL_is_translated_and_WARNED_but_never_REFUSED(
     capsys.readouterr()
     assert ac.approval_through(docs) == expected
     err = capsys.readouterr().err
-    assert "human_approval_through" in err and str(level) in err
+    assert "operator_accepts_through" in err and str(level) in err
     assert expected in err
     assert "--migrate-config" in err, err
     # NOT a conflict — the whole point of the window.
     assert ac.config_conflicts(docs) == []
     # ...and the window is derived from the translation table itself, so the two
     # can never come to disagree about which old values are honoured.
-    key = ("attestation", "human_approval_through")
+    key = ("authority", "operator_accepts_through")
     assert ac.PROCESS_KEY_LEGACY_VALUES[key] == frozenset(ac.LEGACY_DIAL_ORDINALS)
     assert ac.PROCESS_KEY_LEGACY_VALUES[key] == {0, 1, 2, 3, 4}
 
 
 def test_the_legacy_window_REFUSES_a_BOOL_because_True_equals_one(tmp_path):
     """`True == 1` in Python, so a bare `value in {0, 1, 2, 3, 4}` answers True
-    for `True` — and a `human_approval_through = true` that took the window's
+    for `True` — and an `operator_accepts_through = true` that took the window's
     SILENT PASS would be a wrong-typed dial reading as the retired level 1 with
     no diagnostic at all. That is the precise failure the type check exists to
     stop, arriving through the door the migration opened.
@@ -563,7 +563,7 @@ def test_the_legacy_window_REFUSES_a_BOOL_because_True_equals_one(tmp_path):
     one input that distinguishes the two. Driven at the helper AND end to end,
     because a validator that stopped consulting the helper would still pass a
     unit test of it."""
-    window = ac.PROCESS_KEY_LEGACY_VALUES[("attestation", "human_approval_through")]
+    window = ac.PROCESS_KEY_LEGACY_VALUES[("authority", "operator_accepts_through")]
     assert ac._in_legacy_window(1, window) is True
     assert ac._in_legacy_window(0, window) is True
     assert ac._in_legacy_window(True, window) is False
@@ -626,7 +626,7 @@ def test_the_declared_dial_beats_the_legacy_file(tmp_path):
     (tmp_path / "docs" / "gate-policy").write_text(
         "autonomous\n", encoding="utf-8", newline="\n"
     )
-    set_process_key(tmp_path, "attestation", "human_approval_through", dg.STAGE_LLREQS)
+    set_process_key(tmp_path, "authority", "operator_accepts_through", dg.STAGE_LLREQS)
     assert ac.approval_through(tmp_path / "docs") == dg.STAGE_LLREQS
 
 
@@ -636,7 +636,7 @@ def test_the_declared_dial_beats_the_legacy_file(tmp_path):
 SR = {
     "SR-ID": "SR-001",
     "SN-Refs": "SN-001",
-    "Verification": "Test",
+    "VerificationMethod": "Test",
     "Status": "Approved",
 }
 LLR = {"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Approved"}
@@ -747,7 +747,11 @@ def test_NO_status_combination_reaches_the_RELEASE_rung():
                     reached.add(
                         _stage(
                             srs=(
-                                dict(SR, Status=sr_status, Verification=verification),
+                                dict(
+                                    SR,
+                                    Status=sr_status,
+                                    VerificationMethod=verification,
+                                ),
                             ),
                             llrs=(dict(LLR, Status=llr_status),),
                             tcs=(dict(TC, Status=tc_status),),
@@ -931,9 +935,9 @@ def test_a_MISSING_child_puts_the_spine_at_the_CHILD_S_rung():
 
 
 def test_an_LLR_EXEMPT_requirement_needs_no_LLR():
-    # Analysis/Inspection/Attest decompose to a TC and no LLR — the same policy
+    # Analysis/Inspection/Vouch decompose to a TC and no LLR — the same policy
     # trace.py enforces, pinned equal by test_rule_sync.
-    assert _stage(srs=(dict(SR, Verification="Analysis"),), llrs=()) == SETTLED
+    assert _stage(srs=(dict(SR, VerificationMethod="Analysis"),), llrs=()) == SETTLED
 
 
 def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():

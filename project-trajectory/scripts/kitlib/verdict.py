@@ -1890,7 +1890,7 @@ def branch_trailers(root, branch, base):
     a refreshed branch, because the writer must stamp the value the READERS key
     on and that value is the peeled one.
 
-    THIS IS NOT AN ACCEPT PATH, and the distinction is the whole anti-forgery
+    THIS IS NOT AN ADMISSION PATH, and the distinction is the whole anti-forgery
     story. Anyone with commit access can type a trailer onto their own commit
     and it will verify, because it is their tree. What a trailer cannot forge is
     the coordinator's committed session log, which is why the ROUND EVIDENCE

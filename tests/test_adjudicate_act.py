@@ -116,7 +116,7 @@ def _repo(tmp_path, dial="DevStg-Needs"):
     _write(repo, SRS, SPINE_SRS)
     _write(repo, LLRS, SPINE_LLRS)
     _write(repo, TCS, SPINE_TCS)
-    set_process_key(repo, "attestation", "human_approval_through", dial)
+    set_process_key(repo, "authority", "operator_accepts_through", dial)
     baseline_snapshot.copy_live(repo, seed=True)
     _commit(repo, "seed the spine and its record")
     return repo
@@ -150,7 +150,7 @@ def _judged_identities(repo, text):
     return out
 
 
-def _verdict(repo, text, brief, kinds=None, outcome="accepted", commit=True, bind=True):
+def _verdict(repo, text, brief, kinds=None, outcome="recorded", commit=True, bind=True):
     """The verdict and the binding a route writes beside it, recording the
     identity of each row an amendment part rules unless `bind` is False (a
     binding written before the identity existed)."""
@@ -231,9 +231,9 @@ def test_a_row_tagged_both_ways_is_not_blessed():
 
 
 def _parsed(text, brief):
-    """`text` read through the one reader of an accepted verdict."""
-    binding = ksitting.render_requested(brief, (brief,), "accepted")
-    return ksitting.accepted(text, binding)
+    """`text` read through the one reader of a recorded verdict."""
+    binding = ksitting.render_requested(brief, (brief,), "recorded")
+    return ksitting.recorded(text, binding)
 
 
 def test_judged_rows_admits_an_amendment_MEANING_row_only_with_its_bless_mark():
@@ -324,7 +324,7 @@ def _disposition(repo):
         (_disposition, "owes no act"),
     ],
 )
-def test_each_unaccepted_or_unreadable_verdict_is_refused_naming_why(
+def test_each_unrecorded_or_unreadable_verdict_is_refused_naming_why(
     tmp_path, state, words
 ):
     """Implements: TC-368"""
@@ -453,7 +453,7 @@ def _bound_verdict(repo, identities):
     writes beside it recording `identities`, committed."""
     render = ksitting.render_requested
     _write(repo, VERDICT, AMENDMENT_CLARITY)
-    binding = render("amendment", ("amendment",), "accepted", identities=identities)
+    binding = render("amendment", ("amendment",), "recorded", identities=identities)
     _write(repo, ksitting.requested_path(VERDICT), binding)
     _commit(repo, "the verdict\n\nWI: {}".format(WI))
 
@@ -463,7 +463,7 @@ def test_a_held_CLARITY_act_bound_to_the_exact_text_is_owed(tmp_path, monkeypatc
     # The owed result is today's (the act this verdict authorizes); what is
     # new is that the derivation read the bound identity to reach it, which
     # the spy on the one reader of a binding's identities records.
-    reader = ksitting.accepted_identities
+    reader = ksitting.recorded_identities
     repo = _repo(tmp_path, dial="DevStg-Release")
     _amend(repo)
     _bound_verdict(repo, {"SR-001": _sr_digest(repo)})
@@ -473,7 +473,7 @@ def test_a_held_CLARITY_act_bound_to_the_exact_text_is_owed(tmp_path, monkeypatc
         calls.append(args)
         return reader(*args, **kwargs)
 
-    monkeypatch.setattr(ksitting, "accepted_identities", spy)
+    monkeypatch.setattr(ksitting, "recorded_identities", spy)
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None, why
     assert acts == {"amendment": {"reattests": ["SR-001"], "verdict": True}}
@@ -817,7 +817,7 @@ def test_an_approval_owed_where_no_approval_record_exists_is_refused(tmp_path):
     _write(repo, SRS, SPINE_SRS)
     _write(repo, LLRS, SPINE_LLRS + NEW_LLR)
     _write(repo, TCS, SPINE_TCS)
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Needs")
     _commit(repo, "a spine with no approval record")
     _verdict(repo, FIRST_APPROVAL_MIXED, "first-approval")
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")

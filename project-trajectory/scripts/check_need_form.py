@@ -47,7 +47,7 @@ THE THREE TOKEN CLASSES, from SN-033's acceptance verbatim:
     is judged or reported, so its reviewed exception matches.
   - **implementation-only identifier** — a code-suffixed filename
     (`trace.py`, `stack.ini`), an underscore-joined identifier
-    (`human_approval_through`), or a `--flag` token.
+    (`operator_accepts_through`), or a `--flag` token.
   - **process citation** — a sub-stakeholder registry id (`SR-137`, `WI-454`,
     ...) or a `§`-section reference. A stakeholder should not need the process
     docs to recognize the outcome they asked for. `SN-###` is deliberately NOT

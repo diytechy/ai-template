@@ -416,7 +416,7 @@ def test_a_trunk_side_mint_after_the_claim_is_not_the_branchs(tmp_path):
 
 _SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status,Phase,Aspect,Hat-Refs\n"
+    "Permutations,Priority,VerificationMethod,Status,Phase,Aspect,Hat-Refs\n"
 )
 
 
@@ -428,7 +428,7 @@ def _sr(status, req="the drafted text"):
 
 # An accepted first-approval verdict over SR-001: the backing every act needs
 # (WI-849), so a scope test reaches the scope rule it is about.
-BACKED = ("accepted", ["SR-001"])
+BACKED = ("recorded", ["SR-001"])
 
 
 def _write_lane_verdict(root, outcome, rows):
@@ -486,7 +486,7 @@ def _spine_lane(
     # rung, and a held rung's approval is the lane rule's (section 6 below and
     # tests/test_held_status_git.py), which an absent dial would arm.
     (root / "docs" / "process.toml").write_text(
-        '[attestation]\nhuman_approval_through = "DevStg-Below"\n',
+        '[authority]\noperator_accepts_through = "DevStg-Below"\n',
         encoding="utf-8",
         newline="\n",
     )
@@ -526,7 +526,7 @@ def _spine_lane(
 def test_a_lane_that_flips_a_status_to_approved_is_refused_at_the_merge_slot(tmp_path):
     # Owner rulings 2026-09-01 and 6 (2026-10-07). The act — the flip, and the
     # snapshot that anchors it — is an independent adjudicator's (PROCESS.md
-    # §4), so a flip no accepted verdict backs is refused. This happened once for
+    # §4), so a flip no recorded verdict backs is refused. This happened once for
     # real (WI-508 slice 6, four rows at `580df781`) and the next review round
     # returned CHANGES-REQUESTED against exactly those flips.
     root = _spine_lane(tmp_path / "flip", flip=True)
@@ -548,7 +548,7 @@ def test_a_scoped_adjudication_lane_may_land_its_flip_and_snapshot(tmp_path):
         snapshot=True,
         safety="adjudication",
         adjudicates=("SR-001",),
-        verdict=("accepted", ["SR-001"]),
+        verdict=("recorded", ["SR-001"]),
     )
 
     assert integ._adjudication_lane(root, "wi-401") is True
@@ -561,14 +561,14 @@ def test_a_scoped_adjudication_lane_may_land_its_flip_and_snapshot(tmp_path):
 # --- the approval act in the authoring lane (WI-849, owner ruling 6, 2026-10-07)
 
 
-def test_an_in_lane_act_backed_by_an_accepted_verdict_merges_at_the_slot(tmp_path):
+def test_an_in_lane_act_backed_by_a_recorded_verdict_merges_at_the_slot(tmp_path):
     """Implements: TC-331"""
     # The act is an independent adjudicator's, taken in the authoring lane: an
     # ORDINARY lane's flip and snapshot, backed by an accepted first-approval
     # verdict that judged SR-001, clear the rung, and the slot reaches the
     # fixture's next refusal (no `[product] test`), so the admission is in situ.
     root = _spine_lane(
-        tmp_path / "backed", flip=True, snapshot=True, verdict=("accepted", ["SR-001"])
+        tmp_path / "backed", flip=True, snapshot=True, verdict=("recorded", ["SR-001"])
     )
 
     assert integ._adjudication_lane(root, "wi-401") is False
@@ -584,7 +584,7 @@ def _unbacked(tmp_path, name, verdict):
     assert refusal is not None
     assert "APPROVAL ACT" in refusal
     assert "SR-001 flipped Drafted -> Approved" in refusal  # names the act
-    assert "SR-001 (first-approval) is authorized by no accepted verdict" in refusal
+    assert "SR-001 (first-approval) is authorized by no recorded verdict" in refusal
     # No amendment row is refused, so the bless-mark remedy does not apply.
     assert "[MEANING+BLESS]" not in refusal
     return refusal
@@ -602,7 +602,7 @@ def test_an_in_lane_act_whose_verdict_failed_is_refused(tmp_path):
 
 def test_an_in_lane_act_whose_verdict_judged_other_rows_is_refused(tmp_path):
     """Implements: TC-331"""
-    _unbacked(tmp_path, "other-rows", ("accepted", ["SR-002"]))
+    _unbacked(tmp_path, "other-rows", ("recorded", ["SR-002"]))
 
 
 def test_a_first_approval_adjudication_with_no_scope_is_refused(tmp_path):
@@ -695,7 +695,7 @@ def test_unreadable_claimed_frontmatter_is_refused_at_the_approval_rung(tmp_path
     """Implements: TC-331"""
     # Sol r1 MAJOR 1 (WI-849): the claim records which scope bounds the lane's
     # acts, so a claim the rung cannot read is refused by name. Read as "no
-    # claim" it would drop the bound: this act is backed by an accepted verdict
+    # claim" it would drop the bound: this act is backed by a recorded verdict
     # over SR-001 and its claimed row scopes only SR-002.
     root = _spine_lane(
         tmp_path / "unreadable",
@@ -916,7 +916,7 @@ def _ledger_lane(home, *, flip, verdict_rows, scope=None):
             encoding="utf-8",
             newline="\n",
         )
-    _write_lane_verdict(root, "accepted", verdict_rows)
+    _write_lane_verdict(root, "recorded", verdict_rows)
     rel = "docs/requirements/system-requirements.toml"
     baseline_snapshot.copy_live(root, approves={rel: "accepted-sitting"})
     _commit(root, "WI-401: the snapshot act", when=T_CODE)
@@ -944,7 +944,7 @@ def test_a_ledger_only_approval_outside_the_scope_is_refused(tmp_path):
 def test_a_backed_ledger_only_approval_on_an_ordinary_lane_is_admitted(tmp_path):
     """Implements: TC-278, TC-331"""
     # Case B: the lane takes only SR-002's anchoring approval, backed by an
-    # accepted verdict that judged it. With no live flip it read as "no act"
+    # recorded verdict that judged it. With no live flip it read as "no act"
     # and its copy was refused as unbacked.
     root = _ledger_lane(tmp_path / "b", flip=False, verdict_rows=["SR-002"])
     assert integ._approval_act_refusal(root, "wi-401") is None
@@ -955,7 +955,7 @@ def test_an_unbacked_ledger_only_approval_is_refused_by_name(tmp_path):
     # The same act judged by a verdict over other rows backs nothing.
     root = _ledger_lane(tmp_path / "c", flip=False, verdict_rows=["SR-001"])
     refusal = integ._approval_act_refusal(root, "wi-401")
-    assert refusal and "SR-002 (first-approval) is authorized by no accepted" in refusal
+    assert refusal and "SR-002 (first-approval) is authorized by no recorded" in refusal
     assert "[MEANING+BLESS]" not in refusal
 
 
@@ -1465,7 +1465,7 @@ def _held_trunk(home, monkeypatch, dial=HELD):
     home.mkdir(parents=True, exist_ok=True)
     root = claim_repo(home)
     (root / "docs" / "process.toml").write_text(
-        '[attestation]\nhuman_approval_through = "{}"\n'.format(dial),
+        '[authority]\noperator_accepts_through = "{}"\n'.format(dial),
         encoding="utf-8",
         newline="\n",
     )
@@ -1726,7 +1726,7 @@ def _release_in_the_working_file(root):
     """An uncommitted edit to the primary checkout's policy file that would
     release every rung, were it read."""
     (root / "docs" / "process.toml").write_text(
-        '[attestation]\nhuman_approval_through = "DevStg-Below"\n',
+        '[authority]\noperator_accepts_through = "DevStg-Below"\n',
         encoding="utf-8",
         newline="\n",
     )
@@ -1769,7 +1769,7 @@ def test_the_pre_commit_step_reads_a_legacy_dial_as_the_writers_do(
     # is the loop's to move, and the Boundary-rung frame row is not.
     root = _held_trunk(tmp_path, monkeypatch)
     (root / "docs" / "process.toml").write_text(
-        "[attestation]\nhuman_approval_through = 1\n", encoding="utf-8", newline="\n"
+        "[authority]\noperator_accepts_through = 1\n", encoding="utf-8", newline="\n"
     )
     interfaces = root / "docs" / "requirements" / "interfaces.toml"
     interfaces.write_text(

@@ -27,7 +27,7 @@ DS = load_script("derive_stage")
 
 SRS_H = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
-    "Priority,Verification,Status,Phase\n"
+    "Priority,VerificationMethod,Status,Phase\n"
 )
 LLRS_H = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Phase\n"
 TCS_H = (

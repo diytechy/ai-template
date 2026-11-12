@@ -715,7 +715,7 @@ def test_the_merge_ladder_refuses_a_review_range_beyond_its_verdict(tmp_path):
 
 def test_a_trailer_contradicting_the_rounds_refuses(tmp_path):
     """Implements: TC-205"""
-    # The trailer is the machine half and a CROSS-CHECK, never an accept path.
+    # The trailer is the machine half and a CROSS-CHECK, never an admission path.
     # A merge slot that saw an attestation disagreeing with the evidence and
     # merged anyway would be trusting the summary over the evidence all over
     # again — the exact inversion OI-76 was filed about.
@@ -1191,7 +1191,7 @@ def _docs(tmp_path, mode):
     docs = tmp_path / "docs"
     docs.mkdir(parents=True, exist_ok=True)
     (docs / "process.toml").write_text(
-        '[attestation]\nadjudication_review = "{}"\n'.format(mode),
+        '[authority]\nadjudication_review = "{}"\n'.format(mode),
         encoding="utf-8",
         newline="\n",
     )
@@ -1238,7 +1238,7 @@ def adjudication_repo(tmp_path, mode, drafts_class="ordinary", block=None):
     `block` as its one `## Dispositions` block's body instead."""
     root = rounds_repo(tmp_path)
     (root / "docs" / "process.toml").write_text(
-        '[attestation]\nadjudication_review = "{}"\n'.format(mode),
+        '[authority]\nadjudication_review = "{}"\n'.format(mode),
         encoding="utf-8",
         newline="\n",
     )

@@ -134,7 +134,7 @@ chasing it.
     the enable-list, behavior is unchanged (see
     [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Unattended
     operation").
-  - Optional **subjective-quality critique loop** — a `Verification=Critique`
+  - Optional **subjective-quality critique loop** — a `VerificationMethod=Critique`
     requirement's perceptual acceptance is judged by a fresh, independent
     **critic** against a written [`docs/rubrics/`](project-trajectory/rubrics/README.template.md)
     rubric with numbered good/bad anchors derived from the SN/SR intent. Family
@@ -146,7 +146,7 @@ chasing it.
     injects a vendored discipline core into weaker-tier sessions, drift-checked
     by `check_vendored.py`.
   - Consent is explicit via the dials scaffolded into `docs/process.toml`:
-    `human_approval_through` (which tiers a human approves — the row
+    `operator_accepts_through` (which tiers a human approves — the row
     below; the retired `gate_policy` enum is **not** shipped), `push`
     (who may push), and
     `privacy_check` (the PII/identity gate, enforced by the git hooks +
@@ -278,7 +278,7 @@ graph LR
 | [`stakeholder-needs`](project-trajectory/registries/stakeholder-needs.template.toml) | `SN-###` | Why the project exists — one need per row, in the stakeholder's words. The root every other row must trace back to. |
 | [`system-requirements`](project-trajectory/registries/system-requirements.template.toml) | `SR-###` | One testable *shall*-statement per row — written in simple technical English on an **EARS** pattern, against the eight quality characteristics ([`PROCESS.md`](project-trajectory/PROCESS.md) §3) — with measurable acceptance criteria and input `Permutations` for test design; cites the `SN` it serves. |
 | [`low-level-requirements`](project-trajectory/registries/low-level-requirements.template.toml) | `LLR-###` | The design decomposition — pins an SR onto real code (`Module` + `CodeSymbol`). Adds detail; never paraphrases its parent. |
-| [`test-cases`](project-trajectory/registries/test-cases.template.toml) | `TC-###` | Verifies SR/LLR ids; states its `Method` (how it runs) and `Tier`. The verification class (Test / Demonstration / Inspection / Attest) rides the SR's `Verification` column. Written failing-first at DevStg-Tests. |
+| [`test-cases`](project-trajectory/registries/test-cases.template.toml) | `TC-###` | Verifies SR/LLR ids; states its `Method` (how it runs) and `Tier`. The verification class (Test / Demonstration / Inspection / Vouch) rides the SR's `VerificationMethod` column. Written failing-first at DevStg-Tests. |
 
 [`trace.py`](project-trajectory/scripts/trace.py) joins the four tiers into the
 traceability matrix (`docs/test/report.md`; `--html` adds a collapsible map) and
@@ -498,7 +498,7 @@ set:
 |---|---|---|---|
 | `stage` | **generated** — `derive_stage.py` computes it from artifact states (a fresh scaffold reads `DevStg-Reqs`) | never hand-edited; advances by *approving* artifacts | see the [generated current state](docs/status.md#current-state) |
 | `process.toml` `gate_policy` | **not shipped** — SN-029 retired the enum for the dial below; a legacy key is read only as a migration fallback | `bootstrap.py --gate-policy <word>` still takes `"attended"` / `"single-approve"` / `"autonomous"`, but **translates** it to the dials rather than storing it (and scaffolds a deviation register) | not declared; the `"autonomous"` posture is recorded in its [register](docs/gate-policy.md) |
-| `process.toml` `human_approval_through` | `"DevStg-Release"` (every rung human-held) | name a lower rung — every rung **at or below** the value is human-held, down to `"DevStg-Below"` (nothing human-held) | `"DevStg-Needs"` — higher rungs use the delegated artifact approval route; read the live [dial](docs/process.toml) |
+| `process.toml` `operator_accepts_through` | `"DevStg-Release"` (every rung human-held) | name a lower rung — every rung **at or below** the value is human-held, down to `"DevStg-Below"` (nothing human-held) | `"DevStg-Needs"` — higher rungs use the delegated artifact approval route; read the live [dial](docs/process.toml) |
 | `process.toml` `push` | `"human"` | opt-in `"agent-iteration"` / `"agent"` | `"human"` |
 | `process.toml` `review_rounds` | `1` | reviewer dial `0`–`2` (an **int**, not a word) | `1` |
 | `process.toml` `privacy_check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
@@ -553,8 +553,8 @@ brief; semantics: PROCESS.md §7) (process-options.md "Derived gate model").
 - **DevStg-Release — Release readiness** *(per release)*. The release test tier
   passes; the generated release checklist is completed and signed; version
   bumped; changelog + interface versions updated.
-- **Acceptance — the owner's final read.** A human exercises the real product (including
-  manual/demonstration items) and approves.
+- **The operator's final read.** A person exercises the real product (including
+  manual/demonstration items) and signs off.
 
 See [`project-trajectory/README.md`](project-trajectory/README.md) for the full
 tour and the tuning knobs (`COVERAGE_THRESHOLD`, `MAX_ROUNDS`, dropping hats for

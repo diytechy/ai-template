@@ -1,7 +1,7 @@
 """The verification-coherence advisory on an Inspection row (TC-275).
 
 `trace_text.verification_coherence_advisories` hunts a row whose prose claims a
-critique instrument while its `Verification` says another method, the rot a
+critique instrument while its `VerificationMethod` says another method, the rot a
 row mechanized out of Critique leaves behind. The detector is lexical, so a row
 whose SUBJECT is a rubric or a verdict reads to it as a row claiming one as its
 instrument. An Inspection row whose requirement SUBJECT (the text before its
@@ -23,7 +23,7 @@ TEXT = load_script("trace_text")
 # subject is Critique acceptance records, verified by Inspection.
 SUBJECT_IS_A_RUBRIC = {
     "SR-ID": "SR-101",
-    "Verification": "Inspection",
+    "VerificationMethod": "Inspection",
     "Requirement": "Where a capability requires Critique acceptance, the delivered "
     "acceptance record shall name its rubric and anchor every verdict.",
     "AcceptanceCriteria": "A Critique acceptance record names the rubric and ties "
@@ -38,7 +38,7 @@ SUBJECT_IS_A_RUBRIC = {
 # row states two methods, and the advisory exists for it.
 DIRECTS_A_VERDICT = {
     "SR-ID": "SR-102",
-    "Verification": "Inspection",
+    "VerificationMethod": "Inspection",
     "Requirement": "The delivered view shall keep every label legible at default zoom.",
     "AcceptanceCriteria": "A fresh CRITIQUE session returns APPROVE against the "
     "legibility rubric.",
@@ -87,7 +87,7 @@ def test_a_critique_word_in_the_requirement_alone_is_not_a_record_subject():
 
 def test_the_same_prose_on_a_mechanized_method_still_warns():
     for method in ("Test", "Analysis", "Demonstration"):
-        row = dict(SUBJECT_IS_A_RUBRIC, Verification=method)
+        row = dict(SUBJECT_IS_A_RUBRIC, VerificationMethod=method)
         [finding] = TEXT.verification_coherence_advisories([row])
         assert "SR SR-101 Rationale/AcceptanceCriteria" in finding
         assert repr(method) in finding

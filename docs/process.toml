@@ -50,8 +50,8 @@
 # Contracts: IF-037, IF-038 — the interface seams this file declares (process.md
 # §8; rows of record in docs/requirements/interfaces.toml).
 #
-# Contract IF-037: the one home for this repo's policy dials. `[attestation]`
-#     carries the human-approval rung and the review holds, `[policies]` the
+# Contract IF-037: the one home for this repo's policy dials. `[authority]`
+#     carries the operator-acceptance rung and the review holds, `[policies]` the
 #     push, review-round, privacy and secrets dials, `[checks]` the
 #     check-enablement toggles, `[required-checks]` the check suite a commit
 #     must pass, by the name docs/stack.ini `[check-suites]` gives it, and
@@ -73,7 +73,7 @@
 #     file allows. The `SUBAGENT_GATE=allow` launcher environment slot overrides
 #     the declaration for a deliberately supervised run.
 
-[attestation]
+[authority]
 # THE HIGHEST STAGE RUNG A HUMAN STILL APPROVES, cumulatively ("through" this
 # rung). The dispatcher compares the rung a row is IN against this value: AT OR
 # BELOW it, work SURFACES for the human; above it, the loop dispatches and an
@@ -107,9 +107,6 @@
 # 3 -> DevStg-LLReqs, 4 -> DevStg-Release, which holds exactly the rungs each
 # level held before.
 #
-# Named `human_approval_through`, never "attest level": `Attest` is already
-# a Verification method in the SR vocabulary and the collision would be
-# permanent.
 # THIS REPO'S OWN VALUE IS THE LINE BELOW — read it, don't paraphrase it, here
 # or anywhere else. Every rung at or below it is human-held; approval and
 # amendment above it proceed under ordinary review. Its history, for the
@@ -124,7 +121,7 @@
 # DELETED rather than left inert: shipping it beside the ordinal is the
 # shadowing defect the template names, and the kit must not carry in its own
 # config the shape it refuses downstream.
-human_approval_through = "DevStg-Boundary"
+operator_accepts_through = "DevStg-Boundary"
 # OFF-SPINE APPROVAL AUTHORITY IS DERIVED FROM THIS SAME DIAL — NO SECOND KEY
 # (owner ruling OI-30 D3, 2026-08-15). The registries that carry an `approval`
 # cell (interfaces, external, components) are governed by the DEV-STAGE RUNG

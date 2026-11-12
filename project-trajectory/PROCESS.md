@@ -36,8 +36,8 @@ owes.) That default is rung 1 of the §10 ladder.
 **Proportionality — the process right-sizes itself.** Text-representable,
 change-trackable artifacts are the **ideal** this process reaches for, not an
 entry requirement: track *about* an asset in text even where the asset itself
-can't be diffed. Where verification can't be mechanized, a **recorded human
-attestation** (§4 `Attest`) is the honest floor — trust-based by nature (the box
+can't be diffed. Where verification can't be mechanized, the **operator's
+recorded word** (§4 `Vouch`) is the honest floor — trust-based by nature (the box
 can be checked without the work having happened), so the process's job is to make
 it **explicit, named, and auditable**, never to pass it off as a mechanized
 check. Over-aggressive traceability is itself a failure mode: right-sizing is the
@@ -302,7 +302,7 @@ human-judged): there the spine's value is at **high altitude** — `SN→SR` to
 ensure nothing key is missed or silently broken as work moves forward — and you
 **descend to LLR/TC granularity only where a mechanized check earns its keep**,
 not to decompose inherently subjective work into fine-grained rows a script still
-can't verify. Where the honest floor is a human's judgment, name it `Attest`
+can't verify. Where the honest floor is a human's judgment, name it `Vouch`
 (§4) rather than inflate a subjective call into a false `Test`.
 
 **Reviewability — review the source, not the render.** The registries (the
@@ -448,14 +448,14 @@ outside the kit's required path.
 ## 4. Objectives, gates, and exit criteria
 
 Advance only when criteria pass. **Who accepts an advance is the repo's
-declared gate authority** — the `[attestation] human_approval_through` dial
+declared gate authority** — the `[authority] operator_accepts_through` dial
 in `docs/process.toml`, a `DevStg-*` rung: every rung **at or below** it is
 **human-held** (the shipped default, `DevStg-Release`, holds them all;
 `DevStg-Below` holds none — "The approval dial is a rung" below). A held tier's gate
 waits for a per-gate human approval; a released tier's closes on an independent
 fresh-context LLM reviewer's recorded verdict. The words `attended` /
 `single-approve` / `autonomous` are `--gate-policy` **presets** that *translate*
-into the `[attestation]` dials and are never stored. Full
+into the `[authority]` dials and are never stored. Full
 mechanics + the deviation-register pattern:
 [process-options.md "Gate authority levels"](process-options.md#gate-authority-levels).
 **Fixed points at every level:** the owner's final read is the human's; **the
@@ -526,7 +526,7 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   SR links ≥1 SN with measurable acceptance criteria; usability/doc needs +
   constraints + non-goals captured. Sign-offs: Stakeholder, UX, System Engineer.
 - **DevStg-Tests — Decomposition & test coverage.** Every SR → ≥1 LLR (or
-  Analysis/Inspection/Attest); every SR and LLR → ≥1 TC; traceability **0 orphans** and
+  Analysis/Inspection/Vouch); every SR and LLR → ≥1 TC; traceability **0 orphans** and
   ids unique/well-formed; **no `-000` placeholder rows or flow citations remain**
   (`trace.py`/`check_flows.py --no-placeholders`); **every SR with variable
   inputs has its dimensions enumerated (`Permutations`) and a stated combination
@@ -547,10 +547,10 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   after its code landed is reported. Format/lint clean; every source module parses
   (`gen_arch_map.py --strict-parse`); the **full** test tier passes; coverage ≥
   `COVERAGE_THRESHOLD`; registry **schema** holds (required fields non-empty,
-  `Verification`/`Tier` in vocabulary — `trace.py --strict-schema`); every
+  `VerificationMethod`/`Tier` in vocabulary — `trace.py --strict-schema`); every
   **in-scope** test-verifiable SR **Approved** (phase-scoped — see "Phased
   delivery" below); every other SR explicitly **Demonstration / Manual /
-  Inspection / Analysis / Attest / Critique**; each in-scope SR's implementing symbol is **substantive, not a
+  Inspection / Analysis / Vouch / Critique**; each in-scope SR's implementing symbol is **substantive, not a
   stub** (Inspection — see "No-stub / substance review" below). Sign-offs: System
   Engineer, Test Engineer.
 - **`DevStg-Release` — Release readiness** *(per release; skip for a one-off
@@ -559,8 +559,8 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   completed and signed; version bumped; changed `approved` interface versions
   communicated to counterparts; docs/changelog updated. Sign-offs: Test Engineer,
   any active domain hats, Human.
-- **Acceptance — the owner's final read.** Human/stakeholder exercises the real product (incl.
-  Demonstration/Manual items) and approves. For shipped software this is the
+- **The operator's final read.** A person or stakeholder exercises the real product (incl.
+  Demonstration/Manual items) and signs off. For shipped software this is the
   human half of DevStg-Release; for a bespoke deliverable it stands alone.
 
 **The stage ladder — one vocabulary, one axis.** **A stage is a STATE: the repo
@@ -603,8 +603,8 @@ DevStg-Release    nothing in work; release checklist available
 **One value, and everything reads it.** `docs/stage` records the rung the repo is
 **in**, derived over its SETTLED spine so a draft cannot lower it, with the
 honest unfloored reading beside it. `check.py --stage <rung>` runs every step
-declared at or **below** that rung (OI-51); `[attestation]
-human_approval_through` names the highest rung a human still approves, and
+declared at or **below** that rung (OI-51); `[authority]
+operator_accepts_through` names the highest rung a human still approves, and
 holds every rung at or **below** it — the same ladder read from each end. A
 sign-off record names the rung whose boundary was **just** signed and therefore
 the rung the project has **entered**. **`DevStg-Release` has no signed boundary
@@ -660,8 +660,8 @@ accidentally right (`DevStg-Arch` sorts *before* `DevStg-Boundary`).
 **There is no `DevStg-Below` you sit at** — it is the internal sentinel below the
 lowest runnable bar; say "stage Needs", never "at DevStg-Below".
 
-**The approval dial is a rung, on this same ladder.** `[attestation]
-human_approval_through` takes a `DevStg-*` value (or `DevStg-Below` for
+**The approval dial is a rung, on this same ladder.** `[authority]
+operator_accepts_through` takes a `DevStg-*` value (or `DevStg-Below` for
 "nothing is human-held"), and every rung **at or below** it is the human's to
 approve. It was a 0–4 tier ordinal mapped onto the ladder by a declared table
 until OI-21 shape (ii) landed; a repo still carrying the number is read,
@@ -802,25 +802,25 @@ rule, and the config-straddles-Provision↔Startup guidance are in
 
 **Verification methods:** the classic four — `Test` · `Demonstration` ·
 `Inspection` · `Analysis` (`TDIA`, per MIL-STD-961E / ISO/IEC/IEEE 29148 / INCOSE
-SE Handbook) — plus three the kit names: `Manual` (a human procedure that isn't
-`Attest`), `Attest`, and `Critique`. Definitions follow the standard rather than being restated
+SE Handbook) — plus three the kit names: `Manual` (a procedure a person carries out, whose result
+another could repeat), `Vouch`, and `Critique`. Definitions follow the standard rather than being restated
 here; pick the cheapest method that actually establishes the criterion, and don't
-claim `Test` for something only a human can confirm. **`Attest`** is the kit's
+claim `Test` for something only a human can confirm. **`Vouch`** is the kit's
 honest extension (nearest standard analog: a witnessed test / QA sign-off record,
-but the attested-vs-mechanized *reporting* is deliberately beyond the standards):
+but the vouched-vs-mechanized *reporting* is deliberately beyond the standards):
 the floor for what can't be mechanized at all (a playtest, a creative review, a
-physical action) — a **named human's recorded judgment**, **trust-based, the box
+physical action) — the **operator's recorded word**, **trust-based, the box
 can be checked without the work having happened** (Proportionality doctrine); the
 process's job is to make it explicit, named, and auditable, not pass it off as a
-check. Its TC records **who** attested and **when** (`Parameters`/`Expected` cell,
-`Automated=No`); `trace.py` accepts an `Attest` SR as Approved **and** reports it
-under "attested vs mechanized" so an audit sees the trust footprint. **`Critique`**
+check. Its TC records **who** vouched and **when** (`Parameters`/`Expected` cell,
+`Automated=No`); `trace.py` accepts a `Vouch` SR as Approved **and** reports it
+under "vouched vs mechanized" so an audit sees the trust footprint. **`Critique`**
 is the mechanized sibling for *subjective* acceptance: an independent critical eye
-(an LLM one, deliberately separated from human `Attest`) judges a **code-produced**
+(an LLM one, deliberately separated from `Vouch`) judges a **code-produced**
 artifact against a **written rubric** (`docs/rubrics/`) — never the authoring
 session (process-options.md "Critique verification & the critique loop"). Method drives
-what `trace.py` requires: only `Analysis`/`Inspection`/`Attest` SRs are LLR-exempt
-(no code to decompose — `Attest` typically covers a subjective/binary asset with no
+what `trace.py` requires: only `Analysis`/`Inspection`/`Vouch` SRs are LLR-exempt
+(no code to decompose — `Vouch` typically covers a subjective/binary asset with no
 code symbol). `Demonstration` (observe functional behavior, no instrumented
 pass/fail), `Manual`, and `Critique` still exercise code the system runs, so **they
 keep the LLR** — the standard reading puts `Demonstration` closer to `Test`, and a
@@ -1264,10 +1264,10 @@ pip needed to run them):
   structure — the TOML carrier makes a duplicate id a parse error, and a legacy
   CSV's data rows must parse to the header's column count); `--strict-integrity`
   fails on *only* that class (the always-valid pre-commit floor).
-  `--require-verified` adds the DevStg-Impl status criterion (every `Verification=Test` SR
+  `--require-verified` adds the DevStg-Impl status criterion (every `VerificationMethod=Test` SR
   must be `Approved`); `--phase v1` scopes it for phased delivery (§4).
   `--no-placeholders` rejects leftover `-000` rows; `--strict-schema` requires the
-  non-empty fields and the two closed vocabularies (`Verification`, `Tier`) —
+  non-empty fields and the two closed vocabularies (`VerificationMethod`, `Tier`) —
   `Priority`/`Status` stay open. Called by `check.py` at every gate — at DevStg-Reqs as
   the `registry-integrity` floor (`--strict-integrity`), then at DevStg-Tests/DevStg-Impl (DevStg-Tests+ adds
   `--no-placeholders`; DevStg-Impl adds `--require-verified` and `--strict-schema`, plus
@@ -1426,7 +1426,7 @@ should be **minimized within reason**, not guessed at). At DevStg-Reqs, run the
 1. *Allocation / coordination* NFRs (perf budgets, capacity, availability) → the
    **`performance-budgets.csv`** registry below.
 2. *Behavioral* NFRs (security, observability, safety, data integrity) → ordinary
-   **SRs** with measurable `AcceptanceCriteria` + honest `Verification`, owned by
+   **SRs** with measurable `AcceptanceCriteria` + honest `VerificationMethod`, owned by
    a domain hat.
 3. *Hard external limits* (compliance, supported platforms) → `status.md`
    constraints.

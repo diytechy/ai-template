@@ -18,7 +18,7 @@ and responsive behavior. It is **meta-only** dev tooling — the runner and its
 Playwright dependency are never shipped downstream (the kit's install-nothing
 posture governs `project-trajectory/scripts`, not this helper).
 
-This is also the **artifact recipe** a future `Verification=Critique` TC on
+This is also the **artifact recipe** a future `VerificationMethod=Critique` TC on
 dashboard quality would name (the critique-loop contract in
 `project-trajectory/PROCESS_OPTIONS.md`, *"Critique verification"*, requires a
 perceptual TC to name its render recipe): build it once, serve both the ad-hoc

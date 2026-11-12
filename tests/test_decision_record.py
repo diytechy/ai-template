@@ -5,7 +5,7 @@ A delegated run makes calls on the owner's behalf that are too settled for a
 pending open item and not settled enough for the log. The record is where the
 owner is TOLD about them: one TOML file per run, one table per decision, each
 carrying the four disclosure fields and a `review` cell the owner fills in place.
-The `[attestation] decision_recording` dial decides whether a run owes one.
+The `[authority] decision_recording` dial decides whether a run owes one.
 
 Nothing here touches git: the merge-slot rung that refuses a lane closing
 without its record is driven on a scaffold in `test_decision_record_merge.py`.
@@ -68,7 +68,7 @@ def _docs(tmp_path, body):
 
 
 def _dial(tmp_path, value):
-    return _docs(tmp_path, "[attestation]\ndecision_recording = {}\n".format(value))
+    return _docs(tmp_path, "[authority]\ndecision_recording = {}\n".format(value))
 
 
 def _one_entry(key, literal):
@@ -96,7 +96,7 @@ def test_an_undeclared_dial_reads_off(tmp_path):
     """Implements: TC-292"""
     # The template's shipped value and the reading of a repo that never set it:
     # no obligation until an owner asks for one.
-    assert ac.decision_recording(_docs(tmp_path, "[attestation]\n")) == "off"
+    assert ac.decision_recording(_docs(tmp_path, "[authority]\n")) == "off"
     assert ac.decision_recording(tmp_path / "absent") == "off"
 
 
@@ -152,8 +152,8 @@ def test_the_template_ships_off_and_this_repo_records():
     """Implements: TC-292"""
     template = tomllib.loads((KIT / "process.toml.template").read_text("utf-8"))
     live = tomllib.loads((ROOT / "docs" / "process.toml").read_text("utf-8"))
-    assert template["attestation"]["decision_recording"] == "off"
-    assert live["attestation"]["decision_recording"] == "record"
+    assert template["authority"]["decision_recording"] == "off"
+    assert live["authority"]["decision_recording"] == "record"
 
 
 # --- TC-293: the format, the obligation, the session note ------------------------

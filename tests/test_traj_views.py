@@ -1153,7 +1153,7 @@ def _spine_with_sns(root, n):
     )
     (req / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status\n"
+        "Permutations,Priority,VerificationMethod,Status\n"
         + "".join(
             'SR-{i:03d},Req {i},SN-{i:03d},"Shall {i}.",R,"ac {i}",,M,Test,'
             "Approved\n".format(i=i)
@@ -1585,7 +1585,7 @@ def _view_sr(sid, need, da_refs=(), coincident="", delivered_with=()):
         'rationale = "why"',
         'acceptance_criteria = "ac"',
         'priority = "M"',
-        'verification = "Test"',
+        'verification_method = "Test"',
         'status = "Approved"',
     ]
     if da_refs:

@@ -47,7 +47,7 @@ _SR = (
     'rationale = "A fixture row."\n'
     'acceptance_criteria = "The row is read."\n'
     'priority = "M"\n'
-    'verification = "Test"\n'
+    'verification_method = "Test"\n'
     'status = "Approved"\n'
     "phase = 1\n"
 )
@@ -323,7 +323,7 @@ def _release(root):
     """Release every rung to the loop. The scaffold's shipped dial holds them
     all, and a held rung's re-attestation by an adjudication is the separate
     rule `test_a_held_rung_reattestation_*` pins (WI-791)."""
-    set_process_key(root, "attestation", "human_approval_through", "DevStg-Below")
+    set_process_key(root, "authority", "operator_accepts_through", "DevStg-Below")
 
 
 _VERDICT = "docs/reviews/v.md"
@@ -338,13 +338,13 @@ _KIND_LINES = {
 
 
 def _bind_branch(
-    root, rows, outcome="accepted", name="000-ADJUDICATE-x.md", returned=(), tags=None
+    root, rows, outcome="recorded", name="000-ADJUDICATE-x.md", returned=(), tags=None
 ):
     """Write the adjudication verdict, and its binding recording `outcome`,
     that a route leaves in the lane before the act it authorises. `rows` maps
     each kind to the rows its section JUDGES - an amendment section rules them
     CLARITY, a first-approval section APPROVE - since every row an added act
-    flips or re-attests must be judged so by an accepted verdict in the branch
+    flips or re-attests must be judged so by a recorded verdict in the branch
     (round 16). One kind is a single-kind verdict; several, one sitting.
     `tags` maps a row id to the tags its lines carry instead, one line each
     (`["MEANING+BLESS", "CLARITY"]` tags the row two ways)."""
@@ -403,7 +403,7 @@ def _amendment_act(
         (root / _VERDICT).write_text(verdict, encoding="utf-8")
         if binding is None:
             binding = SITTING_MOD.render_requested(
-                "amendment", ("amendment",), "accepted"
+                "amendment", ("amendment",), "recorded"
             )
         (root / SITTING_MOD.requested_path(_VERDICT)).write_text(
             binding, encoding="utf-8"
@@ -465,7 +465,7 @@ def test_a_held_rung_is_read_from_trunk_not_from_the_lane(scaffold):
     head = _commit(run_git, "the lane's re-attesting act")
     assert HS.commit_held_approval_lines(scaffold, head) == []
     run_git("checkout", "-q", trunk_branch)
-    set_process_key(scaffold, "attestation", "human_approval_through", "DevStg-Release")
+    set_process_key(scaffold, "authority", "operator_accepts_through", "DevStg-Release")
     _commit(run_git, "trunk holds every rung")
     lines = " ".join(HS.commit_held_approval_lines(scaffold, head))
     assert "SR-001" in lines and "DevStg-Release" in lines, lines
@@ -488,7 +488,7 @@ def test_a_released_plain_MEANING_reattestation_is_refused_naming_the_row_and_th
     """
     base, head = _amendment_act(scaffold, {"SR-001"}, tags={"SR-001": ["MEANING"]})
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
-    assert "SR-001 (amendment) is authorized by no accepted verdict" in refusal, refusal
+    assert "SR-001 (amendment) is authorized by no recorded verdict" in refusal, refusal
     assert "[MEANING+BLESS]" in refusal, refusal
 
 
@@ -596,7 +596,7 @@ def test_the_acted_set_names_a_retired_rows_registry(scaffold):
 def test_a_retirement_beside_another_act_in_its_registry_merges(scaffold):
     """A retired row's re-attestation authorizes its registry's copy whether
     or not another act moved that registry: beside a second act re-attesting
-    another row of the same registry, both ruled by the accepted verdict and
+    another row of the same registry, both ruled by the recorded verdict and
     inside the amendment scope, the merge is admitted.
 
     Implements: TC-278
@@ -632,11 +632,11 @@ def test_a_retirement_outside_the_amendment_scope_is_refused(scaffold):
     assert refusal and "SR-002 re-attested OUTSIDE" in refusal, refusal
 
 
-def test_a_retirement_no_accepted_verdict_rules_is_refused(scaffold):
+def test_a_retirement_no_recorded_verdict_rules_is_refused(scaffold):
     """Implements: TC-278"""
     base, head, _written = _retirement_act(scaffold, judged=("SR-001",))
     refusal = AR.merge_approval_refusal(scaffold, base, head, _RETIRE, trunk=head)
-    assert refusal and "no ACCEPTED verdict" in refusal and "SR-002" in refusal, refusal
+    assert refusal and "no RECORDED verdict" in refusal and "SR-002" in refusal, refusal
     assert "WIDENED" not in refusal, refusal
 
 
@@ -1025,7 +1025,7 @@ def test_a_combined_act_whose_first_approval_returned_everything_merges(scaffold
     """
     base, head = _split_act(scaffold, approve=False)
     lane_verdict = "docs/reviews/lane/000-ADJUDICATE-x.md"
-    parsed = SITTING_MOD.accepted_at(scaffold, head, lane_verdict)
+    parsed = SITTING_MOD.recorded_at(scaffold, head, lane_verdict)
     assert parsed["first-approval"][3] == {"SN-091": "RETURN"}, parsed
     added = [
         a
@@ -1067,7 +1067,7 @@ _SR_CSV_COLS = [
     "Rationale",
     "AcceptanceCriteria",
     "Priority",
-    "Verification",
+    "VerificationMethod",
     "Status",
     "Phase",
 ]
@@ -1283,7 +1283,7 @@ _REJECTED_SITTING = (
 )
 
 
-def test_a_released_tier_act_naming_an_unaccepted_verdict_is_refused(scaffold):
+def test_a_released_tier_act_naming_an_unrecorded_verdict_is_refused(scaffold):
     """WI-841 round 12 (Sol final4 MAJOR 2): on a RELEASED rung, a
     re-attestation naming a verdict its route recorded FAILED (a rejected
     sitting) is refused like a held one: every act a merge adds that names a
@@ -1299,8 +1299,8 @@ def test_a_released_tier_act_naming_an_unaccepted_verdict_is_refused(scaffold):
     )
     metas = _combined(["amendment:SR-001", "done-when:WI-900"])
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
-    assert refusal and "ACCEPTED" in refusal and _VERDICT in refusal, refusal
-    # The verdict is not accepted at all, so no bless mark is involved.
+    assert refusal and "RECORDED" in refusal and _VERDICT in refusal, refusal
+    # The verdict is not recorded at all, so no bless mark is involved.
     assert "[MEANING+BLESS]" not in refusal, refusal
 
 
@@ -1344,7 +1344,7 @@ def _rejected_mixed_act(root, name_verdict):
     return base, head
 
 
-def test_a_first_approval_in_an_act_naming_an_unaccepted_verdict_is_refused(
+def test_a_first_approval_in_an_act_naming_an_unrecorded_verdict_is_refused(
     scaffold,
 ):
     """An act may name a verdict only beside a re-attestation (the snapshot
@@ -1358,12 +1358,12 @@ def test_a_first_approval_in_an_act_naming_an_unaccepted_verdict_is_refused(
     base, head = _rejected_mixed_act(scaffold, name_verdict=True)
     metas = _combined(["first-approval:SR-002", "amendment:SR-001"])
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
-    assert refusal and "ACCEPTED" in refusal and _VERDICT in refusal, refusal
+    assert refusal and "RECORDED" in refusal and _VERDICT in refusal, refusal
 
 
-def test_an_act_omitting_its_verdict_is_still_tied_to_an_accepted_one(scaffold):
+def test_an_act_omitting_its_verdict_is_still_tied_to_a_recorded_one(scaffold):
     """Sol final6 MAJOR: the same act with `--verdict` OMITTED. Its authority
-    is the adjudication the lane claims, so it must be covered by an ACCEPTED
+    is the adjudication the lane claims, so it must be covered by a RECORDED
     verdict of each kind it takes among the bindings the branch carries; the
     only binding here records FAILED, so the act is refused.
 
@@ -1372,13 +1372,13 @@ def test_an_act_omitting_its_verdict_is_still_tied_to_an_accepted_one(scaffold):
     base, head = _rejected_mixed_act(scaffold, name_verdict=False)
     metas = _combined(["first-approval:SR-002", "amendment:SR-001"])
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
-    assert refusal and "ACCEPTED" in refusal, refusal
+    assert refusal and "RECORDED" in refusal, refusal
 
 
-def test_an_accepted_sitting_over_other_rows_does_not_authorize_this_act(scaffold):
+def test_a_recorded_sitting_over_other_rows_does_not_authorize_this_act(scaffold):
     """Sol final7 MAJOR 1 (owner: an act's authority comes from the
     judgement of ITS rows): a failed sitting's act approves SR-002 and
-    re-attests SR-001 without naming a verdict; a second, ACCEPTED sitting
+    re-attests SR-001 without naming a verdict; a second, RECORDED sitting
     judged SR-003 and SR-004 in the same kinds. Kind coverage would pass it;
     row coverage refuses it, naming each unjudged row and its kind.
 
@@ -1390,7 +1390,7 @@ def test_an_accepted_sitting_over_other_rows_does_not_authorize_this_act(scaffol
         {"amendment": ["SR-003"], "first-approval": ["SR-004"]},
         name="001-ADJUDICATE-y.md",
     )
-    head = _commit(_git(scaffold), "an accepted sitting over other rows")
+    head = _commit(_git(scaffold), "a recorded sitting over other rows")
     metas = _combined(["first-approval:SR-002", "amendment:SR-001"])
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
     assert refusal and "SR-001 (amendment)" in refusal, refusal

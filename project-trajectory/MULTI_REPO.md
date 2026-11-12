@@ -198,7 +198,7 @@ trap:
   A→B→C, closed-loop stability of a controller against its plant, cross-module latency
   / throughput, disturbance rejection. These live in the **coordinator's** `SN→SR`
   chain and are **verified by the integration/plant repo's TCs** (typically
-  `Verification=Demonstration` — run the sim), *not* by any module.
+  `VerificationMethod=Demonstration` — run the sim), *not* by any module.
 
 The handoff **generalizes the §3.1 SR-tier rule**: a composition SR delegates to the
 **plant repo's `SN`** ("verify the composed product satisfies this"), exactly as a

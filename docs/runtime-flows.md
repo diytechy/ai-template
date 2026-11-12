@@ -270,11 +270,11 @@ sequenceDiagram
     Coord->>Roster: a decomposition round's judging brief reads the applicable hats' questions, and any other sitting's says it is none (SR-161, LLR-360)
     Coord->>Agent: launch judging brief
     Agent->>Verdict: commit verdict
-    Coord->>Verdict: validate and record accepted verdict
+    Coord->>Verdict: validate the verdict and record its outcome
     Note over Coord,Verdict: The judging turn stops here.
     Coord->>Lane: confirm lane claim and no uncommitted change (SR-231/LLR-306)
-    Coord->>Verdict: read accepted verdict and binding at HEAD (LLR-338)
-    alt verdict is unaccepted, owes no act, has an unexplained row state, or binds a held CLARITY row to other text than its committed approved text (LLR-359)
+    Coord->>Verdict: read recorded verdict and binding at HEAD (LLR-338)
+    alt verdict is unrecorded, owes no act, has an unexplained row state, or binds a held CLARITY row to other text than its committed approved text (LLR-359)
         Coord-->>Lane: refuse before launch, naming the input
     else later act is owed
         Coord->>Keep: plan by the verdict's bound class (LLR-338)

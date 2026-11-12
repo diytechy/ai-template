@@ -446,7 +446,7 @@ def emit(root):
             (r.get("Requirement") or "").strip(),
             [
                 (r.get("Priority") or "").strip(),
-                (r.get("Verification") or "").strip(),
+                (r.get("VerificationMethod") or "").strip(),
                 (r.get("Status") or "").strip(),
                 (r.get("Aspect") or "").strip(),
             ],

@@ -207,7 +207,7 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    - **Characterization of already-correct behaviour:** unmarked, with a
      stated adequacy witness, the wrong implementation it would catch,
      written in the test itself (its docstring or a comment).
-   - **An Inspection, Analysis or Attest TC:** the independently checkable
+   - **An Inspection, Analysis or Vouch TC:** the independently checkable
      evidence its declared method names, as the TC row states it.
 
    A test that fits none is named, with its disposition, in the lane's
@@ -336,7 +336,7 @@ this hold (`project-trajectory/PROCESS.md` §4).
   Done-when gap) is never deferred: the sitting orders one more fix round or
   escalates. A reviewer's `convergence-class` tag is advice to the sitting.
 - **Successor rows** are filed on trunk at the landing, one per SUCCESSOR
-  ruling of an accepted verdict, from its binding (§4). Without one nothing
+  ruling of a recorded verdict, from its binding (§4). Without one nothing
   is filed, and the finding holds the landing.
 - **A lane in flight when this shape landed** starts its count at zero at
   its next review, recorded as a decision.

@@ -1,5 +1,5 @@
 """The subjective-quality critique loop (WI-068). Managed mode: a committing
-build whose WI touches a Verification=Critique SR schedules a fresh,
+build whose WI touches a VerificationMethod=Critique SR schedules a fresh,
 provider-heterogeneous CRITIQUE session against a rubric before the next build.
 Exercised end-to-end against a fake agent that plays both builder and critic, so
 no test touches a real CLI. Absent an enable-list OR any Critique SR, nothing
@@ -94,7 +94,7 @@ STATUS_MD = """# Status
 # assert the intent reached the critic. TC-050 names the rubric in Parameters.
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status\n"
+    "Permutations,Priority,VerificationMethod,Status\n"
 )
 SR_CRITIQUE = (
     'SR-050,Render realism,SN-001,"SR-INTENT-MARKER the render shall look real.",'
@@ -399,7 +399,7 @@ def test_per_wi_exhaustion_disposition_overrides_autonomous(
     # (WI-498 slice 5 / WI-493 re-keyed this dial off the 0-4 ordinal; the
     # retired `0` still reads through the migration window, but a fixture that
     # spells it leaves the re-key untested exactly here).
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Below")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Below")
     _git(repo, "add", "docs/process.toml")
     _git(repo, "commit", "-qm", "set the loop-held approval level")
     (ctl / "verdict.txt").write_text(CHANGES, encoding="utf-8")

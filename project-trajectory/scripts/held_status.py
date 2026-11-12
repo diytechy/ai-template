@@ -258,7 +258,7 @@ def held_status_refusal(dial, moves):
         return None
     return (
         "the loop may not change a status the approval level holds for a human "
-        "(human_approval_through = {}): {} - a held status moves only in a "
+        "(operator_accepts_through = {}): {} - a held status moves only in a "
         "person's own reviewed commit".format(dial, "; ".join(held))
     )
 
@@ -340,14 +340,14 @@ HELD_PATHS = tuple(
         for under in ("", _RECORD)
     )
 )
-# Where a binding beside an accepted verdict is looked for.
+# Where a binding beside a recorded verdict is looked for.
 _REVIEWS = "docs/reviews"
 # The spine tiers whose status moves the narrowed marker arm reads beside the
 # off-spine walk: the need, requirement, design and test tiers.
 MARKED_SPINE = acceptance_record.PARENT_FIRST_CSVS
 HELD_REMEDY = (
     "a held-rung row's approval lands from a lane only as a CLARITY "
-    "re-attestation whose accepted verdict binds the row's approved text; "
+    "re-attestation whose recorded verdict binds the row's approved text; "
     "leave the approval to the owner, or re-sit the row and take the act "
     "from that verdict"
 )
@@ -441,10 +441,10 @@ def _bound_clarity(root, rev, rid, digest):
         if not path.endswith(_kitsitting.REQUESTED_SUFFIX):
             continue
         verdict = path[: -len(_kitsitting.REQUESTED_SUFFIX)]
-        part = (_kitsitting.accepted_at(root, rev, verdict) or {}).get("amendment")
+        part = (_kitsitting.recorded_at(root, rev, verdict) or {}).get("amendment")
         if not part or part[3].get(rid) != "CLARITY":
             continue
-        identities, _why = _kitsitting.accepted_identities(root, rev, verdict)
+        identities, _why = _kitsitting.recorded_identities(root, rev, verdict)
         if identities and identities.get(rid) == digest:
             return True
     return False
@@ -533,7 +533,7 @@ def _claim_line(key, kind, dial):
         if kind == "a"
         else "its approval record copy moved"
     )
-    return "{} {} claims approval on a held rung ({}; human_approval_through = {}): {}".format(
+    return "{} {} claims approval on a held rung ({}; operator_accepts_through = {}): {}".format(
         spine_carrier.stem(registry).rsplit("/", 1)[-1], rid, rung, dial, what
     )
 
@@ -659,7 +659,7 @@ def marked_refusal(root, base, head, dial, paths=None):
         return None
     return (
         "the loop may not change a status or claim an approval the approval "
-        "level holds for a human (human_approval_through = {}): {} - a held "
+        "level holds for a human (operator_accepts_through = {}): {} - a held "
         "status moves only in a person's own reviewed commit, and a held "
         "approval lands from a lane only as a CLARITY re-attestation bound to "
         "its judged text".format(dial, "; ".join(lines))

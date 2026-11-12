@@ -2,7 +2,7 @@
 
 WI-277 split this module by behavior boundary. What stays here is the
 scaffold-driven half: the strict/schema gates, the verification-category
-buckets (Test / Attest / Demonstrated / Critique), the Drafted exemptions, and
+buckets (Test / Vouch / Demonstrated / Critique), the Drafted exemptions, and
 the generated report/HTML render. WI-521 slice 3 moved the IF-### interface-seam
 tier to tests/test_trace_interfaces.py; the pure in-process rule decisions moved
 to tests/test_trace_rules.py, the git-backed re-attestation brief to
@@ -23,7 +23,7 @@ from conftest import (
 # SR-002 is a genuine (approved, non-Drafted) orphan: Status=Approved, so the
 # derived-gate Drafted exemption (WI-089) does NOT apply and the decomposition
 # rules still fire. A Drafted SR would be exempt — see the WI-089 section below.
-ORPHAN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+ORPHAN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
 SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Approved
 """
@@ -38,7 +38,7 @@ def test_happy_chain_is_orphan_free(scaffold):
 
 def test_verified_triple_prints_when_only_mechanized_is_nonzero(scaffold):
     # WI-466: the summary line's print guard used to read `(demonstrated_verified
-    # or attested_verified)`, so a nonzero mechanized-only count — the common
+    # or vouched_verified)`, so a nonzero mechanized-only count — the common
     # case, and what a happy-chain minimal project produces (SR-001 is
     # Test/Approved) — silently hid the whole triple once the other two legs
     # drained to zero (re-tier v2 S3, log 2026-08-16e: SR-034/SR-036 were the
@@ -48,7 +48,7 @@ def test_verified_triple_prints_when_only_mechanized_is_nonzero(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "verified-mechanized=1" in proc.stdout
     assert "verified-demonstrated=0" in proc.stdout
-    assert "verified-attested=0" in proc.stdout
+    assert "verified-vouched=0" in proc.stdout
 
 
 def test_orphan_sr_fails_strict(scaffold):
@@ -63,7 +63,7 @@ def test_orphan_sr_fails_strict(scaffold):
     assert "SR SR-002 has no test (TC)" in report
 
 
-NO_SN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+NO_SN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,,"The system shall add two numbers.","Rootless.","add(1,2) == 3",,M,Test,Approved
 """
 
@@ -109,7 +109,7 @@ def test_strict_integrity_ignores_orphans_but_fails_bad_ids(scaffold):
 # `test_phase_scopes_require_verified` states rather than works around. Every
 # row carries its Phase: in a phased spine a row with no Phase cell is itself an
 # integrity finding, which is not the property these tests drive.
-PHASED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
+PHASED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Phase
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,v1
 SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Modified,v2
 """
@@ -219,33 +219,33 @@ def test_check_py_passes_phase_to_trace():
     assert "--phase" not in trace_cmd
 
 
-# --- WI-1.7: human-attestation verification kind (Attest) ---------------------
+# --- WI-1.7: the verification method that rests on someone's word (Vouch) ----
 
-# An Attest SR: a named human's recorded judgment, no code to decompose (so
-# LLR-exempt), but it still needs a TC that records who/when attested.
-ATTEST_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+# A Vouch SR: the operator's recorded word, no code to decompose (so
+# LLR-exempt), but it still needs a TC that records who vouched and when.
+VOUCH_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
-SR-002,Theme mood fit,SN-001,"The main theme shall match the mood brief.","Subjective; no automated check.","Creative lead records pass against the brief.",,H,Attest,Approved
+SR-002,Theme mood fit,SN-001,"The main theme shall match the mood brief.","Subjective; no automated check.","Creative lead records pass against the brief.",,H,Vouch,Approved
 """
 
-ATTEST_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
+VOUCH_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
 TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Approved
-TC-002,SR-002,System,creative review of the theme,Release,"attested-by=A. Rivera; attested-on=2026-07-02","Recorded pass judgment for SR-002",No,,Approved
+TC-002,SR-002,System,creative review of the theme,Release,"vouched-by=A. Rivera; vouched-on=2026-07-02","Recorded pass judgment for SR-002",No,,Approved
 """
 
 
 def make_attest_project(scaffold):
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
-    (req / "system-requirements.csv").write_text(ATTEST_SRS, encoding="utf-8")
+    (req / "system-requirements.csv").write_text(VOUCH_SRS, encoding="utf-8")
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(
-        ATTEST_TCS, encoding="utf-8"
+        VOUCH_TCS, encoding="utf-8"
     )
     record_ids(scaffold)
 
 
-def test_attest_sr_is_llr_exempt_but_needs_tc(scaffold):
-    # SR-002 (Attest) has no LLR yet is not an orphan; it still needs its TC.
+def test_a_vouch_sr_is_llr_exempt_but_needs_tc(scaffold):
+    # SR-002 (Vouch) has no LLR yet is not an orphan; it still needs its TC.
     make_attest_project(scaffold)
     record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
@@ -254,9 +254,9 @@ def test_attest_sr_is_llr_exempt_but_needs_tc(scaffold):
     assert "SR SR-002 has no LLR" not in report
     # Drop its TC -> now it is an orphan (every SR needs >=1 TC regardless of method).
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(
-        ATTEST_TCS.replace(
+        VOUCH_TCS.replace(
             "TC-002,SR-002,System,creative review of the theme,Release,"
-            '"attested-by=A. Rivera; attested-on=2026-07-02",'
+            '"vouched-by=A. Rivera; vouched-on=2026-07-02",'
             '"Recorded pass judgment for SR-002",No,,Approved\n',
             "",
         ),
@@ -268,8 +268,8 @@ def test_attest_sr_is_llr_exempt_but_needs_tc(scaffold):
     assert "SR SR-002 has no test (TC)" in report
 
 
-def test_attest_verified_accepted_and_surfaced_distinctly(scaffold):
-    # Under --require-verified (DevStg-Impl), an Attest SR marked Approved passes, and the
+def test_a_verified_vouch_sr_passes_and_is_surfaced_distinctly(scaffold):
+    # Under --require-verified (DevStg-Impl), a Vouch SR marked Approved passes, and the
     # report surfaces it in the three-way verification-basis split (WI-259) so the
     # trust footprint is auditable: SR-001 is mechanized (Test), SR-002 attested.
     make_attest_project(scaffold)
@@ -280,32 +280,32 @@ def test_attest_verified_accepted_and_surfaced_distinctly(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "verified-mechanized=1" in proc.stdout
     assert "verified-demonstrated=0" in proc.stdout
-    assert "verified-attested=1" in proc.stdout
+    assert "verified-vouched=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "Verification basis (mechanized / demonstrated / attested)" in report
-    assert "Attested (Attest): 1 — SR-002" in report
-    assert "Approved SRs — attested (human, §4) | 1 |" in report
+    assert "Verification basis (mechanized / demonstrated / vouched)" in report
+    assert "Vouched (Vouch): 1 — SR-002" in report
+    assert "Approved SRs — vouched (operator, §4) | 1 |" in report
     assert "Approved SRs — mechanized (Test) | 1 |" in report
     assert "Approved SRs — demonstrated/observed | 0 |" in report
 
 
-def test_attest_is_in_verification_vocabulary(scaffold):
-    # --strict-schema must accept Attest (not reject it as out-of-vocabulary).
+def test_vouch_is_in_the_verification_vocabulary(scaffold):
+    # --strict-schema must accept Vouch (not reject it as out-of-vocabulary).
     make_attest_project(scaffold)
     proc = run_py(["scripts/trace.py", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "SR-002 has Verification=" not in report  # no enum-violation finding
+    assert "SR-002 has VerificationMethod=" not in report  # no enum-violation finding
 
 
 # --- WI-259: --require-verified is method-blind; the split has a third bucket ---
 
-# A non-Test, non-Attest SR (Analysis here — representative of the
+# A non-Test, non-Vouch SR (Analysis here — representative of the
 # Demonstration/Manual/Analysis/Inspection/Critique family): its Approved state
 # rests on a human observing an outcome, not a runnable check. Analysis is
 # LLR-exempt so it decomposes to a TC alone. SR-001 stays the mechanized (Test)
 # control.
-DEMO_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+DEMO_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
 SR-002,Analyzed property,SN-001,"The system shall hold an analyzed property.","Judged by analysis, no runnable check.","An analyst records the property holds.",,H,Analysis,Approved
 """
@@ -327,7 +327,7 @@ def make_demo_project(scaffold):
 
 
 def test_demonstrated_sr_is_its_own_category_and_gate_required(scaffold):
-    # M-5/WI-259: a non-Test, non-Attest Approved SR is reported in its own
+    # M-5/WI-259: a non-Test, non-Vouch Approved SR is reported in its own
     # "demonstrated/observed" bucket (never folded into mechanized), listed by id
     # so the audit sees it.
     make_demo_project(scaffold)
@@ -345,7 +345,7 @@ def test_demonstrated_sr_is_its_own_category_and_gate_required(scaffold):
     assert "Demonstrated/observed" in report and "SR-002" in report
 
     # The headline widening (M-5): regress SR-002 to Modified. sr_bar already
-    # caps it at DevStg-Tests, but the OLD --require-verified (Verification=Test only)
+    # caps it at DevStg-Tests, but the OLD --require-verified (VerificationMethod=Test only)
     # silently PASSED it. The widened bar now flags it, naming the real method.
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
@@ -356,16 +356,16 @@ def test_demonstrated_sr_is_its_own_category_and_gate_required(scaffold):
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "status-findings=1" in proc.stdout
-    assert "Verification=Analysis but Status=Modified" in proc.stdout
+    assert "VerificationMethod=Analysis but Status=Modified" in proc.stdout
     assert "DevStg-Impl requires Approved" in proc.stdout
 
 
 # --- WI-068: the Critique verification value ----------------------------------
 
 # A Critique SR: subjective acceptance judged by an independent critical eye
-# against a rubric. Unlike Attest, its artifact is PRODUCED BY CODE (only the
+# against a rubric. Unlike Vouch, its artifact is PRODUCED BY CODE (only the
 # acceptance is perceptual), so it is NOT LLR-exempt.
-CRITIQUE_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+CRITIQUE_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
 SR-002,Render realism,SN-001,"The rendered scene shall look realistic.","Subjective; judged by a critic against a rubric.","Critic judges the render against docs/rubrics/render.md anchors.",,S,Critique,Approved
 """
@@ -394,8 +394,8 @@ def test_critique_verification_value(scaffold):
     proc = run_py(["scripts/trace.py", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "SR-002 has Verification=" not in report
-    # 2) A Critique SR is NOT LLR-exempt (unlike Attest): SR-002 has no LLR, so it
+    assert "SR-002 has VerificationMethod=" not in report
+    # 2) A Critique SR is NOT LLR-exempt (unlike Vouch): SR-002 has no LLR, so it
     #    is an orphan (the artifact is produced by code — only acceptance is
     #    subjective).
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
@@ -475,7 +475,7 @@ def test_gitignore_ignores_the_html_artifact(scaffold):
 
 # --- Thread 5: the optional Lifecycle tag is a schema-safe extra column ---------
 
-LIFECYCLE_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Lifecycle
+LIFECYCLE_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Lifecycle
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,Startup
 """
 
@@ -496,7 +496,7 @@ def test_lifecycle_column_is_schema_safe(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-ASPECT_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Aspect
+ASPECT_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Aspect
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,perf
 """
 
@@ -520,9 +520,9 @@ def test_aspect_column_is_schema_safe(scaffold):
 
 # --- Thread 35: Area is a first-class (still optional) SR column ---------------
 
-ASPECT_MIXED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Aspect
+ASPECT_MIXED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Aspect
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,perf
-SR-002,Addition report,SN-001,"The system shall report the sum.","Realizes SN-001.","Sum is printed.",,M,Attest,Approved,
+SR-002,Addition report,SN-001,"The system shall report the sum.","Realizes SN-001.","Sum is printed.",,M,Vouch,Approved,
 """
 
 
@@ -616,7 +616,7 @@ def test_out_of_vocabulary_aspect_is_a_schema_finding(scaffold):
         ASPECT_SRS.replace(",perf\n", ",Parallel dispatch\n"), encoding="utf-8"
     )
     # Reported at the schema tier, and GATING only under --strict — the same
-    # severity contract its Verification/Tier siblings carry.
+    # severity contract its VerificationMethod/Tier siblings carry.
     proc = run_py(["scripts/trace.py", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "schema-findings=1" in proc.stdout
@@ -723,7 +723,7 @@ def test_require_verified_passes_EVERY_blessed_value(scaffold):
 
 # SR-002 is Drafted with NO LLR and NO TC (undecomposed), but it links SN-001. It
 # must NOT orphan. SR-001 keeps the fully-traced happy chain.
-DRAFT_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+DRAFT_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
 SR-002,Drafted requirement,SN-001,"The system shall do a not-yet-decomposed thing.","Being drafted requirement-first.","some measurable outcome",,M,Test,Drafted
 """
@@ -783,7 +783,7 @@ def test_draft_llr_is_exempt_from_tc_rule(scaffold):
 
 # SR-002 is fully decomposed (LLR-002 + TC-002) so ONLY the status axis varies:
 # Drafted -> exempt from --require-verified; Approved -> flagged.
-RV_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+RV_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
 SR-002,Drafted requirement,SN-001,"The system shall do a drafted thing.","Being drafted.","some measurable outcome",,M,Test,Drafted
 """
@@ -809,7 +809,7 @@ def test_draft_sr_is_exempt_from_require_verified(scaffold):
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "status-findings=0" in proc.stdout
-    # Approving it (Verification=Test, not yet `Approved`) flags it.
+    # Approving it (VerificationMethod=Test, not yet `Approved`) flags it.
     srs.write_text(
         RV_SRS.replace(",M,Test,Drafted", ",M,Test,Modified"), encoding="utf-8"
     )

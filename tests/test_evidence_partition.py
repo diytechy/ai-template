@@ -42,7 +42,7 @@ SRS = [
         "SN-Refs": "SN-001",
         "DA-Refs": "DA-001",
         "Status": "Approved",
-        "Verification": "Test",
+        "VerificationMethod": "Test",
     }
 ]
 LLRS = [

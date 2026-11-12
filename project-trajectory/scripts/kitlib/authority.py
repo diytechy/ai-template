@@ -70,8 +70,8 @@ Contract IF-195: the approval-authority vocabulary, by importer.
     (None when only the key name was retired); `dial_at(root, rev="HEAD")`
     returns that rung for `rev`'s tree, or the index's when `rev` is None,
     printing nothing, and the most-held rung when nothing is declared or git
-    cannot answer. `dial_from_config(policy)` returns the `[attestation]
-    human_approval_through` rung of a parsed policy, `DevStg-Below` included,
+    cannot answer. `dial_from_config(policy)` returns the `[authority]
+    operator_accepts_through` rung of a parsed policy, `DevStg-Below` included,
     or the most-held rung for anything absent, legacy or unrecognised,
     printing nothing. `holds_under(dial, rung)` is True when the dial holds the
     rung for a human: never at `DevStg-Below`, always for an unrecognised dial
@@ -104,7 +104,7 @@ SPINE_APPROVAL_RUNGS = {
 # list, are approved at the needs rung.
 NEEDS_REGISTRY = "docs/requirements/stakeholder-needs"
 
-DIAL_KEY = "human_approval_through"
+DIAL_KEY = "operator_accepts_through"
 
 # Every rung at or below the top one is held: the conservative end.
 MOST_HELD = ladder.STAGE_RELEASE
@@ -127,7 +127,7 @@ LEGACY_DIAL_ORDINALS = {
 }
 #   * the retired key name, read as the live key when the live key is absent;
 LEGACY_DIAL_KEY = "human_ratification_through"
-#   * the retired `gate-policy` enum (`[attestation] gate_policy`, else the
+#   * the retired `gate-policy` enum (`[authority] gate_policy`, else the
 #     one-word file), whose dial half lives here and whose other two halves are
 #     `agent_common.LEGACY_APPROVAL`'s. Undeclared reads as "attended".
 LEGACY_GATE_KEY = "gate_policy"
@@ -161,14 +161,14 @@ def _is_dial(value):
 
 
 def dial_from_config(policy):
-    """`[attestation] human_approval_through` from a parsed policy file, as a
+    """`[authority] operator_accepts_through` from a parsed policy file, as a
     rung or `DevStg-Below`; the most-held rung for anything else, silently.
     The HISTORY reader (see the module docstring for why it does not
     translate).
 
     Implements: SR-210, LLR-249
     """
-    table = policy.get("attestation") if isinstance(policy, dict) else None
+    table = policy.get("authority") if isinstance(policy, dict) else None
     value = table.get(DIAL_KEY) if isinstance(table, dict) else None
     return value.strip() if _is_dial(value) else MOST_HELD
 
@@ -180,12 +180,12 @@ def read_dial(policy, gate_policy=None):
     pre-commit step, the writers, the slot and the coordinator cannot disagree
     about what a dial means.
 
-    `[attestation] human_approval_through` names a rung or `DevStg-Below`; a
+    `[authority] operator_accepts_through` names a rung or `DevStg-Below`; a
     retired 0-4 ordinal is translated (`LEGACY_DIAL_ORDINALS`); the retired key
     name is read when the live key is absent. Any other declared value is
     MALFORMED and reads as the most-held rung, never a best guess, because
     every wrong guess fails toward less human involvement. With no dial
-    declared, the retired gate-policy enum decides: `[attestation] gate_policy`
+    declared, the retired gate-policy enum decides: `[authority] gate_policy`
     when it is a string, else `gate_policy` - the one-word file's value, or a
     zero-argument callable returning it, called only then, so a caller reads
     that file only when it matters - else "attended". An unknown word is the
@@ -197,7 +197,7 @@ def read_dial(policy, gate_policy=None):
 
     Implements: SR-208, LLR-246
     """
-    table = policy.get("attestation") if isinstance(policy, dict) else None
+    table = policy.get("authority") if isinstance(policy, dict) else None
     table = table if isinstance(table, dict) else {}
     value, key = table.get(DIAL_KEY), DIAL_KEY
     if value is None and DIAL_KEY not in table and LEGACY_DIAL_KEY in table:

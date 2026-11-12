@@ -11,6 +11,11 @@ the vocabulary the next changes are written in, never as a claim about the
 current scripts. Links are authored for the scaffolded home (`docs/glossary.md`
 beside `docs/process.md` and `docs/process-options.md`).
 
+**Human.** The tooling cannot know whether a person acted. No field, value,
+flag or exit code that controls who may do what says "human"; those say
+[operator](#operator). "Human" appears only in prose, where it states that a
+person is intended.
+
 ## Sessions and routing
 
 ### ask
@@ -100,6 +105,16 @@ tier, and a planning dial may set the tier per item.
 
 ## Roles
 
+### operator
+
+The role that holds the kit's reserved acts: [accepting](#accept) rows on an
+operator-held rung, ruling open items, confirming or overruling delegated
+decisions, the final read, the push. A person, or a session that person has
+delegated to, with the delegation and its scope recorded. Never a session the
+loop or a launcher started; that is the one line the tooling enforces.
+Formerly "the owner" and "the human", two words for one role; **operator** is
+kept.
+
 ### adjudicator
 
 The role that rules on spine rows, disputes and dispositions and takes the
@@ -135,6 +150,28 @@ alone; when each selects its own, the round becomes an open item for the owner,
 which offers running an independent third agent of the owner's choosing, only
 if the owner picks it. **Today:** two position-swapped arbiter runs must agree
 ([process-options.md "Dual-plan decomposition"](process-options.md#dual-plan-decomposition)).
+
+## Rows
+
+### accept
+
+The act that takes a row as agreed. Its `status` moves from `Drafted` to
+`Accepted`; after an amendment the row is **re-accepted** and its status does
+not move. The [operator](#operator) takes the act on an operator-held rung,
+and an independent [adjudicator](#adjudicator) on a released one. Accepting a
+row takes it as an outcome to build on. It does not claim that every nuance
+was reviewed, and it says nothing about tests passing. Formerly "approve",
+"attest" and "re-attest", three words for one act; **accept** is kept. A
+project's own approval ceremonies are outside the kit.
+
+### Vouch
+
+The verification method for what no check can establish, such as a playtest, a
+creative review or a physical action: the [operator](#operator)'s recorded
+word that the requirement is met, naming who and when. It rests on trust, and
+the trace report counts it apart from mechanized results so that an audit sees
+how much does. Declared as `verification_method = "Vouch"`. Formerly `Attest`;
+**Vouch** is kept.
 
 ## Lanes
 
@@ -213,6 +250,20 @@ The checks a lane's refreshed tree must pass before its
 [landing](#landing): the full gate, run by the station refresh on the tree
 that becomes trunk. Not a declared setting. Formerly the "landing bar";
 **landing checks** is kept.
+
+### passed-checks record
+
+The line in a commit message recording that a named set of checks passed on a
+named tree: `Checks-Passed: tree=<sha> work=<sha>
+checks=<commit|landing|none> tests=<digest|none> <summary>`.
+`integrate.py record-checks` writes it for the
+[commit checks](#commit-checks) and the station refresh writes it for the
+[landing checks](#landing-checks); the merge slot re-derives both ids from git
+before it trusts one. It is a script's record of a result. Nobody decides
+anything, so it is not an [acceptance](#accept). Formerly the "bar
+attestation", written `Bar-Green: ... bar=<review|landing|no-bar>`;
+**passed-checks record** is kept, and a trailer in the earlier form is not
+read.
 
 ### gate checks
 

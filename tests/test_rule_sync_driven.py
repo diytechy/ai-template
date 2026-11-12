@@ -19,7 +19,7 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     # WI-259 (repo-review-2026-07-21 M-5): trace's --require-verified DevStg-Impl bar and
     # spine_rules.sr_bar must agree about which SRs must be Approved before DevStg-Impl.
     # sr_bar has always demanded is_approved for ANY decomposed SR with no
-    # per-method carve-out; trace's bar used to fire only for Verification=Test, so
+    # per-method carve-out; trace's bar used to fire only for VerificationMethod=Test, so
     # a decomposed Demonstration/Analysis/Inspection SR left Approved could never
     # derive DevStg-Impl yet passed trace's check — two scripts disagreeing about the gate.
     # Option A widened trace's bar: its loop now gates only on is_drafted (skip) then
@@ -32,7 +32,7 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         "Manual",
         "Analysis",
         "Inspection",
-        "Attest",
+        "Vouch",
         "Critique",
     ]
     # Computed once from the first method, then every other method must match it:
@@ -44,8 +44,8 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         # `Planned`, which FOLDED into `Approved`. Under the narrowed enum the
         # only value that still means that is `Modified` — using `Approved` here
         # would have made both halves of the comparison the same row.
-        implemented = {"Verification": m, "Status": "Modified"}
-        verified = {"Verification": m, "Status": "Approved"}
+        implemented = {"VerificationMethod": m, "Status": "Modified"}
+        verified = {"VerificationMethod": m, "Status": "Approved"}
         # trace's widened bar applies to every approved (non-Drafted) row — the skip
         # is is_drafted, which is method-blind — and then passes iff is_approved. So
         # an approved SR of ANY method flags exactly when it is not Approved.
@@ -77,7 +77,7 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     # what lets a draft live in the live spine and still show as work in
     # progress. `sr_bar` said this by returning the below-everything sentinel;
     # the fall-through says it by stopping at the requirements rung.
-    draft = {"Verification": "Test", "Status": "Drafted"}
+    draft = {"VerificationMethod": "Test", "Status": "Drafted"}
     assert TRACE.is_drafted(draft) is True
     assert (
         GATE.spine_stage(
@@ -91,7 +91,7 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     )
 
     # The predicate pins above are necessary but not sufficient: because is_drafted/
-    # is_approved read Status (not Verification), restoring a Verification=="Test"
+    # is_approved read Status (not VerificationMethod), restoring a VerificationMethod=="Test"
     # guard INSIDE analyze()'s --require-verified loop would leave them all green.
     # So drive the real loop end-to-end — a decomposed, non-Test (Demonstration) SR
     # left below `Approved` MUST produce a status finding. This is the assertion that
@@ -108,4 +108,4 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "status-findings=1" in proc.stdout
-    assert "Verification=Demonstration but Status=Modified" in proc.stdout
+    assert "VerificationMethod=Demonstration but Status=Modified" in proc.stdout

@@ -1890,7 +1890,7 @@ STAKEHOLDER_NEEDS = """# Stakeholder Needs (SN-###)
 | SN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
 """
 
-SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
 """
 

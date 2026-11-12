@@ -51,7 +51,7 @@ Contract IF-189: `default_base(root)`, the integration base a claimed branch's
     treats as an unreadable change rather than an empty one; and
     `TrunkUndeclared` when the trunk's declaration cannot be read.
 Contract IF-224: `human_approves_spine(docs, registry)`, read by the owner's
-    approval brief to set apart the owing chains the human-approval dial
+    approval brief to set apart the owing chains the operator-acceptance dial
     releases to an adjudicator: True (held) for a spine registry whose rung the
     dial holds and for one no rung map names, False for a released one. The
     brief asks it once per spine tier per rendering and keeps no rung table of
@@ -138,7 +138,7 @@ LEGACY_APPROVAL = agent_policy.LEGACY_APPROVAL
 APPROVAL_DIAL_RUNGS = agent_policy.APPROVAL_DIAL_RUNGS
 LEGACY_DIAL_ORDINALS = agent_policy.LEGACY_DIAL_ORDINALS
 APPROVAL_FALLBACK = agent_policy.APPROVAL_FALLBACK
-LEGACY_ATTESTATION_KEY = agent_policy.LEGACY_ATTESTATION_KEY
+LEGACY_DIAL_KEY = agent_policy.LEGACY_DIAL_KEY
 legacy_approval = agent_policy.legacy_approval
 approval_through = agent_policy.approval_through
 _retired_dial_note = agent_policy._retired_dial_note

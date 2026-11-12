@@ -4,7 +4,7 @@ A **rubric** is the written reference a `Critique`-verified requirement is judge
 against — the instrument that makes *subjective* acceptance ("a realistic-looking
 render", "the two artifacts read as the same scene") auditable instead of left to
 whoever happened to ship it. It is read by an **independent critical eye** (an LLM
-one, deliberately separated from human `Attest`; process-options.md "Critique
+one, deliberately separated from `Vouch`; process-options.md "Critique
 verification & the critique loop"), never by the session that produced the
 artifact.
 

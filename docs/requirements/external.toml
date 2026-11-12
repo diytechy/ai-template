@@ -30,7 +30,7 @@
 # rather than renumbering a locked table.
 #
 # SPENT IDS — never re-minted at a different thing: `EXT-003` (the Adopter,
-# dropped: an adopting team is the human operator of the kit in its own
+# dropped: an adopting team is the person operating the kit in its own
 # repository) and `EXT-004` (the cut hosted-CI entity, re-drawn as `EXT-007`);
 # `B-03` (the read set, returned as `B-09`), `B-06` and `B-07` (the cut
 # hosted-CI crossings, absorbed by `B-11`) and `B-08` (the vendored-doc check,
@@ -80,8 +80,8 @@
 #
 #                  FLIP AUTHORITY IS DERIVED, NOT DECLARED: a `status` cell may
 #                  be machine-flipped only when this registry's stage rung —
-#                  DevStg-Boundary — is not human-held under the `[attestation]
-#                  human_approval_through` dial, the predicate being
+#                  DevStg-Boundary — is not human-held under the `[authority]
+#                  operator_accepts_through` dial, the predicate being
 #                  `agent_common.human_approves(docs, "external")`. READ THE
 #                  DIAL, DO NOT ASSUME IT: whether DevStg-Boundary is held is
 #                  that value's to say, never this comment's. What keeps these
@@ -109,7 +109,7 @@ mediates = "EXT-006"
 description = """The computer and the working copy in its hands: shell, editors, OS, git client, Python and the test runner. Writes reach the system through it, whether a person types them or an agent CLI makes them, and the system's verdicts come back through it. The session HOLDS the checkout; the system owns the governed state those edits become once admitted through the hook floor."""
 status = "Approved"
 absorbs = "v1 EXT-001; dissolved into it: v1 EXT-005 (git), EXT-007 (OS/filesystem/Python), EXT-008 (test+coverage toolchain)"
-notes = """It mediates for the human operator (EXT-006): an outcome landing on its crossings can be one that operator experiences. Who holds authority is policy, declared by the approval dial, not a property of this party."""
+notes = """It mediates for the person (EXT-006): an outcome landing on its crossings can be one that person experiences. Who holds authority is policy, declared by the approval dial, not a property of this party."""
 
 [entity.EXT-002]
 name = "Template"
@@ -128,7 +128,7 @@ absorbs = "v1 EXT-004 merged with the external-reviewer CLI at 13o"
 notes = """A model CLI is just a model CLI, whether primary or secondary."""
 
 [entity.EXT-006]
-name = "Human operator"
+name = "Person"
 class = "operational"
 description = """The person who operates the kit: writes to the system through the development session, holds approval authority, and reads the spine and the views generated from it."""
 status = "Approved"

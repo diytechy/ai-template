@@ -324,7 +324,7 @@ def test_arbiter_disagreement_on_a_loop_held_tier_stalls_not_pages(tmp_path):
     # SN-029: the loop-held tier — `DevStg-Below`, the sentinel below every
     # rung, where a recorded verdict carries approval authority. Declared
     # as the RUNG (WI-493), not as the retired enum word or the 0-4 ordinal.
-    set_process_key(root, "attestation", "human_approval_through", "DevStg-Below")
+    set_process_key(root, "authority", "operator_accepts_through", "DevStg-Below")
 
     fake.write_text(
         FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
@@ -345,8 +345,8 @@ def test_arbiter_disagreement_with_keep_nondependent_stalls_not_pages(tmp_path):
     root, fake = make_fixture(tmp_path)
     # The retired `single-approve` level was two facts: a human-held tier PLUS
     # `keep_nondependent`. Both are declared now, separately.
-    set_process_key(root, "attestation", "human_approval_through", "DevStg-Release")
-    set_process_key(root, "attestation", "keep_nondependent", True)
+    set_process_key(root, "authority", "operator_accepts_through", "DevStg-Release")
+    set_process_key(root, "authority", "keep_nondependent", True)
     fake.write_text(
         FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
         encoding="utf-8",

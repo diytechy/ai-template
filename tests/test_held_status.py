@@ -112,14 +112,14 @@ def test_the_digest_has_the_done_when_shape():
 # --- the binding's identity cell ------------------------------------------------
 
 _IDS = {"SR-001": "sha256:0123456789abcdef", "SN-001": "sha256:fedcba9876543210"}
-_BINDING = "brief = amendment\nkinds = amendment\noutcome = accepted\n"
+_BINDING = "brief = amendment\nkinds = amendment\noutcome = recorded\n"
 
 
 def test_a_binding_round_trips_its_identities():
     """Implements: TC-398"""
     render = ksitting.render_requested
     read = ksitting.read_identities
-    text = render("amendment", ("amendment",), "accepted", identities=_IDS)
+    text = render("amendment", ("amendment",), "recorded", identities=_IDS)
     assert read(text) == (_IDS, None)
 
 
@@ -128,9 +128,9 @@ def test_read_requested_ignores_the_identity_cell():
     # Every other reader of a binding reads brief, kinds and outcome only, so
     # the cell must neither change that answer nor appear without identities.
     render = ksitting.render_requested
-    text = render("amendment", ("amendment",), "accepted", identities=_IDS)
-    assert ksitting.read_requested(text) == ("amendment", ("amendment",), "accepted")
-    assert render("amendment", ("amendment",), "accepted") == _BINDING
+    text = render("amendment", ("amendment",), "recorded", identities=_IDS)
+    assert ksitting.read_requested(text) == ("amendment", ("amendment",), "recorded")
+    assert render("amendment", ("amendment",), "recorded") == _BINDING
 
 
 @pytest.mark.parametrize(

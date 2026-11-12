@@ -223,7 +223,7 @@ def test_gap_census_names_the_three_gap_classes_mechanically(tmp_path):
     )
     (req / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status,Phase,Area,SupersededBy\n"
+        "Permutations,Priority,VerificationMethod,Status,Phase,Area,SupersededBy\n"
         "SR-001,Widget,SN-001,Shall widget.,Because.,Widgets.,,1,Test,"
         "Approved,,,\n",
         encoding="utf-8",

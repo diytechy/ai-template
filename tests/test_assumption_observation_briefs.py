@@ -24,7 +24,7 @@ def assumption_repo(tmp_path):
         'evidence = "docs/test/inspection.md"\ntier = "Release"\n',
         encoding="utf-8",
     )
-    set_process_key(tmp_path, "attestation", "human_approval_through", "DevStg-Needs")
+    set_process_key(tmp_path, "authority", "operator_accepts_through", "DevStg-Needs")
     return tmp_path
 
 

@@ -323,7 +323,7 @@ BASELINE = {
     # extracted to `_dp_fallback`).
     ("plan_runner.py", "run_dual_plan_round"): 30,
     # WI-259 reviewed bump 50 -> 53: the verification-basis split went binary ->
-    # three-way (mechanized/demonstrated/attested, a new elif branch) and
+    # three-way (mechanized/demonstrated/vouched, a new elif branch) and
     # --require-verified was widened to every approved SR of any method, naming
     # the real method in the finding. Trace decomposition remains a follow-up;
     # the added branches are the honest audit surface.

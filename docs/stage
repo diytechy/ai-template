@@ -33,10 +33,10 @@ stage-ord = 6
 stage-of = 8
 floored = no
 settled-stage = DevStg-Impl
-live-stage = DevStg-Impl
+live-stage = DevStg-Reqs
 phase = 6
 per-phase = 1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-Impl;6=DevStg-Impl
-per-phase-live = 1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-Impl;6=DevStg-Impl
-drafted = 20
-fingerprint = sha256:783bca951a09662bf3a4bcbdbffb17692f66892a9cdd4082b220d014abce6029
-# computed 2026-11-08 (as-of aace1d57d)
+per-phase-live = 1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-Impl;6=DevStg-Reqs
+drafted = 23
+fingerprint = sha256:da77a555e6bc0d04857daea22fb56568cb7f409a68d3b0c5cd3e6cd3080be97c
+# computed 2026-11-11 (as-of b5ea4d29c)

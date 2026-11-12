@@ -88,7 +88,7 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     `_spine_row_sides`, so no reader can be the only one that sees a row.
     `merge_approval_refusal(root, base, head, metas, *, trunk)`
     is the merge slot's one call: every lane's acts through
-    `backed_act_refusal` - each backed by an accepted verdict over its own rows
+    `backed_act_refusal` - each backed by a recorded verdict over its own rows
     (owner ruling 6, 2026-10-07) - a record written with no act through
     `lane_approval_refusal`, and, when any claimed row in `metas` records a
     scope, the flips through its first-approval scope besides, and its
@@ -103,7 +103,7 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     ledger or copy the tree lists that cannot be read or does not parse is
     the refusal, naming the carrier and revision; nothing else suppresses.
     `text_as_bound(root, head, ruled)` returns the ids of `ruled` still at the
-    text their accepted verdict's binding records.
+    text their recorded verdict's binding records.
     `unanchored_rows(root, head, ids, routed_cells)` returns `({row id:
     registry}, refusal)` for the mint's held-act arm: the `ids` whose row at
     `head` is not settled against its snapshot copy there, by the one
@@ -223,7 +223,7 @@ SPINE_CSVS = (
 # THE APPROVAL-ACT RUNG'S OWN SET: the spine three PLUS the need tier
 # (WI-572 REVIEW-A round 028). SN is a SPINE tier — `spine_carrier.SPINE_TABLE`
 # names it, its rows carry the same `status` vocabulary, and the DevStg-Reqs
-# rung the human-approval dial holds for the owner is exactly the SN half — so a
+# rung the operator-acceptance dial holds for the owner is exactly the SN half — so a
 # lane flipping `SN-###` Drafted -> Approved is the WORST case of the act the
 # owner's 2026-09-01 ruling moved to the adjudicator, not an exempt one. It was
 # excluded only by the older section-as-state reading recorded at
@@ -457,7 +457,7 @@ SPINE_APPROVED_CELLS = {
             "AcceptanceCriteria",
             "Permutations",
             "Priority",
-            "Verification",
+            "VerificationMethod",
             "Delivered-With",
             "Coincident",
             "Form",
@@ -777,14 +777,14 @@ def staged_approval_acts(root, base="HEAD", head=None):
     LLR, TC — and the assumptions registry's two tiers, and not `SPINE_CSVS`,
     which is the amendment warn's three. SN is
     covered because it is a spine tier carrying the same `status` vocabulary and
-    is the half of DevStg-Reqs the human-approval dial holds, so a lane flipping
+    is the half of DevStg-Reqs the operator-acceptance dial holds, so a lane flipping
     a need is the worst case of this act rather than an exempt one (round 028).
     The three OFF-SPINE registries stay out; see `OUTSIDE_THE_APPROVAL_ACT`.
 
     Owner ruling 6, 2026-10-07 (WI-849): the act this reports is an independent
     adjudicator's, in the authoring lane or on trunk. `approval_delta` directly
     below reads it ONCE for `merge_approval_refusal`, which requires every act
-    backed by an accepted verdict over its own rows, and an adjudication row's
+    backed by a recorded verdict over its own rows, and an adjudication row's
     recorded scope besides, at `integrate._approval_act_refusal`
     — this reader does not itself cross the `IF-091` seam, and the seam does not
     declare that it does.
@@ -1005,7 +1005,7 @@ def adjudication_approval_refusal(scope, acted, delta):
 def merge_approval_refusal(root, base, head, metas, *, trunk):
     """Apply one derived approval delta to THE ONE ACTOR RULE (owner ruling 6,
     2026-10-07; WI-849): a lane's acts are admitted when every act is backed
-    by an accepted verdict judging that act's own rows (`backed_act_refusal`),
+    by a recorded verdict judging that act's own rows (`backed_act_refusal`),
     in whatever lane it is taken, and the snapshot copies exactly the
     registries those acts moved. A lane any of whose claimed rows records a
     scope (`kitlib.sitting.bounds_acts`: an adjudication-kind row, or a row
@@ -1035,7 +1035,7 @@ def merge_approval_refusal(root, base, head, metas, *, trunk):
     elif not any(acted.values()):
         return lane_approval_refusal(root, base, head, delta)
     added = _added_acts(root, base, head)
-    refusal = refusal or _kitsitting.unaccepted_refusal(root, head, added)
+    refusal = refusal or _kitsitting.unrecorded_refusal(root, head, added)
     refusal = refusal or backed_act_refusal(root, base, head, acted, delta)
     return refusal or adjudication_approval_refusal(scope, acted, delta)
 
@@ -1043,7 +1043,7 @@ def merge_approval_refusal(root, base, head, metas, *, trunk):
 def backed_act_refusal(root, base, head, acted, delta):
     """THE ACTOR TEST at the merge slot (owner ruling 6, 2026-10-07; WI-849):
     why a lane's approval acts may not merge, or None. Every act must be backed
-    by an ACCEPTED verdict among the bindings the branch carries that judged
+    by a RECORDED verdict among the bindings the branch carries that judged
     that act's own rows: each row it flips or mints approved ruled APPROVE in a
     first-approval part, each row it re-attests ruled CLARITY, or MEANING with
     the bless mark, in an amendment part (the one reader,
@@ -1055,9 +1055,9 @@ def backed_act_refusal(root, base, head, acted, delta):
     entries the branch added AND the delta's own flips, so a flip that wrote no
     ledger entry and a ledger approval no flip shows are judged alike. The judgement
     is WI-841's one reader (`kitlib.sitting.uncovered_refusal` over
-    `accepted_at`), so a missing, failed, invalid or other-rows verdict refuses
+    `recorded_at`), so a missing, failed, invalid or other-rows verdict refuses
     alike, worded with the acts by `lane_approval_refusal`. Independence rests
-    on that reader: an outcome is recorded accepted only by
+    on that reader: an outcome reads `recorded` only through
     `adjudicate_brief.record_outcome`, which a route calls after it ran the
     adjudication as its own call; no record names the session that authored a
     row, so the merge cannot compare the two sessions itself.
@@ -1310,10 +1310,10 @@ def unanchored_rows(root, head, ids, routed_cells):
 
 
 def text_as_bound(root, head, ruled):
-    """The ids of `ruled` (`{row id: accepted verdict path}`) whose approved
+    """The ids of `ruled` (`{row id: recorded verdict path}`) whose approved
     text at `head` is the text their verdict's binding records. A row gone
     from its registry has no text to differ, so it counts; a binding that
-    records no text for the row (`kitlib.sitting.accepted_identities`) does
+    records no text for the row (`kitlib.sitting.recorded_identities`) does
     not, and neither does an id in no tier.
 
     Implements: SR-174, LLR-153"""
@@ -1325,7 +1325,7 @@ def text_as_bound(root, head, ruled):
         if rel + col not in tiers:
             tiers[rel + col] = _spine_rows_at(root, head + ":", rel, col)
         if verdict not in bound:
-            identities, _why = _kitsitting.accepted_identities(root, head, verdict)
+            identities, _why = _kitsitting.recorded_identities(root, head, verdict)
             bound[verdict] = identities or {}
         row = tiers[rel + col].get(rid)
         if row is None or (
@@ -1438,7 +1438,7 @@ def lane_approval_refusal(root, base, head, delta=None, reason=None):
     cell text on any such row, including approved ones; its acts - a `Status`
     flipped into `Approved`/`Founded`, a row minted already claiming one, a
     re-attestation - merge only when `backed_act_refusal` finds each backed by
-    an accepted verdict that judged its own rows. A copy under `SNAPSHOT_DIR`
+    a recorded verdict that judged its own rows. A copy under `SNAPSHOT_DIR`
     with no flip and no re-attestation behind it is an act no verdict can
     back, and this is its refusal. The off-spine three
     (`OUTSIDE_THE_APPROVAL_ACT`) stay outside this rung - their approval cells
@@ -1479,13 +1479,13 @@ def lane_approval_refusal(root, base, head, delta=None, reason=None):
         for act in acts
     ] + ["  {}".format(name) for name in snapshot_files]
     return (
-        "{} performs an APPROVAL ACT no accepted verdict backs. The act is an "
+        "{} performs an APPROVAL ACT no recorded verdict backs. The act is an "
         "independent adjudicator's, never the session's that authored the rows, "
         "in the authoring lane or on trunk (owner ruling 6, 2026-10-07; "
         "PROCESS.md §4): that session leaves SN/SR/LLR/TC, assumption and "
         "surrogate rows `Drafted` and does not write {}/. Leave the rows "
         "`Drafted` for the first-approval adjudication minted at this merge, "
-        "or back each act with an adjudicator's accepted verdict over its rows. "
+        "or back each act with an adjudicator's recorded verdict over its rows. "
         "Nothing was merged:\n{}\n{}".format(
             head, SNAPSHOT_DIR, "\n".join(lines), reason or ""
         )

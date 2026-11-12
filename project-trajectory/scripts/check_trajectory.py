@@ -67,7 +67,7 @@ that cannot accrete prose and the successor freshness check applies. IMPLEMENTED
 since WI-234 — `status_forward_only_findings` below, and the stand-down is scoped
 to the marked block, not the whole file. `--staged` adds the warn-first **no-validation-delta** checks: the
 follow-up-on-a-done-SR ratchet, the **critique-loop ratchet** (WI-068) — a WI
-closing on a `Verification=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
+closing on a `VerificationMethod=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
 tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor) — and
 the **amend-without-flip** warn (WI-316): a staged diff changing the **approved**
@@ -2850,7 +2850,7 @@ staged_snapshot_findings = acceptance_record.staged_snapshot_findings
 committed_snapshot_findings = acceptance_record.committed_snapshot_findings
 
 
-# The critique-loop ratchet (WI-068). A `Verification=Critique` SR and its latest
+# The critique-loop ratchet (WI-068). A `VerificationMethod=Critique` SR and its latest
 # CRITIQUE verdict file (`docs/reviews/*-CRITIQUE.md`, the S8 verdict format), in
 # BOTH naming generations — serial `NNN-CRITIQUE.md` and the branch-scoped
 # `WI-<n>-CRITIQUE.md` replacing it (concurrency-restructure §5.4, and
@@ -2929,7 +2929,7 @@ def approval_brief_findings(root):
 
 
 def _load_critique_srs(root):
-    """SR ids whose Verification is `Critique` (system-requirements.toml). Empty
+    """SR ids whose verification method is `Critique` (system-requirements.toml). Empty
     makes the critique ratchet vacuous — a repo with no perceptual SR pays
     nothing."""
     out = set()
@@ -2938,7 +2938,7 @@ def _load_critique_srs(root):
         if (
             sid
             and not sid.endswith("-000")
-            and (r.get("Verification") or "").strip() == "Critique"
+            and (r.get("VerificationMethod") or "").strip() == "Critique"
         ):
             out.add(sid)
     return out
@@ -2965,7 +2965,7 @@ def _latest_critique_verdict(root):
 def critique_ratchet_findings(root):
     """The lax-TC ratchet for the critique loop (WI-068; warn-first, the same
     no-validation-delta idea as `staged_findings`). When a staged commit **closes**
-    a WI whose `SR-Refs` include a `Verification=Critique` SR, the latest CRITIQUE
+    a WI whose `SR-Refs` include a `VerificationMethod=Critique` SR, the latest CRITIQUE
     verdict is CHANGES-REQUESTED with findings, yet the staged set touches **neither**
     the TC registry, the tests dir, **nor** a `docs/rubrics/` file, the fix landed in
     the artifact but not the validation chain — so the same 'shipped it because
@@ -3007,7 +3007,7 @@ def critique_ratchet_findings(root):
     ]
 
 
-# The render surface a perceptual (Verification=Critique) SR is judged against —
+# The render surface a perceptual (VerificationMethod=Critique) SR is judged against —
 # WI-243. The dashboard facade and its direct render inputs (located beside this
 # checker so the paths resolve under `--root` in this repo and a downstream
 # scaffold alike) plus the optional meta-only render recipe. A change to any
@@ -3152,7 +3152,7 @@ def _latest_critique_file(root):
 
 def critique_staleness_findings(root):
     """The perceptual re-fire finding (WI-243; git-time staleness like
-    `backlog_staleness_findings`). A `Verification=Critique` SR is judged by a
+    `backlog_staleness_findings`). A `VerificationMethod=Critique` SR is judged by a
     human/critic look recorded in `docs/reviews/*-CRITIQUE.md`, and that verdict
     never re-fires on its own — so once the dashboard *render surface* changes,
     the approval stamp is judging an older render. When a declared render-surface
@@ -3165,7 +3165,7 @@ def critique_staleness_findings(root):
     stale render surface cannot reach a green gate; main() routes it through the
     strict-promotable findings loop (the R-E warn tier). Silent off-git
     and vacuous when the repo declares no perceptual SR (so a downstream repo
-    without a `Verification=Critique` SR — none ship — pays nothing at either
+    without a `VerificationMethod=Critique` SR — none ship — pays nothing at either
     tier), carries no CRITIQUE evidence, or exposes no locatable render surface.
     Bounded cost: one `git log -1` for the evidence plus one per declared
     render-surface path. By construction (git-time, not a render diff) it fires
@@ -3194,7 +3194,7 @@ def critique_staleness_findings(root):
     if not newer:
         return []
     return [
-        "{} (Verification=Critique) last judged by {} but the dashboard render "
+        "{} (VerificationMethod=Critique) last judged by {} but the dashboard render "
         "surface changed after it ({}) — re-run the dashboard critique against the "
         "current render (the shoot.mjs matrix) and record a fresh "
         "docs/reviews/*-CRITIQUE.md".format(
@@ -3486,13 +3486,13 @@ def main():
     # WON'T-BUILD) predecessor it can never see satisfied. WARN plain, ERROR under
     # --strict — same warn-tier as R-E (no new branch in main).
     findings.extend(("dead-dep", False, msg) for msg in dead_dependency_findings(wis))
-    # Perceptual re-fire (WI-243) — a Verification=Critique SR whose latest CRITIQUE
+    # Perceptual re-fire (WI-243) — a VerificationMethod=Critique SR whose latest CRITIQUE
     # evidence predates a dashboard render-surface change is judging an older render.
     # WARN at the commit checks; **fail-closed under --strict** (the DevStg-Impl gate) per the
     # owner's 2026-07-20 ruling — a stale render surface cannot reach a green gate.
     # hard=False rides the same warn-plain / error-under-strict tier as R-E,
     # so main() gains no branch. Vacuous when no perceptual SR / evidence / render
-    # surface (a downstream repo without a Verification=Critique SR — none ship —
+    # surface (a downstream repo without a VerificationMethod=Critique SR — none ship —
     # pays nothing), silent off-git, and opt-out via [checks] trajectory_check.
     findings.extend(
         ("perceptual-stale", False, msg) for msg in critique_staleness_findings(root)

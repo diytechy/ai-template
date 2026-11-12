@@ -23,7 +23,7 @@ _No approved baseline — no docs/archive/last_approved snapshot exists yet — 
 - **Rationale**: why
 - **AcceptanceCriteria**: ac
 - **Priority**: C
-- **Verification**: Test
+- **VerificationMethod**: Test
 - **Status**: Drafted
 - **Phase**: 1
 
@@ -43,7 +43,7 @@ _No approved baseline — no docs/archive/last_approved snapshot exists yet — 
 - **Rationale**: why
 - **AcceptanceCriteria**: ac
 - **Priority**: C
-- **Verification**: Test
+- **VerificationMethod**: Test
 - **Status**: Approved
 - **Phase**: 1
 
@@ -85,7 +85,7 @@ _No approved baseline — no docs/archive/last_approved snapshot exists yet — 
 - **Rationale**: why
 - **AcceptanceCriteria**: ac
 - **Priority**: C
-- **Verification**: Test
+- **VerificationMethod**: Test
 - **Status**: Drafted
 - **Phase**: 1
 

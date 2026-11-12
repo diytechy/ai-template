@@ -436,7 +436,7 @@ def _act_inputs(root, args):
     `(None, None, None, why)`: a lane root, an enabled entry, a lane with no
     uncommitted change, and the act brief composed from the verdict accepted
     at HEAD (`adjudicate_act.compose_act`), which refuses a verdict that is
-    not accepted there, owes no act, or judged a row in a state no act
+    not recorded there, owes no act, or judged a row in a state no act
     explains.
 
     Implements: SR-231, LLR-306
@@ -490,7 +490,7 @@ def _act_report(root, args, outcome, before):
 
 
 def act(args):
-    """Take the act a committed, accepted verdict authorizes: compose the act
+    """Take the act a committed, recorded verdict authorizes: compose the act
     brief from it at HEAD, plan the keep by the verdict's bound class, launch,
     and report whether the act is complete. Reserves no verdict path, writes
     no binding and records no outcome (WI-912).
@@ -619,7 +619,7 @@ def _parser():
     run.add_argument("--timeout", type=int, default=session_service.DEFAULT_DEADLINE)
     run.set_defaults(handler=adjudicate)
     take = sub.add_parser(
-        "act", help="take the act a committed, accepted verdict authorizes"
+        "act", help="take the act a committed, recorded verdict authorizes"
     )
     take.add_argument("--root", default=".")
     take.add_argument("--verdict", required=True)

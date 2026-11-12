@@ -53,7 +53,7 @@ MAPPING = [
     # `copy_file` therefore exempts it from --force (see WATERMARK_DEST).
     ("id-watermark.template", "docs/id-watermark"),
     # THE ONE POLICY HOME (SN-028). Every process dial — gate authority, the
-    # human-approval level, push authority, the reviewer count, the privacy
+    # operator-acceptance level, push authority, the reviewer count, the privacy
     # toggle, the secrets floor, guardrails, the blackout window — declared once
     # here instead of in ~10 one-word files. A FRESH SCAFFOLD GETS ONLY THIS
     # FILE: shipping both homes would hand every new repo the mixed-config
@@ -298,7 +298,7 @@ MAPPING = [
     # requirements remain authoritative in the spine.
     ("knowledge/README.template.md", "docs/knowledge/README.md"),
     # Critique rubrics (process-options.md "Critique verification & the critique
-    # loop", WI-068): the judgment reference a Verification=Critique requirement is
+    # loop", WI-068): the judgment reference a VerificationMethod=Critique requirement is
     # scored against — written from the SN/SR intent (not the possibly-lax TC),
     # carrying numbered good/bad anchors that accumulate at rework. A README
     # explaining the convention + an inert rubric-000 example. Nothing gates on the
@@ -462,6 +462,10 @@ MAPPING = [
     # it once at the resync that retires the `reviewed` key, since no reader
     # of that key is kept. Imports `kitlib.decisions` alone.
     ("scripts/migrate_decisions.py", "scripts/migrate_decisions.py", "SR-225"),
+    # The vocabulary migrator: every adopter runs it once, at the re-sync that
+    # brings the unified vocabulary in, since no reader of an earlier spelling
+    # is kept. Imports nothing from the kit.
+    ("scripts/migrate_vocabulary.py", "scripts/migrate_vocabulary.py", "SR-247"),
     ("scripts/spine_rules.py", "scripts/spine_rules.py"),
     # The STAGE axis's producer (WI-498 slice 1). Imports `spine_rules` for the
     # spine load and its rung predicates — so that the two axes can never

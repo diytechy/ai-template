@@ -126,7 +126,7 @@ def _rev(root, ref="HEAD"):
 
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status\n"
+    "Permutations,Priority,VerificationMethod,Status\n"
 )
 LLR_HEADER = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,Rationale,TestRefs,"
@@ -149,7 +149,7 @@ def write_sr(root, requirement="the original text", status="Approved"):
 
 def write_sn(root, status="Drafted"):
     """The need tier's own carrier row — the tier `APPROVAL_ACT_CSVS` added at
-    WI-572 REVIEW-A round 028, and the one the human-approval dial holds.
+    WI-572 REVIEW-A round 028, and the one the operator-acceptance dial holds.
     Written under a carrier the need tier HAS (`.toml`; its legacy one is
     `.md`): a `stakeholder-needs.csv` was read only while the approval-act
     reader wrongly gave the needs file the row carriers (WI-841 round 6)."""
@@ -299,7 +299,7 @@ def _released(root):
     The fixture declares `DevStg-Needs`: the owner holds Needs and nothing
     above it. (This repository's own value is docs/process.toml's to state.)"""
     set_process_key(
-        root, "attestation", "human_approval_through", kit_ladder.STAGE_NEEDS
+        root, "authority", "operator_accepts_through", kit_ladder.STAGE_NEEDS
     )
 
 
@@ -354,7 +354,7 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
     is refused BY NAME (WI-572 REVIEW-A round 028).
 
     Until this round the refusal walked `SPINE_CSVS` — SR/LLR/TC — only, so the
-    one tier the human-approval dial holds for the owner (`DevStg-Needs`, the
+    one tier the operator-acceptance dial holds for the owner (`DevStg-Needs`, the
     rung the fixture declares held) was the one a lane could bless on its way
     past.
     That is the worst case of the act the owner's 2026-09-01 ruling moved to the
@@ -374,7 +374,7 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
 
     The second half is the dial's: even released of the refusal, no adjudication
     is minted over the flip. Two independent reasons, both intended — the rung
-    is HELD in the fixture (`human_approval_through = DevStg-Needs`, so the
+    is HELD in the fixture (`operator_accepts_through = DevStg-Needs`, so the
     loop may not approve needs at all), and the first-approval mint's universe
     was left at
     `SPINE_CSVS` on purpose, because widening the MINT is a separate decision
@@ -416,7 +416,7 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
     # round, and a moved Status is no amendment even though the amendment walk
     # covers the need tier since WI-791.
     set_process_key(
-        root2, "attestation", "human_approval_through", kit_ladder.STAGE_NEEDS
+        root2, "authority", "operator_accepts_through", kit_ladder.STAGE_NEEDS
     )
     minted, mint_refusal = intake.intake_after_merge(root2, before2, after2, {}, "b")
     assert mint_refusal is None, mint_refusal
@@ -471,7 +471,7 @@ def test_an_amended_approved_need_mints_one_amendment_row(tmp_path):
         ),
     )
     set_process_key(
-        root, "attestation", "human_approval_through", kit_ladder.STAGE_NEEDS
+        root, "authority", "operator_accepts_through", kit_ladder.STAGE_NEEDS
     )
     minted, refusal = intake.intake_after_merge(root, before, after, {}, "wi-003")
     assert refusal is None, refusal
@@ -530,7 +530,7 @@ def test_a_held_rung_mints_no_first_approval_row(tmp_path):
         tmp_path, lambda r: write_sr(r, requirement="fresh draft", status="Drafted")
     )
     set_process_key(
-        root, "attestation", "human_approval_through", kit_ladder.STAGE_RELEASE
+        root, "authority", "operator_accepts_through", kit_ladder.STAGE_RELEASE
     )
     minted, refusal = intake.intake_after_merge(root, before, after, {}, "wi-003")
     assert refusal is None, refusal
@@ -2500,7 +2500,7 @@ FIXTURE_STAGE = kit_ladder.STAGE_TESTS
 
 
 def _declare_dial(root, dial):
-    """Declare BOTH halves of SN-029's comparison: the human-approval dial
+    """Declare BOTH halves of SN-029's comparison: the operator-acceptance dial
     in docs/process.toml, and the spine stage the derived record reports.
 
     The stage is RECORDED rather than derived from a real spine, because what is
@@ -2522,7 +2522,7 @@ def _declare_dial(root, dial):
     `fingerprint` are written: `parse` addresses fields BY NAME and leaves an
     absent one absent, so a fixture states what it is declaring and nothing
     else."""
-    set_process_key(root, "attestation", "human_approval_through", dial)
+    set_process_key(root, "authority", "operator_accepts_through", dial)
     path = root / kit_stage.STAGE_FILE
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="\n") as fh:
@@ -2892,7 +2892,7 @@ def test_an_unreadable_dial_or_stage_fails_toward_recommend(tmp_path):
     # rung is named rather than read back through `spine_stage_of` because the
     # write above moves the fingerprint, which would send the reader off to
     # re-derive — a different question than the one under test.
-    set_process_key(middle, "attestation", "human_approval_through", "four")
+    set_process_key(middle, "authority", "operator_accepts_through", "four")
     assert ac.approval_through(docs) == kit_ladder.STAGE_RELEASE
     assert ac.human_holds(docs, FIXTURE_STAGE) is True, "a wrong-typed dial holds"
 

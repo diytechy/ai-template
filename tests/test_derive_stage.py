@@ -36,7 +36,7 @@ CHECK = load_script("check")
 
 SRS_H = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
-    "Priority,Verification,Status,Phase\n"
+    "Priority,VerificationMethod,Status,Phase\n"
 )
 LLRS_H = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Phase\n"
 TCS_H = (
@@ -662,7 +662,7 @@ def test_an_assumption_only_case_joins_each_phase_citing_its_assumption():
 def test_the_stage_map_places_the_case_itself():
     """`_stage_map` derives the map from the requirements it is handed, so a
     Drafted assumption-only case holds BOTH phases' live reading at Tests."""
-    srs = [dict(r, Status="Approved", Verification="Test") for r in PHASED]
+    srs = [dict(r, Status="Approved", VerificationMethod="Test") for r in PHASED]
     llrs = [
         _row("LLR-ID", "LLR-001", **{"SR-Refs": "SR-001", "Status": "Approved"}),
         _row("LLR-ID", "LLR-002", **{"SR-Refs": "SR-002", "Status": "Approved"}),
@@ -702,7 +702,7 @@ def _toml_spine(root, assumption):
     srs = "".join(
         '[requirement.{}]\ntitle = "T"\nsn_refs = ["SN-001"]\nrequirement = "r"\n'
         'rationale = "why"\nacceptance_criteria = "ac"\npriority = "M"\n'
-        'verification = "Test"\nstatus = "Approved"\nphase = {}\n'
+        'verification_method = "Test"\nstatus = "Approved"\nphase = {}\n'
         'da_refs = ["{}"]\n\n'.format(sid, phase, did)
         for sid, phase, did in (("SR-001", 5, "DA-001"), ("SR-002", 6, "DA-002"))
     )
@@ -773,7 +773,7 @@ def _settled_spine(**tiers):
                 "SR-ID",
                 "SR-001",
                 Status="Approved",
-                Verification="Test",
+                VerificationMethod="Test",
                 **{"SN-Refs": "SN-001"},
             )
         ],
@@ -899,7 +899,7 @@ def _needs_file(root, need_status, stakeholder_status):
     (req / "system-requirements.toml").write_text(
         '[requirement.SR-001]\ntitle = "T"\nsn_refs = ["SN-001"]\n'
         'requirement = "r"\nrationale = "why"\nacceptance_criteria = "ac"\n'
-        'priority = "M"\nverification = "Test"\nstatus = "Approved"\n',
+        'priority = "M"\nverification_method = "Test"\nstatus = "Approved"\n',
         encoding="utf-8",
         newline="\n",
     )
@@ -983,7 +983,7 @@ def test_the_derivation_reads_the_assumptions_registry_as_a_declared_input(
         newline="\n",
     )
     (tmp_path / "docs" / "process.toml").write_text(
-        '[attestation]\nhuman_approval_through = "DevStg-Reqs"\n', encoding="utf-8"
+        '[authority]\noperator_accepts_through = "DevStg-Reqs"\n', encoding="utf-8"
     )
     opened = []
     real_open = io.open

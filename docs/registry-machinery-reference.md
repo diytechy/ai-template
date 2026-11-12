@@ -157,7 +157,7 @@ ruling 2026-08-17).
 | `AcceptanceCriteria` | ✔ | measurable condition | Approved. Fed to the critique brief as SR intent. A **warn-only** testability advisory flags comparative/absolute claims that name no predicate. |
 | `Permutations` | ✘ | the `gen_cases.py` grammar² | Optional test-design dimensions, lifted verbatim into `gen_cases.py --spec`. Never validated by `trace.py`. |
 | `Priority` | ✔ | **open** (`M`/`S`/`C` by convention) | Required non-empty under `--strict-schema`; the *value* is never checked. |
-| `Verification` | ✔ | **closed**: `Test`, `Demonstration`, `Manual`, `Analysis`, `Inspection`, `Attest`, `Critique` | The highest-leverage cell — §3.1. |
+| `VerificationMethod` | ✔ | **closed**: `Test`, `Demonstration`, `Manual`, `Analysis`, `Inspection`, `Vouch`, `Critique` | The highest-leverage cell — §3.1. |
 | `Status` | ✔ | **closed**: `Drafted`, `Approved`, `Founded` | Drives the gate — §3.2. |
 | `Phase` | ✘ | bare integer (`2`) on approved rows once armed | Optional delivery phase — §3.3. |
 | `Aspect` | ✘ | closed: `process` \| `trajectory` \| `unattended-loop` \| `connectivity` \| `perf` \| `portability` | The ruled CROSS-CUTTING review grouping (sitting-2 decision 10, executed by the WI-451 re-tier; replaced the 31-value free-text `Area`, whose 25 component-derivable values were dropped rather than remapped). Blank is normal — a non-cross-cutting row carries none, and that is never a finding; a non-empty out-of-vocabulary value IS a `--strict-schema` finding. `trace.py` emits per-aspect SR counts and never gates on the count. |
@@ -171,11 +171,11 @@ Plus two **optional extension columns** not in the shipped template:
 |---|---|
 | `Lifecycle` | Recognised in the traced/approved split; validated nowhere. |
 
-### 3.1 `Verification` — what it changes
+### 3.1 `VerificationMethod` — what it changes
 
 Three separate mechanisms read this cell.
 
-1. **LLR exemption.** `Analysis`, `Inspection`, `Attest` (`LLR_EXEMPT`)
+1. **LLR exemption.** `Analysis`, `Inspection`, `Vouch` (`LLR_EXEMPT`)
    decompose to a TC but **no LLR** — there is no code to write, only its
    acceptance to analyse — so the "SR has no LLR" orphan rule stands down.
    `Critique` is deliberately *not* exempt: its artifact is produced by code,
@@ -183,7 +183,7 @@ Three separate mechanisms read this cell.
    `spine_rules.LLR_EXEMPT`.
 2. **The verification-basis split** — always reported, never gates:
    - **mechanized** = `Test` — rests on a runnable check.
-   - **attested** = `Attest` — rests on a named human's recorded judgment.
+   - **vouched** = `Vouch` — rests on the operator's recorded word.
    - **demonstrated/observed** = everything else — a human observed an outcome:
      repeatable, but not a runnable check.
    A blank or unrecognised method falls to *demonstrated* — the conservative
@@ -201,7 +201,7 @@ two scripts disagreeing about the gate.
 |---|---|---|---|
 | `Drafted` | `is_drafted` | **DevStg-Below — drops the repo gate** | Exempt from *child-completeness*: needs no LLR, no TC. SN linkage and all integrity rules still apply. Exempt from `--require-verified`. |
 | `Approved` | `is_approved` | doesn't hold a rung open (`is_drafted` is what does) | The row's TEXT is blessed. It makes NO claim that tests passed: the 2026-08-15 ruling (OI-30 D2) carried onto the stage axis at WI-498 slice 3. **No cell reaches DevStg-Release**, and since WI-500 that is structural rather than vacuous — the rung's one input is `spine_stage`'s `evidence_passed` parameter, fed only by `kitlib.stage.evidence_verdict` over the harness-written `docs/test/evidence` record, and the pin demands that return be guarded by the bare parameter so a row-computed guard is unrepresentable. |
-| `Founded` | `is_founded` | same as `Approved` (settled, never caps) | `Approved` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it — whether a tool ever will is D-9 consequence 2's still-open half — but whether an AGENT-authored `Founded` is itself an error is answered: OI-45 (ruled 2026-08-20) sanctions it for spine content past the declared human-approval level (`agent_common.human_holds`) — NARROWED 2026-09-01 to an ADJUDICATION session on the serial trunk side: a worker lane's merge is refused if its delta writes any approval claim (`integrate._approval_act_refusal`). |
+| `Founded` | `is_founded` | same as `Approved` (settled, never caps) | `Approved` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it — whether a tool ever will is D-9 consequence 2's still-open half — but whether an AGENT-authored `Founded` is itself an error is answered: OI-45 (ruled 2026-08-20) sanctions it for spine content past the declared operator-acceptance level (`agent_common.human_holds`) — NARROWED 2026-09-01 to an ADJUDICATION session on the serial trunk side: a worker lane's merge is refused if its delta writes any approval claim (`integrate._approval_act_refusal`). |
 | anything else | — | (an integrity finding — see §3.2's closure) | Not inert: reported. |
 
 **There is no value for a post-approval amendment.** A transitional `Modified`
@@ -427,7 +427,7 @@ gate-scoped orphan set.
 | 1 | every approved **SN** has ≥1 SR | SN is Drafted (section-as-state) | orphan |
 | 2 | every **SR** links ≥1 SN | the SN registry has no real ids yet | orphan |
 | 3 | every **SR** SN-Ref resolves | ditto | orphan |
-| 4 | every **SR** has an LLR | SR is Drafted **or** `Verification ∈ {Analysis, Inspection, Attest}` | orphan |
+| 4 | every **SR** has an LLR | SR is Drafted **or** `VerificationMethod ∈ {Analysis, Inspection, Vouch}` | orphan |
 | 5 | every **SR** has a TC | SR is Drafted | orphan |
 | 6 | every **LLR** has ≥1 SR parent | — (never) | orphan |
 | 7 | every **LLR** SR-Ref resolves | — | orphan |
@@ -479,7 +479,7 @@ it; you approve artifacts and regenerate.
 | Tier | DevStg-Below | DevStg-Reqs | DevStg-Tests | DevStg-Impl |
 |---|---|---|---|---|
 | **SN** | under a "draft" heading, **or approved with no covering SR** (the WI-401 coverage rung) | — | — | approved **and cited by ≥1 SR `SN-Refs`**: such an SN owes nothing past DevStg-Reqs, so it contributes DevStg-Impl and **never caps** |
-| **SR** | `Status=Drafted` | approved, **not decomposed** | **decomposed** = has its required LLR (unless `Verification ∈ LLR_EXEMPT`) **AND** a TC — **and this is the ceiling** (OI-30 D2) | *unreachable by cell*: the release bar is the harness's answer, not a Status value |
+| **SR** | `Status=Drafted` | approved, **not decomposed** | **decomposed** = has its required LLR (unless `VerificationMethod ∈ LLR_EXEMPT`) **AND** a TC — **and this is the ceiling** (OI-30 D2) | *unreachable by cell*: the release bar is the harness's answer, not a Status value |
 | **LLR / TC** | `Status=Drafted` | — | — | once present, contributes DevStg-Impl and **never caps** |
 
 A below-`Approved` SR needs no rule of its own: it is decomposed-but-not-approved, so
@@ -792,7 +792,7 @@ When an **`Approved`** spine row is amended, `staged_spine_amendments` in
 
 | Registry | **Traced** (amend freely) | **Approved** (opens a re-attest window) |
 |---|---|---|
-| SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle`, `DA-Refs` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification`, `Coincident`, `Form` |
+| SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle`, `DA-Refs` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `VerificationMethod`, `Coincident`, `Form` |
 | LLR | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase`, `SR-Refs`, `Hat-Refs` | `Title`, `Detail`, `Rationale` |
 | TC | `Verifies`, `Evidence`, `Automated`, `Phase`, `Assumption-Refs` | `Method`, `Expected`, `Parameters`, `Level`, `Tier`, `Inputs`, `MaxAge`, `Sampling`, `SampleSize`, `AcceptanceRule`, `Trigger`, `Rubric`, `MinWorkItems` |
 | SN | `Stakeholder-Refs`, `Source` | every other need cell (the residual) |
@@ -830,7 +830,7 @@ four readers share one two-tree walk, so no row is visible to only one.
 WHICH of those drafted rows an adjudicator may actually flip is the DIAL's
 answer, from one table: `agent_common.SPINE_APPROVAL_RUNGS` names the DevStg
 rung each spine registry's rows are approved into, and `human_approves_spine`
-compares it against `human_approval_through` — unmapped is HELD, the same
+compares it against `operator_accepts_through` — unmapped is HELD, the same
 fail-safe its off-spine sibling `human_approves` takes. Both ends read it: the
 mint hands over only released rows, and `adjudicate_brief.
 first_approval_values`, which RE-RESOLVES the population live at composition

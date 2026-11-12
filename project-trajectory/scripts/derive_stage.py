@@ -321,7 +321,7 @@ def read(root):
 # Two independent blind spots, both closed here: the frame REGISTRIES were not
 # walked at all, and the cell set was `Status` only, while the derivation also
 # reads a CMP's `Standing` (a lifecycle fact that holds rung 3 on its own), an
-# SR's `SN-Refs` (the coverage rung) and `Verification` (the LLR exemption), and
+# SR's `SN-Refs` (the coverage rung) and `VerificationMethod` (the LLR exemption), and
 # the child rows' parent refs (the decomposition rungs). A rule that reads a
 # narrower input set than the derivation it polices can always be walked past.
 #
@@ -334,7 +334,7 @@ def read(root):
 # so a change to it is attributed like a change to `Verifies`.
 # Implements: SR-197, LLR-230
 _ATTRIBUTED_ROWS = (
-    ("SR-ID", "srs", ("Status", "SN-Refs", "Verification")),
+    ("SR-ID", "srs", ("Status", "SN-Refs", "VerificationMethod")),
     ("LLR-ID", "llrs", ("Status", "SR-Refs")),
     ("TC-ID", "tcs", ("Status", "Verifies", "Assumption-Refs")),
     ("B-ID", "bifs", ("Status",)),
@@ -501,7 +501,7 @@ def phase_rule_findings(root):
     RE-POINTED AT WI-501 (OI-53 (b), 2026-08-22). This carried
     `Implements: SR-139` until the WI-498 close, which was a mis-trace: SR-139
     is "Approval as an ordinal over a derived spine stage" — it governs the
-    `human_approval_through` dial — while this rule's obligation is "a
+    `operator_accepts_through` dial — while this rule's obligation is "a
     spine edit that LOWERS the effective stage must surface as a phase change"
     (ruled plan §4, owner answer §6.1). Unrelated obligations at different
     tiers, so `backlink-coverage` was crediting a requirement about

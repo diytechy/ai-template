@@ -708,7 +708,7 @@ def scripts_dir(root):
 
 def decision_record_note(root, worker):
     """The delegated-decisions note for this lane's session, or "" when the
-    repository's `[attestation] decision_recording` dial is `off` or there is no
+    repository's `[authority] decision_recording` dial is `off` or there is no
     lane. Appended at the one fork every build and adjudication session takes,
     so both altitudes that close a lane are told where the record the merge
     slot asks for belongs, and a reviewer, which closes nothing, is not."""
@@ -816,12 +816,12 @@ RUBRIC_PATH_RE = re.compile(r"docs/rubrics/[\w./\-]+\.md")
 
 
 # --- the critique loop (WI-068) ------------------------------------------------
-# A `Verification=Critique` requirement's subjective acceptance is adjudicated by a
+# A `VerificationMethod=Critique` requirement's subjective acceptance is adjudicated by a
 # fresh, provider-heterogeneous critic against a written rubric, never the authoring
 # session. All of this is gated on managed mode + a real Critique SR, so a repo with
 # neither pays nothing (never-breaking).
 def load_critique_srs(docs):
-    """The SR ids whose Verification is `Critique` (docs/requirements/
+    """The SR ids whose verification method is `Critique` (docs/requirements/
     system-requirements.toml). Empty — absent file, or no such row — makes the whole
     critique layer vacuous, exactly like an absent enable-list makes routing off.
 
@@ -835,7 +835,7 @@ def load_critique_srs(docs):
         if (
             sid
             and not sid.endswith("-000")
-            and (r.get("Verification") or "").strip() == "Critique"
+            and (r.get("VerificationMethod") or "").strip() == "Critique"
         ):
             out.add(sid)
     return out
@@ -1067,7 +1067,7 @@ def review_verdict_trailer(root, merged, worker):
     it. Stamping the unpeeled value filed the attestation under a key
     `integrate._round_refusal` never looks up, so the cross-check silently stood
     down on exactly the branches that had been refreshed (REVIEW-A round 015).
-    The fail-direction was safe — a trailer is never an accept path — but a
+    The fail-direction was safe — a trailer is never an admission path — but a
     third place choosing its own rev is the finding IF-175's contract names.
 
     WHY THE COORDINATOR WRITES IT. A trailer a reviewer could stamp on its own

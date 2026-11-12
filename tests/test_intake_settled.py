@@ -100,7 +100,7 @@ def _sr_row(rid, requirement, acceptance, status, sn_refs="SN-001", phase=1):
         'rationale = "Realizes SN-001."\n'
         'acceptance_criteria = "{ac}"\n'
         'priority = "M"\n'
-        'verification = "Test"\n'
+        'verification_method = "Test"\n'
         'status = "{status}"\n'
         "phase = {phase}\n"
     ).format(

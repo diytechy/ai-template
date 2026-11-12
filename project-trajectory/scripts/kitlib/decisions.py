@@ -125,7 +125,7 @@ import tomllib
 # Implements: SR-225, LLR-283
 DECISIONS_DIR = "docs/decisions"
 
-# The `[attestation] decision_recording` alphabet, in order of how much it asks:
+# The `[authority] decision_recording` alphabet, in order of how much it asks:
 # no obligation; a delegated run's close owes the record; and, beyond recording,
 # prefer the process's exits over deciding.
 # Implements: SR-225, LLR-283
@@ -748,7 +748,7 @@ def missing_record_refusal(mode, run):
             run, exc
         )
     return (
-        "{} closed without its decisions record ({}): [attestation] "
+        "{} closed without its decisions record ({}): [authority] "
         "decision_recording = {!r} makes the record owed at every "
         "close, even with no entries - write it on the branch; nothing "
         "was merged".format(run, rel, mode)
@@ -765,7 +765,7 @@ def session_note(mode, run):
     if str(mode) not in MODES[1:]:
         return ""
     note = (
-        "\n\nDECISIONS RECORD (docs/process.toml [attestation] "
+        "\n\nDECISIONS RECORD (docs/process.toml [authority] "
         'decision_recording = "{mode}"): this run owes one record of the calls '
         "it made on the owner's behalf, at {path} — the format and the routing "
         'rules are the process options\' "Delegated decisions record" layer. '

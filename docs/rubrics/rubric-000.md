@@ -2,10 +2,10 @@
 
 > Inert placeholder (`-000`) — names no real requirement, so it never gates and a
 > fresh scaffold carries it for free. Copy it to `rubric-<name>.md` and fill it in
-> when a requirement declares `Verification=Critique`. See
+> when a requirement declares `VerificationMethod=Critique`. See
 > [`README.md`](README.md).
 
-**Judges:** SR-000 (`Verification=Critique`) · **Artifact recipe:** the TC's
+**Judges:** SR-000 (`VerificationMethod=Critique`) · **Artifact recipe:** the TC's
 `Parameters` cell (the command/steps that produce what's judged).
 
 ## Intent

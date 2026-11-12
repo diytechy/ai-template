@@ -352,16 +352,16 @@ def _show(root, rev, path):
 
 
 def _verdicts(root, rev):
-    """`{digest: (outcome, path)}` for every ACCEPTED Done-when verdict under
+    """`{digest: (outcome, path)}` for every RECORDED Done-when verdict under
     the review records (WI-841 round 11): read through the one reader,
-    `kitlib.sitting.accepted`, which answers only for a verdict whose binding
-    records it accepted by the route that ran the call and which parses as
+    `kitlib.sitting.recorded`, which answers only for a verdict whose binding
+    holds the outcome `recorded` from the route that ran the call and which parses as
     valid against that binding. A failed or pending call, an unbound verdict,
     an invalid sitting and another brief class all cover nothing."""
     found = {}
     pattern = "^[[:space:]]*{}:".format(VERDICT_KEYWORD)
     for path in sorted({p for p, _line in _grep(root, rev, pattern, REVIEWS)}):
-        verdict = _kitsitting.accepted_at(root, rev, path) or {}
+        verdict = _kitsitting.recorded_at(root, rev, path) or {}
         label, fields, _body, _rows = verdict.get("done-when", (None, {}, "", {}))
         if label:
             found[fields["digest"]] = (label, path)

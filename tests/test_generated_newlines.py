@@ -376,7 +376,7 @@ def test_a_regenerated_artifact_has_no_cr_bytes(tmp_path, script, artifact):
     req.mkdir(parents=True)
     (req / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status\n"
+        "Permutations,Priority,VerificationMethod,Status\n"
         'SR-001,T,SN-001,"The system shall.",R,AC,,M,Test,Approved\n',
         encoding="utf-8",
     )

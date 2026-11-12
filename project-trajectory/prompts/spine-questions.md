@@ -294,7 +294,7 @@ Questions:
   usually *the chain, passing, closed over the clauses*.
 - **Descend only where a mechanized check earns its keep** (`docs/process.md`
   §3, "over-aggressive traceability is a failure mode in its own right"). Where
-  the honest floor is a human's judgement, name the verification `Attest` rather
+  the honest floor is a human's judgement, name the verification `Vouch` rather
   than inflate a subjective call into a false `Test`.
 - **Record the stopping boundary in the existing scoped review.** For every
   retained child, state the independent decision or verification purpose it adds;

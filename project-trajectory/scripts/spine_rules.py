@@ -42,8 +42,8 @@ rung anything still holds open, so the answer is "what is in work":
                         that tier is approved (`tier_active`).
   2 `DevStg-Reqs`       a Drafted SR.
   3 `DevStg-Arch`       a declared partition with an unsettled component.
-  4 `DevStg-LLReqs`     an SR with no LLR (unless its Verification is
-                        LLR-exempt: Analysis / Inspection / Attest).
+  4 `DevStg-LLReqs`     an SR with no LLR (unless its verification method is
+                        LLR-exempt: Analysis / Inspection / Vouch).
   5 `DevStg-Tests`      an SR with no TC, or a Drafted LLR/TC.
   6 `DevStg-Impl`       everything above is settled. THE FALL-THROUGH LANDS HERE.
   7 `DevStg-Release`    RETURNED BY NO CELL, EVER. Leaving Impl means the
@@ -630,7 +630,7 @@ def spine_stage(
     stks=(),
 ):
     """The rung currently IN WORK — the STATE axis (a repo is *in* a stage), and
-    the one a human-approval level is compared against. Returns a
+    the one an operator-acceptance level is compared against. Returns a
     `DevStg-<Label>` from STAGE_ORDER.
 
     Read as the LOWEST unfinished rung — the one work is happening at, and

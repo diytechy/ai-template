@@ -994,7 +994,7 @@ def test_a_dispute_verdict_ruling_every_finding_is_valid_and_bound(
     assert "verdict valid" in capsys.readouterr().out
     binding = Path(str(VERDICT["path"]) + ".requested").read_text(encoding="utf-8")
     assert "brief = dispute" in binding and "kinds = F1;R2" in binding
-    assert "outcome = accepted" in binding
+    assert "outcome = recorded" in binding
 
 
 def test_a_dispute_verdict_ruling_a_finding_successor_is_valid_and_bound(
@@ -1010,7 +1010,7 @@ def test_a_dispute_verdict_ruling_a_finding_successor_is_valid_and_bound(
     assert code == 0
     assert "verdict valid" in capsys.readouterr().out
     binding = Path(str(VERDICT["path"]) + ".requested").read_text(encoding="utf-8")
-    assert "outcome = accepted" in binding
+    assert "outcome = recorded" in binding
 
 
 def test_a_dispute_verdict_leaving_a_finding_unruled_fails(
@@ -1053,7 +1053,7 @@ def test_a_dispute_binding_records_its_findings_file_through_the_outcome(
     tmp_path, monkeypatch, launched
 ):
     """The brief's findings-file line is bound beside the verdict and kept
-    through the outcome rewrite, accepted or failed; a brief without the
+    through the outcome rewrite, recorded or failed; a brief without the
     line binds no record.
 
     Implements: TC-327
@@ -1062,7 +1062,7 @@ def test_a_dispute_binding_records_its_findings_file_through_the_outcome(
     text = "RULING: F1 FIX real\nRULING: R2 DISMISS refuted it does not hold\n"
     _root, code = _dispute_call(tmp_path / "a", monkeypatch, text, RECORDED_BRIEF)
     assert code == 0
-    assert line in _binding() and "outcome = accepted" in _binding(), _binding()
+    assert line in _binding() and "outcome = recorded" in _binding(), _binding()
     unruled = "RULING: F1 FIX real\n"
     _root, code = _dispute_call(tmp_path / "f", monkeypatch, unruled, RECORDED_BRIEF)
     assert code == 1

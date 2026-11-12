@@ -70,7 +70,7 @@ def _append_new_approved_sr(root, sid):
         'requirement = "The fixture shall carry a row with no snapshot copy."\n'
         'rationale = "The new-row arm of the authority question, driven."\n'
         'acceptance_criteria = "The row is present and claims approval."\n'
-        'priority = "S"\nverification = "Test"\nstatus = "Approved"\nphase = 1\n'
+        'priority = "S"\nverification_method = "Test"\nstatus = "Approved"\nphase = 1\n'
     ).format(sid)
     with path.open("ab") as fh:
         fh.write(row.encode("utf-8"))
@@ -1397,7 +1397,7 @@ requirement = "The system shall record what a human approved."
 rationale = "Without a record of what was blessed, an approval cannot be audited."
 acceptance_criteria = "A copy of the registry exists under docs/archive/last_approved/."
 priority = "M"
-verification = "Test"
+verification_method = "Test"
 status = "Approved"
 """
 

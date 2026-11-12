@@ -2,7 +2,7 @@
 # the run made on the owner's behalf that deserve the owner's second look.
 # The doctrine (what to record, what goes to the owner instead, what an
 # overturned entry costs) is the process options' "Delegated decisions record"
-# layer; the `[attestation] decision_recording` dial in docs/process.toml
+# layer; the `[authority] decision_recording` dial in docs/process.toml
 # decides whether a run owes one.
 #
 # ONE FILE PER RUN, named by the lane's branch (a `/` becomes `-`; nothing else

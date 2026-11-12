@@ -22,7 +22,7 @@ What it creates in the destination:
                                                   derived — run scripts/derive_stage.py)
     docs/id-watermark                          <- id-watermark.template  (id high-water marks)
     docs/process.toml                          <- process.toml.template  (EVERY policy dial:
-                                                  gate authority, the human-approval level,
+                                                  gate authority, the operator-acceptance level,
                                                   push, reviewer count, privacy + secrets,
                                                   guardrails, blackout, and the six
                                                   check-enablement toggles — SN-028's one home)
@@ -903,10 +903,10 @@ GATE_POLICY_DEVIATIONS = {
             "gets an independent peer-tier second opinion before execution",
         ),
         (
-            "§4 `Attest` (named human judgment)",
-            "a human attests",
-            "LLM-Attest: named *model* judgment, reported honestly as machine "
-            "attestation in the trace report's attested-vs-mechanized split",
+            "§4 `Vouch` (the operator's recorded word)",
+            "the operator vouches",
+            "a delegated `Vouch`: a named *model*'s word, reported as delegated "
+            "in the trace report's vouched-vs-mechanized split",
         ),
     ],
 }
@@ -1103,7 +1103,7 @@ def apply_gate_policy(dest, level, dry_run):
     `--gate-policy` still takes the familiar word, because that is how the
     posture is talked about — but the word is TRANSLATED here (SN-029,
     `LEGACY_APPROVAL` above) rather than stored. Storing it was the
-    defect: the template ships `human_approval_through`, and
+    defect: the template ships `operator_accepts_through`, and
     `approval_through` prefers that key, so a `gate_policy = "autonomous"`
     written beside it was read by nothing and every repo that chose a
     non-default posture scaffolded as fully attended — silently, since neither
@@ -1116,9 +1116,7 @@ def apply_gate_policy(dest, level, dry_run):
     if level == "attended" or dry_run:
         return []
     for key, value in sorted(LEGACY_APPROVAL.get(level, {}).items()):
-        _written(
-            "[attestation] " + key, set_process_key(dest, "attestation", key, value)
-        )
+        _written("[authority] " + key, set_process_key(dest, "authority", key, value))
     register = dest / "docs" / "gate-policy.md"
     written = [PROCESS_TOML_REL]
     if not register.exists():
@@ -1131,7 +1129,7 @@ def apply_gate_policy(dest, level, dry_run):
             "**Status:** DRAFT — approve with the owner, then keep in version "
             "control.\n"
             "**What this is:** this repo declares the `{level}` gate authority "
-            "(`docs/process.toml` `[attestation] human_approval_through` "
+            "(`docs/process.toml` `[authority] operator_accepts_through` "
             "plus `keep_nondependent` and `final_review`; process.md "
             "§4). "
             "The kit-owned process doc is "
@@ -1223,17 +1221,17 @@ def _report_flag(outcome, label, value, answer):
 # Implements: SR-138, LLR-156
 LEGACY_APPROVAL = {
     "attended": {
-        "human_approval_through": "DevStg-Release",
+        "operator_accepts_through": "DevStg-Release",
         "keep_nondependent": False,
         "final_review": "always",
     },
     "single-approve": {
-        "human_approval_through": "DevStg-Below",
+        "operator_accepts_through": "DevStg-Below",
         "keep_nondependent": True,
         "final_review": "always",
     },
     "autonomous": {
-        "human_approval_through": "DevStg-Below",
+        "operator_accepts_through": "DevStg-Below",
         "keep_nondependent": True,
         "final_review": "off",
     },
@@ -1314,18 +1312,18 @@ _first_declared_line = _kitconfig.first_declared_line
 # holds a weight to it that the semantics here don't need" — check_vocab: allow,
 # a declaration site must name the retired word). A repo scaffolded
 # before this rename still carries `human_ratification_through` in  # check_vocab: allow
-# `[attestation]`; `_migrate_dial_key_name` below rewrites the KEY (not the
+# `[authority]`; `_migrate_dial_key_name` below rewrites the KEY (not the
 # value — that is `_migrate_dial_ordinal`'s job, and it runs second so an
 # adopter still on BOTH the old key AND the retired 0-4 ordinal gets both
 # fixed in one `--migrate-config` pass) and `agent_common.approval_through`
 # reads it as a loud fallback for a repo that runs a kit script without ever
 # migrating (the same read-translate-warn shape WI-493 used for the ordinal).
-LEGACY_ATTESTATION_KEY = "human_ratification_through"  # check_vocab: allow
+LEGACY_DIAL_KEY = "human_ratification_through"  # check_vocab: allow
 
 
 def _migrate_dial_key_name(dest, notes, dry_run):
-    """Rewrite `[attestation] human_ratification_through` to  # check_vocab: allow
-    `human_approval_through`, keeping whatever value it held (a rung string OR
+    """Rewrite `[authority] human_ratification_through` to  # check_vocab: allow
+    `operator_accepts_through`, keeping whatever value it held (a rung string OR
     the retired 0-4 ordinal — `_migrate_dial_ordinal`, called right after this
     in `migrate_legacy_config`, normalizes that half).
 
@@ -1344,10 +1342,10 @@ def _migrate_dial_key_name(dest, notes, dry_run):
     path = Path(dest) / PROCESS_TOML_REL
     if not path.is_file():
         return
-    old, new = LEGACY_ATTESTATION_KEY, "human_approval_through"
+    old, new = LEGACY_DIAL_KEY, "operator_accepts_through"
     text = path.read_text(encoding="utf-8-sig")
     data = _kitconfig.read_toml_text(text) or {}
-    table = data.get("attestation")
+    table = data.get("authority")
     if not isinstance(table, dict) or old not in table or new in table:
         return
     renamed = {k: v for k, v in table.items() if k != old}
@@ -1358,18 +1356,18 @@ def _migrate_dial_key_name(dest, notes, dry_run):
         "attestation",
         old,
         "{} = {}".format(new, raw_value),
-        dict(data, attestation=renamed),
+        dict(data, authority=renamed),
     )
     if edited is None:
         raise PolicyWriteRefused(
-            _refusal("attestation", old, _unconfirmed_form(text, "attestation", True))
+            _refusal("authority", old, _unconfirmed_form(text, "authority", True))
         )
     if not dry_run:
         _write_text_lf(path, edited)
     notes.append(
         # check_vocab: allow -- the printed note must name the retired word so
         # an adopter searching their own history for it finds the fix.
-        "{} [attestation] {} {} `human_approval_through` (WI-499: "
+        "{} [authority] {} {} `operator_accepts_through` (WI-499: "
         '"ratification" is retired kit vocabulary). The value ({}) is '  # check_vocab: allow
         "unchanged by this step.".format(
             PROCESS_TOML_REL,
@@ -1381,7 +1379,7 @@ def _migrate_dial_key_name(dest, notes, dry_run):
 
 
 def _migrate_dial_ordinal(dest, notes, dry_run):
-    """Rewrite a `human_approval_through` still holding the retired 0-4
+    """Rewrite an `operator_accepts_through` still holding the retired 0-4
     ordinal as the `DevStg-*` rung that ordinal meant (WI-493).
 
     NOT A LEGACY *FILE* migration like its siblings — the value is already in
@@ -1401,19 +1399,19 @@ def _migrate_dial_ordinal(dest, notes, dry_run):
 
     Implements: SR-138, LLR-156
     """
-    key = "human_approval_through"
+    key = "operator_accepts_through"
     path = Path(dest) / PROCESS_TOML_REL
     if not path.is_file():
         return
     data = _kitconfig.read_toml_text(path.read_text(encoding="utf-8-sig")) or {}
-    table = data.get("attestation")
+    table = data.get("authority")
     raw = table.get(key) if isinstance(table, dict) else None
     if not isinstance(raw, int) or isinstance(raw, bool):
         return
     rung = LEGACY_DIAL_ORDINALS.get(raw)
     if rung is None:
         notes.append(
-            "{} [attestation] {} = {} is outside the retired 0-4 range, so "
+            "{} [authority] {} = {} is outside the retired 0-4 range, so "
             "there is no rung it meant — left in place. Set it to a DevStg-* "
             "rung, or one of {}; until then it reads as the most conservative "
             "setting.".format(
@@ -1424,9 +1422,9 @@ def _migrate_dial_ordinal(dest, notes, dry_run):
             )
         )
         return
-    set_process_key(dest, "attestation", key, rung, dry_run=dry_run)
+    set_process_key(dest, "authority", key, rung, dry_run=dry_run)
     notes.append(
-        "{} [attestation] {} {} the retired ordinal {} -> `{}` (WI-493). The "
+        "{} [authority] {} {} the retired ordinal {} -> `{}` (WI-493). The "
         "rungs held are unchanged.".format(
             PROCESS_TOML_REL,
             key,
@@ -1563,12 +1561,12 @@ def _migrate_gate_policy(dest, moved, notes, dry_run):
     for key, value in sorted((dials or {}).items()):
         if (
             set_process_key(
-                dest, "attestation", key, value, dry_run=dry_run, add_if_missing=True
+                dest, "authority", key, value, dry_run=dry_run, add_if_missing=True
             )
             == "missing"
         ):
             notes.append(
-                "docs/gate-policy could NOT be folded into {} [attestation] {} "
+                "docs/gate-policy could NOT be folded into {} [authority] {} "
                 "— the legacy file is LEFT IN PLACE with its value intact. Fix "
                 "the TOML, then re-run --migrate-config.".format(PROCESS_TOML_REL, key)
             )
@@ -2518,7 +2516,7 @@ def build_parser():
         choices=GATE_POLICY_CHOICES,
         default=None,
         help="declared gate authority, written to docs/process.toml "
-        "[attestation] gate_policy (process.md §4): "
+        "[authority] gate_policy (process.md §4): "
         "attended|single-approve|autonomous. Omitted + interactive TTY -> ASK; "
         "non-interactive -> 'attended' (the default level; zero change). A "
         "non-default level also scaffolds the deviation-register skeleton "

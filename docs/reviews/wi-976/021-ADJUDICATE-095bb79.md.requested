@@ -1,4 +1,4 @@
 brief = dispute
 kinds = F1
-outcome = accepted
+outcome = recorded
 findings_file = docs/reviews/wi-976/020-DISPUTE-findings.toml

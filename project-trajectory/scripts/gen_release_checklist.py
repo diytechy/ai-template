@@ -10,7 +10,7 @@ concrete and traceable instead of a vibe.
 
 It pulls, from `docs/`:
     - Stakeholder needs (SN) + their acceptance intent -> "Does the product meet the need?"
-    - System specifications whose Verification is Demonstration / Manual / Inspection
+    - System specifications whose verification method is Demonstration / Manual / Inspection
     - Release-tier test cases, and any non-automated (manual) test cases
     - Provided cross-project interfaces (IF, if present) -> contract still honored?
     - Performance budgets (PB, if present) -> still within allocation? (§9; the
@@ -43,7 +43,7 @@ of record in docs/requirements/interfaces.toml).
 Contract IF-018: the human release checklist, written as a Markdown document
     whose ordinary items are `- [ ] <ID> — <what to confirm> (refs)`. It collects
     exactly the rows a machine cannot honestly close: stakeholder needs and
-    their acceptance intent, system specifications whose Verification is
+    their acceptance intent, system specifications whose verification method is
     Demonstration, Manual or Inspection, release-tier and manual test cases,
     the declared interface seams, and the performance budgets whose runtime
     tier never fails a gate. Its assumptions section lists each active Approved
@@ -296,7 +296,7 @@ def _checklist_inputs(docs, phase):
     human_srs = [
         r
         for r in srs
-        if r.get("Verification", "") in HUMAN_METHODS
+        if r.get("VerificationMethod", "") in HUMAN_METHODS
         and _in_phase(r, phases, foundation_phase)
     ]
     # Blank Automated means unclassified: keep it visible for a person.
@@ -332,7 +332,7 @@ def _human_requirement_lines(human_srs):
             L.append(
                 "- [ ] **{}** [{}] — {} (AcceptanceCriteria of {})".format(
                     r["SR-ID"],
-                    r.get("Verification", ""),
+                    r.get("VerificationMethod", ""),
                     r.get("Title", "").strip(),
                     r["SR-ID"],
                 )

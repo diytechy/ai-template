@@ -218,7 +218,7 @@ SMALL_WIS = (
 # tiers), so a WI's phase is derived from the SR it delivers.
 TIER_SRS = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
-    "Priority,Verification,Status,Phase\n"
+    "Priority,VerificationMethod,Status,Phase\n"
     'SR-001,P1,SN-001,"r",R,"a",,M,Test,Approved,v1\n'
     'SR-002,P2,SN-001,"r",R,"a",,M,Test,Approved,v2\n'
     'SR-003,P3,SN-001,"r",R,"a",,M,Test,Approved,v3\n'

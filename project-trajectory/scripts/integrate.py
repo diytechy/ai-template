@@ -61,7 +61,7 @@ Five operations here; the two lane closes that are NOT a merge (`hand_back`,
              collision two lanes could produce is unrepresentable), REFUSES a
              branch whose spine delta performs an APPROVAL ACT - a `Status`
              flipped into `Approved`/`Founded`, a row born claiming one, or a
-             write under docs/archive/last_approved/ - that no accepted verdict
+             write under docs/archive/last_approved/ - that no recorded verdict
              of an independent adjudicator's, judging that act's own rows,
              backs (owner ruling 6, 2026-10-07, see `_approval_act_refusal`),
              requires the policy verdicts the outcome
@@ -1243,9 +1243,9 @@ def _approval_act_refusal(root, branch):
     `Status` flip into `Approved`/`Founded` - or a row that arrives already
     claiming one, or a re-attestation - together with the
     `docs/archive/last_approved/` copy that anchors it. The rung admits a lane's
-    acts when EVERY act is backed by an accepted verdict judging that act's own
+    acts when EVERY act is backed by a recorded verdict judging that act's own
     rows (`acceptance_record.backed_act_refusal`, over WI-841's one
-    accepted-verdict reader), and refuses an act without one, naming it and the
+    recorded-verdict reader), and refuses an act without one, naming it and the
     reason. That replaces "is every claimed spec of the `adjudication` kind?"
     as the actor test (WI-849). A lane with no act merges as it always did.
 
@@ -1512,7 +1512,7 @@ def _verdict_owed(root, branch, metas):
     """Does this branch owe a review verdict at all — `(owed, why_not)`.
 
     ORDINARY WORK LANES ALWAYS OWE ONE; the question is only ever asked of an
-    ADJUDICATION lane, and it is answered by `[attestation] adjudication_review`
+    ADJUDICATION lane, and it is answered by `[authority] adjudication_review`
     through the ONE reader both this gate and the round scheduler consult
     (`agent_common.adjudication_review_owed`). Before the dial existed the gate
     demanded a REVIEW-A from a lane whose phase is in `NON_BUILD_PHASES` — so
@@ -1541,7 +1541,7 @@ def _verdict_owed(root, branch, metas):
         classes = [d.get("kind") for d in drafts]
         if ac.adjudication_review_owed(docs, meta.get("brief"), classes):
             return True, ""
-    return False, "adjudication lane, [attestation] adjudication_review = {!r}".format(
+    return False, "adjudication lane, [authority] adjudication_review = {!r}".format(
         ac.adjudication_review(docs)
     )
 
@@ -1681,7 +1681,7 @@ def _round_refusal(root, branch, base, want, entries, required):
                 branch, ", ".join(sorted(flipped))
             )
         )
-    # The machine half, read as a CROSS-CHECK and never as an accept path (see
+    # The machine half, read as a CROSS-CHECK and never as an admission path (see
     # kitlib.verdict.branch_trailers): a verified trailer that names the tree
     # under judgement and contradicts the rounds is a forged or mis-stamped
     # attestation, and a merge slot that saw it and merged anyway would be
@@ -3274,7 +3274,7 @@ def _decision_record_refusal(root, branch, outcomes):
     """SR-225: a delegated run's close owes its decisions record. A refusal
     string, or None.
 
-    Under `[attestation] decision_recording` at `record` or `escalate-first`,
+    Under `[authority] decision_recording` at `record` or `escalate-first`,
     a lane whose claimed rows closed must carry its record at
     `kitlib.decisions.record_path(branch)` on the BRANCH's tree, read like the
     per-close report beside it — a partial close included, since every

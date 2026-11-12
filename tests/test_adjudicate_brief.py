@@ -811,14 +811,14 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
     repo = _amendment_repo(tmp_path)
     row = _am_row()
 
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Needs")
     values, why = ab.amendment_brief.amendment_values(repo, row)
     assert why is None, why
     assert "RELEASED" in values["aftermath"]
     assert "[MEANING+BLESS]" in values["aftermath"]
     assert "later act turn" in values["aftermath"]
 
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Release")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Release")
     values, why = ab.amendment_brief.amendment_values(repo, row)
     assert why is None, why
     assert "still HOLDS for a human" in values["aftermath"]
@@ -940,7 +940,7 @@ def test_the_held_aftermath_gives_each_verdict_its_own_arm(tmp_path):
     Implements: TC-161
     """
     repo = _need_amendment_repo(tmp_path)
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Needs")
     values, why = ab.amendment_brief.amendment_values(
         repo, _am_row(Adjudicates="SN-001")
     )
@@ -1029,7 +1029,7 @@ def test_bind_pending_records_the_briefs_identities(tmp_path):
     assert "rows =" not in text, text
 
 
-@pytest.mark.parametrize("call_ok", [True, False], ids=["accepted", "failed"])
+@pytest.mark.parametrize("call_ok", [True, False], ids=["recorded", "failed"])
 def test_record_outcome_keeps_the_identity_cell(tmp_path, call_ok):
     """Implements: TC-398"""
     # Dropping the cell on the rewrite would refuse every held CLARITY act.
@@ -1044,7 +1044,7 @@ def test_record_outcome_keeps_the_identity_cell(tmp_path, call_ok):
     )
     write(verdict, "amendment", ("amendment",), "pending", identities=_PROMPT_IDS)
     outcome, _why = ab.record_outcome(repo, verdict, "amendment", None, call_ok, "001")
-    assert outcome == ("accepted" if call_ok else "failed")
+    assert outcome == ("recorded" if call_ok else "failed")
     text = (repo / "docs" / "reviews" / "v.md.requested").read_text(encoding="utf-8")
     assert ksitting.read_requested(text)[2] == outcome, text
     assert read(text) == (_PROMPT_IDS, None), text
@@ -1467,7 +1467,7 @@ def _first_approval_repo(tmp_path):
     rows it handed over into `Adjudicates`; a fixture that omitted the cell would
     exercise a row `intake` cannot produce, and the assembler now refuses one."""
     repo = _spine_repo(tmp_path)
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Needs")
     baseline_snapshot.copy_live(repo, seed=True)
     llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
     llrs.write_text(
@@ -1576,7 +1576,7 @@ def _composed_judging_brief(tmp_path, case):
     else:
         repo = _amendment_repo(tmp_path)
         dial = "DevStg-Release" if case == "amendment-held" else "DevStg-Needs"
-        set_process_key(repo, "attestation", "human_approval_through", dial)
+        set_process_key(repo, "authority", "operator_accepts_through", dial)
         row = _am_row()
         if case == "combined":
             row = _am_row(Brief="combined", Adjudicates="amendment:SR-001")
@@ -1642,7 +1642,7 @@ def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
     # dial it saw (`DevStg-Needs`, releasing both), and the owner TIGHTENED it
     # afterwards. The dial is therefore re-checked at composition as well as at
     # the mint — a scope check alone would have handed over the SR.
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Reqs")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Reqs")
     row = _fa_row(Adjudicates="SR-001;LLR-001")
     values, why = ab.first_approval_values(repo, row)
     assert why is None, why
@@ -1662,7 +1662,7 @@ def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
     # what an adopter who has declared nothing gets — the arm has no question at
     # all and REFUSES, rather than composing the owner's sitting as a session's
     # to-do list.
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Release")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Release")
     values, why = ab.first_approval_values(repo, row)
     assert values is None
     assert "HOLDS for a human" in why, why
@@ -2324,7 +2324,7 @@ def _hat_repo(
     SN-002 drafted (or, with `amended_sr`, approved before the seed and its
     text amended after it), and the roster written."""
     repo = _spine_repo(tmp_path)
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Needs")
     needs = repo / "docs" / "requirements" / "stakeholder-needs.toml"
     needs.write_text(_HAT_NEEDS.format("a team can use it"), encoding="utf-8")
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
@@ -2589,11 +2589,11 @@ def _rulings(text, brief, kinds):
     rulings, and the rows it authorizes an act on."""
     parsed, why = ksitting.parse(text, brief, kinds)
     assert why is None, why
-    binding = ksitting.render_requested(brief, kinds, "accepted")
-    accepted = ksitting.accepted(text, binding)
-    assert accepted, text
-    rows = {kind: part[3] for kind, part in accepted.items()}
-    return parsed, rows, ksitting.judged_rows(accepted)
+    binding = ksitting.render_requested(brief, kinds, "recorded")
+    recorded = ksitting.recorded(text, binding)
+    assert recorded, text
+    rows = {kind: part[3] for kind, part in recorded.items()}
+    return parsed, rows, ksitting.judged_rows(recorded)
 
 
 @pytest.mark.parametrize(

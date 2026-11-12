@@ -54,7 +54,7 @@ def test_the_repo_global_rungs_are_the_ones_a_PER_PHASE_call_cannot_own(scaffold
     req = scaffold / "docs" / "requirements"
     srs_h = (
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
-        "Priority,Verification,Status,Phase\n"
+        "Priority,VerificationMethod,Status,Phase\n"
     )
     llrs_h = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Phase\n"
     tcs_h = (
@@ -286,7 +286,7 @@ def test_tier_signals_STRONG_ARM_CAN_ACTUALLY_FIRE_end_to_end(tmp_path):
     req.mkdir(parents=True, exist_ok=True)
     sr_header = (
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status\n"
+        "Permutations,Priority,VerificationMethod,Status\n"
     )
 
     def write_sr(text):

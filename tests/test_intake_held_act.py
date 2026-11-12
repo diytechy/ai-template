@@ -95,7 +95,7 @@ def _held_repo(tmp_path, dial=HOLDS_SRS, extra="", llrs="", needs=""):
     (root / OPEN_ITEMS).write_bytes(b"# The open items.\n")
     if needs:
         (root / SN_REL).write_bytes(needs.encode("utf-8"))
-    set_process_key(root, "attestation", "human_approval_through", dial)
+    set_process_key(root, "authority", "operator_accepts_through", dial)
     SNAP.copy_live(root, seed=True)
     return root, _commit(root, "the dial, the registry and the first signing")
 
@@ -140,7 +140,7 @@ def _judged(root, rids):
     return adjudicate_brief.requested_identities(lines)
 
 
-def _sit(root, rulings, rel=VERDICT, outcome="accepted", identities=None):
+def _sit(root, rulings, rel=VERDICT, outcome="recorded", identities=None):
     """A single-kind amendment verdict and its binding recording `outcome`,
     bound to `identities`, by default the rows' live text."""
     path = _write_verdict(root, rel, _amendment_part(rulings))
@@ -300,7 +300,7 @@ def test_a_blessed_meaning_on_a_held_rung_mints_the_same(tmp_path, shape):
             str(path),
             ksitting.SITTING,
             kinds,
-            "accepted",
+            "recorded",
             identities=_judged(root, rulings),
         )
     after = _commit(root, "amend SR-001 and sit it")
@@ -378,26 +378,26 @@ def test_a_row_with_no_amendment_record_in_the_range_still_mints(tmp_path):
     "first, second, deciding",
     [
         pytest.param(
-            ("MEANING", "accepted"),
-            ("CLARITY", "accepted"),
+            ("MEANING", "recorded"),
+            ("CLARITY", "recorded"),
             None,
             id="meaning-then-clarity",
         ),
         pytest.param(
-            ("CLARITY", "accepted"),
-            ("MEANING", "accepted"),
+            ("CLARITY", "recorded"),
+            ("MEANING", "recorded"),
             LATER_VERDICT,
             id="clarity-then-meaning",
         ),
         pytest.param(
-            ("MEANING", "accepted"),
+            ("MEANING", "recorded"),
             ("CLARITY", "failed"),
             VERDICT,
             id="meaning-then-failed",
         ),
     ],
 )
-def test_the_latest_accepted_verdict_decides_a_row_sat_twice(
+def test_the_latest_recorded_verdict_decides_a_row_sat_twice(
     tmp_path, first, second, deciding
 ):
     """Each sitting's `(ruling, outcome)`, and the verdict that decides the row
@@ -675,9 +675,9 @@ def test_clarity_or_a_released_rung_mints_no_owner_row(tmp_path, dial, tag):
 
 
 @pytest.mark.parametrize("state", ["no-binding", "pending", "failed", "invalid"])
-def test_an_unaccepted_verdict_leaves_the_row_on_the_amendment_row(tmp_path, state):
+def test_an_unrecorded_verdict_leaves_the_row_on_the_amendment_row(tmp_path, state):
     """An unsettled row is sat again. Witness: an arm that reads the verdict's
-    text without `accepted_at` finds the MEANING row in the pending, failed and
+    text without `recorded_at` finds the MEANING row in the pending, failed and
     invalid cases, and one that walks the verdict files rather than their
     bindings finds it in the no-binding case too."""
     root, before = _held_repo(tmp_path)

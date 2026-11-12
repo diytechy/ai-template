@@ -121,7 +121,7 @@ design expectation (links SR, names module/symbol) → `TC-###` test case
 ## Gates (advance only when criteria pass)
 
 Each gate closes per the repo's **declared gate authority** — the
-`[attestation] human_approval_through` dial in `docs/process.toml`, the one home for every
+`[authority] operator_accepts_through` dial in `docs/process.toml`, the one home for every
 process dial (default `attended`: pause for human approval at each
 gate; the `single-approve`/`autonomous` levels and their mechanics:
 `PROCESS.md` §4 + `PROCESS_OPTIONS.md` "Gate authority levels").
@@ -133,19 +133,19 @@ gate; the `single-approve`/`autonomous` levels and their mechanics:
   every SR links ≥1 SN and has measurable acceptance criteria; usability/docs
   needs captured; constraints/non-goals explicit.
 - **DevStg-Tests — Decomposition & test coverage.** Every SR → ≥1 LLR (or marked
-  Analysis/Inspection/Attest); every SR and LLR has ≥1 TC; traceability reports
+  Analysis/Inspection/Vouch); every SR and LLR has ≥1 TC; traceability reports
   **0 orphans**; the harness runs locally and in CI.
 - **DevStg-Impl — Implementation (test-first).** Each DevStg-Tests TC becomes a *failing* test
   before the code that satisfies it (red → green → refactor). Build green, lint
   clean, the **full** test tier passes, coverage ≥ threshold; every
   test-verifiable SR is **Approved**, and every remaining SR is explicitly
-  classified **Demonstration / Manual / Inspection / Analysis / Attest /
+  classified **Demonstration / Manual / Inspection / Analysis / Vouch /
   Critique** (nothing hand-waved).
 - **DevStg-Release — Release readiness** *(per release; skip for a one-off)*. The
   **release** test tier passes; the generated release checklist
   (`scripts/gen_release_checklist.py`) is completed + signed; version bumped;
   changed `Approved` interface versions communicated.
-- **Acceptance — the owner's final read.** A human/stakeholder exercises the real product
+- **The operator's final read.** A person or stakeholder exercises the real product
   (including the Demonstration/Manual items) and signs off.
 
 Tag each `TC-###` with a **Tier** (`Smoke`/`Full`/`Release`) so the cheap gate
@@ -198,7 +198,7 @@ record an explicit n/a where one truly doesn't apply.
    §6 decision-surfacing dial (safety / money / privacy / irreversibility ⇒
    `attended`; low-risk creative/tooling ⇒ `autonomous`-eligible). Record the
    recommendation + the owner's choice in `docs/status.md`; the owner sets
-   `human_approval_through` in `docs/process.toml` (non-default levels get the deviation
+   `operator_accepts_through` in `docs/process.toml` (non-default levels get the deviation
    register — `PROCESS_OPTIONS.md` "Gate authority levels").
 3. Scaffold the artifacts and the check harness (empty registries + headers).
 4. Run **DevStg-Reqs**: as Stakeholder, write SN-### (incl. edge cases); as UX, capture

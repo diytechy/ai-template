@@ -35,7 +35,7 @@ WHAT IT DOES NOT COVER, stated plainly because the gap is the point
     ones. The rest of the procedure — the pack's §2 deviation review and its §3
     per-change entries — is prose an operator executes by hand, and SR-036
     declares that judgment deliberately non-mechanized
-    (`verification = "Inspection"`). None of that half is exercised here.
+    (`verification_method = "Inspection"`). None of that half is exercised here.
   - Consequently a GREEN here means "the documented mechanical steps leave a
     repo whose OWN harness passes", not "the repo is now on the current kit".
     Those are different claims and this file only makes the first — and the

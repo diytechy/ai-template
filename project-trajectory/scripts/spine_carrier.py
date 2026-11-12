@@ -118,7 +118,7 @@ Contract IF-108: plan_briefs reads the system-requirements and interfaces
     will not parse raises instead of quietly narrowing what the planner is told.
 
 Contract IF-109: agent_brief reads SR and TC rows through load() for two
-    purposes at once — the SR Verification cell decides whether a critique
+    purposes at once — the SR VerificationMethod cell decides whether a critique
     round is owed, and SR/TC prose is lifted verbatim into the session brief.
     Both take the same rows under the same column names, so a gate decision and
     the brief beside it can never be drawn from different vocabularies;
@@ -341,7 +341,7 @@ SPINE_COLUMN = {
     "acceptance_criteria": "AcceptanceCriteria",
     "permutations": "Permutations",
     "priority": "Priority",
-    "verification": "Verification",
+    "verification_method": "VerificationMethod",
     "status": "Status",
     # the SN tier's own four, plus the `tags` cell the hats roster reads
     "need": "Need",
@@ -450,7 +450,7 @@ OFFSPINE_COLUMN = {
     "data": "Data",
     # OI-61's sub-question, sanctioned 2026-08-23: the OPTIONAL seam-tier
     # verification pointer. A `TC-###` or an `LLR-###`; empty means "verified in
-    # its own right". It is not a second `Verification` column — the IF tier has
+    # its own right". It is not a second `VerificationMethod` column — the IF tier has
     # none — it is the pointer that makes "the parent functionality's tests
     # cover this" sayable at all.
     "verified_by": "VerifiedBy",

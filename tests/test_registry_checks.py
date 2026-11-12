@@ -17,12 +17,12 @@ def report_of(root):
 
 # --- Integrity: duplicate / malformed ids (always on; fail under --strict) -----
 
-DUP_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+DUP_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Approved
 SR-001,Duplicate,SN-001,"The system shall add again.","r.","dup",,M,Test,Approved
 """
 
-MALFORMED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+MALFORMED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-XX,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Approved
 """
 
@@ -50,17 +50,17 @@ def test_malformed_id_fails_strict(scaffold):
 # DevStg-Impl --strict-schema. Structure is integrity-class: wrong at any stage.
 
 # Permutations cell `set{a,b}` unquoted -> 11 parsed columns vs the 10-col header.
-UNQUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+UNQUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",set{a,b},M,Test,Approved
 """
 
 # Same row properly quoted -> exactly 10 columns; the control must stay green.
-QUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+QUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3","set{a,b}",M,Test,Approved
 """
 
 # A short row (trailing cells lost, e.g. a hand-edit that ate the Status cell).
-SHORT_ROW_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SHORT_ROW_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M
 """
 
@@ -168,7 +168,7 @@ def test_harness_runs_registry_integrity_at_g1(scaffold):
 # tiers, but it must not contradict the SR<->LLR link the LLR's SR-Refs records.
 # Wrong at any stage -> integrity class (fails --strict-integrity).
 
-_TWO_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+_TWO_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Approved
 SR-002,Subtraction,SN-001,"The system shall subtract.","r.","sub(3,1) == 2",,M,Test,Approved
 """
@@ -323,7 +323,7 @@ def test_strict_schema_flags_bad_enum(scaffold):
     )
     proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 1
-    assert "has Verification='Testing'" in report_of(scaffold)
+    assert "has VerificationMethod='Testing'" in report_of(scaffold)
 
 
 def test_strict_schema_leaves_priority_and_status_open(scaffold):

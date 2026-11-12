@@ -1,6 +1,6 @@
 """Gate authority as declared policy (Thread 32, process.md §4).
 
-Who accepts a gate advance is the `[attestation]` posture in
+Who accepts a gate advance is the `[authority]` posture in
 `docs/process.toml`, stated canonically in process.md §4 and referenced (never
 restated) everywhere else; a non-default level ships with a repo-local
 deviation register. The tripwire test keeps the de-duplication honest: a future
@@ -26,13 +26,13 @@ def _posture(root):
 
     SN-028 moved the one-word `docs/gate-policy` file into
     `docs/process.toml`; SN-029 then RETIRED the enum key itself, because
-    shipping `gate_policy` beside `human_approval_through` meant the
+    shipping `gate_policy` beside `operator_accepts_through` meant the
     template's default silently shadowed whatever word bootstrap had written.
     So a posture is read back as a dict and compared against the translation,
     never as a stored word."""
     return {
-        key: process_key(root, "attestation", key)
-        for key in ("human_approval_through", "keep_nondependent", "final_review")
+        key: process_key(root, "authority", key)
+        for key in ("operator_accepts_through", "keep_nondependent", "final_review")
     }
 
 
@@ -54,7 +54,7 @@ def test_scaffold_gate_policy_defaults_attended(scaffold):
     # the shadowing defect needed: with both keys present, `approval_level`
     # prefers the ordinal, so every repo that chose a non-default posture
     # scaffolded fully attended and nothing anywhere said so.
-    assert process_key(scaffold, "attestation", "gate_policy") is None
+    assert process_key(scaffold, "authority", "gate_policy") is None
     assert not (scaffold / "docs" / "gate-policy.md").exists(), (
         "the deviation register is for non-default levels only"
     )
@@ -157,7 +157,7 @@ def test_process_options_teaches_only_the_live_gate_policy_interface():
     text = (KIT / "PROCESS_OPTIONS.md").read_text(encoding="utf-8")
     assert "gate_policy" not in text, (
         "PROCESS_OPTIONS.md instructs through the RETIRED `gate_policy` enum; "
-        "rewrite onto `[attestation] human_approval_through` / "
+        "rewrite onto `[authority] operator_accepts_through` / "
         "`keep_nondependent` and the `human-held`/`loop-held` session hold"
     )
     stray = [

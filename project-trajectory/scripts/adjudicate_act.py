@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""adjudicate_act.py — the ACT a committed, accepted verdict still owes, and
+"""adjudicate_act.py — the ACT a committed, recorded verdict still owes, and
 the act brief filled from it.
 
 Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX).
@@ -17,19 +17,19 @@ own brief, since OI-45 (b) keeps scripted approval retired; Q2 makes a MEANING
 row's blessing a typed mark on the verdict, `[MEANING+BLESS]`.
 
 THE CARRIER. The verdict and the binding beside it, as committed at the lane's
-HEAD, read through `kitlib.sitting.accepted_at`, the one reader every consumer
+HEAD, read through `kitlib.sitting.recorded_at`, the one reader every consumer
 of a verdict goes through. After the split that committed verdict is the act
 turn's whole authority: the session that wrote it may be gone, and a fresh act
 turn takes the same act. The other consumers of the same carrier are
 unchanged: the merge slot (`kitlib.sitting.uncovered_refusal` and
-`unaccepted_refusal`) still admits an act only when an accepted verdict over
+`unrecorded_refusal`) still admits an act only when a recorded verdict over
 the act's own rows backs it (owner ruling 6, 2026-10-07), and its lane rule
 (`held_status.commit_held_approval_lines`) admits a held-rung re-attestation
 only when that verdict rules the row CLARITY and its binding records the row's
 text. `intake.py snapshot --verdict` still records the verdict an act names,
 for audit; no rule requires it.
 
-WHAT THE VERDICT AUTHORIZES. Exactly the rows each accepted part rules to
+WHAT THE VERDICT AUTHORIZES. Exactly the rows each recorded part rules to
 authorize them, read through `kitlib.sitting.judged_rows`, the one reader the
 merge's backing check also reads, so the two cannot disagree. A first-approval
 part's APPROVE flips a row, on a released rung only (a dial the owner
@@ -61,7 +61,7 @@ which is what makes a flip committed without its copy read as inconsistent.
 
 A HELD CLARITY ACT IS BOUND TO THE TEXT ITS VERDICT JUDGED. The binding beside
 the verdict records the digest of each judged row's approved text
-(`kitlib.sitting.accepted_identities`); a re-attest owed on a held rung is
+(`kitlib.sitting.recorded_identities`); a re-attest owed on a held rung is
 owed only while the committed row still has that digest
 (`acceptance_record.approved_text_digest`). A binding with no identity, a
 malformed one, one that does not name the row, or a different digest refuses
@@ -99,7 +99,7 @@ entry point consumes.
     winning, or `(None, reason)`; `left_owed(root, verdict, rev="HEAD")` is
     None when `rev` carries every act the verdict authorizes in full, else
     the acts still owed there or the derivation's refusal, and
-    `bound_brief(root, verdict, rev="HEAD")` the brief class an accepted,
+    `bound_brief(root, verdict, rev="HEAD")` the brief class a recorded,
     actable verdict's binding records, or None. Reads git and the shipped
     template only; writes nothing.
 """
@@ -144,9 +144,9 @@ def _verdict_rel(root, verdict):
     return rel[2:] if rel.startswith("./") else rel
 
 
-def _unaccepted_reason(root, rev, rel):
-    """Why the verdict at `rel` is not accepted at `rev`, read off the files
-    `accepted_at` read; only ever asked once that reader returned None.
+def _unrecorded_reason(root, rev, rel):
+    """Why the verdict at `rel` is not recorded at `rev`, read off the files
+    `recorded_at` read; only ever asked once that reader returned None.
 
     Implements: SR-231, SR-232, LLR-338"""
     text = git_out(root, ["show", "{}:{}".format(rev, rel)])
@@ -159,16 +159,16 @@ def _unaccepted_reason(root, rev, rel):
             rel, rev
         )
     brief, kinds, outcome = bound
-    if outcome != "accepted":
-        return "the verdict {}'s binding records the outcome {}, not accepted".format(
+    if outcome != "recorded":
+        return "the verdict {}'s binding records the outcome {}, not recorded".format(
             rel, outcome
         )
     why = ksitting.parse(text, brief, kinds, rel)[1] or "it does not parse"
     return "the verdict {} is not a valid {} verdict: {}".format(rel, brief, why)
 
 
-def _accepted(root, rev, rel):
-    """`(brief class, {kind: part})` for an accepted verdict of an actable
+def _recorded_verdict(root, rev, rel):
+    """`(brief class, {kind: part})` for a recorded verdict of an actable
     class, or `(None, reason)`.
 
     Implements: SR-231, SR-232, LLR-338"""
@@ -178,9 +178,9 @@ def _accepted(root, rev, rel):
         return None, "a {} verdict owes no act; only {} verdicts do".format(
             bound[0], ", ".join(ACTABLE)
         )
-    parsed = ksitting.accepted_at(root, rev, rel)
+    parsed = ksitting.recorded_at(root, rev, rel)
     if not parsed:
-        return None, _unaccepted_reason(root, rev, rel)
+        return None, _unrecorded_reason(root, rev, rel)
     return (bound[0], parsed), None
 
 
@@ -218,7 +218,7 @@ def _arm(ruling, held):
 
 
 def _authorized(parts, dial):
-    """`[(act, row id, held)]` every accepted part authorizes, `act` being
+    """`[(act, row id, held)]` every recorded part authorizes, `act` being
     "approve" or "reattest", amendment first, in verdict order within a kind.
     Which rows a part authorizes is `kitlib.sitting.judged_rows`'s answer (a
     MEANING row only with its bless mark), the reader the merge's backing
@@ -337,21 +337,21 @@ def _odd(rid, status, equal):
 def _derive(root, verdict, rev):
     """`(rel, authorized, owed, None)` for the verdict at `verdict` judged at
     the commit `rev`, or `(rel, None, None, reason)` when it is refused: not
-    accepted there, of a class that owes no act, or a judged row in a state
+    recorded there, of a class that owes no act, or a judged row in a state
     no act explains.
 
     Implements: SR-231, SR-232, LLR-338"""
     rel = _verdict_rel(root, verdict)
     if not rel:
         return None, None, None, "the verdict {} lies outside {}".format(verdict, root)
-    found, why = _accepted(root, rev, rel)
+    found, why = _recorded_verdict(root, rev, rel)
     if found is None:
         return rel, None, None, why
     rows, authorized, owed = _Rows(root, rev), [], []
     judged = _authorized(found[1], kauthority.dial_at(root, rev))
     bound = (None, None)
     if any(act == "reattest" and held for act, _rid, held in judged):
-        bound = ksitting.accepted_identities(root, rev, rel)
+        bound = ksitting.recorded_identities(root, rev, rel)
     for act, rid, held in judged:
         state, why = _state(rows, act, rid, held, bound)
         if state is None:
@@ -414,7 +414,7 @@ def bound_brief(root, verdict, rev="HEAD"):
 
     Implements: SR-231, LLR-338"""
     rel = _verdict_rel(root, verdict)
-    found = _accepted(root, rev, rel)[0] if rel else None
+    found = _recorded_verdict(root, rev, rel)[0] if rel else None
     return found[0] if found else None
 
 

@@ -49,7 +49,7 @@ def trace():
 
 
 def _sr(sid, **cells):
-    row = {"SR-ID": sid, "Status": "Approved", "Verification": "Test"}
+    row = {"SR-ID": sid, "Status": "Approved", "VerificationMethod": "Test"}
     row.update(cells)
     return row
 

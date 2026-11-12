@@ -50,7 +50,7 @@ WI_COLUMNS = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable"
 SR_WI_COLUMNS = WI_COLUMNS + ",SpecRef"
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status\n"
+    "Permutations,Priority,VerificationMethod,Status\n"
 )
 
 # `active/<branch>/` is the only status two levels deep and the branch is the
@@ -200,7 +200,7 @@ def test_staged_is_a_no_op_outside_git(tmp_path):
 
 _SPINE_SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status,Phase,Aspect,Hat-Refs\n"
+    "Permutations,Priority,VerificationMethod,Status,Phase,Aspect,Hat-Refs\n"
 )
 
 
@@ -1055,7 +1055,7 @@ CRITIQUE_SR_ROW = (
 
 
 def _init_critique_close_repo(tmp_path, verdict="CHANGES-REQUESTED findings=2"):
-    """A git repo with a Verification=Critique SR-050, a committed CRITIQUE verdict
+    """A git repo with a VerificationMethod=Critique SR-050, a committed CRITIQUE verdict
     file, and WI-050 (on SR-050) closed queued->done in the working tree."""
     skip_without_env_gates("git")
     git = shutil.which("git")
@@ -1292,7 +1292,7 @@ def test_backlog_staleness_never_errors_under_strict(tmp_path):
 def _init_critique_staleness_repo(
     tmp_path, ev_at=1000, render_at=2000, verdict="APPROVE findings=0"
 ):
-    """A git repo with a Verification=Critique SR-050, a CRITIQUE evidence file
+    """A git repo with a VerificationMethod=Critique SR-050, a CRITIQUE evidence file
     committed at `ev_at`, a done WI-050 (so the full check reaches the perceptual
     warn, past the no-work-items early return), and a render-surface file
     `scripts/gen_trajectory.py` committed at `render_at`. `render_at > ev_at` is
@@ -1357,7 +1357,7 @@ def test_critique_staleness_off_git_is_silent(tmp_path):
 def test_critique_staleness_vacuous_without_a_critique_sr(tmp_path):
     # A non-Critique SR pays nothing, even with a newer render surface.
     run_git = _staleness_git(tmp_path)
-    _write_sr_row(tmp_path, SR_ROW_V1)  # Verification=Test
+    _write_sr_row(tmp_path, SR_ROW_V1)  # VerificationMethod=Test
     reviews = tmp_path / "docs" / "reviews"
     reviews.mkdir(parents=True, exist_ok=True)
     (reviews / "001-CRITIQUE.md").write_text(
@@ -1451,7 +1451,7 @@ def test_latest_critique_tie_breaks_deterministically_on_name(tmp_path):
 
 def test_render_surface_covers_the_whole_generator_family():
     """`_render_surface_paths` feeds the render-critique-staleness warn: a
-    `Verification=Critique` SR whose judged render surface changed after the
+    `VerificationMethod=Critique` SR whose judged render surface changed after the
     verdict must re-fire. WI-280 split every EMITTER out of gen_trajectory.py
     into HTML emitter modules, so a facade-only surface would leave that warn
     running and always passing — the exact silent-green shape the warn exists

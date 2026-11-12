@@ -67,7 +67,7 @@ def _fixture_repo(root):
             "AcceptanceCriteria",
             "Permutations",
             "Priority",
-            "Verification",
+            "VerificationMethod",
             "Status",
             "Phase",
             "Area",

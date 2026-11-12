@@ -440,7 +440,7 @@ def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
     req.mkdir(parents=True, exist_ok=True)
     sr_header = (
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status\n"
+        "Permutations,Priority,VerificationMethod,Status\n"
     )
     (req / "system-requirements.csv").write_text(
         sr_header + 'SR-001,Adder,SN-001,"the original text","why","ac",,C,'
@@ -535,7 +535,7 @@ def _adjudication_station(tmp_path):
     (wt / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
     (wt / "docs" / "requirements" / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status\n"
+        "Permutations,Priority,VerificationMethod,Status\n"
         'SR-001,Adder,SN-001,"t","w","a",,C,Test,Approved\n',
         encoding="utf-8",
         newline="\n",

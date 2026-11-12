@@ -371,7 +371,7 @@ def _kind_action(kind, human_held, approval_held=False):
     `human_held` answers about the SPINE tier the repo is in; a WI whose action
     would move an `approval` cell in an off-spine registry is governed by THAT
     registry's own rung — `agent_common.human_approves(docs, registry)`, which
-    reads the same `human_approval_through` dial through
+    reads the same `operator_accepts_through` dial through
     `agent_common.APPROVAL_RUNGS`. Either hold surfaces: a loop session must not
     write an approval a human owes, even on a spine tier the project has
     declared machine-approvable.
@@ -1460,7 +1460,7 @@ def _station_exit(root, tier, verb, payload, state):
         # that a human reads it rather than discovering it in a log later.
         _say(
             "FINAL REVIEW - the run is COMPLETE and nothing is blocked, but "
-            "docs/process.toml [attestation] final_review is not 'off', so it "
+            "docs/process.toml [authority] final_review is not 'off', so it "
             "ends here for a human read rather than closing quietly. Read the "
             "run; set the dial to 'off' when you no longer want the stop."
         )
@@ -1525,7 +1525,7 @@ def run(root, args, worker=None, tier="all"):
     # SN-029: one ordinal comparison, made once per run, threaded down exactly
     # as the enum was. `spine_stage_of` reads the tier currently in process
     # through `kitlib.stage.read_stage`; `human_holds` compares it against the
-    # declared `human_approval_through`.
+    # declared `operator_accepts_through`.
     human_held = ac.human_holds(root / "docs", ac.spine_stage_of(root))
     keep_going = ac.keep_nondependent(root / "docs")
     # Computed once, APPLIED lazily: admission refuses on it only when work

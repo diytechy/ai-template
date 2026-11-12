@@ -109,7 +109,7 @@ def _block(repo):
 BOM = bytes([0xEF, 0xBB, 0xBF])
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status,Phase,Area\n"
+    "Permutations,Priority,VerificationMethod,Status,Phase,Area\n"
 )
 
 

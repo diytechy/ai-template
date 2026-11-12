@@ -256,7 +256,7 @@ A repo that adopted the kit months ago will drift behind it: new scripts, rename
 tiers, split docs, retired files. Re-syncing is *not* a fresh bootstrap — you
 merge kit changes into files you have filled in, and that merge call is
 deliberately a person's (or an LLM's): `SR-036` carries
-`verification = "Inspection"` precisely because *did the adopter edit this, and
+`verification_method = "Inspection"` precisely because *did the adopter edit this, and
 does their edit still mean something under the new kit?* is not a fact a tool
 holds.
 
@@ -341,5 +341,5 @@ honestly deviates, the row says so.
 | `PB-###` performance budgets (§9) | Technical Performance Measures (TPMs) / resource budgets | Same intent — track measurable performance/resource targets against thresholds. |
 | `ASSET-###` + manifest/hash | Configuration items + baselines (IEEE 828 / ISO 10007) | A configuration item with a recorded, hashable baseline; the kit tracks provenance/license/hash in text where the asset itself can't be diffed. |
 | `status.md` risks & assumptions | Risk register (ISO 31000 family) | Same purpose — a living record of identified risks and assumptions; the kit keeps it lightweight and inline, not a separate managed register. |
-| `Verification` column | TDIA methods — Test, Demonstration, Inspection, Analysis (MIL-STD-961E / ISO/IEC/IEEE 29148 / INCOSE SE Handbook) | Direct adoption. Plus the kit's `Manual` and `Attest`; `Attest`'s nearest analog is a witnessed test / QA sign-off, with the attested-vs-mechanized reporting deliberately beyond the standards (process.md §4). |
+| `VerificationMethod` column | TDIA methods — Test, Demonstration, Inspection, Analysis (MIL-STD-961E / ISO/IEC/IEEE 29148 / INCOSE SE Handbook) | Direct adoption. Plus the kit's `Manual` and `Vouch`; `Vouch`'s nearest analog is a witnessed test / QA sign-off, with the vouched-vs-mechanized reporting deliberately beyond the standards (process.md §4). |
 | Overall needs → requirements → outputs → verification shape | FDA design controls (21 CFR 820.30) / ISO 13485 Design History File (DHF) | A structural cousin, not a claim of compliance: the same design-input → design-output → verification loop, right-sized for software. |

@@ -22,7 +22,7 @@ rationale = "Why it exists — what breaks without it, which alternative lost (l
 acceptance_criteria = "Measurable condition a test/demo asserts (the contract with the Test Engineer)."
 permutations = """Input dimensions for test design (process.md 'Dimensional coverage'); feed to scripts/gen_cases.py. Grammar: name=range[min..max]; name=set{a,b,c}; name=bool; @full|@pairwise|@boundaries. e.g. size=range[0..2GiB]; mode=set{a,b,c}; @pairwise"""
 priority = "M"
-verification = "Test"
+verification_method = "Test"
 status = "Drafted"
 phase = """Optional DELIVERY phase — a bare integer (1,2,3…), digits only, full cell: once any row is phased, an approved row's Phase must be a bare integer (a prefixed v2 is a --strict-schema finding — the --phase/--approve filters and the phase-drop detector match the cell literally, so a prefix disarms them silently; legacy labels still digit-parse in those filters). Blank is legal only on a pre-approval (Drafted) row, and the foundation (minimum) phase is always in scope under --phase. See process.md 'Phased delivery'. NOT the lifecycle phase: to tag WHEN in the running product's life a requirement holds (Provision/Startup/Runtime), add an optional 'Lifecycle' column instead (process.md §4 'Lifecycle phase')."""
 da_refs = ["DA-000"]  # the DOMAIN ASSUMPTION(S) in docs/requirements/assumptions.toml this requirement's argument relies on to deliver its needs: the claims about the world between what the system does and what a stakeholder experiences. A POINTER: moving it re-opens no approval. Once the assumptions registry holds a row, a requirement citing none and recording no `coincident` waiver is reported as unclassified; an id that resolves to no assumption fails the check.

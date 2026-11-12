@@ -38,7 +38,7 @@ from conftest import load_script
 # artifact change. A sorted fixture could not see that.
 SCRAMBLED_SRS = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status\n"
+    "Permutations,Priority,VerificationMethod,Status\n"
     'SR-009,Late,SN-001,"Shall late.",R,"late",,M,Test,Approved\n'
     'SR-000,Example,SN-001,"Shall example.",R,"example",,M,Test,Drafted\n'
     'SR-002,Middle,SN-001,"Shall middle.",R,"middle",,M,Test,Drafted\n'

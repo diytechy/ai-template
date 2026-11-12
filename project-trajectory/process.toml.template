@@ -20,7 +20,7 @@
 # [policies] reads the gate on and the reviewer required, whatever its value.
 #
 # WHAT IS IN SCOPE: every dial that answers "how is work PROCESSED" — gate
-# authority, the human-approval level, push authority, the reviewer count,
+# authority, the operator-acceptance level, push authority, the reviewer count,
 # the privacy and secrets gates, guardrails, the blackout window — and, since
 # the 2026-08-11 overturn below, every dial that answers "is this CHECK on".
 # What stays outside, and why:
@@ -57,11 +57,11 @@
 # sources live is REFUSED, not silently resolved — a mixed config is exactly
 # the state where two readers disagree about the same policy.
 
-[attestation]
+[authority]
 # THE GATE-AUTHORITY DIAL. This section used to open with a three-value enum
 # (`gate_policy = "attended" | "single-approve" | "autonomous"`). SN-029 RETIRED
 # it and this file no longer ships the key, because shipping both was itself
-# the bug: the template's `human_approval_through` shadowed whatever
+# the bug: the template's `operator_accepts_through` shadowed whatever
 # word `bootstrap --gate-policy` had written, so a repo that chose `autonomous`
 # scaffolded as fully attended with no diagnostic anywhere.
 #
@@ -69,7 +69,7 @@
 # is the one home for the translation, and `bootstrap.py --migrate-config`
 # applies it to a legacy `docs/gate-policy` file):
 #
-#   attended       human_approval_through = "DevStg-Release",
+#   attended       operator_accepts_through = "DevStg-Release",
 #                  keep_nondependent = false
 #   single-approve  = "DevStg-Below", keep_nondependent = true,
 #                  final_review = "always"
@@ -111,11 +111,7 @@
 # notches map 0 -> DevStg-Below, 1 -> DevStg-Boundary, 2 -> DevStg-Arch,
 # 3 -> DevStg-LLReqs, 4 -> DevStg-Release, which holds exactly the rungs each
 # level held before.
-#
-# Named `human_approval_through`, never "attest level": `Attest` is already
-# a Verification method in the SR vocabulary and the collision would be
-# permanent.
-human_approval_through = "DevStg-Release"
+operator_accepts_through = "DevStg-Release"
 # The separate "always show me the full breakdown at the end" hold, split out
 # because it is flipped far more often than the level itself.
 #   "always" — the loop stops for a final human read even when the level would

@@ -57,7 +57,7 @@ CSV_HEADER = ",".join(sched.WI_COLUMNS) + "\n"
 # The spine SR registry's header, for the fixtures whose findings cite an SR.
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status\n"
+    "Permutations,Priority,VerificationMethod,Status\n"
 )
 
 

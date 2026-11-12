@@ -220,7 +220,7 @@ def test_the_generated_view_carries_NO_approval_cell(repo):
     """Implements: TC-195"""
     # OI-30 D3. `components.toml` says CMP-001 is Approved and CMP-002 Drafted;
     # neither word may appear here in any cell, because a generator that wrote
-    # one would route around the very dial human_approval_through governs.
+    # one would route around the very dial operator_accepts_through governs.
     text = load_script(GEN).render(repo)
     doc = _view(repo)
     for row in doc["component_view"].values():

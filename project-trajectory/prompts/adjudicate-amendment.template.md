@@ -27,7 +27,7 @@
                    slot says so and the session is a FIRST-APPROVAL adjudication.
        {aftermath} which branch of the CLARITY and MEANING aftermath this row
                    is actually in — DERIVED from the declared gate authority
-                   (`human_approval_through` in docs/process.toml) for the tiers
+                   (`operator_accepts_through` in docs/process.toml) for the tiers
                    whose rows are shown, so the session is told whether the
                    re-attestation is its own act or the owner's rather than
                    working it out from a dial it would have to go read.

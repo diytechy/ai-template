@@ -2,7 +2,7 @@
 consolidated, pin that there is nothing left to hold equal.
 
 THE FILE'S ORIGINAL SUBJECT — the gate policy `trace.py` and `spine_rules.py`
-each carried a copy of — IS GONE (WI-448 slice 3). Which SR Verification methods
+each carried a copy of — IS GONE (WI-448 slice 3). Which SR verification methods
 are LLR-exempt, what "Drafted"/"Approved"/"Founded" mean, what a `Phase` cell
 parses to, which SN ids exist and which are cited: nine duplicated bodies, nine
 equality pins, one home now (`kitlib.spine`). Policy disagreement between the
@@ -179,16 +179,19 @@ def test_the_llr_exemption_answers_by_value():
     # whitespace-padded valid method (one stripped, one did not), which is a
     # false green on one surface and a false red on the other for ONE registry
     # state. The direction is pinned, not merely the sameness.
-    assert set(KITSPINE.LLR_EXEMPT) == {"Analysis", "Inspection", "Attest"}
+    assert set(KITSPINE.LLR_EXEMPT) == {"Analysis", "Inspection", "Vouch"}
     for row, want in [
-        ({"Verification": "Analysis"}, True),
-        ({"Verification": " Analysis "}, True),  # the 017 case itself
-        ({"Verification": "Attest  "}, True),
-        ({"Verification": "Inspection"}, True),
-        ({"Verification": "analysis"}, False),  # closed vocab stays case-sensitive
-        ({"Verification": "Test"}, False),
-        ({"Verification": ""}, False),
-        ({"Verification": None}, False),
+        ({"VerificationMethod": "Analysis"}, True),
+        ({"VerificationMethod": " Analysis "}, True),  # the 017 case itself
+        ({"VerificationMethod": "Vouch  "}, True),
+        ({"VerificationMethod": "Inspection"}, True),
+        (
+            {"VerificationMethod": "analysis"},
+            False,
+        ),  # closed vocab stays case-sensitive
+        ({"VerificationMethod": "Test"}, False),
+        ({"VerificationMethod": ""}, False),
+        ({"VerificationMethod": None}, False),
         ({}, False),
     ]:
         assert KITSPINE.llr_exempt(row) is want, row
@@ -358,7 +361,7 @@ def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
         "Requirement": "r",
         "Rationale": "why",
         "AcceptanceCriteria": "ac",
-        "Verification": "Test",
+        "VerificationMethod": "Test",
         "Priority": "P1",
         "SN-Refs": "SN-001",
     }
@@ -472,10 +475,10 @@ def test_the_legacy_approval_translation_agrees():
     # 0-4 ordinal. The two ends still mean what the words always meant — the top
     # of the ladder holds everything, and the sentinel below it holds nothing.
     assert (
-        BOOT.LEGACY_APPROVAL["attended"]["human_approval_through"] == "DevStg-Release"
+        BOOT.LEGACY_APPROVAL["attended"]["operator_accepts_through"] == "DevStg-Release"
     )
     assert (
-        BOOT.LEGACY_APPROVAL["autonomous"]["human_approval_through"] == "DevStg-Below"
+        BOOT.LEGACY_APPROVAL["autonomous"]["operator_accepts_through"] == "DevStg-Below"
     )
     # THE SECOND F5 COPY THE RE-KEY CREATED, pinned for the same reason as the
     # first: `--migrate-config` rewrites an adopter's retired ordinal using
@@ -495,7 +498,7 @@ def test_the_legacy_approval_translation_agrees():
 def test_the_retired_enum_key_is_no_longer_shipped():
     """Implements: TC-152"""
     # The shadowing defect, pinned so it cannot come back: the template used to
-    # ship BOTH `gate_policy = "attended"` and `human_approval_through = 4`,
+    # ship BOTH `gate_policy = "attended"` and `operator_accepts_through = 4`,
     # and since `approval_through` prefers the explicit dial, every repo that
     # chose a non-default posture scaffolded as fully attended with no
     # diagnostic.
@@ -508,7 +511,7 @@ def test_the_retired_enum_key_is_no_longer_shipped():
         if ln.strip().startswith("gate_policy") and "=" in ln
     ]
     assert declared == [], declared
-    assert 'human_approval_through = "DevStg-Release"' in text
+    assert 'operator_accepts_through = "DevStg-Release"' in text
 
 
 def test_sn_field_mapping_agrees_across_all_three_readers(tmp_path):
@@ -1800,7 +1803,7 @@ def test_the_two_held_status_predicates_agree_by_value(tmp_path):
         docs = tmp_path / dial / "docs"
         docs.mkdir(parents=True)
         (docs / "process.toml").write_text(
-            '[attestation]\nhuman_approval_through = "{}"\n'.format(dial),
+            '[authority]\noperator_accepts_through = "{}"\n'.format(dial),
             encoding="utf-8",
         )
         for registry in registries:

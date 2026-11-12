@@ -27,7 +27,7 @@ python scripts/trace.py --strict
 # DevStg-Tests+: also reject leftover template example rows (ids ending -000).
 python scripts/trace.py --strict --no-placeholders
 
-# DevStg-Impl: required fields non-empty + closed Verification/Tier vocabularies, plus
+# DevStg-Impl: required fields non-empty + closed VerificationMethod/Tier vocabularies, plus
 # --require-verified: every non-Drafted SR must read Status=Approved.
 python scripts/trace.py --strict --no-placeholders --strict-schema --require-verified
 ```
@@ -50,8 +50,8 @@ call `trace.py` directly to iterate on a specific finding.
   covers every `*.csv` under `docs/requirements/` and `docs/test/`, including
   registries `trace.py` never joins (interfaces, project-added ones).
 - **schema** (`--strict-schema`) — a required field is empty, or a
-  `Verification`/`Tier` value is outside the closed vocabulary
-  (`Test|Demonstration|Inspection|Analysis|Manual|Attest|Critique`;
+  `VerificationMethod`/`Tier` value is outside the closed vocabulary
+  (`Test|Demonstration|Inspection|Analysis|Manual|Vouch|Critique`;
   `Smoke|Full|Release`).
   Fill the field or correct the value.
 - **placeholder** (`--no-placeholders`) — a template `-000` example row survived;

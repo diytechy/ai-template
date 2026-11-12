@@ -489,7 +489,7 @@ FIRST = object()
 def write_dispute(
     root,
     ruling,
-    outcome="accepted",
+    outcome="recorded",
     kinds="F2",
     findings=(),
     verdict=DISPUTE_VERDICT,
@@ -699,7 +699,7 @@ def test_a_dismissal_whose_finding_cannot_be_shown_refuses(tmp_path):
 
 
 def test_a_cited_ruling_that_does_not_dismiss_refuses(tmp_path):
-    """A FIX or ESCALATE ruling, an unaccepted call, a ruling of another
+    """A FIX or ESCALATE ruling, an unrecorded call, a ruling of another
     finding and a missing verdict each refuse the exclusion that cites them.
     The refusal of a ruling that resolves nothing names the set this gate
     accepts (WI-911: a DISMISS or a SUCCESSOR).
@@ -708,13 +708,13 @@ def test_a_cited_ruling_that_does_not_dismiss_refuses(tmp_path):
     """
     accepts = "only a DISMISS or a SUCCESSOR resolves a finding"
     cases = (
-        ("RULING: F2 FIX the wording is wrong", "accepted", "F2", "rules F2 FIX"),
-        ("RULING: F2 FIX the wording is wrong", "accepted", "F2", accepts),
-        ("RULING: F2 ESCALATE high risk", "accepted", "F2", "rules F2 ESCALATE"),
-        ("RULING: F2 ESCALATE high risk", "accepted", "F2", accepts),
+        ("RULING: F2 FIX the wording is wrong", "recorded", "F2", "rules F2 FIX"),
+        ("RULING: F2 FIX the wording is wrong", "recorded", "F2", accepts),
+        ("RULING: F2 ESCALATE high risk", "recorded", "F2", "rules F2 ESCALATE"),
+        ("RULING: F2 ESCALATE high risk", "recorded", "F2", accepts),
         ("RULING: F2 DISMISS refuted no", "pending", "F2", "outcome pending"),
         ("RULING: F2 SUCCESSOR file it", "pending", "F2", "outcome pending"),
-        ("RULING: F1 DISMISS refuted no", "accepted", "F1", "does not rule F2"),
+        ("RULING: F1 DISMISS refuted no", "recorded", "F1", "does not rule F2"),
     )
     for n, (ruling, outcome, kinds, says) in enumerate(cases):
         root = tmp_path / str(n)
@@ -731,7 +731,7 @@ def test_a_cited_ruling_that_does_not_dismiss_refuses(tmp_path):
 
 
 def test_a_successor_ruling_citing_its_verdict_passes(tmp_path):
-    """WI-911: an accepted verdict ruling the finding SUCCESSOR resolves its
+    """WI-911: a recorded verdict ruling the finding SUCCESSOR resolves its
     exclusion on the rework gate, as a dismissal does: the finding becomes
     its own row, filed on trunk at the landing.
 

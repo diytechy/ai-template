@@ -362,10 +362,10 @@ def bound_kinds(verdict_path, brief):
 
 def record_outcome(root, verdict_path, brief, kinds, call_ok, session):
     """THE one place a route DECIDES and records whether the adjudication it
-    ran was ACCEPTED or FAILED, in the verdict's binding, committed in its own
-    bookkeeping commit; returns `(outcome, why)`, `why` None when accepted.
+    ran is RECORDED or FAILED, in the verdict's binding, committed in its own
+    bookkeeping commit; returns `(outcome, why)`, `why` None when recorded.
     ONE RULE for both routes (the coordinator's entry point and the loop):
-    accepted only when the CALL succeeded (`call_ok`: exit 0 within its
+    recorded only when the CALL succeeded (`call_ok`: exit 0 within its
     deadline, no reported error - `session_service.call_succeeded`) AND the
     verdict validates against `kinds` (`verdict_refusal`, judged here, so no
     route can skip it). A failed call is recorded failed without its verdict
@@ -382,7 +382,7 @@ def record_outcome(root, verdict_path, brief, kinds, call_ok, session):
         why = verdict_refusal(brief, verdict_path, kinds=kinds)
     else:
         why = "the call failed (a non-zero exit, a timeout or a reported error)"
-    outcome = "failed" if why else "accepted"
+    outcome = "failed" if why else "recorded"
     # The rewrite keeps the identities and the findings-file record bound at
     # reservation: dropping them would leave every held CLARITY act bound to
     # no text, and every dispute verdict bound to no findings file.
@@ -734,7 +734,7 @@ def first_approval_values(root, row):
 
     THE APPROVAL ACT IS AN INDEPENDENT ADJUDICATOR'S, in the authoring lane or
     on trunk (owner ruling 6, 2026-10-07): a lane's merge is refused if it
-    flips a `Status` or writes the approval record with no accepted verdict
+    flips a `Status` or writes the approval record with no recorded verdict
     judging those rows behind it (`integrate._approval_act_refusal`), so rows
     a lane left `Drafted` are waiting on a session like the one this brief
     composes. Two reasons the owner gave.
@@ -877,7 +877,7 @@ def first_approval_values(root, row):
         return None, (
             "every row in this adjudication's scope that still awaits a first "
             "approval ({}) sits on a rung the declared gate authority HOLDS for "
-            "a human (`human_approval_through` = {}), so the signature is the "
+            "a human (`operator_accepts_through` = {}), so the signature is the "
             "owner's and this arm has nothing to rule on".format(
                 ", ".join(live), ac.approval_through(root / "docs")
             )

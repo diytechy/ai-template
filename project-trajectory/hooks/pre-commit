@@ -199,7 +199,7 @@ kit_policy pre-commit commit || exit 1
 #                        standing case.
 #      - done-when-blessed  reads the index too (WI-841, WI-921, WI-925): it
 #                        refuses a staged close whose changed Done-when no
-#                        accepted verdict or owner ruling in the index binds,
+#                        recorded verdict or owner ruling in the index binds,
 #                        and a trunk commit that changes a claim copy's
 #                        Done-when unblessed. A read it cannot complete (the
 #                        index delta, the current branch) holds, naming why.

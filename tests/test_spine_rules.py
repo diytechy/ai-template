@@ -152,7 +152,7 @@ DS = load_script("derive_stage")
 # Registry helpers -------------------------------------------------------------
 SRS_H = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
-    "Priority,Verification,Status\n"
+    "Priority,VerificationMethod,Status\n"
 )
 LLRS_H = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
 TCS_H = (
@@ -204,7 +204,7 @@ def _stage(scaffold):
 
 
 # --- the meta-repo dogfood ----------------------------------------------------
-LLR_EXEMPT_METHODS = {"Analysis", "Inspection", "Attest"}
+LLR_EXEMPT_METHODS = {"Analysis", "Inspection", "Vouch"}
 
 
 def _meta_text(rel):
@@ -348,7 +348,8 @@ def _independent_meta_expectations():
             answered = {x for r in p_llrs for x in _meta_refs(r.get("sr_refs"))}
             verified = {x for r in p_tcs for x in _meta_refs(r.get("verifies"))}
             if any(
-                str(r.get("verification") or "").strip() not in LLR_EXEMPT_METHODS
+                str(r.get("verification_method") or "").strip()
+                not in LLR_EXEMPT_METHODS
                 and r["_id"] not in answered
                 for r in p_srs
             ) or any(_meta_status(r) == "drafted" for r in p_llrs):

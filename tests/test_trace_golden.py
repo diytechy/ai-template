@@ -22,7 +22,7 @@ GOLDEN = os.path.join(os.path.dirname(__file__), "golden")
 # Exercises every report section the minimal chain does not: the PB/REPO/PART/
 # ASSET/CMP/IF back-link renders, the knowledge-pack + AC advisories, the draft
 # artifacts section (a Drafted SR + a section-as-state Drafted SN), the three-way
-# verification-basis split (an Attest SR — mechanized/demonstrated/attested,
+# verification-basis split (a Vouch SR — mechanized/demonstrated/vouched,
 # WI-259), and the per-Area counts.
 
 RICH_SN = """# Stakeholder Needs (SN-###)
@@ -39,9 +39,9 @@ RICH_SN = """# Stakeholder Needs (SN-###)
 | SN-003 | A future capability. | Later. | C | TBD. |
 """
 
-RICH_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Aspect
+RICH_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Aspect
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,process
-SR-002,Docs,SN-002,"The system shall ship a doc.","Realizes SN-002.","the page is identical to the source",,S,Attest,Approved,trajectory
+SR-002,Docs,SN-002,"The system shall ship a doc.","Realizes SN-002.","the page is identical to the source",,S,Vouch,Approved,trajectory
 SR-003,Future,SN-002,"The system shall do a future thing.","Drafted first.","TBD",,C,Test,Drafted,process
 """
 
@@ -106,7 +106,7 @@ component = "CMP-001"
 notes = "demo seam"
 """
 
-ORPHAN_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+ORPHAN_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
 SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Approved
 """

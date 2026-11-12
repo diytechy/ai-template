@@ -151,7 +151,7 @@ def _bless(lane, line, bound=True):
     _write(lane, _VERDICT_REL, line + "\n")
     binding = lane / ab.ksitting.requested_path(_VERDICT_REL)
     if bound and not binding.exists():
-        text = ab.ksitting.render_requested("done-when", ("done-when",), "accepted")
+        text = ab.ksitting.render_requested("done-when", ("done-when",), "recorded")
         _write(lane, ab.ksitting.requested_path(_VERDICT_REL), text)
     _commit(lane, "verdict")
 
@@ -571,7 +571,7 @@ def _merged(tmp_path, verdict=None, bound=None):
         rel = "docs/reviews/{}/001-ADJUDICATE-x.md".format(BRANCH)
         _write(root, rel, verdict)
         brief, kinds = ("combined", bound) if bound else ("done-when", ("done-when",))
-        binding = ab.ksitting.render_requested(brief, kinds, "accepted")
+        binding = ab.ksitting.render_requested(brief, kinds, "recorded")
         _write(root, ab.ksitting.requested_path(rel), binding)
     return root, before, _commit(root, "integrate: merge " + BRANCH)
 
@@ -1024,7 +1024,7 @@ def test_a_valid_sitting_with_an_unrequested_section_blesses_nothing(tmp_path):
 # --- round 10: parse, don't validate; the requested kinds are bound ----------
 
 
-def _bind(lane, kinds, brief="combined", outcome="accepted"):
+def _bind(lane, kinds, brief="combined", outcome="recorded"):
     """The binding the routes write: the sitting's requested kinds at
     reservation and the outcome the route that ran the call records,
     beside the verdict, committed."""
@@ -1200,9 +1200,9 @@ def test_a_failed_calls_verdict_releases_nothing(
     assert _dispatch_hold(lane) is not None
 
 
-def test_an_accepted_calls_verdict_releases(tmp_path, monkeypatch):
-    """The positive arm: a call that exits 0 with a valid verdict is recorded
-    ACCEPTED by the route that ran it, and only then covers.
+def test_a_recorded_calls_verdict_releases(tmp_path, monkeypatch):
+    """The positive arm: a call that exits 0 with a valid verdict gets the
+    outcome RECORDED from the route that ran it, and only then covers.
 
     Implements: TC-326
     """
@@ -1212,7 +1212,7 @@ def test_an_accepted_calls_verdict_releases(tmp_path, monkeypatch):
     assert returned == 0
     binding = ab.ksitting.requested_path(verdict)
     assert ab.ksitting.read_requested(open(binding, encoding="utf-8").read())[2] == (
-        "accepted"
+        "recorded"
     )
     assert _digest() in kdone.covering(lane, "HEAD")
     assert _dispatch_hold(lane) is None
@@ -1236,7 +1236,7 @@ def test_another_brief_classes_verdict_covers_nothing_and_never_raises(tmp_path)
     assert _dispatch_hold(lane) is not None
 
 
-@pytest.mark.parametrize("valid,outcome", ((True, "accepted"), (False, "failed")))
+@pytest.mark.parametrize("valid,outcome", ((True, "recorded"), (False, "failed")))
 def test_the_loop_route_records_its_verdicts_outcome(tmp_path, valid, outcome):
     """The loop is the other route that runs adjudications: after validating
     its session's verdict it records the outcome through the same writer and
@@ -1478,7 +1478,7 @@ def test_the_loop_route_accepts_a_combined_sitting_on_its_bound_kinds(
     worker = {"adjudication_owed": ""}
     agent_loop.adjudication_bookkeeping(plan, worker, None, False, None, 0, lane)
     bound = ab.ksitting.read_requested(open(binding, encoding="utf-8").read())
-    assert bound == ("combined", ("amendment", "done-when"), "accepted")
+    assert bound == ("combined", ("amendment", "done-when"), "recorded")
     assert worker["adjudication_owed"] == ""
     assert _digest() in kdone.covering(lane, "HEAD")
 
@@ -1569,7 +1569,7 @@ def test_a_malformed_machine_line_invalidates_the_verdict(tmp_path, kind, shape)
 
 @pytest.mark.parametrize("shape", (_split_line, _with_bare_extra))
 def test_a_malformed_done_when_line_releases_no_hold(tmp_path, shape):
-    """The same shapes through the holds: recorded ACCEPTED is not enough -
+    """The same shapes through the holds: an outcome of RECORDED is not enough -
     the one parser every reader uses rejects them, so nothing is covered.
 
     Implements: TC-326
@@ -1612,12 +1612,12 @@ def _ruling(bound):
 
 
 def _stage_blessing(root, blessing):
-    """Stage, in `root`'s index, the lane's accepted verdict on the narrowed
+    """Stage, in `root`'s index, the lane's recorded verdict on the narrowed
     Done-when, or the owner-confirmed ruling binding its digest."""
     if blessing == "verdict":
         line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
         _write(root, _VERDICT_REL, line)
-        text = ab.ksitting.render_requested("done-when", ("done-when",), "accepted")
+        text = ab.ksitting.render_requested("done-when", ("done-when",), "recorded")
         _write(root, ab.ksitting.requested_path(_VERDICT_REL), text)
     else:
         _write(root, _RULING_REL, _ruling(_digest()))
