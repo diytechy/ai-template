@@ -1517,3 +1517,132 @@ migrator's rows once it is complete). Nothing blocks the runbook now.
 
 **Needs no answer unless the operator disagrees:** the reading of "operator
 time" in §9.1.
+
+## §12. The sixth session: triage, the test-run crash, and what the operator ruled
+
+Written 2026-11-16. **A session taking over reads this section first**, then
+§10 for the vocabulary runbook. It is updated as work lands; the last entry
+of §12.6 is the current state.
+
+### §12.1 What the operator asked for
+
+Review every recent audit of the kit, find what still applies and what is
+unscheduled, and finish the kit so that downstream repositories can use it,
+HomeHub first (its open items and requirements). Codex usage is spent:
+cross-family review goes through `opencode run -m opencode-go/deepseek-v4.1-flash`.
+The operator asked for care against over-design: fix what a real adoption or
+a reproduced first-day run hit, prefer removing or quieting to adding
+mechanism, and leave alone findings that would reverse an earlier ruling.
+
+### §12.2 Rulings taken on 2026-11-15 and 2026-11-16
+
+| | Ruling |
+|---|---|
+| Working mode | Continue on `maint/vocabulary` as maintenance work: no lanes, hook bypassed (D14 extended by the operator). Commit when a unit is done; never push |
+| Order | Vocabulary before the adopter-facing fixes. **Revised 2026-11-16:** the operator will confirm the vocabulary direction before any further rename, so §10.5, §10.6 and §4.5.2 to §4.5.7 are ON HOLD. Work that does not depend on them goes ahead |
+| OI-130, the partition | **Accepted: P5 is the depth-0 partition**, on the re-score's evidence (`docs/plans/2026-11-11-oi130-rescore/`). Q1 (b), a fresh ruling dated 2026-11-16; Q2 as the re-score states it: OI-14's objective, its constraint measured as straddle, cut as the tie-breaker, no override |
+| WI-999, the derivation record | Build it. Without it traceability is incomplete. If it is optional at all, it is on by default with a setting to turn it off |
+| §4.5.2 to §4.5.7 | Not ruled. The operator asked whether "stage" means the development stage or is confused with something else (§12.4) |
+| Full-suite runs | Be very careful: they have slowed the machine to a crawl and crashed VS Code. See §12.3 before running one |
+
+### §12.3 Why a test run crashed the machine, and how to run one safely
+
+**Cause, measured 2026-11-16.** The user environment variable
+`PYTEST_DEBUG_TEMPROOT` is `C:\Projects\.pytest-tmp`, which is inside the
+folder VS Code has open (`C:\Projects`, about 150 repositories). Each test
+scaffolds a kit into its temp directory. VS Code's Python extension answers
+every new `.py` file with a fresh `rg --files` walk of the whole workspace, at
+normal priority and outside the test run's CPU cap.
+
+| Sample (`tests/test_trace.py`, 2 workers, 55 s) | File events under `C:\Projects` | `rg` processes started | Tests finished |
+|---|---|---|---|
+| Variable as set | 9,286 | 755 (137 at once) | 7 |
+| Variable unset (`env -u PYTEST_DEBUG_TEMPROOT`) | 62, all git lock files | 0 | 23 |
+
+With 6 workers the count reached 434 `rg` processes and was still climbing,
+with python near 0% CPU: the tests were starved by the scans they caused. The
+root conftest's 50% CPU cap and below-normal priority were working throughout;
+they cannot reach processes VS Code starts. Memory (64 GB) and disk were idle.
+
+**Until the variable is changed, every pytest run on this machine starts with
+`env -u PYTEST_DEBUG_TEMPROOT`** (Git Bash) so that temp files go to
+`%TEMP%`. The kit's own log (2026-07) already records runs "with
+`PYTEST_DEBUG_TEMPROOT` unset" for a different reason: a dot-named temp root
+makes `test_gen_arch_map` fail.
+
+**Waits on the operator:** change or delete the user variable. It was not
+changed by this session, because it is machine configuration and the reason it
+was set is not recorded.
+
+**Not done, on purpose:** a lock against concurrent runs and a lower worker
+count. Neither addresses the measured cause. Revisit only if a run with the
+variable unset still troubles the machine.
+
+The measuring scripts are not kept; the method is: a `FileSystemWatcher` on
+`C:\Projects` plus a count of `rg.exe` every half second.
+
+### §12.4 "Stage" (the operator's question on §4.5.2 and §4.5.5)
+
+In the kit "stage" means the development stage: the rung on the `DevStg-*`
+ladder that `docs/stage` records (`PROCESS.md` §4, "A stage is a STATE").
+`landing_stage`, `sr_stage` and `maturity_stage` would all mean that. Three
+other uses exist, and the glossary has no entry for the word:
+
+- "staged", git's index: `staged_spine_amendments`, `staged-divergence` and
+  about 50 more names. The usual git word; no change proposed.
+- The glossary's *lane state* entry: "A state names the stage whose work is
+  owed next". Here it means a step of a lane, not a development stage.
+- `PROCESS.md` §3, "extract the shared stage": a step of a pipeline in code.
+
+Proposed, for the operator: a glossary entry for **stage** (the development
+stage, and nothing else); "step" in the two sentences above; and for §4.5.2
+the key name `checks_stage` in place of `landing_stage`, because "landing
+stage" reads as a step of landing. `check.py --stage` already uses the word
+this way.
+
+### §12.5 The triage (2026-11-15)
+
+Full findings are in the session's reports, summarised here. Nothing in this
+list is fixed unless §12.6 says so.
+
+- **`codex/simplify-spine-resync`** (`d091418e1`): complete; merges cleanly.
+- **`origin/rolling_review`** (`04488d5cd`): none of its adopter-facing
+  findings (its §9 and §14 items 1, 3, 5) is fixed or filed. About 25 of its
+  §13 findings would reverse a ruling and are left alone.
+- **The downstream conversion of 2026-11-12** (13 repositories, records in
+  `C:\Projects\spine-conversion-2026-11-12\` and each `-wt-spine` worktree's
+  `SPINE_CONVERSION_GAPS.md`): 24 kit findings, 16 confirmed in the code, none
+  with a work item.
+- **Trunk `refactor_again`** (`3e7a3a6ee`): no open claims. 13 queued rows;
+  WI-1003 to WI-1006 owe a scope critique. The review-churn plan's phase 3
+  (items 5, 10 steps 3 to 6, 11, 12's builds) is ruled and has no rows. The 60
+  folders under `docs/work/active/` are empty leftovers.
+- **HomeHub** does not use the kit. Its `open-items.md` (940 KB, sections A to
+  G, numbered by hand) maps to the kit as: A to the open-items registry; C, D
+  and E to work items; F and G to the log.
+
+**The adopter-facing batch** (no ruling needed), in the order to do it:
+
+1. From real conversions: the advisory flood when no stakeholder is accepted
+   (13 repositories); the contract reader that understands only `#` and
+   Markdown comments (8); interface rows left unchecked without saying so
+   (8); `check_docs` reporting the kit's own generated report as an orphan
+   (7); `--strict-schema` exiting 0 with findings; `migrate_carrier` marking
+   needs `Approved` by default; `.gd` missing from the source extensions; the
+   boundary gate ignoring `delivered_with`.
+2. From the first-day run: `sh scripts/setup.sh` under dash; the CI template's
+   depth-1 checkout; the undocumented regeneration commands behind three
+   refused commits; example rows moving the stage to Impl; `pytest.ini`
+   shadowing `pyproject.toml`; docs pointing at a dashboard that is never
+   generated; five different "what next" commands; two guards that fire on a
+   first-day tree.
+
+### §12.6 Progress log
+
+- **2026-11-15.** Committed what both worktrees held uncommitted:
+  `maint/vocabulary` `dfb281b0a` ("owner" to "operator", with two dogfooded
+  lines the sweep missed) and `proposal/test-tiers` `40847887f` (this file,
+  `VOCABULARY.md`, `vocab-tools/`).
+- **2026-11-16.** A full-suite run on `dfb281b0a` died at 7% when the session
+  ended; §12.3 is what was found. **The unfiltered suite has still not passed
+  on `dfb281b0a`.**
