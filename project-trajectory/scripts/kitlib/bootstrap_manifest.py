@@ -519,7 +519,7 @@ MAPPING = [
     ("scripts/check_vendored.py", "scripts/check_vendored.py"),
     # The retired-vocabulary enforcer (OI-21). Shipped, not kit-only: an adopter
     # re-syncing across the conversion has their OWN authored surfaces carrying
-    # the retired `G*` tags (their WI `bar:` values, their `stack.ini` `gates=`,
+    # the retired `G*` tags (their WI `checks_stage` values, their `stack.ini` `gates=`,
     # their status prose), and the recipe that tells them to convert is worth
     # exactly as much as the check that tells them they missed one.
     ("scripts/check_vocab.py", "scripts/check_vocab.py"),

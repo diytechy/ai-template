@@ -136,7 +136,7 @@ COLUMNS = [
     "EstTokens",
     "SafetyClass",
     "PlanMode",
-    "Bar",
+    "ChecksStage",
     # LLR-161 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
     # reviving the closed row — so the successor must be able to say which row
     # it continues, or the thread is lost at the id change. A real column, not
@@ -239,10 +239,11 @@ SCALAR_FIELDS = (
     ("EstTokens", "est_tokens"),
     ("SafetyClass", "safety_class"),
     ("PlanMode", "planmode"),
-    # WI-388: bar declares verification strictness for this row's lane; it
-    # never affects scheduling. (DevStg-Reqs|DevStg-Tests|DevStg-Impl — integrate.refresh passes it to
-    # check.py --gate; the scheduler deliberately does not parse it.)
-    ("Bar", "bar"),
+    # WI-388: checks_stage pins the stage this row's landing checks run at;
+    # it never affects scheduling. (DevStg-Reqs|DevStg-Tests|DevStg-Impl —
+    # integrate.refresh passes it to check.py --stage; the scheduler
+    # deliberately does not parse it.)
+    ("ChecksStage", "checks_stage"),
     ("Supersedes", "supersedes"),
     ("Brief", "brief"),
     ("Digests", "digests"),

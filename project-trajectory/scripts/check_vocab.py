@@ -57,7 +57,7 @@ THE CARVE-OUTS, and why each one is a carve-out rather than an oversight:
   - **The operator's scratchpad is nobody's working surface.**
 
 DECLARATION SITES. Some live code must NAME the retired tags — the translation
-tables that let an adopter's `--gate G2`, `gates = G2 G3` and `bar: G3` keep
+tables that let an adopter's `--gate G2`, `gates = G2 G3` and `checks_stage = G3` keep
 working across the re-sync. Those carry an explicit marker rather than being
 guessed at:
 

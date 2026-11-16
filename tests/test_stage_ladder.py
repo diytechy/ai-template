@@ -104,7 +104,7 @@ def test_the_grep_would_actually_catch_the_thing_it_bans():
     must_not_catch = [
         "assert stage_ord(a) > stage_ord(b)",
         '_LEGACY_BAR_THRESHOLD[STAGE_REQS] = "DevStg-Reqs"',
-        "max(bars, key=_BAR_GATES.index)",
+        "max(bars, key=_CHECKS_STAGES.index)",
         "min(rungs, key=_kitladder.stage_ord)",
     ]
     for line in must_not_catch:
@@ -154,7 +154,7 @@ def test_selection_is_at_or_above_and_routes_through_the_shared_ordinal():
 
 
 def test_the_integrate_and_intake_WI_stage_vocabularies_agree_too():
-    """The WI `bar:` key is read by two modules, each with its own copy of the
+    """The WI `checks_stage` key is read by two modules, each with its own copy of the
     translation (F5 again). A row accepted by one and refused by the other would
     strand a claimed lane.
 
@@ -166,25 +166,24 @@ def test_the_integrate_and_intake_WI_stage_vocabularies_agree_too():
     guarantee (the copies agree, and every value they accept is a real rung)
     without freezing WHICH rungs a WI may name.
 
-    The KEY is still spelled `bar:`, and that is the last adopter-authored
-    surface carrying the retired word. Renaming it is a migration entry of its
-    own and is deliberately NOT folded in here (no WI spec in this repo sets it,
-    so nothing is wrong today — only old-flavoured)."""
+    The KEY was spelled `bar:` until the vocabulary migration of 2026-11, the
+    last adopter-authored surface carrying the retired word; it is
+    `checks_stage` now, and `migrate_vocabulary.py` rewrites the earlier key."""
     intake = load_script("intake")
     integrate = load_script("integrate")
-    assert set(intake.WI_BARS) == set(integrate._BAR_GATES)
-    assert set(intake.WI_BARS) <= set(dg.STAGE_ORDER)
+    assert set(intake.WI_CHECKS_STAGES) == set(integrate._CHECKS_STAGES)
+    assert set(intake.WI_CHECKS_STAGES) <= set(dg.STAGE_ORDER)
     # The two hand-authored RETIRED-tag tables still have to agree with each
     # other — that half of the pin never depended on the bar axis.
     for retired, canonical in intake._RETIRED_WI_BARS.items():
-        assert intake.normalize_bar(retired) == canonical
-        assert integrate._normalize_bar(retired) == canonical
+        assert intake.normalize_checks_stage(retired) == canonical
+        assert integrate._normalize_checks_stage(retired) == canonical
     # ...and a correctly-authored value survives BOTH readers unchanged. The
     # retired readers case-folded with `.upper()`, which would have mangled every
     # canonical value into `DEVBAR-REQS` and refused it.
-    for name in intake.WI_BARS:
-        assert intake.normalize_bar(name) == name
-        assert integrate._normalize_bar(name) == name
+    for name in intake.WI_CHECKS_STAGES:
+        assert intake.normalize_checks_stage(name) == name
+        assert integrate._normalize_checks_stage(name) == name
 
 
 # --- condition 2: the enforcer ------------------------------------------------

@@ -6,7 +6,7 @@ specref = ""
 buildtier = "strong"
 priority = 2
 safety_class = "spine"
-bar = "DevStg-Tests"
+checks_stage = "DevStg-Tests"
 +++
 
 ## Deliverable

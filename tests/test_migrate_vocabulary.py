@@ -424,6 +424,104 @@ def test_a_decisions_record_the_line_edit_cannot_prove_is_named_and_left(
     assert path.read_bytes() == text.encode("utf-8")
 
 
+# --- work items ------------------------------------------------------------------
+
+WORK_ITEM = """+++
+id = "WI-575"
+title = "bar = 'a title, not a key'"
+safety_class = "spine"
+bar = "DevStg-Reqs"  # pinned
++++
+
+## Deliverable
+
+The line bar = "DevStg-Reqs" in prose stays.
+
+## Dispositions
+
+```toml
+title = "A successor"
+bar = 'DevStg-Tests'
+```
+
+The successor's scope, with
+bar = "DevStg-Impl" written as prose.
+
+```toml
+title = "A second successor"
+
+[open_item]
+bar = "a table's own key"
+```
+
+## Context
+
+```toml
+bar = "an example under another heading"
+```
+"""
+
+
+def test_a_work_items_stage_key_is_renamed_in_its_front_matter_and_drafted_rows(
+    tmp_path,
+):
+    """Implements: TC-427"""
+    crlf = WORK_ITEM.replace("\n", "\r\n")
+    live = _write(tmp_path, "docs/work/queued/WI-575-x.md", crlf)
+    archived = _write(tmp_path, "docs/archive/work/complete/WI-576-y.md", WORK_ITEM)
+    other = _write(tmp_path, "docs/notes/WI-577-z.md", WORK_ITEM)
+    assert _run(tmp_path, "--check") == 1
+    assert live.read_bytes() == crlf.encode("utf-8")
+    assert _run(tmp_path) == 0
+    expected = WORK_ITEM.replace(
+        '\nbar = "DevStg-Reqs"  # pinned', '\nchecks_stage = "DevStg-Reqs"  # pinned'
+    ).replace("\nbar = 'DevStg-Tests'", "\nchecks_stage = 'DevStg-Tests'")
+    # Prose, a table's own key and a block under another heading keep the word.
+    assert expected.count("\nbar = ") == 3
+    assert live.read_bytes() == expected.replace("\n", "\r\n").encode("utf-8")
+    assert archived.read_text(encoding="utf-8") == expected
+    assert other.read_text(encoding="utf-8") == WORK_ITEM
+    assert _run(tmp_path, "--check") == 0
+
+
+@pytest.mark.parametrize(
+    "text",
+    (
+        '+++\nid = "WI-1"\nbar = "DevStg-Reqs"\nchecks_stage = "DevStg-Tests"\n+++\n',
+        '+++\nid = "WI-1"\nnote = """\nbar = "x"\n"""\nbar = "DevStg-Reqs"\n+++\n',
+        '+++\nid = "WI-1"\n+++\n\n## Dispositions\n\n```toml\nbar = \n```\n',
+    ),
+    ids=(
+        "both-spellings",
+        "look-alike-line-in-a-string",
+        "a-block-that-does-not-parse",
+    ),
+)
+def test_a_work_item_the_line_edit_cannot_prove_is_named_and_left(
+    tmp_path, capsys, text
+):
+    """Implements: TC-427"""
+    path = _write(tmp_path, "docs/work/queued/WI-1-x.md", text)
+    assert _run(tmp_path) == 1
+    out = capsys.readouterr().out
+    assert "work item NOT rewritten: docs/work/queued/WI-1-x.md" in out, out
+    assert path.read_bytes() == text.encode("utf-8")
+
+
+def test_a_work_item_that_is_not_utf8_is_named_and_left(tmp_path, capsys):
+    """Implements: TC-427"""
+    raw = '+++\nid = "WI-1"\ntitle = "caf\xe9"\nbar = "DevStg-Reqs"\n+++\n'.encode(
+        "latin-1"
+    )
+    path = tmp_path / "docs/archive/work/complete/WI-1-x.md"
+    path.parent.mkdir(parents=True)
+    path.write_bytes(raw)
+    assert _run(tmp_path) == 1
+    out = capsys.readouterr().out
+    assert "docs/archive/work/complete/WI-1-x.md: not UTF-8; left untouched" in out
+    assert path.read_bytes() == raw
+
+
 def test_the_scratchpad_is_renamed_to_its_current_name_with_every_byte_kept(
     tmp_path,
 ):

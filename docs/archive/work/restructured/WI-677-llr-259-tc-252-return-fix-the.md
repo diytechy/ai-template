@@ -6,7 +6,7 @@ specref = "docs/requirements/low-level-requirements.toml"
 buildtier = "medium"
 safety_class = "spine"
 priority = 3
-bar = "DevStg-Tests"
+checks_stage = "DevStg-Tests"
 needs = ["WI-674"]
 +++
 

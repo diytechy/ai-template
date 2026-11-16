@@ -520,15 +520,15 @@ def test_an_empty_deliverable_and_an_empty_optional_cell_round_trip(tmp_path):
     assert "workstream" not in spec
 
 
-def test_the_bar_cell_round_trips_and_a_context_body_is_read_past(tmp_path):
-    """WI-388: the `Bar` column (bar declares verification strictness for this
-    row's lane; it never affects scheduling) crosses the round trip like any
+def test_the_checks_stage_cell_round_trips_and_a_context_body_is_read_past(tmp_path):
+    """WI-388: the `ChecksStage` column (the stage this row's landing checks
+    run at; it never affects scheduling) crosses the round trip like any
     scalar, and the advisory `## Context` body section a minted spec carries is
     read PAST exactly like `## Handback` — `--to-csv` on a minted folder must
     not refuse, and the section maps to no CSV column."""
-    rows = [_row("WI-001", Status="queued", Bar="DevStg-Tests")]
+    rows = [_row("WI-001", Status="queued", ChecksStage="DevStg-Tests")]
     back = _round_trip(tmp_path, rows)
-    assert back[0]["Bar"] == "DevStg-Tests"
+    assert back[0]["ChecksStage"] == "DevStg-Tests"
     assert _cell_mismatches(rows, back) == []
     # A minted, context-only body parses with an empty Deliverable...
     assert wi_convert.parse_deliverable("\n## Context\n\n- advisory joins\n", "w") == ""

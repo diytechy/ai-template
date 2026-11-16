@@ -51,7 +51,7 @@ buildtier = "quick"
 priority = 3
 specref = "docs/test/test-cases.toml"
 sr_refs = ["SR-054"]
-bar = "DevStg-Tests"
+checks_stage = "DevStg-Tests"
 ```
 
 IN SCOPE — one cell, amended in place with status left `Drafted`, then the

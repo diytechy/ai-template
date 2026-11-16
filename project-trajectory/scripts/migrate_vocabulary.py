@@ -33,6 +33,9 @@ words they were written in.
                                    `"first-acceptance"`
     docs/decisions/*.toml         in each `[decision.<id>]` entry, the key
                                    `owner`  ->  `operator`
+    docs/work/**/*.md,             in each work item's front matter and in each
+    docs/archive/work/**/*.md      row drafted in its `## Dispositions` section,
+                                   the key `bar`  ->  `checks_stage`
 
 One file is renamed rather than rewritten: the operator's scratchpad at the
 root, `OWNER_SCRATCHPAD.md`  ->  `OPERATOR_SCRATCHPAD.md`. The kit's scripts
@@ -704,6 +707,112 @@ def decisions(root, check):
     return done, problems
 
 
+# --- work items ------------------------------------------------------------------
+
+# A work item is a spec file under `docs/work/` or its archive: TOML front
+# matter between two `+++` lines, and, in a `## Dispositions` section, the rows
+# it drafts, each in a fenced ```toml block. The stage a row pins its landing
+# checks to was keyed `bar`; it is `checks_stage`.
+WORK_DIRS = ("docs/work", "docs/archive/work")
+WORK_ITEM_KEYS = {"bar": "checks_stage"}
+_FRONT_MATTER = "+++"
+_DISPOSITIONS = "## Dispositions"
+_TOML_FENCE, _FENCE = "```toml", "```"
+# A line that may declare one of the keys, before anything is parsed.
+_WORK_ITEM_KEY = re.compile(
+    r"^[ \t]*(?:{})[ \t]*=".format("|".join(map(re.escape, WORK_ITEM_KEYS))), re.M
+)
+
+
+def _front_matter_span(lines):
+    """`[(first, end)]`: the line span of a work item's front matter, between
+    the `+++` line it opens with and the next one, or `[]` when it has none."""
+    if not lines or lines[0].lstrip("﻿").rstrip() != _FRONT_MATTER:
+        return []
+    for end in range(1, len(lines)):
+        if lines[end].rstrip() == _FRONT_MATTER:
+            return [(1, end)]
+    return []
+
+
+def _disposition_spans(lines):
+    """`[(first, end)]`: the line span of each fenced ```toml block of a work
+    item's `## Dispositions` section, which runs to the next `## ` heading."""
+    spans, opened, inside = [], None, False
+    for number, line in enumerate(lines):
+        text = line.rstrip()
+        if text.startswith("## "):
+            inside, opened = text == _DISPOSITIONS, None
+        elif inside and opened is None and text == _TOML_FENCE:
+            opened = number + 1
+        elif inside and opened is not None and text == _FENCE:
+            spans.append((opened, number))
+            opened = None
+    return spans
+
+
+def _top_level_line(line, in_table):
+    """`(line, in_table)`: one line of a TOML segment with a top-level key
+    respelled, and whether the lines after it belong to a table."""
+    if line.lstrip().startswith("["):
+        return line, True
+    cell = _KEY_LINE.match(line)
+    if not in_table and cell and cell["key"] in WORK_ITEM_KEYS:
+        return cell["lead"] + WORK_ITEM_KEYS[cell["key"]] + cell["rest"], in_table
+    return line, in_table
+
+
+def migrate_work_item(text):
+    """Work-item `text` with each top-level key of its front matter and of the
+    rows its `## Dispositions` section drafts in the current vocabulary. Raises
+    `Unsafe` when a segment's result would not parse as exactly that.
+
+    Implements: SR-247, LLR-369
+    """
+    lines = text.split("\n")
+    for first, end in _front_matter_span(lines) + _disposition_spans(lines):
+        segment = "\n".join(lines[first:end]) + "\n"
+        if not _WORK_ITEM_KEY.search(segment):
+            continue
+        new = _rekeyed(segment, lambda data: [data], WORK_ITEM_KEYS, _top_level_line)
+        lines[first:end] = new[:-1].split("\n")
+    return "\n".join(lines)
+
+
+def _work_item_files(root):
+    """Each `.md` file under the work-item folders, the archive's included."""
+    for folder in (root / d for d in WORK_DIRS):
+        if folder.is_dir():
+            yield from sorted(folder.rglob("*.md"))
+
+
+def work_items(root, check):
+    """Each work item whose front matter or drafted rows carry a key by an
+    earlier name, rewritten: `([repo-relative path], [problem])`. Only the key
+    moves; the item's prose keeps the words it was written in.
+
+    Implements: SR-247, LLR-369
+    """
+    done, problems = [], []
+    for path in _work_item_files(root):
+        rel = path.relative_to(root).as_posix()
+        try:
+            raw = path.read_bytes().decode("utf-8")
+            new = migrate_work_item(raw)
+        except UnicodeDecodeError:
+            problems.append("{}: not UTF-8; left untouched".format(rel))
+            continue
+        except Unsafe as exc:
+            problems.append("{}: {}; left untouched".format(rel, exc))
+            continue
+        if new == raw:
+            continue
+        if not check:
+            path.write_bytes(new.encode("utf-8"))
+        done.append(rel)
+    return done, problems
+
+
 # --- the operator's scratchpad --------------------------------------------------
 
 # The root notes file, by its earlier and its current name.
@@ -985,6 +1094,7 @@ STEPS = (
     ("registry", registries),
     ("policy file", policy),
     ("decisions record", decisions),
+    ("work item", work_items),
     ("scratchpad", scratchpad),
     ("acceptance record", record),
     ("acceptance-record link", links),

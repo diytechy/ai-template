@@ -224,7 +224,7 @@ buildtier = "quick"
 priority = 3
 specref = "docs/requirements/system-requirements.toml"
 sr_refs = ["SR-011", "SR-015", "SR-024", "SR-031", "SR-033", "SR-040", "SR-111", "SR-112", "SR-129", "SR-147", "SR-149", "SR-174", "SR-177", "SR-223", "SR-224"]
-bar = "DevStg-Reqs"
+checks_stage = "DevStg-Reqs"
 ```
 
 VERDICT THIS CONTINUES: the file above. THE TEST every waiver was held to:

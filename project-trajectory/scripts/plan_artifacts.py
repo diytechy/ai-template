@@ -96,7 +96,7 @@ WI_HEADER = [
     "EstTokens",
     "SafetyClass",
     "PlanMode",
-    "Bar",
+    "ChecksStage",
     "Supersedes",
     "Brief",
     "Adjudicates",

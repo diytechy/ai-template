@@ -199,18 +199,18 @@ WORK = "docs/work"
 # read goes through `_terminal_hits` rather than a bare `WORK` glob.
 ARCHIVE_WORK = "docs/archive/work"
 
-# --- the WI `bar:` vocabulary (OI-21 contract break 3) -------------------------
-# The bar a work item is held to, in the stage-ladder vocabulary. A WI's `bar:`
-# frontmatter is a value the AUTHOR writes, so the retired `DevStg-Reqs|DevStg-Tests|DevStg-Impl` tags
-# translate on read — silently, like `docs/stack.ini`'s `gates=` and for the same
-# reason: check_vocab.py sees the authored spec file and can name the line, which
+# --- the WI `checks_stage` vocabulary (OI-21 contract break 3) ------------------
+# The stage a work item pins its landing checks to, a rung of the stage ladder.
+# A WI's `checks_stage` is a value the AUTHOR writes, so the retired tags
+# (`_RETIRED_WI_BARS`, named for the retired bar axis) translate on read —
+# silently, like `docs/stack.ini`'s `gates=` and for the same reason: check_vocab.py sees the authored spec file and can name the line, which
 # is a better message than a loader could produce. New rows author the new form.
 #
 # The retired matching was `.upper()` + an uppercase tuple, which is why this is a
 # named helper now rather than an inline expression: `"DevStg-Reqs".upper()` is
 # `"DEVBAR-REQS"`, so a case-folding comparison would have silently rejected every
 # correctly-authored new value.
-WI_BARS = ("DevStg-Reqs", "DevStg-Tests", "DevStg-Impl")
+WI_CHECKS_STAGES = ("DevStg-Reqs", "DevStg-Tests", "DevStg-Impl")
 _RETIRED_WI_BARS = {
     "g1": "DevStg-Reqs",
     "g2": "DevStg-Tests",
@@ -226,8 +226,8 @@ _RETIRED_WI_BARS = {
 }
 
 
-def normalize_bar(value):
-    """A `bar:` cell as a canonical `DevStg-*` name ("" when blank).
+def normalize_checks_stage(value):
+    """A `checks_stage` cell as a canonical `DevStg-*` name ("" when blank).
 
     Retired tags translate case-insensitively; a canonical value is matched
     case-insensitively too and returned in its declared casing, so `devbar-reqs`
@@ -239,7 +239,7 @@ def normalize_bar(value):
     low = raw.lower()
     if low in _RETIRED_WI_BARS:
         return _RETIRED_WI_BARS[low]
-    for canonical in WI_BARS:
+    for canonical in WI_CHECKS_STAGES:
         if low == canonical.lower():
             return canonical
     return raw
@@ -308,7 +308,7 @@ _DRAFT_KEYS = frozenset(
         "sr_refs",
         "needs",
         "priority",
-        "bar",
+        "checks_stage",
         # LLR-161 lineage: a successor drafted by a disposition names the row it
         # continues, so partial work keeps its thread ACROSS the id change. It
         # is a lineage fact, not a revival — the superseded row stays terminal
@@ -1865,10 +1865,10 @@ def _draft_refusal(data, where, index):
             "kind is DERIVED from the dual signal (single-source); drop the "
             "cell; nothing minted".format(at, declared)
         )
-    bar = normalize_bar(data.get("bar"))
-    if bar and bar not in WI_BARS:
-        return "{} declares bar = {!r} ({}) - nothing minted".format(
-            at, data.get("bar"), "|".join(WI_BARS)
+    stage = normalize_checks_stage(data.get("checks_stage"))
+    if stage and stage not in WI_CHECKS_STAGES:
+        return "{} declares checks_stage = {!r} ({}) - nothing minted".format(
+            at, data.get("checks_stage"), "|".join(WI_CHECKS_STAGES)
         )
     # Shape only here: this block is read before any registry is, so liveness is
     # the mint's rung (`_mint_shape_refusal`), which holds the rows.
@@ -2447,7 +2447,7 @@ def _draft_row(wi_id, draft):
     row["SafetyClass"] = str(draft.get("kind") or "")
     row["Brief"] = str(draft.get("brief") or "")
     row["PlanMode"] = str(draft.get("planmode") or "")
-    row["Bar"] = normalize_bar(draft.get("bar"))
+    row["ChecksStage"] = normalize_checks_stage(draft.get("checks_stage"))
     row["SR-Refs"] = ";".join(draft.get("sr_refs") or [])
     row["Predecessors"] = ";".join(draft.get("needs") or [])
     # LLR-161 lineage, `;`-joined: one id from a disposition, several from a

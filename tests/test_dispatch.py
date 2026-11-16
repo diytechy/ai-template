@@ -148,7 +148,7 @@ def spec_text(
     safety="ordinary",
     specref=None,
     deliverable="A widget, shipped.",
-    bar=None,
+    checks_stage=None,
     needs=(),
 ):
     lines = [
@@ -160,8 +160,8 @@ def spec_text(
         'safety_class = "{}"'.format(safety),
         "order = 0",
     ]
-    if bar:
-        lines.append('bar = "{}"'.format(bar))
+    if checks_stage:
+        lines.append('checks_stage = "{}"'.format(checks_stage))
     if specref:
         lines.append('specref = "{}"'.format(specref))
     text = "+++\n" + "".join(ln + "\n" for ln in lines) + "+++\n"
@@ -889,7 +889,7 @@ def add(a, b):
 '''
 
 
-def scaffold_with_queued_wi(tmp_path, bar=None):
+def scaffold_with_queued_wi(tmp_path, checks_stage=None):
     """A bootstrapped, DevStg-Impl-complete scaffold with WI-401 queued — the state a
     plain launch starts from. Mirrors test_integrate.scaffolded_closed_branch
     (fixture notes there), except the WI is still QUEUED: claiming it is the
@@ -908,7 +908,9 @@ def scaffold_with_queued_wi(tmp_path, bar=None):
     disable_blackout(repo)
     with (repo / ".gitignore").open("a", encoding="utf-8", newline="\n") as fh:
         fh.write("out/\n")
-    write_spec(repo, "queued", "WI-401", specref="docs/log.md", bar=bar)
+    write_spec(
+        repo, "queued", "WI-401", specref="docs/log.md", checks_stage=checks_stage
+    )
     record_ids(repo)  # WI-401 is an ALLOCATED id; the mark must cover it
     _git(repo, "init", "-q")
     hooks_on(repo)  # every route refuses a checkout without hooks
@@ -981,12 +983,12 @@ def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
     # nothing skipped, and (unlike the composed-tree bar this replaced) nothing
     # parked on a candidate branch for someone to go and read.
     #
-    # THE WI PINS ITS OWN `bar:` SINCE THE OI-30 D2 CEILING, and that is not
+    # THE WI PINS ITS OWN `checks_stage` SINCE THE OI-30 D2 CEILING, and that is not
     # test-plumbing — it is this test proving the escape hatch the ruling rests
     # on. `sr_bar` now stops at DevStg-Tests, so a fully accepted scaffold no
     # longer DERIVES DevStg-Impl, and the `tests+coverage` step is tagged for
     # DevStg-Impl alone: without the pin the broken product source below would
-    # sail through a green bar. The `bar:` frontmatter key (WI-388) is exactly
+    # sail through a green bar. The `checks_stage` frontmatter key (WI-388) is exactly
     # the "`--gate DevStg-Impl` stays explicitly invocable" half of the
     # ruling, and it is what a lane that wants the strict plan uses.
     #
@@ -995,7 +997,7 @@ def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
     # `tests+coverage` and `module-coverage` stop being selected by derivation
     # for every repo — they are in `check.ADVISORY_EXCLUDE`, so the open-window
     # advisory tier does not cover them either.
-    repo = scaffold_with_queued_wi(tmp_path, bar="DevStg-Impl")
+    repo = scaffold_with_queued_wi(tmp_path, checks_stage="DevStg-Impl")
 
     rc = drv.run(repo, drive_args(), worker=closing_worker(E2E_BAD_SRC), tier="smoke")
     assert rc == 1

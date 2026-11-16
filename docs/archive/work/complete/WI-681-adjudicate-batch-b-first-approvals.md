@@ -126,7 +126,7 @@ buildtier = "quick"
 priority = 3
 specref = "docs/requirements/low-level-requirements.toml"
 sr_refs = ["SR-017", "SR-176", "SR-183", "SR-163", "SR-220", "SR-154", "SR-156"]
-bar = "DevStg-Tests"
+checks_stage = "DevStg-Tests"
 ```
 
 VERDICT THIS CONTINUES: the file above. Every clause of the seven rows was

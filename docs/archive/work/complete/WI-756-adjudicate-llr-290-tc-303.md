@@ -52,7 +52,7 @@ buildtier = "quick"
 priority = 3
 specref = "docs/requirements/low-level-requirements.toml"
 sr_refs = ["SR-227"]
-bar = "DevStg-Tests"
+checks_stage = "DevStg-Tests"
 ```
 
 IN SCOPE: exactly the text additions below, copied as written, in the two

@@ -1183,7 +1183,7 @@ def _stack_ini(tmp_path, text):
 
 def test_an_absent_stack_ini_is_a_refusal(tmp_path):
     (tmp_path / "docs").mkdir()
-    refusal = integ._declared_bar_or_refusal(tmp_path)
+    refusal = integ._declared_checks_or_refusal(tmp_path)
     assert refusal is not None and "docs/stack.ini is absent" in refusal
 
 
@@ -1192,7 +1192,7 @@ def test_a_stack_ini_without_a_product_test_key_is_a_refusal(tmp_path):
     # bar was never stated. Skipping it is how `bar_failures: 0` came to mean
     # "nothing ran" (the §4.4 fail-open lesson).
     _stack_ini(tmp_path, "[product]\nformat = ruff format --check src\n")
-    refusal = integ._declared_bar_or_refusal(tmp_path)
+    refusal = integ._declared_checks_or_refusal(tmp_path)
     assert refusal is not None and "no [product] test declaration" in refusal
 
 
@@ -1200,13 +1200,13 @@ def test_a_declared_but_empty_test_command_is_a_refusal(tmp_path):
     # The sharpest edge: the key EXISTS, so a "did they declare it?" check would
     # pass. An empty command is a misconfiguration, and it is named as one.
     _stack_ini(tmp_path, "[product]\ntest =\n")
-    refusal = integ._declared_bar_or_refusal(tmp_path)
+    refusal = integ._declared_checks_or_refusal(tmp_path)
     assert refusal is not None and "declared but EMPTY" in refusal
 
 
 def test_a_declared_test_command_passes_the_bar_declaration_check(tmp_path):
     _stack_ini(tmp_path, "[product]\ntest = {py} -m pytest -q\n")
-    assert integ._declared_bar_or_refusal(tmp_path) is None
+    assert integ._declared_checks_or_refusal(tmp_path) is None
 
 
 def test_a_declared_toolchain_without_its_venv_refuses_the_bar(tmp_path):
@@ -1216,7 +1216,7 @@ def test_a_declared_toolchain_without_its_venv_refuses_the_bar(tmp_path):
     # refuses instead, loudly and by name, before it composes anything.
     _stack_ini(tmp_path, "[product]\ntest = {py} -m pytest -q\n")
     (tmp_path / "requirements-dev.txt").write_text("pytest\n", encoding="utf-8")
-    refusal = integ._declared_bar_or_refusal(tmp_path)
+    refusal = integ._declared_checks_or_refusal(tmp_path)
     assert refusal is not None
     assert "harness floor REFUSES" in refusal
     assert "no runnable ./.venv" in refusal and "dev-setup --install" in refusal
@@ -1227,7 +1227,7 @@ def test_a_scaffold_that_declares_no_toolchain_still_runs_the_bar(tmp_path):
     # declaration is not refused. This is the property the whole venv-less fixture
     # fleet (including the e2e scaffolds in this file) depends on.
     _stack_ini(tmp_path, "[product]\ntest = {py} -m pytest -q\n")
-    assert integ._declared_bar_or_refusal(tmp_path) is None
+    assert integ._declared_checks_or_refusal(tmp_path) is None
 
 
 # --- 4b. the BRANCH tree's own harness (WI-368, relocated by WI-386) ----------

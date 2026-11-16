@@ -1222,7 +1222,7 @@ def _claimed_spec_frontmatters(root, branch):
 def _adjudication_lane(root, branch, metas=None):
     """Does EVERY claimed spec on `branch` declare the `adjudication` kind?
 
-    `_lane_bar_directives`' `skip` test and the review gate's: whether the lane
+    `_lane_checks_directives`' `skip` test and the review gate's: whether the lane
     runs a bar and owes a round. The acceptance rung does not ask it (WI-849: any
     claimed row recording a scope bounds the lane's acts, read off the metas by
     `acceptance_record.merge_acceptance_refusal`). UNREADABLE FRONTMATTER ANSWERS
@@ -1769,7 +1769,7 @@ def _head(root):
     return out.strip()
 
 
-def _declared_bar_or_refusal(root):
+def _declared_checks_or_refusal(root):
     """§4: a missing or EMPTY check declaration is a refusal, never a skip - and
     so is a declared bar with no floor-satisfying interpreter to run it on.
 
@@ -1871,7 +1871,7 @@ def _passed_steps(out):
     return names
 
 
-def _run_bar(wt, root, tier, gate=None):
+def _run_bar(wt, root, tier, stage=None):
     """check.py at the derived gate on the refreshed branch; fail-closed reading.
 
     Green means: exit 0 AND the report carries no SKIP line. `--trunk-lane` is
@@ -1880,16 +1880,16 @@ def _run_bar(wt, root, tier, gate=None):
     the §5.2 freshness gates - which stand down on a work branch, and which
     this very step just regenerated - have to run here or nothing checks them.
 
-    `gate` (WI-388, the `bar` frontmatter key) pins check.py's --gate: a row
-    claimed to deliver evidence at a level still bars at that level if
-    docs/gate moves mid-flight. None keeps check.py on its own derived-gate
-    read, exactly as before.
+    `stage` (WI-388, the `checks_stage` frontmatter key) pins check.py's
+    --stage: a row claimed to deliver evidence at a stage is still checked
+    at that stage if the derived stage moves mid-flight. None keeps
+    check.py on its own derived-stage read, exactly as before.
     """
     py = ac.harness_python(root)
     check = _branch_tree_script(wt, root, "check.py")
     argv = [str(py), str(check), "--jobs", "0", "--tier", tier, "--trunk-lane"]
-    if gate:
-        argv += ["--stage", gate]
+    if stage:
+        argv += ["--stage", stage]
     code, out = _run(argv, wt)
     skips = [ln for ln in out.splitlines() if re.match(r"\s*SKIP\s", ln)]
     if code != 0:
@@ -1904,7 +1904,7 @@ def _run_bar(wt, root, tier, gate=None):
         True,
         out,
         "bar PASS ({} steps, tier {}{})".format(
-            len(_passed_steps(out)), tier, ", gate " + gate if gate else ""
+            len(_passed_steps(out)), tier, ", stage " + stage if stage else ""
         ),
     )
 
@@ -1915,15 +1915,15 @@ def _run_trunk_step(wt, root):
     return _run([str(py), str(step), "--root", "."], wt)
 
 
-# The `bar` frontmatter key's vocabulary (WI-388; the stage-ladder names since
-# OI-21): bar declares verification strictness for this row's lane; it never
-# affects scheduling. Ordered weakest to strictest, by LADDER POSITION; a
+# The `checks_stage` frontmatter key's vocabulary (WI-388; the stage-ladder
+# names since OI-21): it pins the stage this row's landing checks run at; it
+# never affects scheduling. Ordered weakest to strictest, by LADDER POSITION; a
 # declared value outside it is refused.
-_BAR_GATES = ("DevStg-Reqs", "DevStg-Tests", "DevStg-Impl")
+_CHECKS_STAGES = ("DevStg-Reqs", "DevStg-Tests", "DevStg-Impl")
 
-# A WI `bar:` is AUTHOR-WRITTEN, so the retired tags translate on read (OI-21
+# A WI `checks_stage` is AUTHOR-WRITTEN, so the retired tags translate on read (OI-21
 # contract break 3) — silently, because check_vocab.py sees the spec file and can
-# name the line. Duplicated from intake.normalize_bar per the F5 rule.
+# name the line. Duplicated from intake.normalize_checks_stage per the F5 rule.
 _RETIRED_BARS = {
     "g1": "DevStg-Reqs",
     "g2": "DevStg-Tests",
@@ -1940,8 +1940,8 @@ _RETIRED_BARS = {
 }
 
 
-def _normalize_bar(value):
-    """A `bar:` cell as a canonical `DevStg-*` name ("" when blank), retired tags
+def _normalize_checks_stage(value):
+    """A `checks_stage` cell as a canonical `DevStg-*` name ("" when blank), retired tags
     translated. Matched case-insensitively — the retired reader did `.upper()`,
     which would turn a correctly-authored `DevStg-Reqs` into `DEVBAR-REQS` and
     refuse it."""
@@ -1951,7 +1951,7 @@ def _normalize_bar(value):
     low = raw.lower()
     if low in _RETIRED_BARS:
         return _RETIRED_BARS[low]
-    for canonical in _BAR_GATES:
+    for canonical in _CHECKS_STAGES:
         if low == canonical.lower():
             return canonical
     return raw
@@ -2043,8 +2043,8 @@ def _adjudication_scope_ok(root, branch):
     return True
 
 
-def _lane_bar_directives(root, branch):
-    """The claimed row's say over the refresh bar (WI-388): `(skip, gate,
+def _lane_checks_directives(root, branch):
+    """The claimed row's say over the refresh bar (WI-388): `(skip, stage,
     refusal)`.
 
     * `skip` — True when the lane's one claimed spec declares the
@@ -2052,11 +2052,12 @@ def _lane_bar_directives(root, branch):
       Status cells and the work registry, nothing a product bar can speak to;
       that is why the kind needs its own no-bar arm rather than a tier). Fails
       TOWARD the bar: an unreadable frontmatter or any other kind runs it.
-    * `gate` — that row's `bar` key (one of DevStg-Reqs, DevStg-Tests,
-      DevStg-Impl), handed to check.py --gate. None when it declares none.
-    * `refusal` — a malformed bar value. Refused loudly rather than silently
-      barred at whatever the derived gate happens to read (the drift the key
-      exists to pin); the claimed spec is on the branch, so the fix is a
+    * `stage` — that row's `checks_stage` key (one of DevStg-Reqs,
+      DevStg-Tests, DevStg-Impl), handed to check.py --stage. None when it
+      declares none.
+    * `refusal` — a malformed `checks_stage`. Refused loudly rather than
+      silently checked at whatever the derived stage happens to read (the
+      drift the key exists to pin); the claimed spec is on the branch, so the fix is a
       lane-side edit.
 
     Read off the TRUNK's claimed specs — the same one-home read the merge slot
@@ -2065,33 +2066,36 @@ def _lane_bar_directives(root, branch):
 
     Implements: SR-174, LLR-154
     """
-    kinds, bars = [], []
+    kinds, stages = [], []
     metas, unreadable = _claimed_spec_frontmatters(root, branch)
     if unreadable:
         return False, None, None  # unreadable: run the bar, fail toward it
     for name, meta in metas:
         kinds.append(str(meta.get("safety_class") or "").strip().lower())
-        declared = _normalize_bar(meta.get("bar"))
-        if declared and declared not in _BAR_GATES:
+        declared = _normalize_checks_stage(meta.get("checks_stage"))
+        if declared and declared not in _CHECKS_STAGES:
             return (
                 False,
                 None,
-                "{} declares bar = {!r} ({}), which is not one of {} - the bar "
-                "key declares verification strictness for this row's lane (it "
+                "{} declares checks_stage = {!r} ({}), which is not one of {} - "
+                "the key pins the stage this row's landing checks run at (it "
                 "never affects scheduling), so a value check.py cannot run is "
                 "refused rather than silently dropped; fix the claimed spec on "
                 "the branch, then refresh".format(
-                    branch, str(meta.get("bar")), name, "|".join(_BAR_GATES)
+                    branch,
+                    str(meta.get("checks_stage")),
+                    name,
+                    "|".join(_CHECKS_STAGES),
                 ),
             )
         if declared:
-            bars.append(declared)
+            stages.append(declared)
     skip = bool(kinds) and all(kind == "adjudication" for kind in kinds)
     # The scope rung (REVIEW-A finding 1): the kind alone never earns the
     # no-bar path — the branch's delta must LOOK like adjudication too.
     if skip and not _adjudication_scope_ok(root, branch):
         skip = False
-    return skip, (bars[0] if bars else None), None
+    return skip, (stages[0] if stages else None), None
 
 
 def _worktree_holding(root, branch):
@@ -2562,7 +2566,7 @@ def _refresh_preflight(root, branch):
     preconditions - a declared bar, a trunk to merge in, a lane that is not
     holding uncommitted work - stated once, here.
     """
-    refusal = _declared_bar_or_refusal(root)
+    refusal = _declared_checks_or_refusal(root)
     if refusal:
         return None, None, refusal
     wt, err = _lane_off_trunk(root, branch)
@@ -2799,11 +2803,11 @@ def refresh(root, branch, tier):
     """
     # The commit hooks are on before anything is read (WI-926). Then the
     # claimed rows' say over the bar (WI-388): the adjudication no-bar arm
-    # and the `bar` strictness pin, both read before anything runs so a
+    # and the `checks_stage` pin, both read before anything runs so a
     # malformed key refuses with the lane untouched.
     hooks_off = _kitcommit_hooks.hooks_refusal(root)
-    skip_bar, bar_gate, refusal = (
-        _lane_bar_directives(root, branch)
+    skip_bar, checks_stage, refusal = (
+        _lane_checks_directives(root, branch)
         if hooks_off is None
         else (False, None, hooks_off)
     )
@@ -2852,7 +2856,7 @@ def refresh(root, branch, tier):
         branch,
         checks="none" if skip_bar else "landing",
         tests=(),
-        run_bar=lambda: _refresh_bar(wt, root, tier, skip_bar, bar_gate),
+        run_bar=lambda: _refresh_bar(wt, root, tier, skip_bar, checks_stage),
         message="{}{}\n\n{}".format(
             kverdict.refresh_subject(branch), trunk[:10], _REFRESH_BODY
         ),
@@ -2893,7 +2897,7 @@ _REFRESH_BODY = (
 )
 
 
-def _refresh_bar(wt, root, tier, skip_bar, bar_gate):
+def _refresh_bar(wt, root, tier, skip_bar, checks_stage):
     """The refresh's bar step, with the WI-388 no-bar arm: `(ok, out, summary)`.
 
     `skip_bar` is the adjudication arm (§A5.2): the trunk step still ran and
@@ -2906,7 +2910,7 @@ def _refresh_bar(wt, root, tier, skip_bar, bar_gate):
     """
     if skip_bar:
         return True, "", "no checks run (adjudication, §A5.2)"
-    return _run_bar(wt, root, tier, bar_gate)
+    return _run_bar(wt, root, tier, checks_stage)
 
 
 def _record_checks_commit(wt, root, branch, checks, tests, run_bar, message):
@@ -3471,7 +3475,7 @@ def _merge_refusal(root, branch, wi_ids):
     refusal = _review_scope_refusal(root, branch)  # S9
     if refusal:
         return outcomes, refusal
-    refusal = _declared_bar_or_refusal(root)
+    refusal = _declared_checks_or_refusal(root)
     if refusal:
         return outcomes, refusal
     return outcomes, _verdict_gate(root, branch, outcomes)

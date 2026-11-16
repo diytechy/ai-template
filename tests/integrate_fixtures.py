@@ -147,7 +147,7 @@ def spec_text(
     order=0,
     deliverable="A widget, shipped.",
     specref=None,
-    bar=None,
+    checks_stage=None,
     brief=None,
     adjudicates=(),
 ):
@@ -171,8 +171,8 @@ def spec_text(
     ]
     if specref:
         lines.append('specref = "{}"'.format(specref))
-    if bar:
-        lines.append('bar = "{}"'.format(bar))
+    if checks_stage:
+        lines.append('checks_stage = "{}"'.format(checks_stage))
     if brief:
         lines.append('brief = "{}"'.format(brief))
     if adjudicates:

@@ -164,7 +164,7 @@ def station_repo(
     Everything the slot reads is real: a real claim commit, a real branch, a
     real closing move. Only the two harness scripts are stubs, and they are
     stubs so the test can assert the ORDER they ran in — see above. `spec_kw`
-    shapes the claimed spec (the WI-388 bar/no-bar tests declare `bar=` or
+    shapes the claimed spec (the WI-388 bar/no-bar tests declare `checks_stage=` or
     `safety=` on it); `product=False` closes the lane WITHOUT the product
     file, the pure-registry shape an honest adjudication lane has.
     `stack_ini` is the declared profile, `extra_scripts` maps further
@@ -426,7 +426,7 @@ def test_the_bar_residue_the_refresh_created_is_shed_but_the_lanes_is_not(tmp_pa
     assert (logs / "session.md").read_text(encoding="utf-8") == "the only copy\n"
 
 
-# 5b.2-wi388 — the adjudication no-bar arm and the `bar` strictness key
+# 5b.2-wi388 — the adjudication no-bar arm and the `checks_stage` key
 
 
 def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
@@ -491,14 +491,15 @@ def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
     assert subjects[1].startswith("integrate: merge wi-401"), subjects[:3]
 
 
-def test_the_bar_key_reaches_check_gate(tmp_path):
-    # WI-388 (5): an optional frontmatter `bar = DevStg-Reqs|DevStg-Tests|DevStg-Impl`
-    # pins the lane's verification strictness — the refresh passes it to check.py
-    # as --stage (WI-498 slice 2 re-keyed the flag; the three VALUES are ladder
-    # rungs and are unchanged), so a row claimed to deliver evidence at a level
-    # still bars at that level if the derived value moves mid-flight. Asserted
+def test_the_checks_stage_key_reaches_check_py(tmp_path):
+    # WI-388 (5): an optional frontmatter `checks_stage = DevStg-Reqs|DevStg-Tests|
+    # DevStg-Impl` pins the stage the lane's landing checks run at — the refresh
+    # passes it to check.py as --stage (WI-498 slice 2 re-keyed the flag; the
+    # three VALUES are ladder rungs and are unchanged), so a row claimed to
+    # deliver evidence at a stage is still checked at that stage if the derived
+    # value moves mid-flight. Asserted
     # off the recording stub's OWN argv.
-    root = station_repo(tmp_path, bar="DevStg-Tests")
+    root = station_repo(tmp_path, checks_stage="DevStg-Tests")
     wt = _lane(root, "wi-401")
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
@@ -507,9 +508,9 @@ def test_the_bar_key_reaches_check_gate(tmp_path):
     assert order.index("--stage") + 1 == order.index("DevStg-Tests")
 
 
-def test_without_a_bar_key_the_refresh_passes_no_stage(tmp_path):
+def test_without_a_checks_stage_key_the_refresh_passes_no_stage(tmp_path):
     # The complement, so the key cannot be mistaken for a default: an undeclared
-    # bar leaves check.py on its own derived-stage read, exactly as before.
+    # checks_stage leaves check.py on its own derived-stage read, exactly as before.
     root = station_repo(tmp_path)
     wt = _lane(root, "wi-401")
     _sha, refusal = integ.refresh(root, "wi-401", "smoke")
@@ -517,14 +518,15 @@ def test_without_a_bar_key_the_refresh_passes_no_stage(tmp_path):
     assert "--stage" not in _order(wt)
 
 
-def test_a_malformed_bar_value_refuses_the_refresh(tmp_path):
-    # Fail closed and loud: a typo'd bar silently ignored would bar at whatever
-    # docs/gate happens to read — the exact drift the key exists to pin. The
+def test_a_malformed_checks_stage_refuses_the_refresh(tmp_path):
+    # Fail closed and loud: a typo'd checks_stage silently ignored would check
+    # at whatever stage the repository derives — the exact drift the key exists
+    # to pin. The
     # claimed spec lives on the branch, so the fix is a lane-side edit.
-    root = station_repo(tmp_path, bar="G9")
+    root = station_repo(tmp_path, checks_stage="G9")
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert sha is None
-    assert "bar" in refusal and "G9" in refusal
+    assert "checks_stage" in refusal and "G9" in refusal
 
 
 def _adjudication_station(tmp_path):
@@ -603,7 +605,7 @@ def test_a_lane_whose_one_row_is_ordinary_runs_the_bar(tmp_path):
     _commit(root, "chore: the stub harness and the declared bar", when=T_CODE)
     assert integ.claim(root, "WI-402", "wi-401") == 0
     assert integ._claimed_wi_ids(root, "wi-401") == ["WI-402"]
-    assert integ._lane_bar_directives(root, "wi-401") == (False, None, None)
+    assert integ._lane_checks_directives(root, "wi-401") == (False, None, None)
     wt, err = integ.lane_worktree(root, "wi-401")
     assert err is None, err
     _sha, refusal = integ.refresh(root, "wi-401", "smoke")

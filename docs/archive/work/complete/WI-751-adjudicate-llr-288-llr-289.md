@@ -56,7 +56,7 @@ buildtier = "quick"
 priority = 3
 specref = "docs/test/test-cases.toml"
 sr_refs = ["SR-148"]
-bar = "DevStg-Tests"
+checks_stage = "DevStg-Tests"
 ```
 
 IN SCOPE: exactly the text replacements below, copied as written, in one Drafted
