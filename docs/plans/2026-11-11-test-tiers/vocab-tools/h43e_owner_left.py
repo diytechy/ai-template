@@ -1,0 +1,196 @@
+"""HANDOFF 4.3 / 10.4, owner: the role uses the rules left behind (trap 28).
+
+Found by listing every "owner" left on the live surface after r43b, r43c, h43c
+and h43d, dropping the interface files, the KEEP patterns and the identifiers
+that stay, and reading the 271 lines that remained. These are the role:
+
+- a citation without the comma r43b's rule anchors on ("(owner 2026-08-11",
+  "owner answer §6.1", "owner rename", "owner framing", "owner question B");
+- "owner" opening a line after an article or a "(" that ended the one before;
+- the role in capitals ("OWNER TEXT", "what the OWNER still owes");
+- the decisions key named by its spelling in prose, a template and messages
+  (`owner` -> `operator`), which the key's rename makes wrong;
+- the pending-actions read model's own words, which the operator surface
+  renders.
+
+What stays, read and left: an interface's owner, a need's owner ("no named
+owner", "the need owner"), a hat or module that owns a question or a rule, the
+debt owner, `@<owner>` on a finding line, the record heading "## Owner route",
+the run names in test_decision_overrule's fixtures, the record-shaped fixture
+text in test_done_when_blessing and test_gen_open_items_render, and sample
+rationale text in test_trace_rules.
+"""
+
+SKILLS = ("project-trajectory/skills", ".claude/skills", ".agents/skills")
+
+
+def mirrors(rel):
+    return tuple("{}/{}".format(root, rel) for root in SKILLS)
+
+
+S = "project-trajectory/scripts/"
+POLICY = ("project-trajectory/process.toml.template", "docs/process.toml")
+
+EDITS = [
+    # --- the skills, in all three copies ---------------------------------------
+    (mirrors("coordinator-cycle/SKILL.md"), "An explicit owner checkpoint",
+     "An explicit operator checkpoint"),
+    (mirrors("coordinator-cycle/references/recipes.md"),
+     "Once the\n  owner rules a draft's calls", "Once the\n  operator rules a draft's calls"),
+    (mirrors("coordinator-cycle/references/recipes.md"),
+     "the\n  owner can move the checkout", "the\n  operator can move the checkout"),
+    (mirrors("render-dashboard-critique/SKILL.md"),
+     "escalate to the\n   owner. Meanwhile", "escalate to the\n   operator. Meanwhile"),
+    (mirrors("session-protocol/SKILL.md"),
+     "The\n  owner sets `operator = ", "The\n  operator sets `operator = "),
+    # --- repository files ---------------------------------------------------------
+    ("CLAUDE.md", "(owner dials, filled", "(operator dials, filled"),
+    ("agent-resume.cmd", "Owner dial 2026-07-22", "Operator dial 2026-07-22"),
+    ("agent-resume.sh", "Owner dial 2026-07-22", "Operator dial 2026-07-22"),
+    ("docs/agents.toml", "owner re-lineup WI-113", "operator re-lineup WI-113"),
+    ("docs/agents.toml", "(owner has no Fable access;", "(operator has no Fable access;"),
+    ("docs/agents.toml", "per owner intent", "per operator intent"),
+    ("docs/declared-absences", "decision 8, owner 2026-08-13u", "decision 8, operator 2026-08-13u"),
+    ("docs/dependencies.md", "(RULING-3, owner 2026-07-28)", "(RULING-3, operator 2026-07-28)"),
+    ("docs/knowledge/decision-routing.md", "non-blocking owner second look",
+     "non-blocking operator second look"),
+    ("docs/knowledge/system-decomposition-methods.md",
+     "failure mode the\n  owner is trying to avoid", "failure mode the\n  operator is trying to avoid"),
+    (POLICY, "OVERTURNED, owner 2026-08-11", "OVERTURNED, operator 2026-08-11"),
+    ("docs/process.toml", "# Owner 2026-10-02:", "# Operator 2026-10-02:"),
+    ("project-trajectory/process.toml.template", "_kitcommon.py`, owner 2026-07-12)",
+     "_kitcommon.py`, operator 2026-07-12)"),
+    ("project-trajectory/process.toml.template", "F5 (owner 2026-07-12, no",
+     "F5 (operator 2026-07-12, no"),
+    ("docs/registry-machinery-reference.md", "the parent SR — owner\n",
+     "the parent SR — operator\n"),
+    ("docs/registry-machinery-reference.md", "**grandfathering** (owner\n",
+     "**grandfathering** (operator\n"),
+    ("docs/registry-machinery-reference.md", "approved as built by owner\n",
+     "approved as built by operator\n"),
+    ("docs/requirements/hats.toml", "THIS FILE IS OWNER TEXT", "THIS FILE IS OPERATOR TEXT"),
+    ("project-trajectory/registries/hats.template.toml", "THIS FILE IS OWNER TEXT",
+     "THIS FILE IS OPERATOR TEXT"),
+    ("docs/requirements/stakeholder-needs.toml", "The repo owner can configure",
+     "The operator can configure"),
+    ("docs/requirements/stakeholder-needs.toml", "The repo owner can find",
+     "The operator can find"),
+    ("docs/stack.ini", "a one-dial owner change edits THIS file",
+     "a one-dial operator change edits THIS file"),
+    # --- shipped prose --------------------------------------------------------------
+    ("project-trajectory/PROCESS.md", "The roster is **owner\ntext**",
+     "The roster is **operator\ntext**"),
+    ("project-trajectory/PROCESS.md", "from current state (owner\n",
+     "from current state (operator\n"),
+    ("project-trajectory/PROCESS_OPTIONS.md", "(owner 2026-08-11, overturning",
+     "(operator 2026-08-11, overturning"),
+    ("project-trajectory/PROCESS_OPTIONS.md", "The initial table, which the\nowner may adjust:",
+     "The initial table, which the\noperator may adjust:"),
+    ("project-trajectory/PROCESS_OPTIONS.md", "stale hints — owner\nnotes never gate",
+     "stale hints — operator\nnotes never gate"),
+    ("project-trajectory/README.md", "what does the OWNER still owe?",
+     "what does the OPERATOR still owe?"),
+    ("project-trajectory/decisions.template.toml",
+     "#   owner              absent until the operator has read the entry",
+     "#   operator           absent until the operator has read the entry"),
+    ("project-trajectory/decisions.template.toml",
+     "#                      `owner` says; run scripts/migrate_decisions.py",
+     "#                      `operator` says; run scripts/migrate_decisions.py"),
+    ("project-trajectory/prompts/adjudicate-disposition.template.md",
+     "is the OWNER's to rule", "is the OPERATOR's to rule"),
+    ("project-trajectory/prompts/spine-questions.md",
+     "the review-churn plan's owner\n", "the review-churn plan's operator\n"),
+    # --- scripts ----------------------------------------------------------------------
+    (S + "adjudicate_brief.py", "(D-9 step 4b, owner\n", "(D-9 step 4b, operator\n"),
+    (S + "adjudicate_brief.py", "manufactured owner interrupts", "manufactured operator interrupts"),
+    (S + "adjudicate_brief.py", "# owner holds their rung", "# operator holds their rung"),
+    (S + "adjudicate_brief.py", "because the OWNER holds its rung", "because the OPERATOR holds its rung"),
+    (S + "agent_policy.py", "in window SHAPE (owner\n", "in window SHAPE (operator\n"),
+    (S + "agent_policy.py", "a one-dial owner change", "a one-dial operator change"),
+    (S + "agent_route.py", "(owner rename 2026-07-12)", "(operator rename 2026-07-12)"),
+    (S + "bootstrap.py", "decomposition faces; OWNER\n", "decomposition faces; OPERATOR\n"),
+    (S + "check_doc_refs.py", "WI-394 (owner\n", "WI-394 (operator\n"),
+    (S + "check_dupes_census.py", "so the\nowner tore it down", "so the\noperator tore it down"),
+    (S + "coherence.py", "(*what does the OWNER hold?*)", "(*what does the OPERATOR hold?*)"),
+    (S + "derive_stage.py",
+     "# --- THE PHASE RULE (ruled plan §4 + owner answer §6.1/§6.2) ------------------",
+     "# --- THE PHASE RULE (ruled plan §4 + operator answer §6.1/§6.2) ---------------"),
+    (S + "derive_stage.py", "(owner answer §6.2)", "(operator answer §6.2)"),
+    (S + "derive_stage.py", "(plan §4, owner answer §6.1)", "(plan §4, operator answer §6.1)"),
+    (S + "derive_stage.py", "(ruled plan §4, owner answer §6.1)", "(ruled plan §4, operator answer §6.1)"),
+    (S + "gen_open_items.py", "(no `owner` verdict;", "(no `operator` verdict;"),
+    (S + "gen_open_items.py", "3 · Pending owner actions ", "3 · Pending operator actions "),
+    (S + "gen_open_items.py", '("review", "Owner note")', '("review", "Operator note")'),
+    (S + "gen_open_items.py", "<code>owner</code> value reads", "<code>operator</code> value reads"),
+    (S + "gen_open_items.py", "asserting a stale owner action", "asserting a stale operator action"),
+    (S + "hats.py", "(owner framing, 2026-08-16)", "(operator framing, 2026-08-16)"),
+    (S + "intake.py", "the\n    owner still approves it", "the\n    operator still approves it"),
+    (S + "intake.py", "(ruled decision 2, owner 2026-07-31; §A8)",
+     "(ruled decision 2, operator 2026-07-31; §A8)"),
+    (S + "integrate.py", "(§A4.1, owner question B)", "(§A4.1, operator question B)"),
+    (S + "integrate.py", "the\n    owner can read what it says", "the\n    operator can read what it says"),
+    (S + "integrate.py", "no verdict or owner \"", "no verdict or operator \""),
+    (S + "kitlib/bootstrap_manifest.py", "# OWNER TEXT:", "# OPERATOR TEXT:"),
+    (S + "kitlib/bootstrap_manifest.py", "what the OWNER owes", "what the OPERATOR owes"),
+    (S + "kitlib/decisions.py", "things the\nowner would want", "things the\noperator would want"),
+    (S + "kitlib/decisions.py", "\nowner CONFIRMS it or OVERRULES it", "\noperator CONFIRMS it or OVERRULES it"),
+    (S + "kitlib/decisions.py", "\n`owner`, set in place to", "\n`operator`, set in place to"),
+    (S + "kitlib/decisions.py", "which the\nowner has ruled out.", "which the\noperator has ruled out."),
+    (S + "kitlib/done_when.py", "entry the\n    owner has confirmed", "entry the\n    operator has confirmed"),
+    (S + "kitlib/done_when.py", "no verdict or owner\n    ruling binds", "no verdict or operator\n    ruling binds"),
+    (S + "kitlib/done_when.py", "no verdict or owner \"\n", "no verdict or operator \"\n"),
+    (S + "migrate_decisions.py", "its own key, `owner` (`confirmed`", "its own key, `operator` (`confirmed`"),
+    (S + "migrate_decisions.py", "beside `owner`, so a record", "beside `operator`, so a record"),
+    (S + "migrate_decisions.py", "its `owner` by hand", "its `operator` by hand"),
+    (S + "pending.py", "what the OWNER still owes.", "what the OPERATOR still owes."),
+    (S + "pending.py", "One durable pending owner action:", "One durable pending operator action:"),
+    (S + "pending.py", "every durable pending owner action,", "every durable pending operator action,"),
+    (S + "pending.py", "\"_Pending owner actions — ", "\"_Pending operator actions — "),
+    (S + "pending.py", "no durable owner action is pending", "no durable operator action is pending"),
+    (S + "schedule.py", "the IF-073 owner\n    registry", "the IF-073 operator\n    registry"),
+    (S + "session_keep.py", "(`take_warm_lease`, owner 2026-10-05", "(`take_warm_lease`, operator 2026-10-05"),
+    (S + "spine_rules.py", "(owner 2026-08-12, re-ruled", "(operator 2026-08-12, re-ruled"),
+    (S + "trace.py", "\"Phased delivery\"; owner\n", "\"Phased delivery\"; operator\n"),
+    (S + "wi_convert.py", "is RETIRED (owner\n", "is RETIRED (operator\n"),
+    # --- tests -------------------------------------------------------------------------
+    ("tests/test_agent_route.py", "(owner rename 2026-07-12)", "(operator rename 2026-07-12)"),
+    ("tests/test_approval_level.py", "state any more (owner\n", "state any more (operator\n"),
+    ("tests/test_bookkeeping.py", "the three files the\n    owner is about to edit.",
+     "the three files the\n    operator is about to edit."),
+    ("tests/test_bootstrap.py", "WI-433 (owner 2026-08-11)", "WI-433 (operator 2026-08-11)"),
+    ("tests/test_check_skip_guard.py", "a migration the\nowner has to choose)",
+     "a migration the\noperator has to choose)"),
+    ("tests/test_decision_overrule.py", "(owner rule: no degenerate path)",
+     "(operator rule: no degenerate path)"),
+    ("tests/test_decision_record.py", "where the\nowner is TOLD about them",
+     "where the\noperator is TOLD about them"),
+    ("tests/test_decisions_to_review.py", "One key, `owner`, carries", "One key, `operator`, carries"),
+    ("tests/test_decisions_to_review.py", "beside `owner` (the migrator", "beside `operator` (the migrator"),
+    ("tests/test_decisions_to_review.py", '"D-001: `owner`"', '"D-001: `operator`"'),
+    ("tests/test_decisions_to_review.py", "whatever `owner`\n", "whatever `operator`\n"),
+    ("tests/test_dispatch.py", "# durable owner action is pending\".", "# durable operator action is pending\"."),
+    ("tests/test_dogfood_sync.py", "(owner dials, filled rows,", "(operator dials, filled rows,"),
+    ("tests/test_dogfood_sync.py", "+ owner dials)", "+ operator dials)"),
+    ("tests/test_dogfood_sync.py", "# owner drops a live column", "# operator drops a live column"),
+    ("tests/test_external_frame.py", "is the OWNER's to flip", "is the OPERATOR's to flip"),
+    ("tests/test_gen_open_items.py", "assert a stale owner action", "assert a stale operator action"),
+    ("tests/test_gen_open_items_render.py", "the cell the\n    owner is actually blessing.",
+     "the cell the\n    operator is actually blessing."),
+    ("tests/test_gen_trajectory_pending.py", "## Pending owner actions (generated)",
+     "## Pending operator actions (generated)"),
+    ("tests/test_gen_trajectory_pending.py", "no durable owner action is pending",
+     "no durable operator action is pending", 3),
+    ("tests/test_hats.py", "the live one is owner text", "the live one is operator text"),
+    ("tests/test_held_status_git.py", "Trunk's owner approves SN-002 in a plain commit;",
+     "The operator approves SN-002 on trunk in a plain commit;"),
+    ("tests/test_intake.py", "(ruled decision 2, owner 2026-07-31; §A8)",
+     "(ruled decision 2, operator 2026-07-31; §A8)"),
+    ("tests/test_module_size_ratchet.py", "WI-432 (owner 2026-08-11,", "WI-432 (operator 2026-08-11,"),
+    ("tests/test_old_kit_resync.py", "the owner-controlled application", "the operator-controlled application"),
+    ("tests/test_old_kit_resync.py", "restore the owner-controlled records", "restore the operator-controlled records"),
+    ("tests/test_old_kit_resync.py", "intentional owner merge", "intentional operator merge"),
+    ("tests/test_phase_rule.py", "\"\"\"Owner answer §6.2:", "\"\"\"Operator answer §6.2:"),
+    ("tests/test_trajectory.py", "# owner re-homes or cancels it", "# operator re-homes or cancels it"),
+    ("tests/test_trajectory_staged.py", "(WI-243, owner 2026-07-20)", "(WI-243, operator 2026-07-20)"),
+    ("tests/traj_fixtures.py", "rejected — owner\n", "rejected — operator\n"),
+]
