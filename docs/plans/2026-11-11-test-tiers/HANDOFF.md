@@ -1669,3 +1669,17 @@ list is fixed unless §12.6 says so.
 - **Not started:** recording OI-130's ruling in `open-items.toml` with the
   rows that cite it (WI-999, WI-1001); building WI-999; the scope critiques
   owed on WI-1003 to WI-1006; everything on hold in §12.2.
+- **2026-11-16, the unfiltered suite on `8ac37acf0`:** 8,026 passed, 29
+  skipped, 4 failed, in 27 min 16 s (8 workers, variable unset, started from
+  Git Bash). No `rg.exe` ran at any point and free memory never fell under
+  38 GB, so §12.3's cause is confirmed on a whole run. The four failures:
+
+  | Test | Meaning | Owed |
+  |---|---|---|
+  | `test_capped_doc_baselines_match_the_real_sizes` | `CLAUDE.md` stamped 8,018, is 8,037; `AGENTS.template.md` stamped 9,992, is 9,999 | re-stamp at the close (§10.7 item 6) |
+  | `test_module_sizes_exactly_match_the_committed_baseline` | `agent_loop.py` 2531 to 2535, `intake.py` 1955 to 1957, `bootstrap.py` 1599 to 1597 | D17, at the close |
+  | `test_the_one_non_literal_site_in_the_kit_is_lf` | a pinned line number in `gen_open_items.py` moved 1670 to 1672 with the "owner" sweep | re-stamp with the others |
+  | `test_check_harness.py::test_jobs_parallel_plan_matches_sequential` | failed under the full run, passes alone (45 s) | nothing; it is sensitive to load. Re-run it alone after any full run that shows it |
+
+  The three stamps are re-done once, after the two fix branches merge, since
+  those change sizes again.
