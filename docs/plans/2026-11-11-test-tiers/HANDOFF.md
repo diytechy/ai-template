@@ -1990,6 +1990,10 @@ the hold above.
 | LLR-172 and TC-166 | **Draft corrections** of the stale text ("NOT BUILT YET"; the method naming `trace.py`'s component pass), for the operator's acceptance act |
 | `trajectory_arch.py` (1,132 code lines) | **File a work item** to decompose it; not on this branch |
 | `PYTEST_DEBUG_TEMPROOT` | **Deleted** from the user environment at the operator's request (§12.3) |
+| `test_first_since` (after §10.5's cut) | **Move it** in `docs/process.toml` to the merge that brings the cut onto trunk; the RESYNC entry tells adopters to do the same. The 63 requirements accepted since `f537fc531d` were judged clean before the cut, and 117 standing warnings would hide new ones |
+| TC-403's real-landing replay | **Retired** (`bfbc5a413`): it replayed two pre-cut landings and could only skip; the fixtures pin the arm. Dropped from TC-403's evidence, a traced cell |
+| Links into the moved record | **The migrator re-bases them** (`bfbc5a413`): link targets only, never prose. The operator asked "isn't it just find/replace?"; it is, confined to link targets |
+| The record's README heading | Followed the rename (`80c52d173`); its dated entries keep their words. Taken under the vocabulary ruling, not asked |
 
 ### §12.3 Why a test run crashed the machine, and how to run one safely
 
@@ -2303,3 +2307,20 @@ list is fixed unless §12.6 says so.
     (§9.10, decision (a)); the `Review-Verdict:` trailer is called a trailer
     everywhere now (decision (b)); `PROCESS_OPTIONS.md:2903`'s "attestation"
     read as the act and became "acceptance" (decision (e)).
+- **2026-11-16, the operator's follow-up rulings applied.** `maint/vocabulary`
+  `bfbc5a413`: `migrate_vocabulary.py` gains a last step, `links`, re-basing
+  Markdown link targets from `last_approved` to `last_accepted` (two tests;
+  SR-247, LLR-369, TC-427 extended, all still `Drafted`); TC-403's
+  real-landing replay is retired. Tests: `test_intake_settled`,
+  `test_migrate_vocabulary` and the standing six, 150 passed, 1 skipped, 2
+  failed, both known re-stamps (`integrate.py` 1793 to 1801, `trace.py` 3851
+  to 3852). `test_first_since` moves at the trunk merge (§12.2).
+  - **Ordering constraint, found while doing this.** The migrator's record
+    step writes every registry copy equal to live whenever they differ,
+    absorbing whatever moved (D13), not only vocabulary. So: (1) on this
+    branch, the ruled row amendments (`ROW-AMENDMENTS.md`) land after the
+    last migrator run, or a run absorbs them without the operator's act;
+    (2) the RESYNC entry tells adopters to run the migrator with no
+    unaccepted amendment pending, and to read the absorbed-cell lines it
+    prints. `migrate_vocabulary --check` here now reports TC-403's evidence
+    cell as owed; that is this, not a missed spelling.
