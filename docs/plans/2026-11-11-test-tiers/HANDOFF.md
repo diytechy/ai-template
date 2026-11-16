@@ -1545,6 +1545,21 @@ mechanism, and leave alone findings that would reverse an earlier ruling.
 | §4.5.2 to §4.5.7 | Not ruled. The operator asked whether "stage" means the development stage or is confused with something else (§12.4) |
 | Full-suite runs | Be very careful: they have slowed the machine to a crawl and crashed VS Code. See §12.3 before running one |
 
+**Rulings taken later on 2026-11-16 (the seventh session).** These supersede
+the hold above.
+
+| | Ruling |
+|---|---|
+| Vocabulary direction | **Go ahead as ruled.** The hold is lifted: §10.5, then §10.6, then §10.7 |
+| §4.5.2 to §4.5.7 and "stage" | **All as proposed, with §12.4's change:** the work-item key `bar` becomes `checks_stage` (not `landing_stage`); §4.5.3 to §4.5.7 as drafted; a glossary entry for **stage** (the development stage and nothing else), and "step" in the two sentences §12.4 names |
+| SR-195 and LLR-227, the count line | **Amend the rows** to say that while no stakeholder is accepted the unreachable needs are reported as one count. Amending accepted rows is the operator's acceptance act; the session drafts the text |
+| Example rows and the stage | **The README note tells adopters to delete the examples** when they accept their first chain. The stage is not held at Reqs |
+| `migrate_carrier`'s default status | **A conversion keeps a row's status when it keeps the row's meaning; a row whose meaning the conversion changes is `Drafted`.** `migrate_carrier` converts the carrier only, so its default stays; the rule goes into the conversion guidance (`ADOPTING.md`, the spine-authoring skill). Reading of the operator's words "as long as meaning keeps the same spirit it can stay accepted, otherwise drafted" |
+| The boundary gate and `delivered_with` | **The gate honours `delivered_with`:** a row delivered jointly with a same-need sibling need not cite its own assumption; any assumption it does cite is still judged. Amends SR-205 and LLR-242 (acceptance act) |
+| LLR-172 and TC-166 | **Draft corrections** of the stale text ("NOT BUILT YET"; the method naming `trace.py`'s component pass), for the operator's acceptance act |
+| `trajectory_arch.py` (1,132 code lines) | **File a work item** to decompose it; not on this branch |
+| `PYTEST_DEBUG_TEMPROOT` | **Deleted** from the user environment at the operator's request (§12.3) |
+
 ### §12.3 Why a test run crashed the machine, and how to run one safely
 
 **Cause, measured 2026-11-16.** The user environment variable
@@ -1570,9 +1585,13 @@ they cannot reach processes VS Code starts. Memory (64 GB) and disk were idle.
 `PYTEST_DEBUG_TEMPROOT` unset" for a different reason: a dot-named temp root
 makes `test_gen_arch_map` fail.
 
-**Waits on the operator:** change or delete the user variable. It was not
-changed by this session, because it is machine configuration and the reason it
-was set is not recorded.
+**Resolved 2026-11-16 (seventh session):** at the operator's request the user
+variable was deleted (`HKCU\Environment` no longer holds it) and VS Code was
+restarted, so a pytest run now writes under `%TEMP%` and needs no `env -u`.
+If `PYTEST_DEBUG_TEMPROOT` still shows a value in a shell, that shell predates
+the change: unset it there. Never point it back inside `C:\Projects` or at a
+dot-named folder. The old `C:\Projects\.pytest-tmp` (4,846 files) is still on
+disk; delete it with VS Code closed.
 
 **Not done, on purpose:** a lock against concurrent runs and a lower worker
 count. Neither addresses the measured cause. Revisit only if a run with the
@@ -1805,3 +1824,18 @@ list is fixed unless §12.6 says so.
   5. Housekeeping: the worktrees `C:\Projects\ai-template-wt-fix-a`,
      `-fix-b` and `D:\ai-template-wt-wi999` and their branches are merged and
      can be removed. Nothing is pushed.
+- **2026-11-16, the seventh session: the operator's answers.** All of item 1
+  above is ruled; the second table in §12.2 has the answers. The vocabulary
+  hold is lifted, so the order is now: §10.5 (its four passes), §10.6, §10.7
+  with all of §4.5 (`checks_stage` for §4.5.2), then the row amendments and
+  fixes ruled today (SR-195 and LLR-227 text; SR-205 and LLR-242 with the gate
+  honouring `delivered_with`; LLR-172 and TC-166 text; the README sentence on
+  deleting the examples; the conversion-status rule in `ADOPTING.md` and the
+  spine-authoring skill; a work item for `trajectory_arch.py`). Amended rows
+  wait for the operator's acceptance act; draft them as `Drafted` changes
+  the operator can read in one place.
+  - `vocab-tools/r45a_reaccept.py` exists, a rule file for §10.5 pass 1 that
+    no entry above mentions. Treat it as an unreviewed draft: run it `--dry`
+    and read every line before applying.
+  - Housekeeping still owed: `C:\Projects\.pytest-tmp` (with VS Code closed),
+    and the merged worktrees of item 5.
