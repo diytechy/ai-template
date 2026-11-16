@@ -266,6 +266,21 @@ def test_regen_fails_loudly_on_a_broken_generator(tmp_path, capsys):
     assert "trunk lane is RED" in err
 
 
+def test_regen_creates_the_okf_bundle_a_fresh_scaffold_lacks(tmp_path, capsys):
+    # A fresh scaffold has registries and no docs/okf/. From the first real
+    # row the commit hook's okf step demands the bundle, so the regen must
+    # create it rather than skip the family as absent: skipping it cost a new
+    # adopter a second refused commit and a command no shipped doc named.
+    reqs = tmp_path / "docs" / "requirements"
+    reqs.mkdir(parents=True)
+    (reqs / "stakeholder-needs.toml").write_text(
+        '[need.SN-001]\ntitle = "n"\nstatus = "Drafted"\n', encoding="utf-8"
+    )
+    assert ts.regen(tmp_path) == 0, capsys.readouterr().err
+    assert "regen — okf ok" in capsys.readouterr().out
+    assert (tmp_path / "docs" / "okf" / "index.md").is_file()
+
+
 def test_regen_really_writes_the_verdict_rollup(tmp_path, capsys):
     """Implements: TC-206"""
     # SR-170's exclusive-writer clause, DRIVEN through the writer it names.

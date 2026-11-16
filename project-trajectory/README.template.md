@@ -58,6 +58,11 @@ consent-first script that explains itself before acting:
    hook.
 4. **Verify:** `scripts/check.*` — the gate harness; green means you're set.
 
+**After you edit the registries** (`docs/requirements/`, `docs/test/`): record
+new ids with `python scripts/trace.py --bump-ids`, rewrite the generated files
+the commit hook checks with `python scripts/trunk_step.py --regen`, then `git
+add` what they changed. A refused commit names the command that clears it.
+
 ## Development
 
 This repo follows a gated, requirement-traced process. The working brief is
