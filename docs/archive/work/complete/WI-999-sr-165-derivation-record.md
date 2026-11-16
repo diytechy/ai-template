@@ -3,13 +3,47 @@ id = "WI-999"
 title = "SR-165's derivation record is built: the record cells, the component check and a record for each live component"
 workstream = "process"
 sr_refs = ["SR-165"]
-specref = "docs/requirements/low-level-requirements.toml#LLR-172"
+specref = ""
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 planmode = "single"
 priority = 5
 +++
+
+## Deliverable
+
+Every live component row holds the partition's derivation record or cites the
+row holding it, and `trajectory_arch.component_findings` reports a row whose
+record is absent, incomplete, malformed or inconsistent, WARN plain and ERROR
+under `--strict`. The rules are `derivation_record_findings` and its small
+helpers, called on the rows the pass already loads, so the registry has no
+second reader. `[checks] components_check = false` still turns the whole pass
+off; no setting was added.
+
+- **Schema** (85811e4bb): the eight cells on `kitlib.spine.OFFSPINE_KEYS`, the
+  carrier's column map and `migrate_carrier.KEY`, and on the template's `-000`
+  row.
+- **Backfill** (864bcea5d): CMP-006 holds the record OI-130's ruling states;
+  CMP-007, CMP-008 and CMP-009 carry `derivation = "CMP-006"`. The act
+  `intake.py snapshot --approves components=docs/log.d/2026-11-16-operator-rules-oi130.md
+  --reattests CMP-006,CMP-007,CMP-008,CMP-009` (act seq 182) copied only
+  `components.toml`. It also absorbed CMP-006's `notes` amendment, pending
+  since the 2026-08-30 copy.
+- **Rules and tests** (1146c5b95): ten tests in `tests/test_trajectory_arch.py`
+  cover TC-166 (a)-(e) and each malformed and inconsistent state, each tagged
+  `Implements: TC-166`, and TC-166's evidence names them. `trajectory_arch.py`
+  grew 1012 -> 1132 SLOC (pin re-stamped). `PROCESS_OPTIONS.md` "Component
+  layer" states the record (+1,272 bytes, a watched file).
+- **RESYNC entry**: "Live component rows carry a derivation record", a forced
+  migration.
+
+Built on the maintenance branch `maint/wi-999`, outside the lane workflow, at
+the operator's direction: no claim, no lane review rounds, and commits made
+with the hook bypassed. The tests-first commit under `[bars] red_mark` (steps
+3 and 4 of the landing order below) was not used; the rules and their tests
+landed in one commit, every commit strict-green. The review is the maintenance
+branch's cross-family review, still to run.
 
 ## Context
 
@@ -173,21 +207,23 @@ OI-130 held the backfill and is ruled. The record of the ruling is
 
 ## Done-when
 
-- [ ] The CMP schema carries the eight cells:
+- [x] The CMP schema carries the eight cells:
       - `kitlib/spine.py` `OFFSPINE_KEYS`;
       - the `spine_carrier` column map and the `migrate_carrier` inverse;
       - the template's `-000` row, which declares every key.
-- [ ] `component_findings` reports every state in "Trust". No second reader
+- [x] `component_findings` reports every state in "Trust". No second reader
       of the registry is added.
-- [ ] In-process cases in `tests/test_trajectory_arch.py` cover TC-166 (a)-(e)
+- [x] In-process cases in `tests/test_trajectory_arch.py` cover TC-166 (a)-(e)
       and each malformed and inconsistent state named above.
-- [ ] CMP-006 holds the record as OI-130's ruling of 2026-11-16 states it
+- [x] CMP-006 holds the record as OI-130's ruling of 2026-11-16 states it
       ("The operator's ruling", above). CMP-007, CMP-008 and CMP-009 cite
       it. The strict trace is clean.
-- [ ] TC-166's `evidence` names the test.
-- [ ] RESYNC entry: a forced migration. An adopter's live CMP rows need a
+- [x] TC-166's `evidence` names the test.
+- [x] RESYNC entry: a forced migration. An adopter's live CMP rows need a
       record while `components_check` is on.
-- [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
+- [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B). Open: on
+      this maintenance branch the review is the branch's cross-family
+      review, which runs after the build.
 
 **One WI, landing order (S1).**
 

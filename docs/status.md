@@ -28,9 +28,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   [handoff-2026-11-11a-attended-oi130-rescore.md](handoff-2026-11-11a-attended-oi130-rescore.md).
   An attended session re-scored the component partition on today's tree
   ([record](plans/2026-11-11-oi130-rescore/README.md)): P5 ranks first on
-  every measure, so OI-130 is re-walked with the owner on that evidence,
-  together with the derivation record's shape, before WI-999 builds; every
-  other queued row waits on the owner, so the handoff carries the stop line.
+  every measure. OI-130 is ruled (2026-11-16) and SR-165's derivation record
+  is built on the maintenance branch `maint/wi-999`, awaiting that branch's
+  cross-family review; every other queued row waits on the operator, so the
+  handoff carries the stop line.
   The tag-migration row and the dashboard re-judge have landed: test files
   carry their test-case tags, and a strict finding holds them equal to the
   evidence cells, so an intent row's evidence cell holds a note until the

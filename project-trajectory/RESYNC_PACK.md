@@ -10955,6 +10955,46 @@ re-synced: the CI workflow and dev-setup. To take their fixes by hand, add
 `fetch-depth: 0` to the checkout step of `.github/workflows/check.yml`, and add
 the guarded install step (with `shell: bash`).
 
+### Live component rows carry a derivation record [since 3e7a3a6ee]
+
+*(Anchored at the preceding commit: the change lands after it.)*
+
+**What changed.** A component partition records how it was chosen, in
+`docs/requirements/components.toml` (SR-165). The component tier gains eight
+flat cells. One row per partition holds the record: `candidates` (best first),
+`objective` (`minimize|maximize <metric>`), `constraints` (`<constraint>:
+<violators>` or the single entry `none`), `scores` (`<candidate>=<number>`, one
+each), `selected`, `ruling` (who ruled, when, where recorded) and an optional
+`override` (`<selected>: <reason>`). The partition's other rows carry only
+`derivation`, the holding row's id. `check_trajectory.py`'s component pass
+reports a live row whose record is absent, incomplete, malformed or
+inconsistent, a WARN plain and an ERROR under `--strict`. It recomputes the
+ranking from the record's own cells, and a selection the scores do not rank
+first needs the `override` naming it. The `-000` row is vacuous, and a project
+with no live component row hears nothing.
+
+**What to do (forced migration).** While `[checks] components_check` is on (the
+default), every live CMP row needs a record or a `derivation`, or your strict
+run fails from this entry. Before re-syncing past it, write one record per
+partition from the ruling that adopted it, in a reviewed commit: the record is a
+fact about your own partition, not something to fill in bulk. The new cells are
+approved content, so on an `Approved` row the commit also carries your approval
+act (`intake.py snapshot --reattests <CMP ids>`). A partition nobody ever ruled
+cannot have an honest record: set `[checks] components_check = false` in
+`docs/process.toml` until one is ruled. That switch turns off the whole
+component pass, the top-view bound and cross-component seam rule included, as it
+always has.
+
+**Kit-owned files — overwrite:** `scripts/trajectory_arch.py`,
+`scripts/kitlib/spine.py`, `scripts/spine_carrier.py`,
+`scripts/migrate_carrier.py`, together: the schema and the reader name the same
+eight cells.
+
+**Regenerated files:** `docs/process-options.md`.
+
+**Adopter-merged files:** `docs/requirements/components.toml`, where your rows
+gain the cells; `registries/components.template.toml`'s `-000` row shows each one.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
