@@ -415,4 +415,4 @@ esac
 say
 say "Done. Workstation ready; the pre-commit floor is wired."
 say "If you skipped it above, run scripts/setup.sh for the product toolchain, then"
-say "./scripts/check.sh --stage DevStg-Impl to run the gates."
+say "./scripts/check.sh to run the gates."

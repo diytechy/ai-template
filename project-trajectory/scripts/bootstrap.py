@@ -3015,7 +3015,7 @@ def main():
     if not plan.dry_run and outcome.created:
         print(
             "Next: fill the PROJECT BRIEF in AGENTS.md + docs/status.md, then "
-            "run gate DevStg-Reqs (docs/process.md)."
+            "run python scripts/check.py (the checks for the derived stage)."
         )
     if outcome.missing:
         sys.exit(1)
