@@ -137,7 +137,7 @@ def _two_roles(scaffold, root):
 def test_devsetup_default_reports_every_role(scaffold, tmp_path):
     # No --profile installs/reports every declared role (the operator ruling: the
     # default does everything; a role is the opt-down).
-    proc = _devsetup_check(_two_roles(scaffold, tmp_path))
+    proc = _devsetup_check(_two_roles(scaffold, tmp_path / "two-roles"))
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "profile=all" in proc.stdout
     assert "role: code" in proc.stdout and "role: design" in proc.stdout
@@ -145,7 +145,9 @@ def test_devsetup_default_reports_every_role(scaffold, tmp_path):
 
 def test_devsetup_profile_narrows_to_one_role(scaffold, tmp_path):
     # --profile <role> narrows to the shared baseline + that role only.
-    proc = _devsetup_check(_two_roles(scaffold, tmp_path), "--profile", "design")
+    proc = _devsetup_check(
+        _two_roles(scaffold, tmp_path / "two-roles"), "--profile", "design"
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "role: design" in proc.stdout
     assert "role: code" not in proc.stdout
