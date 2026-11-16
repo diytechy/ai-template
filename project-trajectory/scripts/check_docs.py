@@ -165,6 +165,16 @@ MD_SUFFIXES = (".md", ".markdown")
 # generated output (the gen_arch_map/gen_trajectory/check_doc_refs idiom); the
 # path constant matches gen_okf's own OUT_DIR.
 OKF_DIR = "docs/okf"
+# The kit's own generated reports under docs/test/ — the Markdown composites the
+# shipped .gitignore template lists there (trace.py, check_perf.py,
+# check_stubs.py write them). Dropped from doc discovery by default for the same
+# reason as OKF_DIR: nothing links to a regenerated report, so it read as an
+# orphan in every repository that ran the checks without `--ignore`.
+GENERATED_REPORTS = (
+    "docs/test/report.md",
+    "docs/test/perf-report.md",
+    "docs/test/stub-report.md",
+)
 # The root operator scratchpad: free-form notes the operator keeps, off-limits to
 # agents (its own loud header says so). Dropped from doc discovery entirely — its
 # links, orphanhood, and staleness never gate a commit (operator notes aren't a
@@ -316,10 +326,12 @@ def collect_docs(root, docs_dir, ignore=()):
     never gate (SCRATCHPAD).
 
     Paths matching an `ignore` glob (repo-relative POSIX) are dropped entirely —
-    not parsed, not orphan-reported — so generated composites (the gitignored
-    `docs/test/report.md`) don't show up as findings. Both the bundle and ignored
-    files still resolve as link *targets*, since the file is on disk.
+    not parsed, not orphan-reported — and so are the kit's generated reports
+    (GENERATED_REPORTS, the gitignored `docs/test/report.md` among them), so
+    generated composites don't show up as findings. The bundle and every dropped
+    file still resolve as link *targets*, since the file is on disk.
     """
+    ignore = GENERATED_REPORTS + tuple(ignore)
     found = {}
     for p in sorted(root.glob("*.md")):
         found[p.resolve()] = True
@@ -927,7 +939,8 @@ def main():
         default=[],
         metavar="GLOB",
         help="repo-relative glob to drop from the scanned set, e.g. a generated "
-        "composite like docs/test/report.md (repeatable)",
+        "composite; the kit's own docs/test/ reports are dropped already "
+        "(repeatable)",
     )
     ap.add_argument(
         "--strict-orphans",

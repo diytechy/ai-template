@@ -257,6 +257,17 @@ def test_ignore_drops_doc_from_scan(scaffold):
     assert passes.returncode == 0, passes.stdout + passes.stderr
 
 
+def test_the_kits_generated_reports_are_dropped_without_ignore(scaffold):
+    # trace.py rewrites docs/test/report.md on every run and nothing links to
+    # it, so without `--ignore` it read as an orphan in every adopting repo.
+    report = scaffold / "docs" / "test" / "report.md"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text("# Report\n\n[stale](gone.md)\n", encoding="utf-8")
+    proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "docs/test/report.md" not in proc.stdout
+
+
 def test_ignore_glob_spans_directories(scaffold):
     # The house glob convention (orphans-allow, declared-absences) is fnmatch
     # with `*` SPANNING separators, and --ignore must match it: one
