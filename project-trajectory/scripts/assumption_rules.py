@@ -179,8 +179,8 @@ Contract IF-231: the assumption gate's rules, read by the gate's check step
     ids]}` and `module_srs(llrs) -> {module: [requirement ids]}`; and
     `release_gate_findings(das, srs, risks)` (SR-206), with `risks` mapping
     each assumption id to its `accepted_risk_state` pair. A `-000` row is never
-    judged. `held_until_agreed(lines, stks, what)` returns `lines`, or one
-    count line in their place while no stakeholder is agreed.
+    judged. `held_until_agreed(lines, stks, what)` returns reach-caused
+    `lines`, or one count line in their place while no stakeholder is agreed.
 """
 
 import datetime
@@ -804,20 +804,20 @@ def assumption_reach_advisories(das, srs, needs, stks, exts, bifs, surs):
 
 
 def held_until_agreed(lines, stks, what):
-    """`lines` as given once a stakeholder is agreed (`Approved`, or `Founded`,
-    with a `Party`); while none is, one line in their place: the count, and
-    what to do.
+    """Reach-caused `lines` as given once a stakeholder is agreed (`Approved`,
+    or `Founded`, with a `Party`); while none is, one line in their place: the
+    count, and what to do.
 
-    With no agreed stakeholder no need has a party, so every served need reads
-    as unreachable and every landing as idle, and the per-row lines restate
-    that one fact once per row (hundreds of lines in the repositories that
-    adopted the kit). `what` names the lines counted."""
+    With no agreed stakeholder no need has a party a landing could belong to,
+    so the reach-caused lines mostly restate that, once per row (hundreds of
+    lines in the repositories that adopted the kit). `what` names the lines
+    counted; pass only lines the reach check caused."""
     if not lines or _agreed_parties(stks):
         return lines
     return [
-        "{} {} not listed one by one: no stakeholder is Approved with a Party "
-        "yet, so every need reads as unreachable; approve the stakeholders to "
-        "list them".format(len(lines), what)
+        "{} {} not listed one by one while no stakeholder is Approved with a "
+        "Party: reach cannot be judged until one is; approve the stakeholders "
+        "to list them".format(len(lines), what)
     ]
 
 

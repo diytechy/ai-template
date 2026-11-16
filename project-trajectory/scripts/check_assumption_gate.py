@@ -32,9 +32,9 @@ honestly (`check.py` places them):
 WHY OFF MEANS ADVISORY, NOT SILENT. With the setting absent or off the step
 prints the same findings as advisories and passes, so a project weighing the
 gate sees exactly what turning it on would fail before it does. One exception:
-while no stakeholder is approved with a party, every reliance reads as
-unreached, so the `assumption-gate` step prints one line with the count in
-place of its advisories.
+while no stakeholder is approved with a party, reach cannot be judged, so the
+`assumption-gate` step prints its reach-caused advisories as one line with
+their count; every other advisory is still listed.
 
 WHAT IT NEVER TOUCHES. The findings are the step's alone: the derived stage
 never reads them and its single release producer stays the harness evidence
@@ -53,8 +53,9 @@ Contract IF-230: the assumption gate's steps, as a command.
     `check_assumption_gate.py --step <STEPS member> [--root <dir>]` prints one
     line per finding, `FAIL: <finding>` with the gate on (`[checks]
     assumption_gate = true`) or `ADVISORY: <finding>` otherwise (the
-    `assumption-gate` step's advisories become one `ADVISORY:` count line while
-    no stakeholder is agreed), then a summary line naming the step, and exits
+    `assumption-gate` step's reach-caused advisories become one `ADVISORY:`
+    count line while no stakeholder is agreed), then a summary line naming the
+    step, and exits
     1 when a finding FAILS, else 0. It reads
     the registries under `<root>/docs`, and for `assumption-evidence` the
     observation records and the approval acts accepting risks; it writes
@@ -119,6 +120,20 @@ def step_findings(root, step, reg):
     return _evidence_findings(root, reg)
 
 
+def _fold_reach_caused(findings, reg):
+    """The `assumption-gate` advisories with only the reach-caused ones passed
+    through `held_until_agreed`; every other finding stays listed. A line is
+    reach-caused when the same judgement with an empty reach map lacks it."""
+    plain = set(
+        rules.boundary_gate_findings(reg.srs, reg.das, reg.surs, {}, bool(reg.bifs))
+    )
+    caused = [line for line in findings if line not in plain]
+    folded = rules.held_until_agreed(caused, reg.stks, "reach finding(s)")
+    if folded == caused:
+        return findings
+    return [line for line in findings if line in plain] + folded
+
+
 def main(argv=None):
     """The command: judge one step and print it as failures or advisories.
 
@@ -137,10 +152,10 @@ def main(argv=None):
     findings = step_findings(root, args.step, reg)
     kind = "FAIL" if enabled else "ADVISORY"
     shown = findings
-    # Advisories only: with no stakeholder agreed, every reliance reads as
-    # unreached, so one count line stands in for them. A failure is never folded.
+    # Advisories only: with no stakeholder agreed, one count line stands in for
+    # the reach-caused ones. A failure is never folded.
     if not enabled and args.step == "assumption-gate":
-        shown = rules.held_until_agreed(findings, reg.stks, "finding(s)")
+        shown = _fold_reach_caused(findings, reg)
     for line in shown:
         print("{}: {}".format(kind, line))
     print(

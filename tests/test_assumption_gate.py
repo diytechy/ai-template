@@ -280,9 +280,12 @@ def test_with_the_gate_absent_or_off_each_condition_is_an_advisory(scaffold, gat
         assert len(_findings(proc, "ADVISORY", sid, *needles)) == 1, (sid, proc.stdout)
 
 
-def test_with_no_agreed_stakeholder_the_advisories_fold_into_one_count(scaffold):
-    # Every reliance reads as unreached while no stakeholder is agreed, so the
-    # advisories are one line with their count; failures are never folded.
+def test_with_no_agreed_stakeholder_the_reach_advisories_fold_into_one_count(
+    scaffold,
+):
+    # Reach cannot be judged while no stakeholder is agreed, so the
+    # reach-caused advisories are one line with their count. Every other
+    # finding is still listed by name, and failures are never folded.
     drafted = NEEDS.replace(
         'party = "EXT-001"\nstatus = "Approved"',
         'party = "EXT-001"\nstatus = "Drafted"',
@@ -290,15 +293,27 @@ def test_with_no_agreed_stakeholder_the_advisories_fold_into_one_count(scaffold)
     root = _project(scaffold, {**BOUNDARY, NEEDS_REL: drafted}, gate=False)
     proc = _step(root, "assumption-gate")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    advisories = _findings(proc, "ADVISORY")
-    assert len(advisories) == 1, proc.stdout
-    total = re.search(r"assumption-gate: (\d+) finding\(s\)", proc.stdout).group(1)
-    assert advisories[0].startswith("ADVISORY: {} finding(s) not listed".format(total))
-    assert "approve the stakeholders" in advisories[0], advisories
+    for sid, needles in BOUNDARY_FAILURES.items():
+        if "does not reach" not in needles:
+            assert len(_findings(proc, "ADVISORY", sid, *needles)) == 1, (
+                sid,
+                proc.stdout,
+            )
+    assert _findings(proc, "ADVISORY", "does not reach") == [], proc.stdout
+    folded = _findings(proc, "ADVISORY", "not listed one by one")
+    assert len(folded) == 1, proc.stdout
+    total = int(re.search(r"assumption-gate: (\d+) finding\(s\)", proc.stdout)[1])
+    listed = len(_findings(proc, "ADVISORY")) - 1
+    assert listed == len(BOUNDARY_FAILURES) - 1, proc.stdout
+    assert folded[0].startswith(
+        "ADVISORY: {} reach finding(s) not listed".format(total - listed)
+    ), folded
+    assert "approve the stakeholders" in folded[0], folded
     _policy(root, True)
     proc = _step(root, "assumption-gate")
     assert proc.returncode == 1, proc.stdout + proc.stderr
-    assert len(_findings(proc, "FAIL")) == int(total), proc.stdout
+    assert len(_findings(proc, "FAIL")) == total, proc.stdout
+    assert len(_findings(proc, "FAIL", "does not reach")) == total - listed
 
 
 def test_with_the_gate_on_each_unmet_condition_fails_naming_it(scaffold):
