@@ -10904,6 +10904,57 @@ read §0 from the target kit when choosing scope. No registry conversion is
 required by this documentation change. A partial spine resync keeps the previous
 whole-kit stamp and records its selected tooling separately.
 
+### First-day and conversion fixes: what thirteen adoptions and a fresh scaffold ran into [since 3e7a3a6ee]
+
+*(Anchored at the preceding commit: the changes land after it.)*
+
+**What changed.** Fixes to what a fresh scaffold and thirteen conversions hit.
+No setting is renamed; each fix is in a script or template.
+
+- **Contract headers are read in each language's own comments.** `//`, `//!`,
+  `///`, `/* */` and `/** */` in Rust, TS/JS, Go and C#; `#` and `<# #>` in
+  PowerShell; `REM` and `::` in `.cmd` files (below an optional `@echo off`). A
+  UTF-8 BOM no longer hides a header. Owners that read as "declares nothing"
+  may now declare their seams, so a "declared, not stated" finding can appear
+  where a contract body is missing. `.gd` files count as source modules and
+  test files.
+- **Advisories fold while no stakeholder is Approved with a Party.** Trace's
+  stakeholder-reach advisories print one count line, and the `assumption-gate`
+  step (gate off) prints one count line for its reach-caused advisories and
+  still lists every other finding. With the gate on, every failure is listed.
+- **`check_trajectory` counts what it could not check.** One warn line gives
+  the IF rows its contract-body gate passed unchecked (`[arch-map] mode =
+  files`, or an external-owned row with no far side in the tree).
+- **`check_docs` ignores the kit's generated reports** (`docs/test/report.md`,
+  `perf-report.md`, `stub-report.md`) by default; your own `--ignore` for them
+  can go.
+- **`trace.py`.** `--strict-schema` without `--strict` still exits 0; its
+  summary line now says the findings are reported and do not fail the run.
+  `--no-placeholders` no longer reports `SN-000` from the needs template's
+  header comment.
+- **Setup wording.** Docs and the hooks-off refusal say `bash scripts/setup.sh`
+  (`sh` fails under dash and leaves hooks off). Setup, dev-setup and bootstrap
+  all point at the plain `python scripts/check.py` run with no `--stage`.
+- **`trunk_step.py --regen` writes `docs/okf/`** on a repo that has registries
+  but no bundle, so the regeneration and the commit check agree: commit the
+  bundle, or set `[checks] okf_export = false`. The README template names the
+  commands to run after editing a registry.
+- **Bootstrap and installs.** Bootstrap no longer writes `pytest.ini` beside a
+  `pyproject.toml` that configures pytest (an existing `pytest.ini` is
+  untouched; add the smoke/full/release markers to pyproject to use
+  `check.py --tier`). `setup.sh`, `setup.ps1` and the CI template run `pip
+  install -e .` only when `pyproject.toml` declares `[project]` or
+  `[build-system]`, else install from `requirements.txt`.
+- **Quieter hook, smaller default.** The pre-commit hook no longer prints "No
+  checks defined at stage all." New scaffolds' dev-setup declares only the
+  `code` role.
+
+**What to do.** Nothing is required of an adopter. The scripts and templates
+above are taken wholesale. Two files are copied once at scaffold and are not
+re-synced: the CI workflow and dev-setup. To take their fixes by hand, add
+`fetch-depth: 0` to the checkout step of `.github/workflows/check.yml`, and add
+the guarded install step (with `shell: bash`).
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
