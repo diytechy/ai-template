@@ -1683,3 +1683,40 @@ list is fixed unless §12.6 says so.
 
   The three stamps are re-done once, after the two fix branches merge, since
   those change sizes again.
+- **2026-11-16, OI-130 recorded.** `maint/vocabulary` `d6e2d30cc`: the item
+  reads `ruled`, WI-999 drops its `needs` and states the record's cells
+  (`objective = "minimize cut"`, scores P5 140, P3 152, P4 235, no override),
+  and `docs/log.d/2026-11-16-operator-rules-oi130.md` carries the ruling.
+  WI-999 is not built yet.
+- **2026-11-16, both fix branches are built** and wait on their DeepSeek
+  review, then the merge into `maint/vocabulary`, one RESYNC entry for both,
+  the regenerated views and the re-stamps.
+  - `maint/fix-conversion` (7 commits, tip `cea6779cd`): the advisory flood
+    is one count line while no stakeholder is accepted; contract headers are
+    read in `//`, `/* */`, PowerShell and batch comments and behind a BOM;
+    `check_trajectory` says how many interface rows its contract gate could
+    not check; `check_docs` ignores the generated `docs/test` reports;
+    `--strict-schema` says when its findings do not fail the run (the exit
+    code is pinned by TC-189 and stays); `--no-placeholders` reads parsed
+    rows; `.gd` is a source extension. Skipped: the first-day architecture
+    warning, because no threshold is right for seams that are not imports.
+  - `maint/fix-first-day` (10 commits, tip `53d2f3a00`): `bash`, not `sh`,
+    for the setup scripts; `fetch-depth: 0` in the CI template; one first
+    command everywhere (`check.py` with no `--stage`); the dashboard
+    sentences say when the file appears; no `pytest.ini` beside a
+    `pyproject.toml` that configures pytest; `trunk_step.py --regen` writes
+    the okf bundle the commit check asks for, and the README template names
+    the commands to run after editing a registry; two first-day noise lines
+    gone.
+  - **For the operator, from these two:**
+    1. SR-195 and LLR-227 say each unreachable need is reported by name.
+       While no stakeholder is accepted they are now reported as a count.
+       Either the rows gain that sentence or the change is undone.
+    2. Accepting a first real chain moves the stage to Impl, where the
+       shipped `-000` rows and the example flow then fail the checks. Hold
+       the stage at Reqs while examples remain (which also holds back the
+       adopter's own tests), or keep the failure and tell adopters in the
+       README note to delete the examples when they accept their first
+       chain? This session recommends the README sentence.
+    3. `trajectory_arch.py` passed 1,000 code lines (989 to 1,012), so the
+       line-count ratchet wants a first baseline entry for it.
