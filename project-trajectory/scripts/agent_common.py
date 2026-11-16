@@ -51,7 +51,7 @@ Contract IF-189: `default_base(root)`, the integration base a claimed branch's
     treats as an unreadable change rather than an empty one; and
     `TrunkUndeclared` when the trunk's declaration cannot be read.
 Contract IF-224: `operator_accepts_spine(docs, registry)`, read by the operator's
-    approval brief to set apart the owing chains the operator-acceptance dial
+    acceptance brief to set apart the owing chains the operator-acceptance dial
     releases to an adjudicator: True (held) for a spine registry whose rung the
     dial holds and for one no rung map names, False for a released one. The
     brief asks it once per spine tier per rendering and keeps no rung table of
@@ -117,7 +117,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import agent_policy
 
-# The declared-policy and approval subsystem moved as one behavior cluster;
+# The declared-policy and acceptance subsystem moved as one behavior cluster;
 # retain the historical shared-primitives surface for existing consumers.
 read_declared = agent_policy.read_declared
 PROCESS_TOML = agent_policy.PROCESS_TOML
@@ -134,17 +134,17 @@ _coerce = agent_policy._coerce
 declared_policy = agent_policy.declared_policy
 parse_blackout = agent_policy.parse_blackout
 blackout_at = agent_policy.blackout_at
-LEGACY_APPROVAL = agent_policy.LEGACY_APPROVAL
-APPROVAL_DIAL_RUNGS = agent_policy.APPROVAL_DIAL_RUNGS
+LEGACY_ACCEPTANCE = agent_policy.LEGACY_ACCEPTANCE
+ACCEPTANCE_DIAL_RUNGS = agent_policy.ACCEPTANCE_DIAL_RUNGS
 LEGACY_DIAL_ORDINALS = agent_policy.LEGACY_DIAL_ORDINALS
-APPROVAL_FALLBACK = agent_policy.APPROVAL_FALLBACK
+ACCEPTANCE_FALLBACK = agent_policy.ACCEPTANCE_FALLBACK
 LEGACY_DIAL_KEY = agent_policy.LEGACY_DIAL_KEY
-legacy_approval = agent_policy.legacy_approval
-approval_through = agent_policy.approval_through
+legacy_acceptance = agent_policy.legacy_acceptance
+acceptance_through = agent_policy.acceptance_through
 _retired_dial_note = agent_policy._retired_dial_note
 LADDER_RUNGS = agent_policy.LADDER_RUNGS
-APPROVAL_RUNGS = agent_policy.APPROVAL_RUNGS
-SPINE_APPROVAL_RUNGS = agent_policy.SPINE_APPROVAL_RUNGS
+ACCEPTANCE_RUNGS = agent_policy.ACCEPTANCE_RUNGS
+SPINE_ACCEPTANCE_RUNGS = agent_policy.SPINE_ACCEPTANCE_RUNGS
 operator_holds = agent_policy.operator_holds
 operator_accepts = agent_policy.operator_accepts
 operator_accepts_spine = agent_policy.operator_accepts_spine

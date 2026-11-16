@@ -70,11 +70,11 @@ follow-up-on-a-done-SR ratchet, the **critique-loop ratchet** (WI-068) — a WI
 closing on a `VerificationMethod=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
 tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor) — and
-the **amend-without-flip** warn (WI-316): a staged diff changing the **approved**
+the **amend-without-flip** warn (WI-316): a staged diff changing the **accepted**
 cells of an `Approved` spine row without re-blessing it in the same commit
 (process.md §7), the write-time discipline commit-message prose never had.
 *Approved*, not every cell — the §A5.1 cell split (operator ruling 2026-07-31;
-WI-380) rules traceability **traced, not approved**, so a `Module`/`CodeSymbol`/
+WI-380) rules traceability **traced, not accepted**, so a `Module`/`CodeSymbol`/
 `TestRefs`/`SN-Refs`/`Verifies` pointer following code that moved does **not**
 arm the marker. The traced half is not discarded: it is carried structurally by
 `staged_spine_amendments`, which returns both halves per amended row.
@@ -262,7 +262,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # comparison and the snapshot mirror, which used to live in this file. Required,
 # not optional like `gen_arch_map` below: its findings join the failure set at
 # `main`'s aggregation, so a copy of this checker without it would silently stop
-# reporting that attested text had drifted, which is the opposite of a vacuity.
+# reporting that accepted text had drifted, which is the opposite of a vacuity.
 # `bootstrap.MAPPING` carries it, so a scaffold gets both or neither. The
 # held-status readers the history check reads (`held_status`, IF-196) moved out
 # of it whole; they import it one way and ride the same guard and MAPPING.
@@ -1057,7 +1057,7 @@ def _registry_ref_findings(w, anchor, states):
 # in both rows — which is precisely the trap the stage/bar spelling overlap sets:
 #
 #   `[p]-[reqs]` / `[p]-[g1]`  requirement structuring: the phase's SRs are  check_vocab: allow
-#                              authored AND approved. `spine_stage` clears its
+#                              authored AND accepted. `spine_stage` clears its
 #                              `any(is_drafted(sr))` test from there on, so what
 #                              the phase then stands at is DevStg-LLReqs — NOT
 #                              DevStg-Reqs, which is the rung it has just LEFT.
@@ -1116,7 +1116,7 @@ def phase_stages(root):
     visible on the live reading even though it no longer moves the effective one.)
 
     THE IMPORT IS LAZY AND DEGRADES TO VACUOUS. This module runs in the shipped
-    pre-commit hook, and the `approval-fresh` lesson (130-REVIEW-A) is that a hook
+    pre-commit hook, and the `acceptance-fresh` lesson (130-REVIEW-A) is that a hook
     which hard-requires a sibling an adopter's tree may not have blocks every
     commit. A fixture that copies `check_trajectory.py` alone therefore loses the
     drop half only — the same vacuity an absent `docs/gate` produced before."""
@@ -1264,7 +1264,7 @@ def phase_findings(root, wis):
 # bootstrap.py MAPPING, so they always ship and re-sync together.
 #
 # The import is LAZY and degrades to None rather than raising: this module runs in
-# the SHIPPED pre-commit hook, and the `approval-fresh` lesson (130-REVIEW-A) is that
+# the SHIPPED pre-commit hook, and the `acceptance-fresh` lesson (130-REVIEW-A) is that
 # a hook which hard-requires a file an adopter's tree may not have blocks every
 # commit. Missing check_docs therefore costs the anchor half only — the path half
 # is unchanged. Vacuity here is a real risk, so it is pinned by a test that drives
@@ -1762,7 +1762,7 @@ def spec_lifecycle_findings(root, wis):
 
 
 # --- WI-352: the completion reconciler ----------------------------------------
-# A WI's `Status` is an ATTESTATION, and the operator ruled 2026-07-28 that it stays
+# A WI's `Status` is a CLAIM, and the operator ruled 2026-07-28 that it stays
 # one rather than becoming derived: the evidence a deriver would read is the `WI:`
 # commit trailer, but a trailer means "a commit CLAIMS this WI", not "the work is
 # right" (WI-336's code landed while its row correctly stayed `queued`, because a
@@ -1886,7 +1886,7 @@ def completion_reconciliation_findings(root, wis):
         ticked across six commits on 2026-07-27, the row still `queued` a day
         later, and because it was `SafetyClass=spine` the scheduler serialized the
         whole project behind finished work while the session told the operator a
-        shipped migration was awaiting approval.
+        shipped migration was awaiting acceptance.
       - **spec-says-unfinished** — a `done` row whose own **live** spec still has
         unticked boxes and which no open WI cites (the same "no open citer" test
         R-F uses to decide when a spec may be archived).
@@ -1952,7 +1952,7 @@ def completion_reconciliation_findings(root, wis):
                         "trailer-claims-it",
                         "{}: status={} but a commit reachable from HEAD carries a "
                         "`WI: {}` trailer — a trailer CLAIMS the WI, it does not "
-                        "attest the work, so this is a prompt to reconcile, never "
+                        "show the work is done, so this is a prompt to reconcile, never "
                         "a reason to close".format(w["id"], w["status"], w["id"]),
                     )
                 )
@@ -1963,8 +1963,8 @@ def tier_completion_findings(findings):
     """Split reconciler findings into `(warn_only, gated)`.
 
     The tier is a property of the SIGNAL, so it is decided here beside the
-    signals rather than as another branch in `main()`. Spec evidence is an
-    attestation, so a row disagreeing with its own ticked boxes is a
+    signals rather than as another branch in `main()`. Spec evidence is a
+    claim, so a row disagreeing with its own ticked boxes is a
     contradiction between two homes for one fact and belongs at the gate. A `WI:`
     trailer is not: it means "a commit CLAIMS this WI", which is the very
     argument the operator's 2026-07-28 ruling uses to keep Status declared — so it
@@ -2400,7 +2400,7 @@ def knowledge_pack_findings(root, wis):
 def backlog_staleness_findings(root, wis):
     """WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance).
 
-    Approving amended SN/SR/LLR/TC content never touches the open WI rows that
+    Accepting amended SN/SR/LLR/TC content never touches the open WI rows that
     cite it, so an incomplete backlog can silently drift out of sync with the
     requirement state it was filed against. For each open WI (queued/active/
     blocked — `deferred` and `done` are exempt) this compares when its registry
@@ -2427,19 +2427,19 @@ def backlog_staleness_findings(root, wis):
     THE SOURCE CLOCK IS LINE-GRANULAR, WHICH THE CELL-CLASS SPLIT IS NOT, and
     that is a second stated limitation rather than a bug to be quietly widened.
     `_blame_row_times` takes the NEWEST commit over a row's lines; a `git blame`
-    line time cannot tell an approved cell from a traced one, so writing an
+    line time cannot tell an accepted cell from a traced one, so writing an
     INFORMATIVE cell re-dates the row and warns every WI that cites it.
     MEASURED (WI-484 phase 2, 2026-08-22): the `hat_refs` backfill wrote 55 SR
     cells and raised seven such warns; at phase 5 one survived — `SR-163`, whose
     newest line is its `hat_refs = [...]`. Two fixes were examined and NEITHER
     is small (recorded so the next reader does not re-derive them):
-    line-attribution of the blame to approved-class keys needs a quote-state
+    line-attribution of the blame to accepted-class keys needs a quote-state
     parser for multi-line TOML values AND would silence a re-pointed
     `SN-Refs`/`Boundary-Refs`, which is traced but scope-BEARING — the exact
     change a citing WI most needs to re-validate against; and recomputing the
     clock through `split_changed_cells` over a rev range is exact but replaces
     this check's bounded cost (≤2 blames) with git work per open WI and
-    inherits the amendment scan's approved-only population. Which traced cells
+    inherits the amendment scan's accepted-only population. Which traced cells
     are staleness-bearing is a new classification, i.e. a ruling, not a patch.
     Stated here on the WI-362 precedent (operator ruling 2026-07-29: name the blind
     spot, do not build the detection).
@@ -2872,11 +2872,11 @@ OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
 # Kept a SEPARATE pattern from PHASE_ANCHOR_RE because that one is anchored to the
 # start of a Title and this one matches mid-cell; the accepted TOKEN SET is the
 # same, and is held equal to it by a test rather than by this comment.
-APPROVAL_ANCHOR_RE = re.compile(
+ACCEPTANCE_ANCHOR_RE = re.compile(
     r"\[[^\]\[]+\]-\[(?:g[12]|reqs|tests|DevStg-[A-Za-z]+)\]", re.IGNORECASE
 )
-# The brief satisfies the rule only by naming an approval/hierarchy VIEW — a
-# bare `trace.py --approve` command mention no longer counts (WI-146 REVIEW-A): a
+# The brief satisfies the rule only by naming an acceptance/hierarchy VIEW — a
+# bare `trace.py --accept` command mention no longer counts (WI-146 REVIEW-A): a
 # command can be unexecuted or wrong-scope, so it is not proof the generated view
 # exists and is carried in the brief. WI-322 moved briefs from markdown sections
 # to registry ROWS, so the proof is a path/link token in the cell rather than a
@@ -2884,24 +2884,24 @@ APPROVAL_ANCHOR_RE = re.compile(
 # `ratif` stays in the token set deliberately (WI-499): the generated view still
 # lives under `docs/ratify/` — the directory kept its name as a record home even
 # though the retired-vocabulary rename covers everything else — so a real link
-# still reads `docs/ratify/CURRENT.md` / `docs/ratify/<date>-*.md`. `approv` is
+# still reads `docs/ratify/CURRENT.md` / `docs/ratify/<date>-*.md`. `accept` is
 # matched too, for a link authored against the word the kit uses everywhere else.
-APPROVAL_VIEW_RE = re.compile(
-    r"(?:ratif|approv|hierarch)\w*[^\s]*\.(?:md|html|csv)|\]\([^)]*(?:ratif|approv|hierarch)[^)]*\)",
+ACCEPTANCE_VIEW_RE = re.compile(
+    r"(?:ratif|accept|hierarch)\w*[^\s]*\.(?:md|html|csv)|\]\([^)]*(?:ratif|accept|hierarch)[^)]*\)",
     re.IGNORECASE,
 )
 
 
-def approval_brief_findings(root):
+def acceptance_brief_findings(root):
     """Warn-first brief lint (WI-146b): an open-items row whose decision is a
-    phase-anchor approval should point at the batch-scoped approval
-    hierarchy view (`trace.py --approve <phase>`) instead of hand-copying registry
+    phase-anchor acceptance should point at the batch-scoped acceptance
+    hierarchy view (`trace.py --accept <phase>`) instead of hand-copying registry
     rows. WARN only — never a gate fail (the house stance for prose surfaces,
     WI-129/132).
 
     Reads `docs/requirements/open-items.toml` since WI-322 retired the markdown
     surface; the brief text is the row's prose cells. Vacuous when the registry
-    is absent or carries no approval brief, so a repo without the surface
+    is absent or carries no acceptance brief, so a repo without the surface
     pays nothing."""
     path = root / OPEN_ITEMS_REL
     if spine_carrier.resolve(path) is None:
@@ -2913,17 +2913,17 @@ def approval_brief_findings(root):
             (row.get(k) or "")
             for k in ("OneLine", "Decision", "BlastRadius", "Options", "Recommendation")
         )
-        # `approv` (not `ratif`, WI-499): live prose no longer uses the retired
-        # spelling, so a freshly-authored row's own text is the "this decision
-        # is about an operator approval" signal now.
-        is_approval = APPROVAL_ANCHOR_RE.search(body) and re.search(
-            r"approv", body, re.IGNORECASE
+        # `accept` (not `ratif`, WI-499, nor `approv`, 2026-11-16): live prose
+        # no longer uses a retired spelling, so a freshly-authored row's own
+        # text is the "this decision is about an operator acceptance" signal.
+        is_acceptance = ACCEPTANCE_ANCHOR_RE.search(body) and re.search(
+            r"accept", body, re.IGNORECASE
         )
-        if not is_approval or APPROVAL_VIEW_RE.search(body):
+        if not is_acceptance or ACCEPTANCE_VIEW_RE.search(body):
             continue
         out.append(
-            "{}: a phase-anchor approval brief should name the batch-scoped "
-            "hierarchy view (generate it with `trace.py --approve <phase>`) instead "
+            "{}: a phase-anchor acceptance brief should name the batch-scoped "
+            "hierarchy view (generate it with `trace.py --accept <phase>`) instead "
             "of hand-copying registry rows ({})".format(oid, OPEN_ITEMS_REL)
         )
     return out
@@ -3156,7 +3156,7 @@ def critique_staleness_findings(root):
     `backlog_staleness_findings`). A `VerificationMethod=Critique` SR is judged by a
     human/critic look recorded in `docs/reviews/*-CRITIQUE.md`, and that verdict
     never re-fires on its own — so once the dashboard *render surface* changes,
-    the approval stamp is judging an older render. When a declared render-surface
+    the acceptance stamp is judging an older render. When a declared render-surface
     path last changed STRICTLY AFTER the latest CRITIQUE evidence, flag that the perceptual
     gate is stale and the dashboard critique should be re-run against the current
     render. Returns finding strings ([] when not applicable).
@@ -3258,7 +3258,7 @@ def loop_held_status_findings(root):
         for line in held_status.held_status_lines(dial, moves):
             out.append(
                 "loop commit {} ({!r}, Loop-Session {}) moved {}, a rung its own "
-                "approval level ({}) holds for an operator".format(
+                "acceptance level ({}) holds for an operator".format(
                     sha[:10], subject, session, line, dial
                 )
             )
@@ -3301,7 +3301,7 @@ def main():
     # warns, in the order they print (the count is deliberately not stated — it
     # went stale twice): the follow-up-on-a-done-SR ratchet, the critique-loop
     # ratchet (a WI closing under a CHANGES-REQUESTED critique without hardening
-    # the chain), the WI-316 amend-without-flip warn (attested spine prose
+    # the chain), the WI-316 amend-without-flip warn (accepted spine prose
     # changed without a fresh blessing) and its WI-484 Hat-Refs arm (the
     # substance moved, the perspective record did not), the mirror invariant
     # below, and the WI-352 close-time
@@ -3364,10 +3364,10 @@ def main():
     ):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
-    # Approval-brief hierarchy-view lint (WI-146b) — warn-first prose-surface
-    # check: a `[phase]-[g1|g2]` approval brief should link the generated
-    # batch-scoped hierarchy view. Vacuous without an approval brief.
-    for w in approval_brief_findings(root):
+    # Acceptance-brief hierarchy-view lint (WI-146b) — warn-first prose-surface
+    # check: a `[phase]-[g1|g2]` acceptance brief should link the generated
+    # batch-scoped hierarchy view. Vacuous without an acceptance brief.
+    for w in acceptance_brief_findings(root):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     # How-SW top-view right-sizing (WI-073/FB5) — WARN plain, ERROR under --strict
@@ -3517,14 +3517,14 @@ def main():
     # --strict, the same warn tier as R-E/R-F, EXCEPT the trailer signal.
     #
     # DEVIATION from the WI row, which asked for the whole reconciler at that
-    # tier, taken on the row's OWN argument: it rules that Status stays an
-    # attestation precisely because a trailer means "a commit claims this WI",
+    # tier, taken on the row's OWN argument: it rules that Status stays a
+    # claim precisely because a trailer means "a commit claims this WI",
     # not "the work is right", and cites WI-336 — code landed, row correctly left
     # `queued`, a review having refuted three of its claims. Under an
     # error-under-strict trailer rule that legitimate state blocks the DevStg-Impl gate
     # for as long as the rework takes, and the only ways out are to close the row
     # falsely or to carry an untracked exception. Spec evidence is different in
-    # kind: a ticked box IS an attestation, so its disagreement with the row is a
+    # kind: a ticked box IS a claim, so its disagreement with the row is a
     # contradiction between two homes for one fact and belongs at the gate.
     warn_only, gated = tier_completion_findings(
         completion_reconciliation_findings(root, wis)

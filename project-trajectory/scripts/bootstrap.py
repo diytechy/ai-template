@@ -859,21 +859,21 @@ GATE_POLICY_DEVIATIONS = {
     "single-approve": [
         (
             "§4 acceptor, DevStg-Reqs+DevStg-Tests",
-            "an operator approves each gate",
+            "an operator accepts each gate",
             "LLM-gate review; every operator call queued as a `Needs <operator>` "
             "Open item (+ provisional decision where the driver proceeded)",
         ),
         (
-            "§4 approval point",
-            "per-gate approval",
-            "one operator sitting at **DevStg-Tests close** approves/amends the queue; "
-            "approved decisions move to docs/log.md (relocating the point = "
+            "§4 acceptance point",
+            "per-gate acceptance",
+            "one operator sitting at **DevStg-Tests close** accepts/amends the queue; "
+            "accepted decisions move to docs/log.md (relocating the point = "
             "amending this register)",
         ),
         (
             "§4 acceptor, DevStg-Impl→DevStg-Impl",
-            "an operator approves each gate",
-            "autonomous rules after approval (LLM-gate verdicts)",
+            "an operator accepts each gate",
+            "autonomous rules after acceptance (LLM-gate verdicts)",
         ),
         (
             "§4 consistency review 'pause and ask'",
@@ -885,10 +885,10 @@ GATE_POLICY_DEVIATIONS = {
     "autonomous": [
         (
             "§4 acceptor, DevStg-Reqs→DevStg-Impl",
-            "an operator approves each gate",
+            "an operator accepts each gate",
             "LLM-gate: an independent fresh-context reviewer runs the harness "
             "itself; verdict recorded in docs/log.md with `Model:` + "
-            "`Role: LLM-GATE`; the driver makes the approving Status-change "
+            "`Role: LLM-GATE`; the driver makes the accepting Status-change "
             "commit + regenerates docs/stage (derive_stage.py) citing it",
         ),
         (
@@ -1103,9 +1103,9 @@ def apply_gate_policy(dest, level, dry_run):
 
     `--gate-policy` still takes the familiar word, because that is how the
     posture is talked about — but the word is TRANSLATED here (SN-029,
-    `LEGACY_APPROVAL` above) rather than stored. Storing it was the
+    `LEGACY_ACCEPTANCE` above) rather than stored. Storing it was the
     defect: the template ships `operator_accepts_through`, and
-    `approval_through` prefers that key, so a `gate_policy = "autonomous"`
+    `acceptance_through` prefers that key, so a `gate_policy = "autonomous"`
     written beside it was read by nothing and every repo that chose a
     non-default posture scaffolded as fully attended — silently, since neither
     dial is wrong on its own and `config_conflicts` had no rule against the
@@ -1116,7 +1116,7 @@ def apply_gate_policy(dest, level, dry_run):
     list of dest-relative paths written."""
     if level == "attended" or dry_run:
         return []
-    for key, value in sorted(LEGACY_APPROVAL.get(level, {}).items()):
+    for key, value in sorted(LEGACY_ACCEPTANCE.get(level, {}).items()):
         _written("[authority] " + key, set_process_key(dest, "authority", key, value))
     register = dest / "docs" / "gate-policy.md"
     written = [PROCESS_TOML_REL]
@@ -1127,7 +1127,7 @@ def apply_gate_policy(dest, level, dry_run):
         _write_text_lf(
             register,
             "# Gate-authority deviation register — `{level}`\n\n"
-            "**Status:** DRAFT — approve with the operator, then keep in version "
+            "**Status:** DRAFT — accept with the operator, then keep in version "
             "control.\n"
             "**What this is:** this repo declares the `{level}` gate authority "
             "(`docs/process.toml` `[authority] operator_accepts_through` "
@@ -1209,18 +1209,18 @@ def _report_flag(outcome, label, value, answer):
 
 
 # SN-029: the retired gate-authority enum, translated to the three dials that
-# replaced it. DUPLICATED from `agent_common.LEGACY_APPROVAL` under the F5
+# replaced it. DUPLICATED from `agent_common.LEGACY_ACCEPTANCE` under the F5
 # rule — bootstrap imports no kit sibling, because it is the one script an
 # adopter may run from a bare download before anything else exists — and pinned
 # equal by tests/test_rule_sync.py, which is how this kit keeps a duplicated
 # POLICY (as opposed to duplicated plumbing) from drifting.
 #
 # What each word meant, and why one key could not hold it: `attended` held every
-# tier and drained the station at an approval; `single-approve` held NO tier
+# tier and drained the station at an acceptance; `single-approve` held NO tier
 # (LLM-gate review ran through DevStg-Reqs+DevStg-Tests) but sat ONE operator at the close and kept
 # non-dependent work running; `autonomous` did the same without the final read.
 # Implements: SR-138, LLR-156
-LEGACY_APPROVAL = {
+LEGACY_ACCEPTANCE = {
     "attended": {
         "operator_accepts_through": "DevStg-Release",
         "keep_nondependent": False,
@@ -1316,7 +1316,7 @@ _first_declared_line = _kitconfig.first_declared_line
 # `[authority]`; `_migrate_dial_key_name` below rewrites the KEY (not the
 # value — that is `_migrate_dial_ordinal`'s job, and it runs second so an
 # adopter still on BOTH the old key AND the retired 0-4 ordinal gets both
-# fixed in one `--migrate-config` pass) and `agent_common.approval_through`
+# fixed in one `--migrate-config` pass) and `agent_common.acceptance_through`
 # reads it as a loud fallback for a repo that runs a kit script without ever
 # migrating (the same read-translate-warn shape WI-493 used for the ordinal).
 LEGACY_DIAL_KEY = "human_ratification_through"  # check_vocab: allow
@@ -1386,7 +1386,7 @@ def _migrate_dial_ordinal(dest, notes, dry_run):
     NOT A LEGACY *FILE* migration like its siblings — the value is already in
     `docs/process.toml`; only its VOCABULARY is old. It rides here because this
     is the one command an adopter is told to run at re-sync, and because the
-    alternative is `agent_common.approval_through` printing its translation
+    alternative is `agent_common.acceptance_through` printing its translation
     warning on every run of every kit script, forever.
 
     The value is read from the parse, never off a line (a key-like line may be
@@ -1396,7 +1396,7 @@ def _migrate_dial_ordinal(dest, notes, dry_run):
     retired range is left alone and named in `notes` rather than guessed at:
     there is no rung it meant, and an out-of-range dial is the one input that
     reads as LESS operator involvement than the operator asked for, so a migrator that
-    picked a value for it would be making an approval-authority decision.
+    picked a value for it would be making an acceptance-authority decision.
 
     Implements: SR-138, LLR-156
     """
@@ -1540,7 +1540,7 @@ def _migrate_gate_policy(dest, moved, notes, dry_run):
     file that is not a one-key rename: `single-approve` carried a tier hold, a
     drain policy AND an end-of-run hold at once, and folding it to a single key
     is what loses two of the three (SN-029). The translation itself lives in
-    `agent_common.LEGACY_APPROVAL`, so the migrator and the readers cannot
+    `agent_common.LEGACY_ACCEPTANCE`, so the migrator and the readers cannot
     disagree about what a word meant. A refused write raises past the
     delete, so the legacy file stays.
 
@@ -1550,12 +1550,12 @@ def _migrate_gate_policy(dest, moved, notes, dry_run):
     if not path.is_file():
         return
     word = _first_declared_line(path)
-    dials = LEGACY_APPROVAL.get((word or "").strip().lower())
+    dials = LEGACY_ACCEPTANCE.get((word or "").strip().lower())
     if word is not None and dials is None:
         notes.append(
             "docs/gate-policy holds {!r}, which is not one of {} — left in "
             "place; fix it, then re-run --migrate-config.".format(
-                word, " / ".join(sorted(LEGACY_APPROVAL))
+                word, " / ".join(sorted(LEGACY_ACCEPTANCE))
             )
         )
         return
@@ -1864,7 +1864,7 @@ def append_stack_checklist(dest, stack, dry_run):
     text = status.read_text(encoding="utf-8")
     # Anchor on the template's seeded sub-list heads; insert after each head's
     # example bullet (the next "  - " line at the outer level closes it).
-    needs_anchor = "  - **In flight** _(driver; no approval needed)_:\n"
+    needs_anchor = "  - **In flight** _(driver; no acceptance needed)_:\n"
     flight_anchor = "- **Assumptions (unattended):**"
     if needs_anchor not in text or flight_anchor not in text:
         return False

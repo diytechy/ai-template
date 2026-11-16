@@ -296,7 +296,7 @@ def test_constants_overridable_from_env():
     assert c["margin"] == route.DEFAULT_CONSTANTS["margin"]  # bad value ignored
 
 
-def test_failure_action_keyed_to_the_approval_level():
+def test_failure_action_keyed_to_the_acceptance_level():
     """SN-029: the page-escalation is keyed to the ORDINAL comparison, not the
     retired three-value enum — and to the orthogonal dial the enum bundled with
     it. Every mode still pauses the causing WI and its hard-edge dependents;

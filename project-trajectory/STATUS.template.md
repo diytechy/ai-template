@@ -2,14 +2,14 @@
 
 The **working surface** for the gated process (see [process.md](process.md)):
 this whole file holds only what the agent or human must perform **next**. Keep
-every section short and current; history — sign-offs, verdicts, approved
+every section short and current; history — sign-offs, verdicts, accepted
 decisions, session notes — appends to the log this header points at, never here.
 
 - **History:** [log.md](log.md) _(append-only; see process.md §5)_
 - **Operator decision surface:** [requirements/open-items.toml](requirements/open-items.toml)
   _(rendered to `docs/open-items.html` by `scripts/gen_open_items.py` — one row per
   pending Needs-\<operator> item, with blast radius, options and recommendation,
-  plus the before/after of every spine row owing an approval or re-accept. The
+  plus the before/after of every spine row owing an acceptance or re-accept. The
   bullet here stays a one-liner. A ruling appends to the log's Decisions and the
   row's `Status` leaves `pending`.)_
 - **Work plan:** [plan.md](plan.md) _(the sequenced session blocks the
@@ -44,7 +44,7 @@ decisions, session notes — appends to the log this header points at, never her
   end every bullet with a link to the artifact it concerns; keep the two
   sub-lists below. Any deferrals/decisions list follows the same bullet
   discipline.)_
-  - **Needs <operator>** _(state the decision wanted, per item — **gate/approval
+  - **Needs <operator>** _(state the decision wanted, per item — **gate/acceptance
     blockers first**; keep each a one-liner and put the depth in the
     [open-items registry](requirements/open-items.toml), which
     `scripts/gen_open_items.py` renders to `docs/open-items.html`)_:
@@ -52,13 +52,13 @@ decisions, session notes — appends to the log this header points at, never her
       (blocks: DevStg-Reqs) → [open-items.toml](requirements/open-items.toml)
       _(replace it with your first real decision, filed with the queued work
       item that cites it)_
-  - **In flight** _(driver; no approval needed)_:
+  - **In flight** _(driver; no acceptance needed)_:
     - OI-000 — example: pinning SR-000's acceptance predicate →
       [system-requirements.toml](requirements/system-requirements.toml)
 - **Assumptions (unattended):** _(decisions taken without sign-off while running
   unattended — each to confirm or revert at the next gate; see AGENTS.md "Ask,
-  don't assume". Once approved, move the entry to the log's Decisions log.)_
-- **Next action:** _(what happens next + who must approve)_
+  don't assume". Once accepted, move the entry to the log's Decisions log.)_
+- **Next action:** _(what happens next + who must accept)_
 
 ## Scope (restated from the brief)
 

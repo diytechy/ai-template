@@ -44,7 +44,7 @@ WIRED = {
     # along with its `derived-gate` enforcer; `stage` is the surviving axis.
     "stage": "derived-stage",
     "openitems": "open-items",
-    "approve": "approval-fresh",
+    "accept": "acceptance-fresh",
     "skillsindex": "skills-index",
     "promptcatalog": "prompt-catalog",
     "components": "component-view",
@@ -68,7 +68,7 @@ WIRED = {
 OTHERWISE_ENFORCED = {
     # A hand-stamped, measured-and-classified BASELINE (docs/stack.ini §5.3):
     # there is no command that regenerates it, because re-deriving it would
-    # blindly approve whatever the tree currently measures — which is the ratchet
+    # blindly accept whatever the tree currently measures — which is the ratchet
     # inverted. Its enforcer is that it IS a test: tests/test_module_size_ratchet
     # re-measures every kit module against the baseline on every run.
     "linecounts": "tests/test_module_size_ratchet.py",

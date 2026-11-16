@@ -20,7 +20,7 @@ from conftest import (
     run_py,
 )
 
-# SR-002 is a genuine (approved, non-Drafted) orphan: Status=Approved, so the
+# SR-002 is a genuine (accepted, non-Drafted) orphan: Status=Approved, so the
 # derived-gate Drafted exemption (WI-089) does NOT apply and the decomposition
 # rules still fire. A Drafted SR would be exempt — see the WI-089 section below.
 ORPHAN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
@@ -114,8 +114,8 @@ SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","a
 SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Modified,v2
 """
 
-# LLR-002 is Drafted: its SR-002 is not approved, and an approved child under
-# an unapproved parent is an integrity finding of its own (parent first).
+# LLR-002 is Drafted: its SR-002 is not accepted, and an accepted child under
+# an unaccepted parent is an integrity finding of its own (parent first).
 PHASED_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Phase
 LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Approved,v1
 LLR-002,SR-002,Future part,src/future,todo,"Drafted decomposition of the v2 SR.",(see TC),Drafted,v2
@@ -680,7 +680,7 @@ def test_require_verified_flags_an_UNMIGRATED_status(scaffold):
     than it was — stated rather than discovered.
 
     Under the closed enum every LIVE value either stands the bar down
-    (`Drafted`, pre-approval) or passes it (`Approved`, `Founded`), so a
+    (`Drafted`, pre-acceptance) or passes it (`Approved`, `Founded`), so a
     conformant repo can no longer reach this finding by cell. The case that
     remains is the one that matters most: a DOWNSTREAM repo mid-migration
     whose rows still read `Modified` (or `Implemented`, or anything else) must
@@ -765,7 +765,7 @@ def test_draft_sr_is_exempt_from_decomposition(scaffold):
     assert "SR SR-002 has no test (TC)" not in report
     assert "## Drafted artifacts (decomposition-exempt)" in report
     assert "SR-002 — Drafted requirement" in report
-    # Approve it (Drafted -> Approved) and the decomposition rules fire again.
+    # Accept it (Drafted -> Approved) and the decomposition rules fire again.
     srs.write_text(
         DRAFT_SR.replace(",M,Test,Drafted", ",M,Test,Approved"), encoding="utf-8"
     )
@@ -825,12 +825,12 @@ def test_draft_sr_is_exempt_from_require_verified(scaffold):
     (req / "low-level-requirements.csv").write_text(RV_LLRS, encoding="utf-8")
     srs = req / "system-requirements.csv"
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(RV_TCS, encoding="utf-8")
-    # Drafted SR-002 is pre-approval: --require-verified does not flag it.
+    # Drafted SR-002 is pre-acceptance: --require-verified does not flag it.
     record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "status-findings=0" in proc.stdout
-    # Approving it (VerificationMethod=Test, not yet `Approved`) flags it.
+    # Accepting it (VerificationMethod=Test, not yet `Approved`) flags it.
     srs.write_text(
         RV_SRS.replace(",M,Test,Drafted", ",M,Test,Modified"), encoding="utf-8"
     )
@@ -866,8 +866,8 @@ def test_draft_sr_still_needs_sn_and_stays_integral(scaffold):
 
 
 # --- WI-090: SN maturity via section-as-state ---------------------------------
-# An SN under a heading whose text contains "draft" is unapproved (DevStg-Below) and exempt
-# from the "every SN needs an SR" rule; SNs under any other heading are approved.
+# An SN under a heading whose text contains "draft" is unaccepted (DevStg-Below) and exempt
+# from the "every SN needs an SR" rule; SNs under any other heading are accepted.
 
 DRAFT_SN_MD = """# Stakeholder Needs (SN-###)
 
@@ -877,7 +877,7 @@ DRAFT_SN_MD = """# Stakeholder Needs (SN-###)
 |---|---|---|---|---|
 | SN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
 
-## Draft needs (unapproved)
+## Draft needs (unaccepted)
 
 | SN-ID | Need | Why | Priority | Acceptance intent |
 |---|---|---|---|---|
@@ -895,13 +895,13 @@ def test_draft_sn_is_exempt_from_sr_rule(scaffold):
     assert "drafts=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "SN SN-002 has no SR" not in report
-    assert "SN-002 (SN, unapproved section)" in report
+    assert "SN-002 (SN, unaccepted section)" in report
     # The DAG flags the draft SN like a Status=Drafted row.
     assert "class SN_002 draft" in report
-    # Approve SN-002 by moving its row under a non-draft heading -> the SN-with-no-SR
+    # Accept SN-002 by moving its row under a non-draft heading -> the SN-with-no-SR
     # rule fires again (it now claims to be a real need with no decomposition).
-    approved = DRAFT_SN_MD.replace("## Draft needs (unapproved)", "## More core needs")
-    sn.write_text(approved, encoding="utf-8")
+    accepted = DRAFT_SN_MD.replace("## Draft needs (unaccepted)", "## More core needs")
+    sn.write_text(accepted, encoding="utf-8")
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1
     assert "SN SN-002 has no SR" in (
@@ -916,7 +916,7 @@ def test_sn_draft_ids_reader():
     assert trace.sn_draft_ids(DRAFT_SN_MD, ".md") == {"SN-002"}
     # A -000 placeholder in a draft section is excluded (like every other scan).
     assert trace.sn_draft_ids("## Draft needs\nSN-000 SN-005\n", ".md") == {"SN-005"}
-    # No draft heading -> nothing is draft (the approved default).
+    # No draft heading -> nothing is draft (the accepted default).
     assert trace.sn_draft_ids("# Needs\n\n## Core\nSN-001\n", ".md") == set()
     # The "draft" match is on the heading text, case-insensitive, not the body.
     assert trace.sn_draft_ids("## DRAFT items\nSN-009\n", ".md") == {"SN-009"}
@@ -945,12 +945,12 @@ def test_predicate_markers_are_word_bounded():
     assert warns("indistinguishable from the reference")
 
 
-# --- WI-188: the approved-phase completeness rule -----------------------------
+# --- WI-188: the accepted-phase completeness rule -----------------------------
 TRACE = load_script("trace")
 
 
 def _real(sr=(), llr=(), tc=()):
-    """The {label: [dict-rows]} shape phase_approved_findings takes — minimal
+    """The {label: [dict-rows]} shape phase_accepted_findings takes — minimal
     id/Status/Phase columns are all the rule reads."""
     import csv
     import io
@@ -966,14 +966,14 @@ def _real(sr=(), llr=(), tc=()):
     }
 
 
-def test_phase_approved_rule_arms_and_fires():
-    f = TRACE.phase_approved_findings
+def test_phase_accepted_rule_arms_and_fires():
+    f = TRACE.phase_accepted_findings
     # Unarmed: nothing phased -> vacuous (a fully-blank downstream registry).
     assert f(_real(["SR-001,Approved,", "SR-002,Approved,"])) == []
-    # Armed by SR-001's phase; SR-002 approved with a blank phase -> one finding.
+    # Armed by SR-001's phase; SR-002 accepted with a blank phase -> one finding.
     fired = f(_real(["SR-001,Approved,1", "SR-002,Approved,"]))
     assert len(fired) == 1 and "SR-002" in fired[0]
-    # An unparseable approved phase fails (armed by SR-001).
+    # An unparseable accepted phase fails (armed by SR-001).
     fired = f(_real(["SR-001,Approved,1", "SR-002,Approved,later"]))
     assert len(fired) == 1 and "SR-002" in fired[0]
     # A Drafted row may leave Phase blank even when armed.
@@ -985,15 +985,15 @@ def test_phase_approved_rule_arms_and_fires():
     assert len(fired) == 1 and "LLR-001" in fired[0]
 
 
-def test_phase_approved_rule_is_numeric_only():
-    # Operator ruling 2026-08-01 (WI-402): once armed, an approved Phase cell is a
+def test_phase_accepted_rule_is_numeric_only():
+    # Operator ruling 2026-08-01 (WI-402): once armed, an accepted Phase cell is a
     # BARE INTEGER — digits only, full cell. A prefixed label still digit-parses
     # (phase_num is untouched, so legacy labels keep arming/filtering/deriving —
-    # grandfathering), but the literal joins (--phase/--approve scope match,
+    # grandfathering), but the literal joins (--phase/--accept scope match,
     # check_trajectory's per-phase= vs [phase]-[gN] anchor join) miss it
     # SILENTLY, which is worse than a crash — so the live cell must be numeric.
-    f = TRACE.phase_approved_findings
-    # A vN-tagged approved registry now arms the rule AND fails it, per cell
+    f = TRACE.phase_accepted_findings
+    # A vN-tagged accepted registry now arms the rule AND fails it, per cell
     # (the pre-WI-402 vN-passes compatibility guarantee, deliberately retired).
     fired = f(_real(["SR-001,Approved,v1", "SR-002,Approved,v2"]))
     assert len(fired) == 2
@@ -1004,7 +1004,7 @@ def test_phase_approved_rule_is_numeric_only():
     # Bare integers stay green (surrounding whitespace is stripped, not judged).
     assert f(_real(["SR-001,Approved,1", "SR-002,Approved, 2 "])) == []
     # A Drafted row is exempt even with a prefixed cell (its phase is not yet
-    # approved scope; it takes its bare number at approval).
+    # accepted scope; it takes its bare number at acceptance).
     assert f(_real(["SR-001,Approved,1", "SR-002,Drafted,v9"])) == []
 
 
@@ -1025,25 +1025,25 @@ def _phase_scaffold(scaffold, sr="1", llr="1", tc="1"):
 
 
 def test_phased_scaffold_passes_strict_schema(scaffold):
-    # A fully phased spine (arming the rule) with every approved row numeric passes.
+    # A fully phased spine (arming the rule) with every accepted row numeric passes.
     make_minimal_project(scaffold)
     _phase_scaffold(scaffold, sr="1", llr="1", tc="1")
     proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-def test_approved_blank_phase_fails_strict_schema(scaffold):
-    # Armed by the SR/LLR phases; the approved TC left blank is a schema finding
+def test_accepted_blank_phase_fails_strict_schema(scaffold):
+    # Armed by the SR/LLR phases; the accepted TC left blank is a schema finding
     # that gates under --strict (the schema tier's standing exit convention).
     make_minimal_project(scaffold)
     _phase_scaffold(scaffold, sr="1", llr="1", tc="")
     proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "approved but its Phase" in report and "TC-001" in report
+    assert "accepted but its Phase" in report and "TC-001" in report
 
 
-def test_approved_prefixed_phase_fails_strict_schema(scaffold):
+def test_accepted_prefixed_phase_fails_strict_schema(scaffold):
     # WI-402: a prefixed-but-parseable cell (P1) arms the rule (digit-extract
     # arming) and fails it — the silently-vacuous literal-join shape, now a
     # schema finding rather than a quiet disarm.
@@ -1052,7 +1052,7 @@ def test_approved_prefixed_phase_fails_strict_schema(scaffold):
     proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "approved but its Phase" in report and "TC-001" in report
+    assert "accepted but its Phase" in report and "TC-001" in report
     assert "bare integer" in report
 
 
@@ -1062,9 +1062,9 @@ def test_approved_prefixed_phase_fails_strict_schema(scaffold):
 def test_require_verified_strips_padded_verification_cell(scaffold):
     # M-1: a padded '"Test "' cell must not create a false PASS. The original bug
     # was that --require-verified matched Verification == "Test" unstripped, so a
-    # padded cell was silently skipped. WI-259 widened the bar to every approved
+    # padded cell was silently skipped. WI-259 widened the bar to every accepted
     # SR of any method, so a padded cell can no longer skip it on the method axis
-    # either — a not-Approved approved SR is flagged regardless of its method cell.
+    # either — a not-Approved accepted SR is flagged regardless of its method cell.
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
@@ -1097,7 +1097,7 @@ def test_strict_failure_prints_findings_to_console(scaffold):
 def test_sn_integrity_flags_duplicate_and_double_state_ids():
     # L-4: the SN tier (prose registry) gets the duplicate-id protection every
     # CSV tier already has — repeated table rows, and an id under both a draft
-    # and a non-draft heading (simultaneously exempt and approved).
+    # and a non-draft heading (simultaneously exempt and accepted).
     trace = load_script("trace")
     text = (
         "# Needs\n"

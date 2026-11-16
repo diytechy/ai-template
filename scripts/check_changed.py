@@ -230,7 +230,7 @@ def commands(root, selection):
                     "docs/interface-reference.md",
                 ),
             ),
-            ("trace.py", ("--root", ".", "--approve", "modified")),
+            ("trace.py", ("--root", ".", "--accept", "modified")),
         )
     ]
     return [

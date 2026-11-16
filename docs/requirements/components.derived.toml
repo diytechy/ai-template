@@ -6,7 +6,7 @@
 # rows that already carry the obligation. It shows no internals, by design —
 # for mechanism, read the design rows named here.
 #
-# NO APPROVAL CELL APPEARS HERE, EVER: maturity lives on the
+# NO ACCEPTANCE CELL APPEARS HERE, EVER: maturity lives on the
 # hand-authored components.toml row, and nothing in this file is evidence
 # that an operator blessed anything.
 #

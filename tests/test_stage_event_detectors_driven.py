@@ -275,7 +275,7 @@ def test_tier_signals_STRONG_ARM_CAN_ACTUALLY_FIRE_end_to_end(tmp_path):
     input for the whole derived era — not wrong, DEAD. A unit test of
     `_stage_moved` proves the input; it does not prove the row. So this drives
     `intake._amendment_drafts` over a real two-commit repo whose merged delta
-    both amends an approved spine cell (the mint's trigger) and moves the recorded
+    both amends an accepted spine cell (the mint's trigger) and moves the recorded
     stage (the signal), and asserts the minted row's `buildtier`.
 
     The counterfactual is the same repo with the stage value held still: the row
@@ -299,7 +299,7 @@ def test_tier_signals_STRONG_ARM_CAN_ACTUALLY_FIRE_end_to_end(tmp_path):
 
     write_sr("the original text")
     _write_stage_value(root, ladder.STAGE_ARCH)
-    before = _commit(root, "attested baseline")
+    before = _commit(root, "accepted baseline")
 
     write_sr("the AMENDED text")
     _write_stage_value(root, ladder.STAGE_IMPL)
@@ -325,7 +325,7 @@ def test_tier_signals_STRONG_ARM_CAN_ACTUALLY_FIRE_end_to_end(tmp_path):
 
     write_sr2("the original text")
     _write_stage_value(root2, ladder.STAGE_ARCH)
-    before2 = _commit(root2, "attested baseline")
+    before2 = _commit(root2, "accepted baseline")
     write_sr2("the AMENDED text")
     _write_stage_value(root2, ladder.STAGE_ARCH)
     after2 = _commit(root2, "the merged branch's delta")

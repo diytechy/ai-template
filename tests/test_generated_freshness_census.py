@@ -99,7 +99,7 @@ def test_the_two_new_steps_gate_at_every_rung():
     # (the loop's prompt templates, the skill library) — kit source that does not
     # move as a downstream plan matures — and their consumers (session forensics,
     # an agent choosing a skill) are live from the first session. Concretely: this
-    # kit's own effective stage sits low while its approval window is open,
+    # kit's own effective stage sits low while its acceptance window is open,
     # so an Impl-threshold step would not run in the kit's own CI at all for the
     # window's whole duration, which is the gap re-created rather than closed.
     #   The tag was a three-bar membership set and is now the LOWEST RUNG

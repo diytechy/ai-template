@@ -311,9 +311,9 @@ def test_a_verdict_judged_against_no_requested_findings_is_refused():
     assert _dispute().parse(VALID, (), "v.md")[1]
 
 
-def test_a_recorded_dispute_verdict_authorizes_no_approval_act():
+def test_a_recorded_dispute_verdict_authorizes_no_acceptance_act():
     """The binding records the finding ids a dispute was asked to rule; no
-    approval act reads a ruling on a finding as a judgement of a row.
+    acceptance act reads a ruling on a finding as a judgement of a row.
 
     Implements: TC-334
     """

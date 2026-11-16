@@ -223,11 +223,11 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # The line number moves whenever anything above it in that module does —
     # 781 -> 835 when `md_block` landed (2026-08-12), 835 -> 836 when the
     # retired-open-items warning was re-pointed at RESYNC_PACK.md (WI-447),
-    # 836 -> 865 when D-9 step 2 gave the attestation cards a third kind,
+    # 836 -> 865 when D-9 step 2 gave the acceptance cards a third kind,
     # 865 -> 874 when step 4 hoisted the baseline and dropped the stamp, and
     # 874 -> 877 when the module's Contracts: docstring line gained IF-126 (log
     # 2026-08-15h), 877 -> 876 when D-9 step 5's rename retired the third
-    # attestation-card kind that step 2 had added (log 2026-08-15m), and
+    # acceptance-card kind that step 2 had added (log 2026-08-15m), and
     # 876 -> 877 when the sitting sweep's M3 fix made the chain-consistency
     # pointer name the warn's real tier (2026-08-15, sweep log entry), and
     # 877 -> 880 when D-9 step 7 retired `Modified` from this module's RENDERED
@@ -245,9 +245,9 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # docstring recorded why (six comment lines above the site; no executable
     # line moved into or out of the region between), and 1156 -> 1183 when
     # WI-513 widened `owes()` past the SR-only test (the OI-61-sitting gap):
-    # `_attestation_cards`' vacuous-state message grew to state the widened
+    # `_acceptance_cards`' vacuous-state message grew to state the widened
     # contract honestly, and `_chain_row` gained the `drafted`-state branch and
-    # the "Drafted, never approved" suffix logic, all above this site, and
+    # the "Drafted, never accepted" suffix logic, all above this site, and
     # 1183 -> 1234 when WI-514 (the SR-177 anchor-text gap) added `_anchor_block`
     # (the anchor SR's Requirement/Rationale, rendered unconditionally rather
     # than only inside the collapsible `.ctx`) and threaded `tr.truncate_cell`
@@ -262,7 +262,7 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # above everything. 1281 -> 1352 when WI-553 (OI-70) added the fragment-`none`
     # cross-check (`_scope_span` + `_none_declaration_findings`, ARM 4) and its
     # `deferral_findings` wiring, all above this site. 1352 -> 1381 when WI-554
-    # (OI-71 defect 1) fixed the false "approved — re-acceptance owed" label on
+    # (OI-71 defect 1) fixed the false "accepted — re-acceptance owed" label on
     # a `Drafted` row and, to keep `_chain_row` under the C901 ratchet, split its
     # changed-cell rendering into `_changed_cell_groups`/`_changed_cell_lines` —
     # all above this site. 1381 -> 1383 when WI-661 made the off-spine census

@@ -66,7 +66,7 @@
 #
 # Contract IF-038: the subagent-spawn policy, `[checks] subagent_gate`, over the
 #     closed alphabet `off` allows every spawn, `ask` defers each spawn to
-#     approval, `deny` refuses it. It ships visible at `off` — an opt-in dial
+#     acceptance, `deny` refuses it. It ships visible at `off` — an opt-in dial
 #     readable without being armed — and an undeclared key reads as `off`. A file
 #     that is present but does not parse reads `ask`, resolved against any legacy
 #     one-word declaration to whichever of the two is more restrictive; an absent
@@ -74,18 +74,18 @@
 #     the declaration for a deliberately supervised run.
 
 [authority]
-# THE HIGHEST STAGE RUNG An OPERATOR STILL APPROVES, cumulatively ("through" this
+# THE HIGHEST STAGE RUNG An OPERATOR STILL ACCEPTS, cumulatively ("through" this
 # rung). The dispatcher compares the rung a row is IN against this value: AT OR
 # BELOW it, work SURFACES for the operator; above it, the loop dispatches and an
-# LLM verdict carries approval authority. It is the exact mirror of the rule
+# LLM verdict carries acceptance authority. It is the exact mirror of the rule
 # that selects checks — a check runs at or ABOVE its `from-stage`, an operator
-# approves at or BELOW this dial.
+# accepts at or BELOW this dial.
 #
 # The value is one of the eight ladder rungs (process.md §4), or `DevStg-Below`
-# for "nothing is operator-held; the loop approves every rung itself":
+# for "nothing is operator-held; the loop accepts every rung itself":
 #
 #   DevStg-Below      nothing is operator-held
-#   DevStg-Needs      the operator approves stakeholder needs
+#   DevStg-Needs      the operator accepts stakeholder needs
 #   DevStg-Boundary   ... and the system frame
 #   DevStg-Reqs       ... and the requirements
 #   DevStg-Arch       ... and the partition
@@ -96,7 +96,7 @@
 #
 # WHO THE OPERATOR MAY BE on a held rung (a person, and which sessions may
 # take the act for them) is stated once, with its enforcer, in process.md
-# §4 "A held rung's approval is the operator's act". Read it there.
+# §4 "A held rung's acceptance is the operator's act". Read it there.
 #
 # IT WAS A 0-4 ORDINAL UNTIL WI-493 (OI-21 shape (ii)). A repo that still
 # carries the number is READ, TRANSLATED AND WARNED — not refused — and,
@@ -108,7 +108,7 @@
 # level held before.
 #
 # THIS REPO'S OWN VALUE IS THE LINE BELOW — read it, don't paraphrase it, here
-# or anywhere else. Every rung at or below it is operator-held; approval and
+# or anywhere else. Every rung at or below it is operator-held; acceptance and
 # amendment above it proceed under ordinary review. Its history, for the
 # record and not as a second statement of the value: the operator set it to hold
 # the Needs rung alone on 2026-08-21
@@ -122,17 +122,17 @@
 # shadowing defect the template names, and the kit must not carry in its own
 # config the shape it refuses downstream.
 operator_accepts_through = "DevStg-Boundary"
-# OFF-SPINE APPROVAL AUTHORITY IS DERIVED FROM THIS SAME DIAL — NO SECOND KEY
+# OFF-SPINE ACCEPTANCE AUTHORITY IS DERIVED FROM THIS SAME DIAL — NO SECOND KEY
 # (operator ruling OI-30 D3, 2026-08-15). The registries that carry an `approval`
 # cell (interfaces, external, components) are governed by the DEV-STAGE RUNG
 # each one already gates: `external` -> DevStg-Boundary, `interfaces` and
 # `components` -> DevStg-Arch. An `approval` cell may be machine-flipped only
 # when its registry's rung is not operator-held by the dial above; an
-# approval-carrying registry with NO rung mapping is HELD. A declared list was
+# acceptance-carrying registry with NO rung mapping is HELD. A declared list was
 # proposed and OVERTURNED — the registry-to-rung association already exists in
 # `spine_rules` (`boundary_incomplete`, `arch_incomplete`), so a second
 # declaration would be a rival answer to a question already answered. The map
-# lives beside `operator_holds` in `agent_common.py` as `APPROVAL_RUNGS`, read by
+# lives beside `operator_holds` in `agent_common.py` as `ACCEPTANCE_RUNGS`, read by
 # `agent_common.operator_accepts`. THIS IS A COMMENT, NOT A KEY: there is nothing
 # here to configure, which is the point of deriving it.
 # The separate "always show me the full breakdown at the end" hold, split out
@@ -141,9 +141,9 @@ operator_accepts_through = "DevStg-Boundary"
 #              have let it close
 #   "off"    — no final hold
 final_review = "always"
-# Keep NON-DEPENDENT work running while an approval is queued? This is an
+# Keep NON-DEPENDENT work running while an acceptance is queued? This is an
 # ORTHOGONAL policy an ordinal cannot express (it was the old `single-approve`
-# level's distinguishing behaviour). false = a queued approval drains the
+# level's distinguishing behaviour). false = a queued acceptance drains the
 # station and stops the run; true = other lanes keep going around it.
 keep_nondependent = false
 # How a CLEAN (`complete/`) lane close is adjudicated. `partial` and
@@ -278,14 +278,14 @@ subagent_gate = "off"
 backlink_coverage_min = 50
 # The test-first order's declared start (SR-217; the shipped template's comment
 # on this key is the canonical doc). This repo declares the PARENT of the
-# phase-6 approval act (cbb6649f, WI-642), so that act is the first commit after
-# the start: the assumption tier's chains it approved count as approved after
-# the start, and are judged by the rule they include. Requirements approved
+# phase-6 acceptance act (cbb6649f, WI-642), so that act is the first commit after
+# the start: the assumption tier's chains it accepted count as accepted after
+# the start, and are judged by the rule they include. Requirements accepted
 # before it predate the rule and are not judged; read whole, the history
 # reports requirements whose code predates the rule.
 test_first_since = "f537fc531dd37b372259ba84f8836a290d1efddb"
 # The assumption gate, OFF here: enabling it is this repository's own act,
-# taken once its requirements' assumptions are approved (the shipped
+# taken once its requirements' assumptions are accepted (the shipped
 # template's comment on this key is the canonical doc).
 assumption_gate = false
 
@@ -300,7 +300,7 @@ assumption_gate = false
 # The loop's adjudication draws the unqualified route, on the person's ambient
 # login.
 context_reset_pct = 55           # 0 = off
-# Owner, 2026-10-05 (docs/decisions/wi-835.toml#D-007): first approvals too,
+# Owner, 2026-10-05 (docs/decisions/wi-835.toml#D-007): first acceptances too,
 # so the coordinator's in-lane adjudications all use the retained session;
 # since WI-841 the Done-when brief and the combined lane-checkpoint sitting; and
 # since WI-865 the dispute sitting that rules a contested review finding.

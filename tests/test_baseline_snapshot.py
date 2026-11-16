@@ -7,14 +7,14 @@ properties, and each gets a red->green test here:
 
   * drift is measured against the copy, over a real tree, and only APPROVED
     cells arm it;
-  * an approval whose snapshot copy does not claim approval is UNANCHORED —
+  * an acceptance whose snapshot copy does not claim acceptance is UNANCHORED —
     the case that is only decidable because the copy is a WHOLE FILE carrying
     each row's own `Status`;
   * the mirror invariant catches a hand-edited, partial, or copy-then-amend
     snapshot in the commit that does it;
   * the FIRST snapshot cannot be created by accident — not by the mechanical
     flip, and not by any loop module, hook, or `check.py`;
-  * a REFRESH carries drifted approved text only for the rows its act flips or
+  * a REFRESH carries drifted accepted text only for the rows its act flips or
     re-accepts, never for a row beside them (SR-207, TC-240).
 
 Fixtures are built by copying THIS repo's real registries into a tmp tree
@@ -53,40 +53,40 @@ SR_REL = "docs/requirements/system-requirements.toml"
 
 
 def _seeded_with_a_drafted_sr(tmp_path):
-    """A standing snapshot with one SR still below approval."""
+    """A standing snapshot with one SR still below acceptance."""
     root = _tree(tmp_path)
     _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
     SNAP.copy_live(root, seed=True)
     return root
 
 
-def _append_new_approved_sr(root, sid):
+def _append_new_accepted_sr(root, sid):
     """Add a row to the LIVE SR registry that arrives already `Approved` — the
     shape that authorises a copy of its registry without any `Status` MOVE,
     because there is no snapshot copy of it to move from."""
     path = root / SR_REL
     row = (
-        '\n[requirement.{}]\ntitle = "A row that arrives already approved"\n'
+        '\n[requirement.{}]\ntitle = "A row that arrives already accepted"\n'
         'requirement = "The fixture shall carry a row with no snapshot copy."\n'
         'rationale = "The new-row arm of the authority question, driven."\n'
-        'acceptance_criteria = "The row is present and claims approval."\n'
+        'acceptance_criteria = "The row is present and claims acceptance."\n'
         'priority = "S"\nverification_method = "Test"\nstatus = "Approved"\nphase = 1\n'
     ).format(sid)
     with path.open("ab") as fh:
         fh.write(row.encode("utf-8"))
 
 
-def test_approves_format_and_parse_share_one_multi_registry_syntax():
-    approves = {
+def test_accepts_format_and_parse_share_one_multi_registry_syntax():
+    accepts = {
         "docs/test/test-cases.toml": "WI-572",
         "docs/requirements/low-level-requirements.toml": "WI-572",
     }
-    rendered = SNAP.format_approves(approves)
+    rendered = SNAP.format_accepts(accepts)
     assert rendered == (
         "docs/requirements/low-level-requirements.toml=WI-572;"
         "docs/test/test-cases.toml=WI-572"
     )
-    assert SNAP.parse_approves(rendered) == approves
+    assert SNAP.parse_accepts(rendered) == accepts
 
 
 # --- vacuity: the only honest empty state -------------------------------------
@@ -138,9 +138,9 @@ def test_the_shipped_README_describes_the_writer_that_exists():
     text = tpl.read_text(encoding="utf-8")
     assert "mechanical flip" not in text
     assert "intake.py snapshot --reaccepts <ROW-ID>" in text
-    # ONE writer, and both of its acts: the first approval rides a Status move.
+    # ONE writer, and both of its acts: the first acceptance rides a Status move.
     assert "One writer only: `scripts/intake.py snapshot`" in text
-    assert "**A first approval** — move the row's `Status` to `Approved`" in text
+    assert "**A first acceptance** — move the row's `Status` to `Approved`" in text
     # A session on a rung the gate authority released DOES re-accept, so the
     # old blanket prohibition on the loop was false and must not come back.
     assert "unattended loop" not in text
@@ -196,7 +196,7 @@ def test_the_mechanical_flip_TOUCHES_NO_SNAPSHOT_AT_ALL(tmp_path):
     # behind an `exists` guard — the guard belongs to the writer now.
     intake_src = (SCRIPTS / "intake.py").read_text(encoding="utf-8")
     assert intake_src.count("baseline_snapshot.copy_live(") == 1
-    assert "root, seed=args.seed, approves=approves, reaccepts=reaccepts" in intake_src
+    assert "root, seed=args.seed, accepts=accepts, reaccepts=reaccepts" in intake_src
 
 
 # --- the authority gate on a REFRESH (2026-08-20) -----------------------------
@@ -209,10 +209,10 @@ def test_the_mechanical_flip_TOUCHES_NO_SNAPSHOT_AT_ALL(tmp_path):
 def test_a_TRACED_only_refresh_needs_no_authority_at_all(tmp_path):
     """The common case, and the one that must stay free of a flag: the
     WI-482/WI-452 class (a `Module`/`CodeSymbol`/`TestRefs` re-point) moves no
-    approved text, so the gate never fires. And since WI-571 it also authorises
+    accepted text, so the gate never fires. And since WI-571 it also authorises
     NO copy — a traced re-point flips no Status and is named by nothing, so the
     snapshot's whole-file copy of that registry simply lags live until a real
-    approval rides it. Harmless: traced cells are never drift- or
+    acceptance rides it. Harmless: traced cells are never drift- or
     unanchored-compared, so a lagging copy of one changes no verdict."""
     root = _seeded(tmp_path)
     llr_rel = "docs/requirements/low-level-requirements.toml"
@@ -225,7 +225,7 @@ def test_a_TRACED_only_refresh_needs_no_authority_at_all(tmp_path):
 
 def test_a_APPROVED_amendment_with_no_flip_and_no_ref_is_REFUSED(tmp_path):
     """THE LAUNDERING SCENARIO, executed. Rewrite an Approved requirement's
-    approved text, then refresh: before this gate the copy landed, the drift
+    accepted text, then refresh: before this gate the copy landed, the drift
     vanished and every check went green with the record rewritten to match."""
     root = _seeded(tmp_path)
     sid, row = _first_row_at(root, "approved")
@@ -243,10 +243,10 @@ def test_a_APPROVED_amendment_with_no_flip_and_no_ref_is_REFUSED(tmp_path):
 
 
 def test_a_FLIP_authorises_ITS_OWN_row_and_no_other(tmp_path):
-    """Approval is an operator moving a maturity cell in a reviewed commit, and the
+    """Acceptance is an operator moving a maturity cell in a reviewed commit, and the
     copy rides it — for THE ROW THAT MOVED. Until SR-207 this test pinned the
-    wider reading: one flip anywhere in a registry authorised every approved
-    amendment in it, so approving one row silently blessed another row's
+    wider reading: one flip anywhere in a registry authorised every accepted
+    amendment in it, so accepting one row silently blessed another row's
     unreviewed edit. The flipped row's text, drafted since its copy, rides its
     flip (WI-806: that text is committed before the act, which the commit-time
     rule enforces, not this refresh); an amended row beside it refuses the act
@@ -254,7 +254,7 @@ def test_a_FLIP_authorises_ITS_OWN_row_and_no_other(tmp_path):
     root = _seeded_with_a_drafted_sr(tmp_path)
     draft_id, draft = _first_row_at(root, "drafted")
     sid, row = _first_row_at(root, "approved", {draft_id})
-    _rewrite(root, SR_REL, draft["Title"], draft["Title"] + " (amended, then approved)")
+    _rewrite(root, SR_REL, draft["Title"], draft["Title"] + " (amended, then accepted)")
     _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')
     assert SNAP.refresh_refusal(root) == ""  # the flip carries its own text...
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended beside it)")
@@ -267,7 +267,7 @@ def test_a_FLIP_authorises_ITS_OWN_row_and_no_other(tmp_path):
     ).read_bytes()
 
 
-def test_an_explicit_APPROVES_ref_authorises_it_and_is_RECORDED(tmp_path):
+def test_an_explicit_ACCEPTS_ref_authorises_it_and_is_RECORDED(tmp_path):
     """The escape for the shape the D-9 ladder actually has: a sitting amends an
     Approved row's text without moving its Status. The ref is not validated —
     it is an operator's citation of the act — but it is NAMED, and it lands in the
@@ -280,7 +280,7 @@ def test_an_explicit_APPROVES_ref_authorises_it_and_is_RECORDED(tmp_path):
     # rows: the amended row is named by `reaccepts` or the act is refused.
     assert sid in SNAP.refresh_refusal(root, {SR_REL: "sitting-4"})
     assert SNAP.refresh_refusal(root, {SR_REL: "sitting-4"}, reaccepts={sid}) == ""
-    SNAP.copy_live(root, approves={SR_REL: "sitting-4"}, reaccepts={sid})
+    SNAP.copy_live(root, accepts={SR_REL: "sitting-4"}, reaccepts={sid})
     stamp = (SNAP.snapshot_root(root) / SNAP.README).read_text(encoding="utf-8")
     assert "sitting-4" in stamp
     assert "system-requirements.toml" in stamp  # the act's scope is recorded
@@ -288,16 +288,16 @@ def test_an_explicit_APPROVES_ref_authorises_it_and_is_RECORDED(tmp_path):
     assert "Nothing parses it" in stamp  # still prose, design §F8
     # A second recorded refresh APPENDS rather than replacing the record.
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (again)")
-    SNAP.copy_live(root, approves={SR_REL: "log 2026-08-20"}, reaccepts={sid})
+    SNAP.copy_live(root, accepts={SR_REL: "log 2026-08-20"}, reaccepts={sid})
     stamp2 = (SNAP.snapshot_root(root) / SNAP.README).read_text(encoding="utf-8")
     assert "sitting-4" in stamp2 and "log 2026-08-20" in stamp2
 
 
-def test_each_act_is_a_typed_ledger_entry_naming_what_it_approved_and_re_accepted(
+def test_each_act_is_a_typed_ledger_entry_naming_what_it_accepted_and_re_accepted(
     tmp_path,
 ):
-    """The act ledger beside the copies is the machine record of each approval
-    act (SR-202, LLR-239): which rows it approved and which it re-accepted, one
+    """The act ledger beside the copies is the machine record of each acceptance
+    act (SR-202, LLR-239): which rows it accepted and which it re-accepted, one
     entry per act. The README stays prose that nothing reads. Two acts naming
     the same row in the same words on the same day are two entries, so the
     later act is never mistaken for the earlier one."""
@@ -358,7 +358,7 @@ def test_a_DRAFTED_rows_amendment_is_not_absorption(tmp_path):
 # `Status` flip re-sealed whatever off-spine drift was live at that moment and
 # silently zeroed the off-spine census (the only rendering of it is computed
 # against the snapshot). The copy now moves ONLY the registry the act
-# authorises: the one a `Status` moved in, plus every registry `--approves`
+# authorises: the one a `Status` moved in, plus every registry `--accepts`
 # names. The rest keep their bytes.
 
 IF_REL = "docs/requirements/interfaces.toml"
@@ -374,7 +374,7 @@ def test_a_spine_flip_LEAVES_the_offspine_snapshot_bytes_UNTOUCHED(tmp_path):
     """The measured problem, driven: a `Status` flip in a spine registry copies
     THAT registry and no other. An off-spine registry that merely drifted in the
     same tree is NOT re-sealed, so the drift SURVIVES to its own census instead
-    of being zeroed by a whole-tree copy riding a spine approval. No flag."""
+    of being zeroed by a whole-tree copy riding a spine acceptance. No flag."""
     root = _seeded_with_a_drafted_sr(tmp_path)
     seed_if = (SNAP.snapshot_root(root) / IF_REL).read_bytes()
     _rewrite(root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO)  # off-spine drift, live
@@ -396,16 +396,16 @@ def test_a_spine_flip_LEAVES_the_offspine_snapshot_bytes_UNTOUCHED(tmp_path):
 
 def test_a_STATUS_MOVE_refresh_is_STAMPED_as_a_Status_move(tmp_path):
     """WI-571 rework: a refresh authorised by a `Status` move alone (no
-    `--approves` ref) copied its registry but wrote NO stamp, so that approval
+    `--accepts` ref) copied its registry but wrote NO stamp, so that acceptance
     act was unauditable in the prose the stamp promises to carry. Now every
     non-seed refresh that copies a registry is recorded — the seed writes no
     stamp, so the record here is written by the flip and names the copied
     registry with `Status move`, not a ref."""
     root = _seeded_with_a_drafted_sr(tmp_path)
     stamp_path = SNAP.snapshot_root(root) / SNAP.README
-    assert not stamp_path.is_file(), "the seed must not write an approval stamp"
+    assert not stamp_path.is_file(), "the seed must not write an acceptance stamp"
     _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')  # the flip
-    written = SNAP.copy_live(root)  # no --approves: a Status move authorises it
+    written = SNAP.copy_live(root)  # no --accepts: a Status move authorises it
     assert any("system-requirements" in w for w in written)
     stamp = stamp_path.read_text(encoding="utf-8")
     assert "system-requirements.toml" in stamp  # the copied registry is named...
@@ -413,23 +413,23 @@ def test_a_STATUS_MOVE_refresh_is_STAMPED_as_a_Status_move(tmp_path):
     assert "Nothing parses it" in stamp  # still prose, design §F8
 
 
-def test_a_DEAPPROVAL_cannot_authorise_an_unrelated_approved_amendment(tmp_path):
-    """A reverse Status move is not an approval act.
+def test_a_DEACCEPTANCE_cannot_authorise_an_unrelated_accepted_amendment(tmp_path):
+    """A reverse Status move is not an acceptance act.
 
     This is the two-row Review-A regression: treating every Status difference
     as a flip copied the whole SR registry, silently absorbing the second row's
-    approved amendment. The one owner predicate now recognises only a transition
-    into approval, so the amendment remains refused and snapshot bytes stay put.
+    accepted amendment. The one owner predicate now recognises only a transition
+    into acceptance, so the amendment remains refused and snapshot bytes stay put.
     """
     root = _seeded(tmp_path)
     before = (SNAP.snapshot_root(root) / SR_REL).read_bytes()
-    deapproved_id, _deapproved = _first_row_at(root, "approved")
-    amended_id, amended = _first_row_at(root, "approved", {deapproved_id})
+    deaccepted_id, _deaccepted = _first_row_at(root, "approved")
+    amended_id, amended = _first_row_at(root, "approved", {deaccepted_id})
     _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
     _rewrite(root, SR_REL, amended["Title"], amended["Title"] + " (amended)")
 
     ledger = SNAP.refresh_ledger(root)[SR_REL]
-    assert deapproved_id not in ledger["flips"]
+    assert deaccepted_id not in ledger["flips"]
     assert amended_id in ledger["absorbed"]
     assert "REFUSED" in SNAP.refresh_refusal(root)
     try:
@@ -437,12 +437,12 @@ def test_a_DEAPPROVAL_cannot_authorise_an_unrelated_approved_amendment(tmp_path)
     except SystemExit as exc:
         assert "REFUSED" in str(exc)
     else:
-        raise AssertionError("a de-approval authorised an unrelated amendment")
+        raise AssertionError("a de-acceptance authorised an unrelated amendment")
     assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == before
 
 
 def test_a_named_ref_copies_EXACTLY_its_registry(tmp_path):
-    """The `--approves` half of the scope: a ref names its registry, and the
+    """The `--accepts` half of the scope: a ref names its registry, and the
     copy moves that one and nothing else, even with unrelated off-spine drift in
     the same tree."""
     root = _seeded(tmp_path)
@@ -450,7 +450,7 @@ def test_a_named_ref_copies_EXACTLY_its_registry(tmp_path):
     sid, row = _first_row_at(root, "approved")
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")  # no flip
     _rewrite(root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO)  # off-spine drift, live
-    written = SNAP.copy_live(root, approves={SR_REL: "the sitting"}, reaccepts={sid})
+    written = SNAP.copy_live(root, accepts={SR_REL: "the sitting"}, reaccepts={sid})
     assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == (
         root / SR_REL
     ).read_bytes()
@@ -460,8 +460,8 @@ def test_a_named_ref_copies_EXACTLY_its_registry(tmp_path):
 
 
 def test_a_named_ref_mutes_ONLY_the_registry_it_names(tmp_path):
-    """The secondary widening the plan names: a bare `--approves` used to short-
-    circuit the whole gate (`if approves: return ""`), so one ref for one
+    """The secondary widening the plan names: a bare `--accepts` used to short-
+    circuit the whole gate (`if accepts: return ""`), so one ref for one
     registry silenced all seven. The property that replaced it is about the
     COPY, not the message: a ref for the wrong registry cannot move the amended
     one's bytes. WI-584 removed the second half of the old assertion — a refusal
@@ -473,7 +473,7 @@ def test_a_named_ref_mutes_ONLY_the_registry_it_names(tmp_path):
     before_sr = (SNAP.snapshot_root(root) / SR_REL).read_bytes()
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")  # SR absorbs
     # A ref for a DIFFERENT registry does not carry the SR's amendment...
-    written = SNAP.copy_live(root, approves={LLR_REL: "ref"})
+    written = SNAP.copy_live(root, accepts={LLR_REL: "ref"})
     assert not any("system-requirements" in w for w in written), written
     assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == before_sr
     assert sid in SNAP.refresh_ledger(root)[SR_REL]["absorbed"]  # drift SURVIVES
@@ -486,15 +486,15 @@ def test_a_named_ref_mutes_ONLY_the_registry_it_names(tmp_path):
 # --- the gate is scoped to the act, like the writer (WI-584) -------------------
 # WI-571 scoped `copy_live` and left `refresh_refusal` global, so the gate judged
 # registries the refresh would never write. The measured cost was that a
-# per-registry approval could not complete its own act: the refusal listed only
+# per-registry acceptance could not complete its own act: the refusal listed only
 # registries the caller had not ruled on, under a header saying nothing
 # authorised it. The gate now judges the act's WRITE SET — with one arm kept
 # unscoped, because an act that copies nothing must not exit 0 in silence.
 
 
-def test_a_SCOPED_single_registry_approval_COMPLETES_over_unrelated_drift(tmp_path):
+def test_a_SCOPED_single_registry_acceptance_COMPLETES_over_unrelated_drift(tmp_path):
     """THE ACCEPTANCE WI-584 NAMES, driven end to end: a scoped, authorised,
-    single-registry approval completes while approved text stands drifted in a
+    single-registry acceptance completes while accepted text stands drifted in a
     registry the act does not touch. Before the ruling this exact call was
     REFUSED, and every row in the refusal was one the caller had not judged."""
     root = _seeded(tmp_path)
@@ -510,7 +510,7 @@ def test_a_SCOPED_single_registry_approval_COMPLETES_over_unrelated_drift(tmp_pa
     assert len(ruled) == 1, ruled
 
     assert SNAP.refresh_refusal(root, {LLR_REL: "the sitting"}, reaccepts=ruled) == ""
-    written = SNAP.copy_live(root, approves={LLR_REL: "the sitting"}, reaccepts=ruled)
+    written = SNAP.copy_live(root, accepts={LLR_REL: "the sitting"}, reaccepts=ruled)
 
     # the ruled registry is anchored...
     assert any("low-level-requirements" in w for w in written), written
@@ -525,11 +525,11 @@ def test_a_SCOPED_single_registry_approval_COMPLETES_over_unrelated_drift(tmp_pa
 
 def test_an_unrelated_drift_cannot_block_a_FLIP_authorised_act_either(tmp_path):
     """The same defect on the commoner path, which is why the ruling had to be
-    the general one: no `--approves` at all, just a flip of a drafted, amended
+    the general one: no `--accepts` at all, just a flip of a drafted, amended
     row in one registry while another carries drift. The global gate refused this too.
 
     The amendment is the FLIPPED row's own since SR-207. This test used to amend
-    a different approved SR beside the flip and pass, which pinned the removed
+    a different accepted SR beside the flip and pass, which pinned the removed
     behaviour (any flip authorised its whole registry); the property it exists
     for — drift in registries the act does not write never blocks it — is
     unchanged."""
@@ -568,13 +568,13 @@ def test_a_registry_WRITTEN_for_another_reason_still_gates_its_amendments(tmp_pa
     """The residual case the scoped gate must keep catching, and the reason it
     is not vacuous. A brand-new row arriving already `Approved` puts its registry
     in the write set — it must, or the row strands as `unanchored_findings` — so
-    the copy WOULD land, carrying an unrelated approved amendment with it. That
+    the copy WOULD land, carrying an unrelated accepted amendment with it. That
     amendment moved no `Status` and is named by nothing, so it is refused."""
     root = _seeded(tmp_path)
     sid, row = _first_row_at(root, "approved")
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended, unruled)")
     before_sr = (SNAP.snapshot_root(root) / SR_REL).read_bytes()
-    _append_new_approved_sr(root, "SR-999")
+    _append_new_accepted_sr(root, "SR-999")
 
     # the new row DOES put its registry in the act's write set...
     assert SR_REL in SNAP._authorised_registries(root, None, SNAP.load_all(root))
@@ -634,10 +634,10 @@ def test_the_refusal_reaches_the_CLI_and_the_flag_clears_it(tmp_path):
     proc = run_py([SCRIPTS / "intake.py", "--root", root, "snapshot"], cwd=root)
     assert proc.returncode != 0, proc.stdout + proc.stderr
     assert "REFUSED" in proc.stdout + proc.stderr
-    approves = ["--approves", "system-requirements.toml=sitting-4"]
-    proc = _snapshot_cli(root, *approves)  # the registry alone clears no row
+    accepts = ["--accepts", "system-requirements.toml=sitting-4"]
+    proc = _snapshot_cli(root, *accepts)  # the registry alone clears no row
     assert proc.returncode != 0 and sid in proc.stderr, proc.stdout + proc.stderr
-    proc = _snapshot_cli(root, *approves, "--reaccepts", sid)
+    proc = _snapshot_cli(root, *accepts, "--reaccepts", sid)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "APPROVED BY: system-requirements.toml=sitting-4" in proc.stdout
     assert "RE-ACCEPTED: " + sid in proc.stdout
@@ -650,8 +650,8 @@ def _snapshot_cli(root, *args):
 
 # --- row-level refusal (SR-207, LLR-245; TC-240) -------------------------------
 # The refusal used to be decided per REGISTRY: a `Status` flip anywhere in a
-# registry, or an `--approves` ref naming it, authorised every approved amendment
-# in it, so approving one row blessed another row's unreviewed edit. It is decided
+# registry, or an `--accepts` ref naming it, authorised every accepted amendment
+# in it, so accepting one row blessed another row's unreviewed edit. It is decided
 # per ROW now: the act's absorbed rows, minus the rows it flips, minus the rows it
 # names with `--reaccepts`, must be empty. Every case is parameterized off
 # `SNAPSHOT_TIERS` itself, so a tier added there later — the assumptions
@@ -667,8 +667,8 @@ def _ids(id_col, n):
 
 
 def _block(id_col, rid, status, title):
-    """One appended TOML row of tier `id_col`: a `title`, which is an approved
-    cell on every compared tier, and a `status` that claims approval or not."""
+    """One appended TOML row of tier `id_col`: a `title`, which is an accepted
+    cell on every compared tier, and a `status` that claims acceptance or not."""
     return '\n[{}.{}]\ntitle = "{}"\nstatus = "{}"\n'.format(
         _SPINE_CARRIER.REGISTRY_TABLE[id_col], rid, title, status
     )
@@ -683,8 +683,8 @@ def _append(root, rel, text):
         fh.write(text.encode("utf-8"))
 
 
-def _approve(root, rel, id_col, rid, title):
-    """The approval act's own `Status` move on one appended row."""
+def _accept(root, rel, id_col, rid, title):
+    """The acceptance act's own `Status` move on one appended row."""
     _rewrite(
         root,
         rel,
@@ -699,8 +699,8 @@ def _last_stamp_line(root):
 
 
 def _shared_file_pairs():
-    """`(registry, approved tier, drifted tier)` for every registry holding more
-    than one tier: each tier approves while the next one round drifts."""
+    """`(registry, accepted tier, drifted tier)` for every registry holding more
+    than one tier: each tier accepts while the next one round drifts."""
     by_rel = {}
     for rel, col in SNAP.SNAPSHOT_TIERS:
         by_rel.setdefault(rel, []).append(col)
@@ -734,20 +734,20 @@ def test_the_row_rule_is_driven_over_EVERY_compared_tier():
 def test_a_drifted_row_outside_the_act_REFUSES_it_until_the_act_names_it(
     tmp_path, rel, id_col
 ):
-    """Row A is approved while row B of the same tier carries drifted approved
+    """Row A is accepted while row B of the same tier carries drifted accepted
     text. The act is refused naming B and the cell; naming the registry alone in
-    `--approves` does not clear B and copies nothing; naming B with
+    `--accepts` does not clear B and copies nothing; naming B with
     `--reaccepts` clears it, and the act's record names B."""
     a, b = _ids(id_col, 2)
     seeded = _block(id_col, a, "Drafted", "Row A") + _block(
         id_col, b, "Approved", "Row B"
     )
     root, _git = _git_tree(tmp_path, lambda r: _append(r, rel, seeded))
-    _approve(root, rel, id_col, a, "Row A")
+    _accept(root, rel, id_col, a, "Row A")
     _rewrite(root, rel, 'title = "Row B"', 'title = "Row B, rewritten unread"')
     recorded = (SNAP.snapshot_root(root) / rel).read_bytes()
     named = "{} {}: Title".format(rel, b)
-    ref = ["--approves", Path(rel).name + "=the-sitting"]
+    ref = ["--accepts", Path(rel).name + "=the-sitting"]
 
     bare = _snapshot_cli(root)
     assert bare.returncode != 0 and named in bare.stderr, bare.stdout + bare.stderr
@@ -762,19 +762,19 @@ def test_a_drifted_row_outside_the_act_REFUSES_it_until_the_act_names_it(
     assert "re-accepted: " + b in _last_stamp_line(root), _last_stamp_line(root)
 
 
-@pytest.mark.parametrize("rel,approved_col,drifted_col", _SHARED)
-def test_in_a_SHARED_file_one_tiers_drift_refuses_anothers_approval(
-    tmp_path, rel, approved_col, drifted_col
+@pytest.mark.parametrize("rel,accepted_col,drifted_col", _SHARED)
+def test_in_a_SHARED_file_one_tiers_drift_refuses_anothers_acceptance(
+    tmp_path, rel, accepted_col, drifted_col
 ):
     """Tiers sharing one file share one record copy, so a per-file authority
-    let an approval in one tier carry another tier's drift."""
-    (a,) = _ids(approved_col, 1)
+    let an acceptance in one tier carry another tier's drift."""
+    (a,) = _ids(accepted_col, 1)
     (b,) = _ids(drifted_col, 1)
-    seeded = _block(approved_col, a, "Drafted", "Row A") + _block(
+    seeded = _block(accepted_col, a, "Drafted", "Row A") + _block(
         drifted_col, b, "Approved", "Row B"
     )
     root, _git = _git_tree(tmp_path, lambda r: _append(r, rel, seeded))
-    _approve(root, rel, approved_col, a, "Row A")
+    _accept(root, rel, accepted_col, a, "Row A")
     _rewrite(root, rel, 'title = "Row B"', 'title = "Row B, rewritten unread"')
     proc = _snapshot_cli(root)
     assert proc.returncode != 0, proc.stdout + proc.stderr
@@ -782,8 +782,8 @@ def test_in_a_SHARED_file_one_tiers_drift_refuses_anothers_approval(
 
 
 def test_an_act_with_NO_drift_outside_it_refreshes_as_before(tmp_path):
-    """The rule costs an act that carries no unattested drift nothing: one row
-    approved in every compared tier at once, no flag, every registry copied."""
+    """The rule costs an act that carries no unaccepted drift nothing: one row
+    accepted in every compared tier at once, no flag, every registry copied."""
     rows = {(rel, col): _ids(col, 1)[0] for rel, col in SNAP.SNAPSHOT_TIERS}
 
     def prepare(root):
@@ -792,7 +792,7 @@ def test_an_act_with_NO_drift_outside_it_refreshes_as_before(tmp_path):
 
     root, _git = _git_tree(tmp_path, prepare)
     for (rel, col), rid in rows.items():
-        _approve(root, rel, col, rid, "Row A")
+        _accept(root, rel, col, rid, "Row A")
     proc = _snapshot_cli(root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     for rel, _col in SNAP.SNAPSHOT_TIERS:
@@ -815,7 +815,7 @@ def test_SEVEN_drifted_rows_are_ALL_named_with_none_cut_off(tmp_path):
     lines = ["{} {}: Title".format(SR_REL, rid) for rid in seven]
     refusal = SNAP.refresh_refusal(root)  # the whole-ledger arm...
     assert all(line in refusal for line in lines) and "more row" not in refusal
-    _approve(root, SR_REL, "SR-ID", a, "Row A")  # ...and an act approving A
+    _accept(root, SR_REL, "SR-ID", a, "Row A")  # ...and an act accepting A
     proc = _snapshot_cli(root)
     assert proc.returncode != 0, proc.stdout + proc.stderr
     assert [line for line in lines if line not in proc.stderr] == [], proc.stderr
@@ -823,7 +823,7 @@ def test_SEVEN_drifted_rows_are_ALL_named_with_none_cut_off(tmp_path):
 
 
 def test_a_drifted_NEED_refuses_the_act_until_the_act_names_it(tmp_path):
-    """The needs file's two tiers are compared tiers (SR-207): an approved need
+    """The needs file's two tiers are compared tiers (SR-207): an accepted need
     whose text moved refuses an act copying the needs registry, naming the need
     and the cell, however the registry is named; `--reaccepts SN-###` clears it,
     copies the registry and records the need in the act ledger."""
@@ -833,7 +833,7 @@ def test_a_drifted_NEED_refuses_the_act_until_the_act_names_it(tmp_path):
     assert (needs, "STK-ID") in SNAP.SNAPSHOT_TIERS
     _rewrite(root, needs, 'why = "', 'why = "Amended, unread. ')
     recorded = (SNAP.snapshot_root(root) / needs).read_bytes()
-    ref = ["--approves", Path(needs).name + "=the-sitting"]
+    ref = ["--accepts", Path(needs).name + "=the-sitting"]
     proc = _snapshot_cli(root, *ref)
     assert proc.returncode != 0, proc.stdout + proc.stderr
     assert "{} SN-001: Why".format(needs) in proc.stderr, proc.stderr
@@ -855,7 +855,7 @@ def test_parse_reaccepts_reads_comma_joined_row_ids_of_compared_tiers():
         "SN-001",
         "STK-01",
     }
-    # A work item and the `;` of the `--approves` idiom each name no row of a
+    # A work item and the `;` of the `--accepts` idiom each name no row of a
     # compared tier; a refusal beats a re-acceptance that matched nothing
     # while reading as though it had.
     for bad in ("WI-635", "SR-012;LLR-061", "sr-012"):
@@ -875,8 +875,8 @@ def test_a_reaccepted_id_that_names_NO_row_is_refused(tmp_path):
 
 
 @pytest.mark.parametrize("rel,id_col", _TIERS)
-def test_a_REMOVED_approved_row_is_absorbed_like_an_amendment(tmp_path, rel, id_col):
-    """Deleting an approved row changes the record as surely as rewriting it:
+def test_a_REMOVED_accepted_row_is_absorbed_like_an_amendment(tmp_path, rel, id_col):
+    """Deleting an accepted row changes the record as surely as rewriting it:
     the copy drops the text an operator blessed. The ledger reads the recorded rows
     as well as the live ones, so a removal is absorbed in every compared tier,
     those sharing a file included."""
@@ -889,8 +889,8 @@ def test_a_REMOVED_approved_row_is_absorbed_like_an_amendment(tmp_path, rel, id_
     assert b in SNAP.refresh_ledger(root)[rel]["absorbed"]
 
 
-def test_a_REMOVED_approved_row_REFUSES_the_act_until_the_act_names_it(tmp_path):
-    """Row A is approved while row B, approved and recorded, is deleted from the
+def test_a_REMOVED_accepted_row_REFUSES_the_act_until_the_act_names_it(tmp_path):
+    """Row A is accepted while row B, accepted and recorded, is deleted from the
     live registry. A flip scoped the registry and the copy carried the deletion
     into the record unnamed. Now the act is refused naming B as removed, a ref
     for the registry does not clear it, and naming B in `--reaccepts` is how the
@@ -899,11 +899,11 @@ def test_a_REMOVED_approved_row_REFUSES_the_act_until_the_act_names_it(tmp_path)
     removed = _block("SR-ID", b, "Approved", "Row B")
     seeded = _block("SR-ID", a, "Drafted", "Row A") + removed
     root, _git = _git_tree(tmp_path, lambda r: _append(r, SR_REL, seeded))
-    _approve(root, SR_REL, "SR-ID", a, "Row A")
+    _accept(root, SR_REL, "SR-ID", a, "Row A")
     _rewrite(root, SR_REL, removed, "")
     recorded = (SNAP.snapshot_root(root) / SR_REL).read_bytes()
     named = "{} {}: removed".format(SR_REL, b)
-    ref = ["--approves", "system-requirements.toml=the-sitting"]
+    ref = ["--accepts", "system-requirements.toml=the-sitting"]
 
     bare = _snapshot_cli(root)
     assert bare.returncode != 0 and named in bare.stderr, bare.stdout + bare.stderr
@@ -1038,7 +1038,7 @@ def test_a_stale_other_carrier_file_is_DELETED_in_the_same_act(tmp_path):
 #
 # `SNAPSHOTTED` copies interfaces/external/components precisely because their
 # maturity cells move only by the operator's hand. Until adversarial round 2 (2026-08-15)
-# `_claims_approval` read `Status` alone, so every one of those rows answered
+# `_claims_acceptance` read `Status` alone, so every one of those rows answered
 # False, was never drift-compared, and the copies recorded nothing anyone would
 # ever look at. These tests are the pin that this cannot silently return.
 
@@ -1046,15 +1046,15 @@ IF_REL = "docs/requirements/interfaces.toml"
 CMP_REL = "docs/requirements/components.toml"
 
 
-def _approved_offspine(tmp_path, rel, id_col, cell, live_value):
-    """A seeded tree in which the FIRST row of `rel` reads approved-or-above on
+def _accepted_offspine(tmp_path, rel, id_col, cell, live_value):
+    """A seeded tree in which the FIRST row of `rel` reads accepted-or-above on
     its own maturity cell, on BOTH sides of the comparison.
 
     The flip happens BEFORE the seed deliberately, and only where the registry
     still carries a non-claiming row to flip: when this fixture was written
-    every shipped IF and CMP row read `Drafted`, so a fixture that approved
+    every shipped IF and CMP row read `Drafted`, so a fixture that accepted
     nothing would have asserted against a predicate that is False for the
-    honest reason. The operator approved all four CMP rows on 2026-08-22, so for
+    honest reason. The operator accepted all four CMP rows on 2026-08-22, so for
     CMP the live registry ALREADY carries claiming rows and there is nothing
     to flip — the closing `assert claiming` keeps the anti-vacuity teeth
     either way."""
@@ -1069,16 +1069,16 @@ def _approved_offspine(tmp_path, rel, id_col, cell, live_value):
         )
     SNAP.copy_live(root, seed=True)
     rows = load_script("spine_carrier").load(root / rel, id_col, keep_examples=False)
-    claiming = [r for r in rows if SNAP._claims_approval(r)]
-    assert claiming, "fixture: no row claims approval on " + cell
-    return root, claiming[0], [r for r in rows if not SNAP._claims_approval(r)]
+    claiming = [r for r in rows if SNAP._claims_acceptance(r)]
+    assert claiming, "fixture: no row claims acceptance on " + cell
+    return root, claiming[0], [r for r in rows if not SNAP._claims_acceptance(r)]
 
 
-def test_an_APPROVAL_cell_tier_is_drift_compared_like_the_spine(tmp_path):
+def test_an_ACCEPTANCE_cell_tier_is_drift_compared_like_the_spine(tmp_path):
     # IF (and the depth-0 frame) carry `Status` — the same cell as the spine
     # since 2026-08-17; they used to carry `Approval`, which is why this
     # off-spine drift comparison needed finding at all.
-    root, row, unclaimed = _approved_offspine(
+    root, row, unclaimed = _accepted_offspine(
         tmp_path, IF_REL, "IF-ID", "Status", ("Drafted", "Approved")
     )
     before = SNAP.rows_for(SNAP.load_all(root), IF_REL, "IF-ID")
@@ -1086,9 +1086,9 @@ def test_an_APPROVAL_cell_tier_is_drift_compared_like_the_spine(tmp_path):
     moved = dict(row, Contract=(row.get("Contract") or "") + " (amended)")
     assert SNAP.is_drifted(IF_REL, "IF-ID", moved, before)
     assert set(SNAP.drifted_cells(IF_REL, "IF-ID", moved, before)) == {"Contract"}
-    # ...and a row that has NOT been approved still cannot drift: it has made no
+    # ...and a row that has NOT been accepted still cannot drift: it has made no
     # claim to fall from, exactly as a Drafted SR cannot.
-    assert unclaimed, "fixture: every row was approved, so the negative is vacuous"
+    assert unclaimed, "fixture: every row was accepted, so the negative is vacuous"
     still_draft = dict(unclaimed[0], Contract="rewritten entirely")
     assert not SNAP.is_drifted(IF_REL, "IF-ID", still_draft, before)
 
@@ -1097,7 +1097,7 @@ def test_a_STATE_cell_tier_is_drift_compared_like_the_spine(tmp_path):
     # CMP carries `Status` too, whose ladder semantics are spine_rules's, not a
     # second set written here — `Approved` and `Founded` are the values that
     # table maps to Approved-or-above.
-    root, row, _unclaimed = _approved_offspine(
+    root, row, _unclaimed = _accepted_offspine(
         tmp_path, CMP_REL, "CMP-ID", "Status", ("Drafted", "Founded")
     )
     before = SNAP.rows_for(SNAP.load_all(root), CMP_REL, "CMP-ID")
@@ -1112,7 +1112,7 @@ def test_the_claimed_sets_are_DERIVED_from_derive_gates_one_ruled_table():
     someone edits one of them — and the ladder table is the declared one home."""
     dg = load_script("spine_rules")
     claimed = (dg.APPROVED, dg.FOUNDED)
-    assert SNAP._APPROVAL_CELL_CLAIMED == frozenset(
+    assert SNAP._ACCEPTANCE_CELL_CLAIMED == frozenset(
         k for k, v in dg.BIF_MATURITY.items() if v in claimed
     )
     assert SNAP._STATE_CELL_CLAIMED == frozenset(
@@ -1122,14 +1122,14 @@ def test_the_claimed_sets_are_DERIVED_from_derive_gates_one_ruled_table():
     # edit that silently drops one has to come through this line. Title-case
     # since the registries speak the one enum; the predicate lower-cases before
     # the lookup, which is what lets the tables stay lowercase-keyed.
-    assert SNAP._claims_approval({"Status": "Approved"})
-    assert SNAP._claims_approval({"Status": "Founded"})
-    assert not SNAP._claims_approval({"Status": "Drafted"})
+    assert SNAP._claims_acceptance({"Status": "Approved"})
+    assert SNAP._claims_acceptance({"Status": "Founded"})
+    assert not SNAP._claims_acceptance({"Status": "Drafted"})
     # The RETIRED CMP words claim nothing — `planned`/`verified` left the
     # vocabulary rather than being renamed, and a stray cell still carrying one
     # must read as unsettled rather than resolving through a stale table row.
-    assert not SNAP._claims_approval({"Status": "verified"})
-    assert not SNAP._claims_approval({"Status": "built"})
+    assert not SNAP._claims_acceptance({"Status": "verified"})
+    assert not SNAP._claims_acceptance({"Status": "built"})
 
 
 def test_the_needs_files_two_tiers_are_COMPARED_tiers():
@@ -1140,13 +1140,13 @@ def test_the_needs_files_two_tiers_are_COMPARED_tiers():
     (`NEED_TIERS`)."""
     assert SNAP.NEEDS_REL in SNAP.SNAPSHOTTED
     assert set(SNAP.NEED_TIERS) <= set(SNAP.SNAPSHOT_TIERS)
-    assert SNAP._claims_approval({"Status": "Approved"})
+    assert SNAP._claims_acceptance({"Status": "Approved"})
 
 
 # --- unanchored, both directions ----------------------------------------------
 
 
-def test_an_approved_row_ABSENT_from_the_snapshot_is_unanchored(tmp_path):
+def test_an_accepted_row_ABSENT_from_the_snapshot_is_unanchored(tmp_path):
     root = _seeded(tmp_path)
     assert SNAP.unanchored_findings(root) == []  # green first
     sid, row = _first_row_at(root, "approved")
@@ -1169,10 +1169,12 @@ def _rest_after_row(rest):
     return rest[at + 1 :] if at >= 0 else ""
 
 
-def test_an_approval_whose_snapshot_copy_reads_BELOW_approval_is_unanchored(tmp_path):
+def test_an_acceptance_whose_snapshot_copy_reads_BELOW_acceptance_is_unanchored(
+    tmp_path,
+):
     """THE CASE THE WHOLE DESIGN EXISTS FOR, and the strongest single argument
     for whole-file copying: the snapshot keeps each row's own `Status`, so a
-    live row reading approved whose copy reads `Drafted` is provably an approval
+    live row reading accepted whose copy reads `Drafted` is provably an acceptance
     that never rode a copy. Row extraction would have deleted this evidence."""
     root = _seeded(tmp_path)
     sid, _row = _first_row_at(root, "approved")
@@ -1186,10 +1188,10 @@ def test_an_approval_whose_snapshot_copy_reads_BELOW_approval_is_unanchored(tmp_
     assert any(sid in f and "Drafted" in f for f in found), found
 
 
-def test_an_approved_NEED_or_STAKEHOLDER_without_its_anchor_is_unanchored(tmp_path):
-    """The unanchored rule covers the needs file's two tiers: an approved need
-    the record does not hold, and an approved stakeholder whose recorded copy
-    reads below approval, are each an approval that never rode a copy."""
+def test_an_accepted_NEED_or_STAKEHOLDER_without_its_anchor_is_unanchored(tmp_path):
+    """The unanchored rule covers the needs file's two tiers: an accepted need
+    the record does not hold, and an accepted stakeholder whose recorded copy
+    reads below acceptance, are each an acceptance that never rode a copy."""
     root = _seeded(tmp_path)
     needs = SNAP.NEEDS_REL
     assert SNAP.unanchored_findings(root) == []
@@ -1226,7 +1228,7 @@ def test_a_registry_missing_from_an_EXISTING_snapshot_is_reported(tmp_path):
     [
         pytest.param(SR_REL, True, id="SR-copy-deleted"),
         pytest.param(SR_REL, False, id="SR-deleted-with-its-copy"),
-        pytest.param(IF_REL, True, id="IF-copy-deleted-no-approved-row"),
+        pytest.param(IF_REL, True, id="IF-copy-deleted-no-accepted-row"),
         pytest.param(IF_REL, False, id="IF-deleted-with-its-copy"),
     ],
 )
@@ -1237,9 +1239,9 @@ def test_an_ESTABLISHED_registry_missing_from_the_record_is_ALWAYS_reported(
     joined the record after it was first signed, and to it alone. For an
     established registry the hole is reported whatever its live rows claim:
     deleting the registry together with its copy leaves no row claiming
-    approval, and a rule reading only the claims would let the deletion erase
+    acceptance, and a rule reading only the claims would let the deletion erase
     its own evidence."""
-    assert SNAP.FIRST_COPY_AT_APPROVAL == (ASSUMPTIONS_REL,)
+    assert SNAP.FIRST_COPY_AT_ACCEPTANCE == (ASSUMPTIONS_REL,)
     root = _seeded(tmp_path)
     (SNAP.snapshot_root(root) / rel).unlink()
     if not with_live:
@@ -1250,7 +1252,7 @@ def test_an_ESTABLISHED_registry_missing_from_the_record_is_ALWAYS_reported(
 
 def test_an_unparseable_snapshot_REFUSES_rather_than_reading_as_empty(tmp_path):
     """`None` and `{}` are opposite claims. An empty read here means "no row was
-    ever approved", which turns a broken file into a clean bill on every row.
+    ever accepted", which turns a broken file into a clean bill on every row.
     Unlike git history, a snapshot file is on disk and a person can fix it."""
     root = _seeded(tmp_path)
     (SNAP.snapshot_root(root) / SR_REL).write_text(
@@ -1350,7 +1352,7 @@ def test_a_PARTIAL_copy_fails_the_mirror_invariant(tmp_path):
     root, run_git = _git_tree(tmp_path)
     # RE-POINTED AT D-9 STEP 5: the first move was Verified->Planned, two live
     # values that FOLDED into one. Any real cell edit serves — this uses the
-    # Title cell, which is approved text and therefore exactly what a snapshot
+    # Title cell, which is accepted text and therefore exactly what a snapshot
     # is supposed to record.
     _rewrite(root, SR_REL, 'title = "', 'title = "amended ')
     shutil.copyfile(root / SR_REL, SNAP.snapshot_root(root) / SR_REL)
@@ -1393,8 +1395,8 @@ def test_deleting_the_WHOLE_record_is_SILENT(tmp_path):
 _WORKED_SR = """
 [requirement.SR-001]
 title = "The worked row"
-requirement = "The system shall record what a human approved."
-rationale = "Without a record of what was blessed, an approval cannot be audited."
+requirement = "The system shall record what a human accepted."
+rationale = "Without a record of what was blessed, an acceptance cannot be audited."
 acceptance_criteria = "A copy of the registry exists under docs/archive/last_approved/."
 priority = "M"
 verification_method = "Test"
@@ -1407,12 +1409,12 @@ def test_a_HOLE_in_the_snapshot_REDS_A_REAL_STRICT_INTEGRITY_RUN(scaffold):
     CRITICAL-1). The pin below this one reads `trace.py`'s SOURCE for the string
     `findings.integrity += findings.snapshot_findings`, and the review executed
     two plausible routing refactors that keep every such string in place while
-    the floor stops firing — the approval-record rules disarmed with the whole
+    the floor stops firing — the acceptance-record rules disarmed with the whole
     suite green. A grep cannot tell you what a program does.
 
     So this runs the real command over a real repo: bootstrap a scaffold, put ONE
-    approved requirement in it, seed the record, and then punch the exact hole the
-    rule exists to catch — an approved row with no copy. `--strict-integrity` is
+    accepted requirement in it, seed the record, and then punch the exact hole the
+    rule exists to catch — an accepted row with no copy. `--strict-integrity` is
     what the pre-commit hook and the DevStg-Reqs `registry-integrity` step both
     run.
 
@@ -1457,7 +1459,7 @@ def test_the_snapshot_rules_are_ARMED_on_traces_INTEGRITY_floor():
     migration step 7". This is that step, so the pin inverts.
 
     BOTH snapshot rules arm together, because they are one property read from
-    two directions: UNANCHORED asks "did every approval ride a copy" and the
+    two directions: UNANCHORED asks "did every acceptance ride a copy" and the
     MIRROR invariant asks "is every copy a copy". Either one alone leaves the
     record forgeable.
 
@@ -1528,33 +1530,33 @@ def test_a_LANDED_forgery_reds_EVERY_LATER_RUN_though_nothing_is_staged(tmp_path
 def _prescribes_a_working_repair(finding, live_rel):
     """A mirror finding's repair is either restoring the blessed copy or an
     explicit fresh act naming its authority for the registry concerned — and
-    that authority is a `--approves` token the snapshot CLI's own resolver
+    that authority is a `--accepts` token the snapshot CLI's own resolver
     accepts for THIS registry, so the prescribed command does not refuse."""
-    m = re.search(r'--approves "([^"]*)"', finding)
+    m = re.search(r'--accepts "([^"]*)"', finding)
     return (
         "restore the copy that was blessed" in finding
         and "--reaccepts <ROW-ID>" in finding
         and m is not None
-        and list(SNAP.parse_approves(m.group(1))) == [SNAP.resolve_registry(live_rel)]
+        and list(SNAP.parse_accepts(m.group(1))) == [SNAP.resolve_registry(live_rel)]
     )
 
 
 def test_the_mirror_repair_names_a_registry_the_resolver_accepts_per_carrier():
     """`resolve_registry` accepts a registry's canonical rel, filename or stem,
     and a CSV carrier's live path is none of those. The repair clause is
-    written for whichever carrier diverged, so its `--approves` token must
+    written for whichever carrier diverged, so its `--accepts` token must
     resolve for both — parsed here through the real resolver, in process."""
     for live_rel in (SR_REL, SR_REL[: -len(".toml")] + ".csv"):
         repair = AR._mirror_repair(live_rel)
-        m = re.search(r'--approves "([^"]*)"', repair)
+        m = re.search(r'--accepts "([^"]*)"', repair)
         assert m, repair
-        assert list(SNAP.parse_approves(m.group(1))) == [SR_REL], repair
+        assert list(SNAP.parse_accepts(m.group(1))) == [SR_REL], repair
 
 
 def test_a_PENDING_AMENDMENT_leaves_the_committed_mirror_GREEN(tmp_path):
     """THE RULE THAT WOULD HAVE BEEN WRONG, refused deliberately. Comparing the
     snapshot to live in the WORKING TREE reds every pending amendment — and the
-    lag between an amendment and its approval is the signal the whole
+    lag between an amendment and its acceptance is the signal the whole
     mechanism exists to render. The comparison is pinned to the commit that
     WROTE each copy, so live moving on afterwards is silent here."""
     root, run_git = _git_tree(tmp_path)
@@ -1615,29 +1617,29 @@ def test_a_LANDED_forgery_reds_A_REAL_STRICT_INTEGRITY_RUN(scaffold):
     assert "LANDED" in out and "integrity=1" in out, out
 
 
-def test_approval_stamp_names_the_commit_that_MOVED_A_STATUS_CELL(tmp_path):
+def test_acceptance_stamp_names_the_commit_that_MOVED_A_STATUS_CELL(tmp_path):
     """The provenance the re-acceptance brief promises its reader (MAJOR-4).
     `stamp` moves on ANY snapshot write, including a refresh that absorbs an
-    amendment approving no new maturity; this one moves only when a maturity cell
+    amendment accepting no new maturity; this one moves only when a maturity cell
     does. (Since WI-571 a traced-only refresh writes NOTHING, so the write that
     exercises the distinction is a named amendment, not a traced re-point.)"""
     root, run_git = _git_tree(tmp_path)
-    seeded = SNAP.approval_stamp(root)[0]
+    seeded = SNAP.acceptance_stamp(root)[0]
     assert seeded, "the seeding commit wrote every status line there is"
     # An amendment absorbed under a ref: the record is re-written for the named
     # registry, but no maturity cell moves.
     ssid, srow = _first_row_at(root, "approved")
     _rewrite(root, SR_REL, srow["Title"], srow["Title"] + " (amended)")
-    SNAP.copy_live(root, approves={SR_REL: "the sitting"}, reaccepts={ssid})
+    SNAP.copy_live(root, accepts={SR_REL: "the sitting"}, reaccepts={ssid})
     run_git("add", "-A")
     run_git("commit", "-m", "an amendment absorbed under a ref")
     assert SNAP.stamp(root)[0] != seeded, "the write stamp must follow any write"
-    assert SNAP.approval_stamp(root)[0] == seeded, "no status cell moved"
+    assert SNAP.acceptance_stamp(root)[0] == seeded, "no status cell moved"
     # ...and now one does.
     _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
     run_git("add", "-A")
     run_git("commit", "-m", "a maturity cell moves")
-    assert SNAP.approval_stamp(root)[0] not in ("", seeded)
+    assert SNAP.acceptance_stamp(root)[0] not in ("", seeded)
 
 
 def test_the_README_is_prose_and_is_exempt_from_the_mirror(tmp_path):
@@ -1770,7 +1772,7 @@ def test_a_reaccepting_act_records_its_verdict_and_refuses_a_bad_one(tmp_path):
     sid, row = _first_row_at(root, "approved")
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (clarified)")
     with pytest.raises(SystemExit) as no_rows:
-        SNAP.copy_live(root, approves={SR_REL: "x"}, verdict="docs/reviews/v.md")
+        SNAP.copy_live(root, accepts={SR_REL: "x"}, verdict="docs/reviews/v.md")
     assert "names no re-accepted row" in str(no_rows.value), no_rows.value
     with pytest.raises(SystemExit) as no_file:
         SNAP.copy_live(root, reaccepts={sid}, verdict="docs/reviews/v.md")
@@ -1907,19 +1909,19 @@ def test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip(tmp_path):
     `check_trajectory.staged_spine_amendments` — the function that MINTS an
     amendment adjudication — fires only when the row's status is unchanged
     across the two trees. So an amendment that moves its row's status in the
-    SAME commit is invisible to it. (Amend-plus-flip is no longer approval,
+    SAME commit is invisible to it. (Amend-plus-flip is no longer acceptance,
     WI-806: a commit that also writes the record is refused by the
     text-then-act rule, but a status move with no act is still legal.) A
     baseline derived from that seam, or from the git walk that keyed off the
     flip, therefore cannot see the very change a sitting exists to judge. The
     snapshot is a baseline that is provably NOT the text under judgement,
-    because the mirror invariant proves it was copied in an approval commit.
+    because the mirror invariant proves it was copied in an acceptance commit.
 
     Implements: TC-153
     """
     root, run_git = _git_tree(tmp_path)
     sid, row = _first_row_at(root, "approved")
-    # Amend an approved cell AND flip the row, in one staged change.
+    # Amend an accepted cell AND flip the row, in one staged change.
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
     _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
     run_git("add", "-A")
@@ -1949,19 +1951,19 @@ def test_intake_snapshot_subcommand_seeds_then_refreshes(tmp_path):
     assert "SEEDED" not in again.stdout
 
 
-# --- the assumptions registry inside the approval act (SR-191, SR-192, LLR-220;
+# --- the assumptions registry inside the acceptance act (SR-191, SR-192, LLR-220;
 # TC-218) -----------------------------------------------------------------------
-# The registry holds two approvable tiers, and each is recorded exactly as every
-# other approved row is: a lane may not approve one, the act that does rides its
+# The registry holds two acceptance tiers, and each is recorded exactly as every
+# other accepted row is: a lane may not accept one, the act that does rides its
 # own reviewed commit and writes the registry's first copy, and an amendment
 # afterwards is drift from that copy. The record here predates the registry, as
 # it does in any repository that signed before adopting the tier, so the first
-# copy is the approval act's.
+# copy is the acceptance act's.
 
 ASSUMPTIONS_REL = "docs/requirements/assumptions.toml"
 _AR = load_script("acceptance_record")
 
-# One real row per tier, in the tier's own cells, and the approved cell an
+# One real row per tier, in the tier's own cells, and the accepted cell an
 # amendment afterwards moves.
 _TIER_ROWS = {
     "DA-ID": (
@@ -1998,12 +2000,12 @@ def _head(run_git):
 
 
 @pytest.mark.parametrize("rel,id_col", _ASSUMPTION_TIERS)
-def test_an_assumption_tier_row_is_approved_only_inside_the_approval_act(
+def test_an_assumption_tier_row_is_accepted_only_inside_the_acceptance_act(
     tmp_path, rel, id_col
 ):
     rid, key, block, cell = _TIER_ROWS[id_col]
     assert (rel, id_col) in SNAP.SNAPSHOT_TIERS
-    assert (rel, id_col) in _AR.APPROVAL_ACT_CSVS
+    assert (rel, id_col) in _AR.ACCEPTANCE_ACT_CSVS
     root, run_git = _git_tree(tmp_path, _without_the_registry)
     assert not (SNAP.snapshot_root(root) / rel).exists()
     _append(root, rel, block)
@@ -2011,34 +2013,34 @@ def test_an_assumption_tier_row_is_approved_only_inside_the_approval_act(
     run_git("commit", "-m", "draft the row")
     drafted = _head(run_git)
 
-    # Before the first approval the registry has no copy, and the
+    # Before the first acceptance the registry has no copy, and the
     # unanchored-record rule reports nothing for it.
     assert [f for f in SNAP.unanchored_findings(root) if rel in f or rid in f] == []
 
-    # A LANE whose delta approves the row is refused at the merge slot, by name.
+    # A LANE whose delta accepts the row is refused at the merge slot, by name.
     _rewrite(root, rel, 'status = "Drafted"', 'status = "Approved"')
     run_git("add", "-A")
-    run_git("commit", "-m", "a lane approves the row")
+    run_git("commit", "-m", "a lane accepts the row")
     head = _head(run_git)
-    refusal = _AR.merge_approval_refusal(root, drafted, head, [], trunk=head)
+    refusal = _AR.merge_acceptance_refusal(root, drafted, head, [], trunk=head)
     assert refusal and rid in refusal and rel in refusal, refusal
-    # ...and an approval with no copy behind it is the hole the rule reports.
+    # ...and an acceptance with no copy behind it is the hole the rule reports.
     assert any(rel in f for f in SNAP.unanchored_findings(root))
     run_git("reset", "-q", "--hard", drafted)
 
-    # THE APPROVAL ACT: the flip and the record's refresh in one reviewed
+    # THE ACCEPTANCE ACT: the flip and the record's refresh in one reviewed
     # commit, which writes the registry's first copy and passes the mirror.
     _rewrite(root, rel, 'status = "Drafted"', 'status = "Approved"')
     written = SNAP.copy_live(root)
     assert "{}/{}".format(SNAP.SNAPSHOT_DIR, rel) in written, written
     run_git("add", "-A")
     assert CT.staged_snapshot_findings(root) == []
-    run_git("commit", "-m", "approve the row")
+    run_git("commit", "-m", "accept the row")
     assert CT.committed_snapshot_findings(root) == []
     assert SNAP.unanchored_findings(root) == []
     assert (SNAP.snapshot_root(root) / rel).read_bytes() == (root / rel).read_bytes()
 
-    # The approved row amended afterwards is drift from its copy.
+    # The accepted row amended afterwards is drift from its copy.
     _rewrite(root, rel, '{} = "Row X"'.format(key), '{} = "Row X, amended"'.format(key))
     record = SNAP.rows_for(SNAP.load_all(root), rel, id_col)
     (live,) = _SPINE_CARRIER.load(root / rel, id_col, keep_examples=False)
@@ -2050,7 +2052,7 @@ def test_an_assumption_tier_row_is_approved_only_inside_the_approval_act(
 # --- each act's entry names the registries it copied (SR-178, IF-220) ---------
 # A later settlement rule has to know which registries an act re-copied, and a
 # row id list cannot say it: a traced re-anchor names no row, a mixed act names
-# rows in one registry only, and a re-seed names only what it newly approved.
+# rows in one registry only, and a re-seed names only what it newly accepted.
 # The writer therefore records the files it actually copied. An entry written
 # before that record existed keeps its shape, and its copy set is unknown: no
 # reader infers one. The commit is the boundary: an entry a commit adds must
@@ -2069,7 +2071,7 @@ def _cli_ok(root, *args):
     return proc
 
 
-def test_an_approval_act_records_the_registry_it_copied(tmp_path):
+def test_an_acceptance_act_records_the_registry_it_copied(tmp_path):
     """Implements: TC-400"""
     root = _seeded_with_a_drafted_sr(tmp_path)
     draft_id, _row = _first_row_at(root, "drafted")
@@ -2099,19 +2101,19 @@ def test_a_traced_reanchor_naming_no_row_records_its_registry(tmp_path):
     """
     root = _seeded(tmp_path)
     _rewrite(root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO)
-    _cli_ok(root, "--approves", "interfaces.toml=sitting-9")
+    _cli_ok(root, "--accepts", "interfaces.toml=sitting-9")
     last = _last_act(root)
     assert last["approved"] == [] and last["reattested"] == [], last
     assert last.get("copied") == [IF_REL], last
 
 
-def test_a_mixed_approves_and_reaccepts_act_records_both_registries(tmp_path):
+def test_a_mixed_accepts_and_reaccepts_act_records_both_registries(tmp_path):
     """Implements: TC-400"""
     root = _seeded(tmp_path)
     sid, row = _first_row_at(root, "approved")
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
     _rewrite(root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO)
-    _cli_ok(root, "--approves", "interfaces.toml=sitting-9", "--reaccepts", sid)
+    _cli_ok(root, "--accepts", "interfaces.toml=sitting-9", "--reaccepts", sid)
     last = _last_act(root)
     assert last["reattested"] == [sid], last  # the rows still name one registry
     assert last.get("copied") == sorted([IF_REL, SR_REL]), last

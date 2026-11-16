@@ -293,12 +293,12 @@ BUILTIN_STEP_NAMES = frozenset(
         "verdict-rollup",
         "interface-reference",
         "okf",
-        "approval-fresh",
+        "acceptance-fresh",
         "skills-sync",
         "skills-index",
         "prompt-catalog",
         "staged-divergence",
-        "approval-immutable",
+        "acceptance-immutable",
         "held-status",
         "reserved-ids",
         "ruling-sync",
@@ -763,7 +763,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # docs/need-form-allow (ships empty). At every bar, like vocabulary —
         # the need registry is authored hardest at the LOWEST bar — but
         # WARN-FIRST ALWAYS: no `--strict` promotion here, deliberately unlike
-        # vocab_cmd/traj_cmd. Promoting a form heuristic over approved
+        # vocab_cmd/traj_cmd. Promoting a form heuristic over accepted
         # stakeholder prose to a gate is an operator ruling that has not been
         # made (WI-454's scope guard); the severity ladder stops at WARN until
         # it is.
@@ -901,8 +901,8 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_IMPL,
             "process",
         ),
-        # The test-first order (SR-217): each requirement approved after the
-        # declared `[checks] test_first_since`, with a test case approved after
+        # The test-first order (SR-217): each requirement accepted after the
+        # declared `[checks] test_first_since`, with a test case accepted after
         # its first `Implements:` line landed, read from history. AT EVERY RUNG,
         # unlike backlink-coverage above, because the gap it reads is the one
         # the ladder leaves: the ladder orders tests before code for the project
@@ -1046,7 +1046,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # was gated by nothing, so it silently drifted behind the registry it
         # summarizes — twice in one day, both times caught only by a human
         # noticing. It fails CLOSED because a stale brief is read by an OPERATOR
-        # ABOUT TO ATTEST: a short brief means an operator blesses rows they were
+        # ABOUT TO ACCEPT: a short brief means an operator blesses rows they were
         # never shown. The comparison uses the baseline the brief itself
         # DECLARES, never a re-derived one (re-deriving is the WI-322 BLOCKER,
         # where a regeneration collapsed 43 chain-row diffs to 18 while a
@@ -1055,7 +1055,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # BUILT-IN rather than a docs/stack.ini `[step:]` — 130-REVIEW-A found
         # that shipping the hook while the step lived in a project-owned
         # stack.ini BLOCKS EVERY COMMIT for an adopter whose stack.ini predates
-        # WI-325 ("check: no step named 'approval-fresh'", exit 1). Its siblings
+        # WI-325 ("check: no step named 'acceptance-fresh'", exit 1). Its siblings
         # above are all built-in for exactly this reason: check.py and the hook
         # ship together, so a step declared here can never be missing from under
         # the hook that calls it. Doubly self-arming, so a non-adopter pays
@@ -1063,20 +1063,20 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # Modified (the window is closed, so the brief is a record).
         #   AT EVERY RUNG SINCE WI-498 slice 2, and the re-derivation is the
         # clearest case in the table. The question this step asks — "is the brief
-        # an operator is about to attest FROM still the brief the registry supports?"
-        # — is asked at the moment of an ATTESTATION, and attestation happens at
+        # an operator is about to accept FROM still the brief the registry supports?"
+        # — is asked at the moment of an ACCEPTANCE, and acceptance happens at
         # every rung of the ladder, not only near the end of it. The old
         # `{DevStg-Tests, DevStg-Impl}` tag put it out of reach for exactly the
-        # repos that attest most often: an early one, whose derived bar sits at
+        # repos that accept most often: an early one, whose derived bar sits at
         # the floor for the whole of its requirements work. Doubly self-arming
         # already, so a repo with no brief still pays nothing.
         (
-            "approval-fresh",
+            "acceptance-fresh",
             (),
             [
                 sys.executable,
                 str(_SCRIPTS / "trace.py"),
-                "--approve",
+                "--accept",
                 "modified",
                 "--check",
             ],
@@ -1121,7 +1121,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # behaved oddly. That is `derived-stage`'s shape (an artifact the
         # machinery's own honesty rests on), not the dashboards'. The concrete
         # case this was written against — a repo pinned at the lowest reading for
-        # the whole duration of an approval window, so a `DevStg-Impl` step
+        # the whole duration of an acceptance window, so a `DevStg-Impl` step
         # never ran in its own CI — is the collapse `docs/stage` removes by
         # deriving over the SETTLED spine; the ARGUMENT for the tag survives it.
         (
@@ -1197,12 +1197,12 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # no --strict switch: unlike staged-divergence, there is no honest
         # warn-first state for "a historical record just got rewritten".
         (
-            "approval-immutable",
+            "acceptance-immutable",
             (),
             [
                 sys.executable,
                 str(_SCRIPTS / "check.py"),
-                "--approval-immutable",
+                "--acceptance-immutable",
             ],
             _kitladder.STAGE_NEEDS,
             "process",
@@ -1249,7 +1249,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             "process",
         ),
         # Text then act (WI-806, OI-101 Q2 amended by README Q-8): a commit that
-        # writes the approval record changes no spine cell but `Status` and
+        # writes the acceptance record changes no spine cell but `Status` and
         # adds or removes no row, for every committer; a squash of a rebased
         # lane passes when each commit it squashes does. The slot asks it of
         # each lane commit, so `--no-verify` lands nothing.
@@ -1260,8 +1260,8 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_NEEDS,
             "process",
         ),
-        # Parent first (WI-850): a commit that leaves an approved spine row
-        # under a cited parent that is not approved, where it moved either
+        # Parent first (WI-850): a commit that leaves an accepted spine row
+        # under a cited parent that is not accepted, where it moved either
         # row's status, is refused for every committer; the slot asks it of
         # each lane commit, so `--no-verify` lands nothing. A standing case the
         # commit did not move is `trace.py --strict-integrity`'s to report.
@@ -1494,9 +1494,9 @@ def _warn_retired_flag_spelling(argv=None):
 # and 5. The last four were the three DISPLAY readers (`traj_parse`,
 # `traj_panels`, `traj_status`), which now render the stage vocabulary, and
 # `agent_common.spine_stage_of` — not display at all, but the input to
-# `operator_holds`, i.e. APPROVAL AUTHORITY — which now comes through the common
+# `operator_holds`, i.e. ACCEPTANCE AUTHORITY — which now comes through the common
 # reader above. That one is why the freshness step could not retire earlier: a
-# stale value there decides who may approve.
+# stale value there decides who may accept.
 STAGE_FILE = Path(_kitstage.STAGE_FILE)
 
 
@@ -1657,7 +1657,7 @@ _COVERAGE_ENV_VARS = (
 # be asked to commit the derived block.
 _TRUNK_FRESHNESS_STEPS = frozenset(
     "derived-stage trajectory-map status-map open-items component-view okf "
-    "approval-fresh cli-reference interface-reference verdict-rollup".split()
+    "acceptance-fresh cli-reference interface-reference verdict-rollup".split()
 )
 
 # `_work_branch` shells out to git; unmemoized it would run once per step. Keyed
@@ -1865,19 +1865,19 @@ def staged_divergence(root=".", strict=False):
 # The defect this closes: `docs/ratify/<date>-*.md` is read as the record of
 # what an operator was shown at a sitting, but a regeneration used to find and
 # rewrite whichever dated file was newest — ten rewrites on one file, none of
-# them about the WI it was named for. The split (`current_approval_brief`,
-# `mint_approval_brief` in trace.py) makes `docs/ratify/CURRENT.md` the only
-# file a regeneration ever touches and `--mint-approval-brief` the only thing
+# them about the WI it was named for. The split (`current_acceptance_brief`,
+# `mint_acceptance_brief` in trace.py) makes `docs/ratify/CURRENT.md` the only
+# file a regeneration ever touches and `--mint-acceptance-brief` the only thing
 # that ever creates a dated one — but a CONVENTION with no enforcer rots the
 # way the byte baselines did (the spec's own words). This is the enforcer: it
 # reads the STAGED tree (what the commit is about to contain, exactly like
-# `approval_immutability`'s sibling `staged_divergence` reads the unstaged one)
+# `acceptance_immutability`'s sibling `staged_divergence` reads the unstaged one)
 # and refuses any status other than a plain ADD on an existing dated name.
 
-_APPROVAL_EXEMPT_NAMES = frozenset({"current.md", "readme.md"})
+_ACCEPTANCE_EXEMPT_NAMES = frozenset({"current.md", "readme.md"})
 
 
-def _is_dated_approval_brief(path):
+def _is_dated_acceptance_brief(path):
     """True for a `docs/ratify/*.md` path that is neither the live surface
     (`CURRENT.md`) nor the directory's own README — i.e. a dated brief that,
     once committed, must never change again."""
@@ -1885,10 +1885,10 @@ def _is_dated_approval_brief(path):
     if not posix.startswith("docs/ratify/"):
         return False
     name = posix.rsplit("/", 1)[-1]
-    return name.lower() not in _APPROVAL_EXEMPT_NAMES
+    return name.lower() not in _ACCEPTANCE_EXEMPT_NAMES
 
 
-def approval_immutability(root=".", strict=True):
+def acceptance_immutability(root=".", strict=True):
     """Refuse a commit whose STAGED diff modifies or deletes an
     already-committed dated re-acceptance brief. Returns the exit code.
 
@@ -1897,7 +1897,7 @@ def approval_immutability(root=".", strict=True):
     reads. `--no-renames` keeps a delete-and-recreate legible as its own two
     honest halves (D + A) rather than a single R that could hide a rewrite
     behind a fresh-looking status; a plain ADD (a brand-new dated filename,
-    what `trace.py --mint-approval-brief` ever produces) is the ONLY status this
+    what `trace.py --mint-acceptance-brief` ever produces) is the ONLY status this
     permits on a dated brief. `docs/ratify/CURRENT.md` and `README.md` are
     exempt — the live surface and the directory's own reference doc, neither
     of them history.
@@ -1916,7 +1916,7 @@ def approval_immutability(root=".", strict=True):
     top = _git_out(root, ["rev-parse", "--show-toplevel"])
     if top is None or not top.strip():
         print(
-            "  SKIP  approval-immutable  no git, or {} is not a git checkout — "
+            "  SKIP  acceptance-immutable  no git, or {} is not a git checkout — "
             "there is no index to compare against.".format(Path(root).resolve())
         )
         return 0
@@ -1926,7 +1926,7 @@ def approval_immutability(root=".", strict=True):
         at_top = False
     if not at_top:
         print(
-            "  SKIP  approval-immutable  {} is not the top level of its git "
+            "  SKIP  acceptance-immutable  {} is not the top level of its git "
             "checkout ({}), so docs/ratify/ does not resolve against this "
             "index.".format(Path(root).resolve(), top.strip())
         )
@@ -1934,7 +1934,7 @@ def approval_immutability(root=".", strict=True):
     diff = _git_out(root, ["diff", "--cached", "--name-status", "--no-renames", "-z"])
     if diff is None:
         print(
-            "  SKIP  approval-immutable  `git diff --cached` failed — the "
+            "  SKIP  acceptance-immutable  `git diff --cached` failed — the "
             "staged tree could not be inspected."
         )
         return 0
@@ -1945,18 +1945,18 @@ def approval_immutability(root=".", strict=True):
     while i + 1 < len(tokens):
         status, path = tokens[i], tokens[i + 1]
         i += 2
-        if not _is_dated_approval_brief(path):
+        if not _is_dated_acceptance_brief(path):
             continue
         if status != "A":
             violations.append((status, path))
     if not violations:
         print(
-            "  ok    approval-immutable  no staged change touches an existing "
+            "  ok    acceptance-immutable  no staged change touches an existing "
             "dated docs/ratify/ brief."
         )
         return 0
     print(
-        "  FAIL  approval-immutable  {} dated re-acceptance brief(s) staged "
+        "  FAIL  acceptance-immutable  {} dated re-acceptance brief(s) staged "
         "with a change other than a plain add — a dated brief is IMMUTABLE "
         "once minted:".format(len(violations))
     )
@@ -1965,9 +1965,9 @@ def approval_immutability(root=".", strict=True):
     print(
         "    Fix: revert the change to the existing dated file (`git restore "
         "--staged --worktree -- <path>`); regenerate the LIVE surface at "
-        "`docs/ratify/CURRENT.md` instead (`trace.py --approve modified --out "
+        "`docs/ratify/CURRENT.md` instead (`trace.py --accept modified --out "
         "docs/ratify/CURRENT.md`); mint a NEW dated brief with `trace.py "
-        "--mint-approval-brief SLUG` rather than editing an old one."
+        "--mint-acceptance-brief SLUG` rather than editing an old one."
     )
     return 1 if strict else 0
 
@@ -2022,22 +2022,22 @@ def _held_squash_refusal(root, head, tip):
     import held_status  # leaf readers of two git trees, siblings of this one
     import text_then_act
 
-    riders = (held_status.commit_held_approval_lines,)
+    riders = (held_status.commit_held_acceptance_lines,)
     lines = text_then_act.squash_walk(root, head, tip, held_status.HELD_PATHS, riders)
     if lines is None:
         dial = _kitauthority.dial_at(root, "HEAD")
-        lines = held_status.held_approval_lines(root, [head], None, dial)
+        lines = held_status.held_acceptance_lines(root, [head], None, dial)
         lines = lines and lines + [text_then_act.SQUASH_REBASE_HINT]
     return "; ".join(lines) if lines else None
 
 
 def _held_status_mode(args):
-    """The `--held-status` entry point, `_approval_immutable_mode`'s shape:
+    """The `--held-status` entry point, `_acceptance_immutable_mode`'s shape:
     EXIT 1 printing the refusal, or 0."""
     if not args.held_status:
         return
     refusal = _held_status_refusal(".")
-    msg = refusal or "no held status move or held approval claim to refuse"
+    msg = refusal or "no held status move or held acceptance claim to refuse"
     print("  {:5} held-status  {}".format("FAIL" if refusal else "ok", msg))
     sys.exit(1 if refusal else 0)
 
@@ -2171,7 +2171,7 @@ def _text_then_act_mode(args):
     if not args.text_then_act:
         return
     refusal = _text_then_act_refusal(".")
-    msg = refusal or "no staged commit mixes spine text with the approval act"
+    msg = refusal or "no staged commit mixes spine text with the acceptance act"
     print("  {:5} text-then-act  {}".format("FAIL" if refusal else "ok", msg))
     sys.exit(1 if refusal else 0)
 
@@ -2200,7 +2200,7 @@ def _parent_first_mode(args):
         return
     refusal = _parent_first_refusal(".")
     msg = (
-        refusal or "no staged status leaves an approved row under an unapproved parent"
+        refusal or "no staged status leaves an accepted row under an unaccepted parent"
     )
     print("  {:5} parent-first  {}".format("FAIL" if refusal else "ok", msg))
     sys.exit(1 if refusal else 0)
@@ -2225,13 +2225,13 @@ def _loop_trailer_mode(args):
     sys.exit(1 if refusal else 0)
 
 
-def _approval_immutable_mode(args):
-    """The `--approval-immutable` entry point, the same shape as
+def _acceptance_immutable_mode(args):
+    """The `--acceptance-immutable` entry point, the same shape as
     `_divergence_mode`: EXIT with the detector's code when the flag selects
     it, else return and let main() build the ordinary plan."""
-    if not args.approval_immutable:
+    if not args.acceptance_immutable:
         return
-    sys.exit(approval_immutability("."))
+    sys.exit(acceptance_immutability("."))
 
 
 def _divergence_mode(args):
@@ -2620,7 +2620,7 @@ def main():
         "AT OR ABOVE runs; paths can also select below it (default: the derived effective stage in docs/stage, "
         "else all). Drafting a row cannot lower it — the derivation reads the "
         "SETTLED spine — so there is no dial that turns product checks off by "
-        "opening an approval window. The retired G1/G2/G3 and DevBar-* "  # check_vocab: allow
+        "opening an acceptance window. The retired G1/G2/G3 and DevBar-* "  # check_vocab: allow
         "value spellings are accepted as aliases and warn; `--gate` is accepted "
         "silently as the prior flag name, `--stage-cleared` warns.",
     )
@@ -2641,7 +2641,7 @@ def main():
         "--phase",
         default=None,
         help="delivery phase(s) in scope, e.g. v1 or v1,v2 — scopes the DevStg-Impl "
-        "approval criterion to that phase (process.md §4 'Phased delivery')",
+        "acceptance criterion to that phase (process.md §4 'Phased delivery')",
     )
     ap.add_argument(
         "--lenient",
@@ -2695,20 +2695,20 @@ def main():
         "clean for a program'); the step itself does NOT pass it today",
     )
     ap.add_argument(
-        "--approval-immutable",
+        "--acceptance-immutable",
         action="store_true",
         help="run ONLY the re-acceptance-brief immutability enforcer and exit "
         "(WI-503): refuse a STAGED change (other than a plain add) to an "
         "existing docs/ratify/<date>-*.md. Fail-closed by default — no "
         "--strict, no warn mode. This is the self-invoked body of the "
-        "'approval-immutable' step, not a separate contract",
+        "'acceptance-immutable' step, not a separate contract",
     )
     ap.add_argument(
         "--held-status",
         action="store_true",
         help="run ONLY the 'held-status' step's body and exit (SR-208): judge "
         "a squash landing by its lane commits, and, under the loop marker "
-        "outside a claimed lane, refuse a held status move or approval claim",
+        "outside a claimed lane, refuse a held status move or acceptance claim",
     )
     ap.add_argument(
         "--reserved-ids",
@@ -2728,15 +2728,15 @@ def main():
         "--text-then-act",
         action="store_true",
         help="run ONLY the 'text-then-act' step's body and exit (WI-806): refuse "
-        "a staged tree that writes the approval record while changing a spine "
+        "a staged tree that writes the acceptance record while changing a spine "
         "cell other than Status, or adding or removing a row",
     )
     ap.add_argument(
         "--parent-first",
         action="store_true",
         help="run ONLY the 'parent-first' step's body and exit (WI-850): refuse "
-        "a staged tree that moves a status so an approved spine row sits under "
-        "a cited parent that is not approved",
+        "a staged tree that moves a status so an accepted spine row sits under "
+        "a cited parent that is not accepted",
     )
     ap.add_argument(
         "--loop-trailer",
@@ -2771,7 +2771,7 @@ def main():
             "(the stage and stack-profile reads are CWD-relative)".format(Path.cwd())
         )
     _divergence_mode(args)  # exits when --staged-divergence selects it
-    _approval_immutable_mode(args)  # exits when --approval-immutable selects it
+    _acceptance_immutable_mode(args)  # exits when --acceptance-immutable selects it
     _held_status_mode(args)  # exits when --held-status selects it
     _reserved_ids_mode(args)  # exits when --reserved-ids selects it
     _ruling_sync_mode(args)  # exits when --ruling-sync selects it

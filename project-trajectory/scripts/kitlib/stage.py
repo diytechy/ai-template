@@ -44,7 +44,7 @@ wiring every production consumer calls.
 
 WHO THE FRESHNESS GUARANTEE COVERS, stated once so no surface has to overclaim
 it. `read_stage` recomputes the fingerprint on every call and derives fresh on a
-mismatch, so no SELECTION or APPROVAL consumer can read a stale stage, on
+mismatch, so no SELECTION or ACCEPTANCE consumer can read a stale stage, on
 any lane — and those are exactly the three call sites that reach it (`check.py`,
 `agent_common`, `check_trajectory`). The DISPLAY surfaces deliberately do not:
 `traj_parse._stage_value` and `traj_status._stage_facts` parse the recorded file
@@ -143,7 +143,7 @@ DECLARED_INPUTS = (
     ("docs/requirements/components", (".toml", ".csv")),
     ("docs/test/test-cases", (".toml", ".csv")),
     # THE ASSUMPTIONS REGISTRY (SR-204): the derivation reads its assumption
-    # and surrogate tiers from their first approval. TOML is its one carrier.
+    # and surrogate tiers from their first acceptance. TOML is its one carrier.
     # The stakeholder tier needs no line: it lives in the needs file above.
     ("docs/requirements/assumptions", (".toml",)),
     # `process.toml` is DELIBERATELY NOT an input (operator ruling 2026-08-21,
@@ -151,7 +151,7 @@ DECLARED_INPUTS = (
     # original "over-inclusion costs milliseconds" argument priced the wrong
     # cost — the real price was RED commit checks after every policy-dial edit,
     # because the committed fingerprint went stale over a file whose value never
-    # reaches the stage. Dials govern who may approve, not what stage is derived.
+    # reaches the stage. Dials govern who may accept, not what stage is derived.
     # If a dial ever DOES enter the derivation, add its file here in the same
     # change that reads it.
     #
@@ -478,7 +478,7 @@ HEADER = [
     "# `fingerprint` is a SHA-256 over the LF-normalized content of the declared",
     "# derivation inputs (kitlib/stage.py DECLARED_INPUTS). A reader recomputes",
     "# it and trusts the values above ONLY on a match, deriving fresh in memory",
-    "# otherwise — so no SELECTION or APPROVAL consumer can read a stale",
+    "# otherwise — so no SELECTION or ACCEPTANCE consumer can read a stale",
     "# stage, on any lane. THE DISPLAY SURFACES ARE THE NAMED EXCEPTION and read",
     "# the recorded values directly, on purpose: PROJECT_STATE.html and the",
     "# generated block in docs/status.md describe the commit they ship with, so",
@@ -486,7 +486,7 @@ HEADER = [
     "# harness derives fresh. That is the design; it is not a guarantee, so the",
     "# sentence above says which consumers it covers.",
     "#",
-    "# HOW IT MOVES: by approving artifacts in a reviewed commit, never by editing",
+    "# HOW IT MOVES: by accepting artifacts in a reviewed commit, never by editing",
     "# this file. Regenerate: python scripts/derive_stage.py",
     "# Freshness is guarded by `--check` (a pre-commit + gate step).",
     "#",
@@ -629,7 +629,7 @@ class DerivationError(Exception):
     that cannot select its plan must not guess one), while
     `agent_common.spine_stage_of` answers None, which `operator_holds` reads as
     OPERATOR-HELD (a coordinator that cannot establish the stage must not let an
-    agent approve). One mechanism, one home; the policy stays at the call site."""
+    agent accept). One mechanism, one home; the policy stays at the call site."""
 
 
 def derive_via_subprocess(scripts_dir, root):
@@ -648,7 +648,7 @@ def derive_via_subprocess(scripts_dir, root):
     `check.py`; slice 5 cut `spine_stage_of` onto the same reader, and copying it
     would have minted exactly the kind of F5 duplicate this package exists to
     retire — with the sharper edge that the copies would be a plan selector and an
-    approval authority drifting apart in silence."""
+    acceptance authority drifting apart in silence."""
     script = Path(scripts_dir) / "derive_stage.py"
     if not script.exists():
         raise DerivationError(
@@ -686,7 +686,7 @@ def read_stage(root, derive, memo=_DEFAULT):
     path it took can, and so the fast path is observable to a test.
 
     IT NEVER WRITES. On a mismatch the file on disk is left exactly as it was; the
-    trunk regen points and the operator's post-approval run are the only writers,
+    trunk regen points and the operator's post-acceptance run are the only writers,
     and the commit-bar `--check` is what stops a stale copy from being committed.
 
     THIS CLOSES BOTH STALE WINDOWS THE SCHEDULE MAP FOUND, BY CONSTRUCTION rather
@@ -697,7 +697,7 @@ def read_stage(root, derive, memo=_DEFAULT):
     registries, which is the trust model the operator confirmed. The read-once-per-run
     window (a value hoisted at the top of `agent_loop`/`dispatch` and threaded
     down for the rest of the run) closes because verification is per CALL, so a
-    mid-session approval is visible to the next consumer that asks."""
+    mid-session acceptance is visible to the next consumer that asks."""
     if memo is _DEFAULT:
         memo = _DIGEST_MEMO
     current = fingerprint(root, memo)

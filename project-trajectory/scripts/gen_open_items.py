@@ -4,13 +4,13 @@
 Replaces the hand-maintained `docs/open-items.md`. Two inputs, one output:
 
   docs/requirements/open-items.toml   pending decision briefs, one row per OI
-  the spine registries + git         rows owing an approval or a re-accept
+  the spine registries + git         rows owing an acceptance or a re-accept
   -> docs/open-items.html            the ONLY surface the operator reads
 
 Why HTML and not markdown: the depth an operator needs to rule a re-accept is a
 WORD-LEVEL DIFF — of a 1,500-character cell, which forty words moved — and
 markdown cannot mark that. The first sitting under the retired `Modified` regime
-read a POINTER ("run `trace.py --approve modified`") and could not act from it,
+read a POINTER ("run `trace.py --accept modified`") and could not act from it,
 which is what this replaces. The CSV is a machine source: it is read raw about as often
 as `work-items.csv` is, i.e. never.
 
@@ -23,8 +23,8 @@ WHAT IT RENDERS, in the order an operator needs it:
      is not a card; it is named in an integrity notice above the cards,
      linked to its registry record, and while one exists the section never
      claims the operator queue is empty.
-  2. APPROVAL & RE-ACCEPTANCE — every SR whose `Status` is `Drafted` (owes a
-     first approval) or whose chain has DRIFTED from the approved snapshot
+  2. ACCEPTANCE & RE-ACCEPTANCE — every SR whose `Status` is `Drafted` (owes a
+     first acceptance) or whose chain has DRIFTED from the accepted snapshot
      (owes a re-accept — D-9 step 7 retired the `Modified` marker and left the
      comparison as the whole detector), with its whole chain; then every
      stakeholder need and stakeholder `baseline_snapshot.needs_owing` reports,
@@ -36,7 +36,7 @@ WHAT IT RENDERS, in the order an operator needs it:
      failure mode that shipped a brief missing two of six rows (log 2026-07-26).
      Clearing the toolbar box also reveals THE REST OF EACH ROW — the cells the
      diff had no reason to show, plus the SR's own text where the amendment sits
-     entirely in a child. A diff says what moved; an attestation asks whether the
+     entirely in a child. A diff says what moved; an acceptance asks whether the
      evidence still verifies what the row now SAYS, and the second question needs
      the cells the first one omits (operator, 2026-07-27). The section closes
      with the AUDIT LIST: every act-ledger entry naming a verdict, i.e. each
@@ -58,7 +58,7 @@ in `trace.reaccept_model`, the needs owing an act in
 pending projection in `pending.pending_block`. This module imports them and
 RENDERS. It owns no
 second opinion about what is pending or what changed — if this view and the
-`--approve` brief ever disagree, the brief is authoritative and this is the bug.
+`--accept` brief ever disagree, the brief is authoritative and this is the bug.
 
 Freshness: `--check` byte-compares the regenerated view against the file — a
 pure function of the committed tree since the dispatcher-era machine-local
@@ -77,10 +77,10 @@ Contract IF-074: the generated operator decision surface at `docs/open-items.htm
     cites (the one-line, the blast radius, the options, the recommendation and
     the queued or claimed rows it holds), with an integrity notice naming each
     pending row no queued or claimed row cites, linked to its registry record,
-    in place of any empty-queue claim; an approval
-    and re-acceptance section listing every SR that owes a first approval or
-    whose chain has drifted from the approved snapshot, and every stakeholder
-    need and stakeholder owing an approval or a re-accept, with the whole chain's
+    in place of any empty-queue claim; an acceptance
+    and re-acceptance section listing every SR that owes a first acceptance or
+    whose chain has drifted from the accepted snapshot, and every stakeholder
+    need and stakeholder owing an acceptance or a re-accept, with the whole chain's
     (or the need's moved cells') per-cell before/after, unchanged runs collapsible, additions and deletions
     marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION so an empty
     section reads as *check the baseline* and never as *nothing changed*,
@@ -97,7 +97,7 @@ Contract IF-074: the generated operator decision surface at `docs/open-items.htm
     `trace.reaccept_model`, the owing needs from
     `baseline_snapshot.needs_owing` and the pointers from `pending.pending_block`, so
     where this view and the
-    `trace.py --approve` brief disagree the brief is authoritative and this is
+    `trace.py --accept` brief disagree the brief is authoritative and this is
     the bug. `--check` byte-compares the regenerated document against the
     committed one — a pure function of the committed tree, deterministic and
     LF, so the compare holds in any clone.
@@ -197,7 +197,7 @@ section.band{display:flex;flex-direction:column;gap:1rem;}
 .pill{font-size:var(--tiny);border-radius:var(--r-pill);padding:.1rem .55rem;
   border:1px solid var(--border);color:var(--muted);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
-.pill.approve{border-color:var(--pending);color:var(--pending);}
+.pill.accept{border-color:var(--pending);color:var(--pending);}
 .baseline{font-size:var(--xsmall);color:var(--muted);font-family:var(--mono);}
 .empty{font-size:var(--small);border-left:3px solid var(--pending);
   padding-left:.75rem;}
@@ -208,8 +208,8 @@ section.band{display:flex;flex-direction:column;gap:1rem;}
 .row-head .rid{font-family:var(--mono);font-size:var(--xsmall);font-weight:700;}
 .cellname{font-family:var(--mono);font-size:var(--xsmall);font-weight:700;
   color:var(--muted);}
-/* The §A5.1 group label above a run of cells (D-9 step 4) — approved cells owe
-   an attestation, traced ones route to adjudication. Set apart from .cellname
+/* The §A5.1 group label above a run of cells (D-9 step 4) — accepted cells owe
+   an acceptance, traced ones route to adjudication. Set apart from .cellname
    by weight and a rule rather than by colour alone, so the grouping survives a
    monochrome print and a low-contrast display. */
 .cellgroup{font-size:var(--xsmall);font-weight:600;letter-spacing:.04em;
@@ -598,10 +598,10 @@ ROW_STATE_TAGS = {
     "removed": "REMOVED since the snapshot",
     "current": "current content",
     # WIDENED (the OI-61-sitting gap): a `Drafted` row present in the snapshot
-    # byte-identical to its current text still owes a first approval — it just
+    # byte-identical to its current text still owes a first acceptance — it just
     # never moved since `intake.py snapshot` copied its registry, which copies
-    # every row of the registries it copies, not only the approved ones.
-    "drafted": "Drafted — never approved",
+    # every row of the registries it copies, not only the accepted ones.
+    "drafted": "Drafted — never accepted",
 }
 
 
@@ -609,29 +609,29 @@ def _changed_cell_groups(row):
     """The `(label, cells)` groups a `changed` row's cells render under.
 
     TWO GROUPS, §A5.1 (D-9 step 4). An APPROVED cell that moved owes an
-    attestation; a TRACED one routes to adjudication and arms no window (the
+    acceptance; a TRACED one routes to adjudication and arms no window (the
     WI-388 ruling). Rendering them in one undifferentiated list asked the operator
     to make that judgement per cell, from memory, mid-sitting — and the snapshot
     comparison hands the split over for free.
 
-    A `Drafted` row was never approved, so no cell of it "owes a re-acceptance"
-    and none "routes to adjudication" — the whole row owes a FIRST approval,
+    A `Drafted` row was never accepted, so no cell of it "owes a re-acceptance"
+    and none "routes to adjudication" — the whole row owes a FIRST acceptance,
     which the row tag already states. The §A5.1 split is a property of an
-    approved row; keyed on the cell's COLUMN class alone it mislabelled a
-    Drafted row's approved-class cells (OI-71 defect 1, the wi508 round-019
+    accepted row; keyed on the cell's COLUMN class alone it mislabelled a
+    Drafted row's accepted-class cells (OI-71 defect 1, the wi508 round-019
     finding). For a Drafted row the cells collapse to ONE unlabelled group, so
-    this HTML view and the `--approve modified` markdown brief agree (IF-074)."""
+    this HTML view and the `--accept modified` markdown brief agree (IF-074)."""
     if row.get("drafted"):
         return [(None, row["cells"])]
-    approved = row.get("approved") or frozenset()
+    accepted = row.get("approved") or frozenset()
     return [
         (
-            "approved — re-acceptance owed",
-            [c for c in row["cells"] if c[0] in approved],
+            "accepted — re-acceptance owed",
+            [c for c in row["cells"] if c[0] in accepted],
         ),
         (
             "traced — routes to adjudication",
-            [c for c in row["cells"] if c[0] not in approved],
+            [c for c in row["cells"] if c[0] not in accepted],
         ),
     ]
 
@@ -670,7 +670,7 @@ def _changed_cell_lines(row):
     Split out of `_chain_row` so its own branch count stays under the C901
     ratchet — decomposition rather than a baseline bump, the escape the ratchet
     exists to force (the same move that first split `_chain_row` off
-    `_attestation_cards`). The group heading appears only when BOTH groups are
+    `_acceptance_cards`). The group heading appears only when BOTH groups are
     present; a lone heading over the only group is noise (and a Drafted row's
     single collapsed group never shows one)."""
     groups = _changed_cell_groups(row)
@@ -698,7 +698,7 @@ def _chain_row(row):
     """One chain row of a section: its per-cell diff where the baseline has a
     before, its whole current content where it does not.
 
-    Split out of `_attestation_cards` when the context block pushed that
+    Split out of `_acceptance_cards` when the context block pushed that
     function over the complexity ratchet — decomposition rather than a baseline
     bump, which is the escape the ratchet exists to force."""
     inner = []
@@ -713,7 +713,7 @@ def _chain_row(row):
             # for it; now it renders itself, with the reason kept identical
             # so a reader who saw the old wording sees the same words.
             inner.append(
-                '<p class="empty">No cell differs from the approved snapshot. '
+                '<p class="empty">No cell differs from the accepted snapshot. '
                 "This row is here because its own <code>Status</code> asks for "
                 "an operator, not because its text moved.</p>"
             )
@@ -724,14 +724,14 @@ def _chain_row(row):
             )
         )
     # WIDENED: WHY does this row owe — drift (its state already says so) or a
-    # first approval it never received (its own `Drafted` Status, independent
+    # first acceptance it never received (its own `Drafted` Status, independent
     # of whether its text also moved)? A row whose state is already "drafted"
     # carries the reason in the base tag; anything else states it as an add-on
-    # so "ADDED since the snapshot" and "Drafted, never approved" both show
+    # so "ADDED since the snapshot" and "Drafted, never accepted" both show
     # rather than one silently standing in for the other.
     tag = ROW_STATE_TAGS[row["state"]]
     if row.get("drafted") and row["state"] != "drafted":
-        tag = "{}, Drafted — never approved".format(tag)
+        tag = "{}, Drafted — never accepted".format(tag)
     return (
         '<div class="row"><div class="row-head">'
         '<span class="rid">{k} {i}</span>'
@@ -754,7 +754,7 @@ def _chain_row(row):
 # what makes the removal safe in this direction too — a model still emitting the
 # retired kind would fail loudly here rather than render a wrong pill.
 _KIND_LABELS = {
-    "approve": "approval owed",
+    "accept": "acceptance owed",
     "reaccept": "re-accept owed",
 }
 
@@ -765,7 +765,7 @@ def _nothing_owed():
     return (
         '<p class="empty">No <code>Drafted</code> <strong>SR</strong>, '
         "<strong>LLR</strong>, or <strong>TC</strong> anywhere in the "
-        "spine, and no drifted chain — no SR owes an approval or a "
+        "spine, and no drifted chain — no SR owes an acceptance or a "
         "re-accept. Say only what was checked: an amended row's own "
         "<code>Status</code> answers for its own cells (operator ruling "
         "2026-08-17m), so a chain row's TEXT moving under an "
@@ -787,12 +787,12 @@ def _nothing_owed():
 def _need_cards(owing):
     """One card per stakeholder need or stakeholder owing an act, as
     `baseline_snapshot.needs_owing` reports it, in its order, under the
-    approval brief's own heading; `""` when none owes.
+    acceptance brief's own heading; `""` when none owes.
 
     The page holds no second opinion of what owes: each row the detector
     returns is shown with its reason verbatim. A drifted row shows its moved
     cells before and after, the rest of the row as collapsed context. Any
-    other row is shown whole and UNCLIPPED: a first approval rules on every
+    other row is shown whole and UNCLIPPED: a first acceptance rules on every
     cell of it, and a clipped cell would ask the operator to sign text they were
     not shown.
 
@@ -812,9 +812,9 @@ def _need_cards(owing):
         cards.append(
             '<article class="card" id="{i}"><h3><span class="rid">{r}</span>'
             '<span class="pill{cls}">{w}</span></h3>{b}</article>'.format(
-                i=esc(rid + "-attest"),
+                i=esc(rid + "-accept"),
                 r=esc(rid),
-                cls="" if cells else " approve",
+                cls="" if cells else " accept",
                 w=esc(why),
                 b=body,
             )
@@ -823,13 +823,13 @@ def _need_cards(owing):
         "<h3>Stakeholder needs and stakeholders owing an act</h3>"
         '<p class="sub">Re-anchor a drifted row with <code>intake.py snapshot '
         "--reaccepts &lt;ROW-ID&gt;</code> once its moved cells are read; a "
-        "<code>Drafted</code> or Status-less row owes its first approval.</p>"
+        "<code>Drafted</code> or Status-less row owes its first acceptance.</p>"
         + "".join(cards)
     )
 
 
-def _attestation_cards(model, srs_by_id=None):
-    """One card per SR owing an approval or a re-accept, its chain beneath.
+def _acceptance_cards(model, srs_by_id=None):
+    """One card per SR owing an acceptance or a re-accept, its chain beneath.
 
     `srs_by_id` supplies the SR row's own cells for two things now: the
     UNCONDITIONAL anchor block (`_anchor_block` — the SR's Requirement and
@@ -850,7 +850,7 @@ def _attestation_cards(model, srs_by_id=None):
             '<span class="pill{cls}">{label}</span></h3>'.format(
                 i=esc(entry["id"]),
                 t=esc(entry["title"] or "(untitled)"),
-                cls="" if entry["kind"] == "reaccept" else " approve",
+                cls="" if entry["kind"] == "reaccept" else " accept",
                 label=label,
             )
         )
@@ -893,13 +893,13 @@ def _attestation_cards(model, srs_by_id=None):
             # after the amendment it precedes, so an empty section now means
             # exactly what it says.
             body.append(
-                '<p class="empty">No cell differs from the approved snapshot. '
+                '<p class="empty">No cell differs from the accepted snapshot. '
                 "This row is here because its own <code>Status</code> asks for an "
                 "operator, not because its text moved.</p>"
             )
         cards.append(
             '<article class="card" id="{i}">{h}{a}{b}{c}{rows}</article>'.format(
-                i=esc(entry["id"] + "-attest"),
+                i=esc(entry["id"] + "-accept"),
                 h=head,
                 a=anchor,
                 b=base,
@@ -933,8 +933,8 @@ def _offspine_census_block(rows):
     return (
         '<p class="sub offspine-note">The off-spine registries above carry no '
         "per-row rendering here; <code>intake.py snapshot</code> copies one only "
-        "when a row in it moves into approval or arrives approved, "
-        "<code>--approves</code> names it or <code>--reaccepts</code> names one "
+        "when a row in it moves into acceptance or arrives accepted, "
+        "<code>--accepts</code> names it or <code>--reaccepts</code> names one "
         "of its rows; a re-SEED still blesses all. What it would absorb:</p>"
         '<ul class="pointers">{}</ul>\n'.format(items)
     )
@@ -1015,13 +1015,13 @@ def render(root):
     NO `since` PARAMETER SINCE D-9 STEP 4. It existed to override a git-derived
     baseline that could sit AFTER the amendment it was supposed to precede — the
     pre-regime-streak case. A snapshot is a directory of files copied at an
-    approval, so it cannot sit after anything; there is nothing to override, and
+    acceptance, so it cannot sit after anything; there is nothing to override, and
     with it goes the baseline stamp `--check` needed in order to reproduce an
     earlier render."""
     root = Path(root)
     reg = tr.load_registries(root / "docs")
     # The model selects on STATE, not on a status literal (D-9 step 4):
-    # `Drafted`, or a chain that has DRIFTED from the approved snapshot. Drift
+    # `Drafted`, or a chain that has DRIFTED from the accepted snapshot. Drift
     # is the arm no cell can carry, and the reason this page survived both the
     # rename and step 7's retirement with nothing to re-key.
     model = tr.reaccept_model(root, reg.srs, reg.llrs, reg.tcs)
@@ -1036,12 +1036,12 @@ def render(root):
     stamps = baseline_snapshot.registry_stamps(root)
     counts = {
         "pending": len(queue["cards"]),
-        "attest": len(model),
+        "accept": len(model),
         "needs": len(owing),
         "rows": sum(len(e["rows"]) for e in model),
         # The drifted count is the one number that cannot be read off a Status
-        # cell: a row whose text moved away from what was approved, while its
-        # own Status still claims approval.
+        # cell: a row whose text moved away from what was accepted, while its
+        # own Status still claims acceptance.
         "drifted": sum(1 for e in model if not e["no_baseline_reason"])
         + sum(1 for o in owing if o[2]),
         "baseline": (
@@ -1057,7 +1057,7 @@ def render(root):
             )
             if stamps
             else "<code>{}</code> — no snapshot exists yet, so every row below "
-            "awaits a FIRST approval and shows its current text in "
+            "awaits a FIRST acceptance and shows its current text in "
             "full".format(esc(baseline_snapshot.SNAPSHOT_DIR))
         ),
     }
@@ -1076,14 +1076,14 @@ def render(root):
         '<p class="eyebrow">generated — do not hand-edit · '
         "<code>python project-trajectory/scripts/gen_open_items.py</code></p>\n"
         "<h1>Open items — operator decision surface</h1>\n"
-        '<p class="sub">{pending} pending decision(s) · {attest} SR chain(s) and '
-        "{needs} stakeholder need(s) or stakeholder(s) owing an approval or a "
+        '<p class="sub">{pending} pending decision(s) · {accept} SR chain(s) and '
+        "{needs} stakeholder need(s) or stakeholder(s) owing an acceptance or a "
         "re-accept, across {rows} chain row change(s); "
-        "{drifted} row(s) drifted from the approved snapshot. Briefs are rows "
-        "in <code>{registry}</code>; the attestation depth is "
+        "{drifted} row(s) drifted from the accepted snapshot. Briefs are rows "
+        "in <code>{registry}</code>; the acceptance depth is "
         "computed by <code>trace.reaccept_model</code> and "
         "<code>baseline_snapshot.needs_owing</code>, the same code behind "
-        "<code>trace.py --approve</code>. If the two ever disagree, the brief is "
+        "<code>trace.py --accept</code>. If the two ever disagree, the brief is "
         "authoritative and this view is the bug.</p>\n"
         '<div class="baseline">Baseline: {baseline}</div>\n'
         "{offspine}"
@@ -1094,8 +1094,8 @@ def render(root):
         '<span class="hint">clear it to read every row in full — each amended '
         "row's remaining cells, and the SR text a chain-only amendment hangs "
         "from</span></div>\n"
-        '<section class="band"><p class="eyebrow">2 · Approval &amp; '
-        "re-acceptance</p>{attestations}{audit}</section>\n"
+        '<section class="band"><p class="eyebrow">2 · Acceptance &amp; '
+        "re-acceptance</p>{acceptances}{audit}</section>\n"
         '<section class="band"><p class="eyebrow">3 · Pending operator actions '
         "(derived)</p>{pointers}</section>\n"
         '<section class="band" id="decisions-to-review"><p class="eyebrow">'
@@ -1114,8 +1114,8 @@ def render(root):
         js=JS,
         briefs=_brief_cards(queue, live_registry_rel(root).split("docs/", 1)[-1]),
         decisions=decisions_block(*pending.decisions_to_review(root)),
-        attestations=(
-            _attestation_cards(
+        acceptances=(
+            _acceptance_cards(
                 model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
             )
             + _need_cards(owing)
@@ -1154,7 +1154,7 @@ def _decision_card(entry):
         for key, label in _DECISION_FIELDS
         if str(entry["fields"].get(key) or "").strip()
     )
-    flag = '<span class="pill approve">high risk</span>' if entry["high_risk"] else ""
+    flag = '<span class="pill accept">high risk</span>' if entry["high_risk"] else ""
     if entry["operator"] is not None and "citing" not in entry:
         flag += '<span class="pill">operator = {}</span>'.format(
             esc(repr(entry["operator"]))
@@ -1654,7 +1654,7 @@ def main(argv=None):
         return 0
     # THE BASELINE-REUSE RULE RETIRED WITH `--since` (D-9 step 4). It existed
     # because a regeneration could silently pick a DIFFERENT git-derived
-    # baseline and destroy the depth an operator was about to attest from — driven
+    # baseline and destroy the depth an operator was about to accept from — driven
     # at 122-REVIEW-A, it collapsed 43 chain-row diffs to 18 and `--check` then
     # certified the loss. The snapshot is the same directory on every machine
     # and in CI, so a regeneration cannot move it and there is nothing to reuse.

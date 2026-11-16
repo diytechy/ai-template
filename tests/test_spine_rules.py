@@ -23,7 +23,7 @@ WHAT IT COVERS.
 WHAT LIVES ELSEWHERE. The stage axis's own producer contract (`docs/stage`,
 `--check`, the draft counterfactual, the floor) is `tests/test_derive_stage.py`;
 the exhaustive rung sweep over the closed Status enum is
-`tests/test_approval_level.py`; the pure carrier half is
+`tests/test_acceptance_level.py`; the pure carrier half is
 `tests/test_kitlib_stage.py`; the equal-predicate pins against `trace.py` are
 `tests/test_rule_sync.py`.
 
@@ -44,11 +44,11 @@ Implements: TC-050, TC-141
 #       The per-artifact rules they asserted are the STAGE ladder's rungs now and
 #       are driven through `spine_stage` here (the SN-coverage rung, the
 #       decomposition rungs) and exhaustively in
-#       `tests/test_approval_level.py`. The one claim that was NOT a bar
+#       `tests/test_acceptance_level.py`. The one claim that was NOT a bar
 #       claim — that `SPINE_TRANSITIONAL` and `SPINE_MATURITY` never overlap — is
 #       pinned harder by VALUE in `tests/test_rule_sync.py`
 #       (`test_no_declared_status_vocabulary_still_lists_a_RETIRED_word`:
-#       `set(SPINE_MATURITY) == {drafted, approved, founded}` exactly, and no
+#       `set(SPINE_MATURITY) == {drafted, accepted, founded}` exactly, and no
 #       retired word may appear in it).
 #
 #   `test_minimal_project_derives_the_ceilinged_top`, `test_draft_sr_drops_the_gate`,
@@ -120,7 +120,7 @@ Implements: TC-050, TC-141
 #       **a Status cell may never claim the test evidence passed.** On the bar
 #       axis that needed a ceiling flag; on the stage axis DevStg-Release simply
 #       has no producer, which is a stronger guarantee than a cap — pinned by
-#       `tests/test_approval_level.py::test_NO_status_combination_reaches_the_RELEASE_rung`
+#       `tests/test_acceptance_level.py::test_NO_status_combination_reaches_the_RELEASE_rung`
 #       (exhaustive over 128 spines) and
 #       `::test_the_RELEASE_rung_has_no_PRODUCER_in_the_source` (structural, so a
 #       `return STAGE_RELEASE` behind a condition no fixture builds is caught
@@ -256,7 +256,7 @@ def _independent_meta_expectations():
     fall-through from its stated rules instead:
 
       needs drafted or absent -> Needs; declared boundary in work -> Boundary; a
-      Drafted requirement in the phase -> Reqs; an approved need no requirement
+      Drafted requirement in the phase -> Reqs; an accepted need no requirement
       cites -> Needs; the declared partition in work -> Arch; a requirement with
       no LLR (unless LLR-exempt) or a Drafted LLR -> LLReqs; a requirement no TC
       verifies or a Drafted TC -> Tests; otherwise Impl.
@@ -266,7 +266,7 @@ def _independent_meta_expectations():
     arithmetic — if the kit's own loader ever mis-read a `status` or a `phase`, a
     `want` side built on it would agree with the bug. The id UNIVERSE for needs is
     a token scrape over the NEED TABLES, because that is what `sn_all_ids`
-    documents (an approved prose mention inside a need counts exactly like a
+    documents (an accepted prose mention inside a need counts exactly like a
     row, while the stakeholder list sharing the file is never read); draft-ness
     is the `status` FIELD, because under TOML it is a field and not
     section-as-state.
@@ -384,9 +384,9 @@ def test_meta_repo_phases_match_an_independent_derivation():
     assert record["per-phase-live"] == expect, (record["per-phase-live"], expect)
     # A deliberate SNAPSHOT of the meta-repo's own derived phase, so a silent
     # phase drift reds here rather than passing unnoticed. Bump it when a
-    # approval legitimately advances the phase (4 -> 5 at the 2026-08-13
-    # re-accept sitting, which approved the last draft SNs and SR-137..149;
-    # 5 -> 6 at the 2026-09-25 phase-6 approval act, cbb6649f, which approved
+    # acceptance legitimately advances the phase (4 -> 5 at the 2026-08-13
+    # re-accept sitting, which accepted the last draft SNs and SR-137..149;
+    # 5 -> 6 at the 2026-09-25 phase-6 acceptance act, cbb6649f, which accepted
     # the assumption tier's chains SN-041..044, SR-187..219, LLR-211..258 and
     # TC-212..251).
     assert record["phase"] == 6
@@ -398,16 +398,16 @@ def test_meta_repo_phases_match_an_independent_derivation():
 
 
 # --- WI-401: the SN-coverage rung ---------------------------------------------
-def _append_approved_sn(scaffold, row):
-    """Append one table row to the fixture's approved needs table (no draft
-    heading above it, so the id is approved by section-as-state — this fixture
+def _append_accepted_sn(scaffold, row):
+    """Append one table row to the fixture's accepted needs table (no draft
+    heading above it, so the id is accepted by section-as-state — this fixture
     writes the LEGACY markdown carrier)."""
     sn = scaffold / "docs" / "requirements" / "stakeholder-needs.md"
     sn.write_text(sn.read_text(encoding="utf-8") + row, encoding="utf-8")
 
 
-def test_uncovered_approved_sn_holds_the_NEEDS_rung(scaffold):
-    # WI-401 (operator ruling 2026-08-01): an approved SN cited by zero SR SN-Refs is
+def test_uncovered_accepted_sn_holds_the_NEEDS_rung(scaffold):
+    # WI-401 (operator ruling 2026-08-01): an accepted SN cited by zero SR SN-Refs is
     # an unanswered need. RE-KEYED FROM THE BAR AXIS — the claim used to be "the
     # raw level caps at DevStg-Below and the runnable value floors to
     # DevStg-Reqs"; on the stage ladder the same fact reads DIRECTLY, as the rung
@@ -417,7 +417,7 @@ def test_uncovered_approved_sn_holds_the_NEEDS_rung(scaffold):
     # (drafted=0 here: the cause is coverage, not a draft).
     make_minimal_project(scaffold)
     _no_frame(scaffold)
-    _append_approved_sn(
+    _append_accepted_sn(
         scaffold, "| SN-002 | Subtract two numbers. | Demo. | M | sub(3,2) is 1. |\n"
     )
     assert _stage(scaffold) == RULES.STAGE_NEEDS
@@ -431,7 +431,7 @@ def test_covering_the_sn_releases_the_NEEDS_rung(scaffold):
     # leaving Impl means the declared tests PASS and no cell may claim that.)
     make_minimal_project(scaffold)
     _no_frame(scaffold)
-    _append_approved_sn(
+    _append_accepted_sn(
         scaffold, "| SN-002 | Subtract two numbers. | Demo. | M | sub(3,2) is 1. |\n"
     )
     _write(scaffold, srs=_sr("SR-001", sn="SN-001;SN-002"))
@@ -444,10 +444,10 @@ def test_example_rows_are_ignored_by_the_coverage_rung(scaffold):
     # coverage set is built, so its SN-Refs cannot fake coverage of a real need.
     make_minimal_project(scaffold)
     _no_frame(scaffold)
-    _append_approved_sn(scaffold, "| SN-000 | Example placeholder. | M | n/a |\n")
+    _append_accepted_sn(scaffold, "| SN-000 | Example placeholder. | M | n/a |\n")
     assert _stage(scaffold) == RULES.STAGE_IMPL
-    # A real approved need answered ONLY by an example SR row stays uncovered.
-    _append_approved_sn(scaffold, "| SN-002 | Real need. | M | tbd |\n")
+    # A real accepted need answered ONLY by an example SR row stays uncovered.
+    _append_accepted_sn(scaffold, "| SN-002 | Real need. | M | tbd |\n")
     _write(scaffold, srs=_sr("SR-001") + _sr("SR-000", sn="SN-002"))
     assert _stage(scaffold) == RULES.STAGE_NEEDS
 
@@ -501,7 +501,7 @@ def test_a_needs_file_that_does_not_parse_refuses_rather_than_derives(tmp_path):
     The file names a Drafted need in text the TOML parser rejects and carries
     no markdown draft heading. Read by a heading-scan fallback its drafts came
     back empty while the id scrape still found SN-007, so the need read as
-    approved and the derived stage could rise on a file nobody could read.
+    accepted and the derived stage could rise on a file nobody could read.
     `load_spine` is the stage derivation's only read of the needs file, so the
     refusal reaches the user from here, as a SystemExit naming the file; the
     trace loader refuses the same file the same way.
@@ -543,7 +543,7 @@ def _phased_srs(scaffold):
 
 def test_derived_current_phase(scaffold):
     # The derived current phase = the highest phase over APPROVED rows; a Drafted
-    # in a not-yet-approved higher phase does not bump it. RE-KEYED onto the
+    # in a not-yet-accepted higher phase does not bump it. RE-KEYED onto the
     # `phase` field of the stage record, which `derive_stage` computes with
     # `spine_rules.phase_num` over exactly the rows the retired basis line used.
     make_minimal_project(scaffold)
@@ -560,7 +560,7 @@ def test_derived_phase_none_when_unphased(scaffold):
 
 def test_requirement_first_lifecycle_end_to_end(scaffold):
     """The full lifecycle on a fixture: draft a requirement in the LIVE spine,
-    then approve -> decompose -> author its test, and watch the derived rung climb
+    then accept -> decompose -> author its test, and watch the derived rung climb
     the ladder, with trace.py clean at the requirement-first step.
 
     RE-KEYED FROM BARS TO RUNGS (WI-498 slice 5), and the walk got LONGER rather
@@ -569,9 +569,9 @@ def test_requirement_first_lifecycle_end_to_end(scaffold):
     steps were indistinguishable. The ladder discriminates each missing artifact
     at the rung that artifact belongs to, so the same fixture now walks four
     distinct rungs. The retired `Modified` fixture that step 2 used to carry is
-    gone with the word; the claim it made (an approved-but-unblessed row reads at
+    gone with the word; the claim it made (an accepted-but-unblessed row reads at
     the decomposed rung) is pinned exhaustively, `Modified` included, by
-    tests/test_approval_level.py::test_NO_status_combination_reaches_the_RELEASE_rung.
+    tests/test_acceptance_level.py::test_NO_status_combination_reaches_the_RELEASE_rung.
     """
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
@@ -595,7 +595,7 @@ def test_requirement_first_lifecycle_end_to_end(scaffold):
     _no_frame(scaffold)
     assert _stage(scaffold) == RULES.STAGE_REQS
 
-    # 2) Approve SR-002 without decomposing it. The requirement rung is cleared and
+    # 2) Accept SR-002 without decomposing it. The requirement rung is cleared and
     #    the rung the MISSING artifact belongs to takes over: an SR with no LLR is
     #    DevStg-LLReqs, because what is being written next is an LLR.
     srs.write_text(

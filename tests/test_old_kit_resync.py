@@ -414,7 +414,7 @@ def test_force_resync_installs_current_checkers_and_the_tree_cannot_false_green(
     """The OTHER half of the procedure — the wholesale overwrite — with --force.
 
     The add-only leg above proves the DOCUMENTED DEFAULT and pins its known
-    dishonest green (the surviving old checkers approve a tree the current kit
+    dishonest green (the surviving old checkers accept a tree the current kit
     refuses). This leg proves the overwrite path: after `bootstrap.py --force`
     plus the documented `--migrate-config`, the tree's checkers ARE current —
     so whatever they report is the CURRENT kit's honest verdict on a
@@ -444,7 +444,7 @@ def test_force_resync_installs_current_checkers_and_the_tree_cannot_false_green(
     out = verdict.stdout + verdict.stderr
     if verdict.returncode == 0:
         # Honest green: the current integrity floor really passed — require
-        # substance so a vacuous pass cannot slip through as approval.
+        # substance so a vacuous pass cannot slip through as acceptance.
         assert "orphans=0" in out or "integrity=0" in out, (
             "green with no substance is the false green this test exists "
             "to refuse:\n" + out

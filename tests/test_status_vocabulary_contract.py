@@ -360,5 +360,5 @@ def test_the_frame_and_interface_tiers_share_one_subset():
     assert IF_STATUS == FRAME_STATUS
     assert IF_STATUS < SPINE_STATUS, (
         "the off-spine subset must stay a strict subset of the spine's ladder — "
-        "`Founded` means settled AND demonstrated, which an approval never says"
+        "`Founded` means settled AND demonstrated, which an acceptance never says"
     )

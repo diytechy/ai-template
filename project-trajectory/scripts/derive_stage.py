@@ -44,12 +44,12 @@ Contract IF-050: the derived stage RECORD at `docs/stage`. A plain run writes th
     FINGERPRINT of the declared derivation inputs, one `key = value` per line
     under a comment header. Every field is addressed BY NAME, so a reordered
     record can never hand a reader the wrong value. The fingerprint is the
-    contract for the two reading postures: a selection or approval consumer
+    contract for the two reading postures: a selection or acceptance consumer
     reads through `kitlib.stage.read_stage`, which recomputes the fingerprint
     and trusts the recorded values only on a match, deriving fresh in memory
     otherwise, so none can act on a stale rung; a render leaf parses the
     committed record as it stands, so the page and the file it cites describe
-    one commit. The record is DERIVED and never hand-set: it moves by approving
+    one commit. The record is DERIVED and never hand-set: it moves by accepting
     artifacts in a reviewed commit, and a hand-edited or cross-ladder value
     raises rather than reading as a rung.
 Contract IF-165: the verdict every arm of this CLI answers in, 0 and 1 alone.
@@ -186,7 +186,7 @@ def _settled_off_spine(rows, table):
     ]
 
 
-# THE THREE TIERS THE STAGE READS FROM THEIR FIRST APPROVAL (SR-204), each
+# THE THREE TIERS THE STAGE READS FROM THEIR FIRST ACCEPTANCE (SR-204), each
 # with the maturity table its settled reading filters by: the settled branch
 # drops their Drafted rows as it does every tier's, so a settled reading is
 # never held by them, and the live reading holds a rung once a tier is active.
@@ -208,7 +208,7 @@ def _stage_map(spine, settled, evidence_passed=False):
     srs, llrs, tcs = spine["srs"], spine["llrs"], spine["tcs"]
     sn_ids, sn_draft = spine["sn_ids"], spine["sn_draft"]
     bifs, cmps = spine["bifs"], spine["cmps"]
-    # The three tiers read from their first approval (SR-204). A spine built
+    # The three tiers read from their first acceptance (SR-204). A spine built
     # before they existed carries none of them, and reads as an empty tier.
     tiers = {key: spine.get(key, []) for key in _FIRST_ACCEPTANCE_TIERS}
     live_labels = set(_phase_groups(srs, llrs, tcs))
@@ -500,12 +500,12 @@ def phase_rule_findings(root):
 
     RE-POINTED AT WI-501 (OI-53 (b), 2026-08-22). This carried
     `Implements: SR-139` until the WI-498 close, which was a mis-trace: SR-139
-    is "Approval as an ordinal over a derived spine stage" — it governs the
+    is "Acceptance as an ordinal over a derived spine stage" — it governs the
     `operator_accepts_through` dial — while this rule's obligation is "a
     spine edit that LOWERS the effective stage must surface as a phase change"
     (ruled plan §4, operator answer §6.1). Unrelated obligations at different
     tiers, so `backlink-coverage` was crediting a requirement about
-    approval authority with a realization edge from a function that does
+    acceptance authority with a realization edge from a function that does
     not realize it — inflating its coverage with a false edge while leaving
     this rule rowless (ROUND-OPUS 12). WI-501 removed the false edge and
     minted SR-181, which states this obligation directly; the declaration
@@ -623,7 +623,7 @@ def main():
     if args.next_phase:
         # The one derived answer to "a confirmed scope change opens a new phase —
         # what number does it take?" (operator ruling 2026-08-01, WI-402: a phase
-        # increments on an adjudication-confirmed scope change or an approved
+        # increments on an adjudication-confirmed scope change or an accepted
         # draft-SN batch, NEVER on a raw derived-value drop — a spurious window
         # must not burn a phase number). Printed bare so the intake mint helper
         # (WI-388) can int() the output. A Drafted row's phase is not yet scope,

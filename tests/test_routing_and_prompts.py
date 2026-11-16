@@ -41,7 +41,7 @@ def test_adjudicate_is_a_weightable_phase():
 
 def test_adjudicate_defaults_strong():
     # It judges, and the cost of a wrong judgement here is a wrong
-    # approval. Same tier as the other two judging phases.
+    # acceptance. Same tier as the other two judging phases.
     assert loop.DEFAULT_PHASE_TIER["ADJUDICATE"] == "strong"
     assert loop.phase_tier("ADJUDICATE", {}) == "strong"
 
@@ -239,13 +239,13 @@ def test_the_act_brief_is_a_shipped_prompt_with_strict_slots():
         "verdict",
         "wi",
         "amendment_act",
-        "approval_act",
+        "acceptance_act",
         "registries",
-        "approves_rows",
+        "accepts_rows",
     }
     values = dict.fromkeys(prompts.slots(text), "x")
     assert not prompts.slots(prompts.fill(key, text, values))
-    del values["approval_act"]
+    del values["acceptance_act"]
     with pytest.raises(prompts.PromptError):
         prompts.fill(key, text, values)
 

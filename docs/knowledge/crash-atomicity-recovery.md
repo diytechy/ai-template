@@ -53,7 +53,7 @@ per-close document*, and the rule refuses a second close of the same event rathe
 than overwriting the first. Read "a close no one can read is indistinguishable
 from a run that finished" as the general test: silence must not be a success
 signal. `baseline_snapshot.refresh_refusal` is the same instinct one tier up — a
-refresh that would absorb a row's drifted approved text is refused unless that
+refresh that would absorb a row's drifted accepted text is refused unless that
 row's own `Status` flip or an explicit `--reaccepts` naming it authorises it, so
 the record of what an operator blessed cannot be quietly rewritten.
 
@@ -75,7 +75,7 @@ the record of what an operator blessed cannot be quietly rewritten.
   not only inside `agent_loop`. The snapshot guards run on the always-on
   `--strict-integrity` floor and the pre-commit hook, which is the right altitude.
 - **Silence is never done.** A terminal state with no report is LOUD (SR-144); a
-  missing snapshot registry is an error, not "nothing approved". Demand the same
+  missing snapshot registry is an error, not "nothing accepted". Demand the same
   of any new durable artifact.
 
 ## Open questions / bounded here

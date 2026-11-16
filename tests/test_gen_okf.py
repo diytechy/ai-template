@@ -233,7 +233,7 @@ def test_malformed_id_is_ignored_not_path_escape(scaffold):
     assert not (scaffold / "docs" / "evil.md").exists()
 
 
-def test_an_IF_one_pager_exports_the_live_approval_value(scaffold):
+def test_an_IF_one_pager_exports_the_live_acceptance_value(scaffold):
     # WI-442 REVIEW-A: the generator kept reading the RETIRED `Stability`
     # column after the Approval migration, so every IF one-pager shipped
     # `tags: []` while the row's `status` cell — the tier's one maturity

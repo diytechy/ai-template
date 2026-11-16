@@ -17,7 +17,7 @@ and a set derived from other rows, to have an opinion at all. What stays in
     `enum_integrity_findings`, `placeholder_findings`, `schema_findings`):
     these ask about the FILE and the raw pre-filter rows, and they are the half
     of the checker that knows a registry is a CSV or a TOML;
-  * the report/console renderers, the approval + watermark machinery, and the
+  * the report/console renderers, the acceptance + watermark machinery, and the
     CLI.
 
 `trace.analyze` composes both halves and stays their only caller, so nothing
@@ -409,14 +409,14 @@ def status_criterion_findings(srs, scope):
     status_findings = []
     phase_deferred = []
     for r in srs:
-        # The DevStg-Impl status bar applies to every approved SR regardless of
+        # The DevStg-Impl status bar applies to every accepted SR regardless of
         # Verification method — matching spine_rules.sr_gate, which already
         # demands is_approved for any decomposed SR before DevStg-Impl with no
         # per-method carve-out (WI-259, review-2026-07-21 M-5: a Demonstration/
         # Analysis/Inspection SR left Implemented can never derive DevStg-Impl yet used
         # to pass this Test-only check — the two scripts disagreeing about the
         # gate is the false-green the kit exists to prevent). A Drafted SR is
-        # pre-approval (below DevStg-Reqs, derived-gate §3): it makes no approval
+        # pre-acceptance (below DevStg-Reqs, derived-gate §3): it makes no acceptance
         # claim yet, so the bar stands down — surfaced in the draft count so
         # the exemption stays auditable. Pinned equivalent to sr_gate's
         # is_approved-for-decomposed rule by test_rule_sync.
@@ -451,7 +451,7 @@ def status_criterion_findings(srs, scope):
             method = (r.get("VerificationMethod") or "").strip() or "(blank)"
             status_findings.append(
                 f"SR {r['SR-ID']} is VerificationMethod={method} but Status="
-                f"{val or '(blank)'} (DevStg-Impl requires Approved for every approved "
+                f"{val or '(blank)'} (DevStg-Impl requires Approved for every accepted "
                 "SR regardless of method — the magic Status values are matched "
                 "case-insensitively, so this is a real mismatch, not a casing "
                 "near-miss)"

@@ -59,11 +59,11 @@ Five operations here; the two lane closes that are NOT a merge (`hand_back`,
              a work-item id outside its claimed set (RULING R1, see
              `_minted_id_refusal` - minting is trunk-side and serial, so a
              collision two lanes could produce is unrepresentable), REFUSES a
-             branch whose spine delta performs an APPROVAL ACT - a `Status`
+             branch whose spine delta performs an ACCEPTANCE ACT - a `Status`
              flipped into `Approved`/`Founded`, a row born claiming one, or a
              write under docs/archive/last_approved/ - that no recorded verdict
              of an independent adjudicator's, judging that act's own rows,
-             backs (operator ruling 6, 2026-10-07, see `_approval_act_refusal`),
+             backs (operator ruling 6, 2026-10-07, see `_acceptance_act_refusal`),
              requires the policy verdicts the outcome
              owes (RULING-7 keyed off §A3, not off the claim), checks
              the ancestor relation and VERIFIES the `Bar-Green:` attestation
@@ -823,10 +823,10 @@ def claim(root, wi_id, branch, dispatch_lock_held=False):
     regen below covers six of the hook's ten `--run-steps` (arch-map, okf,
     derived-gate, trajectory-map, status-map, open-items); it does NOT cover
     `registry-integrity`, the `trajectory` SSOT check, `skills-sync` or
-    `approval-fresh`, and outside `--run-steps` the commit also skips
+    `acceptance-fresh`, and outside `--run-steps` the commit also skips
     `check_privacy --author`, the ALWAYS-ON secrets floor, the `format` step
     and the `commit-msg` hook. Most are vacuous for a pure bookkeeping commit
-    whose parent just passed them, but two are not: `approval-fresh` reads the
+    whose parent just passed them, but two are not: `acceptance-fresh` reads the
     registry this commit MUTATES, and the secrets floor would otherwise scan
     the regenerated artifacts. So trunk advances to a commit no hook inspected,
     and the next thing to bar it is a lane's §A2 refresh. Accepted for the
@@ -1205,7 +1205,7 @@ def _claimed_spec_frontmatters(root, branch):
     claim records the authority a lane acts under, so a reader that answered
     `None` let a caller's `if not metas` read it as "nothing claimed" and drop
     that authority's bounds. Each caller now chooses its own direction out of
-    an explicit refusal: the approval rung and the early close refuse; the bar
+    an explicit refusal: the acceptance rung and the early close refuse; the bar
     and the review gate fail toward more checking.
 
     Implements: SR-156, LLR-140"""
@@ -1222,9 +1222,9 @@ def _adjudication_lane(root, branch, metas=None):
     """Does EVERY claimed spec on `branch` declare the `adjudication` kind?
 
     `_lane_bar_directives`' `skip` test and the review gate's: whether the lane
-    runs a bar and owes a round. The approval rung does not ask it (WI-849: any
+    runs a bar and owes a round. The acceptance rung does not ask it (WI-849: any
     claimed row recording a scope bounds the lane's acts, read off the metas by
-    `acceptance_record.merge_approval_refusal`). UNREADABLE FRONTMATTER ANSWERS
+    `acceptance_record.merge_acceptance_refusal`). UNREADABLE FRONTMATTER ANSWERS
     FALSE, which runs the bar and owes the round: more checking."""
     metas = _claimed_spec_frontmatters(root, branch)[0] if metas is None else metas
     return bool(metas) and all(
@@ -1233,10 +1233,10 @@ def _adjudication_lane(root, branch, metas=None):
     )
 
 
-def _approval_act_refusal(root, branch):
-    """THE APPROVAL ACT IS AN INDEPENDENT ADJUDICATOR'S, IN THE AUTHORING LANE
+def _acceptance_act_refusal(root, branch):
+    """THE ACCEPTANCE ACT IS AN INDEPENDENT ADJUDICATOR'S, IN THE AUTHORING LANE
     OR ON TRUNK (operator ruling 6, 2026-10-07, superseding the trunk-side clause
-    of the 2026-09-01 ruling): the merge slot's approval refusal - a refusal
+    of the 2026-09-01 ruling): the merge slot's acceptance refusal - a refusal
     string, or None.
 
     A LANE AUTHORS `Drafted` SPINE ROWS AND AMENDS CELL TEXT. The act is the
@@ -1250,7 +1250,7 @@ def _approval_act_refusal(root, branch):
     as the actor test (WI-849). A lane with no act merges as it always did.
 
     THE JUDGEMENT ITSELF IS NOT HERE, and that is `LLR-178`'s separation, not
-    tidiness: `acceptance_record.merge_approval_refusal` reads the delta and
+    tidiness: `acceptance_record.merge_acceptance_refusal` reads the delta and
     words the refusal, beside the two-tree walk and the snapshot-mirror rules it
     shares its material with. What stays in the merge slot is the RUNG — the
     merge base this branch is judged against, and the placement in the ladder.
@@ -1265,14 +1265,14 @@ def _approval_act_refusal(root, branch):
 
     metas, refusal = _claimed_spec_frontmatters(root, branch)
     if refusal:
-        return f"{branch}: {refusal}, so the scope bounding the lane's approval acts is unknowable; nothing was merged"
+        return f"{branch}: {refusal}, so the scope bounding the lane's acceptance acts is unknowable; nothing was merged"
     head = _head(root)
     code, base = ac.git(root, "merge-base", head, branch)
     if code != 0 or not base.strip():
         # Fail closed: an unread delta is not an empty one.
-        message = f"cannot read the merge base of trunk {head[:10]} and {branch}, so the spine delta the approval-act rung reads is unknowable; nothing was merged:\n{ac._failure_tail(base)}"
+        message = f"cannot read the merge base of trunk {head[:10]} and {branch}, so the spine delta the acceptance-act rung reads is unknowable; nothing was merged:\n{ac._failure_tail(base)}"
         return message
-    judge = acceptance_record.merge_approval_refusal
+    judge = acceptance_record.merge_acceptance_refusal
     # `trunk=head`: the act lands under TRUNK's authority. This rung runs before
     # the in-slot refresh, so the merge base can predate a hold trunk has since
     # declared; the slot is held, so trunk does not move again before the merge.
@@ -1373,7 +1373,7 @@ def _text_then_act_refusal(root, branch):
     Every commit of the lane, oldest first, is judged against its parents by
     the same function the pre-commit hook runs over the staged tree
     (`text_then_act.commit_text_then_act_lines`): a commit that writes the
-    approval record changes no spine cell but `Status` and adds or removes no
+    acceptance record changes no spine cell but `Status` and adds or removes no
     row. A merge is judged by what neither parent carried, so a refresh that
     brings in trunk's own text and act is not the lane's. The lane then lands
     whole; its landing commit is not held to the rule, because the rule has
@@ -1381,7 +1381,7 @@ def _text_then_act_refusal(root, branch):
 
     The same walk carries every rider of `text_then_act.LANE_COMMIT_RIDERS`,
     the adoption record's rule (WI-969) and the held-rung lane rule
-    (`held_status.commit_held_approval_lines`, SR-208) among them. Each rider's lines carry
+    (`held_status.commit_held_acceptance_lines`, SR-208) among them. Each rider's lines carry
     its own remedy: `TEXT_THEN_ACT_REMEDY` is composed onto text then act's
     lines only (`_with_text_then_act_remedy`), and the record rule's lines
     already name theirs.
@@ -1572,11 +1572,11 @@ def _verdict_gate(root, branch, outcomes):
     KEYED OFF THE OUTCOME, NOT OFF THE CLAIM (§A3). Only `merged` asserts the
     work is done, and only an assertion of done owes a verdict; `cancelled` and
     `handback` assert the opposite — this will never be built, or this is coming
-    back unfinished — so an APPROVE would be an approval of nothing. Reading the
+    back unfinished — so an APPROVE would be an acceptance of nothing. Reading the
     requirement off the claim instead would deadlock the commonest handback
     cause on itself: a review escalation is precisely the case where no APPROVE
     exists, and the lane would be unable to return the work it could not get
-    approved.
+    accepted.
 
     ONE REVIEW SCOPE PER TRAIN (LLR-140), which is why the round evidence is
     computed once for the branch rather than per WI. A worker schedules its
@@ -1676,7 +1676,7 @@ def _round_refusal(root, branch, base, want, entries, required):
         )
     if flipped:
         return (
-            "{}: {} re-ran at this same tree until it approved - a reroll-until-"
+            "{}: {} re-ran at this same tree until it accepted - a reroll-until-"
             "green is escalated, never honoured".format(
                 branch, ", ".join(sorted(flipped))
             )
@@ -3452,7 +3452,7 @@ def _merge_refusal(root, branch, wi_ids):
     if refusal:
         return outcomes, refusal
     refusal = (
-        _approval_act_refusal(root, branch)  # operator ruling 6, 2026-10-07
+        _acceptance_act_refusal(root, branch)  # operator ruling 6, 2026-10-07
         or _loop_trailer_refusal(root, branch)  # SR-209
         or _ruling_sync_refusal(root, branch)  # the ruling sync (WI-790)
         or _text_then_act_refusal(root, branch)  # text before act (WI-806)
@@ -3482,7 +3482,7 @@ def integrate_one(root, branch, tier, held=None):
     the caller has to carry the remainder to the run's exit code.
 
     THE POST-MERGE ARM IS THE INTAKE (WI-388, §A5.2): once the merge lands —
-    and only then — the unified mint helper reads what landed (the approved/
+    and only then — the unified mint helper reads what landed (the accepted/
     routed spine diff, a returned spec's `## Handback`, a merged adjudication
     row's `## Dispositions` drafts) and mints the rows the event forces, as
     ONE bookkeeping commit on trunk, inside this same held slot (serial by

@@ -1,10 +1,10 @@
-"""Each new cell's class — traced or approved — driven through the amendment
+"""Each new cell's class — traced or accepted — driven through the amendment
 classifier over real git trees (TC-222, LLR-225).
 
 The cells the assumption tier and its neighbours introduce, each on an
 APPROVED row whose one change is that cell, compared across two committed
 trees. A traced cell is a pointer at another row: moving it reports no drift
-from the recorded copy. An approved cell is a statement the row makes: moving
+from the recorded copy. An accepted cell is a statement the row makes: moving
 it is drift owed a re-acceptance.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: its fixture builds and
@@ -62,7 +62,7 @@ CELL_CLASSES = [
 ]
 
 
-def test_delivered_with_has_a_carrier_key_and_is_approved_content():
+def test_delivered_with_has_a_carrier_key_and_is_accepted_content():
     assert MIGRATE.KEY["Delivered-With"] == "delivered_with"
     assert (
         acceptance_record.spine_cell_class(
@@ -126,7 +126,7 @@ def amended_cells(tmp_path_factory):
     "rel,id_col,rid,column,cls",
     [pytest.param(*case, id=case[3] + "@" + case[1]) for case in CELL_CLASSES],
 )
-def test_each_new_cell_is_classed_traced_or_approved(
+def test_each_new_cell_is_classed_traced_or_accepted(
     amended_cells, rel, id_col, rid, column, cls
 ):
     before = acceptance_record._spine_rows_at(amended_cells, "HEAD~1:", rel, id_col)
@@ -136,7 +136,7 @@ def test_each_new_cell_is_classed_traced_or_approved(
     other = "approved" if cls == "traced" else "traced"
     assert split[other] == {}, split
     # The recorded copy is the first tree: a traced move is no drift, an
-    # approved one is drift owed a re-acceptance.
+    # accepted one is drift owed a re-acceptance.
     drifted = baseline_snapshot.drifted_cells(rel, id_col, after[rid], before)
     assert drifted == ({column: ("recorded", "moved")} if cls == "approved" else {})
     assert baseline_snapshot.is_drifted(rel, id_col, after[rid], before) is (
@@ -145,10 +145,10 @@ def test_each_new_cell_is_classed_traced_or_approved(
 
 
 def test_off_spine_registries_have_a_traced_half_now():
-    """Before this table every off-spine cell counted as approved: the residual
-    rule reads a cell no table names as approved, and no table named an
+    """Before this table every off-spine cell counted as accepted: the residual
+    rule reads a cell no table names as accepted, and no table named an
     off-spine registry. The traced half is two pointers, and every other cell
-    stays the fail-safe approved."""
+    stays the fail-safe accepted."""
     assert acceptance_record.OFFSPINE_TRACED_CELLS == {
         "docs/requirements/interfaces.toml": frozenset({"BridgedBy"}),
         "docs/requirements/assumptions.toml": frozenset({"ObstacleHats"}),

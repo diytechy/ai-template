@@ -45,7 +45,7 @@ def set_dial(scaffold, section, key, value):
     two steps before the real assertion was reached.
 
     The operator's 2026-08-21 ruling removed `process.toml` from
-    `kitlib/stage.py DECLARED_INPUTS` — dials govern who may approve, not what
+    `kitlib/stage.py DECLARED_INPUTS` — dials govern who may accept, not what
     stage is derived — so writing a dial no longer touches the fingerprint and
     the regeneration had become a no-op performed for a reason that no longer
     existed. The ruling's sweep reached the code and missed this docstring and
@@ -141,7 +141,7 @@ def test_hook_skills_index_and_prompt_catalog_steps(scaffold):
     # A SCAFFOLD IS THE CASE THAT MATTERS HERE. Both generators are kit-only, so
     # downstream neither is beside check.py and both steps must degrade to a
     # vacuous no-op that still RESOLVES — the 130-REVIEW-A failure (`check: no
-    # step named 'approval-fresh'`, exit 1, every commit blocked for an adopter)
+    # step named 'acceptance-fresh'`, exit 1, every commit blocked for an adopter)
     # is the reason these are built-in steps rather than docs/stack.ini
     # `[step:]` sections. Their ability to actually go RED where the generator
     # IS present is pinned in tests/test_generated_freshness_wiring.py.
@@ -225,7 +225,7 @@ def test_run_steps_gate_promotes_the_warn_first_floor(scaffold):
     #
     # THE FRAME HAS TO GO FIRST, and that is not fixture noise — it is slices 2
     # and 3's banked finding driven here. `boundary_incomplete` applies whenever
-    # `external.toml` EXISTS, and the scaffold ships one carrying no approved
+    # `external.toml` EXISTS, and the scaffold ships one carrying no accepted
     # crossing, so a minimal project reads `DevStg-Boundary` and FLOORS to
     # `DevStg-Reqs` — the floor itself, which would make this test vacuous
     # (nothing is above the warn-first floor, so a defaulted `--gate` resolving

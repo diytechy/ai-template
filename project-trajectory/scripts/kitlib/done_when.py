@@ -55,7 +55,7 @@ BLESSED IN THE LANE (WI-841, operator direction 2026-10-06). A lane may edit its
 own Done-when, and an adjudicator, not a guard, blesses the change before what
 consumes the Done-when uses it: the lane's next build dispatch, and its close
 and merge. The verdict is BOUND to the exact text it judged by a digest
-(`digest`), as an approval act binds registry bytes, so a text changed after
+(`digest`), as an acceptance act binds registry bytes, so a text changed after
 the verdict is unblessed again. An operator ruling counts as that verdict: a
 `docs/decisions/*.toml` entry the operator has confirmed or overruled that
 carries the same digest under `done_when`. `blessing_owed` is THE predicate,

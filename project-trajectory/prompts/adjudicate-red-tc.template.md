@@ -30,7 +30,7 @@
 
 You are an INDEPENDENT adjudicator launched by the unattended coordinator. The dispatcher's frontier is empty, and the registry census found test cases that are NOT `Verified` even though the requirements they cover were claimed done.
 
-READ THIS FIRST, because it changes what you are allowed to conclude: **the registry stores no test RESULT.** A test case's `Evidence` cell names a LOCATION — a pytest node id, a script, a procedure doc — never a pass or a fail. The only signal you have is that `Status` is not `Verified`. So the honest reading of each line below is *"this test case has not been attested as passing"*, which has at least four causes and you must decide which:
+READ THIS FIRST, because it changes what you are allowed to conclude: **the registry stores no test RESULT.** A test case's `Evidence` cell names a LOCATION — a pytest node id, a script, a procedure doc — never a pass or a fail. The only signal you have is that `Status` is not `Verified`. So the honest reading of each line below is *"this test case has not been recorded as passing"*, which has at least four causes and you must decide which:
 
   (a) the test exists and passes, and only the `Status` cell was never lifted — a bookkeeping gap;
   (b) the test exists and genuinely fails — a defect;

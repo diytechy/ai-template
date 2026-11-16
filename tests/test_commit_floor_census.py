@@ -51,14 +51,14 @@ NOT_AT_COMMIT = {
     "check, gate-scoped (hook header) and kept in check.py / CI by the floor rule.",
     "vocabulary": "a whole-tree retired-vocabulary scan whose severity rises with "
     "the rung (its step comment): gate-scoped (hook header).",
-    "need-form": "a form heuristic over the approved need prose, warn-first always "
+    "need-form": "a form heuristic over the accepted need prose, warn-first always "
     "(its step comment): gate-scoped (hook header).",
     "doc-navigability": "a whole-tree link and orphan check with a git-history "
     "staleness heuristic (its step comment): gate-scoped (hook header).",
     "backlink-coverage": "the share of LLR rows named by an Implements: line in "
     "source, from the Impl rung, report-only as shipped (its step comment): "
     "gate-scoped (hook header).",
-    "test-first": "reads approval and Implements: order from history, warn-only "
+    "test-first": "reads acceptance and Implements: order from history, warn-only "
     "always (its step comment): gate-scoped (hook header).",
     "assumption-gate": "the assumption gate's requirement question from the "
     "Boundary rung, advisory unless [checks] assumption_gate is set (its step "

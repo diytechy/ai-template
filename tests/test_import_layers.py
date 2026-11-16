@@ -23,7 +23,7 @@ the same ratchet convention:
 WHY A BASELINE AND NOT "ASSERT NO CYCLES". Because there WAS a cycle when this
 file landed, and a test that fails from the day it lands teaches people to skip
 it. The baseline was a debt statement with a live owner (`WI-483`), not an
-approval: every entry was architectural debt that program is paid to remove. It
+acceptance: every entry was architectural debt that program is paid to remove. It
 is now EMPTY — WI-483 slices 1 and 2 removed all seven modules — and because the
 ratchet compares for equality, an empty baseline is the strongest form of the
 same test: any new cycle anywhere reds. The shape stays a list rather than
@@ -356,7 +356,7 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # import instead, so the window moves by one rather than two.
     # RE-STAMPED 27 -> 28 (2026-09-27, WI-577): measured 27 at the top of the
     # window before it, and `trace -> agent_common` (IF-224) joins deferred.
-    # The approval brief reads the operator-acceptance dial through the one existing
+    # The acceptance brief reads the operator-acceptance dial through the one existing
     # predicate, `agent_common.operator_accepts_spine`, rather than a second
     # copy of the rung table; only a rendered re-acceptance brief asks, so
     # every other trace run stays free of agent_common's import. Reason in

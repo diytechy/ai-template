@@ -431,7 +431,7 @@ def test_the_bar_residue_the_refresh_created_is_shed_but_the_lanes_is_not(tmp_pa
 
 def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
     # WI-388's post-merge arm, end to end through the slot: the merged branch
-    # amended an approved SR cell of an Approved row without the flip, so the
+    # amended an accepted SR cell of an Approved row without the flip, so the
     # intake mints ONE adjudication row as its own bookkeeping commit inside
     # the same held slot — serial by construction, derived description, no
     # model in the path (§A5.2; rulings R1/R3).
@@ -1348,7 +1348,7 @@ def test_the_generated_table_reads_kinds_and_prefixes_not_a_second_copy(tmp_path
     ini = root / "docs" / "stack.ini"
     ini.write_text(
         ini.read_text(encoding="utf-8")
-        + "docs/ratify/ = approve\n"
+        + "docs/ratify/ = accept\n"
         + "docs/status.md = status | <!-- BEGIN --> | <!-- END -->\n"
         + "tests/test_module_size_ratchet.py = linecounts\n",
         encoding="utf-8",
@@ -1358,7 +1358,7 @@ def test_the_generated_table_reads_kinds_and_prefixes_not_a_second_copy(tmp_path
     assert table["PROJECT_STATE.html"] == "trajectory"
     assert table["docs/status.md"] == "status"
     assert sorted(integ._generated_paths(root)) == sorted(table)
-    assert integ._declared_generated_kind("docs/ratify/CURRENT.md", table) == "approve"
+    assert integ._declared_generated_kind("docs/ratify/CURRENT.md", table) == "accept"
     assert integ._declared_generated_kind("docs/ratify.md", table) is None
     assert integ._declared_generated_kind("widget.txt", table) is None
     assert (

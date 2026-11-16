@@ -356,8 +356,8 @@ def test_cli_surface_prints_registry_material_not_sentinel(tmp_path):
 
 # --- the perspectives a sitting brief carries ---------------------------------
 #
-# A sitting that judges an SR awaiting its first approval, or an amended
-# approved need, is a decomposition round: its brief carries the question of
+# A sitting that judges an SR awaiting its first acceptance, or an amended
+# accepted need, is a decomposition round: its brief carries the question of
 # every declared hat applicable to the round's parent needs and asks the
 # verdict for one outcome line per hat. Any other sitting says it is no
 # decomposition round and reads no roster. Each parent need is one context,

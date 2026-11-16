@@ -419,7 +419,7 @@ def _fake_spine_assemblers(monkeypatch):
     def first(_root, row):
         seen["first-acceptance"] = row["Adjudicates"]
         return {
-            "chain": "- TC TC-1 [AWAITING FIRST APPROVAL]",
+            "chain": "- TC TC-1 [AWAITING FIRST ACCEPTANCE]",
             "baseline": "B",
             "questions": "Q",
         }, None
@@ -463,7 +463,7 @@ def test_a_combined_sitting_refuses_whole_when_a_section_cannot_compose(
 SITTING = (
     "## amendment\n\n- [CLARITY] LLR-1 Detail -> a -> a -> same\n\n"
     "VERDICT: CLARITY rows=1\n\n"
-    "## first-acceptance\n\nOUTCOME: APPROVE rows=1\n\n"
+    "## first-acceptance\n\nOUTCOME: ACCEPT rows=1\n\n"
     "## done-when\n\nDONE-WHEN: BLESSED changes=2 digest={}\n\n"
     "SITTING: JUDGED kinds=amendment;first-acceptance;done-when\n"
 )
@@ -477,7 +477,7 @@ def test_a_combined_verdict_is_parsed_section_by_section(tmp_path):
     path = tmp_path / "s.md"
     path.write_text(SITTING.format(_digest()), "utf-8")
     assert ab.verdict_refusal("combined", path, kinds=KINDS) is None
-    path.write_text(SITTING.format(_digest()).replace("OUTCOME: APPROVE", "OK"))
+    path.write_text(SITTING.format(_digest()).replace("OUTCOME: ACCEPT", "OK"))
     assert "(## first-acceptance)" in ab.verdict_refusal("combined", path, kinds=KINDS)
     path.write_text(SITTING.format(_digest()).replace(";done-when", ""))
     assert "requested" in ab.verdict_refusal("combined", path, kinds=KINDS)
@@ -1526,7 +1526,7 @@ def test_a_resumed_blocked_lanes_first_build_is_held_at_dispatch(tmp_path):
 _COMPLETE = {
     "done-when": "DONE-WHEN: BLESSED changes=2 digest={}",
     "amendment": "VERDICT: CLARITY rows=1",
-    "first-acceptance": "OUTCOME: APPROVE rows=1",
+    "first-acceptance": "OUTCOME: ACCEPT rows=1",
 }
 
 

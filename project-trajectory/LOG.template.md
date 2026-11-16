@@ -1,7 +1,7 @@
 # Project Log — Append-only history
 
 The durable record for the gated process (see [process.md](process.md) §5):
-sitting sign-offs, review verdicts, approved decisions, and session notes append
+sitting sign-offs, review verdicts, accepted decisions, and session notes append
 here, **newest last**, and are never rewritten. The working surface — what to
 do *next* — lives in [status.md](status.md), which points here; this file is
 **evidence, never normative**: a rule or requirement belongs in the process
@@ -13,7 +13,7 @@ iteration branch & sync").
 **Entries already written are never re-worded, including their vocabulary.** A
 sign-off that recorded a named human certifying `G1` recorded exactly that; a  <!-- check_vocab: allow -->
 later vocabulary change (the stage ladder retired the `G*` tags) does not reach
-backwards, because rewriting an attestation makes the record claim something was
+backwards, because rewriting an acceptance makes the record claim something was
 signed that was not. Read historical rows through the translation in
 process.md §4.
 

@@ -587,14 +587,14 @@ def _row_bindings(root, mods, cache):
 
 def symbol_findings(root):
     """`(dangling, untraced, advisory, unbound)` for the LLR `CodeSymbol` ANCHOR rule
-    (WI-429, approved as built by operator ruling OI-20 2026-08-13).
+    (WI-429, accepted as built by operator ruling OI-20 2026-08-13).
 
     THE RULE: a live LLR row must carry at least ONE identifier-shaped
     `CodeSymbol` token that BINDS in one of the `.py` modules its `Module` cell
     names. Everything else about the cell is filed untraced.
 
     THE GRAMMAR — WHAT A `CodeSymbol` CELL MAY NAME (ruled with the
-    approval, OI-20, on the conservative default; before it the cell had no
+    acceptance, OI-20, on the conservative default; before it the cell had no
     stated grammar at all, which is the rot the census measured). ADMISSIBLE:
 
     - a RESOLVABLE CODE SYMBOL — a function, class, method or constant that

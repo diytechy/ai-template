@@ -5,7 +5,7 @@ A READ MODEL OVER THE COMMITTED TREE, and nothing else — the sibling of
 asks *which gaps do the registries name?*, this module asks *which durable
 actions is the operator holding?* and answers from two sources and no clock:
 
-    spine_pending     `Drafted` SRs (a first approval is owed) and SRs whose
+    spine_pending     `Drafted` SRs (a first acceptance is owed) and SRs whose
                       text has DRIFTED from its `docs/archive/last_approved/`
                       copy (a re-accept is owed, process.md §7)
     pause_pending     the tracked `docs/work/pause` declaration
@@ -43,7 +43,7 @@ NOT `kitlib`, and by the same hard rule that kept the census out: every module
 of that package must stay import-clean of the rest of `scripts/`
 (`tests/test_bootstrap.py::test_bootstrap_imports_only_the_common_package`),
 because `bootstrap.py` imports it. This module reads the spine through
-`traj_parse` and its approved snapshot through `baseline_snapshot`, so it imports
+`traj_parse` and its accepted snapshot through `baseline_snapshot`, so it imports
 siblings by construction and is a plain sibling itself.
 
 THE ITEMS CARRY RENDERED LINES, deliberately. A `PendingItem` is a `kind` plus
@@ -91,11 +91,11 @@ from traj_parse import _spine, ct
 # leaves byte-untouched) — projecting every DURABLE pending-operator action so the
 # operator's one review surface never misses a hard stop. A pure projection of
 # committed-tree state ONLY:
-#   (a) Drafted/DRIFTED SR rows (WI-316): a `Drafted` SR owes an approval, and
+#   (a) Drafted/DRIFTED SR rows (WI-316): a `Drafted` SR owes an acceptance, and
 #       an SR whose chain has moved away from its `docs/archive/last_approved/`
-#       copy owes a re-accept (post-attestation amendment, process.md §7) — one
-#       pointer line each, naming the on-demand brief (`trace.py --approve <id>`
-#       / `--approve modified`) that carries the depth.
+#       copy owes a re-accept (post-acceptance amendment, process.md §7) — one
+#       pointer line each, naming the on-demand brief (`trace.py --accept <id>`
+#       / `--accept modified`) that carries the depth.
 #   (b) a tracked `docs/work/pause` (concurrency-restructure §5.6): one
 #       `Paused since <date>` line, the declared reason rendered verbatim (no
 #       clock), so an open pause is a visible accruing cost.
@@ -137,28 +137,28 @@ _SR_REL = "docs/requirements/system-requirements.toml"
 
 
 def spine_pending(root):
-    """Source (e), WI-316: one pointer line per `Drafted` SR (approval owed) and
-    per SR whose chain has DRIFTED from the approved snapshot (re-accept owed —
-    a post-approval amendment, process.md §7). Only SR rows project — deliberate
+    """Source (e), WI-316: one pointer line per `Drafted` SR (acceptance owed) and
+    per SR whose chain has DRIFTED from the accepted snapshot (re-accept owed —
+    a post-acceptance amendment, process.md §7). Only SR rows project — deliberate
     surface economy, never
-    attestation scope (a row's Status answers for its own cells, operator ruling
+    acceptance scope (a row's Status answers for its own cells, operator ruling
     2026-08-17m): a flagged LLR/TC under an unflagged SR shows in the registry
     and the trace report, not here. Durable committed-tree state, so these
     join the freshness-gated PURE region; pointer-only per this block's charter
     — the depth (per-cell before/after) lives in the on-demand brief the line
-    names, `trace.py --approve modified`, never here. Sorted by id, no clocks.
+    names, `trace.py --accept modified`, never here. Sorted by id, no clocks.
 
     THE `Planned` ARM LEFT AT D-9 STEP 5, with the word. It had joined at step 2
     because a Planned SR projected NOTHING on the operator's own pending-actions
     surface — the loudest instance of the `Planned`-reads-as-`Bananas` finding.
-    OI-30 D1 then ruled the fold: those rows now read `Approved`, and an approved
+    OI-30 D1 then ruled the fold: those rows now read `Approved`, and an accepted
     row owes nothing HERE. What it may still owe is caught by the drift arm below
-    and, once the snapshot is seeded, by the UNANCHORED rule — an approval with
-    no copy recording it — which is where "approved but nobody signed it" belongs.
+    and, once the snapshot is seeded, by the UNANCHORED rule — an acceptance with
+    no copy recording it — which is where "accepted but nobody signed it" belongs.
 
     DRIFT JOINED AT D-9 STEP 4, and it is the arm no Status cell can carry: a
     row whose text has moved away from its copy in
-    `docs/archive/last_approved/` while its own Status still claims approval.
+    `docs/archive/last_approved/` while its own Status still claims acceptance.
     That is the state the migration exists for — under the new ladder an
     amendment no longer flips its row, so a projection keyed on status words
     alone goes quiet exactly when it matters. Vacuous while no snapshot exists.
@@ -169,7 +169,7 @@ def spine_pending(root):
     A projection that had swapped the two in ONE commit would have gone quiet for
     exactly as long as it took someone to notice."""
     # `skip_example=True`: a copied template's `-000` example row owes no
-    # approval. Only the SR arm projects (the docstring's surface-economy
+    # acceptance. Only the SR arm projects (the docstring's surface-economy
     # note), so the LLR/TC arms of the loader go unused here.
     srs = _spine(root, skip_example=True)[0]
     snapshot = baseline_snapshot.load_all(root)
@@ -186,21 +186,21 @@ def spine_pending(root):
         phase_note = " (phase {} pulls the derived gate)".format(phase) if phase else ""
         if status == "drafted":
             lines.append(
-                "- **{} `Drafted` — approval owed**{}: {} — approve in a "
+                "- **{} `Drafted` — acceptance owed**{}: {} — accept in a "
                 "reviewed Status-change commit (`Drafted`→`Approved`; the "
                 "`gate-advance` skill); hierarchy brief: `python "
-                "project-trajectory/scripts/trace.py --approve {}`.".format(
+                "project-trajectory/scripts/trace.py --accept {}`.".format(
                     sid, phase_note, title, sid
                 )
             )
         else:
             lines.append(
-                "- **{} DRIFTED from the approved snapshot**{}: {} — its "
-                "approved text differs from its copy in `{}` while its own "
-                "Status still claims approval, so nobody has read the change. "
+                "- **{} DRIFTED from the accepted snapshot**{}: {} — its "
+                "accepted text differs from its copy in `{}` while its own "
+                "Status still claims acceptance, so nobody has read the change. "
                 "Re-accept it, then run `intake.py snapshot --reaccepts {}` in "
                 "the same commit; before/after brief: `python "
-                "project-trajectory/scripts/trace.py --approve modified`.".format(
+                "project-trajectory/scripts/trace.py --accept modified`.".format(
                     sid, phase_note, title, baseline_snapshot.SNAPSHOT_DIR, sid
                 )
             )
@@ -253,7 +253,7 @@ def pause_pending(root):
 
 def pending_items(root):
     """THE READ MODEL: every durable pending operator action, in surface order
-    (blocked rows, then spine rows owing an approval or re-accept, then the
+    (blocked rows, then spine rows owing an acceptance or re-accept, then the
     tracked pause). Deterministic and committed-tree-pure, so a caller may
     count it, filter it or render it and get the same answer the operator surfaces
     show — which is the WI-381 amendment's requirement (ruled 2026-08-01) held
@@ -276,7 +276,7 @@ def operator_cards(root):
 
 PENDING_LEAD = (
     "_Pending operator actions — a generated projection of durable, "
-    "committed-tree state (Drafted/drifted spine rows owing an approval or "
+    "committed-tree state (Drafted/drifted spine rows owing an acceptance or "
     "re-accept, and the tracked pause declaration); regenerated by `python "
     "project-trajectory/scripts/gen_trajectory.py --status`, do not hand-edit. "
     "This section is freshness-gated by the harness `status-map` step. The "

@@ -23,7 +23,7 @@ claimed away: `a/b` and `a-b`, and a branch name reused by a second lane,
 share one record.
 
 THE OPERATOR'S VERDICT IS ONE KEY, AND AN OVERRULE IS ACTED ON (WI-818). A
-decision is a direction already taken, so the operator does not approve it: the
+decision is a direction already taken, so the operator does not accept it: the
 operator CONFIRMS it or OVERRULES it (operator, 2026-10-04). Each entry may carry
 `operator`, set in place to `confirmed` or `overruled`; an absent key is NOT YET
 SEEN. `operator_state` is the one reading, and any other value reads as not yet

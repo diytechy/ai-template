@@ -313,7 +313,7 @@ def arch_icicle(root):
 
 # --- the per-need assumption view (SR-218) -----------------------------------
 # A reviewer starting from an outcome asks what it relies on and whether any of
-# it has been shown false; the per-assumption reports and the approval brief
+# it has been shown false; the per-assumption reports and the acceptance brief
 # answer other questions. So each need's detail panel in the spine view lists the
 # assumptions its requirements cite, from `traj_parse.need_assumptions`. The
 # style and the one line of script the block needs are emitted only when a

@@ -79,7 +79,7 @@ Contract IF-137: the terminal-outcome WRITES for the two lane closes that are
     is the caller's — so decision and write stay in separate modules and every
     lane still ends in a merge. Under the loop marker every commit either makes
     carries the `Loop-Session` trailer, and a staged tree that would change a
-    status the approval level holds for an operator is refused before it is
+    status the acceptance level holds for an operator is refused before it is
     written.
 """
 

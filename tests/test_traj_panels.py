@@ -246,9 +246,9 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Approved,
     # 3 LLR, 4 TC) — live counts, not prose
     assert "1 SN" in text
-    assert "2 SR · 1 approved" in text
+    assert "2 SR · 1 accepted" in text
     assert "3 LLR" in text and "4 TC" in text
-    assert "1 of 2 SR approved" in text
+    assert "1 of 2 SR accepted" in text
     # the pre-station picture is gone: the serial resume-loop chips and their
     # escalation bullets do not survive the redraw (their successors are the
     # handback outcome and the surface arm, asserted by the station tests).
@@ -608,7 +608,7 @@ def test_station_links_resolve():
     # Over the real meta repo (where every canonical home exists): each linked
     # stage resolves, and the station's canonical homes are the ones the flow
     # actually lands on — the WI registry (claim/intake), the log (the merged
-    # record), and the operator surface (the surfaced approval cards).
+    # record), and the operator surface (the surfaced acceptance cards).
     gt = load_script("gen_trajectory")
     station = gt._station_panel(ROOT)
     hrefs = re.findall(r'href="([^"]+)"', station)

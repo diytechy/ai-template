@@ -156,7 +156,7 @@ STATUS_MD = """# Project Status
 - **Active gate:** DevStg-Reqs
 - **Open items:**
   - **Needs <operator>**:
-    - OI-1 — decide: approve the demo gate (blocks: DevStg-Reqs)
+    - OI-1 — decide: accept the demo gate (blocks: DevStg-Reqs)
 
 ## Scope
 

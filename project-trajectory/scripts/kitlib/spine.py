@@ -302,7 +302,7 @@ def open_items_at(oi_rows, status):
 
     THE SHARED STAGE of every open-items reader that filters by status (WI-821,
     the A->B->C / A->B->D shape PROCESS.md §3 names): the operator queue reads the
-    `pending` items here, `check_trajectory.approval_brief_findings` the
+    `pending` items here, `check_trajectory.acceptance_brief_findings` the
     `pending` briefs and `trace.ruled_open_item_texts` the `ruled` prose. Each
     had carried its own skip-and-filter loop. A row whose id is not `OI-###`
     shaped, or is the `-000` example, is never returned.
@@ -548,7 +548,7 @@ STATUS_VALUES = frozenset({"Drafted", "Approved", "Founded"})
 
 
 def is_drafted(row):
-    """A row in the pre-approval `Drafted` state.
+    """A row in the pre-acceptance `Drafted` state.
 
     Exempt from the child-completeness orphan rules (a Drafted SR needs no
     LLR/TC) and from the `--require-verified` criterion, so a requirement can
@@ -571,7 +571,7 @@ def is_approved(row):
     """The `Approved` state: the row's TEXT is blessed by an operator.
 
     RENAMED FROM `is_verified` AT D-9 STEP 5, and the rename carries a RULING.
-    `Verified` made TWO claims at once — the text is approved AND the evidence
+    `Verified` made TWO claims at once — the text is accepted AND the evidence
     passed — and the second was a hand-set cell asserting a test run nobody
     re-ran. `Approved` says only that the text is blessed; whether the tests
     pass is the harness's answer (`kitlib.evidence`). `Planned` folded into this
@@ -600,10 +600,10 @@ def is_founded(row):
     return (row.get("Status") or "").strip().lower() == "founded"
 
 
-def claims_approval(row):
-    """True when a row's `Status` claims approval or above: `Approved`, or the
+def claims_acceptance(row):
+    """True when a row's `Status` claims acceptance or above: `Approved`, or the
     computed `Founded` above it. A missing `Status`, or a word outside the
-    vocabulary, claims nothing. The one home of the pair the approval-act
+    vocabulary, claims nothing. The one home of the pair the acceptance-act
     readers and the parent-first rule both ask.
 
     Implements: SR-245, LLR-357
@@ -650,7 +650,7 @@ def sn_all_ids(text, carrier=None):
 
     A TOKEN scrape, so a prose mention inside a need counts exactly like a table
     row — the sharp edge `registry-machinery-reference` §2.1 records (an
-    approved, uncited prose mention caps the derived stage through the coverage
+    accepted, uncited prose mention caps the derived stage through the coverage
     rung). `-000` placeholders excluded. This scrape decides which ids BOTH the
     gate derivation and the itemized orphan listing run their rules over, which
     is why it may have only one definition.
@@ -658,7 +658,7 @@ def sn_all_ids(text, carrier=None):
     THE NEED TABLES ONLY, under the TOML carrier. The needs file also carries
     the stakeholder list (`[stakeholder.STK-##]`), whose descriptions may name
     the needs a stakeholder owns; scraping the whole file would turn each such
-    mention into a need of its own, which then reads as approved and uncited
+    mention into a need of its own, which then reads as accepted and uncited
     and caps the stage. So the scrape reads the `[need.*]` tables' ids and
     cells and nothing else, and an id named only in a comment is not a need.
     The legacy markdown carrier, which has no stakeholder list, keeps the
@@ -920,7 +920,7 @@ def review_scope(srs, llrs, tcs, tags, test_root, exists):
 
 
 def tier_findings(tcs, tier_of):
-    """`(errors, advisories)` for the approved test cases whose `Tier` cell
+    """`(errors, advisories)` for the accepted test cases whose `Tier` cell
     disagrees with the tier their evidence runs in.
 
     WHICH TIER A TEST RUNS IN IS THE HARNESS'S ANSWER, so the rule takes it as
@@ -933,7 +933,7 @@ def tier_findings(tcs, tier_of):
     none of whose evidence is slow is an advisory: either it runs per commit
     after all, or it names no test the harness runs (a document, a workflow),
     and the full tier runs everything, so the cell understates where its
-    evidence runs and is never false. A row below approval is not judged; its
+    evidence runs and is never false. A row below acceptance is not judged; its
     tier is a proposal.
 
     Implements: SR-157, LLR-260
@@ -979,8 +979,8 @@ def missing_cell_findings(tiers):
     AN ABSENT CELL WAS THE ONE SHAPE THE VOCABULARY CHECKS COULD NOT SEE. They
     judge a value that is present, so a row authored with no `status` passed
     every one of them while reading, to each surface that asks what it owes, as
-    neither `Drafted` nor approved: no first-acceptance arm and no drift arm
-    fires on it, and the approval brief omitted it. A row with no `phase` in a
+    neither `Drafted` nor accepted: no first-acceptance arm and no drift arm
+    fires on it, and the acceptance brief omitted it. A row with no `phase` in a
     phased spine falls outside every `--phase` scope the same silent way. Both
     are wrong at any stage, so both are integrity-class. The phase half arms as
     the numeric-phase rule does, on the first phased row, so an unphased
@@ -1008,7 +1008,7 @@ def missing_cell_findings(tiers):
         if not (r.get("Status") or "").strip():
             out.append(
                 "{} {} has no Status cell — a row stating no maturity is neither "
-                "Drafted nor approved to every reader that asks what it owes; "
+                "Drafted nor accepted to every reader that asks what it owes; "
                 'give it status = "Drafted"'.format(label, rid)
             )
         if phased and label in PHASED_TIERS and not (r.get("Phase") or "").strip():
@@ -1020,7 +1020,7 @@ def missing_cell_findings(tiers):
     return out
 
 
-# THE PARENT-FIRST RULE: a spine row is approved only after the rows
+# THE PARENT-FIRST RULE: a spine row is accepted only after the rows
 # it hangs from are. Each child tier, the cell naming its parents, and the
 # tiers a parent is read from: an SR's needs, an LLR's SRs, and a TC's SRs and
 # LLRs. Any other id a cell cites (an IF, B or DA row, or an id no row
@@ -1054,23 +1054,23 @@ def _declared_rows(tiers):
     return out
 
 
-def _unapproved_parents(declared, row, column, parent_tiers):
+def _unaccepted_parents(declared, row, column, parent_tiers):
     """The `(id, row)` of each declared parent `row` cites in `column` that
-    does not claim approval, in citation order, once each.
+    does not claim acceptance, in citation order, once each.
 
     Implements: SR-245, LLR-357"""
     for ref in dict.fromkeys(refs(row.get(column))):
         for label in parent_tiers:
             parent = declared.get(label, {}).get(ref)
-            if parent is not None and not claims_approval(parent):
+            if parent is not None and not claims_acceptance(parent):
                 yield ref, parent
 
 
 def parent_first_findings(tiers):
-    """One entry `(child, child status, parent, parent status)` per approved
-    child (`claims_approval`: `Approved` or `Founded`) citing a declared parent
-    that is not approved, over `PARENT_EDGES`. A parent with no `Status`, or a
-    word outside the vocabulary, is not approved. Statuses are the stripped
+    """One entry `(child, child status, parent, parent status)` per accepted
+    child (`claims_acceptance`: `Approved` or `Founded`) citing a declared parent
+    that is not accepted, over `PARENT_EDGES`. A parent with no `Status`, or a
+    word outside the vocabulary, is not accepted. Statuses are the stripped
     cells, "" for a missing one. Pure: the standing finding and the commit
     judgement both read it.
 
@@ -1087,11 +1087,11 @@ def parent_first_findings(tiers):
     out = []
     for label, (column, parent_tiers) in PARENT_EDGES.items():
         for rid, row in declared.get(label, {}).items():
-            if not claims_approval(row):
+            if not claims_acceptance(row):
                 continue
             out += [
                 (rid, _status_cell(row), ref, _status_cell(parent))
-                for ref, parent in _unapproved_parents(
+                for ref, parent in _unaccepted_parents(
                     declared, row, column, parent_tiers
                 )
             ]
@@ -1106,8 +1106,8 @@ def parent_first_line(entry):
     """
     child, child_status, parent, parent_status = entry
     return (
-        "{} ({}) is approved under {} ({}), which is not: approve {} in its own "
-        "approval act, or return {} to Drafted".format(
+        "{} ({}) is accepted under {} ({}), which is not: accept {} in its own "
+        "acceptance act, or return {} to Drafted".format(
             child, child_status, parent, parent_status or "no status", parent, child
         )
     )
@@ -1158,7 +1158,7 @@ SPINE_TIER_KEYS = {
     # the need is, resolved against the same file's `[stakeholder.STK-##]`
     # list; `source` (SR-190) points at the document the need was drawn from,
     # as `path#anchor` targets. Both are optional POINTERS: the relation lives
-    # on the need, and neither is part of the need's approved text.
+    # on the need, and neither is part of the need's accepted text.
     "SN-ID": (
         "status",
         "tags",
@@ -1382,7 +1382,7 @@ OFFSPINE_KEYS = {
     # outcome lands (`effect_at`, crossing ids), what it assumes, when it holds,
     # the obstacle under which it fails and what would show it false; `status`
     # is the spine's maturity and `standing` its validity, active or falsified,
-    # because an approved assumption can later be shown false. `realized_by`
+    # because an accepted assumption can later be shown false. `realized_by`
     # names the one surrogate a fidelity assumption is about, `obstacle_hats`
     # the perspectives its obstacle came from. A surrogate is a stand-in for
     # outside parties in tests, and `emulates` names them (entity ids). Neither

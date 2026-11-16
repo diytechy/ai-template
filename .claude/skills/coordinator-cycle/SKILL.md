@@ -115,7 +115,7 @@ registries they are judged against. Two of its questions shape the spec most:
 - A queued row born before S3, S4 and the delta question is re-critiqued when
   it comes up for claim, one row at a time.
 
-Name the change set's **anchor** in the spec: the approved SN or SR it hangs
+Name the change set's **anchor** in the spec: the accepted SN or SR it hangs
 from. Label any derived SR with its lens (`spine-authoring` §2(c)). File splits
 and preparatory rows on trunk before claiming them.
 
@@ -186,7 +186,7 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    before build round 1 (for a `single` row, after its pass record), from
    the anchor down, plus the arms map (`spine-authoring`,
    `references/in-lane.md`). Keep new spine rows `Drafted` and existing
-   statuses unchanged; interface rows have no approval status. Verify and
+   statuses unchanged; interface rows have no acceptance status. Verify and
    commit the set without a sitting yet. These rows give the builder the
    tests to write and reviewers the obligations the code is meant to meet.
    A TC row's `Evidence` cell follows `references/in-lane.md`, "Author it
@@ -348,14 +348,14 @@ this hold (`project-trajectory/PROCESS.md` §4).
    commit the reconciled text before composing the sitting. When the set
    was reconciled at an earlier checkpoint and since then no round proposed
    row text and no code moved, omit the turn and record why, after checking
-   mechanically that each changed approved cell keeps its approved text
+   mechanically that each changed accepted cell keeps its accepted text
    (WI-914, WI-923). Fill the turn's `HATS` slot as at intent.
 2. **The closure check passes** before the sitting (`spine-authoring`,
    `references/in-lane.md`: parents, the arms, TC-to-LLR-and-SR, interface
    citations, the strict integrity checks).
 3. **One combined sitting** (`coordinator_adjudicate.py adjudicate
    --brief-file <composed brief> --brief combined`) judges every amendment,
-   first approval and Done-when change together, top-down (recipes §1). The
+   first acceptance and Done-when change together, top-down (recipes §1). The
    sitting ends at its committed verdict; its act is the later act turn (§4).
    Carry retired rows into scope explicitly. A parent's return carries its
    children; have
@@ -441,7 +441,7 @@ Record calls not already settled by the spec or a ruled item in
 with the riskiest in `high_risk`. Ask the operator to **confirm or overrule**,
 never to approve. Anything keeping a row from building forward is filed as
 `project-trajectory/PROCESS.md` §5, "Open items", states; then move to the next
-row. A held-rung approval stops no lane, a new need's or a frame external
+row. A held-rung acceptance stops no lane, a new need's or a frame external
 crossing's included: the lane lands its text, and §5 says what stays in the
 lane. An explicit operator checkpoint is a planned step, held as §5 states. A
 high-risk finding goes to the operator. Leave held signatures and open-item rulings to the operator,
@@ -532,9 +532,9 @@ treated the same way. For each such step, the leg:
    (`project-trajectory/PROCESS.md` §5, "Open items");
 4. moves to the next row.
 
-**Not an operator-held step: an approved row with nothing built behind it.**
+**Not an operator-held step: an accepted row with nothing built behind it.**
 That is build debt, and the coordinator files a work item that builds it, with
-no `needs` on an open item. Retiring an approved row becomes the operator's
+no `needs` on an open item. Retiring an accepted row becomes the operator's
 question only when evidence shows substantial work to build it, and the open
 item then states that evidence (operator, 2026-11-08, OI-129).
 

@@ -322,7 +322,7 @@ def test_arbiter_disagreement_on_a_loop_held_tier_stalls_not_pages(tmp_path):
     # EXIT_STALL (attention), never NEEDS-OPERATOR.
     root, fake = make_fixture(tmp_path)
     # SN-029: the loop-held tier — `DevStg-Below`, the sentinel below every
-    # rung, where a recorded verdict carries approval authority. Declared
+    # rung, where a recorded verdict carries acceptance authority. Declared
     # as the RUNG (WI-493), not as the retired enum word or the 0-4 ordinal.
     set_process_key(root, "authority", "operator_accepts_through", "DevStg-Below")
 

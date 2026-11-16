@@ -168,7 +168,7 @@ def test_recording_into_a_closed_round_is_a_cap_error():
         pr.record(state, pr.STEP_PLAN, plan="A", ok=True)
 
 
-def test_page_action_maps_the_approval_level_and_fails_safe():
+def test_page_action_maps_the_acceptance_level_and_fails_safe():
     """SN-029: keyed on the two independent bits the retired enum bundled.
     `attended` was (operator-held, stop), `single-approve` (operator-held, keep
     going), `autonomous` (loop-held) — and the fourth cell, which the enum

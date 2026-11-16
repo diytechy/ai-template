@@ -11,7 +11,7 @@ came out of, so tests/conftest.py lists it beside test_trace in SLOW_MODULES.
 
 What stays in tests/test_trace.py is the SN->SR->LLR->TC spine: the orphan /
 strict gates, the verification-category buckets, the schema-safe extra columns,
-the SN status vocabulary, the Drafted exemptions and the approved-phase
+the SN status vocabulary, the Drafted exemptions and the accepted-phase
 completeness rule.
 
 Implements: TC-244
@@ -389,7 +389,7 @@ def test_channel_refuses_an_unknown_value_as_a_warn(scaffold):
     assert "bytes, call, cli, env, exit-code, file, git, stdout" in proc.stdout
 
 
-def test_approval_refuses_an_unknown_value_as_a_warn(scaffold):
+def test_acceptance_refuses_an_unknown_value_as_a_warn(scaffold):
     # The successor of the `Stability=Provisional` case (WI-442). `Provisional`
     # was the real value four live rows carried while `Stability` was declared by
     # process.md §8 and validated by nothing; the vocabulary is closed now, and
@@ -457,7 +457,7 @@ def test_every_declared_sn_status_leaves_the_enum_floor_silent(scaffold):
     # The other half: a rule that fired on everything would pass the assertions
     # above. All three live vocabulary words, each on its own scaffold run. The
     # word under test sits on a second need nothing cites: SN-001 stays
-    # Approved, since its SR is, and an approved child under an unapproved
+    # Approved, since its SR is, and an accepted child under an unaccepted
     # parent is an integrity finding of its own (parent first).
     make_minimal_project(scaffold)
     for status in ("Drafted", "Approved", "Founded"):

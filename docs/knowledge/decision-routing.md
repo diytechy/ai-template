@@ -96,7 +96,7 @@ decisions-for-review pattern arose ad hoc three times (72 entries total);
 4 were ever affirmed, nothing machine-reads the files, and the declared
 prose format degraded within one session (21 of 46 entries carried the
 `Decided:` field). The one affirmation that happened was per-sitting with
-exceptions, recorded as an approval commit quoting the operator's words — not
+exceptions, recorded as an acceptance commit quoting the operator's words — not
 a per-entry queue worked down. 44 of the 46 most recent entries were
 supervisor-altitude decisions about running the loop, an altitude the
 OI-70 adjudicator-exits doctrine does not reach.
@@ -113,7 +113,7 @@ OI-70 adjudicator-exits doctrine does not reach.
 - Size any operator-review surface from the operator's real capacity first, then
   set what qualifies to fill that budget; keep its precision high enough
   that reading it stays worth doing.
-- Land records where the operator already stops (a sitting, a dated approval
+- Land records where the operator already stops (a sitting, a dated acceptance
   record, a generated band on the open-items surface) rather than minting a
   new inbox.
 - If a detector pass is wanted, make it a separate agent with its own

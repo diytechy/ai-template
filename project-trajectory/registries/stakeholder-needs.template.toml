@@ -20,19 +20,19 @@
 #
 # MATURITY IS A FIELD, NOT A SECTION, AND IT IS THE SAME FIELD AT EVERY TIER.
 # `status` is the ONE vocabulary the whole spine speaks — SN, SR, LLR and TC —
-# so "what is un-approved right now?" is one question with one answer, not a
+# so "what is un-accepted right now?" is one question with one answer, not a
 # per-registry special case:
 #
 #   Drafted   still being drafted — DevStg-Below. trace.py exempts it from the
 #             "every SN needs an SR" rule, so it can sit in the live registry
 #             before its SR decomposition exists. Do not park real needs here.
-#   Approved  an approved need (the steady state). APPROVE by changing `status`
+#   Approved  an accepted need (the steady state). ACCEPT by changing `status`
 #             to "Approved" in a reviewed commit; that commit is the sign-off
-#             and its date is the approval date.
+#             and its date is the acceptance date.
 #
-# There is NO third value for "approved text that has since been AMENDED". A
+# There is NO third value for "accepted text that has since been AMENDED". A
 # transitional `Modified` carried that until 2026-08-20, exactly as long as its
-# own note here said it would: it retired once approved text was snapshotted to
+# own note here said it would: it retired once accepted text was snapshotted to
 # `docs/archive/last_approved/` and the DIFF answered the same question, for
 # every row rather than the ones someone remembered to mark.
 #
@@ -42,7 +42,7 @@
 #
 # This retires the older carrier's "section-as-state", where draft-ness was
 # "appears under a heading containing the word draft" — a rule a prose MENTION
-# of an id could trip, silently re-drafting an already-approved need.
+# of an id could trip, silently re-drafting an already-accepted need.
 #
 # COVER THE WHOLE LIFECYCLE, NOT JUST STEADY STATE. For each need ask: when in
 # the running product's life must this hold? — Provision (before it runs:
@@ -104,14 +104,14 @@ source = ["README.md#vision"]
 #
 # --- DRAFT NEEDS --------------------------------------------------------------
 #
-# Draft new needs with `status = "Drafted"`, then approve them to "Approved".
+# Draft new needs with `status = "Drafted"`, then accept them to "Approved".
 # Empty is the normal steady state.
 
 # --- STAKEHOLDERS --------------------------------------------------------------
 #
 # One table per stakeholder, `[stakeholder.STK-000]`, ids numbered `STK-01`,
 # `STK-02`, ... . `party` is OPTIONAL: omit it for a stakeholder who is not an
-# entity of the frame. Approve a stakeholder the way you approve a need, by
+# entity of the frame. Accept a stakeholder the way you accept a need, by
 # moving its `status` in a reviewed commit.
 
 [stakeholder.STK-000]

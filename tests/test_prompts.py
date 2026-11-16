@@ -736,7 +736,7 @@ listens_for = "unreached failure"
 """
 
 # SN-001 carries tag need-a; SN-002 carries need-b and is the parent of the
-# approved SR-001 a work item may name in its SR-Refs.
+# accepted SR-001 a work item may name in its SR-Refs.
 _LANE_NEEDS = (
     '[need.SN-001]\nstatus = "Approved"\ntags = ["need-a"]\n\n'
     '[need.SN-002]\nstatus = "Approved"\ntags = ["need-b"]\n'

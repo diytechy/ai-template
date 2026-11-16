@@ -10,7 +10,7 @@ The claims this module holds, one per thing the ruling actually decided:
     and whether seams enter the view at all. Each is asserted as a VISIBLE
     answer, because "the generator drops it" and "the generator has a bug"
     are indistinguishable from the outside;
-  * the STANDING CONSTRAINT — a generated file never carries an approval
+  * the STANDING CONSTRAINT — a generated file never carries an acceptance
     (OI-30 D3);
   * the FRESHNESS CONTRACT — `--check` reds on a stale view and greens once
     regenerated. A check that cannot fail converts a visible gap into an
@@ -213,10 +213,10 @@ def test_an_unplaceable_seam_is_REPORTED_not_silently_excluded(repo):
     assert doc["derived"]["seams_unplaced"] == 1
 
 
-# --- the standing constraint: no approval, ever ------------------------------
+# --- the standing constraint: no acceptance, ever ------------------------------
 
 
-def test_the_generated_view_carries_NO_approval_cell(repo):
+def test_the_generated_view_carries_NO_acceptance_cell(repo):
     """Implements: TC-195"""
     # OI-30 D3. `components.toml` says CMP-001 is Approved and CMP-002 Drafted;
     # neither word may appear here in any cell, because a generator that wrote

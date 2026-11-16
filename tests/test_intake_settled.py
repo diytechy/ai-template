@@ -2,12 +2,12 @@
 
 The trunk mint (`intake._routed_amendments`, reached by `intake_after_merge` from
 the merge slot's post-merge arm and by `intake.py sweep`) files one
-`adjudicate:` row for every approved row whose text moved across a merge. A
+`adjudicate:` row for every accepted row whose text moved across a merge. A
 lane that amended a row, sat it and re-accepted it in its own act has already
 settled that change, so minting it again files a redundant row. The filter
 drops a record only when an act-ledger entry the range ADDED re-accepts the row
-AND the row's whole approved and routed traced cell set at the range's `after`
-tree equals its copy in the approved snapshot at that tree (LLR-364).
+AND the row's whole accepted and routed traced cell set at the range's `after`
+tree equals its copy in the accepted snapshot at that tree (LLR-364).
 
 Every ledger, copy and range here is produced by the real producer,
 `baseline_snapshot.copy_live` (what `intake.py snapshot` and the act turn
@@ -192,7 +192,7 @@ def _amendment_rows(root, minted):
     return [
         meta
         for meta in (_frontmatter(root, rel) for _wid, rel in minted)
-        if "approved/routed cell(s) amended" in meta["title"]
+        if "accepted/routed cell(s) amended" in meta["title"]
     ]
 
 
@@ -299,7 +299,7 @@ def test_an_amendment_with_no_act_in_range_still_mints(tmp_path):
     assert refusal is None, refusal
     (row,) = _amendment_rows(root, minted)
     assert row["title"].startswith(
-        "adjudicate: SR-001 - approved/routed cell(s) amended on merged trunk "
+        "adjudicate: SR-001 - accepted/routed cell(s) amended on merged trunk "
         "{}..{} ".format(before[:7], after[:7])
     ), row["title"]
     assert row["adjudicates"] == ["SR-001"]
@@ -359,7 +359,7 @@ def _close_report(root, wi):
 
 @pytest.mark.parametrize("broken", ["malformed", "unreadable"])
 def test_the_filter_is_not_consulted_without_amendment_records(tmp_path, broken):
-    """Guard: a range that amends no approved row never reads the ledger, so a
+    """Guard: a range that amends no accepted row never reads the ledger, so a
     broken one cannot refuse an unrelated mint, and the other arms still run.
     Catches a filter consulted unconditionally.
 
@@ -496,7 +496,7 @@ def test_a_reaccepted_row_missing_from_its_copy_still_mints(tmp_path, copy):
 
 
 def test_a_cell_restored_after_the_act_still_mints(tmp_path):
-    """Guard: the range moves two approved cells, the act copies the row, and
+    """Guard: the range moves two accepted cells, the act copies the row, and
     one cell is then restored to its pre-range text. The net diff reports only
     the other cell, which equals its copy, but the restored cell differs from
     the copy. Catches a filter that compares only the net diff's cells.
@@ -520,8 +520,8 @@ def test_a_cell_restored_after_the_act_still_mints(tmp_path):
 def test_a_routed_traced_cell_moved_after_the_act_still_mints(tmp_path):
     """Guard: the range amends SR-001 and the act copies it; then its
     `SN-Refs`, a traced cell the mint routes to adjudication, is re-pointed.
-    Every approved cell still equals the copy, but the routed cell does not.
-    Catches a filter whose whole-row comparison reads only the approved
+    Every accepted cell still equals the copy, but the routed cell does not.
+    Catches a filter whose whole-row comparison reads only the accepted
     cells.
 
     Implements: TC-403
@@ -698,8 +698,8 @@ def test_a_later_legacy_act_leaves_the_row_unsettled(tmp_path):
 def test_a_later_writer_leaves_a_row_with_unmoved_routed_cells_settled(tmp_path):
     """Act A re-accepts SR-001's amended requirement; act B then re-accepts
     SR-002 and copies the same registry. A later act re-accepting another row
-    cannot carry an unjudged approved-cell change (the snapshot refuses to copy
-    approved drift no act blesses), and SR-001's routed `SN-Refs` are the same
+    cannot carry an unjudged accepted-cell change (the snapshot refuses to copy
+    accepted drift no act blesses), and SR-001's routed `SN-Refs` are the same
     at the range's two ends: both rows settle. Catches a filter that reads
     every later writer of the registry as unsettling.
 
@@ -847,7 +847,7 @@ def test_the_two_real_redundant_landings_mint_nothing():
     """Read-only: `git show` against the kit's own object database, nothing
     written. `test_a_row_amended_again_after_its_act_still_mints` is the
     fixture amended after its act that still mints. The premise is the walk's
-    records with an approved or routed traced change, the rows the redundant
+    records with an accepted or routed traced change, the rows the redundant
     mint named: the walk also returns traced-only records (a moved `Evidence`
     or `CodeSymbol` cell), which are silent by ruling.
 

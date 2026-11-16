@@ -21,6 +21,6 @@ tests/test_run_menu.py::test_direct_launch_runs_command_and_passes_args  # run_m
 tests/test_prompts_driven.py::test_a_scaffold_gets_every_template_and_loads_them_from_there  # the prompt templates
 tests/test_agent_loop.py::test_done_exit_writes_logs_and_index  # agent_loop.py: a session loop runs to done
 tests/test_integrate.py::test_a_spine_claim_succeeds_on_an_idle_station  # integrate.py: a lane claim
-tests/test_intake.py::test_a_approved_cell_diff_mints_one_adjudication_row  # intake.py: the adjudication mint
+tests/test_intake.py::test_a_accepted_cell_diff_mints_one_adjudication_row  # intake.py: the adjudication mint
 tests/test_dispatch.py::test_drive_empty_frontier_drains_and_exits_zero  # dispatch.py: the queue drains
 tests/test_dogfood_sync.py::test_stack_ini_declares_every_template_section  # this repo matches the template it ships

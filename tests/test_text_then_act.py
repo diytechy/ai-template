@@ -55,7 +55,7 @@ def _rows(root, *rows):
 
 
 def _act(root):
-    """The approval act's copy: the live registry, byte for byte."""
+    """The acceptance act's copy: the live registry, byte for byte."""
     path = root / COPY
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes((root / SR).read_bytes())
@@ -68,10 +68,10 @@ def _commit(root, msg):
 
 
 def _base(tmp_path):
-    """SR-001 approved and recorded; SR-002 drafted and recorded."""
+    """SR-001 accepted and recorded; SR-002 drafted and recorded."""
     root = _repo(tmp_path / "repo")
     (root / "README.md").write_text("r\n", encoding="utf-8")
-    # Every rung released: a held rung's approval is the lane rule's
+    # Every rung released: a held rung's acceptance is the lane rule's
     # (tests/test_held_status_git.py), which an absent dial would arm.
     (root / "docs").mkdir()
     (root / "docs" / "process.toml").write_text(
@@ -208,7 +208,7 @@ def test_the_merge_ladder_consults_the_text_then_act_rung(tmp_path, monkeypatch)
     for rung in (
         "_close_record_refusal",
         "_minted_id_refusal",
-        "_approval_act_refusal",
+        "_acceptance_act_refusal",
         "_loop_trailer_refusal",
         "_ruling_sync_refusal",
     ):
@@ -433,7 +433,7 @@ def test_a_stale_squash_message_exempts_no_other_commit(tmp_path):
 
 
 def _requirement(root, lines):
-    """SR-001, approved, its Requirement one multiline cell of `lines`."""
+    """SR-001, accepted, its Requirement one multiline cell of `lines`."""
     path = root / SR
     path.parent.mkdir(parents=True, exist_ok=True)
     cell = "\n".join(lines)

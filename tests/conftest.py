@@ -209,7 +209,7 @@ SLOW_MODULES = frozenset(
         # decision, deliberately not taken here.)
         "test_trajectory_staged",  # --staged git-effect + git-time recovery
         "test_trajectory_arch",  # decision over architecture inputs
-        "test_trajectory_phase",  # phase anchors + approval-brief evidence
+        "test_trajectory_phase",  # phase anchors + acceptance-brief evidence
         "test_trajectory_specs",  # decision over spec bodies
         "test_trajectory_holdban",  # WI-553 hold-by-rename detector on git scaffolds
         "test_components_registry",  # components gate on scaffolds
@@ -320,7 +320,7 @@ SLOW_MODULES = frozenset(
         # WI-638 (TC-247, TC-248): the checkpoint re-judge decision reads inputs
         # at a revision, and its release half drives the intake mint's commit.
         "test_rejudge",  # git init/commit per case + the bookkeeping commit
-        "test_assumption_gate",  # check.py subprocess per case + a git approval act
+        "test_assumption_gate",  # check.py subprocess per case + a git acceptance act
         # WI-543 rework (REVIEW-A): the SR-163 mapping-purpose checker's CLI
         # drives. Each case spawns gen_arch_map.py --mapping-purpose as a
         # subprocess (real interpreter startup) to prove the delivered command is
@@ -348,7 +348,7 @@ SLOW_MODULES = frozenset(
         # subprocesses over a bootstrapped scaffold; the record format stays
         # in-memory in test_observation_record.py.
         "test_observation_writer",  # scaffold + writer/trace.py subprocesses
-        # WI-632 (TC-234): the accepted risk's approval act read from real git
+        # WI-632 (TC-234): the accepted risk's acceptance act read from real git
         # repositories, a shallow clone among them.
         "test_accepted_risk",  # git init/commit/clone per case
         # WI-640 (TC-250): the test-first order exists only in commits, so every
@@ -425,7 +425,7 @@ SLOW_MODULES = frozenset(
         # drawn on, and were 43% of that total. Every script family they
         # exercise keeps a smoke pin elsewhere: kitlib.done_when in
         # test_done_when, session_keep in test_session_keep, acceptance_record
-        # in test_acceptance_record, adjudicate_brief in test_approval_level
+        # in test_acceptance_record, adjudicate_brief in test_acceptance_level
         # and test_consolidate, integrate in test_kitlib_station and
         # test_generated_set. Nothing is deleted: all three run at slice/phase
         # close and in CI.
@@ -2002,7 +2002,7 @@ def make_minimal_project(root):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # The derived STAGE: this is a full DevStg-Impl chain, so docs/stage is
     # regenerated from the artifact states — the scaffold shipped a placeholder,
-    # and approving artifacts up to a settled spine is what advances the derived
+    # and accepting artifacts up to a settled spine is what advances the derived
     # rung. Keeps the `derived-stage` freshness step green.
     #
     # It ran `derive_gate.py` until WI-498 slice 5 retired `docs/gate` along with

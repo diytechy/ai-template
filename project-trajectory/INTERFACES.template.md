@@ -39,7 +39,7 @@ namespace, parallel to SN/SR/LLR/TC).
 | `VerifiedBy` | Optional, and **empty is a real answer**: "verified in its own right". Filled, it names the parent whose tests cover a *low-level* seam — a `TC-###` or an `LLR-###` — so building blocks are not forced into a test each. Warn-first that the pointer resolves; nothing reads whether the named test really exercises the seam. |
 | `CarriedBy` | Optional. **Interface composition** — a constituent naming the bundle that carries it (`IF-###`). A constituent is still one owner and one channel; the bundle is the unit a consumer pins. The carriage graph must resolve and be acyclic; depth past 2 warns. Empty means "not a constituent", which is most rows. |
 | `Version` | Contract version the other side codes against (e.g. `v1`, a semver, a schema hash). |
-| `Status` | **Closed**, and the row's **one** maturity field: `Drafted` · `Approved` — the spine's own words, shared with `external.toml`. `Founded` is **not applicable** to this tier: it means settled *and demonstrated*, while an approval says only that the seam is agreed. Flipping a cell to `Approved` is an operator act in a reviewed commit. |
+| `Status` | **Closed**, and the row's **one** maturity field: `Drafted` · `Approved` — the spine's own words, shared with `external.toml`. `Founded` is **not applicable** to this tier: it means settled *and demonstrated*, while an acceptance says only that the seam is agreed. Flipping a cell to `Approved` is an operator act in a reviewed commit. |
 | `interface_from_external` / `interface_to_external` | The directional tie-back to a `B-##` crossing in `external.toml`, present **only** when this row REALIZES one — `from` for an IN crossing, `to` for an OUT one, both for in/out. A row with neither is an internal seam; that absence IS the statement. A row whose owner and far side are *all* `external:` parties has no in-tree endpoint — no module whose header can hold our reading of the surface — and `trace.py --strict` refuses it. |
 | `bridged_by` / `coincident` | Optional, read only on a row with a tie-back above. `bridged_by` names the assumptions (`DA-###`, `assumptions.toml`) carrying this seam's reading to a stakeholder's outcome; `coincident` says why its reading IS the outcome. A boundary row with neither is one `trace.py` advisory; a `bridged_by` entry no assumption row declares is a `--strict` finding. Neither is checked until `assumptions.toml` holds its first real row. No requirement id goes here: the requirement a seam answers is reached through its `Owner`. |
 | `Component` | Optional `CMP-###` membership tag for the component layer; empty when unused. |
@@ -80,7 +80,7 @@ namespace, parallel to SN/SR/LLR/TC).
   validates the far side of a cross-repo reference — it is a text convention;
   keep the trail two-way by recording the counterpart repo + matching id on
   both rows.
-- **Approval gates change.** Changing an `Approved` contract requires a notice
+- **Acceptance gates change.** Changing an `Approved` contract requires a notice
   to the counterpart and a version bump; a `Drafted` one may change freely. Note
   breaking changes in the audit log and bump `Version`.
 - **The owner's side closes the read.** The thing named in `Owner` defines the

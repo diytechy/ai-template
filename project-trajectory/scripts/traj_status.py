@@ -225,7 +225,7 @@ def _open_item_lines(root, queue):
 
 
 # The eight-rung stage ladder's descriptions, for the generated snapshot line.
-# A repo is IN a stage; approval is the event that moves it (process.md §4
+# A repo is IN a stage; acceptance is the event that moves it (process.md §4
 # "The stage ladder"). Derived by derive_stage.py and read here off the recorded
 # `docs/stage`, never recomputed.
 #
@@ -248,7 +248,7 @@ def _stage_line(record, detail):
     the stage the repo was in AND the "next bar to clear" — because two axes were
     derived side by side. The bar axis retired with `docs/gate`, and with it the
     sentence that had to keep telling readers which reading was meant. A stage is
-    a STATE; approval is the EVENT that moves it, and it is reported where
+    a STATE; acceptance is the EVENT that moves it, and it is reported where
     events are (the phase anchors), not folded into the state.
 
     A `docs/stage` that is absent, or carries a rung this ladder does not name,

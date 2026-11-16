@@ -49,6 +49,6 @@ high_risk = ["D-000"]
 [decision.D-000]
 decided = "What was decided, in one sentence a stranger can check against the diff."
 alternative = "The option passed over, stated so the operator could choose it instead."
-reversal_cost = "What undoing it would cost: a commit, an amendment and re-approval, a migration."
+reversal_cost = "What undoing it would cost: a commit, an amendment and re-acceptance, a migration."
 why_not_escalated = "Why this was the run's call and not the operator's: the routing rule it fell under."
 review = ""

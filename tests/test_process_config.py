@@ -792,7 +792,7 @@ def test_an_out_of_range_dial_is_refused_not_defaulted(tmp_path, value):
     """TC-150 (SR-137: an out-of-range dial is refused rather than defaulted).
     The coverage bar's own reader answers report-only for a value it cannot
     use, so the refusal is what makes the value visible. (The rung dial's
-    out-of-range ordinal is `test_approval_level`'s
+    out-of-range ordinal is `test_acceptance_level`'s
     `test_a_malformed_dial_is_REFUSED_not_silently_defaulted`.)
 
     Adequacy witness: a check that clamped the value into range, or let the
@@ -950,12 +950,12 @@ def test_migration_folds_every_dial_in_and_deletes_the_file(tmp_path):
     # posture while running with another.
     # WI-493 re-keyed the dial to the DevStg-* rung it always meant: the
     # loop-held end that used to be the ordinal `0` is now `DevStg-Below`, the
-    # sentinel for "no rung is an operator's to approve".
+    # sentinel for "no rung is an operator's to accept".
     assert cfg["authority"]["operator_accepts_through"] == "DevStg-Below"
     assert cfg["authority"]["keep_nondependent"] is True
     assert cfg["authority"]["final_review"] == "off"
     assert "gate_policy" not in cfg["authority"]
-    assert ac.approval_through(tmp_path / "docs") == "DevStg-Below"
+    assert ac.acceptance_through(tmp_path / "docs") == "DevStg-Below"
     assert ac.operator_holds(tmp_path / "docs", "DevStg-Needs") is False, (
         "the whole point: `autonomous` must actually read as loop-held"
     )

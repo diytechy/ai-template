@@ -257,7 +257,7 @@ def test_severity_is_WARN_FIRST_and_promotes_under_strict(planted):
     ],
 )
 def test_the_ruled_carve_outs_are_never_reported(planted, rel):
-    """History is not rewritten and attestations are not re-worded — the ruling's
+    """History is not rewritten and acceptances are not re-worded — the ruling's
     hardest condition, because the tempting fix (sweep everything) makes a signed
     record claim something was signed that was not. Each carve-out is planted with
     a real tag, so a glob that stopped matching shows up as a NEW finding here."""

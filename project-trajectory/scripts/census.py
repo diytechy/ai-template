@@ -79,7 +79,7 @@ def gap_census(root):
     census = list(findings.orphans)
     census += list(findings.status_findings)
     census += [
-        "SN {} is a draft need (unapproved)".format(s) for s in sorted(reg.sn_draft)
+        "SN {} is a draft need (unaccepted)".format(s) for s in sorted(reg.sn_draft)
     ]
     census += red_tc_census(root, reg)
     return census
@@ -146,9 +146,9 @@ def red_tc_census(root, reg=None, *, assumptions=False):
     downstream repo mid-migration:
 
       Approved  green, by definition.
-      Drafted   pre-approval; "not yet green" is its CORRECT state.
+      Drafted   pre-acceptance; "not yet green" is its CORRECT state.
       Founded   Approved plus a demonstration — green a fortiori (D-9 step 8).
-                It replaced `Modified`, which named the post-approval amendment
+                It replaced `Modified`, which named the post-acceptance amendment
                 state the §A5.1 adjudication owns; that state no longer has a
                 word, and the amendment path still owns it via snapshot drift.
 

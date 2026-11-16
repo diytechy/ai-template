@@ -1,7 +1,7 @@
 """Loop provenance: the `Loop-Session` trailer, the loop marker, and the history
 check for a loop commit that changed an operator-held status (TC-242, TC-243).
 
-A status change on a rung the approval level holds for an operator is supposed to
+A status change on a rung the acceptance level holds for an operator is supposed to
 mean an operator judged. The loop's commits can be told apart from a person's only
 if every one of them says it is the loop's, so the pieces pinned here are one
 chain rather than four features:
@@ -650,7 +650,7 @@ def test_a_marked_loop_writer_commit_after_a_reclaim_reopens_the_window(
 
 def test_a_lane_never_marked_stays_a_persons(tmp_path, monkeypatch):
     # The trailer rung's window only: a held rung reads no window, and a
-    # re-claimed lane's held approvals are the lane rule's
+    # re-claimed lane's held acceptances are the lane rule's
     # (tests/test_held_status_git.py).
     root = _lane(tmp_path / "person", monkeypatch, loop=False)
     _reclaim(root)
@@ -1010,14 +1010,14 @@ def _history(tmp_path):
     _write(root, INTERFACES, _rows("interface", IF_001="Drafted"))
     shas = {"seed": _commit_all(root, "seed: the frame", T_BASE)}
     _write(root, FRAME, _rows("boundary", B_01="Approved"))
-    shas["c1"] = _commit_all(root, _trailered("loop: approve B-01"), T_BASE + 1)
+    shas["c1"] = _commit_all(root, _trailered("loop: accept B-01"), T_BASE + 1)
     _write(root, INTERFACES, _rows("interface", IF_001="Approved"))
-    shas["c2"] = _commit_all(root, _trailered("loop: approve IF-001"), T_BASE + 2)
+    shas["c2"] = _commit_all(root, _trailered("loop: accept IF-001"), T_BASE + 2)
     _write(root, FRAME, _rows("boundary", B_01="Drafted"))
     shas["c3"] = _commit_all(root, "owner: reopen B-01", T_BASE + 3)
     _git(root, "checkout", "-q", "-b", "lane")
     _write(root, FRAME, _rows("boundary", B_01="Approved"))
-    shas["l1"] = _commit_all(root, _trailered("lane: approve B-01"), T_BASE + 4)
+    shas["l1"] = _commit_all(root, _trailered("lane: accept B-01"), T_BASE + 4)
     _git(root, "checkout", "-q", "main")
     _write(root, "notes.txt", "trunk moved\n")
     shas["c4"] = _commit_all(root, "owner: a note", T_BASE + 5)
@@ -1078,7 +1078,7 @@ def test_a_commit_with_no_dial_is_judged_most_held_and_warns_nothing(tmp_path, c
     _write(root, INTERFACES, _rows("interface", IF_001="Drafted"))
     _commit_all(root, "seed", T_BASE)
     _write(root, INTERFACES, _rows("interface", IF_001="Approved"))
-    no_dial = _commit_all(root, _trailered("loop: approve IF-001"), T_BASE + 1)
+    no_dial = _commit_all(root, _trailered("loop: accept IF-001"), T_BASE + 1)
     # A LEGACY ordinal reads as most-held too. The live reader would translate
     # `1` to DevStg-Boundary and release Arch; the history check must not guess.
     _write(root, POLICY, "[authority]\noperator_accepts_through = 1\n")
@@ -1134,10 +1134,10 @@ def test_the_rung_map_names_every_off_spine_status_registry():
     """Implements: TC-241"""
     # The assumptions registry joins the frame at DevStg-Boundary; the shared
     # coordinator re-exports the one table rather than keeping a copy.
-    assert authority.APPROVAL_RUNGS["assumptions"] == ladder.STAGE_BOUNDARY
-    assert authority.APPROVAL_RUNGS["external"] == ladder.STAGE_BOUNDARY
-    assert ac.APPROVAL_RUNGS is authority.APPROVAL_RUNGS
-    assert ac.SPINE_APPROVAL_RUNGS is authority.SPINE_APPROVAL_RUNGS
+    assert authority.ACCEPTANCE_RUNGS["assumptions"] == ladder.STAGE_BOUNDARY
+    assert authority.ACCEPTANCE_RUNGS["external"] == ladder.STAGE_BOUNDARY
+    assert ac.ACCEPTANCE_RUNGS is authority.ACCEPTANCE_RUNGS
+    assert ac.SPINE_ACCEPTANCE_RUNGS is authority.SPINE_ACCEPTANCE_RUNGS
 
 
 # --- the review's rulings: the needs' rung, and one meaning of the live dial ----
@@ -1147,7 +1147,7 @@ NEEDS = "docs/requirements/stakeholder-needs.toml"
 
 def test_needs_and_stakeholder_statuses_are_held_at_the_needs_rung(tmp_path):
     # The needs file carries the needs (a spine tier) and the stakeholder list
-    # (an off-spine one), both approved at DevStg-Needs. Each move is reported
+    # (an off-spine one), both accepted at DevStg-Needs. Each move is reported
     # once where that rung is held, although both walks read the one file, and
     # nothing is reported where the dial holds nothing.
     for dial, held in (("DevStg-Needs", True), ("DevStg-Below", False)):
@@ -1164,7 +1164,7 @@ def test_needs_and_stakeholder_statuses_are_held_at_the_needs_rung(tmp_path):
             NEEDS,
             _rows("need", SN_001="Approved") + _rows("stakeholder", STK_01="Approved"),
         )
-        sha = _commit_all(root, _trailered("loop: approve the needs"), T_BASE + 1)
+        sha = _commit_all(root, _trailered("loop: accept the needs"), T_BASE + 1)
         findings = ctraj.loop_held_status_findings(root)
         if not held:
             assert findings == [], findings
@@ -1183,7 +1183,7 @@ def test_the_needs_file_is_read_at_the_needs_rung_by_the_authority_alone():
     assert authority.rung_for("docs/requirements/stakeholder-needs") == (
         ladder.STAGE_NEEDS
     )
-    assert "docs/requirements/stakeholder-needs" not in authority.SPINE_APPROVAL_RUNGS
+    assert "docs/requirements/stakeholder-needs" not in authority.SPINE_ACCEPTANCE_RUNGS
 
 
 def test_the_live_dial_reads_every_legacy_spelling_silently_from_a_chosen_tree(
@@ -1222,5 +1222,5 @@ def test_the_live_dial_reads_every_legacy_spelling_silently_from_a_chosen_tree(
     assert out.out == "" and out.err == "", out  # silent, every time
     # The live reader of the working tree gives the same rung; its migration
     # note is presentation, printed by it alone.
-    assert ac.approval_through(root / "docs") == "DevStg-Boundary"
+    assert ac.acceptance_through(root / "docs") == "DevStg-Boundary"
     assert "RETIRED" in capsys.readouterr().err

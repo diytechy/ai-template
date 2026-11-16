@@ -1622,7 +1622,7 @@ def test_codesymbol_crosscheck_vacuous_in_files_mode(tmp_path):
 
 # --- WI-064: the cross-CMP-edge-without-IF rule ---------------------------------
 # An internal import edge between two DIFFERENT components with no covering
-# IF-### row is a finding (the AXES approved model's enforceability ruling) —
+# IF-### row is a finding (the AXES accepted model's enforceability ruling) —
 # WARN plain, ERROR under --strict, sharing the docs/components-check opt-out.
 # Edges come from the MODULE MAP block's `Imports (internal):` lines; the seam
 # side joins interfaces.csv endpoints in either direction. Vacuous whenever any
@@ -2047,7 +2047,7 @@ def test_the_anti_duplication_rationale_arm_is_RETIRED_not_re_keyed(tmp_path):
     slimmed tier has one maturity field with two values, and neither means
     "proposed and not yet pinned by a second consumer". Re-keying onto
     `approval == "draft"` was the obvious move and is the wrong one — it
-    silently becomes "not yet approved", which on a repo that approves nothing
+    silently becomes "not yet accepted", which on a repo that accepts nothing
     before its sitting arms 100% of rows instead of ~4%, at a severity that
     ERRORS under --strict.
 

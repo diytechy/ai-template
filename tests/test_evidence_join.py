@@ -1,13 +1,13 @@
 """The evidence join — a test case's `Evidence` cell, read two ways: which
 tests the spine links to a module (`trace.py --tests-for`, over
-`kitlib.spine.module_tests`), and whether an approved case's `Tier` agrees with
+`kitlib.spine.module_tests`), and whether an accepted case's `Tier` agrees with
 the tier its evidence runs in (`kitlib.spine.tier_findings`).
 
 In-process throughout: synthetic registries under `tmp_path` and the live
 registries read as data, with no scaffold, subprocess or git, so the module
 rides the per-commit smoke tier. That placement is the point of its last case:
 the tier check over the live registry, bound to this repository's module
-tiering, runs in the commit checks themselves, so an approved Smoke case whose
+tiering, runs in the commit checks themselves, so an accepted Smoke case whose
 evidence moved to a slow module (or whose slow module carries a stale pin
 nobody runs per commit) fails the next commit rather than waiting for a close
 run to notice.
@@ -133,10 +133,10 @@ def test_a_full_case_with_slow_evidence_or_a_release_case_is_silent():
     assert spine.tier_findings(cases, tier_of) == ([], [])
 
 
-def test_a_case_below_approval_is_not_judged():
+def test_a_case_below_acceptance_is_not_judged():
     """Implements: TC-255"""
     # A Drafted row's tier is a proposal still in work; the tier cell the rule
-    # holds true is the one an operator approved.
+    # holds true is the one an operator accepted.
     case = _case("Smoke", "tests/test_heavy.py", status="Drafted")
     assert spine.tier_findings([case], _tiers({"tests/test_heavy.py": "slow"})) == (
         [],
@@ -334,7 +334,7 @@ def _live_tier_of(path):
     return smoke_tier_for(p.stem)
 
 
-def test_every_approved_smoke_case_has_evidence_in_the_smoke_tier():
+def test_every_accepted_smoke_case_has_evidence_in_the_smoke_tier():
     """Implements: TC-255"""
     _llrs, tcs = _rows(ROOT)
     errors, advisories = spine.tier_findings(tcs, _live_tier_of)
@@ -342,7 +342,7 @@ def test_every_approved_smoke_case_has_evidence_in_the_smoke_tier():
         warnings.warn(advisory, stacklevel=1)
     if errors:
         pytest.fail(
-            "{} approved Smoke test case(s) have no evidence in the per-commit "
+            "{} accepted Smoke test case(s) have no evidence in the per-commit "
             "tier. Move the case's in-memory clauses into a fast module and "
             "point `evidence` at it, or amend `tier` to Full:\n  {}".format(
                 len(errors), "\n  ".join(errors)

@@ -1,6 +1,6 @@
 """check_need_form.py — SN-033's declared need-cell form check (WI-454).
 
-SN-033's approved acceptance commissions "a declared check [that] reports the
+SN-033's accepted acceptance commissions "a declared check [that] reports the
 row and phrase when a need cell contains an internal path, implementation-only
 identifier or process citation", with a reviewed exception list for names that
 are themselves user-facing interfaces. The check scans `need` cells ONLY —
@@ -302,7 +302,7 @@ def test_an_example_only_registry_is_a_blank_form_not_a_vacuous_tier(tmp_path):
 
 
 def test_the_live_registry_is_clean_at_zero_findings():
-    # The WI's premise, held as a test: the check landed while the approved
+    # The WI's premise, held as a test: the check landed while the accepted
     # tier was clean (measured 2026-08-13, decision 7 rider 2), so the first
     # row to dirty the tier is the one that reports. A finding here is a real
     # regression of the registry, not of the checker.

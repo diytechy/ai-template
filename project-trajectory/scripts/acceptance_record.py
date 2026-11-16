@@ -3,7 +3,7 @@ against.
 
 The boundary, in one sentence, because a decomposition that cannot say where its
 line is has not drawn one: **everything here compares TWO GIT TREES cell by cell
-to answer whether attested text has moved away from the copy recording its
+to answer whether accepted text has moved away from the copy recording its
 acceptance; everything left in `check_trajectory.py` asks what the registries say
 TODAY.** Nothing in this module reads the working tree, and the free-name census
 proves it rather than the docstring claiming it — the whole module's only
@@ -41,7 +41,7 @@ the checker — 8 of `check_trajectory`'s 13 fused obligation pairs run through
 is the same shape `WI-483` slice 1 cut when a render leaf imported a merge
 coordinator for two constants.
 
-WHY THE JUDGE IS STILL NOT THE WRITER. `LLR-178`'s attested rationale places the
+WHY THE JUDGE IS STILL NOT THE WRITER. `LLR-178`'s accepted rationale places the
 mirror invariant away from `baseline_snapshot` because "the writer must not also
 be the judge of its own writes". That separation is unchanged and is the reason
 this module is NOT folded into `baseline_snapshot.py`: it sits beside the writer,
@@ -65,7 +65,7 @@ Contracts: IF-091, IF-129, IF-308 — the interface seams this module declares
 
 Contract IF-091: the staged spine-amendment set, offered as a call.
     `staged_spine_amendments(root, base, head)` returns one record per
-    approved-text spine row amended between the two trees WITHOUT its status
+    accepted-text spine row amended between the two trees WITHOUT its status
     moving — `{"registry", "id", "approved": {cell: (before, after)},
     "traced": {...}}` — and `AMENDMENT_CSVS` names the registries and id
     columns that walk covers: the requirement, design and test tiers, the need
@@ -75,22 +75,22 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     ruling, not this module's. A new row is not an amendment, a row whose
     status moved is a deliberate call this does not second-guess, and any
     missing git context degrades to `[]` rather than raising.
-    THE SAME WALK ANSWERS THE APPROVAL-ACT QUESTIONS (operator ruling 2026-09-01).
-    `staged_approval_acts(root, base, head)` returns the rows that CROSSED into
-    an approval claim or arrived already making one — precisely the set the
-    amendment reader exempts, over the WIDER `APPROVAL_ACT_CSVS` universe that
+    THE SAME WALK ANSWERS THE ACCEPTANCE-ACT QUESTIONS (operator ruling 2026-09-01).
+    `staged_acceptance_acts(root, base, head)` returns the rows that CROSSED into
+    an acceptance claim or arrived already making one — precisely the set the
+    amendment reader exempts, over the WIDER `ACCEPTANCE_ACT_CSVS` universe that
     adds the SN tier — and `staged_drafted_rows` returns the rows a lane
-    added, amended, or moved into `Drafted`. `lane_approval_refusal(root, base, head)`
-    words the refusal of a delta writing the approval record with no act a
+    added, amended, or moved into `Drafted`. `lane_acceptance_refusal(root, base, head)`
+    words the refusal of a delta writing the acceptance record with no act a
     verdict could back, or None. It fails CLOSED on an unreadable
     snapshot delta, the opposite pole from its readers' silent degrade, because
     a refusal is where the conservative direction belongs. All four share
     `_spine_row_sides`, so no reader can be the only one that sees a row.
-    `merge_approval_refusal(root, base, head, metas, *, trunk)`
+    `merge_acceptance_refusal(root, base, head, metas, *, trunk)`
     is the merge slot's one call: every lane's acts through
     `backed_act_refusal` - each backed by a recorded verdict over its own rows
     (operator ruling 6, 2026-10-07) - a record written with no act through
-    `lane_approval_refusal`, and, when any claimed row in `metas` records a
+    `lane_acceptance_refusal`, and, when any claimed row in `metas` records a
     scope, the flips through its first-acceptance scope besides, and its
     re-acceptances — read from the act ledger entries the delta added — through
     `reaccept_scope_refusal`, which refuses by name every re-accepted row
@@ -98,7 +98,7 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     held rung is the lane rule's (`held_status`, IF-196), not this call's.
     `settled_amendments(root, base, head, records, routed_cells)` returns
     `(settled ids, refusal)` for the trunk mint: the records whose row an act
-    ledger entry the range added re-accepts (IF-220) and whose approved and
+    ledger entry the range added re-accepts (IF-220) and whose accepted and
     routed traced cells at `head` equal the row's snapshot copy there. A
     ledger or copy the tree lists that cannot be read or does not parse is
     the refusal, naming the carrier and revision; nothing else suppresses.
@@ -119,20 +119,20 @@ Contract IF-129: the ONE cell-comparison basis.
     amendment guard and a snapshot comparison cannot disagree about which cells
     are content or which half of the remainder arms an act. The dependency runs
     one way only: nothing in this module imports the readers that call it.
-    `approved_text_digest(registry_path, id_col, row)` is the row's
-    approved-text identity on the same basis: `sha256:` and 16 lowercase hex
-    over the row's nonempty cells `spine_cell_class` classes approved, the id
+    `accepted_text_digest(registry_path, id_col, row)` is the row's
+    accepted-text identity on the same basis: `sha256:` and 16 lowercase hex
+    over the row's nonempty cells `spine_cell_class` classes accepted, the id
     column and `Status` excluded, serialized as sorted JSON. So a carrier
     change, an empty cell against an absent one, a status move or a traced
-    cell's move leaves it unchanged, and any approved cell's move changes it.
+    cell's move leaves it unchanged, and any accepted cell's move changes it.
 Contract IF-308: the parent-first commit judgement, offered as a call.
     `staged_parent_first_lines(root)` judges the index against HEAD (and
     MERGE_HEAD during a merge) and `commit_parent_first_lines(root, rev)` one
     commit against every parent of its commit object; both return refusal
     lines, `[]` when the tree passes, and both read through
     `parent_first_lines(root, bases, head)`. A line names the tree (`the
-    index:` or `commit <sha10>:`) and an approved child (`Approved` or
-    `Founded`) left under a declared parent that is not approved, where the
+    index:` or `commit <sha10>:`) and an accepted child (`Approved` or
+    `Founded`) left under a declared parent that is not accepted, where the
     child's or the parent's status differs from that row's status in some
     parent tree (an absent row counting as a value), with its own remedy
     (`kitlib.spine.parent_first_line`). A tree whose name list touches no
@@ -212,22 +212,22 @@ _git = _kitgit.git_out
 # WI-791; extending them to needs was "its own decision rather than a side
 # effect", and OI-100 (ruled 2026-10-03) made it — so they read the sibling
 # `AMENDMENT_CSVS` below, and this constant keeps its three tiers for the
-# readers whose scope did not move. The approval-act readers below are a
-# different question and DO cover SN — `APPROVAL_ACT_CSVS`.
+# readers whose scope did not move. The acceptance-act readers below are a
+# different question and DO cover SN — `ACCEPTANCE_ACT_CSVS`.
 SPINE_CSVS = (
     ("docs/requirements/system-requirements.toml", "SR-ID"),
     ("docs/requirements/low-level-requirements.toml", "LLR-ID"),
     ("docs/test/test-cases.toml", "TC-ID"),
 )
 
-# THE APPROVAL-ACT RUNG'S OWN SET: the spine three PLUS the need tier
+# THE ACCEPTANCE-ACT RUNG'S OWN SET: the spine three PLUS the need tier
 # (WI-572 REVIEW-A round 028). SN is a SPINE tier — `spine_carrier.SPINE_TABLE`
 # names it, its rows carry the same `status` vocabulary, and the DevStg-Reqs
 # rung the operator-acceptance dial holds for the operator is exactly the SN half — so a
 # lane flipping `SN-###` Drafted -> Approved is the WORST case of the act the
 # operator's 2026-09-01 ruling moved to the adjudicator, not an exempt one. It was
 # excluded only by the older section-as-state reading recorded at
-# `baseline_snapshot._claims_approval`, which the `status` cell retired.
+# `baseline_snapshot._claims_acceptance`, which the `status` cell retired.
 #
 # A SEPARATE CONSTANT rather than a widened `SPINE_CSVS` because the two
 # questions have different scopes on purpose: `SPINE_CSVS` is the amendment
@@ -236,12 +236,12 @@ SPINE_CSVS = (
 # refuses. Only the refusal walk reads this one.
 #
 # THE ASSUMPTIONS REGISTRY'S TWO TIERS JOIN IT (SR-191, SR-192). An assumption
-# or a surrogate is approved content recorded like every other, and approving
+# or a surrogate is accepted content recorded like every other, and accepting
 # one means reading the requirements that rely on it, which one lane does not
-# hold: a lane's merge approving one is refused, and the act that does approve
+# hold: a lane's merge accepting one is refused, and the act that does accept
 # one rides its own reviewed commit.
 # Implements: SR-191, SR-192, LLR-220
-APPROVAL_ACT_CSVS = SPINE_CSVS + (
+ACCEPTANCE_ACT_CSVS = SPINE_CSVS + (
     ("docs/requirements/stakeholder-needs.toml", "SN-ID"),
     ("docs/requirements/assumptions.toml", "DA-ID"),
     ("docs/requirements/assumptions.toml", "SUR-ID"),
@@ -249,23 +249,23 @@ APPROVAL_ACT_CSVS = SPINE_CSVS + (
 
 # THE OTHER SIDE OF THAT BOUNDARY, DECLARED RATHER THAN LEFT AS AN ABSENCE.
 # `baseline_snapshot.SNAPSHOTTED` names eight registries whose `Status` a
-# snapshot anchors; `APPROVAL_ACT_CSVS` above names the five the refusal walks.
-# The remaining three are OUT OF SCOPE OF THE APPROVAL-ACT RUNG, and that is a
+# snapshot anchors; `ACCEPTANCE_ACT_CSVS` above names the five the refusal walks.
+# The remaining three are OUT OF SCOPE OF THE ACCEPTANCE-ACT RUNG, and that is a
 # ruling rather than an oversight: the interface, external-frame and component
-# registries are OFF-SPINE, their approval cells are governed by OI-30 D3, and
+# registries are OFF-SPINE, their acceptance cells are governed by OI-30 D3, and
 # the 2026-09-01 ruling scopes this rung to SPINE rows — so a lane moving an
 # interface, frame or component row's `status` is not performing the act
-# `lane_approval_refusal` refuses, and widening to them is OI-30's call.
+# `lane_acceptance_refusal` refuses, and widening to them is OI-30's call.
 #
 # WHY A CONSTANT AND NOT A COMMENT. The hazard the review named is a tier that
-# joins `SNAPSHOTTED` and reaches NO approval reader — silently, because these
+# joins `SNAPSHOTTED` and reaches NO acceptance reader — silently, because these
 # two lists sit hundreds of lines apart in different modules. Naming the
 # exclusions makes the two sets a closed statement:
-# `SNAPSHOTTED == APPROVAL_ACT_CSVS + OUTSIDE_THE_APPROVAL_ACT`, pinned by
+# `SNAPSHOTTED == ACCEPTANCE_ACT_CSVS + OUTSIDE_THE_ACCEPTANCE_ACT`, pinned by
 # `tests/test_acceptance_record.py`. A new tier therefore cannot be added
 # without landing on one side or the other by a deliberate edit.
 # THE AMENDMENT WALK'S UNIVERSE (OI-100 gap 1, ruled 2026-10-03; WI-791): every
-# tier an approval act can bless. An amendment is text moving away from its
+# tier an acceptance act can bless. An amendment is text moving away from its
 # blessing, so the tiers whose text an act blesses are exactly the tiers whose
 # amendment owes a meaning-or-clarity judgement — the needs, the assumptions and
 # the surrogates among them, which the walk left out until WI-616's need edits
@@ -282,9 +282,9 @@ APPROVAL_ACT_CSVS = SPINE_CSVS + (
 # because it fires before any act. The hat arm stays structurally silent on
 # these tiers: none carries `Hat-Refs`.
 # Implements: SR-178, LLR-158
-AMENDMENT_CSVS = APPROVAL_ACT_CSVS
+AMENDMENT_CSVS = ACCEPTANCE_ACT_CSVS
 
-OUTSIDE_THE_APPROVAL_ACT = (
+OUTSIDE_THE_ACCEPTANCE_ACT = (
     "docs/requirements/interfaces.toml",
     "docs/requirements/external.toml",
     "docs/requirements/components.toml",
@@ -313,7 +313,7 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
     Each side resolves independently, and that is the point rather than a
     convenience: across the cutover commit the old side is CSV and the new side
     is TOML, so this scan compares the two carriers CELL FOR CELL and reports
-    any row whose approved text did not survive. The carrier change is then not
+    any row whose accepted text did not survive. The carrier change is then not
     exempt from the amendment guard — it is checked by it, independently of the
     converter's own round-trip proof. A silent-no-op degrade (`{}`) is kept for
     a side that has neither carrier, which is the pre-registry history case;
@@ -350,15 +350,15 @@ def _tier_reads(root, prefix, rel_path, id_col, under=""):
 
 # The §A5.1 cell split (OPERATOR RULING 2026-07-31, docs/concurrency-v2.md; WI-380).
 # Only what is APPROVED arms the re-accept warn. Traceability is TRACED, not
-# approved: re-pointing an LLR at the module the code moved to amends no
-# attested prose. WI-280 paid for the conflation — 19 `Module` cells followed
-# moved code -> 11 owning SRs flipped off `Approved` -> the gate dropped DevStg-Impl->DevStg-Tests -> a
-# approve brief and four review rounds, for a change that altered no requirement.
+# accepted: re-pointing an LLR at the module the code moved to amends no
+# accepted prose. WI-280 paid for the conflation — 19 `Module` cells followed
+# moved code -> 11 owning SRs flipped off `Approved` -> the gate dropped DevStg-Impl->DevStg-Tests -> an
+# acceptance brief and four review rounds, for a change that altered no requirement.
 #
 # BOTH halves are declared per registry, and the RESIDUAL RULE FAILS SAFE: a
 # column in neither set is treated as APPROVED. A column added to a registry
 # after this table was written can therefore only ever be too loud — a spurious
-# window someone sees and dismisses — never silently un-approved, which would
+# window someone sees and dismisses — never silently un-accepted, which would
 # be a MISSED window nobody sees. `tests/test_trajectory_staged.py` pins both
 # halves of that: the unknown-column behaviour, and that every column of the
 # live and shipped-template headers is classified here (so a new column cannot
@@ -370,10 +370,10 @@ def _tier_reads(root, prefix, rel_path, id_col, under=""):
 # prose either side, and whether a re-point moved SCOPE is exactly the judgement
 # the adjudication kind exists to make. So a changed `Boundary-Refs` ROUTES to
 # adjudication (intake.ROUTED_TRACED_CELLS) beside `SN-Refs`; it never arms a
-# re-accept window directly. Classifying it approved instead would arm a window
+# re-accept window directly. Classifying it accepted instead would arm a window
 # on every row of the re-tier campaign, which is the noise that gets a window
 # ignored — and the campaign's re-statements touch `Requirement` anyway, which
-# IS approved, so nothing escapes attestation by this choice.
+# IS accepted, so nothing escapes acceptance by this choice.
 #
 # `Hat-Refs` (SR and LLR) joins the TRACED half at WI-484, and the classification
 # is the load-bearing half of shipping the cell rather than a footnote. Three
@@ -383,7 +383,7 @@ def _tier_reads(root, prefix, rel_path, id_col, under=""):
 # so the phase-2 backfill would arm a re-accept window on every row it touched,
 # which is precisely the 148-row noise `Boundary-Refs` was classified out of; and
 # (3) the operator's own sequencing note prices this ruling — the cell "is NOT
-# anticipated to be an attested cell, so it can be tacked on AFTER the sitting
+# anticipated to be an accepted cell, so it can be tacked on AFTER the sitting
 # without re-opening anything signed", which is only true if it is classified here.
 # It is deliberately NOT in `intake.ROUTED_TRACED_CELLS`: re-pointing `SN-Refs`
 # may have moved SCOPE, which is a judgement adjudication exists to make, while a
@@ -412,7 +412,7 @@ SPINE_TRACED_CELLS = {
     # `SR-Refs` is here BY RULING (WI-388, closing WI-380 REVIEW-A finding 3 —
     # the cell §A5.1 left unclassified): it is the same shape of pointer as
     # the ruled-traced `SN-Refs`/`Verifies` — which SR owns this decomposition
-    # row — and re-pointing it changes no attested prose on either side.
+    # row — and re-pointing it changes no accepted prose on either side.
     # Whether the re-point moved scope is exactly the judgement the
     # adjudication kind exists to make, so a changed `SR-Refs` ROUTES to
     # adjudication (intake.ROUTED_TRACED_CELLS) like its two siblings; it
@@ -435,14 +435,14 @@ SPINE_TRACED_CELLS = {
         {"Stakeholder-Refs", "Source"}
     ),
 }
-# The approved half. (The SR tier's `SupersededBy` column — approved by ruling
+# The accepted half. (The SR tier's `SupersededBy` column — accepted by ruling
 # at WI-388 — retired with the supersession tombstone class, D-4 ruling
 # 2026-08-14b; the CMP registry's own SupersededBy is a separate, still-owed
 # item.) The assumption tier's STATEMENTS join it by name rather than by the
 # residual (LLR-225): a requirement's `Coincident` waiver and `Form`, and a test
 # case's declared `Inputs`, `MaxAge`, `Sampling`, `SampleSize` and
 # `AcceptanceRule`, each a claim the row makes. `Delivered-With` joins the
-# approved half under LLR-222: changing which siblings jointly deliver the need
+# accepted half under LLR-222: changing which siblings jointly deliver the need
 # changes the requirement's own argument, rather than merely re-pointing trace.
 # An observation case's cadence cells `Trigger`, `Rubric` and `MinWorkItems`
 # join by name too (WI-784), keeping the residual's reading: like `MaxAge` and
@@ -486,11 +486,11 @@ SPINE_APPROVED_CELLS = {
 }
 
 # THE OFF-SPINE REGISTRIES' TRACED HALF (LLR-225). Until this table no
-# off-spine registry declared one, so every off-spine cell counted as approved
+# off-spine registry declared one, so every off-spine cell counted as accepted
 # through the residual. Two cells are pointers: an interface's `BridgedBy`
 # names the assumptions bridging it, and an assumption's `ObstacleHats` names
 # the perspectives its obstacle came from. Every other off-spine cell stays
-# approved content (an interface's `Coincident`, a stakeholder's name,
+# accepted content (an interface's `Coincident`, a stakeholder's name,
 # description and party, a crossing's `System`, an entity's `Mediates`, and the
 # rest of the assumption and surrogate cells), because each states something
 # the row asserts rather than pointing at another row.
@@ -505,7 +505,7 @@ def spine_cell_class(csv_path, column):
     """`"traced"` for a column §A5.1 rules traceability, else `"approved"`.
 
     The residual is deliberate and fails SAFE: an unclassified column — one
-    added to a registry after the ruling — reads as approved and keeps arming
+    added to a registry after the ruling — reads as accepted and keeps arming
     the warn. See SPINE_TRACED_CELLS.
 
     KEYED BY THE REGISTRY, NOT BY ITS FILENAME. The two tables above are keyed
@@ -542,28 +542,28 @@ def traced_cells(csv_path):
 # engine — `normative_text`, `sn_normative_text`, `digest`, `current_digests` and
 # their two exclusion sets — lived here for ~107 lines, reserved for an on-row
 # `TextHash`/`HashedOn` writer (repo-lock D-1's anchor half) that was never
-# built. That half is RULED unnecessary complexity: an approval now records what
+# built. That half is RULED unnecessary complexity: an acceptance now records what
 # it blessed by COPYING the registries to `docs/archive/last_approved/`
 # (`baseline_snapshot.py`), and a copy needs no canonical text to hash, no
 # separator that cannot occur in a cell, and no second exclusion list.
 #
 # `split_changed_cells` below is what survived, and it is the better half: it
-# answered the same question the digest did — which cells moved, approved or
+# answered the same question the digest did — which cells moved, accepted or
 # traced — while also returning the before/after pairs a brief has to render
 # anyway. It is PUBLIC because `baseline_snapshot.is_drifted` reads it as the
 # drift basis, so the snapshot comparison and the amend-without-flip warn can
 # never disagree about what "normative" means.
 #
 # A ROW-TEXT IDENTITY CAME BACK, AND IT ANSWERS THAT DIRECTIVE POINT BY POINT
-# (`approved_text_digest`). A verdict about one approved text authorizes no
+# (`accepted_text_digest`). A verdict about one accepted text authorizes no
 # later text, so a held re-acceptance must name the text its verdict judged;
 # a copy is written at the act, after the sitting, so it cannot witness what
 # the sitting saw. The identity is not an on-row cell: it lives in the
 # verdict's binding. It needs no separator, because JSON escapes every cell.
 # And it keeps no exclusion list of its own: it hashes exactly the cells
-# `spine_cell_class` classes approved, the classes this comparison uses.
+# `spine_cell_class` classes accepted, the classes this comparison uses.
 
-# The Status values whose ROW TEXT is approved — the population the
+# The Status values whose ROW TEXT is accepted — the population the
 # amend-without-flip guard scans. ONE MEMBER SINCE D-9 STEP 5, and it is a
 # CONTRACTION OF SPELLING, NOT OF SCOPE: the set used to hold `verified` and
 # `planned` because the pair split one rung ("text blessed, evidence
@@ -572,7 +572,7 @@ def traced_cells(csv_path):
 # blessed, so there is nothing to amend behind an operator's back. `Founded`
 # does not either, and its exclusion is DELIBERATE rather than pending: the rung
 # is COMPUTED from a row's children existing, so a cell reading it is not a
-# second attestation of the row's own text — the `Approved` claim underneath it
+# second acceptance of the row's own text — the `Approved` claim underneath it
 # is the one this guard watches. Lowercase, matching the guard's own
 # normalisation.
 # (`Modified` used to be listed here as excluded-because-the-marker-is-already-set;
@@ -599,9 +599,9 @@ def split_changed_cells(csv_path, id_col, head, row):
     return changed
 
 
-def approved_text_digest(csv_path, id_col, row):
-    """The identity of one row's approved text: `sha256:` and the first 16
-    lowercase hex of SHA-256 over its nonempty approved cells, the id column
+def accepted_text_digest(csv_path, id_col, row):
+    """The identity of one row's accepted text: `sha256:` and the first 16
+    lowercase hex of SHA-256 over its nonempty accepted cells, the id column
     and `Status` excluded, serialized as sorted JSON. The cells are classed by
     `spine_cell_class`, as `split_changed_cells` classes them, so the identity
     a verdict binds and the drift that comparison reports read one split; an
@@ -628,7 +628,7 @@ def _spine_revs(root, base, head, touches=()):
     The prefixes are `git show` arguments: `"HEAD:"`, `"abc123:"`, or `":"` for
     the INDEX. `head=None` means the index — the `--staged` hook case, and the
     default. Any other value is a commit-ish, which is what §A5.2's trigger
-    needs: adjudication is minted from *a trunk commit that changed an approved
+    needs: adjudication is minted from *a trunk commit that changed an accepted
     cell*, and a commit is not the index.
 
     `touches` is the caller's applicability test — the registry paths at least
@@ -662,7 +662,7 @@ def _spine_row_sides(root, base, head, registries=SPINE_CSVS):
     reader below it.
 
     `registries` is the walk's UNIVERSE and defaults to `SPINE_CSVS`; the
-    approval-act reader passes `APPROVAL_ACT_CSVS`, which adds the SN tier. The
+    acceptance-act reader passes `ACCEPTANCE_ACT_CSVS`, which adds the SN tier. The
     parameter exists so the two scopes are one walk with one set of carrier and
     `--no-renames` rules rather than two walks that could drift.
 
@@ -696,22 +696,22 @@ def _spine_row_sides(root, base, head, registries=SPINE_CSVS):
         yield touched[0], id_col, before_rows, after_rows, csv_path
 
 
-# Whether a spine row's `Status` claims approval or above: the PAIR (`Approved`
-# and the computed `Founded` above it), so the approval-act readers below ask
+# Whether a spine row's `Status` claims acceptance or above: the PAIR (`Approved`
+# and the computed `Founded` above it), so the acceptance-act readers below ask
 # one question instead of each restating which rungs count as blessed. Its one
-# home is `kitlib.spine.claims_approval`, which the parent-first rule reads
-# too, so the rule and these readers agree on what counts as approved. Note
+# home is `kitlib.spine.claims_acceptance`, which the parent-first rule reads
+# too, so the rule and these readers agree on what counts as accepted. Note
 # the deliberate difference from `_APPROVED_TEXT`, three hundred lines up: that
 # set is the amend-without-flip guard's, and excludes `Founded` because a
-# computed rung is not a second attestation of the row's own text. Here the
-# question is "does this cell CLAIM approval", and `Founded` does.
-_claims_approval = _kitspine.claims_approval
+# computed rung is not a second acceptance of the row's own text. Here the
+# question is "does this cell CLAIM acceptance", and `Founded` does.
+_claims_acceptance = _kitspine.claims_acceptance
 
 
-def _approval_act(registry, rid, before, row):
-    """The approval act ONE row performs across the two sides, or None.
+def _acceptance_act(registry, rid, before, row):
+    """The acceptance act ONE row performs across the two sides, or None.
 
-    The per-row half of `staged_approval_acts` below, extracted so the walk
+    The per-row half of `staged_acceptance_acts` below, extracted so the walk
     around it is "visit every row of every changed registry" and the judgement
     is stated once, in one place, for both shapes. The two arms answer the same
     question from two directions — text that was never blessed is now blessed —
@@ -719,19 +719,19 @@ def _approval_act(registry, rid, before, row):
     checkable.
 
     An id-less row is not a row (the `-000` template placeholder and a blank
-    key both land here); a de-approval and an unchanged status both fall
+    key both land here); a de-acceptance and an unchanged status both fall
     through to None, which is the subtraction that docstring states."""
     if not rid:
         return None
     if before is None:
         # A row absent on the base side. `before_rows` is `{}` for a newly
         # ADDED registry too, which is why the born arm still answers there: a
-        # registry that arrives with approved rows in it is the same
+        # registry that arrives with accepted rows in it is the same
         # unblessed-text-now-blessed event.
-        if not _claims_approval(row):
+        if not _claims_acceptance(row):
             return None
         act, was = "born", ""
-    elif not _claims_approval(before) and _claims_approval(row):
+    elif not _claims_acceptance(before) and _claims_acceptance(row):
         act, was = "flip", (before.get("Status") or "").strip()
     else:
         return None
@@ -744,48 +744,48 @@ def _approval_act(registry, rid, before, row):
     }
 
 
-def staged_approval_acts(root, base="HEAD", head=None):
-    """Every APPROVAL ACT a spine delta performs between two trees:
+def staged_acceptance_acts(root, base="HEAD", head=None):
+    """Every ACCEPTANCE ACT a spine delta performs between two trees:
 
         [{"registry": <carrier path>, "id": <row id>, "act": "flip" | "born",
           "before": <status>, "after": <status>}]
 
-    An act is a row crossing INTO an approval claim (`act = "flip"` — `Drafted`
+    An act is a row crossing INTO an acceptance claim (`act = "flip"` — `Drafted`
     → `Approved`/`Founded`) or a row that ARRIVES already claiming one
     (`act = "born"`, absent on the base side). Both are the same event seen from
     two directions: text that was never blessed is now blessed, and the
     `docs/archive/last_approved/` copy that anchors it is owed.
 
     THE READING IS THE MIRROR OF `staged_spine_amendments`, deliberately: that
-    one reports rows whose approved text moved while Status stood still and
+    one reports rows whose accepted text moved while Status stood still and
     EXEMPTS a moved Status ("a deliberate call this does not second-guess"); this
-    one reports THE EXEMPTED SET MINUS THE DE-APPROVALS. The two share
+    one reports THE EXEMPTED SET MINUS THE DE-ACCEPTANCES. The two share
     `_spine_row_sides` so they cannot disagree about which rows exist, and the
     subtraction is stated rather than left to the reader because a mirror
     claiming to be exact and then carving out a case is two sentences that
     disagree.
 
-    A DE-APPROVAL IS NOT AN ACT, and that is the subtraction. `Approved` →
+    A DE-ACCEPTANCE IS NOT AN ACT, and that is the subtraction. `Approved` →
     `Drafted` withdraws a claim; it blesses nothing, so it owes no snapshot and
     refuses no merge. It is not dropped on the floor either — `staged_drafted_rows`
     reports it as an amended `Drafted` row, so the first-acceptance mint raises the
-    re-approval it now owes. Same direction as
-    `baseline_snapshot._approval_transition`, which asks the live-vs-snapshot
+    re-acceptance it now owes. Same direction as
+    `baseline_snapshot._acceptance_transition`, which asks the live-vs-snapshot
     form of this question.
 
-    ITS UNIVERSE IS `APPROVAL_ACT_CSVS`, the four SPINE registries — SN, SR,
+    ITS UNIVERSE IS `ACCEPTANCE_ACT_CSVS`, the four SPINE registries — SN, SR,
     LLR, TC — and the assumptions registry's two tiers, and not `SPINE_CSVS`,
     which is the amendment warn's three. SN is
     covered because it is a spine tier carrying the same `status` vocabulary and
     is the half of DevStg-Reqs the operator-acceptance dial holds, so a lane flipping
     a need is the worst case of this act rather than an exempt one (round 028).
-    The three OFF-SPINE registries stay out; see `OUTSIDE_THE_APPROVAL_ACT`.
+    The three OFF-SPINE registries stay out; see `OUTSIDE_THE_ACCEPTANCE_ACT`.
 
     Operator ruling 6, 2026-10-07 (WI-849): the act this reports is an independent
-    adjudicator's, in the authoring lane or on trunk. `approval_delta` directly
-    below reads it ONCE for `merge_approval_refusal`, which requires every act
+    adjudicator's, in the authoring lane or on trunk. `acceptance_delta` directly
+    below reads it ONCE for `merge_acceptance_refusal`, which requires every act
     backed by a recorded verdict over its own rows, and an adjudication row's
-    recorded scope besides, at `integrate._approval_act_refusal`
+    recorded scope besides, at `integrate._acceptance_act_refusal`
     — this reader does not itself cross the `IF-091` seam, and the seam does not
     declare that it does.
 
@@ -793,10 +793,10 @@ def staged_approval_acts(root, base="HEAD", head=None):
     like `staged_spine_amendments`."""
     out = []
     for registry, _id_col, before_rows, after_rows, _csv in _spine_row_sides(
-        root, base, head, APPROVAL_ACT_CSVS
+        root, base, head, ACCEPTANCE_ACT_CSVS
     ):
         for rid, row in after_rows.items():
-            act = _approval_act(registry, rid, before_rows.get(rid), row)
+            act = _acceptance_act(registry, rid, before_rows.get(rid), row)
             if act:
                 out.append(act)
     return out
@@ -808,26 +808,26 @@ def rows_at(root, rev, rel_path, id_col):
     reader behind every two-tree scan in this module, offered for a walk along
     history (`check_test_first.first_acceptance_commits`).
 
-    Public so a history reader parses a row the way the approval-act refusal
+    Public so a history reader parses a row the way the acceptance-act refusal
     does, through the same carrier resolution and the same `-000` filter,
     rather than growing a second reader of the registries at a revision."""
     return _spine_rows_at(root, rev + ":", rel_path, id_col)
 
 
-def approval_acts_between(registry, before_rows, after_rows):
-    """The approval acts `after_rows` perform against `before_rows`, in
-    `staged_approval_acts`' record shape: every row that crossed into an
-    approval claim (`flip`) or arrived already making one (`born`).
+def acceptance_acts_between(registry, before_rows, after_rows):
+    """The acceptance acts `after_rows` perform against `before_rows`, in
+    `staged_acceptance_acts`' record shape: every row that crossed into an
+    acceptance claim (`flip`) or arrived already making one (`born`).
 
-    THE HISTORY FORM OF THE SAME RULE. `staged_approval_acts` reads its two
+    THE HISTORY FORM OF THE SAME RULE. `staged_acceptance_acts` reads its two
     sides from two trees; a walk along trunk carries each commit's rows forward
     as the next commit's before side, so it asks the question of two row maps
     instead and reads each registry once per commit that touches it. The act
-    itself is `_approval_act` in both, so the history and the lane refusal
+    itself is `_acceptance_act` in both, so the history and the lane refusal
     cannot disagree about which change blessed a row."""
     acts = []
     for rid, row in after_rows.items():
-        act = _approval_act(registry, rid, before_rows.get(rid), row)
+        act = _acceptance_act(registry, rid, before_rows.get(rid), row)
         if act:
             acts.append(act)
     return acts
@@ -854,9 +854,9 @@ def _snapshot_acts(name_status):
         yield "{} {}".format(_SNAPSHOT_ACT.get(letter, "changed"), parts[-1].strip())
 
 
-def approval_delta(root, base, head):
+def acceptance_delta(root, base, head):
     """`(row acts, worded snapshot acts, refusal)` for one merge delta."""
-    acts = staged_approval_acts(root, base, head)
+    acts = staged_acceptance_acts(root, base, head)
     out = _git(
         root, ["diff", "--name-status", "--no-renames", base, head, "--", SNAPSHOT_DIR]
     )
@@ -866,7 +866,7 @@ def approval_delta(root, base, head):
             [],
             (
                 "cannot read {}'s {} delta against {}, so whether this branch wrote "
-                "the approval record is unknowable; nothing was merged".format(
+                "the acceptance record is unknowable; nothing was merged".format(
                     head, SNAPSHOT_DIR, str(base)[:10]
                 )
             ),
@@ -886,25 +886,25 @@ def first_acceptance_scope(metas):
 
 
 def _registry_identity(path):
-    """The approval-act registry a carrier path belongs to (its tier's
+    """The acceptance-act registry a carrier path belongs to (its tier's
     canonical path, whichever of `spine_carrier.tier_carriers` names it), or
-    the path itself for a file of no approval-act tier.
+    the path itself for a file of no acceptance-act tier.
 
     Implements: SR-178, LLR-278"""
-    hits = (rel for rel, col in APPROVAL_ACT_CSVS if path in _tier_carriers(rel, col))
+    hits = (rel for rel, col in ACCEPTANCE_ACT_CSVS if path in _tier_carriers(rel, col))
     return next(hits, path)
 
 
 def lane_acted_set(root, base, head, delta):
     """THE ONE DERIVATION OF A LANE'S ACTED SET (WI-849, Sol r3): `(acted,
-    refusal)`, `acted` being `{"approve": {row id: registry}, "reaccept": {row
-    id: registry}}` - every row the lane approved or re-accepted, with the
+    refusal)`, `acted` being `{"accept": {row id: registry}, "reaccept": {row
+    id: registry}}` - every row the lane accepted or re-accepted, with the
     registry its id's tier names (a live flip: the registry the two-tree walk
     reports), present at the head or not, so a retired row authorizes its own
-    registry's copy. Approvals are the delta's live Status transitions
-    (a flip or a row born approved) AND the `approved` rows of the act-ledger
+    registry's copy. Acceptances are the delta's live Status transitions
+    (a flip or a row born accepted) AND the `approved` rows of the act-ledger
     entries the branch added (`_added_acts`), which name rows the snapshot
-    writer carried into approval with no live flip - a row live-approved at
+    writer carried into acceptance with no live flip - a row live-accepted at
     the base whose recorded copy still read below it. Re-acceptances are the
     ledger's (`reaccepted_between`). The scope check, the backing check and
     the copy authorization all take this one set, so an act seen by one is
@@ -918,12 +918,12 @@ def lane_acted_set(root, base, head, delta):
         reattested, refusal = reaccepted_between(root, base, head)
         added = _added_acts(root, base, head)
     if refusal:
-        return {"approve": {}, "reaccept": {}}, refusal
-    approve = {act["id"]: act["registry"] for act in acts}
-    ledger = {str(r) for a in added for r in a.get("approved") or []} - set(approve)
-    approve.update({rid: _tier_of(rid)[0] for rid in ledger})
+        return {"accept": {}, "reaccept": {}}, refusal
+    accept = {act["id"]: act["registry"] for act in acts}
+    ledger = {str(r) for a in added for r in a.get("approved") or []} - set(accept)
+    accept.update({rid: _tier_of(rid)[0] for rid in ledger})
     return {
-        "approve": approve,
+        "accept": accept,
         "reaccept": {r: _tier_of(r)[0] for r in reattested},
     }, None
 
@@ -931,7 +931,7 @@ def lane_acted_set(root, base, head, delta):
 def _copy_lines(acted, snapshot_files):
     """THE COPY AUTHORIZATION over the acted set (`lane_acted_set`): a refusal
     line for each registry copy no acted row authorizes (WIDENED) and each
-    approved row's registry with no copy (WITHOUT ITS ANCHOR), `[]` when the
+    accepted row's registry with no copy (WITHOUT ITS ANCHOR), `[]` when the
     copies match the acts. The record's own files (`SNAPSHOT_OWN_FILES`) are
     not registries. Both sides compare REGISTRY IDENTITY (`_registry_identity`).
 
@@ -946,22 +946,22 @@ def _copy_lines(acted, snapshot_files):
     widened = sorted(
         r for r in written - SNAPSHOT_OWN_FILES if ident(r) not in authorized
     )
-    approved = acted["approve"].values()
-    missing = sorted({r for r in approved if r and ident(r) not in copied})
+    accepted = acted["accept"].values()
+    missing = sorted({r for r in accepted if r and ident(r) not in copied})
     return [
-        "  snapshot WIDENED to {} without an approved row".format(r) for r in widened
-    ] + ["  {} was approved WITHOUT its anchoring snapshot".format(r) for r in missing]
+        "  snapshot WIDENED to {} without an accepted row".format(r) for r in widened
+    ] + ["  {} was accepted WITHOUT its anchoring snapshot".format(r) for r in missing]
 
 
-def adjudication_approval_refusal(scope, acted, delta):
+def adjudication_acceptance_refusal(scope, acted, delta):
     """Judge the ACTED SET (`lane_acted_set`), never a scope on its own
-    (WI-849, Sol r2, r3): every approved row - a live flip or a ledger-only
-    approval alike - lies in `scope` (an empty scope is OUTSIDE's EMPTY
+    (WI-849, Sol r2, r3): every accepted row - a live flip or a ledger-only
+    acceptance alike - lies in `scope` (an empty scope is OUTSIDE's EMPTY
     wording; `scope` None means the lane records none, so only its copies are
     judged), and every registry copy belongs to an acted registry. A lane with
     no act and no copy meets nothing here. A registry copy is WIDENED unless
-    the set holds a row there, approved or re-accepted, so the sections of one
-    combined sitting each keep their own act (WI-841); an approved row's
+    the set holds a row there, accepted or re-accepted, so the sections of one
+    combined sitting each keep their own act (WI-841); an accepted row's
     registry with no copy is WITHOUT ITS ANCHOR (`_copy_lines`). Both sides
     compare REGISTRY IDENTITY (`_registry_identity`), so every carrier path of
     an authorized registry is its act's own - the obsolete carrier's copy a
@@ -969,8 +969,8 @@ def adjudication_approval_refusal(scope, acted, delta):
     _acts, snapshot_files, refusal = delta
     if refusal:
         return refusal
-    approved = acted["approve"]
-    outside = sorted(r for r in approved if scope is not None and r not in scope)
+    accepted = acted["accept"]
+    outside = sorted(r for r in accepted if scope is not None and r not in scope)
     copies = _copy_lines(acted, snapshot_files)
     if not outside and not copies:
         return None
@@ -980,19 +980,19 @@ def adjudication_approval_refusal(scope, acted, delta):
     # THE REMEDY, PER ARM. The three lines above say what the delta did; a
     # session reading only those learns it is stopped and not what to do — and
     # the WIDENED arm in particular is reached by following the brief exactly
-    # (its `--approves` is fixed before the verdict, so a batch that returns a
+    # (its `--accepts` is fixed before the verdict, so a batch that returns a
     # registry's rows in full still names it). Each arm's repair is stated
     # where the stop is read; a lane recording no scope is told of no
     # `Adjudicates` row.
-    head = "the approval act's copies do not match its acts: the merge admits"
+    head = "the acceptance act's copies do not match its acts: the merge admits"
     if scope is not None:
-        head = "first-acceptance adjudication exceeds the approval act recorded on its `Adjudicates` row: the merge admits only scoped flips and"
+        head = "first-acceptance adjudication exceeds the acceptance act recorded on its `Adjudicates` row: the merge admits only scoped flips and"
     return (
         "{} exactly their registry snapshots; nothing was merged:\n{}\nRemedy — "
-        "WIDENED: `--approves` named a registry this act flipped nothing in (its "
+        "WIDENED: `--accepts` named a registry this act flipped nothing in (its "
         "rows were all RETURNED); drop that token and re-take the snapshot, so "
-        "the copy blesses only text this act approved. WITHOUT ITS ANCHOR: the "
-        "flip landed with no copy behind it; add that registry to `--approves`."
+        "the copy blesses only text this act accepted. WITHOUT ITS ANCHOR: the "
+        "flip landed with no copy behind it; add that registry to `--accepts`."
         "{}".format(
             head,
             "\n".join(lines),
@@ -1004,28 +1004,28 @@ def adjudication_approval_refusal(scope, acted, delta):
     )
 
 
-def merge_approval_refusal(root, base, head, metas, *, trunk):
-    """Apply one derived approval delta to THE ONE ACTOR RULE (operator ruling 6,
+def merge_acceptance_refusal(root, base, head, metas, *, trunk):
+    """Apply one derived acceptance delta to THE ONE ACTOR RULE (operator ruling 6,
     2026-10-07; WI-849): a lane's acts are admitted when every act is backed
     by a recorded verdict judging that act's own rows (`backed_act_refusal`),
     in whatever lane it is taken, and the snapshot copies exactly the
     registries those acts moved. A lane any of whose claimed rows records a
     scope (`kitlib.sitting.bounds_acts`: an adjudication-kind row, or a row
-    scoping a first approval or an amendment) is bounded besides, whatever
+    scoping a first acceptance or an amendment) is bounded besides, whatever
     else it claims: its flips by the first-acceptance scope, its re-acceptances
     by the amendment scope (`reaccept_scope_refusal`). The bound is read off
     `metas`, never off a caller's flag, so a mixed lane keeps its adjudication
     row's scope (Sol r1 MAJOR 1); unreadable claims never reach here, the
     merge slot refuses them. A held rung is not judged here: every lane commit
     is judged against the dial committed on trunk by the lane rule that rides
-    the merge slot's lane-commit walk (`held_status.commit_held_approval_lines`),
+    the merge slot's lane-commit walk (`held_status.commit_held_acceptance_lines`),
     so `trunk`, the commit the merge lands on, is read by no rule of this
     function. The scope, backing and copy checks all judge ONE acted set
-    (`lane_acted_set`: the ledger's approvals and re-acceptances and the live
+    (`lane_acted_set`: the ledger's acceptances and re-acceptances and the live
     transitions), so an act recorded only in the ledger is judged by each.
 
     Implements: SR-178, LLR-278"""
-    delta = approval_delta(root, base, head)
+    delta = acceptance_delta(root, base, head)
     acted, refusal = lane_acted_set(root, base, head, delta)
     if refusal:
         return refusal
@@ -1035,18 +1035,18 @@ def merge_approval_refusal(root, base, head, metas, *, trunk):
         refusal = _kitsitting.malformed_refusal(metas)
         refusal = refusal or reaccept_scope_refusal(acted, metas)
     elif not any(acted.values()):
-        return lane_approval_refusal(root, base, head, delta)
+        return lane_acceptance_refusal(root, base, head, delta)
     added = _added_acts(root, base, head)
     refusal = refusal or _kitsitting.unrecorded_refusal(root, head, added)
     refusal = refusal or backed_act_refusal(root, base, head, acted, delta)
-    return refusal or adjudication_approval_refusal(scope, acted, delta)
+    return refusal or adjudication_acceptance_refusal(scope, acted, delta)
 
 
 def backed_act_refusal(root, base, head, acted, delta):
     """THE ACTOR TEST at the merge slot (operator ruling 6, 2026-10-07; WI-849):
-    why a lane's approval acts may not merge, or None. Every act must be backed
+    why a lane's acceptance acts may not merge, or None. Every act must be backed
     by a RECORDED verdict among the bindings the branch carries that judged
-    that act's own rows: each row it flips or mints approved ruled APPROVE in a
+    that act's own rows: each row it flips or mints accepted ruled ACCEPT in a
     first-acceptance part, each row it re-accepts ruled CLARITY, or MEANING with
     the bless mark, in an amendment part (the one reader,
     `kitlib.sitting.judged_rows`). It replaces "is every claimed spec of the adjudication
@@ -1055,10 +1055,10 @@ def backed_act_refusal(root, base, head, acted, delta):
 
     The acts are the lane's one acted set (`lane_acted_set`): the act-ledger
     entries the branch added AND the delta's own flips, so a flip that wrote no
-    ledger entry and a ledger approval no flip shows are judged alike. The judgement
+    ledger entry and a ledger acceptance no flip shows are judged alike. The judgement
     is WI-841's one reader (`kitlib.sitting.uncovered_refusal` over
     `recorded_at`), so a missing, failed, invalid or other-rows verdict refuses
-    alike, worded with the acts by `lane_approval_refusal`. Independence rests
+    alike, worded with the acts by `lane_acceptance_refusal`. Independence rests
     on that reader: an outcome reads `recorded` only through
     `adjudicate_brief.record_outcome`, which a route calls after it ran the
     adjudication as its own call; no record names the session that authored a
@@ -1066,10 +1066,10 @@ def backed_act_refusal(root, base, head, acted, delta):
 
     Implements: SR-178, LLR-158"""
     acts = [
-        {"approved": sorted(acted["approve"]), "reattested": sorted(acted["reaccept"])}
+        {"approved": sorted(acted["accept"]), "reattested": sorted(acted["reaccept"])}
     ]
     reason = _kitsitting.uncovered_refusal(root, base, head, acts)
-    return reason and lane_approval_refusal(root, base, head, delta, reason)
+    return reason and lane_acceptance_refusal(root, base, head, delta, reason)
 
 
 def amendment_scope(metas):
@@ -1183,7 +1183,7 @@ def _snapshot_copy_rows(root, rev, rel_path, id_col):
 
 
 def _row_settled(rel_path, id_col, copy_row, live_row, routed):
-    """Does the live row equal its snapshot copy in every approved cell and
+    """Does the live row equal its snapshot copy in every accepted cell and
     every routed traced cell? A row missing from either side is not settled.
 
     Implements: SR-178, LLR-364"""
@@ -1219,11 +1219,11 @@ def _tier_sides(root, base, head, rel_path, id_col):
 def _settled_row(added, rid, rel_path, id_col, sides, routed):
     """Is `rid` settled by the range-added ledger entries `added`, given its
     tier's `sides` (`_tier_sides`)? It needs an entry re-accepting it and its
-    whole approved and routed traced cell set equal to its copy at the range's
+    whole accepted and routed traced cell set equal to its copy at the range's
     end. That copy is the re-accepting act's own when no later entry wrote the
     registry. A later writer re-accepting another row cannot have absorbed an
-    approved-cell change to this one (the snapshot refuses to copy unattested
-    approved drift), only a routed traced one, so a later writer still leaves
+    accepted-cell change to this one (the snapshot refuses to copy unaccepted
+    accepted drift), only a routed traced one, so a later writer still leaves
     it settled when its routed traced cells are the same at the range's two
     ends. That proves equality at the ends, not that no routed cell moved in
     between; its one limit: a routed traced cell moved before the re-accepting
@@ -1245,7 +1245,7 @@ def _settled_row(added, rid, rel_path, id_col, sides, routed):
 def settled_amendments(root, base, head, records, routed_cells):
     """`(settled ids, refusal)`: which amendment `records` the range
     `base..head` already settled. A record is settled when a ledger entry the
-    range added re-accepts its row, the row's whole approved and routed traced
+    range added re-accepts its row, the row's whole accepted and routed traced
     cell set at `head` equals its snapshot copy at `head`, AND either no entry
     the range added after the latest such one wrote (or, a legacy entry, may
     have written) the row's registry, or the row's routed traced cells are the
@@ -1285,7 +1285,7 @@ def settled_amendments(root, base, head, records, routed_cells):
 
 def unanchored_rows(root, head, ids, routed_cells):
     """`({row id: registry}, refusal)`: the `ids` whose live row at `head`
-    differs from its snapshot copy there, in an approved cell or a routed
+    differs from its snapshot copy there, in an accepted cell or a routed
     traced one (`_row_settled`). A missing row or copy reads as differing, an
     id in no tier is left out, and a copy the tree lists that cannot be read
     or does not parse is the refusal, naming the carrier and revision.
@@ -1312,7 +1312,7 @@ def unanchored_rows(root, head, ids, routed_cells):
 
 
 def text_as_bound(root, head, ruled):
-    """The ids of `ruled` (`{row id: recorded verdict path}`) whose approved
+    """The ids of `ruled` (`{row id: recorded verdict path}`) whose accepted
     text at `head` is the text their verdict's binding records. A row gone
     from its registry has no text to differ, so it counts; a binding that
     records no text for the row (`kitlib.sitting.recorded_identities`) does
@@ -1331,7 +1331,7 @@ def text_as_bound(root, head, ruled):
             bound[verdict] = identities or {}
         row = tiers[rel + col].get(rid)
         if row is None or (
-            bound[verdict].get(rid) == approved_text_digest(rel, col, row)
+            bound[verdict].get(rid) == accepted_text_digest(rel, col, row)
         ):
             kept.add(rid)
     return kept
@@ -1355,7 +1355,7 @@ def reaccepted_between(root, base, head):
 
 
 def _wrote_ledger(delta):
-    """Did the approval delta write the act ledger? A re-acceptance moves no
+    """Did the acceptance delta write the act ledger? A re-acceptance moves no
     cell, so the ledger entries are the only trace of one."""
     return any(line.endswith("/" + SNAPSHOT_ACTS) for line in delta[1])
 
@@ -1427,8 +1427,8 @@ def added_ledger_entries(entries, parents):
     return [a for a in entries if isinstance(a, dict) and a.get("seq") not in held]
 
 
-def lane_approval_refusal(root, base, head, delta=None, reason=None):
-    """Why a lane's delta may not merge because it performs an APPROVAL ACT no
+def lane_acceptance_refusal(root, base, head, delta=None, reason=None):
+    """Why a lane's delta may not merge because it performs an ACCEPTANCE ACT no
     verdict was asked to back - the refusal text, or None when it performs no
     act and writes no record. The merge slot words both refusals here: a record
     written with no act behind it, and acts `backed_act_refusal` found unbacked,
@@ -1437,23 +1437,23 @@ def lane_approval_refusal(root, base, head, delta=None, reason=None):
     THE ACT IS AN INDEPENDENT ADJUDICATOR'S, IN THE AUTHORING LANE OR ON TRUNK
     (operator ruling 6, 2026-10-07, superseding the trunk-side clause of the
     2026-09-01 ruling). A lane AUTHORS `Drafted` SN/SR/LLR/TC rows and AMENDS
-    cell text on any such row, including approved ones; its acts - a `Status`
+    cell text on any such row, including accepted ones; its acts - a `Status`
     flipped into `Approved`/`Founded`, a row minted already claiming one, a
     re-acceptance - merge only when `backed_act_refusal` finds each backed by
     a recorded verdict that judged its own rows. A copy under `SNAPSHOT_DIR`
     with no flip and no re-acceptance behind it is an act no verdict can
     back, and this is its refusal. The off-spine three
-    (`OUTSIDE_THE_APPROVAL_ACT`) stay outside this rung - their approval cells
+    (`OUTSIDE_THE_ACCEPTANCE_ACT`) stay outside this rung - their acceptance cells
     are OI-30 D3's.
 
     HERE RATHER THAN IN THE MERGE SLOT, on `LLR-178`'s separation - the writer
     must not also be the judge of its own writes, and by the same token the
     coordinator that merges is not the reader that decides what a spine delta
-    did. `integrate._approval_act_refusal` supplies the merge base and the rung's
+    did. `integrate._acceptance_act_refusal` supplies the merge base and the rung's
     place in the ladder; the reading and the wording are this module's, beside
     the two-tree walk and the mirror rules they share their material with.
 
-    A DE-APPROVAL IS NOT AN ACT, and neither is an amendment to an approved row:
+    A DE-ACCEPTANCE IS NOT AN ACT, and neither is an amendment to an accepted row:
     the lane may make both, and the amendment adjudication the intake mints at
     this same merge is what judges the second. THE HONEST BOUND is
     `integrate._minted_id_refusal`'s: this defeats the accident and a lane that
@@ -1461,13 +1461,13 @@ def lane_approval_refusal(root, base, head, delta=None, reason=None):
     some file nothing here reads.
 
     Fails closed on an unreadable snapshot delta: an unread diff is not an
-    empty one. `staged_approval_acts`' own degrade is the opposite direction
+    empty one. `staged_acceptance_acts`' own degrade is the opposite direction
     (silence outside a git checkout) and is deliberate - it is a READER, and the
     refusal that consumes it is where the fail-closed posture belongs.
 
     Implements: SR-178, LLR-158
     """
-    acts, snapshot_files, refusal = delta or approval_delta(root, base, head)
+    acts, snapshot_files, refusal = delta or acceptance_delta(root, base, head)
     if refusal or not (acts or snapshot_files):
         return refusal
     lines = [
@@ -1481,7 +1481,7 @@ def lane_approval_refusal(root, base, head, delta=None, reason=None):
         for act in acts
     ] + ["  {}".format(name) for name in snapshot_files]
     return (
-        "{} performs an APPROVAL ACT no recorded verdict backs. The act is an "
+        "{} performs an ACCEPTANCE ACT no recorded verdict backs. The act is an "
         "independent adjudicator's, never the session's that authored the rows, "
         "in the authoring lane or on trunk (operator ruling 6, 2026-10-07; "
         "PROCESS.md §4): that session leaves SN/SR/LLR/TC, assumption and "
@@ -1502,17 +1502,17 @@ def staged_drafted_rows(root, base="HEAD", head=None):
 
     The first-acceptance trigger's input (WI-572): a lane authors `Drafted` rows
     and amends their text, and what it hands the adjudicator is exactly this set
-    — the rows whose text is now waiting on a first approval nobody has given.
+    — the rows whose text is now waiting on a first acceptance nobody has given.
     `changed` is empty on an `added` row (there is no before side to diff) and
-    carries BOTH §A5.1 halves on an `amended` one, because below approval the
+    carries BOTH §A5.1 halves on an `amended` one, because below acceptance the
     split buys nothing: no cell of a `Drafted` row was ever blessed, so none of
     them is "traced-only" relative to a signature.
 
     A row that is `Drafted` on the after side only. A row that LEFT `Drafted`
-    is an approval act (`staged_approval_acts`); every row that ENTERED it is
+    is an acceptance act (`staged_acceptance_acts`); every row that ENTERED it is
     reported here as `amended`, even when only Status moved. The withdrawal
-    itself still blesses nothing and remains absent from `staged_approval_acts`,
-    but the resulting Drafted row now awaits the adjudicator's approval just as
+    itself still blesses nothing and remains absent from `staged_acceptance_acts`,
+    but the resulting Drafted row now awaits the adjudicator's acceptance just as
     an authored Drafted row does.
 
     Returns [] when not applicable; silent no-op on missing git context."""
@@ -1563,7 +1563,7 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     the post-commit question the dispatcher actually has to ask. Both arms are
     tested.
 
-    A record may carry a traced change with NO approved change. Only the
+    A record may carry a traced change with NO accepted change. Only the
     `SN-Refs`/`Verifies`/`SR-Refs` subset of those is the WI-388 case (§A5.1
     routes a re-point of what a requirement answers to, what a test claims to
     cover, or which SR owns an LLR — the last ruled traced at WI-388 — to
@@ -1574,11 +1574,11 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     context is a silent no-op, like staged_findings. A NEW row (id absent on the
     base side) is not an amendment; a row whose Status moved (to `Drafted`,
     `Founded`, anything) made a deliberate call this does not
-    second-guess — `staged_approval_acts` is the reader for the half of that
+    second-guess — `staged_acceptance_acts` is the reader for the half of that
     exemption which BLESSES text, over the same walk.
 
     THE TWO-TREE WALK IS `_spine_row_sides`, shared since WI-572 rather than
-    inlined here, so this reader and the two approval-act readers above it
+    inlined here, so this reader and the two acceptance-act readers above it
     cannot disagree about which registries and rows the delta contains. Its
     universe is `AMENDMENT_CSVS` since WI-791 (OI-100 gap 1): the need,
     assumption and surrogate tiers join the three spine tiers."""
@@ -1586,8 +1586,8 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     # sanctioned amend path is flipping the AMENDED row itself in the same
     # commit — a Status that moved is exempted below. The retired chain
     # reading's owning-SR exemption (a parent flip sanctioning a silent
-    # child amendment) is gone with the doctrine: a child whose approved
-    # cells change while its own Status still claims approval warns,
+    # child amendment) is gone with the doctrine: a child whose accepted
+    # cells change while its own Status still claims acceptance warns,
     # whatever its parent does.
 
     out = []
@@ -1595,7 +1595,7 @@ def staged_spine_amendments(root, base="HEAD", head=None):
         root, base, head, AMENDMENT_CSVS
     ):
         if not head_rows or not staged_rows:
-            continue  # first commit / newly added registry — nothing attested yet
+            continue  # first commit / newly added registry — nothing accepted yet
         for rid, row in staged_rows.items():
             changed = _amended_cells(csv_path, id_col, rid, head_rows.get(rid), row)
             if changed:
@@ -1605,7 +1605,7 @@ def staged_spine_amendments(root, base="HEAD", head=None):
 
 def _amended_cells(csv_path, id_col, rid, head, row):
     """One row's `split_changed_cells` when it is an AMENDMENT — present on
-    both sides, reading the same approved-text Status on both, with a cell
+    both sides, reading the same accepted-text Status on both, with a cell
     moved — else None. `staged_spine_amendments`' per-row judgement, extracted
     unchanged at WI-791 to keep the walk under the complexity bar."""
     if not rid or rid.endswith("-000") or head is None:
@@ -1628,9 +1628,9 @@ def staged_spine_findings(root):
     """The amend-without-flip warn (WI-316; warn-first, `--staged` only), scoped
     by WI-380 to APPROVED cells only.
 
-    A staged diff that changes the approved cells of a spine row whose Status
-    reads the same approved-text value (`Approved`, since D-9 step 5) in both
-    HEAD and the stage has amended attested prose without re-blessing it — the
+    A staged diff that changes the accepted cells of a spine row whose Status
+    reads the same accepted-text value (`Approved`, since D-9 step 5) in both
+    HEAD and the stage has amended accepted prose without re-blessing it — the
     write-time discipline the old RE-ATTESTATION-PENDING commit-message prose
     never had. One warning per amended row, naming the changed cells. A row
     whose only changes are TRACED (§A5.1) is silent here by ruling; it still
@@ -1638,8 +1638,8 @@ def staged_spine_findings(root):
     Index-vs-HEAD by construction — this is the hook's question, so it takes no
     rev arguments; the post-commit view is `staged_spine_amendments`'s."""
     return [
-        "{}: approved cell(s) {} amended while Status stays put — a "
-        "post-attestation amendment owes a fresh operator read (process.md §7). "
+        "{}: accepted cell(s) {} amended while Status stays put — a "
+        "post-acceptance amendment owes a fresh operator read (process.md §7). "
         "Since D-9 step 7 there is no marker to set: either commit the amendment "
         "on its own and re-accept it in the NEXT commit with `intake.py "
         "snapshot --reaccepts {}` (text first, the act second: a commit that "
@@ -1675,17 +1675,17 @@ def staged_hat_refs_findings(root):
     design. The measured instance is `backlog_staleness_findings`, which blames
     the SR registry by LINE: the phase-2 backfill wrote an INFORMATIVE cell on
     55 rows, re-dated five open WIs' cited rows and raised seven warns, because
-    a `git blame` line time cannot tell an approved cell from a traced one.
+    a `git blame` line time cannot tell an accepted cell from a traced one.
     `split_changed_cells` can, so this arm reads it — which is why `Hat-Refs`
     was CLASSIFIED traced at both tiers rather than left to the residual.
 
     THE BASELINE IS THE ONE THE GUARD IT JOINS ALREADY USES: HEAD versus the
     index, via `staged_spine_amendments`, over rows reading the same
-    approved-text Status on both sides. Two consequences, both deliberate and
+    accepted-text Status on both sides. Two consequences, both deliberate and
     both HONEST VACUITY rather than coverage:
 
       * A row with NO baseline is not guarded. A row absent from HEAD (newly
-        minted, this commit) has nothing to compare, and a row below approval
+        minted, this commit) has nothing to compare, and a row below acceptance
         has blessed nothing to amend behind an operator's back — the same population
         rule `staged_spine_amendments` documents, inherited rather than
         re-litigated here.
@@ -1710,7 +1710,7 @@ def staged_hat_refs_findings(root):
     Implements: SR-161, LLR-202
     """
     return [
-        "{}: approved cell(s) {} amended while {} stayed put — the row's "
+        "{}: accepted cell(s) {} amended while {} stayed put — the row's "
         "substance moved and its perspective record did not, so the derived "
         "component/knowledge view keeps answering from the old lenses "
         "(process.md §7; OI-32 phase 5). Re-read the row's hats and either "
@@ -1739,7 +1739,7 @@ SNAPSHOT_README = "README.md"
 
 # The snapshot's act ledger (`baseline_snapshot.ACTS`, restated for the reason
 # the directory is, and pinned equal by tests/test_baseline_snapshot.py): the
-# typed record of each approval act, and like the README a file with no live
+# typed record of each acceptance act, and like the README a file with no live
 # counterpart. These two are the snapshot's own files; every other file under
 # the root is a registry copy the mirror rules compare with live.
 SNAPSHOT_ACTS = "acts.toml"
@@ -1772,17 +1772,17 @@ def _mirror_repair(live_rel):
 
     A bare `intake.py snapshot` is no repair here: it copies only a registry
     the act authorises, so with no `Status` move it copies nothing, and it
-    refuses any approved row whose text differs from the recorded copy unless
+    refuses any accepted row whose text differs from the recorded copy unless
     `--reaccepts` names it. So the finding names the two repairs that work:
     put the blessed copy back, or take a fresh act whose arguments carry the
     authority for this registry and name the rows it re-accepts. The
-    `--approves` token is the registry's STEM: `baseline_snapshot.
+    `--accepts` token is the registry's STEM: `baseline_snapshot.
     resolve_registry` takes a canonical rel, filename or stem, and a CSV
     carrier's live path is none of those, so the path itself would refuse."""
     return (
         "Repair: restore the copy that was blessed, or take a fresh reviewed "
-        'approval act that re-copies it — `intake.py snapshot --approves "{}=<REF>" '
-        "--reaccepts <ROW-ID>[,<ROW-ID>...]`, naming each approved row whose "
+        'acceptance act that re-copies it — `intake.py snapshot --accepts "{}=<REF>" '
+        "--reaccepts <ROW-ID>[,<ROW-ID>...]`, naming each accepted row whose "
         "text differs from the copy; a bare `intake.py snapshot` copies nothing "
         "here or refuses the drift".format(PurePosixPath(live_rel).stem)
     )
@@ -1808,7 +1808,7 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
     invariant did not watch).
 
     The consequence worth stating plainly: **the only way to write text into
-    the snapshot is to write it into the live registry first** — an approval,
+    the snapshot is to write it into the live registry first** — an acceptance,
     in a reviewed commit, exactly as ruled.
 
     Index-vs-HEAD by default (the hook's question); `head` takes a commit-ish
@@ -1860,7 +1860,7 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
                 out.append(
                     "{} was DELETED from the {} snapshot while the rest of the "
                     "record still stands — a registry removed from the record of "
-                    "what was approved is not a smaller record, it is a missing "
+                    "what was accepted is not a smaller record, it is a missing "
                     "one; the snapshot is replaced WHOLESALE at a signing, never "
                     "trimmed a file at a time".format(name, SNAPSHOT_DIR)
                 )
@@ -2236,10 +2236,10 @@ def commit_ruling_sync_lines(root, rev):
     return ruling_sync_lines(root, parents[0], rev)
 
 
-# The parent-first rule's registries: the four spine tiers of the approval-act
+# The parent-first rule's registries: the four spine tiers of the acceptance-act
 # set (the need, requirement, design and test tiers), read by `_tree_tiers`.
 PARENT_FIRST_CSVS = tuple(
-    (path, col) for path, col in APPROVAL_ACT_CSVS if col in SPINE_TABLE
+    (path, col) for path, col in ACCEPTANCE_ACT_CSVS if col in SPINE_TABLE
 )
 
 
@@ -2303,8 +2303,8 @@ def _parent_statuses(root, base):
 
 def parent_first_lines(root, bases, head=None):
     """The parent-first refusal lines for the tree `head` (the index when
-    None) against each tree of `bases`: one per approved child its tree leaves
-    under an unapproved parent where either status moved against some base
+    None) against each tree of `bases`: one per accepted child its tree leaves
+    under an unaccepted parent where either status moved against some base
     (`_status_moved`), or one per failed read. Not read further when no base
     sees a parent-first carrier change.
 
@@ -2316,7 +2316,7 @@ def parent_first_lines(root, bases, head=None):
         if names is None:
             return [
                 "{}: git cannot list what it changes against {}, so whether it "
-                "leaves an approved row under an unapproved parent is "
+                "leaves an accepted row under an unaccepted parent is "
                 "unknown".format(tree, base[:10])
             ]
         touched = touched or bool(names)
@@ -2325,8 +2325,8 @@ def parent_first_lines(root, bases, head=None):
     tiers, failures = _tree_tiers(root, ":" if head is None else head + ":")
     if failures:
         return [
-            "{}: {} in {}, so whether it leaves an approved row under an "
-            "unapproved parent is unknown".format(tree, failure, tree)
+            "{}: {} in {}, so whether it leaves an accepted row under an "
+            "unaccepted parent is unknown".format(tree, failure, tree)
             for failure in failures
         ]
     entries = _kitspine.parent_first_findings(tiers)
@@ -2358,7 +2358,7 @@ def commit_parent_first_lines(root, rev):
 
     Implements: SR-246, LLR-358"""
     parents, unread = _commit_parents(
-        root, rev, "it leaves an approved row under an unapproved parent"
+        root, rev, "it leaves an accepted row under an unaccepted parent"
     )
     if unread or not parents:
         return unread

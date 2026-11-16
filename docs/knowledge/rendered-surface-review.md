@@ -21,9 +21,9 @@ The charter asks who reads a surface and what decision they make on it, and
 listens for "a surface that renders every fact it has instead of the one the
 reader came for." Ground it in the two surfaces that already made this choice.
 `gen_open_items.py` orders its output by what an operator needs to rule (pending
-decisions, then approvals/re-accepts, then pending actions — docstring "in the
+decisions, then acceptances/re-accepts, then pending actions — docstring "in the
 order an operator needs it"), and it exists *because* the prior surface handed the
-reader a pointer ("run `trace.py --approve modified`") they could not act from.
+reader a pointer ("run `trace.py --accept modified`") they could not act from.
 The dashboard starts panels collapsed past the greater-than-3 rule (the
 `_know_panel` note near `gen_trajectory.py:934`) so density does not bury the
 next step — SR-054's "start-collapsed" clause. When reviewing a new view, ask:

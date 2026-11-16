@@ -95,7 +95,7 @@ def _registry(root, rows):
 
 def _section1(root):
     page = gen.render(root)
-    return page.split("1 · Pending decisions", 1)[1].split("2 · Approval", 1)[0]
+    return page.split("1 · Pending decisions", 1)[1].split("2 · Acceptance", 1)[0]
 
 
 def test_a_cited_pending_item_is_a_card_beside_the_rows_it_holds(tmp_path):

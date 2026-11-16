@@ -4,9 +4,9 @@ Split verbatim from `tests/test_baseline_snapshot.py`, which is registered in
 `tests/conftest.py`'s `SLOW_MODULES`. These four copy this repository's real
 registries into a tmp tree, seed a snapshot and compare rows in-process, with
 no git and no subprocess, so they keep TC-153's four corners in the per-commit
-smoke tier: an approved cell moving under an approved row is drift, a traced
+smoke tier: an accepted cell moving under an accepted row is drift, a traced
 cell moving is not, the status marker is never the amendment, and a row below
-approval has no claim to fall from. The premise that needs a real two-commit
+acceptance has no claim to fall from. The premise that needs a real two-commit
 repository stays in the slow module.
 """
 
@@ -17,7 +17,7 @@ SNAP = load_script("baseline_snapshot")
 CT = load_script("check_trajectory")
 
 
-def test_a_approved_cell_moving_under_an_approved_row_is_DRIFT(tmp_path):
+def test_a_accepted_cell_moving_under_an_accepted_row_is_DRIFT(tmp_path):
     """Implements: TC-153"""
     root = _seeded(tmp_path)
     sid, _row = _first_row_at(root, "approved")
@@ -52,10 +52,10 @@ def test_a_TRACED_cell_moving_is_NOT_drift(tmp_path):
     assert not SNAP.is_drifted(SR_REL, "SR-ID", moved, before)
 
 
-def test_a_row_below_approval_can_never_be_drifted(tmp_path):
+def test_a_row_below_acceptance_can_never_be_drifted(tmp_path):
     """Implements: TC-153"""
     # It has made no claim to fall from. A Drafted row differing from its snapshot
-    # copy is work in progress, not a broken attestation. The live registries
+    # copy is work in progress, not a broken acceptance. The live registries
     # carry no Drafted row since the 2026-08-20 signing, so the fixture makes
     # its own (first SR flipped pre-seed) rather than borrowing one.
     root = _tree(tmp_path)

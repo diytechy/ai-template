@@ -1,8 +1,8 @@
-"""A spine row is approved only after the rows it hangs from are, in process.
+"""A spine row is accepted only after the rows it hangs from are, in process.
 
 The rule's one home is a pure function over the four tiers' rows
-(`kitlib.spine.parent_first_findings`): one entry per approved child, `Approved`
-or `Founded`, citing a declared parent that is not approved, over an SR's
+(`kitlib.spine.parent_first_findings`): one entry per accepted child, `Approved`
+or `Founded`, citing a declared parent that is not accepted, over an SR's
 `SN-Refs` to SNs, an LLR's `SR-Refs` to SRs and a TC's `Verifies` to SRs and
 LLRs. `parent_first_line` words each entry once. The commit judgement
 (`acceptance_record.parent_first_lines`) reads a tree against its parents; its
@@ -101,19 +101,19 @@ PAIRS = {
 }
 
 
-# --- the approval pair ------------------------------------------------------
+# --- the acceptance pair ------------------------------------------------------
 
 
-def test_the_approval_pair_has_one_home():
+def test_the_acceptance_pair_has_one_home():
     """Implements: TC-396"""
-    assert getattr(spine, "claims_approval", None) is ar._claims_approval
+    assert getattr(spine, "claims_acceptance", None) is ar._claims_acceptance
 
 
 # --- the rule ---------------------------------------------------------------
 
 
 @pytest.mark.parametrize("pair", sorted(PAIRS), ids=sorted(PAIRS))
-def test_an_approved_child_under_an_unapproved_parent_is_found(pair):
+def test_an_accepted_child_under_an_unaccepted_parent_is_found(pair):
     """Implements: TC-396"""
     child, parent = PAIRS[pair]
     found = spine.parent_first_findings(
@@ -122,7 +122,7 @@ def test_an_approved_child_under_an_unapproved_parent_is_found(pair):
     assert found == [(child, "Approved", parent, "Drafted")]
 
 
-def test_founded_counts_as_approved_on_either_side():
+def test_founded_counts_as_accepted_on_either_side():
     """Implements: TC-396"""
     founded_child = tiers(row("SR-001", "Drafted"), row("LLR-001", "Founded", "SR-001"))
     assert spine.parent_first_findings(founded_child) == [
@@ -138,13 +138,13 @@ def test_an_entry_names_the_child_the_parent_and_both_statuses():
     """Implements: TC-396"""
     line = spine.parent_first_line(("LLR-281", "Approved", "SR-224", "Drafted"))
     assert line == (
-        "LLR-281 (Approved) is approved under SR-224 (Drafted), which is not: "
-        "approve SR-224 in its own approval act, or return LLR-281 to Drafted"
+        "LLR-281 (Approved) is accepted under SR-224 (Drafted), which is not: "
+        "accept SR-224 in its own acceptance act, or return LLR-281 to Drafted"
     )
 
 
 @pytest.mark.parametrize("status", [None, "Bananas"], ids=["no-status", "unknown"])
-def test_a_parent_with_no_status_or_an_unknown_word_is_not_approved(status):
+def test_a_parent_with_no_status_or_an_unknown_word_is_not_accepted(status):
     """Implements: TC-396"""
     found = spine.parent_first_findings(
         tiers(row("SR-001", status), row("LLR-001", "Approved", "SR-001"))
@@ -285,8 +285,8 @@ def test_a_parent_with_no_status_is_rendered_as_no_status():
         tiers(row("SR-001", None), row("LLR-001", "Approved", "SR-001"))
     )
     assert spine.parent_first_line(entry) == (
-        "LLR-001 (Approved) is approved under SR-001 (no status), which is not: "
-        "approve SR-001 in its own approval act, or return LLR-001 to Drafted"
+        "LLR-001 (Approved) is accepted under SR-001 (no status), which is not: "
+        "accept SR-001 in its own acceptance act, or return LLR-001 to Drafted"
     )
 
 
@@ -303,14 +303,14 @@ def test_an_unreadable_parent_side_counts_every_status_as_moved(tmp_path, monkey
     _fake_git(monkeypatch, {"BASE:": base, ":": index}, [SR_PATH])
     lines = ar.parent_first_lines(tmp_path, ["BASE"])
     assert len(lines) == 1, lines
-    assert "LLR-001 (Approved) is approved under SR-001 (Drafted)" in lines[0], lines
+    assert "LLR-001 (Approved) is accepted under SR-001 (Drafted)" in lines[0], lines
 
 
 def test_an_example_parent_and_a_boundary_id_raise_no_finding():
     """A child citing a `-000` example row, and a parent column naming a `B-##`
     boundary id, are not judged. Adequacy witness: a rule that kept `-000` rows
     as parents reports LLR-001 under the Drafted SR-000; one that read every
-    cited id no approved row declares as unapproved reports SR-001 under B-01.
+    cited id no accepted row declares as unaccepted reports SR-001 under B-01.
 
     Implements: TC-396
     """
@@ -325,11 +325,11 @@ def test_an_example_parent_and_a_boundary_id_raise_no_finding():
     assert found == []
 
 
-def test_a_child_with_a_word_outside_the_vocabulary_is_not_approved():
-    """Only `Approved` and `Founded` claim approval on the child side too: a
+def test_a_child_with_a_word_outside_the_vocabulary_is_not_accepted():
+    """Only `Approved` and `Founded` claim acceptance on the child side too: a
     child reading a word outside the vocabulary raises no finding (its own
     integrity finding names the word). Adequacy witness: a rule that read any
-    status but `Drafted` as approved reports LLR-001 under SR-001.
+    status but `Drafted` as accepted reports LLR-001 under SR-001.
 
     Implements: TC-396
     """
@@ -342,7 +342,7 @@ def test_a_child_with_a_word_outside_the_vocabulary_is_not_approved():
 @pytest.mark.parametrize(
     "toml_status, csv_status, found",
     [("Approved", "Drafted", False), ("Drafted", "Approved", True)],
-    ids=["toml-approved", "toml-drafted"],
+    ids=["toml-accepted", "toml-drafted"],
 )
 def test_when_both_carriers_of_a_tier_exist_the_first_listed_decides(
     tmp_path, monkeypatch, toml_status, csv_status, found
@@ -365,7 +365,7 @@ def test_when_both_carriers_of_a_tier_exist_the_first_listed_decides(
     assert bool(lines) is found, lines
 
 
-def test_approval_is_read_in_any_letter_case():
+def test_acceptance_is_read_in_any_letter_case():
     """The status vocabulary is matched case-insensitively on both sides: a
     child reading `approved` under a Drafted parent is found, and a child under
     a parent reading `FOUNDED` is not. Adequacy witness: a case-sensitive
@@ -384,7 +384,7 @@ def test_approval_is_read_in_any_letter_case():
 
 def test_a_tier_absent_on_the_commit_side_supplies_no_rows(tmp_path, monkeypatch):
     """The commit deletes the SR registry while the LLR registry keeps an
-    approved child citing SR-001, which the parent tree held Drafted. The
+    accepted child citing SR-001, which the parent tree held Drafted. The
     absent tier supplies no rows and no refusal (an undeclared parent is the
     orphan rules'), and the parent tree's rows are not read in its place.
     Adequacy witness: a judgement that read a missing commit-side tier from the

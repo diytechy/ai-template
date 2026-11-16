@@ -1,6 +1,6 @@
 """The merge slot's mint files the operator's held act as an open item (TC-147).
 
-A sitting that rules MEANING on a row the approval dial holds cannot end in a
+A sitting that rules MEANING on a row the acceptance dial holds cannot end in a
 lane: the lane lands the text, and the act is the operator's on trunk. So the mint
 at that landing (`intake.intake_after_merge`, and `intake.py sweep` replaying
 it) files one queued operator row per registry and one pending open item naming the
@@ -117,8 +117,8 @@ def _amendment_part(rulings):
 def _combined_part(rulings):
     """The same rulings as the amendment section of a combined sitting."""
     return (
-        "## amendment\n\n{}\n## first-acceptance\n\n- [APPROVE] LLR-009 -> judged\n\n"
-        "OUTCOME: APPROVE rows=1\n\n"
+        "## amendment\n\n{}\n## first-acceptance\n\n- [ACCEPT] LLR-009 -> judged\n\n"
+        "OUTCOME: ACCEPT rows=1\n\n"
         "SITTING: JUDGED kinds=amendment;first-acceptance\n".format(
             _amendment_part(rulings)
         )
@@ -249,7 +249,7 @@ def test_a_held_meaning_verdict_mints_one_operator_row_and_one_pending_item(tmp_
     brief = _brief(cells)
     assert "SR-001" in brief and VERDICT in brief
     assert "intake.py snapshot" in brief
-    assert '--approves "{}=<record>"'.format(SR_REL) in brief
+    assert '--accepts "{}=<record>"'.format(SR_REL) in brief
     assert "--reaccepts SR-001" in brief
     assert "--verdict" not in brief
     # The row is the item's placeholder, titled from its rows and verdict.
@@ -279,7 +279,7 @@ def test_each_registry_files_its_own_row_and_item(tmp_path):
     for command, rid, rel in zip(
         commands, ("SN-001", "SR-001"), (SN_REL, SR_REL), strict=True
     ):
-        assert '--approves "{}=<record>"'.format(rel) in command
+        assert '--accepts "{}=<record>"'.format(rel) in command
         assert command.endswith("--reaccepts " + rid)
         _assert_the_act_anchors(root, command, rid)
 
@@ -559,7 +559,7 @@ def test_a_minted_item_passes_the_strict_checks(tmp_path):
     assert ct.uncited_open_item_findings(root, rows) == []
     assert ct.open_item_specref_findings(root, wis) == []
     assert ct.validate(wis, set(), ct.load_known_ois(root)) == []
-    assert ct.approval_brief_findings(root) == []
+    assert ct.acceptance_brief_findings(root) == []
     records = sched.evaluate(sched._load(root), oi_status=sched.load_oi_status(root))
     held = {r["id"]: r for r in records}[wid]
     assert held["disposition"] == "blocked"

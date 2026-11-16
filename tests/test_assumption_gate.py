@@ -14,7 +14,7 @@ never reads any of it.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: every case runs the
 harness of a bootstrapped scaffold as a subprocess (one bootstrap per module,
-copied per case), and the release half commits an approval act to a real git
+copied per case), and the release half commits an acceptance act to a real git
 repository. The pure rules live in `assumption_rules.py`.
 
 Implements: TC-237, TC-238, TC-239
@@ -237,7 +237,7 @@ description = "A driver reading the screen."
 status = "Drafted"
 
 [surrogate.SUR-002]
-name = "Scripted operator, approved"
+name = "Scripted operator, accepted"
 emulates = ["EXT-001"]
 description = "A driver reading the screen."
 status = "Approved"
@@ -254,10 +254,10 @@ BOUNDARY = {
 # Each failing requirement, with what its finding must name.
 BOUNDARY_FAILURES = {
     "SR-003": ("cites no assumption",),
-    "SR-004": ("DA-002", "not approved"),
+    "SR-004": ("DA-002", "not accepted"),
     "SR-005": ("DA-003", "not active"),
     "SR-006": ("DA-004", "does not reach"),
-    "SR-007": ("DA-005", "SUR-001", "not approved"),
+    "SR-007": ("DA-005", "SUR-001", "not accepted"),
 }
 
 
@@ -308,7 +308,7 @@ def test_with_no_agreed_stakeholder_the_reach_advisories_fold_into_one_count(
     assert folded[0].startswith(
         "ADVISORY: {} reach finding(s) not listed".format(total - listed)
     ), folded
-    assert "approve the stakeholders" in folded[0], folded
+    assert "accept the stakeholders" in folded[0], folded
     _policy(root, True)
     proc = _step(root, "assumption-gate")
     assert proc.returncode == 1, proc.stdout + proc.stderr
@@ -323,8 +323,8 @@ def test_with_the_gate_on_each_unmet_condition_fails_naming_it(scaffold):
     failed = _findings(proc, "FAIL")
     for sid, needles in BOUNDARY_FAILURES.items():
         assert len(_findings(proc, "FAIL", sid, *needles)) == 1, (sid, proc.stdout)
-    # A coincident requirement, one citing only approved, active, reaching
-    # assumptions, and one whose fidelity assumption's surrogate is approved,
+    # A coincident requirement, one citing only accepted, active, reaching
+    # assumptions, and one whose fidelity assumption's surrogate is accepted,
     # all pass: nothing names them.
     for sid in ("SR-001", "SR-002", "SR-008"):
         assert not [line for line in failed if sid in line], (sid, failed)
@@ -457,7 +457,7 @@ ARCH_FAILURES = {
 }
 
 # THE BOUNDARY ARM: the same form judged against the frame's crossings, the
-# level-0 interfaces approved with the frame. SR-011 is recorded coincident;
+# level-0 interfaces accepted with the frame. SR-011 is recorded coincident;
 # SR-012 cites an assumption landing on its crossing; SR-013 cites one landing
 # elsewhere; SR-014 names two crossings and is bridged on one; SR-015 cites
 # nothing. SR-016 is of assumption form, and SR-017 names a crossing the frame
@@ -655,7 +655,7 @@ def _observe(root, tid, outcome="pass"):
 
 
 def _release_repo(scaffold, gate):
-    """The release project in a git repository: the assumptions approved, with
+    """The release project in a git repository: the assumptions accepted, with
     their accepted risks, in one act; then DA-005's text edited after it, and
     failing samples recorded against DA-002 and DA-006."""
     root = _project(scaffold, RELEASE, gate=gate)
@@ -668,7 +668,7 @@ def _release_repo(scaffold, gate):
     _git(root, "commit", "-qm", "the project")
     SNAP.copy_live(root, seed=True)
     _git(root, "add", "-A")
-    _git(root, "commit", "-qm", "approve the assumptions and their accepted risks")
+    _git(root, "commit", "-qm", "accept the assumptions and their accepted risks")
     da = root / DA_REL
     text = da.read_text(encoding="utf-8")
     marker = "[assumption.DA-005]\n"
@@ -733,10 +733,10 @@ def test_the_release_step_lists_at_the_release_rung_and_the_producer_pin_holds(
     assert len(_listed_at(listing, "assumption-evidence", LADDER.STAGE_RELEASE)) == 1
     assert "assumption-evidence" in CHECK.BUILTIN_STEP_NAMES
     # The stage's single release producer, the harness evidence verdict, is
-    # untouched: the approval-level pin on it still holds.
-    import test_approval_level as approval_level
+    # untouched: the acceptance-level pin on it still holds.
+    import test_acceptance_level as acceptance_level
 
-    approval_level.test_the_RELEASE_rung_has_EXACTLY_ONE_PRODUCER_and_it_is_the_EVIDENCE_VERDICT()
+    acceptance_level.test_the_RELEASE_rung_has_EXACTLY_ONE_PRODUCER_and_it_is_the_EVIDENCE_VERDICT()
 
 
 def test_the_release_step_judges_a_project_that_declares_no_frame(scaffold):

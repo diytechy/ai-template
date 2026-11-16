@@ -34,11 +34,11 @@ edit to its neighbours does not.
 
 AND WHAT JUDGING THEM READS. The checker's rules read no file, so the reads
 they need live beside the writer that produces the records:
-`evidence_inputs` reads the record files and each accepted risk's approval
+`evidence_inputs` reads the record files and each accepted risk's acceptance
 act, once per run, and `trace.py` hands them to the rules.
 
 WHAT IT NEVER DOES. It never opens the test-case registry for writing, so
-recording a sample re-opens no approval. And the records' directory is not a
+recording a sample re-opens no acceptance. And the records' directory is not a
 declared stage input and lies outside the release evidence's source surface,
 so recording a sample never makes the stage's fingerprint or a release claim
 stale.
@@ -301,7 +301,7 @@ def evidence_inputs(root, das, bifs, framed=None):
 
     The FILE READ half of those rules, which read no file: the record files
     and their parsed records always; and where the frame declares a crossing
-    and the registry an assumption, each accepted risk's approval act
+    and the registry an assumption, each accepted risk's acceptance act
     (`baseline_snapshot.risk_acceptance_view`). No digest and no suite record
     is read: an assumption carries no evidence level, so nothing asks whether
     a result is current. `framed` overrides whether a crossing is declared:

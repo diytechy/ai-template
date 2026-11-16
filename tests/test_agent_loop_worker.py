@@ -374,8 +374,8 @@ def test_worker_brief_names_the_one_turn_close_bar_scratch_and_amendments(tmp_pa
     #      in the merge slot and the full suite belongs to phase close
     #      (WI-540 lost three sessions ending their turn to await an ~11-minute
     #      suite against a 10-minute cap, and a finished row closed `partial`);
-    #   2. an AMENDMENT of an approved cell stales the approval brief exactly
-    #      as a mint does (WI-538 / LLR-206, an `approval-fresh` red);
+    #   2. an AMENDMENT of an accepted cell stales the acceptance brief exactly
+    #      as a mint does (WI-538 / LLR-206, an `acceptance-fresh` red);
     #   3. scratch has a home, so the lane unload stops refusing it by name.
     row = {"WI-ID": "WI-005", "Title": "t", "SR-Refs": "", "Predecessors": ""}
     prompt = agent_loop.worker_prompt(tmp_path, {"WI-005": row}, "WI-005", "w", "0" * 7)
@@ -393,14 +393,14 @@ def test_worker_brief_resolves_close_commands_at_the_runtime_scripts_path(tmp_pa
     # already does for its slots; no caller can now emit an unusable command.
     row = {"WI-ID": "WI-005", "Title": "t", "SR-Refs": "", "Predecessors": ""}
     prompt = agent_loop.worker_prompt(tmp_path, {"WI-005": row}, "WI-005", "w", "0" * 7)
-    assert "python project-trajectory/scripts/trace.py --approve modified" in prompt
+    assert "python project-trajectory/scripts/trace.py --accept modified" in prompt
     assert "python project-trajectory/scripts/spec_move.py" in prompt
 
     scaffold = tmp_path / "scaffold"
     (scaffold / "scripts").mkdir(parents=True)
     (scaffold / "scripts" / "check.py").write_text("", encoding="utf-8")
     prompt = agent_loop.worker_prompt(scaffold, {"WI-005": row}, "WI-005", "w", "0" * 7)
-    assert "python scripts/trace.py --approve modified" in prompt
+    assert "python scripts/trace.py --accept modified" in prompt
     assert "python scripts/spec_move.py" in prompt
 
 

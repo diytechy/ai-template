@@ -176,12 +176,12 @@ MAPPING = [
     # (SN-029's separate attestation ledger was scaffolded here until it was
     # retired, and the on-row anchor that was to replace it was ruled
     # unnecessary complexity in turn — operator directive 2026-08-15. What an
-    # approval blessed is recorded by COPYING the registries, and the README
+    # acceptance blessed is recorded by COPYING the registries, and the README
     # below is the only part of that mechanism a fresh scaffold receives.)
     #
     # The `last_approved` snapshot's prose stamp. THE DIRECTORY IS SCAFFOLDED
     # WITH ONLY THIS FILE, deliberately: an empty snapshot is the HONEST state
-    # for a repo that has approved nothing yet, and shipping pre-filled copies
+    # for a repo that has accepted nothing yet, and shipping pre-filled copies
     # would hand every new project a record claiming an operator blessed text they
     # have never seen. The registries land in it at the project's first signing
     # (`intake.py snapshot --seed`), and not before.
@@ -190,7 +190,7 @@ MAPPING = [
         "docs/archive/last_approved/README.md",
     ),
     # The append-only history status.md points at (Thread 36, process.md §5):
-    # sign-offs, verdicts, and approved decisions append here, keeping the
+    # sign-offs, verdicts, and accepted decisions append here, keeping the
     # per-session status.md reload cheap.
     ("LOG.template.md", "docs/log.md"),
     # The sequenced work-plan the plan/build cadence runs on (WI-1.29,
@@ -432,7 +432,7 @@ MAPPING = [
     # `agent_common.py` import it, so the package must stay whole.
     ("scripts/kitlib/decisions.py", "scripts/kitlib/decisions.py", "SR-225"),
     # WI-636 added `provenance` and `authority`: the loop's `Loop-Session`
-    # trailer and marker, and the approval-rung tables with the one dial
+    # trailer and marker, and the acceptance-rung tables with the one dial
     # comparison. `agent_common.py`, `integrate.py`, `check.py` and
     # `check_trajectory.py` are all in this list and import them, so the
     # must-be-whole rule applies on the first check or claim a scaffold runs.
@@ -735,7 +735,7 @@ MAPPING = [
     # imports it unguarded, so a scaffold without it cannot run the checker.
     ("scripts/assumption_rules.py", "scripts/assumption_rules.py"),
     # The acceptance record (WI-521 slice 1): the two-tree spine comparison and
-    # the snapshot mirror — which cells are attested, whether their text has
+    # the snapshot mirror — which cells are accepted, whether their text has
     # moved away from the copy recording its acceptance, and that the copy is
     # only ever written by copying live text. Split out of check_trajectory.py,
     # which imports it UNGUARDED and joins its findings to the failure set, so a

@@ -384,8 +384,8 @@ def hat_surface_for_work_item(root, row, needs=()):
 
 
 # --- the perspectives a decomposition round's sitting brief carries -----------
-# A sitting that judges a system requirement awaiting its first approval, or an
-# approved need whose text is amended, is a decomposition round: its brief puts
+# A sitting that judges a system requirement awaiting its first acceptance, or an
+# accepted need whose text is amended, is a decomposition round: its brief puts
 # every applicable hat's question and asks the verdict for one outcome line per
 # hat, and, with or without a hat, for one stopping-boundary line per retained
 # chain. Both kinds of line are review text, read by the review of the verdict;
@@ -394,7 +394,7 @@ def hat_surface_for_work_item(root, row, needs=()):
 # The optional single-brace slot the two spine sitting templates declare.
 HAT_SLOT = "hats"
 # The key an assembler reports its judged parents under: `(srs, needs,
-# amended)`, the SR ids awaiting a first approval, the amended SN ids, and the
+# amended)`, the SR ids awaiting a first acceptance, the amended SN ids, and the
 # amended SR ids, whose needs join a round's parents but make no round. Never
 # a slot.
 HAT_PARENTS = "_hat_parents"
@@ -402,7 +402,7 @@ _NO_PARENTS = ((), (), ())
 
 NOT_A_ROUND = (
     "_(no decomposition round: nothing judged here is a system requirement "
-    "awaiting its first approval or an amended stakeholder need, so no "
+    "awaiting its first acceptance or an amended stakeholder need, so no "
     "perspective question is put and no hat outcome is owed.)_"
 )
 
@@ -465,7 +465,7 @@ def round_hat_block(root, row, needs=(), srs=()):
 
 def sitting_hat_block(root, row, srs, needs, amended=()):
     """The perspectives a sitting judging `srs` (SR ids awaiting a first
-    approval), `needs` (amended SN ids) and `amended` (amended SR ids)
+    acceptance), `needs` (amended SN ids) and `amended` (amended SR ids)
     carries. What makes a round is `srs` or `needs`: with neither it is
     `NOT_A_ROUND`, and the roster is not read. Otherwise the round's block,
     whose parents are the needs every judged SR names (`srs` and `amended`)

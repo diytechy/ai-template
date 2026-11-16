@@ -317,7 +317,7 @@ def test_derived_stage_step_wired_at_every_rung_and_runs(scaffold):
         assert match, "derived-stage missing at {}".format(stage)
         assert match[0][4] == "process" and match[0][1] == ()  # stdlib, no tool
     # End-to-end: on a DevStg-Impl-complete project (docs/stage regenerated to
-    # DevStg-Impl) the step passes; un-approving an SR without regenerating
+    # DevStg-Impl) the step passes; un-accepting an SR without regenerating
     # docs/stage makes it FAIL.
     make_minimal_project(scaffold)
     ok = run_py(["scripts/check.py", "--run-step", "derived-stage"], cwd=scaffold)
@@ -854,14 +854,14 @@ def test_strict_is_refused_without_the_detector(tmp_path):
 # property has no honest partial-compliance state.
 
 
-def _approval_repo_for_immutability(tmp_path):
+def _acceptance_repo_for_immutability(tmp_path):
     """A git repo with a committed CURRENT.md and one committed dated brief —
     the tree an ordinary re-sync commit finds."""
-    approve = tmp_path / "docs" / "ratify"
-    approve.mkdir(parents=True)
-    (approve / "CURRENT.md").write_text("live v1\n", encoding="utf-8")
-    (approve / "2026-08-13-wi444.md").write_text("dated v1\n", encoding="utf-8")
-    (approve / "README.md").write_text("# approve\n", encoding="utf-8")
+    accept = tmp_path / "docs" / "ratify"
+    accept.mkdir(parents=True)
+    (accept / "CURRENT.md").write_text("live v1\n", encoding="utf-8")
+    (accept / "2026-08-13-wi444.md").write_text("dated v1\n", encoding="utf-8")
+    (accept / "README.md").write_text("# accept\n", encoding="utf-8")
     _git(tmp_path, "init", "-q")
     pin_autocrlf(tmp_path)
     _git(tmp_path, "config", "user.email", "t@example.com")
@@ -871,82 +871,84 @@ def _approval_repo_for_immutability(tmp_path):
     return tmp_path
 
 
-def _approval_immutable(repo):
-    return run_py([SCRIPTS / "check.py", "--approval-immutable"], cwd=repo)
+def _acceptance_immutable(repo):
+    return run_py([SCRIPTS / "check.py", "--acceptance-immutable"], cwd=repo)
 
 
-def test_approval_immutable_refuses_a_staged_edit_to_an_existing_dated_brief(tmp_path):
-    repo = _approval_repo_for_immutability(tmp_path)
+def test_acceptance_immutable_refuses_a_staged_edit_to_an_existing_dated_brief(
+    tmp_path,
+):
+    repo = _acceptance_repo_for_immutability(tmp_path)
     (repo / "docs" / "ratify" / "2026-08-13-wi444.md").write_text(
         "dated v2 — rewritten\n", encoding="utf-8"
     )
     _git(repo, "add", "docs/ratify/2026-08-13-wi444.md")
-    proc = _approval_immutable(repo)
+    proc = _acceptance_immutable(repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode != 0, out
     assert "FAIL" in out and "2026-08-13-wi444.md" in out, out
     assert "IMMUTABLE" in out, out
 
 
-def test_approval_immutable_refuses_a_staged_delete_of_a_dated_brief(tmp_path):
-    repo = _approval_repo_for_immutability(tmp_path)
+def test_acceptance_immutable_refuses_a_staged_delete_of_a_dated_brief(tmp_path):
+    repo = _acceptance_repo_for_immutability(tmp_path)
     _git(repo, "rm", "-q", "docs/ratify/2026-08-13-wi444.md")
-    proc = _approval_immutable(repo)
+    proc = _acceptance_immutable(repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode != 0, out
     assert "FAIL" in out and "2026-08-13-wi444.md" in out, out
 
 
-def test_approval_immutable_permits_a_brand_new_dated_brief(tmp_path):
+def test_acceptance_immutable_permits_a_brand_new_dated_brief(tmp_path):
     # THE MINT'S SHAPE: a plain add of a name that never existed before. This
-    # is what `trace.py --mint-approval-brief` ever produces, and the enforcer
+    # is what `trace.py --mint-acceptance-brief` ever produces, and the enforcer
     # must not stand in its way.
-    repo = _approval_repo_for_immutability(tmp_path)
+    repo = _acceptance_repo_for_immutability(tmp_path)
     (repo / "docs" / "ratify" / "2026-08-22-wi503.md").write_text(
         "live v1\n", encoding="utf-8"
     )
     _git(repo, "add", "docs/ratify/2026-08-22-wi503.md")
-    proc = _approval_immutable(repo)
+    proc = _acceptance_immutable(repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
     assert "ok" in out, out
 
 
-def test_approval_immutable_permits_regenerating_CURRENT_and_README(tmp_path):
-    repo = _approval_repo_for_immutability(tmp_path)
+def test_acceptance_immutable_permits_regenerating_CURRENT_and_README(tmp_path):
+    repo = _acceptance_repo_for_immutability(tmp_path)
     (repo / "docs" / "ratify" / "CURRENT.md").write_text("live v2\n", encoding="utf-8")
     (repo / "docs" / "ratify" / "README.md").write_text(
-        "# approve, re-worded\n", encoding="utf-8"
+        "# accept, re-worded\n", encoding="utf-8"
     )
     _git(repo, "add", "docs/ratify/CURRENT.md", "docs/ratify/README.md")
-    proc = _approval_immutable(repo)
+    proc = _acceptance_immutable(repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
 
 
-def test_approval_immutable_ignores_an_unstaged_edit(tmp_path):
+def test_acceptance_immutable_ignores_an_unstaged_edit(tmp_path):
     # Only the STAGED tree is read — an edit sitting in the worktree but not
     # `git add`ed is not (yet) about to be committed.
-    repo = _approval_repo_for_immutability(tmp_path)
+    repo = _acceptance_repo_for_immutability(tmp_path)
     (repo / "docs" / "ratify" / "2026-08-13-wi444.md").write_text(
         "dated v2 — not staged\n", encoding="utf-8"
     )
-    proc = _approval_immutable(repo)
+    proc = _acceptance_immutable(repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
 
 
-def test_approval_immutable_is_silent_on_a_clean_tree(tmp_path):
-    repo = _approval_repo_for_immutability(tmp_path)
-    proc = _approval_immutable(repo)
+def test_acceptance_immutable_is_silent_on_a_clean_tree(tmp_path):
+    repo = _acceptance_repo_for_immutability(tmp_path)
+    proc = _acceptance_immutable(repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
     assert "FAIL" not in out, out
 
 
-def test_approval_immutable_skips_cleanly_outside_a_git_checkout(tmp_path):
+def test_acceptance_immutable_skips_cleanly_outside_a_git_checkout(tmp_path):
     (tmp_path / "docs" / "ratify").mkdir(parents=True)
-    proc = _approval_immutable(tmp_path)
+    proc = _acceptance_immutable(tmp_path)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
     assert "SKIP" in out and "not a git checkout" in out, out
@@ -955,12 +957,14 @@ def test_approval_immutable_skips_cleanly_outside_a_git_checkout(tmp_path):
 def test_the_PLAN_STEP_refuses_the_same_rewrite(tmp_path):
     # Driven through --run-steps, the wiring the pre-commit hook and check.py's
     # own plan actually use — not just the bare flag.
-    repo = _approval_repo_for_immutability(tmp_path)
+    repo = _acceptance_repo_for_immutability(tmp_path)
     (repo / "docs" / "ratify" / "2026-08-13-wi444.md").write_text(
         "dated v2 — rewritten\n", encoding="utf-8"
     )
     _git(repo, "add", "docs/ratify/2026-08-13-wi444.md")
-    proc = run_py([SCRIPTS / "check.py", "--run-steps", "approval-immutable"], cwd=repo)
+    proc = run_py(
+        [SCRIPTS / "check.py", "--run-steps", "acceptance-immutable"], cwd=repo
+    )
     out = proc.stdout + proc.stderr
     assert proc.returncode != 0, out
     assert "FAIL" in out, out

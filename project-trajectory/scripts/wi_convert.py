@@ -165,8 +165,8 @@ COLUMNS = [
     # a live re-derivation with no scope to intersect against re-derives a WIDER
     # question than the mint asked — the first-acceptance brief handed its session
     # every `Drafted` row in the repo, across unrelated workstreams, and derived
-    # a `--approves` argument naming all their registries. The operator's
-    # concurrency reason for moving the approval act to trunk is that the
+    # a `--accepts` argument naming all their registries. The operator's
+    # concurrency reason for moving the acceptance act to trunk is that the
     # snapshot must not move across a workstream, so the act's scope has to be a
     # fact the ROW CARRIES rather than one recomputed from the world. Title prose
     # carrying it is the WI-417 fold; a frontmatter key outside this table is

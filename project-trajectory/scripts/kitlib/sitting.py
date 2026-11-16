@@ -1,7 +1,7 @@
 """A COMBINED lane-checkpoint sitting: its scope tokens and its verdict sections.
 
 WHY THIS EXISTS (WI-841). A lane can owe several in-lane judgements at one
-checkpoint - drifted approved rows (the amendment kind), Drafted rows (the
+checkpoint - drifted accepted rows (the amendment kind), Drafted rows (the
 first-acceptance kind) and a changed Done-when - and one sitting judges them
 all. Its row's `Adjudicates` cell holds `<kind>:<id>` tokens and its verdict
 holds one `## <kind>` section per kind. Three readers ask about that shape and
@@ -37,7 +37,7 @@ Contract IF-287: a combined sitting's grammar. `SITTING` is the brief class and
     reader every consumer of a verdict goes through (round 11). A binding may
     also carry the identity cell, `rows = <ID>=sha256:<16 lowercase hex>`
     joined by `;`, naming each row its brief showed with the digest of that
-    row's approved text: `render_requested(..., identities)` and
+    row's accepted text: `render_requested(..., identities)` and
     `write_binding(..., identities)` write it only when identities are given,
     `read_requested` ignores it, `read_identities(text)` returns
     `({id: digest}, None)`, or `(None, reason)` for no cell, a malformed
@@ -50,7 +50,7 @@ Contract IF-287: a combined sitting's grammar. `SITTING` is the brief class and
     findings_file)` write it only when a path is given, `read_requested`
     ignores it, and `read_findings_file(text)` returns the path, or None for
     no cell or an empty one; `judged_rows(parsed)` is the ONE reader of the
-    rows a recorded verdict authorizes an act on - an APPROVE row, a CLARITY
+    rows a recorded verdict authorizes an act on - an ACCEPT row, a CLARITY
     row, and a MEANING row only with its bless mark - which the merge's
     backing checks and the act assembler both read. `review_line(text)`
     is the ONE reader of a review round's `VERDICT:` line, which the attended
@@ -209,8 +209,8 @@ def brief_scope(meta, kind):
 
 def bounds_acts(meta):
     """Does this claimed row's frontmatter RECORD a scope that bounds its
-    lane's approval acts: an adjudication-kind row (its scope may be empty,
-    which bounds every act out), a row scoping a first approval or an
+    lane's acceptance acts: an adjudication-kind row (its scope may be empty,
+    which bounds every act out), a row scoping a first acceptance or an
     amendment, or a combined row with a malformed token? The merge slot asks
     it of every claimed row, so one such row bounds the whole lane (WI-849).
 
@@ -258,7 +258,7 @@ def malformed_refusal(metas):
 DONE_WHEN_OUTCOMES = ("CLARITY", "BLESSED", "SUCCESSOR")
 GRAMMAR = {
     "amendment": ("VERDICT", ("MEANING", "CLARITY"), ("rows",)),
-    "first-acceptance": ("OUTCOME", ("APPROVE", "RETURN"), ("rows",)),
+    "first-acceptance": ("OUTCOME", ("ACCEPT", "RETURN"), ("rows",)),
     "done-when": ("DONE-WHEN", DONE_WHEN_OUTCOMES, ("changes", "digest")),
     SITTING: ("SITTING", ("JUDGED",), ("kinds",)),
 }
@@ -287,7 +287,7 @@ def render_requested(
     call's recorded outcome; when `findings_file` is given, the record of the
     findings file a dispute brief was composed over; and, when `identities`
     (`{row id: digest}`) is given, the identity cell naming each judged row's
-    approved-text digest.
+    accepted-text digest.
 
     Implements: SR-232, SR-178, LLR-310, LLR-359
     """
@@ -718,11 +718,11 @@ def recorded_identities(root, rev, verdict_path):
     return read_identities(texts[1])
 
 
-# The rulings that authorize each kind's act on a row: a first approval's
-# APPROVE flips it, an amendment's CLARITY re-accepts it, and so does its
+# The rulings that authorize each kind's act on a row: a first acceptance's
+# ACCEPT flips it, an amendment's CLARITY re-accepts it, and so does its
 # MEANING, but only on a row the part marks `[MEANING+BLESS]` (`judged_rows`).
 # The held-rung CLARITY-only rule is acceptance_record's, on top of this.
-_AUTHORIZING = {"first-acceptance": ("APPROVE",), "amendment": ("MEANING", "CLARITY")}
+_AUTHORIZING = {"first-acceptance": ("ACCEPT",), "amendment": ("MEANING", "CLARITY")}
 # The sentence a refusal carries when an amendment row it names is
 # unauthorized; a refusal naming no such row omits it.
 _BLESS_REMEDY = (
@@ -735,7 +735,7 @@ def judged_rows(parsed):
     """`{(kind, row)}` a recorded parsed verdict (`recorded`) rules in a way
     that authorizes that kind's act on the row: the ONE reader of what a
     recorded verdict authorizes an act on, which the merge's backing checks
-    and the act assembler both read. An APPROVE row, a CLARITY row, and an
+    and the act assembler both read. An ACCEPT row, a CLARITY row, and an
     amendment's MEANING row only when its part marks it blessed
     (`kitlib.verdict.blessed_rows`, which reads a row tagged two ways as
     unblessed).
@@ -770,7 +770,7 @@ def _named_line(root, rev, act):
 
 
 def unrecorded_refusal(root, rev, acts):
-    """Why a merge must refuse the approval acts it adds, or None: EVERY act
+    """Why a merge must refuse the acceptance acts it adds, or None: EVERY act
     that names a verdict must name one `recorded_at` reads as recorded at
     `rev` AND that authorizes each row the act re-accepts (`judged_rows`;
     round 16). An act naming no verdict is `uncovered_refusal`'s; acts
@@ -798,7 +798,7 @@ def unrecorded_refusal(root, rev, acts):
 # The review records a lane's verdicts and their bindings live under.
 REVIEWS = "docs/reviews"
 # Which adjudication kind an act-ledger entry's key needs: a flip is a first
-# approval's act, a re-acceptance an amendment's.
+# acceptance's act, a re-acceptance an amendment's.
 _ACT_KINDS = (("approved", "first-acceptance"), ("reattested", "amendment"))
 
 
@@ -816,9 +816,9 @@ def branch_verdicts(root, base, rev):
 
 
 def uncovered_refusal(root, base, rev, acts):
-    """Why a merge must refuse the approval acts it adds, or None, WHETHER OR
+    """Why a merge must refuse the acceptance acts it adds, or None, WHETHER OR
     NOT an act names a verdict (WI-841 rounds 14, 16): every ROW an added act
-    flips must be ruled APPROVE in a first-acceptance part, and every row it
+    flips must be ruled ACCEPT in a first-acceptance part, and every row it
     re-accepts ruled CLARITY, or MEANING with the bless mark, in an amendment
     part (`judged_rows`), of a RECORDED
     verdict (`recorded_at`) among the bindings this branch carries

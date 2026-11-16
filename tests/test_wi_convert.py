@@ -762,7 +762,7 @@ def test_the_authoring_tags_cell_round_trips_through_the_spec_form(tmp_path):
     row.update(
         {
             "WI-ID": "WI-045",
-            "Title": "ADJUDICATE - FIRST APPROVAL: SR-001",
+            "Title": "ADJUDICATE - FIRST ACCEPTANCE: SR-001",
             "Status": "queued",
             "Workstream": "process",
             "SafetyClass": "adjudication",

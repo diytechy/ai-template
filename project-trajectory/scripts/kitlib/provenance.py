@@ -1,7 +1,7 @@
 """Loop provenance: the trailer every commit the unattended loop makes carries,
 and the marker that tells a commit floor a commit is the loop's.
 
-WHY IT EXISTS. A status change on a rung the approval level holds for an operator
+WHY IT EXISTS. A status change on a rung the acceptance level holds for an operator
 is supposed to mean an operator judged. The one observation that would show
 otherwise is such a change arriving in a commit the loop made, and that is
 observable only if every loop-made commit says it is one. Trailers the loop

@@ -32,7 +32,7 @@ RICH_SN = """# Stakeholder Needs (SN-###)
 | SN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
 | SN-002 | Document the adder. | Trust. | S | A page exists. |
 
-## Draft needs (unapproved)
+## Draft needs (unaccepted)
 
 | SN-ID | Need | Why | Priority | Acceptance intent |
 |---|---|---|---|---|

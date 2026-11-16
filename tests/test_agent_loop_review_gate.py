@@ -1077,7 +1077,7 @@ def test_red_cap_exits_with_its_own_code_and_one_fewer_does_not(tmp_path):
     # 12 and the cap's stop banner, which names the count, the declared key
     # and its value; the same two reds under a cap of 3 end on
     # the iteration budget instead. The cap closes partial rather than
-    # escalating through the declared approval level: the worker never
+    # escalating through the declared acceptance level: the worker never
     # consults the page ladder (no failure-action line, no PAGE-OPERATOR stop)
     # and its exit is not the NEEDS-OPERATOR code. A cap that paged the operator
     # first, then exited 12 whatever the hold decided, fails here.

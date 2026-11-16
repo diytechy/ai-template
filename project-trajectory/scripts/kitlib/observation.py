@@ -4,7 +4,7 @@ that never leaves half of one where a reader looks.
 
 WHY A RECORD OF ITS OWN (SR-199). An observation test case is a judgment the
 harness cannot rerun: a person reading a render, a measurement across an
-adopter's first week. Its result cannot live on the approved test case, which
+adopter's first week. Its result cannot live on the accepted test case, which
 would mix what the test IS with what it last FOUND and force the row's
 re-acceptance after every sample. So each result is one file here, naming its
 case, its outcome, when it was observed, who or what observed it, when it

@@ -35,7 +35,7 @@ an unattended run, not a sandbox.
 Policy — `docs/process.toml` `[checks] subagent_gate` since the 2026-08-11
 overturn of WI-423, else (SN-028 migration window) the legacy one-word
 `docs/subagent-gate`: `off` (or undeclared) allows everything, `ask` defers each
-spawn to approval, `deny` refuses. It ships VISIBLE at `"off"` — an opt-in dial
+spawn to acceptance, `deny` refuses. It ships VISIBLE at `"off"` — an opt-in dial
 readable without being armed. The env override `SUBAGENT_GATE=allow` — set in
 the launcher environment, which the model cannot write — bypasses the gate for a
 deliberately-supervised run.
@@ -250,7 +250,7 @@ def decide(tool_name, policy, override, legacy=""):
     if policy == "deny":
         return "deny", "subagent spawns are denied ({}: deny)".format(POLICY)
     if policy == "ask":
-        return "ask", "subagent spawn needs approval ({}: ask)".format(POLICY)
+        return "ask", "subagent spawn needs acceptance ({}: ask)".format(POLICY)
     return "ask", "unrecognized {} value {!r}; asking".format(POLICY, policy)
 
 

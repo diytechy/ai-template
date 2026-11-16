@@ -1936,7 +1936,7 @@ ROW_RULINGS = {
         {"- [MEANING]": "MEANING", "- [CLARITY]": "CLARITY", BLESS_TAG: "MEANING"},
         "MEANING",
     ),
-    "first-acceptance": ({"- [APPROVE]": "APPROVE", "- [RETURN]": "RETURN"}, "RETURN"),
+    "first-acceptance": ({"- [ACCEPT]": "ACCEPT", "- [RETURN]": "RETURN"}, "RETURN"),
 }
 
 
@@ -1952,7 +1952,7 @@ def _ruled_row(line, tags):
 
 def row_rulings(text, kind):
     """`{row id: ruling}` read off a `kind` verdict part's row lines (an
-    amendment's MEANING/CLARITY, a first approval's APPROVE/RETURN); a row
+    amendment's MEANING/CLARITY, a first acceptance's ACCEPT/RETURN); a row
     ruled both ways reads the kind's fail-toward ruling; `{}` for a kind with
     no row lines.
 

@@ -1,10 +1,10 @@
-"""Who takes a held rung's approval: stated once, pointed at everywhere else.
+"""Who takes a held rung's acceptance: stated once, pointed at everywhere else.
 
-process.md §4 holds the one statement that a held rung's approval is the
+process.md §4 holds the one statement that a held rung's acceptance is the
 operator's act (the operator, or an attended session on the operator's explicit
 delegation; never a mechanically triggered session) and which half of that is
 mechanical. The dial's comments and the gate-advance skill point at it. A
-second home would drift from the first the way the dial's "the operator approves"
+second home would drift from the first the way the dial's "the operator accepts"
 comments already had, so these tests pin one statement and its pointers.
 
 In-memory: they read files and nothing else, so they sit in the smoke tier.
@@ -17,10 +17,10 @@ from conftest import KIT, ROOT
 PROCESS = KIT / "PROCESS.md"
 
 # The canonical paragraph's bold lead, which appears nowhere else.
-CANONICAL_LEAD = "**A held rung's approval is the operator's act**"
+CANONICAL_LEAD = "**A held rung's acceptance is the operator's act**"
 
 # What each pointer names: the section and the paragraph's lead, quoted.
-POINTER = "process.md §4 \"A held rung's approval is the operator's act\""
+POINTER = "process.md §4 \"A held rung's acceptance is the operator's act\""
 
 # Phrases only the statement itself uses. A file outside PROCESS.md carrying
 # one is restating the rule rather than pointing at it.
@@ -68,7 +68,7 @@ def _shipped_prose():
 def test_process_md_holds_the_canonical_paragraph_once():
     text = _flat(PROCESS)
     assert text.count(CANONICAL_LEAD) == 1, (
-        "process.md must carry the held-rung approval paragraph exactly once "
+        "process.md must carry the held-rung acceptance paragraph exactly once "
         "(keyed on {!r}); found {}".format(CANONICAL_LEAD, text.count(CANONICAL_LEAD))
     )
     for phrase in DOCTRINE_PHRASES:
@@ -91,7 +91,7 @@ def test_the_doctrine_is_stated_only_in_process_md():
         if hits:
             restated[str(path.relative_to(ROOT))] = hits
     assert not restated, (
-        "the held-rung approval rule is restated outside process.md §4 — point "
+        "the held-rung acceptance rule is restated outside process.md §4 — point "
         "at it with {!r} instead: {}".format(POINTER, restated)
     )
 

@@ -40,17 +40,17 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     # would make it a pin on the ladder instead.
     method_blind_rung = None
     for m in methods:
-        # RE-POINTED AT D-9 STEP 5: the "approved but not approved" fixture was
+        # RE-POINTED AT D-9 STEP 5: the "accepted but not accepted" fixture was
         # `Planned`, which FOLDED into `Approved`. Under the narrowed enum the
         # only value that still means that is `Modified` — using `Approved` here
         # would have made both halves of the comparison the same row.
         implemented = {"VerificationMethod": m, "Status": "Modified"}
         verified = {"VerificationMethod": m, "Status": "Approved"}
-        # trace's widened bar applies to every approved (non-Drafted) row — the skip
+        # trace's widened bar applies to every accepted (non-Drafted) row — the skip
         # is is_drafted, which is method-blind — and then passes iff is_approved. So
-        # an approved SR of ANY method flags exactly when it is not Approved.
-        assert TRACE.is_drafted(implemented) is False, m  # bar applies (approved)
-        assert TRACE.is_drafted(verified) is False, m  # bar applies (approved)
+        # an accepted SR of ANY method flags exactly when it is not Approved.
+        assert TRACE.is_drafted(implemented) is False, m  # bar applies (accepted)
+        assert TRACE.is_drafted(verified) is False, m  # bar applies (accepted)
         assert TRACE.is_approved(verified) is True, m  # Approved -> passes
         assert TRACE.is_approved(implemented) is False, m  # not Approved -> flagged
         # RE-POINTED AT WI-498 slice 5: `sr_bar` is DELETED with the bar axis, so
@@ -71,7 +71,7 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         if method_blind_rung is None:
             method_blind_rung = stage_v
         assert stage_v == method_blind_rung, m
-    # A Drafted SR is pre-approval and exempt from trace's bar (is_drafted
+    # A Drafted SR is pre-acceptance and exempt from trace's bar (is_drafted
     # True, so the loop `continue`s) while it HOLDS ITS RUNG OPEN on the
     # derivation side — the two are the same fact seen from each end, which is
     # what lets a draft live in the live spine and still show as work in

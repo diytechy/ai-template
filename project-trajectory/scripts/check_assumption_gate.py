@@ -12,7 +12,7 @@ on it instead, each at the rung where the question can first be answered
 honestly (`check.py` places them):
 
   assumption-gate       DevStg-Boundary  each requirement not recorded
-                                          coincident cites approved, active
+                                          coincident cites accepted, active
                                           assumptions that reach its
                                           stakeholders (SR-205)
   crossing-allocation   DevStg-Boundary  each interface-form requirement's
@@ -32,14 +32,14 @@ honestly (`check.py` places them):
 WHY OFF MEANS ADVISORY, NOT SILENT. With the setting absent or off the step
 prints the same findings as advisories and passes, so a project weighing the
 gate sees exactly what turning it on would fail before it does. One exception:
-while no stakeholder is approved with a party, reach cannot be judged, so the
+while no stakeholder is accepted with a party, reach cannot be judged, so the
 `assumption-gate` step prints its reach-caused advisories as one line with
 their count; every other advisory is still listed.
 
 WHAT IT NEVER TOUCHES. The findings are the step's alone: the derived stage
 never reads them and its single release producer stays the harness evidence
 verdict (spine map D16). The rules are `assumption_rules.py`'s, pure; this
-module reads the registries, the observation records and the approval acts
+module reads the registries, the observation records and the acceptance acts
 once, and hands them in. The release step keeps its name,
 `assumption-evidence`, for the projects already running it, though an
 assumption carries no evidence level (operator ruling 2026-10-02).
@@ -58,7 +58,7 @@ Contract IF-230: the assumption gate's steps, as a command.
     step, and exits
     1 when a finding FAILS, else 0. It reads
     the registries under `<root>/docs`, and for `assumption-evidence` the
-    observation records and the approval acts accepting risks; it writes
+    observation records and the acceptance acts accepting risks; it writes
     nothing. `check.py` runs it as the built-in steps of the same names.
 
 Python 3.11+, stdlib only; Windows + POSIX.

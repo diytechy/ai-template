@@ -47,8 +47,8 @@ def test_first_acceptance_shows_assumption_only_case(tmp_path):
     )
     assert reason is None, reason
     assert_chain(text)
-    assert "TC TC-279 [AWAITING FIRST APPROVAL]" in text
-    # The act's `--approves` argument is the act brief's, derived from the
+    assert "TC TC-279 [AWAITING FIRST ACCEPTANCE]" in text
+    # The act's `--accepts` argument is the act brief's, derived from the
     # committed verdict (WI-912): the judging brief names no registry token.
     assert "=WI-001" not in text
 

@@ -1372,7 +1372,7 @@ def test_the_ordinal_migration_reads_the_dial_never_a_line_inside_a_string(
 
 
 def test_the_dial_key_rename_refuses_an_old_key_held_in_an_inline_table(tmp_path):
-    """The migration's rename of the retired attestation dial key refuses an
+    """The migration's rename of the retired dial key refuses an
     old key the parse holds inside an inline `authority` table: the file's
     bytes are unchanged, the old declaration stays, and a note says so.
 

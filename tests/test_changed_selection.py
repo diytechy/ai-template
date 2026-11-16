@@ -283,7 +283,7 @@ def test_narrow_commands_keep_every_affected_generated_surface_fresh(repository)
         "--cli-doc docs/cli-reference.md --check",
         "gen_arch_map.py --root . --src project-trajectory/scripts "
         "--contracts-doc docs/interface-reference.md --check",
-        "trace.py --root . --approve modified --check",
+        "trace.py --root . --accept modified --check",
     ):
         assert any(fragment in command for command in rendered), fragment
 

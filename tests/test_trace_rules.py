@@ -5,7 +5,7 @@ The spine-prose predicates (a row states the system not its own history; one
 testable obligation; the paraphrase advisory that warns but never gates; the
 optional LLR Rationale column), the parent-first standing finding (which
 retired the WI-129 LLR/TC status-coherence lint), the WI-146(a)
---approve hierarchy view, and the WI-081 Slice C render/exit helpers
+--accept hierarchy view, and the WI-081 Slice C render/exit helpers
 (_bucket_by_ref pre-indexing + the exit_code gate policy).
 
 Implements: TC-216
@@ -161,7 +161,7 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
     assert not flags(sr={"Rationale": "The M-10 crossing carries the verdict."})
     assert not flags(llr={"Rationale": "Joined against B-04, M-10 and REL-003."})
     # (2) `ruling` / `retired` / `amended` / `attestation` are SUBJECT NOUNS in
-    # every row that specifies the approval machinery itself — 217
+    # every row that specifies the acceptance machinery itself — 217
     # occurrences over 108 live rows. The stamp shape needs a DATE behind the
     # verb, so a row ABOUT amendment is silent and a row RECORDING its own
     # amendment is not.
@@ -477,7 +477,7 @@ def test_a_requirement_states_one_testable_obligation():
     # 'must' likewise: 29148 reserves `shall`, but a repo that standardised on
     # 'must' would have EVERY row flagged, which is the cry-wolf failure.
     assert not flags(sr={"Requirement": "trace.py must exit nonzero."})
-    # A Drafted row is pre-approval and process.md §4 already exempts it from
+    # A Drafted row is pre-acceptance and process.md §4 already exempts it from
     # the decomposition rules — 'TBD' in a Drafted acceptance criterion is what
     # Drafted MEANS, so flagging it would break the state's whole purpose.
     assert not flags(
@@ -646,7 +646,7 @@ def _set_status(path, old, new):
     )
 
 
-def test_an_approved_sr_under_a_drafted_sn_reds_strict_integrity(scaffold):
+def test_an_accepted_sr_under_a_drafted_sn_reds_strict_integrity(scaffold):
     """The need tier is a parent tier too: an Approved SR citing a Drafted SN
     reds the integrity floor, naming both rows and statuses. Adequacy witness:
     a standing finding that read only the SR, LLR and TC tiers (the need tier's
@@ -666,10 +666,10 @@ def test_an_approved_sr_under_a_drafted_sn_reds_strict_integrity(scaffold):
     proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 1, out
-    assert "parent-first: SR-001 (Approved) is approved under SN-001 (Drafted)" in out
+    assert "parent-first: SR-001 (Approved) is accepted under SN-001 (Drafted)" in out
 
 
-def test_an_approved_llr_under_a_drafted_sr_reds_strict_integrity(scaffold):
+def test_an_accepted_llr_under_a_drafted_sr_reds_strict_integrity(scaffold):
     """Implements: TC-396"""
     make_minimal_project(scaffold)
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
@@ -678,10 +678,10 @@ def test_an_approved_llr_under_a_drafted_sr_reds_strict_integrity(scaffold):
     out = proc.stdout + proc.stderr
     assert proc.returncode == 1, out
     assert "parent-first:" in out, out
-    assert "LLR-001 (Approved) is approved under SR-001 (Drafted)" in out, out
+    assert "LLR-001 (Approved) is accepted under SR-001 (Drafted)" in out, out
 
 
-def test_a_drafted_llr_whose_citing_tcs_are_approved_is_an_integrity_finding(
+def test_a_drafted_llr_whose_citing_tcs_are_accepted_is_an_integrity_finding(
     scaffold,
 ):
     """Implements: TC-396"""
@@ -691,7 +691,7 @@ def test_a_drafted_llr_whose_citing_tcs_are_approved_is_an_integrity_finding(
     proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 1, out
-    assert "TC-001 (Approved) is approved under LLR-001 (Drafted)" in out, out
+    assert "TC-001 (Approved) is accepted under LLR-001 (Drafted)" in out, out
 
 
 def test_the_llr_status_advisory_is_retired(scaffold):
@@ -705,8 +705,8 @@ def test_the_llr_status_advisory_is_retired(scaffold):
     assert "llr-status-advisories=" not in proc.stdout, proc.stdout
 
 
-# --- WI-146(a): the --approve batch-scoped approval hierarchy view ---------
-# A generated SN->SR->LLR/TC tree carrying the prose an approver needs (Requirement/
+# --- WI-146(a): the --accept batch-scoped acceptance hierarchy view ---------
+# A generated SN->SR->LLR/TC tree carrying the prose an acceptor needs (Requirement/
 # AC, LLR Detail, TC Method/Expected, cited rubric), scoped by an SR-id list or a
 # phase tag. A generator mode: it runs no checks and always exits 0.
 
@@ -720,12 +720,12 @@ PHASED_RUBRIC_SR = (
 )
 
 
-def test_approval_sr_list_emits_prose(scaffold):
+def test_acceptance_sr_list_emits_prose(scaffold):
     make_minimal_project(scaffold)
-    proc = run_py(["scripts/trace.py", "--approve", "SR-001"], cwd=scaffold)
+    proc = run_py(["scripts/trace.py", "--accept", "SR-001"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     out = proc.stdout
-    assert "# Approval hierarchy" in out and "scope: SR-001" in out
+    assert "# Acceptance hierarchy" in out and "scope: SR-001" in out
     assert "1 SR(s)" in out
     assert "SR-001" in out and "Addition" in out
     # The stakeholder need's own prose heads its subtree, not a bare SN id
@@ -739,21 +739,21 @@ def test_approval_sr_list_emits_prose(scaffold):
     assert "TC-001" in out and "Satisfies SR-001 AcceptanceCriteria" in out  # TC
 
 
-def test_approval_phase_scope_and_rubric(scaffold):
+def test_acceptance_phase_scope_and_rubric(scaffold):
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
         PHASED_RUBRIC_SR, encoding="utf-8"
     )
-    proc = run_py(["scripts/trace.py", "--approve", "v9"], cwd=scaffold)
+    proc = run_py(["scripts/trace.py", "--accept", "v9"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "SR-001" in proc.stdout and "Addition" in proc.stdout
     assert "**Rubrics.** docs/rubrics/adder.md" in proc.stdout
     # A non-matching phase is REFUSED, not rendered empty (D-9 §F2). Until this
     # hardening it fell through to a brief that read "there is nothing to
-    # approve" at exit 0 — the most expensive way for this tool to be wrong,
+    # accept" at exit 0 — the most expensive way for this tool to be wrong,
     # because a typo, a retired phase tag or an unknown reserved word all
     # produced a document an operator then signed.
-    empty = run_py(["scripts/trace.py", "--approve", "v1"], cwd=scaffold)
+    empty = run_py(["scripts/trace.py", "--accept", "v1"], cwd=scaffold)
     assert empty.returncode != 0
     combined = empty.stdout + empty.stderr
     assert "matches no SR" in combined and "refusing to emit an empty" in combined
@@ -763,17 +763,17 @@ def test_approval_phase_scope_and_rubric(scaffold):
     assert empty.stdout == ""
 
 
-def test_approval_out_writes_linkable_file(scaffold):
+def test_acceptance_out_writes_linkable_file(scaffold):
     make_minimal_project(scaffold)
     proc = run_py(
-        ["scripts/trace.py", "--approve", "SR-001", "--out", "docs/ratify/x.md"],
+        ["scripts/trace.py", "--accept", "SR-001", "--out", "docs/ratify/x.md"],
         cwd=scaffold,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     written = (scaffold / "docs" / "ratify" / "x.md").read_text(encoding="utf-8")
-    assert "# Approval hierarchy" in written
+    assert "# Acceptance hierarchy" in written
     assert "The system shall add two numbers." in written
-    assert "trace: wrote approval view" in proc.stdout
+    assert "trace: wrote acceptance view" in proc.stdout
 
 
 # --- WI-081 Slice C: the render/exit extraction + M8 pre-indexing --------------
@@ -947,7 +947,7 @@ def test_a_row_stating_two_verification_methods_warns():
     # correct rows and teach an author to skip the pipe.
     for prose in (
         "Refusals fire at the integrator's verdict gate and intake's adjudication arm.",
-        "The operator approves the split before it lands.",
+        "The operator accepts the split before it lands.",
     ):
         clean = {"SR-ID": "SR-103", "VerificationMethod": "Test", "Rationale": prose}
         assert trace.verification_coherence_advisories([clean]) == []

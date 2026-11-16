@@ -89,8 +89,8 @@ def test_the_dependency_surface_is_the_argument_for_the_split():
     # is a TOML parse. Its owner's parser cannot be imported here — the owner
     # imports the checker that imports this module — so the widening is one
     # stdlib parser, not a sibling. `hashlib` and `json` joined with the
-    # row-text identity (`approved_text_digest`, IF-129): a digest over the
-    # row's approved cells serialized as sorted JSON, beside the comparison
+    # row-text identity (`accepted_text_digest`, IF-129): a digest over the
+    # row's accepted cells serialized as sorted JSON, beside the comparison
     # basis it shares, so it is two stdlib modules, not a sibling either.
     assert _imported_roots() == {
         "spine_carrier",
@@ -262,25 +262,25 @@ def test_git_out_passes_batch_input_through():
 def test_the_cell_split_tables_still_cover_both_halves():
     """The one INVARIANT worth restating at the new home, because it is the
     reason the tables are here at all: a column in neither set falls through to
-    APPROVED (fail-safe loud, never silently un-approved), and the two halves
+    APPROVED (fail-safe loud, never silently un-accepted), and the two halves
     must not disagree about a column they both name."""
     for rel, _ in acceptance_record.SPINE_CSVS:
         traced = acceptance_record.SPINE_TRACED_CELLS[rel]
-        approved = acceptance_record.SPINE_APPROVED_CELLS[rel]
-        assert not traced & approved, (rel, sorted(traced & approved))
+        accepted = acceptance_record.SPINE_APPROVED_CELLS[rel]
+        assert not traced & accepted, (rel, sorted(traced & accepted))
         assert acceptance_record.spine_cell_class(rel, "NoSuchColumn") == "approved"
 
 
-def test_the_amendment_walk_covers_every_tier_an_approval_act_blesses():
+def test_the_amendment_walk_covers_every_tier_an_acceptance_act_blesses():
     """OI-100 gap 1 (WI-791): the amendment walk's universe is a SIBLING
-    constant, equal to the approval act's — text an act can bless is text an
+    constant, equal to the acceptance act's — text an act can bless is text an
     amendment can move away from its blessing. `SPINE_CSVS` stays the three
     tiers its other readers (the first-acceptance mint, the test-first walk, the
     retired flip) were written for, so widening the walk changed none of them.
 
     Implements: TC-153
     """
-    assert acceptance_record.AMENDMENT_CSVS == acceptance_record.APPROVAL_ACT_CSVS
+    assert acceptance_record.AMENDMENT_CSVS == acceptance_record.ACCEPTANCE_ACT_CSVS
     walked = {col for _rel, col in acceptance_record.AMENDMENT_CSVS}
     assert {"SN-ID", "DA-ID", "SUR-ID"} <= walked
     assert [col for _rel, col in acceptance_record.SPINE_CSVS] == [
@@ -290,30 +290,30 @@ def test_the_amendment_walk_covers_every_tier_an_approval_act_blesses():
     ]
 
 
-def test_no_snapshotted_tier_can_go_unseen_by_the_approval_rung():
-    """The approval-act reader's registry set and the snapshot's are ONE closed
+def test_no_snapshotted_tier_can_go_unseen_by_the_acceptance_rung():
+    """The acceptance-act reader's registry set and the snapshot's are ONE closed
     statement (WI-572 REVIEW-A round 7, MAJOR 1).
 
-    `lane_approval_refusal` walks `APPROVAL_ACT_CSVS` — the four SPINE tiers,
+    `lane_acceptance_refusal` walks `ACCEPTANCE_ACT_CSVS` — the four SPINE tiers,
     SN/SR/LLR/TC — while `baseline_snapshot.SNAPSHOTTED` names SEVEN registries
     whose `Status` a snapshot anchors. Both are hand-written literals, in
     different modules, hundreds of lines apart, and NOTHING joined them: a tier
-    could be added to the snapshot and reach no approval reader at all,
+    could be added to the snapshot and reach no acceptance reader at all,
     silently. The remaining narrowness is RULED — the operator's 2026-09-01 ruling
-    scopes the act to SPINE rows, and the off-spine three carry approval cells
+    scopes the act to SPINE rows, and the off-spine three carry acceptance cells
     governed by OI-30 D3 — so this pin does not decide the rung's width. It
     makes the boundary a statement someone must edit ON PURPOSE.
 
     ROUND 028 MOVED ONE TIER ACROSS IT, which is the pin working as intended:
-    `stakeholder-needs.toml` left `OUTSIDE_THE_APPROVAL_ACT` for the covered
+    `stakeholder-needs.toml` left `OUTSIDE_THE_ACCEPTANCE_ACT` for the covered
     set, because SN is a spine tier and the half of DevStg-Reqs the dial holds
     for the operator — a lane flipping it is the worst case, not an exempt one.
 
     A new tier therefore fails HERE, naming itself, and its author has to put it
     on one side or the other."""
     snapshotted = set(baseline_snapshot.SNAPSHOTTED)
-    refused = {rel for rel, _ in acceptance_record.APPROVAL_ACT_CSVS}
-    declared_out = set(acceptance_record.OUTSIDE_THE_APPROVAL_ACT)
+    refused = {rel for rel, _ in acceptance_record.ACCEPTANCE_ACT_CSVS}
+    declared_out = set(acceptance_record.OUTSIDE_THE_ACCEPTANCE_ACT)
 
     # Neither side may name a registry the snapshot does not anchor...
     assert refused <= snapshotted, sorted(refused - snapshotted)
@@ -321,7 +321,7 @@ def test_no_snapshotted_tier_can_go_unseen_by_the_approval_rung():
     # ...the two sides are disjoint (a tier cannot be both refused and exempt)...
     assert not refused & declared_out, sorted(refused & declared_out)
     # ...and TOGETHER they are exhaustive, which is the property that makes
-    # "a snapshotted tier no approval reader sees" unconstructible rather than
+    # "a snapshotted tier no acceptance reader sees" unconstructible rather than
     # merely absent.
     assert refused | declared_out == snapshotted, sorted(
         snapshotted - (refused | declared_out)
@@ -334,7 +334,7 @@ def test_an_off_spine_status_flip_is_not_the_act_this_rung_refuses(tmp_path):
     The review found no test asserting either that the off-spine tiers are
     refused or that they are out of scope, so the omission read as an
     oversight from the outside. It is the ruling: a lane may move an interface
-    row's `status`, and that is not the approval act on a spine row. (The SN
+    row's `status`, and that is not the acceptance act on a spine row. (The SN
     tier was in this exempt set until round 028 and is now covered — see
     `tests/test_intake.py::test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing`.) Driven
     against a real git tree so this pins the READER's behaviour, not a re-reading
@@ -368,17 +368,17 @@ def test_an_off_spine_status_flip_is_not_the_act_this_rung_refuses(tmp_path):
         encoding="utf-8",
     )
     git("add", "-A")
-    git("commit", "-q", "-m", "approve the seam")
+    git("commit", "-q", "-m", "accept the seam")
 
-    assert acceptance_record.staged_approval_acts(tmp_path, "HEAD~1", "HEAD") == []
+    assert acceptance_record.staged_acceptance_acts(tmp_path, "HEAD~1", "HEAD") == []
     assert (
-        acceptance_record.lane_approval_refusal(tmp_path, "HEAD~1", "HEAD") is None
+        acceptance_record.lane_acceptance_refusal(tmp_path, "HEAD~1", "HEAD") is None
     ), "an off-spine flip is outside the ruled scope of this rung"
 
 
-def test_the_snapshot_files_that_mirror_no_registry_widen_no_approval():
-    """An adjudicated first approval may write the snapshot's prose stamp and
-    its act ledger beside the copies of the registries it approves in: neither
+def test_the_snapshot_files_that_mirror_no_registry_widen_no_acceptance():
+    """An adjudicated first acceptance may write the snapshot's prose stamp and
+    its act ledger beside the copies of the registries it accepts in: neither
     is a registry, so neither widens the act past its scope."""
     sr = "docs/requirements/system-requirements.toml"
     snap = acceptance_record.SNAPSHOT_DIR + "/"
@@ -391,8 +391,8 @@ def test_the_snapshot_files_that_mirror_no_registry_widen_no_approval():
         ],
         None,
     )
-    acted = {"approve": {"SR-001": sr}, "reaccept": {}}
+    acted = {"accept": {"SR-001": sr}, "reaccept": {}}
     assert (
-        acceptance_record.adjudication_approval_refusal({"SR-001"}, acted, delta)
+        acceptance_record.adjudication_acceptance_refusal({"SR-001"}, acted, delta)
         is None
     )

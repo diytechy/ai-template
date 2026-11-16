@@ -196,7 +196,7 @@ def test_the_shipped_dial_is_off_and_this_repo_shares_its_structure():
     assert template["adjudicator"]["context_reset_pct"] == 0
     assert live["adjudicator"]["context_reset_pct"] == 55
     assert set(live["adjudicator"]) == set(template["adjudicator"])
-    # And retains first approvals too (operator, 2026-10-05,
+    # And retains first acceptances too (operator, 2026-10-05,
     # docs/decisions/wi-835.toml#D-007), since WI-841 the Done-when brief and
     # the combined lane-checkpoint sitting, and since WI-865 the dispute
     # sitting; the template's list is unchanged.

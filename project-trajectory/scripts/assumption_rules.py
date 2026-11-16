@@ -156,7 +156,7 @@ Contract IF-216: the observation results and what they can falsify, the rules
     `observation_record_findings`, `falsification_worklist` and
     `accepted_risk_state` (one of `RISK_COVERED`, `RISK_UNPROVEN`, with its
     reasons). A view is `baseline_snapshot.risk_acceptance_view`'s dict.
-Contract IF-226: the chain the approval brief renders for one assumption or
+Contract IF-226: the chain the acceptance brief renders for one assumption or
     surrogate, read by `trace.py`'s brief. `assumption_chain(da_id, reg)`
     returns a dict, or None for an id the registry does not declare, and reads
     no file: `reg` maps `srs`, `needs`, `das`, `surs`, `exts`, `bifs` and
@@ -226,8 +226,8 @@ from kitlib.spine import is_approved, is_founded
 # Implements: SR-191, LLR-219
 DA_REQUIRED = ("EffectAt", "Assumption", "HoldsWhen", "Obstacle", "Status", "Standing")
 
-# An assumption's VALIDITY, separate from its maturity: an approved assumption
-# can later be shown false, and `Status` cannot say so without un-approving it.
+# An assumption's VALIDITY, separate from its maturity: an accepted assumption
+# can later be shown false, and `Status` cannot say so without un-accepting it.
 # Implements: SR-191, LLR-219
 STANDING_VALUES = ("active", "falsified")
 
@@ -597,7 +597,7 @@ def sr_form_findings(srs):
 
 def uncited_assumption_advisories(das, srs):
     """SR-196, the first half: one advisory per assumption no requirement's
-    `DA-Refs` cites. Drafted and approved rows are read alike, since an
+    `DA-Refs` cites. Drafted and accepted rows are read alike, since an
     assumption is often written before the requirement that will cite it.
 
     Implements: SR-196, LLR-228
@@ -614,7 +614,7 @@ def uncited_assumption_advisories(das, srs):
 def no_falsifier_advisories(das):
     """SR-196, the second half: one advisory per assumption declaring no
     `Falsifier`, the observable signal that would show it false. Drafted and
-    approved rows are read alike.
+    accepted rows are read alike.
 
     Implements: SR-196, LLR-228
     """
@@ -757,13 +757,13 @@ def _unreached_needs(did, landing, entity_of, reach, fidelity):
     whose = (
         "a party its surrogate emulates"
         if fidelity
-        else "a party of the need's approved stakeholders or one mediating for it"
+        else "a party of the need's accepted stakeholders or one mediating for it"
     )
     out = []
     for nid, parties in reach.items():
         if not parties and not fidelity:
             out.append(
-                "assumption {} serves need {}, which is unreachable: no approved "
+                "assumption {} serves need {}, which is unreachable: no accepted "
                 "stakeholder of it declares a party a crossing could belong "
                 "to".format(did, nid)
             )
@@ -816,7 +816,7 @@ def held_until_agreed(lines, stks, what):
         return lines
     return [
         "{} {} not listed one by one while no stakeholder is Approved with a "
-        "Party: reach cannot be judged until one is; approve the stakeholders "
+        "Party: reach cannot be judged until one is; accept the stakeholders "
         "to list them".format(len(lines), what)
     ]
 
@@ -832,7 +832,7 @@ def reach_gaps(das, srs, needs, stks, exts, bifs, surs):
     is evaluated against `reaching_parties`: a served need no landing crossing
     reaches is one advisory naming the assumption and the need, and a landing
     crossing reaching none of the served needs is one naming the assumption and
-    the crossing. A served need none of whose approved stakeholders declares a
+    the crossing. A served need none of whose accepted stakeholders declares a
     party is named unreachable.
 
     A FIDELITY assumption, one naming a surrogate in `RealizedBy`, is judged
@@ -894,7 +894,7 @@ def need_frame_gap_advisories(needs, stks, srs, bifs, das):
     """SR-188's need-frame gap, as advisories: one per need met in operation
     that nothing answering it reaches an operation crossing for.
 
-    A need is IN SCOPE when the party of one of its approved stakeholders is
+    A need is IN SCOPE when the party of one of its accepted stakeholders is
     itself the entity of an operation crossing. A party that only mediates for
     such an entity does not bring the need into scope: the rule reads the
     stakeholder's own party, as SR-188 states it. An in-scope need is reported,
@@ -907,7 +907,7 @@ def need_frame_gap_advisories(needs, stks, srs, bifs, das):
     names meets the condition as written and is reported too: nothing answers
     it at an operation crossing either.
 
-    Only approved stakeholders are read (`Approved`, or `Founded` above it).
+    Only accepted stakeholders are read (`Approved`, or `Founded` above it).
     VACUOUS with no frame, no stakeholder list or no crossing declaring the
     operation system.
 
@@ -1113,7 +1113,7 @@ def observation_tc_findings(tcs):
     nothing, so judging them would fail a row for a cell it should not carry.
 
     Whether a sampling model is adequate for its claim is judged when the case
-    is approved, never here. The template's `-000` row is never judged.
+    is accepted, never here. The template's `-000` row is never judged.
 
     Implements: SR-198, LLR-233
     """
@@ -1460,12 +1460,12 @@ def accepted_risk_state(da, view, needs, tcs=(), records=()):
     `(None, [])` when it records none.
 
     No result makes the risk moot: a passed observation proves nothing beyond
-    its sample. The risk is bound to the approval act that accepted it (`view`, read by `baseline_snapshot.risk_acceptance_view`:
+    its sample. The risk is bound to the acceptance act that accepted it (`view`, read by `baseline_snapshot.risk_acceptance_view`:
     the act, and the rows and record files as they stood there), and it reads
     `RISK_UNPROVEN`, naming each trigger, when the assumption's bound cells or
     the need or acceptance text of a need it served then differ now, or when a
     failing record of a case naming it is not in the act's tree. A later
-    re-approval of a changed need clears nothing, since the comparison is with
+    re-acceptance of a changed need clears nothing, since the comparison is with
     the act, not with the latest recorded copy; accepting the risk again in an
     act moves the anchor. With no act found (history too shallow, no act
     accepting the risk) it reads unproven with the view's reason. Otherwise
@@ -1504,7 +1504,7 @@ def accepted_risk_advisories(das, tcs, needs, records, views):
             out.append(
                 "assumption {}'s accepted risk has reopened, and it reads "
                 "unproven until the risk is accepted again in a reviewed "
-                "approval: {}".format(did, "; ".join(reasons))
+                "acceptance: {}".format(did, "; ".join(reasons))
             )
     return out
 
@@ -1540,9 +1540,9 @@ def observation_evidence_findings(
     return integrity, advisories
 
 
-# --- the approval brief's chain: what an approver judges an assumption by -----
-# An assumption is approved for what it lets the requirements claim, so the
-# approver's question is whether those requirements may rely on it (SR-203).
+# --- the acceptance brief's chain: what an acceptor judges an assumption by -----
+# An assumption is accepted for what it lets the requirements claim, so the
+# acceptor's question is whether those requirements may rely on it (SR-203).
 # The brief therefore needs, for one row, everything that question reads: the
 # requirements citing it with their text, the needs derived through them,
 # where its outcome lands and whose crossing that is, the cases that can
@@ -1579,7 +1579,7 @@ def _surrogate_chain(sid, reg):
 
 
 def assumption_chain(da_id, reg):
-    """What the approval brief shows for one assumption or surrogate, or None
+    """What the acceptance brief shows for one assumption or surrogate, or None
     when the registry does not declare `da_id`.
 
     For an ASSUMPTION: its row, the requirements citing it (`da_citing_srs`) as
@@ -1645,11 +1645,11 @@ def assumption_chain(da_id, reg):
 # conjuncts of the derived stage, which stays the harness evidence's alone):
 #
 #   DevStg-Boundary  maturity: each requirement not recorded coincident cites
-#                    approved, active assumptions that reach its stakeholders
+#                    accepted, active assumptions that reach its stakeholders
 #                    (SR-205), and each interface-form requirement's crossings
 #                    are coincident or bridged by a cited assumption landing on
 #                    them (SR-212's Boundary arm), since the crossings are the
-#                    level-0 interfaces approved with the frame;
+#                    level-0 interfaces accepted with the frame;
 #   DevStg-Arch      the same form judged against the boundary interfaces that
 #                    realize the crossings, once they exist (SR-212's Arch arm);
 #   DevStg-Release   standing: no relied-on assumption is falsified unless
@@ -1669,7 +1669,7 @@ def _unmet(did, da, surrogates, reach):
         return ["is not a declared assumption"]
     out = []
     if not is_approved(da):
-        out.append("is not approved (Status {})".format(_cell(da, "Status") or "unset"))
+        out.append("is not accepted (Status {})".format(_cell(da, "Status") or "unset"))
     if _cell(da, "Standing") != "active":
         out.append(
             "is not active (Standing {})".format(_cell(da, "Standing") or "unset")
@@ -1679,7 +1679,7 @@ def _unmet(did, da, surrogates, reach):
             "does not reach the stakeholders of its needs: " + "; ".join(reach[did])
         )
     return out + [
-        "is a fidelity assumption whose surrogate {} is not approved".format(sur)
+        "is a fidelity assumption whose surrogate {} is not accepted".format(sur)
         for sur in refs(da.get("RealizedBy"))
         if not is_approved(surrogates.get(sur) or {})
     ]
@@ -1841,7 +1841,7 @@ def crossing_gate_findings(srs, das, bifs):
     """SR-212's Boundary arm, as findings: each interface-form requirement
     judged against every declared crossing its `Boundary-Refs` names.
 
-    The frame's crossings are the level-0 interfaces, approved with the frame
+    The frame's crossings are the level-0 interfaces, accepted with the frame
     before any interface row exists, and an assumption already lands on them
     (`EffectAt`). So a requirement recorded coincident passes, its own
     specification being the outcome at the crossing; otherwise each crossing

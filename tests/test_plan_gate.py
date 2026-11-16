@@ -170,7 +170,7 @@ _EARLIER_RUNGS = (
     "_close_record_refusal",
     "_done_when_refusal",
     "_minted_id_refusal",
-    "_approval_act_refusal",
+    "_acceptance_act_refusal",
     "_loop_trailer_refusal",
     "_ruling_sync_refusal",
     "_text_then_act_refusal",

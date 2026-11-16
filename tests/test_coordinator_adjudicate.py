@@ -572,7 +572,7 @@ def test_an_unretained_call_is_never_probed(tmp_path, monkeypatch, launched):
     root = _repo(tmp_path, dial=0)
     assert _adjudicate(root) == 0
     root2 = _repo(tmp_path / "two")
-    # the stub's verdict line is an amendment's, not a first approval's: 1
+    # the stub's verdict line is an amendment's, not a first acceptance's: 1
     assert _adjudicate(root2, brief="first-acceptance") == 1
     assert calls == []
     assert all("--session-id" not in a for a in launched["argv"])

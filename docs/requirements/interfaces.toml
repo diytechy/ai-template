@@ -124,7 +124,7 @@
 #   status           The ONE maturity field, the spine's words: `Drafted` |
 #                    `Approved`, shared with `external.toml`. `Founded` is NOT
 #                    APPLICABLE here — it means settled AND demonstrated, while
-#                    an approval says the seam is AGREED.
+#                    an acceptance says the seam is AGREED.
 #
 #                    FLIP AUTHORITY IS DERIVED, NOT DECLARED: a `status` cell
 #                    here may be machine-flipped only when this registry's stage
@@ -146,7 +146,7 @@
 #                    is the statement.
 #
 #                    ONE CROSSING IS DELIBERATELY REALIZED BY NOTHING: `B-02`
-#                    (authority in — rulings, attestations and Status flips)
+#                    (authority in — rulings, acceptances and Status flips)
 #                    has no port of its own. Authority enters as CONTENT on
 #                    B-01's write path: an operator edits a Status cell and commits,
 #                    and the hook floor admits that write as it admits any
@@ -211,7 +211,7 @@ status = "Drafted"
 owner = "scripts/trace"
 consumers = ["scripts/check"]
 channel = "exit-code"
-data = "0 clean · 1 a finding under --strict, an integrity finding under --strict-integrity, or a stale brief under --approve modified --check"
+data = "0 clean · 1 a finding under --strict, an integrity finding under --strict-integrity, or a stale brief under --accept modified --check"
 version = "v1"
 status = "Drafted"
 
@@ -698,7 +698,7 @@ notes = """No tie-back, and the gap is in the FRAME rather than in this row: the
 owner = "docs/process.toml"
 consumers = ["scripts/agent_common", "scripts/agent_loop", "scripts/bootstrap", "scripts/check_privacy", "scripts/check_trajectory", "scripts/dispatch", "scripts/gen_arch_map", "scripts/gen_okf", "scripts/integrate", "scripts/kitlib/config", "scripts/subagent_gate", "external:downstream adopter"]
 channel = "file"
-data = "TOML tables: attestation, policies, checks, build; a privacy gate key outside [policies] reads as gate on, and a reviewer key there as review required"
+data = "TOML tables: authority, policies, checks, build; a privacy gate key outside [policies] reads as gate on, and a reviewer key there as review required"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -1045,7 +1045,7 @@ notes = """A pending item has at least one queued or claimed work-item citer. A 
 owner = "scripts/gen_open_items"
 consumers = ["external:downstream adopter"]
 channel = "file"
-data = """docs/open-items.html — pending items a queued or claimed row cites, uncited items, approval/re-accept chains and owing needs and stakeholders, verdict audit, operator actions; Decisions to review last"""
+data = """docs/open-items.html — pending items a queued or claimed row cites, uncited items, acceptance/re-accept chains and owing needs and stakeholders, verdict audit, operator actions; Decisions to review last"""
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -1140,7 +1140,7 @@ data = "tree identity; branch rounds/trailers; row rulings and blessed rows; sco
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """The seam exists because two callers ask ONE question from two sides - the merge slot's may-this-merge and the loop's does-this-lane-still-owe-a-round - and answering it twice is what let a lane draw two identical rounds over a verdict nothing had invalidated. So this row is not bookkeeping over an import: it is the declaration that there is exactly one definition, and a second reader of round evidence anywhere else is a finding against this row rather than a new one. That definition includes the REV the identity is measured at, which is why the refresh peel is owned here and not by the merge slot: while it lived there, one reader peeled and the other measured at HEAD, and the row's whole claim was false across exactly one commit class. The peel has TWO shapes on purpose and they must not be merged: work_tip peels only a refresh sitting on the tip because it feeds a reset --hard where one commit too far destroys work, while governing_rev walks through any commit whose non-record identity equals its first parent's, to reach a disposable commit it would otherwise hide - a read-only question can afford an answer a destructive one cannot. Those two SHAPES are what this row governs; WHICH machine-authored commits are disposable is a class list, it belongs to the owner's own row (LLR-207 names both the station refresh and the machinery's adjudication close), and it is deliberately not restated here, so a reader meeting one seam sentence and one design sentence is never choosing which is current. That step condition is the row's own sentence rather than a proxy for it, so no commit SHAPE gets a case here: a walk that classified the paths a commit touched stopped at the zero-path ones it could not read, and the empty commit an attestation rides when its bookkeeping is unchanged is that shape, so the commit recording an approval buried the refresh. The singularity binds the BINDINGS too, not only the two named readers: the identity a round file's reviewed sha names and the identity an attestation's carrier names are asked through governing_identity at that commit, because a raw fold is this composition with the peel dropped and it disagrees across exactly the commit class the peel exists for - which is how a round drawn after a refresh became invisible to both readers at once, with nothing on the branch able to reconcile them. The rollup generator is a requestor for the NAME grammar only, and score_reviews for the PHASE SPAN only - it holds a hard `from kitlib.verdict import declared_phases` so latest_phase_verdicts keys the merge boundary's map by exactly the phases the loop schedules, and it reads no round evidence at all, so naming it here adds a requestor and NOT a fourth reader of the verdict. It is named because an import no requestors entry carries is an undeclared seam, which is the completeness rule this cell answers to; the singularity sentence above is about round evidence and does not reach a span reader either way. The span crosses as the CONSTANT too, not only through declared_phases: agent_loop's non-build phase set and its dial ceiling ask it at module scope, and that module deliberately keeps no tuple of its own, so a phase added here reaches the scheduler, the routing set and the clamp together. Off git every function answers None and this module never says what that means; each requestor declares its own direction, and both declared directions are toward more review. The gate-bearing round contract crosses here too: format_scope records full, narrow or final review scope; gating_span admits a fresh full scope rooted at the claim base in either mode, admits final only with reviewer retention on and final_reviewer persisted, and admits neither narrow nor retained full scope; filing_refusal gives both filing and gate reading one invalid-evidence boundary. dispatch is also a requestor, so the requestor list names every current reader."""
+notes = """The seam exists because two callers ask ONE question from two sides - the merge slot's may-this-merge and the loop's does-this-lane-still-owe-a-round - and answering it twice is what let a lane draw two identical rounds over a verdict nothing had invalidated. So this row is not bookkeeping over an import: it is the declaration that there is exactly one definition, and a second reader of round evidence anywhere else is a finding against this row rather than a new one. That definition includes the REV the identity is measured at, which is why the refresh peel is owned here and not by the merge slot: while it lived there, one reader peeled and the other measured at HEAD, and the row's whole claim was false across exactly one commit class. The peel has TWO shapes on purpose and they must not be merged: work_tip peels only a refresh sitting on the tip because it feeds a reset --hard where one commit too far destroys work, while governing_rev walks through any commit whose non-record identity equals its first parent's, to reach a disposable commit it would otherwise hide - a read-only question can afford an answer a destructive one cannot. Those two SHAPES are what this row governs; WHICH machine-authored commits are disposable is a class list, it belongs to the owner's own row (LLR-207 names both the station refresh and the machinery's adjudication close), and it is deliberately not restated here, so a reader meeting one seam sentence and one design sentence is never choosing which is current. That step condition is the row's own sentence rather than a proxy for it, so no commit SHAPE gets a case here: a walk that classified the paths a commit touched stopped at the zero-path ones it could not read, and the empty commit an attestation rides when its bookkeeping is unchanged is that shape, so the commit recording an acceptance buried the refresh. The singularity binds the BINDINGS too, not only the two named readers: the identity a round file's reviewed sha names and the identity an attestation's carrier names are asked through governing_identity at that commit, because a raw fold is this composition with the peel dropped and it disagrees across exactly the commit class the peel exists for - which is how a round drawn after a refresh became invisible to both readers at once, with nothing on the branch able to reconcile them. The rollup generator is a requestor for the NAME grammar only, and score_reviews for the PHASE SPAN only - it holds a hard `from kitlib.verdict import declared_phases` so latest_phase_verdicts keys the merge boundary's map by exactly the phases the loop schedules, and it reads no round evidence at all, so naming it here adds a requestor and NOT a fourth reader of the verdict. It is named because an import no requestors entry carries is an undeclared seam, which is the completeness rule this cell answers to; the singularity sentence above is about round evidence and does not reach a span reader either way. The span crosses as the CONSTANT too, not only through declared_phases: agent_loop's non-build phase set and its dial ceiling ask it at module scope, and that module deliberately keeps no tuple of its own, so a phase added here reaches the scheduler, the routing set and the clamp together. Off git every function answers None and this module never says what that means; each requestor declares its own direction, and both declared directions are toward more review. The gate-bearing round contract crosses here too: format_scope records full, narrow or final review scope; gating_span admits a fresh full scope rooted at the claim base in either mode, admits final only with reviewer retention on and final_reviewer persisted, and admits neither narrow nor retained full scope; filing_refusal gives both filing and gate reading one invalid-evidence boundary. dispatch is also a requestor, so the requestor list names every current reader."""
 
 [interface.IF-173]
 owner = "scripts/integrate"
@@ -1283,7 +1283,7 @@ component = "CMP-008"
 owner = "scripts/acceptance_record"
 requestors = ["scripts/intake", "scripts/integrate"]
 channel = "call"
-data = "Approval delta; merge_approval_refusal(root, base, head, metas, trunk) -> acceptance or refusal; settled_amendments(...) -> (settled ids, refusal); unanchored_rows(root, head, ids, routed_cells) -> ({row id: registry}, refusal); text_as_bound(root, head, ruled) -> ids at their bound text"
+data = "Acceptance delta; merge_acceptance_refusal(root, base, head, metas, trunk) -> acceptance or refusal; settled_amendments(...) -> (settled ids, refusal); unanchored_rows(root, head, ids, routed_cells) -> ({row id: registry}, refusal); text_as_bound(root, head, ruled) -> ids at their bound text"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -1545,7 +1545,7 @@ data = "compose(...) -> text | reason; record_outcome(...) -> (recorded | failed
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = "intra-component (both CMP-008), declared because the fail-closed obligation lives on the CALLER and would otherwise be recorded nowhere. `ROUTED` names all eight shipped briefs with an assembler; `conflict` is retired, with its missing derivation named in the module header. The judging composer derives no approval-registry token; the act brief joins the retained identity of actable classes."
+notes = "intra-component (both CMP-008), declared because the fail-closed obligation lives on the CALLER and would otherwise be recorded nowhere. `ROUTED` names all eight shipped briefs with an assembler; `conflict` is retired, with its missing derivation named in the module header. The judging composer derives no acceptance-registry token; the act brief joins the retained identity of actable classes."
 
 [interface.IF-117]
 owner = "scripts/gen_arch_map"
@@ -1614,7 +1614,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 owner = "scripts/baseline_snapshot"
 requestors = ["scripts/intake"]
 channel = "call"
-data = "copy_live, parse_approves, parse_reaccepts, act_summary, tier_owing, load_all, rows_for, exists, stamp, is_drifted, unanchored_findings"
+data = "copy_live, parse_accepts, parse_reaccepts, act_summary, tier_owing, load_all, rows_for, exists, stamp, is_drifted, unanchored_findings"
 version = "v1"
 status = "Drafted"
 
@@ -1622,11 +1622,11 @@ status = "Drafted"
 owner = "scripts/baseline_snapshot"
 requestors = ["scripts/adjudicate_brief", "scripts/amendment_brief", "scripts/adjudicate_act"]
 channel = "call"
-data = "exists, stamp, SNAPSHOT_DIR, SNAPSHOT_TIERS and format_approves"
+data = "exists, stamp, SNAPSHOT_DIR, SNAPSHOT_TIERS and format_accepts"
 carried_by = "IF-123"
 version = "v1"
 status = "Drafted"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 (LLR-159) and baseline_snapshot is CMP-006 (LLR-173). The IF-104/IF-122 consumption shape. The anchor is PROVABLY not the text under judgement: the mirror invariant (check_trajectory.staged_snapshot_findings) proves the copy rode a reviewed approval commit, and nothing but a copy can write it. Covered by TC-161's amendment arm."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 (LLR-159) and baseline_snapshot is CMP-006 (LLR-173). The IF-104/IF-122 consumption shape. The anchor is PROVABLY not the text under judgement: the mirror invariant (check_trajectory.staged_snapshot_findings) proves the copy rode a reviewed acceptance commit, and nothing but a copy can write it. Covered by TC-161's amendment arm."""
 
 [interface.IF-125]
 owner = "scripts/baseline_snapshot"
@@ -1662,10 +1662,10 @@ notes = """intra-component (both endpoints are CMP-006), so the cross-component 
 owner = "scripts/acceptance_record"
 requestors = ["scripts/baseline_snapshot", "scripts/held_status", "scripts/amendment_brief", "scripts/adjudicate_act"]
 channel = "call"
-data = "split_changed_cells; approved_text_digest(registry, id_col, row) -> sha256:<16 lowercase hex>"
+data = "split_changed_cells; accepted_text_digest(registry, id_col, row) -> sha256:<16 lowercase hex>"
 version = "v1"
 status = "Drafted"
-notes = "The digest uses the same approved-cell classification as split_changed_cells, so a carrier representation and an absent versus empty cell do not change it."
+notes = "The digest uses the same accepted-cell classification as split_changed_cells, so a carrier representation and an absent versus empty cell do not change it."
 
 [interface.IF-131]
 rationale = """The rules read the live source AST instead of parsing the retired docs/architecture.md MODULE MAP block back. One walk, one grammar: the module keys and import names are exactly what the map rendered, so every downstream join (stem resolution, CMP membership) is unchanged."""
@@ -1930,22 +1930,22 @@ rationale = "Every reader that asks whether a dial holds a rung - the loop's wri
 owner = "scripts/kitlib/authority"
 requestors = ["scripts/acceptance_record", "scripts/agent_common", "scripts/check", "scripts/check_trajectory", "scripts/integrate", "scripts/adjudicate_act"]
 channel = "call"
-data = "APPROVAL_RUNGS, SPINE_APPROVAL_RUNGS; rung_for -> rung|None; read_dial -> (rung, legacy); dial_at -> rung; dial_from_config -> rung; holds_under -> bool"
+data = "ACCEPTANCE_RUNGS, SPINE_ACCEPTANCE_RUNGS; rung_for -> rung|None; read_dial -> (rung, legacy); dial_at -> rung; dial_from_config -> rung; holds_under -> bool"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = "source - authority consumes the ladder vocabulary and one git read: the dial of a named commit or of the index, read through the kit's git-or-None primitive, so no git, no repository and an unknown commit all read as the most-held rung. It prints nothing; the migration note a legacy dial deserves is the coordinator's to present, for the one working tree a person can migrate."
 
 [interface.IF-196]
-rationale = """Which status cells and copied approval text a delta moves, and whether a dial holds them, is one judgement read from the lane rider, the marked autonomous-commit check and the history check. Drawing it beside the two-tree spine walk it reuses keeps one comparison basis for each route, makes the lane rule independent of who made the lane commit, and keeps the universe of watched registries declared apart from the rung map, so a registry the map does not name reads as held rather than as absent."""
+rationale = """Which status cells and copied acceptance text a delta moves, and whether a dial holds them, is one judgement read from the lane rider, the marked autonomous-commit check and the history check. Drawing it beside the two-tree spine walk it reuses keeps one comparison basis for each route, makes the lane rule independent of who made the lane commit, and keeps the universe of watched registries declared apart from the rung map, so a registry the map does not name reads as held rather than as absent."""
 owner = "scripts/held_status"
 requestors = ["scripts/agent_policy", "scripts/check", "scripts/check_trajectory", "scripts/text_then_act"]
 channel = "call"
-data = "status moves; held_status_lines; held_status_refusal; HELD_TIERS; HELD_PATHS; registry_held; held_claims; held_approval_lines; commit_held_approval_lines; marked_refusal"
+data = "status moves; held_status_lines; held_status_refusal; HELD_TIERS; HELD_PATHS; registry_held; held_claims; held_acceptance_lines; commit_held_acceptance_lines; marked_refusal"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = "A delta git cannot read is an empty list, the status-move readers' degrade; a registry side that does not parse is one move naming the registry, never an empty delta, so an unreadable change is refused where the rung is held. The needs file is shared by a spine tier and an off-spine one: the off-spine walk reads its stakeholder tier alone and the spine walk its needs, so each row is reported once. A delta git cannot read is a refusal rather than an empty claim where the lane rule reads it; a registry side that does not parse is a refusal naming the registry. A held claim is evaluated against every parent, so a refresh merge carrying trunk approval makes no lane claim."
+notes = "A delta git cannot read is an empty list, the status-move readers' degrade; a registry side that does not parse is one move naming the registry, never an empty delta, so an unreadable change is refused where the rung is held. The needs file is shared by a spine tier and an off-spine one: the off-spine walk reads its stakeholder tier alone and the spine walk its needs, so each row is reported once. A delta git cannot read is a refusal rather than an empty claim where the lane rule reads it; a registry side that does not parse is a refusal naming the registry. A held claim is evaluated against every parent, so a refresh merge carrying trunk acceptance makes no lane claim."
 
 [interface.IF-197]
 rationale = """The commit-msg hook is a shell script and the trailer rule is Python, and the rule must be the same wherever the commit floor runs. The hook therefore hands the message file to the harness and reads the exit code, so the grammar lives once and the hook carries only the knowledge of whether the loop marker is set, which it needs to fail closed when the harness cannot run."""
@@ -2012,7 +2012,7 @@ component = "CMP-006"
 notes = """source - assumption_rules consumes nothing but the row vocabulary it reads from kitlib.spine: rows in, findings out, with no I/O, no git and no filesystem."""
 
 [interface.IF-214]
-rationale = """An observation result is kept apart from its test case, one file per result, so recording a sample never edits an approved row; one shipped module owns the file's format, its strict reader and its atomic write, and the writer and the checker both go through it, so neither can read half a record as a result or disagree with the other about what a record is."""
+rationale = """An observation result is kept apart from its test case, one file per result, so recording a sample never edits an accepted row; one shipped module owns the file's format, its strict reader and its atomic write, and the writer and the checker both go through it, so neither can read half a record as a result or disagree with the other about what a record is."""
 owner = "scripts/kitlib/observation"
 consumers = ["scripts/record_observation", "scripts/assumption_rules", "scripts/baseline_snapshot", "scripts/kitlib/evidence"]
 channel = "file"
@@ -2045,7 +2045,7 @@ component = "CMP-006"
 notes = """The rules read no file, no clock and no git: the records and each accepted risk's act arrive already read. No evidence level is derived: an assumption carries none. The writer reads the one policy rule, record_policy_problem, so its refusal and the checker's finding are one statement."""
 
 [interface.IF-217]
-rationale = """An accepted risk is bound to the approval act that accepted it, and only the history of the acceptance record says which act that was; the module that writes the record is the one that reads it back, so the reading follows the record's own format and the pure rule compares texts it never has to find."""
+rationale = """An accepted risk is bound to the acceptance act that accepted it, and only the history of the acceptance record says which act that was; the module that writes the record is the one that reads it back, so the reading follows the record's own format and the pure rule compares texts it never has to find."""
 owner = "scripts/baseline_snapshot"
 requestors = ["scripts/record_observation"]
 channel = "call"
@@ -2053,10 +2053,10 @@ data = "risk_acceptance_act(root, da_id) -> (commit, reason); risk_acceptance_vi
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
-notes = """Read-only and off-clock: an act is found by the entry it added to the act ledger (IF-220), naming the row approved or re-accepted, never by the snapshot's prose stamp, and a failed sample is ordered by whether the act's tree held it. A shallow clone whose window holds no such act answers no anchor, with the reason stated."""
+notes = """Read-only and off-clock: an act is found by the entry it added to the act ledger (IF-220), naming the row accepted or re-accepted, never by the snapshot's prose stamp, and a failed sample is ordered by whether the act's tree held it. A shallow clone whose window holds no such act answers no anchor, with the reason stated."""
 
 [interface.IF-220]
-rationale = """Re-accepting a risk is re-accepting its row, and a re-acceptance moves no cell of the recorded copies, so which rows an approval act named must be written somewhere a reader may parse; the snapshot's stamp is prose that nothing parses. One typed entry per act, numbered, keeps two acts naming the same rows on the same day distinct, so the latest act always moves an accepted risk's anchor. The module that writes the record appends the entry in the same act and is the one that reads it back."""
+rationale = """Re-accepting a risk is re-accepting its row, and a re-acceptance moves no cell of the recorded copies, so which rows an acceptance act named must be written somewhere a reader may parse; the snapshot's stamp is prose that nothing parses. One typed entry per act, numbered, keeps two acts naming the same rows on the same day distinct, so the latest act always moves an accepted risk's anchor. The module that writes the record appends the entry in the same act and is the one that reads it back."""
 owner = "scripts/baseline_snapshot"
 consumers = ["scripts/acceptance_record", "scripts/gen_open_items", "scripts/kitlib/sitting", "scripts/trace"]
 channel = "file"
@@ -2067,7 +2067,7 @@ component = "CMP-006"
 notes = """Appended by every snapshot act that copied a registry, the first signing included, and by none that copied nothing. A malformed ledger is refused whole, never read in part: the snapshot act refuses before it moves any byte of the record, trace.py reports it on the always-on integrity floor, and risk_acceptance_act returns no anchor with the reason. risk_acceptance_act reads the entries a commit added by comparing entry numbers with its parent's. The acceptance record's mirror rules skip the file by name, as they skip the prose stamp, since it copies no live registry. No party outside the kit reads the format: the owner writes it and reads it back, and the file reaches history as one more governed write of the act, committed with its copies. The verdict path is recorded for audit and no held-rung rule requires the act ledger's verdict cell. Fields: seq (a positive integer, unique and increasing in file order), date (an ISO day), approved = [row ids], reattested = [row ids], verdict (an optional non-empty in-tree verdict path), copied (a non-empty, sorted list of distinct repo-relative registry paths, the files the act wrote). A legacy entry's copy set is unknown, never empty, never inferred or backfilled. An entry a commit adds, identified by seq against its parent and against MERGE_HEAD during a merge, must carry copied naming only the snapshot's registry files. In the whole file, no entry may omit copied after one that carries it. A malformed parent and a hand-edited ledger are outside the coverage bound, since no supported route produces either. A copied file is no evidence that its rows were judged."""
 
 [interface.IF-224]
-rationale = """The operator's approval brief sets apart the owing chains the operator-acceptance dial releases, and which rows the dial releases is a question the loop already answers for the rows it mints and the adjudication brief it composes. Reading that one predicate keeps the operator's surface, the mint and the adjudicator agreeing about who signs a row; a rung table in the brief would be a third answer to one question, free to disagree with the other two."""
+rationale = """The operator's acceptance brief sets apart the owing chains the operator-acceptance dial releases, and which rows the dial releases is a question the loop already answers for the rows it mints and the adjudication brief it composes. Reading that one predicate keeps the operator's surface, the mint and the adjudicator agreeing about who signs a row; a rung table in the brief would be a third answer to one question, free to disagree with the other two."""
 owner = "scripts/agent_common"
 requestors = ["scripts/trace", "scripts/intake"]
 channel = "call"
@@ -2075,10 +2075,10 @@ data = "operator_accepts_spine(docs, registry) -> True when the dial holds the r
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """Cross-component crossing: trace is CMP-006 and agent_common is CMP-008. The imports are deferred: approval-brief rendering reads operator_accepts_spine, while a reservation reads trunk_name and parse_wi_id; trace paths outside those uses load nothing from the coordinator's primitives. The shipped dial holds every rung, so a repo that has released none sees the brief it saw before."""
+notes = """Cross-component crossing: trace is CMP-006 and agent_common is CMP-008. The imports are deferred: acceptance-brief rendering reads operator_accepts_spine, while a reservation reads trunk_name and parse_wi_id; trace paths outside those uses load nothing from the coordinator's primitives. The shipped dial holds every rung, so a repo that has released none sees the brief it saw before."""
 
 [interface.IF-226]
-rationale = """An assumption is approved for what it lets the requirements claim, so the brief an approver reads must show, for each one, the requirements citing it, the needs they reach, where its outcome lands, the test cases that can falsify it and its falsifier. Gathering that chain in the pure join layer that judges the tier keeps the approver reading the same rows, joined the same way, as the checker judges, and keeps the brief's module growing by rendering lines alone."""
+rationale = """An assumption is accepted for what it lets the requirements claim, so the brief an acceptor reads must show, for each one, the requirements citing it, the needs they reach, where its outcome lands, the test cases that can falsify it and its falsifier. Gathering that chain in the pure join layer that judges the tier keeps the acceptor reading the same rows, joined the same way, as the checker judges, and keeps the brief's module growing by rendering lines alone."""
 owner = "scripts/assumption_rules"
 requestors = ["scripts/trace"]
 channel = "call"
@@ -2089,7 +2089,7 @@ component = "CMP-006"
 notes = """Rows in, one dict out, with no I/O: the brief reads the registries once and hands them in. No result is read and no evidence level is shown: cases lists the test cases that can falsify the assumption."""
 
 [interface.IF-227]
-rationale = """A reviewer starting from an outcome needs to see what it relies on and whether any of it has been shown false, and neither the per-assumption reports nor the approval brief starts from a need. Deriving the view from the registries in the dashboard's source layer, through the same classification rule the checker applies, keeps it from going stale the way a hand-written summary does and keeps the page and the checker agreeing."""
+rationale = """A reviewer starting from an outcome needs to see what it relies on and whether any of it has been shown false, and neither the per-assumption reports nor the acceptance brief starts from a need. Deriving the view from the registries in the dashboard's source layer, through the same classification rule the checker applies, keeps it from going stale the way a hand-written summary does and keeps the page and the checker agreeing."""
 owner = "scripts/traj_parse"
 requestors = ["scripts/gen_trajectory"]
 channel = "call"
@@ -2340,7 +2340,7 @@ component = "CMP-008"
 notes = "No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."
 
 [interface.IF-308]
-rationale = "The staged check and lane-commit rider need one owner for parent-first refusal lines, so both judge the same parent tree comparison instead of accepting different approval relationships."
+rationale = "The staged check and lane-commit rider need one owner for parent-first refusal lines, so both judge the same parent tree comparison instead of accepting different acceptance relationships."
 owner = "scripts/acceptance_record"
 requestors = ["scripts/check", "scripts/text_then_act"]
 channel = "call"
@@ -2385,7 +2385,7 @@ component = "CMP-008"
 owner = "scripts/agent_policy"
 requestors = ["scripts/agent_common"]
 channel = "call"
-data = "process-config readers and findings, approval authority decisions, and normalized coordinator dials"
+data = "process-config readers and findings, acceptance authority decisions, and normalized coordinator dials"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2636,7 +2636,7 @@ component = "CMP-008"
 notes = "source - this seam reads version-control trees and review or decision records; its staged hold accepts an injected relink oracle, and callers decide the transition they hold."
 
 [interface.IF-287]
-rationale = "Combined brief composition, review verdict checking, merge-time disposition and approval acts need one interpretation of their machine lines, kind-scoped tokens, bound row identities and sections; separate parsers could let one judgement act outside its requested scope or let a malformed review verdict reach a different consumer."
+rationale = "Combined brief composition, review verdict checking, merge-time disposition and acceptance acts need one interpretation of their machine lines, kind-scoped tokens, bound row identities and sections; separate parsers could let one judgement act outside its requested scope or let a malformed review verdict reach a different consumer."
 owner = "scripts/kitlib/sitting"
 requestors = ["scripts/adjudicate_brief", "scripts/amendment_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake", "scripts/review_brief", "scripts/score_reviews", "scripts/plan_coverage", "scripts/adjudicate_act", "scripts/held_status"]
 channel = "call"

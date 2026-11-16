@@ -346,7 +346,7 @@ _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 #      literally — `OI-`, `D-`, `RULING-` — and nothing generalises over them.
 #      Re-measured at each widening: `M-10` is matched by none of them.
 #   2. `ruling` / `retired` / `attestation` / `amended` are SUBJECT NOUNS in the
-#      rows that specify the approval machinery itself — 217 occurrences over
+#      rows that specify the acceptance machinery itself — 217 occurrences over
 #      108 live SR/LLR/TC rows, with SR-149, SR-165 and LLR-118 the worked
 #      instances. A verb grep would destroy every one of them. `_EDIT_STAMP_RE`
 #      therefore requires the verb to be followed WITHIN ONE CLAUSE by an ISO
@@ -383,7 +383,7 @@ _RULING_ID_RE = re.compile(r"\bRULING-\d+\b", re.IGNORECASE)
 _EDIT_VERBS = (
     r"amended|reworded|minted|renumbered|retired|narrowed|revised|superseded|"
     r"restated|added|deleted|moved|extended|clarified|ruled|raised|split|landed|"
-    r"reopened|struck|introduced|widened|promoted|demoted|approved|corrected|"
+    r"reopened|struck|introduced|widened|promoted|demoted|accepted|corrected|"
     r"absorbs|settled|confirmed|investigated|resolved|reverted|joined|"
     r"re-?voiced|re-?based|re-?pointed|re-?affirmed|provisional"
 )
@@ -864,7 +864,7 @@ def form_findings(srs, llrs, tcs):
             )
     for rows, (label, key, cols) in zip((srs, llrs, tcs), PROVENANCE_COLS):
         for rid, r in _real(rows, key):
-            # A `Draft` row is pre-approval and process.md §4 already exempts
+            # A `Draft` row is pre-acceptance and process.md §4 already exempts
             # it from the decomposition rules. "TBD" in a Draft acceptance
             # criterion is what Draft MEANS; flagging it would make the state
             # unusable for the drafting it exists to allow.

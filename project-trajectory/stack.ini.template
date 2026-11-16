@@ -188,7 +188,7 @@ paths =
 #   <path> = <kind> [| <BEGIN marker> | <END marker>]
 # `path` is an exact repo-relative path or a "/"-terminated directory prefix.
 # `kind` names the regenerator: trajectory | okf | status | stage | openitems |
-# components | cli | interface-reference | verdictrollup | approve. OMIT the
+# components | cli | interface-reference | verdictrollup | accept. OMIT the
 # marker pair for a FULLY generated artifact; NAME the (BEGIN, END) pair for a
 # PARTIALLY generated file where only the marked region regenerates
 # (status.md's hand-authored prose stays yours). An ABSENT section declares
@@ -219,7 +219,7 @@ docs/requirements/components.derived.toml = components
 docs/cli-reference.md = cli | <!-- BEGIN GENERATED CLI REFERENCE --> | <!-- END GENERATED CLI REFERENCE -->
 docs/interface-reference.md = interface-reference | <!-- BEGIN GENERATED INTERFACE REFERENCE --> | <!-- END GENERATED INTERFACE REFERENCE -->
 docs/reviews/rollup/ = verdictrollup
-docs/ratify/CURRENT.md = approve
+docs/ratify/CURRENT.md = accept
 
 # --- Session-engine dials (IF-068) — the single home -------------------------
 # The session engine (scripts/agent_loop.py) reads its dials here so a

@@ -205,7 +205,7 @@ def test_the_registry_this_repo_ships_is_control_character_clean(tmp_path):
 
 # --- WI-352: the completion reconciler -----------------------------------------
 #
-# Status stays an ATTESTATION (operator ruling 2026-07-28); what was missing is the
+# Status stays a CLAIM (operator ruling 2026-07-28); what was missing is the
 # RECONCILER every other declared-vs-computed pair here already has. Each signal
 # below is driven against a CONSTRUCTED spec, and each has a twin proving it stays
 # silent in the other direction — the three false-positive classes measured while

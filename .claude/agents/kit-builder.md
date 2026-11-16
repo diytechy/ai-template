@@ -21,8 +21,8 @@ Standing rules, in addition to the prompt:
 - **Read first:** `CLAUDE.md` and the spec in full, including any operator ruling or
   adjudicator draft it quotes. A quoted draft is byte-exact: apply it as written.
 - **Rows.**
-  - Never edit an approved row's cells beyond the grant, and never flip a Status.
-    If an approved row is wrong or impossible as written, stop that part and
+  - Never edit an accepted row's cells beyond the grant, and never flip a Status.
+    If an accepted row is wrong or impossible as written, stop that part and
     report it.
   - Search for an existing home before creating a file or function, and
     name the nearest existing home you considered in your final message

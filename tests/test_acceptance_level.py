@@ -4,7 +4,7 @@ WI-493).
 `operator_holds(docs, stage)` is the one comparison every consumer in the loop
 makes — the dispatcher's admission table, the adjudication flip arm, the
 page-escalation, the dual-plan round. Getting it wrong in the permissive
-direction means a machine approving something an operator meant to hold, which is
+direction means a machine accepting something an operator meant to hold, which is
 the one failure this kit's whole discipline exists to prevent. So the input
 matrix is driven here rather than reasoned about at four call sites.
 
@@ -17,7 +17,7 @@ Three things this module pins, each because a cut got it wrong:
     a declared `agent_common.DIAL_HOLDS` table; WI-493 executed shape (ii) and
     RE-KEYED the dial itself to a `DevStg-*` rung, so the table retired with the
     second vocabulary it existed to bridge. The dial names the HIGHEST rung an
-    operator still approves and every rung AT OR BELOW it is held — the mirror of
+    operator still accepts and every rung AT OR BELOW it is held — the mirror of
     check selection's at-or-above rule.
   * **THE DIAL MOVED, AND EVERY PRE-EXISTING ANSWER SURVIVED IT.** The retired
     0-4 ordinal's five settings hold precisely the same rung sets under the
@@ -73,7 +73,7 @@ def _docs(tmp_path, dial=None, **extra):
 
 # THE AT-OR-BELOW RULE, STATED AS A TABLE — the dial's meaning written out rather
 # than recomputed with the arithmetic under test. Each row is a legal dial value
-# and the rungs an operator still approves at it, in LADDER ORDER.
+# and the rungs an operator still accepts at it, in LADDER ORDER.
 #
 # `DevStg-Below` is the sentinel for "nothing is operator-held", not a rung; it is
 # the value the retired ordinal spelled `0`, and setting the dial below the
@@ -124,7 +124,7 @@ LADDER = {
 # be the code under test asserting about itself.
 #
 # The hand-reasoned property the old table carried: Boundary rides Needs and Arch
-# rides Reqs. The two rungs OI-21 inserted are not APPROVABLE tiers (the ordinal
+# rides Reqs. The two rungs OI-21 inserted are not ACCEPTANCE tiers (the ordinal
 # named SN/SR/LLR/TC), so each was held with the rung BELOW it — attaching them
 # to the rung above would have let a level-1 repo do its boundary work unattended,
 # and the wrong-answer direction that matters here is always "less operator". Under
@@ -166,7 +166,7 @@ def test_each_RETIRED_level_holds_exactly_what_DIAL_HOLDS_held(tmp_path, level):
     """THE RE-KEY'S EQUIVALENCE, PERMUTATION BY PERMUTATION (WI-493).
 
     The template's own words for the retired ordinal: 0 = nothing; 1 = the operator
-    approves SNs; 2 = ...and SRs; 3 = ...and LLRs; 4 = ...and TCs. Cumulative
+    accepts SNs; 2 = ...and SRs; 3 = ...and LLRs; 4 = ...and TCs. Cumulative
     counts, with the two inserted rungs riding the tier below them.
 
     Both ROADS to a retired level are driven, because they are different code:
@@ -183,13 +183,13 @@ def test_each_RETIRED_level_holds_exactly_what_DIAL_HOLDS_held(tmp_path, level):
         assert held == expected, (level, dial)
 
 
-def test_the_four_APPROVABLE_rungs_answer_exactly_as_they_did_before_the_ladder(
+def test_the_four_ACCEPTANCE_rungs_answer_exactly_as_they_did_before_the_ladder(
     tmp_path,
 ):
     """The migration's own invariant, stated as a table rather than trusted.
 
     OI-21 MAPPED the dial onto the eight rungs and WI-493 RE-KEYED it to them. So
-    for the four rungs that were always approval tiers, every retired level
+    for the four rungs that were always acceptance tiers, every retired level
     must answer today what it answered under the six-integer ladder: level 1
     holds needs; 2 adds requirements; 3 adds LLRs; 4 adds tests.
 
@@ -222,7 +222,7 @@ def test_the_top_two_rungs_are_held_by_the_TOP_OF_THE_RETIRED_DIAL_ALONE(
     `DevStg-Impl` and `DevStg-Release` cover PRECISELY the states a bar-advance
     row runs in. With the top rung reading as not-held, the SHIPPED DEFAULT
     (documented as "every tier operator-held; the most conservative setting") let
-    the loop dispatch and self-approve the final bar. Below the top, the retired
+    the loop dispatch and self-accept the final bar. Below the top, the retired
     ordinal was about which SPINE tier is being worked, and neither of these two
     is one — so no setting under it reached them.
 
@@ -286,7 +286,7 @@ def test_BOTH_shipped_homes_declare_the_dial_as_a_RUNG_STRING():
             assert declared[0] in rungs, (rel, declared)
         else:
             assert declared == [expect], (rel, declared)
-    assert ac.APPROVAL_FALLBACK == dg.STAGE_RELEASE
+    assert ac.ACCEPTANCE_FALLBACK == dg.STAGE_RELEASE
 
 
 # --- the failure directions ----------------------------------------------------
@@ -303,7 +303,7 @@ def test_an_unreadable_stage_is_operator_held(tmp_path):
     Note the deliberate asymmetry with `spine_rules.stage_ord`, which RAISES on an
     unknown label. There the question is "where is this on the ladder" and a
     silent default hides that the ladder moved; here the question is "who
-    approves" and the only safe answer to "I do not recognize this" is "the
+    accepts" and the only safe answer to "I do not recognize this" is "the
     operator"."""
     docs = _docs(tmp_path, dg.STAGE_ARCH)
     for stage in (None, 2, 0, 2.0, object(), "DevStg-Nonsense", ""):
@@ -330,7 +330,7 @@ def test_every_legal_dial_reads_back_as_ITSELF(tmp_path, dial):
     # The reader's identity arm, and the reason the malformed table below means
     # anything: a fallback that fired on everything would satisfy every
     # conservative-direction test in this module while making the dial inert.
-    assert ac.approval_through(_docs(tmp_path, dial)) == dial
+    assert ac.acceptance_through(_docs(tmp_path, dial)) == dial
     assert ac.config_conflicts(_docs(tmp_path, dial)) == []
 
 
@@ -357,8 +357,8 @@ def test_every_malformed_dial_falls_back_to_the_conservative_end(tmp_path, value
     # in the new type, and it is refused rather than read, because the migration
     # window is exactly as wide as the migration and no wider.
     assert (
-        ac.approval_through(_docs(tmp_path, value))
-        == ac.APPROVAL_FALLBACK
+        ac.acceptance_through(_docs(tmp_path, value))
+        == ac.ACCEPTANCE_FALLBACK
         == dg.STAGE_RELEASE
     )
 
@@ -442,7 +442,7 @@ def test_a_wrong_TYPED_dial_is_refused_too(tmp_path):
         # only problem each of these files has.
         assert len(found) == 1, (literal, found)
         assert any("operator_accepts_through" in f for f in found), (literal, found)
-        assert ac.approval_through(docs) == dg.STAGE_RELEASE, literal
+        assert ac.acceptance_through(docs) == dg.STAGE_RELEASE, literal
 
 
 def test_an_unknown_RUNG_is_refused_by_the_VOCABULARY_arm(tmp_path):
@@ -463,7 +463,7 @@ def test_an_absent_dial_holds_everything_and_says_nothing(tmp_path):
     # Absence is not a defect: a repo that never declared a dial gets the
     # conservative end, silently, because there is nothing to correct.
     docs = _docs(tmp_path)
-    assert ac.approval_through(docs) == ac.APPROVAL_FALLBACK == dg.STAGE_RELEASE
+    assert ac.acceptance_through(docs) == ac.ACCEPTANCE_FALLBACK == dg.STAGE_RELEASE
     assert ac.config_conflicts(docs) == []
 
 
@@ -501,10 +501,10 @@ def test_the_dial_VOCABULARY_is_the_LADDER_plus_the_BELOW_sentinel():
     assert ac.LADDER_RUNGS is kit_ladder.LADDER_RUNGS
     assert dg.STAGE_ORDER is kit_ladder.STAGE_ORDER
     assert dg.stage_ord is kit_ladder.stage_ord
-    assert ac.APPROVAL_DIAL_RUNGS == set(dg.STAGE_ORDER) | {BELOW}
+    assert ac.ACCEPTANCE_DIAL_RUNGS == set(dg.STAGE_ORDER) | {BELOW}
     assert BELOW not in ac.LADDER_RUNGS  # the sentinel is not a rung
     key = ("authority", "operator_accepts_through")
-    assert ac.PROCESS_KEY_VOCAB[key] is ac.APPROVAL_DIAL_RUNGS
+    assert ac.PROCESS_KEY_VOCAB[key] is ac.ACCEPTANCE_DIAL_RUNGS
     # ...and the retired table is GONE rather than renamed: a reader who finds it
     # has found a revert, not a rename.
     assert not hasattr(ac, "DIAL_HOLDS")
@@ -541,7 +541,7 @@ def test_a_legacy_ORDINAL_is_translated_and_WARNED_but_never_REFUSED(
     assert ac.LEGACY_DIAL_ORDINALS[level] == expected
     docs = _docs(tmp_path, level)
     capsys.readouterr()
-    assert ac.approval_through(docs) == expected
+    assert ac.acceptance_through(docs) == expected
     err = capsys.readouterr().err
     assert "operator_accepts_through" in err and str(level) in err
     assert expected in err
@@ -578,8 +578,8 @@ def test_the_legacy_window_REFUSES_a_BOOL_because_True_equals_one(tmp_path):
     conflicts = ac.config_conflicts(docs)
     assert len(conflicts) == 1, conflicts
     assert "is a bool, expected str" in conflicts[0]
-    assert ac.approval_through(docs) == dg.STAGE_RELEASE
-    assert ac.approval_through(docs) != dg.STAGE_BOUNDARY
+    assert ac.acceptance_through(docs) == dg.STAGE_RELEASE
+    assert ac.acceptance_through(docs) != dg.STAGE_BOUNDARY
 
 
 # --- the legacy translation ----------------------------------------------------
@@ -603,7 +603,7 @@ def test_an_unmigrated_legacy_file_reads_as_all_three_dials(tmp_path, word, rung
         word + "\n", encoding="utf-8", newline="\n"
     )
     docs = tmp_path / "docs"
-    assert ac.approval_through(docs) == rung
+    assert ac.acceptance_through(docs) == rung
     assert ac.keep_nondependent(docs) is keep
 
 
@@ -612,7 +612,7 @@ def test_an_unknown_legacy_word_falls_back_conservatively(tmp_path):
     (tmp_path / "docs" / "gate-policy").write_text(
         "semi-attended\n", encoding="utf-8", newline="\n"
     )
-    assert ac.approval_through(tmp_path / "docs") == dg.STAGE_RELEASE
+    assert ac.acceptance_through(tmp_path / "docs") == dg.STAGE_RELEASE
     assert ac.keep_nondependent(tmp_path / "docs") is False
 
 
@@ -630,7 +630,7 @@ def test_the_declared_dial_beats_the_legacy_file(tmp_path):
         "autonomous\n", encoding="utf-8", newline="\n"
     )
     set_process_key(tmp_path, "authority", "operator_accepts_through", dg.STAGE_LLREQS)
-    assert ac.approval_through(tmp_path / "docs") == dg.STAGE_LLREQS
+    assert ac.acceptance_through(tmp_path / "docs") == dg.STAGE_LLREQS
 
 
 # --- the second axis: spine_stage ----------------------------------------------
@@ -695,7 +695,7 @@ def test_a_draft_need_or_an_empty_spine_is_the_NEEDS_rung():
     assert _stage(srs=()) == dg.STAGE_NEEDS
 
 
-def test_a_approved_but_UNCITED_need_is_the_NEEDS_rung():
+def test_a_accepted_but_UNCITED_need_is_the_NEEDS_rung():
     # WI-401's coverage rung, which the stage axis did not apply: a need with
     # no requirement answering it is unfinished work AT THE NEEDS RUNG. Without
     # this such a spine read the top rung ("nothing in work") while the bar
@@ -706,8 +706,8 @@ def test_a_approved_but_UNCITED_need_is_the_NEEDS_rung():
 
 def test_the_MODIFIED_rung_RETIRED_and_took_no_successor():
     # D-9 STEP 7, and the deletion is what this pins. The rung read the
-    # post-attestation amendment state — the text moved after it was attested,
-    # so a fresh approval was owed ON THE SR — and it sat ahead of the
+    # post-acceptance amendment state — the text moved after it was accepted,
+    # so a fresh acceptance was owed ON THE SR — and it sat ahead of the
     # children for that reason. No cell records that state any more (operator
     # ruling 2026-08-17m: the snapshot comparison does), so the rung went with
     # the word and was deliberately NOT re-keyed onto drift: this axis reads
@@ -1033,7 +1033,7 @@ def test_a_DECLARED_but_EMPTY_boundary_inventory_is_honestly_INCOMPLETE():
 
 def test_a_DRAFT_crossing_holds_the_BOUNDARY_rung_open():
     # `approval = "draft"` maps to DRAFTED: a frame declared and not yet
-    # approved. Lower-cased cells against capitalized ladder constants is exactly
+    # accepted. Lower-cased cells against capitalized ladder constants is exactly
     # the case `_maturity`'s case-fold exists for, so both spellings are pinned.
     assert _stage(bifs=[dict(BIF_APPROVED, Status="Drafted")], have_bifs=True) == (
         dg.STAGE_BOUNDARY
@@ -1044,14 +1044,14 @@ def test_a_DRAFT_crossing_holds_the_BOUNDARY_rung_open():
     )
 
 
-def test_rung_1_gates_on_APPROVAL_and_NOT_on_realization_coverage():
+def test_rung_1_gates_on_ACCEPTANCE_and_NOT_on_realization_coverage():
     """THE RULING'S TWO READINGS, RESOLVED — and the resolution pinned so a later
     pass cannot fold in the second conjunct without touching this test.
 
-    13u's wording gates on BIF approval; §1R.5's names approval AND "every BIF
+    13u's wording gates on BIF acceptance; §1R.5's names acceptance AND "every BIF
     realized (or explicitly deferred)". Whether a crossing has a realizing IF row
     is DECISION 6, deferred by ruling to post-schema, so the predicate reads
-    approval only. An approved crossing that NOTHING realizes therefore clears
+    acceptance only. An accepted crossing that NOTHING realizes therefore clears
     rung 1 — which is the live state of four of this repo's six crossings, not a
     hypothetical."""
     assert _stage(bifs=[BIF_APPROVED], have_bifs=True) == SETTLED
@@ -1184,7 +1184,7 @@ def test_every_declared_registry_enum_value_has_a_maturity_mapping():
     assert all(v == v.lower() for v in dg.CMP_MATURITY)
     assert trace.ENUM_FIELDS["CMP"]["Status"] == {"Drafted", "Approved", "Founded"}
     assert trace.ENUM_FIELDS["B"]["Status"] == {"Drafted", "Approved"}
-    # The IF tier shares the frame's approval vocabulary (decision 12: ONE status
+    # The IF tier shares the frame's acceptance vocabulary (decision 12: ONE status
     # vocabulary, per-registry subsets) — pinned so the two cannot drift apart
     # while each stays internally consistent.
     assert trace.ENUM_FIELDS["IF"]["Status"] == trace.ENUM_FIELDS["B"]["Status"]
@@ -1275,7 +1275,7 @@ def test_final_review_is_INDEPENDENT_of_the_DIAL(tmp_path):
     # you could not ask for a closing read without also holding every tier. It is
     # also where the retired `G-Final` tag's meaning actually lives.  check_vocab: allow
     docs = _docs(tmp_path, BELOW, final_review="always")
-    assert ac.approval_through(docs) == BELOW
+    assert ac.acceptance_through(docs) == BELOW
     assert ac.operator_holds(docs, dg.STAGE_REQS) is False
     assert ac.final_review(docs) is True
 
@@ -1312,30 +1312,30 @@ def test_the_clean_close_sample_is_DETERMINISTIC(tmp_path):
     assert intake._complete_spot_checks(tmp_path, outcomes) == [] or True
 
 
-# --- OI-30 D3: off-spine approval authority, DERIVED from the same dial --------
-def test_APPROVAL_RUNGS_is_the_off_spine_sibling_of_THE_DIAL(tmp_path):
+# --- OI-30 D3: off-spine acceptance authority, DERIVED from the same dial --------
+def test_ACCEPTANCE_RUNGS_is_the_off_spine_sibling_of_THE_DIAL(tmp_path):
     """The map is small, closed, and every value is a REAL rung of the ladder.
 
     A typo'd rung would send `operator_accepts` through `operator_holds`' unrecognized
     arm, which answers True — safe, but silently: the registry would read as held
     for a reason nobody intended. Pin the values against the ladder itself."""
-    assert set(ac.APPROVAL_RUNGS) == {
+    assert set(ac.ACCEPTANCE_RUNGS) == {
         "external",
         "interfaces",
         "components",
         "assumptions",
     }
-    for registry, rung in ac.APPROVAL_RUNGS.items():
+    for registry, rung in ac.ACCEPTANCE_RUNGS.items():
         assert rung in ac.LADDER_RUNGS, (registry, rung)
     # The ruled mapping, verbatim: each registry gets the rung `spine_rules`
     # ALREADY gates on it — external.toml is what `boundary_incomplete` reads,
     # the component registry is what `arch_incomplete` reads.
-    assert ac.APPROVAL_RUNGS["external"] == dg.STAGE_BOUNDARY
-    assert ac.APPROVAL_RUNGS["interfaces"] == dg.STAGE_ARCH
-    assert ac.APPROVAL_RUNGS["components"] == dg.STAGE_ARCH
+    assert ac.ACCEPTANCE_RUNGS["external"] == dg.STAGE_BOUNDARY
+    assert ac.ACCEPTANCE_RUNGS["interfaces"] == dg.STAGE_ARCH
+    assert ac.ACCEPTANCE_RUNGS["components"] == dg.STAGE_ARCH
     # WI-636 (LLR-246): the assumptions registry joins at the frame's rung, the
     # boundary its assumptions land on.
-    assert ac.APPROVAL_RUNGS["assumptions"] == dg.STAGE_BOUNDARY
+    assert ac.ACCEPTANCE_RUNGS["assumptions"] == dg.STAGE_BOUNDARY
     # NO NEW KEY: the ruling's whole point. `operator_accepts` must answer from the
     # existing dial, so a repo that never declares anything new still gets it.
     # The OVERTURNED proposal's key must exist NOWHERE that a reader could take
@@ -1361,9 +1361,9 @@ def test_APPROVAL_RUNGS_is_the_off_spine_sibling_of_THE_DIAL(tmp_path):
 
 def test_operator_accepts_MAPPED_and_HELD_at_this_repos_dial(tmp_path):
     """Arm 1 — the state this repo is in. At `DevStg-Release` every rung is at or
-    below the dial, so every mapped registry's approval cells are the operator's."""
+    below the dial, so every mapped registry's acceptance cells are the operator's."""
     docs = _docs(tmp_path, dial=dg.STAGE_RELEASE)
-    for registry in ac.APPROVAL_RUNGS:
+    for registry in ac.ACCEPTANCE_RUNGS:
         assert ac.operator_accepts(docs, registry) is True, registry
 
 
@@ -1379,12 +1379,12 @@ def test_operator_accepts_MAPPED_and_FREE_at_a_low_dial(tmp_path):
     # ...and at `DevStg-Below` nothing is held at all, which is what "no new
     # enum" buys: the off-spine axis moves with the one dial, never independently.
     docs0 = _docs(tmp_path / "zero", dial=BELOW)
-    for registry in ac.APPROVAL_RUNGS:
+    for registry in ac.ACCEPTANCE_RUNGS:
         assert ac.operator_accepts(docs0, registry) is False, registry
 
 
 def test_operator_accepts_UNMAPPED_is_HELD_fail_safe(tmp_path):
-    """Arm 3 — the fail-safe direction, ruled explicitly: an approval-carrying
+    """Arm 3 — the fail-safe direction, ruled explicitly: an acceptance-carrying
     registry with no rung mapping is HELD, because a registry nobody has
     associated with a rung is one nobody has ruled on."""
     docs = _docs(tmp_path, dial=BELOW)  # the MOST permissive dial there is
@@ -1392,12 +1392,14 @@ def test_operator_accepts_UNMAPPED_is_HELD_fail_safe(tmp_path):
         # (`"Interfaces "` is the casing/whitespace arm: it MAPS, because the
         # lookup normalises — an unmapped answer there would be a false hold
         # hiding a real one.)
-        expected = unknown is not None and unknown.strip().lower() in ac.APPROVAL_RUNGS
+        expected = (
+            unknown is not None and unknown.strip().lower() in ac.ACCEPTANCE_RUNGS
+        )
         assert ac.operator_accepts(docs, unknown) is (not expected), unknown
 
 
 # --- WI-572: the SPINE sibling of the same table, and its two readers ---------
-def test_SPINE_APPROVAL_RUNGS_is_the_spine_sibling_of_THE_DIAL(tmp_path):
+def test_SPINE_ACCEPTANCE_RUNGS_is_the_spine_sibling_of_THE_DIAL(tmp_path):
     """Same pin as its off-spine twin above, for the same reason: a typo'd rung
     would send `operator_accepts_spine` through `operator_holds`' unrecognized arm,
     which answers True — safe, but silently, so a whole spine tier would read as
@@ -1407,23 +1409,23 @@ def test_SPINE_APPROVAL_RUNGS_is_the_spine_sibling_of_THE_DIAL(tmp_path):
     KEYED BY REGISTRY STEM, and that is checked here rather than assumed: both
     readers pass `spine_carrier.stem(<path>)`, so a key carrying a `.toml`
     suffix would map nothing and fail closed to HELD."""
-    assert set(ac.SPINE_APPROVAL_RUNGS) == {
+    assert set(ac.SPINE_ACCEPTANCE_RUNGS) == {
         "docs/requirements/system-requirements",
         "docs/requirements/low-level-requirements",
         "docs/test/test-cases",
     }
-    for registry, rung in ac.SPINE_APPROVAL_RUNGS.items():
+    for registry, rung in ac.SPINE_ACCEPTANCE_RUNGS.items():
         assert rung in ac.LADDER_RUNGS, (registry, rung)
         assert not registry.endswith((".toml", ".csv")), registry
-    # The rung each tier is approved INTO — the same join `gate-advance` states
-    # in prose ("Into `DevStg-Reqs` — a draft requirement is approved").
-    assert ac.SPINE_APPROVAL_RUNGS["docs/requirements/system-requirements"] == (
+    # The rung each tier is accepted INTO — the same join `gate-advance` states
+    # in prose ("Into `DevStg-Reqs` — a draft requirement is accepted").
+    assert ac.SPINE_ACCEPTANCE_RUNGS["docs/requirements/system-requirements"] == (
         dg.STAGE_REQS
     )
-    assert ac.SPINE_APPROVAL_RUNGS["docs/requirements/low-level-requirements"] == (
+    assert ac.SPINE_ACCEPTANCE_RUNGS["docs/requirements/low-level-requirements"] == (
         dg.STAGE_LLREQS
     )
-    assert ac.SPINE_APPROVAL_RUNGS["docs/test/test-cases"] == dg.STAGE_TESTS
+    assert ac.SPINE_ACCEPTANCE_RUNGS["docs/test/test-cases"] == dg.STAGE_TESTS
     # ONE HOME. The rung table lived in `intake` (registry-keyed) AND in
     # `adjudicate_brief` (tier-keyed) for one commit, and the first-acceptance
     # brief — which re-resolves its population live, after the mint — was wired
@@ -1438,7 +1440,7 @@ def test_operator_accepts_spine_is_DERIVED_and_fails_safe(tmp_path):
 
     Arm 2 is the load-bearing one: at `DevStg-Reqs` the SR tier is HELD and the
     LLR/TC tiers below it are RELEASED — the MIXED dial, which is the state that
-    makes "who may approve this row" a per-row question rather than a per-repo
+    makes "who may accept this row" a per-row question rather than a per-repo
     one, and the state the first-acceptance brief got wrong."""
     srs = "docs/requirements/system-requirements"
     llrs = "docs/requirements/low-level-requirements"
@@ -1446,7 +1448,7 @@ def test_operator_accepts_spine_is_DERIVED_and_fails_safe(tmp_path):
 
     # Arm 1 — this repo's shipped default: every rung at or below, all held.
     docs = _docs(tmp_path, dial=dg.STAGE_RELEASE)
-    for registry in ac.SPINE_APPROVAL_RUNGS:
+    for registry in ac.SPINE_ACCEPTANCE_RUNGS:
         assert ac.operator_accepts_spine(docs, registry) is True, registry
 
     # Arm 2 — MIXED, and derived rather than a constant wearing a lookup.
@@ -1455,7 +1457,7 @@ def test_operator_accepts_spine_is_DERIVED_and_fails_safe(tmp_path):
     assert ac.operator_accepts_spine(mixed, llrs) is False
     assert ac.operator_accepts_spine(mixed, tcs) is False
     below = _docs(tmp_path / "below", dial=BELOW)
-    for registry in ac.SPINE_APPROVAL_RUNGS:
+    for registry in ac.SPINE_ACCEPTANCE_RUNGS:
         assert ac.operator_accepts_spine(below, registry) is False, registry
 
     # Arm 3 — UNMAPPED is HELD, at the MOST permissive dial there is.
@@ -1468,9 +1470,9 @@ def test_operator_accepts_spine_is_DERIVED_and_fails_safe(tmp_path):
     assert ac.operator_accepts_spine(mixed, llrs + ".csv") is False
 
 
-def test_the_needs_file_is_approved_at_the_needs_rung_by_both_predicates(tmp_path):
+def test_the_needs_file_is_accepted_at_the_needs_rung_by_both_predicates(tmp_path):
     """WI-636 (LLR-246): the needs file, needs and stakeholders alike, is
-    approved at `DevStg-Needs`. The live predicates read the rung through
+    accepted at `DevStg-Needs`. The live predicates read the rung through
     `kitlib.authority.rung_for`, the map the held-status judgement reads, so
     the needs tier is not unmapped (held at every dial) on one path while it is
     released below the dial on the other. Held at and above `DevStg-Needs`;
@@ -1489,13 +1491,13 @@ def test_the_needs_file_is_approved_at_the_needs_rung_by_both_predicates(tmp_pat
     assert ac.operator_accepts(below, "stakeholder-needs") is False
 
 
-def test_no_shipped_loop_module_WRITES_an_approval_cell():
+def test_no_shipped_loop_module_WRITES_an_acceptance_cell():
     """THE GUARD THAT ACTUALLY BITES TODAY (OI-30 D3's writer-side contract).
 
     No WI kind carries a registry identity, so `dispatch._kind_action`'s
-    `approval_held` seam has no live caller — which is stated in its docstring
+    `acceptance_held` seam has no live caller — which is stated in its docstring
     rather than dressed up. What CAN be enforced now is the premise that makes
-    that acceptable: the kit ships NO automated writer of an off-spine approval
+    that acceptable: the kit ships NO automated writer of an off-spine acceptance
     cell. The moment one is added this fails, and whoever adds it has to route it
     through `agent_common.operator_accepts` first.
 
@@ -1508,7 +1510,7 @@ def test_no_shipped_loop_module_WRITES_an_approval_cell():
     added against the old name is still a writer.
 
     Narrow on purpose: an `approval` word in a comment is documentation (these
-    modules are full of it). What is forbidden is ASSIGNING the approved value to
+    modules are full of it). What is forbidden is ASSIGNING the accepted value to
     a maturity-shaped key in running code."""
     import re as _re
     from pathlib import Path as _Path
@@ -1537,17 +1539,17 @@ def test_no_shipped_loop_module_WRITES_an_approval_cell():
 
 
 def test_the_dispatcher_seam_surfaces_on_EITHER_hold():
-    """`approval_held` is a second reason to surface, not a widening of the
-    spine one: a held approval surfaces an acceptance/gate row even on a spine
-    tier the project declared machine-approvable."""
+    """`acceptance_held` is a second reason to surface, not a widening of the
+    spine one: a held acceptance surfaces an acceptance/gate row even on a spine
+    tier the project declared machine-acceptable."""
     dispatch = load_script("dispatch")
     assert dispatch._kind_action("acceptance", False) == "exclusive"
-    assert dispatch._kind_action("acceptance", False, approval_held=True) == "surface"
-    assert dispatch._kind_action("gate", False, approval_held=True) == "surface"
-    assert dispatch._kind_action("acceptance", True, approval_held=False) == "surface"
+    assert dispatch._kind_action("acceptance", False, acceptance_held=True) == "surface"
+    assert dispatch._kind_action("gate", False, acceptance_held=True) == "surface"
+    assert dispatch._kind_action("acceptance", True, acceptance_held=False) == "surface"
     # Every other kind is untouched by the off-spine axis — the ruling is about
-    # who may write an approval, not about what may run.
+    # who may write an acceptance, not about what may run.
     for kind in ("ordinary", "critique", "spine", "high-risk", "adjudication"):
-        assert dispatch._kind_action(kind, False, approval_held=True) == (
+        assert dispatch._kind_action(kind, False, acceptance_held=True) == (
             dispatch._kind_action(kind, False)
         ), kind

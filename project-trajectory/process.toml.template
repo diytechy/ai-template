@@ -65,7 +65,7 @@
 # word `bootstrap --gate-policy` had written, so a repo that chose `autonomous`
 # scaffolded as fully attended with no diagnostic anywhere.
 #
-# The three words map onto the dials below (`agent_common.LEGACY_APPROVAL`
+# The three words map onto the dials below (`agent_common.LEGACY_ACCEPTANCE`
 # is the one home for the translation, and `bootstrap.py --migrate-config`
 # applies it to a legacy `docs/gate-policy` file):
 #
@@ -79,18 +79,18 @@
 # Note what that makes visible: the enum's words were never one axis. Each
 # bundled a tier hold, a drain policy and an end-of-run hold, which is exactly
 # why four separate tables had to re-interpret the same word.
-# THE HIGHEST STAGE RUNG An OPERATOR STILL APPROVES, cumulatively ("through" this
+# THE HIGHEST STAGE RUNG An OPERATOR STILL ACCEPTS, cumulatively ("through" this
 # rung). The dispatcher compares the rung a row is IN against this value: AT OR
 # BELOW it, work SURFACES for the operator; above it, the loop dispatches and an
-# LLM verdict carries approval authority. It is the exact mirror of the rule
+# LLM verdict carries acceptance authority. It is the exact mirror of the rule
 # that selects checks — a check runs at or ABOVE its `from-stage`, an operator
-# approves at or BELOW this dial.
+# accepts at or BELOW this dial.
 #
 # The value is one of the eight ladder rungs (process.md §4), or `DevStg-Below`
-# for "nothing is operator-held; the loop approves every rung itself":
+# for "nothing is operator-held; the loop accepts every rung itself":
 #
 #   DevStg-Below      nothing is operator-held
-#   DevStg-Needs      the operator approves stakeholder needs
+#   DevStg-Needs      the operator accepts stakeholder needs
 #   DevStg-Boundary   ... and the system frame
 #   DevStg-Reqs       ... and the requirements
 #   DevStg-Arch       ... and the partition
@@ -101,7 +101,7 @@
 #
 # WHO THE OPERATOR MAY BE on a held rung (a person, and which sessions may
 # take the act for them) is stated once, with its enforcer, in process.md
-# §4 "A held rung's approval is the operator's act". Read it there.
+# §4 "A held rung's acceptance is the operator's act". Read it there.
 #
 # IT WAS A 0-4 ORDINAL UNTIL WI-493 (OI-21 shape (ii)). A repo that still
 # carries the number is READ, TRANSLATED AND WARNED — not refused — and,
@@ -118,9 +118,9 @@ operator_accepts_through = "DevStg-Release"
 #              have let it close
 #   "off"    — no final hold
 final_review = "always"
-# Keep NON-DEPENDENT work running while an approval is queued? This is an
+# Keep NON-DEPENDENT work running while an acceptance is queued? This is an
 # ORTHOGONAL policy an ordinal cannot express (it was the old `single-approve`
-# level's distinguishing behaviour). false = a queued approval drains the
+# level's distinguishing behaviour). false = a queued acceptance drains the
 # station and stops the run; true = other lanes keep going around it.
 keep_nondependent = false
 # How a CLEAN (`complete/`) lane close is adjudicated. `partial` and
@@ -287,7 +287,7 @@ live_status = false
 # (subagent_gate.py, a Claude `PreToolUse` hook) — bounded fan-out for an
 # unattended run. NOT a boolean, because it was never one:
 #   "off"   allow every spawn (the default; the hook is a no-op)
-#   "ask"   defer each spawn to approval
+#   "ask"   defer each spawn to acceptance
 #   "deny"  refuse every spawn
 # `ask`/`deny` is a real restriction on what an agent may do, so it stays a
 # thing an adopter TURNS ON. Shipping it visibly at "off" is what the overturn
@@ -325,7 +325,7 @@ subagent_gate = "off"
 backlink_coverage_min = 0
 # THE TEST-FIRST ORDER'S DECLARED START (SR-217), a commit id. The `test-first`
 # step (`check_test_first.py`, warn-only, at every rung) reports each
-# requirement approved AFTER this commit that has a test case approved after its
+# requirement accepted AFTER this commit that has a test case accepted after its
 # implementation first landed on trunk, which is the first commit adding a
 # back-link line naming the requirement or one of its design rows. Both events
 # are read from the committed history, never from a cell.
@@ -333,26 +333,26 @@ backlink_coverage_min = 0
 # WHY A START, AND WHY IT SHIPS EMPTY. A project adopting the rule has history
 # written before it, and judging that history would report every requirement
 # whose code came first under a rule nobody had agreed yet. Declare the commit
-# the rule starts after (typically the parent of the commit that approves your
-# first requirements under it), and only requirements approved after it are
+# the rule starts after (typically the parent of the commit that accepts your
+# first requirements under it), and only requirements accepted after it are
 # judged. `""` declares no start and the whole history is judged, which is
 # right for a project that has kept the order since its first commit.
 #
-# The start scopes only WHICH REQUIREMENTS are judged: test-case approvals are
-# read over the whole history, so a test case approved after the code landed is
+# The start scopes only WHICH REQUIREMENTS are judged: test-case acceptances are
+# read over the whole history, so a test case accepted after the code landed is
 # late even when both came before the start.
 #
 # A start the history cannot honour is reported UNREADABLE, never passed: a
 # commit that no longer exists, one that never stood on trunk's first-parent
 # line, a shallow clone, or a start before the TOML registries (registries
-# still under the older carrier are unreadable too). An approval the TOML
+# still under the older carrier are unreadable too). An acceptance the TOML
 # history cannot date exactly still settles the order when it falls at or
 # before the landing (a requirement's own, at or before the start); otherwise
 # it is reported as an order that cannot be read.
 test_first_since = ""
 # THE ASSUMPTION GATE (SR-205, SR-206, SR-212), off by default. Its four
 # built-in check steps (`check_assumption_gate.py`) ask of every requirement the
-# argument that carries it to its needs: at DevStg-Boundary, approved, active
+# argument that carries it to its needs: at DevStg-Boundary, accepted, active
 # assumptions reaching its stakeholders, or a `coincident` waiver
 # (`assumption-gate`), and for an interface-form requirement, each crossing it
 # names coincident or bridged by a cited assumption landing on it

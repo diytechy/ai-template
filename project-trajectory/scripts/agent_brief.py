@@ -109,7 +109,7 @@ DEFAULT_PHASE_TIER = {
     "CRITIQUE": "strong",
     # SN-026: an adjudicator rules on a CLAIM — was this delivered, did this
     # amendment move meaning, is this queued row a duplicate — and every one of
-    # those is a judgement whose cost of being wrong is a wrong approval.
+    # those is a judgement whose cost of being wrong is a wrong acceptance.
     # Strong by default, like the other two judging phases. The per-row
     # `BuildTier` still pins it down where a disposition estimated cheaper
     # (`intake.tier_signal`), because that estimate is measured; this is the

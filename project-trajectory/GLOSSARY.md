@@ -164,6 +164,14 @@ was reviewed, and it says nothing about tests passing. Formerly "approve",
 "attest" and "re-attest", three words for one act; **accept** is kept. A
 project's own approval ceremonies are outside the kit.
 
+### approve
+
+A [reviewer](#reviewer)'s verdict on a build round or a plan, written
+`VERDICT: APPROVE` against `CHANGES-REQUESTED`, and a critic's in a critique.
+It judges work: it takes no row as agreed and moves no `status`. The act on a
+row is [accept](#accept); an adjudicator's ruling on a row in a
+first-acceptance sitting is `ACCEPT`.
+
 ### Vouch
 
 The verification method for what no check can establish, such as a playtest, a

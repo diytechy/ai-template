@@ -874,7 +874,7 @@ def columns(path, id_col):
 #     text contains the word draft", scraped by one function while the id
 #     universe was scraped by another — and during the 2026-08-10 sitting a
 #     prose MENTION of an id under the draft heading silently re-drafted an
-#     already-attested need. `kind` is now a field on the need itself.
+#     already-accepted need. `kind` is now a field on the need itself.
 #   * THE EDGE-CASE TIER keeps its own fields (`lifecycle` / `scenario` /
 #     `expected`) instead of being folded onto the core four at read time.
 NEED_TABLE = "need"
@@ -997,7 +997,7 @@ def needs_from_markdown(text):
         # legacy markdown had exactly two maturities — under the draft heading
         # or not — so the mapping is total and loses nothing. Emitting it here
         # is what keeps `is_draft_need` honest over legacy text; without it a
-        # draft-heading row reads as approved and the derived gate RISES, the
+        # draft-heading row reads as accepted and the derived gate RISES, the
         # one failure shape this carrier exists to prevent.
         need = {
             "id": cells[0],
@@ -1030,7 +1030,7 @@ def needs_from_text(text, carrier):
     it was read from (`.toml` or `.md`, the resolved file's suffix).
 
     Exists because some readers hold the registry's TEXT rather than its path:
-    the approval view's need prose, the README's Must/Should floor, and the
+    the acceptance view's need prose, the README's Must/Should floor, and the
     snapshot's reads of a needs file at a past commit. Each read that text from
     a file it resolved, so each knows the carrier.
 
@@ -1191,7 +1191,7 @@ def draft_ids_from_text(text, carrier):
     `is_draft_need`), which is what
     retires section-as-state and kills the sharp edge the 2026-08-10 sitting
     hit — a prose MENTION of an id under the draft heading silently re-drafted
-    an already-attested need, because the id universe is a whole-text scrape
+    an already-accepted need, because the id universe is a whole-text scrape
     while draft-ness was a heading scan. Under MARKDOWN the heading scan is
     reproduced EXACTLY as it always behaved, prose mentions and all.
 
@@ -1212,7 +1212,7 @@ def draft_ids_from_text(text, carrier):
     A `.toml` TEXT THAT DOES NOT PARSE RAISES, and so does a carrier the need
     tier does not have. There is no safe guess: a heading-scan fallback over
     malformed TOML with no markdown draft heading answers "no drafts", every
-    need then reads as approved, and the derived stage rises on a file nobody
+    need then reads as accepted, and the derived stage rises on a file nobody
     could read. ValueError, not SystemExit, because the policy is the
     caller's: the two readers of the gate turn it into a refusal naming the
     file, the way `load_needs` refuses."""
@@ -1247,7 +1247,7 @@ def draft_ids_or_refuse(path, text):
 
     The refusal is a SystemExit naming the file, the way `load_needs` refuses:
     answering "no drafts" for an unreadable file would read every need as
-    approved and let the derived stage rise. It has one home because its two
+    accepted and let the derived stage rise. It has one home because its two
     callers are the two readers of the gate, `trace.load_registries` and
     `spine_rules.load_spine`, and a refusal policy stated twice is one that
     drifts. The stage derivation reads the needs file nowhere else, so this is
@@ -1316,7 +1316,7 @@ def is_draft_need(need):
     A NEED WITH NO `status` IS NOT DRAFT, and that default is deliberate rather
     than incidental: the failure mode this tier can least afford is the one the
     markdown carrier had — a row silently reading as un-drafted floats the
-    derived gate UPWARD. Here the absent-key case reads as approved only because
+    derived gate UPWARD. Here the absent-key case reads as accepted only because
     an absent `status` is caught upstream, as a SCHEMA finding on a required
     key, rather than being invented into a maturity by a reader.
 
@@ -1324,7 +1324,7 @@ def is_draft_need(need):
     already follow (`trace.is_drafted`/`is_approved`/`is_founded` all lower the
     cell before comparing; process.md §4). It was an EXACT compare here, and the
     asymmetry failed in the unsafe direction: a need written `status = "drafted"`
-    read as approved, floating the derived gate upward — the same silent
+    read as accepted, floating the derived gate upward — the same silent
     float this docstring's absent-key paragraph exists to prevent, arriving by
     casing instead of by an absent key. Casing is not a maturity, so a
     mis-cased word must not decide one; a word that is not in the vocabulary at

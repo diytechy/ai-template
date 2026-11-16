@@ -204,7 +204,7 @@ _SPINE_SR_HEADER = (
 )
 
 
-def _sr_row(req="the original attested text", status="Approved", hats="hat.MAINTAINER"):
+def _sr_row(req="the original accepted text", status="Approved", hats="hat.MAINTAINER"):
     # `Hat-Refs` is carried by the fixture rather than by a second header
     # because WI-484 phase 5's arm reads it on the SAME rows the WI-316 warn
     # scans — two fixtures would let the two guards drift apart in the tests
@@ -234,7 +234,7 @@ def _init_spine_repo(root):
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
     run_git("add", "-A")
-    run_git("commit", "-m", "attested baseline")
+    run_git("commit", "-m", "accepted baseline")
     return run_git
 
 
@@ -262,7 +262,7 @@ def test_staged_spine_amend_without_flip_warns(tmp_path):
     # snapshot drift until the next sitting.
     assert "SNAPSHOT DRIFT" in proc.stderr
     # The re-copy names the row: a bare `intake.py snapshot` refuses a drifted
-    # approved row that the act neither flips nor names with `--reaccepts`.
+    # accepted row that the act neither flips nor names with `--reaccepts`.
     assert "intake.py snapshot --reaccepts SR-001" in proc.stderr
     # ...and it no longer names a value the closed enum cannot hold.
     assert "Modified re-accept marker" not in proc.stderr
@@ -288,7 +288,7 @@ def test_staged_child_amend_needs_its_own_flip_not_the_parents(tmp_path):
     # amending an LLR and flipping the LLR ITSELF in the same commit is the
     # sanctioned path — no warn. Flipping the OWNING SR instead (the retired
     # chain reading's sanction) no longer silences the child: its text changed
-    # while its own Status still claims approval, so it warns whatever the
+    # while its own Status still claims acceptance, so it warns whatever the
     # parent does.
     run_git = _init_spine_repo(tmp_path)
     llr_h = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
@@ -305,7 +305,7 @@ def test_staged_child_amend_needs_its_own_flip_not_the_parents(tmp_path):
 
     write_llr("the original detail")
     run_git("add", "-A")
-    run_git("commit", "-m", "attested chain")
+    run_git("commit", "-m", "accepted chain")
 
     # (1) amend the LLR + move the LLR's OWN status -> silent (its status
     # moved). `Drafted` since D-9 step 7 retired `Modified`; the guard reads
@@ -320,7 +320,7 @@ def test_staged_child_amend_needs_its_own_flip_not_the_parents(tmp_path):
     # the owning SR's status moved in the same commit (the exemption the
     # retired chain reading used to grant).
     write_llr("the AMENDED detail")
-    _amend_sr(tmp_path, "the original attested text", "Drafted")
+    _amend_sr(tmp_path, "the original accepted text", "Drafted")
     run_git("add", "-A")
     proc2 = run_traj(tmp_path, "--staged")
     assert proc2.returncode == 0, proc2.stdout + proc2.stderr
@@ -341,7 +341,7 @@ def test_staged_spine_warn_survives_a_bom(tmp_path):
         bytes([0xEF, 0xBB, 0xBF]) + (_SPINE_SR_HEADER + _sr_row()).encode("utf-8")
     )
     run_git("add", "-A")
-    run_git("commit", "-m", "BOM'd attested baseline")
+    run_git("commit", "-m", "BOM'd accepted baseline")
     csv_path.write_bytes(
         bytes([0xEF, 0xBB, 0xBF])
         + (_SPINE_SR_HEADER + _sr_row("the AMENDED text", "Approved")).encode("utf-8")
@@ -354,7 +354,7 @@ def test_staged_spine_warn_survives_a_bom(tmp_path):
 
 
 def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
-    # A NEW row is not an amendment; a Status-only change (e.g. the approval
+    # A NEW row is not an amendment; a Status-only change (e.g. the acceptance
     # flip Drafted->Approved with no content delta) made a deliberate call the
     # warn does not second-guess. Both stay silent.
     run_git = _init_spine_repo(tmp_path)
@@ -371,14 +371,14 @@ def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
     assert "re-accept marker" not in proc.stderr
 
 
-# --- WI-572: the APPROVAL ACT half of the same walk ---------------------------
+# --- WI-572: the ACCEPTANCE ACT half of the same walk ---------------------------
 #
 # Operator rulings 2026-09-01 and 6 (2026-10-07): the `Status` flip into
 # `Approved`/`Founded` and the `docs/archive/last_approved/` copy that anchors it
 # are an independent adjudicator's (PROCESS.md §4); the authoring session writes
 # `Drafted` rows and amends text.
 # `staged_spine_amendments` above EXEMPTS a row whose Status moved ("a
-# deliberate call this does not second-guess"); `staged_approval_acts` reports
+# deliberate call this does not second-guess"); `staged_acceptance_acts` reports
 # exactly that exempted set, off the same two-tree walk, so the pair covers the
 # delta and neither can be the only reader of a row.
 
@@ -393,7 +393,7 @@ def _sr_at(root, run_git, *rows, message=None):
         run_git("commit", "-m", message)
 
 
-def test_a_status_flip_into_approved_is_read_as_an_approval_act(tmp_path):
+def test_a_status_flip_into_accepted_is_read_as_an_acceptance_act(tmp_path):
     # The shape the ruling names first, and the one the record actually holds:
     # a lane moved four spine rows Drafted -> Approved in its own delta
     # (`580df781`, WI-508 slice 6), and the next review round returned
@@ -402,10 +402,10 @@ def test_a_status_flip_into_approved_is_read_as_an_approval_act(tmp_path):
     # merge base, not the index.
     run_git = _init_spine_repo(tmp_path)
     _sr_at(tmp_path, run_git, _sr_row(status="Drafted"), message="author the row")
-    _sr_at(tmp_path, run_git, _sr_row(status="Approved"), message="approve it")
+    _sr_at(tmp_path, run_git, _sr_row(status="Approved"), message="accept it")
     ar = load_script("acceptance_record")
 
-    acts = ar.staged_approval_acts(tmp_path, "HEAD~1", "HEAD")
+    acts = ar.staged_acceptance_acts(tmp_path, "HEAD~1", "HEAD")
     assert [(a["id"], a["act"], a["before"], a["after"]) for a in acts] == [
         ("SR-001", "flip", "Drafted", "Approved")
     ]
@@ -414,9 +414,9 @@ def test_a_status_flip_into_approved_is_read_as_an_approval_act(tmp_path):
     assert ar.staged_spine_amendments(tmp_path, "HEAD~1", "HEAD") == []
 
 
-def test_a_row_born_approved_is_read_as_an_approval_act(tmp_path):
+def test_a_row_born_accepted_is_read_as_an_acceptance_act(tmp_path):
     # The second measured shape: four lanes (WI-483, WI-500, WI-501, WI-507)
-    # minted rows that ARRIVED `Approved`, skipping the approval brief entirely.
+    # minted rows that ARRIVED `Approved`, skipping the acceptance brief entirely.
     # There is no Status to have moved, so a flip-only reading would miss every
     # one of them; the row's absence on the base side IS the act.
     run_git = _init_spine_repo(tmp_path)
@@ -426,7 +426,7 @@ def test_a_row_born_approved_is_read_as_an_approval_act(tmp_path):
     _sr_at(tmp_path, run_git, _sr_row(), born, message="mint a born-Approved row")
     ar = load_script("acceptance_record")
 
-    acts = ar.staged_approval_acts(tmp_path, "HEAD~1", "HEAD")
+    acts = ar.staged_acceptance_acts(tmp_path, "HEAD~1", "HEAD")
     assert [(a["id"], a["act"], a["after"]) for a in acts] == [
         ("SR-002", "born", "Approved")
     ]
@@ -445,16 +445,16 @@ def test_born_and_withdrawn_drafted_rows_reach_first_acceptance_not_refusal(tmp_
     _sr_at(
         tmp_path,
         run_git,
-        _sr_row(status="Drafted"),  # SR-001 Approved -> Drafted: a de-approval
-        drafted,  # SR-002 arrives Drafted: authoring, not approving
+        _sr_row(status="Drafted"),  # SR-001 Approved -> Drafted: a de-acceptance
+        drafted,  # SR-002 arrives Drafted: authoring, not accepting
         message="author one row, withdraw another",
     )
     ar = load_script("acceptance_record")
 
-    assert ar.staged_approval_acts(tmp_path, "HEAD~1", "HEAD") == []
+    assert ar.staged_acceptance_acts(tmp_path, "HEAD~1", "HEAD") == []
     # Both resulting Drafted rows are seen by the first-acceptance reader. The
     # withdrawal blesses nothing and therefore remains absent from the refusal,
-    # but it cannot be treated as approval: the adjudicator must re-approve it.
+    # but it cannot be treated as acceptance: the adjudicator must re-accept it.
     drafted_rows = ar.staged_drafted_rows(tmp_path, "HEAD~1", "HEAD")
     assert [(r["id"], r["act"], r["changed"]) for r in drafted_rows] == [
         ("SR-001", "amended", {}),
@@ -462,7 +462,7 @@ def test_born_and_withdrawn_drafted_rows_reach_first_acceptance_not_refusal(tmp_
     ]
 
     # ...and a `Drafted` row whose TEXT then moves DOES reach that surface,
-    # which preserves the ordinary below-approval amendment classification.
+    # which preserves the ordinary below-acceptance amendment classification.
     _sr_at(
         tmp_path,
         run_git,
@@ -487,10 +487,10 @@ def test_the_lane_refusal_names_every_act_and_the_snapshot_write(tmp_path):
     (snap / "system-requirements.csv").write_text(
         _SPINE_SR_HEADER + _sr_row(status="Approved"), encoding="utf-8"
     )
-    _sr_at(tmp_path, run_git, _sr_row(status="Approved"), message="approve + anchor")
+    _sr_at(tmp_path, run_git, _sr_row(status="Approved"), message="accept + anchor")
     ar = load_script("acceptance_record")
 
-    refusal = ar.lane_approval_refusal(tmp_path, "HEAD~1", "HEAD")
+    refusal = ar.lane_acceptance_refusal(tmp_path, "HEAD~1", "HEAD")
     assert refusal is not None
     assert "SR-001 flipped Drafted -> Approved" in refusal
     assert "docs/requirements/system-requirements.csv" in refusal
@@ -502,10 +502,10 @@ def test_the_lane_refusal_names_every_act_and_the_snapshot_write(tmp_path):
     assert "The act is an independent adjudicator's" in refusal
     assert "Leave the rows `Drafted`" in refusal  # the remedy, not just the verdict
     # The green half of the same fixture: the AUTHORING commit is admitted.
-    assert ar.lane_approval_refusal(tmp_path, "HEAD~2", "HEAD~1") is None
+    assert ar.lane_acceptance_refusal(tmp_path, "HEAD~2", "HEAD~1") is None
 
 
-# --- WI-380: the §A5.1 approved-vs-traced cell split ---------------------------
+# --- WI-380: the §A5.1 accepted-vs-traced cell split ---------------------------
 #
 # Operator ruling 2026-07-31 (docs/concurrency-v2.md §A5.1): only what is APPROVED
 # arms the re-accept warn. Traceability is TRACED, and a traced-only edit must
@@ -577,11 +577,11 @@ def _write_child_registries(root, llr_cells, tc_cells):
 
 
 def _init_full_spine_repo(root):
-    """`_init_spine_repo` plus an attested LLR-001 + TC-001 in HEAD."""
+    """`_init_spine_repo` plus an accepted LLR-001 + TC-001 in HEAD."""
     run_git = _init_spine_repo(root)
     _write_child_registries(root, {}, {})
     run_git("add", "-A")
-    run_git("commit", "-m", "attested chain")
+    run_git("commit", "-m", "accepted chain")
     return run_git
 
 
@@ -589,14 +589,14 @@ def test_staged_spine_traced_cells_do_not_arm_the_reaccept_warn(tmp_path):
     # THE WI-380 CASE. Every traced cell of all three registries moves at once —
     # the SR's SN-Refs/Phase/Aspect, the LLR's Module/CodeSymbol/TestRefs/
     # Component/Phase (literally the WI-280 shape), the TC's Verifies/Evidence/
-    # Automated/Phase — with every approved cell and every Status untouched.
+    # Automated/Phase — with every accepted cell and every Status untouched.
     # Silence is the whole point: before this split each of these armed the warn
     # exactly as if requirement prose had changed (mutation-proof: reverting
-    # `spine_cell_class` to "everything but Status is approved" reds this).
+    # `spine_cell_class` to "everything but Status is accepted" reds this).
     run_git = _init_full_spine_repo(tmp_path)
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
         _SPINE_SR_HEADER
-        + 'SR-001,Adder,SN-009,"the original attested text","why","ac",,C,'
+        + 'SR-001,Adder,SN-009,"the original accepted text","why","ac",,C,'
         "Test,Approved,4,unattended-loop,hat.MAINTAINER\n",
         encoding="utf-8",
     )
@@ -622,9 +622,9 @@ def test_staged_spine_traced_cells_do_not_arm_the_reaccept_warn(tmp_path):
     assert "re-accept marker" not in proc.stderr
 
 
-def test_staged_spine_approved_child_cells_still_arm_the_reaccept_warn(tmp_path):
+def test_staged_spine_accepted_child_cells_still_arm_the_reaccept_warn(tmp_path):
     # The complement, so the narrowing cannot be mistaken for a disabling: the
-    # LLR's `Detail`/`Rationale` and the TC's `Method`/`Expected` are approved,
+    # LLR's `Detail`/`Rationale` and the TC's `Method`/`Expected` are accepted,
     # and amending them with the owning SR left Approved still warns per row.
     run_git = _init_full_spine_repo(tmp_path)
     _write_child_registries(
@@ -635,11 +635,11 @@ def test_staged_spine_approved_child_cells_still_arm_the_reaccept_warn(tmp_path)
     run_git("add", "-A")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "LLR-001: approved cell(s) Detail, Rationale amended" in proc.stderr
-    assert "TC-001: approved cell(s) Expected, Method amended" in proc.stderr
+    assert "LLR-001: accepted cell(s) Detail, Rationale amended" in proc.stderr
+    assert "TC-001: accepted cell(s) Expected, Method amended" in proc.stderr
 
 
-def test_staged_spine_unknown_column_falls_to_approved(tmp_path):
+def test_staged_spine_unknown_column_falls_to_accepted(tmp_path):
     # THE FAIL-SAFE. A column in NEITHER §A5.1 list — one added to a registry
     # after the ruling was written — must arm the warn, not fall through it: a
     # spurious window is seen and dismissed, a missed window is seen by nobody.
@@ -655,7 +655,7 @@ def test_staged_spine_unknown_column_falls_to_approved(tmp_path):
     run_git("add", "-A")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "SR-001: approved cell(s) Novelty amended" in proc.stderr
+    assert "SR-001: accepted cell(s) Novelty amended" in proc.stderr
 
 
 def test_spine_cell_split_classifies_every_shipped_column():
@@ -700,7 +700,7 @@ def test_spine_cell_split_classifies_every_shipped_column():
         }
         assert not unclassified, (
             "{}: column(s) {} are classified by NEITHER half of the §A5.1 split "
-            "in check_trajectory.py — rule them approved or traced".format(
+            "in check_trajectory.py — rule them accepted or traced".format(
                 path, sorted(unclassified)
             )
         )
@@ -716,7 +716,7 @@ def test_the_two_wi388_cell_rulings_are_recorded_in_the_split():
     # does not name, RULED at WI-388 rather than left to the residual.
     #   * LLR `SR-Refs` -> TRACED, routed to adjudication like its two pointer
     #     siblings (`SN-Refs`, `Verifies`): re-pointing which SR owns a
-    #     decomposition row changes no attested prose on either side, and
+    #     decomposition row changes no accepted prose on either side, and
     #     whether the re-point moved scope is exactly adjudication's judgement.
     #   * SR `SupersededBy` -> APPROVED. That half is now VACUOUS by a later
     #     ruling: the SR-tier column retired with the supersession tombstone
@@ -793,7 +793,7 @@ _NEED_TOML = (
 )
 
 
-def test_an_approved_needs_amendment_is_recorded_and_warned(tmp_path):
+def test_an_accepted_needs_amendment_is_recorded_and_warned(tmp_path):
     """Implements: TC-153"""
     # OI-100 gap 1 (WI-791): the amendment walk covers the need tier, and the
     # pre-commit warn reads the SAME walk, so what the author is warned about at
@@ -801,9 +801,9 @@ def test_an_approved_needs_amendment_is_recorded_and_warned(tmp_path):
     # arm stays structurally silent: the need tier carries no `Hat-Refs`.
     run_git = _init_spine_repo(tmp_path)
     needs = tmp_path / "docs" / "requirements" / "stakeholder-needs.toml"
-    needs.write_text(_NEED_TOML.format("the attested need"), encoding="utf-8")
+    needs.write_text(_NEED_TOML.format("the accepted need"), encoding="utf-8")
     run_git("add", "-A")
-    run_git("commit", "-m", "the attested need")
+    run_git("commit", "-m", "the accepted need")
     needs.write_text(_NEED_TOML.format("the AMENDED need"), encoding="utf-8")
     run_git("add", "-A")
     ct = load_script("check_trajectory")
@@ -812,9 +812,9 @@ def test_an_approved_needs_amendment_is_recorded_and_warned(tmp_path):
         "docs/requirements/stakeholder-needs.toml",
         "SN-001",
     )
-    assert record["approved"] == {"Need": ("the attested need", "the AMENDED need")}
+    assert record["approved"] == {"Need": ("the accepted need", "the AMENDED need")}
     (finding,) = ct.staged_spine_findings(tmp_path)
-    assert finding.startswith("SN-001: approved cell(s) Need amended"), finding
+    assert finding.startswith("SN-001: accepted cell(s) Need amended"), finding
     assert ct.staged_hat_refs_findings(tmp_path) == []
 
 
@@ -841,7 +841,7 @@ def test_staged_spine_amendments_read_a_commit_range_not_only_the_index(tmp_path
     assert ranged[0]["approved"] == {}
     assert ranged[0]["traced"] == {"SN-Refs": ("SN-001", "SN-009")}
 
-    # The approved half survives the same trip — a rev range is not a second,
+    # The accepted half survives the same trip — a rev range is not a second,
     # weaker scan: it is the same rules read against two commits.
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
         _SPINE_SR_HEADER + _sr_row("the AMENDED text", "Approved"), encoding="utf-8"
@@ -861,7 +861,7 @@ def test_staged_spine_amendments_read_a_commit_range_not_only_the_index(tmp_path
 # same amendment set as the WI-316 guard, comparison by CELL CLASS.
 
 
-def test_amending_approved_cells_without_moving_hat_refs_warns(tmp_path):
+def test_amending_accepted_cells_without_moving_hat_refs_warns(tmp_path):
     """Implements: TC-198"""
     # The fire case. `Requirement` moves, `Hat-Refs` does not.
     run_git = _init_spine_repo(tmp_path)
@@ -870,7 +870,7 @@ def test_amending_approved_cells_without_moving_hat_refs_warns(tmp_path):
     ct = load_script("check_trajectory")
     found = ct.staged_hat_refs_findings(tmp_path)
     assert len(found) == 1, found
-    assert "SR-001: approved cell(s) Requirement amended while Hat-Refs" in found[0]
+    assert "SR-001: accepted cell(s) Requirement amended while Hat-Refs" in found[0]
     # Both arms of the guard fire on this row — the second arm is an ADDITION,
     # not a re-spelling of the first.
     assert ct.staged_spine_findings(tmp_path)
@@ -884,7 +884,7 @@ def test_hat_refs_arm_is_silent_when_only_traced_cells_move(tmp_path):
     # THE REGRESSION CASE, and it is a MEASURED one: WI-484's phase-2 backfill
     # wrote `Hat-Refs` on 55 SR rows and raised seven warns on a neighbouring
     # check that blames the registry by LINE, because a blame time cannot tell
-    # an approved cell from a traced one. This arm must be silent on exactly
+    # an accepted cell from a traced one. This arm must be silent on exactly
     # that edit — writing the informative cell itself, and any other traced-only
     # move — or it would re-create the defect it was designed against.
     run_git = _init_spine_repo(tmp_path)
@@ -897,7 +897,7 @@ def test_hat_refs_arm_is_silent_when_only_traced_cells_move(tmp_path):
     assert ct.staged_hat_refs_findings(tmp_path) == []
     assert ct.staged_spine_findings(tmp_path) == []
     # ...and the same for a traced cell that is NOT Hat-Refs: an SN-Refs
-    # re-point moves no approved cell, so there is no substance to have
+    # re-point moves no accepted cell, so there is no substance to have
     # outrun the perspective record.
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
         _SPINE_SR_HEADER + _sr_row().replace("SN-001", "SN-009"), encoding="utf-8"
@@ -927,7 +927,7 @@ def test_hat_refs_arm_is_vacuous_where_a_row_has_no_baseline(tmp_path):
     """Implements: TC-198"""
     # HONEST VACUITY, both shapes, inherited from the amendment set rather than
     # re-litigated: a row minted in this very commit has nothing to compare, and
-    # a row below approval has blessed nothing to amend behind an operator's back.
+    # a row below acceptance has blessed nothing to amend behind an operator's back.
     # Neither is coverage, and neither is a hole this arm can close.
     run_git = _init_spine_repo(tmp_path)
     csv_path = tmp_path / "docs" / "requirements" / "system-requirements.csv"
@@ -941,7 +941,7 @@ def test_hat_refs_arm_is_vacuous_where_a_row_has_no_baseline(tmp_path):
     ct = load_script("check_trajectory")
     assert ct.staged_hat_refs_findings(tmp_path) == []  # no baseline: not guarded
 
-    # A Drafted row amended under Drafted: below approval on both sides.
+    # A Drafted row amended under Drafted: below acceptance on both sides.
     run_git("commit", "-m", "mint SR-002")
     csv_path.write_text(
         _SPINE_SR_HEADER
@@ -1014,7 +1014,7 @@ def test_the_cutover_commit_is_checked_by_the_amendment_guard_not_exempt_from_it
 def test_text_smuggled_into_the_cutover_commit_is_caught(tmp_path):
     """Implements: TC-160"""
     # The mutation that proves the silence above is not vacuous. Same cutover,
-    # with one approved cell quietly rewritten in the same commit - the exact
+    # with one accepted cell quietly rewritten in the same commit - the exact
     # shape a carrier migration invites, because 400-odd rows all change at once
     # and no reviewer diffs them by eye. The guard names the row and the cell.
     run_git = _init_spine_repo(tmp_path)
@@ -1025,7 +1025,7 @@ def test_text_smuggled_into_the_cutover_commit_is_caught(tmp_path):
     toml_path = next(p for p in written if p.name.startswith("system-requirements"))
     toml_path.write_text(
         toml_path.read_text(encoding="utf-8").replace(
-            "the original attested text", "text nobody agreed to"
+            "the original accepted text", "text nobody agreed to"
         ),
         encoding="utf-8",
     )
@@ -1042,7 +1042,7 @@ def test_text_smuggled_into_the_cutover_commit_is_caught(tmp_path):
         ("docs/requirements/system-requirements.toml", "SR-001")
     ]
     assert amendments[0]["approved"] == {
-        "Requirement": ("the original attested text", "text nobody agreed to")
+        "Requirement": ("the original accepted text", "text nobody agreed to")
     }
 
 

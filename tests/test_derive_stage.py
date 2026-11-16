@@ -185,7 +185,7 @@ def test_per_phase_stages_exist_and_the_global_reading_is_defined_over_them(scaf
     make_minimal_project(scaffold)
     _no_frame(scaffold)
     srs1, llrs1, tcs1 = _settled_phase("001", "SR-001", "1")
-    # phase 2: an approved requirement nobody has decomposed yet
+    # phase 2: an accepted requirement nobody has decomposed yet
     _write(
         scaffold,
         srs=srs1 + _sr("SR-002", phase="2"),
@@ -204,7 +204,7 @@ def test_per_phase_stages_exist_and_the_global_reading_is_defined_over_them(scaf
 
 def test_the_need_coverage_rung_stays_REPO_GLOBAL_across_phases(scaffold):
     """The seam `cited_srs` exists for. The coverage question — does every
-    approved need have a requirement answering it — is repo-wide: a need answered
+    accepted need have a requirement answering it — is repo-wide: a need answered
     by phase 1's requirements is answered. Without the seam, running the
     derivation over one phase's rows reads every OTHER phase's needs as uncovered
     and reports DevStg-Needs for every phase but the first.
@@ -248,12 +248,12 @@ def test_the_FRAME_rungs_are_repo_global_and_cap_every_phase(scaffold):
     make_minimal_project(scaffold)
     srs, llrs, tcs = _settled_phase("001", "SR-001", "1")
     _write(scaffold, srs=srs, llrs=llrs, tcs=tcs)
-    # An ADOPTED frame: one real crossing, declared and not yet approved.
+    # An ADOPTED frame: one real crossing, declared and not yet accepted.
     ext = scaffold / "docs" / "requirements" / "external.toml"
     ext.write_text(
         ext.read_text(encoding="utf-8")
         + '\n[boundary.B-01]\nentity = "EXT-000"\ndirection = "in"\n'
-        'carries = "A real crossing, declared and not yet approved."\n'
+        'carries = "A real crossing, declared and not yet accepted."\n'
         'status = "Drafted"\n',
         encoding="utf-8",
     )
@@ -307,7 +307,7 @@ def test_an_UNMODIFIED_bootstrap_reaches_Impl_on_a_settled_spine(scaffold):
     from the derived value in every adopting repo, permanently.
 
     So: NO deletions, no edits to anything `bootstrap.py` wrote outside the
-    spine. Fill the spine, approve it, and the ladder must climb.
+    spine. Fill the spine, accept it, and the ladder must climb.
     """
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
@@ -539,7 +539,7 @@ def test_next_phase_prints_max_plus_one(scaffold):
         [SCRIPTS / "derive_stage.py", "--root", scaffold, "--next-phase"], cwd=scaffold
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert proc.stdout.strip() == "4"  # max approved = 3; the Drafted 4 is excluded
+    assert proc.stdout.strip() == "4"  # max accepted = 3; the Drafted 4 is excluded
     # An output mode over the existing derivation: docs/stage is not rewritten.
     assert stage_file.read_text(encoding="utf-8") == before
 
@@ -756,9 +756,9 @@ def test_a_moved_assumption_reference_is_attributed_to_the_case_s_phases(tmp_pat
 
 
 # --- TC-236: the assumption, surrogate and stakeholder tiers join the stage at
-# their first approval, each tier read on its own (SR-204, LLR-241) ----------
+# their first acceptance, each tier read on its own (SR-204, LLR-241) ----------
 # A tier holding only Drafted rows reads, to its rung, as a frame declared and
-# not approved; reading it before its first approval would lower the derived
+# not accepted; reading it before its first acceptance would lower the derived
 # stage of every tree in between. So a tier is read only once one of its rows
 # is Approved, and then a Drafted row of it holds its rung in the live reading.
 
@@ -835,7 +835,7 @@ def test_after_the_first_acceptance_a_draft_holds_its_rung_in_the_live_reading_o
         live, settled = _readings(_settled_spine(**{key: rows}))
         assert live == getattr(ladder, "STAGE_" + rung), key
         assert settled == ladder.STAGE_IMPL, key
-    # With every row of each tier approved, nothing holds.
+    # With every row of each tier accepted, nothing holds.
     assert (
         _readings(
             _settled_spine(
@@ -849,8 +849,8 @@ def test_after_the_first_acceptance_a_draft_holds_its_rung_in_the_live_reading_o
 
 
 def test_the_two_tiers_sharing_the_assumptions_file_stay_apart():
-    """An approved assumption does not activate the surrogate tier, and an
-    approved surrogate does not activate the assumption tier."""
+    """An accepted assumption does not activate the surrogate tier, and an
+    accepted surrogate does not activate the assumption tier."""
     assert (
         _readings(
             _settled_spine(
@@ -920,8 +920,8 @@ def _needs_file(root, need_status, stakeholder_status):
 
 def test_a_stakeholder_s_status_never_answers_for_a_need(tmp_path):
     """The two tiers share the needs file and are loaded by their own id
-    columns: a Drafted stakeholder beside an approved need is not a drafted
-    need, and an approved stakeholder does not settle a Drafted need."""
+    columns: a Drafted stakeholder beside an accepted need is not a drafted
+    need, and an accepted stakeholder does not settle a Drafted need."""
     drafted_stk = tmp_path / "drafted-stakeholder"
     _needs_file(drafted_stk, "Approved", "Drafted")
     spine = DS.spine_rules.load_spine(drafted_stk / "docs")
@@ -1008,7 +1008,7 @@ def test_the_derivation_reads_the_assumptions_registry_as_a_declared_input(
 
 
 def test_the_new_maturity_tables_equal_the_check_s_enum_vocabulary():
-    """Compared case-normalized, as the approval-level test pins the existing
+    """Compared case-normalized, as the acceptance-level test pins the existing
     tables: the tables are keyed lowercase because `_maturity` lowercases."""
     rules = DS.spine_rules
     trace = load_script("trace")

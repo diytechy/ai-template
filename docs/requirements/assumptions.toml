@@ -11,8 +11,8 @@
 #
 # EVERY ROW HERE IS DRAFTED. Each is a newly derived claim, not a transcription:
 # nothing wrote these premises down before, so each waits for its own reviewed
-# approval act, where an assumption and the surrogate its fidelity names are
-# judged together. Until one is approved the tier's stage arm stays off, so
+# acceptance act, where an assumption and the surrogate its fidelity names are
+# judged together. Until one is accepted the tier's stage arm stays off, so
 # these rows move no derived stage. The requirement classification, form and
 # interface-bridging reports read them already, warn-only.
 #
@@ -23,9 +23,9 @@
 # surrogate emulates instead. The delivered package's crossing, B-05, is never a
 # landing: no stakeholder meets the kit there.
 #
-# The record of what was approved (`docs/archive/last_approved/`) holds no copy
+# The record of what was accepted (`docs/archive/last_approved/`) holds no copy
 # of this file yet, and must not be given one early: the first copy is written
-# by the approval act that approves this file's first row.
+# by the acceptance act that accepts this file's first row.
 
 [assumption.DA-001]
 effect_at = ["B-09"]
@@ -49,9 +49,9 @@ standing = "active"
 
 [assumption.DA-003]
 effect_at = ["B-02"]
-assumption = """A changed Status cell on a rung the declared approval level holds for an operator means an operator actually exercised the judgement that Status asserts."""
-holds_when = """The row's rung is at or below the rung the declared approval level holds for an operator, and the change is committed by a person rather than by an unattended run."""
-obstacle = """A Status change on an operator-held rung arrives in a commit an unattended run authored, or a person flips the cell without reading the row it approves."""
+assumption = """A changed Status cell on a rung the declared acceptance level holds for an operator means an operator actually exercised the judgement that Status asserts."""
+holds_when = """The row's rung is at or below the rung the declared acceptance level holds for an operator, and the change is committed by a person rather than by an unattended run."""
+obstacle = """A Status change on an operator-held rung arrives in a commit an unattended run authored, or a person flips the cell without reading the row it accepts."""
 falsifier = """A commit carrying the loop's provenance trailer that changes a Status cell on an operator-held rung."""
 obstacle_hats = ["SECURITY"]
 status = "Drafted"

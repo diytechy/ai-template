@@ -36,7 +36,7 @@ def test_deny_policy_refuses_a_spawn():
     assert gate.decide("Agent", "deny", "")[0] == "deny"
 
 
-def test_ask_policy_defers_to_approval():
+def test_ask_policy_defers_to_acceptance():
     assert gate.decide("Task", "ask", "")[0] == "ask"
 
 

@@ -241,7 +241,7 @@ def test_a_claimed_citer_is_a_card_and_on_the_blocked_list(tmp_path):
     _items(tmp_path, ("OI-5", "pending"))
     _spec(tmp_path, "WI-001", where="active/wi-001", needs=["OI-5"])
     page = gen.render(tmp_path)
-    section = page.split("1 · Pending decisions", 1)[1].split("2 · Approval", 1)[0]
+    section = page.split("1 · Pending decisions", 1)[1].split("2 · Acceptance", 1)[0]
     assert 'id="OI-5"' in section and "WI-001" in section
     assert 'role="alert"' not in section
     block = status.status_block(tmp_path)

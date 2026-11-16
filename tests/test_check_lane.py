@@ -301,7 +301,7 @@ def test_every_declared_freshness_step_is_skipped(check, tmp_path, monkeypatch):
         # for its freshness.
         "component-view",
         "okf",
-        "approval-fresh",
+        "acceptance-fresh",
         # OI-61 ruled (a)'s second step: the generated CLI reference. Its SOURCE
         # is code a work branch edits, which is exactly why the branch must not
         # be asked to commit the derived block — and it joined `trunk_step.py

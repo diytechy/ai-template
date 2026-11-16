@@ -23,7 +23,7 @@ Empty template -> guidance and exit 2 (the launchers ship inert, like run.*).
 
 CONSENT: an unattended run typically wires the agent CLI's permission-bypass
 flag into AGENT_CMD — sessions then run with no permission prompts. The operator
-consents by filling the slot, declaring how far an operator approves
+consents by filling the slot, declaring how far an operator accepts
 (docs/process.toml [authority]), and running this; git + CI remain the
 enforcement floor. The banner restates this every run.
 
@@ -3827,7 +3827,7 @@ class SessionPolicies:
     home (docs/process.toml, legacy one-word file as the SN-028 migration
     fallback). SN-029: the three-value gate-authority enum retired for an
     ORDINAL comparison — is the tier the spine is in process at still the
-    operator's to approve? `operator_held` answers it once; `keep_nondependent` is
+    operator's to accept? `operator_held` answers it once; `keep_nondependent` is
     the orthogonal dial the enum bundled. WI-437 (OI-25): `session_hold` is the
     derived label — WHO HOLDS this run."""
 

@@ -40,7 +40,7 @@ def _level(root):
     """The posture, named by the legacy word it corresponds to — so these tests
     can keep speaking the vocabulary the CLI flag and the register still use."""
     posture = _posture(root)
-    for word, dials in COMMON.LEGACY_APPROVAL.items():
+    for word, dials in COMMON.LEGACY_ACCEPTANCE.items():
         if posture == dials:
             return word
     return posture
@@ -51,7 +51,7 @@ def test_scaffold_gate_policy_defaults_attended(scaffold):
     # adopters and default scaffolds see zero change; no register is laid down.
     assert _level(scaffold) == "attended"
     # ...and the retired enum key is not shipped at all. This is the assertion
-    # the shadowing defect needed: with both keys present, `approval_level`
+    # the shadowing defect needed: with both keys present, `acceptance_level`
     # prefers the ordinal, so every repo that chose a non-default posture
     # scaffolded fully attended and nothing anywhere said so.
     assert process_key(scaffold, "authority", "gate_policy") is None
@@ -76,9 +76,9 @@ def test_gate_policy_autonomous_scaffolds_register(tmp_path):
     policy = dest / "docs" / "process.toml"
     assert _level(dest) == "autonomous"
     # WI-493 re-keyed the dial from the 0-4 ordinal to the DevStg-* rung it
-    # always meant, and `approval_level` with it: the loop-held end is no
-    # longer `0` but `DevStg-Below` — no rung an operator still approves.
-    assert COMMON.approval_through(dest / "docs") == "DevStg-Below", (
+    # always meant, and `acceptance_level` with it: the loop-held end is no
+    # longer `0` but `DevStg-Below` — no rung an operator still accepts.
+    assert COMMON.acceptance_through(dest / "docs") == "DevStg-Below", (
         "the posture must READ as loop-held, which is the whole point"
     )
     assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
@@ -99,7 +99,7 @@ def test_gate_policy_single_approval_scaffolds_register(tmp_path):
     dest = _bootstrap(tmp_path, "--gate-policy", "single-approve")
     assert _level(dest) == "single-approve"
     register = (dest / "docs" / "gate-policy.md").read_text(encoding="utf-8")
-    assert "DevStg-Tests close" in register  # the fixed approval point (Q5)
+    assert "DevStg-Tests close" in register  # the fixed acceptance point (Q5)
     assert "Blocked register" in register  # MEDIUM/HIGH routing (Q6 Hybrid)
     assert "the final read is the operator's" in register
 
@@ -171,10 +171,10 @@ def test_process_options_teaches_only_the_live_gate_policy_interface():
 
 
 # The gate-authority claim, in the variants the kit's prose has historically
-# used. "operator approval/decision" (the §6 decision-surfacing dial) is a
+# used. "operator acceptance/decision" (the §6 decision-surfacing dial) is a
 # different fact and deliberately not matched.
 _AUTHORITY_CLAIM = re.compile(
-    r"operator\s+approval|operator\s+approves|pausing\s+for\s+your\s+approval",
+    r"operator\s+acceptance|operator\s+accepts|pausing\s+for\s+your\s+acceptance",
     re.IGNORECASE,
 )
 

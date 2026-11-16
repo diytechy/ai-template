@@ -359,7 +359,7 @@ TOML_REGISTRIES = {
 KIT = ROOT / "project-trajectory"
 
 # Registries whose LIVE rows arrive in a later reviewed commit: the tier and its
-# template ship first, and this repository's own rows are written and approved
+# template ship first, and this repository's own rows are written and accepted
 # later. Until then the live leg is empty and only the template leg (template
 # keys == the schema) can bite. The allowance EXPIRES on its own: both tests
 # below fail once the live table exists, so the commit that writes the rows

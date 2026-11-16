@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Declared process policy, approval authority, and coordinator dials.
+"""Declared process policy, acceptance authority, and coordinator dials.
 
 This module owns the ``docs/process.toml`` reading, its conflict findings,
-approval-rung comparisons, and the small coordinator dial
+acceptance-rung comparisons, and the small coordinator dial
 resolution built from those declarations. Coordinator locks, Git, subprocess
 harnessing, assignment state, and telemetry remain in ``agent_common``.
 
@@ -168,7 +168,7 @@ PROCESS_KEY_RANGES = {
 # asked for, and a misspelled rung does exactly the same thing — it is
 # unrecognized, so it falls to a default rather than to what was meant. Refused
 # here, loudly, and fallen back on conservatively at the reader
-# (`approval_through`). Populated lazily below, where the rung vocabulary
+# (`acceptance_through`). Populated lazily below, where the rung vocabulary
 # is in scope.
 PROCESS_KEY_VOCAB = {}
 
@@ -187,7 +187,7 @@ PROCESS_KEY_VOCAB = {}
 # Without the window at all, `config_conflicts` — a HARD refusal consulted by
 # dispatch, intake and integrate — would refuse an adopter's committed
 # `operator_accepts_through = 4` the moment they took the kit upgrade, on a
-# dial `approval_through` reads perfectly well. The signal for a legacy
+# dial `acceptance_through` reads perfectly well. The signal for a legacy
 # value is the reader's WARNING, once per run, naming the migrator; the refusal
 # stays reserved for values nothing can honour.
 PROCESS_KEY_LEGACY_VALUES = {}
@@ -413,7 +413,7 @@ def blackout_at(docs, t=None):
 
 # --- SN-029: the operator-acceptance level, as an ORDINAL ----------------------
 # THE DIAL, and why it replaces a three-value enum. `attended | single-approve |
-# autonomous` answered "who approves" with three words that four independent
+# autonomous` answered "who accepts" with three words that four independent
 # tables then re-interpreted, each with its own fail-safe direction. What the
 # dispatcher actually needs is an ORDINAL comparison — is the tier this row sits
 # at still operator-held? — and an enum cannot express "TCs are operator-held but LLRs
@@ -426,13 +426,13 @@ def blackout_at(docs, t=None):
 # three facts — the shape of the original SN-029 bug, where `single-approve`
 # became "level 2" and so silently acquired a per-tier hold it never had.
 #
-#   attended       every tier is the operator's; lanes drain at an approval
+#   attended       every tier is the operator's; lanes drain at an acceptance
 #   single-approve  LLM review through DevStg-Reqs+DevStg-Tests, ONE operator sitting
 #                  at the close — so NO per-tier hold (level 0), a final read,
 #                  and the non-dependent work kept running that distinguished it
 #   autonomous     every bar but the operator's final read closes on a recorded
 #                  LLM verdict
-LEGACY_APPROVAL = {
+LEGACY_ACCEPTANCE = {
     "attended": {
         "operator_accepts_through": _kitauthority.LEGACY_GATE_DIALS["attended"],
         "keep_nondependent": False,
@@ -459,12 +459,12 @@ LEGACY_APPROVAL = {
 # the reason it is now unnecessary.
 #
 # WHY THE MAPPING TABLE COULD RETIRE RATHER THAN BE RE-KEYED. `DIAL_HOLDS`
-# existed to bridge TWO vocabularies: an ordinal counting approvable TIERS and a
+# existed to bridge TWO vocabularies: an ordinal counting acceptance TIERS and a
 # ladder of labelled RUNGS. Shape (i)'s own argument against the retired
 # `stage < level` arithmetic was that it compared two different ladders that
 # happened to line up. Under one vocabulary there is only one ladder, so the
 # comparison stops being a coincidence and becomes the definition: the dial names
-# the HIGHEST rung an operator still approves, and every rung AT OR BELOW it is held.
+# the HIGHEST rung an operator still accepts, and every rung AT OR BELOW it is held.
 # That is the exact mirror of the at-or-above rule slice 2 gave check selection.
 #
 # EQUIVALENCE DRIVEN BEFORE THE TABLE WAS DELETED, not asserted after: all five
@@ -473,7 +473,7 @@ LEGACY_APPROVAL = {
 # hand-reasoned property — that `DevStg-Boundary` rides `DevStg-Needs` and
 # `DevStg-Arch` rides `DevStg-Reqs`, chosen because it errs toward MORE operator
 # involvement — falls out of the ordering for free, because each inserted rung
-# sits immediately above the rung it was made to ride. `tests/test_approval_
+# sits immediately above the rung it was made to ride. `tests/test_acceptance_
 # level.py` pins the equivalence permutation by permutation.
 #
 # WHAT THE RE-KEY BUYS BEYOND THE VOCABULARY: three settings the ordinal could
@@ -488,12 +488,12 @@ LEGACY_APPROVAL = {
 # in exactly that sense: set the dial below the ladder and no rung is at or below
 # it. A magic word like `"none"` would have been a second vocabulary in the one
 # place this program exists to remove one.
-APPROVAL_DIAL_RUNGS = frozenset(_kitladder.LADDER_RUNGS) | {_kitstage.BELOW}
+ACCEPTANCE_DIAL_RUNGS = frozenset(_kitladder.LADDER_RUNGS) | {_kitstage.BELOW}
 
 # Declared UP THERE with the other dial tables and filled HERE, because the
 # vocabulary is this module's own and the table is read by the shared
 # validator. One value, one home.
-PROCESS_KEY_VOCAB[("authority", "operator_accepts_through")] = APPROVAL_DIAL_RUNGS
+PROCESS_KEY_VOCAB[("authority", "operator_accepts_through")] = ACCEPTANCE_DIAL_RUNGS
 
 # The 0-4 ordinal an unmigrated repo still declares. READ, TRANSLATED AND
 # WARNED — not refused: the value is a dial in an adopter's committed
@@ -512,31 +512,31 @@ PROCESS_KEY_LEGACY_VALUES[("authority", "operator_accepts_through")] = frozenset
 )
 
 # Fail toward MORE operator involvement on anything unreadable: a dial nobody can
-# parse must not silently hand approval authority to the loop. The top rung
+# parse must not silently hand acceptance authority to the loop. The top rung
 # is the conservative end — it holds every rung there is.
-APPROVAL_FALLBACK = _kitladder.STAGE_RELEASE
+ACCEPTANCE_FALLBACK = _kitladder.STAGE_RELEASE
 
 # The dial's RETIRED KEY NAME (WI-499, operator-ruled 2026-08-21). A repo
 # scaffolded before this rename still carries this spelling in
-# `[authority]`; `approval_through` below reads it as a loud fallback,
+# `[authority]`; `acceptance_through` below reads it as a loud fallback,
 # mirroring the read-translate-warn shape WI-493 used for the retired 0-4
 # ordinal. `bootstrap.py --migrate-config` (`_migrate_dial_key_name`) is the
 # one-time fix that ends the warning.
 LEGACY_DIAL_KEY = _kitauthority.LEGACY_DIAL_KEY
 
 
-def legacy_approval(word, key):
+def legacy_acceptance(word, key):
     """One dial's value under a legacy `gate-policy` word, or None when the word
     is not one of the three. The single home for the translation, so the
     migrator and the fallback readers cannot disagree about what a word meant."""
-    return LEGACY_APPROVAL.get(str(word).strip().lower(), {}).get(key)
+    return LEGACY_ACCEPTANCE.get(str(word).strip().lower(), {}).get(key)
 
 
-def approval_through(docs):
+def acceptance_through(docs):
     """`[authority] operator_accepts_through` as a `DevStg-*` rung.
 
-    The HIGHEST rung an operator still approves; every rung at or below it is held
-    (`operator_holds`). `DevStg-Below` means nothing is held — the loop approves
+    The HIGHEST rung an operator still accepts; every rung at or below it is held
+    (`operator_holds`). `DevStg-Below` means nothing is held — the loop accepts
     every rung itself. `DevStg-Release`, the shipped default, holds everything.
 
     Falls back through the legacy `gate-policy` enum, then to `DevStg-Release`.
@@ -603,24 +603,24 @@ def _retired_dial_note(legacy, rung):
 
 
 # --- OI-21 -> WI-493: THE DIAL AND THE LADDER ARE ONE VOCABULARY --------------
-# THE DIAL MOVED. It was the APPROVABLE-TIER ORDINAL 0-4 SN-029 defined (0 =
+# THE DIAL MOVED. It was the ACCEPTANCE-TIER ORDINAL 0-4 SN-029 defined (0 =
 # nothing held, 1 = SNs, 2 = ...and SRs, 3 = ...and LLRs, 4 = ...and TCs), mapped
 # onto the eight rungs by a declared `DIAL_HOLDS` table under OI-21 shape (i).
 # WI-493 executed shape (ii): it now names a `DevStg-*` rung directly, and the
 # table retired because there is no longer a second vocabulary to map from. The
 # full argument, the driven equivalence and what the change buys are recorded at
-# the re-key block above `APPROVAL_DIAL_RUNGS`.
+# the re-key block above `ACCEPTANCE_DIAL_RUNGS`.
 #
 # WHAT DID *NOT* MOVE, and this is the part OI-21 was emphatic about: the dial
-# still says WHICH SPINE RUNGS an operator approves. It was NOT re-keyed to artifact
-# DEPTH. Re-keying approval to the depth and tier of the artifact touched is a
+# still says WHICH SPINE RUNGS an operator accepts. It was NOT re-keyed to artifact
+# DEPTH. Re-keying acceptance to the depth and tier of the artifact touched is a
 # change to WHEN An OPERATOR IS RE-ENGAGED whose wrong-answer direction is silently
 # LESS operator involvement, so it is decided on its own — once IF/CMP maturity
-# joins the approvable fold — and never defaulted here.
+# joins the acceptance fold — and never defaulted here.
 #
 # WHERE THE TWO INSERTED RUNGS LAND is no longer a decision this module makes.
 # `DevStg-Boundary` and `DevStg-Arch` produce artifacts (IF and CMP rows) that
-# are not approvable TIERS, so the old ordinal had no notch for them and the
+# are not acceptance TIERS, so the old ordinal had no notch for them and the
 # table had to choose: each was held whenever the rung BELOW it was held —
 # Boundary rides Needs, Arch rides Reqs — chosen because it errs toward MORE
 # operator involvement. Under the at-or-below rule that choice falls out of the
@@ -636,7 +636,7 @@ def _retired_dial_note(legacy, rung):
 # IT USED TO BE A LITERAL RESTATEMENT HERE (WI-498 slice 0 ended that). The
 # reason given was the F5 no-shared-module rule — this module could not import
 # the derivation engine — so the eight strings were spelled out again and pinned
-# equal by tests/test_approval_level.py. F5 was replaced by operator ruling D-8
+# equal by tests/test_acceptance_level.py. F5 was replaced by operator ruling D-8
 # (`OI-16`): the vocabulary now has ONE home in `kitlib`, which this module
 # already imports, and the pin retired with the restatement it guarded. Drift is
 # unrepresentable rather than detected — the WI-448 declared-line precedent.
@@ -656,7 +656,7 @@ LADDER_RUNGS = _kitladder.LADDER_RUNGS
 # The proposal on the table was a new `[authority] operator_acceptance_registries`
 # list; it was OVERTURNED because the registry-to-rung association ALREADY
 # EXISTS in `spine_rules` — `boundary_incomplete` gates DevStg-Boundary on
-# `external.toml`'s approvals, and `arch_incomplete` gates DevStg-Arch on the
+# `external.toml`'s acceptances, and `arch_incomplete` gates DevStg-Arch on the
 # component registry. So the association is existing fact, and a second
 # declaration of it would be a rival answer that agrees until someone edits one.
 #
@@ -665,7 +665,7 @@ LADDER_RUNGS = _kitladder.LADDER_RUNGS
 # than declared. WHICH registries that holds is the dial's answer, not a fixed
 # list: at a dial holding every rung it is all of them, at this repo's none.
 #
-# AN UNMAPPED APPROVAL-CARRYING REGISTRY IS HELD. The map is small and the
+# AN UNMAPPED ACCEPTANCE-CARRYING REGISTRY IS HELD. The map is small and the
 # registries are optional, so "I do not know which rung governs this" must
 # resolve toward more operator involvement, exactly as `operator_holds` resolves an
 # unreadable dial and an unrecognized rung.
@@ -676,13 +676,13 @@ LADDER_RUNGS = _kitladder.LADDER_RUNGS
 # the loop's refusal and that report from disagreeing. The assumptions registry
 # joined it at the frame's rung (LLR-246).
 # Implements: SR-208, LLR-246
-APPROVAL_RUNGS = _kitauthority.APPROVAL_RUNGS
+ACCEPTANCE_RUNGS = _kitauthority.ACCEPTANCE_RUNGS
 
 
 # THE SPINE SIBLING OF THE TABLE ABOVE (operator ruling 2026-09-01, WI-572).
 #
 # Same question, same fail-safe, different registries: which DevStg rung is a
-# SPINE row approved INTO, so the dial can answer whether that tier's `Status`
+# SPINE row accepted INTO, so the dial can answer whether that tier's `Status`
 # flip is the loop's act or the operator's. Keyed by registry STEM
 # (`spine_carrier.stem`) rather than by tier letter because the two callers
 # both hold a registry path and neither holds a tier — and because a stem
@@ -695,24 +695,24 @@ APPROVAL_RUNGS = _kitauthority.APPROVAL_RUNGS
 # it re-resolves LIVE that adjudicator may actually flip. It was two tables for
 # one commit — a registry-keyed one in `intake` and a tier-keyed one in
 # `adjudicate_brief` — and the brief's copy was consulted only for the
-# amendment arm's aftermath, so the first-acceptance arm derived its `--approves`
+# amendment arm's aftermath, so the first-acceptance arm derived its `--accepts`
 # argument with no dial filter at all: at any dial holding a spine rung the
-# brief rendered the operator's held rows as this session's to approve. One table
+# brief rendered the operator's held rows as this session's to accept. One table
 # with one predicate is what makes that unrepresentable rather than detected.
 #
 # Re-exported from `kitlib.authority` with its off-spine sibling (LLR-249).
-SPINE_APPROVAL_RUNGS = _kitauthority.SPINE_APPROVAL_RUNGS
+SPINE_ACCEPTANCE_RUNGS = _kitauthority.SPINE_ACCEPTANCE_RUNGS
 
 
 def operator_holds(docs, stage):
-    """Is work at spine `stage` still the OPERATOR's to approve?
+    """Is work at spine `stage` still the OPERATOR's to accept?
 
     The one comparison every consumer makes, stated once. `stage` is
     `spine_rules.spine_stage`'s `DevStg-<Label>` answer — the rung currently in
     work — and a rung the declared level holds surfaces rather than dispatching.
 
     THE COMPARISON IS AN ORDINAL ON THE ONE LADDER (OI-21 -> WI-493). It reads through
-    the ONE ladder. The dial names the highest rung an operator still approves, so
+    the ONE ladder. The dial names the highest rung an operator still accepts, so
     every rung AT OR BELOW it is held — the mirror of the at-or-above rule that
     selects checks. The form retired at OI-21 was `stage < level` over two
     DIFFERENT integer ladders, correct only while they happened to line up, and
@@ -732,7 +732,7 @@ def operator_holds(docs, stage):
     conservative direction as an unreadable level. Note the deliberate asymmetry
     with `kitlib.ladder.stage_ord`, which RAISES on an unknown label: there, an
     unknown stage means the ladder moved under a cached value and the operator
-    must see it; here, the question is who approves, and the only safe answer to
+    must see it; here, the question is who accepts, and the only safe answer to
     "I do not recognize this rung" is "the operator does".
 
     THE COMPARISON ITSELF IS `kitlib.authority.holds_under` (LLR-249), the
@@ -741,7 +741,7 @@ def operator_holds(docs, stage):
 
     Implements: SR-137, SR-139, LLR-155
     """
-    return _kitauthority.holds_under(approval_through(docs), stage)
+    return _kitauthority.holds_under(acceptance_through(docs), stage)
 
 
 def operator_accepts(docs, registry):
@@ -760,7 +760,7 @@ def operator_accepts(docs, registry):
       * MAPPED and its rung is operator-held under `operator_accepts_through`
         -> True (held). At a `DevStg-Needs` dial that is the needs file alone.
       * MAPPED and its rung is not held -> False (a loop session may write it,
-        because the project has declared that rung machine-approvable).
+        because the project has declared that rung machine-acceptable).
       * UNMAPPED -> True (held), FAIL-SAFE. A status-carrying registry nobody has
         associated with a rung is one nobody has ruled on, and the only safe
         answer to that is "the operator does".
@@ -768,10 +768,10 @@ def operator_accepts(docs, registry):
     THE WRITER-SIDE CONTRACT, stated here because this predicate is the only
     home for it. Any path that would set an off-spine `status` to `Approved` MUST
     consult this first and refuse when it answers True. Today the kit ships no
-    such automated writer — off-spine approvals are hand-edited — so the
+    such automated writer — off-spine acceptances are hand-edited — so the
     live consumers are the dispatcher's acceptance/gate arm (`dispatch.
     _kind_action`, which surfaces rather than dispatching a WI whose action
-    would move a held registry's approvals) and `intake`'s snapshot/flip path,
+    would move a held registry's acceptances) and `intake`'s snapshot/flip path,
     which is where the first machine writer would land. That is the honest
     statement of scope: the predicate is enforced where a writer exists, and it
     exists so the next writer cannot be added without meeting it."""
@@ -787,17 +787,17 @@ def operator_accepts_spine(docs, registry):
 
     The spine mirror of `operator_accepts`, and deliberately the same three arms
     and the same fail-safe: mapped-and-held -> True, mapped-and-released ->
-    False, UNMAPPED -> True. An approval-carrying registry nobody has associated
+    False, UNMAPPED -> True. An acceptance-carrying registry nobody has associated
     with a rung is one nobody has ruled on, and the only safe answer to that is
     "the operator does".
 
     `registry` is the registry's path or stem, read through
     `kitlib.authority.rung_for` — the one map the held-status judgement reads
-    too, so the needs file (SN and its stakeholder list) is approved at
+    too, so the needs file (SN and its stakeholder list) is accepted at
     `DevStg-Needs` here as there, not unmapped and held at every dial.
 
     THE READER-SIDE CONTRACT, the half `operator_accepts` states for writers.
-    Anything that tells a session which rows it may approve MUST filter through
+    Anything that tells a session which rows it may accept MUST filter through
     this — not only the path that mints the row, but every path that later
     re-resolves the population and renders it. The two are separated by a merge
     and a claim (`intake._released_drafted_rows` mints; `adjudicate_brief.
@@ -857,7 +857,7 @@ def final_review(docs):
         value = table.get("final_review")
         if isinstance(value, str):
             return value.strip().lower() != "off"
-    legacy = legacy_approval(
+    legacy = legacy_acceptance(
         declared_policy(docs, "gate-policy", "attended"), "final_review"
     )
     return legacy != "off"
@@ -1040,13 +1040,13 @@ def authoritative_spec(paths):
 
 def keep_nondependent(docs):
     """The orthogonal dial the ordinal cannot carry: may other lanes keep
-    running while an approval is queued? Defaults FALSE — a queued
-    approval drains the station, which is what `attended` and `autonomous`
+    running while an acceptance is queued? Defaults FALSE — a queued
+    acceptance drains the station, which is what `attended` and `autonomous`
     both did; only the retired `single-approve` level did otherwise."""
     table = process_config(docs).get("authority")
     if isinstance(table, dict) and isinstance(table.get("keep_nondependent"), bool):
         return table["keep_nondependent"]
-    legacy = legacy_approval(
+    legacy = legacy_acceptance(
         declared_policy(docs, "gate-policy", "attended"), "keep_nondependent"
     )
     return bool(legacy)
@@ -1055,7 +1055,7 @@ def keep_nondependent(docs):
 def spine_stage_of(root):
     """This repo's EFFECTIVE stage, through the common reader
     (`kitlib.stage.read_stage`) — the value `operator_holds` compares the declared
-    approval dial against, i.e. the input to who may approve.
+    acceptance dial against, i.e. the input to who may accept.
 
     THE TRUST INVARIANT IS NOW TRUE BY CONSTRUCTION, and that is the whole point
     of this cut-over (WI-498 slice 5, ruled plan §3). The retired form scraped
@@ -1064,7 +1064,7 @@ def spine_stage_of(root):
     or the `derived-gate` step is already red". THAT WAS NOT TRUE IN TWO PLACES
     the gate schedule map measured: the freshness step STANDS DOWN on a claimed
     branch, and `agent_loop`/`dispatch` hoist this value once per run and thread
-    it down, so a mid-session approval was invisible to every later consumer.
+    it down, so a mid-session acceptance was invisible to every later consumer.
     Both windows close here rather than being re-documented — the reader
     re-fingerprints the declared inputs on every call and derives fresh in memory
     when they have moved. It still never WRITES: regeneration stays the trunk
@@ -1164,7 +1164,7 @@ def _key_value_findings(data, section, key, kind):
             "docs/{} [{}] {} = {!r} is outside {}-{}. It falls back to the "
             "most conservative setting rather than being clamped: clamping a "
             "negative value would read as 'nothing is operator-held' and "
-            "silently disarm every approval hold in the repo.".format(
+            "silently disarm every acceptance hold in the repo.".format(
                 PROCESS_TOML, section, key, value, low_high[0], low_high[1]
             )
         ]
@@ -1179,11 +1179,11 @@ def _vocab_findings(section, key, value):
     vocab = PROCESS_KEY_VOCAB.get((section, key))
     if vocab is None:
         return []
-    if vocab is not APPROVAL_DIAL_RUNGS:
+    if vocab is not ACCEPTANCE_DIAL_RUNGS:
         return _mode_vocab_findings(section, key, value, vocab)
     if str(value).strip() in vocab:
         return []
-    # THE LEGACY ORDINAL IS NOT A CONFLICT. `approval_through` reads it,
+    # THE LEGACY ORDINAL IS NOT A CONFLICT. `acceptance_through` reads it,
     # translates it and warns; saying it twice — once as a refusal here and
     # once as a warning there — would make a kit upgrade look like a broken
     # config to a repo whose dial is merely old.
@@ -1368,17 +1368,17 @@ __all__ = (
     "read_toml",
     "_coerce",
     "declared_policy",
-    "LEGACY_APPROVAL",
-    "APPROVAL_DIAL_RUNGS",
+    "LEGACY_ACCEPTANCE",
+    "ACCEPTANCE_DIAL_RUNGS",
     "LEGACY_DIAL_ORDINALS",
-    "APPROVAL_FALLBACK",
+    "ACCEPTANCE_FALLBACK",
     "LEGACY_DIAL_KEY",
-    "legacy_approval",
-    "approval_through",
+    "legacy_acceptance",
+    "acceptance_through",
     "_retired_dial_note",
     "LADDER_RUNGS",
-    "APPROVAL_RUNGS",
-    "SPINE_APPROVAL_RUNGS",
+    "ACCEPTANCE_RUNGS",
+    "SPINE_ACCEPTANCE_RUNGS",
     "operator_holds",
     "operator_accepts",
     "operator_accepts_spine",

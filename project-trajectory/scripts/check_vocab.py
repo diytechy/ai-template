@@ -43,9 +43,9 @@ THE CARVE-OUTS, and why each one is a carve-out rather than an oversight:
     citation, and rewriting a record of what happened makes it a record of
     something else. A reader searching their own history needs the vocabulary
     that history was written in.
-  - **Attestation quotes are not rewritten** — the strongest case. `docs/ratify/`
+  - **Acceptance quotes are not rewritten** — the strongest case. `docs/ratify/`
     briefs quote registry cells byte-for-byte at a pinned baseline, and the log's
-    dated sign-off entries record a NAMED HUMAN approving a thing that was called
+    dated sign-off entries record a NAMED HUMAN accepting a thing that was called
     `G1` at the time. Rewriting those makes a signed record claim something was
     signed that was not. The ruled remedy is a one-line header note naming the
     retired vocabulary, not a rewrite.
@@ -115,7 +115,7 @@ RETIRED_TAG_RE = re.compile(
     r"|(?<=\]-)\[(?:reqs|tests)\]"
     # WI-499 (operator-ruled 2026-08-21): "ratification holds a weight to it that
     # the semantics here don't need" — the kit's vocabulary unifies on
-    # "approval". The `ratif*` word family is retired the same way the G* tags
+    # "approval", and since 2026-11-16 on "acceptance". The `ratif*` word family is retired the same way the G* tags
     # were, riding the same enforcer for the same reason (one checker, one
     # mistake). Carve-outs for the ONE surviving spelling: the `docs/ratify/`
     # directory itself KEPT its name as a record home (the dated
@@ -159,14 +159,14 @@ SUGGEST = {
     # WRONG — it records a reach BELOW where the phase actually stands, which is
     # the failure direction that loses the event a drop detector exists to
     # report. Closing a `reqs`/`g1` anchor means the phase's SRs are authored AND
-    # approved, which is the LLReqs rung — two above the token's spelling.
+    # accepted, which is the LLReqs rung — two above the token's spelling.
     #
     # `check_trajectory` TRANSLATES these on read and never rewrites a committed
     # title; what this table refuses is AUTHORING one afresh, or a live doc
     # TEACHING the retired spelling. A declaration site that must name them (the
     # translation table itself, a re-sync note) carries `check_vocab: allow`.
     "[g1]": "[DevStg-LLReqs] - the rung the phase stands at once its SRs are "
-    "approved, NOT [DevStg-Reqs], which is two rungs below it",
+    "accepted, NOT [DevStg-Reqs], which is two rungs below it",
     "[reqs]": "[DevStg-LLReqs] - same reading as [g1]; the token names what the "
     "anchor CLOSED, the rung names where the phase now stands",
     "[g2]": "[DevStg-Impl] - LLRs and TCs authored and non-Drafted, NOT "
@@ -179,14 +179,14 @@ SUGGEST = {
 # checked after `SUGGEST` misses (case-insensitively, keeping the finding's
 # own casing out of the suggestion).
 RATIF_SUGGEST_SUFFIX = {
-    "ication": "approval",
-    "ications": "approvals",
-    "y": "approve",
-    "ying": "approving",
-    "ies": "approves",
-    "ied": "approved",
-    "iable": "approvable",
-    "ier": "approver",
+    "ication": "acceptance",
+    "ications": "acceptances",
+    "y": "accept",
+    "ying": "accepting",
+    "ies": "accepts",
+    "ied": "accepted",
+    "iable": "acceptable",
+    "ier": "acceptor",
 }
 
 
@@ -200,8 +200,8 @@ def _suggestion_for(tag):
         suffix = lower[len("ratif") :]
         word = RATIF_SUGGEST_SUFFIX.get(suffix)
         if word is not None:
-            return '{} (WI-499 retired "ratif*" for "approv*")'.format(word)
-        return 'approve/approval (WI-499 retired "ratif*" for "approv*")'
+            return '{} (WI-499 retired "ratif*"; the act is now "accept*")'.format(word)
+        return 'accept/acceptance (WI-499 retired "ratif*"; the act is now "accept*")'
     return "(no suggestion on file — check_vocab.SUGGEST)"
 
 
@@ -235,7 +235,7 @@ EXEMPT_GLOBS = (
     # history: the kit's design archive
     "docs/archive/*",
     # history: the append-only project log, including its dated sign-off and
-    # approval entries (the attestation carve-out's other half)
+    # acceptance entries (the acceptance carve-out's other half)
     "docs/log.md",
     # history: the per-branch log FRAGMENTS `trunk_step.py` compiles into
     # docs/log.md in merge order. They are the same record one merge earlier, so
@@ -247,7 +247,7 @@ EXEMPT_GLOBS = (
     # citations: a rubric records the anchor it was AUTHORED at (D-4 — a WI title
     # is a citation, and a citation names the thing as it was called)
     "docs/rubrics/*",
-    # attestation quotes: registry cells quoted byte-for-byte at a pinned baseline
+    # acceptance quotes: registry cells quoted byte-for-byte at a pinned baseline
     "docs/ratify/*",
     # history, ROW-GRANULAR: open-items.toml mixes RULED rows (records of a
     # dated decision, in the vocabulary of when it was ruled — WI-499's own

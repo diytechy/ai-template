@@ -306,7 +306,7 @@ def test_content_still_moves_the_fingerprint(tmp_path):
 
 
 def test_process_toml_is_NOT_an_input(tmp_path):
-    """Operator ruling 2026-08-21 (amending plan §2): dials govern who may approve,
+    """Operator ruling 2026-08-21 (amending plan §2): dials govern who may accept,
     not what stage is derived — and an over-inclusive fingerprint costs red
     commit checks after every policy-dial edit, not "milliseconds". A process.toml
     edit must not move the fingerprint."""
@@ -422,7 +422,7 @@ def test_every_file_the_DERIVATION_READS_is_a_declared_input(tmp_path):
 # --- corner case 7: a mid-process input change -------------------------------
 def test_the_reader_returns_FRESH_values_when_an_input_changes_mid_process(tmp_path):
     """THE HOISTING WINDOW, CLOSED BY CONSTRUCTION. `agent_loop` and `dispatch`
-    read the stage once per run and thread it down, so a mid-session approval
+    read the stage once per run and thread it down, so a mid-session acceptance
     was invisible for the rest of the run. Verification per CALL is what removes
     that window — including across the per-process memo, which is keyed on
     path+size+mtime and must never be mistaken for the freshness truth.

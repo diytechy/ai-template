@@ -61,10 +61,10 @@ def _da(did="DA-001", **cells):
     row = {
         "DA-ID": did,
         "EffectAt": "B-01",
-        "Assumption": "A reviewer reads the brief before approving.",
+        "Assumption": "A reviewer reads the brief before accepting.",
         "HoldsWhen": "The brief is short enough to read in one sitting.",
         "Obstacle": "The brief grows past what one sitting reads.",
-        "Falsifier": "An approval recorded before the brief was opened.",
+        "Falsifier": "An acceptance recorded before the brief was opened.",
         "Status": "Drafted",
         "Standing": "active",
     }
@@ -624,7 +624,7 @@ def test_the_entity_tier_ships_its_mediates_cell():
 
 
 def test_reaching_parties_holds_each_needs_parties_and_their_mediators(rules):
-    """A need reaches its approved stakeholders' parties and every entity whose
+    """A need reaches its accepted stakeholders' parties and every entity whose
     `Mediates` names one of them; a need whose stakeholders declare no party
     reaches nobody."""
     assert rules.reaching_parties(REACH_NEEDS, REACH_STKS, REACH_EXTS) == {
@@ -748,7 +748,7 @@ def test_with_no_agreed_stakeholder_the_reach_lines_fold_into_one_count(rules):
     folded = _reach(rules, das, srs, drafted)
     assert len(folded) == 1, folded
     assert folded[0].startswith("{} stakeholder-reach".format(count)), folded
-    assert "approve the stakeholders" in folded[0], folded
+    assert "accept the stakeholders" in folded[0], folded
     assert len(_reach(rules, das, srs)) > 1
 
 
@@ -1263,7 +1263,7 @@ def _observed(rules, das, tcs, records=()):
     )
 
 
-def test_an_approved_active_assumption_with_no_result_is_not_reported(rules):
+def test_an_accepted_active_assumption_with_no_result_is_not_reported(rules):
     """Neither no citing case nor a citing case with no result is a finding: an
     assumption is never asked for evidence that would show it holds."""
     das = [_da(Status="Approved")]

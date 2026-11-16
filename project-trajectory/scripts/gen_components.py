@@ -15,10 +15,10 @@ that column was pointing at, so the column retires with this file.
   -> docs/requirements/components.derived.toml   this view
 
 THE SPLIT, and it is the ruling's: the hand file DECLARES a component (that it
-exists, its name, its category, its knowledge refs, its approval); this file
-DESCRIBES it. A GENERATED FILE NEVER CARRIES AN APPROVAL (OI-30 D3) — machine
-flipping an approval routes around the very dial `operator_accepts_through`
-governs — so no maturity, standing or approval cell appears here, and nothing
+exists, its name, its category, its knowledge refs, its acceptance); this file
+DESCRIBES it. A GENERATED FILE NEVER CARRIES AN ACCEPTANCE (OI-30 D3) — machine
+flipping an acceptance routes around the very dial `operator_accepts_through`
+governs — so no maturity, standing or acceptance cell appears here, and nothing
 here may be cited as evidence that an operator blessed anything.
 
 WHAT IT DOES NOT SHOW, stated because the operator's own ruling states it: NOT
@@ -78,7 +78,7 @@ Contract IF-140: the derived view itself — a TOML document carrying one
     table naming the requirements and seams that reach no component. Every
     collection is sorted and nothing reads a clock or the environment, so the
     byte-compare behind `--check` is stable in any clone. It carries no
-    maturity, standing or approval cell, ever, and nothing in it may be cited
+    maturity, standing or acceptance cell, ever, and nothing in it may be cited
     as evidence that an operator blessed anything.
 """
 
@@ -115,7 +115,7 @@ BANNER = (
     "# rows that already carry the obligation. It shows no internals, by design —\n"
     "# for mechanism, read the design rows named here.\n"
     "#\n"
-    "# NO APPROVAL CELL APPEARS HERE, EVER: maturity lives on the\n"
+    "# NO ACCEPTANCE CELL APPEARS HERE, EVER: maturity lives on the\n"
     "# hand-authored components.toml row, and nothing in this file is evidence\n"
     "# that an operator blessed anything.\n"
     "#\n"

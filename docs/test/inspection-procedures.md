@@ -4,7 +4,7 @@ These are the durable procedures for the three drafted decomposition
 inspections and one sampled assumption inspection, one section per subject. Each result subsection stays explicit
 until a reviewer records the person, date, and result. Results below distinguish
 completed document inspections from an incomplete positive sample; none is an
-artifact approval or a machine-coverage result.
+artifact acceptance or a machine-coverage result.
 
 ## Critique acceptance provenance inspection
 
@@ -25,7 +25,7 @@ and its linked invocation. It identified fresh non-author review identity,
 rubric revision/intent sources and coverage of all five numbered anchors. It reported all four
 missing facts in the abnormal record and rejected the fully populated
 TC-copied rubric. This establishes record process/provenance; artifact quality
-and Drafted-row approval remain separate.
+and Drafted-row acceptance remain separate.
 
 ## Requirement and interface counterpart review inspection
 

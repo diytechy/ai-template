@@ -115,7 +115,7 @@ def test_a_BASELINE_read_stays_permissive_about_empty_strings(tmp_path):
 
 def test_a_MULTILINE_string_round_trips_including_its_newlines(tmp_path):
     # The prose cells are multi-line by nature; a reader that flattened or
-    # truncated them would silently shorten attested text.
+    # truncated them would silently shorten accepted text.
     body = "First line.\nSecond line, with a # hash and an = sign.\nThird."
     path = _write(
         tmp_path,
@@ -335,12 +335,12 @@ def test_legacy_markdown_draftness_survives_the_field_it_moved_to():
     The legacy carrier had no maturity FIELD; it had a heading. The reader
     translates that at the boundary, and this pins the translation — because the
     failure mode when it is missing is silent and upward: every drafted need in
-    an un-migrated repo reads as approved and the derived gate RISES.
+    an un-migrated repo reads as accepted and the derived gate RISES.
     """
     text = (
         "## Core needs\n\n| SN-ID | Need | Priority | Acceptance |\n|---|---|---|---|\n"
-        "| SN-001 | approved | M | x |\n\n"
-        "## Draft needs (unapproved)\n\n"
+        "| SN-001 | accepted | M | x |\n\n"
+        "## Draft needs (unaccepted)\n\n"
         "| SN-ID | Need | Priority | Acceptance |\n|---|---|---|---|\n"
         "| SN-050 | not yet | M | x |\n"
     )
@@ -385,7 +385,7 @@ def test_draft_ids_refuse_a_toml_text_that_does_not_parse_and_an_unknown_carrier
     Falling back to the heading scan would choose the carrier from the text
     again, and it is not safe in either direction: malformed TOML with a need
     id and no markdown draft heading scans to "no drafts", every need then reads
-    as approved, and the derived stage RISES on a file nobody could read. The
+    as accepted, and the derived stage RISES on a file nobody could read. The
     stage derivation does not re-read the needs through the refusing loader
     afterwards, so the refusal has to be here.
     """
@@ -411,7 +411,7 @@ def test_draft_ids_refuse_a_toml_text_that_does_not_parse_and_an_unknown_carrier
 _COMMENT_ONLY_TOML = "# Needs are written below once drafted, e.g. SN-005.\n"
 # A valid TOML needs file with no need table and no `need.` in it, whose one
 # stakeholder description carries a markdown table row: sniffed, it read as the
-# markdown carrier and yielded SN-005 as an approved Must need.
+# markdown carrier and yielded SN-005 as an accepted Must need.
 _TABLE_IN_A_STRING = (
     "[stakeholder.STK-01]\n"
     'name = "Owner"\n'
@@ -453,7 +453,7 @@ def test_needs_or_refuse_names_the_file_it_cannot_read(tmp_path):
 
 
 def test_every_needs_text_caller_takes_the_carrier_from_the_file(tmp_path):
-    """The README floor (`check_docs`) and the approval view's need prose
+    """The README floor (`check_docs`) and the acceptance view's need prose
     (`trace._sn_prose`) read no need out of a TOML needs file that declares
     none, and the README floor refuses an unparseable one by name. The
     snapshot's history reader is driven over git in

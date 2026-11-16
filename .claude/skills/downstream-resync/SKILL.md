@@ -1,6 +1,6 @@
 ---
 name: downstream-resync
-description: Use when upgrading an adopted kit or rebuilding a stale requirements spine against the current template. Route full-kit migrations and scoped spine rebuilds through the target kit’s RESYNC_PACK.md, preserving project content and approval authority.
+description: Use when upgrading an adopted kit or rebuilding a stale requirements spine against the current template. Route full-kit migrations and scoped spine rebuilds through the target kit’s RESYNC_PACK.md, preserving project content and acceptance authority.
 stacks: [python, node, powershell, go, rust, any]
 domains: [any]
 phases: [dev, release]

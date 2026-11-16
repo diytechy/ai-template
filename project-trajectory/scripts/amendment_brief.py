@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """amendment_brief.py — the AMENDMENT brief's evidence: the spine rows whose
-approved text moved after they were approved, shown against the accepted
+accepted text moved after they were accepted, shown against the accepted
 anchor, with the identity of each row's judged text and what each verdict owes
 next.
 
@@ -17,7 +17,7 @@ WHAT ELSE LIVES HERE, AND WHY. The arm reads five things the first-acceptance
 arm reads as well: the row's declared scope (`adjudicates`), the tier
 questions' one home (`tier_questions`), the tier -> registry join
 (`_REGISTRY_OF`, whose unchained tiers are this arm's) with the dial per tier
-(`_loop_approves`), and the copy stamps (`_copy_stamp_lines`). They sit here
+(`_loop_accepts`), and the copy stamps (`_copy_stamp_lines`). They sit here
 rather than in the composer because the import runs one way: the composer
 imports this module, and nothing here imports the composer (the import graph
 admits no cycle, a deferred import included). `JUDGED_TEXT` is the identity
@@ -59,7 +59,7 @@ def adjudicates(row):
 
 
 # The amendment brief's identity line, one per row it shows: the row and the
-# digest of its approved text (`acceptance_record.approved_text_digest`).
+# digest of its accepted text (`acceptance_record.accepted_text_digest`).
 JUDGED_TEXT = "JUDGED-TEXT"
 
 
@@ -136,8 +136,8 @@ def tier_questions(tiers):
 
 
 def amendment_values(root, row):
-    """`({baseline, rows, aftermath}, None)` for the spine rows whose approved
-    text moved after they were approved, or `(None, reason)`; the values also
+    """`({baseline, rows, aftermath}, None)` for the spine rows whose accepted
+    text moved after they were accepted, or `(None, reason)`; the values also
     report the amended needs and SRs under `plan_briefs.HAT_PARENTS`, never a
     slot.
 
@@ -148,13 +148,13 @@ def amendment_values(root, row):
     judgement as its own accepted anchor, which is precisely the failure rule 1
     exists to prevent. `docs/archive/last_approved/` is an anchor that is
     provably NOT the text under judgement: the mirror invariant means it can
-    only have been written by copying a live registry in a reviewed approval
+    only have been written by copying a live registry in a reviewed acceptance
     commit.
 
     `{rows}` is `trace.reaccept_model`'s APPROVED cells — the same model behind
-    `trace.py --approve` and `open-items.html`, so the judge, the brief and the
+    `trace.py --accept` and `open-items.html`, so the judge, the brief and the
     operator surface can never show three different diffs. Traced cells are
-    deliberately excluded: §A5.1 rules them non-attesting, and a judge asked to
+    deliberately excluded: §A5.1 rules them outside acceptance, and a judge asked to
     rule "meaning or clarity" on a re-pointed `Module` cell is being asked a
     question the ruling already answers. The need, assumption and surrogate
     tiers, which that model does not hold, are read beside it from the same
@@ -163,7 +163,7 @@ def amendment_values(root, row):
 
     NO SNAPSHOT IS A HOLD, AND IT SAYS WHY. A repo that has never signed has no
     accepted anchor at all, so "did this amendment change the meaning?" is not
-    the question its rows pose — a FIRST APPROVAL is. Refusing names that
+    the question its rows pose — a FIRST ACCEPTANCE is. Refusing names that
     exactly, rather than fabricating an anchor (rule 1) or rendering a
     before/after with an empty before (rule 2). The stamp itself is advisory:
     off git, or before the snapshot's own commit lands, it is empty and the
@@ -172,7 +172,7 @@ def amendment_values(root, row):
     WHICH ROWS IS THE ROW'S OWN `Adjudicates` SCOPE, intersected with the
     model — `first_acceptance_values`' rule, for its reason. The model is
     REPO-WIDE: it walks every SR, so a brief built from it alone handed each
-    amendment row every drifted approved row in the tree, and each verdict had
+    amendment row every drifted accepted row in the tree, and each verdict had
     to count its own rows by hand and list the rest as excluded (three
     adjudications that each named one row were each handed the same twenty).
     The mint writes the rows it routes into the cell; the live model answers
@@ -187,8 +187,8 @@ def amendment_values(root, row):
     last wrote ITS copy.
 
     `{identity}` states one `JUDGED-TEXT: <row id> <digest>` line per row the
-    brief shows, the digest of that row's approved text as the brief's own
-    reader loads it (`acceptance_record.approved_text_digest`), so the binding
+    brief shows, the digest of that row's accepted text as the brief's own
+    reader loads it (`acceptance_record.accepted_text_digest`), so the binding
     records the text this sitting judged.
 
     Implements: SR-146, SR-178, LLR-167, LLR-359
@@ -207,7 +207,7 @@ def amendment_values(root, row):
         )
     if not baseline_snapshot.exists(root):
         return None, (
-            "no {} snapshot exists yet, so nothing has been approved — every row "
+            "no {} snapshot exists yet, so nothing has been accepted — every row "
             "here poses a FIRST-ACCEPTANCE question rather than a "
             "meaning-or-clarity one, and there is no accepted anchor to measure "
             "an amendment against".format(baseline_snapshot.SNAPSHOT_DIR)
@@ -227,8 +227,8 @@ def amendment_values(root, row):
         # to one question (`first_acceptance_values`' rule).
         return None, (
             "none of the {} row(s) this adjudication was minted over ({}) still "
-            "carries approved text that differs from its {} copy — re-anchored, "
-            "withdrawn or renumbered since the mint, awaiting a FIRST approval, "
+            "carries accepted text that differs from its {} copy — re-anchored, "
+            "withdrawn or renumbered since the mint, awaiting a FIRST acceptance, "
             "or moved only TRACED cells — so there is no amendment in its scope "
             "to rule on".format(
                 len(scope), ", ".join(sorted(scope)), baseline_snapshot.SNAPSHOT_DIR
@@ -251,7 +251,7 @@ def amendment_values(root, row):
 
 
 def _amended_rows(model, scope):
-    """`(lines, tiers, shown)`: the approved-cell before/after of each drifted
+    """`(lines, tiers, shown)`: the accepted-cell before/after of each drifted
     row IN `scope`, the spine tiers those rows sit in, and the `(tier, row id)`
     each block shows.
 
@@ -268,7 +268,7 @@ def _amended_rows(model, scope):
 
 
 def _cell_block(head, cells):
-    """One shown row's block: `head`, then each approved cell's name and its
+    """One shown row's block: `head`, then each accepted cell's name and its
     before and after, an empty side shown as `(empty)`.
 
     Implements: SR-146, LLR-167"""
@@ -280,15 +280,15 @@ def _cell_block(head, cells):
 
 
 def _scoped_chain_rows(model, scope):
-    """`(chains, cells_of)`: each drifted row IN `scope` with approved cells
+    """`(chains, cells_of)`: each drifted row IN `scope` with accepted cells
     to show, keyed `(tier, row id)`, mapped to the SR chains it hangs under
-    and to those approved cells. Split out of `_amended_rows` so the selection
+    and to those accepted cells. Split out of `_amended_rows` so the selection
     and the rendering each stay under the complexity bar."""
     chains, cells_of = {}, {}
     for entry in model:
         for chain_row in entry["rows"]:
-            approved = chain_row.get("approved") or frozenset()
-            cells = [c for c in chain_row["cells"] if c[0] in approved]
+            accepted = chain_row.get("approved") or frozenset()
+            cells = [c for c in chain_row["cells"] if c[0] in accepted]
             if chain_row["id"] not in scope or not cells:
                 continue
             key = (chain_row["kind"], chain_row["id"])
@@ -311,7 +311,7 @@ _UNCHAINED_TIERS = (
 
 def _unchained_amended_rows(root, scope):
     """`(lines, tiers, shown)` for the drifted need, assumption and surrogate
-    rows IN `scope`, each rendered like `_amended_rows`' blocks — the approved
+    rows IN `scope`, each rendered like `_amended_rows`' blocks — the accepted
     cells' before/after against the recorded copy
     (`baseline_snapshot.tier_owing`) — and `shown`, each such row's
     `(row id, registry, id column, live row)`.
@@ -332,15 +332,15 @@ def _unchained_amended_rows(root, scope):
 
 def _removed_amended_rows(root, scope):
     """`(lines, tiers, shown, unknown)` for the scoped rows the recorded copy
-    holds approved and the live registry no longer carries, in every tier the
+    holds accepted and the live registry no longer carries, in every tier the
     amendment brief serves (`baseline_snapshot.removed_rows`): each rendered as
-    a removal, its approved cells as `before` and the removal as `after`; the
+    a removal, its accepted cells as `before` and the removal as `after`; the
     tiers those rows sit in; each such row's `(row id, registry, id column,
     recorded row)`; and the scope's ids that neither a live registry nor the
     recorded copy holds.
 
     A removed row is in no live model, so neither the chain model nor
-    `tier_owing` can show it; the recorded copy is the only home its approved
+    `tier_owing` can show it; the recorded copy is the only home its accepted
     text has left. A removed row of a tier this brief does not serve drops.
 
     Implements: SR-146, LLR-167"""
@@ -362,8 +362,8 @@ def _identity(root, chained, unchained):
     """`{identity}`: one `JUDGED-TEXT: <row id> <digest>` line per row the
     brief shows, the requirement-chain rows (`(tier, row id)`, read from the
     live registry the chain model reads) and the unchained ones (already
-    loaded by `tier_owing`), each digest that row's approved text
-    (`acceptance_record.approved_text_digest`).
+    loaded by `tier_owing`), each digest that row's accepted text
+    (`acceptance_record.accepted_text_digest`).
 
     Implements: SR-178, LLR-359"""
     rows, loaded = list(unchained), {}
@@ -379,7 +379,7 @@ def _identity(root, chained, unchained):
         rows.append((rid, rel, id_col, loaded[rel][rid]))
     return "\n".join(
         "{}: {} {}".format(
-            JUDGED_TEXT, rid, acceptance_record.approved_text_digest(rel, col, row)
+            JUDGED_TEXT, rid, acceptance_record.accepted_text_digest(rel, col, row)
         )
         for rid, rel, col, row in rows
     )
@@ -391,10 +391,10 @@ def _amendment_baseline(root, tiers):
     the text actually under judgement, in spine order."""
     rels = list(dict.fromkeys(r for tier, r in _REGISTRY_OF.items() if tier in tiers))
     return (
-        "{} — the approved text as an operator last blessed it, each registry's copy "
+        "{} — the accepted text as an operator last blessed it, each registry's copy "
         "as last written:\n{}\nThis is the text BEFORE the change below; it is "
         "not the change under judgement, and it could only have been written by "
-        "copying a live registry in an approval commit.".format(
+        "copying a live registry in an acceptance commit.".format(
             baseline_snapshot.SNAPSHOT_DIR, _copy_stamp_lines(root, rels)
         )
     )
@@ -423,11 +423,11 @@ def _copy_stamp_lines(root, rels):
 
 # The spine tier a chain row's `kind` names -> the registry it lives in. The
 # ONE join this module owns: a rendered chain row carries its tier, and both
-# questions asked of it downstream — "is this tier's approval mine or the
+# questions asked of it downstream — "is this tier's acceptance mine or the
 # operator's" (`agent_common.operator_accepts_spine`, keyed by registry stem) and
-# "what `--approves` argument does the act owe" (keyed by registry path) — are
+# "what `--accepts` argument does the act owe" (keyed by registry path) — are
 # registry-keyed. A second, tier-keyed rung table lived here until WI-572's
-# rework; it answered the same question as `agent_common.SPINE_APPROVAL_RUNGS`
+# rework; it answered the same question as `agent_common.SPINE_ACCEPTANCE_RUNGS`
 # and was wired into only ONE of the two briefs that needed it.
 _REGISTRY_OF = {
     "SR": "docs/requirements/system-requirements.toml",
@@ -440,8 +440,8 @@ _REGISTRY_OF = {
 }
 
 
-def _loop_approves(root, kind):
-    """Is a `Drafted` row of spine tier `kind` THIS session's to approve?
+def _loop_accepts(root, kind):
+    """Is a `Drafted` row of spine tier `kind` THIS session's to accept?
 
     The one place this module turns a rendered chain row's tier into the dial's
     answer. An unrecognised tier has no registry, so it is HELD — the same
@@ -479,7 +479,7 @@ def _aftermath(root, tiers):
 
     held, mine = [], []
     for tier in sorted(tiers):
-        (mine if _loop_approves(root, tier) else held).append(tier)
+        (mine if _loop_accepts(root, tier) else held).append(tier)
     parts = []
     if mine:
         parts.append(_RELEASED_AFTERMATH.format("/".join(mine)))

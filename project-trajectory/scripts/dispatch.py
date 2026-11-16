@@ -28,7 +28,7 @@ authority the deleted `_claim_refusal` safety arm moved here). The §A8 policy
 table, per kind x session hold: ordinary/critique dispatch parallel at
 every level; high-risk/protected dispatch exclusive at every level; a `spine`
 row dispatches at every level — building a scope change is WORK, not an
-approval — but EXCLUSIVELY, one row per exclusive turn: an exclusive-kind
+acceptance — but EXCLUSIVELY, one row per exclusive turn: an exclusive-kind
 row on the frontier stops new admission, the dispatcher waits for every lane
 back in the station, then admits the first spine row ALONE (one branch, one
 `agent_loop --wi WI-###` worker, one re-accept window); the remaining spine
@@ -40,11 +40,11 @@ the run exits 0 — the machine finished everything it was allowed to do
 implements). `keep_nondependent` never releases that hold: once nothing else
 remains, those rows still surface; on a LOOP-HELD tier they dispatch outright,
 one at a time and exclusive (a recorded fresh-context reviewer verdict
-approves). The three retired enum words
+accepts). The three retired enum words
 (`attended` / `single-approve` / `autonomous`) each named one cell of that
 two-dial table, which is why they could not express the fourth. The fixed
 points hold at every level: the final read is the operator's, no un-run greens, the
-harness is still the bar, approved operator decisions are never re-decided.
+harness is still the bar, accepted operator decisions are never re-decided.
 
 Beyond admission it adds ORDERING only, no authority: every refusal stays
 where it already lives (the tracked docs/work/pause, a dirty trunk, the
@@ -341,7 +341,7 @@ def _refresh_or_quarantine(root, branch, tier):
     return refusal
 
 
-def _kind_action(kind, operator_held, approval_held=False):
+def _kind_action(kind, operator_held, acceptance_held=False):
     """The §A8 policy table — what the dispatcher does with a frontier row of
     `kind`, and the one place this module must not invent policy:
 
@@ -352,29 +352,29 @@ def _kind_action(kind, operator_held, approval_held=False):
         acceptance, gate     surface              exclusive
 
     `operator_held` is the SN-029 comparison already made: is the tier this repo's
-    spine is currently in process at still the operator's to approve
+    spine is currently in process at still the operator's to accept
     (`agent_common.operator_holds`)? It replaces the three-value gate-authority enum,
     which could not express "TCs are operator-held but LLRs are not" — the whole
-    reason the approval dial became an ordinal read against the 0-5 spine
+    reason the acceptance dial became an ordinal read against the 0-5 spine
     stage ladder (the dial's own levels stay 0-4: the four SPINE tiers plus
-    "nothing", and implementation is not an approval tier).
+    "nothing", and implementation is not an acceptance tier).
 
     A `spine` row dispatches EITHER WAY because building a scope change is
-    WORK, not an approval — it opens a window; closing it is the next row's
+    WORK, not an acceptance — it opens a window; closing it is the next row's
     job. `acceptance`/`gate` close a window, which on an operator-held tier is the
     operator's act (drain, surface the cards, exit 0) and otherwise dispatches — a
     recorded fresh-context reviewer verdict approves. The last arm also covers
     `adjudication`: exclusive, like every non-parallel kind.
 
-    `approval_held` IS THE OFF-SPINE AXIS (operator ruling OI-30 D3, 2026-08-15),
+    `acceptance_held` IS THE OFF-SPINE AXIS (operator ruling OI-30 D3, 2026-08-15),
     and it is a SECOND reason to surface rather than a widening of the first.
     `operator_held` answers about the SPINE tier the repo is in; a WI whose action
     would move an `approval` cell in an off-spine registry is governed by THAT
     registry's own rung — `agent_common.operator_accepts(docs, registry)`, which
     reads the same `operator_accepts_through` dial through
-    `agent_common.APPROVAL_RUNGS`. Either hold surfaces: a loop session must not
-    write an approval an operator owes, even on a spine tier the project has
-    declared machine-approvable.
+    `agent_common.ACCEPTANCE_RUNGS`. Either hold surfaces: a loop session must not
+    write an acceptance an operator owes, even on a spine tier the project has
+    declared machine-acceptable.
 
     IT DEFAULTS FALSE AND EVERY CALLER IN THIS MODULE PASSES THE DEFAULT, which
     is stated rather than hidden: NO WI KIND CARRIES A REGISTRY IDENTITY TODAY.
@@ -382,7 +382,7 @@ def _kind_action(kind, operator_held, approval_held=False):
     admission to satisfy a rule with no live writer would be building the wrong
     half first. This parameter is the SEAM the rule is enforced at, placed so the
     caller that first learns which registry a row would touch has somewhere to
-    say so — and `tests/test_approval_level.py` pins that no shipped loop
+    say so — and `tests/test_acceptance_level.py` pins that no shipped loop
     module writes an `approval` cell in the meantime, which is the guard that
     actually bites today.
 
@@ -393,7 +393,7 @@ def _kind_action(kind, operator_held, approval_held=False):
     if kind == "spine":
         return "exclusive"
     if kind in ("acceptance", "gate"):
-        return "surface" if (operator_held or approval_held) else "exclusive"
+        return "surface" if (operator_held or acceptance_held) else "exclusive"
     return "exclusive"
 
 
@@ -412,9 +412,9 @@ def _judgement_first(ready_kinds):
     because a lane CLAIMED an outcome (a partial close, a cancellation, an
     amendment that may have moved meaning) and nothing has judged that claim
     yet. A spine row re-accepts requirements. Running the spine row first
-    re-approves a spine on a premise the pending judgement may overturn, and an
-    approval is the one thing this loop cannot cheaply take back — the
-    attestation ledger is append-only by design. Judge, then build."""
+    re-accepts a spine on a premise the pending judgement may overturn, and an
+    acceptance is the one thing this loop cannot cheaply take back — the
+    acceptance ledger is append-only by design. Judge, then build."""
     return sorted(ready_kinds, key=lambda wk: wk[1] != "adjudication")
 
 
@@ -423,10 +423,10 @@ def _admission(ready_kinds, operator_held, busy, free, keep_nondependent=False):
 
     `ready_kinds` is the ordered frontier as `(wi_id, kind)` pairs (rank
     already sorted spine first), `operator_held` the SN-029 comparison (is the
-    tier in process still the operator's to approve?), `busy` whether any lane is
+    tier in process still the operator's to accept?), `busy` whether any lane is
     out, `free` how many lanes are open, and `keep_nondependent` the orthogonal
     dial an ordinal cannot carry — may other work keep running while an
-    approval is queued? Returns `(verb, payload)`:
+    acceptance is queued? Returns `(verb, payload)`:
 
       ("admit", [[id], ...])        fill lanes with parallel rows, one per lane
       ("admit-exclusive", [id])     the first exclusive row, spine included,
@@ -456,23 +456,23 @@ def _admission(ready_kinds, operator_held, busy, free, keep_nondependent=False):
         (w, k) for w, k in ready_kinds if _kind_action(k, operator_held) != "surface"
     ]
     if surfaced and not keep_nondependent:
-        # The operator-held stop (§A8 premise: once an approval is pending, no
+        # The operator-held stop (§A8 premise: once an acceptance is pending, no
         # work can be taken): drain and exit 0 into the operator's queue.
         return "surface", surfaced
     if not dispatchable:
         if not surfaced:
             return "empty", []
         # THE CLOSE UNDER `keep_nondependent`: the non-dependent work has all
-        # drained and only the approval rows remain. They still SURFACE.
+        # drained and only the acceptance rows remain. They still SURFACE.
         #
         # This arm used to admit them, inherited from the retired
         # `single-approve` word — "dispatches only as the queued batch once
         # nothing else remains". Under the ordinal that is a contradiction:
         # `operator_held` is TRUE here, which is the statement that this tier is
-        # the operator's to approve, and `keep_nondependent` answers an entirely
+        # the operator's to accept, and `keep_nondependent` answers an entirely
         # different question — may OTHER lanes keep running while a
-        # approval is queued. Letting the second dial override the first is
-        # the machine approving what an operator declared theirs, reached by a
+        # acceptance is queued. Letting the second dial override the first is
+        # the machine accepting what an operator declared theirs, reached by a
         # combination the enum could not even express (level 4 +
         # keep_nondependent, the fourth cell).
         if busy:
@@ -572,7 +572,7 @@ def _branch_exclusive(root, branch):
 # the TERMINAL `partial/`, which `schedule._disposition` reads as `partial` (never
 # ready), so an unattended run can never pick that WI up again until a successor
 # is minted. §A3's ruling is "any non-zero worker exit that is not a crash", and
-# its justification (the dominant shape is green-but-not-approved or
+# its justification (the dominant shape is green-but-not-accepted or
 # cannot-proceed-for-config-reasons) is about EXIT_NEEDS_OPERATOR, not about a
 # ceiling. The alternative — a handback that stays resumable — re-opens the
 # claim/return/re-claim loop this row closed, bounded then only by
@@ -1023,12 +1023,14 @@ def _surface_banner(root, surfaced):
     queued = len(surfaced)
     if cards and queued:
         return (
-            "queue drained - {} approval(s) waiting in open-items.html; "
+            "queue drained - {} acceptance(s) waiting in open-items.html; "
             "{} queued acceptance row(s) on the frontier (the two reads may "
             "name the same row)".format(cards, queued)
         )
     if cards:
-        return "queue drained - {} approval(s) waiting in open-items.html".format(cards)
+        return "queue drained - {} acceptance(s) waiting in open-items.html".format(
+            cards
+        )
     return (
         "queue drained - {} queued acceptance row(s); no card has projected "
         "to open-items.html yet".format(queued)
@@ -1187,7 +1189,7 @@ def _admit(
 ):
     """One tick's admission, enacted: `(admitted, exit_code)`. The exit code
     is non-None only when the run ends here — the drained queue, the surfaced
-    approvals, a refusal — and only ever with the station idle.
+    acceptances, a refusal — and only ever with the station idle.
 
     `paused` is the tracked pause's parsed body (None when absent), and it
     gates exactly ONE of the three things this function does: the CLAIM. §5.6
@@ -1384,7 +1386,7 @@ def _paused_exit(root, tier, paused, state):
 
 
 def _station_exit(root, tier, verb, payload, state):
-    """The run's honest ends, station idle: the surfaced-approval stop
+    """The run's honest ends, station idle: the surfaced-acceptance stop
     (§A8 attended: drain, leave the cards, exit 0) and the drained queue — or,
     on rung 1, NOT an end at all: a minted gap row re-fills the frontier and
     the return is None (keep driving). A finished branch may still be waiting
@@ -1403,7 +1405,7 @@ def _station_exit(root, tier, verb, payload, state):
     # the WI-388 intake mint, which turns each gap into a concrete gap-closure
     # row (derived description, no model in the path) and dedupes against the
     # rows that already exist, so the ladder cannot mint one gap forever.
-    # Rung 2: census empty but a pending attestation exists — that is not
+    # Rung 2: census empty but a pending acceptance exists — that is not
     # missing work; the cards are on open-items.html and the banner counts
     # them off the shared read. Rung 3: census empty and registries complete —
     # honest drain.
@@ -1431,7 +1433,7 @@ def _station_exit(root, tier, verb, payload, state):
     cards = _pending_cards(root)
     if cards:
         _say(
-            "queue drained - {} approval(s) waiting in open-items.html".format(
+            "queue drained - {} acceptance(s) waiting in open-items.html".format(
                 len(cards)
             )
         )

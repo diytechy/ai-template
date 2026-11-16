@@ -54,8 +54,8 @@ review = ""
 [decision.D-002]
 decided = "authored a derived requirement"
 alternative = "cited a need whose text does not demand it"
-reversal_cost = "an amendment and a re-approval"
-why_not_escalated = "the row is Drafted; approval stays the operator's act"
+reversal_cost = "an amendment and a re-acceptance"
+why_not_escalated = "the row is Drafted; acceptance stays the operator's act"
 review = "fine by me"
 """
 

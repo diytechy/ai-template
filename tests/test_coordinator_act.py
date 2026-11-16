@@ -202,21 +202,19 @@ def _flip(lane, prompt):
     return bool(match)
 
 
-def _approve(lane, prompt):
+def _accept(lane, prompt):
     if not _flip(lane, prompt):
         return
     for argv in _commands(prompt):
-        if "--approves" in argv:
-            approves = baseline_snapshot.parse_approves(
-                argv[argv.index("--approves") + 1]
-            )
-            baseline_snapshot.copy_live(lane, approves=approves)
-    _commit(lane, "approve\n\nWI: {}".format(WI))
+        if "--accepts" in argv:
+            accepts = baseline_snapshot.parse_accepts(argv[argv.index("--accepts") + 1])
+            baseline_snapshot.copy_live(lane, accepts=accepts)
+    _commit(lane, "accept\n\nWI: {}".format(WI))
 
 
 def full(lane, prompt):
     _reaccept(lane, prompt)
-    _approve(lane, prompt)
+    _accept(lane, prompt)
 
 
 def skip_flip(lane, prompt):
@@ -433,8 +431,8 @@ def test_a_combined_act_commits_its_amendment_act_before_its_first_acceptance_ac
     _primary, lane = _combined(tmp_path)
     assert _act(launched, lane) == 0
     subjects = _git(lane, "log", "--format=%s", "-4").splitlines()
-    acts = [s for s in subjects if s in ("re-accept", "approve")]
-    assert acts == ["approve", "re-accept"]  # newest first
+    acts = [s for s in subjects if s in ("re-accept", "accept")]
+    assert acts == ["accept", "re-accept"]  # newest first
 
 
 def test_the_act_turn_reports_success_only_when_no_listed_act_is_left(
@@ -489,7 +487,7 @@ def test_a_combined_act_interrupted_between_commits_reruns_with_only_its_first_a
     first, second = launched["prompts"]
     assert ["--reaccepts" in argv for argv in _commands(first)] == [True, False]
     (only,) = _commands(second)
-    assert "--approves" in only
+    assert "--accepts" in only
     assert _amendment_part(second) == cli.adjudicate_act.NONE_OWED
 
 

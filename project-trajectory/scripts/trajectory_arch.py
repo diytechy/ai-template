@@ -794,7 +794,7 @@ def if_tc_coverage_findings(root):
     `Approved`, and its own `detail` says the connectivity layer emits its
     findings "without changing exit status" — true of `interface_findings`,
     which this function does not touch, and now FALSE of the seam-TC rule this
-    function promotes. Amending an Approved cell overrides attestation (the
+    function promotes. Amending an Approved cell overrides acceptance (the
     sitting's act, the SR-006/LLR-060 precedent, WI-473); minting a fresh
     Drafted LLR under `SR-159` was considered and declined for the same reason
     that session gave first — `SR-159` is phase 1, and a Drafted child would
@@ -959,7 +959,7 @@ def if_tc_allow_parse_findings(root):
 # than rediscovered by campaign. WARN-FIRST FOREVER by the ruling — no
 # allowlist, no `--strict` arm — because it checks a TRACED, not APPROVED,
 # cell (process.md §8's `Module`/`CodeSymbol`/`TestRefs` "traced, not
-# approved" posture, cited at check_trajectory.py:77) and a mismatch is
+# accepted" posture, cited at check_trajectory.py:77) and a mismatch is
 # routine drift, not a defect to gate a commit over.
 #
 # ONE HOME for the AST walk (WI-486): `gen_arch_map.implements_report` builds
@@ -1620,7 +1620,7 @@ def _cross_component_scan(root):
 
 
 def cross_component_findings(root):
-    """The cross-CMP-edge-without-IF rule (WI-064; the AXES approved model's
+    """The cross-CMP-edge-without-IF rule (WI-064; the AXES accepted model's
     "Enforceability" ruling, process-options.md "Component layer"): an internal
     import edge whose endpoints belong to *different* CMP-### components must be
     covered by a declared IF-### row — an undeclared cross-component coupling is
@@ -1967,9 +1967,9 @@ def spec_interface_findings(root):
     of any `Stability = Experimental` seam — the forced nearest-existing-IF
     search. Its arming input was DELETED: the slimmed tier has one maturity
     field with two values, and neither means what `Experimental` meant ("proposed
-    and not yet pinned by a second consumer"). Re-keying onto `approval ==
+    and not yet pinned by a second consumer"). Re-keying onto `acceptance ==
     "draft"` was the obvious move and is the WRONG one: it silently changes the
-    predicate to "not yet approved", which on this repo's registry arms 113 of
+    predicate to "not yet accepted", which on this repo's registry arms 113 of
     113 rows instead of 5, and it does so at a severity that ERRORS under
     --strict. A rule whose blast radius multiplies twentyfold while its sentence
     stays the same is not the same rule.

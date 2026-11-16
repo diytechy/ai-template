@@ -325,11 +325,11 @@ def test_regen_really_writes_the_verdict_rollup(tmp_path, capsys):
     assert "001-REVIEW-A-abc1234.md" in rollup.read_text(encoding="utf-8")
 
 
-def test_regen_really_writes_the_approval_brief(tmp_path, capsys):
-    # The live approval brief is a generated artifact (`docs/ratify/ = approve`
-    # in [generated]) whose freshness `check.py`'s `approval-fresh` step gates
+def test_regen_really_writes_the_acceptance_brief(tmp_path, capsys):
+    # The live acceptance brief is a generated artifact (`docs/ratify/ = accept`
+    # in [generated]) whose freshness `check.py`'s `acceptance-fresh` step gates
     # on the refresh bar. Measured 2026-09-04 on the WI-590 adjudication lane:
-    # the lane's approval act moved the snapshot, its tip carried a stale brief,
+    # the lane's acceptance act moved the snapshot, its tip carried a stale brief,
     # the station's refresh regenerated everything in this table EXCEPT the
     # brief, and the bar went red on a file only the trunk step could have
     # refreshed inside the one commit the verdict gate peels. Driven, not read
@@ -341,10 +341,10 @@ def test_regen_really_writes_the_approval_brief(tmp_path, capsys):
 
     assert ts.regen(tmp_path) == 0, capsys.readouterr().err
     captured = capsys.readouterr()
-    assert "regen — approval-brief ok" in captured.out, captured.out + captured.err
+    assert "regen — acceptance-brief ok" in captured.out, captured.out + captured.err
     text = brief.read_text(encoding="utf-8")
     assert "STALE-SENTINEL" not in text, (
-        "the trunk step ran without regenerating the approval brief: "
+        "the trunk step ran without regenerating the acceptance brief: "
         + captured.out
         + captured.err
     )

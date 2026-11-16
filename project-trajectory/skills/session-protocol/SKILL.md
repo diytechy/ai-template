@@ -33,7 +33,7 @@ kit's design history — the old thread specs and the WI-1.x log — is archived
   part of the scope, and record which in the log. (The unattended loop surfaces
   this into the session prompt; the judgment is yours — it never auto-stashes.)
 - **Treat a declared-policy change as a status-staleness event.** In the same
-  sitting, grep `docs/status.md` for pause/stop/approval
+  sitting, grep `docs/status.md` for pause/stop/acceptance
   language predicated on the old `gate_policy`, `push`, `review_rounds`, or
   `guardrails` value; point to `docs/process.toml` instead of paraphrasing it.
 
@@ -176,7 +176,7 @@ session's results are recorded.
   `docs/work/` is not), so any commit after it that CHANGES that tree buys
   another round — and one that does not, cannot.
   Close **first** — Deliverable filled, spec moved to its terminal folder, any
-  approving Status-change commit — and take the final verdict round **last**;
+  accepting Status-change commit — and take the final verdict round **last**;
   never hand-merge trunk, since only the station's `refresh` commit is peeled.
   A correction the verdict itself demanded still costs a round: that is the gate
   working, not a defect (process-options.md, "The LLM-gate verdict protocol").

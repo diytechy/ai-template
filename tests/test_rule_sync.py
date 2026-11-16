@@ -203,7 +203,7 @@ def test_the_llr_exemption_answers_by_value():
 
 
 def test_is_modified_is_GONE_from_both_copies():
-    # D-9 STEP 7. `Modified` was the TRANSITIONAL marker for "approved text that
+    # D-9 STEP 7. `Modified` was the TRANSITIONAL marker for "accepted text that
     # has since moved" and its own docstring named this commit: the predicate
     # survived step 5's rename only so the kit never had a commit with no drift
     # detector at all, and it retired once its successor — the
@@ -312,12 +312,12 @@ def test_no_predicate_anywhere_still_honours_a_RETIRED_status_word():
 
 def test_no_declared_status_vocabulary_still_lists_a_RETIRED_word():
     # The declaration half of the same rule: the closed enum and every
-    # approval-claim set must speak only live words. `_APPROVAL_CLAIMED` is here
+    # acceptance-claim set must speak only live words. `_ACCEPTANCE_CLAIMED` is here
     # because it is the set `baseline_snapshot` reads INSTEAD of importing a
     # predicate (it cannot: `trace` imports it), so it is exactly the third copy
     # the grep above exists to catch, and it is worth pinning by value too.
     snap = load_script("baseline_snapshot")
-    assert snap._APPROVAL_CLAIMED == frozenset({"approved"})
+    assert snap._ACCEPTANCE_CLAIMED == frozenset({"approved"})
     # The OTHER two sets keyed on Status words that the source grep above CANNOT
     # see, because neither is a comparison — one is a dict's KEYS, the other a
     # bare frozenset with no `status` token on its line. Both were live readers
@@ -332,7 +332,7 @@ def test_no_declared_status_vocabulary_still_lists_a_RETIRED_word():
     assert census._TC_NOT_RED == lowered
     for word in _RETIRED_STATUS_WORDS:
         assert word.title() not in TRACE.STATUS_VALUES
-        assert word not in snap._APPROVAL_CLAIMED
+        assert word not in snap._ACCEPTANCE_CLAIMED
         assert word not in GATE.SPINE_MATURITY
         assert word not in census._TC_NOT_RED
 
@@ -386,7 +386,7 @@ def test_the_sn_scrapes_answer_by_value():
     #
     # The scrape is a TOKEN scrape: a prose-mentioned id is in the universe
     # exactly like a table row (the registry-machinery-reference §2.1 sharp edge
-    # — approved + uncited caps the derived stage through the coverage rung).
+    # — accepted + uncited caps the derived stage through the coverage rung).
     # Drafted-section ids are INCLUDED; the draft/coverage split happens later,
     # on sn_draft_ids. Only -000 placeholders are excluded.
     assert KITSPINE.sn_all_ids("prose SN-010\n## Drafted\nSN-011 and SN-000\n") == {
@@ -456,7 +456,7 @@ def test_the_sn_scrapes_answer_by_value():
         assert CARRIER.draft_ids_from_text(text, ".md") == want, text
 
 
-def test_the_legacy_approval_translation_agrees():
+def test_the_legacy_acceptance_translation_agrees():
     """Implements: TC-152"""
     # SN-029. `bootstrap.py` imports no kit sibling — it is the one script an
     # adopter may run from a bare download — so it carries its own copy of the
@@ -466,8 +466,8 @@ def test_the_legacy_approval_translation_agrees():
     # another, which is precisely the shadowing defect SN-029 removed.
     BOOT = load_script("bootstrap")
     COMMON = load_script("agent_common")
-    assert BOOT.LEGACY_APPROVAL == COMMON.LEGACY_APPROVAL
-    assert set(BOOT.LEGACY_APPROVAL) == {"attended", "single-approve", "autonomous"}
+    assert BOOT.LEGACY_ACCEPTANCE == COMMON.LEGACY_ACCEPTANCE
+    assert set(BOOT.LEGACY_ACCEPTANCE) == {"attended", "single-approve", "autonomous"}
     # And the two ends are what the words always meant, stated here so a future
     # edit to either copy has to argue with a named expectation rather than
     # merely keeping two dictionaries equal to each other.
@@ -475,10 +475,12 @@ def test_the_legacy_approval_translation_agrees():
     # 0-4 ordinal. The two ends still mean what the words always meant — the top
     # of the ladder holds everything, and the sentinel below it holds nothing.
     assert (
-        BOOT.LEGACY_APPROVAL["attended"]["operator_accepts_through"] == "DevStg-Release"
+        BOOT.LEGACY_ACCEPTANCE["attended"]["operator_accepts_through"]
+        == "DevStg-Release"
     )
     assert (
-        BOOT.LEGACY_APPROVAL["autonomous"]["operator_accepts_through"] == "DevStg-Below"
+        BOOT.LEGACY_ACCEPTANCE["autonomous"]["operator_accepts_through"]
+        == "DevStg-Below"
     )
     # THE SECOND F5 COPY THE RE-KEY CREATED, pinned for the same reason as the
     # first: `--migrate-config` rewrites an adopter's retired ordinal using
@@ -499,7 +501,7 @@ def test_the_retired_enum_key_is_no_longer_shipped():
     """Implements: TC-152"""
     # The shadowing defect, pinned so it cannot come back: the template used to
     # ship BOTH `gate_policy = "attended"` and `operator_accepts_through = 4`,
-    # and since `approval_through` prefers the explicit dial, every repo that
+    # and since `acceptance_through` prefers the explicit dial, every repo that
     # chose a non-default posture scaffolded as fully attended with no
     # diagnostic.
     from conftest import KIT
@@ -623,7 +625,7 @@ MIGRATE = load_script("migrate_carrier")
 
 def test_the_two_spine_carrier_readers_agree():
     """Implements: TC-160"""
-    # trace.py owns the approve brief's baseline read; check_trajectory.py owns
+    # trace.py owns the accept brief's baseline read; check_trajectory.py owns
     # the two-tree amendment scan. Both resolve a registry to a tier and a
     # column vocabulary, and both are consulted about the SAME commit.
     assert TRACE.SPINE_TABLE == CHECK_TRAJ.SPINE_TABLE
@@ -736,7 +738,7 @@ def test_the_scaffolded_brief_refuses_a_key_the_schema_does_not_declare(
     (docs / "requirements").mkdir(parents=True)
     (docs / "requirements" / "open-items.toml").write_text("", encoding="utf-8")
     (docs / "status.md").write_text(
-        "  - **In flight** _(driver; no approval needed)_:\n"
+        "  - **In flight** _(driver; no acceptance needed)_:\n"
         "- **Assumptions (unattended):**\n",
         encoding="utf-8",
     )
@@ -876,7 +878,7 @@ def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
     assert SPINE.draft_ids_from_text(legacy, ".md") == {"SN-005"}
 
     # The same claim under the new carrier is a field, and a MENTION does not
-    # set it: SN-006 is named in SN-005's prose and stays approved.
+    # set it: SN-006 is named in SN-005's prose and stays accepted.
     modern = (
         '[need.SN-005]\nstatus = "Drafted"\nneed = "n"\n\n'
         '[need.SN-006]\nstatus = "Approved"\nneed = "supersedes SN-005"\n'
@@ -1102,8 +1104,8 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         "backlink_coverage_min": 50,
         # WI-640 (SR-217): this repo's history predates the rule and reaches
         # back before the TOML registries, so it declares the start at the
-        # PARENT of the phase-6 approval act (cbb6649f): the chains that act
-        # approved are the first judged by the rule they include.
+        # PARENT of the phase-6 acceptance act (cbb6649f): the chains that act
+        # accepted are the first judged by the rule they include.
         "test_first_since": "f537fc531dd37b372259ba84f8836a290d1efddb",
     }
     assert live["checks"] == {**checks, **OPERATOR_DIALS}
@@ -1438,7 +1440,7 @@ def test_is_drifted_has_exactly_ONE_home():
     value. `is_drifted` is a different animal — it joins a live registry against
     a snapshot tree through the carrier resolver and the §A5.1 cell split, so a
     second copy would not be a five-line duplicate, it would be a second opinion
-    about what "the approved text" is. Two answers to that question is the
+    about what "the accepted text" is. Two answers to that question is the
     failure the whole `last_approved` mechanism exists to prevent.
 
     So: exactly one definition, in `baseline_snapshot.py`, and every consumer
@@ -1570,7 +1572,10 @@ def test_the_open_items_status_filter_is_one_home():
     assert KITSPINE.open_items_at([], "pending") == []
     assert not hasattr(KITSPINE, "_pending_items")
     # Both near-copy readers now call it: neither carries its own id filter.
-    for mod, fn in ((CT, "approval_brief_findings"), (TRACE, "ruled_open_item_texts")):
+    for mod, fn in (
+        (CT, "acceptance_brief_findings"),
+        (TRACE, "ruled_open_item_texts"),
+    ):
         src = inspect.getsource(getattr(mod, fn))
         assert "open_items_at" in src and 'endswith("-000")' not in src, fn
 
@@ -1579,7 +1584,7 @@ def test_the_open_items_readers_answer_by_value(tmp_path):
     """Implements: TC-314"""
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True)
-    brief = "Approve the [p]-[DevStg-Reqs] batch: an operator approval"
+    brief = "Accept the [p]-[DevStg-Reqs] batch: an operator acceptance"
     (req / "open-items.toml").write_text(
         "[open_item.OI-000]\n"
         'status = "pending"\n'
@@ -1593,7 +1598,7 @@ def test_the_open_items_readers_answer_by_value(tmp_path):
         encoding="utf-8",
         newline="\n",
     )
-    briefs = CT.approval_brief_findings(tmp_path)
+    briefs = CT.acceptance_brief_findings(tmp_path)
     assert [b.split(":")[0] for b in briefs] == ["OI-001"], briefs
     ruled = TRACE.ruled_open_item_texts(tmp_path)
     assert list(ruled) == ["OI-002"] and "B = 8 is ruled" in ruled["OI-002"]
@@ -1627,14 +1632,14 @@ def test_the_open_items_stage_keeps_duplicate_rows_in_sequence(tmp_path):
     req.mkdir(parents=True)
     (req / "open-items.csv").write_text(
         "OI-ID,Status,OneLine\n"
-        "OI-001,pending,Approve the [p]-[DevStg-Reqs] batch\n"
+        "OI-001,pending,Accept the [p]-[DevStg-Reqs] batch\n"
         "OI-001,pending,Unrelated decision\n"
         "OI-002,ruled,r1\n"
         "OI-002,ruled,r2\n",
         encoding="utf-8",
         newline="\n",
     )
-    briefs = CT.approval_brief_findings(tmp_path)
+    briefs = CT.acceptance_brief_findings(tmp_path)
     assert [b.split(":")[0] for b in briefs] == ["OI-001"], briefs
     ruled = TRACE.ruled_open_item_texts(tmp_path)
     assert list(ruled) == ["OI-002"] and "r2" in ruled["OI-002"]
@@ -1642,24 +1647,24 @@ def test_the_open_items_stage_keeps_duplicate_rows_in_sequence(tmp_path):
 
 def test_the_brief_lint_reports_a_duplicate_row_in_either_position(tmp_path):
     """Two pending rows sharing an id are both read by the brief lint: the
-    link-less approval row warns whether it comes first or second, so no
+    link-less acceptance row warns whether it comes first or second, so no
     by-id map that keeps only one of them can hide it.
 
     Implements: TC-314
     """
-    approval = "Approve the [p]-[DevStg-Reqs] batch"
+    acceptance = "Accept the [p]-[DevStg-Reqs] batch"
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True)
     for first, second in (
-        ("Unrelated decision", approval),
-        (approval, "Unrelated decision"),
+        ("Unrelated decision", acceptance),
+        (acceptance, "Unrelated decision"),
     ):
         (req / "open-items.csv").write_text(
             f"OI-ID,Status,OneLine\nOI-001,pending,{first}\nOI-001,pending,{second}\n",
             encoding="utf-8",
             newline="\n",
         )
-        briefs = CT.approval_brief_findings(tmp_path)
+        briefs = CT.acceptance_brief_findings(tmp_path)
         assert [b.split(":")[0] for b in briefs] == ["OI-001"], (first, briefs)
 
 

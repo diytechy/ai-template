@@ -126,7 +126,7 @@ LOG_D = "docs/log.d"
 # than it has rungs, so a row names the RUNG RANGE it certifies rather than being
 # one-per-boundary. This constant, `LOG.template.md`'s heading and
 # tests/test_trunk_step.py move together; an adopter's existing log renames the
-# heading at re-sync (the rows underneath stay verbatim — they are attestations).
+# heading at re-sync (the rows underneath stay verbatim — they are acceptances).
 RESERVED_HEADINGS = ("## Sittings", "## Decisions log", "## Audit log")
 
 # `<id>-<slug>.md`. The `WI-<n>-<slug>` form is the house convention; a bare
@@ -587,21 +587,21 @@ REGEN_STEPS = (
         "docs/reviews/ absent",
         ("docs/reviews/rollup/",),
     ),
-    # The live approval brief (`docs/ratify/CURRENT.md`, declared `approve` in
+    # The live acceptance brief (`docs/ratify/CURRENT.md`, declared `accept` in
     # docs/stack.ini [generated]). It projects the registry against the
-    # docs/archive/last_approved snapshot, and `check.py`'s `approval-fresh`
-    # step (`trace.py --approve modified --check`) reds the refresh bar the
+    # docs/archive/last_approved snapshot, and `check.py`'s `acceptance-fresh`
+    # step (`trace.py --accept modified --check`) reds the refresh bar the
     # moment either side moves under it. A LEAF like the rollup — nothing reads
     # it back — so its position is free. It belongs HERE because the refresh
     # commit is the one commit the verdict gate peels: an adjudication lane
-    # whose approval act moved the snapshot left the brief stale at its tip
+    # whose acceptance act moved the snapshot left the brief stale at its tip
     # (WI-590, 2026-09-04), and regenerating it on the lane AFTER the round
     # would have staled the round's tree identity, while the station's refresh
     # could not regenerate it because this table did not name it.
     (
-        "approval-brief",
+        "acceptance-brief",
         _has("docs/ratify/CURRENT.md"),
-        _cmd("trace.py", "--approve", "modified", "--out", "docs/ratify/CURRENT.md"),
+        _cmd("trace.py", "--accept", "modified", "--out", "docs/ratify/CURRENT.md"),
         "docs/ratify/CURRENT.md absent",
         ("docs/ratify/CURRENT.md",),
     ),

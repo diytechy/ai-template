@@ -26,7 +26,7 @@
      tier's brief, so an SN or SR sitting reads the same rule as an LLR or TC
      one; §1(e), §2(b), §2(d) and §3 point at it.
 
-     §4 serves the LLR tier because DevStg-Arch has no approval act of its
+     §4 serves the LLR tier because DevStg-Arch has no acceptance act of its
      own: the first LLR sitting at a component scope, or one that re-cuts
      it, is the act a decomposition judgement feeds. Every LLR brief carries
      §4, so its line states that applies-when itself: at any other LLR
@@ -56,13 +56,13 @@
   implementation carrier (a code file, function or symbol). A shipped boundary
   artifact (a registry, template, config file or launcher) may be named at the
   LLR and TC tiers only; SN and SR rows name no file in any cell, acceptance and
-  rationale included. An approved cell keeps its approved text verbatim, names
+  rationale included. An accepted cell keeps its accepted text verbatim, names
   included, until it is amended through its authority, and an amendment adds no
   name the rule forbids.
 - **Keep or mint:** a row whose meaning changed keeps its id only as
   `docs/process.md` §4 "Keep or mint" allows.
 
-## 1. At SN intake — answer these before the need is approved
+## 1. At SN intake — answer these before the need is accepted
 <!-- tiers: SN -->
 
 A defect admitted here becomes a whole subtree of need-less requirements later.
@@ -194,7 +194,7 @@ Questions:
 - **(c3) In a decomposition round, the review record names each applicable
   hat's outcome.** `Hat-Refs` cannot say that a perspective was weighed and
   found nothing, and no file beside the decomposition says it either. A round
-  that adds an SR under a need, or amends an approved need, carries each
+  that adds an SR under a need, or amends an accepted need, carries each
   applicable hat's question in its brief, and the sitting's verdict, the
   review record, names every one of them once: the rows it raised, by their
   `Hat-Refs`, or no finding with the reason. A missing outcome is a finding
@@ -216,7 +216,7 @@ Questions:
   not a cap: a hard cap invites merging two LLRs into one to slip under it,
   hiding the defect the number exists to surface. Clearing one is a **recorded
   per-row re-stamp** — the waiver token in the tier's reason cell (`Rationale`
-  at SR, `why` at SN) for an approved cell's kept name (§0), never for a new
+  at SR, `why` at SN) for an accepted cell's kept name (§0), never for a new
   one, the
   `fan-out re-stamp: <reason>` phrase for fan-out — and the reason must be one a
   later reader can **argue with**. "Accepted" is not a reason.
@@ -260,10 +260,10 @@ Questions:
   affected trace/evidence/work references, and the code that becomes removable.
   Amend the LLR and its mechanism-specific verification together; an Approved
   LLR does not require keeping an obsolete shim. Preserve unchanged parent
-  approval, re-accept changed child content through the applicable authority,
+  acceptance, re-accept changed child content through the applicable authority,
   and let the derived stage expose incomplete evidence. A changed stakeholder
   outcome, justified SR constraint or active WI scope returns to its own intake
-  and approval path; it cannot be hidden as a design-only replacement.
+  and acceptance path; it cannot be hidden as a design-only replacement.
 - **An LLR's `Hat-Refs` holds only what its OWN decomposition raised — never a
   copy of its parent's.** The row's EFFECTIVE set is derived (own refs unioned
   with its `SR-Refs` parents'), so an own ref is earned only where the design

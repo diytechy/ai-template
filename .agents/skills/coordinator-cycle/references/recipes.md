@@ -173,7 +173,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   one, refuses the turn before launch, naming the log and the cause; it
   never starts a fresh thread in its place. Commit the named log, or run
   a first turn without `--resume`.
-  - A checkpoint reconcile over many approved rows can lose text in four
+  - A checkpoint reconcile over many accepted rows can lose text in four
     ways. All four cost wi-977 a returned sitting, then a re-sit, then a
     gate MAJOR (wi-977 D-019 to D-024).
     - **Compression.** Terra summarizes long cells into pointers such as
@@ -555,7 +555,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `## amendment` section the one verdict parser refuses for a single-kind
      brief, after its act was committed, and was discarded (wi-921 D-018).
      Single-kind briefs use bare ids. An empty section refuses the entire composition.
-     An interface row carries no approval status, so no kind token
+     An interface row carries no acceptance status, so no kind token
      names it: name an amended IF cell as context in the appended arms
      map (wi-966 D-010).
      A `disposition` row that carries an `## Owner route` section (WI-953,
@@ -645,7 +645,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 - **Preview spine mints,** from the lane root:
   `"$PY" "$TOOLS/preview_mint.py" <before> [<after>]`.
   `<before>` is the lane/trunk merge base; `<after>` defaults to HEAD. This
-  previews amendments and first approvals only, not every sweep outcome.
+  previews amendments and first acceptances only, not every sweep outcome.
 
 ## 2. Claiming
 
@@ -756,40 +756,40 @@ commit of its own, move it to trunk's tip
      authorized either: the merge slot refuses it, so re-sit the row before
      the landing.
 
-  The act brief lists its own `--reaccepts` and `--approves` rows: CLARITY
+  The act brief lists its own `--reaccepts` and `--accepts` rows: CLARITY
   rows, a MEANING row the verdict marks `[MEANING+BLESS]` on a released rung,
-  and APPROVE rows on a released rung; on a held rung a CLARITY re-accept
+  and ACCEPT rows on a released rung; on a held rung a CLARITY re-accept
   names the verdict with `--verdict`, for audit, and is owed only while the
   row's committed text still has the identity the verdict's binding records
   (the act turn refuses before launch otherwise: re-sit the row). A row the
   verdict rules CLARITY that
   the lane deleted (a retired row) is listed in `--reaccepts` until its
   recorded copy drops it; on a held rung it owes no act (removing a held row
-  is the operator's). A first approval of a row absent at HEAD is refused as
+  is the operator's). A first acceptance of a row absent at HEAD is refused as
   inconsistent.
   The act turn takes one act per kind of judgement, in the combined brief's
   order: the amendment act
-  (`--reaccepts`) first, then the first-acceptance act (`--approves`). A
-  first-acceptance copy is refused while an approved row in its registry still
-  drifts unattested, and the amendment act clears that drift first. The old
+  (`--reaccepts`) first, then the first-acceptance act (`--accepts`). A
+  first-acceptance copy is refused while an accepted row in its registry still
+  drifts unaccepted, and the amendment act clears that drift first. The old
   single act covering both kinds is retired, because the spine is decomposed
   one way in every mode (operator, 2026-10-07). This order is not yet proven on a
-  same-registry checkpoint, so record the first one. `--approves` splits on
+  same-registry checkpoint, so record the first one. `--accepts` splits on
   `;`, so never put one in a ref. A traced-only change owes no sitting.
   A traced cell changed after the act (a `code_symbol` a later fix adds)
   leaves the registry off its anchor: re-anchor it in the LANE, as its last
   spine commit, with
-  `"$PY" "$SCRIPTS/intake.py" snapshot --approves "<registry>=<ref>"`
+  `"$PY" "$SCRIPTS/intake.py" snapshot --accepts "<registry>=<ref>"`
   (no `--reaccepts`; the ref names the sitting that last anchored it).
   Taken on trunk inside the squash, text-then-act refuses it (WI-887,
-  2026-10-11). Adding an IF to an approved TC's `Verifies` (the strict gate refuses
+  2026-10-11). Adding an IF to an accepted TC's `Verifies` (the strict gate refuses
   an IF row no TC cites) is traced-only too: the composer refuses an
   amendment sitting for it, and the re-anchor is the step (WI-902's archived lane tip `d3d301216`). The bar command on the staged squash (below) catches
   this drift; the lane hook does not.
-- **Approve a parent with its children, never after them** (WI-850):
+- **Accept a parent with its children, never after them** (WI-850):
   the pre-commit `parent-first` step and the slot's third lane-commit
-  rider refuse a commit that leaves an approved row under an
-  unapproved parent where either status moved, so an act that flips a
+  rider refuse a commit that leaves an accepted row under an
+  unaccepted parent where either status moved, so an act that flips a
   child whose parent is still Drafted is refused; sit the parent in
   the same combined sitting, or first.
 - **A return in a sitting holds its whole registry.** A row the sitting
@@ -814,9 +814,9 @@ commit of its own, move it to trunk's tip
   squash. When trunk still equals the lane's base (no rebase was owed),
   the staged squash's tree is the lane tip's, so the bar on the staged
   squash below is that run; a red there resets the squash and is fixed in
-  the lane (leg 28). An act that approves a row arms checks a Drafted row escapes:
-  an approved Smoke TC whose evidence sits in a `SLOW_MODULES` module reds
-  `test_every_approved_smoke_case_has_evidence_in_the_smoke_tier`. Fix it
+  the lane (leg 28). An act that accepts a row arms checks a Drafted row escapes:
+  an accepted Smoke TC whose evidence sits in a `SLOW_MODULES` module reds
+  `test_every_accepted_smoke_case_has_evidence_in_the_smoke_tier`. Fix it
   in the lane (move the case to a fast module, a traced-only change) and
   re-anchor there, never on trunk (wi-958 D-019).
 - **Squash** on trunk with `git merge --squash <lane>`, one per lane.
@@ -846,8 +846,8 @@ commit of its own, move it to trunk's tip
   the lane's SOUND full-lane review in the command's description: the
   auto-mode classifier has refused an uncited squash as an unreviewed merge.
   The squash's hook judges text-then-act, held-status (each lane commit's
-  held approval claims, by the lane rule), reserved-ids and ruling-sync, but
-  never the merge slot's approval-act floor, so on this path the act
+  held acceptance claims, by the lane rule), reserved-ids and ruling-sync, but
+  never the merge slot's acceptance-act floor, so on this path the act
   turn's verdict-derived command is the only guard until the one-landing
   row moves coordinator landings onto the slot (coordinator-2026-10-17
   D-009).
@@ -875,7 +875,7 @@ commit of its own, move it to trunk's tip
   - pass `--src project-trajectory/scripts` to both `gen_arch_map.py` forms (a
     bare `--contracts-doc` wipes the interface reference);
   - regenerate `docs/ratify/CURRENT.md` with
-    `"$PY" "$SCRIPTS/trace.py" --approve modified --out docs/ratify/CURRENT.md`.
+    `"$PY" "$SCRIPTS/trace.py" --accept modified --out docs/ratify/CURRENT.md`.
 - **Run the commit checks, `"$PY" "$SCRIPTS/run_menu.py" smoke`, on the staged
   squash before the landing commit** (ruling 6). Its strict lints catch what the hook's
   non-strict forms pass: R-F (a closed row's `specref`) and a traced cell off
@@ -1011,7 +1011,7 @@ lane commit being replayed.
 - A lane whose spine set amends rows another open lane is amending, or
   whose code edits the same functions, waits for that lane's landing and
   rebases onto it before its spine turn and first round. Its text then
-  amends what the sitting approved, and the round reviews the tip that
+  amends what the sitting accepted, and the round reviews the tip that
   lands (wi-946 D-006). Conflicts across several replayed commits can go to
   a kit-builder briefed to keep both sides' behaviour and stop on any
   semantic choice; read the resolved functions and re-run the bar yourself
@@ -1030,7 +1030,7 @@ lane commit being replayed.
   judged rows still get their unchanged-rows check (wi-927 D-013).
 - Acts collide too: check `acts.toml` after every rebase for duplicate act
   seqs (the skill's §4 latches sittings to avoid them).
-- A lane rebased after its act turn, onto a trunk that moved an approved
+- A lane rebased after its act turn, onto a trunk that moved an accepted
   row's traced cells (`module`, `code_symbol`, `evidence`), replays its act
   commits' snapshot copies unchanged, so each no longer equals its live
   file at that commit. The registry-integrity step reads that as a landed
@@ -1117,8 +1117,8 @@ lane commit being replayed.
   commit, since the bar runs `check_trajectory.py --strict`; an intent row's
   cell follows `spine-authoring`, `references/in-lane.md`, "Author it before
   the build". A renamed test moves both.
-- When a move makes an approved cell's module-qualified name false, drop
-  the qualifier and keep the approved symbol: a swapped qualifier adds a
+- When a move makes an accepted cell's module-qualified name false, drop
+  the qualifier and keep the accepted symbol: a swapped qualifier adds a
   name to row text, which a sitting returns (wi-976 sitting 015).
 - Terra has dropped an existing `code_symbol` entry as "nonexistent". Grep
   every symbol it removes before committing.
@@ -1133,33 +1133,33 @@ lane commit being replayed.
 - The local Codex sandbox has failed shallow-clone tests and `git worktree add`,
   and hit Windows locks at `-n 2`. Ask for `-n 0`; confirm those failures with
   decisive tests outside that sandbox before treating them as code defects.
-- Name the sentences a lane added and no sitting approved: Terra may
+- Name the sentences a lane added and no sitting accepted: Terra may
   rewrite those. Told only to amend by addition, it appended a corrective
   sentence after a lane-added one it contradicted, which the coordinator
   removed before the sitting (WI-921 LLR-309, 2026-10-15). A term one row
   defines is defined again, or cited by name, in a sibling row that uses
   it: the sitting returned LLR-309 for an "elsewhere" only LLR-307 defines.
-- Brief Terra to amend an approved row by addition: keep the approved cell
+- Brief Terra to amend an accepted row by addition: keep the accepted cell
   verbatim, function names included (item 5's schema lane migrates them),
   and append the new text in contract voice. Told only to restate the
   builder's function names, it rewrote LLR-313's whole Detail and TC-333's
-  Expected and dropped approved obligations (WI-913, 2026-10-14).
+  Expected and dropped accepted obligations (WI-913, 2026-10-14).
 - Check that every spine item the Done-when names moved its cell at
   intent, by diffing the cell against the lane's trunk base: an intent
   turn reported SR-019's acceptance amended and never applied it, which
   round 1 caught as a MAJOR (wi-926 D-009).
 - Check an intent or reconcile set mechanically before committing it: in
-  each changed cell of an approved row the approved text must occur
+  each changed cell of an accepted row the accepted text must occur
   verbatim (old within new, read with `tomllib`; judge a tier or list
   cell by hand). Compare with the row at the lane's trunk base,
   sentence by sentence, not with HEAD: a lane-added sentence may be
-  rewritten, an approved one may not (wi-925 D-009). Terra follows a
+  rewritten, an accepted one may not (wi-925 D-009). Terra follows a
   plan's literal text: it dropped from an IF data cell a function the
-  owner still serves to a requestor, and restated in an approved row a
+  owner still serves to a requestor, and restated in an accepted row a
   sentence its new row already states. Check each changed IF data
   cell against its requestors' calls, and each new sentence for a
-  second home (wi-925 D-006). Terra reworded two approved phrases in SR-233 while
-  reporting every approved text kept: restore the approved bytes by a
+  second home (wi-925 D-006). Terra reworded two accepted phrases in SR-233 while
+  reporting every accepted text kept: restore the accepted bytes by a
   guarded replace, keep its addition, and record it (wi-911 D-007,
   2026-10-15).
 - An interface row names no file in any cell; a "No tie-back" note belongs
@@ -1189,8 +1189,8 @@ lane commit being replayed.
   (wi-960 D-013).
 - After every Terra turn, diff the registries row by row against the
   last commit and compare the changed rows with the set the turn was
-  given: a checkpoint turn narrowed two approved evidence cells outside
-  the set from a module to named nodes, which the approved-sentence
+  given: a checkpoint turn narrowed two accepted evidence cells outside
+  the set from a module to named nodes, which the accepted-sentence
   check passes, and its report named one under another id. Restore any
   row outside the set by a guarded replace (wi-960 D-012).
 - An LLR detail carries no `shall`: the one-`shall` rule is the SR's.
@@ -1220,17 +1220,17 @@ lane commit being replayed.
   disposition suggested, which one listed outcome did not keep (wi-961
   D-015).
 
-- An intent turn given a plan's amendment list rewrote whole approved
+- An intent turn given a plan's amendment list rewrote whole accepted
   cells (SR-208, LLR-246, TC-241, TC-278): run a sentence-level check
-  before committing (each base sentence of an approved cell, split on
+  before committing (each base sentence of an accepted cell, split on
   `.` and `;`, present verbatim in the new cell), and have an
   independent read-only sub-agent classify each missing sentence as
   retired by the spec or dropped; it found 27 dropped, which a resumed
   turn restored (wi-851 D-003).
-- A checkpoint arms turn may state an arm by amending an approved row
+- A checkpoint arms turn may state an arm by amending an accepted row
   outside the set (TC-243), which then joins the sitting and can be
   returned: name the rows it may touch, and restore any other row to
-  its approved bytes (wi-851 D-012).
+  its accepted bytes (wi-851 D-012).
 
 - Name a new row's `phase` in the intent brief, read from `docs/stage`'s
   `phase`: an intent turn stamped seven rows 1 on a phase-6 spine, which
@@ -1287,7 +1287,7 @@ lane commit being replayed.
   D-005).
 - A commit sometimes exits 1 with every hook step passing. Read the hook
   output and retry with `-F`; never skip the hook.
-- On trunk (or `check.py --trunk-lane`), `approval-fresh` refuses a stale
+- On trunk (or `check.py --trunk-lane`), `acceptance-fresh` refuses a stale
   `docs/ratify/CURRENT.md`. Regenerate it and read what it lists before an act.
 - Where freshness is gated, `interface-reference` refuses a stale view after
   a declared header or contract changes; regenerate it.
@@ -1644,4 +1644,4 @@ lane commit being replayed.
   its finding goes to one dispute sitting, uncontested, the coordinator
   taking no side, since only that sitting moves a MAJOR to a successor.
 - **TC-279:** the part population is `gen_arch_map.declaration_sites`, never a
-  hand-written scan. Record the first result only after the case is approved.
+  hand-written scan. Record the first result only after the case is accepted.

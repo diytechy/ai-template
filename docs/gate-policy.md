@@ -7,7 +7,7 @@ the operator may restore a lower level at any time. Keep in version control.
 
 _Prior level:_ **`single-approve`** — APPROVED 2026-07-13 (OI-2; operator review of
 the WI-107 enablement commit, [log.md](log.md) "GATE: DevStg-Impl re-acceptance" +
-Decisions). That level and its approval stand as history and may be restored
+Decisions). That level and its acceptance stand as history and may be restored
 by raising `operator_accepts_through` in [process.toml](process.toml) + this
 register.
 
@@ -21,7 +21,7 @@ in the title. What the word now means here, read off
 
 | dial | this repo | meaning |
 |---|---|---|
-| `operator_accepts_through` | `"DevStg-Below"` | nothing is operator-held; the loop approves every rung itself |
+| `operator_accepts_through` | `"DevStg-Below"` | nothing is operator-held; the loop accepts every rung itself |
 | `keep_nondependent` | `false` | a paged round does not carry non-dependent work forward |
 | `final_review` | `"always"` | the end-of-run review is never skipped — the fixed point below, as a dial |
 
@@ -38,7 +38,7 @@ fresh-context LLM reviewer's recorded verdict** — no operator batch sitting. T
 is config-layer only: **no spine change**, so the flip does **not** move the
 derived stage (`docs/stage` is always whatever `derive_stage.py` computes — the
 level never moves the derived value; read `docs/stage` for the current stage
-rather than this register). The level governs only WHO approves a gate,
+rather than this register). The level governs only WHO accepts a gate,
 not what the gate computes. _(The flip's reviewed commit is the operator's
 in-chat directive + this register update, 2026-07-15.)_
 
@@ -46,9 +46,9 @@ in-chat directive + this register update, 2026-07-15.)_
 
 | process.md clause | Standard behavior | This repo (`autonomous`) |
 |---|---|---|
-| §4 acceptor, DevStg-Reqs+DevStg-Tests | an operator approves each gate | an **independent fresh-context LLM reviewer's recorded verdict** approves the gate; no operator sitting |
-| §4 approval point | per-gate approval | each gate closes on its recorded reviewer verdict (LLM-gate); an operator call is queued as a `Needs <operator>` Open item only when a **fixed point** below forces it |
-| §4 acceptor, DevStg-Impl→DevStg-Release | an operator approves each gate | autonomous (LLM-gate verdicts) |
+| §4 acceptor, DevStg-Reqs+DevStg-Tests | an operator accepts each gate | an **independent fresh-context LLM reviewer's recorded verdict** approves the gate; no operator sitting |
+| §4 acceptance point | per-gate acceptance | each gate closes on its recorded reviewer verdict (LLM-gate); an operator call is queued as a `Needs <operator>` Open item only when a **fixed point** below forces it |
+| §4 acceptor, DevStg-Impl→DevStg-Release | an operator accepts each gate | autonomous (LLM-gate verdicts) |
 | §4 consistency review 'pause and ask' | solicit the operator | route by revert-cost: LOW → decide + record (log.md Decisions log); MEDIUM/HIGH → the Blocked register; never a mid-run pause |
 
 ## Fixed points (nothing in this file overrides these)

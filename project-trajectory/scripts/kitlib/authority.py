@@ -1,5 +1,5 @@
-"""Approval authority: which rung a registry's status cells are approved into,
-whether a declared approval level holds that rung for an operator, and what the
+"""Acceptance authority: which rung a registry's status cells are accepted into,
+whether a declared acceptance level holds that rung for an operator, and what the
 dial a chosen tree declares is.
 
 WHY IT IS A MODULE OF ITS OWN (LLR-249). Every reader that asks "does the dial
@@ -15,17 +15,17 @@ about which rung is held.
 
 THE RUNG MAPS, and the fail-safe they share:
 
-  * `APPROVAL_RUNGS` keys the OFF-SPINE registries that carry a status cell by
+  * `ACCEPTANCE_RUNGS` keys the OFF-SPINE registries that carry a status cell by
     their stem. The association is existing fact (`spine_rules` gates the
     Boundary rung on the frame and the Arch rung on the components), not a new
     declaration. The assumptions registry sits at the frame's rung: an
-    assumption lands on a boundary crossing, and is approved with the frame it
+    assumption lands on a boundary crossing, and is accepted with the frame it
     lands on.
-  * `SPINE_APPROVAL_RUNGS` keys the spine registries by path stem. It is also
+  * `SPINE_ACCEPTANCE_RUNGS` keys the spine registries by path stem. It is also
     the mint's table (which Drafted rows a merge hands an adjudicator), so it
     names only what the mint asks about.
   * `NEEDS_REGISTRY` is the one file that carries two tiers: the needs (a spine
-    tier) and the stakeholder list (an off-spine one). Both are approved at
+    tier) and the stakeholder list (an off-spine one). Both are accepted at
     `DevStg-Needs` - `spine_rules` derives that rung while a need is still
     drafted - so `rung_for` answers it for the file without widening the
     mint's table.
@@ -37,13 +37,13 @@ THE DIAL, READ TWO WAYS, for two different questions:
 
   * `dial_at(root, rev)` is THE LIVE READER: the dial a chosen commit's tree,
     or the index, declares, with every legacy spelling the live loop has ever
-    accepted translated exactly as `agent_common.approval_through` translates
+    accepted translated exactly as `agent_common.acceptance_through` translates
     it (`read_dial` is the one resolution both run), printing nothing. The
     writers, the pre-commit step and the merge slot all read the dial through
     it, from a tree they name, never from a primary checkout's working file,
     where an uncommitted operator edit could strengthen or weaken the judgement
     of a tree built from HEAD. The migration note a legacy spelling deserves
-    is presentation, printed only by `agent_common.approval_through` for the
+    is presentation, printed only by `agent_common.acceptance_through` for the
     one working tree a person can migrate.
   * `dial_from_config(policy)` is THE HISTORY READER: an absent, legacy or
     unrecognised value reads as the MOST-held rung. Applied to a past commit,
@@ -57,9 +57,9 @@ through `kitlib.git`); no argv, and nothing printed.
 Contracts: IF-195 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 
-Contract IF-195: the approval-authority vocabulary, by importer.
-    `APPROVAL_RUNGS` (off-spine registry stem -> rung) and
-    `SPINE_APPROVAL_RUNGS` (spine registry path stem -> rung) are the one pair
+Contract IF-195: the acceptance-authority vocabulary, by importer.
+    `ACCEPTANCE_RUNGS` (off-spine registry stem -> rung) and
+    `SPINE_ACCEPTANCE_RUNGS` (spine registry path stem -> rung) are the one pair
     of tables; `rung_for(registry)` maps a registry path, stem or bare name to
     its rung - the needs file, both of its tiers, to `DevStg-Needs` - or None
     when nothing maps it, which every caller reads as held.
@@ -85,7 +85,7 @@ from . import ladder, stage
 
 # THE OFF-SPINE MAP (operator ruling OI-30 D3, 2026-08-15; moved here from
 # agent_common by LLR-249, which re-exports it). Keyed by the registry's stem.
-APPROVAL_RUNGS = {
+ACCEPTANCE_RUNGS = {
     "external": ladder.STAGE_BOUNDARY,
     "interfaces": ladder.STAGE_ARCH,
     "components": ladder.STAGE_ARCH,
@@ -94,14 +94,14 @@ APPROVAL_RUNGS = {
 
 # THE SPINE MAP (operator ruling 2026-09-01, WI-572; moved here with its sibling).
 # Keyed by the registry's path stem, the key `spine_carrier.stem` produces.
-SPINE_APPROVAL_RUNGS = {
+SPINE_ACCEPTANCE_RUNGS = {
     "docs/requirements/system-requirements": ladder.STAGE_REQS,
     "docs/requirements/low-level-requirements": ladder.STAGE_LLREQS,
     "docs/test/test-cases": ladder.STAGE_TESTS,
 }
 
 # The needs file's path stem: both of its tiers, the needs and the stakeholder
-# list, are approved at the needs rung.
+# list, are accepted at the needs rung.
 NEEDS_REGISTRY = "docs/requirements/stakeholder-needs"
 
 DIAL_KEY = "operator_accepts_through"
@@ -129,7 +129,7 @@ LEGACY_DIAL_ORDINALS = {
 LEGACY_DIAL_KEY = "human_ratification_through"
 #   * the retired `gate-policy` enum (`[authority] gate_policy`, else the
 #     one-word file), whose dial half lives here and whose other two halves are
-#     `agent_common.LEGACY_APPROVAL`'s. Undeclared reads as "attended".
+#     `agent_common.LEGACY_ACCEPTANCE`'s. Undeclared reads as "attended".
 LEGACY_GATE_KEY = "gate_policy"
 LEGACY_GATE_DIALS = {
     "attended": ladder.STAGE_RELEASE,
@@ -140,18 +140,18 @@ LEGACY_GATE_DEFAULT = "attended"
 
 
 def rung_for(registry):
-    """The rung `registry`'s status cells are approved into, or None when no
+    """The rung `registry`'s status cells are accepted into, or None when no
     map names it — which every caller reads as HELD. Accepts a path under
     either carrier, a path stem, or a bare stem such as `"external"`."""
     path = str(registry or "").strip().replace("\\", "/")
     stem = path[: -len(".toml")] if path.endswith(".toml") else path
     stem = stem[: -len(".csv")] if stem.endswith(".csv") else stem
-    if stem in SPINE_APPROVAL_RUNGS:
-        return SPINE_APPROVAL_RUNGS[stem]
+    if stem in SPINE_ACCEPTANCE_RUNGS:
+        return SPINE_ACCEPTANCE_RUNGS[stem]
     name = stem.rsplit("/", 1)[-1].lower()
     if name == NEEDS_REGISTRY.rsplit("/", 1)[-1]:
         return ladder.STAGE_NEEDS
-    return APPROVAL_RUNGS.get(name)
+    return ACCEPTANCE_RUNGS.get(name)
 
 
 def _is_dial(value):
@@ -176,7 +176,7 @@ def dial_from_config(policy):
 def read_dial(policy, gate_policy=None):
     """`(rung, legacy)`: the dial a parsed policy declares, every legacy
     spelling translated, and which legacy spelling was read. THE resolution
-    every live reader runs (`dial_at`, `agent_common.approval_through`), so the
+    every live reader runs (`dial_at`, `agent_common.acceptance_through`), so the
     pre-commit step, the writers, the slot and the coordinator cannot disagree
     about what a dial means.
 
@@ -263,7 +263,7 @@ def holds_under(dial, rung):
     """Does `dial` hold `rung` for an operator? Nothing at `DevStg-Below`; every
     rung at or below the dial otherwise; and an unrecognised dial or rung is
     HELD, because the only safe answer to "I do not recognise this" is "the
-    operator approves it".
+    operator accepts it".
 
     Implements: SR-210, LLR-249
     """

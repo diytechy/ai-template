@@ -401,7 +401,7 @@ def test_per_wi_exhaustion_disposition_overrides_autonomous(
     # spells it leaves the re-key untested exactly here).
     set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Below")
     _git(repo, "add", "docs/process.toml")
-    _git(repo, "commit", "-qm", "set the loop-held approval level")
+    _git(repo, "commit", "-qm", "set the loop-held acceptance level")
     (ctl / "verdict.txt").write_text(CHANGES, encoding="utf-8")
     proc = _loop(repo, cmd, "--max-iterations", "3")
     assert proc.returncode == expected, proc.stdout + proc.stderr

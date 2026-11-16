@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Need-form check: stakeholder-need cells stay in stakeholder language.
 
-SN-033 (approved 2026-08-13) commissions this check by its own acceptance text:
+SN-033 (accepted 2026-08-13) commissions this check by its own acceptance text:
 "A declared check reports the row and phrase when a need cell contains an
 internal path, implementation-only identifier or process citation; a reviewed
 exception list distinguishes names that are themselves user-facing interfaces."
 A need written in internal engineering vocabulary can stay technically current
 while becoming unreadable to the person whose intent it preserves — the failure
-is an approved requirement spine no stakeholder can independently validate.
+is an accepted requirement spine no stakeholder can independently validate.
 
 Stdlib only, like trace.py / check_vocab.py:
 
@@ -134,7 +134,7 @@ CLASSES = (
         # the kit's own path alphabet. A single-slash, dot-free token is then
         # judged by _looks_like_path below: "subjective/perceptual" and
         # "requirement/test" are English either/or pairs that resolve to
-        # nothing on disk (both live in the approved registry), while
+        # nothing on disk (both live in the accepted registry), while
         # `docs/archive` names a real directory and reports. The residual,
         # documented miss is a one-level dot-free path whose target no longer
         # exists in the scanned tree.

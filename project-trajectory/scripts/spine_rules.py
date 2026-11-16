@@ -35,11 +35,11 @@ nothing runs it — there is no `main()`.
 THE RUNG FALL-THROUGH, in one sentence each. `spine_stage` returns the LOWEST
 rung anything still holds open, so the answer is "what is in work":
 
-  0 `DevStg-Needs`      a Drafted need, an approved need no SR answers, or a
-                        Drafted stakeholder once one stakeholder is approved.
+  0 `DevStg-Needs`      a Drafted need, an accepted need no SR answers, or a
+                        Drafted stakeholder once one stakeholder is accepted.
   1 `DevStg-Boundary`   a declared external frame with an unsettled crossing,
                         or a Drafted assumption or surrogate once one row of
-                        that tier is approved (`tier_active`).
+                        that tier is accepted (`tier_active`).
   2 `DevStg-Reqs`       a Drafted SR.
   3 `DevStg-Arch`       a declared partition with an unsettled component.
   4 `DevStg-LLReqs`     an SR with no LLR (unless its verification method is
@@ -62,7 +62,7 @@ OI-20's binding rule. Requirements come before architecture because architecture
 is a RESPONSE to requirements (process.md §4).
 
 HOW THIS COMPOSES WITH `trace.py`. Trace ENFORCES structure — orphans,
-decomposition, approval — at the selected stage; these rules DERIVE the stage
+decomposition, acceptance — at the selected stage; these rules DERIVE the stage
 from the same rows. A Drafted row is exempt from trace's orphan rule (so it can
 live in the live spine) yet holds its rung open here (so it is visible as work in
 progress). Auditing correctness is the whole point, so every rule is
@@ -163,7 +163,7 @@ sn_draft_ids = spine_carrier.draft_ids_from_text
 # it would be deleted here rather than migrated.
 #
 # `is_modified` WAS DELETED AT D-9 STEP 7 on the same terms, as its own docstring
-# promised. It marked "approved text that has since moved" and survived step 5
+# promised. It marked "accepted text that has since moved" and survived step 5
 # only so the kit never had a commit with NO drift detector; its successor (the
 # `docs/archive/last_approved/` comparison) ran alongside it through the signing.
 # `modified=N` went with it, for `planned=`'s reason: a count of a value the
@@ -185,7 +185,7 @@ sn_draft_ids = spine_carrier.draft_ids_from_text
 # OI-51): **stages are the rungs of the decomposition, and a repo is IN exactly
 # one.** Certification is an EVENT at a rung boundary — a named operator's reviewed
 # Status-change commit — recorded where events are, not as a rival value. The
-# stage is state; approval is what moves it.
+# stage is state; acceptance is what moves it.
 #
 # THE VOCABULARY ITSELF MOVED OUT (WI-498 slice 0, plan §5 item 0). The rung
 # strings, their order, `STAGE_OF`, `STAGE_DESC` and the `stage_ord` lookup are
@@ -285,9 +285,9 @@ SPINE_MATURITY = {
 # entirely the wrong reason.
 #
 # NOT Founded on `approved`, for the reason the old table gave and which
-# survives the re-key unchanged: an approval says the crossing is agreed, it says
+# survives the re-key unchanged: an acceptance says the crossing is agreed, it says
 # nothing about the crossing having been demonstrated.
-# `drafted` (not `draft`) since D-9 step 5b: the off-spine approval vocabulary
+# `drafted` (not `draft`) since D-9 step 5b: the off-spine acceptance vocabulary
 # moved with the spine's so ONE word means one thing across every registry —
 # `interfaces.toml` and `external.toml` cells, both file headers, and the two
 # shipped templates changed in the same commit.
@@ -348,7 +348,7 @@ CMP_MATURITY = {
 # active` is the declared shorthand — so it clears.
 CMP_STANDING_CLEARS = frozenset({"active", "deprecated"})
 
-# THE THREE TIERS READ FROM THEIR FIRST APPROVAL (SR-204): the domain
+# THE THREE TIERS READ FROM THEIR FIRST ACCEPTANCE (SR-204): the domain
 # assumptions and the surrogates in `assumptions.toml`, read at the boundary
 # rung, and the stakeholders in the needs file, read at the needs rung. Each is
 # its own table rather than a share of `SPINE_MATURITY`, for `CMP_MATURITY`'s
@@ -504,22 +504,22 @@ def boundary_incomplete(bifs, have_registry):
     WARN-HONEST WHEN IT DOES APPLY. A registry that exists but declares NO real
     crossing is honestly incomplete: the file says the project intends to type its
     frame and has not. And any crossing at DRAFTED maturity (`approval = "draft"`)
-    is a frame declared and not yet approved. Both cap the rung.
+    is a frame declared and not yet accepted. Both cap the rung.
 
-    APPROVAL, NOT REALIZATION COVERAGE — the two readings of the ruling, resolved
-    rather than assumed. 13u's wording gates on BIF *approval*; §1R.5's wording
+    ACCEPTANCE, NOT REALIZATION COVERAGE — the two readings of the ruling, resolved
+    rather than assumed. 13u's wording gates on BIF *acceptance*; §1R.5's wording
     ("every declared BIF settled, every BIF realized or explicitly deferred")
-    names approval AND a second conjunct. They are different predicates, and this
+    names acceptance AND a second conjunct. They are different predicates, and this
     is the first: whether each declared crossing carries a realizing IF row is
     DECISION 6, deferred BY RULING to post-schema (sitting-2 §4.0), and gating on
     it here would take a decision nobody has. It is not a hypothetical gap — four
     of the six locked crossings are realized by no IF row today, so the second
     conjunct would hold rung 1 down on work decision 6 has not yet scoped, and it
-    would do so under a predicate that reads like approval. When decision 6
+    would do so under a predicate that reads like acceptance. When decision 6
     lands, adding the conjunct is a two-line change HERE, with the coverage rule
     stated in its own docstring.
 
-    NOTE WHAT THIS STILL DOES *NOT* CLAIM. An approved crossing is agreed, not
+    NOTE WHAT THIS STILL DOES *NOT* CLAIM. An accepted crossing is agreed, not
     demonstrated. Nothing here reports that anything was built."""
     if not have_registry:
         return False
@@ -568,11 +568,11 @@ def tier_active(rows):
     amendment of that requirement, not a reading of it.
 
     THE SWITCH IS THE ROWS, AND NO SETTING EXISTS (SR-204). A tier holding only
-    Drafted rows reads, to its rung, as a frame declared and not approved, so
-    reading it before its first approval would lower the derived stage of every
+    Drafted rows reads, to its rung, as a frame declared and not accepted, so
+    reading it before its first acceptance would lower the derived stage of every
     committed tree between the registry's arrival and its first signing.
-    Reading it from its first approved row puts the switch in the commit that
-    approves the first batch, and there is nothing beside the rows that could
+    Reading it from its first accepted row puts the switch in the commit that
+    accepts the first batch, and there is nothing beside the rows that could
     disagree with them: `docs/process.toml` is kept out of the stage's inputs,
     and no registry carries a file-level key.
 
@@ -592,9 +592,9 @@ def assumption_incomplete(das, surs):
     """The boundary rung's reading of the assumptions registry: an active
     assumption tier or an active surrogate tier holding a Drafted row.
 
-    EACH TIER IS READ ON ITS OWN, though the two share one file. An approved
+    EACH TIER IS READ ON ITS OWN, though the two share one file. An accepted
     assumption beside a Drafted surrogate leaves the surrogate tier inactive,
-    and the reverse: the first approval in a shared file must not answer for
+    and the reverse: the first acceptance in a shared file must not answer for
     every other tier in it, or two readers of one file would disagree about
     what a status covers. The rows arrive already split by id column
     (`load_spine`), so this never sees one tier's rows as the other's.
@@ -636,7 +636,7 @@ def spine_stage(
     Read as the LOWEST unfinished rung — the one work is happening at, and
     therefore the one an operator boundary has to be compared against.
 
-      DevStg-Needs      a need is a draft, none is approved, or an approved one
+      DevStg-Needs      a need is a draft, none is accepted, or an accepted one
                         has no SR answering it
       DevStg-Boundary   ...and the declared boundary inventory is in work
       DevStg-Reqs       ...and a requirement is Drafted
@@ -652,7 +652,7 @@ def spine_stage(
                         Reached ONLY through `evidence_passed`, see below
 
     THE `Modified` ARM OF THE Reqs RUNG RETIRED AT D-9 STEP 7 — no cell records
-    "amended after attestation" any more, and the successor (the snapshot
+    "amended after acceptance" any more, and the successor (the snapshot
     comparison) is deliberately NOT read here; see the rung itself.
 
     THE TWO INSERTED RUNGS (OI-21) read from the IF and CMP registries, which
@@ -703,7 +703,7 @@ def spine_stage(
     until step 7, which retired the `Modified` case that was checked FIRST.)
 
     `cited_srs` IS THE SCOPE OF THE NEED-COVERAGE RUNG, and it exists for the
-    PER-PHASE call (WI-498 slice 1). The coverage question — "does every approved
+    PER-PHASE call (WI-498 slice 1). The coverage question — "does every accepted
     need have a requirement answering it" — is repo-global: a need answered only
     by phase 1's requirements is answered. Running this function over one phase's
     rows with the default would read every OTHER phase's needs as uncovered and
@@ -719,10 +719,10 @@ def spine_stage(
     applying WI-401's coverage rung on the same subset `_raw_level` uses: a need
     with no requirement answering it is unfinished work at the needs rung.
 
-    `das`, `surs` and `stks` ARE THE THREE TIERS READ FROM THEIR FIRST APPROVAL
+    `das`, `surs` and `stks` ARE THE THREE TIERS READ FROM THEIR FIRST ACCEPTANCE
     (SR-204), repo-global like the frame rows: an active stakeholder tier with
     a Drafted row holds DevStg-Needs, and an active assumption or surrogate
-    tier with a Drafted row holds DevStg-Boundary. A tier with no approved row
+    tier with a Drafted row holds DevStg-Boundary. A tier with no accepted row
     holds nothing (`tier_active`). All three default empty, which is every
     caller's reading before the tiers existed."""
     bifs = bifs or []
@@ -831,7 +831,7 @@ def load_spine(docs):
     # the kit where a literal suffix would be worst: an existence test on `.toml`
     # alone answers False for a repo still on markdown, `sn_ids` and `sn_draft`
     # both come back EMPTY, and an empty draft set makes every draft need read as
-    # approved — the derived value RISES on a registry the reader simply could not
+    # accepted — the derived value RISES on a registry the reader simply could not
     # find. Absent must mean absent, never "no drafts".
     sn_md = spine_carrier.resolve(
         docs / "requirements" / "stakeholder-needs.toml", spine_carrier.NEED_CARRIERS
@@ -841,7 +841,7 @@ def load_spine(docs):
         text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
         sn_ids = sn_all_ids(text, sn_md.suffix)
         # An unreadable needs file REFUSES the run, naming the file: answering
-        # "no drafts" for it would read every need as approved.
+        # "no drafts" for it would read every need as accepted.
         sn_draft = spine_carrier.draft_ids_or_refuse(sn_md, text)
 
     # THE TWO OFF-SPINE REGISTRIES THE LADDER'S INSERTED RUNGS READ (OI-21). Both
@@ -851,11 +851,11 @@ def load_spine(docs):
     # the runnable bar is computed from exactly the rows it always was.
     bifs, have_bifs = _frame_rows(docs, "external.toml", "B-ID")
     cmps, have_cmps = _frame_rows(docs, "components.toml", "CMP-ID")
-    # THE THREE TIERS READ FROM THEIR FIRST APPROVAL (SR-204), each loaded by
+    # THE THREE TIERS READ FROM THEIR FIRST ACCEPTANCE (SR-204), each loaded by
     # its OWN id column: the two tiers of the assumptions registry apart, and
     # the stakeholders apart from the needs whose draft set is read above, so no
     # tier's status ever answers for another sharing its file. No applies-when
-    # flag travels with them: an absent registry and one holding no approved
+    # flag travels with them: an absent registry and one holding no accepted
     # row mean the same thing here, a tier the stage does not read yet.
     assumptions = docs / "requirements" / "assumptions.toml"
     das = spine_carrier.load(assumptions, "DA-ID", keep_examples=False)

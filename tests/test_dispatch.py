@@ -859,7 +859,7 @@ def test_a_red_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_drain_
         "last run: BAR-FAIL-MARKER 3"
     ) in text, text
     assert 'split_decided_by = "adjudicator"' in text
-    # Not the approval-level escalation a NEEDS-OPERATOR exit gets: a dispatcher
+    # Not the acceptance-level escalation a NEEDS-OPERATOR exit gets: a dispatcher
     # that closed the cap as a judgement call would tier it strong and label
     # it NEEDS-JUDGEMENT.
     assert 'suggested_tier = "medium"' in text, text
@@ -983,7 +983,7 @@ def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
     #
     # THE WI PINS ITS OWN `bar:` SINCE THE OI-30 D2 CEILING, and that is not
     # test-plumbing — it is this test proving the escape hatch the ruling rests
-    # on. `sr_bar` now stops at DevStg-Tests, so a fully approved scaffold no
+    # on. `sr_bar` now stops at DevStg-Tests, so a fully accepted scaffold no
     # longer DERIVES DevStg-Impl, and the `tests+coverage` step is tagged for
     # DevStg-Impl alone: without the pin the broken product source below would
     # sail through a green bar. The `bar:` frontmatter key (WI-388) is exactly
@@ -1268,23 +1268,23 @@ def test_the_worker_preflight_accepts_the_resumed_finished_lane(tmp_path):
     )
 
 
-def test_attended_approval_row_drains_and_exits_zero_with_the_banner(tmp_path, capfd):
+def test_attended_acceptance_row_drains_and_exits_zero_with_the_banner(tmp_path, capfd):
     # THE HONEST CORRECTION (§A8): before WI-381 a queued gate row sorted
     # first, the driver claimed ready[0], `_claim_refusal` rejected it and the
     # run stopped NONZERO — a failure banner over a machine that had finished
     # everything it was allowed to do. Under `attended` the dispatcher must
-    # not dispatch an approval: drain, leave the cards on open-items.html,
+    # not dispatch an acceptance: drain, leave the cards on open-items.html,
     # exit 0 with the honest banner — and take no ordinary work past the
-    # pending approval either (the §A8 premise: no work can be taken).
+    # pending acceptance either (the §A8 premise: no work can be taken).
     root = git_repo(tmp_path)
     write_spec(
-        root, "queued", "WI-600", slug="approve", safety="gate", specref="seed.txt"
+        root, "queued", "WI-600", slug="accept", safety="gate", specref="seed.txt"
     )
     write_spec(root, "queued", "WI-401", specref="seed.txt")
     (root / "docs" / "gate-policy").write_text(
         "attended\n", encoding="utf-8", newline="\n"
     )
-    _commit(root, "file the approval row", when=T_CODE)
+    _commit(root, "file the acceptance row", when=T_CODE)
     worker = Recorder()
 
     rc = drv.run(root, drive_args(), worker=worker)
@@ -1296,9 +1296,9 @@ def test_attended_approval_row_drains_and_exits_zero_with_the_banner(tmp_path, c
     # durable operator action is pending".
     assert "1 queued acceptance row(s)" in out, out
     assert "no card has projected to open-items.html yet" in out, out
-    assert "approval(s) waiting in open-items.html" not in out, out
+    assert "acceptance(s) waiting in open-items.html" not in out, out
     assert worker.calls == []
-    assert (root / "docs" / "work" / "queued" / "WI-600-approve.md").is_file()
+    assert (root / "docs" / "work" / "queued" / "WI-600-accept.md").is_file()
 
 
 def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeypatch):
@@ -1313,7 +1313,7 @@ def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeyp
 
     line = drv._surface_banner(root, ["WI-600", "WI-601"])
 
-    assert "1 approval(s) waiting in open-items.html" in line, line
+    assert "1 acceptance(s) waiting in open-items.html" in line, line
     assert "2 queued acceptance row(s) on the frontier" in line, line
     assert "the two reads may name the same row" in line, line
     # never summed: 1 card + 2 rows must not be reported as 3 of anything
@@ -1322,7 +1322,7 @@ def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeyp
     # ...and with nothing queued, the cards arm is still exactly the classic
     # line the ruled amendment names.
     assert drv._surface_banner(root, []) == (
-        "queue drained - 1 approval(s) waiting in open-items.html"
+        "queue drained - 1 acceptance(s) waiting in open-items.html"
     )
 
 
@@ -1407,10 +1407,10 @@ def test_the_census_mint_refusal_stops_the_run_loudly(tmp_path, capfd, monkeypat
 def test_empty_frontier_rung_two_banner_derives_from_the_shared_pending_read(
     tmp_path, capfd
 ):
-    # Rung 2: census empty but a pending attestation exists — that is NOT
+    # Rung 2: census empty but a pending acceptance exists — that is NOT
     # missing work. The banner's count comes from the SAME pending_block(root)
     # read the dashboard and open-items.html share (a Drafted spine row owing an
-    # approval is one card), so agent-resume and the operator surfaces can never
+    # acceptance is one card), so agent-resume and the operator surfaces can never
     # disagree about what is blocking. (A blocked WI carrying a BlockRef used to
     # be that card; the blockref vocabulary retired at WI-553/OI-70, so the
     # surviving operator_card source is the spine arm.)
@@ -1430,7 +1430,7 @@ def test_empty_frontier_rung_two_banner_derives_from_the_shared_pending_read(
     rc = drv.run(root, drive_args(), worker=worker)
     assert rc == 0
     out = capfd.readouterr().out
-    assert "queue drained - 1 approval(s) waiting in open-items.html" in out, out
+    assert "queue drained - 1 acceptance(s) waiting in open-items.html" in out, out
     assert worker.calls == []
 
 

@@ -719,7 +719,7 @@ def _amend(repo):
 
 
 def _amendment_repo(tmp_path):
-    """A repo with a spine, an approved snapshot, an amended approved cell, and
+    """A repo with a spine, an accepted snapshot, an amended accepted cell, and
     the adjudication row `intake` would have minted for it — scope included,
     because the mint writes the rows it routes into `Adjudicates` and a row
     without one is a row it can no longer produce."""
@@ -731,7 +731,7 @@ def _amendment_repo(tmp_path):
         [
             {
                 "WI-ID": "WI-301",
-                "Title": "adjudicate: SR-001 - approved cell(s) amended",
+                "Title": "adjudicate: SR-001 - accepted cell(s) amended",
                 "SafetyClass": "adjudication",
                 "Brief": "amendment",
                 "Adjudicates": "SR-001",
@@ -764,7 +764,7 @@ def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
 
 
 def test_only_APPROVED_cells_reach_the_judge(tmp_path):
-    # A traced cell is ruled non-attesting (§A5.1), so asking a judge to rule
+    # A traced cell is ruled outside acceptance (§A5.1), so asking a judge to rule
     # "meaning or clarity" on a re-pointed Phase cell asks a question the
     # ruling already answers. Drive it: move ONLY a traced cell.
     repo = _spine_repo(tmp_path)
@@ -850,7 +850,7 @@ _NEED_TOML = (
 
 
 def _need_amendment_repo(tmp_path):
-    """The demo spine plus one approved need, seeded, then the need amended —
+    """The demo spine plus one accepted need, seeded, then the need amended —
     the shape the widened amendment mint routes (OI-100 gap 1)."""
     repo = _spine_repo(tmp_path)
     needs = repo / "docs" / "requirements" / "stakeholder-needs.toml"
@@ -895,7 +895,7 @@ def test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_sco
     tmp_path,
 ):
     """LLR-167: an assumption- or surrogate-scoped amendment row composes with
-    the drifted row's approved cells before and after, and only the rows its
+    the drifted row's accepted cells before and after, and only the rows its
     Adjudicates scope names are rendered.
 
     Implements: TC-161
@@ -963,8 +963,8 @@ _JUDGED = re.compile(r"^JUDGED-TEXT: (\S+) (\S+)$", re.M)
 
 
 def _committed_digest(repo, rel, id_col, rid):
-    """The approved-text digest of row `rid` as committed at HEAD."""
-    digest = acceptance_record.approved_text_digest
+    """The accepted-text digest of row `rid` as committed at HEAD."""
+    digest = acceptance_record.accepted_text_digest
     row = acceptance_record.rows_at(repo, "HEAD", rel, id_col)[rid]
     return digest(rel, id_col, row)
 
@@ -1069,7 +1069,7 @@ def test_the_amendment_brief_reanchors_CLARITY_rows_and_keeps_the_sibling_hold()
 #
 # The same widening WI-572 closed for the first-acceptance arm, found live in this
 # one: `reaccept_model` is REPO-WIDE, so an amendment row minted for one row
-# rendered every drifted approved row in the tree, and three adjudications that
+# rendered every drifted accepted row in the tree, and three adjudications that
 # each named one row were each handed the same twenty.
 
 _SR_002 = (
@@ -1085,7 +1085,7 @@ def _rev_short(repo):
 
 
 def _two_drift_repo(tmp_path):
-    """An approved two-SR spine where an EARLIER merge's amendment to SR-002 is
+    """An accepted two-SR spine where an EARLIER merge's amendment to SR-002 is
     still unadjudicated when THIS merge amends SR-001. `(repo, before, after)`,
     `before..after` being this merge's delta."""
     repo = _spine_repo(tmp_path)
@@ -1093,7 +1093,7 @@ def _two_drift_repo(tmp_path):
     srs.write_text(srs.read_text(encoding="utf-8") + _SR_002, encoding="utf-8")
     baseline_snapshot.copy_live(repo, seed=True)
     _git(repo, "add", "-A")
-    _git(repo, "commit", "-q", "-m", "the approved spine")
+    _git(repo, "commit", "-q", "-m", "the accepted spine")
     srs.write_text(
         srs.read_text(encoding="utf-8").replace(
             "The system shall subtract.", "The system shall subtract and round."
@@ -1150,7 +1150,7 @@ def test_an_amendment_row_with_no_declared_scope_is_REFUSED_not_widened(tmp_path
 
 def test_an_amendment_scope_that_no_longer_differs_REFUSES_by_naming_it(tmp_path):
     # The scope BOUNDS the question and the live model ANSWERS it. The case that
-    # matters is a scoped row that STILL EXISTS, approved, and has been settled
+    # matters is a scoped row that STILL EXISTS, accepted, and has been settled
     # since the mint (re-anchored, or its amendment reverted) while ANOTHER row,
     # outside the scope, still drifts: the repo-wide model is not empty, so only
     # the intersection can tell that this act's question has no subject left.
@@ -1167,7 +1167,7 @@ def test_an_amendment_scope_that_no_longer_differs_REFUSES_by_naming_it(tmp_path
         encoding="utf-8",
     )
     # The premises, or the refusal below proves nothing: the scoped SR-001 is
-    # present, approved and byte-identical to its recorded copy...
+    # present, accepted and byte-identical to its recorded copy...
     copy = baseline_snapshot.snapshot_root(repo) / (
         "docs/requirements/system-requirements.csv"
     )
@@ -1203,8 +1203,8 @@ def test_an_amendment_scope_that_no_longer_differs_REFUSES_by_naming_it(tmp_path
 
 # --- a scoped row the lane removed is briefed as a removal ----------------------
 #
-# A row the recorded copy holds approved and the live registry no longer
-# carries is a retirement the sitting rules: its approved cells are the
+# A row the recorded copy holds accepted and the live registry no longer
+# carries is a retirement the sitting rules: its accepted cells are the
 # `before`, the removal is the `after`, and its tier is counted like a drifted
 # row's. A scope token naming a row in neither home refuses by name.
 
@@ -1216,7 +1216,7 @@ _REMOVED_AFTER = "    - after: ({})".format(baseline_snapshot.ROW_REMOVED)
 
 
 def _removed_tc_repo(tmp_path):
-    """The demo spine plus an approved TC-002, seeded, then TC-002 deleted
+    """The demo spine plus an accepted TC-002, seeded, then TC-002 deleted
     from the live registry: a retirement in a chained tier."""
     repo = _spine_repo(tmp_path)
     tcs = repo / "docs" / "test" / "test-cases.csv"
@@ -1227,7 +1227,7 @@ def _removed_tc_repo(tmp_path):
 
 
 def _removed_da_repo(tmp_path):
-    """The demo spine plus an approved DA-001 and SUR-001, seeded, then DA-001
+    """The demo spine plus an accepted DA-001 and SUR-001, seeded, then DA-001
     deleted from the live registry: a retirement in an unchained tier."""
     repo = _spine_repo(tmp_path)
     path = repo / "docs" / "requirements" / "assumptions.toml"
@@ -1240,9 +1240,9 @@ def _removed_da_repo(tmp_path):
 
 
 def _recorded_digest(repo, rel, id_col, rid):
-    """The approved-text digest of row `rid` as its recorded copy holds it."""
+    """The accepted-text digest of row `rid` as its recorded copy holds it."""
     recorded = baseline_snapshot.rows_for(baseline_snapshot.load_all(repo), rel, id_col)
-    return acceptance_record.approved_text_digest(rel, id_col, recorded[rid])
+    return acceptance_record.accepted_text_digest(rel, id_col, recorded[rid])
 
 
 def _removal_block(rows, kind, rid):
@@ -1374,11 +1374,11 @@ def test_the_amendment_anchor_names_each_shown_registrys_own_copy(tmp_path):
         tcs.read_text(encoding="utf-8").replace(",Approved,P1", ",Approved,P2"),
         encoding="utf-8",
     )
-    baseline_snapshot.copy_live(repo, approves={TC_TOML: "WI-9"})
+    baseline_snapshot.copy_live(repo, accepts={TC_TOML: "WI-9"})
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "a later act copies the TC registry")
     tc_copy = _rev_short(repo)
-    # Scoped drift in BOTH tiers at once: an approved SR cell and an approved TC
+    # Scoped drift in BOTH tiers at once: an accepted SR cell and an accepted TC
     # cell, whose copies were written at the two different commits above.
     _amend(repo)
     tcs.write_text(
@@ -1454,7 +1454,7 @@ def test_stamp_reads_one_registrys_copy_under_every_carrier(tmp_path):
 def _first_acceptance_repo(tmp_path):
     """A repo whose lane left a `Drafted` LLR under an `Approved` SR — the exact
     population the ruling hands to the adjudicator, and the one no drift arm can
-    see: a row below approval has made no claim to fall from.
+    see: a row below acceptance has made no claim to fall from.
 
     THE DIAL IS DECLARED, and it has to be. This arm exists only for rungs the
     declared gate authority has RELEASED; with no `docs/process.toml` the dial
@@ -1479,7 +1479,7 @@ def _first_acceptance_repo(tmp_path):
         [
             {
                 "WI-ID": "WI-301",
-                "Title": "adjudicate: LLR-001 - await a FIRST APPROVAL",
+                "Title": "adjudicate: LLR-001 - await a FIRST ACCEPTANCE",
                 "SafetyClass": "adjudication",
                 "Brief": "first-acceptance",
                 "Adjudicates": "LLR-001",
@@ -1500,7 +1500,7 @@ def _fa_row(**over):
 
 
 def test_the_first_acceptance_brief_carries_the_WHOLE_CHAIN(tmp_path):
-    # The operator's CONTEXT reason, mechanized: approving a row means holding its
+    # The operator's CONTEXT reason, mechanized: accepting a row means holding its
     # whole chain — the parent SR, the sibling LLRs, the tests — which is the
     # thing one work item does not hold and is therefore why the act is the
     # adjudicator's. So the brief must show the chain, not the changed cells.
@@ -1511,9 +1511,9 @@ def test_the_first_acceptance_brief_carries_the_WHOLE_CHAIN(tmp_path):
     assert "SR-001" in chain and "LLR-001" in chain and "TC-001" in chain
     # The row awaiting the act is MARKED as such — a chain rendered without
     # saying which rows are the question reads as a report, not a brief.
-    assert "LLR-001 [AWAITING FIRST APPROVAL]" in chain
+    assert "LLR-001 [AWAITING FIRST ACCEPTANCE]" in chain
     assert "SR-001 [approved]" in chain
-    # The act's `--approves` argument is no longer this brief's: the act turn
+    # The act's `--accepts` argument is no longer this brief's: the act turn
     # derives it from the committed verdict (WI-912).
     # The SRs it marks as this session's are reported beside the slots, under
     # a key the composer takes out before the fill.
@@ -1533,7 +1533,7 @@ def test_the_first_acceptance_brief_carries_the_WHOLE_CHAIN(tmp_path):
     assert why is None, why
     assert re.findall(r"\{[a-z_]+\}", text) == []
     assert "You are an INDEPENDENT adjudicator" in text
-    assert "OUTCOME: APPROVE|RETURN rows=N" in text
+    assert "OUTCOME: ACCEPT|RETURN rows=N" in text
     # The sitting ends at its committed verdict; the act is a later turn
     # (WI-912), so the judging brief orders no flip and no copy.
     assert "intake.py snapshot" not in text
@@ -1553,7 +1553,7 @@ def test_the_first_acceptance_anchor_names_the_copied_registrys_own_copy(tmp_pat
         tcs.read_text(encoding="utf-8").replace(",Approved,P1", ",Approved,P2"),
         encoding="utf-8",
     )
-    baseline_snapshot.copy_live(repo, approves={TC_TOML: "WI-9"})
+    baseline_snapshot.copy_live(repo, accepts={TC_TOML: "WI-9"})
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "a later act copies the TC registry")
     assert baseline_snapshot.stamp(repo)[0] != seeded
@@ -1604,7 +1604,7 @@ def test_no_judging_brief_orders_an_act(tmp_path, case):
 def test_the_first_acceptance_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
     # Rule 2, and `red_tc_values`' live-recompute rule applied to this arm: the
     # row is minted at a merge and claimed later, so by composition time another
-    # act may have approved or withdrawn every row it was minted for. A brief
+    # act may have accepted or withdrawn every row it was minted for. A brief
     # built from the mint's remembered listing would ask the judge to rule on a
     # world that no longer exists; an emptied population refuses instead.
     repo = _first_acceptance_repo(tmp_path)
@@ -1616,7 +1616,7 @@ def test_the_first_acceptance_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
     baseline_snapshot.copy_live(repo, seed=True)  # the act's own anchor moved too
     values, why = ab.first_acceptance_values(repo, _fa_row())
     assert values is None
-    assert "still awaiting a first approval" in why, why
+    assert "still awaiting a first acceptance" in why, why
 
 
 def test_the_first_acceptance_brief_never_hands_the_judge_a_HELD_row(tmp_path):
@@ -1625,7 +1625,7 @@ def test_the_first_acceptance_brief_never_hands_the_judge_a_HELD_row(tmp_path):
     # from `reaccept_model`, which is dial-blind by design — and the first cut
     # did not put the filter back. Under a MIXED dial that is not a cosmetic
     # gap: the brief rendered a held `Drafted` SR beside a released `Drafted`
-    # LLR, marked both as awaiting the act, and derived a `--approves` argument
+    # LLR, marked both as awaiting the act, and derived a `--accepts` argument
     # naming BOTH registries — a prompt instructing an adjudicator to perform a
     # signature the operator owes. The filter now lives in ONE table both ends read.
     repo = _first_acceptance_repo(tmp_path)
@@ -1650,12 +1650,14 @@ def test_the_first_acceptance_brief_never_hands_the_judge_a_HELD_row(tmp_path):
     # Both halves. The held row is SHOWN — it is the chain, and holding the
     # chain is the whole reason this act is the adjudicator's — but it is shown
     # as the operator's...
-    assert "SR-001 [AWAITING FIRST APPROVAL - HELD FOR THE OPERATOR" in values["chain"]
-    assert "LLR-001 [AWAITING FIRST APPROVAL]" in values["chain"]
+    assert (
+        "SR-001 [AWAITING FIRST ACCEPTANCE - HELD FOR THE OPERATOR" in values["chain"]
+    )
+    assert "LLR-001 [AWAITING FIRST ACCEPTANCE]" in values["chain"]
     text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
     assert why is None, why
     assert (
-        "Only a row marked `[AWAITING FIRST APPROVAL]` may be ruled `APPROVE`" in text
+        "Only a row marked `[AWAITING FIRST ACCEPTANCE]` may be ruled `ACCEPT`" in text
     )
 
     # And when the dial holds EVERY rung — the kit's shipped default, so this is
@@ -1675,11 +1677,11 @@ def test_the_first_acceptance_act_cannot_widen_past_the_rows_the_merge_handed_ov
     # population LIVE from `trace.reaccept_model`, which walks EVERY SR in the
     # repo — so with nothing to intersect against, a merge that staged ONE
     # `Drafted` LLR minted a row whose brief then told its session it held the
-    # approval authority for the whole repo's `Drafted` backlog, and derived a
-    # `--approves` argument naming every registry those rows live in. That
+    # acceptance authority for the whole repo's `Drafted` backlog, and derived a
+    # `--accepts` argument naming every registry those rows live in. That
     # contradicts the doctrine ("over the `Drafted` rows the lane handed over")
     # and the operator's concurrency reason for moving the act to trunk: the
-    # approval snapshot must not move across a workstream.
+    # acceptance snapshot must not move across a workstream.
     repo = _first_acceptance_repo(tmp_path)
     req = repo / "docs" / "requirements"
     # Two other lanes' rows, both `Drafted` on released rungs, neither in this
@@ -1706,12 +1708,12 @@ def test_the_first_acceptance_act_cannot_widen_past_the_rows_the_merge_handed_ov
     assert why is None, why
     chain = values["chain"]
     # The scoped row is still the question, and it is the ONLY one.
-    assert "LLR-001 [AWAITING FIRST APPROVAL]\n" in chain + "\n"
-    assert chain.count("[AWAITING FIRST APPROVAL]") == 1, chain
+    assert "LLR-001 [AWAITING FIRST ACCEPTANCE]\n" in chain + "\n"
+    assert chain.count("[AWAITING FIRST ACCEPTANCE]") == 1, chain
     # The sibling in the same chain is SHOWN — it is evidence — and labelled with
     # the reason that is actually true of it. Saying "HELD FOR THE OPERATOR" here
     # would tell the session to wait on a signature nobody owes.
-    assert "LLR-003 [AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE" in chain
+    assert "LLR-003 [AWAITING FIRST ACCEPTANCE - OUTSIDE THIS ACT'S SCOPE" in chain
     # The unrelated chain is dropped WHOLE: it is not this act's question and it
     # is not this act's evidence either.
     for rid in ("SR-002", "LLR-002"):
@@ -1734,7 +1736,7 @@ def test_an_adjudication_with_no_declared_scope_is_REFUSED_not_widened(tmp_path)
 def test_a_scope_whose_rows_are_all_settled_REFUSES_by_naming_them(tmp_path):
     # The second-order harm of the widening: merge B's adjudication, minted
     # while merge A's was still queued, used to find "no spine row awaits a
-    # first approval any more" — one repo-wide sentence for three different
+    # first acceptance any more" — one repo-wide sentence for three different
     # states. The refusal now names WHICH filter emptied the population, because
     # "ruled on already" (drop the row), "the operator holds the rung" (sign it)
     # and "the scope names rows this spine no longer has" (the mint and the tree
@@ -1749,21 +1751,19 @@ def test_a_scope_whose_rows_are_all_settled_REFUSES_by_naming_them(tmp_path):
 def test_the_first_acceptance_brief_is_ROUTED_and_demands_its_own_verdict(tmp_path):
     # The seam, both halves. The brief has an assembler (so a row declaring it
     # is DISPATCHED, not held for an operator), and its verdict grammar is its own:
-    # the amendment arm's MEANING/CLARITY cannot answer "approve or return", and
+    # the amendment arm's MEANING/CLARITY cannot answer "accept or return", and
     # a checker still expecting the old enum is exactly the drift the table
     # prevents.
     assert "first-acceptance" in ab.ROUTED
     assert ab.VERDICT_GRAMMAR["first-acceptance"] == (
         "OUTCOME",
-        ("APPROVE", "RETURN"),
+        ("ACCEPT", "RETURN"),
         ("rows",),
     )
     verdict = tmp_path / "v.md"
     verdict.write_text("OUTCOME: MEANING rows=1\n", encoding="utf-8")
-    assert "not one of APPROVE|RETURN" in ab.verdict_refusal(
-        "first-acceptance", verdict
-    )
-    verdict.write_text("OUTCOME: APPROVE rows=2\n", encoding="utf-8")
+    assert "not one of ACCEPT|RETURN" in ab.verdict_refusal("first-acceptance", verdict)
+    verdict.write_text("OUTCOME: ACCEPT rows=2\n", encoding="utf-8")
     assert ab.verdict_refusal("first-acceptance", verdict) is None
 
 
@@ -2249,7 +2249,7 @@ def test_no_second_copy_of_the_questions_exists(tmp_path):
 
 # --- the perspectives a decomposition round's sitting brief carries -----------
 #
-# A first approval of an SR, or an amendment of an approved need, is a
+# A first acceptance of an SR, or an amendment of an accepted need, is a
 # decomposition round: the brief carries the question of every declared hat
 # applicable to the round's parent needs and asks for one outcome per hat. Any
 # other sitting says it is none. The slot is filled only where the template
@@ -2321,9 +2321,9 @@ def _write_roster(repo, roster):
 def _hat_repo(
     tmp_path, roster=_HAT_ROSTER, amend_need=False, drafted_sr=False, amended_sr=False
 ):
-    """The demo spine with two approved needs, seeded, on a dial that releases
+    """The demo spine with two accepted needs, seeded, on a dial that releases
     the requirement rungs; then SN-001's text amended and/or an SR-002 under
-    SN-002 drafted (or, with `amended_sr`, approved before the seed and its
+    SN-002 drafted (or, with `amended_sr`, accepted before the seed and its
     text amended after it), and the roster written."""
     repo = _spine_repo(tmp_path)
     set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Needs")
@@ -2331,8 +2331,8 @@ def _hat_repo(
     needs.write_text(_HAT_NEEDS.format("a team can use it"), encoding="utf-8")
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
     if amended_sr:
-        approved = _DRAFTED_SR.replace(",Drafted,", ",Approved,")
-        srs.write_text(srs.read_text(encoding="utf-8") + approved, encoding="utf-8")
+        accepted = _DRAFTED_SR.replace(",Drafted,", ",Approved,")
+        srs.write_text(srs.read_text(encoding="utf-8") + accepted, encoding="utf-8")
     baseline_snapshot.copy_live(repo, seed=True)
     if amend_need:
         needs.write_text(_HAT_NEEDS.format("a team can use the kit"), encoding="utf-8")
@@ -2361,7 +2361,7 @@ def test_a_first_acceptance_of_a_drafted_sr_carries_the_hat_block(tmp_path):
     """Implements: TC-399"""
     repo = _hat_repo(tmp_path, drafted_sr=True)
     text = _composed(repo, _fa_row(Adjudicates="SR-002"))
-    assert "SR-002 [AWAITING FIRST APPROVAL]" in text
+    assert "SR-002 [AWAITING FIRST ACCEPTANCE]" in text
     assert "always-on question?" in text
     assert "need-b question?" in text  # SR-002's parent need reaches its hat
     assert "need-a question?" not in text  # SN-001 is no parent of this round
@@ -2379,7 +2379,7 @@ def test_a_first_acceptance_of_llr_and_tc_rows_only_says_no_decomposition_round(
     assert not [q for q in _HAT_QUESTIONS if q in text]
 
 
-def test_an_amendment_of_an_approved_need_carries_the_hat_block(tmp_path):
+def test_an_amendment_of_an_accepted_need_carries_the_hat_block(tmp_path):
     """Implements: TC-399"""
     repo = _hat_repo(tmp_path, amend_need=True)
     text = _composed(repo, _am_row(Adjudicates="SN-001"))
@@ -2575,8 +2575,8 @@ _HAT_LINES = (
 )
 _AMENDMENT_VERDICT = "VERDICT: CLARITY rows=1\n- [CLARITY] SR-001 -> a rewording\n"
 _FIRST_ACCEPTANCE_VERDICT = (
-    "OUTCOME: APPROVE rows=2\n"
-    "- [APPROVE] LLR-001 -> ready\n"
+    "OUTCOME: ACCEPT rows=2\n"
+    "- [ACCEPT] LLR-001 -> ready\n"
     "- [RETURN] TC-001 -> its expected result is vague\n"
 )
 _COMBINED_VERDICT = (
