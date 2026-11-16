@@ -519,6 +519,16 @@ OFFSPINE_COLUMN = {
     "knowledge": "Knowledge",
     "standing": "Standing",
     "part_of": "PartOf",
+    # the component derivation record (SR-165, WI-999). The inverse lives in
+    # migrate_carrier.KEY.
+    "candidates": "Candidates",
+    "objective": "Objective",
+    "constraints": "Constraints",
+    "scores": "Scores",
+    "selected": "Selected",
+    "ruling": "Ruling",
+    "override": "Override",
+    "derivation": "Derivation",
 }
 REGISTRY_COLUMN = dict(SPINE_COLUMN, **OFFSPINE_COLUMN)
 

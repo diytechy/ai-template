@@ -1326,6 +1326,11 @@ OFFSPINE_KEYS = {
         "component",
         "notes",
     ),
+    # The derivation record (SR-165, WI-999): eight flat cells, since the
+    # carrier refuses a nested table. One row per partition holds the record
+    # (`candidates` .. `override`, the last optional); every other row of the
+    # partition carries only `derivation`, the id of the row holding it. Its one
+    # reader is `trajectory_arch.component_findings`.
     "CMP-ID": (
         "name",
         "category",
@@ -1334,6 +1339,14 @@ OFFSPINE_KEYS = {
         "standing",
         "superseded_by",
         "part_of",
+        "candidates",
+        "objective",
+        "constraints",
+        "scores",
+        "selected",
+        "ruling",
+        "override",
+        "derivation",
         "notes",
     ),
     # WI-442 — the depth-0 frame's three tiers, all on `external.toml`. Each

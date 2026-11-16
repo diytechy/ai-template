@@ -278,6 +278,17 @@ KEY = {
     "Knowledge": "knowledge",
     "Standing": "standing",
     "PartOf": "part_of",
+    # the component derivation record (SR-165, WI-999). None is in REF_COLS: a
+    # `Constraints` entry holds spaces and a colon, so the cells convert as
+    # plain strings and round-trip byte-exact; the reader splits on `;`.
+    "Candidates": "candidates",
+    "Objective": "objective",
+    "Constraints": "constraints",
+    "Scores": "scores",
+    "Selected": "selected",
+    "Ruling": "ruling",
+    "Override": "override",
+    "Derivation": "derivation",
     # external — the depth-0 frame (WI-442). This registry never had a CSV
     # carrier and so is never CONVERTED by this script; the entries exist
     # because this map is the writer half of the ONE column vocabulary, pinned
