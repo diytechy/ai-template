@@ -29,9 +29,9 @@ before you edit and again before you commit.
 
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
-| `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,992 | 2026-11-04 | -6: WI-994 — test files carry TC ids, linked to process.md §3, paid for in the same bullet |
-| `CLAUDE.md` | **8,500** | 8,018 | 2026-11-11 | +14: the commit checks and the expected-failure marker are renamed |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,579 | 2026-11-11 | Restamps the CLAUDE.md row and this one: the rename above |
+| `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,999 | 2026-11-16 | +7: the vocabulary sweep and the first-day fixes (maintenance branch), re-stamped to the measured size |
+| `CLAUDE.md` | **8,500** | 8,037 | 2026-11-16 | +19: the vocabulary sweep and the first-day fixes (maintenance branch), re-stamped to the measured size |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,627 | 2026-11-16 | Restamps the two rows above (CLAUDE.md, AGENTS.template.md) |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
