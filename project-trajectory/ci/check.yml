@@ -60,13 +60,16 @@ jobs:
       # never restates a check command. The reference harness uses ruff + pytest
       # (+ pytest-cov); trace.py and gen_arch_map.py are stdlib-only.
       - name: Install tooling
+        shell: bash
         run: |
           python -m pip install --upgrade pip
           pip install ruff pytest pytest-cov
-          # Then install YOUR project's deps — pick the one that fits and let it
-          # fail loudly (don't add `|| true`, which would hide an install error):
-          #   pip install -e .                 # if you have a pyproject.toml
-          #   pip install -r requirements.txt  # if you pin deps in a file
+          # Then YOUR project's deps, the same choice scripts/setup.sh makes, so
+          # tests can import your package here as they do locally. Let it fail
+          # loudly (don't add `|| true`, which would hide an install error).
+          if [ -f pyproject.toml ]; then pip install -e .
+          elif [ -f requirements.txt ]; then pip install -r requirements.txt
+          fi
 
       # Tier by moment. WHICH tier runs at which moment is declared ONCE in
       # `docs/stack.ini` `[ci-tiers]`; the `if:` guards and `--tier` flags below

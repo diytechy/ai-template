@@ -129,7 +129,8 @@ What it creates in the destination:
     .githooks/pre-push                         <- hooks/pre-push  (privacy-review backstop)
     docs/stack.ini                             <- stack.ini.template  (declared product toolchain)
     pytest.ini                                 (test-tier markers; skipped when
-                                                --stack is explicitly non-Python)
+                                                --stack is explicitly non-Python
+                                                or pyproject.toml configures pytest)
     docs/kit-profile                           (generated stamp: stack + omitted axes)
     .gitignore                                 <- gitignore.template
     .gitattributes                             <- gitattributes.template (eol=lf hook pin)
@@ -2696,6 +2697,19 @@ def _write_scaffold_file(src, dst, src_rel, dst_rel, dest, plan):
         dst.chmod(dst.stat().st_mode | 0o111)
 
 
+PYTEST_INI_SKIPPED = (
+    "  skipped: pytest.ini (pyproject.toml already configures pytest; to use "
+    "check.py --tier, add the smoke/full/release markers there)"
+)
+
+
+def _pyproject_has_pytest(dest):
+    """Whether dest's pyproject.toml has a [tool.pytest...] table."""
+    path = dest / "pyproject.toml"
+    text = path.read_text(encoding="utf-8-sig") if path.is_file() else ""
+    return "pytest" in (_kitconfig.read_toml_text(text) or {}).get("tool", {})
+
+
 def copy_kit_files(dest, plan):
     """The MAPPING copy pass + the GITKEEP_DIRS placeholders, as a
     `CopyOutcome`. Write-once by default (an existing file is skipped, not
@@ -2713,6 +2727,12 @@ def copy_kit_files(dest, plan):
         # stack gets no dead Python artifacts — the rewiring checklist lands
         # in docs/status.md instead (append_stack_checklist below).
         if dst_rel == "pytest.ini" and plan.stack in NON_PYTHON_STACKS:
+            continue
+        # pytest reads pytest.ini before pyproject.toml, so writing one beside a
+        # pyproject that configures pytest would drop that config (its
+        # pythonpath, say) from every test run.
+        if dst_rel == "pytest.ini" and not dst.exists() and _pyproject_has_pytest(dest):
+            print(PYTEST_INI_SKIPPED)
             continue
         if not src.exists():
             missing.append(src_rel)
