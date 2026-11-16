@@ -2043,16 +2043,14 @@ def placeholder_findings(label, raw_rows):
     ]
 
 
-def scan_sn_placeholders(sn_md):
-    """Sorted unique '-000' SN ids still present in the needs registry.
+def scan_sn_placeholders(sn_rows):
+    """Sorted unique '-000' SN ids among the needs registry's parsed rows.
 
-    `sn_md` is the CARRIER-RESOLVED path the loader found, so None here means
-    the registry is genuinely absent rather than "not under the suffix I
-    guessed"."""
-    if sn_md is None or not sn_md.exists():
-        return []
-    text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
-    return sorted({u for u in re.findall(r"\bSN-\d+\b", text) if is_example(u)})
+    `sn_rows` are `load_registries`' `raw_sns`, read through the carrier, so a
+    row is a table key (or a markdown table row) and never a mention: the
+    template's own header comment quotes `[need.SN-000]`, and the raw-text scan
+    this replaced reported it as a leftover row."""
+    return sorted({r["SN-ID"] for r in sn_rows if is_example(r["SN-ID"])})
 
 
 # SN maturity lives in section-as-state (derived-gate model §4a): a stakeholder-
@@ -5621,12 +5619,12 @@ def integrity_sweep(reg, raw):
     return integrity
 
 
-def placeholder_sweep(raw, sn_md):
+def placeholder_sweep(raw, sn_rows):
     """The `--no-placeholders` sweep: leftover `-000` example rows across the
-    three raw spine tiers plus the need registry's prose placeholders. Stated
-    unconditionally here; the caller owns the flag."""
+    three raw spine tiers plus the need registry's. Stated unconditionally
+    here; the caller owns the flag."""
     return [f for label in raw for f in placeholder_findings(label, raw[label])] + [
-        f"SN placeholder {u} still present" for u in scan_sn_placeholders(sn_md)
+        f"SN placeholder {u} still present" for u in scan_sn_placeholders(sn_rows)
     ]
 
 
@@ -5813,7 +5811,7 @@ def analyze(reg, args):
     integrity += tier_integrity
     interface_backlink_findings += tier_interface
     interface_advisories += tier_advisories
-    placeholders = placeholder_sweep(raw, reg.sn_md) if flags.no_placeholders else []
+    placeholders = placeholder_sweep(raw, reg.raw_sns) if flags.no_placeholders else []
     schema = schema_sweep(real) if flags.strict_schema else []
     # Warn-only, always on: comparative AcceptanceCriteria terms with no pinned
     # predicate (see the module docstring). Never joins a failure set below.
