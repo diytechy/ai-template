@@ -26,7 +26,7 @@ which is the whole point of this module existing: the carrier change is data
 plus a loader, not a sixteen-module rename braided into a migration. D-3 is the
 pass that renames things, and it renames them on this carrier afterwards.
 
-WHY THIS IS A SIBLING MODULE AND NOT ELEVEN COPIES — OWNER RULING 2026-08-10,
+WHY THIS IS A SIBLING MODULE AND NOT ELEVEN COPIES — OPERATOR RULING 2026-08-10,
 AMENDING the F5 ruling that rejected a shared `_kitcommon.py` at WI-078. The F5 rule buys cross-script copy-ability, and it
 is a good rule; it was written for small stable PLUMBING (a five-line CSV
 loader, the argparse preamble), where a divergence between copies is visible
@@ -59,7 +59,7 @@ Contract IF-270: SPINE_COLUMN maps TOML registry keys to legacy column names. To
     registry tier, including cells a generated automated case leaves blank.
 
 Contract IF-265: `load(path, "OI-ID")` supplies the scheduler's IF-073
-    owner-registry rows under carrier-neutral column names. An absent file
+    operator-registry rows under carrier-neutral column names. An absent file
     returns no rows; malformed content raises rather than publishing an empty
     queue. Both TOML and legacy CSV use the same load boundary.
 Contract IF-102: the carrier's whole read surface, as trace.py imports it — and
@@ -156,7 +156,7 @@ Contract IF-114: adjudicate_brief lists a red-TC brief's cases from
     refuses rather than rendering a dash. Read-only: nothing on this seam
     writes a registry.
 
-Contract IF-118: the owner decision view reads docs/requirements/open-items
+Contract IF-118: the operator decision view reads docs/requirements/open-items
     through resolve() and load(), so it answers whichever carrier is live and
     the rows arrive under today's column names. load() returns [] only when the
     registry is genuinely absent and raises on one that exists and will not
@@ -239,7 +239,7 @@ from kitlib import spine as _kitspine
 # The tier each registry's rows live under, keyed by the registry's ID COLUMN
 # rather than by its path. A path carries a carrier suffix and therefore moves;
 # the tier is the thing that does not.
-# `SN-ID` JOINED 2026-08-17 (owner ruling 2026-08-17k, "Yes add in"). The need
+# `SN-ID` JOINED 2026-08-17 (operator ruling 2026-08-17k, "Yes add in"). The need
 # tier had no declared schema at all, which is the guard gap that let the
 # shipped template ship without `tags` and let three fields accumulate for one
 # axis — the census is what makes a fourth impossible to add quietly.
@@ -396,7 +396,7 @@ SPINE_COLUMN = {
 # the two halves union cleanly and a second entry for a shared column would be
 # precisely the drift a single stated map exists to prevent.
 OFFSPINE_COLUMN = {
-    # open-items (the owner decision queue)
+    # open-items (the operator decision queue)
     "raised": "Raised",
     "one_line": "OneLine",
     "decision": "Decision",
@@ -459,7 +459,7 @@ OFFSPINE_COLUMN = {
     "carried_by": "CarriedBy",
     # The far side names the DIRECTION: `requestors` put information into the
     # surface the owner defines, `consumers` take what it emits — exactly one
-    # per row (OI-67, the owner's own addition).
+    # per row (OI-67, the operator's own addition).
     "requestors": "Requestors",
     "consumers": "Consumers",
     # `contract` LEFT the row with them once every definition had moved into
@@ -760,7 +760,7 @@ def empty_value_findings(rows, id_col, rel=""):
     row disagree — the file says the author wrote something, the reader says
     they did not — and every writer downstream would then re-emit a row it never
     read. Refusing names the row and the key and asks for a one-character edit:
-    delete the line. (Owner ruling owed — this fork was never ruled; the
+    delete the line. (Operator ruling owed — this fork was never ruled; the
     fail-closed option is taken and flagged.)"""
     out = []
     for row in rows:
@@ -915,7 +915,7 @@ def _names_from_header(cells):
 def _edge_folded(need):
     """A legacy edge-table row read as an ORDINARY need.
 
-    The `edge` row TYPE is retired (owner ruling 2026-08-17j) — no live carrier
+    The `edge` row TYPE is retired (operator ruling 2026-08-17j) — no live carrier
     emits it and no reader downstream defines it — but legacy markdown files
     still HAVE edge tables, and their cells are content. So the shape is
     resolved here, at the one boundary that still meets it, rather than left for
@@ -1164,7 +1164,7 @@ def folded(need):
     saying "change both together"; they drifted, and the dashboard rendered a
     phantom `SN-000` root (§6 F-6).
 
-    THE EDGE ARM IS GONE (owner ruling 2026-08-17j, "edge is dropped"). It
+    THE EDGE ARM IS GONE (operator ruling 2026-08-17j, "edge is dropped"). It
     re-titled an edge row — scenario as the need, lifecycle phase as the why —
     and there is nothing left to re-title: the row TYPE is retired along with
     the `kind` field that declared it, and edge coverage is the hats

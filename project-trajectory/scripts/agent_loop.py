@@ -252,7 +252,7 @@ EXIT_REVIEW_OWED = agent_common.EXIT_REVIEW_OWED
 EXIT_RESTART = agent_common.EXIT_RESTART
 EXIT_RED_CAP = agent_common.EXIT_RED_CAP
 END_STATES = agent_common.END_STATES
-OWNER_ONLY_PATHS = agent_common.OWNER_ONLY_PATHS
+OPERATOR_ONLY_PATHS = agent_common.OPERATOR_ONLY_PATHS
 read_declared = agent_common.read_declared
 declared_policy = agent_common.declared_policy
 process_config = agent_common.process_config
@@ -964,7 +964,7 @@ def worker_endstate(
         # routed to a strong cross-family judge to produce.
         return None
     if substantive_working_tree_dirty(root):
-        return None  # committed evidence only — a dirty tree (owner-only exempt) is not done
+        return None  # committed evidence only — a dirty tree (operator-only exempt) is not done
     return _done_endstate(worker, managed, rp_int, rounds)
 
 
@@ -990,7 +990,7 @@ def routed_session(ctx, i, current_wi, session, resume_reconcile, now):
 def build_hold(root, worker):
     """`(EXIT_NEEDS_OPERATOR, "HELD", reason)` when the lane's next build session
     would build on a Done-when that differs from the claimed one with no
-    verdict or owner ruling binding its exact text, else None. Asked of the
+    verdict or operator ruling binding its exact text, else None. Asked of the
     lane's committed HEAD against the claim copy at its integration base,
     through the one predicate the close and merge points ask
     (`kitlib.done_when.lane_hold`). An adjudication row is never held: it is
@@ -2308,7 +2308,7 @@ def schedule_review_round(ctx, after):
     round approved the very tree the first had refused and the merge slot
     refused the pair as a reroll-until-green. The page uses the existing ladder,
     so an operator-held run stops and a loop-held one degrades to DESIGN-CHECK
-    (owner ruling 2026-09-03 leaves that degrade uncapped); what this arm adds
+    (operator ruling 2026-09-03 leaves that degrade uncapped); what this arm adds
     is the CAUSE line, without which an operator re-runs the same rework.
 
     Returns an int exit code when the run must end, else None."""
@@ -3259,7 +3259,7 @@ def review_owed_stop(ctx):
     when the ladder is exhausted — the build is committed, a round is still
     queued, and `--stall-limit` consecutive draws failed. The exit code is
     deliberately NOT a decided dispatcher outcome: the lane parks with its
-    work and the next cycle resumes it to draw the round (owner direction
+    work and the next cycle resumes it to draw the round (operator direction
     2026-08-30 — a reviewer outage never closes finished work partial)."""
     st = ctx.run.routing
     if not st.review_queue or st.review_draw_failures < max(1, ctx.args.stall_limit):
@@ -4139,8 +4139,8 @@ def main():
     # out/agent-loop.lock (and, later, docs/iteration/*.log) — so the check sees
     # genuine interrupted-session residue, never our own artifacts. In a scaffold
     # out/ is gitignored, so the lock would not show anyway; taking the snapshot
-    # first is correct regardless of a repo's .gitignore hygiene. Owner-only paths
-    # (OWNER_ONLY_PATHS) are dropped so the perpetually-edited scratchpad never
+    # first is correct regardless of a repo's .gitignore hygiene. Operator-only paths
+    # (OPERATOR_ONLY_PATHS) are dropped so the perpetually-edited scratchpad never
     # reads as residue and fires the reconcile note on every resume (WI-203).
     start_dirty = substantive_working_tree_dirty(root)
 

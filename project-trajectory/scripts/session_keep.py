@@ -1709,7 +1709,7 @@ def keepwarm_due(record, cfg, now, work_pending):
     an hour; the others' live minutes and are never pinged) and active, it
     is the adjudicator's (a scoped review record is never pinged), work is
     pending, and it has been idle `keepwarm_minutes`. No ping fires inside
-    the blackout window (`take_warm_lease`, owner 2026-10-05, overruling OI-69
+    the blackout window (`take_warm_lease`, operator 2026-10-05, overruling OI-69
     (c2)): a session idle across the window is retired after it instead.
 
     Implements: SR-227, LLR-270

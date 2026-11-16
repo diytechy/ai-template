@@ -1,9 +1,9 @@
 """bookkeeping.py — the ONE trunk bookkeeping commit: build it away from the
-owner's checkout, install exactly what it wrote, and advance trunk.
+operator's checkout, install exactly what it wrote, and advance trunk.
 
 WHY IT EXISTS (WI-612). The loop's two trunk-side writers, the claim
 (`integrate.claim`) and the intake mint (`intake._mint`), run in the PRIMARY
-checkout, which is also where the owner works. Each used to treat that whole
+checkout, which is also where the operator works. Each used to treat that whole
 working tree as its own: `git add -A` staged whatever lay there into the
 bookkeeping commit, `git reset --hard HEAD` (plus the mint's `git clean -fd`)
 threw it away on a refusal, and `git reset --hard <commit>` advanced trunk over
@@ -12,7 +12,7 @@ a clean-trunk refusal in front of the claim only GUARDED against that, at the
 top of a tick. This module narrows the whole tree to the step's own SCOPE.
 
 WHY THE STEP RUNS ELSEWHERE (WI-647). Narrowing to the scope still left the
-step writing in the checkout, so an owner edit landing on an in-scope path
+step writing in the checkout, so an operator edit landing on an in-scope path
 while it ran (the prose of `docs/status.md`, which the status splice rewrites
 whole) could be swept into the commit or overwritten, and the regeneration read
 the checkout, so an uncommitted edit to a generator INPUT shaped the artifacts
@@ -38,7 +38,7 @@ WHAT IT PROMISES, AND WHERE IT STOPS:
   * A path INSIDE the scope is guarded twice: at the pre-check, before the
     step runs, and at the drift check, immediately before the install and
     after the caller's `before_advance`, which refuses BY NAME any in-scope
-    path that no longer equals HEAD and installs nothing. An owner edit made
+    path that no longer equals HEAD and installs nothing. An operator edit made
     while the step, its regeneration or the caller's callback ran therefore
     survives untouched and is named.
   * The window that remains is the INSTALL itself: the few git calls between
@@ -483,7 +483,7 @@ def _commit_object(root, scratch, head, written, message):
             scratch, "write-tree", why="the tree could not be named", env=env
         )
     # The dial is the one committed at `head`, the tree this commit is built
-    # on, never the working file: an uncommitted owner edit is not this tree.
+    # on, never the working file: an uncommitted operator edit is not this tree.
     _raise_on(
         ac.loop_held_status_refusal(root, root, head, tree.strip(), trunk_rev=head)
     )

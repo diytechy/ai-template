@@ -71,7 +71,7 @@ each says something about what "routed" costs:
     that mints it, so all three gaps close together (the 2026-09-02
     backlog-restructure plan §1).
   * `amendment` was the OTHER one, and it is the capability the `last_approved`
-    snapshot unlocked (D-9 step 4b, owner
+    snapshot unlocked (D-9 step 4b, operator
     directive 2026-08-15). Two things blocked it and the snapshot answers both.
     Its `{rows}` slot named `trace.reattest_model`, which selected rows whose
     Status was `Modified`, while `check_trajectory.staged_spine_amendments` —
@@ -610,7 +610,7 @@ def _spine_excerpt(root, ids):
 # composes both, so the home governs it too.
 QUESTION_BRIEFS = ("amendment", "first-approval", COMBINED)
 
-# --- the first-approval brief (owner ruling 2026-09-01) -----------------------
+# --- the first-approval brief (operator ruling 2026-09-01) -----------------------
 
 
 def _render_chain(root, entry, scope, srs, llrs_by_sr, tcs_by_ref, registries):
@@ -733,11 +733,11 @@ def first_approval_values(root, row):
     `plan_briefs.HAT_PARENTS`, never a slot.
 
     THE APPROVAL ACT IS AN INDEPENDENT ADJUDICATOR'S, in the authoring lane or
-    on trunk (owner ruling 6, 2026-10-07): a lane's merge is refused if it
+    on trunk (operator ruling 6, 2026-10-07): a lane's merge is refused if it
     flips a `Status` or writes the approval record with no recorded verdict
     judging those rows behind it (`integrate._approval_act_refusal`), so rows
     a lane left `Drafted` are waiting on a session like the one this brief
-    composes. Two reasons the owner gave.
+    composes. Two reasons the operator gave.
     CONTEXT: approving means holding the row's WHOLE chain, which one work item
     does not — so `{chain}` is the whole chain, not the changed cells.
     CONCURRENCY: an adjudication lane runs alone, so the act cannot race a
@@ -745,7 +745,7 @@ def first_approval_values(root, row):
 
     WHICH ROWS IS THE ROW'S OWN `Adjudicates` SCOPE, INTERSECTED with
     `trace.reattest_model`'s `approve` half — the same model behind `trace.py
-    --approve` and `open-items.html`, so the judge, the brief and the owner
+    --approve` and `open-items.html`, so the judge, the brief and the operator
     surface cannot show three different pictures of one spine. Its `Drafted`
     selector is chain-wide (the OI-61-sitting widening), so a `Drafted` LLR
     under an `Approved` SR is a first approval owed and no drift arm can see it
@@ -761,9 +761,9 @@ def first_approval_values(root, row):
     three spine registries in the derived `--approves` argument, from a mint of
     one row. That contradicts the doctrine this same change wrote (the merge
     "MINTS a first-approval adjudication over the `Drafted` rows the lane handed
-    over") and the owner's own concurrency reason for moving the act to trunk:
+    over") and the operator's own concurrency reason for moving the act to trunk:
     the approval snapshot must not move across a workstream. It also
-    manufactured owner interrupts — a second merge's adjudication, minted while
+    manufactured operator interrupts — a second merge's adjudication, minted while
     the first was still queued, found nothing left and composed to a rule-3 HOLD.
 
     SO THE SCOPE IS A FACT THE ROW CARRIES (`wi_convert`'s `Adjudicates`
@@ -798,12 +798,12 @@ def first_approval_values(root, row):
     from `reattest_model` — which is dial-blind by design — without putting that
     filter back. At any dial holding a spine rung (every dial above this repo's,
     including the shipped `DevStg-Release` default) the brief therefore rendered
-    the owner's HELD rows as this session's to approve and derived a
+    the operator's HELD rows as this session's to approve and derived a
     `--approves` argument for their registry: a prompt instructing an
-    adjudicator to perform a signature the owner owes. So `operator_accepts_spine`
+    adjudicator to perform a signature the operator owes. So `operator_accepts_spine`
     is consulted PER CHAIN ROW here, from the same table the mint reads. The
     dial is checked as well as the scope, not instead of it: the mint filtered
-    by the dial AT THE MINT, and a dial the owner tightens afterwards must bind
+    by the dial AT THE MINT, and a dial the operator tightens afterwards must bind
     the act it has not yet authorised.
 
     AN OUT-OF-SCOPE OR HELD ROW IS STILL SHOWN, and shown as not yours. It is
@@ -811,7 +811,7 @@ def first_approval_values(root, row):
     is what a row must be judged against — but it is labelled, it contributes no
     registry, and an SR whose chain holds no row of this session's at all is
     dropped entirely. If nothing survives, this REFUSES: a brief whose every row
-    belongs to the owner or to another act is not this arm's question.
+    belongs to the operator or to another act is not this arm's question.
 
     The registries the RELEASED rows live in are still walked, for the tiers
     whose questions `{questions}` carries. The act's `--approves` argument is
@@ -864,7 +864,7 @@ def first_approval_values(root, row):
         # WHICH of the three filters emptied it, named. "Nothing to rule on" is
         # a HOLD an operator then has to diagnose, and the three causes take
         # opposite actions: the rows were ruled on already (drop the row), the
-        # owner holds their rung (sign, or move the dial), or the scope names
+        # operator holds their rung (sign, or move the dial), or the scope names
         # rows this spine no longer has (the mint and the tree disagree).
         live = sorted(scope & awaiting)
         if not live:
@@ -878,7 +878,7 @@ def first_approval_values(root, row):
             "every row in this adjudication's scope that still awaits a first "
             "approval ({}) sits on a rung the declared gate authority HOLDS for "
             "an operator (`operator_accepts_through` = {}), so the signature is the "
-            "owner's and this arm has nothing to rule on".format(
+            "operator's and this arm has nothing to rule on".format(
                 ", ".join(live), ac.approval_through(root / "docs")
             )
         )
@@ -933,10 +933,10 @@ def _chain_label(drafted, in_scope, yours):
     when it is not.
 
     Three states, not two, and the reason is the point. A `Drafted` row can fail
-    to be yours because the OWNER holds its rung, or because it belongs to
+    to be yours because the OPERATOR holds its rung, or because it belongs to
     ANOTHER act's scope, and those are opposite instructions: the first waits
     for a signature, the second is already somebody's. Collapsing them into one
-    "HELD FOR THE OWNER" line would have told a session to wait on the owner for
+    "HELD FOR THE OPERATOR" line would have told a session to wait on the operator for
     a row a sibling adjudication is about to rule on — a true label for the
     wrong reason is still a false brief (rule 2)."""
     if not drafted:
@@ -948,7 +948,7 @@ def _chain_label(drafted, in_scope, yours):
             "AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE, ANOTHER "
             "ADJUDICATION'S ROW; SHOWN AS CHAIN EVIDENCE ONLY"
         )
-    return "AWAITING FIRST APPROVAL - HELD FOR THE OWNER, NOT YOURS TO FLIP"
+    return "AWAITING FIRST APPROVAL - HELD FOR THE OPERATOR, NOT YOURS TO FLIP"
 
 
 # --- the consolidation brief (the 2026-09-02 restructure plan §1.4) -----------
@@ -1129,7 +1129,7 @@ def _prior_lines(cons, rows, bodies):
     from a verdict file - rule 1, a judge's evidence is a record and not a
     claim. Each absorbed row says whether a judgement enacted it or a hand
     commit did (`cons.prior_line`), because the brief's "overturning one pages
-    the owner" is true only of the first."""
+    the operator" is true only of the first."""
     prior = cons.prior_absorbs(rows)
     if not prior:
         return NO_PRIOR

@@ -330,7 +330,7 @@ def test_failure_action_keyed_to_the_approval_level():
     # THE FOURTH CELL, and the reason the returned dict must REPORT the dial
     # rather than assume it. A loop-held tier that was told to drain must
     # drain: this arm used to hardcode True, so the dict documented as "what
-    # the coordinator enacts and logs" reported the opposite of an owner's
+    # the coordinator enacts and logs" reported the opposite of an operator's
     # explicit `keep_nondependent = false` — which is this repo's own setting.
     drains = route.failure_action(False)
     assert drains["mode"] == "loop-held"
@@ -733,7 +733,7 @@ def test_planner_fallback_no_responding_family(tmp_path):
 
 
 def test_weak_is_a_legacy_alias_for_quick(tmp_path):
-    # WI-113 (owner rename 2026-07-12): the bottom tier is `quick`; the old
+    # WI-113 (operator rename 2026-07-12): the bottom tier is `quick`; the old
     # `weak` vocabulary still loads, validates, and selects — never-breaking
     # (the Provider->Family precedent). REGISTRY_CSV above deliberately still
     # says `weak`, so this doubles as the legacy-registry proof.

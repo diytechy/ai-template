@@ -10,7 +10,7 @@ verification"*, requires a perceptual TC to name its render recipe).
 
 > **Meta-only, dev-only.** This tool is **not** shipped downstream. The kit's
 > stdlib-only / install-nothing posture governs `project-trajectory/scripts`;
-> it does **not** govern this dev helper (owner ruling at WI-189 filing — same
+> it does **not** govern this dev helper (operator ruling at WI-189 filing — same
 > meta-only scoping as WI-175 Rec 3). Nothing here changes
 > `dev-setup.template.*` or adds a runtime requirement to any kit script.
 

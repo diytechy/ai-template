@@ -120,7 +120,7 @@ def test_devsetup_wires_the_process_floor_and_offers_setup_chain(scaffold):
 
 
 def test_devsetup_default_reports_every_role(scaffold):
-    # No --profile installs/reports every declared role (the owner ruling: the
+    # No --profile installs/reports every declared role (the operator ruling: the
     # default does everything; a role is the opt-down).
     proc = _devsetup_check(scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -689,7 +689,7 @@ def test_each_verification_gate_fails_closed():
 
 
 def test_the_shipped_template_does_not_fetch_a_runtime():
-    # Owner ruling 2026-07-25 (blast radius): auto-provisioning stays in THIS repo
+    # Operator ruling 2026-07-25 (blast radius): auto-provisioning stays in THIS repo
     # until proven. Adopters must not inherit a network-fetching setup script.
     for rel in (
         "project-trajectory/scripts/dev-setup.template.command",

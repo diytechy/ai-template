@@ -53,14 +53,14 @@ Usage:
     python scripts/schedule.py [--root .] simulate --jobs N [--format text|json]
 
 Small CSV loaders are duplicated from trace.py / check_trajectory.py per the kit's
-independently-copyable-script convention (the F5 rule). Owner gates are read
+independently-copyable-script convention (the F5 rule). Operator gates are read
 through the shared `spine_carrier` loader.
 
 Contracts: IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172, IF-264 — the
 interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
-Contract IF-264: `_load(root)` reads the work registry and the IF-073 owner
+Contract IF-264: `_load(root)` reads the work registry and the IF-073 operator
     registry together; `load_wis(rows, open_items=())` attaches to each row the
     id and title of every open item its `needs` cites. `hard_preds_satisfied`
     is the shared readiness predicate, used by disposition and mutex selection:
@@ -223,7 +223,7 @@ RANK_UNCLASSIFIED = 7
 # won't-build row: like `done` it is never in the ready frontier, but UNLIKE
 # `done` a cancelled predecessor does NOT satisfy a successor's hard dependency
 # (a cancelled WI never integrates, so a live WI hard-blocked on one can never
-# run — it stays `waiting`, surfacing to the owner, rather than proceeding on a
+# run — it stays `waiting`, surfacing to the operator, rather than proceeding on a
 # will-never-happen dependency; WI-267 design-decision 3).
 _DONE = "done"
 _CANCELLED = "cancelled"
@@ -250,7 +250,7 @@ def load_rows(path):
 # STATUS encoded as the DIRECTORY (docs/concurrency-restructure.md §2.1). The
 # 270-line reader that used to sit here VERBATIM, and identically in the other
 # two of schedule.py, check_trajectory.py and agent_common.py, now lives once in
-# `kitlib/registry.py`: owner ruling D-8 (`OI-16`, inversion confirmed
+# `kitlib/registry.py`: operator ruling D-8 (`OI-16`, inversion confirmed
 # 2026-08-13) retired the F5 no-shared-module rule that had licensed the copies.
 #
 # RE-EXPORTED under the names this module has always carried, so no call site
@@ -703,7 +703,7 @@ _TERMINAL_DISPOSITION = {
     # The fourth terminal (2026-09-02 restructure plan §1.6): a row ABSORBED into
     # a successor by a consolidation judgement. Terminal for the same reason the
     # other two are — nothing re-claims it — but its own code, because the
-    # dead-end reads differently to an owner: the scope did not die, it moved,
+    # dead-end reads differently to an operator: the scope did not die, it moved,
     # and the successor named in the row's one-line Deliverable is where it went.
     _RESTRUCTURED: ("restructured", "restructured:absorbed"),
 }
@@ -727,7 +727,7 @@ def _waiting_reasons(wi, status):
     the 2026-09-02 restructure plan: a cancelled, partial OR restructured
     predecessor is a DEAD hard edge — it is terminal and will never integrate
     `done`, so the WI can never become ready. Each is surfaced as its own reason
-    code (the WI still just waits, never silently satisfied) so the owner sees
+    code (the WI still just waits, never silently satisfied) so the operator sees
     the will-never-happen dependency — and the codes match the validator's
     `dead_dependency_findings`, which flags exactly this SET, so the scheduler
     and the checker never disagree on whether an edge is dead. `restructured`

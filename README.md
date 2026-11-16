@@ -67,12 +67,12 @@ chasing it.
 | [`project-trajectory/`](project-trajectory/) | The portable kit: the gated, requirement-traced development process plus all templates and runnable scripts. **This is the thing you copy into new repos.** |
 | [`project-trajectory/README.md`](project-trajectory/README.md) | Full contents + rationale for the kit. |
 | [`CLAUDE.md`](CLAUDE.md) | Guide for working **in this template repo** (developing the templates themselves). |
-| [`docs/status.md`](docs/status.md) · [current handoff](docs/handoff-2026-09-26-coordinator.md) | Resume kit development: the assumption tier's build continues, the queued work, and the owner acts outstanding. |
+| [`docs/status.md`](docs/status.md) · [current handoff](docs/handoff-2026-09-26-coordinator.md) | Resume kit development: the assumption tier's build continues, the queued work, and the operator acts outstanding. |
 
 ## The kit's headline pieces
 
 - **A gated process** ([`PROCESS.md`](project-trajectory/PROCESS.md)) — roles as
-  "hats", approval bars (DevStg-Reqs→DevStg-Tests→DevStg-Impl, then DevStg-Release and the owner's final read; DevStg-Release only for
+  "hats", approval bars (DevStg-Reqs→DevStg-Tests→DevStg-Impl, then DevStg-Release and the operator's final read; DevStg-Release only for
   versioned releases), and a verdict protocol; each gate's bar **fails, never
   silently skips** (SN-004, SN-008).
 - **A traceability spine** — `SN → SR → LLR → TC` registries joined by a
@@ -166,7 +166,7 @@ chasing it.
   process. It scaffolds to `AGENTS.md` (the cross-tool standard), with thin
   `CLAUDE.md`/`GEMINI.md` stubs pointing back at it.
 - **Approved at the 2026-08-13 sitting, commissioned rather than shipped** —
-  seven needs the owner attested whose machinery was scheduled, not built. They
+  seven needs the operator attested whose machinery was scheduled, not built. They
   are listed here because an approved promise should be visible before its code
   is, not after. State each one at the half it actually reached:
   - **Shipped.** System-requirement boundary references resolve against declared
@@ -175,7 +175,7 @@ chasing it.
     (SN-033) — `scripts/check_need_form.py`, wired at all three bars in
     `check.py`, traced SR-150 → LLR-170 → TC-164; **warn-first by design**, since
     promoting a form heuristic over approved stakeholder prose to a gate is an
-    owner ruling that has not been made.
+    operator ruling that has not been made.
   - **Half shipped.** The record of which expert and downstream-user
     perspectives a decomposition was examined from (SN-036). The **roster and
     injection** halves are built — `hats.template.toml` + `scripts/hats.py`, with
@@ -205,7 +205,7 @@ chasing it.
   four needs whose chains are approved down to test cases, with none of their
   machinery built yet
   ([the assumption-tier spine map](docs/plans/2026-09-25-assumption-tier-spine-map.md)).
-  The owner's stand-in signed them, and the owner's re-attestation is owed:
+  The operator's stand-in signed them, and the operator's re-attestation is owed:
   - Code and analytics a later reader can understand, and change one part of
     without reworking unrelated parts (SN-041).
   - Every required behavior checked by tests written from its requirement
@@ -479,7 +479,7 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
   [`docs/status.md`](docs/status.md) and [`PROJECT_STATE.html`](PROJECT_STATE.html)
   from the live registries and [`docs/stage`](docs/stage). The
   [current handoff](docs/handoff-2026-09-26-coordinator.md) gives the read order, what is
-  next, and the owner acts outstanding.
+  next, and the operator acts outstanding.
 
 ### Configuration at a glance (defaults vs. this repo)
 

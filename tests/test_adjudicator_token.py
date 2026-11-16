@@ -1,7 +1,7 @@
 """A token account's long-lived token, and an auth failure that keeps the session.
 
 WI-846, re-pointed by WI-798. The retained adjudicator's Claude account
-authenticates with the owner's long-lived token (`claude setup-token`): the
+authenticates with the operator's long-lived token (`claude setup-token`): the
 token binds to one declared TOKEN ACCOUNT, whose `token_file_variable` names
 the variable locating its file, never to a family, and it launches under that
 account's own home (outside the checkout, created empty by the kit). The token FILE's path is

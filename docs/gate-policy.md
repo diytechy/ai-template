@@ -1,11 +1,11 @@
 # Gate-authority deviation register — `autonomous`
 
-**Status:** ACTIVE — owner directive 2026-07-15 (in-chat) flipped the declared
+**Status:** ACTIVE — operator directive 2026-07-15 (in-chat) flipped the declared
 gate authority `single-approve` → **`autonomous`** to let phases iterate
 through their gates without an operator g2-close sitting. **Reversible / temporary:**
-the owner may restore a lower level at any time. Keep in version control.
+the operator may restore a lower level at any time. Keep in version control.
 
-_Prior level:_ **`single-approve`** — APPROVED 2026-07-13 (OI-2; owner review of
+_Prior level:_ **`single-approve`** — APPROVED 2026-07-13 (OI-2; operator review of
 the WI-107 enablement commit, [log.md](log.md) "GATE: DevStg-Impl re-attestation" +
 Decisions). That level and its approval stand as history and may be restored
 by raising `operator_accepts_through` in [process.toml](process.toml) + this
@@ -33,13 +33,13 @@ fixed points at the bottom, which nothing overrides.**
 
 **This repo (the ai-template META-repo):** the kit's own unattended layer,
 self-applied (adopted via **WI-107**, `docs/archive/specs/WI-107.2026-07-20.md`). Under
-`autonomous`, every gate **except the owner's final read** closes on an **independent
+`autonomous`, every gate **except the operator's final read** closes on an **independent
 fresh-context LLM reviewer's recorded verdict** — no operator batch sitting. This
 is config-layer only: **no spine change**, so the flip does **not** move the
 derived stage (`docs/stage` is always whatever `derive_stage.py` computes — the
 level never moves the derived value; read `docs/stage` for the current stage
 rather than this register). The level governs only WHO approves a gate,
-not what the gate computes. _(The flip's reviewed commit is the owner's
+not what the gate computes. _(The flip's reviewed commit is the operator's
 in-chat directive + this register update, 2026-07-15.)_
 
 ## Deviation register
@@ -61,5 +61,5 @@ in-chat directive + this register update, 2026-07-15.)_
   loop fabricate an APPROVE it could not run.)_
 - **The harness is still the bar** — LLM judgment supplements the checks; it
   never waives a red one.
-- **Approved owner decisions are never re-decided by an agent** — flag a
+- **Approved operator decisions are never re-decided by an agent** — flag a
   problematic one as Blocked instead.

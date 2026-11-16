@@ -472,25 +472,25 @@ def test_fresh_node_scaffold_generates_its_required_prompt_catalog(tmp_path):
     assert "PASS  prompt-catalog" in harness.stdout
 
 
-def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path):
+def test_node_adopter_upgrade_preserves_populated_operator_content(resync, tmp_path):
     """A populated non-Python adopter survives the documented target re-sync.
 
     This is deliberately a copy of the archived old-kit scaffold, not a fresh
     current fixture: the target bootstrap must encounter an adopter's existing
     README, legacy SN/SR carriers, application, Node harness configuration and
-    recorded history.  It adds the current hats carrier as owner-authored text
+    recorded history.  It adds the current hats carrier as operator-authored text
     before the first target run, then proves that neither the initial add-only
     re-sync, the profile-driven process-doc regeneration, nor ``--sync``
     replaces any of those records.
 
     A second copy follows the full documented overwrite, then explicitly merges
-    the owner-controlled application, README, hats, stack config, work record,
+    the operator-controlled application, README, hats, stack config, work record,
     and history before it migrates the carriers and policy file.
     """
     repo = tmp_path / "node-adopter-upgrade"
     shutil.copytree(resync.pristine, repo)
 
-    owner_content = {
+    operator_content = {
         "README.md": """# Signal Triage\n\n## Vision\n\n**PROJECT-VISION:** Dispatch teams shall see a trustworthy incident timeline\nfrom browser-collected signals without losing the source or confidence of an\nevent.\n\n## What it does\n\n- **Incident timeline** — responders inspect the ordered browser signals (SN-701).\n\n## Migration record\n\n[Source-confidence note](docs/adopter-notes.md)\n""",
         "docs/requirements/hats.toml": """[hat.DATA-PROVENANCE]\napplies_when = 'tags contains "telemetry"'\nasks = "Can a responder distinguish reported events from inferred events?"\nlistens_for = "A timeline that makes uncertain or derived events appear authoritative."\n""",
         "src/timeline.js": """export function label(event) {\n  return `${event.source}: ${event.message}`;\n}\n""",
@@ -498,7 +498,7 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
         "package.json": """{\n  "name": "signal-triage",\n  "private": true,\n  "type": "module",\n  "scripts": {"test": "node --test"}\n}\n""",
         "docs/stack.ini": """[paths]\nsrc = src\ntests = test\n\n[product]\nformat = npx --no-install prettier --check {src} {tests}\nlint = npx --no-install eslint {src} {tests}\ntest = node --test\n\n[tiers]\nsmoke = test/smoke\nfull =\nrelease =\nall =\n\n[coverage]\nthreshold = 0\nargs =\n\n[arch-map]\nmode = files\n""",
     }
-    for rel, text in owner_content.items():
+    for rel, text in operator_content.items():
         path = repo / rel
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
@@ -547,7 +547,7 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
     history.write_text(
         history.read_text(encoding="utf-8")
         + "\n## 2026-09-06 — source-confidence decision\n\n"
-        "The owner retained source and confidence in incident evidence.\n",
+        "The operator retained source and confidence in incident evidence.\n",
         encoding="utf-8",
     )
     _adopter_git(repo, "init", "-q")
@@ -558,7 +558,7 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
     initial_commit = _adopter_git(repo, "rev-parse", "HEAD").strip()
     preserved = _digests(
         repo,
-        tuple(owner_content)
+        tuple(operator_content)
         + (
             "docs/requirements/stakeholder-needs.md",
             "docs/requirements/system-requirements.csv",
@@ -600,8 +600,8 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
     _adopter_git(repo, "commit", "-qm", "resync: record Node profile")
 
     # The migration is deliberately on a copy. Take the complete current kit
-    # mapping first, then restore the owner-controlled records before converting
-    # carriers. This is the documented overwrite plus intentional owner merge,
+    # mapping first, then restore the operator-controlled records before converting
+    # carriers. This is the documented overwrite plus intentional operator merge,
     # rather than a script-only update that leaves stale kit documents behind.
     # This leg does NOT test preservation: the byte-restore below is the test's
     # own operator step. What it proves is that the documented overwrite plus
@@ -614,7 +614,7 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
         cwd=supported,
     )
     assert forced.returncode == 0, forced.stdout + forced.stderr
-    restored = tuple(owner_content) + (
+    restored = tuple(operator_content) + (
         "docs/requirements/stakeholder-needs.md",
         "docs/requirements/system-requirements.csv",
         "docs/log.md",
@@ -678,8 +678,8 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
     )
     assert requirements["SR-701"]["sn_refs"] == ["SN-701"]
     assert requirements["SR-701"]["status"] == "Drafted"
-    assert _digests(supported, tuple(owner_content) + ("docs/log.md",)) == _digests(
-        repo, tuple(owner_content) + ("docs/log.md",)
+    assert _digests(supported, tuple(operator_content) + ("docs/log.md",)) == _digests(
+        repo, tuple(operator_content) + ("docs/log.md",)
     )
     note.write_text(
         note.read_text(encoding="utf-8").replace(

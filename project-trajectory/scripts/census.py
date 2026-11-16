@@ -114,7 +114,7 @@ RED_ASSUMPTION_TC_PREFIX = "red assumption TC "
 # structurally dead in any conformant repo (tests/test_adjudicate_brief.py
 # records the same fact and moved its fixtures out-of-enum to stay meaningful).
 # Deliberately kept rather than deleted: whether the rung RETIRES or re-arms on
-# a narrower exempt set is the owner's call, recorded as a judgement item at
+# a narrower exempt set is the operator's call, recorded as a judgement item at
 # the 2026-08-15 sitting sweep.
 #
 # D-9 STEPS 7/8 SWAPPED ONE MEMBER FOR ANOTHER AND THE ARITHMETIC IS UNMOVED:
@@ -123,7 +123,7 @@ RED_ASSUMPTION_TC_PREFIX = "red assumption TC "
 # joined — a TC at the top rung is green a fortiori, so exempting it is not a
 # widening. The set still covers the WHOLE closed vocabulary, so the census
 # remains structurally dead in a conformant repo, which is precisely the fact
-# the owner's judgement item is about. A DOWNSTREAM repo still carrying
+# the operator's judgement item is about. A DOWNSTREAM repo still carrying
 # `Modified` TCs now sees them as red here — that repo is already failing the
 # always-on integrity floor on the same cells, so the rung is naming a gap the
 # floor has already named rather than inventing one.

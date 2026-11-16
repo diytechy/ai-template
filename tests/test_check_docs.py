@@ -587,25 +587,25 @@ def test_okf_bundle_adds_zero_scanned_docs(scaffold):
     assert "docs/okf" not in after.stdout
 
 
-# --- the owner scratchpad is exempt entirely (FB3) ---------------------------
+# --- the operator scratchpad is exempt entirely (FB3) ---------------------------
 
 
 def test_scratchpad_exempt_from_scan(scaffold):
-    # FB3: OWNER_SCRATCHPAD.md holds free-form owner notes and is dropped from doc
+    # FB3: OPERATOR_SCRATCHPAD.md holds free-form operator notes and is dropped from doc
     # discovery entirely — a broken link in it never gates, and it is never
     # counted, orphaned, or link-checked. The scaffold ships it at the root.
-    pad = scaffold / "OWNER_SCRATCHPAD.md"
-    assert pad.exists(), "bootstrap must scaffold OWNER_SCRATCHPAD.md"
+    pad = scaffold / "OPERATOR_SCRATCHPAD.md"
+    assert pad.exists(), "bootstrap must scaffold OPERATOR_SCRATCHPAD.md"
     pad.write_text(
-        pad.read_text(encoding="utf-8") + "\nSee [gone](nowhere-owner.md).\n",
+        pad.read_text(encoding="utf-8") + "\nSee [gone](nowhere-operator.md).\n",
         encoding="utf-8",
     )
     proc = run_py(
         ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "OWNER_SCRATCHPAD.md" not in proc.stdout
-    assert "nowhere-owner.md" not in proc.stdout  # its broken link is never checked
+    assert "OPERATOR_SCRATCHPAD.md" not in proc.stdout
+    assert "nowhere-operator.md" not in proc.stdout  # its broken link is never checked
 
 
 # --- the archive keeps link validation but drops orphan/stale noise (FB4) ----

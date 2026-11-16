@@ -269,7 +269,7 @@ LIVE_NAMES = [
     "TEST-ENGINEER",
     "UX-DESIGNER",
     "UX-ENGINEER",
-    # SAFETY leaves this repo's roster (owner ruling: it has no application in
+    # SAFETY leaves this repo's roster (operator ruling: it has no application in
     # a software-only repo). The shipped template keeps it for adopters with
     # physical products, a values divergence the dogfood rule allows, so
     # TEMPLATE_NAMES below keeps it in its place.
@@ -303,7 +303,7 @@ TEMPLATE_NAMES = (
 
 # The floor every decomposition in THIS repo faces, IN DECLARED ORDER: the three
 # original `always` hats plus the UX pair, unconditional here because
-# PROJECT_STATE.html / open-items.html are real owner-facing surfaces (WI-453,
+# PROJECT_STATE.html / open-items.html are real operator-facing surfaces (WI-453,
 # ruling 2026-08-13q) — plus the three provisional 2026-08-16 charters, `always`
 # deliberately: the finding each answers was UNREACHABILITY, so gating them on a
 # tag nobody sets would reproduce the defect they exist to close.
@@ -313,7 +313,7 @@ LIVE_ALWAYS = [
     "TEST-ENGINEER",
     "UX-DESIGNER",
     "UX-ENGINEER",
-    # Owner ruling 2026-08-16: ACCESSIBILITY and PERFORMANCE leave the tag-gated
+    # Operator ruling 2026-08-16: ACCESSIBILITY and PERFORMANCE leave the tag-gated
     # aspect set and become unconditional — "in general those should always be
     # considered". They keep their declared position inside the aspect block, so
     # they land here between the UX pair and the cross-cutting three. The SAME
@@ -322,7 +322,7 @@ LIVE_ALWAYS = [
     # only template-side always-set assertion, and it is untouched by this.
     "ACCESSIBILITY",
     "PERFORMANCE",
-    # Owner ruling 2026-08-16, same session: CONSISTENCY ruled in `always`. It
+    # Operator ruling 2026-08-16, same session: CONSISTENCY ruled in `always`. It
     # was already pinned here as a provisional draft, so the ruling moves no
     # name and changes no assertion — what it changes is that a cut would now
     # be an amendment rather than a decision never taken. The same flip lands
@@ -854,7 +854,7 @@ def test_an_override_template_without_the_slot_is_not_handed_it():
 # --- the dogfood rule: structure must not drift, values may -------------------
 def test_the_kit_template_and_the_live_roster_share_a_STRUCTURE():
     """CLAUDE.md's dogfood rule applied to the roster. The two files are allowed
-    to diverge in VALUES — the live one is owner text marked for edit, and an
+    to diverge in VALUES — the live one is operator text marked for edit, and an
     adopter is *expected* to rewrite theirs — so this pins the SHAPE: both parse
     under the same reader, both declare the same three required keys per hat,
     and neither ships a hat whose condition the grammar cannot evaluate."""
@@ -879,7 +879,7 @@ def test_template_and_instance_share_structure_and_the_template_ships_thirteen()
     """The dogfood rule applied to the roster (review finding): STRUCTURE must
     not drift between the shipped template and this repo's instance — same
     table name, same required key set per row, both non-empty — while VALUES
-    (which hats an owner keeps, and their conditions) may. Separately, the
+    (which hats an operator keeps, and their conditions) may. Separately, the
     SHIPPED template is kit product: it carries exactly the thirteen ruled
     starting hats (the six of OI-19 plus the UX pair and five aspect hats of
     Decision 11, rulings 2026-08-13q/s, executed at WI-453) until a reviewed
@@ -990,7 +990,7 @@ def test_aspect_hats_ship_silent_by_design_and_switch_on_by_tag():
     FIRST-RUN-ADOPTER's silence BY DEFECT) and fires the moment a project tags
     work with it.
 
-    THREE of the original five, since 2026-08-16. The owner ruled ACCESSIBILITY
+    THREE of the original five, since 2026-08-16. The operator ruled ACCESSIBILITY
     and PERFORMANCE `always` — "in general those should always be considered" —
     so they are no longer examples of design silence at all, and asserting they
     stay silent would now be asserting the ruling did not happen. Their
@@ -1023,7 +1023,7 @@ def test_aspect_hats_ship_silent_by_design_and_switch_on_by_tag():
 
 
 def test_the_two_ruled_always_aspect_hats_are_unconditional_in_both_rosters():
-    """Owner ruling 2026-08-16, pinned on BOTH copies deliberately: unlike the
+    """Operator ruling 2026-08-16, pinned on BOTH copies deliberately: unlike the
     UX pair (whose divergence is the worked example of the dogfood VALUES rule),
     this flip lands identically in the kit's instance and in the shipped
     template, so an adopter who keeps the roster gets the same floor. The
@@ -1045,7 +1045,7 @@ def test_the_ux_pair_is_unconditional_here_and_render_gated_in_the_template():
     """The template-vs-this-repo split, made deliberately (Decision 11,
     accepted 2026-08-13u): VALUES may diverge under the dogfood rule. HERE the
     UX pair is `always` — PROJECT_STATE.html / open-items.html are real
-    owner-facing surfaces every decomposition may shape. The SHIPPED starting
+    operator-facing surfaces every decomposition may shape. The SHIPPED starting
     roster gates them on `render`/`ui`, silent-by-design for adopters with no
     UI rather than falsely universal."""
     live = {h["name"]: h for h in hats.load(ROOT)}
@@ -1055,7 +1055,7 @@ def test_the_ux_pair_is_unconditional_here_and_render_gated_in_the_template():
         assert not hats.evaluate(kit[name]["condition"], {})
         assert hats.evaluate(kit[name]["condition"], {"tags": ["render"]})
         assert hats.evaluate(kit[name]["condition"], {"tags": ["ui"]})
-        # The QUESTION is the owner's ruled text, identical in both copies —
+        # The QUESTION is the operator's ruled text, identical in both copies —
         # only the condition diverges.
         assert live[name]["asks"] == kit[name]["asks"]
         assert live[name]["listens_for"] == kit[name]["listens_for"]
@@ -1346,7 +1346,7 @@ def test_live_roster_knowledge_values_resolve_and_the_drafted_packs_say_DRAFT():
     (REVIEW-A rounds 1-3): every `knowledge` value on the LIVE roster is a
     real pack below docs/knowledge/ — resolved, not string-matched — and each
     pack the pass DRAFTED (rather than re-pointed) still carries the DRAFT
-    marker in its own header until the owner cuts it."""
+    marker in its own header until the operator cuts it."""
     live = hats.load(ROOT)
     values = [v for hat in live for v in hat.get("knowledge", ())]
     assert values, "the value-pass populated at least one knowledge cell"

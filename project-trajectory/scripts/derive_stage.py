@@ -303,7 +303,7 @@ def read(root):
     return kitstage.read_stage(root, derive)
 
 
-# --- THE PHASE RULE (ruled plan §4 + owner answer §6.1/§6.2) ------------------
+# --- THE PHASE RULE (ruled plan §4 + operator answer §6.1/§6.2) ---------------
 # EVERY ROW THIS RULE CAN ATTRIBUTE A DECREASE TO, as
 # `(id-column, spine key, the cells the DERIVATION reads)`.
 #
@@ -347,11 +347,11 @@ _ATTRIBUTED_ROWS = (
 # its finding says so rather than asking for something the row cannot carry.
 _PHASELESS_KEYS = frozenset({"bifs", "cmps"})
 
-# THE EXEMPTION, and it is exactly one permutation (owner answer §6.2): a
+# THE EXEMPTION, and it is exactly one permutation (operator answer §6.2): a
 # decrease landing precisely on DevStg-LLReqs -> DevStg-Arch is the PERMITTED
 # DECOMPOSITION CYCLE — architecture rework surfaced by breaking a requirement
 # down is within-phase churn, and any deeply decomposed problem would otherwise
-# run the phase counter up. The owner declined a wider Arch-tier exemption, so
+# run the phase counter up. The operator declined a wider Arch-tier exemption, so
 # this is a pair, not a predicate over the Arch rung: a two-rung drop that
 # happens to END at Arch is NOT exempt, and neither is Arch -> anything.
 _EXEMPT_DECREASE = (kitladder.STAGE_LLREQS, kitladder.STAGE_ARCH)
@@ -373,7 +373,7 @@ def _spine_at(root, rev):
     THE WHOLE FRAME IS READ AT `rev`, NOT HELD AT THE LIVE TREE. Holding it
     constant was tried first and is wrong: the ruled exemption is
     `DevStg-LLReqs -> DevStg-Arch`, and the Arch rung is derived from the
-    COMPONENT registry, so a frame pinned to the live tree makes the owner's one
+    COMPONENT registry, so a frame pinned to the live tree makes the operator's one
     permitted decrease unreachable — the rule would be unable to see the very
     transition it is required to forgive."""
     if _git(root, ["rev-parse", "--verify", "--quiet", rev]) is None:
@@ -462,7 +462,7 @@ def _changed_rows(live, before_rows):
 
 
 def phase_rule_findings(root):
-    """The authoring-time decrease rule (plan §4, owner answer §6.1).
+    """The authoring-time decrease rule (plan §4, operator answer §6.1).
 
     **An edit that LOWERS the effective stage must surface as a phase change.**
     When the effective stage decreased, every row this edit added or moved a
@@ -503,7 +503,7 @@ def phase_rule_findings(root):
     is "Approval as an ordinal over a derived spine stage" — it governs the
     `operator_accepts_through` dial — while this rule's obligation is "a
     spine edit that LOWERS the effective stage must surface as a phase change"
-    (ruled plan §4, owner answer §6.1). Unrelated obligations at different
+    (ruled plan §4, operator answer §6.1). Unrelated obligations at different
     tiers, so `backlink-coverage` was crediting a requirement about
     approval authority with a realization edge from a function that does
     not realize it — inflating its coverage with a false edge while leaving
@@ -622,7 +622,7 @@ def main():
 
     if args.next_phase:
         # The one derived answer to "a confirmed scope change opens a new phase —
-        # what number does it take?" (owner ruling 2026-08-01, WI-402: a phase
+        # what number does it take?" (operator ruling 2026-08-01, WI-402: a phase
         # increments on an adjudication-confirmed scope change or an approved
         # draft-SN batch, NEVER on a raw derived-value drop — a spurious window
         # must not burn a phase number). Printed bare so the intake mint helper

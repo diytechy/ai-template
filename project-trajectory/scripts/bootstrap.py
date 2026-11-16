@@ -44,7 +44,7 @@ What it creates in the destination:
     docs/requirements/components.toml          <- registries/components.template.toml
     docs/requirements/hats.toml                <- registries/hats.template.toml  (the
                                                 declared expert perspectives every
-                                                applicable decomposition faces; OWNER
+                                                applicable decomposition faces; OPERATOR
                                                 text — adopters are expected to edit)
     docs/decisions/run-000-example.toml        <- decisions.template.toml  (the
                                                 delegated-decisions record's format)
@@ -106,7 +106,7 @@ What it creates in the destination:
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
     scripts/dev-setup.{sh,ps1,command,cmd}     <- dev-setup.template.* (workstation setup)
     README.md                                  <- README.template.md (human front door; kept if one exists)
-    OWNER_SCRATCHPAD.md                        <- OWNER_SCRATCHPAD.template.md (owner-only notes; agents ignore)
+    OPERATOR_SCRATCHPAD.md                        <- OPERATOR_SCRATCHPAD.template.md (operator-only notes; agents ignore)
     scripts/run_menu.py                        (capability-menu reader the run.* launchers delegate to)
     run.{cmd,sh,command}                       <- run.template.*  (root product launchers)
     agent-resume.{cmd,sh,command}              <- agent-resume.template.*  (root agent launchers)
@@ -366,7 +366,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 # THE ONE SIBLING THIS MODULE IMPORTS, AND THE RULE IS ASSERTED, NOT PROMISED.
-# Owner ruling D-8 (`OI-16`) directed shared helpers into one shipped home and
+# Operator ruling D-8 (`OI-16`) directed shared helpers into one shipped home and
 # `bootstrap.py` to import FROM it — the INVERSION of its literal step 2, which
 # was unbuildable: `bootstrap.py` is deliberately absent from its own MAPPING
 # (the scaffolder is not shipped), so a downstream script doing `import
@@ -918,7 +918,7 @@ GATE_POLICY_FIXED_POINTS = """## Fixed points (nothing in this file overrides th
   executed is a process violation regardless of tier.
 - **The harness is still the bar** — LLM judgment supplements the checks; it
   never waives a red one.
-- **Approved owner decisions are never re-decided by an agent** — flag a
+- **Approved operator decisions are never re-decided by an agent** — flag a
   problematic one as Blocked instead.
 """
 
@@ -1126,7 +1126,7 @@ def apply_gate_policy(dest, level, dry_run):
         _write_text_lf(
             register,
             "# Gate-authority deviation register — `{level}`\n\n"
-            "**Status:** DRAFT — approve with the owner, then keep in version "
+            "**Status:** DRAFT — approve with the operator, then keep in version "
             "control.\n"
             "**What this is:** this repo declares the `{level}` gate authority "
             "(`docs/process.toml` `[authority] operator_accepts_through` "
@@ -1308,7 +1308,7 @@ LEGACY_CONFIG = (
 _first_declared_line = _kitconfig.first_declared_line
 
 
-# The dial's RETIRED KEY NAME (WI-499, owner-ruled 2026-08-21: "ratification  # check_vocab: allow
+# The dial's RETIRED KEY NAME (WI-499, operator-ruled 2026-08-21: "ratification  # check_vocab: allow
 # holds a weight to it that the semantics here don't need" — check_vocab: allow,
 # a declaration site must name the retired word). A repo scaffolded
 # before this rename still carries `human_ratification_through` in  # check_vocab: allow
@@ -1394,7 +1394,7 @@ def _migrate_dial_ordinal(dest, notes, dry_run):
     it), or when the dial is absent or already a rung. A number OUTSIDE the
     retired range is left alone and named in `notes` rather than guessed at:
     there is no rung it meant, and an out-of-range dial is the one input that
-    reads as LESS operator involvement than the owner asked for, so a migrator that
+    reads as LESS operator involvement than the operator asked for, so a migrator that
     picked a value for it would be making an approval-authority decision.
 
     Implements: SR-138, LLR-156
@@ -1749,7 +1749,7 @@ STACK_IN_FLIGHT = (
 # (check_docs S-3: every owner ask has its brief); the In-flight OI-4..6 are
 # driver work and need none. WI-322 retired the markdown surface — briefs are
 # ROWS in docs/requirements/open-items, rendered into the generated
-# docs/open-items.html the owner reads — so the brief is APPENDED as a row
+# docs/open-items.html the operator reads — so the brief is APPENDED as a row
 # instead of spliced above a marker.
 #
 # KEYS, not a positional tuple, since the carrier moved to TOML (repo-lock
@@ -1877,7 +1877,7 @@ def append_stack_checklist(dest, stack, dry_run):
     )
     _write_text_lf(status, text)
     # OI-3 is a Needs-<operator> ask, so it owes a brief (check_docs S-3): append it
-    # as a row of the open-items registry, which the generated owner surface
+    # as a row of the open-items registry, which the generated operator surface
     # renders, together with its queued placeholder row (WI-790), which is what
     # puts the decision on the queue. Idempotent — re-running bootstrap must not
     # file OI-3 or its row twice.
@@ -2220,7 +2220,7 @@ def initialize_generated_docs(dest, created):
         return
     for rel_cmd in (
         ["scripts/trace.py"],
-        # WI-322: the owner decision surface is a fully-generated file, so a
+        # WI-322: the operator decision surface is a fully-generated file, so a
         # MISSING one reads as stale to its freshness gate (the C9 posture its
         # siblings take). Seeding it here is what keeps a fresh scaffold green
         # on its first `check.py` — the scaffolded registry already carries the

@@ -1034,7 +1034,7 @@ def test_a_retitle_plus_content_edit_does_not_redate_the_clock(tmp_path):
     file — and `--diff-filter=AM` drops a rename whatever else the same commit
     did (git scores it `R<similarity>`, never `M`). A downstream author who
     re-affirms by re-titling therefore keeps the pre-edit clock and the warn does
-    not clear. The owner ruled (2026-07-29) to state that in the warn text rather
+    not clear. The operator ruled (2026-07-29) to state that in the warn text rather
     than build rename detection; if a later WI builds the detection, this
     assertion is the one it must consciously flip."""
     run_git = git_repo(tmp_path)

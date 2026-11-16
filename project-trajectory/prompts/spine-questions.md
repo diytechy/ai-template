@@ -17,7 +17,7 @@
      the first `## ` heading is not composed. Keep the section numbers: other
      kit text cites them (e.g. "§2(c)").
 
-     §3's first bullet (WI-911) is ruling 5 of the review-churn plan's owner
+     §3's first bullet (WI-911) is ruling 5 of the review-churn plan's operator
      rulings of 2026-10-11, as revisions 35 and 36 refine it: an LLR in
      contract voice, no implementation carrier in row text, and the traced
      `module` and `code_symbol` cells kept filled and binding until the plan's
@@ -88,7 +88,7 @@ Questions:
   alone?** The honest test of a need. Where the answer is no, the defect is in
   the need — file it as a needs defect, not as an SR problem.
 - **(e) Does the acceptance intent name an INSTRUMENT?** The no-concrete-artifact
-  rule reaches this tier too (owner directive 2026-08-18, extending it from SR up
+  rule reaches this tier too (operator directive 2026-08-18, extending it from SR up
   to SN), and it bites hardest here: the SN `acceptance` cell is where a need
   quietly becomes a sentence about a file. "`trace.py --strict` reports zero
   orphans" fixes a *stakeholder outcome* to one script — it cannot survive the

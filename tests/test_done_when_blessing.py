@@ -6,7 +6,7 @@ Done-when uses it. The one predicate (`kitlib.done_when.blessing_owed`) is
 asked at the lane's next build dispatch (`agent_loop.build_hold`, through
 `worker_endstate`), at a hand close (`integrate.py done-when-hold`, the
 pre-commit hook's `done-when-blessed` step) and at the merge slot
-(`integrate._done_when_refusal`); a verdict line or an owner ruling that binds
+(`integrate._done_when_refusal`); a verdict line or an operator ruling that binds
 the exact text's digest releases all three, and a text changed after it holds
 them again. At merge, intake mints the goalposts row only for an uncovered
 close. One combined sitting composes every pending in-lane judgement.
@@ -275,7 +275,7 @@ def test_a_covering_verdict_releases_the_dispatch_and_the_close(tmp_path, outcom
     assert integrate._done_when_refusal(trunk, BRANCH, [WI]) is None
 
 
-def test_an_owner_ruling_binding_the_digest_releases_and_an_unseen_one_does_not(
+def test_an_operator_ruling_binding_the_digest_releases_and_an_unseen_one_does_not(
     tmp_path,
 ):
     """Implements: TC-326"""
@@ -288,9 +288,9 @@ def test_an_owner_ruling_binding_the_digest_releases_and_an_unseen_one_does_not(
     )
     _write(lane, "docs/decisions/wi-007.toml", entry)
     _commit(lane, "decisions: the ruling, not yet seen")
-    assert _dispatch_hold(lane) is not None, "an entry the owner has not seen"
-    _write(lane, "docs/decisions/wi-007.toml", entry + 'owner = "confirmed"\n')
-    _commit(lane, "decisions: the owner confirms")
+    assert _dispatch_hold(lane) is not None, "an entry the operator has not seen"
+    _write(lane, "docs/decisions/wi-007.toml", entry + 'operator = "confirmed"\n')
+    _commit(lane, "decisions: the operator confirms")
     assert _dispatch_hold(lane) is None
     assert _merge_refusal(trunk, lane) is None
 
@@ -299,7 +299,7 @@ def test_a_confirmed_ruling_still_carrying_the_retired_reviewed_key_does_not_rel
     tmp_path,
 ):
     """An entry still carrying the retired `reviewed` key reads as NOT YET
-    SEEN whatever its `owner` says (kitlib.decisions), so its matching digest
+    SEEN whatever its `operator` says (kitlib.decisions), so its matching digest
     covers nothing and the hold stands.
 
     Implements: TC-326
@@ -311,7 +311,7 @@ def test_a_confirmed_ruling_still_carrying_the_retired_reviewed_key_does_not_rel
         "[decision.D-001]\n"
         'decided = "WI-007 renders at 30 fps."\nalternative = "60 fps."\n'
         'reversal_cost = "One line."\nwhy_not_escalated = "Owner ruled."\n'
-        'review = ""\ndone_when = "{}"\nowner = "confirmed"\n'
+        'review = ""\ndone_when = "{}"\noperator = "confirmed"\n'
         "{} = true\n".format(_digest(), kdecisions.RETIRED_KEY)
     )
     _write(lane, "docs/decisions/wi-007.toml", entry)
@@ -1602,18 +1602,18 @@ _RULING_REL = "docs/decisions/{}.toml".format(BRANCH)
 
 
 def _ruling(bound):
-    """An owner-confirmed decisions entry binding the Done-when digest `bound`."""
+    """An operator-confirmed decisions entry binding the Done-when digest `bound`."""
     return (
         "[decision.D-001]\n"
         'decided = "WI-007 renders at 30 fps."\nalternative = "60 fps."\n'
         'reversal_cost = "One line."\nwhy_not_escalated = "Owner ruled."\n'
-        'review = ""\ndone_when = "{}"\nowner = "confirmed"\n'.format(bound)
+        'review = ""\ndone_when = "{}"\noperator = "confirmed"\n'.format(bound)
     )
 
 
 def _stage_blessing(root, blessing):
     """Stage, in `root`'s index, the lane's recorded verdict on the narrowed
-    Done-when, or the owner-confirmed ruling binding its digest."""
+    Done-when, or the operator-confirmed ruling binding its digest."""
     if blessing == "verdict":
         line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
         _write(root, _VERDICT_REL, line)
@@ -1673,7 +1673,7 @@ def test_a_trunk_commit_deleting_a_claim_copy_is_held_and_no_blessing_releases_i
 ):
     """A trunk commit whose delta only deletes the claim copy under
     `active/<branch>/` leaves the claimed row with no copy, so it is held
-    naming why, and neither a covering verdict nor an owner ruling releases
+    naming why, and neither a covering verdict nor an operator ruling releases
     it: the kit has no route that returns a claimed spec to the queue.
 
     Implements: TC-325

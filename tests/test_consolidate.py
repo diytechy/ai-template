@@ -691,7 +691,7 @@ def test_a_queued_judgement_that_would_run_first_refuses_by_name(tmp_path):
 
 def test_prior_labels_a_hand_consolidation_as_unjudged():
     """The judge reads `{prior}` before absorbing anything, and the brief tells
-    it that overturning an earlier consolidation pages the owner. A hand
+    it that overturning an earlier consolidation pages the operator. A hand
     consolidation carries no judgement to overturn, so its line says so.
 
     Implements: TC-208
@@ -735,7 +735,7 @@ def test_a_successor_is_read_from_lineage_and_not_from_how_many_it_absorbed():
 
 def test_re_absorbing_a_row_a_consolidation_minted_is_refused_by_name():
     """Overturning a consolidation is a RETURN-TO-DRAFT of THAT judgement (plan
-    §1.3) — the owner's to rule, never a second machine mint. Distinct from
+    §1.3) — the operator's to rule, never a second machine mint. Distinct from
     `intake._supersedes_refusal`'s absorbed arm, which refuses continuing a row
     somebody already absorbed (a lineage chain).
 

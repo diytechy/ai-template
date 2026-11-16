@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """overnight_legs.py — run coordinator sessions back to back, unattended, as
-headless `claude -p` legs (owner, 2026-10-09: "Headless leg loop").
+headless `claude -p` legs (operator, 2026-10-09: "Headless leg loop").
 
 Why it exists: one coordinator session holds about five rows before the 50%
 context guard latches, and the guard's own relaunch fires only when a session
@@ -18,7 +18,7 @@ foreground cap (the plain environment variable is not read).
 
 A run is an autonomous run, marked (review-churn plan revisions 35, "The
 coordinator role", and 36, "Headless coordinator legs are marked now"; the
-owner's 2026-10-14 split ruling; docs/decisions/coordinator-2026-10-14.toml
+operator's 2026-10-14 split ruling; docs/decisions/coordinator-2026-10-14.toml
 D-015 and D-016):
   - the marker. Before the first leg the launcher calls the kit's
     `provenance.mark_loop_process()` once, in its own process, and logs the
@@ -47,7 +47,7 @@ Stops (never retries blindly):
     empty; the provenance note is empty; no `claude` resolves on PATH; the
     trunk reader refuses (the run prints its message);
   - the newest handoff carries the line `Overnight: stop` (queue drained, or
-    nothing can move without the owner);
+    nothing can move without the operator);
   - exit 3, before a leg: the snapshot does not hold the bound trunk, or the
     checkout is not on it (its HEAD is detached, unreadable or unparseable,
     or names another branch);
@@ -89,7 +89,7 @@ trunk is off procedure while landings are squashes after `check-lane` (once
 WI-808 puts landings on the merge slot, its trailer rung judges the lane it
 merges). The audit judges provenance only, not which branches a leg may
 move: a marked commit on a branch the lane rule reads as a person's (`main`
-included) passes it, and the owner-held steps belong to the procedure (the
+included) passes it, and the operator-held steps belong to the procedure (the
 coordinator-cycle skill's headless-leg section), not to the audit. Until
 WI-925 declares the trunk's name, `check-lane` reads trunk at its own run as
 the branch the primary checkout is on at that moment, or, when the primary

@@ -1229,7 +1229,7 @@ def _waiting_item(wid, title, by_id, status):
 
 def _blocked_item(record, title):
     """One Next-work line for a row an open item holds: the row, then each
-    pending item that holds it, named and linked to the owner surface's card.
+    pending item that holds it, named and linked to the operator surface's card.
 
     Implements: SR-054, LLR-115
     """

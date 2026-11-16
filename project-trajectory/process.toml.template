@@ -35,7 +35,7 @@
 #      act, nor survive as a one-line reviewed diff.
 #   3. `docs/stage` — a GENERATED CACHE (derive_stage.py), not configuration.
 #   (There used to be a fourth exception here — the six CHECK-ENABLEMENT
-#   toggles stay one-word files, WI-423. It is OVERTURNED, owner 2026-08-11:
+#   toggles stay one-word files, WI-423. It is OVERTURNED, operator 2026-08-11:
 #   "creating files to toggle something off is also very confusing … far
 #   better to tie those into process.toml and key them all to on / true."
 #   They are now the [checks] section at the bottom of this file. The ruling
@@ -45,7 +45,7 @@
 #   The cost the old text priced is real and is PAID, not hidden: the hooks
 #   never read these six, so folding them widens no hook's read, and each
 #   independently-copyable checker grows its own small
-#   `tomllib` read (F5 — no shared `_kitcommon.py`, owner 2026-07-12). Every
+#   `tomllib` read (F5 — no shared `_kitcommon.py`, operator 2026-07-12). Every
 #   checker also keeps reading its legacy one-word file as a MIGRATION-WINDOW
 #   fallback, the way check_privacy.py reads `docs/privacy-check` — see the
 #   [checks] header for the expiry.)
@@ -101,7 +101,7 @@
 #
 # WHO THE OPERATOR MAY BE on a held rung (a person, and which sessions may
 # take the act for them) is stated once, with its enforcer, in process.md
-# §4 "A held rung's approval is the owner's act". Read it there.
+# §4 "A held rung's approval is the operator's act". Read it there.
 #
 # IT WAS A 0-4 ORDINAL UNTIL WI-493 (OI-21 shape (ii)). A repo that still
 # carries the number is READ, TRANSLATED AND WARNED — not refused — and,
@@ -149,13 +149,13 @@ complete_sample_rate = 4
 #                    check: no round.
 #   "always"       — every adjudication gets one
 adjudication_review = "when-minting"
-# Whether a DELEGATED run owes the owner a record of the calls it made on the
-# owner's behalf — one TOML file per run under docs/decisions/, one entry per
+# Whether a DELEGATED run owes the operator a record of the calls it made on the
+# operator's behalf — one TOML file per run under docs/decisions/, one entry per
 # decision, each saying what was decided, the alternative, the reversal cost and
-# why it was not escalated, with a `review` cell the owner fills in place. The
+# why it was not escalated, with a `review` cell the operator fills in place. The
 # format and the routing doctrine are process-options.md "Delegated decisions
-# record". The dial allocates the owner's reading; it never moves what must go
-# to the owner through the process's exits — those bind at every setting.
+# record". The dial allocates the operator's reading; it never moves what must go
+# to the operator through the process's exits — those bind at every setting.
 #   "off"            — no record is owed (the shipped value)
 #   "record"         — a delegated run's close owes its record: the merge slot
 #                      refuses a lane that closed its work without one, and
@@ -199,7 +199,7 @@ guardrails = "off"
 # handoff and end, with no relaunch. An empty value, or `start == end` as
 # shipped below, DISABLES it.
 #
-# SHIPPED DISABLED, SHAPE KEPT (owner ruling 2026-08-11). This used to ship
+# SHIPPED DISABLED, SHAPE KEPT (operator ruling 2026-08-11). This used to ship
 # `"12:00-19:00"` — the kit author's own operating window — and every adopter
 # inherited a business-hours blackout in a timezone they did not choose. The
 # asymmetry decided it: a shipped-EMPTY dial an adopter forgets costs some
@@ -233,7 +233,7 @@ trunk = "main"
 observation_min_work_items = 10
 # IS THIS CHECK ON. Six dials that used to be one-word files under docs/ and
 # that no scaffold ever wrote, so ABSENCE was the declaration — which is what
-# the owner overturned WI-423 over (2026-08-11): a repo that has decided
+# the operator overturned WI-423 over (2026-08-11): a repo that has decided
 # nothing and a repo that never heard of the layer looked identical, and the
 # only way to switch a check off was to CREATE a file. They are keys now, and
 # every one of them ships VISIBLE so the decision is readable at a glance.
@@ -245,7 +245,7 @@ observation_min_work_items = 10
 #
 # WHO READS THEM, and the cost that buys: `check_trajectory.py` (the first
 # three), `gen_okf.py`, `subagent_gate.py`, `agent_loop.py`. The first three of
-# those import nothing of the coordinator layer — F5 (owner 2026-07-12, no
+# those import nothing of the coordinator layer — F5 (operator 2026-07-12, no
 # shared `_kitcommon.py`) keeps every kit script independently copy-able — so
 # each carries its OWN small `tomllib` read of this section. That duplication
 # is deliberate and BOUNDED BY A TEST: `tests/test_rule_sync.py` drives the
@@ -447,7 +447,7 @@ final_reviewer = "fresh"
 # session is told to stop starting lanes, bring in-flight rows to a safe point,
 # write its handoff and request a relaunch, which runs at its session end. The
 # latch never clears on a lower reading; only the relaunched successor's lease
-# take or the owner's recorded clear clears it, and no lease ever passes
+# take or the operator's recorded clear clears it, and no lease ever passes
 # because time went by. Claude Code only; the procedure is the session-protocol
 # skill's.
 #

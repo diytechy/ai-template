@@ -62,7 +62,7 @@ for _k in [k for k in os.environ if k.startswith("AGENT_")]:
 
 # The codex adapter reads a thread's rollout under the inherited CODEX_HOME, or
 # under codex's default home (`~/.codex`) when none is set (WI-787), so a test
-# would otherwise read the owner's real rollouts. Pin it to a home that does not
+# would otherwise read the operator's real rollouts. Pin it to a home that does not
 # exist; a test that needs a codex home sets its own (or unsets this one).
 os.environ["CODEX_HOME"] = str(ROOT / "tests" / "_no-codex-home")
 
@@ -78,7 +78,7 @@ os.environ["CODEX_HOME"] = str(ROOT / "tests" / "_no-codex-home")
 # and that each name below is a real test module.
 #
 # WI-281 re-tiered this set to a BUDGET. A smoke test answers "is it basically
-# alive?", so the commit checks must run <= 60 s wall at -n auto (owner directive
+# alive?", so the commit checks must run <= 60 s wall at -n auto (operator directive
 # 2026-07-23). At 1378 tests the WI-122 opt-out default had inverted its own
 # purpose: 1088/1378 (79%) ran per commit at ~6 min wall (measured 351 s), so
 # the "smoke" bar re-ran most of the full suite every commit. The line below is
@@ -1632,11 +1632,11 @@ def seed_row(root, srs=(), llrs=None, tcs=None, tags=None, sr_refs=None):
 # outside the window recorded the module as "not reproduced ... flaky". It is
 # not flaky; it is deterministic in the clock.
 #
-# WI-433 (owner ruling 2026-08-11) removed the source rather than only the
+# WI-433 (operator ruling 2026-08-11) removed the source rather than only the
 # symptom: the template now ships the dial DISABLED (`"12:00-12:00"`,
 # `start == end`), keeping the window SHAPE so an adopter can still read the
 # format off the line they edit. This repo's OWN dial is unchanged and still
-# the owner's to set.
+# the operator's to set.
 #
 # Everything below therefore stays, as defence in depth rather than as the only
 # defence. Test scaffolds still opt out explicitly through the dial's own
@@ -1752,8 +1752,8 @@ def _no_loop_marker_leaks():
 
 
 @pytest.fixture(autouse=True)
-def _no_owner_token_file(monkeypatch):
-    """WI-846: no test reads the owner's real long-lived token. The variable
+def _no_operator_token_file(monkeypatch):
+    """WI-846: no test reads the operator's real long-lived token. The variable
     naming its file, and the variable the Claude CLI reads a token from, are
     removed from every test's environment; a test that needs a token writes a
     canary file of its own."""
@@ -1762,10 +1762,10 @@ def _no_owner_token_file(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _no_owner_account_homes(monkeypatch, tmp_path_factory, request):
+def _no_operator_account_homes(monkeypatch, tmp_path_factory, request):
     """WI-798: account homes live under the user configuration directory
     (`%APPDATA%` on Windows, `$XDG_CONFIG_HOME` on POSIX), shared by every
-    repository on the box. No test reads, or creates a home in, the owner's
+    repository on the box. No test reads, or creates a home in, the operator's
     real one: each test gets a temporary one of its own, named under the
     basetemp and created only if something writes there."""
     tag = hashlib.sha256(request.node.nodeid.encode("utf-8")).hexdigest()[:16]

@@ -14,7 +14,7 @@ POSITION SWAP (required): run this prompt TWICE — second run with A and B
 swapped. The selections must agree; if they differ, the round is
 position-unstable: page the operator, do not average or re-roll.
 
-Slots: {{OWNER_PROMPT}} = the owner's original goal prompt, verbatim;
+Slots: {{OPERATOR_PROMPT}} = the operator's original goal prompt, verbatim;
 {{GOAL_BRIEF}}, {{RUBRIC}} as for the critic; {{COVERAGE_REPORT}} = the
 coverage report over the two REVISED plans; {{PLAN_A}}, {{PLAN_B}} = the
 revised, anonymized plans.
@@ -37,9 +37,9 @@ Warnings that apply to you specifically, as an LLM judge:
 
 ## Inputs
 
-### The owner's original prompt (the intent you are serving)
+### The operator's original prompt (the intent you are serving)
 
-{{OWNER_PROMPT}}
+{{OPERATOR_PROMPT}}
 
 ### Goal brief (numbered clauses)
 
@@ -66,7 +66,7 @@ Warnings that apply to you specifically, as an LLM judge:
 1. **Per-anchor comparison first.** For each rubric anchor, one line: which
    plan satisfies it better and why, citing rows. Do this before any overall
    judgment — the anchors discipline the comparison.
-2. **Select one plan.** The plan that better serves the owner's prompt on the
+2. **Select one plan.** The plan that better serves the operator's prompt on the
    anchors, coverage honesty, and buildable order — not the longer one.
 3. **Port coverage-closing deltas.** For each goal clause the losing plan
    covers and the selected plan does not (see the coverage diff): either port

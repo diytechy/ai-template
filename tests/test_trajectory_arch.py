@@ -800,7 +800,7 @@ def test_an_owner_that_never_declares_is_the_reverse_checks_warn_not_the_gates(
     # The ruled rule is "a DECLARED seam with no body". An owner that declares
     # nothing is the owner-exact reverse check's warn (the migration list, not a
     # defect in a stated definition) — the dodge that leaves is on record in
-    # the gate's docstring and is the owner's to promote.
+    # the gate's docstring and is the operator's to promote.
     root = _gate_repo(tmp_path, '"""A, silent."""\n')
     proc = run_traj(root, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr

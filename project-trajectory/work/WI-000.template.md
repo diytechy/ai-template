@@ -48,7 +48,7 @@ Three consequences worth stating, because they are the reason for the shape:
   `blocked/` directory. A lane that cannot finish CLOSES PARTIAL — its spec
   moves to the terminal `partial/` with an immutable handback report — and the
   adjudicator judges that handback, queueing a successor or minting an open
-  item. The one exception is a planned owner-held step (process.md §5, "Open items").
+  item. The one exception is a planned operator-held step (process.md §5, "Open items").
   Parking a lane by renaming its branch ref is BANNED (OI-70): a lane
   must close or it gets lost, and the harness reports any `active/<branch>/`
   claim with no matching branch ref. (`blocked` survives as a status WORD in

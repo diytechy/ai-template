@@ -1183,8 +1183,8 @@ def test_git_success_returns_stdout_only_unchanged(tmp_path):
     assert "seed with a warning" in out  # stdout summary preserved, unchanged
 
 
-def test_substantive_dirty_drops_owner_scratchpad(tmp_path):
-    # WI-203: OWNER_SCRATCHPAD.md is perpetually owner-edited, so the loop's
+def test_substantive_dirty_drops_operator_scratchpad(tmp_path):
+    # WI-203: OPERATOR_SCRATCHPAD.md is perpetually operator-edited, so the loop's
     # dirty-tree signal drops it — the raw primitive still counts it, but the
     # substantive view (used by the resume note + done detection) reads clean.
     loop = load_script("agent_loop")
@@ -1195,12 +1195,12 @@ def test_substantive_dirty_drops_owner_scratchpad(tmp_path):
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "a@b.com")
     _git(repo, "config", "user.name", "A")
-    (repo / "OWNER_SCRATCHPAD.md").write_text("notes\n", encoding="utf-8")
+    (repo / "OPERATOR_SCRATCHPAD.md").write_text("notes\n", encoding="utf-8")
     (repo / "a.txt").write_text("hi\n", encoding="utf-8")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "seed")
-    # only the owner scratchpad is dirty -> raw sees it, substantive does not
-    (repo / "OWNER_SCRATCHPAD.md").write_text("edited\n", encoding="utf-8")
+    # only the operator scratchpad is dirty -> raw sees it, substantive does not
+    (repo / "OPERATOR_SCRATCHPAD.md").write_text("edited\n", encoding="utf-8")
     assert len(loop.working_tree_dirty(repo)) == 1  # the primitive stays honest
     assert loop.substantive_working_tree_dirty(repo) == []  # the loop reads clean
     # a real deliverable still counts; the scratchpad is still dropped
@@ -1210,13 +1210,13 @@ def test_substantive_dirty_drops_owner_scratchpad(tmp_path):
     assert len(loop.working_tree_dirty(repo)) == 2  # raw counts both
 
 
-def test_owner_scratchpad_dirty_at_start_injects_nothing(loop_repo):
-    # WI-203: an owner-only-dirty tree at loop start is NOT interrupted residue —
+def test_operator_scratchpad_dirty_at_start_injects_nothing(loop_repo):
+    # WI-203: an operator-only-dirty tree at loop start is NOT interrupted residue —
     # no WI-076 reconcile note, no dirty line logged (the prompt stays
     # byte-identical to the clean default), so the note fires only on real residue.
     repo, ctl, template = loop_repo
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
-    (repo / "OWNER_SCRATCHPAD.md").write_text("owner edit\n", encoding="utf-8")
+    (repo / "OPERATOR_SCRATCHPAD.md").write_text("operator edit\n", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     prompt = (ctl / "prompt.txt").read_text(encoding="utf-8")

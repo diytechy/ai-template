@@ -25,7 +25,7 @@ the spec's optional `timestamp` field is deliberately omitted so the freshness
 gate stays byte-stable). `docs/okf/UPSTREAM.md` pins the targeted spec version;
 re-targeting is a visible, human-reviewed bump, never silent drift.
 
-On by default, opt-out (owner ruling): `docs/process.toml` `[checks]
+On by default, opt-out (operator ruling): `docs/process.toml` `[checks]
 okf_export = false` silences everything — else, for the SN-028 migration
 window, the one word `off` in the legacy `docs/okf-export`. A placeholder-only
 or absent registry emits nothing and passes vacuously, so a fresh scaffold and
@@ -67,7 +67,7 @@ from pathlib import Path
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
 
-# The shipped shared-helper package (owner ruling D-8, `OI-16`): the
+# The shipped shared-helper package (operator ruling D-8, `OI-16`): the
 # declared-policy readers and the spine ROW vocabulary this module used to
 # spell out itself.
 from kitlib import config as _kitconfig
@@ -175,13 +175,13 @@ def read_enabled(root):
     """Whether the OKF export layer is on. `docs/process.toml` `[checks]
     okf_export = false` opts out; else (migration window) the one word `off` in
     the legacy `docs/okf-export`; absent or any other value reads on (the
-    owner-ruled default-on posture)."""
+    operator-ruled default-on posture)."""
     declared = _process_check(root, "okf_export")
     if declared is not None:
         return declared
     p = root / LEGACY_POLICY
     if not p.exists():
-        return True  # absent = on (the owner-ruled default-on posture)
+        return True  # absent = on (the operator-ruled default-on posture)
     for ln in p.read_text(encoding="utf-8").splitlines():
         ln = ln.strip()
         if ln and not ln.startswith("#"):

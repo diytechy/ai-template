@@ -51,7 +51,7 @@ classes links can't see, with false-positive control as the design center
      retired). You *assert* a symbol exists and the check holds you to it.
      No scannable source / files mode -> the tier skips cleanly (a
      non-Python stack degrades gracefully).
-  3. REGISTRY TIER (WI-394, owner ruling R2 2026-08-01, option (c)): the
+  3. REGISTRY TIER (WI-394, operator ruling R2 2026-08-01, option (c)): the
      spine's Evidence-class cells — TC `Evidence`, LLR `Module`/`CodeSymbol`/
      `TestRefs`, the four pointers OUT of the registries into the code and
      test tree — must cite files that EXIST. These cells are exactly what
@@ -221,7 +221,7 @@ def is_path_shaped(token):
         return False
     # `;`/`,` join a list of paths — not a single filesystem path, so they
     # stay out of the path tier's scope (false-positive control is the point).
-    # `::` used to keep a whole pytest node id out with them; WI-394 (owner
+    # `::` used to keep a whole pytest node id out with them; WI-394 (operator
     # ruling R2, option (c)) RE-SCOPED that guard: a node id
     # (tests/x.py::test_name — the kit's sanctioned Evidence form) is a real
     # FILE plus a selector, so the file half is judged like any path while the
@@ -587,7 +587,7 @@ def _row_bindings(root, mods, cache):
 
 def symbol_findings(root):
     """`(dangling, untraced, advisory, unbound)` for the LLR `CodeSymbol` ANCHOR rule
-    (WI-429, approved as built by owner ruling OI-20 2026-08-13).
+    (WI-429, approved as built by operator ruling OI-20 2026-08-13).
 
     THE RULE: a live LLR row must carry at least ONE identifier-shaped
     `CodeSymbol` token that BINDS in one of the `.py` modules its `Module` cell
@@ -735,7 +735,7 @@ def unbound_modules(root, anchored, cache):
     anchored row lists in which none of its identifier tokens binds.
 
     A design row's `module` cell lists the modules holding its `code_symbol`
-    entries (the coordinator's ruling on the cell, open to the owner's
+    entries (the coordinator's ruling on the cell, open to the operator's
     overturn), so a listed module holding none of them sends a reader to the
     wrong file, and the union anchor above lets it pass. The count is
     untraced-class, never dangling and never the exit code: most such rows

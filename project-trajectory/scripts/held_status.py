@@ -348,7 +348,7 @@ MARKED_SPINE = acceptance_record.PARENT_FIRST_CSVS
 HELD_REMEDY = (
     "a held-rung row's approval lands from a lane only as a CLARITY "
     "re-attestation whose recorded verdict binds the row's approved text; "
-    "leave the approval to the owner, or re-sit the row and take the act "
+    "leave the approval to the operator, or re-sit the row and take the act "
     "from that verdict"
 )
 

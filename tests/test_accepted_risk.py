@@ -7,7 +7,7 @@ stood in the act that accepted it: a later change to either, even one
 re-approved on its own, or a failed sample added after the act, reopens it,
 and it reads UNPROVEN, naming the trigger, until an act accepts the risk
 again. A passing result restores nothing: an assumption carries no evidence
-level (owner ruling 2026-10-02), and a passed sample proves nothing beyond
+level (operator ruling 2026-10-02), and a passed sample proves nothing beyond
 itself. Time alone never reopens it, and the order of a failed sample is read
 from commit ancestry, never from the timestamp the record carries.
 
@@ -91,7 +91,7 @@ assumption = "A reviewer reads the brief before approving."
 holds_when = "The brief is short enough to read in one sitting."
 obstacle = "The brief grows past what one sitting reads."
 falsifier = "An approval recorded before the brief was opened."
-accepted_risk = "No reviewer population to sample yet; proceeding on the owner's say-so."
+accepted_risk = "No reviewer population to sample yet; proceeding on the operator's say-so."
 status = "Drafted"
 standing = "active"
 """

@@ -13,11 +13,11 @@ lanes, and compaction then degrades it. This module is the whole guard:
   `out/coordinator/`. It passes in exactly three ways: to the relaunched
   successor at its `SessionStart`, by the holder's recorded hand-back naming
   the handoff it closed with (freeing it for the next session's take), or by
-  the owner's recorded release of a holder that has gone. Time never
+  the operator's recorded release of a holder that has gone. Time never
   transfers it;
 - **the drain latch** (`latch_reading`): the first reading at or above the
   declared threshold latches drain mode in the lease, and only the successor's
-  take, the holder's hand-back (which frees the lease with it) or the owner's
+  take, the holder's hand-back (which frees the lease with it) or the operator's
   recorded clear or release unlatches it;
 - **the admission boundary** (`claim_refusal`): the work-item claim calls it on
   every route except the live dispatcher's;
@@ -227,7 +227,7 @@ BLACKOUT_INSTRUCTION = (
     "adjudication of an active claim where a step needs it (the session "
     "service admits that one call); a lane whose next step is a review, rework "
     "or any launch the window refuses stops there; (2) write the handoff naming "
-    "each lane and its next obligation; (3) end the session. The owner resumes "
+    "each lane and its next obligation; (3) end the session. The operator resumes "
     "after the window."
 )
 BLACKOUT_DENIAL = (
@@ -483,10 +483,8 @@ def take(root, session_id, transcript=None, ask=None):
         if lease.get("holder") == session_id:
             return None  # already held: a re-take never unlatches
         if lease.get("holder"):
-            return (
-                "the coordinator lease is held by {}; the owner releases it: {}".format(
-                    _holder_line(lease), _guard_command('release --reason "<why>"')
-                )
+            return "the coordinator lease is held by {}; the operator releases it: {}".format(
+                _holder_line(lease), _guard_command('release --reason "<why>"')
             )
         _install(directory, lease, session_id, transcript, root, "take")
     return None
@@ -511,7 +509,7 @@ def _install(directory, lease, session_id, transcript, root, how):
 
 
 def release(root, reason):
-    """The owner's release: frees the lease, recorded with `reason`.
+    """The operator's release: frees the lease, recorded with `reason`.
 
     Implements: SR-229, LLR-300
     """
@@ -525,7 +523,7 @@ def release(root, reason):
 
 
 def clear(root, reason):
-    """The owner's clear: unlatches drain mode, recorded with `reason`.
+    """The operator's clear: unlatches drain mode, recorded with `reason`.
 
     Implements: SR-229, LLR-300
     """
@@ -620,7 +618,7 @@ def _ownership_refusal(lease, session_id):
     if session_id != lease["holder"]:
         return (
             "coordinator guard: the coordinator lease is held by {}, not by "
-            "this caller (session {}); only the coordinator claims. The owner "
+            "this caller (session {}); only the coordinator claims. The operator "
             "releases a lease whose session has ended: {}"
         ).format(
             _holder_line(lease),
@@ -1264,7 +1262,7 @@ def hand_back(root, handoff, session_id):
     """The holder's hand-back at its close-out: frees the lease, its latch
     with it, recorded with the handoff it closed with, so the next session's
     take succeeds. Refuses another caller first, whatever handoff it names
-    (the owner releases a holder that has gone), then a handoff with no
+    (the operator releases a holder that has gone), then a handoff with no
     session prompt, then the holder's own pending relaunch request (its
     successor takes the lease at its start). A previous holder's request
     never blocks it: it is left for session_end's foreign-request refusal.
@@ -1281,7 +1279,7 @@ def hand_back(root, handoff, session_id):
         lease = _load(directory)
         refusal = _not_holder(lease, session_id, "hands the lease back")
         if refusal:
-            return "{}; the owner releases a lease whose holder has gone: {}".format(
+            return "{}; the operator releases a lease whose holder has gone: {}".format(
                 refusal, _guard_command('release --reason "<why>"')
             )
         if promptless:
@@ -1645,7 +1643,7 @@ def _parser():
     p.add_argument("--session", default=None)
     p.add_argument("--transcript", default=None)
     for name in ("release", "clear"):
-        p = sub.add_parser(name, help="the owner's {} (recorded)".format(name))
+        p = sub.add_parser(name, help="the operator's {} (recorded)".format(name))
         p.add_argument("--reason", required=True)
     p = sub.add_parser("request-relaunch", help="request the relaunch from a handoff")
     p.add_argument("--handoff", required=True)

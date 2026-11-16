@@ -521,7 +521,7 @@ def test_the_arms_list_at_their_rungs_and_the_stage_fold_takes_no_interface(
 
 
 # --- TC-238: the release half (SR-206) -----------------------------------------
-# An assumption carries no evidence level (owner ruling 2026-10-02), so release
+# An assumption carries no evidence level (operator ruling 2026-10-02), so release
 # asks no assumption for a passing result: it reads standing. Each assumption is
 # cited by one requirement. DA-001 is active with no result at all, and DA-002
 # active beside a failing observation that no person has acted on: both pass,

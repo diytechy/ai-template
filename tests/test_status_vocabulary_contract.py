@@ -103,7 +103,7 @@ NON_INSTRUCTING_KIT_DOCS = {
     "CLAUDE.stub.template.md": "a three-line pointer at AGENTS.md; teaches nothing",
     "GEMINI.stub.template.md": "the same stub for a second agent",
     "LOG.template.md": "an empty append-only log; records, never instructs",
-    "OWNER_SCRATCHPAD.template.md": "the owner's free-form notes surface",
+    "OPERATOR_SCRATCHPAD.template.md": "the operator's free-form notes surface",
     "PLAN.template.md": "an empty plan surface a session fills",
     "STATUS.template.md": "the scaffolded status surface, filled per repo",
     "RUNTIME_FLOWS.template.md": "an authored-narrative shell",

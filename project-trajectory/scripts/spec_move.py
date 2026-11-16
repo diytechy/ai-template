@@ -242,10 +242,10 @@ def _markdown_files(root):
     redirect visits - ONE traversal, shared by the ritual and its plan
     (`planned_writes`), so the two cannot disagree about which files exist.
 
-    The owner-only paths (`agent_common.OWNER_ONLY_PATHS`) are not visited:
+    The operator-only paths (`agent_common.OPERATOR_ONLY_PATHS`) are not visited:
     they are the operator's free-form notes, and no kit step rewrites them.
-    A stale link there is the owner's to fix. Relinking it put the scratchpad
-    in a claim's write set, so an owner mid-edit had the claim refused by name
+    A stale link there is the operator's to fix. Relinking it put the scratchpad
+    in a claim's write set, so an operator mid-edit had the claim refused by name
     over their own notes. Excluded HERE, in the one traversal, the plan and the
     write agree without a second rule."""
     root = Path(root)
@@ -253,7 +253,7 @@ def _markdown_files(root):
         rel = path.relative_to(root)
         if ".git" in rel.parts or "node_modules" in rel.parts:
             continue
-        if rel.as_posix() in ac.OWNER_ONLY_PATHS:
+        if rel.as_posix() in ac.OPERATOR_ONLY_PATHS:
             continue
         yield path, rel.as_posix()
 

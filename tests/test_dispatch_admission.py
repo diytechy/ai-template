@@ -144,8 +144,8 @@ def test_parallel_rows_fill_free_lanes_in_frontier_order():
 
 def test_an_operator_held_tier_surfaces_an_attestation_instead_of_dispatching():
     # §A8 attended row: do not dispatch — drain the lanes, surface the cards,
-    # exit 0 into the owner's queue. Ordinary rows behind it do NOT slip past:
-    # today's behaviour the owner confirmed must keep working is "no work can
+    # exit 0 into the operator's queue. Ordinary rows behind it do NOT slip past:
+    # today's behaviour the operator confirmed must keep working is "no work can
     # be taken" once an approval is pending.
     ready = [("WI-600", "gate"), ("WI-401", "ordinary")]
     verb, payload = dsp._admission(ready, True, busy=False, free=1)

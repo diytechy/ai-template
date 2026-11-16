@@ -133,7 +133,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 from kitlib.config import utf8_console
 from kitlib.git import git_out
 
-# The coordinator's adjudicator: the strong Anthropic route (owner, 2026-10-05),
+# The coordinator's adjudicator: the strong Anthropic route (operator, 2026-10-05),
 # run on the declared token account ADJUDICATOR (WI-798), whose table names the
 # variable locating its long-lived token (OI-110 (b)). A repository that does
 # not declare that account names its entry with --route.
@@ -146,7 +146,7 @@ IDLE_TIMEOUT = 900
 
 def resolve_route(root, entry):
     """`(registry, None)` when the enabled `entry` may launch, else `(None,
-    reason)`: the entry's own enable-list line is the owner's consent to
+    reason)`: the entry's own enable-list line is the operator's consent to
     launch it, here as in the loop (an unqualified entry is its route id, a
     qualified one `ROUTE@ACCOUNT`). Refused, never discarded (WI-798): a
     registry error (a malformed row or account table), an agents-enabled

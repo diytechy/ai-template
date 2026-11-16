@@ -72,7 +72,7 @@ always true.
 - **The coordinator's procedure has one home, the `coordinator-cycle` skill**
   (adjudication, rendered review briefs, the rework coverage gate, disputes).
 - **A stopped lane CLOSES; it is never held by renaming its ref (OI-70).** The
-  only sanctioned stop, save a planned owner-held step (process.md §5, "Open items"), is
+  only sanctioned stop, save a planned operator-held step (process.md §5, "Open items"), is
   the partial close (§4): the spec moves to the terminal
   `docs/archive/work/partial/` with a handback report an adjudicator then judges
   (queue a successor, or mint an open item). Parking a lane by renaming its
@@ -99,7 +99,7 @@ last, and its run is the bar's only tier run.
 runs it once, FAILS the commit on a red tier (with the tier's own exit code),
 and reports the tier's CPU-seconds and wall time against `docs/stack.ini`
 `[smoke-budget]`, with a WARN line for a limit over. No bar fails on seconds
-(the owner, 2026-10-20): `run.cmd audit` judges them, running the same step
+(the operator, 2026-10-20): `run.cmd audit` judges them, running the same step
 with `--mode enforce` against the tier's own CPU-seconds (`cpu-seconds`;
 other load on the box moves it far less than wall time), a looser wall cap (`wall-seconds`)
 and the tier's test count (`max-tests`), by hand and at phase close. A breach
@@ -156,12 +156,12 @@ session's results are recorded.
   `## <YYYY-MM-DD> — <title>` heading; links authored relative to
   `docs/log.d/`) — `trunk_step.py` compiles fragments into the log in merge
   order and deletes them. Never hand-edit `docs/log.md` on a work branch. A
-  session that ends owing the owner a decision **declares it** in the fragment —
+  session that ends owing the operator a decision **declares it** in the fragment —
   `Deferred open items: OI-45` (or `… none — <why>`), checked at the commit checks
   by `gen_open_items.py --check` (process.md §5, OI-41 ARM 2).
-- **A delegated decisions record is the owner's to rule.** Write each entry
-  of `docs/decisions/<run>.toml` with `review` empty and no `owner` key. The
-  owner sets `owner = "confirmed"` or `"overruled"`; an overrule's commit
+- **A delegated decisions record is the operator's to rule.** Write each entry
+  of `docs/decisions/<run>.toml` with `review` empty and no `operator` key. The
+  operator sets `operator = "confirmed"` or `"overruled"`; an overrule's commit
   states the new direction in `review` and files or amends a queued or active
   work item citing `docs/decisions/<run>.toml#D-NNN`, or the ruling-sync step
   and the merge slot refuse it (process-options.md, "Delegated decisions
@@ -208,19 +208,19 @@ session's results are recorded.
   pause point, the last finished step whose evidence is committed; a lane
   whose next step is a review, rework or any launch the window refuses stops
   there, and the review cycle is not completed to reach a pause; a lane stays
-  `active`, and a stop the owner must act on follows process.md §5, "Open items".
+  `active`, and a stop the operator must act on follows process.md §5, "Open items".
   (2) Write the
   handoff naming each lane and its next obligation. (3) End the session: no
   relaunch is requested inside the window (a pending one is cancelled at the
   exit), and the lease is kept, not handed back. To resume after the window,
-  the owner reopens the same session (a context-threshold latch still set
-  needs the owner's recorded `clear` too) or releases the lease and takes it
+  the operator reopens the same session (a context-threshold latch still set
+  needs the operator's recorded `clear` too) or releases the lease and takes it
   in a fresh one. The handoff also classifies each compaction the
   lease recorded (`coordinator_guard.py status`) as a **missed threshold**
   (auto-compaction before the latch), a **manual** compaction, or a
   compaction **during the drain**. A coordinator session takes the lease with `coordinator_guard.py
-  take`; a crashed holder's lease is freed only by the owner's recorded
-  `release --reason`, and a latch only by the owner's recorded `clear`, the
+  take`; a crashed holder's lease is freed only by the operator's recorded
+  `release --reason`, and a latch only by the operator's recorded `clear`, the
   holder's hand-back or the relaunched successor's take.
 - WI ordering is derived from the registry by `schedule.py` (the DAG +
   `Priority` + gate class), not a hand-curated `docs/next-wi` — that pointer

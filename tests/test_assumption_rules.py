@@ -12,7 +12,7 @@ on (SR-191), a surrogate is a stand-in for an outside party in tests (SR-192),
 each requirement cites its assumptions or records why it needs none (SR-193)
 and declares its form (SR-194), and an assumption nothing cites or nothing
 could falsify is reported (SR-196). An assumption carries no evidence level
-(owner ruling 2026-10-02): one shown false is listed with everything relying on
+(operator ruling 2026-10-02): one shown false is listed with everything relying on
 it (SR-201), and the release gate reads its standing (SR-206).
 
 The tier's two reach rules ride here too, on the same in-memory rows: an
@@ -1185,7 +1185,7 @@ def test_the_example_row_is_never_judged_for_its_perspectives(rules):
     assert rules.obstacle_hat_findings([example], set()) == []
 
 
-# --- no evidence ladder (owner ruling 2026-10-02, WI-771) ----------------------
+# --- no evidence ladder (operator ruling 2026-10-02, WI-771) ----------------------
 # An assumption carries its status, its standing and its falsifier, and nothing
 # else about whether it holds: a passed observation proves nothing beyond its
 # sample, so no result raises an assumption to a level and no rule asks for

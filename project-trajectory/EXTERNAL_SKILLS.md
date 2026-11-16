@@ -11,7 +11,7 @@ same trust rules apply.
 
 **One exception exists, ruled rather than mined.** `skills/antidote/` IS
 vendored — verbatim, license-cleared, source-commit-pinned — per an explicit
-owner ruling (OI-58, WI-507); its row lives in
+operator ruling (OI-58, WI-507); its row lives in
 [`docs/dependencies.md`](../docs/dependencies.md), the ledger every entered
 dependency owes. It is not listed as a source below because it did not come
 through this page's mine-don't-install triage: it is the one case the "vendors

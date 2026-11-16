@@ -92,7 +92,7 @@ pytestmark = env_gate_skipif("git")
 # --- 5b. THE STATION PROTOCOL (WI-386) ---------------------------------------
 #
 # The one constraint, the refresh that satisfies it, and the two properties the
-# owner's caveat turned into requirements. Every fixture below CONSTRUCTS the
+# operator's caveat turned into requirements. Every fixture below CONSTRUCTS the
 # topology it measures — two branches cut from one base, a trunk that moves
 # under a finished branch — rather than inheriting a repo's state, because the
 # thing under test is a relationship between commits.
@@ -727,7 +727,7 @@ def test_the_refresh_refuses_rather_than_discard_uncommitted_lane_work(tmp_path)
     assert (wt / "wi-401.txt").read_text(encoding="utf-8") == "half-finished\n"
 
 
-# 5b.4 — the two requirements the owner's caveat produced
+# 5b.4 — the two requirements the operator's caveat produced
 
 
 def test_slot_acquisition_has_exactly_one_call_site():
@@ -794,7 +794,7 @@ def test_the_pessimistic_sequence_runs_when_a_lane_loses_the_race(tmp_path):
 def test_a_branch_that_never_refreshed_is_refreshed_by_the_slot(tmp_path):
     # The degradation that makes the speculative half OPTIONAL: delete drive.py's
     # refresh call and the queue still works, one lane at a time, with the bar
-    # inside the lock. That is the owner's caveat priced at one line — and it is
+    # inside the lock. That is the operator's caveat priced at one line — and it is
     # this path, so it is covered whether or not anyone ever exercises it.
     root = station_repo(tmp_path)
     assert integ.refresh_attestation(root, "wi-401") is None
@@ -1018,7 +1018,7 @@ def test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence(tmp_p
     # it is (REVIEW-A round 2 drove it). Naming the tree and the parent by hand
     # is four git invocations and no bar, and it VERIFIES — this test asserts the
     # limit rather than a defence, because the only structural closure is a
-    # slot-side re-bar and DECISION 3 (owner ruling) deleted that outright.
+    # slot-side re-bar and DECISION 3 (operator ruling) deleted that outright.
     # If this test ever starts failing, the design changed: re-read §A2.0 and
     # `refresh_attestation`'s contract before "fixing" it.
     root = station_repo(tmp_path)

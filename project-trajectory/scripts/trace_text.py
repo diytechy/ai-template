@@ -27,7 +27,7 @@ and duplicated in `spine_rules.py`; `trace.py` still imports them back from this
 module by name, so the dependency runs one way and there is no cycle.
 
 The shared-`_kitcommon` shape this module's split once avoided is no longer ruled
-out — owner ruling D-8 (`OI-16`) replaced F5, and `kitlib` IS that home, shipped
+out — operator ruling D-8 (`OI-16`) replaced F5, and `kitlib` IS that home, shipped
 as a whole directory so a partial copy ImportErrors rather than degrading. What
 stays true of this file is the narrower claim: it is one module's own TEXT core,
 imported by that one module (ADOPTING.md §6).
@@ -65,7 +65,7 @@ import re
 import sys
 from pathlib import Path
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`). Same guarded
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`). Same guarded
 # idiom the other scripts use: run as a subprocess this file's own dir is
 # sys.path[0], so the plain import resolves; the fallback covers an in-process
 # import whose sys.path does not yet carry scripts/.
@@ -325,7 +325,7 @@ def ac_advisories(srs):
 _WI_TOKEN_RE = re.compile(r"\bWI-\d+", re.IGNORECASE)
 _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 
-# --- The wider provenance vocabulary (owner ruling: NO provenance citation in
+# --- The wider provenance vocabulary (operator ruling: NO provenance citation in
 # any living registry cell) --------------------------------------------------
 #
 # The two shapes above are the GATING class and keep that severity. These are the
@@ -390,7 +390,7 @@ _EDIT_VERBS = (
 # THE DATE, WITH ITS RULING SUFFIX. This repo — and the kit's own convention —
 # writes a ruling as the date plus a serial letter (`2026-08-13u`, `2026-08-16q`),
 # which is the CANONICAL citation shape and was invisible to a bare `\d{4}-\d{2}-\d{2}`:
-# `provenance_tokens("The owner ruling 2026-08-13u settled this.")` returned []
+# `provenance_tokens("The operator ruling 2026-08-13u settled this.")` returned []
 # while the plain-date form beside it reported. The optional `[a-z]` closes that,
 # and it cannot over-reach — `\b` after it refuses `2026-08-13until`, because the
 # suffix must end the token.
@@ -524,7 +524,7 @@ def is_allowed(allow, rid, col, token):
     parenthetical and nothing else. Measured on 2026-08-18: re-running detection
     with the list ignored exposed 67 tokens over 22 rows that no entry had
     adjudicated, including `RE-VOICED 2026-08-17` and
-    `Minted at the owner's 2026-08-15` — the banned shape itself, riding a
+    `Minted at the operator's 2026-08-15` — the banned shape itself, riding a
     carve-out written for a label. An exception now silences what it NAMES and
     nothing else, so a frame that appears beside an allowed one still reports,
     and re-wording an allowed cell re-opens the question rather than laundering
@@ -614,11 +614,11 @@ def provenance_findings(srs, llrs, tcs):
     rubric is the acceptance instrument. A rule that cries wolf on 65 legitimate
     rows is a rule that gets scrolled past — the `check_doc_refs` lesson.
 
-    GATING under `--strict` (owner ruling 2026-07-27, raised at the first
+    GATING under `--strict` (operator ruling 2026-07-27, raised at the first
     re-attestation sitting on finding `LLR-050`'s `WI-316:` changelog prefix). It
     shipped warn-only on the argument that cleaning a `Verified` row flips it
     `Modified` and owes a re-attestation, so the checker should not pick the
-    owner's schedule. The counter-argument won and is the stronger one: a warn
+    operator's schedule. The counter-argument won and is the stronger one: a warn
     nobody must act on is how 43 rows accumulated, and the whole population was
     cleaned in one pass at the same sitting, so the rule now guards zero-to-zero
     rather than dictating a cleanup.
@@ -656,7 +656,7 @@ def provenance_findings(srs, llrs, tcs):
 
 
 # The SN tier's cells, and the widened scope of the SR/LLR/TC ones. The need tier
-# joins by owner ruling: the rule was written naming three tiers and the need tier
+# joins by operator ruling: the rule was written naming three tiers and the need tier
 # then accumulated the worked examples of exactly the defect it forbids.
 # The need's three PROSE cells only: its `source` cell (SR-190) is a pointer to
 # the document the need was drawn from, a repository path by design, and
@@ -1009,7 +1009,7 @@ def paraphrase_advisories(srs, llrs):
 # decisions and grew a fan of children to cover them — and a smell is exactly
 # what an operator decides. None ever joins the exit code under any flag. R2's
 # no-concrete-artifact rule reaches the SN tier too (`sn_artifact_advisories`,
-# owner directive 2026-08-18); the fan-out rule is SR-only by construction.
+# operator directive 2026-08-18); the fan-out rule is SR-only by construction.
 
 # A concrete Python artifact named in a cell: a bare script (`trace.py`) or a
 # path-qualified one (`scripts/trace.py`). Anchored on the literal `.py`
@@ -1160,7 +1160,7 @@ def sr_artifact_advisories(srs):
     return out
 
 
-# The SN tier's artifact vocabulary (owner directive 2026-08-18, which extends
+# The SN tier's artifact vocabulary (operator directive 2026-08-18, which extends
 # R2's no-concrete-artifact rule from SR up to SN). Deliberately WIDER than
 # `_PY_ARTIFACT_RE` above, and deliberately narrower than "anything with a dot",
 # both for measured reasons taken over the kit's own 27 live needs:
@@ -1190,7 +1190,7 @@ _SN_ARTIFACT_RE = re.compile(
 
 def sn_artifact_advisories(needs):
     """Warn-only: an SN `acceptance` cell that names a concrete artifact
-    (owner directive 2026-08-18, extending re-tier v2 R2 from SR to SN).
+    (operator directive 2026-08-18, extending re-tier v2 R2 from SR to SN).
 
     **A need states the observable condition, never the instrument that observes
     it.** An acceptance cell reading "`trace.py --strict` reports zero orphans"

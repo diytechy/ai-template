@@ -197,7 +197,7 @@ record an explicit n/a where one truly doesn't apply.
 2. **Recommend a gate-authority level** from the brief, risk-calibrated per the
    §6 decision-surfacing dial (safety / money / privacy / irreversibility ⇒
    `attended`; low-risk creative/tooling ⇒ `autonomous`-eligible). Record the
-   recommendation + the owner's choice in `docs/status.md`; the owner sets
+   recommendation + the operator's choice in `docs/status.md`; the operator sets
    `operator_accepts_through` in `docs/process.toml` (non-default levels get the deviation
    register — `PROCESS_OPTIONS.md` "Gate authority levels").
 3. Scaffold the artifacts and the check harness (empty registries + headers).

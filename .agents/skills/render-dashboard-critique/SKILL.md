@@ -60,7 +60,7 @@ rationale, and the read caveats — live in `scripts/dashboard-shots/README.md`.
    that exits non-zero (a Playwright error, a timeout, a failed regenerate) or
    prints any `NOT shot` tab gives a smaller matrix than the page renders: stop,
    then repair it (add the tab to `TABS`, fix the run) or escalate to the
-   owner. Meanwhile no verdict and no observation record is written, so a
+   operator. Meanwhile no verdict and no observation record is written, so a
    re-judge stays open.
 3. **Read & critique** — Read a representative spread (both themes; the
    graph-heavy `sw` / `dag` tabs; the `390px` mobile landing) and judge:

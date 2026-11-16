@@ -1,7 +1,7 @@
 """THE COHERENCE RULES — do the loaded registry rows agree with each other?
 
 The sibling of `census.py` (*what do the registries LACK?*) and `pending.py`
-(*what does the OWNER hold?*), answering the third question the same engine used
+(*what does the OPERATOR hold?*), answering the third question the same engine used
 to answer inline: **does every id a row cites name a row that exists, and does
 every row have the children its tier requires?**
 

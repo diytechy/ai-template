@@ -62,7 +62,7 @@ next tick unless something remembers. All three are read off typed cells:
      brief (as open rows, and as `{prior}`), because a cluster formed for other
      reasons may legitimately contain one; what they never do is SEED a cluster.
      Re-absorbing one is refused outright at the mint (`reabsorption_refusal`),
-     which is the RETURN-TO-DRAFT-that-pages-the-owner the plan asks for: the
+     which is the RETURN-TO-DRAFT-that-pages-the-operator the plan asks for: the
      judgement to overturn is the earlier consolidation's, and that is an operator's
      call, not a second machine mint.
 
@@ -155,7 +155,7 @@ RESTRUCTURED = "restructured"
 #: The `SafetyClass` every judgement row carries, whatever its brief.
 JUDGEMENT = "adjudication"
 #: The `{prior}` marker on an absorbed row no judgement enacted. The brief tells
-#: the judge that overturning an earlier consolidation pages the owner, which is
+#: the judge that overturning an earlier consolidation pages the operator, which is
 #: true of a judged absorption and false of a hand commit, so each absorbed row
 #: says which it was.
 # Implements: SR-220, LLR-210
@@ -717,7 +717,7 @@ def reabsorption_refusal(rows, absorbed, bodies):
 
     Overturning a consolidation is a RETURN-TO-DRAFT of THAT judgement (plan
     §1.3), and this refusal is what makes it one: the mint stops, the run pages
-    the owner, and the earlier verdict is re-opened by an operator rather than
+    the operator, and the earlier verdict is re-opened by an operator rather than
     silently replaced by a second machine mint. `intake._supersedes_refusal`
     covers the adjacent case — absorbing a row already ABSORBED — which is a
     lineage chain rather than an overturned judgement."""
@@ -727,7 +727,7 @@ def reabsorption_refusal(rows, absorbed, bodies):
         return (
             "the draft absorbs {} - {} minted by an earlier consolidation. "
             "Re-absorbing one overturns that judgement, which is a "
-            "RETURN-TO-DRAFT for the owner to rule, never a second mint; "
+            "RETURN-TO-DRAFT for the operator to rule, never a second mint; "
             "nothing minted".format(";".join(hit), "a row" if len(hit) == 1 else "rows")
         )
     return None

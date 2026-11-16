@@ -1,6 +1,6 @@
 # Crash, atomicity and recovery: what the next reader finds after an interrupted write — DRAFT
 
-> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.INTEGRITY-RECOVERABILITY` roster entry has a `knowledge` value to point at; the owner reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a settled finding.
+> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.INTEGRITY-RECOVERABILITY` roster entry has a `knowledge` value to point at; the operator reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a settled finding.
 
 This pack is what a reviewer wearing INTEGRITY-RECOVERABILITY looks for HERE. The
 charter's question — "interrupted mid-write, what does the next reader find, and
@@ -90,4 +90,4 @@ the record of what an operator blessed cannot be quietly rewritten.
 - SR-144 carries `hat_refs = ["UNATTENDED-OPS"]` today, not this hat; the
   immutable-record and dead-lane-claim reasoning it encodes is the clearest
   in-repo statement of this hat's concern, and whether its hat_ref should widen is
-  an owner call at review.
+  an operator call at review.

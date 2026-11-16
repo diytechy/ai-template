@@ -140,7 +140,7 @@ def test_check_selects_on_the_SHARED_ladder_and_restates_no_vocabulary():
 
 
 def test_selection_is_at_or_above_and_routes_through_the_shared_ordinal():
-    """The owner's rule (OI-51) pinned as BEHAVIOR rather than as prose: a step
+    """The operator's rule (OI-51) pinned as BEHAVIOR rather than as prose: a step
     runs because the repo is at or above its threshold, `all` is above
     everything without being a rung, and an unknown rung RAISES instead of
     degrading to a default that would silently change which checks run."""
@@ -214,7 +214,7 @@ def planted(tmp_path):
         "docs/work/complete/WI-001-x.md",
         "docs/okf/k.md",
         "docs/log.md",
-        "OWNER_SCRATCHPAD.md",
+        "OPERATOR_SCRATCHPAD.md",
     ):
         (tmp_path / rel).write_text(
             "the repo passed G1 and G2 on 2026-01-01\n", encoding="utf-8"
@@ -253,7 +253,7 @@ def test_severity_is_WARN_FIRST_and_promotes_under_strict(planted):
         "docs/work/complete/WI-001-x.md",
         "docs/okf/k.md",
         "docs/log.md",
-        "OWNER_SCRATCHPAD.md",
+        "OPERATOR_SCRATCHPAD.md",
     ],
 )
 def test_the_ruled_carve_outs_are_never_reported(planted, rel):

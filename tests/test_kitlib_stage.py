@@ -306,7 +306,7 @@ def test_content_still_moves_the_fingerprint(tmp_path):
 
 
 def test_process_toml_is_NOT_an_input(tmp_path):
-    """Owner ruling 2026-08-21 (amending plan §2): dials govern who may approve,
+    """Operator ruling 2026-08-21 (amending plan §2): dials govern who may approve,
     not what stage is derived — and an over-inclusive fingerprint costs red
     commit checks after every policy-dial edit, not "milliseconds". A process.toml
     edit must not move the fingerprint."""

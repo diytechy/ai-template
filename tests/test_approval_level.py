@@ -229,7 +229,7 @@ def test_the_top_two_rungs_are_held_by_the_TOP_OF_THE_RETIRED_DIAL_ALONE(
     THE CLAIM IS SCOPED TO THE RETIRED FIVE, and that scoping is the re-key's
     doing rather than a softening. Under the rung vocabulary `DevStg-Impl` is a
     legal dial in its own right, so "hold Impl but not the close" is now a
-    setting an owner can ask for — pinned by the last two lines, because a
+    setting an operator can ask for — pinned by the last two lines, because a
     reader who met only the paragraph above would think it impossible."""
     for level in range(4):
         docs = _docs(tmp_path / str(level), ac.LEGACY_DIAL_ORDINALS[level])
@@ -265,7 +265,7 @@ def test_BOTH_shipped_homes_declare_the_dial_as_a_RUNG_STRING():
 
     The pin is STRUCTURAL on this repo's own file and VALUED on the template —
     the dogfood rule (CLAUDE.md): VALUES may diverge between the kit's template
-    and this repo's instance (the owner set this repo's dial to `DevStg-Needs`
+    and this repo's instance (the operator set this repo's dial to `DevStg-Needs`
     on 2026-08-21, a declared-policy act), STRUCTURE must not (both homes carry
     a quoted ladder-rung string, never the retired ordinal)."""
     root = _Path(__file__).resolve().parents[1]
@@ -311,7 +311,7 @@ def test_an_unreadable_stage_is_operator_held(tmp_path):
 
 
 def test_the_BELOW_dial_is_absolute_even_against_an_unreadable_stage(tmp_path):
-    # "Nothing is operator-held" is a statement the owner made outright, and the
+    # "Nothing is operator-held" is a statement the operator made outright, and the
     # upgrade-time repo (no readable stage record) is precisely when it must
     # still hold — otherwise the dial reads as its own opposite on the one day
     # it matters.
@@ -671,7 +671,7 @@ def test_a_settled_spine_is_the_IMPL_rung_and_the_top_rung_is_NOT_DERIVED():
     plan (§5 item 3) — deliberately, not by drift.
 
     WHAT THIS TEST USED TO SAY: `_stage() == dg.STAGE_RELEASE`, named "a settled
-    spine is the TOP RUNG". That was the polarity the owner ruled wrong: a spine
+    spine is the TOP RUNG". That was the polarity the operator ruled wrong: a spine
     whose rows are all blessed through the test tier reported "nothing in work;
     release checklist available" for the entire implementation period, which is
     the wrong sentence for the longest stretch of a project.
@@ -708,7 +708,7 @@ def test_the_MODIFIED_rung_RETIRED_and_took_no_successor():
     # D-9 STEP 7, and the deletion is what this pins. The rung read the
     # post-attestation amendment state — the text moved after it was attested,
     # so a fresh approval was owed ON THE SR — and it sat ahead of the
-    # children for that reason. No cell records that state any more (owner
+    # children for that reason. No cell records that state any more (operator
     # ruling 2026-08-17m: the snapshot comparison does), so the rung went with
     # the word and was deliberately NOT re-keyed onto drift: this axis reads
     # CELLS, and reaching into `docs/archive/` for a rung would make a pure row
@@ -1231,7 +1231,7 @@ def test_no_stage_label_carries_its_own_position():
 
 
 def test_the_two_ruled_label_typos_never_shipped():
-    # The ruling names them: `Arcitecture` and `Impliment` were in the owner's
+    # The ruling names them: `Arcitecture` and `Impliment` were in the operator's
     # draft ladders and had to be fixed BEFORE they became identifiers, because a
     # closed vocabulary is a citation surface.
     joined = " ".join(dg.STAGE_ORDER)
@@ -1259,7 +1259,7 @@ def test_the_two_ruled_label_typos_never_shipped():
 def test_final_review_defaults_to_HOLDING_and_reads_off(tmp_path):
     """Shipped, type-checked, and read by NOTHING for one review round — so a
     run at the `DevStg-Below` dial with `final_review = "always"` closed itself
-    silently, which is precisely the state an owner sets this dial to prevent. A
+    silently, which is precisely the state an operator sets this dial to prevent. A
     declared promise nothing keeps is worse than an absent one."""
     top = dg.STAGE_RELEASE
     assert ac.final_review(_docs(tmp_path, top)) is True  # absent -> hold
@@ -1361,7 +1361,7 @@ def test_APPROVAL_RUNGS_is_the_off_spine_sibling_of_THE_DIAL(tmp_path):
 
 def test_operator_accepts_MAPPED_and_HELD_at_this_repos_dial(tmp_path):
     """Arm 1 — the state this repo is in. At `DevStg-Release` every rung is at or
-    below the dial, so every mapped registry's approval cells are the owner's."""
+    below the dial, so every mapped registry's approval cells are the operator's."""
     docs = _docs(tmp_path, dial=dg.STAGE_RELEASE)
     for registry in ac.APPROVAL_RUNGS:
         assert ac.operator_accepts(docs, registry) is True, registry
@@ -1401,7 +1401,7 @@ def test_SPINE_APPROVAL_RUNGS_is_the_spine_sibling_of_THE_DIAL(tmp_path):
     """Same pin as its off-spine twin above, for the same reason: a typo'd rung
     would send `operator_accepts_spine` through `operator_holds`' unrecognized arm,
     which answers True — safe, but silently, so a whole spine tier would read as
-    the owner's forever and no first-approval adjudication would ever be minted
+    the operator's forever and no first-approval adjudication would ever be minted
     for it. Pin the values against the ladder itself.
 
     KEYED BY REGISTRY STEM, and that is checked here rather than assumed: both
@@ -1427,7 +1427,7 @@ def test_SPINE_APPROVAL_RUNGS_is_the_spine_sibling_of_THE_DIAL(tmp_path):
     # ONE HOME. The rung table lived in `intake` (registry-keyed) AND in
     # `adjudicate_brief` (tier-keyed) for one commit, and the first-approval
     # brief — which re-resolves its population live, after the mint — was wired
-    # to neither, so it rendered the owner's held rows as an adjudicator's to
+    # to neither, so it rendered the operator's held rows as an adjudicator's to
     # flip. Neither copy comes back.
     assert not hasattr(load_script("intake"), "APPROVAL_RUNG")
     assert not hasattr(load_script("adjudicate_brief"), "_APPROVAL_RUNG_OF")

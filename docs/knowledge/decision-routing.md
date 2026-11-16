@@ -2,7 +2,7 @@
 
 This pack preserves the 2026-08-31 research base for the "decisions for owner
 review" question — whether agent decisions can be routed among deciding
-silently, recording for a non-blocking owner second look, and escalating
+silently, recording for a non-blocking operator second look, and escalating
 (handback / open item), and what signal should drive the routing. The design
 itself is undecided; this pack holds the evidence, not the ruling.
 
@@ -74,11 +74,11 @@ trending to 100%, time-per-item trending to zero).
 **Autonomy-ladder precedent.** Sheridan & Verplank's 1978 levels 5-8 map
 onto escalate / veto-window / record / decide-silently: level 6 (execute
 after a delay unless countermanded) is a distinct tier that degrades into
-"record" when the owner is away and "escalate" when watching. Aviation's
+"record" when the operator is away and "escalate" when watching. Aviation's
 management-by-consent / management-by-exception vocabulary (Billings, NASA)
 names the same split, with the empirical rider that operator preference
 shifts from consent toward exception under time pressure and workload — the
-measured version of "it depends on the owner's mood," and the strongest
+measured version of "it depends on the operator's mood," and the strongest
 argument that the setting must be cheap to move per sitting. Horvitz (CHI
 1999) formalizes the whole ladder as TWO THRESHOLDS on one score (below the
 first: act silently; between: record/dialog; above: ask), with the
@@ -96,7 +96,7 @@ decisions-for-review pattern arose ad hoc three times (72 entries total);
 4 were ever affirmed, nothing machine-reads the files, and the declared
 prose format degraded within one session (21 of 46 entries carried the
 `Decided:` field). The one affirmation that happened was per-sitting with
-exceptions, recorded as an approval commit quoting the owner's words — not
+exceptions, recorded as an approval commit quoting the operator's words — not
 a per-entry queue worked down. 44 of the 46 most recent entries were
 supervisor-altitude decisions about running the loop, an altitude the
 OI-70 adjudicator-exits doctrine does not reach.
@@ -110,10 +110,10 @@ OI-70 adjudicator-exits doctrine does not reach.
 - Any recording obligation should be a required structured field on an
   artifact already produced and already validated (the `split_decided_by`
   pattern), not brief prose or a post-hoc auditor.
-- Size any owner-review surface from the owner's real capacity first, then
+- Size any operator-review surface from the operator's real capacity first, then
   set what qualifies to fill that budget; keep its precision high enough
   that reading it stays worth doing.
-- Land records where the owner already stops (a sitting, a dated approval
+- Land records where the operator already stops (a sitting, a dated approval
   record, a generated band on the open-items surface) rather than minting a
   new inbox.
 - If a detector pass is wanted, make it a separate agent with its own

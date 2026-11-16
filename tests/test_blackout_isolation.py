@@ -9,7 +9,7 @@ and the runner reported green on the other 2232. "Full bar green" was a function
 of the wall clock; a probe outside the window recorded the module as "not
 reproduced ... flaky" on 2026-08-10.
 
-WI-433 removed the source: the owner ruled the template SHIPS DISABLED
+WI-433 removed the source: the operator ruled the template SHIPS DISABLED
 (`"12:00-12:00"`, `start == end`), keeping the shape so an adopter can see what
 a window looks like without inheriting one. That moves this module's job, and
 the move is where the vacuity trap lives — a guard whose subject no longer
@@ -57,7 +57,7 @@ agent_common = load_script("agent_common")
 # template shipped until WI-433. It is no longer what a scaffold receives; it is
 # kept here as the POPULATED window every non-vacuity probe in this module is
 # driven against.
-OWNER_WINDOW = "12:00-19:00"
+OPERATOR_WINDOW = "12:00-19:00"
 
 # What the template ships now: a window whose start equals its end, i.e. the
 # dial's own documented disable form, written in window SHAPE rather than as an
@@ -121,8 +121,8 @@ def test_a_populated_window_still_blocks_so_the_machinery_is_proven_live():
     # had quietly stopped working. This is the one test that would notice: the
     # window the defect actually ran on must still stop a coordinator — 35
     # weekday hours a week, up to 7 h at a stretch, and never at a weekend.
-    assert blackout_is_live(OWNER_WINDOW)
-    sleeping = sleeps_at(OWNER_WINDOW)
+    assert blackout_is_live(OPERATOR_WINDOW)
+    sleeping = sleeps_at(OPERATOR_WINDOW)
     assert sleeping, "the window under guard must actually block, or this is theatre"
     assert max(wake for _, _, wake in sleeping) == 7 * 3600
     assert {day for day, _, _ in sleeping} == {"Mon", "Tue", "Wed", "Thu", "Fri"}
@@ -130,10 +130,10 @@ def test_a_populated_window_still_blocks_so_the_machinery_is_proven_live():
 
 
 def test_this_repos_own_dial_is_deliberately_not_pinned_to_a_value():
-    # The template stopped carrying the owner's window; this repo still declares
-    # one, and it is the OWNER'S to set — WI-433 was explicitly scoped out of
+    # The template stopped carrying the operator's window; this repo still declares
+    # one, and it is the OPERATOR'S to set — WI-433 was explicitly scoped out of
     # docs/process.toml. So this pins the two things that are the kit's business
-    # and not the owner's: the key EXISTS (a deleted key reads as disabled with
+    # and not the operator's: the key EXISTS (a deleted key reads as disabled with
     # nothing saying so), and whatever it holds is a value the shipped parser
     # understands.
     value = process_key(ROOT, "policies", "blackout")
@@ -183,10 +183,10 @@ def test_the_guard_reds_on_a_planted_live_window(tmp_path):
     set_process_key(tmp_path, "policies", "review_rounds", 0)
     assert live_blackout_scaffolds(tmp_path) == []  # green
 
-    set_process_key(tmp_path, "policies", "blackout", OWNER_WINDOW)  # planted
+    set_process_key(tmp_path, "policies", "blackout", OPERATOR_WINDOW)  # planted
     caught = live_blackout_scaffolds(tmp_path)
     assert [(p.relative_to(tmp_path).as_posix(), v) for p, v in caught] == [
-        ("docs/process.toml", OWNER_WINDOW)
+        ("docs/process.toml", OPERATOR_WINDOW)
     ]
     # What the guard caught is a scaffold that would really have slept: this is
     # the measured 2026-08-11 reproduction, on an injected clock (a Tuesday

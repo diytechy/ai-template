@@ -198,7 +198,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "src/.gitkeep",
         "tests/.gitkeep",
         "README.md",
-        "OWNER_SCRATCHPAD.md",
+        "OPERATOR_SCRATCHPAD.md",
         "run.cmd",
         "run.sh",
         "run.command",
@@ -477,7 +477,7 @@ def test_agents_template_stays_within_size_budget():
 # here, since a second home is what let the withdrawn ones survive. Each cap is
 # ~20-25% headroom
 # over the file's size when the cap landed, so ordinary edits pass and a
-# doubling does not; the owner may retune any of them (the skill's Budgets
+# doubling does not; the operator may retune any of them (the skill's Budgets
 # table is the readable statement of the same values).
 BYTE_CAPS = {
     # Loaded into every agent session in this repo (project instructions).
@@ -509,7 +509,7 @@ def test_always_loaded_docs_stay_within_byte_caps():
     assert not oversize, (
         "; ".join(oversize) + " — tighten the file (history belongs in "
         "docs/log.md, not in a nested parenthetical) or argue the cap up with "
-        "the owner in the same commit; the byte-budget-guard skill's Budgets "
+        "the operator in the same commit; the byte-budget-guard skill's Budgets "
         "table states the same numbers and must be re-stamped with them"
     )
 
@@ -872,17 +872,17 @@ def test_readme_vision_tag_and_needs_pointer(scaffold):
     assert "](../../README.md#vision)" in needs
 
 
-def test_scaffolds_owner_scratchpad(scaffold):
-    # FB3: the owner scratchpad ships at the root with a loud agents-ignore header
+def test_scaffolds_operator_scratchpad(scaffold):
+    # FB3: the operator scratchpad ships at the root with a loud agents-ignore header
     # and the secrets-floor caveat. It carries no placeholders, so the scaffolded
     # copy is content-identical to the kit template.
-    pad = scaffold / "OWNER_SCRATCHPAD.md"
-    assert pad.exists(), "bootstrap must scaffold OWNER_SCRATCHPAD.md"
+    pad = scaffold / "OPERATOR_SCRATCHPAD.md"
+    assert pad.exists(), "bootstrap must scaffold OPERATOR_SCRATCHPAD.md"
     text = pad.read_text(encoding="utf-8")
-    assert "For the human owner only" in text
+    assert "For the operator only, as a person" in text
     assert "do **NOT** read" in text  # the agents-ignore instruction
     assert "secrets floor still scans this file" in text  # not a secrets-safe zone
-    template = (KIT / "OWNER_SCRATCHPAD.template.md").read_text(encoding="utf-8")
+    template = (KIT / "OPERATOR_SCRATCHPAD.template.md").read_text(encoding="utf-8")
     assert text == template, "scaffolded scratchpad must match the kit template"
 
 
@@ -988,7 +988,7 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
     # and each is TYPED (a bool is a bool, the reviewer count is an int) rather
     # than a one-word string every reader re-parses. Every VALUE is the one the
     # file it replaced shipped, with ONE deliberate exception carrying its own
-    # ruling: WI-433 (owner 2026-08-11) ships `blackout` DISABLED
+    # ruling: WI-433 (operator 2026-08-11) ships `blackout` DISABLED
     # (`12:00-12:00`, start == end) rather than the kit author's own
     # 12:00-19:00 window, because an adopter should not inherit a
     # business-hours blackout in a timezone they did not choose. Folding a file
@@ -1703,7 +1703,7 @@ def test_the_common_package_ships_complete(scaffold):
 def test_bootstrap_imports_only_the_common_package():
     """THE RULE THAT REPLACED F5, ASSERTED RATHER THAN COMMENTED.
 
-    Owner ruling D-8 (`OI-16`) inverted its own step 2: shared helpers live in
+    Operator ruling D-8 (`OI-16`) inverted its own step 2: shared helpers live in
     the shipped package and `bootstrap.py` imports FROM it. The replacing rule
     — *bootstrap imports the common package and nothing else* — had only ever
     been prose. It is load-bearing in one specific way: `bootstrap.py` is

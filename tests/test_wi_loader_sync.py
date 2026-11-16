@@ -9,7 +9,7 @@ kit's F5 working agreement keeps them
 separate ON PURPOSE: `schedule.py` stays stdlib-only and self-contained (no kit
 import) so it ships independently copy-able, and IF-053 fixes the dependency
 arrow (the validator consumes the scheduler, never the reverse), so a shared
-`wi_registry.py` was NOT extracted (owner ruling 2026-07-12; WI-291).
+`wi_registry.py` was NOT extracted (operator ruling 2026-07-12; WI-291).
 
 The only real risk of two parsers is that they DRIFT — one starts handling a
 row shape the other doesn't, and the scheduler's frontier silently disagrees

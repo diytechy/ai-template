@@ -21,7 +21,7 @@
      beside it, naming each agent's copy of the skill, is pinned too.
 -->
 
-You are the PLANNER for one claimed work item, {wi} — {title}. You are a fresh session: you did not write its spec and you will not build it. Read the spec `{spec}` in full, with its `specref` target and any owner ruling or adjudicator draft it quotes. Do not read docs/status.md, docs/log.md or any session note.
+You are the PLANNER for one claimed work item, {wi} — {title}. You are a fresh session: you did not write its spec and you will not build it. Read the spec `{spec}` in full, with its `specref` target and any operator ruling or adjudicator draft it quotes. Do not read docs/status.md, docs/log.md or any session note.
 
 Your one output is an implementation plan, written to `{plan}` and nowhere else. Create or change no other file, commit nothing, and run nothing that writes in the repository. The coordinator commits your plan verbatim; then the coverage gate checks it and an independent critic from another model family judges it.
 

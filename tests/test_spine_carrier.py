@@ -78,7 +78,7 @@ def test_an_EXPLICIT_empty_string_is_REFUSED_not_quietly_accepted(tmp_path):
 
     FAIL CLOSED: refused, naming the row and the key, rather than normalised
     away. Normalising would leave the file and the loaded row disagreeing about
-    what the author wrote. (Owner ruling owed; this fork was never ruled.)
+    what the author wrote. (Operator ruling owed; this fork was never ruled.)
     """
     path = _write(tmp_path, '[requirement.SR-001]\ntitle = ""\nstatus = "Approved"\n')
     with pytest.raises(SystemExit) as excinfo:
@@ -216,7 +216,7 @@ def test_the_vocabulary_unions_without_redefining_a_shared_column():
 def test_an_open_items_registry_that_does_not_parse_is_absent_never_empty(tmp_path):
     """The false green this whole rule exists for: `{}` on a DECISION QUEUE
     reads as "no open items", so an unreadable registry would publish "nothing
-    is waiting on the owner" and every gate would stay green."""
+    is waiting on the operator" and every gate would stay green."""
     p = tmp_path / "open-items.toml"
     p.write_text('[open_item.OI-1]\ntitle = "unterminated\n', encoding="utf-8")
     assert sc.rows_from_toml(p.read_text(encoding="utf-8"), "OI-ID") is None

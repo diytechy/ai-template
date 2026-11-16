@@ -175,7 +175,7 @@ from kitlib.config import (
 from kitlib.config import utf8_console as _utf8_console
 import fnmatch
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`, executed
 # WI-448): the best-effort-off-git subprocess pattern this module used to spell
 # out itself. Run as a subprocess this script's own dir is sys.path[0] so a
 # plain import resolves; the guard covers an in-process import (a test) whose
@@ -587,7 +587,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
     # every in-scope row — so it was reached ONLY by a spine already fully
     # decomposed and TC'd, which on the stage ladder is the Impl rung, not the
     # Arch rung that opens the bar's span. Keying on Arch would PROMOTE A
-    # SEVERITY the owner ruled warn-first-until-mature, which is a policy change
+    # SEVERITY the operator ruled warn-first-until-mature, which is a policy change
     # and not a re-key. The rung the promotion has always effectively meant is
     # the rung it now names.
     # The retired-vocabulary enforcer (OI-21) rides check_trajectory's severity
@@ -764,7 +764,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # the need registry is authored hardest at the LOWEST bar — but
         # WARN-FIRST ALWAYS: no `--strict` promotion here, deliberately unlike
         # vocab_cmd/traj_cmd. Promoting a form heuristic over approved
-        # stakeholder prose to a gate is an owner ruling that has not been
+        # stakeholder prose to a gate is an operator ruling that has not been
         # made (WI-454's scope guard); the severity ladder stops at WARN until
         # it is.
         (
@@ -953,7 +953,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_IMPL,
             "process",
         ),
-        # Owner decision-surface freshness (WI-322, OI-10 ruled option (b)):
+        # Operator decision-surface freshness (WI-322, OI-10 ruled option (b)):
         # docs/open-items.html is generated from docs/requirements/open-items.toml
         # plus the spine's Drafted/Modified rows — the surface that replaced the
         # hand-maintained docs/open-items.md. Same generated-artifact contract
@@ -1046,7 +1046,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # was gated by nothing, so it silently drifted behind the registry it
         # summarizes — twice in one day, both times caught only by a human
         # noticing. It fails CLOSED because a stale brief is read by an OPERATOR
-        # ABOUT TO ATTEST: a short brief means an owner blesses rows they were
+        # ABOUT TO ATTEST: a short brief means an operator blesses rows they were
         # never shown. The comparison uses the baseline the brief itself
         # DECLARES, never a re-derived one (re-deriving is the WI-322 BLOCKER,
         # where a regeneration collapsed 43 chain-row diffs to 18 while a
@@ -1275,7 +1275,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # A hand close's Done-when blessing (WI-841): a commit that moves a
         # spec out of `active/<branch>/` into a closed folder while its
         # Done-when differs from the claimed one is refused unless a verdict or
-        # an owner ruling in the index binds the exact text. On trunk any
+        # an operator ruling in the index binds the exact text. On trunk any
         # commit that changes a claim copy's Done-when, closing it or not, is
         # judged the same way against its parent (WI-921), and an index delta
         # or a current branch git cannot read holds. A lane's commit that edits
@@ -1334,7 +1334,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
 
 
 # --- THE STAGE AXIS: SELECTION IS AT-OR-ABOVE (OI-51, ruled 2026-08-21) --------
-# THE OWNER'S RULE, and this module is what it re-keys: a step runs because the
+# THE OPERATOR'S RULE, and this module is what it re-keys: a step runs because the
 # repo IS AT OR ABOVE the rung that step becomes relevant at — *"when is it
 # relevant for me to run these checks"* — never because some earlier bar was
 # cleared. The eight-rung vocabulary is `kitlib.ladder`'s (one home since WI-498
@@ -2386,7 +2386,7 @@ def missing_tool_banner(skipped):
     trunk-lane freshness skips (`_TRUNK_FRESHNESS_STEPS`) are all process-layer
     — a DELIBERATE, already-explained skip must never be dressed as a defect.
 
-    Refusal was weighed and left to the owner: making a declared-but-absent tool
+    Refusal was weighed and left to the operator: making a declared-but-absent tool
     FAIL on the hook path is the stronger guard, and it breaks every adopter
     whose contributor has not run dev-setup yet — a migration this session has
     no authority to impose. Recorded in the log rather than taken quietly."""

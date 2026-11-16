@@ -965,7 +965,7 @@ def test_phase_approved_rule_arms_and_fires():
 
 
 def test_phase_approved_rule_is_numeric_only():
-    # Owner ruling 2026-08-01 (WI-402): once armed, an approved Phase cell is a
+    # Operator ruling 2026-08-01 (WI-402): once armed, an approved Phase cell is a
     # BARE INTEGER — digits only, full cell. A prefixed label still digit-parses
     # (phase_num is untouched, so legacy labels keep arming/filtering/deriving —
     # grandfathering), but the literal joins (--phase/--approve scope match,
@@ -1277,7 +1277,7 @@ def test_an_allow_entry_names_the_open_item_it_defers(tmp_path):
 def test_the_allow_field_is_a_position_not_a_mention(tmp_path):
     # A field, not a phrase match: the id is the FIRST token of the reason. An id
     # discussed later in the sentence is prose — accepting it would re-introduce
-    # exactly the "grabs items that are not applicable" failure the owner refused.
+    # exactly the "grabs items that are not applicable" failure the operator refused.
     trace = load_script("trace")
     root = _allow_repo(
         tmp_path,

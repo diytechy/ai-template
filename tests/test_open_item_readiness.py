@@ -1,7 +1,7 @@
 """A work item cites the open item it waits on (WI-790; TC-301).
 
 The `OI-###` token in a row's `needs` is the one edge between a work item and
-an owner decision: the row reads `blocked`, the item named, until the item
+an operator decision: the row reads `blocked`, the item named, until the item
 leaves `pending`, and the open item carries no pointer back. An open item's
 historical `wi_refs` cell is read by nothing.
 
@@ -226,7 +226,7 @@ def _uncited(root):
 
 def test_an_item_only_a_claimed_row_cites_is_no_error(tmp_path):
     """Implements: TC-314"""
-    # IF-073, LLR-299: a lane at a planned owner-held step cites its item from
+    # IF-073, LLR-299: a lane at a planned operator-held step cites its item from
     # the claim copy, and the checker must not refuse that filing.
     _items(tmp_path, ("OI-5", "pending"))
     _spec(tmp_path, "WI-001", where="active/wi-001", needs=["OI-5"])

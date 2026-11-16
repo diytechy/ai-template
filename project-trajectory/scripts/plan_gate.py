@@ -5,10 +5,10 @@ WHY THIS EXISTS (review-churn plan item 9 step 3; WI-788's design, chapter 3
 §4.1, §4.5 and §4.7). A row the scope critique marks `planmode = "single"`
 plans in its lane after the claim: a plan, the coverage gate, one independent
 cross-family critique, at most one revision, and at the cap a dispute sitting
-or the owner. A build starts only after a passing verdict. Advice that is not
+or the operator. A build starts only after a passing verdict. Advice that is not
 held at the commit is advice a hand landing or a `--no-verify` commit skips,
 so the hold is a commit rule, asked where every lane commit is made and again
-where it lands (the owner's 2026-10-03 rule: enforce at the commit):
+where it lands (the operator's 2026-10-03 rule: enforce at the commit):
 
   * the pre-commit hook's `plan-gate` step (`staged_lines`), of the commit
     being made in a lane, and, on trunk, of each lane commit a `git merge
@@ -402,7 +402,7 @@ def _cap_problems(root, at, fields, findings):
 def _dismissals(root, at, fields, blocking):
     """Why the cited dispute verdict, read at `at` with its binding, is not
     a RECORDED dispute verdict ruling each blocking finding DISMISS, or [].
-    A FIX or an ESCALATE is the owner's, never the build's. Which finding the
+    A FIX or an ESCALATE is the operator's, never the build's. Which finding the
     sitting ruled, as the findings file beside it records it, is checked once,
     at the filing step (`plan_coverage.ruling_problem`); this re-reads what a
     rebase cannot change.
@@ -422,7 +422,7 @@ def _dismissals(root, at, fields, blocking):
         return ["the dispute verdict is refused: {}".format(why)]
     return [
         "{}: the dispute verdict rules it {}; only a DISMISS lets the plan "
-        "pass, and anything else is the owner's".format(
+        "pass, and anything else is the operator's".format(
             fid, (rulings.get(fid) or ("nothing",))[0]
         )
         for fid in blocking

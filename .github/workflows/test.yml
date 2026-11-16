@@ -9,7 +9,7 @@ on:
     # development branch had run ~845 commits with NO hosted CI, because a
     # branch push only triggered a run while someone kept a PR open — and the
     # 2026-07-25 DevStg-Impl sitting proved what that costs: an entire test layer
-    # (`agent_loop_*`) could not execute on the owner's machine at all, so the
+    # (`agent_loop_*`) could not execute on the operator's machine at all, so the
     # local gate was green over a blind spot only an independent environment
     # sees. A push trigger is repo state that travels with the branch and
     # cannot lapse; naming individual branches would just re-lapse at the next
@@ -95,7 +95,7 @@ jobs:
   # run menu's audit (docs/stack.ini [run] audit) judges them, by hand and at
   # phase close. A red tier still fails this job with the tier's own code. The
   # CPU budget is stamped on one workstation and applies everywhere, so a WARN
-  # here is a finding for the owner, not a re-stamp (the step's docstring owns
+  # here is a finding for the operator, not a re-stamp (the step's docstring owns
   # the meters and their bounds). One lane: this is a timing signal, not a
   # portability check.
   smoke-budget:

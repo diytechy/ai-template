@@ -608,7 +608,7 @@ def test_station_links_resolve():
     # Over the real meta repo (where every canonical home exists): each linked
     # stage resolves, and the station's canonical homes are the ones the flow
     # actually lands on — the WI registry (claim/intake), the log (the merged
-    # record), and the owner surface (the surfaced approval cards).
+    # record), and the operator surface (the surfaced approval cards).
     gt = load_script("gen_trajectory")
     station = gt._station_panel(ROOT)
     hrefs = re.findall(r'href="([^"]+)"', station)
@@ -971,7 +971,7 @@ def test_t4_an_over_bound_next_work_title_discloses_operably(tmp_path):
 # --- WI-315 (SR-054 T1 binding): the three core reading tasks each reach a
 # LABELLED entry point within one tab switch of the landing view ----------------
 # WI-300's option-(f) pattern applied to T1, the last SR-054 anchor whose
-# mechanizable half had no owner. The 2026-07-26 owner ruling reworded T1 off the
+# mechanizable half had no owner. The 2026-07-26 operator ruling reworded T1 off the
 # word "obvious" onto an operational gloss: each of the three core reading tasks
 # (find the project state / the next work / how the parts connect) is reachable in
 # <= 1 tab switch from the landing view, its entry point a LABELLED nav control or

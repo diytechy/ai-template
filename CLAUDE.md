@@ -11,7 +11,7 @@ and scripts, not a downstream application.
 > it). Don't confuse the two: this file governs editing the kit; that one governs
 > using the kit.
 
-> **`OWNER_SCRATCHPAD.md` is owner-only** — never read, cite, or act on it. It
+> **`OPERATOR_SCRATCHPAD.md` is operator-only** — never read, cite, or act on it. It
 > holds the operator's free-form notes; the working surfaces are
 > `docs/status.md`, the registries, and `docs/log.md`.
 
@@ -51,7 +51,7 @@ that easier to achieve in a real project — or get out of the way.
   adopter's cell must mean something in **their** repo: a marker naming one of
   this repo's own rulings cites a record they can never read.
 - **Don't let this repo drift from the template it ships.** VALUES may diverge
-  between the kit's template and this repo's own instance (owner dials, filled
+  between the kit's template and this repo's own instance (operator dials, filled
   registry rows, enabled sets); STRUCTURE must not (schema headers, launcher
   command contracts, declared-section shapes) — `tests/test_dogfood_sync.py`
   enforces it.
@@ -59,7 +59,7 @@ that easier to achieve in a real project — or get out of the way.
   command, `run.cmd smoke` (`run_menu.py smoke` from a shell; its steps are
   [`docs/stack.ini`](docs/stack.ini) `[run]`). It runs the smoke tier once: a
   red tier FAILS the bar; its CPU-seconds and wall time are only reported
-  (owner, 2026-10-20). `run.cmd audit` judges them, and the tier's test
+  (operator, 2026-10-20). `run.cmd audit` judges them, and the tier's test
   count, against `[smoke-budget]`, by hand and at phase close; a breach is
   filed as a re-tier row, never charged to the lane that ran it. Heavy cases
   live in `tests/conftest.py` `SLOW_MODULES`, every script family keeping an

@@ -88,7 +88,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`): `kitlib.ladder`
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`): `kitlib.ladder`
 # is the ONE home for the eight-rung stage vocabulary this module used to define
 # (WI-498 slice 0), and `kitlib.spine` is the ONE home for the ROW vocabulary it
 # used to duplicate against trace.py (WI-448 slice 3). Same guarded idiom as the
@@ -181,7 +181,7 @@ sn_draft_ids = spine_carrier.draft_ids_from_text
 # something subtly different at each of its reading sites; splitting the token
 # without splitting the question just moves the ambiguity.
 #
-# THE RULED MODEL (owner 2026-08-12, re-ruled 2026-08-13 as OI-21, unified at
+# THE RULED MODEL (operator 2026-08-12, re-ruled 2026-08-13 as OI-21, unified at
 # OI-51): **stages are the rungs of the decomposition, and a repo is IN exactly
 # one.** Certification is an EVENT at a rung boundary — a named operator's reviewed
 # Status-change commit — recorded where events are, not as a rival value. The
@@ -740,7 +740,7 @@ def spine_stage(
         for u in sn_ids
     ):
         return STAGE_NEEDS
-    # THE `Modified` RUNG RETIRED AT STEP 7 with the word it read (owner ruling
+    # THE `Modified` RUNG RETIRED AT STEP 7 with the word it read (operator ruling
     # 2026-08-17m). NOT re-keyed onto drift: this axis reads CELLS, and reaching
     # into `docs/archive/` would make a pure row computation read the filesystem.
     if arch_incomplete(cmps, have_cmps):
@@ -758,7 +758,7 @@ def spine_stage(
     # slice 3). Falling through every rung above means every SR is decomposed
     # and every TC is authored and non-Drafted — the test set is WRITTEN, so
     # "TCs in work" is false. What remains is making them pass, and that is
-    # DevStg-Impl. The owner's semantics, ruled 2026-08-21: Founded through the
+    # DevStg-Impl. The operator's semantics, ruled 2026-08-21: Founded through the
     # test tier = broken down with test cases laid = implementation is the work
     # in progress.
     #

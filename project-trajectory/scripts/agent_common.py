@@ -5,7 +5,7 @@ unchanged). The session engine (agent_loop) and the serial integrator
 (integrate.py) both stand on this layer:
 
   - the typed exit codes + `END_STATES`;
-  - `git`/`head_sha`/`head_sha_full` and the dirty-tree family (owner-only
+  - `git`/`head_sha`/`head_sha_full` and the dirty-tree family (operator-only
     scratchpad exemption, WI-203);
   - the declared-surface reads — `read_declared`, `pause_reason`, the WI-148
     blackout window — and the stop banner + Current State excerpt;
@@ -50,7 +50,7 @@ Contract IF-189: `default_base(root)`, the integration base a claimed branch's
     HEAD on an unrelated history, None on an unborn HEAD — which the caller
     treats as an unreadable change rather than an empty one; and
     `TrunkUndeclared` when the trunk's declaration cannot be read.
-Contract IF-224: `operator_accepts_spine(docs, registry)`, read by the owner's
+Contract IF-224: `operator_accepts_spine(docs, registry)`, read by the operator's
     approval brief to set apart the owing chains the operator-acceptance dial
     releases to an adjudicator: True (held) for a spine registry whose rung the
     dial holds and for one no rung map names, False for a released one. The
@@ -70,7 +70,7 @@ import sys
 import time
 from pathlib import Path
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`, executed
 # WI-448): one home for behaviours this module used to spell out itself — the
 # declared-policy line reader, the `docs/work/` spec-folder registry reader, and
 # (WI-498 slice 0) the stage ladder's closed rung vocabulary.
@@ -283,7 +283,7 @@ EXIT_PAUSED = 8
 # reviewer ladder errored, hung or was cooled. Deliberately NOT a decided
 # worker outcome (dispatch._WORKER_OUTCOMES): the lane parks with its work,
 # like a crash, and the next cycle resumes it to draw the round — finished
-# work is never handed back over a reviewer outage (owner direction
+# work is never handed back over a reviewer outage (operator direction
 # 2026-08-30). Appended at the END of the exit alphabet; 10 stays retired.
 EXIT_REVIEW_OWED = 9
 
@@ -308,15 +308,15 @@ EXIT_RESTART = 11
 EXIT_RED_CAP = 12
 
 
-# The FB3 owner-only path(s): OWNER_SCRATCHPAD.md is free-form owner notes the
+# The FB3 operator-only path(s): OPERATOR_SCRATCHPAD.md is free-form operator notes the
 # operator edits continuously (check_docs.py drops it from doc discovery the same
 # way — check_docs.SCRATCHPAD). Because it is tracked and perpetually edited, an
-# owner-only-dirty tree is NOT interrupted-session residue: it must not fire the
+# operator-only-dirty tree is NOT interrupted-session residue: it must not fire the
 # WI-076 resume note or flip the done detection (WI-203). Mirrored, not imported
 # — importing the doc-checker into the coordinator would add a CMP-008→CMP-007
 # edge + an IF seam for one fixed filename; the name is a bootstrap contract
 # (test_bootstrap asserts the scaffold ships it), so the mirror cannot drift.
-OWNER_ONLY_PATHS = ("OWNER_SCRATCHPAD.md",)
+OPERATOR_ONLY_PATHS = ("OPERATOR_SCRATCHPAD.md",)
 
 
 PAUSE_MALFORMED = "<malformed docs/work/pause — fix or delete it>"
@@ -509,7 +509,7 @@ def _declared_test_command(ini, py=None):
     """The repo's declared test command as a tokenized argv, read from a
     docs/stack.ini path — the stack-schema home a bar runner reads so it runs
     the bar the repo actually declares. Mirrors check.py's stack schema rather
-    than importing it — the OWNER_ONLY_PATHS precedent above: a CMP-008→CMP-007
+    than importing it — the OPERATOR_ONLY_PATHS precedent above: a CMP-008→CMP-007
     import for one small read would owe an IF seam; the tests pin it against
     drift. The kit schema is `[product] test` (with {py}/{src}/{tests} the same
     placeholders check.py fills), with the legacy raw `[stack] test` as a
@@ -683,7 +683,7 @@ def parse_wi_id(value, source):
 # STATUS encoded as the DIRECTORY (docs/concurrency-restructure.md §2.1). The
 # 270-line reader that used to sit here VERBATIM, and identically in the other
 # two of schedule.py, check_trajectory.py and agent_common.py, now lives once in
-# `kitlib/registry.py`: owner ruling D-8 (`OI-16`, inversion confirmed
+# `kitlib/registry.py`: operator ruling D-8 (`OI-16`, inversion confirmed
 # 2026-08-13) retired the F5 no-shared-module rule that had licensed the copies.
 #
 # RE-EXPORTED under the names this module has always carried, so no call site
@@ -1352,7 +1352,7 @@ def working_tree_dirty(root):
 def _porcelain_path(line):
     """The repo-relative path a `git status --porcelain` line names — the
     destination side of a rename/copy (`R  old -> new`), surrounding quotes
-    stripped — used to match a dirty line against OWNER_ONLY_PATHS. Splits the
+    stripped — used to match a dirty line against OPERATOR_ONLY_PATHS. Splits the
     XY status token off the front rather than assuming a fixed column width (a
     leading blank status column may or may not survive to here)."""
     body = line.strip()
@@ -1363,16 +1363,16 @@ def _porcelain_path(line):
 
 
 def substantive_working_tree_dirty(root):
-    """`working_tree_dirty` minus the FB3 owner-only paths (OWNER_ONLY_PATHS) —
+    """`working_tree_dirty` minus the FB3 operator-only paths (OPERATOR_ONLY_PATHS) —
     the view the loop's WI-076 resume note (loop start) and done detection use,
-    so a tree whose ONLY changes are the owner scratchpad (perpetually edited,
+    so a tree whose ONLY changes are the operator scratchpad (perpetually edited,
     never the loop's or a worker's deliverable) reads clean and the interrupted-
     residue signal fires only on genuine residue. The raw primitive stays
     available for a caller that wants every uncommitted path (WI-203)."""
     return [
         ln
         for ln in working_tree_dirty(root)
-        if _porcelain_path(ln) not in OWNER_ONLY_PATHS
+        if _porcelain_path(ln) not in OPERATOR_ONLY_PATHS
     ]
 
 
@@ -2092,7 +2092,7 @@ def preflight(root, template, args):
             elif stale_terminal_assignment(root, wid, row):
                 # WI-267: a WI CANCELLED mid-assignment is terminal too — a
                 # worker must never build a WON'T-BUILD row. The scheduler
-                # never freshly dispatches a cancelled WI, but an owner can
+                # never freshly dispatches a cancelled WI, but an operator can
                 # cancel one already leased to a worker; this closes that
                 # narrow mid-flight race the done-only check missed.
                 status = (row.get("Status") or "").strip().lower()

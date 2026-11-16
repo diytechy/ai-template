@@ -75,7 +75,7 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     ruling, not this module's. A new row is not an amendment, a row whose
     status moved is a deliberate call this does not second-guess, and any
     missing git context degrades to `[]` rather than raising.
-    THE SAME WALK ANSWERS THE APPROVAL-ACT QUESTIONS (owner ruling 2026-09-01).
+    THE SAME WALK ANSWERS THE APPROVAL-ACT QUESTIONS (operator ruling 2026-09-01).
     `staged_approval_acts(root, base, head)` returns the rows that CROSSED into
     an approval claim or arrived already making one — precisely the set the
     amendment reader exempts, over the WIDER `APPROVAL_ACT_CSVS` universe that
@@ -89,7 +89,7 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     `merge_approval_refusal(root, base, head, metas, *, trunk)`
     is the merge slot's one call: every lane's acts through
     `backed_act_refusal` - each backed by a recorded verdict over its own rows
-    (owner ruling 6, 2026-10-07) - a record written with no act through
+    (operator ruling 6, 2026-10-07) - a record written with no act through
     `lane_approval_refusal`, and, when any claimed row in `metas` records a
     scope, the flips through its first-approval scope besides, and its
     re-attestations — read from the act ledger entries the delta added — through
@@ -155,8 +155,8 @@ two trees in both places. It decides only that mechanical condition: whether
 the change carries the ruling, and whether a row's other fields must move, is
 the reviewer's judgement.
 
-The same rule couples the owner's OVERRULE of a delegated decision to work
-(WI-818): a commit that sets a decisions-record entry `owner = "overruled"`
+The same rule couples the operator's OVERRULE of a delegated decision to work
+(WI-818): a commit that sets a decisions-record entry `operator = "overruled"`
 must, in the same diff, file or amend a queued or active work item whose spec
 cites the entry (`kitlib.decisions.overrule_sync_lines`, which owns the
 record's format and is handed the two trees as readers; `ruling_sync_lines`
@@ -223,9 +223,9 @@ SPINE_CSVS = (
 # THE APPROVAL-ACT RUNG'S OWN SET: the spine three PLUS the need tier
 # (WI-572 REVIEW-A round 028). SN is a SPINE tier — `spine_carrier.SPINE_TABLE`
 # names it, its rows carry the same `status` vocabulary, and the DevStg-Reqs
-# rung the operator-acceptance dial holds for the owner is exactly the SN half — so a
+# rung the operator-acceptance dial holds for the operator is exactly the SN half — so a
 # lane flipping `SN-###` Drafted -> Approved is the WORST case of the act the
-# owner's 2026-09-01 ruling moved to the adjudicator, not an exempt one. It was
+# operator's 2026-09-01 ruling moved to the adjudicator, not an exempt one. It was
 # excluded only by the older section-as-state reading recorded at
 # `baseline_snapshot._claims_approval`, which the `status` cell retired.
 #
@@ -348,7 +348,7 @@ def _tier_reads(root, prefix, rel_path, id_col, under=""):
         yield path, rows, None if rows is not None else "does not parse"
 
 
-# The §A5.1 cell split (OWNER RULING 2026-07-31, docs/concurrency-v2.md; WI-380).
+# The §A5.1 cell split (OPERATOR RULING 2026-07-31, docs/concurrency-v2.md; WI-380).
 # Only what is APPROVED arms the re-attest warn. Traceability is TRACED, not
 # approved: re-pointing an LLR at the module the code moved to amends no
 # attested prose. WI-280 paid for the conflation — 19 `Module` cells followed
@@ -382,7 +382,7 @@ def _tier_reads(root, prefix, rel_path, id_col, under=""):
 # one — carrying no prose either side; (2) the residual would classify it APPROVED,
 # so the phase-2 backfill would arm a re-attest window on every row it touched,
 # which is precisely the 148-row noise `Boundary-Refs` was classified out of; and
-# (3) the owner's own sequencing note prices this ruling — the cell "is NOT
+# (3) the operator's own sequencing note prices this ruling — the cell "is NOT
 # anticipated to be an attested cell, so it can be tacked on AFTER the sitting
 # without re-opening anything signed", which is only true if it is classified here.
 # It is deliberately NOT in `intake.ROUTED_TRACED_CELLS`: re-pointing `SN-Refs`
@@ -538,7 +538,7 @@ def traced_cells(csv_path):
 
 
 # --- the §A5.1 cell comparison ------------------------------------------------
-# WHAT WAS HERE AND WHY IT IS GONE (owner directive 2026-08-15). SN-029's digest
+# WHAT WAS HERE AND WHY IT IS GONE (operator directive 2026-08-15). SN-029's digest
 # engine — `normative_text`, `sn_normative_text`, `digest`, `current_digests` and
 # their two exclusion sets — lived here for ~107 lines, reserved for an on-row
 # `TextHash`/`HashedOn` writer (repo-lock D-1's anchor half) that was never
@@ -781,7 +781,7 @@ def staged_approval_acts(root, base="HEAD", head=None):
     a need is the worst case of this act rather than an exempt one (round 028).
     The three OFF-SPINE registries stay out; see `OUTSIDE_THE_APPROVAL_ACT`.
 
-    Owner ruling 6, 2026-10-07 (WI-849): the act this reports is an independent
+    Operator ruling 6, 2026-10-07 (WI-849): the act this reports is an independent
     adjudicator's, in the authoring lane or on trunk. `approval_delta` directly
     below reads it ONCE for `merge_approval_refusal`, which requires every act
     backed by a recorded verdict over its own rows, and an adjudication row's
@@ -1003,7 +1003,7 @@ def adjudication_approval_refusal(scope, acted, delta):
 
 
 def merge_approval_refusal(root, base, head, metas, *, trunk):
-    """Apply one derived approval delta to THE ONE ACTOR RULE (owner ruling 6,
+    """Apply one derived approval delta to THE ONE ACTOR RULE (operator ruling 6,
     2026-10-07; WI-849): a lane's acts are admitted when every act is backed
     by a recorded verdict judging that act's own rows (`backed_act_refusal`),
     in whatever lane it is taken, and the snapshot copies exactly the
@@ -1041,7 +1041,7 @@ def merge_approval_refusal(root, base, head, metas, *, trunk):
 
 
 def backed_act_refusal(root, base, head, acted, delta):
-    """THE ACTOR TEST at the merge slot (owner ruling 6, 2026-10-07; WI-849):
+    """THE ACTOR TEST at the merge slot (operator ruling 6, 2026-10-07; WI-849):
     why a lane's approval acts may not merge, or None. Every act must be backed
     by a RECORDED verdict among the bindings the branch carries that judged
     that act's own rows: each row it flips or mints approved ruled APPROVE in a
@@ -1433,7 +1433,7 @@ def lane_approval_refusal(root, base, head, delta=None, reason=None):
     its `reason` appended.
 
     THE ACT IS AN INDEPENDENT ADJUDICATOR'S, IN THE AUTHORING LANE OR ON TRUNK
-    (owner ruling 6, 2026-10-07, superseding the trunk-side clause of the
+    (operator ruling 6, 2026-10-07, superseding the trunk-side clause of the
     2026-09-01 ruling). A lane AUTHORS `Drafted` SN/SR/LLR/TC rows and AMENDS
     cell text on any such row, including approved ones; its acts - a `Status`
     flipped into `Approved`/`Founded`, a row minted already claiming one, a
@@ -1481,7 +1481,7 @@ def lane_approval_refusal(root, base, head, delta=None, reason=None):
     return (
         "{} performs an APPROVAL ACT no recorded verdict backs. The act is an "
         "independent adjudicator's, never the session's that authored the rows, "
-        "in the authoring lane or on trunk (owner ruling 6, 2026-10-07; "
+        "in the authoring lane or on trunk (operator ruling 6, 2026-10-07; "
         "PROCESS.md §4): that session leaves SN/SR/LLR/TC, assumption and "
         "surrogate rows `Drafted` and does not write {}/. Leave the rows "
         "`Drafted` for the first-approval adjudication minted at this merge, "
@@ -1580,7 +1580,7 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     cannot disagree about which registries and rows the delta contains. Its
     universe is `AMENDMENT_CSVS` since WI-791 (OI-100 gap 1): the need,
     assumption and surrogate tiers join the three spine tiers."""
-    # Each row answers for its OWN cells (owner ruling 2026-08-17m): the
+    # Each row answers for its OWN cells (operator ruling 2026-08-17m): the
     # sanctioned amend path is flipping the AMENDED row itself in the same
     # commit — a Status that moved is exempted below. The retired chain
     # reading's owning-SR exemption (a parent flip sanctioning a silent

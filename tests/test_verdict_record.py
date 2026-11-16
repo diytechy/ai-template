@@ -2318,7 +2318,7 @@ def test_a_record_only_rework_draws_no_round_and_pages(tmp_path, capsys):
     assert "rework changed no non-record path" in out
     assert "a round on the same tree would be refused as a reroll" in out
     # The existing ladder, at a loop-held hold: the run does not stop, the next
-    # session is the DESIGN-CHECK the page degrades to (owner ruling
+    # session is the DESIGN-CHECK the page degrades to (operator ruling
     # 2026-09-03 leaves that degrade uncapped).
     assert code is None
     assert st.next_phase == "DESIGN-CHECK"

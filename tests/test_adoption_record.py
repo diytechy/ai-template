@@ -470,7 +470,7 @@ def test_a_record_refusal_at_the_slot_does_not_carry_the_text_then_act_remedy(
 
 def _spy_shared_walk(monkeypatch):
     """Wrap `kitlib.git.lane_commit_walk` with a spy recording each call's
-    commits and riders, then walking them as the owner does."""
+    commits and riders, then walking them as the operator does."""
     from kitlib import git as kgit
 
     real = getattr(kgit, "lane_commit_walk", None)

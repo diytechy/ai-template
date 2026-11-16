@@ -3,7 +3,7 @@
 The kit's product is the template in ``project-trajectory/``; this repo also
 *uses* that template on itself. The governing rule (CLAUDE.md principles):
 
-    VALUES may diverge between template and instance (owner dials, filled rows,
+    VALUES may diverge between template and instance (operator dials, filled rows,
     enabled sets); STRUCTURE must not (schema headers, launcher command
     contracts, declared-section shapes).
 
@@ -17,7 +17,7 @@ This module is the enforcer. It asserts, for the live repo, that:
   * the root ``agent-resume.{sh,cmd,command}`` launchers structurally match
     their templates on the engine-invocation line (normalised for the meta-repo
     ``project-trajectory/`` path prefix + ``--root .`` self-application) and the
-    exported ``AGENT_*`` variable-NAME set (template subset of live) — the owner
+    exported ``AGENT_*`` variable-NAME set (template subset of live) — the operator
     DIAL VALUES (AGENT_CMD/AGENT_TIER_MAP/AGENT_JOBS/...) are explicitly free;
   * live ``docs/stack.ini`` declares every SECTION the template declares.
 
@@ -30,7 +30,7 @@ It lives in ``test_dogfood_widening.py``, outside the per-commit smoke tier,
 because it reads every live work item through four consumers twice.
 
 dev-setup is deliberately NOT pinned: unlike the launchers (near-verbatim copies
-+ owner dials), the live ``scripts/dev-setup.{sh,ps1,cmd,command}`` are bespoke
++ operator dials), the live ``scripts/dev-setup.{sh,ps1,cmd,command}`` are bespoke
 meta-repo rewrites (own install ladder, own CLI contract) with no shared
 structural line — pinning them would be over-fitting, the exact anti-goal. The
 one thing asserted is that they carry no ``agent_loop`` engine line, i.e. the
@@ -72,7 +72,7 @@ REGISTRIES = {
     # `agents`, which had never been pinned to a template at all. The WI-322 /
     # 122-REVIEW-A finding that put it here stands — drifting
     # Status/Raised/OneLine in the template passed all 23 dogfood tests, and a
-    # scaffold on that template then rendered "the owner queue is empty" for a
+    # scaffold on that template then rendered "the operator queue is empty" for a
     # registry holding two pending decisions: exit 0, gate green, silent wrong
     # content on the surface an operator rules from.)
     #
@@ -278,7 +278,7 @@ def test_dev_setup_carries_no_engine_line_to_pin():
 # so this is the map agreeing with the schema of record rather than a second
 # convention.
 TOML_REGISTRIES = {
-    # The NEED tier joined the census on 2026-08-17 (owner ruling 2026-08-17k).
+    # The NEED tier joined the census on 2026-08-17 (operator ruling 2026-08-17k).
     # It was the one spine tier with no schema of record, which is exactly how
     # it accumulated three fields for one axis and shipped a template missing
     # the `tags` cell its own live rows use.
@@ -545,7 +545,7 @@ def test_bite_removed_live_registry_column():
     tmpl = ["IF-ID", "Direction", "Contract", "Stability", "Notes"]
     live = ["IF-ID", "Direction", "Contract", "Stability", "Component", "Notes"]
     assert registry_header_drift(tmpl, live) is None  # live may ADD a column
-    mutated = [c for c in live if c != "Stability"]  # owner drops a live column
+    mutated = [c for c in live if c != "Stability"]  # operator drops a live column
     drift = registry_header_drift(tmpl, mutated)
     assert drift is not None and "Stability" in drift
     # Order is part of the rule, not only membership.
@@ -665,7 +665,7 @@ def test_bite_missing_stack_section():
 # backfilled, and 0/58 live specs carried the close-ritual boxes the absent
 # exemplar stated — a one-time audit is not an invariant, so this walk is.
 
-# dest -> one-line reason, owner-triaged 2026-07-20 (WI-251) and MOVED to a
+# dest -> one-line reason, operator-triaged 2026-07-20 (WI-251) and MOVED to a
 # declared file by WI-308: `docs/declared-absences` is now the one home, because
 # `check_doc_refs.py` needs the same facts (prose naming a path this repo
 # declares it does not carry is untraced, not rot) and the kit's anti-duplication

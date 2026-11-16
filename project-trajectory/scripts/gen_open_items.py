@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The owner decision surface, generated (WI-322, OI-10 ruled option (b)).
+"""The operator decision surface, generated (WI-322, OI-10 ruled option (b)).
 
 Replaces the hand-maintained `docs/open-items.md`. Two inputs, one output:
 
@@ -7,14 +7,14 @@ Replaces the hand-maintained `docs/open-items.md`. Two inputs, one output:
   the spine registries + git         rows owing an approval or a re-attest
   -> docs/open-items.html            the ONLY surface the operator reads
 
-Why HTML and not markdown: the depth an owner needs to rule a re-attest is a
+Why HTML and not markdown: the depth an operator needs to rule a re-attest is a
 WORD-LEVEL DIFF — of a 1,500-character cell, which forty words moved — and
 markdown cannot mark that. The first sitting under the retired `Modified` regime
 read a POINTER ("run `trace.py --approve modified`") and could not act from it,
 which is what this replaces. The CSV is a machine source: it is read raw about as often
 as `work-items.csv` is, i.e. never.
 
-WHAT IT RENDERS, in the order an owner needs it:
+WHAT IT RENDERS, in the order an operator needs it:
 
   1. PENDING DECISIONS — one card per `Status=pending` row a QUEUED or CLAIMED
      work item's `needs` cites (the queue projection, `pending.open_item_queue`,
@@ -22,7 +22,7 @@ WHAT IT RENDERS, in the order an owner needs it:
      recommendation, and the rows it holds. A pending row NO such row cites
      is not a card; it is named in an integrity notice above the cards,
      linked to its registry record, and while one exists the section never
-     claims the owner queue is empty.
+     claims the operator queue is empty.
   2. APPROVAL & RE-ATTESTATION — every SR whose `Status` is `Drafted` (owes a
      first approval) or whose chain has DRIFTED from the approved snapshot
      (owes a re-attest — D-9 step 7 retired the `Modified` marker and left the
@@ -38,15 +38,15 @@ WHAT IT RENDERS, in the order an owner needs it:
      diff had no reason to show, plus the SR's own text where the amendment sits
      entirely in a child. A diff says what moved; an attestation asks whether the
      evidence still verifies what the row now SAYS, and the second question needs
-     the cells the first one omits (owner, 2026-07-27). The section closes
+     the cells the first one omits (operator, 2026-07-27). The section closes
      with the AUDIT LIST: every act-ledger entry naming a verdict, i.e. each
      re-attestation an adjudicator's CLARITY ruling carried over — on a held
-     rung, the owner's signature carried onto amended text (OI-100, WI-791).
-  3. PENDING OWNER ACTIONS — the pointer projection `pending.py` already
+     rung, the operator's signature carried onto amended text (OI-100, WI-791).
+  3. PENDING OPERATOR ACTIONS — the pointer projection `pending.py` already
      derives (blocked rows, the spine pointers, the tracked pause), reused
      verbatim rather than recomputed.
   4. DECISIONS TO REVIEW — every delegated-decisions entry under
-     `docs/decisions/` the owner has not yet seen (no `owner` verdict;
+     `docs/decisions/` the operator has not yet seen (no `operator` verdict;
      `pending.decisions_to_review`), the high-risk entries first, each with
      its disclosure fields and a link to its record, or the count confirmed
      when none is left; then every overruled entry under its own heading,
@@ -71,7 +71,7 @@ gated compare is byte-stable.
 Contracts: IF-074 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 
-Contract IF-074: the generated owner decision surface at `docs/open-items.html` —
+Contract IF-074: the generated operator decision surface at `docs/open-items.html` —
     the one document the operator reads to rule. It carries, in this order: a card
     per `Status=pending` open-item row a queued or claimed work item's `needs`
     cites (the one-line, the blast radius, the options, the recommendation and
@@ -86,8 +86,8 @@ Contract IF-074: the generated owner decision surface at `docs/open-items.html` 
     section reads as *check the baseline* and never as *nothing changed*,
     closed by the audit list of every act-ledger entry that names a verdict
     (newest first, its rows and its verdict file; "None recorded." when there
-    is none); the pending-owner-actions pointer projection; and, last,
-    "Decisions to review": every delegated-decisions entry the owner has not
+    is none); the pending-operator-actions pointer projection; and, last,
+    "Decisions to review": every delegated-decisions entry the operator has not
     yet seen, high-risk first, with its file, id, disclosure fields and a link
     to its record, `-000` entries never shown, and the confirmed count when
     none is left, then every overruled entry under its own heading with the
@@ -133,7 +133,7 @@ OUT_REL = "docs/open-items.html"
 # files, identical on every machine and in CI, so there is nothing to stamp and
 # nothing a later run could accidentally re-derive differently.)
 
-# The theme tokens the two owner surfaces must agree on. This is a NAME list,
+# The theme tokens the two operator surfaces must agree on. This is a NAME list,
 # not a value mirror: 122-REVIEW-A refuted the value-mirror version — nine of the
 # twelve emitted tokens were rewritten (dark `--text:#444444`) and the guard
 # stayed green, because the mirror was a test-only dict nothing rendered from.
@@ -356,7 +356,7 @@ def word_diff(before, after):
         elif came:
             # A whitespace-only insertion is not worth MARKING, but dropping it
             # fused the neighbours — "a  b" → "a b" rendered as "ab". The
-            # reconstructed "after" must be the cell the owner is blessing, so
+            # reconstructed "after" must be the cell the operator is blessing, so
             # the run is emitted unmarked (122-REVIEW-A).
             out.append('<span class="eq">{}</span>'.format(esc(came)))
     return "".join(out)
@@ -391,8 +391,8 @@ def md_block(text):
     blank-line-separated paragraphs, `- ` bullet lists, and `### ` sub-headings.
 
     Why this exists: `md_inline` renders a cell as ONE run of text, so a brief
-    written as four paragraphs and a bulleted option list arrived on the owner's
-    screen as a single wall — the owner's words, 2026-08-12: "huge blocks of
+    written as four paragraphs and a bulleted option list arrived on the operator's
+    screen as a single wall — the operator's words, 2026-08-12: "huge blocks of
     single bloated paragraphs". The prose was structured; the renderer flattened
     it. That is a rendering defect, not an authoring one, and fixing it in the
     author (shorter cells) would have traded away the reasoning a ruler needs.
@@ -435,7 +435,7 @@ def md_block(text):
 # A link target is emitted as an anchor ONLY when it is a fragment, a relative
 # path, or http(s). These cells are agent-authored prose landing on the one
 # document the operator reads, so an unrestricted target ships a clickable
-# `javascript:` URL onto the owner's decision surface (122-REVIEW-A). An unsafe
+# `javascript:` URL onto the operator's decision surface (122-REVIEW-A). An unsafe
 # target is not silently dropped — it degrades to visible literal text, so the
 # reader still sees what the brief said.
 _SAFE_TARGET = re.compile(r"(?:#|\.{0,2}/|[\w.-]+/|https?:)")
@@ -511,14 +511,14 @@ def _uncited_notice(uncited, registry):
 def _brief_cards(queue, registry="requirements/open-items.toml"):
     """Section 1 from the one queue projection: the integrity notice for any
     uncited pending item, then one card per decision a queued or claimed row
-    cites. The "owner queue is empty" line is said only when both are empty.
+    cites. The "operator queue is empty" line is said only when both are empty.
 
     Implements: SR-049, LLR-118
     """
     notice = _uncited_notice(queue["uncited"], registry) if queue["uncited"] else ""
     cards = "".join(_brief_card(row, citers) for row, citers in queue["cards"])
     if not cards and not notice:
-        return '<p class="empty">No pending decision — the owner queue is empty.</p>'
+        return '<p class="empty">No pending decision — the operator queue is empty.</p>'
     return notice + cards
 
 
@@ -531,7 +531,7 @@ def _context_block(full, skip=(), heading="the rest of this row"):
     under this surface hit exactly that: a `Rationale` rewritten in full, with
     the `Requirement` it justifies nowhere on the page. Rendered always, revealed
     by clearing the toolbar box (hence hidden markup rather than a second
-    generator mode — the owner is one click from full context, not one re-run).
+    generator mode — the operator is one click from full context, not one re-run).
 
     `skip` drops the cells the diff already showed, so the block is a complement
     and never a second, unmarked copy of the changed text. Empty cells are
@@ -555,7 +555,7 @@ def _context_block(full, skip=(), heading="the rest of this row"):
 
 
 # The two cells the anchor block below renders on its own — excluded from
-# `_context_block`'s collapsed "rest of this row" so the owner never sees the
+# `_context_block`'s collapsed "rest of this row" so the operator never sees the
 # same Requirement/Rationale twice, once visible and once behind the toggle.
 _ANCHOR_CELLS = ("Requirement", "Rationale")
 
@@ -565,7 +565,7 @@ def _anchor_block(sr_row):
     truncated the same way — rendered UNCONDITIONALLY for every card, never
     inside `.ctx`.
 
-    THE OWNER'S REPORT, VERBATIM (2026-08-24): opening `open-items.html` and
+    THE OPERATOR'S REPORT, VERBATIM (2026-08-24): opening `open-items.html` and
     looking at an owing SR, the Requirement text was nowhere on the page. It
     was, in fact, on the page — `_context_block` already rendered it, for the
     SR-unchanged-chain-amended case — but only inside `.ctx`, which is
@@ -610,7 +610,7 @@ def _changed_cell_groups(row):
 
     TWO GROUPS, §A5.1 (D-9 step 4). An APPROVED cell that moved owes an
     attestation; a TRACED one routes to adjudication and arms no window (the
-    WI-388 ruling). Rendering them in one undifferentiated list asked the owner
+    WI-388 ruling). Rendering them in one undifferentiated list asked the operator
     to make that judgement per cell, from memory, mid-sitting — and the snapshot
     comparison hands the split over for free.
 
@@ -747,7 +747,7 @@ def _chain_row(row):
 # `trace._entry_kind`'s values -> the pill each card wears. Held as a table
 # rather than a chain of ternaries so a new kind is a row here and a KeyError
 # anywhere it was forgotten, which is the loud direction: a card that silently
-# fell back to "re-attest owed" would misdescribe what the owner owes.
+# fell back to "re-attest owed" would misdescribe what the operator owes.
 #
 # BACK TO TWO AT D-9 STEP 5: `plan` ("evidence owed") went out with `Planned`,
 # which OI-30 D1 folded into `Approved`. The KeyError-if-forgotten property is
@@ -767,7 +767,7 @@ def _nothing_owed():
         "<strong>LLR</strong>, or <strong>TC</strong> anywhere in the "
         "spine, and no drifted chain — no SR owes an approval or a "
         "re-attest. Say only what was checked: an amended row's own "
-        "<code>Status</code> answers for its own cells (owner ruling "
+        "<code>Status</code> answers for its own cells (operator ruling "
         "2026-08-17m), so a chain row's TEXT moving under an "
         "<code>Approved</code> SR reaches this view through the "
         "snapshot-drift arm — which compares against "
@@ -793,7 +793,7 @@ def _need_cards(owing):
     returns is shown with its reason verbatim. A drifted row shows its moved
     cells before and after, the rest of the row as collapsed context. Any
     other row is shown whole and UNCLIPPED: a first approval rules on every
-    cell of it, and a clipped cell would ask the owner to sign text they were
+    cell of it, and a clipped cell would ask the operator to sign text they were
     not shown.
 
     Implements: SR-178, LLR-271"""
@@ -838,7 +838,7 @@ def _attestation_cards(model, srs_by_id=None):
     among its chain rows — which happens whenever the SR's own cells did not
     move and an LLR or TC carries the whole amendment. Without the anchor
     block a reader saw ids and pills with no requirement text on the page at
-    all (the owner's report, 2026-08-24); without `sr_ctx` a reader diffing a
+    all (the operator's report, 2026-08-24); without `sr_ctx` a reader diffing a
     child row still had no statement of the requirement it hangs from."""
     srs_by_id = srs_by_id or {}
     cards = []
@@ -867,7 +867,7 @@ def _attestation_cards(model, srs_by_id=None):
             )
         )
         # UNCONDITIONAL and never hidden — see `_anchor_block`'s docstring for
-        # the gap this closes (the owner's report, verbatim).
+        # the gap this closes (the operator's report, verbatim).
         anchor = _anchor_block(srs_by_id.get(entry["id"]))
         # The SR's own REMAINING text (SN-Refs, Boundary-Refs, … — Requirement
         # and Rationale are excluded: `anchor` above already showed them,
@@ -944,9 +944,9 @@ def verdict_reattest_block(acts):
     """The audit list closing section 2: every act-ledger entry that names a
     verdict, newest first — the re-attestations an adjudicator's CLARITY
     verdict carried over (OI-100, ruled 2026-10-03; WI-791). On a held rung
-    that act carries the owner's signature onto amended text, so it stays
-    listed here after the fact, for the owner to audit. An act naming no
-    verdict is not listed: it is the owner's own, or a released rung's.
+    that act carries the operator's signature onto amended text, so it stays
+    listed here after the fact, for the operator to audit. An act naming no
+    verdict is not listed: it is the operator's own, or a released rung's.
 
     Implements: SR-049, LLR-118"""
     named = [a for a in acts if a.get("verdict")]
@@ -1065,7 +1065,7 @@ def render(root):
         "<!doctype html>\n"
         '<html lang="en"><head><meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        "<title>Open items — owner decision surface</title>\n"
+        "<title>Open items — operator decision surface</title>\n"
         "<style>{css}</style>\n"
         # Without scripting the checkbox governs nothing, so the honest default
         # is the FULLER page: context visible rather than a control that lies.
@@ -1075,7 +1075,7 @@ def render(root):
         "<header>\n"
         '<p class="eyebrow">generated — do not hand-edit · '
         "<code>python project-trajectory/scripts/gen_open_items.py</code></p>\n"
-        "<h1>Open items — owner decision surface</h1>\n"
+        "<h1>Open items — operator decision surface</h1>\n"
         '<p class="sub">{pending} pending decision(s) · {attest} SR chain(s) and '
         "{needs} stakeholder need(s) or stakeholder(s) owing an approval or a "
         "re-attest, across {rows} chain row change(s); "
@@ -1096,7 +1096,7 @@ def render(root):
         "from</span></div>\n"
         '<section class="band"><p class="eyebrow">2 · Approval &amp; '
         "re-attestation</p>{attestations}{audit}</section>\n"
-        '<section class="band"><p class="eyebrow">3 · Pending owner actions '
+        '<section class="band"><p class="eyebrow">3 · Pending operator actions '
         "(derived)</p>{pointers}</section>\n"
         '<section class="band" id="decisions-to-review"><p class="eyebrow">'
         "4 · Decisions to review</p>{decisions}</section>\n"
@@ -1125,7 +1125,7 @@ def render(root):
         pointers=_pointer_list(pure),
         offspine=_offspine_census_block(offspine_rows),
         # The LIVE carrier, never a hardcoded suffix: this view is the surface
-        # an owner rules from, and a pointer at the file the repo no longer has
+        # an operator rules from, and a pointer at the file the repo no longer has
         # (or has not migrated to yet) sends them to edit nothing.
         registry=live_registry_rel(root),
         **counts,
@@ -1137,13 +1137,13 @@ _DECISION_FIELDS = (
     ("alternative", "Alternative passed over"),
     ("reversal_cost", "Reversal cost"),
     ("why_not_escalated", "Why not escalated"),
-    ("review", "Owner note"),
+    ("review", "Operator note"),
 )
 
 
 def _decision_card(entry):
     """One delegated decision: its record and id, a high-risk pill when the run
-    hoisted it, an unrecognized `owner` value shown as it stands, its
+    hoisted it, an unrecognized `operator` value shown as it stands, its
     disclosure fields and, for an overruled entry, the work items citing it.
 
     Implements: SR-225, LLR-283
@@ -1155,8 +1155,10 @@ def _decision_card(entry):
         if str(entry["fields"].get(key) or "").strip()
     )
     flag = '<span class="pill approve">high risk</span>' if entry["high_risk"] else ""
-    if entry["owner"] is not None and "citing" not in entry:
-        flag += '<span class="pill">owner = {}</span>'.format(esc(repr(entry["owner"])))
+    if entry["operator"] is not None and "citing" not in entry:
+        flag += '<span class="pill">operator = {}</span>'.format(
+            esc(repr(entry["operator"]))
+        )
     if "citing" in entry:
         fields += _citing_field(entry["citing"])
     return (
@@ -1219,7 +1221,7 @@ def decisions_block(entries, overruled, findings, confirmed):
     if findings:
         body += (
             '<p class="empty notice">Format findings (an unrecognized '
-            "<code>owner</code> value reads as not yet seen):</p>"
+            "<code>operator</code> value reads as not yet seen):</p>"
             '<ul class="pointers">{}</ul>'.format(
                 "".join("<li>{}</li>".format(esc(f)) for f in findings)
             )
@@ -1243,7 +1245,7 @@ def pending_block_text(root):
 # A generated view can be perfectly FRESH and carry nothing: before 2026-08-18
 # this check reported UP TO DATE — truthfully, the bytes matched — over a
 # registry holding one pending row, the inert `-000` example, while about TEN
-# genuine owner decisions were live in log fragments, allow entries and session
+# genuine operator decisions were live in log fragments, allow entries and session
 # reports. Every freshness gate here asks *does the artifact match its
 # regeneration*; none of them asked whether the SOURCE was populated, and the
 # reassuring word is the same in both cases.
@@ -1401,7 +1403,7 @@ def _none_declaration_findings(root, pending):
     SCOPE cites a PENDING open item is CONTRADICTED. This is the exact weakness
     OI-70 named — `gen_open_items --check` verified a fragment DECLARES its
     deferrals, never that the declaration is TRUE, so a sitting could honestly
-    write `none` while holding a lane for the owner and nothing contradicted it.
+    write `none` while holding a lane for the operator and nothing contradicted it.
 
     POSITION IS SCOPE, as ARM 2 already reads it: a section-scoped `none` is
     judged against the pending ids cited in THAT section, a file-level one
@@ -1513,7 +1515,7 @@ def deferral_findings(root, states=None):
             elif states[oid] != "pending":
                 out.append(
                     "{}:{} declares {} deferred, but that row reads `{}` — a "
-                    "deferral names a row the owner has still to rule".format(
+                    "deferral names a row the operator has still to rule".format(
                         d["file"], d["line"], oid, states[oid] or "(no status)"
                     )
                 )
@@ -1614,10 +1616,10 @@ def main(argv=None):
         return 0
     # The migration has a detector, on BOTH paths. A resynced adopter keeps the
     # retired docs/open-items.md, whose GENERATED PENDING block nothing writes
-    # any more — it can sit there asserting a stale owner action, with their
+    # any more — it can sit there asserting a stale operator action, with their
     # status.md still pointing at it, while every gate stays green (122-REVIEW-A
     # planted a fabricated "WI-999 blocked" line and nothing noticed). Warn-only:
-    # the migration is the owner's, and failing here would red a repo midway
+    # the migration is the operator's, and failing here would red a repo midway
     # through it.
     if (root / "docs" / "open-items.md").is_file() and spine_carrier.resolve(
         root / OPEN_ITEMS_REL
@@ -1652,7 +1654,7 @@ def main(argv=None):
         return 0
     # THE BASELINE-REUSE RULE RETIRED WITH `--since` (D-9 step 4). It existed
     # because a regeneration could silently pick a DIFFERENT git-derived
-    # baseline and destroy the depth an owner was about to attest from — driven
+    # baseline and destroy the depth an operator was about to attest from — driven
     # at 122-REVIEW-A, it collapsed 43 chain-row diffs to 18 and `--check` then
     # certified the loss. The snapshot is the same directory on every machine
     # and in CI, so a regeneration cannot move it and there is nothing to reuse.

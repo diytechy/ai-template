@@ -12,7 +12,7 @@ CONTAIN the drift rather than remove it.
 
 Those questions are POLICY, not plumbing, and a policy disagreement between
 those two modules is a false green or a false red AT A GATE — the exact failure
-class the kit exists to prevent (repo-review-2026-07-12b M1 -> WI-099). Owner
+class the kit exists to prevent (repo-review-2026-07-12b M1 -> WI-099). Operator
 ruling D-8 (`OI-16`) replaced F5: the rule lives here, once, and both modules
 import it under their existing local names, so no call site moved.
 
@@ -257,28 +257,28 @@ def split_pred_edges(value):
     return hard_wi, hard_oi, soft
 
 
-# The work-row statuses whose `needs` hold a pending open item on the owner's
+# The work-row statuses whose `needs` hold a pending open item on the operator's
 # queue: a queued row, and a claimed row at a step its Done-when names.
 _CITER_STATUSES = frozenset({"queued", "active"})
 
 
 def open_item_queue(work_rows, oi_rows):
-    """THE ONE QUEUE PROJECTION of the owner's pending decisions (WI-790): which
+    """THE ONE QUEUE PROJECTION of the operator's pending decisions (WI-790): which
     pending open items a QUEUED or CLAIMED work item cites in its `needs`, and
     which no such row cites.
 
     Returns `{"cards": [(oi_row, [citing ids])], "uncited": [OI ids],
     "held": {WI id: [OI ids]}}`, every list in id order. `cards` is what the
-    owner surface renders and counts, `held` is the status snapshot's Blocked
-    list, and `uncited` is the integrity finding and the owner surface's notice:
+    operator surface renders and counts, `held` is the status snapshot's Blocked
+    list, and `uncited` is the integrity finding and the operator surface's notice:
     a pending decision nothing on the queue cites is invisible to the queue.
     One function feeds all of them, so the page, the snapshot and the checker
-    cannot disagree about what the owner owes.
+    cannot disagree about what the operator owes.
 
     `work_rows` are registry rows (`WI-ID`, `Status`, `Predecessors`) and
     `oi_rows` open-item rows (`OI-ID`, `Status`); `-000` example rows on either
     side are inert. A row outside `_CITER_STATUSES` (drafted, deferred or closed)
-    surfaces nothing: the decision reaches the owner through the queue.
+    surfaces nothing: the decision reaches the operator through the queue.
 
     Implements: SR-148, LLR-299
     """
@@ -301,7 +301,7 @@ def open_items_at(oi_rows, status):
     `status` (lower case), in row order, a duplicated id once per row.
 
     THE SHARED STAGE of every open-items reader that filters by status (WI-821,
-    the A->B->C / A->B->D shape PROCESS.md §3 names): the owner queue reads the
+    the A->B->C / A->B->D shape PROCESS.md §3 names): the operator queue reads the
     `pending` items here, `check_trajectory.approval_brief_findings` the
     `pending` briefs and `trace.ruled_open_item_texts` the `ruled` prose. Each
     had carried its own skip-and-filter loop. A row whose id is not `OI-###`
@@ -310,7 +310,7 @@ def open_items_at(oi_rows, status):
     A SEQUENCE, not a map: the carrier keeps two rows sharing an id, and the
     brief lint reads each of them, as its own loop did. A reader that wants a
     by-id map builds it with `dict(...)`, so the last row wins there exactly as
-    it did in the owner queue's and the ruled-prose reader's own loops.
+    it did in the operator queue's and the ruled-prose reader's own loops.
 
     Implements: SR-148, LLR-299
     """
@@ -1421,7 +1421,7 @@ FORM_VALUES = ("interface", "assumption", "cross-cutting")
 # `sampled` result was taken over a sample of the population the assumption
 # speaks about, and a `monitored` one is read continuously in operation. Each
 # says how the case looks, never how well the assumption holds: an assumption
-# carries no evidence level (owner ruling 2026-10-02). And
+# carries no evidence level (operator ruling 2026-10-02). And
 # THE LIFETIME FLOOR, in whole days: a judgment the harness cannot rerun is
 # trusted only for a declared time, and a lifetime under a week would demand it
 # more often than it can honestly be taken. The one judge of both is

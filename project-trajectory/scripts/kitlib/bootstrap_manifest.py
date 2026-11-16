@@ -169,13 +169,13 @@ MAPPING = [
     # them: it reads the adopting repo's own `docs/<file>`, so the templates
     # are documentation, not an input.)
     ("STATUS.template.md", "docs/status.md"),
-    # The owner decision briefs status.md's Needs-<operator> bullets link to
+    # The operator decision briefs status.md's Needs-<operator> bullets link to
     # (process-options.md "Trajectory / work-items layer"): one OI-N section
     # per pending decision, deleted when the ruling lands in log.md Decisions.
     ("registries/open-items.template.toml", "docs/requirements/open-items.toml"),
     # (SN-029's separate attestation ledger was scaffolded here until it was
     # retired, and the on-row anchor that was to replace it was ruled
-    # unnecessary complexity in turn — owner directive 2026-08-15. What an
+    # unnecessary complexity in turn — operator directive 2026-08-15. What an
     # approval blessed is recorded by COPYING the registries, and the README
     # below is the only part of that mechanism a fresh scaffold receives.)
     #
@@ -251,7 +251,7 @@ MAPPING = [
     # `plan_briefs.hat_surface`. It ships with CONTENT rather than as a blank
     # form — the roster itself is the census — because an empty roster is a
     # form with nothing behind it, only useful if it says something on day one.
-    # OWNER TEXT: adopters are expected to EDIT it (cut, add, rewrite every
+    # OPERATOR TEXT: adopters are expected to EDIT it (cut, add, rewrite every
     # `applies_when` against their own vocabulary), which is the only thing that
     # keeps a roster inherited from a template honest. Deleting the file is a
     # supported opt-out; the composers proceed without hats.
@@ -310,7 +310,7 @@ MAPPING = [
         "docs/rubrics/architecture-decomposition.md",
         "SR-186",
     ),
-    # THE SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed WI-448) —
+    # THE SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`, executed WI-448) —
     # AND THIS BLOCK IS THE WHOLE DOWNSTREAM RISK SURFACE OF THAT RULING.
     #
     # `kitlib/` holds the behaviours that used to be copied into script after
@@ -529,7 +529,7 @@ MAPPING = [
     ("scripts/check_need_form.py", "scripts/check_need_form.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
     ("scripts/trajectory_arch.py", "scripts/trajectory_arch.py"),
-    # The `last_approved` snapshot reader/writer (owner directive 2026-08-15).
+    # The `last_approved` snapshot reader/writer (operator directive 2026-08-15).
     # Shipped because it is a SIBLING IMPORT of `intake.py` — the adjudication
     # flip copies the registries in the same act — and because `trace.py` reads
     # it for the drift overlay. A scaffold without it cannot run either.
@@ -643,12 +643,12 @@ MAPPING = [
     # them. Root, not scripts/: the double-click use case is "open the checkout
     # folder and click" — one hop shallower matters for a non-code evaluator.
     ("README.template.md", "README.md"),
-    # The owner's private scratchpad (FB3, owner-feedback-2026-07-11): a root
+    # The operator's private scratchpad (FB3, owner-feedback-2026-07-11): a root
     # file for the operator to keep free-form notes. Its loud header tells LLM
     # agents not to read/cite/act on it, and check_docs.py exempts it entirely
-    # (links, orphans, stale hints) — owner notes never gate. Always scaffolded
+    # (links, orphans, stale hints) — operator notes never gate. Always scaffolded
     # like the README front door; a repo that doesn't want it just deletes it.
-    ("OWNER_SCRATCHPAD.template.md", "OWNER_SCRATCHPAD.md"),
+    ("OPERATOR_SCRATCHPAD.template.md", "OPERATOR_SCRATCHPAD.md"),
     # The capability-menu reader the launchers delegate to (WI-067): reads the
     # docs/stack.ini [run] section and presents a menu / launches by name /
     # lists for an agent, so the launch commands live once in stack.ini instead
@@ -713,13 +713,13 @@ MAPPING = [
     # it can neither mint at a merge nor print its release checklist.
     ("scripts/rejudge.py", "scripts/rejudge.py", "SR-215"),
     ("scripts/observation_cadence.py", "scripts/observation_cadence.py", "SR-215"),
-    # The pending-owner-action read model (WI-483 slice 3): the other half of
-    # the same question the census asks — what the OWNER owes, rather than what
+    # The pending-operator-action read model (WI-483 slice 3): the other half of
+    # the same question the census asks — what the OPERATOR owes, rather than what
     # the registries lack. It used to live in traj_status.py, which made the
     # dispatcher and gen_open_items.py import the gen_trajectory render facade
     # for a state query. traj_status.py, gen_open_items.py and dispatch.py all
     # import it, the first two unguarded, so a scaffold without it cannot render
-    # the owner surface.
+    # the operator surface.
     ("scripts/pending.py", "scripts/pending.py"),
     # The checker's cross-row coherence rules (WI-483 slice 4): does every id a
     # row cites name a row that exists, and does every row have the children its

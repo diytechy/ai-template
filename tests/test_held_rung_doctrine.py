@@ -1,7 +1,7 @@
 """Who takes a held rung's approval: stated once, pointed at everywhere else.
 
 process.md §4 holds the one statement that a held rung's approval is the
-owner's act (the owner, or an attended session on the owner's explicit
+operator's act (the operator, or an attended session on the operator's explicit
 delegation; never a mechanically triggered session) and which half of that is
 mechanical. The dial's comments and the gate-advance skill point at it. A
 second home would drift from the first the way the dial's "the operator approves"
@@ -17,10 +17,10 @@ from conftest import KIT, ROOT
 PROCESS = KIT / "PROCESS.md"
 
 # The canonical paragraph's bold lead, which appears nowhere else.
-CANONICAL_LEAD = "**A held rung's approval is the owner's act**"
+CANONICAL_LEAD = "**A held rung's approval is the operator's act**"
 
 # What each pointer names: the section and the paragraph's lead, quoted.
-POINTER = "process.md §4 \"A held rung's approval is the owner's act\""
+POINTER = "process.md §4 \"A held rung's approval is the operator's act\""
 
 # Phrases only the statement itself uses. A file outside PROCESS.md carrying
 # one is restating the rule rather than pointing at it.

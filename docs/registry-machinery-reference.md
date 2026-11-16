@@ -17,7 +17,7 @@ still reads like a strictness selector, the value it names is a RUNG.
 
 **Scope.** The four spine tiers in full, the stage derivation in full, the
 harness's stage→tier→coverage path in full, and what sits outside the derived
-range (`DevStg-Release`/`the owner's final read`, §9.5). The off-spine registries
+range (`DevStg-Release`/`the operator's final read`, §9.5). The off-spine registries
 (IF / PB / CMP / PART / ASSET / REPO) get a summary in §10. The **work-item**
 registry (`docs/work/`) is a different machine with its own states and fields and
 is deliberately not covered here.
@@ -142,9 +142,9 @@ prose enforcement; the DevStg-Reqs consistency review is the operator backstop.
 ## 3. SR — System Requirements
 
 **12 columns.** The **grouping row** of the re-attest surfaces: the sitting,
-the pending-owner-actions projection and the `--approve modified` brief all key
+the pending-operator-actions projection and the `--approve modified` brief all key
 off the SR row — presentation, never attestation scope (a row's `Status`
-answers for its own cells; a child amendment never flips the parent SR — owner
+answers for its own cells; a child amendment never flips the parent SR — operator
 ruling 2026-08-17).
 
 | Column | Required¹ | Vocabulary / default | Effect on the machinery |
@@ -221,7 +221,7 @@ copy carries drifted approved text that the act neither flips nor names; an
 ### 3.3 `Phase` — optional phased delivery
 
 - Parsed by `phase_num` — **the first digit run wins**, so `v2`, `2` and
-  `phase-2` all parse to `2`. The lenient parse is **grandfathering** (owner
+  `phase-2` all parse to `2`. The lenient parse is **grandfathering** (operator
   ruling 2026-08-01, WI-402): historical labels keep filtering and deriving,
   but a live approved cell must be a bare integer — next bullet.
 - **The rule arms itself, and is NUMERIC-ONLY.** `phase_approved_findings` is
@@ -246,7 +246,7 @@ copy carries drifted approved text that the act neither flips nor names; an
   (downstream compatibility), and the **foundation phase** — `min()` over all SR
   phases — is never deferred. The `tag in phases` match itself stays literal
   (CLI label-agnostic) — which is exactly why the cells must be numeric.
-- **The phase boundary is a confirmation event** (owner ruling 2026-08-01). The
+- **The phase boundary is a confirmation event** (operator ruling 2026-08-01). The
   current phase is derived — `max()` over non-draft spine rows, the `phase = N`
   field in `docs/stage` (§8.3) — and it increments only when
   re-opened scope is **confirmed**: an adjudication verdict that scope moved,
@@ -306,7 +306,7 @@ are.
 
 ### 4.2 `CodeSymbol` must BIND — the discharge test, and what the cell may name
 
-`symbol_findings` in `check_doc_refs.py` (WI-429; approved as built by owner
+`symbol_findings` in `check_doc_refs.py` (WI-429; approved as built by operator
 ruling **OI-20**, 2026-08-13). A live LLR row must carry **at least one**
 identifier-shaped `CodeSymbol` token that binds at module scope in one of the
 `.py` modules its `Module` cell names — `CodeSymbol` supplies the tokens,
@@ -486,7 +486,7 @@ A below-`Approved` SR needs no rule of its own: it is decomposed-but-not-approve
 it reads **DevStg-Tests**. That is the deliberate gate pull that makes a pending re-attest
 visible.
 
-The SN column's two DevStg-Below rungs are deliberately disjoint (WI-401, owner ruling
+The SN column's two DevStg-Below rungs are deliberately disjoint (WI-401, operator ruling
 2026-08-01). A **Drafted** SN fires only the draft rung — it is exempt from the
 coverage rung exactly as it is exempt from trace.py's orphan rule, so one fact
 never fires two findings at once. An **approved** SN cited by zero SR `SN-Refs`
@@ -731,9 +731,9 @@ trunk lane for exactly that one run.
 trunk, including the `derived-stage` freshness check. The stage a branch reports
 is the value as-of-base.
 
-### 9.5 What sits OUTSIDE the derived range: DevStg-Release and the owner's final read
+### 9.5 What sits OUTSIDE the derived range: DevStg-Release and the operator's final read
 
-DevStg-Reqs–DevStg-Impl are the derivable gates. `DevStg-Release` and `the owner's final read` are **not derived, not
+DevStg-Reqs–DevStg-Impl are the derivable gates. `DevStg-Release` and `the operator's final read` are **not derived, not
 cached, and not known to the harness at all** — `check.py`'s vocabulary is
 `GATES = ["DevStg-Reqs", "DevStg-Tests", "DevStg-Impl", "all"]`, so there is no `--gate DevStg-Release` to run.
 They are release milestones recorded separately.
@@ -783,7 +783,7 @@ assumed covered.
 
 ## 10. The traced-vs-approved cell split
 
-Owner ruling 2026-07-31 (`docs/concurrency-v2.md` §A5.1, WI-380). The newest
+Operator ruling 2026-07-31 (`docs/concurrency-v2.md` §A5.1, WI-380). The newest
 layer, and the one behind a lot of historical accidental gate churn.
 
 When an **`Approved`** spine row is amended, `staged_spine_amendments` in
@@ -813,7 +813,7 @@ brief and four review rounds — for a change that altered no requirement.
 **approved**, so a newly-added column can only ever be too loud, never silently
 un-approved. `tests/test_trajectory_staged.py` pins both halves.
 
-**The other half of the same walk** (owner ruling 2026-09-01). That reader
+**The other half of the same walk** (operator ruling 2026-09-01). That reader
 EXEMPTS a row whose `Status` moved — "a deliberate call this does not
 second-guess". `acceptance_record.staged_approval_acts` reports that
 exempted set MINUS the de-approvals: a row crossing INTO `Approved`/`Founded`,
@@ -836,7 +836,7 @@ mint hands over only released rows, and `adjudicate_brief.
 first_approval_values`, which RE-RESOLVES the population live at composition
 time (the row is claimed long after the merge), re-applies the same filter to
 what it re-resolved. A held row still appears in the rendered chain — it is
-evidence — labelled as the owner's and contributing no registry to the act's
+evidence — labelled as the operator's and contributing no registry to the act's
 `--approves` scope.
 
 WHICH ROWS the act may reach at all is the mint's, carried on the row: the
@@ -844,11 +844,11 @@ WHICH ROWS the act may reach at all is the mint's, carried on the row: the
 re-resolution is INTERSECTED with it. Without that intersection the live
 re-derivation asks a wider question than the mint asked — `reattest_model` walks
 every SR in the repo, so a merge staging one `Drafted` row minted a brief
-covering the whole repo's `Drafted` backlog, across workstreams the owner's
+covering the whole repo's `Drafted` backlog, across workstreams the operator's
 concurrency reason says the snapshot must not move across. Three filters, one
 label: `Drafted`, in scope, on a released rung. A row that is `Drafted` and
 released but belongs to a SIBLING act is shown as chain evidence and labelled
-with that reason rather than as the owner's — the two states take opposite
+with that reason rather than as the operator's — the two states take opposite
 actions. A row declaring no scope at all REFUSES: an unstated boundary read as
 "everything" is the widening the cell exists to prevent.
 
@@ -912,7 +912,7 @@ it through `wi_convert.write_spec_file`, which serializes from
 `parse_spec`. A column also lets a later composition read the recorded fact
 instead of looking a row up.
 
-**Chain-consistency warns — RETIRED** (owner ruling 2026-08-17, the cell
+**Chain-consistency warns — RETIRED** (operator ruling 2026-08-17, the cell
 reading): `modified_chain_advisories` told an author to flip the owning SR
 whenever a child read the retired `Modified` marker, asserting the retired
 chain reading. An amended LLR/TC under an `Approved` SR is a legitimate state — a row's

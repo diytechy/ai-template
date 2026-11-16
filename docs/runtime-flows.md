@@ -23,7 +23,7 @@ keeps the citations honest). This doc is the narrative half of the
 architecture record: the **structural** half (module map, import graph,
 declared `IF-###` seams, components) is *derived* from the registries and the
 source tree and rendered in [`PROJECT_STATE.html`](../PROJECT_STATE.html)'s
-"How (SW architecture)" tab, which also embeds these flows (owner ruling
+"How (SW architecture)" tab, which also embeds these flows (operator ruling
 2026-08-13u, sitting-2 decision 8 — the retired hand-authored architecture
 doc is this doc's ancestor). The requirement spine it cites
 lives in [`requirements/`](requirements/) + [`test/`](test/).
@@ -205,7 +205,7 @@ sequenceDiagram
             Note over Slot: not ready, a lagging watermark included:<br/>refreshed inside the held slot, and that refresh folds
             Slot->>Slot: merge --no-ff, ff trunk, unload, audit
             Slot->>Intake: post-merge arm, still inside the held slot (LLR-154)
-            Intake-->>Slot: rows the merge forces, minus amendments the range already settled (LLR-364), with an owner row and a pending item for a held row a sitting ruled MEANING, as ONE bookkeeping commit on trunk (LLR-153)
+            Intake-->>Slot: rows the merge forces, minus amendments the range already settled (LLR-364), with an operator row and a pending item for a held row a sitting ruled MEANING, as ONE bookkeeping commit on trunk (LLR-153)
         end
     end
     Disp->>Intake: empty frontier — gap census mints gap-closure rows, else drain and exit 0

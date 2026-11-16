@@ -32,7 +32,7 @@
 #      act, nor survive as a one-line reviewed diff.
 #   3. `docs/stage` — a GENERATED CACHE (derive_stage.py), not configuration.
 #   (The fourth exception — CHECK-ENABLEMENT TOGGLES stay files, WI-423 — is
-#   OVERTURNED, owner 2026-08-11: "creating files to toggle something off is
+#   OVERTURNED, operator 2026-08-11: "creating files to toggle something off is
 #   also very confusing … far better to tie those into process.toml and key
 #   them all to on / true." The six are the [checks] section at the bottom of
 #   this file now. This repo used to declare none of them, which is precisely
@@ -96,7 +96,7 @@
 #
 # WHO THE OPERATOR MAY BE on a held rung (a person, and which sessions may
 # take the act for them) is stated once, with its enforcer, in process.md
-# §4 "A held rung's approval is the owner's act". Read it there.
+# §4 "A held rung's approval is the operator's act". Read it there.
 #
 # IT WAS A 0-4 ORDINAL UNTIL WI-493 (OI-21 shape (ii)). A repo that still
 # carries the number is READ, TRANSLATED AND WARNED — not refused — and,
@@ -110,20 +110,20 @@
 # THIS REPO'S OWN VALUE IS THE LINE BELOW — read it, don't paraphrase it, here
 # or anywhere else. Every rung at or below it is operator-held; approval and
 # amendment above it proceed under ordinary review. Its history, for the
-# record and not as a second statement of the value: the owner set it to hold
+# record and not as a second statement of the value: the operator set it to hold
 # the Needs rung alone on 2026-08-21
 # (docs/log.d/2026-08-21-owner-session-dial-and-folds.md), superseding the
 # 2026-08-14 every-tier-operator-held directive (itself superseding the spent
 # 2026-07-15 loop-held charge-through directive); the C1 sitting of the
 # assumption-tier plan then raised it one rung to hold the system frame too
-# (docs/plans/2026-09-25-c1-sitting-package.md §4, on the owner's 2026-09-25
+# (docs/plans/2026-09-25-c1-sitting-package.md §4, on the operator's 2026-09-25
 # ruling). The retired `gate_policy = "autonomous"` that used to sit above is
 # DELETED rather than left inert: shipping it beside the ordinal is the
 # shadowing defect the template names, and the kit must not carry in its own
 # config the shape it refuses downstream.
 operator_accepts_through = "DevStg-Boundary"
 # OFF-SPINE APPROVAL AUTHORITY IS DERIVED FROM THIS SAME DIAL — NO SECOND KEY
-# (owner ruling OI-30 D3, 2026-08-15). The registries that carry an `approval`
+# (operator ruling OI-30 D3, 2026-08-15). The registries that carry an `approval`
 # cell (interfaces, external, components) are governed by the DEV-STAGE RUNG
 # each one already gates: `external` -> DevStg-Boundary, `interfaces` and
 # `components` -> DevStg-Arch. An `approval` cell may be machine-flipped only
@@ -154,7 +154,7 @@ keep_nondependent = false
 #   "off"    — never (the review rounds are the judgement)
 #   "sample" — spot-check at `complete_sample_rate`
 #   "always" — adjudicate every clean close too
-# Owner 2026-10-02: "off" - review rounds and adjudication already judge every
+# Operator 2026-10-02: "off" - review rounds and adjudication already judge every
 # close; of nine past spot checks one caught what nothing else did (WI-719).
 complete_review = "off"
 complete_sample_rate = 4
@@ -174,13 +174,13 @@ complete_sample_rate = 4
 #                    check: no round.
 #   "always"       — every adjudication gets one
 adjudication_review = "when-minting"
-# Whether a DELEGATED run owes the owner a record of the calls it made on the
-# owner's behalf — one TOML file per run under docs/decisions/, one entry per
+# Whether a DELEGATED run owes the operator a record of the calls it made on the
+# operator's behalf — one TOML file per run under docs/decisions/, one entry per
 # decision, each saying what was decided, the alternative, the reversal cost and
-# why it was not escalated, with a `review` cell the owner fills in place. The
+# why it was not escalated, with a `review` cell the operator fills in place. The
 # format and the routing doctrine are process-options.md "Delegated decisions
-# record". The dial allocates the owner's reading; it never moves what must go
-# to the owner through the process's exits — those bind at every setting.
+# record". The dial allocates the operator's reading; it never moves what must go
+# to the operator through the process's exits — those bind at every setting.
 #   "off"            — no record is owed (the shipped value)
 #   "record"         — a delegated run's close owes its record: the merge slot
 #                      refuses a lane that closed its work without one, and
@@ -188,7 +188,7 @@ adjudication_review = "when-minting"
 #   "escalate-first" — as "record", and sessions prefer the exits over
 #                      deciding: delegate less, ask more
 # An undeclared key reads "off"; a value outside the three is refused.
-# THIS REPO RECORDS (the owner ruled the dial and this value 2026-08-31, OI-75).
+# THIS REPO RECORDS (the operator ruled the dial and this value 2026-08-31, OI-75).
 decision_recording = "record"
 
 [policies]
@@ -206,7 +206,7 @@ review_rounds = 1
 # secrets floor below is separate and runs regardless.
 # `false` here is a RULED posture, not an unexamined default: OI-44 (ruled
 # 2026-08-20) defers the publication/identity decision to the first act that
-# would publish this repo's history beyond the owner's machines — re-answer
+# would publish this repo's history beyond the operator's machines — re-answer
 # OI-44 before that act. Do not re-raise "privacy off + identities in
 # history" as a finding; it resolves at that row.
 privacy_check = false
@@ -222,9 +222,9 @@ privacy_review = "require"
 guardrails = "off"
 # The blackout window, UTC, HH:MM-HH:MM — was docs/blackout. It starts on each
 # weekday; a window wrapping past midnight belongs to its start day. An empty
-# value (or start == end) disables it. Owner direction 2026-09-04: disabled (was
+# value (or start == end) disables it. Operator direction 2026-09-04: disabled (was
 # "12:00-19:00") so the supervised queue drain keeps moving. When armed it gates
-# claims on every route, the dispatcher's included (owner ruling (i),
+# claims on every route, the dispatcher's included (operator ruling (i),
 # 2026-10-05, WI-834), and every new session but a wrap-up adjudication of an
 # active claim. Restore the value to re-arm.
 blackout = ""
@@ -248,7 +248,7 @@ observation_min_work_items = 10
 trajectory_check = true
 interfaces_check = true
 components_check = true
-# Opt-out, OFF since 2026-08-18 (owner directive): the kit still SHIPS the OKF
+# Opt-out, OFF since 2026-08-18 (operator directive): the kit still SHIPS the OKF
 # layer — gen_okf.py, its check step, the dashboard's Knowledge tab — but this
 # repo stopped exporting its own bundle and deleted docs/okf/ (551 files, 27% of
 # the tracked tree, and every grep over the spine hit each fact twice). Nothing
@@ -293,7 +293,7 @@ assumption_gate = false
 # Adjudicator session retention, shipped OFF (`context_reset_pct = 0`: every
 # adjudication a fresh session, no id minted, no resume flag, no store). The
 # shipped template's [adjudicator] header carries the full field reasoning.
-# This repo is ON at 55 since WI-835 (owner ruling (b), 2026-10-05). Since
+# This repo is ON at 55 since WI-835 (operator ruling (b), 2026-10-05). Since
 # WI-798 the coordinator's adjudication (coordinator_adjudicate.py's default
 # entry) runs on the declared token account ADJUDICATOR (docs/agents.toml); a
 # launch whose account does not read signed in is refused, naming dev-setup.
@@ -314,14 +314,14 @@ reset_on_same_artifact = false
 [reviewer]
 # Loop reviewer session retention and the final reviewer (WI-887), shipped
 # OFF and fresh; the shipped template's [reviewer] header carries the full
-# reasoning. This repo keeps the shipped values until the owner turns it on.
+# reasoning. This repo keeps the shipped values until the operator turns it on.
 context_reset_pct = 0            # 0 = off
 final_reviewer = "fresh"         # or "persisted"
 
 [coordinator]
 # The coordinator context guard (WI-822). The shipped template's [coordinator]
 # header carries the full reasoning. This repo's coordinator runs a 1M-context
-# model, and the owner set the latch at half of it (2026-10-04).
+# model, and the operator set the latch at half of it (2026-10-04).
 context_guard_pct = 50
 context_window_tokens = 1000000
 

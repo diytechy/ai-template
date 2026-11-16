@@ -76,7 +76,7 @@ read_declared = _kitconfig.read_declared
 # NOT here, deliberately (each documented in process.toml.template's header):
 # docs/stack.ini (adopter-owned product toolchain), docs/work/pause and
 # docs/agents-enabled (presence-as-semantics), docs/stage (a generated cache).
-# The six check-enablement toggles USED to be a fourth exception; the owner
+# The six check-enablement toggles USED to be a fourth exception; the operator
 # overturned that on 2026-08-11 and they are rows below.
 PROCESS_TOML = "process.toml"
 
@@ -164,7 +164,7 @@ PROCESS_KEY_RANGES = {
 # Dials whose value must come from a CLOSED VOCABULARY. This replaced
 # `operator_accepts_through`'s `(0, 4)` range row at WI-493, and it is the
 # same guarantee carried on the new value's own terms: the retired range refused
-# `-1` because that single input reads as LESS operator involvement than the owner
+# `-1` because that single input reads as LESS operator involvement than the operator
 # asked for, and a misspelled rung does exactly the same thing — it is
 # unrecognized, so it falls to a default rather than to what was meant. Refused
 # here, loudly, and fallen back on conservatively at the reader
@@ -181,7 +181,7 @@ PROCESS_KEY_VOCAB = {}
 # was tried first and was wrong in a way worth recording: it accepted every
 # int, so `operator_accepts_through = -1` — the single input the retired
 # `(0, 4)` range row existed to refuse, because it is the one that reads as
-# LESS operator involvement than the owner asked for — stopped being refused at
+# LESS operator involvement than the operator asked for — stopped being refused at
 # all. A migration window must be exactly as wide as the migration.
 #
 # Without the window at all, `config_conflicts` — a HARD refusal consulted by
@@ -311,7 +311,7 @@ def declared_policy(docs, legacy_name, default):
 # reads it: the loop's pre-session wait, the session service's launch boundary,
 # the claim, the coordinator guard's hooks and the retained adjudicator's
 # retirement. An absent, empty or malformed value, or `start == end`, disables
-# it; a fresh scaffold ships `12:00-12:00`, disabled but in window SHAPE (owner
+# it; a fresh scaffold ships `12:00-12:00`, disabled but in window SHAPE (operator
 # ruling 2026-08-11, WI-433).
 BLACKOUT_RE = re.compile(r"^\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*$")
 
@@ -430,7 +430,7 @@ def blackout_at(docs, t=None):
 #   single-approve  LLM review through DevStg-Reqs+DevStg-Tests, ONE operator sitting
 #                  at the close — so NO per-tier hold (level 0), a final read,
 #                  and the non-dependent work kept running that distinguished it
-#   autonomous     every bar but the owner's final read closes on a recorded
+#   autonomous     every bar but the operator's final read closes on a recorded
 #                  LLM verdict
 LEGACY_APPROVAL = {
     "attended": {
@@ -454,7 +454,7 @@ LEGACY_APPROVAL = {
 # THE DIAL MOVED, DELIBERATELY, and the block below this one used to say the
 # opposite. OI-21 ruled shape (i) — keep the 0-4 ordinal and MAP it onto the
 # ladder through a declared `DIAL_HOLDS` table — and named this conversion as
-# shape (ii), available to supersede (i). The owner exercised that clause; the
+# shape (ii), available to supersede (i). The operator exercised that clause; the
 # stage unification is where it lands, because the reason (i) was ever needed is
 # the reason it is now unnecessary.
 #
@@ -516,7 +516,7 @@ PROCESS_KEY_LEGACY_VALUES[("authority", "operator_accepts_through")] = frozenset
 # is the conservative end — it holds every rung there is.
 APPROVAL_FALLBACK = _kitladder.STAGE_RELEASE
 
-# The dial's RETIRED KEY NAME (WI-499, owner-ruled 2026-08-21). A repo
+# The dial's RETIRED KEY NAME (WI-499, operator-ruled 2026-08-21). A repo
 # scaffolded before this rename still carries this spelling in
 # `[authority]`; `approval_through` below reads it as a loud fallback,
 # mirroring the read-translate-warn shape WI-493 used for the retired 0-4
@@ -636,22 +636,22 @@ def _retired_dial_note(legacy, rung):
 # IT USED TO BE A LITERAL RESTATEMENT HERE (WI-498 slice 0 ended that). The
 # reason given was the F5 no-shared-module rule — this module could not import
 # the derivation engine — so the eight strings were spelled out again and pinned
-# equal by tests/test_approval_level.py. F5 was replaced by owner ruling D-8
+# equal by tests/test_approval_level.py. F5 was replaced by operator ruling D-8
 # (`OI-16`): the vocabulary now has ONE home in `kitlib`, which this module
 # already imports, and the pin retired with the restatement it guarded. Drift is
 # unrepresentable rather than detected — the WI-448 declared-line precedent.
 LADDER_RUNGS = _kitladder.LADDER_RUNGS
 
 
-# THE OFF-SPINE SIBLING OF THE DIAL (owner ruling OI-30 D3, 2026-08-15).
+# THE OFF-SPINE SIBLING OF THE DIAL (operator ruling OI-30 D3, 2026-08-15).
 #
 # `operator_accepts_through` governs the SPINE tiers. The off-spine registries
 # that carry an off-spine `status` cell — `interfaces.toml`, `external.toml`,
 # `components.toml` — were governed by PROSE ONLY: their headers said the cells
-# were the owner's to flip, and at any dial below 4 nothing refused a loop
+# were the operator's to flip, and at any dial below 4 nothing refused a loop
 # session that wrote `approved`.
 #
-# THE RULED SHAPE IS DERIVED, NOT DECLARED, and the owner's question is why:
+# THE RULED SHAPE IS DERIVED, NOT DECLARED, and the operator's question is why:
 # *"I thought this would follow the dev-stage directly? Why build a new enum?"*
 # The proposal on the table was a new `[authority] operator_acceptance_registries`
 # list; it was OVERTURNED because the registry-to-rung association ALREADY
@@ -679,11 +679,11 @@ LADDER_RUNGS = _kitladder.LADDER_RUNGS
 APPROVAL_RUNGS = _kitauthority.APPROVAL_RUNGS
 
 
-# THE SPINE SIBLING OF THE TABLE ABOVE (owner ruling 2026-09-01, WI-572).
+# THE SPINE SIBLING OF THE TABLE ABOVE (operator ruling 2026-09-01, WI-572).
 #
 # Same question, same fail-safe, different registries: which DevStg rung is a
 # SPINE row approved INTO, so the dial can answer whether that tier's `Status`
-# flip is the loop's act or the owner's. Keyed by registry STEM
+# flip is the loop's act or the operator's. Keyed by registry STEM
 # (`spine_carrier.stem`) rather than by tier letter because the two callers
 # both hold a registry path and neither holds a tier — and because a stem
 # survives a carrier change, which a `.toml` suffix would not.
@@ -697,7 +697,7 @@ APPROVAL_RUNGS = _kitauthority.APPROVAL_RUNGS
 # `adjudicate_brief` — and the brief's copy was consulted only for the
 # amendment arm's aftermath, so the first-approval arm derived its `--approves`
 # argument with no dial filter at all: at any dial holding a spine rung the
-# brief rendered the owner's held rows as this session's to approve. One table
+# brief rendered the operator's held rows as this session's to approve. One table
 # with one predicate is what makes that unrepresentable rather than detected.
 #
 # Re-exported from `kitlib.authority` with its off-spine sibling (LLR-249).
@@ -747,7 +747,7 @@ def operator_holds(docs, stage):
 def operator_accepts(docs, registry):
     """May only an OPERATOR move the `status` cell of this off-spine `registry`?
 
-    True means HELD — the cell is the owner's, in a reviewed Status-change
+    True means HELD — the cell is the operator's, in a reviewed Status-change
     commit. The mirror of `operator_holds`, and deliberately the same shape: one
     predicate, one home, consulting one table.
 
@@ -825,7 +825,7 @@ def loop_held_status_refusal(
     copy claim. The dial is the one COMMITTED at `trunk_rev` in the `trunk`
     checkout (`kitlib.authority.dial_at`, the one silent, legacy-aware
     reader), never the trunk checkout's working file, because an uncommitted
-    owner edit there is not the tree the writer commits onto. `head=None` is
+    operator edit there is not the tree the writer commits onto. `head=None` is
     the index (a `git commit` writer); a commit or tree sha is the tree a
     plumbing writer is about to commit; `paths` narrows the judgement to the
     registries a path-scoped commit takes.
@@ -946,11 +946,11 @@ def decision_recording(docs):
 
     UNDECLARED reads `"off"`, the template's shipped value: no repo owes a
     record until its owner asks for one. DECLARED BUT UNRECOGNIZED reads
-    `"record"`: the owner asked for something, and the failure that matters is
+    `"record"`: the operator asked for something, and the failure that matters is
     silently recording nothing — `config_conflicts` refuses the value loudly
     upstream, and this reader keeps the obligation for anyone who did not run
-    that gate. The dial allocates the owner's reading; it never moves what must
-    reach the owner through the process's exits, at any setting.
+    that gate. The dial allocates the operator's reading; it never moves what must
+    reach the operator through the process's exits, at any setting.
 
     Implements: SR-225, LLR-282
     """
@@ -966,7 +966,7 @@ def adjudication_review_owed(docs, brief, drafts):
     the round scheduler and the merge gate, so the two cannot disagree.
 
     THE POSITION (plan `docs/plans/2026-09-02-backlog-restructure-and-
-    consolidation.md` §3, owner direction 2026-09-02). The adjudicator is
+    consolidation.md` §3, operator direction 2026-09-02). The adjudicator is
     already the cross-family judge by routing: `agent_loop`'s ADJUDICATE arm
     excludes the builder's family, so the judgement is a fresh context by
     construction. A further round is a SECOND fresh session, with less context
@@ -1194,7 +1194,7 @@ def _vocab_findings(section, key, value):
         "`{}` for 'nothing is operator-held'). It falls back to the most "
         "conservative setting rather than to what was probably meant: an "
         "unrecognized dial that guessed would read as LESS operator "
-        "involvement than the owner asked for.".format(
+        "involvement than the operator asked for.".format(
             PROCESS_TOML,
             section,
             key,
@@ -1305,7 +1305,7 @@ def read_agent_loop_config(docs):
 
     This is the DECLARED-FILE tier of the coordinator-dial precedence
     ``CLI flag > AGENT_* env > declared file > built-in default`` that
-    ``agent_loop.main`` applies (so a one-dial owner change edits ONE file, not
+    ``agent_loop.main`` applies (so a one-dial operator change edits ONE file, not
     the same value in three launchers)."""
     try:
         # An absent file reads None; an unreadable or malformed one degrades to

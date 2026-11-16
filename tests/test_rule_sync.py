@@ -21,13 +21,13 @@ policy the kit genuinely still states twice: the carrier reader/writer inverse,
 and `subagent_gate`'s separate WORD-valued dial reader, whose values can never
 be equal to the bool reader's and whose aligned DIRECTION is what is held.
 
-THE F5 RULE'S LIVE HOME, AND THE ANTI-DRIFT TOOL OF RECORD (owner ruling
+THE F5 RULE'S LIVE HOME, AND THE ANTI-DRIFT TOOL OF RECORD (operator ruling
 2026-08-10, repo-lock D-7; executed WI-426). F5 is the kit's standing ruling
-(owner, 2026-07-12) that a shared `_kitcommon.py` is REJECTED: each kit script
+(operator, 2026-07-12) that a shared `_kitcommon.py` is REJECTED: each kit script
 must stay stdlib-only and independently copy-able, so small stable helpers —
 `_utf8_console`, the one-line declared-policy readers, argparse/exit
 scaffolding, the spec-folder registry reader — were duplicated on purpose. Read
-that list as HISTORY: owner ruling D-8 (`OI-16`) superseded F5 for three of the
+that list as HISTORY: operator ruling D-8 (`OI-16`) superseded F5 for three of the
 four, and the console guard was the last to go (WI-448 slice 2, 2026-08-22) —
 all 34 copies now resolve to `kitlib.config.utf8_console`, so nothing is left
 for a pin here to hold equal. See the D-8 note above the declared-line pins. That
@@ -71,7 +71,7 @@ GATE = load_script("spine_rules")
 # They were the D-7 bar's whole content for this pair: F5 licensed the
 # duplication, so the best a test could do was CONTAIN the drift.
 #
-# Owner ruling D-8 (`OI-16`) moved the rules into `kitlib.spine`; `trace.py`,
+# Operator ruling D-8 (`OI-16`) moved the rules into `kitlib.spine`; `trace.py`,
 # `trace_text.py` and `spine_rules.py` re-export them, so "the copies agree" is
 # no longer a property that can FAIL — there are no copies. A test asserting a
 # function equals itself is not a weaker pin, it is a VACUOUS one, and this
@@ -208,7 +208,7 @@ def test_is_modified_is_GONE_from_both_copies():
     # survived step 5's rename only so the kit never had a commit with no drift
     # detector at all, and it retired once its successor — the
     # `baseline_snapshot` comparison — had run live alongside it through the
-    # owner's signing act. Deleted, not re-keyed: a surviving copy would be a
+    # operator's signing act. Deleted, not re-keyed: a surviving copy would be a
     # second reader of a retired word, which is exactly what the grep below
     # forbids for every module at once.
     assert not hasattr(TRACE, "is_modified")
@@ -1047,7 +1047,7 @@ def test_every_checks_dial_falls_back_to_its_legacy_file_and_toml_wins(tmp_path)
 
 def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
     # The overturn's whole content: the six are VISIBLE. Absence used to be the
-    # declaration, which is exactly what the owner called confusing — so the
+    # declaration, which is exactly what the operator called confusing — so the
     # anti-regression here is that a key is not quietly dropped again, and that
     # the two opt-in dials did not get flipped on the way in.
     text = (KIT / "process.toml.template").read_text(encoding="utf-8")
@@ -1084,11 +1084,11 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
     # that must not drift (CLAUDE.md: "VALUES may diverge … STRUCTURE must not").
     live = tomllib.loads((ROOT / "docs" / "process.toml").read_text(encoding="utf-8"))
     assert set(live["checks"]) == set(checks)
-    # Every value matches the shipped default except the owner dials listed here,
+    # Every value matches the shipped default except the operator dials listed here,
     # each with its reason. A divergence NOT listed is the finding: it means a
     # dial moved in this repo without anyone recording why.
-    OWNER_DIALS = {
-        # 2026-08-18 owner directive: the LAYER still ships at `true` (asserted
+    OPERATOR_DIALS = {
+        # 2026-08-18 operator directive: the LAYER still ships at `true` (asserted
         # above) — this repo stopped exporting its OWN bundle and deleted
         # docs/okf/ (551 files, 27% of the tracked tree). docs/declared-absences
         # carries the absence; docs/log.d/2026-08-18-okf-off.md the decision.
@@ -1106,7 +1106,7 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         # approved are the first judged by the rule they include.
         "test_first_since": "f537fc531dd37b372259ba84f8836a290d1efddb",
     }
-    assert live["checks"] == {**checks, **OWNER_DIALS}
+    assert live["checks"] == {**checks, **OPERATOR_DIALS}
     # AND THE README'S DIAL TABLE, whose third column is this repo's own value
     # (2026-08-21 review, M-13). The dial was raised 0 -> 50 and both documents
     # that state its value went on saying 0 for the rest of the batch, because
@@ -1120,7 +1120,7 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
     ]
     assert len(row) == 1, "the README dial table lost its backlink row"
     assert (
-        "`{}`".format(OWNER_DIALS["backlink_coverage_min"]) in row[0].split("|")[-2]
+        "`{}`".format(OPERATOR_DIALS["backlink_coverage_min"]) in row[0].split("|")[-2]
     ), "README's dial table states a different value than docs/process.toml: " + row[0]
 
 
@@ -1206,7 +1206,7 @@ def test_the_migration_table_and_the_converter_name_the_same_six():
 # lived here to hold the copies in step, because F5 licensed the duplication
 # and D-7 could only CONTAIN the drift, not remove it.
 #
-# THOSE TWO TESTS ARE GONE, AND THE REASON IS THE POINT. Owner ruling D-8
+# THOSE TWO TESTS ARE GONE, AND THE REASON IS THE POINT. Operator ruling D-8
 # (`OI-16`) moved the rule into `kitlib.config.first_declared_line`; all five
 # names now resolve to that one function, so "the copies agree" is no longer a
 # property that can FAIL — there are no copies. A test asserting a function
@@ -1273,7 +1273,7 @@ def test_the_subagent_copy_diverges_only_where_its_docstring_now_says(tmp_path):
     #   2. "" instead of None on absent/blank/comments-only — also deliberate:
     #      decide() below documents its own `policy` param as `"" = off`, so
     #      this reader has to hand back "" to compose with that contract.
-    # Both are load-bearing (this module's fail-open posture is owner-ruled
+    # Both are load-bearing (this module's fail-open posture is operator-ruled
     # 2026-08-11 — do NOT "fix" either away), so the docstring was corrected
     # to name divergence 2 rather than leaving the "same parse" claim to imply
     # casing is the only difference.

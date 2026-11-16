@@ -1,4 +1,4 @@
-"""The pending-owner-actions projection (WI-234), as DERIVED (WI-322).
+"""The pending-operator-actions projection (WI-234), as DERIVED (WI-322).
 
 `pending.pending_block` is a pure projection of committed-tree state:
 
@@ -29,7 +29,7 @@ from conftest import load_script, pin_autocrlf
 # OPEN_ITEMS.template.md tail. The intro + OI-1 above the marker must never be
 # rewritten by regeneration.
 HAND = (
-    "# Open items — owner decision briefs\n\n"
+    "# Open items — operator decision briefs\n\n"
     "Hand-authored intro paragraph — this text MUST stay byte-identical.\n\n"
     "## OI-1 — a real pending decision\n\n"
     "- **One-line:** rule the thing.\n"
@@ -37,8 +37,8 @@ HAND = (
 )
 OPEN_ITEMS = (
     HAND + "\n---\n\n"
-    "<!-- Generated pending-owner-actions projection (WI-234) — do NOT hand-edit. -->\n\n"
-    "## Pending owner actions (generated)\n\n"
+    "<!-- Generated pending-operator-actions projection (WI-234) — do NOT hand-edit. -->\n\n"
+    "## Pending operator actions (generated)\n\n"
     "<!-- BEGIN GENERATED PENDING -->\n"
     "placeholder — to be regenerated\n"
     "<!-- END GENERATED PENDING -->\n"
@@ -94,7 +94,7 @@ def _block(repo):
 
 # (A former source (a) `blocked` WI rows carrying a BlockRef retired with the
 # blockref vocabulary at WI-553/OI-70 — nothing produces a queued-row blockref
-# now, so the owner surface no longer reads a zero-producer source. The spine
+# now, so the operator surface no longer reads a zero-producer source. The spine
 # and pause arms below are the two surviving sources.)
 
 
@@ -144,7 +144,7 @@ def test_a_RETIRED_marker_no_longer_projects_a_reattest_line(tmp_path):
     body = _block(tmp_path)
     assert "SR-004" not in body
     assert "SR-000" not in body  # the example row never projects
-    assert "None — no durable owner action is pending" in body
+    assert "None — no durable operator action is pending" in body
 
 
 def test_draft_sr_projects_approval_owed(tmp_path):
@@ -203,7 +203,7 @@ def test_approved_sr_does_not_project_and_the_flip_drops_the_line(tmp_path):
     )
     body = _block(tmp_path)
     assert "SR-004" not in body
-    assert "None — no durable owner action is pending" in body
+    assert "None — no durable operator action is pending" in body
 
 
 # --- (f) the tracked pause declaration, docs/work/pause -----------------------
@@ -221,7 +221,7 @@ def test_no_pause_file_projects_no_bullet(tmp_path):
     _init(tmp_path)
     body = _block(tmp_path)
     assert "Paused" not in body
-    assert "None — no durable owner action is pending" in body
+    assert "None — no durable operator action is pending" in body
 
 
 def test_tracked_pause_projects_reason_and_declared_since(tmp_path):
@@ -244,7 +244,7 @@ def test_tracked_pause_without_since_omits_the_stamp(tmp_path):
 def test_malformed_pause_still_projects_fail_closed(tmp_path):
     """Implements: TC-194"""
     # A pause file we cannot read is still a pause: it projects the same loud
-    # message the coordinator's reader returns, routing the owner to the fix.
+    # message the coordinator's reader returns, routing the operator to the fix.
     pending = load_script("pending")
     _init(tmp_path)
     for bad in ("not toml at all\n", 'since = "2026-07-29"\n', "reason = 7\n"):
@@ -290,7 +290,7 @@ def test_the_typed_model_kinds_every_pending_item(tmp_path):
     assert all(i.line for i in items)
 
 
-def test_owner_cards_is_pending_items_minus_the_pause(tmp_path):
+def test_operator_cards_is_pending_items_minus_the_pause(tmp_path):
     """Implements: TC-194"""
     # The dispatcher's drained-queue arm: a paused station has its own earlier
     # exit, so the pause must never inflate the approvals-waiting count — and
@@ -300,14 +300,14 @@ def test_owner_cards_is_pending_items_minus_the_pause(tmp_path):
     _write_srs(tmp_path, 'SR-007,New need,SN-001,"r","x","a",,C,Test,Drafted,3,\n')
     _pause(tmp_path, 'reason = "draining"\n')
     assert len(pending.pending_items(tmp_path)) == 2
-    cards = pending.owner_cards(tmp_path)
+    cards = pending.operator_cards(tmp_path)
     assert [c.kind for c in cards] == [pending.SPINE]
 
 
 def test_the_block_renders_exactly_the_model(tmp_path):
     """Implements: TC-194"""
     # One derivation, one rendering: every item's line appears in the block, so
-    # the banner's count and the owner surface can never disagree.
+    # the banner's count and the operator surface can never disagree.
     pending = load_script("pending")
     _init(tmp_path)
     _write_srs(tmp_path, 'SR-007,New need,SN-001,"r","x","a",,C,Test,Drafted,3,\n')
@@ -319,7 +319,7 @@ def test_the_block_renders_exactly_the_model(tmp_path):
 def test_the_dispatcher_reads_the_model_not_the_render_facade(tmp_path):
     """Implements: TC-194"""
     # THE EDGE, asserted at the behaviour rather than only in the import
-    # census: the banner's card count is the read model's `owner_cards`, so a
+    # census: the banner's card count is the read model's `operator_cards`, so a
     # future rewrite cannot go back to two private names in a render module
     # without this failing.
     drv = load_script("dispatch")
@@ -329,10 +329,10 @@ def test_the_dispatcher_reads_the_model_not_the_render_facade(tmp_path):
         [("queued", "WI-900", "blocked-one", 'blockref = "docs/x.md"\n', "")],
     )
     _pause(tmp_path, 'reason = "draining"\n')
-    assert drv._pending_cards(tmp_path) == pending.owner_cards(tmp_path)
+    assert drv._pending_cards(tmp_path) == pending.operator_cards(tmp_path)
 
 
-def test_the_owner_surface_reads_the_model_not_the_render_facade(tmp_path):
+def test_the_operator_surface_reads_the_model_not_the_render_facade(tmp_path):
     """Implements: TC-194"""
     # The other documented bad edge: gen_open_items reused `pending_block` by
     # importing the ~1,000-line facade. Same text, one module down.

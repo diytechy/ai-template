@@ -294,17 +294,17 @@ def test_drive_refuses_a_dirty_trunk_before_resuming(tmp_path, capfd):
     assert worker.calls == []
 
 
-def test_a_dirty_owner_scratchpad_does_not_stop_the_drive(tmp_path, capfd):
-    # WI-612: the owner-only paths are the owner's, edited continuously and
+def test_a_dirty_operator_scratchpad_does_not_stop_the_drive(tmp_path, capfd):
+    # WI-612: the operator-only paths are the operator's, edited continuously and
     # never a lane's deliverable. Resume and done detection already read past
     # them; the tick-top clean-trunk refusal now does too, so the parked lane
     # resumes (and stalls on this do-nothing worker) instead of the run
-    # stopping at the preflight over the owner's notes.
+    # stopping at the preflight over the operator's notes.
     root = parked_repo(tmp_path)
-    pad = root / drv.ac.OWNER_ONLY_PATHS[0]
-    pad.write_text("owner notes\n", encoding="utf-8", newline="\n")
-    _commit(root, "the owner's scratchpad", when=T_LATER)
-    pad.write_text("owner notes, mid-edit\n", encoding="utf-8", newline="\n")
+    pad = root / drv.ac.OPERATOR_ONLY_PATHS[0]
+    pad.write_text("operator notes\n", encoding="utf-8", newline="\n")
+    _commit(root, "the operator's scratchpad", when=T_LATER)
+    pad.write_text("operator notes, mid-edit\n", encoding="utf-8", newline="\n")
     worker = Recorder(outcomes=(0, 0))
 
     rc = drv.run(root, drive_args(stall_limit=2), worker=worker)
@@ -312,7 +312,7 @@ def test_a_dirty_owner_scratchpad_does_not_stop_the_drive(tmp_path, capfd):
     assert "working tree is dirty" not in err
     assert rc == 4 and "STALL" in err
     assert worker.calls == [("wi-401", "WI-401"), ("wi-401", "WI-401")]
-    assert pad.read_text(encoding="utf-8") == "owner notes, mid-edit\n"
+    assert pad.read_text(encoding="utf-8") == "operator notes, mid-edit\n"
 
 
 def test_drive_empty_frontier_drains_and_exits_zero(tmp_path, capfd):
@@ -490,7 +490,7 @@ def test_a_parked_lane_claimed_with_two_specs_stops_the_run(tmp_path, capfd):
     assert (active / "WI-402-beta.md").is_file()
 
 
-# --- a parked lane at a filed owner-held step (LLR-143) -----------------------
+# --- a parked lane at a filed operator-held step (LLR-143) -----------------------
 #
 # A claimed row whose `needs` cites a pending open item reads `blocked` in the
 # shared schedule (LLR-288), and the worker brief composes no assignment for
@@ -506,7 +506,7 @@ def parked_beside_ready_repo(tmp_path, oi_status):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     (req / "open-items.toml").write_text(
-        '[open_item.OI-005]\ntitle = "The owner\'s call"\nstatus = "{}"\n'.format(
+        '[open_item.OI-005]\ntitle = "The operator\'s call"\nstatus = "{}"\n'.format(
             oi_status
         ),
         encoding="utf-8",
@@ -777,7 +777,7 @@ def test_a_decided_exit_after_the_lane_closed_merges_on_its_declared_outcome(
 
 
 def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path, capfd):
-    # THE RULED CASE (owner decision 1). The lane hands back code the bar
+    # THE RULED CASE (operator decision 1). The lane hands back code the bar
     # refuses, which would be the one branch that could still hang. Instead the
     # code is reverted, the failing diff lands as a `.patch`, the second
     # refresh goes green and the branch merges — so trunk ends with the record
@@ -1292,8 +1292,8 @@ def test_attended_approval_row_drains_and_exits_zero_with_the_banner(tmp_path, c
     out = capfd.readouterr().out
     # WI-412 (REVIEW-A finding 1): this fixture is the reviewer's driven
     # corner — a queued gate row with ZERO pending cards. The banner must name
-    # the queued row, NOT send the owner to a page that renders "None - no
-    # durable owner action is pending".
+    # the queued row, NOT send the operator to a page that renders "None - no
+    # durable operator action is pending".
     assert "1 queued attestation row(s)" in out, out
     assert "no card has projected to open-items.html yet" in out, out
     assert "approval(s) waiting in open-items.html" not in out, out
@@ -1410,10 +1410,10 @@ def test_empty_frontier_rung_two_banner_derives_from_the_shared_pending_read(
     # Rung 2: census empty but a pending attestation exists — that is NOT
     # missing work. The banner's count comes from the SAME pending_block(root)
     # read the dashboard and open-items.html share (a Drafted spine row owing an
-    # approval is one card), so agent-resume and the owner surfaces can never
+    # approval is one card), so agent-resume and the operator surfaces can never
     # disagree about what is blocking. (A blocked WI carrying a BlockRef used to
     # be that card; the blockref vocabulary retired at WI-553/OI-70, so the
-    # surviving owner_card source is the spine arm.)
+    # surviving operator_card source is the spine arm.)
     root = git_repo(tmp_path)
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)

@@ -6,11 +6,11 @@
 # their own, yet their perspective constrains someone else's need — that
 # constraint is what a hat carries.
 #
-# THIS FILE IS OWNER TEXT, NOT AGENT TEXT, and it is MARKED FOR THE OWNER'S EDIT
+# THIS FILE IS OPERATOR TEXT, NOT AGENT TEXT, and it is MARKED FOR THE OPERATOR'S EDIT
 # AT RETURN: review all fifteen, cut what does not earn its place, add what is
 # missing, and rewrite any `applies_when` that does not match how this repo
 # actually files work. A roster chosen by an agent and left unread is exactly the
-# ceremony this tier was admitted to prevent. SAFETY is not here: the owner
+# ceremony this tier was admitted to prevent. SAFETY is not here: the operator
 # ruled on 2026-10-13 (the review-churn plan's revision 25) that it has no
 # application in a software-only repo, its failure vocabulary (harm to a person,
 # property or the environment) having one reachable referent here, already
@@ -63,7 +63,7 @@
 # NOTHING GATES ON A HAT TODAY.
 #
 # VALUES-DIVERGE NOTE (the kit's dogfood rule): in THIS repo the two UX hats are
-# `always`, because the generated owner surfaces are real, owner-facing pages a
+# `always`, because the generated operator surfaces are real, operator-facing pages a
 # session reads; the SHIPPED template gates them on `render`/`ui` tags, since not
 # every adopter has a UI.
 

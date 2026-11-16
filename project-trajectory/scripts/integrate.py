@@ -63,7 +63,7 @@ Five operations here; the two lane closes that are NOT a merge (`hand_back`,
              flipped into `Approved`/`Founded`, a row born claiming one, or a
              write under docs/archive/last_approved/ - that no recorded verdict
              of an independent adjudicator's, judging that act's own rows,
-             backs (owner ruling 6, 2026-10-07, see `_approval_act_refusal`),
+             backs (operator ruling 6, 2026-10-07, see `_approval_act_refusal`),
              requires the policy verdicts the outcome
              owes (RULING-7 keyed off §A3, not off the claim), checks
              the ancestor relation and VERIFIES the `Bar-Green:` attestation
@@ -83,7 +83,7 @@ Five operations here; the two lane closes that are NOT a merge (`hand_back`,
              every trunk commit in --since..HEAD that touches product paths
              must be a merge commit. Scoped to a window because the
              always-on form would flag attended serial work (RULING-8's
-             workers=1 flow) — widening the scope is an owner ruling, not
+             workers=1 flow) — widening the scope is an operator ruling, not
              this script's call.
   attest     a build round's own record of green (WI-956): in the lane
              worktree, refuse a worktree that holds work the index does not,
@@ -129,7 +129,7 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     bookkeeping commit and the branch is cut from that commit — refusing
     before it writes anything on a declared pause, a dirty path it must write,
     an existing branch, an unsafe branch name, a non-ordinary spec or an
-    off-frontier row. The owner's notes (the owner-only paths) are never
+    off-frontier row. The operator's notes (the operator-only paths) are never
     rewritten: the move's relink passes them by, so they are never a path the
     claim must write and never a reason it refuses.
     `refresh` runs the station refresh on a claimed branch, refusing before
@@ -145,7 +145,7 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     worktree, the trunk step folded in, then the DECLARED bar on the composed
     tree — a missing or empty declaration, or any SKIP in it, refuses — and
     the verdict gate with git-derived freshness before the fast-forward-only
-    trunk advance; a lane whose changed Done-when no verdict or owner ruling
+    trunk advance; a lane whose changed Done-when no verdict or operator ruling
     binds is refused (WI-841). `done-when-hold` refuses a staged close of such
     a lane (the pre-commit hook's step), and on trunk any staged change of a
     claim copy's Done-when no verdict or ruling binds (WI-921); an index
@@ -683,7 +683,7 @@ def _claim_refusal(root, wi_id, branch):
     one work item the lane claims (`_claim_input_refusal` has checked it).
 
     The `safety_class != ordinary` arm that used to live here is DELETED
-    (§A4.1, owner question B): the dispatcher admits, so the claim rung has no
+    (§A4.1, operator question B): the dispatcher admits, so the claim rung has no
     class authority — what replaced the hard stop is the dispatch-lock
     constraint (`_dispatch_lock`) plus the barrier's wait.
 
@@ -699,7 +699,7 @@ def _claim_refusal(root, wi_id, branch):
         )
     # No clean-trunk rung (WI-612): the claim commits exactly what it writes,
     # through `bookkeeping.commit`, whose pre-check refuses by name the dirty
-    # paths it must write - and dirt anywhere else is the owner's to keep.
+    # paths it must write - and dirt anywhere else is the operator's to keep.
     code, _ = ac.git(root, "rev-parse", "--verify", "--quiet", "refs/heads/" + branch)
     if code == 0 and not _abandoned_claim(root, wi_id, branch):
         return "branch {} already exists".format(branch)
@@ -883,8 +883,8 @@ def _claim_locked(root, wi_id, branch):
     worktree), with the declared regeneration joined by the helper. So a dirty
     path the claim must write refuses by name, and an uncommitted edit anywhere
     else is neither swept into the claim commit nor discarded by its refusal.
-    The owner's notes are never in that set: the relink does not visit the
-    owner-only paths (`spec_move._markdown_files`), so the claim neither
+    The operator's notes are never in that set: the relink does not visit the
+    operator-only paths (`spec_move._markdown_files`), so the claim neither
     rewrites them nor refuses over their edits.
 
     Under the loop marker the same helper judges the claim's tree against the
@@ -1088,7 +1088,7 @@ def branch_outcomes(root, branch):
 
 
 def _minted_id_refusal(root, branch, claimed):
-    """RULING R1 (owner, 2026-08-01): the merge slot's MINT refusal - a refusal
+    """RULING R1 (operator, 2026-08-01): the merge slot's MINT refusal - a refusal
     string, or None.
 
     A WORK BRANCH NEVER MINTS A WORK-ITEM ID; minting is a serial TRUNK-side act
@@ -1164,7 +1164,7 @@ def _minted_id_refusal(root, branch, claimed):
         return None
     return (
         "{} ADDS work-item spec(s) carrying {} outside its claimed set ({}) - a "
-        "WORK BRANCH NEVER MINTS A WORK-ITEM ID (owner ruling R1, 2026-08-01: "
+        "WORK BRANCH NEVER MINTS A WORK-ITEM ID (operator ruling R1, 2026-08-01: "
         "minting is a serial TRUNK-side act only, so an id two lanes could pick "
         "at once is unrepresentable rather than coordinated around). Record the "
         "finding as PROSE - the spec body, the log fragment, the review record - "
@@ -1235,7 +1235,7 @@ def _adjudication_lane(root, branch, metas=None):
 
 def _approval_act_refusal(root, branch):
     """THE APPROVAL ACT IS AN INDEPENDENT ADJUDICATOR'S, IN THE AUTHORING LANE
-    OR ON TRUNK (owner ruling 6, 2026-10-07, superseding the trunk-side clause
+    OR ON TRUNK (operator ruling 6, 2026-10-07, superseding the trunk-side clause
     of the 2026-09-01 ruling): the merge slot's approval refusal - a refusal
     string, or None.
 
@@ -1367,7 +1367,7 @@ def _ruling_sync_refusal(root, branch):
 
 
 def _text_then_act_refusal(root, branch):
-    """TEXT THEN ACT AT THE SLOT (WI-806; OI-101 Q2, amended by the owner's
+    """TEXT THEN ACT AT THE SLOT (WI-806; OI-101 Q2, amended by the operator's
     README Q-8 answer): a refusal string, or None.
 
     Every commit of the lane, oldest first, is judged against its parents by
@@ -1556,7 +1556,7 @@ def _verdict_gate(root, branch, outcomes):
     `kitlib.verdict` carries the reading; what is decided here is what the
     reading MEANS for a merge.
 
-    GOVERNING = TREE IDENTITY (owner ruling 2026-08-31, OI-76). A verdict counts
+    GOVERNING = TREE IDENTITY (operator ruling 2026-08-31, OI-76). A verdict counts
     only if it names the branch's current NON-RECORD tree — the tree with
     `docs/reviews/`, `docs/log.d/` and `docs/iteration/` removed. There is no
     ordering rule any more and no timestamp comparison: staleness dissolves into
@@ -3280,7 +3280,7 @@ def _decision_record_refusal(root, branch, outcomes):
     per-close report beside it — a partial close included, since every
     delegated run closes with its record; the refusal is a hold for a person to
     write it. A record that is there but malformed is reported and merges: the
-    owner can read what it says, and a refusal over one field would strand
+    operator can read what it says, and a refusal over one field would strand
     finished work for a reporting defect. Under `off` nothing is read. A
     branch name `record_path` refuses (`#`, or a character git refuses) is an
     ABSENT record, refused when one is owed (WI-818 dispute 1): it is never
@@ -3329,7 +3329,7 @@ def _close_record_refusal(root, branch, outcomes):
 def _done_when_refusal(root, branch, wi_ids):
     """WI-841 AT THE SLOT: a lane whose Done-when differs from the one trunk
     holds under `active/<branch>/` (its claim) closes only when a verdict or
-    an owner ruling on the branch's tree binds the exact text it closes with
+    an operator ruling on the branch's tree binds the exact text it closes with
     (`kitlib.done_when.lane_hold`, the one predicate every hold point asks). A
     refusal string, or None.
 
@@ -3452,7 +3452,7 @@ def _merge_refusal(root, branch, wi_ids):
     if refusal:
         return outcomes, refusal
     refusal = (
-        _approval_act_refusal(root, branch)  # owner ruling 6, 2026-10-07
+        _approval_act_refusal(root, branch)  # operator ruling 6, 2026-10-07
         or _loop_trailer_refusal(root, branch)  # SR-209
         or _ruling_sync_refusal(root, branch)  # the ruling sync (WI-790)
         or _text_then_act_refusal(root, branch)  # text before act (WI-806)
@@ -3581,7 +3581,7 @@ def _slot(root):
     this lock, and only the ancestor check plus the merge run inside it, so the
     slot is held for well under a second and extra lanes buy throughput instead
     of queueing behind one bar. Restricting the design to pessimistic - the
-    owner's recorded caveat - is then a ONE-LINE change: delete dispatch.py's
+    operator's recorded caveat - is then a ONE-LINE change: delete dispatch.py's
     speculative refresh call, and every refresh happens under
     this already-held lock via `integrate_one`'s not-merge-ready arm. Nothing
     else moves, and no dial is added for a decision nobody has yet needed to
@@ -3598,9 +3598,9 @@ def integrate(root, tier, branches=None):
     # Dirty check BEFORE the lock: the lock file itself is untracked (and
     # gitignored - out/integrate.lock in the shipped template), so taking it
     # first would make the queue refuse itself on any repo whose ignore rules
-    # predate it. The owner-only paths are read past (WI-612), as the
+    # predate it. The operator-only paths are read past (WI-612), as the
     # dispatcher's tick-top check and resume and done detection read past them:
-    # the owner's scratchpad is never a lane's deliverable, the merge touches
+    # the operator's scratchpad is never a lane's deliverable, the merge touches
     # no path it names, and a mid-edit note must not stop the loop.
     # The commit hooks are on before all of that (WI-926): a hookless
     # checkout never takes the slot.
@@ -3702,7 +3702,7 @@ def _generated_paths(root):
 def audit(root, since):
     """RULING-6 over a window: non-merge trunk commits must stay on bookkeeping
     surfaces. Scoped to --since because the always-on form would flag attended
-    serial work (RULING-8); widening it is an owner ruling.
+    serial work (RULING-8); widening it is an operator ruling.
 
     Implements: SR-156, LLR-140
     """
@@ -3781,7 +3781,7 @@ def main(argv=None):
     )
     sub.add_parser(
         "done-when-hold",
-        help="refuse a staged close whose changed Done-when no verdict or owner "
+        help="refuse a staged close whose changed Done-when no verdict or operator "
         "ruling binds, or on trunk any such staged Done-when change, and a "
         "staged delta or branch git cannot read (WI-841, WI-921; the "
         "pre-commit hook's done-when-blessed step)",

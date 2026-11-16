@@ -375,19 +375,19 @@ BASELINE = {
     # this function and became the module-level `spine_chain`, paired with
     # `chain_buckets`. Not tidying — `adjudicate_brief.first_approval_values`
     # needs the SAME answer to "what is this SR's chain" for the first-approval
-    # brief, and a second copy of that walk is how the judge and the owner's
+    # brief, and a second copy of that walk is how the judge and the operator's
     # surface come to disagree about one spine. Recorded DOWN in the same
     # commit rather than left as headroom, per this file's rule.
     ("trace.py", "reattest_model"): 13,
     # `reattest_lines` DELETED, 2026-09-27, WI-577: its per-chain loop (the
     # row-state arms WI-513 added, and the census splice WI-518 added beside
     # them) moved into `_entry_lines`, because the OI-82 ruling renders a
-    # chain in two places — the owner's section and the collapsed block of
+    # chain in two places — the operator's section and the collapsed block of
     # chains the dial releases — and one renderer is what keeps a chain reading
     # the same in both. Both functions sit under the threshold, so the entry
     # goes rather than being re-stamped, per this file's rule.
     ("trace.py", "render_report"): 17,
-    # 2026-08-15, the interface rework step 7 (Q3, owner-ruled): the carriage
+    # 2026-08-15, the interface rework step 7 (Q3, operator-ruled): the carriage
     # graph's three rules in one pass — resolve, acyclic, depth-bounded. The
     # branches ARE the distinct findings a reader acts on (unknown carrier,
     # not-an-id, self-carriage, several carriers, cycle, too deep), and folding

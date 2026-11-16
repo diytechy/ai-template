@@ -44,7 +44,7 @@ def set_dial(scaffold, section, key, value):
     commit floor's `derived-stage` step reported the committed record stale
     two steps before the real assertion was reached.
 
-    The owner's 2026-08-21 ruling removed `process.toml` from
+    The operator's 2026-08-21 ruling removed `process.toml` from
     `kitlib/stage.py DECLARED_INPUTS` — dials govern who may approve, not what
     stage is derived — so writing a dial no longer touches the fingerprint and
     the regeneration had become a no-op performed for a reason that no longer

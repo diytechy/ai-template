@@ -52,7 +52,7 @@ def test_disposition_brief_makes_the_successor_the_open_items_placeholder():
     text = pr.load(pr.ADJUDICATE_DISPOSITION)
     assert "writes its id into the successor's `needs`" in text
     assert "the successor is the open item's PLACEHOLDER on the queue" in text
-    assert "queued but blocked until the owner rules" in text
+    assert "queued but blocked until the operator rules" in text
     assert "`docs/requirements/open-items.toml#OI-NNN`" in text
     assert "Ruling the item updates the successor in the same commit" in text
     assert "`wi_refs`" not in text
@@ -227,7 +227,7 @@ def test_the_reviewer_brief_links_the_review_threat_model_and_restates_nothing()
 
 def test_the_review_threat_model_dismisses_contrived_scenarios_and_gates_every_class():
     """Implements: TC-332"""
-    # The owner's ruling of 2026-10-13: a contrived, improbable scenario is
+    # The operator's ruling of 2026-10-13: a contrived, improbable scenario is
     # dismissed like a contrived host, severity tracks plausibility and
     # impact, and reachability gates a fail-open, data-loss or security path
     # as it gates any other; whoever rules a finding re-grades a mislabel.
@@ -236,7 +236,7 @@ def test_the_review_threat_model_dismisses_contrived_scenarios_and_gates_every_c
     paragraph = " ".join(process[start : process.find("\n\n", start)].split())
     for clause in (
         "A finding whose reproduction needs a contrived, improbable scenario is "
-        "dismissed the same way (owner ruling 2026-10-13)",
+        "dismissed the same way (operator ruling 2026-10-13)",
         "a hand act the process forbids (rewinding the trunk branch, skipping "
         "or disabling a hook, hand-editing a generated view or a ruled record)",
         "or ordinary tools run in an order no supported workflow or kit route produces",
@@ -252,7 +252,7 @@ def test_the_review_threat_model_dismisses_contrived_scenarios_and_gates_every_c
 
 def test_a_spec_promise_reaches_only_what_supported_routes_produce():
     """Implements: TC-332"""
-    # The owner's ruling of 2026-10-15: a spec's promise over an input space
+    # The operator's ruling of 2026-10-15: a spec's promise over an input space
     # is bounded by what supported workflows and the kit's own routes
     # produce, stated once in the review threat model; the dispute brief
     # weighs a scenario's plausibility under it, and a cheap fix for a

@@ -4,7 +4,7 @@
 Stack-agnostic kit, stdlib-only (Python 3.11+). Most of the harness is machine-
 checkable, but a release still needs a human to *exercise the real product* —
 the Demonstration / Manual / Inspection items that no automated test can honestly
-cover (the owner's final read in process.md). This script collects exactly those, back-linked to
+cover (the operator's final read in process.md). This script collects exactly those, back-linked to
 their requirement ids, into a tick-box checklist so the release sign-off is
 concrete and traceable instead of a vibe.
 

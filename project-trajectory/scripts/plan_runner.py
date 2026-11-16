@@ -536,7 +536,7 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
             prompt = plan_briefs.assemble(
                 plan_briefs.HAT_ARBITER,
                 {
-                    "OWNER_PROMPT": (row.get("Title") or wi).strip(),
+                    "OPERATOR_PROMPT": (row.get("Title") or wi).strip(),
                     "GOAL_BRIEF": goal_text,
                     "RUBRIC": rubric_text,
                     "COVERAGE_REPORT": coverage_report,

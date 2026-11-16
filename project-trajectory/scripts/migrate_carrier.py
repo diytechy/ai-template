@@ -560,7 +560,7 @@ def value_to_cell(col, value):
     a prettier one. Measured over this repo's own spine at the cutover: 271 of
     271 multi-ref cells wrote `A;B`, none wrote `A; B`. Joining on `"; "`
     therefore rewrote every one of them, which put ~40 spurious "cell changed"
-    entries into the re-attestation brief the owner is about to work — the
+    entries into the re-attestation brief the operator is about to work — the
     carrier migration manufacturing amendments in the one view that must show
     only real ones. The separator is not the meaning (`_cells_differ` compares
     token lists either way), which is exactly why the conversion has no licence
@@ -706,7 +706,7 @@ def sn_status(kind):
     Section-as-state carried exactly two maturities — a row sat under a draft
     heading or it did not — so this mapping is TOTAL and loses nothing. `kind`
     itself does not survive the conversion: it conflated maturity with row TYPE,
-    and the type half (`edge`) is retired (owner ruling 2026-08-17j).
+    and the type half (`edge`) is retired (operator ruling 2026-08-17j).
 
     ONE HOME because the LOSS ORACLE compares against it. If the emitter and the
     oracle each derived the word, a drift between them would make the oracle

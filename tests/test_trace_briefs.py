@@ -561,7 +561,7 @@ def test_reattest_model_owed_row_count_matches_the_live_drafted_llr_tc_census():
 #
 # Every other generated surface here is freshness-gated; the brief was not, and
 # it went stale TWICE in one day — at 121-CRITIQUE missing two chain rows and an
-# amendment (an owner would have blessed six rows having seen four), at
+# amendment (an operator would have blessed six rows having seen four), at
 # 123-CRITIQUE three rows short. Both caught by a human noticing.
 #
 # The hard part is not the comparison, it is the BASELINE: the brief self-stamps
@@ -708,7 +708,7 @@ def test_the_brief_states_what_the_stamp_IS_and_names_approval_provenance(tmp_pa
 
 def test_a_row_added_after_the_brief_makes_it_stale(tmp_path):
     """Drift direction 1 — the 121-CRITIQUE shape: chain rows added to the
-    registry after the brief was written, so an owner blesses fewer rows than
+    registry after the brief was written, so an operator blesses fewer rows than
     exist."""
     _run_git, _rev, write = _approval_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
@@ -773,7 +773,7 @@ def test_a_closed_window_is_a_no_op(tmp_path):
 def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
     """THE LAUNDERING THE MECHANISM EXISTS TO CATCH, driven end to end.
 
-    An owner who blesses the amendment by moving `Status` alone has changed the
+    An operator who blesses the amendment by moving `Status` alone has changed the
     claim without moving the record of what the claim is about. Under the old
     git-derived baseline that closed the window — the row read `Approved`, so
     the walk stopped at HEAD and the diff was empty. Under the snapshot the row
@@ -1018,8 +1018,8 @@ def test_offspine_census_renders_nothing_when_no_offspine_tier_changed(tmp_path)
     assert "Off-spine census" not in out
 
 
-# --- OI-82, ruled (a) as the owner refined it: every unapproved chain stays on
-# --- the owner's brief, and a chain the operator-acceptance dial releases to an
+# --- OI-82, ruled (a) as the operator refined it: every unapproved chain stays on
+# --- the operator's brief, and a chain the operator-acceptance dial releases to an
 # --- adjudicator renders in full under its own label, collapsed by default.
 
 _WAITING = "Waiting for automated adjudication"
@@ -1034,7 +1034,7 @@ def _dial_split_tree(root, dial=None):
       * SR-002 is `Approved`; only its LLR and TC are `Drafted`: every owing
         row sits on a released rung, so the whole chain is the adjudicator's.
       * SR-003 is `Drafted` with a `Drafted` LLR: a chain with ANY held row is
-        still the owner's to sign, released rows beside it notwithstanding.
+        still the operator's to sign, released rows beside it notwithstanding.
 
     `dial=None` writes no `docs/process.toml`, which is the shipped default
     (`DevStg-Release`, every rung held)."""
@@ -1107,7 +1107,7 @@ def test_a_released_rungs_chain_renders_in_full_collapsed_under_its_label(tmp_pa
     assert "## SR-003 — Mixed parent" in before
     assert "**Detail**: the mixed detail" in before
     assert "SR-001" not in inside and "SR-003" not in inside
-    # The page's own framing does not tell the owner to sign what the block
+    # The page's own framing does not tell the operator to sign what the block
     # holds: the title claims no operator act, and the signing instruction is
     # scoped to the sections outside the block.
     head = before.split("\n## ", 1)[0]
@@ -1122,7 +1122,7 @@ def test_a_released_rungs_chain_renders_in_full_collapsed_under_its_label(tmp_pa
 def test_the_shipped_default_dial_holds_every_chain_and_collapses_none(tmp_path):
     """No dial declared reads as `DevStg-Release`, which releases no spine
     tier: no collapsed block renders and every owing chain stays in the
-    owner's section. (The title and signing instruction are the same at every
+    operator's section. (The title and signing instruction are the same at every
     level; only the block depends on the dial.)"""
     _dial_split_tree(tmp_path)
     proc = _brief(tmp_path)
@@ -1140,8 +1140,8 @@ def test_the_shipped_default_dial_holds_every_chain_and_collapses_none(tmp_path)
     assert _check(tmp_path).returncode == 0
 
 
-def test_a_dial_releasing_every_rung_leaves_the_owner_a_stated_empty_ask(tmp_path):
-    """Every owing chain released: the owner's section says there is nothing on
+def test_a_dial_releasing_every_rung_leaves_the_operator_a_stated_empty_ask(tmp_path):
+    """Every owing chain released: the operator's section says there is nothing on
     a held rung, rather than reading as an empty brief, and every chain is in
     the block."""
     _dial_split_tree(tmp_path, dial="DevStg-Below")
@@ -1155,7 +1155,7 @@ def test_a_dial_releasing_every_rung_leaves_the_owner_a_stated_empty_ask(tmp_pat
         assert "## {} —".format(sid) in inside
         assert sid in summary
         assert sid not in before
-    # The freshness gate reads the block over an empty owner's section back.
+    # The freshness gate reads the block over an empty operator's section back.
     assert _check(tmp_path).returncode == 0
 
 
@@ -1165,7 +1165,7 @@ def _amended_split_tree(root):
     holds the SR rung and releases the LLR and TC rungs:
 
       * SR-001's own Requirement moved: a drifted row on the held rung, so the
-        chain is the owner's re-attestation, as before the ruling.
+        chain is the operator's re-attestation, as before the ruling.
       * SR-002's chain moved only below the SR: LLR-002's Detail changed and
         TC-002 left the registry. Every owing row is on a released rung, so the
         re-attestation is an adjudicator's, and its diff renders collapsed."""
@@ -1226,7 +1226,7 @@ def test_a_released_rungs_re_attestation_renders_its_diff_in_the_collapsed_block
     assert "after: the AMENDED released detail" in inside
     assert "### TC TC-002 — REMOVED since the snapshot" in inside
     assert "SR-002" not in before
-    # The held chain's re-attestation stays on the owner's section.
+    # The held chain's re-attestation stays on the operator's section.
     assert "## SR-001 — Held amended parent" in before
     assert "before: the ORIGINAL held text" in before
     assert "after: the AMENDED held text" in before
@@ -1457,7 +1457,7 @@ def test_every_cell_of_an_owing_row_appears_in_its_section(tmp_path):
 
 
 def test_no_assumption_shows_an_evidence_level(tmp_path):
-    """An assumption carries no evidence level (owner ruling 2026-10-02): its
+    """An assumption carries no evidence level (operator ruling 2026-10-02): its
     section names the cases that can falsify it, never a level and never
     "Evidenced by", and the freshness comparison sets no evidence line aside,
     since none is rendered."""

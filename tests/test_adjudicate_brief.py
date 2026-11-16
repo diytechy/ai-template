@@ -799,7 +799,7 @@ def test_with_no_snapshot_the_brief_HOLDS_and_says_FIRST_APPROVAL(tmp_path):
 
 
 def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tmp_path):
-    # done-when 3 (owner ruling 2026-09-01). This template used to end "the
+    # done-when 3 (operator ruling 2026-09-01). This template used to end "the
     # flip, if one is owed, is the mechanical tool's act, not yours" — true when
     # written, and FALSE since OI-45 ruled (b) retired that tool
     # (intake._apply_flips writes nothing, permanently). So a MEANING verdict on
@@ -807,7 +807,7 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
     # loop-held doctrine. What replaces it is not a longer sentence but a
     # DERIVED one: the dial is a repo declaration the judge would otherwise have
     # to go read mid-verdict, which is the shape that produces a session
-    # confidently performing the owner's act.
+    # confidently performing the operator's act.
     repo = _amendment_repo(tmp_path)
     row = _am_row()
 
@@ -822,7 +822,7 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
     values, why = ab.amendment_brief.amendment_values(repo, row)
     assert why is None, why
     assert "still HOLDS for an operator" in values["aftermath"]
-    assert "the signature is the owner's" in values["aftermath"]
+    assert "the signature is the operator's" in values["aftermath"]
 
     # ...and the retired sentence never reaches the JUDGE, which is the property
     # that matters: a brief that says both things is worse than one that says
@@ -831,7 +831,7 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
     text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
     assert why is None, why
     assert "the mechanical tool's act, not yours" not in text
-    assert "the signature is the owner's" in text  # the aftermath landed instead
+    assert "the signature is the operator's" in text  # the aftermath landed instead
     assert re.findall(r"\{[a-z_]+\}", text) == []
     template = (
         SCRIPTS.parent / "prompts" / "adjudicate-amendment.template.md"
@@ -935,7 +935,7 @@ def test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_sco
 def test_the_held_aftermath_gives_each_verdict_its_own_arm(tmp_path):
     """LLR-167: on a held rung the aftermath tells a CLARITY verdict that the
     later act turn re-attests it naming the verdict, and a MEANING verdict
-    that it stops for the owner, never the other way round (WI-912).
+    that it stops for the operator, never the other way round (WI-912).
 
     Implements: TC-161
     """
@@ -947,8 +947,8 @@ def test_the_held_aftermath_gives_each_verdict_its_own_arm(tmp_path):
     assert why is None, why
     clarity, meaning = values["aftermath"].split("A MEANING verdict on them", 1)
     assert "later act turn" in clarity and "naming this verdict" in clarity, clarity
-    assert "the signature is the owner's" not in clarity, clarity
-    assert "the signature is the owner's" in meaning, meaning
+    assert "the signature is the operator's" not in clarity, clarity
+    assert "the signature is the operator's" in meaning, meaning
     assert "--verdict" not in meaning, meaning
 
 
@@ -1053,7 +1053,7 @@ def test_record_outcome_keeps_the_identity_cell(tmp_path, call_ok):
 def test_the_amendment_brief_reanchors_CLARITY_rows_and_keeps_the_sibling_hold():
     # OI-100 gap 0: followed literally, "a CLARITY verdict owes nothing further"
     # left the row drifted from its anchor for good. Gap 3 stays: one MEANING
-    # row holds its CLARITY siblings in the same registry until the owner signs.
+    # row holds its CLARITY siblings in the same registry until the operator signs.
     template = (
         SCRIPTS.parent / "prompts" / "adjudicate-amendment.template.md"
     ).read_text(encoding="utf-8")
@@ -1448,7 +1448,7 @@ def test_stamp_reads_one_registrys_copy_under_every_carrier(tmp_path):
     assert baseline_snapshot.stamp(repo, TC_TOML) == ("", "")
 
 
-# --- the first-approval brief (owner ruling 2026-09-01) -----------------------
+# --- the first-approval brief (operator ruling 2026-09-01) -----------------------
 
 
 def _first_approval_repo(tmp_path):
@@ -1459,7 +1459,7 @@ def _first_approval_repo(tmp_path):
     THE DIAL IS DECLARED, and it has to be. This arm exists only for rungs the
     declared gate authority has RELEASED; with no `docs/process.toml` the dial
     falls back to the shipped `DevStg-Release`, which holds every rung, so an
-    undeclared fixture is not this arm's scenario at all — it is the owner's.
+    undeclared fixture is not this arm's scenario at all — it is the operator's.
     That omission is what let the first cut ship a brief with no dial filter and
     a green test beside it (WI-572 REVIEW-A).
 
@@ -1500,7 +1500,7 @@ def _fa_row(**over):
 
 
 def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
-    # The owner's CONTEXT reason, mechanized: approving a row means holding its
+    # The operator's CONTEXT reason, mechanized: approving a row means holding its
     # whole chain — the parent SR, the sibling LLRs, the tests — which is the
     # thing one work item does not hold and is therefore why the act is the
     # adjudicator's. So the brief must show the chain, not the changed cells.
@@ -1627,7 +1627,7 @@ def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
     # gap: the brief rendered a held `Drafted` SR beside a released `Drafted`
     # LLR, marked both as awaiting the act, and derived a `--approves` argument
     # naming BOTH registries — a prompt instructing an adjudicator to perform a
-    # signature the owner owes. The filter now lives in ONE table both ends read.
+    # signature the operator owes. The filter now lives in ONE table both ends read.
     repo = _first_approval_repo(tmp_path)
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
@@ -1636,10 +1636,10 @@ def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
         ),
         encoding="utf-8",
     )
-    # `DevStg-Reqs` holds the SR tier for the owner and releases the LLR tier
+    # `DevStg-Reqs` holds the SR tier for the operator and releases the LLR tier
     # below it — the exact mixed dial the finding names. The scope names BOTH
     # rows, which is the honest shape of this scenario: the mint filtered by the
-    # dial it saw (`DevStg-Needs`, releasing both), and the owner TIGHTENED it
+    # dial it saw (`DevStg-Needs`, releasing both), and the operator TIGHTENED it
     # afterwards. The dial is therefore re-checked at composition as well as at
     # the mint — a scope check alone would have handed over the SR.
     set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Reqs")
@@ -1649,8 +1649,8 @@ def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
 
     # Both halves. The held row is SHOWN — it is the chain, and holding the
     # chain is the whole reason this act is the adjudicator's — but it is shown
-    # as the owner's...
-    assert "SR-001 [AWAITING FIRST APPROVAL - HELD FOR THE OWNER" in values["chain"]
+    # as the operator's...
+    assert "SR-001 [AWAITING FIRST APPROVAL - HELD FOR THE OPERATOR" in values["chain"]
     assert "LLR-001 [AWAITING FIRST APPROVAL]" in values["chain"]
     text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
     assert why is None, why
@@ -1660,7 +1660,7 @@ def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
 
     # And when the dial holds EVERY rung — the kit's shipped default, so this is
     # what an adopter who has declared nothing gets — the arm has no question at
-    # all and REFUSES, rather than composing the owner's sitting as a session's
+    # all and REFUSES, rather than composing the operator's sitting as a session's
     # to-do list.
     set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Release")
     values, why = ab.first_approval_values(repo, row)
@@ -1678,7 +1678,7 @@ def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over
     # approval authority for the whole repo's `Drafted` backlog, and derived a
     # `--approves` argument naming every registry those rows live in. That
     # contradicts the doctrine ("over the `Drafted` rows the lane handed over")
-    # and the owner's concurrency reason for moving the act to trunk: the
+    # and the operator's concurrency reason for moving the act to trunk: the
     # approval snapshot must not move across a workstream.
     repo = _first_approval_repo(tmp_path)
     req = repo / "docs" / "requirements"
@@ -1709,7 +1709,7 @@ def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over
     assert "LLR-001 [AWAITING FIRST APPROVAL]\n" in chain + "\n"
     assert chain.count("[AWAITING FIRST APPROVAL]") == 1, chain
     # The sibling in the same chain is SHOWN — it is evidence — and labelled with
-    # the reason that is actually true of it. Saying "HELD FOR THE OWNER" here
+    # the reason that is actually true of it. Saying "HELD FOR THE OPERATOR" here
     # would tell the session to wait on a signature nobody owes.
     assert "LLR-003 [AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE" in chain
     # The unrelated chain is dropped WHOLE: it is not this act's question and it
@@ -1736,7 +1736,7 @@ def test_a_scope_whose_rows_are_all_settled_REFUSES_by_naming_them(tmp_path):
     # while merge A's was still queued, used to find "no spine row awaits a
     # first approval any more" — one repo-wide sentence for three different
     # states. The refusal now names WHICH filter emptied the population, because
-    # "ruled on already" (drop the row), "the owner holds the rung" (sign it)
+    # "ruled on already" (drop the row), "the operator holds the rung" (sign it)
     # and "the scope names rows this spine no longer has" (the mint and the tree
     # disagree) take three different actions.
     repo = _first_approval_repo(tmp_path)

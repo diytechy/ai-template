@@ -12,7 +12,7 @@ lane ends in a merge and no branch is ever left hanging:
                  whole point: the close is a trunk fact, the partial work is
                  reachable history, and the run keeps going.
 
-  quarantine     the RULED red arm (owner decision 1, 2026-07-31). Every outcome
+  quarantine     the RULED red arm (operator decision 1, 2026-07-31). Every outcome
                  merges and a merge needs a green bar, so a lane handing back
                  code the bar refuses would be the one branch that could still
                  hang. The ruling: revert the code, keep the record — the

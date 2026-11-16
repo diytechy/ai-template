@@ -431,7 +431,7 @@ def test_the_holders_claim_below_threshold_passes(root, tx):
     assert guard.claim_refusal(root, env=ENV) is None
 
 
-def test_the_owners_release_frees_the_lease_and_is_recorded(root, tx):
+def test_the_operators_release_frees_the_lease_and_is_recorded(root, tx):
     """Implements: TC-316"""
     held(root, tx)
     assert guard.release(root, "") is not None
@@ -513,7 +513,7 @@ def test_the_latch_survives_a_resumed_session_and_is_restated(root, tx):
     assert guard.claim_refusal(root, env=ENV) is not None
 
 
-def test_only_the_owners_recorded_clear_or_the_successor_unlatches(root, tx):
+def test_only_the_operators_recorded_clear_or_the_successor_unlatches(root, tx):
     """Implements: TC-316"""
     held(root, tx)
     tx.reply(600)
@@ -802,11 +802,11 @@ def test_another_sessions_or_a_promptless_hand_back_is_refused(root, tx, tmp_pat
     bare = tmp_path / "bare.md"
     bare.write_text("# Handoff\n\nNo prompt here.\n", encoding="utf-8")
     for caller in (OTHER, None):
-        # a non-holder hears the owner's release whatever handoff it names
+        # a non-holder hears the operator's release whatever handoff it names
         for named in (handoff, bare, tmp_path / "absent.md"):
             refusal = guard.hand_back(root, named, caller)
             assert "only the lease holder" in refusal
-            assert "coordinator_guard.py release" in refusal  # the owner releases
+            assert "coordinator_guard.py release" in refusal  # the operator releases
     assert "no session prompt" in guard.hand_back(root, bare, COORD)
     assert guard._load(guard.lease_dir(root)) == lease
     assert [e["event"] for e in events(root)] == ["take"]
@@ -835,7 +835,7 @@ def test_a_previous_holders_request_never_blocks_the_current_holders_hand_back(
     root, tx, tmp_path
 ):
     """Implements: TC-316"""
-    # A requests the relaunch and crashes before SessionEnd; the owner
+    # A requests the relaunch and crashes before SessionEnd; the operator
     # releases A; B takes the lease and closes out without a relaunch.
     handoff = _ready(root, tx, tmp_path)
     assert guard.release(root, "the coordinator crashed before SessionEnd") is None
@@ -1202,7 +1202,7 @@ def test_exec_claude_passes_the_prompt_as_one_argument(tmp_path):
 
 
 def test_the_guard_hooks_are_this_repos_opt_in_not_its_tracked_settings():
-    """Owner ruling 2026-10-10 (WI-880): the committed project settings carry
+    """Operator ruling 2026-10-10 (WI-880): the committed project settings carry
     no guard hook, so a machine runs the guard only after the machine-local
     opt-in; the inert example that opt-in reads registers the guard on every
     event it serves, at this repository's own script path.

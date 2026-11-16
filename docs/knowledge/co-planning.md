@@ -1,6 +1,6 @@
 # Co-planning: reconciling independent work-item decompositions
 
-**Research WI:** WI-190 (filed from the 2026-07-16 owner feedback session) ·
+**Research WI:** WI-190 (filed from the 2026-07-16 operator feedback session) ·
 **retrieved:** 2026-07-16
 
 ## The design question

@@ -125,7 +125,7 @@ def test_spine_loader_drops_example_rows_only_when_asked(tmp_path):
     assert "LLR-000" in [r["LLR-ID"] for r in d_llrs]
     assert "TC-000" in [r["TC-ID"] for r in d_tcs]
     # And the rule reaches its real caller: SR-000 is `Drafted`, so a leaked
-    # example row would invent an approval the owner does not owe.
+    # example row would invent an approval the operator does not owe.
     pending = load_script("pending").spine_pending(root)
     assert pending, "the Drafted SRs must still project"
     assert not any("SR-000" in line for line in pending)

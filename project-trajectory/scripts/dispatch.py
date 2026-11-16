@@ -44,7 +44,7 @@ approves). The three retired enum words
 (`attended` / `single-approve` / `autonomous`) each named one cell of that
 two-dial table, which is why they could not express the fourth. The fixed
 points hold at every level: the final read is the operator's, no un-run greens, the
-harness is still the bar, approved owner decisions are never re-decided.
+harness is still the bar, approved operator decisions are never re-decided.
 
 Beyond admission it adds ORDERING only, no authority: every refusal stays
 where it already lives (the tracked docs/work/pause, a dirty trunk, the
@@ -289,7 +289,7 @@ def _drain(root, tier):
     THIS CALL IS THE WHOLE SPECULATION. Deleting the refresh loop below
     restricts the design to pessimistic: `integrate_one` refreshes in-slot for
     any branch that arrives un-refreshed, so the queue keeps working, one lane
-    at a time, with the bar inside the lock. That is the owner's recorded
+    at a time, with the bar inside the lock. That is the operator's recorded
     caveat priced at one line.
 
     A red refresh STOPS the run for a branch that asserts it is DONE - it is
@@ -366,7 +366,7 @@ def _kind_action(kind, operator_held, approval_held=False):
     recorded fresh-context reviewer verdict approves. The last arm also covers
     `adjudication`: exclusive, like every non-parallel kind.
 
-    `approval_held` IS THE OFF-SPINE AXIS (owner ruling OI-30 D3, 2026-08-15),
+    `approval_held` IS THE OFF-SPINE AXIS (operator ruling OI-30 D3, 2026-08-15),
     and it is a SECOND reason to surface rather than a widening of the first.
     `operator_held` answers about the SPINE tier the repo is in; a WI whose action
     would move an `approval` cell in an off-spine registry is governed by THAT
@@ -457,7 +457,7 @@ def _admission(ready_kinds, operator_held, busy, free, keep_nondependent=False):
     ]
     if surfaced and not keep_nondependent:
         # The operator-held stop (§A8 premise: once an approval is pending, no
-        # work can be taken): drain and exit 0 into the owner's queue.
+        # work can be taken): drain and exit 0 into the operator's queue.
         return "surface", surfaced
     if not dispatchable:
         if not surfaced:
@@ -576,7 +576,7 @@ def _branch_exclusive(root, branch):
 # cannot-proceed-for-config-reasons) is about EXIT_NEEDS_OPERATOR, not about a
 # ceiling. The alternative — a handback that stays resumable — re-opens the
 # claim/return/re-claim loop this row closed, bounded then only by
-# --max-iterations, so it is an owner call rather than a builder's: filed as a
+# --max-iterations, so it is an operator call rather than a builder's: filed as a
 # finding, not decided here.
 #
 # `EXIT_PREFLIGHT` IS NOT IN THE SET, and that is a 2026-09-04 ruling rather
@@ -638,7 +638,7 @@ def _lane_close(root, branch, code):
     WI wanting an operator froze a walk-away run, and its partial work sat where
     nobody would find it. Neither is an exceptional outcome that deserves an
     exceptional path: the lane hands back, the WI returns to trunk blocked and
-    visible on the owner surface, and the dispatcher moves to the next one.
+    visible on the operator surface, and the dispatcher moves to the next one.
 
     A process restart preserves the lane before any work-outcome decision.
     Otherwise a lane that ALREADY CLOSED its specs is left alone.
@@ -674,7 +674,7 @@ def _lane_close(root, branch, code):
         # committed and no reviewer could be drawn. Deliberately parked, not
         # decided — the next cycle resumes the lane, whose worker schedules
         # the owed round first (the out/review-owed marker). A reviewer
-        # outage never hands finished work back (owner direction 2026-08-30).
+        # outage never hands finished work back (operator direction 2026-08-30).
         _say(
             "worker on {} exited REVIEW OWED (exit {}) - the build is "
             "committed and no reviewer could be drawn; the lane stays parked "
@@ -964,11 +964,11 @@ def _budget_exit(args, state):
 
 
 def _pending_cards(root):
-    """The pending owner cards, from the SAME `pending_block(root)` read the
+    """The pending operator cards, from the SAME `pending_block(root)` read the
     dashboard and open-items.html share (the WI-381 amendment, ruled
     2026-08-01: gen_open_items renders `pending.pending_block` verbatim, and
     the dispatcher's exit banner must derive from that one read so
-    agent-resume and the owner surfaces can never disagree about what is
+    agent-resume and the operator surfaces can never disagree about what is
     blocking). Drafted/drifted spine rows; the tracked-pause card is excluded
     because a pause has its own earlier exit, and the coordinator's git-trailer
     reads stay for in-flight lanes only. (A blocked-rows-with-a-BlockRef source
@@ -982,15 +982,15 @@ def _pending_cards(root):
     query, through private names used as a cross-module API (H-02, M-02). The
     old judgment note argued the facade crossed no *forbidden* seam, which was
     true and beside the point: a scheduling composer does not depend on a
-    dashboard to learn what the owner owes. The derivation now sits in
+    dashboard to learn what the operator owes. The derivation now sits in
     `pending.py`, below all three of its readers, and this asks it in its own
-    vocabulary — `owner_cards`, which is `pending_items` minus the pause,
+    vocabulary — `operator_cards`, which is `pending_items` minus the pause,
     declared once there rather than re-assembled here from two of the three
     sources. Still deferred, so the tick loop pays the read only at an exit
     banner."""
     import pending
 
-    return pending.owner_cards(root)
+    return pending.operator_cards(root)
 
 
 def _surface_banner(root, surfaced):
@@ -999,7 +999,7 @@ def _surface_banner(root, surfaced):
 
     The count used to be `max(cards, surfaced)`. That did not merely
     over-report, it MISLABELED: with a queued gate row and zero pending cards
-    it sent the owner to open-items.html to read "None - no durable owner
+    it sent the operator to open-items.html to read "None - no durable owner
     action is pending", exactly the disagreement the ruled amendment forbids
     ("must derive from the SAME pending_block(root) read ... can never
     disagree").
@@ -1008,7 +1008,7 @@ def _surface_banner(root, surfaced):
     exclusive: cards if any exist, else the queued rows. That still could not
     disagree with `pending_block`, but review drove the cost — one unrelated
     card silently SUPPRESSED two genuinely queued attestation rows, hiding
-    work the owner had every reason to see. The reason given for suppressing
+    work the operator had every reason to see. The reason given for suppressing
     them (that the populations overlap, since `_pending_cards` yields
     Drafted/drifted spine rows while `surfaced` yields queued gate/attestation
     frontier rows, and one row can be both)
@@ -1425,7 +1425,7 @@ def _station_exit(root, tier, verb, payload, state):
         _say(
             "empty frontier - {} registry gap(s) named above already carry "
             "minted rows (open or built); nothing new to mint - the remainder "
-            "is the owner's to read.".format(len(census))
+            "is the operator's to read.".format(len(census))
         )
         return ac.EXIT_DONE
     cards = _pending_cards(root)
@@ -1446,7 +1446,7 @@ def _station_exit(root, tier, verb, payload, state):
     # and they are different questions — which is exactly why it is its own
     # dial. Without a reader it was a declared, type-checked promise that
     # nothing kept: a run at level 0 with `final_review = "always"` closed
-    # silently, which is the state an owner sets this dial to prevent.
+    # silently, which is the state an operator sets this dial to prevent.
     _say(drained)
     if ac.final_review(root / "docs"):
         # EXIT_DONE, deliberately, and this is the part worth being careful
@@ -1552,9 +1552,9 @@ def run(root, args, worker=None, tier="all"):
         paused = ac.tracked_pause(root / "docs")
         # The clean-trunk refusal at the tick top, so the PARKED-resume path
         # meets it too; with lanes live it only freezes admission (their own
-        # merges refuse on dirt by themselves). The owner-only paths are read
+        # merges refuse on dirt by themselves). The operator-only paths are read
         # past (WI-612), as resume and done detection already read past them:
-        # the owner's scratchpad is never a lane's deliverable, and no
+        # the operator's scratchpad is never a lane's deliverable, and no
         # bookkeeping commit stages it, so a mid-edit note is not residue.
         dirty = ac.substantive_working_tree_dirty(root)
         if dirty and not table:

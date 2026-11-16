@@ -1633,7 +1633,7 @@ def component_findings(root):
       itself is larger than the bound do the declared components decide: a
       right-sized handful of top-level CMPs brings the top view back under it.
     - **Knowledge⇒component coupling** (WI-153; research-knowledge.md §3a,
-      owner-ruled 2026-07-14): when ≥1 knowledge pack exists the component web is
+      operator-ruled 2026-07-14): when ≥1 knowledge pack exists the component web is
       *expected* — any arch-map module the CMP join leaves uncontained is a finding
       regardless of the bound, because packs tie the *what* to the knowledge behind
       the *how* and that web must be robust wherever packs are enabled. Arms the

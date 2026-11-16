@@ -2,8 +2,8 @@
 
 **retrieved:** 2026-08-12. This pack answers the open question in
 [`docs/repo-lock.md`](../repo-lock.md) §0/§8.6 ("work the partition as an
-*optimization over system I/O*, present it; the ruling stays the owner's") and
-the owner's framing: lay out the system's inputs/outputs first, then break
+*optimization over system I/O*, present it; the ruling stays the operator's") and
+the operator's framing: lay out the system's inputs/outputs first, then break
 that into components with internal signals, minimizing what crosses a
 boundary. It surveys the principled decomposition methods and names the one
 that fits this kit's registries — `components.csv` (`CMP-###`, the boundary)
@@ -13,10 +13,10 @@ is advisory input to that ruling, not the ruling itself.
 
 ## Recommendation
 
-> **Two corrections, owner-driven 2026-08-12 — read them before the method
+> **Two corrections, operator-driven 2026-08-12 — read them before the method
 > below.**
 >
-> **1. The objective has a hard constraint above the cut count.** The owner
+> **1. The objective has a hard constraint above the cut count.** The operator
 > stated the purpose: a defined architecture exists *"to prevent modules and
 > implementations from repeating the behavior in multiple places, or doing it
 > in a way that contradicts what was done elsewhere."* So **one home per
@@ -51,7 +51,7 @@ DSM-clustering, not a metaphor for it. Prefer the **hypergraph-cut** framing
 (§1 below) over plain-graph Newman modularity (§3): modularity needs a
 resolution parameter and degrades on small, sparse graphs like this kit's
 (~100 rows), while a hypergraph cut is exactly "how many `IF-###` rows would
-this partition force" — the quantity the owner wants small. Run it as a
+this partition force" — the quantity the operator wants small. Run it as a
 **ranker over candidate partitions**, never an autonomous decision-maker: a
 human still picks the cluster count, names each cluster, and can override
 the math on grounds it cannot see (below).
@@ -208,7 +208,7 @@ kit's registry sizes; no need for `scipy`/`networkx`/METIS bindings.
   override a lower-cost cut for reasons outside the matrix.
 - **Ties and local optima.** The problem is NP-hard (partitions grow as a
   Bell number); the hill-climb finds *a* good partition, not provably *the*
-  best. Per `docs/repo-lock.md` §0 the partition itself "stays the owner's"
+  best. Per `docs/repo-lock.md` §0 the partition itself "stays the operator's"
   regardless of what a proposer scores best.
 
 ## Failed or bounded approaches
@@ -218,7 +218,7 @@ kit's registry sizes; no need for `scipy`/`networkx`/METIS bindings.
   iterations *only when the objective is explicit* — and found that adding
   domain knowledge to the prompt **impairs** performance on complex DSMs (a
   semantic-alignment mismatch), a concrete instance of the failure mode the
-  owner is trying to avoid by asking for a mathematical objective.
+  operator is trying to avoid by asking for a mathematical objective.
 - **Clique-expanding a hyperedge before clustering** (turning each
   multi-signal requirement into pairwise DSM edges to reuse plain-graph
   tools) distorts the true cut cost — use a native hypergraph objective

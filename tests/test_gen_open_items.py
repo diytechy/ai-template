@@ -1,4 +1,4 @@
-"""gen_open_items.py — the generated owner decision surface (WI-322, OI-10 (b)).
+"""gen_open_items.py — the generated operator decision surface (WI-322, OI-10 (b)).
 
 `docs/open-items.md` is retired: decision briefs are ROWS in
 `docs/requirements/open-items.csv`, and this generator renders them — plus every
@@ -75,7 +75,7 @@ def repo(tmp_path, sr_rows="", oi_rows="", llr_rows="", tc_rows=""):
 
 
 def _file_placeholders(docs, oi_rows):
-    """WI-790: a pending open item reaches the owner surface only through a
+    """WI-790: a pending open item reaches the operator surface only through a
     queued work item citing it, so the fixture files that placeholder row for
     every pending row it writes (a decision nothing on the queue cites is an
     integrity notice, not a card)."""
@@ -175,7 +175,7 @@ def test_pending_briefs_render_and_ruled_rows_do_not(tmp_path):
 def test_draft_and_DRIFTED_rows_both_surface(tmp_path):
     """ "New or changed" is the requirement: a Drafted row owes a first
     approval, an amended row owes a re-attest, and a view that renders only
-    one of them silently drops half the owner's queue.
+    one of them silently drops half the operator's queue.
 
     THE SECOND ROW IS NOW REACHED BY DRIFT, NOT BY A CELL. It used to read
     `Status = Modified`; D-9 step 7 retired that marker, so an amended row
@@ -204,7 +204,7 @@ def test_draft_and_DRIFTED_rows_both_surface(tmp_path):
     page = html_of(root)
     assert 'id="SR-001-attest"' in page and "approval owed" in page
     assert 'id="SR-002-attest"' in page and "re-attest owed" in page
-    # ...and the drifted cell is what the owner is shown, before and after.
+    # ...and the drifted cell is what the operator is shown, before and after.
     assert "ORIGINAL" in page and "CHANGED" in page
 
 
@@ -317,7 +317,7 @@ def test_drafted_row_cells_are_not_labelled_approved(tmp_path):
 def test_anchor_sr_requirement_and_rationale_render_unconditionally_and_visibly(
     tmp_path,
 ):
-    """The owner's report, verbatim (2026-08-24): opening open-items.html and
+    """The operator's report, verbatim (2026-08-24): opening open-items.html and
     looking at SR-177, the requirement text itself was nowhere on the page.
 
     It WAS on the page — inside `.ctx`, which is `display:none` until the
@@ -518,7 +518,7 @@ def test_the_view_names_its_authority(tmp_path):
 def test_the_footer_names_reattests_for_blessing_an_amendment(tmp_path):
     """Blessing an amendment re-copies a row that still reads `Approved`, so no
     flip carries it, and a bare `intake.py snapshot` refuses it. The footer's
-    instruction has to name the row, or it hands the owner a refusal."""
+    instruction has to name the row, or it hands the operator a refusal."""
     repo(tmp_path, oi_rows=PENDING_OI)
     assert gen(tmp_path).returncode == 0
     assert "intake.py snapshot --reattests &lt;ROW-ID&gt;" in html_of(tmp_path)
@@ -530,7 +530,7 @@ def test_the_footer_names_reattests_for_blessing_an_amendment(tmp_path):
 # (`test_baseline_is_reused_when_no_since_is_passed` retired at D-9 step 4. It
 # was 122-REVIEW-A's BLOCKER as a regression: regenerating with no `--since`
 # used to fall back to a re-derived baseline and DESTROY the attestation depth
-# an owner was about to read — driven, it collapsed 43 chain-row diffs to 18.
+# an operator was about to read — driven, it collapsed 43 chain-row diffs to 18.
 # The stamp-and-reuse rule it pinned has no subject any more: there is one
 # baseline, it is a directory, and no run can pick a different one.)
 
@@ -610,8 +610,8 @@ def test_empty_attestation_state_names_only_what_it_checked(tmp_path):
 
 def test_retired_markdown_surface_is_reported(tmp_path):
     """122-REVIEW-A: a resynced adopter keeps docs/open-items.md, whose generated
-    block nothing writes any more — it can assert a stale owner action with every
-    gate green. Warn-only: the migration is the owner's, and failing would red a
+    block nothing writes any more — it can assert a stale operator action with every
+    gate green. Warn-only: the migration is the operator's, and failing would red a
     repo midway through it."""
     root = repo(tmp_path, oi_rows=PENDING_OI)
     assert gen(root).returncode == 0
@@ -679,7 +679,7 @@ def ctx_blocks(page):
 
 
 def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
-    """The owner's 2026-07-27 finding: the surface showed WHICH CELLS MOVED and
+    """The operator's 2026-07-27 finding: the surface showed WHICH CELLS MOVED and
     nothing else, so a rewritten `Rationale` arrived with no `Requirement` beside
     it — and "does the existing evidence still verify this row" is a question
     about what the row now SAYS, not only about what changed in it.
@@ -764,7 +764,7 @@ def test_an_unreadable_decision_queue_refuses_rather_than_rendering_it_empty(tmp
 
     Under the CSV carrier a malformed registry still parsed into *something*,
     and a registry that vanished parsed into nothing — either way this view
-    rendered "0 pending decisions", which on the owner's decision queue reads as
+    rendered "0 pending decisions", which on the operator's decision queue reads as
     "nothing is waiting on you". `spine_carrier.load` raises on a carrier that
     exists and will not parse, so the surface refuses to be published wrong.
     """
@@ -778,7 +778,7 @@ def test_an_unreadable_decision_queue_refuses_rather_than_rendering_it_empty(tmp
 
 
 def test_the_view_points_at_whichever_carrier_is_live(tmp_path):
-    """The pointer an owner follows to edit a brief must name a file that
+    """The pointer an operator follows to edit a brief must name a file that
     exists. Both arms, because the kit ships to repos on either carrier."""
     root = repo(tmp_path, oi_rows=None)
     (root / "docs" / "requirements" / "open-items.toml").write_text(

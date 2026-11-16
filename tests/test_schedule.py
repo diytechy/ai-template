@@ -128,7 +128,7 @@ def test_a_restructured_row_is_terminal_with_the_absorbed_reason_code():
     # The fourth terminal word (2026-09-02 restructure plan §1.6): a row a
     # consolidation ABSORBED into a successor is as final as `done` — never
     # ready, never packed — and carries its own code, because the dead-end reads
-    # differently to an owner: the scope did not die, it moved.
+    # differently to an operator: the scope did not die, it moved.
     wis = sched.load_wis([row("WI-001", status="restructured"), row("WI-002")])
     d = disposition(wis, "WI-001")
     assert d["disposition"] == "restructured"
@@ -251,7 +251,7 @@ def test_load_oi_status_resolves_a_real_open_items_registry(tmp_path):
 
 def test_load_oi_status_answers_empty_where_the_repo_has_no_registry(tmp_path):
     """Implements: TC-253"""
-    # The owner draws absent apart from empty; the requestor collapses absent
+    # The operator draws absent apart from empty; the requestor collapses absent
     # to an empty map at its own boundary, so every OI edge fails closed.
     assert load_script("trace").open_item_states(tmp_path) is None
     oi = sched.load_oi_status(tmp_path)

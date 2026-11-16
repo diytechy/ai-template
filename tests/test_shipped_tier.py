@@ -2,7 +2,7 @@
 
 SN-011 and SR-034 draw a distinction the ledger's own suite does not check:
 a dependency reached by a check an **adopter runs** forces every adopting repo
-to install it, so it needs an owner ruling and stdlib stays *preferred* there;
+to install it, so it needs an operator ruling and stdlib stays *preferred* there;
 a `coordinator` dependency only this repo installs carries a far lower bar.
 `test_dependency_ledger.py` asks one question — *is this import declared?* — and
 never reads the `Tier` column, so before this module nothing stopped a
@@ -158,7 +158,7 @@ def shipped_bar_violations(
             bad[module] = (
                 f"imported by {via} and declared Tier=shipped, but its `Ruled` "
                 "cell is empty — a shipped-tier dependency forces every adopter "
-                "to install it and needs an owner ruling recorded in the ledger"
+                "to install it and needs an operator ruling recorded in the ledger"
             )
     return bad
 
@@ -213,11 +213,11 @@ def test_bar_catches_a_coordinator_tier_import(tmp_path):
 
 
 def test_bar_catches_an_unruled_shipped_import(tmp_path):
-    """Mutation proof: Tier=shipped with no owner ruling is still a failure."""
+    """Mutation proof: Tier=shipped with no operator ruling is still a failure."""
     tree = _fixture_tree(tmp_path, {"trace.py": "import yaml\n"})
     rows = [{"name": "yaml", "kind": "python", "tier": "shipped", "ruled": ""}]
     bad = shipped_bar_violations(tree, {"trace"}, rows)
-    assert "yaml" in bad and "owner ruling" in bad["yaml"]
+    assert "yaml" in bad and "operator ruling" in bad["yaml"]
 
 
 def test_bar_catches_an_undeclared_import(tmp_path):

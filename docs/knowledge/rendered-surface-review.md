@@ -1,12 +1,12 @@
-# Rendered-surface review: layout priority, robustness, and accessibility of this repo's generated owner surfaces — DRAFT
+# Rendered-surface review: layout priority, robustness, and accessibility of this repo's generated operator surfaces — DRAFT
 
-> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.UX-DESIGNER`, `hat.UX-ENGINEER` and `hat.ACCESSIBILITY` roster entries have a shared `knowledge` value to point at; the owner reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a settled finding.
+> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.UX-DESIGNER`, `hat.UX-ENGINEER` and `hat.ACCESSIBILITY` roster entries have a shared `knowledge` value to point at; the operator reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a settled finding.
 
 This pack is shared because three hats review the same objects from three angles.
-The objects are this repo's **generated, owner-facing surfaces**: the root
+The objects are this repo's **generated, operator-facing surfaces**: the root
 `PROJECT_STATE.html` dashboard and the SVG views emitted by
 `project-trajectory/scripts/gen_trajectory.py` (the `arch`/icicle, `dag`, and
-software/how tabs); the owner decision surface `docs/open-items.html` from
+software/how tabs); the operator decision surface `docs/open-items.html` from
 `gen_open_items.py`; and the console reports the checkers print. In THIS repo the
 two UX hats are ruled `always` (the `hats.toml` VALUES-DIVERGE note, lines 63–66)
 because these are real pages a session reads to decide what to do next — not a
@@ -20,9 +20,9 @@ hypothetical adopter's UI. The bar for all three is written down: SR-052
 The charter asks who reads a surface and what decision they make on it, and
 listens for "a surface that renders every fact it has instead of the one the
 reader came for." Ground it in the two surfaces that already made this choice.
-`gen_open_items.py` orders its output by what an owner needs to rule (pending
+`gen_open_items.py` orders its output by what an operator needs to rule (pending
 decisions, then approvals/re-attests, then pending actions — docstring "in the
-order an owner needs it"), and it exists *because* the prior surface handed the
+order an operator needs it"), and it exists *because* the prior surface handed the
 reader a pointer ("run `trace.py --approve modified`") they could not act from.
 The dashboard starts panels collapsed past the greater-than-3 rule (the
 `_know_panel` note near `gen_trajectory.py:934`) so density does not bury the
@@ -89,7 +89,7 @@ the keyboard or the screen reader.
   are Approved and phase-3 (aspect `trajectory`); each states its acceptance as a
   child-LLR chain, and SR-054 records one clause — a first-time reader in fact
   finding the entry points usable — that rests on a **recorded human judgement**,
-  not a standing check. Treat that clause as owner-attested, not auto-verified.
+  not a standing check. Treat that clause as operator-accepted, not auto-verified.
 - **The critique matrix is declared in `shoot.mjs`, not here.** Widths, themes and
   tabs are that file's constants; this pack does not restate them (single source).
   The runner is meta-only (Playwright is never shipped downstream).

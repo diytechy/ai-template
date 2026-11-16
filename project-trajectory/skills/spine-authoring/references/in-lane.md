@@ -63,13 +63,13 @@ child returned for want of a parent, then a TC for an arm its LLR states).
 Use the same authoring and closure checks, then split approval authority:
 
 - **Held first drafts stay `Drafted`.** Include them as chain evidence; their
-  approval stays with the owner through the approval brief.
+  approval stays with the operator through the approval brief.
 - **Judge held amendments for CLARITY or MEANING.** CLARITY means the obligation
   is unchanged. Only an independent sitting that rules the amendment CLARITY
   may re-attest it, and that verdict, bound to the text it was shown, is what
   permits the act: edit the row after the sitting and the act is refused, so
   re-sit it. Naming the verdict in the act's `--verdict` is for audit.
-  A MEANING change is the owner's: the lane lands its text, and the act is
+  A MEANING change is the operator's: the lane lands its text, and the act is
   ruled on trunk (`docs/process.md` §5, "Open items"). Leave existing statuses
   unchanged.
 - **Released children wait for their held parent.** They may be judged in the

@@ -153,7 +153,7 @@ def _repo(tmp_path, seed=True, extra="", llrs=""):
         _write_llrs(root, llrs)
     if seed:
         SNAP.copy_live(root, seed=True)
-    return root, _commit(root, "the owner's first signing")
+    return root, _commit(root, "the operator's first signing")
 
 
 def _act(root, *rids):

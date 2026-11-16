@@ -69,7 +69,7 @@ Usage:
     python scripts/wi_convert.py --to-csv --work docs/work --csv out/work-items.csv
     python scripts/wi_convert.py --verify --csv docs/requirements/work-items.csv
 
-The F5 rule this module's helpers were once duplicated under is RETIRED (owner
+The F5 rule this module's helpers were once duplicated under is RETIRED (operator
 ruling D-8, `OI-16`): the console guard, the spec-folder read side and the TOML
 emitter all live in the shipped `kitlib` package now, and this module imports
 them. It is still a drop-in — `kitlib` copies with it, as ADOPTING.md §6 says.
@@ -165,7 +165,7 @@ COLUMNS = [
     # a live re-derivation with no scope to intersect against re-derives a WIDER
     # question than the mint asked — the first-approval brief handed its session
     # every `Drafted` row in the repo, across unrelated workstreams, and derived
-    # a `--approves` argument naming all their registries. The owner's
+    # a `--approves` argument naming all their registries. The operator's
     # concurrency reason for moving the approval act to trunk is that the
     # snapshot must not move across a workstream, so the act's scope has to be a
     # fact the ROW CARRIES rather than one recomputed from the world. Title prose

@@ -959,7 +959,7 @@ def test_a_draft_wi_with_a_filled_deliverable_fails_ra(tmp_path):
 def test_open_wi_depending_on_cancelled_pred_is_flagged(tmp_path):
     # Decision 3 (dead-dep): a live WI whose hard predecessor is cancelled can
     # never become ready — surfaced (warn plain, ERROR under --strict) so the
-    # owner re-homes or cancels it, rather than waiting forever.
+    # operator re-homes or cancels it, rather than waiting forever.
     write_spec(tmp_path, "docs/specs/WI-002.md")
     write_wis_sr(
         tmp_path,
@@ -1082,7 +1082,7 @@ def test_clean_status_has_no_forward_only_finding(tmp_path):
     # A done WI whose id is NOT echoed in status.md is clean (the file names only
     # the open work ahead), under --strict too.
     write_wis_sr(tmp_path, "WI-001,Shipped,scripts,,,done,shipped it,\n")
-    write_status(tmp_path, "## Next action\n- everything closed; await the owner.\n")
+    write_status(tmp_path, "## Next action\n- everything closed; await the operator.\n")
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert FORWARD_ONLY not in proc.stderr
@@ -1158,7 +1158,7 @@ def test_generated_marker_exempts_only_the_block(tmp_path):
     # And a hybrid file whose hand region is clean stays clean.
     write_status(
         tmp_path,
-        "## Next action\n- await the owner.\n\n"
+        "## Next action\n- await the operator.\n\n"
         + GENERATED_MARKER
         + "\n- WI-001 (from the registry snapshot)\n"
         "<!-- END GENERATED TRAJECTORY SNAPSHOT -->\n",

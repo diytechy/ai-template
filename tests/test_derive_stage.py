@@ -377,7 +377,7 @@ def test_on_a_CLAIMED_BRANCH_the_reader_derives_from_the_branch_s_own_registries
 
     The common reader does not depend on that step: it verifies per call, so on a
     claimed branch it derives from the branch's OWN registries. That is the trust
-    model the owner confirmed (§6.4) — spine work happens in series, so the
+    model the operator confirmed (§6.4) — spine work happens in series, so the
     branch's derived result IS the trunk's next value.
 
     It also must not WRITE there: a work branch never commits a generated

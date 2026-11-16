@@ -1,6 +1,6 @@
-"""The owner surface follows the queue (WI-790; IF-074, OI-102 Q2).
+"""The operator surface follows the queue (WI-790; IF-074, OI-102 Q2).
 
-One queue projection, `kitlib.spine.open_item_queue`, feeds the owner
+One queue projection, `kitlib.spine.open_item_queue`, feeds the operator
 surface's cards and counts, its integrity notice, the status snapshot's
 open-items and Blocked lists and the checker's uncited-pending error. A pending
 open item shows only when a queued or claimed work item cites it in `needs`,
@@ -127,10 +127,10 @@ def test_an_uncited_pending_item_is_a_notice_not_a_card(tmp_path):
 def test_only_uncited_items_never_claim_an_empty_queue(tmp_path):
     _registry(tmp_path, [("OI-5", "pending")])
     section = _section1(tmp_path)
-    assert "the owner queue is empty" not in section
+    assert "the operator queue is empty" not in section
     assert 'role="alert"' in section and "OI-5" in section
     _registry(tmp_path, [("OI-5", "ruled")])
-    assert "the owner queue is empty" in _section1(tmp_path)
+    assert "the operator queue is empty" in _section1(tmp_path)
 
 
 def test_the_status_snapshot_lists_the_same_projection(tmp_path):
@@ -160,7 +160,7 @@ def test_the_projection_reads_the_queue_not_a_historical_pointer(tmp_path):
 
 
 def test_decisions_to_review_is_the_pages_last_section(tmp_path):
-    # LLR-118: the owner surface's sections run in a fixed order, and
+    # LLR-118: the operator surface's sections run in a fixed order, and
     # Decisions to review is the last of them.
     page = gen.render(tmp_path)
     eyebrows = re.findall(

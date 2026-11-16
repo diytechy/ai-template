@@ -199,7 +199,7 @@ kit_policy pre-commit commit || exit 1
 #                        standing case.
 #      - done-when-blessed  reads the index too (WI-841, WI-921, WI-925): it
 #                        refuses a staged close whose changed Done-when no
-#                        recorded verdict or owner ruling in the index binds,
+#                        recorded verdict or operator ruling in the index binds,
 #                        and a trunk commit that changes a claim copy's
 #                        Done-when unblessed. A read it cannot complete (the
 #                        index delta, the current branch) holds, naming why.
@@ -250,7 +250,7 @@ kit_policy pre-commit commit || exit 1
 #                             the ritual's byte-exact relink, which the
 #                             exemption above, reading only a close's move,
 #                             would not pass), and its later reach is held as
-#                             above. An owner ruling releases each.
+#                             above. An operator ruling releases each.
 #      - plan-gate       reads the index too (WI-913): in a lane whose claimed
 #                        row declares `planmode = "single"`, a commit carrying
 #                        build output is refused until a pass record under
@@ -277,7 +277,7 @@ kit_policy pre-commit commit || exit 1
 #    trajectory (the dashboard consumes the bundle); the gate marker via
 #    spine_rules.py and the stage marker via derive_stage.py, then the status
 #    snapshot via `gen_trajectory.py --status`
-#    (it reads the fresh gate), then the owner surface via `gen_open_items.py`
+#    (it reads the fresh gate), then the operator surface via `gen_open_items.py`
 #    — then STAGE THE REGENERATED FILES (`git add`) and re-commit. Staging is
 #    not a formality: these steps compare the tree ON DISK, so regenerating
 #    without staging turns them green over a commit that still carries the

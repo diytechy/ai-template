@@ -73,7 +73,7 @@ tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor) — 
 the **amend-without-flip** warn (WI-316): a staged diff changing the **approved**
 cells of an `Approved` spine row without re-blessing it in the same commit
 (process.md §7), the write-time discipline commit-message prose never had.
-*Approved*, not every cell — the §A5.1 cell split (owner ruling 2026-07-31;
+*Approved*, not every cell — the §A5.1 cell split (operator ruling 2026-07-31;
 WI-380) rules traceability **traced, not approved**, so a `Module`/`CodeSymbol`/
 `TestRefs`/`SN-Refs`/`Verifies` pointer following code that moved does **not**
 arm the marker. The traced half is not discarded: it is carried structurally by
@@ -137,7 +137,7 @@ tag on an LLR row joins its `Module` → `CMP-###`; nesting via the CMP registry
 modules — or no arch-map inventory — passes trivially (the bound, not the
 registry, is the rule), so a small or non-adopting repo is never broken.
 
-**Knowledge⇒component coupling** (WI-153; research-knowledge.md §3a, owner-ruled
+**Knowledge⇒component coupling** (WI-153; research-knowledge.md §3a, operator-ruled
 2026-07-14). The same finding is *armed independent of the bound* once
 `docs/knowledge/` holds a real pack: an uncontained arch-map module is then a
 finding even below the 10-item bound, because a knowledge pack ties the *what* to
@@ -219,7 +219,7 @@ from pathlib import Path
 from kitlib.config import utf8_console as _utf8_console
 from observation_cadence import observation_rubric_findings
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`, executed
 # WI-448): one home for behaviours this module used to spell out itself — the
 # declared-policy line reader and the `docs/work/` spec-folder registry reader.
 # It replaces the F5 rule, which had licensed those copies unbounded and left
@@ -428,7 +428,7 @@ _TERMINAL_DELIVERABLE_REASON = {
 }
 
 # Backlog-staleness (WI-205) applies to genuinely-in-flight WIs: the open set
-# minus `deferred` and `draft` (both re-enter via an owner look — an un-defer, or
+# minus `deferred` and `draft` (both re-enter via an operator look — an un-defer, or
 # the thinking finishing — which is itself the driven review, so both are
 # EXEMPT), plus `blocked` (a WI parked on an external
 # dependency is still live work whose cited requirements can drift under it).
@@ -443,7 +443,7 @@ BACKLOG_STALE_STATUSES = ("queued", "active", "blocked")
 # ever failing a gate or asking anyone to reword what is already filed — ten of
 # the eleven live (open) titles measured at this WI's filing were multi-sentence
 # program narratives, so a validation-only fix would have forced a mass reword
-# of owner-authored text. Set a shade under the dashboard's own bound so the
+# of operator-authored text. Set a shade under the dashboard's own bound so the
 # advisory fires before a reader ever meets the clipped render.
 _TITLE_CONCISE_MAX = 120
 
@@ -522,7 +522,7 @@ def read_rows(path):
 # STATUS encoded as the DIRECTORY (docs/concurrency-restructure.md §2.1). The
 # 270-line reader that used to sit here VERBATIM, and identically in the other
 # two of schedule.py, check_trajectory.py and agent_common.py, now lives once in
-# `kitlib/registry.py`: owner ruling D-8 (`OI-16`, inversion confirmed
+# `kitlib/registry.py`: operator ruling D-8 (`OI-16`, inversion confirmed
 # 2026-08-13) retired the F5 no-shared-module rule that had licensed the copies.
 #
 # RE-EXPORTED under the names this module has always carried, so no call site
@@ -944,10 +944,10 @@ def load_known_ois(root):
 
 def uncited_open_item_findings(root, wi_rows):
     """Each pending open item NO queued or claimed work item cites in its
-    `needs` (WI-790): the queue is the only route a decision reaches the owner
+    `needs` (WI-790): the queue is the only route a decision reaches the operator
     by, so such an item is invisible, and it is an ERROR whatever the gate.
     Read off the one queue projection (`kitlib.spine.open_item_queue`) the
-    owner surface and the status snapshot also read. Vacuous without an
+    operator surface and the status snapshot also read. Vacuous without an
     open-items registry.
 
     Implements: SR-148, LLR-299
@@ -958,7 +958,7 @@ def uncited_open_item_findings(root, wi_rows):
     queue = _kitspine.open_item_queue(wi_rows, spine_carrier.load(path, "OI-ID"))
     return [
         "{}: pending, but no queued or claimed work item cites it in `needs`, "
-        "so the decision never reaches the owner's queue — cite it from the row "
+        "so the decision never reaches the operator's queue — cite it from the row "
         "it holds, or file a queued placeholder row (WI-790)".format(oid)
         for oid in queue["uncited"]
     ]
@@ -1761,7 +1761,7 @@ def spec_lifecycle_findings(root, wis):
 
 
 # --- WI-352: the completion reconciler ----------------------------------------
-# A WI's `Status` is an ATTESTATION, and the owner ruled 2026-07-28 that it stays
+# A WI's `Status` is an ATTESTATION, and the operator ruled 2026-07-28 that it stays
 # one rather than becoming derived: the evidence a deriver would read is the `WI:`
 # commit trailer, but a trailer means "a commit CLAIMS this WI", not "the work is
 # right" (WI-336's code landed while its row correctly stayed `queued`, because a
@@ -1884,7 +1884,7 @@ def completion_reconciliation_findings(root, wis):
         ticked Done-when box and none left unticked. The WI-328 shape: six boxes
         ticked across six commits on 2026-07-27, the row still `queued` a day
         later, and because it was `SafetyClass=spine` the scheduler serialized the
-        whole project behind finished work while the session told the owner a
+        whole project behind finished work while the session told the operator a
         shipped migration was awaiting approval.
       - **spec-says-unfinished** — a `done` row whose own **live** spec still has
         unticked boxes and which no open WI cites (the same "no open citer" test
@@ -1966,7 +1966,7 @@ def tier_completion_findings(findings):
     attestation, so a row disagreeing with its own ticked boxes is a
     contradiction between two homes for one fact and belongs at the gate. A `WI:`
     trailer is not: it means "a commit CLAIMS this WI", which is the very
-    argument the owner's 2026-07-28 ruling uses to keep Status declared — so it
+    argument the operator's 2026-07-28 ruling uses to keep Status declared — so it
     warns and never joins the exit code.
 
     DEVIATION from the WI row, which asked for the whole reconciler at the
@@ -2111,7 +2111,7 @@ def dead_dependency_findings(wis):
     integrate `done`, so an open successor whose hard edge points at it can
     NEVER become ready. The conservative decision (WI-267 design-decision 3) is
     to SURFACE the dead edge rather than let a terminal predecessor silently
-    "satisfy" the dependency the way `done` does: the owner must re-home the
+    "satisfy" the dependency the way `done` does: the operator must re-home the
     successor's edge (an OI-70/OI-73 close now REPLACES inbound edges at the
     mint, and a consolidation close re-points them the same way, so a strand
     minted through either path never reaches here) or cancel it too. The scheduler already refuses to
@@ -2257,7 +2257,7 @@ def _path_commit_time(root, rel_path, row_history=False):
 
     A commit that moves AND edits the spec answers 1000 as well — git scores it
     `R<similarity>`, and `--diff-filter=AM` drops it like any other rename. That
-    is the accepted blind spot (WI-362, owner ruling 2026-07-29: name it, do not
+    is the accepted blind spot (WI-362, operator ruling 2026-07-29: name it, do not
     build rename detection): re-affirmation must be a content edit at the SAME
     path, because a Title edit renames the spec file. Only a rewrite large enough
     to defeat rename detection reads as `A` and re-dates, so the re-dating of a
@@ -2419,7 +2419,7 @@ def backlog_staleness_findings(root, wis):
     rename whatever else the commit did. Since the Title drives the spec
     FILENAME, re-titling a WI renames its file and does NOT clear the warn: a
     genuine re-affirmation carried by a Title edit reads as no re-affirmation at
-    all. That is the accepted blind spot of the trade (WI-362, owner ruling
+    all. That is the accepted blind spot of the trade (WI-362, operator ruling
     2026-07-29: state it in the warn, do not build rename detection) — pinned by
     tests/test_wi_folder_loaders.py so changing it has to be deliberate.
 
@@ -2440,7 +2440,7 @@ def backlog_staleness_findings(root, wis):
     this check's bounded cost (≤2 blames) with git work per open WI and
     inherits the amendment scan's approved-only population. Which traced cells
     are staleness-bearing is a new classification, i.e. a ruling, not a patch.
-    Stated here on the WI-362 precedent (owner ruling 2026-07-29: name the blind
+    Stated here on the WI-362 precedent (operator ruling 2026-07-29: name the blind
     spot, do not build the detection).
 
     NEVER joins the exit code — not even under `--strict` (a warn-tier checker
@@ -2562,7 +2562,7 @@ def holdbyrename_findings(root):
     """A `docs/work/active/<branch>/` claim directory with NO matching git
     branch ref — the exact signature of a HOLD-BY-RENAME, which OI-70 BANS: a
     lane that must stop CLOSES PARTIAL (the only sanctioned stop, save a planned
-    owner-held step, process.md §5 "Open items"), it is never
+    operator-held step, process.md §5 "Open items"), it is never
     parked by renaming its ref (`git branch -m ... -HELD`) while its claim stays
     on trunk. That mismatch is also the phantom head the scheduler/dispatcher
     disagree over: the row reads `ready` off the claim while the dispatcher
@@ -2772,7 +2772,7 @@ def staged_findings(root):
     directories, so both maps come from name listings (`--name-status` staged,
     `ls-tree` at HEAD) and never from parsing a row.
 
-    Known false-positive, accepted at the WI-271 retirement (owner ruling
+    Known false-positive, accepted at the WI-271 retirement (operator ruling
     2026-07-29): a follow-up WI whose chain change landed in its BUILD commit
     warns on its bookkeeping-only close commit — a moment's investigation, the
     lesser evil against a missed paper-close. Un-defer trigger: reopen (fresh
@@ -3161,7 +3161,7 @@ def critique_staleness_findings(root):
     render. Returns finding strings ([] when not applicable).
 
     TIERED severity (set by the caller): WARN at the commit checks, ERROR under
-    `--strict` (the DevStg-Impl gate) — fail-closed per the owner's 2026-07-20 ruling, a
+    `--strict` (the DevStg-Impl gate) — fail-closed per the operator's 2026-07-20 ruling, a
     stale render surface cannot reach a green gate; main() routes it through the
     strict-promotable findings loop (the R-E warn tier). Silent off-git
     and vacuous when the repo declares no perceptual SR (so a downstream repo
@@ -3489,7 +3489,7 @@ def main():
     # Perceptual re-fire (WI-243) — a VerificationMethod=Critique SR whose latest CRITIQUE
     # evidence predates a dashboard render-surface change is judging an older render.
     # WARN at the commit checks; **fail-closed under --strict** (the DevStg-Impl gate) per the
-    # owner's 2026-07-20 ruling — a stale render surface cannot reach a green gate.
+    # operator's 2026-07-20 ruling — a stale render surface cannot reach a green gate.
     # hard=False rides the same warn-plain / error-under-strict tier as R-E,
     # so main() gains no branch. Vacuous when no perceptual SR / evidence / render
     # surface (a downstream repo without a VerificationMethod=Critique SR — none ship —

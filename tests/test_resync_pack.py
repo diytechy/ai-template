@@ -1,6 +1,6 @@
 """RESYNC_PACK.md — the LLM re-sync pack's structural contract (OI-27).
 
-WHY THESE TESTS EXIST. The ruling (owner, 2026-08-13) picked option (e), the
+WHY THESE TESTS EXIST. The ruling (operator, 2026-08-13) picked option (e), the
 prose pack, over (c), a detector-carrying migration registry — but named (c) as
 the promotion target and made ONE discipline non-negotiable: **every entry is
 SHA-anchored**, naming the kit commit range it applies to. That anchor is what

@@ -62,7 +62,7 @@ monorepo.
 
 ## 3. The confirmed model
 
-Six decisions, confirmed with the product owner. Each extends a seam the kit already
+Six decisions, confirmed with the operator. Each extends a seam the kit already
 has (`IF-###`, the Integration/Coordination hat, `PB-###`, the recursive spine) across
 a repo boundary — they are not new machinery.
 

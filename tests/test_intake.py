@@ -288,7 +288,7 @@ def test_the_amendment_mint_is_idempotent_across_a_rerun(tmp_path):
 
 # --- trigger (a2): the Drafted rows a lane hands over -------------------------
 #
-# Owner ruling 2026-09-01. A work lane authors `Drafted` spine rows and its merge
+# Operator ruling 2026-09-01. A work lane authors `Drafted` spine rows and its merge
 # is REFUSED if it approves them, so every merge that adds or amends one leaves
 # text waiting on an approval nobody gave. The mirror of trigger (a), off the
 # same two-tree walk.
@@ -296,7 +296,7 @@ def test_the_amendment_mint_is_idempotent_across_a_rerun(tmp_path):
 
 def _released(root):
     """Release every spine rung to the loop — the dial state this trigger needs.
-    The fixture declares `DevStg-Needs`: the owner holds Needs and nothing
+    The fixture declares `DevStg-Needs`: the operator holds Needs and nothing
     above it. (This repository's own value is docs/process.toml's to state.)"""
     set_process_key(
         root, "authority", "operator_accepts_through", kit_ladder.STAGE_NEEDS
@@ -354,10 +354,10 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
     is refused BY NAME (WI-572 REVIEW-A round 028).
 
     Until this round the refusal walked `SPINE_CSVS` — SR/LLR/TC — only, so the
-    one tier the operator-acceptance dial holds for the owner (`DevStg-Needs`, the
+    one tier the operator-acceptance dial holds for the operator (`DevStg-Needs`, the
     rung the fixture declares held) was the one a lane could bless on its way
     past.
-    That is the worst case of the act the owner's 2026-09-01 ruling moved to the
+    That is the worst case of the act the operator's 2026-09-01 ruling moved to the
     adjudicator, not an exempt one, so `APPROVAL_ACT_CSVS` now adds the need
     registry. The three OFF-SPINE registries stay out — their approval cells are
     OI-30 D3's, not this rung's — and the exhaustiveness pin in
@@ -366,7 +366,7 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
     THE REFUSAL IS KEYED TO A WORK LANE'S MERGE, NOT TO THE COMMIT. It is read
     at `integrate._approval_act_refusal` over the merge delta of a branch the
     station is landing, and an adjudication lane is exempted within its recorded
-    scope. The owner's own sitting — flipping an SN row by hand in a reviewed
+    scope. The operator's own sitting — flipping an SN row by hand in a reviewed
     commit ON TRUNK — never reaches that slot and is unaffected: there is no
     lane merge to refuse. This test therefore drives the reader directly, which
     is the same reading the slot performs, and asserts nothing about a trunk
@@ -457,7 +457,7 @@ def test_an_amended_approved_need_mints_one_amendment_row(tmp_path):
     """OI-100 gap 1 (WI-791): an approved need's text moving on merged trunk
     reaches the meaning-or-clarity adjudication, as one `amendment` row scoped
     to the need. Until WI-791 the walk covered SR/LLR/TC only, so WI-616's need
-    edits merged and minted nothing — the need reached the owner's brief with
+    edits merged and minted nothing — the need reached the operator's brief with
     no meaning judgement. The dial does not filter this mint: a held rung's
     amendment is still judged, and the verdict's aftermath is where the hold
     decides who signs."""
@@ -522,7 +522,7 @@ def test_amended_approved_assumption_and_surrogate_mint_one_row(tmp_path):
 
 def test_a_held_rung_mints_no_first_approval_row(tmp_path):
     # The ruling's own boundary, and the half that keeps this from pre-empting a
-    # signature the owner owes: the adjudicator acts only on rungs the dial
+    # signature the operator owes: the adjudicator acts only on rungs the dial
     # RELEASES. A held tier still surfaces through the approval brief, exactly
     # as it does today, and minting here would either duplicate that surface or
     # invite a session to approve past the operator.
@@ -1882,7 +1882,7 @@ def write_open_items(root):
     return path
 
 
-# The owner's whole card, as the adjudicator authors it: the four cells a
+# The operator's whole card, as the adjudicator authors it: the four cells a
 # hand-filed pending row carries, multi-line and quote-bearing so "verbatim" is
 # tested on the shapes a real brief has, not on one tidy sentence.
 _BRIEF = {
@@ -1905,12 +1905,12 @@ _OPEN_ITEM_TABLE = "\n[open_item]\n" + "".join(
 _OPERATOR_OWED_HEAD = """
 ## Deliverable
 
-Adjudicated: the remaining question is the owner's to answer.
+Adjudicated: the remaining question is the operator's to answer.
 
 ## Dispositions
 
 ```toml
-title = "Continue once the owner rules the boundary"
+title = "Continue once the operator rules the boundary"
 workstream = "scripts"
 buildtier = "medium"
 supersedes = "WI-005"
@@ -1984,7 +1984,7 @@ def test_the_minted_open_item_carries_the_adjudicators_brief_verbatim(tmp_path):
     # options, recommendation) and every authored cell lands byte-for-byte, so
     # gen_open_items renders it with no special case. Before the typed table
     # the mint wrote title/status/raised/one_line/wi_refs only, and OI-77 and
-    # OI-78 reached the owner as a bare question.
+    # OI-78 reached the operator as a bare question.
     root = git_repo(tmp_path)
     write_sr(root)
     registry = write_open_items(root)
@@ -2079,7 +2079,7 @@ def test_an_open_item_table_missing_a_cell_is_refused_by_name(cell, thin):
 
 # Every non-string TOML value type, as authored. Each is truthy, so a
 # "non-empty" check alone would pass it and the mint would serialize whatever
-# `str` makes of it onto the owner's card.
+# `str` makes of it onto the operator's card.
 _NON_STRING_TOML = {
     "integer": "7",
     "float": "1.5",
@@ -2111,7 +2111,7 @@ def test_an_open_item_cell_that_is_not_a_string_is_refused_by_name(kind):
 
 def test_a_non_string_cell_mints_nothing_and_renders_nothing(tmp_path):
     # Through the whole path: the merge's mint refuses by cell name, the
-    # registry is byte-identical, and the owner's surface has no card to draw.
+    # registry is byte-identical, and the operator's surface has no card to draw.
     root = git_repo(tmp_path)
     write_sr(root)
     registry = write_open_items(root)
@@ -2451,7 +2451,7 @@ def test_the_census_mints_gap_rows_and_dedupes_on_rerun(tmp_path):
     assert again == []
 
 
-# --- the gate-policy arms (ruled decision 2, owner 2026-07-31; §A8) ------------
+# --- the gate-policy arms (ruled decision 2, operator 2026-07-31; §A8) ------------
 
 
 def _policy_repo(tmp_path, dial):
@@ -2566,7 +2566,7 @@ def test_below_the_operator_dial_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_pa
     status quoted, and NOTHING is written. Fail-closed matters more than the
     lost arm — the alternative resolutions (write to a `Drafted` row, or
     re-bless a drifted `Approved` one) are both WIDER than the silent skip they
-    would replace, and widening mechanical approval authority is an owner
+    would replace, and widening mechanical approval authority is an operator
     ruling, not a migration step's to take. The writer's own properties did not
     move with the guard and are proved directly below.
 
@@ -2870,7 +2870,7 @@ def test_an_unreadable_dial_or_stage_fails_toward_recommend(tmp_path):
     assert intake.adjudication_action(False) == "flip"
     # OI-100 gap 2 (WI-791): the held arm's one stated case. A CLARITY verdict
     # approves no new text, so the session re-attests it; a MEANING verdict and
-    # a first draft (no verdict) still stop at a recommendation to the owner.
+    # a first draft (no verdict) still stop at a recommendation to the operator.
     assert intake.adjudication_action(True, "CLARITY") == "reattest"
     assert intake.adjudication_action(True, "MEANING") == "recommend"
     assert intake.adjudication_action(False, "CLARITY") == "flip"
@@ -2995,7 +2995,7 @@ def test_the_mint_refuses_a_draft_that_absorbs_a_consolidations_own_successor():
     and neither substitutes: that one refuses CONTINUING a row somebody already
     absorbed (a lineage chain), this refuses ABSORBING a row an earlier
     consolidation MINTED — overturning that judgement, which is a
-    RETURN-TO-DRAFT for the owner and never a second machine mint."""
+    RETURN-TO-DRAFT for the operator and never a second machine mint."""
     registry = [
         {"WI-ID": "WI-005", "Status": "restructured", "Supersedes": "", "Title": "a"},
         {"WI-ID": "WI-101", "Status": "queued", "Supersedes": "WI-005", "Title": "b"},

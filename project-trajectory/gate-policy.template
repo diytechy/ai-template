@@ -19,7 +19,7 @@
 #   single-approve — LLM review through the requirement and test rungs; the operator
 #                   approves the queued batch once at the phase's
 #                   [DevStg-Impl] close; autonomous after.
-#   autonomous    — every gate except the owner's final read closes on an independent
+#   autonomous    — every gate except the operator's final read closes on an independent
 #                   fresh-context LLM reviewer's recorded verdict.
 # A non-default level is amended into the repo by the deviation register
 # (docs/gate-policy.md — scaffolded by `bootstrap.py --gate-policy`); the §4

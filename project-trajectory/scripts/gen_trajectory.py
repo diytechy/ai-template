@@ -51,7 +51,7 @@ Stdlib only. Usage:  python scripts/gen_trajectory.py [--root .] [--check] [--st
              registry is invalid or the committed HTML is stale.
   --status   splice the derived-facts snapshot (spine + derived stage + open-items
              one-liners) into docs/status.md's `<!-- BEGIN GENERATED STATUS -->`
-             block (WI-202) AND the durable pending-owner-actions projection into
+             block (WI-202) AND the durable pending-operator-actions projection into
              (WI-234); with --check, byte-compare BOTH for freshness — the
              successor invariant to the WI-200 forward-only token guard. Vacuous
              (exit 0) per file when it is absent or has no marker pair.
@@ -75,7 +75,7 @@ Contract IF-011: the dashboard generator's verdict, delivered as a CLI. A plain
     run regenerates the root `PROJECT_STATE.html` from the work-item registry,
     the spine registries and the live source tree. `--check` writes nothing and
     exits 1 when the registry is invalid or the committed HTML is stale.
-    `--status` splices the derived-facts snapshot and the pending-owner-actions
+    `--status` splices the derived-facts snapshot and the pending-operator-actions
     projection into the marked blocks of `docs/status.md`, byte-comparing both
     under `--check` and passing vacuously per file when the file is absent or
     has no marker pair. The freshness compare EXCLUDES the git-derived as-of
@@ -1104,7 +1104,7 @@ def main():
         "open-items one-liners) into docs/status.md instead of rendering the "
         "dashboard; with --check, byte-compare it for freshness (the WI-200 "
         "forward-only guard's successor). Vacuous without the marker pair. The "
-        "pending-owner-actions projection moved to gen_open_items.py with "
+        "pending-operator-actions projection moved to gen_open_items.py with "
         "WI-322 — this still DERIVES it (`pending_block`), that renders it.",
     )
     args = ap.parse_args()
@@ -1112,7 +1112,7 @@ def main():
 
     if args.status:
         # `--status` gates the status snapshot alone since WI-322: the
-        # pending-owner-actions projection moved to the generated owner surface
+        # pending-operator-actions projection moved to the generated operator surface
         # docs/open-items.html (its own `open-items` harness step), because the
         # markdown file it used to splice into is retired. `pending_block` stays
         # here — it is still the ONE derivation of what is pending; gen_open_items

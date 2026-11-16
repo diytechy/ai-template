@@ -370,7 +370,7 @@ def _every_emitter_document(tmp_path):
       test.
 
     The trap that mixture sets is the CALLER's to disarm, and deliberately so
-    (the shared fresh-emitting fixture was considered and rejected — owner
+    (the shared fresh-emitting fixture was considered and rejected — operator
     ruling 2026-07-30, log.md Decisions). A change that TIGHTENS an invariant
     reds through the stale shipped copy rather than through the emitter it
     changed: the failure names an older renderer's markup while the code under

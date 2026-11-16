@@ -79,7 +79,7 @@ standing = "active"
 
 [assumption.DA-006]
 effect_at = ["B-09"]
-assumption = """The model runner follows the runner contract: it reads its prompt from stdin, exits with the documented codes, ends rather than waits when it needs input it cannot have, and leaves its work as commits in its own lane, so the work the owner reads back is the work the loop asked for."""
+assumption = """The model runner follows the runner contract: it reads its prompt from stdin, exits with the documented codes, ends rather than waits when it needs input it cannot have, and leaves its work as commits in its own lane, so the work the operator reads back is the work the loop asked for."""
 holds_when = """A runner and model listed in the declared agent registry, at the command-line version the loop was tested against."""
 obstacle = """A runner update changes its exit codes, its commit behaviour or what it does on a closed stdin, and every loop requirement relying on the contract loses its premise at once."""
 falsifier = """A routed session whose exit code, stdin behaviour or commit shape falls outside the documented runner contract."""
@@ -171,10 +171,10 @@ standing = "active"
 
 [assumption.DA-015]
 effect_at = ["B-09"]
-assumption = """A fresh model session asked to judge whether queued work items overlap, from a brief the loop composed from the registries, judges as the owner would: the items it merges overlap, and the successor it names carries their scope."""
-holds_when = """A runner and model at a strong tier listed in the declared agent registry; the brief carries each item's full scope text; the owner reads the recorded restructuring where the queue is shown."""
+assumption = """A fresh model session asked to judge whether queued work items overlap, from a brief the loop composed from the registries, judges as the operator would: the items it merges overlap, and the successor it names carries their scope."""
+holds_when = """A runner and model at a strong tier listed in the declared agent registry; the brief carries each item's full scope text; the operator reads the recorded restructuring where the queue is shown."""
 obstacle = """The session merges items that do not overlap, or names a successor that drops part of an absorbed scope, and no one reads the recorded restructuring."""
-falsifier = """An owner reversing a recorded consolidation, or re-filing scope an absorbed item carried."""
+falsifier = """An operator reversing a recorded consolidation, or re-filing scope an absorbed item carried."""
 obstacle_hats = ["PRODUCT-FITNESS"]
 status = "Drafted"
 standing = "active"

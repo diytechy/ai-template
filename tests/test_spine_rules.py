@@ -407,7 +407,7 @@ def _append_approved_sn(scaffold, row):
 
 
 def test_uncovered_approved_sn_holds_the_NEEDS_rung(scaffold):
-    # WI-401 (owner ruling 2026-08-01): an approved SN cited by zero SR SN-Refs is
+    # WI-401 (operator ruling 2026-08-01): an approved SN cited by zero SR SN-Refs is
     # an unanswered need. RE-KEYED FROM THE BAR AXIS — the claim used to be "the
     # raw level caps at DevStg-Below and the runnable value floors to
     # DevStg-Reqs"; on the stage ladder the same fact reads DIRECTLY, as the rung

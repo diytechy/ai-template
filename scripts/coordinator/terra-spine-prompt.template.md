@@ -15,7 +15,7 @@ An independent Claude Opus adjudicator will judge your rows later, in this lane,
 - Never flip a `status`. A new row is `Drafted`. You may amend any cell of an approved row the change makes untrue; the adjudicator then rules it MEANING or CLARITY against its anchor.
 - Draft a new id only from the reserved ranges this turn names: @RESERVED@. The coordinator reserved them for this work item before your turn. Never count a new id up from `docs/id-watermark`'s mark or the live maximum: your lane's copy does not see the ids other lanes hold.
 - If the set needs more ids in a space than its range holds, or a range where this turn names none, stop and report how many more ids you need in each space; the coordinator reserves again and resumes you. Never draft an id outside the ranges.
-- Requirements never reference code (owner ruling 5 of 2026-10-11, as revisions 35 and 36 refine it: `docs/plans/2026-10-11-review-churn/README.md#owner-rulings-2026-10-11`):
+- Requirements never reference code (operator ruling 5 of 2026-10-11, as revisions 35 and 36 refine it: `docs/plans/2026-10-11-review-churn/README.md#owner-rulings-2026-10-11`):
   - text you write into a requirement row names no implementation carrier (a code file, function or symbol);
   - SN and SR rows name no file in any cell, acceptance included: current-carrier evidence lives in the TC rows that verify them, never in SR acceptance;
   - a shipped boundary artifact (a registry, template, config file or launcher) may be named in LLR and TC rows only;

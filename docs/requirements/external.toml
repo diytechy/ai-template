@@ -85,7 +85,7 @@
 #                  `agent_common.operator_accepts(docs, "external")`. READ THE
 #                  DIAL, DO NOT ASSUME IT: whether DevStg-Boundary is held is
 #                  that value's to say, never this comment's. What keeps these
-#                  values the owner's, whatever the dial says, is that the kit
+#                  values the operator's, whatever the dial says, is that the kit
 #                  ships no automated writer for an off-spine `status` — they
 #                  are hand-edited, in a reviewed Status-change commit. The
 #                  predicate exists so the first such writer cannot be added

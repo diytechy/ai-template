@@ -240,7 +240,7 @@ def test_tab_button_and_panel_helpers_emit_the_aria_pattern():
 # --- WI-144: the 042-CRITIQUE rubric-meeting build round (dashboard-*.md) -------
 # Regression guards for the six rubric-meeting fixes (A4/U4/A3/U3/U1 done here;
 # T2 knowledge-density is the round's handed-off remainder). These guard the build
-# against regressions; they are NOT the owner-gated formal TC-HARDEN cases (the
+# against regressions; they are NOT the operator-gated formal TC-HARDEN cases (the
 # per-<text> WCAG parse / dead-selector / legend-per-fill TCs route via §5 intake).
 
 

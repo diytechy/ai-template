@@ -32,7 +32,7 @@ alternative = "Drop OI-115 from WI-963's needs so the lane writes and blesses th
 reversal_cost = "Low: one Done-when item, re-blessed in the lane if it changes."
 why_not_escalated = "Escalated: the owner confirmed the text in session, 2026-11-01."
 review = ""
-owner = "confirmed"
+operator = "confirmed"
 done_when = "sha256:f8c62f4a13affe14"
 
 [decision.D-005]

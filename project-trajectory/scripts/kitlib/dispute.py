@@ -3,8 +3,8 @@
 WHY THIS EXISTS (WI-865). A review finding the lane's builder or its
 coordinator contests, or one that keeps coming back round after round, is the
 adjudicator's call, not the coordinator's by sending every finding back to the
-builder (the owner's ruling of 2026-10-08, rule 2); its call is final, and a
-high-risk finding goes to the owner. That sitting's input is a findings file
+builder (the operator's ruling of 2026-10-08, rule 2); its call is final, and a
+high-risk finding goes to the operator. That sitting's input is a findings file
 the coordinator writes by hand, and its output a verdict ruling each finding.
 Both shapes have one home, here, below the routes that use them: the
 coordinator's adjudication entry point today, the loop's in-lane sitting
@@ -52,7 +52,7 @@ physical line (leading indentation aside), and no other `RULING:` line:
     RULING: <id> DISMISS out-of-scope|refuted|not-worth-cost <why>
     RULING: <id> ESCALATE <why it is high risk>
 
-SUCCESSOR (WI-911; the owner's ruling of 2026-10-14, in session, that only
+SUCCESSOR (WI-911; the operator's ruling of 2026-10-14, in session, that only
 the dispute sitting moves a finding to a successor row): the finding is real
 and in scope, but becomes its own row, filed on trunk at the landing from
 this verdict's binding. Like FIX and ESCALATE it takes no reason class.

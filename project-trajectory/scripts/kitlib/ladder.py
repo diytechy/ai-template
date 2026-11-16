@@ -13,7 +13,7 @@ living in four places, held together by equality tests, is the accreted
 duplication this repo's doctrine refuses. It predates `kitlib`; the D-7-era
 pins-over-extraction choice is what left it this way.
 
-`kitlib` is the sanctioned landing (owner ruling D-8, `OI-16`), and the pins
+`kitlib` is the sanctioned landing (operator ruling D-8, `OI-16`), and the pins
 retire because drift becomes UNREPRESENTABLE rather than DETECTED — the same
 move WI-448 already made for the five-way declared-line reader
 (`tests/test_rule_sync.py`, "the declared-line reader: WAS 5-way, now ONE home",
@@ -52,7 +52,7 @@ work performed twice. The axis is gone repo-wide as of slice 5.
 """
 
 # --- THE LADDER (SN-029 / OI-21, ruled 2026-08-13; moved here WI-498) ----------
-# THE RULED MODEL (owner, 2026-08-12; the ladder re-ruled 2026-08-13 as OI-21):
+# THE RULED MODEL (operator, 2026-08-12; the ladder re-ruled 2026-08-13 as OI-21):
 # **stages are the rungs of the decomposition — a repo is IN one; bars are the
 # subset of rung boundaries an operator must certify — you CLEAR one.** The stage is
 # state, the bar is an event.

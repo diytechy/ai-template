@@ -1,6 +1,6 @@
 """The acceptance record as its readers see it: the needs file's two tiers
 compared with their recorded copies, a spine row missing the cells every reader
-keys on, each registry's own copy stamp on the owner's surfaces, a
+keys on, each registry's own copy stamp on the operator's surfaces, a
 re-attestation held to its amendment's scope at merge, and the snapshot's
 history reader taking the needs carrier from the file.
 
@@ -35,7 +35,7 @@ TC_REL = "docs/test/test-cases.toml"
 _NEED = (
     "\n[need.SN-001]\n"
     'status = "Approved"\n'
-    'need = "The owner sees every approved need whose text moved."\n'
+    'need = "The operator sees every approved need whose text moved."\n'
     'why = "An amendment nobody was shown is blessed by nobody."\n'
     'priority = "M"\n'
     'acceptance = "A moved need is shown before and after."\n'
@@ -112,8 +112,8 @@ def test_a_drifted_approved_need_is_reported_and_briefed_with_its_diff(scaffold)
     _rewrite(
         root,
         NEEDS_REL,
-        'need = "The owner sees every approved need whose text moved."',
-        'need = "The owner sees every approved need whose text moved, at once."',
+        'need = "The operator sees every approved need whose text moved."',
+        'need = "The operator sees every approved need whose text moved, at once."',
     )
     ((rid, why, cells, _row),) = SNAP.needs_owing(root)
     assert (rid, why) == ("SN-001", "DRIFTED")
@@ -122,9 +122,11 @@ def test_a_drifted_approved_need_is_reported_and_briefed_with_its_diff(scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     brief = proc.stdout
     assert "### SN-001 — DRIFTED" in brief, brief
-    assert "  - before: The owner sees every approved need whose text moved." in brief
     assert (
-        "  - after: The owner sees every approved need whose text moved, at once."
+        "  - before: The operator sees every approved need whose text moved." in brief
+    )
+    assert (
+        "  - after: The operator sees every approved need whose text moved, at once."
         in (brief)
     )
 
@@ -174,7 +176,7 @@ def test_an_approved_stakeholder_is_recorded_by_the_act_that_approves_it(scaffol
     _append(
         root,
         NEEDS_REL,
-        '\n[stakeholder.STK-01]\nname = "The owner"\n'
+        '\n[stakeholder.STK-01]\nname = "The operator"\n'
         'description = "Owns the kit\'s outcomes."\nstatus = "Drafted"\n',
     )
     SNAP.copy_live(root, seed=True)
@@ -265,7 +267,7 @@ def test_a_row_missing_its_status_or_phase_cell_is_an_integrity_finding(scaffold
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-# --- each registry's own copy on the owner's surfaces (TC-271) ---------------
+# --- each registry's own copy on the operator's surfaces (TC-271) ---------------
 
 
 def _two_copy_scaffold(root):
@@ -287,7 +289,7 @@ def _two_copy_scaffold(root):
     return seeded, later
 
 
-def test_the_owners_brief_and_open_items_name_each_registrys_own_copy(scaffold):
+def test_the_operators_brief_and_open_items_name_each_registrys_own_copy(scaffold):
     """Implements: TC-271"""
     root = scaffold
     seeded, later = _two_copy_scaffold(root)
@@ -656,7 +658,7 @@ _MD_NEEDS = (
     "# Stakeholder needs\n\n## Core needs\n\n"
     "| SN-ID | Need | Why it matters | Priority | Acceptance intent |\n"
     "|---|---|---|---|---|\n"
-    "| SN-001 | The owner sees a moved need. | Unseen is unblessed. | M |"
+    "| SN-001 | The operator sees a moved need. | Unseen is unblessed. | M |"
     " Shown before and after. |\n"
 )
 
@@ -703,7 +705,7 @@ def test_a_drifted_approved_stakeholder_is_reported_and_briefed(scaffold):
     _append(
         root,
         NEEDS_REL,
-        '\n[stakeholder.STK-01]\nname = "The owner"\n'
+        '\n[stakeholder.STK-01]\nname = "The operator"\n'
         'description = "Owns the outcomes."\nstatus = "Approved"\n',
     )
     SNAP.copy_live(root, seed=True)
@@ -720,7 +722,7 @@ def test_a_drifted_approved_stakeholder_is_reported_and_briefed(scaffold):
     assert "  - after: Owns every outcome." in proc.stdout, proc.stdout
 
 
-# --- the owner's open-items page shows the needs owing an act (TC-269) --------
+# --- the operator's open-items page shows the needs owing an act (TC-269) --------
 
 _EMPTY_SECTION_2 = "no SR owes an approval or a re-attest"
 
@@ -745,8 +747,8 @@ def _drifted_need(root):
     _rewrite(
         root,
         NEEDS_REL,
-        'need = "The owner sees every approved need whose text moved."',
-        'need = "The owner sees every approved need whose text moved, at once."',
+        'need = "The operator sees every approved need whose text moved."',
+        'need = "The operator sees every approved need whose text moved, at once."',
     )
 
 
@@ -764,7 +766,7 @@ def test_a_drifted_need_has_its_card_on_the_open_items_page(scaffold):
     assert ">DRIFTED<" in card, card
     assert '<div class="cellname">Need' in card, card
     # Before and after: the unchanged run once, the moved words both ways.
-    assert "The owner sees every approved need whose text " in card, card
+    assert "The operator sees every approved need whose text " in card, card
     assert "<del>moved.</del><ins>moved, at once.</ins>" in card, card
     assert _EMPTY_SECTION_2 not in page
 
@@ -783,21 +785,21 @@ def test_a_first_approval_need_and_stakeholder_show_their_cells_in_full(scaffold
         root,
         NEEDS_REL,
         '\n[need.SN-002]\nstatus = "Drafted"\n'
-        'need = "The owner reads a new need before approving it."\n'
+        'need = "The operator reads a new need before approving it."\n'
         'why = "{}"\npriority = "M"\n'
         'acceptance = "The need is shown in full."\n'
-        '\n[stakeholder.STK-01]\nname = "The owner"\n'
+        '\n[stakeholder.STK-01]\nname = "The operator"\n'
         'description = "Owns the outcomes."\n'.format(long_why),
     )
     page = load_script("gen_open_items").render(root)
     need = _card(page, "SN-002")
     assert ">Drafted, never approved<" in need, need
-    assert "The owner reads a new need before approving it." in need, need
+    assert "The operator reads a new need before approving it." in need, need
     assert "END-OF-WHY" in need, need
     assert "more chars — read the registry row" not in need, need
     stakeholder = _card(page, "STK-01")
     assert ">no Status cell, never approved<" in stakeholder, stakeholder
-    assert "The owner" in stakeholder and "Owns the outcomes." in stakeholder
+    assert "The operator" in stakeholder and "Owns the outcomes." in stakeholder
     for card in (need, stakeholder):
         assert "<del>" not in card and "<ins>" not in card, card
 
@@ -973,7 +975,7 @@ def _split_act(root, approve, copy_needs=None, sr_rel=SR_REL, append=None):
     _commit(run_git, "seed")
     _rewrite(root, sr_rel, '"row one"', '"row one, amended"')
     # The drafted need's text moves too, so its copy differs from the seed's.
-    _rewrite(root, NEEDS_REL, "The owner sees", "The owner now sees")
+    _rewrite(root, NEEDS_REL, "The operator sees", "The operator now sees")
     base = _commit(run_git, "the amendment and the drafted need")
     if approve:
         _rewrite(
@@ -997,7 +999,7 @@ def _split_act(root, approve, copy_needs=None, sr_rel=SR_REL, append=None):
 # A need of its own, so the act flips exactly it (the scaffold ships others).
 _SPLIT_NEED = (
     _NEED.replace("SN-001", "SN-091")
-    .replace("The owner sees", "The owner now sees")
+    .replace("The operator sees", "The operator now sees")
     .replace('"Approved"', "{}")
 )
 _SPLIT = ["amendment:SR-001", "first-approval:SN-091", "done-when:WI-682"]
@@ -1156,7 +1158,7 @@ def test_a_combined_act_on_a_markdown_needs_carrier_authorizes_its_copy(scaffold
 _TOML_NEEDS = (
     "\n[need.SN-001]\n"
     'status = "Approved"\n'
-    'need = "The owner sees every moved need."\n'
+    'need = "The operator sees every moved need."\n'
     'why = "Unseen is unblessed."\n'
     'priority = "M"\n'
     'acceptance = "Shown before and after."\n'
@@ -1164,7 +1166,7 @@ _TOML_NEEDS = (
 _TOML_DRAFT_NEED = (
     "\n[need.SN-002]\n"
     'status = "Drafted"\n'
-    'need = "The owner sees a second need."\n'
+    'need = "The operator sees a second need."\n'
     'why = "A second need."\n'
     'priority = "M"\n'
     'acceptance = "Shown."\n'
@@ -1234,8 +1236,8 @@ def test_a_plain_flip_across_a_needs_carrier_conversion_merges(scaffold):
     _rewrite(
         scaffold,
         NEEDS_REL,
-        'status = "Drafted"\nneed = "The owner sees a second need."',
-        'status = "Approved"\nneed = "The owner sees a second need."',
+        'status = "Drafted"\nneed = "The operator sees a second need."',
+        'status = "Approved"\nneed = "The operator sees a second need."',
     )
     _bind_branch(scaffold, {"amendment": ["SN-001"], "first-approval": ["SN-002"]})
     SNAP.copy_live(scaffold, approves={NEEDS_REL: "WI-685"}, reattests={"SN-001"})

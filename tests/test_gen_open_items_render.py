@@ -27,7 +27,7 @@ def test_word_diff_marks_only_what_moved(tmp_path):
 
 def test_open_items_theme_tokens_match_the_dashboard():
     """A drift guard, not an extraction (the WI-291 precedent, and the F5 ruling
-    against a shared `_kitcommon`): the two owner surfaces must read as one
+    against a shared `_kitcommon`): the two operator surfaces must read as one
     system, so every shared theme token must carry the same value the dashboard
     emits.
 
@@ -112,7 +112,7 @@ def test_unsafe_link_target_is_not_clickable():
 
 
 def test_brief_cells_render_BLOCK_structure_not_one_wall():
-    """The owner, 2026-08-12: the briefs arrived as "huge blocks of single
+    """The operator, 2026-08-12: the briefs arrived as "huge blocks of single
     bloated paragraphs". They were not written that way — `md_inline` renders a
     cell as ONE run of text, so paragraphs, bullets and sub-headings were
     flattened on the way to the screen. A RENDERING defect, so the fix belongs
@@ -160,7 +160,7 @@ def test_unknown_block_syntax_degrades_to_visible_text():
 def test_whitespace_only_edit_does_not_fuse_neighbours():
     """122-REVIEW-A: `word_diff` dropped whitespace-only opcodes, so "a  b" ->
     "a b" rendered as "ab" — the reconstructed after-text must be the cell the
-    owner is actually blessing."""
+    operator is actually blessing."""
     gi = load_script("gen_open_items")
     out = gi.word_diff("a  b", "a b")
     assert re.sub(r"<[^>]+>", "", out) == "a b", out
@@ -227,7 +227,7 @@ def test_a_fragment_declares_the_open_items_it_deferred(tmp_path):
     assert decls[0]["file"] == "docs/log.d/WI-1-ids.md" and decls[0]["line"] == 3
 
 
-def test_a_declared_deferral_must_name_a_row_the_owner_has_still_to_rule(tmp_path):
+def test_a_declared_deferral_must_name_a_row_the_operator_has_still_to_rule(tmp_path):
     gi = load_script("gen_open_items")
     root = repo(tmp_path, oi_rows=PENDING_OI + RULED_OI)
     _log_d(root, "WI-1-x.md", "## s\n\nDeferred open items: OI-4, OI-5, OI-77\n")
@@ -401,11 +401,11 @@ def test_an_ABSENT_registry_with_live_entries_is_a_finding_not_a_silence(tmp_pat
     assert gi.deferral_findings(root, None) == []
 
 
-def test_a_verdict_reattestation_stays_listed_on_the_owner_surface(tmp_path):
+def test_a_verdict_reattestation_stays_listed_on_the_operator_surface(tmp_path):
     """OI-100 (WI-791): on a held rung an adjudicator's CLARITY verdict carries
-    the owner's signature over, so every act that names a verdict stays listed
-    on the owner's surface, for audit after the fact. An act naming no verdict
-    is the owner's own or a released rung's, and is not listed here.
+    the operator's signature over, so every act that names a verdict stays listed
+    on the operator's surface, for audit after the fact. An act naming no verdict
+    is the operator's own or a released rung's, and is not listed here.
 
     Implements: TC-123
     """
@@ -430,7 +430,7 @@ def test_a_verdict_reattestation_stays_listed_on_the_owner_surface(tmp_path):
 
 
 def test_the_verdict_audit_list_is_newest_first():
-    """LLR-118: the owner's audit list shows the newest verdict-naming act
+    """LLR-118: the operator's audit list shows the newest verdict-naming act
     first.
 
     Implements: TC-123

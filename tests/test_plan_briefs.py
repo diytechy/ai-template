@@ -163,7 +163,7 @@ def _slots_for(hat, surface):
             "PLAN": PLAN_A,
         }
     return {
-        "OWNER_PROMPT": GOAL,
+        "OPERATOR_PROMPT": GOAL,
         "GOAL_BRIEF": GOAL,
         "RUBRIC": RUBRIC,
         "COVERAGE_REPORT": COVERAGE,

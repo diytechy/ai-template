@@ -89,7 +89,7 @@ from kitlib.config import STACK_INI, StackIniError, read_stack_ini
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`, executed
 # WI-448): the best-effort-off-git subprocess pattern this module used to spell
 # out itself. Run as a subprocess this script's own dir is sys.path[0] so a
 # plain import resolves; the guard covers an in-process import (a test) whose

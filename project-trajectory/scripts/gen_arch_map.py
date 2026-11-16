@@ -2123,7 +2123,7 @@ def read_backlink_min(root):
     both the shipped default and the answer for an absent, unreadable,
     wrong-typed or out-of-range dial.
 
-    A LOCAL `tomllib` READ, per F5 (owner 2026-07-12, no shared `_kitcommon.py`):
+    A LOCAL `tomllib` READ, per F5 (operator 2026-07-12, no shared `_kitcommon.py`):
     this module is imported by three checkers and copied standalone into every
     scaffold, so it must not reach into the coordinator layer that already knows
     how to read this file. It is the same posture `check_trajectory._process_check`

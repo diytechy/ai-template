@@ -100,7 +100,7 @@ def test_claim_refuses_while_the_tracked_pause_is_present(tmp_path, capsys):
 
 def test_claim_refuses_a_dirty_path_it_must_write(tmp_path, capsys):
     # A claim commits exactly what it writes (WI-612), so dirt ELSEWHERE is the
-    # owner's and stays out of it (tests/test_bookkeeping.py) - but a hand edit
+    # operator's and stays out of it (tests/test_bookkeeping.py) - but a hand edit
     # to the very spec the claim moves would ride the move into the claim
     # commit. It refuses by name before anything moves.
     root = claim_repo(tmp_path)

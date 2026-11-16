@@ -41,7 +41,7 @@ THE DIAL, READ TWO WAYS, for two different questions:
     it (`read_dial` is the one resolution both run), printing nothing. The
     writers, the pre-commit step and the merge slot all read the dial through
     it, from a tree they name, never from a primary checkout's working file,
-    where an uncommitted owner edit could strengthen or weaken the judgement
+    where an uncommitted operator edit could strengthen or weaken the judgement
     of a tree built from HEAD. The migration note a legacy spelling deserves
     is presentation, printed only by `agent_common.approval_through` for the
     one working tree a person can migrate.
@@ -83,7 +83,7 @@ import tomllib
 from . import git as _git
 from . import ladder, stage
 
-# THE OFF-SPINE MAP (owner ruling OI-30 D3, 2026-08-15; moved here from
+# THE OFF-SPINE MAP (operator ruling OI-30 D3, 2026-08-15; moved here from
 # agent_common by LLR-249, which re-exports it). Keyed by the registry's stem.
 APPROVAL_RUNGS = {
     "external": ladder.STAGE_BOUNDARY,
@@ -92,7 +92,7 @@ APPROVAL_RUNGS = {
     "assumptions": ladder.STAGE_BOUNDARY,
 }
 
-# THE SPINE MAP (owner ruling 2026-09-01, WI-572; moved here with its sibling).
+# THE SPINE MAP (operator ruling 2026-09-01, WI-572; moved here with its sibling).
 # Keyed by the registry's path stem, the key `spine_carrier.stem` produces.
 SPINE_APPROVAL_RUNGS = {
     "docs/requirements/system-requirements": ladder.STAGE_REQS,
@@ -238,7 +238,7 @@ def dial_at(root, rev="HEAD"):
     the dial is a question about a TREE: the tree a writer is about to commit
     onto, the commit a hook is about to make, the trunk a lane merges into. An
     uncommitted edit in a primary checkout is none of those, and reading it let
-    an owner's half-made edit release (or hold) a commit built from HEAD. A
+    an operator's half-made edit release (or hold) a commit built from HEAD. A
     policy file git cannot show, or that does not parse, declares nothing, so
     the retired gate-policy file in the same tree decides; with neither the
     answer is the most-held rung, so no git, no repository and an unknown rev

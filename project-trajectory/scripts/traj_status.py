@@ -3,9 +3,9 @@
 The docs/status.md GENERATED STATUS splice (WI-202) and the generated
 Ready-frontier lines. The facade re-exports, so consumers are unchanged.
 
-THE PENDING-OWNER-ACTIONS DERIVATION (WI-234) LEFT AT WI-483 SLICE 3, down to
+THE PENDING-OPERATOR-ACTIONS DERIVATION (WI-234) LEFT AT WI-483 SLICE 3, down to
 `pending.py`, and only its re-exports remain below: it had three readers, of
-which this module is one, so the dispatcher and the generated owner surface
+which this module is one, so the dispatcher and the generated operator surface
 each had to import the `gen_trajectory` facade — a render family — to reach a
 state query, and the dispatcher reached in for two PRIVATE names. Those were the
 2026-08-19 review's two documented bad edges (H-02, M-02).
@@ -45,11 +45,11 @@ from kitlib import ladder as _ladder
 from traj_display import load_display_snapshot, load_stage_record
 from traj_parse import cmp_rows, spine_stats
 
-# --- the pending-owner-actions projection, RE-EXPORTED (WI-483 slice 3) --------
+# --- the pending-operator-actions projection, RE-EXPORTED (WI-483 slice 3) --------
 #
 # The derivation moved DOWN to `pending.py`, below this module: it had three
 # readers and only one of them is the dashboard, so the other two — the
-# dispatcher's exit banner and the generated owner surface — each had to import
+# dispatcher's exit banner and the generated operator surface — each had to import
 # the `gen_trajectory` FACADE to reach it, and one of them reached in for the
 # two private names below. A read model with three readers belongs beneath all
 # three (the `census.py` / `kitlib.station` cut, applied again).
@@ -159,7 +159,7 @@ def _open_item_oneliners(root, queue=None):
     QUEUED or CLAIMED work item cites, id-order — the status snapshot's
     one-line-per-item projection, read off the one queue projection
     (`pending.open_item_queue`, WI-790) so the snapshot lists exactly the cards
-    the owner surface renders.
+    the operator surface renders.
 
     The one-liner is the row's `OneLine` cell, else the first sentence of its
     `Recommendation` — the same fallback the markdown contract had, kept so a
@@ -182,7 +182,7 @@ def _open_item_lines(root, queue):
     """The snapshot's open-items block: one bullet per decision a queued or
     claimed row cites, naming the rows it holds; the uncited pending items,
     which no such row surfaces (a `check_trajectory` ERROR); and the count of
-    delegated decisions left to review, linked to the owner surface's section.
+    delegated decisions left to review, linked to the operator surface's section.
     Empty when there is nothing to say."""
     ois = _open_item_oneliners(root, queue)
     entries = decisions_to_review(root)[0]
@@ -203,7 +203,7 @@ def _open_item_lines(root, queue):
             "- **Open items** _(the pending rows of [{oi}]({oi}) a queued or "
             "claimed work item cites; each item's blast radius, options and "
             "recommendation render in [open-items.html](open-items.html), the "
-            "generated owner surface):_".format(oi=oi_rel)
+            "generated operator surface):_".format(oi=oi_rel)
         )
         lines.extend(
             "  - **{}** — {} _(holds {})_".format(oid, one, ", ".join(citers))
@@ -419,7 +419,7 @@ def _frontier_lines(root, queue=None):
 
 def _blocked_lines(blocked, queue, titles):
     """The Blocked list: one bullet per queued or claimed row a pending open
-    item holds, in id order, each gate linked to its card on the owner
+    item holds, in id order, each gate linked to its card on the operator
     surface."""
     oi_titles = {
         row["OI-ID"].strip(): (row.get("Title") or "").strip()

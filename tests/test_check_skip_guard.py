@@ -11,7 +11,7 @@ A dim line repeated nine times is a line nobody reads.
 
 So the guard does NOT change what the commit is allowed to do (refusal would
 break every adopter whose contributor has not run dev-setup, a migration the
-owner has to choose). It makes the same fact impossible to miss. What this
+operator has to choose). It makes the same fact impossible to miss. What this
 module pins is the SELECTOR, because that is the part a later edit can quietly
 get wrong in the silently-less-safe direction:
 

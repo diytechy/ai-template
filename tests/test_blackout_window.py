@@ -762,13 +762,13 @@ def test_a_pending_relaunch_at_session_end_inside_the_window_is_cancelled(
     assert events[-1]["reason"] == "blackout"
 
 
-def test_reopening_the_same_session_with_both_drains_needs_the_owners_clear(
+def test_reopening_the_same_session_with_both_drains_needs_the_operators_clear(
     tmp_path, clock
 ):
     """The context latch tripped inside the window (round 035 F2): it is
     recorded, but a new latch and the latched holder's resumed start each get
     the one blackout close-down, never the relaunch request the window
-    refuses; after the window the latch still needs the owner's clear.
+    refuses; after the window the latch still needs the operator's clear.
 
     Implements: TC-316
     """

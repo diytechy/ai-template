@@ -123,7 +123,7 @@ REPO_GLOBAL_RUNGS = frozenset(
 # files; adding an input (the test-evidence carrier, when the Release rung is
 # evidence-gated) is an edit HERE and the fingerprint covers it automatically.
 #
-# The owner's concern was that fingerprinting "the repository" is expensive and
+# The operator's concern was that fingerprinting "the repository" is expensive and
 # duplicates other scans. It dissolves with the inventory: the input set is not
 # the repository, it is under a dozen files totalling a few hundred KB. Every
 # current consumer already PARSES these same files wholesale, which costs far more
@@ -146,7 +146,7 @@ DECLARED_INPUTS = (
     # and surrogate tiers from their first approval. TOML is its one carrier.
     # The stakeholder tier needs no line: it lives in the needs file above.
     ("docs/requirements/assumptions", (".toml",)),
-    # `process.toml` is DELIBERATELY NOT an input (owner ruling 2026-08-21,
+    # `process.toml` is DELIBERATELY NOT an input (operator ruling 2026-08-21,
     # amending the plan's §2 list): the derivation does not read it, and the
     # original "over-inclusion costs milliseconds" argument priced the wrong
     # cost — the real price was RED commit checks after every policy-dial edit,
@@ -694,7 +694,7 @@ def read_stage(root, derive, memo=_DEFAULT):
     claimed branch, so a green run over a stale cache is reachable there) closes
     because a reader no longer trusts a cache the freshness step cannot police —
     it verifies per call, and on a claimed branch derives from that branch's OWN
-    registries, which is the trust model the owner confirmed. The read-once-per-run
+    registries, which is the trust model the operator confirmed. The read-once-per-run
     window (a value hoisted at the top of `agent_loop`/`dispatch` and threaded
     down for the rest of the run) closes because verification is per CALL, so a
     mid-session approval is visible to the next consumer that asks."""

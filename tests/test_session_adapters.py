@@ -226,7 +226,7 @@ def _put_rollout(home, text):
 def default_home(tmp_path, monkeypatch):
     """codex's default home, `<user home>/.codex`, with the user home
     redirected into the test's own directory and no CODEX_HOME set: the
-    owner's real home is never read."""
+    operator's real home is never read."""
     user = tmp_path / "user"
     user.mkdir()
     monkeypatch.delenv("CODEX_HOME", raising=False)

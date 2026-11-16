@@ -317,7 +317,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   session:
   `"$PY" "$TOOLS/codex_call.py" CRITIQUE --root "$REPO.wt/trunk-tmp" --prompt-file <brief> --out <out>`.
   Record the answer before the claim. In an attended session, put
-  the spec's filing calls to the owner first and record them under
+  the spec's filing calls to the operator first and record them under
   `## Calls ruled at filing`, so the critique judges the ruled spec (WI-921
   to WI-923, 2026-10-15). `review_brief.py critique`
   names the same verdict path every round (`WI-NNN-scope-critique.md`): move
@@ -343,7 +343,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   verdict: append a line naming the verdict path and saying to commit
   nothing and change no file in the checkout. Confirming rounds can run
   there beside a lane's reviews (2026-10-17b).
-  A confirming round runs in convergence stance (owner, 2026-10-14). The
+  A confirming round runs in convergence stance (operator, 2026-10-14). The
   rubric's verdict section states that stance, so append one line to its
   brief: that it is a confirming round of round N, checking the adopted
   dispositions the spec records. A disposition that adds a carrier with authority gives the
@@ -360,8 +360,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   drafter answering a row an open item's ruling released to check the
   ruling's stated evidence against the history it cites: WI-999's found
   the derivation the ruling named was the requirement's, not the
-  partition's, so its backfill became an owner-held step (OI-130, leg 39). Once the
-  owner rules a draft's calls, resume the same drafter with the decision ids
+  partition's, so its backfill became an operator-held step (OI-130, leg 39). Once the
+  operator rules a draft's calls, resume the same drafter with the decision ids
   to fold them into a final copy: it keeps its reading (2026-10-15i).
   Drafts have come back CRLF: normalize to LF as you place them. An open
   row needs a `specref` that resolves (R-E: a spec of record or a doc
@@ -446,16 +446,16 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      (wi-902, 2026-10-20).
      Two lanes' sittings have run in parallel (2026-10-18b). Sit it; commit;
      then `plan-file --wi WI-NNN --pass --dispute <verdict path>`. Anything
-     but an accepted DISMISS of every one is the owner's: close the lane
+     but an accepted DISMISS of every one is the operator's: close the lane
      partial.
   An edited plan or Done-when unbinds the record: remove it, and a fresh
   critique (the cap still counts) must pass the changed plan.
-  When an owner ruling makes the Done-when edit itself owed after the
+  When an operator ruling makes the Done-when edit itself owed after the
   second critique, make it the lane's last commit outside the record
   homes' reach: run first every step that writes elsewhere (an
   inspection's result, a RESYNC re-anchor, a round and any fix it orders),
   then the edit and its `done-when` sitting (wi-976 D-026).
-  An owner ruling recorded on trunk that adds a Done-when item to a
+  An operator ruling recorded on trunk that adds a Done-when item to a
   claimed `single` row whose pass record stands unbinds that record as
   soon as the lane rebases onto it: every replayed commit then carries
   the item, so the landing walk refuses the pass-record commit and every
@@ -481,7 +481,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   by the plan render: carry the spec of record's sections into the row's
   spec byte for byte, and a `combined` sitting of kind
   `done-when:WI-NNN` blesses them before the plan (wi-969 D-001). A plan
-  revision the owner routes to such a successor renders as a fresh
+  revision the operator routes to such a successor renders as a fresh
   `plan --wi`, with the predecessor's plan and critiques appended as
   claims and the ruling as binding; its critique then renders as round 1
   in the ordinary stance, so append the convergence line by hand (wi-969,
@@ -515,7 +515,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   own remedy: a triage that forbade WI ids in shipped comments contradicted
   both reviewers' remedies and a pinned convention (wi-911 D-014). A
   fail-open or Done-when-gap finding the builder accepts, whose only fix is
-  a new boundary beyond the spec's surface, goes to the owner as a choice
+  a new boundary beyond the spec's surface, goes to the operator as a choice
   (a successor, the build, or a sitting): neither you nor a sitting may
   defer it. A successor ruling is stated in the spec's Trust section, never
   its Done-when, so the pass record stays bound (wi-921 D-014).
@@ -578,7 +578,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      lands.
   2. Name the verdict `docs/reviews/<wi-slug>/NNN-ADJUDICATE-<lane sha7>.md`.
   3. Check sign-in. The adjudicator runs on the declared ADJUDICATOR account,
-     which authenticates with the owner's long-lived token, read at each
+     which authenticates with the operator's long-lived token, read at each
      launch from the file the `AGENT_CLAUDE_TOKEN_FILE` environment variable
      names. Set that variable
      to the path in the launching shell; never read the file, and never put
@@ -640,7 +640,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `not-worth-cost`. A SUCCESSOR's reason says what its row must do; the
      brief never offers it for a convergence-class finding.
   4. Record each ruling in the response to the review and in the lane's
-     `docs/decisions/<branch>.toml`. An ESCALATE goes to the owner. A
+     `docs/decisions/<branch>.toml`. An ESCALATE goes to the operator. A
      SUCCESSOR is filed on trunk at the landing (§3).
 - **Preview spine mints,** from the lane root:
   `"$PY" "$TOOLS/preview_mint.py" <before> [<after>]`.
@@ -650,7 +650,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 ## 2. Claiming
 
 1. `"$PY" "$SCRIPTS/coordinator_guard.py" take --transcript <path>`.
-   If a stale holder blocks it, the owner releases it. The session
+   If a stale holder blocks it, the operator releases it. The session
    prompt's bare `python` can resolve to an interpreter older than 3.11,
    which fails on `import tomllib` before the take: run it with `$PY`
    (leg 27, 2026-11-01).
@@ -658,7 +658,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
    `docs/open-items.html`. Run `trunk_step.py --regen` first: right after
    a landing the deletion commit was refused for a stale status block and
    `docs/ratify/CURRENT.md` (2026-10-21d). It counts as reviewed when it passes the commit checks
-   and cites the owner's authorization.
+   and cites the operator's authorization.
 3. Confirm HEAD moved. `claim` reads the **working-tree** pause.
 4. Run `"$PY" "$SCRIPTS/integrate.py" claim --wi WI-NNN --branch wi-NNN`
    for each row. Branch names are single-segment. A claim that exits 127
@@ -708,7 +708,7 @@ commit of its own, move it to trunk's tip
   Done-when change) has no checkpoint tip to gate. When its last counted
   round ran in convergence stance, after the map, over the tip that lands,
   with only record-only commits after it, leg 39 ran no separate gate round
-  (wi-1000 D-007, for the owner to confirm or overrule).
+  (wi-1000 D-007, for the operator to confirm or overrule).
 - **Rebase, even when trunk moved only by the pause restore.** Text-then-act
   exempts a squash only of a tip that contains HEAD. Conflicts: §4. When
   trunk moved only by commits the lane does not touch, rebase before the
@@ -765,7 +765,7 @@ commit of its own, move it to trunk's tip
   verdict rules CLARITY that
   the lane deleted (a retired row) is listed in `--reattests` until its
   recorded copy drops it; on a held rung it owes no act (removing a held row
-  is the owner's). A first approval of a row absent at HEAD is refused as
+  is the operator's). A first approval of a row absent at HEAD is refused as
   inconsistent.
   The act turn takes one act per kind of judgement, in the combined brief's
   order: the amendment act
@@ -773,7 +773,7 @@ commit of its own, move it to trunk's tip
   first-approval copy is refused while an approved row in its registry still
   drifts unattested, and the amendment act clears that drift first. The old
   single act covering both kinds is retired, because the spine is decomposed
-  one way in every mode (owner, 2026-10-07). This order is not yet proven on a
+  one way in every mode (operator, 2026-10-07). This order is not yet proven on a
   same-registry checkpoint, so record the first one. `--approves` splits on
   `;`, so never put one in a ref. A traced-only change owes no sitting.
   A traced cell changed after the act (a `code_symbol` a later fix adds)
@@ -830,9 +830,9 @@ commit of its own, move it to trunk's tip
   probe once left a stray file at its root through a redirect from its
   default working directory (wi-798, 2026-10-20). Then read
   `git branch --show-current` against `docs/process.toml`'s `trunk`: the
-  owner can move the checkout during a leg, nothing fails when the new
+  operator can move the checkout during a leg, nothing fails when the new
   branch starts at trunk's tip, and a landing then commits off trunk.
-  Never switch or reset the owner's checkout: fast-forward trunk by a
+  Never switch or reset the operator's checkout: fast-forward trunk by a
   guarded `git update-ref refs/heads/<trunk> <landing> <old tip>`, run the
   rest from `trunk-tmp` on the trunk branch, detach `trunk-tmp` afterwards
   so the branch stays free to check out, and put it first in the handoff
@@ -851,11 +851,11 @@ commit of its own, move it to trunk's tip
   turn's verdict-derived command is the only guard until the one-landing
   row moves coordinator landings onto the slot (coordinator-2026-10-17
   D-009).
-  If the lane recorded an owner overrule in
+  If the lane recorded an operator overrule in
   `docs/decisions`, land two commits: the squash up to the commit before the
   close, then the close. The hook judges the first commit's Done-when change
   against its parent, so that commit carries the lane's covering verdict or
-  owner ruling in its own tree, or the hook refuses it naming the digest; the
+  operator ruling in its own tree, or the hook refuses it naming the digest; the
   close then compares against the blessed copy. Never amend either commit to
   change a Done-when or drop a blessing: an amend is judged against the
   commit it replaces, not its real parent (WI-921's stated residue).
@@ -954,7 +954,7 @@ commit of its own, move it to trunk's tip
   open:
   an observation re-judge whose trigger fired, or a goalposts row. A
   held-rung row the sitting ruled MEANING arrives minted, as a queued
-  owner row citing the act's pending open item, and leaves the amendment
+  operator row citing the act's pending open item, and leaves the amendment
   row; nothing is filed by hand. An amendment row the sweep mints for
   another row of that registry waits on the same act, since the act copies
   the whole registry: give it `needs` on that item at the landing.
@@ -1319,7 +1319,7 @@ lane commit being replayed.
 - `git add -A <paths>` aborts entirely if one path is missing. `2>/dev/null`
   hides that, and `staged-divergence` then fails. `components.derived.toml`
   lives under `docs/requirements/`.
-- `ruling-sync` refuses an overrule (`owner = "overruled"`) unless the same
+- `ruling-sync` refuses an overrule (`operator = "overruled"`) unless the same
   commit amends a queued or active row citing the decision as
   `docs/decisions/<file>.toml#D-NNN`, in that form; a prose citation does
   not count. Regenerate the views after the commit's last edit: that
@@ -1385,7 +1385,7 @@ lane commit being replayed.
   its log spools): the cache listed it and it worked again on 2026-10-10
   at 22:40 local (leg 02). While it is not offered, review through the
   same entry point with `--route <the enabled Luna row>` at
-  `--effort high` (coordinator-2026-10-10 D-017, pending the owner); the
+  `--effort high` (coordinator-2026-10-10 D-017, pending the operator); the
   model is that row's. Record the substitution in every lane's decisions
   record.
 - **Codex usage limit:** wait for the reset the CLI error names. Retain
@@ -1396,7 +1396,7 @@ lane commit being replayed.
   next step is Terra's stops at a committed safe point, and the leg
   closes out with a `Resume-not-before:` line at the reset
   (coordinator-2026-10-26 D-004).
-  Every Codex call runs through the `codex` CLI on `PATH`; the owner switches
+  Every Codex call runs through the `codex` CLI on `PATH`; the operator switches
   accounts with `codex logout` and `codex login`.
 - **Background or foreground.** In an attended session, start each Codex call
   as its own background command; one started in a detached subshell sends no
@@ -1474,8 +1474,8 @@ lane commit being replayed.
   close moved the derived stage reads that one red in a detached
   worktree: re-derive there (`derive_stage.py`) and re-run the test
   before treating it as a defect (wi-921 D-020).
-- **Test jobs while the owner's applications load the box:** when the
-  owner asks, run every local test job (bars, the full suite, Codex
+- **Test jobs while the operator's applications load the box:** when the
+  operator asks, run every local test job (bars, the full suite, Codex
   launches, the Claude reviewers' pytest) at below-normal priority
   through a stdlib wrapper
   (`subprocess.call(cmd, creationflags=subprocess.BELOW_NORMAL_PRIORITY_CLASS)`;
@@ -1546,7 +1546,7 @@ lane commit being replayed.
 - A landed lane's deleted branch reds the next attest of an open lane whose
   base still holds that claim folder (hold-by-rename). Rebase the open lane
   first, with `git stash` around staged work (wi-993, leg 34).
-- Tell every builder to exclude `OWNER_SCRATCHPAD.md` from a broad search: a
+- Tell every builder to exclude `OPERATOR_SCRATCHPAD.md` from a broad search: a
   repo-wide grep returned two of its lines (leg 34).
 - A long registry cell is a triple-quoted string: a guarded append matches
   the cell's own quote form and parses before it writes (leg 34).
@@ -1584,7 +1584,7 @@ lane commit being replayed.
   neither drafts nor adopts is still refused at the close and at the
   landing's sweep (OI-73). Since WI-901 (2026-10-11) a close whose commit
   range is empty composes its disposition brief.
-- **Close a lane partial for an owner answer that re-scopes it** (OI-70: never
+- **Close a lane partial for an operator answer that re-scopes it** (OI-70: never
   park it claimed, save a planned step under PROCESS.md §5, "Open items"). Save any uncommitted build outside the repository and revert the
   lane first: `handback.close_partial` commits residue as-is with the hook
   skipped. Call it as `handback.close_partial(Path(root).resolve(), branch,

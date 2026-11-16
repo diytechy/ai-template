@@ -16,7 +16,7 @@ from conftest import load_script, make_minimal_project, run_py
 
 def test_a_spine_row_states_the_system_not_its_own_history():
     """Implements: TC-126"""
-    # Owner-raised at the first re-attestation sitting, on LLR-050's `WI-316:`
+    # Operator-raised at the first re-attestation sitting, on LLR-050's `WI-316:`
     # changelog prefix: a spine row must be stand-alone — a reader with none of
     # this repo's history reads one row and knows what the system does and why.
     # Provenance has better homes (work-items.csv, the log's Decisions), and the
@@ -86,7 +86,7 @@ def test_a_spine_row_states_the_system_not_its_own_history():
 
 
 def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
-    # The owner ruling that repealed "a ruling reference is optional context on
+    # The operator ruling that repealed "a ruling reference is optional context on
     # top of a sentence that stands alone": NO provenance citation in a living
     # registry cell, on all FOUR spine tiers, in the reason cell as loudly as in
     # the normative ones. Warn-first by the same ruling — the population is ~300
@@ -111,7 +111,7 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
             allow,
         )
 
-    # THE NEED TIER, which the gating rule cannot see and where the owner's own
+    # THE NEED TIER, which the gating rule cannot see and where the operator's own
     # worked examples lived. Its rows arrive lower-cased off `load_needs`.
     assert flags(
         need={"why": "AMENDED 2026-08-17 (C-ACC-2): the hue is not the signal."}
@@ -134,7 +134,7 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
     # in the registries reporting nothing while the plain-date form beside them
     # reported. The suffix must END the token, so a word beginning with the same
     # letter cannot drag the date into it.
-    assert flags(sr={"Rationale": "The owner ruling 2026-08-13u settled this."})
+    assert flags(sr={"Rationale": "The operator ruling 2026-08-13u settled this."})
     assert flags(llr={"Rationale": "Cut by 2026-08-16q with the frame locked."})
     assert not flags(sr={"Rationale": "Held 2026-08-13until the sitting ruled."})
     # A NORMATIVE cell reports an edit stamp, never a bare date: a requirement
@@ -280,7 +280,9 @@ def test_the_if_reason_cells_are_swept_for_citation_frames_warn_only():
         return trace.if_note_advisories([row], allow)
 
     assert flags({"Notes": "MINTED 2026-08-15 (log 2026-08-15h) with LLR-173."})
-    assert flags({"Notes": "One home is an owner ruling (2026-08-10, repo-lock D-6)."})
+    assert flags(
+        {"Notes": "One home is an operator ruling (2026-08-10, repo-lock D-6)."}
+    )
     # `SignalNote` RETIRED WITH ITS COLUMN at OI-67 (ruled (a), 2026-08-29), so
     # this arm no longer sweeps it — a rule ranging over a cell no row may carry
     # is a rule reporting about nothing. Pinned rather than deleted: the cell
@@ -895,7 +897,7 @@ def test_exit_code_gate_policy():
 
 
 # --- Re-tier v2 R2/R3: the two warn-first tiering detectors -------------------
-# Owner ruling 2026-08-15 (log `2026-08-15p`). Both report a TIERING smell — a
+# Operator ruling 2026-08-15 (log `2026-08-15p`). Both report a TIERING smell — a
 # requirement that decided which artifact carries a capability, and a row whose
 # fan of children says it merged several decisions — and both stay advisory
 # forever, because clearing them means re-writing requirements, which is the
@@ -945,7 +947,7 @@ def test_a_row_stating_two_verification_methods_warns():
     # correct rows and teach an author to skip the pipe.
     for prose in (
         "Refusals fire at the integrator's verdict gate and intake's adjudication arm.",
-        "The owner approves the split before it lands.",
+        "The operator approves the split before it lands.",
     ):
         clean = {"SR-ID": "SR-103", "VerificationMethod": "Test", "Rationale": prose}
         assert trace.verification_coherence_advisories([clean]) == []
@@ -1072,7 +1074,7 @@ def test_a_recorded_waiver_silences_the_row_but_not_a_shared_artifact():
 
 
 def test_a_need_whose_acceptance_names_a_concrete_artifact_warns():
-    """The SN arm of the artifact-voice rule (owner directive 2026-08-18).
+    """The SN arm of the artifact-voice rule (operator directive 2026-08-18).
 
     Rows arrive in the `spine_carrier.load_needs` shape — lower-case `id` and
     cells — NOT the `<TIER>-ID`/Title-case shape the SR rules read, so the
@@ -1188,7 +1190,7 @@ def test_a_recorded_why_waiver_silences_a_need_and_there_is_no_shared_census():
     )
     # A `why` that records something else does not silence it.
     assert trace.sn_artifact_advisories(
-        [dict(waived, why="One home per dial is cheaper for the owner.")]
+        [dict(waived, why="One home per dial is cheaper for the operator.")]
     )
 
     # NO PER-ARTIFACT CENSUS at SN, unlike the SR arm: two needs may honestly

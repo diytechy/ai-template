@@ -17,7 +17,7 @@ WHAT IT SCANS — `need` cells ONLY. SN-033 scopes itself by its own text: "the
 rule applies specifically to each SN `need` cell, not to engineering
 requirements or acceptance evidence". `why` and `acceptance` stay EXEMPT HERE —
 but NO LONGER because acceptance evidence may name its machinery freely (what
-the ruling-day 16-of-27 measurement was read as licensing): the owner directive
+the ruling-day 16-of-27 measurement was read as licensing): the operator directive
 of 2026-08-18 extends R2's no-concrete-artifact rule up to SN acceptance, and
 `trace_text.sn_artifact_advisories` owns that cell so one token is never
 reported twice. `-000` rows are ignored; the edge tier carries no `need`.
@@ -70,7 +70,7 @@ lock that state in: the FIRST row to dirty the tier is the one that reports.
 
 SEVERITY IS WARN-FIRST, ALWAYS, in the shipped wiring. check.py runs this step
 with no `--strict` at every bar — deliberately unlike check_vocab, which
-promotes from DevStg-Tests on. Promoting this check to a gate is an owner
+promotes from DevStg-Tests on. Promoting this check to a gate is an operator
 ruling that has not been made (WI-454's scope guard): a form heuristic over
 stakeholder prose must not block work on the strength of a regex. `--strict`
 exists for a repo that makes that ruling for itself.
@@ -349,7 +349,7 @@ def main():
         "--strict",
         action="store_true",
         help="promote findings from WARN to ERROR (exit 1). NOT wired by "
-        "check.py at any bar — gating on this check needs an owner ruling "
+        "check.py at any bar — gating on this check needs an operator ruling "
         "(WI-454's scope guard).",
     )
     args = ap.parse_args()

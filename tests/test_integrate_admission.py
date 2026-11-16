@@ -288,7 +288,7 @@ def _mint_repo(home, minted=None, directory="complete"):
 
 
 def test_a_branch_that_mints_a_foreign_id_is_refused_at_the_merge_slot(tmp_path):
-    # RULING R1 (owner, 2026-08-01). Two lanes cannot see each other's trees, so
+    # RULING R1 (operator, 2026-08-01). Two lanes cannot see each other's trees, so
     # a branch-side `max(id) + 1` collides by construction — it happened twice in
     # one session. The rung makes it unrepresentable at the one point every lane
     # passes through, and the refusal has to be ACTIONABLE: the foreign id, the
@@ -411,7 +411,7 @@ def test_a_trunk_side_mint_after_the_claim_is_not_the_branchs(tmp_path):
     assert integ._minted_id_refusal(root, "wi-401", ["WI-401"]) is None
 
 
-# --- 2c-bis. the APPROVAL-ACT refusal (owner ruling 2026-09-01) --------------
+# --- 2c-bis. the APPROVAL-ACT refusal (operator ruling 2026-09-01) --------------
 
 
 _SR_HEADER = (
@@ -524,7 +524,7 @@ def _spine_lane(
 
 
 def test_a_lane_that_flips_a_status_to_approved_is_refused_at_the_merge_slot(tmp_path):
-    # Owner rulings 2026-09-01 and 6 (2026-10-07). The act — the flip, and the
+    # Operator rulings 2026-09-01 and 6 (2026-10-07). The act — the flip, and the
     # snapshot that anchors it — is an independent adjudicator's (PROCESS.md
     # §4), so a flip no recorded verdict backs is refused. This happened once for
     # real (WI-508 slice 6, four rows at `580df781`) and the next review round
@@ -558,7 +558,7 @@ def test_a_scoped_adjudication_lane_may_land_its_flip_and_snapshot(tmp_path):
     assert "APPROVAL ACT" not in refusal
 
 
-# --- the approval act in the authoring lane (WI-849, owner ruling 6, 2026-10-07)
+# --- the approval act in the authoring lane (WI-849, operator ruling 6, 2026-10-07)
 
 
 def test_an_in_lane_act_backed_by_a_recorded_verdict_merges_at_the_slot(tmp_path):
@@ -1398,7 +1398,7 @@ def test_audit_passes_a_trunk_commit_of_every_regen_output_under_the_shipped_lis
 # --- 6. the HELD STATUS (SR-208, TC-241) ---------------------------------------
 #
 # Where the approval level holds an off-spine registry's rung for an operator, a
-# row of it moves into approval only by the owner. The frame and assumptions
+# row of it moves into approval only by the operator. The frame and assumptions
 # registries sit at DevStg-Boundary, which the dial below holds. The merge slot
 # refuses such a move in ANY lane, whoever built it, by the lane rule riding
 # its lane-commit walk; the loop's own writers refuse a held status move before

@@ -7,7 +7,7 @@ Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX).
 WHY THIS MODULE EXISTS (WI-912). A sitting used to judge and act in one turn:
 the brief that asked for the judgement also ordered the `Status` flips and the
 anchoring copy. So a sitting held ahead of landing order that followed its
-brief took its act out of order. The owner's rulings split the two (revision
+brief took its act out of order. The operator's rulings split the two (revision
 31 of the review-churn plan: verdicts move between lanes while acts keep
 landing order; revision 32: the act is a later turn of the retained
 adjudicator, run fresh where retention lapsed; revision 36: the split reaches
@@ -23,7 +23,7 @@ turn's whole authority: the session that wrote it may be gone, and a fresh act
 turn takes the same act. The other consumers of the same carrier are
 unchanged: the merge slot (`kitlib.sitting.uncovered_refusal` and
 `unrecorded_refusal`) still admits an act only when a recorded verdict over
-the act's own rows backs it (owner ruling 6, 2026-10-07), and its lane rule
+the act's own rows backs it (operator ruling 6, 2026-10-07), and its lane rule
 (`held_status.commit_held_approval_lines`) admits a held-rung re-attestation
 only when that verdict rules the row CLARITY and its binding records the row's
 text. `intake.py snapshot --verdict` still records the verdict an act names,
@@ -32,7 +32,7 @@ for audit; no rule requires it.
 WHAT THE VERDICT AUTHORIZES. Exactly the rows each recorded part rules to
 authorize them, read through `kitlib.sitting.judged_rows`, the one reader the
 merge's backing check also reads, so the two cannot disagree. A first-approval
-part's APPROVE flips a row, on a released rung only (a dial the owner
+part's APPROVE flips a row, on a released rung only (a dial the operator
 tightened after the sitting binds the act it has not yet authorized). An amendment part's CLARITY re-attests a row, naming the
 verdict on a held rung; its MEANING re-attests only on a released rung and
 only with the bless mark. A RETURN row, an unmarked or held MEANING row, a
@@ -47,12 +47,12 @@ whatever its recorded copy holds (a whole-registry copy carries Drafted rows),
 and taken when the row is Approved and its copy equals its committed text. A
 re-attest of an Approved row is taken when the copy equals the row, and owed
 otherwise. A re-attest of a row absent from the committed registries is a
-RETIREMENT (the owner's ruling of 2026-10-17, WI-912): owed while its recorded
+RETIREMENT (the operator's ruling of 2026-10-17, WI-912): owed while its recorded
 copy still holds the row, named in `--reattests` with the other re-attests
 (the snapshot writer clears a recorded row the live registry no longer holds
 only when it is named there), and taken once the copy no longer holds it. On a
 held rung a retirement owes no act, read through the same held-rung test as a
-held MEANING or APPROVE row: removing a held row is the owner's. Every other
+held MEANING or APPROVE row: removing a held row is the operator's. Every other
 state (an Approved row without an equal copy at a first approval, a first
 approval of an absent row, a re-attest of a row below Approved, a row no
 compared tier holds) is inconsistent and refuses the whole derivation, naming
@@ -376,7 +376,7 @@ def owed_acts(root, verdict, rev="HEAD"):
     if any(act == "approve" for act, _rid, _held in owed) and not _recorded(root, rev):
         return None, (
             "the verdict {} approves rows, but no approval record exists at {}: "
-            "the first signing creates it, and that is the owner's".format(rel, rev)
+            "the first signing creates it, and that is the operator's".format(rel, rev)
         )
     if not owed:
         return None, "the verdict {} owes no act: {}".format(

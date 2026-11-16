@@ -1,6 +1,6 @@
 ---
 name: kit-builder
-description: Builds one ai-template work item in a pre-cut lane worktree, as the coordinator's dispatched builder (owner direction 2026-10-03: Claude Opus at medium effort). Use only when the coordinator hands it a lane path and a build prompt; it leaves its change uncommitted for the coordinator to verify and commit.
+description: Builds one ai-template work item in a pre-cut lane worktree, as the coordinator's dispatched builder (operator direction 2026-10-03: Claude Opus at medium effort). Use only when the coordinator hands it a lane path and a build prompt; it leaves its change uncommitted for the coordinator to verify and commit.
 model: opus
 effort: medium
 ---
@@ -18,7 +18,7 @@ Standing rules, in addition to the prompt:
     verifies it, regenerates generated files and commits it on the lane.
   - Do not regenerate or edit `PROJECT_STATE.html`, `docs/status.md`'s generated
     block, or other generated artifacts.
-- **Read first:** `CLAUDE.md` and the spec in full, including any owner ruling or
+- **Read first:** `CLAUDE.md` and the spec in full, including any operator ruling or
   adjudicator draft it quotes. A quoted draft is byte-exact: apply it as written.
 - **Rows.**
   - Never edit an approved row's cells beyond the grant, and never flip a Status.
@@ -27,7 +27,7 @@ Standing rules, in addition to the prompt:
   - Search for an existing home before creating a file or function, and
     name the nearest existing home you considered in your final message
     (`PROCESS.md` §3, "Consolidate, don't duplicate").
-  - Owner ruling R2: a requirement (SR) cell never names a concrete script,
+  - Operator ruling R2: a requirement (SR) cell never names a concrete script,
     command, file or function.
   - Tag each new function `Implements: <SR>, <LLR>` with the LLR whose `module` is
     that file, and list the function in that LLR's `code_symbol`.

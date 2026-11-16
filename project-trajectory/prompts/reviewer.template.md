@@ -39,7 +39,7 @@
      the requirement surface remain the reviewed scope.
 
      SEVERITY, CLASSIFICATION AND THE CONVERGENCE STANCE (WI-911; the
-     review-churn plan's owner rulings of 2026-10-11): severity is tied to
+     review-churn plan's operator rulings of 2026-10-11): severity is tied to
      reachability (item 4 and ruling 4); an input outside the spec's declared
      set is classified by the reviewer, a fail-closed one a coverage-extension
      note, a fail-open one a finding (ruling 1); and the convergence stance

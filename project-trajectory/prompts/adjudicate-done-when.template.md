@@ -7,7 +7,7 @@
      reviewer maps each Done-when item to its covering test, so a change the
      lane made is the checklist its own reviewer reads, moved by the party it
      judges. The lane is HELD at its next build dispatch and at its close and
-     merge until a verdict (or an owner ruling) binds the exact text.
+     merge until a verdict (or an operator ruling) binds the exact text.
 
      Slots (single-brace, strict fill — a missing one refuses):
        {subject}   the work item whose Done-when changed, and where its current
@@ -33,7 +33,7 @@
 
      WHAT IS DELIBERATELY ABSENT: the lane's session notes, its commit
      messages, docs/log.md and any self-assessment of why the scope changed
-     (WI-418). An owner ruling that directed the change is not evidence here
+     (WI-418). An operator ruling that directed the change is not evidence here
      either: it counts as its own blessing (a `done_when` digest on the
      docs/decisions entry), and this sitting is for a change no ruling binds.
 -->

@@ -16,7 +16,7 @@ smell after the fact. The tiering itself is a judgement, and this is the questio
 list to put to a row **before** it lands (the questions themselves have one
 shipped home, named under §1–3 below).
 
-**Authoring is not approving** (owner rulings 2026-09-01 and 2026-10-07;
+**Authoring is not approving** (operator rulings 2026-09-01 and 2026-10-07;
 `docs/process.md` §4). The authoring session writes its rows `Drafted` and may
 amend any cell of any row, approved ones included. It never flips a `Status` to
 `Approved`/`Founded`, never writes a row already claiming one, and never writes
@@ -101,7 +101,7 @@ purpose without adding a registry tier, approval stage or completion percentage.
 ## Three ways a spine grows
 
 Choose the mode before writing. The `operator_accepts_through` dial in
-`docs/process.toml` holds rungs at or below it for the owner (`docs/process.md`
+`docs/process.toml` holds rungs at or below it for the operator (`docs/process.md`
 §4).
 
 | Mode | What it is | How it is judged |
@@ -229,7 +229,7 @@ One line each, each one seen in a real spine:
   afterwards. Guard: writing or amending a spine rule, enumerate all four tiers
   and say why each one is in or out.
 - **A row amended without its own re-attest** — a row's `Status` answers for
-  its OWN cells (`docs/process.md` §4; owner ruling 2026-08-17): re-read the
+  its OWN cells (`docs/process.md` §4; operator ruling 2026-08-17): re-read the
   row whose text changed, and only that row — a child LLR/TC amendment never
   touches its parent SR. There is no marker to set (`Modified` retired
   2026-08-20); EVERY post-approval amendment is the snapshot-drift arm's find

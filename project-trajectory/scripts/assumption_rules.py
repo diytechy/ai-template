@@ -41,7 +41,7 @@ with or without a frame.
 
 AND THE RESULTS THEMSELVES. Each observation result is a record of its own
 (`kitlib.observation`, SR-199), judged here against the case it names. An
-assumption carries NO EVIDENCE LEVEL (owner ruling 2026-10-02): a passed
+assumption carries NO EVIDENCE LEVEL (operator ruling 2026-10-02): a passed
 observation proves nothing beyond its sample, so no result raises an
 assumption and no rule asks one for current evidence. The one evidence-shaped
 signal is falsification: one shown false, by its standing or by a failing
@@ -1216,7 +1216,7 @@ def obstacle_hat_findings(das, hat_names):
 # (`kitlib.observation`). The rules below judge those files against the cases
 # they name, list what relies on an assumption shown false, and read whether an
 # accepted risk still covers one. No rule here derives how well an assumption
-# holds: an assumption carries no evidence level (owner ruling 2026-10-02),
+# holds: an assumption carries no evidence level (operator ruling 2026-10-02),
 # since a passed observation proves nothing beyond its sample. Every input that
 # lives on disk or in git arrives already read: `record_observation.evidence_inputs`
 # reads the records and each accepted risk's act, once, and `trace.main` hands
@@ -1633,7 +1633,7 @@ def assumption_chain(da_id, reg):
 #   DevStg-Release   standing: no relied-on assumption is falsified unless
 #                    an accepted risk that has not reopened covers it
 #                    (SR-206). No result is asked for: an assumption carries
-#                    no evidence level (owner ruling 2026-10-02).
+#                    no evidence level (operator ruling 2026-10-02).
 #
 # With the gate off the step prints the same findings as advisories and
 # passes. The rules below return the findings alone; which of the two they

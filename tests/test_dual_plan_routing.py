@@ -88,7 +88,7 @@ def test_failed_planning_invocations_keep_attribution_and_unknown_usage(
         pr.session_service, "run_session", lambda *a, **k: (1, transcript, "idle")
     )
     attribution = {
-        "source-event": "owner-review",
+        "source-event": "operator-review",
         "role": "CRITIQUE",
         "provider": "ANTHROPIC",
         "tier": "strong",
@@ -106,7 +106,7 @@ def test_failed_planning_invocations_keep_attribution_and_unknown_usage(
     rows = [pr.session_service.agent_common.read_log_meta(p) for p in logs]
     assert len({row["invocation-id"] for row in rows}) == 2
     for row in rows:
-        assert row["source-event"] == "owner-review"
+        assert row["source-event"] == "operator-review"
         assert row["wi"] == ""
         assert row["role"] == "CRITIQUE"
         assert row["roster-row"] == "route-A"

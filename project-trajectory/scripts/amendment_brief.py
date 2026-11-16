@@ -153,7 +153,7 @@ def amendment_values(root, row):
 
     `{rows}` is `trace.reattest_model`'s APPROVED cells — the same model behind
     `trace.py --approve` and `open-items.html`, so the judge, the brief and the
-    owner surface can never show three different diffs. Traced cells are
+    operator surface can never show three different diffs. Traced cells are
     deliberately excluded: §A5.1 rules them non-attesting, and a judge asked to
     rule "meaning or clarity" on a re-pointed `Module` cell is being asked a
     question the ruling already answers. The need, assumption and surrogate
@@ -424,7 +424,7 @@ def _copy_stamp_lines(root, rels):
 # The spine tier a chain row's `kind` names -> the registry it lives in. The
 # ONE join this module owns: a rendered chain row carries its tier, and both
 # questions asked of it downstream — "is this tier's approval mine or the
-# owner's" (`agent_common.operator_accepts_spine`, keyed by registry stem) and
+# operator's" (`agent_common.operator_accepts_spine`, keyed by registry stem) and
 # "what `--approves` argument does the act owe" (keyed by registry path) — are
 # registry-keyed. A second, tier-keyed rung table lived here until WI-572's
 # rework; it answered the same question as `agent_common.SPINE_APPROVAL_RUNGS`
@@ -456,12 +456,12 @@ def _loop_approves(root, kind):
 
 def _aftermath(root, tiers):
     """What each verdict owes NEXT, derived from the declared gate authority for
-    the tiers actually shown (owner ruling 2026-09-01) and from ruled decision
+    the tiers actually shown (operator ruling 2026-09-01) and from ruled decision
     2's one home, `intake.adjudication_action`, as OI-100 amended it
     (2026-10-03, WI-791): on a released rung the session re-attests what it
     rules CLARITY and the MEANING rows it would bless; on a held rung it
     re-attests a CLARITY row naming its verdict, and recommends a MEANING row
-    to the owner.
+    to the operator.
 
     THIS SLOT REPLACED A SENTENCE THAT HAD GONE FALSE. The template used to end
     "the flip, if one is owed, is the mechanical tool's act, not yours" — true
@@ -472,7 +472,7 @@ def _aftermath(root, tiers):
 
     DERIVED, NOT LEFT TO THE SESSION. The dial is a repo-level declaration the
     judge would otherwise have to go read and interpret mid-verdict, which is
-    the shape that produces a session confidently doing the owner's act. An
+    the shape that produces a session confidently doing the operator's act. An
     unrecognised tier is reported as HELD, the same direction `operator_holds`
     fails."""
     import intake  # ruled decision 2's one home; deferred, a leaf read
@@ -511,10 +511,10 @@ _HELD_AFTERMATH = (
 )
 _HELD_ARMS = {
     "reattest": "is re-attested by the later act turn as a judgement act, "
-    "naming this verdict; the act ledger records the verdict and the owner's "
+    "naming this verdict; the act ledger records the verdict and the operator's "
     "surface lists the act for audit. The verdict is bound to the text shown "
     "here (its JUDGED-TEXT identities), so an edit to that text after this "
     "verdict refuses the act",
-    "recommend": "stops at your verdict and the signature is the owner's — "
-    "recommend it to the owner and do not re-anchor it",
+    "recommend": "stops at your verdict and the signature is the operator's — "
+    "recommend it to the operator and do not re-anchor it",
 }

@@ -11,7 +11,7 @@ alternative = "Keep a notes fill value carrying the builder's report, as the coo
 reversal_cost = "Low: one fill value in review_brief.py and one template sentence."
 why_not_escalated = "The kit's own prompts README (rule 3), the reviewer template and the agent-routing pack already forbid putting the judged party's self-assessment in a judge's brief; the hand briefs broke that rule."
 review = "Owner, in the coordinator session of 2026-10-08: \"You can mark the other decisions as acknowledged / confirmed.\" Recorded by the coordinator at the owner's word."
-owner = "confirmed"
+operator = "confirmed"
 
 [decision.D-002]
 decided = "A coordinator round file filed through the new render is read by the verdict rollup but gains no merge authority: the verdict gate still counts a round only when a committed session log declares its review phase, and filing writes no session log. WI-852 stays render-only and leaves the gate unchanged."
@@ -19,7 +19,7 @@ alternative = "Let the gate count an attended round file (for example from a fil
 reversal_cost = "Medium: a gate change, with anti-forgery questions of its own, is a separate row."
 why_not_escalated = "The spec says render only and names WI-801 as the launcher's owner; widening what the gate trusts is a design decision for the owner, surfaced here rather than taken."
 review = "Owner, in the coordinator session of 2026-10-08: \"You can mark the other decisions as acknowledged / confirmed.\" Recorded by the coordinator at the owner's word."
-owner = "confirmed"
+operator = "confirmed"
 
 [decision.D-003]
 decided = "After the re-sit returned SR-154 a second time (the coordinator's own steer had widened SR-154's trigger to attended submissions, which bound the attended path to registry routing, consent and cross-family selection it does not do), SR-154 was restored byte-for-byte to its anchor and a new SR-235 states only the attended record-or-refuse obligation; LLR-313's filing half and TC-333 trace to it."
@@ -34,7 +34,7 @@ alternative = "Keep one or two in-process pins in smoke and move the rest to the
 reversal_cost = "Low: one stamp line; the tier is re-measured by the row the owner directed next."
 why_not_escalated = "Escalated: the owner chose the re-stamp to 2438 in the coordinator session of 2026-10-08, and directed that the smoke tier be brought back under budget right after WI-852 lands."
 review = "Owner, in the coordinator session of 2026-10-08: chose \"Re-stamp to 2438\". Recorded by the coordinator at the owner's word."
-owner = "confirmed"
+operator = "confirmed"
 
 [decision.D-005]
 decided = "The third fresh full-lane review's two findings went to a dispute sitting (the malformed-verdict class had reached its third round), through the dispute class WI-865 landed; the adjudicator ruled both FIX (verdict 006): A, replace the filing boundary's token checks with one whole-grammar check; B, refuse a lane whose scope is the rollup generator's own directory. The coordinator had argued B out of scope as contrived; the adjudicator ruled it an unusual input on a supported path, not a contrived host, with silent loss of an accepted record as the outcome. The ruling is final (OI-103 Q3)."

@@ -19,7 +19,7 @@ Stdlib only, like trace.py / check_docs.py:
 
 WHAT IT REFUSES. The TAGS, matched as whole words: `G0`, `G1`, `G2`, `G3`,
 `G-Release`, `G-Final` — and, since the 2026-08-18 one-vocabulary ruling, any
-`DevBar-*` token. Since WI-499 (owner-ruled 2026-08-21, "ratification holds a
+`DevBar-*` token. Since WI-499 (operator-ruled 2026-08-21, "ratification holds a
 weight to it that the semantics here don't need"), also any inflection of
 `ratif*` (`ratify`, `ratified`, `ratification`, `ratifying`, `ratifies`,
 `ratifiable`, `ratifier`, ...) — EXCEPT the literal `docs/ratify/` path, which
@@ -54,7 +54,7 @@ THE CARVE-OUTS, and why each one is a carve-out rather than an oversight:
     checking them would report the same fact twice and could only ever be fixed
     upstream. `docs/gate` is generated too, and its own format migrated with the
     conversion (one forced regenerate — the proven precedent).
-  - **The owner's scratchpad is nobody's working surface.**
+  - **The operator's scratchpad is nobody's working surface.**
 
 DECLARATION SITES. Some live code must NAME the retired tags — the translation
 tables that let an adopter's `--gate G2`, `gates = G2 G3` and `bar: G3` keep
@@ -89,7 +89,7 @@ from kitlib.config import utf8_console as _utf8_console
 # The retired TAGS, as whole words. `G-Release`/`G-Final` are matched before the
 # bare digits by putting them first in the alternation.
 #
-# THE `DevBar-*` PREFIX JOINED THIS SET 2026-08-18 (owner ruling: one vocabulary).
+# THE `DevBar-*` PREFIX JOINED THIS SET 2026-08-18 (operator ruling: one vocabulary).
 # It rides the SAME regex rather than a second checker for the reason the `G*`
 # tags ride one: a reader who trips either has made ONE mistake — a retired
 # spelling for a live concept — and two findings for one mistake is how a checker
@@ -113,7 +113,7 @@ RETIRED_TAG_RE = re.compile(
     r"|\bDevBar-\w+"
     r"|\[g[12]\]"
     r"|(?<=\]-)\[(?:reqs|tests)\]"
-    # WI-499 (owner-ruled 2026-08-21): "ratification holds a weight to it that
+    # WI-499 (operator-ruled 2026-08-21): "ratification holds a weight to it that
     # the semantics here don't need" — the kit's vocabulary unifies on
     # "approval". The `ratif*` word family is retired the same way the G* tags
     # were, riding the same enforcer for the same reason (one checker, one
@@ -139,7 +139,7 @@ SUGGEST = {
     "G2": "DevStg-Tests (cleared) / DevStg-Tests (the rung in work)",
     "G3": "DevStg-Impl (cleared) / DevStg-Impl or DevStg-Release (the rung)",
     "G-Release": "DevStg-Impl (cleared) / DevStg-Release (the rung)",
-    "G-Final": "the owner's final read (final_review), which is its own dial",
+    "G-Final": "the operator's final read (final_review), which is its own dial",
     # The prefix swap is 1:1 EXCEPT for Release, and that exception is the whole
     # reason these are spelled out rather than described as "drop the Bar".
     "DevBar-Reqs": "DevStg-Reqs",
@@ -295,8 +295,8 @@ EXEMPT_GLOBS = (
     # surface" and this exemption never actually fired. Naming the successor in
     # both places is what makes the skip say WHY.
     "docs/stage",
-    # owner-only, never a working surface
-    "OWNER_SCRATCHPAD.md",
+    # operator-only, never a working surface
+    "OPERATOR_SCRATCHPAD.md",
 )
 
 # Only these suffixes are read (plus the extensionless files named outright

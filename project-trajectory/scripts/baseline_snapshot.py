@@ -4,7 +4,7 @@ like when an operator last blessed it.
 
 Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX).
 
-WHY THIS EXISTS (owner directive 2026-08-15; design:
+WHY THIS EXISTS (operator directive 2026-08-15; design:
 docs/plans/2026-08-15-baseline-snapshot-design.md). Every "has this attested row
 changed?" question in the kit used to be answered by DERIVING a baseline from
 git — `trace._attested_baseline` walked the registry's history for the newest
@@ -60,7 +60,7 @@ citations from dangling. `check_trajectory.ARCHIVE_SPECS_DIR` already reads
 archive as live machinery input, so the class is not new.
 
 STATUS OF THIS MODULE, 2026-08-20: LIVE AND ARMED. It shipped reader-first and
-advisory (2026-08-15) with every function vacuous by absence; the owner's
+advisory (2026-08-15) with every function vacuous by absence; the operator's
 signing act seeded `docs/archive/last_approved/` in the post-rename vocabulary
 (migration step 6), and step 7 promoted `unanchored_findings` to an
 INTEGRITY-class ERROR on the always-on `--strict-integrity` floor plus the
@@ -146,7 +146,7 @@ Contract IF-125: the drift read — `load_all`, `rows_for`, `is_drifted` and
     nothing approved rather than everything drifted.
 Contract IF-126: the stamp read — `registry_stamps(root)` and `SNAPSHOT_DIR` —
     and the needs read, `needs_owing(root)`: one `(id, why, cells, row)` per
-    stakeholder need or stakeholder owing an act, the rows the owner page's
+    stakeholder need or stakeholder owing an act, the rows the operator page's
     approval and re-attestation section lists. The stamp lets a generated
     surface name WHICH baseline the reader is being shown and where it lives:
     each registry the record holds a committed copy of, with the commit that
@@ -627,7 +627,7 @@ def stamp(root, registry=None):
 
 def registry_stamps(root, rels=SNAPSHOTTED):
     """`[(registry, short rev, date)]`: `stamp` asked once per registry the
-    record holds a copy of, in `rels` order — the provenance an owner's surface
+    record holds a copy of, in `rels` order — the provenance an operator's surface
     names beside the rows it shows. A refresh copies only what its act
     authorises, so the copies were written at different commits, and one
     directory-wide stamp named one copy's commit for all of them. A registry
@@ -1382,7 +1382,7 @@ def copy_live(root, *, seed=False, approves=None, reattests=None, verdict=None):
 
     **REFUSES to CREATE the directory unless `seed=True`.** That refusal is the
     bootstrap guard: the FIRST snapshot blesses whatever text it copies, so it
-    must ride the owner's own reviewed signing commit and nothing else.
+    must ride the operator's own reviewed signing commit and nothing else.
     `--seed` is reachable only from `intake.py snapshot --seed`, and
     `tests/test_baseline_snapshot.py` pins that no loop module, hook or
     `check.py` contains the flag.
@@ -1468,7 +1468,7 @@ def _seed_targets(root, base, seed, reattests):
         raise SystemExit(
             "baseline_snapshot: REFUSED — {} does not exist, and creating it "
             "would bless whatever text happens to be in the tree right now. "
-            "The first snapshot rides the owner's signing commit: run "
+            "The first snapshot rides the operator's signing commit: run "
             "`intake.py snapshot --seed` there, after every pending row has "
             "been ruled.".format(base)
         )

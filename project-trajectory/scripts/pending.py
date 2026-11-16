@@ -1,9 +1,9 @@
-"""pending.py — the pending-owner-action read model: what the OWNER still owes.
+"""pending.py — the pending-operator-action read model: what the OPERATOR still owes.
 
 A READ MODEL OVER THE COMMITTED TREE, and nothing else — the sibling of
 `census.py`, which answers the other half of the same question. Where the census
 asks *which gaps do the registries name?*, this module asks *which durable
-actions is the owner holding?* and answers from two sources and no clock:
+actions is the operator holding?* and answers from two sources and no clock:
 
     spine_pending     `Drafted` SRs (a first approval is owed) and SRs whose
                       text has DRIFTED from its `docs/archive/last_approved/`
@@ -13,7 +13,7 @@ actions is the owner holding?* and answers from two sources and no clock:
 (A THIRD SOURCE `blocked_pending` — `queued/` rows carrying a `blockref` —
 retired with the blockref vocabulary at WI-553, OI-70: `handback.close_partial`
 moves a stopped lane's specs to the TERMINAL `partial/`, never back to `queued/`
-with a blockref, so nothing has produced one since LLR-161 and the owner surface
+with a blockref, so nothing has produced one since LLR-161 and the operator surface
 was reading a source with zero producers.)
 
 `pending_items` joins the two into the typed model — one `PendingItem` per
@@ -24,8 +24,8 @@ this module consumes THAT rather than the sources by name:
                       `gen_trajectory` facade and the dashboard family are
                       unchanged
     gen_open_items.py renders `pending_block` into section 3 of the generated
-                      owner surface `docs/open-items.html`
-    dispatch.py       counts `owner_cards` for the §A8 drained-queue banner
+                      operator surface `docs/open-items.html`
+    dispatch.py       counts `operator_cards` for the §A8 drained-queue banner
 
 WHY THIS IS A MODULE AND NOT PART OF THE DASHBOARD (WI-483, slice 3). Until this
 module the derivation lived in `traj_status.py`, a RENDER module inside the
@@ -57,14 +57,14 @@ needs, and it is a FIELD rather than a substring match on the prose.
 Contracts: IF-088 — the seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 
-Contract IF-088: the dispatcher's exit banner calls `owner_cards(root)` — the
+Contract IF-088: the dispatcher's exit banner calls `operator_cards(root)` — the
     same `pending_items(root)` read model the dashboard and the generated
     open-items surface render, minus the tracked-pause kind, whose pause has
     its own earlier exit. Each item is a `PendingItem(kind, line)`: a `kind` of
     `spine` or `pause`, and the rendered markdown bullet a human reads. The
     kind is a FIELD, so the one caller that discriminates never parses prose to
     make a control-flow decision. The derivation is a pure function of the
-    committed tree — sorted, no clocks — so the banner and the owner surfaces
+    committed tree — sorted, no clocks — so the banner and the operator surfaces
     can never disagree about what is blocking, and the import is deferred: this
     seam costs nothing until an exit banner asks for it.
 
@@ -85,11 +85,11 @@ from kitlib import registry as _kitregistry
 from kitlib import spine as _kitspine
 from traj_parse import _spine, ct
 
-# --- the pending-owner-actions projection (WI-234) ------------------------------
+# --- the pending-operator-actions projection (WI-234) ------------------------------
 # `--status` also splices a second GENERATED block — at the END of
-# the generated owner surface docs/open-items.html (WI-322), beside the briefs
-# leaves byte-untouched) — projecting every DURABLE pending-owner action so the
-# owner's one review surface never misses a hard stop. A pure projection of
+# the generated operator surface docs/open-items.html (WI-322), beside the briefs
+# leaves byte-untouched) — projecting every DURABLE pending-operator action so the
+# operator's one review surface never misses a hard stop. A pure projection of
 # committed-tree state ONLY:
 #   (a) Drafted/DRIFTED SR rows (WI-316): a `Drafted` SR owes an approval, and
 #       an SR whose chain has moved away from its `docs/archive/last_approved/`
@@ -101,7 +101,7 @@ from traj_parse import _spine, ct
 #       clock), so an open pause is a visible accruing cost.
 # (A retired source (0) `blocked` WI rows carrying a BlockRef — went with the
 # blockref vocabulary at WI-553/OI-70: nothing produces a queued-row blockref
-# any more, so the owner surface no longer reads a zero-producer source.)
+# any more, so the operator surface no longer reads a zero-producer source.)
 # One line per pending action with a pointer (never a brief — the depth stays in
 # the hand-authored briefs). Deterministic (sorted rows, no clocks), so the
 # gated region is byte-stable; a pure function of the committed tree, so the
@@ -115,7 +115,7 @@ from traj_parse import _spine, ct
 
 
 class PendingItem(NamedTuple):
-    """One durable pending owner action: its source `kind` and its bullet.
+    """One durable pending operator action: its source `kind` and its bullet.
 
     `kind` is one of `spine`, `pause` — a field rather than a prefix
     test on `line`, because the one caller that discriminates (`dispatch`,
@@ -141,7 +141,7 @@ def spine_pending(root):
     per SR whose chain has DRIFTED from the approved snapshot (re-attest owed —
     a post-approval amendment, process.md §7). Only SR rows project — deliberate
     surface economy, never
-    attestation scope (a row's Status answers for its own cells, owner ruling
+    attestation scope (a row's Status answers for its own cells, operator ruling
     2026-08-17m): a flagged LLR/TC under an unflagged SR shows in the registry
     and the trace report, not here. Durable committed-tree state, so these
     join the freshness-gated PURE region; pointer-only per this block's charter
@@ -149,7 +149,7 @@ def spine_pending(root):
     names, `trace.py --approve modified`, never here. Sorted by id, no clocks.
 
     THE `Planned` ARM LEFT AT D-9 STEP 5, with the word. It had joined at step 2
-    because a Planned SR projected NOTHING on the owner's own pending-actions
+    because a Planned SR projected NOTHING on the operator's own pending-actions
     surface — the loudest instance of the `Planned`-reads-as-`Bananas` finding.
     OI-30 D1 then ruled the fold: those rows now read `Approved`, and an approved
     row owes nothing HERE. What it may still owe is caught by the drift arm below
@@ -252,10 +252,10 @@ def pause_pending(root):
 
 
 def pending_items(root):
-    """THE READ MODEL: every durable pending owner action, in surface order
+    """THE READ MODEL: every durable pending operator action, in surface order
     (blocked rows, then spine rows owing an approval or re-attest, then the
     tracked pause). Deterministic and committed-tree-pure, so a caller may
-    count it, filter it or render it and get the same answer the owner surfaces
+    count it, filter it or render it and get the same answer the operator surfaces
     show — which is the WI-381 amendment's requirement (ruled 2026-08-01) held
     by construction rather than by three callers agreeing to be careful."""
     items = [PendingItem(SPINE, line) for line in spine_pending(root)]
@@ -263,19 +263,19 @@ def pending_items(root):
     return tuple(items)
 
 
-def owner_cards(root):
+def operator_cards(root):
     """The pending items a DRAINED-QUEUE banner names — every kind except the
     pause.
 
     The pause is excluded because a paused station has its own, earlier exit:
-    naming it again at the drain would send the owner to `open-items.html` about
-    a stop they were already stopped by. Same read as the owner surfaces, one
+    naming it again at the drain would send the operator to `open-items.html` about
+    a stop they were already stopped by. Same read as the operator surfaces, one
     declared filter — not a second derivation."""
     return tuple(i for i in pending_items(root) if i.kind != PAUSE)
 
 
 PENDING_LEAD = (
-    "_Pending owner actions — a generated projection of durable, "
+    "_Pending operator actions — a generated projection of durable, "
     "committed-tree state (Drafted/drifted spine rows owing an approval or "
     "re-attest, and the tracked pause declaration); regenerated by `python "
     "project-trajectory/scripts/gen_trajectory.py --status`, do not hand-edit. "
@@ -283,12 +283,12 @@ PENDING_LEAD = (
     "briefs above are hand-authored and untouched by regeneration._"
 )
 
-PENDING_NONE = "_None — no durable owner action is pending._"
+PENDING_NONE = "_None — no durable operator action is pending._"
 
 
 def pending_block(root):
     """The GENERATED PENDING block CONTENT (between the markers) for the
-    generated owner surface: the read model above, rendered. A pure function of
+    generated operator surface: the read model above, rendered. A pure function of
     the committed tree — deterministic (sorted, no clocks) — so the harness
     `open-items` freshness gate byte-compares the WHOLE block through
     `gen_open_items.py --check` (the renderer since WI-322, NOT `--status`) and
@@ -300,7 +300,7 @@ def pending_block(root):
     return "{}\n\n{}".format(PENDING_LEAD, body)
 
 
-# --- the owner's decision queue and the decisions to review (WI-790) -----------
+# --- the operator's decision queue and the decisions to review (WI-790) -----------
 OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
 WORK_REL = "docs/work"
 DECISIONS_REL = _kitdecisions.DECISIONS_DIR
@@ -308,10 +308,10 @@ DECISIONS_REL = _kitdecisions.DECISIONS_DIR
 
 def open_item_queue(root):
     """THE QUEUE PROJECTION over the committed tree: `kitlib.spine.open_item_queue`
-    fed the work registry and the open-items registry. The owner surface's cards
+    fed the work registry and the open-items registry. The operator surface's cards
     and counts, its integrity notice and the status snapshot's open-items and
     Blocked lists all read this one call, so no two of them can disagree about
-    which decisions the owner owes. An absent registry is an empty queue; an
+    which decisions the operator owes. An absent registry is an empty queue; an
     unreadable one raises (the carrier's rule), never an empty queue.
 
     Implements: SR-168, LLR-198

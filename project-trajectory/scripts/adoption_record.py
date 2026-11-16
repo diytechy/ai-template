@@ -50,7 +50,7 @@ Contract IF-303: the adoption record, as calls the close and the lane-commit
     order, validated in the tree of `rev`; `commit_adoption_record_lines(root,
     rev)` returns one refusal line per record change the commit `rev` makes
     against its parents that only the close may make, `[]` when it makes
-    none. The owner reads named git trees and writes nothing.
+    none. The operator reads named git trees and writes nothing.
 
 Contract IF-304: the adoption-record step, as a command.
     `adoption_record.py [--root <dir>]` judges the commit being made in the

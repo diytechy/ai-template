@@ -30,15 +30,15 @@ Five triggers, plus the drafts-not-mints arm:
       an open row.
   (a2) **the `Drafted` rows the same merged commit hands over** — via
       `acceptance_record.staged_drafted_rows`, the other side of (a)'s coin
-      (owner ruling 2026-09-01). A work lane AUTHORS `Drafted` spine rows and
+      (operator ruling 2026-09-01). A work lane AUTHORS `Drafted` spine rows and
       approves none itself — `integrate._approval_act_refusal` refuses an act
-      no independent adjudicator's recorded verdict backs (owner ruling 6,
+      no independent adjudicator's recorded verdict backs (operator ruling 6,
       2026-10-07) — so every merge that adds or amends one and leaves it
       `Drafted` leaves rows waiting on an approval nobody has given. One `first-approval` adjudication row per
       merge lists them; its session reads each row's whole chain and either
       approves (the flip plus its anchoring snapshot, in one reviewed commit) or
       returns with findings through `## Dispositions`. Rows on a rung the dial
-      still HOLDS are not minted here: the owner approves those, through the
+      still HOLDS are not minted here: the operator approves those, through the
       approval brief, exactly as today.
   (b) **a merged spec carrying `## Handback`** — the DISPOSITION row (ruling
       R3): same `adjudication` kind, rank 1; its only outcomes are cancel /
@@ -67,7 +67,7 @@ Five triggers, plus the drafts-not-mints arm:
       rung the dial holds, with the row differing from its snapshot copy
       (`acceptance_record.unanchored_rows`) and still at the text the verdict
       bound (`acceptance_record.text_as_bound`): the act cannot land from a
-      lane, so one queued owner row per registry citing one pending open
+      lane, so one queued operator row per registry citing one pending open
       item, and those rows leave the amendment row.
 
 **Tier signals are measurable, never judged**: rows touched and a moved
@@ -80,7 +80,7 @@ The mint commits through the ONE trunk bookkeeping commit the claim also uses
 (`bookkeeping.commit`, WI-612): its write set is planned before anything is
 written, the declared artifacts are regenerated (RULING-6 — the registry
 changed, so the regeneration folds into the same bookkeeping commit), and
-exactly the paths it wrote are committed, so the owner's uncommitted work in the
+exactly the paths it wrote are committed, so the operator's uncommitted work in the
 checkout is neither swept in nor discarded. All-or-nothing: any refusal restores
 what the mint wrote and mints NOTHING, and every derived title is deterministic
 (the amendment title carries its sha pair), so a recovery re-run — `python
@@ -92,9 +92,9 @@ declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-090: the trunk-side intake mint, by importer.
     `intake_after_merge(root, before, after, outcomes, branch, label="")` is integrate's
-    post-merge arm: it mints one landed merge's forced rows — the owner rows
+    post-merge arm: it mints one landed merge's forced rows — the operator rows
     for held acts, the amendment adjudications, the FIRST-APPROVAL adjudications over the `Drafted` rows the
-    lane handed over on rungs the dial releases (owner ruling 2026-09-01: a lane
+    lane handed over on rungs the dial releases (operator ruling 2026-09-01: a lane
     authors, an adjudicator approves), the close dispositions, the drafts a
     close names and one adjudication per row whose lane changed its own
     Done-when since claim — as ONE bookkeeping commit inside the slot the caller holds,
@@ -314,9 +314,9 @@ _DRAFT_KEYS = frozenset(
         # is a lineage fact, not a revival — the superseded row stays terminal
         # and its scope stays exactly what it was.
         "supersedes",
-        # OI-73 exit (B), as an owner gate: where the answer is operator-owed
+        # OI-73 exit (B), as an operator gate: where the answer is operator-owed
         # and the adjudicator found no alternative route, the draft carries the
-        # owner's brief here, as the typed `[open_item]` table
+        # operator's brief here, as the typed `[open_item]` table
         # (`OPEN_ITEM_CELLS`). The mint creates a `pending` open item from it
         # (id from the watermark's OI space) and writes the new id into THIS
         # successor's `needs` (WI-790), so the successor is the item's
@@ -327,10 +327,10 @@ _DRAFT_KEYS = frozenset(
     }
 )
 
-# The typed open-item brief: the cells the owner's card renders, every one
+# The typed open-item brief: the cells the operator's card renders, every one
 # required and non-empty. The scalar `open_item = "<question>"` this replaces
 # let the mint write a bare question where the registry wants a brief, and the
-# two rows it minted reached the owner with no options and no recommendation.
+# two rows it minted reached the operator with no options and no recommendation.
 # A table missing a cell is refused rather than minted thin, so the thin card
 # is a state the mint cannot write. The adjudicator authors the brief, because
 # it is the party that has just measured the alternatives.
@@ -426,7 +426,7 @@ def _mint_open_item(root, brief, *, date=None):
 
     `brief` is the draft's validated `[open_item]` table, and its cells are
     written VERBATIM, so a minted row has the shape of a hand-filed pending row
-    and the owner's card renders it with no special case. `decision` ("what is
+    and the operator's card renders it with no special case. `decision` ("what is
     being decided") is the one brief cell a hand-filed row carries that the
     table does not; it is derived from `one_line`, which opens with the
     decision."""
@@ -816,7 +816,7 @@ def _amendment_context(records):
         "dial releases the rung, the MEANING rows you would bless) by naming",
         "them in the act's `--reattests`; on an OPERATOR-HELD tier a CLARITY row",
         "is re-attested, bound to the text the verdict judged, and a MEANING row is",
-        "recommended to the owner (ruled decision 2 as OI-100 amends it). Or",
+        "recommended to the operator (ruled decision 2 as OI-100 amends it). Or",
         "draft the real scope-change / re-scope / cancellation rows in a",
         "`## Dispositions` section of THIS spec — intake mints them at this",
         "row's merge (drafts-not-mints, R1).",
@@ -842,7 +842,7 @@ def _amendment_drafts(root, before, after, authoring_tags=(), carried=()):
     """`(drafts, refusal)`: trigger (a)'s one adjudication row, or none, or
     `_routed_amendments`' refusal. `authoring_tags` is `_authoring_tags`'
     answer, written on the row as the composer's tags. `carried` is the ids
-    an owner row carries (`_held_act_drafts`), left out of the row."""
+    an operator row carries (`_held_act_drafts`), left out of the row."""
     records, refusal = _routed_amendments(root, before, after)
     records = [rec for rec in records if rec["id"] not in carried]
     if not records:
@@ -897,10 +897,10 @@ def _latest_rulings(root, before, after):
 
 
 def _held_act_draft(registry, rows):
-    """The owner row and item for `rows` (`{row id: verdict path}`), the rows of
-    one `registry` held for the owner's act. The command names no verdict: the
+    """The operator row and item for `rows` (`{row id: verdict path}`), the rows of
+    one `registry` held for the operator's act. The command names no verdict: the
     ledger's verdict marks a session's own CLARITY act, and this act is the
-    owner's. It copies the whole registry, so option (a) states what widens it.
+    operator's. It copies the whole registry, so option (a) states what widens it.
     The title is the event's identity, so a replay mints nothing.
 
     Implements: SR-174, LLR-153"""
@@ -910,23 +910,25 @@ def _held_act_draft(registry, rows):
         ",".join(sorted(rows)),
     )
     return {
-        "title": "owner act: {} ruled MEANING on a held rung by {}".format(names, by),
+        "title": "operator act: {} ruled MEANING on a held rung by {}".format(
+            names, by
+        ),
         "kind": "ordinary",
         "workstream": "process",
         "context": "The sitting {} ruled these rows MEANING on a held rung, so the "
-        "act is the owner's, on trunk. The open item this row cites names the "
+        "act is the operator's, on trunk. The open item this row cites names the "
         "command.".format(by),
         "open_item": {
             "one_line": "Take the act on {} or return the text: {} ruled MEANING on "
             "a held rung.".format(names, by),
-            "blast_radius": "The owner row only, held by its needs edge. Until "
+            "blast_radius": "The operator row only, held by its needs edge. Until "
             "the act, the snapshot records the older text and the approval brief "
             "lists the rows as drifted.",
             "options": "- (a) TAKE THE ACT: on trunk, in its own commit after the "
             "text, run `{}`, with <record> naming your record of the act. The act "
             "copies the whole registry: name beside these rows any other row of it "
             "unanchored by then, another landing's waiting item included. The ruling "
-            "commit writes the owner row's Done-when or closes it.\n- (b) RETURN THE "
+            "commit writes the operator row's Done-when or closes it.\n- (b) RETURN THE "
             "TEXT: name what is wrong; the rows are reworked and sat again, and the "
             "ruling commit does the same.".format(command),
             "recommendation": "Read the verdict and the live rows: the sitting's own "
@@ -937,7 +939,7 @@ def _held_act_draft(registry, rows):
 
 def _held_act_drafts(root, before, after):
     """`(drafts, row ids, refusal)`: one owner row per registry over the rows the
-    range's latest accepted rulings hold for the owner's act (MEANING, blessed
+    range's latest accepted rulings hold for the operator's act (MEANING, blessed
     or not, unanchored at `after`, on a rung the dial holds, at the text the
     verdict bound). A snapshot act copies a whole registry, so its item is the
     registry's, not a verdict's. A copy that cannot be read refuses the mint.
@@ -968,7 +970,7 @@ def _held_act_drafts(root, before, after):
 
 # --- trigger (a2): the Drafted rows a lane hands over -------------------------
 #
-# THE OTHER SIDE OF TRIGGER (a)'s COIN (owner ruling 2026-09-01, WI-572). A lane
+# THE OTHER SIDE OF TRIGGER (a)'s COIN (operator ruling 2026-09-01, WI-572). A lane
 # authors `Drafted` spine rows and amends their text; it never approves them. So
 # the same merged commit that mints an amendment adjudication for the rows whose
 # APPROVED text moved mints a FIRST-APPROVAL adjudication for the rows that are
@@ -980,9 +982,9 @@ def _released_drafted_rows(root, before, after):
     tier the dial still HOLDS for an operator.
 
     A held rung is not minted here and that is the ruling, not an omission: the
-    owner still approves it, and it surfaces through the approval brief exactly
+    operator still approves it, and it surfaces through the approval brief exactly
     as it does today. Minting an adjudication for it would either duplicate that
-    surface or invite a session to pre-empt a signature the owner owes.
+    surface or invite a session to pre-empt a signature the operator owes.
 
     WHICH ROWS THE DIAL RELEASES is `agent_common.operator_accepts_spine` and
     nothing local: the brief this mint hands the adjudicator re-resolves the
@@ -1024,7 +1026,7 @@ def _first_approval_context(records):
         )
     lines += [
         "",
-        "Outcomes (owner ruling 2026-09-01): read each row's WHOLE CHAIN — the",
+        "Outcomes (operator ruling 2026-09-01): read each row's WHOLE CHAIN — the",
         "parent SR, the sibling LLRs, the test cases — and either APPROVE (move",
         "the rows' `Status` to `Approved` and take the anchoring snapshot,",
         '`python scripts/intake.py snapshot --approves "<REGISTRY>=<this row>"`,',
@@ -1073,7 +1075,7 @@ def _first_approval_drafts(root, before, after, authoring_tags=()):
             # the world the judge is actually in) — so without this cell the
             # re-derivation asks a WIDER question than the merge asked, and the
             # session is handed every `Drafted` row in the repo, across
-            # workstreams the owner's concurrency reason says the snapshot must
+            # workstreams the operator's concurrency reason says the snapshot must
             # not move across. Live AND scoped is the intersection of the two.
             # NOT truncated the way `sr_refs` is: that cell is an advisory join,
             # this one is the act's boundary, and a boundary with a `[:8]` on it
@@ -1239,7 +1241,7 @@ def _close_drafts(root, outcomes):
             _say(
                 "{} is an adjudication row closed early - NO disposition row "
                 "is minted for it (R3: no recursion); its close is the "
-                "owner's to read".format(wi_id),
+                "operator's to read".format(wi_id),
                 err=True,
             )
             continue
@@ -1337,7 +1339,7 @@ def _close_drafts(root, outcomes):
 def _done_when_drafts(root, before, after, outcomes, branch):
     """Trigger (e), S13: `(drafts, refusal)` - one adjudication per claimed row
     whose lane changed its OWN Done-when between claim and merge, ticks and
-    trailing evidence aside, that no in-lane verdict or owner ruling blesses.
+    trailing evidence aside, that no in-lane verdict or operator ruling blesses.
 
     A reviewer maps each Done-when item to its covering test, so an item the
     builder rewords is the checklist its own reviewer reads - moved by the party
@@ -1350,7 +1352,7 @@ def _done_when_drafts(root, before, after, outcomes, branch):
     THE SAFETY NET (WI-841). The change is blessed IN THE LANE, before the
     lane builds on it or closes (`kitlib.done_when`, the predicate the hold
     points ask), so a merge through the slot already carries a verdict or an
-    owner ruling binding the closed text, read here off the merged tree at
+    operator ruling binding the closed text, read here off the merged tree at
     `after`. Such a close mints nothing, except that a SUCCESSOR verdict's own
     `## Dispositions` drafts are minted here, since a lane never mints. Only an
     UNCOVERED close (a merge outside the slot) mints the goalposts row, and it
@@ -1427,7 +1429,7 @@ def _done_when_draft(root, after, wi_id, branch, relpath, blessing):
             "context": (
                 "`{spec}` closed with a Done-when that differs from the one "
                 "it was claimed with (ticks and trailing evidence already "
-                "set aside), and no in-lane verdict or owner ruling blesses "
+                "set aside), and no in-lane verdict or operator ruling blesses "
                 "the closed text. A reviewer maps coverage against that list, "
                 "so a change made by the lane it judges is the goalposts "
                 "moving:\n\n{lines}\n\nJudge whether each change only "
@@ -1883,7 +1885,7 @@ def _open_item_refusal(draft, at):
     reaches `_mint_open_item` with a thin brief. Three shapes are refused: the
     retired bare scalar (a question where the registry wants a brief), a table
     missing or emptying any of `OPEN_ITEM_CELLS`, a cell that is not a string
-    (an integer, array, boolean or table would be serialized onto the owner's
+    (an integer, array, boolean or table would be serialized onto the operator's
     card as whatever `str` makes of it), and a table carrying a cell the brief
     does not have (a typo'd cell is a silently dropped one)."""
     if "open_item" not in draft:
@@ -1907,7 +1909,7 @@ def _open_item_refusal(draft, at):
     elif untyped:
         why = (
             "has [open_item] cell(s) {} that are not strings - each is prose "
-            "the owner's card renders".format(", ".join(untyped))
+            "the operator's card renders".format(", ".join(untyped))
         )
     else:
         thin = [c for c in OPEN_ITEM_CELLS if not brief.get(c, "").strip()]
@@ -1915,7 +1917,7 @@ def _open_item_refusal(draft, at):
             return None
         why = "has an [open_item] table missing or empty in {}".format(", ".join(thin))
     return (
-        "{} {} - the adjudicator authors the owner's whole brief, never a thin "
+        "{} {} - the adjudicator authors the operator's whole brief, never a thin "
         "card; nothing minted".format(at, why)
     )
 
@@ -3134,7 +3136,7 @@ def merged_outcomes(root, ids):
     return outcomes, None
 
 
-# --- the session-hold arms (ruled decision 2, owner 2026-07-31; §A8) -----------
+# --- the session-hold arms (ruled decision 2, operator 2026-07-31; §A8) -----------
 
 
 def adjudication_action(operator_held, verdict=""):
@@ -3147,16 +3149,16 @@ def adjudication_action(operator_held, verdict=""):
         a re-attestation of a row it ruled CLARITY or ruled MEANING and would
         bless.
       * **operator-held tier, CLARITY verdict -> `reattest`**: the one case. A
-        CLARITY verdict approves no new text; it records that the owner's
+        CLARITY verdict approves no new text; it records that the operator's
         existing signature still describes the row. So the independent
         session re-attests the row as a judgement act, naming its verdict in
         the act for audit (`intake.py snapshot --reattests <ROW-ID> --verdict
-        <file>`): the act ledger records it and the owner's surface lists it.
+        <file>`): the act ledger records it and the operator's surface lists it.
         The merge slot's lane rule (`held_status`) admits the act only when an
         recorded verdict rules the row CLARITY and its binding records the
         row's approved text as it stands at the act.
       * **operator-held tier otherwise -> `recommend`**: a MEANING verdict, or a
-        first draft (no verdict), is the owner's to sign. The session prepares
+        first draft (no verdict), is the operator's to sign. The session prepares
         the brief and stops; it never approves a first draft on a held rung.
 
     Anything unreadable upstream resolves to operator-held — `agent_common.
@@ -3456,7 +3458,7 @@ def _apply_flips(root, tables, located):
     move. D-9 step 7 left two candidate resolutions on the table — re-bless a
     drifted `Approved` row under loop-hold (a), or retire the arm (b) — and
     OI-45 RULED (b): the guard below is the ruled shape, not a stopgap awaiting
-    an owner call.
+    an operator call.
 
     OI-45 IS THE RECORD, and what it retires is precise: MECHANICAL
     approval — a scripted path moving a Status cell with no judgment behind
@@ -3635,7 +3637,7 @@ def _cmd_snapshot(args):
     says which). `intake.flip_verified`'s mechanical `_apply_flips` is the
     retired candidate (OI-45 (b)); this copy was never it.
 
-    The owner's hand sequence at a sitting is: edit the Status cells in the
+    The operator's hand sequence at a sitting is: edit the Status cells in the
     reviewed commit -> run `intake.py snapshot` -> commit both together. The
     mirror invariant (`acceptance_record.staged_snapshot_findings`) is what makes
     "together" checkable rather than remembered.
@@ -3779,7 +3781,7 @@ def main(argv=None):
         "--seed",
         action="store_true",
         help="CREATE the snapshot directory. For the FIRST snapshot only, in "
-        "the owner's signing commit, after every pending row has been ruled — "
+        "the operator's signing commit, after every pending row has been ruled — "
         "seeding earlier blesses text nobody read. Unreachable from every loop "
         "module and hook (pinned by tests/test_baseline_snapshot.py)",
     )

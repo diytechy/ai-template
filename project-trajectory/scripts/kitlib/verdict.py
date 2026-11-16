@@ -515,7 +515,7 @@ def refresh_attestation(root, branch, rev=None):
     the cost is reading, not reverse-engineering.
 
     That is accepted, deliberately. The only structural closure is a bar the
-    slot itself runs and cannot skip, and DECISION 3 (owner ruling 2026-07-31)
+    slot itself runs and cannot skip, and DECISION 3 (operator ruling 2026-07-31)
     deleted the merge bar outright: a kept-just-in-case bar is exactly the
     shape §0's governing principle warns against. So the threat model here is
     the same one the rest of the coordinator holds - bugs, drift and a lane that

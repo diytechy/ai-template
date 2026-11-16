@@ -216,7 +216,7 @@ from pathlib import Path
 from kitlib.config import assumption_gate_enabled, read_stack_ini
 from kitlib.config import utf8_console as _utf8_console
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`, executed
 # WI-448): the best-effort-off-git subprocess pattern this module used to spell
 # out itself. Run as a subprocess this script's own dir is sys.path[0] so a
 # plain import resolves; the guard covers an in-process import (a test) whose
@@ -383,7 +383,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # `spine_rules.py` under the retired F5 rule, held equal by
 # `tests/test_rule_sync.py` pins. They are POLICY — this module ENFORCES the
 # spine, that one DERIVES its stage, and a disagreement between them is a false
-# green or false red AT A GATE (WI-099). Owner ruling D-8 (`OI-16`) replaced the
+# green or false red AT A GATE (WI-099). Operator ruling D-8 (`OI-16`) replaced the
 # pins with one home, `kitlib/spine.py`; the names are re-exported here so no
 # call site in this 5,000-line module moved. Each rule's own rationale travelled
 # with it and is NOT restated here.
@@ -429,8 +429,8 @@ sn_draft_ids = spine_carrier.draft_ids_from_text
 # "approved text that has since moved", kept past step 5's rename only so the kit
 # never had a commit with no drift detector at all; its successor — the
 # `docs/archive/last_approved/` comparison — ran live beside it through the
-# owner's signing act (step 6), which cleared the last `Modified` row and seeded
-# the snapshot. Owner ruling 2026-08-17m states the replacement in one line:
+# operator's signing act (step 6), which cleared the last `Modified` row and seeded
+# the snapshot. Operator ruling 2026-08-17m states the replacement in one line:
 # *"modified means nothing because it is caught by comparing to the snapshot"*.
 #
 # `tests/test_rule_sync.py` asserts NEGATIVELY that no predicate in any shipped
@@ -591,7 +591,7 @@ REQUIRED_FIELDS = {
 # NARROWED AGAIN AT STEP 7 + ARMED AT STEP 8, in ONE act, because the enum must
 # equal the set of values at least one live predicate recognizes at EVERY commit:
 # `Modified` leaves (snapshot drift, live beside it since step 4, is now the only
-# detector — owner ruling 2026-08-17m) and `Founded` enters. D-9's ruled ladder,
+# detector — operator ruling 2026-08-17m) and `Founded` enters. D-9's ruled ladder,
 # whole: Drafted -> Approved -> Founded.
 #
 # The VALUE lives in `kitlib.spine` beside the predicates that read its words,
@@ -650,7 +650,7 @@ ENUM_FIELDS = {
     # WI-443 / OI-14 part B — the IF tier's first closed vocabularies, advisory
     # like its required fields above.
     #
-    # `Signal` is the owner's ruled discrete-vs-variable typing and is NEW: all
+    # `Signal` is the operator's ruled discrete-vs-variable typing and is NEW: all
     # 113 live rows were searched before the ruling and NOTHING in the registry
     # typed a signal at all, in any column. `Stability` was DECLARED by
     # process.md §8 from the start and validated nowhere, which is how four rows
@@ -869,7 +869,7 @@ def enum_integrity_findings(label, rows):
 WATERMARK = id_carrier.WATERMARK
 # Every id space in the repo: the ten this module already patterns, plus the
 # seven it does not (SN is the prose tier, WI is directory-as-state, OI is the
-# owner queue, DP is a plan-round directory, and B/EXT/REL are the depth-0 frame
+# operator queue, DP is a plan-round directory, and B/EXT/REL are the depth-0 frame
 # tiers in external.toml — added by the sitting-3 item-17 ruling after the
 # 2026-08-16q cut spent B-06/B-07/EXT-004 with nothing mechanical to stop a
 # later re-mint). STK is the stakeholder list on the needs file (SR-189), hand-
@@ -2798,7 +2798,7 @@ def load_provenance_allow(root):
     list held 15 `SR-### Rationale` entries all reasoned "unsigned
     derived-requirement label"; re-running detection with the list ignored
     exposed 67 tokens over 22 rows, including `RE-VOICED 2026-08-17` and
-    `Minted at the owner's 2026-08-15`. Those are the banned shape itself, riding
+    `Minted at the operator's 2026-08-15`. Those are the banned shape itself, riding
     a carve-out written for a parenthetical label — and `docs/test/report.md` was
     meanwhile asserting that no living spine cell carried a frame. A key is now
     `<ROW-ID> <Cell> <token>`, matched against the token the detector reports,
@@ -3281,7 +3281,7 @@ def _resolves_in_tree(root, endpoint):
 
 
 def phase_approved_findings(real):
-    """The approved-phase NUMERIC-ONLY rule (process.md §4 "Phased delivery"; owner
+    """The approved-phase NUMERIC-ONLY rule (process.md §4 "Phased delivery"; operator
     ruling 2026-08-01, WI-402): once the project phases ANY spine row (digit-parse
     arming — a legacy `v2` cell arms it too), every APPROVED (non-`Drafted`) SR/LLR/TC
     must carry a `Phase` that is a BARE INTEGER — digits only, full cell. Numeric-
@@ -3394,7 +3394,7 @@ def spine_chain(sr_id, srs, llrs_by_sr, tcs_by_ref):
     they must not disagree: the re-attest model asks it of the live registries
     and of the snapshot's, and `adjudicate_brief.first_approval_values` asks it
     to render the chain a first-approval adjudicator reads — the whole chain,
-    not the changed rows, because holding the chain is the owner's stated reason
+    not the changed rows, because holding the chain is the operator's stated reason
     the approval act is the adjudicator's and not the authoring lane's."""
     out = []
     sr_row = next((r for r in srs if r.get("SR-ID") == sr_id), None)
@@ -3597,7 +3597,7 @@ def _scope_srs(scope, srs):
     an unmatched scope fell through to an empty brief at exit 0 — a typo, a
     retired phase tag, or a reserved word this function does not know produced a
     document that reads "there is nothing to approve", which is the most
-    expensive way for this tool to be wrong: an owner reads a short brief and
+    expensive way for this tool to be wrong: an operator reads a short brief and
     blesses a batch they were never shown. An empty resolution is a REFUSAL, not
     an output."""
     tokens = refs(scope)
@@ -3651,7 +3651,7 @@ def _sn_prose(sn_text, carrier):
 # brief shows every chain row's changed cells as BEFORE (the row in the
 # `docs/archive/last_approved/` snapshot) vs AFTER (the working tree).
 #
-# THE BASELINE STOPPED BEING GIT ARCHAEOLOGY AT D-9 STEP 4 (owner directive
+# THE BASELINE STOPPED BEING GIT ARCHAEOLOGY AT D-9 STEP 4 (operator directive
 # 2026-08-15). It used to be the newest commit at which the SR row read
 # `Verified` (now `Approved`), which is correct only while every amendment flips its row in the
 # same commit — and D-9 deletes the flip, so that walk returns HEAD and the diff
@@ -3667,7 +3667,7 @@ def _sn_prose(sn_text, carrier):
 # deletion — `check_trajectory._spine_rows_at` is the surviving carrier-aware
 # `git show` reader, still exercised by the cutover suite, so the D-5 hazard
 # those tests guarded (a baseline read that knows only the live carrier reports
-# every pre-migration revision as an EMPTY baseline, and the owner re-blesses
+# every pre-migration revision as an EMPTY baseline, and the operator re-blesses
 # full text with no diff) is still covered where the reader actually lives.
 
 SPINE_FILES = (
@@ -3679,7 +3679,7 @@ SPINE_FILES = (
 # --- the spine carrier (repo-lock D-5/D-6) -----------------------------------
 # The vocabulary and both readers live in `spine_carrier.py`, imported as a
 # sibling. The full argument for that home — and why it AMENDS the F5 ruling
-# rather than ignoring it (owner ruling 2026-08-10) — is in that module's
+# rather than ignoring it (operator ruling 2026-08-10) — is in that module's
 # docstring; the short version is that a duplicated VOCABULARY fails
 # silently, by returning a row with a cell missing, which every consumer reads
 # as "the cell is empty".
@@ -3708,7 +3708,7 @@ CELL_TRUNCATE_LIMIT = 1500
 
 def truncate_cell(text, limit=CELL_TRUNCATE_LIMIT):
     """`text` clipped to `limit` characters with an EXPLICIT marker naming how
-    much was dropped — never a silent cut. The brief this feeds is an owner
+    much was dropped — never a silent cut. The brief this feeds is an operator
     approval surface: a cell trimmed without saying so reads identically to a
     cell that was always short, which is exactly the false-green shape the
     rest of this kit refuses. Below the limit, `text` is returned unchanged —
@@ -3744,7 +3744,7 @@ def _anchor_lines(sr_row):
     entirely in a `Drafted` child never appeared in `entry["rows"]` at all (see
     `reattest_model`'s `if cells or drafted:` gate) — so the brief showed the
     chain row an operator must bless with no statement of the requirement it hangs
-    from. The owner's report, verbatim (2026-08-24): opening the surface and
+    from. The operator's report, verbatim (2026-08-24): opening the surface and
     looking at an owing SR, the requirement text itself was nowhere on the
     page. `_full_row_bullets`/`_cell_diff_lines` already rendered a CHANGED or
     ADDED chain row's own text in full; this is the one row shape — SR
@@ -3767,7 +3767,7 @@ def _cell_diff_lines(changed, approved=frozenset(), drafted=False):
     The split is a capability the snapshot comparison hands the reader for free
     (D-9 step 4): an APPROVED cell that moved owes an attestation, a TRACED one
     routes to adjudication and arms no window. Rendering them in one
-    undifferentiated list asked the owner to make that judgement per cell, from
+    undifferentiated list asked the operator to make that judgement per cell, from
     memory, mid-sitting. Headings appear only when BOTH groups are present —
     a lone heading over the only group is noise.
 
@@ -3830,7 +3830,7 @@ def _entry_kind(sr_drafted, chain_has_drafted):
     AND THE SECOND ARM HAS ONE SOURCE SINCE STEP 7, where it used to have two: a
     row said so itself (`Modified`) OR the snapshot said so (drift). The marker
     retired with the word, so the snapshot is the whole answer — which is the
-    point of the mechanism rather than a loss (owner ruling 2026-08-17m). This
+    point of the mechanism rather than a loss (operator ruling 2026-08-17m). This
     function is unchanged by that: it already returned `reattest` for everything
     that is not `drafted`.
 
@@ -3860,7 +3860,7 @@ def sr_chain_drifts(sid, chain, snapshot):
     The brief GROUPS by owning SR for reading — a drifted LLR or TC surfaces
     under its owning SR's section — but the grouping is presentation, never
     attestation scope: a row's Status answers for its OWN cells, and a child
-    amendment never flips the parent SR (owner ruling 2026-08-17m; the
+    amendment never flips the parent SR (operator ruling 2026-08-17m; the
     chain-completeness claim belongs to the derived `Founded` state, D-9 step
     8). This drift arm catches a child amended while still claiming approval —
     which, since step 7 retired the `Modified` marker, is EVERY post-approval
@@ -3925,7 +3925,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
 
     Split out of `reattest_lines` (WI-322) so the computation runs ONCE and two
     renderers consume it — the markdown brief here, and the generated
-    `open-items.html` owner view in `gen_open_items.py`.
+    `open-items.html` operator view in `gen_open_items.py`.
 
     THE SELECTOR IS NO LONGER A LIST OF STATUS WORDS (D-9 step 4). It used to
     be `statuses=("modified",)` — the "hard coupling" the migration plan named,
@@ -3946,7 +3946,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
 
     THE `Modified` ARM LEFT AT STEP 7: the selector now reads ONE status word,
     for the one thing a word can honestly answer — "this row has never been
-    approved". Everything post-approval is the snapshot's answer (owner ruling
+    approved". Everything post-approval is the snapshot's answer (operator ruling
     2026-08-17m). The arm was deleted only after its successor had run live
     beside it through the signing, which is why the migration ordered steps 4, 6
     and 7 as it did.
@@ -4151,7 +4151,7 @@ def current_approval_brief(root):
 # the status snapshot, `gen_okf --check`, `gen_open_items --check`); the brief was
 # generated the same way and gated by nothing, so it silently drifted behind the
 # registry it summarizes. Observed twice in one day: at 121-CRITIQUE it was
-# missing LLR-105/TC-108 and SR-054's later amendment (an owner would have blessed
+# missing LLR-105/TC-108 and SR-054's later amendment (an operator would have blessed
 # six rows having seen four), and again at 123-CRITIQUE it was three chain rows
 # short. Both were caught by a human noticing — the weakest enforcement tier
 # `docs/enforcement-audit.md` names.
@@ -4195,7 +4195,7 @@ def approval_check(root, srs, llrs, tcs, out_path):
     regenerate-and-compare, like every other freshness gate in the kit.
 
     Fails CLOSED on a difference — a stale brief is read by an operator about to
-    attest, and the cost of a false green here is an owner blessing rows they
+    attest, and the cost of a false green here is an operator blessing rows they
     were never shown.
 
     Two silences, both the arming idiom the component checks use rather than
@@ -4245,7 +4245,7 @@ def approval_check(root, srs, llrs, tcs, out_path):
     return 1, (
         "{} is STALE against the registry and the {} snapshot. Regenerate it "
         "with `trace.py --approve modified --out {}` and re-read it BEFORE "
-        "attesting — an owner blessing a short brief blesses rows they were "
+        "attesting — an operator blessing a short brief blesses rows they were "
         "never shown.".format(out_path, baseline_snapshot.SNAPSHOT_DIR, out_path)
     )
 
@@ -4256,7 +4256,7 @@ def approval_check(root, srs, llrs, tcs, out_path):
 # authorises), but `reattest_lines` renders one section per SR — the off-spine tiers
 # (`interfaces.toml`, `external.toml`, `components.toml`) never reach it, so a
 # row changed there since the last snapshot enters the signed baseline with no
-# owner-visible before/after at all (found by the OI-62-sitting adversarial
+# operator-visible before/after at all (found by the OI-62-sitting adversarial
 # round, `docs/log.d/2026-08-24-oi62-rule-and-spine-approval.md`, its MAJOR-2).
 #
 # THIS IS A DISCLOSURE SURFACE, NOT A NEW GATE — it changes nothing `owes()`
@@ -4336,7 +4336,7 @@ def offspine_census_rows(root, snapshot=_UNSET):
     Split out (WI-518, the `reattest_model`/`reattest_lines` shape) so the
     comparison runs ONCE and two renderers consume it — this module's
     markdown brief (`offspine_census_lines`) and `gen_open_items.py`'s HTML
-    owner view."""
+    operator view."""
     if snapshot is _UNSET:
         snapshot = baseline_snapshot.load_all(root)
     if snapshot is None:
@@ -4388,7 +4388,7 @@ def offspine_census_lines(root, snapshot=_UNSET):
     ]
 
 
-# THE LABEL OF THE COLLAPSED BLOCK, in the owner's own words (OI-82 ruling).
+# THE LABEL OF THE COLLAPSED BLOCK, in the operator's own words (OI-82 ruling).
 WAITING_FOR_ADJUDICATION = "Waiting for automated adjudication"
 
 # The row states that owe an act on their own: changed or added text, a row
@@ -4399,7 +4399,7 @@ _OWING_STATES = frozenset(("changed", "added", "removed", "drafted"))
 
 def released_tiers(root):
     """The spine tiers (`SR`, `LLR`, `TC`) whose rows the dial `root` declares
-    RELEASES to an adjudicator — the rows the owner no longer signs.
+    RELEASES to an adjudicator — the rows the operator no longer signs.
 
     The dial is read ONLY through `agent_common.operator_accepts_spine`, the
     predicate the mint (`intake._released_drafted_rows`) and the adjudicator's
@@ -4422,11 +4422,11 @@ def released_tiers(root):
 
 
 def dial_releases_chain(entry, released):
-    """Is this owing chain an ADJUDICATOR's to approve rather than the owner's?
+    """Is this owing chain an ADJUDICATOR's to approve rather than the operator's?
 
     True only when the chain has at least one row owing an act and EVERY such
     row's tier is in `released` (`released_tiers`). One held row keeps the
-    whole chain on the owner's section: the owner's signature is still owed on
+    whole chain on the operator's section: the operator's signature is still owed on
     it, and a row is read with its chain. A chain with no owing row is held
     too: nothing released it, and the conservative answer to "who approves" is
     the operator.
@@ -4470,7 +4470,7 @@ def _entry_lines(entry, srs_by_id):
     """The markdown section for ONE owing chain of `reattest_model`: the
     anchor SR's own text, then each chain row as its state renders it.
 
-    One function for both places a chain renders — the owner's section and the
+    One function for both places a chain renders — the operator's section and the
     collapsed block of chains the dial releases to an adjudicator — so a chain
     reads the same wherever the dial puts it (the OI-82 ruling: released
     chains render in full, not as ids)."""
@@ -4608,7 +4608,7 @@ def _assumption_lines(chain):
     first, then its landing crossings, its cells (status and standing among
     them), the cases that can falsify it and its falsifier, and a fidelity
     assumption's surrogate beside it. No evidence level: an assumption
-    carries none (owner ruling 2026-10-02)."""
+    carries none (operator ruling 2026-10-02)."""
     row, sur = chain["row"], chain["surrogate"]
     out = _listed("Relied on by.", ["{} — {}: {}".format(*c) for c in chain["citing"]])
     out += _listed("Serving.", ["{} — {}".format(*n) for n in chain["needs"]])
@@ -4879,9 +4879,9 @@ def reattest_lines(root, srs, llrs, tcs):
         )
         return lines
     # THE DIAL SPLITS THE POPULATION, IT DOES NOT NARROW IT (OI-82, ruled (a)
-    # as the owner refined it): every owing chain is still rendered, and a
+    # as the operator refined it): every owing chain is still rendered, and a
     # chain whose every owing row sits on a rung the dial releases goes to a
-    # collapsed block below the owner's section, in full.
+    # collapsed block below the operator's section, in full.
     tiers = released_tiers(root)
     held, released = [], []
     for entry in model:
@@ -5818,7 +5818,7 @@ def analyze(reg, args):
     # Warn-only, always on: comparative AcceptanceCriteria terms with no pinned
     # predicate (see the module docstring). Never joins a failure set below.
     advisories = ac_advisories(srs)
-    # GATING (owner ruling 2026-07-27): a spine row whose text carries its own
+    # GATING (operator ruling 2026-07-27): a spine row whose text carries its own
     # provenance. Its own pipe, not folded into the AC advisories above — that
     # counter names the acceptance-criteria lint, and a shared count would say
     # "ac-advisories" about a finding that is not one. Joins exit_code.
@@ -5839,19 +5839,19 @@ def analyze(reg, args):
     # heuristic (lexical overlap), so it warns FOREVER — 38 of 118 LLRs trip it
     # and most are legitimate. Never joins a failure set below.
     paraphrase = paraphrase_advisories(srs, llrs)
-    # Warn-only, always on (re-tier v2 R2/R3, owner ruling 2026-08-15): an SR
+    # Warn-only, always on (re-tier v2 R2/R3, operator ruling 2026-08-15): an SR
     # `Requirement` naming a concrete artifact, and an SR whose direct-LLR fan-out
     # is over the declared bound. Their own pipes — they are TIERING detectors,
     # not prose lints, and folding them into the AC/paraphrase counters would
     # report a tiering defect under a wording heading. Never joins a failure set
     # below: warn-first by ruling, cleared by the re-tier campaign, not by a gate.
     sr_artifact_advis = sr_artifact_advisories(srs)
-    # The same rule one tier up (owner directive 2026-08-18): a need's
+    # The same rule one tier up (operator directive 2026-08-18): a need's
     # `acceptance` naming the instrument rather than the observable condition.
     # Its own pipe for the same reason — a tiering finding reported under a
     # wording heading is a mis-named finding — and warn-only on the same terms.
     sn_artifact_advis = sn_artifact_advisories(reg.sn_needs)
-    # Warn-first, always on (owner ruling: no provenance citation in a living
+    # Warn-first, always on (operator ruling: no provenance citation in a living
     # registry cell). The same subject as the gating `provenance` pipe above and
     # deliberately NOT the same counter: that one names two token shapes in three
     # tiers and joins the exit code, this one names the rest of the citation frame

@@ -10,7 +10,7 @@
      coordinator's entry point. The act is the `Status` flips and the
      anchoring copy, text before act (WI-806), each part in its own reviewed
      commit, and the merge admits it only when a recorded verdict over the
-     act's own rows backs it (owner ruling 6, 2026-10-07). This brief is the
+     act's own rows backs it (operator ruling 6, 2026-10-07). This brief is the
      one home of the act's instructions: the judging briefs no longer carry
      them.
 

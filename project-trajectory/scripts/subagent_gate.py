@@ -19,7 +19,7 @@ true in both directions. Nothing here denies until an operator writes `deny`, or
 gate cannot tell what the operator wrote. The old headline described the opposite
 posture, which is the most expensive kind of comment to be wrong: a reader
 budgeting risk would have credited this module with a refusal it never makes.
-Whether the fail posture on a genuine ABSENCE should also invert stays an owner
+Whether the fail posture on a genuine ABSENCE should also invert stays an operator
 call, deliberately not taken here.
 
 A Claude Code `PreToolUse` hook (SR-043; realizes SN-006 "a walk-away run stays
@@ -95,12 +95,12 @@ import sys
 import tomllib
 from pathlib import Path
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`, executed
 # WI-448): the declared-policy line reader this module used to spell out
 # itself. Run as a subprocess this script's own dir is sys.path[0] so a plain
 # import resolves; the guard covers an in-process import (a test) whose
 # sys.path does not yet carry scripts/. THIS MODULE IS A FAIL-OPEN GATE BY
-# OWNER RULING (2026-08-11) and the import does not change that: `kitlib` ships
+# OPERATOR RULING (2026-08-11) and the import does not change that: `kitlib` ships
 # in bootstrap's MAPPING like every other sibling, so an adopter's copy has it;
 # were it ever absent the gate would fail LOUDLY at import rather than silently
 # allowing, which is the direction this module already prefers for a defect.

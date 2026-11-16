@@ -1549,7 +1549,7 @@ def test_fit_lines_breaks_on_words_then_ellipsizes():
 # citing it; a need answered only by coincident requirements says so, an
 # unclassified requirement shows as the gap, and a falsified premise is marked
 # in words as well as in color. No evidence level is shown: an assumption
-# carries none (owner ruling 2026-10-02).
+# carries none (operator ruling 2026-10-02).
 
 _GOLDEN_PAGE = ROOT / "tests" / "golden" / "dashboard-no-assumptions.html"
 
@@ -1569,10 +1569,10 @@ acceptance = "It loads."
 
 [need.SN-003]
 status = "Approved"
-need = "Reports reach the owner."
+need = "Reports reach the operator."
 why = "An unread report changes nothing."
 priority = "S"
-acceptance = "The owner reads it."
+acceptance = "The operator reads it."
 """
 
 
@@ -1627,7 +1627,7 @@ sampling = "monitored"
 _VIEW_FRAME = """[entity.EXT-001]
 name = "Owner"
 class = "operational"
-description = "The owner."
+description = "The operator."
 status = "Approved"
 
 [boundary.B-01]
@@ -1655,10 +1655,10 @@ _VIEW_DAS = (
     _view_da(
         "DA-001",
         "active",
-        "The verdict reaches the owner intact.",
-        "A verdict the owner read differently from the run.",
+        "The verdict reaches the operator intact.",
+        "A verdict the operator read differently from the run.",
     )
-    + _view_da("DA-002", "falsified", "The owner reads every verdict.")
+    + _view_da("DA-002", "falsified", "The operator reads every verdict.")
     + _view_da("DA-003", "active", "Reports are opened within a day.")
 )
 
@@ -1666,7 +1666,7 @@ _VIEW_RECORD = {
     "tc": "TC-010",
     "outcome": "pass",
     "observed_at": "2026-09-01T00:00:00Z",
-    "provenance": "the owner",
+    "provenance": "the operator",
     "expires": "2099-01-01T00:00:00Z",
     "judged": "",
 }
@@ -1733,7 +1733,7 @@ def test_need_assumptions_derives_each_need_s_premises_once(tmp_path):
     da1, da2 = first["assumptions"]
     assert da1["citing"] == ["SR-001", "SR-002"]
     assert (da1["status"], da1["standing"]) == ("Approved", "active")
-    assert da1["falsifier"] == "A verdict the owner read differently from the run."
+    assert da1["falsifier"] == "A verdict the operator read differently from the run."
     assert da1["cases"] == ["TC-010"]
     assert (da2["standing"], da2["falsifier"], da2["cases"]) == ("falsified", "", [])
     assert "level" not in da1 and "level" not in da2
@@ -1757,7 +1757,7 @@ def test_each_need_s_detail_lists_its_assumptions_with_their_standing(tmp_path):
     for needle in (
         "status: Approved",
         "active",
-        "A verdict the owner read differently from the run.",
+        "A verdict the operator read differently from the run.",
         "can be falsified by: TC-010",
         "SR-001",
         "SR-002",

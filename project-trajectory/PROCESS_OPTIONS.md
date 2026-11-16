@@ -27,7 +27,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Gate authority levels | a repo approves fewer tiers by hand than the default | `docs/process.toml` `[authority] operator_accepts_through` + a deviation register |
 | Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
 | Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py` + `dispatch.py`/`lane.py`, `integrate.py`, `agents.toml`, the launchers |
-| Delegated decisions record | a run acts on the owner's behalf while the owner is away (unattended or delegated) | `docs/process.toml` `[authority] decision_recording` + one `docs/decisions/<run>.toml` per run |
+| Delegated decisions record | a run acts on the operator's behalf while the operator is away (unattended or delegated) | `docs/process.toml` `[authority] decision_recording` + one `docs/decisions/<run>.toml` per run |
 | Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Vouch`/critique TCs |
 | Dual-plan decomposition | a goal is design-shaping enough that one planner's WI decomposition should not go unchallenged | two rival plans + a coverage diff + one critique round + an arbiter verdict (`docs/plans/`) |
 | Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/process.toml` `[policies] guardrails` |
@@ -61,7 +61,7 @@ running with both homes live is refused, not resolved by precedence. Three kinds
 declared file stay outside it: the adopter-owned toolchain `docs/stack.ini`, the
 presence-as-semantics markers (`docs/work/pause`, `docs/agents-enabled`), and
 the generated `docs/stage`. The six per-checker enablement toggles are **in** it,
-as the `[checks]` section (owner 2026-08-11, overturning WI-423: absence as a
+as the `[checks]` section (operator 2026-08-11, overturning WI-423: absence as a
 declaration is unreadable, so each ships as a visible key at its current
 default — four `true`, `live_status = false`, `subagent_gate = "off"`).
 
@@ -298,7 +298,7 @@ is an unambiguous boundary**; the committed anchor makes membership legible.
 above: just as the gate is computed from artifact states, the project's **current
 phase is derived** — the highest phase any approved spine row carries — so a scope
 change surfaces as a phase bump, never a hand-set marker. **The phase boundary is
-a confirmation event** (owner ruling 2026-08-01): a phase increments when
+a confirmation event** (operator ruling 2026-08-01): a phase increments when
 re-opened scope is *confirmed* — an adjudication verdict that scope moved, or a
 new draft-SN batch approved into scope — **never on the raw derived-stage drop**;
 a spurious re-attest window must not burn a phase number (the counterexample:
@@ -312,7 +312,7 @@ dishonesty. **Every approved SR/LLR/TC carries the `Phase` it was approved in** 
 **bare integer** (`1`, `2`, `3`…), digits only, full cell; an SN's phase is
 *derived* as the minimum phase of its
 referencing SRs (no `stakeholder-needs.toml` schema change). Numeric-only is a
-correctness rule, not a style (owner ruling 2026-08-01): the `--phase`/`--approve`
+correctness rule, not a style (operator ruling 2026-08-01): the `--phase`/`--approve`
 scope filters and the phase-drop detector's per-phase-to-anchor join match the
 cell **literally**, so a prefixed label (`v2`, `P1`) does not fail them — it goes
 *silently vacuous*, disarming a warn without telling anyone, which is worse than
@@ -422,7 +422,7 @@ and the register below.
 **The deviation register (`docs/gate-policy.md`).** The kit-owned process doc
 is never edited per-repo (it is overwritten on re-sync); a non-default level
 lives in a repo-local register that *amends* it: a table of `process.md`
-clause → standard behavior → this repo's behavior, approved by the owner,
+clause → standard behavior → this repo's behavior, approved by the operator,
 with the fixed points at the bottom that nothing overrides. Where the two
 disagree, the register wins — except the fixed points. `bootstrap.py`
 scaffolds the skeleton pre-filled for the chosen level.
@@ -437,7 +437,7 @@ harness is the bar everywhere; a red check is a red check.
 still accepts. It never said **who acts** on the rungs it releases, and for a
 single-lane repo the question does not arise — the session that authors a row
 is the only session there is. It arises the moment work runs in parallel lanes.
-The owner ruled it (2026-09-01) and widened where the act may be taken (ruling 6,
+The operator ruled it (2026-09-01) and widened where the act may be taken (ruling 6,
 2026-10-07, superseding the earlier trunk-side clause):
 
 > The approval act on a spine row — the `Status` flip `Drafted` → `Approved`
@@ -472,7 +472,7 @@ driving it:
 | Amends spine text | Yes — any cell, on any row, `Approved` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
 | Flips `Status` | **Never on a spine row** (SN/SR/LLR/TC). | Yes, on the rungs the dial releases, backed by its recorded verdict over exactly those rows, in the authoring lane or on trunk. |
 | Writes `docs/archive/last_approved/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
-| Judges a post-approval amendment | No; it records what it changed and why. | Yes — meaning or clarity; its act is a later adjudicator turn taken from the committed verdict, which re-attests a *meaning* row on a released rung only when the verdict blesses it; on a held rung the row goes to the owner. |
+| Judges a post-approval amendment | No; it records what it changed and why. | Yes — meaning or clarity; its act is a later adjudicator turn taken from the committed verdict, which re-attests a *meaning* row on a released rung only when the verdict blesses it; on a held rung the row goes to the operator. |
 | Where | Its own lane, beside other lanes. | In the authoring lane, where the act merges with that lane; or as a trunk-side adjudication lane, which runs alone. A verdict may be sat at any time; its act keeps landing order (WI-912). |
 
 **How it is held.** Three mechanisms, none of them a new detector:
@@ -502,7 +502,7 @@ driving it:
 2. That same merge MINTS a first-approval adjudication over the `Drafted` rows
    the lane handed over, on the rungs the dial releases — with each row's whole
    chain in its brief, asking one question: approve, or return with findings. A
-   rung the dial still holds is not minted; it surfaces to the owner as before.
+   rung the dial still holds is not minted; it surfaces to the operator as before.
    Those row ids are RECORDED ON THE MINTED ROW, and the brief — which re-derives
    its population live, because the row is claimed long after the merge — acts
    only on the intersection. Otherwise "the rows the lane handed over" is a
@@ -515,11 +515,11 @@ driving it:
    that claims it besides.
 
 **What this is not.** It is not a change to the dial or to which rungs are
-operator-held — a held rung still surfaces to the owner exactly as before, and the
-adjudicator acts only where the dial has released. The owner's approval brief
+operator-held — a held rung still surfaces to the operator exactly as before, and the
+adjudicator acts only where the dial has released. The operator's approval brief
 (`trace.py --approve modified`) still shows every owing chain: one whose every
 owing row sits on a released rung renders in full under "Waiting for automated
-adjudication", collapsed by default — in sight, apart from what the owner
+adjudication", collapsed by default — in sight, apart from what the operator
 signs. It is not a return of
 mechanical approval: no hook, step or helper writes a `Status` cell. The act is
 a *session's* reviewed commit, and what changed is which session may take it.
@@ -531,14 +531,14 @@ The three words are `--gate-policy` **presets**: each *translates* into the
 `final_review`) and is never stored. The dials are what the machinery reads.
 
 - **`attended`** *(default)* — an operator approves each gate (DevStg-Reqs/DevStg-Tests/DevStg-Impl/DevStg-Release)
-  and the owner's final read. The standard §4/§5 flow; nothing else here applies.
+  and the operator's final read. The standard §4/§5 flow; nothing else here applies.
 - **`single-approve`** — the driver advances through DevStg-Reqs+DevStg-Tests with LLM-gate review
   (below), **queuing every operator call** instead of pausing: each becomes a
   `Needs <operator>` Open-items bullet in `status.md` plus, where the driver had
   to proceed, a provisional decision. At the **approval point — fixed at
   DevStg-Tests close** — the operator reviews the accumulated list + gate evidence in one
   sitting and approves or amends (approved decisions move to `log.md`'s
-  Decisions log, §5); DevStg-Impl→DevStg-Release then run under `autonomous` rules. The owner's final read
+  Decisions log, §5); DevStg-Impl→DevStg-Release then run under `autonomous` rules. The final read
   stays the operator's. *Why DevStg-Tests close:* every requirement/design ambiguity is resolved
   exactly once, over cheap artifacts (registries and docs, not code), before
   the expensive autonomous implementation stretch. An adopting repo *may*
@@ -547,7 +547,7 @@ The three words are `--gate-policy` **presets**: each *translates* into the
   never a mid-run pause (the approver accepted bounded risk; momentum is the
   level's value): LOW → decide + record in the Decisions log; MEDIUM/HIGH →
   the Blocked register.
-- **`autonomous`** — every bar except the owner's final read closes on the LLM verdict;
+- **`autonomous`** — every bar except the operator's final read closes on the LLM verdict;
   mid-run operator escalation is replaced by the Blocked register, ask-the-operator
   by the Decisions log (HIGH revert-cost decisions get an independent
   peer-tier second opinion *before* execution), a person's `Vouch` by a delegated one.
@@ -622,7 +622,7 @@ finding names a concrete, falsifiable failure scenario (these inputs → this
 wrong behavior); its owner **confirms** it by reproducing that scenario — or
 **refutes** it — *before* changing code. A refutation is a legitimate
 outcome, recorded in the round record with its evidence: it counts against
-the reviewer's confirmed-finding rate, never against the owner's standing.
+the reviewer's confirmed-finding rate, never against the operator's standing.
 This is the reviewer's own skepticism pointed the other way — the reviewer
 re-runs the implementer's claims; the implementer re-derives the reviewer's.
 And a **re-review round verifies that the fixes landed — it does not hunt
@@ -639,7 +639,7 @@ case is what turns costly rework from a unilateral act into a decidable one.
 ### The Blocked register (replaces mid-run escalation)
 
 When a finding survives `MAX_ROUNDS`, a call is MEDIUM/HIGH revert-cost after
-approval, or a step is impossible without the owner (a purchase, an
+approval, or a step is impossible without the operator (a purchase, an
 account, a physical action): record it under **Blocked** in `status.md` —
 what, why, rounds spent, the driver's best-judgment recommendation — and
 **continue with independent work**. Every Blocked item surfaces prominently
@@ -652,7 +652,7 @@ Where the process says *ask / pause / solicit clarification*, an autonomous
 driver decides and appends to the `log.md` Decisions log (§5): what was
 chosen, why, the alternatives, `Revert cost: LOW|MEDIUM|HIGH`, `Model:`. A
 decision is never a license to expand scope — one that would contradict an
-approved owner decision is a Blocked item, not a new decision. Under a
+approved operator decision is a Blocked item, not a new decision. Under a
 recording `decision_recording` dial, a call the owner should see is disclosed
 in the run's "Delegated decisions record" as well.
 
@@ -881,7 +881,7 @@ its end is retired at the first keep call after it. The window is half-open
 `start == end` disables, and so does an empty value (disabled is
 byte-identical to before). The scaffold ships it **DISABLED but shaped** —
 `"12:00-12:00"` — so a fresh repo inherits nobody's hours while still seeing
-the format it edits (owner ruling 2026-08-11, replacing the shipped
+the format it edits (operator ruling 2026-08-11, replacing the shipped
 `12:00-19:00`: a populated dial an adopter does not notice costs seven hours a
 day of a loop that looks broken).
 
@@ -1267,9 +1267,9 @@ doesn't want the entry point deletes the launchers; the protocol stands alone.
 
 ## Delegated decisions record
 
-**Applies when** a run acts on the owner's behalf while the owner is away — the
+**Applies when** a run acts on the operator's behalf while the operator is away — the
 unattended loop's build and adjudication sessions, or a supervising session
-handed the owner's authority for a run. Governed by `docs/process.toml`
+handed the operator's authority for a run. Governed by `docs/process.toml`
 `[authority] decision_recording`: `"off"` (shipped), `"record"`, or
 `"escalate-first"`.
 
@@ -1278,18 +1278,18 @@ handed the owner's authority for a run. Governed by `docs/process.toml`
 in the format of `decisions.template.toml`: a top-level `high_risk` list naming
 the entries the owner should read first, then one `[decision.D-<n>]` table per
 call carrying `decided`, `alternative`, `reversal_cost`, `why_not_escalated`
-and `review = ""`. The owner rules **in place**: `owner = "confirmed"` or
-`"overruled"`; absent is not yet seen, listed on the owner surface's
+and `review = ""`. The operator rules **in place**: `operator = "confirmed"` or
+`"overruled"`; absent is not yet seen, listed on the operator surface's
 "Decisions to review". The fields are required because a prose list of calls
 loses them as soon as nothing reads them.
 
-**The record is not an exit.** It tells the owner about calls already made.
+**The record is not an exit.** It tells the operator about calls already made.
 Work still routes only through the process's exits — a successor work item, an
-open item the owner rules, a Blocked item — and a call that is the owner's to
+open item the operator rules, a Blocked item — and a call that is the operator's to
 make goes there, never only into the record.
 
 **Route on the action, never on confidence.** The initial table, which the
-owner may adjust:
+operator may adjust:
 
 | The action | Route |
 |---|---|
@@ -1302,7 +1302,7 @@ delegate less, ask more. **The confidence ratchet is one-way:** low confidence,
 or a reviewer's dissent, may promote a call (silent to recorded, recorded to an
 exit); high confidence or consensus never demotes one, because a model's
 self-assessment is too unreliable to route on. **The dial never moves the
-safety boundary:** it allocates the owner's reading, and the exits bind at
+safety boundary:** it allocates the operator's reading, and the exits bind at
 every setting, `off` included.
 
 **What the close enforces.** Under `record` or `escalate-first` the merge slot
@@ -1448,7 +1448,7 @@ files, `agent_route` family heterogeneity, budgets) — **no new engine**:
    self-preference bias): **provenance-anonymized, position-swapped** pairwise
    comparison — run the arbiter prompt twice with the plan order swapped; the
    verdicts must agree, disagreement is a position-bias page-the-operator —
-   against the rubric + the coverage report + the owner's original prompt,
+   against the rubric + the coverage report + the operator's original prompt,
    warned that **more WIs ≠ better** (verbosity bias). It selects **one** plan
    and **ports named loser-WIs** that close coverage gaps, each port a cited
    delta in the verdict file. Never a merge. (The S8 "no LLM-judge tiebreaker
@@ -1865,14 +1865,14 @@ cheap), and a query-time semantic index (§7 map-vs-index note) can help chase
 references across a large tree — but both are optional, downstream, and orthogonal
 to the promote rule.
 
-**The owner scratchpad is human scratch, not a working surface.** Bootstrap
-scaffolds a root `OWNER_SCRATCHPAD.md` — the operator's counterpart to the
+**The operator scratchpad is a person's scratch, not a working surface.** Bootstrap
+scaffolds a root `OPERATOR_SCRATCHPAD.md` — the operator's counterpart to the
 agent scratch above: free-form notes that may be old, contradictory, augmented, or
 half-formed. **LLM agents must not read, index, summarize, cite, or act on it**;
 its own loud header says so and is the primary defense (the meta repo's `CLAUDE.md`
 carries the same one-liner). Nothing there is a requirement, ruling, or working
 surface — those stay `docs/status.md`, the registries, and `docs/log.md`.
-`check_docs.py` exempts the file entirely (links, orphans, stale hints — owner
+`check_docs.py` exempts the file entirely (links, orphans, stale hints — operator
 notes never gate a commit); the always-on secrets floor still scans it, so it is
 not a secrets-safe zone. A repo that doesn't want it just deletes it.
 
@@ -1963,7 +1963,7 @@ independent tracks meet, which task is in flight, how far along the whole is. A
   ranking, and the acyclicity rule); a `~`-prefixed id (`~WI-013`) is a **soft**
   edge (advisory ordering — must resolve, never blocks, dashed in the render);
   and a bare `OI-###` is a **hard open-item** edge (OI-73) — the row waits until
-  that open item leaves `pending`, so an owner ruling gates it (an open item is
+  that open item leaves `pending`, so an operator ruling gates it (an open item is
   not a DAG node: no acyclicity, no ranking). The grammar widened tolerantly, so
   a bare WI id still means exactly what it always did;
 - it moves through a **lifecycle**: `draft → queued → active → done`; `draft`
@@ -2009,7 +2009,7 @@ way, so the declaration makes the reservation checked, not merely possible);
 `blocked` has
 no directory of its own — the `blockref` mechanism that once expressed it
 retired at WI-553/OI-70, and a stopped lane now closes PARTIAL, save a planned
-owner-held step (process.md §5, "Open items"); and `cancelled`
+operator-held step (process.md §5, "Open items"); and `cancelled`
 (WI-267, spelled `retired` until
 WI-384) is terminal — a deliberate won't-build, counted separately
 from `done`, never scheduled, its reason in the body. `partial` (SR-144) is the
@@ -2071,7 +2071,7 @@ becomes an **integrator-generated reference snapshot** — regenerated only on t
 integration branch after a successful integration and gated by generated
 freshness (like `PROJECT_STATE.html`), never written on a worker branch. It
 carries only: the derived gate/bar pointers; queued/deferred/blocked counts + a
-link to the WI dashboard; pending `Needs <operator>` items linked to the owner
+link to the WI dashboard; pending `Needs <operator>` items linked to the operator
 decision surface; the ready frontier; and
 project scope/constraints whose canonical homes are linked, not copied. The
 former **R-B/R-C** rules — every open WI repeated as a token in `status.md` —
@@ -2081,7 +2081,7 @@ forward-only (WI-200):** a `done` WI id lingering in `status.md` is a finding
 again — warn at commit, ERROR under `--strict` at DevStg-Tests+ — except inside a
 generated snapshot block, which cannot accrete prose.
 
-**The owner decision surface's depth + the status-surface lint.** The surface
+**The operator decision surface's depth + the status-surface lint.** The surface
 itself is **not a layer here** — registry and generated view are always-shipped
 process ([`process.md`](process.md) §5), scaffolded into every profile; what
 stays here is the depth. The Needs-\<operator> bullets in `status.md` stay
@@ -2168,7 +2168,7 @@ until a real recurring pattern earns it.
 
 **Phase cadence.** Any batch of spine-touching work headed for the same
 re-attestation should land as **one phase** — batch the changes so a **single
-owner sitting** covers each re-attestation, rather than paying for several
+operator sitting** covers each re-attestation, rather than paying for several
 (what is owed is the DIFFERENCE between the amended rows and their copies in
 `docs/archive/last_approved/` — process.md §7 — so the pending batch is tree
 state the sitting reads via `trace.py --approve modified`, never commit-message
@@ -2187,7 +2187,7 @@ guessed subset. A WI's phase is **derived** from the delivery `Phase` of the SRs
 it delivers (§4 "Phased delivery"), and the When-view dashboard tiers the WI DAG
 by **phase ⊃ workstream ⊃ work-item** — there is no separate grouping column.
 
-**Whole-registry contradiction audit (WI-206).** The per-commit reviewer sweep is change-scoped — it checks each new SN/SR/TC row against the whole registry as it lands (inductive pairwise coverage), but never re-audits **old-vs-old** drift between rows that both predate it. *Applies when* the registry is mature enough for that to bite (>= 2 closed phases or >= 30 SRs). *Occasion:* at **phase close** (with the gate checks) and **before the owner's final read**. *Execution:* one independent fresh-context session, redacted to the registries + `docs/rubrics/registry-contradiction-audit.md`, writing a recorded `docs/reviews/<phase-or-scope>-AUDIT.md` verdict (scope-named, not serial-numbered). *Disposition:* findings route as WIs through change-intake; the audit never edits the spine. Per-commit coverage stays the change-scoped reviewer sweep — unchanged.
+**Whole-registry contradiction audit (WI-206).** The per-commit reviewer sweep is change-scoped — it checks each new SN/SR/TC row against the whole registry as it lands (inductive pairwise coverage), but never re-audits **old-vs-old** drift between rows that both predate it. *Applies when* the registry is mature enough for that to bite (>= 2 closed phases or >= 30 SRs). *Occasion:* at **phase close** (with the gate checks) and **before the operator's final read**. *Execution:* one independent fresh-context session, redacted to the registries + `docs/rubrics/registry-contradiction-audit.md`, writing a recorded `docs/reviews/<phase-or-scope>-AUDIT.md` verdict (scope-named, not serial-numbered). *Disposition:* findings route as WIs through change-intake; the audit never edits the spine. Per-commit coverage stays the change-scoped reviewer sweep — unchanged.
 
 **Parallel test execution.** Running the suite across cores is a **`docs/stack.ini`
 concern**, not a process rule: append `-n auto` to `[product] test` and the harness,

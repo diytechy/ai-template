@@ -62,7 +62,7 @@
 # QUESTION put to each decomposition: no perspective becomes a stakeholder row.
 #
 # SAY WHERE A NEED CAME FROM. When a need is drawn from a longer document (an
-# owner's statement of design constraints, a needs catalog), point at it in
+# operator's statement of design constraints, a needs catalog), point at it in
 # `source`: a list of repository-relative `path#anchor` targets, each of which
 # must resolve to a file and one of its headings or ids. The need stays the
 # canonical obligation and the document its provenance, so the pointer lives in

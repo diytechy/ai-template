@@ -365,7 +365,7 @@ def test_an_empty_retired_cell_and_a_nested_sub_table_are_refused_by_the_carrier
 
 def test_channel_refuses_an_unknown_value_as_a_warn(scaffold):
     """Implements: TC-182"""
-    # The owner's ruled typing is a CLOSED vocabulary — `Channel` since OI-67,
+    # The operator's ruled typing is a CLOSED vocabulary — `Channel` since OI-67,
     # which subsumed `Signal`'s discrete/variable pair (`exit-code` and `env` are
     # the discrete kinds; the rest are unbounded). Written straight to TOML:
     # `_write_ifs` supplies `channel = "call"`, and the point here is a value the

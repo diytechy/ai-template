@@ -1,6 +1,6 @@
 # docs/decisions/<run>.toml — ONE delegated run's DECISIONS RECORD: the calls
-# the run made on the owner's behalf that deserve the owner's second look.
-# The doctrine (what to record, what goes to the owner instead, what an
+# the run made on the operator's behalf that deserve the operator's second look.
+# The doctrine (what to record, what goes to the operator instead, what an
 # overturned entry costs) is the process options' "Delegated decisions record"
 # layer; the `[authority] decision_recording` dial in docs/process.toml
 # decides whether a run owes one.
@@ -18,16 +18,16 @@
 #   decided            what was decided
 #   alternative        the option passed over
 #   reversal_cost      what undoing it would cost
-#   why_not_escalated  why it did not go to the owner through the exits
-#   review             EMPTY until the owner writes a note; an overrule
+#   why_not_escalated  why it did not go to the operator through the exits
+#   review             EMPTY until the operator writes a note; an overrule
 #                      states the direction instead here.
-# AND ONE KEY THE OWNER SETS (the writer never does):
-#   owner              absent until the owner has read the entry: the entry
+# AND ONE KEY THE OPERATOR SETS (the writer never does):
+#   operator           absent until the operator has read the entry: the entry
 #                      is NOT YET SEEN and is listed under "Decisions to
 #                      review" at the bottom of docs/open-items.html,
-#                      high-risk first. The owner then sets, in place,
-#                        owner = "confirmed"   the direction stands, or
-#                        owner = "overruled"   it does not; the `review` note
+#                      high-risk first. The operator then sets, in place,
+#                        operator = "confirmed"   the direction stands, or
+#                        operator = "overruled"   it does not; the `review` note
 #                                              says what instead, and the SAME
 #                                              commit files or amends a queued
 #                                              or active work item citing this
@@ -39,16 +39,16 @@
 #                      Any other value reads as not yet seen AND is a format
 #                      finding. The old `reviewed` key is retired: an entry
 #                      still carrying it reads as not yet seen, whatever
-#                      `owner` says; run scripts/migrate_decisions.py to
+#                      `operator` says; run scripts/migrate_decisions.py to
 #                      rewrite it.
 # An entry may carry further keys of the writer's own; they are not judged.
 
-# The entries the writer judges deserve the owner's eyes first; empty when none.
+# The entries the writer judges deserve the operator's eyes first; empty when none.
 high_risk = ["D-000"]
 
 [decision.D-000]
 decided = "What was decided, in one sentence a stranger can check against the diff."
-alternative = "The option passed over, stated so the owner could choose it instead."
+alternative = "The option passed over, stated so the operator could choose it instead."
 reversal_cost = "What undoing it would cost: a commit, an amendment and re-approval, a migration."
-why_not_escalated = "Why this was the run's call and not the owner's: the routing rule it fell under."
+why_not_escalated = "Why this was the run's call and not the operator's: the routing rule it fell under."
 review = ""

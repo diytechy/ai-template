@@ -100,7 +100,7 @@ def test_unknown_module_is_flagged(tmp_path):
 
 
 def test_node_id_file_half_is_judged_and_joined_lists_stay_out_of_scope(tmp_path):
-    # WI-394 (owner ruling R2 2026-08-01, option (c)) RE-SCOPED the A2-era `::`
+    # WI-394 (operator ruling R2 2026-08-01, option (c)) RE-SCOPED the A2-era `::`
     # guard this test used to pin: a pytest node id — the kit's sanctioned
     # Evidence form — is a real FILE plus a selector, so the FILE half is now
     # judged like any path. `;`/`,`-joined lists keep their exclusion

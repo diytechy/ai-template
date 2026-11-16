@@ -1,7 +1,7 @@
 """The authoring-time stage-decrease rule (`derive_stage.phase_rule_findings`).
 
 WI-498 slice 3, ruled plan `docs/plans/2026-08-21-stage-unification-plan.md` §4
-with the owner's answers §6.1 (phase stays DERIVED; the decrease rule is an
+with the operator's answers §6.1 (phase stays DERIVED; the decrease rule is an
 AUTHORING-TIME check, not a stored counter) and §6.2 (the exemption is EXACTLY
 the one permutation `DevStg-LLReqs -> DevStg-Arch`, the permitted decomposition
 cycle).
@@ -185,7 +185,7 @@ def test_an_ALREADY_OPEN_LOWER_phase_also_satisfies_the_rule(repo):
 
 # --- DIRECTION 3: the ONE exempt permutation passes with no phase tag ----------
 def test_the_LLREQS_to_ARCH_decrease_is_EXEMPT(repo):
-    """Owner answer §6.2: exactly the one permutation `LLReqs -> Arch`, the
+    """Operator answer §6.2: exactly the one permutation `LLReqs -> Arch`, the
     PERMITTED DECOMPOSITION CYCLE. Architecture rework surfaced by breaking a
     requirement down is within-phase churn; any deeply decomposed problem would
     otherwise run the phase counter up.

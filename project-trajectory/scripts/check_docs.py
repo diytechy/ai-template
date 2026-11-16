@@ -65,7 +65,7 @@ finding classes:
     disables S-1..S-3); (S-2) its Open-items marker must precede the `## Scope`
     heading (open items surface at the top); (S-3) with
     `docs/requirements/open-items.toml` present, every `OI-N` inside the
-    Needs-<operator> block has a PENDING row there (no undocumented owner ask) and
+    Needs-<operator> block has a PENDING row there (no undocumented operator ask) and
     every pending id appears in status.md (no orphan brief). S-3 **retires under
     a generated snapshot** (WI-202): once status.md carries the
     `<!-- BEGIN GENERATED STATUS -->` block, its open-items list is PROJECTED
@@ -75,7 +75,7 @@ finding classes:
     shape; a custom layout misses warnings, never false-fails. Vacuous when
     status.md (or, for S-3, the registry) is absent.
 
-The root `OWNER_SCRATCHPAD.md` is exempt from all of the above: it holds the
+The root `OPERATOR_SCRATCHPAD.md` is exempt from all of the above: it holds the
 operator's free-form private notes and is dropped from doc discovery entirely
 (agents must not read or act on it; its own header says so).
 
@@ -165,13 +165,13 @@ MD_SUFFIXES = (".md", ".markdown")
 # generated output (the gen_arch_map/gen_trajectory/check_doc_refs idiom); the
 # path constant matches gen_okf's own OUT_DIR.
 OKF_DIR = "docs/okf"
-# The root owner scratchpad: free-form notes the operator keeps, off-limits to
+# The root operator scratchpad: free-form notes the operator keeps, off-limits to
 # agents (its own loud header says so). Dropped from doc discovery entirely — its
-# links, orphanhood, and staleness never gate a commit (owner notes aren't a
+# links, orphanhood, and staleness never gate a commit (operator notes aren't a
 # working surface) — via the same "never lint this file" idiom as OKF_DIR. It
 # still resolves as a link *target* (the file is on disk) and the always-on
 # secrets floor still scans it.
-SCRATCHPAD = "OWNER_SCRATCHPAD.md"
+SCRATCHPAD = "OPERATOR_SCRATCHPAD.md"
 # The design-history archive: frozen context. Archived docs KEEP broken-link
 # validation (a dead link in the history still misleads a future reader, and the
 # archival flow re-bases links once at archive time), but are DROPPED from orphan
@@ -312,7 +312,7 @@ def collect_docs(root, docs_dir, ignore=()):
     The gen_okf.py bundle under `docs/okf/` is dropped unconditionally: it is a
     fully-generated tree whose freshness `gen_okf.py --check` owns, so the doc set
     never lints its own generated output (the gen_arch_map/gen_trajectory idiom).
-    The root `OWNER_SCRATCHPAD.md` is dropped the same way: free-form owner notes
+    The root `OPERATOR_SCRATCHPAD.md` is dropped the same way: free-form operator notes
     never gate (SCRATCHPAD).
 
     Paths matching an `ignore` glob (repo-relative POSIX) are dropped entirely —
@@ -333,7 +333,7 @@ def collect_docs(root, docs_dir, ignore=()):
         # Never lint generated output: gen_okf.py --check owns docs/okf/ freshness.
         if relpath == OKF_DIR or relpath.startswith(OKF_DIR + "/"):
             continue
-        # Owner-only free-form notes never gate: drop the scratchpad entirely.
+        # Operator-only free-form notes never gate: drop the scratchpad entirely.
         if relpath == SCRATCHPAD:
             continue
         # fnmatch, not Path.match: the house glob convention (see orphans-allow
@@ -851,7 +851,7 @@ def _oi_coherence_warns(open_items, text):
     list is PROJECTED from the registry by `gen_trajectory --status`, so the two
     surfaces cannot disagree — the `status-map` freshness gate is the invariant.
     The check stays live only for a hand-authored status.md, where the two lists
-    can drift. WI-322 moved briefs from markdown sections to ROWS (the owner
+    can drift. WI-322 moved briefs from markdown sections to ROWS (the operator
     reads the generated view), so the brief set is the registry's PENDING ids: a
     carrier read, no heading parse, and a ruled row is not a brief — its record
     is the log.
@@ -868,7 +868,7 @@ def _oi_coherence_warns(open_items, text):
     must never be the exit code."""
     if spine_carrier.resolve(open_items) is None:
         return [
-            "the open-items registry is absent — the owner decision surface is "
+            "the open-items registry is absent — the operator decision surface is "
             "always-shipped process (process.md §5), not an opt-in layer: "
             "scaffold {} (kit template registries/open-items.template.toml) and "
             "render it with gen_open_items.py, or every deferred decision has "

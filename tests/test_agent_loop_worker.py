@@ -804,14 +804,14 @@ def test_worker_endstate_dirty_tree_defers(tmp_path):
     assert al.worker_endstate(str(repo), worker, False, False, 1) is None
 
 
-def test_worker_endstate_owner_scratchpad_stays_done(tmp_path):
-    # WI-203: an owner-only-dirty tree (OWNER_SCRATCHPAD.md) is not interrupted
+def test_worker_endstate_operator_scratchpad_stays_done(tmp_path):
+    # WI-203: an operator-only-dirty tree (OPERATOR_SCRATCHPAD.md) is not interrupted
     # work — done detection must not read it as not-done (contrast the scratch.txt
     # case above, which still defers).
     al = load_script("agent_loop")
     repo, base, worker = _train_repo(tmp_path)
     _build_commit(repo, "WI-201", "t1", base)
-    (repo / "OWNER_SCRATCHPAD.md").write_text("owner notes", encoding="utf-8")
+    (repo / "OPERATOR_SCRATCHPAD.md").write_text("operator notes", encoding="utf-8")
     end = al.worker_endstate(str(repo), worker, False, False, 1)
     assert end is not None and end[0] == al.EXIT_DONE
 

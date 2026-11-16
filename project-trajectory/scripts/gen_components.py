@@ -21,7 +21,7 @@ flipping an approval routes around the very dial `operator_accepts_through`
 governs — so no maturity, standing or approval cell appears here, and nothing
 here may be cited as evidence that an operator blessed anything.
 
-WHAT IT DOES NOT SHOW, stated because the owner's own ruling states it: NOT
+WHAT IT DOES NOT SHOW, stated because the operator's own ruling states it: NOT
 INTERNALS. A requirement list says what a component is obliged to do and nothing
 about how its parts fit together. That is the ruled trade — the artifact that
 stays true beats the artifact that shows mechanism and drifts — and a reader who

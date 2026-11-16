@@ -284,7 +284,7 @@ def test_staged_spine_amend_with_a_status_move_is_silent(tmp_path):
 
 
 def test_staged_child_amend_needs_its_own_flip_not_the_parents(tmp_path):
-    # A row's Status answers for its OWN cells (owner ruling 2026-08-17m):
+    # A row's Status answers for its OWN cells (operator ruling 2026-08-17m):
     # amending an LLR and flipping the LLR ITSELF in the same commit is the
     # sanctioned path — no warn. Flipping the OWNING SR instead (the retired
     # chain reading's sanction) no longer silences the child: its text changed
@@ -373,7 +373,7 @@ def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
 
 # --- WI-572: the APPROVAL ACT half of the same walk ---------------------------
 #
-# Owner rulings 2026-09-01 and 6 (2026-10-07): the `Status` flip into
+# Operator rulings 2026-09-01 and 6 (2026-10-07): the `Status` flip into
 # `Approved`/`Founded` and the `docs/archive/last_approved/` copy that anchors it
 # are an independent adjudicator's (PROCESS.md §4); the authoring session writes
 # `Drafted` rows and amends text.
@@ -498,7 +498,7 @@ def test_the_lane_refusal_names_every_act_and_the_snapshot_write(tmp_path):
         "wrote docs/archive/last_approved/docs/requirements/system-requirements.csv"
         in refusal
     )
-    # The rule it names is owner ruling 6 (2026-10-07, WI-849).
+    # The rule it names is operator ruling 6 (2026-10-07, WI-849).
     assert "The act is an independent adjudicator's" in refusal
     assert "Leave the rows `Drafted`" in refusal  # the remedy, not just the verdict
     # The green half of the same fixture: the AUTHORING commit is admitted.
@@ -507,7 +507,7 @@ def test_the_lane_refusal_names_every_act_and_the_snapshot_write(tmp_path):
 
 # --- WI-380: the §A5.1 approved-vs-traced cell split ---------------------------
 #
-# Owner ruling 2026-07-31 (docs/concurrency-v2.md §A5.1): only what is APPROVED
+# Operator ruling 2026-07-31 (docs/concurrency-v2.md §A5.1): only what is APPROVED
 # arms the re-attest warn. Traceability is TRACED, and a traced-only edit must
 # stay silent — WI-280 paid four review rounds and a DevStg-Impl->DevStg-Tests gate drop for 19
 # `Module` pointers that followed moved code and altered no requirement.
@@ -1268,7 +1268,7 @@ def test_backlog_staleness_off_git_is_silent(tmp_path):
 
 
 def test_backlog_staleness_deferred_is_exempt(tmp_path):
-    # A deferred WI citing an amended SR is EXEMPT (it re-enters via an owner
+    # A deferred WI citing an amended SR is EXEMPT (it re-enters via an operator
     # un-defer, itself the driven look) -> no warn.
     _init_amended_sr_repo(tmp_path, status="deferred")
     proc = run_traj(tmp_path)
@@ -1376,7 +1376,7 @@ def test_critique_staleness_vacuous_without_a_critique_sr(tmp_path):
 
 
 def test_critique_staleness_fails_closed_under_strict(tmp_path):
-    # FAIL-CLOSED (WI-243, owner 2026-07-20): under --strict (the DevStg-Impl gate) a stale
+    # FAIL-CLOSED (WI-243, operator 2026-07-20): under --strict (the DevStg-Impl gate) a stale
     # render surface is an ERROR (exit 1), not just a warn — it cannot reach green.
     _init_critique_staleness_repo(tmp_path)
     proc = run_traj(tmp_path, "--strict")

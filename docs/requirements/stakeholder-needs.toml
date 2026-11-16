@@ -35,7 +35,7 @@
 #                           commit is the sign-off and its date is the
 #                           approval date.
 #                 Modified  approved text that has since been amended and is
-#                           not re-signed — the owner re-attests it.
+#                           not re-signed — the operator re-attests it.
 #                           Transitional: it retires once approved text is
 #                           snapshotted and a diff answers the same question.
 #
@@ -238,7 +238,7 @@ acceptance = """A plain launch derives what to do next from the tracked WI DAG p
 status = "Approved"
 stakeholder_refs = ["STK-01"]
 tags = ["unattended", "loop", "legal", "personal-data"]
-need ="""The repo owner can configure **several LLM families** — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured."""
+need ="""The operator can configure **several LLM families** — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured."""
 why = """One family is a single point of both failure and bias: an outage, a retired model or an expired auth stalls the whole loop, and a reviewer drawn from the implementer's own family shares its blind spots — so a same-family review reads like corroboration while adding little. Declaring the families and levels in a registry, rather than hard-coding one vendor, is also what keeps the kit vendor-neutral as models turn over."""
 priority = "S"
 acceptance = """A declared agent roster carries (family × model × tier) pair-rows and a separate consent surface, whose presence turns managed selection on. The coordinator resolves a row per in-process phase and tier, prefers a cross-family draw for the reviewer, critic and planner-pair sessions, degrades to the *documented* same-family mode when only one family is routable rather than silently skipping the second opinion, and logs every selection before launch — never a silent model swap."""
@@ -259,8 +259,8 @@ acceptance = """A launch with independent ready WIs runs up to the configured wo
 status = "Approved"
 stakeholder_refs = ["STK-01"]
 tags = ["shell"]
-need ="""The repo owner can find and change every policy dial in **one home** — a **single hand-edited, machine-read file** — and a repo that declares the same dial twice is REFUSED rather than resolved by precedence."""
-why = """The dials had accreted into ~10 one-word files under `docs/`, an idiom that was never ruled. Scattering costs an owner one file per question and a reader five ad-hoc parsers; worse, two sources for one dial can give enforcers different policy values, and a precedence rule makes that disagreement invisible instead of loud."""
+need ="""The operator can find and change every policy dial in **one home** — a **single hand-edited, machine-read file** — and a repo that declares the same dial twice is REFUSED rather than resolved by precedence."""
+why = """The dials had accreted into ~10 one-word files under `docs/`, an idiom that was never ruled. Scattering costs an operator one file per question and a reader five ad-hoc parsers; worse, two sources for one dial can give enforcers different policy values, and a precedence rule makes that disagreement invisible instead of loud."""
 priority = "S"
 acceptance = """A single declared process-dial file holds every process dial. Every reader obtains its policy answer from the file's TOML parse. A legacy one-word file still present alongside its key is a REFUSAL naming both, and a declared migration action — run by bootstrap and by the documented re-sync — converts and deletes each legacy file it can confirm in the policy declaration and, when it cannot write one, leaves it intact with a named refusal and hand-edit path so an adopter never meets that refusal unaided. A wrong-typed or out-of-range dial is refused, never defaulted."""
 
@@ -269,7 +269,7 @@ status = "Approved"
 stakeholder_refs = ["STK-01"]
 tags = ["unattended", "loop"]
 need ="""**An autonomous run gets as far as it honestly can.** Once triggered, the coordinator stops for an operator judgement only when the declared approval level reserves that tier for an operator, when a round cannot converge on its own, or when requirement/test documentation is introduced or amended such that the gate drops below what automation is permitted to attest. On every tier released to automation, an approval still happens as a review from a declared perspective against the row's actual evidence, and leaves a record naming who or what approved it — releasing a tier means the review is delegated, never skipped."""
-why = """The unattended layer only pays for itself if a walk-away run actually walks away — so what stops it must be exactly the set of judgements the owner reserved, and nothing else. A three-value gate-authority enum (`attended` / `single-approve` / `autonomous`) cannot express "TCs are operator-held but LLRs are not", the distinction an owner actually wants to dial, and leaves each consuming table free to re-interpret the same word with its own fail-safe direction. Answering "has this been approved?" by walking git for the newest commit where a row reads `Verified` is sound only while every amendment flips its row in the same commit — precisely the sanctioned path an amendment detector ignores — so the blessed way to amend an attested requirement is invisible to every consumer, and a stakeholder need has no anchor at all (an SN has no Status cell)."""
+why = """The unattended layer only pays for itself if a walk-away run actually walks away — so what stops it must be exactly the set of judgements the operator reserved, and nothing else. A three-value gate-authority enum (`attended` / `single-approve` / `autonomous`) cannot express "TCs are operator-held but LLRs are not", the distinction an operator actually wants to dial, and leaves each consuming table free to re-interpret the same word with its own fail-safe direction. Answering "has this been approved?" by walking git for the newest commit where a row reads `Verified` is sound only while every amendment flips its row in the same commit — precisely the sanctioned path an amendment detector ignores — so the blessed way to amend an attested requirement is invisible to every consumer, and a stakeholder need has no anchor at all (an SN has no Status cell)."""
 priority = "S"
 acceptance = """A cumulative level names the highest tier an operator still approves, compared against a separately derived SPINE STAGE (which tier is in process) via a declared, auditable mapping. Every failure direction — an unreadable stage, an out-of-range level, a wrong-typed dial — resolves toward MORE operator involvement, because the failure that matters is a machine approving something an operator meant to hold. Each acceptance is anchored ON THE ACCEPTED ARTIFACT'S OWN ROW — the commit whose tree carries the accepted text, plus a digest of that row's normative cells — never in a second registry keyed on the same artifact. Text that has moved away from what was accepted surfaces regardless of any Status movement, the one signal the sanctioned amend-and-flip path would otherwise hide, so an AMENDED requirement drops the derived stage exactly as a newly introduced one does. Each automated approval on a released tier appends a durable record (row, transition, acting reviewer, commit) distinguishable from an operator approval by query."""
 
@@ -355,7 +355,7 @@ status = "Approved"
 stakeholder_refs = ["STK-01"]
 source = ["README.md#objective-o3"]
 priority = "M"
-need = """**Scope: template (adopters + this repo).** The owner can rely on every required behavior being checked by tests written from its requirement before the behavior was built, rather than by tests written afterwards to fit what was built."""
+need = """**Scope: template (adopters + this repo).** The operator can rely on every required behavior being checked by tests written from its requirement before the behavior was built, rather than by tests written afterwards to fit what was built."""
 why = """Tests written after the code tend to describe what the code does instead of what was required, so a passing run stops being evidence that the requirement is met, and the approval gates stop meaning what the vision promises."""
 acceptance = """Each requirement's test cases are defined and approved before its implementation is accepted, and the project record shows that order for every requirement approved after the project adopts this rule; an implementation accepted ahead of its test cases is reported."""
 
@@ -386,7 +386,7 @@ acceptance = """Each need names the declared stakeholder or stakeholders whose o
 # `hats.toml` owns a QUESTION, and no perspective becomes a stakeholder row.
 
 [stakeholder.STK-01]
-name = "Owner"
+name = "Operator"
 description = """Holds approval authority over the repository, sets its policy and design constraints, and runs it unattended where that is enabled."""
 party = "EXT-006"
 status = "Approved"

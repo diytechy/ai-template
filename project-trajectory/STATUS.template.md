@@ -6,7 +6,7 @@ every section short and current; history — sign-offs, verdicts, approved
 decisions, session notes — appends to the log this header points at, never here.
 
 - **History:** [log.md](log.md) _(append-only; see process.md §5)_
-- **Owner decision surface:** [requirements/open-items.toml](requirements/open-items.toml)
+- **Operator decision surface:** [requirements/open-items.toml](requirements/open-items.toml)
   _(rendered to `docs/open-items.html` by `scripts/gen_open_items.py` — one row per
   pending Needs-\<operator> item, with blast radius, options and recommendation,
   plus the before/after of every spine row owing an approval or re-attest. The

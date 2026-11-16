@@ -1,4 +1,4 @@
-# Open items (OI-###) — the owner DECISION registry, TOML carrier.
+# Open items (OI-###) — the operator DECISION registry, TOML carrier.
 #
 # ONE TABLE PER ROW, id-keyed with the prefix retained and the key BARE:
 # `[open_item.OI-1]`. An EMPTY CELL IS AN ABSENT KEY — omit a key rather than
@@ -13,7 +13,7 @@
 #
 # `status` leaves `pending` when the ruling lands in docs/log.md's Decisions
 # log; `scripts/gen_open_items.py` renders every pending row a queued or
-# claimed work item cites into the generated docs/open-items.html the owner
+# claimed work item cites into the generated docs/open-items.html the operator
 # actually reads.
 #
 # WORK ITEMS POINT TO OPEN ITEMS, NEVER THE REVERSE. What an item is, and when
@@ -25,7 +25,7 @@
 # it. New rows carry none.
 #
 # FILE EVERY OPEN ITEM WITH ITS PLACEHOLDER. A pending item no queued or claimed
-# work item cites never reaches the owner's queue, so the checker reports it as
+# work item cites never reaches the operator's queue, so the checker reports it as
 # an error. A claimed row citing the item, for a step its Done-when names, needs
 # no placeholder beside it; any other item gets a queued one.
 # The placeholder may hold nothing but its item: a `title`, a `safety_class`,
@@ -72,7 +72,7 @@
 # re-read a cell to find the question is being taxed for the author's
 # convenience.
 [open_item.OI-000]
-title = "Example row - the shape of an owner decision brief"
+title = "Example row - the shape of an operator decision brief"
 status = "pending"
 raised = "2026-01-01"
 one_line = """ONE sentence the status surface projects: what is being decided, the recommended option, and the deciding reason - no history, no measurements"""

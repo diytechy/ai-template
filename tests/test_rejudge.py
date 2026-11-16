@@ -661,7 +661,7 @@ def test_the_release_subcommand_mints_for_an_expired_result_once(tmp_path, capsy
         record(root, tc, observed=observed, expires=expires, inputs=inputs.get(tc))
     _commit(root, "judged")
     # An unrelated uncommitted edit in the checkout, outside the mint's scope.
-    _write(root, "seed.txt", "the owner's uncommitted edit\n")
+    _write(root, "seed.txt", "the operator's uncommitted edit\n")
     code = intake.main(["--root", str(root), "rejudge", "--checkpoint", "release"])
     assert code == 0, capsys.readouterr()
     minted = _queued_rejudges(root)
@@ -669,7 +669,7 @@ def test_the_release_subcommand_mints_for_an_expired_result_once(tmp_path, capsy
     assert minted[0]["SafetyClass"] == "adjudication"
     # The mint is a trunk commit, and it did not sweep in or discard the edit.
     assert (root / "seed.txt").read_text(encoding="utf-8") == (
-        "the owner's uncommitted edit\n"
+        "the operator's uncommitted edit\n"
     )
     assert "seed.txt" in _git(root, "status", "--porcelain")
     assert "seed.txt" not in _git(root, "show", "--name-only", "--format=", "HEAD")
@@ -907,7 +907,7 @@ def test_the_release_mint_runs_the_mint_checks(tmp_path, monkeypatch):
 
 def test_a_pre_staged_unrelated_edit_survives_the_release_mint(tmp_path, capsys):
     root, _ = judged_repo(tmp_path, expired=("TC-003",))
-    _write(root, "seed.txt", "the owner's STAGED edit\n")
+    _write(root, "seed.txt", "the operator's STAGED edit\n")
     _git(root, "add", "seed.txt")
     _write(root, "src/c.txt", "an unstaged edit to an input\n")
     index = _git(root, "diff", "--cached", "--binary", "HEAD", "--", "seed.txt")

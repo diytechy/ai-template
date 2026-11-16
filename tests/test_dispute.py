@@ -1,6 +1,6 @@
 """A contested or repeated review finding, ruled by the adjudicator (WI-865).
 
-The owner's ruling of 2026-10-08 (docs/log.d/2026-10-08-owner-ruling-review-
+The operator's ruling of 2026-10-08 (docs/log.d/2026-10-08-owner-ruling-review-
 threat-model.md, rule 2): the adjudicator, not the coordinator, makes the call
 on a finding the builder or coordinator contests, or one that keeps coming
 back. The `dispute` brief class carries each finding as the reviewer wrote
@@ -285,7 +285,7 @@ def test_a_malformed_or_incomplete_verdict_is_refused(tmp_path, text, needle):
 
 def test_a_successor_ruling_is_accepted_and_parsed(tmp_path):
     """WI-911: the sitting may rule a finding SUCCESSOR, a row of its own filed
-    on trunk at the landing (the owner's ruling of 2026-10-14, in session).
+    on trunk at the landing (the operator's ruling of 2026-10-14, in session).
 
     Implements: TC-334
     """

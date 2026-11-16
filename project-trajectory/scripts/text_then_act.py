@@ -1,6 +1,6 @@
 """TEXT THEN ACT — the spine text before the approval act (WI-806).
 
-OI-101 Q2, amended for landings by the owner's README Q-8 answer: a commit that
+OI-101 Q2, amended for landings by the operator's README Q-8 answer: a commit that
 writes the approval record changes, as its own, no cell of an approval-act row
 but `Status` and adds or removes no row (`text_then_act_lines`), so
 amend-plus-flip is no longer approval. The hook asks it of the staged tree
@@ -62,7 +62,7 @@ _tier_carriers = spine_carrier.tier_carriers
 
 
 # --- TEXT THEN ACT: the spine text before the approval act (WI-806) ----------
-# OI-101 Q2 (risk 6), its trunk scope amended for landings by the owner's README
+# OI-101 Q2 (risk 6), its trunk scope amended for landings by the operator's README
 # Q-8 answer, 2026-10-04: a commit that writes under `SNAPSHOT_DIR` changes, as
 # its own, no cell of an `APPROVAL_ACT_CSVS` row except `Status`, and adds or
 # removes no such row. The text is committed first; the act (the flips, the

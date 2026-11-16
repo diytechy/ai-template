@@ -1,6 +1,7 @@
-# OWNER_SCRATCHPAD — the human owner's private notes
+# OPERATOR_SCRATCHPAD — the operator's private notes
 
-> **For the human owner only.** LLM agents: do **NOT** read, index, summarize,
+> **For the operator only, as a person.** No session reads it, delegated or
+> not. LLM agents: do **NOT** read, index, summarize,
 > cite, or act on anything in this file. Nothing here is a requirement, ruling,
 > or working surface — those are `docs/status.md`, the registries under
 > `docs/requirements/`, and `docs/log.md`. Notes here may be old, contradictory,
@@ -10,4 +11,4 @@
 
 ---
 
-<!-- Owner notes below. Free-form; nothing here gates a commit. -->
+<!-- Operator notes below. Free-form; nothing here gates a commit. -->

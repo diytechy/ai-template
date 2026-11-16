@@ -84,7 +84,7 @@ as it then read.
 independent purposes of SR-184/SR-185/SR-186 and their direct Inspection cases,
 read the stopping reason, and rejected the paraphrasing child. The procedure
 then required a machine-produced SR-161 perspective record that did not exist,
-as LLR-183 then stated. The owner ruling of 2026-09-06, re-affirmed on
+as LLR-183 then stated. The operator ruling of 2026-09-06, re-affirmed on
 2026-10-13 (`docs/log.d/2026-10-25-wi976-sn036-ruling.md`), replaced that
 obligation with the existing hat-by-hat review path, and LLR-183 was amended
 accordingly. The earlier result remains incomplete for the procedure it
@@ -198,5 +198,5 @@ inspector must identify the exact versions it reads.
 
 The historical incomplete result records what that earlier inspection examined.
 A later TC-211 execution inspects the actual completed review record and records
-its own reviewer, date, subject and findings; the owner ruling itself supplies
+its own reviewer, date, subject and findings; the operator ruling itself supplies
 no Inspection result.

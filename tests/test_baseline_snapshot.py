@@ -1,4 +1,4 @@
-"""baseline_snapshot.py — the `last_approved` snapshot (owner directive
+"""baseline_snapshot.py — the `last_approved` snapshot (operator directive
 2026-08-15; docs/plans/2026-08-15-baseline-snapshot-design.md).
 
 The mechanism replaces a DERIVED baseline (a git walk for the newest commit at
@@ -151,7 +151,7 @@ def test_the_shipped_README_describes_the_writer_that_exists():
 
 def test_copy_live_REFUSES_to_create_the_snapshot_without_seed(tmp_path):
     # The first snapshot blesses whatever text it copies, so it must ride the
-    # owner's reviewed signing commit and nothing else. Refusal, not creation.
+    # operator's reviewed signing commit and nothing else. Refusal, not creation.
     root = _tree(tmp_path)
     try:
         SNAP.copy_live(root)
@@ -615,7 +615,7 @@ def test_a_RESEED_over_a_standing_record_is_judged_over_the_WHOLE_tree(tmp_path)
 
 
 def test_the_SEED_still_copies_the_WHOLE_tree(tmp_path):
-    """The seed is unchanged: it blesses the whole tree once, on the owner's
+    """The seed is unchanged: it blesses the whole tree once, on the operator's
     signing commit. Scope is a REFRESH-time property; the first copy is total."""
     root = _tree(tmp_path)
     SNAP.copy_live(root, seed=True)
@@ -990,7 +990,7 @@ def test_seed_is_unreachable_from_every_loop_module_and_hook():
                 offenders.append("{}: {}".format(path.name, token))
     assert not offenders, (
         "the snapshot SEED is reachable from an unattended path — the first "
-        "snapshot must be the owner's deliberate act: " + ", ".join(offenders)
+        "snapshot must be the operator's deliberate act: " + ", ".join(offenders)
     )
     # The pin is only worth having if the token really is the reachable one.
     assert "--seed" in (SCRIPTS / "intake.py").read_text(encoding="utf-8")
@@ -1054,7 +1054,7 @@ def _approved_offspine(tmp_path, rel, id_col, cell, live_value):
     still carries a non-claiming row to flip: when this fixture was written
     every shipped IF and CMP row read `Drafted`, so a fixture that approved
     nothing would have asserted against a predicate that is False for the
-    honest reason. The owner approved all four CMP rows on 2026-08-22, so for
+    honest reason. The operator approved all four CMP rows on 2026-08-22, so for
     CMP the live registry ALREADY carries claiming rows and there is nothing
     to flip — the closing `assert claiming` keeps the anti-vacuity teeth
     either way."""

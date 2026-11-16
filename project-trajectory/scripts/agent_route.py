@@ -136,7 +136,7 @@ TIER_ORDER = ("quick", "medium", "strong")
 
 def normalize_tier(tier):
     """Lowercase + the legacy alias: `weak` — the pre-rename bottom tier — reads
-    as `quick` (owner rename 2026-07-12), so an existing registry or tier-map
+    as `quick` (operator rename 2026-07-12), so an existing registry or tier-map
     value stays valid (the Provider->Family never-breaking precedent)."""
     t = (tier or "").strip().lower()
     return "quick" if t == "weak" else t
@@ -1402,7 +1402,7 @@ def failure_action(operator_held, keep_nondependent=False):
         # independent — that is the entire reason the enum's three words became
         # two dials — so a loop-held tier that was told to drain must drain.
         # Hardcoding it here made the returned dict, documented as "what the
-        # coordinator enacts and logs", report the opposite of the owner's
+        # coordinator enacts and logs", report the opposite of the operator's
         # explicit setting.
         "keep_nondependent": bool(keep_nondependent),
         "design_check": True,

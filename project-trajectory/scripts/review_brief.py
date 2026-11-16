@@ -380,7 +380,7 @@ def round_facts(rnd, spec, verdict, scripts):
         "",
         "ROUND FACTS (stated by the attended launcher that rendered this brief):",
         "- Work item {}, spec `{}`. Read it in full, with its `specref` target "
-        "and any owner ruling or adjudicator draft it quotes.".format(rnd.wi, spec),
+        "and any operator ruling or adjudicator draft it quotes.".format(rnd.wi, spec),
         "- Lane `{}`, this worktree; the reviewed commit is `{}`.".format(
             rnd.lane, rnd.sha
         ),
@@ -559,7 +559,7 @@ _PLAN_INPUTS = ("srs", "tcs", "interfaces", "components", "flows")
 # What the scope critic reads beside the spec for the coverage, delta and
 # dependency anchors (WI-911; review-churn plan item 12, revision 20).
 _CRITIQUE_INPUTS = ("components", "interfaces", "derived", "flows", "dependencies")
-# The second critique's stance (owner, 2026-10-14): it judges the revised plan
+# The second critique's stance (operator, 2026-10-14): it judges the revised plan
 # as it stands and never sees the first critique.
 _CONVERGENCE = (
     "- This is the SECOND and last critique of this plan, after its one "
@@ -746,7 +746,7 @@ def _critique_round_to_open(root, wi):
     if n > plan_pass.MAX_CRITIQUES:
         raise BriefError(
             "{} already has its {} critiques: the cap goes to a dispute sitting "
-            "or the owner".format(wi, plan_pass.MAX_CRITIQUES)
+            "or the operator".format(wi, plan_pass.MAX_CRITIQUES)
         )
     return n
 

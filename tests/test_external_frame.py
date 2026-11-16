@@ -139,9 +139,9 @@ def test_every_frame_row_carries_the_approval_element():
 
 def test_the_live_frame_approval_state_is_pinned():
     """The flip authority, asserted rather than asked for: a `status` cell here
-    is the OWNER's to flip in a reviewed commit, and nothing the kit builds may
+    is the OPERATOR's to flip in a reviewed commit, and nothing the kit builds may
     set one. The pre-sign form of this test pinned {"Drafted"} and fired — as
-    designed — at the 2026-08-20 sitting-3 approval, where the owner
+    designed — at the 2026-08-20 sitting-3 approval, where the operator
     approved the locked frame in writing (log Decisions 2026-08-20a); this
     edit IS that approval's sanctioned update. The tripwire now points the
     other way: the frame is uniformly Approved, and any row leaving that state

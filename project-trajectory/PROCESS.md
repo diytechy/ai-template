@@ -26,7 +26,7 @@ notes — are summarized here with an **applies-when** and expanded in
 
 **Minimum profile — a standalone one-module project needs exactly:** the five
 spine hats (§1), the id scheme (§2), the §3 traceability/anti-duplication
-discipline, the bars **DevStg-Reqs→DevStg-Tests→DevStg-Impl** + the owner's final read (§4), the verdict protocol (§5),
+discipline, the bars **DevStg-Reqs→DevStg-Tests→DevStg-Impl** + the operator's final read (§4), the verdict protocol (§5),
 review triage (§6), and the harness (§7). Everything else is opt-in: skip §8,
 §9, §10, the `Phase`/`Lifecycle` tags, and every "optional" tripwire until the
 scope forces it. (Skipping the `Lifecycle` *tag* doesn't skip DevStg-Reqs's per-phase
@@ -74,7 +74,7 @@ cross-module budgets (`performance-budgets.csv`, §9) — are declared in the
 shipped **hats roster** (`requirements/hats.toml`): one `[hat.NAME]` per
 perspective carrying `applies_when` (a closed, evaluable condition), `asks`
 (the question put to the decomposition) and `listens_for` (the failure class
-it catches — a hat naming no failure is ceremony). The roster is **owner
+it catches — a hat naming no failure is ceremony). The roster is **operator
 text**, tailored with the frame at `DevStg-Boundary`; `scripts/hats.py` reads
 it and the planning briefs and a decomposition round's sitting brief put
 each applicable hat's question to the decomposition, and the sitting's
@@ -224,7 +224,7 @@ Stable, zero-padded, never reused.
 - **Record a decision where it is made.** A decision a later step depends on
   is recorded by the step that makes it, in the commit where it is made, and
   checked against that commit's parent. A later reader trusts the record and
-  never recomputes the decision from history or from current state (owner
+  never recomputes the decision from history or from current state (operator
   ruling 2026-10-11).
 - **A structural move is its own commit.** A behaviour-preserving move
   (a rename, an extraction, a file split) lands in a commit that changes no
@@ -466,11 +466,11 @@ authored the rows, taken in the authoring lane or on trunk** (a lane authors
 verdict judging that act's own rows backs — [process-options.md "Who performs the
 approval act"](process-options.md#who-performs-the-approval-act)); a lane's
 edit to its own Done-when holds its next build and its close (never the edit
-or the tests) until an adjudicator's verdict or the owner's ruling binds that
+or the tests) until an adjudicator's verdict or the operator's ruling binds that
 exact text; no un-run
 greens; the
 harness is still the bar (LLM judgment never waives a red check); approved
-owner decisions are never re-decided by an agent. A coordinator can loop fresh
+operator decisions are never re-decided by an agent. A coordinator can loop fresh
 driver sessions under any level, stopping where the level requires an operator —
 the stop banner + typed exit codes:
 [process-options.md "Unattended operation"](process-options.md#unattended-operation-walk-away-runs).
@@ -507,7 +507,7 @@ authorises. **Text first, the act second:** a commit writing the record
 changes no spine cell but `Status` and adds or removes no row (hook- and
 merge-slot-enforced; a lane's squash landing is exempt); amend-plus-flip is
 not approval. A row's `Status` answers for its **own cells** — a child
-(LLR/TC) amendment never touches its parent SR (owner ruling 2026-08-17). A
+(LLR/TC) amendment never touches its parent SR (operator ruling 2026-08-17). A
 child change surfaces through the snapshot-drift arm; chain-completeness is the
 derived `Founded` state's claim (D-9), never the signature's. **Sequence requirement-text work *into* an open window, not after it:**
 a prose standard, a registry schema change or a cleanup lands while the sitting
@@ -570,7 +570,7 @@ a reviewed Status-change commit — and an event is recorded where events are (t
 phase anchors, §5), not as a second value beside the state. There is no separate
 "bar" axis and no second spelling: a certified rung boundary is **a rung that a
 named operator signs off**, and the **three signed boundaries are a strict subset of
-the eight rungs**. (Owner rulings 2026-08-18 and OI-51. Three vocabularies have
+the eight rungs**. (Operator rulings 2026-08-18 and OI-51. Three vocabularies have
 now failed here, each the same way — by carrying two questions on one token. The
 `G*` tags had one axis saying both "already met" and "to pass next"; the  <!-- check_vocab: allow -->
 `DevBar-` prefix split the spelling instead of the question; and the derived  <!-- check_vocab: allow -->
@@ -671,17 +671,17 @@ above `DevStg-Needs` and `DevStg-Arch` immediately above `DevStg-Reqs`, so each
 is held whenever the rung below it is — the direction that errs toward *more*
 operator involvement — and now by the ORDER rather than by a hand-written pairing.
 
-**A held rung's approval is the owner's act**, taken by the owner or by an
-attended session on the owner's explicit delegation, the delegation and its
+**A held rung's approval is the operator's act**, taken by the operator or by an
+attended session on the operator's explicit delegation, the delegation and its
 scope recorded in the approving commit or its log entry. A mechanically
 triggered session (the unattended loop, a launcher-spawned worker) never
 approves on a held rung; that is what the hold is for. One stated case: an
 independent adjudicator session may **re-attest** an amended row it rules
-CLARITY — that approves no new text, it records that the owner's signature
+CLARITY — that approves no new text, it records that the operator's signature
 still describes the row — bound to the text it judged: the verdict's binding
 records it, and an edit after the verdict refuses the act. The act names its
 verdict (`--verdict`) for audit. A MEANING row and a first draft stay the
-owner's, and neither holds a lane (§5, "Open items"). MECHANICAL: the merge slot judges every lane commit against trunk's
+operator's, and neither holds a lane (§5, "Open items"). MECHANICAL: the merge slot judges every lane commit against trunk's
 dial, so a held row's approval lands from a lane only as such a bound
 re-attestation (`scripts/held_status.py`), and `check.py`'s `held-status` step
 judges a squash landing by its lane commits. A loop-started commit must carry
@@ -689,7 +689,7 @@ its `Loop-Session` trailer (`scripts/kitlib/provenance.py`); outside a lane
 the `held-status` step and each loop writer refuse a held status move or
 approval claim it makes, and `check_trajectory.py` reports one that lands.
 REVIEW-ENFORCED: the delegation record, and an unmarked plain trunk commit,
-which nothing judges: the risk the owner accepts by delegating.
+which nothing judges: the risk the operator accepts by delegating.
 
 **Keep or mint, when a row's meaning changes.** A changed requirement leans
 toward a new id. It keeps its id only when the id's spirit is retained and
@@ -926,9 +926,9 @@ A retired spine row is deleted and leaves one record, `docs/log.d/retired/<ID>.m
 are for **lookup, not browsing**: read the record of a spent id you meet; never
 survey the set.
 
-**Open items — the owner decision surface, always shipped.** An open item is
-anything keeping a row from building forward: an owner decision, an owner act,
-an approval or signature, a credential, the owner's presence. It is a **row** in
+**Open items — the operator decision surface, always shipped.** An open item is
+anything keeping a row from building forward: an operator decision, an operator act,
+an approval or signature, a credential, the operator's presence. It is a **row** in
 `docs/requirements/open-items.toml`, rendered by
 `gen_open_items.py` into `docs/open-items.html`; status.md's `Needs <operator>`
 bullets stay one-liners pointing at it. It is filed as a pending row the held
@@ -936,11 +936,11 @@ work item's `needs` cites in the same commit, and that work item reads
 `blocked`; every pending item is filed with the queued or claimed row citing
 it, and ruling it updates that row in the same commit
 (IF-073 in the registry's header, IF-054 in `docs/work/README.md`). A routine
-push files no item, and an act's item closes by the owner's ruling or a
-delegated decision. A lane keeps its claim at a planned owner-held step, one its
+push files no item, and an act's item closes by the operator's ruling or a
+delegated decision. A lane keeps its claim at a planned operator-held step, one its
 claim copy's Done-when names, only while the item is filed and cited on trunk;
 the item goes on the claim copy when the lane reaches the step, since a row
-citing a pending item cannot be claimed. Otherwise, or on an owner answer that
+citing a pending item cannot be claimed. Otherwise, or on an operator answer that
 re-scopes the row, the lane closes partial. A held-rung approval is never such
 a step: the lane lands its text and the act is ruled on trunk, on
 `open-items.html`, and the merge slot's mint files that item for a row a sitting
@@ -955,7 +955,7 @@ queue from being two artifacts: a `docs/provenance-allow` entry **names** the
 **declares** the ids its session deferred (`Deferred open items: OI-45` / `…
 none — <why>`), warn-only at the commit checks; and zero pending rows while entries
 still stand is reported as a contradiction naming them. The surface is the
-substrate, never the mechanism — a fresh registry renders *the owner queue is
+substrate, never the mechanism — a fresh registry renders *the operator queue is
 empty* perfectly truthfully.
 
 Reviews use this block — in `log.md`, or as a `docs/reviews/WI-<n>-<PHASE>.md`
@@ -1051,7 +1051,7 @@ or tool) is out of scope: it is dismissed in one recorded line by whoever
 rules the finding, in the response to the review verdict (and in the
 delegated-decisions record too, when the run keeps one), and never answered
 with code. A finding whose reproduction needs a contrived, improbable scenario
-is dismissed the same way (owner ruling 2026-10-13): a hand act the process
+is dismissed the same way (operator ruling 2026-10-13): a hand act the process
 forbids (rewinding the trunk branch, skipping or disabling a hook,
 hand-editing a generated view or a ruled record), or ordinary tools run in an
 order no supported workflow or kit route produces. Severity tracks

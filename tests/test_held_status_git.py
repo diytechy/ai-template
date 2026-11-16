@@ -93,7 +93,7 @@ def _needs_text(rows):
             "[need.{}]\n"
             'status = "{}"\n'
             'need = "{}"\n'
-            'why = "the owner asked"\n'
+            'why = "the operator asked"\n'
             'priority = "M"\n'
             'acceptance = "it is shown"\n'
             'source = "{}"\n\n'
@@ -508,7 +508,7 @@ def test_a_traced_only_copy_move_lands(tmp_path, monkeypatch):
 
 
 def test_a_refresh_merge_carrying_trunks_approvals_lands(tmp_path, monkeypatch):
-    """Characterization. Trunk's owner approves SN-002 in a plain commit; the
+    """Characterization. The operator approves SN-002 on trunk in a plain commit; the
     lane takes it in by a refresh merge. The merge claims SN-002 against its
     lane parent but not against its trunk parent, so it claims nothing.
     Adequacy witness: a rule judging a merge against its first parent alone
@@ -1011,7 +1011,7 @@ def test_an_unparseable_act_ledger_at_the_head_is_refused_by_name(
 
 
 def test_an_act_already_on_trunk_is_not_re_read(tmp_path, monkeypatch):
-    """Trunk's own unbacked act (an owner's re-attestation, recorded in the
+    """Trunk's own unbacked act (an operator's re-attestation, recorded in the
     act ledger) is in the merge base; a lane that adds one act of its own,
     backed by a recorded verdict, is admitted at the approval rung. Witness:
     a ledger reader taking the head's every entry, not only those the base
@@ -1021,13 +1021,13 @@ def test_an_act_already_on_trunk_is_not_re_read(tmp_path, monkeypatch):
     """
     both = _with(APPROVED, "SN-002", status="Approved")
     root = _trunk(tmp_path, monkeypatch, needs=both)
-    _write_needs(root, _with(both, "SN-001", need="the owner's own wording"))
+    _write_needs(root, _with(both, "SN-001", need="the operator's own wording"))
     snap.copy_live(root, reattests=frozenset({"SN-001"}))
     _commit(root, "owner: re-attest SN-001", when=T_CODE)
     base = _rev(root, "HEAD")
     _git(root, "checkout", "-q", "-b", "lane")
     lane_rows = _with(
-        _with(both, "SN-001", need="the owner's own wording"),
+        _with(both, "SN-001", need="the operator's own wording"),
         "SN-002",
         need="a team adopts the kit",
     )

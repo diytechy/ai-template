@@ -1,6 +1,6 @@
 """Check selection is AT OR ABOVE the derived stage (OI-51, ruled 2026-08-21).
 
-THE OWNER'S RULE: a step runs because the repo IS AT OR ABOVE the rung the step
+THE OPERATOR'S RULE: a step runs because the repo IS AT OR ABOVE the rung the step
 becomes relevant at — *"when is it relevant for me to run these checks"* — never
 because some earlier bar was cleared.
 
@@ -17,7 +17,7 @@ So the C-01 regression scenario the review asked for is driven here at the
 SELECTION level, which is where it now lives. The floor's own honesty tripwire
 (`test_the_floor_is_dormant_for_the_BUILT_IN_product_steps_and_says_so`) had a
 successor obligation written into it — *"which bar those three belong at is a
-policy question with an owner ruling already sitting on it (OI-51); this test
+policy question with an operator ruling already sitting on it (OI-51); this test
 exists so nobody reads the floor as having fixed it"* — and
 `test_the_three_built_in_product_steps_are_REACHABLE_from_a_derived_value` below
 is that obligation discharged.
@@ -159,12 +159,12 @@ def test_the_three_built_in_product_steps_are_REACHABLE_from_a_derived_value(
     SLICE 3 CHANGED THE RUNG THIS REACHES, AND THE PREVIOUS TEXT PREDICTED IT.
     It read: "That the rung actually reached is Release rather than Impl is
     honest and known: rung 6 is vacant under today's closed Status enum, which
-    is why the owner's rule had to be 'in or above' rather than 'in', and slice
+    is why the operator's rule had to be 'in or above' rather than 'in', and slice
     3 re-discriminates the ladder." It did. A settled spine now lands ON the
     threshold rather than above it — the fix is the same size either way, but
     the reading is no longer "nothing in work" for a repo that is being built.
     `at_or_above` is still asserted below, because the RULE is unchanged: the
-    owner's "in or above" survives the vacancy closing."""
+    operator's "in or above" survives the vacancy closing."""
     _mature_frame_free(scaffold)
     proc = run_py([SCRIPTS / "derive_stage.py", "--root", "."], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr

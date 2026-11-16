@@ -2,20 +2,20 @@
 """Rewrite every delegated-decisions record off the retired `reviewed` key
 (WI-818), in place.
 
-WHY A MIGRATOR AND NOT A READER. WI-818 gives the owner's verdict on a
-delegated decision its own key, `owner` (`confirmed` or `overruled`; absent is
-not yet seen), and retires WI-790's `reviewed`. The owner ruled out legacy
-paths: no reader reads `reviewed` beside `owner`, so a record still carrying it
+WHY A MIGRATOR AND NOT A READER. WI-818 gives the operator's verdict on a
+delegated decision its own key, `operator` (`confirmed` or `overruled`; absent is
+not yet seen), and retires WI-790's `reviewed`. The operator ruled out legacy
+paths: no reader reads `reviewed` beside `operator`, so a record still carrying it
 reads as not yet seen and reports a format finding until it is rewritten. This
 script is that rewrite, run once by a repository at its next resync:
 `reviewed = true` (or any word that read as reviewed) becomes
-`owner = "confirmed"` in the same place, a not-reviewed value is dropped, and
+`operator = "confirmed"` in the same place, a not-reviewed value is dropped, and
 every other line — each `review` note, every comment — is kept byte for byte
 (`kitlib.decisions.migrate_text`). It rewrites complete top-level
 assignments only, never a string's contents, and re-parses the result: a
 record whose re-parse would differ in anything but the verdict keys is left
 untouched and named. A value outside the retired vocabulary is
-left where it is and named, because guessing the owner's verdict is the one
+left where it is and named, because guessing the operator's verdict is the one
 thing a migration must not do.
 
 Usage:
@@ -47,7 +47,7 @@ def _migrate_one(path, check):
         return False, ["{}: {}; left untouched".format(path.name, exc)]
     problems = [
         "{}: {} keeps a `reviewed` value outside the retired vocabulary; set "
-        "its `owner` by hand".format(path.name, eid)
+        "its `operator` by hand".format(path.name, eid)
         for eid in left
     ]
     if new == raw:

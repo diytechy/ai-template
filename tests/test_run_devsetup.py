@@ -1340,7 +1340,7 @@ def test_at_a_windows_console_install_offers_the_missing_runtime(tmp_path):
 
 @pytest.mark.parametrize("family", ["sh", "ps1"])
 def test_this_repos_readiness_report_names_the_hooks_opt_in(family):
-    """WI-880 (owner ruling 2026-10-10): this repository commits no guard
+    """WI-880 (operator ruling 2026-10-10): this repository commits no guard
     hooks, so a machine runs them only after the machine-local opt-in, and
     dev-setup's readiness report says which state this machine is in.
 

@@ -1,5 +1,5 @@
 """Spine text before the act, enforced on every lane commit (WI-806; OI-101 Q2,
-amended for landings by the owner's README Q-8 answer, 2026-10-04).
+amended for landings by the operator's README Q-8 answer, 2026-10-04).
 
 One function over two trees: a commit that writes under
 `docs/archive/last_approved/` may, against its parent, change no spine cell
@@ -566,7 +566,7 @@ def test_a_refresh_merge_combining_two_text_commits_beside_trunks_act_passes(
 
 def _spy_shared_walk(monkeypatch):
     """Wrap `kitlib.git.lane_commit_walk` with a spy recording each call's
-    commits and riders, then walking them as the owner does."""
+    commits and riders, then walking them as the operator does."""
     from kitlib import git as kgit
 
     real = getattr(kgit, "lane_commit_walk", None)

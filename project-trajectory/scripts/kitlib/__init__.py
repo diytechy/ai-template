@@ -1,6 +1,6 @@
 """The kit's small SHIPPED helper package — one home per shared behaviour.
 
-WHY THIS EXISTS, AND WHAT IT REPLACES (owner ruling D-8, `OI-16`, ruled
+WHY THIS EXISTS, AND WHAT IT REPLACES (operator ruling D-8, `OI-16`, ruled
 2026-08-12 and its inversion confirmed 2026-08-13; executed WI-448).
 
 The kit used to run the **F5 rule**: a shared `_kitcommon.py` was REJECTED so

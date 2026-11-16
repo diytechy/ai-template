@@ -6,10 +6,10 @@ WARN-FIRST FOREVER: this never fails a gate, not even under `--strict` (the
 flag is accepted only for the `[step:]` convention's uniform command shape).
 That is deliberate and narrower than what it replaces: `[step:dupes]` GATED on
 an unbounded population and 93% of its findings were accepted idioms, so the
-owner tore it down (D-7, 2026-08-10) and ruled F5 duplication UNBOUNDED. OI-58
+operator tore it down (D-7, 2026-08-10) and ruled F5 duplication UNBOUNDED. OI-58
 (2026-08-22) re-arms the MEASUREMENT, not the gate — a burn-down number beside
 the module-size and smoke-budget ratchets, never a new floor. Do not add
-`--strict` teeth here without bringing that case to the owner, per D-7.
+`--strict` teeth here without bringing that case to the operator, per D-7.
 
 Measures duplicated FUNCTION BODIES over `project-trajectory/scripts/**/*.py`
 (bodies >= 4 lines, docstring stripped, `__pycache__` excluded): each

@@ -16,13 +16,13 @@
      Slots (single-brace, strict fill — a missing one refuses):
        {chain}     the rows awaiting a first approval, each rendered with its
                    WHOLE chain, from trace.reattest_model's `approve` entries —
-                   the same model behind `trace.py --approve` and the owner's
-                   open-items view, so judge, brief and owner surface can never
+                   the same model behind `trace.py --approve` and the operator's
+                   open-items view, so judge, brief and operator surface can never
                    show three different pictures. Re-computed at composition
                    time, not remembered from the mint, so a chain that changed
                    between mint and claim is the one you are shown — and
                    re-filtered by the DIAL as it is re-computed, so a `Drafted`
-                   row on a rung the owner still holds appears as chain evidence
+                   row on a rung the operator still holds appears as chain evidence
                    marked HELD and never as one of yours. And BOUNDED by the
                    row's own `Adjudicates` cell — the rows the merge handed this
                    act — so a live re-computation asks the mint's question and
@@ -63,7 +63,7 @@
 
 You are an INDEPENDENT adjudicator launched by the unattended coordinator, wearing a DIFFERENT hat from whoever authored these rows. You hold the approval authority for every row below marked `[AWAITING FIRST APPROVAL]`: the rung it sits at is one the repo's declared gate authority has released to the loop, so no operator signature is pending behind you. What you approve is approved.
 
-A row marked `[AWAITING FIRST APPROVAL - HELD FOR THE OWNER, NOT YOURS TO FLIP]` is shown because it is part of a chain you must read — never because it is yours. Its rung is one the dial still holds for an operator. Read it as evidence, weigh it in your verdict on the rows that ARE yours, and leave it out of the act: it reaches the owner through the approval brief, and a flip of it is the one act this whole arm exists to keep out of a session's hands.
+A row marked `[AWAITING FIRST APPROVAL - HELD FOR THE OPERATOR, NOT YOURS TO FLIP]` is shown because it is part of a chain you must read — never because it is yours. Its rung is one the dial still holds for an operator. Read it as evidence, weigh it in your verdict on the rows that ARE yours, and leave it out of the act: it reaches the operator through the approval brief, and a flip of it is the one act this whole arm exists to keep out of a session's hands.
 
 A row marked `[AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE, ANOTHER ADJUDICATION'S ROW; SHOWN AS CHAIN EVIDENCE ONLY]` is also shown for the chain and is also not yours — for a different reason, and the difference matters. Nothing is pending on an operator for it: it was handed to a DIFFERENT adjudication by a different merge, which will rule on it as you rule on yours. Read it as evidence and do not rule on it. The act may reach only the rows this sitting's `Adjudicates` scope names; the merge refuses a flip outside that scope by name, and the row's own adjudication will judge it.
 

@@ -30,7 +30,7 @@ LEFTOVER_PHRASES = (
 )
 
 # Every §-numbered heading the profile axes gate; these labels must be literal,
-# stable text in EVERY permutation (the owner's §N-constancy constraint).
+# stable text in EVERY permutation (the operator's §N-constancy constraint).
 GATED_HEADINGS = {
     "docs/process.md": (
         "## 9. Non-functional requirements & performance budgets",
@@ -175,7 +175,7 @@ def test_every_profile_permutation_scaffolds_green(tmp_path, omit, stack):
     _zero_findings(dest)
     proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=dest)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    # THE OWNER DECISION SURFACE IS ALWAYS ON (OI-41, ruled 2026-08-20): the
+    # THE OPERATOR DECISION SURFACE IS ALWAYS ON (OI-41, ruled 2026-08-20): the
     # registry AND its generated view land in every permutation, so `check_docs`
     # S-3 means the same thing in every adopting repo instead of standing down
     # wherever the layer was declined. Both halves, because a missing view reads
@@ -297,7 +297,7 @@ def test_the_scaffolded_oi3_brief_is_an_append_not_a_reserialization(tmp_path):
       * the appended row PARSES and comes back through the real reader, so the
         keys it invents are the keys the reader maps (a brief written under an
         unmapped key renders as a brief with no text, and `check_docs` S-3 then
-        reports the owner ask as briefed);
+        reports the operator ask as briefed);
       * the file stays LF. The CSV writer this replaced defaulted to CRLF, which
         is the exact defect this migration was warned about.
     """

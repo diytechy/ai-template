@@ -39,7 +39,7 @@ verdict (spine map D16). The rules are `assumption_rules.py`'s, pure; this
 module reads the registries, the observation records and the approval acts
 once, and hands them in. The release step keeps its name,
 `assumption-evidence`, for the projects already running it, though an
-assumption carries no evidence level (owner ruling 2026-10-02).
+assumption carries no evidence level (operator ruling 2026-10-02).
 
 Implements: SR-205, SR-206, SR-212, LLR-242, LLR-243, LLR-244
 

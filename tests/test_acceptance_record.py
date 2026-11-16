@@ -299,7 +299,7 @@ def test_no_snapshotted_tier_can_go_unseen_by_the_approval_rung():
     whose `Status` a snapshot anchors. Both are hand-written literals, in
     different modules, hundreds of lines apart, and NOTHING joined them: a tier
     could be added to the snapshot and reach no approval reader at all,
-    silently. The remaining narrowness is RULED — the owner's 2026-09-01 ruling
+    silently. The remaining narrowness is RULED — the operator's 2026-09-01 ruling
     scopes the act to SPINE rows, and the off-spine three carry approval cells
     governed by OI-30 D3 — so this pin does not decide the rung's width. It
     makes the boundary a statement someone must edit ON PURPOSE.
@@ -307,7 +307,7 @@ def test_no_snapshotted_tier_can_go_unseen_by_the_approval_rung():
     ROUND 028 MOVED ONE TIER ACROSS IT, which is the pin working as intended:
     `stakeholder-needs.toml` left `OUTSIDE_THE_APPROVAL_ACT` for the covered
     set, because SN is a spine tier and the half of DevStg-Reqs the dial holds
-    for the owner — a lane flipping it is the worst case, not an exempt one.
+    for the operator — a lane flipping it is the worst case, not an exempt one.
 
     A new tier therefore fails HERE, naming itself, and its author has to put it
     on one side or the other."""

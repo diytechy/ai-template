@@ -11,7 +11,7 @@ materializes the folder; this module is its read half.
 WHAT THIS REPLACES. Until WI-448 this 270-line block was copied VERBATIM into
 `schedule.py`, `check_trajectory.py` and `agent_common.py` under the retired F5
 rule, with `tests/test_wi_loader_sync.py` pinning the three parsers equal
-because extraction had been refused (owner ruling 2026-07-12). D-8 reversed
+because extraction had been refused (operator ruling 2026-07-12). D-8 reversed
 that ruling. The extraction also settled a live question the pins could not
 see: the three copies were NOT verbatim at the moment they were merged —
 `agent_common`'s carried `a DevStg-* value` in the `Bar` comment where the

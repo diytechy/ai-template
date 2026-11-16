@@ -344,7 +344,7 @@ def tc_path(root):
 
 
 def test_strict_schema_requires_evidence_on_automated_yes(scaffold):
-    # Thread 51 (owner-ruled 2026-07-09): a TC claiming Automated=Yes with no
+    # Thread 51 (operator-ruled 2026-07-09): a TC claiming Automated=Yes with no
     # cited Evidence is a soft false-green -> a --strict-schema (DevStg-Impl) finding.
     # Plain --strict stays green (the chain is structurally fine).
     make_minimal_project(scaffold)

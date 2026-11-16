@@ -327,6 +327,91 @@ def test_a_policy_file_in_the_current_vocabulary_is_untouched(tmp_path):
     assert path.read_bytes() == text.encode("utf-8")
 
 
+# --- delegated-decisions records and the scratchpad -----------------------------
+
+DECISIONS = """# A delegated run's record.
+high_risk = ["D-002"]
+owner = "not an entry's key"
+
+[decision.D-001]
+decided = "Kept the parser."
+review = "Confirmed in session; owner = confirmed in prose stays."
+owner = "confirmed"  # in session
+
+[decision.D-002]
+decided = 'Split the module.'
+review = "Do it the other way."
+owner = "overruled"
+
+[decision.D-003]
+decided = "Not yet seen."
+review = ""
+"""
+
+
+def test_a_decisions_records_verdict_key_is_renamed_in_each_entry(tmp_path):
+    """Implements: TC-427"""
+    crlf = DECISIONS.replace("\n", "\r\n")
+    path = _write(tmp_path, "docs/decisions/wi-1.toml", crlf)
+    assert _run(tmp_path) == 0
+    expected = DECISIONS.replace('\nowner = "confirmed"', '\noperator = "confirmed"')
+    expected = expected.replace('\nowner = "overruled"', '\noperator = "overruled"')
+    # The same key outside an entry, and the word in prose, stay as written.
+    assert 'owner = "not an entry\'s key"' in expected
+    assert "owner = confirmed in prose stays" in expected
+    assert path.read_bytes() == expected.replace("\n", "\r\n").encode("utf-8")
+    entries = tomllib.loads(expected)["decision"]
+    verdicts = [entries[d].get("operator") for d in ("D-001", "D-002", "D-003")]
+    assert verdicts == ["confirmed", "overruled", None]
+    assert _run(tmp_path, "--check") == 0
+
+
+@pytest.mark.parametrize(
+    "text",
+    (
+        '[decision.D-001]\nowner = "confirmed"\noperator = "overruled"\n',
+        '[decision.D-001]\nreview = """\nowner = "confirmed"\n"""\nowner = "confirmed"\n',
+        'decision = { D-001 = { owner = "confirmed" } }\n',
+    ),
+    ids=("both-spellings", "look-alike-line-in-a-string", "inline-table"),
+)
+def test_a_decisions_record_the_line_edit_cannot_prove_is_named_and_left(
+    tmp_path, capsys, text
+):
+    """Implements: TC-427"""
+    path = _write(tmp_path, "docs/decisions/wi-1.toml", text)
+    assert _run(tmp_path) == 1
+    out = capsys.readouterr().out
+    assert "decisions record NOT rewritten: docs/decisions/wi-1.toml" in out
+    assert path.read_bytes() == text.encode("utf-8")
+
+
+def test_the_scratchpad_is_renamed_to_its_current_name_with_every_byte_kept(
+    tmp_path,
+):
+    """Implements: TC-427"""
+    notes = "# notes\r\nowner: me \u2014 half-formed\r\n".encode("utf-8")
+    old, new = (tmp_path / name for name in migrate.SCRATCHPAD_NAMES)
+    old.write_bytes(notes)
+    assert _run(tmp_path, "--check") == 1
+    assert old.read_bytes() == notes and not new.exists()
+    assert _run(tmp_path) == 0
+    assert not old.exists() and new.read_bytes() == notes
+    assert _run(tmp_path, "--check") == 0
+
+
+def test_a_scratchpad_under_both_names_is_named_and_neither_is_touched(
+    tmp_path, capsys
+):
+    """Implements: TC-427"""
+    old = _write(tmp_path, "OWNER_SCRATCHPAD.md", "earlier\n")
+    new = _write(tmp_path, "OPERATOR_SCRATCHPAD.md", "current\n")
+    assert _run(tmp_path) == 1
+    out = capsys.readouterr().out
+    assert "OPERATOR_SCRATCHPAD.md exists too; merge the two by hand" in out
+    assert old.read_bytes() == b"earlier\n" and new.read_bytes() == b"current\n"
+
+
 # --- the acceptance record's copies, and the run as a whole ---------------------
 
 

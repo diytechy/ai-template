@@ -18,8 +18,8 @@ Authority: `docs/process.md` §4 (the stage ladder), §5 (verdict protocol), §7
 (default `DevStg-Release` = an operator through every rung; the levels + the
 deviation register: process-options.md "Gate authority levels") — on a
 non-default repo, read "operator" in this skill as that declared acceptor. On a
-held rung the approval is the owner's act; which sessions may take it is
-process.md §4 "A held rung's approval is the owner's act" — read it there.
+held rung the approval is the operator's act; which sessions may take it is
+process.md §4 "A held rung's approval is the operator's act" — read it there.
 
 ## One axis: a stage is a STATE, approval is an EVENT
 
@@ -99,8 +99,8 @@ Advancing is not a `docs/stage` bump. The acceptor **marks a batch of
 artifacts approved in a reviewed commit** — that commit *is* the sign-off, and
 the derived rung follows from it.
 
-**WHO the acceptor is** (owner rulings 2026-09-01 and 2026-10-07; PROCESS.md
-§4). On a rung the dial still holds, the owner. On a rung it has released, an
+**WHO the acceptor is** (operator rulings 2026-09-01 and 2026-10-07; PROCESS.md
+§4). On a rung the dial still holds, the operator. On a rung it has released, an
 **independent adjudicator** — never the session that authored the rows — in the
 authoring lane or on trunk: approving means reading the row's whole chain, and
 the writer does not judge its own writes. A lane authors `Drafted` rows and
@@ -117,7 +117,7 @@ ACCEPTOR's procedure, not an author's:
   four spine registries, needs included, so a lane flipping an SN row is refused
   by name (`acceptance_record.APPROVAL_ACT_CSVS`; the off-spine registries stay
   out under OI-30 D3, and `OUTSIDE_THE_APPROVAL_ACT` declares that bound). The
-  refusal is keyed to a WORK LANE's merge, so the owner's own sitting — an SN
+  refusal is keyed to a WORK LANE's merge, so the operator's own sitting — an SN
   flip made by hand in a reviewed commit on trunk — is unaffected.
 - **`DevStg-Tests` → `DevStg-Impl`** — the SR is `Approved` and its tests
   pass; the derived rung follows. Note what `Approved` does and does not say: it
@@ -126,7 +126,7 @@ ACCEPTOR's procedure, not an author's:
 - **Re-attest (an amended `Approved` row)** — **there is no Status cell to
   move.** An approved row whose content is later amended STAYS `Approved`;
   what marks it is the DIFFERENCE from its copy in
-  `docs/archive/last_approved/`, and the pending-owner-actions projection
+  `docs/archive/last_approved/`, and the pending-operator-actions projection
   carries one line per drifted SR. Read the before/after first — `python
   scripts/trace.py --approve modified --out docs/ratify/CURRENT.md` (the scope
   word is a CLI name, not a Status value). `CURRENT.md` is the ONE file this
@@ -147,7 +147,7 @@ ACCEPTOR's procedure, not an author's:
   re-copy in the **same commit** wherever ONE session does both — which is
   every re-attestation, since a lane that re-copied would be approving. (The
   `--staged` warn enforces the pairing.) A row's `Status` answers for its OWN
-  cells (owner ruling 2026-08-17) — a child LLR/TC amendment never touches
+  cells (operator ruling 2026-08-17) — a child LLR/TC amendment never touches
   the owning SR.
 
   > **The vocabulary is CLOSED at three values** — `Drafted`, `Approved`,

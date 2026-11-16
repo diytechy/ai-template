@@ -10,7 +10,7 @@ alternative = "Close WI-997 partial and carry the tag work to a successor (OI-12
 reversal_cost = "Low: two Done-when items on an unbuilt row with no pass record."
 why_not_escalated = "Escalated: the owner confirmed the text in session, 2026-11-05."
 review = ""
-owner = "confirmed"
+operator = "confirmed"
 done_when = "sha256:332f7f304d074a47"
 
 [decision.D-002]
