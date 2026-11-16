@@ -1785,3 +1785,23 @@ list is fixed unless §12.6 says so.
     text, so correcting them is an acceptance act.
   - A confirming unfiltered suite run on `6e24ff593` was started; its result
     is the next entry.
+- **2026-11-16, the branch passes whole with WI-999.** `maint/vocabulary` at
+  `6e24ff593`: **8,076 passed, 29 skipped, none failed**, in 25 min 14 s
+  (8 workers, variable unset, no `rg.exe`, free memory never under 37 GB).
+- **Where this session stopped.** Everything ruled and not on hold is done.
+  What remains needs the operator or is larger than a session:
+  1. The operator's answers: the vocabulary direction (§12.2, §12.4); the
+     `PYTEST_DEBUG_TEMPROOT` variable (§12.3); the three points under the
+     fix-branch entry; LLR-172's and TC-166's accepted text; the two
+     conversion findings that change what rows mean (`migrate_carrier`'s
+     default status, the boundary gate and `delivered_with`).
+  2. Then §10.5 onward, if the vocabulary direction stands.
+  3. Before trunk: the generated views (`trunk_step.py --regen`),
+     `docs/ratify/CURRENT.md`, `components.derived.toml`, and
+     `docs/status.md`'s resume text.
+  4. Not started: WI-1003 to WI-1006; the review-churn plan's phase 3; the
+     functional changes of §6 (B1 to B14); the second migrator pass over the
+     13 converted repositories; HomeHub's adoption.
+  5. Housekeeping: the worktrees `C:\Projects\ai-template-wt-fix-a`,
+     `-fix-b` and `D:\ai-template-wt-wi999` and their branches are merged and
+     can be removed. Nothing is pushed.
