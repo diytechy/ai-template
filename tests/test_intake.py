@@ -134,7 +134,7 @@ LLR_HEADER = (
 )
 
 
-def write_sr(root, requirement="the original text", status="Approved"):
+def write_sr(root, requirement="the original text", status="Accepted"):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     (req / "system-requirements.csv").write_text(
@@ -168,7 +168,7 @@ def write_llr(root, sr_refs="SR-001", module="src/d.py"):
     req.mkdir(parents=True, exist_ok=True)
     (req / "low-level-requirements.csv").write_text(
         LLR_HEADER
-        + 'LLR-001,{},Core,{},f,"the detail","why",TC-001,Approved,CMP-001,1\n'.format(
+        + 'LLR-001,{},Core,{},f,"the detail","why",TC-001,Accepted,CMP-001,1\n'.format(
             sr_refs, module
         ),
         encoding="utf-8",
@@ -328,12 +328,12 @@ def test_a_drafted_row_mints_one_first_acceptance_adjudication(tmp_path):
     assert "SR-001 amended" in text
     assert "read each row's WHOLE CHAIN" in text  # the outcomes, not just the list
     # ...and the AMENDMENT trigger stayed silent on the same delta: the row left
-    # `Approved`, so no accepted text moved behind anyone's back.
+    # `Accepted`, so no accepted text moved behind anyone's back.
     assert "meaning-or-clarity" not in text
 
 
 def test_a_status_only_withdrawal_mints_first_acceptance_adjudication(tmp_path):
-    # Approved -> Drafted refuses no merge because it blesses nothing, but the
+    # Accepted -> Drafted refuses no merge because it blesses nothing, but the
     # resulting row is awaiting acceptance again. The same two-tree reader must
     # therefore hand it to trigger (a2), even when no content cell moved.
     root, before, after = amended_repo(
@@ -350,7 +350,7 @@ def test_a_status_only_withdrawal_mints_first_acceptance_adjudication(tmp_path):
 
 
 def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_path):
-    """SN is a SPINE tier, so a WORK LANE flipping `SN-001` Drafted -> Approved
+    """SN is a SPINE tier, so a WORK LANE flipping `SN-001` Drafted -> Accepted
     is refused BY NAME (WI-572 REVIEW-A round 028).
 
     Until this round the refusal walked `SPINE_CSVS` — SR/LLR/TC — only, so the
@@ -381,7 +381,7 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
     from widening the REFUSAL and this round made only the second."""
     acceptance_record = load_script("acceptance_record")
     root, before, after = amended_repo(
-        tmp_path, lambda r: write_sn(r, status="Approved")
+        tmp_path, lambda r: write_sn(r, status="Accepted")
     )
     # The base side must carry the Drafted row for this to be a FLIP rather than
     # a born row; `amended_repo` commits its baseline before calling `amend`.
@@ -400,12 +400,12 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
     (tmp_path / "flip").mkdir()
     root2, before2, after2 = amended_repo(
         tmp_path / "flip",
-        lambda r: write_sn(r, status="Approved"),
+        lambda r: write_sn(r, status="Accepted"),
         seed=lambda r: write_sn(r, status="Drafted"),
     )
     acts2 = acceptance_record.staged_acceptance_acts(root2, before2, after2)
     assert [(a["id"], a["act"], a["before"], a["after"]) for a in acts2] == [
-        ("SN-001", "flip", "Drafted", "Approved")
+        ("SN-001", "flip", "Drafted", "Accepted")
     ], acts2
     assert "SN-001" in (
         acceptance_record.lane_acceptance_refusal(root2, before2, after2) or ""
@@ -425,7 +425,7 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
 
 NEED_TOML = (
     "[need.SN-001]\n"
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     'need = "{}"\n'
     'why = "why"\n'
     'priority = "M"\n'
@@ -438,12 +438,12 @@ ASSUMPTION_TOML = (
     'assumption = "{}"\n'
     'holds_when = "always"\n'
     'obstacle = "never"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     "\n[surrogate.SUR-001]\n"
     'name = "the stand-in"\n'
     'emulates = ["EXT-001"]\n'
     'description = "{}"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
 )
 
 
@@ -491,7 +491,7 @@ def test_an_amended_accepted_need_mints_one_amendment_row(tmp_path):
         lambda r: _write_toml(
             r,
             "stakeholder-needs.toml",
-            NEED_TOML.format("the need").replace("Approved", "Drafted"),
+            NEED_TOML.format("the need").replace("Accepted", "Drafted"),
         ),
         seed=lambda r: _write_toml(
             r, "stakeholder-needs.toml", NEED_TOML.format("the need")
@@ -553,7 +553,7 @@ def test_the_first_acceptance_mint_is_one_row_and_idempotent(tmp_path):
         write_sr(r, requirement="fresh draft", status="Drafted")
         (r / "docs" / "requirements" / "low-level-requirements.csv").write_text(
             LLR_HEADER
-            + 'LLR-001,SR-001,Core,src/d.py,f,"the detail","why",TC-001,Approved,'
+            + 'LLR-001,SR-001,Core,src/d.py,f,"the detail","why",TC-001,Accepted,'
             "CMP-001,1\n"
             + 'LLR-002,SR-001,Extra,src/e.py,g,"the new detail","why",TC-002,'
             "Drafted,CMP-001,1\n",
@@ -2229,7 +2229,7 @@ def context_repo(tmp_path):
     write_sr(root)
     (req / "low-level-requirements.csv").write_text(
         LLR_HEADER + 'LLR-001,SR-001,Core,src/widget.py,widget_f,"the detail","why",'
-        "TC-001,Approved,CMP-001,1\n",
+        "TC-001,Accepted,CMP-001,1\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -2239,7 +2239,7 @@ def context_repo(tmp_path):
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
         "Evidence,Status,Phase\n"
         "TC-001,SR-001;LLR-001,Unit,run it,smoke,,works,Y,tests/test_widget.py,"
-        "Approved,1\n",
+        "Accepted,1\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -2257,7 +2257,7 @@ def context_repo(tmp_path):
         "IF-ID,Owner,Consumers,Channel,Contract,Version,"
         "Status,Component,Notes\n"
         'IF-001,scripts/widget,scripts/check,cli,"widget CLI: exits 1 on '
-        'a bad widget",v1,Approved,CMP-001,\n',
+        'a bad widget",v1,Accepted,CMP-001,\n',
         encoding="utf-8",
         newline="\n",
     )
@@ -2434,7 +2434,7 @@ def test_the_census_mints_gap_rows_and_dedupes_on_rerun(tmp_path):
     write_sr(root)
     (root / "docs" / "work" / "queued").mkdir(parents=True)
     census = [
-        "SR-001 is not Approved (Status=Drafted)",
+        "SR-001 is not Accepted (Status=Drafted)",
         "SN SN-002 is a draft need (unaccepted)",
     ]
     minted, refusal = intake.mint_gap_rows(root, census)
@@ -2455,7 +2455,7 @@ def test_the_census_mints_gap_rows_and_dedupes_on_rerun(tmp_path):
 
 
 def _policy_repo(tmp_path, dial):
-    """A repo with one Drafted SR, one Approved SR, one Drafted LLR, and the
+    """A repo with one Drafted SR, one Accepted SR, one Drafted LLR, and the
     declared acceptance `dial` — the state an adjudication row's cheap
     outcome acts on.
 
@@ -2469,7 +2469,7 @@ def _policy_repo(tmp_path, dial):
     marker that named "accepted text that has since moved" and the one state
     `_apply_flips` ever moved FROM; the word retired with the step, and a
     fixture carrying it would be driving this repo's writer with a value its own
-    integrity floor now refuses. `Drafted` is the live below-`Approved` value,
+    integrity floor now refuses. `Drafted` is the live below-`Accepted` value,
     which is what these fixtures need: a located row that is NOT already at the
     value the act writes."""
     root = git_repo(tmp_path)
@@ -2478,7 +2478,7 @@ def _policy_repo(tmp_path, dial):
     (req / "system-requirements.csv").write_text(
         SR_HEADER
         + 'SR-001,Adder,SN-001,"the text","why","ac",,C,Test,Drafted\n'
-        + 'SR-002,Widget,SN-001,"other text","why","ac",,C,Test,Approved\n',
+        + 'SR-002,Widget,SN-001,"other text","why","ac",,C,Test,Accepted\n',
         encoding="utf-8",
         newline="\n",
     )
@@ -2557,7 +2557,7 @@ def test_below_the_operator_dial_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_pa
 
     It used to prove the other arm of ruled decision 2: below the operator's
     acceptance dial a recorded LLM verdict carries acceptance authority, so
-    the helper enacted `Modified` -> `Approved`. Step 7 retired `Modified`, the
+    the helper enacted `Modified` -> `Accepted`. Step 7 retired `Modified`, the
     ONE state that act ever moved from, and the guard it left behind — a silent
     `continue` over every other status — resolved into an explicit refusal.
 
@@ -2565,7 +2565,7 @@ def test_below_the_operator_dial_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_pa
     flip used to run at: a located row this act cannot move is NAMED, with its
     status quoted, and NOTHING is written. Fail-closed matters more than the
     lost arm — the alternative resolutions (write to a `Drafted` row, or
-    re-bless a drifted `Approved` one) are both WIDER than the silent skip they
+    re-bless a drifted `Accepted` one) are both WIDER than the silent skip they
     would replace, and widening mechanical acceptance authority is an operator
     ruling, not a migration step's to take. The writer's own properties did not
     move with the guard and are proved directly below.
@@ -2594,7 +2594,7 @@ def test_below_the_operator_dial_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_pa
         # Status move plus the copy — never `--reaccepts`, which is the remedy
         # for accepted text that drifted. The `--accepts` token it prints must
         # be one the snapshot CLI's own resolver accepts for this registry.
-        assert "move its `Status` to `Approved`" in msg, msg
+        assert "move its `Status` to `Accepted`" in msg, msg
         assert "--reaccepts" not in msg, msg
         assert _accepts_resolves_to(msg, "low-level-requirements"), msg
         # ...and the refusal wrote nothing: it raises before the write loops.
@@ -2621,19 +2621,19 @@ def test_a_FOUNDED_row_is_refused_with_the_reaccept_remedy_naming_it(tmp_path):
     Status-move remedy a `Drafted` row gets would be wrong here."""
     root = _policy_repo(tmp_path, kit_stage.BELOW)
     sr_csv = root / "docs" / "requirements" / "system-requirements.csv"
-    sr_csv.write_bytes(sr_csv.read_bytes().replace(b",Test,Approved", b",Test,Founded"))
+    sr_csv.write_bytes(sr_csv.read_bytes().replace(b",Test,Accepted", b",Test,Founded"))
     with pytest.raises(SystemExit) as excinfo:
         intake.flip_verified(root, ["SR-002"])
     msg = str(excinfo.value)
     assert 'reads `status = "Founded"`' in msg, msg
     assert "intake.py snapshot --reaccepts SR-002" in msg, msg
-    assert "move its `Status` to `Approved`" not in msg, msg
+    assert "move its `Status` to `Accepted`" not in msg, msg
 
 
 def test_a_row_already_at_the_written_value_is_the_ONE_silent_skip(tmp_path):
     """The other half of the resolved guard: idempotence survives.
 
-    `SR-002` is `Approved` — already at the value this act writes — so it is
+    `SR-002` is `Accepted` — already at the value this act writes — so it is
     skipped rather than named, and the act reports no flip. That skip is the one
     the old `if status != "Modified": continue` was RIGHT about, and separating
     it from the refusal is the whole content of the step-7 resolution: one
@@ -2690,7 +2690,7 @@ SR_TOML = (
     "[requirement.SR-002]\n"
     'title = "Widget"\n'
     'sn_refs = ["SN-001"]\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
 )
 
 # The registry key the writer tests below pass directly.
@@ -2735,14 +2735,14 @@ def test_the_flip_rewrites_ONE_LINE_of_the_toml_carrier(tmp_path):
     assert len(b) == len(a)
     moved = [i for i in range(len(b)) if b[i] != a[i]]
     assert len(moved) == 1, [(b[i], a[i]) for i in moved]
-    assert (b[moved[0]], a[moved[0]]) == ('status = "Drafted"', 'status = "Approved"')
+    assert (b[moved[0]], a[moved[0]]) == ('status = "Drafted"', 'status = "Accepted"')
     # The comments and the untouched row survived, which is the whole reason
     # this is a line rewrite rather than a re-emit.
     assert "# a comment BETWEEN rows" in after
-    assert 'status = "Approved"' in after.split("[requirement.SR-002]")[1]
+    assert 'status = "Accepted"' in after.split("[requirement.SR-002]")[1]
     # ...and it never reached past the row it was asked for: SR-002 read
-    # `Approved` before and reads it after, so the file now holds exactly two.
-    assert after.count('status = "Approved"') == 2
+    # `Accepted` before and reads it after, so the file now holds exactly two.
+    assert after.count('status = "Accepted"') == 2
 
 
 # A row whose REQUIREMENT PROSE quotes registry syntax — the counterexample the
@@ -2775,7 +2775,7 @@ def test_the_flip_is_toml_STRING_aware_not_line_aware(tmp_path):
 
     after = sr_toml.read_text(encoding="utf-8")
     # The REAL cell moved...
-    assert tomllib.loads(after)["requirement"]["SR-001"]["status"] == "Approved"
+    assert tomllib.loads(after)["requirement"]["SR-001"]["status"] == "Accepted"
     # ...and the prose that merely looks like registry syntax is untouched.
     assert "status = literal prose inside the requirement" in after
     assert "[requirement.SR-999] is not a table header either." in after
@@ -2821,7 +2821,7 @@ def test_a_crlf_registry_keeps_its_line_endings_through_a_flip(tmp_path):
     changed = [
         (b, a) for b, a in zip(before.split(b"\r\n"), after.split(b"\r\n")) if b != a
     ]
-    assert changed == [(b'status = "Drafted"', b'status = "Approved"')]
+    assert changed == [(b'status = "Drafted"', b'status = "Accepted"')]
 
 
 def test_an_lf_registry_is_not_given_crlf_either(tmp_path):
@@ -3417,7 +3417,7 @@ OBSERVATION_TCS = (
     "TC-ID,Verifies,Level,Method,Tier,Expected,Automated,Evidence,Status,"
     "Inputs,MaxAge\n"
     "TC-001,SR-001,Inspection,a reader reads the page,Release,the page reads,"
-    "No,docs/m.md,Approved,src/page.txt,30\n"
+    "No,docs/m.md,Accepted,src/page.txt,30\n"
 )
 
 
@@ -3646,7 +3646,7 @@ def authored_merge(tmp_path, kind="first-acceptance", **closed):
     accepted need and the two-hat roster."""
 
     def seed(root):
-        write_sn(root, status="Approved")
+        write_sn(root, status="Accepted")
         _write_toml(root, "hats.toml", AUTHORING_ROSTER)
 
     def amend(root):

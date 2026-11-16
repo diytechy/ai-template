@@ -39,27 +39,27 @@ from conftest import load_script
 SCRAMBLED_SRS = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
     "Permutations,Priority,VerificationMethod,Status\n"
-    'SR-009,Late,SN-001,"Shall late.",R,"late",,M,Test,Approved\n'
+    'SR-009,Late,SN-001,"Shall late.",R,"late",,M,Test,Accepted\n'
     'SR-000,Example,SN-001,"Shall example.",R,"example",,M,Test,Drafted\n'
     'SR-002,Middle,SN-001,"Shall middle.",R,"middle",,M,Test,Drafted\n'
     'NOTE,Not a requirement,SN-001,"Shall not.",R,"nope",,M,Test,Drafted\n'
-    'SR-001,First,SN-001,"Shall first.",R,"first",,M,Test,Approved\n'
+    'SR-001,First,SN-001,"Shall first.",R,"first",,M,Test,Accepted\n'
 )
 
 SCRAMBLED_LLRS = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
-    'LLR-007,SR-001,Late,src/m,add,"late",(see TC),Approved\n'
-    'LLR-000,SR-001,Example,src/m,add,"example",(see TC),Approved\n'
-    "NOTE,SR-001,Not an LLR,src/m,add,nope,(see TC),Approved\n"
-    'LLR-001,SR-001,First,src/m,add,"first",(see TC),Approved\n'
+    'LLR-007,SR-001,Late,src/m,add,"late",(see TC),Accepted\n'
+    'LLR-000,SR-001,Example,src/m,add,"example",(see TC),Accepted\n'
+    "NOTE,SR-001,Not an LLR,src/m,add,nope,(see TC),Accepted\n"
+    'LLR-001,SR-001,First,src/m,add,"first",(see TC),Accepted\n'
 )
 
 SCRAMBLED_TCS = (
     "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status\n"
-    "TC-005,LLR-001,Unit,call add,Smoke,a=5,ok,Yes,Approved\n"
+    "TC-005,LLR-001,Unit,call add,Smoke,a=5,ok,Yes,Accepted\n"
     "NOTE,LLR-001,Unit,not a case,Smoke,a=0,ok,Yes,Drafted\n"
     "TC-000,LLR-001,Unit,call add,Smoke,a=0,ok,Yes,Drafted\n"
-    "TC-001,LLR-001,Unit,call add,Smoke,a=1,ok,Yes,Approved\n"
+    "TC-001,LLR-001,Unit,call add,Smoke,a=1,ok,Yes,Accepted\n"
 )
 
 

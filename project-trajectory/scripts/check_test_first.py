@@ -21,7 +21,7 @@ TWO EVENTS, BOTH READ FROM TRUNK'S FIRST-PARENT HISTORY, OLDEST FIRST.
     counts. Tests and documents are not code declaring an implementation. The
     earlier of the requirement's own line and any design row's line is the
     landing. A merge lands everything it brings at the merge.
-  * A test case is APPROVED FOR A REQUIREMENT at the earliest commit in which
+  * A test case is ACCEPTED FOR A REQUIREMENT at the earliest commit in which
     it reads accepted AND names the requirement or one of its design rows, the
     design rows being those whose `SR-Refs` name the requirement at that
     commit. Acceptance alone is not enough: a test case accepted for something
@@ -51,7 +51,7 @@ anything happened.
 
 AN ACCEPTANCE WITHOUT AN EXACT DATE. The TOML registries are the readable
 history. A row already accepted when its registry arrived under TOML from an
-older carrier, and a row moved into `Approved` from a word outside the closed
+older carrier, and a row moved into `Accepted` from a word outside the closed
 status vocabulary (a rename, not the act), was accepted AT OR BEFORE that
 commit. Such a date still settles the order when it falls at or before the
 landing (for a requirement's own acceptance, at or before the start); when it
@@ -103,7 +103,7 @@ import gen_arch_map
 import spine_carrier
 from kitlib.config import process_check_text, utf8_console
 from kitlib.git import git_out
-from kitlib.spine import STATUS_VALUES, is_approved, is_founded, refs
+from kitlib.spine import STATUS_VALUES, is_accepted, is_founded, refs
 
 START_KEY = "test_first_since"
 
@@ -263,7 +263,7 @@ def first_acceptance_commits(root, registry, id_col, since=None, rev="HEAD"):
     word of the closed status vocabulary. Otherwise the row was accepted at or
     before the commit and the date is not exact: a row already accepted at
     `since`, one already accepted when the registry arrived from an older
-    carrier (whose history is not read), and one moved into `Approved` from a
+    carrier (whose history is not read), and one moved into `Accepted` from a
     retired word, which is a rename rather than the act.
 
     Implements: SR-217, LLR-257
@@ -461,7 +461,7 @@ def _members(root, rev):
     for tid, row in acceptance_record.rows_at(root, rev, *TEST_CASES).items():
         for vid in refs(row.get("Verifies")):
             tests.setdefault(vid, []).append(tid)
-        if is_approved(row) or is_founded(row):
+        if is_accepted(row) or is_founded(row):
             standing.add(tid)
     return design, tests, standing
 
@@ -510,7 +510,7 @@ def test_first_findings(root, src="src", start=None, rev="HEAD"):
             continue
         landing, late, unread, unaccepted = judged
         if start and not own.exact:
-            # Approved at or before a commit after the start: whether it
+            # Accepted at or before a commit after the start: whether it
             # entered scope at all cannot be read.
             late, unread, unaccepted = (), ((sr, own.commit),), ()
         if late or unread or unaccepted:

@@ -20,14 +20,14 @@ checks each need against. A worked one for this project:
 
 ```toml
 [need.SN-001]
-status = "Approved"
+status = "Accepted"
 need = "Export my records to a file I can open in a spreadsheet."
 why = "The data is useless if I can't get it into Excel/Sheets."
 priority = "M"
 acceptance = "A new user clicks export and the file opens in a spreadsheet with the right columns and all their rows."
 
 [need.SN-013]
-status = "Approved"
+status = "Accepted"
 need = """If an export is interrupted (crash / power loss / cancel) mid-write, I never end up with a half-written file that looks complete; I can just run it again."""
 why = "A partial file that opens cleanly in a spreadsheet is silent data loss."
 priority = "M"
@@ -39,7 +39,7 @@ is no separate edge tier. What keeps such needs from being forgotten is the
 **hats roster** (`hats.toml`, process.md §1): each applicable hat's question is
 put to every decomposition it applies to, so edge coverage is regenerated per
 need rather than maintained as a standing checklist. Maturity is the `status`
-field (`Drafted`/`Approved`) — the same word at every tier — never a section
+field (`Drafted`/`Accepted`) — the same word at every tier — never a section
 heading, and an absent key IS the empty cell.
 
 ## 2. System specifications — `requirements/system-requirements.toml`
@@ -54,7 +54,7 @@ acceptance_criteria = """Output parses as CSV; row count == records + 1 (header)
 permutations = "field=set{plain,comma,quote,newline}"
 priority = "M"
 verification_method = "Test"
-status = "Approved"
+status = "Accepted"
 
 [requirement.SR-002]
 title = "Atomic export write"
@@ -65,7 +65,7 @@ acceptance_criteria = """A run interrupted before completion leaves no file at t
 permutations = "interrupt=set{during-write,before-rename}"
 priority = "M"
 verification_method = "Demonstration"
-status = "Approved"
+status = "Accepted"
 ```
 
 Note the **statement pattern**: both rows are EARS *ubiquitous* (`The <system>
@@ -78,13 +78,13 @@ distinction is why `trace.py` warns on a non-EARS opening rather than gating it.
 
 Note also: each SR has **measurable** acceptance criteria a test can assert (not
 "exports correctly"), links its SN, and uses `permutations` so one row covers
-many cases. `status` is the **closed** vocabulary — `Drafted`, `Approved`,
-`Founded` (process.md §4): `Approved` blesses the row's *text* and says
+many cases. `status` is the **closed** vocabulary — `Drafted`, `Accepted`,
+`Founded` (process.md §4): `Accepted` blesses the row's *text* and says
 nothing about tests passing (that is the harness's answer), `Founded` adds
 that the artifacts the row calls for exist and is COMPUTED rather than typed,
 and an out-of-vocabulary word is an always-on integrity finding, not a free
 label. A post-acceptance amendment has no value of its own — it is caught by
-diffing the row against `docs/archive/last_approved/`. The `phase` key is omitted
+diffing the row against `docs/archive/last_accepted/`. The `phase` key is omitted
 throughout because this is a single-shot deliverable (no phased roadmap): with
 nothing phased the accepted-row Phase rule stays unarmed, and an absent key
 means in scope for every phase. A phased roadmap instead tags every accepted
@@ -107,7 +107,7 @@ module = "src/export/csv"
 code_symbol = "to_csv"
 detail = """Pure function: records -> String. Header from the schema; values quoted per RFC-4180. No I/O — unit-testable in isolation."""
 test_refs = "(see TC)"
-status = "Approved"
+status = "Accepted"
 
 [design.LLR-002]
 sr_refs = ["SR-002"]
@@ -117,7 +117,7 @@ code_symbol = "write_atomic"
 detail = """Write bytes to <path>.tmp, then rename to <path>; remove the tmp on any error. Rename is atomic on the same volume. The I/O shell around the pure core."""
 rationale = """Streaming the write in place was ruled out: a crash mid-write leaves a half-file the next run reads as valid. Costs one temp file per export."""
 test_refs = "(see TC)"
-status = "Approved"
+status = "Accepted"
 ```
 
 Note the split: **`to_csv` is a pure core** (cheap, exhaustive unit tests);
@@ -145,7 +145,7 @@ parameters = "field=set{plain,comma,quote,newline}"
 expected = "Satisfies SR-001 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_export.rs"
-status = "Approved"
+status = "Accepted"
 
 [test.TC-002]
 verifies = ["SR-002", "LLR-002"]
@@ -156,7 +156,7 @@ parameters = "interrupt=set{during-write,before-rename}"
 expected = "Satisfies SR-002 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_export.rs"
-status = "Approved"
+status = "Accepted"
 ```
 
 The `Evidence` column names the **concrete test that provides the proof** — a
@@ -261,7 +261,7 @@ store. A reliability need (`SN-020`) becomes an SR verified by demonstration:
 
 ```csv
 SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Phase,Lifecycle
-SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Approved,,Runtime
+SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Accepted,,Runtime
 ```
 
 The domain hat filters and owns its slice through the rows' LLR
@@ -290,7 +290,7 @@ checklist (`gen_release_checklist.py`) finds it:
 
 ```csv
 TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
-TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a write committed just before the kill is readable after",Release,"failure=set{kill,network-loss,disk-full}","Satisfies SR-101 AcceptanceCriteria",No,docs/test/failover-procedure.md,Approved,
+TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a write committed just before the kill is readable after",Release,"failure=set{kill,network-loss,disk-full}","Satisfies SR-101 AcceptanceCriteria",No,docs/test/failover-procedure.md,Accepted,
 ```
 
 `Tier=Release` keeps this slow, environment-heavy test out of the per-push and
@@ -313,15 +313,15 @@ needs ≥1 TC, whose cell records **who vouched and when**:
 
 ```csv
 SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Phase,Aspect
-SR-201,Main-theme mood fit,SN-040,"The main theme shall match the game's established mood (heroic, wistful undertone) as judged by the creative lead.","Realizes SN-040: the score sets the emotional tone; no automated check can judge 'fit'.","The creative lead reviews the rendered track against the mood brief and records a pass/fail with notes.",,H,Vouch,Approved,,
+SR-201,Main-theme mood fit,SN-040,"The main theme shall match the game's established mood (heroic, wistful undertone) as judged by the creative lead.","Realizes SN-040: the score sets the emotional tone; no automated check can judge 'fit'.","The creative lead reviews the rendered track against the mood brief and records a pass/fail with notes.",,H,Vouch,Accepted,,
 ```
 
 ```csv
 TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
-TC-201,SR-201,System,"Creative review of the rendered main theme against the mood brief",Release,"vouched-by=A. Rivera (creative lead); vouched-on=2026-07-02","Recorded judgment that SR-201's mood-fit criterion is met (pass, with notes)",No,docs/reviews/main-theme-signoff.md,Approved,
+TC-201,SR-201,System,"Creative review of the rendered main theme against the mood brief",Release,"vouched-by=A. Rivera (creative lead); vouched-on=2026-07-02","Recorded judgment that SR-201's mood-fit criterion is met (pass, with notes)",No,docs/reviews/main-theme-signoff.md,Accepted,
 ```
 
-`trace.py` accepts `SR-201` as legitimately `Approved` but reports it under
+`trace.py` accepts `SR-201` as legitimately `Accepted` but reports it under
 **"Verification basis (vouched vs mechanized)"** — so an audit always sees how
 much of the project rests on trust versus a runnable check. Note the spine here
 stays at **high altitude**: `SN-040 → SR-201` ensures the theme's mood isn't
@@ -382,7 +382,7 @@ acceptance_criteria = """Output parses as CSV; columns match the schema; special
 permutations = "field=set{plain,comma,quote,newline}"
 priority = "M"
 verification_method = "Test"
-status = "Approved"
+status = "Accepted"
 
 [requirement.SR-050]
 title = "Deliver export to destination"
@@ -393,7 +393,7 @@ acceptance_criteria = """A completed export reaches the destination and receipt 
 permutations = "dest=set{local,s3,sftp}"
 priority = "M"
 verification_method = "Test"
-status = "Approved"
+status = "Accepted"
 ```
 
 The boundary between the two is a **contract**, so it is an `IF-###` (process.md
@@ -410,7 +410,7 @@ consumers = ["src/delivery"]
 channel = "file"
 data = "the export file: RFC-4180 CSV at the configured path, header row first"
 version = "v1"
-status = "Approved"
+status = "Accepted"
 ```
 
 `owner` is the providing **thing** — the module the information plugs into, in
@@ -451,7 +451,7 @@ parameters = "dest=set{local,s3,sftp}"
 expected = "Satisfies SR-050 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_delivery_seam.py"
-status = "Approved"
+status = "Accepted"
 ```
 
 Each module's SRs still decompose into their own `Module`-tagged LLRs as usual (§3;
@@ -520,7 +520,7 @@ consumers = ["src/delivery"]
 channel = "file"
 data = "RFC-4180 CSV at the agreed path, header row first — stated once, in the export repo"
 version = "v2"
-status = "Approved"
+status = "Accepted"
 
 [interface.IF-011]
 owner = "external:object-store"
@@ -528,7 +528,7 @@ requestors = ["src/delivery"]
 channel = "call"
 data = "S3 PutObject of the purchased store; the vendor datasheet is the definition of record"
 version = "vendor-2024"
-status = "Approved"
+status = "Accepted"
 ```
 
 `IF-010`'s definition is owned by a repo that **builds** the surface (`export` — its

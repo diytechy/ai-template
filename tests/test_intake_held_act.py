@@ -75,7 +75,7 @@ HOLDS_NEEDS = kit_ladder.STAGE_NEEDS
 
 NEED = (
     "[need.SN-001]\n"
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     'need = "{}"\n'
     'why = "It is the point."\n'
     'priority = "M"\n'

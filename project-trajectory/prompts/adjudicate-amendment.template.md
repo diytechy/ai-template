@@ -8,7 +8,7 @@
 
      Slots (single-brace, strict fill — a missing one refuses):
        {rows}      the per-cell before/after listing, rendered from
-                   trace.reaccept_model — APPROVED cells only, since a traced
+                   trace.reaccept_model — ACCEPTED cells only, since a traced
                    cell is ruled outside acceptance (section A5.1). Registry-derived ONLY.
                    SCOPE-BOUNDED: only the rows in this row's own `Adjudicates`
                    cell (the rows the amendment mint routed), each once, so a
@@ -16,7 +16,7 @@
                    drift. A row with no scope, or a scope with nothing left
                    drifted, refuses rather than composing.
        {baseline}  the accepted anchor this diff is measured against: the
-                   docs/archive/last_approved/ snapshot and, for EACH registry
+                   docs/archive/last_accepted/ snapshot and, for EACH registry
                    the listing shows, the reviewed commit that last copied that
                    registry — not the newest write anywhere in the directory,
                    which is often another registry's copy. That directory can

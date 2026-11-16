@@ -370,7 +370,7 @@ STAKEHOLDERS = """
 name = "Adopting team"
 description = "A team that adds the package to its own work."
 party = "EXT-001"
-status = "Approved"
+status = "Accepted"
 """
 
 # The party the stakeholder names, declared so the tree is otherwise clean:

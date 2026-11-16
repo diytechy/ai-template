@@ -185,7 +185,7 @@ IF_HDR = (
 # The two maturity columns these bodies carry collapse into the ONE the tier
 # has: a body that reads `Stability=draft`, or `Status=Proposed` with no
 # `Stability`, translates to `status = "Drafted"`; anything else to
-# `status = "Approved"` (OI-67 put the spine's own two words on the row).
+# `status = "Accepted"` (OI-67 put the spine's own two words on the row).
 def _csv_body_to_toml(header, table, body):
     import csv as _csv
     import io as _io
@@ -228,7 +228,7 @@ def _csv_body_to_toml(header, table, body):
         maturity = (row.get("Stability") or "").strip() or (
             "draft"
             if (row.get("Status") or "").strip().lower() == "proposed"
-            else "approved"
+            else "accepted"
         )
         out.append("[{}.{}]".format(table, rid))
         if table == "interface":
@@ -250,7 +250,7 @@ def _csv_body_to_toml(header, table, body):
                 'status = "{}"'.format(
                     "Drafted"
                     if maturity.lower() in ("draft", "drafted", "proposed")
-                    else "Approved"
+                    else "Accepted"
                 )
             )
         for col, key in keys.items():
@@ -420,13 +420,13 @@ def test_seam_tc_citation_warn(tmp_path):
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
         'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     proc = run_traj(tmp_path)
@@ -436,7 +436,7 @@ def test_seam_tc_citation_warn(tmp_path):
     assert len(seam) == 1, proc.stderr
     assert "1 IF seam(s)" in seam[0] and "IF-002" in seam[0]
     assert "IF-001" not in seam[0]  # the TC citation suppresses it
-    # IF-002 is `draft` and IF-001 `approved`, so the row that warns is the one
+    # IF-002 is `draft` and IF-001 `accepted`, so the row that warns is the one
     # NO TC cites regardless of maturity — the arming key really is gone, not
     # merely renamed.
 
@@ -450,7 +450,7 @@ def test_contracts_docstring_citation_warns(tmp_path):
     write_arch(tmp_path, arch)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
         'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     proc = run_traj(tmp_path)
@@ -473,7 +473,7 @@ def test_a_seam_declared_on_the_wrong_module_is_named(tmp_path):
     write_arch(tmp_path, arch)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,approved,Active,,\n',
+        'IF-001,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,accepted,Active,,\n',
     )
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -514,13 +514,13 @@ def test_seam_tc_promotion_errors_under_strict_when_not_allowlisted(tmp_path):
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
         'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     proc = run_traj(tmp_path)
@@ -549,13 +549,13 @@ def test_seam_tc_promotion_allowlisted_seam_stays_warn_under_strict(tmp_path):
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
         'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     (tmp_path / "docs" / "if-tc-coverage-allow").write_text(
@@ -574,13 +574,13 @@ def test_if_tc_allow_hygiene_reports_stale_and_unknown_entries(tmp_path):
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
         'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     (tmp_path / "docs" / "if-tc-coverage-allow").write_text(
@@ -638,7 +638,7 @@ def test_a_multi_valued_endpoint_cell_declares_every_pair_in_it(tmp_path):
     write_ifs(
         tmp_path,
         'IF-001,Provides,scripts/mod_a,"scripts/mod_b; scripts/mod_c","a to b and c",'
-        "SR-001,v1,approved,Active,,\n",
+        "SR-001,v1,accepted,Active,,\n",
     )
     pairs = check_trajectory._declared_seam_pairs(tmp_path)
     assert ("scripts/mod_a", "scripts/mod_b") in pairs
@@ -669,13 +669,13 @@ def test_a_bare_addition_past_the_seed_suppresses_nothing(tmp_path):
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
         'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     allow = tmp_path / "docs" / "if-tc-coverage-allow"
@@ -760,13 +760,13 @@ def _gate_repo(
     )
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
-        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,approved,Active,,\n',
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,accepted,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001;IF-002,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001;IF-002,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     return tmp_path
@@ -822,13 +822,13 @@ def test_an_external_owned_seam_is_stated_by_its_far_side(tmp_path):
     )
     write_ifs(
         root,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
-        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,approved,Active,,\n'
-        'IF-003,Provides,external:git,scripts/mod_b,"refs",SR-001,v1,approved,Active,,\n',
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,accepted,Active,,\n'
+        'IF-003,Provides,external:git,scripts/mod_b,"refs",SR-001,v1,accepted,Active,,\n',
     )
     (root / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001;IF-002;IF-003,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001;IF-002;IF-003,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     proc = run_traj(root, "--strict")
@@ -993,13 +993,13 @@ def test_the_rows_the_gate_did_not_judge_are_counted_in_one_warn_line(tmp_path):
     )
     write_ifs(
         root,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
-        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,approved,Active,,\n'
-        'IF-003,Provides,external:git,external:ci,"refs",SR-001,v1,approved,Active,,\n',
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,accepted,Active,,\n'
+        'IF-003,Provides,external:git,external:ci,"refs",SR-001,v1,accepted,Active,,\n',
     )
     (root / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001;IF-002;IF-003,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001;IF-002;IF-003,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     assert check_trajectory.unchecked_contract_rows(root) == [
@@ -1028,12 +1028,12 @@ def test_if_tc_allow_malformed_line_is_reported_end_to_end(tmp_path):
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n',
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     allow = tmp_path / "docs" / "if-tc-coverage-allow"
@@ -1053,7 +1053,7 @@ def test_seam_tc_promotion_shares_the_one_module_vacuity(tmp_path):
     write_arch(tmp_path, ARCH_1MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,downstream adopter,"a to world",SR-001,v1,approved,Active,,\n',
+        'IF-001,Provides,scripts/mod_a,downstream adopter,"a to world",SR-001,v1,accepted,Active,,\n',
     )
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 0, strict.stdout + strict.stderr
@@ -1116,7 +1116,7 @@ def write_tagged_llrs(root, pairs):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     body = "".join(
-        "LLR-{:03d},SR-001,T,{},f,d,(see TC),Approved,{}\n".format(i + 1, mod, cmp)
+        "LLR-{:03d},SR-001,T,{},f,d,(see TC),Accepted,{}\n".format(i + 1, mod, cmp)
         for i, (mod, cmp) in enumerate(pairs)
     )
     (req / "low-level-requirements.csv").write_text(
@@ -1545,7 +1545,7 @@ def write_symbol_llrs(root, rows):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     body = "".join(
-        "{},SR-001,T,{},{},d,(see TC),Approved,\n".format(lid, mod, sym)
+        "{},SR-001,T,{},{},d,(see TC),Accepted,\n".format(lid, mod, sym)
         for lid, mod, sym in rows
     )
     (req / "low-level-requirements.csv").write_text(
@@ -1681,7 +1681,7 @@ def _write_tc_citing(tmp_path, if_id):
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;{},Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n".format(
+        "TC-001,SR-001;{},Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n".format(
             if_id
         ),
         encoding="utf-8",
@@ -1982,7 +1982,7 @@ def test_kernel_allow_hygiene_shares_the_components_check_opt_out(tmp_path):
 
 # Two declared seams for the spec-citation checks.
 SPEC_IFS_ONE = (
-    'IF-001,Consumes,scripts/mod_a,docs/stack.ini,"reads",SR-001,v1,approved,Stable,,\n'
+    'IF-001,Consumes,scripts/mod_a,docs/stack.ini,"reads",SR-001,v1,accepted,Stable,,\n'
 )
 SPEC_IFS_PROPOSED = SPEC_IFS_ONE + (
     'IF-050,Provides,scripts/mod_a,scripts/mod_b,"new seam",SR-001,v1,'
@@ -2145,7 +2145,7 @@ def test_tag_findings_warn_plain_and_error_under_strict(tmp_path, work_items):
     """Implements: TC-409"""
     if work_items:
         write_wis(tmp_path, "WI-001,A,scripts,,,done,Shipped it.\n")
-    _write_tc_rows(tmp_path, {"TC-001": "Approved"})
+    _write_tc_rows(tmp_path, {"TC-001": "Accepted"})
     rel = "tests/test_tagged.py"
     _write_test_file(tmp_path, rel, TAG_CLEAN_FILE)
     clean = run_traj(tmp_path, "--strict")
@@ -2163,7 +2163,7 @@ def test_tag_findings_warn_plain_and_error_under_strict(tmp_path, work_items):
 @pytest.mark.parametrize("wrap", [", TC-002", "and TC-002"], ids=["comma", "and"])
 def test_a_wrapped_tag_list_is_refused_under_strict(tmp_path, wrap):
     """Implements: TC-409"""
-    _write_tc_rows(tmp_path, {"TC-001": "Approved", "TC-002": "Approved"})
+    _write_tc_rows(tmp_path, {"TC-001": "Accepted", "TC-002": "Accepted"})
     rel = "tests/test_tagged.py"
     text = '"""Module text.\n\nImplements: TC-001\n{}\n"""\n'.format(wrap)
     _write_test_file(tmp_path, rel, text)
@@ -2180,7 +2180,7 @@ def test_the_tag_check_is_vacuous_with_no_tests_root_or_no_registry(tmp_path):
     assert no_registry.returncode == 0, no_registry.stdout + no_registry.stderr
     assert rel not in no_registry.stderr
 
-    _write_tc_rows(tmp_path, {"TC-001": "Approved"})
+    _write_tc_rows(tmp_path, {"TC-001": "Accepted"})
     paired = run_traj(tmp_path, "--strict")
     assert paired.returncode == 1, paired.stdout + paired.stderr
     assert _tag_finding(paired, "ERROR", rel, 3, "unknown"), paired.stderr
@@ -2197,7 +2197,7 @@ def test_a_nested_tests_root_reports_repo_relative_paths(tmp_path):
     (tmp_path / "docs" / "stack.ini").write_text(
         "[paths]\nsrc = src\ntests = qa/tests\n", encoding="utf-8"
     )
-    _write_tc_rows(tmp_path, {"TC-001": "Approved"})
+    _write_tc_rows(tmp_path, {"TC-001": "Accepted"})
     rel = "qa/tests/test_tagged.py"
     _write_test_file(tmp_path, rel, TAG_MISPLACED_FILE)
     _write_test_file(tmp_path, "tests/test_undeclared.py", TAG_MISPLACED_FILE)
@@ -2228,7 +2228,7 @@ def test_a_draft_tc_is_clean_and_an_absent_one_is_refused(tmp_path):
     )
     assert tags == {"TC-001": [rel]}
 
-    _write_tc_rows(tmp_path, {"TC-002": "Approved"})
+    _write_tc_rows(tmp_path, {"TC-002": "Accepted"})
     deleted = run_traj(tmp_path, "--strict")
     assert deleted.returncode == 1, deleted.stdout + deleted.stderr
     assert _tag_finding(deleted, "ERROR", rel, 3, "unknown"), deleted.stderr
@@ -2238,7 +2238,7 @@ def test_the_tag_check_on_a_bootstrapped_scaffold(scaffold):
     """Implements: TC-409"""
     registry = scaffold / "docs" / "test" / "test-cases.toml"
     registry.write_text(
-        registry.read_text(encoding="utf-8") + "\n" + _tc_rows({"TC-001": "Approved"}),
+        registry.read_text(encoding="utf-8") + "\n" + _tc_rows({"TC-001": "Accepted"}),
         encoding="utf-8",
     )
     rel = "tests/test_tagged.py"
@@ -2298,7 +2298,7 @@ def _equality_findings(proc, level):
     ]
 
 
-def _write_equality_tree(root, evidence, text, status="Approved", rel=TAGGED_FILE):
+def _write_equality_tree(root, evidence, text, status="Accepted", rel=TAGGED_FILE):
     """TC-001 citing `evidence`, and the one test file `text` beside it."""
     _write_tc_rows(root, {"TC-001": status}, evidence)
     _write_test_file(root, rel, text)
@@ -2347,7 +2347,7 @@ def test_a_draft_tc_is_judged(tmp_path):
 def test_the_equality_check_on_a_bootstrapped_scaffold(scaffold):
     """Implements: TC-410"""
     registry = scaffold / "docs" / "test" / "test-cases.toml"
-    rows = _tc_rows({"TC-001": "Approved"}, TAGGED_NODE)
+    rows = _tc_rows({"TC-001": "Accepted"}, TAGGED_NODE)
     registry.write_text(
         registry.read_text(encoding="utf-8") + "\n" + rows, encoding="utf-8"
     )
@@ -2527,14 +2527,14 @@ def test_a_placeholder_row_is_outside_the_equality_rule(tmp_path):
     # Adequacy witness: a comparison judging every registry row reads TC-000's
     # untagged part as a difference, and this test fails in both phases.
     _write_test_file(tmp_path, TAGGED_FILE, UNTAGGED_TEST)
-    _write_tc_rows(tmp_path, {"TC-000": "Approved"}, TAGGED_NODE)
+    _write_tc_rows(tmp_path, {"TC-000": "Accepted"}, TAGGED_NODE)
     placeholder_only = run_traj(tmp_path, "--strict")
     assert _equality_findings(placeholder_only, "ERROR") == [], placeholder_only.stderr
     assert placeholder_only.returncode == 0, (
         placeholder_only.stdout + placeholder_only.stderr
     )
 
-    _write_tc_rows(tmp_path, {"TC-000": "Approved", "TC-001": "Approved"}, TAGGED_NODE)
+    _write_tc_rows(tmp_path, {"TC-000": "Accepted", "TC-001": "Accepted"}, TAGGED_NODE)
     beside_a_live_row = run_traj(tmp_path, "--strict")
     assert _equality_findings(beside_a_live_row, "ERROR") == [_no_tag(TAGGED_NODE)], (
         beside_a_live_row.stderr
@@ -2551,7 +2551,7 @@ def test_the_equality_check_is_vacuous_with_no_tests_root_or_no_registry(tmp_pat
     assert no_registry.returncode == 0, no_registry.stdout + no_registry.stderr
     assert _equality_findings(no_registry, "ERROR") == [], no_registry.stderr
 
-    _write_tc_rows(tmp_path, {"TC-001": "Approved"}, TAGGED_NODE)
+    _write_tc_rows(tmp_path, {"TC-001": "Accepted"}, TAGGED_NODE)
     paired = run_traj(tmp_path, "--strict")
     assert _equality_findings(paired, "ERROR") == [_no_tag(TAGGED_NODE)], paired.stderr
     assert paired.returncode == 1, paired.stdout + paired.stderr
@@ -2619,9 +2619,9 @@ def _record(**changes):
 
 def _derivation_findings(root, rows):
     """`component_findings` over a registry of `rows`, `[(id, {key: TOML
-    literal})]`, written as live `Approved` rows."""
+    literal})]`, written as live `Accepted` rows."""
     blocks = [
-        '[component.{0}]\nname = "{0}"\nstatus = "Approved"\n'.format(rid)
+        '[component.{0}]\nname = "{0}"\nstatus = "Accepted"\n'.format(rid)
         + "".join("{} = {}\n".format(key, value) for key, value in cells.items())
         for rid, cells in rows
     ]

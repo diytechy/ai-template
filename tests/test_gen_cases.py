@@ -43,7 +43,7 @@ def test_process_md_specs_parse():
 # pins their cells: the 3771c003 Status-rename sweep missed EXAMPLE's four
 # `Implemented` cells precisely because no test read them (WI-471). These two
 # pins close that hole.
-LEGAL_STATUS = {"Drafted", "Approved", "Modified"}
+LEGAL_STATUS = {"Drafted", "Accepted", "Modified"}
 FENCED_BLOCK_RE = re.compile(r"```(toml|csv)\n(.*?)```", re.DOTALL)
 
 

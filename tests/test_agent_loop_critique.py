@@ -98,17 +98,17 @@ SR_HEADER = (
 )
 SR_CRITIQUE = (
     'SR-050,Render realism,SN-001,"SR-INTENT-MARKER the render shall look real.",'
-    '"Subjective.","Judged against the rubric.",,S,Critique,Approved\n'
+    '"Subjective.","Judged against the rubric.",,S,Critique,Accepted\n'
 )
 SR_TEST = (
     'SR-050,Render realism,SN-001,"The render shall look real.",'
-    '"Objective.","render(x)==y.",,S,Test,Approved\n'
+    '"Objective.","render(x)==y.",,S,Test,Accepted\n'
 )
 
 TC_ROW = (
     "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
     "TC-050,SR-050,System,critique against the rubric,Release,"
-    '"rubric=docs/rubrics/render.md; artifact=art.txt","Critic APPROVE",No,,Approved\n'
+    '"rubric=docs/rubrics/render.md; artifact=art.txt","Critic APPROVE",No,,Accepted\n'
 )
 
 # The registry's one home is `docs/work/` spec files, so the fixture hands

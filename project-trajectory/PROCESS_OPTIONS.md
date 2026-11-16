@@ -176,9 +176,9 @@ is the axis's **below-the-ladder sentinel** for a row that has not earned a rung
 yet — a fold value, never a rung a repo sits at (§4):
 
 - **SR / LLR / TC** — the CLOSED `Status` vocabulary is
-  `Drafted` → `Approved` → `Founded` (the last COMPUTED, never typed). An
-  accepted row whose text later moves stays `Approved`; the change is caught
-  by diffing it against `docs/archive/last_approved/`. Per-artifact stage: an SR is **DevStg-Below** while
+  `Drafted` → `Accepted` → `Founded` (the last COMPUTED, never typed). An
+  accepted row whose text later moves stays `Accepted`; the change is caught
+  by diffing it against `docs/archive/last_accepted/`. Per-artifact stage: an SR is **DevStg-Below** while
   `Drafted`, **DevStg-Reqs** once accepted (Status past `Drafted`), **DevStg-Tests** once decomposed (its
   LLR — unless the verification method is LLR-exempt Analysis/Inspection/Vouch — plus a
   TC). **DevStg-Release is not reachable from a cell** (the 2026-08-15 ruling,
@@ -275,7 +275,7 @@ exactly where "this also modifies SR-12" and other conflicts surface in one revi
 ```
 Phase N:  [N]-[DevStg-LLReqs]  draft+accept ALL new/reopened SN/SR  (parallel, batch)
               │
-          [N]-[DevStg-Impl]     decompose to LLR/TC, all Approved   (parallel, batch)
+          [N]-[DevStg-Impl]     decompose to LLR/TC, all Accepted   (parallel, batch)
               │
           WI-a ─ DevStg-Tests→DevStg-Impl ─┐
           WI-b ─ DevStg-Tests→DevStg-Impl ─┤  (series, per-WI vertical slices)
@@ -321,7 +321,7 @@ a crash. The digit-extract parse is retained for grandfathering (`phase_num`:
 filter and derive while `--strict-schema` migrates the live cells. Semantics:
 
 - **A blank `Phase` is legal only on a pre-acceptance (`Drafted`) row.** An accepted
-  SR/LLR/TC (`Approved`/`Founded`) — and transitively an accepted SN — must carry a
+  SR/LLR/TC (`Accepted`/`Founded`) — and transitively an accepted SN — must carry a
   full-cell bare-integer Phase, or `trace.py --strict-schema` reports a schema
   finding. The rule is **vacuous until ≥1 artifact is phased** (the same arming idiom
   the component checks use), so a fully-blank downstream registry stays green: the
@@ -331,7 +331,7 @@ filter and derive while `--strict-schema` migrates the live cells. Semantics:
   whatever its phase — decomposition is cheap and pins the design. An LLR's Phase is
   its parent SR's; a TC's is the max over what it verifies.
 - **The DevStg-Impl acceptance criterion is phase-scoped.** `check.py --gate DevStg-Impl --phase 1`
-  (cumulative for later closures: `--phase 1,2`) requires `Approved` only for
+  (cumulative for later closures: `--phase 1,2`) requires `Accepted` only for
   in-scope SRs; out-of-scope SRs are listed in the trace report as
   **phase-deferred** — an explicit, recorded exemption, never a silent skip. **The
   foundation (minimum) phase is always in scope** — never phase-deferred — so
@@ -349,9 +349,9 @@ filter and derive while `--strict-schema` migrates the live cells. Semantics:
   set still closes at DevStg-Impl with `check.py --gate DevStg-Impl --phase <shipped>` (per-phase
   scoping, not a marker rewind — rewinding would discard the closed phase's
   acceptance). Traceability is phase-blind, so a new-phase SR still reaches
-  **DevStg-Tests-completeness (LLR + TC)** before it is *Approved* — but it no longer waits
+  **DevStg-Tests-completeness (LLR + TC)** before it is *Accepted* — but it no longer waits
   off-spine to be *drafted*: it is a live `Drafted` row from the start (its Phase may
-  stay blank while `Drafted` and takes its number at acceptance). Only *Approved*
+  stay blank while `Drafted` and takes its number at acceptance). Only *Accepted*
   and *DevStg-Release* defer by phase; the new phase's SRs read phase-deferred until
   their own DevStg-Impl.
 
@@ -440,8 +440,8 @@ is the only session there is. It arises the moment work runs in parallel lanes.
 The operator ruled it (2026-09-01) and widened where the act may be taken (ruling 6,
 2026-10-07, superseding the earlier trunk-side clause):
 
-> The acceptance act on a spine row — the `Status` flip `Drafted` → `Approved`
-> (and on to `Founded`), and the `docs/archive/last_approved/` copy that anchors
+> The acceptance act on a spine row — the `Status` flip `Drafted` → `Accepted`
+> (and on to `Founded`), and the `docs/archive/last_accepted/` copy that anchors
 > it — belongs to an **independent adjudicator**, never to the session that
 > authored the row. It may be taken **in the authoring lane or on trunk**.
 
@@ -469,16 +469,16 @@ driving it:
 | | The authoring session | An independent adjudicator |
 |---|---|---|
 | Authors spine rows | Yes — new rows are written `Drafted`, chain links, rationale and evidence cells filled. | No. |
-| Amends spine text | Yes — any cell, on any row, `Approved` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
+| Amends spine text | Yes — any cell, on any row, `Accepted` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
 | Flips `Status` | **Never on a spine row** (SN/SR/LLR/TC). | Yes, on the rungs the dial releases, backed by its recorded verdict over exactly those rows, in the authoring lane or on trunk. |
-| Writes `docs/archive/last_approved/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
+| Writes `docs/archive/last_accepted/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
 | Judges a post-acceptance amendment | No; it records what it changed and why. | Yes — meaning or clarity; its act is a later adjudicator turn taken from the committed verdict, which re-accepts a *meaning* row on a released rung only when the verdict blesses it; on a held rung the row goes to the operator. |
 | Where | Its own lane, beside other lanes. | In the authoring lane, where the act merges with that lane; or as a trunk-side adjudication lane, which runs alone. A verdict may be sat at any time; its act keeps landing order (WI-912). |
 
 **How it is held.** Three mechanisms, none of them a new detector:
 
 1. The merge slot REFUSES a branch whose spine delta flips a `Status` into
-   `Approved`/`Founded`, mints a row already claiming one, records one
+   `Accepted`/`Founded`, mints a row already claiming one, records one
    accepted in its act ledger, or re-accepts one, unless every such act is backed by a recorded verdict among the branch's
    bindings that judged that act's own rows (a meaning row's re-acceptance
    only by a verdict that blesses it); it names each unbacked act and
@@ -2170,7 +2170,7 @@ until a real recurring pattern earns it.
 re-acceptance should land as **one phase** — batch the changes so a **single
 operator sitting** covers each re-acceptance, rather than paying for several
 (what is owed is the DIFFERENCE between the amended rows and their copies in
-`docs/archive/last_approved/` — process.md §7 — so the pending batch is tree
+`docs/archive/last_accepted/` — process.md §7 — so the pending batch is tree
 state the sitting reads via `trace.py --accept modified`, never commit-message
 prose). A
 phase's spec is one shared `docs/specs/` doc with a `#anchor` per WI. **Its
@@ -2639,7 +2639,7 @@ a repo that never names a component pays nothing.
 plus the derivation record's cells below
 — and holds **only what a tag can't**: the knowledge refs (`;`-joined skill
 names, `docs/knowledge/` labels, URLs), maturity
-(`Status ∈ Drafted|Approved|Founded`, the one spine vocabulary) and lifecycle
+(`Status ∈ Drafted|Accepted|Founded`, the one spine vocabulary) and lifecycle
 (`Standing ∈ active|has-gap|deprecated`; omit = active), with `SupersededBy`
 naming the successor so identity survives a rewrite, and nesting (`PartOf`).
 `Category` is an open value set (`software`, `physical`). **What the component

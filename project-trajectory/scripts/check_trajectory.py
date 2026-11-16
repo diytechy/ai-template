@@ -71,9 +71,9 @@ closing on a `VerificationMethod=Critique` SR while the latest `docs/reviews/*-C
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
 tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor) — and
 the **amend-without-flip** warn (WI-316): a staged diff changing the **accepted**
-cells of an `Approved` spine row without re-blessing it in the same commit
+cells of an `Accepted` spine row without re-blessing it in the same commit
 (process.md §7), the write-time discipline commit-message prose never had.
-*Approved*, not every cell — the §A5.1 cell split (operator ruling 2026-07-31;
+*Accepted*, not every cell — the §A5.1 cell split (operator ruling 2026-07-31;
 WI-380) rules traceability **traced, not accepted**, so a `Module`/`CodeSymbol`/
 `TestRefs`/`SN-Refs`/`Verifies` pointer following code that moved does **not**
 arm the marker. The traced half is not discarded: it is carried structurally by
@@ -2830,11 +2830,11 @@ SPINE_CSVS = acceptance_record.SPINE_CSVS
 SPINE_TABLE = acceptance_record.SPINE_TABLE
 SPINE_COLUMN = acceptance_record.SPINE_COLUMN
 SPINE_TRACED_CELLS = acceptance_record.SPINE_TRACED_CELLS
-SPINE_APPROVED_CELLS = acceptance_record.SPINE_APPROVED_CELLS
+SPINE_ACCEPTED_CELLS = acceptance_record.SPINE_ACCEPTED_CELLS
 HAT_REFS_CELL = acceptance_record.HAT_REFS_CELL
 SNAPSHOT_DIR = acceptance_record.SNAPSHOT_DIR
 SNAPSHOT_README = acceptance_record.SNAPSHOT_README
-_APPROVED_TEXT = acceptance_record._APPROVED_TEXT
+_ACCEPTED_TEXT = acceptance_record._ACCEPTED_TEXT
 _spine_stem = acceptance_record._spine_stem
 _spine_carriers = acceptance_record._spine_carriers
 _spine_rows_at = acceptance_record._spine_rows_at
@@ -3320,7 +3320,7 @@ def main():
             # neighbour check.
             + staged_hat_refs_findings(root)
             # The MIRROR INVARIANT (snapshot design §F3): a commit that touches
-            # the `last_approved` snapshot must leave every touched file
+            # the `last_accepted` snapshot must leave every touched file
             # byte-identical to its live counterpart. This is the replacement
             # for the co-mutation guard D-1's anchor half would have needed —
             # and it is a stronger rule, because it makes "the only way to write

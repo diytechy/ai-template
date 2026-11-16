@@ -23,7 +23,7 @@
 # outcome). An assumption's needs are never written here: they are read through
 # the requirements citing it.
 #
-# STATUS is the spine's maturity, `Drafted` | `Approved` | `Founded`, and an
+# STATUS is the spine's maturity, `Drafted` | `Accepted` | `Founded`, and an
 # acceptance is a reviewed act like every other: a work lane never accepts a row
 # here. STANDING is the assumption's validity, `active` | `falsified`, and is
 # separate from its maturity because an accepted assumption can later be shown

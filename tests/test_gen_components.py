@@ -34,7 +34,7 @@ def _write(root, rel, text):
 CMPS = """[component.CMP-001]
 name = "Alpha"
 category = "software"
-status = "Approved"
+status = "Accepted"
 
 [component.CMP-002]
 name = "Beta"
@@ -45,15 +45,15 @@ status = "Drafted"
 SRS = """[requirement.SR-001]
 title = "shared across two components"
 hat_refs = ["SECURITY"]
-status = "Approved"
+status = "Accepted"
 
 [requirement.SR-002]
 title = "alpha only"
-status = "Approved"
+status = "Accepted"
 
 [requirement.SR-003]
 title = "no design child at all"
-status = "Approved"
+status = "Accepted"
 """
 
 LLRS = """[design.LLR-001]
@@ -61,7 +61,7 @@ sr_refs = ["SR-001"]
 title = "in alpha"
 module = "project-trajectory/scripts/alpha.py"
 component = "CMP-001"
-status = "Approved"
+status = "Accepted"
 
 [design.LLR-002]
 sr_refs = ["SR-001", "SR-002"]
@@ -69,7 +69,7 @@ title = "in beta"
 module = "project-trajectory/scripts/beta.py"
 component = "CMP-002"
 hat_refs = ["MAINTAINER"]
-status = "Approved"
+status = "Accepted"
 """
 
 IFS = """[interface.IF-001]
@@ -218,7 +218,7 @@ def test_an_unplaceable_seam_is_REPORTED_not_silently_excluded(repo):
 
 def test_the_generated_view_carries_NO_acceptance_cell(repo):
     """Implements: TC-195"""
-    # OI-30 D3. `components.toml` says CMP-001 is Approved and CMP-002 Drafted;
+    # OI-30 D3. `components.toml` says CMP-001 is Accepted and CMP-002 Drafted;
     # neither word may appear here in any cell, because a generator that wrote
     # one would route around the very dial operator_accepts_through governs.
     text = load_script(GEN).render(repo)
@@ -226,7 +226,7 @@ def test_the_generated_view_carries_NO_acceptance_cell(repo):
     for row in doc["component_view"].values():
         assert not {"status", "standing", "approval"} & set(row)
     body = "\n".join(ln for ln in text.splitlines() if not ln.lstrip().startswith("#"))
-    assert "Approved" not in body and "Drafted" not in body
+    assert "Accepted" not in body and "Drafted" not in body
 
 
 # --- the freshness contract --------------------------------------------------

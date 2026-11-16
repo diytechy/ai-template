@@ -379,7 +379,7 @@ def _copy_claim(registry, id_col, rid, copy_after, copy_before):
     if was is None or (now.get("Status") or "") != (was.get("Status") or ""):
         return True
     cells = acceptance_record.split_changed_cells(registry, id_col, was, now)
-    return bool(cells["approved"])
+    return bool(cells["accepted"])
 
 
 def held_claims(after, before, held):

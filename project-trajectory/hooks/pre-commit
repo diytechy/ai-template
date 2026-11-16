@@ -185,7 +185,7 @@ kit_policy pre-commit commit || exit 1
 #                        committer, no dial. The merge slot asks the same of
 #                        each lane commit against its first parent.
 #      - text-then-act   reads the index too (WI-806, OI-101 Q2): a commit that
-#                        writes docs/archive/last_approved/ changes no spine
+#                        writes docs/archive/last_accepted/ changes no spine
 #                        cell but Status and adds or removes no row, so the
 #                        text is committed first and the act second. Every
 #                        committer, a direct trunk commit included; a squash

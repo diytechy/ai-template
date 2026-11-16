@@ -335,9 +335,9 @@ def test_sn_edge_rows_keep_their_native_fields(tmp_path):
     assert not any("kind" in row for row in parsed.values())
     assert set(parsed["SN-003"]) == {"status", "lifecycle", "scenario", "expected"}
     assert {rid: row["status"] for rid, row in parsed.items()} == {
-        "SN-001": "Approved",
+        "SN-001": "Accepted",
         "SN-002": "Drafted",
-        "SN-003": "Approved",
+        "SN-003": "Accepted",
     }
 
 
@@ -449,7 +449,7 @@ def test_cell_whitespace_is_CONTENT_and_survives_the_conversion(tmp_path):
         tmp_path,
         **{
             "docs/requirements/system-requirements.csv": (
-                'SR-ID,Title,Requirement,Status\nSR-001,T,"{}",Approved\n'.format(
+                'SR-ID,Title,Requirement,Status\nSR-001,T,"{}",Accepted\n'.format(
                     padded
                 )
             )
@@ -470,7 +470,7 @@ def test_cell_whitespace_is_CONTENT_and_survives_the_conversion(tmp_path):
         tmp_path / "b",
         **{
             "docs/requirements/system-requirements.csv": (
-                'SR-ID,Title,Requirement,Status\nSR-001,T,"   ",Approved\n'
+                'SR-ID,Title,Requirement,Status\nSR-001,T,"   ",Accepted\n'
             )
         },
     )
@@ -520,13 +520,13 @@ def test_the_pack_recipe_run_verbatim_leaves_the_registries_TRACKED(tmp_path):
                 "| SN-001 | a need | matters | M | works |\n"
             ),
             "docs/requirements/system-requirements.csv": (
-                "SR-ID,Title,SN-Refs,Status\nSR-001,Adder,SN-001,Approved\n"
+                "SR-ID,Title,SN-Refs,Status\nSR-001,Adder,SN-001,Accepted\n"
             ),
             "docs/requirements/low-level-requirements.csv": (
-                "LLR-ID,SR-Refs,Title,Status\nLLR-001,SR-001,Core,Approved\n"
+                "LLR-ID,SR-Refs,Title,Status\nLLR-001,SR-001,Core,Accepted\n"
             ),
             "docs/test/test-cases.csv": (
-                "TC-ID,Verifies,Method,Status\nTC-001,SR-001;LLR-001,run,Approved\n"
+                "TC-ID,Verifies,Method,Status\nTC-001,SR-001;LLR-001,run,Accepted\n"
             ),
         },
     )

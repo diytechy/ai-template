@@ -123,13 +123,13 @@ def _spine(root, *, tc_status, wi_status="done", verifies="SR-001"):
     )
     (req / "system-requirements.csv").write_text(
         SR_HEADER + "SR-001,Widget,SN-001,Shall widget.,Because.,Widgets.,,1,"
-        "Test,Approved,,,\n",
+        "Test,Accepted,,,\n",
         encoding="utf-8",
         newline="\n",
     )
     (req / "low-level-requirements.csv").write_text(
         LLR_HEADER + "LLR-001,SR-001,Widget impl,Do it.,Because.,w.py,widget,"
-        "tests/test_w.py,Approved,,\n",
+        "tests/test_w.py,Accepted,,\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -161,14 +161,14 @@ def test_a_red_tc_under_a_closed_row_is_named(tmp_path):
     assert dsp.parse_red_tc(census[0]) == ("TC-001", ["SR-001"])
 
 
-@pytest.mark.parametrize("status", ["Approved", "Drafted", "Founded"])
+@pytest.mark.parametrize("status", ["Accepted", "Drafted", "Founded"])
 def test_the_three_exempt_statuses_are_never_red(tmp_path, status):
     """Implements: TC-183"""
     # Stated as EXEMPTIONS rather than as a list of red words: anything else is
     # red, so the rule fails toward naming a gap rather than missing one, and it
     # keeps working for a downstream repo mid-migration.
-    # Approved is green; Drafted is pre-acceptance, where "not yet green" is
-    # correct; Founded (armed at D-9 step 8) is Approved plus a demonstration, so
+    # Accepted is green; Drafted is pre-acceptance, where "not yet green" is
+    # correct; Founded (armed at D-9 step 8) is Accepted plus a demonstration, so
     # it is green a fortiori. It REPLACED `Modified` here at step 7 — that word
     # belonged to the §A5.1 amendment adjudication and retired with the marker,
     # and a set still exempting it would be a live reader of a retired word.

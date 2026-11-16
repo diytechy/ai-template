@@ -672,7 +672,7 @@ def test_node_adopter_upgrade_preserves_populated_operator_content(resync, tmp_p
             encoding="utf-8"
         )
     )["requirement"]
-    assert needs["SN-701"]["status"] == "Approved"
+    assert needs["SN-701"]["status"] == "Accepted"
     assert (
         needs["SN-701"]["need"] == "Responders need each event's source and confidence."
     )

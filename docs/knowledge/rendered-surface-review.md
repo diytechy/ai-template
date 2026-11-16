@@ -86,7 +86,7 @@ the keyboard or the screen reader.
 ## Open questions / bounded here
 
 - **What is mechanically enforced today is not fully settled.** SR-052/053/054
-  are Approved and phase-3 (aspect `trajectory`); each states its acceptance as a
+  are Accepted and phase-3 (aspect `trajectory`); each states its acceptance as a
   child-LLR chain, and SR-054 records one clause — a first-time reader in fact
   finding the entry points usable — that rests on a **recorded human judgement**,
   not a standing check. Treat that clause as operator-accepted, not auto-verified.

@@ -324,7 +324,7 @@ def test_derived_stage_step_wired_at_every_rung_and_runs(scaffold):
     assert ok.returncode == 0, ok.stdout + ok.stderr
     sr = scaffold / "docs" / "requirements" / "system-requirements.csv"
     sr.write_text(
-        sr.read_text(encoding="utf-8").replace(",Test,Approved", ",Test,Drafted"),
+        sr.read_text(encoding="utf-8").replace(",Test,Accepted", ",Test,Drafted"),
         encoding="utf-8",
     )
     bad = run_py(["scripts/check.py", "--run-step", "derived-stage"], cwd=scaffold)
@@ -747,7 +747,7 @@ def _stale_stage_repo(tmp_path):
     _git(tmp_path, "add", "-A")
     _git(tmp_path, "commit", "-q", "-m", "base")
     # The edit that moves the derived stage, STAGED …
-    reg.write_text('[req.SR-001]\nstatus = "Approved"\n', encoding="utf-8")
+    reg.write_text('[req.SR-001]\nstatus = "Accepted"\n', encoding="utf-8")
     _git(tmp_path, "add", "docs/requirements/system-requirements.toml")
     # … and the regeneration that answers it, NOT staged.
     (tmp_path / "docs" / "stage").write_text("stage: DevStg-Impl\n", encoding="utf-8")

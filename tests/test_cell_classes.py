@@ -2,7 +2,7 @@
 classifier over real git trees (TC-222, LLR-225).
 
 The cells the assumption tier and its neighbours introduce, each on an
-APPROVED row whose one change is that cell, compared across two committed
+ACCEPTED row whose one change is that cell, compared across two committed
 trees. A traced cell is a pointer at another row: moving it reports no drift
 from the recorded copy. An accepted cell is a statement the row makes: moving
 it is drift owed a re-acceptance.
@@ -40,24 +40,24 @@ _DA = ("docs/requirements/assumptions.toml", "DA-ID")
 # (registry, id column, row id, column, class)
 CELL_CLASSES = [
     (*_SR, "SR-001", "DA-Refs", "traced"),
-    (*_SR, "SR-002", "Coincident", "approved"),
-    (*_SR, "SR-003", "Delivered-With", "approved"),
-    (*_SR, "SR-004", "Form", "approved"),
+    (*_SR, "SR-002", "Coincident", "accepted"),
+    (*_SR, "SR-003", "Delivered-With", "accepted"),
+    (*_SR, "SR-004", "Form", "accepted"),
     (*_TC, "TC-001", "Assumption-Refs", "traced"),
-    (*_TC, "TC-002", "Inputs", "approved"),
-    (*_TC, "TC-003", "MaxAge", "approved"),
-    (*_TC, "TC-004", "Sampling", "approved"),
-    (*_TC, "TC-005", "SampleSize", "approved"),
-    (*_TC, "TC-006", "AcceptanceRule", "approved"),
+    (*_TC, "TC-002", "Inputs", "accepted"),
+    (*_TC, "TC-003", "MaxAge", "accepted"),
+    (*_TC, "TC-004", "Sampling", "accepted"),
+    (*_TC, "TC-005", "SampleSize", "accepted"),
+    (*_TC, "TC-006", "AcceptanceRule", "accepted"),
     (*_SN, "SN-001", "Stakeholder-Refs", "traced"),
     (*_SN, "SN-002", "Source", "traced"),
-    (*_STK, "STK-01", "Name", "approved"),
-    (*_STK, "STK-02", "Description", "approved"),
-    (*_STK, "STK-03", "Party", "approved"),
+    (*_STK, "STK-01", "Name", "accepted"),
+    (*_STK, "STK-02", "Description", "accepted"),
+    (*_STK, "STK-03", "Party", "accepted"),
     (*_IF, "IF-001", "BridgedBy", "traced"),
-    (*_IF, "IF-002", "Coincident", "approved"),
-    (*_B, "B-01", "System", "approved"),
-    (*_EXT, "EXT-001", "Mediates", "approved"),
+    (*_IF, "IF-002", "Coincident", "accepted"),
+    (*_B, "B-01", "System", "accepted"),
+    (*_EXT, "EXT-001", "Mediates", "accepted"),
     (*_DA, "DA-001", "ObstacleHats", "traced"),
 ]
 
@@ -68,19 +68,19 @@ def test_delivered_with_has_a_carrier_key_and_is_accepted_content():
         acceptance_record.spine_cell_class(
             "docs/requirements/system-requirements.toml", "Delivered-With"
         )
-        == "approved"
+        == "accepted"
     )
 
 
 def _cell_rows(value):
-    """Each registry's text: one APPROVED row per case, carrying its cell at
+    """Each registry's text: one ACCEPTED row per case, carrying its cell at
     `value`. Rows sharing a file (needs and stakeholders; the frame's tiers)
     land in that one file under their own tables."""
     carrier = load_script("spine_carrier")
     files = {}
     for rel, id_col, rid, column, _cls in CELL_CLASSES:
         files.setdefault(rel, []).append(
-            '[{}.{}]\n{} = "{}"\nstatus = "Approved"\n'.format(
+            '[{}.{}]\n{} = "{}"\nstatus = "Accepted"\n'.format(
                 carrier.REGISTRY_TABLE[id_col],
                 rid,
                 MIGRATE.KEY.get(column, column),
@@ -133,14 +133,14 @@ def test_each_new_cell_is_classed_traced_or_accepted(
     after = acceptance_record._spine_rows_at(amended_cells, "HEAD:", rel, id_col)
     split = acceptance_record.split_changed_cells(rel, id_col, before[rid], after[rid])
     assert split[cls] == {column: ("recorded", "moved")}, split
-    other = "approved" if cls == "traced" else "traced"
+    other = "accepted" if cls == "traced" else "traced"
     assert split[other] == {}, split
     # The recorded copy is the first tree: a traced move is no drift, an
     # accepted one is drift owed a re-acceptance.
     drifted = baseline_snapshot.drifted_cells(rel, id_col, after[rid], before)
-    assert drifted == ({column: ("recorded", "moved")} if cls == "approved" else {})
+    assert drifted == ({column: ("recorded", "moved")} if cls == "accepted" else {})
     assert baseline_snapshot.is_drifted(rel, id_col, after[rid], before) is (
-        cls == "approved"
+        cls == "accepted"
     )
 
 
@@ -156,4 +156,4 @@ def test_off_spine_registries_have_a_traced_half_now():
     for rel, cells in acceptance_record.OFFSPINE_TRACED_CELLS.items():
         for column in cells:
             assert acceptance_record.spine_cell_class(rel, column) == "traced"
-        assert acceptance_record.spine_cell_class(rel, "Notes") == "approved"
+        assert acceptance_record.spine_cell_class(rel, "Notes") == "accepted"

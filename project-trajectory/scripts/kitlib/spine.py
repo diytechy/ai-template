@@ -3,7 +3,7 @@
 THE PAIR THAT HAD TWO HOMES (WI-448 slice 3; census 2026-08-12, `repo-lock.md`
 §8.2). `trace.py` ENFORCES the spine and `spine_rules.py` DERIVES its stage from
 the same rows, so every question either one asks of a single cell was asked
-twice: what `Drafted`/`Approved`/`Founded` mean, which `VerificationMethod` methods
+twice: what `Drafted`/`Accepted`/`Founded` mean, which `VerificationMethod` methods
 decompose to a TC but no LLR, what integer a free-form `Phase` cell parses to,
 which `SN-###` tokens a needs registry mentions, and which of them the SRs cite.
 Nine duplicated function bodies, held equal by nine `tests/test_rule_sync.py`
@@ -84,7 +84,7 @@ __all__ = [
     "registry_row_hint",
     "is_example",
     "is_drafted",
-    "is_approved",
+    "is_accepted",
     "is_founded",
     "STATUS_VALUES",
     "llr_exempt",
@@ -540,11 +540,11 @@ def is_example(rid):
 
 # THE SPINE'S CLOSED STATUS VOCABULARY — the three words the predicates below
 # read, and the one ladder every tier's `Status` is held to (D-9's Drafted ->
-# Approved -> Founded; its history is recorded where `trace.py` binds it). Its
+# Accepted -> Founded; its history is recorded where `trace.py` binds it). Its
 # home is here rather than in the checker so a pure sibling of the checker can
 # hold a tier to it without importing the checker: `frame_rules` holds the
 # stakeholder list to it.
-STATUS_VALUES = frozenset({"Drafted", "Approved", "Founded"})
+STATUS_VALUES = frozenset({"Drafted", "Accepted", "Founded"})
 
 
 def is_drafted(row):
@@ -556,7 +556,7 @@ def is_drafted(row):
     OPEN on the derivation side, which is the same fact seen from the other end.
 
     `Status` is a CLOSED vocabulary since D-9 step 1 and reached the ruled ladder
-    at steps 7/8: `{Drafted, Approved, Founded}`. Matched case-insensitively on
+    at steps 7/8: `{Drafted, Accepted, Founded}`. Matched case-insensitively on
     the stripped cell — the one Status-casing rule (process.md §4) — which all
     three predicates here share.
 
@@ -567,13 +567,13 @@ def is_drafted(row):
     return (row.get("Status") or "").strip().lower() == "drafted"
 
 
-def is_approved(row):
-    """The `Approved` state: the row's TEXT is blessed by an operator.
+def is_accepted(row):
+    """The `Accepted` state: the row's TEXT is blessed by an operator.
 
     RENAMED FROM `is_verified` AT D-9 STEP 5, and the rename carries a RULING.
     `Verified` made TWO claims at once — the text is accepted AND the evidence
     passed — and the second was a hand-set cell asserting a test run nobody
-    re-ran. `Approved` says only that the text is blessed; whether the tests
+    re-ran. `Accepted` says only that the text is blessed; whether the tests
     pass is the harness's answer (`kitlib.evidence`). `Planned` folded into this
     same value at the same act (OI-30 D1).
 
@@ -581,7 +581,7 @@ def is_approved(row):
       Inputs:  row: a registry row mapping
       Outputs: bool
     """
-    return (row.get("Status") or "").strip().lower() == "approved"
+    return (row.get("Status") or "").strip().lower() == "accepted"
 
 
 def is_founded(row):
@@ -589,7 +589,7 @@ def is_founded(row):
 
     Armed for the spine at D-9 step 8 the way it armed for CMP at the registry
     status unification — the word becomes legal, no live cell moves to it. It
-    reads ABOVE `Approved`, so arming it can never LOWER a derived reading. The
+    reads ABOVE `Accepted`, so arming it can never LOWER a derived reading. The
     DISCHARGE is computed per tier elsewhere; this reads the cell, like its two
     siblings.
 
@@ -601,7 +601,7 @@ def is_founded(row):
 
 
 def claims_acceptance(row):
-    """True when a row's `Status` claims acceptance or above: `Approved`, or the
+    """True when a row's `Status` claims acceptance or above: `Accepted`, or the
     computed `Founded` above it. A missing `Status`, or a word outside the
     vocabulary, claims nothing. The one home of the pair the acceptance-act
     readers and the parent-first rule both ask.
@@ -612,7 +612,7 @@ def claims_acceptance(row):
       Inputs:  row: a registry row mapping
       Outputs: bool
     """
-    return is_approved(row) or is_founded(row)
+    return is_accepted(row) or is_founded(row)
 
 
 def llr_exempt(row):
@@ -946,7 +946,7 @@ def tier_findings(tcs, tier_of):
     """
     errors, advisories = [], []
     for r in tcs:
-        if not is_approved(r):
+        if not is_accepted(r):
             continue
         tier = (r.get("Tier") or "").strip()
         paths = sorted({p for p, _node in evidence_items(r.get("Evidence"))})
@@ -1068,7 +1068,7 @@ def _unaccepted_parents(declared, row, column, parent_tiers):
 
 def parent_first_findings(tiers):
     """One entry `(child, child status, parent, parent status)` per accepted
-    child (`claims_acceptance`: `Approved` or `Founded`) citing a declared parent
+    child (`claims_acceptance`: `Accepted` or `Founded`) citing a declared parent
     that is not accepted, over `PARENT_EDGES`. A parent with no `Status`, or a
     word outside the vocabulary, is not accepted. Statuses are the stripped
     cells, "" for a missing one. Pure: the standing finding and the commit

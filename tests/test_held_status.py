@@ -54,7 +54,7 @@ def _sr_row(**cells):
         "Title": "Adds",
         "Requirement": "The kit shall add two numbers.",
         "Rationale": "the demo",
-        "Status": "Approved",
+        "Status": "Accepted",
         "Phase": "1",
         "SN-Refs": "SN-001",
     }
@@ -82,12 +82,12 @@ _TOML_SR = (
     'title = "Adds"\n'
     'requirement = "The kit shall add two numbers."\n'
     'rationale = "the demo"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     "phase = 1\n"
 )
 _CSV_SR = (
     "SR-ID,Title,Requirement,Rationale,Area,Status,Phase\n"
-    "SR-001,Adds,The kit shall add two numbers.,the demo,,Approved,1\n"
+    "SR-001,Adds,The kit shall add two numbers.,the demo,,Accepted,1\n"
 )
 
 
@@ -175,11 +175,11 @@ def _held_everywhere(_registry):
 @pytest.mark.parametrize(
     "before, after",
     [
-        (_rows(_row("SR-001", "Drafted")), _rows(_row("SR-001", "Approved"))),
+        (_rows(_row("SR-001", "Drafted")), _rows(_row("SR-001", "Accepted"))),
         (_rows(_row("SR-001", "Drafted")), _rows(_row("SR-001", "Founded"))),
-        (_rows(), _rows(_row("SR-001", "Approved"))),
+        (_rows(), _rows(_row("SR-001", "Accepted"))),
     ],
-    ids=["Approved", "Founded", "born Approved"],
+    ids=["Accepted", "Founded", "born Accepted"],
 )
 def test_a_live_flip_into_acceptance_is_a_claim(before, after):
     """Implements: TC-241"""
@@ -188,7 +188,7 @@ def test_a_live_flip_into_acceptance_is_a_claim(before, after):
     assert got == {("SR-001", SR_REL, "SR-ID"): "a"}
 
 
-_LIVE = _rows(_row("SR-001", "Approved", "new"))
+_LIVE = _rows(_row("SR-001", "Accepted", "new"))
 
 
 @pytest.mark.parametrize(
@@ -196,7 +196,7 @@ _LIVE = _rows(_row("SR-001", "Approved", "new"))
     [
         ((_LIVE, {}), (_LIVE, _LIVE)),
         (
-            (_LIVE, _rows(_row("SR-001", "Approved", "old"))),
+            (_LIVE, _rows(_row("SR-001", "Accepted", "old"))),
             (_LIVE, _LIVE),
         ),
         (
@@ -219,7 +219,7 @@ def test_a_copy_entry_move_or_retirement_is_a_claim(before, after):
 
 # One real claim every not-judged case sits beside: SR-009 flips into acceptance.
 _CLAIM_BEFORE = _row("SR-009", "Drafted")
-_CLAIM_AFTER = _row("SR-009", "Approved")
+_CLAIM_AFTER = _row("SR-009", "Accepted")
 
 
 def _beside_the_claim(before, after):
@@ -252,8 +252,8 @@ _NOT_JUDGED = {
         ),
     ),
     "demotion": (
-        (_rows(_row("SR-002", "Approved")), _rows(_row("SR-002", "Approved")), {}),
-        (_rows(_row("SR-002", "Drafted")), _rows(_row("SR-002", "Approved")), {}),
+        (_rows(_row("SR-002", "Accepted")), _rows(_row("SR-002", "Accepted")), {}),
+        (_rows(_row("SR-002", "Drafted")), _rows(_row("SR-002", "Accepted")), {}),
     ),
     "below-acceptance move": (
         (_rows(_row("SR-002", "")), {}, {}),
@@ -261,13 +261,13 @@ _NOT_JUDGED = {
     ),
     "traced-only copy move": (
         (
-            _rows(_row("SR-002", "Approved", phase="2")),
-            _rows(_row("SR-002", "Approved", phase="1")),
+            _rows(_row("SR-002", "Accepted", phase="2")),
+            _rows(_row("SR-002", "Accepted", phase="1")),
             {},
         ),
         (
-            _rows(_row("SR-002", "Approved", phase="2")),
-            _rows(_row("SR-002", "Approved", phase="2")),
+            _rows(_row("SR-002", "Accepted", phase="2")),
+            _rows(_row("SR-002", "Accepted", phase="2")),
             {},
         ),
     ),
@@ -280,12 +280,12 @@ _NOT_JUDGED = {
         (
             {},
             {},
-            {"LLR-002": {"LLR-ID": "LLR-002", "Detail": "d", "Status": "Approved"}},
+            {"LLR-002": {"LLR-ID": "LLR-002", "Detail": "d", "Status": "Accepted"}},
         ),
     ),
     "-000 row": (
         (_rows(_row("SR-000", "Drafted")), {}, {}),
-        (_rows(_row("SR-000", "Approved")), {}, {}),
+        (_rows(_row("SR-000", "Accepted")), {}, {}),
     ),
 }
 
@@ -313,7 +313,7 @@ def test_an_unmapped_registry_is_held():
     assert held_by("DevStg-Reqs", SR_REL) is True
     tier = (unmapped, "W-ID")
     before = {tier: ({"W-001": {"W-ID": "W-001", "Status": "Drafted"}}, {})}
-    after = {tier: ({"W-001": {"W-ID": "W-001", "Status": "Approved"}}, {})}
+    after = {tier: ({"W-001": {"W-ID": "W-001", "Status": "Accepted"}}, {})}
     got = claims(after, before, functools.partial(held_by, "DevStg-Below"))
     assert got == {("W-001", unmapped, "W-ID"): "a"}
 

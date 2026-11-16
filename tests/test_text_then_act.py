@@ -2,7 +2,7 @@
 amended for landings by the operator's README Q-8 answer, 2026-10-04).
 
 One function over two trees: a commit that writes under
-`docs/archive/last_approved/` may, against its parent, change no spine cell
+`docs/archive/last_accepted/` may, against its parent, change no spine cell
 except `Status` and add or remove no row. The text is committed first and the
 act (the flips, the snapshot, the ledger and the views) second. The pre-commit
 hook asks it of the staged tree; the merge slot asks it of every lane commit,
@@ -22,7 +22,7 @@ integrate = load_script("integrate")
 snap = load_script("baseline_snapshot")
 
 SR = "docs/requirements/system-requirements.csv"
-COPY = "docs/archive/last_approved/" + SR
+COPY = "docs/archive/last_accepted/" + SR
 HEADER = "SR-ID,Title,Requirement,Status\n"
 
 
@@ -78,7 +78,7 @@ def _base(tmp_path):
         '[authority]\noperator_accepts_through = "DevStg-Below"\n', encoding="utf-8"
     )
     _commit(root, "first")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two", "Drafted"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two", "Drafted"))
     _act(root)
     _commit(root, "the first signing")
     return root
@@ -98,7 +98,7 @@ def _step(root):
 def test_a_mixed_commit_is_refused_at_pre_commit(tmp_path):
     """Implements: TC-173"""
     root = _base(tmp_path)
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Accepted"))
     _act(root)
     _git(root, "add", "-A")
     (line,) = tta.staged_text_then_act_lines(root)
@@ -113,11 +113,11 @@ def test_a_mixed_commit_is_refused_at_pre_commit(tmp_path):
 def test_the_two_commit_form_is_accepted(tmp_path):
     """Implements: TC-173"""
     root = _base(tmp_path)
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Drafted"))
     _git(root, "add", "-A")
     assert tta.staged_text_then_act_lines(root) == []  # text alone, no act
     _commit(root, "the text")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Accepted"))
     _act(root)
     _git(root, "add", "-A")
     assert tta.staged_text_then_act_lines(root) == []  # the act: flips and copy
@@ -130,16 +130,16 @@ def test_a_row_added_or_removed_beside_the_act_is_refused(tmp_path):
     root = _base(tmp_path)
     _rows(
         root,
-        ("SR-001", "One", "Approved"),
-        ("SR-002", "Two", "Approved"),
-        ("SR-003", "Three", "Approved"),
+        ("SR-001", "One", "Accepted"),
+        ("SR-002", "Two", "Accepted"),
+        ("SR-003", "Three", "Accepted"),
     )
     _act(root)
     _git(root, "add", "-A")
     (line,) = tta.staged_text_then_act_lines(root)
     assert "SR-003" in line and "added" in line
     _git(root, "reset", "-q", "--hard")
-    _rows(root, ("SR-001", "One", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"))
     _act(root)
     _git(root, "add", "-A")
     (line,) = tta.staged_text_then_act_lines(root)
@@ -153,7 +153,7 @@ def test_a_traced_cell_beside_the_act_is_text_too(tmp_path):
     root = _base(tmp_path)
     (root / SR).write_text(
         "SR-ID,Title,Requirement,Status,SN-Refs\n"
-        "SR-001,One,the text,Approved,SN-001\n"
+        "SR-001,One,the text,Accepted,SN-001\n"
         "SR-002,Two,the text,Drafted,\n",
         encoding="utf-8",
     )
@@ -166,7 +166,7 @@ def test_a_traced_cell_beside_the_act_is_text_too(tmp_path):
 def test_a_commit_that_writes_no_record_is_never_judged(tmp_path):
     """Implements: TC-173"""
     root = _base(tmp_path)
-    _rows(root, ("SR-001", "One amended", "Approved"), ("SR-009", "New", "Drafted"))
+    _rows(root, ("SR-001", "One amended", "Accepted"), ("SR-009", "New", "Drafted"))
     _git(root, "add", "-A")
     assert tta.staged_text_then_act_lines(root) == []
 
@@ -175,7 +175,7 @@ def test_a_no_verify_lane_commit_is_refused_at_the_landing(tmp_path):
     """Implements: TC-173"""
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-001")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Accepted"))
     _act(root)
     bad = _commit(root, "text and act together")  # --no-verify
     _git(root, "checkout", "-q", "main")
@@ -185,9 +185,9 @@ def test_a_no_verify_lane_commit_is_refused_at_the_landing(tmp_path):
     assert "amend-plus-flip" not in refusal.lower()
     # The two-commit lane lands.
     _git(root, "checkout", "-q", "-b", "wi-002")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Drafted"))
     _commit(root, "the text")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Accepted"))
     _act(root)
     _commit(root, "the act")
     _git(root, "checkout", "-q", "main")
@@ -198,7 +198,7 @@ def test_the_merge_ladder_consults_the_text_then_act_rung(tmp_path, monkeypatch)
     """Implements: TC-173"""
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-001")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Accepted"))
     _act(root)
     bad = _commit(root, "text and act together")
     _git(root, "checkout", "-q", "main")
@@ -226,9 +226,9 @@ def test_a_refresh_merge_is_judged_by_what_neither_side_carried(tmp_path):
     (root / "lane.txt").write_text("lane\n", encoding="utf-8")
     _commit(root, "lane work")
     _git(root, "checkout", "-q", "main")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Drafted"))
     _commit(root, "trunk text")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Accepted"))
     _act(root)
     _commit(root, "trunk act")
     _git(root, "checkout", "-q", "wi-001")
@@ -245,7 +245,7 @@ def test_a_refresh_merge_is_judged_by_what_neither_side_carried(tmp_path):
     _git(root, "checkout", "-q", "wi-001")
     _git(root, "merge", "-q", "--no-ff", "--no-commit", "-s", "ours", "main")
     assert _git(root, "rev-parse", "-q", "--verify", "MERGE_HEAD")
-    _rows(root, ("SR-001", "One evil", "Approved"), ("SR-002", "Two", "Drafted"))
+    _rows(root, ("SR-001", "One evil", "Accepted"), ("SR-002", "Two", "Drafted"))
     _act(root)
     _git(root, "add", "-A")
     (line,) = tta.staged_text_then_act_lines(root)
@@ -259,9 +259,9 @@ def test_a_squash_landing_is_admitted_only_when_its_lane_commits_pass(tmp_path):
     # checks rather than assumes, since a hand landing never meets the slot.
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-002")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Drafted"))
     _commit(root, "the text")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Accepted"))
     _act(root)
     _commit(root, "the act")
     _git(root, "checkout", "-q", "main")
@@ -273,7 +273,7 @@ def test_a_squash_landing_is_admitted_only_when_its_lane_commits_pass(tmp_path):
     _git(root, "commit", "-q", "--no-verify", "-m", "WI-002: land")
     # A lane holding a --no-verify mixed commit cannot be squashed past the hook.
     _git(root, "checkout", "-q", "-b", "wi-003")
-    _rows(root, ("SR-001", "One amended", "Approved"), ("SR-002", "Two", "Approved"))
+    _rows(root, ("SR-001", "One amended", "Accepted"), ("SR-002", "Two", "Accepted"))
     _act(root)
     bad = _commit(root, "text and act together")
     _git(root, "checkout", "-q", "main")
@@ -287,7 +287,7 @@ def test_a_squash_landing_is_admitted_only_when_its_lane_commits_pass(tmp_path):
 def test_a_first_commit_has_nothing_before_it(tmp_path):
     """Implements: TC-173"""
     root = _repo(tmp_path / "repo")
-    _rows(root, ("SR-001", "One", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"))
     _act(root)
     _git(root, "add", "-A")
     assert tta.staged_text_then_act_lines(root) == []
@@ -315,7 +315,7 @@ def test_no_refusal_text_offers_amend_plus_flip(tmp_path):
         assert "same tree" not in text and "same commit" not in text
     # The amend-without-flip warn names the two commits, not "in this commit".
     root = _base(tmp_path)
-    _rows(root, ("SR-001", "One amended", "Approved"), ("SR-002", "Two", "Drafted"))
+    _rows(root, ("SR-001", "One amended", "Accepted"), ("SR-002", "Two", "Drafted"))
     _git(root, "add", "-A")
     (warn,) = ar.staged_spine_findings(root)
     assert "SR-001" in warn and "in this commit" not in warn
@@ -351,7 +351,7 @@ def test_a_row_only_one_parent_carried_is_judged_by_its_cell_values(tmp_path):
     _git(root, "checkout", "-q", "-b", "wi-003")
     _rows(
         root,
-        ("SR-001", "One", "Approved"),
+        ("SR-001", "One", "Accepted"),
         ("SR-002", "Two", "Drafted"),
         ("SR-003", "Three", "Drafted"),
     )
@@ -362,9 +362,9 @@ def test_a_row_only_one_parent_carried_is_judged_by_its_cell_values(tmp_path):
     _git(root, "merge", "-q", "--no-ff", "--no-commit", "wi-003")
     _rows(
         root,
-        ("SR-001", "One", "Approved"),
+        ("SR-001", "One", "Accepted"),
         ("SR-002", "Two", "Drafted"),
-        ("SR-003", "Three edited", "Approved"),
+        ("SR-003", "Three edited", "Accepted"),
     )
     _act(root)
     _git(root, "add", "-A")
@@ -380,9 +380,9 @@ def test_a_row_only_one_parent_carried_is_judged_by_its_cell_values(tmp_path):
     _git(root, "merge", "-q", "--no-ff", "--no-commit", "wi-003")
     _rows(
         root,
-        ("SR-001", "One", "Approved"),
+        ("SR-001", "One", "Accepted"),
         ("SR-002", "Two", "Drafted"),
-        ("SR-003", "Three", "Approved"),
+        ("SR-003", "Three", "Accepted"),
     )
     _act(root)
     _git(root, "add", "-A")
@@ -397,9 +397,9 @@ def test_a_stale_squash_message_exempts_no_other_commit(tmp_path):
     # different direct commit made afterwards is judged like any other.
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-002")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Drafted"))
     _commit(root, "the text")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Accepted"))
     _act(root)
     _commit(root, "the act")
     _git(root, "checkout", "-q", "main")
@@ -410,7 +410,7 @@ def test_a_stale_squash_message_exempts_no_other_commit(tmp_path):
     assert (root / ".git" / "SQUASH_MSG").is_file()  # left behind
     # RESIDUE (D-004): the lane tip's own spine and record, retyped by hand,
     # ARE its squash in content: every byte was committed and judged there.
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Accepted"))
     _act(root)
     _git(root, "add", "-A")
     assert tta.staged_text_then_act_lines(root, _squashed(root)) == []
@@ -438,7 +438,7 @@ def _requirement(root, lines):
     path.parent.mkdir(parents=True, exist_ok=True)
     cell = "\n".join(lines)
     path.write_text(
-        HEADER + 'SR-001,One,"{}",Approved\n'.format(cell), encoding="utf-8"
+        HEADER + 'SR-001,One,"{}",Accepted\n'.format(cell), encoding="utf-8"
     )
 
 
@@ -489,9 +489,9 @@ def test_a_squash_of_a_lane_not_containing_head_is_refused_with_the_rebase_hint(
     """Implements: TC-173"""
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-002")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Drafted"))
     _commit(root, "the text")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Accepted"))
     _act(root)
     _commit(root, "the act")
     _git(root, "checkout", "-q", "main")
@@ -551,7 +551,7 @@ def test_a_refresh_merge_combining_two_text_commits_beside_trunks_act_passes(
     _git(root, "checkout", "-q", "main")
     detail(lines[:-1] + ["trunk"])
     _commit(root, "trunk text only")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two", "Accepted"))
     _act(root)
     _commit(root, "trunk act on SR")
     _git(root, "checkout", "-q", "wi-001")
@@ -589,9 +589,9 @@ def test_a_squash_landing_is_judged_through_the_shared_walk(tmp_path, monkeypatc
     """
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-002")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Drafted"))
     _commit(root, "the text")
-    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _rows(root, ("SR-001", "One", "Accepted"), ("SR-002", "Two amended", "Accepted"))
     _act(root)
     _commit(root, "the act")
     _git(root, "checkout", "-q", "main")

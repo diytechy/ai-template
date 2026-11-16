@@ -169,7 +169,7 @@ same way §3.5 splits gating:
   `CIF-###`, the owner's **current published version** and each consumer's **pinned**
   version. A consumer pinned below the owner's current version — the owner (parent)
   moved and the dependent didn't — is a **compatibility finding**, weighted by the §8
-  `Status` cell (a `Drafted` change is expected; an `Approved` one past a pin is
+  `Status` cell (a `Drafted` change is expected; an `Accepted` one past a pin is
   a blocker). This is comparing versions the repos publish as text: no build engine.
 - **The interface's own contract test verifies *compatibility* (already exists).**
   Whether the new version is actually compatible is answered by the dependent repo

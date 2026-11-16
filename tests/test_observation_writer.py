@@ -45,7 +45,7 @@ TEST_CASES = (
     "Status,Inputs,MaxAge\n"
     'TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2",'
     '"Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,'
-    "Approved,,\n"
+    "Accepted,,\n"
     "TC-002,SR-001,Inspection,a reader reads the sum,Release,,"
     '"Satisfies SR-001 AcceptanceCriteria",No,docs/test/manual.md,Drafted,'
     "src/demo.py;SR-001,30\n"

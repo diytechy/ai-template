@@ -39,11 +39,11 @@ MOVED = (
     "SPINE_TABLE",
     "SPINE_COLUMN",
     "SPINE_TRACED_CELLS",
-    "SPINE_APPROVED_CELLS",
+    "SPINE_ACCEPTED_CELLS",
     "HAT_REFS_CELL",
     "SNAPSHOT_DIR",
     "SNAPSHOT_README",
-    "_APPROVED_TEXT",
+    "_ACCEPTED_TEXT",
     "_spine_stem",
     "_spine_carriers",
     "_spine_rows_at",
@@ -262,13 +262,13 @@ def test_git_out_passes_batch_input_through():
 def test_the_cell_split_tables_still_cover_both_halves():
     """The one INVARIANT worth restating at the new home, because it is the
     reason the tables are here at all: a column in neither set falls through to
-    APPROVED (fail-safe loud, never silently un-accepted), and the two halves
+    ACCEPTED (fail-safe loud, never silently un-accepted), and the two halves
     must not disagree about a column they both name."""
     for rel, _ in acceptance_record.SPINE_CSVS:
         traced = acceptance_record.SPINE_TRACED_CELLS[rel]
-        accepted = acceptance_record.SPINE_APPROVED_CELLS[rel]
+        accepted = acceptance_record.SPINE_ACCEPTED_CELLS[rel]
         assert not traced & accepted, (rel, sorted(traced & accepted))
-        assert acceptance_record.spine_cell_class(rel, "NoSuchColumn") == "approved"
+        assert acceptance_record.spine_cell_class(rel, "NoSuchColumn") == "accepted"
 
 
 def test_the_amendment_walk_covers_every_tier_an_acceptance_act_blesses():
@@ -362,9 +362,9 @@ def test_an_off_spine_status_flip_is_not_the_act_this_rung_refuses(tmp_path):
     git("add", "-A")
     git("commit", "-q", "-m", "seed")
 
-    # The flip an off-spine tier CAN carry: Drafted -> Approved on its own cell.
+    # The flip an off-spine tier CAN carry: Drafted -> Accepted on its own cell.
     interfaces.write_text(
-        '[interface.IF-001]\nowner = "scripts/demo"\nstatus = "Approved"\n',
+        '[interface.IF-001]\nowner = "scripts/demo"\nstatus = "Accepted"\n',
         encoding="utf-8",
     )
     git("add", "-A")

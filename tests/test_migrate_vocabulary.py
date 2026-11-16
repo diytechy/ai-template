@@ -457,11 +457,153 @@ def test_a_scratchpad_under_both_names_is_named_and_neither_is_touched(
 def test_the_acceptance_records_copy_of_a_registry_moves_with_it(tmp_path, record):
     """Implements: TC-427"""
     live = _write(tmp_path, "docs/requirements/system-requirements.toml", SR_TOML)
-    copy = _write(
-        tmp_path, record + "/docs/requirements/system-requirements.toml", SR_TOML
-    )
+    _write(tmp_path, record + "/docs/requirements/system-requirements.toml", SR_TOML)
     assert _run(tmp_path) == 0
+    copy = (
+        tmp_path / migrate.RECORD_DIRS[1] / "docs/requirements/system-requirements.toml"
+    )
     assert copy.read_bytes() == live.read_bytes() != SR_TOML.encode("utf-8")
+    assert not (tmp_path / migrate.RECORD_DIRS[0]).exists()
+
+
+STATUS_TOML = """[requirement.SR-001]
+title = "Approved by the operator, in prose"
+status = "Approved"
+
+[requirement.SR-002]
+status = 'approved'  # read case-folded
+note = "Approved"
+
+[requirement.SR-003]
+status = "Drafted"
+"""
+
+STATUS_CSV = (
+    "SR-ID,Title,Status\r\n"
+    'SR-001,"Approved, in prose",Approved\r\n'
+    "SR-002,Approved,Drafted\r\n"
+)
+
+
+def test_a_rows_earlier_status_is_respelled_in_both_carriers(tmp_path):
+    """Implements: TC-427"""
+    toml = _write(tmp_path, "docs/requirements/system-requirements.toml", STATUS_TOML)
+    csv_ = _write(tmp_path, "docs/test/test-cases.csv", STATUS_CSV)
+    assert _run(tmp_path) == 0
+    # Only the status cell moves: the word in a title or another key stays.
+    assert toml.read_bytes() == STATUS_TOML.replace(
+        'status = "Approved"', 'status = "Accepted"'
+    ).replace("status = 'approved'", "status = 'accepted'").encode("utf-8")
+    assert csv_.read_bytes() == STATUS_CSV.replace(
+        'in prose",Approved', 'in prose",Accepted'
+    ).encode("utf-8")
+
+
+LEDGER = """# APPROVAL ACTS, appended by `intake.py snapshot`. Do not edit.
+
+[[act]]
+seq = 1
+date = "2026-09-27"
+approved = ["SR-001"]
+reattested = []
+
+[[act]]
+seq = 2
+date = "2026-09-28"
+approved = []
+reattested = ["SR-001"]  # re-anchored
+verdict = "docs/reviews/wi-1/001-ADJUDICATE-a.md"
+"""
+
+LIVE_SR = """[requirement.SR-001]
+requirement = "The system shall add, now in other words."
+status = "Approved"
+
+[requirement.SR-002]
+requirement = "A draft."
+status = "Drafted"
+"""
+
+COPY_SR = """[requirement.SR-001]
+requirement = "The system shall add."
+status = "Approved"
+
+[requirement.SR-002]
+requirement = "An older draft."
+status = "Drafted"
+
+[requirement.SR-009]
+requirement = "Retired since."
+status = "Approved"
+"""
+
+
+def _record(root, home=None):
+    """A repository with an acceptance record under `home` (the earlier name
+    by default): its README, its ledger and a copy of one registry."""
+    home = home or migrate.RECORD_DIRS[0]
+    live = _write(root, "docs/requirements/system-requirements.toml", LIVE_SR)
+    _write(root, home + "/README.md", "# `last_approved` — the record\n")
+    _write(root, home + "/acts.toml", LEDGER)
+    _write(root, home + "/docs/requirements/system-requirements.toml", COPY_SR)
+    return live
+
+
+def test_the_acceptance_record_moves_rekeys_and_absorbs_naming_each_cell(
+    tmp_path, capsys
+):
+    """Implements: TC-427"""
+    live = _record(tmp_path)
+    old, new = (tmp_path / d for d in migrate.RECORD_DIRS)
+    assert _run(tmp_path, "--check") == 1
+    assert old.is_dir() and not new.exists(), "--check wrote"
+    capsys.readouterr()
+    assert _run(tmp_path) == 0
+    out = capsys.readouterr().out
+    assert not old.exists() and new.is_dir()
+    # The README keeps its words; the ledger's keys move and nothing else.
+    assert (
+        (new / "README.md").read_text(encoding="utf-8").startswith("# `last_approved`")
+    )
+    ledger = (new / "acts.toml").read_text(encoding="utf-8")
+    assert ledger == LEDGER.replace("\napproved = ", "\naccepted = ").replace(
+        "\nreattested = ", "\nreaccepted = "
+    )
+    acts = tomllib.loads(ledger)["act"]
+    assert [sorted(a) for a in acts][0] == ["accepted", "date", "reaccepted", "seq"]
+    # The copy equals the live registry, status respelled in both.
+    copy = new / "docs/requirements/system-requirements.toml"
+    assert copy.read_bytes() == live.read_bytes()
+    assert 'status = "Accepted"' in live.read_text(encoding="utf-8")
+    # Every accepted cell it absorbed is named; a draft's moved text is not.
+    rel = "docs/requirements/system-requirements.toml"
+    assert "{} absorbs SR-001 requirement".format(rel) in out, out
+    assert "{} absorbs SR-009 (the whole row)".format(rel) in out, out
+    assert "SR-002" not in out, out
+    assert _run(tmp_path, "--check") == 0
+
+
+def test_a_record_under_both_names_is_named_and_neither_is_touched(tmp_path, capsys):
+    """Implements: TC-427"""
+    _record(tmp_path)
+    _write(tmp_path, migrate.RECORD_DIRS[1] + "/acts.toml", LEDGER)
+    assert _run(tmp_path) == 1
+    assert "merge the two by hand" in capsys.readouterr().out
+    for home in migrate.RECORD_DIRS:
+        assert (tmp_path / home / "acts.toml").read_text(encoding="utf-8") == LEDGER
+
+
+def test_a_ledger_the_line_edit_cannot_prove_leaves_the_record_untouched(
+    tmp_path, capsys
+):
+    """Implements: TC-427"""
+    decoy = LEDGER + 'note = """\napproved = []\n"""\n'
+    _record(tmp_path)
+    ledger = _write(tmp_path, migrate.RECORD_DIRS[0] + "/acts.toml", decoy)
+    assert _run(tmp_path) == 1
+    assert "the record is left untouched" in capsys.readouterr().out
+    assert ledger.read_text(encoding="utf-8") == decoy
+    assert not (tmp_path / migrate.RECORD_DIRS[1]).exists()
 
 
 def test_a_file_that_is_not_a_registry_is_left_alone(tmp_path):

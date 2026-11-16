@@ -3,7 +3,7 @@ consolidated, pin that there is nothing left to hold equal.
 
 THE FILE'S ORIGINAL SUBJECT — the gate policy `trace.py` and `spine_rules.py`
 each carried a copy of — IS GONE (WI-448 slice 3). Which SR verification methods
-are LLR-exempt, what "Drafted"/"Approved"/"Founded" mean, what a `Phase` cell
+are LLR-exempt, what "Drafted"/"Accepted"/"Founded" mean, what a `Phase` cell
 parses to, which SN ids exist and which are cited: nine duplicated bodies, nine
 equality pins, one home now (`kitlib.spine`). Policy disagreement between the
 module that ENFORCES the spine and the module that DERIVES its stage is a false
@@ -64,7 +64,7 @@ GATE = load_script("spine_rules")
 # --- the spine ROW vocabulary: WAS a duplicated PAIR, now ONE home (WI-448) ----
 # EIGHT EQUALITY TESTS STOOD HERE AND THEY ARE GONE, which is the point of this
 # block. `test_llr_exempt_sets_agree`, `test_is_drafted_agrees`,
-# `test_is_approved_agrees`, `test_is_founded_agrees`, `test_llr_exempt_agrees`,
+# `test_is_accepted_agrees`, `test_is_founded_agrees`, `test_llr_exempt_agrees`,
 # `test_sn_all_ids_agrees`, `test_sn_cited_ids_agrees` and
 # `test_sn_draft_ids_agrees` each imported both modules and asserted one
 # predicate answered identically in each, over a casing/whitespace/None battery.
@@ -100,7 +100,7 @@ def test_the_spine_row_vocabulary_is_one_home():
     # `is_drafted`/`is_example`/`refs` reach trace.py through `trace_text`, which
     # re-exports the same objects, so the chain is asserted end to end.
     for name in (
-        "is_approved",
+        "is_accepted",
         "is_founded",
         "llr_exempt",
         "phase_num",
@@ -143,16 +143,16 @@ def test_the_status_predicates_answer_by_value():
         ({"Status": "drafted"}, True),
         ({"Status": "  DRAFTED  "}, True),
         ({"Status": "Draft"}, False),  # RETIRED spelling
-        ({"Status": "Approved"}, False),
+        ({"Status": "Accepted"}, False),
         ({"Status": ""}, False),
         ({"Status": None}, False),
         ({}, False),
     ]:
         assert KITSPINE.is_drafted(row) is want, row
     for row, want in [
-        ({"Status": "Approved"}, True),
-        ({"Status": "approved"}, True),
-        ({"Status": "  APPROVED  "}, True),
+        ({"Status": "Accepted"}, True),
+        ({"Status": "accepted"}, True),
+        ({"Status": "  ACCEPTED  "}, True),
         ({"Status": "Verified"}, False),  # RETIRED — folded, not honoured
         ({"Status": "Planned"}, False),  # RETIRED — folded (OI-30 D1)
         ({"Status": "Modified"}, False),  # RETIRED at step 7
@@ -160,12 +160,12 @@ def test_the_status_predicates_answer_by_value():
         ({"Status": None}, False),
         ({}, False),
     ]:
-        assert KITSPINE.is_approved(row) is want, row
+        assert KITSPINE.is_accepted(row) is want, row
     for row, want in [
         ({"Status": "Founded"}, True),
         ({"Status": "founded"}, True),
         ({"Status": "  FOUNDED  "}, True),
-        ({"Status": "Approved"}, False),
+        ({"Status": "Accepted"}, False),
         ({"Status": "Modified"}, False),
         ({"Status": None}, False),
         ({}, False),
@@ -222,13 +222,13 @@ def test_is_modified_is_GONE_from_both_copies():
     # third reader of it, one the predicate grep below cannot see (it is a dict
     # KEY, not a comparison).
     assert "modified" not in GATE.SPINE_MATURITY
-    assert set(GATE.SPINE_MATURITY) == {"drafted", "approved", "founded"}
+    assert set(GATE.SPINE_MATURITY) == {"drafted", "accepted", "founded"}
 
 
 def test_is_planned_is_GONE_from_both_copies():
     # `is_planned` was step-2 INSURANCE and D-9 step 5 DELETED it, which is what
     # its own docstring promised — deleted, not re-keyed. OI-30 D1 folded
-    # `Planned` into `Approved`, so the predicate had nothing left to answer for,
+    # `Planned` into `Accepted`, so the predicate had nothing left to answer for,
     # and a surviving copy would be a second reader of a retired word.
     assert not hasattr(TRACE, "is_planned")
     assert not hasattr(GATE, "is_planned")
@@ -247,11 +247,11 @@ def test_the_three_recognized_status_values_are_mutually_exclusive():
     # the declared set equals the set at least one live predicate recognizes,
     # and this is where "at least one" and "at most one" are both checked.
     # THE END STATE, since step 7 retired `Modified` and step 8 armed `Founded`
-    # in one act: D-9's ruled ladder, {Drafted, Approved, Founded}. The enum
+    # in one act: D-9's ruled ladder, {Drafted, Accepted, Founded}. The enum
     # never held four values and never held two — the rule is that it equals the
     # live predicate set at EVERY commit, which is why the two moved together.
-    predicates = ("is_drafted", "is_founded", "is_approved")
-    assert TRACE.STATUS_VALUES == frozenset({"Drafted", "Approved", "Founded"})
+    predicates = ("is_drafted", "is_founded", "is_accepted")
+    assert TRACE.STATUS_VALUES == frozenset({"Drafted", "Accepted", "Founded"})
     for val in sorted(TRACE.STATUS_VALUES):
         row = {"Status": val}
         hits = [name for name in predicates if getattr(KITSPINE, name)(row)]
@@ -317,7 +317,7 @@ def test_no_declared_status_vocabulary_still_lists_a_RETIRED_word():
     # predicate (it cannot: `trace` imports it), so it is exactly the third copy
     # the grep above exists to catch, and it is worth pinning by value too.
     snap = load_script("baseline_snapshot")
-    assert snap._ACCEPTANCE_CLAIMED == frozenset({"approved"})
+    assert snap._ACCEPTANCE_CLAIMED == frozenset({"accepted"})
     # The OTHER two sets keyed on Status words that the source grep above CANNOT
     # see, because neither is a comparison — one is a dict's KEYS, the other a
     # bare frozenset with no `status` token on its line. Both were live readers
@@ -443,13 +443,13 @@ def test_the_sn_scrapes_answer_by_value():
     # at the next heading, and -000 is excluded here too.
     CARRIER = load_script("spine_carrier")
     for text, want in [
-        ("## Drafted\nSN-010 x\n## Approved\nSN-011 done\n", {"SN-010"}),
+        ("## Drafted\nSN-010 x\n## Accepted\nSN-011 done\n", {"SN-010"}),
         (
             "# Needs\nSN-001\n### Drafted candidates\nSN-020\nSN-021\n",
             {"SN-020", "SN-021"},
         ),
         ("## DRAFT (in review)\nSN-030 SN-000 SN-031\n", {"SN-030", "SN-031"}),
-        ("## Approved only\nSN-040\n", set()),
+        ("## Accepted only\nSN-040\n", set()),
         ("SN-050 no heading at all\n", set()),
         ("", set()),
     ]:
@@ -819,7 +819,7 @@ def test_the_edge_case_fold_is_not_titled_by_its_lifecycle_phase():
     edge = SPINE._edge_folded(
         {
             "id": "SN-013",
-            "status": "Approved",
+            "status": "Accepted",
             "lifecycle": "Provision",
             "scenario": "No Python 3 on PATH",
             "expected": "Probe and fail with a remedy",
@@ -852,7 +852,7 @@ def test_the_edge_case_fold_is_not_titled_by_its_lifecycle_phase():
     # A core need passes through unchanged.
     core = {
         "id": "SN-001",
-        "status": "Approved",
+        "status": "Accepted",
         "need": "n",
         "why": "w",
         "priority": "M",
@@ -881,7 +881,7 @@ def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
     # set it: SN-006 is named in SN-005's prose and stays accepted.
     modern = (
         '[need.SN-005]\nstatus = "Drafted"\nneed = "n"\n\n'
-        '[need.SN-006]\nstatus = "Approved"\nneed = "supersedes SN-005"\n'
+        '[need.SN-006]\nstatus = "Accepted"\nneed = "supersedes SN-005"\n'
     )
     assert SPINE.draft_ids_from_text(modern, ".toml") == {"SN-005"}
 
@@ -1434,14 +1434,14 @@ def test_is_drifted_has_exactly_ONE_home():
     """The F5 predicate-copy sanction does NOT extend to `is_drifted`, and the
     distinction is worth pinning rather than remembering.
 
-    `is_drafted`/`is_planned`/`is_modified`/`is_approved` are duplicated between
+    `is_drafted`/`is_planned`/`is_modified`/`is_accepted` are duplicated between
     `trace.py` and `spine_rules.py` on purpose: each reads ONE cell, each script
     stays independently copyable, and the tests above pin the copies equal by
     value. `is_drifted` is a different animal — it joins a live registry against
     a snapshot tree through the carrier resolver and the §A5.1 cell split, so a
     second copy would not be a five-line duplicate, it would be a second opinion
     about what "the accepted text" is. Two answers to that question is the
-    failure the whole `last_approved` mechanism exists to prevent.
+    failure the whole `last_accepted` mechanism exists to prevent.
 
     So: exactly one definition, in `baseline_snapshot.py`, and every consumer
     imports it."""

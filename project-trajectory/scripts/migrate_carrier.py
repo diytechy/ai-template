@@ -22,7 +22,7 @@ code and become properties of the parse:
     the same string.
 
 WHAT THIS DELIBERATELY DOES NOT DO. Carrier only. `Status` keeps whatever
-vocabulary the tree it converts already uses — `Drafted` / `Approved` /
+vocabulary the tree it converts already uses — `Drafted` / `Accepted` /
 `Founded` since D-9 steps 5/7/8 — and a value this converter does not recognize
 is COPIED, never mapped. That is the rule, not an omission: a downstream tree
 still carrying `Modified` (or `Draft`, or `Verified`) owes an operator ruling on
@@ -723,7 +723,7 @@ def sn_status(kind):
     oracle each derived the word, a drift between them would make the oracle
     agree with the bug — an oracle built from the thing under test cannot
     fail, which is the defect the raw-source oracle beside it exists to avoid."""
-    return "Drafted" if kind == "draft" else "Approved"
+    return "Drafted" if kind == "draft" else "Accepted"
 
 
 def sn_to_toml(needs):

@@ -499,11 +499,11 @@ def test_inventory_draft_must_need_not_required_in_readme(scaffold):
         ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    # ...and the same need APPROVED does force it — otherwise this test would
+    # ...and the same need ACCEPTED does force it — otherwise this test would
     # pass on a check that had simply stopped looking.
     reg.write_text(
         reg.read_text(encoding="utf-8").replace(
-            'status = "Drafted"', 'status = "Approved"'
+            'status = "Drafted"', 'status = "Accepted"'
         ),
         encoding="utf-8",
     )

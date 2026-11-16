@@ -49,7 +49,7 @@ def trace():
 
 
 def _sr(sid, **cells):
-    row = {"SR-ID": sid, "Status": "Approved", "VerificationMethod": "Test"}
+    row = {"SR-ID": sid, "Status": "Accepted", "VerificationMethod": "Test"}
     row.update(cells)
     return row
 
@@ -62,8 +62,8 @@ def test_the_orphan_rules_emit_sr_then_llr_then_tc_then_sn(coherence):
     # The order is what the report and the console compare, so it is a
     # property of the composer and not of where an append happened to sit.
     srs = [_sr("SR-001", **{"SN-Refs": "SN-001"})]
-    llrs = [{"LLR-ID": "LLR-001", "SR-Refs": "", "Status": "Approved"}]
-    tcs = [{"TC-ID": "TC-001", "Verifies": "", "Status": "Approved"}]
+    llrs = [{"LLR-ID": "LLR-001", "SR-Refs": "", "Status": "Accepted"}]
+    tcs = [{"TC-ID": "TC-001", "Verifies": "", "Status": "Accepted"}]
     orphans, ids = coherence.spine_orphan_findings(
         srs, llrs, tcs, [], {"SR-001"}, {"LLR-001"}, {"SN-001", "SN-002"}, set()
     )
@@ -335,7 +335,7 @@ def _tc(tid, verifies="", assumptions=None, **cells):
         "Expected": "It answers.",
         "Automated": "Yes",
         "Evidence": "tests/test_it.py",
-        "Status": "Approved",
+        "Status": "Accepted",
     }
     if assumptions is not None:
         row["Assumption-Refs"] = assumptions

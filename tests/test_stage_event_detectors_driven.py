@@ -62,18 +62,18 @@ def test_the_repo_global_rungs_are_the_ones_a_PER_PHASE_call_cannot_own(scaffold
         "Status,Phase\n"
     )
     srs = "".join(
-        '{},T,SN-001,"r","why","ac",,M,Test,Approved,{}\n'.format(sid, phase)
+        '{},T,SN-001,"r","why","ac",,M,Test,Accepted,{}\n'.format(sid, phase)
         for sid, phase in (("SR-001", "1"), ("SR-002", "2"))
     )
     llrs = "".join(
-        '{},{},Adder,src/demo,add,"d",(see TC),Approved,{}\n'.format(lid, sid, phase)
+        '{},{},Adder,src/demo,add,"d",(see TC),Accepted,{}\n'.format(lid, sid, phase)
         for lid, sid, phase in (
             ("LLR-001", "SR-001", "1"),
             ("LLR-002", "SR-002", "2"),
         )
     )
     tcs = "".join(
-        '{},{},Unit,m,Smoke,"a=1","e",Yes,tests/t.py::t,Approved,{}\n'.format(
+        '{},{},Unit,m,Smoke,"a=1","e",Yes,tests/t.py::t,Accepted,{}\n'.format(
             tid, sid, phase
         )
         for tid, sid, phase in (("TC-001", "SR-001", "1"), ("TC-002", "SR-002", "2"))
@@ -292,7 +292,7 @@ def test_tier_signals_STRONG_ARM_CAN_ACTUALLY_FIRE_end_to_end(tmp_path):
     def write_sr(text):
         (req / "system-requirements.csv").write_text(
             sr_header
-            + 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,Approved\n'.format(text),
+            + 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,Accepted\n'.format(text),
             encoding="utf-8",
             newline="\n",
         )
@@ -318,7 +318,7 @@ def test_tier_signals_STRONG_ARM_CAN_ACTUALLY_FIRE_end_to_end(tmp_path):
     def write_sr2(text):
         (req2 / "system-requirements.csv").write_text(
             sr_header
-            + 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,Approved\n'.format(text),
+            + 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,Accepted\n'.format(text),
             encoding="utf-8",
             newline="\n",
         )

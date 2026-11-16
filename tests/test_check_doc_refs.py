@@ -433,12 +433,12 @@ def spine_repo(root, evidence, module="scripts/real.py", symbol="load/save"):
     (root / "docs" / "requirements").mkdir(parents=True)
     (root / "docs" / "test" / "test-cases.csv").write_text(
         TC_HEADER
-        + "TC-001,SR-001,Unit,run it,Full,,ok,Yes,{},Approved,1\n".format(evidence),
+        + "TC-001,SR-001,Unit,run it,Full,,ok,Yes,{},Accepted,1\n".format(evidence),
         encoding="utf-8",
     )
     (root / "docs" / "requirements" / "low-level-requirements.csv").write_text(
         LLR_HEADER
-        + "LLR-001,SR-001,T,{},{},detail,,(see TC-001),Approved,,1\n".format(
+        + "LLR-001,SR-001,T,{},{},detail,,(see TC-001),Accepted,,1\n".format(
             module, symbol
         ),
         encoding="utf-8",
@@ -457,7 +457,7 @@ def test_registry_citations_whose_files_exist_pass(tmp_path):
 
 
 def test_an_invented_registry_evidence_citation_reds_under_strict(tmp_path):
-    # The WI-394 finding itself: an Automated=Yes / Status=Approved row citing
+    # The WI-394 finding itself: an Automated=Yes / Status=Accepted row citing
     # a file that has never existed. Warn-first names the row and the column.
     spine_repo(tmp_path, "tests/never_existed.py::test_invented")
     proc = refs(tmp_path)
@@ -486,7 +486,7 @@ def test_registry_placeholder_rows_and_symbol_joins_stay_out_of_scope(tmp_path):
     spine_repo(tmp_path, "scripts/real.py", symbol="load/save")
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         TC_HEADER
-        + "TC-000,SR-000,Unit,example,Full,,ok,Yes,tests/nope.py::test_x,Approved,1\n",
+        + "TC-000,SR-000,Unit,example,Full,,ok,Yes,tests/nope.py::test_x,Accepted,1\n",
         encoding="utf-8",
     )
     proc = refs(tmp_path, "--strict")
@@ -514,7 +514,7 @@ def test_llr_symbol_anchor_reds_on_a_planted_defect(tmp_path):
     llr.write_text(
         llr.read_text(encoding="utf-8")
         + "LLR-901,SR-001,Planted,scripts/real.py,no_such_symbol_anywhere,"
-        "detail,,(see TC-001),Approved,,1\n",
+        "detail,,(see TC-001),Accepted,,1\n",
         encoding="utf-8",
     )
     proc = refs(tmp_path)
@@ -726,7 +726,7 @@ def test_a_generic_main_does_not_bind_a_listed_module_for_the_count(tmp_path):
     # holds `main`, which is where the row's code is, so it is not counted.
     _add_llr(
         tmp_path,
-        "LLR-002,SR-001,T,scripts/other.py,main,detail,,(see TC-001),Approved,,1\n",
+        "LLR-002,SR-001,T,scripts/other.py,main,detail,,(see TC-001),Accepted,,1\n",
     )
     proc = refs(tmp_path, "--strict", "--show-untraced")
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -753,7 +753,7 @@ def test_a_name_every_cli_module_defines_does_not_bind_for_the_count(tmp_path):
     )
     _add_llr(
         tmp_path,
-        "LLR-002,SR-001,T,scripts/third.py,own,detail,,(see TC-001),Approved,,1\n",
+        "LLR-002,SR-001,T,scripts/third.py,own,detail,,(see TC-001),Accepted,,1\n",
     )
     proc = refs(tmp_path, "--strict", "--show-untraced")
     assert proc.returncode == 0, proc.stdout + proc.stderr

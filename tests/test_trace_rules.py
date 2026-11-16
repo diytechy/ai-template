@@ -173,11 +173,11 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
     # PARTICIPLES mid-sentence, and every one of these is a live cell's real
     # wording. The clause-opening constraint is the whole separation — measured
     # over every live spine + IF cell at 36 hits, 36 of them genuine stamps.
-    assert not flags(llr={"Detail": "An APPROVED SN cited by zero SRs caps the bar."})
+    assert not flags(llr={"Detail": "An ACCEPTED SN cited by zero SRs caps the bar."})
     assert not flags(sr={"Rationale": "So an AMENDED requirement drops the stage."})
     assert not flags(tc={"Method": "A stale file is DELETED in the same act."})
     assert not flags(tc={"Method": "Assert a RULED row does not render as a brief."})
-    assert not flags(llr={"Detail": "Arm the comparison on the APPROVED half only."})
+    assert not flags(llr={"Detail": "Arm the comparison on the ACCEPTED half only."})
     # (4) THE REVIEW-CODE ARM IS GONE, and this is the case that removed it. A
     # `C-<HAT>-<n>` "review-round code" pattern shipped and measured 20 hits, 20
     # of them FALSE — every live occurrence names a hat-charter CLAUSE as the
@@ -489,7 +489,7 @@ def test_a_requirement_states_one_testable_obligation():
     )
     assert flags(
         sr={
-            "Status": "Approved",
+            "Status": "Accepted",
             "Requirement": "y shall b.",
             "AcceptanceCriteria": "TBD",
         }
@@ -598,7 +598,7 @@ def test_the_llr_carries_a_rationale_column_and_it_is_optional():
         "Module": "m",
         "CodeSymbol": "c",
         "Detail": "d",
-        "Status": "Approved",
+        "Status": "Accepted",
     }
     assert trace.schema_findings("LLR", [bare]) == []
     # ...and an SR with an empty one is not (zero-to-zero: all 110 carry one).
@@ -611,7 +611,7 @@ def test_the_llr_carries_a_rationale_column_and_it_is_optional():
         "AcceptanceCriteria": "a",
         "Priority": "1",
         "VerificationMethod": "Test",
-        "Status": "Approved",
+        "Status": "Accepted",
     }
     (found,) = trace.schema_findings("SR", [sr])
     assert "empty required field Rationale" in found
@@ -647,7 +647,7 @@ def _set_status(path, old, new):
 
 
 def test_an_accepted_sr_under_a_drafted_sn_reds_strict_integrity(scaffold):
-    """The need tier is a parent tier too: an Approved SR citing a Drafted SN
+    """The need tier is a parent tier too: an Accepted SR citing a Drafted SN
     reds the integrity floor, naming both rows and statuses. Adequacy witness:
     a standing finding that read only the SR, LLR and TC tiers (the need tier's
     rows not passed to the rule) would leave this run at exit 0.
@@ -666,19 +666,19 @@ def test_an_accepted_sr_under_a_drafted_sn_reds_strict_integrity(scaffold):
     proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 1, out
-    assert "parent-first: SR-001 (Approved) is accepted under SN-001 (Drafted)" in out
+    assert "parent-first: SR-001 (Accepted) is accepted under SN-001 (Drafted)" in out
 
 
 def test_an_accepted_llr_under_a_drafted_sr_reds_strict_integrity(scaffold):
     """Implements: TC-396"""
     make_minimal_project(scaffold)
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
-    _set_status(srs, ",M,Test,Approved", ",M,Test,Drafted")
+    _set_status(srs, ",M,Test,Accepted", ",M,Test,Drafted")
     proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 1, out
     assert "parent-first:" in out, out
-    assert "LLR-001 (Approved) is accepted under SR-001 (Drafted)" in out, out
+    assert "LLR-001 (Accepted) is accepted under SR-001 (Drafted)" in out, out
 
 
 def test_a_drafted_llr_whose_citing_tcs_are_accepted_is_an_integrity_finding(
@@ -687,11 +687,11 @@ def test_a_drafted_llr_whose_citing_tcs_are_accepted_is_an_integrity_finding(
     """Implements: TC-396"""
     make_minimal_project(scaffold)
     llrs = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
-    _set_status(llrs, ",(see TC),Approved", ",(see TC),Drafted")
+    _set_status(llrs, ",(see TC),Accepted", ",(see TC),Drafted")
     proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 1, out
-    assert "TC-001 (Approved) is accepted under LLR-001 (Drafted)" in out, out
+    assert "TC-001 (Accepted) is accepted under LLR-001 (Drafted)" in out, out
 
 
 def test_the_llr_status_advisory_is_retired(scaffold):
@@ -700,7 +700,7 @@ def test_the_llr_status_advisory_is_retired(scaffold):
     assert not hasattr(trace, "llr_status_advisories")
     make_minimal_project(scaffold)
     llrs = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
-    _set_status(llrs, ",(see TC),Approved", ",(see TC),Drafted")
+    _set_status(llrs, ",(see TC),Accepted", ",(see TC),Drafted")
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert "llr-status-advisories=" not in proc.stdout, proc.stdout
 
@@ -716,7 +716,7 @@ PHASED_RUBRIC_SR = (
     "Permutations,Priority,VerificationMethod,Status,Phase\n"
     'SR-001,Addition,SN-001,"The system shall add two numbers.",'
     '"Realizes SN-001.","Judged against docs/rubrics/adder.md",,'
-    "M,Critique,Approved,v9\n"
+    "M,Critique,Accepted,v9\n"
 )
 
 
@@ -1501,7 +1501,7 @@ def test_verified_by_is_optional_and_its_pointer_must_resolve():
 
 _SOURCE_NEED = """
 [need.SN-001]
-status = "Approved"
+status = "Accepted"
 need = "Add two numbers."
 why = "Demo."
 priority = "M"

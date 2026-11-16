@@ -5,7 +5,7 @@ gate authority `single-approve` → **`autonomous`** to let phases iterate
 through their gates without an operator g2-close sitting. **Reversible / temporary:**
 the operator may restore a lower level at any time. Keep in version control.
 
-_Prior level:_ **`single-approve`** — APPROVED 2026-07-13 (OI-2; operator review of
+_Prior level:_ **`single-approve`** — ACCEPTED 2026-07-13 (OI-2; operator review of
 the WI-107 enablement commit, [log.md](log.md) "GATE: DevStg-Impl re-acceptance" +
 Decisions). That level and its acceptance stand as history and may be restored
 by raising `operator_accepts_through` in [process.toml](process.toml) + this
@@ -61,5 +61,5 @@ in-chat directive + this register update, 2026-07-15.)_
   loop fabricate an APPROVE it could not run.)_
 - **The harness is still the bar** — LLM judgment supplements the checks; it
   never waives a red one.
-- **Approved operator decisions are never re-decided by an agent** — flag a
+- **Accepted operator decisions are never re-decided by an agent** — flag a
   problematic one as Blocked instead.

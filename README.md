@@ -165,7 +165,7 @@ chasing it.
   our readability/maintainability conventions and points agents at the
   process. It scaffolds to `AGENTS.md` (the cross-tool standard), with thin
   `CLAUDE.md`/`GEMINI.md` stubs pointing back at it.
-- **Approved at the 2026-08-13 sitting, commissioned rather than shipped** —
+- **Accepted at the 2026-08-13 sitting, commissioned rather than shipped** —
   seven needs the operator accepted whose machinery was scheduled, not built. They
   are listed here because an accepted promise should be visible before its code
   is, not after. State each one at the half it actually reached:
@@ -184,7 +184,7 @@ chasing it.
     applicable perspective reported — is **deliberately not built** (`hats.py`
     says so in its header: injection alone already changes the output, while a
     record built first is a form with nothing behind it). SR-161 states that
-    obligation and is `Approved` with no LLR or TC under it. Nothing gates on a
+    obligation and is `Accepted` with no LLR or TC under it. Nothing gates on a
     hat today.
   - **Still owed.** One front-door action per platform for **each** of the two
     universal contributor actions — preparing the dev environment and resuming
@@ -201,7 +201,7 @@ chasing it.
   a chain describing machinery that is not built. Read a row's state as a
   statement about the registry, and read this list for what an adopter can
   actually run.
-- **Approved at the 2026-09-25 sitting, commissioned rather than shipped** —
+- **Accepted at the 2026-09-25 sitting, commissioned rather than shipped** —
   four needs whose chains are accepted down to test cases, with none of their
   machinery built yet
   ([the assumption-tier spine map](docs/plans/2026-09-25-assumption-tier-spine-map.md)).
@@ -310,7 +310,7 @@ integrity-check the ids the moment real rows exist.
 | [`performance-budgets`](project-trajectory/registries/performance-budgets.template.csv) | `PB-###` | Quantitative NFR budgets (latency, RAM, artifact size) that behavior tests can't express; `check_perf.py` compares emitted metrics against budget + baseline (§9). |
 | [`procurement`](project-trajectory/registries/procurement.template.csv) | `PART-###` | Parts the project **buys rather than builds** (motor, board, camera): vendor, cost, status, quantity. The owning `IF-###` row is each part's owner-of-record. |
 | [`assets`](project-trajectory/registries/assets.template.csv) | `ASSET-###` | The facts *about* an un-diffable binary (art, music, CAD, voice): provenance (AI-content disclosure), license, attribution, contract link, location + hash. |
-| [`components`](project-trajectory/registries/components.template.toml) | `CMP-###` | The durable **set-grained** home for knowledge + lifecycle — a subsystem, "the left arm", a package group. It exists because no finer tier can hold either: an IF is one seam, a workstream is mutable by design, and an LLR *is* the thing a rewrite replaces — while `Status` (maturity), `Standing` (the lifecycle axis: `active`/`has-gap`/`deprecated`) and `SupersededBy` carry identity across the rewrite. **Structure is derived, never authored**: membership is a `Component` tag on LLR/IF/ASSET/PART rows; an IF with both endpoints inside a CMP is *internal*, with one endpoint inside it is that CMP's *boundary*. (Approved design: [`AXES_AND_WORKSTREAMS.md`](docs/archive/AXES_AND_WORKSTREAMS.md); live spec: [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Component layer".) |
+| [`components`](project-trajectory/registries/components.template.toml) | `CMP-###` | The durable **set-grained** home for knowledge + lifecycle — a subsystem, "the left arm", a package group. It exists because no finer tier can hold either: an IF is one seam, a workstream is mutable by design, and an LLR *is* the thing a rewrite replaces — while `Status` (maturity), `Standing` (the lifecycle axis: `active`/`has-gap`/`deprecated`) and `SupersededBy` carry identity across the rewrite. **Structure is derived, never authored**: membership is a `Component` tag on LLR/IF/ASSET/PART rows; an IF with both endpoints inside a CMP is *internal*, with one endpoint inside it is that CMP's *boundary*. (Accepted design: [`AXES_AND_WORKSTREAMS.md`](docs/archive/AXES_AND_WORKSTREAMS.md); live spec: [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Component layer".) |
 | [`work-items`](project-trajectory/work/WI-000.template.md) | `WI-###` | The execution DAG — *when/how* atop the spine's *what*: each WI delivers SRs, belongs to a workstream, and depends on predecessors (a bare id blocks; a `~`-prefixed id only orders). The live carrier is the **`docs/work/` spec folder** (one file per WI, status = its directory; [`work-items.template.csv`](project-trajectory/registries/work-items.template.csv) survives as the legacy migration format `wi_convert.py` reads). Validated by `check_trajectory.py`; rendered into `PROJECT_STATE.html`. |
 | [`repos`](project-trajectory/registries/repos.template.csv) | `REPO-###` | Coordinator-only, for the rare multi-repo rung: one row per delegated repo plus the coordinator SRs it fulfils ([`MULTI_REPO.md`](project-trajectory/MULTI_REPO.md) §6). |
 | [`hats`](project-trajectory/registries/hats.template.toml) | *names, no id space* | The **declared expert perspectives** every applicable decomposition must face. Each `[hat.NAME]` carries `applies_when` (a closed, evaluable condition — `always`, `scope`/`kind` equality, `tags contains`), `asks` (the question that lands in the brief) and `listens_for` (the **failure class** it catches — a hat naming no failure is refused as ceremony). Unlike the rows above it ships with **content**, because an empty roster is a form with nothing behind it, and it is **owner text**: adopters edit it, which is what keeps an inherited `applies_when` honest. `scripts/hats.py` reads it; `scripts/plan_briefs.py` injects the applicable questions into the dual-plan **planner** (decomposition) brief. Deleting it is a supported opt-out; a broken one refuses loudly. |
@@ -536,7 +536,7 @@ a batch of artifacts is **accepted** in a reviewed `Status`-change commit, and i
 *pulls back* when accepted content is amended. There is no status value for that
 state: the transitional `Modified` marker retired at the 2026-08-20 signing, and
 an amendment is now detected by **drift** — the row compared against its copy in
-`docs/archive/last_approved/`, which cannot be forgotten the way setting a marker
+`docs/archive/last_accepted/`, which cannot be forgotten the way setting a marker
 could. Such a row owes a re-accept until the sitting blesses it (`trace.py
 --accept modified` still names that reserved scope and emits the before/after
 brief; semantics: PROCESS.md §7) (process-options.md "Derived gate model").
@@ -549,7 +549,7 @@ brief; semantics: PROCESS.md §7) (process-options.md "Derived gate model").
   no placeholder rows; key runtime flows diagrammed.
 - **DevStg-Impl — Implementation.** Code is written **test-first** and passes the full
   harness: format/lint, full test tier, coverage ≥ threshold, schema, every
-  in-scope requirement `Approved`, no stubs.
+  in-scope requirement `Accepted`, no stubs.
 - **DevStg-Release — Release readiness** *(per release)*. The release test tier
   passes; the generated release checklist is completed and signed; version
   bumped; changelog + interface versions updated.

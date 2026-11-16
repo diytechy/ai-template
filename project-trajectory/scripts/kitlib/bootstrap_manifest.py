@@ -179,15 +179,15 @@ MAPPING = [
     # acceptance blessed is recorded by COPYING the registries, and the README
     # below is the only part of that mechanism a fresh scaffold receives.)
     #
-    # The `last_approved` snapshot's prose stamp. THE DIRECTORY IS SCAFFOLDED
+    # The `last_accepted` snapshot's prose stamp. THE DIRECTORY IS SCAFFOLDED
     # WITH ONLY THIS FILE, deliberately: an empty snapshot is the HONEST state
     # for a repo that has accepted nothing yet, and shipping pre-filled copies
     # would hand every new project a record claiming an operator blessed text they
     # have never seen. The registries land in it at the project's first signing
     # (`intake.py snapshot --seed`), and not before.
     (
-        "registries/last-approved-README.template.md",
-        "docs/archive/last_approved/README.md",
+        "registries/last-accepted-README.template.md",
+        "docs/archive/last_accepted/README.md",
     ),
     # The append-only history status.md points at (Thread 36, process.md §5):
     # sign-offs, verdicts, and accepted decisions append here, keeping the
@@ -529,7 +529,7 @@ MAPPING = [
     ("scripts/check_need_form.py", "scripts/check_need_form.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
     ("scripts/trajectory_arch.py", "scripts/trajectory_arch.py"),
-    # The `last_approved` snapshot reader/writer (operator directive 2026-08-15).
+    # The `last_accepted` snapshot reader/writer (operator directive 2026-08-15).
     # Shipped because it is a SIBLING IMPORT of `intake.py` — the adjudication
     # flip copies the registries in the same act — and because `trace.py` reads
     # it for the drift overlay. A scaffold without it cannot run either.

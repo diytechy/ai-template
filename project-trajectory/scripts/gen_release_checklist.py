@@ -15,7 +15,7 @@ It pulls, from `docs/`:
     - Provided cross-project interfaces (IF, if present) -> contract still honored?
     - Performance budgets (PB, if present) -> still within allocation? (§9; the
       warn-tier runtime budgets never fail the gate, so a human confirms them here)
-    - Active Approved assumptions and any missing falsifier -> recall whether
+    - Active Accepted assumptions and any missing falsifier -> recall whether
       the assumption has been falsified; a person sets standing
     - A REQUIRED re-judge item (SR-215): the command that files one re-judge
       work item per observation test case due at the release commit, with
@@ -46,7 +46,7 @@ Contract IF-018: the human release checklist, written as a Markdown document
     their acceptance intent, system specifications whose verification method is
     Demonstration, Manual or Inspection, release-tier and manual test cases,
     the declared interface seams, and the performance budgets whose runtime
-    tier never fails a gate. Its assumptions section lists each active Approved
+    tier never fails a gate. Its assumptions section lists each active Accepted
     assumption and any assumption with no falsifier, once each, marked
     `- [ ] ASSUMPTION <DA-ID> — <falsifier question> (method: <TC IDs>)`.
     Checking an assumption asserts only that it has not been falsified; this
@@ -170,7 +170,7 @@ def assumption_checklist_lines(docs, tcs):
     for row in rows:
         falsifier = (row.get("Falsifier") or "").strip()
         if falsifier and not (
-            row.get("Status") == "Approved" and row.get("Standing") == "active"
+            row.get("Status") == "Accepted" and row.get("Standing") == "active"
         ):
             continue
         rid = row["DA-ID"]
@@ -455,7 +455,7 @@ def main():
         "(paste the output in the audit log).",
         _rejudge_checklist_line(docs.resolve().parent),
         "- [ ] CHANGELOG / release notes updated.",
-        "- [ ] Version bumped; any changed `Approved` interface versions "
+        "- [ ] Version bumped; any changed `Accepted` interface versions "
         "communicated to counterparts.",
         "- [ ] Docs (README / quick-reference) match the shipped behavior.",
         "- [ ] README `sn-inventory` bullets still reflect the current "

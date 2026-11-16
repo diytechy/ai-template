@@ -19,20 +19,20 @@ is a refusal rather than a silently empty instruction.
 
 | Key | File | Digest | Slots |
 |---|---|---|---|
-| `ADJUDICATE-ACT` | [adjudicate-act.template.md](adjudicate-act.template.md) | `sha256:6e06954e2fee` | `{acceptance_act}`, `{accepts_rows}`, `{amendment_act}`, `{registries}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-ACT` | [adjudicate-act.template.md](adjudicate-act.template.md) | `sha256:fc26ac978cf5` | `{acceptance_act}`, `{accepts_rows}`, `{amendment_act}`, `{registries}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:c96597b09a4f` | `{aftermath}`, `{baseline}`, `{hats}`, `{identity}`, `{questions}`, `{rows}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-COMBINED` | [adjudicate-combined.template.md](adjudicate-combined.template.md) | `sha256:d16b4841c8b2` | `{kinds}`, `{sections}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-CONSOLIDATE` | [adjudicate-consolidate.template.md](adjudicate-consolidate.template.md) | `sha256:d505cbb298ae` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{prior}`, `{spine}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:83c98efe88bc` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DISPUTE` | [adjudicate-dispute.template.md](adjudicate-dispute.template.md) | `sha256:178821302b00` | `{commits}`, `{findings}`, `{process_doc}`, `{range}`, `{request}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DONE-WHEN` | [adjudicate-done-when.template.md](adjudicate-done-when.template.md) | `sha256:2fd58110f42b` | `{anchor}`, `{changes}`, `{claimed}`, `{context}`, `{current}`, `{digest}`, `{subject}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-FIRST-ACCEPTANCE` | [adjudicate-first-acceptance.template.md](adjudicate-first-acceptance.template.md) | `sha256:dc343f687cc1` | `{baseline}`, `{chain}`, `{hats}`, `{questions}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-FIRST-ACCEPTANCE` | [adjudicate-first-acceptance.template.md](adjudicate-first-acceptance.template.md) | `sha256:e5bc38971b88` | `{baseline}`, `{chain}`, `{hats}`, `{questions}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:9eefbcd06e41` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-REJUDGE` | [adjudicate-rejudge.template.md](adjudicate-rejudge.template.md) | `sha256:5a1e40710449` | `{case}`, `{reason}`, `{tc}`, `{verdict}`, `{wi}` |
 | `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:6f26c312de16` | `{brief}`, `{verdict}` |
 | `PLAN-SINGLE` | [plan-single.template.md](plan-single.template.md) | `sha256:9e9630661ec5` | `{clauses}`, `{inputs}`, `{plan}`, `{revision}`, `{spec}`, `{title}`, `{wi}` |
-| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:728717507828` | `{head}`, `{process_doc}`, `{round_facts}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
-| `WORKER` | [worker.template.md](worker.template.md) | `sha256:386460d38a59` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
+| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:cfaf464bf42e` | `{head}`, `{process_doc}`, `{round_facts}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
+| `WORKER` | [worker.template.md](worker.template.md) | `sha256:fb385e5fbba0` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
 
 ## Composed fragments
 
@@ -44,7 +44,7 @@ no key and no override. An absent or unreadable fragment fails generation and
 
 | File | Digest | Fills |
 |---|---|---|
-| [spine-questions.md](spine-questions.md) | `sha256:1a09a0628314` | `{questions}` |
+| [spine-questions.md](spine-questions.md) | `sha256:e5ad08db3287` | `{questions}` |
 
 An operator override replaces a template per phase (`--prompt-map`); an
 overridden session's `# prompt-template:` names the override path, so the

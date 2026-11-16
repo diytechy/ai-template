@@ -26,14 +26,14 @@
 #   Drafted   still being drafted — DevStg-Below. trace.py exempts it from the
 #             "every SN needs an SR" rule, so it can sit in the live registry
 #             before its SR decomposition exists. Do not park real needs here.
-#   Approved  an accepted need (the steady state). ACCEPT by changing `status`
-#             to "Approved" in a reviewed commit; that commit is the sign-off
+#   Accepted  an accepted need (the steady state). ACCEPT by changing `status`
+#             to "Accepted" in a reviewed commit; that commit is the sign-off
 #             and its date is the acceptance date.
 #
 # There is NO third value for "accepted text that has since been AMENDED". A
 # transitional `Modified` carried that until 2026-08-20, exactly as long as its
 # own note here said it would: it retired once accepted text was snapshotted to
-# `docs/archive/last_approved/` and the DIFF answered the same question, for
+# `docs/archive/last_accepted/` and the DIFF answered the same question, for
 # every row rather than the ones someone remembered to mark.
 #
 # Do NOT add a second field for this axis — no `attestation`, no `amended`
@@ -74,7 +74,7 @@
 # each to its home (process.md §9). A prompt, not a mandate.
 
 [need.SN-000]
-status = "Approved"
+status = "Accepted"
 need = """_EXAMPLE — replace this row; number real needs sequentially (the `-000` id is a placeholder the tooling ignores)._"""
 why = """Why it matters — the consequence of NOT meeting it, in the stakeholder's terms. This is the need tier's REASON cell (the schema carries no Rationale), and it takes the ARGUMENT, never the CITATION: no work-item id, ruling, sitting, review-round or open-item reference, decision id, edit verb or date stamp — the history belongs in the log (process.md §3)."""
 priority = "M"
@@ -104,7 +104,7 @@ source = ["README.md#vision"]
 #
 # --- DRAFT NEEDS --------------------------------------------------------------
 #
-# Draft new needs with `status = "Drafted"`, then accept them to "Approved".
+# Draft new needs with `status = "Drafted"`, then accept them to "Accepted".
 # Empty is the normal steady state.
 
 # --- STAKEHOLDERS --------------------------------------------------------------
@@ -118,4 +118,4 @@ source = ["README.md#vision"]
 name = "_EXAMPLE_ — who owns an outcome, in a few words"
 description = """Which outcomes this stakeholder owns, and what they would lose if a need of theirs were dropped. Replace this row; the `-000` id is a placeholder the tooling ignores."""
 party = "EXT-000"
-status = "Approved"
+status = "Accepted"

@@ -649,7 +649,7 @@ LADDER_RUNGS = _kitladder.LADDER_RUNGS
 # that carry an off-spine `status` cell — `interfaces.toml`, `external.toml`,
 # `components.toml` — were governed by PROSE ONLY: their headers said the cells
 # were the operator's to flip, and at any dial below 4 nothing refused a loop
-# session that wrote `approved`.
+# session that wrote `accepted`.
 #
 # THE RULED SHAPE IS DERIVED, NOT DECLARED, and the operator's question is why:
 # *"I thought this would follow the dev-stage directly? Why build a new enum?"*
@@ -766,7 +766,7 @@ def operator_accepts(docs, registry):
         answer to that is "the operator does".
 
     THE WRITER-SIDE CONTRACT, stated here because this predicate is the only
-    home for it. Any path that would set an off-spine `status` to `Approved` MUST
+    home for it. Any path that would set an off-spine `status` to `Accepted` MUST
     consult this first and refuse when it answers True. Today the kit ships no
     such automated writer — off-spine acceptances are hand-edited — so the
     live consumers are the dispatcher's acceptance/gate arm (`dispatch.
@@ -783,7 +783,7 @@ def operator_accepts(docs, registry):
 
 def operator_accepts_spine(docs, registry):
     """May only an OPERATOR flip this SPINE `registry`'s rows `Drafted` ->
-    `Approved`? True means HELD.
+    `Accepted`? True means HELD.
 
     The spine mirror of `operator_accepts`, and deliberately the same three arms
     and the same fail-safe: mapped-and-held -> True, mapped-and-released ->

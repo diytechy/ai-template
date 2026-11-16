@@ -105,13 +105,13 @@ the derived rung follows from it.
 authoring lane or on trunk: accepting means reading the row's whole chain, and
 the writer does not judge its own writes. A lane authors `Drafted` rows and
 amends cell text; its merge is REFUSED if its delta flips an **SN/SR/LLR/TC**
-`Status` or writes `docs/archive/last_approved/` with no recorded verdict
+`Status` or writes `docs/archive/last_accepted/` with no recorded verdict
 judging that act's own rows behind it, and otherwise the first-acceptance
 adjudication minted at that merge accepts what it authored. Everything below is therefore the
 ACCEPTOR's procedure, not an author's:
 
 - **Into `DevStg-Reqs`** — a draft requirement is accepted: `Status` **`Drafted`
-  → `Approved`** on the SR (and an SN leaves its draft state). The acceptance
+  → `Accepted`** on the SR (and an SN leaves its draft state). The acceptance
   date is git-derived (the commit that moved it). Both halves are the
   acceptor's, and BOTH are mechanically held: the merge refusal above reads all
   four spine registries, needs included, so a lane flipping an SN row is refused
@@ -119,14 +119,14 @@ ACCEPTOR's procedure, not an author's:
   out under OI-30 D3, and `OUTSIDE_THE_ACCEPTANCE_ACT` declares that bound). The
   refusal is keyed to a WORK LANE's merge, so the operator's own sitting — an SN
   flip made by hand in a reviewed commit on trunk — is unaffected.
-- **`DevStg-Tests` → `DevStg-Impl`** — the SR is `Approved` and its tests
-  pass; the derived rung follows. Note what `Approved` does and does not say: it
+- **`DevStg-Tests` → `DevStg-Impl`** — the SR is `Accepted` and its tests
+  pass; the derived rung follows. Note what `Accepted` does and does not say: it
   blesses the row's **TEXT** and makes no claim that any test passed — whether
   they pass is the harness's answer, never a cell's.
-- **Re-accept (an amended `Approved` row)** — **there is no Status cell to
-  move.** An accepted row whose content is later amended STAYS `Approved`;
+- **Re-accept (an amended `Accepted` row)** — **there is no Status cell to
+  move.** An accepted row whose content is later amended STAYS `Accepted`;
   what marks it is the DIFFERENCE from its copy in
-  `docs/archive/last_approved/`, and the pending-operator-actions projection
+  `docs/archive/last_accepted/`, and the pending-operator-actions projection
   carries one line per drifted SR. Read the before/after first — `python
   scripts/trace.py --accept modified --out docs/ratify/CURRENT.md` (the scope
   word is a CLI name, not a Status value). `CURRENT.md` is the ONE file this
@@ -150,12 +150,12 @@ ACCEPTOR's procedure, not an author's:
   cells (operator ruling 2026-08-17) — a child LLR/TC amendment never touches
   the owning SR.
 
-  > **The vocabulary is CLOSED at three values** — `Drafted`, `Approved`,
+  > **The vocabulary is CLOSED at three values** — `Drafted`, `Accepted`,
   > `Founded` — matched case-insensitively, and a value outside it is an
   > always-on integrity finding. `Founded` is COMPUTED (the artifacts the row
   > calls for exist); never type it to advance a gate. `Draft`, `Verified`,
   > `Planned` and `Modified` are RETIRED — `Verified`/`Planned` folded into
-  > `Approved` (D-9, 2026-08-15), which is why there is no evidence-invalidated
+  > `Accepted` (D-9, 2026-08-15), which is why there is no evidence-invalidated
   > Status, and `Modified` retired (2026-08-20) once the snapshot diff answered
   > the same question. Do not reintroduce them.
 
@@ -186,7 +186,7 @@ row per boundary.
   `-000` placeholders where committed), acceptance criteria measurable, the
   UX/edge-case lens applied. If the repo declares an `external.toml` frame, the
   boundary inventory is settled — every declared `[boundary.B-##]` crossing
-  `approved` — or `DevStg-Boundary` honestly holds the ladder down (WI-442
+  `accepted` — or `DevStg-Boundary` honestly holds the ladder down (WI-442
   re-key; a repo with no `external.toml` skips the rung). Sign-offs recorded
   in `docs/log.md`.
 - **`DevStg-Tests` (Arch · LLReqs · Tests certified).** If the repo declares a
@@ -201,7 +201,7 @@ row per boundary.
 - **`DevStg-Impl` (Impl certified).** Code implements the LLRs with
   `Implements:` back-links; the full harness passes: `trace.py --strict
   --no-placeholders --strict-schema --require-verified`, coverage ≥ threshold,
-  arch-map fresh, flows current. Every test-verifiable SR is `Approved`
+  arch-map fresh, flows current. Every test-verifiable SR is `Accepted`
   with its tests green.
 
 Run the checks with `scripts/check.py` (it selects every step at or above the rung

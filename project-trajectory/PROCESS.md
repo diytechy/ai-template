@@ -459,7 +459,7 @@ into the `[authority]` dials and are never stored. Full
 mechanics + the deviation-register pattern:
 [process-options.md "Gate authority levels"](process-options.md#gate-authority-levels).
 **Fixed points at every level:** the final read is the operator's; **the
-acceptance act — a spine row's `Status` flip and the `docs/archive/last_approved/`
+acceptance act — a spine row's `Status` flip and the `docs/archive/last_accepted/`
 copy that anchors it — is an independent adjudicator's, never the session's that
 authored the rows, taken in the authoring lane or on trunk** (a lane authors
 `Drafted` rows and amends text; its merge is REFUSED for any act no accepted
@@ -479,28 +479,28 @@ hand-set: `scripts/derive_stage.py` generates it as the **min over every in-scop
 artifact's own rung**, so it names the rung the repo is IN and thereby
 selects the strictness the harness runs at ("Stages and gates" below). Crossing a
 gate = **accepting a batch of artifacts in a reviewed commit** (`Status`
-`Drafted`→`Approved`, at every tier including SN), never a manual bump (§7
+`Drafted`→`Accepted`, at every tier including SN), never a manual bump (§7
 "The derived gate"; the model + parallel/series workflow:
 [process-options.md "Derived gate model"](process-options.md#derived-gate-model)).
 A `Drafted` artifact lives in the live spine (exempt from the decomposition rules),
 retiring the old `-000`/off-spine drafting workaround.
-`Status` is a **closed** vocabulary — `Drafted`, `Approved`, `Founded` — matched
+`Status` is a **closed** vocabulary — `Drafted`, `Accepted`, `Founded` — matched
 **case-insensitively** (write them Title-Case); a value outside it is an
 always-on integrity finding, not a free label — it was open until 2026-08-15,
 and a word no predicate read announced nothing.
-`Approved` says the row's TEXT is blessed and says nothing about tests passing —
+`Accepted` says the row's TEXT is blessed and says nothing about tests passing —
 whether they pass is the harness's answer, never a cell's. `Founded` is
-`Approved` plus a demonstration: the artifacts the row calls for EXIST (SRs
+`Accepted` plus a demonstration: the artifacts the row calls for EXIST (SRs
 under an SN, LLR+TC under an SR, resolving code under an LLR, a written test
 under a TC). It is COMPUTED, never a claim you type to advance a gate.
 **A post-acceptance amendment has no value of its own** — an accepted row whose
-text is later changed stays `Approved` and the change is caught by DIFFING it
+text is later changed stays `Accepted` and the change is caught by DIFFING it
 against the last acceptance. (A transitional `Modified` marked that state until
 2026-08-20; it is retired, and an adopter carrying it migrates —
 `RESYNC_PACK.md`.) A re-accept is a reviewed commit that re-reads the changed
 cells and re-copies the record. The baseline those before/after diffs run against is a
 **byte-for-byte copy** of the registries at the last acceptance —
-`docs/archive/last_approved/`, written only by the acceptance act itself
+`docs/archive/last_accepted/`, written only by the acceptance act itself
 (`intake.py snapshot`, in the same commit as the `Status` write; a snapshot
 file must always equal its live counterpart), scoped to the registries that act
 authorises. **Text first, the act second:** a commit writing the record
@@ -541,14 +541,14 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   code and removed by it, and never landed. TDD is *how* DevStg-Impl code gets
   written; the SN→SR→LLR→TC spine is *what* it must satisfy — it operates within
   the traceability discipline, not instead of it. The exit criteria below
-  (coverage, every in-scope SR Approved) are what that loop drives toward.
+  (coverage, every in-scope SR Accepted) are what that loop drives toward.
   The warn-only `test-first` step reads that order from history: an SR accepted
   after `[checks] test_first_since` (empty: all history) with a TC accepted
   after its code landed is reported. Format/lint clean; every source module parses
   (`gen_arch_map.py --strict-parse`); the **full** test tier passes; coverage ≥
   `COVERAGE_THRESHOLD`; registry **schema** holds (required fields non-empty,
   `VerificationMethod`/`Tier` in vocabulary — `trace.py --strict-schema`); every
-  **in-scope** test-verifiable SR **Approved** (phase-scoped — see "Phased
+  **in-scope** test-verifiable SR **Accepted** (phase-scoped — see "Phased
   delivery" below); every other SR explicitly **Demonstration / Manual /
   Inspection / Analysis / Vouch / Critique**; each in-scope SR's implementing symbol is **substantive, not a
   stub** (Inspection — see "No-stub / substance review" below). Sign-offs: System
@@ -556,7 +556,7 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
 - **`DevStg-Release` — Release readiness** *(per release; skip for a one-off
   deliverable)*. The **release** test tier passes (incl. slow/hardware tests);
   the generated **release checklist** (`scripts/gen_release_checklist.py`) is
-  completed and signed; version bumped; changed `approved` interface versions
+  completed and signed; version bumped; changed `accepted` interface versions
   communicated to counterparts; docs/changelog updated. Sign-offs: Test Engineer,
   any active domain hats, Human.
 - **The operator's final read.** A person or stakeholder exercises the real product (incl.
@@ -813,7 +813,7 @@ physical action) — the **operator's recorded word**, **trust-based, the box
 can be checked without the work having happened** (Proportionality doctrine); the
 process's job is to make it explicit, named, and auditable, not pass it off as a
 check. Its TC records **who** vouched and **when** (`Parameters`/`Expected` cell,
-`Automated=No`); `trace.py` accepts a `Vouch` SR as Approved **and** reports it
+`Automated=No`); `trace.py` accepts a `Vouch` SR as Accepted **and** reports it
 under "vouched vs mechanized" so an audit sees the trust footprint. **`Critique`**
 is the mechanized sibling for *subjective* acceptance: an independent critical eye
 (an LLM one, deliberately separated from `Vouch`) judges a **code-produced**
@@ -1266,7 +1266,7 @@ pip needed to run them):
   CSV's data rows must parse to the header's column count); `--strict-integrity`
   fails on *only* that class (the always-valid pre-commit floor).
   `--require-verified` adds the DevStg-Impl status criterion (every `VerificationMethod=Test` SR
-  must be `Approved`); `--phase v1` scopes it for phased delivery (§4).
+  must be `Accepted`); `--phase v1` scopes it for phased delivery (§4).
   `--no-placeholders` rejects leftover `-000` rows; `--strict-schema` requires the
   non-empty fields and the two closed vocabularies (`VerificationMethod`, `Tier`) —
   `Priority`/`Status` stay open. Called by `check.py` at every gate — at DevStg-Reqs as
@@ -1342,7 +1342,7 @@ name the bundle that carries it (`CarriedBy` — a constituent is still one
 owner and one channel), and a low-level seam may say the parent's tests cover
 it (`VerifiedBy`: a `TC-###` or an `LLR-###`, warn-first that it resolves;
 empty means "verified in its own right"). `Version` and `Status` (`Drafted` ·
-`Approved` — the spine's words minus `Founded`, which never applies: an
+`Accepted` — the spine's words minus `Founded`, which never applies: an
 acceptance says the seam is agreed, not demonstrated) complete the row. The
 owner's side closes the final read; a consuming side links the same `IF-###`
 and pins the version. A row ties back to a declared boundary crossing (`B-##`

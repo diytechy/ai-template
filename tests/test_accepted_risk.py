@@ -45,21 +45,21 @@ need = "A reviewer can tell which requirements a claim about the world supports.
 why = "A false claim hides behind a verified system."
 priority = "M"
 acceptance = "The reviewer names the requirements from the report alone."
-status = "Approved"
+status = "Accepted"
 
 [need.SN-002]
 need = "An adopter can resume work from the record alone."
 why = "Sessions end mid-task."
 priority = "S"
 acceptance = "A fresh session names the next step from the record."
-status = "Approved"
+status = "Accepted"
 
 [need.SN-009]
 need = "An unrelated need."
 why = "It serves nothing the assumption touches."
 priority = "C"
 acceptance = "Nothing here moves the risk."
-status = "Approved"
+status = "Accepted"
 """
 
 REQUIREMENTS = """
@@ -68,20 +68,20 @@ title = "Report the claims under each requirement"
 sn_refs = ["SN-001"]
 requirement = "The kit shall report the assumptions each requirement cites."
 da_refs = ["DA-001"]
-status = "Approved"
+status = "Accepted"
 
 [requirement.SR-002]
 title = "Resume from the record"
 sn_refs = ["SN-002"]
 requirement = "The kit shall name the next step from the record."
 da_refs = ["DA-001"]
-status = "Approved"
+status = "Accepted"
 
 [requirement.SR-009]
 title = "Unrelated"
 sn_refs = ["SN-009"]
 requirement = "The kit shall do something unrelated."
-status = "Approved"
+status = "Accepted"
 """
 
 ASSUMPTIONS = """
@@ -105,7 +105,7 @@ tier = "Release"
 expected = "The brief is opened before the acceptance is recorded."
 automated = "No"
 evidence = "docs/notes.md"
-status = "Approved"
+status = "Accepted"
 inputs = ["docs/notes.md"]
 max_age = 30
 sampling = "monitored"
@@ -171,7 +171,7 @@ def repo(tmp_path):
     _git(root, "config", "user.email", "test@example.com")
     _git(root, "config", "user.name", "Test")
     _commit(root, "draft the assumption")
-    _edit(root, DA_REL, 'status = "Drafted"', 'status = "Approved"')
+    _edit(root, DA_REL, 'status = "Drafted"', 'status = "Accepted"')
     SNAP.copy_live(root, seed=True)
     act = _commit(root, "accept DA-001 and its accepted risk")
     return root, act
@@ -392,7 +392,7 @@ def test_a_failing_record_the_act_already_held_does_not_reopen_it(tmp_path):
     _git(root, "config", "user.name", "Test")
     _observe(root, "fail")
     _commit(root, "draft, with a failed sample on record")
-    _edit(root, DA_REL, 'status = "Drafted"', 'status = "Approved"')
+    _edit(root, DA_REL, 'status = "Drafted"', 'status = "Accepted"')
     SNAP.copy_live(root, seed=True)
     _commit(root, "accept DA-001, accepting the risk over the failure")
     assert _state(root) == (RULES.RISK_COVERED, [])

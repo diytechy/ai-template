@@ -80,7 +80,7 @@ def test_an_EXPLICIT_empty_string_is_REFUSED_not_quietly_accepted(tmp_path):
     away. Normalising would leave the file and the loaded row disagreeing about
     what the author wrote. (Operator ruling owed; this fork was never ruled.)
     """
-    path = _write(tmp_path, '[requirement.SR-001]\ntitle = ""\nstatus = "Approved"\n')
+    path = _write(tmp_path, '[requirement.SR-001]\ntitle = ""\nstatus = "Accepted"\n')
     with pytest.raises(SystemExit) as excinfo:
         sc.load(path, SR)
     message = str(excinfo.value)
@@ -152,7 +152,7 @@ def test_the_live_loader_keeps_DUPLICATE_csv_ids_for_the_integrity_check(tmp_pat
     (SR-002)."""
     path = tmp_path / "system-requirements.csv"
     path.write_text(
-        "SR-ID,Title,Status\nSR-001,one,Approved\nSR-001,two,Approved\n",
+        "SR-ID,Title,Status\nSR-001,one,Accepted\nSR-001,two,Accepted\n",
         encoding="utf-8",
     )
     rows = sc.load(path, SR)
@@ -286,7 +286,7 @@ def test_draft_need_ids_reads_STATUS_and_nothing_else():
     """
     needs = [
         {"id": "SN-001", "status": "Drafted"},
-        {"id": "SN-002", "status": "Approved"},
+        {"id": "SN-002", "status": "Accepted"},
         {"id": "SN-003", "status": "Modified"},
     ]
     assert sc.draft_need_ids(needs) == {"SN-001"}
@@ -310,10 +310,10 @@ def test_draft_need_ids_reads_STATUS_and_nothing_else():
     # OPPOSITE — "the word is closed and case-sensitive", so `drafted` was "an
     # unrecognized value" — and that reading was wrong in the unsafe direction:
     # an unrecognized value here does not report anything, it returns False, and
-    # False on this predicate means APPROVED. A mis-cased need silently floated
+    # False on this predicate means ACCEPTED. A mis-cased need silently floated
     # the derived gate up, which is the one failure `is_draft_need`'s own
     # docstring says this tier can least afford. The other three spine tiers
-    # already lower the cell before comparing (`trace.is_drafted`/`is_approved`/
+    # already lower the cell before comparing (`trace.is_drafted`/`is_accepted`/
     # `is_modified`, the one Status-casing rule of process.md §4), so this is the
     # SN tier joining them rather than a new leniency. Closure is still enforced
     # — by `trace.enum_integrity_findings` over `ENUM_FIELDS["SN"]`, which
@@ -325,7 +325,7 @@ def test_draft_need_ids_reads_STATUS_and_nothing_else():
     # still a different word.
     assert sc.is_draft_need({"id": "SN-008", "status": "draft"}) is False
     assert sc.draft_need_ids(
-        [{"id": "SN-009", "status": "approved"}, {"id": "SN-010", "status": "drafted"}]
+        [{"id": "SN-009", "status": "accepted"}, {"id": "SN-010", "status": "drafted"}]
     ) == {"SN-010"}
 
 
@@ -346,7 +346,7 @@ def test_legacy_markdown_draftness_survives_the_field_it_moved_to():
     )
     needs = sc.needs_from_markdown(text)
     assert {n["id"]: n["status"] for n in needs} == {
-        "SN-001": "Approved",
+        "SN-001": "Accepted",
         "SN-050": "Drafted",
     }
     assert sc.draft_need_ids(needs) == {"SN-050"}

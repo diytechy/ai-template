@@ -47,12 +47,12 @@ STAKEHOLDERS = """
 name = "Adopting team"
 description = "A team that adds the package to its own work."
 party = "EXT-001"
-status = "Approved"
+status = "Accepted"
 """
 
 NEED = """
 [need.SN-001]
-status = "Approved"
+status = "Accepted"
 need = "Add two numbers."
 why = "Demo."
 priority = "M"
@@ -162,7 +162,7 @@ def test_a_status_outside_the_vocabulary_is_one_integrity_finding(scaffold):
     always-on integrity floor owns it. The full strict run reports it ONCE, in
     that class, and never again in the frame class beside it: two findings for
     one bad cell would count one defect twice."""
-    _project(scaffold, STAKEHOLDERS.replace('"Approved"', '"Bananas"', 1) + NEED)
+    _project(scaffold, STAKEHOLDERS.replace('"Accepted"', '"Bananas"', 1) + NEED)
     for flag in ("--strict-integrity", "--strict"):
         proc = _run(scaffold, flag, bump=flag == "--strict-integrity")
         found = _lines(proc.stdout, "FINDING", "STK-01", "Bananas")

@@ -17,13 +17,13 @@ GATE = load_script("spine_rules")
 
 def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     # WI-259 (repo-review-2026-07-21 M-5): trace's --require-verified DevStg-Impl bar and
-    # spine_rules.sr_bar must agree about which SRs must be Approved before DevStg-Impl.
-    # sr_bar has always demanded is_approved for ANY decomposed SR with no
+    # spine_rules.sr_bar must agree about which SRs must be Accepted before DevStg-Impl.
+    # sr_bar has always demanded is_accepted for ANY decomposed SR with no
     # per-method carve-out; trace's bar used to fire only for VerificationMethod=Test, so
-    # a decomposed Demonstration/Analysis/Inspection SR left Approved could never
+    # a decomposed Demonstration/Analysis/Inspection SR left Accepted could never
     # derive DevStg-Impl yet passed trace's check — two scripts disagreeing about the gate.
     # Option A widened trace's bar: its loop now gates only on is_drafted (skip) then
-    # is_approved (pass) and NEVER reads Verification, so it is method-blind exactly
+    # is_accepted (pass) and NEVER reads Verification, so it is method-blind exactly
     # like sr_bar. Pin the equivalence on the predicates each side actually uses,
     # across the full Verification vocabulary, so neither re-grows a method filter.
     methods = [
@@ -41,18 +41,18 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     method_blind_rung = None
     for m in methods:
         # RE-POINTED AT D-9 STEP 5: the "accepted but not accepted" fixture was
-        # `Planned`, which FOLDED into `Approved`. Under the narrowed enum the
-        # only value that still means that is `Modified` — using `Approved` here
+        # `Planned`, which FOLDED into `Accepted`. Under the narrowed enum the
+        # only value that still means that is `Modified` — using `Accepted` here
         # would have made both halves of the comparison the same row.
         implemented = {"VerificationMethod": m, "Status": "Modified"}
-        verified = {"VerificationMethod": m, "Status": "Approved"}
+        verified = {"VerificationMethod": m, "Status": "Accepted"}
         # trace's widened bar applies to every accepted (non-Drafted) row — the skip
-        # is is_drafted, which is method-blind — and then passes iff is_approved. So
-        # an accepted SR of ANY method flags exactly when it is not Approved.
+        # is is_drafted, which is method-blind — and then passes iff is_accepted. So
+        # an accepted SR of ANY method flags exactly when it is not Accepted.
         assert TRACE.is_drafted(implemented) is False, m  # bar applies (accepted)
         assert TRACE.is_drafted(verified) is False, m  # bar applies (accepted)
-        assert TRACE.is_approved(verified) is True, m  # Approved -> passes
-        assert TRACE.is_approved(implemented) is False, m  # not Approved -> flagged
+        assert TRACE.is_accepted(verified) is True, m  # Accepted -> passes
+        assert TRACE.is_accepted(implemented) is False, m  # not Accepted -> flagged
         # RE-POINTED AT WI-498 slice 5: `sr_bar` is DELETED with the bar axis, so
         # the derivation side of this pin moves onto the rung fall-through that
         # replaced it. The claim is unchanged and is the half the OI-30 D2
@@ -63,8 +63,8 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         # owns that.)
         stage_v = GATE.spine_stage(
             [dict(verified, **{"SR-ID": "SR-001", "SN-Refs": "SN-001"})],
-            [{"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Approved"}],
-            [{"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Approved"}],
+            [{"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Accepted"}],
+            [{"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Accepted"}],
             {"SN-001"},
             set(),
         )
@@ -82,8 +82,8 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     assert (
         GATE.spine_stage(
             [dict(draft, **{"SR-ID": "SR-001", "SN-Refs": "SN-001"})],
-            [{"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Approved"}],
-            [{"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Approved"}],
+            [{"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Accepted"}],
+            [{"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Accepted"}],
             {"SN-001"},
             set(),
         )
@@ -91,17 +91,17 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     )
 
     # The predicate pins above are necessary but not sufficient: because is_drafted/
-    # is_approved read Status (not VerificationMethod), restoring a VerificationMethod=="Test"
+    # is_accepted read Status (not VerificationMethod), restoring a VerificationMethod=="Test"
     # guard INSIDE analyze()'s --require-verified loop would leave them all green.
     # So drive the real loop end-to-end — a decomposed, non-Test (Demonstration) SR
-    # left below `Approved` MUST produce a status finding. This is the assertion that
+    # left below `Accepted` MUST produce a status finding. This is the assertion that
     # actually pins the loop side method-blind: restore the Test-only guard and it
     # fails (Demonstration skipped -> status-findings=0 -> exit 0).
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
         csv_path.read_text(encoding="utf-8").replace(
-            ",M,Test,Approved", ",M,Demonstration,Modified"
+            ",M,Test,Accepted", ",M,Demonstration,Modified"
         ),
         encoding="utf-8",
     )

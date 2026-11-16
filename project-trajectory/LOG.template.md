@@ -42,7 +42,7 @@ ability to answer "which sittings did a human actually attend?".
 
 ## Decisions log
 
-_Approved or executed decisions only — the call, the alternatives passed over,
+_Accepted or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids). A decision still **awaiting** an operator is an
 Open item in [status.md](status.md), not a log entry._
 

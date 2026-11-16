@@ -56,13 +56,13 @@ why = "A silent system is indistinguishable from a broken one."
 priority = "M"
 acceptance = "The operator names the outcome from what the system shows."
 stakeholder_refs = ["STK-001"]
-status = "Approved"
+status = "Accepted"
 
 [stakeholder.STK-001]
 name = "Operator"
 description = "Runs the system and owns what it shows."
 party = "EXT-001"
-status = "Approved"
+status = "Accepted"
 """
 
 FRAME = """
@@ -70,38 +70,38 @@ FRAME = """
 name = "Operator"
 class = "operational"
 description = "The person running the system."
-status = "Approved"
+status = "Accepted"
 
 [entity.EXT-002]
 name = "Archive"
 class = "operational"
 description = "A store the system writes to."
-status = "Approved"
+status = "Accepted"
 
 [boundary.B-01]
 entity = "EXT-001"
 direction = "out"
 carries = "the outcome shown to the operator"
 system = "operation"
-status = "Approved"
+status = "Accepted"
 
 [boundary.B-02]
 entity = "EXT-002"
 direction = "out"
 carries = "the record kept"
 system = "operation"
-status = "Approved"
+status = "Accepted"
 
 [boundary.B-03]
 entity = "EXT-001"
 direction = "in"
 carries = "the operator's request"
 system = "operation"
-status = "Approved"
+status = "Accepted"
 """
 
 
-def _assumption(did, *, status="Approved", standing="active", lands="B-01", **cells):
+def _assumption(did, *, status="Accepted", standing="active", lands="B-01", **cells):
     extra = "".join('{} = "{}"\n'.format(k, v) for k, v in cells.items())
     return (
         "\n[assumption.{}]\n"
@@ -123,7 +123,7 @@ def _requirement(sid, *, da=(), coincident=None, form=None, boundary=("B-01",)):
         'sn_refs = ["SN-001"]',
         "boundary_refs = [{}]".format(", ".join('"{}"'.format(b) for b in boundary)),
         'requirement = "The system shall show the outcome."',
-        'status = "Approved"',
+        'status = "Accepted"',
     ]
     if da:
         lines.append("da_refs = [{}]".format(", ".join('"{}"'.format(d) for d in da)))
@@ -240,7 +240,7 @@ status = "Drafted"
 name = "Scripted operator, accepted"
 emulates = ["EXT-001"]
 description = "A driver reading the screen."
-status = "Approved"
+status = "Accepted"
 """
 )
 
@@ -287,7 +287,7 @@ def test_with_no_agreed_stakeholder_the_reach_advisories_fold_into_one_count(
     # reach-caused advisories are one line with their count. Every other
     # finding is still listed by name, and failures are never folded.
     drafted = NEEDS.replace(
-        'party = "EXT-001"\nstatus = "Approved"',
+        'party = "EXT-001"\nstatus = "Accepted"',
         'party = "EXT-001"\nstatus = "Drafted"',
     )
     root = _project(scaffold, {**BOUNDARY, NEEDS_REL: drafted}, gate=False)
@@ -394,7 +394,7 @@ def _design(lid, module, sid):
         'module = "{}"\n'
         'code_symbol = "run"\n'
         'detail = "How {} is built."\n'
-        'status = "Approved"\n'
+        'status = "Accepted"\n'
     ).format(lid, sid, lid, module, sid)
 
 
@@ -417,7 +417,7 @@ def _interface(iid, owner, *, bridged=(), coincident=None):
         'channel = "stdout"',
         'data = "the outcome"',
         'version = "v1"',
-        'status = "Approved"',
+        'status = "Accepted"',
         'interface_to_external = ["B-01"]',
     ]
     if bridged:
@@ -438,7 +438,7 @@ ARCH_IFS = (
     # An internal seam realizes no crossing and reaches nothing.
     + '\n[interface.IF-006]\nowner = "scripts/epsilon"\nconsumers = '
     '["scripts/alpha"]\nchannel = "call"\ndata = "x"\nversion = "v1"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
 )
 
 ARCH = {
@@ -594,7 +594,7 @@ def _case(tid, did, sampling):
         'expected = "The outcome is read."\n'
         'automated = "No"\n'
         'evidence = "docs/notes.md"\n'
-        'status = "Approved"\n'
+        'status = "Accepted"\n'
         'inputs = ["docs/notes.md"]\n'
         "max_age = 30\n"
         'sampling = "{}"\n'

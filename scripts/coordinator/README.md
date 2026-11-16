@@ -62,7 +62,7 @@ refused with exit 2), so the call goes through the loop's keep operation and
 `out/adjudicator/` record, and one retained session judges the whole chain.
 
 1. Compose the brief with `compose_lane.py` (above): `amendment` for accepted
-   rows whose text drifted from `docs/archive/last_approved/`, `first-acceptance`
+   rows whose text drifted from `docs/archive/last_accepted/`, `first-acceptance`
    for Drafted rows. Number the verdict `NNN-ADJUDICATE-<lane sha7>.md` under
    `docs/reviews/<wi-slug>/`.
 2. Confirm the adjudicator's declared account is signed in: the command

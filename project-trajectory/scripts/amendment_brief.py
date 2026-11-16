@@ -146,12 +146,12 @@ def amendment_values(root, row):
     is measured against"; the old derivation resolved, for a row that never
     flipped, to the amendment commit ITSELF — presenting the text under
     judgement as its own accepted anchor, which is precisely the failure rule 1
-    exists to prevent. `docs/archive/last_approved/` is an anchor that is
+    exists to prevent. `docs/archive/last_accepted/` is an anchor that is
     provably NOT the text under judgement: the mirror invariant means it can
     only have been written by copying a live registry in a reviewed acceptance
     commit.
 
-    `{rows}` is `trace.reaccept_model`'s APPROVED cells — the same model behind
+    `{rows}` is `trace.reaccept_model`'s ACCEPTED cells — the same model behind
     `trace.py --accept` and `open-items.html`, so the judge, the brief and the
     operator surface can never show three different diffs. Traced cells are
     deliberately excluded: §A5.1 rules them outside acceptance, and a judge asked to
@@ -287,7 +287,7 @@ def _scoped_chain_rows(model, scope):
     chains, cells_of = {}, {}
     for entry in model:
         for chain_row in entry["rows"]:
-            accepted = chain_row.get("approved") or frozenset()
+            accepted = chain_row.get("accepted") or frozenset()
             cells = [c for c in chain_row["cells"] if c[0] in accepted]
             if chain_row["id"] not in scope or not cells:
                 continue

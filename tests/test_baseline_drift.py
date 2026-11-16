@@ -20,7 +20,7 @@ CT = load_script("check_trajectory")
 def test_a_accepted_cell_moving_under_an_accepted_row_is_DRIFT(tmp_path):
     """Implements: TC-153"""
     root = _seeded(tmp_path)
-    sid, _row = _first_row_at(root, "approved")
+    sid, _row = _first_row_at(root, "accepted")
     snapshot = SNAP.load_all(root)
     before = SNAP.rows_for(snapshot, SR_REL, "SR-ID")
     live = {
@@ -46,7 +46,7 @@ def test_a_TRACED_cell_moving_is_NOT_drift(tmp_path):
     root = _seeded(tmp_path)
     snapshot = SNAP.load_all(root)
     before = SNAP.rows_for(snapshot, SR_REL, "SR-ID")
-    sid, row = _first_row_at(root, "approved")
+    sid, row = _first_row_at(root, "accepted")
     moved = dict(row, Phase="99")  # `Phase` is declared TRACED for the SR tier
     assert CT.spine_cell_class(SR_REL, "Phase") == "traced"
     assert not SNAP.is_drifted(SR_REL, "SR-ID", moved, before)
@@ -59,7 +59,7 @@ def test_a_row_below_acceptance_can_never_be_drifted(tmp_path):
     # carry no Drafted row since the 2026-08-20 signing, so the fixture makes
     # its own (first SR flipped pre-seed) rather than borrowing one.
     root = _tree(tmp_path)
-    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
+    _rewrite(root, SR_REL, 'status = "Accepted"', 'status = "Drafted"')
     SNAP.copy_live(root, seed=True)
     snapshot = SNAP.load_all(root)
     before = SNAP.rows_for(snapshot, SR_REL, "SR-ID")
@@ -76,5 +76,5 @@ def test_status_itself_is_never_the_amendment(tmp_path):
     # invisible behind its own flip.
     root = _seeded(tmp_path)
     before = SNAP.rows_for(SNAP.load_all(root), SR_REL, "SR-ID")
-    sid, row = _first_row_at(root, "approved")
-    assert not SNAP.is_drifted(SR_REL, "SR-ID", dict(row, Status="Approved"), before)
+    sid, row = _first_row_at(root, "accepted")
+    assert not SNAP.is_drifted(SR_REL, "SR-ID", dict(row, Status="Accepted"), before)

@@ -497,10 +497,10 @@ def _spine_lane(
     _commit(root, "spine: the attested baseline", when=T_BASE)
     assert integ.claim(root, "WI-401", "wi-401") == 0
     _git(root, "checkout", "-q", "wi-401")
-    rows = _SR_HEADER + _sr("Approved" if flip else "Drafted", "the AMENDED text")
+    rows = _SR_HEADER + _sr("Accepted" if flip else "Drafted", "the AMENDED text")
     if born:
         rows += (
-            'SR-002,New req,SN-001,"fresh","why","ac",,C,Test,Approved,1,,'
+            'SR-002,New req,SN-001,"fresh","why","ac",,C,Test,Accepted,1,,'
             "hat.MAINTAINER\n"
         )
     if snapshot:
@@ -516,7 +516,7 @@ def _spine_lane(
     if verdict is not None:
         _write_lane_verdict(root, *verdict)
     if snapshot:
-        snap = root / "docs" / "archive" / "last_approved" / "docs" / "requirements"
+        snap = root / "docs" / "archive" / "last_accepted" / "docs" / "requirements"
         snap.mkdir(parents=True, exist_ok=True)
         (snap / "system-requirements.csv").write_text(
             rows, encoding="utf-8", newline="\n"
@@ -539,7 +539,7 @@ def test_a_lane_that_flips_a_status_to_accepted_is_refused_at_the_merge_slot(tmp
     refusal = refused(root, "wi-401", "smoke")
     assert refusal is not None
     assert "ACCEPTANCE ACT" in refusal
-    assert "SR-001 flipped Drafted -> Approved" in refusal
+    assert "SR-001 flipped Drafted -> Accepted" in refusal
     assert "Leave the rows `Drafted`" in refusal  # actionable, not just a verdict
 
 
@@ -587,7 +587,7 @@ def _unbacked(tmp_path, name, verdict):
     refusal = refused(root, "wi-401", "smoke")
     assert refusal is not None
     assert "ACCEPTANCE ACT" in refusal
-    assert "SR-001 flipped Drafted -> Approved" in refusal  # names the act
+    assert "SR-001 flipped Drafted -> Accepted" in refusal  # names the act
     assert "SR-001 (first-acceptance) is authorized by no recorded verdict" in refusal
     # No amendment row is refused, so the bless-mark remedy does not apply.
     assert "[MEANING+BLESS]" not in refusal
@@ -684,7 +684,7 @@ def test_an_adjudication_snapshot_cannot_widen_beyond_its_flips(tmp_path):
         verdict=BACKED,
     )
     _git(root, "checkout", "-q", "wi-401")
-    snap = root / "docs" / "archive" / "last_approved" / "docs" / "test"
+    snap = root / "docs" / "archive" / "last_accepted" / "docs" / "test"
     snap.mkdir(parents=True, exist_ok=True)
     (snap / "test-cases.toml").write_text("[cases]\n", encoding="utf-8", newline="\n")
     _commit(root, "WI-401: widen the acceptance snapshot", when=T_LATER)
@@ -894,9 +894,9 @@ def _second(status):
 
 def _ledger_lane(home, *, flip, verdict_rows, scope=None):
     """A lane whose act-ledger entry accepts a row no live `Status` moved
-    (Sol r3 MAJOR 2): at the base SR-002 is live `Approved` while its recorded
+    (Sol r3 MAJOR 2): at the base SR-002 is live `Accepted` while its recorded
     copy still reads `Drafted`, so the REAL snapshot writer
-    (`baseline_snapshot.copy_live`) records it `approved`. `flip` also flips
+    (`baseline_snapshot.copy_live`) records it `accepted`. `flip` also flips
     SR-001; `scope`, when given, is the claimed first-acceptance scope."""
     import baseline_snapshot
 
@@ -905,11 +905,11 @@ def _ledger_lane(home, *, flip, verdict_rows, scope=None):
     reg = root / "docs" / "requirements" / "system-requirements.csv"
     reg.parent.mkdir(parents=True, exist_ok=True)
     reg.write_text(
-        _SR_HEADER + _sr("Drafted") + _second("Approved"),
+        _SR_HEADER + _sr("Drafted") + _second("Accepted"),
         encoding="utf-8",
         newline="\n",
     )
-    snap = root / "docs/archive/last_approved/docs/requirements/system-requirements.csv"
+    snap = root / "docs/archive/last_accepted/docs/requirements/system-requirements.csv"
     snap.parent.mkdir(parents=True, exist_ok=True)
     snap.write_text(
         _SR_HEADER + _sr("Drafted") + _second("Drafted"),
@@ -921,7 +921,7 @@ def _ledger_lane(home, *, flip, verdict_rows, scope=None):
     _git(root, "checkout", "-q", "wi-401")
     if flip:
         reg.write_text(
-            _SR_HEADER + _sr("Approved") + _second("Approved"),
+            _SR_HEADER + _sr("Accepted") + _second("Accepted"),
             encoding="utf-8",
             newline="\n",
         )
@@ -973,18 +973,18 @@ def test_an_unbacked_ledger_only_acceptance_is_refused_by_name(tmp_path):
 def test_a_lane_that_mints_a_row_born_accepted_is_refused(tmp_path):
     # The second measured shape, and the one a flip-only rung would miss whole:
     # four lanes (WI-483, WI-500, WI-501, WI-507) minted rows that ARRIVED
-    # `Approved`, so no Status ever moved and the acceptance brief never saw them.
+    # `Accepted`, so no Status ever moved and the acceptance brief never saw them.
     root = _spine_lane(tmp_path / "born", born=True)
     # The lane reserved the id it mints, so the reserved-ids rung passes it on
     # to the rung measured here.
     plant_id_carrier(root, reserved_watermark({"SR": 2}, [("SR", 2, 2, "WI-401")]))
 
     refusal = refused(root, "wi-401", "smoke")
-    assert "SR-002 was minted born Approved" in refusal
+    assert "SR-002 was minted born Accepted" in refusal
 
 
 def test_a_lane_that_writes_the_acceptance_snapshot_is_refused(tmp_path):
-    # The third: the copy under `docs/archive/last_approved/` IS the signature
+    # The third: the copy under `docs/archive/last_accepted/` IS the signature
     # since the mechanical writer retired (OI-45 ruled (b)), so a lane that
     # writes it has accepted whatever text was live at that moment — which is
     # how a spine-only act came to re-seal off-spine drift (WI-571). The rung
@@ -993,7 +993,7 @@ def test_a_lane_that_writes_the_acceptance_snapshot_is_refused(tmp_path):
     root = _spine_lane(tmp_path / "snap", snapshot=True)
 
     refusal = refused(root, "wi-401", "smoke")
-    assert "wrote docs/archive/last_approved/" in refusal
+    assert "wrote docs/archive/last_accepted/" in refusal
 
 
 def test_a_lane_that_only_authors_and_amends_drafted_rows_is_admitted(tmp_path):
@@ -1018,11 +1018,11 @@ def test_a_trunk_side_acceptance_after_the_claim_is_not_the_lanes(tmp_path):
     # delta at all. Free by construction, not by exemption.
     root = _spine_lane(tmp_path / "trunk")
     reg = root / "docs" / "requirements" / "system-requirements.csv"
-    reg.write_text(_SR_HEADER + _sr("Approved"), encoding="utf-8", newline="\n")
+    reg.write_text(_SR_HEADER + _sr("Accepted"), encoding="utf-8", newline="\n")
     _commit(root, "spine: the adjudicator accepts SR-001 on trunk", when=T_LATER)
 
     # The flip really is on trunk and really is not the branch's.
-    assert "Approved" in reg.read_text(encoding="utf-8")
+    assert "Accepted" in reg.read_text(encoding="utf-8")
     assert integ._acceptance_act_refusal(root, "wi-401") is None
 
 
@@ -1421,7 +1421,7 @@ FRAME = "docs/requirements/external.toml"
 ASSUMPTIONS = "docs/requirements/assumptions.toml"
 LOOP_SESSION = "20260926T101500Z-a1b2c3"
 MARK = "KIT_LOOP_SESSION"
-GAP = "SR-001 is not Approved (Status=Drafted)"
+GAP = "SR-001 is not Accepted (Status=Drafted)"
 NO_REGEN = "import sys\nsys.exit(0)\n"
 
 
@@ -1457,7 +1457,7 @@ def _marked(message):
     return "{}\n\nLoop-Session: {}".format(message, LOOP_SESSION)
 
 
-BASE_FRAME = {"B-01": "Drafted", "B-02": "Approved"}
+BASE_FRAME = {"B-01": "Drafted", "B-02": "Accepted"}
 BASE_ASSUMPTIONS = {"DA-001": "Drafted"}
 
 
@@ -1490,7 +1490,7 @@ def _held_trunk(home, monkeypatch, dial=HELD):
 # the refusal must name).
 LANE_CHANGES = {
     "frame-flip": (
-        {**BASE_FRAME, "B-01": "Approved"},
+        {**BASE_FRAME, "B-01": "Accepted"},
         BASE_ASSUMPTIONS,
         "external",
         "B-01",
@@ -1502,7 +1502,7 @@ LANE_CHANGES = {
         "B-03",
     ),
     "frame-removed": ({"B-01": "Drafted"}, BASE_ASSUMPTIONS, "external", "B-02"),
-    "assumption-flip": (BASE_FRAME, {"DA-001": "Approved"}, "assumptions", "DA-001"),
+    "assumption-flip": (BASE_FRAME, {"DA-001": "Accepted"}, "assumptions", "DA-001"),
     "assumption-born": (
         BASE_FRAME,
         {**BASE_ASSUMPTIONS, "DA-002": "Drafted"},
@@ -1548,7 +1548,7 @@ def test_a_lane_that_moves_a_held_row_into_acceptance_is_refused_at_the_merge_sl
     tmp_path, monkeypatch
 ):
     # The frame flip is the lane rule's refusal; an assumption flipped to
-    # Approved is an acceptance act since the assumptions registry joined it,
+    # Accepted is an acceptance act since the assumptions registry joined it,
     # and the acceptance-act rung runs before the lane-commit walk. A born
     # Drafted row or a removal claims no acceptance and lands
     # (tests/test_held_status_git.py).
@@ -1597,7 +1597,7 @@ def test_the_held_status_pre_commit_step_judges_only_a_marked_commit(
     tmp_path, monkeypatch
 ):
     root = _held_trunk(tmp_path, monkeypatch)
-    _write_registries(root, {**BASE_FRAME, "B-01": "Approved"}, BASE_ASSUMPTIONS)
+    _write_registries(root, {**BASE_FRAME, "B-01": "Accepted"}, BASE_ASSUMPTIONS)
     _git(root, "add", "--", FRAME)
     step = [SCRIPTS / "check.py", "--run-steps", "held-status"]
 
@@ -1618,7 +1618,7 @@ def test_the_held_status_pre_commit_step_judges_only_a_marked_commit(
 
 
 def _flip_frame(root):
-    _write_registries(root, {**BASE_FRAME, "B-01": "Approved"}, BASE_ASSUMPTIONS)
+    _write_registries(root, {**BASE_FRAME, "B-01": "Accepted"}, BASE_ASSUMPTIONS)
 
 
 def _assert_named(refusal):
@@ -1702,7 +1702,7 @@ def test_the_telemetry_writer_refuses_a_tree_carrying_a_held_status_change(
     assert "telemetry commit skipped" in capsys.readouterr().err
     assert _rev(root, "HEAD") == head
     assert _git(root, "diff", "--cached", "--name-only").strip() == ""
-    assert _frame_row_is(root, "Approved")  # left exactly as found
+    assert _frame_row_is(root, "Accepted")  # left exactly as found
 
 
 # --- 6b. the review's rulings on the held status (WI-636 follow-up) ------------
@@ -1714,7 +1714,7 @@ def test_the_telemetry_writer_refuses_a_tree_carrying_a_held_status_change(
 
 
 def _flip_stakeholder(root):
-    _write_registries(root, BASE_FRAME, BASE_ASSUMPTIONS, {"STK-01": "Approved"})
+    _write_registries(root, BASE_FRAME, BASE_ASSUMPTIONS, {"STK-01": "Accepted"})
 
 
 def test_a_stakeholder_status_is_held_at_the_needs_rung(tmp_path, monkeypatch):
@@ -1788,7 +1788,7 @@ def test_the_pre_commit_step_reads_a_legacy_dial_as_the_writers_do(
     )
     _commit(root, "a legacy dial, and an interface", when=T_CODE)
     interfaces.write_text(
-        _status_rows("interface", {"IF-001": "Approved"}), encoding="utf-8"
+        _status_rows("interface", {"IF-001": "Accepted"}), encoding="utf-8"
     )
     _git(root, "add", "--", "docs/requirements/interfaces.toml")
     step = [SCRIPTS / "check.py", "--run-steps", "held-status"]
@@ -1810,7 +1810,7 @@ def test_the_held_status_step_judges_a_merge_by_what_neither_side_had(
 ):
     root = _held_trunk(tmp_path, monkeypatch)
     _git(root, "checkout", "-q", "-b", "other")
-    _write_registries(root, {**BASE_FRAME, "B-01": "Approved"}, BASE_ASSUMPTIONS)
+    _write_registries(root, {**BASE_FRAME, "B-01": "Accepted"}, BASE_ASSUMPTIONS)
     _commit(root, "owner: accept B-01", when=T_CODE)
     _git(root, "checkout", "-q", "main")
     _git(root, "merge", "-q", "--no-ff", "--no-commit", "other")
@@ -1822,7 +1822,7 @@ def test_the_held_status_step_judges_a_merge_by_what_neither_side_had(
     assert taken.returncode == 0, taken.stdout + taken.stderr
 
     # A resolution writing a status NEITHER side carried is the merge's own.
-    _write_registries(root, {"B-01": "Approved", "B-02": "Drafted"}, BASE_ASSUMPTIONS)
+    _write_registries(root, {"B-01": "Accepted", "B-02": "Drafted"}, BASE_ASSUMPTIONS)
     _git(root, "add", "--", FRAME)
     introduced = run_py(step, cwd=root)
     assert introduced.returncode == 1, introduced.stdout + introduced.stderr

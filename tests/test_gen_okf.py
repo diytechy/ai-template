@@ -224,7 +224,7 @@ def test_malformed_id_is_ignored_not_path_escape(scaffold):
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
         srs.read_text(encoding="utf-8")
-        + 'SR-/../../evil,Bad,SN-001,"x",R,"y",,M,Test,Approved\n',
+        + 'SR-/../../evil,Bad,SN-001,"x",R,"y",,M,Test,Accepted\n',
         encoding="utf-8",
     )
     proc = okf(scaffold)
@@ -258,7 +258,7 @@ def test_prune_removes_emptied_tier_directory(scaffold):
     (req / "interfaces.toml").write_text(
         '[interface.IF-001]\nname = "Seam"\nowner = "src/demo"\n'
         'consumers = ["external:downstream"]\nchannel = "call"\n'
-        'status = "Approved"\n',
+        'status = "Accepted"\n',
         encoding="utf-8",
     )
     assert okf(scaffold).returncode == 0

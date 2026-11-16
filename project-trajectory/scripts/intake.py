@@ -733,7 +733,7 @@ def _routed_amendments(root, before, after):
                 spine_carrier.stem(rec["registry"]), ()
             )
         }
-        if rec["approved"] or routed_cells:
+        if rec["accepted"] or routed_cells:
             routed.append(dict(rec, routed=routed_cells))
     settled, refusal = acceptance_record.settled_amendments(
         root, before, after, routed, ROUTED_TRACED_CELLS
@@ -793,12 +793,12 @@ def _amendment_context(records):
     section; R-A forbids a filled Deliverable on an open row)."""
     lines = [
         "Derived from `staged_spine_amendments` on the merged commit (§A5.2).",
-        "Approved and ROUTED traced cells only; other traced cells are silent",
+        "Accepted and ROUTED traced cells only; other traced cells are silent",
         "by ruling. Each line: registry row / cell: before -> after.",
         "",
     ]
     for rec in records:
-        cells = dict(rec["approved"])
+        cells = dict(rec["accepted"])
         cells.update(rec["routed"])
         for cell in sorted(cells):
             before, after = cells[cell]
@@ -973,7 +973,7 @@ def _held_act_drafts(root, before, after):
 # THE OTHER SIDE OF TRIGGER (a)'s COIN (operator ruling 2026-09-01, WI-572). A lane
 # authors `Drafted` spine rows and amends their text; it never accepts them. So
 # the same merged commit that mints an amendment adjudication for the rows whose
-# APPROVED text moved mints a FIRST-ACCEPTANCE adjudication for the rows that are
+# ACCEPTED text moved mints a FIRST-ACCEPTANCE adjudication for the rows that are
 # waiting on an acceptance nobody has given — read off the same two-tree walk
 # (`acceptance_record.staged_drafted_rows`), one row per merge, same shape.
 #
@@ -1028,7 +1028,7 @@ def _first_acceptance_context(records):
         "",
         "Outcomes (operator ruling 2026-09-01): read each row's WHOLE CHAIN — the",
         "parent SR, the sibling LLRs, the test cases — and either APPROVE (move",
-        "the rows' `Status` to `Approved` and take the anchoring snapshot,",
+        "the rows' `Status` to `Accepted` and take the anchoring snapshot,",
         '`python scripts/intake.py snapshot --accepts "<REGISTRY>=<this row>"`,',
         "in ONE reviewed commit on this lane) or RETURN with findings, drafting",
         "the follow-up in a `## Dispositions` section of THIS spec — intake mints",
@@ -3191,7 +3191,7 @@ def flip_verified(root, ids):
     only the named rows' Status cells move; every other cell of every row
     stays CELL-exact (and the live registries byte-identical — measured:
     their quoting is all by necessity, which QUOTE_MINIMAL reproduces), a
-    row already at `Approved` is skipped (idempotent), and an unknown id
+    row already at `Accepted` is skipped (idempotent), and an unknown id
     refuses — a typo on a mechanical tool must never half-apply. The flipped
     registry still owes its regeneration (`spine_rules` recovers the gate);
     the lane's own refresh runs it.
@@ -3252,7 +3252,7 @@ def flip_verified(root, ids):
     # authority; acceptance stays a reviewed-commit act, and `intake.py snapshot`'s
     # authority-gated refresh is the record's one mechanical door.
     for rid in flipped:
-        _say("flipped {} -> Approved ({})".format(rid, session_hold))
+        _say("flipped {} -> Accepted ({})".format(rid, session_hold))
     return action, flipped, None
 
 
@@ -3336,7 +3336,7 @@ def _multiline_delims(text):
 
 
 def _flip_status_lines(lines, table, rid):
-    """Rewrite `[<table>.<rid>]`'s `status = ...` line to `Approved`, in place.
+    """Rewrite `[<table>.<rid>]`'s `status = ...` line to `Accepted`, in place.
     True when a line moved. A LINE REWRITE ON `bootstrap.set_process_key`'s
     PATTERN, and for its reasons: stdlib has no TOML
     writer, and re-serialising the registry to change one cell would normalise
@@ -3372,14 +3372,14 @@ def _flip_status_lines(lines, table, rid):
             in_row = stripped == header
             continue
         if in_row and stripped.split("=")[0].strip() == _STATUS_KEY and opened is None:
-            lines[i] = '{} = "Approved"'.format(_STATUS_KEY)
+            lines[i] = '{} = "Accepted"'.format(_STATUS_KEY)
             return True
         open_delim = opened
     return False
 
 
 def _rewrite_toml_statuses(live, rel, ids):
-    """Move every named row's status line to `Approved` in one TOML registry.
+    """Move every named row's status line to `Accepted` in one TOML registry.
 
     Split out of `_apply_flips` when the snapshot copy joined it (D-9 step 3):
     the carrier-specific write is a self-contained job with its own refusal, and
@@ -3430,7 +3430,7 @@ def _flip_remedy(rid, rel, status):
     `baseline_snapshot.resolve_registry` accepts under either carrier."""
     if status == "Drafted":
         return (
-            "{} owes a FIRST acceptance: move its `Status` to `Approved` in a "
+            "{} owes a FIRST acceptance: move its `Status` to `Accepted` in a "
             "reviewed commit and run `intake.py snapshot` in the same commit, "
             'adding `--accepts "{}=<REF>"` when the act rides a ref.'.format(
                 rid, Path(rel).stem
@@ -3452,18 +3452,18 @@ def _apply_flips(root, tables, located):
     used to carry open.
 
     **THE STATE THIS ACT MOVED FROM RETIRED AT D-9 STEP 7.** It enacted ruled
-    decision 2's cheap outcome (`Modified` -> `Approved` for a row judged
+    decision 2's cheap outcome (`Modified` -> `Accepted` for a row judged
     no-scope-moved); under the snapshot ladder an amendment never flips its
-    row, so an amended row already reads `Approved` and there is no cell to
+    row, so an amended row already reads `Accepted` and there is no cell to
     move. D-9 step 7 left two candidate resolutions on the table — re-bless a
-    drifted `Approved` row under loop-hold (a), or retire the arm (b) — and
+    drifted `Accepted` row under loop-hold (a), or retire the arm (b) — and
     OI-45 RULED (b): the guard below is the ruled shape, not a stopgap awaiting
     an operator call.
 
     OI-45 IS THE RECORD, and what it retires is precise: MECHANICAL
     acceptance — a scripted path moving a Status cell with no judgment behind
     it. It does not say no agent may ever move a Status cell. An LLM session or
-    adjudicator is fully expected to flip a row to `Approved`, and further to
+    adjudicator is fully expected to flip a row to `Accepted`, and further to
     `Founded`, for spine content past the declared operator-acceptance level
     (`agent_common.operator_holds` says which) — at the operator's request, or when
     working through content the level does not hold to operator acceptance. The
@@ -3495,18 +3495,18 @@ def _apply_flips(root, tables, located):
         # `if status != "Modified": continue` — one silent skip over two unrelated
         # states: an already-blessed row (idempotent, correct) and a row this act
         # has no business touching (silent, wrong). The resolution splits them.
-        if status == "Approved":
+        if status == "Accepted":
             # Already at the value this act writes — the one legitimate skip, and
             # the idempotence `flip_verified`'s docstring advertises.
             continue
         # Everything else is REFUSED, naming the row. Fail-CLOSED and strictly
         # less permissive than the skip it replaces:
         #   `Drafted`  a FIRST acceptance, not an adjudication's cheap outcome.
-        #   `Founded`  ABOVE `Approved` — writing `Approved` moves it DOWN.
+        #   `Founded`  ABOVE `Accepted` — writing `Accepted` moves it DOWN.
         #   anything   outside the closed enum, already an integrity error.
         raise SystemExit(
             'intake: {} in {} reads `{} = "{}"` — this act moves a row TO '
-            "`Approved` and the only state it moved FROM (`Modified`) retired at "
+            "`Accepted` and the only state it moved FROM (`Modified`) retired at "
             "D-9 migration step 7. Under the snapshot ladder an amendment does "
             "not flip its row at all, so there is no cell for a mechanical "
             "adjudication to move. {} Refusing rather than skipping, so the row "
@@ -3623,15 +3623,15 @@ def _cmd_rejudge(args):
 
 
 def _cmd_snapshot(args):
-    """THE REVIEWED-COMMIT PATH to the `last_approved` snapshot: copy every snapshotted
-    registry into `docs/archive/last_approved/`.
+    """THE REVIEWED-COMMIT PATH to the `last_accepted` snapshot: copy every snapshotted
+    registry into `docs/archive/last_accepted/`.
 
     ACCEPTANCE AUTHORITY WAS DELIBERATELY NOT MECHANIZED (OI-45, ruled
     2026-08-20) — this refresh is the ONE mechanical toucher of the acceptance
     record, and it is authority-gated (`--accepts` below) rather than
     unconditional. That is a statement about which SCRIPT decides, not about
     who may act: an LLM session or adjudicator is fully expected to move a
-    row's Status to `Approved`, and further to `Founded`, through the reviewed
+    row's Status to `Accepted`, and further to `Founded`, through the reviewed
     commit this refresh then copies — at the operator's request, or for spine
     content past the declared acceptance level (`agent_common.operator_holds`
     says which). `intake.flip_verified`'s mechanical `_apply_flips` is the
@@ -3651,7 +3651,7 @@ def _cmd_snapshot(args):
     THE REFRESH IS AUTHORITY-GATED ROW BY ROW (`baseline_snapshot.
     refresh_refusal`, 2026-08-20; per row since SR-207). It is the door the
     adversarial round found standing open: creating the record was guarded and
-    rewriting it was not, so a two-commit path — amend an Approved row, then
+    rewriting it was not, so a two-commit path — amend an Accepted row, then
     refresh — re-blessed the amendment with every check green. A row whose
     accepted text drifted from its recorded copy rides a refresh only on its own
     `Status` flip or when `--reaccepts <ROW-ID>[,<ROW-ID>...]` names it — the
@@ -3774,7 +3774,7 @@ def main(argv=None):
     snap = sub.add_parser(
         "snapshot",
         help="copy every spine + acceptance-carrying registry into "
-        "docs/archive/last_approved/ — the record of WHAT TEXT an acceptance "
+        "docs/archive/last_accepted/ — the record of WHAT TEXT an acceptance "
         "blessed. Run it in the same reviewed commit as the Status edits",
     )
     snap.add_argument(

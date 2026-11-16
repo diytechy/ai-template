@@ -762,7 +762,7 @@ def _named_line(root, rev, act):
     if not parsed:
         return "  {}".format(verdict)
     judged = judged_rows(parsed)
-    rows = [str(r) for r in act.get("reattested") or []]
+    rows = [str(r) for r in act.get("reaccepted") or []]
     unjudged = [r for r in rows if ("amendment", r) not in judged]
     if not unjudged:
         return None
@@ -799,7 +799,7 @@ def unrecorded_refusal(root, rev, acts):
 REVIEWS = "docs/reviews"
 # Which adjudication kind an act-ledger entry's key needs: a flip is a first
 # acceptance's act, a re-acceptance an amendment's.
-_ACT_KINDS = (("approved", "first-acceptance"), ("reattested", "amendment"))
+_ACT_KINDS = (("accepted", "first-acceptance"), ("reaccepted", "amendment"))
 
 
 def branch_verdicts(root, base, rev):

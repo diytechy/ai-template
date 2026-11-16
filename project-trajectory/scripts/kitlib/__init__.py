@@ -53,7 +53,7 @@ theme and says so in its own docstring:
                  the derivation as an ARGUMENT — the registry parse needs a
                  sibling this package may not import.
   * `spine`    — the spine ROW vocabulary, one tier over `ladder`: what a
-                 `Status` word means (`Drafted`/`Approved`/`Founded`), which
+                 `Status` word means (`Drafted`/`Accepted`/`Founded`), which
                  `VerificationMethod` methods decompose to a TC but no LLR, what a
                  free-form `Phase` cell parses to, which `SN-###` ids a needs
                  registry mentions and which of them the SRs cite, plus the ref

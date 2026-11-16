@@ -42,10 +42,10 @@ each rung's arm is `intake.adjudication_action`'s answer (the held-rung
 policy's one home, which the judging composer reads too).
 
 OWED, TAKEN OR INCONSISTENT: judged at a revision, never the working tree. A
-first acceptance is owed while the row's committed status is below Approved,
+first acceptance is owed while the row's committed status is below Accepted,
 whatever its recorded copy holds (a whole-registry copy carries Drafted rows),
-and taken when the row is Approved and its copy equals its committed text. A
-re-accept of an Approved row is taken when the copy equals the row, and owed
+and taken when the row is Accepted and its copy equals its committed text. A
+re-accept of an Accepted row is taken when the copy equals the row, and owed
 otherwise. A re-accept of a row absent from the committed registries is a
 RETIREMENT (the operator's ruling of 2026-10-17, WI-912): owed while its recorded
 copy still holds the row, named in `--reaccepts` with the other re-accepts
@@ -53,8 +53,8 @@ copy still holds the row, named in `--reaccepts` with the other re-accepts
 only when it is named there), and taken once the copy no longer holds it. On a
 held rung a retirement owes no act, read through the same held-rung test as a
 held MEANING or APPROVE row: removing a held row is the operator's. Every other
-state (an Approved row without an equal copy at a first acceptance, a first
-acceptance of an absent row, a re-accept of a row below Approved, a row no
+state (an Accepted row without an equal copy at a first acceptance, a first
+acceptance of an absent row, a re-accept of a row below Accepted, a row no
 compared tier holds) is inconsistent and refuses the whole derivation, naming
 the row: it is never counted as taken. "Equal" compares the whole parsed row, Status included,
 which is what makes a flip committed without its copy read as inconsistent.
@@ -258,7 +258,7 @@ class _Rows:
         return self.cache[key]
 
 
-# Whether a row's `Status` claims acceptance (`Approved` or `Founded`): the pair's
+# Whether a row's `Status` claims acceptance (`Accepted` or `Founded`): the pair's
 # one home is `kitlib.spine.claims_acceptance`, which the acceptance record's
 # acceptance-act readers and the parent-first rule read too.
 _claims_acceptance = kspine.claims_acceptance
@@ -458,7 +458,7 @@ def _amendment_text(part, rel, wi):
         command += " --verdict {}".format(rel)
     retires = part.get("retires") or []
     accepted = [rid for rid in part["reaccepts"] if rid not in retires]
-    rows = "Re-accept these Approved rows: {}.\n".format(", ".join(accepted))
+    rows = "Re-accept these Accepted rows: {}.\n".format(", ".join(accepted))
     if retires:
         rows = (rows if accepted else "") + (
             "Retire these rows, which the lane deleted from their registries, "
@@ -478,7 +478,7 @@ def _acceptance_text(accepts, registries, wi):
         "{} ({})".format(rid, rel) for rel in sorted(accepts) for rid in accepts[rel]
     )
     return (
-        "Flip `Status` from `Drafted` to `Approved` for exactly these rows: {}.\n"
+        "Flip `Status` from `Drafted` to `Accepted` for exactly these rows: {}.\n"
         "Then run, and commit the flips and the copy together, ending the commit "
         'with `WI: {}`:\n\n    python scripts/intake.py snapshot --accepts "{}"'.format(
             rows, wi, registries

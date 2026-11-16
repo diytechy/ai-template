@@ -19,8 +19,8 @@ shipped home, named under §1–3 below).
 **Authoring is not accepting** (operator rulings 2026-09-01 and 2026-10-07;
 `docs/process.md` §4). The authoring session writes its rows `Drafted` and may
 amend any cell of any row, accepted ones included. It never flips a `Status` to
-`Approved`/`Founded`, never writes a row already claiming one, and never writes
-`docs/archive/last_approved/` — that act is an independent adjudicator's, never
+`Accepted`/`Founded`, never writes a row already claiming one, and never writes
+`docs/archive/last_accepted/` — that act is an independent adjudicator's, never
 the session's that authored the rows, taken in the authoring lane or on trunk
 after reading the row's whole chain, and a lane's merge is refused by name for
 any act no recorded verdict judging its own rows backs. So use the question list to make a row *ready*; the answer to "is
@@ -233,7 +233,7 @@ One line each, each one seen in a real spine:
   row whose text changed, and only that row — a child LLR/TC amendment never
   touches its parent SR. There is no marker to set (`Modified` retired
   2026-08-20); EVERY post-acceptance amendment is the snapshot-drift arm's find
-  (`docs/archive/last_approved/`), never the parent signature's, and the
+  (`docs/archive/last_accepted/`), never the parent signature's, and the
   chain-completeness claim belongs to the derived `Founded` state (D-9).
   The amendment is yours to make; the RE-COPY is the acceptance act and belongs
   to the adjudication (the preamble above; `docs/process.md` §4), which takes it

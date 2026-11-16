@@ -114,11 +114,11 @@ def _sr_row(rid, requirement, acceptance, status, sn_refs="SN-001", phase=1):
 
 
 def _write_srs(root, requirement=ORIGINAL, acceptance=AC_ORIGINAL, extra="", **cells):
-    """The SR registry: the one Approved row SR-001 (its traced `cells`, if
+    """The SR registry: the one Accepted row SR-001 (its traced `cells`, if
     given: `sn_refs`, `phase`), plus any `extra` rows."""
     path = root / SR_REL
     path.parent.mkdir(parents=True, exist_ok=True)
-    text = _sr_row("SR-001", requirement, acceptance, "Approved", **cells) + extra
+    text = _sr_row("SR-001", requirement, acceptance, "Accepted", **cells) + extra
     path.write_bytes(text.encode("utf-8"))
 
 
@@ -129,7 +129,7 @@ def _write_llrs(root, text):
 
 
 def _repo(tmp_path, seed=True, extra="", llrs=""):
-    """A trunk carrying SR-001 Approved (plus any `extra` SR rows and any
+    """A trunk carrying SR-001 Accepted (plus any `extra` SR rows and any
     `llrs` LLR registry text) and, when `seed`, its first snapshot (ledger
     seq 1). `(root, sha)`."""
     skip_without_env_gates("git")
@@ -483,7 +483,7 @@ def test_a_reaccepted_row_missing_from_its_copy_still_mints(tmp_path, copy):
     if copy == "absent":
         _git(root, "rm", "-q", COPY_REL)
     else:
-        other = _sr_row("SR-002", "Another row.", "ac", "Approved")
+        other = _sr_row("SR-002", "Another row.", "ac", "Accepted")
         (root / COPY_REL).write_bytes(other.encode("utf-8"))
     after = _commit(root, "the copy loses SR-001")
     minted, refusal = intake.intake_after_merge(root, before, after, {}, "")
@@ -510,7 +510,7 @@ def test_a_cell_restored_after_the_act_still_mints(tmp_path):
     _write_srs(root, requirement=ORIGINAL, acceptance=AC_AMENDED)
     after = _commit(root, "restore the requirement after the act")
     (rec,) = acceptance_record.staged_spine_amendments(root, before, after)
-    assert set(rec["approved"]) == {"AcceptanceCriteria"}, rec["approved"]
+    assert set(rec["accepted"]) == {"AcceptanceCriteria"}, rec["accepted"]
     minted, refusal = intake.intake_after_merge(root, before, after, {}, "")
     assert refusal is None, refusal
     (row,) = _amendment_rows(root, minted)
@@ -562,7 +562,7 @@ LLR_AMENDED = "Adds with the + operator, integers only."
 
 
 def _sr002(requirement):
-    return "\n" + _sr_row("SR-002", requirement, "sub(3, 1) == 2", "Approved")
+    return "\n" + _sr_row("SR-002", requirement, "sub(3, 1) == 2", "Accepted")
 
 
 def _llr001(detail):
@@ -574,7 +574,7 @@ def _llr001(detail):
         'code_symbol = "add"\n'
         'detail = "{}"\n'
         'test_refs = "(see TC-001)"\n'
-        'status = "Approved"\n'
+        'status = "Accepted"\n'
         "phase = 1\n"
     ).format(detail)
 
@@ -821,7 +821,12 @@ REAL_LANDINGS = (
 
 def _landings_unavailable():
     """A named reason the pinned landings cannot be read, or None: a shallow
-    clone or a source export is an environment fact, not a defect."""
+    clone or a source export is an environment fact, not a defect. So is a
+    landing older than the vocabulary migration: its trees spell the accepted
+    status and the acceptance record's directory in words no reader reads any
+    more, so the walk finds no accepted row in them and the test could only
+    pass by seeing nothing. Such a tree has no record under its current name.
+    The arm stays pinned by the fixtures above, in both directions."""
 
     def git(*args):
         return subprocess.run(
@@ -840,6 +845,12 @@ def _landings_unavailable():
                 return "landing commit {} is not in this checkout's history{}".format(
                     sha[:9], depth
                 )
+        record = "{}:{}".format(after, acceptance_record.SNAPSHOT_DIR)
+        if git("cat-file", "-e", record).returncode != 0:
+            return (
+                "landing commit {} predates the vocabulary migration, so its "
+                "rows read as never accepted".format(after[:9])
+            )
     return None
 
 
@@ -860,7 +871,7 @@ def test_the_two_real_redundant_landings_mint_nothing():
     for before, after, rows in REAL_LANDINGS:
         walk = acceptance_record.staged_spine_amendments(ROOT, before, after)
         judged = {
-            rec["id"] for rec in walk if rec["approved"] or set(rec["traced"]) & routed
+            rec["id"] for rec in walk if rec["accepted"] or set(rec["traced"]) & routed
         }
         assert judged == rows
         assert intake._routed_amendments(ROOT, before, after) == ([], None)

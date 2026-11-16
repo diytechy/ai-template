@@ -196,7 +196,7 @@ try:
         is_example,
         refs,
     )
-    from kitlib.spine import is_approved, is_founded, norm_module
+    from kitlib.spine import is_accepted, is_founded, norm_module
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
     from pathlib import Path
@@ -210,13 +210,13 @@ except ImportError:  # pragma: no cover - in-process fallback
         is_example,
         refs,
     )
-    from kitlib.spine import is_approved, is_founded, norm_module
+    from kitlib.spine import is_accepted, is_founded, norm_module
 
 # The observation record's reader (SR-199): the shipped package again,
 # importable once the block above has put this directory on the path.
 from kitlib.observation import format_utc, latest, parse_utc
 from kitlib.observation import problem as record_problem
-from kitlib.spine import is_approved, is_founded
+from kitlib.spine import is_accepted, is_founded
 
 # THE ASSUMPTION ROW'S REQUIRED CELLS (SR-191), in the carrier's column names.
 # `Falsifier` is deliberately absent: an assumption is often written before the
@@ -679,13 +679,13 @@ _OPERATION = "operation"
 
 def _agreed_parties(stks):
     """`{stakeholder id: party}` for each agreed stakeholder declaring a party:
-    `Approved`, or `Founded`, which reads above it on the one ladder. A
+    `Accepted`, or `Founded`, which reads above it on the one ladder. A
     stakeholder still in draft has not been agreed as anyone's, so its party is
     never read."""
     return {
         sid: _cell(row, "Party")
         for sid, row in _real(stks, "STK-ID")
-        if _cell(row, "Party") and (is_approved(row) or is_founded(row))
+        if _cell(row, "Party") and (is_accepted(row) or is_founded(row))
     }
 
 
@@ -804,7 +804,7 @@ def assumption_reach_advisories(das, srs, needs, stks, exts, bifs, surs):
 
 
 def held_until_agreed(lines, stks, what):
-    """Reach-caused `lines` as given once a stakeholder is agreed (`Approved`,
+    """Reach-caused `lines` as given once a stakeholder is agreed (`Accepted`,
     or `Founded`, with a `Party`); while none is, one line in their place: the
     count, and what to do.
 
@@ -815,7 +815,7 @@ def held_until_agreed(lines, stks, what):
     if not lines or _agreed_parties(stks):
         return lines
     return [
-        "{} {} not listed one by one while no stakeholder is Approved with a "
+        "{} {} not listed one by one while no stakeholder is Accepted with a "
         "Party: reach cannot be judged until one is; accept the stakeholders "
         "to list them".format(len(lines), what)
     ]
@@ -907,7 +907,7 @@ def need_frame_gap_advisories(needs, stks, srs, bifs, das):
     names meets the condition as written and is reported too: nothing answers
     it at an operation crossing either.
 
-    Only accepted stakeholders are read (`Approved`, or `Founded` above it).
+    Only accepted stakeholders are read (`Accepted`, or `Founded` above it).
     VACUOUS with no frame, no stakeholder list or no crossing declaring the
     operation system.
 
@@ -1668,7 +1668,7 @@ def _unmet(did, da, surrogates, reach):
     if da is None:
         return ["is not a declared assumption"]
     out = []
-    if not is_approved(da):
+    if not is_accepted(da):
         out.append("is not accepted (Status {})".format(_cell(da, "Status") or "unset"))
     if _cell(da, "Standing") != "active":
         out.append(
@@ -1681,7 +1681,7 @@ def _unmet(did, da, surrogates, reach):
     return out + [
         "is a fidelity assumption whose surrogate {} is not accepted".format(sur)
         for sur in refs(da.get("RealizedBy"))
-        if not is_approved(surrogates.get(sur) or {})
+        if not is_accepted(surrogates.get(sur) or {})
     ]
 
 
@@ -1691,9 +1691,9 @@ def boundary_gate_findings(srs, das, surs, reach, have_frame):
 
     A requirement recorded coincident (`Coincident`) passes. Any other
     requirement fails when it cites no assumption, and once for each unmet
-    condition of each assumption it cites: not `Approved`, `Standing` not
+    condition of each assumption it cites: not `Accepted`, `Standing` not
     active, reported by the reach check (`reach`, `reach_gaps`' map), or a
-    fidelity assumption whose `RealizedBy` surrogate is not `Approved`. With
+    fidelity assumption whose `RealizedBy` surrogate is not `Accepted`. With
     no assumptions registry every requirement not recorded coincident
     therefore fails: enabling the gate asks for the argument.
 

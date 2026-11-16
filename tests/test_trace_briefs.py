@@ -1,4 +1,4 @@
-"""trace.py — the re-acceptance brief, baselined on the `last_approved`
+"""trace.py — the re-acceptance brief, baselined on the `last_accepted`
 snapshot (WI-277 split this file out of tests/test_trace.py by behavior
 boundary; D-9 step 4 re-homed its baseline).
 
@@ -43,7 +43,7 @@ from conftest import (
 
 # --- WI-316: the re-acceptance brief (--accept modified) ----------------------
 # A sitting cannot bless a delta it cannot see: per-cell before/after for every
-# DRIFTED or Drafted SR's chain, baselined at the last_approved SNAPSHOT
+# DRIFTED or Drafted SR's chain, baselined at the last_accepted SNAPSHOT
 # (git supplies only the stamp). A generator mode: no checks, always exits 0.
 
 _REACCEPT_SR_H = (
@@ -57,11 +57,11 @@ _REACCEPT_TC_H = (
 
 
 def _reaccept_repo(root):
-    """A repo with an APPROVED SNAPSHOT (SR-001 Approved, old prose) and a live
+    """A repo with an ACCEPTED SNAPSHOT (SR-001 Accepted, old prose) and a live
     tree that has since been amended (Requirement changed,
     LLR-002 added). Returns the git runner. THE AMENDMENT NO LONGER FLIPS THE
     ROW: it wrote `Status = Modified` until D-9 step 7 retired that marker, so
-    the live row stays `Approved` and DRIFT against the snapshot is what puts
+    the live row stays `Accepted` and DRIFT against the snapshot is what puts
     it in the brief — the fixture is closer to the real sequence, not further.
 
     The git repo is still built — the brief's stamp reads git, and the mirror
@@ -90,18 +90,18 @@ def _reaccept_repo(root):
         )
         (req / "low-level-requirements.csv").write_text(
             _REACCEPT_LLR_H
-            + 'LLR-001,SR-001,Add core,src/demo.py,add,"pure add",(see TC-001),Approved\n'
+            + 'LLR-001,SR-001,Add core,src/demo.py,add,"pure add",(see TC-001),Accepted\n'
             + extra_llr,
             encoding="utf-8",
         )
         (root / "docs" / "test" / "test-cases.csv").write_text(
             _REACCEPT_TC_H
             + 'TC-001,SR-001;LLR-001,Unit,"drive add","Smoke","a=1","sum",Yes,'
-            "tests/test_demo.py::t,Approved\n",
+            "tests/test_demo.py::t,Accepted\n",
             encoding="utf-8",
         )
 
-    write_spine("Approved", "the ORIGINAL accepted text")
+    write_spine("Accepted", "the ORIGINAL accepted text")
     run_git("init")
     pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     run_git("config", "user.email", "t@example.com")
@@ -114,9 +114,9 @@ def _reaccept_repo(root):
     # The amendment: prose changes, NO cell announces it, and the snapshot
     # deliberately stays behind — that lag IS the signal.
     write_spine(
-        "Approved",
+        "Accepted",
         "the AMENDED text",
-        'LLR-002,SR-001,New slice,src/demo.py,mul,"added later",(see TC-001),Approved\n',
+        'LLR-002,SR-001,New slice,src/demo.py,mul,"added later",(see TC-001),Accepted\n',
     )
     run_git("add", "-A")
     run_git("commit", "-m", "amend, no flip — the D-9 regime")
@@ -137,13 +137,13 @@ def test_reaccept_brief_shows_before_after_and_added_rows(tmp_path):
     assert "before: the ORIGINAL accepted text" in out
     assert "after: the AMENDED text" in out
     assert "LLR LLR-002 — ADDED since the snapshot" in out
-    assert "docs/archive/last_approved" in out
+    assert "docs/archive/last_accepted" in out
     # The header's instruction for the DRIFTED row it is about: an amended row
-    # still reads `Approved`, so no flip carries it, and a bare `intake.py
+    # still reads `Accepted`, so no flip carries it, and a bare `intake.py
     # snapshot` refuses it. The re-copy has to name it.
     assert "intake.py snapshot --reaccepts <ROW-ID>" in out
     # The Status cell itself is excluded from the diff, both directions.
-    assert "before: Approved" not in out
+    assert "before: Accepted" not in out
     # The unchanged chain rows (LLR-001, TC-001) emit no section.
     assert "### LLR LLR-001" not in out
     assert "### TC TC-001" not in out
@@ -169,7 +169,7 @@ def test_reaccept_brief_reads_a_bommed_baseline(tmp_path):
     (tmp_path / "docs" / "test").mkdir(parents=True)
     sr_v1 = (
         _REACCEPT_SR_H
-        + 'SR-001,Adder,SN-001,"old text","w","a",,C,Test,Approved,1'
+        + 'SR-001,Adder,SN-001,"old text","w","a",,C,Test,Accepted,1'
         + "\n"
     )
     (req / "system-requirements.csv").write_bytes(
@@ -188,7 +188,7 @@ def test_reaccept_brief_reads_a_bommed_baseline(tmp_path):
     run_git("commit", "-m", "accepted, BOM'd + snapshot")
     sr_v2 = (
         _REACCEPT_SR_H
-        + 'SR-001,Adder,SN-001,"new text","w","a",,C,Test,Approved,1'
+        + 'SR-001,Adder,SN-001,"new text","w","a",,C,Test,Accepted,1'
         + "\n"
     )
     (req / "system-requirements.csv").write_bytes(
@@ -217,7 +217,7 @@ def test_reaccept_brief_empty_when_nothing_is_modified(scaffold):
 
 
 # --- the OI-61-sitting widening: a Drafted LLR/TC owes even under an --------
-# --- Approved, undrifted SR (docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md)
+# --- Accepted, undrifted SR (docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md)
 
 
 def test_reaccept_brief_owes_a_drafted_llr_under_an_accepted_undrifted_sr(tmp_path):
@@ -241,7 +241,7 @@ def test_reaccept_brief_owes_a_drafted_llr_under_an_accepted_undrifted_sr(tmp_pa
     (req / "system-requirements.csv").write_text(
         _REACCEPT_SR_H
         + 'SR-001,Stable parent,SN-001,"a stable requirement","why","ac",,C,'
-        "Test,Approved,1\n",
+        "Test,Accepted,1\n",
         encoding="utf-8",
     )
     (req / "low-level-requirements.csv").write_text(_REACCEPT_LLR_H, encoding="utf-8")
@@ -270,7 +270,7 @@ def test_reaccept_brief_owes_a_drafted_llr_under_an_accepted_undrifted_sr(tmp_pa
     assert "## SR-001 — Stable parent" in out
     assert "LLR LLR-001" in out
     assert "Drafted — never accepted" in out
-    # THE SR-177 GAP: the SR row itself carries no diff (it is `Approved` and
+    # THE SR-177 GAP: the SR row itself carries no diff (it is `Accepted` and
     # undrifted), so it never appeared in `entry["rows"]` at all — the anchor
     # block is the only thing that puts its own Requirement on the page.
     assert "> **Requirement.** a stable requirement" in out
@@ -329,7 +329,7 @@ def test_reaccept_brief_never_labels_a_drafted_rows_cells_accepted(tmp_path):
     rendered under the heading `accepted — re-acceptance owed`.
 
     `_cell_diff_lines` splits a changed row's cells into the §A5.1 two groups
-    keyed on the cell's COLUMN class (`SPINE_APPROVED_CELLS`), independent of
+    keyed on the cell's COLUMN class (`SPINE_ACCEPTED_CELLS`), independent of
     the ROW's Status. A `Drafted` TC that drifted in both an accepted-class
     cell (`Method`) and a traced-class cell (`Evidence`) therefore renders its
     `Method` change under `accepted — re-acceptance owed` — asserting an
@@ -344,7 +344,7 @@ def test_reaccept_brief_never_labels_a_drafted_rows_cells_accepted(tmp_path):
     def write_spine(method, evidence):
         (req / "system-requirements.csv").write_text(
             _REACCEPT_SR_H
-            + 'SR-001,Adder,SN-001,"a stable requirement","why","ac",,C,Test,Approved,1\n',
+            + 'SR-001,Adder,SN-001,"a stable requirement","why","ac",,C,Test,Accepted,1\n',
             encoding="utf-8",
         )
         (req / "low-level-requirements.csv").write_text(
@@ -398,7 +398,7 @@ def test_reaccept_brief_shows_a_long_changed_cell_whole(tmp_path):
     def write_spine(method_tail):
         (req / "system-requirements.csv").write_text(
             _REACCEPT_SR_H
-            + 'SR-001,Adder,SN-001,"a stable requirement","why","ac",,C,Test,Approved,1\n',
+            + 'SR-001,Adder,SN-001,"a stable requirement","why","ac",,C,Test,Accepted,1\n',
             encoding="utf-8",
         )
         (req / "low-level-requirements.csv").write_text(
@@ -406,7 +406,7 @@ def test_reaccept_brief_shows_a_long_changed_cell_whole(tmp_path):
         )
         (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
             _REACCEPT_TC_H
-            + 'TC-001,SR-001,Unit,"{}","Smoke","a=1","sum",Yes,ev,Approved\n'.format(
+            + 'TC-001,SR-001,Unit,"{}","Smoke","a=1","sum",Yes,ev,Accepted\n'.format(
                 head + method_tail
             ),
             encoding="utf-8",
@@ -430,7 +430,7 @@ def test_reaccept_brief_shows_a_long_changed_cell_whole(tmp_path):
 
 
 def test_reaccept_brief_stays_silent_for_an_accepted_undrifted_chain(tmp_path):
-    """The negative half: an `Approved` LLR under an `Approved`, undrifted SR
+    """The negative half: an `Accepted` LLR under an `Accepted`, undrifted SR
     owes nothing. The widening asks the chain the `Drafted` question; it must
     not turn every settled row into a false positive."""
     import shutil as _sh
@@ -448,12 +448,12 @@ def test_reaccept_brief_stays_silent_for_an_accepted_undrifted_chain(tmp_path):
     (req / "system-requirements.csv").write_text(
         _REACCEPT_SR_H
         + 'SR-001,Stable parent,SN-001,"a stable requirement","why","ac",,C,'
-        "Test,Approved,1\n",
+        "Test,Accepted,1\n",
         encoding="utf-8",
     )
     (req / "low-level-requirements.csv").write_text(
         _REACCEPT_LLR_H + 'LLR-001,SR-001,A stable child,src/demo.py,add,"settled",'
-        "(see TC-001),Approved\n",
+        "(see TC-001),Accepted\n",
         encoding="utf-8",
     )
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
@@ -465,7 +465,7 @@ def test_reaccept_brief_stays_silent_for_an_accepted_undrifted_chain(tmp_path):
     run_git("config", "user.name", "T")
     load_script("baseline_snapshot").copy_live(tmp_path, seed=True)
     run_git("add", "-A")
-    run_git("commit", "-m", "accepted SR + Approved LLR + snapshot")
+    run_git("commit", "-m", "accepted SR + Accepted LLR + snapshot")
     proc = run_py([SCRIPTS / "trace.py", "--accept", "modified"], cwd=tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "No spine row differs from its" in proc.stdout
@@ -572,7 +572,7 @@ def test_reaccept_model_owed_row_count_matches_the_live_drafted_llr_tc_census():
 
 
 def _acceptance_repo(tmp_path):
-    """A git repo with an Approved SR chain amended IN PLACE (D-9 step 7 retired
+    """A git repo with an Accepted SR chain amended IN PLACE (D-9 step 7 retired
     the flip), so
     `--accept modified` has something real to render. Returns (run_git, rev) with
     `rev` the accepted baseline commit."""
@@ -599,16 +599,16 @@ def _acceptance_repo(tmp_path):
         )
         (req / "low-level-requirements.csv").write_text(
             "LLR-ID,SR-Refs,Detail,Module,Rationale,Status\n"
-            "LLR-001,SR-001,{},m.py,why,Approved\n".format(llr_detail),
+            "LLR-001,SR-001,{},m.py,why,Accepted\n".format(llr_detail),
             encoding="utf-8",
         )
         (req / "test-cases.csv").write_text(
             "TC-ID,LLR-Refs,Steps,Expected,Automated,Tier,Status\n"
-            "TC-001,LLR-001,step,expected,Yes,smoke,Approved\n",
+            "TC-001,LLR-001,step,expected,Yes,smoke,Accepted\n",
             encoding="utf-8",
         )
 
-    write("Approved")
+    write("Accepted")
     run_git("init")
     pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
     run_git("config", "user.email", "t@example.com")
@@ -619,7 +619,7 @@ def _acceptance_repo(tmp_path):
     rev = run_git("rev-parse", "HEAD").stdout.strip()
 
     # A later commit that amends the SR text, leaving its Status alone.
-    write("Approved", sr_req="The system shall do the AMENDED thing.")
+    write("Accepted", sr_req="The system shall do the AMENDED thing.")
     run_git("add", "-A")
     run_git("commit", "-m", "amend, no flip — the D-9 regime")
     return run_git, rev, write
@@ -715,8 +715,8 @@ def test_a_row_added_after_the_brief_makes_it_stale(tmp_path):
     req = tmp_path / "docs" / "requirements"
     (req / "low-level-requirements.csv").write_text(
         "LLR-ID,SR-Refs,Detail,Module,Rationale,Status\n"
-        "LLR-001,SR-001,Detail A,m.py,why,Approved\n"
-        "LLR-002,SR-001,Detail B,m.py,why,Approved\n",
+        "LLR-001,SR-001,Detail A,m.py,why,Accepted\n"
+        "LLR-002,SR-001,Detail B,m.py,why,Accepted\n",
         encoding="utf-8",
     )
     proc = _check(tmp_path)
@@ -728,7 +728,7 @@ def test_a_changed_cell_makes_it_stale(tmp_path):
     """Drift direction 2 — the same row, different content."""
     _run_git, _rev, write = _acceptance_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
-    write("Approved", sr_req="The system shall do the RE-AMENDED thing.")
+    write("Accepted", sr_req="The system shall do the RE-AMENDED thing.")
     proc = _check(tmp_path)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "STALE" in proc.stderr
@@ -752,14 +752,14 @@ def test_a_closed_window_is_a_no_op(tmp_path):
     for what the first without the second looks like.
 
     THE COPY NAMES ITS AUTHORITY SINCE 2026-08-20. This amendment moves accepted
-    text under a row that is already `Approved` — the D-9 ladder's own shape, and
+    text under a row that is already `Accepted` — the D-9 ladder's own shape, and
     the one the authority gate makes an operator declare, because it is
     indistinguishable from laundering without the declaration. Since SR-207 the
     declaration names the ROW (`--reaccepts`); the registry's ref alone clears
     none of its rows."""
     _run_git, _rev, write = _acceptance_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
-    write("Approved", sr_req="The system shall do the AMENDED thing.")
+    write("Accepted", sr_req="The system shall do the AMENDED thing.")
     load_script("baseline_snapshot").copy_live(
         tmp_path,
         accepts={"docs/requirements/system-requirements.toml": "the sitting"},
@@ -775,12 +775,12 @@ def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
 
     An operator who blesses the amendment by moving `Status` alone has changed the
     claim without moving the record of what the claim is about. Under the old
-    git-derived baseline that closed the window — the row read `Approved`, so
+    git-derived baseline that closed the window — the row read `Accepted`, so
     the walk stopped at HEAD and the diff was empty. Under the snapshot the row
     still differs from the text an operator actually read, so it stays in the brief
     until the copy rides with it."""
     _run_git, _rev, write = _acceptance_repo(tmp_path)
-    write("Approved", sr_req="The system shall do the AMENDED thing.")
+    write("Accepted", sr_req="The system shall do the AMENDED thing.")
     proc = run_py(
         [SCRIPTS / "trace.py", "--root", tmp_path, "--accept", "modified"],
         cwd=tmp_path,
@@ -1031,7 +1031,7 @@ def _dial_split_tree(root, dial=None):
     `DevStg-Reqs` the SR rung is held and the LLR and TC rungs are released:
 
       * SR-001 is itself `Drafted`: its one owing row sits on the held rung.
-      * SR-002 is `Approved`; only its LLR and TC are `Drafted`: every owing
+      * SR-002 is `Accepted`; only its LLR and TC are `Drafted`: every owing
         row sits on a released rung, so the whole chain is the adjudicator's.
       * SR-003 is `Drafted` with a `Drafted` LLR: a chain with ANY held row is
         still the operator's to sign, released rows beside it notwithstanding.
@@ -1045,7 +1045,7 @@ def _dial_split_tree(root, dial=None):
         _REACCEPT_SR_H + 'SR-001,Held parent,SN-001,"a held requirement","why","ac",,C,'
         "Test,Drafted,1\n"
         + 'SR-002,Released parent,SN-001,"a settled requirement","why","ac",,C,'
-        "Test,Approved,1\n"
+        "Test,Accepted,1\n"
         + 'SR-003,Mixed parent,SN-001,"a mixed requirement","why","ac",,C,'
         "Test,Drafted,1\n",
         encoding="utf-8",
@@ -1160,8 +1160,8 @@ def test_a_dial_releasing_every_rung_leaves_the_operator_a_stated_empty_ask(tmp_
 
 
 def _amended_split_tree(root):
-    """Two APPROVED chains snapshotted, then amended with every `Status` left
-    `Approved` (the D-9 regime: an amendment flips nothing), under a dial that
+    """Two ACCEPTED chains snapshotted, then amended with every `Status` left
+    `Accepted` (the D-9 regime: an amendment flips nothing), under a dial that
     holds the SR rung and releases the LLR and TC rungs:
 
       * SR-001's own Requirement moved: a drifted row on the held rung, so the
@@ -1174,25 +1174,25 @@ def _amended_split_tree(root):
         (req / "system-requirements.csv").write_text(
             _REACCEPT_SR_H
             + 'SR-001,Held amended parent,SN-001,"{}","why","ac",,C,Test,'
-            "Approved,1\n".format(sr1_req)
+            "Accepted,1\n".format(sr1_req)
             + 'SR-002,Released amended parent,SN-001,"a settled requirement",'
-            '"why","ac",,C,Test,Approved,1\n',
+            '"why","ac",,C,Test,Accepted,1\n',
             encoding="utf-8",
         )
         (req / "low-level-requirements.csv").write_text(
             _REACCEPT_LLR_H + 'LLR-001,SR-001,Held child,src/demo.py,add,"held detail",'
-            "(see TC-001),Approved\n"
+            "(see TC-001),Accepted\n"
             + 'LLR-002,SR-002,Released child,src/demo.py,mul,"{}",'
-            "(see TC-002),Approved\n".format(llr2_detail),
+            "(see TC-002),Accepted\n".format(llr2_detail),
             encoding="utf-8",
         )
         (root / "docs" / "test" / "test-cases.csv").write_text(
             _REACCEPT_TC_H
             + 'TC-001,SR-001;LLR-001,Unit,"drive the held case","Smoke","a=1",'
-            '"sum",Yes,tests/test_demo.py::t,Approved\n'
+            '"sum",Yes,tests/test_demo.py::t,Accepted\n'
             + (
                 'TC-002,SR-002;LLR-002,Unit,"drive the released case","Smoke",'
-                '"a=1","product",Yes,tests/test_demo.py::u,Approved\n'
+                '"a=1","product",Yes,tests/test_demo.py::u,Accepted\n'
                 if with_tc2
                 else ""
             ),
@@ -1243,14 +1243,14 @@ def test_a_released_rungs_re_acceptance_renders_its_diff_in_the_collapsed_block(
 _GOLDEN_BRIEF = ROOT / "tests" / "golden" / "acceptance-brief-no-assumptions.txt"
 
 _ASSUMPTION_NEEDS = """[need.SN-001]
-status = "Approved"
+status = "Accepted"
 need = "An operator sees the verdict of every run."
 why = "A hidden verdict is acted on blind."
 priority = "M"
 acceptance = "The verdict is on screen."
 
 [need.SN-002]
-status = "Approved"
+status = "Accepted"
 need = "A vendor's answers are trusted only as far as they were checked."
 why = "An unchecked stand-in hides a broken integration."
 priority = "S"
@@ -1265,7 +1265,7 @@ rationale = "why"
 acceptance_criteria = "the verdict is printed"
 priority = "M"
 verification_method = "Test"
-status = "Approved"
+status = "Accepted"
 da_refs = ["DA-001"]
 
 [requirement.SR-002]
@@ -1276,7 +1276,7 @@ rationale = "why"
 acceptance_criteria = "the lookup is called"
 priority = "M"
 verification_method = "Test"
-status = "Approved"
+status = "Accepted"
 da_refs = ["DA-002"]
 """
 
@@ -1288,7 +1288,7 @@ tier = "Full"
 expected = "the verdict is printed"
 automated = "Yes"
 evidence = "tests/test_demo.py::t"
-status = "Approved"
+status = "Accepted"
 assumption_refs = ["DA-001"]
 """
 
@@ -1296,25 +1296,25 @@ _ASSUMPTION_FRAME = """[entity.EXT-001]
 name = "Operator"
 class = "operational"
 description = "The person running the system."
-status = "Approved"
+status = "Accepted"
 
 [entity.EXT-002]
 name = "Vendor lookup"
 class = "enabling"
 description = "The vendor's lookup service."
-status = "Approved"
+status = "Accepted"
 
 [boundary.B-01]
 entity = "EXT-001"
 direction = "out"
 carries = "the run's verdict"
-status = "Approved"
+status = "Accepted"
 
 [boundary.B-02]
 entity = "EXT-002"
 direction = "inout"
 carries = "the lookup"
-status = "Approved"
+status = "Accepted"
 """
 
 _ASSUMPTIONS = """[assumption.DA-001]
@@ -1344,7 +1344,7 @@ assumption = "The console stand-in prints as the operator's terminal does."
 holds_when = "The terminal is a plain text console."
 obstacle = "A terminal that reflows lines."
 realized_by = "SUR-002"
-status = "Approved"
+status = "Accepted"
 standing = "active"
 
 [surrogate.SUR-001]
@@ -1365,7 +1365,7 @@ def _assumption_tree(root, assumptions=_ASSUMPTIONS):
     """A spine every row of which is accepted, a frame of two crossings, and an
     assumptions registry: DA-001 plain and Drafted, DA-002 a Drafted fidelity
     assumption on SUR-001 (Drafted), and SUR-002 a lone Drafted surrogate that
-    the Approved DA-003 names. No snapshot and no git, so the spine window is
+    the Accepted DA-003 names. No snapshot and no git, so the spine window is
     closed and the brief is deterministic."""
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
@@ -1542,7 +1542,7 @@ def test_an_assumption_id_scope_renders_the_named_rows(tmp_path):
 
 
 def test_the_assumptions_scope_with_nothing_owing_is_refused(tmp_path):
-    _assumption_tree(tmp_path, _ASSUMPTIONS.replace('"Drafted"', '"Approved"'))
+    _assumption_tree(tmp_path, _ASSUMPTIONS.replace('"Drafted"', '"Accepted"'))
     proc = _accept(tmp_path, "assumptions")
     assert proc.returncode != 0
     assert "refusing" in (proc.stdout + proc.stderr)
@@ -1569,11 +1569,11 @@ def test_a_brief_with_no_assumption_owing_is_byte_identical_to_the_golden(tmp_pa
     template = (
         ROOT / "project-trajectory" / "registries" / "assumptions.template.toml"
     ).read_text(encoding="utf-8")
-    accepted = _ASSUMPTIONS.replace('"Drafted"', '"Approved"')
+    accepted = _ASSUMPTIONS.replace('"Drafted"', '"Accepted"')
     for label, assumptions in (
         ("none", None),
         ("template", template),
-        ("approved", accepted),
+        ("accepted", accepted),
     ):
         root = tmp_path / label
         root.mkdir()

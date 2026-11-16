@@ -20,14 +20,14 @@ LLR_HEADER = (
 TC_HEADER = "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase\n"
 
 
-def sr_row(rid, title, phase="", verification="Demonstration", status="Approved"):
+def sr_row(rid, title, phase="", verification="Demonstration", status="Accepted"):
     return '{},{},SN-001,"The system shall {}.","Why.","Observable.",,M,{},{},{},\n'.format(
         rid, title, title.lower(), verification, status, phase
     )
 
 
 def llr_row(rid, sr_refs):
-    return '{},{},Decomposition,src/mod,func,"Detail.",(see TC),Approved,,\n'.format(
+    return '{},{},Decomposition,src/mod,func,"Detail.",(see TC),Accepted,,\n'.format(
         rid, sr_refs
     )
 

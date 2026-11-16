@@ -56,7 +56,7 @@ PLAN_B_BAD_GATED = PLAN_B_GOOD_GATED.replace(
 
 IFS = (
     "IF-ID,Owner,Consumers,Channel,Data,Version,Status,Component,Notes\n"
-    "IF-001,scripts/a,scripts/b,call,the call,v1,Approved,,\n"
+    "IF-001,scripts/a,scripts/b,call,the call,v1,Accepted,,\n"
 )
 SRS = "SR-ID,Title,Requirement\nSR-001,One,shall\n"
 

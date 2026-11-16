@@ -74,7 +74,7 @@ Usage:
                 and never hand-set; `all` when no stage file exists. This keeps a
                 young project's CI green-and-honest: it enforces what the project
                 has reached, not the end-state. From DevStg-Impl on, traceability
-                also requires every VerificationMethod=Test SR to be Status=Approved
+                also requires every VerificationMethod=Test SR to be Status=Accepted
                 (trace.py --require-verified). `--gate` is the accepted prior
                 spelling; `--stage-cleared` is accepted and warns.
     --tier      Which test tier to run (default: all). Mark fast critical-path
@@ -551,7 +551,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
     ]
     if at_or_above(
         stage, _kitladder.STAGE_IMPL
-    ):  # the Impl criterion: test-verifiable SRs are Approved
+    ):  # the Impl criterion: test-verifiable SRs are Accepted
         trace_cmd.append("--require-verified")
         trace_cmd.append(
             "--strict-schema"

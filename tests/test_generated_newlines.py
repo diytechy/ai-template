@@ -21,7 +21,7 @@ translation to get wrong.
 ## Two corrections this module records, because they cost something
 
 **`Path.write_text(newline=...)` is 3.10+, NOT 3.13+.** It is `Path.read_text`
-whose `newline` kwarg is 3.13+, and the two were confused. Approved on the floor
+whose `newline` kwarg is 3.13+, and the two were confused. Accepted on the floor
 interpreter (3.11.9): `write_text(newline=)` works, `read_text(newline=)` raises
 `TypeError`. Three other kit scripts had said "3.10+" in their own comments the
 whole time.
@@ -379,7 +379,7 @@ def test_a_regenerated_artifact_has_no_cr_bytes(tmp_path, script, artifact):
     (req / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
         "Permutations,Priority,VerificationMethod,Status\n"
-        'SR-001,T,SN-001,"The system shall.",R,AC,,M,Test,Approved\n',
+        'SR-001,T,SN-001,"The system shall.",R,AC,,M,Test,Accepted\n',
         encoding="utf-8",
     )
     proc = run_py([SCRIPTS / script, "--root", tmp_path], cwd=tmp_path)

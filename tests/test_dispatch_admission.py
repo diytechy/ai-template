@@ -225,7 +225,7 @@ def test_gap_census_names_the_three_gap_classes_mechanically(tmp_path):
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
         "Permutations,Priority,VerificationMethod,Status,Phase,Area,SupersededBy\n"
         "SR-001,Widget,SN-001,Shall widget.,Because.,Widgets.,,1,Test,"
-        "Approved,,,\n",
+        "Accepted,,,\n",
         encoding="utf-8",
         newline="\n",
     )

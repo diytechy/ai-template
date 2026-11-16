@@ -11,7 +11,7 @@ An independent Claude Opus adjudicator will judge your rows later, in this lane,
 - Read `CLAUDE.md`, `project-trajectory/PROCESS.md` §3 and §4, and `.claude/skills/spine-authoring/SKILL.md` (the adjudicator's question list per tier: put every row you write through it).
 
 ## Rules
-- Edit ONLY the spine registries: `docs/requirements/system-requirements.toml`, `low-level-requirements.toml`, `interfaces.toml`, `stakeholder-needs.toml`, `assumptions.toml`, and `docs/test/test-cases.toml`. Edit nothing else, and never touch `docs/id-watermark` or `docs/archive/last_approved/`; never commit or stage.
+- Edit ONLY the spine registries: `docs/requirements/system-requirements.toml`, `low-level-requirements.toml`, `interfaces.toml`, `stakeholder-needs.toml`, `assumptions.toml`, and `docs/test/test-cases.toml`. Edit nothing else, and never touch `docs/id-watermark` or `docs/archive/last_accepted/`; never commit or stage.
 - Never flip a `status`. A new row is `Drafted`. You may amend any cell of an accepted row the change makes untrue; the adjudicator then rules it MEANING or CLARITY against its anchor.
 - Draft a new id only from the reserved ranges this turn names: @RESERVED@. The coordinator reserved them for this work item before your turn. Never count a new id up from `docs/id-watermark`'s mark or the live maximum: your lane's copy does not see the ids other lanes hold.
 - If the set needs more ids in a space than its range holds, or a range where this turn names none, stop and report how many more ids you need in each space; the coordinator reserves again and resumes you. Never draft an id outside the ranges.

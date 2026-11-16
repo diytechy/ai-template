@@ -382,7 +382,7 @@ def test_worker_brief_names_the_one_turn_close_bar_scratch_and_amendments(tmp_pa
     assert "THE CLOSE BAR IS THE COMMIT CHECKS, and it must fit in ONE turn" in prompt
     assert "You do NOT owe the full unfiltered suite at close" in prompt
     assert "NEVER end a turn waiting on one" in prompt
-    assert "AMENDED THE TEXT OF AN ALREADY-APPROVED CELL" in prompt
+    assert "AMENDED THE TEXT OF AN ALREADY-ACCEPTED CELL" in prompt
     assert "Scratch belongs OUTSIDE the worktree" in prompt
 
 

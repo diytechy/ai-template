@@ -65,7 +65,7 @@ class History:
         self.rows[SR_REG][rid] = {"title": "requirement " + rid, "status": status}
         return self
 
-    def llr(self, rid, sr, status="Approved"):
+    def llr(self, rid, sr, status="Accepted"):
         self.rows[LLR_REG][rid] = {"sr_refs": [sr], "status": status}
         return self
 
@@ -124,10 +124,10 @@ def test_test_cases_all_accepted_before_the_implementation_produce_nothing(
     tmp_path, ctf
 ):
     h = History(tmp_path / "repo")
-    h.sr("SR-001", "Approved").tc("TC-001", ["SR-001"], "Drafted")
-    h.tc("TC-002", ["SR-001"], "Approved")
+    h.sr("SR-001", "Accepted").tc("TC-001", ["SR-001"], "Drafted")
+    h.tc("TC-002", ["SR-001"], "Accepted")
     h.commit("requirement, one test case accepted")
-    h.tc("TC-001", ["SR-001"], "Approved")
+    h.tc("TC-001", ["SR-001"], "Accepted")
     h.commit("second test case accepted")
     h.write("src/app.py", implements("SR-001"))
     h.commit("implementation")
@@ -146,11 +146,11 @@ def test_the_landing_is_the_earlier_of_a_requirement_line_and_a_design_row_line(
     # names; a landing read at the later line would put the acceptance first.
     later = "LLR-001" if first == "SR-001" else "SR-001"
     h = History(tmp_path / "repo")
-    h.sr("SR-001", "Approved").llr("LLR-001", "SR-001")
+    h.sr("SR-001", "Accepted").llr("LLR-001", "SR-001")
     h.tc("TC-001", ["SR-001", "LLR-001"], "Drafted")
     h.commit("chain drafted")
     landing = h.write("src/a.py", implements(first)).commit("first declaration")
-    acceptance = h.tc("TC-001", ["SR-001", "LLR-001"], "Approved").commit("accept")
+    acceptance = h.tc("TC-001", ["SR-001", "LLR-001"], "Accepted").commit("accept")
     h.write("src/b.py", implements(later)).commit("second declaration")
     assert as_tuples(_judge(ctf, h.root)) == [
         ("SR-001", landing, [("TC-001", acceptance)])
@@ -178,12 +178,12 @@ def test_first_implementation_commits_reads_each_id_at_its_earliest_line(tmp_pat
 
 def test_two_test_cases_accepted_after_the_landing_are_both_named(tmp_path, ctf):
     h = History(tmp_path / "repo")
-    h.sr("SR-001", "Approved").tc("TC-001", ["SR-001"], "Drafted")
+    h.sr("SR-001", "Accepted").tc("TC-001", ["SR-001"], "Drafted")
     h.tc("TC-002", ["SR-001"], "Drafted")
     h.commit("drafted")
     landing = h.write("src/app.py", implements("SR-001")).commit("implementation")
-    one = h.tc("TC-001", ["SR-001"], "Approved").commit("accept TC-001")
-    two = h.tc("TC-002", ["SR-001"], "Approved").commit("accept TC-002")
+    one = h.tc("TC-001", ["SR-001"], "Accepted").commit("accept TC-001")
+    two = h.tc("TC-002", ["SR-001"], "Accepted").commit("accept TC-002")
     assert as_tuples(_judge(ctf, h.root)) == [
         ("SR-001", landing, [("TC-001", one), ("TC-002", two)])
     ]
@@ -191,12 +191,12 @@ def test_two_test_cases_accepted_after_the_landing_are_both_named(tmp_path, ctf)
 
 def test_the_printed_report_names_the_requirement_and_every_commit(tmp_path):
     h = History(tmp_path / "repo")
-    h.sr("SR-001", "Approved").tc("TC-001", ["SR-001"], "Drafted")
+    h.sr("SR-001", "Accepted").tc("TC-001", ["SR-001"], "Drafted")
     h.tc("TC-002", ["SR-001"], "Drafted")
     h.commit("drafted")
     landing = h.write("src/app.py", implements("SR-001")).commit("implementation")
-    one = h.tc("TC-001", ["SR-001"], "Approved").commit("accept TC-001")
-    two = h.tc("TC-002", ["SR-001"], "Approved").commit("accept TC-002")
+    one = h.tc("TC-001", ["SR-001"], "Accepted").commit("accept TC-001")
+    two = h.tc("TC-002", ["SR-001"], "Accepted").commit("accept TC-002")
     proc = run_py(
         [SCRIPTS / "check_test_first.py", "--root", ".", "--src", "src"], cwd=h.root
     )
@@ -216,11 +216,11 @@ def test_a_commit_accepting_one_test_case_while_withdrawing_another_records_it(
     # The accepted-status count is the same on both sides of the swap, which is
     # why an occurrence-count pickaxe over the registry would see no change here.
     h = History(tmp_path / "repo")
-    h.sr("SR-001", "Approved").tc("TC-001", ["SR-001"], "Drafted")
-    h.tc("TC-002", ["SR-001"], "Approved")
+    h.sr("SR-001", "Accepted").tc("TC-001", ["SR-001"], "Drafted")
+    h.tc("TC-002", ["SR-001"], "Accepted")
     h.commit("drafted and accepted")
     landing = h.write("src/app.py", implements("SR-001")).commit("implementation")
-    h.tc("TC-001", ["SR-001"], "Approved").tc("TC-002", ["SR-001"], "Drafted")
+    h.tc("TC-001", ["SR-001"], "Accepted").tc("TC-002", ["SR-001"], "Drafted")
     swap = h.commit("accept TC-001, withdraw TC-002")
     root_commit = _git(h.root, "rev-list", "--max-parents=0", "HEAD")
     assert ctf.first_acceptance_commits(h.root, TC_REG, "TC-ID") == {
@@ -234,11 +234,11 @@ def test_a_withdrawn_and_reaccepted_test_case_keeps_its_first_acceptance(tmp_pat
     # LLR-257 records each row's FIRST move into acceptance. Re-accepting after a
     # withdrawal is not that move, from the root or from a declared start.
     h = History(tmp_path / "repo")
-    h.sr("SR-001", "Approved").tc("TC-001", ["SR-001"], "Approved")
+    h.sr("SR-001", "Accepted").tc("TC-001", ["SR-001"], "Accepted")
     first = h.commit("test case accepted first")
     start = h.write("src/app.py", implements("SR-001")).commit("implementation")
     h.tc("TC-001", ["SR-001"], "Drafted").commit("withdrawn")
-    h.tc("TC-001", ["SR-001"], "Approved").commit("re-accepted")
+    h.tc("TC-001", ["SR-001"], "Accepted").commit("re-accepted")
     acceptances = ctf.first_acceptance_commits(h.root, TC_REG, "TC-ID")
     assert acceptances == {"TC-001": ctf.Acceptance(first, True)}
     # Walked from a later commit, the row was already accepted there: accepted
@@ -254,10 +254,10 @@ def test_a_withdrawn_and_reaccepted_test_case_keeps_its_first_acceptance(tmp_pat
 
 def test_a_requirement_with_no_implementation_produces_nothing(tmp_path, ctf):
     h = History(tmp_path / "repo")
-    h.sr("SR-001", "Approved").tc("TC-001", ["SR-001"], "Drafted")
+    h.sr("SR-001", "Accepted").tc("TC-001", ["SR-001"], "Drafted")
     h.write("src/app.py", "# relates to SR-001, but declares nothing\n")
     h.commit("drafted")
-    h.tc("TC-001", ["SR-001"], "Approved").commit("accept")
+    h.tc("TC-001", ["SR-001"], "Accepted").commit("accept")
     assert _judge(ctf, h.root) == []
 
 
@@ -268,12 +268,12 @@ def _two_requirements(root):
     """SR-001 accepted in the root commit, SR-002 accepted after `start`; both
     implemented at `start`, both with a test case accepted after it."""
     h = History(root)
-    h.sr("SR-001", "Approved").sr("SR-002", "Drafted")
+    h.sr("SR-001", "Accepted").sr("SR-002", "Drafted")
     h.tc("TC-001", ["SR-001"], "Drafted").tc("TC-002", ["SR-002"], "Drafted")
     h.commit("SR-001 accepted")
     start = h.write("src/app.py", implements("SR-001", "SR-002")).commit("impl")
-    h.sr("SR-002", "Approved").commit("SR-002 accepted")
-    h.tc("TC-001", ["SR-001"], "Approved").tc("TC-002", ["SR-002"], "Approved")
+    h.sr("SR-002", "Accepted").commit("SR-002 accepted")
+    h.tc("TC-001", ["SR-001"], "Accepted").tc("TC-002", ["SR-002"], "Accepted")
     late = h.commit("both test cases accepted")
     return h, start, late
 
@@ -303,9 +303,9 @@ def test_a_test_case_accepted_after_the_landing_but_before_the_start_is_reported
     h = History(tmp_path / "repo")
     h.sr("SR-001", "Drafted").tc("TC-001", ["SR-001"], "Drafted").commit("drafted")
     landing = h.write("src/app.py", implements("SR-001")).commit("implementation")
-    acceptance = h.tc("TC-001", ["SR-001"], "Approved").commit("test case accepted")
+    acceptance = h.tc("TC-001", ["SR-001"], "Accepted").commit("test case accepted")
     start = h.write("notes.txt", "adopted\n").commit("the rule adopted", False)
-    h.sr("SR-001", "Approved").commit("requirement accepted after the start")
+    h.sr("SR-001", "Accepted").commit("requirement accepted after the start")
     assert as_tuples(_judge(ctf, h.root, start=start)) == [
         ("SR-001", landing, [("TC-001", acceptance)])
     ]
@@ -329,9 +329,9 @@ def test_the_start_is_read_from_the_declared_checks_key(tmp_path, ctf, capsys):
 
 def test_a_test_case_added_already_accepted_counts_at_its_birth(tmp_path, ctf):
     h = History(tmp_path / "repo")
-    h.sr("SR-001", "Approved").commit("requirement")
+    h.sr("SR-001", "Accepted").commit("requirement")
     landing = h.write("src/app.py", implements("SR-001")).commit("implementation")
-    born = h.tc("TC-001", ["SR-001"], "Approved").commit("test case, born accepted")
+    born = h.tc("TC-001", ["SR-001"], "Accepted").commit("test case, born accepted")
     assert ctf.first_acceptance_commits(h.root, TC_REG, "TC-ID") == {
         "TC-001": ctf.Acceptance(born, True)
     }
@@ -348,11 +348,11 @@ def test_an_accepted_test_case_re_pointed_after_the_landing_is_dated_at_the_re_p
     # SR-001 only after the code landed, it is SR-001's test case from that
     # commit: its own earlier acceptance date does not travel with it.
     h = History(tmp_path / "repo")
-    h.sr("SR-001", "Approved").sr("SR-002", "Approved")
-    h.tc("TC-001", ["SR-002"], "Approved")
+    h.sr("SR-001", "Accepted").sr("SR-002", "Accepted")
+    h.tc("TC-001", ["SR-002"], "Accepted")
     early = h.commit("TC-001 accepted for SR-002")
     landing = h.write("src/app.py", implements("SR-001")).commit("SR-001 code")
-    repoint = h.tc("TC-001", ["SR-001"], "Approved").commit("TC-001 re-pointed")
+    repoint = h.tc("TC-001", ["SR-001"], "Accepted").commit("TC-001 re-pointed")
     assert ctf.first_association_commits(h.root) == {
         ("TC-001", "SR-002"): ctf.Acceptance(early, True),
         ("TC-001", "SR-001"): ctf.Acceptance(repoint, True),
@@ -369,8 +369,8 @@ def test_a_test_case_reaching_the_requirement_through_a_re_pointed_design_row(
     # SR-002 and is re-pointed at SR-001 after SR-001's code landed, so TC-001
     # names one of SR-001's design rows only from the re-pointing commit.
     h = History(tmp_path / "repo")
-    h.sr("SR-001", "Approved").sr("SR-002", "Approved").llr("LLR-001", "SR-002")
-    h.tc("TC-001", ["LLR-001"], "Approved").commit("TC-001 accepted via LLR-001")
+    h.sr("SR-001", "Accepted").sr("SR-002", "Accepted").llr("LLR-001", "SR-002")
+    h.tc("TC-001", ["LLR-001"], "Accepted").commit("TC-001 accepted via LLR-001")
     landing = h.write("src/app.py", implements("SR-001")).commit("SR-001 code")
     repoint = h.llr("LLR-001", "SR-001").commit("LLR-001 re-pointed at SR-001")
     assert ctf.first_association_commits(h.root)[("TC-001", "SR-001")] == (
@@ -390,8 +390,8 @@ def as_unaccepted(findings):
 
 def test_a_drafted_test_case_of_a_landed_requirement_is_warned(tmp_path, ctf, capsys):
     h = History(tmp_path / "repo")
-    h.sr("SR-001", "Approved").sr("SR-002", "Approved")
-    h.tc("TC-001", ["SR-001"], "Approved").tc("TC-002", ["SR-001"], "Drafted")
+    h.sr("SR-001", "Accepted").sr("SR-002", "Accepted")
+    h.tc("TC-001", ["SR-001"], "Accepted").tc("TC-002", ["SR-001"], "Drafted")
     h.tc("TC-003", ["SR-002"], "Drafted").commit("two accepted, two drafted")
     landing = h.write("src/app.py", implements("SR-001")).commit("SR-001 code")
     findings = _judge(ctf, h.root)
@@ -421,9 +421,9 @@ def test_a_late_acceptance_carries_the_same_warning(tmp_path, capsys, ctf):
 
 def _one_finding_history(root):
     h = History(root)
-    h.sr("SR-001", "Approved").tc("TC-001", ["SR-001"], "Drafted").commit("draft")
+    h.sr("SR-001", "Accepted").tc("TC-001", ["SR-001"], "Drafted").commit("draft")
     h.write("src/app.py", implements("SR-001")).commit("implementation")
-    h.tc("TC-001", ["SR-001"], "Approved").commit("accept")
+    h.tc("TC-001", ["SR-001"], "Accepted").commit("accept")
     return h
 
 
@@ -484,18 +484,18 @@ def _csv_then_toml(root):
     implemented and its test case accepted before the TOML cutover; SR-002
     drafted at the cutover, implemented, then its test case accepted late."""
     h = History(root)
-    h.write(SR_CSV, "SR-ID,Status\nSR-001,Approved\n")
-    h.write(TC_CSV, "TC-ID,Verifies,Status\nTC-001,SR-001,Approved\n")
+    h.write(SR_CSV, "SR-ID,Status\nSR-001,Accepted\n")
+    h.write(TC_CSV, "TC-ID,Verifies,Status\nTC-001,SR-001,Accepted\n")
     csv = h.commit("the csv carrier", registries=False)
     old = h.write("src/old.py", implements("SR-001")).commit("old code", False)
     for rel in (SR_CSV, TC_CSV):
         (h.root / rel).unlink()
-    h.sr("SR-001", "Approved").tc("TC-001", ["SR-001"], "Approved")
+    h.sr("SR-001", "Accepted").tc("TC-001", ["SR-001"], "Accepted")
     h.sr("SR-002", "Drafted").tc("TC-002", ["SR-002"], "Drafted")
     cutover = h.commit("the toml cutover")
     landing = h.write("src/new.py", implements("SR-002")).commit("new code")
-    h.sr("SR-002", "Approved").commit("SR-002 accepted")
-    late = h.tc("TC-002", ["SR-002"], "Approved").commit("TC-002 accepted late")
+    h.sr("SR-002", "Accepted").commit("SR-002 accepted")
+    late = h.tc("TC-002", ["SR-002"], "Accepted").commit("TC-002 accepted late")
     return h, csv, old, cutover, landing, late
 
 
@@ -524,8 +524,8 @@ def test_a_design_registry_still_under_an_older_carrier_is_reported_unreadable(
     # A test case reaches a requirement through a design row, so a design
     # registry the TOML reader cannot see would silently drop that test case.
     h = History(tmp_path / "repo")
-    h.write(LLR_CSV, "LLR-ID,SR-Refs,Status\nLLR-001,SR-001,Approved\n")
-    h.sr("SR-001", "Approved").tc("TC-001", ["LLR-001"], "Drafted").commit("mixed")
+    h.write(LLR_CSV, "LLR-ID,SR-Refs,Status\nLLR-001,SR-001,Accepted\n")
+    h.sr("SR-001", "Accepted").tc("TC-001", ["LLR-001"], "Drafted").commit("mixed")
     h.write("src/app.py", implements("SR-001")).commit("implementation")
     assert "older carrier" in _assert_unreadable(ctf, h.root)
 
@@ -537,10 +537,10 @@ def _design_csv_then_toml(root):
     h = History(root)
     h.write(
         LLR_CSV,
-        "LLR-ID,SR-Refs,Status\nLLR-001,SR-001,Approved\nLLR-002,SR-002,Approved\n",
+        "LLR-ID,SR-Refs,Status\nLLR-001,SR-001,Accepted\nLLR-002,SR-002,Accepted\n",
     )
-    h.sr("SR-001", "Approved").sr("SR-002", "Approved")
-    h.tc("TC-001", ["LLR-001"], "Approved").tc("TC-002", ["LLR-002"], "Approved")
+    h.sr("SR-001", "Accepted").sr("SR-002", "Accepted")
+    h.tc("TC-001", ["LLR-001"], "Accepted").tc("TC-002", ["LLR-002"], "Accepted")
     csv = h.commit("design rows under the csv carrier")
     landing = h.write("src/app.py", implements("SR-001")).commit("SR-001 code")
     (h.root / LLR_CSV).unlink()
@@ -591,15 +591,15 @@ def test_a_verdict_resting_on_a_date_before_the_toml_registries_is_unread(
 
 
 def test_an_acceptance_under_a_retired_status_word_has_no_exact_date(tmp_path, ctf):
-    # A move into `Approved` from a word outside the closed vocabulary is a
+    # A move into `Accepted` from a word outside the closed vocabulary is a
     # rename, not the act: the row was accepted at or before it. Renamed before
     # the landing, it is not late; renamed after, its order cannot be read.
     h = History(tmp_path / "repo")
-    h.sr("SR-001", "Approved").tc("TC-001", ["SR-001"], "Verified")
+    h.sr("SR-001", "Accepted").tc("TC-001", ["SR-001"], "Verified")
     h.tc("TC-002", ["SR-001"], "Verified").commit("the old vocabulary")
-    early = h.tc("TC-002", ["SR-001"], "Approved").commit("TC-002 renamed")
+    early = h.tc("TC-002", ["SR-001"], "Accepted").commit("TC-002 renamed")
     landing = h.write("src/app.py", implements("SR-001")).commit("implementation")
-    renamed = h.tc("TC-001", ["SR-001"], "Approved").commit("TC-001 renamed")
+    renamed = h.tc("TC-001", ["SR-001"], "Accepted").commit("TC-001 renamed")
     assert ctf.first_acceptance_commits(h.root, TC_REG, "TC-ID") == {
         "TC-002": ctf.Acceptance(early, False),
         "TC-001": ctf.Acceptance(renamed, False),
@@ -622,8 +622,8 @@ def test_a_requirement_renamed_into_acceptance_after_the_start_cannot_be_judged(
     h.sr("SR-001", "Verified").tc("TC-001", ["SR-001"], "Drafted").commit("old")
     landing = h.write("src/app.py", implements("SR-001")).commit("implementation")
     start = h.write("notes.txt", "adopted\n").commit("the rule adopted", False)
-    renamed = h.sr("SR-001", "Approved").commit("SR-001 renamed")
-    h.tc("TC-001", ["SR-001"], "Approved").commit("TC-001 accepted late")
+    renamed = h.sr("SR-001", "Accepted").commit("SR-001 renamed")
+    h.tc("TC-001", ["SR-001"], "Accepted").commit("TC-001 accepted late")
     findings = _judge(ctf, h.root, start=start)
     assert as_tuples(findings) == [("SR-001", landing, [])]
     assert as_unread(findings) == [("SR-001", [("SR-001", renamed)])]
@@ -637,9 +637,9 @@ def test_the_order_comes_from_commits_never_from_a_cell(tmp_path, ctf):
     # the same at the tip, so any difference in the verdict came from history.
     def build(root, test_first):
         h = History(root)
-        h.sr("SR-001", "Approved").tc("TC-001", ["SR-001"], "Drafted").commit("draft")
+        h.sr("SR-001", "Accepted").tc("TC-001", ["SR-001"], "Drafted").commit("draft")
         steps = [
-            lambda: h.tc("TC-001", ["SR-001"], "Approved").commit("accept"),
+            lambda: h.tc("TC-001", ["SR-001"], "Accepted").commit("accept"),
             lambda: h.write("src/app.py", implements("SR-001")).commit("implement"),
         ]
         for step in steps if test_first else reversed(steps):

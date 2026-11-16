@@ -108,7 +108,7 @@ RED_ASSUMPTION_TC_PREFIX = "red assumption TC "
 # census firing only on a row with no Status at all — a state the schema tier
 # refuses and `adjudicate_brief.TC_CELLS` will not brief, so census -> mint ->
 # brief would have been unreachable end to end (a deleted feature, LLR-159, not
-# a narrowed rung). OI-30 D1 then folded `Planned` into `Approved`, and the
+# a narrowed rung). OI-30 D1 then folded `Planned` into `Accepted`, and the
 # arithmetic now cuts the OTHER way: the enum narrowed to exactly these three
 # states, so the exemption covers the WHOLE vocabulary and the census is
 # structurally dead in any conformant repo (tests/test_adjudicate_brief.py
@@ -127,13 +127,13 @@ RED_ASSUMPTION_TC_PREFIX = "red assumption TC "
 # `Modified` TCs now sees them as red here — that repo is already failing the
 # always-on integrity floor on the same cells, so the rung is naming a gap the
 # floor has already named rather than inventing one.
-_TC_NOT_RED = frozenset({"approved", "drafted", "founded"})
+_TC_NOT_RED = frozenset({"accepted", "drafted", "founded"})
 
 
 def red_tc_census(root, reg=None, *, assumptions=False):
     """LLR-159: TEST CASES LEFT RED UNDER A CLAIMED IMPLEMENTATION.
 
-    A TC that is not `Approved` is ordinary unfinished work — unless something
+    A TC that is not `Accepted` is ordinary unfinished work — unless something
     already claims to have BUILT what it verifies, and that is the state this
     names: a TC outside the three exempt statuses, all of whose `Verifies`
     targets are cited by at least one WI recorded `done`. The pair is a
@@ -145,9 +145,9 @@ def red_tc_census(root, reg=None, *, assumptions=False):
     naming a gap rather than toward missing one, and keeps working for a
     downstream repo mid-migration:
 
-      Approved  green, by definition.
+      Accepted  green, by definition.
       Drafted   pre-acceptance; "not yet green" is its CORRECT state.
-      Founded   Approved plus a demonstration — green a fortiori (D-9 step 8).
+      Founded   Accepted plus a demonstration — green a fortiori (D-9 step 8).
                 It replaced `Modified`, which named the post-acceptance amendment
                 state the §A5.1 adjudication owns; that state no longer has a
                 word, and the amendment path still owns it via snapshot drift.

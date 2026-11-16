@@ -919,7 +919,7 @@ GATE_POLICY_FIXED_POINTS = """## Fixed points (nothing in this file overrides th
   executed is a process violation regardless of tier.
 - **The harness is still the bar** — LLM judgment supplements the checks; it
   never waives a red one.
-- **Approved operator decisions are never re-decided by an agent** — flag a
+- **Accepted operator decisions are never re-decided by an agent** — flag a
   problematic one as Blocked instead.
 """
 

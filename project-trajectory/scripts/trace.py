@@ -45,7 +45,7 @@ restated here (the kit's decompose-don't-paraphrase rule applied to itself):
     - the orphan rules (an SR needs an LLR unless the verification method is
       Analysis/Inspection/Vouch, a TC, and — when a needs file exists — an SN;
       LLR/TC parentage), the Drafted child-completeness exemption, and the
-      Drafted->Approved ladder: process.md §4 + the derived-gate model
+      Drafted->Accepted ladder: process.md §4 + the derived-gate model
       (docs/archive/specs/derived-gate-model.2026-07-20.md §3, and §4a for section-as-state SN
       maturity).
     - the always-on structural-integrity floor (a CSV data row whose column count
@@ -59,14 +59,14 @@ restated here (the kit's decompose-don't-paraphrase rule applied to itself):
       Tier): process.md §4.
 
 Flags in brief: --require-verified adds the DevStg-Impl criterion "an SR is
-Status=Approved" — any Verification method (Drafted SRs exempt); --no-placeholders flags leftover "-000"
+Status=Accepted" — any Verification method (Drafted SRs exempt); --no-placeholders flags leftover "-000"
 example rows (wire in from DevStg-Tests on); --strict-schema adds required-field,
 closed-vocabulary, and "Automated=Yes cites Evidence" checks over the real rows;
 --accept SCOPE emits ONLY the batch-scoped acceptance hierarchy (a phase tag or
 an SR-id list) to stdout or --out and runs no checks (WI-146); the reserved scope
 `modified` (WI-316) emits the re-acceptance brief instead — per-cell
 before/after for every row owing an operator act, against its copy in the
-`docs/archive/last_approved/` snapshot (`baseline_snapshot.py`); regenerate it
+`docs/archive/last_accepted/` snapshot (`baseline_snapshot.py`); regenerate it
 to `docs/ratify/CURRENT.md`, the one file this path ever rewrites; the
 reserved scope `assumptions`, or a DA-/SUR-id list, emits the assumption
 section alone, the one both briefs carry (SR-203). `--mint-
@@ -74,8 +74,8 @@ acceptance-brief SLUG` (WI-503) copies CURRENT.md to a dated, IMMUTABLE
 `docs/ratify/<date>-SLUG.md` — the only sanctioned writer of a dated brief;
 `check.py --acceptance-immutable` refuses any other commit that touches one. Warn-only
 advisories (loud on stdout + in the report, never gating): an unpinned
-comparative acceptance-criterion, an LLR reading below Approved while every
-citing TC is Approved (WI-129), a missing knowledge pack, and an interface
+comparative acceptance-criterion, an LLR reading below Accepted while every
+citing TC is Accepted (WI-129), a missing knowledge pack, and an interface
 endpoint that resolves to no LLR Module. The report always carries the
 vouched-vs-mechanized acceptance split (process.md §4 "Vouch") and, when the SR
 registry tags Aspect, a per-aspect count.
@@ -99,7 +99,7 @@ Contract IF-042: the always-valid integrity floor, run over staged content.
 Contract IF-075: `reaccept_model(root, srs, llrs, tcs, snapshot=...)`, reached
     through `load_registries(docs)` — the ONE computation of what a spine row
     owing an operator act looks like against its copy in
-    `docs/archive/last_approved/`: the chain rows, each row's changed cells
+    `docs/archive/last_accepted/`: the chain rows, each row's changed cells
     before and after, and the baseline revision and date. It returns structured
     entries rather than text, so every renderer consumes this model and none
     re-derives it; `reaccept_lines` renders the same entries as the markdown
@@ -243,7 +243,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # same sanctioned-sibling-import idiom agent_loop and gen_trajectory use.
 #
 # `baseline_snapshot` and (through it) `check_trajectory` joined at D-9 step 4:
-# the re-acceptance model's baseline is the `last_approved` snapshot, and its
+# the re-acceptance model's baseline is the `last_accepted` snapshot, and its
 # cell comparison is `check_trajectory.split_changed_cells` — the SAME function
 # the amend-without-flip warn reads, which is what stops the brief and the warn
 # from ever disagreeing about which cells are normative. This is the one new
@@ -378,7 +378,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 
 
 # --- THE ROW VOCABULARY, RE-EXPORTED FROM ITS ONE HOME (WI-448 slice 3) --------
-# `load_csv`, `is_approved`, `is_founded`, `LLR_EXEMPT`/`llr_exempt`, `phase_num`,
+# `load_csv`, `is_accepted`, `is_founded`, `LLR_EXEMPT`/`llr_exempt`, `phase_num`,
 # `sn_all_ids` and `sn_cited_ids` were DUPLICATED between this module and
 # `spine_rules.py` under the retired F5 rule, held equal by
 # `tests/test_rule_sync.py` pins. They are POLICY — this module ENFORCES the
@@ -395,7 +395,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # `is_drafted`, `is_example` and `refs` are NOT in this block: they arrive from
 # `trace_text` above, which re-exports the same objects from the same home.
 load_csv = _spine.load_csv
-is_approved = _spine.is_approved
+is_accepted = _spine.is_accepted
 is_founded = _spine.is_founded
 LLR_EXEMPT = _spine.LLR_EXEMPT
 llr_exempt = _spine.llr_exempt
@@ -420,15 +420,15 @@ sn_draft_ids = spine_carrier.draft_ids_from_text
 # its own docstring promised. It was step-2 INSURANCE: `Planned` sat on 14 live
 # spine rows while no predicate in the kit recognized it (it read identically to
 # `Bananas`), so it was surfaced for the interval between the closure and the
-# ruling. OI-30 D1 ruled the fold — `Planned` IS `Approved` — so every site that
-# read the predicate now reads `is_approved` or `is_drafted`, and the word itself
+# ruling. OI-30 D1 ruled the fold — `Planned` IS `Accepted` — so every site that
+# read the predicate now reads `is_accepted` or `is_drafted`, and the word itself
 # is out of `STATUS_VALUES`.
 #
 # `is_modified` WAS DELETED AT D-9 MIGRATION STEP 7 on the same terms, for the
 # reason its own docstring stated in advance. It was the TRANSITIONAL marker for
 # "accepted text that has since moved", kept past step 5's rename only so the kit
 # never had a commit with no drift detector at all; its successor — the
-# `docs/archive/last_approved/` comparison — ran live beside it through the
+# `docs/archive/last_accepted/` comparison — ran live beside it through the
 # operator's signing act (step 6), which cleared the last `Modified` row and seeded
 # the snapshot. Operator ruling 2026-08-17m states the replacement in one line:
 # *"modified means nothing because it is caught by comparing to the snapshot"*.
@@ -585,14 +585,14 @@ REQUIRED_FIELDS = {
 # executably: *at every commit, the declared Status enum equals exactly the set
 # of values at least one live predicate recognizes, narrowing monotonically*.
 #
-# `Draft`→`Drafted`, `Verified`/`Planned`→`Approved` (OI-30 D1: the two
+# `Draft`→`Drafted`, `Verified`/`Planned`→`Accepted` (OI-30 D1: the two
 # accepted-text rungs are ONE once the pass claim leaves the vocabulary).
 #
 # NARROWED AGAIN AT STEP 7 + ARMED AT STEP 8, in ONE act, because the enum must
 # equal the set of values at least one live predicate recognizes at EVERY commit:
 # `Modified` leaves (snapshot drift, live beside it since step 4, is now the only
 # detector — operator ruling 2026-08-17m) and `Founded` enters. D-9's ruled ladder,
-# whole: Drafted -> Approved -> Founded.
+# whole: Drafted -> Accepted -> Founded.
 #
 # The VALUE lives in `kitlib.spine` beside the predicates that read its words,
 # and is bound here under its old name, so a pure sibling of this checker
@@ -675,10 +675,10 @@ ENUM_FIELDS = {
     # reads the endpoint pair, which the header always said it took both ways.
     "IF": {
         "Channel": set(check_trajectory._kitspine.IF_CHANNELS),
-        "Status": {"Drafted", "Approved"},
+        "Status": {"Drafted", "Accepted"},
     },
     "CMP": {
-        "Status": {"Drafted", "Approved", "Founded"},
+        "Status": {"Drafted", "Accepted", "Founded"},
         "Standing": {"active", "has-gap", "deprecated"},
     },
     # WI-442 — the depth-0 frame. `Class` is the entity vocabulary §1R.7 item 2
@@ -687,13 +687,13 @@ ENUM_FIELDS = {
     # tier's Provides/Consumes reading, this is the carrier's ONLY `Direction`.
     "EXT": {
         "Class": {"operational", "enabling", "interoperating", "deliverable"},
-        "Status": {"Drafted", "Approved"},
+        "Status": {"Drafted", "Accepted"},
     },
     "B": {
         "Direction": {"in", "out", "inout"},
-        "Status": {"Drafted", "Approved"},
+        "Status": {"Drafted", "Accepted"},
     },
-    "REL": {"Status": {"Drafted", "Approved"}},
+    "REL": {"Status": {"Drafted", "Accepted"}},
     # The stakeholder list (SR-189) holds the spine's own ladder, since it is
     # the needs file's second acceptance tier; the always-on integrity floor
     # reads it through `enum_integrity_findings` like every tier's Status.
@@ -3281,7 +3281,7 @@ def _resolves_in_tree(root, endpoint):
 def phase_accepted_findings(real):
     """The accepted-phase NUMERIC-ONLY rule (process.md §4 "Phased delivery"; operator
     ruling 2026-08-01, WI-402): once the project phases ANY spine row (digit-parse
-    arming — a legacy `v2` cell arms it too), every APPROVED (non-`Drafted`) SR/LLR/TC
+    arming — a legacy `v2` cell arms it too), every ACCEPTED (non-`Drafted`) SR/LLR/TC
     must carry a `Phase` that is a BARE INTEGER — digits only, full cell. Numeric-
     only because two joins match the cell LITERALLY, not by parse: the `--phase` /
     `--accept` scope filters (`in_phase` / `_scope_srs`) and check_trajectory's
@@ -3648,11 +3648,11 @@ def _sn_prose(sn_text, carrier):
 # --- the re-acceptance brief (--accept modified, WI-316) ----------------------
 # A sitting cannot bless a delta it cannot see: for each SR owing an operator act the
 # brief shows every chain row's changed cells as BEFORE (the row in the
-# `docs/archive/last_approved/` snapshot) vs AFTER (the working tree).
+# `docs/archive/last_accepted/` snapshot) vs AFTER (the working tree).
 #
 # THE BASELINE STOPPED BEING GIT ARCHAEOLOGY AT D-9 STEP 4 (operator directive
 # 2026-08-15). It used to be the newest commit at which the SR row read
-# `Verified` (now `Approved`), which is correct only while every amendment flips its row in the
+# `Verified` (now `Accepted`), which is correct only while every amendment flips its row in the
 # same commit — and D-9 deletes the flip, so that walk returns HEAD and the diff
 # is empty by construction. The snapshot is a baseline OUTSIDE the live file,
 # which is what the walk could never be.
@@ -3739,7 +3739,7 @@ def _anchor_lines(sr_row):
     for every entry regardless of whether the SR row itself appears among its
     chain rows.
 
-    THE GAP THIS CLOSES: an `Approved`, undrifted SR whose amendment lives
+    THE GAP THIS CLOSES: an `Accepted`, undrifted SR whose amendment lives
     entirely in a `Drafted` child never appeared in `entry["rows"]` at all (see
     `reaccept_model`'s `if cells or drafted:` gate) — so the brief showed the
     chain row an operator must bless with no statement of the requirement it hangs
@@ -3764,7 +3764,7 @@ def _cell_diff_lines(changed, accepted=frozenset(), drafted=False):
     """The per-cell before/after bullets, split into the §A5.1 two groups.
 
     The split is a capability the snapshot comparison hands the reader for free
-    (D-9 step 4): an APPROVED cell that moved owes an acceptance, a TRACED one
+    (D-9 step 4): an ACCEPTED cell that moved owes an acceptance, a TRACED one
     routes to adjudication and arms no window. Rendering them in one
     undifferentiated list asked the operator to make that judgement per cell, from
     memory, mid-sitting. Headings appear only when BOTH groups are present —
@@ -3820,7 +3820,7 @@ def _entry_kind(sr_drafted, chain_has_drafted):
 
     BACK TO TWO ARMS AT D-9 STEP 5. The third (`plan`, for a `Planned` row whose
     text was accepted and whose evidence was never established) went out with the
-    word: OI-30 D1 ruled `Planned` IS `Approved`, so there is no longer a state
+    word: OI-30 D1 ruled `Planned` IS `Accepted`, so there is no longer a state
     that means "blessed text, no evidence" — evidence is the harness's answer,
     not a cell's. A `Drafted` row owes a first acceptance and has no baseline to
     diff against; anything else in the model is here because its text moved after
@@ -3836,7 +3836,7 @@ def _entry_kind(sr_drafted, chain_has_drafted):
     WIDENED (the OI-61-sitting gap, `docs/log.d/2026-08-23-oi61-rule-and-spine-
     approval.md`): `state` used to be read off the SR's own `Status` alone, which
     is exactly the discriminator that let nineteen `Drafted` LLR/TC rows sit
-    under `Approved`, undrifted SRs and never reach the brief's pill. The pill
+    under `Accepted`, undrifted SRs and never reach the brief's pill. The pill
     now answers "does ANYTHING in this chain owe a first acceptance" — the SR
     itself, or any LLR/TC beneath it — because that is the action the reader
     actually owes; a card whose only drafted content is a child would otherwise
@@ -3931,13 +3931,13 @@ def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
     because a brief that selects a literal returns a clean bill forever once
     that literal is retired, at exit 0, with nothing to notice. A row now owes
     an act when it is `Drafted` (a first acceptance is owed) — or when its chain
-    has DRIFTED from `docs/archive/last_approved/`, which is a property of two
+    has DRIFTED from `docs/archive/last_accepted/`, which is a property of two
     files rather than of a word, and which no rename can silence.
 
     THE `Drafted` ARM IS CHAIN-WIDE, NOT SR-ONLY (the OI-61-sitting widening,
     `docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md`). The selector used
     to read `Drafted` off the SR row alone, so a `Drafted` LLR or TC hanging off
-    an `Approved`, undrifted SR reached no surface: the drift arm cannot catch
+    an `Accepted`, undrifted SR reached no surface: the drift arm cannot catch
     it either, since a row below acceptance has made no claim to fall from, and one
     absent from the snapshot is unanchored rather than drifted. The docstring
     said "a row" from the start; the code now matches it — `owes()` tests every
@@ -3963,7 +3963,7 @@ def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
     `changed` | `added` | `removed` | `current` | `drafted` (the last: a
     `Drafted` row with no cell diff against the snapshot — it owes only because
     it was never accepted, not because its text moved), `cells` is the
-    `(name, before, after)` triples ORDERED accepted-first, `approved` is the
+    `(name, before, after)` triples ORDERED accepted-first, `accepted` is the
     subset of those names §A5.1 rules accepted (so a renderer groups by one
     membership test rather than re-deriving the split), `full` is the row dict
     for the states that render whole rows, and `drafted` is whether THIS row
@@ -4048,7 +4048,7 @@ def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
                     "id": i,
                     "state": "current",
                     "cells": [],
-                    "approved": frozenset(),
+                    "accepted": frozenset(),
                     "full": r,
                     "drafted": _owes_first(r),
                 }
@@ -4070,7 +4070,7 @@ def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
                         "id": rid,
                         "state": "added",
                         "cells": [],
-                        "approved": frozenset(),
+                        "accepted": frozenset(),
                         "full": row,
                         "drafted": drafted,
                     }
@@ -4078,13 +4078,13 @@ def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
                 continue
             rel, id_col = SPINE_FILES[_KIND_IX[kind]]
             split = check_trajectory.split_changed_cells(rel, id_col, before, row)
-            # APPROVED FIRST, then traced — the reader's question is "what do I
+            # ACCEPTED FIRST, then traced — the reader's question is "what do I
             # have to re-bless?", and the §A5.1 split answers it: an accepted
             # cell owes acceptance, a traced one routes to adjudication and
             # arms no window (the WI-388 ruling).
             cells = [
                 (name, split[half][name][0], split[half][name][1])
-                for half in ("approved", "traced")
+                for half in ("accepted", "traced")
                 for name in sorted(split[half])
             ]
             # WIDENED: a `Drafted` row present in the snapshot with no cell
@@ -4100,7 +4100,7 @@ def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
                         "id": rid,
                         "state": "changed" if cells else "drafted",
                         "cells": cells,
-                        "approved": frozenset(split["approved"]),
+                        "accepted": frozenset(split["accepted"]),
                         "full": row,
                         "drafted": drafted,
                     }
@@ -4113,7 +4113,7 @@ def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
                         "id": rid,
                         "state": "removed",
                         "cells": [],
-                        "approved": frozenset(),
+                        "accepted": frozenset(),
                         "full": row,
                         "drafted": False,
                     }
@@ -4510,7 +4510,7 @@ def _entry_lines(entry, srs_by_id):
                 "",
                 "### {} {} — {}, never accepted".format(row["kind"], row["id"], first),
                 "_No cell differs from the accepted snapshot; this row owes"
-                " because its own `Status` has never been `Approved`._",
+                " because its own `Status` has never been `Accepted`._",
             ]
             out += _full_row_bullets(row)
         elif row["state"] == "changed":
@@ -4519,7 +4519,7 @@ def _entry_lines(entry, srs_by_id):
                 "### {} {}{}".format(row["kind"], row["id"], suffix),
             ]
             out += _cell_diff_lines(
-                row["cells"], row["approved"], drafted=row.get("drafted", False)
+                row["cells"], row["accepted"], drafted=row.get("drafted", False)
             )
         elif row["state"] == "removed":
             out += [
@@ -4789,16 +4789,16 @@ def reaccept_lines(root, srs, llrs, tcs):
     """Markdown for the re-acceptance brief (`--accept modified`, WI-316): one
     section per SR owing an operator act (grouped by SR for reading) with per-cell
     before/after for every chain row (the SR + its LLRs + their/its TCs) that
-    differs from the `docs/archive/last_approved/` snapshot, plus rows ADDED to
+    differs from the `docs/archive/last_accepted/` snapshot, plus rows ADDED to
     or REMOVED from the chain.
 
     THE BASELINE IS A DIRECTORY, NOT A REVISION (D-9 step 4). It used to be the
-    newest commit at which the SR row still read `Verified` (now `Approved`), with `--since` as
+    newest commit at which the SR row still read `Verified` (now `Accepted`), with `--since` as
     the escape hatch for a streak that walk could not see. Both are gone: the
     walk dies by construction once an accepted row stops flipping on amendment,
     and a snapshot cannot sit after the amendment it is supposed to precede.
 
-    Each changed row renders its APPROVED cells first and its TRACED cells
+    Each changed row renders its ACCEPTED cells first and its TRACED cells
     after, under their own heading — the capability the split buys a reader:
     accepted cells owe an acceptance, traced cells route to adjudication and
     arm no window (§A5.1, the WI-388 ruling).
@@ -4825,10 +4825,10 @@ def reaccept_lines(root, srs, llrs, tcs):
         " because it was never accepted. `Status` itself is never listed — the"
         " marker is not the amendment. Rule on each section outside the"
         " collapsed `{}` block (every section, when none renders): bless → set"
-        " a `Drafted` row's `Status` to `Approved` (process.md §7), and from the"
+        " a `Drafted` row's `Status` to `Accepted` (process.md §7), and from the"
         " first signing onward run `intake.py snapshot` in the SAME commit —"
         " `intake.py snapshot --reaccepts <ROW-ID>` for a DRIFTED row, which no"
-        " flip carries since it already reads `Approved` — or the record of"
+        " flip carries since it already reads `Accepted` — or the record of"
         " what was blessed does not move. A chain inside that block is an"
         " adjudication session's to accept, not this sitting's._".format(
             WAITING_FOR_ADJUDICATION
@@ -5255,7 +5255,7 @@ class Findings:
     # filesystem and git, which analyze()'s pure contract forbids.
     watermark_advisories: list = field(default_factory=list)
     # Filled after analyze() returns, for the same reason: the snapshot's
-    # unanchored rule reads the `docs/archive/last_approved/` tree. INTEGRITY
+    # unanchored rule reads the `docs/archive/last_accepted/` tree. INTEGRITY
     # class since migration step 7 — it is also appended to `findings.integrity`
     # there, and kept as its own list so the console can name the rule.
     snapshot_findings: list = field(default_factory=list)
@@ -5488,7 +5488,7 @@ def load_registries(docs):
 
 def verification_basis(srs):
     """Verification-basis audit surface (process.md §4): of the SRs the project
-    reports Approved, how was each reached? Three kinds, most-to-least runnable —
+    reports Accepted, how was each reached? Three kinds, most-to-least runnable —
     Test rests on a runnable check (mechanized); Demonstration/Manual/Analysis/
     Inspection/Critique rest on a human observing an outcome (demonstrated/
     observed — repeatable, but not a runnable check); Vouch rests on the
@@ -5505,7 +5505,7 @@ def verification_basis(srs):
     outward from `analyze` at WI-483."""
     mechanized_verified, demonstrated_verified, vouched_verified = [], [], []
     for r in srs:
-        if not is_approved(r):
+        if not is_accepted(r):
             continue
         method = (r.get("VerificationMethod") or "").strip()
         if method in MECHANIZED_METHODS:
@@ -5983,9 +5983,9 @@ def render_report(reg, findings, args, forest):
         + [
             f"| Orphans | {len(orphans)} |",
             f"| Integrity findings | {len(integrity)} |",
-            f"| Approved SRs — mechanized (Test) | {len(mechanized_verified)} |",
-            f"| Approved SRs — demonstrated/observed | {len(demonstrated_verified)} |",
-            f"| Approved SRs — vouched (operator, §4) | {len(vouched_verified)} |",
+            f"| Accepted SRs — mechanized (Test) | {len(mechanized_verified)} |",
+            f"| Accepted SRs — demonstrated/observed | {len(demonstrated_verified)} |",
+            f"| Accepted SRs — vouched (operator, §4) | {len(vouched_verified)} |",
         ]
         + (
             [f"| Drafted artifacts (decomposition-exempt) | {n_draft} |"]
@@ -6177,7 +6177,7 @@ def render_report(reg, findings, args, forest):
         else [f"- {f}" for f in sr_fanout_advis]
     )
     # Verification-basis surface (process.md §4): make the project's trust
-    # footprint auditable — of what is `Approved`, how much rests on a runnable
+    # footprint auditable — of what is `Accepted`, how much rests on a runnable
     # check (Test), on a human observing an outcome (Demonstration/Manual/Analysis/
     # Inspection/Critique), or on the operator's recorded word (Vouch)? Split
     # three ways (WI-259) so non-Test acceptance claims are never folded into
@@ -6185,7 +6185,7 @@ def render_report(reg, findings, args, forest):
     # see exactly which rows rest on something other than a runnable check.
     lines += ["", "## Verification basis (mechanized / demonstrated / vouched)", ""]
     lines += [
-        "_Of the SRs reported `Approved`: `Test` rows rest on a runnable, "
+        "_Of the SRs reported `Accepted`: `Test` rows rest on a runnable, "
         "re-executable check (mechanized); `Demonstration`/`Manual`/`Analysis`/"
         "`Inspection`/`Critique` rows rest on a human observing an outcome "
         "(demonstrated/observed — repeatable, but not a runnable check); `Vouch` "
@@ -6307,7 +6307,7 @@ def render_report(reg, findings, args, forest):
         scope = f" — phase scope: {args.phase}" if phases else ""
         lines += ["", f"## Status findings (--require-verified{scope})", ""]
         lines += (
-            ["None. Every in-scope accepted SR is Approved (any method)."]
+            ["None. Every in-scope accepted SR is Accepted (any method)."]
             if not status_findings
             else [f"- {s}" for s in status_findings]
         )
@@ -6748,7 +6748,7 @@ def main():
     ap.add_argument(
         "--require-verified",
         action="store_true",
-        help="DevStg-Impl criterion: flag non-Drafted SRs not Status=Approved "
+        help="DevStg-Impl criterion: flag non-Drafted SRs not Status=Accepted "
         "(any Verification method)",
     )
     ap.add_argument(
@@ -6783,7 +6783,7 @@ def main():
         "(e.g. 'SR-052,SR-053'); a DevStg-Reqs/DevStg-Tests brief links this instead of hand-copying "
         "rows (WI-146). The reserved scope 'modified' (WI-316) emits the "
         "RE-ACCEPTANCE brief instead: per-cell before/after for every row owing "
-        "an operator act, against its copy in docs/archive/last_approved/. The "
+        "an operator act, against its copy in docs/archive/last_accepted/. The "
         "reserved scope 'assumptions', or a DA-/SUR-id list, emits the "
         "assumption section: each assumption or surrogate owing an acceptance, "
         "or each one named, with the requirements citing it first. A scope "
@@ -6853,7 +6853,7 @@ def main():
     # (WI-146a). It reuses the loaded, example-filtered working sets above.
     # A RESERVED scope (`_RESERVED_ACCEPTANCE_SCOPES` — `modified` today) emits the
     # re-acceptance brief instead: per-cell before/after for every row owing an
-    # operator act, against its copy in the `last_approved` snapshot. Anything else
+    # operator act, against its copy in the `last_accepted` snapshot. Anything else
     # is a phase tag or an id list, and `_scope_srs` REFUSES one that matches
     # nothing rather than rendering an empty brief.
     if args.accept is not None:
@@ -6954,9 +6954,9 @@ def main():
             "live-id and complete-space rules still ran".format(WATERMARK)
         )
     # THE ACCEPTANCE-RECORD RULES — **ARMED AS INTEGRITY ERRORS AT MIGRATION STEP
-    # 7**, the successor to repo-lock D-9's "Approved-with-no-anchor is an ERROR".
+    # 7**, the successor to repo-lock D-9's "Accepted-with-no-anchor is an ERROR".
     # UNANCHORED (design §B4): a row whose live maturity claims acceptance-or-above
-    # with no copy in `docs/archive/last_approved/` recording it — or a copy that
+    # with no copy in `docs/archive/last_accepted/` recording it — or a copy that
     # reads below it — is an acceptance that never rode a copy. THE MIRROR
     # INVARIANT (§F3 risk 3, which asks for exactly this pair of severities:
     # *"warn at the staged hook, ERROR on the integrity floor"*): a snapshot file

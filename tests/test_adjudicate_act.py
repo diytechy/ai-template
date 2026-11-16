@@ -48,17 +48,17 @@ SPINE_SRS = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Priority,"
     "Verification,Status,Phase,Area\n"
     "SR-001,Adds,SN-001,The system shall add two numbers.,arithmetic is the "
-    "demo,the sum is right,Must,Test,Approved,P1,core\n"
+    "demo,the sum is right,Must,Test,Accepted,P1,core\n"
 )
 SPINE_LLRS = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component,Phase\n"
     "LLR-001,SR-001,add impl,src/demo.py,add,add() returns a + b.,TC-001,"
-    "Approved,,P1\n"
+    "Accepted,,P1\n"
 )
 SPINE_TCS = (
     "TC-ID,Verifies,Level,Method,Tier,Expected,Automated,Evidence,Status,Phase\n"
     'TC-001,LLR-001,unit,run pytest,fast,"add(2, 2) == 4",yes,'
-    "tests/test_demo.py::test_add,Approved,P1\n"
+    "tests/test_demo.py::test_add,Accepted,P1\n"
 )
 NEW_LLR = (
     "LLR-002,SR-001,sub impl,src/demo.py,sub,sub() returns a - b.,TC-002,Drafted,,P1\n"
@@ -103,7 +103,7 @@ def _commit(repo, message):
 
 
 def _repo(tmp_path, dial="DevStg-Needs"):
-    """A spine of three Approved rows, its recorded copy seeded, and a dial
+    """A spine of three Accepted rows, its recorded copy seeded, and a dial
     that releases (by default) every spine rung, all committed."""
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -194,7 +194,7 @@ def _take_acceptance_act(repo, ids, registries):
         rel = LLRS if rid.startswith("LLR") else TCS
         text = (repo / rel).read_text(encoding="utf-8")
         line = next(ln for ln in text.splitlines() if ln.startswith(rid + ","))
-        _replace(repo, rel, line, line.replace(",Drafted,", ",Approved,"))
+        _replace(repo, rel, line, line.replace(",Drafted,", ",Accepted,"))
     baseline_snapshot.copy_live(
         repo, accepts=baseline_snapshot.parse_accepts(registries)
     )
@@ -551,7 +551,7 @@ def test_a_flip_committed_without_its_copy_is_refused_naming_the_row(tmp_path):
     repo = _repo(tmp_path)
     _draft(repo)
     _verdict(repo, FIRST_ACCEPTANCE_MIXED, "first-acceptance")
-    _replace(repo, LLRS, ",Drafted,,P1", ",Approved,,P1")
+    _replace(repo, LLRS, ",Drafted,,P1", ",Accepted,,P1")
     _commit(repo, "flip LLR-002 with no copy")
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert acts is None
@@ -571,7 +571,7 @@ def test_a_Drafted_row_present_unchanged_in_a_whole_registry_copy_is_owed(tmp_pa
     assert acts == {"first-acceptance": {"accepts": {LLR_REL: ["LLR-002"]}}}
 
 
-def test_a_reaccept_of_a_row_below_Approved_is_refused_naming_the_row(tmp_path):
+def test_a_reaccept_of_a_row_below_Accepted_is_refused_naming_the_row(tmp_path):
     """Implements: TC-368"""
     repo = _repo(tmp_path)
     _draft(repo)
@@ -635,7 +635,7 @@ def test_the_act_reads_HEAD_not_the_working_tree(tmp_path):
     repo = _repo(tmp_path)
     _draft(repo)
     _verdict(repo, FIRST_ACCEPTANCE_MIXED, "first-acceptance")
-    _replace(repo, LLRS, ",Drafted,,P1", ",Approved,,P1")
+    _replace(repo, LLRS, ",Drafted,,P1", ",Accepted,,P1")
     baseline_snapshot.copy_live(
         repo, accepts=baseline_snapshot.parse_accepts("{}={}".format(LLR_REL, WI))
     )
@@ -704,7 +704,7 @@ def test_a_row_ruled_on_two_lines_is_listed_once(tmp_path):
 
 RETIRE_COMBINED = (
     "## amendment\n\n"
-    "- [CLARITY] TC-001 Status -> Approved -> (deleted) -> retirement\n\n"
+    "- [CLARITY] TC-001 Status -> Accepted -> (deleted) -> retirement\n\n"
     "VERDICT: CLARITY rows=1\n\n"
     "## first-acceptance\n\n"
     "- [ACCEPT] TC-002 -> sub -> chain holds -> ready\n\n"
@@ -714,7 +714,7 @@ RETIRE_COMBINED = (
 
 
 def _retire(repo, draft=True):
-    """Delete the Approved TC-001 from its live registry and, by default,
+    """Delete the Accepted TC-001 from its live registry and, by default,
     draft TC-002 in the same registry, committed."""
     text = (repo / TCS).read_text(encoding="utf-8")
     kept = [ln for ln in text.splitlines() if not ln.startswith("TC-001,")]
@@ -768,7 +768,7 @@ def test_a_retirement_on_a_held_rung_owes_no_act(tmp_path):
     _retire(repo, draft=False)
     _verdict(
         repo,
-        "- [CLARITY] TC-001 Status -> Approved -> (deleted) -> retirement\n\n"
+        "- [CLARITY] TC-001 Status -> Accepted -> (deleted) -> retirement\n\n"
         "VERDICT: CLARITY rows=1\n",
         "amendment",
     )
@@ -777,7 +777,7 @@ def test_a_retirement_on_a_held_rung_owes_no_act(tmp_path):
     _amend(repo)
     _verdict(
         repo,
-        "- [CLARITY] TC-001 Status -> Approved -> (deleted) -> retirement\n"
+        "- [CLARITY] TC-001 Status -> Accepted -> (deleted) -> retirement\n"
         "- [CLARITY] SR-001 Requirement -> add -> add -> same\n\n"
         "VERDICT: CLARITY rows=2\n",
         "amendment",

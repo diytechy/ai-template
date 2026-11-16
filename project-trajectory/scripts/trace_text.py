@@ -83,7 +83,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # because there is nothing left to hold equal.
 #
 # The tier claim this module used to make about `is_drafted` — "the pure text/row
-# predicates live here, while `is_approved`/`is_founded` live in trace.py and
+# predicates live here, while `is_accepted`/`is_founded` live in trace.py and
 # spine_rules.py as the F5-duplicated pair" — EXPIRED with the pair. All three
 # Status predicates now sit at the same tier, below every reader, which is what
 # the claim was reaching for and could not have while F5 stood.
@@ -365,9 +365,9 @@ _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 #      edit-stamp arms below already detect. Where a clause code genuinely rides
 #      inside a stamp ("REWORDED 2026-08-17 (C-PRF-1, applied)") the stamp is
 #      reported and the whole frame is what gets stripped.
-#   4. AN ALL-CAPS EDIT VERB IS A STAMP ONLY WHERE A CLAUSE OPENS. `APPROVED`,
+#   4. AN ALL-CAPS EDIT VERB IS A STAMP ONLY WHERE A CLAUSE OPENS. `ACCEPTED`,
 #      `RETIRED`, `DELETED`, `RULED` and `AMENDED` are also ordinary
-#      participles mid-sentence — "an APPROVED SN cited by zero SRs", "an AMENDED
+#      participles mid-sentence — "an ACCEPTED SN cited by zero SRs", "an AMENDED
 #      requirement drops the derived stage", "a stale file is DELETED in the same
 #      act" — so `_CAPS_EDIT_STAMP_RE` fires only at the start of the cell or of
 #      a clause. Measured over every live spine + IF cell: 36 hits, 36 of them
@@ -414,7 +414,7 @@ _ISO_DATE_RE = re.compile(r"\b(?P<date>" + _ISO_DATE + r")\b")
 _CAPS_STAMP_VERBS = (
     r"AMENDED|REWORDED|MINTED|RENUMBERED|RETIRED|NARROWED|REVISED|SUPERSEDED|"
     r"RESTATED|DELETED|EXTENDED|CLARIFIED|RULED|SPLIT|LANDED|REOPENED|STRUCK|"
-    r"INTRODUCED|WIDENED|PROMOTED|DEMOTED|APPROVED|CORRECTED|ABSORBS|SETTLED|"
+    r"INTRODUCED|WIDENED|PROMOTED|DEMOTED|ACCEPTED|CORRECTED|ABSORBS|SETTLED|"
     r"CONFIRMED|INVESTIGATED|RESOLVED|REVERTED|JOINED|RE-?VOICED|RE-?BASED|"
     r"RE-?POINTED|RE-?AFFIRMED"
 )
@@ -426,7 +426,7 @@ _CAPS_EDIT_STAMP_RE = re.compile(
     # in the run, so the reported token is the stamp's own head word.
     #
     # A prefix word is TWO letters or more, which is not cosmetic: with `*` the
-    # article in "An APPROVED SN cited by zero SRs caps the bar" read as an
+    # article in "An ACCEPTED SN cited by zero SRs caps the bar" read as an
     # all-caps subject whenever the sentence opened a cell, turning the
     # participle hazard this arm exists to avoid back on. The negative test is
     # what found it.

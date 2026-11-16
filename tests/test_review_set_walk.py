@@ -19,7 +19,7 @@ def _llr(llr, *srs):
     return {"LLR-ID": llr, "SR-Refs": ";".join(srs)}
 
 
-def _tc(tc, verifies, evidence="", status="Approved"):
+def _tc(tc, verifies, evidence="", status="Accepted"):
     return {"TC-ID": tc, "Verifies": verifies, "Evidence": evidence, "Status": status}
 
 

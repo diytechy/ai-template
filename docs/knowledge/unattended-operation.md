@@ -24,7 +24,7 @@ not to invent one.
   PROSE while its token pointed elsewhere. Worse, the retired tripwire itself
   only *warned and never blocked* (:1527) — a smell, printed, that could not
   fail a run or a gate. Two silent-failure shapes stacked: an unenforced warning,
-  then a stale Approved row publishing a deleted symbol into the generated
+  then a stale Accepted row publishing a deleted symbol into the generated
   bundle. The lesson the hat carries: an anchor that verifies a token is not the
   same as one that verifies the sentence around it.
 

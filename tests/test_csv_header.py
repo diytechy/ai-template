@@ -172,7 +172,7 @@ def test_load_csv_and_every_registry_reader_skip_the_header(tmp_path):
     assert [r["PB-ID"] for r in rel.load_csv(path)] == ["PB-001"]
     # The spine carrier's legacy CSV arm reads the same way, both shapes.
     sc = load_script("spine_carrier")
-    text = HEADER + "SR-ID,Title,Status\nSR-001,one,Approved\nSR-001,two,Approved\n"
+    text = HEADER + "SR-ID,Title,Status\nSR-001,one,Accepted\nSR-001,two,Accepted\n"
     assert [r["Title"] for r in sc.rows_seq_from_text(text, "SR-ID", ".csv")] == [
         "one",
         "two",

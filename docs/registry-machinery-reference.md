@@ -61,7 +61,7 @@ prevent) is now unrepresentable rather than pinned.
 - **Multi-ref cells split on `;`, `,` or whitespace** (`refs()`, same file).
   Semicolon is the documented form; the other two are tolerated.
 - **`Status` is a CLOSED vocabulary of exactly three values**, all matched
-  case-insensitively: `Drafted`, `Approved`, `Founded`. Anything else is an
+  case-insensitively: `Drafted`, `Accepted`, `Founded`. Anything else is an
   **integrity finding on the always-on `--strict-integrity` floor** — not a
   legal-but-inert label. *(SR/LLR/TC only: the SN tier declares the same
   vocabulary and no live pipe reads it — §2.3.)* THE OPEN-VOCABULARY PROMISE IS
@@ -69,7 +69,7 @@ prevent) is now unrepresentable rather than pinned.
   the closure landed 2026-08-15 (D-9 step 1) precisely because a word no
   predicate read — `Planned` was one, and `Bananas` would have read identically
   — sat in the registry announcing nothing; the rename to the ladder landed the
-  same day (step 5), folding `Planned` into `Approved`. An adopter carrying
+  same day (step 5), folding `Planned` into `Accepted`. An adopter carrying
   `Implemented`/`In-Review`/… migrates the cells (`RESYNC_PACK.md`) rather than
   declaring them.
 
@@ -87,7 +87,7 @@ There is **no Status column.** Maturity is the *heading the row sits under*:
 | Section | State | Effect |
 |---|---|---|
 | any heading whose text contains **"draft"** (case-insensitive) | **Drafted** (DevStg-Below) | exempt from "every SN needs an SR"; **drops the derived gate to DevStg-Below** |
-| any other heading (`## Core needs`, `## Edge-case expectations`) | **Approved** (DevStg-Reqs) | must have ≥1 SR referencing it — an uncovered accepted SN is both an orphan finding (§6) **and caps the derived gate at DevStg-Below** (the WI-401 coverage rung, §8.1) |
+| any other heading (`## Core needs`, `## Edge-case expectations`) | **Accepted** (DevStg-Reqs) | must have ≥1 SR referencing it — an uncovered accepted SN is both an orphan finding (§6) **and caps the derived gate at DevStg-Below** (the WI-401 coverage rung, §8.1) |
 
 Accepting a need = **moving the table row up** in a reviewed commit. That commit
 *is* the sign-off, and its date is the acceptance date — git-derived, no
@@ -152,13 +152,13 @@ ruling 2026-08-17).
 | `SR-ID` | ✔ | `SR-<digits>` | Join key. Duplicate → integrity; malformed → integrity; **a row with content but a blank id** → integrity ("a live requirement that just vanished from every join"). |
 | `Title` | ✔ | free text | Node label in the outline / mermaid / HTML views. |
 | `SN-Refs` | ✔ | `;`-joined SN ids | **Upward join.** Empty (when real SNs exist) → orphan; unknown target → orphan. *Traced, not accepted* (§9). |
-| `Requirement` | ✔ | one testable shall-statement, on an EARS pattern | Approved prose — amending it opens a re-accept window. Two rules read the text: `form_findings` **gates** the decidable half of singular/unambiguous (one `shall`, no non-obligation modal, no unfalsifiable term, no open-ended clause, no actorless passive), and `ears_advisories` **warns** when the opening states a condition outside `When`/`While`/`If`/`Where` (process.md §3). |
+| `Requirement` | ✔ | one testable shall-statement, on an EARS pattern | Accepted prose — amending it opens a re-accept window. Two rules read the text: `form_findings` **gates** the decidable half of singular/unambiguous (one `shall`, no non-obligation modal, no unfalsifiable term, no open-ended clause, no actorless passive), and `ears_advisories` **warns** when the opening states a condition outside `When`/`While`/`If`/`Where` (process.md §3). |
 | `Rationale` | ✔ | free text | **Required**, unlike the LLR's. Guards zero-to-zero (every row already carries one). |
-| `AcceptanceCriteria` | ✔ | measurable condition | Approved. Fed to the critique brief as SR intent. A **warn-only** testability advisory flags comparative/absolute claims that name no predicate. |
+| `AcceptanceCriteria` | ✔ | measurable condition | Accepted. Fed to the critique brief as SR intent. A **warn-only** testability advisory flags comparative/absolute claims that name no predicate. |
 | `Permutations` | ✘ | the `gen_cases.py` grammar² | Optional test-design dimensions, lifted verbatim into `gen_cases.py --spec`. Never validated by `trace.py`. |
 | `Priority` | ✔ | **open** (`M`/`S`/`C` by convention) | Required non-empty under `--strict-schema`; the *value* is never checked. |
 | `VerificationMethod` | ✔ | **closed**: `Test`, `Demonstration`, `Manual`, `Analysis`, `Inspection`, `Vouch`, `Critique` | The highest-leverage cell — §3.1. |
-| `Status` | ✔ | **closed**: `Drafted`, `Approved`, `Founded` | Drives the gate — §3.2. |
+| `Status` | ✔ | **closed**: `Drafted`, `Accepted`, `Founded` | Drives the gate — §3.2. |
 | `Phase` | ✘ | bare integer (`2`) on accepted rows once armed | Optional delivery phase — §3.3. |
 | `Aspect` | ✘ | closed: `process` \| `trajectory` \| `unattended-loop` \| `connectivity` \| `perf` \| `portability` | The ruled CROSS-CUTTING review grouping (sitting-2 decision 10, executed by the WI-451 re-tier; replaced the 31-value free-text `Area`, whose 25 component-derivable values were dropped rather than remapped). Blank is normal — a non-cross-cutting row carries none, and that is never a finding; a non-empty out-of-vocabulary value IS a `--strict-schema` finding. `trace.py` emits per-aspect SR counts and never gates on the count. |
 
@@ -200,16 +200,16 @@ two scripts disagreeing about the gate.
 | Value | Predicate | Stage effect | Rule effect |
 |---|---|---|---|
 | `Drafted` | `is_drafted` | **DevStg-Below — drops the repo gate** | Exempt from *child-completeness*: needs no LLR, no TC. SN linkage and all integrity rules still apply. Exempt from `--require-verified`. |
-| `Approved` | `is_approved` | doesn't hold a rung open (`is_drafted` is what does) | The row's TEXT is blessed. It makes NO claim that tests passed: the 2026-08-15 ruling (OI-30 D2) carried onto the stage axis at WI-498 slice 3. **No cell reaches DevStg-Release**, and since WI-500 that is structural rather than vacuous — the rung's one input is `spine_stage`'s `evidence_passed` parameter, fed only by `kitlib.stage.evidence_verdict` over the harness-written `docs/test/evidence` record, and the pin demands that return be guarded by the bare parameter so a row-computed guard is unrepresentable. |
-| `Founded` | `is_founded` | same as `Approved` (settled, never caps) | `Approved` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it — whether a tool ever will is D-9 consequence 2's still-open half — but whether an AGENT-authored `Founded` is itself an error is answered: OI-45 (ruled 2026-08-20) sanctions it for spine content past the declared operator-acceptance level (`agent_common.operator_holds`) — NARROWED 2026-09-01 to an ADJUDICATION session on the serial trunk side: a worker lane's merge is refused if its delta writes any acceptance claim (`integrate._acceptance_act_refusal`). |
+| `Accepted` | `is_accepted` | doesn't hold a rung open (`is_drafted` is what does) | The row's TEXT is blessed. It makes NO claim that tests passed: the 2026-08-15 ruling (OI-30 D2) carried onto the stage axis at WI-498 slice 3. **No cell reaches DevStg-Release**, and since WI-500 that is structural rather than vacuous — the rung's one input is `spine_stage`'s `evidence_passed` parameter, fed only by `kitlib.stage.evidence_verdict` over the harness-written `docs/test/evidence` record, and the pin demands that return be guarded by the bare parameter so a row-computed guard is unrepresentable. |
+| `Founded` | `is_founded` | same as `Accepted` (settled, never caps) | `Accepted` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it — whether a tool ever will is D-9 consequence 2's still-open half — but whether an AGENT-authored `Founded` is itself an error is answered: OI-45 (ruled 2026-08-20) sanctions it for spine content past the declared operator-acceptance level (`agent_common.operator_holds`) — NARROWED 2026-09-01 to an ADJUDICATION session on the serial trunk side: a worker lane's merge is refused if its delta writes any acceptance claim (`integrate._acceptance_act_refusal`). |
 | anything else | — | (an integrity finding — see §3.2's closure) | Not inert: reported. |
 
 **There is no value for a post-acceptance amendment.** A transitional `Modified`
 carried that state until 2026-08-20 (D-9 step 7), feeding a `modified=N` basis
 count and the `--accept modified` brief. It retired once the snapshot-backed
 drift rule had run live beside it through the signing act: an amended row now
-stays `Approved`, and what marks it is the DIFFERENCE from its copy in
-`docs/archive/last_approved/` — a property of two files, for every row rather
+stays `Accepted`, and what marks it is the DIFFERENCE from its copy in
+`docs/archive/last_accepted/` — a property of two files, for every row rather
 than the ones somebody remembered to mark. Blessing an amendment is a reviewed
 commit that re-reads the changed cells and runs `intake.py snapshot --reaccepts
 <ROW-ID>` naming each row read — the adjudicator's act since 2026-09-01, never
@@ -271,8 +271,8 @@ copy carries drifted accepted text that the act neither flips nor names; an
 | `Title` | ✔ | free text | Node label. |
 | `Module` | ✔ | repo path | Doubles as a **join target**: the set of `Module` values is added to the PB back-link target set and to the IF-endpoint advisory join. Normalised by stripping a leading `project-trajectory/` segment and any of `.py .sh .ps1 .ts .js .go .rs .cmd`. |
 | `CodeSymbol` | ✔ | function/type name | Required non-empty, and **resolved against real code** — `check_doc_refs.py`'s `symbol_findings` is the LLR tier's *discharge* test (§4.2). Also read by `gen_okf.py` for the knowledge bundle. |
-| `Detail` | ✔ | decomposition detail, **not** an SR paraphrase | Approved prose. |
-| `Rationale` | ✘ | free text | **Deliberately not required** — "a short decomposition row's why IS its parent SR's, so requiring one everywhere would manufacture the restatement the column exists to prevent." Approved when present. |
+| `Detail` | ✔ | decomposition detail, **not** an SR paraphrase | Accepted prose. |
+| `Rationale` | ✘ | free text | **Deliberately not required** — "a short decomposition row's why IS its parent SR's, so requiring one everywhere would manufacture the restatement the column exists to prevent." Accepted when present. |
 | `TestRefs` | ✘ | `(see TC)` | **Inert** — see §12.1. |
 | `Status` | ✔ | closed, as SR | `Drafted` HOLDS THE `DevStg-LLReqs` RUNG OPEN (`spine_stage`: `any(is_drafted(r) for r in llrs)`) and exempts the row from "no TC". Otherwise **does not move the stage** — §4.1. |
 | `Component` | ✘ | `CMP-###` | Optional membership tag, validated against the CMP registry only when that registry is non-empty. |
@@ -282,15 +282,15 @@ copy carries drifted accepted text that the act neither flips nor names; an
 
 `spine_stage` in `spine_rules.py`: an LLR holds its rung open **only** when
 `is_drafted` reads it as DRAFTED (the new-phase signal). Once
-present, its own Status is irrelevant — the SR's `Approved` drives the SR rung,
+present, its own Status is irrelevant — the SR's `Accepted` drives the SR rung,
 matching `--require-verified`, which checks SRs and not children. A downstream
 repo whose LLRs all read `Implemented` is unaffected here (that value defaults
-to APPROVED for this rule deliberately; the closure names it on the integrity
+to ACCEPTED for this rule deliberately; the closure names it on the integrity
 floor instead, so one fault is not punished twice).
 
 What LLR status DOES answer to is **acceptance order**, which is an integrity
 rule, not a stage input: a spine row is accepted only after the rows it hangs
-from are (`kitlib.spine.parent_first_findings`). An accepted child (`Approved`
+from are (`kitlib.spine.parent_first_findings`). An accepted child (`Accepted`
 or `Founded`) whose cited SN, SR or LLR parent is not accepted — `Drafted`, no
 `Status`, or a word outside the vocabulary — is an integrity finding of
 `trace.py --strict-integrity` (`parent-first: <child> (<status>) is accepted
@@ -300,7 +300,7 @@ that moves either status into such a case. IF, B, DA and undeclared ids and the
 `-000` example rows are not judged. It does not move the derived stage, so the
 coupling the derived-stage model dropped stays dropped. It retired the
 warn-only `llr_status_advisories` lint (WI-129), whose one case — a `Drafted`
-LLR every citing TC of which is `Approved` — is now the finding on the TC-to-LLR
+LLR every citing TC of which is `Accepted` — is now the finding on the TC-to-LLR
 edge, reported from the first accepted TC rather than only once all of them
 are.
 
@@ -369,7 +369,7 @@ hidden.
 | `Method` | ✔ | **open** | Required non-empty; the value is never validated. |
 | `Tier` | ✔ | **closed**: `Smoke`, `Full`, `Release` | The only closed TC vocabulary. Wrong value → schema finding. Selects release-checklist items (§9.5); **not** joined to the pytest marker that selects tests — see §12.2. |
 | `Parameters` | ✘ | `param=a; other=x` | Read as the artifact recipe in the critique brief. Not validated. |
-| `Expected` | ✔ | cite the AcceptanceCriteria **by id** | Approved prose. |
+| `Expected` | ✔ | cite the AcceptanceCriteria **by id** | Accepted prose. |
 | `Automated` | ✔ | `Yes` / `No` (open) | **Conditional rule:** `Yes` + empty `Evidence` → schema finding ("a claimed-automated test with no cited location is a soft false-green"). `No` marks an **observation test case**, which declares the five cells below `Phase` (`assumption_rules.is_observation_tc`). |
 | `Evidence` | ✘* | pytest node / path / procedure link | *Required only when `Automated=Yes`. |
 | `Status` | ✔ | closed, as SR | `Drafted` → DevStg-Below. Otherwise does not gate (same as LLR). |
@@ -482,7 +482,7 @@ it; you accept artifacts and regenerate.
 | **SR** | `Status=Drafted` | accepted, **not decomposed** | **decomposed** = has its required LLR (unless `VerificationMethod ∈ LLR_EXEMPT`) **AND** a TC — **and this is the ceiling** (OI-30 D2) | *unreachable by cell*: the release bar is the harness's answer, not a Status value |
 | **LLR / TC** | `Status=Drafted` | — | — | once present, contributes DevStg-Impl and **never caps** |
 
-A below-`Approved` SR needs no rule of its own: it is decomposed-but-not-accepted, so
+A below-`Accepted` SR needs no rule of its own: it is decomposed-but-not-accepted, so
 it reads **DevStg-Tests**. That is the deliberate gate pull that makes a pending re-accept
 visible.
 
@@ -757,7 +757,7 @@ Four things separate them, only the first of which is a test run:
    (`fail`/`warn`) is independent of its `Tier`; noisy runtime metrics default to
    `warn` and therefore fail no gate at any tier. The checklist is the only place
    they are confirmed.
-4. **Release admin and different sign-offs** — version bump, changed `Approved`
+4. **Release admin and different sign-offs** — version bump, changed `Accepted`
    interface versions communicated to counterparts, changelog. DevStg-Impl signs off
    System Engineer + Test Engineer; DevStg-Release adds the active domain hats and the
    **Operator**.
@@ -786,11 +786,11 @@ assumed covered.
 Operator ruling 2026-07-31 (`docs/concurrency-v2.md` §A5.1, WI-380). The newest
 layer, and the one behind a lot of historical accidental gate churn.
 
-When an **`Approved`** spine row is amended, `staged_spine_amendments` in
+When an **`Accepted`** spine row is amended, `staged_spine_amendments` in
 `check_trajectory.py` sorts each changed cell into two halves. Only an
 **accepted** cell change warns that a re-accept is owed.
 
-| Registry | **Traced** (amend freely) | **Approved** (opens a re-accept window) |
+| Registry | **Traced** (amend freely) | **Accepted** (opens a re-accept window) |
 |---|---|---|
 | SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle`, `DA-Refs` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `VerificationMethod`, `Coincident`, `Form` |
 | LLR | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase`, `SR-Refs`, `Hat-Refs` | `Title`, `Detail`, `Rationale` |
@@ -806,7 +806,7 @@ entity's `Mediates` among them. A traced cell is a pointer at another row; an
 accepted one states something the row asserts.
 
 **Why it exists:** WI-280 moved code, 19 LLR `Module` cells followed it, 11
-owning SRs flipped off `Approved`, the gate dropped, and it cost an accept
+owning SRs flipped off `Accepted`, the gate dropped, and it cost an accept
 brief and four review rounds — for a change that altered no requirement.
 
 **The residual rule fails safe:** a column in *neither* set is treated as
@@ -816,8 +816,8 @@ un-accepted. `tests/test_trajectory_staged.py` pins both halves.
 **The other half of the same walk** (operator ruling 2026-09-01). That reader
 EXEMPTS a row whose `Status` moved — "a deliberate call this does not
 second-guess". `acceptance_record.staged_acceptance_acts` reports that
-exempted set MINUS the de-acceptances: a row crossing INTO `Approved`/`Founded`,
-or arriving already claiming one. An `Approved` → `Drafted` withdrawal also
+exempted set MINUS the de-acceptances: a row crossing INTO `Accepted`/`Founded`,
+or arriving already claiming one. An `Accepted` → `Drafted` withdrawal also
 moves `Status`, so the amendment reader exempts it too, but it blesses nothing
 and is reported by `staged_drafted_rows` instead, as the re-acceptance it now
 owes. On a WORK BRANCH those are refusals, not records — the acceptance
@@ -915,9 +915,9 @@ instead of looking a row up.
 **Chain-consistency warns — RETIRED** (operator ruling 2026-08-17, the cell
 reading): `modified_chain_advisories` told an author to flip the owning SR
 whenever a child read the retired `Modified` marker, asserting the retired
-chain reading. An amended LLR/TC under an `Approved` SR is a legitimate state — a row's
+chain reading. An amended LLR/TC under an `Accepted` SR is a legitimate state — a row's
 `Status` answers for its own cells — and an UNMARKED child amendment is the
-snapshot-drift arm's find once `docs/archive/last_approved/` is seeded.
+snapshot-drift arm's find once `docs/archive/last_accepted/` is seeded.
 
 ---
 
@@ -928,7 +928,7 @@ All optional; all vacuous when absent or `-000`-only.
 | Registry | Id | Back-link cell | Rule |
 |---|---|---|---|
 | `docs/requirements/interfaces.toml` | `IF-###` | `Owner` (a path or `external:` party), `Requestors` / `Consumers` (exactly one), `interface_from_external` / `interface_to_external` | An id-shaped or multi-endpoint `Owner` joins the `--strict` failure set (OI-67), and so does a directional tie-back naming a crossing `external.toml` does not declare. A row whose owner AND far side are all `external:` parties joins it too — it has no in-tree endpoint, so no module whose header can hold our reading of the surface, and a crossing between two external parties is not a seam of this system. **Warn-only**: a row naming both far sides or neither; a module-shaped owner that no LLR `Module` names and whose header declares no `Implements:` (the seam reaches no requirement); an endpoint that resolves to nothing in the tree (WI-455: the cell is present only where `Owner`→LLR→`Module` cannot derive it). Citable from a TC's `Verifies`. The five RETIRED cells (`Contract`, `Provider`, `Req-Refs`, `Signal`, `SignalNote`) are found per REGISTRY by KEY PRESENCE through `spine_carrier.columns` — a TOML row that sets one, even to `""`, or a legacy CSV header that still declares the column — one `--strict` finding per key, naming the rows or the header column (OI-67 slice 6). The `Data` cell carries FIVE warn-first rules: the four FORM rules (no work-item id, no `D-<n>` citation, no rationale connective, a 160-character ceiling) plus a CONTENT rule — a `SCHED_*` / `Foo.bar` / `CONSTANT_NAME` token must resolve in the declared source surface and a named path must exist, vacuous where there is no surface (`[arch-map] mode = files`) and silent on a path `docs/declared-absences` declares. **The definition gate** is `check_trajectory.contract_body_findings` — WARN plain, ERROR under `--strict` (which `check.py` passes at or above `DevStg-Impl`; a direct run passes it any time), sharing `[checks] interfaces_check` — four shapes of ONE rule: a row its owner declares on its `Contracts:` marker but states no `Contract IF-###:` body for; a source whose header the contract grammar refuses (its declared rows count as unstated, the scan continues); an `external:`-owned row no far-side kit module states; a stray declaration on a source that is not the owner. An owner that declares NOTHING is the owner-exact reverse check's WARN, not the gate's. The optional `VerifiedBy` cell (a `TC-###` or an `LLR-###`; empty = "verified in its own right") is checked for RESOLUTION only, warn-first. On a BOUNDARY row (one with a tie-back) the optional `BridgedBy` names the assumptions carrying the seam's reading to an outcome and `Coincident` says why its reading is the outcome (SR-211, `assumption_rules.interface_bridge_findings`): a `BridgedBy` entry no assumption row declares joins the `--strict` failure set (class `interface`); a boundary row with neither is one advisory naming it; an internal row is not read. |
-| `docs/requirements/external.toml` — the depth-0 FRAME (WI-442) | `EXT-###` (entities), `B-##` (boundary crossings), `REL-###` (relationships) | crossing `Entity`; relationship `From`/`To`; entity `Mediates` | THREE tiers on ONE path, keyed by id column. Every reference must resolve to a declared entity, joining the `--strict` failure set — **and crossings or relationships declared with NO entity at all are a finding of their own**, not a vacuous pass. Required fields per tier: EXT `Name`/`Class`/`Description`/`Status`; B `Entity`/`Direction`/`Carries`/`Status`; REL `From`/`To`/`Kind`/`Flow`/`Status`. `Status` (`Drafted`\|`Approved`) is the one maturity field, shared with the IF tier, and **rung 1 of the stage ladder reads it** — `spine_rules.boundary_incomplete` caps the repo at `DevStg-Boundary` while any crossing is `Drafted`. Realization coverage (a crossing with no realizing IF row) is REPORTED and never gated: decision 6, deferred by ruling. An SR names its crossing(s) in `Boundary-Refs` — resolution hard, coverage advisory (SN-037). An entity's optional `Mediates` names the ONE entity it acts for; naming an undeclared entity or the row itself joins the same failure set (`frame_rules.mediation_findings`, SR-195), and its one reader is the assumption tier's reach check. |
+| `docs/requirements/external.toml` — the depth-0 FRAME (WI-442) | `EXT-###` (entities), `B-##` (boundary crossings), `REL-###` (relationships) | crossing `Entity`; relationship `From`/`To`; entity `Mediates` | THREE tiers on ONE path, keyed by id column. Every reference must resolve to a declared entity, joining the `--strict` failure set — **and crossings or relationships declared with NO entity at all are a finding of their own**, not a vacuous pass. Required fields per tier: EXT `Name`/`Class`/`Description`/`Status`; B `Entity`/`Direction`/`Carries`/`Status`; REL `From`/`To`/`Kind`/`Flow`/`Status`. `Status` (`Drafted`\|`Accepted`) is the one maturity field, shared with the IF tier, and **rung 1 of the stage ladder reads it** — `spine_rules.boundary_incomplete` caps the repo at `DevStg-Boundary` while any crossing is `Drafted`. Realization coverage (a crossing with no realizing IF row) is REPORTED and never gated: decision 6, deferred by ruling. An SR names its crossing(s) in `Boundary-Refs` — resolution hard, coverage advisory (SN-037). An entity's optional `Mediates` names the ONE entity it acts for; naming an undeclared entity or the row itself joins the same failure set (`frame_rules.mediation_findings`, SR-195), and its one reader is the assumption tier's reach check. |
 | performance budgets | `PB-###` | `Refs` | Must resolve to a real SR id, LLR id, **or LLR `Module` path**. Empty `Refs` → finding. |
 | `docs/requirements/components.toml` | `CMP-###` | `PartOf`, `SupersededBy`, `Derivation` | Must name real CMP ids. When non-empty, every `Component` tag on LLR/IF/PART/ASSET must resolve. `Knowledge` refs under `docs/knowledge/` are **warn-only**. Each real row holds the partition's derivation record (`Candidates`, `Objective`, `Constraints`, `Scores`, `Selected`, `Ruling`, optional `Override`) or cites, with `Derivation`, the one row holding it (SR-165): `trajectory_arch.derivation_record_findings`, inside `component_findings`, reports an absent, incomplete, malformed or inconsistent record — WARN plain, ERROR under `--strict`, sharing `[checks] components_check` — and recomputes the ranking only for a record with none of the first three. |
 | procurement | `PART-###` | `Component` | membership only |

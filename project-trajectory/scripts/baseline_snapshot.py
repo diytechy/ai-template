@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""baseline_snapshot.py — the `last_approved` snapshot: what the spine looked
+"""baseline_snapshot.py — the `last_accepted` snapshot: what the spine looked
 like when an operator last blessed it.
 
 Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX).
@@ -8,7 +8,7 @@ WHY THIS EXISTS (operator directive 2026-08-15; design:
 docs/plans/2026-08-15-baseline-snapshot-design.md). Every "has this accepted row
 changed?" question in the kit used to be answered by DERIVING a baseline from
 git — `trace._attested_baseline` walked the registry's history for the newest
-commit at which the row read `Verified` (now `Approved`). That derivation is correct only while
+commit at which the row read `Verified` (now `Accepted`). That derivation is correct only while
 every amendment flips its row's Status in the same commit, and D-9 deletes the
 flip: under the new ladder an accepted row STAYS accepted while its text is
 amended, so the newest-accepted revision is HEAD and the diff is empty BY
@@ -16,7 +16,7 @@ CONSTRUCTION. The brief would return a clean bill forever, at exit 0, on exactly
 the rows a sitting exists to judge.
 
 So the baseline moves OUT of git history and onto disk: when an acceptance lands,
-the registries are COPIED, byte for byte, into `docs/archive/last_approved/`.
+the registries are COPIED, byte for byte, into `docs/archive/last_accepted/`.
 Every comparison — the adjudicator, the operator re-accept read, the HTML
 generators — diffs the live registries against that copy. No hashes, no anchor
 columns, no commit-id walk. The baseline becomes something a human can open in
@@ -44,7 +44,7 @@ piece of machinery that no longer needs to exist:
      "re-bless everything with no diff shown".
 
 REPO-RELATIVE PATHS ARE PRESERVED UNDER THE SNAPSHOT ROOT
-(`<root>/docs/archive/last_approved/docs/requirements/...`). `spine_carrier`'s
+(`<root>/docs/archive/last_accepted/docs/requirements/...`). `spine_carrier`'s
 `resolve`/`carriers`/`stem` all take a registry path, so `snapshot_root / rel`
 reuses every existing resolver verbatim, carrier fallback included. Flattening
 would need a second path vocabulary and would give the resolver nothing to
@@ -61,7 +61,7 @@ archive as live machinery input, so the class is not new.
 
 STATUS OF THIS MODULE, 2026-08-20: LIVE AND ARMED. It shipped reader-first and
 advisory (2026-08-15) with every function vacuous by absence; the operator's
-signing act seeded `docs/archive/last_approved/` in the post-rename vocabulary
+signing act seeded `docs/archive/last_accepted/` in the post-rename vocabulary
 (migration step 6), and step 7 promoted `unanchored_findings` to an
 INTEGRITY-class ERROR on the always-on `--strict-integrity` floor plus the
 pre-commit hook. The order was the safety property, not ceremony: run against a
@@ -71,9 +71,9 @@ everything is a check that gets switched off. It stays VACUOUS BY ABSENCE for a
 repo that has accepted nothing, which is a fresh adopter's honest state.
 
 VOCABULARY NOTE — THE TRANSITIONAL MAPPING IS GONE (D-9 step 5, 2026-08-15).
-This module was written against `Approved` before the value existed, and read
+This module was written against `Accepted` before the value existed, and read
 the two pre-rename values that together carried the claim (`Verified` and
-`Planned`). Step 5 renamed both into `Approved`, so the spine arm of
+`Planned`). Step 5 renamed both into `Accepted`, so the spine arm of
 `_claims_acceptance` collapsed to the single value its own docstring promised —
 deleted, not re-keyed. THE SKEW THIS LEAVES IS REAL AND IS THE DESIGN'S §B6
 axis 3: a snapshot copied BEFORE the rename speaks the retired words and would
@@ -85,11 +85,11 @@ only after that (step 7).
 Contracts: IF-123, IF-124, IF-125, IF-126, IF-217, IF-220 — the seams this module
 declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
-Contract IF-123: the `last_approved` baseline, write side and whole read side.
+Contract IF-123: the `last_accepted` baseline, write side and whole read side.
     `copy_live(root, seed=False, accepts=None, reaccepts=None, verdict=None)`
     mirrors ONLY
     the registries an act authorises byte-for-byte into
-    `docs/archive/last_approved/` — the seed copies the whole tree once, a
+    `docs/archive/last_accepted/` — the seed copies the whole tree once, a
     refresh copies the registry a `Status` move happened in, every registry
     `accepts` names and every registry holding a row `reaccepts` names, and
     leaves the rest byte-identical to what they were (WI-571: the whole-tree
@@ -174,11 +174,11 @@ Contract IF-220: the act ledger, `ACTS` under `SNAPSHOT_DIR`. A TOML file of
     `[[act]]` entries, one appended by each `copy_live` that copied a registry
     (the seed included) and none by an act that copied nothing: `seq`, an
     integer one above the highest already present, so identical acts stay
-    distinct; `date`, the ISO day; `approved`, the sorted ids of the compared
+    distinct; `date`, the ISO day; `accepted`, the sorted ids of the compared
     tiers' rows the act carried into acceptance (a live row claiming acceptance
     whose prior recorded copy did not, or that the record did not hold), the
     needs file's need and stakeholder tiers among them (`NEED_TIERS`); and
-    `reattested`, the sorted ids its `reaccepts` named; and, only when the act
+    `reaccepted`, the sorted ids its `reaccepts` named; and, only when the act
     named one, `verdict`, the verdict file that ruled those rows — the record a
     held rung's CLARITY re-acceptance carries (OI-100, WI-791); and `copied`,
     the sorted canonical `SNAPSHOTTED` paths of the registries the act
@@ -246,7 +246,7 @@ from kitlib.spine import is_drafted, toml_fields
 # registry a `Status` move happened in, every registry `accepts` names and
 # every registry holding a row `reaccepts` names), leaving a registry outside
 # the act's scope untouched — see `copy_live`.
-SNAPSHOT_DIR = "docs/archive/last_approved"
+SNAPSHOT_DIR = "docs/archive/last_accepted"
 
 # The prose stamp's filename. Rendered for a human (design §F8, repo-lock
 # D-10's tripwire) and parsed by nothing: every machine fact comes from the
@@ -378,10 +378,10 @@ SNAPSHOT_TIERS = (
 # The Status value that CLAIMS acceptance-or-above. ONE MEMBER since D-9 step 5
 # (it held `verified` and `planned` before the fold). Lowercase, matching every
 # other Status comparison in the kit (the one casing rule, process.md §4). Kept
-# as a set rather than an `is_approved` call because this module must not import
+# as a set rather than an `is_accepted` call because this module must not import
 # `trace` (`trace` imports IT), and a set is the honest way to say "the values
 # that claim" in a module that owns no predicate copy.
-_ACCEPTANCE_CLAIMED = frozenset({"approved"})
+_ACCEPTANCE_CLAIMED = frozenset({"accepted"})
 
 # The OFF-SPINE tiers claim on the SAME CELL as the spine since 2026-08-17 —
 # `interfaces.toml`, `external.toml` and `components.toml` spell it `status`,
@@ -400,9 +400,9 @@ _ACCEPTANCE_CLAIMED = frozenset({"approved"})
 # `BIF_MATURITY`/`CMP_MATURITY` are where each vocabulary's ladder semantics are
 # "stated here and nowhere else", so a second hand-written set would be a rival
 # answer to "is this row settled" that agrees until someone edits one of them.
-# `Approved` and `Founded` both claim — `Founded` is `Approved` plus a
+# `Accepted` and `Founded` both claim — `Founded` is `Accepted` plus a
 # demonstration, and this predicate asks about the TEXT being blessed.
-_CLAIMED_MATURITY = (spine_rules.APPROVED, spine_rules.FOUNDED)
+_CLAIMED_MATURITY = (spine_rules.ACCEPTED, spine_rules.FOUNDED)
 _ACCEPTANCE_CELL_CLAIMED = frozenset(
     k for k, v in spine_rules.BIF_MATURITY.items() if v in _CLAIMED_MATURITY
 )
@@ -527,7 +527,7 @@ def act_summary(written, seed, accepts, reaccepts, verdict=None):
         " (SEEDED — this is the first snapshot; it blesses the text you just ruled)"
         if seed
         else "",
-        " (APPROVED BY: {} — recorded in the snapshot's stamp)".format(
+        " (ACCEPTED BY: {} — recorded in the snapshot's stamp)".format(
             "; ".join("{}={}".format(Path(r).name, accepts[r]) for r in accepts)
         )
         if accepts
@@ -718,7 +718,7 @@ def _claims_acceptance(row):
     second place to keep that mapping right.
 
     THE SPINE HALF COLLAPSED AT D-9 STEP 5, as this docstring said it would: the
-    ladder has ONE word for the claim (`Approved`) and the two pre-rename values
+    ladder has ONE word for the claim (`Accepted`) and the two pre-rename values
     that split it (`Verified`, `Planned`) folded into it under OI-30 D1. The two
     off-spine arms were never transitional and are unchanged, except that
     `BIF_MATURITY`'s below-acceptance key is spelled `drafted` since 5b — which
@@ -741,8 +741,8 @@ def _acceptance_transition(before, after):
     """True only when an existing row crosses INTO an acceptance claim.
 
     This is the maturity boundary that authorises a refresh: a `Drafted` row
-    becoming `Approved` blesses its registry's current text. A Status difference
-    by itself is not authority — in particular `Approved` -> `Drafted` revokes
+    becoming `Accepted` blesses its registry's current text. A Status difference
+    by itself is not authority — in particular `Accepted` -> `Drafted` revokes
     a claim and cannot carry an unrelated accepted amendment into the snapshot.
     Keep the meaning here beside `_claims_acceptance`, rather than making each
     refresh caller remember which direction a Status move went (WI-571,
@@ -868,7 +868,7 @@ def removed_rows(root, ids, snapshot):
         known |= set(recorded)
         for rid in sorted(ids & set(_removed_rows(recorded, live, id_col))):
             cells = check_trajectory.split_changed_cells(rel, id_col, recorded[rid], {})
-            cells = [(n, b, a) for n, (b, a) in sorted(cells["approved"].items())]
+            cells = [(n, b, a) for n, (b, a) in sorted(cells["accepted"].items())]
             removed.append((rel, id_col, rid, cells, recorded[rid]))
     return removed, sorted(ids - known)
 
@@ -944,8 +944,8 @@ def _ledger_live_rows(entry, rel, id_col, before_rows, live_rows):
         if not _claims_acceptance(before):
             continue
         changed = check_trajectory.split_changed_cells(rel, id_col, before, row)
-        if changed["approved"]:
-            entry["absorbed"][rid] = changed["approved"]
+        if changed["accepted"]:
+            entry["absorbed"][rid] = changed["accepted"]
 
 
 def refresh_refusal(root, accepts=None, snapshot=None, *, seed=False, reaccepts=()):
@@ -956,7 +956,7 @@ def refresh_refusal(root, accepts=None, snapshot=None, *, seed=False, reaccepts=
     The hole was exact and was executed end to end: `copy_live` refused only to
     CREATE the directory, so once a repo had signed, `intake.py snapshot`
     re-blessed whatever text happened to be in the tree. Two commits — rewrite an
-    Approved requirement, then refresh — left every check green with the record
+    Accepted requirement, then refresh — left every check green with the record
     rewritten to match, and the drift the mechanism exists to render had been
     absorbed into the baseline.
 
@@ -975,7 +975,7 @@ def refresh_refusal(root, accepts=None, snapshot=None, *, seed=False, reaccepts=
          amend-plus-flip is no longer acceptance). It blesses that row and no
          other.
       3. **`--reaccepts <ROW-ID>` names it.** The escape for the shape the ladder
-         genuinely has — an amendment to an Approved row that a sitting ruled
+         genuinely has — an amendment to an Accepted row that a sitting ruled
          without moving its Status (the D-9 ladder's own case, and what the
          2026-08-20 17-cell amendment batch was). The ids land in the snapshot's
          prose stamp, so the record says which rows the act re-read.
@@ -1018,7 +1018,7 @@ def refresh_refusal(root, accepts=None, snapshot=None, *, seed=False, reaccepts=
 
     ONE ARM STAYS UNSCOPED, deliberately: when the act would write NOTHING and
     accepted text has drifted, it is still refused. A refresh that copies
-    nothing is a no-op, and a no-op exiting 0 in a tree where an Approved row's
+    nothing is a no-op, and a no-op exiting 0 in a tree where an Accepted row's
     text was quietly rewritten is the laundering scenario answered with silence.
     The drift survives either way — the writer is already scoped — but the
     caller is told, which is the whole job of this text.
@@ -1163,7 +1163,7 @@ def _record_acceptance(base, accepts, copied_rels, reaccepts=frozenset()):
     )
     if not path.is_file():
         path.write_text(
-            "# `last_approved` — the acceptance stamp\n\n"
+            "# `last_accepted` — the acceptance stamp\n\n"
             "**This file is prose. Nothing parses it.** Every machine fact about "
             "the snapshot comes from the copied registry files beside it, from "
             "the act ledger `acts.toml`, or from `git log` over this "
@@ -1360,7 +1360,7 @@ def _refresh_targets(root, accepts, seed, base, reaccepts=frozenset()):
 
 
 def copy_live(root, *, seed=False, accepts=None, reaccepts=None, verdict=None):
-    """Mirror the registries an act AUTHORISES into `docs/archive/last_approved/`;
+    """Mirror the registries an act AUTHORISES into `docs/archive/last_accepted/`;
     the sorted list of repo-relative paths written.
 
     SCOPED TO THE ACT SINCE WI-571. The seed copies the whole tree once; a
@@ -1391,7 +1391,7 @@ def copy_live(root, *, seed=False, accepts=None, reaccepts=None, verdict=None):
     Creating was guarded and rewriting was not, which made the second act the
     cheap one: after the first signing this function re-blessed any text it was
     pointed at. Since SR-207 a refresh that would absorb a row's drifted
-    APPROVED text needs that row's own `Status` flip or its id in `reaccepts`;
+    ACCEPTED text needs that row's own `Status` flip or its id in `reaccepts`;
     an `accepts` ref names the act and its registry and clears no row. Refs and
     re-accepted ids are recorded into the snapshot's prose stamp. Traced-cell
     refreshes are unaffected and need no flag. Since WI-584 that gate is scoped
@@ -1631,10 +1631,10 @@ def _copied_order_problems(entries):
 
 def _named_rows_problems(where, entry):
     """The faults of an act entry's row lists and its optional `verdict`:
-    `approved` and `reattested` lists of row ids, and a `verdict`, when the
+    `accepted` and `reaccepted` lists of row ids, and a `verdict`, when the
     entry has one, naming a file (a non-empty string; OI-100, WI-791)."""
     out = []
-    for key in ("approved", "reattested"):
+    for key in ("accepted", "reaccepted"):
         ids = entry.get(key)
         if not isinstance(ids, list) or not all(isinstance(r, str) for r in ids):
             out.append("{}: `{}` must be a list of row ids".format(where, key))
@@ -1652,7 +1652,7 @@ def acts_problems(text):
     """Every fault of an act ledger's text, `[]` for a well-formed one or for
     no text at all (no ledger). Fails CLOSED: text that does not parse, an
     `act` that is not a list of tables, a missing or mistyped field (`seq` a
-    positive integer, `date` an ISO day, `approved` and `reattested` lists of
+    positive integer, `date` an ISO day, `accepted` and `reaccepted` lists of
     row ids, `copied`, when present, a sorted list of distinct paths), `seq`
     values that are not unique and increasing in file order, since acts are
     told apart by number alone, and an entry omitting `copied` after one that
@@ -1676,7 +1676,7 @@ def acts_problems(text):
 
 
 def parse_acts(text):
-    """The act ledger's entries as `{seq, date, approved, reattested}` dicts in
+    """The act ledger's entries as `{seq, date, accepted, reaccepted}` dicts in
     file order, with `verdict` on an entry that names one and `copied` on an
     entry that records it; `[]` for no text. A legacy entry has no `copied`
     key, never `[]`: its copy set is unknown, and nothing here infers one.
@@ -1692,8 +1692,8 @@ def parse_acts(text):
             {
                 "seq": entry["seq"],
                 "date": str(entry["date"]),
-                "approved": list(entry["approved"]),
-                "reattested": list(entry["reattested"]),
+                "accepted": list(entry["accepted"]),
+                "reaccepted": list(entry["reaccepted"]),
             },
             **({"verdict": entry["verdict"]} if "verdict" in entry else {}),
             **({"copied": list(entry["copied"])} if "copied" in entry else {}),
@@ -1813,7 +1813,7 @@ def _standing_acts(root):
         ) from None
 
 
-def _record_act(base, standing, accepted, reattested, copied, verdict=None):
+def _record_act(base, standing, accepted, reaccepted, copied, verdict=None):
     """Append one act's entry to the ledger, numbered one above the `standing`
     entries `_standing_acts` read before the act began, creating the file with
     its header when the record has none. `copied` is the registries the act
@@ -1829,8 +1829,8 @@ def _record_act(base, standing, accepted, reattested, copied, verdict=None):
         [
             ("seq", seq),
             ("date", _today()),
-            ("approved", sorted(accepted)),
-            ("reattested", sorted(reattested)),
+            ("accepted", sorted(accepted)),
+            ("reaccepted", sorted(reaccepted)),
             ("copied", sorted(copied)),
         ]
         + ([("verdict", verdict)] if verdict else [])
@@ -1841,7 +1841,7 @@ def _record_act(base, standing, accepted, reattested, copied, verdict=None):
 
 
 def is_drifted(rel, id_col, live_row, snapshot_rows):
-    """True when this row claims acceptance-or-above AND its APPROVED cells differ
+    """True when this row claims acceptance-or-above AND its ACCEPTED cells differ
     from its copy in the snapshot.
 
     A row BELOW acceptance is never drifted — it has made no claim to fall from,
@@ -1856,7 +1856,7 @@ def is_drifted(rel, id_col, live_row, snapshot_rows):
     not the amendment — folding it in would make every flip look like an
     amendment and every amendment invisible behind its own flip), and which
     already splits the remainder into the §A5.1 accepted/traced halves. Only the
-    APPROVED half arms drift: a re-pointed `SN-Refs`/`Verifies`/`SR-Refs` routes
+    ACCEPTED half arms drift: a re-pointed `SN-Refs`/`Verifies`/`SR-Refs` routes
     to adjudication and never arms a re-accept window (the WI-388 ruling,
     unchanged)."""
     if not _claims_acceptance(live_row):
@@ -1866,7 +1866,7 @@ def is_drifted(rel, id_col, live_row, snapshot_rows):
     if before is None:
         return False  # unanchored, not drifted — a different finding entirely
     changed = check_trajectory.split_changed_cells(rel, id_col, before, live_row)
-    return bool(changed["approved"])
+    return bool(changed["accepted"])
 
 
 def drifted_cells(rel, id_col, live_row, snapshot_rows):
@@ -1878,7 +1878,7 @@ def drifted_cells(rel, id_col, live_row, snapshot_rows):
     rid = str(live_row.get(id_col) or "").strip()
     return check_trajectory.split_changed_cells(
         rel, id_col, snapshot_rows[rid], live_row
-    )["approved"]
+    )["accepted"]
 
 
 def owing_rows(rel, id_col, rows, snapshot_rows):
@@ -1980,7 +1980,7 @@ def unanchored_findings(root, snapshot=None):
     demand a copy no act may write.
 
     The vacuum is "no registry" rather than "no directory", and the distinction
-    is not academic: `bootstrap.py` SCAFFOLDS `docs/archive/last_approved/` with
+    is not academic: `bootstrap.py` SCAFFOLDS `docs/archive/last_accepted/` with
     its README and nothing else, deliberately ("an empty snapshot is the HONEST
     state for a repo that has accepted nothing yet"), so a directory test would
     report every tier missing in EVERY fresh adopter repo on day one — the
@@ -2094,7 +2094,7 @@ def _act_names(root, sha, da_id):
     """Whether an act that landed at `sha` names the assumption, as accepted or
     as re-accepted."""
     return any(
-        da_id in act["approved"] or da_id in act["reattested"]
+        da_id in act["accepted"] or da_id in act["reaccepted"]
         for act in _acts_at(root, sha)
     )
 

@@ -52,7 +52,7 @@ IFS = (
     'consumers = ["scripts/b"]\n'
     'channel = "call"\n'
     'version = "v1"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
 )
 SRS = "SR-ID,Title,Requirement\nSR-001,One,shall\n"
 
@@ -220,11 +220,11 @@ Excludes: D3 — the verdict writer lands with the dual pickup row.
 TCS = (
     "[test.TC-001]\n"
     'verifies = ["SR-001"]\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     "\n"
     "[test.TC-002]\n"
     'verifies = ["SR-001"]\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
 )
 
 FINDINGS = """# Open review findings
@@ -430,7 +430,7 @@ def test_a_bold_exclusion_label_is_an_exclusion(tmp_path):
 def test_a_tc_verifying_only_a_non_item_sr_stays_out_of_the_single_diff(tmp_path):
     """The SR/TC diff asks only for the TCs that verify one of the item's own
     SRs; a TC on another SR is not this plan's to name or exclude."""
-    other = TCS + '\n[test.TC-003]\nverifies = ["SR-002"]\nstatus = "Approved"\n'
+    other = TCS + '\n[test.TC-003]\nverifies = ["SR-002"]\nstatus = "Accepted"\n'
     proc = write_single(tmp_path, tcs=other)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "TC-003" not in proc.stdout

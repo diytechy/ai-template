@@ -1,4 +1,4 @@
-# `last_approved` — what the spine looked like when an operator last blessed it
+# `last_accepted` — what the spine looked like when an operator last blessed it
 
 **This file is prose. Nothing parses it.** Every machine fact about the
 snapshot comes from the copied registry files beside it, from the act ledger
@@ -62,10 +62,10 @@ reviewed commit of an acceptance act and committed together with it. It copies
 only the registries the act authorises, and it refuses while any accepted row
 in them has drifted from its copy here without the act flipping or naming it:
 
-- **A first acceptance** — move the row's `Status` to `Approved`, run
+- **A first acceptance** — move the row's `Status` to `Accepted`, run
   `intake.py snapshot`, and commit both together. (`--accepts <REGISTRY=REF>`
   names a registry the act blesses by an acceptance ref instead.)
-- **A re-acceptance** — an amended row still reads `Approved`, so no flip
+- **A re-acceptance** — an amended row still reads `Accepted`, so no flip
   carries it. Read its changed cells, then run
   `intake.py snapshot --reaccepts <ROW-ID>[,<ROW-ID>...]`, naming exactly the
   rows you read. A drifted row that is not yours to bless stays out of the

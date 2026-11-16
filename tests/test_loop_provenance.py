@@ -90,7 +90,7 @@ FRAME = "docs/requirements/external.toml"
 INTERFACES = "docs/requirements/interfaces.toml"
 POLICY = "docs/process.toml"
 
-GAP = "SR-001 is not Approved (Status=Drafted)"
+GAP = "SR-001 is not Accepted (Status=Drafted)"
 
 
 def _trailered(message, session=SESSION):
@@ -998,10 +998,10 @@ def _commit_all(root, message, when):
 def _history(tmp_path):
     """Three trunk commits after a seed, and a merged lane:
 
-    c1  trailer   B-01 Drafted -> Approved   Boundary, held by its dial
-    c2  trailer   IF-001 Drafted -> Approved  Arch, released by its dial
-    c3  none      B-01 Approved -> Drafted   held, but a person's commit
-    l1  trailer   B-01 Drafted -> Approved   inside a lane, merged by m
+    c1  trailer   B-01 Drafted -> Accepted   Boundary, held by its dial
+    c2  trailer   IF-001 Drafted -> Accepted  Arch, released by its dial
+    c3  none      B-01 Accepted -> Drafted   held, but a person's commit
+    l1  trailer   B-01 Drafted -> Accepted   inside a lane, merged by m
     m   trailer   the --no-ff merge of the lane: its changes are l1's
     """
     root = _bare(tmp_path / "history")
@@ -1009,14 +1009,14 @@ def _history(tmp_path):
     _write(root, FRAME, _rows("boundary", B_01="Drafted"))
     _write(root, INTERFACES, _rows("interface", IF_001="Drafted"))
     shas = {"seed": _commit_all(root, "seed: the frame", T_BASE)}
-    _write(root, FRAME, _rows("boundary", B_01="Approved"))
+    _write(root, FRAME, _rows("boundary", B_01="Accepted"))
     shas["c1"] = _commit_all(root, _trailered("loop: accept B-01"), T_BASE + 1)
-    _write(root, INTERFACES, _rows("interface", IF_001="Approved"))
+    _write(root, INTERFACES, _rows("interface", IF_001="Accepted"))
     shas["c2"] = _commit_all(root, _trailered("loop: accept IF-001"), T_BASE + 2)
     _write(root, FRAME, _rows("boundary", B_01="Drafted"))
     shas["c3"] = _commit_all(root, "owner: reopen B-01", T_BASE + 3)
     _git(root, "checkout", "-q", "-b", "lane")
-    _write(root, FRAME, _rows("boundary", B_01="Approved"))
+    _write(root, FRAME, _rows("boundary", B_01="Accepted"))
     shas["l1"] = _commit_all(root, _trailered("lane: accept B-01"), T_BASE + 4)
     _git(root, "checkout", "-q", "main")
     _write(root, "notes.txt", "trunk moved\n")
@@ -1065,7 +1065,7 @@ def test_raising_the_dial_later_does_not_change_an_earlier_verdict(tmp_path):
 def test_a_root_commit_is_compared_with_the_empty_tree(tmp_path):
     root = _bare(tmp_path / "rooted")
     _write(root, POLICY, _dial("DevStg-Boundary"))
-    _write(root, FRAME, _rows("boundary", B_01="Approved"))
+    _write(root, FRAME, _rows("boundary", B_01="Accepted"))
     sha = _commit_all(root, _trailered("loop: the first frame"), T_BASE)
     findings = ctraj.loop_held_status_findings(root)
     assert len(findings) == 1 and sha[:10] in findings[0], findings
@@ -1077,7 +1077,7 @@ def test_a_commit_with_no_dial_is_judged_most_held_and_warns_nothing(tmp_path, c
     _write(root, POLICY, "[policies]\nreview_rounds = 0\n")
     _write(root, INTERFACES, _rows("interface", IF_001="Drafted"))
     _commit_all(root, "seed", T_BASE)
-    _write(root, INTERFACES, _rows("interface", IF_001="Approved"))
+    _write(root, INTERFACES, _rows("interface", IF_001="Accepted"))
     no_dial = _commit_all(root, _trailered("loop: accept IF-001"), T_BASE + 1)
     # A LEGACY ordinal reads as most-held too. The live reader would translate
     # `1` to DevStg-Boundary and release Arch; the history check must not guess.
@@ -1162,7 +1162,7 @@ def test_needs_and_stakeholder_statuses_are_held_at_the_needs_rung(tmp_path):
         _write(
             root,
             NEEDS,
-            _rows("need", SN_001="Approved") + _rows("stakeholder", STK_01="Approved"),
+            _rows("need", SN_001="Accepted") + _rows("stakeholder", STK_01="Accepted"),
         )
         sha = _commit_all(root, _trailered("loop: accept the needs"), T_BASE + 1)
         findings = ctraj.loop_held_status_findings(root)

@@ -21,7 +21,9 @@ words they were written in.
     every registry, both carriers  the requirement field `verification`
                                    (CSV `Verification`)  ->  `verification_method`
                                    (`VerificationMethod`), and in it the method
-                                   `Attest`  ->  `Vouch`
+                                   `Attest`  ->  `Vouch`; in every row's
+                                   `status` (CSV `Status`), `Approved`  ->
+                                   `Accepted`
     docs/process.toml              the table `[attestation]`  ->  `[authority]`,
                                    and in it `human_approval_through`  ->
                                    `operator_accepts_through`; in `[policies]`,
@@ -37,6 +39,15 @@ root, `OWNER_SCRATCHPAD.md`  ->  `OPERATOR_SCRATCHPAD.md`. The kit's scripts
 protect it by its current name, so a file left under the earlier one would
 lose that protection without a word. It holds a person's private notes, so
 it is moved and never opened.
+
+One directory is moved: the acceptance record, `docs/archive/last_approved/`
+->  `docs/archive/last_accepted/`. In its act ledger, `acts.toml`, each
+`[[act]]` entry's keys `approved`  ->  `accepted` and `reattested`  ->
+`reaccepted`. Then each registry copy in it is written equal to its live
+registry, because a copy that differs from live is drift the kit would report
+and a renamed directory writes every copy anyway. That absorbs whatever text
+had moved since the last act, so every accepted cell that differed is named
+in the output, for the operator to read. The record's README keeps its words.
 
 A registry is a `.toml` or `.csv` file directly under `docs/requirements/` or
 `docs/test/`, and the acceptance record's copy of each. A registry is rewritten
@@ -81,9 +92,12 @@ FIELDS = {
     "toml": {"verification": "verification_method"},
     "csv": {"Verification": "VerificationMethod"},
 }
+# The status a row holds once accepted was `Approved`; the kit's readers fold
+# its case, so each case it was written in moves.
+_STATUS = {"Approved": "Accepted", "approved": "accepted", "APPROVED": "ACCEPTED"}
 VALUES = {
-    "toml": {"verification_method": {"Attest": "Vouch"}},
-    "csv": {"VerificationMethod": {"Attest": "Vouch"}},
+    "toml": {"verification_method": {"Attest": "Vouch"}, "status": _STATUS},
+    "csv": {"VerificationMethod": {"Attest": "Vouch"}, "Status": _STATUS},
 }
 
 
@@ -589,17 +603,48 @@ def _decision_entries(data):
     return [entry for entry in tier.values() if isinstance(entry, dict)]
 
 
-def _decisions_expected(data):
-    """`data` as it must parse after the rewrite: each entry's keys moved to
-    the current vocabulary. Raises `Unsafe` for an entry carrying both."""
-    for entry in _decision_entries(data):
-        for key, new in DECISION_KEYS.items():
+def _parsed(text):
+    """The parse of TOML `text`. Raises `Unsafe` when it does not parse."""
+    try:
+        return tomllib.loads(text.lstrip("﻿"))
+    except tomllib.TOMLDecodeError as exc:
+        raise Unsafe("it does not parse ({})".format(exc)) from None
+
+
+def _moved_keys(entries, keys):
+    """Each entry table of `entries` with the keys `keys` maps moved to their
+    current names, in place. Raises `Unsafe` for an entry carrying both."""
+    for entry in entries:
+        for key, new in keys.items():
             if key not in entry:
                 continue
             if new in entry:
                 raise Unsafe("an entry carries both `{}` and `{}`".format(key, new))
             entry[new] = entry.pop(key)
-    return data
+
+
+def _rekeyed(text, entries_of, keys, step):
+    """`text` with the keys `keys` maps respelled in every entry table
+    `entries_of` finds in its parse, by a line edit through `step(line,
+    inside)`, which says whether the lines after it belong to an entry.
+    Raises `Unsafe` when the result would not parse as exactly that."""
+    expected = _parsed(text)
+    entries = entries_of(expected)
+    if not any(key in entry for entry in entries for key in keys):
+        return text
+    _moved_keys(entries, keys)
+    lines, inside = [], False
+    for line in text.split("\n"):
+        line, inside = step(line, inside)
+        lines.append(line)
+    new = "\n".join(lines)
+    try:
+        after = tomllib.loads(new.lstrip("﻿"))
+    except tomllib.TOMLDecodeError:
+        after = None
+    if after != expected:
+        raise Unsafe("a rewrite of it would change more than the vocabulary")
+    return new
 
 
 def _decision_line(line, in_entry):
@@ -623,26 +668,7 @@ def migrate_decisions_record(text):
 
     Implements: SR-247, LLR-369
     """
-    try:
-        before = tomllib.loads(text.lstrip("\ufeff"))
-    except tomllib.TOMLDecodeError as exc:
-        raise Unsafe("it does not parse ({})".format(exc)) from None
-    entries = _decision_entries(before)
-    if not any(key in entry for entry in entries for key in DECISION_KEYS):
-        return text
-    expected = _decisions_expected(before)
-    lines, in_entry = [], False
-    for line in text.split("\n"):
-        line, in_entry = _decision_line(line, in_entry)
-        lines.append(line)
-    new = "\n".join(lines)
-    try:
-        after = tomllib.loads(new.lstrip("\ufeff"))
-    except tomllib.TOMLDecodeError:
-        after = None
-    if after != expected:
-        raise Unsafe("a rewrite of it would change more than the vocabulary")
-    return new
+    return _rekeyed(text, _decision_entries, DECISION_KEYS, _decision_line)
 
 
 def decisions(root, check):
@@ -697,13 +723,194 @@ def scratchpad(root, check):
     return ["{} -> {}".format(*SCRATCHPAD_NAMES)], []
 
 
+# --- the acceptance record -------------------------------------------------------
+
+# The record's directory is `RECORD_DIRS` above, by its earlier and current
+# name. Its act ledger holds one `[[act]]` entry per act; each named the rows
+# it carried into acceptance and the rows it re-accepted under earlier keys.
+LEDGER_NAME = "acts.toml"
+LEDGER_KEYS = {"approved": "accepted", "reattested": "reaccepted"}
+# A row the copy holds as accepted, in either spelling of the status.
+_ACCEPTED_WORDS = frozenset({"approved", "accepted"})
+
+# An array-of-tables header: `[[act]]`.
+_ARRAY_HEADER = re.compile(
+    r"^[ \t]*\[\[(?P<name>[A-Za-z0-9_.-]+)\]\][ \t]*(?:#[^\r\n]*)?\r?$"
+)
+
+
+def _ledger_entries(data):
+    """Every `[[act]]` entry of a parsed act ledger."""
+    acts = data.get("act")
+    if not isinstance(acts, list):
+        return []
+    return [entry for entry in acts if isinstance(entry, dict)]
+
+
+def _ledger_line(line, in_act):
+    """`(line, in_act)`: one line of the act ledger with an entry's key
+    respelled, and whether the lines after it belong to an `[[act]]` entry."""
+    array = _ARRAY_HEADER.match(line)
+    if array:
+        return line, array["name"] == "act"
+    if line.lstrip().startswith("["):
+        return line, False
+    cell = _KEY_LINE.match(line)
+    if in_act and cell and cell["key"] in LEDGER_KEYS:
+        return cell["lead"] + LEDGER_KEYS[cell["key"]] + cell["rest"], in_act
+    return line, in_act
+
+
+def migrate_ledger(text):
+    """Act-ledger `text` with each entry's keys in the current vocabulary.
+    Raises `Unsafe` when the result would not parse as exactly that.
+
+    Implements: SR-247, LLR-369
+    """
+    return _rekeyed(text, _ledger_entries, LEDGER_KEYS, _ledger_line)
+
+
+def _record_rows(text, suffix):
+    """`{row id: {cell: value}}` of a registry's `text` under either carrier
+    (a CSV row keyed by its first cell), `{}` when it does not parse."""
+    if suffix == ".toml":
+        try:
+            data = tomllib.loads(text.lstrip("﻿"))
+        except tomllib.TOMLDecodeError:
+            return {}
+        tiers = [t for t in data.values() if isinstance(t, dict)]
+        return {
+            rid: row for t in tiers for rid, row in t.items() if isinstance(row, dict)
+        }
+    offset = len(text) - len(text.lstrip("﻿"))
+    offset += _csv_preamble(text[offset:])
+    records = _csv_parsed(text[offset:])
+    if not records:
+        return {}
+    return {r[0]: dict(zip(records[0], r)) for r in records[1:] if r}
+
+
+def _absorbed(copy_text, live_text, suffix):
+    """`[(row id, cell)]`: each cell of a row the copy holds as accepted that
+    the live registry holds otherwise, the status left out; a row the live
+    registry no longer holds is named once, as the whole row."""
+    copy, live = _record_rows(copy_text, suffix), _record_rows(live_text, suffix)
+    out = []
+    for rid, row in copy.items():
+        status = str(row.get("status", row.get("Status", ""))).strip().lower()
+        if status not in _ACCEPTED_WORDS:
+            continue
+        if rid not in live:
+            out.append((rid, "(the whole row)"))
+            continue
+        cells = (set(row) | set(live[rid])) - {"status", "Status"}
+        out += [(rid, c) for c in sorted(cells) if row.get(c) != live[rid].get(c)]
+    return out
+
+
+def _record_copies(home):
+    """`(live path, copy path)` for each registry copy in the record `home`."""
+    for folder in (home / d for d in REGISTRY_DIRS):
+        if not folder.is_dir():
+            continue
+        for path in sorted(folder.iterdir()):
+            if path.is_file() and path.suffix in (".toml", ".csv"):
+                yield path.relative_to(home).as_posix(), path
+
+
+def _copies_owed(root, home):
+    """`([(copy path, live bytes)], [report line], [problem])`: each copy in
+    the record `home` that differs from its live registry, with a line for it
+    and one for each accepted cell writing it would absorb, and each copy
+    whose live registry is gone, which is left as it is."""
+    owed, lines, problems = [], [], []
+    for rel, path in _record_copies(home):
+        where = "{}/{}".format(RECORD_DIRS[1], rel)
+        live = root / rel
+        if not live.is_file():
+            problems.append(
+                "{}: no live {} to write it from; left untouched".format(where, rel)
+            )
+            continue
+        want, have = live.read_bytes(), path.read_bytes()
+        if want == have:
+            continue
+        owed.append((path, want))
+        lines.append("{} written equal to {}".format(where, rel))
+        absorbed = _absorbed(have.decode("utf-8"), want.decode("utf-8"), path.suffix)
+        lines += ["{} absorbs {} {}".format(rel, rid, cell) for rid, cell in absorbed]
+    return owed, lines, problems
+
+
+def _ledger_owed(root, home):
+    """`(ledger text or None, [problem])`: the record `home`'s act ledger with
+    its keys respelled, None when nothing moves, or a problem when the line
+    edit cannot be proved."""
+    path = home / LEDGER_NAME
+    if not path.is_file():
+        return None, []
+    raw = path.read_bytes().decode("utf-8")
+    try:
+        new = migrate_ledger(raw)
+    except Unsafe as exc:
+        where = path.relative_to(root).as_posix()
+        return None, ["{}: {}; the record is left untouched".format(where, exc)]
+    return (None if new == raw else new), []
+
+
+def _write_record(home, target, ledger, owed):
+    """Move the record `home` to `target`, then write its ledger and copies."""
+    if home != target:
+        home.rename(target)
+    if ledger is not None:
+        (target / LEDGER_NAME).write_bytes(ledger.encode("utf-8"))
+    for path, want in owed:
+        (target / path.relative_to(home)).write_bytes(want)
+
+
+def record(root, check):
+    """The acceptance record under its earlier name moved to the current one,
+    its act ledger's keys respelled, and each registry copy in it written
+    equal to its live registry, naming every accepted cell that absorbs:
+    `([what moved], [problem])`. Both names present, or a ledger the line
+    edit cannot prove, is a problem, and nothing is touched.
+
+    Implements: SR-247, LLR-369
+    """
+    old, new = (root / d for d in RECORD_DIRS)
+    if old.is_dir() and new.exists():
+        return [], ["{}: {} exists too; merge the two by hand".format(*RECORD_DIRS)]
+    home = old if old.is_dir() else new
+    if not home.is_dir():
+        return [], []
+    ledger, problems = _ledger_owed(root, home)
+    owed, lines, missing = _copies_owed(root, home)
+    if problems:
+        return [], problems + missing
+    done = ["{} -> {}".format(*RECORD_DIRS)] if home == old else []
+    if ledger is not None:
+        done.append(
+            "{}/{}: keys {}".format(
+                RECORD_DIRS[1],
+                LEDGER_NAME,
+                ", ".join("{} -> {}".format(*kv) for kv in LEDGER_KEYS.items()),
+            )
+        )
+    if not check:
+        _write_record(home, new, ledger, owed)
+    return done + lines, missing
+
+
 # Each step: what it is called in the report, and the function that takes it.
+# The record comes last, so that the copies it writes equal live registries
+# the registry step has already respelled.
 STEPS = (
     ("verdict binding", bindings),
     ("registry", registries),
     ("policy file", policy),
     ("decisions record", decisions),
     ("scratchpad", scratchpad),
+    ("acceptance record", record),
 )
 
 

@@ -123,7 +123,7 @@ def _git_init(root):
 
 def _accept(root):
     """The acceptance act, in a fixture: copy the spine into
-    `docs/archive/last_approved/`. Everything the diff renders is measured
+    `docs/archive/last_accepted/`. Everything the diff renders is measured
     against what this call captured, so a fixture that amends WITHOUT calling it
     first has no baseline and renders current state — which is a different test."""
     load_script("baseline_snapshot").copy_live(root, seed=True)
@@ -179,8 +179,8 @@ def test_draft_and_DRIFTED_rows_both_surface(tmp_path):
 
     THE SECOND ROW IS NOW REACHED BY DRIFT, NOT BY A CELL. It used to read
     `Status = Modified`; D-9 step 7 retired that marker, so an amended row
-    still reads `Approved` and the ONLY thing that can put it in this queue is
-    the comparison against `docs/archive/last_approved/`. The fixture therefore
+    still reads `Accepted` and the ONLY thing that can put it in this queue is
+    the comparison against `docs/archive/last_accepted/`. The fixture therefore
     has to accept first and amend after — which is the real sequence, and the
     reason this test is worth more than it was: it now proves the surface can
     see an amendment nothing in the registry announces.
@@ -191,7 +191,7 @@ def test_draft_and_DRIFTED_rows_both_surface(tmp_path):
     )
     accepted = (
         "SR-002,An amended need,SN-001,shall do the ORIGINAL thing,because,"
-        "criteria,,C,Test,Approved,1,W\n"
+        "criteria,,C,Test,Accepted,1,W\n"
     )
     root = repo(tmp_path, sr_rows=drafted + accepted)
     _git_init(root)
@@ -213,7 +213,7 @@ def test_verified_rows_are_not_in_the_queue(tmp_path):
     # must not appear, or the surface cries wolf on every spine row.
     repo(
         tmp_path,
-        sr_rows="SR-003,A settled need,SN-001,shall,because,criteria,,C,Test,Approved,1,W\n",
+        sr_rows="SR-003,A settled need,SN-001,shall,because,criteria,,C,Test,Accepted,1,W\n",
     )
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
@@ -225,11 +225,11 @@ def test_drafted_child_under_accepted_undrifted_sr_owes(tmp_path):
     """The OI-61-sitting gap
     (docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md): `owes()` used to
     test the SR row's own `Status` alone, so a `Drafted` LLR/TC hanging off an
-    `Approved`, undrifted SR reached no surface — the drift arm cannot catch it
+    `Accepted`, undrifted SR reached no surface — the drift arm cannot catch it
     either, since a row below acceptance has made no claim to fall from. Widened:
     the chain is asked too, and the pill says WHY."""
     sr = (
-        "SR-020,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
+        "SR-020,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Accepted,1,W\n"
     )
     root = repo(tmp_path, sr_rows=sr)
     _git_init(root)
@@ -247,13 +247,13 @@ def test_drafted_child_under_accepted_undrifted_sr_owes(tmp_path):
 
 
 def test_accepted_child_under_accepted_sr_does_not_owe(tmp_path):
-    """The negative half: an `Approved` child under an `Approved`, undrifted SR
+    """The negative half: an `Accepted` child under an `Accepted`, undrifted SR
     owes nothing — the widening must not turn every settled chain row into a
     false positive."""
     sr = (
-        "SR-021,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
+        "SR-021,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Accepted,1,W\n"
     )
-    llr = "LLR-021,SR-021,A child,mod.py,sym,detail,TC-021,Approved,CMP-001,1\n"
+    llr = "LLR-021,SR-021,A child,mod.py,sym,detail,TC-021,Accepted,CMP-001,1\n"
     root = repo(tmp_path, sr_rows=sr, llr_rows=llr)
     _git_init(root)
     _accept(root)
@@ -264,12 +264,12 @@ def test_accepted_child_under_accepted_sr_does_not_owe(tmp_path):
 
 
 def test_drafted_child_unchanged_since_snapshot_still_owes(tmp_path):
-    """A `Drafted` row can sit in `docs/archive/last_approved/` byte-identical to
+    """A `Drafted` row can sit in `docs/archive/last_accepted/` byte-identical to
     its current text — `intake.py snapshot` copies every registry wholesale, not
     only accepted rows — so the widened arm cannot rely on a cell diff to notice
     it; it has to ask `Status` directly, independent of whether anything moved."""
     sr = (
-        "SR-022,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
+        "SR-022,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Accepted,1,W\n"
     )
     llr = "LLR-022,SR-022,A child,mod.py,sym,detail,TC-022,Drafted,CMP-001,1\n"
     root = repo(tmp_path, sr_rows=sr, llr_rows=llr)
@@ -289,7 +289,7 @@ def test_drafted_row_cells_are_not_labelled_accepted(tmp_path):
     owed`, keyed on the cell's COLUMN class alone — a re-acceptance window on a
     row that was never accepted. It owes a FIRST acceptance wholesale."""
     sr = (
-        "SR-023,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
+        "SR-023,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Accepted,1,W\n"
     )
     tc = "TC-023,SR-023,Unit,drive the old path,Smoke,a=1,sum,Yes,old-ev,Drafted,1\n"
     root = repo(tmp_path, sr_rows=sr, tc_rows=tc)
@@ -322,13 +322,13 @@ def test_anchor_sr_requirement_and_rationale_render_unconditionally_and_visibly(
 
     It WAS on the page — inside `.ctx`, which is `display:none` until the
     toolbar's "Collapse unchanged text" box (checked by default) is cleared —
-    for exactly the shape SR-177 is: `Approved`, undrifted, its amendment
+    for exactly the shape SR-177 is: `Accepted`, undrifted, its amendment
     living entirely in a `Drafted` child. The anchor block must render the
     SR's own Requirement/Rationale OUTSIDE `.ctx`, before it, so it is visible
     on load with no interaction."""
     sr = (
         "SR-030,Stable parent,SN-001,shall report the DISTINCTIVE requirement,"
-        "because DISTINCTIVE rationale,criteria,,C,Test,Approved,1,W\n"
+        "because DISTINCTIVE rationale,criteria,,C,Test,Accepted,1,W\n"
     )
     llr = "LLR-030,SR-030,A new child,mod.py,sym,detail,TC-030,Drafted,CMP-001,1\n"
     root = repo(tmp_path, sr_rows=sr, llr_rows=llr)
@@ -352,9 +352,9 @@ def test_anchor_requirement_truncates_above_threshold_not_below(tmp_path):
     an explicit marker; a cell comfortably below it renders untouched."""
     long_req = "A" * 1600
     short_req = "B" * 100
-    sr_rows = "SR-031,Long,SN-001,{},because,criteria,,C,Test,Approved,1,W\n".format(
+    sr_rows = "SR-031,Long,SN-001,{},because,criteria,,C,Test,Accepted,1,W\n".format(
         long_req
-    ) + "SR-032,Short,SN-001,{},because,criteria,,C,Test,Approved,1,W\n".format(
+    ) + "SR-032,Short,SN-001,{},because,criteria,,C,Test,Accepted,1,W\n".format(
         short_req
     )
     llr_rows = (
@@ -381,7 +381,7 @@ def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_p
     is structurally gone and the advice would now be false. The section says
     what is actually true instead."""
     verified = (
-        "SR-004,No visible delta,SN-001,shall,because,criteria,,C,Test,Approved,1,W\n"
+        "SR-004,No visible delta,SN-001,shall,because,criteria,,C,Test,Accepted,1,W\n"
     )
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
@@ -393,7 +393,7 @@ def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_p
     # retired that marker; `Drafted` is the surviving value that puts a row in
     # the queue on its own Status rather than on a diff.
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
-        SR_HEADER + verified.replace(",Approved,", ",Drafted,"), encoding="utf-8"
+        SR_HEADER + verified.replace(",Accepted,", ",Drafted,"), encoding="utf-8"
     )
     assert gen(root).returncode == 0
     page = html_of(root)
@@ -482,7 +482,7 @@ def test_a3_kind_pills_are_never_distinguished_by_colour_alone(tmp_path):
     )
     accepted = (
         "SR-002,An amended need,SN-001,shall do the ORIGINAL thing,because,"
-        "criteria,,C,Test,Approved,1,W\n"
+        "criteria,,C,Test,Accepted,1,W\n"
     )
     root = repo(tmp_path, sr_rows=drafted + accepted)
     _git_init(root)
@@ -518,7 +518,7 @@ def test_the_view_names_its_authority(tmp_path):
 
 
 def test_the_footer_names_reaccepts_for_blessing_an_amendment(tmp_path):
-    """Blessing an amendment re-copies a row that still reads `Approved`, so no
+    """Blessing an amendment re-copies a row that still reads `Accepted`, so no
     flip carries it, and a bare `intake.py snapshot` refuses it. The footer's
     instruction has to name the row, or it hands the operator a refusal."""
     repo(tmp_path, oi_rows=PENDING_OI)
@@ -586,7 +586,7 @@ def test_check_is_agnostic_to_the_checkouts_line_endings(tmp_path):
 def test_empty_acceptance_state_names_only_what_it_checked(tmp_path):
     """122-REVIEW-A named a real gap: the whole-section empty state used to
     claim no Drafted/Modified SPINE ROW while the model selected SRs only, so a
-    Drafted LLR under an Approved SR was invisible AND actively denied. That
+    Drafted LLR under an Accepted SR was invisible AND actively denied. That
     gap is CLOSED (the OI-61-sitting widening,
     docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md) — a Drafted LLR now
     surfaces directly, so this fixture no longer reaches the empty state at
@@ -596,7 +596,7 @@ def test_empty_acceptance_state_names_only_what_it_checked(tmp_path):
     contract honestly rather than the pre-widening SR-only caveat."""
     repo(
         tmp_path,
-        sr_rows="SR-007,Settled,SN-001,shall,because,criteria,,C,Test,Approved,1,W\n",
+        sr_rows="SR-007,Settled,SN-001,shall,because,criteria,,C,Test,Accepted,1,W\n",
     )
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
@@ -638,7 +638,7 @@ def test_collapse_toggle_is_wired_to_the_unchanged_runs(tmp_path):
     stdlib test can drive — that needs the Playwright harness, and asserting it
     here would be the proxy this repo refuses."""
     verified = (
-        "SR-008,Amended,SN-001,shall do a thing,because,criteria,,C,Test,Approved,1,W\n"
+        "SR-008,Amended,SN-001,shall do a thing,because,criteria,,C,Test,Accepted,1,W\n"
     )
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
@@ -646,7 +646,7 @@ def test_collapse_toggle_is_wired_to_the_unchanged_runs(tmp_path):
     # A real amendment, so a real diff renders: the `.eq` runs only exist where
     # unchanged text sits BESIDE a change, which is exactly what the toggle
     # collapses.
-    # NO STATUS FLIP SINCE D-9 STEP 7: the row stays `Approved` and reaches the
+    # NO STATUS FLIP SINCE D-9 STEP 7: the row stays `Accepted` and reaches the
     # queue by DRIFT alone, which is what an amendment looks like under the new
     # ladder. The diff being rendered is the same one.
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
@@ -692,12 +692,12 @@ def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
     stdlib test can drive (the same boundary the collapse guard states)."""
     verified = (
         "SR-009,Amended reasoning,SN-001,shall hold the ORIGINAL requirement,"
-        "because of the old reason,the acceptance criteria,,C,Test,Approved,1,W\n"
+        "because of the old reason,the acceptance criteria,,C,Test,Accepted,1,W\n"
     )
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
     _accept(root)
-    # NO STATUS FLIP SINCE D-9 STEP 7 — the row stays `Approved` and reaches the
+    # NO STATUS FLIP SINCE D-9 STEP 7 — the row stays `Accepted` and reaches the
     # queue by DRIFT on the amended cell alone.
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
         SR_HEADER
@@ -736,14 +736,14 @@ def test_sr_text_renders_when_only_a_child_row_was_amended(tmp_path):
         "SR-010,A stable requirement,SN-001,shall state the THING BEING VERIFIED,"
         "because,criteria,,C,Test,{},1,W\n"
     )
-    llr = "LLR-010,SR-010,A child,mod.py,sym,{},TC-010,Approved,CMP-001,1\n"
+    llr = "LLR-010,SR-010,A child,mod.py,sym,{},TC-010,Accepted,CMP-001,1\n"
     root = repo(
-        tmp_path, sr_rows=sr.format("Approved"), llr_rows=llr.format("old detail")
+        tmp_path, sr_rows=sr.format("Accepted"), llr_rows=llr.format("old detail")
     )
     _git_init(root)
     _accept(root)
     # ONLY THE CHILD MOVES SINCE D-9 STEP 7. The SR used to flip to `Modified`
-    # to enter the queue; under the new ladder it stays `Approved` and the
+    # to enter the queue; under the new ladder it stays `Accepted` and the
     # CHAIN DRIFT pulls it in — which is the same state this test was always
     # about (nothing of the SR itself changed) reached the way it now happens.
     (root / "docs" / "requirements" / "low-level-requirements.csv").write_text(

@@ -69,7 +69,7 @@ SESSION = "20261023T101500Z-a1b2c3"
 STEP = [SCRIPTS / "check.py", "--run-steps", "held-status"]
 NO_REGEN = "import sys\nsys.exit(0)\n"
 BAR = "no [product] test declaration"
-GAP = "SR-001 is not Approved (Status=Drafted)"
+GAP = "SR-001 is not Accepted (Status=Drafted)"
 
 # Each need: (status, need text, source). `source` is a traced cell.
 BASE = {
@@ -237,22 +237,22 @@ def _the_rule_rides_the_walk():
 
 
 def _accept_sn1_with_its_copy(root):
-    _write_needs(root, _with(BASE, "SN-001", status="Approved"))
+    _write_needs(root, _with(BASE, "SN-001", status="Accepted"))
     snap.copy_live(root)
     _verdict(root, "first-acceptance", ["SN-001"])
 
 
 def _flip_sn1_without_its_copy(root):
-    _write_needs(root, _with(BASE, "SN-001", status="Approved"))
+    _write_needs(root, _with(BASE, "SN-001", status="Accepted"))
     _verdict(root, "first-acceptance", ["SN-001"])
 
 
-APPROVED = _with(BASE, "SN-001", status="Approved")
+ACCEPTED = _with(BASE, "SN-001", status="Accepted")
 
 
 def _amend(need="a team can use the kit", **more):
     def write(root):
-        rows = _with(APPROVED, "SN-001", need=need)
+        rows = _with(ACCEPTED, "SN-001", need=need)
         for rid, cells in more.items():
             rows = _with(rows, rid.replace("_", "-"), **cells)
         _write_needs(root, rows)
@@ -320,7 +320,7 @@ def test_loop_coordinator_and_reclaimed_lanes_are_judged_alike(tmp_path, monkeyp
         _refused_by_the_rule(root, "SN-001", NEEDS_RUNG)
 
 
-def _clarity_lane(home, monkeypatch, *steps, needs=APPROVED):
+def _clarity_lane(home, monkeypatch, *steps, needs=ACCEPTED):
     root = _trunk(home, monkeypatch, needs=needs)
     return _lane(root, monkeypatch, list(steps))
 
@@ -456,7 +456,7 @@ def test_a_held_retirement_is_refused(tmp_path, monkeypatch):
     """Implements: TC-241, TC-278"""
 
     def retire(root):
-        rows = dict(APPROVED)
+        rows = dict(ACCEPTED)
         del rows["SN-001"]
         _write_needs(root, rows)
 
@@ -492,13 +492,13 @@ def test_a_held_CLARITY_act_carrying_an_edited_Drafted_sibling_lands(
 def test_a_traced_only_copy_move_lands(tmp_path, monkeypatch):
     """Implements: TC-241"""
     # SN-002 is accepted and moves only its traced `source` in the copy.
-    needs = _with(APPROVED, "SN-002", status="Approved")
+    needs = _with(ACCEPTED, "SN-002", status="Accepted")
     root = _clarity_lane(
         tmp_path,
         monkeypatch,
         (
             "WI-401: amend SN-001",
-            _amend(SN_002={"status": "Approved", "source": "a survey"}),
+            _amend(SN_002={"status": "Accepted", "source": "a survey"}),
         ),
         ("WI-401: the verdict", _bound_verdict()),
         ("WI-401: re-accept SN-001", _reaccept(named=False)),
@@ -522,7 +522,7 @@ def test_a_refresh_merge_carrying_trunks_acceptances_lands(tmp_path, monkeypatch
     _write(root, "notes.txt", "lane work\n")
     _commit(root, "WI-401: lane work", when=T_CODE)
     _git(root, "checkout", "-q", "main")
-    _write_needs(root, _with(BASE, "SN-002", status="Approved"))
+    _write_needs(root, _with(BASE, "SN-002", status="Accepted"))
     snap.copy_live(root)
     _commit(root, "owner: accept SN-002", when=T_CODE)
     _git(root, "checkout", "-q", "wi-401")
@@ -576,7 +576,7 @@ def test_an_off_spine_demotion_and_a_born_Drafted_row_land_from_a_loop_lane(
     """Implements: TC-241"""
     # What loop lanes lose: a held status move that claims no acceptance is no
     # longer refused at the slot.
-    frame = {"B-01": "Drafted", "B-02": "Approved"}
+    frame = {"B-01": "Drafted", "B-02": "Accepted"}
     root = _trunk(tmp_path, monkeypatch, frame=frame)
 
     def move(root):
@@ -596,7 +596,7 @@ def test_an_off_spine_demotion_and_a_born_Drafted_row_land_from_a_loop_lane(
 
 
 def _stage_sn1_acceptance(root):
-    _write_needs(root, _with(BASE, "SN-001", status="Approved"))
+    _write_needs(root, _with(BASE, "SN-001", status="Accepted"))
     snap.copy_live(root)
     _git(root, "add", "-A")
 
@@ -630,7 +630,7 @@ def test_the_same_commit_marked_is_refused_by_the_hook_step(tmp_path, monkeypatc
 
 def test_a_marked_held_SN_demotion_outside_a_lane_is_refused(tmp_path, monkeypatch):
     """Implements: TC-241"""
-    root = _trunk(tmp_path, monkeypatch, needs=APPROVED)
+    root = _trunk(tmp_path, monkeypatch, needs=ACCEPTED)
     _write_needs(root, BASE)
     _git(root, "add", "-A")
     monkeypatch.setenv(MARK, SESSION)
@@ -640,7 +640,7 @@ def test_a_marked_held_SN_demotion_outside_a_lane_is_refused(tmp_path, monkeypat
 
 
 def _flip_sn1(root):
-    _write_needs(root, _with(BASE, "SN-001", status="Approved"))
+    _write_needs(root, _with(BASE, "SN-001", status="Accepted"))
 
 
 def _claim_writer(root, monkeypatch, capsys):
@@ -714,11 +714,11 @@ def test_a_marked_commit_inside_a_lane_passes_at_commit_and_is_judged_at_landing
     """Implements: TC-241"""
     # A session in its lane accepts the held frame row B-01: the hook step
     # and the handback residue writer pass it, and the slot refuses the lane.
-    root = _trunk(tmp_path, monkeypatch, frame={"B-01": "Drafted", "B-02": "Approved"})
+    root = _trunk(tmp_path, monkeypatch, frame={"B-01": "Drafted", "B-02": "Accepted"})
     assert integ.claim(root, "WI-401", "wi-401") == 0
     wt, err = integ.lane_worktree(root, "wi-401")
     assert err is None, err
-    _write(wt, FRAME, _frame_text({"B-01": "Approved", "B-02": "Approved"}))
+    _write(wt, FRAME, _frame_text({"B-01": "Accepted", "B-02": "Accepted"}))
     _git(wt, "add", "--", FRAME)
     monkeypatch.setenv(MARK, SESSION)
     proc = run_py(STEP, cwd=wt)
@@ -775,7 +775,7 @@ def test_a_squash_not_admitted_is_judged_as_one_commit(tmp_path, monkeypatch):
     root = _trunk(tmp_path, monkeypatch)
     _squash(root, monkeypatch, _accept_sn1_with_its_copy, marked=False)
     _write_needs(
-        root, _with(_with(BASE, "SN-001", status="Approved"), "SN-002", need="edited")
+        root, _with(_with(BASE, "SN-001", status="Accepted"), "SN-002", need="edited")
     )
     _git(root, "add", "--", NEEDS)
     proc = run_py(STEP, cwd=root)
@@ -810,7 +810,7 @@ def _assert_named_by_rule(lines, rid, rung):
 def test_a_first_draft_under_a_bound_CLARITY_verdict_is_no_exception(
     tmp_path, monkeypatch
 ):
-    """A Drafted need flipped to Approved with its copy, under an accepted
+    """A Drafted need flipped to Accepted with its copy, under an accepted
     CLARITY verdict bound to its exact text, is refused: a first draft carries
     no signature to re-accept. Witness: an exception that admitted any claim
     whose row an accepted CLARITY binding names at its digest, without
@@ -818,7 +818,7 @@ def test_a_first_draft_under_a_bound_CLARITY_verdict_is_no_exception(
 
     Implements: TC-241, TC-278
     """
-    rows = _with(BASE, "SN-002", status="Approved")
+    rows = _with(BASE, "SN-002", status="Accepted")
 
     def act(root):
         _write_needs(root, rows)
@@ -846,7 +846,7 @@ def test_a_copy_unequal_to_its_live_row_is_no_exception(tmp_path, monkeypatch):
     """
 
     def other_copy(root):
-        text = _needs_text(_with(APPROVED, "SN-001", need="a text nobody judged"))
+        text = _needs_text(_with(ACCEPTED, "SN-001", need="a text nobody judged"))
         _write(root, COPY, text)
 
     root = _clarity_lane(
@@ -907,7 +907,7 @@ def test_an_absent_or_unreadable_CLARITY_verdict_is_no_exception(
 @pytest.mark.parametrize(
     "frame, row",
     [
-        ({"B-01": "Drafted", "B-02": "Approved", "B-03": "Drafted"}, "B-03"),
+        ({"B-01": "Drafted", "B-02": "Accepted", "B-03": "Drafted"}, "B-03"),
         ({"B-01": "Drafted"}, "B-02"),
     ],
     ids=["row added with a status", "row removed with a status"],
@@ -922,7 +922,7 @@ def test_a_marked_commit_adding_or_removing_a_held_status_row_is_refused(
 
     Implements: TC-241
     """
-    root = _trunk(tmp_path, monkeypatch, frame={"B-01": "Drafted", "B-02": "Approved"})
+    root = _trunk(tmp_path, monkeypatch, frame={"B-01": "Drafted", "B-02": "Accepted"})
     _write(root, FRAME, _frame_text(frame))
     _git(root, "add", "--", FRAME)
     monkeypatch.setenv(MARK, SESSION)
@@ -942,10 +942,10 @@ def test_a_handback_commit_outside_a_lane_refuses_a_held_status_move(
 
     Implements: TC-241
     """
-    root = _trunk(tmp_path, monkeypatch, frame={"B-01": "Drafted", "B-02": "Approved"})
+    root = _trunk(tmp_path, monkeypatch, frame={"B-01": "Drafted", "B-02": "Accepted"})
     wt = tmp_path / "scratch-wt"
     _git(root, "worktree", "add", "-q", "-b", "scratch", str(wt))
-    _write(wt, FRAME, _frame_text({"B-01": "Approved", "B-02": "Approved"}))
+    _write(wt, FRAME, _frame_text({"B-01": "Accepted", "B-02": "Accepted"}))
     _git(wt, "add", "--", FRAME)
     monkeypatch.setenv(MARK, SESSION)
     tip = _rev(wt, "HEAD")
@@ -1019,7 +1019,7 @@ def test_an_act_already_on_trunk_is_not_re_read(tmp_path, monkeypatch):
 
     Implements: TC-278
     """
-    both = _with(APPROVED, "SN-002", status="Approved")
+    both = _with(ACCEPTED, "SN-002", status="Accepted")
     root = _trunk(tmp_path, monkeypatch, needs=both)
     _write_needs(root, _with(both, "SN-001", need="the operator's own wording"))
     snap.copy_live(root, reaccepts=frozenset({"SN-001"}))

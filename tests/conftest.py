@@ -1604,7 +1604,7 @@ def seed_row(root, srs=(), llrs=None, tcs=None, tags=None, sr_refs=None):
     default roots."""
     design = {k: {"sr_refs": list(v)} for k, v in (llrs or {}).items()}
     cases = {
-        k: {"verifies": list(v[0]), "evidence": v[1], "status": "Approved"}
+        k: {"verifies": list(v[0]), "evidence": v[1], "status": "Accepted"}
         for k, v in (tcs or {}).items()
     }
     for rel, table, rows in (
@@ -1891,15 +1891,15 @@ STAKEHOLDER_NEEDS = """# Stakeholder Needs (SN-###)
 """
 
 SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted
 """
 
 LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Approved
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Accepted
 """
 
 TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
-TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Approved
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Accepted
 """
 
 

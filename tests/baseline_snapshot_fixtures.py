@@ -17,7 +17,7 @@ SR_REL = "docs/requirements/system-requirements.toml"
 
 def _tree(tmp_path):
     """A tmp repo carrying this repo's seven real registries at their real
-    paths. SR, LLR and TC statuses start Approved so tests plant their own
+    paths. SR, LLR and TC statuses start Accepted so tests plant their own
     maturity moves instead of depending on the live spine's acceptance progress.
     Everything resolves off `root`, so nothing else needs to come along."""
     root = tmp_path / "repo"
@@ -36,7 +36,7 @@ def _tree(tmp_path):
             dest.write_bytes(
                 re.sub(
                     rb'(?m)^status = "[^"]+"',
-                    b'status = "Approved"',
+                    b'status = "Accepted"',
                     dest.read_bytes(),
                 )
             )

@@ -17,7 +17,7 @@ reported) and `SR-179` (the record can only ever be written by copying live
 text), plus the staged `Hat-Refs` arm of the same amendment comparison
 (`SR-161`, `LLR-202`), which is that comparison applied to one traced cell:
 
-    the cell split      `SPINE_TRACED_CELLS` / `SPINE_APPROVED_CELLS`,
+    the cell split      `SPINE_TRACED_CELLS` / `SPINE_ACCEPTED_CELLS`,
                         `spine_cell_class`, `traced_cells` — the §A5.1 owner
                         ruling that decides which cells arm a re-accept window
     the comparison      `_spine_rows_at`, `_spine_revs`, `split_changed_cells`,
@@ -66,7 +66,7 @@ Contracts: IF-091, IF-129, IF-308 — the interface seams this module declares
 Contract IF-091: the staged spine-amendment set, offered as a call.
     `staged_spine_amendments(root, base, head)` returns one record per
     accepted-text spine row amended between the two trees WITHOUT its status
-    moving — `{"registry", "id", "approved": {cell: (before, after)},
+    moving — `{"registry", "id", "accepted": {cell: (before, after)},
     "traced": {...}}` — and `AMENDMENT_CSVS` names the registries and id
     columns that walk covers: the requirement, design and test tiers, the need
     tier and the assumption registry's two tiers (OI-100, WI-791). Which two trees is a parameter, so the same call answers
@@ -112,7 +112,7 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     cannot be read or does not parse is the refusal.
 Contract IF-129: the ONE cell-comparison basis.
     `split_changed_cells(registry_path, id_col, before_row, live_row)` returns
-    `{"approved": {cell: (before, after)}, "traced": {cell: (before, after)}}`
+    `{"accepted": {cell: (before, after)}, "traced": {cell: (before, after)}}`
     for a single row, excluding the id column (a join key, not content) and
     `Status` (the flip the caller is asking about) structurally, at the callee.
     Every reader of "what changed on this row" joins here, so the staged
@@ -131,7 +131,7 @@ Contract IF-308: the parent-first commit judgement, offered as a call.
     commit against every parent of its commit object; both return refusal
     lines, `[]` when the tree passes, and both read through
     `parent_first_lines(root, bases, head)`. A line names the tree (`the
-    index:` or `commit <sha10>:`) and an accepted child (`Approved` or
+    index:` or `commit <sha10>:`) and an accepted child (`Accepted` or
     `Founded`) left under a declared parent that is not accepted, where the
     child's or the parent's status differs from that row's status in some
     parent tree (an absent row counting as a value), with its own remedy
@@ -224,7 +224,7 @@ SPINE_CSVS = (
 # (WI-572 REVIEW-A round 028). SN is a SPINE tier — `spine_carrier.SPINE_TABLE`
 # names it, its rows carry the same `status` vocabulary, and the DevStg-Reqs
 # rung the operator-acceptance dial holds for the operator is exactly the SN half — so a
-# lane flipping `SN-###` Drafted -> Approved is the WORST case of the act the
+# lane flipping `SN-###` Drafted -> Accepted is the WORST case of the act the
 # operator's 2026-09-01 ruling moved to the adjudicator, not an exempt one. It was
 # excluded only by the older section-as-state reading recorded at
 # `baseline_snapshot._claims_acceptance`, which the `status` cell retired.
@@ -349,14 +349,14 @@ def _tier_reads(root, prefix, rel_path, id_col, under=""):
 
 
 # The §A5.1 cell split (OPERATOR RULING 2026-07-31, docs/concurrency-v2.md; WI-380).
-# Only what is APPROVED arms the re-accept warn. Traceability is TRACED, not
+# Only what is ACCEPTED arms the re-accept warn. Traceability is TRACED, not
 # accepted: re-pointing an LLR at the module the code moved to amends no
 # accepted prose. WI-280 paid for the conflation — 19 `Module` cells followed
-# moved code -> 11 owning SRs flipped off `Approved` -> the gate dropped DevStg-Impl->DevStg-Tests -> an
+# moved code -> 11 owning SRs flipped off `Accepted` -> the gate dropped DevStg-Impl->DevStg-Tests -> an
 # acceptance brief and four review rounds, for a change that altered no requirement.
 #
 # BOTH halves are declared per registry, and the RESIDUAL RULE FAILS SAFE: a
-# column in neither set is treated as APPROVED. A column added to a registry
+# column in neither set is treated as ACCEPTED. A column added to a registry
 # after this table was written can therefore only ever be too loud — a spurious
 # window someone sees and dismisses — never silently un-accepted, which would
 # be a MISSED window nobody sees. `tests/test_trajectory_staged.py` pins both
@@ -379,7 +379,7 @@ def _tier_reads(root, prefix, rel_path, id_col, under=""):
 # is the load-bearing half of shipping the cell rather than a footnote. Three
 # reasons, in the order that decides it: (1) it is the same SHAPE of pointer as
 # `SN-Refs`/`Boundary-Refs` — which declared row in another registry bears on this
-# one — carrying no prose either side; (2) the residual would classify it APPROVED,
+# one — carrying no prose either side; (2) the residual would classify it ACCEPTED,
 # so the phase-2 backfill would arm a re-accept window on every row it touched,
 # which is precisely the 148-row noise `Boundary-Refs` was classified out of; and
 # (3) the operator's own sequencing note prices this ruling — the cell "is NOT
@@ -448,7 +448,7 @@ SPINE_TRACED_CELLS = {
 # join by name too (WI-784), keeping the residual's reading: like `MaxAge` and
 # `Inputs`, each states how the row's claim is judged or kept current.
 # Implements: SR-193, SR-194, SR-198, LLR-222, LLR-225
-SPINE_APPROVED_CELLS = {
+SPINE_ACCEPTED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
         {
             "Title",
@@ -502,7 +502,7 @@ OFFSPINE_TRACED_CELLS = {
 
 
 def spine_cell_class(csv_path, column):
-    """`"traced"` for a column §A5.1 rules traceability, else `"approved"`.
+    """`"traced"` for a column §A5.1 rules traceability, else `"accepted"`.
 
     The residual is deliberate and fails SAFE: an unclassified column — one
     added to a registry after the ruling — reads as accepted and keeps arming
@@ -512,13 +512,13 @@ def spine_cell_class(csv_path, column):
     on paths that carry a carrier SUFFIX, and the callers do not agree on which
     one: a staged-diff scan names whichever file git reported, while a live read
     names the constant. Under the CSV carrier a `.toml`-keyed lookup misses, and
-    a miss here does not red — every column reads `approved`, so a traced-only
+    a miss here does not red — every column reads `accepted`, so a traced-only
     edit arms a re-accept window that was ruled not to. `stem` drops the suffix,
     which is what `spine_carrier` exists to make possible.
 
     Implements: SR-178, LLR-158
     """
-    return "traced" if column in traced_cells(csv_path) else "approved"
+    return "traced" if column in traced_cells(csv_path) else "accepted"
 
 
 def traced_cells(csv_path):
@@ -528,7 +528,7 @@ def traced_cells(csv_path):
     Extracted from `spine_cell_class` (its own body, unchanged) because a second
     caller needs the SET rather than one column's class: the Hat-Refs arm below
     asks whether this TIER carries the column at all, which a per-column class
-    cannot answer (an absent column classes `approved`, the fail-safe residual,
+    cannot answer (an absent column classes `accepted`, the fail-safe residual,
     and would make every TC amendment warn about a cell that tier does not
     have)."""
     key = spine_carrier.stem(csv_path)
@@ -543,7 +543,7 @@ def traced_cells(csv_path):
 # their two exclusion sets — lived here for ~107 lines, reserved for an on-row
 # `TextHash`/`HashedOn` writer (repo-lock D-1's anchor half) that was never
 # built. That half is RULED unnecessary complexity: an acceptance now records what
-# it blessed by COPYING the registries to `docs/archive/last_approved/`
+# it blessed by COPYING the registries to `docs/archive/last_accepted/`
 # (`baseline_snapshot.py`), and a copy needs no canonical text to hash, no
 # separator that cannot occur in a cell, and no second exclusion list.
 #
@@ -568,28 +568,28 @@ def traced_cells(csv_path):
 # CONTRACTION OF SPELLING, NOT OF SCOPE: the set used to hold `verified` and
 # `planned` because the pair split one rung ("text blessed, evidence
 # established" vs "text blessed, evidence pending"), and OI-30 D1 folded them
-# into the single `Approved`. `Drafted` does not belong: nothing has been
+# into the single `Accepted`. `Drafted` does not belong: nothing has been
 # blessed, so there is nothing to amend behind an operator's back. `Founded`
 # does not either, and its exclusion is DELIBERATE rather than pending: the rung
 # is COMPUTED from a row's children existing, so a cell reading it is not a
-# second acceptance of the row's own text — the `Approved` claim underneath it
+# second acceptance of the row's own text — the `Accepted` claim underneath it
 # is the one this guard watches. Lowercase, matching the guard's own
 # normalisation.
 # (`Modified` used to be listed here as excluded-because-the-marker-is-already-set;
 # it retired at D-9 step 7 and the exclusion retired with it.)
 # Implements: SR-178, LLR-158
-_APPROVED_TEXT = frozenset({"approved"})
+_ACCEPTED_TEXT = frozenset({"accepted"})
 
 
 def split_changed_cells(csv_path, id_col, head, row):
     """One row's changed cells, split into the §A5.1 halves with their
-    before/after: `{"approved": {cell: (before, after)}, "traced": {...}}`.
+    before/after: `{"accepted": {cell: (before, after)}, "traced": {...}}`.
     The id column and `Status` are not content (the id is the join key; Status
     is the flip the caller is asking about), so neither is compared.
 
     Implements: SR-178, LLR-158
     """
-    changed = {"approved": {}, "traced": {}}
+    changed = {"accepted": {}, "traced": {}}
     for key in set(head) | set(row):
         if key in (id_col, "Status"):
             continue
@@ -614,7 +614,7 @@ def accepted_text_digest(csv_path, id_col, row):
         for key, value in row.items()
         if key not in (id_col, "Status")
         and value
-        and spine_cell_class(csv_path, key) == "approved"
+        and spine_cell_class(csv_path, key) == "accepted"
     }
     text = json.dumps(cells, sort_keys=True, ensure_ascii=True, separators=(",", ":"))
     hexed = hashlib.sha256(text.encode("utf-8")).hexdigest()
@@ -696,12 +696,12 @@ def _spine_row_sides(root, base, head, registries=SPINE_CSVS):
         yield touched[0], id_col, before_rows, after_rows, csv_path
 
 
-# Whether a spine row's `Status` claims acceptance or above: the PAIR (`Approved`
+# Whether a spine row's `Status` claims acceptance or above: the PAIR (`Accepted`
 # and the computed `Founded` above it), so the acceptance-act readers below ask
 # one question instead of each restating which rungs count as blessed. Its one
 # home is `kitlib.spine.claims_acceptance`, which the parent-first rule reads
 # too, so the rule and these readers agree on what counts as accepted. Note
-# the deliberate difference from `_APPROVED_TEXT`, three hundred lines up: that
+# the deliberate difference from `_ACCEPTED_TEXT`, three hundred lines up: that
 # set is the amend-without-flip guard's, and excludes `Founded` because a
 # computed rung is not a second acceptance of the row's own text. Here the
 # question is "does this cell CLAIM acceptance", and `Founded` does.
@@ -751,10 +751,10 @@ def staged_acceptance_acts(root, base="HEAD", head=None):
           "before": <status>, "after": <status>}]
 
     An act is a row crossing INTO an acceptance claim (`act = "flip"` — `Drafted`
-    → `Approved`/`Founded`) or a row that ARRIVES already claiming one
+    → `Accepted`/`Founded`) or a row that ARRIVES already claiming one
     (`act = "born"`, absent on the base side). Both are the same event seen from
     two directions: text that was never blessed is now blessed, and the
-    `docs/archive/last_approved/` copy that anchors it is owed.
+    `docs/archive/last_accepted/` copy that anchors it is owed.
 
     THE READING IS THE MIRROR OF `staged_spine_amendments`, deliberately: that
     one reports rows whose accepted text moved while Status stood still and
@@ -765,7 +765,7 @@ def staged_acceptance_acts(root, base="HEAD", head=None):
     claiming to be exact and then carving out a case is two sentences that
     disagree.
 
-    A DE-ACCEPTANCE IS NOT AN ACT, and that is the subtraction. `Approved` →
+    A DE-ACCEPTANCE IS NOT AN ACT, and that is the subtraction. `Accepted` →
     `Drafted` withdraws a claim; it blesses nothing, so it owes no snapshot and
     refuses no merge. It is not dropped on the floor either — `staged_drafted_rows`
     reports it as an amended `Drafted` row, so the first-acceptance mint raises the
@@ -902,7 +902,7 @@ def lane_acted_set(root, base, head, delta):
     registry its id's tier names (a live flip: the registry the two-tree walk
     reports), present at the head or not, so a retired row authorizes its own
     registry's copy. Acceptances are the delta's live Status transitions
-    (a flip or a row born accepted) AND the `approved` rows of the act-ledger
+    (a flip or a row born accepted) AND the `accepted` rows of the act-ledger
     entries the branch added (`_added_acts`), which name rows the snapshot
     writer carried into acceptance with no live flip - a row live-accepted at
     the base whose recorded copy still read below it. Re-acceptances are the
@@ -913,18 +913,18 @@ def lane_acted_set(root, base, head, delta):
 
     Implements: SR-178, LLR-278"""
     acts, _files, refusal = delta
-    reattested, added = frozenset(), []
+    reaccepted, added = frozenset(), []
     if not refusal and _wrote_ledger(delta):  # an unwritten ledger added nothing
-        reattested, refusal = reaccepted_between(root, base, head)
+        reaccepted, refusal = reaccepted_between(root, base, head)
         added = _added_acts(root, base, head)
     if refusal:
         return {"accept": {}, "reaccept": {}}, refusal
     accept = {act["id"]: act["registry"] for act in acts}
-    ledger = {str(r) for a in added for r in a.get("approved") or []} - set(accept)
+    ledger = {str(r) for a in added for r in a.get("accepted") or []} - set(accept)
     accept.update({rid: _tier_of(rid)[0] for rid in ledger})
     return {
         "accept": accept,
-        "reaccept": {r: _tier_of(r)[0] for r in reattested},
+        "reaccept": {r: _tier_of(r)[0] for r in reaccepted},
     }, None
 
 
@@ -1066,7 +1066,7 @@ def backed_act_refusal(root, base, head, acted, delta):
 
     Implements: SR-178, LLR-158"""
     acts = [
-        {"approved": sorted(acted["accept"]), "reattested": sorted(acted["reaccept"])}
+        {"accepted": sorted(acted["accept"]), "reaccepted": sorted(acted["reaccept"])}
     ]
     reason = _kitsitting.uncovered_refusal(root, base, head, acts)
     return reason and lane_acceptance_refusal(root, base, head, delta, reason)
@@ -1139,7 +1139,7 @@ def _latest_reaccept(added, rid):
 
     Implements: SR-178, LLR-364"""
     marks = [
-        i for i, a in enumerate(added) if rid in map(str, a.get("reattested") or ())
+        i for i, a in enumerate(added) if rid in map(str, a.get("reaccepted") or ())
     ]
     return marks[-1] if marks else None
 
@@ -1163,7 +1163,7 @@ def _reaccepted_ids(before, after):
 
     Implements: SR-178, LLR-278"""
     added = added_ledger_entries(after, [before])
-    return frozenset(str(r) for a in added for r in a.get("reattested") or [])
+    return frozenset(str(r) for a in added for r in a.get("reaccepted") or [])
 
 
 def _snapshot_copy_rows(root, rev, rel_path, id_col):
@@ -1190,7 +1190,7 @@ def _row_settled(rel_path, id_col, copy_row, live_row, routed):
     if copy_row is None or live_row is None:
         return False
     changed = split_changed_cells(rel_path, id_col, copy_row, live_row)
-    return not changed["approved"] and not set(changed["traced"]) & set(routed)
+    return not changed["accepted"] and not set(changed["traced"]) & set(routed)
 
 
 def _routed_unmoved(rel_path, id_col, before_row, live_row, routed):
@@ -1438,7 +1438,7 @@ def lane_acceptance_refusal(root, base, head, delta=None, reason=None):
     (operator ruling 6, 2026-10-07, superseding the trunk-side clause of the
     2026-09-01 ruling). A lane AUTHORS `Drafted` SN/SR/LLR/TC rows and AMENDS
     cell text on any such row, including accepted ones; its acts - a `Status`
-    flipped into `Approved`/`Founded`, a row minted already claiming one, a
+    flipped into `Accepted`/`Founded`, a row minted already claiming one, a
     re-acceptance - merge only when `backed_act_refusal` finds each backed by
     a recorded verdict that judged its own rows. A copy under `SNAPSHOT_DIR`
     with no flip and no re-acceptance behind it is an act no verdict can
@@ -1530,7 +1530,7 @@ def staged_drafted_rows(root, base="HEAD", head=None):
                 )
                 continue
             split = split_changed_cells(csv_path, id_col, before, row)
-            changed = dict(split["approved"])
+            changed = dict(split["accepted"])
             changed.update(split["traced"])
             entered_drafted = not _kitspine.is_drafted(before)
             if changed or entered_drafted:
@@ -1549,12 +1549,12 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     """The structured amendment set behind the amend-without-flip warn (WI-316,
     narrowed by WI-380) — the seam adjudication (WI-388) consumes.
 
-    One record per APPROVED-TEXT spine row (`_APPROVED_TEXT` — `Approved`, into
+    One record per ACCEPTED-TEXT spine row (`_ACCEPTED_TEXT` — `Accepted`, into
     which `Verified` and `Planned` both folded at D-9 step 5) amended between the
     two trees without its status moving, each cell sorted into the §A5.1 halves with its before/after:
 
         {"registry": <csv path>, "id": <row id>,
-         "approved": {cell: (before, after)}, "traced": {cell: (before, after)}}
+         "accepted": {cell: (before, after)}, "traced": {cell: (before, after)}}
 
     WHICH TWO TREES is a parameter, and WI-388 needs it to be: `head=None` (the
     default) compares the INDEX against `base`, which is the hook's `--staged`
@@ -1612,24 +1612,24 @@ def _amended_cells(csv_path, id_col, rid, head, row):
         return None
     head_status = (head.get("Status") or "").strip().lower()
     cur_status = (row.get("Status") or "").strip().lower()
-    # APPROVED-TEXT STATES, both sides, and the SAME one. Since D-9
-    # step 5 that is the single value `Approved`; before the fold it was
+    # ACCEPTED-TEXT STATES, both sides, and the SAME one. Since D-9
+    # step 5 that is the single value `Accepted`; before the fold it was
     # `Verified` OR `Planned`, and requiring the SAME one on both sides
     # is what kept a legitimate rung move from reading as an amendment.
     # A status that MOVED between the two sides is still exempt,
     # unchanged: that is a deliberate call this does not second-guess.
-    if head_status != cur_status or head_status not in _APPROVED_TEXT:
+    if head_status != cur_status or head_status not in _ACCEPTED_TEXT:
         return None
     changed = split_changed_cells(csv_path, id_col, head, row)
-    return changed if changed["approved"] or changed["traced"] else None
+    return changed if changed["accepted"] or changed["traced"] else None
 
 
 def staged_spine_findings(root):
     """The amend-without-flip warn (WI-316; warn-first, `--staged` only), scoped
-    by WI-380 to APPROVED cells only.
+    by WI-380 to ACCEPTED cells only.
 
     A staged diff that changes the accepted cells of a spine row whose Status
-    reads the same accepted-text value (`Approved`, since D-9 step 5) in both
+    reads the same accepted-text value (`Accepted`, since D-9 step 5) in both
     HEAD and the stage has amended accepted prose without re-blessing it — the
     write-time discipline the old RE-ATTESTATION-PENDING commit-message prose
     never had. One warning per amended row, naming the changed cells. A row
@@ -1646,9 +1646,9 @@ def staged_spine_findings(root):
         "writes the record changes no other spine cell), or the change rides "
         "as SNAPSHOT DRIFT until the next sitting — "
         "visible on the re-accept brief and open-items.html, but not "
-        "blessed".format(a["id"], ", ".join(sorted(a["approved"])), a["id"])
+        "blessed".format(a["id"], ", ".join(sorted(a["accepted"])), a["id"])
         for a in staged_spine_amendments(root)
-        if a["approved"]
+        if a["accepted"]
     ]
 
 
@@ -1663,7 +1663,7 @@ def staged_hat_refs_findings(root):
     """THE AMEND-WITHOUT-FLIP GUARD'S SECOND ARM (OI-32 phase 5, OI-33's
     surviving residue) — warn-first, `--staged` only, never an exit code.
 
-    A row whose APPROVED cells moved while its `Hat-Refs` cell did not has been
+    A row whose ACCEPTED cells moved while its `Hat-Refs` cell did not has been
     amended without re-examining which perspectives bear on it. The component
     view is DERIVED from these cells (OI-32 ruled (d)), and a derived view is
     only as true as its rows: a generated artifact can be perfectly FRESH and
@@ -1692,13 +1692,13 @@ def staged_hat_refs_findings(root):
       * A TIER with no `Hat-Refs` column is silent structurally (the TC tier
         today), not by an allowlist.
 
-    NOT THE `last_approved` SNAPSHOT, and the trade is worth recording: that
+    NOT THE `last_accepted` SNAPSHOT, and the trade is worth recording: that
     baseline would make the finding STAND until answered, where this one is a
     single warn at the commit that earns it. It was declined on OI-33's own
     timing argument — the party who knows whether the perspectives moved is the
     one making the change, at the moment they make it — and on the ruling's
     words, "same shape, same home, warn-first". The standing half of the same
-    question is already carried for APPROVED cells by snapshot drift; if this
+    question is already carried for ACCEPTED cells by snapshot drift; if this
     warn is measured to be ignored, promoting it to a drift-tier finding is the
     next rung, on evidence.
 
@@ -1716,22 +1716,22 @@ def staged_hat_refs_findings(root):
         "(process.md §7; OI-32 phase 5). Re-read the row's hats and either "
         "update {} in this commit or leave it deliberately — an unchanged cell "
         "cannot say which".format(
-            a["id"], ", ".join(sorted(a["approved"])), HAT_REFS_CELL, HAT_REFS_CELL
+            a["id"], ", ".join(sorted(a["accepted"])), HAT_REFS_CELL, HAT_REFS_CELL
         )
         for a in staged_spine_amendments(root)
-        if a["approved"]
+        if a["accepted"]
         and HAT_REFS_CELL in traced_cells(a["registry"])
         and HAT_REFS_CELL not in a["traced"]
     ]
 
 
-# The `last_approved` snapshot's root, repo-relative. RESTATED rather than
+# The `last_accepted` snapshot's root, repo-relative. RESTATED rather than
 # imported from `baseline_snapshot`: the import edge runs the other way (that
 # module reads `split_changed_cells` from here), and a back-import would make
 # the pair un-loadable. One string, pinned equal by
 # tests/test_baseline_snapshot.py — the F5 plumbing-duplication sanction, with
 # the behavioural pin the D-7 ruling requires.
-SNAPSHOT_DIR = "docs/archive/last_approved"
+SNAPSHOT_DIR = "docs/archive/last_accepted"
 
 # The snapshot's prose stamp: rendered for a human, PARSED BY NOTHING, and with
 # no live counterpart to mirror.
@@ -1791,7 +1791,7 @@ def _mirror_repair(live_rel):
 def staged_snapshot_findings(root, base="HEAD", head=None):
     """THE MIRROR INVARIANT (snapshot design §F3), as warn strings.
 
-    > In any commit that touches a file under `docs/archive/last_approved/`,
+    > In any commit that touches a file under `docs/archive/last_accepted/`,
     > that file must be byte-identical to its live counterpart in that same
     > commit.
 

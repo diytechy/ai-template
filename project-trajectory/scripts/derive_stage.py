@@ -427,7 +427,7 @@ def _changed_rows(live, before_rows):
     (slice 3), a newly DRAFTED row cannot decrease the effective stage AT ALL —
     slice 1 excludes drafts from the settled fold, so that half of the phrase is
     inert by construction. What actually decreases it is a redrafted child
-    (Impl -> LLReqs for an LLR, Impl -> Tests for a TC) and a newly APPROVED
+    (Impl -> LLReqs for an LLR, Impl -> Tests for a TC) and a newly ACCEPTED
     parent with no children yet (Impl -> LLReqs). Narrowing to the literal words
     would have shipped a rule that cannot fire on the two shapes that matter, so
     the trigger is "added, or a stage-affecting cell moved" — which CONTAINS the

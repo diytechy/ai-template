@@ -58,13 +58,13 @@ TEST_CASES = (
     "Inputs,MaxAge\n"
     "TC-000,SR-001,Inspection,the example,Release,x,No,docs/m.md,Drafted,"
     "src/a.txt,30\n"
-    "TC-001,SR-001,Unit,call add,Smoke,x,Yes,tests/t.py,Approved,,\n"
+    "TC-001,SR-001,Unit,call add,Smoke,x,Yes,tests/t.py,Accepted,,\n"
     "TC-002,SR-001,Inspection,a reader reads the page,Release,"
-    "the page reads,No,docs/m.md,Approved,src/a.txt;src/b.txt,30\n"
+    "the page reads,No,docs/m.md,Accepted,src/a.txt;src/b.txt,30\n"
     "TC-003,SR-001,Inspection,a reader reads the other page,Release,"
-    "the other page reads,No,docs/m.md,Approved,src/c.txt,30\n"
+    "the other page reads,No,docs/m.md,Accepted,src/c.txt,30\n"
     "TC-004,SR-001,Demonstration,an adopter's first week,Release,"
-    "the week goes well,No,docs/m.md,Approved,,30\n"
+    "the week goes well,No,docs/m.md,Accepted,,30\n"
 )
 
 
@@ -755,7 +755,7 @@ def _escape_repo(tmp_path, outside):
         "TC-ID,Verifies,Level,Method,Tier,Expected,Automated,Evidence,Status,"
         "Inputs,MaxAge\n"
         "TC-002,SR-001,Inspection,a reader reads,Release,it reads,No,docs/m.md,"
-        "Approved,src/a.txt;{},30\n".format(outside),
+        "Accepted,src/a.txt;{},30\n".format(outside),
     )
     return root
 
@@ -814,7 +814,7 @@ def _many_repo(tmp_path):
         for rel in inputs[tc]:
             _write(root, rel, "as judged\n")
         rows.append(
-            "{},SR-001,Inspection,read {},Release,x,No,docs/m.md,Approved,{},30".format(
+            "{},SR-001,Inspection,read {},Release,x,No,docs/m.md,Accepted,{},30".format(
                 tc, i, ";".join(inputs[tc])
             )
         )
@@ -993,7 +993,7 @@ def test_a_dotdot_that_stays_inside_is_read_as_its_normal_path(tmp_path):
         "TC-ID,Verifies,Level,Method,Tier,Expected,Automated,Evidence,Status,"
         "Inputs,MaxAge\n"
         "TC-002,SR-001,Inspection,a reader reads,Release,it reads,No,docs/m.md,"
-        "Approved,{},30\n".format(name),
+        "Accepted,{},30\n".format(name),
     )
     assert record_observation.inputs_digest(
         root, [name]
@@ -1074,7 +1074,7 @@ def _linked_repo(tmp_path, declared, link, target):
         "TC-ID,Verifies,Level,Method,Tier,Expected,Automated,Evidence,Status,"
         "Inputs,MaxAge\n"
         "TC-002,SR-001,Inspection,a reader reads,Release,it reads,No,docs/m.md,"
-        "Approved,{},30\n".format(declared),
+        "Accepted,{},30\n".format(declared),
     )
     _commit(root, "the case")
     _commit_symlink(root, link, target)

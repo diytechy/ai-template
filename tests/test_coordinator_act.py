@@ -198,7 +198,7 @@ def _flip(lane, prompt):
         rel = taa.LLRS if rid.startswith("LLR") else taa.TCS
         text = (lane / rel).read_text(encoding="utf-8")
         line = next(ln for ln in text.splitlines() if ln.startswith(rid + ","))
-        taa._replace(lane, rel, line, line.replace(",Drafted,", ",Approved,"))
+        taa._replace(lane, rel, line, line.replace(",Drafted,", ",Accepted,"))
     return bool(match)
 
 
@@ -327,7 +327,7 @@ def _owes_no_act(tmp_path, primary, lane):
 
 
 def _inconsistent(tmp_path, primary, lane):
-    # A re-accept of a row below Approved: no act explains it. (A row absent
+    # A re-accept of a row below Accepted: no act explains it. (A row absent
     # from the committed tree is a retirement, not an inconsistent state.)
     taa._draft(lane)
     taa._write(
@@ -401,7 +401,7 @@ def test_the_act_turn_refuses_before_launch_when_held_text_moved(
 def _head_rows(lane):
     return {
         rel: _git(lane, "show", "HEAD:" + rel)
-        for rel in (taa.SRS, "docs/archive/last_approved/" + taa.SRS)
+        for rel in (taa.SRS, "docs/archive/last_accepted/" + taa.SRS)
     }
 
 
@@ -419,7 +419,7 @@ def test_a_retained_and_a_fresh_act_turn_take_the_same_act_from_one_verdict(
     assert "keep: minting a retained session" in results["kept"][0]
     assert "keep: none" in results["fresh"][0]
     assert results["kept"][1] == results["fresh"][1]
-    copy = results["kept"][1]["docs/archive/last_approved/" + taa.SRS]
+    copy = results["kept"][1]["docs/archive/last_accepted/" + taa.SRS]
     assert "add two integers." in copy
     assert "act: complete" in results["kept"][0]
 

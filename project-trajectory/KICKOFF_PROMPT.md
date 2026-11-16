@@ -138,13 +138,13 @@ gate; the `single-approve`/`autonomous` levels and their mechanics:
 - **DevStg-Impl — Implementation (test-first).** Each DevStg-Tests TC becomes a *failing* test
   before the code that satisfies it (red → green → refactor). Build green, lint
   clean, the **full** test tier passes, coverage ≥ threshold; every
-  test-verifiable SR is **Approved**, and every remaining SR is explicitly
+  test-verifiable SR is **Accepted**, and every remaining SR is explicitly
   classified **Demonstration / Manual / Inspection / Analysis / Vouch /
   Critique** (nothing hand-waved).
 - **DevStg-Release — Release readiness** *(per release; skip for a one-off)*. The
   **release** test tier passes; the generated release checklist
   (`scripts/gen_release_checklist.py`) is completed + signed; version bumped;
-  changed `Approved` interface versions communicated.
+  changed `Accepted` interface versions communicated.
 - **The operator's final read.** A person or stakeholder exercises the real product
   (including the Demonstration/Manual items) and signs off.
 

@@ -211,7 +211,7 @@ def test_a_row_with_no_in_tree_endpoint_is_a_strict_finding(scaffold):
 
 CLEAN_IF = (
     'IF-001,Provides,src/demo,external:git,"reads the ref state",'
-    "SR-001,v1,Approved,Active,,\n"
+    "SR-001,v1,Accepted,Active,,\n"
 )
 
 
@@ -378,7 +378,7 @@ def test_channel_refuses_an_unknown_value_as_a_warn(scaffold):
         'channel = "analog"\n'
         'data = "reads the ref state"\n'
         'version = "v1"\n'
-        'status = "Approved"\n',
+        'status = "Accepted"\n',
         encoding="utf-8",
     )
     record_ids(scaffold)
@@ -396,9 +396,9 @@ def test_acceptance_refuses_an_unknown_value_as_a_warn(scaffold):
     # the check has to bite on the SUCCESSOR column or the lesson was migrated
     # away rather than kept.
     make_minimal_project(scaffold)
-    out = _warn_run(scaffold, CLEAN_IF.replace(",v1,Approved,", ",v1,Provisional,"))
+    out = _warn_run(scaffold, CLEAN_IF.replace(",v1,Accepted,", ",v1,Provisional,"))
     assert "IF IF-001 has Status='Provisional'" in out
-    assert "Approved, Drafted" in out
+    assert "Accepted, Drafted" in out
 
 
 def test_cmp_state_refuses_an_unknown_value_as_a_warn(scaffold):
@@ -457,11 +457,11 @@ def test_every_declared_sn_status_leaves_the_enum_floor_silent(scaffold):
     # The other half: a rule that fired on everything would pass the assertions
     # above. All three live vocabulary words, each on its own scaffold run. The
     # word under test sits on a second need nothing cites: SN-001 stays
-    # Approved, since its SR is, and an accepted child under an unaccepted
+    # Accepted, since its SR is, and an accepted child under an unaccepted
     # parent is an integrity finding of its own (parent first).
     make_minimal_project(scaffold)
-    for status in ("Drafted", "Approved", "Founded"):
-        _needs_on_toml(scaffold, "Approved")
+    for status in ("Drafted", "Accepted", "Founded"):
+        _needs_on_toml(scaffold, "Accepted")
         needs = scaffold / "docs" / "requirements" / "stakeholder-needs.toml"
         second = NEEDS_TOML.replace("SN-001", "SN-002").format(status=status)
         text = needs.read_text(encoding="utf-8") + "\n" + second
@@ -481,7 +481,7 @@ def test_missing_required_if_field_is_a_warn(scaffold):
         'consumers = ["external:git"]\n'
         'data = "reads the ref state"\n'
         'version = "v1"\n'
-        'status = "Approved"\n',  # no `channel`
+        'status = "Accepted"\n',  # no `channel`
         encoding="utf-8",
     )
     record_ids(scaffold)
@@ -952,7 +952,7 @@ def _seam_scaffold(scaffold, verifies):
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
         'TC-001,{},Unit,call add and assert the sum,Smoke,"a=1; b=2",'
         '"Satisfies SR-001 AcceptanceCriteria",Yes,'
-        "tests/test_demo.py::test_add_sr001,Approved\n".format(verifies),
+        "tests/test_demo.py::test_add_sr001,Accepted\n".format(verifies),
         encoding="utf-8",
     )
     return scaffold
@@ -1190,10 +1190,10 @@ HAT_NEEDS = """
 name = "Adopting team"
 description = "A team that adds the package to its own work."
 party = "EXT-001"
-status = "Approved"
+status = "Accepted"
 
 [need.SN-001]
-status = "Approved"
+status = "Accepted"
 need = "Add two numbers."
 why = "Demo."
 priority = "M"

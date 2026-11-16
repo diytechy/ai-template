@@ -69,9 +69,9 @@ A row marked `[AWAITING FIRST ACCEPTANCE - OUTSIDE THIS ACT'S SCOPE, ANOTHER ADJ
 
 THE QUESTION, and it is the only one you answer:
 
-    Is each of these rows ready to be APPROVED as it stands — or does it go back with findings?
+    Is each of these rows ready to be ACCEPTED as it stands — or does it go back with findings?
 
-`Approved` blesses the row's TEXT and nothing else. It does NOT claim any test passed; whether they pass is the harness's answer, never a cell's.
+`Accepted` blesses the row's TEXT and nothing else. It does NOT claim any test passed; whether they pass is the harness's answer, never a cell's.
 
 --- ROWS AWAITING A FIRST ACCEPTANCE, WITH THEIR CHAINS ---
 {chain}

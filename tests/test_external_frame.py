@@ -134,7 +134,7 @@ def test_every_frame_row_carries_the_acceptance_element():
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
     for table in ("entity", "boundary", "relationship"):
         for rid, row in tables[table].items():
-            assert row.get("status") in ("Drafted", "Approved"), (table, rid)
+            assert row.get("status") in ("Drafted", "Accepted"), (table, rid)
 
 
 def test_the_live_frame_acceptance_state_is_pinned():
@@ -144,7 +144,7 @@ def test_the_live_frame_acceptance_state_is_pinned():
     designed — at the 2026-08-20 sitting-3 acceptance, where the operator
     accepted the locked frame in writing (log Decisions 2026-08-20a); this
     edit IS that acceptance's sanctioned update. The tripwire now points the
-    other way: the frame is uniformly Approved, and any row leaving that state
+    other way: the frame is uniformly Accepted, and any row leaving that state
     is again a red test rather than a quiet line in a diff."""
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
     acceptances = {
@@ -152,7 +152,7 @@ def test_the_live_frame_acceptance_state_is_pinned():
         for table in ("entity", "boundary", "relationship")
         for row in tables[table].values()
     }
-    assert acceptances == {"Approved"}
+    assert acceptances == {"Accepted"}
 
 
 # --- the join rules ------------------------------------------------------------
@@ -321,7 +321,7 @@ def _srs(scaffold, extra_keys=""):
         'acceptance_criteria = "add(1,2) == 3"\n'
         'priority = "M"\n'
         'verification_method = "Test"\n'
-        'status = "Approved"\n'.format(extra_keys),
+        'status = "Accepted"\n'.format(extra_keys),
         encoding="utf-8",
     )
 

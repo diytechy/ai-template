@@ -160,7 +160,7 @@ TCS_H = (
 )
 
 
-def _sr(sid, verification="Test", status="Approved", sn="SN-001"):
+def _sr(sid, verification="Test", status="Accepted", sn="SN-001"):
     return '{},T,{},"r","why","ac",,M,{},{}\n'.format(sid, sn, verification, status)
 
 
@@ -300,9 +300,9 @@ def _independent_meta_expectations():
     # the rung", which is also the module's fail-honest default: an unrecognized
     # maturity caps rather than clears.
     needs_in_work = (not sn_ids) or bool(sn_ids & sn_draft)
-    boundary_in_work = (not bifs) or any(_meta_status(r) != "approved" for r in bifs)
+    boundary_in_work = (not bifs) or any(_meta_status(r) != "accepted" for r in bifs)
     arch_in_work = (not cmps) or any(
-        _meta_status(r) not in ("approved", "founded")
+        _meta_status(r) not in ("accepted", "founded")
         # `standing` is the LIFECYCLE axis; only `active`/`deprecated` clear rung
         # 3, and an ABSENT cell is the declared `active` shorthand.
         or str(r.get("standing") or "active").strip().lower()
@@ -470,11 +470,11 @@ def test_per_phase_resolves_tc_citing_only_its_llr(scaffold):
     # BUCKET AT ALL.
     make_minimal_project(scaffold)
     _no_frame(scaffold)
-    llrs = 'LLR-001,SR-001,Adder,src/demo,add,"d",(see TC-001),Approved\n'
-    settled_tc = 'TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests,Approved\n'
+    llrs = 'LLR-001,SR-001,Adder,src/demo,add,"d",(see TC-001),Accepted\n'
+    settled_tc = 'TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests,Accepted\n'
     _write(
         scaffold,
-        srs=_sr("SR-001", status="Approved"),
+        srs=_sr("SR-001", status="Accepted"),
         llrs=llrs,
         tcs=settled_tc,
     )
@@ -483,7 +483,7 @@ def test_per_phase_resolves_tc_citing_only_its_llr(scaffold):
 
     _write(
         scaffold,
-        srs=_sr("SR-001", status="Approved"),
+        srs=_sr("SR-001", status="Accepted"),
         llrs=llrs,
         tcs=settled_tc + 'TC-002,LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests,Drafted\n',
     )
@@ -542,7 +542,7 @@ def _phased_srs(scaffold):
 
 
 def test_derived_current_phase(scaffold):
-    # The derived current phase = the highest phase over APPROVED rows; a Drafted
+    # The derived current phase = the highest phase over ACCEPTED rows; a Drafted
     # in a not-yet-accepted higher phase does not bump it. RE-KEYED onto the
     # `phase` field of the stage record, which `derive_stage` computes with
     # `spine_rules.phase_num` over exactly the rows the retired basis line used.
@@ -599,15 +599,15 @@ def test_requirement_first_lifecycle_end_to_end(scaffold):
     #    the rung the MISSING artifact belongs to takes over: an SR with no LLR is
     #    DevStg-LLReqs, because what is being written next is an LLR.
     srs.write_text(
-        SRS_H + _sr("SR-001") + _sr("SR-002", status="Approved"), encoding="utf-8"
+        SRS_H + _sr("SR-001") + _sr("SR-002", status="Accepted"), encoding="utf-8"
     )
     assert _stage(scaffold) == RULES.STAGE_LLREQS
 
     # 3) Decompose: LLR-002 exists, its TC does not. DevStg-Tests.
     llrs.write_text(
         LLRS_H
-        + 'LLR-001,SR-001,Adder,src/demo,add,"d",(see TC),Approved\n'
-        + 'LLR-002,SR-002,Part,src/demo,two,"d",(see TC),Approved\n',
+        + 'LLR-001,SR-001,Adder,src/demo,add,"d",(see TC),Accepted\n'
+        + 'LLR-002,SR-002,Part,src/demo,two,"d",(see TC),Accepted\n',
         encoding="utf-8",
     )
     assert _stage(scaffold) == RULES.STAGE_TESTS
@@ -617,8 +617,8 @@ def test_requirement_first_lifecycle_end_to_end(scaffold):
     #    progress: DevStg-Impl, the terminal rung of the derivation.
     tcs.write_text(
         TCS_H
-        + 'TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,Approved\n'
-        + 'TC-002,SR-002;LLR-002,Unit,m,Full,,"e",Yes,tests/test_demo.py::t2,Approved\n',
+        + 'TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,Accepted\n'
+        + 'TC-002,SR-002;LLR-002,Unit,m,Full,,"e",Yes,tests/test_demo.py::t2,Accepted\n',
         encoding="utf-8",
     )
     assert _stage(scaffold) == RULES.STAGE_IMPL

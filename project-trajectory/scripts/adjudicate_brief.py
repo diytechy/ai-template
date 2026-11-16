@@ -70,7 +70,7 @@ each says something about what "routed" costs:
     same three questions, plus the CONSOLIDATE exit and the idle-station census
     that mints it, so all three gaps close together (the 2026-09-02
     backlog-restructure plan §1).
-  * `amendment` was the OTHER one, and it is the capability the `last_approved`
+  * `amendment` was the OTHER one, and it is the capability the `last_accepted`
     snapshot unlocked (D-9 step 4b, operator
     directive 2026-08-15). Two things blocked it and the snapshot answers both.
     Its `{rows}` slot named `trace.reaccept_model`, which selected rows whose
@@ -748,7 +748,7 @@ def first_acceptance_values(root, row):
     --accept` and `open-items.html`, so the judge, the brief and the operator
     surface cannot show three different pictures of one spine. Its `Drafted`
     selector is chain-wide (the OI-61-sitting widening), so a `Drafted` LLR
-    under an `Approved` SR is a first acceptance owed and no drift arm can see it
+    under an `Accepted` SR is a first acceptance owed and no drift arm can see it
     — a row below acceptance has made no claim to fall from.
 
     BOTH HALVES ARE LOAD-BEARING, and shipping only the second is the WI-572
@@ -940,7 +940,7 @@ def _chain_label(drafted, in_scope, yours):
     a row a sibling adjudication is about to rule on — a true label for the
     wrong reason is still a false brief (rule 2)."""
     if not drafted:
-        return "approved"
+        return "accepted"
     if yours:
         return "AWAITING FIRST ACCEPTANCE"
     if not in_scope:

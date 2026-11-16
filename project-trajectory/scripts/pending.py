@@ -6,7 +6,7 @@ asks *which gaps do the registries name?*, this module asks *which durable
 actions is the operator holding?* and answers from two sources and no clock:
 
     spine_pending     `Drafted` SRs (a first acceptance is owed) and SRs whose
-                      text has DRIFTED from its `docs/archive/last_approved/`
+                      text has DRIFTED from its `docs/archive/last_accepted/`
                       copy (a re-accept is owed, process.md §7)
     pause_pending     the tracked `docs/work/pause` declaration
 
@@ -92,7 +92,7 @@ from traj_parse import _spine, ct
 # operator's one review surface never misses a hard stop. A pure projection of
 # committed-tree state ONLY:
 #   (a) Drafted/DRIFTED SR rows (WI-316): a `Drafted` SR owes an acceptance, and
-#       an SR whose chain has moved away from its `docs/archive/last_approved/`
+#       an SR whose chain has moved away from its `docs/archive/last_accepted/`
 #       copy owes a re-accept (post-acceptance amendment, process.md §7) — one
 #       pointer line each, naming the on-demand brief (`trace.py --accept <id>`
 #       / `--accept modified`) that carries the depth.
@@ -151,14 +151,14 @@ def spine_pending(root):
     THE `Planned` ARM LEFT AT D-9 STEP 5, with the word. It had joined at step 2
     because a Planned SR projected NOTHING on the operator's own pending-actions
     surface — the loudest instance of the `Planned`-reads-as-`Bananas` finding.
-    OI-30 D1 then ruled the fold: those rows now read `Approved`, and an accepted
+    OI-30 D1 then ruled the fold: those rows now read `Accepted`, and an accepted
     row owes nothing HERE. What it may still owe is caught by the drift arm below
     and, once the snapshot is seeded, by the UNANCHORED rule — an acceptance with
     no copy recording it — which is where "accepted but nobody signed it" belongs.
 
     DRIFT JOINED AT D-9 STEP 4, and it is the arm no Status cell can carry: a
     row whose text has moved away from its copy in
-    `docs/archive/last_approved/` while its own Status still claims acceptance.
+    `docs/archive/last_accepted/` while its own Status still claims acceptance.
     That is the state the migration exists for — under the new ladder an
     amendment no longer flips its row, so a projection keyed on status words
     alone goes quiet exactly when it matters. Vacuous while no snapshot exists.
@@ -187,7 +187,7 @@ def spine_pending(root):
         if status == "drafted":
             lines.append(
                 "- **{} `Drafted` — acceptance owed**{}: {} — accept in a "
-                "reviewed Status-change commit (`Drafted`→`Approved`; the "
+                "reviewed Status-change commit (`Drafted`→`Accepted`; the "
                 "`gate-advance` skill); hierarchy brief: `python "
                 "project-trajectory/scripts/trace.py --accept {}`.".format(
                     sid, phase_note, title, sid

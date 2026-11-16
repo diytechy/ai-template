@@ -518,13 +518,13 @@ def _script(name):
 _TESTS_FOR_LLRS = """[design.LLR-001]
 sr_refs = ["SR-001"]
 module = "src/m.py"
-status = "Approved"
+status = "Accepted"
 """
 _TESTS_FOR_TCS = """[test.TC-001]
 verifies = ["LLR-001"]
 tier = "Smoke"
 evidence = "tests/test_m.py; spec/test_m.py"
-status = "Approved"
+status = "Accepted"
 """
 
 

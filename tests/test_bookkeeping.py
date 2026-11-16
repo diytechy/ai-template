@@ -70,7 +70,7 @@ pytestmark = env_gate_skipif("git")
 
 intake = load_script("intake")
 
-GAP = "SR-001 is not Approved (Status=Drafted)"
+GAP = "SR-001 is not Accepted (Status=Drafted)"
 
 # The operator's work, left lying in the primary checkout: one tracked file
 # modified, one untracked, one STAGED. The staged one is the edit a commit built

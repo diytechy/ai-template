@@ -28,7 +28,7 @@ LLR_REL = "docs/requirements/low-level-requirements.toml"
 TC_REL = "docs/test/test-cases.toml"
 
 
-def _case(tier, evidence, status="Approved", cid="TC-001"):
+def _case(tier, evidence, status="Accepted", cid="TC-001"):
     return {
         "TC-ID": cid,
         "Verifies": "LLR-001",
@@ -149,12 +149,12 @@ def test_a_case_below_acceptance_is_not_judged():
 LLRS = """[design.LLR-001]
 sr_refs = ["SR-001"]
 module = "src/pay.py;src/ledger.py"
-status = "Approved"
+status = "Accepted"
 
 [design.LLR-002]
 sr_refs = ["SR-001"]
 module = "src/other.py"
-status = "Approved"
+status = "Accepted"
 
 [design.LLR-003]
 sr_refs = ["SR-001"]
@@ -166,19 +166,19 @@ TCS = """[test.TC-001]
 verifies = ["SR-001", "LLR-001"]
 tier = "Smoke"
 evidence = "tests/test_checkout.py::test_total; tests/test_ledger.py"
-status = "Approved"
+status = "Accepted"
 
 [test.TC-002]
 verifies = ["SR-001"]
 tier = "Smoke"
 evidence = "tests/test_sr_only.py"
-status = "Approved"
+status = "Accepted"
 
 [test.TC-003]
 verifies = ["LLR-002"]
 tier = "Full"
 evidence = "tests/test_other.py"
-status = "Approved"
+status = "Accepted"
 
 [test.TC-004]
 verifies = ["LLR-001"]

@@ -411,12 +411,12 @@ def test_a_verdict_reacceptance_stays_listed_on_the_operator_surface(tmp_path):
     """
     gi = load_script("gen_open_items")
     acts = [
-        {"seq": 1, "date": "2026-10-03", "approved": ["SR-001"], "reattested": []},
+        {"seq": 1, "date": "2026-10-03", "accepted": ["SR-001"], "reaccepted": []},
         {
             "seq": 2,
             "date": "2026-10-04",
-            "approved": [],
-            "reattested": ["SN-009"],
+            "accepted": [],
+            "reaccepted": ["SN-009"],
             "verdict": "docs/reviews/v.md",
         },
     ]
@@ -440,15 +440,15 @@ def test_the_verdict_audit_list_is_newest_first():
         {
             "seq": 2,
             "date": "2026-10-03",
-            "approved": [],
-            "reattested": ["SN-003"],
+            "accepted": [],
+            "reaccepted": ["SN-003"],
             "verdict": "docs/reviews/a.md",
         },
         {
             "seq": 5,
             "date": "2026-10-04",
-            "approved": [],
-            "reattested": ["SN-009"],
+            "accepted": [],
+            "reaccepted": ["SN-009"],
             "verdict": "docs/reviews/b.md",
         },
     ]

@@ -791,10 +791,10 @@ def if_tc_coverage_findings(root):
 
     DELIBERATELY UNCLAIMED — this function declares no back-link at all.
     `LLR-042` (`SR-159`) is
-    `Approved`, and its own `detail` says the connectivity layer emits its
+    `Accepted`, and its own `detail` says the connectivity layer emits its
     findings "without changing exit status" — true of `interface_findings`,
     which this function does not touch, and now FALSE of the seam-TC rule this
-    function promotes. Amending an Approved cell overrides acceptance (the
+    function promotes. Amending an Accepted cell overrides acceptance (the
     sitting's act, the SR-006/LLR-060 precedent, WI-473); minting a fresh
     Drafted LLR under `SR-159` was considered and declined for the same reason
     that session gave first — `SR-159` is phase 1, and a Drafted child would
@@ -957,7 +957,7 @@ def if_tc_allow_parse_findings(root):
 # its row's `CodeSymbol`/`Module` claim. This promotes that manual method into
 # a continuous warn-first finding, so the next stale batch is measured rather
 # than rediscovered by campaign. WARN-FIRST FOREVER by the ruling — no
-# allowlist, no `--strict` arm — because it checks a TRACED, not APPROVED,
+# allowlist, no `--strict` arm — because it checks a TRACED, not ACCEPTED,
 # cell (process.md §8's `Module`/`CodeSymbol`/`TestRefs` "traced, not
 # accepted" posture, cited at check_trajectory.py:77) and a mismatch is
 # routine drift, not a defect to gate a commit over.

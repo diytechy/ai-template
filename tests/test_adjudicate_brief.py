@@ -98,17 +98,17 @@ SPINE_SRS = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Priority,"
     "Verification,Status,Phase,Area\n"
     "SR-001,Adds,SN-001,The system shall add two numbers.,arithmetic is the "
-    "demo,the sum is right,Must,Test,Approved,P1,core\n"
+    "demo,the sum is right,Must,Test,Accepted,P1,core\n"
 )
 SPINE_LLRS = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component,Phase\n"
     "LLR-001,SR-001,add impl,src/demo.py,add,add() returns a + b.,TC-001,"
-    "Approved,,P1\n"
+    "Accepted,,P1\n"
 )
 SPINE_TCS = (
     "TC-ID,Verifies,Level,Method,Tier,Expected,Automated,Evidence,Status,Phase\n"
     'TC-001,LLR-001,unit,run pytest,fast,"add(2, 2) == 4",yes,'
-    "tests/test_demo.py::test_add,Approved,P1\n"
+    "tests/test_demo.py::test_add,Accepted,P1\n"
 )
 
 
@@ -279,7 +279,7 @@ def test_a_range_git_cannot_resolve_refuses_naming_gits_failure(tmp_path):
 # move is a finding rather than a tidy-up. `red_tc_census` names a red TC by
 # EXEMPTION — anything outside `dispatch._TC_NOT_RED` is red — and this fixture
 # used `Planned`, the one LIVE value that sat outside it. OI-30 D1 folded
-# `Planned` into `Approved`, and the narrowed enum is now EXACTLY the exempt set,
+# `Planned` into `Accepted`, and the narrowed enum is now EXACTLY the exempt set,
 # so no conformant repo can carry a red TC any more. `Implemented` is the honest
 # remaining population: the value a downstream repo mid-migration still carries,
 # which the integrity floor names and this rung still judges. That the rung is
@@ -295,7 +295,7 @@ def _red_tc_repo(tmp_path, tc_status="Implemented"):
     tests = repo / "docs" / "test"
     tests.mkdir(parents=True)
     (tests / "test-cases.csv").write_text(
-        SPINE_TCS.replace(",Approved,", "," + tc_status + ","), encoding="utf-8"
+        SPINE_TCS.replace(",Accepted,", "," + tc_status + ","), encoding="utf-8"
     )
     _write_rows(
         repo,
@@ -352,7 +352,7 @@ def test_the_red_tc_brief_carries_the_live_census_and_the_obligation_it_covers(
 
 # `Founded` replaced `Modified` at D-9 steps 7/8: the exempt set is the whole
 # closed enum, so the parametrization is the enum itself.
-@pytest.mark.parametrize("green", ["Approved", "Drafted", "Founded"])
+@pytest.mark.parametrize("green", ["Accepted", "Drafted", "Founded"])
 def test_a_census_that_has_come_clean_refuses_rather_than_briefing_an_empty_one(
     tmp_path, green
 ):
@@ -706,7 +706,7 @@ def _spine_repo(tmp_path):
 
 
 def _amend(repo):
-    """Move SR-001's `Requirement` — an APPROVED cell — leaving its Status put.
+    """Move SR-001's `Requirement` — an ACCEPTED cell — leaving its Status put.
     This is the D-9 shape exactly: the text changed and nothing flipped."""
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
@@ -763,7 +763,7 @@ def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
     assert "refuse floats" in values["rows"]  # after
 
 
-def test_only_APPROVED_cells_reach_the_judge(tmp_path):
+def test_only_ACCEPTED_cells_reach_the_judge(tmp_path):
     # A traced cell is ruled outside acceptance (§A5.1), so asking a judge to rule
     # "meaning or clarity" on a re-pointed Phase cell asks a question the
     # ruling already answers. Drive it: move ONLY a traced cell.
@@ -772,7 +772,7 @@ def test_only_APPROVED_cells_reach_the_judge(tmp_path):
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
         srs.read_text(encoding="utf-8").replace(
-            ",Test,Approved,P1,", ",Test,Approved,P9,"
+            ",Test,Accepted,P1,", ",Test,Accepted,P9,"
         ),
         encoding="utf-8",
     )
@@ -841,7 +841,7 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
 
 _NEED_TOML = (
     "[need.SN-001]\n"
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     'need = "{}"\n'
     'why = "why"\n'
     'priority = "M"\n'
@@ -882,12 +882,12 @@ _ASSUMPTION_TOML = (
     'assumption = "{}"\n'
     'holds_when = "always"\n'
     'obstacle = "never"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     "\n[surrogate.SUR-001]\n"
     'name = "the stand-in"\n'
     'emulates = ["EXT-001"]\n'
     'description = "{}"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
 )
 
 
@@ -1074,7 +1074,7 @@ def test_the_amendment_brief_reanchors_CLARITY_rows_and_keeps_the_sibling_hold()
 
 _SR_002 = (
     "SR-002,Subtracts,SN-001,The system shall subtract.,arithmetic,the "
-    "difference is right,Must,Test,Approved,P1,core\n"
+    "difference is right,Must,Test,Accepted,P1,core\n"
 )
 SR_TOML = "docs/requirements/system-requirements.toml"
 TC_TOML = "docs/test/test-cases.toml"
@@ -1179,7 +1179,7 @@ def test_an_amendment_scope_that_no_longer_differs_REFUSES_by_naming_it(tmp_path
             if line.startswith("SR-001,")
         )
 
-    assert sr_001(srs) == sr_001(copy) and ",Approved," in sr_001(srs)
+    assert sr_001(srs) == sr_001(copy) and ",Accepted," in sr_001(srs)
     # ...and the drift OUTSIDE the scope is real: a scope naming it renders it.
     outside, why = ab.amendment_brief.amendment_values(
         repo, _am_row(Adjudicates="SR-002")
@@ -1210,7 +1210,7 @@ def test_an_amendment_scope_that_no_longer_differs_REFUSES_by_naming_it(tmp_path
 
 _TC_002 = (
     "TC-002,LLR-001,unit,run the subtraction check,fast,the difference is right,"
-    "yes,tests/test_demo.py::test_sub,Approved,P1\n"
+    "yes,tests/test_demo.py::test_sub,Accepted,P1\n"
 )
 _REMOVED_AFTER = "    - after: ({})".format(baseline_snapshot.ROW_REMOVED)
 
@@ -1371,7 +1371,7 @@ def test_the_amendment_anchor_names_each_shown_registrys_own_copy(tmp_path):
     # copy is refused nothing), and it is now the newest write in the directory.
     tcs = repo / "docs" / "test" / "test-cases.csv"
     tcs.write_text(
-        tcs.read_text(encoding="utf-8").replace(",Approved,P1", ",Approved,P2"),
+        tcs.read_text(encoding="utf-8").replace(",Accepted,P1", ",Accepted,P2"),
         encoding="utf-8",
     )
     baseline_snapshot.copy_live(repo, accepts={TC_TOML: "WI-9"})
@@ -1452,7 +1452,7 @@ def test_stamp_reads_one_registrys_copy_under_every_carrier(tmp_path):
 
 
 def _first_acceptance_repo(tmp_path):
-    """A repo whose lane left a `Drafted` LLR under an `Approved` SR — the exact
+    """A repo whose lane left a `Drafted` LLR under an `Accepted` SR — the exact
     population the ruling hands to the adjudicator, and the one no drift arm can
     see: a row below acceptance has made no claim to fall from.
 
@@ -1471,7 +1471,7 @@ def _first_acceptance_repo(tmp_path):
     baseline_snapshot.copy_live(repo, seed=True)
     llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
     llrs.write_text(
-        llrs.read_text(encoding="utf-8").replace("TC-001,Approved,", "TC-001,Drafted,"),
+        llrs.read_text(encoding="utf-8").replace("TC-001,Accepted,", "TC-001,Drafted,"),
         encoding="utf-8",
     )
     _write_rows(
@@ -1512,7 +1512,7 @@ def test_the_first_acceptance_brief_carries_the_WHOLE_CHAIN(tmp_path):
     # The row awaiting the act is MARKED as such — a chain rendered without
     # saying which rows are the question reads as a report, not a brief.
     assert "LLR-001 [AWAITING FIRST ACCEPTANCE]" in chain
-    assert "SR-001 [approved]" in chain
+    assert "SR-001 [accepted]" in chain
     # The act's `--accepts` argument is no longer this brief's: the act turn
     # derives it from the committed verdict (WI-912).
     # The SRs it marks as this session's are reported beside the slots, under
@@ -1550,7 +1550,7 @@ def test_the_first_acceptance_anchor_names_the_copied_registrys_own_copy(tmp_pat
     seeded = _rev_short(repo)
     tcs = repo / "docs" / "test" / "test-cases.csv"
     tcs.write_text(
-        tcs.read_text(encoding="utf-8").replace(",Approved,P1", ",Approved,P2"),
+        tcs.read_text(encoding="utf-8").replace(",Accepted,P1", ",Accepted,P2"),
         encoding="utf-8",
     )
     baseline_snapshot.copy_live(repo, accepts={TC_TOML: "WI-9"})
@@ -1597,7 +1597,7 @@ def test_no_judging_brief_orders_an_act(tmp_path, case):
     text = _composed_judging_brief(tmp_path, case)
     assert "intake.py snapshot" not in text
     assert "BY YOU" not in text
-    assert "from `Drafted` to `Approved`" not in text
+    assert "from `Drafted` to `Accepted`" not in text
     assert "later act turn" in text
 
 
@@ -1610,7 +1610,7 @@ def test_the_first_acceptance_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
     repo = _first_acceptance_repo(tmp_path)
     llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
     llrs.write_text(
-        llrs.read_text(encoding="utf-8").replace("TC-001,Drafted,", "TC-001,Approved,"),
+        llrs.read_text(encoding="utf-8").replace("TC-001,Drafted,", "TC-001,Accepted,"),
         encoding="utf-8",
     )
     baseline_snapshot.copy_live(repo, seed=True)  # the act's own anchor moved too
@@ -1632,7 +1632,7 @@ def test_the_first_acceptance_brief_never_hands_the_judge_a_HELD_row(tmp_path):
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
         srs.read_text(encoding="utf-8").replace(
-            ",Approved,P1,core", ",Drafted,P1,core"
+            ",Accepted,P1,core", ",Drafted,P1,core"
         ),
         encoding="utf-8",
     )
@@ -2291,14 +2291,14 @@ _HAT_QUESTIONS = (
 # the SR-002 a lane drafts.
 _HAT_NEEDS = (
     "[need.SN-001]\n"
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     'need = "{}"\n'
     'why = "why"\n'
     'priority = "M"\n'
     'acceptance = "ac"\n'
     'tags = ["need-a"]\n'
     "\n[need.SN-002]\n"
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     'need = "a team can subtract"\n'
     'why = "why"\n'
     'priority = "M"\n'
@@ -2331,7 +2331,7 @@ def _hat_repo(
     needs.write_text(_HAT_NEEDS.format("a team can use it"), encoding="utf-8")
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
     if amended_sr:
-        accepted = _DRAFTED_SR.replace(",Drafted,", ",Approved,")
+        accepted = _DRAFTED_SR.replace(",Drafted,", ",Accepted,")
         srs.write_text(srs.read_text(encoding="utf-8") + accepted, encoding="utf-8")
     baseline_snapshot.copy_live(repo, seed=True)
     if amend_need:
@@ -2641,7 +2641,7 @@ listens_for = "unreached failure"
 def _draft_llr(repo):
     llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
     text = llrs.read_text(encoding="utf-8")
-    text = text.replace("TC-001,Approved,", "TC-001,Drafted,")
+    text = text.replace("TC-001,Accepted,", "TC-001,Drafted,")
     llrs.write_text(text, encoding="utf-8")
 
 

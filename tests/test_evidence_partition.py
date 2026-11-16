@@ -41,23 +41,23 @@ SRS = [
         "Title": "Adds",
         "SN-Refs": "SN-001",
         "DA-Refs": "DA-001",
-        "Status": "Approved",
+        "Status": "Accepted",
         "VerificationMethod": "Test",
     }
 ]
 LLRS = [
-    {"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Title": "Adder", "Status": "Approved"}
+    {"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Title": "Adder", "Status": "Accepted"}
 ]
 
 
-def _tc(tid, verifies="", assumptions="", status="Approved"):
+def _tc(tid, verifies="", assumptions="", status="Accepted"):
     row = {"TC-ID": tid, "Verifies": verifies, "Method": "m", "Status": status}
     if assumptions:
         row["Assumption-Refs"] = assumptions
     return row
 
 
-def _spine(status="Approved"):
+def _spine(status="Accepted"):
     """A requirement-only case, an assumption-only case, a case citing both,
     and a case citing neither."""
     return [

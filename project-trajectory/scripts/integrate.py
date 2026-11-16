@@ -60,8 +60,8 @@ Five operations here; the two lane closes that are NOT a merge (`hand_back`,
              `_minted_id_refusal` - minting is trunk-side and serial, so a
              collision two lanes could produce is unrepresentable), REFUSES a
              branch whose spine delta performs an ACCEPTANCE ACT - a `Status`
-             flipped into `Approved`/`Founded`, a row born claiming one, or a
-             write under docs/archive/last_approved/ - that no recorded verdict
+             flipped into `Accepted`/`Founded`, a row born claiming one, or a
+             write under docs/archive/last_accepted/ - that no recorded verdict
              of an independent adjudicator's, judging that act's own rows,
              backs (operator ruling 6, 2026-10-07, see `_acceptance_act_refusal`),
              requires the policy verdicts the outcome
@@ -1240,9 +1240,9 @@ def _acceptance_act_refusal(root, branch):
     string, or None.
 
     A LANE AUTHORS `Drafted` SPINE ROWS AND AMENDS CELL TEXT. The act is the
-    `Status` flip into `Approved`/`Founded` - or a row that arrives already
+    `Status` flip into `Accepted`/`Founded` - or a row that arrives already
     claiming one, or a re-acceptance - together with the
-    `docs/archive/last_approved/` copy that anchors it. The rung admits a lane's
+    `docs/archive/last_accepted/` copy that anchors it. The rung admits a lane's
     acts when EVERY act is backed by a recorded verdict judging that act's own
     rows (`acceptance_record.backed_act_refusal`, over WI-841's one
     recorded-verdict reader), and refuses an act without one, naming it and the

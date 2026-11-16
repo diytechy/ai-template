@@ -608,7 +608,7 @@ ROW_STATE_TAGS = {
 def _changed_cell_groups(row):
     """The `(label, cells)` groups a `changed` row's cells render under.
 
-    TWO GROUPS, §A5.1 (D-9 step 4). An APPROVED cell that moved owes an
+    TWO GROUPS, §A5.1 (D-9 step 4). An ACCEPTED cell that moved owes an
     acceptance; a TRACED one routes to adjudication and arms no window (the
     WI-388 ruling). Rendering them in one undifferentiated list asked the operator
     to make that judgement per cell, from memory, mid-sitting — and the snapshot
@@ -623,7 +623,7 @@ def _changed_cell_groups(row):
     this HTML view and the `--accept modified` markdown brief agree (IF-074)."""
     if row.get("drafted"):
         return [(None, row["cells"])]
-    accepted = row.get("approved") or frozenset()
+    accepted = row.get("accepted") or frozenset()
     return [
         (
             "accepted — re-acceptance owed",
@@ -750,7 +750,7 @@ def _chain_row(row):
 # fell back to "re-accept owed" would misdescribe what the operator owes.
 #
 # BACK TO TWO AT D-9 STEP 5: `plan` ("evidence owed") went out with `Planned`,
-# which OI-30 D1 folded into `Approved`. The KeyError-if-forgotten property is
+# which OI-30 D1 folded into `Accepted`. The KeyError-if-forgotten property is
 # what makes the removal safe in this direction too — a model still emitting the
 # retired kind would fail loudly here rather than render a wrong pill.
 _KIND_LABELS = {
@@ -769,9 +769,9 @@ def _nothing_owed():
         "re-accept. Say only what was checked: an amended row's own "
         "<code>Status</code> answers for its own cells (operator ruling "
         "2026-08-17m), so a chain row's TEXT moving under an "
-        "<code>Approved</code> SR reaches this view through the "
+        "<code>Accepted</code> SR reaches this view through the "
         "snapshot-drift arm — which compares against "
-        "<code>docs/archive/last_approved/</code>, the "
+        "<code>docs/archive/last_accepted/</code>, the "
         "<code>Modified</code> marker having retired at D-9 step 7 — "
         "but a chain row's <code>Drafted</code> Status reaches this view "
         "DIRECTLY (the OI-61-sitting widening: it used to be checked on "
@@ -955,7 +955,7 @@ def verdict_reaccept_block(acts):
         "<code>{verdict}</code></li>".format(
             seq=esc(str(a["seq"])),
             date=esc(a["date"]),
-            rows=esc(", ".join(a["reattested"]) or "no row"),
+            rows=esc(", ".join(a["reaccepted"]) or "no row"),
             verdict=esc(a["verdict"]),
         )
         for a in sorted(named, key=lambda a: a["seq"], reverse=True)

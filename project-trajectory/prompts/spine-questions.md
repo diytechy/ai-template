@@ -258,7 +258,7 @@ Questions:
   parent outcome remains sound but the LLR's mechanism causes the problem,
   compare the old/new design, retained parent clauses and behavioral regressions,
   affected trace/evidence/work references, and the code that becomes removable.
-  Amend the LLR and its mechanism-specific verification together; an Approved
+  Amend the LLR and its mechanism-specific verification together; an Accepted
   LLR does not require keeping an obsolete shim. Preserve unchanged parent
   acceptance, re-accept changed child content through the applicable authority,
   and let the derived stage expose incomplete evidence. A changed stakeholder

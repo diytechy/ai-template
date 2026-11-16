@@ -640,10 +640,10 @@ SR = {
     "SR-ID": "SR-001",
     "SN-Refs": "SN-001",
     "VerificationMethod": "Test",
-    "Status": "Approved",
+    "Status": "Accepted",
 }
-LLR = {"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Approved"}
-TC = {"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Approved"}
+LLR = {"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Accepted"}
+TC = {"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Accepted"}
 
 # WHAT A FULLY SETTLED SPINE READS — `DevStg-Impl` since WI-498 slice 3, and
 # NAMED rather than spelled so the rungs below can say what they mean.
@@ -715,21 +715,21 @@ def test_the_MODIFIED_rung_RETIRED_and_took_no_successor():
     # computation depend on the filesystem.
     #
     # A row still carrying the retired value therefore lands on the LAST rung,
-    # not the Reqs one — it is simply not `Approved`, so the children-first
+    # not the Reqs one — it is simply not `Accepted`, so the children-first
     # cascade runs and the Impl discriminator catches it. That is the safe
     # direction (an unmigrated row reads LESS finished, never more) and the
     # integrity floor names the cell itself.
     #
     # WI-498 SLICE 3 FLIPPED THE REASON WITHOUT FLIPPING THE VALUE, and that is
     # worth stating: `Modified` used to reach DevStg-Impl by being SINGLED OUT
-    # ("not Approved, so the discriminator catches it"). The discriminator is
+    # ("not Accepted, so the discriminator catches it"). The discriminator is
     # gone — every spine that gets this far reads Impl — so the row now lands
     # there by falling through with everything else. Same answer, and no longer
     # dependent on an out-of-vocabulary cell being the one thing that reached
     # the rung.
     assert _stage(srs=(dict(SR, Status="Modified"),)) == dg.STAGE_IMPL
     # `Founded`, armed at step 8, is the opposite case — and since slice 3 it is
-    # no longer a DIFFERENT answer. It reads Impl too: `Founded` is `Approved`
+    # no longer a DIFFERENT answer. It reads Impl too: `Founded` is `Accepted`
     # plus a demonstration, and neither is evidence that the tests pass.
     assert _stage(srs=(dict(SR, Status="Founded"),)) == SETTLED
 
@@ -744,9 +744,9 @@ def test_NO_status_combination_reaches_the_RELEASE_rung():
     Not one may read the top rung."""
     reached = set()
     for verification in ("Test", "Analysis"):
-        for sr_status in ("Drafted", "Approved", "Founded", "Modified"):
-            for llr_status in ("Drafted", "Approved", "Founded", "Modified"):
-                for tc_status in ("Drafted", "Approved", "Founded", "Modified"):
+        for sr_status in ("Drafted", "Accepted", "Founded", "Modified"):
+            for llr_status in ("Drafted", "Accepted", "Founded", "Modified"):
+                for tc_status in ("Drafted", "Accepted", "Founded", "Modified"):
                     reached.add(
                         _stage(
                             srs=(
@@ -946,14 +946,14 @@ def test_an_LLR_EXEMPT_requirement_needs_no_LLR():
 def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
     """THE RUNG INSERTED 2026-08-12, pinned in the exact state that was wrong.
 
-    Every SR decomposed, every TC authored and non-Drafted, nothing Approved yet:
+    Every SR decomposed, every TC authored and non-Drafted, nothing Accepted yet:
     the test set is WRITTEN, so "TCs in work" is false — what is in work is
     making them pass. This state persists for the entire implementation period,
     which is why reading it as the tests rung labelled the longest stretch of a
     project with the name of a tier that had already finished
     (docs/archive/plans/2026-08-11-stage-gate-semantics.md §3).
 
-    Children are still checked FIRST: an SR reaches Approved only once its LLRs
+    Children are still checked FIRST: an SR reaches Accepted only once its LLRs
     and TCs are green, so while a child is in flight the child's rung is the
     honest answer — the two assertions below pin that half.
 
@@ -966,8 +966,8 @@ def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
 
       * D-9 step 5 made the rung unreachable-by-cell. The state it describes —
         decomposed, TCs authored, the SR not yet blessed — was carried by
-        `Planned`, and OI-30 D1 folded `Planned` into `Approved`. Under the
-        closed enum every not-`Approved` SR was `Drafted` (caught by the Reqs
+        `Planned`, and OI-30 D1 folded `Planned` into `Accepted`. Under the
+        closed enum every not-`Accepted` SR was `Drafted` (caught by the Reqs
         rung) or `Founded` (read as blessed), so no LIVE value reached the Impl
         test at the bottom of `spine_stage`.
       * Step 7 narrowed the unreachability rather than closing it: the rung
@@ -986,13 +986,13 @@ def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
     the correct thing for a rung to say, instead of in the middle, where it made
     a state no legal spine could occupy."""
     assert _stage(srs=(dict(SR, Status="Drafted"),)) == dg.STAGE_REQS
-    for blessed in ("Approved", "Founded"):
+    for blessed in ("Accepted", "Founded"):
         assert _stage(srs=(dict(SR, Status=blessed),)) == dg.STAGE_IMPL, blessed
     # The unmigrated, out-of-vocabulary cell reads the same rung — no longer
     # because it is singled out, but because everything that gets here does.
     assert _stage(srs=(dict(SR, Status="Modified"),)) == dg.STAGE_IMPL
     # The children-first half is unaffected by the rename and still pins.
-    unverified = dict(SR, Status="Approved")
+    unverified = dict(SR, Status="Accepted")
     assert _stage(srs=(unverified,), tcs=()) == dg.STAGE_TESTS
     assert (
         _stage(srs=(unverified,), tcs=(dict(TC, Status="Drafted"),)) == dg.STAGE_TESTS
@@ -1003,8 +1003,8 @@ def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
 
 
 # WI-442: rung 1 reads the FRAME's `[boundary.B-##]` rows, not the IF registry.
-BIF_APPROVED = {"B-ID": "B-01", "Status": "Approved"}
-CMP_BUILT = {"CMP-ID": "CMP-001", "Status": "Approved"}
+BIF_ACCEPTED = {"B-ID": "B-01", "Status": "Accepted"}
+CMP_BUILT = {"CMP-ID": "CMP-001", "Status": "Accepted"}
 
 
 def test_the_two_INSERTED_rungs_are_FREE_for_a_repo_that_adopts_neither_registry():
@@ -1035,11 +1035,11 @@ def test_a_DRAFT_crossing_holds_the_BOUNDARY_rung_open():
     # `approval = "draft"` maps to DRAFTED: a frame declared and not yet
     # accepted. Lower-cased cells against capitalized ladder constants is exactly
     # the case `_maturity`'s case-fold exists for, so both spellings are pinned.
-    assert _stage(bifs=[dict(BIF_APPROVED, Status="Drafted")], have_bifs=True) == (
+    assert _stage(bifs=[dict(BIF_ACCEPTED, Status="Drafted")], have_bifs=True) == (
         dg.STAGE_BOUNDARY
     )
-    assert _stage(bifs=[BIF_APPROVED], have_bifs=True) == SETTLED
-    assert _stage(bifs=[dict(BIF_APPROVED, Approval="Approved")], have_bifs=True) == (
+    assert _stage(bifs=[BIF_ACCEPTED], have_bifs=True) == SETTLED
+    assert _stage(bifs=[dict(BIF_ACCEPTED, Approval="Accepted")], have_bifs=True) == (
         SETTLED
     )
 
@@ -1054,7 +1054,7 @@ def test_rung_1_gates_on_ACCEPTANCE_and_NOT_on_realization_coverage():
     acceptance only. An accepted crossing that NOTHING realizes therefore clears
     rung 1 — which is the live state of four of this repo's six crossings, not a
     hypothetical."""
-    assert _stage(bifs=[BIF_APPROVED], have_bifs=True) == SETTLED
+    assert _stage(bifs=[BIF_ACCEPTED], have_bifs=True) == SETTLED
     # ...and `spine_stage` no longer takes the IF registry at all, which is the
     # structural half of the same statement: rung 1 CANNOT read realization
     # coverage, because it is no longer handed the rows that would show it.
@@ -1107,7 +1107,7 @@ def test_a_recorded_GAP_holds_the_ARCH_rung_open_however_mature_the_row_reads():
     assert _stage(cmps=[gapped], have_cmps=True) == dg.STAGE_ARCH
     # ...and it holds under every maturity, not only the top one — the fact is
     # about the partition, not about how far the row's status has climbed.
-    for status in ("Drafted", "Approved", "Founded"):
+    for status in ("Drafted", "Accepted", "Founded"):
         assert (
             _stage(
                 cmps=[dict(CMP_BUILT, Status=status, Standing="has-gap")],
@@ -1117,7 +1117,7 @@ def test_a_recorded_GAP_holds_the_ARCH_rung_open_however_mature_the_row_reads():
         ), status
     # THE OTHER DIRECTION, so this is a mapping and not a blanket veto on the
     # field: `deprecated` is a decided state (the pre-split table read it
-    # APPROVED), `active` says nothing, and an ABSENT cell is the declared
+    # ACCEPTED), `active` says nothing, and an ABSENT cell is the declared
     # `omit = active` shorthand. None of the three may hold the rung.
     assert _stage(cmps=[CMP_BUILT], have_cmps=True) == SETTLED
     for clears in ("active", "deprecated", "", None):
@@ -1182,8 +1182,8 @@ def test_every_declared_registry_enum_value_has_a_maturity_mapping():
     # future edit cannot "tidy" one side into the other and make the comparison
     # above vacuous in the direction it was designed to catch.
     assert all(v == v.lower() for v in dg.CMP_MATURITY)
-    assert trace.ENUM_FIELDS["CMP"]["Status"] == {"Drafted", "Approved", "Founded"}
-    assert trace.ENUM_FIELDS["B"]["Status"] == {"Drafted", "Approved"}
+    assert trace.ENUM_FIELDS["CMP"]["Status"] == {"Drafted", "Accepted", "Founded"}
+    assert trace.ENUM_FIELDS["B"]["Status"] == {"Drafted", "Accepted"}
     # The IF tier shares the frame's acceptance vocabulary (decision 12: ONE status
     # vocabulary, per-registry subsets) — pinned so the two cannot drift apart
     # while each stays internally consistent.
@@ -1516,13 +1516,13 @@ def test_no_shipped_loop_module_WRITES_an_acceptance_cell():
     from pathlib import Path as _Path
 
     scripts = _Path(__file__).resolve().parents[1] / "project-trajectory" / "scripts"
-    # `status = "Approved"`, `status: "Approved"`, `["status"] = "Approved"` and
+    # `status = "Accepted"`, `status: "Accepted"`, `["status"] = "Accepted"` and
     # the TOML line an emitter would write — plus the retired `approval` spelling
     # and the retired `verified`/`built` CMP words, so a writer cannot be smuggled
     # in under a name this repo has already stopped using.
     pat = _re.compile(
         r"""\b(?:status|approval|state)["'\]]*\s*[:=]\s*"""
-        r"""["'](?:approved|verified|built|founded)["']""",
+        r"""["'](?:accepted|verified|built|founded)["']""",
         _re.IGNORECASE,
     )
     offenders = []

@@ -12,7 +12,7 @@ def assumption_repo(tmp_path):
     (requirements / "assumptions.toml").write_text(
         '[assumption.DA-011]\nassumption = "A new reader understands the code."\n'
         'falsifier = "A reader cannot explain the code."\n'
-        'status = "Approved"\nstanding = "active"\n',
+        'status = "Accepted"\nstanding = "active"\n',
         encoding="utf-8",
     )
     tests = tmp_path / "docs/test"

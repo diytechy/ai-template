@@ -544,8 +544,8 @@ def test_nested_components_render_inside_their_parent(tmp_path):
     )
     (req / "low-level-requirements.csv").write_text(
         CONT_LLRS.replace(
-            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Approved,CMP-001",
-            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Approved,CMP-003",
+            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Accepted,CMP-001",
+            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Accepted,CMP-003",
         ),
         encoding="utf-8",
     )
@@ -1069,10 +1069,10 @@ def test_leaf_wi_block_surfaces_delivery_phase(tmp_path):
 
 # Four one-module components -> the How-SW top view exceeds the > 3 threshold.
 FOUR_CMP_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component
-LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Approved,CMP-001
-LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Approved,CMP-002
-LLR-003,SR-002,C,scripts/mod_c,gen,d,(see TC),Approved,CMP-003
-LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Approved,CMP-004
+LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Accepted,CMP-001
+LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Accepted,CMP-002
+LLR-003,SR-002,C,scripts/mod_c,gen,d,(see TC),Accepted,CMP-003
+LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Accepted,CMP-004
 """
 
 FOUR_CMPS = (
@@ -1156,7 +1156,7 @@ def _spine_with_sns(root, n):
         "Permutations,Priority,VerificationMethod,Status\n"
         + "".join(
             'SR-{i:03d},Req {i},SN-{i:03d},"Shall {i}.",R,"ac {i}",,M,Test,'
-            "Approved\n".format(i=i)
+            "Accepted\n".format(i=i)
             for i in range(1, n + 1)
         ),
         encoding="utf-8",
@@ -1165,7 +1165,7 @@ def _spine_with_sns(root, n):
         "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
         + "".join(
             'LLR-{i:03d},SR-{i:03d},Low {i},src/m.py,f{i},"d {i}",(see TC),'
-            "Approved\n".format(i=i)
+            "Accepted\n".format(i=i)
             for i in range(1, n + 1)
         ),
         encoding="utf-8",
@@ -1175,7 +1175,7 @@ def _spine_with_sns(root, n):
         "Evidence,Status\n"
         + "".join(
             'TC-{i:03d},SR-{i:03d};LLR-{i:03d},Unit,m {i},Smoke,"p","e {i}",Yes,'
-            "tests/t.py::t{i},Approved\n".format(i=i)
+            "tests/t.py::t{i},Accepted\n".format(i=i)
             for i in range(1, n + 1)
         ),
         encoding="utf-8",
@@ -1554,21 +1554,21 @@ def test_fit_lines_breaks_on_words_then_ellipsizes():
 _GOLDEN_PAGE = ROOT / "tests" / "golden" / "dashboard-no-assumptions.html"
 
 _VIEW_NEEDS = """[need.SN-001]
-status = "Approved"
+status = "Accepted"
 need = "Runs are trustworthy."
 why = "A wrong verdict is acted on."
 priority = "M"
 acceptance = "Every verdict is right."
 
 [need.SN-002]
-status = "Approved"
+status = "Accepted"
 need = "The page loads."
 why = "No page, no reading."
 priority = "M"
 acceptance = "It loads."
 
 [need.SN-003]
-status = "Approved"
+status = "Accepted"
 need = "Reports reach the operator."
 why = "An unread report changes nothing."
 priority = "S"
@@ -1586,7 +1586,7 @@ def _view_sr(sid, need, da_refs=(), coincident="", delivered_with=()):
         'acceptance_criteria = "ac"',
         'priority = "M"',
         'verification_method = "Test"',
-        'status = "Approved"',
+        'status = "Accepted"',
     ]
     if da_refs:
         cells.append("da_refs = [{}]".format(", ".join('"%s"' % d for d in da_refs)))
@@ -1618,7 +1618,7 @@ method = "watch a week of runs"
 tier = "Full"
 expected = "every verdict right"
 automated = "No"
-status = "Approved"
+status = "Accepted"
 assumption_refs = ["DA-001"]
 max_age = 30
 sampling = "monitored"
@@ -1628,20 +1628,20 @@ _VIEW_FRAME = """[entity.EXT-001]
 name = "Owner"
 class = "operational"
 description = "The operator."
-status = "Approved"
+status = "Accepted"
 
 [boundary.B-01]
 entity = "EXT-001"
 direction = "out"
 carries = "the verdict"
-status = "Approved"
+status = "Accepted"
 """
 
 
 def _view_da(did, standing, text, falsifier=""):
     return (
         '[assumption.{}]\neffect_at = ["B-01"]\nassumption = "{}"\n'
-        'holds_when = "always"\nobstacle = "never"\nstatus = "Approved"\n'
+        'holds_when = "always"\nobstacle = "never"\nstatus = "Accepted"\n'
         'standing = "{}"\n{}\n'.format(
             did,
             text,
@@ -1732,7 +1732,7 @@ def test_need_assumptions_derives_each_need_s_premises_once(tmp_path):
     assert [a["id"] for a in first["assumptions"]] == ["DA-001", "DA-002"]
     da1, da2 = first["assumptions"]
     assert da1["citing"] == ["SR-001", "SR-002"]
-    assert (da1["status"], da1["standing"]) == ("Approved", "active")
+    assert (da1["status"], da1["standing"]) == ("Accepted", "active")
     assert da1["falsifier"] == "A verdict the operator read differently from the run."
     assert da1["cases"] == ["TC-010"]
     assert (da2["standing"], da2["falsifier"], da2["cases"]) == ("falsified", "", [])
@@ -1755,7 +1755,7 @@ def test_each_need_s_detail_lists_its_assumptions_with_their_standing(tmp_path):
     # requirements citing it.
     assert first.count("DA-001") == 1 and first.count("DA-002") == 1
     for needle in (
-        "status: Approved",
+        "status: Accepted",
         "active",
         "A verdict the operator read differently from the run.",
         "can be falsified by: TC-010",

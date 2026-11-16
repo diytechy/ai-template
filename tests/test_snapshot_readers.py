@@ -34,7 +34,7 @@ TC_REL = "docs/test/test-cases.toml"
 
 _NEED = (
     "\n[need.SN-001]\n"
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     'need = "The operator sees every accepted need whose text moved."\n'
     'why = "An amendment nobody was shown is blessed by nobody."\n'
     'priority = "M"\n'
@@ -48,7 +48,7 @@ _SR = (
     'acceptance_criteria = "The row is read."\n'
     'priority = "M"\n'
     'verification_method = "Test"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     "phase = 1\n"
 )
 
@@ -161,7 +161,7 @@ def test_a_drifted_need_refuses_the_snapshot_until_it_is_reaccepted(scaffold):
     assert (SNAP.snapshot_root(root) / NEEDS_REL).read_bytes() == (
         root / NEEDS_REL
     ).read_bytes()
-    assert "SN-001" in SNAP.read_acts(root)[-1]["reattested"]
+    assert "SN-001" in SNAP.read_acts(root)[-1]["reaccepted"]
     assert SNAP.needs_owing(root) == []
 
 
@@ -180,10 +180,10 @@ def test_an_accepted_stakeholder_is_recorded_by_the_act_that_accepts_it(scaffold
         'description = "Owns the kit\'s outcomes."\nstatus = "Drafted"\n',
     )
     SNAP.copy_live(root, seed=True)
-    _rewrite(root, NEEDS_REL, 'status = "Drafted"\n', 'status = "Approved"\n')
+    _rewrite(root, NEEDS_REL, 'status = "Drafted"\n', 'status = "Accepted"\n')
     SNAP.copy_live(root, accepts={NEEDS_REL: "the sitting"})
     last = SNAP.read_acts(root)[-1]
-    assert "STK-01" in last["approved"], last
+    assert "STK-01" in last["accepted"], last
 
 
 def test_the_snapshot_history_reader_takes_the_needs_carrier_from_the_file(tmp_path):
@@ -234,7 +234,7 @@ def test_a_row_missing_its_status_or_phase_cell_is_an_integrity_finding(scaffold
     _append(
         root,
         NEEDS_REL,
-        _NEED.replace('status = "Approved"\n', "").replace("SN-001", "SN-002"),
+        _NEED.replace('status = "Accepted"\n', "").replace("SN-001", "SN-002"),
     )
     # The hand-authored ids recorded first, so the missing cells are the only
     # integrity findings left to fail the run.
@@ -590,7 +590,7 @@ def test_the_acted_set_names_a_retired_rows_registry(scaffold):
     Implements: TC-278
     """
     base, head, written = _retirement_act(scaffold)
-    assert written == ["docs/archive/last_approved/" + SR_REL], written
+    assert written == ["docs/archive/last_accepted/" + SR_REL], written
     acted = AR.lane_acted_set(
         scaffold, base, head, AR.acceptance_delta(scaffold, base, head)
     )[0]
@@ -708,7 +708,7 @@ def test_a_drifted_accepted_stakeholder_is_reported_and_briefed(scaffold):
         root,
         NEEDS_REL,
         '\n[stakeholder.STK-01]\nname = "The operator"\n'
-        'description = "Owns the outcomes."\nstatus = "Approved"\n',
+        'description = "Owns the outcomes."\nstatus = "Accepted"\n',
     )
     SNAP.copy_live(root, seed=True)
     _rewrite(
@@ -823,7 +823,7 @@ def test_the_open_items_counts_include_the_needs_that_owe(scaffold):
 
 
 def _complete(label, rid, phase=True):
-    row = {label + "-ID": rid, "Status": "Approved"}
+    row = {label + "-ID": rid, "Status": "Accepted"}
     if phase and label != "SN":
         row["Phase"] = "1"
     return row
@@ -874,7 +874,7 @@ def _mixed_act(root, accept_scope, amend_scope, metas=None, amend_tag="CLARITY")
         root,
         SR_REL,
         _SR.format(rid="SR-002", title="row two").replace(
-            'status = "Approved"', 'status = "Drafted"'
+            'status = "Accepted"', 'status = "Drafted"'
         ),
     )
     SNAP.copy_live(root, seed=True)
@@ -882,7 +882,7 @@ def _mixed_act(root, accept_scope, amend_scope, metas=None, amend_tag="CLARITY")
     _rewrite(root, SR_REL, '"row one"', '"row one, amended"')
     base = _commit(run_git, "the amendment and the drafted row")
     _rewrite(
-        root, SR_REL, 'status = "Drafted"\nphase = 1', 'status = "Approved"\nphase = 1'
+        root, SR_REL, 'status = "Drafted"\nphase = 1', 'status = "Accepted"\nphase = 1'
     )
     _bind_branch(
         root,
@@ -984,7 +984,7 @@ def _split_act(root, accept, copy_needs=None, sr_rel=SR_REL, append=None):
             root,
             NEEDS_REL,
             _SPLIT_NEED.format('"Drafted"'),
-            _SPLIT_NEED.format('"Approved"'),
+            _SPLIT_NEED.format('"Accepted"'),
         )
     accepts = {NEEDS_REL: "WI-682"} if accept or copy_needs else None
     # The first-acceptance section ACCEPTS SN-091 when the act flips it, and
@@ -1002,7 +1002,7 @@ def _split_act(root, accept, copy_needs=None, sr_rel=SR_REL, append=None):
 _SPLIT_NEED = (
     _NEED.replace("SN-001", "SN-091")
     .replace("The operator sees", "The operator now sees")
-    .replace('"Approved"', "{}")
+    .replace('"Accepted"', "{}")
 )
 _SPLIT = ["amendment:SR-001", "first-acceptance:SN-091", "done-when:WI-682"]
 
@@ -1036,7 +1036,7 @@ def test_a_combined_act_whose_first_acceptance_returned_everything_merges(scaffo
         for a in AR._ledger_acts(scaffold, head)
         if a.get("seq") not in {x.get("seq") for x in AR._ledger_acts(scaffold, base)}
     ]
-    assert [(a["approved"], a["reattested"]) for a in added] == [([], ["SR-001"])]
+    assert [(a["accepted"], a["reaccepted"]) for a in added] == [([], ["SR-001"])]
     assert (
         AR.merge_acceptance_refusal(scaffold, base, head, _combined(_SPLIT), trunk=head)
         is None
@@ -1133,7 +1133,7 @@ def test_a_combined_act_on_a_markdown_needs_carrier_authorizes_its_copy(scaffold
     _append(
         root,
         SR_REL,
-        _SR.format(rid="SR-001", title="row one").replace('"Approved"', '"Drafted"'),
+        _SR.format(rid="SR-001", title="row one").replace('"Accepted"', '"Drafted"'),
     )
     SNAP.copy_live(root, seed=True)
     _commit(run_git, "seed")
@@ -1143,7 +1143,7 @@ def test_a_combined_act_on_a_markdown_needs_carrier_authorizes_its_copy(scaffold
     )
     base = _commit(run_git, "the need drifts")
     _rewrite(
-        root, SR_REL, 'status = "Drafted"\nphase = 1', 'status = "Approved"\nphase = 1'
+        root, SR_REL, 'status = "Drafted"\nphase = 1', 'status = "Accepted"\nphase = 1'
     )
     _bind_branch(root, {"amendment": ["SN-001"], "first-acceptance": ["SR-001"]})
     SNAP.copy_live(root, accepts={SR_REL: "WI-683"}, reaccepts={"SN-001"})
@@ -1163,7 +1163,7 @@ def test_a_combined_act_on_a_markdown_needs_carrier_authorizes_its_copy(scaffold
 
 _TOML_NEEDS = (
     "\n[need.SN-001]\n"
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     'need = "The operator sees every moved need."\n'
     'why = "Unseen is unblessed."\n'
     'priority = "M"\n'
@@ -1191,7 +1191,7 @@ def _converted_needs(root, extra="", amend=True):
     _append(
         root,
         SR_REL,
-        _SR.format(rid="SR-002", title="row two").replace('"Approved"', '"Drafted"'),
+        _SR.format(rid="SR-002", title="row two").replace('"Accepted"', '"Drafted"'),
     )
     SNAP.copy_live(root, seed=True)
     _commit(run_git, "seed, the needs on markdown")
@@ -1220,7 +1220,7 @@ def test_a_combined_act_across_a_needs_carrier_conversion_merges(scaffold):
         scaffold,
         SR_REL,
         'status = "Drafted"\nphase = 1',
-        'status = "Approved"\nphase = 1',
+        'status = "Accepted"\nphase = 1',
     )
     _bind_branch(scaffold, {"amendment": ["SN-001"], "first-acceptance": ["SR-002"]})
     SNAP.copy_live(scaffold, accepts={SR_REL: "WI-684"}, reaccepts={"SN-001"})
@@ -1243,7 +1243,7 @@ def test_a_plain_flip_across_a_needs_carrier_conversion_merges(scaffold):
         scaffold,
         NEEDS_REL,
         'status = "Drafted"\nneed = "The operator sees a second need."',
-        'status = "Approved"\nneed = "The operator sees a second need."',
+        'status = "Accepted"\nneed = "The operator sees a second need."',
     )
     _bind_branch(scaffold, {"amendment": ["SN-001"], "first-acceptance": ["SN-002"]})
     SNAP.copy_live(scaffold, accepts={NEEDS_REL: "WI-685"}, reaccepts={"SN-001"})
@@ -1270,7 +1270,7 @@ def test_an_unauthorized_registrys_obsolete_copy_is_still_widened(scaffold):
         scaffold,
         SR_REL,
         'status = "Drafted"\nphase = 1',
-        'status = "Approved"\nphase = 1',
+        'status = "Accepted"\nphase = 1',
     )
     # `--accepts` naming the needs file copies it (TOML written, the obsolete
     # markdown deleted) although no need was flipped or re-accepted.
@@ -1321,7 +1321,7 @@ def _rejected_mixed_act(root, name_verdict):
     _release(root)
     _append(root, SR_REL, _SR.format(rid="SR-001", title="row one"))
     drafted = _SR.format(rid="SR-002", title="row two").replace(
-        '"Approved"', '"Drafted"'
+        '"Accepted"', '"Drafted"'
     )
     _append(root, SR_REL, drafted)
     SNAP.copy_live(root, seed=True)
@@ -1329,7 +1329,7 @@ def _rejected_mixed_act(root, name_verdict):
     _rewrite(root, SR_REL, '"row one"', '"row one, amended"')
     base = _commit(run_git, "the amendment, SR-002 drafted")
     # SR-002 itself, never the scaffold's SR-000 example (Sol final6 MINOR).
-    _rewrite(root, SR_REL, drafted, drafted.replace('"Drafted"', '"Approved"'))
+    _rewrite(root, SR_REL, drafted, drafted.replace('"Drafted"', '"Accepted"'))
     (root / _VERDICT).parent.mkdir(parents=True, exist_ok=True)
     (root / _VERDICT).write_text(_REJECTED_SITTING, encoding="utf-8")
     failed = SITTING_MOD.render_requested(
@@ -1348,7 +1348,7 @@ def _rejected_mixed_act(root, name_verdict):
         for a in AR._ledger_acts(root, head)
         if a.get("seq") not in {x.get("seq") for x in AR._ledger_acts(root, base)}
     ]
-    assert act["approved"] == ["SR-002"] and act["reattested"] == ["SR-001"], act
+    assert act["accepted"] == ["SR-002"] and act["reaccepted"] == ["SR-001"], act
     return base, head
 
 
@@ -1437,12 +1437,12 @@ def test_a_single_kind_first_acceptance_of_its_judged_row_merges(scaffold):
     run_git = _git(scaffold)
     _release(scaffold)
     drafted = _SR.format(rid="SR-002", title="row two").replace(
-        '"Approved"', '"Drafted"'
+        '"Accepted"', '"Drafted"'
     )
     _append(scaffold, SR_REL, drafted)
     SNAP.copy_live(scaffold, seed=True)
     base = _commit(run_git, "seed, SR-002 drafted")
-    _rewrite(scaffold, SR_REL, drafted, drafted.replace('"Drafted"', '"Approved"'))
+    _rewrite(scaffold, SR_REL, drafted, drafted.replace('"Drafted"', '"Accepted"'))
     _bind_branch(scaffold, {"first-acceptance": ["SR-002"]})
     SNAP.copy_live(scaffold, accepts={SR_REL: "WI-902"})
     head = _commit(run_git, "the first acceptance of SR-002")
