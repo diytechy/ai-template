@@ -243,6 +243,12 @@ def test_pytest_ini_is_not_written_over_a_pyproject_pytest_config(tmp_path, caps
         dry_run=True,
     )
     assert "pytest.ini" in boot.copy_kit_files(tmp_path, plan).created
+    # A pyproject with no pytest table still gets pytest.ini: the skip is that
+    # narrow, not "any pyproject.toml".
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "x"\n\n[tool.ruff]\nline-length = 88\n', encoding="utf-8"
+    )
+    assert "pytest.ini" in boot.copy_kit_files(tmp_path, plan).created
     (tmp_path / "pyproject.toml").write_text(
         '[project]\nname = "x"\n\n[tool.pytest.ini_options]\npythonpath = ["src"]\n',
         encoding="utf-8",

@@ -38,7 +38,8 @@ python -m pip install --upgrade pip
 # tiers, coverage) is declared once in docs/stack.ini — edit there, not in
 # check.py. Install whatever those commands name.
 pip install ruff pytest pytest-cov
-if [ -f pyproject.toml ]; then pip install -e .
+# A pyproject holding only tool config ([tool.*]) has nothing to install.
+if [ -f pyproject.toml ] && grep -qE '^\[(project|build-system)\]' pyproject.toml; then pip install -e .
 elif [ -f requirements.txt ]; then pip install -r requirements.txt
 fi
 # ------------------------------------------------------------------------------

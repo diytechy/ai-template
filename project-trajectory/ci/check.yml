@@ -67,7 +67,8 @@ jobs:
           # Then YOUR project's deps, the same choice scripts/setup.sh makes, so
           # tests can import your package here as they do locally. Let it fail
           # loudly (don't add `|| true`, which would hide an install error).
-          if [ -f pyproject.toml ]; then pip install -e .
+          # A pyproject holding only tool config ([tool.*]) has nothing to install.
+          if [ -f pyproject.toml ] && grep -qE '^\[(project|build-system)\]' pyproject.toml; then pip install -e .
           elif [ -f requirements.txt ]; then pip install -r requirements.txt
           fi
 
