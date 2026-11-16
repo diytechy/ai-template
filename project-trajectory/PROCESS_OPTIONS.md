@@ -2635,7 +2635,8 @@ an LLR *is* the WHAT being rewritten. The registry is optional and off-spine
 a repo that never names a component pays nothing.
 
 **The row is deliberately slim** —
-`CMP-ID,Name,Category,Knowledge,Status,Standing,SupersededBy,PartOf,Notes`
+`CMP-ID,Name,Category,Knowledge,Status,Standing,SupersededBy,PartOf,Notes`,
+plus the derivation record's cells below
 — and holds **only what a tag can't**: the knowledge refs (`;`-joined skill
 names, `docs/knowledge/` labels, URLs), maturity
 (`Status ∈ Drafted|Approved|Founded`, the one spine vocabulary) and lifecycle
@@ -2670,6 +2671,24 @@ IFs is legal.
 integrity; `PartOf`/`SupersededBy` resolve to real CMP ids; and every primitive
 `Component` tag resolves to a real CMP row (the membership join — checked on
 all four registries `trace.py` reads: LLR/IF/PART/ASSET).
+
+**The partition carries its derivation record** (SR-165). The record of how
+the partition was chosen lives in the registry, not in session prose. One row
+per partition holds it: `Candidates` (the candidate partitions, best first),
+`Objective` (`minimize <metric>` or `maximize <metric>`), `Constraints`
+(`<constraint>: <violating candidates>`, or the single entry `none`), `Scores`
+(`<candidate>=<number>`, one per candidate), `Selected`, `Ruling` (who ruled,
+when, and where it is recorded) and an optional `Override`
+(`<selected>: <reason>`). Every other row of the partition carries only
+`Derivation`, the holding row's id. `check_trajectory.py` reports a real row
+whose record is absent, incomplete, malformed or inconsistent — **WARN** at
+the plain run, **ERROR under `--strict`** — sharing the
+`[checks] components_check` opt-out. It recomputes the ranking from the
+record's own cells: a candidate no constraint names ranks above every one a
+constraint names, then by score in the objective's direction, equal scores
+tying. A selection the scores do not rank first needs the `Override` that
+names it. The check covers form and arithmetic; whether `Ruling` reports a real
+human act is for review and the approval route.
 
 **A cross-component edge needs a declared seam** (WI-064 — the AXES
 enforceability rule, mechanized for software). `check_trajectory.py` joins the

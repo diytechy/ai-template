@@ -3,8 +3,9 @@ verbatim from tests/test_trajectory.py by behavior boundary).
 
 Interface-connectivity coverage (WI-056), the How-SW top-view right-sizing
 bound (WI-073/FB5), knowledge⇒component coupling (WI-153), cross-CMP edges
-without a declared IF (WI-064), and specs
-acting on declared interface boundaries (WI-191).
+without a declared IF (WI-064), specs
+acting on declared interface boundaries (WI-191), and the component
+partition's derivation record (WI-999).
 
 check_vocab: allow-file — THE ANCHOR FIXTURES MUST AUTHOR THE RETIRED SPELLING.
 `check_trajectory` TRANSLATES `[p]-[g1]`/`[p]-[reqs]` on read and never rewrites
@@ -36,6 +37,7 @@ if str(SCRIPTS) not in sys.path:
 
 wi_convert = load_script("wi_convert")
 check_trajectory = load_script("check_trajectory")
+trajectory_arch = load_script("trajectory_arch")
 
 
 def test_architecture_rules_are_reexported_from_their_behavior_module():
@@ -1085,12 +1087,27 @@ def _arch_n(n):
     )
 
 
+# SR-165 (WI-999): a live CMP row with no derivation record is a component
+# finding. These fixtures are about containment and seams, not the record, so
+# the first row holds a one-candidate record and every other row cites it.
+FIXTURE_RECORD = (
+    'candidates = ["A"]\nobjective = "minimize cut"\nconstraints = ["none"]\n'
+    'scores = ["A=1"]\nselected = "A"\nruling = "the fixture"\n'
+)
+
+
 def write_cmps(root, body):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
-    (req / "components.toml").write_text(
-        _csv_body_to_toml(CMP_HDR, "component", body), encoding="utf-8"
-    )
+    text = _csv_body_to_toml(CMP_HDR, "component", body)
+    ids = re.findall(r"(?m)^\[component\.(CMP-\d+)\]$", text)
+    for rid in ids:
+        cells = (
+            FIXTURE_RECORD if rid == ids[0] else 'derivation = "{}"\n'.format(ids[0])
+        )
+        head = "[component.{}]\n".format(rid)
+        text = text.replace(head, head + cells, 1)
+    (req / "components.toml").write_text(text, encoding="utf-8")
 
 
 def write_tagged_llrs(root, pairs):
@@ -2570,3 +2587,246 @@ def test_a_note_only_cell_has_no_part_and_a_tag_on_it_is_a_finding(tmp_path):
         tagged.stderr
     )
     assert tagged.returncode == 1, tagged.stdout + tagged.stderr
+
+
+# --- SR-165 / WI-999: the partition's derivation record (TC-166) --------------
+# In-process over `component_findings`, the record's one reader. The record is
+# eight flat cells on a CMP row; one row per partition holds it and the
+# partition's other rows cite it with `derivation`. The numbers are OI-130's
+# ruling on this repository's own partition (minimize cut: P5 140, P3 152,
+# P4 235, every candidate violating the one constraint), so the clean case is
+# the record the kit's own CMP-006 holds.
+
+RECORD = {
+    "candidates": '["P5", "P3", "P4"]',
+    "objective": '"minimize cut"',
+    "constraints": '["one-home-per-behaviour: P3 P4 P5"]',
+    "scores": '["P5=140", "P3=152", "P4=235"]',
+    "selected": '"P5"',
+    "ruling": '"the operator, 2026-11-16, recorded under OI-130"',
+}
+CITE = {"derivation": '"CMP-001"'}
+CMP_CSV_PATH = "docs/requirements/components.toml"
+HELD = CMP_CSV_PATH + " CMP-001 (record cited by CMP-002, CMP-003): derivation record: "
+
+
+def _record(**changes):
+    """RECORD with each `changes` cell replaced by a TOML literal, or dropped
+    when the value is None."""
+    cells = dict(RECORD, **changes)
+    return {key: value for key, value in cells.items() if value is not None}
+
+
+def _derivation_findings(root, rows):
+    """`component_findings` over a registry of `rows`, `[(id, {key: TOML
+    literal})]`, written as live `Approved` rows."""
+    blocks = [
+        '[component.{0}]\nname = "{0}"\nstatus = "Approved"\n'.format(rid)
+        + "".join("{} = {}\n".format(key, value) for key, value in cells.items())
+        for rid, cells in rows
+    ]
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "components.toml").write_text("\n".join(blocks), encoding="utf-8")
+    return trajectory_arch.component_findings(root)
+
+
+def _partition(root, **changes):
+    """A three-row partition: CMP-001 holds the record, the others cite it."""
+    rows = [("CMP-001", _record(**changes)), ("CMP-002", CITE), ("CMP-003", CITE)]
+    return _derivation_findings(root, rows)
+
+
+def test_a_complete_derivation_record_passes_silently(tmp_path):
+    """(a) The record OI-130 ruled, held once and cited twice, is silent; so is
+    a record declaring no constraint and maximizing its metric.
+
+    Implements: TC-166"""
+    assert _partition(tmp_path) == []
+    assert (
+        _partition(
+            tmp_path,
+            objective='"maximize cohesion"',
+            constraints='["none"]',
+            candidates='["P4", "P3", "P5"]',
+            selected='"P4"',
+        )
+        == []
+    )
+
+
+@pytest.mark.parametrize(
+    "changes,element",
+    [
+        ({"candidates": None}, "`candidates` is missing"),
+        ({"objective": None}, "`objective` is missing"),
+        ({"constraints": None}, "`constraints` is missing"),
+        ({"scores": '["P5=140", "P4=235"]'}, "`scores` has no score for candidate P3"),
+        ({"scores": None}, "`scores` is missing"),
+        ({"selected": None}, "`selected` is missing"),
+        ({"ruling": None}, "`ruling` is missing"),
+    ],
+)
+def test_each_omitted_record_element_is_reported_once(tmp_path, changes, element):
+    """(b) Each element omitted in turn is one finding, naming the row and the
+    element: reported on the holding row, which names the rows citing it.
+
+    Implements: TC-166"""
+    assert _partition(tmp_path, **changes) == [HELD + element]
+
+
+def test_a_ranking_that_does_not_recompute_is_reported(tmp_path):
+    """(c) The recompute: a feasible candidate ranks above every infeasible one,
+    then by score in the objective's direction, and a tie may be listed in
+    either order.
+
+    Implements: TC-166"""
+    misordered = _partition(tmp_path, candidates='["P3", "P5", "P4"]')
+    assert misordered == [HELD + "the recompute ranks P5 above P3, listed before it"]
+    reversed_direction = _partition(tmp_path, objective='"maximize cut"')
+    assert reversed_direction[0].startswith(HELD + "the recompute ranks P3 above P5")
+    # P5 alone violates the constraint, so the worse-scoring P3 and P4 rank
+    # above it, and P3 is the selection the scores rank first.
+    feasible_first = {
+        "candidates": '["P3", "P4", "P5"]',
+        "constraints": '["one-home-per-behaviour: P5"]',
+        "selected": '"P3"',
+    }
+    assert _partition(tmp_path, **feasible_first) == []
+    tied = {"scores": '["P5=140", "P3=140", "P4=235"]'}
+    assert _partition(tmp_path, **tied) == []
+    assert _partition(tmp_path, candidates='["P3", "P5", "P4"]', **tied) == []
+    assert _partition(tmp_path, selected='"P3"', **tied) == []
+
+
+def test_a_selection_not_ranked_first_needs_an_override_naming_it(tmp_path):
+    """(d) A selection the scores do not rank first is a finding; the same
+    record with an override naming the selection is silent; an override
+    naming anything else does not silence it; and an override where the
+    selection ranks first is itself a finding.
+
+    Implements: TC-166"""
+    unexplained = _partition(tmp_path, selected='"P3"')
+    assert unexplained == [
+        HELD + "`selected` P3 is not ranked first and has no `override`"
+    ]
+    overridden = '"P3: the operator keeps the actor split for the review path"'
+    assert _partition(tmp_path, selected='"P3"', override=overridden) == []
+    elsewhere = _partition(tmp_path, selected='"P3"', override='"P4: a reason"')
+    assert elsewhere == [HELD + "`override` names P4, not the selected P3"]
+    needless = _partition(tmp_path, override='"P5: a reason"')
+    assert needless == [
+        HELD + "`override` is present although `selected` P5 ranks first"
+    ]
+
+
+def test_no_components_and_the_example_row_are_vacuous(tmp_path):
+    """(e) A project declaring no components, and the shipped `-000` row, are
+    vacuous; `[checks] components_check = false` turns the whole pass off.
+
+    Implements: TC-166"""
+    assert trajectory_arch.component_findings(tmp_path) == []
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    shutil.copyfile(
+        ROOT / "project-trajectory" / "registries" / "components.template.toml",
+        req / "components.toml",
+    )
+    assert trajectory_arch.component_findings(tmp_path) == []
+    (tmp_path / "docs" / "process.toml").write_text(
+        "[checks]\ncomponents_check = false\n", encoding="utf-8"
+    )
+    assert _derivation_findings(tmp_path, [("CMP-001", {})]) == []
+
+
+@pytest.mark.parametrize(
+    "changes,cause",
+    [
+        ({"objective": '"optimize cut"'}, "`objective` 'optimize cut' is not"),
+        ({"objective": '"minimize"'}, "`objective` 'minimize' is not"),
+        ({"scores": '["P5=140", "P3=many", "P4=235"]'}, "'P3=many' is not `<"),
+        ({"scores": '["P5=140", "P3=152", "P4=235", "P9=1"]'}, "'P9=1' is an extra"),
+        ({"scores": '["P5=140", "P5=141", "P3=152", "P4=235"]'}, "'P5=141' is an ex"),
+        ({"candidates": '["P5", "P3", "P4", "P3"]'}, "lists P3 more than once"),
+        ({"selected": '"P9"'}, "`selected` P9 is not a candidate"),
+        ({"constraints": '["one-home: P3 P9"]'}, "violator P9, which is not a cand"),
+        ({"constraints": '["one-home P3"]'}, "entry 'one-home P3' is not `<name>"),
+        ({"constraints": '["none", "one-home: P3"]'}, "entry 'none' is not `<name>"),
+        ({"override": '"P5"'}, "`override` 'P5' is not `<candidate>: <reason>`"),
+        ({"override": '"P5:"'}, "`override` 'P5:' is not `<candidate>: <reason>`"),
+    ],
+)
+def test_each_malformed_record_cell_is_reported(tmp_path, changes, cause):
+    """Each value outside the record's form is one finding naming the cell and
+    the cause; the ranking does not run on it.
+
+    Implements: TC-166"""
+    findings = _partition(tmp_path, **changes)
+    assert len(findings) == 1 and findings[0].startswith(HELD), findings
+    assert cause in findings[0], findings
+
+
+@pytest.mark.parametrize(
+    "citing,cause",
+    [
+        ({"derivation": '"CMP-099"'}, "names CMP-099, which is no live component"),
+        ({"derivation": '"CMP-000"'}, "names CMP-000, which is no live component"),
+        ({"derivation": '"CMP-002"'}, "points at the row itself"),
+        ({"derivation": '"CMP-003"'}, "names CMP-003, which itself cites another"),
+        (dict(CITE, selected='"P5"'), "sits beside record cells"),
+    ],
+)
+def test_each_malformed_derivation_is_reported(tmp_path, citing, cause):
+    """A `derivation` that is dangling (the vacuous `-000` row included),
+    points at its own row, chains to another citing row, or sits beside record
+    cells is a finding on the citing row.
+
+    Implements: TC-166"""
+    rows = [
+        ("CMP-001", _record()),
+        ("CMP-002", citing),
+        ("CMP-003", CITE),
+    ]
+    findings = _derivation_findings(tmp_path, rows)
+    prefix = CMP_CSV_PATH + " CMP-002: derivation record: `derivation` "
+    assert len(findings) == 1 and findings[0].startswith(prefix), findings
+    assert cause in findings[0], findings
+
+
+def test_an_absent_record_is_reported_once_on_the_row_its_citers_name(tmp_path):
+    """Absent: a row with neither record cells nor `derivation`. A held record
+    is reported once, on the holding row, naming the rows citing it.
+
+    Implements: TC-166"""
+    held = _derivation_findings(
+        tmp_path, [("CMP-001", {}), ("CMP-002", CITE), ("CMP-003", CITE)]
+    )
+    assert len(held) == 1, held
+    assert held[0].startswith(
+        CMP_CSV_PATH
+        + " CMP-001 (record cited by CMP-002, CMP-003): no derivation record"
+    )
+    alone = _derivation_findings(tmp_path, [("CMP-001", _record()), ("CMP-002", {})])
+    assert len(alone) == 1 and alone[0].startswith(
+        CMP_CSV_PATH + " CMP-002: no derivation record"
+    ), alone
+
+
+def test_the_ranking_runs_only_on_a_complete_well_formed_record(tmp_path):
+    """A record that fails the element or form checks has already failed
+    closed: its misordered ranking is not also reported.
+
+    Implements: TC-166"""
+    findings = _partition(tmp_path, candidates='["P3", "P5", "P4"]', ruling=None)
+    assert findings == [HELD + "`ruling` is missing"]
+
+
+def test_a_derivation_finding_warns_plain_and_fails_strict(tmp_path):
+    """Implements: TC-166"""
+    _derivation_findings(tmp_path, [("CMP-001", {})])
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "WARN - " + CMP_CSV_PATH + " CMP-001: no derivation record" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+    assert "ERROR - " + CMP_CSV_PATH + " CMP-001: no derivation record" in strict.stderr

@@ -1803,7 +1803,7 @@ method = """Run trace.py's component pass over fixture component registries: (a)
 tier = "Full"
 expected = "Satisfies SR-165 AcceptanceCriteria via the LLR-172 detail contract"
 automated = "Yes"
-evidence = "(owed by WI-999)"
+evidence = """tests/test_trajectory_arch.py::test_a_complete_derivation_record_passes_silently; tests/test_trajectory_arch.py::test_each_omitted_record_element_is_reported_once; tests/test_trajectory_arch.py::test_a_ranking_that_does_not_recompute_is_reported; tests/test_trajectory_arch.py::test_a_selection_not_ranked_first_needs_an_override_naming_it; tests/test_trajectory_arch.py::test_no_components_and_the_example_row_are_vacuous; tests/test_trajectory_arch.py::test_each_malformed_record_cell_is_reported; tests/test_trajectory_arch.py::test_each_malformed_derivation_is_reported; tests/test_trajectory_arch.py::test_an_absent_record_is_reported_once_on_the_row_its_citers_name; tests/test_trajectory_arch.py::test_the_ranking_runs_only_on_a_complete_well_formed_record; tests/test_trajectory_arch.py::test_a_derivation_finding_warns_plain_and_fails_strict"""
 status = "Approved"
 phase = 5
 

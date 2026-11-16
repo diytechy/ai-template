@@ -1654,12 +1654,184 @@ def cross_component_advisories(root):
     return _cross_component_scan(root)[1]
 
 
+# --- the component derivation record (SR-165, LLR-172; WI-999) -----------------
+# Eight flat cells on a CMP row, since the carrier refuses a nested table. One
+# row per partition holds the record; the partition's other rows carry only
+# `Derivation`, the id of that row. `component_findings` is its one reader.
+_RECORD_ELEMENTS = tuple(
+    "Candidates Objective Constraints Scores Selected Ruling".split()
+)
+_RECORD_CELLS = _RECORD_ELEMENTS + ("Override",)
+_NUMBER_RE = re.compile(r"[-+]?\d+(?:\.\d+)?")
+_NO_RECORD = (
+    "no derivation record: declare candidates, objective, constraints, scores, "
+    "selected and ruling, or cite the row holding the partition's record with "
+    "derivation, or set docs/process.toml [checks] components_check = false"
+)
+
+
+def _cell(row, column):
+    return (row.get(column) or "").strip()
+
+
+def _entries(row, column):
+    """A list cell's entries; the carrier joins a TOML array on `;`."""
+    return [e.strip() for e in _cell(row, column).split(";") if e.strip()]
+
+
+def _score_findings(row, candidates):
+    """`(scores, findings)`: each candidate's number, then each score entry
+    outside `<candidate>=<number>`, each extra score and each missing one."""
+    scores, named, out = {}, set(), []
+    for entry in _entries(row, "Scores"):
+        name, sep, number = (part.strip() for part in entry.partition("="))
+        if not sep or not _NUMBER_RE.fullmatch(number):
+            out.append(f"`scores` entry {entry!r} is not `<candidate>=<number>`")
+        elif name in named or (candidates and name not in candidates):
+            out.append(f"`scores` entry {entry!r} is an extra score")
+        else:
+            scores[name] = float(number)
+        named.add(name)
+    missing = [c for c in candidates if c not in named] if _cell(row, "Scores") else []
+    out += [f"`scores` has no score for candidate {c}" for c in missing]
+    return scores, out
+
+
+def _constraint_findings(row, candidates):
+    """`(violators, findings)`: the candidates a constraint names, then each
+    entry outside `<constraint>: <violators>` and each violator not a candidate.
+    The single entry `none` declares no constraint."""
+    entries = _entries(row, "Constraints")
+    violators, out = set(), []
+    for entry in [] if entries == ["none"] else entries:
+        name, sep, who = entry.partition(":")
+        if not sep or not name.strip():
+            out.append(
+                f"`constraints` entry {entry!r} is not `<name>: <violators>` "
+                "or the single entry `none`"
+            )
+        violators.update(who.split())
+    for v in sorted(violators - set(candidates)) if candidates else []:
+        out.append(f"`constraints` names violator {v}, which is not a candidate")
+    return violators, out
+
+
+def _override_findings(override, selected):
+    """The optional override: `<candidate>: <reason>`, naming `selected`."""
+    who, sep, reason = (part.strip() for part in override.partition(":"))
+    if override and (not sep or not who or not reason):
+        return [f"`override` {override!r} is not `<candidate>: <reason>`"]
+    if override and selected and who != selected:
+        return [f"`override` names {who}, not the selected {selected}"]
+    return []
+
+
+def _record_findings(row):
+    """`(record, findings)` for a row holding the record: one finding per
+    missing element, then each malformed cell. `record` is None unless there
+    is no finding, the one state the ranking recompute reads."""
+    out = [f"`{c.lower()}` is missing" for c in _RECORD_ELEMENTS if not _cell(row, c)]
+    candidates = _entries(row, "Candidates")
+    for c in sorted({c for c in candidates if candidates.count(c) > 1}):
+        out.append(f"`candidates` lists {c} more than once")
+    objective = _cell(row, "Objective")
+    verb, _, metric = objective.partition(" ")
+    if objective and (verb not in ("minimize", "maximize") or not metric.strip()):
+        out.append(f"`objective` {objective!r} is not `minimize|maximize <metric>`")
+    scores, score_out = _score_findings(row, candidates)
+    violators, constraint_out = _constraint_findings(row, candidates)
+    out += score_out + constraint_out
+    selected = _cell(row, "Selected")
+    if selected and candidates and selected not in candidates:
+        out.append(f"`selected` {selected} is not a candidate")
+    out += _override_findings(_cell(row, "Override"), selected)
+    sign = 1 if verb == "minimize" else -1
+    key = {c: (c in violators, sign * scores.get(c, 0)) for c in candidates}
+    return (None if out else (candidates, key, selected)), out
+
+
+def _ranking_findings(record, override):
+    """The recompute: a feasible candidate (one no constraint names) ranks above
+    every infeasible one, then by score in the objective's direction; equal
+    keys tie, and a tie may be listed in either order."""
+    candidates, key, selected = record
+    out = []
+    for i, c in enumerate(candidates):
+        above = [d for d in candidates[i + 1 :] if key[d] < key[c]]
+        if above:
+            out.append(f"the recompute ranks {above[0]} above {c}, listed before it")
+            break
+    first = not any(key[c] < key[selected] for c in candidates)
+    if not first and not override:
+        out.append(f"`selected` {selected} is not ranked first and has no `override`")
+    if first and override:
+        out.append(f"`override` is present although `selected` {selected} ranks first")
+    return out
+
+
+def _derivation_findings(rid, row, live):
+    """Why a citing row's `Derivation` does not resolve, in one hop, to a live
+    row holding the record ([] when it does)."""
+    target = _cell(row, "Derivation")
+    if any(_cell(row, c) for c in _RECORD_CELLS):
+        return ["`derivation` sits beside record cells: hold the record or cite it"]
+    if target == rid:
+        return ["`derivation` points at the row itself"]
+    if target not in live:
+        return [f"`derivation` names {target}, which is no live component row"]
+    if _cell(live[target], "Derivation"):
+        return [f"`derivation` names {target}, which itself cites another row"]
+    return []
+
+
+def _row_causes(rid, row, live):
+    """One live row's causes: its citation's when it cites, else its record's,
+    the ranking recompute running only on a record with no other cause. None
+    when the row neither holds a record nor cites one."""
+    if _cell(row, "Derivation"):
+        return _derivation_findings(rid, row, live)
+    if not any(_cell(row, c) for c in _RECORD_CELLS):
+        return None
+    record, causes = _record_findings(row)
+    return causes or _ranking_findings(record, _cell(row, "Override"))
+
+
+def derivation_record_findings(rows):
+    """Each live CMP row's derivation-record finding (SR-165): the row holds
+    the record or cites, with `Derivation`, the one live row holding it. Absent,
+    incomplete (one finding per missing element) and malformed records are
+    reported, and only a record with none of those is recomputed: an order the
+    recompute contradicts, a selection not ranked first with no override, and
+    an override where the selection ranks first. A finding against a held
+    record is reported once, on the holding row, naming the rows citing it.
+    `-000` rows are vacuous, as is a registry with no live row.
+
+    Implements: SR-165, LLR-172"""
+    live, citers, out = {}, {}, []
+    for r in rows:
+        rid = _cell(r, "CMP-ID")
+        if CMP_ID_RE.match(rid) and not rid.endswith("-000"):
+            live[rid] = r
+    for rid, row in live.items():
+        if _cell(row, "Derivation") not in ("", rid):
+            citers.setdefault(_cell(row, "Derivation"), []).append(rid)
+    for rid, row in live.items():
+        label = f"{CMP_CSV} {rid}"
+        if rid in citers:
+            label += " (record cited by {})".format(", ".join(citers[rid]))
+        causes = _row_causes(rid, row, live)
+        if causes is None:
+            out.append(f"{label}: {_NO_RECORD}")
+        out += [f"{label}: derivation record: {c}" for c in causes or []]
+    return out
+
+
 def component_findings(root):
     """The How-SW component-coverage finding(s) (process-options.md "Component
     layer"). Returns the finding strings ([] when opted out or clean). The caller
     prints them WARN plain and promotes them to ERROR under `--strict` (DevStg-Tests+).
     Opt-out via `[checks] components_check = false`. Five rules, all off the arch-map ⇒
-    CMP join:
+    CMP join, and the registry's own derivation record:
 
     - **Top-view right-sizing** (WI-073/FB5): vacuous when the arch-map inventory
       has ≤ TOP_VIEW_MAX modules (a small or pre-arch-map repo can never exceed the
@@ -1694,8 +1866,12 @@ def component_findings(root):
       either way (fail-safe), so this rule is reporting, never gating, the
       fail-safe default — it just says so out loud instead of leaving the
       author to notice a seam finding that did not go away.
+    - **The partition's derivation record** (SR-165, WI-999): see
+      `derivation_record_findings` — each live CMP row holds the record or
+      cites the row that does, and the record recomputes. Off the registry
+      alone, so it needs no arch-map.
 
-    Implements: SR-159, LLR-049
+    Implements: SR-159, LLR-049, SR-165, LLR-172
     """
     if not read_components_check_enabled(root):
         return []
@@ -1733,6 +1909,8 @@ def component_findings(root):
         )
     out.extend(cross_component_findings(root))
     out.extend(kernel_allow_parse_findings(root))
+    cmp_rows = spine_carrier.load(root / CMP_CSV, "CMP-ID")
+    out.extend(derivation_record_findings(cmp_rows))
     return out
 
 
