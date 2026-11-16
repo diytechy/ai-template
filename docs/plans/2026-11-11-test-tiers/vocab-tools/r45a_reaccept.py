@@ -16,6 +16,7 @@ NOT in this pass:
   "approve" (`args.approves` and the flag move in one rule there).
 - `RE-ATTESTATION-PENDING`: a retired commit-message convention, named as it
   was spelled.
+- `held_reattest_refusal`: a retired function that a test asserts is gone.
 """
 
 import sys
@@ -65,4 +66,7 @@ PROTECT = list(_PROTECT) + [
     # in test_baseline_snapshot writes the ledger as "...\nreattested = []\n"
     r"(?<=\\n)reattested(?![A-Za-z0-9_])",
     r"RE-ATTESTATION[ -]PENDING",
+    # a retired function, asserted ABSENT by test_held_status: renaming it
+    # would make the assertion vacuous (reviewed 2026-11-16)
+    r"held_reattest_refusal",
 ]

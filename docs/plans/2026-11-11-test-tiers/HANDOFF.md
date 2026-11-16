@@ -815,6 +815,7 @@ committed (D14).
 
 | §4.2 and §4.3, the dial | applied: `[attestation]` is `[authority]`, `human_approval_through` is `operator_accepts_through`, `LEGACY_ATTESTATION_KEY` is `LEGACY_DIAL_KEY`. 290 lines by rule in 73 files. The readers of older spellings (the 0-4 ordinal, the older key name, the gate-policy enum) still read them, now inside the renamed table, until D11's change. The note in the policy template that explained why the key was not called "attest level" is removed. "attestation" as a work-item safety class is untouched: it moves with the act. Its 82 test modules and `check_trajectory.py --strict` were running when this was written |
 | The migrator, continued | a third step: the policy file's table and dial key, by line edit proved by a second parse (an inline or dotted table is refused, not guessed). 22 tests. Its manifest row is in. Its spine rows are written as `Drafted`: SR-247, LLR-369, TC-427, component CMP-006, with the id watermark raised. `docs/stage` now reads settled `DevStg-Impl`, live `DevStg-Reqs`, which is what three drafted rows in phase 6 mean; the operator's acceptance of them is owed (D18) |
+| §4.2, the act (§10.5) | done in four passes, six commits on `maint/vocabulary` (`deb642747` to `a40b38de4`): re-attest, the brief kind and safety class, approve and attest, then the status, the record and its ledger through the migrator. §9.9 |
 
 Traps this session walked into:
 
@@ -1159,6 +1160,228 @@ Traps found:
     interface files because "the owner" there is the providing side, and so
     missed `OWNER_KEY` in an IF row's data cell. After a rule file with a
     skip list, scan the skipped files for its `TOKENS` and `PARTS`.
+
+### §9.9 The seventh session: approve and attest become accept (§10.5)
+
+Written 2026-11-16. It did §10.5's four passes on `maint/vocabulary`, from
+`049f481d3`, each through §10.3's loop with every line of every dry run read.
+Hook bypassed (D14); nothing pushed. The rule and hand-edit files are in
+`vocab-tools/` under the names below.
+
+| Pass | Commit | By rule | Hand edits and stored values | Tests (touched modules plus the standing six, 8 workers, variable unset) |
+|---|---|---|---|---|
+| 1. re-attest to re-accept | `deb642747` | `r45a_reaccept.py`: 956 lines in 91 files. The draft was read whole first; it would have renamed `held_reattest_refusal`, a retired function a test asserts is gone, so that name is protected | none | 37 modules: 1,267 passed, 3 skipped |
+| 2. the kind and the class | `cd6004963` | `r45b_first_acceptance.py`: 482 lines in 79 files; `git mv` of the prompt to `adjudicate-first-acceptance.template.md` | `h45b.py` (5): bootstrap's dial-key migration, see below. `h45b_rows.py`, `h45b_migrator.patch`: the migrator's list step `POLICY_ITEMS` respells the kind in `[adjudicator] retain_for`; two tests; run here | 41 modules: 2,212 passed, 1 skipped, 1 failed (`test_dogfood_sync`: the WI-000 example under `docs/work/` is a record the rules skip; recopied, then 44 passed, 1 skipped) |
+| 3. approve and attest to accept | `401b53008` | `r45c_accept.py` 4,146 lines in 246 files; `r45d_attest.py` 166 in 54; `r45e_residue.py` 28; `r45c2_is_approved_back.py` returns `is_approved` to pass 4 | `h45c.py` to `h45f.py` (64): the review-round modules' act-sense lines, `check_vocab`'s suggestions, S7 ("claim"), three forms the dial concept missed, the open-item brief lint's word signal; the glossary entry **approve** (D12) | 106 modules: 3,913 passed, 3 skipped, 11 failed; fixed (`h45f.py`), then 3,922 passed, 3 skipped, 2 failed (the two known, below) |
+| 4. status, record, ledger: code and rows | `e119d6680` | `r45f_status.py` 1,734 lines in 170 files; `r45g_status_rows.py` 58 lines in 7 live registries (the rows' text; the `status` cell left to the migrator); `git mv` of `last-approved-README.template.md` | `h45g.py` (8); `h45h_migrator.patch` and `h45h_rows.py`: the status value and the record step, four tests, LLR-369, TC-427, SR-247; the migrator run (below) | 135 modules (`vocab-tools/s45_tests.txt`): 4,837 passed, 3 skipped, 3 failed. Two are the known ones; the third, `test_intake_settled`'s real landings, is pre-cut history (below): it now skips with that reason, and the module gives 27 passed, 1 skipped |
+| 4. the record move | `2bee2b551`, then `a40b38de4` (the open-items view, regenerated over it) | the migrator moved the directory | `h45i_relink.py`: 20 links in 9 records re-based | the standing checks on the committed tree: clean (below) |
+
+**Pass 2 found a bug the dial concept left.** `bootstrap._migrate_dial_key_name`
+reads the `[authority]` table but passed the table's earlier name to
+`_confirmed_edit` on a line of its own, where the dial concept's rule never
+looked. Every rename of the retired dial key under a bare `[authority]` header
+was refused and left in place. Fixed, with a test that fails without the fix
+(TC-152's evidence names it).
+
+**What the migrator now does for pass 4** (LLR-369, TC-427, SR-247, all
+`Drafted`):
+
+- `VALUES` maps the status in `status` (TOML) and `Status` (CSV), in the three
+  letter cases a reader folds. Here: 904 live cells (SN 35, SR 138, LLR 334,
+  TC 380, components 4, external 13) and the record's copies.
+- `record` runs last. It moves `docs/archive/last_approved/` to
+  `docs/archive/last_accepted/`, re-keys the two keys of each `[[act]]` entry
+  in `acts.toml` (182 entries) under the same re-parse proof as the decisions
+  step (`_rekeyed`, now shared), and writes each registry copy equal to live,
+  naming every accepted cell it absorbs (D13). Both names present, or a ledger
+  edit the re-parse cannot prove, leaves the record untouched and exits 1.
+- **439 cells in 242 rows absorbed**, each named in
+  `vocab-tools/s45_record_absorbed.txt` (LLR 92 rows, TC 78, SR 57, SN 12,
+  external 3; most often `detail`, `rationale`, `method`). Of these, 169 cells
+  in 116 rows were already pending at `049f481d3` (the earlier sessions'
+  rewording of accepted rows, D5); passes 1 to 3 brought it to 425 in 235;
+  pass 4 the rest. No row was missing from live.
+- A row edit made after the migrator has run leaves the copies unequal again:
+  `--check` names them, and a second run writes them (it did here, for
+  LLR-369, SR-247 and TC-427, absorbing nothing since they are `Drafted`).
+
+**The record move breaks links in records.** Nine records (eight review
+files of September's waves and one log fragment) link into
+`docs/archive/last_approved/`, and `check_docs` validates links in history too.
+Their link targets are re-based in the record-move commit; their words are
+not touched. Neither file kind is in a verdict's tree identity
+(`kitlib/verdict.py` drops `docs/reviews/` and `docs/log.d/`), so no verdict
+goes stale. The migrator does not re-base links: an adopter whose records
+link into the record meets the same `check_docs` failure (re-sync entry,
+§10.7 item 5). Whether the migrator should do it is not ruled.
+
+**Decision (a): the migrator does not recompute the observation digests.**
+`record_observation._row_digest` hashes a row's cells, `status` included, and
+`rejudge.due_cases` reads a case as due when an input's digest differs from
+the one recorded as judged. All five observed cases (TC-055, TC-209, TC-210,
+TC-211, TC-279; 18 records) already had inputs changed beyond `status` by the
+earlier passes: TC-055 by `gen_trajectory.py`, `rendering/`, SR-054 and
+LLR-055; TC-209 to TC-211 by `inspection-procedures.md` and their SRs (with
+`hats.toml` and the reviews); TC-279 by `sampled-new-reader.md` and DA-011.
+A digest records what was judged; recomputing it over text nobody judged would
+claim a judgement that was not made, and only for the status would it even be
+true. So they read due, which they are, at each case's own next checkpoint
+(TC-055 by its `component:CMP-009` trigger at a merge, the other four at
+`release`). Nothing else reads the digests.
+
+**Decision (b): history before the cut.**
+
+- `check_trajectory.loop_held_status_findings`: **no change; pre-cut trees are
+  judged, and the status word does not matter.** It judges every status move a
+  `Loop-Session` commit made (`held_status.held_status_lines` reads any
+  `before -> after`, not a move into one word) against the dial in that
+  commit's own tree. The pass changes neither, so the count is unchanged by
+  it: 117 advisory WARNs before and after. They come from the dial's table
+  rename (§9.1, the third session): a pre-cut tree declares the dial under
+  its earlier table name, which `dial_from_config` reads as absent, so as
+  the most-held rung. The
+  migration commits carry no `Loop-Session` trailer and are not judged. Making
+  a pre-cut tree "not judged" would need a reader of the earlier table name,
+  which D3 rules out; the WARNs are advisory, and B2 removes the walk.
+- `check_test_first.py`: **no change; pre-cut history is not judged, and its
+  documented rule already says so per requirement.** It reads first
+  acceptances through `acceptance_record`, which now reads only `Accepted`. A
+  row moved into `Accepted` from a word outside the closed status vocabulary
+  is a rename, accepted at or before that commit (LLR-257, an inexact date),
+  and a requirement whose acceptance date is inexact and after the declared
+  start is reported as unread, never passed. So every requirement accepted
+  before the cut now reads as first accepted, inexactly, at the cut.
+  Before pass 4: "OK" (of the 138 accepted SRs, 75 were accepted at the
+  declared start `f537fc531d` and out of scope; 63 were accepted after it and
+  judged, none late). After, on `a40b38de4`: 117 WARN lines, one per
+  requirement, each "the order against SR-nnn at or before e119d6680a cannot
+  be read", and a summary; exit 0. All of it is warn-only (the shipped step
+  never passes `--strict`), so nothing is refused. Teaching it
+  that the earlier spelling was the act would be a reader of an earlier
+  spelling (D3). **For the operator:** move `[checks] test_first_since` in
+  `docs/process.toml` to the commit that carries the cut onto trunk's
+  first-parent line (the merge of this branch, §10.7, not a commit on the
+  branch, which never stands on that line). Requirements accepted before the
+  cut then fall out of scope instead of each warning; the cost is that the
+  63 judged since `f537fc531d` are no longer judged. Not done here: the start
+  is the project's declaration. Every adopter whose start precedes its
+  migration meets the same choice (re-sync entry).
+- A test that reads real pre-cut commits: `test_intake_settled`'s
+  `test_the_two_real_redundant_landings_mint_nothing` (TC-403) walks two
+  pinned September landings and first checks its premise, that the walk
+  returns the rows the redundant mint named. Through the current reader those
+  trees hold no accepted row and no record under its current name, so the
+  premise failed (it would otherwise pass by seeing nothing). The same rule
+  applies: a pre-cut tree is not judged. `_landings_unavailable`, which
+  already names a shallow clone or a source export as a reason to skip, now
+  names a landing whose tree has no `acceptance_record.SNAPSHOT_DIR`. The arm
+  stays pinned by the module's fixtures in both directions (27 passed, 1
+  skipped). **For the operator:** in this repository the test now always
+  skips, and TC-403's evidence still cites it; re-pin it to a post-cut
+  landing when one exists, or retire it. The other tests that pin real
+  commit ids (`test_bootstrap`, `test_check_test_first`, `test_old_kit_resync`,
+  `test_rule_sync`) ran and pass; `test_session_service`'s pins an external
+  convention, not a commit here.
+
+**Standing checks on `a40b38de4`:** `trace.py --strict` exit 0
+(`integrity=0`); `check_trajectory.py --strict` clean, 253 advisory WARNs on
+stderr (117 of them the loop walk above); `check_docs.py --stale`
+0 broken; `check_resync.py` OK; `gen_open_items.py --check`, `derive_stage.py
+--check`, `gen_prompt_catalog.py --check`, `gen_skills_index.py --check`
+fresh; `migrate_vocabulary.py --check` "nothing stored in an earlier
+spelling"; `ruff format --check`, `ruff check` clean. `intake.py snapshot`
+was never run.
+
+**Known failures left** (§10.7 item 6, D17), all re-stamps:
+
+- `test_capped_doc_baselines_match_the_real_sizes`: `CLAUDE.md` 8,037 to
+  8,039 bytes; `AGENTS.template.md` 9,999 to 9,998.
+- `test_module_sizes_exactly_match_the_committed_baseline`: `trace.py` 3,851
+  to 3,852 code lines.
+- `check.py --path-triggered`, the `complexity` step: already failing at
+  `049f481d3` (`bootstrap.copy_kit_files` 20 over 17, `trace.render_console`
+  36 over 34, `check_docs._needs_operator_block` from §10.4, a stale
+  `gen_arch_map.header_lines` row). The passes add two re-keys, each with an
+  unchanged score: `trace.reattest_model` is `reaccept_model` (34) and
+  `trace.approval_lines` is `acceptance_lines` (74). `docs/complexity-baseline`
+  is §10.7 item 6.
+
+**Left as written, for later passes or the operator:**
+
+- S3, the method (now `Vouch`): `hats.toml` "critique or attestation",
+  `PROCESS_OPTIONS.md:2702` "gate-attested", the rubric's "a rubric or an
+  attestation", SR text "inspection, critique and attestation tests",
+  `trace.py`'s "SR-002 attested", `make_attest_project` in `test_trace.py`.
+- S1, the passed-checks record: every `attest` of the lane station, the review
+  attestation, `attest_build`, "half-attested" in `dispatch.py` (§10.6).
+- `PROCESS_OPTIONS.md:2903`, "(review file, critique, attestation)": the last
+  item could be S3 or S6; read it with §10.6.
+- "owner" leftovers the §10.4 sweep missed: `README.md:321` "one owner
+  sitting"; `docs/process.toml:303` "# Owner, 2026-10-05".
+- The retired `Approval` column, in history notes and `trajectory_arch`'s
+  in-memory key "approval"; `docs/process.toml:126` and `:129`, a stale
+  `approval` cell-class comment.
+- `docs/ratify/CURRENT.md` is stale; it regenerates before trunk (§12.6).
+- The record's own `README.md` moved with it unchanged: it is this
+  repository's record, not the template, and still opens "`last_approved` —
+  the approval stamp". Whether a record's README follows the rename is not
+  ruled; the template it was scaffolded from has.
+- `docs/complexity-baseline` and the module-size baseline are keyed by
+  function name: re-key the renamed functions at §10.7 item 6.
+
+**For the re-sync entry (§10.7 item 5).** The prompt file and its
+`--prompt-map` key (`ADJUDICATE-FIRST-ACCEPTANCE`); the slots
+`{acceptance_act}` and `{accepts_rows}`; the check steps `acceptance-fresh`
+and `acceptance-immutable`; the flags `--accept`, `--accepts`, `--reaccepts`,
+`--mint-acceptance-brief`, `--acceptance-immutable`; the `[generated]` label
+`accept`; the adjudicator's grammar (`- [ACCEPT]`, `OUTCOME: ACCEPT`,
+`ACCEPT|RETURN`); old verdict files and bindings keep the old kind (D15);
+`safety_class = "acceptance"`; `retain_for`; the record's
+new directory and ledger keys; the old prompt file left beside the new one by
+a copy-over; the observations that read due; links into the old record path;
+and that the migration commit is refused by the hooks.
+
+Traps found:
+
+32. *A protection can split a variable from its uses.* Patterns meant for
+    TOML and prose (`approved = [`, `approval = "`) also held Python
+    assignments in `adjudicate_act.py` and `test_rule_sync.py` while their
+    uses moved. Anchor a protection to the context it means.
+33. *A test can derive a name from a stored word.* The `is_approved` test
+    builds the predicate's name from the status. Rename the two together.
+34. *Trap 22 has a second home.* `docs/work/queued/WI-000-example.md` copies
+    the work-item template from under `docs/work`, which the rules skip as
+    records; recopy it with `docs/rubrics/`.
+35. *A missed form can be a live bug.* See pass 2 above. Read what a missed
+    form does, not only how it is spelt.
+36. *A tripwire follows the rename.* `test_gate_policy`'s gate-authority
+    tripwire, renamed, catches plain "accepts" in `PROCESS.md`.
+37. *A file-name protection catches fixtures.* `*approv*.md`, meant for dated
+    record names, held a fixture named from its slug while the slug moved.
+38. *`EXTRA` bypasses `check_vocab`'s live scope.* A glob in a registry-only
+    rule file reached `open-items.toml`, a record. Name the files.
+39. *A phrase protection fails across a line break.* Hand-edit it.
+40. *Files skipped whole still hold renamed flags in prose.* The reviewer
+    prompt (skipped for D12) still said `trace.py --approve`. After renaming a
+    flag, search the skipped files for it.
+41. *A hand edit of a Python line holding `\n`* must be written as a raw
+    string, or it matches nothing.
+42. *Quoted `"approved"` had three senses in the code*: the status read
+    case-folded, the ledger's key and the cell class. All three are
+    "accepted" now; each was read.
+43. *`(?i)` inside a `PROTECT` pattern* is a global flag in the middle of the
+    joined regex and fails; write `(?i:…)`.
+44. *Moving the record breaks links in records.* Re-base them in the move's
+    commit (`h45i_relink.py`).
+45. *Row edits after the migrator run leave the record's copies unequal.* Run
+    the migrator after the last row edit, and `--check` before committing.
+46. *A generated view reads the record from git.* `gen_open_items` names each
+    copy by the commit that last wrote it, so a view generated before the
+    record is committed says no snapshot exists. Regenerate after the record
+    commit (`a40b38de4`).
+47. *A test can read real history.* Pinned commit ids are pre-cut trees the
+    current reader cannot see into. Search `tests/` for 40-hex ids after a
+    rename of a stored value.
 
 ## §10. Runbook: finishing the migration
 
@@ -1839,3 +2062,17 @@ list is fixed unless §12.6 says so.
     and read every line before applying.
   - Housekeeping still owed: `C:\Projects\.pytest-tmp` (with VS Code closed),
     and the merged worktrees of item 5.
+- **2026-11-16, §10.5 is done.** Four passes on `maint/vocabulary`, six
+  commits: `deb642747` (re-attest to re-accept), `cd6004963` (the kind and
+  the class), `401b53008` (approve and attest to accept), then pass 4 as
+  `e119d6680` (the status, the record's name and the ledger keys in code and
+  rows), `2bee2b551` (the record moved by the migrator, and the nine records
+  whose links pointed into it) and `a40b38de4` (the open-items view
+  regenerated over the moved record). §9.9 has the counts, the decisions on
+  the observation digests and on pre-cut history, the traps (32 to 47) and
+  what is left. `intake.py snapshot` was not run. The unfiltered suite was
+  not run (§10.7 item 7). Next: §10.6.
+  - **For the operator:** `[checks] test_first_since` (§9.9, decision (b));
+    `test_intake_settled`'s real landings, which now always skip; whether the
+    migrator should re-base links into the moved record; whether the record's
+    own README follows the rename.
