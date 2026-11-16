@@ -718,6 +718,16 @@ def test_reverse_coverage_reads_non_python_source_but_not_unlisted_types(tmp_pat
     assert "LLR-002" in gen_arch_map.scan_backlinks([src], (".md",))
 
 
+def test_godot_source_is_a_recognised_module_type(tmp_path):
+    # GDScript comments are `#`; a Godot project's `.gd` tags were skipped.
+    _root, src = _backlink_repo(tmp_path, ["LLR-001"])
+    (tmp_path / "src" / "game.gd").write_text(
+        "# Implements: LLR-001\nextends Node\n", encoding="utf-8"
+    )
+    assert gen_arch_map.scan_backlinks([src]) == {"LLR-001": ["src/game.gd"]}
+    assert gen_arch_map._norm_module("game/scripts/game.gd") == "game/scripts/game"
+
+
 def test_the_dial_reads_zero_for_everything_it_cannot_trust(tmp_path):
     """0 is report-only AND the fallback: a threshold has no conservative
     default to fail toward, so an unreadable dial must not invent a bar. The
