@@ -71,7 +71,7 @@ theme and says so in its own docstring:
                  files are one format with different fields.
   * `station`  — the lane-close TERMINAL-OUTCOME vocabulary: the three states a
                  lane can close into, the status directory each is declared by,
-                 the bar-attestation trailer label, and the "exactly one
+                 the passed-checks record's label, and the "exactly one
                  declared directory, or none" decision.
   * `secret_classes` — the credential CLASS vocabulary: which named classes
                  (PEM private key, GitHub token, GitHub fine-grained token,

@@ -69,7 +69,7 @@ drv = load_script("dispatch")
 from kitlib import provenance  # noqa: E402
 from integrate_fixtures import claim_by_hand  # noqa: E402
 
-# The attestation constant has ONE home; a literal here would be a second one
+# The trailer's label has ONE home; a literal here would be a second one
 # that could drift silently past every test in this file.
 integ = drv.integrate
 
@@ -802,7 +802,7 @@ def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path,
     assert (root / "docs" / "handbacks" / "WI-401-wi-401-widget.md").is_file()
 
 
-def red_capped_worker(reds):
+def failure_capped_worker(reds):
     """A worker whose build stayed red at its commit checks for `reds` rounds:
     each round commits a red build and then the loop's own record of it, a
     session log keyed by that build's sha with the bar's summary. It then ends
@@ -821,18 +821,18 @@ def red_capped_worker(reds):
             sha = _git(wt, "rev-parse", "HEAD").strip()
             (logs / "t1-{:03d}-20261021-00000{}.log".format(n, n)).write_text(
                 "# agent session log\n# session: {:03d}\n# train: t1\n"
-                "# phase: BUILD\n# outcome: COMMITTED\n# bar-red: {}\n"
-                "# bar-summary: BAR-FAIL-MARKER {}\n".format(n, sha, n),
+                "# phase: BUILD\n# outcome: COMMITTED\n# checks-failed: {}\n"
+                "# checks-summary: BAR-FAIL-MARKER {}\n".format(n, sha, n),
                 encoding="utf-8",
                 newline="\n",
             )
             _commit(wt, "telemetry: round {}".format(n), when=T_LATER + 2 * n + 1)
-        return drv.ac.EXIT_RED_CAP
+        return drv.ac.EXIT_CHECK_FAILURE_CAP
 
     return worker
 
 
-def test_a_red_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_drain_quarantines_it(
+def test_a_failure_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_drain_quarantines_it(
     tmp_path, capfd
 ):
     """Implements: TC-381"""
@@ -840,7 +840,7 @@ def test_a_red_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_drain_
     # the lane partial with typed fields, its reason naming the count and the
     # last bar summary, and the drain's red refresh quarantines the lane.
     root = stub_harness_repo(tmp_path)
-    worker = then_closing(red_capped_worker(3))
+    worker = then_closing(failure_capped_worker(3))
 
     rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
     captured = capfd.readouterr()
@@ -969,9 +969,9 @@ def test_drive_end_to_end_claims_builds_merges_and_drains(tmp_path, capfd):
     assert "integrate: refreshed wi-401-widget onto trunk" in out, out
     assert "is not merge-ready" not in out, out
     # ...and the merged tip is the refresh commit, carrying the bar's own
-    # attestation for exactly that tree.
+    # record for exactly that tree.
     merged_tip = _git(repo, "rev-list", "--parents", "-n", "1", "HEAD").split()[2]
-    assert integ.refresh_attestation(repo, "wi-401-widget", merged_tip) is not None
+    assert integ.refresh_passed_checks(repo, "wi-401-widget", merged_tip) is not None
 
 
 def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
@@ -1004,8 +1004,8 @@ def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
     assert "wi-401-widget" in _git(repo, "branch", "--format=%(refname:short)")
     assert not (repo / "docs" / "work" / "complete" / "WI-401-widget.md").exists()
     # The lane is left exactly where the worker left it: no refresh commit, no
-    # attestation, so the slot could not merge it even if something tried.
-    assert integ.refresh_attestation(repo, "wi-401-widget") is None
+    # record, so the slot could not merge it even if something tried.
+    assert integ.refresh_passed_checks(repo, "wi-401-widget") is None
 
 
 # --- the spine barrier, end to end (WI-381, §A4/§A8) ---------------------------

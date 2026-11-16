@@ -417,7 +417,7 @@ def test_meta_process_tab_smoke():
 # 08-01 diagram review's constraint governs this suite: the stage vocabulary must
 # never again pin the dashboard to itself — every assertable stage name is either
 # DERIVED in the panel from the shipped module's own constant (integrate.
-# OUTCOME_DIRS, integrate.BAR_GREEN, schedule's kind tables) or, where a label
+# OUTCOME_DIRS, integrate.CHECKS_PASSED, schedule's kind tables) or, where a label
 # has no exported constant, held by a sync pin against the module it mirrors
 # (dispatch._kind_action, intake.tier_signal), so drift reds.
 
@@ -515,17 +515,17 @@ def test_station_slot_is_the_serial_waist(tmp_path):
     assert "fill:var(--slot)" in text
 
 
-def test_station_refresh_pins_the_bar_attestation(tmp_path):
+def test_station_refresh_pins_the_passed_checks_record(tmp_path):
     """Implements: TC-056"""
-    # THE SYNC PIN for §A2: the refresh card carries the shipped attestation
-    # label (integrate.BAR_GREEN, the trailer the merge slot verifies) and the
+    # THE SYNC PIN for §A2: the refresh card carries the shipped passed-checks record's
+    # label (integrate.CHECKS_PASSED, the trailer the merge slot verifies) and the
     # refresh sequence the integrator actually runs (merge trunk in, trunk_step,
     # the bar) — derived/pinned, never folklore.
     integ = load_script("integrate")
     with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     station = _station_div(html_of(tmp_path))
-    assert integ.BAR_GREEN.rstrip(":") in station
+    assert integ.CHECKS_PASSED.rstrip(":") in station
     assert "trunk_step" in station
     assert "merge trunk in" in station
 

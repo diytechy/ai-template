@@ -93,7 +93,7 @@ os.environ["CODEX_HOME"] = str(ROOT / "tests" / "_no-codex-home")
 # docs/stack.ini [smoke-budget] and tests/test_smoke_budget.py.
 SLOW_MODULES = frozenset(
     {
-        # WI-996: the expected-failure marker's attest and refresh arms on real
+        # WI-996: the expected-failure marker's record-checks and refresh arms on real
         # lanes; its in-process pin is tests/test_red_mark.py.
         "test_red_mark_lane",
         # P9R selector tests create/commit real Git fixtures and invoke the
@@ -139,8 +139,8 @@ SLOW_MODULES = frozenset(
         "test_integrate_admission",  # what the slot admits: outcome/mint/verdict/bar
         "test_integrate_station",  # the station protocol, refresh + merge slot
         "test_integrate_unload",  # the §5.6 branch + worker-worktree unload
-        "test_integrate_attest",  # WI-956: the attest route on station repos and lane worktrees
-        "test_bar_attestation",  # WI-956: the Bar-Green grammar and peel, a real git repo per case
+        "test_integrate_record_checks",  # WI-956: the record-checks route on station repos and lane worktrees
+        "test_passed_checks",  # WI-956: the Checks-Passed grammar and peel, a real git repo per case
         "test_dispatch",  # the dispatch loop: real git repos + the real bar (WI-374/WI-381)
         # The two lane closes: real claims (so the real trunk_step --regen
         # subprocess), real lane worktrees, real reverts — the same heavy class
@@ -1487,7 +1487,7 @@ RED_MARK = (
     "pytest.mark.xfail(strict=True, raises=(Assertion"
     + "Error, pytest.fail.Exception))"
 )
-# The line a `docs/stack.ini` fixture that reaches `attest` or the refresh
+# The line a `docs/stack.ini` fixture that reaches `record-checks` or the refresh
 # declares, the key being required with no default. It is a `[product]` key,
 # so a fixture composes it straight after its `[product]` lines, before the
 # next header: `"[product]\ntest = ...\n" + BARS_RED_MARK`. A second
@@ -1520,7 +1520,7 @@ def require_commit_suite(root, name=COMMIT_SUITE):
     checks' declaration, whose other half is the suite's line under
     `docs/stack.ini` `[check-suites]`. The key is set in place through
     bootstrap's own writer, so every table the fixture already wrote stays as
-    it was. The file must exist: a fixture that reaches `attest` has declared
+    it was. The file must exist: a fixture that reaches `record-checks` has declared
     its trunk (`declare_trunk`), and this helper never makes a repository
     with no policy file into one with a file that is silent on every other
     dial. The caller commits the file."""

@@ -37,7 +37,7 @@ ROUTES = (
     (SCRIPTS / "bookkeeping.py", "commit", "root", ROOT_PATH),
     (SCRIPTS / "integrate.py", "refresh", "root", ()),
     (SCRIPTS / "integrate.py", "integrate", "root", ()),
-    (SCRIPTS / "integrate.py", "attest", "root", ()),
+    (SCRIPTS / "integrate.py", "record_checks", "root", ()),
     (SCRIPTS / "coordinator_guard.py", "take", "root", ()),
     (
         LEGS,

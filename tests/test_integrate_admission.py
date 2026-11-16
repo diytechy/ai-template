@@ -494,7 +494,7 @@ def _spine_lane(
         encoding="utf-8",
         newline="\n",
     )
-    _commit(root, "spine: the attested baseline", when=T_BASE)
+    _commit(root, "spine: the accepted baseline", when=T_BASE)
     assert integ.claim(root, "WI-401", "wi-401") == 0
     _git(root, "checkout", "-q", "wi-401")
     rows = _SR_HEADER + _sr("Accepted" if flip else "Drafted", "the AMENDED text")

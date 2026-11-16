@@ -147,7 +147,7 @@ def _round_owed(root, branch):
     file is invalid evidence (WI-884) — which is exactly the refusal class a
     worker can discharge. A refusal with nothing owed is one of the gate's
     other three answers — a dissent, a reroll-until-green, or a contradicted
-    attestation — and none of them is fixed by drawing another round.
+    trailer — and none of them is fixed by drawing another round.
 
     Fails toward NOT owed at every unreadable step: git that cannot name the
     tree, or a lane with no readable claim commit, leaves the gate's own
@@ -300,8 +300,8 @@ def _drain(root, tier):
     for branch in integrate.finished_branches(root):
         ready, _why = integrate._landing_ready(root, branch)
         if ready:
-            # A lane's own refresh (or a hand refresh) already attested this
-            # exact tip against the current trunk, and its watermark holds the
+            # A lane's own refresh (or a hand refresh) already recorded the
+            # landing checks for this exact tip against the current trunk, and its watermark holds the
             # id carrier's fold: the slot's own readiness question, so the slot
             # will not refresh it again — redoing the disposable commit would
             # spend a full bar to reproduce it.
@@ -601,21 +601,21 @@ _WORKER_OUTCOMES = frozenset(
         ac.EXIT_BUDGET,
         ac.EXIT_NEEDS_OPERATOR,
         ac.EXIT_PAUSED,
-        ac.EXIT_RED_CAP,
+        ac.EXIT_CHECK_FAILURE_CAP,
     }
 )
 
 
-def _red_cap_close(root, branch):
+def _failure_cap_close(root, branch):
     """`(reason, not_delivered)` for a lane whose worker hit the commit-check
     failure cap: the count and the last run's summary read through
-    `kverdict.red_rounds` from the lane's merge base with trunk, and the
+    `kverdict.failed_rounds` from the lane's merge base with trunk, and the
     declared cap (`kconfig.RED_ROUNDS_KEY`).
 
     Implements: SR-242, LLR-343
     """
     code, base = ac.git(root, "merge-base", ac.trunk_name(root), branch)
-    red = kverdict.red_rounds(root, branch, base.strip()) if code == 0 else None
+    red = kverdict.failed_rounds(root, branch, base.strip()) if code == 0 else None
     count, last = (red.count, red.last_summary) if red else ("unreadable", "-")
     reason = (
         "commit-check failure cap: {} consecutive failed rounds ([build] {} = "
@@ -727,8 +727,8 @@ def _lane_close(root, branch, code):
             "commit range above.".format(code, branch)
         ),
     }
-    if code == ac.EXIT_RED_CAP:
-        reason, fields["not_delivered"] = _red_cap_close(root, branch)
+    if code == ac.EXIT_CHECK_FAILURE_CAP:
+        reason, fields["not_delivered"] = _failure_cap_close(root, branch)
     _ids, refusal = handback.close_partial(root, branch, reason, fields)
     if refusal:
         _say("cannot close {} as partial: {}".format(branch, refusal), err=True)
@@ -835,7 +835,7 @@ def _advance(root, ln, tier, restarting=False):
     if rc == 0:
         # THE MERGE SLOT, scoped to this lane's branch: another lane may be
         # mid-refresh on its own branch and must not be pulled into the slot
-        # half-attested.
+        # half-refreshed.
         code = integrate.integrate(root, tier, branches=[ln.branch])
         if code != 0:
             return ("fatal", code)

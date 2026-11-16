@@ -245,12 +245,14 @@ is required; it declares one moment today, `commit`. Formerly a "bar";
 
 ### commit checks
 
-The [required checks](#required-checks) for a commit a lane attests.
-`integrate.py attest` runs the named [check suite](#check-suite), then the
-row's derived review tests, and records the green in the commit. Formerly the
-"commit bar" and the "review bar", two words for one thing; **commit checks**
-is kept. The attestation's recorded name is still `review` (the trailer reads
-`Bar-Green: ... bar=review`).
+The [required checks](#required-checks) for a commit a lane builds.
+`integrate.py record-checks --checks commit` runs the named
+[check suite](#check-suite), then the row's derived review tests, and when
+both pass commits the lane's staged work carrying a
+[passed-checks record](#passed-checks-record) with `checks=commit`. When they
+fail, the loop writes a [failed-checks record](#failed-checks-record).
+Formerly the "commit bar" and the "review bar", two words for one thing;
+**commit checks** is kept.
 
 ### landing checks
 
@@ -272,6 +274,17 @@ anything, so it is not an [acceptance](#accept). Formerly the "bar
 attestation", written `Bar-Green: ... bar=<review|landing|no-bar>`;
 **passed-checks record** is kept, and a trailer in the earlier form is not
 read.
+
+### failed-checks record
+
+The two header lines a build's session log carries when its
+[commit checks](#commit-checks) failed: the build commit they refused and a
+one-line summary, written `# checks-failed: <sha>` and
+`# checks-summary: <line>`. The
+[commit-check failure cap](#commit-check-failure-cap) counts these since the
+last [passed-checks record](#passed-checks-record). Formerly the "red
+record", written `# bar-red:` and `# bar-summary:`; **failed-checks record**
+is kept, and headers in the earlier form are not read.
 
 ### gate checks
 

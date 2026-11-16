@@ -305,7 +305,7 @@ EXIT_RESTART = 11
 # declared number of consecutive rounds (`[build]
 # stop_lane_after_consecutive_commit_check_failures`). A decided worker outcome, after
 # the permanently retired 10 and RESTART.
-EXIT_RED_CAP = 12
+EXIT_CHECK_FAILURE_CAP = 12
 
 
 # The FB3 operator-only path(s): OPERATOR_SCRATCHPAD.md is free-form operator notes the
@@ -1497,10 +1497,11 @@ def write_session_log(iter_dir, meta, transcript):
         # `full|narrow <base>..<reviewed sha>` (kitlib.verdict.gating_span):
         # the reviewed range, base and tip.
         "review-scope",
-        # WI-958: a red commit checks' record, keyed by the build commit it
-        # refused (kitlib.verdict.format_red_record); empty on every other log.
-        "bar-red",
-        "bar-summary",
+        # WI-958: the failed-checks record, keyed by the build commit the commit
+        # checks refused (kitlib.verdict.format_failed_record); empty on every
+        # other log.
+        "checks-failed",
+        "checks-summary",
         "tokens",
         "cost-usd",
         "wall-secs",
@@ -1731,10 +1732,10 @@ def commit_telemetry(root, session, label, paths, trailer=None):
     files in the tree exactly as before — never fatal, so the fix can only help
     (a walk-away run that today dangles telemetry keeps working either way).
 
-    `trailer` is the round's `Review-Verdict:` ATTESTATION (OI-76 alternative C,
-    the `Bar-Green:` pattern), and it changes one rule: an attestation must land
+    `trailer` is the round's `Review-Verdict:` TRAILER (OI-76 alternative C,
+    the `Checks-Passed:` pattern), and it changes one rule: a trailer must land
     even when the bookkeeping it rides did not change, so a trailer commits
-    EMPTY rather than not at all. That is the same trade `Bar-Green` makes: the
+    EMPTY rather than not at all. That is the same trade `Checks-Passed` makes: the
     commit's value is the words, not the diff. "An empty commit changes no tree"
     is only HALF of what makes that free, and the missing half was a defect: the
     identity is read through `verdict.governing_rev`, whose walk used to step by
@@ -1789,12 +1790,12 @@ def _telemetry_argv(session, label, trailer, dirty, rels):
     pathspec commits THE INDEX, so a single unrelated staged file (the caller's
     own `pre_staged` restore proves a non-empty index here is a state the
     authors already expect) lands inside a commit labelled `telemetry:`,
-    carrying a `Review-Verdict:` attestation on a commit that changed the work
+    carrying a `Review-Verdict:` trailer on a commit that changed the work
     tree. Round 015 closed that for `--allow-empty` REPLACING the pathspec, but
     left the scope itself conditional on `rels` — and a scope that exists only
     when its input is non-empty is no scope at all on the arm that matters:
     `commit_telemetry(root, s, l, [], trailer=…)` went on sweeping a staged
-    `src.py` into the attestation's carrier, driven. So the scope is STATED, by
+    `src.py` into the trailer's carrier, driven. So the scope is STATED, by
     `--only`, and holds on every arm instead of on the arms that happen to carry
     paths. With paths that is what `-- <paths>` already implied; with none,
     git-commit(1) documents `--only` together with `--allow-empty` as needing no

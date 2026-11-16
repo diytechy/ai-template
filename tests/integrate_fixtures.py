@@ -12,7 +12,7 @@ seven behaviour sections rather than by line count:
     test_integrate_admission.py  what the slot ADMITS: outcome, the R1 mint
                                  refusal, the verdict gate, the declared bar,
                                  the branch tree's harness, the window audit
-    test_integrate_station.py    the station protocol — refresh, attestation,
+    test_integrate_station.py    the station protocol — refresh, passed-checks record,
                                  the merge slot — and the real-bar end-to-end
     test_integrate_unload.py     the §5.6 unload of the branch and its worktree
 

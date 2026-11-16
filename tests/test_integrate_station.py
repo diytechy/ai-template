@@ -28,7 +28,7 @@ is that the constraint is really load-bearing rather than merely documented:
     is only true while that stays true;
   * **the pessimistic path is not dead code** — a two-branch drain reaches it by
     construction, since the first merge moves trunk out from under the second;
-  * **the attestation cannot be forged** — a hand-written bar-green trailer, an
+  * **the passed-checks record cannot be forged** — a hand-written Checks-Passed trailer, an
     amended refresh commit, and a work commit that merely QUOTES the trailer.
 
 THE TWO KINDS OF BAR IN THIS MODULE ARE A DELIBERATE SPLIT, stated because a
@@ -171,7 +171,7 @@ def station_repo(
     `scripts/` stubs to their source and `commit_suite` is the check suite
     `docs/process.toml` names as the one a commit must pass (None names
     none), all committed before the claim so the trunk and the lane carry the
-    same ones (the attest tests declare the commit checks and a recording
+    same ones (the record-checks tests declare the commit checks and a recording
     `[product] test` this way).
     """
     root = claim_repo(tmp_path, **spec_kw)
@@ -228,24 +228,24 @@ def close_branch(
     return wt
 
 
-# The `attest` route's harness (WI-956). The commit checks are declared the way
+# The `record-checks` route's harness (WI-956). The commit checks are declared the way
 # the shipped templates declare them: the suite's line here, under
 # `[check-suites]`, and the suite's name in `docs/process.toml`
-# (`attest_repo`). So the station's recording `check.py` stub is what they
+# (`checks_repo`). So the station's recording `check.py` stub is what they
 # run, and `[product] test` is a stub that records the named tests it was
 # handed: their order in `harness-order.txt` beside the bar's, and their exact
 # argv in `named-args.json`, both OUTSIDE the worktree for the reason
 # `STUB_TRUNK_STEP` states.
-ATTEST_SUITE = COMMIT_SUITE + " = python scripts/check.py --jobs 0 --tier smoke\n"
-ATTEST_STACK_INI = (
+CHECKS_SUITE = COMMIT_SUITE + " = python scripts/check.py --jobs 0 --tier smoke\n"
+CHECKS_STACK_INI = (
     "[product]\ntest = {py} scripts/named_tests.py\n"
     + BARS_RED_MARK
     + "[check-suites]\n"
-    + ATTEST_SUITE
+    + CHECKS_SUITE
 )
 
-# The derived set of `attest_repo`'s row, in its sorted order.
-ATTEST_FILES = ("tests/test_gadget.py", "tests/test_widget.py")
+# The derived set of `checks_repo`'s row, in its sorted order.
+CHECKS_FILES = ("tests/test_gadget.py", "tests/test_widget.py")
 
 STUB_NAMED_TESTS = """import json
 import pathlib
@@ -263,18 +263,18 @@ STUB_NAMED_TESTS_GREEN = STUB_NAMED_TESTS.format(code=0)
 STUB_NAMED_TESTS_RED = STUB_NAMED_TESTS.format(code=1)
 
 
-def attest_repo(
+def checks_repo(
     tmp_path,
     check_src=STUB_CHECK_GREEN,
     named_src=STUB_NAMED_TESTS_GREEN,
-    stack_ini=ATTEST_STACK_INI,
+    stack_ini=CHECKS_STACK_INI,
     row=True,
 ):
     """`station_repo` with the commit checks declared, the suite's name in
     `docs/process.toml` and its line in `docs/stack.ini`, and the named-test
-    stub in the harness: the closed `wi-401` lane an `attest` call commits
+    stub in the harness: the closed `wi-401` lane a `record-checks` call commits
     on. When `row`, the lane carries a spine whose derived set is
-    `ATTEST_FILES`."""
+    `CHECKS_FILES`."""
     root = station_repo(
         tmp_path,
         check_src=check_src,
@@ -287,8 +287,8 @@ def attest_repo(
         seed_row(
             wt,
             srs=["SR-001"],
-            tcs={"TC-001": (["SR-001"], " ".join(ATTEST_FILES))},
-            tags={path: ["TC-001"] for path in ATTEST_FILES},
+            tcs={"TC-001": (["SR-001"], " ".join(CHECKS_FILES))},
+            tags={path: ["TC-001"] for path in CHECKS_FILES},
             sr_refs=["SR-001"],
         )
         _git(wt, "add", "-A")
@@ -307,14 +307,14 @@ def _order(wt):
 
 
 def _refresh_commits(root, branch):
-    """Every commit on `branch` carrying the bar-green trailer, tip-first."""
+    """Every commit on `branch` carrying the Checks-Passed trailer, tip-first."""
     out = _git(root, "log", "--format=%H%x1f%B%x1e", branch).split("\x1e")
     hits = []
     for entry in out:
         if not entry.strip():
             continue
         sha, _, body = entry.strip().partition("\x1f")
-        if integ.BAR_GREEN in body:
+        if integ.CHECKS_PASSED in body:
             hits.append(sha)
     return hits
 
@@ -334,7 +334,7 @@ def test_trunk_is_ancestor_has_two_answers_on_a_constructed_topology(tmp_path):
     assert not integ.trunk_is_ancestor(root, "wi-401")
 
 
-def test_merge_ready_needs_the_ancestor_relation_AND_the_attestation(tmp_path):
+def test_merge_ready_needs_the_ancestor_relation_AND_the_passed_checks_record(tmp_path):
     # Ancestry alone says nothing about whether anyone barred the composition,
     # so the tip must also carry the bar's own trailer. Both halves are shown
     # failing separately, then passing together — a single-answer gate is not a
@@ -352,7 +352,7 @@ def test_merge_ready_needs_the_ancestor_relation_AND_the_attestation(tmp_path):
     _commit(root, "docs: trunk moves after the refresh", when=T_LATER)
     ready, why = integ._merge_ready(root, "wi-401")
     assert not ready and "is not an ancestor of it" in why
-    assert sha == _rev(root, "wi-401")  # the attestation is still there; trunk moved
+    assert sha == _rev(root, "wi-401")  # the record is still there; trunk moved
 
 
 # 5b.2 — the refresh, and the order inside it
@@ -388,22 +388,22 @@ def test_the_refresh_merges_trunk_in_regenerates_bars_then_commits(tmp_path):
     assert "regenerated.txt" in _git(root, "ls-tree", "-r", "--name-only", sha)
 
 
-def test_the_refresh_attests_the_bar_to_the_sha_it_produced(tmp_path):
+def test_the_refresh_records_the_checks_for_the_sha_it_produced(tmp_path):
     """Implements: TC-205"""
-    # "Attested to a TREE, not to a run" (§A2): the trailer lives in the commit,
+    # "Recorded against a TREE, not a run" (§A2): the trailer lives in the commit,
     # so the slot verifies a property of the sha rather than someone's claim
     # about a run. A later commit on the branch therefore REVOKES it, because
     # the tip is no longer the tree that was barred.
     root = station_repo(tmp_path)
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
-    assert integ.refresh_attestation(root, "wi-401", sha)
-    assert integ.refresh_attestation(root, "wi-401")
+    assert integ.refresh_passed_checks(root, "wi-401", sha)
+    assert integ.refresh_passed_checks(root, "wi-401")
 
     wt = root.parent / (root.name + integ.LANE_WORKTREE_SUFFIX) / "wi-401"
     (wt / "afterthought.txt").write_text("x\n", encoding="utf-8", newline="\n")
     _commit(wt, "WI-401: one more idea", when=T_LATER)
-    assert integ.refresh_attestation(root, "wi-401") is None
+    assert integ.refresh_passed_checks(root, "wi-401") is None
     ready, why = integ._merge_ready(root, "wi-401")
     assert not ready and "not a verified refresh commit" in why
 
@@ -465,7 +465,7 @@ def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
         STUB_TRUNK_STEP, encoding="utf-8", newline="\n"
     )
     (scripts / "check.py").write_text(STUB_CHECK_GREEN, encoding="utf-8", newline="\n")
-    _commit(root, "the attested spine + the stub harness", when=T_CODE)
+    _commit(root, "the accepted spine + the stub harness", when=T_CODE)
     assert integ.claim(root, "WI-401", "wi-401") == 0
     wt = close_branch(root, "wi-401")
     (wt / "docs" / "requirements" / "system-requirements.csv").write_text(
@@ -548,7 +548,7 @@ def test_an_adjudication_lane_runs_no_bar(tmp_path):
     # WI-388 (1): adjudication runs NO BAR (§A5.2) — its outputs are Status
     # cells and the work registry, nothing a product bar can speak to. The
     # refresh still merges trunk in and runs the trunk step, still commits a
-    # verified Bar-Green attestation (the slot's contract), but the check
+    # verified passed-checks record (the slot's contract), but the check
     # harness is never invoked and the summary says so. `product=False`: the
     # lane's delta is the pure registry shape the kind's premise names — a
     # spine Status edit rides along and stays inside the scope rung.
@@ -556,11 +556,11 @@ def test_an_adjudication_lane_runs_no_bar(tmp_path):
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
     assert _order(wt) == ["trunk_step"], "the bar must not run for adjudication"
-    attested = integ.refresh_attestation(root, "wi-401", sha)
-    assert attested is not None
-    assert "no-bar" in attested[1]
+    passed = integ.refresh_passed_checks(root, "wi-401", sha)
+    assert passed is not None
+    assert "no checks run" in passed[1]
     ready, why = integ._merge_ready(root, "wi-401")
-    assert ready and "no-bar" in why
+    assert ready and "no checks run" in why
 
 
 def test_a_product_touching_adjudication_lane_fails_toward_the_bar(tmp_path):
@@ -663,7 +663,7 @@ def test_a_conflicting_trunk_merge_leaves_the_branch_at_its_work_commit(tmp_path
 
 def test_a_red_refresh_bar_commits_nothing_and_leaves_the_branch_clean(tmp_path):
     # A red bar is the lane's to fix, so the branch goes back to where the lane
-    # left it — no refresh commit, no attestation, and therefore no way for the
+    # left it — no refresh commit, no passed-checks record, and therefore no way for the
     # slot to merge it. The bar really ran (the stub recorded itself) before the
     # tree was restored.
     root = station_repo(tmp_path, check_src=STUB_CHECK_RED)
@@ -797,7 +797,7 @@ def test_a_branch_that_never_refreshed_is_refreshed_by_the_slot(tmp_path):
     # inside the lock. That is the operator's caveat priced at one line — and it is
     # this path, so it is covered whether or not anyone ever exercises it.
     root = station_repo(tmp_path)
-    assert integ.refresh_attestation(root, "wi-401") is None
+    assert integ.refresh_passed_checks(root, "wi-401") is None
 
     proc = run_py([SCRIPTS / "integrate.py", "integrate", "--tier", "smoke"], cwd=root)
     out = proc.stdout + proc.stderr
@@ -818,7 +818,7 @@ def test_the_refresh_cli_is_the_lane_side_entry_point(tmp_path):
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
     assert "integrate: refreshed wi-401 onto trunk" in out, out
-    assert integ.refresh_attestation(root, "wi-401")
+    assert integ.refresh_passed_checks(root, "wi-401")
 
     proc = run_py(
         [SCRIPTS / "integrate.py", "refresh", "--branch", "wi-999", "--tier", "smoke"],
@@ -828,22 +828,22 @@ def test_the_refresh_cli_is_the_lane_side_entry_point(tmp_path):
     assert "cannot refresh wi-999" in proc.stdout + proc.stderr
 
 
-# 5b.5 — the attestation is a BINDING, not a string (REVIEW-A round 1)
+# 5b.5 — the passed-checks record is a BINDING, not a string (REVIEW-A round 1)
 #
 # Round 1 found the constraint's second half satisfiable by a message: any line
-# starting with `Bar-Green:` made a branch merge-ready, so a forged trailer, a
+# starting with `Checks-Passed:` made a branch merge-ready, so a forged trailer, a
 # copied message and `commit --amend` all landed unbarred content on trunk, and
 # the same unbound token drove a `reset --hard` that DELETED a work commit. Each
 # of the four tests below is that exploit, kept as the regression.
 
 
 FORGED_TRAILER = (
-    "Bar-Green: tree={t} work={w} bar=landing tests=none "
+    "Checks-Passed: tree={t} work={w} checks=landing tests=none "
     "bar PASS (2 steps, tier all)".format(t="0" * 40, w="1" * 40)
 )
 
 
-def test_a_forged_bar_green_trailer_does_not_make_a_branch_merge_ready(tmp_path):
+def test_a_forged_checks_passed_trailer_does_not_make_a_branch_merge_ready(tmp_path):
     """Implements: TC-205"""
     # Exploit (a), three ways, because the fix has three independent checks and
     # a test that only drove one would let the other two rot. An ordinary
@@ -864,23 +864,23 @@ def test_a_forged_bar_green_trailer_does_not_make_a_branch_merge_ready(tmp_path)
         "refresh: wi-401 onto trunk 0123456789\n\n" + FORGED_TRAILER,
         when=T_LATER,
     )
-    assert integ.refresh_attestation(root, "wi-401") is None
+    assert integ.refresh_passed_checks(root, "wi-401") is None
 
     # Now a REAL refresh, then its whole message re-used on a new commit.
     _sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
     genuine = _git(root, "log", "-1", "--format=%B", "wi-401")
-    assert integ.refresh_attestation(root, "wi-401") is not None
+    assert integ.refresh_passed_checks(root, "wi-401") is not None
     (wt / "carried.txt").write_text("rode in\n", encoding="utf-8", newline="\n")
     _commit(wt, genuine, when=T_LATER)
-    assert integ.refresh_attestation(root, "wi-401") is None, (
+    assert integ.refresh_passed_checks(root, "wi-401") is None, (
         "a copied refresh message names another commit's tree and parent"
     )
     ready, _why = integ._merge_ready(root, "wi-401")
     assert not ready
 
 
-def test_the_queue_refuses_to_land_a_forged_attestation_unbarred(tmp_path):
+def test_the_queue_refuses_to_land_a_forged_passed_checks_record_unbarred(tmp_path):
     # The exploit end to end, which is what made it MAJOR: round 1's
     # `integrate --tier smoke` exited 0 and put `sneaky.txt` on trunk with the
     # recording stub harness never invoked at all. Now the slot does not
@@ -901,7 +901,7 @@ def test_the_queue_refuses_to_land_a_forged_attestation_unbarred(tmp_path):
     assert "sneaky.txt" in _git(root, "ls-tree", "-r", "--name-only", "HEAD")
 
 
-def test_amending_a_refresh_commit_revokes_its_attestation(tmp_path):
+def test_amending_a_refresh_commit_revokes_its_passed_checks_record(tmp_path):
     """Implements: TC-205"""
     # Exploit (b): `commit --amend --no-edit` keeps the message while the tree
     # moves, so round 1 landed the amended-in file with the bar not re-run. The
@@ -918,7 +918,7 @@ def test_amending_a_refresh_commit_revokes_its_attestation(tmp_path):
     _git(wt, "commit", "-q", "--amend", "--no-edit")
     assert _git(root, "rev-parse", "wi-401^{tree}").strip() != before
 
-    assert integ.refresh_attestation(root, "wi-401") is None
+    assert integ.refresh_passed_checks(root, "wi-401") is None
     ready, why = integ._merge_ready(root, "wi-401")
     assert not ready and "not a verified refresh commit" in why
     # And end to end: the amended content still reaches trunk, but only through
@@ -934,13 +934,15 @@ def test_a_work_commit_that_quotes_the_trailer_is_never_peeled_away(tmp_path):
     """Implements: TC-205"""
     # The data-loss half. `_work_tip` feeds a `reset --hard`, so peeling one
     # commit too far DESTROYS committed work: in round 1 a commit carrying
-    # `Bar-Green: I ran it locally, honest` was peeled and its file left the
+    # `Checks-Passed: I ran it locally, honest` was peeled and its file left the
     # branch entirely. The peel now needs a commit that names its own tree and
     # parent, which no hand-written message can do by accident.
     root = station_repo(tmp_path)
     wt = _lane(root, "wi-401")
     (wt / "late.txt").write_text("real work\n", encoding="utf-8", newline="\n")
-    _commit(wt, "WI-401: late fix\n\nBar-Green: I ran it locally, honest", when=T_LATER)
+    _commit(
+        wt, "WI-401: late fix\n\nChecks-Passed: I ran it locally, honest", when=T_LATER
+    )
     tip = _rev(root, "wi-401")
 
     assert integ._work_tip(root, "wi-401") == tip, "an honest tip must not peel"
@@ -1012,7 +1014,9 @@ def test_a_directory_the_bar_itself_created_is_pruned(tmp_path):
     assert integ._worktree_dirt(wt) == [], "...so the lane reads clean to §5.6"
 
 
-def test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence(tmp_path):
+def test_a_deliberately_forged_passed_checks_record_is_a_STATED_limit_not_a_defence(
+    tmp_path,
+):
     """Implements: TC-205"""
     # The honest bound, pinned so nobody re-reads the guarantee as stronger than
     # it is (REVIEW-A round 2 drove it). Naming the tree and the parent by hand
@@ -1020,7 +1024,7 @@ def test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence(tmp_p
     # limit rather than a defence, because the only structural closure is a
     # slot-side re-bar and DECISION 3 (operator ruling) deleted that outright.
     # If this test ever starts failing, the design changed: re-read §A2.0 and
-    # `refresh_attestation`'s contract before "fixing" it.
+    # `refresh_passed_checks`'s contract before "fixing" it.
     root = station_repo(tmp_path)
     wt = _lane(root, "wi-401")
     (wt / "never-barred.txt").write_text("no bar\n", encoding="utf-8", newline="\n")
@@ -1034,12 +1038,12 @@ def test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence(tmp_p
         "commit",
         "-qm",
         "refresh: wi-401 onto trunk deadbeef01\n\n"
-        + kv.format_bar_green(
+        + kv.format_passed_checks(
             tree, parent, "landing", "none", "bar PASS (99 steps, tier all)"
         ),
     )
 
-    assert integ.refresh_attestation(root, "wi-401") == (
+    assert integ.refresh_passed_checks(root, "wi-401") == (
         parent,
         "bar PASS (99 steps, tier all)",
     )
@@ -1066,7 +1070,7 @@ def test_a_cancelled_branch_merges_through_the_slot_owing_no_verdict(tmp_path):
 def test_the_refresh_refuses_when_the_main_checkout_holds_the_branch(tmp_path):
     # Round 1: with the main checkout on the branch, `_head(root)` IS the branch,
     # so the refresh "merged trunk in" from itself, printed a trunk sha that was
-    # the branch's own, and attested a composition that never happened. There is
+    # the branch's own, and recorded checks for a composition that never happened. There is
     # no trunk to resolve while nothing has it checked out, so it refuses.
     root = station_repo(tmp_path)
     _git(root, "worktree", "remove", str(_lane(root, "wi-401")))
@@ -1078,7 +1082,7 @@ def test_the_refresh_refuses_when_the_main_checkout_holds_the_branch(tmp_path):
     assert sha is None
     assert "MAIN checkout" in refusal and "no trunk checked out" in refusal
     assert "checkout <trunk>" in refusal
-    assert integ.refresh_attestation(root, "wi-401") is None
+    assert integ.refresh_passed_checks(root, "wi-401") is None
     assert not (root / "trunk-moved.txt").exists(), "nothing was merged in"
 
 
@@ -1284,9 +1288,9 @@ def test_a_conflict_only_on_declared_generated_paths_refreshes_green(tmp_path):
 
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
-    # A real merge of trunk, barred and attested — the ordinary refresh outcome.
+    # A real merge of trunk, barred and recorded — the ordinary refresh outcome.
     assert integ.trunk_is_ancestor(root, "wi-401")
-    assert integ.refresh_attestation(root, "wi-401", sha)
+    assert integ.refresh_passed_checks(root, "wi-401", sha)
     assert _order(wt)[0] == "trunk_step"
     # The trunk's side is what the trunk step then regenerated over.
     assert "the lane's regeneration" not in (wt / "PROJECT_STATE.html").read_text(
@@ -1369,56 +1373,56 @@ def test_the_generated_table_reads_kinds_and_prefixes_not_a_second_copy(tmp_path
 
 # --- the named bar and the one producer (WI-956) ------------------------------
 #
-# The refresh's `Bar-Green:` line names the bar it ran (`landing`, or `no-bar`
+# The refresh's `Checks-Passed:` line names the checks it ran (`landing`, or `none`
 # on the adjudication arm), and it is written through the one producer the
-# `attest` route also commits through.
+# `record-checks` route also commits through.
 
 
 def _producer_spy(monkeypatch):
-    """Wrap `integrate._attest_commit`; return the list of bars its calls name,
+    """Wrap `integrate._record_checks_commit`; return the list of check sets its calls name,
     in call order. The real producer still runs underneath."""
-    real = integ._attest_commit
-    bars = []
+    real = integ._record_checks_commit
+    named = []
 
     def spy(*args, **kwargs):
-        bars.append(inspect.signature(real).bind(*args, **kwargs).arguments["bar"])
+        named.append(inspect.signature(real).bind(*args, **kwargs).arguments["checks"])
         return real(*args, **kwargs)
 
-    monkeypatch.setattr(integ, "_attest_commit", spy)
-    return bars
+    monkeypatch.setattr(integ, "_record_checks_commit", spy)
+    return named
 
 
 def test_the_refresh_trailer_names_the_landing_bar(tmp_path):
     """Implements: TC-205"""
-    # A refresh that ran the declared bar attests the `landing` bar, with no
+    # A refresh that ran the declared bar records `checks=landing`, with no
     # named tests, on its own tree and first parent.
     root = station_repo(tmp_path)
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
-    attested = kv.bar_attestation(root, sha)
-    assert attested is not None, _git(root, "log", "-1", "--format=%B", sha)
-    assert (attested.bar, attested.tests) == ("landing", "none")
-    assert attested.tree == _rev(root, sha + "^{tree}")
-    assert attested.work == _rev(root, sha + "^1")
+    passed = kv.passed_checks(root, sha)
+    assert passed is not None, _git(root, "log", "-1", "--format=%B", sha)
+    assert (passed.checks, passed.tests) == ("landing", "none")
+    assert passed.tree == _rev(root, sha + "^{tree}")
+    assert passed.work == _rev(root, sha + "^1")
 
 
-def test_the_adjudication_refresh_names_no_bar(tmp_path):
+def test_the_adjudication_refresh_names_no_checks(tmp_path):
     """Implements: TC-205"""
-    # The adjudication arm runs no bar (§A5.2), and its attestation says so in
-    # the bar field rather than only in the free-text summary.
+    # The adjudication arm runs no bar (§A5.2), and its record says so in
+    # the `checks=` field rather than only in the free-text summary.
     root, _wt = _adjudication_station(tmp_path)
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
-    attested = kv.bar_attestation(root, sha)
-    assert attested is not None, _git(root, "log", "-1", "--format=%B", sha)
-    assert (attested.bar, attested.tests) == ("no-bar", "none")
+    passed = kv.passed_checks(root, sha)
+    assert passed is not None, _git(root, "log", "-1", "--format=%B", sha)
+    assert (passed.checks, passed.tests) == ("none", "none")
 
 
 def test_the_refresh_commits_through_the_shared_producer(tmp_path, monkeypatch):
     """Implements: TC-205"""
-    # Both refresh arms reach the one producer and name their bar to it, so
+    # Both refresh arms reach the one producer and name their checks to it, so
     # the refresh keeps no commit-and-verify block of its own.
-    bars = _producer_spy(monkeypatch)
+    named = _producer_spy(monkeypatch)
     landing = tmp_path / "landing"
     landing.mkdir()
     root = station_repo(landing)
@@ -1429,17 +1433,19 @@ def test_the_refresh_commits_through_the_shared_producer(tmp_path, monkeypatch):
     root, _wt = _adjudication_station(adjudication)
     _sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
-    assert bars == ["landing", "no-bar"]
+    assert named == ["landing", "none"]
 
 
-def test_the_refresh_and_attest_commit_through_one_producer(tmp_path, monkeypatch):
+def test_the_refresh_and_record_checks_commit_through_one_producer(
+    tmp_path, monkeypatch
+):
     """Implements: TC-205"""
-    # The two routes that write an attestation share one producer: `attest`
-    # names `review` to it, and the refresh that follows names `landing`.
-    bars = _producer_spy(monkeypatch)
-    root = attest_repo(tmp_path)
-    _sha, refusal = integ.attest(root, "wi-401", "review")
+    # The two routes that write a passed-checks record share one producer:
+    # `record-checks` names `commit` to it, and the refresh that follows names `landing`.
+    named = _producer_spy(monkeypatch)
+    root = checks_repo(tmp_path)
+    _sha, refusal = integ.record_checks(root, "wi-401", "commit")
     assert refusal is None, refusal
     _sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
-    assert bars == ["review", "landing"]
+    assert named == ["commit", "landing"]

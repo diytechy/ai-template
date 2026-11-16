@@ -204,7 +204,7 @@ def test_a_real_close_relinking_a_file_outside_docs_work_passes_the_rider_and_th
     # The case is real: the close rewrote the review's link to the spec.
     assert review in _git(root, "diff", "--name-only", close + "^", close).split()
     # The peel is unchanged: a close whose relink leaves docs/work is not peeled.
-    assert kverdict.mechanical_close_attestation(root, close) is None
+    assert kverdict.mechanical_close_peel(root, close) is None
     assert _slot(root) is None
     _squash(root)
     assert _hook(root) == 0

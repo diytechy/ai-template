@@ -1,19 +1,19 @@
-"""The `Bar-Green:` attestation: one grammar, one verifier, one tests digest
-(WI-956), and the peel that must never read a `review` attestation.
+"""The `Checks-Passed:` record: one grammar, one verifier, one tests digest
+(WI-956), and the peel that must never read a `commit` record.
 
 The line is
 
-    Bar-Green: tree=<40 hex> work=<40 hex> bar=<review|landing|no-bar> tests=<64 hex|none> <summary>
+    Checks-Passed: tree=<40 hex> work=<40 hex> checks=<commit|landing|none> tests=<64 hex|none> <summary>
 
-and it is an attestation only when it is the message's one column-0 label line,
+and it is a passed-checks record only when it is the message's one column-0 label line,
 its `tree=` and `work=` are the commit's own tree and first parent, and its bar
 is in the closed set. Every refusal below is driven beside the honest commit it
 differs from, so a verifier that refused everything fails here too.
 
 The peel half is the one that destroys work when it is wrong: `work_tip` feeds
-the refresh's `reset --hard`, so a `review` attestation sitting on the tip (a
+the refresh's `reset --hard`, so a `commit` record sitting on the tip (a
 build round's own record of green) must never be peeled, while a verified
-`landing` or `no-bar` refresh still is.
+`landing` or `none` refresh still is.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: each case but the digest's
 commits to a real git repository.
@@ -42,16 +42,16 @@ def _repo(tmp_path):
     return git_repo(tmp_path, branch=BRANCH)
 
 
-def _line(tree, work, bar="landing", tests="none", summary="bar PASS (2 steps)"):
-    """A `Bar-Green:` line composed here, field by field, so the refusal cases
+def _line(tree, work, checks="landing", tests="none", summary="bar PASS (2 steps)"):
+    """A `Checks-Passed:` line composed here, field by field, so the refusal cases
     pin the grammar itself rather than whatever the writer emits. `None` drops
     a field."""
     fields = ["tree=" + tree, "work=" + work]
-    if bar is not None:
-        fields.append("bar=" + bar)
+    if checks is not None:
+        fields.append("checks=" + checks)
     if tests is not None:
         fields.append("tests=" + tests)
-    return "Bar-Green: " + " ".join(fields + [summary])
+    return "Checks-Passed: " + " ".join(fields + [summary])
 
 
 def _commit_naming(root, trailer_for, subject="WI-401: a work commit"):
@@ -73,117 +73,142 @@ def _refresh_subject():
     return kv.refresh_subject(BRANCH) + "0123456789"
 
 
-def _honest(root, bar="landing", subject="WI-401: a work commit"):
+def _honest(root, checks="landing", subject="WI-401: a work commit"):
     """The control: a commit whose line names its own tree and parent."""
-    return _commit_naming(root, lambda t, p: _line(t, p, bar=bar), subject)[0]
+    return _commit_naming(root, lambda t, p: _line(t, p, checks=checks), subject)[0]
 
 
 # --- the grammar and the verifier --------------------------------------------
 
 
-@pytest.mark.parametrize("bar", ["review", "landing", "no-bar"])
-def test_a_trailer_naming_its_own_tree_and_parent_verifies_for_each_bar(tmp_path, bar):
+@pytest.mark.parametrize("checks", ["commit", "landing", "none"])
+def test_a_trailer_naming_its_own_tree_and_parent_verifies_for_each_check_set(
+    tmp_path, checks
+):
     """Implements: TC-205"""
-    # The writer and the verifier agree: what `format_bar_green` writes, on the
+    # The writer and the verifier agree: what `format_passed_checks` writes, on the
     # commit whose tree and parent it names, reads back field for field.
     root = _repo(tmp_path)
     sha, tree, parent = _commit_naming(
-        root, lambda t, p: kv.format_bar_green(t, p, bar, DIGEST, "a summary")
+        root, lambda t, p: kv.format_passed_checks(t, p, checks, DIGEST, "a summary")
     )
-    attested = kv.bar_attestation(root, sha)
-    assert attested is not None, _git(root, "log", "-1", "--format=%B", sha)
-    assert (attested.tree, attested.work) == (tree, parent)
-    assert (attested.bar, attested.tests, attested.summary) == (
-        bar,
+    passed = kv.passed_checks(root, sha)
+    assert passed is not None, _git(root, "log", "-1", "--format=%B", sha)
+    assert (passed.tree, passed.work) == (tree, parent)
+    assert (passed.checks, passed.tests, passed.summary) == (
+        checks,
         DIGEST,
         "a summary",
     )
 
 
-def test_a_wrong_tree_is_not_an_attestation(tmp_path):
+def test_a_wrong_tree_is_not_a_passed_checks_record(tmp_path):
     """Implements: TC-205"""
     # `tree=` names the parent's tree, a real tree but not this commit's: the
     # line rode onto content it does not describe.
     root = _repo(tmp_path)
-    assert kv.bar_attestation(root, _honest(root)) is not None
+    assert kv.passed_checks(root, _honest(root)) is not None
     parent_tree = _rev(root, "HEAD^{tree}")
     sha, _tree, _parent = _commit_naming(root, lambda t, p: _line(parent_tree, p))
-    assert kv.bar_attestation(root, sha) is None
+    assert kv.passed_checks(root, sha) is None
 
 
-def test_a_wrong_parent_is_not_an_attestation(tmp_path):
+def test_a_wrong_parent_is_not_a_passed_checks_record(tmp_path):
     """Implements: TC-205"""
     # `work=` names the grandparent, a real commit but not this one's parent:
     # what a rebase or a cherry-pick carries the line onto.
     root = _repo(tmp_path)
     honest = _honest(root)
-    assert kv.bar_attestation(root, honest) is not None
+    assert kv.passed_checks(root, honest) is not None
     grandparent = _rev(root, honest + "^1")
     sha, _tree, _parent = _commit_naming(root, lambda t, p: _line(t, grandparent))
-    assert kv.bar_attestation(root, sha) is None
+    assert kv.passed_checks(root, sha) is None
 
 
-def test_a_trailer_without_bar_is_not_an_attestation(tmp_path):
+def test_a_line_in_the_earlier_trailer_form_is_not_a_passed_checks_record(tmp_path):
     """Implements: TC-205"""
-    # The old grammar, on a refresh subject, with a true tree and parent: it is
-    # not read at all (no legacy path), so the refresh verifier refuses it too.
+    # The vocabulary cut (2026-11-16): the record was once written
+    # `Bar-Green: ... bar=review`. A line in that form, naming its own tree
+    # and parent on a refresh subject, reads as no record at all: there is no
+    # reader for the earlier spelling, so a lane whose tip carries one records
+    # its checks again before a review or a merge.
     root = _repo(tmp_path)
-    honest = _honest(root, subject=_refresh_subject())
-    assert kv.bar_attestation(root, honest) is not None
+    assert kv.passed_checks(root, _honest(root)) is not None
     sha, _tree, _parent = _commit_naming(
         root,
-        lambda t, p: _line(t, p, bar=None, tests=None),
+        lambda t, p: "Bar-Green: tree={} work={} bar=review tests=none old".format(
+            t, p
+        ),
         subject=_refresh_subject(),
     )
-    assert kv.refresh_attestation(root, BRANCH, sha) is None
-    assert kv.bar_attestation(root, sha) is None
+    passed, cause = kv.read_passed_checks(root, sha)
+    assert passed is None and "carries 0 `Checks-Passed:` lines" in cause, cause
+    assert kv.refresh_passed_checks(root, BRANCH, sha) is None
 
 
-def test_an_unknown_bar_is_not_an_attestation(tmp_path):
+def test_a_trailer_without_checks_is_not_a_passed_checks_record(tmp_path):
+    """Implements: TC-205"""
+    # A line with no `checks=` field, on a refresh subject, with a true tree
+    # and parent: it is not read at all, so the refresh verifier refuses it too.
+    root = _repo(tmp_path)
+    honest = _honest(root, subject=_refresh_subject())
+    assert kv.passed_checks(root, honest) is not None
+    sha, _tree, _parent = _commit_naming(
+        root,
+        lambda t, p: _line(t, p, checks=None, tests=None),
+        subject=_refresh_subject(),
+    )
+    assert kv.refresh_passed_checks(root, BRANCH, sha) is None
+    assert kv.passed_checks(root, sha) is None
+
+
+def test_an_unknown_check_set_is_not_a_passed_checks_record(tmp_path):
     """Implements: TC-205"""
     # The bar set is closed: a bar outside it is refused even with a true tree
     # and parent and the refresh subject.
     root = _repo(tmp_path)
-    assert kv.bar_attestation(root, _honest(root)) is not None
+    assert kv.passed_checks(root, _honest(root)) is not None
     sha, _tree, _parent = _commit_naming(
-        root, lambda t, p: _line(t, p, bar="nightly"), subject=_refresh_subject()
+        root, lambda t, p: _line(t, p, checks="nightly"), subject=_refresh_subject()
     )
-    assert kv.refresh_attestation(root, BRANCH, sha) is None
-    assert kv.bar_attestation(root, sha) is None
+    assert kv.refresh_passed_checks(root, BRANCH, sha) is None
+    assert kv.passed_checks(root, sha) is None
 
 
-def test_a_trailer_without_tests_is_not_an_attestation(tmp_path):
+def test_a_trailer_without_tests_is_not_a_passed_checks_record(tmp_path):
     """Implements: TC-205"""
     root = _repo(tmp_path)
-    assert kv.bar_attestation(root, _honest(root)) is not None
+    assert kv.passed_checks(root, _honest(root)) is not None
     sha, _tree, _parent = _commit_naming(root, lambda t, p: _line(t, p, tests=None))
-    assert kv.bar_attestation(root, sha) is None
+    assert kv.passed_checks(root, sha) is None
 
 
 @pytest.mark.parametrize(
     "lead", ["see ", "> ", "  "], ids=["after-text", "quoted", "indented"]
 )
-def test_a_trailer_quoted_mid_line_is_not_an_attestation(tmp_path, lead):
+def test_a_trailer_quoted_mid_line_is_not_a_passed_checks_record(tmp_path, lead):
     """Implements: TC-205"""
     # A true line that does not start at column 0 is a quotation of an
-    # attestation, not one: the label counts only as the line's first bytes.
+    # record, not one: the label counts only as the line's first bytes.
     root = _repo(tmp_path)
-    assert kv.bar_attestation(root, _honest(root)) is not None
+    assert kv.passed_checks(root, _honest(root)) is not None
     sha, _tree, _parent = _commit_naming(root, lambda t, p: lead + _line(t, p))
-    assert kv.bar_attestation(root, sha) is None
+    assert kv.passed_checks(root, sha) is None
 
 
-def test_two_label_lines_are_not_an_attestation(tmp_path):
+def test_two_label_lines_are_not_a_passed_checks_record(tmp_path):
     """Implements: TC-205"""
-    # Two true lines naming two bars: the message attests no single bar, so it
-    # attests none.
+    # Two true lines naming two sets: the message records no single set, so it
+    # records none.
     root = _repo(tmp_path)
-    assert kv.bar_attestation(root, _honest(root)) is not None
+    assert kv.passed_checks(root, _honest(root)) is not None
     sha, _tree, _parent = _commit_naming(
         root,
-        lambda t, p: _line(t, p, bar="landing") + "\n" + _line(t, p, bar="review"),
+        lambda t, p: (
+            _line(t, p, checks="landing") + "\n" + _line(t, p, checks="commit")
+        ),
     )
-    assert kv.bar_attestation(root, sha) is None
+    assert kv.passed_checks(root, sha) is None
 
 
 # --- the tests digest ---------------------------------------------------------
@@ -234,43 +259,43 @@ def _review_on_refresh_subject(root):
     sharpest shape, since only the bar field tells it from a refresh."""
     return _commit_naming(
         root,
-        lambda t, p: _line(t, p, bar="review", tests=DIGEST),
+        lambda t, p: _line(t, p, checks="commit", tests=DIGEST),
         subject=_refresh_subject(),
     )[0]
 
 
 def _is_verified_review(root, sha):
-    attested = kv.bar_attestation(root, sha)
-    return attested is not None and attested.bar == "review"
+    passed = kv.passed_checks(root, sha)
+    return passed is not None and passed.checks == "commit"
 
 
-def test_work_tip_never_peels_a_review_attestation(tmp_path):
+def test_work_tip_never_peels_a_commit_checks_record(tmp_path):
     """Implements: TC-205"""
     # `work_tip` feeds `reset --hard`: peeling the review commit would drop the
     # build round it recorded. The peel is asserted first, then that what was
-    # not peeled really is a verified review attestation.
+    # not peeled really is a verified commit record.
     root = _repo(tmp_path)
     sha = _review_on_refresh_subject(root)
-    assert kv.work_tip(root, BRANCH) == sha, "the review attestation was peeled"
+    assert kv.work_tip(root, BRANCH) == sha, "the commit record was peeled"
     assert _is_verified_review(root, sha)
 
 
-def test_governing_rev_never_peels_a_review_attestation(tmp_path):
+def test_governing_rev_never_peels_a_commit_checks_record(tmp_path):
     """Implements: TC-205"""
     # The same commit carries a work change, so the verdict governs at it, not
     # at its parent.
     root = _repo(tmp_path)
     sha = _review_on_refresh_subject(root)
-    assert kv.governing_rev(root, BRANCH) == sha, "the review attestation was peeled"
+    assert kv.governing_rev(root, BRANCH) == sha, "the commit record was peeled"
     assert _is_verified_review(root, sha)
 
 
-@pytest.mark.parametrize("bar", ["landing", "no-bar"])
-def test_a_verified_refresh_still_peels_under_the_new_grammar(tmp_path, bar):
+@pytest.mark.parametrize("checks", ["landing", "none"])
+def test_a_verified_refresh_still_peels_under_the_new_grammar(tmp_path, checks):
     """Characterization: the peel of a verified refresh holds today and must
     survive the narrowing. Adequacy witness: a verifier that stopped reading
-    the `bar=` field as part of a refresh line, or that admitted only one of
-    `landing` and `no-bar`, leaves the refresh on the tip, and both readers
+    the `checks=` field as part of a refresh line, or that admitted only one of
+    `landing` and `none`, leaves the refresh on the tip, and both readers
     then answer the refresh commit instead of the work commit under it.
 
     Implements: TC-205
@@ -278,7 +303,7 @@ def test_a_verified_refresh_still_peels_under_the_new_grammar(tmp_path, bar):
     root = _repo(tmp_path)
     work, _tree, _parent = _commit_naming(root, lambda t, p: "no trailer")
     refresh, _tree, parent = _commit_naming(
-        root, lambda t, p: _line(t, p, bar=bar), subject=_refresh_subject()
+        root, lambda t, p: _line(t, p, checks=checks), subject=_refresh_subject()
     )
     assert parent == work and refresh != work
     assert kv.work_tip(root, BRANCH) == work

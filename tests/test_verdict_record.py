@@ -161,7 +161,7 @@ def test_the_trailer_round_trips_and_the_last_one_governs():
     line = kv.format_trailer("APPROVE", 2, tree)
     assert line == "Review-Verdict: APPROVE rounds=2 tree=" + tree
     # A rework commit that QUOTES the round it answers must not have the
-    # quotation read as its own attestation; the kit's convention puts a
+    # quotation read as its own trailer; the kit's convention puts a
     # commit's own trailers last.
     quoted = (
         "rework\n\nanswering Review-Verdict: APPROVE rounds=1 tree={}\n\n{}".format(
@@ -716,7 +716,7 @@ def test_the_merge_ladder_refuses_a_review_range_beyond_its_verdict(tmp_path):
 def test_a_trailer_contradicting_the_rounds_refuses(tmp_path):
     """Implements: TC-205"""
     # The trailer is the machine half and a CROSS-CHECK, never an admission path.
-    # A merge slot that saw an attestation disagreeing with the evidence and
+    # A merge slot that saw a trailer disagreeing with the evidence and
     # merged anyway would be trusting the summary over the evidence all over
     # again — the exact inversion OI-76 was filed about.
     root = rounds_repo(tmp_path)
@@ -735,11 +735,11 @@ def test_a_trailer_contradicting_the_rounds_refuses(tmp_path):
     _git(root, "checkout", "-q", "main")
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
-    assert "attestation claims what the evidence does not" in refusal
+    assert "trailer claims what the evidence does not" in refusal
 
 
 def _count_stamped(root, tree, rounds):
-    """An attestation naming `tree` with a count the evidence does not carry."""
+    """A trailer naming `tree` with a count the evidence does not carry."""
     _git(
         root,
         "commit",
@@ -768,7 +768,7 @@ def test_a_trailer_UNDERSTATING_the_governing_round_count_does_not(tmp_path):
     """Implements: TC-205"""
     # ROUND 033, FINDING 4 — the opposite direction, and the asymmetry is the
     # rule. The cross-check refused any inequality, so a second honest round at
-    # one governing tree whose attestation FAILED TO LAND left the newest stamp
+    # one governing tree whose trailer FAILED TO LAND left the newest stamp
     # at N-1 against evidence N and the gate accused an approved lane of
     # forgery: the OI-76 supervisor stop, re-created by the check meant to
     # prevent it. The writer is `commit_telemetry`, documented best-effort ("a
@@ -783,7 +783,7 @@ def test_a_trailer_UNDERSTATING_the_governing_round_count_does_not(tmp_path):
     _git(root, "checkout", "-q", "main")
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
     # ...and the WORD is still checked in both directions: an understated count
-    # is forgiven, a dissenting attestation at this tree is not.
+    # is forgiven, a dissenting trailer at this tree is not.
     _git(root, "checkout", "-q", "wi-401")
     _git(
         root,
@@ -799,7 +799,7 @@ def test_a_trailer_UNDERSTATING_the_governing_round_count_does_not(tmp_path):
 
 
 def _stamp(root, tree, word, rounds, when):
-    """One coordinator attestation, on the telemetry commit shape that carries
+    """One coordinator trailer, on the telemetry commit shape that carries
     it: record-only, so the commit's own non-record identity IS `tree`."""
     (root / "docs" / "reviews" / "wi-401" / "scoreboard.txt").write_text(
         "rounds {}\n".format(rounds), encoding="utf-8", newline="\n"
@@ -812,11 +812,11 @@ def _stamp(root, tree, word, rounds, when):
     )
 
 
-def test_the_newest_attestation_at_a_tree_governs_the_cross_check(tmp_path):
+def test_the_newest_trailer_at_a_tree_governs_the_cross_check(tmp_path):
     """Implements: TC-205"""
     # ROUND 007, FINDING 1. `git log` is NEWEST-first, so a last-write-wins map
     # handed the gate the OLDEST stamp: two honest rounds at one governing tree
-    # (`rounds=1`, then `rounds=2`) made the cross-check report the attestation
+    # (`rounds=1`, then `rounds=2`) made the cross-check report the trailer
     # and the evidence as disagreeing and park an approved lane at a supervisor
     # stop — the OI-76 failure mode, re-created by the check meant to prevent
     # it, and reachable on any re-drawn round.
@@ -837,16 +837,16 @@ def test_the_newest_attestation_at_a_tree_governs_the_cross_check(tmp_path):
     assert kv.branch_trailers(root, "wi-401", _rev(root, "main"))[tree] == [
         ("APPROVE", 1),
         ("APPROVE", 2),
-    ], "the attestations arrive as a sequence, oldest first — not one per tree"
+    ], "the trailers arrive as a sequence, oldest first — not one per tree"
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
 
-def test_an_attestation_riding_a_commit_that_changed_the_work_is_not_read(tmp_path):
+def test_a_trailer_riding_a_commit_that_changed_the_work_is_not_read(tmp_path):
     """Implements: TC-205"""
     # THE ANTI-FORGERY HALF of "the trailer cannot create an approval", which
     # every other trailer case leaves unexercised by stamping only on carriers
     # whose identity already matches. The words are copyable: nothing stops a
-    # commit from repeating an attestation that was true one tree ago. What
+    # commit from repeating a trailer that was true one tree ago. What
     # stops it counting is that the carrier is asked for its OWN governing
     # identity, so a commit that changed the work describes a tree its words do
     # not name and is dropped.
@@ -887,8 +887,8 @@ def test_an_attestation_riding_a_commit_that_changed_the_work_is_not_read(tmp_pa
 
 def _refresh_commit(root, branch, when):
     """A GENUINE station refresh commit on `branch`: trunk content folded in,
-    with the `Bar-Green:` trailer naming its own tree and its work parent, which
-    is what `refresh_attestation` verifies. Written by hand rather than through
+    with the `Checks-Passed:` trailer naming its own tree and its work parent, which
+    is what `refresh_passed_checks` verifies. Written by hand rather than through
     `integrate.refresh` because the lane worktree/bar machinery is not what is
     under test here — the peel is."""
     work = _rev(root, branch)
@@ -904,10 +904,10 @@ def _refresh_commit(root, branch, when):
         "-m",
         "{}0123456789\n\n{}".format(
             kv.refresh_subject(branch),
-            kv.format_bar_green(tree, work, "landing", "none", "bar green"),
+            kv.format_passed_checks(tree, work, "landing", "none", "bar green"),
         ),
     )
-    assert kv.refresh_attestation(root, branch) == (work, "bar green")
+    assert kv.refresh_passed_checks(root, branch) == (work, "bar green")
     return work
 
 
@@ -1006,7 +1006,7 @@ def test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel(tmp_path):
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
     # ...and the OTHER carrier, which is the one the coordinator actually
-    # writes for an attestation (ROUND 012, FINDING 1). `commit_telemetry`
+    # writes for a trailer (ROUND 012, FINDING 1). `commit_telemetry`
     # commits EMPTY when a `Review-Verdict:` trailer must land on unchanged
     # bookkeeping — a zero-path commit, which is precisely what a walk that
     # CLASSIFIES PATHS cannot classify and so used to stop at, burying the
@@ -1054,9 +1054,9 @@ def test_the_empty_carrier_commits_its_own_paths_and_never_the_index(tmp_path):
     # for `--allow-empty`, and a `git commit` with no pathspec reads THE INDEX.
     # So one unrelated staged file — a state this function's own `pre_staged`
     # restore already treats as reachable — landed inside a commit labelled
-    # `telemetry:`, carrying a `Review-Verdict:` attestation on a commit that
+    # `telemetry:`, carrying a `Review-Verdict:` trailer on a commit that
     # changed the work tree. Silent wrong content under a bookkeeping label,
-    # and an attestation whose "an empty commit changes no tree" premise was
+    # and a trailer whose "an empty commit changes no tree" premise was
     # simply false. The pre-diff form was immune by construction, so the fix is
     # to keep the path scope on BOTH arms rather than to guard the index.
     root = rounds_repo(tmp_path)
@@ -1083,7 +1083,7 @@ def test_the_empty_carrier_commits_its_own_paths_and_never_the_index(tmp_path):
         "telemetry: session wi-401-002 REVIEW-A COMMITTED"
     )
     assert not _git(root, "show", "--format=", "--name-only", "HEAD").strip(), (
-        "the attestation's carrier must be EMPTY — an unrelated staged file "
+        "the trailer's carrier must be EMPTY — an unrelated staged file "
         "swept into it is work landing under a bookkeeping label"
     )
     assert _git(root, "diff", "--cached", "--name-only").split() == [
@@ -1095,7 +1095,7 @@ def test_the_empty_carrier_commits_its_own_paths_and_never_the_index(tmp_path):
     # pathspec is appended only `if rels`, so `paths=[]` still emitted a
     # pathspec-less `git commit --allow-empty` — the very shape the finding was
     # about. Not a hypothetical call: this suite makes it twice, and it is what
-    # a caller with nothing to record but an attestation writes.
+    # a caller with nothing to record but a trailer writes.
     ac.commit_telemetry(
         root,
         "wi-401-003",
@@ -1322,7 +1322,7 @@ def test_the_peel_still_refuses_a_close_whose_relink_leaves_docs_work(tmp_path):
     (the adoption-record rule admits that relink; the peel does not).
 
     A characterization, green before and after the shared close shape lands.
-    Adequacy witness: an attestor that handed the shared close shape the relink
+    Adequacy witness: a peel that handed the shared close shape the relink
     oracle (`spec_move.exact_relink`), widening the peel, would return the
     close's parent here and fail it.
 
@@ -1338,7 +1338,7 @@ def test_the_peel_still_refuses_a_close_whose_relink_leaves_docs_work(tmp_path):
     close = _git(root, "rev-parse", "wi-401").strip()
     changed = _git(root, "diff", "--name-only", close + "^", close).split()
     assert review in changed  # the case is real: the close rewrote the review
-    assert kv.mechanical_close_attestation(root, close) is None
+    assert kv.mechanical_close_peel(root, close) is None
 
 
 def _loop_ctx(al, root, rp_int=1, **over):
@@ -1712,9 +1712,9 @@ def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path, c
     # reached (ROUND 033, FINDING 1). Every trailer test above calls
     # `review_verdict_trailer` with a hand-built worker dict and then commits
     # the string itself, so the whole path between a round COMPLETING and its
-    # attestation LANDING — the merge/score/record ladder, the scoreboard
+    # trailer LANDING — the merge/score/record ladder, the scoreboard
     # write, `commit_telemetry`'s pathspec and message assembly — was untested,
-    # and an attestation that never lands is invisible by construction: the
+    # and a trailer that never lands is invisible by construction: the
     # gate's cross-check stands down on absence (it must; the trailer is
     # additive), so nothing anywhere reports a writer that stopped writing.
     al = _al()
@@ -1736,17 +1736,17 @@ def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path, c
     assert kv.parse_trailer(message) == ("APPROVE", 1, before)
     assert kv.branch_trailers(root, "wi-401", base)[before] == [("APPROVE", 1)]
     assert kv.governing_identity(root, "wi-401") == before, (
-        "the carrier is a record-path commit; writing the attestation must not "
-        "move the tree the attestation names"
+        "the carrier is a record-path commit; writing the trailer must not "
+        "move the tree the trailer names"
     )
     assert ctx.scoreboard.exists(), "the commit's own payload was written too"
     # ...and the gate reads the pair as agreeing, which is what the whole
     # cross-check is for.
     _git(root, "checkout", "-q", "main")
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
-    assert "no Review-Verdict attestation" not in capsys.readouterr().err
+    assert "no Review-Verdict trailer" not in capsys.readouterr().err
 
-    # A round that derives NO attestation SAYS SO. Nothing else in the system
+    # A round that derives NO trailer SAYS SO. Nothing else in the system
     # can: a missing trailer is never a refusal (it is additive), so absence is
     # precisely the state the cross-check must stand down on, and a writer that
     # quietly stops writing would otherwise be invisible everywhere. Driven with
@@ -1758,7 +1758,7 @@ def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path, c
         ("REVIEW-A", score.parse_verdict(APPROVE), "anthropic", "model-a")
     ]
     assert al.complete_review_round(blind, "005") is None
-    assert "no Review-Verdict attestation" in capsys.readouterr().err
+    assert "no Review-Verdict trailer" in capsys.readouterr().err
 
 
 def test_a_stale_owed_marker_over_served_evidence_redraws_nothing(tmp_path):
@@ -2014,7 +2014,7 @@ def test_only_the_machinerys_own_close_subject_peels(tmp_path):
 def test_a_forged_mechanical_close_middle_does_not_peel(tmp_path):
     """Implements: TC-205"""
     # The outer vocabulary is public and therefore forgeable. The owning
-    # attestor binds its middle to the WI id the real active/ -> complete/ move
+    # peel binds its middle to the WI id the real active/ -> complete/ move
     # carries, so affix-shaped prose cannot turn an ordinary work commit into a
     # disposable machinery close.
     root = rounds_repo(tmp_path)
@@ -2022,7 +2022,7 @@ def test_a_forged_mechanical_close_middle_does_not_peel(tmp_path):
     add_round(root, 3)
     _mechanical_close(root, subject=ks.mechanical_close_subject("NOT-A-WI-ID"))
     forged = _rev(root, "wi-401")
-    assert kv.mechanical_close_attestation(root, forged) is None
+    assert kv.mechanical_close_peel(root, forged) is None
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None and "names its current tree" in refusal
 
@@ -2049,7 +2049,7 @@ def test_a_close_that_smuggles_a_new_spec_in_does_not_peel(tmp_path):
     _claim_commit(root)
     add_round(root, 3)
     _mechanical_close(root, also="docs/work/queued/WI-999-smuggled.md")
-    assert kv.mechanical_close_attestation(root, _rev(root, "wi-401")) is None
+    assert kv.mechanical_close_peel(root, _rev(root, "wi-401")) is None
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None and "names its current tree" in refusal
 
@@ -2064,7 +2064,7 @@ def test_a_close_that_destroys_an_archived_record_does_not_peel(tmp_path):
     _claim_commit(root, seed=(terminal,))
     add_round(root, 3)
     _mechanical_close(root, remove=terminal)
-    assert kv.mechanical_close_attestation(root, _rev(root, "wi-401")) is None
+    assert kv.mechanical_close_peel(root, _rev(root, "wi-401")) is None
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None and "names its current tree" in refusal
 
@@ -2081,7 +2081,7 @@ def test_a_close_reaching_into_a_second_lanes_claims_does_not_peel(tmp_path):
     _claim_commit(root, foreign=(_ROW_2,))
     add_round(root, 3)
     _mechanical_close(root, foreign=(_ROW_2,))
-    assert kv.mechanical_close_attestation(root, _rev(root, "wi-401")) is None
+    assert kv.mechanical_close_peel(root, _rev(root, "wi-401")) is None
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None and "names its current tree" in refusal
 
@@ -2105,7 +2105,7 @@ def test_a_mechanical_close_moving_two_rows_does_not_peel(tmp_path):
 
     closed = _rev(root, "wi-401")
     assert kv.tree_identity(root, closed) != kv.tree_identity(root, judged)
-    assert kv.mechanical_close_attestation(root, closed) is None
+    assert kv.mechanical_close_peel(root, closed) is None
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None and "names its current tree" in refusal
 
@@ -2128,7 +2128,7 @@ def test_a_two_row_close_under_the_one_id_subject_does_not_peel(tmp_path):
     message = _git(root, "log", "-1", "--format=%s", closed).strip()
     assert message == ks.mechanical_close_subject("WI-401")
     assert kv.tree_identity(root, closed) != kv.tree_identity(root, judged)
-    assert kv.mechanical_close_attestation(root, closed) is None
+    assert kv.mechanical_close_peel(root, closed) is None
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None and "names its current tree" in refusal
 
@@ -2176,7 +2176,7 @@ def test_an_empty_close_is_refused_and_the_walk_covers_it_regardless(tmp_path):
     # refuses anything else. There is deliberately no separate non-emptiness
     # clause: it could only fire where the one-row clause already had, which
     # is the definition of untestable.
-    assert kv.mechanical_close_attestation(root, empty) is None
+    assert kv.mechanical_close_peel(root, empty) is None
     # AND THE REFUSAL STRANDS NOTHING, which is why it is safe to make it: an
     # empty commit preserves the identity by construction, so `governing_rev`'s
     # walk-through step reaches the real close underneath either way.

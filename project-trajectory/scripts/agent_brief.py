@@ -1056,7 +1056,7 @@ def lane_completion(root, base):
 
 def review_verdict_trailer(root, merged, worker):
     """The round's `Review-Verdict:` line, or None when there is nothing to
-    attest (no merged verdict, or git cannot name the tree).
+    record (no merged verdict, or git cannot name the tree).
 
     THE TREE IS THE ONE THE TWO READERS KEY ON — `governing_identity` at the
     lane's BRANCH, the same call `review_owed_by_evidence` and
@@ -1064,14 +1064,14 @@ def review_verdict_trailer(root, merged, worker):
     is right only while no station refresh sits below the tip: the fold drops
     `docs/reviews/`, so the round file the reviewer just added does not move the
     identity, but the refresh does, and the peel is what the readers apply to
-    it. Stamping the unpeeled value filed the attestation under a key
+    it. Stamping the unpeeled value filed the trailer under a key
     `integrate._round_refusal` never looks up, so the cross-check silently stood
     down on exactly the branches that had been refreshed (REVIEW-A round 015).
     The fail-direction was safe — a trailer is never an admission path — but a
     third place choosing its own rev is the finding IF-175's contract names.
 
     WHY THE COORDINATOR WRITES IT. A trailer a reviewer could stamp on its own
-    commit attests nothing the round file did not already claim; what makes this
+    commit records nothing the round file did not already claim; what makes this
     one evidence is the same thing that makes the session log evidence — it is
     written by the process that ROUTED the round, after the round completed."""
     if not worker:

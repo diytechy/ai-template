@@ -2,9 +2,9 @@
 """review_set.py - a lane's review test set, derived from its row (WI-995).
 
 The commit checks' named tests come from the spine, never from whoever asks for the
-attestation. The row's SRs reach their LLRs, both reach their test cases, and
+record. The row's SRs reach their LLRs, both reach their test cases, and
 the test-file tags reach the files: `derive` reads those inputs from one lane
-and `kitlib.spine.review_scope` walks them. `integrate.attest`, the loop's draw
+and `kitlib.spine.review_scope` walks them. `integrate.record_checks`, the loop's draw
 and the review render all call `derive`, so a record, a draw and a brief cannot
 disagree about what a row's set is. The answer is the set or one named refusal,
 and the set never widens to the whole bar: an empty set runs the commit checks
@@ -13,7 +13,7 @@ alone, and the floor (`[required-checks] commit`, the landing checks) stays as i
 WHAT IS READ FROM WHERE. The claim listing and the row's text come from git
 (HEAD, the merge base, the index), the changed paths from the index against the
 merge base, and the registries, `docs/stack.ini` and the tags from the lane
-checkout. `attest` has already refused a worktree that differs from the index,
+checkout. `record-checks` has already refused a worktree that differs from the index,
 so there the two agree; at the render and the draw a working-tree edit can only
 change the derived list, and the record's digest then refuses it.
 

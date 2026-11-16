@@ -193,14 +193,14 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    before the build". Fill the prompt's `HATS` slot as
    `references/recipes.md`, "Terra, first turn", defines it.
 2. Build round 1's first deliverable is the tests, committed alone before
-   the code through `integrate.py attest` (recipes §6), with their tags and
+   the code through `integrate.py record-checks` (recipes §6), with their tags and
    `Evidence` parts by that same rule, each under one evidence class (plan
    item 13's typed evidence):
    - **New or corrected executable behaviour:** a strict expected assertion
      failure, the mark `[product] expected_failure_marker` declares (Python:
      `@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))`).
      The mark is written as the declared text verbatim, with no added
-     arguments: `attest` and the refresh count only that text, so a mark
+     arguments: `record-checks` and the refresh count only that text, so a mark
      carrying an added `reason=` is not counted and its test can land red.
      Its red reaches the test's own assertion, never an import error; a
      stub is the builder's choice. The code commit removes the marks.
@@ -213,17 +213,17 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    A test that fits none is named, with its disposition, in the lane's
    decisions record before the code commit.
 
-   The tests-first commit goes through `integrate.py attest` with a test
+   The tests-first commit goes through `integrate.py record-checks` with a test
    set that names each marked file: the file carries a tag to a TC in the
-   row's scope, and `attest` refuses a marked file the set does not name.
+   row's scope, and `record-checks` refuses a marked file the set does not name.
    The code commit that removes the marks names the same set: change no
-   tag, TC row or `sr_refs` between the two, and attest a set that must
+   tag, TC row or `sr_refs` between the two, and record checks for a set that must
    change with the marks kept first. A refresh or a hand landing (recipes
    §3) refused for a mark ends in the code commit or a quarantine. A test the bar skips takes no mark,
    because a skip is never evidence: it is named, with its disposition,
    in the lane's decisions record.
 3. The builder then builds the code. Re-run its claimed results yourself,
-   then verify, regenerate and commit through `integrate.py attest`
+   then verify, regenerate and commit through `integrate.py record-checks`
    (recipes §6).
 
 A lane claimed before this order landed keeps the order it started with;
@@ -233,10 +233,10 @@ record that as a decision in its decisions record.
 
 Each round:
 
-1. **The tip carries the commit checks' attestation** before any review:
-   commit lane work through `integrate.py attest`, which derives the
+1. **The tip carries the commit checks' record** before any review:
+   commit lane work through `integrate.py record-checks`, which derives the
    row's review test set, and `review_brief.py review` refuses any other
-   tip. A hook-refused commit or failed commit checks attest nothing, and the render then
+   tip. A hook-refused commit or failed commit checks record nothing, and the render then
    refuses.
 2. **Run the lints after the build round** (ruling 6): `trace.py --strict`
    and `check_trajectory.py --strict`, with the commit checks. They run here,
@@ -312,7 +312,7 @@ this hold (`project-trajectory/PROCESS.md` §4).
   before the checkpoint. Rounds run until one has no BLOCKER or MAJOR code
   finding, and the checkpoint follows it.
 - **The commit-check failure cap** (revisions 17 and 18): failed commit checks
-  draw no review. Count each failed `integrate.py attest` as a failed round in
+  draw no review. Count each failed `integrate.py record-checks` as a failed round in
   the lane's decisions record; at `[build] stop_lane_after_consecutive_commit_check_failures`
   consecutive failed rounds, close the lane partial (recipes §8, "Close a lane partial"), never a new stop.
 - **Which rounds run in convergence stance.** The third counted round, the

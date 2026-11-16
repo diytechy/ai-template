@@ -1,15 +1,15 @@
 """The expected-failure marker: the strict mark that proves a test failed
 before its code existed, as `docs/stack.ini` `[product]
-expected_failure_marker` declares it, and the two checks `integrate.py attest`
+expected_failure_marker` declares it, and the two checks `integrate.py record-checks`
 and its refresh make of it (WI-996). It is read beside the commit checks'
-command, the other value an attestation needs.
+command, the other value a passed-checks record needs.
 
 WHY THIS EXISTS. A lane's tests-first commit lands each new test under the
-declared marker, and its attestation's green commit checks are that test's
+declared marker, and its record of passing commit checks is that test's
 failing-first proof: a strictly marked test the checks run passes them only by
 failing at an assertion. The code commit removes the marker. So a marker may
 be added only where the round's test set will run it, removed only against the
-lane's last review record over the same test set, and never landed: a marked
+lane's last commit record over the same test set, and never landed: a marked
 test passes the landing checks while it is failing. One home holds the
 declaration's states, the count and the per-file table, so the two verbs that
 ask cannot disagree.
@@ -47,7 +47,7 @@ __all__ = [
     "count",
     "tree_counts",
     "findings",
-    "attest_refusal",
+    "record_checks_refusal",
     "landing_refusal",
 ]
 
@@ -72,7 +72,7 @@ _SUITE_MEANS = "the shell line of the check suite {} [{}] {} names".format(
 
 
 class Bars(NamedTuple):
-    """What an attestation needs from the lane at `lane`: `review`, the shell
+    """What a passed-checks record needs from the lane at `lane`: `review`, the shell
     line of the check suite a commit must pass; `red_mark`, the declared
     expected-failure marker; the tests root's path prefix; and, per value that
     is undeclared (`""`), the line naming where it belongs and why it is not
@@ -242,7 +242,7 @@ def _removal_failures(path, named, tests, digest):
     """
     failed = []
     if digest is None:
-        failed.append("no review record stands for the marked tree")
+        failed.append("no commit record stands for the marked tree")
     elif digest != kverdict.tests_digest(tests):
         failed.append("the record is for another test set")
     if path not in named:
@@ -313,36 +313,36 @@ def _refusal(lead, found):
     )
 
 
-def attest_refusal(root, wt, branch, base, bars, tests):
-    """Why `attest` may not record the tree `wt` stages, by the table, or
-    None. The reference is the newest verified review record in
+def record_checks_refusal(root, wt, branch, base, bars, tests):
+    """Why `record-checks` may not record the tree `wt` stages, by the table, or
+    None. The reference is the newest verified commit record in
     `base..branch`, else `base` with no record; `tests` is the round's test
     set. An unreadable range, reference tree or staged tree refuses, naming
     the read. Raises nothing, and moves neither the branch nor the index.
 
     Implements: SR-156, LLR-368
     """
-    record = kverdict.last_review_record(root, branch, base)
+    record = kverdict.last_commit_record(root, branch, base)
     if record is None:
         return (
-            "cannot read the range {}..{}, so the lane's last review record is "
+            "cannot read the range {}..{}, so the lane's last commit record is "
             "unknowable".format(base[:10], branch)
         )
-    sha, attested = record
+    sha, passed = record
     after, refusal = _read_counts(wt, _staged_tree(wt), bars, "staged tree")
     if refusal:
         return refusal
-    reference = attested.tree if attested else base + "^{tree}"
+    reference = passed.tree if passed else base + "^{tree}"
     before, refusal = _read_counts(root, reference, bars, "reference tree")
     if refusal:
         return refusal
-    found = findings(before, after, tests, attested.tests if attested else None)
+    found = findings(before, after, tests, passed.tests if passed else None)
     if not found:
         return None
     where = (
-        "the lane's last review record {}".format(sha[:10])
-        if attested
-        else "the lane base {}, which carries no review record".format(base[:10])
+        "the lane's last commit record {}".format(sha[:10])
+        if passed
+        else "the lane base {}, which carries no commit record".format(base[:10])
     )
     return _refusal(
         "a test file's count of the declared expected-failure marker changed "

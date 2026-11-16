@@ -319,14 +319,14 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
         "the independently checkable evidence its declared method names",
         "A test that fits none is named, with its disposition, in the lane's "
         "decisions record before the code commit.",
-        # WI-996: the order runs through `attest`, which judges the mark
+        # WI-996: the order runs through `record-checks`, which judges the mark
         # `[product] expected_failure_marker` declares, and the refresh refuses
         # a landing mark.
         "a strict expected assertion failure, the mark `[product] "
         "expected_failure_marker` declares",
         "The mark is written as the declared text verbatim, with no added "
-        "arguments: `attest` and the refresh count only that text",
-        "The tests-first commit goes through `integrate.py attest` with a test "
+        "arguments: `record-checks` and the refresh count only that text",
+        "The tests-first commit goes through `integrate.py record-checks` with a test "
         "set that names each marked file",
         "The code commit that removes the marks names the same set",
         "A refresh or a hand landing (recipes §3) refused for a mark ends in "
@@ -365,7 +365,7 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
     process = " ".join((KIT / "PROCESS.md").read_text(encoding="utf-8").split())
     assert (
         "(red → green → refactor). In a lane, the failing test is proven by the "
-        "marker `[product] expected_failure_marker` declares, attested before the "
+        "marker `[product] expected_failure_marker` declares, recorded before the "
         "code and removed by it, and never landed." in process
     )
 
@@ -402,11 +402,11 @@ def test_the_hand_landing_checks_the_staged_squash_for_a_red_mark():
     )
 
 
-def test_the_cycle_reviews_only_an_attested_tip():
+def test_the_cycle_reviews_only_a_recorded_tip():
     # Pins WI-957's Done-when item on the coordinator-cycle skill text: the
-    # pre-review check is the commit checks' attestation on the tip, not a moved
+    # pre-review check is the commit checks' record on the tip, not a moved
     # `git log -1`, and the skill and its recipes commit lane work through the
-    # attest route. Adequacy witness: a cycle that still
+    # record-checks route. Adequacy witness: a cycle that still
     # checks only that the commit landed keeps the old phrase.
     cycle = KIT / "skills" / "coordinator-cycle"
     texts = {
@@ -414,9 +414,9 @@ def test_the_cycle_reviews_only_an_attested_tip():
         for name in ("SKILL.md", "references/recipes.md")
     }
     step = texts["SKILL.md"].replace("*", "").casefold()
-    assert "the tip carries the commit checks' attestation" in step
+    assert "the tip carries the commit checks' record" in step
     for name, flat in texts.items():
-        assert "integrate.py attest" in flat, name
+        assert "integrate.py record-checks" in flat, name
         assert "`git log -1` moved" not in flat, name
 
 
@@ -439,7 +439,7 @@ def test_no_cycle_copy_types_a_review_test_list():
 def test_coordinator_cycle_states_the_red_round_cap_citing_the_key():
     # No TC row names this case yet; it pins WI-958's Done-when item on the
     # coordinator-cycle skill text. Its section on rounds and the cap counts
-    # each red attest as a red round and, at the declared key, closes the lane
+    # each failed record-checks run as a red round and, at the declared key, closes the lane
     # partial by the recipe. test_skills_sync keeps the copies byte-identical.
     skill = (KIT / "skills" / "coordinator-cycle" / "SKILL.md").read_text(
         encoding="utf-8"

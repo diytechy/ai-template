@@ -590,12 +590,12 @@ def test_worker_review_evidence_names_exact_reviewed_commit(tmp_path):
     verdicts = list((repo / "docs" / "reviews" / "t1").glob("*-REVIEW-A-*.md"))
     assert len(verdicts) == 1, "expected one train-scoped verdict"
     sha7 = verdicts[0].stem.rsplit("-", 1)[1]
-    # The named sha is the exact reviewed commit: the commit checks' attestation
+    # The named sha is the exact reviewed commit: the commit checks' record
     # of the implementer's commit, sitting directly on it with its tree.
     subjects = _git(repo, "log", "--format=%h %s", "HEAD")
     build_line = [ln for ln in subjects.splitlines() if "build WI-201" in ln][0]
     reviewed = _git(repo, "rev-parse", sha7)
-    assert agent_loop.kverdict.bar_attestation(str(repo), reviewed) is not None
+    assert agent_loop.kverdict.passed_checks(str(repo), reviewed) is not None
     assert _git(repo, "rev-parse", reviewed + "^").startswith(build_line.split()[0])
     assert (repo / "docs" / "reviews" / "t1" / "scoreboard.txt").exists()
     # And no un-scoped lane verdict escaped the train directory.

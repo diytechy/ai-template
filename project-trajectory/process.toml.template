@@ -468,11 +468,11 @@ context_window_tokens = 200000
 # docs/stack.ini [check-suites] holds that suite's command: this file says
 # which suite is required, the stack file says how this stack runs it.
 #
-#   commit   every commit a lane attests. `integrate.py attest` runs the named
+#   commit   every commit a lane builds. `integrate.py record-checks` runs the named
 #            suite on the staged work, then the row's derived review tests,
-#            and records the green in the commit. Required, with no default:
+#            and records that they passed in the commit. Required, with no default:
 #            an absent table or key, a value that is not a name, or a name
-#            docs/stack.ini does not declare makes `attest` refuse.
+#            docs/stack.ini does not declare makes `record-checks` refuse.
 #
 # A landing is not a setting: the merge slot runs the full gate
 # (`check.py --tier all`) on the refreshed tree whatever this table says.
@@ -480,10 +480,10 @@ commit = "smoke"
 
 [build]
 # THE COMMIT-CHECK FAILURE CAP. A managed loop draws a review only over a tip
-# whose required commit checks were attested green; a failed run draws no
+# whose required commit checks were recorded as passed; a failed run draws no
 # review and hands the failure's tail to the next build instead. Each failure
 # is recorded in the lane's committed session log, keyed by the build commit
-# it refused, so the count survives a resume, and a verified green attestation
+# it refused, so the count survives a resume, and a verified passed-checks record
 # resets it. At this many consecutive failures the worker stops with its own
 # exit code, and the dispatcher closes the lane partial through its existing
 # failed-build arm.

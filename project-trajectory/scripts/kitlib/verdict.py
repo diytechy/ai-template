@@ -35,7 +35,7 @@ itself: a round file, a log fragment and a session log are records OF the work
 under review, never the work, so a commit that only touches them cannot
 invalidate a verdict. The digest is a truncation-free SHA-256 over the filtered
 listing, 64 hex — deliberately NOT 40, because a 40-hex `tree=` beside the
-`Bar-Green: tree=<40 hex>` trailer (which IS a git tree object id) would read as
+`Checks-Passed: tree=<40 hex>` trailer (which IS a git tree object id) would read as
 the same kind of value and it is not one.
 
 WHAT CANNOT INVALIDATE A VERDICT HAS TWO HALVES, AND ONE OWNER. The record
@@ -61,9 +61,9 @@ path, which the fold is built to ignore — moved the identity anyway, by buryin
 the refresh under it. A read-only question can afford an answer a destructive
 one cannot. The walk's step condition is the module's own sentence rather than a
 proxy for it ("a commit that cannot invalidate a verdict"), which is why the
-empty attestation carrier `commit_telemetry` writes needs no case of its own.
+empty trailer carrier `commit_telemetry` writes needs no case of its own.
 
-THE TRAILER is the machine half, the `Bar-Green:` pattern applied to a verdict:
+THE TRAILER is the machine half, the `Checks-Passed:` pattern applied to a verdict:
 
     Review-Verdict: APPROVE|CHANGES-REQUESTED rounds=<N> tree=<64 hex>
 
@@ -98,7 +98,7 @@ in docs/requirements/interfaces.toml).
 Contract IF-175: the verdict record, as functions two independent readers call
     to reach ONE answer. `tree_identity` (and its pure half `fold_listing`)
     gives the non-record tree identity a verdict names, and
-    `governing_identity` — over `governing_rev` / `refresh_attestation` — gives
+    `governing_identity` — over `governing_rev` / `refresh_passed_checks` — gives
     the rev that identity is measured at, so neither reader chooses its own
     (`work_tip` is the tip-only peel the `reset --hard` shares, deliberately
     NOT the same walk);
@@ -124,23 +124,23 @@ Contract IF-175: the verdict record, as functions two independent readers call
     for (never drawn, or whose latest round is invalid evidence) — the resume's
     question, weaker than the gate's demand for an APPROVE only on a dissent,
     so the two readers share a span without pretending to share a threshold;
-    `branch_trailers` the verified attestations on
+    `branch_trailers` the verified trailers on
     the branch's own commits, in commit order;
-    `read_bar_attestation` / `bar_attestation` / `tests_digest` the bar
-    attestation grammar, its verifier and the one tests digest; and
-    `review_attestation` the review walk: a verified `review` record whose
+    `read_passed_checks` / `passed_checks` / `tests_digest` the passed-checks
+    record's grammar, its verifier and the one tests digest; and
+    `commit_passed_checks` the review walk: a verified `commit` record whose
     tests digest matches, at the commit or beneath it through commits whose
     non-record identity is unchanged (the step `governing_rev` takes), the
-    first verified record deciding, so another bar or another digest refuses
-    rather than being walked past; `format_red_record` / `parse_red_record`
-    the red record a build's session log header carries, keyed by the build
-    sha a failed run of the commit checks refused, `red_record` whether a build already has
-    one, and `red_rounds` the count: the distinct red builds since the last
-    verified `review` attestation, an unreadable log counting toward the cap,
+    first verified record deciding, so another set or another digest refuses
+    rather than being walked past; `format_failed_record` / `parse_failed_record`
+    the failed-checks record a build's session log header carries, keyed by the build
+    sha a failed run of the commit checks refused, `failed_record` whether a build already has
+    one, and `failed_rounds` the count: the distinct failed builds since the last
+    verified `commit` record, an unreadable log counting toward the cap,
     never away from it; and `mechanical_close` the one close-shape reader,
     whose optional relink oracle (injected by the adoption-record rule)
     admits only the close's byte-exact inbound relinks outside `docs/work/`,
-    while the peel (`mechanical_close_attestation`) calls it without that
+    while the peel (`mechanical_close_peel`) calls it without that
     oracle. Pure functions plus thin reads through
     `kitlib.git`, so nothing here writes and nothing imports a sibling service —
     the verdict parser arrives as an ARGUMENT rather than an import, which is
@@ -160,7 +160,7 @@ from typing import NamedTuple
 from .config import FINAL_PERSISTED, reviewer_dials
 from .git import git_bytes, git_out
 from .station import (
-    BAR_GREEN,
+    CHECKS_PASSED,
     mechanical_close_subject,
 )
 
@@ -183,16 +183,16 @@ __all__ = [
     "fold_listing",
     "tree_identity",
     "refresh_subject",
-    "refresh_attestation",
-    "BAR_NAMES",
-    "LANDING_BARS",
-    "BarAttestation",
+    "refresh_passed_checks",
+    "CHECK_SETS",
+    "LANDING_CHECK_SETS",
+    "PassedChecks",
     "tests_digest",
     "normal_test_paths",
-    "format_bar_green",
-    "bar_attestation",
-    "last_review_record",
-    "mechanical_close_attestation",
+    "format_passed_checks",
+    "passed_checks",
+    "last_commit_record",
+    "mechanical_close_peel",
     "mechanical_close",
     "work_tip",
     "governing_rev",
@@ -213,11 +213,11 @@ __all__ = [
     "branch_paths",
     "log_history",
     "review_logs",
-    "RED_KEYS",
-    "format_red_record",
-    "parse_red_record",
-    "RedCount",
-    "red_rounds",
+    "FAILED_KEYS",
+    "format_failed_record",
+    "parse_failed_record",
+    "FailedCount",
+    "failed_rounds",
     "logged_rounds",
     "round_entries",
     "branch_entries",
@@ -250,7 +250,7 @@ UNCHANGED_REWORK = (
 )
 UNCHANGED_PAGE = "PAGE-OPERATOR — rework left the reviewed tree unchanged"
 
-# The machine half. Anchored per-line (`re.M`) exactly like the `Bar-Green:`
+# The machine half. Anchored per-line (`re.M`) exactly like the `Checks-Passed:`
 # reader, and the verdict word is a CLOSED alternation rather than `\S+`: an
 # unrecognized word must fail to parse (and so read as no verdict at all) rather
 # than arrive downstream as a third outcome nobody wrote a rule for.
@@ -362,7 +362,7 @@ def parse_trailer(message):
 
     The last, not the first: a commit message that quotes an earlier trailer
     (a rework commit citing the round it answers) must not have the quotation
-    read as its own attestation, and the kit's convention puts a commit's own
+    read as its own trailer, and the kit's convention puts a commit's own
     trailers at the end."""
     matches = TRAILER_RE.findall(message or "")
     if not matches:
@@ -439,25 +439,26 @@ def tree_identity(root, rev):
 # --- the rev the identity is measured at --------------------------------------
 
 
-# The `Bar-Green:` attestation, VERIFIED against git. The label comes from
-# `station` so the writer (`format_bar_green`) and this verifier share one
-# spelling rather than two literals that must agree. The bar set is closed:
-# `review` is a build round's record of green, `landing` and `no-bar` are the
-# station refresh's (the adjudication arm runs no bar and says so).
-BAR_NAMES = ("review", "landing", "no-bar")
-LANDING_BARS = ("landing", "no-bar")
-_ATTEST_RE = re.compile(
-    r"^{}\s+tree=([0-9a-f]{{40}})\s+work=([0-9a-f]{{40}})\s+bar=(\S+)"
-    r"\s+tests=([0-9a-f]{{64}}|none)(?:\s+(\S.*))?$".format(BAR_GREEN)
+# The passed-checks record, `Checks-Passed:`, VERIFIED against git. The label
+# comes from `station` so the writer (`format_passed_checks`) and this
+# verifier share one spelling rather than two literals that must agree. The
+# set of checks is closed: `commit` is a build round's record that its commit
+# checks passed, `landing` and `none` are the station refresh's (the
+# adjudication arm runs no checks and says so).
+CHECK_SETS = ("commit", "landing", "none")
+LANDING_CHECK_SETS = ("landing", "none")
+_PASSED_CHECKS_RE = re.compile(
+    r"^{}\s+tree=([0-9a-f]{{40}})\s+work=([0-9a-f]{{40}})\s+checks=(\S+)"
+    r"\s+tests=([0-9a-f]{{64}}|none)(?:\s+(\S.*))?$".format(CHECKS_PASSED)
 )
 
 
-class BarAttestation(NamedTuple):
-    """The verified fields of one `Bar-Green:` line."""
+class PassedChecks(NamedTuple):
+    """The verified fields of one `Checks-Passed:` line."""
 
     tree: str
     work: str
-    bar: str
+    checks: str
     tests: str
     summary: str
 
@@ -474,25 +475,25 @@ def refresh_subject(branch):
     return "refresh: {} onto trunk ".format(branch)
 
 
-def refresh_attestation(root, branch, rev=None):
+def refresh_passed_checks(root, branch, rev=None):
     """`(work_tip_sha, bar summary)` if `rev` is a GENUINE refresh commit for
     `branch`, else None. `rev` defaults to the branch tip.
 
-    The bar is attested to a TREE, and this is where that sentence is made
+    The checks are recorded against a TREE, and this is where that sentence is made
     true rather than merely written down. A commit message is not evidence: it
     can be copied, hand-written, amended onto different content, cherry-picked
     or rebased, and every one of those carries the words onto a tree nobody
     barred (REVIEW-A round 1, driven both ways - a forged trailer on an
     ordinary work commit, and `commit --amend` adding a file to a real one).
 
-    So the trailer NAMES what it attests, and `bar_attestation` verifies it
-    against git (the grammar and its one writer are `format_bar_green`'s):
+    So the trailer NAMES what it records, and `passed_checks` verifies it
+    against git (the grammar and its one writer are `format_passed_checks`'s):
 
-        Bar-Green: tree=<40 hex> work=<40 hex> bar=<review|landing|no-bar> tests=<64 hex|none> <summary>
+        Checks-Passed: tree=<40 hex> work=<40 hex> checks=<commit|landing|none> tests=<64 hex|none> <summary>
 
-      * `bar=` must be `landing` or `no-bar` here: a `review` attestation is a
+      * `checks=` must be `landing` or `none` here: a `commit` record is a
         build round's record of green, never a refresh, so it is never peeled
-        and never satisfies the merge slot. The old line without `bar=` is not
+        and never satisfies the merge slot. A line in an earlier grammar is not
         read at all.
       * `tree=` must equal the commit's OWN tree. This is the load-bearing one:
         no edit that changes content can keep it, because the tree sha IS the
@@ -528,10 +529,10 @@ def refresh_attestation(root, branch, rev=None):
     lines = message.splitlines()
     if not lines or not lines[0].strip().startswith(refresh_subject(branch)):
         return None
-    attested = bar_attestation(root, rev)
-    if attested is None or attested.bar not in LANDING_BARS:
-        return None  # a `review` attestation is never a refresh, so never peeled
-    return attested.work, attested.summary
+    passed = passed_checks(root, rev)
+    if passed is None or passed.checks not in LANDING_CHECK_SETS:
+        return None  # a `commit` record is never a refresh, so never peeled
+    return passed.work, passed.summary
 
 
 def tests_digest(paths):
@@ -567,32 +568,34 @@ def normal_test_paths(paths):
     return normalized
 
 
-def format_bar_green(tree, work, bar, tests, summary):
-    """The one writer of the `Bar-Green:` line:
+def format_passed_checks(tree, work, checks, tests, summary):
+    """The one writer of the `Checks-Passed:` line:
 
-        Bar-Green: tree=<40 hex> work=<40 hex> bar=<bar> tests=<64 hex|none> <summary>
+        Checks-Passed: tree=<40 hex> work=<40 hex> checks=<checks> tests=<64 hex|none> <summary>
 
-    It raises on a bar outside `BAR_NAMES`, so the writer cannot emit a line
+    It raises on a set of checks outside `CHECK_SETS`, so the writer cannot emit a line
     the verifier refuses.
 
     Implements: SR-156, LLR-207
     """
-    if bar not in BAR_NAMES:
-        raise ValueError("unknown bar {!r}; the set is {}".format(bar, BAR_NAMES))
-    return "{} tree={} work={} bar={} tests={} {}".format(
-        BAR_GREEN, tree, work, bar, tests, summary
+    if checks not in CHECK_SETS:
+        raise ValueError(
+            "unknown checks {!r}; the set is {}".format(checks, CHECK_SETS)
+        )
+    return "{} tree={} work={} checks={} tests={} {}".format(
+        CHECKS_PASSED, tree, work, checks, tests, summary
     ).rstrip()
 
 
-def read_bar_attestation(root, rev):
-    """`(BarAttestation, None)` for `rev`'s verified `Bar-Green:` attestation,
+def read_passed_checks(root, rev):
+    """`(PassedChecks, None)` for `rev`'s verified `Checks-Passed:` record,
     else `(None, cause)`: the one verifier, with the reason it refused named.
 
-    An attestation is the message's ONE line starting with the label at column
-    0 (a quoted or indented line is a quotation, two lines attest no single
-    bar), matching the grammar in full, naming a bar in `BAR_NAMES`, and whose
+    A record is the message's ONE line starting with the label at column
+    0 (a quoted or indented line is a quotation, two lines record no single
+    set), matching the grammar in full, naming a set in `CHECK_SETS`, and whose
     `tree=` and `work=` are `rev`'s own tree and first parent. An unreadable
-    commit, or the old grammar without `bar=`, is not one: no legacy path. The
+    commit, or a line in an earlier grammar, is not one: no legacy path. The
     cause names the first of those checks that failed, with both values for a
     tree or parent that does not match, so a refusing reader can say why.
 
@@ -601,47 +604,46 @@ def read_bar_attestation(root, rev):
     message = git_out(root, ["log", "-1", "--format=%B", rev])
     if not message:
         return None, "the commit's message cannot be read"
-    labelled = [line for line in message.splitlines() if line.startswith(BAR_GREEN)]
+    labelled = [line for line in message.splitlines() if line.startswith(CHECKS_PASSED)]
     if len(labelled) != 1:
         return None, "it carries {} `{}` lines at column 0, not one".format(
-            len(labelled), BAR_GREEN
+            len(labelled), CHECKS_PASSED
         )
-    matched = _ATTEST_RE.match(labelled[0])
+    matched = _PASSED_CHECKS_RE.match(labelled[0])
     if not matched:
         return None, "its `{}` line is outside the grammar `{}`".format(
-            BAR_GREEN, "tree=<40 hex> work=<40 hex> bar=<bar> tests=<64 hex|none>"
+            CHECKS_PASSED,
+            "tree=<40 hex> work=<40 hex> checks=<checks> tests=<64 hex|none>",
         )
-    if matched.group(3) not in BAR_NAMES:
+    if matched.group(3) not in CHECK_SETS:
         return None, "its `{}` line names bar {!r}, outside {}".format(
-            BAR_GREEN, matched.group(3), ", ".join(BAR_NAMES)
+            CHECKS_PASSED, matched.group(3), ", ".join(CHECK_SETS)
         )
-    attested = BarAttestation(
-        *matched.group(1, 2, 3, 4), (matched.group(5) or "").strip()
-    )
+    passed = PassedChecks(*matched.group(1, 2, 3, 4), (matched.group(5) or "").strip())
     tree = _rev(root, rev + "^{tree}")
-    if tree != attested.tree:  # the message rode onto a tree it does not describe
+    if tree != passed.tree:  # the message rode onto a tree it does not describe
         return None, "its `{}` line names tree {}, but the commit's tree is {}".format(
-            BAR_GREEN, attested.tree, tree
+            CHECKS_PASSED, passed.tree, tree
         )
     parent = _rev(root, rev + "^1")
-    if parent != attested.work:  # ...or onto another parent than the one it names
+    if parent != passed.work:  # ...or onto another parent than the one it names
         return None, "its `{}` line names work {}, but its first parent is {}".format(
-            BAR_GREEN, attested.work, parent
+            CHECKS_PASSED, passed.work, parent
         )
-    return attested, None
+    return passed, None
 
 
-def bar_attestation(root, rev):
-    """The verified fields of `rev`'s `Bar-Green:` attestation as a
-    `BarAttestation`, or None: `read_bar_attestation` without its cause.
+def passed_checks(root, rev):
+    """The verified fields of `rev`'s `Checks-Passed:` record as a
+    `PassedChecks`, or None: `read_passed_checks` without its cause.
 
     Implements: SR-156, LLR-207
     """
-    return read_bar_attestation(root, rev)[0]
+    return read_passed_checks(root, rev)[0]
 
 
 # The one non-record tree the MACHINERY itself moves. See
-# `mechanical_close_attestation` for why it is peeled and what bounds that.
+# `mechanical_close_peel` for why it is peeled and what bounds that.
 _WORK_PREFIX = b"docs/work/"
 _ACTIVE_SPEC = re.compile(rb"^docs/work/active/([^/]+)/((WI-[0-9]+)-[^/]+[.]md)$")
 _COMPLETE_SPEC = re.compile(rb"^docs/work/complete/(WI-[0-9]+-[^/]+[.]md)$")
@@ -740,7 +742,7 @@ def _outside_relinked(outside, branches, deleted, relinked, blobs):
     return True
 
 
-def mechanical_close_attestation(root, rev):
+def mechanical_close_peel(root, rev):
     """The first parent of `rev` if `rev` is the machinery's OWN adjudication
     close (`handback.close_adjudication`), else None.
 
@@ -779,7 +781,7 @@ def mechanical_close_attestation(root, rev):
     stops a close whose inbound-link relink reached into product or requirement
     files from being peeled. Each check FAILS TOWARD REVIEW: declining to peel
     measures at a later rev, so the gate asks for MORE review, never less. The
-    honest bound is `refresh_attestation`'s — this defeats accident and drift,
+    honest bound is `refresh_passed_checks`'s — this defeats accident and drift,
     not a lane that lies on purpose, which is the threat model the coordinator
     holds throughout.
 
@@ -800,7 +802,7 @@ def mechanical_close_attestation(root, rev):
 def mechanical_close(root, rev, relinked=None):
     """`(parent, closed ids)` when `rev` is the machinery's own adjudication
     close, else None: the ONE reading of the close shape, shared by the peel
-    (`mechanical_close_attestation`, no oracle) and the adoption-record rule
+    (`mechanical_close_peel`, no oracle) and the adoption-record rule
     (`relinked=spec_move.exact_relink`, injected because this leaf imports no
     script). One parent (a merge is never a close), the
     `--name-status --no-renames -z` stream judged by `_closed_wi_ids` (with
@@ -845,10 +847,10 @@ def _peel_target(root, branch, rev):
     (which archives a judged row terminal). Both are machine-authored, both move
     the tree without the lane having changed what it is claiming, and both are
     admitted by verification against git rather than by measurement."""
-    attested = refresh_attestation(root, branch, rev)
-    if attested is not None:
-        return attested[0]
-    return mechanical_close_attestation(root, rev)
+    passed = refresh_passed_checks(root, branch, rev)
+    if passed is not None:
+        return passed[0]
+    return mechanical_close_peel(root, rev)
 
 
 def work_tip(root, branch):
@@ -863,7 +865,7 @@ def work_tip(root, branch):
     and the generated artifacts, and if that counted as code it would stale the
     honest APPROVE that had to precede it.
 
-    The peel is why `refresh_attestation` had to become a verification rather
+    The peel is why `refresh_passed_checks` had to become a verification rather
     than a substring test: this function feeds a `reset --hard`, so peeling one
     commit too far DESTROYS committed work. A work commit whose message merely
     quoted the trailer used to be peeled, and its file left the branch (REVIEW-A
@@ -872,10 +874,10 @@ def work_tip(root, branch):
     """
     rev = branch
     for _ in range(_MAX_REFRESH_PEEL):
-        attested = refresh_attestation(root, branch, rev)
-        if attested is None:
+        passed = refresh_passed_checks(root, branch, rev)
+        if passed is None:
             return _rev(root, rev)
-        rev = attested[0]
+        rev = passed[0]
     return _rev(root, rev)
 
 
@@ -955,7 +957,7 @@ def governing_rev(root, branch, rev=None):
     read — a merge, an empty commit — and it answered "stop", which reads as
     "this might have invalidated the verdict" for a commit that provably did
     not. `agent_common.commit_telemetry` then began writing exactly that shape:
-    a `Review-Verdict:` attestation must land even when the bookkeeping it rides
+    a `Review-Verdict:` trailer must land even when the bookkeeping it rides
     is unchanged, so it commits EMPTY, and the very commit that RECORDS an
     approval buried the refresh underneath it. Asking the identity question
     directly makes the empty carrier, the merge commit and the quoted-path trap
@@ -977,17 +979,17 @@ def governing_rev(root, branch, rev=None):
     return _rev(root, rev)
 
 
-def review_attestation(root, rev, tests):
-    """`(attested sha, None)` when `rev`, or a commit beneath it that only
-    record-only commits separate from it, carries a verified `review`
-    attestation whose tests digest is `tests_digest(tests)`; else `(None,
+def commit_passed_checks(root, rev, tests):
+    """`(recorded sha, None)` when `rev`, or a commit beneath it that only
+    record-only commits separate from it, carries a verified `commit`
+    record whose tests digest is `tests_digest(tests)`; else `(None,
     cause)`.
 
     The walk looks at `rev`, then steps to the first parent only while the
     non-record identity is unchanged (`_identity_step`, the step
     `governing_rev` takes), so a round file, a telemetry fragment or an empty
-    commit above an attested commit needs no new bar. The first verified record
-    it meets decides: another bar, a refresh's `landing` included, is refused
+    commit above a recorded commit needs no new bar. The first verified record
+    it meets decides: another set, a refresh's `landing` included, is refused
     as one, and so is another tests digest. It never peels a disposable commit
     and never runs the bar: it reads the record.
 
@@ -997,35 +999,38 @@ def review_attestation(root, rev, tests):
     rev = _rev(root, rev) or rev
     identity = tree_identity(root, rev)
     for _ in range(_MAX_GOVERNING_WALK):
-        attested, cause = read_bar_attestation(root, rev)
-        if attested is not None:
-            return _review_record_answer(rev, attested, want)
+        passed, cause = read_passed_checks(root, rev)
+        if passed is not None:
+            return _commit_record_answer(rev, passed, want)
         step = _identity_step(root, rev, identity)
         if step is None:
             return None, (
-                "{} has no verified attestation ({}), and it changes non-record "
+                "{} has no verified passed-checks record ({}), and it changes non-record "
                 "paths over its parent, so no commit beneath it stands for "
                 "it".format(rev, cause)
             )
         rev, identity = step
-    return None, "no verified attestation within {} record-only commits".format(
-        _MAX_GOVERNING_WALK
+    return (
+        None,
+        "no verified passed-checks record within {} record-only commits".format(
+            _MAX_GOVERNING_WALK
+        ),
     )
 
 
-def _review_record_answer(rev, attested, want):
-    """`review_attestation`'s answer at the first verified record it meets."""
-    if attested.bar != "review":
+def _commit_record_answer(rev, passed, want):
+    """`commit_passed_checks`'s answer at the first verified record it meets."""
+    if passed.checks != "commit":
         return (
             None,
-            "{} carries a verified `{}` attestation, not a `review` one".format(
-                rev, attested.bar
+            "{} carries a verified `checks={}` record, not a `checks=commit` one".format(
+                rev, passed.checks
             ),
         )
-    if attested.tests != want:
+    if passed.tests != want:
         return None, (
-            "{}'s review attestation is for tests={}, but the round's tests "
-            "digest to {}".format(rev, attested.tests, want)
+            "{}'s commit record is for tests={}, but the round's tests "
+            "digest to {}".format(rev, passed.tests, want)
         )
     return rev, None
 
@@ -1043,7 +1048,7 @@ def governing_identity(root, branch, rev=None):
 
     "EVERY READER" INCLUDES THE ONES THAT ASK ABOUT A COMMIT rather than about
     the branch — `round_entries` for the sha a round file cites, and
-    `branch_trailers` for the commit an attestation rides. They used to call
+    `branch_trailers` for the commit a trailer rides. They used to call
     `tree_identity` directly, which is the same composition with the peel left
     out, and the two answers part company across exactly one refresh commit:
     a round drawn AFTER a refresh named the post-refresh tree while the gate
@@ -1364,29 +1369,29 @@ def review_logs(root, branch, base, paths):
     return found
 
 
-# --- the red record: the commit checks that refused a build, and the count -----------
+# --- the failed-checks record: the commit checks that refused a build, and the count ---
 
-# A red result is written into a session log's header, keyed by the build
-# commit whose tip the bar refused:
+# A failed run of the commit checks is written into a session log's header,
+# keyed by the build commit whose tip they refused:
 #
-#     # bar-red: <40-hex build sha>
-#     # bar-summary: <one line>
+#     # checks-failed: <40-hex build sha>
+#     # checks-summary: <one line>
 #
-# `format_red_record` is the one writer of the two fields (the loop hands them
-# to `agent_common.write_session_log`) and `parse_red_record` the one reader.
+# `format_failed_record` is the one writer of the two fields (the loop hands them
+# to `agent_common.write_session_log`) and `parse_failed_record` the one reader.
 # Only the header counts: a transcript quoting the line is no record.
-RED_KEYS = ("bar-red", "bar-summary")
+FAILED_KEYS = ("checks-failed", "checks-summary")
 _SHA40_RE = re.compile(r"^[0-9a-f]{40}$")
-_BAR_RED_RE = re.compile(r"^# bar-red:[ \t]*([0-9a-f]{40})[ \t]*$", re.M)
-_BAR_SUMMARY_RE = re.compile(r"^# bar-summary:[ \t]*(.*)$", re.M)
+_CHECKS_FAILED_RE = re.compile(r"^# checks-failed:[ \t]*([0-9a-f]{40})[ \t]*$", re.M)
+_CHECKS_SUMMARY_RE = re.compile(r"^# checks-summary:[ \t]*(.*)$", re.M)
 _SUMMARY_MAX = 240
 _SUMMARY_GAP = " ... "
 _SUMMARY_HEAD = 80
 
 
-def format_red_record(sha, summary):
-    """`{"bar-red": sha, "bar-summary": one line}`, the header fields of a red
-    record. The summary's whitespace folds to single spaces; a longer line
+def format_failed_record(sha, summary):
+    """`{"checks-failed": sha, "checks-summary": one line}`, the header fields of a
+    failed-checks record. The summary's whitespace folds to single spaces; a longer line
     keeps its first `_SUMMARY_HEAD` characters (the refusal's cause) and its
     tail (where a bar prints its final diagnostic), joined by `_SUMMARY_GAP`,
     within `_SUMMARY_MAX` characters. This line is the only copy a resumed
@@ -1397,68 +1402,70 @@ def format_red_record(sha, summary):
     Implements: SR-242, LLR-343
     """
     if not _SHA40_RE.match(str(sha)):
-        raise ValueError("a red record names a 40-hex build sha, not {!r}".format(sha))
+        raise ValueError(
+            "a failed-checks record names a 40-hex build sha, not {!r}".format(sha)
+        )
     line = " ".join(str(summary).split())
     if len(line) > _SUMMARY_MAX:
         tail = _SUMMARY_MAX - _SUMMARY_HEAD - len(_SUMMARY_GAP)
         line = line[:_SUMMARY_HEAD] + _SUMMARY_GAP + line[-tail:]
-    return dict(zip(RED_KEYS, (sha, line or "(no summary)")))
+    return dict(zip(FAILED_KEYS, (sha, line or "(no summary)")))
 
 
-def parse_red_record(blob):
-    """`(build sha, summary)` for a session log's red record, else None. Read
+def parse_failed_record(blob):
+    """`(build sha, summary)` for a session log's failed-checks record, else None. Read
     from the header alone, the lines before the log's `# ---` separator.
 
     Implements: SR-242, LLR-343
     """
     header = blob.split("\n# ---", 1)[0]
-    matched = _BAR_RED_RE.search(header)
+    matched = _CHECKS_FAILED_RE.search(header)
     if matched is None:
         return None
-    summary = _BAR_SUMMARY_RE.search(header)
+    summary = _CHECKS_SUMMARY_RE.search(header)
     return matched.group(1), summary.group(1).strip() if summary else ""
 
 
-class RedCount(NamedTuple):
-    """The lane's consecutive red review-bar rounds and the last bar summary."""
+class FailedCount(NamedTuple):
+    """The lane's consecutive failed commit-check rounds and the last summary."""
 
     count: int
     last_summary: str
 
 
-def red_rounds(root, branch, base):
-    """The consecutive red review-bar rounds `base..branch` records, as a
-    `RedCount`, or None when git cannot list that history.
+def failed_rounds(root, branch, base):
+    """The consecutive failed commit-check rounds `base..branch` records, as a
+    `FailedCount`, or None when git cannot list that history.
 
-    The newest commit in the range carrying a verified `review` attestation is
-    the last green, and it resets the count. Every session log the range's
+    The newest commit in the range carrying a verified `commit` record is
+    the last pass, and it resets the count. Every session log the range's
     commits added is read as the commit that added it (`log_history`, so a
-    later rewrite changes nothing), and each red record whose build sha is not
-    an ancestor of that green counts. DISTINCT shas give the count, so a red
+    later rewrite changes nothing), and each failed-checks record whose build sha is
+    not an ancestor of that pass counts. DISTINCT shas give the count, so a failure
     recorded twice for one build counts once, and the last summary is the
-    newest counted record's. A log git cannot show counts as one red keyed by
-    its path (unless the commit that added it is beneath the green): an
+    newest counted record's. A log git cannot show counts as one failure keyed
+    by its path (unless the commit that added it is beneath the pass): an
     unreadable record counts toward the cap, never away from it. Both callers
     read None as "at the cap" for the same reason.
 
     Implements: SR-242, LLR-343
     """
     history = log_history(root, branch, base)
-    green = _last_review_green(root, branch, base)
+    green = _last_commit_passed(root, branch, base)
     if history is None or green is None:
         return None
     reds, last = set(), ""
     for path, added in history[0].items():
-        red = _logged_red(root, path, added)
+        red = _logged_failure(root, path, added)
         if red is None or (green and _is_ancestor(root, red[2], green)):
             continue
         reds.add(red[0])
         last = red[1]
-    return RedCount(len(reds), last)
+    return FailedCount(len(reds), last)
 
 
-def red_record(root, branch, base, sha):
-    """The summary of the red record `base..branch`'s session logs hold for the
+def failed_record(root, branch, base, sha):
+    """The summary of the failed-checks record `base..branch`'s session logs hold for the
     build commit `sha`, or None when none does: whether the commit checks already
     refused that build, so a draw over it rebuilds without running the bar
     again. A log git cannot show names no build, so it answers nothing here.
@@ -1468,16 +1475,16 @@ def red_record(root, branch, base, sha):
     history = log_history(root, branch, base)
     found = None
     for path, added in (history[0] if history else {}).items():
-        red = _logged_red(root, path, added)
+        red = _logged_failure(root, path, added)
         if red is not None and red[0] == sha:
             found = red[1]
     return found
 
 
-def _logged_red(root, path, added):
-    """`(key, summary, dated by)` for the red one session log records, read at
-    the commit `added` that added it, else None. A readable log keys its red
-    by the build sha and is dated by it; a log git cannot show keys one red by
+def _logged_failure(root, path, added):
+    """`(key, summary, dated by)` for the failure one session log records, read
+    at the commit `added` that added it, else None. A readable log keys its
+    failure by the build sha and is dated by it; a log git cannot show keys one failure by
     its path and is dated by the commit that added it.
 
     Implements: SR-242, LLR-343
@@ -1485,13 +1492,13 @@ def _logged_red(root, path, added):
     blob = git_out(root, ["show", "{}:{}".format(added, path)])
     if blob is None:
         return path, "(session log {} could not be read)".format(path), added
-    record = parse_red_record(blob)
+    record = parse_failed_record(blob)
     return None if record is None else (record[0], record[1], record[0])
 
 
-def _last_review_green(root, branch, base):
-    """The newest commit in `base..branch` carrying a verified `review`
-    attestation, "" when none does, None when git cannot list the range.
+def _last_commit_passed(root, branch, base):
+    """The newest commit in `base..branch` carrying a verified `commit`
+    record, "" when none does, None when git cannot list the range.
 
     Implements: SR-242, LLR-343
     """
@@ -1500,27 +1507,27 @@ def _last_review_green(root, branch, base):
         return None
     for record in out.split("\x00")[1:]:
         sha, _sep, message = record.partition("\n")
-        if not any(ln.startswith(BAR_GREEN) for ln in message.splitlines()):
+        if not any(ln.startswith(CHECKS_PASSED) for ln in message.splitlines()):
             continue
-        attested = bar_attestation(root, sha.strip())
-        if attested is not None and attested.bar == "review":
+        passed = passed_checks(root, sha.strip())
+        if passed is not None and passed.checks == "commit":
             return sha.strip()
     return ""
 
 
-def last_review_record(root, branch, base):
-    """The lane's last review record in `base..branch`: `(sha, BarAttestation)`
-    for the newest commit there carrying a verified `review` attestation,
+def last_commit_record(root, branch, base):
+    """The lane's last commit record in `base..branch`: `(sha, PassedChecks)`
+    for the newest commit there carrying a verified `commit` record,
     `("", None)` when none does, or None when git cannot list the range. The
-    public reader of what `_last_review_green` finds, so a caller outside this
+    public reader of what `_last_commit_passed` finds, so a caller outside this
     module never reaches for a private name.
 
     Implements: SR-156, LLR-207, LLR-368
     """
-    sha = _last_review_green(root, branch, base)
+    sha = _last_commit_passed(root, branch, base)
     if sha is None:
         return None
-    return (sha, bar_attestation(root, sha)) if sha else ("", None)
+    return (sha, passed_checks(root, sha)) if sha else ("", None)
 
 
 def _is_ancestor(root, rev, of):
@@ -1844,7 +1851,7 @@ def format_branch_trailer(root, branch, base, word, parse):
     """The tree-bound trailer derived from logged branch evidence, or None.
 
     Stamped at `governing_identity`, the value both readers key on. Naming the
-    branch's RAW tree instead filed the attestation under a key
+    branch's RAW tree instead filed the trailer under a key
     `integrate._round_refusal` never looks up, so on a refreshed branch the
     cross-check silently stood down instead of cross-checking (REVIEW-A round
     015). `branch` must therefore be the lane's BRANCH NAME and not `HEAD`: the
@@ -1866,15 +1873,15 @@ def branch_trailers(root, branch, base):
     """`{reviewed tree: [(word, rounds), ...]}` from every VERIFIED
     `Review-Verdict:` trailer on the branch's own commits, or None when git
     cannot answer. Each list is in COMMIT ORDER, oldest first, so `[-1]` is the
-    newest attestation for that tree.
+    newest trailer for that tree.
 
-    A SEQUENCE, not one attestation per tree, and the type is the fix. One tree
-    carries more than one attestation whenever a round is re-drawn without the
+    A SEQUENCE, not one trailer per tree, and the type is the fix. One tree
+    carries more than one trailer whenever a round is re-drawn without the
     work changing — `score_reviews.latest_phase_verdicts` exists precisely
     because "a phase was re-run at the same commit" — and a last-write-wins map
     fed from `git log` (which is NEWEST-first) handed its reader the OLDEST
     stamp. Driven: two honest rounds at one governing tree, stamped `rounds=1`
-    then `rounds=2`, made the merge slot report the evidence and the attestation
+    then `rounds=2`, made the merge slot report the evidence and the trailer
     as disagreeing and park an approved lane at a supervisor stop — the OI-76
     failure mode, re-created by the cross-check meant to prevent it (REVIEW-A
     round 007, finding 1). The order of a git history is not this module's to
@@ -1882,11 +1889,11 @@ def branch_trailers(root, branch, base):
     than guarded.
 
     VERIFIED means the trailer names the GOVERNING identity of the commit that
-    CARRIES it — the `Bar-Green` verification applied to a verdict, through the
+    CARRIES it — the `Checks-Passed` verification applied to a verdict, through the
     one rev rule rather than beside it. The record commit only touches record
     paths, so the tree it governs IS the reviewed tree, and a trailer amended
     onto a commit that changed the work names a tree that is not its carrier's.
-    Verifying with the raw fold instead would reject every honest attestation on
+    Verifying with the raw fold instead would reject every honest trailer on
     a refreshed branch, because the writer must stamp the value the READERS key
     on and that value is the peeled one.
 
@@ -1901,7 +1908,7 @@ def branch_trailers(root, branch, base):
         return None
     by_tree = {}
     # `git log` is newest-first; reversed() makes each list oldest-first, which
-    # is the order a reader means by "the latest attestation".
+    # is the order a reader means by "the latest trailer".
     for record in reversed(log.split("\x1e")):
         sha, _sep, message = record.partition("\x1f")
         sha = sha.strip()

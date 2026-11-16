@@ -45,14 +45,14 @@ test = {py} -m pytest -q
 # test = {py} -m pytest -q -n auto
 # The expected-failure marker: the text this test framework uses to mark a
 # test that is expected to fail. A lane's new tests go in under it before the
-# code that makes them pass. `integrate.py attest` lets a test file's count of
+# code that makes them pass. `integrate.py record-checks` lets a test file's count of
 # it rise only when the round's test set names the file, and fall only against
-# the lane's last review record over the same set; the refresh refuses a tree
+# the lane's last commit record over the same set; the refresh refuses a tree
 # whose test files still hold it, so a marked test never lands. It is matched
 # with whitespace ignored, so a formatter that wraps the call still counts,
 # and it carries no `@`, so a `pytest.param(..., marks=...)` marker counts
 # too. Required, with no default: an absent key or an empty value makes
-# `attest` and the refresh refuse. Every adopter declares it, including one
+# `record-checks` and the refresh refuse. Every adopter declares it, including one
 # that never marks a test. On another stack, declare that stack's strict
 # expected-failure form restricted to assertion failures. Jest's
 # `test.failing` accepts any thrown error, so wrap it in a project helper that
@@ -267,14 +267,14 @@ lanes = 2
 # --- Check suites (the named sets of checks this project can run) ------------
 # One `<name> = <command>` line per suite. docs/process.toml [required-checks]
 # says, by name, which suite a commit on a work branch must pass, so this file
-# says only how this stack runs it. `integrate.py attest` runs that suite on a
+# says only how this stack runs it. `integrate.py record-checks` runs that suite on a
 # lane's staged work before it commits the work carrying a
-# `Bar-Green: ... bar=review` attestation, then the row's derived review test
+# `Checks-Passed: ... checks=commit` record, then the row's derived review test
 # set through [product] test (an empty set runs the suite alone). Each value
 # is a full SHELL line, run in the lane worktree; its `python` is the harness
 # interpreter (a directory whose `python` is it comes first on PATH, as for
 # [run]). There is NO default: when the suite docs/process.toml names is
-# absent here or empty, `attest` refuses. Shipped with the kit's own smoke
+# absent here or empty, `record-checks` refuses. Shipped with the kit's own smoke
 # run; add a line for a suite of your own and name it in docs/process.toml.
 [check-suites]
 smoke = python scripts/check.py --jobs 0 --tier smoke

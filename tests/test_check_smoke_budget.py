@@ -483,8 +483,8 @@ BARS = ["commit", "review"]
 
 def _bar_budget_argv(bar):
     """The budget step's arguments in one bar's command, read from the real
-    docs/stack.ini. The commit checks run by hand are [run] smoke; the ones an
-    attestation runs (`review`) are the check suite docs/process.toml
+    docs/stack.ini. The commit checks run by hand are [run] smoke; the ones
+    `integrate.py record-checks` runs (`review`) are the check suite docs/process.toml
     [required-checks] commit names, whose [check-suites] line runs the run
     menu's smoke action, so it resolves to the same line."""
     cp = _stack_ini()

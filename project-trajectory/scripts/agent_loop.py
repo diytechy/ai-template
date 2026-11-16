@@ -250,7 +250,7 @@ EXIT_NEEDS_OPERATOR = agent_common.EXIT_NEEDS_OPERATOR
 EXIT_PAUSED = agent_common.EXIT_PAUSED
 EXIT_REVIEW_OWED = agent_common.EXIT_REVIEW_OWED
 EXIT_RESTART = agent_common.EXIT_RESTART
-EXIT_RED_CAP = agent_common.EXIT_RED_CAP
+EXIT_CHECK_FAILURE_CAP = agent_common.EXIT_CHECK_FAILURE_CAP
 END_STATES = agent_common.END_STATES
 OPERATOR_ONLY_PATHS = agent_common.OPERATOR_ONLY_PATHS
 read_declared = agent_common.read_declared
@@ -2166,10 +2166,10 @@ def complete_review_round(ctx, session):
     # telemetry commit the moment the round records (WI-137), not on the next
     # session's commit. That commit also carries the round's MACHINE HALF: the
     # `Review-Verdict:` trailer naming the tree this round judged (OI-76's
-    # alternative C, the `Bar-Green:` pattern). It is written HERE, by the
+    # alternative C, the `Checks-Passed:` pattern). It is written HERE, by the
     # coordinator, and never by a session — see `review_verdict_trailer`.
     #
-    # A round that derives NO attestation is SAID SO, once, on stderr. The gate
+    # A round that derives NO trailer is SAID SO, once, on stderr. The gate
     # cannot report it: a missing trailer is never a refusal (it is additive,
     # and an adopter's loop may write none), so absence is exactly the state the
     # cross-check must stand down on — which means a writer that quietly stops
@@ -2179,7 +2179,7 @@ def complete_review_round(ctx, session):
     # could not be read at all, which is worth a line and is not worth a stop.
     trailer = review_verdict_trailer(ctx.root, merged, ctx.worker)
     if trailer is None:  # a LINE, never a stop: the gate reads the round FILES
-        print("review round: no Review-Verdict attestation derived", file=sys.stderr)
+        print("review round: no Review-Verdict trailer derived", file=sys.stderr)
     commit_telemetry(ctx.root, session, "review scoreboard", [scoreboard], trailer)
     print(
         "review round: merged={} margin={:.2f} tripwires={} heterogeneity={} "
@@ -2452,21 +2452,21 @@ def committed_build_rounds(ctx, plan, commits, after, wi_label):
     The design-check arm had all three in duplicate — a committing design-check
     IS the rework, so it owes exactly what a build owes (WI-579, measured
     2026-09-03) — and a rule kept in two copies is a rule that drifts.
-    A build whose commit checks refused it (`attest_build`) owes no review round:
+    A build whose commit checks refused it (`record_build_checks`) owes no review round:
     the refusal is the next build's rework, as a round's findings would be.
     Returns `schedule_review_round`'s exit code, the red cap's after a red
-    (`red_cap_check`), or None.
+    (`failure_cap_check`), or None.
 
     Implements: SR-154, LLR-344
     """
     ctx.run.routing.on_committed_build(plan["route_family"], wi_label, commits)
     paged = None
-    if plan.get("bar_red"):
-        ctx.worker["rework"] = plan["bar_red"]
+    if plan.get("checks_failed"):
+        ctx.worker["rework"] = plan["checks_failed"]
         print("dispatch: commit checks failed -> no review; rework carries the tail")
-        paged = red_cap_check(ctx)
+        paged = failure_cap_check(ctx)
     else:
-        paged = schedule_review_round(ctx, plan.get("attested") or after)
+        paged = schedule_review_round(ctx, plan.get("passed") or after)
     schedule_critique_round(ctx, commits)
     return paged
 
@@ -2479,13 +2479,13 @@ def lane_branch(root):
     return git(root, "branch", "--show-current")[1].strip()
 
 
-def attest_build(ctx, plan, outcome, meta):
+def record_build_checks(ctx, plan, outcome, meta):
     """The commit checks at the event: a committed build (or design-check) that
     completes the assignment, under managed routing with a reviewer dial, runs
-    the lane's commit checks once through its one producer, `integrate.attest`,
+    the lane's commit checks once through its one producer, `integrate.record_checks`,
     before the session's log is written. A refusal of any kind is red, its
-    text the cause. Green leaves the attested commit on `plan` for the round's
-    range; red writes the red record into this session's own log header and
+    text the cause. Green leaves the recorded commit on `plan` for the round's
+    range; red writes the failed-checks record into this session's own log header and
     leaves the refusal on `plan`. The record is keyed by the build commit as
     the draw names it (`kverdict.governing_rev`, which walks past record-only
     commits), so a build whose last commit is a log fragment is found again at
@@ -2501,10 +2501,10 @@ def attest_build(ctx, plan, outcome, meta):
     if not all(w in built for w in worker["assigned"]):
         return
     build = kverdict.governing_rev(ctx.root, lane_branch(ctx.root))
-    attested, red = integrate.attest(ctx.root, lane_branch(ctx.root), "review")
-    plan["attested"], plan["bar_red"] = attested, red
+    passed, red = integrate.record_checks(ctx.root, lane_branch(ctx.root), "commit")
+    plan["passed"], plan["checks_failed"] = passed, red
     if red:
-        meta.update(kverdict.format_red_record(build, red))
+        meta.update(kverdict.format_failed_record(build, red))
 
 
 def build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now):
@@ -3368,15 +3368,15 @@ def session_commit_range(root, before):
 def review_draw_gate(ctx):
     """The one choke point every queued review round passes before it is drawn
     (fresh, post-narrow, resumed and adjudication rounds alike): the round is
-    drawn only over a tip carrying a verified `review` attestation for the
-    row's derived set, and its range is pointed at that attested commit.
+    drawn only over a tip carrying a verified `commit` record for the
+    row's derived set, and its range is pointed at that recorded commit.
     Without one, a red already recorded for the governing build commit drops
     the round and rebuilds with its summary, running no bar; with no record,
     the commit checks run once here and `record_bar_result` records it, green
     drawing the round and red dropping it. A derivation refusal leaves no
-    record to compare, so `integrate.attest` refuses with the same text and it
+    record to compare, so `integrate.record_checks` refuses with the same text and it
     is recorded as any red is. Returns the red cap's exit code after a red
-    (`red_cap_check`), else None: the session is routed next.
+    (`failure_cap_check`), else None: the session is routed next.
 
     Implements: SR-154, LLR-344
     """
@@ -3385,37 +3385,37 @@ def review_draw_gate(ctx):
         return None
     branch = lane_branch(root)
     derived, refused = review_set.derive(root, branch)
-    attested = None
+    passed = None
     if not refused:
-        attested, _cause = kverdict.review_attestation(root, "HEAD", derived.files)
-    if attested is None:
+        passed, _cause = kverdict.commit_passed_checks(root, "HEAD", derived.files)
+    if passed is None:
         build = kverdict.governing_rev(root, branch)
-        red = kverdict.red_record(root, "HEAD", worker["base"], build)
+        red = kverdict.failed_record(root, "HEAD", worker["base"], build)
         if red is None:
-            attested, red = integrate.attest(root, branch, "review")
+            passed, red = integrate.record_checks(root, branch, "commit")
             record_bar_result(ctx, build, red)
         if red is not None:
             st.refuse_round()
             worker["rework"] = red
             print("dispatch: commit checks failed at the draw -> no round; rebuilding")
-            return red_cap_check(ctx)
-    st.set_train_range("{}..{}".format(worker["base"], attested))
+            return failure_cap_check(ctx)
+    st.set_train_range("{}..{}".format(worker["base"], passed))
     return None
 
 
-def red_cap_check(ctx):
-    """`EXIT_RED_CAP` with its stop banner once the lane's committed
+def failure_cap_check(ctx):
+    """`EXIT_CHECK_FAILURE_CAP` with its stop banner once the lane's committed
     failed-check records, counted from the worker's base (its merge base with
     trunk, as the dispatcher reads it), reach the declared commit-check
     failure cap (`kconfig.RED_ROUNDS_KEY`) or cannot be read;
     else None. Armed where a review is drawn; run at the run's start and after
-    each committed red record.
+    each committed failed-checks record.
 
     Implements: SR-242, LLR-343
     """
     if not (ctx.managed and ctx.rp_int >= 1 and ctx.worker):
         return None
-    red = kverdict.red_rounds(ctx.root, "HEAD", ctx.worker["base"])
+    red = kverdict.failed_rounds(ctx.root, "HEAD", ctx.worker["base"])
     if red is not None and red.count < ctx.red_rounds_max:
         return None
     count, last = (red.count, red.last_summary) if red else ("unreadable", "-")
@@ -3426,15 +3426,15 @@ def red_cap_check(ctx):
             kconfig.RED_ROUNDS_KEY, ctx.red_rounds_max, last
         ),
     )
-    return EXIT_RED_CAP
+    return EXIT_CHECK_FAILURE_CAP
 
 
 def record_bar_result(ctx, build, refusal):
     """The loop's record of a review-bar run it made at a draw: a log of phase
-    `ATTEST` written through the session service's one writer
+    `CHECKS` written through the session service's one writer
     (`session_service.record`) and committed in its own telemetry commit,
-    never a rewrite of an existing log. A red carries the red record keyed by
-    the build commit `build`.
+    never a rewrite of an existing log. A failure carries the failed-checks record
+    keyed by the build commit `build`.
 
     Implements: SR-154, LLR-344
     """
@@ -3442,13 +3442,13 @@ def record_bar_result(ctx, build, refusal):
     session = "{:03d}".format(next_session_number(ctx.iter_dir, worker["train"]))
     meta = {"session": session, "stamp": time.strftime("%Y%m%d-%H%M%S")}
     meta["date"] = time.strftime("%Y-%m-%d %H:%M")
-    meta.update(train=worker["train"], base=worker["base"][:12], phase="ATTEST")
-    meta["outcome"] = "RED" if refusal else "GREEN"
+    meta.update(train=worker["train"], base=worker["base"][:12], phase="CHECKS")
+    meta["outcome"] = "FAILED" if refusal else "PASSED"
     if refusal:
-        meta.update(kverdict.format_red_record(build, refusal))
+        meta.update(kverdict.format_failed_record(build, refusal))
     text = refusal or "green"
     ran = session_service.Outcome(ctx.root, int(bool(refusal)), text, False, text, {})
-    label = "ATTEST " + meta["outcome"]
+    label = "CHECKS " + meta["outcome"]
     session_service.record(
         ran, meta, iter_dir=ctx.iter_dir, session=ctx.tag + session, label=label
     )
@@ -3558,7 +3558,7 @@ def run_iteration(ctx, i):
         ctx, plan, data, session, stamp, current_wi, outcome, commits, code, wall_secs
     )
     stamp_session_meta(meta, plan, timed_out)
-    attest_build(ctx, plan, outcome, meta)
+    record_build_checks(ctx, plan, outcome, meta)
     # The service's one writer: the tracked log, the raw stream in the
     # untracked run-logs, and its own telemetry commit — never riding the next
     # session's work commit (WI-137). A worker never regenerates the iteration
@@ -4060,7 +4060,7 @@ def run_loop(ctx):
     """Iterate until an iteration returns an exit code, or until the declared
     budget runs out — which is itself an exit with a banner, never a silent
     stop. A lane already at its red cap ends before any session."""
-    code = red_cap_check(ctx)
+    code = failure_cap_check(ctx)
     if code is not None:
         return code
     for i in range(1, ctx.args.max_iterations + 1):

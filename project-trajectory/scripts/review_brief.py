@@ -68,9 +68,9 @@ Contract IF-288: the attended launcher's command line, its arguments.
     command also leaves out `docs/decisions` and `docs/plans/*/critique-*`
     (WI-911). The brief is written only when SHA, or a commit beneath it
     that only record-only commits separate from it, carries a verified
-    `bar=review` attestation whose tests digest is that of the derived set,
+    `checks=commit` record whose tests digest is that of the derived set,
     a record for another set refusing with both digests; the command then
-    prints the attested commit and that digest. `critique --wi
+    prints the recorded commit and that digest. `critique --wi
     WI-N --rubric RUBRIC --scratch DIR --out FILE [--root DIR]` writes the
     shipped critique template strictly filled with the work item's spec,
     RUBRIC and the registries the critic reads beside the spec, each named by
@@ -114,8 +114,8 @@ Contract IF-289: the command's exit codes. 0 when the brief is written or the
     unfilled template slot, a missing spec, plan, critique or Done-when, an
     unreadable or empty named input, a root not on a branch, a revision that
     is not a commit or a base that is not an ancestor, a branch that is not a
-    review scope, a reviewed commit with no such attestation (the refusal
-    names the commit, the cause and the attest command), a review that fails
+    review scope, a reviewed commit with no such record (the refusal
+    names the commit, the cause and the record-checks command), a review that fails
     the IF-288 checks, a review round whose
     stance is not one of `ordinary` or `convergence`, a narrow round in the
     convergence stance, a
@@ -189,9 +189,9 @@ REVIEWS = "docs/reviews"
 _ORDINAL_RE = re.compile(r"^(\d+)-")
 # The step that records a passing commit checks, closing every render refusal
 # that lacks one. Filled with the scripts directory and the lane.
-_ATTEST_STEP = (
-    'Run "$PY" {}/integrate.py attest --branch {} --bar review from the primary '
-    "checkout (staging the work it attests, or nothing for an empty attestation "
+_RECORD_CHECKS_STEP = (
+    'Run "$PY" {}/integrate.py record-checks --branch {} --checks commit from the primary '
+    "checkout (staging the work it records, or nothing for an empty record "
     "commit), then render again"
 )
 
@@ -1074,18 +1074,18 @@ def _write(path, text):
 
 
 def _review_bar_refusal(root, lane, sha, tests):
-    """The commit whose verified `review` attestation for `tests` stands for
+    """The commit whose verified `commit` record for `tests` stands for
     the reviewed commit `sha`, or `BriefError` naming `sha`, the cause and the
     step that records one. The render trusts the record and never runs the bar.
 
     Implements: SR-241, LLR-341
     """
-    attested, cause = kverdict.review_attestation(root, sha, tests)
-    if attested is not None:
-        return attested
+    passed, cause = kverdict.commit_passed_checks(root, sha, tests)
+    if passed is not None:
+        return passed
     raise BriefError(
-        "{} carries no commit-checks attestation for the round's tests: {}. {}".format(
-            sha, cause, _ATTEST_STEP.format(agent_brief.scripts_dir(root), lane)
+        "{} carries no commit-checks record for the round's tests: {}. {}".format(
+            sha, cause, _RECORD_CHECKS_STEP.format(agent_brief.scripts_dir(root), lane)
         )
     )
 
@@ -1095,11 +1095,11 @@ def _cmd_review(args):
     derived, refusal = review_set.derive(args.root, lane)
     if refusal:
         raise BriefError(
-            "{} can carry no commit-checks attestation, its test set being refused: "
+            "{} can carry no commit-checks record, its test set being refused: "
             "{}\nClear that, then: {}".format(
                 sha,
                 refusal,
-                _ATTEST_STEP.format(agent_brief.scripts_dir(args.root), lane),
+                _RECORD_CHECKS_STEP.format(agent_brief.scripts_dir(args.root), lane),
             )
         )
     rnd = Round(
@@ -1116,12 +1116,12 @@ def _cmd_review(args):
         rubric=args.rubric,
         stance=args.stance,
     )
-    attested = _review_bar_refusal(args.root, lane, sha, rnd.tests)
+    passed = _review_bar_refusal(args.root, lane, sha, rnd.tests)
     text, verdict = render_review(args.root, rnd)
     _write(args.out, text)
     print(
-        "review_brief: {} renders over the commit checks' attestation at {} "
-        "(tests={})".format(sha, attested, kverdict.tests_digest(rnd.tests))
+        "review_brief: {} renders over the commit checks' record at {} "
+        "(tests={})".format(sha, passed, kverdict.tests_digest(rnd.tests))
     )
     print("review_brief: wrote {}; the reviewer writes {}".format(args.out, verdict))
     print(

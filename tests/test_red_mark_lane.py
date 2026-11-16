@@ -1,8 +1,8 @@
-"""The expected-failure marker on real lanes (WI-996): `integrate.py attest`
-judges the staged tree against the lane's last attested tree, and the refresh
+"""The expected-failure marker on real lanes (WI-996): `integrate.py record-checks`
+judges the staged tree against the lane's last recorded tree, and the refresh
 refuses a tree whose tests root holds the mark.
 
-Each case drives `integ.attest` or `integ.refresh` through the station's
+Each case drives `integ.record_checks` or `integ.refresh` through the station's
 fixtures. A case that holds today is a characterization case, unmarked, with its
 adequacy witness in its docstring: the wrong check it would catch. The rule's
 in-process pin is `tests/test_red_mark.py`.
@@ -34,19 +34,19 @@ from integrate_fixtures import (
 )
 from kitlib import config as kconfig
 from kitlib import verdict as kv
-from test_integrate_attest import BRANCH, _attest, _declare, _ran, _state
+from test_integrate_record_checks import BRANCH, _record_checks, _declare, _ran, _state
 from test_integrate_station import (
-    ATTEST_FILES,
+    CHECKS_FILES,
     _adjudication_station,
     _lane,
     _order,
-    attest_repo,
+    checks_repo,
     station_repo,
 )
 
 pytestmark = env_gate_skipif("git")
 
-GADGET, WIDGET = ATTEST_FILES
+GADGET, WIDGET = CHECKS_FILES
 LOOSE = "tests/test_loose.py"  # untagged, so the row's set never names it
 LEGACY = "tests/test_legacy.py"
 TAG = "TC-001"  # the fixture row's test case
@@ -98,14 +98,14 @@ def _stage(wt, rel, text):
 
 
 def _green(root):
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     assert refusal is None, refusal
     return sha
 
 
 def _refused(root):
-    sha, refusal = _attest(root)
-    assert sha is None and refusal, "attest committed {}".format(sha)
+    sha, refusal = _record_checks(root)
+    assert sha is None and refusal, "record-checks committed {}".format(sha)
     return refusal
 
 
@@ -176,13 +176,15 @@ def _refresh_arm(tmp_path, arm):
     return root, wt, root
 
 
-# --- attest: the declaration --------------------------------------------------
+# --- record-checks: the declaration --------------------------------------------------
 
 
 @pytest.mark.parametrize("section, cause", UNDECLARED, ids=UNDECLARED_IDS)
-def test_attest_refuses_each_undeclared_state_before_the_bar(tmp_path, section, cause):
+def test_record_checks_refuses_each_undeclared_state_before_the_bar(
+    tmp_path, section, cause
+):
     """Implements: TC-424"""
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _undeclare(wt, section)
     tip = _rev(root, BRANCH)
@@ -191,59 +193,59 @@ def test_attest_refuses_each_undeclared_state_before_the_bar(tmp_path, section, 
     assert _ran(wt) == [] and _rev(root, BRANCH) == tip
 
 
-def test_attest_reads_the_mark_its_lane_stages_not_the_primarys(tmp_path):
+def test_record_checks_reads_the_mark_its_lane_stages_not_the_primarys(tmp_path):
     """Implements: TC-424"""
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _declare(wt, _no_product(wt) + PRODUCT + MARKER_KEY + " = lane_mark(\n")
     _stage(wt, LOOSE, '"""A file no tag reads."""\n\nlane_mark()\n')
     assert LOOSE in _refused(root)
 
 
-# --- attest: the table --------------------------------------------------------
+# --- record-checks: the table --------------------------------------------------------
 
 
-def test_attest_refuses_an_added_mark_the_set_does_not_name(tmp_path):
+def test_record_checks_refuses_an_added_mark_the_set_does_not_name(tmp_path):
     """Implements: TC-424"""
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _stage(wt, LOOSE, _source())
     assert LOOSE in _refused(root)
     assert _ran(wt) == []
 
 
-def test_attest_passes_an_added_mark_the_set_names(tmp_path):
+def test_record_checks_passes_an_added_mark_the_set_names(tmp_path):
     """Adequacy witness: a check that refuses every raised count fails here,
     since the set names the file.
 
     Implements: TC-424
     """
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     sha = _marked_round(root, wt)
-    assert kv.bar_attestation(root, sha).tests == kv.tests_digest(ATTEST_FILES)
+    assert kv.passed_checks(root, sha).tests == kv.tests_digest(CHECKS_FILES)
     assert RED_MARK in _git(root, "show", "{}:{}".format(sha, WIDGET))
 
 
-def test_attest_refuses_a_removal_with_no_record_in_the_range(tmp_path):
+def test_record_checks_refuses_a_removal_with_no_record_in_the_range(tmp_path):
     """Implements: TC-424"""
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _mark_at_base(root, wt, TAG)
     _stage(wt, LEGACY, _plain())
     refusal = _refused(root)
-    assert LEGACY in refusal and "no review record" in refusal
+    assert LEGACY in refusal and "no commit record" in refusal
     assert _ran(wt) == []
 
 
-def test_attest_passes_a_removal_over_the_same_set(tmp_path):
+def test_record_checks_passes_a_removal_over_the_same_set(tmp_path):
     """Adequacy witness: a plain commit sits on the record, so a check reading
     the record from HEAD finds none and refuses; a check comparing digests of
     different spellings refuses too.
 
     Implements: TC-424
     """
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _marked_round(root, wt)
     write_lf(wt, "note.txt", "a plain commit on the record\n")
@@ -253,9 +255,9 @@ def test_attest_passes_a_removal_over_the_same_set(tmp_path):
     assert RED_MARK not in _git(root, "show", "{}:{}".format(sha, WIDGET))
 
 
-def test_attest_refuses_a_removal_after_the_set_changed(tmp_path):
+def test_record_checks_refuses_a_removal_after_the_set_changed(tmp_path):
     """Implements: TC-424"""
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _marked_round(root, wt)
     _stage(wt, WIDGET, _plain())
@@ -264,9 +266,9 @@ def test_attest_refuses_a_removal_after_the_set_changed(tmp_path):
     assert WIDGET in refusal and "another test set" in refusal
 
 
-def test_attest_refuses_a_removal_the_set_does_not_name(tmp_path):
+def test_record_checks_refuses_a_removal_the_set_does_not_name(tmp_path):
     """Implements: TC-424"""
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _mark_at_base(root, wt)
     _green(root)
@@ -281,17 +283,17 @@ def test_a_deleted_marked_file_is_not_judged(tmp_path):
 
     Implements: TC-424
     """
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _marked_round(root, wt)
     _git(wt, "rm", "-q", WIDGET)
-    attested = kv.bar_attestation(root, _green(root))
-    assert attested.tests == kv.tests_digest([GADGET])
+    passed = kv.passed_checks(root, _green(root))
+    assert passed.tests == kv.tests_digest([GADGET])
 
 
 def test_a_wrapped_mark_is_judged_as_the_one_line_form(tmp_path):
     """Implements: TC-424"""
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     wrapped = RED_MARK.replace("(strict", "(\n    strict").replace(
         ", raises", ",\n    raises"
@@ -308,12 +310,12 @@ def test_a_wrapped_mark_is_judged_as_the_one_line_form(tmp_path):
 )
 def test_an_unreadable_range_or_tree_refuses(tmp_path, monkeypatch, read):
     """Implements: TC-424"""
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     if read == "range":
         # A real unlistable range needs a broken ref, so the reader answers
         # what it answers when git cannot list one.
-        monkeypatch.setattr(kv, "last_review_record", lambda *a: None, raising=False)
+        monkeypatch.setattr(kv, "last_commit_record", lambda *a: None, raising=False)
         _stage(wt, "staged.txt", "staged work\n")
     elif read == "reference tree":
         _stage(wt, WIDGET, _plain("the first round"))
@@ -361,7 +363,7 @@ def _unnamed_arm(root, wt):
 )
 def test_every_mark_refusal_leaves_branch_and_index(tmp_path, arm):
     """Implements: TC-424"""
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     arm(root, wt)
     before, runs = _state(root, wt), len(_ran(wt))
@@ -401,7 +403,7 @@ def test_a_lane_without_the_key_refreshes_on_the_merged_key(tmp_path):
     assert RED_MARK in _git(root, "show", sha + ":docs/stack.ini")
 
 
-@pytest.mark.parametrize("arm", ["landing", "no-bar"])
+@pytest.mark.parametrize("arm", ["landing", "none"])
 def test_refresh_refuses_a_marked_tree_naming_each_file_and_count(tmp_path, arm):
     """Implements: TC-425"""
     root, wt, where = _refresh_arm(tmp_path, arm)
@@ -427,7 +429,7 @@ def test_a_refused_refresh_leaves_the_lane_at_its_work_tip(tmp_path):
     assert _git(wt, "status", "--porcelain") == ""
 
 
-@pytest.mark.parametrize("arm", ["landing", "no-bar"])
+@pytest.mark.parametrize("arm", ["landing", "none"])
 def test_a_tree_with_no_marks_refreshes_as_today(tmp_path, arm):
     """Adequacy witness: a check that refuses an empty count map fails here,
     on a tests root holding no mark, or none at all on the no-bar lane.
@@ -437,22 +439,22 @@ def test_a_tree_with_no_marks_refreshes_as_today(tmp_path, arm):
     root, wt, _where = _refresh_arm(tmp_path, arm)
     sha, refusal = _refresh(root)
     assert refusal is None, refusal
-    assert kv.bar_attestation(root, sha).bar == arm
+    assert kv.passed_checks(root, sha).checks == arm
     assert _bar_ran(wt) == (arm == "landing")
 
 
 # --- the routes a lane reaches them by ----------------------------------------
 
 
-def test_a_plain_commit_removal_then_an_empty_attest_is_judged(tmp_path):
+def test_a_plain_commit_removal_then_an_empty_record_checks_commit_is_judged(tmp_path):
     """Implements: TC-426"""
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _mark_at_base(root, wt, TAG)
     write_lf(wt, LEGACY, _plain())
     _commit(wt, "the removal, by a plain commit", when=T_LATER)
     refusal = _refused(root)
-    assert LEGACY in refusal and "no review record" in refusal
+    assert LEGACY in refusal and "no commit record" in refusal
 
 
 def test_a_plain_commit_removal_over_a_matching_record_passes(tmp_path):
@@ -462,13 +464,13 @@ def test_a_plain_commit_removal_over_a_matching_record_passes(tmp_path):
 
     Implements: TC-426
     """
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _marked_round(root, wt)
     write_lf(wt, WIDGET, _plain())
     _commit(wt, "the removal, by a plain commit", when=T_LATER)
     tree = _rev(root, BRANCH + "^{tree}")
-    assert kv.bar_attestation(root, _green(root)).tree == tree
+    assert kv.passed_checks(root, _green(root)).tree == tree
 
 
 def test_a_trunk_file_merged_in_is_not_judged(tmp_path):
@@ -479,7 +481,7 @@ def test_a_trunk_file_merged_in_is_not_judged(tmp_path):
 
     Implements: TC-426
     """
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _marked_round(root, wt)
     write_lf(root, "tests/test_trunk.py", '"""A file no tag reads."""\n')
@@ -501,7 +503,7 @@ def test_a_partial_close_holding_a_mark_quarantines_then_refreshes(tmp_path):
 
 def test_a_rebase_makes_the_new_base_the_reference(tmp_path):
     """Implements: TC-426"""
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _mark_at_base(root, wt, TAG)
     _stage(wt, "staged.txt", "staged work\n")
@@ -509,10 +511,10 @@ def test_a_rebase_makes_the_new_base_the_reference(tmp_path):
     write_lf(root, "trunk.txt", "trunk moves\n")
     _commit(root, "trunk moves", when=T_LATER)
     _git(wt, "rebase", "-q", _rev(root, "HEAD"))
-    assert kv.bar_attestation(root, BRANCH) is None, "the record outlived the rebase"
+    assert kv.passed_checks(root, BRANCH) is None, "the record outlived the rebase"
     _stage(wt, LEGACY, _plain())
     refusal = _refused(root)
-    assert LEGACY in refusal and "no review record" in refusal
+    assert LEGACY in refusal and "no commit record" in refusal
 
 
 def test_a_bootstrapped_scaffold_refreshes_on_its_template_declaration(tmp_path):

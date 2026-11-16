@@ -1,7 +1,7 @@
-"""integrate.py `attest` — a build round's own record of green (WI-956).
+"""integrate.py `record-checks` — a build round's own record of green (WI-956).
 
-`attest` commits the lane's staged work (or, with nothing staged, an empty
-commit on the tip) carrying a `Bar-Green:` line that names the `review` bar and
+`record-checks` commits the lane's staged work (or, with nothing staged, an empty
+commit on the tip) carrying a `Checks-Passed:` line that names the `review` bar and
 the digest of the tests it ran, through the one producer the station refresh
 also commits through. It derives the row's review test set, runs the commit
 checks (the check suite `docs/process.toml` `[required-checks] commit` names,
@@ -13,9 +13,9 @@ Every failed write leaves the branch and the index exactly as they were: a
 red bar or a red named test, a dirty worktree (refused before the bar),
 undeclared commit checks (refused before the bar), a message that already carries
 the label, a commit a hook refuses, and a commit a hook rewrites. The merge
-seam reads the record too: a tip carrying only a `review` attestation is not
+seam reads the record too: a tip carrying only a `commit` record is not
 merge-ready, and the refusal names both bars. The review render reads it as
-its gate (WI-957): it renders over what `attest` writes, deriving the same set.
+its gate (WI-957): it renders over what `record-checks` writes, deriving the same set.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES` with its station
 siblings: real repositories and lane worktrees.
@@ -41,12 +41,12 @@ from conftest import (
 )
 from integrate_fixtures import T_LATER, _commit, _git, _rev, integ
 from test_integrate_station import (
-    ATTEST_STACK_INI,
+    CHECKS_STACK_INI,
     STUB_CHECK_GREEN,
     STUB_CHECK_RED,
     STUB_NAMED_TESTS_RED,
     _lane,
-    attest_repo,
+    checks_repo,
     station_repo,
 )
 
@@ -98,41 +98,43 @@ def _hook(root, name, body):
 
 def _declare(wt, text, rel=STACK):
     """Stage `text` as the lane's `docs/stack.ini` (or `rel`): the
-    declaration the attested tree carries."""
+    declaration the recorded tree carries."""
     (wt / rel).write_text(text, encoding="utf-8", newline="\n")
     _git(wt, "add", rel)
 
 
-def _attest(root, message_file=None):
-    return integ.attest(root, BRANCH, "review", message_file=message_file)
+def _record_checks(root, message_file=None):
+    return integ.record_checks(root, BRANCH, "commit", message_file=message_file)
 
 
 # --- the record a green build round leaves ------------------------------------
 
 
-def test_attest_commits_staged_work_carrying_a_trailer_that_verifies(tmp_path):
-    root = attest_repo(tmp_path)
+def test_record_checks_commits_staged_work_carrying_a_trailer_that_verifies(tmp_path):
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _stage(wt)
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     assert refusal is None, refusal
     assert sha == _rev(root, BRANCH)
     assert "staged.txt" in _git(root, "ls-tree", "-r", "--name-only", sha).split()
-    attested = kv.bar_attestation(root, sha)
-    assert attested is not None, _git(root, "log", "-1", "--format=%B", sha)
-    assert attested.bar == "review"
-    assert attested.tests == kv.tests_digest(NAMED) != "none"
+    passed = kv.passed_checks(root, sha)
+    assert passed is not None, _git(root, "log", "-1", "--format=%B", sha)
+    assert passed.checks == "commit"
+    assert passed.tests == kv.tests_digest(NAMED) != "none"
 
 
-def test_attest_with_nothing_staged_writes_an_empty_commit_that_verifies(tmp_path):
-    root = attest_repo(tmp_path)
+def test_record_checks_with_nothing_staged_writes_an_empty_commit_that_verifies(
+    tmp_path,
+):
+    root = checks_repo(tmp_path)
     tip = _rev(root, BRANCH)
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     assert refusal is None, refusal
     assert _rev(root, sha + "^1") == tip
     assert _rev(root, sha + "^{tree}") == _rev(root, tip + "^{tree}")
-    attested = kv.bar_attestation(root, sha)
-    assert attested is not None and attested.bar == "review"
+    passed = kv.passed_checks(root, sha)
+    assert passed is not None and passed.checks == "commit"
 
 
 @pytest.mark.parametrize(
@@ -147,11 +149,11 @@ def test_a_red_review_bar_commits_nothing_and_leaves_branch_and_index(
     tmp_path, arm, check_src, named_src, ran
 ):
     kw = {"check_src": check_src} if check_src else {"named_src": named_src}
-    root = attest_repo(tmp_path, **kw)
+    root = checks_repo(tmp_path, **kw)
     wt = _lane(root, BRANCH)
     _stage(wt)
     before = _state(root, wt)
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     assert sha is None and refusal, arm
     assert _ran(wt) and ran in _ran(wt)[-1], "the red came from {}".format(arm)
     assert _state(root, wt) == before
@@ -162,13 +164,13 @@ def test_a_red_review_bar_commits_nothing_and_leaves_branch_and_index(
     [("tracked", True), ("untracked", True), ("ignored", False)],
     ids=["unstaged-tracked-edit", "untracked-file", "ignored-file"],
 )
-def test_attest_refuses_a_dirty_worktree_before_running_the_bar(
+def test_record_checks_refuses_a_dirty_worktree_before_running_the_bar(
     tmp_path, dirt, refuses
 ):
     # The bar runs on the index as staged, so the worktree must equal it: an
     # unstaged edit or an untracked file would be barred-but-not-committed.
     # An ignored file is not the index's business and does not refuse.
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     path = {
         "tracked": "wi-401.txt",
@@ -178,7 +180,7 @@ def test_attest_refuses_a_dirty_worktree_before_running_the_bar(
     (wt / path).parent.mkdir(parents=True, exist_ok=True)
     (wt / path).write_text("not staged\n", encoding="utf-8", newline="\n")
     before = _state(root, wt)
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     if refuses:
         assert sha is None and path in (refusal or ""), refusal
         assert _ran(wt) == [], "the bar ran on a dirty worktree"
@@ -188,28 +190,28 @@ def test_attest_refuses_a_dirty_worktree_before_running_the_bar(
         assert _ran(wt), "the bar never ran"
 
 
-def test_attest_counts_untracked_files_whatever_status_shows(tmp_path):
+def test_record_checks_counts_untracked_files_whatever_status_shows(tmp_path):
     # `status.showUntrackedFiles=no` hides an untracked file from a plain
     # `git status`; the bar would still see it, so it still refuses.
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _git(wt, "config", "status.showUntrackedFiles", "no")
     (wt / "loose.txt").write_text("not staged\n", encoding="utf-8", newline="\n")
     before = _state(root, wt)
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     assert sha is None and "loose.txt" in (refusal or ""), refusal
     assert _ran(wt) == [], "the bar ran on a dirty worktree"
     assert _state(root, wt) == before
 
 
-def test_attest_refuses_the_branch_the_main_checkout_holds(tmp_path):
-    # The trunk moves only inside the merge slot, so attest resolves its lane
+def test_record_checks_refuses_the_branch_the_main_checkout_holds(tmp_path):
+    # The trunk moves only inside the merge slot, so record-checks resolves its lane
     # through the boundary the refresh uses and refuses the primary's branch.
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     trunk = _git(root, "rev-parse", "--abbrev-ref", "HEAD").strip()
     _stage(root)
     tip = _rev(root, trunk)
-    sha, refusal = integ.attest(root, trunk, "review")
+    sha, refusal = integ.record_checks(root, trunk, "commit")
     assert sha is None
     assert "MAIN checkout" in (refusal or "") and trunk in refusal, refusal
     assert _rev(root, trunk) == tip
@@ -223,13 +225,13 @@ def test_attest_refuses_the_branch_the_main_checkout_holds(tmp_path):
 )
 def test_an_unreadable_message_file_is_a_named_refusal(tmp_path, content):
     # An operator-supplied path: a refusal returned and naming it, never a raise.
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
-    message = tmp_path.parent / (tmp_path.name + "-attest-message.txt")
+    message = tmp_path.parent / (tmp_path.name + "-checks-message.txt")
     if content is not None:
         message.write_bytes(content)
     tip = _rev(root, BRANCH)
-    sha, refusal = _attest(root, message_file=message)
+    sha, refusal = _record_checks(root, message_file=message)
     assert sha is None and str(message) in (refusal or ""), refusal
     assert _ran(wt) == [] and _rev(root, BRANCH) == tip
 
@@ -263,7 +265,7 @@ RETIRED_REVIEW = "; the retired [bars] review still declares it and is no longer
         ),
         (
             STACK,
-            ATTEST_STACK_INI + "[check-suites]\nother = python x.py\n",
+            CHECKS_STACK_INI + "[check-suites]\nother = python x.py\n",
             [SUITE_AT + "the file does not parse ("],
         ),
         # The retired home of that line is named, and never run.
@@ -304,15 +306,15 @@ RETIRED_REVIEW = "; the retired [bars] review still declares it and is no longer
         "a-name-with-no-line",
     ],
 )
-def test_attest_refuses_a_missing_review_bar_key_naming_it(
+def test_record_checks_refuses_a_missing_review_bar_key_naming_it(
     tmp_path, rel, declared, named
 ):
     # No default and no fallback to another bar: the declaration staged in the
-    # lane the record is for is absent or unusable, so attest names the file,
+    # lane the record is for is absent or unusable, so record-checks names the file,
     # the key and the cause and runs nothing, though the primary checkout's
     # own declaration is whole. `declared` is the lane's `rel`, None removing
     # it; of the policy file it is what follows the trunk's line.
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     if declared is None:
         _git(wt, "rm", "-q", rel)
@@ -322,19 +324,21 @@ def test_attest_refuses_a_missing_review_bar_key_naming_it(
     else:
         _declare(wt, declared)
     tip = _rev(root, BRANCH)
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     assert sha is None
     for text in named:
         assert text in (refusal or ""), refusal
     assert _ran(wt) == [] and _rev(root, BRANCH) == tip
 
 
-def test_attest_runs_the_declarations_staged_in_the_lane_not_the_primarys(tmp_path):
+def test_record_checks_runs_the_declarations_staged_in_the_lane_not_the_primarys(
+    tmp_path,
+):
     # The record binds the staged tree, so the bar and the named-tests command
     # it runs are the ones that tree declares: the suite the lane's policy
     # file names, by the line the lane's stack file gives it. The primary
     # checkout declares others; neither of them runs.
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _declare(
         wt,
@@ -347,18 +351,18 @@ def test_attest_runs_the_declarations_staged_in_the_lane_not_the_primarys(tmp_pa
     )
     require_commit_suite(wt, "lane")
     _git(wt, "add", POLICY)
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     assert refusal is None, refusal
     assert _ran(wt) == ["check --lane-declared", "named"], _ran(wt)
     assert "--lane-declared" in _named_args(wt), _named_args(wt)
-    attested = kv.bar_attestation(root, sha)
-    assert attested is not None and attested.bar == "review"
+    passed = kv.passed_checks(root, sha)
+    assert passed is not None and passed.checks == "commit"
 
 
 def test_the_named_tests_run_after_the_review_bar_under_the_lanes_basetemp(tmp_path):
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
-    _sha, refusal = _attest(root)
+    _sha, refusal = _record_checks(root)
     assert refusal is None, refusal
     ran = _ran(wt)
     assert ran and ran[0].startswith("check ") and ran[1:] == ["named"], ran
@@ -374,23 +378,23 @@ def test_the_named_tests_run_after_the_review_bar_under_the_lanes_basetemp(tmp_p
 # --- every failed write leaves the branch and the index -----------------------
 
 
-def test_a_hook_refused_attest_commit_leaves_branch_and_index(tmp_path):
-    root = attest_repo(tmp_path)
+def test_a_hook_refused_record_checks_commit_leaves_branch_and_index(tmp_path):
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _hook(root, "commit-msg", "exit 1\n")
     _stage(wt)
     before = _state(root, wt)
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     assert sha is None and refusal
     assert _ran(wt), "the refusal came before the bar, not at the commit"
     assert _state(root, wt) == before
 
 
-def test_a_rewritten_attest_commit_is_undone_by_the_self_check(tmp_path):
+def test_a_rewritten_record_checks_commit_is_undone_by_the_self_check(tmp_path):
     # A pre-commit hook that stages a file of its own moves the committed tree
     # off the one the bar saw; the line then names a tree that is not there,
     # and the producer undoes the commit and the hook's staging both.
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _hook(
         root,
@@ -399,7 +403,7 @@ def test_a_rewritten_attest_commit_is_undone_by_the_self_check(tmp_path):
     )
     _stage(wt)
     before = _state(root, wt)
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     assert sha is None and refusal
     assert _ran(wt), "the refusal came before the bar, not at the self-check"
     assert _state(root, wt) == before
@@ -424,33 +428,37 @@ sys.exit({code})
 """
 
 
-@pytest.mark.parametrize("route", ["attest", "refresh"])
-def test_a_bar_that_edits_a_tracked_file_attests_nothing(tmp_path, route):
+@pytest.mark.parametrize("route", ["record-checks", "refresh"])
+def test_a_bar_that_edits_a_tracked_file_records_nothing(tmp_path, route):
     # The tree is named before the bar runs, so a bar that rewrites a tracked
     # file is caught: what it tested is no longer what would be committed.
-    root = attest_repo(tmp_path, check_src=STUB_CHECK_EDITS)
+    root = checks_repo(tmp_path, check_src=STUB_CHECK_EDITS)
     wt = _lane(root, BRANCH)
-    if route == "attest":
+    if route == "record-checks":
         _stage(wt)  # the refresh stages its own composed tree
     tip, index = _state(root, wt)
-    run = _attest if route == "attest" else lambda r: integ.refresh(r, BRANCH, "smoke")
+    run = (
+        _record_checks
+        if route == "record-checks"
+        else lambda r: integ.refresh(r, BRANCH, "smoke")
+    )
     sha, refusal = run(root)
     assert sha is None and "wi-401.txt" in (refusal or ""), refusal
     assert _ran(wt), "the refusal came before the bar"
     assert _rev(root, BRANCH) == tip
-    if route == "attest":
+    if route == "record-checks":
         assert _git(wt, "write-tree").strip() == index
 
 
 @pytest.mark.parametrize("code", [1, 0], ids=["red", "green"])
 def test_a_bar_that_stages_an_edit_leaves_the_index_as_staged(tmp_path, code):
-    # Red or green, a bar that moves the index is not attested, and the index
+    # Red or green, a bar that moves the index records nothing, and the index
     # goes back to the tree the caller staged.
-    root = attest_repo(tmp_path, check_src=STUB_CHECK_STAGES.format(code=code))
+    root = checks_repo(tmp_path, check_src=STUB_CHECK_STAGES.format(code=code))
     wt = _lane(root, BRANCH)
     _stage(wt)
     before = _state(root, wt)
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     assert sha is None and refusal
     assert _ran(wt)[:1] == ["check-stages"], _ran(wt)
     assert _state(root, wt) == before
@@ -458,18 +466,18 @@ def test_a_bar_that_stages_an_edit_leaves_the_index_as_staged(tmp_path, code):
         assert "wi-401.txt" in refusal, refusal
 
 
-def test_the_attestation_joins_a_message_files_trailer_block(tmp_path):
+def test_the_passed_checks_record_joins_a_message_files_trailer_block(tmp_path):
     # git reads trailers from the last paragraph only, so the line extends the
     # message's own block rather than opening a paragraph after it.
-    root = attest_repo(tmp_path)
-    message = tmp_path.parent / (tmp_path.name + "-attest-message.txt")
+    root = checks_repo(tmp_path)
+    message = tmp_path.parent / (tmp_path.name + "-checks-message.txt")
     message.write_text(
         "WI-401: the build round\n\nBody.\n\nWI: WI-401\n"
         "Co-Authored-By: A Builder <builder@example.com>\n",
         encoding="utf-8",
         newline="\n",
     )
-    sha, refusal = _attest(root, message_file=message)
+    sha, refusal = _record_checks(root, message_file=message)
     assert refusal is None, refusal
 
     def trailer(key):
@@ -478,19 +486,19 @@ def test_the_attestation_joins_a_message_files_trailer_block(tmp_path):
 
     assert trailer("WI") == "WI-401"
     assert trailer("Co-Authored-By") == "A Builder <builder@example.com>"
-    attested = kv.bar_attestation(root, sha)
-    assert attested is not None and attested.bar == "review"
+    passed = kv.passed_checks(root, sha)
+    assert passed is not None and passed.checks == "commit"
 
 
-def test_attest_refuses_below_the_harness_floor_before_the_bar(tmp_path):
+def test_record_checks_refuses_below_the_harness_floor_before_the_bar(tmp_path):
     # The refresh's floor: a repo that declares the pinned toolchain but has
     # no runnable .venv must not record a green run on ambient Python.
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     (root / "requirements-dev.txt").write_text("pytest\n", encoding="utf-8")
     _stage(wt)
     before = _state(root, wt)
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     assert sha is None and "harness floor" in (refusal or ""), refusal
     assert _ran(wt) == [], "the bar ran below the floor"
     assert _state(root, wt) == before
@@ -499,35 +507,35 @@ def test_attest_refuses_below_the_harness_floor_before_the_bar(tmp_path):
 def test_a_message_file_carrying_the_label_is_refused_before_the_bar(tmp_path):
     # The producer writes the one label line; a message that brings its own
     # would make two, or a forged one.
-    root = attest_repo(tmp_path)
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
-    message = tmp_path.parent / (tmp_path.name + "-attest-message.txt")
+    message = tmp_path.parent / (tmp_path.name + "-checks-message.txt")
     message.write_text(
-        "WI-401: the build round\n\nBar-Green: tree={} work={} bar=review "
+        "WI-401: the build round\n\nChecks-Passed: tree={} work={} checks=commit "
         "tests=none hand-written\n".format("0" * 40, "1" * 40),
         encoding="utf-8",
         newline="\n",
     )
     tip = _rev(root, BRANCH)
-    sha, refusal = _attest(root, message_file=message)
-    assert sha is None and "Bar-Green" in (refusal or ""), refusal
+    sha, refusal = _record_checks(root, message_file=message)
+    assert sha is None and "Checks-Passed" in (refusal or ""), refusal
     assert _ran(wt) == [] and _rev(root, BRANCH) == tip
 
 
-def test_the_attest_cli_is_the_route_a_builder_calls(tmp_path):
-    root = attest_repo(tmp_path)
+def test_the_record_checks_cli_is_the_route_a_builder_calls(tmp_path):
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
-    argv = [SCRIPTS / "integrate.py", "attest", "--branch", BRANCH, "--bar"]
-    proc = run_py(argv + ["review"], cwd=root)
+    argv = [SCRIPTS / "integrate.py", "record-checks", "--branch", BRANCH, "--checks"]
+    proc = run_py(argv + ["commit"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    attested = kv.bar_attestation(root, BRANCH)
-    assert attested is not None and attested.bar == "review"
+    passed = kv.passed_checks(root, BRANCH)
+    assert passed is not None and passed.checks == "commit"
 
     tip = _rev(root, BRANCH)
     (wt / "loose.txt").write_text("not staged\n", encoding="utf-8", newline="\n")
-    proc = run_py(argv + ["review"], cwd=root)
+    proc = run_py(argv + ["commit"], cwd=root)
     assert proc.returncode == 1 and "loose.txt" in proc.stderr, proc.stderr
-    # `landing` and `no-bar` are the refresh's alone.
+    # `landing` and `none` are the refresh's alone.
     proc = run_py(argv + ["landing"], cwd=root)
     assert proc.returncode != 0 and _rev(root, BRANCH) == tip
 
@@ -543,19 +551,19 @@ title = "A widget under review"
 """
 
 
-def test_the_review_render_accepts_what_attest_writes(tmp_path, capsys):
+def test_the_review_render_accepts_what_record_checks_writes(tmp_path, capsys):
     """Implements: TC-371"""
-    # TC-371 (WI-957): the set `attest` derived and the set the render derives
+    # TC-371 (WI-957): the set `record-checks` derived and the set the render derives
     # agree. Adequacy witness: a render that never reads the record names no
-    # attested commit, and one that derives another set refuses here.
-    root = attest_repo(tmp_path)
+    # recorded commit, and one that derives another set refuses here.
+    root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     spec = wt / "docs" / "work" / "active" / BRANCH / "WI-401-widget.md"
     spec.parent.mkdir(parents=True, exist_ok=True)
     spec.write_text(REVIEWED_SPEC, encoding="utf-8", newline="\n")
     _git(wt, "add", "-A")
     base = _rev(root, BRANCH)
-    sha, refusal = _attest(root)
+    sha, refusal = _record_checks(root)
     assert refusal is None, refusal
     capsys.readouterr()  # the route's own console lines are not the render's
     out = tmp_path / "review-out"
@@ -577,14 +585,21 @@ TEST_B = "tests/test_b.py"
 
 
 def _cli(root, *extra):
-    argv = [SCRIPTS / "integrate.py", "attest", "--branch", BRANCH, "--bar", "review"]
+    argv = [
+        SCRIPTS / "integrate.py",
+        "record-checks",
+        "--branch",
+        BRANCH,
+        "--checks",
+        "commit",
+    ]
     return run_py(argv + list(extra), cwd=root)
 
 
 def _seeded(tmp_path, code=True, **seed):
     """The closed lane with `seed` staged as its spine, and code staged beside
     it when `code`. Returns `(root, wt)`."""
-    root = attest_repo(tmp_path, row=False)
+    root = checks_repo(tmp_path, row=False)
     wt = _lane(root, BRANCH)
     seed_row(wt, **seed)
     if code:
@@ -607,7 +622,7 @@ def _derived():
     }
 
 
-def test_attest_takes_no_tests_argument(tmp_path):
+def test_record_checks_takes_no_tests_argument(tmp_path):
     """Implements: TC-417"""
     root, wt = _seeded(tmp_path, **_derived())
     before = _state(root, wt)
@@ -656,7 +671,7 @@ def test_a_derivation_refusal_runs_no_bar_and_leaves_branch_and_index(
     assert _state(root, wt) == before
 
 
-def test_attest_runs_the_review_bar_then_the_derived_files(tmp_path):
+def test_record_checks_runs_the_review_bar_then_the_derived_files(tmp_path):
     """Implements: TC-417"""
     root, wt = _seeded(tmp_path, **_derived())
     proc = _cli(root)
@@ -665,12 +680,12 @@ def test_attest_runs_the_review_bar_then_the_derived_files(tmp_path):
     assert ran and ran[0].startswith("check ") and ran[1:] == ["named"], ran
     args = _named_args(wt)
     assert TEST_A in args and TEST_B in args, args
-    attested = kv.bar_attestation(root, BRANCH)
-    assert attested is not None and attested.bar == "review"
-    assert attested.tests == kv.tests_digest([TEST_A, TEST_B])
+    passed = kv.passed_checks(root, BRANCH)
+    assert passed is not None and passed.checks == "commit"
+    assert passed.tests == kv.tests_digest([TEST_A, TEST_B])
 
 
-def test_attest_prints_the_set_and_the_listed_evidence(tmp_path):
+def test_record_checks_prints_the_set_and_the_listed_evidence(tmp_path):
     """Implements: TC-417"""
     root, _wt = _seeded(tmp_path, **_derived())
     proc = _cli(root)
@@ -679,7 +694,7 @@ def test_attest_prints_the_set_and_the_listed_evidence(tmp_path):
         assert named in proc.stdout, proc.stdout
 
 
-def test_attest_prints_the_gaps_a_row_touching_no_code_reports(tmp_path):
+def test_record_checks_prints_the_gaps_a_row_touching_no_code_reports(tmp_path):
     """Implements: TC-417"""
     root, _wt = _seeded(tmp_path, code=False, srs=["SR-001"], sr_refs=["SR-001"])
     proc = _cli(root)
@@ -699,8 +714,8 @@ def test_a_row_touching_no_code_runs_the_bar_alone(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     ran = _ran(wt)
     assert len(ran) == 1 and ran[0].startswith("check "), ran
-    attested = kv.bar_attestation(root, BRANCH)
-    assert attested is not None and attested.tests == "none"
+    passed = kv.passed_checks(root, BRANCH)
+    assert passed is not None and passed.tests == "none"
 
 
 # --- the merge seam reads the record ------------------------------------------
@@ -711,21 +726,21 @@ def test_a_row_touching_no_code_runs_the_bar_alone(tmp_path):
     ["refresh: wi-401 onto trunk 0123456789", "WI-401: the build round"],
     ids=["refresh-subject", "work-subject"],
 )
-def test_merge_ready_refuses_a_tip_carrying_only_a_review_attestation(
+def test_merge_ready_refuses_a_tip_carrying_only_a_commit_checks_record(
     tmp_path, subject
 ):
-    # A build round's record of green is not the landing checks: the slot refuses
-    # it and names the bar it found and the one it needs.
+    # A build round's passed-checks record is not the landing checks: the slot
+    # refuses it and names the set it found and the one it needs.
     root = station_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _stage(wt, "reviewed.txt")
     tree = _git(wt, "write-tree").strip()
     parent = _rev(root, BRANCH)
-    line = kv.format_bar_green(
-        tree, parent, "review", kv.tests_digest(NAMED), "commit checks PASS"
+    line = kv.format_passed_checks(
+        tree, parent, "commit", kv.tests_digest(NAMED), "commit checks PASS"
     )
     _commit(wt, subject + "\n\n" + line, when=T_LATER)
     ready, why = integ._merge_ready(root, BRANCH)
-    assert not ready and "review" in why and "landing" in why, why
-    attested = kv.bar_attestation(root, BRANCH)
-    assert attested is not None and attested.bar == "review"
+    assert not ready and "checks=commit" in why and "landing" in why, why
+    passed = kv.passed_checks(root, BRANCH)
+    assert passed is not None and passed.checks == "commit"

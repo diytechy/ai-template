@@ -367,7 +367,7 @@ MAPPING = [
     # first merge attempt, not on some rare path.
     ("scripts/kitlib/verdict.py", "scripts/kitlib/verdict.py"),
     # WI-996 added `red_mark`: the declared strict expected-failure mark, its
-    # count and the per-file table `attest` and the refresh apply.
+    # count and the per-file table `record-checks` and the refresh apply.
     # `integrate.py`, in this list, imports it, so a scaffold missing it
     # ImportErrors on its first refresh.
     ("scripts/kitlib/red_mark.py", "scripts/kitlib/red_mark.py"),

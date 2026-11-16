@@ -63,7 +63,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   form that gets past the hook was cut off by a safety classifier (WI-834).
   A plan that orders its commits (a pin, then a structural move alone,
   then the rest) is built in stages: the builder stops after each, you
-  verify and commit through `integrate.py attest` (§6), and SendMessage resumes the same builder (WI-911,
+  verify and commit through `integrate.py record-checks` (§6), and SendMessage resumes the same builder (WI-911,
   2026-10-15). In a headless leg the resumed builder runs in the
   background and reports only while the leg's turn still runs: wait in
   the foreground on the file it writes last (its bar log, then its
@@ -143,7 +143,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     lane, and after an exit 4 commit the named log yourself. A builder's
     unstaged regenerated view (`docs/open-items.html`) makes the log
     commit's `staged-divergence` step refuse: the exit 4 log then rides the
-    next attest commit with that view (wi-987, leg 28). The resumed
+    next record-checks commit with that view (wi-987, leg 28). The resumed
     turn reads its session id from that committed log: a lane resumed
     days later found a noted id only in `~/.codex/sessions/<date>/`, by
     its `cwd` and model (wi-798, 2026-10-20).
@@ -211,16 +211,16 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   directory (so its own verdict path and `--basetemp`).
   1. Render from the lane root, once per reviewer:
      `"$PY" "$SCRIPTS/review_brief.py" review --wi WI-NNN --base <trunk base> --sha <tip> --scope full --scratch <dated root>/<reviewer> --rubric docs/rubrics/kit-change-review.md --out <brief>`.
-     The render derives the row's review test set from the lane, as `attest`
+     The render derives the row's review test set from the lane, as `record-checks`
      does, and a derivation refusal refuses it with that text whole, the
-     reviewed commit and the attest step. It
-     refuses a tip with no verified `review` attestation for that set, naming
+     reviewed commit and the record-checks step. It
+     refuses a tip with no verified `commit` record for that set, naming
      both digests when the record is for another, looking
      beneath it only through record-only commits (round files, log
-     fragments, empty commits), and names the `integrate.py attest` command
+     fragments, empty commits), and names the `integrate.py record-checks` command
      to run. A spine-checkpoint commit and a decisions-record commit change
-     non-record paths, so attest them (stage them into the next attest, or
-     make an empty attestation commit) before the round.
+     non-record paths, so record checks for them (stage them into the next record-checks run, or
+     make an empty record-checks commit) before the round.
      A red the tip already shows (a known failing test) is fixed in a build
      stage before the round, so the round reviews a green tip (item 13;
      wi-926 D-007).
@@ -274,11 +274,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      brief's pinned sha and a relaunch on that brief stops at the
      reviewer's checkout identity check, filing nothing: re-render that
      reviewer's brief at the record-only tip (the render finds the
-     attestation beneath it) and relaunch; the other reviewer's verdict
+     record beneath it) and relaunch; the other reviewer's verdict
      at the earlier sha stands, since the range between holds only call
      logs, which the reading scope excludes (wi-878 D-008). A leg that
      ends before its round is filed leaves nothing to file: the next
-     leg renders the round afresh at the same attested tip and records
+     leg renders the round afresh at the same recorded tip and records
      it as that round (wi-878 D-004).
   4. File each: `"$PY" "$SCRIPTS/review_brief.py" file --review <verdict path> --sha <tip> --scope full --phase REVIEW-A`
      (or `--phase REVIEW-B`) writes `docs/reviews/<lane>/NNN-<phase>-<sha7>.md`.
@@ -304,10 +304,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     while Codex is out), move the first one's filed round file outside
     the lane until the second has written its verdict, then put it back
     and file the second (wi-966 D-007).
-  - The render's pytest line is the list the tip was attested with,
-    and a stage attested over a narrow list (a docs or pack stage) hands
+  - The render's pytest line is the list the tip's checks were recorded with,
+    and a stage recorded over a narrow list (a docs or pack stage) hands
     the round that narrow line. Before a round over a staged build, make
-    one empty attestation commit over the lane's touched test modules;
+    one empty record-checks commit over the lane's touched test modules;
     the render finds it beneath record-only commits. Under load that bar
     ran 50 minutes (wi-977, 2026-10-31): start it with time left for the
     round's two reviewer runs.
@@ -1061,9 +1061,9 @@ lane commit being replayed.
 - Launch no review until the rebase has finished. A rebase stopped on
   generated-file conflicts leaves the lane mid-rebase: take `--ours`,
   regenerate, continue, then render the brief at the real tip.
-- A rebase changes every commit's `work=`, so no attestation survives it:
-  attest the rebased tip (`integrate.py attest` with nothing staged makes
-  an empty attestation commit) before its round.
+- A rebase changes every commit's `work=`, so no passed-checks record survives it:
+  record checks for the rebased tip (`integrate.py record-checks` with nothing staged makes
+  an empty record-checks commit) before its round.
 
 ## 5. Spine-cell edits (brief Terra with these)
 
@@ -1241,13 +1241,13 @@ lane commit being replayed.
 - A commit made by hand in a lane worktree runs the hook under the
   ambient interpreter, which has no ruff, so its format step prints "A
   DECLARED CHECK DID NOT RUN": commit every Python change through
-  `integrate.py attest` (below), which runs under the primary checkout's
+  `integrate.py record-checks` (below), which runs under the primary checkout's
   interpreter; a records-only commit may go by hand (2026-10-22c).
 - Run the commit checks on every commit, docs-only ones included. A lane
-  commit runs it through `"$PY" "$SCRIPTS/integrate.py" attest --branch
-  <lane> --bar review --message-file <msg>` from the
+  commit runs it through `"$PY" "$SCRIPTS/integrate.py" record-checks --branch
+  <lane> --checks commit --message-file <msg>` from the
   primary checkout, which runs `[required-checks] commit` and the row's derived test
-  set, refuses red, and commits the staged work with the attestation the review render
+  set, refuses red, and commits the staged work with the passed-checks record the review render
   requires (SKILL §3, Iterate step 1). A trunk commit runs the one
   declared command by hand, `run.cmd smoke` (`"$PY" "$SCRIPTS/run_menu.py" smoke` from
   a shell), whose steps are `docs/stack.ini` `[run] smoke`. Read the summary
@@ -1255,19 +1255,19 @@ lane commit being replayed.
   gated only on the command's exit code inside `$(...)` committed a red tier
   (2026-10-10). The commit hook does not run it: run it yourself, before a
   landing commit rather than after it.
-- `integrate.py attest` runs `[required-checks] commit`, the smoke action with its
+- `integrate.py record-checks` runs `[required-checks] commit`, the smoke action with its
   budget step in warn mode, so it refuses only failed checks, never the
   tier's seconds. Run it from the primary checkout, `"$PY"
-  "$SCRIPTS/integrate.py" --root "$REPO" attest --branch <lane> --bar
-  review --message-file <file>`: it finds the lane by
+  "$SCRIPTS/integrate.py" --root "$REPO" record-checks --branch <lane> --checks
+  commit --message-file <file>`: it finds the lane by
   branch and runs the bar there under the primary checkout's
   interpreter. Run from the lane with the default root, its harness floor
   reads the lane's own root, finds no `.venv` and refuses (wi-957 D-007).
-- The tests-first commit goes through `integrate.py attest` with a test
+- The tests-first commit goes through `integrate.py record-checks` with a test
   set that names each marked file, and the code commit that removes the
-  marks names the same set (SKILL §3, Intent step 2). `attest` judges each
+  marks names the same set (SKILL §3, Intent step 2). `record-checks` judges each
   test file's count of the mark `[product] expected_failure_marker` declares against the
-  lane's last review record, and the refresh and the hand landing's check
+  lane's last commit record, and the refresh and the hand landing's check
   (§3) refuse a tree that still holds one: a refresh or a hand landing (§3)
   refused for a mark ends in the code commit or a quarantine. A test the bar skips takes no mark, because a skip is never
   evidence: it is named, with its disposition, in the lane's decisions
@@ -1332,13 +1332,13 @@ lane commit being replayed.
   hook's own step list (WI-913 round 2; WI-841's `done-when-blessed` has
   the same gap).
 
-- `attest` refuses a lane worktree holding work the index does not.
+- `record-checks` refuses a lane worktree holding work the index does not.
   To commit two stages a builder built together on disjoint files,
-  copy the later stage's file aside, check it out at HEAD, attest the
-  first stage, then restore the file and attest the second (wi-977
+  copy the later stage's file aside, check it out at HEAD, record checks for
+  the first stage, then restore the file and record checks for the second (wi-977
   D-014). Set the files aside with `cp --parents`: Git Bash's `tar` reads
   the `C:` of a path as a remote host and fails (leg 38).
-- `attest` derives its tests from the row: its `sr_refs`, every LLR under
+- `record-checks` derives its tests from the row: its `sr_refs`, every LLR under
   them, the test cases verifying either, and the test files whose
   `Implements:` lines name those cases. It refuses before any bar, and the
   render and the loop's draw refuse with that text. Each refusal has its
@@ -1350,23 +1350,23 @@ lane commit being replayed.
   - `empty`: a code row whose SRs reach only non-executable evidence. Name an
     SR with a test, or add one.
   - `malformed`: fix the input it names.
-- A spine step that adds TC rows before their tests exist commits without an
-  attestation (registry text), or is staged into the attest that carries
-  those tests. The first attest after it must hold their tagged tests, or it
+- A spine step that adds TC rows before their tests exist commits without a
+  passed-checks record (registry text), or is staged into the record-checks run that
+  carries those tests. The first record-checks run after it must hold their tagged tests, or it
   refuses as partial.
-- `attest`'s refusal prints only the bar's last lines, never the
+- `record-checks`'s refusal prints only the bar's last lines, never the
   failing test: run `"$PY" "$SCRIPTS/run_menu.py" smoke` in the lane,
   to a log, to name it. A red that run passes is load-sensitive: file
   it under status.md's follow-ups and re-accept; never charge it to the
   lane (2026-10-24a).
 - A tests stage's in-process cases can carry the smoke tier past
-  `max-tests` at its first attest: count the tier first
+  `max-tests` at its first record-checks run: count the tier first
   (`pytest -q -m smoke --collect-only`, against `docs/stack.ini`'s
   `max-tests`) and re-stamp in that commit (wi-856 D-002).
 
-- `attest` appends the run's trailer to a message file that already
+- `record-checks` appends the run's trailer to a message file that already
   carries it, so that commit holds it twice. The last wins and `check-lane`
-  passes; leave it out of an attest message (leg 32).
+  passes; leave it out of a record-checks message (leg 32).
 
 ## 7. Environment and limits
 
@@ -1411,9 +1411,9 @@ lane commit being replayed.
   (`ls tests/test_*.py | awk 'NR%2==1'`, then `NR%2==0`), each with its
   own basetemp, deleted after it: on 2026-10-25c they took 19:41 and
   12:08.
-  Give every bar, attest and full-suite run the whole raised cap
-  (3600000 ms): on a box other sessions loaded an attest's bar ran 30
-  minutes and the full suite 54, and a 30-minute timeout moved the attest
+  Give every bar, record-checks and full-suite run the whole raised cap
+  (3600000 ms): on a box other sessions loaded a record-checks run's bar ran 30
+  minutes and the full suite 54, and a 30-minute timeout moved the record-checks run
   to the background, where a leg loses it (2026-10-22).
   Launch each background call as its own command: in `A=… && (x) & (y) &`
   only the first subshell sees `A`, since the first `&` backgrounds the
@@ -1528,7 +1528,7 @@ lane commit being replayed.
   breaks the shallow-clone tests' `git clone` of a file URI ("'/C:/...'
   does not appear to be a git repository"; WI-913, 2026-10-15).
 
-- A bar can hang instead of dying: under other jobs' load an attest's
+- A bar can hang instead of dying: under other jobs' load a record-checks run's
   smoke tier ran over an hour with no summary line, and the tool cap
   moved it to the background. Stop its process tree
   (`taskkill //PID <the integrate.py pid> //T //F` from Git Bash), re-run
@@ -1543,7 +1543,7 @@ lane commit being replayed.
 - Tool calls in one message run one after the other, an Agent call included:
   a planner's 54 minutes passed before the two Sol critiques beside it began
   (leg 34). Real overlap needs one script that starts its children and waits.
-- A landed lane's deleted branch reds the next attest of an open lane whose
+- A landed lane's deleted branch reds the next record-checks run of an open lane whose
   base still holds that claim folder (hold-by-rename). Rebase the open lane
   first, with `git stash` around staged work (wi-993, leg 34).
 - Tell every builder to exclude `OPERATOR_SCRATCHPAD.md` from a broad search: a

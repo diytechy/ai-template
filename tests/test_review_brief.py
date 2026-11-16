@@ -157,7 +157,7 @@ def _derives_a_set(monkeypatch):
 
 def _past_the_git_reads(monkeypatch):
     """Drive the command line in process past its git reads: the lane's
-    commits, and the commit checks' attestation the render requires (the real
+    commits, and the commit checks' record the render requires (the real
     record read is pinned in `tests/test_review_brief_git.py`)."""
     monkeypatch.setattr(
         rb, "lane_commits", lambda root, base, sha: ("wi-900", BASE, SHA)

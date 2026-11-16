@@ -582,7 +582,7 @@ the tree, and that is now an IDENTITY rather than a comparison:
 `integrate._verdict_gate` requires the verdict to **name the branch's current
 non-record tree** — the tree with `docs/reviews/`, `docs/log.d/` and
 `docs/iteration/` removed, read at the **governing rev** — the tip with the
-station's `refresh` commit peeled off at the work sha it attests, and with any
+station's `refresh` commit peeled off at the work sha it records, and with any
 commit that left that tree untouched stepped through to reach it (a mechanical
 re-merge is not a change the reviewer could conclude differently about, and
 neither is the commit that records the round). There is no ordering rule
@@ -831,7 +831,7 @@ control input — was retired):
   that failed earlier in the run must answer a 30 s `OK` liveness probe on
   its own command template before another real session is spent on it; a
   route with a clean history is never probed (recovery aid, not a tax).
-- **The commit-check failure cap** is **exit code 12** (`EXIT_RED_CAP`): failed
+- **The commit-check failure cap** is **exit code 12** (`EXIT_CHECK_FAILURE_CAP`): failed
   commit checks draw no review, and the lane's consecutive failed rounds reached
   `[build] stop_lane_after_consecutive_commit_check_failures`
   (`docs/process.toml`, shipped `3`). Checked at run start and after each
@@ -2900,7 +2900,7 @@ already run ONCE, on the branch itself at refresh, read fail-closed — a
 missing or empty check declaration is a **refusal**, never a skip, and any SKIP
 in the report refuses (the fail-open lesson, stated as a contract). The `[authority]` dials
 (RULING-7) are enforced by requiring the corresponding **verdict artifact**
-(review file `docs/reviews/WI-<n>-<PHASE>.md`, critique, attestation) with
+(review file `docs/reviews/WI-<n>-<PHASE>.md`, critique, acceptance) with
 git-derived freshness before the trunk fast-forwards; a red queue parks
 loudly. `integrate.py audit` is the RULING-6 window check: coordinator
 bookkeeping (claims, fragment compile, regeneration — the `[generated]` set

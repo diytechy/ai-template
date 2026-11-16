@@ -859,11 +859,11 @@ def test_the_claim_refresh_merge_and_mint_writers_carry_the_trailer(
     _git(wt, "rm", "-q", "docs/work/active/wi-401/WI-401-widget.md")
     _commit(wt, _trailered("WI-401: build + close"), when=T_VERDICT)
 
-    # The refresh: the trailer rides beside Bar-Green, which still verifies.
+    # The refresh: the trailer rides beside Checks-Passed, which still verifies.
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
     assert provenance.parse_loop_trailer(_message(root, sha)) == SESSION
-    assert integ.refresh_attestation(root, "wi-401", sha)
+    assert integ.refresh_passed_checks(root, "wi-401", sha)
     # ...and the slot reads it as one of the loop's own writers' commits, the
     # mark that makes a lane the loop's.
     assert integ._marked_loop_writer(_message(root, sha), "wi-401")

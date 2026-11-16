@@ -88,7 +88,7 @@ sequenceDiagram
         Loop->>Disp: _drive_entry — nothing is read from docs/status.md
         Note over Loop,Disp: resume authority is the claimed assignment plus the committed<br/>trailers on its branch (SR-026/LLR-026); the serial<br/>resume-from-status.md loop is retired
         Disp->>Worker: spawn per admitted lane, stdin closed (LLR-061)
-        Note over Worker,Agent: the commit-check failure cap is checked before the first session (SR-242/LLR-343),<br/>and a review is drawn only on a tip attested green (LLR-344)
+        Note over Worker,Agent: the commit-check failure cap is checked before the first session (SR-242/LLR-343),<br/>and a review is drawn only on a tip recorded as passed (LLR-344)
         Worker->>Agent: run headless session(s)
         alt agent errors (retired model / auth)
             Agent-->>Worker: nonzero
@@ -158,7 +158,7 @@ sequenceDiagram
 
 One tick of `dispatch.run`. The three properties hardest to read off the rows:
 the **spine barrier** is a property of admission (nothing slips past an
-exclusive kind into a free lane), the **bar is attested to a tree** on the
+exclusive kind into a free lane), the **checks are recorded against a tree** on the
 branch *before* the merge slot rather than run on a composed tree inside it,
 and **every lane ends in a merge** — a worker that cannot finish hands back and
 the run keeps going.
@@ -195,13 +195,13 @@ sequenceDiagram
         Lane->>Lane: merge trunk in, a conflict on docs/id-watermark alone settled by the fold (LLR-363)
         Lane->>Lane: while an id carrier exists, fold its tip into the lane's watermark (LLR-363)
         Lane->>Lane: then trunk_step, then the expected-failure marker refusal (a tree whose tests hold a declared mark is refused, LLR-368), then the check.py bar
-        Lane->>Lane: commit a Bar-Green trailer naming the landing checks (or no-bar), the tree it barred and its work parent
+        Lane->>Lane: commit a Checks-Passed trailer naming the landing checks (or none), the tree it barred and its work parent
         alt refresh red
             Note over Disp,Hand: a branch asserting DONE stops the run; one that merges<br/>nothing is quarantined once (code reverted, diff kept<br/>as a bar-inert patch) and refreshed again
         else refresh green
             Disp->>Slot: merge this lane's branch only — the slot is sub-second
             Slot->>Slot: refusal ladder: R1, then the reserved-ids rung (each carrier-space id the lane adds over its base in the lane's own carrier record, LLR-363), then the rest
-            Slot->>Slot: is trunk already an ancestor, does the tip attest its OWN tree for the landing checks, and does its watermark hold the id carrier's fold?
+            Slot->>Slot: is trunk already an ancestor, does the tip record the landing checks for its OWN tree, and does its watermark hold the id carrier's fold?
             Note over Slot: not ready, a lagging watermark included:<br/>refreshed inside the held slot, and that refresh folds
             Slot->>Slot: merge --no-ff, ff trunk, unload, audit
             Slot->>Intake: post-merge arm, still inside the held slot (LLR-154)

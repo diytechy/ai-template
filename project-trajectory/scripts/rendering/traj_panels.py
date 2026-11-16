@@ -6,7 +6,7 @@ The OKF concept graph + type-tiered drill, the method-reference Process tab
 landing-hero Next-work card. The facade re-exports, so consumers are unchanged.
 
 `kitlib.station` and `schedule` are imported for their CONSTANTS only (the
-terminal outcomes, the bar attestation label, the kind tables): the station
+terminal outcomes, the passed-checks record label, the kind tables): the station
 render derives its stage vocabulary from the modules that ship the flow, instead
 of restating it as literals that drift (the 2026-08-01 diagram review's ruling —
 the dashboard must never be pinned to itself).
@@ -473,7 +473,7 @@ def _know_panel(root, svg, details):
 # advance -> the post-merge intake mint -> the dispatcher tick — with the spine
 # barrier and the intake arm visible. The 2026-08-01 diagram review's
 # constraint governs the vocabulary: stage names are DERIVED from the shipped
-# modules' own constants (station.OUTCOME_DIRS, station.BAR_GREEN,
+# modules' own constants (station.OUTCOME_DIRS, station.CHECKS_PASSED,
 # schedule's kind tables) wherever one exists, and every label that must stay a
 # literal here is held by a sync pin against the module it mirrors
 # (tests/test_traj_panels.py, the station suite) — the dashboard is never again
@@ -604,7 +604,7 @@ def _station_svg(root):
     ow, oh = g["outw"], g["outh"]
     oy = g["oy"]
     outcomes = _outcome_cards()
-    bar_label = station.BAR_GREEN.rstrip(":")
+    bar_label = station.CHECKS_PASSED.rstrip(":")
 
     # The ring edges + the outcome fan, one closed directed cycle. Anchors are
     # card-edge points; ends stop 5px short so the arrowheads land cleanly.

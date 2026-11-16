@@ -1,12 +1,12 @@
 """The expected-failure marker's rule in process (WI-996): the declaration, the
-count and the per-file table `integrate.py attest` and the refresh both apply.
+count and the per-file table `integrate.py record-checks` and the refresh both apply.
 
 A test's red-before is proven by a strict expected-failure mark. The mark is
 declared once, as `docs/stack.ini` `[product] expected_failure_marker`; a
 file's count of it is taken from its bytes with ASCII whitespace removed; and
-the table compares each test file's count at the lane's last attested tree
+the table compares each test file's count at the lane's last recorded tree
 with its count in the staged tree. The same reader answers the commit checks'
-shell line, the other value an attestation needs: `docs/process.toml`
+shell line, the other value a passed-checks record needs: `docs/process.toml`
 `[required-checks] commit` names a check suite and `docs/stack.ini`
 `[check-suites]` holds that suite's line. The real-lane cases are in
 `tests/test_red_mark_lane.py`.
@@ -346,7 +346,7 @@ def test_the_contract_names_the_key_and_its_refusal():
     ]
     assert "`[product] expected_failure_marker`" in contract
     assert "whitespace ignored" in contract
-    assert "the marker refuses an attestation and a refresh alike" in contract
+    assert "the marker refuses a record-checks run and a refresh alike" in contract
 
 
 # --- the count ----------------------------------------------------------------
@@ -490,7 +490,7 @@ def test_a_lowered_count_passes_on_a_matching_record():
 @pytest.mark.parametrize(
     "tests, digest, condition",
     [
-        ([P], None, "no review record"),
+        ([P], None, "no commit record"),
         ([P], kv.tests_digest([OTHER]), "another test set"),
         ([OTHER], kv.tests_digest([OTHER]), "does not name"),
     ],

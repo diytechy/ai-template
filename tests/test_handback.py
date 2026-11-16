@@ -668,12 +668,12 @@ def test_the_mechanical_adjudication_close_archives_terminal_and_finishes(tmp_pa
     assert rows["WI-401"]["Status"] == "done"
 
 
-def test_the_close_the_writer_lands_is_one_the_attestor_peels(tmp_path):
+def test_the_close_the_writer_lands_is_one_the_verifier_peels(tmp_path):
     """Implements: TC-205"""
     # THE WRITER↔VERIFIER LOOP, closed on a REAL close rather than a
-    # hand-composed one. `verdict.mechanical_close_attestation` re-derives this
+    # hand-composed one. `verdict.mechanical_close_peel` re-derives this
     # subject from the one row the diff moves and compares it exactly, so the
-    # writer and the attestor share one composer and one spelling; if they
+    # writer and the peel share one composer and one spelling; if they
     # drift, every adjudication close silently stops peeling and re-opens the
     # staled-APPROVE failure the peel exists to close. The peel test suite
     # composes its own fixtures, so nothing else drives the producer here.
@@ -684,7 +684,7 @@ def test_the_close_the_writer_lands_is_one_the_attestor_peels(tmp_path):
     assert ids == ["WI-401"]
     landed = _git(root, "rev-parse", "wi-401").strip()
     assert landed != before  # the close really committed
-    assert kv.mechanical_close_attestation(root, landed) == before
+    assert kv.mechanical_close_peel(root, landed) == before
 
 
 def test_the_mechanical_close_mints_the_drafted_successor_at_merge(tmp_path):
