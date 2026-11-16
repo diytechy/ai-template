@@ -2572,6 +2572,14 @@ def _invocation_plan(args, coverage, profile):
     return stage, plan
 
 
+def _say_empty_plan(stage, path_triggered):
+    """Say that no check is defined at `stage`, unless the plan asked for was
+    the path-triggered one: the hook asks for that on every commit, most repos
+    declare none, and that is not news worth a line."""
+    if not path_triggered:
+        print("No checks defined at stage {}.".format(stage))
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -2850,10 +2858,7 @@ def main():
         return
 
     if not plan:
-        # The hook asks for path-triggered steps on every commit; most repos
-        # declare none, and that is not news worth a line.
-        if not args.path_triggered:
-            print("No checks defined at stage {}.".format(stage))
+        _say_empty_plan(stage, args.path_triggered)
         return
 
     # Run-scope the coverage report before the plan (see the helper): a stale,
