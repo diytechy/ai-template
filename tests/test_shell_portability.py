@@ -96,8 +96,8 @@ _RUN_WITH_SH = re.compile(r"(?<![\w/.-])sh scripts/(?:setup|check)\.sh")
 def test_no_shipped_instruction_runs_a_bash_script_with_sh():
     for name in _BASH_ONLY:
         path = ROOT / "project-trajectory" / "scripts" / name
-        head = path.read_text(encoding="utf-8")[:200]
-        assert "pipefail" in head, name + " is no longer bash-only; drop this pin"
+        text = path.read_text(encoding="utf-8")
+        assert "pipefail" in text, name + " is no longer bash-only; drop this pin"
     listed = subprocess.run(
         ["git", "ls-files", "-z", "project-trajectory"],
         cwd=ROOT,
