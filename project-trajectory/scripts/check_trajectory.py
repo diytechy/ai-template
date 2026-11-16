@@ -324,6 +324,7 @@ interface_findings = _trajectory_arch.interface_findings
 _owner_exact_findings = _trajectory_arch._owner_exact_findings
 _declaration_sites = _trajectory_arch._declaration_sites
 contract_body_findings = _trajectory_arch.contract_body_findings
+unchecked_contract_rows = _trajectory_arch.unchecked_contract_rows
 _external_body_findings = _trajectory_arch._external_body_findings
 _stray_declaration_findings = _trajectory_arch._stray_declaration_findings
 _parse_if_tc_allow_full = _trajectory_arch._parse_if_tc_allow_full
@@ -3348,8 +3349,11 @@ def main():
     # deliberately kept out of this loop.
     # ...and the loop-commit held-status report (SR-210) rides it too: the
     # change has already landed, so it asks for an operator's look, never a red.
+    # ...and the count of IF rows the definition gate below passed unjudged
+    # rides it too: it names a vacuous pass, and changes no verdict.
     for w in (
         interface_findings(root)
+        + unchecked_contract_rows(root)
         + cross_component_advisories(root)
         + if_tc_allow_hygiene_findings(root)
         + codesymbol_crosscheck_findings(root)

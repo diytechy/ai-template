@@ -480,15 +480,11 @@ def _declaration_sites(root):
     READ is deliberately NOT in `problems`: that is the reference's own "could
     not read" list and `arch_inventory`'s skip. `(None, problems)` when there
     is no surface to read — files-mode, an absent scan root, no generator
-    beside this script — the `arch_inventory` posture."""
-    if gen_arch_map is None or not hasattr(gen_arch_map, "scan_contracts"):
+    beside this script — the `arch_inventory` posture (`_no_surface_reason`)."""
+    if _no_surface_reason(root):
         return None, []
-    src, mode = _arch_scan_profile(root)
-    if mode == "files":
-        return None, []
+    src, _mode = _arch_scan_profile(root)
     src_dir = root / src.strip().replace("\\", "/").rstrip("/")
-    if not src_dir.is_dir():
-        return None, []
     owner_files = _owner_files(root)
     refused = []
     records, _unreadable = gen_arch_map.scan_contracts(
@@ -500,6 +496,44 @@ def _declaration_sites(root):
         key = rel if rel in file_names else _norm_module(rel)
         sites[key] = (rel, set(ids), set(bodies))
     return sites, refused
+
+
+def _no_surface_reason(root):
+    """Why `_declaration_sites` has no surface to read, or None when it has
+    one: files-mode, an absent scan root, or no generator beside this
+    script."""
+    if gen_arch_map is None or not hasattr(gen_arch_map, "scan_contracts"):
+        return "gen_arch_map.py is not beside this script"
+    src, mode = _arch_scan_profile(root)
+    if mode == "files":
+        return "[arch-map] mode = files reads no source headers"
+    if not (root / src.strip().replace("\\", "/").rstrip("/")).is_dir():
+        return "the scan root {!r} is absent".format(src.strip())
+    return None
+
+
+def unchecked_contract_rows(root):
+    """One line naming how many IF rows the armed definition gate
+    (`contract_body_findings`) passed without judging, and why; `[]` when it
+    judged them all or the gate is opted out. Every row, where there is no
+    surface to read; otherwise each `external:`-owned row whose far side names
+    no in-tree module to state it. Warn-only: it changes no verdict, it only
+    stops a vacuous pass reading as a checked one."""
+    if not read_interfaces_check_enabled(root):
+        return []
+    rows = load_seams(root)
+    why = _no_surface_reason(root)
+    if why is None:
+        why = "external-owned, and no in-tree module on the far side states them"
+        rows = [
+            r
+            for r in rows
+            if r["owner"].startswith("external:")
+            and all(e.startswith("external:") for e in r["far"])
+        ]
+    if not rows:
+        return []
+    return ["contract bodies not checked for {} IF row(s): {}".format(len(rows), why)]
 
 
 def contract_body_findings(root):
@@ -1830,6 +1864,8 @@ __all__ = (
     "interface_findings",
     "_owner_exact_findings",
     "_declaration_sites",
+    "_no_surface_reason",
+    "unchecked_contract_rows",
     "contract_body_findings",
     "_external_body_findings",
     "_stray_declaration_findings",

@@ -278,6 +278,19 @@ def test_no_placeholders_flags_template_rows(scaffold):
     assert "placeholder row SR-000 still present" in report_of(scaffold)
 
 
+def test_no_placeholders_reads_need_rows_never_a_comment_quoting_one(scaffold):
+    # The needs template's header comment quotes `[need.SN-000]`: a mention,
+    # not a row. Only the example table itself is a leftover placeholder.
+    needs = scaffold / "docs" / "requirements" / "stakeholder-needs.toml"
+    comment = '# An example need reads `[need.SN-000]`.\n\n[need.SN-001]\nneed = "x"\n'
+    needs.write_text(comment, encoding="utf-8")
+    run_py(["scripts/trace.py", "--no-placeholders"], cwd=scaffold)
+    assert "SN placeholder" not in report_of(scaffold)
+    needs.write_text(comment + '\n[need.SN-000]\nneed = "example"\n', encoding="utf-8")
+    run_py(["scripts/trace.py", "--no-placeholders"], cwd=scaffold)
+    assert "SN placeholder SN-000 still present" in report_of(scaffold)
+
+
 def test_harness_g2_fails_on_unfilled_scaffold(scaffold):
     # The key F3 behavior: you cannot claim DevStg-Tests with placeholder-only registries.
     proc = run_py(["scripts/check.py", "--gate", "DevStg-Tests"], cwd=scaffold)

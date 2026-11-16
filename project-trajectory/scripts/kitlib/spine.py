@@ -353,7 +353,7 @@ def _id_number(rid):
 # endpoint written with the full repo path
 # (`project-trajectory/scripts/check.py`), an LLR `Module` cell and an arch-map
 # node name (`scripts/check`) all collapse to one key.
-MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
+MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd", ".gd")
 # The file types `--backlink-coverage` reads (OI-42's declared extension list),
 # and the types a test file is (`is_test_file`): `MODULE_EXTS` — the kit's
 # existing answer to "what is a source module" — extended with the families

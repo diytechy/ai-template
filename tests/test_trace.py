@@ -629,6 +629,27 @@ def test_out_of_vocabulary_aspect_is_a_schema_finding(scaffold):
     assert "portability" in strict.stdout, "the allowed set must be reported"
 
 
+def test_strict_schema_alone_says_on_its_summary_line_that_it_does_not_fail(
+    scaffold,
+):
+    # Exit 0 without --strict is the pinned contract (the test above); the
+    # summary line states it, so findings printed beside exit 0 are not read
+    # as a gate that missed them.
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        ASPECT_SRS.replace(",perf\n", ",Parallel dispatch\n"), encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert (
+        "schema-findings=1 (reported, not failing: --strict-schema fails the run "
+        "only with --strict)" in proc.stdout
+    )
+    strict = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+    assert "not failing" not in strict.stdout
+
+
 def test_blank_aspect_is_never_a_schema_finding(scaffold):
     # The complement, and it is the ruled behaviour rather than a leniency: an
     # aspect is a REVIEW grouping, so a requirement that is not cross-cutting

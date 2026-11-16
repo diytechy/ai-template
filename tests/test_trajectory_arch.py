@@ -982,6 +982,42 @@ def test_the_gate_shares_the_interfaces_check_opt_out_and_the_files_mode_vacuity
     assert check_trajectory.contract_body_findings(root) == []
 
 
+def test_the_rows_the_gate_did_not_judge_are_counted_in_one_warn_line(tmp_path):
+    # A vacuous pass says so, and no verdict moves: an external-owned row with
+    # no in-tree far side is one no module can state, and files-mode leaves
+    # every row unjudged.
+    root = _gate_repo(
+        tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a."""\n'
+    )
+    write_ifs(
+        root,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,approved,Active,,\n'
+        'IF-003,Provides,external:git,external:ci,"refs",SR-001,v1,approved,Active,,\n',
+    )
+    (root / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+        "TC-001,SR-001;IF-001;IF-002;IF-003,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        encoding="utf-8",
+    )
+    assert check_trajectory.unchecked_contract_rows(root) == [
+        "contract bodies not checked for 1 IF row(s): external-owned, and no "
+        "in-tree module on the far side states them"
+    ]
+    assert check_trajectory.contract_body_findings(root) == []
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WARN - contract bodies not checked for 1 IF row(s)" in proc.stderr
+    (root / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = scripts\n[arch-map]\nmode = files\n", encoding="utf-8"
+    )
+    assert check_trajectory.unchecked_contract_rows(root) == [
+        "contract bodies not checked for 3 IF row(s): [arch-map] mode = files "
+        "reads no source headers"
+    ]
+    assert check_trajectory.contract_body_findings(root) == []
+
+
 def test_if_tc_allow_malformed_line_is_reported_end_to_end(tmp_path):
     # The same fixture `test_a_bare_addition_past_the_seed_suppresses_nothing`
     # uses, proving the new arm rides the real `main()` wiring at the same

@@ -678,46 +678,81 @@ def _contract_bodies(lines, declared):
 
 
 # Files whose leading comment block is `#`-prefixed lines. Anything else that
-# is not Markdown is read the same way, so a shell hook, an INI file and an
-# extensionless config all declare through one grammar.
+# is not Markdown or in `_HEADER_FORMS` is read the same way, so a shell hook,
+# an INI file and an extensionless config all declare through one grammar.
 _MARKDOWN_SUFFIXES = (".md", ".markdown", ".html")
+# The other languages' comment forms, by suffix: the line-comment marker and
+# the block comment's opener and closer. A source file states its contracts in
+# its own language's comments; read for `#` alone, every one of these
+# declared nothing in the repositories that adopted the kit.
+_SLASH_FORM = (re.compile(r"//[/!]?"), ("/*", "*/"))
+_HEADER_FORMS = {
+    ".rs": _SLASH_FORM,
+    ".ts": _SLASH_FORM,
+    ".js": _SLASH_FORM,
+    ".go": _SLASH_FORM,
+    ".cs": _SLASH_FORM,
+    ".ps1": (re.compile(r"#+"), ("<#", "#>")),
+    ".cmd": (re.compile(r"@?rem\b|::", re.I), None),
+}
+_HASH_FORM = (re.compile(r"#+"), None)
+# A first line that may sit above the header without ending it.
+_PREAMBLE_RE = re.compile(r"#!|@echo\s+off\b", re.I)
 
 
 def header_lines(path):
     """The leading comment block of a NON-Python file, its comment markers
     stripped, as the lines the marker and body grammar read.
 
-    Two carriers: `#`-prefixed lines at the top of a TOML/INI/CSV/shell/
-    extensionless file (a `#!` shebang on line 1 is skipped; the block ends at
-    the first line that is not a `#` comment), or the FIRST `<!-- ... -->`
-    block at the top of a Markdown file. `[]` when the file opens with anything
-    else — a header is the first thing in the file or it is not a header."""
+    The carriers: the FIRST `<!-- ... -->` block at the top of a Markdown
+    file; line and block comments in the forms `_HEADER_FORMS` lists for
+    Rust, TS/JS, Go, C# (`//`, `//!`, `///`, `/* */`, `/** */`), PowerShell
+    (`#`, `<# #>`) and batch (`REM`, `::`); and `#`-prefixed lines at the top
+    of any other file (TOML/INI/CSV/shell/extensionless). A `#!` shebang or a
+    batch `@echo off` on line 1 is skipped, a UTF-8 BOM is dropped, and the
+    block ends at the first line that is not a comment. `[]` when the file
+    opens with anything else — a header is the first thing in the file or it
+    is not a header."""
     try:
-        lines = path.read_text(encoding="utf-8").splitlines()
+        lines = path.read_text(encoding="utf-8-sig").splitlines()
     except (OSError, UnicodeDecodeError):
         return []
     if path.suffix.lower() in _MARKDOWN_SUFFIXES:
-        i = 0
-        while i < len(lines) and not lines[i].strip():
-            i += 1
-        if i >= len(lines) or not lines[i].lstrip().startswith("<!--"):
-            return []
-        out, first = [], lines[i].lstrip()[4:]
-        rest = [first] + lines[i + 1 :]
-        for line in rest:
-            if "-->" in line:
-                out.append(line[: line.index("-->")].strip())
-                break
-            out.append(line.strip())
-        return out
-    out = []
-    for j, line in enumerate(lines):
+        return _markdown_header(lines)
+    line_re, block = _HEADER_FORMS.get(path.suffix.lower(), _HASH_FORM)
+    if lines and _PREAMBLE_RE.match(lines[0].strip()):
+        lines = lines[1:]
+    out, closer = [], None
+    for line in lines:
         s = line.strip()
-        if j == 0 and s.startswith("#!"):
+        if closer is None and block and s.startswith(block[0]):
+            closer, s = block[1], s[len(block[0]) :]
+        elif closer is None:
+            m = line_re.match(s)
+            if not m:
+                break
+            out.append(s[m.end() :].strip())
             continue
-        if not s.startswith("#"):
+        if closer in s:
+            s, closer = s[: s.index(closer)], None
+        out.append(s.lstrip("*").strip())
+    return out
+
+
+def _markdown_header(lines):
+    """`header_lines` for a Markdown file: its first `<!-- ... -->` block."""
+    i = 0
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    if i >= len(lines) or not lines[i].lstrip().startswith("<!--"):
+        return []
+    out, first = [], lines[i].lstrip()[4:]
+    rest = [first] + lines[i + 1 :]
+    for line in rest:
+        if "-->" in line:
+            out.append(line[: line.index("-->")].strip())
             break
-        out.append(s.lstrip("#").strip())
+        out.append(line.strip())
     return out
 
 

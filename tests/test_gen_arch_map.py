@@ -718,6 +718,16 @@ def test_reverse_coverage_reads_non_python_source_but_not_unlisted_types(tmp_pat
     assert "LLR-002" in gen_arch_map.scan_backlinks([src], (".md",))
 
 
+def test_godot_source_is_a_recognised_module_type(tmp_path):
+    # GDScript comments are `#`; a Godot project's `.gd` tags were skipped.
+    _root, src = _backlink_repo(tmp_path, ["LLR-001"])
+    (tmp_path / "src" / "game.gd").write_text(
+        "# Implements: LLR-001\nextends Node\n", encoding="utf-8"
+    )
+    assert gen_arch_map.scan_backlinks([src]) == {"LLR-001": ["src/game.gd"]}
+    assert gen_arch_map._norm_module("game/scripts/game.gd") == "game/scripts/game"
+
+
 def test_the_dial_reads_zero_for_everything_it_cannot_trust(tmp_path):
     """0 is report-only AND the fallback: a threshold has no conservative
     default to fail toward, so an unreadable dial must not invent a bar. The
@@ -1371,6 +1381,56 @@ def test_a_non_python_owner_declares_through_its_comment_header(tmp_path):
     late = tmp_path / "late.toml"
     late.write_text("[table]\n# Contracts: IF-953\n", encoding="utf-8")
     assert gen_arch_map.file_contracts(late) == ([], {})
+
+
+# Each language's own comment form carries the same header: read for `#`
+# alone, every one of these declared nothing in the adopting repositories.
+
+
+def _declared(tmp_path, name, text, encoding="utf-8"):
+    path = tmp_path / name
+    path.write_text(text, encoding=encoding)
+    return gen_arch_map.file_contracts(path)
+
+
+def test_a_slash_line_comment_header_declares(tmp_path):
+    rust = "//! Pipeline.\n//!\n//! Contracts: IF-970\n//! Contract IF-970: frames in order.\nuse std::io;\n"
+    assert _declared(tmp_path, "pipeline.rs", rust) == (
+        ["IF-970"],
+        {"IF-970": "frames in order."},
+    )
+    cs = "// Log.\n// Contracts: IF-971\n//\n// Contract IF-971: one line per event,\n//     UTC first.\nusing System;\n"
+    assert _declared(tmp_path, "AppLog.cs", cs) == (
+        ["IF-971"],
+        {"IF-971": "one line per event, UTC first."},
+    )
+
+
+def test_a_slash_block_comment_header_declares(tmp_path):
+    ts = "/**\n * Store.\n *\n * Contracts: IF-972\n *\n * Contract IF-972: reads the catalog.\n */\nexport {};\n"
+    assert _declared(tmp_path, "store.ts", ts) == (
+        ["IF-972"],
+        {"IF-972": "reads the catalog."},
+    )
+
+
+def test_a_powershell_header_declares_through_a_bom_and_block_help(tmp_path):
+    ps = (
+        "#Requires -Version 7.2\n<#\n.SYNOPSIS\n  Try a voice.\n#>\n"
+        "# Contracts: IF-973\n#\n# Contract IF-973: returns 3 when busy.\nparam()\n"
+    )
+    assert _declared(tmp_path, "Try-Voice.ps1", ps, encoding="utf-8-sig") == (
+        ["IF-973"],
+        {"IF-973": "returns 3 when busy."},
+    )
+
+
+def test_a_batch_header_declares_below_echo_off(tmp_path):
+    cmd = "@echo off\nREM Launcher.\nREM Contracts: IF-974\n:: Contract IF-974: runs the build.\nsetlocal\n"
+    assert _declared(tmp_path, "run.cmd", cmd) == (
+        ["IF-974"],
+        {"IF-974": "runs the build."},
+    )
 
 
 def test_the_reference_lists_a_file_owner_beside_the_modules(tmp_path):

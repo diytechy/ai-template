@@ -733,6 +733,25 @@ def test_a_drafted_stakeholders_party_is_not_read(rules):
     assert _named(advisories, "DA-001", "SN-001", "unreachable"), advisories
 
 
+def test_with_no_agreed_stakeholder_the_reach_lines_fold_into_one_count(rules):
+    """Every stakeholder still in draft: no need has a party, so each line
+    would restate that one fact. One line carries the count and what to do,
+    and one agreed stakeholder brings the per-row lines back."""
+    drafted = [_stk(s["STK-ID"], s.get("Party"), "Drafted") for s in REACH_STKS]
+    das = [_da("DA-001", EffectAt="B-01"), _da("DA-002", EffectAt="B-04")]
+    srs = [
+        _citing("SR-001", "SN-001;SN-002"),
+        _citing("SR-002", "SN-003", das="DA-002"),
+    ]
+    gaps = rules.reach_gaps(das, srs, REACH_NEEDS, drafted, REACH_EXTS, REACH_BIFS, [])
+    count = sum(len(lines) for lines in gaps.values())
+    folded = _reach(rules, das, srs, drafted)
+    assert len(folded) == 1, folded
+    assert folded[0].startswith("{} stakeholder-reach".format(count)), folded
+    assert "approve the stakeholders" in folded[0], folded
+    assert len(_reach(rules, das, srs)) > 1
+
+
 def test_an_uncited_assumption_is_not_judged(rules):
     das = [_da("DA-001", EffectAt="B-05"), _da("DA-002", EffectAt="B-05")]
     srs = [_citing("SR-001", "SN-001", das="", **{"Boundary-Refs": "B-01"})]
