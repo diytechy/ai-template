@@ -19,7 +19,7 @@ text), plus the staged `Hat-Refs` arm of the same amendment comparison
 
     the cell split      `SPINE_TRACED_CELLS` / `SPINE_APPROVED_CELLS`,
                         `spine_cell_class`, `traced_cells` — the §A5.1 owner
-                        ruling that decides which cells arm a re-attest window
+                        ruling that decides which cells arm a re-accept window
     the comparison      `_spine_rows_at`, `_spine_revs`, `split_changed_cells`,
                         `staged_spine_amendments` — the one basis an amendment
                         is measured by (`LLR-158`)
@@ -92,13 +92,13 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     (operator ruling 6, 2026-10-07) - a record written with no act through
     `lane_approval_refusal`, and, when any claimed row in `metas` records a
     scope, the flips through its first-approval scope besides, and its
-    re-attestations — read from the act ledger entries the delta added — through
-    `reattest_scope_refusal`, which refuses by name every re-attested row
+    re-acceptances — read from the act ledger entries the delta added — through
+    `reaccept_scope_refusal`, which refuses by name every re-accepted row
     outside the `Adjudicates` scope of the amendment rows the lane claims. A
     held rung is the lane rule's (`held_status`, IF-196), not this call's.
     `settled_amendments(root, base, head, records, routed_cells)` returns
     `(settled ids, refusal)` for the trunk mint: the records whose row an act
-    ledger entry the range added re-attests (IF-220) and whose approved and
+    ledger entry the range added re-accepts (IF-220) and whose approved and
     routed traced cells at `head` equal the row's snapshot copy there. A
     ledger or copy the tree lists that cannot be read or does not parse is
     the refusal, naming the carrier and revision; nothing else suppresses.
@@ -277,7 +277,7 @@ APPROVAL_ACT_CSVS = SPINE_CSVS + (
 # warn (`staged_spine_findings`) and the mint (`intake._routed_amendments`) read
 # one walk, `staged_spine_amendments`, so the author is warned at the commit
 # about exactly the rows the merge will route to an adjudicator. The mint then
-# drops the rows the merged range re-attested and left equal to their snapshot
+# drops the rows the merged range re-accepted and left equal to their snapshot
 # copies (`settled_amendments`, LLR-364); the warn reads the unfiltered walk,
 # because it fires before any act. The hat arm stays structurally silent on
 # these tiers: none carries `Hat-Refs`.
@@ -349,7 +349,7 @@ def _tier_reads(root, prefix, rel_path, id_col, under=""):
 
 
 # The §A5.1 cell split (OPERATOR RULING 2026-07-31, docs/concurrency-v2.md; WI-380).
-# Only what is APPROVED arms the re-attest warn. Traceability is TRACED, not
+# Only what is APPROVED arms the re-accept warn. Traceability is TRACED, not
 # approved: re-pointing an LLR at the module the code moved to amends no
 # attested prose. WI-280 paid for the conflation — 19 `Module` cells followed
 # moved code -> 11 owning SRs flipped off `Approved` -> the gate dropped DevStg-Impl->DevStg-Tests -> a
@@ -370,7 +370,7 @@ def _tier_reads(root, prefix, rel_path, id_col, under=""):
 # prose either side, and whether a re-point moved SCOPE is exactly the judgement
 # the adjudication kind exists to make. So a changed `Boundary-Refs` ROUTES to
 # adjudication (intake.ROUTED_TRACED_CELLS) beside `SN-Refs`; it never arms a
-# re-attest window directly. Classifying it approved instead would arm a window
+# re-accept window directly. Classifying it approved instead would arm a window
 # on every row of the re-tier campaign, which is the noise that gets a window
 # ignored — and the campaign's re-statements touch `Requirement` anyway, which
 # IS approved, so nothing escapes attestation by this choice.
@@ -380,7 +380,7 @@ def _tier_reads(root, prefix, rel_path, id_col, under=""):
 # reasons, in the order that decides it: (1) it is the same SHAPE of pointer as
 # `SN-Refs`/`Boundary-Refs` — which declared row in another registry bears on this
 # one — carrying no prose either side; (2) the residual would classify it APPROVED,
-# so the phase-2 backfill would arm a re-attest window on every row it touched,
+# so the phase-2 backfill would arm a re-accept window on every row it touched,
 # which is precisely the 148-row noise `Boundary-Refs` was classified out of; and
 # (3) the operator's own sequencing note prices this ruling — the cell "is NOT
 # anticipated to be an attested cell, so it can be tacked on AFTER the sitting
@@ -416,7 +416,7 @@ SPINE_TRACED_CELLS = {
     # Whether the re-point moved scope is exactly the judgement the
     # adjudication kind exists to make, so a changed `SR-Refs` ROUTES to
     # adjudication (intake.ROUTED_TRACED_CELLS) like its two siblings; it
-    # never arms a re-attest window directly.
+    # never arms a re-accept window directly.
     "docs/requirements/low-level-requirements.toml": frozenset(
         {
             "Module",
@@ -513,7 +513,7 @@ def spine_cell_class(csv_path, column):
     one: a staged-diff scan names whichever file git reported, while a live read
     names the constant. Under the CSV carrier a `.toml`-keyed lookup misses, and
     a miss here does not red — every column reads `approved`, so a traced-only
-    edit arms a re-attest window that was ruled not to. `stem` drops the suffix,
+    edit arms a re-accept window that was ruled not to. `stem` drops the suffix,
     which is what `spine_carrier` exists to make possible.
 
     Implements: SR-178, LLR-158
@@ -556,7 +556,7 @@ def traced_cells(csv_path):
 #
 # A ROW-TEXT IDENTITY CAME BACK, AND IT ANSWERS THAT DIRECTIVE POINT BY POINT
 # (`approved_text_digest`). A verdict about one approved text authorizes no
-# later text, so a held re-attestation must name the text its verdict judged;
+# later text, so a held re-acceptance must name the text its verdict judged;
 # a copy is written at the act, after the sitting, so it cannot witness what
 # the sitting saw. The identity is not an on-row cell: it lives in the
 # verdict's binding. It needs no separator, because JSON escapes every cell.
@@ -895,16 +895,16 @@ def _registry_identity(path):
 
 def lane_acted_set(root, base, head, delta):
     """THE ONE DERIVATION OF A LANE'S ACTED SET (WI-849, Sol r3): `(acted,
-    refusal)`, `acted` being `{"approve": {row id: registry}, "reattest": {row
-    id: registry}}` - every row the lane approved or re-attested, with the
+    refusal)`, `acted` being `{"approve": {row id: registry}, "reaccept": {row
+    id: registry}}` - every row the lane approved or re-accepted, with the
     registry its id's tier names (a live flip: the registry the two-tree walk
     reports), present at the head or not, so a retired row authorizes its own
     registry's copy. Approvals are the delta's live Status transitions
     (a flip or a row born approved) AND the `approved` rows of the act-ledger
     entries the branch added (`_added_acts`), which name rows the snapshot
     writer carried into approval with no live flip - a row live-approved at
-    the base whose recorded copy still read below it. Re-attestations are the
-    ledger's (`reattested_between`). The scope check, the backing check and
+    the base whose recorded copy still read below it. Re-acceptances are the
+    ledger's (`reaccepted_between`). The scope check, the backing check and
     the copy authorization all take this one set, so an act seen by one is
     seen by all; "no act" is both kinds empty. An unreadable delta or ledger
     is the refusal, never an empty set.
@@ -913,16 +913,16 @@ def lane_acted_set(root, base, head, delta):
     acts, _files, refusal = delta
     reattested, added = frozenset(), []
     if not refusal and _wrote_ledger(delta):  # an unwritten ledger added nothing
-        reattested, refusal = reattested_between(root, base, head)
+        reattested, refusal = reaccepted_between(root, base, head)
         added = _added_acts(root, base, head)
     if refusal:
-        return {"approve": {}, "reattest": {}}, refusal
+        return {"approve": {}, "reaccept": {}}, refusal
     approve = {act["id"]: act["registry"] for act in acts}
     ledger = {str(r) for a in added for r in a.get("approved") or []} - set(approve)
     approve.update({rid: _tier_of(rid)[0] for rid in ledger})
     return {
         "approve": approve,
-        "reattest": {r: _tier_of(r)[0] for r in reattested},
+        "reaccept": {r: _tier_of(r)[0] for r in reattested},
     }, None
 
 
@@ -958,7 +958,7 @@ def adjudication_approval_refusal(scope, acted, delta):
     wording; `scope` None means the lane records none, so only its copies are
     judged), and every registry copy belongs to an acted registry. A lane with
     no act and no copy meets nothing here. A registry copy is WIDENED unless
-    the set holds a row there, approved or re-attested, so the sections of one
+    the set holds a row there, approved or re-accepted, so the sections of one
     combined sitting each keep their own act (WI-841); an approved row's
     registry with no copy is WITHOUT ITS ANCHOR (`_copy_lines`). Both sides
     compare REGISTRY IDENTITY (`_registry_identity`), so every carrier path of
@@ -1010,8 +1010,8 @@ def merge_approval_refusal(root, base, head, metas, *, trunk):
     registries those acts moved. A lane any of whose claimed rows records a
     scope (`kitlib.sitting.bounds_acts`: an adjudication-kind row, or a row
     scoping a first approval or an amendment) is bounded besides, whatever
-    else it claims: its flips by the first-approval scope, its re-attestations
-    by the amendment scope (`reattest_scope_refusal`). The bound is read off
+    else it claims: its flips by the first-approval scope, its re-acceptances
+    by the amendment scope (`reaccept_scope_refusal`). The bound is read off
     `metas`, never off a caller's flag, so a mixed lane keeps its adjudication
     row's scope (Sol r1 MAJOR 1); unreadable claims never reach here, the
     merge slot refuses them. A held rung is not judged here: every lane commit
@@ -1019,7 +1019,7 @@ def merge_approval_refusal(root, base, head, metas, *, trunk):
     the merge slot's lane-commit walk (`held_status.commit_held_approval_lines`),
     so `trunk`, the commit the merge lands on, is read by no rule of this
     function. The scope, backing and copy checks all judge ONE acted set
-    (`lane_acted_set`: the ledger's approvals and re-attestations and the live
+    (`lane_acted_set`: the ledger's approvals and re-acceptances and the live
     transitions), so an act recorded only in the ledger is judged by each.
 
     Implements: SR-178, LLR-278"""
@@ -1031,7 +1031,7 @@ def merge_approval_refusal(root, base, head, metas, *, trunk):
     if any(_kitsitting.bounds_acts(meta) for _name, meta in metas):
         scope = first_approval_scope(metas) or frozenset()
         refusal = _kitsitting.malformed_refusal(metas)
-        refusal = refusal or reattest_scope_refusal(acted, metas)
+        refusal = refusal or reaccept_scope_refusal(acted, metas)
     elif not any(acted.values()):
         return lane_approval_refusal(root, base, head, delta)
     added = _added_acts(root, base, head)
@@ -1045,7 +1045,7 @@ def backed_act_refusal(root, base, head, acted, delta):
     why a lane's approval acts may not merge, or None. Every act must be backed
     by a RECORDED verdict among the bindings the branch carries that judged
     that act's own rows: each row it flips or mints approved ruled APPROVE in a
-    first-approval part, each row it re-attests ruled CLARITY, or MEANING with
+    first-approval part, each row it re-accepts ruled CLARITY, or MEANING with
     the bless mark, in an amendment part (the one reader,
     `kitlib.sitting.judged_rows`). It replaces "is every claimed spec of the adjudication
     kind?" as the test of who may act: the act is an independent
@@ -1064,7 +1064,7 @@ def backed_act_refusal(root, base, head, acted, delta):
 
     Implements: SR-178, LLR-158"""
     acts = [
-        {"approved": sorted(acted["approve"]), "reattested": sorted(acted["reattest"])}
+        {"approved": sorted(acted["approve"]), "reattested": sorted(acted["reaccept"])}
     ]
     reason = _kitsitting.uncovered_refusal(root, base, head, acts)
     return reason and lane_approval_refusal(root, base, head, delta, reason)
@@ -1074,7 +1074,7 @@ def amendment_scope(metas):
     """The rows the claimed AMENDMENT adjudications ruled: the union of their
     `Adjudicates` cells and of a combined sitting's `amendment:` tokens, empty
     when none is claimed. A first-approval row's scope is its flips, not a
-    re-attestation's.
+    re-acceptance's.
 
     Implements: SR-178, LLR-278"""
     return frozenset(
@@ -1114,7 +1114,7 @@ def _ledger_acts(root, rev):
     return [] if failure == "cannot be read" else acts
 
 
-def _reattested_added(root, base, head):
+def _reaccepted_added(root, base, head):
     """`(entries, failure)`: the ledger entries `head` added over `base`, in
     file order, or the ledger's path, revision and what went wrong when either
     side cannot be read or does not parse.
@@ -1130,9 +1130,9 @@ def _reattested_added(root, base, head):
     return added_ledger_entries(sides[1], [sides[0]]), None
 
 
-def _latest_reattest(added, rid):
+def _latest_reaccept(added, rid):
     """The index in the range-added ledger entries `added` of the latest one
-    that re-attests `rid`, or None. Entries are in file order, which IF-220
+    that re-accepts `rid`, or None. Entries are in file order, which IF-220
     makes `seq` order.
 
     Implements: SR-178, LLR-364"""
@@ -1155,8 +1155,8 @@ def _no_later_writer(later, rel_path):
     )
 
 
-def _reattested_ids(before, after):
-    """The row ids re-attested by the ledger entries of `after` whose `seq`
+def _reaccepted_ids(before, after):
+    """The row ids re-accepted by the ledger entries of `after` whose `seq`
     `before` does not hold.
 
     Implements: SR-178, LLR-278"""
@@ -1216,20 +1216,20 @@ def _tier_sides(root, base, head, rel_path, id_col):
 
 def _settled_row(added, rid, rel_path, id_col, sides, routed):
     """Is `rid` settled by the range-added ledger entries `added`, given its
-    tier's `sides` (`_tier_sides`)? It needs an entry re-attesting it and its
+    tier's `sides` (`_tier_sides`)? It needs an entry re-accepting it and its
     whole approved and routed traced cell set equal to its copy at the range's
-    end. That copy is the re-attesting act's own when no later entry wrote the
-    registry. A later writer re-attesting another row cannot have absorbed an
+    end. That copy is the re-accepting act's own when no later entry wrote the
+    registry. A later writer re-accepting another row cannot have absorbed an
     approved-cell change to this one (the snapshot refuses to copy unattested
     approved drift), only a routed traced one, so a later writer still leaves
     it settled when its routed traced cells are the same at the range's two
     ends. That proves equality at the ends, not that no routed cell moved in
-    between; its one limit: a routed traced cell moved before the re-attesting
+    between; its one limit: a routed traced cell moved before the re-accepting
     act and restored after it is re-anchored by the later copy, as any traced
     refresh is, and the row settles.
 
     Implements: SR-178, LLR-364"""
-    mark = _latest_reattest(added, rid)
+    mark = _latest_reaccept(added, rid)
     copy, live, before = sides
     if mark is None or not _row_settled(
         rel_path, id_col, copy.get(rid), live.get(rid), routed
@@ -1243,12 +1243,12 @@ def _settled_row(added, rid, rel_path, id_col, sides, routed):
 def settled_amendments(root, base, head, records, routed_cells):
     """`(settled ids, refusal)`: which amendment `records` the range
     `base..head` already settled. A record is settled when a ledger entry the
-    range added re-attests its row, the row's whole approved and routed traced
+    range added re-accepts its row, the row's whole approved and routed traced
     cell set at `head` equals its snapshot copy at `head`, AND either no entry
     the range added after the latest such one wrote (or, a legacy entry, may
     have written) the row's registry, or the row's routed traced cells are the
     same at the range's two ends, `base` and `head` (`_settled_row`). That
-    second arm's one limit: a routed traced cell moved before the re-attesting
+    second arm's one limit: a routed traced cell moved before the re-accepting
     act and restored after it is re-anchored by a later act's copy of the
     registry, and the row settles. The test reads what each act
     copied, so it holds on a squashed range whose one commit carries every
@@ -1262,14 +1262,14 @@ def settled_amendments(root, base, head, records, routed_cells):
     Implements: SR-178, LLR-364"""
     if not records:
         return frozenset(), None
-    added, refusal = _reattested_added(root, base, head)
+    added, refusal = _reaccepted_added(root, base, head)
     if refusal:
         return frozenset(), refusal
     routed = {spine_carrier.stem(k): v for k, v in routed_cells.items()}
     settled, tiers = set(), {}
     for rid in sorted({rec["id"] for rec in records}):
         rel, col = _tier_of(rid)
-        if rel is None or _latest_reattest(added, rid) is None:
+        if rel is None or _latest_reaccept(added, rid) is None:
             continue
         if rel + col not in tiers:
             tiers[rel + col], refusal = _tier_sides(root, base, head, rel, col)
@@ -1335,9 +1335,9 @@ def text_as_bound(root, head, ruled):
     return kept
 
 
-def reattested_between(root, base, head):
+def reaccepted_between(root, base, head):
     """`(ids, refusal)`: the row ids the act-ledger entries `head` added over
-    `base` re-attested, or a refusal naming the ledger when either side does
+    `base` re-accepted, or a refusal naming the ledger when either side does
     not parse. An entry is added when its `seq` is not in `base`'s ledger.
 
     Implements: SR-178, LLR-278"""
@@ -1345,43 +1345,43 @@ def reattested_between(root, base, head):
     if before is None or after is None:
         return frozenset(), (
             "the act ledger {}/{} does not parse at {}, so which rows this "
-            "merge re-attests is unknowable; nothing was merged".format(
+            "merge re-accepts is unknowable; nothing was merged".format(
                 SNAPSHOT_DIR, SNAPSHOT_ACTS, base if before is None else head
             )
         )
-    return _reattested_ids(before, after), None
+    return _reaccepted_ids(before, after), None
 
 
 def _wrote_ledger(delta):
-    """Did the approval delta write the act ledger? A re-attestation moves no
+    """Did the approval delta write the act ledger? A re-acceptance moves no
     cell, so the ledger entries are the only trace of one."""
     return any(line.endswith("/" + SNAPSHOT_ACTS) for line in delta[1])
 
 
-def reattest_scope_refusal(acted, metas):
-    """Refuse an adjudication's act re-attesting a row outside the `Adjudicates`
+def reaccept_scope_refusal(acted, metas):
+    """Refuse an adjudication's act re-accepting a row outside the `Adjudicates`
     scope of the amendment rows it claims — by name — or None.
 
-    A re-attestation moves no cell, so the flips the first-approval arm
+    A re-acceptance moves no cell, so the flips the first-approval arm
     judges cannot show it; the acted set (`lane_acted_set`) carries the rows
-    the act-ledger entries this branch added re-attested. An amendment
+    the act-ledger entries this branch added re-accepted. An amendment
     row's scope is the rows its verdict ruled, so re-anchoring any other row
     re-blesses text nobody judged. A lane claiming no amendment row has no
-    re-attestation scope at all.
+    re-acceptance scope at all.
 
     Implements: SR-178, LLR-278"""
     scope = amendment_scope(metas)
-    outside = sorted(set(acted["reattest"]) - scope)
+    outside = sorted(set(acted["reaccept"]) - scope)
     if not outside:
         return None
     return (
-        "the adjudication's act re-attests rows OUTSIDE the `Adjudicates` scope "
+        "the adjudication's act re-accepts rows OUTSIDE the `Adjudicates` scope "
         "of its amendment row(s) ({}); nothing was merged:\n{}\nRemedy: a "
-        "re-attestation re-anchors text as judged, so it names only rows the "
-        "amendment ruled. Re-take the snapshot with `--reattests` naming those "
+        "re-acceptance re-anchors text as judged, so it names only rows the "
+        "amendment ruled. Re-take the snapshot with `--reaccepts` naming those "
         "rows alone; a drifted row outside them is another act's to judge.".format(
             ";".join(sorted(scope)) or "none claimed",
-            "\n".join("  {} re-attested OUTSIDE the scope".format(r) for r in outside),
+            "\n".join("  {} re-accepted OUTSIDE the scope".format(r) for r in outside),
         )
     )
 
@@ -1402,7 +1402,7 @@ def _tier_of(rid):
 
 def _added_acts(root, base, head):
     """The act-ledger entries `head` adds over `base`, `[]` when either side
-    does not parse (`reattest_scope_refusal` names that).
+    does not parse (`reaccept_scope_refusal` names that).
 
     Implements: SR-178, LLR-278"""
     before, after = _ledger_acts(root, base), _ledger_acts(root, head)
@@ -1437,9 +1437,9 @@ def lane_approval_refusal(root, base, head, delta=None, reason=None):
     2026-09-01 ruling). A lane AUTHORS `Drafted` SN/SR/LLR/TC rows and AMENDS
     cell text on any such row, including approved ones; its acts - a `Status`
     flipped into `Approved`/`Founded`, a row minted already claiming one, a
-    re-attestation - merge only when `backed_act_refusal` finds each backed by
+    re-acceptance - merge only when `backed_act_refusal` finds each backed by
     a recorded verdict that judged its own rows. A copy under `SNAPSHOT_DIR`
-    with no flip and no re-attestation behind it is an act no verdict can
+    with no flip and no re-acceptance behind it is an act no verdict can
     back, and this is its refusal. The off-spine three
     (`OUTSIDE_THE_APPROVAL_ACT`) stay outside this rung - their approval cells
     are OI-30 D3's.
@@ -1639,11 +1639,11 @@ def staged_spine_findings(root):
         "{}: approved cell(s) {} amended while Status stays put — a "
         "post-attestation amendment owes a fresh operator read (process.md §7). "
         "Since D-9 step 7 there is no marker to set: either commit the amendment "
-        "on its own and re-attest it in the NEXT commit with `intake.py "
-        "snapshot --reattests {}` (text first, the act second: a commit that "
+        "on its own and re-accept it in the NEXT commit with `intake.py "
+        "snapshot --reaccepts {}` (text first, the act second: a commit that "
         "writes the record changes no other spine cell), or the change rides "
         "as SNAPSHOT DRIFT until the next sitting — "
-        "visible on the re-attest brief and open-items.html, but not "
+        "visible on the re-accept brief and open-items.html, but not "
         "blessed".format(a["id"], ", ".join(sorted(a["approved"])), a["id"])
         for a in staged_spine_amendments(root)
         if a["approved"]
@@ -1771,16 +1771,16 @@ def _mirror_repair(live_rel):
     A bare `intake.py snapshot` is no repair here: it copies only a registry
     the act authorises, so with no `Status` move it copies nothing, and it
     refuses any approved row whose text differs from the recorded copy unless
-    `--reattests` names it. So the finding names the two repairs that work:
+    `--reaccepts` names it. So the finding names the two repairs that work:
     put the blessed copy back, or take a fresh act whose arguments carry the
-    authority for this registry and name the rows it re-attests. The
+    authority for this registry and name the rows it re-accepts. The
     `--approves` token is the registry's STEM: `baseline_snapshot.
     resolve_registry` takes a canonical rel, filename or stem, and a CSV
     carrier's live path is none of those, so the path itself would refuse."""
     return (
         "Repair: restore the copy that was blessed, or take a fresh reviewed "
         'approval act that re-copies it — `intake.py snapshot --approves "{}=<REF>" '
-        "--reattests <ROW-ID>[,<ROW-ID>...]`, naming each approved row whose "
+        "--reaccepts <ROW-ID>[,<ROW-ID>...]`, naming each approved row whose "
         "text differs from the copy; a bare `intake.py snapshot` copies nothing "
         "here or refuses the drift".format(PurePosixPath(live_rel).stem)
     )

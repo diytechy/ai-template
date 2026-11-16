@@ -6,7 +6,7 @@ through their gates without an operator g2-close sitting. **Reversible / tempora
 the operator may restore a lower level at any time. Keep in version control.
 
 _Prior level:_ **`single-approve`** — APPROVED 2026-07-13 (OI-2; operator review of
-the WI-107 enablement commit, [log.md](log.md) "GATE: DevStg-Impl re-attestation" +
+the WI-107 enablement commit, [log.md](log.md) "GATE: DevStg-Impl re-acceptance" +
 Decisions). That level and its approval stand as history and may be restored
 by raising `operator_accepts_through` in [process.toml](process.toml) + this
 register.

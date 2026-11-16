@@ -260,7 +260,7 @@ Questions:
   affected trace/evidence/work references, and the code that becomes removable.
   Amend the LLR and its mechanism-specific verification together; an Approved
   LLR does not require keeping an obsolete shim. Preserve unchanged parent
-  approval, re-attest changed child content through the applicable authority,
+  approval, re-accept changed child content through the applicable authority,
   and let the derived stage expose incomplete evidence. A changed stakeholder
   outcome, justified SR constraint or active WI scope returns to its own intake
   and approval path; it cannot be hidden as a design-only replacement.

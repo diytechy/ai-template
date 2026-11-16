@@ -40,7 +40,7 @@ def test_a_approved_cell_moving_under_an_approved_row_is_DRIFT(tmp_path):
 def test_a_TRACED_cell_moving_is_NOT_drift(tmp_path):
     """Implements: TC-153"""
     # The WI-388 ruling, unchanged by the new baseline: re-pointing what a
-    # requirement answers to routes to ADJUDICATION and never arms a re-attest
+    # requirement answers to routes to ADJUDICATION and never arms a re-accept
     # window. If this ever flips, the re-tier campaign arms a window on every
     # row it touches, which is the noise that gets a window ignored.
     root = _seeded(tmp_path)

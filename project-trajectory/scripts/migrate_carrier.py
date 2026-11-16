@@ -571,7 +571,7 @@ def value_to_cell(col, value):
     a prettier one. Measured over this repo's own spine at the cutover: 271 of
     271 multi-ref cells wrote `A;B`, none wrote `A; B`. Joining on `"; "`
     therefore rewrote every one of them, which put ~40 spurious "cell changed"
-    entries into the re-attestation brief the operator is about to work — the
+    entries into the re-acceptance brief the operator is about to work — the
     carrier migration manufacturing amendments in the one view that must show
     only real ones. The separator is not the meaning (`_cells_differ` compares
     token lists either way), which is exactly why the conversion has no licence

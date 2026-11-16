@@ -4,10 +4,10 @@
 Replaces the hand-maintained `docs/open-items.md`. Two inputs, one output:
 
   docs/requirements/open-items.toml   pending decision briefs, one row per OI
-  the spine registries + git         rows owing an approval or a re-attest
+  the spine registries + git         rows owing an approval or a re-accept
   -> docs/open-items.html            the ONLY surface the operator reads
 
-Why HTML and not markdown: the depth an operator needs to rule a re-attest is a
+Why HTML and not markdown: the depth an operator needs to rule a re-accept is a
 WORD-LEVEL DIFF — of a 1,500-character cell, which forty words moved — and
 markdown cannot mark that. The first sitting under the retired `Modified` regime
 read a POINTER ("run `trace.py --approve modified`") and could not act from it,
@@ -23,9 +23,9 @@ WHAT IT RENDERS, in the order an operator needs it:
      is not a card; it is named in an integrity notice above the cards,
      linked to its registry record, and while one exists the section never
      claims the operator queue is empty.
-  2. APPROVAL & RE-ATTESTATION — every SR whose `Status` is `Drafted` (owes a
+  2. APPROVAL & RE-ACCEPTANCE — every SR whose `Status` is `Drafted` (owes a
      first approval) or whose chain has DRIFTED from the approved snapshot
-     (owes a re-attest — D-9 step 7 retired the `Modified` marker and left the
+     (owes a re-accept — D-9 step 7 retired the `Modified` marker and left the
      comparison as the whole detector), with its whole chain; then every
      stakeholder need and stakeholder `baseline_snapshot.needs_owing` reports,
      a drifted one with its moved cells before and after, a first-approval one
@@ -40,7 +40,7 @@ WHAT IT RENDERS, in the order an operator needs it:
      evidence still verifies what the row now SAYS, and the second question needs
      the cells the first one omits (operator, 2026-07-27). The section closes
      with the AUDIT LIST: every act-ledger entry naming a verdict, i.e. each
-     re-attestation an adjudicator's CLARITY ruling carried over — on a held
+     re-acceptance an adjudicator's CLARITY ruling carried over — on a held
      rung, the operator's signature carried onto amended text (OI-100, WI-791).
   3. PENDING OPERATOR ACTIONS — the pointer projection `pending.py` already
      derives (blocked rows, the spine pointers, the tracked pause), reused
@@ -53,7 +53,7 @@ WHAT IT RENDERS, in the order an operator needs it:
      beside the work item citing it (WI-818).
 
 ANTI-DUPLICATION, deliberately: the git archaeology and the cell comparison live
-in `trace.reattest_model`, the needs owing an act in
+in `trace.reaccept_model`, the needs owing an act in
 `baseline_snapshot.needs_owing` (the detector the brief reads too), and the
 pending projection in `pending.pending_block`. This module imports them and
 RENDERS. It owns no
@@ -78,9 +78,9 @@ Contract IF-074: the generated operator decision surface at `docs/open-items.htm
     the queued or claimed rows it holds), with an integrity notice naming each
     pending row no queued or claimed row cites, linked to its registry record,
     in place of any empty-queue claim; an approval
-    and re-attestation section listing every SR that owes a first approval or
+    and re-acceptance section listing every SR that owes a first approval or
     whose chain has drifted from the approved snapshot, and every stakeholder
-    need and stakeholder owing an approval or a re-attest, with the whole chain's
+    need and stakeholder owing an approval or a re-accept, with the whole chain's
     (or the need's moved cells') per-cell before/after, unchanged runs collapsible, additions and deletions
     marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION so an empty
     section reads as *check the baseline* and never as *nothing changed*,
@@ -94,7 +94,7 @@ Contract IF-074: the generated operator decision surface at `docs/open-items.htm
     work items citing it. It renders and owns no second
     opinion: the queue comes from `pending.open_item_queue`, the decisions from
     `pending.decisions_to_review`, the archaeology and cell comparison from
-    `trace.reattest_model`, the owing needs from
+    `trace.reaccept_model`, the owing needs from
     `baseline_snapshot.needs_owing` and the pointers from `pending.pending_block`, so
     where this view and the
     `trace.py --approve` brief disagree the brief is authoritative and this is
@@ -614,7 +614,7 @@ def _changed_cell_groups(row):
     to make that judgement per cell, from memory, mid-sitting — and the snapshot
     comparison hands the split over for free.
 
-    A `Drafted` row was never approved, so no cell of it "owes a re-attestation"
+    A `Drafted` row was never approved, so no cell of it "owes a re-acceptance"
     and none "routes to adjudication" — the whole row owes a FIRST approval,
     which the row tag already states. The §A5.1 split is a property of an
     approved row; keyed on the cell's COLUMN class alone it mislabelled a
@@ -626,7 +626,7 @@ def _changed_cell_groups(row):
     approved = row.get("approved") or frozenset()
     return [
         (
-            "approved — re-attestation owed",
+            "approved — re-acceptance owed",
             [c for c in row["cells"] if c[0] in approved],
         ),
         (
@@ -747,7 +747,7 @@ def _chain_row(row):
 # `trace._entry_kind`'s values -> the pill each card wears. Held as a table
 # rather than a chain of ternaries so a new kind is a row here and a KeyError
 # anywhere it was forgotten, which is the loud direction: a card that silently
-# fell back to "re-attest owed" would misdescribe what the operator owes.
+# fell back to "re-accept owed" would misdescribe what the operator owes.
 #
 # BACK TO TWO AT D-9 STEP 5: `plan` ("evidence owed") went out with `Planned`,
 # which OI-30 D1 folded into `Approved`. The KeyError-if-forgotten property is
@@ -755,7 +755,7 @@ def _chain_row(row):
 # retired kind would fail loudly here rather than render a wrong pill.
 _KIND_LABELS = {
     "approve": "approval owed",
-    "reattest": "re-attest owed",
+    "reaccept": "re-accept owed",
 }
 
 
@@ -766,7 +766,7 @@ def _nothing_owed():
         '<p class="empty">No <code>Drafted</code> <strong>SR</strong>, '
         "<strong>LLR</strong>, or <strong>TC</strong> anywhere in the "
         "spine, and no drifted chain — no SR owes an approval or a "
-        "re-attest. Say only what was checked: an amended row's own "
+        "re-accept. Say only what was checked: an amended row's own "
         "<code>Status</code> answers for its own cells (operator ruling "
         "2026-08-17m), so a chain row's TEXT moving under an "
         "<code>Approved</code> SR reaches this view through the "
@@ -822,14 +822,14 @@ def _need_cards(owing):
     return (
         "<h3>Stakeholder needs and stakeholders owing an act</h3>"
         '<p class="sub">Re-anchor a drifted row with <code>intake.py snapshot '
-        "--reattests &lt;ROW-ID&gt;</code> once its moved cells are read; a "
+        "--reaccepts &lt;ROW-ID&gt;</code> once its moved cells are read; a "
         "<code>Drafted</code> or Status-less row owes its first approval.</p>"
         + "".join(cards)
     )
 
 
 def _attestation_cards(model, srs_by_id=None):
-    """One card per SR owing an approval or a re-attest, its chain beneath.
+    """One card per SR owing an approval or a re-accept, its chain beneath.
 
     `srs_by_id` supplies the SR row's own cells for two things now: the
     UNCONDITIONAL anchor block (`_anchor_block` — the SR's Requirement and
@@ -850,7 +850,7 @@ def _attestation_cards(model, srs_by_id=None):
             '<span class="pill{cls}">{label}</span></h3>'.format(
                 i=esc(entry["id"]),
                 t=esc(entry["title"] or "(untitled)"),
-                cls="" if entry["kind"] == "reattest" else " approve",
+                cls="" if entry["kind"] == "reaccept" else " approve",
                 label=label,
             )
         )
@@ -934,15 +934,15 @@ def _offspine_census_block(rows):
         '<p class="sub offspine-note">The off-spine registries above carry no '
         "per-row rendering here; <code>intake.py snapshot</code> copies one only "
         "when a row in it moves into approval or arrives approved, "
-        "<code>--approves</code> names it or <code>--reattests</code> names one "
+        "<code>--approves</code> names it or <code>--reaccepts</code> names one "
         "of its rows; a re-SEED still blesses all. What it would absorb:</p>"
         '<ul class="pointers">{}</ul>\n'.format(items)
     )
 
 
-def verdict_reattest_block(acts):
+def verdict_reaccept_block(acts):
     """The audit list closing section 2: every act-ledger entry that names a
-    verdict, newest first — the re-attestations an adjudicator's CLARITY
+    verdict, newest first — the re-acceptances an adjudicator's CLARITY
     verdict carried over (OI-100, ruled 2026-10-03; WI-791). On a held rung
     that act carries the operator's signature onto amended text, so it stays
     listed here after the fact, for the operator to audit. An act naming no
@@ -951,7 +951,7 @@ def verdict_reattest_block(acts):
     Implements: SR-049, LLR-118"""
     named = [a for a in acts if a.get("verdict")]
     items = "".join(
-        "<li>act {seq} ({date}) — re-attested {rows} on the verdict "
+        "<li>act {seq} ({date}) — re-accepted {rows} on the verdict "
         "<code>{verdict}</code></li>".format(
             seq=esc(str(a["seq"])),
             date=esc(a["date"]),
@@ -961,7 +961,7 @@ def verdict_reattest_block(acts):
         for a in sorted(named, key=lambda a: a["seq"], reverse=True)
     )
     return (
-        '<div class="verdict-audit"><p class="sub"><strong>Re-attested on an '
+        '<div class="verdict-audit"><p class="sub"><strong>Re-accepted on an '
         "adjudicator's verdict</strong> — each act a session took on its own "
         "CLARITY ruling, from the act ledger <code>{}/{}</code>. On a held rung "
         "it carried your signature onto amended text: open the verdict to audit "
@@ -1024,7 +1024,7 @@ def render(root):
     # `Drafted`, or a chain that has DRIFTED from the approved snapshot. Drift
     # is the arm no cell can carry, and the reason this page survived both the
     # rename and step 7's retirement with nothing to re-key.
-    model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
+    model = tr.reaccept_model(root, reg.srs, reg.llrs, reg.tcs)
     # The needs file's two tiers, from the one detector the brief reads.
     owing = baseline_snapshot.needs_owing(root)
     offspine_rows = tr.offspine_census_rows(root)
@@ -1078,10 +1078,10 @@ def render(root):
         "<h1>Open items — operator decision surface</h1>\n"
         '<p class="sub">{pending} pending decision(s) · {attest} SR chain(s) and '
         "{needs} stakeholder need(s) or stakeholder(s) owing an approval or a "
-        "re-attest, across {rows} chain row change(s); "
+        "re-accept, across {rows} chain row change(s); "
         "{drifted} row(s) drifted from the approved snapshot. Briefs are rows "
         "in <code>{registry}</code>; the attestation depth is "
-        "computed by <code>trace.reattest_model</code> and "
+        "computed by <code>trace.reaccept_model</code> and "
         "<code>baseline_snapshot.needs_owing</code>, the same code behind "
         "<code>trace.py --approve</code>. If the two ever disagree, the brief is "
         "authoritative and this view is the bug.</p>\n"
@@ -1095,7 +1095,7 @@ def render(root):
         "row's remaining cells, and the SR text a chain-only amendment hangs "
         "from</span></div>\n"
         '<section class="band"><p class="eyebrow">2 · Approval &amp; '
-        "re-attestation</p>{attestations}{audit}</section>\n"
+        "re-acceptance</p>{attestations}{audit}</section>\n"
         '<section class="band"><p class="eyebrow">3 · Pending operator actions '
         "(derived)</p>{pointers}</section>\n"
         '<section class="band" id="decisions-to-review"><p class="eyebrow">'
@@ -1104,7 +1104,7 @@ def render(root):
         "registries. Rule a decision by appending to <code>docs/log.md</code>'s "
         "Decisions log and setting the row's <code>Status</code>; bless an amendment "
         "by re-reading the drifted cells and running <code>intake.py snapshot "
-        "--reattests &lt;ROW-ID&gt;</code>, naming each row read, in a reviewed "
+        "--reaccepts &lt;ROW-ID&gt;</code>, naming each row read, in a reviewed "
         "commit — the copy IS the blessing now that no <code>Status</code> cell "
         "records one, so without it the record of what was blessed does not move. "
         "The gate re-derives on its own.</footer>\n"
@@ -1121,7 +1121,7 @@ def render(root):
             + _need_cards(owing)
         )
         or _nothing_owed(),
-        audit=verdict_reattest_block(_ledger_entries(root)),
+        audit=verdict_reaccept_block(_ledger_entries(root)),
         pointers=_pointer_list(pure),
         offspine=_offspine_census_block(offspine_rows),
         # The LIVE carrier, never a hardcoded suffix: this view is the surface

@@ -1241,7 +1241,7 @@ def _approval_act_refusal(root, branch):
 
     A LANE AUTHORS `Drafted` SPINE ROWS AND AMENDS CELL TEXT. The act is the
     `Status` flip into `Approved`/`Founded` - or a row that arrives already
-    claiming one, or a re-attestation - together with the
+    claiming one, or a re-acceptance - together with the
     `docs/archive/last_approved/` copy that anchors it. The rung admits a lane's
     acts when EVERY act is backed by a recorded verdict judging that act's own
     rows (`acceptance_record.backed_act_refusal`, over WI-841's one

@@ -319,7 +319,7 @@ def test_no_refusal_text_offers_amend_plus_flip(tmp_path):
     _git(root, "add", "-A")
     (warn,) = ar.staged_spine_findings(root)
     assert "SR-001" in warn and "in this commit" not in warn
-    assert "intake.py snapshot --reattests SR-001" in warn
+    assert "intake.py snapshot --reaccepts SR-001" in warn
 
 
 def test_a_commit_whose_parent_cannot_be_read_is_refused_by_name(tmp_path):
@@ -442,8 +442,8 @@ def _requirement(root, lines):
     )
 
 
-def _text_then_reattest(root, lines, what):
-    """The two-commit form: the amended cell, then its re-attesting copy."""
+def _text_then_reaccept(root, lines, what):
+    """The two-commit form: the amended cell, then its re-accepting copy."""
     _requirement(root, lines)
     _commit(root, what + " text")
     _act(root)
@@ -460,9 +460,9 @@ def _combined_cell_lanes(tmp_path):
     _act(root)
     _commit(root, "the first signing")
     _git(root, "checkout", "-q", "-b", "wi-004")
-    _text_then_reattest(root, ["lane"] + lines[1:], "lane")
+    _text_then_reaccept(root, ["lane"] + lines[1:], "lane")
     _git(root, "checkout", "-q", "main")
-    _text_then_reattest(root, lines[:-1] + ["trunk"], "trunk")
+    _text_then_reaccept(root, lines[:-1] + ["trunk"], "trunk")
     return root
 
 

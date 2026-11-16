@@ -2,7 +2,7 @@
 commit judged outside a lane, and a squash judged by what it folds in.
 
 A held-rung spine row's approval lands from a lane only as a CLARITY
-re-attestation bound to the text its verdict judged (the binding's identity).
+re-acceptance bound to the text its verdict judged (the binding's identity).
 Each lane commit is judged against each of its parents by the merge slot's
 lane-commit walk, whoever built the lane: a loop's, a coordinator's, or a
 re-claimed one. The pre-commit `held-status` step judges a squash landing by
@@ -268,10 +268,10 @@ def _bound_verdict(tag=None, bind=True):
     return write
 
 
-def _reattest(named=True):
+def _reaccept(named=True):
     def write(root):
         snap.copy_live(
-            root, reattests=frozenset({"SN-001"}), verdict=VERDICT if named else None
+            root, reaccepts=frozenset({"SN-001"}), verdict=VERDICT if named else None
         )
 
     return write
@@ -326,7 +326,7 @@ def _clarity_lane(home, monkeypatch, *steps, needs=APPROVED):
 
 
 @pytest.mark.parametrize("named", [True, False], ids=["named", "unnamed"])
-def test_a_held_CLARITY_reattestation_bound_to_the_exact_text_lands(
+def test_a_held_CLARITY_reacceptance_bound_to_the_exact_text_lands(
     tmp_path, monkeypatch, named
 ):
     """Implements: TC-241"""
@@ -337,7 +337,7 @@ def test_a_held_CLARITY_reattestation_bound_to_the_exact_text_lands(
         monkeypatch,
         ("WI-401: amend SN-001", _amend()),
         ("WI-401: the verdict", _bound_verdict()),
-        ("WI-401: re-attest SN-001", _reattest(named)),
+        ("WI-401: re-accept SN-001", _reaccept(named)),
     )
     _lands(root)
 
@@ -352,7 +352,7 @@ def test_held_text_changed_after_its_CLARITY_verdict_is_refused_at_the_slot(
         ("WI-401: amend SN-001", _amend()),
         ("WI-401: the verdict", _bound_verdict()),
         ("WI-401: amend SN-001 again", _amend("a team can use the whole kit")),
-        ("WI-401: re-attest SN-001", _reattest()),
+        ("WI-401: re-accept SN-001", _reaccept()),
     )
     _refused_by_the_rule(root, "SN-001", NEEDS_RUNG)
 
@@ -365,12 +365,12 @@ def test_a_binding_with_no_identity_cell_is_refused(tmp_path, monkeypatch):
         monkeypatch,
         ("WI-401: amend SN-001", _amend()),
         ("WI-401: the verdict", _bound_verdict(bind=False)),
-        ("WI-401: re-attest SN-001", _reattest()),
+        ("WI-401: re-accept SN-001", _reaccept()),
     )
     _refused_by_the_rule(root, "SN-001", NEEDS_RUNG)
 
 
-def test_a_held_MEANING_BLESS_reattestation_is_refused(tmp_path, monkeypatch):
+def test_a_held_MEANING_BLESS_reacceptance_is_refused(tmp_path, monkeypatch):
     """Implements: TC-241, TC-278"""
     # A blessing is a released rung's act; on a held rung only CLARITY is.
     root = _clarity_lane(
@@ -378,7 +378,7 @@ def test_a_held_MEANING_BLESS_reattestation_is_refused(tmp_path, monkeypatch):
         monkeypatch,
         ("WI-401: amend SN-001", _amend()),
         ("WI-401: the verdict", _bound_verdict(tag="MEANING+BLESS")),
-        ("WI-401: re-attest SN-001", _reattest()),
+        ("WI-401: re-accept SN-001", _reaccept()),
     )
     _refused_by_the_rule(root, "SN-001", NEEDS_RUNG)
 
@@ -444,7 +444,7 @@ def test_an_unrecorded_or_unruled_CLARITY_binding_is_no_exception(
         monkeypatch,
         ("WI-401: amend SN-001", _amend()),
         ("WI-401: the verdict", verdict),
-        ("WI-401: re-attest SN-001", _reattest()),
+        ("WI-401: re-accept SN-001", _reaccept()),
     )
     refused(root, "wi-401", "smoke")
     lines = _rider_lines(root, _rev(root, "wi-401~1"))
@@ -468,7 +468,7 @@ def test_a_held_retirement_is_refused(tmp_path, monkeypatch):
         monkeypatch,
         ("WI-401: retire SN-001", retire),
         ("WI-401: the verdict", verdict),
-        ("WI-401: re-attest SN-001", _reattest()),
+        ("WI-401: re-accept SN-001", _reaccept()),
     )
     _refused_by_the_rule(root, "SN-001", NEEDS_RUNG)
 
@@ -484,7 +484,7 @@ def test_a_held_CLARITY_act_carrying_an_edited_Drafted_sibling_lands(
         monkeypatch,
         ("WI-401: amend SN-001 and SN-002", _amend(SN_002={"need": "a team adopts"})),
         ("WI-401: the verdict", _bound_verdict()),
-        ("WI-401: re-attest SN-001", _reattest(named=False)),
+        ("WI-401: re-accept SN-001", _reaccept(named=False)),
     )
     _lands(root)
 
@@ -501,7 +501,7 @@ def test_a_traced_only_copy_move_lands(tmp_path, monkeypatch):
             _amend(SN_002={"status": "Approved", "source": "a survey"}),
         ),
         ("WI-401: the verdict", _bound_verdict()),
-        ("WI-401: re-attest SN-001", _reattest(named=False)),
+        ("WI-401: re-accept SN-001", _reaccept(named=False)),
         needs=needs,
     )
     _lands(root)
@@ -812,7 +812,7 @@ def test_a_first_draft_under_a_bound_CLARITY_verdict_is_no_exception(
 ):
     """A Drafted need flipped to Approved with its copy, under an accepted
     CLARITY verdict bound to its exact text, is refused: a first draft carries
-    no signature to re-attest. Witness: an exception that admitted any claim
+    no signature to re-accept. Witness: an exception that admitted any claim
     whose row an accepted CLARITY binding names at its digest, without
     requiring the row approving on both sides, would admit it.
 
@@ -884,7 +884,7 @@ def _undecodable_verdict(root):
 def test_an_absent_or_unreadable_CLARITY_verdict_is_no_exception(
     tmp_path, monkeypatch, verdict
 ):
-    """A held re-attestation with no verdict at all, or with a verdict that
+    """A held re-acceptance with no verdict at all, or with a verdict that
     cannot be read beside a binding recording the row's digest, is refused by
     the lane rule. Witnesses: an exception reading a binding's identity cell
     without its verdict being accepted would admit the undecodable verdict;
@@ -898,7 +898,7 @@ def test_an_absent_or_unreadable_CLARITY_verdict_is_no_exception(
         monkeypatch,
         ("WI-401: amend SN-001", _amend()),
         ("WI-401: the verdict", verdict),
-        ("WI-401: re-attest SN-001", _reattest(named=False)),
+        ("WI-401: re-accept SN-001", _reaccept(named=False)),
     )
     refused(root, "wi-401", "smoke")
     _assert_named_by_rule(_act_commit_lines(root), "SN-001", NEEDS_RUNG)
@@ -1011,7 +1011,7 @@ def test_an_unparseable_act_ledger_at_the_head_is_refused_by_name(
 
 
 def test_an_act_already_on_trunk_is_not_re_read(tmp_path, monkeypatch):
-    """Trunk's own unbacked act (an operator's re-attestation, recorded in the
+    """Trunk's own unbacked act (an operator's re-acceptance, recorded in the
     act ledger) is in the merge base; a lane that adds one act of its own,
     backed by a recorded verdict, is admitted at the approval rung. Witness:
     a ledger reader taking the head's every entry, not only those the base
@@ -1022,8 +1022,8 @@ def test_an_act_already_on_trunk_is_not_re_read(tmp_path, monkeypatch):
     both = _with(APPROVED, "SN-002", status="Approved")
     root = _trunk(tmp_path, monkeypatch, needs=both)
     _write_needs(root, _with(both, "SN-001", need="the operator's own wording"))
-    snap.copy_live(root, reattests=frozenset({"SN-001"}))
-    _commit(root, "owner: re-attest SN-001", when=T_CODE)
+    snap.copy_live(root, reaccepts=frozenset({"SN-001"}))
+    _commit(root, "owner: re-accept SN-001", when=T_CODE)
     base = _rev(root, "HEAD")
     _git(root, "checkout", "-q", "-b", "lane")
     lane_rows = _with(
@@ -1035,7 +1035,7 @@ def test_an_act_already_on_trunk_is_not_re_read(tmp_path, monkeypatch):
     _commit(root, "lane: amend SN-002", when=T_CODE)
     _verdict(root, "amendment", ["SN-002"])
     _commit(root, "lane: the verdict", when=T_CODE)
-    snap.copy_live(root, reattests=frozenset({"SN-002"}))
-    _commit(root, "lane: re-attest SN-002", when=T_LATER)
+    snap.copy_live(root, reaccepts=frozenset({"SN-002"}))
+    _commit(root, "lane: re-accept SN-002", when=T_LATER)
     head = _rev(root, "HEAD")
     assert ar.merge_approval_refusal(root, base, head, [], trunk=head) is None

@@ -385,7 +385,7 @@ def test_meta_repo_phases_match_an_independent_derivation():
     # A deliberate SNAPSHOT of the meta-repo's own derived phase, so a silent
     # phase drift reds here rather than passing unnoticed. Bump it when a
     # approval legitimately advances the phase (4 -> 5 at the 2026-08-13
-    # re-attest sitting, which approved the last draft SNs and SR-137..149;
+    # re-accept sitting, which approved the last draft SNs and SR-137..149;
     # 5 -> 6 at the 2026-09-25 phase-6 approval act, cbb6649f, which approved
     # the assumption tier's chains SN-041..044, SR-187..219, LLR-211..258 and
     # TC-212..251).

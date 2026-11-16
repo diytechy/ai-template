@@ -73,7 +73,7 @@ each says something about what "routed" costs:
   * `amendment` was the OTHER one, and it is the capability the `last_approved`
     snapshot unlocked (D-9 step 4b, operator
     directive 2026-08-15). Two things blocked it and the snapshot answers both.
-    Its `{rows}` slot named `trace.reattest_model`, which selected rows whose
+    Its `{rows}` slot named `trace.reaccept_model`, which selected rows whose
     Status was `Modified`, while `check_trajectory.staged_spine_amendments` —
     the function that MINTS these rows — fires only when the row and its owning
     SR both stayed put: the two populations were disjoint BY CONSTRUCTION, so
@@ -744,7 +744,7 @@ def first_approval_values(root, row):
     second one.
 
     WHICH ROWS IS THE ROW'S OWN `Adjudicates` SCOPE, INTERSECTED with
-    `trace.reattest_model`'s `approve` half — the same model behind `trace.py
+    `trace.reaccept_model`'s `approve` half — the same model behind `trace.py
     --approve` and `open-items.html`, so the judge, the brief and the operator
     surface cannot show three different pictures of one spine. Its `Drafted`
     selector is chain-wide (the OI-61-sitting widening), so a `Drafted` LLR
@@ -778,7 +778,7 @@ def first_approval_values(root, row):
     WHAT IS RENDERED is the WHOLE CHAIN of each selected SR, through
     `trace.spine_chain` — NOT the model's own `rows`. That list carries only the
     rows that changed or are `Drafted`, which is the right answer to the
-    re-attest brief's question ("what must I re-bless?") and the wrong one to
+    re-accept brief's question ("what must I re-bless?") and the wrong one to
     this brief's: the settled parent and the passing sibling test ARE the
     evidence that a drafted row belongs where it sits. Rendering the model's
     subset here would have shipped a chain brief with the chain missing —
@@ -795,7 +795,7 @@ def first_approval_values(root, row):
     AND THE DIAL IS RE-APPLIED TO IT, which is the half the first cut missed
     (WI-572 REVIEW-A). `intake._released_drafted_rows` hands over only the rows
     on a rung the dial RELEASES, and this assembler re-derived the population
-    from `reattest_model` — which is dial-blind by design — without putting that
+    from `reaccept_model` — which is dial-blind by design — without putting that
     filter back. At any dial holding a spine rung (every dial above this repo's,
     including the shipped `DevStg-Release` default) the brief therefore rendered
     the operator's HELD rows as this session's to approve and derived a
@@ -836,7 +836,7 @@ def first_approval_values(root, row):
     reg = tr.load_registries(root / "docs")
     model = [
         entry
-        for entry in tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
+        for entry in tr.reaccept_model(root, reg.srs, reg.llrs, reg.tcs)
         if entry.get("kind") == "approve"
     ]
     # No early "the model is empty" return: an empty model is one way the

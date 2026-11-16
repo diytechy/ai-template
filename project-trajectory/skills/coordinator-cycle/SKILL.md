@@ -172,7 +172,7 @@ its author.
 
 Run intent, iterate and checkpoint. Draft the connected spine set once,
 iterate code, then reconcile and judge the set against settled code.
-Why: alternating code fixes and row re-attestations buys a sitting per fix.
+Why: alternating code fixes and row re-acceptances buys a sitting per fix.
 
 Omit spine authoring and sittings when no new rows, row-text amendments or
 Done-when change are owed; traced-only updates owe no sitting.

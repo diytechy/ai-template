@@ -301,7 +301,7 @@ change surfaces as a phase bump, never a hand-set marker. **The phase boundary i
 a confirmation event** (operator ruling 2026-08-01): a phase increments when
 re-opened scope is *confirmed* — an adjudication verdict that scope moved, or a
 new draft-SN batch approved into scope — **never on the raw derived-stage drop**;
-a spurious re-attest window must not burn a phase number (the counterexample:
+a spurious re-accept window must not burn a phase number (the counterexample:
 19 traced cells once flipped 11 SRs and dropped the gate, and no scope had
 moved). `derive_stage.py --next-phase` prints the derived max + 1 — the one call
 every agent (and the intake mint helper) uses for a newly confirmed phase's
@@ -472,15 +472,15 @@ driving it:
 | Amends spine text | Yes — any cell, on any row, `Approved` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
 | Flips `Status` | **Never on a spine row** (SN/SR/LLR/TC). | Yes, on the rungs the dial releases, backed by its recorded verdict over exactly those rows, in the authoring lane or on trunk. |
 | Writes `docs/archive/last_approved/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
-| Judges a post-approval amendment | No; it records what it changed and why. | Yes — meaning or clarity; its act is a later adjudicator turn taken from the committed verdict, which re-attests a *meaning* row on a released rung only when the verdict blesses it; on a held rung the row goes to the operator. |
+| Judges a post-approval amendment | No; it records what it changed and why. | Yes — meaning or clarity; its act is a later adjudicator turn taken from the committed verdict, which re-accepts a *meaning* row on a released rung only when the verdict blesses it; on a held rung the row goes to the operator. |
 | Where | Its own lane, beside other lanes. | In the authoring lane, where the act merges with that lane; or as a trunk-side adjudication lane, which runs alone. A verdict may be sat at any time; its act keeps landing order (WI-912). |
 
 **How it is held.** Three mechanisms, none of them a new detector:
 
 1. The merge slot REFUSES a branch whose spine delta flips a `Status` into
    `Approved`/`Founded`, mints a row already claiming one, records one
-   approved in its act ledger, or re-attests one, unless every such act is backed by a recorded verdict among the branch's
-   bindings that judged that act's own rows (a meaning row's re-attestation
+   approved in its act ledger, or re-accepts one, unless every such act is backed by a recorded verdict among the branch's
+   bindings that judged that act's own rows (a meaning row's re-acceptance
    only by a verdict that blesses it); it names each unbacked act and
    why. The copies must match the acts: each flip carries its registry's copy,
    and a copy of a registry no act moved is refused (WIDENED). It reads
@@ -2167,8 +2167,8 @@ would false-positive on `DevStg-Impl`, `SR-###`, and the like, so a narrow lint 
 until a real recurring pattern earns it.
 
 **Phase cadence.** Any batch of spine-touching work headed for the same
-re-attestation should land as **one phase** — batch the changes so a **single
-operator sitting** covers each re-attestation, rather than paying for several
+re-acceptance should land as **one phase** — batch the changes so a **single
+operator sitting** covers each re-acceptance, rather than paying for several
 (what is owed is the DIFFERENCE between the amended rows and their copies in
 `docs/archive/last_approved/` — process.md §7 — so the pending batch is tree
 state the sitting reads via `trace.py --approve modified`, never commit-message

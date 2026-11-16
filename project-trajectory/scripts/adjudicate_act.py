@@ -24,7 +24,7 @@ turn takes the same act. The other consumers of the same carrier are
 unchanged: the merge slot (`kitlib.sitting.uncovered_refusal` and
 `unrecorded_refusal`) still admits an act only when a recorded verdict over
 the act's own rows backs it (operator ruling 6, 2026-10-07), and its lane rule
-(`held_status.commit_held_approval_lines`) admits a held-rung re-attestation
+(`held_status.commit_held_approval_lines`) admits a held-rung re-acceptance
 only when that verdict rules the row CLARITY and its binding records the row's
 text. `intake.py snapshot --verdict` still records the verdict an act names,
 for audit; no rule requires it.
@@ -33,8 +33,8 @@ WHAT THE VERDICT AUTHORIZES. Exactly the rows each recorded part rules to
 authorize them, read through `kitlib.sitting.judged_rows`, the one reader the
 merge's backing check also reads, so the two cannot disagree. A first-approval
 part's APPROVE flips a row, on a released rung only (a dial the operator
-tightened after the sitting binds the act it has not yet authorized). An amendment part's CLARITY re-attests a row, naming the
-verdict on a held rung; its MEANING re-attests only on a released rung and
+tightened after the sitting binds the act it has not yet authorized). An amendment part's CLARITY re-accepts a row, naming the
+verdict on a held rung; its MEANING re-accepts only on a released rung and
 only with the bless mark. A RETURN row, an unmarked or held MEANING row, a
 Done-when part and every brief class but amendment, first-approval and
 combined owe no act. The dial is read at the act, from the committed tree, and
@@ -45,23 +45,23 @@ OWED, TAKEN OR INCONSISTENT: judged at a revision, never the working tree. A
 first approval is owed while the row's committed status is below Approved,
 whatever its recorded copy holds (a whole-registry copy carries Drafted rows),
 and taken when the row is Approved and its copy equals its committed text. A
-re-attest of an Approved row is taken when the copy equals the row, and owed
-otherwise. A re-attest of a row absent from the committed registries is a
+re-accept of an Approved row is taken when the copy equals the row, and owed
+otherwise. A re-accept of a row absent from the committed registries is a
 RETIREMENT (the operator's ruling of 2026-10-17, WI-912): owed while its recorded
-copy still holds the row, named in `--reattests` with the other re-attests
+copy still holds the row, named in `--reaccepts` with the other re-accepts
 (the snapshot writer clears a recorded row the live registry no longer holds
 only when it is named there), and taken once the copy no longer holds it. On a
 held rung a retirement owes no act, read through the same held-rung test as a
 held MEANING or APPROVE row: removing a held row is the operator's. Every other
 state (an Approved row without an equal copy at a first approval, a first
-approval of an absent row, a re-attest of a row below Approved, a row no
+approval of an absent row, a re-accept of a row below Approved, a row no
 compared tier holds) is inconsistent and refuses the whole derivation, naming
 the row: it is never counted as taken. "Equal" compares the whole parsed row, Status included,
 which is what makes a flip committed without its copy read as inconsistent.
 
 A HELD CLARITY ACT IS BOUND TO THE TEXT ITS VERDICT JUDGED. The binding beside
 the verdict records the digest of each judged row's approved text
-(`kitlib.sitting.recorded_identities`); a re-attest owed on a held rung is
+(`kitlib.sitting.recorded_identities`); a re-accept owed on a held rung is
 owed only while the committed row still has that digest
 (`acceptance_record.approved_text_digest`). A binding with no identity, a
 malformed one, one that does not name the row, or a different digest refuses
@@ -80,10 +80,10 @@ in docs/requirements/interfaces.toml).
 Contract IF-296: the act assembler's call surface, which the coordinator's
 entry point consumes.
     `owed_acts(root, verdict, rev="HEAD")` returns `(acts, None)`, where
-    `acts` is `{"amendment": {"reattests": [ids], "verdict": bool},
+    `acts` is `{"amendment": {"reaccepts": [ids], "verdict": bool},
     "first-approval": {"approves": {registry: [ids]}}}` in that order, each
     part present only when something is owed there, the amendment part also
-    carrying `"retires": [ids]`, the re-attested ids absent from the committed
+    carrying `"retires": [ids]`, the re-accepted ids absent from the committed
     registries, only when one is owed, or `(None, reason)` for
     a verdict that is not committed at `rev`, has no binding there, records
     a pending or failed outcome, is not valid against its binding, is of a
@@ -127,7 +127,7 @@ NONE_OWED = "none owed"
 # A judged row's state when its ruling authorizes no act on it: a retirement
 # on a held rung.
 NO_ACT = "no act"
-# The act a re-attest of a row absent from the committed registries is.
+# The act a re-accept of a row absent from the committed registries is.
 RETIRE = "retire"
 
 
@@ -202,10 +202,10 @@ def _held(dial, rid):
 
 def _arm(ruling, held):
     """The act one authorized row's ruling owes on its rung: "approve",
-    "reattest" or None. The rung's arm is `intake.adjudication_action`'s
+    "reaccept" or None. The rung's arm is `intake.adjudication_action`'s
     answer, the held-rung policy's one home, never restated here: "recommend"
-    owes no act, "reattest" is the re-attest a held CLARITY row owes, and
-    "flip" is the act itself, a flip for an APPROVE row and a re-attest for an
+    owes no act, "reaccept" is the re-accept a held CLARITY row owes, and
+    "flip" is the act itself, a flip for an APPROVE row and a re-accept for an
     amendment row. A RETURN row, or any ruling that is not an approval or an
     amendment ruling, owes none.
 
@@ -214,12 +214,12 @@ def _arm(ruling, held):
         return None
     if intake.adjudication_action(held, ruling) == "recommend":
         return None
-    return "approve" if ruling == "APPROVE" else "reattest"
+    return "approve" if ruling == "APPROVE" else "reaccept"
 
 
 def _authorized(parts, dial):
     """`[(act, row id, held)]` every recorded part authorizes, `act` being
-    "approve" or "reattest", amendment first, in verdict order within a kind.
+    "approve" or "reaccept", amendment first, in verdict order within a kind.
     Which rows a part authorizes is `kitlib.sitting.judged_rows`'s answer (a
     MEANING row only with its bless mark), the reader the merge's backing
     check also reads; each such row's act is `_arm`'s.
@@ -266,12 +266,12 @@ _claims_approval = kspine.claims_approval
 
 def _retirement(act, rid, held, recorded):
     """The state of a judged row absent from the committed registries: a
-    re-attest is a retirement, owed while the copy still holds the row
+    re-accept is a retirement, owed while the copy still holds the row
     (`recorded`) and taken once it does not, and owes no act on a held rung;
     a first approval of an absent row is inconsistent.
 
     Implements: SR-231, SR-232, LLR-338"""
-    if act != "reattest":
+    if act != "reaccept":
         return None, _odd(rid, "absent", False)
     if held:
         return NO_ACT, None
@@ -281,7 +281,7 @@ def _retirement(act, rid, held, recorded):
 def _state(rows, act, rid, held, bound):
     """`("owed" | RETIRE | "taken" | NO_ACT, None)` for one authorized row,
     or `(None, why)` when its committed state is inconsistent with the act, or
-    when an owed held re-attest's text is not the text `bound` (the verdict's
+    when an owed held re-accept's text is not the text `bound` (the verdict's
     `(identities, why)`) records.
 
     Implements: SR-231, SR-232, SR-178, LLR-338, LLR-359"""
@@ -297,14 +297,14 @@ def _state(rows, act, rid, held, bound):
         return "owed", None
     if approved and equal:
         return "taken", None
-    if approved and act == "reattest":
+    if approved and act == "reaccept":
         why = _unbound_text(row, tier, rid, bound) if held else None
         return (None, why) if why else ("owed", None)
     return None, _odd(rid, row.get("Status") or "(empty)", equal)
 
 
 def _unbound_text(row, tier, rid, bound):
-    """Why the held re-attest of row `rid` is not bound to its committed text,
+    """Why the held re-accept of row `rid` is not bound to its committed text,
     or None: the verdict's binding (`bound`, `(identities, why)`) records no
     identity, does not name the row, or names another digest than the
     committed row's approved text has.
@@ -350,7 +350,7 @@ def _derive(root, verdict, rev):
     rows, authorized, owed = _Rows(root, rev), [], []
     judged = _authorized(found[1], kauthority.dial_at(root, rev))
     bound = (None, None)
-    if any(act == "reattest" and held for act, _rid, held in judged):
+    if any(act == "reaccept" and held for act, _rid, held in judged):
         bound = ksitting.recorded_identities(root, rev, rel)
     for act, rid, held in judged:
         state, why = _state(rows, act, rid, held, bound)
@@ -402,7 +402,7 @@ def left_owed(root, verdict, rev="HEAD"):
     parts = _grouped(owed)
     named = []
     if "amendment" in parts:
-        named.append("re-attest " + ", ".join(parts["amendment"]["reattests"]))
+        named.append("re-accept " + ", ".join(parts["amendment"]["reaccepts"]))
     for rel, ids in sorted(parts.get("first-approval", {}).get("approves", {}).items()):
         named.append("flip {} ({})".format(", ".join(ids), rel))
     return "; ".join(named)
@@ -432,7 +432,7 @@ def _grouped(owed):
     amendment = [entry for entry in owed if entry[0] != "approve"]
     if amendment:
         acts["amendment"] = {
-            "reattests": [rid for _act, rid, _held in amendment],
+            "reaccepts": [rid for _act, rid, _held in amendment],
             "verdict": any(held for _act, _rid, held in amendment),
         }
         retires = [rid for act, rid, _held in amendment if act == RETIRE]
@@ -449,14 +449,14 @@ def _grouped(owed):
 
 def _amendment_text(part, rel, wi):
     """The amendment act's rendered rows and command."""
-    command = "python scripts/intake.py snapshot --reattests {}".format(
-        ",".join(part["reattests"])
+    command = "python scripts/intake.py snapshot --reaccepts {}".format(
+        ",".join(part["reaccepts"])
     )
     if part["verdict"]:
         command += " --verdict {}".format(rel)
     retires = part.get("retires") or []
-    approved = [rid for rid in part["reattests"] if rid not in retires]
-    rows = "Re-attest these Approved rows: {}.\n".format(", ".join(approved))
+    approved = [rid for rid in part["reaccepts"] if rid not in retires]
+    rows = "Re-accept these Approved rows: {}.\n".format(", ".join(approved))
     if retires:
         rows = (rows if approved else "") + (
             "Retire these rows, which the lane deleted from their registries, "

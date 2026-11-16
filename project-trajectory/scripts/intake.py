@@ -22,7 +22,7 @@ Five triggers, plus the drafts-not-mints arm:
       change or a ROUTED traced change (`ROUTED_TRACED_CELLS`: `SN-Refs`,
       `Verifies`, and `SR-Refs` — the last ruled traced at WI-388); the other
       traced cells are silent by ruling. A record the merged range already
-      settled (an act it added re-attests the row, and the row equals its
+      settled (an act it added re-accepts the row, and the row equals its
       approved-snapshot copy) is dropped through
       `acceptance_record.settled_amendments`. One `adjudication` row per merge,
       listing each changed row, cell and before/after — the long form in the
@@ -714,7 +714,7 @@ def _routed_amendments(root, before, after):
     """`(records, refusal)`: the amendment records that are adjudication's to
     judge: an approved change, or a routed traced change
     (`ROUTED_TRACED_CELLS`). Everything else in the traced half is silent by
-    ruling. A record the merged range already settled (re-attested by an act
+    ruling. A record the merged range already settled (re-accepted by an act
     it added and equal to its snapshot copy at `after`) is dropped, and a
     ledger or copy that cannot be read or does not parse refuses the mint:
     `acceptance_record.settled_amendments` decides both.
@@ -812,10 +812,10 @@ def _amendment_context(records):
             )
     lines += [
         "",
-        "Outcomes (§A5.2): re-attest the rows ruled CLARITY (and, where the",
+        "Outcomes (§A5.2): re-accept the rows ruled CLARITY (and, where the",
         "dial releases the rung, the MEANING rows you would bless) by naming",
-        "them in the act's `--reattests`; on an OPERATOR-HELD tier a CLARITY row",
-        "is re-attested, bound to the text the verdict judged, and a MEANING row is",
+        "them in the act's `--reaccepts`; on an OPERATOR-HELD tier a CLARITY row",
+        "is re-accepted, bound to the text the verdict judged, and a MEANING row is",
         "recommended to the operator (ruled decision 2 as OI-100 amends it). Or",
         "draft the real scope-change / re-scope / cancellation rows in a",
         "`## Dispositions` section of THIS spec — intake mints them at this",
@@ -905,7 +905,7 @@ def _held_act_draft(registry, rows):
 
     Implements: SR-174, LLR-153"""
     names, by = ", ".join(sorted(rows)), " and ".join(sorted(set(rows.values())))
-    command = 'intake.py snapshot --approves "{}" --reattests {}'.format(
+    command = 'intake.py snapshot --approves "{}" --reaccepts {}'.format(
         baseline_snapshot.format_approves({registry: "<record>"}),
         ",".join(sorted(rows)),
     )
@@ -1004,7 +1004,7 @@ def _released_drafted_rows(root, before, after):
 def _first_approval_context(records):
     """The derived listing — each row waiting on a first approval, with what the
     lane did to it. The CHAIN is not rendered here: `adjudicate_brief`'s
-    assembler builds it live at composition time from `trace.reattest_model`, so
+    assembler builds it live at composition time from `trace.reaccept_model`, so
     the judge rules on the state of the world it is actually in rather than on a
     snapshot of it taken at mint (`red_tc_values`' rule, applied to this arm)."""
     lines = [
@@ -3146,13 +3146,13 @@ def adjudication_action(operator_held, verdict=""):
 
       * **loop-held tier -> `flip`**: a recorded LLM verdict already carries
         approval authority, so the session performs the act — an approval, or
-        a re-attestation of a row it ruled CLARITY or ruled MEANING and would
+        a re-acceptance of a row it ruled CLARITY or ruled MEANING and would
         bless.
-      * **operator-held tier, CLARITY verdict -> `reattest`**: the one case. A
+      * **operator-held tier, CLARITY verdict -> `reaccept`**: the one case. A
         CLARITY verdict approves no new text; it records that the operator's
         existing signature still describes the row. So the independent
-        session re-attests the row as a judgement act, naming its verdict in
-        the act for audit (`intake.py snapshot --reattests <ROW-ID> --verdict
+        session re-accepts the row as a judgement act, naming its verdict in
+        the act for audit (`intake.py snapshot --reaccepts <ROW-ID> --verdict
         <file>`): the act ledger records it and the operator's surface lists it.
         The merge slot's lane rule (`held_status`) admits the act only when an
         recorded verdict rules the row CLARITY and its binding records the
@@ -3164,7 +3164,7 @@ def adjudication_action(operator_held, verdict=""):
     Anything unreadable upstream resolves to operator-held — `agent_common.
     operator_holds` fails that way deliberately — so the failure direction is
     the held arm (`recommend`, or for a CLARITY verdict the recorded and
-    audited `reattest`), never a machine approval. The kit DEFAULT holds every tier
+    audited `reaccept`), never a machine approval. The kit DEFAULT holds every tier
     even though this repo holds none, which is why both arms are built and
     tested.
 
@@ -3177,7 +3177,7 @@ def adjudication_action(operator_held, verdict=""):
     record's one mechanical door."""
     if not operator_held:
         return "flip"
-    return "reattest" if verdict == "CLARITY" else "recommend"
+    return "reaccept" if verdict == "CLARITY" else "recommend"
 
 
 def flip_verified(root, ids):
@@ -3421,7 +3421,7 @@ def _flip_remedy(rid, rel, status):
     The refusal meets three kinds of row, and one remedy for all of them sent
     two of the three the wrong way. A `Drafted` row owes a FIRST approval: a
     reviewed `Status` move plus the copy, which that move itself authorises;
-    naming it in `--reattests` would record a re-attestation of text nobody
+    naming it in `--reaccepts` would record a re-acceptance of text nobody
     ever approved. A `Founded` row claims approval and owes, if its text was
     amended, a fresh read plus a copy that names it, because a bare
     `intake.py snapshot` refuses a drifted approved row it neither flips nor
@@ -3439,7 +3439,7 @@ def _flip_remedy(rid, rel, status):
     if status == "Founded":
         return (
             "If {0}'s approved text was amended, what it owes is a fresh operator "
-            "read plus `intake.py snapshot --reattests {0}` in the same "
+            "read plus `intake.py snapshot --reaccepts {0}` in the same "
             "commit.".format(rid)
         )
     return "Its status is outside the closed vocabulary: correct the cell first."
@@ -3654,8 +3654,8 @@ def _cmd_snapshot(args):
     rewriting it was not, so a two-commit path — amend an Approved row, then
     refresh — re-blessed the amendment with every check green. A row whose
     approved text drifted from its recorded copy rides a refresh only on its own
-    `Status` flip or when `--reattests <ROW-ID>[,<ROW-ID>...]` names it — the
-    re-attestation a sitting rules without moving the Status; the ids land in
+    `Status` flip or when `--reaccepts <ROW-ID>[,<ROW-ID>...]` names it — the
+    re-acceptance a sitting rules without moving the Status; the ids land in
     the snapshot's prose stamp. `--approves <registry>=<ref>` NAMES THE ACT: the
     ref is an operator's citation, recorded into the stamp and validated by nothing,
     because nothing can, and it copies the ONE registry it names (WI-571; a bare
@@ -3663,11 +3663,11 @@ def _cmd_snapshot(args):
     of that registry's rows, since a registry-wide pass let one row's approval
     bless another row's unreviewed edit. The values are `;`-joined
     `REGISTRY=REF` pairs and comma-joined row ids
-    (`baseline_snapshot.parse_approves`, `parse_reattests`). Traced-cell
+    (`baseline_snapshot.parse_approves`, `parse_reaccepts`). Traced-cell
     refreshes (the common case) still need no flag at all. `--verdict <path>`
-    names the verdict file that ruled the re-attested rows, and the act ledger
+    names the verdict file that ruled the re-accepted rows, and the act ledger
     records it for audit; it stays optional and no rule requires it. On a held
-    rung a session re-attests only a row a recorded verdict rules CLARITY,
+    rung a session re-accepts only a row a recorded verdict rules CLARITY,
     bound to the row's text, and the merge slot's lane rule (`held_status`)
     refuses the act otherwise.
 
@@ -3686,13 +3686,13 @@ def _cmd_snapshot(args):
     starts writing one."""
     root = Path(args.root).resolve()
     approves = baseline_snapshot.parse_approves(getattr(args, "approves", None))
-    reattests = baseline_snapshot.parse_reattests(getattr(args, "reattests", None))
+    reaccepts = baseline_snapshot.parse_reaccepts(getattr(args, "reaccepts", None))
     verdict = baseline_snapshot.verdict_rel(root, getattr(args, "verdict", None))
     written = baseline_snapshot.copy_live(
-        root, seed=args.seed, approves=approves, reattests=reattests, verdict=verdict
+        root, seed=args.seed, approves=approves, reaccepts=reaccepts, verdict=verdict
     )
     summary = baseline_snapshot.act_summary(
-        written, args.seed, approves, reattests, verdict
+        written, args.seed, approves, reaccepts, verdict
     )
     return _cli_result(None, summary)
 
@@ -3769,7 +3769,7 @@ def main(argv=None):
     # The slot the retired `attest` subcommand reserved, filled. The destination
     # changed — a whole-file copy, not a ledger line or a digest cell — so the
     # name changed with it, and there is deliberately no `--rows`: a whole-file
-    # mirror has no row scope to take. `--reattests` names rows, but as what the
+    # mirror has no row scope to take. `--reaccepts` names rows, but as what the
     # act BLESSES, never as a narrower copy — the file still moves whole.
     snap = sub.add_parser(
         "snapshot",
@@ -3792,13 +3792,13 @@ def main(argv=None):
         help="NAME THE APPROVAL ACT this refresh rides, PER REGISTRY: `;`-joined "
         "`<registry>=<ref>` pairs. A ref copies the ONE registry it names and "
         "lands in the snapshot's prose stamp; it clears none of that registry's "
-        "drifted rows (name those with --reattests)",
+        "drifted rows (name those with --reaccepts)",
     )
     snap.add_argument(
-        "--reattests",
+        "--reaccepts",
         default=None,
         metavar="ROW-ID[,ROW-ID...]",
-        help="RE-ATTEST these rows: comma-joined ids whose drifted approved text "
+        help="RE-ACCEPT these rows: comma-joined ids whose drifted approved text "
         "this act blesses without moving their Status. The refresh is refused "
         "while any row it would copy has drifted text neither flipped nor named "
         "here; the ids land in the snapshot's prose stamp",
@@ -3807,8 +3807,8 @@ def main(argv=None):
         "--verdict",
         default=None,
         metavar="PATH",
-        help="the verdict file that ruled the --reattests rows, recorded in the "
-        "act ledger. Required at merge for a session's re-attestation on a held "
+        help="the verdict file that ruled the --reaccepts rows, recorded in the "
+        "act ledger. Required at merge for a session's re-acceptance on a held "
         "rung, where the verdict must rule each row CLARITY (OI-100)",
     )
     snap.set_defaults(func=_cmd_snapshot)

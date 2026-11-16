@@ -973,7 +973,7 @@ def process_panel(root, wis, stats, stage_record=None):
     bars = [
         ("per-WI slice", "one scoped work item; ends at the commit checks"),
         ("commit checks", "the per-commit suite + doc checks — every commit"),
-        ("phase close", "a phase's slices batch to one re-attestation sitting"),
+        ("phase close", "a phase's slices batch to one re-acceptance sitting"),
         ("rung bar", "the full check.py --stage run at phase close / advance"),
         ("CI", "runs the same bar on every push"),
     ]

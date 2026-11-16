@@ -7,7 +7,7 @@ WHAT THIS IS (SR-199). An observation test case is one recorded as not
 automated: a judgment the harness cannot rerun, like a person reading a render
 or a measurement over an adopter's first week. Its result is not written on
 the test case, which would mix what the test IS with what it last FOUND and
-force the row's re-attestation after every sample. This command writes it as a
+force the row's re-acceptance after every sample. This command writes it as a
 record of its own (`kitlib/observation.py`): the case, the outcome, the moment
 it was observed (now, in UTC), who or what observed it, when it expires and a
 digest of the inputs the case declares it reads, as they stand now.

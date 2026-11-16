@@ -15,7 +15,7 @@
 
      Slots (single-brace, strict fill — a missing one refuses):
        {chain}     the rows awaiting a first approval, each rendered with its
-                   WHOLE chain, from trace.reattest_model's `approve` entries —
+                   WHOLE chain, from trace.reaccept_model's `approve` entries —
                    the same model behind `trace.py --approve` and the operator's
                    open-items view, so judge, brief and operator surface can never
                    show three different pictures. Re-computed at composition

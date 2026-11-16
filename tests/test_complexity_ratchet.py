@@ -354,7 +354,7 @@ BASELINE = {
     # 28 -> 27: the L-3 approve bucketing removed a nested scan (re-stamped
     # downward per the ratchet's improvement rule).
     ("trace.py", "approval_lines"): 27,
-    # WI-322 split the git archaeology out of the renderer: reattest_lines went
+    # WI-322 split the git archaeology out of the renderer: reaccept_lines went
     # prose-only (25 -> 14) and the extracted model carries the branching (21) —
     # one computation, two renderers. WI-347 then took it UNDER the limit
     # entirely (`_full_row_bullets` absorbed the two whole-row render arms), so
@@ -378,8 +378,8 @@ BASELINE = {
     # brief, and a second copy of that walk is how the judge and the operator's
     # surface come to disagree about one spine. Recorded DOWN in the same
     # commit rather than left as headroom, per this file's rule.
-    ("trace.py", "reattest_model"): 13,
-    # `reattest_lines` DELETED, 2026-09-27, WI-577: its per-chain loop (the
+    ("trace.py", "reaccept_model"): 13,
+    # `reaccept_lines` DELETED, 2026-09-27, WI-577: its per-chain loop (the
     # row-state arms WI-513 added, and the census splice WI-518 added beside
     # them) moved into `_entry_lines`, because the OI-82 ruling renders a
     # chain in two places — the operator's section and the collapsed block of

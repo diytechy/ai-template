@@ -83,9 +83,9 @@ def test_the_dependency_surface_is_the_argument_for_the_split():
     narrow is found, not carved. If a future edit widens it, the split's premise
     has changed and that should be argued, not absorbed.
     """
-    # `tomllib` joined with the merge's re-attestation scope check (LLR-273): the
+    # `tomllib` joined with the merge's re-acceptance scope check (LLR-273): the
     # act ledger (IF-220, whose declared consumer this module is) is the one
-    # record of which rows an act re-attested, and reading it at two revisions
+    # record of which rows an act re-accepted, and reading it at two revisions
     # is a TOML parse. Its owner's parser cannot be imported here — the owner
     # imports the checker that imports this module — so the widening is one
     # stdlib parser, not a sibling. `hashlib` and `json` joined with the
@@ -391,7 +391,7 @@ def test_the_snapshot_files_that_mirror_no_registry_widen_no_approval():
         ],
         None,
     )
-    acted = {"approve": {"SR-001": sr}, "reattest": {}}
+    acted = {"approve": {"SR-001": sr}, "reaccept": {}}
     assert (
         acceptance_record.adjudication_approval_refusal({"SR-001"}, acted, delta)
         is None

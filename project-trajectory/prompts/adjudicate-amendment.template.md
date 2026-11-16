@@ -8,7 +8,7 @@
 
      Slots (single-brace, strict fill — a missing one refuses):
        {rows}      the per-cell before/after listing, rendered from
-                   trace.reattest_model — APPROVED cells only, since a traced
+                   trace.reaccept_model — APPROVED cells only, since a traced
                    cell is ruled non-attesting (section A5.1). Registry-derived ONLY.
                    SCOPE-BOUNDED: only the rows in this row's own `Adjudicates`
                    cell (the rows the amendment mint routed), each once, so a
@@ -29,7 +29,7 @@
                    is actually in — DERIVED from the declared gate authority
                    (`operator_accepts_through` in docs/process.toml) for the tiers
                    whose rows are shown, so the session is told whether the
-                   re-attestation is its own act or the operator's rather than
+                   re-acceptance is its own act or the operator's rather than
                    working it out from a dial it would have to go read.
                    It says which mark each verdict owes; it orders no act.
        {questions} the judging questions for the tiers of the rows listed,
@@ -58,7 +58,7 @@
                    brief's own reader loaded it. The route that binds this
                    call reads these lines off the composed prompt and records
                    them in the verdict's binding, so a held CLARITY
-                   re-attestation is bound to the text this sitting judged:
+                   re-acceptance is bound to the text this sitting judged:
                    the act turn and the merge refuse it once the row's text
                    no longer has that digest. Registry-derived ONLY.
        {verdict}   the repo path this session writes its verdict to.
@@ -70,17 +70,17 @@
      writes NOTHING, permanently). A MEANING verdict on a loop-held rung then
      ended at a brief nobody was owed, which contradicts the loop-held doctrine
      itself. Who acts is settled once, in PROCESS.md §4 and process-options
-     "Who performs the approval act": the approval act — and re-attestation IS
+     "Who performs the approval act": the approval act — and re-acceptance IS
      one — is the adjudicator's, never the authoring session's.
 
      THIS SITTING ENDS AT ITS COMMITTED VERDICT (WI-912; revisions 32 and 36
-     of the review-churn plan). The re-attestation each verdict authorizes is
+     of the review-churn plan). The re-acceptance each verdict authorizes is
      a later adjudicator turn taken from that verdict and composed from the
      act brief (prompts/adjudicate-act.template.md). So the verdict records
      what the act needs: CLARITY re-anchors the row; a MEANING row's new text
      the judge would bless is marked `[MEANING+BLESS]` (the bless mark, Q2 of
      coordinator-2026-10-14 D-003, read by kitlib.verdict.blessed_rows) and is
-     re-attested only on a released rung; a plain `[MEANING]` row is not
+     re-accepted only on a released rung; a plain `[MEANING]` row is not
      re-anchored.
 
      WHAT IS DELIBERATELY ABSENT: the amending session's own notes, its commit
@@ -113,7 +113,7 @@ Method:
 - Read the BEFORE text and write down, for yourself, the concrete obligation it imposes — what a builder must do, what a test must check.
 - Read the AFTER text and do the same, independently.
 - Compare the two obligations, not the two paragraphs. Diff noise is not the subject; the obligation is.
-- When the two obligations differ AT ALL, the answer is `meaning`. Fail toward `meaning`: a wrongly-kept attestation is a silent false claim that an operator blessed this text, and that is the failure this rung exists to prevent. A wrongly-owed re-attest costs one sitting.
+- When the two obligations differ AT ALL, the answer is `meaning`. Fail toward `meaning`: a wrongly-kept attestation is a silent false claim that an operator blessed this text, and that is the failure this rung exists to prevent. A wrongly-owed re-accept costs one sitting.
 - If the diff is mixed — one cell clarified, another moved the obligation — the answer for the ROW is `meaning`, and you say which cell carried it.
 
 Whether a `MEANING` row's new text is one you would bless — or recommend to the operator — is judged by the questions for its tier, the same ones a first approval puts. A `CLARITY` verdict owes them nothing new: the obligation is the one already blessed.
@@ -138,8 +138,8 @@ Then exactly one machine line:
 
 Your verdict is this turn's whole output: stop once it is committed. Every row you judged still reads as approved text that drifted from its anchor until an act re-anchors it, and that act is a later act turn taken from your committed verdict, so each row line says what the act needs:
 
-- A `CLARITY` row keeps its attestation: the operator's signature still describes it. The later act turn re-anchors it so the record stops drifting. Where the dial still HOLDS the rung for an operator, your verdict is bound to the text shown above (its JUDGED TEXT identities), so an edit to that text after your verdict refuses the act; that act names your verdict, so the act ledger records it and the operator's surface lists it for audit; the merge refuses a held-rung re-attestation your verdict does not rule CLARITY.
-- A `MEANING` row's attestation is now a false claim, and it owes a fresh one. Where the rung is RELEASED, mark each row whose new text you would bless `[MEANING+BLESS]`: the later act turn re-attests exactly those. If a row's new text is NOT one you would bless, mark it `[MEANING]` and draft the corrective work in a `## Dispositions` section of this row's own spec, which intake mints at this row's merge. Where the dial HOLDS the rung, stop at the verdict and recommend the row to the operator: the row surfaces on the operator's approval brief and the signature is theirs.
+- A `CLARITY` row keeps its attestation: the operator's signature still describes it. The later act turn re-anchors it so the record stops drifting. Where the dial still HOLDS the rung for an operator, your verdict is bound to the text shown above (its JUDGED TEXT identities), so an edit to that text after your verdict refuses the act; that act names your verdict, so the act ledger records it and the operator's surface lists it for audit; the merge refuses a held-rung re-acceptance your verdict does not rule CLARITY.
+- A `MEANING` row's attestation is now a false claim, and it owes a fresh one. Where the rung is RELEASED, mark each row whose new text you would bless `[MEANING+BLESS]`: the later act turn re-accepts exactly those. If a row's new text is NOT one you would bless, mark it `[MEANING]` and draft the corrective work in a `## Dispositions` section of this row's own spec, which intake mints at this row's merge. Where the dial HOLDS the rung, stop at the verdict and recommend the row to the operator: the row surfaces on the operator's approval brief and the signature is theirs.
 - Never approve a first draft on a held rung. A held rung's `Drafted` row is the operator's alone.
 
 A MEANING row on a held rung refuses the copy and holds the CLARITY rows that share its registry until the operator signs; say so in your verdict, so the coordinator puts them in the same sitting as the MEANING row.

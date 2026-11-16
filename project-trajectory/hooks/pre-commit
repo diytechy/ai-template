@@ -85,7 +85,7 @@ kit_policy pre-commit commit || exit 1
 #                        the step is vacuous for a non-adopter; checks needing
 #                        the product toolchain or gate context (tests, perf,
 #                        flows) stay in check.py / CI.
-#      - approval-fresh    the re-attestation brief fresh against the registry it
+#      - approval-fresh    the re-acceptance brief fresh against the registry it
 #                        summarizes (WI-325). It self-stamps its baseline, so the
 #                        compare uses the one the FILE declares, never a re-derived
 #                        one. Doubly self-arming: silent with no brief, and silent
@@ -136,7 +136,7 @@ kit_policy pre-commit commit || exit 1
 #                        non-adopter pays nothing.
 #      - approval-immutable  refuses a STAGED change (other than a brand-new add)
 #                        to an existing docs/ratify/<date>-*.md (WI-503): a
-#                        dated re-attestation brief is the record of what an
+#                        dated re-acceptance brief is the record of what an
 #                        operator was shown at a sitting, and rewriting it in
 #                        place is the defect the CURRENT.md/dated split fixes.
 #                        Mint a new one with `trace.py --mint-approval-brief
@@ -162,7 +162,7 @@ kit_policy pre-commit commit || exit 1
 #                        (SR-208), under the dial committed at HEAD. A squash
 #                        landing is judged by its lane commits, marked or not:
 #                        a held-rung row's approval lands from a lane only as a
-#                        CLARITY re-attestation bound to its judged text. A
+#                        CLARITY re-acceptance bound to its judged text. A
 #                        commit made under the loop marker outside a claimed
 #                        lane may not move a held status or make a held
 #                        approval claim; a merge in progress is judged only for

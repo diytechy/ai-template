@@ -288,7 +288,7 @@ def committed_status_moves(root, rev):
 
 # --- THE HELD-RUNG RULE: what lands from a lane is judged by state -------------
 # A held-rung spine row's approval lands from a lane only as a CLARITY
-# re-attestation bound to the text its verdict judged. Every lane commit is
+# re-acceptance bound to the text its verdict judged. Every lane commit is
 # judged against each of its parents by the merge slot's lane-commit walk
 # (`commit_held_approval_lines`, a rider of `text_then_act.LANE_COMMIT_RIDERS`),
 # whoever built the lane; the pre-commit `held-status` step judges a squash
@@ -347,7 +347,7 @@ _REVIEWS = "docs/reviews"
 MARKED_SPINE = acceptance_record.PARENT_FIRST_CSVS
 HELD_REMEDY = (
     "a held-rung row's approval lands from a lane only as a CLARITY "
-    "re-attestation whose recorded verdict binds the row's approved text; "
+    "re-acceptance whose recorded verdict binds the row's approved text; "
     "leave the approval to the operator, or re-sit the row and take the act "
     "from that verdict"
 )
@@ -451,7 +451,7 @@ def _bound_clarity(root, rev, rid, digest):
 
 
 def _excepted(root, head, key, after, befores):
-    """`(True, None)` when the (b) claim `key` is a CLARITY re-attestation
+    """`(True, None)` when the (b) claim `key` is a CLARITY re-acceptance
     bound to the row's text at `head`; `(False, None)` when it is not; and
     `(False, line)` when git cannot search for its verdict."""
     rid, registry, id_col = key
@@ -661,6 +661,6 @@ def marked_refusal(root, base, head, dial, paths=None):
         "the loop may not change a status or claim an approval the approval "
         "level holds for an operator (operator_accepts_through = {}): {} - a held "
         "status moves only in a person's own reviewed commit, and a held "
-        "approval lands from a lane only as a CLARITY re-attestation bound to "
+        "approval lands from a lane only as a CLARITY re-acceptance bound to "
         "its judged text".format(dial, "; ".join(lines))
     )

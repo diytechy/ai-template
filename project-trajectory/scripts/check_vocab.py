@@ -23,7 +23,7 @@ WHAT IT REFUSES. The TAGS, matched as whole words: `G0`, `G1`, `G2`, `G3`,
 weight to it that the semantics here don't need"), also any inflection of
 `ratif*` (`ratify`, `ratified`, `ratification`, `ratifying`, `ratifies`,
 `ratifiable`, `ratifier`, ...) — EXCEPT the literal `docs/ratify/` path, which
-kept its name as a record home for the immutable dated re-attestation briefs
+kept its name as a record home for the immutable dated re-acceptance briefs
 that already lived there; that one spelling is not retired vocabulary, it is a
 directory name. Nothing else.
 
@@ -119,7 +119,7 @@ RETIRED_TAG_RE = re.compile(
     # were, riding the same enforcer for the same reason (one checker, one
     # mistake). Carve-outs for the ONE surviving spelling: the `docs/ratify/`
     # directory itself KEPT its name as a record home (the dated
-    # re-attestation briefs already live there and are immutable), so a live
+    # re-acceptance briefs already live there and are immutable), so a live
     # file naming that real path is not quoting retired vocabulary — whether
     # written as the one string `"docs/ratify/..."` (the `docs/` lookbehind),
     # as a markdown-relative link from a doc that already lives under

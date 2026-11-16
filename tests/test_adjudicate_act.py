@@ -185,8 +185,8 @@ COMBINED_KINDS = ("amendment", "first-approval")
 
 
 def _take_amendment_act(repo, ids):
-    baseline_snapshot.copy_live(repo, reattests=frozenset(ids))
-    _commit(repo, "re-attest {}\n\nWI: {}".format(",".join(ids), WI))
+    baseline_snapshot.copy_live(repo, reaccepts=frozenset(ids))
+    _commit(repo, "re-accept {}\n\nWI: {}".format(",".join(ids), WI))
 
 
 def _take_approval_act(repo, ids, registries):
@@ -374,10 +374,10 @@ def test_a_MEANING_row_without_the_bless_mark_is_left_unacted(tmp_path):
     )
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None
-    assert acts == {"amendment": {"reattests": ["LLR-001"], "verdict": False}}
+    assert acts == {"amendment": {"reaccepts": ["LLR-001"], "verdict": False}}
 
 
-def test_a_blessed_MEANING_row_on_a_released_rung_is_reattested(tmp_path):
+def test_a_blessed_MEANING_row_on_a_released_rung_is_reaccepted(tmp_path):
     """Implements: TC-368"""
     repo = _repo(tmp_path)
     _amend(repo)
@@ -389,7 +389,7 @@ def test_a_blessed_MEANING_row_on_a_released_rung_is_reattested(tmp_path):
     )
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None
-    assert acts == {"amendment": {"reattests": ["SR-001"], "verdict": False}}
+    assert acts == {"amendment": {"reaccepts": ["SR-001"], "verdict": False}}
 
 
 def test_a_blessed_MEANING_row_on_a_held_rung_is_left_unacted(tmp_path):
@@ -405,20 +405,20 @@ def test_a_blessed_MEANING_row_on_a_held_rung_is_left_unacted(tmp_path):
     )
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None
-    assert acts == {"amendment": {"reattests": ["LLR-001"], "verdict": True}}
+    assert acts == {"amendment": {"reaccepts": ["LLR-001"], "verdict": True}}
 
 
-def test_a_held_rung_CLARITY_row_is_reattested_naming_its_verdict(tmp_path):
+def test_a_held_rung_CLARITY_row_is_reaccepted_naming_its_verdict(tmp_path):
     """Implements: TC-368"""
     repo = _repo(tmp_path, dial="DevStg-Release")
     _amend(repo)
     _verdict(repo, AMENDMENT_CLARITY, "amendment")
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None
-    assert acts == {"amendment": {"reattests": ["SR-001"], "verdict": True}}
+    assert acts == {"amendment": {"reaccepts": ["SR-001"], "verdict": True}}
     values, why = act.act_values(repo, VERDICT, WI)
     assert why is None
-    assert "--reattests SR-001 --verdict {}".format(VERDICT) in values["amendment_act"]
+    assert "--reaccepts SR-001 --verdict {}".format(VERDICT) in values["amendment_act"]
     assert values["approval_act"] == act.NONE_OWED
 
 
@@ -476,7 +476,7 @@ def test_a_held_CLARITY_act_bound_to_the_exact_text_is_owed(tmp_path, monkeypatc
     monkeypatch.setattr(ksitting, "recorded_identities", spy)
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None, why
-    assert acts == {"amendment": {"reattests": ["SR-001"], "verdict": True}}
+    assert acts == {"amendment": {"reaccepts": ["SR-001"], "verdict": True}}
     assert calls, "the act was derived without reading the bound identity"
 
 
@@ -529,7 +529,7 @@ def test_a_combined_verdict_lists_the_amendment_act_before_the_first_approval_ac
     assert list(acts) == ["amendment", "first-approval"]
     text, why = act.compose_act(repo, VERDICT, WI)
     assert why is None
-    assert text.index("--reattests SR-001") < text.index("--approves")
+    assert text.index("--reaccepts SR-001") < text.index("--approves")
 
 
 def test_a_combined_act_interrupted_between_its_commits_lists_only_the_first_approval_act(
@@ -543,7 +543,7 @@ def test_a_combined_act_interrupted_between_its_commits_lists_only_the_first_app
     assert acts == {"first-approval": {"approves": {LLR_REL: ["LLR-002"]}}}
     values, _why = act.act_values(repo, VERDICT, WI)
     assert values["amendment_act"] == act.NONE_OWED
-    assert "--reattests" not in values["approval_act"]
+    assert "--reaccepts" not in values["approval_act"]
 
 
 def test_a_flip_committed_without_its_copy_is_refused_naming_the_row(tmp_path):
@@ -571,7 +571,7 @@ def test_a_Drafted_row_present_unchanged_in_a_whole_registry_copy_is_owed(tmp_pa
     assert acts == {"first-approval": {"approves": {LLR_REL: ["LLR-002"]}}}
 
 
-def test_a_reattest_of_a_row_below_Approved_is_refused_naming_the_row(tmp_path):
+def test_a_reaccept_of_a_row_below_Approved_is_refused_naming_the_row(tmp_path):
     """Implements: TC-368"""
     repo = _repo(tmp_path)
     _draft(repo)
@@ -724,7 +724,7 @@ def _retire(repo, draft=True):
     _commit(repo, "retire TC-001")
 
 
-def test_a_retired_row_ruled_CLARITY_beside_a_first_approval_is_listed_in_the_reattests(
+def test_a_retired_row_ruled_CLARITY_beside_a_first_approval_is_listed_in_the_reaccepts(
     tmp_path,
 ):
     """Implements: TC-368"""
@@ -734,13 +734,13 @@ def test_a_retired_row_ruled_CLARITY_beside_a_first_approval_is_listed_in_the_re
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None, why
     assert acts == {
-        "amendment": {"reattests": ["TC-001"], "verdict": False, "retires": ["TC-001"]},
+        "amendment": {"reaccepts": ["TC-001"], "verdict": False, "retires": ["TC-001"]},
         "first-approval": {"approves": {TC_REL: ["TC-002"]}},
     }
     text, why = act.compose_act(repo, VERDICT, WI)
     assert why is None, why
     assert "Retire" in text and "TC-001" in text
-    assert text.index("--reattests TC-001") < text.index("--approves")
+    assert text.index("--reaccepts TC-001") < text.index("--approves")
 
 
 def test_a_retirement_and_its_first_approval_taken_through_the_snapshot_writer_leave_nothing_owed(
@@ -784,7 +784,7 @@ def test_a_retirement_on_a_held_rung_owes_no_act(tmp_path):
     )
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None, why
-    assert acts == {"amendment": {"reattests": ["SR-001"], "verdict": True}}
+    assert acts == {"amendment": {"reaccepts": ["SR-001"], "verdict": True}}
 
 
 def test_a_first_approval_of_a_row_absent_from_the_committed_tree_is_refused_naming_it(
@@ -876,9 +876,9 @@ def test_each_rows_act_arm_follows_the_adjudication_action_policy_on_every_rung(
             elif ruling == "APPROVE":
                 assert arm == "approve", case
             else:
-                assert arm == "reattest", case
+                assert arm == "reaccept", case
     # With and without the bless mark, on each rung: only a marked MEANING row
-    # is re-attested, and only where the rung is released.
+    # is re-accepted, and only where the rung is released.
     parts = _parsed(
         "- [MEANING] SR-001 Requirement -> a -> b -> differs\n"
         "- [MEANING+BLESS] LLR-001 Detail -> a -> b -> differs\n"
@@ -887,7 +887,7 @@ def test_each_rows_act_arm_follows_the_adjudication_action_policy_on_every_rung(
         "amendment",
     )
     assert act._authorized(parts, "DevStg-Needs") == [
-        ("reattest", "LLR-001", False),
-        ("reattest", "TC-001", False),
+        ("reaccept", "LLR-001", False),
+        ("reaccept", "TC-001", False),
     ]
-    assert act._authorized(parts, "DevStg-Release") == [("reattest", "TC-001", True)]
+    assert act._authorized(parts, "DevStg-Release") == [("reaccept", "TC-001", True)]

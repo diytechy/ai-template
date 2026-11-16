@@ -24,7 +24,7 @@ docs/requirements/components.toml
 
 Beside them, `acts.toml` holds one entry per approval act that copied a
 registry, the first signing included: its number, its day, the rows it carried
-into approval, the rows it re-attested and the registries it copied
+into approval, the rows it re-accepted and the registries it copied
 (`copied`). An entry written before `copied` existed keeps its shape; its copy
 set is unknown, and nothing infers one. An accepted risk is anchored to the
 latest act naming its assumption there.
@@ -65,9 +65,9 @@ in them has drifted from its copy here without the act flipping or naming it:
 - **A first approval** — move the row's `Status` to `Approved`, run
   `intake.py snapshot`, and commit both together. (`--approves <REGISTRY=REF>`
   names a registry the act blesses by an approval ref instead.)
-- **A re-attestation** — an amended row still reads `Approved`, so no flip
+- **A re-acceptance** — an amended row still reads `Approved`, so no flip
   carries it. Read its changed cells, then run
-  `intake.py snapshot --reattests <ROW-ID>[,<ROW-ID>...]`, naming exactly the
+  `intake.py snapshot --reaccepts <ROW-ID>[,<ROW-ID>...]`, naming exactly the
   rows you read. A drifted row that is not yours to bless stays out of the
   list, and the copy stays refused until that row is ruled on.
 

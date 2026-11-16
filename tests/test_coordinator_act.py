@@ -183,13 +183,13 @@ def _commands(prompt):
     ]
 
 
-def _reattest(lane, prompt):
+def _reaccept(lane, prompt):
     for argv in _commands(prompt):
-        if "--reattests" in argv:
+        if "--reaccepts" in argv:
             verdict = argv[argv.index("--verdict") + 1] if "--verdict" in argv else None
-            ids = baseline_snapshot.parse_reattests(argv[argv.index("--reattests") + 1])
-            baseline_snapshot.copy_live(lane, reattests=ids, verdict=verdict)
-            _commit(lane, "re-attest\n\nWI: {}".format(WI))
+            ids = baseline_snapshot.parse_reaccepts(argv[argv.index("--reaccepts") + 1])
+            baseline_snapshot.copy_live(lane, reaccepts=ids, verdict=verdict)
+            _commit(lane, "re-accept\n\nWI: {}".format(WI))
 
 
 def _flip(lane, prompt):
@@ -215,12 +215,12 @@ def _approve(lane, prompt):
 
 
 def full(lane, prompt):
-    _reattest(lane, prompt)
+    _reaccept(lane, prompt)
     _approve(lane, prompt)
 
 
 def skip_flip(lane, prompt):
-    _reattest(lane, prompt)
+    _reaccept(lane, prompt)
 
 
 def flip_uncommitted(lane, prompt):
@@ -329,7 +329,7 @@ def _owes_no_act(tmp_path, primary, lane):
 
 
 def _inconsistent(tmp_path, primary, lane):
-    # A re-attest of a row below Approved: no act explains it. (A row absent
+    # A re-accept of a row below Approved: no act explains it. (A row absent
     # from the committed tree is a retirement, not an inconsistent state.)
     taa._draft(lane)
     taa._write(
@@ -337,7 +337,7 @@ def _inconsistent(tmp_path, primary, lane):
         VERDICT,
         "- [CLARITY] LLR-002 Detail -> a -> a -> same\n\nVERDICT: CLARITY rows=1\n",
     )
-    _commit(lane, "a verdict re-attesting a Drafted row")
+    _commit(lane, "a verdict re-accepting a Drafted row")
 
 
 def _dirty(tmp_path, primary, lane):
@@ -382,7 +382,7 @@ def test_the_act_turn_refuses_before_launch_when_held_text_moved(
 ):
     """Implements: TC-398"""
     # A held CLARITY verdict bound to SR-001's text at the sitting; the text
-    # is edited after it, so the act it would take re-attests text nobody
+    # is edited after it, so the act it would take re-accepts text nobody
     # judged. The entry point refuses before launching an adjudicator.
     primary, lane = _lane(tmp_path, dial="DevStg-Release")
     taa._amend(lane)
@@ -433,8 +433,8 @@ def test_a_combined_act_commits_its_amendment_act_before_its_first_approval_act(
     _primary, lane = _combined(tmp_path)
     assert _act(launched, lane) == 0
     subjects = _git(lane, "log", "--format=%s", "-4").splitlines()
-    acts = [s for s in subjects if s in ("re-attest", "approve")]
-    assert acts == ["approve", "re-attest"]  # newest first
+    acts = [s for s in subjects if s in ("re-accept", "approve")]
+    assert acts == ["approve", "re-accept"]  # newest first
 
 
 def test_the_act_turn_reports_success_only_when_no_listed_act_is_left(
@@ -487,7 +487,7 @@ def test_a_combined_act_interrupted_between_commits_reruns_with_only_its_first_a
     launched["act"] = full
     assert _act(launched, lane) == 0
     first, second = launched["prompts"]
-    assert ["--reattests" in argv for argv in _commands(first)] == [True, False]
+    assert ["--reaccepts" in argv for argv in _commands(first)] == [True, False]
     (only,) = _commands(second)
     assert "--approves" in only
     assert _amendment_part(second) == cli.adjudicate_act.NONE_OWED
@@ -495,7 +495,7 @@ def test_a_combined_act_interrupted_between_commits_reruns_with_only_its_first_a
 
 def _amendment_part(prompt):
     """The rendered amendment act of a delivered act brief."""
-    part = prompt.split("--- 1. THE AMENDMENT ACT (re-attestation) ---\n", 1)[1]
+    part = prompt.split("--- 1. THE AMENDMENT ACT (re-acceptance) ---\n", 1)[1]
     return part.split("\n--- 2.", 1)[0]
 
 

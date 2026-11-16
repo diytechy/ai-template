@@ -215,20 +215,20 @@ def _observe(root, outcome, observed=None, expires=None):
     return path
 
 
-def _reattest(root):
-    """Accept the risk again: an act re-attesting DA-001, its text unchanged by
+def _reaccept(root):
+    """Accept the risk again: an act re-accepting DA-001, its text unchanged by
     the act itself."""
-    SNAP.copy_live(root, reattests={"DA-001"})
+    SNAP.copy_live(root, reaccepts={"DA-001"})
     return _commit(root, "re-accept DA-001's risk")
 
 
 def _restorations(root):
     """From one reopened state: a current passing result restores nothing, and
-    an act re-attesting the assumption re-binds the risk."""
+    an act re-accepting the assumption re-binds the risk."""
     path = _observe(root, "pass")
     assert _state(root)[0] == RULES.RISK_UNPROVEN
     path.unlink()
-    _reattest(root)
+    _reaccept(root)
     assert _state(root) == (RULES.RISK_COVERED, [])
 
 
@@ -265,12 +265,12 @@ def test_two_identical_re_attestations_on_one_day_are_two_acts(repo):
     root, _act = repo
     _edit(root, DA_REL, "reads the brief", "reads the whole brief")
     _commit(root, "amend DA-001")
-    first = _reattest(root)
+    first = _reaccept(root)
     assert _state(root) == (RULES.RISK_COVERED, [])
     _edit(root, DA_REL, "reads the whole brief", "reads every page of the brief")
     _commit(root, "amend DA-001 again")
     assert _state(root)[0] == RULES.RISK_UNPROVEN
-    second = _reattest(root)
+    second = _reaccept(root)
     assert second != first
     assert SNAP.risk_acceptance_act(root, "DA-001")[0] == second
     assert _state(root) == (RULES.RISK_COVERED, [])
@@ -285,7 +285,7 @@ def test_the_prose_stamp_moves_no_anchor(repo):
     stamp.write_text(
         (stamp.read_text(encoding="utf-8") if stamp.is_file() else "")
         + "- 2026-09-26 — refresh under approval. Copied: assumptions.toml "
-        "(re-attested: DA-001).\n",
+        "(re-accepted: DA-001).\n",
         encoding="utf-8",
     )
     _commit(root, "amend DA-001 and write a stamp line by hand")
@@ -298,7 +298,7 @@ def test_a_malformed_act_ledger_in_history_refuses_rather_than_guesses(repo):
     so the anchor is not read at all: the reason names the ledger, and the
     risk reads unproven until the ledger is repaired."""
     root, _act = repo
-    _reattest(root)
+    _reaccept(root)
     ledger = SNAP.snapshot_root(root) / SNAP.ACTS
     _edit(root, "{}/{}".format(SNAP.SNAPSHOT_DIR, SNAP.ACTS), "seq = 2", "seq = 1")
     assert ledger.is_file()
@@ -329,9 +329,9 @@ def test_a_need_amended_then_re_approved_on_its_own_still_reads_unproven(repo):
     # the needs now holds the new text, and the risk still reads unproven,
     # because the comparison is with the act that accepted the risk.
     # Needs are compared tiers, so the act re-approving the drifted need names
-    # it (`--reattests`); naming the registry alone is refused.
+    # it (`--reaccepts`); naming the registry alone is refused.
     SNAP.copy_live(
-        root, approves={NEEDS_REL: "SN-001 re-approved"}, reattests={"SN-001"}
+        root, approves={NEEDS_REL: "SN-001 re-approved"}, reaccepts={"SN-001"}
     )
     _commit(root, "re-approve SN-001")
     assert SNAP.risk_acceptance_act(root, "DA-001")[0] == act

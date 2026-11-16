@@ -2591,11 +2591,11 @@ def test_below_the_operator_dial_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_pa
         assert "LLR-001" in msg and "Drafted" in msg, msg
         assert "Modified" in msg and "step 7" in msg, msg
         # A `Drafted` row owes a FIRST approval, so the remedy is a reviewed
-        # Status move plus the copy — never `--reattests`, which is the remedy
+        # Status move plus the copy — never `--reaccepts`, which is the remedy
         # for approved text that drifted. The `--approves` token it prints must
         # be one the snapshot CLI's own resolver accepts for this registry.
         assert "move its `Status` to `Approved`" in msg, msg
-        assert "--reattests" not in msg, msg
+        assert "--reaccepts" not in msg, msg
         assert _approves_resolves_to(msg, "low-level-requirements"), msg
         # ...and the refusal wrote nothing: it raises before the write loops.
         assert (sr_csv.read_bytes(), llr_csv.read_bytes()) == before
@@ -2613,10 +2613,10 @@ def _approves_resolves_to(text, stem):
     ]
 
 
-def test_a_FOUNDED_row_is_refused_with_the_reattest_remedy_naming_it(tmp_path):
+def test_a_FOUNDED_row_is_refused_with_the_reaccept_remedy_naming_it(tmp_path):
     """The other status the refusal meets. A `Founded` row claims approval, so
     what an amendment of it owes is a fresh read plus a re-copy that NAMES it
-    (`--reattests <id>`): a bare `intake.py snapshot` refuses a drifted
+    (`--reaccepts <id>`): a bare `intake.py snapshot` refuses a drifted
     approved row it neither flips nor names. It is not a first approval, so the
     Status-move remedy a `Drafted` row gets would be wrong here."""
     root = _policy_repo(tmp_path, kit_stage.BELOW)
@@ -2626,7 +2626,7 @@ def test_a_FOUNDED_row_is_refused_with_the_reattest_remedy_naming_it(tmp_path):
         intake.flip_verified(root, ["SR-002"])
     msg = str(excinfo.value)
     assert 'reads `status = "Founded"`' in msg, msg
-    assert "intake.py snapshot --reattests SR-002" in msg, msg
+    assert "intake.py snapshot --reaccepts SR-002" in msg, msg
     assert "move its `Status` to `Approved`" not in msg, msg
 
 
@@ -2869,9 +2869,9 @@ def test_an_unreadable_dial_or_stage_fails_toward_recommend(tmp_path):
     assert intake.adjudication_action(True) == "recommend"
     assert intake.adjudication_action(False) == "flip"
     # OI-100 gap 2 (WI-791): the held arm's one stated case. A CLARITY verdict
-    # approves no new text, so the session re-attests it; a MEANING verdict and
+    # approves no new text, so the session re-accepts it; a MEANING verdict and
     # a first draft (no verdict) still stop at a recommendation to the operator.
-    assert intake.adjudication_action(True, "CLARITY") == "reattest"
+    assert intake.adjudication_action(True, "CLARITY") == "reaccept"
     assert intake.adjudication_action(True, "MEANING") == "recommend"
     assert intake.adjudication_action(False, "CLARITY") == "flip"
 

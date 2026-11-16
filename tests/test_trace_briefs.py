@@ -1,4 +1,4 @@
-"""trace.py — the re-attestation brief, baselined on the `last_approved`
+"""trace.py — the re-acceptance brief, baselined on the `last_approved`
 snapshot (WI-277 split this file out of tests/test_trace.py by behavior
 boundary; D-9 step 4 re-homed its baseline).
 
@@ -23,7 +23,7 @@ Implements: TC-235, TC-252
 # NameError instead of skipping — the safety net failing exactly where it was
 # supposed to catch. Nothing noticed because every machine that has run this
 # suite had git (WI-333; the DevStg-Impl-only `lint` step that reports it had been
-# dropped from the bar by an open re-attestation window). (WI-277 moved this
+# dropped from the bar by an open re-acceptance window). (WI-277 moved this
 # note with the tests it guards — it was authored in tests/test_trace.py, whose
 # git-backed tests are now all here.)
 
@@ -41,22 +41,22 @@ from conftest import (
 )
 
 
-# --- WI-316: the re-attestation brief (--approve modified) ----------------------
+# --- WI-316: the re-acceptance brief (--approve modified) ----------------------
 # A sitting cannot bless a delta it cannot see: per-cell before/after for every
 # DRIFTED or Drafted SR's chain, baselined at the last_approved SNAPSHOT
 # (git supplies only the stamp). A generator mode: no checks, always exits 0.
 
-_REATTEST_SR_H = (
+_REACCEPT_SR_H = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
     "Permutations,Priority,VerificationMethod,Status,Phase\n"
 )
-_REATTEST_LLR_H = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
-_REATTEST_TC_H = (
+_REACCEPT_LLR_H = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
+_REACCEPT_TC_H = (
     "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
 )
 
 
-def _reattest_repo(root):
+def _reaccept_repo(root):
     """A repo with an APPROVED SNAPSHOT (SR-001 Approved, old prose) and a live
     tree that has since been amended (Requirement changed,
     LLR-002 added). Returns the git runner. THE AMENDMENT NO LONGER FLIPS THE
@@ -82,20 +82,20 @@ def _reattest_repo(root):
 
     def write_spine(sr_status, requirement, extra_llr=""):
         (req / "system-requirements.csv").write_text(
-            _REATTEST_SR_H
+            _REACCEPT_SR_H
             + 'SR-001,Adder,SN-001,"{}","why","old ac",,C,Test,{},1\n'.format(
                 requirement, sr_status
             ),
             encoding="utf-8",
         )
         (req / "low-level-requirements.csv").write_text(
-            _REATTEST_LLR_H
+            _REACCEPT_LLR_H
             + 'LLR-001,SR-001,Add core,src/demo.py,add,"pure add",(see TC-001),Approved\n'
             + extra_llr,
             encoding="utf-8",
         )
         (root / "docs" / "test" / "test-cases.csv").write_text(
-            _REATTEST_TC_H
+            _REACCEPT_TC_H
             + 'TC-001,SR-001;LLR-001,Unit,"drive add","Smoke","a=1","sum",Yes,'
             "tests/test_demo.py::t,Approved\n",
             encoding="utf-8",
@@ -123,16 +123,16 @@ def _reattest_repo(root):
     return run_git
 
 
-def test_reattest_brief_shows_before_after_and_added_rows(tmp_path):
+def test_reaccept_brief_shows_before_after_and_added_rows(tmp_path):
     # The brief diffs the live tree against the snapshot and shows the
     # Requirement's before/after, the ADDED LLR — and NOT the Status cell, which
     # `split_changed_cells` excludes structurally (the marker is not the
     # amendment, in either direction).
-    _reattest_repo(tmp_path)
+    _reaccept_repo(tmp_path)
     proc = run_py([SCRIPTS / "trace.py", "--approve", "modified"], cwd=tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     out = proc.stdout
-    assert "# Re-attestation brief" in out
+    assert "# Re-acceptance brief" in out
     assert "## SR-001 — Adder" in out
     assert "before: the ORIGINAL attested text" in out
     assert "after: the AMENDED text" in out
@@ -141,7 +141,7 @@ def test_reattest_brief_shows_before_after_and_added_rows(tmp_path):
     # The header's instruction for the DRIFTED row it is about: an amended row
     # still reads `Approved`, so no flip carries it, and a bare `intake.py
     # snapshot` refuses it. The re-copy has to name it.
-    assert "intake.py snapshot --reattests <ROW-ID>" in out
+    assert "intake.py snapshot --reaccepts <ROW-ID>" in out
     # The Status cell itself is excluded from the diff, both directions.
     assert "before: Approved" not in out
     # The unchanged chain rows (LLR-001, TC-001) emit no section.
@@ -149,7 +149,7 @@ def test_reattest_brief_shows_before_after_and_added_rows(tmp_path):
     assert "### TC TC-001" not in out
 
 
-def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
+def test_reaccept_brief_reads_a_bommed_baseline(tmp_path):
     # F4, re-aimed at the snapshot (D-9 step 4). A BOM is a property of bytes on
     # disk, and `copy_live` is byte-for-byte, so a BOM'd registry produces a
     # BOM'd snapshot. Unstripped on the read, the header glues to SR-ID and every
@@ -168,16 +168,16 @@ def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
     req.mkdir(parents=True)
     (tmp_path / "docs" / "test").mkdir(parents=True)
     sr_v1 = (
-        _REATTEST_SR_H
+        _REACCEPT_SR_H
         + 'SR-001,Adder,SN-001,"old text","w","a",,C,Test,Approved,1'
         + "\n"
     )
     (req / "system-requirements.csv").write_bytes(
         b"\xef\xbb\xbf" + sr_v1.encode("utf-8")
     )
-    (req / "low-level-requirements.csv").write_text(_REATTEST_LLR_H, encoding="utf-8")
+    (req / "low-level-requirements.csv").write_text(_REACCEPT_LLR_H, encoding="utf-8")
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
-        _REATTEST_TC_H, encoding="utf-8"
+        _REACCEPT_TC_H, encoding="utf-8"
     )
     run_git("init")
     pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
@@ -187,7 +187,7 @@ def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
     run_git("add", "-A")
     run_git("commit", "-m", "attested, BOM'd + snapshot")
     sr_v2 = (
-        _REATTEST_SR_H
+        _REACCEPT_SR_H
         + 'SR-001,Adder,SN-001,"new text","w","a",,C,Test,Approved,1'
         + "\n"
     )
@@ -202,7 +202,7 @@ def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
     assert "before: old text" in proc.stdout and "after: new text" in proc.stdout
 
 
-def test_reattest_brief_empty_when_nothing_is_modified(scaffold):
+def test_reaccept_brief_empty_when_nothing_is_modified(scaffold):
     # Nothing drifted, nothing Drafted -> the explicit nothing-owed line (and
     # --out still writes). The selector read `Modified` until D-9 step 7.
     make_minimal_project(scaffold)
@@ -220,8 +220,8 @@ def test_reattest_brief_empty_when_nothing_is_modified(scaffold):
 # --- Approved, undrifted SR (docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md)
 
 
-def test_reattest_brief_owes_a_drafted_llr_under_an_approved_undrifted_sr(tmp_path):
-    """`trace.reattest_model`'s `owes()` used to test the SR row's own `Status`
+def test_reaccept_brief_owes_a_drafted_llr_under_an_approved_undrifted_sr(tmp_path):
+    """`trace.reaccept_model`'s `owes()` used to test the SR row's own `Status`
     alone: `is_drafted(sr)` never looked at the chain, and `sr_chain_drifts`
     cannot see a `Drafted` child either (it has made no claim to fall from the
     snapshot). Widened so the brief an operator approves from actually shows the
@@ -239,14 +239,14 @@ def test_reattest_brief_owes_a_drafted_llr_under_an_approved_undrifted_sr(tmp_pa
     req.mkdir(parents=True)
     (tmp_path / "docs" / "test").mkdir(parents=True)
     (req / "system-requirements.csv").write_text(
-        _REATTEST_SR_H
+        _REACCEPT_SR_H
         + 'SR-001,Stable parent,SN-001,"a stable requirement","why","ac",,C,'
         "Test,Approved,1\n",
         encoding="utf-8",
     )
-    (req / "low-level-requirements.csv").write_text(_REATTEST_LLR_H, encoding="utf-8")
+    (req / "low-level-requirements.csv").write_text(_REACCEPT_LLR_H, encoding="utf-8")
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
-        _REATTEST_TC_H, encoding="utf-8"
+        _REACCEPT_TC_H, encoding="utf-8"
     )
     run_git("init")
     pin_autocrlf(tmp_path)
@@ -258,7 +258,7 @@ def test_reattest_brief_owes_a_drafted_llr_under_an_approved_undrifted_sr(tmp_pa
     # The SR is untouched after the snapshot — no drift. A brand-new `Drafted`
     # LLR is added under it: never approved, absent from the snapshot.
     (req / "low-level-requirements.csv").write_text(
-        _REATTEST_LLR_H + 'LLR-001,SR-001,A new child,src/demo.py,add,"never approved",'
+        _REACCEPT_LLR_H + 'LLR-001,SR-001,A new child,src/demo.py,add,"never approved",'
         "(see TC-001),Drafted\n",
         encoding="utf-8",
     )
@@ -276,7 +276,7 @@ def test_reattest_brief_owes_a_drafted_llr_under_an_approved_undrifted_sr(tmp_pa
     assert "> **Requirement.** a stable requirement" in out
 
 
-def test_reattest_brief_truncates_long_anchor_requirement_with_marker(tmp_path):
+def test_reaccept_brief_truncates_long_anchor_requirement_with_marker(tmp_path):
     """Long-cell sanity: the anchor SR's own Requirement truncates above the
     1,500-char threshold with an explicit marker — never silently. A cell
     comfortably below the threshold renders untouched."""
@@ -286,14 +286,14 @@ def test_reattest_brief_truncates_long_anchor_requirement_with_marker(tmp_path):
     long_req = "A" * 1600
     short_req = "B" * 100
     (req / "system-requirements.csv").write_text(
-        _REATTEST_SR_H
+        _REACCEPT_SR_H
         + 'SR-001,Long,SN-001,"{}","why","ac",,C,Test,Drafted,1\n'.format(long_req)
         + 'SR-002,Short,SN-001,"{}","why","ac",,C,Test,Drafted,1\n'.format(short_req),
         encoding="utf-8",
     )
-    (req / "low-level-requirements.csv").write_text(_REATTEST_LLR_H, encoding="utf-8")
+    (req / "low-level-requirements.csv").write_text(_REACCEPT_LLR_H, encoding="utf-8")
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
-        _REATTEST_TC_H, encoding="utf-8"
+        _REACCEPT_TC_H, encoding="utf-8"
     )
     proc = run_py([SCRIPTS / "trace.py", "--approve", "modified"], cwd=tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -306,7 +306,7 @@ def test_reattest_brief_truncates_long_anchor_requirement_with_marker(tmp_path):
 
 def _git_repo(root):
     """Init a committable git repo at `root`, skipping the test when git is
-    absent. Returns the runner. The re-attestation baseline is the snapshot,
+    absent. Returns the runner. The re-acceptance baseline is the snapshot,
     but the brief still reads git for its stamp, so a repo has to exist."""
     import shutil as _sh
     import subprocess as _sp
@@ -324,15 +324,15 @@ def _git_repo(root):
     return run_git
 
 
-def test_reattest_brief_never_labels_a_drafted_rows_cells_approved(tmp_path):
+def test_reaccept_brief_never_labels_a_drafted_rows_cells_approved(tmp_path):
     """OI-71 defect 1 — round 019 of the wi508 lane saw a `Drafted` row's cells
-    rendered under the heading `approved — re-attestation owed`.
+    rendered under the heading `approved — re-acceptance owed`.
 
     `_cell_diff_lines` splits a changed row's cells into the §A5.1 two groups
     keyed on the cell's COLUMN class (`SPINE_APPROVED_CELLS`), independent of
     the ROW's Status. A `Drafted` TC that drifted in both an approved-class
     cell (`Method`) and a traced-class cell (`Evidence`) therefore renders its
-    `Method` change under `approved — re-attestation owed` — asserting an
+    `Method` change under `approved — re-acceptance owed` — asserting an
     attestation window that never opened, since the row was never approved. The
     row owes a FIRST approval wholesale, which its own section heading already
     states."""
@@ -343,15 +343,15 @@ def test_reattest_brief_never_labels_a_drafted_rows_cells_approved(tmp_path):
 
     def write_spine(method, evidence):
         (req / "system-requirements.csv").write_text(
-            _REATTEST_SR_H
+            _REACCEPT_SR_H
             + 'SR-001,Adder,SN-001,"a stable requirement","why","ac",,C,Test,Approved,1\n',
             encoding="utf-8",
         )
         (req / "low-level-requirements.csv").write_text(
-            _REATTEST_LLR_H, encoding="utf-8"
+            _REACCEPT_LLR_H, encoding="utf-8"
         )
         (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
-            _REATTEST_TC_H
+            _REACCEPT_TC_H
             + 'TC-001,SR-001,Unit,"{}","Smoke","a=1","sum",Yes,"{}",Drafted\n'.format(
                 method, evidence
             ),
@@ -375,14 +375,14 @@ def test_reattest_brief_never_labels_a_drafted_rows_cells_approved(tmp_path):
     # The TC is on the page and correctly tagged as a never-approved draft...
     assert "TC TC-001" in out
     assert "Drafted — never approved" in out
-    # ...and its cells are NOT labelled as owing a re-attestation: a Drafted row
+    # ...and its cells are NOT labelled as owing a re-acceptance: a Drafted row
     # was never approved, so no cell of it can owe one (OI-71 defect 1).
-    assert "approved — re-attestation owed" not in out
+    assert "approved — re-acceptance owed" not in out
     # The change itself is still shown, just not mislabelled.
     assert "drive the add path anew" in out
 
 
-def test_reattest_brief_shows_a_long_changed_cell_whole(tmp_path):
+def test_reaccept_brief_shows_a_long_changed_cell_whole(tmp_path):
     """OI-71 defect 2 — round 019 also saw a changed `Method` cell TRUNCATED so
     the reader could not see what changed. `_cell_diff_lines` ran each of
     before/after through `truncate_cell` (a 1,500-char PREFIX). A cell whose
@@ -397,15 +397,15 @@ def test_reattest_brief_shows_a_long_changed_cell_whole(tmp_path):
 
     def write_spine(method_tail):
         (req / "system-requirements.csv").write_text(
-            _REATTEST_SR_H
+            _REACCEPT_SR_H
             + 'SR-001,Adder,SN-001,"a stable requirement","why","ac",,C,Test,Approved,1\n',
             encoding="utf-8",
         )
         (req / "low-level-requirements.csv").write_text(
-            _REATTEST_LLR_H, encoding="utf-8"
+            _REACCEPT_LLR_H, encoding="utf-8"
         )
         (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
-            _REATTEST_TC_H
+            _REACCEPT_TC_H
             + 'TC-001,SR-001,Unit,"{}","Smoke","a=1","sum",Yes,ev,Approved\n'.format(
                 head + method_tail
             ),
@@ -429,7 +429,7 @@ def test_reattest_brief_shows_a_long_changed_cell_whole(tmp_path):
     assert "-NEW-TAIL" in out, "the after tail was truncated away"
 
 
-def test_reattest_brief_stays_silent_for_an_approved_undrifted_chain(tmp_path):
+def test_reaccept_brief_stays_silent_for_an_approved_undrifted_chain(tmp_path):
     """The negative half: an `Approved` LLR under an `Approved`, undrifted SR
     owes nothing. The widening asks the chain the `Drafted` question; it must
     not turn every settled row into a false positive."""
@@ -446,18 +446,18 @@ def test_reattest_brief_stays_silent_for_an_approved_undrifted_chain(tmp_path):
     req.mkdir(parents=True)
     (tmp_path / "docs" / "test").mkdir(parents=True)
     (req / "system-requirements.csv").write_text(
-        _REATTEST_SR_H
+        _REACCEPT_SR_H
         + 'SR-001,Stable parent,SN-001,"a stable requirement","why","ac",,C,'
         "Test,Approved,1\n",
         encoding="utf-8",
     )
     (req / "low-level-requirements.csv").write_text(
-        _REATTEST_LLR_H + 'LLR-001,SR-001,A stable child,src/demo.py,add,"settled",'
+        _REACCEPT_LLR_H + 'LLR-001,SR-001,A stable child,src/demo.py,add,"settled",'
         "(see TC-001),Approved\n",
         encoding="utf-8",
     )
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
-        _REATTEST_TC_H, encoding="utf-8"
+        _REACCEPT_TC_H, encoding="utf-8"
     )
     run_git("init")
     pin_autocrlf(tmp_path)
@@ -507,7 +507,7 @@ def _assert_assumption_only_cases_on_their_brief(trace_mod, root, reg):
     return only
 
 
-def test_reattest_model_owed_row_count_matches_the_live_drafted_llr_tc_census():
+def test_reaccept_model_owed_row_count_matches_the_live_drafted_llr_tc_census():
     """The number this widening is FOR: `docs/stage`'s `drafted` figure counts
     every `Drafted` SR/LLR/TC row (+ SN drafts) live in this repo's own
     registries, and this test asserts the widened `owes()` surfaces the SR/LLR/TC
@@ -539,7 +539,7 @@ def test_reattest_model_owed_row_count_matches_the_live_drafted_llr_tc_census():
         for row in rows
         if _spine_rules.is_drafted(row) and row not in assumption_only
     )
-    model = _trace.reattest_model(ROOT, reg.srs, reg.llrs, reg.tcs)
+    model = _trace.reaccept_model(ROOT, reg.srs, reg.llrs, reg.tcs)
     # Unique (kind, id), not a raw sum: a TC cited by more than one SR's chain
     # is deduped by design (`chain_of`'s `seen_tcs`) within one entry, but the
     # census question is "does every live Drafted row appear at least once",
@@ -557,7 +557,7 @@ def test_reattest_model_owed_row_count_matches_the_live_drafted_llr_tc_census():
     )
 
 
-# --- WI-325: the re-attestation brief gets a freshness gate ---------------------
+# --- WI-325: the re-acceptance brief gets a freshness gate ---------------------
 #
 # Every other generated surface here is freshness-gated; the brief was not, and
 # it went stale TWICE in one day — at 121-CRITIQUE missing two chain rows and an
@@ -755,7 +755,7 @@ def test_a_closed_window_is_a_no_op(tmp_path):
     text under a row that is already `Approved` — the D-9 ladder's own shape, and
     the one the authority gate makes an operator declare, because it is
     indistinguishable from laundering without the declaration. Since SR-207 the
-    declaration names the ROW (`--reattests`); the registry's ref alone clears
+    declaration names the ROW (`--reaccepts`); the registry's ref alone clears
     none of its rows."""
     _run_git, _rev, write = _approval_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
@@ -763,7 +763,7 @@ def test_a_closed_window_is_a_no_op(tmp_path):
     load_script("baseline_snapshot").copy_live(
         tmp_path,
         approves={"docs/requirements/system-requirements.toml": "the sitting"},
-        reattests={"SR-001"},
+        reaccepts={"SR-001"},
     )
     proc = _check(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -789,14 +789,14 @@ def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
     assert "## SR-001" in proc.stdout
     assert "before: The system shall do the thing." in proc.stdout
     assert "after: The system shall do the AMENDED thing." in proc.stdout
-    # ...and the copy is what clears it — naming the row it re-attests (SR-207;
+    # ...and the copy is what clears it — naming the row it re-accepts (SR-207;
     # a ref for the act rides beside it since 2026-08-20): absorbing approved
     # text under a standing approval is the one refresh that cannot be told from
     # laundering without an operator saying so.
     load_script("baseline_snapshot").copy_live(
         tmp_path,
         approves={"docs/requirements/system-requirements.toml": "the sitting"},
-        reattests={"SR-001"},
+        reaccepts={"SR-001"},
     )
     after = run_py(
         [SCRIPTS / "trace.py", "--root", tmp_path, "--approve", "modified"],
@@ -986,7 +986,7 @@ def test_offspine_census_names_the_interfaces_registry_after_an_IF_cell_changes(
     assert "1 changed, 0 added, 0 removed" in out
     # The census states what copies an off-spine registry. The implementation
     # copies on a row moving INTO approval or arriving approved (a de-approval
-    # copies nothing), on `--approves` naming it, or on `--reattests` naming
+    # copies nothing), on `--approves` naming it, or on `--reaccepts` naming
     # one of its rows. Each trigger is driven in tests/test_baseline_snapshot.py:
     # test_a_spine_flip_LEAVES_the_offspine_snapshot_bytes_UNTOUCHED (into
     # approval), test_a_registry_WRITTEN_for_another_reason_still_gates_its_
@@ -994,9 +994,9 @@ def test_offspine_census_names_the_interfaces_registry_after_an_IF_cell_changes(
     # unrelated_approved_amendment (a de-approval authorises nothing),
     # test_an_explicit_APPROVES_ref_authorises_it_and_is_RECORDED (`--approves`)
     # and test_a_FLIP_authorises_ITS_OWN_row_and_no_other
-    # (`--reattests` copies the live bytes).
+    # (`--reaccepts` copies the live bytes).
     assert "a row in it moves into approval or arrives approved" in out
-    assert "`--reattests` names one of its rows" in out
+    assert "`--reaccepts` names one of its rows" in out
     # The earlier sentences were false: two triggers only, then any move.
     assert "moves or `--approves` names it" not in out
     assert "when its own `Status` moves" not in out
@@ -1042,7 +1042,7 @@ def _dial_split_tree(root, dial=None):
     req.mkdir(parents=True)
     (root / "docs" / "test").mkdir(parents=True)
     (req / "system-requirements.csv").write_text(
-        _REATTEST_SR_H + 'SR-001,Held parent,SN-001,"a held requirement","why","ac",,C,'
+        _REACCEPT_SR_H + 'SR-001,Held parent,SN-001,"a held requirement","why","ac",,C,'
         "Test,Drafted,1\n"
         + 'SR-002,Released parent,SN-001,"a settled requirement","why","ac",,C,'
         "Test,Approved,1\n"
@@ -1051,7 +1051,7 @@ def _dial_split_tree(root, dial=None):
         encoding="utf-8",
     )
     (req / "low-level-requirements.csv").write_text(
-        _REATTEST_LLR_H
+        _REACCEPT_LLR_H
         + 'LLR-002,SR-002,Released child,src/demo.py,add,"the released detail",'
         "(see TC-002),Drafted\n"
         + 'LLR-003,SR-003,Mixed child,src/demo.py,mul,"the mixed detail",'
@@ -1059,7 +1059,7 @@ def _dial_split_tree(root, dial=None):
         encoding="utf-8",
     )
     (root / "docs" / "test" / "test-cases.csv").write_text(
-        _REATTEST_TC_H
+        _REACCEPT_TC_H
         + 'TC-002,SR-002;LLR-002,Unit,"drive the released case","Smoke","a=1",'
         '"sum",Yes,tests/test_demo.py::t,Drafted\n',
         encoding="utf-8",
@@ -1165,14 +1165,14 @@ def _amended_split_tree(root):
     holds the SR rung and releases the LLR and TC rungs:
 
       * SR-001's own Requirement moved: a drifted row on the held rung, so the
-        chain is the operator's re-attestation, as before the ruling.
+        chain is the operator's re-acceptance, as before the ruling.
       * SR-002's chain moved only below the SR: LLR-002's Detail changed and
         TC-002 left the registry. Every owing row is on a released rung, so the
-        re-attestation is an adjudicator's, and its diff renders collapsed."""
+        re-acceptance is an adjudicator's, and its diff renders collapsed."""
 
     def write(sr1_req, llr2_detail, with_tc2):
         (req / "system-requirements.csv").write_text(
-            _REATTEST_SR_H
+            _REACCEPT_SR_H
             + 'SR-001,Held amended parent,SN-001,"{}","why","ac",,C,Test,'
             "Approved,1\n".format(sr1_req)
             + 'SR-002,Released amended parent,SN-001,"a settled requirement",'
@@ -1180,14 +1180,14 @@ def _amended_split_tree(root):
             encoding="utf-8",
         )
         (req / "low-level-requirements.csv").write_text(
-            _REATTEST_LLR_H + 'LLR-001,SR-001,Held child,src/demo.py,add,"held detail",'
+            _REACCEPT_LLR_H + 'LLR-001,SR-001,Held child,src/demo.py,add,"held detail",'
             "(see TC-001),Approved\n"
             + 'LLR-002,SR-002,Released child,src/demo.py,mul,"{}",'
             "(see TC-002),Approved\n".format(llr2_detail),
             encoding="utf-8",
         )
         (root / "docs" / "test" / "test-cases.csv").write_text(
-            _REATTEST_TC_H
+            _REACCEPT_TC_H
             + 'TC-001,SR-001;LLR-001,Unit,"drive the held case","Smoke","a=1",'
             '"sum",Yes,tests/test_demo.py::t,Approved\n'
             + (
@@ -1210,7 +1210,7 @@ def _amended_split_tree(root):
     )
 
 
-def test_a_released_rungs_re_attestation_renders_its_diff_in_the_collapsed_block(
+def test_a_released_rungs_re_acceptance_renders_its_diff_in_the_collapsed_block(
     tmp_path,
 ):
     _amended_split_tree(tmp_path)
@@ -1218,7 +1218,7 @@ def test_a_released_rungs_re_attestation_renders_its_diff_in_the_collapsed_block
     assert proc.returncode == 0, proc.stdout + proc.stderr
     text = (tmp_path / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
     before, inside = _collapsed_block(text)
-    # The released chain's re-attestation, whole, inside the block: the
+    # The released chain's re-acceptance, whole, inside the block: the
     # changed cell's before/after and the row that left the chain.
     assert "## SR-002 — Released amended parent" in inside
     assert "### LLR LLR-002" in inside
@@ -1226,7 +1226,7 @@ def test_a_released_rungs_re_attestation_renders_its_diff_in_the_collapsed_block
     assert "after: the AMENDED released detail" in inside
     assert "### TC TC-002 — REMOVED since the snapshot" in inside
     assert "SR-002" not in before
-    # The held chain's re-attestation stays on the operator's section.
+    # The held chain's re-acceptance stays on the operator's section.
     assert "## SR-001 — Held amended parent" in before
     assert "before: the ORIGINAL held text" in before
     assert "after: the AMENDED held text" in before

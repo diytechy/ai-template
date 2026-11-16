@@ -45,7 +45,7 @@ def test_an_adjudication_row_outranks_a_spine_work_item():
     # Spine is rank 0 and adjudication rank 1, so the FRONTIER hands them over
     # spine-first; admission re-orders. Why: an adjudication row exists because
     # a lane CLAIMED an outcome nothing has judged, and a spine work item
-    # re-attests requirements — running it first approves a spine on a
+    # re-accepts requirements — running it first approves a spine on a
     # premise the pending judgement may overturn, and the attestation ledger is
     # append-only by design. Adequacy witness: an admission that dropped the
     # judgement-first rung would admit WI-001 (the spine row, rank 0) and fail.

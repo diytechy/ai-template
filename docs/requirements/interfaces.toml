@@ -1045,18 +1045,18 @@ notes = """A pending item has at least one queued or claimed work-item citer. A 
 owner = "scripts/gen_open_items"
 consumers = ["external:downstream adopter"]
 channel = "file"
-data = """docs/open-items.html — pending items a queued or claimed row cites, uncited items, approval/re-attest chains and owing needs and stakeholders, verdict audit, operator actions; Decisions to review last"""
+data = """docs/open-items.html — pending items a queued or claimed row cites, uncited items, approval/re-accept chains and owing needs and stakeholders, verdict audit, operator actions; Decisions to review last"""
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
-coincident = """The page lists the pending decisions and the re-attestation chains for the operator to rule on; showing them is the page's whole promise, and the ruling is the authority crossing's own."""
+coincident = """The page lists the pending decisions and the re-acceptance chains for the operator to rule on; showing them is the page's whole promise, and the ruling is the authority crossing's own."""
 
 [interface.IF-075]
-rationale = """Split out of reattest_lines rather than reimplemented, because a second copy of the baseline derivation in a second module is the paraphrase-not-decompose failure this kit exists to prevent. The cross-component import (Generators -> Traceability core) is declared here rather than retagged: the model belongs with the registries it reads, and the renderer belongs with the generators."""
+rationale = """Split out of reaccept_lines rather than reimplemented, because a second copy of the baseline derivation in a second module is the paraphrase-not-decompose failure this kit exists to prevent. The cross-component import (Generators -> Traceability core) is declared here rather than retagged: the model belongs with the registries it reads, and the renderer belongs with the generators."""
 owner = "scripts/trace"
 requestors = ["scripts/gen_open_items", "scripts/adjudicate_brief", "scripts/amendment_brief"]
 channel = "call"
-data = "reattest_model entries: chain rows, changed cells, baseline rev and date, and each spine registry's own copy stamp; an empty model is a valid answer"
+data = "reaccept_model entries: chain rows, changed cells, baseline rev and date, and each spine registry's own copy stamp; an empty model is a valid answer"
 version = "v1"
 status = "Drafted"
 
@@ -1614,7 +1614,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 owner = "scripts/baseline_snapshot"
 requestors = ["scripts/intake"]
 channel = "call"
-data = "copy_live, parse_approves, parse_reattests, act_summary, tier_owing, load_all, rows_for, exists, stamp, is_drifted, unanchored_findings"
+data = "copy_live, parse_approves, parse_reaccepts, act_summary, tier_owing, load_all, rows_for, exists, stamp, is_drifted, unanchored_findings"
 version = "v1"
 status = "Drafted"
 
@@ -2053,10 +2053,10 @@ data = "risk_acceptance_act(root, da_id) -> (commit, reason); risk_acceptance_vi
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
-notes = """Read-only and off-clock: an act is found by the entry it added to the act ledger (IF-220), naming the row approved or re-attested, never by the snapshot's prose stamp, and a failed sample is ordered by whether the act's tree held it. A shallow clone whose window holds no such act answers no anchor, with the reason stated."""
+notes = """Read-only and off-clock: an act is found by the entry it added to the act ledger (IF-220), naming the row approved or re-accepted, never by the snapshot's prose stamp, and a failed sample is ordered by whether the act's tree held it. A shallow clone whose window holds no such act answers no anchor, with the reason stated."""
 
 [interface.IF-220]
-rationale = """Re-accepting a risk is re-attesting its row, and a re-attestation moves no cell of the recorded copies, so which rows an approval act named must be written somewhere a reader may parse; the snapshot's stamp is prose that nothing parses. One typed entry per act, numbered, keeps two acts naming the same rows on the same day distinct, so the latest act always moves an accepted risk's anchor. The module that writes the record appends the entry in the same act and is the one that reads it back."""
+rationale = """Re-accepting a risk is re-accepting its row, and a re-acceptance moves no cell of the recorded copies, so which rows an approval act named must be written somewhere a reader may parse; the snapshot's stamp is prose that nothing parses. One typed entry per act, numbered, keeps two acts naming the same rows on the same day distinct, so the latest act always moves an accepted risk's anchor. The module that writes the record appends the entry in the same act and is the one that reads it back."""
 owner = "scripts/baseline_snapshot"
 consumers = ["scripts/acceptance_record", "scripts/gen_open_items", "scripts/kitlib/sitting", "scripts/trace"]
 channel = "file"

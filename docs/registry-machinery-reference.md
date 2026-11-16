@@ -141,7 +141,7 @@ prose enforcement; the DevStg-Reqs consistency review is the operator backstop.
 
 ## 3. SR — System Requirements
 
-**12 columns.** The **grouping row** of the re-attest surfaces: the sitting,
+**12 columns.** The **grouping row** of the re-accept surfaces: the sitting,
 the pending-operator-actions projection and the `--approve modified` brief all key
 off the SR row — presentation, never attestation scope (a row's `Status`
 answers for its own cells; a child amendment never flips the parent SR — operator
@@ -152,7 +152,7 @@ ruling 2026-08-17).
 | `SR-ID` | ✔ | `SR-<digits>` | Join key. Duplicate → integrity; malformed → integrity; **a row with content but a blank id** → integrity ("a live requirement that just vanished from every join"). |
 | `Title` | ✔ | free text | Node label in the outline / mermaid / HTML views. |
 | `SN-Refs` | ✔ | `;`-joined SN ids | **Upward join.** Empty (when real SNs exist) → orphan; unknown target → orphan. *Traced, not approved* (§9). |
-| `Requirement` | ✔ | one testable shall-statement, on an EARS pattern | Approved prose — amending it opens a re-attest window. Two rules read the text: `form_findings` **gates** the decidable half of singular/unambiguous (one `shall`, no non-obligation modal, no unfalsifiable term, no open-ended clause, no actorless passive), and `ears_advisories` **warns** when the opening states a condition outside `When`/`While`/`If`/`Where` (process.md §3). |
+| `Requirement` | ✔ | one testable shall-statement, on an EARS pattern | Approved prose — amending it opens a re-accept window. Two rules read the text: `form_findings` **gates** the decidable half of singular/unambiguous (one `shall`, no non-obligation modal, no unfalsifiable term, no open-ended clause, no actorless passive), and `ears_advisories` **warns** when the opening states a condition outside `When`/`While`/`If`/`Where` (process.md §3). |
 | `Rationale` | ✔ | free text | **Required**, unlike the LLR's. Guards zero-to-zero (every row already carries one). |
 | `AcceptanceCriteria` | ✔ | measurable condition | Approved. Fed to the critique brief as SR intent. A **warn-only** testability advisory flags comparative/absolute claims that name no predicate. |
 | `Permutations` | ✘ | the `gen_cases.py` grammar² | Optional test-design dimensions, lifted verbatim into `gen_cases.py --spec`. Never validated by `trace.py`. |
@@ -211,7 +211,7 @@ drift rule had run live beside it through the signing act: an amended row now
 stays `Approved`, and what marks it is the DIFFERENCE from its copy in
 `docs/archive/last_approved/` — a property of two files, for every row rather
 than the ones somebody remembered to mark. Blessing an amendment is a reviewed
-commit that re-reads the changed cells and runs `intake.py snapshot --reattests
+commit that re-reads the changed cells and runs `intake.py snapshot --reaccepts
 <ROW-ID>` naming each row read — the adjudicator's act since 2026-09-01, never
 the lane's: the lane amends, the adjudication rules on the amendment and
 re-anchors it in the same commit. The refresh is refused while any row it would
@@ -251,7 +251,7 @@ copy carries drifted approved text that the act neither flips nor names; an
   field in `docs/stage` (§8.3) — and it increments only when
   re-opened scope is **confirmed**: an adjudication verdict that scope moved,
   or a new draft-SN batch approved into scope — **never on the raw derived-stage
-  drop**. A spurious re-attest window must not burn a phase number (WI-280 is
+  drop**. A spurious re-accept window must not burn a phase number (WI-280 is
   the counterexample: 19 traced cells, 11 SRs flipped, no scope moved).
   `derive_stage.py --next-phase` prints that max + 1 — the one derived call
   every agent and the intake mint helper (WI-388) use for a newly confirmed
@@ -483,7 +483,7 @@ it; you approve artifacts and regenerate.
 | **LLR / TC** | `Status=Drafted` | — | — | once present, contributes DevStg-Impl and **never caps** |
 
 A below-`Approved` SR needs no rule of its own: it is decomposed-but-not-approved, so
-it reads **DevStg-Tests**. That is the deliberate gate pull that makes a pending re-attest
+it reads **DevStg-Tests**. That is the deliberate gate pull that makes a pending re-accept
 visible.
 
 The SN column's two DevStg-Below rungs are deliberately disjoint (WI-401, operator ruling
@@ -788,9 +788,9 @@ layer, and the one behind a lot of historical accidental gate churn.
 
 When an **`Approved`** spine row is amended, `staged_spine_amendments` in
 `check_trajectory.py` sorts each changed cell into two halves. Only an
-**approved** cell change warns that a re-attest is owed.
+**approved** cell change warns that a re-accept is owed.
 
-| Registry | **Traced** (amend freely) | **Approved** (opens a re-attest window) |
+| Registry | **Traced** (amend freely) | **Approved** (opens a re-accept window) |
 |---|---|---|
 | SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle`, `DA-Refs` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `VerificationMethod`, `Coincident`, `Form` |
 | LLR | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase`, `SR-Refs`, `Hat-Refs` | `Title`, `Detail`, `Rationale` |
@@ -842,7 +842,7 @@ evidence — labelled as the operator's and contributing no registry to the act'
 WHICH ROWS the act may reach at all is the mint's, carried on the row: the
 `Adjudicates` column holds the ids the merge handed over, and the live
 re-resolution is INTERSECTED with it. Without that intersection the live
-re-derivation asks a wider question than the mint asked — `reattest_model` walks
+re-derivation asks a wider question than the mint asked — `reaccept_model` walks
 every SR in the repo, so a merge staging one `Drafted` row minted a brief
 covering the whole repo's `Drafted` backlog, across workstreams the operator's
 concurrency reason says the snapshot must not move across. Three filters, one
@@ -1029,7 +1029,7 @@ and still live.
 The code says so explicitly: §A5.1 never named it, and it is "the same shape of
 pointer as the ruled-traced `SN-Refs` / `Verifies`." Flagged in-code as WI-388's
 question rather than a defect — but it means re-pointing an LLR at a different
-parent SR opens a re-attest window while re-pointing an SR at a different SN does
+parent SR opens a re-accept window while re-pointing an SR at a different SN does
 not.
 
 ---
@@ -1060,7 +1060,7 @@ python project-trajectory/scripts/check.py --list             # show the plan on
 # per-module coverage floors (needs a coverage.json from a covered tier)
 python project-trajectory/scripts/check_coverage.py --tier full --skip-tiers smoke
 
-# the approval hierarchy for a batch, and the re-attest brief
+# the approval hierarchy for a batch, and the re-accept brief
 python project-trajectory/scripts/trace.py --approve SR-052,SR-053
 python project-trajectory/scripts/trace.py --approve modified --out docs/ratify/CURRENT.md
 python project-trajectory/scripts/trace.py --approve modified --check   # freshness gate (approval-fresh)

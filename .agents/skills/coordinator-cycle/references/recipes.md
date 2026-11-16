@@ -503,7 +503,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   with a reason that cites no verdict. The plan cap takes only a DISMISS.
   A dispute FIX's remedy is checked on the coordinator's own landing
   shape: the remedy WI-963's sitting named (compare with the copy the
-  re-attesting act's commit wrote) closed its finding only on an
+  re-accepting act's commit wrote) closed its finding only on an
   unsquashed range, while every hand landing is a squash; ask the
   builder to drive the fix over a squashed range too (wi-963 D-011).
   When a FIX's builder stops because the remedy breaks another Done-when
@@ -756,20 +756,20 @@ commit of its own, move it to trunk's tip
      authorized either: the merge slot refuses it, so re-sit the row before
      the landing.
 
-  The act brief lists its own `--reattests` and `--approves` rows: CLARITY
+  The act brief lists its own `--reaccepts` and `--approves` rows: CLARITY
   rows, a MEANING row the verdict marks `[MEANING+BLESS]` on a released rung,
-  and APPROVE rows on a released rung; on a held rung a CLARITY re-attest
+  and APPROVE rows on a released rung; on a held rung a CLARITY re-accept
   names the verdict with `--verdict`, for audit, and is owed only while the
   row's committed text still has the identity the verdict's binding records
   (the act turn refuses before launch otherwise: re-sit the row). A row the
   verdict rules CLARITY that
-  the lane deleted (a retired row) is listed in `--reattests` until its
+  the lane deleted (a retired row) is listed in `--reaccepts` until its
   recorded copy drops it; on a held rung it owes no act (removing a held row
   is the operator's). A first approval of a row absent at HEAD is refused as
   inconsistent.
   The act turn takes one act per kind of judgement, in the combined brief's
   order: the amendment act
-  (`--reattests`) first, then the first-approval act (`--approves`). A
+  (`--reaccepts`) first, then the first-approval act (`--approves`). A
   first-approval copy is refused while an approved row in its registry still
   drifts unattested, and the amendment act clears that drift first. The old
   single act covering both kinds is retired, because the spine is decomposed
@@ -780,7 +780,7 @@ commit of its own, move it to trunk's tip
   leaves the registry off its anchor: re-anchor it in the LANE, as its last
   spine commit, with
   `"$PY" "$SCRIPTS/intake.py" snapshot --approves "<registry>=<ref>"`
-  (no `--reattests`; the ref names the sitting that last anchored it).
+  (no `--reaccepts`; the ref names the sitting that last anchored it).
   Taken on trunk inside the squash, text-then-act refuses it (WI-887,
   2026-10-11). Adding an IF to an approved TC's `Verifies` (the strict gate refuses
   an IF row no TC cites) is traced-only too: the composer refuses an
@@ -935,7 +935,7 @@ commit of its own, move it to trunk's tip
   act in the range copied the row's registry and the row's routed traced
   cells moved, a row the lane's own act fully judged mints again (LLR-364).
   Check each minted amendment row against the lane's act: when that act
-  re-attested the row and its text is unchanged since, close the row citing
+  re-accepted the row and its text is unchanged since, close the row citing
   that act. Every other row it mints is real work and stays open.
 - **Successor rows:** for each SUCCESSOR ruling of an accepted dispute
   verdict (its `.requested` binding reads `outcome = recorded`), file one row
@@ -1357,7 +1357,7 @@ lane commit being replayed.
 - `attest`'s refusal prints only the bar's last lines, never the
   failing test: run `"$PY" "$SCRIPTS/run_menu.py" smoke` in the lane,
   to a log, to name it. A red that run passes is load-sensitive: file
-  it under status.md's follow-ups and re-attest; never charge it to the
+  it under status.md's follow-ups and re-accept; never charge it to the
   lane (2026-10-24a).
 - A tests stage's in-process cases can carry the smoke tier past
   `max-tests` at its first attest: count the tier first

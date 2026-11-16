@@ -123,7 +123,7 @@ ACCEPTOR's procedure, not an author's:
   pass; the derived rung follows. Note what `Approved` does and does not say: it
   blesses the row's **TEXT** and makes no claim that any test passed — whether
   they pass is the harness's answer, never a cell's.
-- **Re-attest (an amended `Approved` row)** — **there is no Status cell to
+- **Re-accept (an amended `Approved` row)** — **there is no Status cell to
   move.** An approved row whose content is later amended STAYS `Approved`;
   what marks it is the DIFFERENCE from its copy in
   `docs/archive/last_approved/`, and the pending-operator-actions projection
@@ -137,7 +137,7 @@ ACCEPTOR's procedure, not an author's:
   `CURRENT.md`, mint that sitting's dated copy — `python
   scripts/trace.py --mint-approval-brief <slug>` — and commit it alongside the
   approving `Status`/snapshot change. Blessing the amendment
-  is `python scripts/intake.py snapshot --reattests <ROW-ID>[,...]` in the
+  is `python scripts/intake.py snapshot --reaccepts <ROW-ID>[,...]` in the
   reviewed commit, naming each row read: the copy IS the signature now, so
   without it the record of what was blessed does not move, and the refresh
   refuses any drifted row neither flipped nor named. If the amendment invalidated the evidence, that is the harness's
@@ -145,7 +145,7 @@ ACCEPTOR's procedure, not an author's:
   Decisions, like any approval. The amendment itself is the authoring lane's
   to make; the RE-COPY is the acceptor's (the ruling above), so amend and
   re-copy in the **same commit** wherever ONE session does both — which is
-  every re-attestation, since a lane that re-copied would be approving. (The
+  every re-acceptance, since a lane that re-copied would be approving. (The
   `--staged` warn enforces the pairing.) A row's `Status` answers for its OWN
   cells (operator ruling 2026-08-17) — a child LLR/TC amendment never touches
   the owning SR.
@@ -168,7 +168,7 @@ Requirement/AC, LLR Detail, TC Method/Expected, and any cited rubric — then li
 that file from the `## OI-N` brief. `check_trajectory.py` warns (never fails)
 when a `[phase]-[reqs|tests]` approval brief carries no such link. **This
 view, once committed under `docs/ratify/`, is immutable too** (the enforcer
-does not distinguish it from a re-attestation brief) — a phase that needs a
+does not distinguish it from a re-acceptance brief) — a phase that needs a
 fresh view after committing one picks a new filename rather than overwriting.
 
 This preserves the reviewed-commit discipline while making the marker computed.

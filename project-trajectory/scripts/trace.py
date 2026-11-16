@@ -64,7 +64,7 @@ example rows (wire in from DevStg-Tests on); --strict-schema adds required-field
 closed-vocabulary, and "Automated=Yes cites Evidence" checks over the real rows;
 --approve SCOPE emits ONLY the batch-scoped approval hierarchy (a phase tag or
 an SR-id list) to stdout or --out and runs no checks (WI-146); the reserved scope
-`modified` (WI-316) emits the re-attestation brief instead — per-cell
+`modified` (WI-316) emits the re-acceptance brief instead — per-cell
 before/after for every row owing an operator act, against its copy in the
 `docs/archive/last_approved/` snapshot (`baseline_snapshot.py`); regenerate it
 to `docs/ratify/CURRENT.md`, the one file this path ever rewrites; the
@@ -96,13 +96,13 @@ Contract IF-042: the always-valid integrity floor, run over staged content.
     incoherent SR;LLR citation pair, an id-watermark breach — and 0 otherwise.
     Orphan and status findings are gate-scoped and never gate this flag, so the
     floor is safe to run on every commit at any stage.
-Contract IF-075: `reattest_model(root, srs, llrs, tcs, snapshot=...)`, reached
+Contract IF-075: `reaccept_model(root, srs, llrs, tcs, snapshot=...)`, reached
     through `load_registries(docs)` — the ONE computation of what a spine row
     owing an operator act looks like against its copy in
     `docs/archive/last_approved/`: the chain rows, each row's changed cells
     before and after, and the baseline revision and date. It returns structured
     entries rather than text, so every renderer consumes this model and none
-    re-derives it; `reattest_lines` renders the same entries as the markdown
+    re-derives it; `reaccept_lines` renders the same entries as the markdown
     brief. `snapshot=None` compares against nothing and falls back to the
     first-approval arm alone. An EMPTY model is a real answer, not a failure —
     no row differing from its snapshot copy and none awaiting a first approval
@@ -243,7 +243,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # same sanctioned-sibling-import idiom agent_loop and gen_trajectory use.
 #
 # `baseline_snapshot` and (through it) `check_trajectory` joined at D-9 step 4:
-# the re-attestation model's baseline is the `last_approved` snapshot, and its
+# the re-acceptance model's baseline is the `last_approved` snapshot, and its
 # cell comparison is `check_trajectory.split_changed_cells` — the SAME function
 # the amend-without-flip warn reads, which is what stops the brief and the warn
 # from ever disagreeing about which cells are normative. This is the one new
@@ -3388,8 +3388,8 @@ def spine_chain(sr_id, srs, llrs_by_sr, tcs_by_ref):
     deduped and in id order.
 
     THE ONE ANSWER TO "WHAT IS THIS REQUIREMENT'S CHAIN", public since WI-572
-    rather than a closure inside `reattest_model`. Two readers need it now and
-    they must not disagree: the re-attest model asks it of the live registries
+    rather than a closure inside `reaccept_model`. Two readers need it now and
+    they must not disagree: the re-accept model asks it of the live registries
     and of the snapshot's, and `adjudicate_brief.first_approval_values` asks it
     to render the chain a first-approval adjudicator reads — the whole chain,
     not the changed rows, because holding the chain is the operator's stated reason
@@ -3571,7 +3571,7 @@ def _rubrics_cited(*cells):
 
 
 # The `--approve` scopes that are NOT a phase tag or an id list — a CLOSED set,
-# routed to the re-attestation brief instead of the hierarchy view. Held as a set
+# routed to the re-acceptance brief instead of the hierarchy view. Held as a set
 # rather than as a literal comparison so a scope that is neither reserved nor
 # resolvable cannot fall through to an empty brief, and so re-spelling one is a
 # single edit here plus `check.py`'s `approval-fresh` step in the same commit.
@@ -3580,7 +3580,7 @@ def _rubrics_cited(*cells):
 # move when `Modified` retired at step 7. The snapshot design proposed re-spelling
 # it `drifted`; that renames a published command surface (`check.py`'s
 # `approval-fresh`, the `gate-advance` skill, adopters' muscle memory) and buys
-# nothing the migration needed — the COUPLING the plan named was `reattest_model`
+# nothing the migration needed — the COUPLING the plan named was `reaccept_model`
 # SELECTING on the literal, and that was cut at step 4.
 _RESERVED_APPROVAL_SCOPES = frozenset({"modified"})
 
@@ -3644,7 +3644,7 @@ def _sn_prose(sn_text, carrier):
     }
 
 
-# --- the re-attestation brief (--approve modified, WI-316) ----------------------
+# --- the re-acceptance brief (--approve modified, WI-316) ----------------------
 # A sitting cannot bless a delta it cannot see: for each SR owing an operator act the
 # brief shows every chain row's changed cells as BEFORE (the row in the
 # `docs/archive/last_approved/` snapshot) vs AFTER (the working tree).
@@ -3695,7 +3695,7 @@ _spine_stem = spine_carrier.stem
 _git_out = _kitgit.git_out
 
 
-# The reviewable-text threshold, shared by both re-attestation renderers
+# The reviewable-text threshold, shared by both re-acceptance renderers
 # (this module's markdown brief and `gen_open_items.py`'s HTML, which imports
 # `truncate_cell` rather than re-deriving its own limit — one number, not a
 # pair a future edit could let drift). Generous on purpose: this gates a
@@ -3721,7 +3721,7 @@ def truncate_cell(text, limit=CELL_TRUNCATE_LIMIT):
 
 def _full_row_bullets(row):
     """The `- **Cell**: value` bullets for a WHOLE registry row, non-empty cells
-    only — how the re-attestation brief renders a row it has no baseline to diff
+    only — how the re-acceptance brief renders a row it has no baseline to diff
     against. Both arms that need it (no attested baseline, and a row ADDED since
     the baseline) rendered it identically in place (WI-347); same file, so the
     cross-script F5 sanction never covered the copy."""
@@ -3740,7 +3740,7 @@ def _anchor_lines(sr_row):
 
     THE GAP THIS CLOSES: an `Approved`, undrifted SR whose amendment lives
     entirely in a `Drafted` child never appeared in `entry["rows"]` at all (see
-    `reattest_model`'s `if cells or drafted:` gate) — so the brief showed the
+    `reaccept_model`'s `if cells or drafted:` gate) — so the brief showed the
     chain row an operator must bless with no statement of the requirement it hangs
     from. The operator's report, verbatim (2026-08-24): opening the surface and
     looking at an owing SR, the requirement text itself was nowhere on the
@@ -3771,11 +3771,11 @@ def _cell_diff_lines(changed, approved=frozenset(), drafted=False):
 
     `drafted` COLLAPSES THE SPLIT (OI-71 defect 1). The two group labels are a
     property of a row that HAS been approved: an approved cell of it "owes a
-    re-attestation", a traced one "routes to adjudication". A `Drafted` row was
-    never approved — none of its cells owes a re-attestation and none arms a
+    re-acceptance", a traced one "routes to adjudication". A `Drafted` row was
+    never approved — none of its cells owes a re-acceptance and none arms a
     window; the whole row owes a FIRST approval, which its own section heading
     already states. Keyed on the cell's COLUMN class alone, the split rendered a
-    Drafted row's approved-class cells under "approved — re-attestation owed" —
+    Drafted row's approved-class cells under "approved — re-acceptance owed" —
     the exact false label round 019 of the wi508 lane caught. For a Drafted row
     the cells therefore render in one plain list, no group heading.
 
@@ -3791,7 +3791,7 @@ def _cell_diff_lines(changed, approved=frozenset(), drafted=False):
     else:
         groups = [
             (
-                "approved — re-attestation owed",
+                "approved — re-acceptance owed",
                 [c for c in changed if c[0] in approved],
             ),
             (
@@ -3814,7 +3814,7 @@ def _cell_diff_lines(changed, approved=frozenset(), drafted=False):
 
 
 def _entry_kind(sr_drafted, chain_has_drafted):
-    """What the model's entry OWES: a first approval, or a re-attestation of
+    """What the model's entry OWES: a first approval, or a re-acceptance of
     text that moved after it was blessed.
 
     BACK TO TWO ARMS AT D-9 STEP 5. The third (`plan`, for a `Planned` row whose
@@ -3829,7 +3829,7 @@ def _entry_kind(sr_drafted, chain_has_drafted):
     row said so itself (`Modified`) OR the snapshot said so (drift). The marker
     retired with the word, so the snapshot is the whole answer — which is the
     point of the mechanism rather than a loss (operator ruling 2026-08-17m). This
-    function is unchanged by that: it already returned `reattest` for everything
+    function is unchanged by that: it already returned `reaccept` for everything
     that is not `drafted`.
 
     WIDENED (the OI-61-sitting gap, `docs/log.d/2026-08-23-oi61-rule-and-spine-
@@ -3839,10 +3839,10 @@ def _entry_kind(sr_drafted, chain_has_drafted):
     now answers "does ANYTHING in this chain owe a first approval" — the SR
     itself, or any LLR/TC beneath it — because that is the action the reader
     actually owes; a card whose only drafted content is a child would otherwise
-    wear "re-attest owed" and mislead about what act closes it."""
+    wear "re-accept owed" and mislead about what act closes it."""
     if sr_drafted or chain_has_drafted:
         return "approve"
-    return "reattest"
+    return "reaccept"
 
 
 # "the caller passed nothing" vs "the caller passed None". `None` is a REAL
@@ -3917,11 +3917,11 @@ def _spine_stamps(root, snapshot):
     }
 
 
-def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
+def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
     """The STRUCTURED attestation model: one entry per SR owing an operator act,
     with its chain rows and each row's changed cells.
 
-    Split out of `reattest_lines` (WI-322) so the computation runs ONCE and two
+    Split out of `reaccept_lines` (WI-322) so the computation runs ONCE and two
     renderers consume it — the markdown brief here, and the generated
     `open-items.html` operator view in `gen_open_items.py`.
 
@@ -3971,7 +3971,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     leave that reason implicit in `state` alone; a row with no `Status` cell
     reads as owing its first approval the same way (`_owes_first`). `kind`
     answers for the whole chain: `approve` if the SR or any chain row owes a
-    first approval, `reattest` otherwise (drift only). Deterministic given the working tree and the
+    first approval, `reaccept` otherwise (drift only). Deterministic given the working tree and the
     snapshot."""
     if snapshot is _UNSET:
         snapshot = baseline_snapshot.load_all(root)
@@ -4136,7 +4136,7 @@ CURRENT_APPROVAL_BRIEF = "CURRENT.md"
 
 
 def current_approval_brief(root):
-    """The live re-attestation brief — `docs/ratify/CURRENT.md` — or None when
+    """The live re-acceptance brief — `docs/ratify/CURRENT.md` — or None when
     it does not exist. The fixed counterpart of the retired
     `newest_approval_brief`; see `CURRENT_APPROVAL_BRIEF` for why a fixed name
     replaced a derived one."""
@@ -4144,7 +4144,7 @@ def current_approval_brief(root):
     return path if path.is_file() else None
 
 
-# --- WI-325: the re-attestation brief gets the freshness gate everything else has
+# --- WI-325: the re-acceptance brief gets the freshness gate everything else has
 # Every other generated surface here is freshness-gated (`gen_trajectory --check`,
 # the status snapshot, `gen_okf --check`, `gen_open_items --check`); the brief was
 # generated the same way and gated by nothing, so it silently drifted behind the
@@ -4168,7 +4168,7 @@ def current_approval_brief(root):
 # dissolves rather than being guarded against.
 
 
-# The two lines `reattest_lines` derives from git rather than from the registry.
+# The two lines `reaccept_lines` derives from git rather than from the registry.
 # Excluded from the freshness comparison, and named ONCE here so the renderer and
 # the gate can never disagree about which lines are derived (the renderer's own
 # note points back at this constant).
@@ -4180,7 +4180,7 @@ _DERIVED_STAMP_PREFIXES = (
 
 def _without_derived_stamps(text):
     """`text` with the derived stamp lines dropped — the comparable half of a
-    re-attestation brief."""
+    re-acceptance brief."""
     return "\n".join(
         line
         for line in text.splitlines()
@@ -4213,7 +4213,7 @@ def approval_check(root, srs, llrs, tcs, out_path):
     "a gate that re-derives its own expectation" blocker dissolves.
 
     THE DERIVED STAMP LINES ARE EXCLUDED, and that is the same blocker in a
-    smaller shape (2026-08-20, the batch review's MAJOR-11). `reattest_lines`
+    smaller shape (2026-08-20, the batch review's MAJOR-11). `reaccept_lines`
     renders two lines that come from `git log`, not from the registry: the
     snapshot's write commit and the last status-cell move. Both change on commits
     that move no row the brief renders, so comparing them made the brief STALE on
@@ -4223,7 +4223,7 @@ def approval_check(root, srs, llrs, tcs, out_path):
     them."""
     if not out_path.exists():
         return 0, "no brief at {} — nothing to gate".format(out_path)
-    model = reattest_model(root, srs, llrs, tcs)
+    model = reaccept_model(root, srs, llrs, tcs)
     # An assumption owing an approval keeps the window open (SR-203), so a
     # batch holding only assumptions is freshness-checked like any other.
     if (
@@ -4231,13 +4231,13 @@ def approval_check(root, srs, llrs, tcs, out_path):
         and not assumptions_owing(root, *_assumption_rows(root))
         and not baseline_snapshot.needs_owing(root)
     ):
-        return 0, "no row owes an approval or a re-attest — the window is closed"
+        return 0, "no row owes an approval or a re-accept — the window is closed"
     try:
         with out_path.open("r", encoding="utf-8", newline="") as fh:
             existing = fh.read()
     except OSError as exc:
         return 1, "cannot read {}: {}".format(out_path, exc)
-    rendered = "\n".join(reattest_lines(root, srs, llrs, tcs)) + "\n"
+    rendered = "\n".join(reaccept_lines(root, srs, llrs, tcs)) + "\n"
     if _without_derived_stamps(rendered) == _without_derived_stamps(existing):
         return 0, "{} is current".format(out_path)
     return 1, (
@@ -4251,7 +4251,7 @@ def approval_check(root, srs, llrs, tcs, out_path):
 # --- WI-518: the off-spine census ---------------------------------------------
 # `intake.py snapshot` may copy any of the SEVEN `SNAPSHOTTED` registries (all
 # of them on a `--seed`; since WI-571 a refresh copies only the ones the act
-# authorises), but `reattest_lines` renders one section per SR — the off-spine tiers
+# authorises), but `reaccept_lines` renders one section per SR — the off-spine tiers
 # (`interfaces.toml`, `external.toml`, `components.toml`) never reach it, so a
 # row changed there since the last snapshot enters the signed baseline with no
 # operator-visible before/after at all (found by the OI-62-sitting adversarial
@@ -4331,7 +4331,7 @@ def offspine_census_rows(root, snapshot=_UNSET):
     unchanged (including when there is no snapshot at all — nothing to
     disclose about a re-seed that has never happened).
 
-    Split out (WI-518, the `reattest_model`/`reattest_lines` shape) so the
+    Split out (WI-518, the `reaccept_model`/`reaccept_lines` shape) so the
     comparison runs ONCE and two renderers consume it — this module's
     markdown brief (`offspine_census_lines`) and `gen_open_items.py`'s HTML
     operator view."""
@@ -4376,7 +4376,7 @@ def offspine_census_lines(root, snapshot=_UNSET):
         "",
         "_Off-spine registries get no per-row rendering here; `intake.py snapshot`"
         " copies one only when a row in it moves into approval or arrives approved,"
-        " `--approves` names it or `--reattests` names one of its rows; a re-SEED"
+        " `--approves` names it or `--reaccepts` names one of its rows; a re-SEED"
         " still blesses the whole tree. What it would absorb:_",
         "",
     ] + [
@@ -4465,7 +4465,7 @@ def _waiting_lines(entries, srs_by_id):
 
 
 def _entry_lines(entry, srs_by_id):
-    """The markdown section for ONE owing chain of `reattest_model`: the
+    """The markdown section for ONE owing chain of `reaccept_model`: the
     anchor SR's own text, then each chain row as its state renders it.
 
     One function for both places a chain renders — the operator's section and the
@@ -4694,13 +4694,13 @@ def assumption_brief_lines(root, srs, tcs, ids=None):
 
 
 def _approval_body(scope, reserved, root, reg):
-    """The `--approve` view's lines: the re-attestation brief for a reserved
+    """The `--approve` view's lines: the re-acceptance brief for a reserved
     scope; the assumption section for the `assumptions` scope or a list of
     `DA-`/`SUR-` ids, after the hierarchy of any other ids in the list; and
     the hierarchy view otherwise. An assumption scope with nothing to render is
     REFUSED, as an unmatched SR scope is."""
     if reserved:
-        return reattest_lines(root, reg.srs, reg.llrs, reg.tcs)
+        return reaccept_lines(root, reg.srs, reg.llrs, reg.tcs)
     named = [t.upper() for t in refs(scope) if _ASSUMPTION_ID.fullmatch(t)]
     rest = [t for t in refs(scope) if not _ASSUMPTION_ID.fullmatch(t)]
     if scope.strip().lower() != ASSUMPTION_SCOPE and not named:
@@ -4768,7 +4768,7 @@ def need_brief_lines(root):
         "## Stakeholder needs and stakeholders owing an act",
         "",
         "_A drifted row's approved text moved from its `{}` copy: once its"
-        " meaning is ruled, re-anchor it with `intake.py snapshot --reattests"
+        " meaning is ruled, re-anchor it with `intake.py snapshot --reaccepts"
         " <ROW-ID>`; until then an act copying the needs registry is refused. A"
         " row with no `Status` cell, or a `Drafted` one, owes its first"
         " approval._".format(baseline_snapshot.SNAPSHOT_DIR),
@@ -4784,8 +4784,8 @@ def need_brief_lines(root):
     return lines
 
 
-def reattest_lines(root, srs, llrs, tcs):
-    """Markdown for the re-attestation brief (`--approve modified`, WI-316): one
+def reaccept_lines(root, srs, llrs, tcs):
+    """Markdown for the re-acceptance brief (`--approve modified`, WI-316): one
     section per SR owing an operator act (grouped by SR for reading) with per-cell
     before/after for every chain row (the SR + its LLRs + their/its TCs) that
     differs from the `docs/archive/last_approved/` snapshot, plus rows ADDED to
@@ -4803,16 +4803,16 @@ def reattest_lines(root, srs, llrs, tcs):
     arm no window (§A5.1, the WI-388 ruling).
 
     Deterministic given the working tree and the snapshot; a generator mode like
-    `approval_lines` — runs no checks. The markdown RENDERER over `reattest_model`
+    `approval_lines` — runs no checks. The markdown RENDERER over `reaccept_model`
     (WI-322): the model owns the comparison, this owns the prose.
 
     Implements: SR-139, LLR-259
     """
-    model = reattest_model(root, srs, llrs, tcs)
+    model = reaccept_model(root, srs, llrs, tcs)
     srs_by_id = {r.get("SR-ID"): r for r in srs if r.get("SR-ID")}
     appr_rev, appr_date = baseline_snapshot.approval_stamp(root)
     lines = [
-        "# Re-attestation brief — spine rows owing an approval",
+        "# Re-acceptance brief — spine rows owing an approval",
         "",
         "_GENERATED by `trace.py --approve modified` (WI-316) — do not"
         " hand-edit; cite the spine registries, not this rendering. One section"
@@ -4826,7 +4826,7 @@ def reattest_lines(root, srs, llrs, tcs):
         " collapsed `{}` block (every section, when none renders): bless → set"
         " a `Drafted` row's `Status` to `Approved` (process.md §7), and from the"
         " first signing onward run `intake.py snapshot` in the SAME commit —"
-        " `intake.py snapshot --reattests <ROW-ID>` for a DRIFTED row, which no"
+        " `intake.py snapshot --reaccepts <ROW-ID>` for a DRIFTED row, which no"
         " flip carries since it already reads `Approved` — or the record of"
         " what was blessed does not move. A chain inside that block is an"
         " adjudication session's to approve, not this sitting's._".format(
@@ -5550,7 +5550,7 @@ def integrity_sweep(reg, raw):
     # schema-class on purpose: `--strict-schema` runs at DevStg-Impl only, so
     # a Status closure routed there would never execute in the repos this rule
     # exists for. A row carrying a word no predicate recognizes is invisible to
-    # every surface — the re-attest brief, the pending projection, the basis
+    # every surface — the re-accept brief, the pending projection, the basis
     # counters — which is a silent, not a loud, failure.
     integrity += [
         f for label in raw for f in enum_integrity_findings(label, raw[label])
@@ -6654,7 +6654,7 @@ def _cmd_mint_approval_brief(root, slug, date):
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    print("trace: minted re-attestation brief -> {}".format(dest))
+    print("trace: minted re-acceptance brief -> {}".format(dest))
     return 0
 
 
@@ -6781,7 +6781,7 @@ def main():
         "with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list "
         "(e.g. 'SR-052,SR-053'); a DevStg-Reqs/DevStg-Tests brief links this instead of hand-copying "
         "rows (WI-146). The reserved scope 'modified' (WI-316) emits the "
-        "RE-ATTESTATION brief instead: per-cell before/after for every row owing "
+        "RE-ACCEPTANCE brief instead: per-cell before/after for every row owing "
         "an operator act, against its copy in docs/archive/last_approved/. The "
         "reserved scope 'assumptions', or a DA-/SUR-id list, emits the "
         "assumption section: each assumption or surrogate owing an approval, "
@@ -6851,7 +6851,7 @@ def main():
     # approval hierarchy and exit 0 without running any orphan/integrity pass
     # (WI-146a). It reuses the loaded, example-filtered working sets above.
     # A RESERVED scope (`_RESERVED_APPROVAL_SCOPES` — `modified` today) emits the
-    # re-attestation brief instead: per-cell before/after for every row owing an
+    # re-acceptance brief instead: per-cell before/after for every row owing an
     # operator act, against its copy in the `last_approved` snapshot. Anything else
     # is a phase tag or an id list, and `_scope_srs` REFUSES one that matches
     # nothing rather than rendering an empty brief.

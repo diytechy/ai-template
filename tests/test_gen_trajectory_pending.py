@@ -3,7 +3,7 @@
 `pending.pending_block` is a pure projection of committed-tree state:
 
   (a) `blocked` WI rows carrying a BlockRef (the attestation/approval page);
-  (e) Drafted/Modified SR rows (WI-316) owing an approval / re-attest;
+  (e) Drafted/Modified SR rows (WI-316) owing an approval / re-accept;
   (f) the tracked `docs/work/pause` declaration (concurrency-restructure §5.6).
 
 (The dispatcher-era sources — refs/llm conflict records, quarantined trains,
@@ -119,10 +119,10 @@ def _write_srs(repo, body):
     )
 
 
-def test_a_RETIRED_marker_no_longer_projects_a_reattest_line(tmp_path):
+def test_a_RETIRED_marker_no_longer_projects_a_reaccept_line(tmp_path):
     """D-9 STEP 7, pinned in the direction that could otherwise go unnoticed.
 
-    This test used to prove that a `Modified` SR projected a re-attest line
+    This test used to prove that a `Modified` SR projected a re-accept line
     naming both flips. The marker retired, and what replaced it is SNAPSHOT
     DRIFT — so a row still carrying the retired word projects NOTHING here,
     which is correct (there is no baseline in this fixture to have drifted
@@ -157,7 +157,7 @@ def test_draft_sr_projects_approval_owed(tmp_path):
     assert "--approve SR-007" in body
 
 
-def test_a_DRIFTED_sr_line_names_the_row_to_reattest(tmp_path):
+def test_a_DRIFTED_sr_line_names_the_row_to_reaccept(tmp_path):
     """The drift arm's instruction has to be one that WORKS. An amended row
     still reads `Approved`, so no `Status` flip carries it into the copy, and a
     bare `intake.py snapshot` refuses a drifted row the act neither flips nor
@@ -172,7 +172,7 @@ def test_a_DRIFTED_sr_line_names_the_row_to_reattest(tmp_path):
     )
     body = _block(tmp_path)
     assert "SR-004 DRIFTED from the approved snapshot" in body
-    assert "`intake.py snapshot --reattests SR-004`" in body
+    assert "`intake.py snapshot --reaccepts SR-004`" in body
 
 
 def test_bommed_registry_still_projects(tmp_path):

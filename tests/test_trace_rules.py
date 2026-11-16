@@ -16,7 +16,7 @@ from conftest import load_script, make_minimal_project, run_py
 
 def test_a_spine_row_states_the_system_not_its_own_history():
     """Implements: TC-126"""
-    # Operator-raised at the first re-attestation sitting, on LLR-050's `WI-316:`
+    # Operator-raised at the first re-acceptance sitting, on LLR-050's `WI-316:`
     # changelog prefix: a spine row must be stand-alone — a reader with none of
     # this repo's history reads one row and knows what the system does and why.
     # Provenance has better homes (work-items.csv, the log's Decisions), and the
@@ -41,7 +41,7 @@ def test_a_spine_row_states_the_system_not_its_own_history():
     # The two token shapes, in the normative cells of all THREE registries — the
     # scope the SR-only version could not see, and where 43 of the 45 rows lived.
     assert flags(sr={"Requirement": "Shall resume (WI-210, one path)."})
-    assert flags(sr={"AcceptanceCriteria": "Modified (WI-316) rows re-attest."})
+    assert flags(sr={"AcceptanceCriteria": "Modified (WI-316) rows re-accept."})
     assert flags(sr={"Rationale": "Re-scoped by WI-210 to one path."})
     assert flags(sr={"Title": "Resume authority (WI-210)"})
     assert flags(llr={"Detail": "WI-316: is_modified recognized."})

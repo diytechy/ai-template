@@ -205,7 +205,7 @@ chasing it.
   four needs whose chains are approved down to test cases, with none of their
   machinery built yet
   ([the assumption-tier spine map](docs/plans/2026-09-25-assumption-tier-spine-map.md)).
-  The operator's stand-in signed them, and the operator's re-attestation is owed:
+  The operator's stand-in signed them, and the operator's re-acceptance is owed:
   - Code and analytics a later reader can understand, and change one part of
     without reworking unrelated parts (SN-041).
   - Every required behavior checked by tests written from its requirement
@@ -318,7 +318,7 @@ integrity-check the ids the moment real rows exist.
 This meta-repo dogfoods the component knowledge layer in its
 [`docs/knowledge/` index](docs/knowledge/README.md).
 
-*(Spine-touching work batches as a **phase** so one owner sitting re-attests
+*(Spine-touching work batches as a **phase** so one owner sitting re-accepts
 the whole batch, with the gate cadence riding the same convention — see
 [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Phase cadence".)*
 
@@ -537,7 +537,7 @@ a batch of artifacts is **approved** in a reviewed `Status`-change commit, and i
 state: the transitional `Modified` marker retired at the 2026-08-20 signing, and
 an amendment is now detected by **drift** — the row compared against its copy in
 `docs/archive/last_approved/`, which cannot be forgotten the way setting a marker
-could. Such a row owes a re-attest until the sitting blesses it (`trace.py
+could. Such a row owes a re-accept until the sitting blesses it (`trace.py
 --approve modified` still names that reserved scope and emits the before/after
 brief; semantics: PROCESS.md §7) (process-options.md "Derived gate model").
 

@@ -262,15 +262,15 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # above everything. 1281 -> 1352 when WI-553 (OI-70) added the fragment-`none`
     # cross-check (`_scope_span` + `_none_declaration_findings`, ARM 4) and its
     # `deferral_findings` wiring, all above this site. 1352 -> 1381 when WI-554
-    # (OI-71 defect 1) fixed the false "approved — re-attestation owed" label on
+    # (OI-71 defect 1) fixed the false "approved — re-acceptance owed" label on
     # a `Drafted` row and, to keep `_chain_row` under the C901 ratchet, split its
     # changed-cell rendering into `_changed_cell_groups`/`_changed_cell_lines` —
     # all above this site. 1381 -> 1383 when WI-661 made the off-spine census
     # note name every copy trigger (two lines, above this site). 1383 -> 1392
     # when WI-651 made the open-items view list each registry's own copy stamp
     # (the baseline paragraph became a list, above this site). 1392 -> 1443
-    # when WI-791 (OI-100) added the verdict re-attestation audit list
-    # (`verdict_reattest_block`, `_ledger_entries`) above this site. 1443 ->
+    # when WI-791 (OI-100) added the verdict re-acceptance audit list
+    # (`verdict_reaccept_block`, `_ledger_entries`) above this site. 1443 ->
     # 1549 when WI-790 added the queue-projection cards, the integrity notice
     # and the "Decisions to review" section, all above this site. 1549 -> 1580
     # when WI-818 added the overruled heading and the citing-row field to that

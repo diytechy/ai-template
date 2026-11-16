@@ -358,7 +358,7 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # window before it, and `trace -> agent_common` (IF-224) joins deferred.
     # The approval brief reads the operator-acceptance dial through the one existing
     # predicate, `agent_common.operator_accepts_spine`, rather than a second
-    # copy of the rung table; only a rendered re-attestation brief asks, so
+    # copy of the rung table; only a rendered re-acceptance brief asks, so
     # every other trace run stays free of agent_common's import. Reason in
     # docs/log.d/2026-09-26-wave3-build.md.
     # RE-STAMPED 28 -> 29 (2026-09-29, WI-545): the pure behavior split moved

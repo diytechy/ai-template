@@ -108,7 +108,7 @@ Choose the mode before writing. The `operator_accepts_through` dial in
 |---|---|---|
 | **From the vision** | The first breakdown | Tier by tier: approve each tier before deriving the next (§1–§3) |
 | **In a lane, released rungs** | A defect or new scope whose changed rows are all on released rungs | One change set, authored whole and judged in one sitting |
-| **In a lane, a held rung** | The change touches a held rung | Split at the dial: the lane lands held first drafts and MEANING changes, and their act is ruled on trunk; the sitting may re-attest only held amendments ruled CLARITY in its verdict |
+| **In a lane, a held rung** | The change touches a held rung | Split at the dial: the lane lands held first drafts and MEANING changes, and their act is ruled on trunk; the sitting may re-accept only held amendments ruled CLARITY in its verdict |
 
 **In every mode, a child is approved only after its parent.** An SR waits for
 every SN it cites, an LLR for every SR, and a TC for every SR and LLR it
@@ -164,7 +164,7 @@ file: change it there.
   as the flip.
 - **The approve brief.** `scripts/trace.py --approve <scope>` renders the batch's
   SN→SR→LLR→TC hierarchy with prose for the acceptor to read, and
-  `--approve modified` renders the per-cell before/after re-attestation brief.
+  `--approve modified` renders the per-cell before/after re-acceptance brief.
   Link the brief; never hand-copy rows into it. (Running the bar itself: the
   `gate-advance` skill. Orphans, integrity and schema findings:
   `registry-hygiene`.)
@@ -228,7 +228,7 @@ One line each, each one seen in a real spine:
   governing `SR`/`LLR`/`TC`, and each had to be extended to the need tier
   afterwards. Guard: writing or amending a spine rule, enumerate all four tiers
   and say why each one is in or out.
-- **A row amended without its own re-attest** — a row's `Status` answers for
+- **A row amended without its own re-accept** — a row's `Status` answers for
   its OWN cells (`docs/process.md` §4; operator ruling 2026-08-17): re-read the
   row whose text changed, and only that row — a child LLR/TC amendment never
   touches its parent SR. There is no marker to set (`Modified` retired

@@ -719,14 +719,14 @@ def recorded_identities(root, rev, verdict_path):
 
 
 # The rulings that authorize each kind's act on a row: a first approval's
-# APPROVE flips it, an amendment's CLARITY re-attests it, and so does its
+# APPROVE flips it, an amendment's CLARITY re-accepts it, and so does its
 # MEANING, but only on a row the part marks `[MEANING+BLESS]` (`judged_rows`).
 # The held-rung CLARITY-only rule is acceptance_record's, on top of this.
 _AUTHORIZING = {"first-approval": ("APPROVE",), "amendment": ("MEANING", "CLARITY")}
 # The sentence a refusal carries when an amendment row it names is
 # unauthorized; a refusal naming no such row omits it.
 _BLESS_REMEDY = (
-    "An amendment's MEANING row authorizes a re-attestation only when its "
+    "An amendment's MEANING row authorizes a re-acceptance only when its "
     "verdict marks it `[MEANING+BLESS]`: re-sit that row."
 )
 
@@ -756,7 +756,7 @@ def judged_rows(parsed):
 
 def _named_line(root, rev, act):
     """The refusal line for one act naming a verdict, or None: the verdict is
-    not recorded, or it does not authorize a row the act re-attests."""
+    not recorded, or it does not authorize a row the act re-accepts."""
     verdict = str(act["verdict"]).strip()
     parsed = recorded_at(root, rev, verdict)
     if not parsed:
@@ -772,7 +772,7 @@ def _named_line(root, rev, act):
 def unrecorded_refusal(root, rev, acts):
     """Why a merge must refuse the approval acts it adds, or None: EVERY act
     that names a verdict must name one `recorded_at` reads as recorded at
-    `rev` AND that authorizes each row the act re-attests (`judged_rows`;
+    `rev` AND that authorizes each row the act re-accepts (`judged_rows`;
     round 16). An act naming no verdict is `uncovered_refusal`'s; acts
     already on trunk are never passed here.
 
@@ -787,7 +787,7 @@ def unrecorded_refusal(root, rev, acts):
     unmarked = any(" (does not authorize " in line for line in lines)
     return (
         "the adjudication's act names a verdict no route RECORDED, or "
-        "one that does not authorize the rows it re-attests; nothing was "
+        "one that does not authorize the rows it re-accepts; nothing was "
         "merged:\n{}\nRemedy: re-sit the adjudication through the loop or the "
         "coordinator's entry point, which records its outcome beside the "
         "verdict, and name the recorded verdict that authorizes those "
@@ -798,7 +798,7 @@ def unrecorded_refusal(root, rev, acts):
 # The review records a lane's verdicts and their bindings live under.
 REVIEWS = "docs/reviews"
 # Which adjudication kind an act-ledger entry's key needs: a flip is a first
-# approval's act, a re-attestation an amendment's.
+# approval's act, a re-acceptance an amendment's.
 _ACT_KINDS = (("approved", "first-approval"), ("reattested", "amendment"))
 
 
@@ -819,7 +819,7 @@ def uncovered_refusal(root, base, rev, acts):
     """Why a merge must refuse the approval acts it adds, or None, WHETHER OR
     NOT an act names a verdict (WI-841 rounds 14, 16): every ROW an added act
     flips must be ruled APPROVE in a first-approval part, and every row it
-    re-attests ruled CLARITY, or MEANING with the bless mark, in an amendment
+    re-accepts ruled CLARITY, or MEANING with the bless mark, in an amendment
     part (`judged_rows`), of a RECORDED
     verdict (`recorded_at`) among the bindings this branch carries
     (`branch_verdicts`), single-kind or combined. An act's authority is the

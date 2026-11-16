@@ -25,11 +25,11 @@
 
      Slots (single-brace, strict fill — a missing one refuses):
        {verdict}        the committed verdict that authorizes this act, as a
-                        repo path; a held-rung re-attestation names it.
+                        repo path; a held-rung re-acceptance names it.
        {wi}             the adjudication work item, for each act commit's
                         trailer.
-       {amendment_act}  the re-attestation the amendment part still owes:
-                        the rows and the one `intake.py snapshot --reattests`
+       {amendment_act}  the re-acceptance the amendment part still owes:
+                        the rows and the one `intake.py snapshot --reaccepts`
                         command, or `none owed`.
        {approval_act}   the flips the first-approval part still owes: the
                         rows, each with its registry, and the one
@@ -50,7 +50,7 @@ You are the adjudicator taking the ACT a committed verdict authorizes. The judge
 
 The act is derived from that verdict and from this lane's committed tree. It lists only what is still owed. Take each part listed, in the order given, each in its own reviewed commit ending with the trailer `WI: {wi}`, and take nothing that is not listed.
 
---- 1. THE AMENDMENT ACT (re-attestation) ---
+--- 1. THE AMENDMENT ACT (re-acceptance) ---
 {amendment_act}
 --- 2. THE FIRST-APPROVAL ACT (flips) ---
 {approval_act}
@@ -62,10 +62,10 @@ The first-approval act's `--approves` value is `{registries}`. Its `;`-joined to
 
 How to take each part:
 
-- THE AMENDMENT ACT comes first. Leave every row's `Status` at `Approved` and every registry cell byte-exact, run its one `python scripts/intake.py snapshot --reattests ...` command exactly as listed (with `--verdict` where it is listed), and commit the copy it writes. Never widen `--reattests` to a row that is not listed: re-attesting text no verdict ruled is the laundering the snapshot's refusal exists to stop.
+- THE AMENDMENT ACT comes first. Leave every row's `Status` at `Approved` and every registry cell byte-exact, run its one `python scripts/intake.py snapshot --reaccepts ...` command exactly as listed (with `--verdict` where it is listed), and commit the copy it writes. Never widen `--reaccepts` to a row that is not listed: re-accepting text no verdict ruled is the laundering the snapshot's refusal exists to stop.
 - THE FIRST-APPROVAL ACT comes second. Move each listed row's `Status` from `Drafted` to `Approved`, and change nothing else in any registry: every other cell of every row stays byte-exact. Then run its one `python scripts/intake.py snapshot --approves "..."` command exactly as listed, and commit the flips and the copy together as one commit. KEEP THE QUOTES: the value joins registries with `;`, which every shell reads as a command separator, so an unquoted value spanning two registries snapshots only the first and runs the second as a command.
 - A part listed as `none owed` is already taken, or was never owed. Skip it.
 
-If the snapshot REFUSES, naming a row that is not listed, that row is an approved one whose text drifted from its recorded copy: an amendment another verdict owes. Do not add it to `--reattests` and do not edit it. Stop there: commit nothing further, and report the refusal. The coordinator discards what the refusal left uncommitted and takes the case from there.
+If the snapshot REFUSES, naming a row that is not listed, that row is an approved one whose text drifted from its recorded copy: an amendment another verdict owes. Do not add it to `--reaccepts` and do not edit it. Stop there: commit nothing further, and report the refusal. The coordinator discards what the refusal left uncommitted and takes the case from there.
 
-You may not write or edit anything under `docs/reviews/`, edit any registry cell but a listed row's `Status`, or approve or re-attest a row that is not listed. The act turn reports success only when every listed part is committed.
+You may not write or edit anything under `docs/reviews/`, edit any registry cell but a listed row's `Status`, or approve or re-accept a row that is not listed. The act turn reports success only when every listed part is committed.

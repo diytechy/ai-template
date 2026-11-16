@@ -2,7 +2,7 @@
 
 `docs/open-items.md` is retired: decision briefs are ROWS in
 `docs/requirements/open-items.csv`, and this generator renders them — plus every
-spine row owing an approval (`Drafted`) or a re-attest (`Modified`), with a
+spine row owing an approval (`Drafted`) or a re-accept (`Modified`), with a
 word-level before/after — into `docs/open-items.html`.
 
 What these guard, in the order the surface can fail a reader:
@@ -174,7 +174,7 @@ def test_pending_briefs_render_and_ruled_rows_do_not(tmp_path):
 
 def test_draft_and_DRIFTED_rows_both_surface(tmp_path):
     """ "New or changed" is the requirement: a Drafted row owes a first
-    approval, an amended row owes a re-attest, and a view that renders only
+    approval, an amended row owes a re-accept, and a view that renders only
     one of them silently drops half the operator's queue.
 
     THE SECOND ROW IS NOW REACHED BY DRIFT, NOT BY A CELL. It used to read
@@ -203,7 +203,7 @@ def test_draft_and_DRIFTED_rows_both_surface(tmp_path):
     assert gen(root).returncode == 0
     page = html_of(root)
     assert 'id="SR-001-attest"' in page and "approval owed" in page
-    assert 'id="SR-002-attest"' in page and "re-attest owed" in page
+    assert 'id="SR-002-attest"' in page and "re-accept owed" in page
     # ...and the drifted cell is what the operator is shown, before and after.
     assert "ORIGINAL" in page and "CHANGED" in page
 
@@ -218,7 +218,7 @@ def test_verified_rows_are_not_in_the_queue(tmp_path):
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
     assert "SR-003" not in page
-    assert "no SR owes an approval or a re-attest" in page
+    assert "no SR owes an approval or a re-accept" in page
 
 
 def test_drafted_child_under_approved_undrifted_sr_owes(tmp_path):
@@ -260,7 +260,7 @@ def test_approved_child_under_approved_sr_does_not_owe(tmp_path):
     assert gen(root).returncode == 0
     page = html_of(root)
     assert 'id="SR-021-attest"' not in page
-    assert "no SR owes an approval or a re-attest" in page
+    assert "no SR owes an approval or a re-accept" in page
 
 
 def test_drafted_child_unchanged_since_snapshot_still_owes(tmp_path):
@@ -285,8 +285,8 @@ def test_drafted_row_cells_are_not_labelled_approved(tmp_path):
     """OI-71 defect 1, the HTML half — this view and the `--approve modified`
     markdown brief must agree (IF-074). A `Drafted` TC that drifted in both an
     approved-class cell (`Method`) and a traced-class cell (`Evidence`) used to
-    render its `Method` change under the §A5.1 heading `approved — re-attestation
-    owed`, keyed on the cell's COLUMN class alone — a re-attestation window on a
+    render its `Method` change under the §A5.1 heading `approved — re-acceptance
+    owed`, keyed on the cell's COLUMN class alone — a re-acceptance window on a
     row that was never approved. It owes a FIRST approval wholesale."""
     sr = (
         "SR-023,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
@@ -307,7 +307,7 @@ def test_drafted_row_cells_are_not_labelled_approved(tmp_path):
     page = html_of(root)
     assert "TC-023" in page and "never approved" in page
     assert "<ins>NEW</ins>" in page  # the change is still shown, via word_diff
-    assert "approved — re-attestation owed" not in page
+    assert "approved — re-acceptance owed" not in page
 
 
 # --- the SR-177 gap: the anchor SR's own text, unconditional and never -----
@@ -453,7 +453,7 @@ def test_html_escapes_registry_prose(tmp_path):
 # `test_a3_every_painted_vocabulary_member_is_explained_in_words`
 # (test_traj_render_sweeps.py) sweeps gen_trajectory's declared palette dicts —
 # this module has no such dict to enumerate; its colour-differentiated idioms
-# (the diff marks, the approve/re-attest pills) were held apart by comment
+# (the diff marks, the approve/re-accept pills) were held apart by comment
 # discipline alone (the module docstring's own claim: "ins/del carries
 # line-through + box-shadow ... pills carry words"). These are that closure's
 # equivalent for THIS module's own two encodings — each pinned so a future
@@ -512,16 +512,16 @@ def test_the_view_names_its_authority(tmp_path):
     repo(tmp_path, oi_rows=PENDING_OI)
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
-    assert "reattest_model" in page and "authoritative" in page
+    assert "reaccept_model" in page and "authoritative" in page
 
 
-def test_the_footer_names_reattests_for_blessing_an_amendment(tmp_path):
+def test_the_footer_names_reaccepts_for_blessing_an_amendment(tmp_path):
     """Blessing an amendment re-copies a row that still reads `Approved`, so no
     flip carries it, and a bare `intake.py snapshot` refuses it. The footer's
     instruction has to name the row, or it hands the operator a refusal."""
     repo(tmp_path, oi_rows=PENDING_OI)
     assert gen(tmp_path).returncode == 0
-    assert "intake.py snapshot --reattests &lt;ROW-ID&gt;" in html_of(tmp_path)
+    assert "intake.py snapshot --reaccepts &lt;ROW-ID&gt;" in html_of(tmp_path)
 
 
 # --- 122-REVIEW-A regressions: one per finding, each proven against the defect --
@@ -727,7 +727,7 @@ def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
 
 
 def test_sr_text_renders_when_only_a_child_row_was_amended(tmp_path):
-    """An SR can owe a re-attest while nothing but its Status flipped — the whole
+    """An SR can owe a re-accept while nothing but its Status flipped — the whole
     amendment sitting in an LLR or TC beneath it. That section used to open with
     a child-row diff and never state the requirement it hangs from."""
     sr = (
@@ -883,7 +883,7 @@ def test_offspine_census_names_the_interfaces_registry_in_the_html_view(tmp_path
     # The same copy triggers as the markdown census (see
     # tests/test_trace_briefs.py for where each is driven behaviourally).
     assert "a row in it moves into approval or arrives approved" in html
-    assert "<code>--reattests</code> names one of its rows" in html
+    assert "<code>--reaccepts</code> names one of its rows" in html
     assert "moves or <code>--approves</code> names it" not in html
     assert "when its own Status moves" not in html
     # No-change off-spine tiers render nothing.

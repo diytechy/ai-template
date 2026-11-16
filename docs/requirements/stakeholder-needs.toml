@@ -35,7 +35,7 @@
 #                           commit is the sign-off and its date is the
 #                           approval date.
 #                 Modified  approved text that has since been amended and is
-#                           not re-signed — the operator re-attests it.
+#                           not re-signed — the operator re-accepts it.
 #                           Transitional: it retires once approved text is
 #                           snapshotted and a diff answers the same question.
 #
@@ -74,7 +74,7 @@
 #   stakeholder_refs
 #               The declared stakeholders (`[stakeholder.STK-##]`, below the
 #               needs) whose outcome the need is. A POINTER, not the need's own
-#               text: traced, so re-pointing it re-attests nothing. A need
+#               text: traced, so re-pointing it re-accepts nothing. A need
 #               naming none is reported; one naming an undeclared id fails.
 #
 #   source      OPTIONAL — where the need was drawn from: repository-relative

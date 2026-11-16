@@ -54,7 +54,7 @@ than overwriting the first. Read "a close no one can read is indistinguishable
 from a run that finished" as the general test: silence must not be a success
 signal. `baseline_snapshot.refresh_refusal` is the same instinct one tier up — a
 refresh that would absorb a row's drifted approved text is refused unless that
-row's own `Status` flip or an explicit `--reattests` naming it authorises it, so
+row's own `Status` flip or an explicit `--reaccepts` naming it authorises it, so
 the record of what an operator blessed cannot be quietly rewritten.
 
 ## Application

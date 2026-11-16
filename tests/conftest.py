@@ -188,7 +188,7 @@ SLOW_MODULES = frozenset(
         # behavior-preserving, not a re-tiering. test_trace_rules is genuinely
         # in-process; putting it back in the bar is a separate MEASURED call.
         "test_trace_rules",  # pure registry-rule decisions
-        "test_trace_briefs",  # re-attestation brief: git effect + freshness gate
+        "test_trace_briefs",  # re-acceptance brief: git effect + freshness gate
         # WI-521 slice 3 split the IF-### interface-seam tier out of test_trace.py
         # (M-06). Every test still drives a real trace.py over a scaffold through
         # run_py — the SAME heavy class as test_trace above — so it rides that

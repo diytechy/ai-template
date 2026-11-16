@@ -934,7 +934,7 @@ def test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_sco
 
 def test_the_held_aftermath_gives_each_verdict_its_own_arm(tmp_path):
     """LLR-167: on a held rung the aftermath tells a CLARITY verdict that the
-    later act turn re-attests it naming the verdict, and a MEANING verdict
+    later act turn re-accepts it naming the verdict, and a MEANING verdict
     that it stops for the operator, never the other way round (WI-912).
 
     Implements: TC-161
@@ -954,7 +954,7 @@ def test_the_held_aftermath_gives_each_verdict_its_own_arm(tmp_path):
 
 # --- the row-text identity the amendment brief states and the binding keeps ---
 #
-# A held CLARITY re-attestation is bound to the text its verdict judged: the
+# A held CLARITY re-acceptance is bound to the text its verdict judged: the
 # brief states one `JUDGED-TEXT: <row> <digest>` line per row it shows, the
 # binding records those identities at reservation, and the route's outcome
 # rewrite keeps them.
@@ -1060,7 +1060,7 @@ def test_the_amendment_brief_reanchors_CLARITY_rows_and_keeps_the_sibling_hold()
     body = template.split("-->", 1)[1]
     assert "owes nothing further" not in body
     assert "CLARITY" in body and "[MEANING+BLESS]" in body
-    assert "--reattests" not in body
+    assert "--reaccepts" not in body
     assert "same sitting" in body
     assert "first draft" in body
 
@@ -1068,7 +1068,7 @@ def test_the_amendment_brief_reanchors_CLARITY_rows_and_keeps_the_sibling_hold()
 # --- the amendment brief's scope and its per-registry anchor -----------------
 #
 # The same widening WI-572 closed for the first-approval arm, found live in this
-# one: `reattest_model` is REPO-WIDE, so an amendment row minted for one row
+# one: `reaccept_model` is REPO-WIDE, so an amendment row minted for one row
 # rendered every drifted approved row in the tree, and three adjudications that
 # each named one row were each handed the same twenty.
 
@@ -1324,7 +1324,7 @@ def test_a_present_undrifted_scoped_row_still_drops_beside_a_removal(tmp_path):
 
 
 def test_an_amended_row_under_two_SRs_is_rendered_once(tmp_path):
-    # `reattest_model` groups by owning SR, so a row with two parents sits in
+    # `reaccept_model` groups by owning SR, so a row with two parents sits in
     # two entries. Rendered per entry, a one-row mint showed its row twice and
     # the verdict's `rows=N` could not be counted against the brief.
     repo = _spine_repo(tmp_path)
@@ -1593,7 +1593,7 @@ def test_no_judging_brief_orders_an_act(tmp_path, case):
     # WI-912 (revisions 32 and 36): a sitting ends at its committed verdict,
     # and its act is a later turn taken from that verdict. So no composed
     # judging brief tells its session to flip a Status, take the copy, or
-    # re-attest by itself; each says the act is a later turn.
+    # re-accept by itself; each says the act is a later turn.
     text = _composed_judging_brief(tmp_path, case)
     assert "intake.py snapshot" not in text
     assert "BY YOU" not in text
@@ -1622,7 +1622,7 @@ def test_the_first_approval_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
 def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
     # WI-572 REVIEW-A, the MAJOR finding. The mint filters the population by the
     # dial (`intake._released_drafted_rows`); this assembler RE-RESOLVES it live
-    # from `reattest_model`, which is dial-blind by design — and the first cut
+    # from `reaccept_model`, which is dial-blind by design — and the first cut
     # did not put the filter back. Under a MIXED dial that is not a cosmetic
     # gap: the brief rendered a held `Drafted` SR beside a released `Drafted`
     # LLR, marked both as awaiting the act, and derived a `--approves` argument
@@ -1672,7 +1672,7 @@ def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over
     tmp_path,
 ):
     # WI-572 REVIEW-A round 4, the MAJOR finding. The assembler re-derives its
-    # population LIVE from `trace.reattest_model`, which walks EVERY SR in the
+    # population LIVE from `trace.reaccept_model`, which walks EVERY SR in the
     # repo — so with nothing to intersect against, a merge that staged ONE
     # `Drafted` LLR minted a row whose brief then told its session it held the
     # approval authority for the whole repo's `Drafted` backlog, and derived a

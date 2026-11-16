@@ -256,16 +256,16 @@ def test_staged_spine_amend_without_flip_warns(tmp_path):
     assert "SR-001" in proc.stderr
     assert "Requirement" in proc.stderr
     # THE MESSAGE MOVED AT D-9 STEP 7 and the assertion moves with it. It told
-    # the author to set the `Modified` re-attest marker; that marker retired,
-    # so it now names the two real outcomes — re-attest in the next commit
+    # the author to set the `Modified` re-accept marker; that marker retired,
+    # so it now names the two real outcomes — re-accept in the next commit
     # (WI-806: the text first, the act second), or the change rides as
     # snapshot drift until the next sitting.
     assert "SNAPSHOT DRIFT" in proc.stderr
     # The re-copy names the row: a bare `intake.py snapshot` refuses a drifted
-    # approved row that the act neither flips nor names with `--reattests`.
-    assert "intake.py snapshot --reattests SR-001" in proc.stderr
+    # approved row that the act neither flips nor names with `--reaccepts`.
+    assert "intake.py snapshot --reaccepts SR-001" in proc.stderr
     # ...and it no longer names a value the closed enum cannot hold.
-    assert "Modified re-attest marker" not in proc.stderr
+    assert "Modified re-accept marker" not in proc.stderr
 
 
 def test_staged_spine_amend_with_a_status_move_is_silent(tmp_path):
@@ -326,9 +326,9 @@ def test_staged_child_amend_needs_its_own_flip_not_the_parents(tmp_path):
     assert proc2.returncode == 0, proc2.stdout + proc2.stderr
     assert "LLR-001" in proc2.stderr
     # WI-806: the warn names the two commits, text first and the act second.
-    assert "re-attest it in the NEXT commit" in proc2.stderr
-    assert "re-attest it in this commit" not in proc2.stderr
-    assert "intake.py snapshot --reattests LLR-001" in proc2.stderr
+    assert "re-accept it in the NEXT commit" in proc2.stderr
+    assert "re-accept it in this commit" not in proc2.stderr
+    assert "intake.py snapshot --reaccepts LLR-001" in proc2.stderr
 
 
 def test_staged_spine_warn_survives_a_bom(tmp_path):
@@ -368,7 +368,7 @@ def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
     run_git("add", "-A")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "re-attest marker" not in proc.stderr
+    assert "re-accept marker" not in proc.stderr
 
 
 # --- WI-572: the APPROVAL ACT half of the same walk ---------------------------
@@ -508,7 +508,7 @@ def test_the_lane_refusal_names_every_act_and_the_snapshot_write(tmp_path):
 # --- WI-380: the §A5.1 approved-vs-traced cell split ---------------------------
 #
 # Operator ruling 2026-07-31 (docs/concurrency-v2.md §A5.1): only what is APPROVED
-# arms the re-attest warn. Traceability is TRACED, and a traced-only edit must
+# arms the re-accept warn. Traceability is TRACED, and a traced-only edit must
 # stay silent — WI-280 paid four review rounds and a DevStg-Impl->DevStg-Tests gate drop for 19
 # `Module` pointers that followed moved code and altered no requirement.
 
@@ -585,7 +585,7 @@ def _init_full_spine_repo(root):
     return run_git
 
 
-def test_staged_spine_traced_cells_do_not_arm_the_reattest_warn(tmp_path):
+def test_staged_spine_traced_cells_do_not_arm_the_reaccept_warn(tmp_path):
     # THE WI-380 CASE. Every traced cell of all three registries moves at once —
     # the SR's SN-Refs/Phase/Aspect, the LLR's Module/CodeSymbol/TestRefs/
     # Component/Phase (literally the WI-280 shape), the TC's Verifies/Evidence/
@@ -619,10 +619,10 @@ def test_staged_spine_traced_cells_do_not_arm_the_reattest_warn(tmp_path):
     run_git("add", "-A")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "re-attest marker" not in proc.stderr
+    assert "re-accept marker" not in proc.stderr
 
 
-def test_staged_spine_approved_child_cells_still_arm_the_reattest_warn(tmp_path):
+def test_staged_spine_approved_child_cells_still_arm_the_reaccept_warn(tmp_path):
     # The complement, so the narrowing cannot be mistaken for a disabling: the
     # LLR's `Detail`/`Rationale` and the TC's `Method`/`Expected` are approved,
     # and amending them with the owning SR left Approved still warns per row.
@@ -745,7 +745,7 @@ def test_the_two_wi388_cell_rulings_are_recorded_in_the_split():
     assert "SupersededBy" not in ct.SPINE_TRACED_CELLS[sr]
 
 
-def test_staged_llr_sr_refs_repoint_is_traced_not_a_reattest_warn(tmp_path):
+def test_staged_llr_sr_refs_repoint_is_traced_not_a_reaccept_warn(tmp_path):
     # The ruled behaviour, driven: an LLR re-pointed at a different owning SR
     # stays SILENT at the amend-without-flip warn (traced, per the WI-388
     # ruling above) but does NOT vanish — the amendment record carries it in

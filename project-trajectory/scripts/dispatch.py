@@ -31,7 +31,7 @@ row dispatches at every level — building a scope change is WORK, not an
 approval — but EXCLUSIVELY, one row per exclusive turn: an exclusive-kind
 row on the frontier stops new admission, the dispatcher waits for every lane
 back in the station, then admits the first spine row ALONE (one branch, one
-`agent_loop --wi WI-###` worker, one re-attest window); the remaining spine
+`agent_loop --wi WI-###` worker, one re-accept window); the remaining spine
 rows stay queued for later exclusive turns. A lane carries exactly one work
 item. An `attestation`/`gate` row does NOT dispatch while the tier in process
 is still OPERATOR-HELD: the lanes drain, the cards stay on open-items.html, and
@@ -411,7 +411,7 @@ def _judgement_first(ready_kinds):
     WHY dispositions outrank even a scope change: an adjudication row exists
     because a lane CLAIMED an outcome (a partial close, a cancellation, an
     amendment that may have moved meaning) and nothing has judged that claim
-    yet. A spine row re-attests requirements. Running the spine row first
+    yet. A spine row re-accepts requirements. Running the spine row first
     re-approves a spine on a premise the pending judgement may overturn, and an
     approval is the one thing this loop cannot cheaply take back — the
     attestation ledger is append-only by design. Judge, then build."""

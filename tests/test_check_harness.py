@@ -846,7 +846,7 @@ def test_strict_is_refused_without_the_detector(tmp_path):
     assert "--strict applies only to --staged-divergence" in (proc.stdout + proc.stderr)
 
 
-# --- WI-503: the re-attestation brief's immutability enforcer -----------------
+# --- WI-503: the re-acceptance brief's immutability enforcer -----------------
 # staged_divergence's sibling: it reads the STAGED tree (what a commit is
 # about to contain) rather than the unstaged worktree, and asks a different
 # question — not "did you forget to stage a regeneration" but "does this

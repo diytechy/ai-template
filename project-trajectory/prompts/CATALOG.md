@@ -19,8 +19,8 @@ is a refusal rather than a silently empty instruction.
 
 | Key | File | Digest | Slots |
 |---|---|---|---|
-| `ADJUDICATE-ACT` | [adjudicate-act.template.md](adjudicate-act.template.md) | `sha256:41fc9b0c1a37` | `{amendment_act}`, `{approval_act}`, `{approves_rows}`, `{registries}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:7b2886c9b62c` | `{aftermath}`, `{baseline}`, `{hats}`, `{identity}`, `{questions}`, `{rows}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-ACT` | [adjudicate-act.template.md](adjudicate-act.template.md) | `sha256:a98ee33b28d1` | `{amendment_act}`, `{approval_act}`, `{approves_rows}`, `{registries}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:f15b4bb9c79e` | `{aftermath}`, `{baseline}`, `{hats}`, `{identity}`, `{questions}`, `{rows}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-COMBINED` | [adjudicate-combined.template.md](adjudicate-combined.template.md) | `sha256:d16b4841c8b2` | `{kinds}`, `{sections}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-CONSOLIDATE` | [adjudicate-consolidate.template.md](adjudicate-consolidate.template.md) | `sha256:d505cbb298ae` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{prior}`, `{spine}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:83c98efe88bc` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
@@ -31,7 +31,7 @@ is a refusal rather than a silently empty instruction.
 | `ADJUDICATE-REJUDGE` | [adjudicate-rejudge.template.md](adjudicate-rejudge.template.md) | `sha256:5a1e40710449` | `{case}`, `{reason}`, `{tc}`, `{verdict}`, `{wi}` |
 | `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:6f26c312de16` | `{brief}`, `{verdict}` |
 | `PLAN-SINGLE` | [plan-single.template.md](plan-single.template.md) | `sha256:9e9630661ec5` | `{clauses}`, `{inputs}`, `{plan}`, `{revision}`, `{spec}`, `{title}`, `{wi}` |
-| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:e125a41b7023` | `{head}`, `{process_doc}`, `{round_facts}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
+| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:728717507828` | `{head}`, `{process_doc}`, `{round_facts}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
 | `WORKER` | [worker.template.md](worker.template.md) | `sha256:b1c4454887c6` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
 
 ## Composed fragments
@@ -44,7 +44,7 @@ no key and no override. An absent or unreadable fragment fails generation and
 
 | File | Digest | Fills |
 |---|---|---|
-| [spine-questions.md](spine-questions.md) | `sha256:336c994f15a2` | `{questions}` |
+| [spine-questions.md](spine-questions.md) | `sha256:4ceeb4f7aab4` | `{questions}` |
 
 An operator override replaces a template per phase (`--prompt-map`); an
 overridden session's `# prompt-template:` names the override path, so the

@@ -5,7 +5,7 @@ The cells the assumption tier and its neighbours introduce, each on an
 APPROVED row whose one change is that cell, compared across two committed
 trees. A traced cell is a pointer at another row: moving it reports no drift
 from the recorded copy. An approved cell is a statement the row makes: moving
-it is drift owed a re-attestation.
+it is drift owed a re-acceptance.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: its fixture builds and
 commits a real git repository, which the per-commit tier does not run.
@@ -136,7 +136,7 @@ def test_each_new_cell_is_classed_traced_or_approved(
     other = "approved" if cls == "traced" else "traced"
     assert split[other] == {}, split
     # The recorded copy is the first tree: a traced move is no drift, an
-    # approved one is drift owed a re-attestation.
+    # approved one is drift owed a re-acceptance.
     drifted = baseline_snapshot.drifted_cells(rel, id_col, after[rid], before)
     assert drifted == ({column: ("recorded", "moved")} if cls == "approved" else {})
     assert baseline_snapshot.is_drifted(rel, id_col, after[rid], before) is (

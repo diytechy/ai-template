@@ -401,7 +401,7 @@ def test_an_ABSENT_registry_with_live_entries_is_a_finding_not_a_silence(tmp_pat
     assert gi.deferral_findings(root, None) == []
 
 
-def test_a_verdict_reattestation_stays_listed_on_the_operator_surface(tmp_path):
+def test_a_verdict_reacceptance_stays_listed_on_the_operator_surface(tmp_path):
     """OI-100 (WI-791): on a held rung an adjudicator's CLARITY verdict carries
     the operator's signature over, so every act that names a verdict stays listed
     on the operator's surface, for audit after the fact. An act naming no verdict
@@ -420,13 +420,13 @@ def test_a_verdict_reattestation_stays_listed_on_the_operator_surface(tmp_path):
             "verdict": "docs/reviews/v.md",
         },
     ]
-    block = gi.verdict_reattest_block(acts)
+    block = gi.verdict_reaccept_block(acts)
     assert "SN-009" in block and "docs/reviews/v.md" in block, block
     assert "act 2" in block and "act 1" not in block, block
-    assert "None recorded" in gi.verdict_reattest_block(acts[:1])
+    assert "None recorded" in gi.verdict_reaccept_block(acts[:1])
     repo(tmp_path, oi_rows=PENDING_OI)
     page = gi.render(tmp_path)
-    assert "re-attested on an adjudicator" in page.lower(), page
+    assert "re-accepted on an adjudicator" in page.lower(), page
 
 
 def test_the_verdict_audit_list_is_newest_first():
@@ -452,5 +452,5 @@ def test_the_verdict_audit_list_is_newest_first():
             "verdict": "docs/reviews/b.md",
         },
     ]
-    block = gi.verdict_reattest_block(acts)
+    block = gi.verdict_reaccept_block(acts)
     assert block.index("act 5") < block.index("act 2"), block

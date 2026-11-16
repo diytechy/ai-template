@@ -5,7 +5,7 @@ scaffold-driven half: the strict/schema gates, the verification-category
 buckets (Test / Vouch / Demonstrated / Critique), the Drafted exemptions, and
 the generated report/HTML render. WI-521 slice 3 moved the IF-### interface-seam
 tier to tests/test_trace_interfaces.py; the pure in-process rule decisions moved
-to tests/test_trace_rules.py, the git-backed re-attestation brief to
+to tests/test_trace_rules.py, the git-backed re-acceptance brief to
 tests/test_trace_briefs.py.
 
 Implements: TC-001

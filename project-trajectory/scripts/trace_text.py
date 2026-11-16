@@ -615,9 +615,9 @@ def provenance_findings(srs, llrs, tcs):
     rows is a rule that gets scrolled past — the `check_doc_refs` lesson.
 
     GATING under `--strict` (operator ruling 2026-07-27, raised at the first
-    re-attestation sitting on finding `LLR-050`'s `WI-316:` changelog prefix). It
+    re-acceptance sitting on finding `LLR-050`'s `WI-316:` changelog prefix). It
     shipped warn-only on the argument that cleaning a `Verified` row flips it
-    `Modified` and owes a re-attestation, so the checker should not pick the
+    `Modified` and owes a re-acceptance, so the checker should not pick the
     operator's schedule. The counter-argument won and is the stronger one: a warn
     nobody must act on is how 43 rows accumulated, and the whole population was
     cleaned in one pass at the same sitting, so the rule now guards zero-to-zero

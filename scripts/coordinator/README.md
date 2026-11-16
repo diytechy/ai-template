@@ -82,7 +82,7 @@ refused with exit 2), so the call goes through the loop's keep operation and
    verdict, 2 a refusal before launch, and 7 an ADJUDICATOR account that is
    not signed in (set its token up through dev-setup; nothing falls back).
 4. The adjudicator commits the verdict (trailer `WI: WI-NNN`) and its own
-   re-attest or approve act. The entry point commits the telemetry log. A
+   re-accept or approve act. The entry point commits the telemetry log. A
    returned row's follow-up arrives as a `## Dispositions` block in the spec.
    If it is answered in-lane, replace the section under another heading, since
    intake refuses a `## Dispositions` heading with no toml block.

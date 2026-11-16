@@ -497,7 +497,7 @@ under a TC). It is COMPUTED, never a claim you type to advance a gate.
 text is later changed stays `Approved` and the change is caught by DIFFING it
 against the last approval. (A transitional `Modified` marked that state until
 2026-08-20; it is retired, and an adopter carrying it migrates —
-`RESYNC_PACK.md`.) A re-attest is a reviewed commit that re-reads the changed
+`RESYNC_PACK.md`.) A re-accept is a reviewed commit that re-reads the changed
 cells and re-copies the record. The baseline those before/after diffs run against is a
 **byte-for-byte copy** of the registries at the last approval —
 `docs/archive/last_approved/`, written only by the approval act itself
@@ -512,7 +512,7 @@ child change surfaces through the snapshot-drift arm; chain-completeness is the
 derived `Founded` state's claim (D-9), never the signature's. **Sequence requirement-text work *into* an open window, not after it:**
 a prose standard, a registry schema change or a cleanup lands while the sitting
 is still owed, so its rows join the batch an operator is already reading. Landing it
-after a re-attest drifts freshly-blessed rows straight away from the record and
+after a re-accept drifts freshly-blessed rows straight away from the record and
 buys a second sitting for the same reading.
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
@@ -676,14 +676,14 @@ attended session on the operator's explicit delegation, the delegation and its
 scope recorded in the approving commit or its log entry. A mechanically
 triggered session (the unattended loop, a launcher-spawned worker) never
 approves on a held rung; that is what the hold is for. One stated case: an
-independent adjudicator session may **re-attest** an amended row it rules
+independent adjudicator session may **re-accept** an amended row it rules
 CLARITY — that approves no new text, it records that the operator's signature
 still describes the row — bound to the text it judged: the verdict's binding
 records it, and an edit after the verdict refuses the act. The act names its
 verdict (`--verdict`) for audit. A MEANING row and a first draft stay the
 operator's, and neither holds a lane (§5, "Open items"). MECHANICAL: the merge slot judges every lane commit against trunk's
 dial, so a held row's approval lands from a lane only as such a bound
-re-attestation (`scripts/held_status.py`), and `check.py`'s `held-status` step
+re-acceptance (`scripts/held_status.py`), and `check.py`'s `held-status` step
 judges a squash landing by its lane commits. A loop-started commit must carry
 its `Loop-Session` trailer (`scripts/kitlib/provenance.py`); outside a lane
 the `held-status` step and each loop writer refuse a held status move or

@@ -1041,7 +1041,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_IMPL,
             "process",
         ),
-        # Re-attestation brief freshness (WI-325). Every other generated surface
+        # Re-acceptance brief freshness (WI-325). Every other generated surface
         # here is freshness-gated; docs/ratify/*.md is generated the same way and
         # was gated by nothing, so it silently drifted behind the registry it
         # summarizes — twice in one day, both times caught only by a human
@@ -1188,7 +1188,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_NEEDS,
             "process",
         ),
-        # Re-attestation brief immutability (WI-503). A sibling of
+        # Re-acceptance brief immutability (WI-503). A sibling of
         # staged-divergence above, same shape and same reason for AT EVERY BAR
         # / NOT in _TRUNK_FRESHNESS_STEPS: it reads the staged tree rather than
         # a regenerated artifact's freshness, so it is as true on a work branch
@@ -1861,7 +1861,7 @@ def staged_divergence(root=".", strict=False):
     return 1 if strict else 0
 
 
-# --- WI-503: the re-attestation brief's immutability enforcer -----------------
+# --- WI-503: the re-acceptance brief's immutability enforcer -----------------
 # The defect this closes: `docs/ratify/<date>-*.md` is read as the record of
 # what an operator was shown at a sitting, but a regeneration used to find and
 # rewrite whichever dated file was newest — ten rewrites on one file, none of
@@ -1890,7 +1890,7 @@ def _is_dated_approval_brief(path):
 
 def approval_immutability(root=".", strict=True):
     """Refuse a commit whose STAGED diff modifies or deletes an
-    already-committed dated re-attestation brief. Returns the exit code.
+    already-committed dated re-acceptance brief. Returns the exit code.
 
     Reads `git diff --cached --name-status --no-renames -z` — the tree this
     commit is about to contain, not the working tree `staged_divergence`
@@ -1956,7 +1956,7 @@ def approval_immutability(root=".", strict=True):
         )
         return 0
     print(
-        "  FAIL  approval-immutable  {} dated re-attestation brief(s) staged "
+        "  FAIL  approval-immutable  {} dated re-acceptance brief(s) staged "
         "with a change other than a plain add — a dated brief is IMMUTABLE "
         "once minted:".format(len(violations))
     )
@@ -2697,7 +2697,7 @@ def main():
     ap.add_argument(
         "--approval-immutable",
         action="store_true",
-        help="run ONLY the re-attestation-brief immutability enforcer and exit "
+        help="run ONLY the re-acceptance-brief immutability enforcer and exit "
         "(WI-503): refuse a STAGED change (other than a plain add) to an "
         "existing docs/ratify/<date>-*.md. Fail-closed by default — no "
         "--strict, no warn mode. This is the self-invoked body of the "

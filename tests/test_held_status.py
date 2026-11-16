@@ -1,7 +1,7 @@
 """The held-rung rule's pure halves, in process: the row-text identity, the
 binding's identity cell, and the approval-claim predicate.
 
-A held-rung row's approval lands from a lane only as a CLARITY re-attestation
+A held-rung row's approval lands from a lane only as a CLARITY re-acceptance
 bound to the text its verdict judged. Two pieces of that rule need no git and
 are pinned here:
 

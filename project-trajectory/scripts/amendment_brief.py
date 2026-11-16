@@ -151,7 +151,7 @@ def amendment_values(root, row):
     only have been written by copying a live registry in a reviewed approval
     commit.
 
-    `{rows}` is `trace.reattest_model`'s APPROVED cells — the same model behind
+    `{rows}` is `trace.reaccept_model`'s APPROVED cells — the same model behind
     `trace.py --approve` and `open-items.html`, so the judge, the brief and the
     operator surface can never show three different diffs. Traced cells are
     deliberately excluded: §A5.1 rules them non-attesting, and a judge asked to
@@ -213,7 +213,7 @@ def amendment_values(root, row):
             "an amendment against".format(baseline_snapshot.SNAPSHOT_DIR)
         )
     reg = tr.load_registries(root / "docs")
-    model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
+    model = tr.reaccept_model(root, reg.srs, reg.llrs, reg.tcs)
     lines, tiers, chained = _amended_rows(model, scope)
     more, more_tiers, unchained = _unchained_amended_rows(root, scope)
     gone, gone_tiers, removed, unknown = _removed_amended_rows(root, scope)
@@ -458,9 +458,9 @@ def _aftermath(root, tiers):
     """What each verdict owes NEXT, derived from the declared gate authority for
     the tiers actually shown (operator ruling 2026-09-01) and from ruled decision
     2's one home, `intake.adjudication_action`, as OI-100 amended it
-    (2026-10-03, WI-791): on a released rung the session re-attests what it
+    (2026-10-03, WI-791): on a released rung the session re-accepts what it
     rules CLARITY and the MEANING rows it would bless; on a held rung it
-    re-attests a CLARITY row naming its verdict, and recommends a MEANING row
+    re-accepts a CLARITY row naming its verdict, and recommends a MEANING row
     to the operator.
 
     THIS SLOT REPLACED A SENTENCE THAT HAD GONE FALSE. The template used to end
@@ -500,7 +500,7 @@ def _aftermath(root, tiers):
 # that act, never an act of its own.
 _RELEASED_AFTERMATH = (
     "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared gate "
-    "authority has RELEASED, so a CLARITY row is re-attested by the later act "
+    "authority has RELEASED, so a CLARITY row is re-accepted by the later act "
     "turn, and so is a MEANING row you mark `[MEANING+BLESS]`; a row you mark "
     "plain `[MEANING]` is not re-anchored."
 )
@@ -510,7 +510,7 @@ _HELD_AFTERMATH = (
     "verdict on them {}."
 )
 _HELD_ARMS = {
-    "reattest": "is re-attested by the later act turn as a judgement act, "
+    "reaccept": "is re-accepted by the later act turn as a judgement act, "
     "naming this verdict; the act ledger records the verdict and the operator's "
     "surface lists the act for audit. The verdict is bound to the text shown "
     "here (its JUDGED-TEXT identities), so an edit to that text after this "

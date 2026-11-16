@@ -152,7 +152,7 @@ def _sit(root, rulings, rel=VERDICT, outcome="recorded", identities=None):
 
 def _landed(tmp_path, tag, **repo):
     """The landing the arm reads: the range amends SR-001 and carries a sitting
-    ruling it `tag`, and nothing re-attests it. `(root, before, after)`."""
+    ruling it `tag`, and nothing re-accepts it. `(root, before, after)`."""
     root, before = _held_repo(tmp_path, **repo)
     _write_srs(root, requirement=AMENDED)
     _sit(root, {"SR-001": tag})
@@ -250,7 +250,7 @@ def test_a_held_meaning_verdict_mints_one_operator_row_and_one_pending_item(tmp_
     assert "SR-001" in brief and VERDICT in brief
     assert "intake.py snapshot" in brief
     assert '--approves "{}=<record>"'.format(SR_REL) in brief
-    assert "--reattests SR-001" in brief
+    assert "--reaccepts SR-001" in brief
     assert "--verdict" not in brief
     # The row is the item's placeholder, titled from its rows and verdict.
     assert meta["needs"] == [oi]
@@ -280,7 +280,7 @@ def test_each_registry_files_its_own_row_and_item(tmp_path):
         commands, ("SN-001", "SR-001"), (SN_REL, SR_REL), strict=True
     ):
         assert '--approves "{}=<record>"'.format(rel) in command
-        assert command.endswith("--reattests " + rid)
+        assert command.endswith("--reaccepts " + rid)
         _assert_the_act_anchors(root, command, rid)
 
 
@@ -435,7 +435,7 @@ def test_two_verdicts_on_one_registry_file_one_item_whose_command_runs(tmp_path)
     assert meta["needs"] == [oi]
     assert VERDICT in _brief(cells) and LATER_VERDICT in _brief(cells)
     command = _command(cells)
-    assert "--reattests SR-001,SR-002" in command
+    assert "--reaccepts SR-001,SR-002" in command
     assert "--verdict" not in command
     _assert_the_act_anchors(root, command, "SR-001", "SR-002")
     assert "verdict" not in _last_act(root)
@@ -454,7 +454,7 @@ def test_the_operator_act_is_never_listed_as_a_sessions_own(tmp_path):
     _rel, _meta, _oi, cells = _one_operator_row(root)
     assert VERDICT in _brief(cells)
     command = _command(cells)
-    assert command.endswith("--reattests SR-001,SR-002")
+    assert command.endswith("--reaccepts SR-001,SR-002")
     _assert_the_act_anchors(root, command, "SR-001", "SR-002")
     assert "verdict" not in _last_act(root)
     audit = gen_open_items.render(root).split('class="verdict-audit"')[1]

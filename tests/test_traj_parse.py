@@ -129,7 +129,7 @@ def test_spine_loader_drops_example_rows_only_when_asked(tmp_path):
     pending = load_script("pending").spine_pending(root)
     assert pending, "the Drafted SRs must still project"
     assert not any("SR-000" in line for line in pending)
-    # SR-002 read `Modified` -> re-attest until D-9 step 7 retired the marker. It
+    # SR-002 read `Modified` -> re-accept until D-9 step 7 retired the marker. It
     # reads `Drafted` now: the projection's second arm is snapshot DRIFT, which
     # needs a seeded snapshot this loader fixture has no business carrying, so
     # the Drafted arm is what keeps a NON-example row projecting here — which is
