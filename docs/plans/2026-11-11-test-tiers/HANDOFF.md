@@ -816,6 +816,7 @@ committed (D14).
 | §4.2 and §4.3, the dial | applied: `[attestation]` is `[authority]`, `human_approval_through` is `operator_accepts_through`, `LEGACY_ATTESTATION_KEY` is `LEGACY_DIAL_KEY`. 290 lines by rule in 73 files. The readers of older spellings (the 0-4 ordinal, the older key name, the gate-policy enum) still read them, now inside the renamed table, until D11's change. The note in the policy template that explained why the key was not called "attest level" is removed. "attestation" as a work-item safety class is untouched: it moves with the act. Its 82 test modules and `check_trajectory.py --strict` were running when this was written |
 | The migrator, continued | a third step: the policy file's table and dial key, by line edit proved by a second parse (an inline or dotted table is refused, not guessed). 22 tests. Its manifest row is in. Its spine rows are written as `Drafted`: SR-247, LLR-369, TC-427, component CMP-006, with the id watermark raised. `docs/stage` now reads settled `DevStg-Impl`, live `DevStg-Reqs`, which is what three drafted rows in phase 6 mean; the operator's acceptance of them is owed (D18) |
 | §4.2, the act (§10.5) | done in four passes, six commits on `maint/vocabulary` (`deb642747` to `a40b38de4`): re-attest, the brief kind and safety class, approve and attest, then the status, the record and its ledger through the migrator. §9.9 |
+| §4.1 and §4.5.1, the passed-checks and failed-checks records (§10.6) | done, three commits on `maint/vocabulary` (`80b853c24`, `9cba92a1e`, `5a07a2675`): `Checks-Passed: ... checks=<commit\|landing\|none>`, `integrate.py record-checks --checks commit`, the phase `CHECKS`, the headers `# checks-failed:` / `# checks-summary:`, every name of both tables, the glossary's failed-checks record. No migrator step. §9.10 |
 
 Traps this session walked into:
 
@@ -1026,7 +1027,10 @@ lists the old words on the live surface, leaving out the records named in
 file to each changed span with a little context, which is what makes a
 thousand-line review readable; `article_scan.py WORD [--fix]` finds an article
 left at a line end before a word that now needs "an"; `absorbed.py REGISTRY`
-names the accepted cells a record copy would absorb (D13).
+names the accepted cells a record copy would absorb (D13). Added by the eighth session:
+`pyname.py NAMES.py [--dry] [--review OUT]` renames Python names by token,
+never inside a string or a comment, for locals and fields whose spelling is
+also prose (§9.10, trap 52).
 
 ### §9.7 The fourth session: "human" becomes "operator"
 
@@ -1383,6 +1387,207 @@ Traps found:
     current reader cannot see into. Search `tests/` for 40-hex ids after a
     rename of a stored value.
 
+### §9.10 The eighth session: the passed-checks record, with §4.5.1 (§10.6)
+
+Written 2026-11-16. It did §10.6 on `maint/vocabulary` from `acefe63d4`,
+through §10.3's loop, every line of every dry run read. Hook bypassed (D14);
+nothing pushed. The rule, name and hand-edit files are in `vocab-tools/` under
+the names below.
+
+| Step | What |
+|---|---|
+| `r46a_passed_checks.py` | 732 lines in 48 files: every name in §10.6's table and §4.5.1's, the trailer's grammar and values, the failed-checks headers, the command line, the log phase and its labels, 70 test functions with the evidence cells that cite them. Applied with `--force`: the one collision, `mechanical_close_peel`, was a comment in `station.py` already naming the same function |
+| `git mv` | `tests/test_bar_attestation.py` to `test_passed_checks.py`, `tests/test_integrate_attest.py` to `test_integrate_record_checks.py` |
+| `pyname.py` with `n46a_names.py` | new tool: renames Python names by token, never inside a string or a comment (trap 52). 156 lines in 11 files: the locals `attested` (`passed`; `trailers` where they held `Review-Verdict:` trailers), the field and parameter `bar` (`checks`), `integrate.attest` (`record_checks`), `att`/`attests` in one test |
+| `h46a_scripts.py` | 117 edits in 11 kit scripts: the sentences, the CLI parser, the refusal messages, the failed-checks record's prose, the `Review-Verdict:` trailer where the code called it an attestation |
+| `r46b_prose.py` | 112 lines in 21 files: phrases naming the record in the tests, rows, skills and templates, limited to those files |
+| `r46c_verdict_trailer.py` | 24 lines in `tests/test_verdict_record.py`: "attestation" for the verdict trailer becomes "trailer" |
+| `h46b_tests.py`, `h46c_prose.py`, `h46e_fixups.py` | 69, 64 and 10 edits: assertions on reworded messages, the producer's argument, the CLI's flag in the CLI test, the skill and recipes, interface and design rows, the code_symbol cell that still bound `attest`, and two new tests (below) |
+| `h46d_glossary.py` | the **failed-checks record** entry (§4.5.1's draft, with its header spellings beside the passed-checks record's grammar) and the **commit checks** entry rewritten for `record-checks` |
+| migrator | no new step (decision (c)). Run after the last row edit: it wrote four record copies equal to live and named 58 cells in 31 rows (LLR 10, SR 2, TC 19; many are traced evidence cells), in `vocab-tools/s46_record_absorbed.txt`. `--check`: "nothing stored in an earlier spelling" |
+| regenerated | `docs/stage` (fingerprint only), `prompts/CATALOG.md`, `skills/INDEX.csv`; `docs/test/report.md` by `trace.py`; `docs/open-items.html` after the record commit (trap 46) |
+| `h46f_after_run.py` | 2 edits: what the test run found (below) |
+| commits | `80b853c24` the wording (code, tests, rows, prose, glossary); `9cba92a1e` the record copies (text then act, §9.2); `5a07a2675` the open-items view regenerated over them |
+
+**What the names became.** As §10.6's table, with these additions, each named
+for the trailer's field or value and so moving with it: `BAR_GREEN` is
+`CHECKS_PASSED`, `BAR_NAMES` is `CHECK_SETS`, `LANDING_BARS` is
+`LANDING_CHECK_SETS`, the field `PassedChecks.bar` is `.checks`;
+`last_review_record`, `_last_review_green`, `_review_record_answer` are
+`last_commit_record`, `_last_commit_passed`, `_commit_record_answer`, and
+"review record" in their messages is "commit record"; `RED_KEYS`,
+`_BAR_RED_RE`, `_BAR_SUMMARY_RE`, `RedCount`, `_logged_red`, `_red_cap_close`
+are `FAILED_KEYS`, `_CHECKS_FAILED_RE`, `_CHECKS_SUMMARY_RE`, `FailedCount`,
+`_logged_failure`, `_failure_cap_close`; the loop's plan keys `attested` and
+`bar_red` are `passed` and `checks_failed`; the log's outcome `GREEN`/`RED`
+is `PASSED`/`FAILED`, so the labels read `CHECKS PASSED`/`CHECKS FAILED`; the
+default commit subject is `record-checks: <branch> checks=commit`; the
+adjudication arm's summary is "no checks run (adjudication, §A5.2)".
+
+**Decisions taken here.**
+
+(a) **`mechanical_close_attestation` is `mechanical_close_peel`, not the
+table's `mechanical_close_passed_checks`.** It reads no checks record: it
+returns the parent of the machinery's own adjudication-close commit, the
+second disposable commit the governing walk peels. `station.py` already named
+it `verdict.mechanical_close_peel`. The table's name would have put "passed
+checks" on a function that has nothing to do with checks. **For the
+operator:** if the table's name is wanted, it is one TOKENS line.
+
+(b) **The `Review-Verdict:` trailer is a "trailer", not an "attestation".**
+The code called it both; "attestation" would otherwise have been left naming
+only it. Code comments and messages (`agent_common`, `agent_loop`,
+`agent_brief`, `integrate._round_refusal`, `kitlib/verdict.py`), the tests,
+TC-205, LLR-140's detail, IF-175's notes and the enforcement audit.
+
+(c) **No migrator step.** Nothing a current script reads moves. Trailers are
+commit messages, which are history and are not rewritten; the session-log
+headers and the phase live in `docs/iteration/`, records read only inside a
+lane's own range; no setting, row or file holds the old spellings. The
+re-sync entry (§10.7 item 5) names the command, the flag and the trailer for
+adopters whose own prose or scripts type them.
+
+(d) **Readers of history: a tree whose history holds only old-form trailers
+and headers is not judged, and every reader then asks for more checks or more
+review, never less.** No reader of the earlier spelling is kept (D3). Read
+from the code:
+
+- the commit-check failure cap (`failed_rounds`): an old `Bar-Green: ...
+  bar=review` is no reset point and an old `# bar-red:` header is no failure
+  (a readable log with no record counts nothing; only an unreadable log counts
+  toward the cap). The count restarts at zero at the cut. Pinned by
+  `test_a_header_in_the_earlier_form_is_not_a_failed_checks_record`;
+- `failed_record` (was this build already refused?): no, so the draw runs the
+  commit checks once more for that build;
+- the review draw and the review render (`commit_passed_checks`): an old-form
+  tip has no record, so the loop runs `record-checks` once at the draw and the
+  render refuses, naming the command. Pinned by
+  `test_a_line_in_the_earlier_trailer_form_is_not_a_passed_checks_record`;
+- the merge slot (`_merge_ready`, `refresh_passed_checks`): an old-form
+  refresh tip is not merge-ready, so the slot refreshes it in the slot (the
+  pessimistic sequence), running the landing checks again;
+- the peels (`work_tip`, `governing_rev`): an old-form refresh commit is not
+  peeled. For `governing_rev` that measures a verdict at the refresh's tree,
+  so a round is owed again. For `work_tip` the next refresh merges trunk on top
+  of the old refresh commit instead of resetting below it, and can conflict on
+  `docs/log.md`'s compiled end, refusing loudly; the remedy is to drop that
+  commit in the lane first;
+- the expected-failure marker's reference (`last_commit_record`): no record,
+  so the reference is the lane base and a marker removal refuses until the
+  checks are recorded again over the same set.
+
+In this repository no lane is in flight: `wi-902` closed partial, and the one
+branch whose tip carries an old trailer, `wi-850`, landed by squash
+(`90ddd6f5f`). The adopters on this machine hold no such trailer
+(`VOCABULARY.md` §8).
+
+(e) **`PROCESS_OPTIONS.md:2903`'s "attestation" is the act, S6**, read with
+§10.6 as §9.9 asked: the `[authority]` dials' verdict artifacts are a review
+file, a critique and an acceptance. It reads "acceptance" now.
+
+**Two tests added**, each naming the earlier spelling on purpose, as
+`test_migrate_vocabulary` does: `tests/test_passed_checks.py::
+test_a_line_in_the_earlier_trailer_form_is_not_a_passed_checks_record`
+(TC-205) and `tests/test_agent_loop_review_gate.py::
+test_a_header_in_the_earlier_form_is_not_a_failed_checks_record` (TC-379),
+with their evidence cells. The detector of §10.7 item 4 must let them.
+
+**Left as written, for §10.7 or the operator:**
+
+- "bar" where it names running checks: `record_bar_result`, `run_bar`,
+  `skip_bar`, `_bar_refusal`, "the review bar", "the no-bar arm/path" of the
+  adjudication lane (its value in the trailer is now `none`), the work-item
+  `bar` key, `ctl/bar_red` (a fixture's switch for a failing check suite),
+  test names such as `test_the_refresh_trailer_names_the_landing_bar` (§4.5.2
+  to §4.5.7).
+- "red" in running prose and test names (`test_red_count_survives_...`,
+  `test_an_interrupted_red_...`, "red-round maximum" in TC-381 and TC-382)
+  (§4.5.6), and §4.5.4's `red_rounds_max`, `RED_ROUNDS_*`, `Bars`,
+  `read_bars`.
+- The S3 leftovers §9.9 lists (`make_attest_project`, "SR-002 attested",
+  "critique or attestation", "gate-attested", "a rubric or an attestation").
+- Records: `docs/status.md:644` (`integrate.py attest`), `open-items.toml`'s
+  OI-76 ruling, the redesign notes; the generated `docs/cli-reference.md`,
+  `docs/interface-reference.md` and `PROJECT_STATE.html` regenerate before
+  trunk (§12.6).
+
+**Tests** (§10.3 step 8: the 21 test modules the change touched plus the
+standing six, 27 in all, `vocab-tools/s46_tests.txt`; 8 workers, Git Bash,
+`PYTEST_DEBUG_TEMPROOT` unset): **1,076 passed, 1 skipped, 3 failed** in
+7 min 58 s. Two were real: `test_merge_ready_refuses_a_tip_carrying_only_a_commit_checks_record`
+(both subjects) asked for the word "review" in the slot's refusal, which now
+names `checks=commit`; fixed in `h46f_after_run.py`, then the module ran
+**46 passed**. The third is the known re-stamp below.
+
+**Standing checks on `5a07a2675`:** `trace.py --strict` exit 0
+(`integrity=0`); `check_trajectory.py --strict` clean; `check_docs.py --stale`
+0 broken; `scripts/check_resync.py` OK; `migrate_vocabulary.py --check`
+"nothing stored in an earlier spelling"; `gen_open_items.py --check`,
+`derive_stage.py --check`, `gen_prompt_catalog.py --check`,
+`gen_skills_index.py --check` fresh; `ruff format --check`, `ruff check`
+clean; skill mirrors identical. `check_complexity.py --mode enforce` fails
+exactly as §9.9 lists, nothing added: no renamed function is in
+`docs/complexity-baseline`.
+
+**Known failures left** (§10.7 item 6, D17), re-stamps only:
+
+- `test_module_sizes_exactly_match_the_committed_baseline`: `integrate.py`
+  1,793 to 1,801 code lines (the formatter re-wrapped the longer names and
+  messages; the `record-checks` parser takes two lines more), `trace.py`
+  3,851 to 3,852 (from §10.5).
+- Not run here, known from §9.9: `test_capped_doc_baselines_match_the_real_sizes`
+  (`CLAUDE.md`, `AGENTS.template.md`; neither file changed in this step).
+- `check.py`'s complexity step, as above.
+
+**For the re-sync entry (§10.7 item 5).** The command and flag
+(`integrate.py record-checks --branch B --checks commit`, the subcommand
+`attest` and `--bar` gone); the trailer and its values; the failed-checks
+headers; the log phase and labels; the default commit subject; that no reader
+of the earlier forms is kept, so a lane in flight across the re-sync records
+its checks again, may meet a refresh conflict on `docs/log.md` if its tip is
+an earlier-form refresh commit (drop that commit first), and restarts its
+failure count; and that an adopter's own scripts or prose that type `attest`
+change by hand.
+
+Traps found:
+
+48. *A name can have had another home.* `BAR_NAMES` was also the retired
+    stage axis's tuple, still named as gone in `kitlib/ladder.py`,
+    `spine_rules.py` and `test_stage_ladder.py`. The dry run showed it;
+    protected in those three contexts.
+49. *vapply runs TOKENS before REGEX, and REGEX in order.* A value rule
+    written against the old constant (`BAR_NAMES = ("review", ...)`) never
+    matched, and `bar=review` was rewritten before the longer rule that
+    contained it (`attest: {} bar=review`) could run. Write REGEX against the
+    new names, longest context first.
+50. *Trap 20 holds for REGEX too.* vapply's escape edge covers TOKENS and
+    PARTS only; `"\n\nBar-Green:"` needed `(?:\b|(?<=\n))`.
+51. *SCOPED times many globs does not finish.* vapply tests every glob on
+    every line of the tree. To limit a phrase file to a few files, put every
+    other tracked file in SKIP and use REGEX (`r46b_prose.py`).
+52. *Locals and fields share their spelling with prose.* `attested` and `bar`
+    are also words in docstrings and messages. `pyname.py` renames them by
+    token, catching attributes (`.bar`), parameters and keyword arguments;
+    the strings that name them (`parametrize("bar", ...)`,
+    `inspect...arguments["bar"]`) it does not, so grep for the quoted name.
+53. *One spelling, three keys.* "`bar=`" was the trailer's field and the
+    work-item key a station spec declares; `bar == "review"` was the
+    trailer's value in `integrate.py` and a label of the commit-checks route
+    in `test_check_smoke_budget.py`. Scope such rules to the file.
+54. *A value can be the word "commit".* Messages formatted "the {} commit"
+    read "the commit commit" once `review` became `commit`; they say
+    `checks={}` now.
+55. *A table can misname.* §10.6 proposed `mechanical_close_passed_checks`
+    for a function that reads no checks record. Read what a function does
+    before giving it the table's name (decision (a)).
+56. *A Windows path in a Python heredoc.* `C:\Projects\ai-...` written
+    through an escaped string became a bell character (`\a`) in a rule file.
+    Write paths with forward slashes.
+57. *A message's word is pinned by a test outside the rule's reach.* The
+    merge slot's refusal named the set by its value; the test asserted the
+    old value as a bare word ("review"), which no rule could rename safely.
+    After changing a message's wording, grep the tests for its old words.
+
 ## §10. Runbook: finishing the migration
 
 Written 2026-11-11 for the session that takes over, which has none of the
@@ -1678,6 +1883,9 @@ and `adjudicate_act.py`) is the act and becomes `ACCEPT`.
    record.
 
 ### §10.6 Then: the passed-checks record, with §4.5.1
+
+**Done (eighth session, 2026-11-16): §9.10.** What follows is the plan as
+it stood, kept for the record of what was decided.
 
 D16 is ruled: §4.5.1 as drafted, so the names below and §4.5.1's are settled.
 The glossary entry for the passed-checks record is written; add one for the
@@ -2076,3 +2284,22 @@ list is fixed unless §12.6 says so.
     `test_intake_settled`'s real landings, which now always skip; whether the
     migrator should re-base links into the moved record; whether the record's
     own README follows the rename.
+- **2026-11-16, §10.6 is done.** The passed-checks record and §4.5.1 on
+  `maint/vocabulary`, three commits: `80b853c24` (the trailer
+  `Checks-Passed: ... checks=<commit|landing|none>`, `integrate.py
+  record-checks --checks commit`, the phase `CHECKS`, the headers
+  `# checks-failed:` / `# checks-summary:`, every name of §10.6's table and
+  §4.5.1's, the two test files renamed, the glossary's failed-checks record
+  and its rewritten commit-checks entry), `9cba92a1e` (the record's copies,
+  58 cells absorbed and named) and `5a07a2675` (the open-items view
+  regenerated over them). §9.10 has the counts, the decisions (the peel's
+  name, the verdict trailer, no migrator step, what a tree holding only
+  old-form trailers does), the traps (48 to 57) and what is left. The 27
+  touched and standing test modules: 1,076 passed, 1 skipped, 3 failed, two of
+  them fixed and re-run (46 passed), the third the known module-size
+  re-stamp. The unfiltered suite was not run (§10.7 item 7). Next: §10.7.
+  - **For the operator:** `mechanical_close_attestation` was renamed
+    `mechanical_close_peel`, not the table's `mechanical_close_passed_checks`
+    (§9.10, decision (a)); the `Review-Verdict:` trailer is called a trailer
+    everywhere now (decision (b)); `PROCESS_OPTIONS.md:2903`'s "attestation"
+    read as the act and became "acceptance" (decision (e)).
