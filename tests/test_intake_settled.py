@@ -26,7 +26,6 @@ import tomllib
 
 import pytest
 from conftest import (
-    ROOT,
     SCRIPTS,
     env_gate_skipif,
     hooks_on,
@@ -799,80 +798,3 @@ def test_a_routed_cell_restored_after_the_act_with_no_later_copy_still_mints(
     assert refusal is None, refusal
     (row,) = _amendment_rows(root, minted)
     assert row["adjudicates"] == ["SR-001"]
-
-
-# --- D6: the two real landings that minted a redundant row --------------------------
-
-# WI-926's landing (minted WI-952) and WI-956's (minted WI-959): every row each
-# walk returns was re-accepted in its range and equals its copy at `after`.
-REAL_LANDINGS = (
-    (
-        "5245ac82cf9d2132f7c6c1940f9a1f3c49294ba3",
-        "08bbb71b60b060e0ceed4fa8baaac924b2be42c6",
-        {"SR-019", "SR-020", "LLR-019", "LLR-020", "LLR-140", "LLR-300"},
-    ),
-    (
-        "be80354d9297eac08952a9d3a1efeab0d31b28a5",
-        "ed84e25107cce3b18fb4977fd0afc7fe567f3bca",
-        {"LLR-207", "TC-132", "TC-205"},
-    ),
-)
-
-
-def _landings_unavailable():
-    """A named reason the pinned landings cannot be read, or None: a shallow
-    clone or a source export is an environment fact, not a defect. So is a
-    landing older than the vocabulary migration: its trees spell the accepted
-    status and the acceptance record's directory in words no reader reads any
-    more, so the walk finds no accepted row in them and the test could only
-    pass by seeing nothing. Such a tree has no record under its current name.
-    The arm stays pinned by the fixtures above, in both directions."""
-
-    def git(*args):
-        return subprocess.run(
-            ["git", "-C", str(ROOT), *args], capture_output=True, encoding="utf-8"
-        )
-
-    if git("rev-parse", "--is-inside-work-tree").returncode != 0:
-        return "no git work tree at the repo root (source export?)"
-    for before, after, _rows in REAL_LANDINGS:
-        for sha in (before, after):
-            if git("cat-file", "-e", sha + "^{commit}").returncode != 0:
-                shallow = git("rev-parse", "--is-shallow-repository").stdout.strip()
-                depth = (
-                    " (shallow clone - fetch full history)" if shallow == "true" else ""
-                )
-                return "landing commit {} is not in this checkout's history{}".format(
-                    sha[:9], depth
-                )
-        record = "{}:{}".format(after, acceptance_record.SNAPSHOT_DIR)
-        if git("cat-file", "-e", record).returncode != 0:
-            return (
-                "landing commit {} predates the vocabulary migration, so its "
-                "rows read as never accepted".format(after[:9])
-            )
-    return None
-
-
-def test_the_two_real_redundant_landings_mint_nothing():
-    """Read-only: `git show` against the kit's own object database, nothing
-    written. `test_a_row_amended_again_after_its_act_still_mints` is the
-    fixture amended after its act that still mints. The premise is the walk's
-    records with an accepted or routed traced change, the rows the redundant
-    mint named: the walk also returns traced-only records (a moved `Evidence`
-    or `CodeSymbol` cell), which are silent by ruling.
-
-    Implements: TC-403
-    """
-    reason = _landings_unavailable()
-    if reason:
-        pytest.skip("the real landings are unavailable: " + reason)
-    routed = set().union(*intake.ROUTED_TRACED_CELLS.values())
-    for before, after, rows in REAL_LANDINGS:
-        walk = acceptance_record.staged_spine_amendments(ROOT, before, after)
-        judged = {
-            rec["id"] for rec in walk if rec["accepted"] or set(rec["traced"]) & routed
-        }
-        assert judged == rows
-        assert intake._routed_amendments(ROOT, before, after) == ([], None)
-        assert intake._amendment_drafts(ROOT, before, after) == ([], None)

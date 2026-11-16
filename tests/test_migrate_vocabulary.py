@@ -606,6 +606,53 @@ def test_a_ledger_the_line_edit_cannot_prove_leaves_the_record_untouched(
     assert not (tmp_path / migrate.RECORD_DIRS[1]).exists()
 
 
+# A page linking into the record by its earlier directory, inline and by a
+# reference definition, beside the name in a label, in prose, in a code span
+# and inside a longer path segment, none of which is a link target.
+LINKED = (
+    "See [the ledger](../archive/last_approved/acts.toml) and [the stamp][s].\n"
+    "\n"
+    "[s]: docs/archive/last_approved/README.md#refreshes\n"
+    "[last_approved](notes/last_approved_count.md) names `last_approved/` and\n"
+    "the last_approved folder in prose.\n"
+)
+
+
+def test_links_into_the_record_follow_it_and_every_other_word_stays(tmp_path, capsys):
+    """Implements: TC-427"""
+    page = _write(tmp_path, "docs/reviews/old.md", LINKED.replace("\n", "\r\n"))
+    hidden = _write(tmp_path, ".claude/notes.md", LINKED)
+    vendored = _write(tmp_path, "node_modules/pkg/README.md", LINKED)
+    assert _run(tmp_path) == 0
+    assert "docs/reviews/old.md: 2 link(s)" in capsys.readouterr().out
+    expected = LINKED.replace(
+        "../archive/last_approved/acts", "../archive/last_accepted/acts"
+    ).replace("docs/archive/last_approved/README", "docs/archive/last_accepted/README")
+    assert page.read_bytes() == expected.replace("\n", "\r\n").encode("utf-8")
+    assert hidden.read_text(encoding="utf-8") == LINKED
+    assert vendored.read_text(encoding="utf-8") == LINKED
+
+
+def test_links_owed_are_reported_under_check_and_a_page_not_utf8_is_named(
+    tmp_path, capsys
+):
+    """Implements: TC-427"""
+    page = _write(tmp_path, "README.md", LINKED)
+    latin = tmp_path / "docs/latin.md"
+    latin.parent.mkdir(parents=True)
+    latin.write_bytes("caf\xe9 [x](last_approved/acts.toml)\n".encode("latin-1"))
+    assert _run(tmp_path, "--check") == 1
+    out = capsys.readouterr().out
+    assert "acceptance-record link owes the rewrite: README.md: 2 link(s)" in out
+    assert "acceptance-record link NOT rewritten: docs/latin.md: not UTF-8" in out
+    assert page.read_text(encoding="utf-8") == LINKED
+    assert _run(tmp_path) == 1
+    capsys.readouterr()
+    latin.unlink()
+    assert _run(tmp_path, "--check") == 0
+    assert "nothing stored in an earlier spelling" in capsys.readouterr().out
+
+
 def test_a_file_that_is_not_a_registry_is_left_alone(tmp_path):
     """Implements: TC-427"""
     note = _write(

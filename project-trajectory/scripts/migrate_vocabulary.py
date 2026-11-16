@@ -49,6 +49,11 @@ and a renamed directory writes every copy anyway. That absorbs whatever text
 had moved since the last act, so every accepted cell that differed is named
 in the output, for the operator to read. The record's README keeps its words.
 
+Links into the record follow it: in every Markdown file of the repository, a
+link target that names the record's earlier directory as a whole path segment
+names the current one, so `check_docs` does not report it broken. The link
+text and every other word of the file stay as written.
+
 A registry is a `.toml` or `.csv` file directly under `docs/requirements/` or
 `docs/test/`, and the acceptance record's copy of each. A registry is rewritten
 in place, byte for byte outside the values named above, then parsed again: a
@@ -67,6 +72,7 @@ nothing to do.
 import argparse
 import csv
 import io
+import os
 import re
 import sys
 import tomllib
@@ -901,9 +907,79 @@ def record(root, check):
     return done + lines, missing
 
 
+# --- links into the moved record -------------------------------------------------
+
+# A Markdown link's target: inline, `](target)`, or a reference definition,
+# `[label]: target`. Only `target` is ever rewritten.
+_LINK = re.compile(
+    r"(?P<lead>\]\(|^[ \t]{0,3}\[[^\]\r\n]+\]:[ \t]*)(?P<target>[^)\s]+)",
+    re.M,
+)
+# The record's directory names, earlier and current, as one path segment.
+_OLD_RECORD, _NEW_RECORD = (d.rsplit("/", 1)[1] for d in RECORD_DIRS)
+_OLD_SEGMENT = re.compile(r"(?<![\w.-]){}(?![\w.-])".format(re.escape(_OLD_RECORD)))
+# Folders whose Markdown is not the repository's own.
+_UNWALKED = frozenset({"node_modules", "__pycache__"})
+
+
+def relink_markdown(text):
+    """`(text, count)`: Markdown `text` with each link target naming the
+    record's earlier directory re-based onto the current one, and how many
+    moved. The link text and the prose around it keep their words.
+
+    Implements: SR-247, LLR-369
+    """
+    count = 0
+
+    def rebased(match):
+        nonlocal count
+        target, n = _OLD_SEGMENT.subn(_NEW_RECORD, match["target"])
+        count += n
+        return match["lead"] + target
+
+    return _LINK.sub(rebased, text), count
+
+
+def _markdown_files(root):
+    """Each `.md` file under `root`, outside hidden folders and `_UNWALKED`."""
+    for folder, dirs, files in os.walk(root):
+        dirs[:] = sorted(d for d in dirs if d[0] != "." and d not in _UNWALKED)
+        for name in sorted(files):
+            if name.endswith(".md"):
+                yield Path(folder) / name
+
+
+def links(root, check):
+    """Markdown links into the acceptance record re-based from its earlier
+    directory to the current one: `([what moved], [problem])`. A file that is
+    not UTF-8 is named and left untouched.
+
+    Implements: SR-247, LLR-369
+    """
+    done, problems = [], []
+    needle = _OLD_RECORD.encode("ascii")
+    for path in _markdown_files(root):
+        raw = path.read_bytes()
+        if needle not in raw:
+            continue
+        where = path.relative_to(root).as_posix()
+        try:
+            text, count = relink_markdown(raw.decode("utf-8"))
+        except UnicodeDecodeError:
+            problems.append("{}: not UTF-8; left untouched".format(where))
+            continue
+        if not count:
+            continue
+        done.append("{}: {} link(s) into {}".format(where, count, RECORD_DIRS[1]))
+        if not check:
+            path.write_bytes(text.encode("utf-8"))
+    return done, problems
+
+
 # Each step: what it is called in the report, and the function that takes it.
-# The record comes last, so that the copies it writes equal live registries
-# the registry step has already respelled.
+# The record comes after the registries, so that the copies it writes equal
+# live registries the registry step has already respelled; the links into it
+# come last.
 STEPS = (
     ("verdict binding", bindings),
     ("registry", registries),
@@ -911,6 +987,7 @@ STEPS = (
     ("decisions record", decisions),
     ("scratchpad", scratchpad),
     ("acceptance record", record),
+    ("acceptance-record link", links),
 )
 
 
