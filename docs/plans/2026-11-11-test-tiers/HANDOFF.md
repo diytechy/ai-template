@@ -1646,3 +1646,26 @@ list is fixed unless §12.6 says so.
 - **2026-11-16.** A full-suite run on `dfb281b0a` died at 7% when the session
   ended; §12.3 is what was found. **The unfiltered suite has still not passed
   on `dfb281b0a`.**
+- **2026-11-16, merges.** `maint/vocabulary` now holds `proposal/test-tiers`
+  (this file), `codex/simplify-spine-resync` and trunk `3e7a3a6ee`, at
+  `8ac37acf0`. The two RESYNC entries on the branch are re-anchored at the new
+  base and `check_resync` passes. After a merge of trunk, `check_resync`
+  judges the branch from the new merge base: re-anchor again each time.
+- **2026-11-16, in flight when this was written.**
+  - The unfiltered suite on `8ac37acf0`, 8 workers, variable unset, with a
+    watchdog that stops the run if `rg.exe` passes 40 or free memory falls
+    under 6 GB. A first attempt was stopped by the watchdog for a reason of
+    this session's own making: `git worktree add` under `C:\Projects` wrote
+    thousands of `.py` files and set off the same scans. **Do not create or
+    check out a worktree under `C:\Projects` while tests run.**
+  - Two fix branches cut from `8ac37acf0`, each worked by an Opus sub-agent
+    and to be merged back into `maint/vocabulary` after a DeepSeek review:
+    `maint/fix-conversion` in `C:\Projects\ai-template-wt-fix-a` (§12.5 list
+    1, without the `migrate_carrier` default and the `delivered_with` gate,
+    which change what rows mean and wait on the operator) and
+    `maint/fix-first-day` in `C:\Projects\ai-template-wt-fix-b` (§12.5 list
+    2). Neither edits `RESYNC_PACK.md`; one entry for both is written at the
+    merge.
+- **Not started:** recording OI-130's ruling in `open-items.toml` with the
+  rows that cite it (WI-999, WI-1001); building WI-999; the scope critiques
+  owed on WI-1003 to WI-1006; everything on hold in §12.2.
