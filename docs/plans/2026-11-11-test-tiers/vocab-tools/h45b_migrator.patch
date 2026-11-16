@@ -1,0 +1,180 @@
+diff --git a/project-trajectory/scripts/migrate_vocabulary.py b/project-trajectory/scripts/migrate_vocabulary.py
+index 379494e7e..fd791610a 100644
+--- a/project-trajectory/scripts/migrate_vocabulary.py
++++ b/project-trajectory/scripts/migrate_vocabulary.py
+@@ -25,8 +25,11 @@ words they were written in.
+     docs/process.toml              the table `[attestation]`  ->  `[authority]`,
+                                    and in it `human_approval_through`  ->
+                                    `operator_accepts_through`; in `[policies]`,
+-                                   `push = "human"`  ->  `push = "operator"`
+-    docs/decisions/*.toml          in each `[decision.<id>]` entry, the key
++                                   `push = "human"`  ->  `push = "operator"`;
++                                   in `[adjudicator] retain_for`, the brief
++                                   kind `"first-approval"`  ->
++                                   `"first-acceptance"`
++    docs/decisions/*.toml         in each `[decision.<id>]` entry, the key
+                                    `owner`  ->  `operator`
+ 
+ One file is renamed rather than rewritten: the operator's scratchpad at the
+@@ -389,11 +392,15 @@ def registries(root, check):
+ # VALUES: within a table and key (both named as they are after the rename), an
+ # earlier string value and the current one. The push authority's default was
+ # spelled `human`; the role is now the operator, a person or a session that
+-# person delegated the push to.
++# person delegated the push to. ITEMS: within a table and a key holding a list
++# of strings, an earlier element and the current one. The adjudicator's
++# retained sittings are named by brief kind, and the sitting that takes a row
++# into acceptance was the kind `first-approval`.
+ POLICY_REL = "docs/process.toml"
+ POLICY_TABLES = {"attestation": "authority"}
+ POLICY_KEYS = {"authority": {"human_approval_through": "operator_accepts_through"}}
+ POLICY_VALUES = {"policies": {"push": {"human": "operator"}}}
++POLICY_ITEMS = {"adjudicator": {"retain_for": {"first-approval": "first-acceptance"}}}
+ 
+ _TABLE_HEADER = re.compile(
+     r"^(?P<lead>[ \t]*\[)(?P<name>[A-Za-z0-9_-]+)(?P<tail>\][ \t]*(?:#[^\r\n]*)?\r?)$"
+@@ -403,10 +410,17 @@ _KEY_LINE = re.compile(r"^(?P<lead>[ \t]*)(?P<key>[A-Za-z0-9_-]+)(?P<rest>[ \t]*
+ _QUOTED = re.compile(
+     r"^(?P<eq>[ \t]*=[ \t]*)(?P<quote>[\"'])(?P<value>[^\"'\r\n]*)(?P=quote)(?P<tail>.*)$"
+ )
++# One quoted element of a list.
++_ITEM = re.compile(r"(?P<quote>[\"'])(?P<value>[^\"'\r\n]*)(?P=quote)")
+ 
+ 
+ def _policy_value(table, key, value):
+-    """`value` as the current vocabulary spells it, for `key` in `table`."""
++    """`value` as the current vocabulary spells it, for `key` in `table`: a
++    string through `POLICY_VALUES`, each string of a list through
++    `POLICY_ITEMS`."""
++    if isinstance(value, list):
++        items = POLICY_ITEMS.get(table, {}).get(key, {})
++        return [items.get(v, v) if isinstance(v, str) else v for v in value]
+     if not isinstance(value, str):
+         return value
+     return POLICY_VALUES.get(table, {}).get(key, {}).get(value, value)
+@@ -459,6 +473,46 @@ def _policy_line(line, table):
+     return line, table
+ 
+ 
++def _code_part(text):
++    """Where the comment of a line of TOML starts: the index of its first `#`
++    outside a quoted string, or the line's length when it has none."""
++    quote = None
++    for i, char in enumerate(text):
++        if quote:
++            quote = None if char == quote else quote
++        elif char in "\"'":
++            quote = char
++        elif char == "#":
++            return i
++    return len(text)
++
++
++def _array_line(text, items):
++    """`(text, items)`: one line of a list whose elements `items` respells,
++    each quoted element before its comment in the current vocabulary, and
++    `items` again while the list stays open after it (None once a `]` before
++    the comment closes it). The comment keeps its words."""
++    cut = _code_part(text)
++    code = _ITEM.sub(
++        lambda m: "{0}{1}{0}".format(m["quote"], items.get(m["value"], m["value"])),
++        text[:cut],
++    )
++    return code + text[cut:], (None if "]" in code else items)
++
++
++def _array_opened(line, table):
++    """`(line, items)` for a line of `table`: when its key holds a list that
++    `POLICY_ITEMS` respells, the line with the elements on it respelled and the
++    map for the lines after it while the list is open; otherwise the line as
++    it is and None."""
++    cell = _KEY_LINE.match(line)
++    items = POLICY_ITEMS.get(table, {}).get(cell["key"]) if cell else None
++    if not items or not cell["rest"].lstrip(" \t=").startswith("["):
++        return line, None
++    rest, items = _array_line(cell["rest"], items)
++    return cell["lead"] + cell["key"] + rest, items
++
++
+ def migrate_policy(text):
+     """Policy-file `text` with its tables, keys and values in the current
+     vocabulary.
+@@ -475,9 +529,13 @@ def migrate_policy(text):
+     )
+     if expected == before:
+         return text
+-    lines, table = [], None
++    lines, table, items = [], None, None
+     for line in text.split("\n"):
+-        line, table = _policy_line(line, table)
++        if items:
++            line, items = _array_line(line, items)
++        else:
++            line, table = _policy_line(line, table)
++            line, items = _array_opened(line, table)
+         lines.append(line)
+     new = "\n".join(lines)
+     try:
+diff --git a/tests/test_migrate_vocabulary.py b/tests/test_migrate_vocabulary.py
+index f76c0169d..b48b39f96 100644
+--- a/tests/test_migrate_vocabulary.py
++++ b/tests/test_migrate_vocabulary.py
+@@ -294,6 +294,42 @@ def test_the_push_authoritys_earlier_default_is_respelled_in_place(tmp_path):
+         assert path.read_bytes() == text.encode("utf-8")
+ 
+ 
++RETAIN = """[adjudicator]
++context_reset_pct = 55
++# first sittings too: "first-approval" stays in a comment
++retain_for = [
++    "disposition", "amendment", "first-approval",  # "first-approval" was its name
++    'first-approval', "done-when",
++]
++keepwarm_minutes = 0
++
++[reviewer]
++retain_for = ["first-approval"]
++"""
++
++
++def test_the_adjudicators_retained_brief_kinds_are_respelled_in_place(tmp_path):
++    """Implements: TC-427"""
++    path = _write(tmp_path, "docs/process.toml", RETAIN.replace("\n", "\r\n"))
++    assert _run(tmp_path) == 0
++    expected = RETAIN.replace(
++        '"amendment", "first-approval",  #', '"amendment", "first-acceptance",  #'
++    ).replace("    'first-approval', ", "    'first-acceptance', ")
++    # A comment keeps its words, and a key of the same name in another table
++    # is that table's own.
++    assert '# first sittings too: "first-approval" stays in a comment' in expected
++    assert '# "first-approval" was its name' in expected
++    assert expected.endswith('[reviewer]\nretain_for = ["first-approval"]\n')
++    assert path.read_bytes() == expected.replace("\n", "\r\n").encode("utf-8")
++    retain = tomllib.loads(expected)["adjudicator"]["retain_for"]
++    assert retain.count("first-acceptance") == 2 and "first-approval" not in retain
++    assert _run(tmp_path, "--check") == 0
++    one_line = '[adjudicator]\nretain_for = ["first-approval", "combined"]\n'
++    path = _write(tmp_path, "docs/process.toml", one_line)
++    assert _run(tmp_path) == 0
++    assert path.read_bytes() == one_line.replace("approval", "acceptance").encode()
++
++
+ @pytest.mark.parametrize(
+     "text",
+     (
+@@ -302,6 +338,7 @@ def test_the_push_authoritys_earlier_default_is_respelled_in_place(tmp_path):
+         '[policies]\nnote = """\n[attestation]\n"""\n\n[attestation]\nfinal_review = "off"\n',
+         'policies = { push = "human" }\n',
+         '[policies]\npush = """human"""\n',
++        'adjudicator = { retain_for = ["first-approval"] }\n',
+     ),
+     ids=(
+         "inline-table",
+@@ -309,6 +346,7 @@ def test_the_push_authoritys_earlier_default_is_respelled_in_place(tmp_path):
+         "look-alike-header-in-a-string",
+         "push-in-an-inline-table",
+         "push-in-a-multi-line-string",
++        "retained-kind-in-an-inline-table",
+     ),
+ )
+ def test_a_dial_the_line_edit_cannot_reach_is_refused_not_guessed(tmp_path, text):
