@@ -1373,6 +1373,56 @@ def test_a_non_python_owner_declares_through_its_comment_header(tmp_path):
     assert gen_arch_map.file_contracts(late) == ([], {})
 
 
+# Each language's own comment form carries the same header: read for `#`
+# alone, every one of these declared nothing in the adopting repositories.
+
+
+def _declared(tmp_path, name, text, encoding="utf-8"):
+    path = tmp_path / name
+    path.write_text(text, encoding=encoding)
+    return gen_arch_map.file_contracts(path)
+
+
+def test_a_slash_line_comment_header_declares(tmp_path):
+    rust = "//! Pipeline.\n//!\n//! Contracts: IF-970\n//! Contract IF-970: frames in order.\nuse std::io;\n"
+    assert _declared(tmp_path, "pipeline.rs", rust) == (
+        ["IF-970"],
+        {"IF-970": "frames in order."},
+    )
+    cs = "// Log.\n// Contracts: IF-971\n//\n// Contract IF-971: one line per event,\n//     UTC first.\nusing System;\n"
+    assert _declared(tmp_path, "AppLog.cs", cs) == (
+        ["IF-971"],
+        {"IF-971": "one line per event, UTC first."},
+    )
+
+
+def test_a_slash_block_comment_header_declares(tmp_path):
+    ts = "/**\n * Store.\n *\n * Contracts: IF-972\n *\n * Contract IF-972: reads the catalog.\n */\nexport {};\n"
+    assert _declared(tmp_path, "store.ts", ts) == (
+        ["IF-972"],
+        {"IF-972": "reads the catalog."},
+    )
+
+
+def test_a_powershell_header_declares_through_a_bom_and_block_help(tmp_path):
+    ps = (
+        "#Requires -Version 7.2\n<#\n.SYNOPSIS\n  Try a voice.\n#>\n"
+        "# Contracts: IF-973\n#\n# Contract IF-973: returns 3 when busy.\nparam()\n"
+    )
+    assert _declared(tmp_path, "Try-Voice.ps1", ps, encoding="utf-8-sig") == (
+        ["IF-973"],
+        {"IF-973": "returns 3 when busy."},
+    )
+
+
+def test_a_batch_header_declares_below_echo_off(tmp_path):
+    cmd = "@echo off\nREM Launcher.\nREM Contracts: IF-974\n:: Contract IF-974: runs the build.\nsetlocal\n"
+    assert _declared(tmp_path, "run.cmd", cmd) == (
+        ["IF-974"],
+        {"IF-974": "runs the build."},
+    )
+
+
 def test_the_reference_lists_a_file_owner_beside_the_modules(tmp_path):
     src = tmp_path / "src"
     src.mkdir()
