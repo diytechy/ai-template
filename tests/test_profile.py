@@ -225,6 +225,41 @@ def test_python_and_default_scaffolds_keep_pytest_ini(tmp_path):
         assert "OI-3" not in status, "checklist must not appear for " + str(extra)
 
 
+def test_pytest_ini_is_not_written_over_a_pyproject_pytest_config(tmp_path, capsys):
+    # pytest reads pytest.ini before pyproject.toml, so a scaffolded one would
+    # silently drop the adopter's own pytest config (a src layout's pythonpath).
+    # A dry run walks the same copy pass without writing anything.
+    plan = boot.ScaffoldPlan(
+        stack="python",
+        omit=frozenset(),
+        agent_choice="none",
+        agents=[],
+        domain="any",
+        skills=[],
+        gate_policy="attended",
+        push_policy="operator",
+        privacy_check="false",
+        force=False,
+        dry_run=True,
+    )
+    assert "pytest.ini" in boot.copy_kit_files(tmp_path, plan).created
+    # A pyproject with no pytest table still gets pytest.ini: the skip is that
+    # narrow, not "any pyproject.toml".
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "x"\n\n[tool.ruff]\nline-length = 88\n', encoding="utf-8"
+    )
+    assert "pytest.ini" in boot.copy_kit_files(tmp_path, plan).created
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "x"\n\n[tool.pytest.ini_options]\npythonpath = ["src"]\n',
+        encoding="utf-8",
+    )
+    capsys.readouterr()
+    assert "pytest.ini" not in boot.copy_kit_files(tmp_path, plan).created
+    assert "skipped: pytest.ini (pyproject.toml already configures pytest" in (
+        capsys.readouterr().out
+    )
+
+
 # --- The recorded profile & re-sync regeneration ------------------------------
 
 

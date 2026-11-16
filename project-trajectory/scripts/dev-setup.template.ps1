@@ -64,9 +64,11 @@ $IdeInstall = ""
 
 # One entry per role. Cmds: detection commands (any present => role present).
 # Install: the install command (empty = nothing to install here).
+# The design line is an EXAMPLE second role (a non-code asset designer):
+# uncomment it to declare it.
 $Roles = [ordered]@{
     code   = @{ Cmds = @();           Install = "" }  # toolchain is setup.ps1's job
-    design = @{ Cmds = @("inkscape"); Install = "" }  # e.g. "winget install --id Inkscape.Inkscape -e"
+    # design = @{ Cmds = @("inkscape"); Install = "" }  # e.g. "winget install --id Inkscape.Inkscape -e"
 }
 # ===========================================================================
 
@@ -387,4 +389,4 @@ if (($selected -contains "code") -and (Interactive)) {
 Write-Host ""
 Write-Host "Done. Workstation ready; the pre-commit floor is wired."
 Write-Host "If you skipped it above, run scripts/setup.ps1 for the product toolchain, then"
-Write-Host ".\scripts\check.ps1 --stage DevStg-Impl to run the gates."
+Write-Host ".\scripts\check.ps1 to run the gates."

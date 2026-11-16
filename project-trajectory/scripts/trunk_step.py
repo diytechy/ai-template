@@ -514,11 +514,15 @@ def _open_items(root):
 #                so it has no edge at all and its position is free for the same
 #                reason component-view's is.
 REGEN_STEPS = (
+    # okf arms on the registries as well as on the bundle: `gen_okf.py --check`
+    # demands docs/okf/ from the first real row, so the regen must create it.
     (
         "okf",
-        lambda root: (Path(root) / "docs" / "okf").is_dir(),
+        lambda root: any(
+            (Path(root) / "docs" / d).is_dir() for d in ("okf", "requirements")
+        ),
         _cmd("gen_okf.py"),
-        "docs/okf/ absent",
+        "neither docs/okf/ nor docs/requirements/",
         ("docs/okf/",),
     ),
     (

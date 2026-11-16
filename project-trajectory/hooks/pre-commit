@@ -41,9 +41,11 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # commit through this hook at all (the interpreter step below refuses), so the
 # check holds wherever the hook runs.
 
-# No step of this hook is ever skipped: a missing interpreter refuses
+# The hook as a whole is never skipped: a missing interpreter refuses
 # (WI-880), and so does a missing kit scripts dir (WI-926), whatever the
-# privacy policy says. A repo whose harness lives elsewhere sets
+# privacy policy says. A single step may still report SKIP or "nothing to
+# check" when it does not apply (format with no formatter installed, step 4,
+# prints SKIP by name). A repo whose harness lives elsewhere sets
 # KIT_SCRIPTS_DIR (relative to the repo root, or absolute) so this one shipped
 # hook fits ANY layout, e.g. the kit's own meta-repo, where .githooks/pre-commit
 # is a two-line wrapper that sets the var and delegates here (WI-1.42); the

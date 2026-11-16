@@ -2850,7 +2850,10 @@ def main():
         return
 
     if not plan:
-        print("No checks defined at stage {}.".format(stage))
+        # The hook asks for path-triggered steps on every commit; most repos
+        # declare none, and that is not news worth a line.
+        if not args.path_triggered:
+            print("No checks defined at stage {}.".format(stage))
         return
 
     # Run-scope the coverage report before the plan (see the helper): a stale,

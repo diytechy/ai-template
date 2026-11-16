@@ -6,7 +6,7 @@ It is loaded every session: keep it short and current. Project facts live in
 `docs/`; this file points at them.
 
 <!-- kit-only -->
-> Scaffolds to `AGENTS.md` (the cross-tool standard) via `bootstrap.py`.
+> Scaffolds to `AGENTS.md` via `bootstrap.py`.
 <!-- /kit-only -->
 > Thin `CLAUDE.md`/`GEMINI.md` stubs point back here. Fill the **Project**
 > section, delete guidance that doesn't apply. Everything below the line is
@@ -53,15 +53,15 @@ the ladder, and the ID scheme. The short version needed every session:
 - **Versioned releases:** `DevStg-Release` adds the `release` tier and
   `scripts/gen_release_checklist.py`.
 - **The code map is derived from the source AST**: per-module summary and
-  public symbols with `Implements:` back-links, rendered live in
-  `PROJECT_STATE.html`'s How-SW tab. **Read it to find where a capability
-  lives before searching the tree**; `scripts/gen_arch_map.py --doc` splices
-  it here: never hand-edit between `GENERATED` markers or commit exported
-  diagrams.
+  public symbols with `Implements:` back-links, in `PROJECT_STATE.html`'s
+  How-SW tab once a work item exists (`scripts/gen_trajectory.py`). **Read it
+  to find where a capability lives before searching**;
+  `scripts/gen_arch_map.py --doc` splices it here: never hand-edit between
+  `GENERATED` markers or commit exported diagrams.
 - **Start each session** with *Current State* in
   [docs/status.md](docs/status.md); end each turn by updating it (stage, what
-  changed, next action). **Commit hooks on before any work** (`sh
-  scripts/setup.sh`, or `scripts\setup.ps1`); never bypass them.
+  changed, next action). **Commit hooks on before any work** (`bash
+  scripts/setup.sh` or `scripts\setup.ps1`); never bypass them.
   **Commit early and often**, small and green per step; the `push` dial says
   who publishes (default: operator). End with a clean tree.
 
@@ -186,6 +186,6 @@ Direct and concrete; explain the *why* before the *how*.
 ---
 
 > **Customizing:** add a rule only after you've had to repeat it, and **pay for
-> it by tightening another** — this file has a hard byte budget (keep ≥2k
-> headroom under Gemini's ~12k AGENTS.md cap for project facts). Delete rules
+> it by tightening another** — this file has a hard byte budget (≥2k of
+> Gemini's ~12k AGENTS.md cap stays free for project facts). Delete rules
 > you don't enforce — unbacked rules are noise.
