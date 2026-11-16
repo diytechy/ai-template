@@ -1743,3 +1743,21 @@ list is fixed unless §12.6 says so.
   (`trunk_step.py --regen`: dashboard, CLI and interface references, the
   status snapshot); `docs/status.md`'s resume text, which still describes the
   queue before OI-130 was ruled; and everything on hold in §12.2.
+- **2026-11-16, the branch passes whole.** `maint/vocabulary` at `97207bd0c`:
+  the unfiltered suite ran **8,045 passed, 29 skipped, none failed**, in
+  26 min 2 s (8 workers, variable unset, no `rg.exe` at any point). Before it:
+  - `5c6cc4dc7` re-stamped eight line-count baselines, the byte-budget table
+    and the pinned line number. `trajectory_arch.py` has its first baseline
+    entry (1,012); decomposing it is left to the operator. The ratchet's
+    header asks for the reason of a bump in the work item's log; this branch
+    has no work item, so the reasons are in the entries' comments only.
+  - `1f75f680e` added one RESYNC entry for both fix branches.
+  - `97207bd0c` moved `check.py`'s empty-plan line into `_say_empty_plan`,
+    because the first-day fix had taken `main` from 15 to 16 on the
+    complexity census.
+- **State for whoever resumes.** All four worktrees are clean. Nothing is
+  pushed. `maint/fix-conversion` and `maint/fix-first-day` are merged and
+  their worktrees (`C:\Projects\ai-template-wt-fix-a`, `-fix-b`) can be
+  removed. Next in order: build WI-999 (ruled, §12.2); then the operator's
+  answers on the vocabulary (§12.2, §12.4) and on the three points at the end
+  of the fix-branch entry above; then §10.5 onward.
