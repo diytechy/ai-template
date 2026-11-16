@@ -1646,3 +1646,118 @@ list is fixed unless §12.6 says so.
 - **2026-11-16.** A full-suite run on `dfb281b0a` died at 7% when the session
   ended; §12.3 is what was found. **The unfiltered suite has still not passed
   on `dfb281b0a`.**
+- **2026-11-16, merges.** `maint/vocabulary` now holds `proposal/test-tiers`
+  (this file), `codex/simplify-spine-resync` and trunk `3e7a3a6ee`, at
+  `8ac37acf0`. The two RESYNC entries on the branch are re-anchored at the new
+  base and `check_resync` passes. After a merge of trunk, `check_resync`
+  judges the branch from the new merge base: re-anchor again each time.
+- **2026-11-16, in flight when this was written.**
+  - The unfiltered suite on `8ac37acf0`, 8 workers, variable unset, with a
+    watchdog that stops the run if `rg.exe` passes 40 or free memory falls
+    under 6 GB. A first attempt was stopped by the watchdog for a reason of
+    this session's own making: `git worktree add` under `C:\Projects` wrote
+    thousands of `.py` files and set off the same scans. **Do not create or
+    check out a worktree under `C:\Projects` while tests run.**
+  - Two fix branches cut from `8ac37acf0`, each worked by an Opus sub-agent
+    and to be merged back into `maint/vocabulary` after a DeepSeek review:
+    `maint/fix-conversion` in `C:\Projects\ai-template-wt-fix-a` (§12.5 list
+    1, without the `migrate_carrier` default and the `delivered_with` gate,
+    which change what rows mean and wait on the operator) and
+    `maint/fix-first-day` in `C:\Projects\ai-template-wt-fix-b` (§12.5 list
+    2). Neither edits `RESYNC_PACK.md`; one entry for both is written at the
+    merge.
+- **Not started:** recording OI-130's ruling in `open-items.toml` with the
+  rows that cite it (WI-999, WI-1001); building WI-999; the scope critiques
+  owed on WI-1003 to WI-1006; everything on hold in §12.2.
+- **2026-11-16, the unfiltered suite on `8ac37acf0`:** 8,026 passed, 29
+  skipped, 4 failed, in 27 min 16 s (8 workers, variable unset, started from
+  Git Bash). No `rg.exe` ran at any point and free memory never fell under
+  38 GB, so §12.3's cause is confirmed on a whole run. The four failures:
+
+  | Test | Meaning | Owed |
+  |---|---|---|
+  | `test_capped_doc_baselines_match_the_real_sizes` | `CLAUDE.md` stamped 8,018, is 8,037; `AGENTS.template.md` stamped 9,992, is 9,999 | re-stamp at the close (§10.7 item 6) |
+  | `test_module_sizes_exactly_match_the_committed_baseline` | `agent_loop.py` 2531 to 2535, `intake.py` 1955 to 1957, `bootstrap.py` 1599 to 1597 | D17, at the close |
+  | `test_the_one_non_literal_site_in_the_kit_is_lf` | a pinned line number in `gen_open_items.py` moved 1670 to 1672 with the "owner" sweep | re-stamp with the others |
+  | `test_check_harness.py::test_jobs_parallel_plan_matches_sequential` | failed under the full run, passes alone (45 s) | nothing; it is sensitive to load. Re-run it alone after any full run that shows it |
+
+  The three stamps are re-done once, after the two fix branches merge, since
+  those change sizes again.
+- **2026-11-16, OI-130 recorded.** `maint/vocabulary` `d6e2d30cc`: the item
+  reads `ruled`, WI-999 drops its `needs` and states the record's cells
+  (`objective = "minimize cut"`, scores P5 140, P3 152, P4 235, no override),
+  and `docs/log.d/2026-11-16-operator-rules-oi130.md` carries the ruling.
+  WI-999 is not built yet.
+- **2026-11-16, both fix branches are built** and wait on their DeepSeek
+  review, then the merge into `maint/vocabulary`, one RESYNC entry for both,
+  the regenerated views and the re-stamps.
+  - `maint/fix-conversion` (7 commits, tip `cea6779cd`): the advisory flood
+    is one count line while no stakeholder is accepted; contract headers are
+    read in `//`, `/* */`, PowerShell and batch comments and behind a BOM;
+    `check_trajectory` says how many interface rows its contract gate could
+    not check; `check_docs` ignores the generated `docs/test` reports;
+    `--strict-schema` says when its findings do not fail the run (the exit
+    code is pinned by TC-189 and stays); `--no-placeholders` reads parsed
+    rows; `.gd` is a source extension. Skipped: the first-day architecture
+    warning, because no threshold is right for seams that are not imports.
+  - `maint/fix-first-day` (10 commits, tip `53d2f3a00`): `bash`, not `sh`,
+    for the setup scripts; `fetch-depth: 0` in the CI template; one first
+    command everywhere (`check.py` with no `--stage`); the dashboard
+    sentences say when the file appears; no `pytest.ini` beside a
+    `pyproject.toml` that configures pytest; `trunk_step.py --regen` writes
+    the okf bundle the commit check asks for, and the README template names
+    the commands to run after editing a registry; two first-day noise lines
+    gone.
+  - **For the operator, from these two:**
+    1. SR-195 and LLR-227 say each unreachable need is reported by name.
+       While no stakeholder is accepted they are now reported as a count.
+       Either the rows gain that sentence or the change is undone.
+    2. Accepting a first real chain moves the stage to Impl, where the
+       shipped `-000` rows and the example flow then fail the checks. Hold
+       the stage at Reqs while examples remain (which also holds back the
+       adopter's own tests), or keep the failure and tell adopters in the
+       README note to delete the examples when they accept their first
+       chain? This session recommends the README sentence.
+    3. `trajectory_arch.py` passed 1,000 code lines (989 to 1,012), so the
+       line-count ratchet wants a first baseline entry for it.
+- **2026-11-16, both fix branches reviewed and merged.** `maint/vocabulary`
+  is at `99166f01d`. DeepSeek (`opencode-go/deepseek-v4.1-flash`) reviewed
+  each diff and asked for changes on both:
+  - Conversion: the count line was swallowing gate advisories that have
+    nothing to do with stakeholders ("cites no assumption", "not approved").
+    Fixed in `6e5bcf5ba`: only the reach-caused lines fold; the line no longer
+    claims every need is unreachable.
+  - First day: the CI template and both setup scripts ran `pip install -e .`
+    for any `pyproject.toml`, which fails on one that holds only tool
+    settings. Fixed in `f34c74874`: they install only when the file declares
+    `[project]` or `[build-system]`.
+  - Declined as cases nobody hit: a kit checkout missing its own
+    `pytest.ini`; `sh ./scripts/setup.sh` beside `sh scripts/setup.sh`.
+  - A DeepSeek review given the repository takes 20 to 30 minutes and reads
+    widely. Tell it to answer from the diff and cap its tool calls.
+- **In flight:** a Sonnet sub-agent in the vocabulary worktree re-stamps the
+  line-count ratchet, the byte-budget table and the pinned line number, and
+  writes one RESYNC entry for both fix branches. After it: one more
+  unfiltered suite run (§12.3's recipe) to confirm the branch.
+- **Still owed before `maint/vocabulary` can be trunk:** the generated views
+  (`trunk_step.py --regen`: dashboard, CLI and interface references, the
+  status snapshot); `docs/status.md`'s resume text, which still describes the
+  queue before OI-130 was ruled; and everything on hold in §12.2.
+- **2026-11-16, the branch passes whole.** `maint/vocabulary` at `97207bd0c`:
+  the unfiltered suite ran **8,045 passed, 29 skipped, none failed**, in
+  26 min 2 s (8 workers, variable unset, no `rg.exe` at any point). Before it:
+  - `5c6cc4dc7` re-stamped eight line-count baselines, the byte-budget table
+    and the pinned line number. `trajectory_arch.py` has its first baseline
+    entry (1,012); decomposing it is left to the operator. The ratchet's
+    header asks for the reason of a bump in the work item's log; this branch
+    has no work item, so the reasons are in the entries' comments only.
+  - `1f75f680e` added one RESYNC entry for both fix branches.
+  - `97207bd0c` moved `check.py`'s empty-plan line into `_say_empty_plan`,
+    because the first-day fix had taken `main` from 15 to 16 on the
+    complexity census.
+- **State for whoever resumes.** All four worktrees are clean. Nothing is
+  pushed. `maint/fix-conversion` and `maint/fix-first-day` are merged and
+  their worktrees (`C:\Projects\ai-template-wt-fix-a`, `-fix-b`) can be
+  removed. Next in order: build WI-999 (ruled, §12.2); then the operator's
+  answers on the vocabulary (§12.2, §12.4) and on the three points at the end
+  of the fix-branch entry above; then §10.5 onward.
