@@ -29,7 +29,7 @@ from pathlib import Path
 
 import pytest
 from conftest import (
-    BARS_RED_MARK,
+    MARKER_DECLARATION,
     COMMIT_SUITE,
     SCRIPTS,
     env_gate_skipif,
@@ -238,7 +238,7 @@ def test_an_unreadable_message_file_is_a_named_refusal(tmp_path, content):
 
 # A lane's `docs/stack.ini` up to its check suites: `[product]` with the marker
 # declared, so the commit checks are all a case leaves undeclared.
-PRODUCT = "[product]\ntest = {py} scripts/named_tests.py\n" + BARS_RED_MARK
+PRODUCT = "[product]\ntest = {py} scripts/named_tests.py\n" + MARKER_DECLARATION
 # An undeclared value's line opens with where the value belongs: the suite's
 # line under the suite's name, or the name itself.
 SUITE_AT = "docs/stack.ini [check-suites] {} - ".format(COMMIT_SUITE)
@@ -343,7 +343,7 @@ def test_record_checks_runs_the_declarations_staged_in_the_lane_not_the_primarys
     _declare(
         wt,
         "[product]\ntest = {py} scripts/named_tests.py --lane-declared\n"
-        + BARS_RED_MARK
+        + MARKER_DECLARATION
         + "[check-suites]\n"
         + COMMIT_SUITE
         + " = python scripts/check.py --the-primarys-name\n"

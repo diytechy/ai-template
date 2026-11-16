@@ -34,7 +34,7 @@ import subprocess
 
 import pytest
 from conftest import (
-    BARS_RED_MARK,
+    MARKER_DECLARATION,
     ROOT,
     SCRIPTS,
     env_gate_skipif,
@@ -107,7 +107,7 @@ def _trunk(home, harness=True, sr_mark=5, attributes=None, sr_rows=(), records=(
         write_lf(
             root,
             "docs/stack.ini",
-            "[product]\ntest = {py} -m pytest -q\n" + BARS_RED_MARK,
+            "[product]\ntest = {py} -m pytest -q\n" + MARKER_DECLARATION,
         )
         declare_generated(root)
         write_lf(root, "docs/review-policy", "0\n")

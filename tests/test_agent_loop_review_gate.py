@@ -1064,7 +1064,7 @@ def test_unparseable_process_toml_and_a_non_table_build_refuse_at_preflight(
     ],
     ids=["0", "-1", "true", '"3"', "3.0", "retired-key"],
 )
-def test_a_bad_red_rounds_max_refuses_before_any_session(tmp_path, key, value):
+def test_a_bad_failure_cap_refuses_before_any_session(tmp_path, key, value):
     """Implements: TC-380"""
     # TC-380. A declared cap that is not an int, is a bool, or is below 1 is
     # refused at the loop's preflight, naming its line and the key, before any

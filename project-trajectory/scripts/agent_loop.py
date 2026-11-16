@@ -1694,7 +1694,7 @@ class LoopContext:
     reviews_dir: Path
     scoreboard: Path
     rp_int: int
-    red_rounds_max: int
+    failure_cap: int
     run: LoopRun
 
 
@@ -2454,8 +2454,8 @@ def committed_build_rounds(ctx, plan, commits, after, wi_label):
     2026-09-03) — and a rule kept in two copies is a rule that drifts.
     A build whose commit checks refused it (`record_build_checks`) owes no review round:
     the refusal is the next build's rework, as a round's findings would be.
-    Returns `schedule_review_round`'s exit code, the red cap's after a red
-    (`failure_cap_check`), or None.
+    Returns `schedule_review_round`'s exit code, the failure cap's after a
+    refused build (`failure_cap_check`), or None.
 
     Implements: SR-154, LLR-344
     """
@@ -3375,8 +3375,8 @@ def review_draw_gate(ctx):
     the commit checks run once here and `record_bar_result` records it, green
     drawing the round and red dropping it. A derivation refusal leaves no
     record to compare, so `integrate.record_checks` refuses with the same text and it
-    is recorded as any red is. Returns the red cap's exit code after a red
-    (`failure_cap_check`), else None: the session is routed next.
+    is recorded as any failure is. Returns the failure cap's exit code after a
+    failure (`failure_cap_check`), else None: the session is routed next.
 
     Implements: SR-154, LLR-344
     """
@@ -3407,7 +3407,7 @@ def failure_cap_check(ctx):
     """`EXIT_CHECK_FAILURE_CAP` with its stop banner once the lane's committed
     failed-check records, counted from the worker's base (its merge base with
     trunk, as the dispatcher reads it), reach the declared commit-check
-    failure cap (`kconfig.RED_ROUNDS_KEY`) or cannot be read;
+    failure cap (`kconfig.FAILURE_CAP_KEY`) or cannot be read;
     else None. Armed where a review is drawn; run at the run's start and after
     each committed failed-checks record.
 
@@ -3415,15 +3415,15 @@ def failure_cap_check(ctx):
     """
     if not (ctx.managed and ctx.rp_int >= 1 and ctx.worker):
         return None
-    red = kverdict.failed_rounds(ctx.root, "HEAD", ctx.worker["base"])
-    if red is not None and red.count < ctx.red_rounds_max:
+    failed = kverdict.failed_rounds(ctx.root, "HEAD", ctx.worker["base"])
+    if failed is not None and failed.count < ctx.failure_cap:
         return None
-    count, last = (red.count, red.last_summary) if red else ("unreadable", "-")
+    count, last = (failed.count, failed.last_summary) if failed else ("unreadable", "-")
     stop_banner(
         ctx.status_path,
         "COMMIT-CHECK FAILURE CAP — {} consecutive failed rounds".format(count),
         "[build] {} = {}; last run: {}. The lane closes partial.".format(
-            kconfig.RED_ROUNDS_KEY, ctx.red_rounds_max, last
+            kconfig.FAILURE_CAP_KEY, ctx.failure_cap, last
         ),
     )
     return EXIT_CHECK_FAILURE_CAP
@@ -3752,7 +3752,7 @@ class SessionSetup:
     prompt_templates: dict
     routing: RoutingSetup
     worker: dict
-    red_rounds_max: int
+    failure_cap: int
 
 
 def resolve_session_setup(args, root):
@@ -3800,7 +3800,7 @@ def resolve_session_setup(args, root):
         return None, err
     # After the assignment: its undeclared-trunk refusal already names the
     # line an absent docs/process.toml lacks.
-    red_max, refusal = kconfig.red_rounds_max(root)
+    cap, refusal = kconfig.commit_check_failure_cap(root)
     if refusal is not None:
         print("agent_loop: preflight failed —\n  - " + refusal, file=sys.stderr)
         return None, EXIT_PREFLIGHT
@@ -3815,7 +3815,7 @@ def resolve_session_setup(args, root):
             prompt_templates=prompt_templates,
             routing=routing,
             worker=worker,
-            red_rounds_max=red_max,
+            failure_cap=cap,
         ),
         None,
     )
@@ -4059,7 +4059,7 @@ def moved_scripts_stop():
 def run_loop(ctx):
     """Iterate until an iteration returns an exit code, or until the declared
     budget runs out — which is itself an exit with a banner, never a silent
-    stop. A lane already at its red cap ends before any session."""
+    stop. A lane already at its failure cap ends before any session."""
     code = failure_cap_check(ctx)
     if code is not None:
         return code
@@ -4248,7 +4248,7 @@ def main():
             reviews_dir=reviews_dir,
             scoreboard=reviews_dir / "scoreboard.txt",
             rp_int=rp_int,
-            red_rounds_max=setup.red_rounds_max,
+            failure_cap=setup.failure_cap,
             run=LoopRun(routing=st, warned_no_core=warned_no_core),
         )
     )

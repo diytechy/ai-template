@@ -230,7 +230,7 @@ def _session_config_refusal(root, args):
     conflicts = ac.config_conflicts(root / "docs")
     if conflicts:
         return conflicts[0]
-    _, refusal = kconfig.red_rounds_max(root)
+    _, refusal = kconfig.commit_check_failure_cap(root)
     if refusal is not None:
         return refusal
     template = (
@@ -610,7 +610,7 @@ def _failure_cap_close(root, branch):
     """`(reason, not_delivered)` for a lane whose worker hit the commit-check
     failure cap: the count and the last run's summary read through
     `kverdict.failed_rounds` from the lane's merge base with trunk, and the
-    declared cap (`kconfig.RED_ROUNDS_KEY`).
+    declared cap (`kconfig.FAILURE_CAP_KEY`).
 
     Implements: SR-242, LLR-343
     """
@@ -620,7 +620,10 @@ def _failure_cap_close(root, branch):
     reason = (
         "commit-check failure cap: {} consecutive failed rounds ([build] {} = "
         "{}); last run: {}".format(
-            count, kconfig.RED_ROUNDS_KEY, kconfig.red_rounds_max(root)[0], last
+            count,
+            kconfig.FAILURE_CAP_KEY,
+            kconfig.commit_check_failure_cap(root)[0],
+            last,
         )
     )
     return reason, (

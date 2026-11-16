@@ -370,7 +370,7 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
     )
 
 
-def test_the_hand_landing_checks_the_staged_squash_for_a_red_mark():
+def test_the_hand_landing_checks_the_staged_squash_for_an_expected_failure_marker():
     # WI-996: the landing arm runs inside the refresh, and the coordinator's
     # hand landing squashes without one, so recipes §3 runs the same arm on
     # the staged squash before the commit checks and resets the squash on a
@@ -388,7 +388,7 @@ def test_the_hand_landing_checks_the_staged_squash_for_a_red_mark():
     for clause in (
         step,
         '"$PY" -c "import sys; sys.path.insert(0, \'$SCRIPTS\'); from '
-        "kitlib.red_mark import landing_refusal; r = landing_refusal('.'); "
+        "kitlib.expected_failure import landing_refusal; r = landing_refusal('.'); "
         "print(r or 'no expected-failure marker staged'); sys.exit(1 if r else 0)\"",
         "reset the squash with `git reset --hard HEAD`, never a stash",
         "a hand landing (§3) refused for a mark ends in the code commit or a "
@@ -436,10 +436,10 @@ def test_no_cycle_copy_types_a_review_test_list():
             assert refusal in flat, (copy, refusal)
 
 
-def test_coordinator_cycle_states_the_red_round_cap_citing_the_key():
+def test_coordinator_cycle_states_the_failure_cap_citing_the_key():
     # No TC row names this case yet; it pins WI-958's Done-when item on the
     # coordinator-cycle skill text. Its section on rounds and the cap counts
-    # each failed record-checks run as a red round and, at the declared key, closes the lane
+    # each failed record-checks run as a failed round and, at the declared key, closes the lane
     # partial by the recipe. test_skills_sync keeps the copies byte-identical.
     skill = (KIT / "skills" / "coordinator-cycle" / "SKILL.md").read_text(
         encoding="utf-8"

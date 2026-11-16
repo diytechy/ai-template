@@ -42,8 +42,8 @@ from . import spine as kspine
 from . import verdict as kverdict
 
 __all__ = [
-    "Bars",
-    "read_bars",
+    "CommitCheckSettings",
+    "read_commit_check_settings",
     "count",
     "tree_counts",
     "findings",
@@ -71,9 +71,9 @@ _SUITE_MEANS = "the shell line of the check suite {} [{}] {} names".format(
 )
 
 
-class Bars(NamedTuple):
-    """What a passed-checks record needs from the lane at `lane`: `review`, the shell
-    line of the check suite a commit must pass; `red_mark`, the declared
+class CommitCheckSettings(NamedTuple):
+    """What a passed-checks record needs from the lane at `lane`: `commit_checks`, the
+    shell line of the check suite a commit must pass; `marker`, the declared
     expected-failure marker; the tests root's path prefix; and, per value that
     is undeclared (`""`), the line naming where it belongs and why it is not
     there.
@@ -82,8 +82,8 @@ class Bars(NamedTuple):
     """
 
     lane: str
-    review: str
-    red_mark: str
+    commit_checks: str
+    marker: str
     tests_prefix: str
     causes: dict
 
@@ -162,15 +162,15 @@ def _at(path, section, key, cause, means):
     return "{} [{}] {} - {} (declare {})".format(path, section, key, cause, means)
 
 
-def read_bars(lane):
+def read_commit_check_settings(lane):
     """The commit checks' shell line and the expected-failure marker, with the
-    tests root, as the lane at `lane` declares them, as a `Bars`: the marker
+    tests root, as the lane at `lane` declares them, as a `CommitCheckSettings`: the marker
     from `[product] expected_failure_marker` and the suite's line from
     `[check-suites]`, both through the one parse of `lane`'s `docs/stack.ini`,
     and the suite's name from `docs/process.toml` `[required-checks] commit`.
     An absent file, one that does not parse, an absent section, table or key,
     or a value empty after stripping is undeclared, and its line is kept for
-    `Bars.refusal`.
+    `CommitCheckSettings.refusal`.
 
     Implements: SR-156, LLR-368
     """
@@ -185,24 +185,28 @@ def read_bars(lane):
     if name is None:
         why += _moved(profile, "review")
         means = "the name of the check suite a commit must pass"
-        causes["review"] = _at(POLICY, *REQUIRED, why, means)
+        causes["commit_checks"] = _at(POLICY, *REQUIRED, why, means)
     if profile is None:
         if name:
-            causes["review"] = _at(DECLARATION, SUITES, name, unread, _SUITE_MEANS)
-        causes["red_mark"] = _at(DECLARATION, *MARKER, unread, _MARKER_MEANS)
-        return Bars(str(lane), "", "", "", causes)
+            causes["commit_checks"] = _at(
+                DECLARATION, SUITES, name, unread, _SUITE_MEANS
+            )
+        causes["marker"] = _at(DECLARATION, *MARKER, unread, _MARKER_MEANS)
+        return CommitCheckSettings(str(lane), "", "", "", causes)
     marker_cause = _cause(profile, *MARKER)
     if marker_cause:
         why = marker_cause + _moved(profile, "red_mark")
-        causes["red_mark"] = _at(DECLARATION, *MARKER, why, _MARKER_MEANS)
+        causes["marker"] = _at(DECLARATION, *MARKER, why, _MARKER_MEANS)
     suite_cause = _cause(profile, SUITES, name) if name else None
     if suite_cause:
         why = suite_cause + _moved(profile, "review")
-        causes["review"] = _at(DECLARATION, SUITES, name, why, _SUITE_MEANS)
-    review = "" if "review" in causes else profile.get(SUITES, name).strip()
+        causes["commit_checks"] = _at(DECLARATION, SUITES, name, why, _SUITE_MEANS)
+    commit_checks = (
+        "" if "commit_checks" in causes else profile.get(SUITES, name).strip()
+    )
     marker = "" if marker_cause else profile.get(*MARKER).strip()
     prefix = kspine.root_prefix(kspine.declared_roots(profile)[1])
-    return Bars(str(lane), review, marker, prefix, causes)
+    return CommitCheckSettings(str(lane), commit_checks, marker, prefix, causes)
 
 
 def count(data, mark):
@@ -289,7 +293,7 @@ def _staged_tree(wt):
     return tree.strip() if tree and tree.strip() else None
 
 
-def _read_counts(root, tree, bars, what):
+def _read_counts(root, tree, settings, what):
     """`(counts, None)` for `tree`, or `(None, refusal)` naming `what` as the
     read that failed.
 
@@ -298,7 +302,7 @@ def _read_counts(root, tree, bars, what):
     if tree is None:
         return None, "cannot read the {}: git could not name it".format(what)
     try:
-        return tree_counts(root, tree, bars.tests_prefix, bars.red_mark), None
+        return tree_counts(root, tree, settings.tests_prefix, settings.marker), None
     except kgit.ArchiveError as exc:
         return None, "cannot read the {} ({})".format(what, exc)
 
@@ -313,7 +317,7 @@ def _refusal(lead, found):
     )
 
 
-def record_checks_refusal(root, wt, branch, base, bars, tests):
+def record_checks_refusal(root, wt, branch, base, settings, tests):
     """Why `record-checks` may not record the tree `wt` stages, by the table, or
     None. The reference is the newest verified commit record in
     `base..branch`, else `base` with no record; `tests` is the round's test
@@ -329,11 +333,11 @@ def record_checks_refusal(root, wt, branch, base, bars, tests):
             "unknowable".format(base[:10], branch)
         )
     sha, passed = record
-    after, refusal = _read_counts(wt, _staged_tree(wt), bars, "staged tree")
+    after, refusal = _read_counts(wt, _staged_tree(wt), settings, "staged tree")
     if refusal:
         return refusal
     reference = passed.tree if passed else base + "^{tree}"
-    before, refusal = _read_counts(root, reference, bars, "reference tree")
+    before, refusal = _read_counts(root, reference, settings, "reference tree")
     if refusal:
         return refusal
     found = findings(before, after, tests, passed.tests if passed else None)
@@ -360,11 +364,11 @@ def landing_refusal(wt):
 
     Implements: SR-156, LLR-368
     """
-    bars = read_bars(wt)
-    refusal = bars.refusal("red_mark")
+    settings = read_commit_check_settings(wt)
+    refusal = settings.refusal("marker")
     if refusal:
         return refusal
-    counts, refusal = _read_counts(wt, _staged_tree(wt), bars, "staged tree")
+    counts, refusal = _read_counts(wt, _staged_tree(wt), settings, "staged tree")
     if refusal:
         return refusal
     marked = ["{}: {} marked".format(p, n) for p, n in sorted(counts.items()) if n]

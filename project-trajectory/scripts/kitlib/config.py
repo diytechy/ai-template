@@ -55,7 +55,7 @@ __all__ = [
     "read_declared_lower",
     "read_stack_ini",
     "read_toml_text",
-    "red_rounds_max",
+    "commit_check_failure_cap",
     "reviewer_dials",
     "utf8_console",
     "step_paths",
@@ -325,9 +325,9 @@ def reviewer_dials(root):
 # stop_lane_after_consecutive_commit_check_failures`, and its shipped value:
 # read only for an absent `[build]` table or an absent key, never for a value
 # this reader cannot use. The key's earlier name is refused, never read.
-RED_ROUNDS_KEY = "stop_lane_after_consecutive_commit_check_failures"
-RED_ROUNDS_RETIRED_KEY = "red_rounds_max"
-RED_ROUNDS_MAX_DEFAULT = 3
+FAILURE_CAP_KEY = "stop_lane_after_consecutive_commit_check_failures"
+FAILURE_CAP_RETIRED_KEY = "red_rounds_max"
+FAILURE_CAP_DEFAULT = 3
 _TOML_HEADER_RE = re.compile(r"^\s*\[\[?\s*([A-Za-z0-9_-]+)\s*\]\]?\s*(#.*)?$")
 
 
@@ -353,7 +353,7 @@ def _process_toml_at(text, section, key):
     return "docs/process.toml"
 
 
-def red_rounds_max(root):
+def commit_check_failure_cap(root):
     """`(maximum, None)` for `<root>/docs/process.toml`'s `[build]
     stop_lane_after_consecutive_commit_check_failures`, the number of
     consecutive failed commit-check rounds at which a lane stops, or
@@ -385,25 +385,25 @@ def red_rounds_max(root):
         return None, "{}: `build` is a {}, not a table".format(
             _process_toml_at(text, None, "build"), type(table).__name__
         )
-    if RED_ROUNDS_RETIRED_KEY in table:
+    if FAILURE_CAP_RETIRED_KEY in table:
         return None, (
             "{}: [build] {} was renamed {}; rename the key (the old name is "
             "refused, never read)".format(
-                _process_toml_at(text, "build", RED_ROUNDS_RETIRED_KEY),
-                RED_ROUNDS_RETIRED_KEY,
-                RED_ROUNDS_KEY,
+                _process_toml_at(text, "build", FAILURE_CAP_RETIRED_KEY),
+                FAILURE_CAP_RETIRED_KEY,
+                FAILURE_CAP_KEY,
             )
         )
-    value = table.get(RED_ROUNDS_KEY, RED_ROUNDS_MAX_DEFAULT)
+    value = table.get(FAILURE_CAP_KEY, FAILURE_CAP_DEFAULT)
     if type(value) is int and value >= 1:
         return value, None
     return None, (
         "{}: [build] {} = {!r} is refused; it must be an integer of at least "
         "1 (an absent key reads {})".format(
-            _process_toml_at(text, "build", RED_ROUNDS_KEY),
-            RED_ROUNDS_KEY,
+            _process_toml_at(text, "build", FAILURE_CAP_KEY),
+            FAILURE_CAP_KEY,
             value,
-            RED_ROUNDS_MAX_DEFAULT,
+            FAILURE_CAP_DEFAULT,
         )
     )
 

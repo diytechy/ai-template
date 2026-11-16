@@ -862,7 +862,7 @@ commit of its own, move it to trunk's tip
   Ruling-sync needs an open item citing the overrule.
 - **Check the staged squash for the expected-failure marker** before the landing commit,
   from the checkout that holds it:
-  `"$PY" -c "import sys; sys.path.insert(0, '$SCRIPTS'); from kitlib.red_mark import landing_refusal; r = landing_refusal('.'); print(r or 'no expected-failure marker staged'); sys.exit(1 if r else 0)"`.
+  `"$PY" -c "import sys; sys.path.insert(0, '$SCRIPTS'); from kitlib.expected_failure import landing_refusal; r = landing_refusal('.'); print(r or 'no expected-failure marker staged'); sys.exit(1 if r else 0)"`.
   It runs the refresh's landing arm on the staged tree: exit 0 when no test
   file holds the mark `[product] expected_failure_marker` declares; exit 1, printing the
   refusal, when one does (each file named with its count), when the key is

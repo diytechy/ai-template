@@ -94,8 +94,8 @@ os.environ["CODEX_HOME"] = str(ROOT / "tests" / "_no-codex-home")
 SLOW_MODULES = frozenset(
     {
         # WI-996: the expected-failure marker's record-checks and refresh arms on real
-        # lanes; its in-process pin is tests/test_red_mark.py.
-        "test_red_mark_lane",
+        # lanes; its in-process pin is tests/test_expected_failure.py.
+        "test_expected_failure_lane",
         # P9R selector tests create/commit real Git fixtures and invoke the
         # existing generators (45 cases, 11.57s alone); they are integration
         # assurance at Full/CI, not in-process smoke units. No existing module
@@ -170,9 +170,9 @@ SLOW_MODULES = frozenset(
         "test_traj_graph",  # layout + obstacle-aware wire routing
         "test_traj_parse",  # source loaders + the git/subprocess seam
         "test_agent_loop_review",  # review-tail subprocess rounds
-        # WI-958: the review gate and the red-round cap, each case a real
+        # WI-958: the review gate and the commit-check failure cap, each case a real
         # agent_loop.py run on a linked lane worktree; the family's in-process
-        # pins are the setting's reader in test_red_rounds_max and the count
+        # pins are the setting's reader in test_commit_check_failure_cap and the count
         # reader, called in-process inside these cases.
         "test_agent_loop_review_gate",  # review-gate subprocess rounds
         "test_agent_loop",  # agent_loop.py subprocess loops
@@ -1483,17 +1483,17 @@ def claim_on_branch(lane, wi="WI-9"):
 # The expected-failure marker's reference text, built by concatenation so
 # `tests/` never holds it whole: this repository's own landing tree counts 0
 # (WI-996).
-RED_MARK = (
+EXPECTED_FAILURE_MARKER = (
     "pytest.mark.xfail(strict=True, raises=(Assertion"
     + "Error, pytest.fail.Exception))"
 )
 # The line a `docs/stack.ini` fixture that reaches `record-checks` or the refresh
 # declares, the key being required with no default. It is a `[product]` key,
 # so a fixture composes it straight after its `[product]` lines, before the
-# next header: `"[product]\ntest = ...\n" + BARS_RED_MARK`. A second
+# next header: `"[product]\ntest = ...\n" + MARKER_DECLARATION`. A second
 # `[product]` header would be a duplicate section, which does not parse. The
-# name is the reader's, `Bars.red_mark`, not the retired `[bars]` section's.
-BARS_RED_MARK = "expected_failure_marker = {}\n".format(RED_MARK)
+# name is the reader's, `CommitCheckSettings.marker`, not the retired `[bars]` section's.
+MARKER_DECLARATION = "expected_failure_marker = {}\n".format(EXPECTED_FAILURE_MARKER)
 # The check suite a fixture names as the one a commit must pass: the name the
 # shipped templates give theirs.
 COMMIT_SUITE = "smoke"
@@ -1551,7 +1551,9 @@ def declare_review_bar(repo, ctl):
         "sys.exit(1 if r else 0)"
     ).format(control)
     command = '"{}" -c "{}"'.format(Path(sys.executable).as_posix(), code)
-    declare_stack_key(repo, "product", "expected_failure_marker", RED_MARK)
+    declare_stack_key(
+        repo, "product", "expected_failure_marker", EXPECTED_FAILURE_MARKER
+    )
     declare_stack_key(repo, "check-suites", COMMIT_SUITE, command)
     require_commit_suite(repo)
     return command

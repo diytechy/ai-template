@@ -366,11 +366,11 @@ MAPPING = [
     # the must-be-whole rule applies: a scaffold missing it ImportErrors on the
     # first merge attempt, not on some rare path.
     ("scripts/kitlib/verdict.py", "scripts/kitlib/verdict.py"),
-    # WI-996 added `red_mark`: the declared strict expected-failure mark, its
+    # WI-996 added `expected_failure`: the declared strict expected-failure mark, its
     # count and the per-file table `record-checks` and the refresh apply.
     # `integrate.py`, in this list, imports it, so a scaffold missing it
     # ImportErrors on its first refresh.
-    ("scripts/kitlib/red_mark.py", "scripts/kitlib/red_mark.py"),
+    ("scripts/kitlib/expected_failure.py", "scripts/kitlib/expected_failure.py"),
     # WI-621 added `done_when`: a spec's Done-when as comparable items (S13).
     # `integrate.py` (the claim warning), `intake.py` (the merge-time flag) and
     # `agent_loop.py` (the reviewer's brief) import it, all three in this list.

@@ -55,7 +55,7 @@ import re
 import sys
 
 from conftest import (
-    BARS_RED_MARK,
+    MARKER_DECLARATION,
     COMMIT_SUITE,
     SCRIPTS,
     env_gate_skipif,
@@ -145,7 +145,7 @@ print("RESULT: FAIL (1 step(s) failed)")
 sys.exit(1)
 """
 
-STATION_STACK_INI = "[product]\ntest = {py} -m pytest -q\n" + BARS_RED_MARK
+STATION_STACK_INI = "[product]\ntest = {py} -m pytest -q\n" + MARKER_DECLARATION
 
 
 def station_repo(
@@ -239,7 +239,7 @@ def close_branch(
 CHECKS_SUITE = COMMIT_SUITE + " = python scripts/check.py --jobs 0 --tier smoke\n"
 CHECKS_STACK_INI = (
     "[product]\ntest = {py} scripts/named_tests.py\n"
-    + BARS_RED_MARK
+    + MARKER_DECLARATION
     + "[check-suites]\n"
     + CHECKS_SUITE
 )
@@ -453,7 +453,7 @@ def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
     )
     (root / "docs" / "stack.ini").write_text(
         "[product]\ntest = {py} -m pytest -q\n"
-        + BARS_RED_MARK
+        + MARKER_DECLARATION
         + "[generated]\nPROJECT_STATE.html = trajectory\n",
         encoding="utf-8",
         newline="\n",

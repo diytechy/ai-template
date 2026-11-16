@@ -91,7 +91,7 @@ Five operations here; the two lane closes that are NOT a merge (`hand_back`,
              derive the row's review test set (`review_set.derive`), judge
              each test file's count of the expected-failure marker declared at
              docs/stack.ini `[product] expected_failure_marker` against the lane's last commit
-             record (`kitlib.red_mark`, WI-996), run the
+             record (`kitlib.expected_failure`, WI-996), run the
              commit checks declared at docs/stack.ini `[required-checks] commit` and then
              the derived files, and commit the staged work (or
              an empty commit on the tip) carrying a `checks=commit` record,
@@ -208,7 +208,7 @@ from kitlib import commit_hooks as _kitcommit_hooks
 from kitlib import config as _kitconfig
 from kitlib import decisions as kdecisions
 from kitlib import provenance as _kitprovenance
-from kitlib import red_mark as _kitredmark
+from kitlib import expected_failure as _kitexpected
 from kitlib import registry as kregistry
 from kitlib import done_when as kdone
 from kitlib import verdict as kverdict
@@ -2775,7 +2775,7 @@ def refresh(root, branch, tier):
 
     That order is fixed and load-bearing (§A2.1): the compile has to see the
     trunk's log before it appends, and the bar has to see what the compile and
-    the regen wrote. The expected-failure marker (`kitlib.red_mark.landing_refusal`) is read
+    the regen wrote. The expected-failure marker (`kitlib.expected_failure.landing_refusal`) is read
     from that staged tree before either bar: an undeclared `[product] expected_failure_marker`,
     an unreadable tree or a test file holding the mark refuses, naming each
     file and its count, since a marked test passes the bar while it is red.
@@ -2847,7 +2847,7 @@ def refresh(root, branch, tier):
     # the first that holds the merged declaration and everything regenerated,
     # so the expected-failure marker is read and counted there, before either bar.
     ac.git(wt, "add", "-A")
-    marked = _kitredmark.landing_refusal(wt)
+    marked = _kitexpected.landing_refusal(wt)
     if marked:
         return undo(marked, "")
     _sha, refused = _record_checks_commit(
@@ -3011,7 +3011,7 @@ def _bar_refusal(wt, tree, checks, ok, summary):
     )
 
 
-def _lane_mark_refusal(root, wt, branch, bars, tests):
+def _lane_mark_refusal(root, wt, branch, settings, tests):
     """The expected-failure marker check on the tree `wt` stages, against the lane's last
     commit record over its own base, for the round's test set `tests`: a
     refusal, or None. An unknowable base refuses, as an unread range does.
@@ -3019,8 +3019,8 @@ def _lane_mark_refusal(root, wt, branch, bars, tests):
     Implements: SR-156, LLR-207
     """
     base, refusal = _lane_base(root, branch, "the lane's last commit record")
-    return refusal or _kitredmark.record_checks_refusal(
-        root, wt, branch, base, bars, tests
+    return refusal or _kitexpected.record_checks_refusal(
+        root, wt, branch, base, settings, tests
     )
 
 
@@ -3127,7 +3127,7 @@ def _record_checks_preflight(root, branch, checks, message_file):
     The lane comes through the refresh's boundary (`_lane_off_trunk`), and the
     row's set, the commit checks and the expected-failure marker are read from that lane's
     checkout once it is known to equal the index, so what they read is what is
-    staged. Both are declared values (`kitlib.red_mark.read_bars`), required
+    staged. Both are declared values (`kitlib.expected_failure.read_commit_check_settings`), required
     with no default; an undeclared one is named with its cause. The expected-failure marker check
     runs last, on the derived set, before any bar.
 
@@ -3150,18 +3150,18 @@ def _record_checks_preflight(root, branch, checks, message_file):
                 wt, ", ".join(dirt) if dirt else "git status failed"
             )
         )
-    bars = _kitredmark.read_bars(wt)
-    refusal = bars.refusal("review", "red_mark")
+    settings = _kitexpected.read_commit_check_settings(wt)
+    refusal = settings.refusal("commit_checks", "marker")
     if refusal:
         return None, refusal
     message, refusal = _record_checks_message(branch, message_file)
     if refusal:
         return None, refusal
     derived, refusal = review_set.derive(wt, branch)
-    refusal = refusal or _lane_mark_refusal(root, wt, branch, bars, derived.files)
+    refusal = refusal or _lane_mark_refusal(root, wt, branch, settings, derived.files)
     if refusal:
         return None, refusal
-    return _RecordChecksPlan(wt, derived, bars.review, message), None
+    return _RecordChecksPlan(wt, derived, settings.commit_checks, message), None
 
 
 def record_checks(root, branch, checks, message_file=None):

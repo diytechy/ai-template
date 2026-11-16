@@ -47,7 +47,7 @@ import subprocess
 import sys
 
 from conftest import (
-    BARS_RED_MARK,
+    MARKER_DECLARATION,
     hooks_on,
     SCRIPTS,
     declare_trunk,
@@ -615,7 +615,7 @@ def stub_harness_repo(tmp_path):
     # gives for the claim.
     (root / "docs" / "stack.ini").write_text(
         "[product]\ntest = {py} -m pytest -q\n"
-        + BARS_RED_MARK
+        + MARKER_DECLARATION
         + "[generated]\nPROJECT_STATE.html = trajectory\n",
         encoding="utf-8",
         newline="\n",
@@ -806,7 +806,7 @@ def failure_capped_worker(reds):
     """A worker whose build stayed red at its commit checks for `reds` rounds:
     each round commits a red build and then the loop's own record of it, a
     session log keyed by that build's sha with the bar's summary. It then ends
-    with the red cap's exit code, specs still in active/."""
+    with the failure cap's exit code, specs still in active/."""
 
     def worker(root, branch, wi_id, args):
         wt, err = drv.integrate.lane_worktree(root, branch)
@@ -836,7 +836,7 @@ def test_a_failure_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_dr
     tmp_path, capfd
 ):
     """Implements: TC-381"""
-    # TC-381. The red cap is a decided worker outcome: the dispatcher closes
+    # TC-381. The failure cap is a decided worker outcome: the dispatcher closes
     # the lane partial with typed fields, its reason naming the count and the
     # last bar summary, and the drain's red refresh quarantines the lane.
     root = stub_harness_repo(tmp_path)
@@ -1338,7 +1338,7 @@ def census_repo(tmp_path):
     (root / "docs").mkdir(exist_ok=True)
     (root / "docs" / "stack.ini").write_text(
         "[product]\ntest = {py} -m pytest -q\n"
-        + BARS_RED_MARK
+        + MARKER_DECLARATION
         + "[generated]\nPROJECT_STATE.html = trajectory\n",
         encoding="utf-8",
         newline="\n",

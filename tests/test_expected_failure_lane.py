@@ -5,7 +5,7 @@ refuses a tree whose tests root holds the mark.
 Each case drives `integ.record_checks` or `integ.refresh` through the station's
 fixtures. A case that holds today is a characterization case, unmarked, with its
 adequacy witness in its docstring: the wrong check it would catch. The rule's
-in-process pin is `tests/test_red_mark.py`.
+in-process pin is `tests/test_expected_failure.py`.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES` with its station siblings:
 real repositories and lane worktrees.
@@ -17,7 +17,7 @@ import stat
 
 import pytest
 from conftest import (
-    RED_MARK,
+    EXPECTED_FAILURE_MARKER,
     declare_stack_key,
     env_gate_skipif,
     load_script,
@@ -66,7 +66,7 @@ UNDECLARED = [
     (PRODUCT + MARKER_KEY + " =    \n", "the value is empty"),
     # The retired section still declaring the mark is named, never read.
     (
-        PRODUCT + "[bars]\nred_mark = " + RED_MARK + "\n",
+        PRODUCT + "[bars]\nred_mark = " + EXPECTED_FAILURE_MARKER + "\n",
         "the key is absent; the retired [bars] red_mark still declares it and "
         "is no longer read",
     ),
@@ -74,7 +74,7 @@ UNDECLARED = [
 UNDECLARED_IDS = ["absent", "unparseable", "no-section", "no-key", "empty", "retired"]
 
 
-def _source(tag=None, mark=RED_MARK, cases=1):
+def _source(tag=None, mark=EXPECTED_FAILURE_MARKER, cases=1):
     """A test file holding `cases` tests under `mark`; `tag` is its module tag."""
     doc = "Implements: " + tag if tag else "A file no tag reads."
     return '"""{}"""\n\nimport pytest\n{}'.format(
@@ -224,7 +224,7 @@ def test_record_checks_passes_an_added_mark_the_set_names(tmp_path):
     wt = _lane(root, BRANCH)
     sha = _marked_round(root, wt)
     assert kv.passed_checks(root, sha).tests == kv.tests_digest(CHECKS_FILES)
-    assert RED_MARK in _git(root, "show", "{}:{}".format(sha, WIDGET))
+    assert EXPECTED_FAILURE_MARKER in _git(root, "show", "{}:{}".format(sha, WIDGET))
 
 
 def test_record_checks_refuses_a_removal_with_no_record_in_the_range(tmp_path):
@@ -252,7 +252,9 @@ def test_record_checks_passes_a_removal_over_the_same_set(tmp_path):
     _commit(wt, "a plain commit", when=T_LATER)
     _stage(wt, WIDGET, _plain())
     sha = _green(root)
-    assert RED_MARK not in _git(root, "show", "{}:{}".format(sha, WIDGET))
+    assert EXPECTED_FAILURE_MARKER not in _git(
+        root, "show", "{}:{}".format(sha, WIDGET)
+    )
 
 
 def test_record_checks_refuses_a_removal_after_the_set_changed(tmp_path):
@@ -295,10 +297,10 @@ def test_a_wrapped_mark_is_judged_as_the_one_line_form(tmp_path):
     """Implements: TC-424"""
     root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
-    wrapped = RED_MARK.replace("(strict", "(\n    strict").replace(
+    wrapped = EXPECTED_FAILURE_MARKER.replace("(strict", "(\n    strict").replace(
         ", raises", ",\n    raises"
     )
-    assert wrapped != RED_MARK
+    assert wrapped != EXPECTED_FAILURE_MARKER
     _stage(wt, LOOSE, _source(mark=wrapped))
     assert LOOSE in _refused(root)
 
@@ -396,11 +398,11 @@ def test_a_lane_without_the_key_refreshes_on_the_merged_key(tmp_path):
     Implements: TC-425
     """
     root = station_repo(tmp_path, stack_ini=PRODUCT)
-    declare_stack_key(root, "product", MARKER_KEY, RED_MARK)
+    declare_stack_key(root, "product", MARKER_KEY, EXPECTED_FAILURE_MARKER)
     _commit(root, "trunk declares the key", when=T_LATER)
     sha, refusal = _refresh(root)
     assert refusal is None, refusal
-    assert RED_MARK in _git(root, "show", sha + ":docs/stack.ini")
+    assert EXPECTED_FAILURE_MARKER in _git(root, "show", sha + ":docs/stack.ini")
 
 
 @pytest.mark.parametrize("arm", ["landing", "none"])
@@ -521,7 +523,7 @@ def test_a_bootstrapped_scaffold_refreshes_on_its_template_declaration(tmp_path)
     """Implements: TC-426"""
     repo, _claim_sha = scaffolded_closed_branch(tmp_path)
     declared = kconfig.read_stack_ini(repo / "docs" / "stack.ini")
-    assert declared.get("product", MARKER_KEY, fallback="") == RED_MARK
+    assert declared.get("product", MARKER_KEY, fallback="") == EXPECTED_FAILURE_MARKER
     proc = run_py(
         [repo / "scripts" / "integrate.py", "integrate", "--tier", "smoke"], cwd=repo
     )

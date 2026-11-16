@@ -3,7 +3,7 @@ failure cap's one reader, in-process.
 
 The reader's table lives here, in the per-commit tier, rather than beside the
 hook-driven `docs/process.toml` contract in `test_process_config` (a slow
-module): it is a pure unit of `kitlib.config.red_rounds_max` over a temp file,
+module): it is a pure unit of `kitlib.config.commit_check_failure_cap` over a temp file,
 and the review-gate family's subprocess cases call the same reader through the
 real loop.
 """
@@ -52,7 +52,7 @@ def _build(value, key=KEY):
         pytest.param(_build(3.0), None, id="float"),
     ],
 )
-def test_red_rounds_max_reads_3_when_absent_and_refuses_each_bad_value(
+def test_the_failure_cap_reads_3_when_absent_and_refuses_each_bad_value(
     tmp_path, body, value
 ):
     """Implements: TC-382"""
@@ -60,7 +60,7 @@ def test_red_rounds_max_reads_3_when_absent_and_refuses_each_bad_value(
     # that is not an int, is a bool, or is below 1 is refused, naming the
     # file, its line and the key.
     write_toml(tmp_path, _TRUNK + body)
-    got, refusal = kconfig.red_rounds_max(tmp_path)
+    got, refusal = kconfig.commit_check_failure_cap(tmp_path)
     if value is not None:
         assert (got, refusal) == (value, None)
         return
@@ -86,7 +86,7 @@ def test_the_retired_key_is_refused_naming_the_new_one(tmp_path, body):
     # refused, naming its line, the old name and the name to rename it to: a
     # renamed dial read as absent would silently restore the shipped 3.
     write_toml(tmp_path, _TRUNK + body)
-    got, refusal = kconfig.red_rounds_max(tmp_path)
+    got, refusal = kconfig.commit_check_failure_cap(tmp_path)
     assert got is None, got
     assert refusal.startswith(
         "docs/process.toml:5: [build] {} was renamed {}; rename the key".format(
