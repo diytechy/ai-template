@@ -1761,3 +1761,27 @@ list is fixed unless §12.6 says so.
   removed. Next in order: build WI-999 (ruled, §12.2); then the operator's
   answers on the vocabulary (§12.2, §12.4) and on the three points at the end
   of the fix-branch entry above; then §10.5 onward.
+- **2026-11-16, WI-999 is built and merged.** `maint/vocabulary` is at
+  `6e24ff593` (four commits from `maint/wi-999`, built by an Opus sub-agent in
+  `D:\ai-template-wt-wi999`, a worktree outside the VS Code workspace so that
+  creating it starts no scans).
+  - CMP-006 holds the record as OI-130 ruled it; CMP-007, 008 and 009 cite
+    it. `component_findings` reports absent, incomplete, malformed and
+    inconsistent records; `[checks] components_check = false` still turns the
+    pass off. Ten tests; TC-166's evidence names them. One RESYNC entry (a
+    forced migration). The row is in `docs/archive/work/complete/` with its
+    review box open.
+  - The acceptance act is seq 182 in `docs/archive/last_approved/acts.toml`:
+    it copied `components.toml` only, and beside the new cells it absorbed
+    CMP-006's `notes` change pending since August (D13).
+  - DeepSeek's review raised two points, both of them the row's own stated
+    design and so not changed: an empty list in a cell is refused by the
+    carrier (the row's "Trust" section says so; "no constraints" is written
+    `"none"`), and the holding row's findings name the rows that cite it
+    (also "Trust").
+  - `trajectory_arch.py` is now 1,132 code lines (pin re-stamped).
+  - **For the operator:** LLR-172's detail still says "NOT BUILT YET" and
+    TC-166's method still names `trace.py`'s component pass. Both are accepted
+    text, so correcting them is an acceptance act.
+  - A confirming unfiltered suite run on `6e24ff593` was started; its result
+    is the next entry.
