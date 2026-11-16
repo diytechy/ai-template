@@ -2715,22 +2715,6 @@ not shipped kit machinery. It keeps CI and phase-close Full unchanged, and
 never labels a selected run as Full. No Worktrunk dependency or replacement
 runner is introduced by this slice.
 
-### Spine rebuilds have a scoped route alongside full kit upgrades [since ee2b19b9e]
-
-*(Anchored at the preceding commit: the change lands after it.)*
-
-**What changed.** §0 separates full-kit migration from reassessing a project's
-needs and rebuilding its traced design. §0.1 provides the short route, including
-partial-tooling provenance, staged check integration under owner authority,
-parent-first acceptance, reconciliation and an implementation handoff. It does
-not change approval policy, checker behavior or the full-upgrade procedure.
-
-**What to do.** Refresh the `downstream-resync` skill and generated skill index;
-read §0 from the target kit when choosing scope. No registry conversion is
-required by this documentation change. A partial spine resync keeps the previous
-whole-kit stamp and records its selected tooling separately.
-
-
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which
@@ -10836,7 +10820,7 @@ too, only if you vendored them: `skills/coordinator-cycle/` and
 
 **Regenerated files:** `docs/process.md`.
 
-### The commit checks and the expected-failure marker are renamed and re-homed [since 7fa851f33]
+### The commit checks and the expected-failure marker are renamed and re-homed [since 3e7a3a6ee]
 
 *(Anchored at the preceding commit: the change lands in the commit after it.)*
 
@@ -10904,6 +10888,21 @@ too, only if you vendored them: `skills/coordinator-cycle/`,
 `skills/session-protocol/SKILL.md` and `skills/byte-budget-guard/SKILL.md`.
 
 **Regenerated files:** `docs/process.md`, `PROJECT_STATE.html`.
+
+### Spine rebuilds have a scoped route alongside full kit upgrades [since 3e7a3a6ee]
+
+*(Anchored at the preceding commit: the change lands after it.)*
+
+**What changed.** §0 separates full-kit migration from reassessing a project's
+needs and rebuilding its traced design. §0.1 provides the short route, including
+partial-tooling provenance, staged check integration under owner authority,
+parent-first acceptance, reconciliation and an implementation handoff. It does
+not change approval policy, checker behavior or the full-upgrade procedure.
+
+**What to do.** Refresh the `downstream-resync` skill and generated skill index;
+read §0 from the target kit when choosing scope. No registry conversion is
+required by this documentation change. A partial spine resync keeps the previous
+whole-kit stamp and records its selected tooling separately.
 
 ## 5. Promotion: when this pack stops being prose
 
