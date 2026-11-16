@@ -2,7 +2,7 @@
 name = "W1 Registry & conformance"
 category = "software"
 knowledge = "registry-hygiene"
-status = "Approved"
+status = "Accepted"
 candidates = ["P5", "P3", "P4"]
 objective = "minimize cut"
 constraints = ["one-home-per-behaviour: P3 P4 P5"]
@@ -14,7 +14,7 @@ notes ="""The spine and everything that decides whether it holds: spine_carrier,
 [component.CMP-007]
 name = "W2 Gatekeeper"
 category = "software"
-status = "Approved"
+status = "Accepted"
 derivation = "CMP-006"
 notes ="""Every verdict a hook, CI job or gate run consumes: check, check_privacy, subagent_gate, the 8 check_* lints, and the shipped pre-commit/pre-push hooks."""
 
@@ -22,7 +22,7 @@ notes ="""Every verdict a hook, CI job or gate run consumes: check, check_privac
 name = "W3 Autonomy"
 category = "software"
 knowledge = """docs/knowledge/agent-routing;docs/knowledge/effort-tiering;docs/knowledge/prompt-image-token-efficiency"""
-status = "Approved"
+status = "Accepted"
 derivation = "CMP-006"
 notes ="""The unattended coordinator end to end: the agent_* family plus adjudicate_brief, the 5 plan_* round modules, dispatch, handback, intake, integrate, lane, prompts, schedule, score_reviews, spec_move, trunk_step."""
 
@@ -30,7 +30,7 @@ notes ="""The unattended coordinator end to end: the agent_* family plus adjudic
 name = "W4 Human & adopter surfaces"
 category = "software"
 knowledge = "downstream-resync"
-status = "Approved"
+status = "Accepted"
 derivation = "CMP-006"
 notes ="""Everything a person or an adopting repo reads or runs: bootstrap, run_menu, the 7 remaining gen_*, the 6 traj_* dashboard modules, and the onboard/dev-setup templates."""
 

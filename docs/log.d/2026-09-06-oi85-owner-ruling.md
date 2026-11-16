@@ -20,7 +20,7 @@ The reviewed delta against the existing needs snapshot is limited to:
 The recording command is `intake.py --root . snapshot --approves
 stakeholder-needs.toml=docs/log.d/2026-09-06-oi85-owner-ruling.md#2026-09-06--oi-85-owner-re-attestation`.
 It copies only the needs registry into
-[`last_approved/docs/requirements/stakeholder-needs.toml`](../archive/last_approved/docs/requirements/stakeholder-needs.toml)
+[`last_approved/docs/requirements/stakeholder-needs.toml`](../archive/last_accepted/docs/requirements/stakeholder-needs.toml)
 and appends that scope to the existing stamp. No Status moves, other registry
 snapshot refreshes, queue transitions or policy changes are part of this act.
 The historical snapshot remains in Git. The generated modified-approval brief

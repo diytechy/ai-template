@@ -1,0 +1,1124 @@
+# APPROVAL ACTS, appended by `intake.py snapshot` (baseline_snapshot.copy_live).
+# One entry per act that copied a registry: the rows it carried into approval
+# and the rows it re-attested. Do not edit; accepted risks are anchored to
+# these entries, and git holds the commit each act landed in.
+
+[[act]]
+seq = 1
+date = "2026-09-27"
+accepted = []
+reaccepted = ["LLR-140", "LLR-143", "LLR-154", "LLR-167", "LLR-216", "LLR-224", "LLR-246", "LLR-248", "LLR-250", "LLR-257", "SR-209", "SR-211", "TC-061", "TC-135", "TC-137", "TC-144", "TC-145", "TC-161", "TC-164", "TC-170", "TC-178", "TC-192", "TC-206", "TC-222", "TC-244"]
+
+[[act]]
+seq = 2
+date = "2026-09-27"
+accepted = ["B-09", "B-10", "B-11", "EXT-006", "EXT-007"]
+reaccepted = ["B-01", "B-02", "B-04", "B-05", "EXT-001", "EXT-003", "EXT-005", "REL-001", "REL-002", "REL-003"]
+
+[[act]]
+seq = 3
+date = "2026-09-27"
+accepted = []
+reaccepted = ["LLR-257", "SR-209", "SR-217", "TC-242", "TC-250"]
+
+[[act]]
+seq = 4
+date = "2026-09-27"
+accepted = ["LLR-210", "LLR-259", "LLR-260", "LLR-261", "LLR-263", "SR-183", "SR-184", "SR-185", "SR-186", "SR-221", "TC-199", "TC-200", "TC-202", "TC-208", "TC-209", "TC-210", "TC-211", "TC-252", "TC-253", "TC-254", "TC-255", "TC-256", "TC-257", "TC-258", "TC-259"]
+reaccepted = ["LLR-051", "LLR-056", "LLR-057", "LLR-124", "LLR-139", "LLR-160", "LLR-180", "LLR-233", "LLR-244", "LLR-254", "SR-054", "SR-151", "SR-152", "SR-157", "SR-175", "SR-198", "SR-212", "TC-036", "TC-055", "TC-067", "TC-068", "TC-077", "TC-086", "TC-100", "TC-175", "TC-189", "TC-198", "TC-228", "TC-239", "TC-247"]
+
+[[act]]
+seq = 5
+date = "2026-09-28"
+accepted = ["LLR-205", "LLR-206", "LLR-262", "LLR-264", "LLR-265", "LLR-271", "LLR-272", "LLR-273", "LLR-274", "LLR-275", "LLR-276", "LLR-277", "LLR-278", "LLR-279", "LLR-280", "LLR-281", "TC-201", "TC-203", "TC-204", "TC-260", "TC-261", "TC-269", "TC-270", "TC-271", "TC-273", "TC-274", "TC-275", "TC-276", "TC-278", "TC-289", "TC-291"]
+reaccepted = ["LLR-158", "LLR-173", "LLR-203", "LLR-210", "LLR-233", "LLR-245", "TC-167", "TC-208", "TC-240"]
+
+[[act]]
+seq = 6
+date = "2026-09-28"
+accepted = ["LLR-282", "LLR-283", "LLR-284", "LLR-285", "SR-220", "SR-223", "SR-225", "TC-272", "TC-290", "TC-292", "TC-293", "TC-294", "TC-297"]
+reaccepted = ["SR-006", "SR-007", "SR-009", "SR-011", "SR-022", "SR-027", "SR-031", "SR-035", "SR-040", "SR-043", "SR-049", "SR-070", "SR-111", "SR-112", "SR-113", "SR-137", "SR-144", "SR-146", "SR-147", "SR-149", "SR-150", "SR-156", "SR-157", "SR-158", "SR-159", "SR-161", "SR-162", "SR-164", "SR-165", "SR-166", "SR-167", "SR-168", "SR-169", "SR-173", "SR-174", "SR-175", "SR-176", "SR-178", "SR-180", "SR-181", "SR-182", "SR-183", "SR-185", "SR-186", "SR-187", "SR-188", "SR-189", "SR-190", "SR-191", "SR-192", "SR-193", "SR-194", "SR-195", "SR-196", "SR-197", "SR-198", "SR-199", "SR-200", "SR-201", "SR-202", "SR-203", "SR-204", "SR-205", "SR-206", "SR-207", "SR-208", "SR-210", "SR-211", "SR-212", "SR-213", "SR-214", "SR-215", "SR-217", "SR-218", "SR-219", "SR-221"]
+
+[[act]]
+seq = 7
+date = "2026-09-28"
+accepted = ["LLR-286", "TC-296", "TC-299"]
+reaccepted = []
+
+[[act]]
+seq = 8
+date = "2026-09-28"
+accepted = ["LLR-287", "SR-226", "TC-263", "TC-265", "TC-266", "TC-267", "TC-300"]
+reaccepted = ["LLR-177", "TC-172"]
+
+[[act]]
+seq = 9
+date = "2026-09-29"
+accepted = []
+reaccepted = ["SR-015", "SR-033", "SR-111", "SR-174", "SR-177", "SR-193", "SR-223", "SR-225"]
+
+[[act]]
+seq = 10
+date = "2026-09-29"
+accepted = ["TC-262"]
+reaccepted = ["TC-220", "TC-222"]
+
+[[act]]
+seq = 11
+date = "2026-09-29"
+accepted = ["LLR-266", "LLR-267", "LLR-268", "LLR-269", "LLR-270"]
+reaccepted = ["LLR-222", "LLR-223", "LLR-286", "SR-177", "SR-193", "TC-267"]
+
+[[act]]
+seq = 12
+date = "2026-09-29"
+accepted = ["SR-222", "SR-227", "TC-264"]
+reaccepted = []
+
+[[act]]
+seq = 13
+date = "2026-09-29"
+accepted = ["TC-268"]
+reaccepted = ["LLR-270"]
+
+[[act]]
+seq = 14
+date = "2026-10-02"
+accepted = []
+reaccepted = ["LLR-116", "TC-121", "TC-262", "TC-263", "TC-264", "TC-267"]
+
+[[act]]
+seq = 15
+date = "2026-10-02"
+accepted = ["LLR-288", "LLR-289", "TC-301"]
+reaccepted = []
+
+[[act]]
+seq = 16
+date = "2026-10-03"
+accepted = ["TC-302"]
+reaccepted = []
+
+[[act]]
+seq = 17
+date = "2026-10-03"
+accepted = []
+reaccepted = ["LLR-268", "TC-264"]
+
+[[act]]
+seq = 18
+date = "2026-10-03"
+accepted = []
+reaccepted = ["LLR-289", "TC-302"]
+
+[[act]]
+seq = 19
+date = "2026-10-03"
+accepted = ["LLR-290", "TC-303"]
+reaccepted = []
+
+[[act]]
+seq = 20
+date = "2026-10-03"
+accepted = ["LLR-291", "TC-304"]
+reaccepted = ["LLR-195", "LLR-206"]
+
+[[act]]
+seq = 21
+date = "2026-10-03"
+accepted = ["LLR-292", "TC-305"]
+reaccepted = []
+
+[[act]]
+seq = 22
+date = "2026-10-03"
+accepted = ["LLR-293", "LLR-294", "LLR-295", "TC-279", "TC-307", "TC-308", "TC-311"]
+reaccepted = ["LLR-254", "LLR-255", "SR-033", "SR-215", "TC-036", "TC-055", "TC-209", "TC-210", "TC-211", "TC-247", "TC-248"]
+
+[[act]]
+seq = 23
+date = "2026-10-03"
+accepted = ["LLR-296", "TC-306"]
+reaccepted = ["TC-055"]
+
+[[act]]
+seq = 24
+date = "2026-10-03"
+accepted = []
+reaccepted = ["SR-215"]
+
+[[act]]
+seq = 25
+date = "2026-10-03"
+accepted = ["TC-309", "TC-310"]
+reaccepted = ["LLR-237", "LLR-238", "LLR-240", "LLR-243", "LLR-258", "SR-191", "SR-192", "SR-197", "SR-198", "SR-199", "SR-200", "SR-201", "SR-202", "SR-203", "SR-206", "SR-218", "TC-227", "TC-232", "TC-233", "TC-234", "TC-235", "TC-238", "TC-251"]
+
+[[act]]
+seq = 26
+date = "2026-10-03"
+accepted = ["LLR-297", "TC-312"]
+reaccepted = ["LLR-183"]
+
+[[act]]
+seq = 27
+date = "2026-10-03"
+accepted = []
+reaccepted = ["TC-211"]
+
+[[act]]
+seq = 28
+date = "2026-10-03"
+accepted = []
+reaccepted = ["LLR-267", "LLR-290"]
+
+[[act]]
+seq = 29
+date = "2026-10-04"
+accepted = ["SR-228"]
+reaccepted = ["LLR-118", "LLR-153", "LLR-158", "LLR-167", "LLR-245", "LLR-271", "LLR-278", "SR-178", "TC-123", "TC-147", "TC-153", "TC-161", "TC-240", "TC-278"]
+
+[[act]]
+seq = 30
+date = "2026-10-04"
+accepted = ["LLR-298", "LLR-299", "TC-313", "TC-314"]
+reaccepted = ["LLR-010", "LLR-058", "LLR-118", "LLR-153", "LLR-283", "LLR-288", "LLR-289", "SR-225", "TC-010", "TC-123", "TC-147", "TC-293", "TC-301", "TC-302"]
+
+[[act]]
+seq = 31
+date = "2026-10-04"
+accepted = []
+reaccepted = ["SN-003", "SN-008", "SN-009", "SN-025", "SN-043"]
+
+[[act]]
+seq = 32
+date = "2026-10-04"
+accepted = []
+reaccepted = ["LLR-069", "TC-069"]
+verdict = "docs/reviews/wi-803-plan-gate/002-ADJUDICATE-2a64d0b.md"
+
+[[act]]
+seq = 33
+date = "2026-10-05"
+accepted = ["LLR-300", "LLR-301", "SR-229", "SR-230", "TC-315", "TC-316", "TC-317", "TC-318"]
+reaccepted = ["LLR-140", "LLR-270"]
+
+[[act]]
+seq = 34
+date = "2026-10-05"
+accepted = ["LLR-302"]
+reaccepted = ["LLR-173", "LLR-245", "TC-173"]
+verdict = "docs/reviews/wi-806-text-then-act/006-ADJUDICATE-0d714f9.md"
+
+[[act]]
+seq = 35
+date = "2026-10-05"
+accepted = []
+reaccepted = ["LLR-210", "TC-314"]
+
+[[act]]
+seq = 36
+date = "2026-10-05"
+accepted = ["LLR-303", "LLR-304", "TC-319", "TC-320"]
+reaccepted = ["LLR-283", "LLR-284", "SR-225", "TC-293", "TC-294", "TC-313"]
+
+[[act]]
+seq = 37
+date = "2026-10-06"
+accepted = []
+reaccepted = ["LLR-270", "TC-266"]
+verdict = "docs/reviews/wi-835-coordinator-retained-adjudication/002-ADJUDICATE-a10adc3.md"
+
+[[act]]
+seq = 38
+date = "2026-10-06"
+accepted = []
+reaccepted = ["LLR-270", "SR-227"]
+verdict = "docs/reviews/wi-835-coordinator-retained-adjudication/003-ADJUDICATE-6ca0b05.md"
+
+[[act]]
+seq = 39
+date = "2026-10-06"
+accepted = ["LLR-305", "TC-322", "TC-323", "TC-324"]
+reaccepted = []
+
+[[act]]
+seq = 40
+date = "2026-10-06"
+accepted = ["LLR-306", "SR-231", "TC-321"]
+reaccepted = []
+
+[[act]]
+seq = 41
+date = "2026-10-06"
+accepted = []
+reaccepted = ["LLR-300", "SR-229", "TC-316", "TC-318"]
+
+[[act]]
+seq = 42
+date = "2026-10-06"
+accepted = []
+reaccepted = ["LLR-270"]
+
+[[act]]
+seq = 43
+date = "2026-10-06"
+accepted = ["TC-329"]
+reaccepted = []
+
+[[act]]
+seq = 44
+date = "2026-10-06"
+accepted = []
+reaccepted = ["LLR-167", "LLR-262", "LLR-278", "LLR-305", "SR-156", "TC-257", "TC-278"]
+
+[[act]]
+seq = 45
+date = "2026-10-06"
+accepted = ["LLR-309", "TC-326"]
+reaccepted = []
+
+[[act]]
+seq = 46
+date = "2026-10-06"
+accepted = []
+reaccepted = ["LLR-262", "LLR-277", "LLR-278"]
+
+[[act]]
+seq = 47
+date = "2026-10-06"
+accepted = ["LLR-307", "LLR-308", "LLR-310", "SR-232", "TC-325", "TC-327"]
+reaccepted = []
+
+[[act]]
+seq = 48
+date = "2026-10-07"
+accepted = []
+reaccepted = ["TC-326"]
+
+[[act]]
+seq = 49
+date = "2026-10-07"
+accepted = ["TC-328"]
+reaccepted = []
+
+[[act]]
+seq = 50
+date = "2026-10-07"
+accepted = []
+reaccepted = ["LLR-262", "LLR-307", "LLR-310", "TC-326", "TC-327", "TC-328"]
+
+[[act]]
+seq = 51
+date = "2026-10-07"
+accepted = []
+reaccepted = ["LLR-306", "LLR-307", "LLR-308", "LLR-310", "TC-257", "TC-326", "TC-327"]
+
+[[act]]
+seq = 52
+date = "2026-10-07"
+accepted = []
+reaccepted = ["LLR-262", "LLR-278", "LLR-306", "LLR-307", "LLR-310", "TC-278", "TC-326"]
+
+[[act]]
+seq = 53
+date = "2026-10-07"
+accepted = []
+reaccepted = ["LLR-262", "LLR-278", "LLR-306", "LLR-310"]
+
+[[act]]
+seq = 54
+date = "2026-10-07"
+accepted = []
+reaccepted = ["LLR-262", "LLR-306", "LLR-310", "TC-278", "TC-326"]
+
+[[act]]
+seq = 55
+date = "2026-10-07"
+accepted = []
+reaccepted = ["LLR-278", "LLR-310", "TC-278"]
+
+[[act]]
+seq = 56
+date = "2026-10-07"
+accepted = []
+reaccepted = ["LLR-262", "LLR-278", "LLR-306", "LLR-310", "TC-278", "TC-326", "TC-327"]
+
+[[act]]
+seq = 57
+date = "2026-10-07"
+accepted = []
+reaccepted = ["LLR-309", "TC-325"]
+
+[[act]]
+seq = 58
+date = "2026-10-07"
+accepted = []
+reaccepted = ["LLR-308", "LLR-310"]
+
+[[act]]
+seq = 59
+date = "2026-10-07"
+accepted = []
+reaccepted = []
+
+[[act]]
+seq = 60
+date = "2026-10-08"
+accepted = []
+reaccepted = ["LLR-158", "LLR-167", "LLR-181", "LLR-278", "LLR-310", "TC-218", "TC-278"]
+
+[[act]]
+seq = 61
+date = "2026-10-08"
+accepted = ["TC-331"]
+reaccepted = []
+
+[[act]]
+seq = 62
+date = "2026-10-08"
+accepted = []
+reaccepted = ["LLR-270", "LLR-305", "SR-227", "TC-267", "TC-268", "TC-323", "TC-324"]
+
+[[act]]
+seq = 63
+date = "2026-10-08"
+accepted = ["TC-330"]
+reaccepted = []
+
+[[act]]
+seq = 64
+date = "2026-10-08"
+accepted = ["LLR-311", "SR-233", "TC-332"]
+reaccepted = []
+
+[[act]]
+seq = 65
+date = "2026-10-08"
+accepted = ["LLR-312"]
+reaccepted = []
+
+[[act]]
+seq = 66
+date = "2026-10-08"
+accepted = []
+reaccepted = ["TC-254"]
+
+[[act]]
+seq = 67
+date = "2026-10-08"
+accepted = []
+reaccepted = ["TC-254"]
+
+[[act]]
+seq = 68
+date = "2026-10-08"
+accepted = []
+reaccepted = ["LLR-311", "SR-233", "TC-332"]
+
+[[act]]
+seq = 69
+date = "2026-10-08"
+accepted = ["LLR-315", "SR-234"]
+reaccepted = []
+
+[[act]]
+seq = 70
+date = "2026-10-08"
+accepted = ["LLR-314", "TC-334"]
+reaccepted = []
+
+[[act]]
+seq = 71
+date = "2026-10-08"
+accepted = []
+reaccepted = ["SR-146"]
+
+[[act]]
+seq = 72
+date = "2026-10-08"
+accepted = ["LLR-313", "SR-235", "TC-333"]
+reaccepted = []
+
+[[act]]
+seq = 73
+date = "2026-10-08"
+accepted = []
+reaccepted = ["LLR-313", "TC-333"]
+
+[[act]]
+seq = 74
+date = "2026-10-08"
+accepted = []
+reaccepted = ["LLR-313", "TC-333"]
+
+[[act]]
+seq = 75
+date = "2026-10-09"
+accepted = []
+reaccepted = ["TC-325", "TC-326", "TC-327", "TC-328"]
+
+[[act]]
+seq = 76
+date = "2026-10-09"
+accepted = []
+reaccepted = ["LLR-046", "LLR-207", "LLR-310", "LLR-313", "TC-083", "TC-327"]
+
+[[act]]
+seq = 77
+date = "2026-10-09"
+accepted = []
+reaccepted = ["LLR-069", "TC-069"]
+verdict = "docs/reviews/wi-853-findings-gate-in-rework/001-ADJUDICATE-0b94f3c.md"
+
+[[act]]
+seq = 78
+date = "2026-10-09"
+accepted = []
+reaccepted = ["LLR-069", "TC-069"]
+verdict = "docs/reviews/wi-853-findings-gate-in-rework/004-ADJUDICATE-1ccd09d.md"
+
+[[act]]
+seq = 79
+date = "2026-10-09"
+accepted = ["SR-236"]
+reaccepted = []
+
+[[act]]
+seq = 80
+date = "2026-10-09"
+accepted = []
+reaccepted = ["SR-227", "SR-229", "SR-230", "TC-267", "TC-317", "TC-318"]
+
+[[act]]
+seq = 81
+date = "2026-10-09"
+accepted = ["SR-237", "TC-340"]
+reaccepted = []
+
+[[act]]
+seq = 82
+date = "2026-10-09"
+accepted = []
+reaccepted = ["TC-316", "TC-321"]
+
+[[act]]
+seq = 83
+date = "2026-10-09"
+accepted = ["TC-341", "TC-342"]
+reaccepted = []
+
+[[act]]
+seq = 84
+date = "2026-10-09"
+accepted = []
+reaccepted = ["LLR-047", "LLR-270", "LLR-300", "LLR-301", "SR-046", "SR-237"]
+
+[[act]]
+seq = 85
+date = "2026-10-09"
+accepted = ["LLR-316", "LLR-317", "LLR-318", "LLR-319", "LLR-320", "LLR-321", "LLR-322", "TC-335", "TC-336", "TC-337", "TC-338", "TC-339", "TC-343", "TC-344", "TC-345"]
+reaccepted = []
+
+[[act]]
+seq = 86
+date = "2026-10-09"
+accepted = []
+reaccepted = ["TC-342", "TC-343"]
+
+[[act]]
+seq = 87
+date = "2026-10-09"
+accepted = []
+reaccepted = ["LLR-047", "LLR-320", "TC-342", "TC-343"]
+
+[[act]]
+seq = 88
+date = "2026-10-09"
+accepted = []
+reaccepted = ["LLR-300", "LLR-301", "LLR-322", "TC-339", "TC-340", "TC-345"]
+
+[[act]]
+seq = 89
+date = "2026-10-09"
+accepted = []
+reaccepted = ["LLR-320", "TC-342", "TC-343"]
+
+[[act]]
+seq = 90
+date = "2026-10-09"
+accepted = []
+reaccepted = ["LLR-300", "TC-316", "TC-340"]
+
+[[act]]
+seq = 91
+date = "2026-10-09"
+accepted = []
+reaccepted = ["LLR-167", "LLR-270", "TC-161", "TC-322"]
+
+[[act]]
+seq = 92
+date = "2026-10-10"
+accepted = []
+reaccepted = ["LLR-045", "TC-082"]
+
+[[act]]
+seq = 93
+date = "2026-10-10"
+accepted = []
+reaccepted = ["LLR-021", "LLR-047", "LLR-322", "TC-021", "TC-047", "TC-345"]
+
+[[act]]
+seq = 94
+date = "2026-10-10"
+accepted = ["LLR-326", "TC-350"]
+reaccepted = []
+
+[[act]]
+seq = 95
+date = "2026-10-10"
+accepted = []
+reaccepted = ["SR-019", "SR-020", "SR-032", "SR-046"]
+
+[[act]]
+seq = 96
+date = "2026-10-10"
+accepted = []
+reaccepted = ["LLR-047", "SR-020", "SR-046", "TC-047"]
+
+[[act]]
+seq = 97
+date = "2026-10-10"
+accepted = []
+reaccepted = ["LLR-046", "LLR-069", "LLR-313", "TC-069", "TC-083", "TC-333"]
+
+[[act]]
+seq = 98
+date = "2026-10-10"
+accepted = []
+reaccepted = ["LLR-162", "LLR-164", "TC-192"]
+
+[[act]]
+seq = 99
+date = "2026-10-10"
+accepted = []
+reaccepted = ["LLR-026"]
+
+[[act]]
+seq = 100
+date = "2026-10-10"
+accepted = ["SR-238"]
+reaccepted = []
+
+[[act]]
+seq = 101
+date = "2026-10-10"
+accepted = []
+reaccepted = ["TC-026"]
+
+[[act]]
+seq = 102
+date = "2026-10-10"
+accepted = []
+reaccepted = ["LLR-026", "SR-238", "TC-026"]
+
+[[act]]
+seq = 103
+date = "2026-10-10"
+accepted = []
+reaccepted = ["LLR-045", "LLR-140", "LLR-207", "LLR-262", "SR-154", "SR-156"]
+
+[[act]]
+seq = 104
+date = "2026-10-10"
+accepted = []
+reaccepted = ["TC-082", "TC-205"]
+
+[[act]]
+seq = 105
+date = "2026-10-10"
+accepted = []
+reaccepted = ["TC-055"]
+
+[[act]]
+seq = 106
+date = "2026-10-10"
+accepted = []
+reaccepted = ["LLR-270", "TC-268"]
+
+[[act]]
+seq = 107
+date = "2026-10-11"
+accepted = []
+reaccepted = ["SR-154", "SR-156"]
+verdict = "docs/reviews/wi-887/005-ADJUDICATE-adc244d.md"
+
+[[act]]
+seq = 108
+date = "2026-10-11"
+accepted = []
+reaccepted = ["LLR-045", "LLR-140", "LLR-207", "LLR-262", "LLR-269", "LLR-270", "LLR-305", "TC-205", "TC-266", "TC-322"]
+verdict = "docs/reviews/wi-887/006-ADJUDICATE-4c9a427.md"
+
+[[act]]
+seq = 109
+date = "2026-10-11"
+accepted = ["SR-239", "TC-351"]
+reaccepted = []
+
+[[act]]
+seq = 110
+date = "2026-10-11"
+accepted = []
+reaccepted = ["LLR-270", "SR-239", "TC-205", "TC-266", "TC-351"]
+verdict = "docs/reviews/wi-887/009-ADJUDICATE-2310bdc.md"
+
+[[act]]
+seq = 111
+date = "2026-10-11"
+accepted = []
+reaccepted = []
+
+[[act]]
+seq = 112
+date = "2026-10-11"
+accepted = []
+reaccepted = ["LLR-270", "TC-267", "TC-329"]
+verdict = "docs/reviews/wi-858/003-ADJUDICATE-5663028.md"
+
+[[act]]
+seq = 113
+date = "2026-10-15"
+accepted = []
+reaccepted = ["LLR-313", "TC-333"]
+
+[[act]]
+seq = 114
+date = "2026-10-15"
+accepted = ["LLR-337", "TC-367"]
+reaccepted = []
+
+[[act]]
+seq = 115
+date = "2026-10-15"
+accepted = []
+reaccepted = ["SR-154", "TC-333"]
+
+[[act]]
+seq = 116
+date = "2026-10-15"
+accepted = []
+reaccepted = ["LLR-019", "LLR-307", "LLR-309", "TC-019", "TC-325"]
+
+[[act]]
+seq = 117
+date = "2026-10-15"
+accepted = []
+reaccepted = ["LLR-069", "LLR-311", "LLR-313", "LLR-314", "TC-069", "TC-332", "TC-333", "TC-334"]
+
+[[act]]
+seq = 118
+date = "2026-10-15"
+accepted = []
+reaccepted = ["SR-233", "SR-234", "SR-236", "TC-334"]
+
+[[act]]
+seq = 119
+date = "2026-10-15"
+accepted = []
+reaccepted = ["LLR-314", "SR-236"]
+
+[[act]]
+seq = 120
+date = "2026-10-16"
+accepted = []
+reaccepted = ["LLR-292"]
+
+[[act]]
+seq = 121
+date = "2026-10-16"
+accepted = []
+reaccepted = ["LLR-270", "TC-267", "TC-329"]
+
+[[act]]
+seq = 122
+date = "2026-10-16"
+accepted = []
+reaccepted = ["SR-154"]
+
+[[act]]
+seq = 123
+date = "2026-10-16"
+accepted = []
+reaccepted = ["LLR-313", "TC-333"]
+
+[[act]]
+seq = 124
+date = "2026-10-17"
+accepted = []
+reaccepted = ["LLR-300", "TC-339"]
+
+[[act]]
+seq = 125
+date = "2026-10-17"
+accepted = []
+reaccepted = ["LLR-026", "SR-238", "TC-026"]
+
+[[act]]
+seq = 126
+date = "2026-10-17"
+accepted = []
+reaccepted = ["LLR-167", "LLR-305", "LLR-306", "LLR-310", "SR-231", "TC-161", "TC-192", "TC-308", "TC-321", "TC-322"]
+
+[[act]]
+seq = 127
+date = "2026-10-17"
+accepted = ["LLR-338", "TC-368"]
+reaccepted = []
+
+[[act]]
+seq = 128
+date = "2026-10-17"
+accepted = []
+reaccepted = ["LLR-310", "TC-327"]
+
+[[act]]
+seq = 129
+date = "2026-10-18"
+accepted = []
+reaccepted = ["LLR-278", "TC-278"]
+
+[[act]]
+seq = 130
+date = "2026-10-18"
+accepted = []
+reaccepted = ["LLR-300", "LLR-322", "TC-345"]
+
+[[act]]
+seq = 131
+date = "2026-10-18"
+accepted = []
+reaccepted = ["LLR-278", "LLR-310", "LLR-338", "TC-278"]
+
+[[act]]
+seq = 132
+date = "2026-10-18"
+accepted = []
+reaccepted = ["LLR-248", "SR-209"]
+
+[[act]]
+seq = 133
+date = "2026-10-18"
+accepted = []
+reaccepted = ["TC-242"]
+
+[[act]]
+seq = 134
+date = "2026-10-19"
+accepted = []
+reaccepted = ["LLR-248", "TC-242"]
+
+[[act]]
+seq = 135
+date = "2026-10-19"
+accepted = []
+reaccepted = ["LLR-208", "LLR-307", "LLR-337", "TC-206", "TC-325", "TC-367"]
+
+[[act]]
+seq = 136
+date = "2026-10-19"
+accepted = ["LLR-339", "TC-369"]
+reaccepted = []
+
+[[act]]
+seq = 137
+date = "2026-10-19"
+accepted = []
+reaccepted = ["LLR-019", "LLR-020", "LLR-140", "LLR-300", "SR-019", "SR-020"]
+
+[[act]]
+seq = 138
+date = "2026-10-19"
+accepted = ["LLR-340", "SR-240"]
+reaccepted = []
+
+[[act]]
+seq = 139
+date = "2026-10-19"
+accepted = ["TC-370"]
+reaccepted = []
+
+[[act]]
+seq = 140
+date = "2026-10-20"
+accepted = []
+reaccepted = []
+
+[[act]]
+seq = 141
+date = "2026-10-20"
+accepted = []
+reaccepted = ["LLR-044", "LLR-072", "LLR-266", "LLR-267", "LLR-268", "LLR-270", "LLR-305", "LLR-306", "LLR-321", "TC-267", "TC-321", "TC-323", "TC-324", "TC-330", "TC-344"]
+
+[[act]]
+seq = 142
+date = "2026-10-20"
+accepted = ["LLR-336", "TC-361", "TC-362", "TC-363", "TC-364", "TC-365", "TC-366"]
+reaccepted = []
+
+[[act]]
+seq = 143
+date = "2026-10-20"
+accepted = []
+reaccepted = ["LLR-207", "TC-132", "TC-205"]
+
+[[act]]
+seq = 144
+date = "2026-10-21"
+accepted = []
+reaccepted = ["LLR-021", "LLR-031", "SR-031", "TC-021", "TC-031"]
+
+[[act]]
+seq = 145
+date = "2026-10-21"
+accepted = ["TC-374"]
+reaccepted = []
+
+[[act]]
+seq = 146
+date = "2026-10-21"
+accepted = ["LLR-341", "SR-241", "TC-371"]
+reaccepted = []
+
+[[act]]
+seq = 147
+date = "2026-10-21"
+accepted = ["LLR-343", "LLR-344", "SR-242", "TC-375", "TC-376", "TC-377", "TC-378", "TC-379", "TC-380", "TC-381", "TC-382"]
+reaccepted = []
+
+[[act]]
+seq = 148
+date = "2026-10-21"
+accepted = []
+reaccepted = []
+
+[[act]]
+seq = 149
+date = "2026-10-22"
+accepted = []
+reaccepted = ["LLR-153", "LLR-161", "LLR-312", "SR-148", "TC-147", "TC-156", "TC-254"]
+
+[[act]]
+seq = 150
+date = "2026-10-22"
+accepted = ["LLR-335", "LLR-345", "TC-360", "TC-383"]
+reaccepted = []
+
+[[act]]
+seq = 151
+date = "2026-10-22"
+accepted = []
+reaccepted = ["LLR-269", "LLR-270", "TC-265", "TC-268"]
+
+[[act]]
+seq = 152
+date = "2026-10-22"
+accepted = ["LLR-346", "SR-243", "TC-384", "TC-385"]
+reaccepted = []
+
+[[act]]
+seq = 153
+date = "2026-10-22"
+accepted = ["LLR-347", "LLR-348", "LLR-349", "LLR-350", "LLR-351", "LLR-352", "LLR-353", "LLR-354", "LLR-355", "LLR-356", "SR-244", "TC-386", "TC-387", "TC-388", "TC-389", "TC-390", "TC-391", "TC-392", "TC-393", "TC-394", "TC-395"]
+reaccepted = []
+
+[[act]]
+seq = 154
+date = "2026-10-23"
+accepted = ["SR-224"]
+reaccepted = []
+
+[[act]]
+seq = 155
+date = "2026-10-23"
+accepted = ["LLR-357", "LLR-358", "SR-245", "SR-246", "TC-396", "TC-397"]
+reaccepted = []
+
+[[act]]
+seq = 156
+date = "2026-10-23"
+accepted = []
+reaccepted = ["LLR-246", "LLR-249", "LLR-278", "SR-208", "SR-228", "TC-241", "TC-278"]
+
+[[act]]
+seq = 157
+date = "2026-10-23"
+accepted = ["LLR-359", "TC-398"]
+reaccepted = []
+
+[[act]]
+seq = 158
+date = "2026-10-24"
+accepted = []
+reaccepted = ["LLR-210", "TC-208", "TC-254"]
+
+[[act]]
+seq = 159
+date = "2026-10-25"
+accepted = []
+reaccepted = ["LLR-069", "LLR-310", "LLR-314", "LLR-315", "TC-069", "TC-327", "TC-334"]
+
+[[act]]
+seq = 160
+date = "2026-10-25"
+accepted = []
+reaccepted = ["LLR-167", "LLR-183", "LLR-273", "LLR-297", "SR-161", "SR-165", "TC-161", "TC-178", "TC-211", "TC-312"]
+
+[[act]]
+seq = 161
+date = "2026-10-25"
+accepted = ["LLR-360", "TC-399"]
+reaccepted = []
+
+[[act]]
+seq = 162
+date = "2026-10-31"
+accepted = []
+reaccepted = ["LLR-031", "LLR-155", "LLR-156", "SR-031", "SR-137", "TC-031", "TC-150", "TC-152"]
+
+[[act]]
+seq = 163
+date = "2026-11-01"
+accepted = []
+reaccepted = ["LLR-058", "LLR-061", "LLR-123", "LLR-144", "LLR-149", "LLR-150", "LLR-151", "LLR-152", "LLR-161", "LLR-207", "SR-144", "SR-148", "SR-156", "TC-058", "TC-061", "TC-138", "TC-143", "TC-144", "TC-145", "TC-146", "TC-154", "TC-156", "TC-205"]
+
+[[act]]
+seq = 164
+date = "2026-11-01"
+accepted = []
+reaccepted = ["LLR-271", "TC-269"]
+
+[[act]]
+seq = 165
+date = "2026-11-01"
+accepted = ["LLR-361", "TC-400"]
+reaccepted = []
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 166
+date = "2026-11-02"
+accepted = []
+reaccepted = ["SR-174", "TC-158"]
+copied = ["docs/requirements/system-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 167
+date = "2026-11-02"
+accepted = ["LLR-362", "LLR-363", "TC-401", "TC-402"]
+reaccepted = []
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 168
+date = "2026-11-02"
+accepted = []
+reaccepted = ["SN-028", "SN-036"]
+copied = ["docs/requirements/stakeholder-needs.toml"]
+
+[[act]]
+seq = 169
+date = "2026-11-03"
+accepted = []
+reaccepted = ["LLR-153", "LLR-158"]
+copied = ["docs/requirements/low-level-requirements.toml"]
+
+[[act]]
+seq = 170
+date = "2026-11-03"
+accepted = ["LLR-364", "TC-403"]
+reaccepted = []
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 171
+date = "2026-11-04"
+accepted = ["LLR-365", "TC-404", "TC-405", "TC-406", "TC-407", "TC-408", "TC-409"]
+reaccepted = []
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 172
+date = "2026-11-04"
+accepted = []
+reaccepted = ["LLR-360", "TC-399"]
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 173
+date = "2026-11-05"
+accepted = []
+reaccepted = ["LLR-360", "TC-399"]
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 174
+date = "2026-11-06"
+accepted = []
+reaccepted = ["LLR-365", "TC-333"]
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 175
+date = "2026-11-06"
+accepted = ["LLR-366", "TC-410", "TC-411", "TC-412"]
+reaccepted = []
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 176
+date = "2026-11-06"
+accepted = []
+reaccepted = ["LLR-118", "LLR-153", "LLR-299", "LLR-364", "TC-123", "TC-147", "TC-314"]
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 177
+date = "2026-11-06"
+accepted = []
+reaccepted = ["LLR-207", "LLR-313", "LLR-341", "LLR-344", "SR-241", "TC-132", "TC-333", "TC-371"]
+copied = ["docs/requirements/low-level-requirements.toml", "docs/requirements/system-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 178
+date = "2026-11-06"
+accepted = ["LLR-367", "TC-413", "TC-414", "TC-415", "TC-416", "TC-417", "TC-418", "TC-419", "TC-420"]
+reaccepted = []
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 179
+date = "2026-11-07"
+accepted = []
+reaccepted = ["LLR-143", "TC-137"]
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 180
+date = "2026-11-08"
+accepted = []
+reaccepted = ["LLR-207", "SR-156"]
+copied = ["docs/requirements/low-level-requirements.toml", "docs/requirements/system-requirements.toml"]
+
+[[act]]
+seq = 181
+date = "2026-11-08"
+accepted = ["LLR-368", "TC-421", "TC-422", "TC-423", "TC-424", "TC-425", "TC-426"]
+reaccepted = []
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 182
+date = "2026-11-16"
+accepted = []
+reaccepted = ["CMP-006", "CMP-007", "CMP-008", "CMP-009"]
+copied = ["docs/requirements/components.toml"]

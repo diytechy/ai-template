@@ -30,7 +30,7 @@
 # rather than renumbering a locked table.
 #
 # SPENT IDS — never re-minted at a different thing: `EXT-003` (the Adopter,
-# dropped: an adopting team is the human operator of the kit in its own
+# dropped: an adopting team is the person operating the kit in its own
 # repository) and `EXT-004` (the cut hosted-CI entity, re-drawn as `EXT-007`);
 # `B-03` (the read set, returned as `B-09`), `B-06` and `B-07` (the cut
 # hosted-CI crossings, absorbed by `B-11`) and `B-08` (the vendored-doc check,
@@ -71,21 +71,21 @@
 #
 #   ON EVERY ROW KIND
 #     status       The ONE maturity field — the same field and words the spine
-#                  uses. Closed vocabulary, `Drafted` | `Approved`. `Founded` is
+#                  uses. Closed vocabulary, `Drafted` | `Accepted`. `Founded` is
 #                  NOT APPLICABLE to this tier and never will be: it means
-#                  settled AND demonstrated, while an approval says the crossing
+#                  settled AND demonstrated, while an acceptance says the crossing
 #                  is AGREED. The rung that reads it is
 #                  `spine_rules.boundary_incomplete` ("is the boundary inventory
 #                  still in work?"), through one table, `BIF_MATURITY`.
 #
 #                  FLIP AUTHORITY IS DERIVED, NOT DECLARED: a `status` cell may
 #                  be machine-flipped only when this registry's stage rung —
-#                  DevStg-Boundary — is not human-held under the `[attestation]
-#                  human_approval_through` dial, the predicate being
-#                  `agent_common.human_approves(docs, "external")`. READ THE
+#                  DevStg-Boundary — is not operator-held under the `[authority]
+#                  operator_accepts_through` dial, the predicate being
+#                  `agent_common.operator_accepts(docs, "external")`. READ THE
 #                  DIAL, DO NOT ASSUME IT: whether DevStg-Boundary is held is
 #                  that value's to say, never this comment's. What keeps these
-#                  values the owner's, whatever the dial says, is that the kit
+#                  values the operator's, whatever the dial says, is that the kit
 #                  ships no automated writer for an off-spine `status` — they
 #                  are hand-edited, in a reviewed Status-change commit. The
 #                  predicate exists so the first such writer cannot be added
@@ -107,15 +107,15 @@ name = "Development session"
 class = "operational"
 mediates = "EXT-006"
 description = """The computer and the working copy in its hands: shell, editors, OS, git client, Python and the test runner. Writes reach the system through it, whether a person types them or an agent CLI makes them, and the system's verdicts come back through it. The session HOLDS the checkout; the system owns the governed state those edits become once admitted through the hook floor."""
-status = "Approved"
+status = "Accepted"
 absorbs = "v1 EXT-001; dissolved into it: v1 EXT-005 (git), EXT-007 (OS/filesystem/Python), EXT-008 (test+coverage toolchain)"
-notes = """It mediates for the human operator (EXT-006): an outcome landing on its crossings can be one that operator experiences. Who holds authority is policy, declared by the approval dial, not a property of this party."""
+notes = """It mediates for the person (EXT-006): an outcome landing on its crossings can be one that person experiences. Who holds authority is policy, declared by the acceptance dial, not a property of this party."""
 
 [entity.EXT-002]
 name = "Template"
 class = "deliverable"
 description = """The delivered package - every *.template.*, the registries, scripts, hooks, skills and launchers - as a separate package. From an adopter's frame this package is their enabling system."""
-status = "Approved"
+status = "Accepted"
 absorbs = "v1 EXT-002"
 notes = """`deliverable` was an ADDITION to the class vocabulary (operational/enabling/interoperating did not fit an output package) and is CONFIRMED (§1R.7 item 2). Nothing gates on `class` today; it is read by the generated context view and the advisory schema tier."""
 
@@ -123,21 +123,21 @@ notes = """`deliverable` was an ADDITION to the class vocabulary (operational/en
 name = "Model provider API(s) / CLI(s)"
 class = "interoperating"
 description = """The model services and command-line runners behind every model in use, the primary builder and the adversarial reviewers alike. The kit's own loop invokes them across B-10; a person may also drive one directly, and its writes then arrive through the development session."""
-status = "Approved"
+status = "Accepted"
 absorbs = "v1 EXT-004 merged with the external-reviewer CLI at 13o"
 notes = """A model CLI is just a model CLI, whether primary or secondary."""
 
 [entity.EXT-006]
-name = "Human operator"
+name = "Person"
 class = "operational"
-description = """The person who operates the kit: writes to the system through the development session, holds approval authority, and reads the spine and the views generated from it."""
-status = "Approved"
+description = """The person who operates the kit: writes to the system through the development session, holds acceptance authority, and reads the spine and the views generated from it."""
+status = "Accepted"
 
 [entity.EXT-007]
 name = "Hosted CI"
 class = "interoperating"
 description = """A remote runner that invokes the declared bar on a push, pull request or schedule, across the OS x Python matrix the job declares, and reports the job verdict and step log."""
-status = "Approved"
+status = "Accepted"
 notes = """Outside this system's design control: it may or may not honour the workflow it is handed. That is what makes it an external party; the obligation the system can carry stays on the shipped workflow (B-05 content)."""
 
 # --- boundary crossings: what enters and leaves the system ---------------------
@@ -147,15 +147,15 @@ entity = "EXT-001"
 direction = "in"
 system = "operation"
 carries = """Governed writes: artifact, registry and config edits admitted ONLY through the git hook floor (privacy, format, gate checks) - the one write path from the session into the system's governed state."""
-status = "Approved"
+status = "Accepted"
 absorbs = "v1 BIF-004/N-01, BIF-006/M-13, BIF-007-in/M-10, BIF-025/X-09, and the write half of BIF-026/M-16"
 
 [boundary.B-02]
 entity = "EXT-006"
 direction = "in"
 system = "operation"
-carries = """Authority: rulings, attestations and Status flips - the distinguished input the process advances on."""
-status = "Approved"
+carries = """Authority: rulings, acceptances and Status flips - the distinguished input the process advances on."""
+status = "Accepted"
 absorbs = "v1 BIF-005/M-11"
 notes = """No port of its own: authority arrives as content on B-01's write path. The system can observe that a Status cell changed, not that a person judged."""
 
@@ -164,7 +164,7 @@ entity = "EXT-001"
 direction = "out"
 system = "operation"
 carries = """Guardrail verdicts during a session: hook-floor accept/reject and subagent_gate PreToolUse allow/deny."""
-status = "Approved"
+status = "Accepted"
 absorbs = "v1 BIF-012/X-07, and the verdict halves of BIF-006 and BIF-026"
 notes = """The honest limit belongs in this crossing's SR: a local hook floor is bypassable (git commit --no-verify), so "no unchecked write enters governed state" rests on this verdict at the moment of the act PLUS a re-run of the same bar away from that bypass. Where hosted CI is configured, that re-run crosses B-11. The system holds no design control over whether the runner honours the workflow it is handed, so the obligation it carries stays on the shipped workflow (B-05 content, SR-151 and SR-152)."""
 
@@ -173,7 +173,7 @@ entity = "EXT-002"
 direction = "out"
 system = "delivery"
 carries = """THE TEMPLATE - the packaged deliverable. The delivered scripts' contracts (check.py, bootstrap.py + MAPPING, agent_loop.py, check_vendored.py, gen_cases.py, gen_release_checklist.py, the hooks, the launchers) are IF definitions tied to this crossing: content of the package, not separate system crossings."""
-status = "Approved"
+status = "Accepted"
 absorbs = "v1 BIF-014/M-07, BIF-015/M-06, BIF-016..021/X-01..X-06; BIF-001/M-01 and BIF-002/M-02 as CONTENT (their invocation is the session's, 13n); the skills fan-out and docs/knowledge packs (§1R.7 item 5)"
 notes = "The largest bundle in the frame, and legitimate as one under §3R: a single shall against it is permitted BECAUSE the decomposition is stated in the component details. The delivered capabilities it breaks down into are: harness verdict, scaffold + MAPPING, unattended loop, generators, hook floor, and cross-cutting property -- the sixth being a ruled class for a property of every delivered capability at once, which is why SR-031, SR-034, SR-035 and SR-114 each stay one row in it rather than one per capability."
 
@@ -182,7 +182,7 @@ entity = "EXT-006"
 direction = "out"
 system = "operation"
 carries = """Read: the spine and the views generated from it - the project-state dashboard, the open-items page, the status surface, the derived stage and the console reports."""
-status = "Approved"
+status = "Accepted"
 absorbs = "v1 BIF-007-out/M-10, BIF-008/M-03, BIF-009/M-19, BIF-010/M-09, BIF-011/M-08 - the former B-03 set, held by REL-002 while the views were not system outputs"
 
 [boundary.B-10]
@@ -190,7 +190,7 @@ entity = "EXT-005"
 direction = "inout"
 system = "operation"
 carries = """The loop invoking a model runner: the prompt and brief out; the output, exit code and commits back; and the runner's limits - rate limit, expired authorization, model retirement."""
-status = "Approved"
+status = "Accepted"
 absorbs = "REL-003 (v1 BIF-023/M-15 and BIF-024/M-14)"
 notes = """The backoff obligation stays a requirement on the loop content that makes the call."""
 
@@ -199,7 +199,7 @@ entity = "EXT-007"
 direction = "inout"
 system = "operation"
 carries = """A hosted run of the declared bar: the trigger and the declared OS x Python matrix in; the job verdict and step log out."""
-status = "Approved"
+status = "Accepted"
 absorbs = "EXT-004's cut crossings B-06 (trigger in) and B-07 (verdict out)"
 
 # --- relationships: external-to-external, the system not a party ---------------
@@ -212,5 +212,5 @@ from = "EXT-002"
 to = "EXT-001"
 kind = "hands-off"
 flow = """Transition: the Template installed into an operating environment, this repository's own or an adopter's - the only lifecycle hand-off between the delivery frame and the operation frame."""
-status = "Approved"
+status = "Accepted"
 absorbs = "REL-001 (the Template adopted into the Adopter's repository), merged when EXT-003 was dropped"
