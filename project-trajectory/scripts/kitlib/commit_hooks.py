@@ -50,7 +50,7 @@ REQUIRED_HOOKS = ("pre-commit", "commit-msg")
 # step every checkout has. Neither creates a hook or sets a mode bit, so those
 # two causes name their own repair.
 _ACTIVATE = (
-    "Turn the hooks on: sh scripts/setup.sh (Windows: scripts\\setup.ps1; a "
+    "Turn the hooks on: bash scripts/setup.sh (Windows: scripts\\setup.ps1; a "
     "repository without them: its dev-setup), or git config core.hooksPath "
     ".githooks"
 )

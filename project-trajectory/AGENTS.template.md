@@ -60,8 +60,8 @@ the ladder, and the ID scheme. The short version needed every session:
   diagrams.
 - **Start each session** with *Current State* in
   [docs/status.md](docs/status.md); end each turn by updating it (stage, what
-  changed, next action). **Commit hooks on before any work** (`sh
-  scripts/setup.sh`, or `scripts\setup.ps1`); never bypass them.
+  changed, next action). **Commit hooks on before any work** (`bash
+  scripts/setup.sh` or `scripts\setup.ps1`); never bypass them.
   **Commit early and often**, small and green per step; the `push` dial says
   who publishes (default: operator). End with a clean tree.
 

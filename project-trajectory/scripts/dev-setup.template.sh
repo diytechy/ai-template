@@ -407,7 +407,7 @@ case " $SELECTED " in
     if interactive; then
       printf 'Run scripts/setup.sh now for the product toolchain (venv + test tools)? [y/N] '
       read -r ans
-      case "$ans" in [Yy]*) sh scripts/setup.sh ;; *) say "  - skipped setup.sh (run it when ready)" ;; esac
+      case "$ans" in [Yy]*) bash scripts/setup.sh ;; *) say "  - skipped setup.sh (run it when ready)" ;; esac
     fi
     ;;
 esac

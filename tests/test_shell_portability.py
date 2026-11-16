@@ -85,6 +85,40 @@ def test_every_shell_file_parses_under_sh(rel):
     assert result.returncode == 0, result.stderr
 
 
+# setup.sh and check.sh are bash scripts (`set -o pipefail`). `sh -n` above only
+# parses, so it cannot see that dash (Debian/Ubuntu's /bin/sh) stops at that
+# line before doing anything. An instruction that says `sh scripts/setup.sh`
+# therefore leaves the commit hooks off on the most common Linux.
+_BASH_ONLY = ("setup.sh", "check.sh")
+_RUN_WITH_SH = re.compile(r"(?<![\w/.-])sh scripts/(?:setup|check)\.sh")
+
+
+def test_no_shipped_instruction_runs_a_bash_script_with_sh():
+    for name in _BASH_ONLY:
+        path = ROOT / "project-trajectory" / "scripts" / name
+        head = path.read_text(encoding="utf-8")[:200]
+        assert "pipefail" in head, name + " is no longer bash-only; drop this pin"
+    listed = subprocess.run(
+        ["git", "ls-files", "-z", "project-trajectory"],
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
+    ).stdout.split(b"\0")
+    bad = []
+    for rel in filter(None, (name.decode() for name in listed)):
+        # RESYNC_PACK.md narrates past releases, wording included.
+        if rel.endswith("RESYNC_PACK.md") or not (ROOT / rel).is_file():
+            continue
+        try:
+            text = (ROOT / rel).read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        # Backticks and line wraps removed, so `sh\n  scripts/setup.sh` counts.
+        if _RUN_WITH_SH.search(" ".join(text.replace("`", "").split())):
+            bad.append(rel)
+    assert not bad, "say `bash scripts/setup.sh` (or check.sh) in: " + ", ".join(bad)
+
+
 # --- the hooks read the policy through one parse (SR-031, LLR-021) ----------
 
 HOOKS_DIR = ROOT / "project-trajectory" / "hooks"
