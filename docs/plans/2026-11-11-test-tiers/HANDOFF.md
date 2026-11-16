@@ -1720,3 +1720,26 @@ list is fixed unless §12.6 says so.
        chain? This session recommends the README sentence.
     3. `trajectory_arch.py` passed 1,000 code lines (989 to 1,012), so the
        line-count ratchet wants a first baseline entry for it.
+- **2026-11-16, both fix branches reviewed and merged.** `maint/vocabulary`
+  is at `99166f01d`. DeepSeek (`opencode-go/deepseek-v4.1-flash`) reviewed
+  each diff and asked for changes on both:
+  - Conversion: the count line was swallowing gate advisories that have
+    nothing to do with stakeholders ("cites no assumption", "not approved").
+    Fixed in `6e5bcf5ba`: only the reach-caused lines fold; the line no longer
+    claims every need is unreachable.
+  - First day: the CI template and both setup scripts ran `pip install -e .`
+    for any `pyproject.toml`, which fails on one that holds only tool
+    settings. Fixed in `f34c74874`: they install only when the file declares
+    `[project]` or `[build-system]`.
+  - Declined as cases nobody hit: a kit checkout missing its own
+    `pytest.ini`; `sh ./scripts/setup.sh` beside `sh scripts/setup.sh`.
+  - A DeepSeek review given the repository takes 20 to 30 minutes and reads
+    widely. Tell it to answer from the diff and cap its tool calls.
+- **In flight:** a Sonnet sub-agent in the vocabulary worktree re-stamps the
+  line-count ratchet, the byte-budget table and the pinned line number, and
+  writes one RESYNC entry for both fix branches. After it: one more
+  unfiltered suite run (§12.3's recipe) to confirm the branch.
+- **Still owed before `maint/vocabulary` can be trunk:** the generated views
+  (`trunk_step.py --regen`: dashboard, CLI and interface references, the
+  status snapshot); `docs/status.md`'s resume text, which still describes the
+  queue before OI-130 was ruled; and everything on hold in §12.2.
