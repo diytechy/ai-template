@@ -4,7 +4,7 @@ title = "SR-165's derivation record is built: the record cells, the component ch
 workstream = "process"
 sr_refs = ["SR-165"]
 specref = "docs/requirements/low-level-requirements.toml#LLR-172"
-needs = ["OI-130"]
+needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 planmode = "single"
@@ -46,8 +46,8 @@ Three findings hold the backfill:
    - On 2026-08-23 the log still called "the deferred P5 approval" the owner's
      to take (`docs/log.md:45536-45540`).
 
-Writing the records needs answers this row cannot invent (B3, B4). See "The
-owner-held step".
+Writing the records needed answers this row could not invent (B3, B4). OI-130
+was ruled on 2026-11-16: see "The operator's ruling".
 
 ## The record form (S3: closed)
 
@@ -149,26 +149,27 @@ whole pass, as it does today.
 The machine checks form and arithmetic. Whether `ruling` reports a real human
 act is for review and the approval route to judge.
 
-## The owner-held step (B4)
+## The operator's ruling (OI-130, ruled 2026-11-16)
 
-OI-130 (filed pending by headless leg 39, 2026-11-08) holds the backfill. It
-asks two questions:
+OI-130 held the backfill and is ruled. The record of the ruling is
+`docs/log.d/2026-11-16-operator-rules-oi130.md`.
 
-- **Q1. Which ruling adopted P5?** (a) the 2026-08-22 approval, which also
-  closes decision 10; (b) a fresh approval now; (c) a fresh partition round,
-  which falls outside this row.
-- **Q2. Which objective does the record declare?**
-  - (a) OI-14 as ruled. The record would carry `objective = "minimize cut"`,
-    `constraints = ["one-home-per-behaviour: P1 P2 P3 P4 P5"]` and scores
-    P1=33, P2=48, P3=30, P4=48, P5=31. P3 then ranks first, so P5 carries an
-    override that cites the shortlist's straddle reasoning.
-  - (b) The shortlist's working objective, `minimize straddle` with no
-    constraint. P5 ranks first, but the order behind it differs from the
-    shortlist's.
-
-The recommendation is Q1 (a) and Q2 (a). Answer (a) records the objective as
-it was ruled, the scores as measured, and the departure from them as a human
-override.
+- **Q1 (b).** The operator accepts P5 as the depth-0 partition on
+  2026-11-16, a fresh ruling. `ruling` cites it.
+- **Q2, as the re-score states it.** The numbers are the re-score's, taken on
+  today's tree (`docs/plans/2026-11-11-oi130-rescore/README.md`, "Scores"),
+  not August's. The record on CMP-006 carries:
+  - `candidates = ["P5", "P3", "P4"]`;
+  - `objective = "minimize cut"`;
+  - `constraints = ["one-home-per-behaviour: P3 P4 P5"]`;
+  - `scores = ["P5=140", "P3=152", "P4=235"]`;
+  - `selected = "P5"`, with no `override`: P5 ranks first.
+  P1 and P2 are not candidates of this record. The re-score did not score
+  them, and says why.
+- **The record's shape is SR-165 as written.** The operator: without it,
+  traceability is incomplete.
+- **Optionality.** The check is on by default and `[checks] components_check
+  = false` turns it off, as "Trust" already says. No new setting is added.
 
 ## Done-when
 
@@ -180,8 +181,9 @@ override.
       of the registry is added.
 - [ ] In-process cases in `tests/test_trajectory_arch.py` cover TC-166 (a)-(e)
       and each malformed and inconsistent state named above.
-- [ ] CMP-006 holds the record as the owner's OI-130 answers state it.
-      CMP-007, CMP-008 and CMP-009 cite it. The strict trace is clean.
+- [ ] CMP-006 holds the record as OI-130's ruling of 2026-11-16 states it
+      ("The operator's ruling", above). CMP-007, CMP-008 and CMP-009 cite
+      it. The strict trace is clean.
 - [ ] TC-166's `evidence` names the test.
 - [ ] RESYNC entry: a forced migration. An adopter's live CMP rows need a
       record while `components_check` is on.
