@@ -279,7 +279,7 @@ sequenceDiagram
     else later act is owed
         Coord->>Keep: plan by the verdict's bound class (LLR-338)
         Coord->>Agent: launch complete act brief; append loop provenance when marked (SR-209)
-        Agent->>Records: take amendment act, then first-approval act
+        Agent->>Records: take amendment act, then first-acceptance act
         Coord->>Verdict: re-derive owed work and inspect verdict-record changes
         alt call succeeded, nothing owed, and verdict records unchanged
             Coord-->>Lane: complete

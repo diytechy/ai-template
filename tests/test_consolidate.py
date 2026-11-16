@@ -451,7 +451,7 @@ def test_a_queued_judgement_naming_no_candidate_holds_nothing_back(tmp_path):
         _row("WI-001", SpecRef="docs/plans/a.md"),
         _row("WI-002", SpecRef="docs/plans/a.md"),
         _judge("WI-003", Brief="amendment", Adjudicates="SR-001;LLR-001"),
-        _judge("WI-004", Brief="first-approval"),
+        _judge("WI-004", Brief="first-acceptance"),
     ]
     repo = _repo(tmp_path, rows)
     draft, why = consolidate.census_draft(repo, rows)
@@ -1063,7 +1063,7 @@ def test_the_close_refuses_a_row_outside_the_adjudicates_cluster(tmp_path):
     census never clustered used to close, merge and archive it — the row's own
     Context says "judge those rows and no others", the brief template says it,
     and plan §1.3 clause 2 says it, while nothing enforced it. The
-    first-approval sibling has bounded its act this way since WI-572."""
+    first-acceptance sibling has bounded its act this way since WI-572."""
     rows = [_row("WI-401"), _row("WI-402"), _row("WI-409")]
     why = _close(
         tmp_path,

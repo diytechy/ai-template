@@ -294,6 +294,42 @@ def test_the_push_authoritys_earlier_default_is_respelled_in_place(tmp_path):
         assert path.read_bytes() == text.encode("utf-8")
 
 
+RETAIN = """[adjudicator]
+context_reset_pct = 55
+# first sittings too: "first-approval" stays in a comment
+retain_for = [
+    "disposition", "amendment", "first-approval",  # "first-approval" was its name
+    'first-approval', "done-when",
+]
+keepwarm_minutes = 0
+
+[reviewer]
+retain_for = ["first-approval"]
+"""
+
+
+def test_the_adjudicators_retained_brief_kinds_are_respelled_in_place(tmp_path):
+    """Implements: TC-427"""
+    path = _write(tmp_path, "docs/process.toml", RETAIN.replace("\n", "\r\n"))
+    assert _run(tmp_path) == 0
+    expected = RETAIN.replace(
+        '"amendment", "first-approval",  #', '"amendment", "first-acceptance",  #'
+    ).replace("    'first-approval', ", "    'first-acceptance', ")
+    # A comment keeps its words, and a key of the same name in another table
+    # is that table's own.
+    assert '# first sittings too: "first-approval" stays in a comment' in expected
+    assert '# "first-approval" was its name' in expected
+    assert expected.endswith('[reviewer]\nretain_for = ["first-approval"]\n')
+    assert path.read_bytes() == expected.replace("\n", "\r\n").encode("utf-8")
+    retain = tomllib.loads(expected)["adjudicator"]["retain_for"]
+    assert retain.count("first-acceptance") == 2 and "first-approval" not in retain
+    assert _run(tmp_path, "--check") == 0
+    one_line = '[adjudicator]\nretain_for = ["first-approval", "combined"]\n'
+    path = _write(tmp_path, "docs/process.toml", one_line)
+    assert _run(tmp_path) == 0
+    assert path.read_bytes() == one_line.replace("approval", "acceptance").encode()
+
+
 @pytest.mark.parametrize(
     "text",
     (
@@ -302,6 +338,7 @@ def test_the_push_authoritys_earlier_default_is_respelled_in_place(tmp_path):
         '[policies]\nnote = """\n[attestation]\n"""\n\n[attestation]\nfinal_review = "off"\n',
         'policies = { push = "human" }\n',
         '[policies]\npush = """human"""\n',
+        'adjudicator = { retain_for = ["first-approval"] }\n',
     ),
     ids=(
         "inline-table",
@@ -309,6 +346,7 @@ def test_the_push_authoritys_earlier_default_is_respelled_in_place(tmp_path):
         "look-alike-header-in-a-string",
         "push-in-an-inline-table",
         "push-in-a-multi-line-string",
+        "retained-kind-in-an-inline-table",
     ),
 )
 def test_a_dial_the_line_edit_cannot_reach_is_refused_not_guessed(tmp_path, text):

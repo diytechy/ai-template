@@ -824,7 +824,7 @@ owes. On a WORK BRANCH those are refusals, not records — the approval
 act is an adjudicator's, on the serial trunk side — and
 `lane_approval_refusal` words the refusal the merge slot returns. Its sibling
 `staged_drafted_rows` reports the rows the lane authored below approval, which
-`intake` turns into the first-approval adjudication that approves them. All
+`intake` turns into the first-acceptance adjudication that approves them. All
 four readers share one two-tree walk, so no row is visible to only one.
 
 WHICH of those drafted rows an adjudicator may actually flip is the DIAL's
@@ -833,7 +833,7 @@ rung each spine registry's rows are approved into, and `operator_accepts_spine`
 compares it against `operator_accepts_through` — unmapped is HELD, the same
 fail-safe its off-spine sibling `operator_accepts` takes. Both ends read it: the
 mint hands over only released rows, and `adjudicate_brief.
-first_approval_values`, which RE-RESOLVES the population live at composition
+first_acceptance_values`, which RE-RESOLVES the population live at composition
 time (the row is claimed long after the merge), re-applies the same filter to
 what it re-resolved. A held row still appears in the rendered chain — it is
 evidence — labelled as the operator's and contributing no registry to the act's
@@ -883,7 +883,7 @@ detectable rather than assumed fresh.
 
 ### The `AuthoringTags` cell — whose tags a sitting widens by
 
-A minted first-approval or amendment row always carries `Workstream = process`
+A minted first-acceptance or amendment row always carries `Workstream = process`
 and the routing `SafetyClass = adjudication`, so those two cells say how the row
 routes, not what its authoring work item was. `AuthoringTags` holds that fact:
 the authoring work items' `Workstream` and `SafetyClass` values, deduplicated

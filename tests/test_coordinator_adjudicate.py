@@ -427,7 +427,7 @@ def test_the_identity_covers_the_act_brief_for_an_actable_retained_class():
     """
     ab = cli.adjudicate_brief
     act_path = ab.prompts.template_path(ab.prompts.ADJUDICATE_ACT)
-    for cls in ("amendment", "first-approval", "combined"):
+    for cls in ("amendment", "first-acceptance", "combined"):
         assert act_path in ab.governing_templates([cls])[0], cls
     assert act_path not in ab.governing_templates(["red-tc", "disposition"])[0]
     paths, texts = ab.governing_templates(
@@ -573,7 +573,7 @@ def test_an_unretained_call_is_never_probed(tmp_path, monkeypatch, launched):
     assert _adjudicate(root) == 0
     root2 = _repo(tmp_path / "two")
     # the stub's verdict line is an amendment's, not a first approval's: 1
-    assert _adjudicate(root2, brief="first-approval") == 1
+    assert _adjudicate(root2, brief="first-acceptance") == 1
     assert calls == []
     assert all("--session-id" not in a for a in launched["argv"])
 
@@ -872,7 +872,7 @@ def test_a_verdict_path_under_a_missing_directory_is_reserved_and_launches(
     assert verdict.read_text(encoding="utf-8").startswith("VERDICT: MEANING")
 
 
-RETAINED = '["disposition", "amendment", "red-tc", "first-approval"]'
+RETAINED = '["disposition", "amendment", "red-tc", "first-acceptance"]'
 
 
 def _retaining(tmp_path):
@@ -892,7 +892,7 @@ def test_switching_retained_classes_with_nothing_edited_keeps_the_session(
     root = _retaining(tmp_path)
     _signed_in(monkeypatch)
     _adjudicate(root, "WI-1", brief="amendment")
-    _adjudicate(root, "WI-1", brief="first-approval")
+    _adjudicate(root, "WI-1", brief="first-acceptance")
     assert "--resume" in launched["argv"][1]
     record = _state(root)
     assert record["state"] == "active" and record["reset_reason"] == ""

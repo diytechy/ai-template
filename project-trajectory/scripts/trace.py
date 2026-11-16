@@ -104,7 +104,7 @@ Contract IF-075: `reaccept_model(root, srs, llrs, tcs, snapshot=...)`, reached
     entries rather than text, so every renderer consumes this model and none
     re-derives it; `reaccept_lines` renders the same entries as the markdown
     brief. `snapshot=None` compares against nothing and falls back to the
-    first-approval arm alone. An EMPTY model is a real answer, not a failure —
+    first-acceptance arm alone. An EMPTY model is a real answer, not a failure —
     no row differing from its snapshot copy and none awaiting a first approval
     means there is nothing to judge — and the caller is handed that emptiness
     to refuse on instead of a fabricated brief.
@@ -3390,8 +3390,8 @@ def spine_chain(sr_id, srs, llrs_by_sr, tcs_by_ref):
     THE ONE ANSWER TO "WHAT IS THIS REQUIREMENT'S CHAIN", public since WI-572
     rather than a closure inside `reaccept_model`. Two readers need it now and
     they must not disagree: the re-accept model asks it of the live registries
-    and of the snapshot's, and `adjudicate_brief.first_approval_values` asks it
-    to render the chain a first-approval adjudicator reads — the whole chain,
+    and of the snapshot's, and `adjudicate_brief.first_acceptance_values` asks it
+    to render the chain a first-acceptance adjudicator reads — the whole chain,
     not the changed rows, because holding the chain is the operator's stated reason
     the approval act is the adjudicator's and not the authoring lane's."""
     out = []
@@ -4401,7 +4401,7 @@ def released_tiers(root):
 
     The dial is read ONLY through `agent_common.operator_accepts_spine`, the
     predicate the mint (`intake._released_drafted_rows`) and the adjudicator's
-    brief (`adjudicate_brief.first_approval_values`) filter through: a copy of
+    brief (`adjudicate_brief.first_acceptance_values`) filter through: a copy of
     the rung table here would be a third answer to one question. Each tier's
     registry is `SPINE_FILES`, the tier-to-file join this module already owns.
     Asked once per rendering, not once per row, so a legacy dial's migration

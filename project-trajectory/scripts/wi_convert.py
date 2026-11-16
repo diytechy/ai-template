@@ -163,7 +163,7 @@ COLUMNS = [
     # expensive. `adjudicate_brief` re-derives its population LIVE at composition
     # time (`red_tc_values`' rule: brief the world the judge is actually in), and
     # a live re-derivation with no scope to intersect against re-derives a WIDER
-    # question than the mint asked — the first-approval brief handed its session
+    # question than the mint asked — the first-acceptance brief handed its session
     # every `Drafted` row in the repo, across unrelated workstreams, and derived
     # a `--approves` argument naming all their registries. The operator's
     # concurrency reason for moving the approval act to trunk is that the
@@ -195,7 +195,7 @@ COLUMNS = [
     # byte-stable. Validated only by `kitlib.adoption.record_ids`.
     "Adopted",
     # WI-982 THE AUTHORING TAGS: the Workstream and SafetyClass values of the
-    # work items a minted first-approval or amendment row was authored under,
+    # work items a minted first-acceptance or amendment row was authored under,
     # deduplicated and `;`-joined, or empty when no route named one. NOT the
     # routing `SafetyClass`, which stays `adjudication`: this cell only feeds
     # the hat composer, `hats.context_from_work_item`. A REAL COLUMN for the

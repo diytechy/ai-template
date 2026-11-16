@@ -825,7 +825,7 @@ def test_a_tier_holding_only_drafted_rows_moves_neither_reading():
         assert _readings(_settled_spine(**tiers)) == IMPL, tiers
 
 
-def test_after_the_first_approval_a_draft_holds_its_rung_in_the_live_reading_only():
+def test_after_the_first_acceptance_a_draft_holds_its_rung_in_the_live_reading_only():
     held = {
         "das": ([_da("DA-001", "Approved"), _da("DA-002", "Drafted")], "BOUNDARY"),
         "surs": ([_sur("SUR-001", "Approved"), _sur("SUR-002", "Drafted")], "BOUNDARY"),

@@ -850,7 +850,7 @@ modules = [
   "project-trajectory/hooks/pre-commit",
   "project-trajectory/prompts/adjudicate-amendment.template.md",
   "project-trajectory/prompts/adjudicate-dispute.template.md",
-  "project-trajectory/prompts/adjudicate-first-approval.template.md",
+  "project-trajectory/prompts/adjudicate-first-acceptance.template.md",
   "project-trajectory/prompts/reviewer.template.md",
   "project-trajectory/scripts/acceptance_record.py",
   "project-trajectory/scripts/adjudicate_act.py",

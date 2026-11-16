@@ -28,7 +28,7 @@ WHAT IT RENDERS, in the order an operator needs it:
      (owes a re-accept — D-9 step 7 retired the `Modified` marker and left the
      comparison as the whole detector), with its whole chain; then every
      stakeholder need and stakeholder `baseline_snapshot.needs_owing` reports,
-     a drifted one with its moved cells before and after, a first-approval one
+     a drifted one with its moved cells before and after, a first-acceptance one
      with its cells whole and unclipped. Each SR chain card shows:
      per-cell before/after, unchanged runs collapsible, additions and deletions
      marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION. An empty

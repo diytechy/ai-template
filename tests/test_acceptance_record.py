@@ -275,7 +275,7 @@ def test_the_amendment_walk_covers_every_tier_an_approval_act_blesses():
     """OI-100 gap 1 (WI-791): the amendment walk's universe is a SIBLING
     constant, equal to the approval act's — text an act can bless is text an
     amendment can move away from its blessing. `SPINE_CSVS` stays the three
-    tiers its other readers (the first-approval mint, the test-first walk, the
+    tiers its other readers (the first-acceptance mint, the test-first walk, the
     retired flip) were written for, so widening the walk changed none of them.
 
     Implements: TC-153

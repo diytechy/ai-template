@@ -426,14 +426,14 @@ def _sr(status, req="the drafted text"):
     )
 
 
-# An accepted first-approval verdict over SR-001: the backing every act needs
+# An accepted first-acceptance verdict over SR-001: the backing every act needs
 # (WI-849), so a scope test reaches the scope rule it is about.
 BACKED = ("recorded", ["SR-001"])
 
 
 def _write_lane_verdict(root, outcome, rows):
     """The verdict and binding an independent adjudicator's sitting leaves in
-    the authoring lane: a first-approval part APPROVING `rows`, bound by the
+    the authoring lane: a first-acceptance part APPROVING `rows`, bound by the
     route that ran the call with its recorded `outcome` (kitlib.sitting)."""
     from kitlib import sitting
 
@@ -442,7 +442,9 @@ def _write_lane_verdict(root, outcome, rows):
     text += "\nOUTCOME: APPROVE rows={}\n".format(len(rows))
     (root / rel).parent.mkdir(parents=True, exist_ok=True)
     (root / rel).write_text(text, encoding="utf-8", newline="\n")
-    binding = sitting.render_requested("first-approval", ("first-approval",), outcome)
+    binding = sitting.render_requested(
+        "first-acceptance", ("first-acceptance",), outcome
+    )
     (root / sitting.requested_path(rel)).write_text(
         binding, encoding="utf-8", newline="\n"
     )
@@ -456,12 +458,12 @@ def _spine_lane(
     snapshot=False,
     safety="ordinary",
     adjudicates=(),
-    first_approval=True,
+    first_acceptance=True,
     verdict=None,
 ):
     """A claimed branch that authored a `Drafted` SR — and then, per flag,
     performed one of the three shapes of approval act on it. `verdict`, an
-    `(outcome, rows)` pair, writes the first-approval verdict an adjudicator's
+    `(outcome, rows)` pair, writes the first-acceptance verdict an adjudicator's
     sitting left in the lane, APPROVING `rows`, beside the binding its route
     recorded `outcome` in (WI-849).
 
@@ -473,7 +475,9 @@ def _spine_lane(
         home,
         safety=safety,
         brief=(
-            "first-approval" if safety == "adjudication" and first_approval else None
+            "first-acceptance"
+            if safety == "adjudication" and first_acceptance
+            else None
         ),
         adjudicates=adjudicates,
     )
@@ -564,7 +568,7 @@ def test_a_scoped_adjudication_lane_may_land_its_flip_and_snapshot(tmp_path):
 def test_an_in_lane_act_backed_by_a_recorded_verdict_merges_at_the_slot(tmp_path):
     """Implements: TC-331"""
     # The act is an independent adjudicator's, taken in the authoring lane: an
-    # ORDINARY lane's flip and snapshot, backed by an accepted first-approval
+    # ORDINARY lane's flip and snapshot, backed by an accepted first-acceptance
     # verdict that judged SR-001, clear the rung, and the slot reaches the
     # fixture's next refusal (no `[product] test`), so the admission is in situ.
     root = _spine_lane(
@@ -584,7 +588,7 @@ def _unbacked(tmp_path, name, verdict):
     assert refusal is not None
     assert "APPROVAL ACT" in refusal
     assert "SR-001 flipped Drafted -> Approved" in refusal  # names the act
-    assert "SR-001 (first-approval) is authorized by no recorded verdict" in refusal
+    assert "SR-001 (first-acceptance) is authorized by no recorded verdict" in refusal
     # No amendment row is refused, so the bless-mark remedy does not apply.
     assert "[MEANING+BLESS]" not in refusal
     return refusal
@@ -605,7 +609,7 @@ def test_an_in_lane_act_whose_verdict_judged_other_rows_is_refused(tmp_path):
     _unbacked(tmp_path, "other-rows", ("recorded", ["SR-002"]))
 
 
-def test_a_first_approval_adjudication_with_no_scope_is_refused(tmp_path):
+def test_a_first_acceptance_adjudication_with_no_scope_is_refused(tmp_path):
     root = _spine_lane(
         tmp_path / "empty-scope", flip=True, safety="adjudication", verdict=BACKED
     )
@@ -646,7 +650,7 @@ def test_an_adjudication_kind_alone_does_not_authorise_a_flip(tmp_path):
         tmp_path / "actor-only",
         flip=True,
         safety="adjudication",
-        first_approval=False,
+        first_acceptance=False,
         verdict=BACKED,
     )
 
@@ -770,13 +774,13 @@ def _flip_claimed(tmp_path, name, *cells, safety="ordinary"):
 def test_a_brief_spelled_unlike_its_kind_still_bounds_the_lane(tmp_path):
     """Implements: TC-331"""
     # Sol r2 MAJOR 1: the route normalizes the brief (stripped, lower-cased),
-    # so the merge reads it the same way. Read raw, ` FIRST-APPROVAL ` scoped
+    # so the merge reads it the same way. Read raw, ` FIRST-ACCEPTANCE ` scoped
     # nothing and the act outside SR-002 was admitted.
     for name, cells in (
-        ("spaced", ('brief = " FIRST-APPROVAL "', 'adjudicates = ["SR-002"]')),
+        ("spaced", ('brief = " FIRST-ACCEPTANCE "', 'adjudicates = ["SR-002"]')),
         (
             "combined",
-            ('brief = " COMBINED "', 'adjudicates = ["first-approval:SR-002"]'),
+            ('brief = " COMBINED "', 'adjudicates = ["first-acceptance:SR-002"]'),
         ),
     ):
         refusal = _flip_claimed(tmp_path, name, *cells)
@@ -827,11 +831,16 @@ def test_the_route_and_the_merge_read_one_scope_cell_alike(tmp_path):
     # parser now reads the raw value for both; a value outside the one shape
     # (a TOML list of strings) is refused by name on both paths.
     cases = (
-        ("nonstring", "combined", '[0, false, "first-approval:SR-001"]', None),
-        ("string", "first-approval", '"SR-002; SR-001"', None),
-        ("table", "combined", '{"first-approval:SR-001" = "x"}', None),
-        ("list", "combined", '["first-approval:SR-001"]', {"first-approval:SR-001"}),
-        ("plain", "first-approval", '["SR-001", " SR-002 "]', {"SR-001", "SR-002"}),
+        ("nonstring", "combined", '[0, false, "first-acceptance:SR-001"]', None),
+        ("string", "first-acceptance", '"SR-002; SR-001"', None),
+        ("table", "combined", '{"first-acceptance:SR-001" = "x"}', None),
+        (
+            "list",
+            "combined",
+            '["first-acceptance:SR-001"]',
+            {"first-acceptance:SR-001"},
+        ),
+        ("plain", "first-acceptance", '["SR-001", " SR-002 "]', {"SR-001", "SR-002"}),
     )
     for name, brief, cell, scope in cases:
         root = _spine_lane(tmp_path / name, flip=True, snapshot=True, verdict=BACKED)
@@ -862,13 +871,13 @@ def test_an_act_free_lane_with_an_empty_scope_is_admitted(tmp_path):
     # Sol r2 MAJOR 2: scope judges the acts needing authorization, so a lane
     # that only authors `Drafted` text meets no scope refusal, however empty.
     root = _spine_lane(tmp_path / "act-free")
-    _claim_cells(root, "ordinary", 'brief = "first-approval"', "adjudicates = []")
+    _claim_cells(root, "ordinary", 'brief = "first-acceptance"', "adjudicates = []")
     assert integ._approval_act_refusal(root, "wi-401") is None
 
 
 def test_a_bounded_lane_writing_only_the_snapshot_is_refused(tmp_path):
     """Implements: TC-331"""
-    # The opposite gap: a lane with no first-approval scope that copies a
+    # The opposite gap: a lane with no first-acceptance scope that copies a
     # registry it took no act in re-blesses its live text, so the copy meets
     # WIDENED whatever scope the lane records.
     root = _spine_lane(tmp_path / "copy-only", snapshot=True)
@@ -888,7 +897,7 @@ def _ledger_lane(home, *, flip, verdict_rows, scope=None):
     (Sol r3 MAJOR 2): at the base SR-002 is live `Approved` while its recorded
     copy still reads `Drafted`, so the REAL snapshot writer
     (`baseline_snapshot.copy_live`) records it `approved`. `flip` also flips
-    SR-001; `scope`, when given, is the claimed first-approval scope."""
+    SR-001; `scope`, when given, is the claimed first-acceptance scope."""
     import baseline_snapshot
 
     home.mkdir(parents=True, exist_ok=True)
@@ -924,7 +933,7 @@ def _ledger_lane(home, *, flip, verdict_rows, scope=None):
     _close_to(root, "wi-401", "complete")
     if scope is not None:
         cell = "adjudicates = [{}]".format(", ".join('"{}"'.format(r) for r in scope))
-        _claim_cells(root, "ordinary", 'brief = "first-approval"', cell)
+        _claim_cells(root, "ordinary", 'brief = "first-acceptance"', cell)
     return root
 
 
@@ -955,7 +964,9 @@ def test_an_unbacked_ledger_only_approval_is_refused_by_name(tmp_path):
     # The same act judged by a verdict over other rows backs nothing.
     root = _ledger_lane(tmp_path / "c", flip=False, verdict_rows=["SR-001"])
     refusal = integ._approval_act_refusal(root, "wi-401")
-    assert refusal and "SR-002 (first-approval) is authorized by no recorded" in refusal
+    assert (
+        refusal and "SR-002 (first-acceptance) is authorized by no recorded" in refusal
+    )
     assert "[MEANING+BLESS]" not in refusal
 
 

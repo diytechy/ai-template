@@ -2,7 +2,7 @@
 
 WHY THIS EXISTS (WI-841). A lane can owe several in-lane judgements at one
 checkpoint - drifted approved rows (the amendment kind), Drafted rows (the
-first-approval kind) and a changed Done-when - and one sitting judges them
+first-acceptance kind) and a changed Done-when - and one sitting judges them
 all. Its row's `Adjudicates` cell holds `<kind>:<id>` tokens and its verdict
 holds one `## <kind>` section per kind. Three readers ask about that shape and
 must not disagree: the brief that composes the sitting
@@ -105,7 +105,7 @@ __all__ = [
 ]
 
 SITTING = "combined"
-KINDS = ("amendment", "first-approval", "done-when")
+KINDS = ("amendment", "first-acceptance", "done-when")
 # A combined verdict's section heading: a KIND-FORM heading (a lower-case,
 # hyphenated brief-class token) alone on its line - any kind, not only the
 # composable three, so an unrequested section is seen and refused (round 9).
@@ -221,7 +221,7 @@ def bounds_acts(meta):
     return (
         kind == "adjudication"
         or bool(bad)
-        or any(k in found for k in ("first-approval", "amendment"))
+        or any(k in found for k in ("first-acceptance", "amendment"))
     )
 
 
@@ -258,7 +258,7 @@ def malformed_refusal(metas):
 DONE_WHEN_OUTCOMES = ("CLARITY", "BLESSED", "SUCCESSOR")
 GRAMMAR = {
     "amendment": ("VERDICT", ("MEANING", "CLARITY"), ("rows",)),
-    "first-approval": ("OUTCOME", ("APPROVE", "RETURN"), ("rows",)),
+    "first-acceptance": ("OUTCOME", ("APPROVE", "RETURN"), ("rows",)),
     "done-when": ("DONE-WHEN", DONE_WHEN_OUTCOMES, ("changes", "digest")),
     SITTING: ("SITTING", ("JUDGED",), ("kinds",)),
 }
@@ -722,7 +722,7 @@ def recorded_identities(root, rev, verdict_path):
 # APPROVE flips it, an amendment's CLARITY re-accepts it, and so does its
 # MEANING, but only on a row the part marks `[MEANING+BLESS]` (`judged_rows`).
 # The held-rung CLARITY-only rule is acceptance_record's, on top of this.
-_AUTHORIZING = {"first-approval": ("APPROVE",), "amendment": ("MEANING", "CLARITY")}
+_AUTHORIZING = {"first-acceptance": ("APPROVE",), "amendment": ("MEANING", "CLARITY")}
 # The sentence a refusal carries when an amendment row it names is
 # unauthorized; a refusal naming no such row omits it.
 _BLESS_REMEDY = (
@@ -799,7 +799,7 @@ def unrecorded_refusal(root, rev, acts):
 REVIEWS = "docs/reviews"
 # Which adjudication kind an act-ledger entry's key needs: a flip is a first
 # approval's act, a re-acceptance an amendment's.
-_ACT_KINDS = (("approved", "first-approval"), ("reattested", "amendment"))
+_ACT_KINDS = (("approved", "first-acceptance"), ("reattested", "amendment"))
 
 
 def branch_verdicts(root, base, rev):
@@ -818,7 +818,7 @@ def branch_verdicts(root, base, rev):
 def uncovered_refusal(root, base, rev, acts):
     """Why a merge must refuse the approval acts it adds, or None, WHETHER OR
     NOT an act names a verdict (WI-841 rounds 14, 16): every ROW an added act
-    flips must be ruled APPROVE in a first-approval part, and every row it
+    flips must be ruled APPROVE in a first-acceptance part, and every row it
     re-accepts ruled CLARITY, or MEANING with the bless mark, in an amendment
     part (`judged_rows`), of a RECORDED
     verdict (`recorded_at`) among the bindings this branch carries

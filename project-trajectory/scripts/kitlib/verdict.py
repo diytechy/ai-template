@@ -1936,7 +1936,7 @@ ROW_RULINGS = {
         {"- [MEANING]": "MEANING", "- [CLARITY]": "CLARITY", BLESS_TAG: "MEANING"},
         "MEANING",
     ),
-    "first-approval": ({"- [APPROVE]": "APPROVE", "- [RETURN]": "RETURN"}, "RETURN"),
+    "first-acceptance": ({"- [APPROVE]": "APPROVE", "- [RETURN]": "RETURN"}, "RETURN"),
 }
 
 

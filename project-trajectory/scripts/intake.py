@@ -34,7 +34,7 @@ Five triggers, plus the drafts-not-mints arm:
       approves none itself — `integrate._approval_act_refusal` refuses an act
       no independent adjudicator's recorded verdict backs (operator ruling 6,
       2026-10-07) — so every merge that adds or amends one and leaves it
-      `Drafted` leaves rows waiting on an approval nobody has given. One `first-approval` adjudication row per
+      `Drafted` leaves rows waiting on an approval nobody has given. One `first-acceptance` adjudication row per
       merge lists them; its session reads each row's whole chain and either
       approves (the flip plus its anchoring snapshot, in one reviewed commit) or
       returns with findings through `## Dispositions`. Rows on a rung the dial
@@ -93,7 +93,7 @@ declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 Contract IF-090: the trunk-side intake mint, by importer.
     `intake_after_merge(root, before, after, outcomes, branch, label="")` is integrate's
     post-merge arm: it mints one landed merge's forced rows — the operator rows
-    for held acts, the amendment adjudications, the FIRST-APPROVAL adjudications over the `Drafted` rows the
+    for held acts, the amendment adjudications, the FIRST-ACCEPTANCE adjudications over the `Drafted` rows the
     lane handed over on rungs the dial releases (operator ruling 2026-09-01: a lane
     authors, an adjudicator approves), the close dispositions, the drafts a
     close names and one adjudication per row whose lane changed its own
@@ -867,7 +867,7 @@ def _amendment_drafts(root, before, after, authoring_tags=(), carried=()):
                 stage_moved=_stage_moved(root, before, after),
             ),
             "sr_refs": _owning_srs(records),
-            # THE ACT'S SCOPE, `_first_approval_drafts`' cell for its reason:
+            # THE ACT'S SCOPE, `_first_acceptance_drafts`' cell for its reason:
             # the brief re-derives its rows from a repo-wide model, so without
             # this every amendment row was handed every drifted row in the tree.
             "adjudicates": ids,
@@ -973,7 +973,7 @@ def _held_act_drafts(root, before, after):
 # THE OTHER SIDE OF TRIGGER (a)'s COIN (operator ruling 2026-09-01, WI-572). A lane
 # authors `Drafted` spine rows and amends their text; it never approves them. So
 # the same merged commit that mints an amendment adjudication for the rows whose
-# APPROVED text moved mints a FIRST-APPROVAL adjudication for the rows that are
+# APPROVED text moved mints a FIRST-ACCEPTANCE adjudication for the rows that are
 # waiting on an approval nobody has given — read off the same two-tree walk
 # (`acceptance_record.staged_drafted_rows`), one row per merge, same shape.
 #
@@ -1001,7 +1001,7 @@ def _released_drafted_rows(root, before, after):
     ]
 
 
-def _first_approval_context(records):
+def _first_acceptance_context(records):
     """The derived listing — each row waiting on a first approval, with what the
     lane did to it. The CHAIN is not rendered here: `adjudicate_brief`'s
     assembler builds it live at composition time from `trace.reaccept_model`, so
@@ -1038,7 +1038,7 @@ def _first_approval_context(records):
     return "\n".join(lines)
 
 
-def _first_approval_drafts(root, before, after, authoring_tags=()):
+def _first_acceptance_drafts(root, before, after, authoring_tags=()):
     records = _released_drafted_rows(root, before, after)
     if not records:
         return []
@@ -1054,7 +1054,7 @@ def _first_approval_drafts(root, before, after, authoring_tags=()):
         {
             "title": title,
             "kind": "adjudication",
-            "brief": "first-approval",
+            "brief": "first-acceptance",
             "workstream": "process",
             "buildtier": tier_signal(
                 "amendment",
@@ -1083,7 +1083,7 @@ def _first_approval_drafts(root, before, after, authoring_tags=()):
             "adjudicates": ids,
             "authoring_tags": list(authoring_tags),
             "specref": records[0]["registry"],
-            "context": _first_approval_context(records),
+            "context": _first_acceptance_context(records),
         }
     ]
 
@@ -1444,7 +1444,7 @@ def _successor_drafts(root, after, cover):
     """The drafts a covering SUCCESSOR verdict carries in its OWN
     `## Dispositions` section, read at `after`; none for any other blessing. In
     a combined verdict that is the `## done-when` section's, never another
-    section's (a first-approval RETURN draft is that section's act). A
+    section's (a first-acceptance RETURN draft is that section's act). A
     SUCCESSOR verdict with no draft, or an ambiguous one, is a refusal, never a
     skip: the scope it would not bless is carried forward only by its successor.
 
@@ -2916,7 +2916,7 @@ def intake_after_merge(root, before, after, outcomes=None, branch="", label=""):
     if refusal:
         return [], refusal
     drafts += held_acts
-    drafts += _first_approval_drafts(root, before, after, authoring_tags)
+    drafts += _first_acceptance_drafts(root, before, after, authoring_tags)
     drafts += _close_drafts(root, outcomes)
     goalposts, refusal = _done_when_drafts(root, before, after, outcomes, branch)
     if refusal:

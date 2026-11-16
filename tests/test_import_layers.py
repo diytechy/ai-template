@@ -430,7 +430,7 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # RE-STAMPED 40 -> 41 (2026-10-25, WI-976): amendment_brief -> trace joins
     # deferred. The amendment arm moved out of adjudicate_brief whole, its
     # deferred `trace` and `intake` reads with it: the composer keeps its own
-    # deferred `trace` edge for the first-approval and re-judge arms, so the
+    # deferred `trace` edge for the first-acceptance and re-judge arms, so the
     # arm's copy is a new edge, and `intake` moved rather than joined. The
     # composer imports the new module one way, so no cycle or layer edge grew.
     # RE-STAMPED 41 -> 43 (2026-11-02, SR-174, the reserved-ids landing):

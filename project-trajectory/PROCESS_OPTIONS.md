@@ -499,7 +499,7 @@ driving it:
    statement, so a tier added to the snapshot must be placed on one side or the
    other by a deliberate edit and cannot quietly reach no approval reader at
    all.
-2. That same merge MINTS a first-approval adjudication over the `Drafted` rows
+2. That same merge MINTS a first-acceptance adjudication over the `Drafted` rows
    the lane handed over, on the rungs the dial releases — with each row's whole
    chain in its brief, asking one question: approve, or return with findings. A
    rung the dial still holds is not minted; it surfaces to the operator as before.

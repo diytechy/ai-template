@@ -1256,7 +1256,7 @@ def _approval_act_refusal(root, branch):
     merge base this branch is judged against, and the placement in the ladder.
 
     An adjudication lane is one case of the rule, not unbounded authority: a
-    claimed first-approval row's `Adjudicates` cell bounds its flips besides,
+    claimed first-acceptance row's `Adjudicates` cell bounds its flips besides,
     and the snapshot may cover exactly the registries those flips changed. The
     delta is derived once and handed to the one judgement, so the lane's kind
     can never bypass the material being authorised.

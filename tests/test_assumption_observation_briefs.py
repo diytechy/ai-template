@@ -37,12 +37,12 @@ def assert_chain(text):
     assert "Ask a new reader." in text
 
 
-def test_first_approval_shows_assumption_only_case(tmp_path):
+def test_first_acceptance_shows_assumption_only_case(tmp_path):
     """Implements: TC-308"""
     root = assumption_repo(tmp_path)
     text, reason = ab.compose(
         root,
-        {"WI-ID": "WI-001", "Brief": "first-approval", "Adjudicates": "TC-279"},
+        {"WI-ID": "WI-001", "Brief": "first-acceptance", "Adjudicates": "TC-279"},
         "verdict.md",
     )
     assert reason is None, reason

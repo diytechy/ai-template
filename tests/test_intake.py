@@ -303,7 +303,7 @@ def _released(root):
     )
 
 
-def test_a_drafted_row_mints_one_first_approval_adjudication(tmp_path):
+def test_a_drafted_row_mints_one_first_acceptance_adjudication(tmp_path):
     root, before, after = amended_repo(
         tmp_path, lambda r: write_sr(r, requirement="fresh draft", status="Drafted")
     )
@@ -316,7 +316,7 @@ def test_a_drafted_row_mints_one_first_approval_adjudication(tmp_path):
     assert row["SafetyClass"] == "adjudication"
     # The BRIEF cell is what routes the session (adjudicate_brief.BRIEF_PROMPTS);
     # deriving it from the SpecRef would be ambiguous, so it is typed.
-    assert row["Brief"] == "first-approval"
+    assert row["Brief"] == "first-acceptance"
     # ...and the SCOPE cell beside it, which is what stops the brief's live
     # re-derivation from asking a wider question than this merge asked
     # (WI-572 REVIEW-A). Typed for the same reason `Brief` is: the ids are in
@@ -332,7 +332,7 @@ def test_a_drafted_row_mints_one_first_approval_adjudication(tmp_path):
     assert "meaning-or-clarity" not in text
 
 
-def test_a_status_only_withdrawal_mints_first_approval_adjudication(tmp_path):
+def test_a_status_only_withdrawal_mints_first_acceptance_adjudication(tmp_path):
     # Approved -> Drafted refuses no merge because it blesses nothing, but the
     # resulting row is awaiting approval again. The same two-tree reader must
     # therefore hand it to trigger (a2), even when no content cell moved.
@@ -344,7 +344,7 @@ def test_a_status_only_withdrawal_mints_first_approval_adjudication(tmp_path):
     assert refusal is None, refusal
     assert len(minted) == 1
     wid, relpath = minted[0]
-    assert queued_rows(root)[wid]["Brief"] == "first-approval"
+    assert queued_rows(root)[wid]["Brief"] == "first-acceptance"
     text = (root / relpath).read_text(encoding="utf-8")
     assert "SR-001 amended" in text
 
@@ -375,7 +375,7 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
     The second half is the dial's: even released of the refusal, no adjudication
     is minted over the flip. Two independent reasons, both intended — the rung
     is HELD in the fixture (`operator_accepts_through = DevStg-Needs`, so the
-    loop may not approve needs at all), and the first-approval mint's universe
+    loop may not approve needs at all), and the first-acceptance mint's universe
     was left at
     `SPINE_CSVS` on purpose, because widening the MINT is a separate decision
     from widening the REFUSAL and this round made only the second."""
@@ -412,7 +412,7 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
     )
 
     # The mint half: held rung, nothing minted. Then released, still nothing —
-    # the first-approval mint's universe is `SPINE_CSVS`, unchanged by this
+    # the first-acceptance mint's universe is `SPINE_CSVS`, unchanged by this
     # round, and a moved Status is no amendment even though the amendment walk
     # covers the need tier since WI-791.
     set_process_key(
@@ -484,7 +484,7 @@ def test_an_amended_approved_need_mints_one_amendment_row(tmp_path):
     text = (root / relpath).read_text(encoding="utf-8")
     assert "the need" in text and "the AMENDED need" in text
     # A STATUS move is still exempt, on the need tier as on every other: the
-    # need withdrawn to Drafted is the first-approval question, not this one.
+    # need withdrawn to Drafted is the first-acceptance question, not this one.
     (tmp_path / "moved").mkdir()
     root2, before2, after2 = amended_repo(
         tmp_path / "moved",
@@ -520,7 +520,7 @@ def test_amended_approved_assumption_and_surrogate_mint_one_row(tmp_path):
     assert drafts[0]["brief"] == "amendment"
 
 
-def test_a_held_rung_mints_no_first_approval_row(tmp_path):
+def test_a_held_rung_mints_no_first_acceptance_row(tmp_path):
     # The ruling's own boundary, and the half that keeps this from pre-empting a
     # signature the operator owes: the adjudicator acts only on rungs the dial
     # RELEASES. A held tier still surfaces through the approval brief, exactly
@@ -543,7 +543,7 @@ def test_a_held_rung_mints_no_first_approval_row(tmp_path):
     assert len(again) == 1
 
 
-def test_the_first_approval_mint_is_one_row_and_idempotent(tmp_path):
+def test_the_first_acceptance_mint_is_one_row_and_idempotent(tmp_path):
     # ONE row per merge however many rows it hands over (the trigger-(a) shape),
     # and the derived title carries the sha pair, so the CLI recovery re-run
     # finds it by exact-title dedup and mints nothing twice.
@@ -3288,7 +3288,7 @@ def test_merged_mints_every_arm_the_slot_would_have_for_a_hand_merge(tmp_path, c
     argv = ("--before", before, "--after", after, "--branch", "wi-007")
     assert _sweep(root, *argv, "--merged", "WI-007;WI-008;WI-009") == 0
     titles = _titles(root)
-    # (a2) the first-approval row over the SR the merge handed over Drafted,
+    # (a2) the first-acceptance row over the SR the merge handed over Drafted,
     assert any("FIRST APPROVAL" in t and "SR-001" in t for t in titles), titles
     # the clean-close spot check of the sampled row it closed, and not of the
     # sampled row already on file,
@@ -3611,7 +3611,7 @@ def test_a_lane_that_only_ticks_its_done_when_with_evidence_mints_nothing(tmp_pa
 
 # --- the authoring tags a minted row carries -----------------------------------
 #
-# A minted first-approval or amendment row routes as `process` / `adjudication`,
+# A minted first-acceptance or amendment row routes as `process` / `adjudication`,
 # so its own two cells say nothing about the lane that handed the row over. Its
 # `AuthoringTags` cell carries that lane's tags, and only a route that names the
 # authoring rows fills it: the merge slot and `sweep --merged`.
@@ -3635,12 +3635,12 @@ listens_for = "a step only a project insider could take"
 
 LANE_TAGS = {"workstream": "unattended", "safety_class": "ordinary"}
 ROW_KINDS = {
-    "first-approval": lambda r: write_sr(r, requirement="fresh", status="Drafted"),
+    "first-acceptance": lambda r: write_sr(r, requirement="fresh", status="Drafted"),
     "amendment": lambda r: write_sr(r, requirement="the AMENDED text"),
 }
 
 
-def authored_merge(tmp_path, kind="first-approval", **closed):
+def authored_merge(tmp_path, kind="first-acceptance", **closed):
     """`(root, before, after)`: one merge whose delta owes a `kind` row and which
     closes WI-007 into `complete/` carrying the frontmatter `closed`, over an
     approved need and the two-hat roster."""
@@ -3699,7 +3699,7 @@ def test_a_merged_sweep_unions_the_named_rows_tags(tmp_path):
     root, before, after = hand_lane_repo(tmp_path, tags=tags)
     argv = ("--before", before, "--after", after, "--branch", "wi-007")
     assert _sweep(root, *argv, "--merged", "WI-008;WI-007") == 0
-    cells = [r.get("AuthoringTags") for r in _of_kind(root, "first-approval")]
+    cells = [r.get("AuthoringTags") for r in _of_kind(root, "first-acceptance")]
     assert cells == ["unattended;ordinary;scripts"]
 
 
@@ -3715,7 +3715,7 @@ def test_a_minted_author_passes_its_cell_on(tmp_path):
         authoring_tags=["unattended", "ordinary"],
     )
     _slot_mint(root, before, after)
-    cells = [r.get("AuthoringTags") for r in _of_kind(root, "first-approval")]
+    cells = [r.get("AuthoringTags") for r in _of_kind(root, "first-acceptance")]
     assert cells == ["unattended;ordinary"]
 
 
@@ -3730,12 +3730,12 @@ def test_a_real_mint_and_the_lane_row_compose_one_hat_set(tmp_path):
     root, before, after = authored_merge(tmp_path, **LANE_TAGS)
     _slot_mint(root, before, after)
     rows = {r["WI-ID"]: r for r in ac.read_spec_rows(root / "docs" / "work")}
-    in_lane = dict(rows["WI-007"], Brief="first-approval", Adjudicates="SR-001")
+    in_lane = dict(rows["WI-007"], Brief="first-acceptance", Adjudicates="SR-001")
     in_lane["SR-Refs"] = "SR-001"
     lane_block = plan_briefs.sitting_hat_block(root, in_lane, ["SR-001"], [])
     minted_blocks = [
         plan_briefs.sitting_hat_block(root, row, ["SR-001"], [])
-        for row in _of_kind(root, "first-approval")
+        for row in _of_kind(root, "first-acceptance")
     ]
     assert minted_blocks == [lane_block]
     assert UNATTENDED_QUESTION in lane_block
@@ -3760,7 +3760,7 @@ def test_a_range_sweep_with_no_merged_leaves_the_cell_empty_and_widens_by_its_ow
     Implements: TC-399"""
     root, before, after = authored_merge(tmp_path, **LANE_TAGS)
     assert _sweep(root, "--before", before, "--after", after, *extra) == 0
-    rows = _of_kind(root, "first-approval")
+    rows = _of_kind(root, "first-acceptance")
     assert [r["Adjudicates"] for r in rows] == ["SR-001"]
     assert not any(r.get("AuthoringTags") for r in rows)
     blocks = [plan_briefs.sitting_hat_block(root, r, ["SR-001"], []) for r in rows]

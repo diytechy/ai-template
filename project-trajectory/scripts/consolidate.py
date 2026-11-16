@@ -1186,7 +1186,7 @@ def close_refusal(root, record, absorbed, rows, where, *, scope, drafts, recorde
     3. **Every row this verdict touches is inside the row's `Adjudicates`
        scope.** The scope cell was decorative on this path: a draft superseding
        a row the census never clustered closed, merged and archived it. The
-       first-approval sibling has enforced exactly this bound since WI-572
+       first-acceptance sibling has enforced exactly this bound since WI-572
        (`is OUTSIDE `Adjudicates` scope`), and for the same reason — a live
        re-derivation with no scope to intersect asks a wider question than the
        mint asked.

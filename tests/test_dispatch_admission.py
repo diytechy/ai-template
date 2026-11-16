@@ -11,7 +11,7 @@ loop around it is tests/test_dispatch.py's, on real repos):
   * the §A8 kind x gate-policy table exactly as ruled: ordinary/critique
     parallel at every level, high-risk/protected exclusive at every level,
     spine dispatches at every level (building a scope change is WORK, not an
-    approval), attestation/gate does NOT dispatch on an operator-held tier
+    approval), acceptance/gate does NOT dispatch on an operator-held tier
     (drain, surface the cards, exit 0; with `keep_nondependent` other work
     keeps running and the held rows surface once nothing else remains), and
     dispatches one at a time, exclusive, on a loop-held tier (a recorded
@@ -89,7 +89,7 @@ def test_the_kind_action_table_is_a8_verbatim():
             assert dsp._kind_action(kind, held) == "exclusive", (kind, held)
     # The one arm the level decides: a window-CLOSING row is the operator's act
     # while the tier is operator-held, and dispatches once it is not.
-    for kind in ("attestation", "gate"):
+    for kind in ("acceptance", "gate"):
         assert dsp._kind_action(kind, True) == "surface", kind
         assert dsp._kind_action(kind, False) == "exclusive", kind
 
@@ -161,7 +161,7 @@ def test_keep_nondependent_keeps_non_dependent_work_running():
     # close, when nothing else remains. Under the enum these two facts
     # could only be expressed together, which is why a repo that wanted one
     # had to take the other.
-    ready = [("WI-600", "attestation"), ("WI-401", "ordinary")]
+    ready = [("WI-600", "acceptance"), ("WI-401", "ordinary")]
     verb, payload = dsp._admission(
         ready, True, busy=False, free=1, keep_nondependent=True
     )
@@ -179,7 +179,7 @@ def test_keep_nondependent_keeps_non_dependent_work_running():
     # combination the enum could not even express (level 4 + keep_nondependent,
     # the fourth cell).
     verb, payload = dsp._admission(
-        [("WI-600", "attestation"), ("WI-601", "gate")],
+        [("WI-600", "acceptance"), ("WI-601", "gate")],
         True,
         busy=False,
         free=1,
@@ -188,7 +188,7 @@ def test_keep_nondependent_keeps_non_dependent_work_running():
     assert verb == "surface" and payload == ["WI-600", "WI-601"]
     # ...but not while a lane is still out.
     verb, _payload = dsp._admission(
-        [("WI-600", "attestation")], True, busy=True, free=1, keep_nondependent=True
+        [("WI-600", "acceptance")], True, busy=True, free=1, keep_nondependent=True
     )
     assert verb == "wait"
 

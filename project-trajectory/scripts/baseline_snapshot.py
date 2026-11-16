@@ -129,7 +129,7 @@ Contract IF-124: the anchor read a composed brief takes — `exists`, `stamp` an
     `SNAPSHOT_DIR` — so an amendment is measured against text that is not the
     text under judgement. `exists` answers the vacuous case truthfully rather
     than conveniently: before the first signing there is no anchor at all, and
-    the honest response is a held first-approval question, never a before/after
+    the honest response is a held first-acceptance question, never a before/after
     rendered with an empty before. `stamp` is ADVISORY and derived from git; off
     a checkout it returns empty strings rather than raising, so a missing date
     costs a reader one line and nothing more. Named a registry, it answers for
@@ -1888,7 +1888,7 @@ def owing_rows(rel, id_col, rows, snapshot_rows):
     (`drifted_cells`, whose `(name, before, after)` triples `cells` carries).
 
     THE ROW WITH NO STATUS OWES TOO. It claims no approval, so no drift arm can
-    fire on it, and it is not `Drafted`, so the first-approval arm missed it: a
+    fire on it, and it is not `Drafted`, so the first-acceptance arm missed it: a
     row authored without the cell reached no surface a signer reads. Its
     missing cell is also an integrity finding; this is the half that keeps the
     brief from omitting it.

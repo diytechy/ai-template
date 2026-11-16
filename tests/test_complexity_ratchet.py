@@ -373,8 +373,8 @@ BASELINE = {
     # child now owes independently of drift.
     # RE-STAMPED DOWN 19 -> 13, 2026-09-01, WI-572: the `chain_of` closure left
     # this function and became the module-level `spine_chain`, paired with
-    # `chain_buckets`. Not tidying — `adjudicate_brief.first_approval_values`
-    # needs the SAME answer to "what is this SR's chain" for the first-approval
+    # `chain_buckets`. Not tidying — `adjudicate_brief.first_acceptance_values`
+    # needs the SAME answer to "what is this SR's chain" for the first-acceptance
     # brief, and a second copy of that walk is how the judge and the operator's
     # surface come to disagree about one spine. Recorded DOWN in the same
     # commit rather than left as headroom, per this file's rule.

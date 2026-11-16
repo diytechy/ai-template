@@ -100,7 +100,7 @@ a wall of `= ""`.
   default plus `move-on`.
 - `priority` (integer, default 0), `exclusive` (semantic mutex keys),
   `est_tokens`, `safety_class`
-  (`ordinary|spine|gate|attestation|protected|high-risk|adjudication`) and `planmode`
+  (`ordinary|spine|gate|acceptance|protected|high-risk|adjudication`) and `planmode`
   are the scheduler's optional inputs. `planmode` is one of `none`, `single` or
   `dual` (absent and empty read as `none`): `dual` opts into dual-plan
   decomposition; `single` plans the claimed row in its lane first, and the

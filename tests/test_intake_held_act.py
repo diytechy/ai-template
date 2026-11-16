@@ -117,9 +117,9 @@ def _amendment_part(rulings):
 def _combined_part(rulings):
     """The same rulings as the amendment section of a combined sitting."""
     return (
-        "## amendment\n\n{}\n## first-approval\n\n- [APPROVE] LLR-009 -> judged\n\n"
+        "## amendment\n\n{}\n## first-acceptance\n\n- [APPROVE] LLR-009 -> judged\n\n"
         "OUTCOME: APPROVE rows=1\n\n"
-        "SITTING: JUDGED kinds=amendment;first-approval\n".format(
+        "SITTING: JUDGED kinds=amendment;first-acceptance\n".format(
             _amendment_part(rulings)
         )
     )
@@ -295,7 +295,7 @@ def test_a_blessed_meaning_on_a_held_rung_mints_the_same(tmp_path, shape):
         _sit(root, rulings)
     else:
         path = _write_verdict(root, VERDICT, _combined_part(rulings))
-        kinds = ("amendment", "first-approval")
+        kinds = ("amendment", "first-acceptance")
         ksitting.write_binding(
             str(path),
             ksitting.SITTING,

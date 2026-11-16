@@ -106,7 +106,7 @@ authoring lane or on trunk: approving means reading the row's whole chain, and
 the writer does not judge its own writes. A lane authors `Drafted` rows and
 amends cell text; its merge is REFUSED if its delta flips an **SN/SR/LLR/TC**
 `Status` or writes `docs/archive/last_approved/` with no recorded verdict
-judging that act's own rows behind it, and otherwise the first-approval
+judging that act's own rows behind it, and otherwise the first-acceptance
 adjudication minted at that merge approves what it authored. Everything below is therefore the
 ACCEPTOR's procedure, not an author's:
 

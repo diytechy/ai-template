@@ -703,7 +703,9 @@ def test_the_cycle_reserves_before_drafting_and_folds_the_watermark(copy):
 # sitting reaches, or fills with the stated no-round line for `none`.
 
 
-@pytest.mark.parametrize("key", [pr.ADJUDICATE_FIRST_APPROVAL, pr.ADJUDICATE_AMENDMENT])
+@pytest.mark.parametrize(
+    "key", [pr.ADJUDICATE_FIRST_ACCEPTANCE, pr.ADJUDICATE_AMENDMENT]
+)
 def test_the_two_spine_sitting_templates_declare_the_hats_slot(key):
     assert "hats" in pr.slots(pr.load(key))
 

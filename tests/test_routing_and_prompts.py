@@ -272,7 +272,7 @@ def test_a_template_edit_moves_its_digest_and_so_the_catalogue():
 
 
 # --- WI-882: the composed question home is a catalogued source ------------------
-# The first-approval and amendment briefs compose `prompts/spine-questions.md`
+# The first-acceptance and amendment briefs compose `prompts/spine-questions.md`
 # into their `{questions}` slot at render time, so that home is a source of a
 # launched brief's static instruction text exactly as a template is. These
 # drive the real generator over a real copy of the shipped prompts directory;

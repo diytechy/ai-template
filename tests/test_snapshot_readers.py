@@ -335,7 +335,7 @@ _VERDICT = "docs/reviews/v.md"
 # act is tied to (WI-841 round 14).
 _KIND_LINES = {
     "amendment": "VERDICT: CLARITY rows=1",
-    "first-approval": "OUTCOME: APPROVE rows=1",
+    "first-acceptance": "OUTCOME: APPROVE rows=1",
 }
 
 
@@ -345,16 +345,16 @@ def _bind_branch(
     """Write the adjudication verdict, and its binding recording `outcome`,
     that a route leaves in the lane before the act it authorises. `rows` maps
     each kind to the rows its section JUDGES - an amendment section rules them
-    CLARITY, a first-approval section APPROVE - since every row an added act
+    CLARITY, a first-acceptance section APPROVE - since every row an added act
     flips or re-accepts must be judged so by a recorded verdict in the branch
     (round 16). One kind is a single-kind verdict; several, one sitting.
     `tags` maps a row id to the tags its lines carry instead, one line each
     (`["MEANING+BLESS", "CLARITY"]` tags the row two ways)."""
-    kinds = tuple(k for k in ("amendment", "first-approval") if k in rows)
-    tag = {"amendment": "CLARITY", "first-approval": "APPROVE"}
+    kinds = tuple(k for k in ("amendment", "first-acceptance") if k in rows)
+    tag = {"amendment": "CLARITY", "first-acceptance": "APPROVE"}
 
     def row_tags(kind, rid):
-        # A row in `returned` is ruled RETURN in the first-approval section.
+        # A row in `returned` is ruled RETURN in the first-acceptance section.
         if tags and rid in tags:
             return tags[rid]
         return ["RETURN" if rid in returned else tag[kind]]
@@ -438,8 +438,8 @@ def test_a_reacceptance_inside_the_amendment_scope_merges(scaffold):
     assert (
         AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head) is None
     )
-    # The same act claimed by a first-approval row holds no re-acceptance scope.
-    first = [("WI-901.md", {"brief": "first-approval", "adjudicates": ["SR-001"]})]
+    # The same act claimed by a first-acceptance row holds no re-acceptance scope.
+    first = [("WI-901.md", {"brief": "first-acceptance", "adjudicates": ["SR-001"]})]
     refusal = AR.merge_approval_refusal(scaffold, base, head, first, trunk=head)
     assert refusal and "SR-001" in refusal, refusal
 
@@ -771,7 +771,7 @@ def test_a_drifted_need_has_its_card_on_the_open_items_page(scaffold):
     assert _EMPTY_SECTION_2 not in page
 
 
-def test_a_first_approval_need_and_stakeholder_show_their_cells_in_full(scaffold):
+def test_a_first_acceptance_need_and_stakeholder_show_their_cells_in_full(scaffold):
     """A `Drafted` need and a stakeholder with no Status cell each get a card
     showing every cell whole: a first approval rules on all of the row's
     text, so a cell past the page's context clip is shown to its end.
@@ -863,7 +863,7 @@ def test_each_tiers_missing_cell_is_named(label, cell):
 def _mixed_act(root, approve_scope, amend_scope, metas=None, amend_tag="CLARITY"):
     """Batch B's shape (act seq 4 of this repository's ledger): one act that
     carries a Drafted row into approval AND re-accepts an amended approved
-    row, claimed by a first-approval row and an amendment row together, or by
+    row, claimed by a first-acceptance row and an amendment row together, or by
     the claiming rows `metas` names (a combined sitting's one row)."""
     run_git = _git(root)
     _release(root)
@@ -884,14 +884,14 @@ def _mixed_act(root, approve_scope, amend_scope, metas=None, amend_tag="CLARITY"
     )
     _bind_branch(
         root,
-        {"amendment": ["SR-001"], "first-approval": ["SR-002"]},
+        {"amendment": ["SR-001"], "first-acceptance": ["SR-002"]},
         tags={"SR-001": [amend_tag]},
     )
     SNAP.copy_live(root, approves={SR_REL: "WI-681"}, reaccepts={"SR-001"})
     head = _commit(run_git, "the one act: approve SR-002, re-accept SR-001")
     metas = metas or [
         ("WI-680.md", {"brief": "amendment", "adjudicates": amend_scope}),
-        ("WI-681.md", {"brief": "first-approval", "adjudicates": approve_scope}),
+        ("WI-681.md", {"brief": "first-acceptance", "adjudicates": approve_scope}),
     ]
     return AR.merge_approval_refusal(root, base, head, metas, trunk=head)
 
@@ -921,7 +921,7 @@ def test_a_combined_act_carrying_a_plain_MEANING_reacceptance_is_refused_whole(
     """
     refusal = _mixed_act(scaffold, ["SR-002"], ["SR-001"], amend_tag="MEANING")
     assert refusal and "SR-001 (amendment)" in refusal, refusal
-    assert "SR-002 (first-approval)" not in refusal, refusal
+    assert "SR-002 (first-acceptance)" not in refusal, refusal
     assert "[MEANING+BLESS]" in refusal, refusal
 
 
@@ -942,7 +942,7 @@ def test_a_combined_sittings_sections_each_take_their_own_act(scaffold):
 
     Implements: TC-278
     """
-    tokens = ["first-approval:SR-002", "amendment:SR-001", "done-when:WI-682"]
+    tokens = ["first-acceptance:SR-002", "amendment:SR-001", "done-when:WI-682"]
     assert _mixed_act(scaffold, [], [], metas=_combined(tokens)) is None
 
 
@@ -952,7 +952,7 @@ def test_a_combined_sittings_act_outside_its_kinds_tokens_is_refused(scaffold):
 
     Implements: TC-278
     """
-    tokens = ["first-approval:SR-002", "first-approval:SR-001"]
+    tokens = ["first-acceptance:SR-002", "first-acceptance:SR-001"]
     refusal = _mixed_act(scaffold, [], [], metas=_combined(tokens))
     assert refusal and "SR-001 re-accepted OUTSIDE" in refusal, refusal
 
@@ -961,7 +961,7 @@ def _split_act(root, approve, copy_needs=None, sr_rel=SR_REL, append=None):
     """WI-841 round 3 (Sol r2): a combined sitting whose two sections act in
     DIFFERENT registries. SR-001 is approved and amended (the amendment
     section re-accepts it, copying the SR registry); SN-001 is Drafted in the
-    needs registry (the first-approval section approves it when `approve`,
+    needs registry (the first-acceptance section approves it when `approve`,
     copying the needs registry, or returns it). `copy_needs` forces the needs
     copy without a flip, the WIDENED case. `sr_rel` and `append` put the SR
     registry on another carrier (round 5: the legacy CSV). Returns
@@ -985,11 +985,11 @@ def _split_act(root, approve, copy_needs=None, sr_rel=SR_REL, append=None):
             _SPLIT_NEED.format('"Approved"'),
         )
     approves = {NEEDS_REL: "WI-682"} if approve or copy_needs else None
-    # The first-approval section APPROVES SN-091 when the act flips it, and
+    # The first-acceptance section APPROVES SN-091 when the act flips it, and
     # RETURNS it otherwise (the all-return case, Sol final8 MINOR).
     _bind_branch(
         root,
-        {"amendment": ["SR-001"], "first-approval": ["SN-091"]},
+        {"amendment": ["SR-001"], "first-acceptance": ["SN-091"]},
         returned=() if approve else ("SN-091",),
     )
     SNAP.copy_live(root, approves=approves, reaccepts={"SR-001"})
@@ -1002,12 +1002,12 @@ _SPLIT_NEED = (
     .replace("The operator sees", "The operator now sees")
     .replace('"Approved"', "{}")
 )
-_SPLIT = ["amendment:SR-001", "first-approval:SN-091", "done-when:WI-682"]
+_SPLIT = ["amendment:SR-001", "first-acceptance:SN-091", "done-when:WI-682"]
 
 
 def test_a_combined_act_in_two_registries_merges(scaffold):
     """The re-accepted SR registry's copy is the amendment section's act, not
-    a widening of the first-approval section's.
+    a widening of the first-acceptance section's.
 
     Implements: TC-278
     """
@@ -1018,8 +1018,8 @@ def test_a_combined_act_in_two_registries_merges(scaffold):
     )
 
 
-def test_a_combined_act_whose_first_approval_returned_everything_merges(scaffold):
-    """The first-approval section returned its row and flipped nothing; the
+def test_a_combined_act_whose_first_acceptance_returned_everything_merges(scaffold):
+    """The first-acceptance section returned its row and flipped nothing; the
     amendment section's re-acceptance alone is accepted, as it is for an
     amendment-only sitting (the control).
 
@@ -1028,7 +1028,7 @@ def test_a_combined_act_whose_first_approval_returned_everything_merges(scaffold
     base, head = _split_act(scaffold, approve=False)
     lane_verdict = "docs/reviews/lane/000-ADJUDICATE-x.md"
     parsed = SITTING_MOD.recorded_at(scaffold, head, lane_verdict)
-    assert parsed["first-approval"][3] == {"SN-091": "RETURN"}, parsed
+    assert parsed["first-acceptance"][3] == {"SN-091": "RETURN"}, parsed
     added = [
         a
         for a in AR._ledger_acts(scaffold, head)
@@ -1143,14 +1143,14 @@ def test_a_combined_act_on_a_markdown_needs_carrier_authorizes_its_copy(scaffold
     _rewrite(
         root, SR_REL, 'status = "Drafted"\nphase = 1', 'status = "Approved"\nphase = 1'
     )
-    _bind_branch(root, {"amendment": ["SN-001"], "first-approval": ["SR-001"]})
+    _bind_branch(root, {"amendment": ["SN-001"], "first-acceptance": ["SR-001"]})
     SNAP.copy_live(root, approves={SR_REL: "WI-683"}, reaccepts={"SN-001"})
     head = _commit(run_git, "the one act of the sitting")
     md_rel = "docs/requirements/stakeholder-needs.md"
     acted = AR.lane_acted_set(root, base, head, AR.approval_delta(root, base, head))[0]
     assert set(acted["reaccept"].values()) == {NEEDS_REL}
     assert AR._registry_identity(md_rel) == NEEDS_REL
-    tokens = ["amendment:SN-001", "first-approval:SR-001", "done-when:WI-683"]
+    tokens = ["amendment:SN-001", "first-acceptance:SR-001", "done-when:WI-683"]
     refusal = AR.merge_approval_refusal(root, base, head, _combined(tokens), trunk=head)
     assert refusal is None, refusal
 
@@ -1216,10 +1216,10 @@ def test_a_combined_act_across_a_needs_carrier_conversion_merges(scaffold):
         'status = "Drafted"\nphase = 1',
         'status = "Approved"\nphase = 1',
     )
-    _bind_branch(scaffold, {"amendment": ["SN-001"], "first-approval": ["SR-002"]})
+    _bind_branch(scaffold, {"amendment": ["SN-001"], "first-acceptance": ["SR-002"]})
     SNAP.copy_live(scaffold, approves={SR_REL: "WI-684"}, reaccepts={"SN-001"})
     head = _commit(run_git, "the one act")
-    tokens = ["amendment:SN-001", "first-approval:SR-002", "done-when:WI-684"]
+    tokens = ["amendment:SN-001", "first-acceptance:SR-002", "done-when:WI-684"]
     refusal = AR.merge_approval_refusal(
         scaffold, base, head, _combined(tokens), trunk=head
     )
@@ -1239,11 +1239,11 @@ def test_a_plain_flip_across_a_needs_carrier_conversion_merges(scaffold):
         'status = "Drafted"\nneed = "The operator sees a second need."',
         'status = "Approved"\nneed = "The operator sees a second need."',
     )
-    _bind_branch(scaffold, {"amendment": ["SN-001"], "first-approval": ["SN-002"]})
+    _bind_branch(scaffold, {"amendment": ["SN-001"], "first-acceptance": ["SN-002"]})
     SNAP.copy_live(scaffold, approves={NEEDS_REL: "WI-685"}, reaccepts={"SN-001"})
     head = _commit(run_git, "the one act")
     metas = [
-        ("WI-685.md", {"brief": "first-approval", "adjudicates": ["SN-002"]}),
+        ("WI-685.md", {"brief": "first-acceptance", "adjudicates": ["SN-002"]}),
         ("WI-686.md", {"brief": "amendment", "adjudicates": ["SN-001"]}),
     ]
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
@@ -1268,10 +1268,10 @@ def test_an_unauthorized_registrys_obsolete_copy_is_still_widened(scaffold):
     )
     # `--approves` naming the needs file copies it (TOML written, the obsolete
     # markdown deleted) although no need was flipped or re-accepted.
-    _bind_branch(scaffold, {"first-approval": ["SR-002"]})
+    _bind_branch(scaffold, {"first-acceptance": ["SR-002"]})
     SNAP.copy_live(scaffold, approves={SR_REL: "WI-687", NEEDS_REL: "WI-687"})
     head = _commit(run_git, "the act, a first approval alone")
-    metas = [("WI-687.md", {"brief": "first-approval", "adjudicates": ["SR-002"]})]
+    metas = [("WI-687.md", {"brief": "first-acceptance", "adjudicates": ["SR-002"]})]
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
     assert refusal and "WIDENED to docs/requirements/stakeholder-needs" in refusal, (
         refusal
@@ -1308,7 +1308,7 @@ def test_a_released_tier_act_naming_an_unrecorded_verdict_is_refused(scaffold):
 
 def _rejected_mixed_act(root, name_verdict):
     """One act on a released rung that approves SR-002 and re-accepts SR-001,
-    taken after a combined `amendment;first-approval` sitting its route
+    taken after a combined `amendment;first-acceptance` sitting its route
     recorded FAILED. `name_verdict` passes `--verdict` (the named path) or
     omits it (the unnamed path, round 14). Returns (base, head)."""
     run_git = _git(root)
@@ -1327,7 +1327,7 @@ def _rejected_mixed_act(root, name_verdict):
     (root / _VERDICT).parent.mkdir(parents=True, exist_ok=True)
     (root / _VERDICT).write_text(_REJECTED_SITTING, encoding="utf-8")
     failed = SITTING_MOD.render_requested(
-        "combined", ("amendment", "first-approval"), "failed"
+        "combined", ("amendment", "first-acceptance"), "failed"
     )
     (root / SITTING_MOD.requested_path(_VERDICT)).write_text(failed, encoding="utf-8")
     SNAP.copy_live(
@@ -1346,7 +1346,7 @@ def _rejected_mixed_act(root, name_verdict):
     return base, head
 
 
-def test_a_first_approval_in_an_act_naming_an_unrecorded_verdict_is_refused(
+def test_a_first_acceptance_in_an_act_naming_an_unrecorded_verdict_is_refused(
     scaffold,
 ):
     """An act may name a verdict only beside a re-acceptance (the snapshot
@@ -1358,7 +1358,7 @@ def test_a_first_approval_in_an_act_naming_an_unrecorded_verdict_is_refused(
     Implements: TC-278
     """
     base, head = _rejected_mixed_act(scaffold, name_verdict=True)
-    metas = _combined(["first-approval:SR-002", "amendment:SR-001"])
+    metas = _combined(["first-acceptance:SR-002", "amendment:SR-001"])
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
     assert refusal and "RECORDED" in refusal and _VERDICT in refusal, refusal
 
@@ -1372,7 +1372,7 @@ def test_an_act_omitting_its_verdict_is_still_tied_to_a_recorded_one(scaffold):
     Implements: TC-278
     """
     base, head = _rejected_mixed_act(scaffold, name_verdict=False)
-    metas = _combined(["first-approval:SR-002", "amendment:SR-001"])
+    metas = _combined(["first-acceptance:SR-002", "amendment:SR-001"])
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
     assert refusal and "RECORDED" in refusal, refusal
 
@@ -1389,14 +1389,14 @@ def test_a_recorded_sitting_over_other_rows_does_not_authorize_this_act(scaffold
     base, head = _rejected_mixed_act(scaffold, name_verdict=False)
     _bind_branch(
         scaffold,
-        {"amendment": ["SR-003"], "first-approval": ["SR-004"]},
+        {"amendment": ["SR-003"], "first-acceptance": ["SR-004"]},
         name="001-ADJUDICATE-y.md",
     )
     head = _commit(_git(scaffold), "a recorded sitting over other rows")
-    metas = _combined(["first-approval:SR-002", "amendment:SR-001"])
+    metas = _combined(["first-acceptance:SR-002", "amendment:SR-001"])
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
     assert refusal and "SR-001 (amendment)" in refusal, refusal
-    assert "SR-002 (first-approval)" in refusal, refusal
+    assert "SR-002 (first-acceptance)" in refusal, refusal
 
 
 def test_a_single_kind_verdict_over_other_rows_does_not_authorize(scaffold):
@@ -1422,8 +1422,8 @@ def test_a_named_verdict_must_judge_the_rows_it_reaccepts(scaffold):
     assert refusal and "SR-001" in refusal and _VERDICT in refusal, refusal
 
 
-def test_a_single_kind_first_approval_of_its_judged_row_merges(scaffold):
-    """The ordinary happy path: a first-approval verdict APPROVES SR-002 and
+def test_a_single_kind_first_acceptance_of_its_judged_row_merges(scaffold):
+    """The ordinary happy path: a first-acceptance verdict APPROVES SR-002 and
     the act flips exactly it.
 
     Implements: TC-278
@@ -1437,8 +1437,8 @@ def test_a_single_kind_first_approval_of_its_judged_row_merges(scaffold):
     SNAP.copy_live(scaffold, seed=True)
     base = _commit(run_git, "seed, SR-002 drafted")
     _rewrite(scaffold, SR_REL, drafted, drafted.replace('"Drafted"', '"Approved"'))
-    _bind_branch(scaffold, {"first-approval": ["SR-002"]})
+    _bind_branch(scaffold, {"first-acceptance": ["SR-002"]})
     SNAP.copy_live(scaffold, approves={SR_REL: "WI-902"})
     head = _commit(run_git, "the first approval of SR-002")
-    metas = [("WI-902.md", {"brief": "first-approval", "adjudicates": ["SR-002"]})]
+    metas = [("WI-902.md", {"brief": "first-acceptance", "adjudicates": ["SR-002"]})]
     assert AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head) is None

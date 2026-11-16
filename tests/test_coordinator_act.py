@@ -67,7 +67,7 @@ token_file_variable = "AGENT_CLAUDE_TOKEN_FILE"
 """.replace("{template}", TEMPLATE)
 VERDICT = taa.VERDICT
 WI = "WI-9"
-RETAIN = '["amendment", "first-approval", "combined"]'
+RETAIN = '["amendment", "first-acceptance", "combined"]'
 SESSION = "20261017T000000Z-abc123"
 
 
@@ -137,10 +137,10 @@ def _combined(tmp_path, **kw):
     return primary, lane
 
 
-def _first_approval(tmp_path):
+def _first_acceptance(tmp_path):
     primary, lane = _lane(tmp_path)
     taa._draft(lane)
-    taa._verdict(lane, taa.FIRST_APPROVAL_MIXED, "first-approval")
+    taa._verdict(lane, taa.FIRST_ACCEPTANCE_MIXED, "first-acceptance")
     return primary, lane
 
 
@@ -426,7 +426,7 @@ def test_a_retained_and_a_fresh_act_turn_take_the_same_act_from_one_verdict(
     assert "act: complete" in results["kept"][0]
 
 
-def test_a_combined_act_commits_its_amendment_act_before_its_first_approval_act(
+def test_a_combined_act_commits_its_amendment_act_before_its_first_acceptance_act(
     tmp_path, launched
 ):
     """Implements: TC-321"""
@@ -463,7 +463,7 @@ def test_an_act_interrupted_between_flip_and_snapshot_is_refused_dirty_then_reru
     tmp_path, launched, capsys
 ):
     """Implements: TC-321"""
-    _primary, lane = _first_approval(tmp_path)
+    _primary, lane = _first_acceptance(tmp_path)
     launched["act"] = flip_uncommitted
     assert _act(launched, lane) == 1
     assert _act(launched, lane) == 2
@@ -477,7 +477,7 @@ def test_an_act_interrupted_between_flip_and_snapshot_is_refused_dirty_then_reru
     assert "LLR-002" in launched["prompts"][1]
 
 
-def test_a_combined_act_interrupted_between_commits_reruns_with_only_its_first_approval_act(
+def test_a_combined_act_interrupted_between_commits_reruns_with_only_its_first_acceptance_act(
     tmp_path, launched
 ):
     """Implements: TC-321"""

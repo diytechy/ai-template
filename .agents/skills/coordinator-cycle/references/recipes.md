@@ -543,14 +543,14 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 - **Adjudication,** from the lane root:
   1. Compose the brief:
      `"$PY" "$TOOLS/compose_lane.py" WI-NNN <brief> "<ids>" "<srs>" <verdict> <out>`.
-     The classes are `amendment`, `first-approval`, `done-when`, `combined`,
+     The classes are `amendment`, `first-acceptance`, `done-when`, `combined`,
      `disposition`, `consolidate`, `red-tc`, `rejudge` and `dispute` (below).
      For `combined`, `<ids>` is **kind-prefixed**, for example
-     `"amendment:LLR-123;first-approval:SR-234;first-approval:LLR-345;first-approval:TC-456;done-when:WI-NNN"`.
-     Include only kinds actually owed (`amendment`, `first-approval`,
+     `"amendment:LLR-123;first-acceptance:SR-234;first-acceptance:LLR-345;first-acceptance:TC-456;done-when:WI-NNN"`.
+     Include only kinds actually owed (`amendment`, `first-acceptance`,
      `done-when`); `<srs>` is the semicolon-joined SR scope. A checkpoint is
      always `combined`, even when only amendments are owed, and so is a
-     returned row's re-sit (`first-approval:TC-370` alone, wi-926 D-012): sitting 010,
+     returned row's re-sit (`first-acceptance:TC-370` alone, wi-926 D-012): sitting 010,
      composed as the single-kind `amendment` class, came back with a
      `## amendment` section the one verdict parser refuses for a single-kind
      brief, after its act was committed, and was discarded (wi-921 D-018).
@@ -749,7 +749,7 @@ commit of its own, move it to trunk's tip
      uncommitted, and the next `act` refuses the lane as dirty. Discard the
      named paths (`git checkout -- <paths>`), record that as a decision, and
      re-run: it lists the whole act again. A combined act stopped between its
-     two commits re-runs with only its first-approval act.
+     two commits re-runs with only its first-acceptance act.
   5. A lane in flight when WI-912 landed: a verdict sat before it whose act is
      still owed carries no bless marks, so re-sit it, recorded as a decision.
      An act a lane already took from such a verdict on a MEANING row is not
@@ -769,8 +769,8 @@ commit of its own, move it to trunk's tip
   inconsistent.
   The act turn takes one act per kind of judgement, in the combined brief's
   order: the amendment act
-  (`--reaccepts`) first, then the first-approval act (`--approves`). A
-  first-approval copy is refused while an approved row in its registry still
+  (`--reaccepts`) first, then the first-acceptance act (`--approves`). A
+  first-acceptance copy is refused while an approved row in its registry still
   drifts unattested, and the amendment act clears that drift first. The old
   single act covering both kinds is retired, because the spine is decomposed
   one way in every mode (operator, 2026-10-07). This order is not yet proven on a

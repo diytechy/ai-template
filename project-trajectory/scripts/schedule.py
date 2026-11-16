@@ -23,7 +23,7 @@ Two contracts live here:
 
   * **Deterministic safety classification on TWO axes (LLR-059/LLR-089;
     docs/concurrency-v2.md §A1).** One pure classifier maps a WI's declared
-    `SafetyClass` (`ordinary|spine|gate|attestation|protected|high-risk`), its
+    `SafetyClass` (`ordinary|spine|gate|acceptance|protected|high-risk`), its
     critique flag and the registry `PlanMode=dual` signal (LLR-095 — derived from
     the signal itself, never a second hand-set cell) to **two independent
     answers**, because the two questions are independent:
@@ -152,7 +152,7 @@ SAFETY_CLASSES = (
     "ordinary",
     "spine",
     "gate",
-    "attestation",
+    "acceptance",
     "protected",
     "high-risk",
     "adjudication",
@@ -187,7 +187,7 @@ CONCURRENCY_UNCLASSIFIED = "unclassified"  # fail closed — never scheduled
 _KIND_CONCURRENCY = {
     "spine": CONCURRENCY_EXCLUSIVE,
     "adjudication": CONCURRENCY_EXCLUSIVE,
-    "attestation": CONCURRENCY_EXCLUSIVE,
+    "acceptance": CONCURRENCY_EXCLUSIVE,
     "gate": CONCURRENCY_EXCLUSIVE,
     "protected": CONCURRENCY_EXCLUSIVE,
     "high-risk": CONCURRENCY_EXCLUSIVE,
@@ -205,7 +205,7 @@ _KIND_CONCURRENCY = {
 _KIND_RANK = {
     "spine": 0,
     "adjudication": 1,  # WI-388, §A5.2: exclusive, runs no bar
-    "attestation": 2,
+    "acceptance": 2,
     "gate": 2,
     "protected": 3,
     "high-risk": 4,

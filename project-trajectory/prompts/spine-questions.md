@@ -3,7 +3,7 @@
      THE ONE HOME of the questions an adjudicator puts to a spine row, per
      tier. Two readers, and neither holds a copy:
        - scripts/adjudicate_brief.py composes the sections whose tiers match
-         the rows a first-approval or amendment brief judges (and each combined
+         the rows a first-acceptance or amendment brief judges (and each combined
          section composing those briefs) into that brief's {questions} slot at
          render time, so the brief stays self-contained in a repo with no
          skills installed;

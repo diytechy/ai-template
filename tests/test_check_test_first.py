@@ -223,14 +223,14 @@ def test_a_commit_approving_one_test_case_while_withdrawing_another_records_it(
     h.tc("TC-001", ["SR-001"], "Approved").tc("TC-002", ["SR-001"], "Drafted")
     swap = h.commit("approve TC-001, withdraw TC-002")
     root_commit = _git(h.root, "rev-list", "--max-parents=0", "HEAD")
-    assert ctf.first_approval_commits(h.root, TC_REG, "TC-ID") == {
+    assert ctf.first_acceptance_commits(h.root, TC_REG, "TC-ID") == {
         "TC-002": ctf.Approval(root_commit, True),
         "TC-001": ctf.Approval(swap, True),
     }
     assert as_tuples(_judge(ctf, h.root)) == [("SR-001", landing, [("TC-001", swap)])]
 
 
-def test_a_withdrawn_and_reapproved_test_case_keeps_its_first_approval(tmp_path, ctf):
+def test_a_withdrawn_and_reapproved_test_case_keeps_its_first_acceptance(tmp_path, ctf):
     # LLR-257 records each row's FIRST move into approval. Re-approving after a
     # withdrawal is not that move, from the root or from a declared start.
     h = History(tmp_path / "repo")
@@ -239,11 +239,11 @@ def test_a_withdrawn_and_reapproved_test_case_keeps_its_first_approval(tmp_path,
     start = h.write("src/app.py", implements("SR-001")).commit("implementation")
     h.tc("TC-001", ["SR-001"], "Drafted").commit("withdrawn")
     h.tc("TC-001", ["SR-001"], "Approved").commit("re-approved")
-    approvals = ctf.first_approval_commits(h.root, TC_REG, "TC-ID")
+    approvals = ctf.first_acceptance_commits(h.root, TC_REG, "TC-ID")
     assert approvals == {"TC-001": ctf.Approval(first, True)}
     # Walked from a later commit, the row was already approved there: approved
     # at or before it, on a date that walk cannot narrow.
-    later = ctf.first_approval_commits(h.root, TC_REG, "TC-ID", since=start)
+    later = ctf.first_acceptance_commits(h.root, TC_REG, "TC-ID", since=start)
     assert later == {"TC-001": ctf.Approval(start, False)}
     assert _judge(ctf, h.root) == []
     assert _judge(ctf, h.root, start=start) == []
@@ -332,7 +332,7 @@ def test_a_test_case_added_already_approved_counts_at_its_birth(tmp_path, ctf):
     h.sr("SR-001", "Approved").commit("requirement")
     landing = h.write("src/app.py", implements("SR-001")).commit("implementation")
     born = h.tc("TC-001", ["SR-001"], "Approved").commit("test case, born approved")
-    assert ctf.first_approval_commits(h.root, TC_REG, "TC-ID") == {
+    assert ctf.first_acceptance_commits(h.root, TC_REG, "TC-ID") == {
         "TC-001": ctf.Approval(born, True)
     }
     assert as_tuples(_judge(ctf, h.root)) == [("SR-001", landing, [("TC-001", born)])]
@@ -600,7 +600,7 @@ def test_an_approval_under_a_retired_status_word_has_no_exact_date(tmp_path, ctf
     early = h.tc("TC-002", ["SR-001"], "Approved").commit("TC-002 renamed")
     landing = h.write("src/app.py", implements("SR-001")).commit("implementation")
     renamed = h.tc("TC-001", ["SR-001"], "Approved").commit("TC-001 renamed")
-    assert ctf.first_approval_commits(h.root, TC_REG, "TC-ID") == {
+    assert ctf.first_acceptance_commits(h.root, TC_REG, "TC-ID") == {
         "TC-002": ctf.Approval(early, False),
         "TC-001": ctf.Approval(renamed, False),
     }

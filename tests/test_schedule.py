@@ -406,7 +406,7 @@ def test_legacy_blocked_status_is_excluded_fail_closed():
 RULED_TABLE = {
     "spine": (EXCL, 0),
     "adjudication": (EXCL, 1),
-    "attestation": (EXCL, 2),
+    "acceptance": (EXCL, 2),
     "gate": (EXCL, 2),
     "protected": (EXCL, 3),
     "high-risk": (EXCL, 4),
@@ -743,7 +743,7 @@ def test_planmode_dual_contradicting_safetyclass_quarantines():
     """Implements: TC-091"""
     # A second hand-set cell that contradicts the derivation fails closed —
     # the same cross-check posture as declared-ordinary-vs-structural.
-    for declared in ("ordinary", "spine", "gate", "attestation", "protected"):
+    for declared in ("ordinary", "spine", "gate", "acceptance", "protected"):
         wis = sched.load_wis([row("WI-001", safety=declared, PlanMode="dual")])
         concurrency, rank, reasons = sched.classify(wis[0])
         assert concurrency == sched.CONCURRENCY_UNCLASSIFIED, declared

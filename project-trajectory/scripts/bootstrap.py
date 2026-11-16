@@ -1354,7 +1354,7 @@ def _migrate_dial_key_name(dest, notes, dry_run):
     raw_value = _toml_scalar(table[old])
     edited = _confirmed_edit(
         text.splitlines(),
-        "attestation",
+        "authority",
         old,
         "{} = {}".format(new, raw_value),
         dict(data, authority=renamed),

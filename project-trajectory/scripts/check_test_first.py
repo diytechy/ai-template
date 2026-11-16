@@ -194,7 +194,7 @@ def history_unreadable(root, start=None, rev="HEAD"):
     rather than the act. That bars registries still under the older carrier
     at `rev`, and a declared start before the TOML registries; with no start,
     the history before the cutover is simply not read, and an approval it held
-    carries no exact date (`first_approval_commits`). The design registry is
+    carries no exact date (`first_acceptance_commits`). The design registry is
     held to the same rule as the two judged ones: a test case reaches a
     requirement through a design row, so a design registry the TOML reader
     cannot see would drop that test case in silence rather than report it. A
@@ -245,7 +245,7 @@ def history_unreadable(root, start=None, rev="HEAD"):
     return None
 
 
-def first_approval_commits(root, registry, id_col, since=None, rev="HEAD"):
+def first_acceptance_commits(root, registry, id_col, since=None, rev="HEAD"):
     """`{row id: Approval}` — the commit at which each row of one spine
     registry (its TOML carrier) first reads approved, on the first-parent line
     ending at `rev`, walked from `since` or from the root when None.
@@ -348,7 +348,7 @@ def first_association_commits(root, rev="HEAD"):
     before is judged with the same approval-act rule as a single row's. A pair
     arriving while its test case already reads approved is born approved, at
     that commit; a test case flipping to approved while it names the
-    requirement flips its pairs. Exactness is `first_approval_commits`' rule,
+    requirement flips its pairs. Exactness is `first_acceptance_commits`' rule,
     and a pair that first shows at the commit either registry moved from an
     older carrier is dated at or before that commit.
 
@@ -492,7 +492,7 @@ def test_first_findings(root, src="src", start=None, rev="HEAD"):
         raise HistoryUnreadable(reason)
     start = _commit(root, start) if start else None
     order = {sha: i for i, sha in enumerate(_first_parent(root, rev))}
-    approved = first_approval_commits(root, *REQUIREMENTS, since=start, rev=rev)
+    approved = first_acceptance_commits(root, *REQUIREMENTS, since=start, rev=rev)
     landed = first_implementation_commits(root, src, rev)
     design, tests, standing = _members(root, rev)
     tc_approved = {

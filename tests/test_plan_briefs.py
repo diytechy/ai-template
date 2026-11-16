@@ -443,7 +443,7 @@ def _not_a_round():
     return line
 
 
-def test_a_sitting_with_no_first_approval_sr_and_no_amended_need_says_it_is_no_decomposition_round(
+def test_a_sitting_with_no_first_acceptance_sr_and_no_amended_need_says_it_is_no_decomposition_round(
     tmp_path,
 ):
     """Implements: TC-399"""
@@ -629,10 +629,10 @@ def test_a_stopping_boundary_form_is_no_row_line_and_no_machine_line(tmp_path):
 @pytest.mark.parametrize(
     "key, parents",
     [
-        (pb.prompts.ADJUDICATE_FIRST_APPROVAL, (("SR-1",), (), ())),
+        (pb.prompts.ADJUDICATE_FIRST_ACCEPTANCE, (("SR-1",), (), ())),
         (pb.prompts.ADJUDICATE_AMENDMENT, ((), ("SN-1",), ())),
     ],
-    ids=["first-approval", "amendment"],
+    ids=["first-acceptance", "amendment"],
 )
 def test_each_shipped_sitting_template_carries_the_stopping_boundary_line(
     tmp_path, key, parents

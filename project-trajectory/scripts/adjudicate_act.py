@@ -31,12 +31,12 @@ for audit; no rule requires it.
 
 WHAT THE VERDICT AUTHORIZES. Exactly the rows each recorded part rules to
 authorize them, read through `kitlib.sitting.judged_rows`, the one reader the
-merge's backing check also reads, so the two cannot disagree. A first-approval
+merge's backing check also reads, so the two cannot disagree. A first-acceptance
 part's APPROVE flips a row, on a released rung only (a dial the operator
 tightened after the sitting binds the act it has not yet authorized). An amendment part's CLARITY re-accepts a row, naming the
 verdict on a held rung; its MEANING re-accepts only on a released rung and
 only with the bless mark. A RETURN row, an unmarked or held MEANING row, a
-Done-when part and every brief class but amendment, first-approval and
+Done-when part and every brief class but amendment, first-acceptance and
 combined owe no act. The dial is read at the act, from the committed tree, and
 each rung's arm is `intake.adjudication_action`'s answer (the held-rung
 policy's one home, which the judging composer reads too).
@@ -81,7 +81,7 @@ Contract IF-296: the act assembler's call surface, which the coordinator's
 entry point consumes.
     `owed_acts(root, verdict, rev="HEAD")` returns `(acts, None)`, where
     `acts` is `{"amendment": {"reaccepts": [ids], "verdict": bool},
-    "first-approval": {"approves": {registry: [ids]}}}` in that order, each
+    "first-acceptance": {"approves": {registry: [ids]}}}` in that order, each
     part present only when something is owed there, the amendment part also
     carrying `"retires": [ids]`, the re-accepted ids absent from the committed
     registries, only when one is owed, or `(None, reason)` for
@@ -120,7 +120,7 @@ from kitlib.git import git_out
 # The brief classes whose verdict can authorize an act: the one home of the
 # set, which `adjudicate_brief` also reads to decide which retained sessions'
 # identity covers the act brief.
-ACTABLE = ("amendment", "first-approval", ksitting.SITTING)
+ACTABLE = ("amendment", "first-acceptance", ksitting.SITTING)
 # A part of the act that nothing is owed for: a state the derivation reports,
 # never a default a missing value falls back to.
 NONE_OWED = "none owed"
@@ -227,7 +227,7 @@ def _authorized(parts, dial):
     Implements: SR-231, SR-232, LLR-338"""
     judged = ksitting.judged_rows(parts)
     out = []
-    for kind in ("amendment", "first-approval"):
+    for kind in ("amendment", "first-acceptance"):
         if kind not in parts:
             continue
         for rid, ruling in parts[kind][3].items():
@@ -403,7 +403,9 @@ def left_owed(root, verdict, rev="HEAD"):
     named = []
     if "amendment" in parts:
         named.append("re-accept " + ", ".join(parts["amendment"]["reaccepts"]))
-    for rel, ids in sorted(parts.get("first-approval", {}).get("approves", {}).items()):
+    for rel, ids in sorted(
+        parts.get("first-acceptance", {}).get("approves", {}).items()
+    ):
         named.append("flip {} ({})".format(", ".join(ids), rel))
     return "; ".join(named)
 
@@ -443,7 +445,7 @@ def _grouped(owed):
         if act == "approve":
             approves.setdefault(_tier(rid)[0], []).append(rid)
     if approves:
-        acts["first-approval"] = {"approves": approves}
+        acts["first-acceptance"] = {"approves": approves}
     return acts
 
 
@@ -471,7 +473,7 @@ def _amendment_text(part, rel, wi):
 
 
 def _approval_text(approves, registries, wi):
-    """The first-approval act's rendered rows and command."""
+    """The first-acceptance act's rendered rows and command."""
     rows = ", ".join(
         "{} ({})".format(rid, rel) for rel in sorted(approves) for rid in approves[rel]
     )
@@ -496,7 +498,7 @@ def act_values(root, verdict, wi, rev="HEAD"):
     if not wi:
         return None, "no work item was named for the act's commit trailer"
     amendment = acts.get("amendment")
-    approves = (acts.get("first-approval") or {}).get("approves") or {}
+    approves = (acts.get("first-acceptance") or {}).get("approves") or {}
     registries = baseline_snapshot.format_approves(dict.fromkeys(approves, wi))
     return {
         "verdict": rel,

@@ -33,7 +33,7 @@ row on the frontier stops new admission, the dispatcher waits for every lane
 back in the station, then admits the first spine row ALONE (one branch, one
 `agent_loop --wi WI-###` worker, one re-accept window); the remaining spine
 rows stay queued for later exclusive turns. A lane carries exactly one work
-item. An `attestation`/`gate` row does NOT dispatch while the tier in process
+item. An `acceptance`/`gate` row does NOT dispatch while the tier in process
 is still OPERATOR-HELD: the lanes drain, the cards stay on open-items.html, and
 the run exits 0 — the machine finished everything it was allowed to do
 (`agent_route.failure_action(operator_held=True)` is the contract this
@@ -349,7 +349,7 @@ def _kind_action(kind, operator_held, approval_held=False):
         ordinary, critique    parallel             parallel
         high-risk, protected  exclusive            exclusive
         spine                 exclusive            exclusive
-        attestation, gate     surface              exclusive
+        acceptance, gate     surface              exclusive
 
     `operator_held` is the SN-029 comparison already made: is the tier this repo's
     spine is currently in process at still the operator's to approve
@@ -361,7 +361,7 @@ def _kind_action(kind, operator_held, approval_held=False):
 
     A `spine` row dispatches EITHER WAY because building a scope change is
     WORK, not an approval — it opens a window; closing it is the next row's
-    job. `attestation`/`gate` close a window, which on an operator-held tier is the
+    job. `acceptance`/`gate` close a window, which on an operator-held tier is the
     operator's act (drain, surface the cards, exit 0) and otherwise dispatches — a
     recorded fresh-context reviewer verdict approves. The last arm also covers
     `adjudication`: exclusive, like every non-parallel kind.
@@ -392,7 +392,7 @@ def _kind_action(kind, operator_held, approval_held=False):
         return "parallel"
     if kind == "spine":
         return "exclusive"
-    if kind in ("attestation", "gate"):
+    if kind in ("acceptance", "gate"):
         return "surface" if (operator_held or approval_held) else "exclusive"
     return "exclusive"
 
@@ -434,7 +434,7 @@ def _admission(ready_kinds, operator_held, busy, free, keep_nondependent=False):
                                     wait for later exclusive turns
       ("wait", [])                  an exclusive-kind row is pending: stop
                                     admitting and let the lanes come home
-      ("surface", ids)              attestation/gate rows that may not dispatch
+      ("surface", ids)              acceptance/gate rows that may not dispatch
                                     at this level: drain, surface, exit 0
       ("empty", [])                 nothing ready at all
 
@@ -1007,10 +1007,10 @@ def _surface_banner(root, surfaced):
     THE JUDGMENT, REVISED UNDER REVIEW. The first attempt made the two arms
     exclusive: cards if any exist, else the queued rows. That still could not
     disagree with `pending_block`, but review drove the cost — one unrelated
-    card silently SUPPRESSED two genuinely queued attestation rows, hiding
+    card silently SUPPRESSED two genuinely queued acceptance rows, hiding
     work the operator had every reason to see. The reason given for suppressing
     them (that the populations overlap, since `_pending_cards` yields
-    Drafted/drifted spine rows while `surfaced` yields queued gate/attestation
+    Drafted/drifted spine rows while `surfaced` yields queued gate/acceptance
     frontier rows, and one row can be both)
     justifies never SUMMING them — it does not justify hiding one.
 
@@ -1024,13 +1024,13 @@ def _surface_banner(root, surfaced):
     if cards and queued:
         return (
             "queue drained - {} approval(s) waiting in open-items.html; "
-            "{} queued attestation row(s) on the frontier (the two reads may "
+            "{} queued acceptance row(s) on the frontier (the two reads may "
             "name the same row)".format(cards, queued)
         )
     if cards:
         return "queue drained - {} approval(s) waiting in open-items.html".format(cards)
     return (
-        "queue drained - {} queued attestation row(s); no card has projected "
+        "queue drained - {} queued acceptance row(s); no card has projected "
         "to open-items.html yet".format(queued)
     )
 

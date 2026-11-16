@@ -91,7 +91,7 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     `backed_act_refusal` - each backed by a recorded verdict over its own rows
     (operator ruling 6, 2026-10-07) - a record written with no act through
     `lane_approval_refusal`, and, when any claimed row in `metas` records a
-    scope, the flips through its first-approval scope besides, and its
+    scope, the flips through its first-acceptance scope besides, and its
     re-acceptances — read from the act ledger entries the delta added — through
     `reaccept_scope_refusal`, which refuses by name every re-accepted row
     outside the `Adjudicates` scope of the amendment rows the lane claims. A
@@ -206,7 +206,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 _git = _kitgit.git_out
 
 
-# The three spine registries the first-approval mint (`staged_drafted_rows`),
+# The three spine registries the first-acceptance mint (`staged_drafted_rows`),
 # the test-first walk and the retired flip read, each with its id column. The
 # amend-without-flip warn (WI-316) and the amendment mint read this set until
 # WI-791; extending them to needs was "its own decision rather than a side
@@ -667,7 +667,7 @@ def _spine_row_sides(root, base, head, registries=SPINE_CSVS):
     `--no-renames` rules rather than two walks that could drift.
 
     Extracted at WI-572 rather than copied: that row's lane refusal and its
-    first-approval trigger ask two more questions of the SAME diff
+    first-acceptance trigger ask two more questions of the SAME diff
     `staged_spine_amendments` already reads (which rows FLIPPED, which arrived
     `Drafted`), and a second walk would be a second place for the
     `--no-renames`/carrier-resolution/`-000` rules to drift out of agreement.
@@ -768,7 +768,7 @@ def staged_approval_acts(root, base="HEAD", head=None):
     A DE-APPROVAL IS NOT AN ACT, and that is the subtraction. `Approved` →
     `Drafted` withdraws a claim; it blesses nothing, so it owes no snapshot and
     refuses no merge. It is not dropped on the floor either — `staged_drafted_rows`
-    reports it as an amended `Drafted` row, so the first-approval mint raises the
+    reports it as an amended `Drafted` row, so the first-acceptance mint raises the
     re-approval it now owes. Same direction as
     `baseline_snapshot._approval_transition`, which asks the live-vs-snapshot
     form of this question.
@@ -806,7 +806,7 @@ def rows_at(root, rev, rel_path, id_col):
     """`{id: row}` of one spine registry at commit `rev`, or `{}` when the
     registry is absent there under either carrier — `_spine_rows_at`, the row
     reader behind every two-tree scan in this module, offered for a walk along
-    history (`check_test_first.first_approval_commits`).
+    history (`check_test_first.first_acceptance_commits`).
 
     Public so a history reader parses a row the way the approval-act refusal
     does, through the same carrier resolution and the same `-000` filter,
@@ -874,11 +874,13 @@ def approval_delta(root, base, head):
     return acts, sorted(_snapshot_acts(out)), None
 
 
-def first_approval_scope(metas):
-    """The typed scope of claimed first-approval rows (a combined sitting's
-    `first-approval:` tokens included), read through `kitlib.sitting`'s one
+def first_acceptance_scope(metas):
+    """The typed scope of claimed first-acceptance rows (a combined sitting's
+    `first-acceptance:` tokens included), read through `kitlib.sitting`'s one
     claimed-row reader, or None when none scopes one."""
-    scopes = [_kitsitting.brief_scope(meta, "first-approval") for _name, meta in metas]
+    scopes = [
+        _kitsitting.brief_scope(meta, "first-acceptance") for _name, meta in metas
+    ]
     scopes = [scope for scope in scopes if scope is not None]
     return frozenset(r for s in scopes for r in s) if scopes else None
 
@@ -984,7 +986,7 @@ def adjudication_approval_refusal(scope, acted, delta):
     # `Adjudicates` row.
     head = "the approval act's copies do not match its acts: the merge admits"
     if scope is not None:
-        head = "first-approval adjudication exceeds the approval act recorded on its `Adjudicates` row: the merge admits only scoped flips and"
+        head = "first-acceptance adjudication exceeds the approval act recorded on its `Adjudicates` row: the merge admits only scoped flips and"
     return (
         "{} exactly their registry snapshots; nothing was merged:\n{}\nRemedy — "
         "WIDENED: `--approves` named a registry this act flipped nothing in (its "
@@ -1010,7 +1012,7 @@ def merge_approval_refusal(root, base, head, metas, *, trunk):
     registries those acts moved. A lane any of whose claimed rows records a
     scope (`kitlib.sitting.bounds_acts`: an adjudication-kind row, or a row
     scoping a first approval or an amendment) is bounded besides, whatever
-    else it claims: its flips by the first-approval scope, its re-acceptances
+    else it claims: its flips by the first-acceptance scope, its re-acceptances
     by the amendment scope (`reaccept_scope_refusal`). The bound is read off
     `metas`, never off a caller's flag, so a mixed lane keeps its adjudication
     row's scope (Sol r1 MAJOR 1); unreadable claims never reach here, the
@@ -1029,7 +1031,7 @@ def merge_approval_refusal(root, base, head, metas, *, trunk):
         return refusal
     scope = None
     if any(_kitsitting.bounds_acts(meta) for _name, meta in metas):
-        scope = first_approval_scope(metas) or frozenset()
+        scope = first_acceptance_scope(metas) or frozenset()
         refusal = _kitsitting.malformed_refusal(metas)
         refusal = refusal or reaccept_scope_refusal(acted, metas)
     elif not any(acted.values()):
@@ -1045,7 +1047,7 @@ def backed_act_refusal(root, base, head, acted, delta):
     why a lane's approval acts may not merge, or None. Every act must be backed
     by a RECORDED verdict among the bindings the branch carries that judged
     that act's own rows: each row it flips or mints approved ruled APPROVE in a
-    first-approval part, each row it re-accepts ruled CLARITY, or MEANING with
+    first-acceptance part, each row it re-accepts ruled CLARITY, or MEANING with
     the bless mark, in an amendment part (the one reader,
     `kitlib.sitting.judged_rows`). It replaces "is every claimed spec of the adjudication
     kind?" as the test of who may act: the act is an independent
@@ -1073,7 +1075,7 @@ def backed_act_refusal(root, base, head, acted, delta):
 def amendment_scope(metas):
     """The rows the claimed AMENDMENT adjudications ruled: the union of their
     `Adjudicates` cells and of a combined sitting's `amendment:` tokens, empty
-    when none is claimed. A first-approval row's scope is its flips, not a
+    when none is claimed. A first-acceptance row's scope is its flips, not a
     re-acceptance's.
 
     Implements: SR-178, LLR-278"""
@@ -1362,7 +1364,7 @@ def reaccept_scope_refusal(acted, metas):
     """Refuse an adjudication's act re-accepting a row outside the `Adjudicates`
     scope of the amendment rows it claims — by name — or None.
 
-    A re-acceptance moves no cell, so the flips the first-approval arm
+    A re-acceptance moves no cell, so the flips the first-acceptance arm
     judges cannot show it; the acted set (`lane_acted_set`) carries the rows
     the act-ledger entries this branch added re-accepted. An amendment
     row's scope is the rows its verdict ruled, so re-anchoring any other row
@@ -1484,7 +1486,7 @@ def lane_approval_refusal(root, base, head, delta=None, reason=None):
         "in the authoring lane or on trunk (operator ruling 6, 2026-10-07; "
         "PROCESS.md §4): that session leaves SN/SR/LLR/TC, assumption and "
         "surrogate rows `Drafted` and does not write {}/. Leave the rows "
-        "`Drafted` for the first-approval adjudication minted at this merge, "
+        "`Drafted` for the first-acceptance adjudication minted at this merge, "
         "or back each act with an adjudicator's recorded verdict over its rows. "
         "Nothing was merged:\n{}\n{}".format(
             head, SNAPSHOT_DIR, "\n".join(lines), reason or ""
@@ -1498,7 +1500,7 @@ def staged_drafted_rows(root, base="HEAD", head=None):
         [{"registry": <carrier path>, "id": <row id>, "act": "added" | "amended",
           "changed": {cell: (before, after)}}]
 
-    The first-approval trigger's input (WI-572): a lane authors `Drafted` rows
+    The first-acceptance trigger's input (WI-572): a lane authors `Drafted` rows
     and amends their text, and what it hands the adjudicator is exactly this set
     — the rows whose text is now waiting on a first approval nobody has given.
     `changed` is empty on an `added` row (there is no before side to diff) and

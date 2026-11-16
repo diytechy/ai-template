@@ -6,7 +6,7 @@ Run FROM THE LANE ROOT with the repo venv:
 
 <before> is the trunk commit the lane forked from (its merge-base with trunk);
 <after> defaults to HEAD. It calls the kit's own draft builders,
-`intake._amendment_drafts` and `intake._first_approval_drafts`, which mint
+`intake._amendment_drafts` and `intake._first_acceptance_drafts`, which mint
 nothing, and prints each draft's brief, scope and SR refs: the in-lane
 adjudication scope, exactly what a sitting would receive.
 """
@@ -26,7 +26,7 @@ def main(argv):
     if refusal:
         print("preview_mint: " + refusal)
         return 1
-    drafts += intake._first_approval_drafts(root, before, after)
+    drafts += intake._first_acceptance_drafts(root, before, after)
     if not drafts:
         print("preview_mint: nothing would be minted")
         return 0

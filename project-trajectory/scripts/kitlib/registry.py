@@ -122,7 +122,7 @@ WI_COLUMNS = (
     # registry read.
     "Adopted",
     # WI-982 THE AUTHORING TAGS. The `;`-joined Workstream and SafetyClass
-    # values of the work items a minted first-approval or amendment row was
+    # values of the work items a minted first-acceptance or amendment row was
     # authored under, or empty when no route named one. NOT the routing
     # `SafetyClass`, which stays `adjudication`: the one reader is the hat
     # composer, `hats.context_from_work_item`. A real column for the

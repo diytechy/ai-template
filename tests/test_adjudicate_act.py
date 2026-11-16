@@ -155,7 +155,7 @@ def _verdict(repo, text, brief, kinds=None, outcome="recorded", commit=True, bin
     identity of each row an amendment part rules unless `bind` is False (a
     binding written before the identity existed)."""
     _write(repo, VERDICT, text)
-    ids = _judged_identities(repo, text) if bind and brief != "first-approval" else {}
+    ids = _judged_identities(repo, text) if bind and brief != "first-acceptance" else {}
     binding = ksitting.render_requested(
         brief, kinds or (brief,), outcome, identities=ids or None
     )
@@ -167,7 +167,7 @@ def _verdict(repo, text, brief, kinds=None, outcome="recorded", commit=True, bin
 AMENDMENT_CLARITY = (
     "- [CLARITY] SR-001 Requirement -> add -> add -> same\n\nVERDICT: CLARITY rows=1\n"
 )
-FIRST_APPROVAL_MIXED = (
+FIRST_ACCEPTANCE_MIXED = (
     "- [APPROVE] LLR-002 -> sub -> chain holds -> ready\n"
     "- [RETURN] TC-002 -> sub -> no evidence -> not ready\n\n"
     "OUTCOME: RETURN rows=2\n"
@@ -176,12 +176,12 @@ COMBINED = (
     "## amendment\n\n"
     "- [CLARITY] SR-001 Requirement -> add -> add -> same\n\n"
     "VERDICT: CLARITY rows=1\n\n"
-    "## first-approval\n\n"
+    "## first-acceptance\n\n"
     "- [APPROVE] LLR-002 -> sub -> chain holds -> ready\n\n"
     "OUTCOME: APPROVE rows=1\n\n"
-    "SITTING: JUDGED kinds=amendment;first-approval\n"
+    "SITTING: JUDGED kinds=amendment;first-acceptance\n"
 )
-COMBINED_KINDS = ("amendment", "first-approval")
+COMBINED_KINDS = ("amendment", "first-acceptance")
 
 
 def _take_amendment_act(repo, ids):
@@ -257,9 +257,9 @@ def test_judged_rows_admits_an_amendment_MEANING_row_only_with_its_bless_mark():
         "- [APPROVE] LLR-002 -> sub -> chain holds -> ready\n"
         "- [RETURN] TC-002 -> sub -> no evidence -> not ready\n\n"
         "OUTCOME: RETURN rows=2\n",
-        "first-approval",
+        "first-acceptance",
     )
-    assert ksitting.judged_rows(first) == {("first-approval", "LLR-002")}
+    assert ksitting.judged_rows(first) == {("first-acceptance", "LLR-002")}
 
 
 def test_the_bless_mark_has_one_reader_shared_by_the_merge_and_the_act():
@@ -343,16 +343,16 @@ def test_each_unrecorded_or_unreadable_verdict_is_refused_naming_why(
 # --- what each ruling authorizes ------------------------------------------
 
 
-def test_a_mixed_first_approval_verdict_approves_only_its_approved_rows_registries(
+def test_a_mixed_first_acceptance_verdict_approves_only_its_approved_rows_registries(
     tmp_path,
 ):
     """Implements: TC-368"""
     repo = _repo(tmp_path)
     _draft(repo)
-    _verdict(repo, FIRST_APPROVAL_MIXED, "first-approval")
+    _verdict(repo, FIRST_ACCEPTANCE_MIXED, "first-acceptance")
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None
-    assert acts == {"first-approval": {"approves": {LLR_REL: ["LLR-002"]}}}
+    assert acts == {"first-acceptance": {"approves": {LLR_REL: ["LLR-002"]}}}
     values, why = act.act_values(repo, VERDICT, WI)
     assert why is None
     assert values["registries"] == "{}={}".format(LLR_REL, WI)
@@ -426,7 +426,7 @@ def test_a_held_rung_APPROVE_row_owes_no_act(tmp_path):
     """Implements: TC-368"""
     repo = _repo(tmp_path, dial="DevStg-Release")
     _draft(repo)
-    _verdict(repo, FIRST_APPROVAL_MIXED, "first-approval")
+    _verdict(repo, FIRST_ACCEPTANCE_MIXED, "first-acceptance")
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert acts is None
     assert "owes no act" in why, why
@@ -519,20 +519,20 @@ def _combined_repo(tmp_path):
     return repo
 
 
-def test_a_combined_verdict_lists_the_amendment_act_before_the_first_approval_act(
+def test_a_combined_verdict_lists_the_amendment_act_before_the_first_acceptance_act(
     tmp_path,
 ):
     """Implements: TC-368"""
     repo = _combined_repo(tmp_path)
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None
-    assert list(acts) == ["amendment", "first-approval"]
+    assert list(acts) == ["amendment", "first-acceptance"]
     text, why = act.compose_act(repo, VERDICT, WI)
     assert why is None
     assert text.index("--reaccepts SR-001") < text.index("--approves")
 
 
-def test_a_combined_act_interrupted_between_its_commits_lists_only_the_first_approval_act(
+def test_a_combined_act_interrupted_between_its_commits_lists_only_the_first_acceptance_act(
     tmp_path,
 ):
     """Implements: TC-368"""
@@ -540,7 +540,7 @@ def test_a_combined_act_interrupted_between_its_commits_lists_only_the_first_app
     _take_amendment_act(repo, ["SR-001"])
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None
-    assert acts == {"first-approval": {"approves": {LLR_REL: ["LLR-002"]}}}
+    assert acts == {"first-acceptance": {"approves": {LLR_REL: ["LLR-002"]}}}
     values, _why = act.act_values(repo, VERDICT, WI)
     assert values["amendment_act"] == act.NONE_OWED
     assert "--reaccepts" not in values["approval_act"]
@@ -550,7 +550,7 @@ def test_a_flip_committed_without_its_copy_is_refused_naming_the_row(tmp_path):
     """Implements: TC-368"""
     repo = _repo(tmp_path)
     _draft(repo)
-    _verdict(repo, FIRST_APPROVAL_MIXED, "first-approval")
+    _verdict(repo, FIRST_ACCEPTANCE_MIXED, "first-acceptance")
     _replace(repo, LLRS, ",Drafted,,P1", ",Approved,,P1")
     _commit(repo, "flip LLR-002 with no copy")
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
@@ -565,10 +565,10 @@ def test_a_Drafted_row_present_unchanged_in_a_whole_registry_copy_is_owed(tmp_pa
     copy = repo / baseline_snapshot.SNAPSHOT_DIR / LLRS
     shutil.copyfile(repo / LLRS, copy)
     _commit(repo, "a whole-registry copy carrying LLR-002 Drafted")
-    _verdict(repo, FIRST_APPROVAL_MIXED, "first-approval")
+    _verdict(repo, FIRST_ACCEPTANCE_MIXED, "first-acceptance")
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None
-    assert acts == {"first-approval": {"approves": {LLR_REL: ["LLR-002"]}}}
+    assert acts == {"first-acceptance": {"approves": {LLR_REL: ["LLR-002"]}}}
 
 
 def test_a_reaccept_of_a_row_below_Approved_is_refused_naming_the_row(tmp_path):
@@ -617,7 +617,7 @@ def test_the_rendered_act_commands_survive_a_shell(tmp_path):
         "- [APPROVE] LLR-002 -> sub -> chain holds -> ready\n"
         "- [APPROVE] TC-002 -> sub -> chain holds -> ready\n\n"
         "OUTCOME: APPROVE rows=2\n",
-        "first-approval",
+        "first-acceptance",
     )
     text, why = act.compose_act(repo, VERDICT, WI)
     assert why is None
@@ -634,14 +634,14 @@ def test_the_act_reads_HEAD_not_the_working_tree(tmp_path):
     """Implements: TC-368"""
     repo = _repo(tmp_path)
     _draft(repo)
-    _verdict(repo, FIRST_APPROVAL_MIXED, "first-approval")
+    _verdict(repo, FIRST_ACCEPTANCE_MIXED, "first-acceptance")
     _replace(repo, LLRS, ",Drafted,,P1", ",Approved,,P1")
     baseline_snapshot.copy_live(
         repo, approves=baseline_snapshot.parse_approves("{}={}".format(LLR_REL, WI))
     )
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None
-    assert acts == {"first-approval": {"approves": {LLR_REL: ["LLR-002"]}}}
+    assert acts == {"first-acceptance": {"approves": {LLR_REL: ["LLR-002"]}}}
 
 
 def test_the_composed_act_brief_names_its_verdict_and_trailer(tmp_path):
@@ -669,7 +669,7 @@ def test_a_two_registry_act_says_which_rows_each_approves_token_covers(tmp_path)
         "- [APPROVE] LLR-002 -> sub -> chain holds -> ready\n"
         "- [APPROVE] TC-002 -> sub -> chain holds -> ready\n\n"
         "OUTCOME: APPROVE rows=2\n",
-        "first-approval",
+        "first-acceptance",
     )
     values, why = act.act_values(repo, VERDICT, WI)
     assert why is None
@@ -691,11 +691,11 @@ def test_a_row_ruled_on_two_lines_is_listed_once(tmp_path):
         "- [APPROVE] LLR-002 -> sub -> chain of SR-001 -> ready\n"
         "- [APPROVE] LLR-002 -> sub -> chain of SR-002 -> ready\n\n"
         "OUTCOME: APPROVE rows=1\n",
-        "first-approval",
+        "first-acceptance",
     )
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None
-    assert acts == {"first-approval": {"approves": {LLR_REL: ["LLR-002"]}}}
+    assert acts == {"first-acceptance": {"approves": {LLR_REL: ["LLR-002"]}}}
     values, _why = act.act_values(repo, VERDICT, WI)
     assert values["approves_rows"].count("LLR-002") == 1
 
@@ -706,10 +706,10 @@ RETIRE_COMBINED = (
     "## amendment\n\n"
     "- [CLARITY] TC-001 Status -> Approved -> (deleted) -> retirement\n\n"
     "VERDICT: CLARITY rows=1\n\n"
-    "## first-approval\n\n"
+    "## first-acceptance\n\n"
     "- [APPROVE] TC-002 -> sub -> chain holds -> ready\n\n"
     "OUTCOME: APPROVE rows=1\n\n"
-    "SITTING: JUDGED kinds=amendment;first-approval\n"
+    "SITTING: JUDGED kinds=amendment;first-acceptance\n"
 )
 
 
@@ -724,7 +724,7 @@ def _retire(repo, draft=True):
     _commit(repo, "retire TC-001")
 
 
-def test_a_retired_row_ruled_CLARITY_beside_a_first_approval_is_listed_in_the_reaccepts(
+def test_a_retired_row_ruled_CLARITY_beside_a_first_acceptance_is_listed_in_the_reaccepts(
     tmp_path,
 ):
     """Implements: TC-368"""
@@ -735,7 +735,7 @@ def test_a_retired_row_ruled_CLARITY_beside_a_first_approval_is_listed_in_the_re
     assert why is None, why
     assert acts == {
         "amendment": {"reaccepts": ["TC-001"], "verdict": False, "retires": ["TC-001"]},
-        "first-approval": {"approves": {TC_REL: ["TC-002"]}},
+        "first-acceptance": {"approves": {TC_REL: ["TC-002"]}},
     }
     text, why = act.compose_act(repo, VERDICT, WI)
     assert why is None, why
@@ -743,7 +743,7 @@ def test_a_retired_row_ruled_CLARITY_beside_a_first_approval_is_listed_in_the_re
     assert text.index("--reaccepts TC-001") < text.index("--approves")
 
 
-def test_a_retirement_and_its_first_approval_taken_through_the_snapshot_writer_leave_nothing_owed(
+def test_a_retirement_and_its_first_acceptance_taken_through_the_snapshot_writer_leave_nothing_owed(
     tmp_path,
 ):
     """Implements: TC-368"""
@@ -755,7 +755,7 @@ def test_a_retirement_and_its_first_approval_taken_through_the_snapshot_writer_l
     _take_amendment_act(repo, ["TC-001"])
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert why is None, why
-    assert acts == {"first-approval": {"approves": {TC_REL: ["TC-002"]}}}
+    assert acts == {"first-acceptance": {"approves": {TC_REL: ["TC-002"]}}}
     _take_approval_act(repo, ["TC-002"], values["registries"])
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert acts is None and "owes no act" in why, why
@@ -787,7 +787,7 @@ def test_a_retirement_on_a_held_rung_owes_no_act(tmp_path):
     assert acts == {"amendment": {"reaccepts": ["SR-001"], "verdict": True}}
 
 
-def test_a_first_approval_of_a_row_absent_from_the_committed_tree_is_refused_naming_it(
+def test_a_first_acceptance_of_a_row_absent_from_the_committed_tree_is_refused_naming_it(
     tmp_path,
 ):
     """Implements: TC-368"""
@@ -795,7 +795,7 @@ def test_a_first_approval_of_a_row_absent_from_the_committed_tree_is_refused_nam
     _verdict(
         repo,
         "- [APPROVE] LLR-009 -> x -> chain holds -> ready\n\nOUTCOME: APPROVE rows=1\n",
-        "first-approval",
+        "first-acceptance",
     )
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert acts is None
@@ -819,7 +819,7 @@ def test_an_approval_owed_where_no_approval_record_exists_is_refused(tmp_path):
     _write(repo, TCS, SPINE_TCS)
     set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Needs")
     _commit(repo, "a spine with no approval record")
-    _verdict(repo, FIRST_APPROVAL_MIXED, "first-approval")
+    _verdict(repo, FIRST_ACCEPTANCE_MIXED, "first-acceptance")
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert acts is None
     assert "no approval record" in why, why
@@ -862,7 +862,7 @@ def test_each_rows_act_arm_follows_the_adjudication_action_policy_on_every_rung(
     intake = load_script("intake")
     rulings = {
         word
-        for kind in ("amendment", "first-approval")
+        for kind in ("amendment", "first-acceptance")
         for word in kverdict.ROW_RULINGS[kind][0].values()
     }
     assert rulings == {"MEANING", "CLARITY", "APPROVE", "RETURN"}

@@ -6,7 +6,7 @@ Run FROM THE LANE ROOT with the repo venv:
         WI-NNN <brief> "<ID;ID;...>" "<SR;SR>" <verdict-path> <out.md>
 
 <brief> is the adjudication kind the merge would mint (`amendment` or
-`first-approval`); the row is the lane's own work-item row with `Brief`,
+`first-acceptance`); the row is the lane's own work-item row with `Brief`,
 `Adjudicates` and `SR-Refs` overridden, exactly as the coordinator composed
 WI-688's and WI-787's briefs. The kit's own `adjudicate_brief.compose` fills
 it, so the adjudicator reads the brief the merge's mint would hand a sitting.

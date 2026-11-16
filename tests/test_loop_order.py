@@ -70,7 +70,7 @@ def test_judgement_first_is_a_STABLE_partition_not_a_sort():
     # — the frontier arrives rank-sorted and this rung must not reshuffle it.
     frontier = [
         ("WI-001", "spine"),
-        ("WI-002", "attestation"),
+        ("WI-002", "acceptance"),
         ("WI-003", "adjudication"),
         ("WI-004", "ordinary"),
         ("WI-005", "adjudication"),
@@ -80,7 +80,7 @@ def test_judgement_first_is_a_STABLE_partition_not_a_sort():
         ("WI-003", "adjudication"),
         ("WI-005", "adjudication"),
         ("WI-001", "spine"),
-        ("WI-002", "attestation"),
+        ("WI-002", "acceptance"),
         ("WI-004", "ordinary"),
         ("WI-006", "ordinary"),
     ]
@@ -88,9 +88,9 @@ def test_judgement_first_is_a_STABLE_partition_not_a_sort():
 
 def test_judgement_first_does_not_smuggle_work_past_an_operator_held_stop():
     # The preference reorders; it never CHANGES what may run. An operator-held
-    # attestation still drains and surfaces, with the adjudication row waiting
+    # acceptance row still drains and surfaces, with the adjudication row waiting
     # behind the stop rather than being admitted ahead of it.
-    frontier = [("WI-001", "attestation"), ("WI-002", "adjudication")]
+    frontier = [("WI-001", "acceptance"), ("WI-002", "adjudication")]
     verb, payload = dsp._admission(frontier, True, busy=False, free=2)
     assert verb == "surface"
     assert payload == ["WI-001"]

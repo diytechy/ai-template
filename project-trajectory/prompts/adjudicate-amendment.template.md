@@ -24,7 +24,7 @@
                    copying a live registry in an approval commit (the mirror
                    invariant), which is what makes it an anchor that is provably
                    NOT the text under judgement. When no snapshot exists yet the
-                   slot says so and the session is a FIRST-APPROVAL adjudication.
+                   slot says so and the session is a FIRST-ACCEPTANCE adjudication.
        {aftermath} which branch of the CLARITY and MEANING aftermath this row
                    is actually in — DERIVED from the declared gate authority
                    (`operator_accepts_through` in docs/process.toml) for the tiers

@@ -1401,7 +1401,7 @@ def test_SPINE_APPROVAL_RUNGS_is_the_spine_sibling_of_THE_DIAL(tmp_path):
     """Same pin as its off-spine twin above, for the same reason: a typo'd rung
     would send `operator_accepts_spine` through `operator_holds`' unrecognized arm,
     which answers True — safe, but silently, so a whole spine tier would read as
-    the operator's forever and no first-approval adjudication would ever be minted
+    the operator's forever and no first-acceptance adjudication would ever be minted
     for it. Pin the values against the ladder itself.
 
     KEYED BY REGISTRY STEM, and that is checked here rather than assumed: both
@@ -1425,7 +1425,7 @@ def test_SPINE_APPROVAL_RUNGS_is_the_spine_sibling_of_THE_DIAL(tmp_path):
     )
     assert ac.SPINE_APPROVAL_RUNGS["docs/test/test-cases"] == dg.STAGE_TESTS
     # ONE HOME. The rung table lived in `intake` (registry-keyed) AND in
-    # `adjudicate_brief` (tier-keyed) for one commit, and the first-approval
+    # `adjudicate_brief` (tier-keyed) for one commit, and the first-acceptance
     # brief — which re-resolves its population live, after the mint — was wired
     # to neither, so it rendered the operator's held rows as an adjudicator's to
     # flip. Neither copy comes back.
@@ -1439,7 +1439,7 @@ def test_operator_accepts_spine_is_DERIVED_and_fails_safe(tmp_path):
     Arm 2 is the load-bearing one: at `DevStg-Reqs` the SR tier is HELD and the
     LLR/TC tiers below it are RELEASED — the MIXED dial, which is the state that
     makes "who may approve this row" a per-row question rather than a per-repo
-    one, and the state the first-approval brief got wrong."""
+    one, and the state the first-acceptance brief got wrong."""
     srs = "docs/requirements/system-requirements"
     llrs = "docs/requirements/low-level-requirements"
     tcs = "docs/test/test-cases"
@@ -1538,13 +1538,13 @@ def test_no_shipped_loop_module_WRITES_an_approval_cell():
 
 def test_the_dispatcher_seam_surfaces_on_EITHER_hold():
     """`approval_held` is a second reason to surface, not a widening of the
-    spine one: a held approval surfaces an attestation/gate row even on a spine
+    spine one: a held approval surfaces an acceptance/gate row even on a spine
     tier the project declared machine-approvable."""
     dispatch = load_script("dispatch")
-    assert dispatch._kind_action("attestation", False) == "exclusive"
-    assert dispatch._kind_action("attestation", False, approval_held=True) == "surface"
+    assert dispatch._kind_action("acceptance", False) == "exclusive"
+    assert dispatch._kind_action("acceptance", False, approval_held=True) == "surface"
     assert dispatch._kind_action("gate", False, approval_held=True) == "surface"
-    assert dispatch._kind_action("attestation", True, approval_held=False) == "surface"
+    assert dispatch._kind_action("acceptance", True, approval_held=False) == "surface"
     # Every other kind is untouched by the off-spine axis — the ruling is about
     # who may write an approval, not about what may run.
     for kind in ("ordinary", "critique", "spine", "high-risk", "adjudication"):

@@ -115,7 +115,7 @@ WORKER = "WORKER"
 REVIEWER = "REVIEWER"
 CRITIQUE = "CRITIQUE"
 ADJUDICATE_AMENDMENT = "ADJUDICATE-AMENDMENT"
-ADJUDICATE_FIRST_APPROVAL = "ADJUDICATE-FIRST-APPROVAL"
+ADJUDICATE_FIRST_ACCEPTANCE = "ADJUDICATE-FIRST-ACCEPTANCE"
 ADJUDICATE_DISPOSITION = "ADJUDICATE-DISPOSITION"
 # The CONSOLIDATION brief (the 2026-09-02 backlog-restructure plan §1.1). It
 # REPLACES the retired `ADJUDICATE-CONFLICT`: that template carried the three
@@ -149,7 +149,7 @@ KIT_PROMPTS = {
     REVIEWER: "reviewer.template.md",
     CRITIQUE: "critique.template.md",
     ADJUDICATE_AMENDMENT: "adjudicate-amendment.template.md",
-    ADJUDICATE_FIRST_APPROVAL: "adjudicate-first-approval.template.md",
+    ADJUDICATE_FIRST_ACCEPTANCE: "adjudicate-first-acceptance.template.md",
     ADJUDICATE_DISPOSITION: "adjudicate-disposition.template.md",
     ADJUDICATE_CONSOLIDATE: "adjudicate-consolidate.template.md",
     ADJUDICATE_RED_TC: "adjudicate-red-tc.template.md",

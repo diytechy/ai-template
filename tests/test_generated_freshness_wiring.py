@@ -181,7 +181,7 @@ def test_prompt_catalog_step_reds_when_a_template_changes(tmp_path):
 
 def test_prompt_catalog_step_reds_when_the_composed_question_home_changes(tmp_path):
     """Implements: TC-192"""
-    # WI-882: `prompts/spine-questions.md` is composed into the first-approval
+    # WI-882: `prompts/spine-questions.md` is composed into the first-acceptance
     # and amendment briefs at render time, so it is a source of a launched
     # brief's text like any template. An edit to it that leaves the catalogue
     # alone must red the wired step, not pass it.

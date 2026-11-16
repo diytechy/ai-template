@@ -402,7 +402,7 @@ def test_the_done_when_verdict_grammar(tmp_path):
 
 
 def _fake_spine_assemblers(monkeypatch):
-    """The amendment and first-approval assemblers, stubbed to their slot sets
+    """The amendment and first-acceptance assemblers, stubbed to their slot sets
     and recording the scope each was handed; the done-when one stays real."""
     seen = {}
 
@@ -417,7 +417,7 @@ def _fake_spine_assemblers(monkeypatch):
         }, None
 
     def first(_root, row):
-        seen["first-approval"] = row["Adjudicates"]
+        seen["first-acceptance"] = row["Adjudicates"]
         return {
             "chain": "- TC TC-1 [AWAITING FIRST APPROVAL]",
             "baseline": "B",
@@ -425,7 +425,7 @@ def _fake_spine_assemblers(monkeypatch):
         }, None
 
     monkeypatch.setitem(ab._ASSEMBLERS, "amendment", amendment)
-    monkeypatch.setitem(ab._ASSEMBLERS, "first-approval", first)
+    monkeypatch.setitem(ab._ASSEMBLERS, "first-acceptance", first)
     return seen
 
 
@@ -435,14 +435,14 @@ def test_a_combined_sitting_composes_each_kind_from_its_own_brief(
     """Implements: TC-327"""
     _trunk_root, lane = _lane(tmp_path)
     seen = _fake_spine_assemblers(monkeypatch)
-    scope = "amendment:LLR-1;first-approval:TC-1;done-when:{}".format(WI)
+    scope = "amendment:LLR-1;first-acceptance:TC-1;done-when:{}".format(WI)
     text, why = ab.compose(lane, _row("combined", scope), "docs/reviews/s.md")
     assert why is None, why
-    assert seen == {"amendment": "LLR-1", "first-approval": "TC-1"}
+    assert seen == {"amendment": "LLR-1", "first-acceptance": "TC-1"}
     order = [text.index("=== SECTION `## {}`".format(k)) for k in ab.COMBINABLE]
     assert order == sorted(order)
     assert "the `## done-when` section of docs/reviews/s.md" in text
-    assert "kinds=amendment;first-approval;done-when" in text
+    assert "kinds=amendment;first-acceptance;done-when" in text
     assert _digest() in text
     assert "combined" in ab.ROUTED
 
@@ -463,13 +463,13 @@ def test_a_combined_sitting_refuses_whole_when_a_section_cannot_compose(
 SITTING = (
     "## amendment\n\n- [CLARITY] LLR-1 Detail -> a -> a -> same\n\n"
     "VERDICT: CLARITY rows=1\n\n"
-    "## first-approval\n\nOUTCOME: APPROVE rows=1\n\n"
+    "## first-acceptance\n\nOUTCOME: APPROVE rows=1\n\n"
     "## done-when\n\nDONE-WHEN: BLESSED changes=2 digest={}\n\n"
-    "SITTING: JUDGED kinds=amendment;first-approval;done-when\n"
+    "SITTING: JUDGED kinds=amendment;first-acceptance;done-when\n"
 )
 
 
-KINDS = ("amendment", "first-approval", "done-when")
+KINDS = ("amendment", "first-acceptance", "done-when")
 
 
 def test_a_combined_verdict_is_parsed_section_by_section(tmp_path):
@@ -478,7 +478,7 @@ def test_a_combined_verdict_is_parsed_section_by_section(tmp_path):
     path.write_text(SITTING.format(_digest()), "utf-8")
     assert ab.verdict_refusal("combined", path, kinds=KINDS) is None
     path.write_text(SITTING.format(_digest()).replace("OUTCOME: APPROVE", "OK"))
-    assert "(## first-approval)" in ab.verdict_refusal("combined", path, kinds=KINDS)
+    assert "(## first-acceptance)" in ab.verdict_refusal("combined", path, kinds=KINDS)
     path.write_text(SITTING.format(_digest()).replace(";done-when", ""))
     assert "requested" in ab.verdict_refusal("combined", path, kinds=KINDS)
     path.write_text(SITTING.format(_digest()).replace("## done-when\n", ""))
@@ -644,22 +644,22 @@ def _draft(title):
 def test_at_merge_a_combined_successor_mints_the_done_when_sections_own_draft(
     tmp_path,
 ):
-    """Round 2, MAJOR 3: a combined verdict whose first-approval section
+    """Round 2, MAJOR 3: a combined verdict whose first-acceptance section
     carries a RETURN draft BEFORE the done-when section's SUCCESSOR draft. The
     merge mints the done-when section's own draft, never the first one.
 
     Implements: TC-328
     """
     verdict = (
-        "## first-approval\n\nOUTCOME: RETURN rows=1\n\n"
+        "## first-acceptance\n\nOUTCOME: RETURN rows=1\n\n"
         + _draft("Rework TC-1")
         + "## done-when\n\nDONE-WHEN: SUCCESSOR changes=2 digest={}\n\n".format(
             _digest()
         )
         + _draft("Render the widget at 60 fps")
-        + "SITTING: JUDGED kinds=first-approval;done-when\n"
+        + "SITTING: JUDGED kinds=first-acceptance;done-when\n"
     )
-    bound = ("first-approval", "done-when")
+    bound = ("first-acceptance", "done-when")
     root, before, after = _merged(tmp_path, verdict=verdict, bound=bound)
     minted, refusal = _intake(root, before, after)
     assert refusal is None, refusal
@@ -719,15 +719,15 @@ def test_a_combined_rows_tokens_scope_each_kinds_act():
             "WI-900.md",
             {
                 "brief": "combined",
-                "adjudicates": ["first-approval:TC-001", "amendment:LLR-001"]
+                "adjudicates": ["first-acceptance:TC-001", "amendment:LLR-001"]
                 + ["done-when:WI-007"],
             },
         )
     ]
-    assert ar.first_approval_scope(combined) == {"TC-001"}
+    assert ar.first_acceptance_scope(combined) == {"TC-001"}
     assert ar.amendment_scope(combined) == {"LLR-001"}
     only = [("WI-901.md", {"brief": "combined", "adjudicates": ["amendment:SR-1"]})]
-    assert ar.first_approval_scope(only) is None
+    assert ar.first_acceptance_scope(only) is None
 
 
 # --- round 4: an ABSENT claim is released, an UNREADABLE one is held ----------
@@ -1452,7 +1452,7 @@ def test_the_loop_route_accepts_a_combined_sitting_on_its_bound_kinds(
     """
     _trunk_root, lane = _lane(tmp_path)
     _fake_spine_assemblers(monkeypatch)
-    for kind in ("amendment", "first-approval"):  # the loop's own module copy
+    for kind in ("amendment", "first-acceptance"):  # the loop's own module copy
         loop_assemblers = agent_loop.adjudicate_brief._ASSEMBLERS
         monkeypatch.setitem(loop_assemblers, kind, ab._ASSEMBLERS[kind])
     assigned = _worker(lane)
@@ -1526,7 +1526,7 @@ def test_a_resumed_blocked_lanes_first_build_is_held_at_dispatch(tmp_path):
 _COMPLETE = {
     "done-when": "DONE-WHEN: BLESSED changes=2 digest={}",
     "amendment": "VERDICT: CLARITY rows=1",
-    "first-approval": "OUTCOME: APPROVE rows=1",
+    "first-acceptance": "OUTCOME: APPROVE rows=1",
 }
 
 
@@ -1542,7 +1542,7 @@ def _with_bare_extra(kind):
     return "{}\n{}:\n".format(line, line.split(":", 1)[0])
 
 
-@pytest.mark.parametrize("kind", ("done-when", "amendment", "first-approval"))
+@pytest.mark.parametrize("kind", ("done-when", "amendment", "first-acceptance"))
 @pytest.mark.parametrize("shape", (_split_line, _with_bare_extra))
 def test_a_malformed_machine_line_invalidates_the_verdict(tmp_path, kind, shape):
     """Sol final10 MAJOR: a keyword whose label sits on the next line, or a
@@ -1556,7 +1556,7 @@ def test_a_malformed_machine_line_invalidates_the_verdict(tmp_path, kind, shape)
     single.write_text(shape(kind), encoding="utf-8")
     assert ab.verdict_refusal(kind, single), shape.__name__
     combined = tmp_path / "combined.md"
-    other = "amendment" if kind != "amendment" else "first-approval"
+    other = "amendment" if kind != "amendment" else "first-acceptance"
     sections = {kind: shape(kind), other: _COMPLETE[other].format(_digest()) + "\n"}
     kinds = tuple(sorted(sections))
     combined.write_text(

@@ -16,7 +16,7 @@
 
      Slots (single-brace, strict fill — a missing one refuses):
        {sections}  the composed per-kind briefs, in the order amendment,
-                   first-approval, done-when; each one's {verdict} names its
+                   first-acceptance, done-when; each one's {verdict} names its
                    `## <kind>` section of this sitting's verdict file.
        {kinds}     the `;`-joined kinds composed, which the closing
                    `SITTING:` line restates verbatim.

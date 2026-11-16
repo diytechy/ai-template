@@ -1294,7 +1294,7 @@ def test_attended_approval_row_drains_and_exits_zero_with_the_banner(tmp_path, c
     # corner — a queued gate row with ZERO pending cards. The banner must name
     # the queued row, NOT send the operator to a page that renders "None - no
     # durable operator action is pending".
-    assert "1 queued attestation row(s)" in out, out
+    assert "1 queued acceptance row(s)" in out, out
     assert "no card has projected to open-items.html yet" in out, out
     assert "approval(s) waiting in open-items.html" not in out, out
     assert worker.calls == []
@@ -1306,7 +1306,7 @@ def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeyp
     # can be both a projected card and a queued gate row — so they must never
     # be SUMMED. Review drove the cost of the first fix, which suppressed the
     # queued rows entirely whenever any card existed: one unrelated card hid
-    # two real attestation rows. Both are named, separately, with the overlap
+    # two real acceptance rows. Both are named, separately, with the overlap
     # stated; no total is asserted that neither read supports.
     root = git_repo(tmp_path)
     monkeypatch.setattr(drv, "_pending_cards", lambda _root: ["one waiting card"])
@@ -1314,7 +1314,7 @@ def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeyp
     line = drv._surface_banner(root, ["WI-600", "WI-601"])
 
     assert "1 approval(s) waiting in open-items.html" in line, line
-    assert "2 queued attestation row(s) on the frontier" in line, line
+    assert "2 queued acceptance row(s) on the frontier" in line, line
     assert "the two reads may name the same row" in line, line
     # never summed: 1 card + 2 rows must not be reported as 3 of anything
     assert "3" not in line, line

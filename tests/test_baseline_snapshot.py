@@ -1233,7 +1233,7 @@ def test_a_registry_missing_from_an_EXISTING_snapshot_is_reported(tmp_path):
 def test_an_ESTABLISHED_registry_missing_from_the_record_is_ALWAYS_reported(
     tmp_path, rel, with_live
 ):
-    """The no-copy-before-first-approval exception belongs to the registry that
+    """The no-copy-before-first-acceptance exception belongs to the registry that
     joined the record after it was first signed, and to it alone. For an
     established registry the hole is reported whatever its live rows claim:
     deleting the registry together with its copy leaves no row claiming

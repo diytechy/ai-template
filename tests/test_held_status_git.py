@@ -152,11 +152,11 @@ def _trunk(home, monkeypatch, needs=BASE, frame=None):
 
 def _verdict(root, kind, rows, identities=None, tag=None):
     """The verdict and its accepted binding that a route leaves in the lane:
-    an amendment part ruling `rows` CLARITY (or `tag`), or a first-approval
+    an amendment part ruling `rows` CLARITY (or `tag`), or a first-acceptance
     part APPROVING them; `identities` is the binding's identity cell."""
-    word = tag or {"amendment": "CLARITY", "first-approval": "APPROVE"}[kind]
+    word = tag or {"amendment": "CLARITY", "first-acceptance": "APPROVE"}[kind]
     label = "MEANING" if word.startswith("MEANING") else word
-    line = {"amendment": "VERDICT", "first-approval": "OUTCOME"}[kind]
+    line = {"amendment": "VERDICT", "first-acceptance": "OUTCOME"}[kind]
     text = "".join(
         "- [{}] {} -> judged -> judged -> same\n".format(word, r) for r in rows
     )
@@ -239,12 +239,12 @@ def _the_rule_rides_the_walk():
 def _approve_sn1_with_its_copy(root):
     _write_needs(root, _with(BASE, "SN-001", status="Approved"))
     snap.copy_live(root)
-    _verdict(root, "first-approval", ["SN-001"])
+    _verdict(root, "first-acceptance", ["SN-001"])
 
 
 def _flip_sn1_without_its_copy(root):
     _write_needs(root, _with(BASE, "SN-001", status="Approved"))
-    _verdict(root, "first-approval", ["SN-001"])
+    _verdict(root, "first-acceptance", ["SN-001"])
 
 
 APPROVED = _with(BASE, "SN-001", status="Approved")

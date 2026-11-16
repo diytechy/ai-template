@@ -25,7 +25,7 @@ sessions this loop launches, so it belongs where a diff shows it.**
 | `plan-single.template.md` | the in-lane planner of a claimed row whose claim copy declares `planmode = "single"` (`scripts/review_brief.py plan`) | yes (`PLAN-SINGLE`) |
 
 `spine-questions.md` is not a brief: it is the one home of the questions an
-adjudicator puts to a spine row, per tier. The first-approval and amendment
+adjudicator puts to a spine row, per tier. The first-acceptance and amendment
 briefs compose the sections for the tiers they judge into their `{questions}`
 slot at render time, and the `spine-authoring` skill points at it. An absent or
 unreadable copy refuses those briefs; an override of either brief must keep the

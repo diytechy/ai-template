@@ -83,8 +83,8 @@ MAPPING = [
         "SR-146",
     ),
     (
-        "prompts/adjudicate-first-approval.template.md",
-        "prompts/adjudicate-first-approval.template.md",
+        "prompts/adjudicate-first-acceptance.template.md",
+        "prompts/adjudicate-first-acceptance.template.md",
         "SR-146",
     ),
     (
@@ -134,7 +134,7 @@ MAPPING = [
         "prompts/plan-single.template.md",
         "SR-146",
     ),
-    # The ONE home of the adjudicator's per-tier questions: the first-approval
+    # The ONE home of the adjudicator's per-tier questions: the first-acceptance
     # and amendment briefs compose it at render time (an absent copy refuses
     # them), and the spine-authoring skill points at it.
     ("prompts/spine-questions.md", "prompts/spine-questions.md", "SR-146"),

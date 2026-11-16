@@ -56,7 +56,7 @@ control flow must be a typed field. So it is a typed field.
 ALL NINE BRIEFS ARE NOW ROUTED (`ROUTED`), which they were not for most of this
 module's life. Two came with WI-841: `done-when`, a lane's own Done-when
 change judged in the lane, and `combined`, one lane-checkpoint sitting that
-composes the pending amendment, first-approval and done-when briefs. The
+composes the pending amendment, first-acceptance and done-when briefs. The
 newest (WI-865) is `dispute`: a review finding the lane contests, or one at
 its third round, ruled by the adjudicator. The two that were unrouted are worth keeping on record, because
 each says something about what "routed" costs:
@@ -142,7 +142,7 @@ DISPUTE = kdispute.BRIEF
 # The declared `Brief` cell -> the prompt key its session is composed from.
 BRIEF_PROMPTS = {
     "amendment": prompts.ADJUDICATE_AMENDMENT,
-    "first-approval": prompts.ADJUDICATE_FIRST_APPROVAL,
+    "first-acceptance": prompts.ADJUDICATE_FIRST_ACCEPTANCE,
     "disposition": prompts.ADJUDICATE_DISPOSITION,
     "consolidate": prompts.ADJUDICATE_CONSOLIDATE,
     "red-tc": prompts.ADJUDICATE_RED_TC,
@@ -188,7 +188,7 @@ VERDICT_GRAMMAR = {
     # their grammar from `kitlib.sitting.GRAMMAR`, the one home the Done-when
     # holds validate a sitting with too (WI-841 round 9).
     "amendment": ksitting.GRAMMAR["amendment"],
-    "first-approval": ksitting.GRAMMAR["first-approval"],
+    "first-acceptance": ksitting.GRAMMAR["first-acceptance"],
     "disposition": ("OUTCOME", ("COMPLETE", "PARTIAL", "CANCELLED"), ("successors",)),
     # The CONSOLIDATION grammar (restructure plan §1.2). Its first three
     # alternatives are the retired `conflict` grammar verbatim; the fourth is
@@ -608,16 +608,16 @@ def _spine_excerpt(root, ids):
 
 # The briefs whose `{questions}` slot the home fills; the combined sitting
 # composes both, so the home governs it too.
-QUESTION_BRIEFS = ("amendment", "first-approval", COMBINED)
+QUESTION_BRIEFS = ("amendment", "first-acceptance", COMBINED)
 
-# --- the first-approval brief (operator ruling 2026-09-01) -----------------------
+# --- the first-acceptance brief (operator ruling 2026-09-01) -----------------------
 
 
 def _render_chain(root, entry, scope, srs, llrs_by_sr, tcs_by_ref, registries):
-    """One SR chain rendered for the first-approval brief:
+    """One SR chain rendered for the first-acceptance brief:
     `(lines, has_a_row_of_this_session's, the_Drafted_ids_seen)`.
 
-    Extracted from `first_approval_values` rather than nested in it because the
+    Extracted from `first_acceptance_values` rather than nested in it because the
     per-row judgement is where every rule of this arm lands — the three-way
     intersection, the label that says WHY a row is not yours, and the registry
     the act will name — and the assembler around it is then just "walk the model,
@@ -726,7 +726,7 @@ def _render_assumption_cases(root, reg, scope, registries):
     return _assumption_case_chain(root, reg.srs, reg.tcs, cases) + body, awaiting
 
 
-def first_approval_values(root, row):
+def first_acceptance_values(root, row):
     """`({chain, baseline, questions}, None)` for the spine rows a lane
     authored `Drafted` and did not approve, or `(None, reason)`; the values
     also report the SRs marked as this session's under
@@ -760,7 +760,7 @@ def first_approval_values(root, row):
     before the fix: 4 SR chains, 11 `[AWAITING FIRST APPROVAL]` rows and all
     three spine registries in the derived `--approves` argument, from a mint of
     one row. That contradicts the doctrine this same change wrote (the merge
-    "MINTS a first-approval adjudication over the `Drafted` rows the lane handed
+    "MINTS a first-acceptance adjudication over the `Drafted` rows the lane handed
     over") and the operator's own concurrency reason for moving the act to trunk:
     the approval snapshot must not move across a workstream. It also
     manufactured operator interrupts — a second merge's adjudication, minted while
@@ -981,7 +981,7 @@ def consolidate_values(root, row):
     `(None, reason)`.
 
     THE CLUSTER IS THE ROW'S OWN `Adjudicates` CELL, and the population is
-    RE-DERIVED LIVE against it — the two halves `first_approval_values` was
+    RE-DERIVED LIVE against it — the two halves `first_acceptance_values` was
     rebuilt around, for the same two reasons. The cell BOUNDS the question (a
     live re-derivation with no scope to intersect asks a wider question than the
     mint asked), and the live read ANSWERS it (`red_tc_values`' rule: brief the
@@ -1483,7 +1483,7 @@ def _render_finding(finding):
 # relaxing the fill.
 _ASSEMBLERS = {
     "amendment": amendment_brief.amendment_values,
-    "first-approval": first_approval_values,
+    "first-acceptance": first_acceptance_values,
     "consolidate": consolidate_values,
     "disposition": disposition_values,
     "red-tc": red_tc_values,

@@ -979,7 +979,7 @@ def missing_cell_findings(tiers):
     AN ABSENT CELL WAS THE ONE SHAPE THE VOCABULARY CHECKS COULD NOT SEE. They
     judge a value that is present, so a row authored with no `status` passed
     every one of them while reading, to each surface that asks what it owes, as
-    neither `Drafted` nor approved: no first-approval arm and no drift arm
+    neither `Drafted` nor approved: no first-acceptance arm and no drift arm
     fires on it, and the approval brief omitted it. A row with no `phase` in a
     phased spine falls outside every `--phase` scope the same silent way. Both
     are wrong at any stage, so both are integrity-class. The phase half arms as

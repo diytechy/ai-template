@@ -691,11 +691,11 @@ APPROVAL_RUNGS = _kitauthority.APPROVAL_RUNGS
 # IT HAS ONE HOME BECAUSE IT HAS TWO CONSUMERS AND THEY MUST NOT DISAGREE. The
 # mint (`intake._released_drafted_rows`) uses it to decide which Drafted rows a
 # merge hands to an adjudicator; the brief
-# (`adjudicate_brief.first_approval_values`) uses it to decide which of the rows
+# (`adjudicate_brief.first_acceptance_values`) uses it to decide which of the rows
 # it re-resolves LIVE that adjudicator may actually flip. It was two tables for
 # one commit — a registry-keyed one in `intake` and a tier-keyed one in
 # `adjudicate_brief` — and the brief's copy was consulted only for the
-# amendment arm's aftermath, so the first-approval arm derived its `--approves`
+# amendment arm's aftermath, so the first-acceptance arm derived its `--approves`
 # argument with no dial filter at all: at any dial holding a spine rung the
 # brief rendered the operator's held rows as this session's to approve. One table
 # with one predicate is what makes that unrepresentable rather than detected.
@@ -769,7 +769,7 @@ def operator_accepts(docs, registry):
     home for it. Any path that would set an off-spine `status` to `Approved` MUST
     consult this first and refuse when it answers True. Today the kit ships no
     such automated writer — off-spine approvals are hand-edited — so the
-    live consumers are the dispatcher's attestation/gate arm (`dispatch.
+    live consumers are the dispatcher's acceptance/gate arm (`dispatch.
     _kind_action`, which surfaces rather than dispatching a WI whose action
     would move a held registry's approvals) and `intake`'s snapshot/flip path,
     which is where the first machine writer would land. That is the honest
@@ -801,7 +801,7 @@ def operator_accepts_spine(docs, registry):
     this — not only the path that mints the row, but every path that later
     re-resolves the population and renders it. The two are separated by a merge
     and a claim (`intake._released_drafted_rows` mints; `adjudicate_brief.
-    first_approval_values` re-resolves live at composition time), and a filter
+    first_acceptance_values` re-resolves live at composition time), and a filter
     applied at only one of them is a filter the brief does not have."""
     rung = _kitauthority.rung_for(registry)
     if rung is None:

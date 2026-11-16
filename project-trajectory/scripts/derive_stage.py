@@ -190,7 +190,7 @@ def _settled_off_spine(rows, table):
 # with the maturity table its settled reading filters by: the settled branch
 # drops their Drafted rows as it does every tier's, so a settled reading is
 # never held by them, and the live reading holds a rung once a tier is active.
-_FIRST_APPROVAL_TIERS = {
+_FIRST_ACCEPTANCE_TIERS = {
     "das": spine_rules.DA_MATURITY,
     "surs": spine_rules.SUR_MATURITY,
     "stks": spine_rules.STK_MATURITY,
@@ -210,7 +210,7 @@ def _stage_map(spine, settled, evidence_passed=False):
     bifs, cmps = spine["bifs"], spine["cmps"]
     # The three tiers read from their first approval (SR-204). A spine built
     # before they existed carries none of them, and reads as an empty tier.
-    tiers = {key: spine.get(key, []) for key in _FIRST_APPROVAL_TIERS}
+    tiers = {key: spine.get(key, []) for key in _FIRST_ACCEPTANCE_TIERS}
     live_labels = set(_phase_groups(srs, llrs, tcs))
 
     if settled:
@@ -222,7 +222,7 @@ def _stage_map(spine, settled, evidence_passed=False):
         bifs = _settled_off_spine(bifs, spine_rules.BIF_MATURITY)
         cmps = _settled_off_spine(cmps, spine_rules.CMP_MATURITY)
         tiers = {
-            key: _settled_off_spine(rows, _FIRST_APPROVAL_TIERS[key])
+            key: _settled_off_spine(rows, _FIRST_ACCEPTANCE_TIERS[key])
             for key, rows in tiers.items()
         }
 
@@ -273,9 +273,9 @@ def derive(root):
     settled_stage = min(earned, key=kitstage.order) if earned else kitstage.BELOW
 
     rows = spine["srs"] + spine["llrs"] + spine["tcs"]
-    # The three first-approval tiers' drafts are counted too, whether or not
+    # The three first-acceptance tiers' drafts are counted too, whether or not
     # their tier is read yet: the count is of rows in work, not a rung.
-    tier_rows = [r for key in _FIRST_APPROVAL_TIERS for r in spine.get(key, [])]
+    tier_rows = [r for key in _FIRST_ACCEPTANCE_TIERS for r in spine.get(key, [])]
     drafted = sum(1 for r in rows + tier_rows if spine_rules.is_drafted(r)) + len(
         spine["sn_draft"]
     )

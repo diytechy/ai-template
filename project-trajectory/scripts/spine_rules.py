@@ -153,7 +153,7 @@ sn_draft_ids = spine_carrier.draft_ids_from_text
 # not private helpers of a rung. Under the pins that was an argument that had to
 # be made; now it is just what a re-export is for.
 # `is_approved` has a caller here again since `tier_active` (SR-204): the first
-# APPROVED row is what switches a first-approval tier on.
+# APPROVED row is what switches a first-acceptance tier on.
 
 
 # `is_planned` WAS DELETED AT D-9 STEP 5 (not re-keyed) with the word it read:

@@ -13,7 +13,7 @@ half-filled brief, a refusal is a hold. `adjudicate_brief` routes the
 `amendment` brief to `amendment_values` and composes it there; this module
 neither composes nor routes.
 
-WHAT ELSE LIVES HERE, AND WHY. The arm reads five things the first-approval
+WHAT ELSE LIVES HERE, AND WHY. The arm reads five things the first-acceptance
 arm reads as well: the row's declared scope (`adjudicates`), the tier
 questions' one home (`tier_questions`), the tier -> registry join
 (`_REGISTRY_OF`, whose unchained tiers are this arm's) with the dial per tier
@@ -170,7 +170,7 @@ def amendment_values(root, row):
     baseline line says so rather than naming a date.
 
     WHICH ROWS IS THE ROW'S OWN `Adjudicates` SCOPE, intersected with the
-    model — `first_approval_values`' rule, for its reason. The model is
+    model — `first_acceptance_values`' rule, for its reason. The model is
     REPO-WIDE: it walks every SR, so a brief built from it alone handed each
     amendment row every drifted approved row in the tree, and each verdict had
     to count its own rows by hand and list the rest as excluded (three
@@ -208,7 +208,7 @@ def amendment_values(root, row):
     if not baseline_snapshot.exists(root):
         return None, (
             "no {} snapshot exists yet, so nothing has been approved — every row "
-            "here poses a FIRST-APPROVAL question rather than a "
+            "here poses a FIRST-ACCEPTANCE question rather than a "
             "meaning-or-clarity one, and there is no accepted anchor to measure "
             "an amendment against".format(baseline_snapshot.SNAPSHOT_DIR)
         )
@@ -224,7 +224,7 @@ def amendment_values(root, row):
     if not lines:
         # One refusal for every way the SCOPED population empties, naming the
         # scope: a repo-wide "nothing to judge" beside it would be two answers
-        # to one question (`first_approval_values`' rule).
+        # to one question (`first_acceptance_values`' rule).
         return None, (
             "none of the {} row(s) this adjudication was minted over ({}) still "
             "carries approved text that differs from its {} copy — re-anchored, "
@@ -434,7 +434,7 @@ _REGISTRY_OF = {
     "LLR": "docs/requirements/low-level-requirements.toml",
     "TC": TC_REGISTRY,
     # The amendment brief's unchained tiers (OI-100, WI-791). Only the
-    # amendment arm ever renders these kinds; a first-approval chain holds
+    # amendment arm ever renders these kinds; a first-acceptance chain holds
     # SR, LLR and TC rows alone.
     **{kind: rel for kind, rel, _col in _UNCHAINED_TIERS},
 }

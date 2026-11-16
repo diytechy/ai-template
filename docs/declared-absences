@@ -125,7 +125,7 @@ prompts/worker.template.md — see the `prompts/` line above (kit home: project-
 prompts/reviewer.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/reviewer.template.md).
 prompts/critique.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/critique.template.md).
 prompts/adjudicate-amendment.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-amendment.template.md).
-prompts/adjudicate-first-approval.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-first-approval.template.md).
+prompts/adjudicate-first-acceptance.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-first-acceptance.template.md).
 prompts/adjudicate-disposition.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-disposition.template.md).
 prompts/adjudicate-red-tc.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-red-tc.template.md).
 prompts/adjudicate-consolidate.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-consolidate.template.md). The fifth routed adjudication brief, SHIPPED by WI-583.
@@ -135,7 +135,7 @@ prompts/adjudicate-combined.template.md — see the `prompts/` line above (kit h
 prompts/adjudicate-dispute.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-dispute.template.md). The dispute sitting: a review finding the lane contests, or one at its third round, ruled by the adjudicator (WI-865).
 prompts/adjudicate-act.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-act.template.md). The act brief: the later adjudicator turn that takes the act a committed verdict authorizes (WI-912).
 prompts/plan-single.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/plan-single.template.md). The single-plan brief: the in-lane planner of a claimed row whose claim copy declares `planmode = "single"` (WI-913).
-prompts/spine-questions.md — see the `prompts/` line above (kit home: project-trajectory/prompts/spine-questions.md). The one home of the adjudicator's per-tier questions, composed into the first-approval and amendment briefs.
+prompts/spine-questions.md — see the `prompts/` line above (kit home: project-trajectory/prompts/spine-questions.md). The one home of the adjudicator's per-tier questions, composed into the first-acceptance and amendment briefs.
 prompts/dual-plan-planner.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-planner.template.md).
 prompts/dual-plan-critic.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-critic.template.md).
 prompts/dual-plan-arbiter.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-arbiter.template.md).
