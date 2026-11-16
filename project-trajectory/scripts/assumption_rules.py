@@ -101,7 +101,8 @@ Contract IF-190: the assumption tier's rule surface `trace.py` imports. Rows in,
     template's example and is never judged.
     Two reach reports ride the same seam as advisories, composed by the checker
     beside the tier: `assumption_reach_advisories(das, srs, needs, stks, exts,
-    bifs, surs)`, silent when `bifs` declares no crossing, and
+    bifs, surs)`, silent when `bifs` declares no crossing and one count line
+    while no stakeholder is agreed, and
     `need_frame_gap_advisories(needs, stks, srs, bifs, das)`, silent with no
     operation crossing or no agreed stakeholder. `needs` are
     `spine_carrier.load_needs`' rows. `reaching_parties(needs, stks, exts)` is
@@ -178,7 +179,8 @@ Contract IF-231: the assumption gate's rules, read by the gate's check step
     ids]}` and `module_srs(llrs) -> {module: [requirement ids]}`; and
     `release_gate_findings(das, srs, risks)` (SR-206), with `risks` mapping
     each assumption id to its `accepted_risk_state` pair. A `-000` row is never
-    judged.
+    judged. `held_until_agreed(lines, stks, what)` returns `lines`, or one
+    count line in their place while no stakeholder is agreed.
 """
 
 import datetime
@@ -791,12 +793,32 @@ def _idle_landings(did, landing, entity_of, reach, fidelity):
 
 def assumption_reach_advisories(das, srs, needs, stks, exts, bifs, surs):
     """SR-195's reach check, need by need, as advisories: every line
-    `reach_gaps` holds, in assumption order.
+    `reach_gaps` holds, in assumption order, or one line in their place while
+    no stakeholder is agreed (`held_until_agreed`).
 
     Implements: SR-195, LLR-227
     """
     gaps = reach_gaps(das, srs, needs, stks, exts, bifs, surs)
-    return [line for lines in gaps.values() for line in lines]
+    lines = [line for lines in gaps.values() for line in lines]
+    return held_until_agreed(lines, stks, "stakeholder-reach advisory line(s)")
+
+
+def held_until_agreed(lines, stks, what):
+    """`lines` as given once a stakeholder is agreed (`Approved`, or `Founded`,
+    with a `Party`); while none is, one line in their place: the count, and
+    what to do.
+
+    With no agreed stakeholder no need has a party, so every served need reads
+    as unreachable and every landing as idle, and the per-row lines restate
+    that one fact once per row (hundreds of lines in the repositories that
+    adopted the kit). `what` names the lines counted."""
+    if not lines or _agreed_parties(stks):
+        return lines
+    return [
+        "{} {} not listed one by one: no stakeholder is Approved with a Party "
+        "yet, so every need reads as unreachable; approve the stakeholders to "
+        "list them".format(len(lines), what)
+    ]
 
 
 def reach_gaps(das, srs, needs, stks, exts, bifs, surs):

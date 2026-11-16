@@ -22,6 +22,7 @@ Implements: TC-237, TC-238, TC-239
 
 import datetime
 import inspect
+import re
 import shutil
 import subprocess
 
@@ -277,6 +278,27 @@ def test_with_the_gate_absent_or_off_each_condition_is_an_advisory(scaffold, gat
     assert _findings(proc, "FAIL") == []
     for sid, needles in BOUNDARY_FAILURES.items():
         assert len(_findings(proc, "ADVISORY", sid, *needles)) == 1, (sid, proc.stdout)
+
+
+def test_with_no_agreed_stakeholder_the_advisories_fold_into_one_count(scaffold):
+    # Every reliance reads as unreached while no stakeholder is agreed, so the
+    # advisories are one line with their count; failures are never folded.
+    drafted = NEEDS.replace(
+        'party = "EXT-001"\nstatus = "Approved"',
+        'party = "EXT-001"\nstatus = "Drafted"',
+    )
+    root = _project(scaffold, {**BOUNDARY, NEEDS_REL: drafted}, gate=False)
+    proc = _step(root, "assumption-gate")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    advisories = _findings(proc, "ADVISORY")
+    assert len(advisories) == 1, proc.stdout
+    total = re.search(r"assumption-gate: (\d+) finding\(s\)", proc.stdout).group(1)
+    assert advisories[0].startswith("ADVISORY: {} finding(s) not listed".format(total))
+    assert "approve the stakeholders" in advisories[0], advisories
+    _policy(root, True)
+    proc = _step(root, "assumption-gate")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert len(_findings(proc, "FAIL")) == int(total), proc.stdout
 
 
 def test_with_the_gate_on_each_unmet_condition_fails_naming_it(scaffold):
