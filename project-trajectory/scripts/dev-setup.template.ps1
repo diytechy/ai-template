@@ -64,9 +64,11 @@ $IdeInstall = ""
 
 # One entry per role. Cmds: detection commands (any present => role present).
 # Install: the install command (empty = nothing to install here).
+# The design line is an EXAMPLE second role (a non-code asset designer):
+# uncomment it to declare it.
 $Roles = [ordered]@{
     code   = @{ Cmds = @();           Install = "" }  # toolchain is setup.ps1's job
-    design = @{ Cmds = @("inkscape"); Install = "" }  # e.g. "winget install --id Inkscape.Inkscape -e"
+    # design = @{ Cmds = @("inkscape"); Install = "" }  # e.g. "winget install --id Inkscape.Inkscape -e"
 }
 # ===========================================================================
 

@@ -1110,11 +1110,14 @@ def test_at_a_terminal_each_missing_item_is_offered_consent_first(
     (root / "scripts").mkdir(parents=True)
     marker = tmp_path / "installed"
     text = (scaffold_root / "scripts" / "dev-setup.sh").read_text(encoding="utf-8")
+    # The shipped default declares `code` only; declare the example role.
+    text = text.replace('\nROLES="code"\n', '\nROLES="code design"\n')
     text = text.replace('design_CMDS="inkscape"', 'design_CMDS="no-such-tool-834"')
     text = text.replace(
         'design_INSTALL=""', "design_INSTALL=\"touch '{}'\"".format(marker)
     )
     assert "no-such-tool-834" in text and str(marker) in text
+    assert 'ROLES="code design"' in text
     (root / "scripts" / "dev-setup.sh").write_text(text, encoding="utf-8")
     for answer, installed in ((b"n\n", False), (b"y\n", True)):
         code, out = _at_a_terminal(

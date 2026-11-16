@@ -61,14 +61,15 @@ IDE_INSTALL=""
 # Declared roles (space-separated). For each <role>, set:
 #   <role>_CMDS     detection commands; if ANY is on PATH the role reads present
 #   <role>_INSTALL  the install command (empty = nothing to install here)
-ROLES="code design"
+ROLES="code"
 
 # code — a code contributor. The linter/test toolchain is setup.sh's job, so
 # this usually stays empty (baseline runtime + git is what they need here).
 code_CMDS=""
 code_INSTALL=""
 
-# design — a non-code asset designer (art/UI). Example: an SVG editor.
+# design — an EXAMPLE second role, a non-code asset designer (art/UI); add it
+# to ROLES to declare it. Example: an SVG editor.
 design_CMDS="inkscape"
 design_INSTALL=""   # e.g. "sudo apt-get install -y inkscape"
 # ===========================================================================
