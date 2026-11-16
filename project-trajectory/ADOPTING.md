@@ -273,6 +273,7 @@ Preserving a customized roster is the starting point for judging its relevance.
 
 | What you need | Where |
 | --- | --- |
+| full kit upgrade or scoped spine rebuild: choose the route and its completion conditions | pack §0 |
 | the procedure: what to read, in what order, and the judgement SR-036 leaves to you | pack §1 |
 | the file-by-file deviation review over the `MAPPING` inventory — overwrite / regenerate / re-apply-dials / preserve, and the sets that only move together | pack §2 |
 | the per-change migration entries, each anchored `[since <kit sha>]` so your stamp-to-target range selects the ones that apply | pack §3 |
