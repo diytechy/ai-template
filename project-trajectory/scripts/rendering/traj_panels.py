@@ -760,7 +760,7 @@ def _station_svg(root):
             "Station refresh",
             (
                 "merge trunk in · trunk_step · checks",
-                "green ⇒ {} @ branch tip".format(record_label),
+                "pass ⇒ {} @ branch tip".format(record_label),
             ),
             opts_doc,
             R,
@@ -855,7 +855,7 @@ def _station_panel(root):
         "<li><b>Empty frontier</b> — the exit ladder: a registry gap census "
         "hands the intake its mint (gap-closure rows re-fill the frontier); "
         "else pending acceptances surface; else an honest drain.</li>\n"
-        "<li><b>Red checks · lost race</b> — a red refresh goes back to the lane "
+        "<li><b>Failed checks · lost race</b> — a failed refresh goes back to the lane "
         "to fix on the branch; a slot ancestor miss re-refreshes, and after one "
         "lost race the branch takes the slot for its retry.</li>\n"
         "</ul>"
