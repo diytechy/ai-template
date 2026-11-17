@@ -441,9 +441,16 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # Deferred: check.py keeps its kitlib-only floor and a commit that is not a
     # squash imports no tracer; integrate pays it only at a refresh or the
     # slot. trace imports neither module, so no cycle or layer edge grew.
-    assert 14 <= deferred <= 43, (
+    # RE-STAMPED 43 -> 44 (2026-11-17, D11 on maint/vocabulary):
+    # migrate_vocabulary -> kitlib.config joins deferred, inside `_stack_parse`,
+    # its one user. The migrator's `gates =` step proves its rewrite by
+    # re-parsing through the kit's one stack-profile parse rather than a copy
+    # of it; deferred so every other step still imports nothing from the kit.
+    # kitlib.config imports no migrator, so no cycle or layer edge grew. Reason
+    # in HANDOFF §9.14.
+    assert 14 <= deferred <= 44, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..43 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..44 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "
