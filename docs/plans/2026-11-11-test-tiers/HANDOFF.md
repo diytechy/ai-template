@@ -1750,6 +1750,183 @@ Traps found:
     "standard" for "bar" took it over. Measure the capped files after prose
     edits.
 
+### §9.12 The tenth session: item 1's two leftovers, §4.5.6 in prose and "bar" in this repository's docs (§10.7)
+
+Written 2026-11-16. It did the two leftovers §9.11 lists, both ruled "as
+drafted" (§12.2), on `maint/vocabulary` from `78fff040c`, through §10.3's
+loop, every line of every dry run read. Hook bypassed (D14); nothing pushed.
+The rule and line-edit files are in `vocab-tools/` under the names below.
+
+| Concept | Commit | What moved |
+|---|---|---|
+| "bar" in this repository's docs (§4.5.5, §4.5.7) | `71bcf4020` | `h48a_bar_docs.py`: 33 line edits in 9 files (the enforcement audit, the registry machinery reference, the dependency ledger, four knowledge packs, the declared absences, `LOG.template.md`) |
+| §4.5.6 in prose | `163fd6c1e` | `r48b_pass_fail_prose.py` 788 lines in 206 files (the phrase map); `h48b_pass_fail.py` 350 line edits in 141 files and `h48c_pass_fail_rest.py` 7 (what the map could not read, and its corrections); regenerated `prompts/CATALOG.md`, `skills/INDEX.csv`, `docs/stage`. 1,076 lines in 239 files; by area: tests 513 lines in 118 files, kit scripts 221 in 49, skills 112 in 17 (three copies), rows 98 in 7 registries, kit prose 60 in 20, this repository's docs 43 in 15, CI 11 in 4, root 7 in 4, repo scripts 6 in 2, generated 5 in 3 |
+| the record | `db12d3857` | the migrator's record step wrote five copies equal to live: 93 cells in 80 rows absorbed (LLR 26, SR 20, TC 31, SN 3), named in `vocab-tools/s48_record_absorbed.txt`. Before it ran, every copy was byte-equal to its live registry at `78fff040c`, so it absorbed this rewording and nothing else. Then `5c447bb91` regenerated the open-items view (trap 46) |
+
+**What the words became.** A run of checks passes or fails, by part of
+speech, so number holds without a mark: "reds X" is "fails X", "would red" is
+"would fail", "goes red" is "fails", "is green" is "passes", "stays green" is
+"keeps passing", "a red tier" is "a failing tier", "a red" is "a failure", "a
+green" is "a pass", "a false green" is "a false pass" (SN-008's own words),
+"red-first" is "failing-first", "red-then-green" is "failing and then
+passing". "Bar" in the docs: a run of checks takes the glossary's terms (the
+commit checks where `check_resync` runs, the gate checks of `check.py --gate`
+and of `trace.py`'s command lines, the merge slot's landing checks), a stage
+is a stage (the release stage), a threshold is a standard, minimum or
+threshold.
+
+**Decisions taken here.**
+
+(a) **`docs/concurrency-v2.md` keeps its words.** §9.11 listed it, but it is
+a closed and ruled plan (its header says so), `common.RECORDS` lists it, and
+every earlier concept left it as written ("owner", "re-attest"). Changing
+only its "bar" would leave a record half in each vocabulary.
+
+(b) **`rendering/` and the dashboard's tests are left whole**, as this
+session's brief listed them with the colours. Most of their "red" and "green"
+are colours; these are the pass/fail sense, **for the operator**: the panel
+texts `traj_panels.py:763` ("green ⇒ … @ branch tip") and `:858` ("Red checks
+· lost race — a red refresh goes back to the lane"), the comments
+`traj_panels.py:505` and `traj_views.py:1048`, and comments in
+`test_traj_graph.py` (644, 869), `test_traj_panels.py` (422, 539, 576, 641,
+766), `test_traj_render.py` (50), `test_traj_render_sweeps.py` (11, 39, 438,
+473), `test_traj_views.py` (73, 578), `test_gen_trajectory_pending.py` (131)
+and `traj_fixtures.py` (375, 394, 400). The panel texts change the dashboard,
+so `PROJECT_STATE.html` with them.
+
+(c) **The red, green, refactor cycle is named once**, in `PROCESS.md` §4
+(DevStg-Impl), as the rule says; `test_prompts` pins that sentence. The
+parenthesis is gone from `README.md`, `AGENTS.template.md`, `KICKOFF_PROMPT.md`
+and gate-advance's "(red → green)". `AGENTS.template.md` is 9,964 bytes, under
+its cap.
+
+(d) **"Red" and "green" for a test case's status are the evidence gap's
+words**, not a run's: "a test case that is not green" is "not accepted", "a
+list of red words" is "a list of gap statuses", an exempt status is "no gap"
+(LLR-1648, LLR-1996, the intake's evidence-gap brief, `test_loop_order`,
+`test_adjudicate_brief`).
+
+(e) **Names of rulings and rules** are said in plain words rather than coined:
+"the §A3 ruling on a failing handback" (was the "red-handback ruling"), "on a
+failed refresh", "on a failing close" (also in the quarantine's commit
+message, `handback.py`), "the ruled failure arm" (quarantine), "the rule that
+no list edit makes a check pass" (was "never-green-by-list-edit"), "a
+successor that makes it pass" (was "fix-to-green"). LLR-343's title is
+"Commit-check failure cap and partial-close outcome" (the glossary's term);
+SR-010's is "Scaffold passes out of the box"; SR-157's, SR-158's and SR-167's
+titles say "fail" where they said "red".
+
+(f) **Messages that changed**, each grepped in the tests: `trunk_step`'s "the
+trunk lane FAILED —" (was "is RED"), `dispatch`'s "the refresh FAILED for"
+(was "is RED for"), the intake's "This close PASSED:" (was "was GREEN:") and
+its evidence-gap brief, `check_iterate`'s verdict word "passed"/"FAILED", the
+loop's session-outcome text "passed" (was "green"), the scaffolded gate
+policy's "No un-run passes" (with `docs/gate-policy.md` and
+`test_gate_policy`), bootstrap's "a wrong entry makes the harness pass
+falsely", the expected-failure refusal's "makes its tests pass",
+`record_test_evidence`'s help, the release checklist's "`… --tier release`
+passes". `test_checks_that_stage_an_edit_leave_the_index_as_staged` takes the
+ids `failing`/`passing` (D4; no evidence cell cites its ids).
+
+(g) **The spec of record `docs/specs/WI-1001.md` quotes its work item
+verbatim again.** `3cf264ccd` had turned the quotation "or the bar stays red"
+into "or the checks stays red", a misquote of `docs/work/queued/WI-1001-…`
+(a record, which keeps its words). The quotation is restored; the spec's own
+prose says "every check kept passing", and `WI-1006.md`'s "every check keeps
+passing". `docs/specs/WI-910.md`, also a spec of record, is left.
+
+(h) **Earlier slips fixed on the way**: `test_integrate_station`'s quotation
+of §A8, "the harness is still the checks", is "still the standard" again (as
+`PROCESS.md` has it); `test_agent_loop_review_gate`'s ". failing checks
+draws" is ". Failing checks draw"; `dispatch`'s "A merged lane that fails the
+checks have broken" is "has broken".
+
+(i) **The spine-authoring skill keeps one "green"**: its warning against
+colour-only signals quotes "a reader can believe a green" as the anti-pattern.
+
+**Left as written**, by the inventory (`inv.py lines` for red, green, reds,
+reddens; 223 lines at the end of this session):
+
+- **Python names, 104 lines**: locals, parameters and constants (`red`,
+  `green`, `reds`, `red=True`, `parametrize("green", …)`, `STUB_CHECK_GREEN`).
+  §4.5.6 covers prose, comments and messages; a name is not prose. `pyname.py`
+  can rename them in one pass if the operator wants it.
+- **The dashboard and its tests, 30, and `rendering/`, 6**: decision (b).
+- **The size and complexity ratchets' history notes, 25**: each records a
+  bump in the words of its day.
+- **`reroll-until-green`, 14**: the flip of a review's verdict at one tree
+  (`score_reviews`, the merge slot's refusal, `agent_brief`, their tests). It
+  is a review verdict, not a run of checks, and every other name for it would
+  be coined. **For the operator.**
+- **Retired spellings and their readers, 10; the glossary, 9** (the rule and
+  its "Formerly" lines).
+- **Quotes and records, 8**: WI-1001's quotation and its review finding,
+  WI-910's title, `check_trajectory.py:1898` quoting a record's box text, and
+  (i).
+- **Idioms and external words, 7**: "Red flags", "red-flagged", an external
+  plugin's GREEN/YELLOW/RED, the quick red fox of a diff test.
+- **Fixture data and record slugs, 6**: `check-red`, "harness green" titles, a
+  method cell under test, the WI-326 review slug.
+- **The cycle, 2**: `PROCESS.md` and the test that pins it.
+- **Unclear sense, 2**: `spine_rules.py:701` and `test_acceptance_level.py:957`,
+  "an SR reaches `Accepted` only once its LLRs and TCs are green". Green could
+  mean accepted (the ordering runs the other way, parent first) or passing.
+  **For the operator.**
+
+**Tests** (8 workers, Git Bash, `PYTEST_DEBUG_TEMPROOT` unset):
+
+| Concept | Modules | Result |
+|---|---|---|
+| "bar" in docs | 13: the standing six with the modules reading the edited docs (`test_dependency_ledger`, `test_push_policy`, `test_status_vocabulary_contract`, `test_hats`, `test_shipped_tier`, `test_check_docs`, `test_bootstrap`) | 2 failed, 384 passed, 1 skipped in 88.73s; both re-stamps |
+| §4.5.6 | 121 (`vocab-tools/s48b_tests.txt`): every test module edited, the standing six, and the modules of the edited messages, templates and skills | 2 failed, 4522 passed, 6 skipped in 951.80s; both re-stamps |
+| final tree `5c447bb91` | 12: the standing six with `test_skills_sync`, `test_check_iterate`, `test_gate_policy`, `test_prompts`, `test_gen_open_items`, `test_acceptance_record` | 1 failed, 308 passed, 1 skipped in 36.22s; the module-size re-stamp |
+
+The unfiltered suite was not run (§10.7 item 7).
+
+**Standing checks** on `5c447bb91`: `trace.py --strict` exit 0
+(`integrity=0`); `check_trajectory.py --strict` clean, 254 advisory WARNs;
+`check_docs.py --stale` 0 broken; `scripts/check_resync.py` OK;
+`migrate_vocabulary.py --check` "nothing stored in an earlier spelling";
+`gen_open_items.py`, `derive_stage.py`, `gen_prompt_catalog.py`,
+`gen_skills_index.py` `--check` fresh; `ruff format --check` and `ruff check`
+clean (430 files); skill mirrors identical. `check_complexity.py --mode
+enforce` fails exactly as §9.9 lists, nothing added.
+
+**Known failures left** (§10.7 item 6, D17), re-stamps only:
+`test_capped_doc_baselines_match_the_real_sizes` (`CLAUDE.md` 8,037 to 8,052
+bytes; `AGENTS.template.md` 9,999 to 9,964, under its cap);
+`test_module_sizes_exactly_match_the_committed_baseline` (`integrate.py` 1,793
+to 1,805, `trace.py` 3,851 to 3,852, `check.py` 1,393 to 1,391, none moved by
+this session); `check.py`'s complexity step as §9.9.
+
+Traps found:
+
+68. *Trap 56 reaches a one-off edit script piped to Python.* A script fed to
+    `python -` through a Bash heredoc (quoted delimiter) did not receive its
+    `\\b` escapes as written; its own assertion on the old text failed and
+    nothing was written. Edit rule files with the file tool, and let any
+    edit script assert the text it replaces.
+69. *A hyphen is a word edge.* `(runs|run) green` rewrote "re-runs green" to
+    "re-passes" and "un-run green" to "un-pass". Guard verb rules with
+    `(?<!-)` and take the hyphenated forms first.
+70. *"Reds" is a noun and a verb.* A determiner at the end of the line above
+    ("Those\n# reds read like …") hides the noun from a rule. Read every line
+    that a verb rule writes at a line start.
+71. *A colour word can be the anti-pattern's example.* spine-authoring quotes
+    "a reader can believe a green" to warn against colour-only signals; a
+    sweep turned the example into its own cure. Read what a quotation is for.
+72. *A word can name a status as well as a run.* The evidence-gap census
+    calls a test case "red" by its `status`; "fails" would misstate it. The
+    gap's own words ("not accepted", "a gap") fit.
+73. *"Stays green" is not "still passes".* "A gate that would stay red for
+    months" is a gate that keeps failing; "keeps passing" and "keeps failing"
+    fit every line the map met.
+74. *A quotation can be broken by an earlier sweep.* WI-1001's spec quoted its
+    work item, a record the sweeps skip, and 3cf264ccd rewrote the quotation
+    only. Check a quotation against its source.
+75. *`parametrize(ids=…)` is part of a test's name* and no `PARTS` rule
+    reaches it; grep `ids=` after a test-name concept.
+
 ## §10. Runbook: finishing the migration
 
 Written 2026-11-11 for the session that takes over, which has none of the
@@ -2070,7 +2247,7 @@ rewrite it here.
 
 ### §10.7 Closing the branch
 
-**Items 1 to 3 are done (ninth session, 2026-11-16): §9.11.** Left from them: §4.5.6's prose ("red" and "green" in comments, docstrings, messages and rows; only test names moved) and "bar" in this repository's own docs, both listed in §9.11. Item 4 onward is next.
+**Items 1 to 3 are done (ninth session, 2026-11-16): §9.11.** **Item 1 is done (tenth session, 2026-11-16): §9.12** records its two leftovers, §4.5.6's prose and "bar" in this repository's own docs. Item 4 onward is next.
 
 1. The rest of §4.5, as the operator rules each line.
 2. The glossary's older entries, by hand: "the owner" in *independence* and
@@ -2514,3 +2691,24 @@ list is fixed unless §12.6 says so.
   - **Still owed by §10.7:** items 4 to 9, with the re-stamps of item 6 now
     covering `check.py` (shrank to 1,391) beside `integrate.py` and
     `trace.py`.
+- **2026-11-16, §10.7 item 1 is done.** The two leftovers §9.11 listed, on
+  `maint/vocabulary`: `71bcf4020` ("bar" in this repository's own docs, by
+  sense), `163fd6c1e` (§4.5.6 in prose: a run of checks passes or fails, in
+  comments, docstrings, messages, rows, skills and docs; 1,076 lines in 239
+  files), `db12d3857` (the record: 93 cells in 80 rows absorbed) and
+  `5c447bb91` (the open-items view). The 121 touched and standing test
+  modules: 4,522 passed, 6 skipped, 2 failed, both known re-stamps. §9.12
+  has the counts, the decisions (a) to (i), the tests, the traps (68 to 75)
+  and what is left: 223 lines still say "red" or "green", every one a Python
+  name, a colour or the dashboard, a record or quotation, a retired spelling,
+  the cycle `PROCESS.md` names, or one of the cases below. The row amendments
+  of `ROW-AMENDMENTS.md` were not applied; the unfiltered suite was not run.
+  - **For the operator:** (1) `rendering/` and the dashboard's tests were left
+    whole, though a few of their lines use red and green for pass and fail
+    (§9.12 decision (b) lists them). (2) `reroll-until-green`, the name of a
+    review's flipped verdict, is kept. (3) "an SR reaches `Accepted` only once
+    its LLRs and TCs are green" (`spine_rules.py:701` and its test) has an
+    unclear sense and is kept. (4) `docs/concurrency-v2.md` kept its "bar" as a
+    record. (5) WI-1001's spec quotes its work item verbatim again ("or the bar
+    stays red"). (6) Python names (`red`, `green`, `reds`) were not renamed.
+  - **Still owed by §10.7:** items 4 to 9.
