@@ -28,9 +28,10 @@ Three things this module pins, each because a cut got it wrong:
     and was the one arithmetic that failed permissively: `-1` clamped to 0, which
     reads as "nothing is operator-held" and disarms every hold in the repo. The
     re-key did not soften that — a misspelled rung guesses at nothing and takes
-    `DevStg-Release`. What it DID add is a migration window exactly as wide as
-    the migration: a legacy 0-4 int is translated and warned about, and NOTHING
-    else int-shaped is.
+    `DevStg-Release`. The retired 0-4 int is no exception: the core reads the
+    current spelling only (D11), so an unmigrated int is a wrong-typed dial,
+    refused and held, and the vocabulary migrator rewrites it as the rung it
+    meant.
 
 Implements: TC-151
 """
@@ -45,6 +46,11 @@ from conftest import load_script, set_process_key
 
 ac = load_script("agent_common")
 dg = load_script("spine_rules")
+# The rung each retired 0-4 level meant: the vocabulary migrator's to write
+# (D11), and its table is the one statement of it.
+RETIRED_RUNG = load_script("migrate_vocabulary").POLICY_ORDINALS["authority"][
+    "operator_accepts_through"
+]
 # The ladder's ONE home since WI-498 slice 0, and the stage carrier that declares
 # the `DevStg-Below` sentinel. Imported as packages (not via `load_script`, which
 # loads a single `scripts/*.py`); `scripts/` is already on sys.path by here —
@@ -170,17 +176,16 @@ def test_each_RETIRED_level_holds_exactly_what_DIAL_HOLDS_held(tmp_path, level):
     counts, with the two inserted rungs riding the tier below them.
 
     Both ROADS to a retired level are driven, because they are different code:
-    the dial declared as the legacy INT (the migration window's reader, which
-    translates and warns) and the dial declared as the RUNG that int translates
-    to (what `--migrate-config` will write into the same file). A translation
-    that agreed with the ordinal rule but disagreed with itself would be just as
-    much a regression, and only driving both catches it."""
+    the dial declared as the RUNG the vocabulary migrator writes for the level,
+    which must hold what the level held, and the dial left as the retired INT,
+    which the core no longer reads (D11): a wrong-typed dial, it holds every
+    rung, which only ever asks the operator for more."""
     expected = RETIRED_DIAL_HOLDS[level]
-    rung = ac.LEGACY_DIAL_ORDINALS[level]
-    for i, dial in enumerate((level, rung)):
-        docs = _docs(tmp_path / str(i), dial)
+    rung = RETIRED_RUNG[level]
+    for dial, want in ((rung, expected), (level, list(dg.STAGE_ORDER))):
+        docs = _docs(tmp_path / str(dial), dial)
         held = [s for s in dg.STAGE_ORDER if ac.operator_holds(docs, s)]
-        assert held == expected, (level, dial)
+        assert held == want, (level, dial)
 
 
 def test_the_four_ACCEPTANCE_rungs_answer_exactly_as_they_did_before_the_ladder(
@@ -205,7 +210,7 @@ def test_the_four_ACCEPTANCE_rungs_answer_exactly_as_they_did_before_the_ladder(
     }
     for rung, first_level in was.items():
         for level in range(5):
-            docs = _docs(tmp_path / str(level), ac.LEGACY_DIAL_ORDINALS[level])
+            docs = _docs(tmp_path / str(level), RETIRED_RUNG[level])
             assert ac.operator_holds(docs, rung) is (level >= first_level), (
                 rung,
                 level,
@@ -232,7 +237,7 @@ def test_the_top_two_rungs_are_held_by_the_TOP_OF_THE_RETIRED_DIAL_ALONE(
     setting an operator can ask for — pinned by the last two lines, because a
     reader who met only the paragraph above would think it impossible."""
     for level in range(4):
-        docs = _docs(tmp_path / str(level), ac.LEGACY_DIAL_ORDINALS[level])
+        docs = _docs(tmp_path / str(level), RETIRED_RUNG[level])
         assert ac.operator_holds(docs, stage) is False, level
     assert ac.operator_holds(_docs(tmp_path / "top", dg.STAGE_RELEASE), stage) is True
     # The setting the old five notches could not name.
@@ -363,7 +368,7 @@ def test_every_malformed_dial_falls_back_to_the_conservative_end(tmp_path, value
     )
 
 
-@pytest.mark.parametrize("value", [-1, 7, True, "4", "", "DevStg-Nope", "arch"])
+@pytest.mark.parametrize("value", [-1, 3, 7, True, "4", "", "DevStg-Nope", "arch"])
 def test_a_malformed_dial_is_REFUSED_not_silently_defaulted(tmp_path, value):
     """Implements: TC-150"""
     # The fallback above keeps a caller working; the refusal is what makes the
@@ -374,19 +379,19 @@ def test_a_malformed_dial_is_REFUSED_not_silently_defaulted(tmp_path, value):
     # one of the two shapes a bad dial takes, and the refusal covers both.
     # Exactly ONE finding per bad dial, so a value cannot be reported twice (once
     # as a type error and once as an unknown rung) and read as two defects.
-    conflicts = ac.config_conflicts(_docs(tmp_path, value))
+    #
+    # AN INT IS REFUSED AS A WRONG TYPE, in or out of the retired 0-4 range: the
+    # core reads the current spelling only (D11), so there is no window an
+    # in-range int could take a silent pass through. The vocabulary migrator
+    # rewrites one a repository stores; the refusal is for a repository that
+    # has not run it.
+    docs = _docs(tmp_path, value)
+    conflicts = ac.config_conflicts(docs)
     assert len(conflicts) == 1, conflicts
     assert "operator_accepts_through" in conflicts[0]
-    # ...and it never reads as a value the migration window HONOURS. An
-    # out-of-range int is refused BY A MESSAGE THAT NAMES THE MIGRATION (the
-    # only person who meets it is someone whose 0-4 dial was already out of
-    # range), so the discriminator is "out of range", not the absence of the
-    # words: the window accepts exactly 0-4 and says so either way.
     if isinstance(value, int) and not isinstance(value, bool):
-        assert "out of range" in conflicts[0], conflicts
-        assert "--migrate-config" in conflicts[0], conflicts
-    else:
-        assert "RETIRED 0-4" not in conflicts[0], conflicts
+        assert "is a int, expected str" in conflicts[0], conflicts
+    assert ac.acceptance_through(docs) == dg.STAGE_RELEASE
 
 
 def test_a_wrong_TYPED_dial_is_refused_too(tmp_path):
@@ -405,21 +410,16 @@ def test_a_wrong_TYPED_dial_is_refused_too(tmp_path):
     assert "expected str" in conflicts[0], conflicts
     assert "is a bool" in conflicts[0], conflicts
 
-    # `-1` MOVED OFF THIS ARM. An int is the dial's own RETIRED type, so it is
-    # refused by the migration-aware message instead of by "expected str" —
-    # accurate but useless for the one reader likely to meet it, while 0-4 ints
-    # are accepted four lines away. `test_a_malformed_dial_is_REFUSED...` owns
-    # that arm now.
+    # An int, in or out of the retired 0-4 range, takes this arm too since D11
+    # (`test_a_malformed_dial_is_REFUSED...` drives it).
     #
-    # THE THREE TYPES THE MIGRATION WINDOW NEARLY SWALLOWED, driven here because
-    # each was a real defect found by re-keying these tests and fixed in the same
-    # act (WI-498 slice 5). `_in_legacy_window` guarded `bool` by hand and then
-    # asked `value in legacy_values`, which is wrong three ways in Python's
-    # numeric tower — `True == 1` and `2.0 == 2` both slip into a window they
-    # were never in, and an unhashable value RAISES out of `config_conflicts`,
-    # whose docstring promises it "never raises" to three callers (dispatch,
-    # intake, integrate) that use it inside an exit-code contract. The guard is
-    # now an exact `type(value) is int`, which refuses all three at once. What is
+    # THE THREE TYPES A MIGRATION WINDOW ONCE NEARLY SWALLOWED, driven here
+    # because each was a real defect, found by re-keying these tests and fixed in
+    # the same act (WI-498 slice 5), while the core still read the retired 0-4
+    # int: `True == 1` and `2.0 == 2` slipped into a window they were never in,
+    # and an unhashable value RAISED out of `config_conflicts`, whose docstring
+    # promises it "never raises" to three callers (dispatch, intake, integrate)
+    # that use it inside an exit-code contract. The window is gone (D11); what is
     # pinned is the OUTCOME each must have — refused, exactly once, never a
     # raise — not which arm produces it, because the arm is an implementation
     # detail and the silence was the defect.
@@ -510,26 +510,22 @@ def test_the_dial_VOCABULARY_is_the_LADDER_plus_the_BELOW_sentinel():
     assert not hasattr(ac, "DIAL_HOLDS")
 
 
-# --- the migration window: the retired 0-4 ordinal ------------------------------
+# --- the retired 0-4 ordinal and the gate-policy word ---------------------------
 
 
 @pytest.mark.parametrize("level", [0, 1, 2, 3, 4])
-def test_a_legacy_ORDINAL_is_translated_and_WARNED_but_never_REFUSED(
+def test_a_retired_ORDINAL_is_refused_and_held_never_translated(
     tmp_path, level, capsys
 ):
-    """THE MIGRATION WINDOW (WI-493), and every clause of it is load-bearing.
+    """THE CORE READS THE CURRENT SPELLING ONLY (D11). An adopter's
+    `operator_accepts_through = 4` was once translated and warned about; the
+    vocabulary migrator now rewrites it as the rung it meant, and a repository
+    that has not run it holds a wrong-typed dial. That dial is refused by
+    `config_conflicts` and read as the top rung, silently: never as the rung
+    the int meant, which for every level but 4 holds less.
 
-    An adopter's committed `operator_accepts_through = 4` must not stop their
-    loop dead on a kit upgrade over a spelling the kit knows how to read — so the
-    reader TRANSLATES. But a dial nobody re-keyed is still a dial nobody
-    re-keyed, so it WARNS, naming the command that fixes it. And
-    `config_conflicts` — a HARD refusal consulted by dispatch, intake and
-    integrate — stays SILENT, because saying it twice would make a kit upgrade
-    look like a broken config to a repo whose dial is merely old.
-
-    The translation is pinned as a literal expectation table rather than read out
-    of `LEGACY_DIAL_ORDINALS`, and then the constant is checked against it: level
-    4 is the top rung, level 0 is the sentinel, and the three between are the
+    The migrator's translation is pinned as a literal expectation table: level 4
+    is the top rung, level 0 is the sentinel, and the three between are the
     rungs the retired table held THROUGH."""
     expected = {
         0: BELOW,
@@ -538,42 +534,23 @@ def test_a_legacy_ORDINAL_is_translated_and_WARNED_but_never_REFUSED(
         3: dg.STAGE_LLREQS,
         4: dg.STAGE_RELEASE,
     }[level]
-    assert ac.LEGACY_DIAL_ORDINALS[level] == expected
+    assert RETIRED_RUNG[level] == expected
     docs = _docs(tmp_path, level)
     capsys.readouterr()
-    assert ac.acceptance_through(docs) == expected
-    err = capsys.readouterr().err
-    assert "operator_accepts_through" in err and str(level) in err
-    assert expected in err
-    assert "--migrate-config" in err, err
-    # NOT a conflict — the whole point of the window.
-    assert ac.config_conflicts(docs) == []
-    # ...and the window is derived from the translation table itself, so the two
-    # can never come to disagree about which old values are honoured.
-    key = ("authority", "operator_accepts_through")
-    assert ac.PROCESS_KEY_LEGACY_VALUES[key] == frozenset(ac.LEGACY_DIAL_ORDINALS)
-    assert ac.PROCESS_KEY_LEGACY_VALUES[key] == {0, 1, 2, 3, 4}
+    assert ac.acceptance_through(docs) == dg.STAGE_RELEASE
+    assert capsys.readouterr().err == ""
+    conflicts = ac.config_conflicts(docs)
+    assert len(conflicts) == 1, conflicts
+    assert "is a int, expected str" in conflicts[0], conflicts
 
 
-def test_the_legacy_window_REFUSES_a_BOOL_because_True_equals_one(tmp_path):
-    """`True == 1` in Python, so a bare `value in {0, 1, 2, 3, 4}` answers True
-    for `True` — and an `operator_accepts_through = true` that took the window's
-    SILENT PASS would be a wrong-typed dial reading as the retired level 1 with
-    no diagnostic at all. That is the precise failure the type check exists to
-    stop, arriving through the door the migration opened.
-
-    So `_in_legacy_window` is a function rather than a bare `in`, and this is the
-    one input that distinguishes the two. Driven at the helper AND end to end,
-    because a validator that stopped consulting the helper would still pass a
-    unit test of it."""
-    window = ac.PROCESS_KEY_LEGACY_VALUES[("authority", "operator_accepts_through")]
-    assert ac._in_legacy_window(1, window) is True
-    assert ac._in_legacy_window(0, window) is True
-    assert ac._in_legacy_window(True, window) is False
-    assert ac._in_legacy_window(False, window) is False
-    assert ac._in_legacy_window(5, window) is False
-    # End to end: `true` takes the wrong-TYPE refusal, not the window's pass, and
-    # reads the conservative end rather than the level-1 rung it numerically is.
+def test_a_BOOL_dial_is_refused_though_True_equals_one(tmp_path):
+    """`True == 1` in Python, so a table keyed by the retired 0-4 int answers
+    level 1 for `True`, and an `operator_accepts_through = true` read through
+    one would be a wrong-typed dial reading as `DevStg-Boundary` with no
+    diagnostic at all. The core holds no such table now (D11), and the
+    migrator's matches `type(value) is int` only; end to end, `true` takes the
+    wrong-TYPE refusal and reads the conservative end."""
     docs = _docs(tmp_path, True)
     conflicts = ac.config_conflicts(docs)
     assert len(conflicts) == 1, conflicts
@@ -582,55 +559,22 @@ def test_the_legacy_window_REFUSES_a_BOOL_because_True_equals_one(tmp_path):
     assert ac.acceptance_through(docs) != dg.STAGE_BOUNDARY
 
 
-# --- the legacy translation ----------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "word,rung,keep",
-    [
-        ("attended", dg.STAGE_RELEASE, False),
-        ("single-approve", BELOW, True),
-        ("autonomous", BELOW, True),
-    ],
-)
-def test_an_unmigrated_legacy_file_reads_as_all_three_dials(tmp_path, word, rung, keep):
-    # An un-migrated repo keeps working, and keeps working as the WHOLE posture
-    # rather than as one dial with two facts dropped. `single-approve` is the one
-    # that proves it: translated to a hold setting alone it silently acquired a
-    # per-tier hold it never had.
-    (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "docs" / "gate-policy").write_text(
-        word + "\n", encoding="utf-8", newline="\n"
+@pytest.mark.parametrize("word", ["attended", "single-approve", "autonomous"])
+def test_a_gate_policy_word_is_not_read_where_no_dial_is_declared(tmp_path, word):
+    # The retired enum's word, as the one-word file and as the TOML key, is not
+    # read (D11): bootstrap folds the file into the three dials on every
+    # scaffold pass, and a repository that kept either reads every dial at its
+    # default, the most-held one. The declared dial is read beside them.
+    docs = _docs(tmp_path)
+    (docs / "gate-policy").write_text(word + "\n", encoding="utf-8", newline="\n")
+    (docs / "process.toml").write_text(
+        '[authority]\ngate_policy = "{}"\n'.format(word), encoding="utf-8"
     )
-    docs = tmp_path / "docs"
-    assert ac.acceptance_through(docs) == rung
-    assert ac.keep_nondependent(docs) is keep
-
-
-def test_an_unknown_legacy_word_falls_back_conservatively(tmp_path):
-    (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "docs" / "gate-policy").write_text(
-        "semi-attended\n", encoding="utf-8", newline="\n"
-    )
-    assert ac.acceptance_through(tmp_path / "docs") == dg.STAGE_RELEASE
-    assert ac.keep_nondependent(tmp_path / "docs") is False
-
-
-def test_the_declared_dial_beats_the_legacy_file(tmp_path):
-    # Precedence, for the window in which both can exist. (`config_conflicts`
-    # REFUSES the pair outright at every guarded entry point; this is the
-    # behaviour for a caller that did not run that check.)
-    #
-    # The declared value is a MIDDLE rung on purpose: `autonomous` translates to
-    # the sentinel and the fallback is the top rung, so a dial reading either END
-    # would also be consistent with the legacy file winning, or with nothing
-    # being read at all.
-    (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "docs" / "gate-policy").write_text(
-        "autonomous\n", encoding="utf-8", newline="\n"
-    )
+    assert ac.acceptance_through(docs) == dg.STAGE_RELEASE
+    assert ac.keep_nondependent(docs) is False
+    assert ac.final_review(docs) is True
     set_process_key(tmp_path, "authority", "operator_accepts_through", dg.STAGE_LLREQS)
-    assert ac.acceptance_through(tmp_path / "docs") == dg.STAGE_LLREQS
+    assert ac.acceptance_through(docs) == dg.STAGE_LLREQS
 
 
 # --- the second axis: spine_stage ----------------------------------------------

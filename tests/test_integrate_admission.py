@@ -1772,12 +1772,12 @@ def test_the_writers_and_the_slot_read_the_committed_dial_not_the_working_file(
     _assert_named(capsys.readouterr().err)
 
 
-def test_the_pre_commit_step_reads_a_legacy_dial_as_the_writers_do(
+def test_the_pre_commit_step_holds_a_retired_dial_as_the_writers_do(
     tmp_path, monkeypatch
 ):
-    # A retired 0-4 ordinal still names a rung (1 reads as DevStg-Boundary), and
-    # every live reader reads it so, silently: here the Arch-rung interface row
-    # is the loop's to move, and the Boundary-rung frame row is not.
+    # A retired 0-4 ordinal names no rung any more (D11): every live reader
+    # reads it as the most-held rung, silently, so the Arch-rung interface row
+    # the integer 1 once released to the loop is held, as the frame row is.
     root = _held_trunk(tmp_path, monkeypatch)
     (root / "docs" / "process.toml").write_text(
         "[authority]\noperator_accepts_through = 1\n", encoding="utf-8", newline="\n"
@@ -1794,15 +1794,12 @@ def test_the_pre_commit_step_reads_a_legacy_dial_as_the_writers_do(
     step = [SCRIPTS / "check.py", "--run-steps", "held-status"]
     monkeypatch.setenv(MARK, LOOP_SESSION)
 
-    released = run_py(step, cwd=root)
-    assert released.returncode == 0, released.stdout + released.stderr
-    assert "RETIRED" not in released.stdout + released.stderr  # silent
-
     _flip_frame(root)
     _git(root, "add", "--", FRAME)
     held = run_py(step, cwd=root)
     assert held.returncode == 1, held.stdout + held.stderr
-    assert "B-01" in held.stdout and "IF-001" not in held.stdout, held.stdout
+    assert "B-01" in held.stdout and "IF-001" in held.stdout, held.stdout
+    assert "RETIRED" not in held.stdout + held.stderr  # silent
 
 
 def test_the_held_status_step_judges_a_merge_by_what_neither_side_had(

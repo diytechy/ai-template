@@ -88,11 +88,9 @@ PROCESS_KEYS = {
     "privacy-review": ("policies", "privacy_review", "str"),
     "guardrails-policy": ("policies", "guardrails", "str"),
     "blackout": ("policies", "blackout", "str"),
-    # The gate-authority dial retired into the ORDINAL below at SN-029. The
-    # legacy `docs/gate-policy` FILE is still read (an un-migrated repo keeps
-    # working), and the enum key is still type-checked if a repo hand-wrote it,
-    # but nothing SHIPS it any more — see PROCESS_ONLY_KEYS.
-    "gate-policy": ("authority", "gate_policy", "str"),
+    # NOT `gate-policy`: that word retired into three dials at SN-029, and the
+    # core reads the dials only (D11). Bootstrap folds a `docs/gate-policy`
+    # file into them on every scaffold pass (`_migrate_gate_policy`).
     # The six CHECK-ENABLEMENT toggles, folded in by the 2026-08-11 overturn of
     # WI-423 ("far better to tie those into process.toml and key them all to on
     # / true"). They belong in THIS table, not PROCESS_ONLY_KEYS: each had a
@@ -171,26 +169,6 @@ PROCESS_KEY_RANGES = {
 # (`acceptance_through`). Populated lazily below, where the rung vocabulary
 # is in scope.
 PROCESS_KEY_VOCAB = {}
-
-# THE MIGRATION WINDOW: for a re-keyed dial, the exact set of PREVIOUS values
-# the reader still translates. Filled below from the translation table itself,
-# so the window and the translation cannot come to disagree about which old
-# values are honoured.
-#
-# WHY A VALUE SET AND NOT A TYPE. Declaring "the old TYPE is still accepted"
-# was tried first and was wrong in a way worth recording: it accepted every
-# int, so `operator_accepts_through = -1` — the single input the retired
-# `(0, 4)` range row existed to refuse, because it is the one that reads as
-# LESS operator involvement than the operator asked for — stopped being refused at
-# all. A migration window must be exactly as wide as the migration.
-#
-# Without the window at all, `config_conflicts` — a HARD refusal consulted by
-# dispatch, intake and integrate — would refuse an adopter's committed
-# `operator_accepts_through = 4` the moment they took the kit upgrade, on a
-# dial `acceptance_through` reads perfectly well. The signal for a legacy
-# value is the reader's WARNING, once per run, naming the migrator; the refusal
-# stays reserved for values nothing can honour.
-PROCESS_KEY_LEGACY_VALUES = {}
 
 
 def _process_toml_path(docs):
@@ -418,37 +396,6 @@ def blackout_at(docs, t=None):
 # dispatcher actually needs is an ORDINAL comparison — is the tier this row sits
 # at still operator-held? — and an enum cannot express "TCs are operator-held but LLRs
 # are not", which is the distinction the eight-rung stage ladder exists to make.
-#
-# THE LEGACY TRANSLATION, stated as all THREE dials rather than as a level.
-# The enum's three words were never one axis: each of them bundled a tier hold,
-# a drain policy and an end-of-run hold, which is precisely why four tables had
-# to re-interpret the same word. Translating to a level alone loses two of the
-# three facts — the shape of the original SN-029 bug, where `single-approve`
-# became "level 2" and so silently acquired a per-tier hold it never had.
-#
-#   attended       every tier is the operator's; lanes drain at an acceptance
-#   single-approve  LLM review through DevStg-Reqs+DevStg-Tests, ONE operator sitting
-#                  at the close — so NO per-tier hold (level 0), a final read,
-#                  and the non-dependent work kept running that distinguished it
-#   autonomous     every gate but the operator's final read closes on a recorded
-#                  LLM verdict
-LEGACY_ACCEPTANCE = {
-    "attended": {
-        "operator_accepts_through": _kitauthority.LEGACY_GATE_DIALS["attended"],
-        "keep_nondependent": False,
-        "final_review": "always",
-    },
-    "single-approve": {
-        "operator_accepts_through": _kitauthority.LEGACY_GATE_DIALS["single-approve"],
-        "keep_nondependent": True,
-        "final_review": "always",
-    },
-    "autonomous": {
-        "operator_accepts_through": _kitauthority.LEGACY_GATE_DIALS["autonomous"],
-        "keep_nondependent": True,
-        "final_review": "off",
-    },
-}
 
 # --- THE RE-KEY (WI-493, OI-21 shape (ii), folded into WI-498 slice 5) ---------
 # THE DIAL MOVED, DELIBERATELY, and the block below this one used to say the
@@ -495,41 +442,15 @@ ACCEPTANCE_DIAL_RUNGS = frozenset(_kitladder.LADDER_RUNGS) | {_kitstage.BELOW}
 # validator. One value, one home.
 PROCESS_KEY_VOCAB[("authority", "operator_accepts_through")] = ACCEPTANCE_DIAL_RUNGS
 
-# The 0-4 ordinal an unmigrated repo still declares. READ, TRANSLATED AND
-# WARNED — not refused: the value is a dial in an adopter's committed
-# `process.toml`, and refusing it would stop their loop dead on a kit upgrade
-# for a spelling. `bootstrap.py --migrate-config` rewrites it in place, and the
-# warning names that command. There is no clamping arm: an int outside 0-4 was
-# malformed before the re-key and is malformed after it. The table's one home
-# is `kitlib.authority`, whose `read_dial` is the resolution every live reader
-# of the dial runs (the loop's writers, the pre-commit step and the merge slot
-# read committed trees through it, silently); re-exported here for the migrator
-# and the validator.
-LEGACY_DIAL_ORDINALS = _kitauthority.LEGACY_DIAL_ORDINALS
-
-PROCESS_KEY_LEGACY_VALUES[("authority", "operator_accepts_through")] = frozenset(
-    LEGACY_DIAL_ORDINALS
-)
+# The 0-4 integer the dial took before the re-key is not read (D11): it is a
+# wrong-typed dial, refused by `config_conflicts` and read as the most-held
+# rung. The vocabulary migrator rewrites one a repository stores as the rung
+# it meant.
 
 # Fail toward MORE operator involvement on anything unreadable: a dial nobody can
 # parse must not silently hand acceptance authority to the loop. The top rung
 # is the conservative end — it holds every rung there is.
 ACCEPTANCE_FALLBACK = _kitladder.STAGE_RELEASE
-
-# The dial's RETIRED KEY NAME (WI-499, operator-ruled 2026-08-21). A repo
-# scaffolded before this rename still carries this spelling in
-# `[authority]`; `acceptance_through` below reads it as a loud fallback,
-# mirroring the read-translate-warn shape WI-493 used for the retired 0-4
-# ordinal. `bootstrap.py --migrate-config` (`_migrate_dial_key_name`) is the
-# one-time fix that ends the warning.
-LEGACY_DIAL_KEY = _kitauthority.LEGACY_DIAL_KEY
-
-
-def legacy_acceptance(word, key):
-    """One dial's value under a legacy `gate-policy` word, or None when the word
-    is not one of the three. The single home for the translation, so the
-    migrator and the fallback readers cannot disagree about what a word meant."""
-    return LEGACY_ACCEPTANCE.get(str(word).strip().lower(), {}).get(key)
 
 
 def acceptance_through(docs):
@@ -537,14 +458,8 @@ def acceptance_through(docs):
 
     The HIGHEST rung an operator still accepts; every rung at or below it is held
     (`operator_holds`). `DevStg-Below` means nothing is held — the loop accepts
-    every rung itself. `DevStg-Release`, the shipped default, holds everything.
-
-    Falls back through the legacy `gate-policy` enum, then to `DevStg-Release`.
-
-    A LEGACY 0-4 INT IS TRANSLATED AND WARNED, not refused (WI-493). See
-    `LEGACY_DIAL_ORDINALS`: an adopter's committed dial must not stop their loop
-    on a kit upgrade, and the warning names the migrator that fixes it. An int
-    OUTSIDE 0-4 was malformed before the re-key and stays malformed.
+    every rung itself. `DevStg-Release`, the shipped default, holds everything,
+    and an undeclared dial reads as it.
 
     AN UNRECOGNIZED VALUE IS MALFORMED, NOT COERCED — the same reasoning the
     out-of-range int always took, and it matters more now that the vocabulary is
@@ -554,52 +469,18 @@ def acceptance_through(docs):
     (`config_conflicts` refuses it loudly upstream; this is the behaviour for
     callers that did not run that gate.)
 
-    THE RESOLUTION IS `kitlib.authority.read_dial`, the one the loop's writers,
-    the pre-commit step and the merge slot run over a committed tree
+    THE RESOLUTION IS `kitlib.authority.dial_from_config`, the one the loop's
+    writers, the pre-commit step and the merge slot run over a committed tree
     (`authority.dial_at`), so a dial means one thing to every reader. This
-    function adds the two things only the LIVE working tree needs: the file
-    read, and the migration note, which is presentation and printed here alone.
+    function adds the one thing only the LIVE working tree needs: the file
+    read. A spelling older than the current vocabulary is not read (D11): the
+    dial's earlier key or its retired 0-4 integer reads as undeclared or
+    malformed, and so as `DevStg-Release`, until the vocabulary migrator
+    rewrites it.
 
     Implements: SR-137, SR-139, LLR-155
     """
-    rung, legacy = _kitauthority.read_dial(
-        process_config(docs),
-        lambda: read_declared(Path(docs) / "gate-policy", None),
-    )
-    if legacy is not None:
-        print(_retired_dial_note(legacy, rung), file=sys.stderr)
-    return rung
-
-
-def _retired_dial_note(legacy, rung):
-    """The migration note for a retired dial spelling `read_dial` translated:
-    the retired key name, the retired 0-4 ordinal, or both.
-
-    ASCII ONLY, deliberately. This prints from a LIBRARY path, so no caller is
-    guaranteed to have run `utf8_console()` first; an em-dash here reaches a
-    cp1252 console as a replacement character in a message whose whole job is
-    to be read and acted on."""
-    fix = (
-        "Run `python project-trajectory/scripts/bootstrap.py --migrate-config "
-        "--dest .` from your kept kit checkout to rewrite {}."
-    )
-    retired_key = legacy["key"] == LEGACY_DIAL_KEY
-    if legacy["ordinal"] is None:
-        return (
-            "agent_common: [authority] {} is RETIRED - reading it as "
-            "`operator_accepts_through` (WI-499). ".format(LEGACY_DIAL_KEY)
-            + fix.format("the key")
-        )
-    return (
-        "agent_common: [authority] {} = {} is the RETIRED 0-4 ordinal{} - reading it as `{}` (WI-493{}). ".format(
-            legacy["key"],
-            legacy["ordinal"],
-            " under a RETIRED key name too (WI-499)" if retired_key else "",
-            rung,
-            "+WI-499" if retired_key else "",
-        )
-        + fix.format("it")
-    )
+    return _kitauthority.dial_from_config(process_config(docs))
 
 
 # --- OI-21 -> WI-493: THE DIAL AND THE LADDER ARE ONE VOCABULARY --------------
@@ -853,14 +734,8 @@ def final_review(docs):
     unreadable value takes the same conservative direction every other dial in
     this module takes."""
     table = process_config(docs).get("authority")
-    if isinstance(table, dict):
-        value = table.get("final_review")
-        if isinstance(value, str):
-            return value.strip().lower() != "off"
-    legacy = legacy_acceptance(
-        declared_policy(docs, "gate-policy", "attended"), "final_review"
-    )
-    return legacy != "off"
+    value = table.get("final_review") if isinstance(table, dict) else None
+    return not isinstance(value, str) or value.strip().lower() != "off"
 
 
 def complete_review(docs):
@@ -1046,10 +921,7 @@ def keep_nondependent(docs):
     table = process_config(docs).get("authority")
     if isinstance(table, dict) and isinstance(table.get("keep_nondependent"), bool):
         return table["keep_nondependent"]
-    legacy = legacy_acceptance(
-        declared_policy(docs, "gate-policy", "attended"), "keep_nondependent"
-    )
-    return bool(legacy)
+    return False
 
 
 def spine_stage_of(root):
@@ -1092,31 +964,6 @@ def _legacy_present(docs, legacy_name):
     return (Path(docs) / legacy_name).is_file()
 
 
-def _in_legacy_window(value, legacy_values):
-    """Is `value` EXACTLY one of the retired values a re-keyed dial still honours?
-
-    A FUNCTION, NOT A BARE `in`, AND AN EXACT TYPE TEST, because Python's
-    numeric tower makes the obvious spelling wrong three ways and each one fails
-    silently — the migration window would swallow a malformed dial that the type
-    check exists to name:
-
-      * `True == 1`, so a `true` dial would pass for the ordinal 1 and take the
-        window's silent pass instead of the wrong-type refusal it has earned;
-      * `2.0 == 2`, so a float dial would too — a wrong-typed value falling
-        through to a default with no diagnostic, which IS the failure this
-        table's type check was written for;
-      * an unhashable value (`[4]`, an inline table) raises `TypeError` from
-        `in` against a set — and `config_conflicts` promises its callers it
-        returns a list and never raises, because two of the three call it from
-        inside an exit-code contract.
-
-    `type(value) is int` refuses all three at once: `bool` and `float` are not
-    `int`, and a non-int never reaches the membership test."""
-    if type(value) is not int:
-        return False
-    return value in legacy_values
-
-
 def _key_value_findings(data, section, key, kind):
     """Type, range and vocabulary findings for ONE declared dial ([] when absent
     or sound).
@@ -1128,28 +975,6 @@ def _key_value_findings(data, section, key, kind):
     if not (isinstance(table, dict) and key in table):
         return []
     value = table[key]
-    legacy_values = PROCESS_KEY_LEGACY_VALUES.get((section, key))
-    if legacy_values is not None and _in_legacy_window(value, legacy_values):
-        # A value this dial USED to take, which the reader migrates and warns
-        # about; refusing it here would be the kit refusing to start over a
-        # spelling it already knows how to read. Anything outside the window —
-        # including an out-of-range int — falls through to the findings below.
-        return []
-    if legacy_values is not None and type(value) is int:
-        # AN INT OUTSIDE THE WINDOW: still refused, but by a message that names
-        # the migration rather than the type. Whoever meets this is the one
-        # person whose 0-4 dial was out of range BEFORE the re-key, and telling
-        # them "expected str" while the four lines above silently accept 0-4 is
-        # accurate and useless.
-        return [
-            "docs/{} [{}] {} = {!r} is the RETIRED 0-4 ordinal, out of range. "
-            "There is no rung it meant, so it reads as the most conservative "
-            "setting. Set it to a DevStg-* rung (or `{}` for 'nothing is "
-            "operator-held'); `bootstrap.py --migrate-config` converts an "
-            "IN-range one for you.".format(
-                PROCESS_TOML, section, key, value, _kitstage.BELOW
-            )
-        ]
     if _coerce(value, kind) is None:
         return [
             "docs/{} [{}] {} = {!r} is a {}, expected {} — a wrong-typed "
@@ -1182,12 +1007,6 @@ def _vocab_findings(section, key, value):
     if vocab is not ACCEPTANCE_DIAL_RUNGS:
         return _mode_vocab_findings(section, key, value, vocab)
     if str(value).strip() in vocab:
-        return []
-    # THE LEGACY ORDINAL IS NOT A CONFLICT. `acceptance_through` reads it,
-    # translates it and warns; saying it twice — once as a refusal here and
-    # once as a warning there — would make a kit upgrade look like a broken
-    # config to a repo whose dial is merely old.
-    if isinstance(value, int) and not isinstance(value, bool):
         return []
     return [
         "docs/{} [{}] {} = {!r} names no rung. Legal values are {} (and "
@@ -1361,21 +1180,15 @@ __all__ = (
     "PROCESS_ONLY_KEYS",
     "PROCESS_KEY_RANGES",
     "PROCESS_KEY_VOCAB",
-    "PROCESS_KEY_LEGACY_VALUES",
     "_process_toml_path",
     "process_config",
     "read_toml_text",
     "read_toml",
     "_coerce",
     "declared_policy",
-    "LEGACY_ACCEPTANCE",
     "ACCEPTANCE_DIAL_RUNGS",
-    "LEGACY_DIAL_ORDINALS",
     "ACCEPTANCE_FALLBACK",
-    "LEGACY_DIAL_KEY",
-    "legacy_acceptance",
     "acceptance_through",
-    "_retired_dial_note",
     "LADDER_RUNGS",
     "ACCEPTANCE_RUNGS",
     "SPINE_ACCEPTANCE_RUNGS",
@@ -1398,7 +1211,6 @@ __all__ = (
     "keep_nondependent",
     "spine_stage_of",
     "_legacy_present",
-    "_in_legacy_window",
     "_key_value_findings",
     "_vocab_findings",
     "mode_word",

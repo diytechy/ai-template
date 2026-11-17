@@ -65,9 +65,9 @@
 # word `bootstrap --gate-policy` had written, so a repo that chose `autonomous`
 # scaffolded as fully attended with no diagnostic anywhere.
 #
-# The three words map onto the dials below (`agent_common.LEGACY_ACCEPTANCE`
-# is the one home for the translation, and `bootstrap.py --migrate-config`
-# applies it to a legacy `docs/gate-policy` file):
+# The three words map onto the dials below (`bootstrap.py`'s
+# `GATE_POLICY_DIALS` is the one home: `--gate-policy` writes them, and
+# `--migrate-config` folds a legacy `docs/gate-policy` file into them):
 #
 #   attended       operator_accepts_through = "DevStg-Release",
 #                  keep_nondependent = false

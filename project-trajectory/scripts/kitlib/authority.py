@@ -6,12 +6,11 @@ WHY IT IS A MODULE OF ITS OWN (LLR-249). Every reader that asks "does the dial
 hold this rung" asks it here: the loop's own writers before they commit, the
 pre-commit `held-status` step, the merge slot, and the HISTORY CHECK, which
 reads each past commit's own tree. None of them may reach for the coordinator's
-primitives to ask a question about a string and a table, and none may print a
-migration note per commit or per hook run, so the comparison, the rung tables
-and the dial readers live here, below all of them, and `agent_common`
-re-exports the tables under the names every caller already uses. One table and
-one comparison, so the loop's refusal and the history's report cannot disagree
-about which rung is held.
+primitives to ask a question about a string and a table, so the comparison,
+the rung tables and the dial reader live here, below all of them, and
+`agent_common` re-exports the tables under the names every caller already uses.
+One table, one reader and one comparison, so the loop's refusal and the
+history's report cannot disagree about which rung is held.
 
 THE RUNG MAPS, and the fail-safe they share:
 
@@ -33,23 +32,17 @@ THE RUNG MAPS, and the fail-safe they share:
     caller reads None as the operator's), because a status nobody has associated
     with a rung is one nobody has released.
 
-THE DIAL, READ TWO WAYS, for two different questions:
-
-  * `dial_at(root, rev)` is THE LIVE READER: the dial a chosen commit's tree,
-    or the index, declares, with every legacy spelling the live loop has ever
-    accepted translated exactly as `agent_common.acceptance_through` translates
-    it (`read_dial` is the one resolution both run), printing nothing. The
-    writers, the pre-commit step and the merge slot all read the dial through
-    it, from a tree they name, never from a primary checkout's working file,
-    where an uncommitted operator edit could strengthen or weaken the judgement
-    of a tree built from HEAD. The migration note a legacy spelling deserves
-    is presentation, printed only by `agent_common.acceptance_through` for the
-    one working tree a person can migrate.
-  * `dial_from_config(policy)` is THE HISTORY READER: an absent, legacy or
-    unrecognised value reads as the MOST-held rung. Applied to a past commit,
-    translation would guess, in the less-held direction, what a dial that
-    predates the ladder meant for the rows of its day; the history check only
-    ever reports, so the conservative end costs a line, never a refusal.
+THE DIAL, READ ONE WAY: `dial_from_config(policy)` reads `[authority]
+operator_accepts_through` from a parsed policy file, and anything absent,
+wrong-typed or unrecognised reads as the MOST-held rung, silently. Every
+reader runs it: `agent_common.acceptance_through` over the working file, the
+history check over each past commit's tree, and `dial_at(root, rev)`, THE LIVE
+READER, over the tree a writer, the pre-commit step or the merge slot names,
+never a primary checkout's working file, where an uncommitted operator edit
+could strengthen or weaken the judgement of a tree built from HEAD. Spellings
+older than the current vocabulary are not read (D11): the vocabulary migrator
+rewrites the ones a repository stores, and an unmigrated dial holds every
+rung, which only ever asks the operator for more.
 
 Pure data and comparisons over `kitlib.ladder`, plus one git read (`dial_at`,
 through `kitlib.git`); no argv, and nothing printed.
@@ -63,19 +56,15 @@ Contract IF-195: the acceptance-authority vocabulary, by importer.
     of tables; `rung_for(registry)` maps a registry path, stem or bare name to
     its rung - the needs file, both of its tiers, to `DevStg-Needs` - or None
     when nothing maps it, which every caller reads as held.
-    `read_dial(policy, gate_policy)` resolves a parsed policy (and, only when
-    no dial is declared, the retired one-word gate-policy value, given as a
-    string or a zero-argument callable) to `(rung, legacy)`, where `legacy` is
-    None or a dict naming the retired `key` read and the `ordinal` translated
-    (None when only the key name was retired); `dial_at(root, rev="HEAD")`
-    returns that rung for `rev`'s tree, or the index's when `rev` is None,
-    printing nothing, and the most-held rung when nothing is declared or git
-    cannot answer. `dial_from_config(policy)` returns the `[authority]
+    `dial_from_config(policy)` returns the `[authority]
     operator_accepts_through` rung of a parsed policy, `DevStg-Below` included,
-    or the most-held rung for anything absent, legacy or unrecognised,
-    printing nothing. `holds_under(dial, rung)` is True when the dial holds the
-    rung for an operator: never at `DevStg-Below`, always for an unrecognised dial
-    or rung, otherwise when the rung sits at or below the dial on the ladder.
+    or the most-held rung for anything absent, wrong-typed or unrecognised,
+    printing nothing; `dial_at(root, rev="HEAD")` returns that rung for `rev`'s
+    tree, or the index's when `rev` is None, printing nothing, and the
+    most-held rung when nothing is declared or git cannot answer.
+    `holds_under(dial, rung)` is True when the dial holds the rung for an
+    operator: never at `DevStg-Below`, always for an unrecognised dial or rung,
+    otherwise when the rung sits at or below the dial on the ladder.
 """
 
 import tomllib
@@ -109,34 +98,8 @@ DIAL_KEY = "operator_accepts_through"
 # Every rung at or below the top one is held: the conservative end.
 MOST_HELD = ladder.STAGE_RELEASE
 
-# Where a tree declares its dial, and the retired one-word file that declared
-# it before `docs/process.toml` existed.
+# Where a tree declares its dial.
 POLICY_PATH = "docs/process.toml"
-GATE_POLICY_PATH = "docs/gate-policy"
-
-# THE LEGACY SPELLINGS the live loop still reads, one home each (agent_common
-# re-exports them for the migrator and the config validator):
-#   * the retired 0-4 ordinal, which holds exactly the rung set it always held;
-#     an int outside 0-4 was malformed before the re-key and stays malformed;
-LEGACY_DIAL_ORDINALS = {
-    0: stage.BELOW,
-    1: ladder.STAGE_BOUNDARY,
-    2: ladder.STAGE_ARCH,
-    3: ladder.STAGE_LLREQS,
-    4: ladder.STAGE_RELEASE,
-}
-#   * the retired key name, read as the live key when the live key is absent;
-LEGACY_DIAL_KEY = "human_ratification_through"
-#   * the retired `gate-policy` enum (`[authority] gate_policy`, else the
-#     one-word file), whose dial half lives here and whose other two halves are
-#     `agent_common.LEGACY_ACCEPTANCE`'s. Undeclared reads as "attended".
-LEGACY_GATE_KEY = "gate_policy"
-LEGACY_GATE_DIALS = {
-    "attended": ladder.STAGE_RELEASE,
-    "single-approve": stage.BELOW,
-    "autonomous": stage.BELOW,
-}
-LEGACY_GATE_DEFAULT = "attended"
 
 
 def rung_for(registry):
@@ -163,86 +126,32 @@ def _is_dial(value):
 def dial_from_config(policy):
     """`[authority] operator_accepts_through` from a parsed policy file, as a
     rung or `DevStg-Below`; the most-held rung for anything else, silently.
-    The HISTORY reader (see the module docstring for why it does not
-    translate).
+    THE resolution every reader runs (`dial_at`,
+    `agent_common.acceptance_through`, the history check), so the pre-commit
+    step, the writers, the slot, the coordinator and the history report cannot
+    disagree about what a dial means. Any value that is not a rung or
+    `DevStg-Below` is MALFORMED and reads as the most-held rung, never a best
+    guess, because every wrong guess fails toward less operator involvement.
 
-    Implements: SR-210, LLR-249
+    Implements: SR-208, SR-210, LLR-246, LLR-249
     """
     table = policy.get("authority") if isinstance(policy, dict) else None
     value = table.get(DIAL_KEY) if isinstance(table, dict) else None
     return value.strip() if _is_dial(value) else MOST_HELD
 
 
-def read_dial(policy, gate_policy=None):
-    """`(rung, legacy)`: the dial a parsed policy declares, every legacy
-    spelling translated, and which legacy spelling was read. THE resolution
-    every live reader runs (`dial_at`, `agent_common.acceptance_through`), so the
-    pre-commit step, the writers, the slot and the coordinator cannot disagree
-    about what a dial means.
-
-    `[authority] operator_accepts_through` names a rung or `DevStg-Below`; a
-    retired 0-4 ordinal is translated (`LEGACY_DIAL_ORDINALS`); the retired key
-    name is read when the live key is absent. Any other declared value is
-    MALFORMED and reads as the most-held rung, never a best guess, because
-    every wrong guess fails toward less operator involvement. With no dial
-    declared, the retired gate-policy enum decides: `[authority] gate_policy`
-    when it is a string, else `gate_policy` - the one-word file's value, or a
-    zero-argument callable returning it, called only then, so a caller reads
-    that file only when it matters - else "attended". An unknown word is the
-    most-held rung.
-
-    `legacy` is None, or `{"key": ..., "ordinal": ...}` naming the key that was
-    read and the ordinal translated (None when only the key name was retired):
-    what a caller that PRESENTS a migration note needs. Prints nothing.
-
-    Implements: SR-208, LLR-246
-    """
-    table = policy.get("authority") if isinstance(policy, dict) else None
-    table = table if isinstance(table, dict) else {}
-    value, key = table.get(DIAL_KEY), DIAL_KEY
-    if value is None and DIAL_KEY not in table and LEGACY_DIAL_KEY in table:
-        value, key = table.get(LEGACY_DIAL_KEY), LEGACY_DIAL_KEY
-    if _is_dial(value):
-        retired = {"key": key, "ordinal": None} if key == LEGACY_DIAL_KEY else None
-        return value.strip(), retired
-    if isinstance(value, int) and not isinstance(value, bool):
-        rung = LEGACY_DIAL_ORDINALS.get(value)
-        if rung is None:
-            return MOST_HELD, None
-        return rung, {"key": key, "ordinal": value}
-    if value is not None:
-        return MOST_HELD, None
-    word = table.get(LEGACY_GATE_KEY)
-    if not isinstance(word, str):
-        word = gate_policy() if callable(gate_policy) else gate_policy
-    word = LEGACY_GATE_DEFAULT if word is None else str(word)
-    return LEGACY_GATE_DIALS.get(word.strip().lower(), MOST_HELD), None
-
-
-def _first_declared(text):
-    """The first non-blank, non-comment line of a one-word policy text, or None:
-    `kitlib.config.first_declared_line`, over a blob instead of a file."""
-    for line in (text or "").splitlines():
-        line = line.strip()
-        if line and not line.startswith("#"):
-            return line
-    return None
-
-
 def dial_at(root, rev="HEAD"):
     """THE LIVE DIAL OF A CHOSEN TREE: the rung `rev`'s committed tree declares,
-    or the INDEX's when `rev` is None, every legacy spelling translated
-    (`read_dial`), printing nothing.
+    or the INDEX's when `rev` is None (`dial_from_config`), printing nothing.
 
     Read from git, never from a working file, because every live question about
     the dial is a question about a TREE: the tree a writer is about to commit
     onto, the commit a hook is about to make, the trunk a lane merges into. An
     uncommitted edit in a primary checkout is none of those, and reading it let
     an operator's half-made edit release (or hold) a commit built from HEAD. A
-    policy file git cannot show, or that does not parse, declares nothing, so
-    the retired gate-policy file in the same tree decides; with neither the
-    answer is the most-held rung, so no git, no repository and an unknown rev
-    all fail toward the operator.
+    policy file git cannot show, or that does not parse, declares nothing, and
+    the answer is the most-held rung, so no git, no repository and an unknown
+    rev all fail toward the operator.
 
     Implements: SR-208, LLR-246
     """
@@ -252,11 +161,7 @@ def dial_at(root, rev="HEAD"):
         policy = tomllib.loads(text.lstrip("﻿")) if text else {}
     except tomllib.TOMLDecodeError:
         policy = {}
-
-    def gate_policy():
-        return _first_declared(_git.git_out(root, ["show", prefix + GATE_POLICY_PATH]))
-
-    return read_dial(policy, gate_policy)[0]
+    return dial_from_config(policy)
 
 
 def holds_under(dial, rung):

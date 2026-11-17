@@ -1285,9 +1285,6 @@ def test_attended_acceptance_row_drains_and_exits_zero_with_the_banner(tmp_path,
         root, "queued", "WI-600", slug="accept", safety="gate", specref="seed.txt"
     )
     write_spec(root, "queued", "WI-401", specref="seed.txt")
-    (root / "docs" / "gate-policy").write_text(
-        "attended\n", encoding="utf-8", newline="\n"
-    )
     _commit(root, "file the acceptance row", when=T_CODE)
     worker = Recorder()
 

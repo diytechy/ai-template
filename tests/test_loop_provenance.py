@@ -1079,8 +1079,8 @@ def test_a_commit_with_no_dial_is_judged_most_held_and_warns_nothing(tmp_path, c
     _commit_all(root, "seed", T_BASE)
     _write(root, INTERFACES, _rows("interface", IF_001="Accepted"))
     no_dial = _commit_all(root, _trailered("loop: accept IF-001"), T_BASE + 1)
-    # A LEGACY ordinal reads as most-held too. The live reader would translate
-    # `1` to DevStg-Boundary and release Arch; the history check must not guess.
+    # A retired ordinal reads as most-held too: no reader translates it (D11),
+    # and translating `1` to DevStg-Boundary would release Arch.
     _write(root, POLICY, "[authority]\noperator_accepts_through = 1\n")
     _write(root, INTERFACES, _rows("interface", IF_001="Drafted"))
     legacy = _commit_all(root, _trailered("loop: reopen IF-001"), T_BASE + 2)
@@ -1186,19 +1186,19 @@ def test_the_needs_file_is_read_at_the_needs_rung_by_the_authority_alone():
     assert "docs/requirements/stakeholder-needs" not in authority.SPINE_ACCEPTANCE_RUNGS
 
 
-def test_the_live_dial_reads_every_legacy_spelling_silently_from_a_chosen_tree(
+def test_the_live_dial_reads_the_current_spelling_silently_from_a_chosen_tree(
     tmp_path, capsys
 ):
     """Implements: TC-241"""
     root = _bare(tmp_path / "dials")
     cases = (
         ('[authority]\noperator_accepts_through = "DevStg-Arch"\n', "DevStg-Arch"),
-        # the retired 0-4 ordinal, translated rather than guessed
-        ("[authority]\noperator_accepts_through = 1\n", "DevStg-Boundary"),
-        # the retired key name
-        ('[authority]\nhuman_ratification_through = "DevStg-Reqs"\n', "DevStg-Reqs"),
-        # the retired enum, where no dial is declared at all
-        ('[authority]\ngate_policy = "autonomous"\n', "DevStg-Below"),
+        # Spellings older than the vocabulary are not read (D11), so each is the
+        # most held, never translated: the retired 0-4 ordinal, the retired key
+        # name, and the retired enum where no dial is declared at all.
+        ("[authority]\noperator_accepts_through = 1\n", "DevStg-Release"),
+        ('[authority]\nhuman_ratification_through = "DevStg-Reqs"\n', "DevStg-Release"),
+        ('[authority]\ngate_policy = "autonomous"\n', "DevStg-Release"),
         # a value no reader recognises, and no policy at all: the most held
         ('[authority]\noperator_accepts_through = "devstg-arch"\n', "DevStg-Release"),
         ("", "DevStg-Release"),
@@ -1208,19 +1208,17 @@ def test_the_live_dial_reads_every_legacy_spelling_silently_from_a_chosen_tree(
         sha = _commit_all(root, "dial {}".format(i), T_BASE + i)
         assert authority.dial_at(root, sha) == rung, text
         assert authority.dial_at(root, "HEAD") == rung, text
-    # The retired one-word FILE, where the policy file says nothing.
+    # The retired one-word FILE is not read either.
     _write(root, POLICY, "[policies]\nreview_rounds = 0\n")
     _write(root, "docs/gate-policy", "# the old enum\nsingle-approve\n")
     _commit_all(root, "the old gate-policy file", T_LATER)
-    assert authority.dial_at(root, "HEAD") == "DevStg-Below"
+    assert authority.dial_at(root, "HEAD") == "DevStg-Release"
     # An explicitly chosen tree: the index answers for itself.
-    _write(root, POLICY, "[authority]\noperator_accepts_through = 1\n")
+    _write(root, POLICY, '[authority]\noperator_accepts_through = "DevStg-Boundary"\n')
     _git(root, "add", "--", POLICY)
     assert authority.dial_at(root, None) == "DevStg-Boundary"
-    assert authority.dial_at(root, "HEAD") == "DevStg-Below"
+    assert authority.dial_at(root, "HEAD") == "DevStg-Release"
+    # The live reader of the working tree gives the same rung, and prints nothing.
+    assert ac.acceptance_through(root / "docs") == "DevStg-Boundary"
     out = capsys.readouterr()
     assert out.out == "" and out.err == "", out  # silent, every time
-    # The live reader of the working tree gives the same rung; its migration
-    # note is presentation, printed by it alone.
-    assert ac.acceptance_through(root / "docs") == "DevStg-Boundary"
-    assert "RETIRED" in capsys.readouterr().err
