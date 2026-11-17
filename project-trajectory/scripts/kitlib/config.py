@@ -48,6 +48,7 @@ __all__ = [
     "assumption_gate_enabled",
     "first_declared_line",
     "MISPLACED_PRIVACY_READING",
+    "parse_stack_ini",
     "policy_declaration",
     "process_check",
     "process_check_text",
@@ -99,13 +100,27 @@ def read_stack_ini(path, *, fold_keys=True):
     path = Path(path)
     if not path.exists():
         return None
+    try:
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError as exc:
+        raise StackIniError(str(exc)) from exc
+    return parse_stack_ini(text, source=str(path), fold_keys=fold_keys)
+
+
+def parse_stack_ini(text, *, source="<string>", fold_keys=True):
+    """`read_stack_ini`'s parse of `docs/stack.ini` text already in hand, under
+    the same options; a parse error raises `StackIniError`. For the vocabulary
+    migrator, which proves its rewrite of the file by parsing the rewritten
+    text before it writes it.
+
+    Implements: SR-007
+    """
     cp = configparser.ConfigParser(interpolation=None)
     if not fold_keys:
         cp.optionxform = str
     try:
-        text = path.read_text(encoding="utf-8-sig", errors="replace")
-        cp.read_string(text, source=str(path))
-    except (configparser.Error, OSError) as exc:
+        cp.read_string(text, source=source)
+    except configparser.Error as exc:
         raise StackIniError(str(exc)) from exc
     return cp
 

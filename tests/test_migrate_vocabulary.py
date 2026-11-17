@@ -354,6 +354,10 @@ def test_the_retained_evidence_gap_kind_is_respelled_beside_the_others(tmp_path)
         'policies = { push = "human" }\n',
         '[policies]\npush = """human"""\n',
         'adjudicator = { retain_for = ["first-approval"] }\n',
+        "authority = { operator_accepts_through = 3 }\n",
+        "[authority]\noperator_accepts_through = +3\n",
+        "[authority]\noperator_accepts_through = 0x3\n",
+        "build = { red_rounds_max = 5 }\n",
     ),
     ids=(
         "inline-table",
@@ -362,6 +366,10 @@ def test_the_retained_evidence_gap_kind_is_respelled_beside_the_others(tmp_path)
         "push-in-an-inline-table",
         "push-in-a-multi-line-string",
         "retained-kind-in-an-inline-table",
+        "ordinal-in-an-inline-table",
+        "ordinal-with-a-sign",
+        "ordinal-in-hexadecimal",
+        "failure-cap-in-an-inline-table",
     ),
 )
 def test_a_dial_the_line_edit_cannot_reach_is_refused_not_guessed(tmp_path, text):
@@ -377,6 +385,80 @@ def test_a_policy_file_in_the_current_vocabulary_is_untouched(tmp_path):
     path = _write(tmp_path, "docs/process.toml", text)
     assert _run(tmp_path, "--check") == 0
     assert _run(tmp_path) == 0
+    assert path.read_bytes() == text.encode("utf-8")
+
+
+# The dial under its earliest key name, holding the retired integer.
+EARLIEST_KEY = "human_ratification_through"  # check_vocab: allow
+DIAL = "# The dial.\n[attestation]\n{} = {}  # the old ordinal\nfinal_review = 1\n"
+
+
+@pytest.mark.parametrize(
+    "ordinal, rung",
+    (
+        (0, "DevStg-Below"),
+        (1, "DevStg-Boundary"),
+        (2, "DevStg-Arch"),
+        (3, "DevStg-LLReqs"),
+        (4, "DevStg-Release"),
+    ),
+)
+def test_the_dials_earliest_key_and_retired_integer_are_respelled_in_place(
+    tmp_path, ordinal, rung
+):
+    """Implements: TC-427"""
+    text = DIAL.format(EARLIEST_KEY, ordinal)
+    path = _write(tmp_path, "docs/process.toml", text.replace("\n", "\r\n"))
+    assert _run(tmp_path) == 0
+    expected = (
+        '# The dial.\n[authority]\noperator_accepts_through = "{}"  # the old '
+        "ordinal\nfinal_review = 1\n".format(rung)
+    )
+    assert path.read_bytes() == expected.replace("\n", "\r\n").encode("utf-8")
+    # The integer moves in its own key only: another integer in the table stays.
+    assert tomllib.loads(expected)["authority"]["final_review"] == 1
+    assert _run(tmp_path, "--check") == 0
+
+
+def test_a_dial_holding_no_retired_integer_keeps_its_value(tmp_path):
+    """Implements: TC-427"""
+    for value in ("true", "7", '"DevStg-Arch"'):
+        text = "[authority]\noperator_accepts_through = {}\n".format(value)
+        path = _write(tmp_path, "docs/process.toml", text)
+        assert _run(tmp_path) == 0
+        assert path.read_bytes() == text.encode("utf-8")
+    text = "[authority]\noperator_accepts_through = 3\n"
+    path = _write(tmp_path, "docs/process.toml", text)
+    assert _run(tmp_path) == 0
+    assert path.read_bytes() == text.replace("3", '"DevStg-LLReqs"').encode()
+
+
+def test_the_failure_caps_earlier_key_is_renamed_in_place(tmp_path, capsys):
+    """Implements: TC-427"""
+    text = "[build]\nred_rounds_max = 5  # stop after five\n\n[other]\nred_rounds_max = 1\n"
+    path = _write(tmp_path, "docs/process.toml", text)
+    assert _run(tmp_path) == 0
+    cap = "stop_lane_after_consecutive_commit_check_failures"
+    expected = text.replace("[build]\nred_rounds_max", "[build]\n" + cap)
+    assert path.read_bytes() == expected.encode("utf-8")
+    both = "[build]\nred_rounds_max = 5\n{} = 3\n".format(cap)
+    path = _write(tmp_path, "docs/process.toml", both)
+    assert _run(tmp_path) == 1
+    assert "carries both `red_rounds_max` and `{}`".format(cap) in (
+        capsys.readouterr().out
+    )
+    assert path.read_bytes() == both.encode("utf-8")
+
+
+def test_a_dial_under_two_earlier_keys_is_named_and_left(tmp_path, capsys):
+    """Implements: TC-427"""
+    text = '[authority]\nhuman_approval_through = "DevStg-Reqs"\n{} = 1\n'.format(
+        EARLIEST_KEY
+    )
+    path = _write(tmp_path, "docs/process.toml", text)
+    assert _run(tmp_path) == 1
+    out = capsys.readouterr().out
+    assert "carries both `human_approval_through` and `{}`".format(EARLIEST_KEY) in out
     assert path.read_bytes() == text.encode("utf-8")
 
 
@@ -534,6 +616,141 @@ def test_a_work_item_that_is_not_utf8_is_named_and_left(tmp_path, capsys):
     assert _run(tmp_path) == 1
     out = capsys.readouterr().out
     assert "docs/archive/work/complete/WI-1-x.md: not UTF-8; left untouched" in out
+    assert path.read_bytes() == raw
+
+
+# --- the stack profile -------------------------------------------------------------
+
+# The retired tags a step's list could hold, each named once.
+TAG_1 = "G1"  # check_vocab: allow
+TAG_2 = "G2"  # check_vocab: allow
+TAG_3 = "G3"  # check_vocab: allow
+BAR_REQS = "DevBar-Reqs"  # check_vocab: allow
+BAR_RELEASE = "DevBar-Release"  # check_vocab: allow
+
+STACK = (
+    "# The product toolchain.\n"
+    "[run]\n"
+    "gates = not a step's list\n"
+    "\n"
+    "[step:duplo]\n"
+    "command = {py} -m duplo {src}\n"
+    "gates = " + TAG_2 + " " + TAG_3 + "\n"
+    "layer = product\n"
+    "\n"
+    "[step:docs]\n"
+    "command = npx thing\n"
+    "GATES: " + TAG_1 + ", DevStg-Impl\n"
+    "# gates = DevStg-Impl stays a comment\n"
+    "\n"
+    "[step:reqs]\n"
+    "command = {py} reqs.py\n"
+    "gates    = DevStg-Reqs " + BAR_RELEASE + "\n"
+    "\n"
+    "[step:bar]\n"
+    "command = {py} bar.py\n"
+    "gates = DevStg-Tests, " + BAR_REQS + "\n"
+    "\n"
+    "[step:spare]\n"
+    "command = {py} spare.py\n"
+    "gates =\n"
+    "\n"
+    "[step:current]\n"
+    "command = {py} x.py\n"
+    "from-stage = DevStg-Arch\n"
+)
+
+
+def test_a_steps_list_of_stages_becomes_the_one_stage_it_meant(tmp_path):
+    """Implements: TC-427"""
+    from kitlib import config as kconfig
+
+    path = _write(tmp_path, "docs/stack.ini", STACK.replace("\n", "\r\n"))
+    owed = [line for line in migrate.spellings_owed(tmp_path) if "stack" in line]
+    assert owed == ["stack profile owes the rewrite: docs/stack.ini"]
+    assert _run(tmp_path) == 0
+    moves = (
+        ("gates = " + TAG_2 + " " + TAG_3, "from-stage = DevStg-Impl"),
+        ("GATES: " + TAG_1 + ", DevStg-Impl", "from-stage: DevStg-Needs"),
+        ("gates    = DevStg-Reqs " + BAR_RELEASE, "from-stage    = DevStg-Needs"),
+        ("gates = DevStg-Tests, " + BAR_REQS, "from-stage = DevStg-Needs"),
+        ("gates =\n", "from-stage = DevStg-Impl\n"),
+    )
+    expected = STACK
+    for old, new in moves:
+        assert expected.count(old) == 1, old
+        expected = expected.replace(old, new)
+    # A section that is not a step keeps its key, and a comment its words.
+    assert "[run]\ngates = not a step's list\n" in expected
+    assert "# gates = DevStg-Impl stays a comment\n" in expected
+    assert path.read_bytes() == expected.replace("\n", "\r\n").encode("utf-8")
+    profile = kconfig.read_stack_ini(path)
+    stages = {s: kconfig.step_threshold(profile, s) for s in profile.sections()[1:]}
+    assert stages == {
+        "step:duplo": "DevStg-Impl",
+        "step:docs": "DevStg-Needs",
+        "step:reqs": "DevStg-Needs",
+        "step:bar": "DevStg-Needs",
+        "step:spare": "DevStg-Impl",
+        "step:current": "DevStg-Arch",
+    }
+    assert migrate.spellings_owed(tmp_path) == []
+    assert _run(tmp_path, "--check") == 0
+
+
+@pytest.mark.parametrize(
+    "text, problem",
+    (
+        ("[step:a]\ngates = G9\n", "[step:a] gates names 'G9'"),
+        ("[step:a]\ngates = " + TAG_2 + " ; noted\n", "[step:a] gates names ';'"),
+        (
+            "[step:a]\ngates = " + TAG_2 + "\n  " + TAG_3 + "\n",
+            "[step:a] continues its `gates` list",
+        ),
+        (
+            "[DEFAULT]\ngates = " + TAG_1 + "\n\n[step:a]\ncommand = x\n",
+            "[DEFAULT] declares `gates`",
+        ),
+        (
+            "[step:a]\ngates = " + TAG_1 + "\nfrom-stage = DevStg-Impl\n",
+            "[step:a] declares both `gates` and `from-stage`",
+        ),
+        ("[step:a]\ngates = " + TAG_1 + "\n[step:a]\n", "it does not parse"),
+        (
+            "[step:a]\ncommand = run\n  gates = " + TAG_1 + "\ngates = " + TAG_2 + "\n",
+            "would change more than the vocabulary",
+        ),
+    ),
+    ids=(
+        "unknown-token",
+        "inline-comment",
+        "continuation-line",
+        "under-default",
+        "both-keys",
+        "does-not-parse",
+        "look-alike-continuation",
+    ),
+)
+def test_a_stack_profile_the_rewrite_cannot_prove_is_named_and_left(
+    tmp_path, capsys, text, problem
+):
+    """Implements: TC-427"""
+    path = _write(tmp_path, "docs/stack.ini", text)
+    assert _run(tmp_path) == 1
+    out = capsys.readouterr().out
+    assert "stack profile NOT rewritten: docs/stack.ini: " in out, out
+    assert problem in out, out
+    assert path.read_bytes() == text.encode("utf-8")
+
+
+def test_a_stack_profile_that_is_not_utf8_is_named_and_left(tmp_path, capsys):
+    """Implements: TC-427"""
+    raw = "[step:a]\ncommand = caf\xe9\ngates = DevStg-Impl\n".encode("latin-1")
+    path = tmp_path / "docs" / "stack.ini"
+    path.parent.mkdir(parents=True)
+    path.write_bytes(raw)
+    assert _run(tmp_path) == 1
+    assert "docs/stack.ini: not UTF-8; left untouched" in capsys.readouterr().out
     assert path.read_bytes() == raw
 
 

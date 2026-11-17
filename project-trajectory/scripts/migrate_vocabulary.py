@@ -25,8 +25,13 @@ words they were written in.
                                    `status` (CSV `Status`), `Approved`  ->
                                    `Accepted`
     docs/process.toml              the table `[attestation]`  ->  `[authority]`,
-                                   and in it `human_approval_through`  ->
-                                   `operator_accepts_through`; in `[policies]`,
+                                   and in it `human_approval_through` and the
+                                   earlier `human_ratification_through`  ->  # check_vocab: allow
+                                   `operator_accepts_through`, whose retired
+                                   0-4 integer  ->  the quoted `DevStg-*` rung
+                                   it meant; in `[build]`, `red_rounds_max`
+                                   ->  `stop_lane_after_consecutive_commit_
+                                   check_failures`; in `[policies]`,
                                    `push = "human"`  ->  `push = "operator"`;
                                    in `[adjudicator] retain_for`, the brief
                                    kinds `"first-approval"`  ->
@@ -37,6 +42,11 @@ words they were written in.
     docs/work/**/*.md,             in each work item's front matter and in each
     docs/archive/work/**/*.md      row drafted in its `## Dispositions` section,
                                    the key `bar`  ->  `checks_stage`
+    docs/stack.ini                 in each `[step:<name>]` section, the list
+                                   `gates = <stages>`  ->  `from-stage =` the
+                                   one stage it meant: `DevStg-Needs` when the
+                                   list names the requirements stage (by any
+                                   of its spellings), else `DevStg-Impl`
 
 One file is renamed rather than rewritten: the operator's scratchpad at the
 root, `OWNER_SCRATCHPAD.md`  ->  `OPERATOR_SCRATCHPAD.md`. The kit's scripts
@@ -85,7 +95,11 @@ Usage:
 `--check` writes nothing and exits 1 when anything still owes the rewrite;
 otherwise the values are rewritten and the script exits 0, or 1 when a file
 could not be rewritten safely. It imports nothing from the kit, so it runs
-whatever state the kit's own scripts are in. Idempotent: a second run finds
+whatever state the kit's own scripts are in, with one exception: the stack
+profile step parses `docs/stack.ini` through `kitlib.config.parse_stack_ini`,
+imported in that step alone, because the kit holds one parse of that file
+(`test_the_stack_ini_parse_is_one_home`) and a second here could read it
+differently from the reader the rewrite is for. Idempotent: a second run finds
 nothing to do.
 """
 
@@ -437,10 +451,32 @@ def registries(root, check):
 # retained sittings are named by brief kind: the sitting that takes a row
 # into acceptance was the kind `first-approval`, and the one that judges an
 # evidence gap (a test case left unaccepted under closed work) `red-tc`.
+# ORDINALS: within a table and key, an earlier bare integer and the string
+# that replaced it. The acceptance dial was an integer, 0 to 4, before it named
+# a stage (WI-493), and each integer held exactly the stages its rung holds.
+# Its key had two earlier names, the first retired at WI-499. The commit-check
+# failure cap's key was `red_rounds_max`.
 POLICY_REL = "docs/process.toml"
 POLICY_TABLES = {"attestation": "authority"}
-POLICY_KEYS = {"authority": {"human_approval_through": "operator_accepts_through"}}
+POLICY_KEYS = {
+    "authority": {
+        "human_approval_through": "operator_accepts_through",
+        "human_ratification_through": "operator_accepts_through",  # check_vocab: allow
+    },
+    "build": {"red_rounds_max": "stop_lane_after_consecutive_commit_check_failures"},
+}
 POLICY_VALUES = {"policies": {"push": {"human": "operator"}}}
+POLICY_ORDINALS = {
+    "authority": {
+        "operator_accepts_through": {
+            0: "DevStg-Below",
+            1: "DevStg-Boundary",
+            2: "DevStg-Arch",
+            3: "DevStg-LLReqs",
+            4: "DevStg-Release",
+        }
+    }
+}
 POLICY_ITEMS = {
     "adjudicator": {
         "retain_for": {
@@ -460,23 +496,43 @@ _QUOTED = re.compile(
 )
 # One quoted element of a list.
 _ITEM = re.compile(r"(?P<quote>[\"'])(?P<value>[^\"'\r\n]*)(?P=quote)")
+# The `= value` part of a key line when the value is a bare decimal integer.
+_BARE_INT = re.compile(
+    r"^(?P<eq>[ \t]*=[ \t]*)(?P<value>[0-9]+)(?P<tail>(?:[ \t#\r].*)?)$"
+)
 
 
 def _policy_value(table, key, value):
     """`value` as the current vocabulary spells it, for `key` in `table`: a
     string through `POLICY_VALUES`, each string of a list through
-    `POLICY_ITEMS`."""
+    `POLICY_ITEMS`, an integer (never a boolean) through `POLICY_ORDINALS`."""
     if isinstance(value, list):
         items = POLICY_ITEMS.get(table, {}).get(key, {})
         return [items.get(v, v) if isinstance(v, str) else v for v in value]
+    if type(value) is int:
+        return POLICY_ORDINALS.get(table, {}).get(key, {}).get(value, value)
     if not isinstance(value, str):
         return value
     return POLICY_VALUES.get(table, {}).get(key, {}).get(value, value)
 
 
+def _ordinal_rest(table, key, rest):
+    """The `= value` part of a key line whose bare integer `POLICY_ORDINALS`
+    respells, as the quoted string; otherwise None."""
+    match = _BARE_INT.match(rest)
+    ordinals = POLICY_ORDINALS.get(table, {}).get(key, {})
+    if not match or int(match["value"]) not in ordinals:
+        return None
+    return '{}"{}"{}'.format(match["eq"], ordinals[int(match["value"])], match["tail"])
+
+
 def _policy_rest(table, key, rest):
-    """The `= value` part of a key line with its quoted value respelled. A value
-    written any other way is left as it is, and the re-parse refuses it."""
+    """The `= value` part of a key line with its quoted value, or its bare
+    integer, respelled. A value written any other way is left as it is, and
+    the re-parse refuses it."""
+    ordinal = _ordinal_rest(table, key, rest)
+    if ordinal is not None:
+        return ordinal
     match = _QUOTED.match(rest)
     if not match:
         return rest
@@ -489,7 +545,7 @@ def _policy_rest(table, key, rest):
 def _policy_table(name, table, declared):
     """`(name, table)` as the current vocabulary spells one top-level table of
     a parsed policy file. Raises `Unsafe` when the file `declared` both
-    spellings of the table, or the table carries both spellings of a key."""
+    spellings of the table, or the table carries two spellings of a key."""
     new_name = POLICY_TABLES.get(name, name)
     if new_name != name and new_name in declared:
         raise Unsafe("it declares both `[{}]` and `[{}]`".format(name, new_name))
@@ -498,8 +554,11 @@ def _policy_table(name, table, declared):
     keys, renamed = POLICY_KEYS.get(new_name, {}), {}
     for key, value in table.items():
         new_key = keys.get(key, key)
-        if new_key != key and new_key in table:
-            raise Unsafe("`[{}]` carries both `{}` and `{}`".format(name, key, new_key))
+        other = [k for k in table if k != key and keys.get(k, k) == new_key]
+        if new_key != key and other:
+            raise Unsafe(
+                "`[{}]` carries both `{}` and `{}`".format(name, key, other[0])
+            )
         renamed[new_key] = _policy_value(new_name, new_key, value)
     return new_name, renamed
 
@@ -838,6 +897,143 @@ def work_items(root, check):
     return done, problems
 
 
+# --- the stack profile -------------------------------------------------------------
+
+# `docs/stack.ini`: each `[step:<name>]` section names the one stage its step
+# becomes relevant at, `from-stage = <stage>`, and the step runs at or above it.
+# It was a list, `gates = <stages>`, naming the stages (or the retired tags for
+# them) the step ran at, each read by meaning (WI-498 slice 2): a list naming
+# the requirements stage ran the step from the needs stage on, the floor every
+# repository sits at, and any other list from the implementation stage. Each
+# spelling a list could hold, and the stage it meant:
+STACK_REL = "docs/stack.ini"
+STACK_GATES = {
+    "G1": "DevStg-Needs",  # check_vocab: allow
+    "DevBar-Reqs": "DevStg-Needs",  # check_vocab: allow
+    "DevStg-Reqs": "DevStg-Needs",
+    "G2": "DevStg-Impl",  # check_vocab: allow
+    "G3": "DevStg-Impl",  # check_vocab: allow
+    "DevBar-Tests": "DevStg-Impl",  # check_vocab: allow
+    "DevBar-Release": "DevStg-Impl",  # check_vocab: allow
+    "DevStg-Tests": "DevStg-Impl",
+    "DevStg-Impl": "DevStg-Impl",
+}
+_STACK_FLOOR = "DevStg-Needs"
+# A section header, and the line declaring the list (the parse folds the key's
+# case, and `:` delimits a key as `=` does).
+_STACK_HEADER = re.compile(r"^[ \t]*\[(?P<name>[^\]\r\n]+)\][ \t]*\r?$")
+_GATES_LINE = re.compile(
+    r"^(?P<lead>[ \t]*)gates(?P<pad>[ \t]*)(?P<delim>[=:]).*?(?P<end>\r?)$", re.I
+)
+
+
+def _stack_parse(text):
+    """The kit's one parse of stack-profile `text`, as `{section: {key:
+    value}}` with `[DEFAULT]` beside the sections. Raises `Unsafe` when it does
+    not parse."""
+    from kitlib.config import StackIniError, parse_stack_ini
+
+    try:
+        profile = parse_stack_ini(text.lstrip("\ufeff"))
+    except StackIniError as exc:
+        raise Unsafe("it does not parse ({})".format(exc)) from None
+    out = {"DEFAULT": dict(profile.defaults())}
+    out.update((s, dict(profile.items(s, raw=True))) for s in profile.sections())
+    return out
+
+
+def _stage_meant(name, value):
+    """The one stage the list `value` of section `name` meant. Raises `Unsafe`
+    for a list continued onto a second line or naming an unknown token."""
+    if "\n" in value:
+        raise Unsafe("[{}] continues its `gates` list on a second line".format(name))
+    tokens = value.replace(",", " ").split()
+    unknown = [t for t in tokens if t not in STACK_GATES]
+    if unknown:
+        raise Unsafe(
+            "[{}] gates names {!r}, no stage this knows".format(name, unknown[0])
+        )
+    meant = {STACK_GATES[t] for t in tokens}
+    return _STACK_FLOOR if _STACK_FLOOR in meant else "DevStg-Impl"
+
+
+def _stack_expected(parsed):
+    """`{section: stage}` for each step section whose `gates` list moves, after
+    moving it in `parsed` in place. Raises `Unsafe` for a list under
+    `[DEFAULT]`, which every section inherits, or a section carrying both
+    keys."""
+    if "gates" in parsed["DEFAULT"]:
+        raise Unsafe("[DEFAULT] declares `gates`, which every section inherits")
+    moved = {}
+    for name, keys in parsed.items():
+        if not name.startswith("step:") or "gates" not in keys:
+            continue
+        if "from-stage" in keys:
+            raise Unsafe("[{}] declares both `gates` and `from-stage`".format(name))
+        moved[name] = keys["from-stage"] = _stage_meant(name, keys.pop("gates"))
+    return moved
+
+
+def migrate_stack_profile(text):
+    """Stack-profile `text` with each step's `gates` list as the one stage it
+    meant, `from-stage = <stage>`, every other byte kept. Raises `Unsafe` when
+    the result would not parse as exactly that.
+
+    Implements: SR-247, LLR-369
+    """
+    expected = _stack_parse(text)
+    moved = _stack_expected(expected)
+    if not moved:
+        return text
+    lines, section = [], None
+    for line in text.split("\n"):
+        header = _STACK_HEADER.match(line.lstrip("\ufeff"))
+        gates = _GATES_LINE.match(line)
+        if header:
+            section = header["name"]
+        elif gates and section in moved:
+            line = "{}from-stage{}{} {}{}".format(
+                gates["lead"],
+                gates["pad"],
+                gates["delim"],
+                moved[section],
+                gates["end"],
+            )
+        lines.append(line)
+    new = "\n".join(lines)
+    try:
+        after = _stack_parse(new)
+    except Unsafe:
+        after = None
+    if after != expected:
+        raise Unsafe("a rewrite of it would change more than the vocabulary")
+    return new
+
+
+def stack_profile(root, check):
+    """The stack profile, when a step names its stages as a `gates` list,
+    rewritten: `([repo-relative path], [problem])`. A file that is not UTF-8
+    or cannot be proved is named and left untouched.
+
+    Implements: SR-247, LLR-369
+    """
+    path = root / STACK_REL
+    if not path.is_file():
+        return [], []
+    try:
+        raw = path.read_bytes().decode("utf-8")
+        new = migrate_stack_profile(raw)
+    except UnicodeDecodeError:
+        return [], ["{}: not UTF-8; left untouched".format(STACK_REL)]
+    except Unsafe as exc:
+        return [], ["{}: {}; left untouched".format(STACK_REL, exc)]
+    if new == raw:
+        return [], []
+    if not check:
+        path.write_bytes(new.encode("utf-8"))
+    return [STACK_REL], []
+
+
 # --- the operator's scratchpad --------------------------------------------------
 
 # The root notes file, by its earlier and its current name.
@@ -1122,6 +1318,7 @@ STEPS = (
     ("policy file", policy),
     ("decisions record", decisions),
     ("work item", work_items),
+    ("stack profile", stack_profile),
     ("scratchpad", scratchpad),
     ("acceptance record", record),
     ("acceptance-record link", links),
