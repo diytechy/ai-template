@@ -128,7 +128,7 @@ acceptance = """The toolchain is declared once, in a single declared configurati
 [need.SN-004]
 status = "Accepted"
 stakeholder_refs = ["STK-02"]
-need = """A team advances only through **explicit acceptance gates** (DevStg-Reqs→DevStg-Tests→DevStg-Impl→…), and a gate passes only when its mechanical bar is met."""
+need = """A team advances only through **explicit acceptance gates** (DevStg-Reqs→DevStg-Tests→DevStg-Impl→…), and a gate passes only when its mechanical standard is met."""
 why = "*Explicit acceptance gates so you can trust what ships.*"
 priority = "M"
 acceptance = """A harness run for a named gate enforces that gate's required steps; a missing required tool **fails**, never silently skips."""
@@ -140,7 +140,7 @@ tags = ["shell"]
 need ="""AI agents and humans work from the **same playbook**, and the process is enforced **agent-neutrally** — by git hooks + CI — not by trusting whichever agent showed up."""
 why = """*AI agents and humans working from the same playbook*; enforcement can't depend on which agent showed up."""
 priority = "M"
-acceptance = """The enforcement floor is git + CI running the *same* harness a human runs — where "same" is ONE DEFINITION OF PASSING PER MOMENT: each CI trigger runs the documented entry point at the tier the declared moment-to-tier table assigns to that moment (per-commit bar, slice close, release), pinned by test for the SHIPPED reference workflow. Per-agent configs only mirror the floor, never replace it. Two things are deliberately outside the claim: an adopter-edited workflow copy, which is beyond this repo's reach, and full local-CI equivalence on every input, which is not mechanizable and would be a bar nothing can check."""
+acceptance = """The enforcement floor is git + CI running the *same* harness a human runs — where "same" is ONE DEFINITION OF PASSING PER MOMENT: each CI trigger runs the documented entry point at the tier the declared moment-to-tier table assigns to that moment (per-commit checks, slice close, release), pinned by test for the SHIPPED reference workflow. Per-agent configs only mirror the floor, never replace it. Two things are deliberately outside the claim: an adopter-edited workflow copy, which is beyond this repo's reach, and full local-CI equivalence on every input, which is not mechanizable and would be a standard nothing can check."""
 
 [need.SN-006]
 status = "Accepted"
@@ -157,7 +157,7 @@ stakeholder_refs = ["STK-04"]
 need = """The people maintaining this kit hold it to its own standard: it stays traceable and tested through every change."""
 why = """The kit is a foundation many repos inherit; a regression here propagates downstream."""
 priority = "M"
-acceptance = """The declared bar is green before a change lands. The Full-suite run bootstraps a temp scaffold and exercises every delivered script."""
+acceptance = """The declared checks are green before a change lands. The Full-suite run bootstraps a temp scaffold and exercises every delivered script."""
 
 [need.SN-008]
 status = "Accepted"
@@ -189,7 +189,7 @@ status = "Accepted"
 stakeholder_refs = ["STK-02"]
 tags = ["scripts", "legal"]
 need ="""An adopting team can run every check on a **clean Python 3.11+ with minimal, argued dependencies** — stdlib by default, a non-stdlib dependency admitted only through a reviewed ledger row — on Windows and POSIX (and macOS)."""
-why = """Portability — the kit must not impose an *unargued* dependency stack on a downstream repo to run its checks. But a blanket "no dependencies" rule is itself a design constraint: it can force a worse hand-rolled alternative than a well-chosen tool, so the bar is **argument, not abstinence**."""
+why = """Portability — the kit must not impose an *unargued* dependency stack on a downstream repo to run its checks. But a blanket "no dependencies" rule is itself a design constraint: it can force a worse hand-rolled alternative than a well-chosen tool, so the standard is **argument, not abstinence**."""
 priority = "M"
 acceptance = """Every non-stdlib import in the kit's scripts is declared as a row in the dependency ledger naming what it replaces, why hand-rolling is worse, and the ruling that admitted it — the suite fails on an undeclared import; checks an adopter runs (`shipped` tier) stay stdlib-*preferred*, since a dependency there forces every adopter to install it; the CI matrix is green on Linux + Windows + macOS."""
 
@@ -253,7 +253,7 @@ tags = ["perf", "unattended", "scripts"]
 need ="""A team gets more than one piece of ready work moving at once: ready work **fans out across bounded parallel lanes**, while mutation of the integration branch stays **serialized and gated**."""
 why = """Concurrency is admitted here on structural grounds, not throughput ones: the WI DAG already encodes what may proceed, so a frontier bounded to one lane idles ready work for no reason; and parallel *integration* is precisely how a reviewed process ships an unreviewed tree — so fan-out is admitted only because it narrows back to a single serialized, gated seam before anything lands. No instrument here measures speedup, so a quantified-speedup justification would be unfalsifiable as written; the observability such a claim would need is carried instead by the lane-utilisation report."""
 priority = "S"
-acceptance = """A launch with independent ready WIs runs up to the configured worker ceiling (default 2) concurrently in isolated worktrees; every finished branch lands through one serial, fail-closed integrator that runs the declared bar on the composed tree; `--jobs 1` preserves the serial semantic; a declared pause stops claiming and drains what is already in flight; a crash at any lifecycle boundary recovers from Git history alone, without double-assignment or half-integrated authoritative state. Spec of record: `docs/archive/specs/parallel-wi-dispatch.2026-07-20.md` + `docs/concurrency-restructure.md`."""
+acceptance = """A launch with independent ready WIs runs up to the configured worker ceiling (default 2) concurrently in isolated worktrees; every finished branch lands through one serial, fail-closed integrator that runs the declared checks on the composed tree; `--jobs 1` preserves the serial semantic; a declared pause stops claiming and drains what is already in flight; a crash at any lifecycle boundary recovers from Git history alone, without double-assignment or half-integrated authoritative state. Spec of record: `docs/archive/specs/parallel-wi-dispatch.2026-07-20.md` + `docs/concurrency-restructure.md`."""
 
 [need.SN-028]
 status = "Accepted"
