@@ -1927,6 +1927,82 @@ Traps found:
 75. *`parametrize(ids=…)` is part of a test's name* and no `PARTS` rule
     reaches it; grep `ids=` after a test-name concept.
 
+### §9.13 The eleventh session: §10.7 items 4 to 7, and the ruled fixes
+
+Written 2026-11-16, on `maint/vocabulary` from `c9010ee1b`, by the session
+itself (no sub-agent). Hook bypassed (D14); nothing pushed.
+
+| Item | Commit | What |
+|---|---|---|
+| 4, the detector | `015e55583`, record `bd525feaf`, view `4241f92fe` | `check_vocab.py` reports each value `migrate_vocabulary.py` still owes, naming the migrator as the fix, at its own severity (WARN; ERROR from `DevStg-Impl`, where `check.py` adds `--strict`). It asks the migrator: `spellings_owed(root)` runs every step in check mode, the record with `copies=False`. Seam IF-312 (Drafted), cited by TC-427; SR-247, LLR-369, TC-427 extended (Drafted); three tests. On this repository `check_vocab` takes 4.3 s, 1.5 s of it the migrator |
+| 5, the re-sync entry | `c9cde4a1b` | The vocabulary entry, last before the pack's §5: the renames by thing and nine steps for an adopter (below). The earlier entry at the same anchor now names `record-checks`, `Checks-Passed`, `# checks-failed:` and `kitlib/expected_failure.py`. The pack's own §0 to §2 (live procedure, skipped whole by every sweep as the declared home of retired words) say operator, acceptance, pass and failing |
+| §4.5.6, two visible strings | `fdcf7277b` | The station panel's "green ⇒ … @ branch tip" and "Red checks · lost race … a red refresh" (§9.12 decision (b)) read "pass ⇒" and "Failed checks … a failed refresh" |
+| The ruled fixes (§12.2) | `4fc9186fa` | `README.template.md`: delete the example rows and diagram at the first accepted chain. `ADOPTING.md` §4 and the spine-authoring skill: a conversion keeps a row's status where it keeps its meaning, else `Drafted`. Both named in the first-day and conversion RESYNC entry |
+| WI-1007 | `c9c1915a9` | Filed: `trajectory_arch.py` split by the checks it holds, behaviour unchanged |
+| 6, the re-stamps | `462c49ec5` | Module sizes: `integrate.py` 1,805, `trace.py` 3,854, `check.py` 1,391, `bootstrap.py` 1,612. Bytes: `CLAUDE.md` 8,052, `AGENTS.template.md` 9,964, the guard skill 4,624. Complexity baseline: three re-keys at unchanged scores, the stale `gen_arch_map.header_lines` row deleted |
+| 7, the lints and the suite | on `462c49ec5` | The four declared lints clean; the unfiltered suite below |
+
+**Decisions taken here.**
+
+(a) **The detector asks the migrator; it does not hold patterns.** §5 part 2
+planned the old stored spellings as patterns in `check_vocab.py`. That breaks
+the migrator's docstring ("no other script names them"), and a probe of a
+narrow pattern set still hit dated design notes quoting an old TOML line and a
+local variable `bar = "=" * 70`. Asking the migrator is exact, covers both
+carriers and every step, and needs no accepted row changed: `scan` (LLR-169)
+is untouched; `main` adds the lines. A record copy that differs from live is
+left out of the question: it is an amendment awaiting its act, and only a
+run of the record step writes it.
+
+(b) **The two complexity growths were decomposed, not bumped.**
+`bootstrap.copy_kit_files` (17 to 20) and `trace.render_console` (34 to 36)
+came from the first-day and conversion fixes, whose commits bypassed the hook,
+so the census never ran on them. Each condition moved to a sibling
+(`_pytest_ini_withheld`, `_schema_note`), the ratchet's named escape; the size
+ratchet took the lines as a reviewed bump (+4, +2).
+
+(c) **The RESYNC entry's steps**, in §1.3's order: leave no amendment awaiting
+its act (the record step absorbs whatever differs); fold, then migrate; run
+the migrator straight after taking the scripts (`intake.py snapshot` would
+otherwise write an act for every `Approved` row); the hook refuses the
+migration commit, so the operator commits it bypassed and runs the checks on
+the committed tree; move `[checks] test_first_since` to it; delete
+`kitlib/red_mark.py` and the three renamed templates a copy-over leaves; the
+adopter's own overrides, scripts and prose; lanes in flight; observations
+reading due.
+
+**Found, not fixed (for the operator or a later row).**
+
+- `check_vocab.py`'s docstring and `--strict` help, and LLR-169's detail
+  (Accepted), say the step is strict "from the `DevStg-Tests` bar on";
+  `check.py` adds `--strict` from `DevStg-Impl`. The words predate this
+  branch; LLR-169's correction is an amendment.
+- D11 (item 8) is a functional change across nine modules (`check.py`,
+  `kitlib/config.py`, `kitlib/authority.py`, `agent_common.py`,
+  `agent_policy.py`, `intake.py`, `integrate.py`, `bootstrap.py`,
+  `check_vocab.py`). No LLR names a table in its `code_symbol`, but accepted
+  rows and test cases describe the behaviours (the `--gate G2` translation,
+  the one-word policy fold), so moving them is amendment work.
+
+**Tests** (8 workers, Git Bash, `PYTEST_DEBUG_TEMPROOT` gone from the
+environment):
+
+| Change | Modules | Result |
+|---|---|---|
+| item 4 | `test_migrate_vocabulary`, `test_stage_ladder`, `test_check_harness`, `test_derive_stage`, `test_gen_open_items`, `test_dogfood_sync`, `test_skills_sync`, `test_module_size_ratchet`, `test_complexity_ratchet`, `test_interface_owner_reach`, `test_intake_settled` | 1 failed (the size re-stamp), 258 passed, 2 skipped in 133.52s |
+| the panel strings | `test_traj_panels` | 41 passed in 13.79s |
+| the ruled fixes | `test_skills_sync`, `test_dogfood_sync`, `test_check_docs` | 119 passed, 1 skipped in 28.23s |
+| item 6 | `test_module_size_ratchet`, `test_complexity_ratchet`, `test_check_complexity`; the byte tests; `test_bootstrap`, `test_profile`, `test_trace`, `test_trajectory`, `test_old_kit_resync` | 52 passed in 2.10s; 2 passed; 241 passed, 1 skipped in 111.84s |
+| item 7, unfiltered | the whole suite on `462c49ec5` | 8,095 passed, 29 skipped, none failed, 18 warnings (advisory tier notes) in 1632.35s (27 min 12 s) |
+
+**Standing checks** (on `462c49ec5`): `trace.py --strict` exit 0
+(`integrity=0`); `check_trajectory.py --strict` clean; `check_docs.py --stale`
+0 broken; `scripts/check_resync.py` OK; `check_vocab.py --strict` clean;
+`migrate_vocabulary.py --check` "nothing stored in an earlier spelling";
+`check_complexity.py --mode enforce` OK (182 rows); `derive_stage.py`,
+`gen_open_items.py`, `gen_prompt_catalog.py`, `gen_skills_index.py` fresh;
+ruff format and check clean; skill mirrors identical.
+
 ## §10. Runbook: finishing the migration
 
 Written 2026-11-11 for the session that takes over, which has none of the
@@ -2247,7 +2323,7 @@ rewrite it here.
 
 ### §10.7 Closing the branch
 
-**Items 1 to 3 are done (ninth session, 2026-11-16): §9.11.** **Item 1 is done (tenth session, 2026-11-16): §9.12** records its two leftovers, §4.5.6's prose and "bar" in this repository's own docs. Item 4 onward is next.
+**Items 1 to 3 are done (ninth session, 2026-11-16): §9.11.** **Item 1 is done (tenth session, 2026-11-16): §9.12** records its two leftovers, §4.5.6's prose and "bar" in this repository's own docs. **Items 4 to 7 are done (eleventh session, 2026-11-16): §9.13**, with the ruled fixes of §12.2 and WI-1007. Item 8 (D11) is next; `ROW-AMENDMENTS.md` follows the last migrator run, which D11 is expected to include.
 
 1. The rest of §4.5, as the operator rules each line.
 2. The glossary's older entries, by hand: "the owner" in *independence* and
@@ -2712,3 +2788,13 @@ list is fixed unless §12.6 says so.
     record. (5) WI-1001's spec quotes its work item verbatim again ("or the bar
     stays red"). (6) Python names (`red`, `green`, `reds`) were not renamed.
   - **Still owed by §10.7:** items 4 to 9.
+- **2026-11-16, §10.7 items 4 to 7 done, with the ruled fixes.** On
+  `maint/vocabulary`: the detector asks the migrator (`015e55583`, IF-312);
+  the RESYNC entry and the pack's live procedure (`c9cde4a1b`); the panel's
+  two colour strings (`fdcf7277b`); the README examples note and the
+  conversion-status rule (`4fc9186fa`); WI-1007 filed (`c9c1915a9`); the
+  re-stamps, with two complexity growths decomposed (`462c49ec5`). The four
+  lints clean. Unfiltered suite: 8,095 passed, 29 skipped, none failed, 18 warnings (advisory tier notes) in 1632.35s (27 min 12 s). §9.13 has the decisions and
+  what was found.
+  - **Still owed by §10.7:** item 8 (D11), then `ROW-AMENDMENTS.md` after
+    the last migrator run, then §6.
