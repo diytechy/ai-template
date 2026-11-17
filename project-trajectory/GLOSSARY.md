@@ -16,6 +16,11 @@ flag or exit code that controls who may do what says "human"; those say
 [operator](#operator). "Human" appears only in prose, where it states that a
 person is intended.
 
+**Passes and fails.** A run of checks **passes** or **fails**. "Red" and
+"green" are not used for either, except once, where `process.md` names the
+red, green, refactor cycle. A threshold is named for what it is (a minimum,
+a standard, a level), never a "bar".
+
 ## Sessions and routing
 
 ### ask
@@ -54,7 +59,7 @@ table in `docs/process.toml`); every other call starts a fresh session.
 A judgement never runs in a session that authored what it judges. There are
 two exceptions. First, the [adjudicator](#adjudicator)'s final pass over its own
 spine draft after an [adjudication reviewer](#adjudication-reviewer) has edited
-it: it approves only if it changes nothing. Second, in a decomposition round's
+it: it [accepts](#accept) the rows only if the pass changes nothing. Second, in a decomposition round's
 selection (see [arbiter](#arbiter)), the losing drafter's concession: its vote
 for the rival plan, cast against its own interest, decides; a drafter's vote for
 its own plan carries no weight alone. Excluding a **session** is hard. Preferring
@@ -64,7 +69,7 @@ the eligible families cannot meet it, so a fresh session of an eligible family
 is always available, and each unmet preference is logged. One the declared
 families make impossible (a kind with a single eligible family) is logged
 only; one that availability prevented (a cooldown, an outage) is also listed
-for the owner's review. **Planned:** the ranked form. **Today:** reviewers run
+for the [operator](#operator)'s review. **Planned:** the ranked form. **Today:** reviewers run
 in a fresh session, and the different-family filter runs before pins and
 weights.
 
@@ -118,7 +123,7 @@ kept.
 ### adjudicator
 
 The role that rules on spine rows, disputes and dispositions and takes the
-approval act, performed by an [adjudicate] session, retained until its
+[acceptance](#accept) act, performed by an [adjudicate] session, retained until its
 [reset terms](#reset-terms) are met. One term: a retained adjudicator, and an
 "independent adjudicator" launched by the loop or by a person's coordinating
 session, are this same role under the same rules, not separate roles.
@@ -146,9 +151,9 @@ family is planned.
 
 Whoever selects among rival plans in a decomposition round. **Planned:** the
 drafters select, by concession, never one drafter's vote for its own plan
-alone; when each selects its own, the round becomes an open item for the owner,
-which offers running an independent third agent of the owner's choosing, only
-if the owner picks it. **Today:** two position-swapped arbiter runs must agree
+alone; when each selects its own, the round becomes an open item for the
+[operator](#operator), which offers running an independent third agent of the
+operator's choosing, only if the operator picks it. **Today:** two position-swapped arbiter runs must agree
 ([process-options.md "Dual-plan decomposition"](process-options.md#dual-plan-decomposition)).
 
 ## Rows
@@ -181,13 +186,21 @@ the trace report counts it apart from mechanized results so that an audit sees
 how much does. Declared as `verification_method = "Vouch"`. Formerly `Attest`;
 **Vouch** is kept.
 
+### evidence gap
+
+A test case that is not [accepted](#accept) although every requirement it
+verifies is cited by a work item recorded done: the work is closed and its
+evidence is not. The gap census names each one, and the landing mints an
+adjudication row for it, briefed as the `evidence-gap` kind. Formerly a
+"red TC"; **evidence gap** is kept.
+
 ## Lanes
 
 ### lane state
 
 **Planned.** Where a lane is in its lifecycle, derived from committed evidence
 and live ownership on every read, never stored: `PLANNING`, `BUILD`,
-`REVIEW_REWORK`, `ADJUDICATION`, `MERGE` or `ARCHIVE`. A state names the stage
+`REVIEW_REWORK`, `ADJUDICATION`, `MERGE` or `ARCHIVE`. A state names the step
 whose work is owed next or is running now; after `ARCHIVE` the lane is closed.
 
 - **Substate:** `PLANNING` is `SINGLE` or `DUAL` (`DRAFT`, `CROSS_CRITIQUE`,
@@ -236,6 +249,24 @@ lane lands as a `--no-ff` merge of its refreshed branch.
 
 ## Checks
 
+### stage
+
+The development stage: the rung of the `DevStg-*` ladder a repository stands
+at, derived from its registries and recorded in `docs/stage`
+(`process.md` §4, "A stage is a STATE"). `check.py --stage`
+selects the steps that run at it. The word names this and nothing else: a
+step of a lane or of a pipeline in code is a **step**, and git's index keeps
+its own word, "staged". The retired axis of stage thresholds was the "bar";
+**stage** is kept.
+
+### checks stage
+
+The [stage](#stage) a work item pins its [landing checks](#landing-checks) to.
+A row claimed to deliver evidence at a stage is checked at that stage even if
+the repository's derived stage moves while its lane is in flight. Declared in
+the work item as `checks_stage`. Formerly the item's `bar`; **checks stage**
+is kept.
+
 ### required checks
 
 The checks a change must pass at a given moment. `docs/process.toml`
@@ -258,7 +289,8 @@ Formerly the "commit bar" and the "review bar", two words for one thing;
 
 The checks a lane's refreshed tree must pass before its
 [landing](#landing): the full gate, run by the station refresh on the tree
-that becomes trunk. Not a declared setting. Formerly the "landing bar";
+that becomes trunk, at the repository's [stage](#stage) or the work item's
+[checks stage](#checks-stage). Not a declared setting. Formerly the "landing bar";
 **landing checks** is kept.
 
 ### passed-checks record
@@ -288,7 +320,7 @@ is kept, and headers in the earlier form are not read.
 
 ### gate checks
 
-The full gate for a stage: `check.py` at that stage, with the unfiltered suite
+The full gate for a [stage](#stage): `check.py` at that stage, with the unfiltered suite
 and coverage. Formerly the "gate bar"; **gate checks** is kept.
 
 ### check suite

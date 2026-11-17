@@ -142,7 +142,7 @@ def main():
         print(
             "check_dupes_census: WARN - {} vs the stamped baseline {} — "
             "duplication grew. Not a gate (D-7): investigate whether the new "
-            "duplicate pairs a fix that wants a shared stage (0->A->B), then "
+            "duplicate pairs a fix that wants a shared step (0->A->B), then "
             "re-stamp deliberately with the reason, in "
             "docs/stack.ini [dupes-census].".format(measured, baselined),
             file=sys.stderr,

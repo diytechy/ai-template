@@ -300,7 +300,7 @@ def open_items_at(oi_rows, status):
     """`[(OI id, row)]` for every real (non-example) open item whose status is
     `status` (lower case), in row order, a duplicated id once per row.
 
-    THE SHARED STAGE of every open-items reader that filters by status (WI-821,
+    THE SHARED STEP of every open-items reader that filters by status (WI-821,
     the A->B->C / A->B->D shape PROCESS.md §3 names): the operator queue reads the
     `pending` items here, `check_trajectory.acceptance_brief_findings` the
     `pending` briefs and `trace.ruled_open_item_texts` the `ruled` prose. Each
@@ -521,7 +521,7 @@ def clip_line(text, width):
     """`text` as ONE line of at most `width` characters: whitespace collapsed,
     and an over-long line cut to `width - 1` characters plus `…`.
 
-    THE SHARED STAGE of the kit's one-line clips (WI-821): `hats._clip`,
+    THE SHARED STEP of the kit's one-line clips (WI-821): `hats._clip`,
     `intake._clip` and `check_trajectory._clip_title` each carried this body.
     It takes text; what a missing cell reads as (`""` or `"None"`) stays each
     caller's own choice, because the copies differed there and a brief's

@@ -77,7 +77,7 @@ Code a newcomer — human or model — can navigate without re-deriving the desi
 - **Entry points orchestrate, they don't compute.** A top-level routine reads
   as a short list of well-named step calls; push logic into the steps.
 - **One fact, one home — in code, and across it.** No copy-paste logic;
-  consolidate duplicates into a shared stage (PROCESS.md §3, 0→A→B).
+  consolidate duplicates into a shared step (PROCESS.md §3, 0→A→B).
 - **Intention-revealing names; no cryptic abbreviations.**
 - **Back-link to requirements** per `[checks] backlink_coverage_min`:
   `Implements: SR-007, LLR-014` on implementing symbols; TC ids in test files

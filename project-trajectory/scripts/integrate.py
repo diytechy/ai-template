@@ -572,7 +572,7 @@ def _relinked_exactly(root, tip, remap, paths):
     not decode as UTF-8 convicts too: `_rewrite_md_links` SKIPS such a file,
     so a modification to it cannot be the ritual's write. `remap` is the
     commit's own src->dest move pair, re-derived by the caller from the A/D
-    records themselves. The reading itself is the one shared stage, `spec_move.exact_relink`; an empty remap
+    records themselves. The reading itself is the one shared step, `spec_move.exact_relink`; an empty remap
     rewrites nothing, so it excuses nothing."""
     for path in paths:
         old = _blob_bytes(root, "{}^1:{}".format(tip, path))

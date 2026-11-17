@@ -79,7 +79,7 @@ that easier to achieve in a real project — or get out of the way.
   downstream repos to migrate.
 - **Consolidate across the codebase.** The scope above is per-task; when the
   task itself is consolidation, minimize TOTAL behavior instead — extract the
-  shared stage rather than duplicate a fix (PROCESS.md §3, "Consolidate, don't
+  shared step rather than duplicate a fix (PROCESS.md §3, "Consolidate, don't
   duplicate — the 0→A→B rule").
 
 ## Repo map

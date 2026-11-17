@@ -1469,9 +1469,9 @@ def test_branch_length_ceiling_mirrors_wi_convert_slug_chars():
 
 
 # --- WI-821: the burn-down of the census's last groups and the named near-copies
-# Each shared stage below took ONE home and its former copies call it. The
+# Each shared step below took ONE home and its former copies call it. The
 # identity assertions are the deletions' warrant; the value batteries pin what
-# the shared stage DOES, so a later edit to the home is checked by value rather
+# the shared step DOES, so a later edit to the home is checked by value rather
 # than by sameness (the `_sn_fields` lesson above).
 import ast  # noqa: E402
 import inspect  # noqa: E402
@@ -1605,7 +1605,7 @@ def test_the_open_items_readers_answer_by_value(tmp_path):
 
 
 def test_the_open_items_stage_keeps_duplicate_rows_in_sequence(tmp_path):
-    """Two pending rows sharing an id are two rows to the shared stage: it
+    """Two pending rows sharing an id are two rows to the shared step: it
     returns `(id, row)` pairs in row order, never a map that drops the first.
     The brief lint read rows in sequence before WI-821 and still warns on the
     first; the readers that want a by-id map build it, so the last row wins
@@ -1675,7 +1675,7 @@ def test_the_one_line_clip_is_one_home():
     assert clip("abcdef", 6) == "abcdef"
     assert clip("abcdefg", 6) == "abcde…"
     # Each caller keeps its own reading of a missing value: the copies differed
-    # there, and the shared stage takes text so neither had to move.
+    # there, and the shared step takes text so neither had to move.
     hats, intake = load_script("hats"), load_script("intake")
     assert hats._clip(None, 10) == ""
     assert intake._clip(None, 10) == "None"

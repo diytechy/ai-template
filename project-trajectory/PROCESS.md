@@ -205,9 +205,9 @@ Stable, zero-padded, never reused.
   guide, "Working agreement") is scoped to the task in front of you: smallest
   diff, within that one change. Across the codebase the goal is the opposite —
   prefer the change that minimizes **total** behavior. When a fix wants the
-  same code in two places, don't patch each site: extract the shared stage
+  same code in two places, don't patch each site: extract the shared step
   both sites call through, so two independent paths to a result (0→B, 0→D)
-  become one shared stage feeding both (0→A→B, 0→A→D). Where two or more
+  become one shared step feeding both (0→A→B, 0→A→D). Where two or more
   existing outputs already overlap, restructure so each behavior has exactly
   one home — never an original plus a near-copy. The same principle governs
   validation and error handling: implement once, at the boundary that owns the
