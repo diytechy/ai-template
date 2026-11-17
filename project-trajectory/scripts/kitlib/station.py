@@ -129,7 +129,7 @@ OUTCOME_DIRS = MappingProxyType(
 #: the tree and the work commit it records so both can be checked against git.
 #: (`verdict.refresh_passed_checks` is why the names are the whole point: a
 #: message alone rides through amend, rebase and cherry-pick onto trees nobody
-#: barred.) It lives here because the station render draws the label and must
+#: checked.) It lives here because the station render draws the label and must
 #: not import the coordinator to learn it.
 CHECKS_PASSED = "Checks-Passed:"
 

@@ -7,7 +7,7 @@ the test-file tags reach the files: `derive` reads those inputs from one lane
 and `kitlib.spine.review_scope` walks them. `integrate.record_checks`, the loop's draw
 and the review render all call `derive`, so a record, a draw and a brief cannot
 disagree about what a row's set is. The answer is the set or one named refusal,
-and the set never widens to the whole bar: an empty set runs the commit checks
+and the set never widens to the whole checks: an empty set runs the commit checks
 alone, and the floor (`[required-checks] commit`, the landing checks) stays as it is.
 
 WHAT IS READ FROM WHERE. The claim listing and the row's text come from git
@@ -163,7 +163,7 @@ def _changed(lane, base):
 
 def _roots(lane):
     """`(src, tests)` as `docs/stack.ini` `[paths]` declares them, with the
-    defaults a bar's command reads.
+    defaults a check run's command reads.
 
     Implements: SR-241, LLR-367
     """

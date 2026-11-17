@@ -65,7 +65,7 @@ are symbol-mode only (they need a parser).
 
 Reverse back-link coverage (`--backlink-coverage`): the same `Implements:`
 grammar, run the other way round — for each LIVE LLR row, does any literal
-declaration in the source surface name it? A REPORT, not a gate: the bar lives
+declaration in the source surface name it? A REPORT, not a gate: the minimum lives
 in `docs/process.toml` `[checks] backlink_coverage_min` and ships at `0`, so the
 number appears in every run and nothing fails. It measures PRESENCE, never
 correctness. See the section above `main()` for the direction argument.
@@ -118,7 +118,7 @@ Contract IF-010: this generator's own invocation surface. `--doc`, `--cli-doc` a
     scanned tree for parseability independently of staleness;
     `--backlink-coverage` is a report mode needing no `--doc`, measuring
     reverse `Implements:` coverage against the declared `[checks]
-    backlink_coverage_min` bar, with `--strict-backlinks` promoting a
+    backlink_coverage_min` minimum, with `--strict-backlinks` promoting a
     below-minimum reading from a warning.
 Contract IF-028: the `sym:` ORACLE. `scan_inventory(src_roots, strict=False)`
     yields one `(rel, summary, imports, contracts, rows)` record per module of
@@ -162,7 +162,7 @@ Contract IF-150: the freshness and parse verdict the harness reads back. 0 says
     `--contracts-doc` target is stale under `--check`, when a module in the
     scanned tree fails to parse under `--strict-parse`, and when reverse
     `Implements:` coverage reads below the declared `[checks]
-    backlink_coverage_min` bar under `--strict-backlinks`. An absent
+    backlink_coverage_min` minimum under `--strict-backlinks`. An absent
     `--cli-doc` or `--contracts-doc` target is vacuous and exits 0, while an
     absent `--doc` target, a `--doc` file missing its MODULE MAP marker pair,
     and no `--doc` at all are hard refusals with a message on stderr.
@@ -2166,7 +2166,7 @@ def read_backlink_min(root):
 
     IT FALLS BACK TO 0 RATHER THAN "ON, LOUDLY" — the opposite of those two
     boolean readers, and the reason is that this dial is not a boolean. A
-    malformed file cannot tell us what bar the adopter meant, and inventing one
+    malformed file cannot tell us what minimum the adopter meant, and inventing one
     would gate a repo on a number nobody declared. The loud half is not lost, it
     is elsewhere and stronger: `agent_common.PROCESS_ONLY_KEYS` type-checks this
     key and `config_conflicts` REFUSES a wrong-typed dial outright, so the
@@ -2219,11 +2219,11 @@ def backlink_report(src_roots, root, exts=BACKLINK_EXTS, registry=LLR_REGISTRY):
     if minimum == 0:
         # The shipped position, and it is stated on every run rather than
         # implied by silence: a reader must be able to tell "this repo declined
-        # the bar" from "this repo has never heard of the layer".
+        # the minimum" from "this repo has never heard of the layer".
         lines.append(
             "back-link coverage: REPORT-ONLY — the minimum is 0, so the number "
             "is reported and nothing is gated. Raise it when your practice "
-            "earns the bar."
+            "earns the minimum."
         )
     elif pct < minimum:
         lines.append(
@@ -2601,7 +2601,7 @@ def main():
         action="store_true",
         help="REPORT MODE (writes nothing, needs no --doc): what share of live "
         "LLR rows is named by a literal `Implements:` declaration under --src. "
-        "The bar is docs/process.toml [checks] backlink_coverage_min",
+        "The minimum is docs/process.toml [checks] backlink_coverage_min",
     )
     ap.add_argument(
         "--mapping-purpose",

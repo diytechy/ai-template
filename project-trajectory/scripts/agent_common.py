@@ -328,7 +328,7 @@ def tracked_pause(docs_dir):
     because one meaning needs none: **pause = stop claiming.** Everything in
     flight finishes, integrates, and archives — a traincar always unloads, so a
     pause never strands finished work on a branch; the only thing that stops an
-    unload is the integrator's own refusal (red bar, missing verdict), which is
+    unload is the integrator's own refusal (failing checks, missing verdict), which is
     the gate working, not the pause.
 
     Presence pauses. An **unpause is a tracked deletion commit** — which is the
@@ -379,7 +379,7 @@ def pause_reason(lane):
 # fails in CI, and the pinned dev tools (requirements-dev.txt) may be absent. The
 # fix is to run the harness under the repo's OWN .venv — the pinned ≥3.11
 # toolchain — shared into each worktree by absolute path (the dispatcher points a
-# worker's PATH at it and sets the integrator bar's {py} to it), plus a preflight
+# worker's PATH at it and sets the integrator checks' {py} to it), plus a preflight
 # so a below-floor interpreter is caught before it can produce a false green.
 
 # The kit's Python floor (WI-262/WI-270; the setup scripts enforce the same
@@ -405,7 +405,7 @@ def harness_python(root):
     """The interpreter the test harness (pytest + the pinned dev tools) should run
     under for a worktree session: the repo's own .venv when present (shared by
     absolute path — one pinned ≥3.11 toolchain, no per-worktree install).
-    Returns a str path — a bar runner substitutes it for {py} so the bar runs
+    Returns a str path — a check runner substitutes it for {py} so the checks run
     under the floor-satisfying interpreter even when the caller was itself
     launched on ambient Python (WI-286).
 
@@ -413,7 +413,7 @@ def harness_python(root):
     stdlib-only resolver must return SOMETHING), and it is the honest answer
     ONLY for a repo that has not declared the pinned toolchain. A repo that has
     is refused UPSTREAM by `harness_floor_failures` below - integrate.py calls
-    it before the bar - so a declared repo never reaches this fallback
+    it before the checks - so a declared repo never reaches this fallback
     (WI-361; the dispatcher-era gate this replaces died at Phase 5)."""
     py = venv_python(root)
     return str(py) if py else sys.executable
@@ -454,9 +454,9 @@ def harness_floor_failures(root):
     else []. A tree without the repo's own .venv resolves ambient PATH (run
     20260723T0202 inherited 3.8), so a below-floor idiom passes locally and only
     fails in CI - and an ambient-MODERN interpreter is the worse half, clearing
-    the version floor while lacking the pinned dev tools the bar assumes, which
+    the version floor while lacking the pinned dev tools the checks assumes, which
     makes its green FALSE. integrate.py is the refusing seam: it calls this
-    before the composed-tree bar rather than running the bar on ambient Python.
+    before the landing checks rather than running the checks on ambient Python.
 
     ARMING BOUNDARY: the floor guards only a repo that DECLARES the pinned
     toolchain - concretely, one carrying `requirements-dev.txt` at its root. A
@@ -507,8 +507,8 @@ def harness_floor_failures(root):
 
 def _declared_test_command(ini, py=None):
     """The repo's declared test command as a tokenized argv, read from a
-    docs/stack.ini path — the stack-schema home a bar runner reads so it runs
-    the bar the repo actually declares. Mirrors check.py's stack schema rather
+    docs/stack.ini path — the stack-schema home a check runner reads so it runs
+    the checks the repo actually declares. Mirrors check.py's stack schema rather
     than importing it — the OPERATOR_ONLY_PATHS precedent above: a CMP-008→CMP-007
     import for one small read would owe an IF seam; the tests pin it against
     drift. The kit schema is `[product] test` (with {py}/{src}/{tests} the same
@@ -1089,8 +1089,8 @@ def _own_step_window(lines, fail_idx):
     name or no banner names it, so the caller keeps its bounded fallback.
 
     Known limit (WI-398 REVIEW-A finding 1, pinned by WI-405): both anchors
-    trust line SHAPE, so bar-shaped text EMBEDDED in a step's own captured
-    output — a quoted FAIL row, a quoted banner, a nested scaffold bar naming
+    trust line SHAPE, so harness-shaped text EMBEDDED in a step's own captured
+    output — a quoted FAIL row, a quoted banner, a nested scaffold checks naming
     another step — can silently misanchor the window onto a passing step's
     text; deliberately not parsed away (WI-398's scope guard), and on the
     refresh path the kept full log (out/run-logs/refresh-refused-<branch>.log)

@@ -7,10 +7,10 @@ job names, and one asserts that the reference workflow mentions `check.py` **at
 all** — none compares CI against a documented local command.
 
 The measurement that made the clause checkable (OI-24, 2026-08-12) is that "the
-same harness" cannot mean one command, because the HUMAN bar is itself tiered by
+same harness" cannot mean one command, because the HUMAN checks are itself tiered by
 MOMENT — smoke per commit, the full suite at a work-item/slice close, the
 release tier at a tag. So the obligation is **per-moment equivalence**: each CI
-trigger runs the same ENTRY POINT and the same TIER the documented bar assigns
+trigger runs the same ENTRY POINT and the same TIER the documented checks assigns
 to the corresponding moment. The reference workflow already did exactly that;
 the mapping simply lived in a YAML comment, where nothing could see it drift.
 
@@ -44,7 +44,7 @@ from conftest import KIT, ROOT, SCRIPTS, load_script
 
 CHECK = load_script("check")
 
-# The entry point the shipped agent guide documents as THE bar. CI matching this
+# The entry point the shipped agent guide documents as THE checks. CI matching this
 # string is the "one definition of passing" half of the claim.
 HARNESS = "scripts/check.py"
 
@@ -203,8 +203,8 @@ def test_declared_rows_name_real_tiers_and_known_triggers():
             )
 
 
-def test_the_shipped_table_is_the_documented_human_bar():
-    # The three moments the process documents, in the order the bar rises. This
+def test_the_shipped_table_is_the_documented_set_of_checks():
+    # The three moments the process documents, in the order the checks rise. This
     # asserts the shipped VALUES, which is the point of declaring them: the
     # per-commit checks must be the cheap tier and a release must claim the top one,
     # so "CI got faster" can never quietly mean "CI got weaker".
@@ -256,14 +256,14 @@ def test_reference_workflow_step_labels_agree_with_what_they_run():
 
 def test_reference_workflow_runs_the_documented_human_entry_point():
     # (b) of the OI-24 build: ONE definition of passing. The shipped agent guide
-    # names `python scripts/check.py` as the bar; every PYTHON entry point the
+    # names `python scripts/check.py` as the checks; every PYTHON entry point the
     # workflow touches must be the harness (or the release-checklist generator
     # the release moment also owes). Honestly: the inventory sees `.py` tokens,
     # so a non-Python check (npm test, a bare shell loop) is outside its reach —
     # that class is an adopter edit, which OI-24 already places out of scope.
     agents = (KIT / "AGENTS.template.md").read_text(encoding="utf-8")
     assert "`python %s`" % HARNESS in agents, (
-        "the agent guide no longer documents %s as the human bar; this pin's "
+        "the agent guide no longer documents %s as the human checks; this pin's "
         "reference point moved" % HARNESS
     )
     ci = CI_REFERENCE.read_text(encoding="utf-8")

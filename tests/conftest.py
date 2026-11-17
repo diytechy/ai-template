@@ -67,13 +67,13 @@ for _k in [k for k in os.environ if k.startswith("AGENT_")]:
 os.environ["CODEX_HOME"] = str(ROOT / "tests" / "_no-codex-home")
 
 
-# --- WI-122 + WI-281: the meta commit-bar smoke tier --------------------------
+# --- WI-122 + WI-281: the meta commit-check smoke tier --------------------------
 # The per-commit checks run the fast SMOKE tier (docs/stack.ini [tiers]
 # smoke = -m smoke); the FULL suite runs at slice/phase close and in CI
 # (PROCESS_OPTIONS.md phased-delivery cadence). Tiering is OPT-OUT: every
 # collected test is `smoke` UNLESS its module is listed below, so a NEW test is
 # in the commit checks by default ("never a false green" by omission) and a test
-# leaves the bar only by being named here. `smoke` and `slow` PARTITION the
+# leaves the checks only by being named here. `smoke` and `slow` PARTITION the
 # suite (every test gets exactly one) — test_smoke_tier.py guards the invariant
 # and that each name below is a real test module.
 #
@@ -81,15 +81,15 @@ os.environ["CODEX_HOME"] = str(ROOT / "tests" / "_no-codex-home")
 # alive?", so the commit checks must run <= 60 s wall at -n auto (operator directive
 # 2026-07-23). At 1378 tests the WI-122 opt-out default had inverted its own
 # purpose: 1088/1378 (79%) ran per commit at ~6 min wall (measured 351 s), so
-# the "smoke" bar re-ran most of the full suite every commit. The line below is
+# the "smoke" checks re-ran most of the full suite every commit. The line below is
 # the MECHANICAL boundary the measured module-wall ranking drew (recorded in
 # docs/specs/WI-281.md): a module whose cost is dominated by driving the heavy
 # scripts (gen_trajectory / trace / check* / agent_loop) or bootstrapping a
 # scaffold through conftest.run_py as SUBPROCESSES runs at close + CI, not per
-# commit; the in-process unit modules stay in the bar. Nothing is deleted or
+# commit; the in-process unit modules stay in the checks. Nothing is deleted or
 # weakened — everything cut still runs at slice/phase close + CI. The runtime is
 # its OWN budget item now (declared seconds + a deterministic membership ratchet
-# that bites if this set shrinks the bar back toward the full suite) — see
+# that bites if this set shrinks the checks back toward the full suite) — see
 # docs/stack.ini [smoke-budget] and tests/test_smoke_budget.py.
 SLOW_MODULES = frozenset(
     {
@@ -128,27 +128,27 @@ SLOW_MODULES = frozenset(
         # anchored this group retired with the dispatcher at
         # concurrency-restructure Phase 5.)
         "test_dual_plan_round",  # the dual-plan round end-to-end (WI-199)
-        "test_integrate",  # local integrator: real git repos + a real check.py bar
+        "test_integrate",  # local integrator: real git repos + a real check.py checks
         "test_coordinator_guard_e2e",  # the guard via CLI, wrapper, launchers, real git (WI-822)
         # WI-521 slice 2 split test_integrate.py by behavior boundary (M-06).
         # The three new modules are the SAME heavy class as the module they came
-        # out of — real git repos, real worktrees, the real bar in the e2e — so
+        # out of — real git repos, real worktrees, the real checks in the e2e — so
         # they are re-tiered WITH it rather than accreting into the commit checks
         # by default. The shared fixture surface, tests/integrate_fixtures.py,
         # carries no `test_` prefix and is never collected.
-        "test_integrate_admission",  # what the slot admits: outcome/mint/verdict/bar
+        "test_integrate_admission",  # what the slot admits: outcome/mint/verdict/checks
         "test_integrate_station",  # the station protocol, refresh + merge slot
         "test_integrate_unload",  # the §5.6 branch + worker-worktree unload
         "test_integrate_record_checks",  # WI-956: the record-checks route on station repos and lane worktrees
         "test_passed_checks",  # WI-956: the Checks-Passed grammar and peel, a real git repo per case
-        "test_dispatch",  # the dispatch loop: real git repos + the real bar (WI-374/WI-381)
+        "test_dispatch",  # the dispatch loop: real git repos + the real checks (WI-374/WI-381)
         # The two lane closes: real claims (so the real trunk_step --regen
         # subprocess), real lane worktrees, real reverts — the same heavy class
         # as its two siblings above, filed with them rather than left to the
         # opt-out default where it would spend a fifth of the smoke budget.
         "test_handback",  # handback + quarantine on real git repos (WI-387)
         # WI-281: subprocess/scaffold-heavy modules moved to slow to hold the
-        # <= 60 s commit-bar budget. Each is dominated by run_py subprocesses
+        # <= 60 s commit-check budget. Each is dominated by run_py subprocesses
         # (running gen_trajectory / trace / check* / agent_loop) or the scaffold
         # fixture's full bootstrap — the same heavy class as above, just not
         # "end-to-end" in name. Ordered by measured module-wall cost (the
@@ -186,7 +186,7 @@ SLOW_MODULES = frozenset(
         # WI-277 split test_trace.py by behavior boundary; same cost class as the
         # parent (trace.py run_py subprocesses / real git repos), so same tier —
         # behavior-preserving, not a re-tiering. test_trace_rules is genuinely
-        # in-process; putting it back in the bar is a separate MEASURED call.
+        # in-process; putting it back in the checks are a separate MEASURED call.
         "test_trace_rules",  # pure registry-rule decisions
         "test_trace_briefs",  # re-acceptance brief: git effect + freshness gate
         # WI-521 slice 3 split the IF-### interface-seam tier out of test_trace.py
@@ -205,7 +205,7 @@ SLOW_MODULES = frozenset(
         # modules carry the SAME cost class as their parent (check_trajectory.py
         # run_py subprocesses over temp registries), so they inherit its tier —
         # the split is behavior-preserving, not a re-tiering. (Whether the
-        # decision-only halves belong back in the bar is a separate MEASURED
+        # decision-only halves belong back in the checks are a separate MEASURED
         # decision, deliberately not taken here.)
         "test_trajectory_staged",  # --staged git-effect + git-time recovery
         "test_trajectory_arch",  # decision over architecture inputs
@@ -264,7 +264,7 @@ SLOW_MODULES = frozenset(
         "test_session_stdin",  # run_session subprocess/shim transport (WI-275 reds)
         # The toolchain prereq, re-tiered on the SAME precedent as test_session_stdin
         # directly above: it is DESIGNED to red on a below-floor checkout, so leaving
-        # it in the bar would make the commit checks unpassable on such a machine — a
+        # it in the checks would make the commit checks unpassable on such a machine — a
         # developer could then never commit the very fix that installs the floor.
         # Nothing is weakened: the `pytest_sessionstart` banner still fires on EVERY
         # run including `-m smoke`, so the commit checks keep the loud warning and
@@ -1532,11 +1532,11 @@ def require_commit_suite(root, name=COMMIT_SUITE):
     )
 
 
-def declare_review_bar(repo, ctl):
-    """Declare the commit checks under `repo` as a stand-in bar driven from
+def declare_commit_checks(repo, ctl):
+    """Declare the commit checks under `repo` as a stand-in checks driven from
     the control directory `ctl`: each run appends one line to
-    `ctl/bar_runs.txt`, and the bar is red (exit 1, printing
-    `BAR-FAIL-MARKER`) while `ctl/bar_red` exists, green (exit 0) otherwise.
+    `ctl/check_runs.txt`, and the checks fail (exit 1, printing
+    `CHECKS-FAIL-MARKER`) while `ctl/checks_fail` exists, green (exit 0) otherwise.
     It is declared the way a real repository declares its own: the command as
     the `COMMIT_SUITE` line of `docs/stack.ini` `[check-suites]`, and that
     suite's name in `docs/process.toml` `[required-checks] commit`
@@ -1546,8 +1546,8 @@ def declare_review_bar(repo, ctl):
     control = Path(ctl).resolve().as_posix()
     code = (
         "import pathlib,sys; c=pathlib.Path('{}'); "
-        "open(c/'bar_runs.txt','a').write('run\\n'); "
-        "r=(c/'bar_red').exists(); r and print('BAR-FAIL-MARKER'); "
+        "open(c/'check_runs.txt','a').write('run\\n'); "
+        "r=(c/'checks_fail').exists(); r and print('CHECKS-FAIL-MARKER'); "
         "sys.exit(1 if r else 0)"
     ).format(control)
     command = '"{}" -c "{}"'.format(Path(sys.executable).as_posix(), code)
@@ -1630,7 +1630,7 @@ def seed_row(root, srs=(), llrs=None, tcs=None, tags=None, sr_refs=None):
 # correctly honors by SLEEPING: measured 2026-08-11,
 # `blackout_wake("12:00-19:00", 14:22Z) == 16650` s (4 h 37 m). The tests did
 # not fail, they never ran, and the runner reported green on the rest — so
-# "full bar green" was a function of UTC time-of-day, and a 2026-08-10 probe
+# "full checks green" was a function of UTC time-of-day, and a 2026-08-10 probe
 # outside the window recorded the module as "not reproduced ... flaky". It is
 # not flaky; it is deterministic in the clock.
 #

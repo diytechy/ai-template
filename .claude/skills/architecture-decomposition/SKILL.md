@@ -7,7 +7,7 @@ phases: [dev, gate]
 tags: [architecture, decomposition, interfaces, components, planning]
 scope: kit
 ---
-**When to use.** Three moments: at `DevStg-Arch`, when a component scope is broken into sub-components; when planning a work item, to answer its architectural-delta question; and in an audit of a scope as it stands. *Why:* a boundary is worth its interface only when it hides a decision likely to change, and that is argued from the scope's states, domains and dependencies, not from the steps its processing runs through. The bar is the rubric at `docs/rubrics/architecture-decomposition.md`; this skill is the procedure that produces what the rubric judges, and it cites the rubric's anchors by id instead of restating them.
+**When to use.** Three moments: at `DevStg-Arch`, when a component scope is broken into sub-components; when planning a work item, to answer its architectural-delta question; and in an audit of a scope as it stands. *Why:* a boundary is worth its interface only when it hides a decision likely to change, and that is argued from the scope's states, domains and dependencies, not from the steps its processing runs through. The standard is the rubric at `docs/rubrics/architecture-decomposition.md`; this skill is the procedure that produces what the rubric judges, and it cites the rubric's anchors by id instead of restating them.
 
 **Procedure.**
 1. **Name the mode classes** (rubric A2). Record each one, with its transitions, as the scope's state flow in `docs/runtime-flows.md`.

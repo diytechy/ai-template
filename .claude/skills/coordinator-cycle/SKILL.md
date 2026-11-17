@@ -219,7 +219,7 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    The code commit that removes the marks names the same set: change no
    tag, TC row or `sr_refs` between the two, and record checks for a set that must
    change with the marks kept first. A refresh or a hand landing (recipes
-   §3) refused for a mark ends in the code commit or a quarantine. A test the bar skips takes no mark,
+   §3) refused for a mark ends in the code commit or a quarantine. A test the checks skip takes no mark,
    because a skip is never evidence: it is named, with its disposition,
    in the lane's decisions record.
 3. The builder then builds the code. Re-run its claimed results yourself,
@@ -385,7 +385,7 @@ them where reasonable, and the spawner's bounds hold for each one:
 - a reviewer's sub-agents see only what its brief gives it, never builder
   material or another reviewer's verdict, and write only in its scratch;
 - a builder's sub-agents work in its lane, never two writers on one file at
-  once, and the builder stays accountable for the change and runs the bar;
+  once, and the builder stays accountable for the change and runs the checks;
 - no sub-agent reviews or adjudicates the work of the agent that spawned it;
 - each test runner has its own `--basetemp` beside its spawner's, or leaves
   the runs to its spawner.

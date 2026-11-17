@@ -132,12 +132,12 @@ PROCESS_ONLY_KEYS = {
     ("authority", "complete_sample_rate"): "int",
     ("authority", "adjudication_review"): "str",
     ("authority", "decision_recording"): "str",
-    # The reverse back-link coverage bar (OI-42 ruled (e), WI-486). It sits in
+    # The reverse back-link coverage minimum (OI-42 ruled (e), WI-486). It sits in
     # `[checks]` beside six BOOLEANS and is an INT, which is exactly why it
     # needs the type check: its reader
     # (`gen_arch_map.read_backlink_min`) answers 0 — report-only — for anything
     # it cannot read as an int in range, so a hand-written
-    # `backlink_coverage_min = "50"` would silently disarm a bar the repo
+    # `backlink_coverage_min = "50"` would silently disarm a minimum the repo
     # believes it declared. That reader is deliberately quiet (a threshold has
     # no conservative default to fail toward); this table is where it gets loud.
     ("checks", "backlink_coverage_min"): "int",
@@ -155,8 +155,8 @@ PROCESS_ONLY_KEYS = {
 }
 
 # Dials whose value must also fall in a RANGE. Out of range is refused rather
-# than clamped: `101` is not "the strictest bar", it is a value nobody can
-# satisfy, and `-1` reads as a bar that can never fire.
+# than clamped: `101` is not "the strictest minimum", it is a value nobody can
+# satisfy, and `-1` reads as a minimum that can never fire.
 PROCESS_KEY_RANGES = {
     ("checks", "backlink_coverage_min"): (0, 100),
 }
@@ -430,7 +430,7 @@ def blackout_at(docs, t=None):
 #   single-approve  LLM review through DevStg-Reqs+DevStg-Tests, ONE operator sitting
 #                  at the close — so NO per-tier hold (level 0), a final read,
 #                  and the non-dependent work kept running that distinguished it
-#   autonomous     every bar but the operator's final read closes on a recorded
+#   autonomous     every gate but the operator's final read closes on a recorded
 #                  LLM verdict
 LEGACY_ACCEPTANCE = {
     "attended": {
@@ -869,7 +869,7 @@ def complete_review(docs):
 
     `partial` and `cancelled` closes are ALWAYS adjudicated: each carries a
     claim about what was not delivered, and a claim is what an adjudicator is
-    for. A green close already passed the declared bar and the review rounds,
+    for. A green close already passed the declared checks and the review rounds,
     so gating every one of them would rebuild the verdict gate under a new
     name — but never looking at any of them means the review rounds are the
     only thing that ever judged the work. The sample is the middle.

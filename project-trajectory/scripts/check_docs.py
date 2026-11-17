@@ -235,7 +235,7 @@ def blank_frontmatter(text):
     a markdown link is DESCRIBING one, never making one. Parsed as document
     body, `title = "... ([WI-n](specs/WI-n.md)) ..."` becomes a link to a file
     that was never meant to exist — a false positive that costs the link check
-    its authority, since a bar nobody believes is a bar nobody reads.
+    its authority, since a standard nobody believes is a standard nobody reads.
 
     The fence rule matches `agent_common.parse_spec_frontmatter` exactly — line
     one is the fence, the close is the next whole `+++` line — because two

@@ -1,9 +1,9 @@
 """The loop's review gate and its commit-check failure cap (WI-958).
 
 A managed worker draws a review only over a tip whose declared commit checks
-are recorded as passed. A red bar draws no review: the red is recorded in the build's
+are recorded as passed. failing checks draws no review: the red is recorded in the build's
 committed session log, keyed by the build commit, and the next build carries
-the bar's failure tail. The red count lives in those committed logs, so it
+the checks' failure tail. The red count lives in those committed logs, so it
 survives a resume and resets at a verified passed-checks record; at
 `[build] stop_lane_after_consecutive_commit_check_failures` consecutive reds
 the worker ends with its own exit code, and the dispatcher closes the lane
@@ -13,7 +13,7 @@ Driven end to end against a fake CLI that plays builder, reviewer and
 adjudicator, on the topology a dispatched worker meets: the train branch in
 a linked lane worktree, `main` in the primary, stand-in commit checks declared
 in `docs/stack.ini` and named in `docs/process.toml`
-(`conftest.declare_review_bar`). Every case runs the real loop as a
+(`conftest.declare_commit_checks`). Every case runs the real loop as a
 subprocess, so the module is filed in `SLOW_MODULES`; the family's in-process
 pins are the setting's reader in `tests/test_process_config.py` and the count
 reader, called in-process here against the committed logs.
@@ -32,7 +32,7 @@ from conftest import (
     COMMIT_SUITE,
     SCRIPTS,
     claim_on_branch,
-    declare_review_bar,
+    declare_commit_checks,
     declare_stack_key,
     declare_trunk,
     hooks_on,
@@ -57,7 +57,7 @@ TRAIN = "llm/train/t1"
 # scripted typed verdict and commits with the row's trailer. A reviewer (its
 # brief names a verdict path) writes the next scripted verdict body and
 # commits. Anything else builds: before committing, the n-th build sets the
-# stand-in bar red or green from `bar_plan` (one R or G per build), commits
+# stand-in checks red or green from `checks_plan` (one R or G per build), commits
 # `work.txt` with the WI trailer and records its sha; under `code_work` it
 # writes `src/work.py` beside it; under `record_last` it then commits a
 # record-only log fragment on top; under `no_commit` it records the launch and
@@ -108,10 +108,10 @@ else:
     append("builds.txt", "b\n")
     if (ctl / "no_commit").exists():
         sys.exit(0)
-    plan = (ctl / "bar_plan").read_text(encoding="utf-8").strip() \
-        if (ctl / "bar_plan").exists() else ""
+    plan = (ctl / "checks_plan").read_text(encoding="utf-8").strip() \
+        if (ctl / "checks_plan").exists() else ""
     if n < len(plan):
-        red = ctl / "bar_red"
+        red = ctl / "checks_fail"
         if plan[n] == "R":
             red.write_text("on\n", encoding="utf-8")
         elif red.exists():
@@ -201,7 +201,7 @@ def _lane(tmp_path, rows=None):
 
     ctl = tmp_path / "control"
     ctl.mkdir()
-    declare_review_bar(lane, ctl)
+    declare_commit_checks(lane, ctl)
     fake = tmp_path / "fake.py"
     fake.write_text(FAKE, encoding="utf-8")
     cmd = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
@@ -303,10 +303,10 @@ def _out(proc):
 
 def _hand_build(lane, ctl, red, rel="work.txt"):
     """A build commit carrying the WI trailer, with no passed-checks record and no
-    failed-checks record: the state a run stopped between the build and its bar leaves.
+    failed-checks record: the state a run stopped between the build and its checks leave.
     Returns its sha."""
     if red:
-        (ctl / "bar_red").write_text("on\n", encoding="utf-8")
+        (ctl / "checks_fail").write_text("on\n", encoding="utf-8")
     (lane / rel).parent.mkdir(parents=True, exist_ok=True)
     (lane / rel).write_text("built by hand\n", encoding="utf-8")
     _git(lane, "add", "-A")
@@ -341,15 +341,15 @@ def _build_prompts(ctl):
 # --- D2 and D3: the gate at the event ------------------------------------------
 
 
-def test_red_bar_draws_no_review_records_a_red_round_and_rebuilds_with_the_tail(
+def test_failed_checks_draw_no_review_record_a_failed_round_and_rebuild_with_the_tail(
     tmp_path,
 ):
     """Implements: TC-375"""
     # TC-375. A committed build whose commit checks are red draws no review: the
     # red is written into that build's committed session log, keyed by its
-    # sha, and the next build's prompt carries the bar's failure tail.
+    # sha, and the next build's prompt carries the checks' failure tail.
     lane, ctl, cmd = _lane(tmp_path)
-    (ctl / "bar_red").write_text("on\n", encoding="utf-8")
+    (ctl / "checks_fail").write_text("on\n", encoding="utf-8")
     _configure(lane)
 
     proc = _run(lane, cmd, 2)
@@ -367,13 +367,13 @@ def test_red_bar_draws_no_review_records_a_red_round_and_rebuilds_with_the_tail(
     assert first in reds, _out(proc)
     prompts = _build_prompts(ctl)
     assert len(prompts) >= 2, _out(proc)
-    assert "BAR-FAIL-MARKER" in prompts[1]
+    assert "CHECKS-FAIL-MARKER" in prompts[1]
 
 
-LONG_BAR = r"""
+LONG_CHECKS = r"""
 import pathlib, sys
 ctl = pathlib.Path(sys.argv[1])
-with open(str(ctl / "bar_runs.txt"), "a", encoding="utf-8") as fh:
+with open(str(ctl / "check_runs.txt"), "a", encoding="utf-8") as fh:
     fh.write("run\n")
 print("context " * 80 + "ACTIONABLE-END-DIAGNOSTIC")
 sys.exit(1)
@@ -382,13 +382,13 @@ sys.exit(1)
 
 def test_a_resumed_build_receives_the_tail_of_a_long_recorded_refusal(tmp_path):
     """Implements: TC-375"""
-    # TC-375. A red bar whose output runs far past the recorded summary's
+    # TC-375. failing checks whose output runs far past the recorded summary's
     # bound, its diagnostic last: a fresh process resuming the lane reads the
     # failure from the committed record alone, and the build it routes still
     # receives that final diagnostic.
     lane, ctl, cmd = _lane(tmp_path)
-    script = ctl / "long_bar.py"
-    script.write_text(LONG_BAR, encoding="utf-8")
+    script = ctl / "long_checks.py"
+    script.write_text(LONG_CHECKS, encoding="utf-8")
     stack = lane / "docs" / "stack.ini"
     declared = '"{}" "{}" "{}"'.format(
         Path(sys.executable).as_posix(), script.as_posix(), ctl.as_posix()
@@ -407,7 +407,7 @@ def test_a_resumed_build_receives_the_tail_of_a_long_recorded_refusal(tmp_path):
 
     second = _run(lane, cmd, 1)
 
-    assert len(_lines(ctl, "bar_runs.txt")) == 1, _out(first) + _out(second)
+    assert len(_lines(ctl, "check_runs.txt")) == 1, _out(first) + _out(second)
     resumed = _build_prompts(ctl)[seen:]
     assert resumed, _out(second)
     assert "ACTIONABLE-END-DIAGNOSTIC" in resumed[0], resumed[0]
@@ -440,29 +440,29 @@ def test_passed_commit_checks_are_recorded_once_then_the_review_is_drawn(tmp_pat
         capture_output=True,
     )
     assert older.returncode == 0 and sha != verdict_commit, (sha, verdict_commit)
-    assert len(_lines(ctl, "bar_runs.txt")) == 1
+    assert len(_lines(ctl, "check_runs.txt")) == 1
 
 
 # --- D4: every draw, one choke point --------------------------------------------
 
 
-@pytest.mark.parametrize("bar", ["green", "red"])
-def test_resumed_round_on_an_unrecorded_tip_runs_the_producer_once(tmp_path, bar):
+@pytest.mark.parametrize("outcome", ["passed", "failed"])
+def test_resumed_round_on_an_unrecorded_tip_runs_the_producer_once(tmp_path, outcome):
     """Implements: TC-377"""
     # TC-377. A resumed lane whose committed build owes a round but carries no
     # passed-checks record runs the commit checks once at the draw: green draws the round
     # and a CHECKS log records the result, red draws no reviewer.
     lane, ctl, cmd = _lane(tmp_path)
     _configure(lane)
-    _hand_build(lane, ctl, red=(bar == "red"))
-    if bar == "red":
+    _hand_build(lane, ctl, red=(outcome == "failed"))
+    if outcome == "failed":
         (ctl / "no_commit").write_text("on\n", encoding="utf-8")
 
     proc = _run(lane, cmd, 2)
 
-    assert len(_lines(ctl, "bar_runs.txt")) == 1, _out(proc)
+    assert len(_lines(ctl, "check_runs.txt")) == 1, _out(proc)
     models = _lines(ctl, "models.txt")
-    if bar == "green":
+    if outcome == "passed":
         # The hand build left no session log, so no builder family is known
         # and the reviewer is any medium entry: the round is its REVIEW log.
         logs = _committed_logs(lane).values()
@@ -542,7 +542,7 @@ def test_post_narrow_and_adjudication_rounds_draw_only_over_a_verified_passed_ch
     # TC-377. The rounds `complete_review_round` and
     # `schedule_adjudication_round` queue pass the same draw: every review
     # session's reviewed commit carries a verified `commit` record, and
-    # the narrow-to-full transition runs no bar of its own.
+    # the narrow-to-full transition runs no checks of its own.
     make = _post_narrow_round if route == "post-narrow" else _adjudication_round
     lane, ctl, proc = make(tmp_path)
 
@@ -558,7 +558,7 @@ def test_post_narrow_and_adjudication_rounds_draw_only_over_a_verified_passed_ch
         passed, cause = kverdict.commit_passed_checks(str(lane), sha, [])
         assert passed is not None, cause
     builds = len(_lines(ctl, "builds.txt"))
-    assert len(_lines(ctl, "bar_runs.txt")) == (builds or 1), _out(proc)
+    assert len(_lines(ctl, "check_runs.txt")) == (builds or 1), _out(proc)
 
 
 # --- D5: the count survives a resume; the cap -----------------------------------
@@ -570,7 +570,7 @@ def test_red_count_survives_a_resume_and_a_green_resets_it(tmp_path):
     # process continues it, and its first build carries the recorded failure
     # tail. A verified passed-checks record resets it.
     lane, ctl, cmd = _lane(tmp_path / "a")
-    (ctl / "bar_red").write_text("on\n", encoding="utf-8")
+    (ctl / "checks_fail").write_text("on\n", encoding="utf-8")
     _configure(lane, _cap(5))
     first = _run(lane, cmd, 2)
     seen = len(_build_prompts(ctl))
@@ -578,11 +578,11 @@ def test_red_count_survives_a_resume_and_a_green_resets_it(tmp_path):
 
     assert _red_count(lane).count == 3, _out(first) + _out(second)
     resumed = _build_prompts(ctl)[seen:]
-    assert resumed and "BAR-FAIL-MARKER" in resumed[0], _out(second)
+    assert resumed and "CHECKS-FAIL-MARKER" in resumed[0], _out(second)
 
     # red, green (its round asks for changes), red, red: two since the green.
     lane, ctl, cmd = _lane(tmp_path / "b")
-    (ctl / "bar_plan").write_text("RGRR\n", encoding="utf-8")
+    (ctl / "checks_plan").write_text("RGRR\n", encoding="utf-8")
     (ctl / "verdicts.json").write_text(json.dumps([CHANGES_REQUESTED]), "utf-8")
     _configure(lane, _cap(5))
     proc = _run(lane, cmd, 5)
@@ -594,7 +594,7 @@ def test_red_count_survives_a_resume_to_the_cap_and_exits_12(tmp_path):
     # TC-378. Two reds in one run and a third in a fresh process reach a cap
     # of 3: the resumed worker ends with the cap's own code and banner.
     lane, ctl, cmd = _lane(tmp_path)
-    (ctl / "bar_red").write_text("on\n", encoding="utf-8")
+    (ctl / "checks_fail").write_text("on\n", encoding="utf-8")
     _configure(lane, _cap(3))
     _run(lane, cmd, 2)
 
@@ -609,13 +609,13 @@ def test_a_lane_resumed_at_the_cap_exits_12_before_any_session(tmp_path, reds):
     """Implements: TC-378, TC-381"""
     # TC-378, TC-381. A lane resumed with the cap's count of failed-checks records
     # already committed (a stop after the record and before the exit) ends at
-    # run start: no builder, reviewer or bar runs and nothing is committed,
+    # run start: no builder, reviewer or checks run and nothing is committed,
     # whatever round its committed trailer owes. One red fewer is no cap: the
     # resumed run launches a build (one that commits nothing, so it records no
     # further red); its run is given one session, since a build that commits
     # nothing does not end the run and a second session would build again.
     lane, ctl, cmd = _lane(tmp_path)
-    (ctl / "bar_red").write_text("on\n", encoding="utf-8")
+    (ctl / "checks_fail").write_text("on\n", encoding="utf-8")
     if reds == "at-the-cap":
         _configure(lane, _cap(5))
         _run(lane, cmd, 3)
@@ -624,7 +624,7 @@ def test_a_lane_resumed_at_the_cap_exits_12_before_any_session(tmp_path, reds):
         _configure(lane, _cap(3))
         _run(lane, cmd, 2)
         (ctl / "no_commit").write_text("on\n", encoding="utf-8")
-    models, runs = _lines(ctl, "models.txt"), _lines(ctl, "bar_runs.txt")
+    models, runs = _lines(ctl, "models.txt"), _lines(ctl, "check_runs.txt")
     builds = len(_lines(ctl, "builds.txt"))
     commits = _git(lane, "rev-list", "--count", "HEAD")
 
@@ -634,7 +634,7 @@ def test_a_lane_resumed_at_the_cap_exits_12_before_any_session(tmp_path, reds):
         assert proc.returncode == 12, _out(proc)
         assert CAP_BANNER in proc.stdout and _capped(3) in proc.stdout
         assert _lines(ctl, "models.txt") == models
-        assert _lines(ctl, "bar_runs.txt") == runs
+        assert _lines(ctl, "check_runs.txt") == runs
         assert _git(lane, "rev-list", "--count", "HEAD") == commits
     else:
         assert proc.returncode != 12, _out(proc)
@@ -657,7 +657,7 @@ def test_an_interrupted_red_is_rechecked_once_at_the_draw_and_counted_once(tmp_p
 
     proc = _run(lane, cmd, 1)
 
-    assert len(_lines(ctl, "bar_runs.txt")) == 1, _out(proc)
+    assert len(_lines(ctl, "check_runs.txt")) == 1, _out(proc)
     checks_logs = [t for t in _committed_logs(lane).values() if _phase(t) == "CHECKS"]
     assert any(build in _CHECKS_FAILED_RE.findall(t) for t in checks_logs), _out(proc)
 
@@ -665,7 +665,7 @@ def test_an_interrupted_red_is_rechecked_once_at_the_draw_and_counted_once(tmp_p
     again = lane / "docs" / "iteration" / "t1-090-20261021-000000.log"
     again.write_text(
         "# agent session log\n# session: 090\n# train: t1\n# phase: CHECKS\n"
-        "# outcome: FAILED\n# checks-failed: {}\n# checks-summary: BAR-FAIL-MARKER\n".format(
+        "# outcome: FAILED\n# checks-failed: {}\n# checks-summary: CHECKS-FAIL-MARKER\n".format(
             build
         ),
         encoding="utf-8",
@@ -681,10 +681,10 @@ def test_a_build_ending_in_a_record_only_commit_is_recorded_and_counted_once(
     """Implements: TC-379"""
     # TC-379. A build session whose last commit touches only records (its log
     # fragment) is the same build commit at the event and at the draw: the red
-    # recorded at the event is found again on resume, so the bar does not run
+    # recorded at the event is found again on resume, so the checks do not run
     # twice for it and two red builds count two.
     lane, ctl, cmd = _lane(tmp_path)
-    (ctl / "bar_red").write_text("on\n", encoding="utf-8")
+    (ctl / "checks_fail").write_text("on\n", encoding="utf-8")
     (ctl / "record_last").write_text("on\n", encoding="utf-8")
     _configure(lane, _cap(5))
     first = _run(lane, cmd, 1)
@@ -692,7 +692,7 @@ def test_a_build_ending_in_a_record_only_commit_is_recorded_and_counted_once(
 
     builds = _lines(ctl, "build_shas.txt")
     assert len(builds) == 2, _out(first) + _out(second)
-    assert len(_lines(ctl, "bar_runs.txt")) == 2, _out(first) + _out(second)
+    assert len(_lines(ctl, "check_runs.txt")) == 2, _out(first) + _out(second)
     keyed = {
         sha
         for text in _committed_logs(lane).values()
@@ -799,12 +799,12 @@ def test_failed_rounds_counts_distinct_failed_builds_and_a_passed_checks_record_
     # record resets it, and the last summary is the newest red's.
     repo = _reader_lane(tmp_path)
     first = _reader_build(repo, 1)
-    _reader_log(repo, 1, "BUILD", (first, "bar failed:\n  one"))
+    _reader_log(repo, 1, "BUILD", (first, "checks failed:\n  one"))
     second = _reader_build(repo, 2)
-    _reader_log(repo, 2, "BUILD", (second, "bar failed: two"))
+    _reader_log(repo, 2, "BUILD", (second, "checks failed: two"))
 
     counted = kverdict.failed_rounds(str(repo), "t1", "main")
-    assert counted == kverdict.FailedCount(2, "bar failed: two")
+    assert counted == kverdict.FailedCount(2, "checks failed: two")
 
     _reader_build(repo, 3)
     _reader_green(repo)
@@ -812,9 +812,9 @@ def test_failed_rounds_counts_distinct_failed_builds_and_a_passed_checks_record_
     assert kverdict.failed_rounds(str(repo), "t1", "main").count == 0
 
     fourth = _reader_build(repo, 4)
-    _reader_log(repo, 4, "BUILD", (fourth, "bar failed: four"))
+    _reader_log(repo, 4, "BUILD", (fourth, "checks failed: four"))
     assert kverdict.failed_rounds(str(repo), "t1", "main") == kverdict.FailedCount(
-        1, "bar failed: four"
+        1, "checks failed: four"
     )
 
 
@@ -822,7 +822,7 @@ def test_a_long_red_summary_keeps_its_cause_and_its_final_diagnostic():
     """Implements: TC-375"""
     # TC-375. The one persisted summary of a red result is bounded, and a
     # refusal longer than the bound keeps both ends: the cause at its head and
-    # the diagnostic a bar prints last. A short one is kept whole.
+    # the diagnostic a check run prints last. A short one is kept whole.
     sha = "a" * 40
     refusal = (
         "record-checks REFUSED - CAUSE-AT-HEAD:\n" + "context\n" * 80 + "FINAL-LINE"
@@ -835,8 +835,8 @@ def test_a_long_red_summary_keeps_its_cause_and_its_final_diagnostic():
     assert kverdict.parse_failed_record(
         "# checks-failed: {}\n# checks-summary: {}\n# ---\n".format(sha, line)
     ) == (sha, line)
-    short = kverdict.format_failed_record(sha, "bar failed:\n  one line")
-    assert short["checks-summary"] == "bar failed: one line"
+    short = kverdict.format_failed_record(sha, "checks failed:\n  one line")
+    assert short["checks-summary"] == "checks failed: one line"
 
 
 def test_a_header_in_the_earlier_form_is_not_a_failed_checks_record():
@@ -846,12 +846,12 @@ def test_a_header_in_the_earlier_form_is_not_a_failed_checks_record():
     # a log holding one counts toward nothing and the failure count restarts
     # at the cut, as the passed-checks record that would reset it is cut too.
     sha = "b" * 40
-    old = "# bar-red: {}\n# bar-summary: bar failed\n# ---\n".format(sha)
+    old = "# bar-red: {}\n# bar-summary: checks failed\n# ---\n".format(sha)
     assert kverdict.parse_failed_record(old) is None
     new = old.replace("# bar-red:", "# checks-failed:").replace(
         "bar-summary", "checks-summary"
     )
-    assert kverdict.parse_failed_record(new) == (sha, "bar failed")
+    assert kverdict.parse_failed_record(new) == (sha, "checks failed")
 
 
 def test_failed_rounds_counts_one_build_recorded_twice_once(tmp_path):
@@ -861,16 +861,16 @@ def test_failed_rounds_counts_one_build_recorded_twice_once(tmp_path):
     # its summary folded to one line, and a transcript line is no record.
     repo = _reader_lane(tmp_path)
     build = _reader_build(repo, 1)
-    _reader_log(repo, 1, "BUILD", (build, "bar failed:\n  one"))
-    _reader_log(repo, 2, "CHECKS", (build, "bar failed: again"))
+    _reader_log(repo, 1, "BUILD", (build, "checks failed:\n  one"))
+    _reader_log(repo, 2, "CHECKS", (build, "checks failed: again"))
     _reader_log(repo, 3, "BUILD")
 
     assert kverdict.failed_rounds(str(repo), "t1", "main") == kverdict.FailedCount(
-        1, "bar failed: again"
+        1, "checks failed: again"
     )
     logs = sorted((repo / "docs" / "iteration").glob("*.log"))
     first = logs[0].read_text(encoding="utf-8")
-    assert kverdict.parse_failed_record(first) == (build, "bar failed: one")
+    assert kverdict.parse_failed_record(first) == (build, "checks failed: one")
     assert kverdict.parse_failed_record(logs[2].read_text(encoding="utf-8")) is None
 
 
@@ -882,7 +882,7 @@ def test_failed_rounds_counts_an_unreadable_log_and_answers_none_for_no_history(
     # toward the cap; a range git cannot list answers None.
     repo = _reader_lane(tmp_path)
     build = _reader_build(repo, 1)
-    _reader_log(repo, 1, "BUILD", (build, "bar failed: one"))
+    _reader_log(repo, 1, "BUILD", (build, "checks failed: one"))
     _reader_log(repo, 2, "BUILD")
     real = kverdict.git_out
 
@@ -985,7 +985,7 @@ def test_the_draw_runs_the_derived_files_and_compares_their_digest(tmp_path):
 
     proc = _run(lane, cmd, 2)
 
-    assert len(_lines(ctl, "bar_runs.txt")) == 1, _out(proc)
+    assert len(_lines(ctl, "check_runs.txt")) == 1, _out(proc)
     assert TEST_A in _named_args(ctl), _out(proc)
     assert _records(lane)[0].tests == kverdict.tests_digest([TEST_A]), _out(proc)
     logs = _committed_logs(lane).values()
@@ -1101,7 +1101,7 @@ def test_failure_cap_exits_with_its_own_code_and_one_fewer_does_not(tmp_path):
     # and its exit is not the NEEDS-OPERATOR code. A cap that paged the operator
     # first, then exited 12 whatever the hold decided, fails here.
     lane, ctl, cmd = _lane(tmp_path / "capped")
-    (ctl / "bar_red").write_text("on\n", encoding="utf-8")
+    (ctl / "checks_fail").write_text("on\n", encoding="utf-8")
     _configure(lane, _cap(2))
     proc = _run(lane, cmd, 2)
     assert proc.returncode == 12, _out(proc)
@@ -1112,7 +1112,7 @@ def test_failure_cap_exits_with_its_own_code_and_one_fewer_does_not(tmp_path):
     assert "PAGE-OPERATOR" not in proc.stdout, _out(proc)
 
     lane, ctl, cmd = _lane(tmp_path / "below")
-    (ctl / "bar_red").write_text("on\n", encoding="utf-8")
+    (ctl / "checks_fail").write_text("on\n", encoding="utf-8")
     _configure(lane, _cap(3))
     proc = _run(lane, cmd, 2)
     assert proc.returncode == agent_loop.EXIT_BUDGET, _out(proc)

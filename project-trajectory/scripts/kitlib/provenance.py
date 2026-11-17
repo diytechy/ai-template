@@ -223,7 +223,7 @@ LOOP_WRITER_SUBJECTS = (
     r"refresh: {branch} onto trunk .+",
     r"partial: .+ -> partial/ \(.*",
     r".+: the work so far, committed as-is \(partial close\)",
-    r"handback: revert {branch} to a bar-inert artefact",
+    r"handback: revert {branch} to a checks-inert artefact",
     r"adjudicate: .+ -> complete/ \(mechanical close\)",
     r"telemetry: session .+",
 )

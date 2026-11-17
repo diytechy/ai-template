@@ -14,7 +14,7 @@ import pytest
 from conftest import (
     SCRIPTS,
     claim_on_branch,
-    declare_review_bar,
+    declare_commit_checks,
     declare_trunk,
     hooks_on,
     lane_checkout,
@@ -260,7 +260,7 @@ def managed_repo(tmp_path):
 
     ctl = tmp_path / "control"
     ctl.mkdir()
-    declare_review_bar(repo, ctl)
+    declare_commit_checks(repo, ctl)
     fake = tmp_path / "fake.py"
     fake.write_text(FAKE, encoding="utf-8")
     cmd = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
@@ -879,7 +879,7 @@ def _winstay_repo(tmp_path):
 
     ctl = tmp_path / "control"
     ctl.mkdir()
-    declare_review_bar(repo, ctl)
+    declare_commit_checks(repo, ctl)
     fake = tmp_path / "fake.py"
     fake.write_text(FAKE, encoding="utf-8")
     cmd = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(

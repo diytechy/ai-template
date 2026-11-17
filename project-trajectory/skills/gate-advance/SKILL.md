@@ -180,7 +180,7 @@ sign-off in `docs/log.md`'s **Sittings** table — a **sitting is an occasion, n
 a rung**, so each row names the **rung range it certifies** rather than being one
 row per boundary.
 
-## What each bar takes
+## What each stage takes
 
 - **`DevStg-Reqs` (Needs · Boundary · Reqs certified).** Real SN/SR rows (no
   `-000` placeholders where committed), acceptance criteria measurable, the
@@ -225,7 +225,7 @@ paraphrasing the value.
 
 If the repo runs the **agent iteration branch & sync** layer
 (`docs/process-options.md`; agent work rides `llm/<branch>`, the development
-branch is curated), a bar closure is a **sync point**. Run the five-step ritual
+branch is curated), a stage's closure is a **sync point**. Run the five-step ritual
 before the accepting commit lands: backup ref → scrub (privacy-checked repos
 only; fail closed if the scrub agent can't run) → optional iteration-branch push
 per the `push` dial → collate into categorical commits → land on the development
@@ -246,7 +246,7 @@ fake subjective work into a `Test`; give it an honest `Vouch` home.
 ## Report vouched vs. mechanized
 
 `trace.py` always emits a **"Verification basis (vouched vs mechanized)"**
-count. When reporting a bar's readiness, state that split honestly — how many SRs
+count. When reporting a stage's readiness, state that split honestly — how many SRs
 are machine-verified vs. resting on someone's word — so a reviewer sees the
-trust footprint rather than a single "all green". A vouched bar can be
+trust footprint rather than a single "all green". A vouched stage can be
 legitimate; hiding that it's vouched is not.

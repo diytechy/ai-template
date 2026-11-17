@@ -19,7 +19,7 @@ TICKING WITH EVIDENCE IS THE NORMAL CONVENTION, so a comparison that fired on
 every tick would be noise: `- [x] item`, `~~item~~ - LANDED ...` and
 `item. (tests/test_x.py::test_y)` all read as the item unchanged. EVIDENCE IS
 A FORM, the one the repository's closed specs use: text appended after the item
-that opens with an evidence separator (a dash, an arrow, a bracket, a bar or a
+that opens with an evidence separator (a dash, an arrow, a bracket, a check run or a
 check mark) AND carries an evidence token - a completion word in capitals
 (LANDED, DONE, MET, VERIFIED, SHIPPED, PASSED, FIXED, COVERED), a path or test
 id, a backticked name, or a commit sha. Anything else appended is prose, and

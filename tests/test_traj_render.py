@@ -530,9 +530,9 @@ def test_u3_svg_corner_radii_match_the_declared_scale(tmp_path):
 # commit message:
 #
 #   WITHIN a vocabulary — 15. Every member can sit beside every other in one
-#   legend, so the bar is the strict one the phase accents already met.
+#   legend, so the stage is the strict one the phase accents already met.
 #   ACROSS vocabularies — 12. Two colours from different vocabularies meet less
-#   often (a status fill and a phase accent share no legend), so the bar is
+#   often (a status fill and a phase accent share no legend), so the stage is
 #   lower — but not absent, because 120-CRITIQUE reported a reader conflating
 #   exactly such a pair. 12 clears every confirmed conflation without forcing a
 #   wholesale re-hue; the closest surviving pair is 12.5.

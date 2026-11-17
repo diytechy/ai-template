@@ -1423,7 +1423,7 @@ def test_a_HOLE_in_the_snapshot_REDS_A_REAL_STRICT_INTEGRITY_RUN(scaffold):
     `integrity=1` is asserted, not just the exit code — that is what pins the
     finding to the ALWAYS-ON pipe rather than to `--strict-schema`, which runs at
     DevStg-Impl alone and would leave the rule inert for every repo below the top
-    bar."""
+    checks."""
     sr = scaffold / SR_REL
     sr.write_text(sr.read_text(encoding="utf-8") + _WORKED_SR, encoding="utf-8")
     # A hand-authored id owes the watermark; recording it keeps the baseline green

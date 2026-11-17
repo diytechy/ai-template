@@ -331,7 +331,7 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
         "The code commit that removes the marks names the same set",
         "A refresh or a hand landing (recipes §3) refused for a mark ends in "
         "the code commit or a quarantine.",
-        "A test the bar skips takes no mark, because a skip is never evidence: "
+        "A test the checks skip takes no mark, because a skip is never evidence: "
         "it is named, with its disposition, in the lane's decisions record.",
     ):
         assert clause in skill, clause
@@ -375,7 +375,7 @@ def test_the_hand_landing_checks_the_staged_squash_for_an_expected_failure_marke
     # hand landing squashes without one, so recipes §3 runs the same arm on
     # the staged squash before the commit checks and resets the squash on a
     # refusal. Adequacy witness: a recipe that lands the squash on the smoke
-    # bar alone, where a strictly marked red test reads green, lacks the step.
+    # checks alone, where a strictly marked red test reads green, lacks the step.
     recipes = " ".join(
         (KIT / "skills" / "coordinator-cycle" / "references" / "recipes.md")
         .read_text(encoding="utf-8")
@@ -1116,8 +1116,8 @@ def test_the_worker_brief_sent_body_cites_no_record_of_this_repository():
     assert "WI-540" in notes and "WI-538" in notes
 
 
-def test_the_worker_close_bar_points_at_its_homes_instead_of_restating_it():
-    # The bar is declared in two homes every scaffold carries: the step table
+def test_the_worker_close_checks_point_at_their_homes_instead_of_restating_them():
+    # The checks are declared in two homes every scaffold carries: the step table
     # check.py selects at the rung in docs/stage, and the test tier selector in
     # docs/stack.ini [tiers]. A restatement naming a wall-time budget told a
     # scaffold's worker to run a budget its repo does not declare.
@@ -1142,8 +1142,8 @@ def test_the_worker_brief_carries_the_standing_state_ritual():
     assert "not a one-shot write at the end" in worker
 
 
-def test_the_worker_brief_points_at_the_spine_linked_tests_and_the_bar():
-    # The inner loop and the bar are two different runs: while iterating, the
+def test_the_worker_brief_points_at_the_spine_linked_tests_and_the_checks():
+    # The inner loop and the checks are two different runs: while iterating, the
     # tests the spine links to the module being changed (derived by `trace.py
     # --tests-for`, never a hand-kept map or a file-name guess); before every
     # commit, the commit checks, whatever the inner loop said.

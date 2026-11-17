@@ -6,7 +6,7 @@ The line is
     Checks-Passed: tree=<40 hex> work=<40 hex> checks=<commit|landing|none> tests=<64 hex|none> <summary>
 
 and it is a passed-checks record only when it is the message's one column-0 label line,
-its `tree=` and `work=` are the commit's own tree and first parent, and its bar
+its `tree=` and `work=` are the commit's own tree and first parent, and its checks
 is in the closed set. Every refusal below is driven beside the honest commit it
 differs from, so a verifier that refused everything fails here too.
 
@@ -42,7 +42,7 @@ def _repo(tmp_path):
     return git_repo(tmp_path, branch=BRANCH)
 
 
-def _line(tree, work, checks="landing", tests="none", summary="bar PASS (2 steps)"):
+def _line(tree, work, checks="landing", tests="none", summary="checks PASS (2 steps)"):
     """A `Checks-Passed:` line composed here, field by field, so the refusal cases
     pin the grammar itself rather than whatever the writer emits. `None` drops
     a field."""
@@ -164,7 +164,7 @@ def test_a_trailer_without_checks_is_not_a_passed_checks_record(tmp_path):
 
 def test_an_unknown_check_set_is_not_a_passed_checks_record(tmp_path):
     """Implements: TC-205"""
-    # The bar set is closed: a bar outside it is refused even with a true tree
+    # The check-set field is closed: a set outside it is refused even with a true tree
     # and parent and the refresh subject.
     root = _repo(tmp_path)
     assert kv.passed_checks(root, _honest(root)) is not None
@@ -256,7 +256,7 @@ def test_the_tests_digest_differs_for_a_different_set(other):
 
 def _review_on_refresh_subject(root):
     """A commit carrying the refresh subject AND a true `review` line: the
-    sharpest shape, since only the bar field tells it from a refresh."""
+    sharpest shape, since only the checks field tells it from a refresh."""
     return _commit_naming(
         root,
         lambda t, p: _line(t, p, checks="commit", tests=DIGEST),

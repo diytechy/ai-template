@@ -18,21 +18,21 @@ What this module pins is the loop's own contract — the joints, not the parts
     loop's own stall guard (the trunk-unmoved counter);
   * a worker that could not finish HANDS BACK (WI-387, §A3) — NEEDS-OPERATOR no
     longer stops the run, the WI returns to trunk blocked, and the loop drives
-    on to the drained banner; a red handback is reverted to a bar-inert
+    on to the drained banner; a red handback is reverted to a checks-inert
     artefact and merges anyway; a CRASHED worker is not a handback and keeps
     the parked-resume path;
   * end-to-end on a REAL scaffold: claim -> injected worker close -> the REAL
-    §A2 refresh bar -> merge -> drained banner; and the same flow with a
-    breaking change stops on the RED bar with the branch still parked;
+    §A2 landing checks -> merge -> drained banner; and the same flow with a
+    breaking change stops on the RED checks with the branch still parked;
   * the SPECULATIVE half of the station protocol (WI-386): `_drain` refreshes
-    every finished branch BEFORE it takes the merge slot, so the 11-minute bar
+    every finished branch BEFORE it takes the merge slot, so the 11-minute checks
     never holds the exclusive turn to advance trunk. That one call is the whole
     speculation — deleting it restricts the design to pessimistic, which the
     integrator's own suite covers from the other side.
 
 The worker seam is injected in every test (`run(root, args, worker=...)`) —
 the real subprocess launch of agent_loop.py --wi is agent_loop's own tested
-surface — but integrate.py and the bar are REAL: a stubbed bar here would be
+surface — but integrate.py and the checks are REAL: a stubbed checks here would be
 exactly the vacuous green the integrator exists to make impossible. Git
 fixtures are real repositories for the same reason as tests/test_integrate.py
 (the queue derives everything from history), and the helper shapes are copied
@@ -393,7 +393,7 @@ def test_a_fresh_launch_under_a_pause_resumes_the_lane_in_flight(tmp_path, capfd
     # mid-work — the pause stranding the very in-flight lane its own contract
     # (§5.6, and the pause file's own header) promises to finish and merge.
     # The claim is the only act a pause stops.
-    root = stub_harness_repo(tmp_path)  # WI-401 queued, and a declared bar
+    root = stub_harness_repo(tmp_path)  # WI-401 queued, and a declared checks
     write_spec(root, "active/wi-402", "WI-402", slug="parked", specref="seed.txt")
     write_pause(root)
     _commit(root, "claim WI-402 + pause: owner says stop", when=T_LATER)
@@ -584,7 +584,7 @@ def test_a_parked_lane_citing_a_ruled_item_still_resumes_first(tmp_path, capfd):
 # These run the WHOLE cycle — claim, worker, close, refresh, merge, next cycle —
 # against a stub harness rather than a bootstrapped scaffold, because what is
 # under test is the loop's decision and the shape it lands in trunk, not the
-# bar. The stub check is CONDITIONAL (red exactly while the lane's own broken
+# checks. The stub check is CONDITIONAL (red exactly while the lane's own broken
 # file is present), which is what lets the red-handback ruling be driven end to
 # end instead of asserted about: an always-red stub could not show the second
 # refresh going green. Helper shapes are copied from tests/test_integrate.py per
@@ -603,7 +603,7 @@ print("  PASS  tests+coverage   0.2s")
 
 
 def stub_harness_repo(tmp_path):
-    """A trunk with WI-401 queued, a DECLARED bar, and a stub harness in the
+    """A trunk with WI-401 queued, a DECLARED checks, and a stub harness in the
     tree — the smallest repo a full drive cycle can actually run in."""
     root = git_repo(tmp_path)
     (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
@@ -628,7 +628,7 @@ def stub_harness_repo(tmp_path):
     )
     (scripts / "check.py").write_text(STUB_CHECK, encoding="utf-8", newline="\n")
     write_spec(root, "queued", "WI-401", specref="seed.txt")
-    _commit(root, "seed: the stub harness, the declared bar and WI-401", when=T_CODE)
+    _commit(root, "seed: the stub harness, the declared checks and WI-401", when=T_CODE)
     return root
 
 
@@ -776,8 +776,10 @@ def test_a_decided_exit_after_the_lane_closed_merges_on_its_declared_outcome(
     assert (root / "shipped.py").is_file()
 
 
-def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path, capfd):
-    # THE RULED CASE (operator decision 1). The lane hands back code the bar
+def test_a_failing_handback_is_reverted_to_a_checks_inert_artefact_and_merges(
+    tmp_path, capfd
+):
+    # THE RULED CASE (operator decision 1). The lane hands back code the checks
     # refuses, which would be the one branch that could still hang. Instead the
     # code is reverted, the failing diff lands as a `.patch`, the second
     # refresh goes green and the branch merges — so trunk ends with the record
@@ -805,7 +807,7 @@ def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path,
 def failure_capped_worker(reds):
     """A worker whose build stayed red at its commit checks for `reds` rounds:
     each round commits a red build and then the loop's own record of it, a
-    session log keyed by that build's sha with the bar's summary. It then ends
+    session log keyed by that build's sha with the checks' summary. It then ends
     with the failure cap's exit code, specs still in active/."""
 
     def worker(root, branch, wi_id, args):
@@ -822,7 +824,7 @@ def failure_capped_worker(reds):
             (logs / "t1-{:03d}-20261021-00000{}.log".format(n, n)).write_text(
                 "# agent session log\n# session: {:03d}\n# train: t1\n"
                 "# phase: BUILD\n# outcome: COMMITTED\n# checks-failed: {}\n"
-                "# checks-summary: BAR-FAIL-MARKER {}\n".format(n, sha, n),
+                "# checks-summary: CHECKS-FAIL-MARKER {}\n".format(n, sha, n),
                 encoding="utf-8",
                 newline="\n",
             )
@@ -838,7 +840,7 @@ def test_a_failure_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_dr
     """Implements: TC-381"""
     # TC-381. The failure cap is a decided worker outcome: the dispatcher closes
     # the lane partial with typed fields, its reason naming the count and the
-    # last bar summary, and the drain's red refresh quarantines the lane.
+    # last checks summary, and the drain's red refresh quarantines the lane.
     root = stub_harness_repo(tmp_path)
     worker = then_closing(failure_capped_worker(3))
 
@@ -851,12 +853,12 @@ def test_a_failure_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_dr
     reason = (
         "commit-check failure cap: 3 consecutive failed rounds ([build] "
         "stop_lane_after_consecutive_commit_check_failures = 3); "
-        "last run: BAR-FAIL-MARKER 3"
+        "last run: CHECKS-FAIL-MARKER 3"
     )
     assert 'reason = "{}"'.format(reason) in text, text
     assert (
         "The lane's commit checks kept failing, so its build is not delivered: "
-        "last run: BAR-FAIL-MARKER 3"
+        "last run: CHECKS-FAIL-MARKER 3"
     ) in text, text
     assert 'split_decided_by = "adjudicator"' in text
     # Not the acceptance-level escalation a NEEDS-OPERATOR exit gets: a dispatcher
@@ -870,7 +872,7 @@ def test_a_failure_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_dr
     assert rc == 0
 
 
-# --- end to end against the REAL bar ------------------------------------------
+# --- end to end against the REAL checks ------------------------------------------
 
 E2E_GOOD_SRC = '''"""Demo module. Implements: SR-001"""
 
@@ -970,17 +972,17 @@ def test_drive_end_to_end_claims_builds_merges_and_drains(tmp_path, capfd):
     # which is the point of asserting it separately from "it merged".
     assert "integrate: refreshed wi-401-widget onto trunk" in out, out
     assert "is not merge-ready" not in out, out
-    # ...and the merged tip is the refresh commit, carrying the bar's own
+    # ...and the merged tip is the refresh commit, carrying the checks' own
     # record for exactly that tree.
     merged_tip = _git(repo, "rev-list", "--parents", "-n", "1", "HEAD").split()[2]
     assert integ.refresh_passed_checks(repo, "wi-401-widget", merged_tip) is not None
 
 
-def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
-    # The worker's "close" breaks the product test: the REAL bar goes red at the
+def test_drive_stops_on_failing_landing_checks(tmp_path, capfd):
+    # The worker's "close" breaks the product test: the REAL checks go red at the
     # §A2 refresh — on the branch, where the lane that caused it can fix it —
     # and the driver STOPS with the branch still claimed. Nothing merged,
-    # nothing skipped, and (unlike the composed-tree bar this replaced) nothing
+    # nothing skipped, and (unlike the landing checks this replaced) nothing
     # parked on a candidate branch for someone to go and read.
     #
     # THE WI PINS ITS OWN `checks_stage` SINCE THE OI-30 D2 CEILING, and that is not
@@ -988,7 +990,7 @@ def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
     # on. `sr_bar` now stops at DevStg-Tests, so a fully accepted scaffold no
     # longer DERIVES DevStg-Impl, and the `tests+coverage` step is tagged for
     # DevStg-Impl alone: without the pin the broken product source below would
-    # sail through a green bar. The `checks_stage` frontmatter key (WI-388) is exactly
+    # sail through passing checks. The `checks_stage` frontmatter key (WI-388) is exactly
     # the "`--gate DevStg-Impl` stays explicitly invocable" half of the
     # ruling, and it is what a lane that wants the strict plan uses.
     #
@@ -1002,7 +1004,7 @@ def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
     rc = drv.run(repo, drive_args(), worker=closing_worker(E2E_BAD_SRC), tier="smoke")
     assert rc == 1
     err = capfd.readouterr().err
-    assert "bar is RED on the refreshed tree" in err
+    assert "checks FAIL on the refreshed tree" in err
     assert "wi-401-widget" in _git(repo, "branch", "--format=%(refname:short)")
     assert not (repo / "docs" / "work" / "complete" / "WI-401-widget.md").exists()
     # The lane is left exactly where the worker left it: no refresh commit, no
@@ -1332,7 +1334,7 @@ def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeyp
 
 
 def census_repo(tmp_path):
-    """A drivable repo (declared bar + stub harness) whose registries name
+    """A drivable repo (declared checks + stub harness) whose registries name
     gaps and whose queue is EMPTY — the rung-1 state."""
     root = git_repo(tmp_path)
     (root / "docs").mkdir(exist_ok=True)

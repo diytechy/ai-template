@@ -435,7 +435,7 @@ def test_a_CLOSED_row_never_conflicts():
 
 
 def test_unrelated_open_rows_are_silent():
-    # The bar is deliberately high (Jaccard 0.8): this rung catches the same
+    # The threshold is deliberately high (Jaccard 0.8): this rung catches the same
     # job minted twice, not two rows in the same area. A warn that fires on
     # ordinary work gets ignored, which is worse than not having it.
     rows = [

@@ -12,7 +12,7 @@ in `tests/conftest.py`'s `SLOW_MODULES`.
 A review renders only over a commit whose commit checks are recorded as passed for
 the round's named tests (WI-957, TC-371): the fixture's reviewed commits carry
 that record, written by the kit's own `Checks-Passed:` writer, and the gate's
-cases commit the absent, unverified, malformed, other-bar and other-tests
+cases commit the absent, unverified, malformed, other-checks and other-tests
 records and the commits above a recorded one.
 """
 
@@ -89,7 +89,7 @@ def _passed_checks_tip(
         work or parent,
         checks,
         kverdict.tests_digest(tests),
-        "{} bar PASS".format(checks),
+        "{} checks PASS".format(checks),
     )
     return _commit_message(root, message + "\n\n" + line)
 
@@ -361,7 +361,7 @@ def test_a_passed_checks_record_that_does_not_name_the_tip_refuses_naming_the_ca
 
 def test_a_landing_record_refuses_naming_both_check_sets(git_lane, capsys):
     """Implements: TC-371"""
-    # TC-371. A refresh's verified landing record is another bar, never a
+    # TC-371. A refresh's verified landing record is another checks, never a
     # review one. Adequacy witness: a render that accepts any verified
     # record renders here.
     root, base, _tip, _side, out = git_lane
@@ -379,7 +379,7 @@ def test_a_commit_checks_record_for_other_tests_refuses_naming_both_digests(
     git_lane, capsys, monkeypatch
 ):
     """Implements: TC-371"""
-    # TC-371. Adequacy witness: a render that checks the bar but not the
+    # TC-371. Adequacy witness: a render that checks the checks but not the
     # tests digest renders here.
     root, base, tip, _side, out = git_lane
     other = ("tests/test_b.py",)
@@ -409,7 +409,7 @@ def test_a_matching_commit_checks_record_renders_and_names_it(
 def test_record_only_commits_above_the_recorded_one_render(git_lane, capsys):
     """Implements: TC-371"""
     # TC-371. An empty commit, a round file and a telemetry fragment above
-    # the recorded commit force no new bar. Adequacy witness: a render that
+    # the recorded commit force no new checks. Adequacy witness: a render that
     # reads only the reviewed commit's own record refuses here.
     root, base, tip, _side, out = git_lane
     _git(root, "commit", "-q", "--allow-empty", "-m", "an empty commit")
@@ -466,7 +466,7 @@ def test_a_search_past_the_walk_bound_refuses(git_lane, capsys):
 @pytest.mark.parametrize("rel", ["src/app.py", "docs/decisions/wi-900.toml"])
 def test_a_work_commit_above_the_recorded_one_refuses(git_lane, capsys, rel):
     """Implements: TC-371"""
-    # TC-371. The decisions record is not a record path, so it needs the bar
+    # TC-371. The decisions record is not a record path, so it needs the checks
     # too. Adequacy witness: a walk that steps over any commit renders here.
     root, base, _tip, _side, out = git_lane
     _work(root, rel)

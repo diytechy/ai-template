@@ -19,7 +19,7 @@ import graph, file sizes, a dependency-matrix clustering or a value-domain
 check, come in only as a generated report. A report is evidence for a finding
 and never the verdict: a clustering can suggest a grouping, but it never
 defines a cut. The `architecture-decomposition` skill is the author's procedure
-for producing the artifact. This file is the bar that artifact is judged
+for producing the artifact. This file is the standard that artifact is judged
 against.
 
 ## Intent

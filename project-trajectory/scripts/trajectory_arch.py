@@ -798,7 +798,7 @@ def if_tc_coverage_findings(root):
     sitting's act, the SR-006/LLR-060 precedent, WI-473); minting a fresh
     Drafted LLR under `SR-159` was considered and declined for the same reason
     that session gave first — `SR-159` is phase 1, and a Drafted child would
-    drag that phase's derived bar down as a side effect of unrelated work. So
+    drag that phase's derived stage down as a side effect of unrelated work. So
     the built behaviour is ahead of its requirement on purpose, recorded as
     owed on WI-488's own spec rather than claimed here.
     """

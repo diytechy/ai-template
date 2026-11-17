@@ -419,7 +419,7 @@ def test_the_mint_does_not_reissue_a_deleted_id(tmp_path):
 
 
 def test_live_wi_ids_are_counted_under_the_archive_sibling_too(tmp_path):
-    """WI-511's own commit-bar hazard, driven: WI-504 relocated terminal WI
+    """WI-511's own commit-check hazard, driven: WI-504 relocated terminal WI
     history one directory deeper, to `docs/archive/work/<disposition>/`, and
     `docs/work/README.md`'s own rule is that both roots are ONE registry. A
     spec minted and closed to the archive in the SAME commit (the pattern

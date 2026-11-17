@@ -5,7 +5,7 @@ window, `blackout = "12:00-19:00"`. A test scaffold seeded from that template an
 handed to a session-driving fixture gave `agent_loop` a LIVE window, which it
 correctly honors by sleeping — so on a weekday between 12:00 and 19:00 UTC the
 ten tests of `tests/test_agent_loop_critique.py` did not fail, they never ran,
-and the runner reported green on the other 2232. "Full bar green" was a function
+and the runner reported green on the other 2232. "Full checks green" was a function
 of the wall clock; a probe outside the window recorded the module as "not
 reproduced ... flaky" on 2026-08-10.
 

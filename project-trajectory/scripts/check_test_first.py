@@ -191,7 +191,7 @@ def history_unreadable(root, start=None, rev="HEAD"):
     never stood on trunk's first-parent line, gives nothing to order after; and
     registries under the older carrier were written in an older status
     vocabulary, so a first acceptance read across them would date the rename
-    rather than the act. That bars registries still under the older carrier
+    rather than the act. That excludes registries still under the older carrier
     at `rev`, and a declared start before the TOML registries; with no start,
     the history before the cutover is simply not read, and an acceptance it held
     carries no exact date (`first_acceptance_commits`). The design registry is

@@ -151,7 +151,7 @@ def test_an_outcome_other_than_pass_is_refused(tmp_path):
             lambda r: (r / "docs" / "stack.ini").write_text(
                 "[paths]\nsrc = src\ntests = tests\n[product]\ntest = pytest -k nothing\n"
             ),
-            id="the-declared-bar-itself",
+            id="the-declared-checks-itself",
         ),
         pytest.param(
             lambda r: (

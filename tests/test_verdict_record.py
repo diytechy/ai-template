@@ -889,7 +889,7 @@ def _refresh_commit(root, branch, when):
     """A GENUINE station refresh commit on `branch`: trunk content folded in,
     with the `Checks-Passed:` trailer naming its own tree and its work parent, which
     is what `refresh_passed_checks` verifies. Written by hand rather than through
-    `integrate.refresh` because the lane worktree/bar machinery is not what is
+    `integrate.refresh` because the lane worktree/checks machinery is not what is
     under test here — the peel is."""
     work = _rev(root, branch)
     (root / "trunk.txt").write_text("from trunk\n", encoding="utf-8", newline="\n")
@@ -904,10 +904,10 @@ def _refresh_commit(root, branch, when):
         "-m",
         "{}0123456789\n\n{}".format(
             kv.refresh_subject(branch),
-            kv.format_passed_checks(tree, work, "landing", "none", "bar green"),
+            kv.format_passed_checks(tree, work, "landing", "none", "checks green"),
         ),
     )
-    assert kv.refresh_passed_checks(root, branch) == (work, "bar green")
+    assert kv.refresh_passed_checks(root, branch) == (work, "checks green")
     return work
 
 
@@ -1839,7 +1839,7 @@ def test_a_resume_that_cannot_read_its_evidence_still_draws_the_parked_round(
     # IN-PROCESS, and that is the point. The end-to-end test that caught this
     # lives in `test_agent_loop_review`, which `conftest.SLOW_MODULES` drops
     # from the smoke tier — so the inversion sat red on the branch for five
-    # commits under green commit checks. The guard belongs where the bar runs.
+    # commits under green commit checks. The guard belongs where the checks run.
     al = _al()
     root = rounds_repo(tmp_path)
     _git(root, "checkout", "-q", "wi-401")

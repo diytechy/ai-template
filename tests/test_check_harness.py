@@ -121,7 +121,7 @@ def test_failing_test_fails_the_harness(scaffold):
     assert "RESULT: FAIL" in proc.stdout
 
 
-def test_backlink_coverage_step_is_wired_at_the_right_bars(tmp_path):
+def test_backlink_coverage_step_is_wired_at_the_right_stages(tmp_path):
     """THE WIRING NOBODY PINNED (2026-08-20, the batch review's MINOR-20). Every
     other part of the reverse-coverage layer has a test — the grammar, the
     percentage, the dial reader, the report's vacuity — while the fact that
@@ -770,7 +770,7 @@ def test_the_PLAN_STEP_refuses_a_regenerated_but_unstaged_derived_stage(tmp_path
     proc = run_py([SCRIPTS / "check.py", "--run-steps", "staged-divergence"], cwd=repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode != 0, (
-        "the bar must REFUSE a commit whose derived stage is regenerated but "
+        "the checks must REFUSE a commit whose derived stage is regenerated but "
         "unstaged — this is the exact tree that used to pass: " + out
     )
     assert "FAIL" in out and "docs/stage" in out, out
@@ -779,7 +779,7 @@ def test_the_PLAN_STEP_refuses_a_regenerated_but_unstaged_derived_stage(tmp_path
 def test_the_PLAN_STEP_passes_once_the_regeneration_is_staged(tmp_path):
     # The other half, so the refusal above is a decision and not a step that
     # reds on every tree: stage the regeneration — the correct workflow — and
-    # the same bar goes green.
+    # the same checks go green.
     repo = _stale_stage_repo(tmp_path)
     _git(repo, "add", "docs/stage")
     proc = run_py([SCRIPTS / "check.py", "--run-steps", "staged-divergence"], cwd=repo)

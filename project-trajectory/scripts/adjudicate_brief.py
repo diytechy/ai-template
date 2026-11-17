@@ -244,7 +244,7 @@ def verdict_refusal(brief, verdict_path, kinds=None):
 
     THE SESSION'S OUTPUT IS THE VERDICT FILE, not its commit. A worker session
     is judged DONE from committed `WI:` trailers, and an adjudicator that
-    committed anything at all would clear that bar while having ruled on
+    committed anything at all would clear that checks while having ruled on
     nothing — the shape where the machinery reports a judgement was made and no
     judgement exists. So completion is gated on the artifact the brief named,
     carrying the closed-enum line the brief demanded.

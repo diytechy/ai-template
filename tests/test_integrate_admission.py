@@ -16,7 +16,7 @@ of `test_integrate_station.py` gets to move it:
     trees. Driven on one topology built both ways (with and without the minted
     file), plus the shapes that must stay ADMITTED — a terminal-outcome move
     into `complete/` and `cancelled/`, a handback's return to `queued/` with its
-    bar-inert `.patch`, and a TRUNK-side mint taken after the claim (free by
+    checks-inert `.patch`, and a TRUNK-side mint taken after the claim (free by
     construction: it is in the merge base, not in the branch's delta) — and the
     rename trap that makes `--no-renames` load-bearing rather than tidy.
   * **the verdict gate** (RULING-7) — the dialed review artifact must be
@@ -26,7 +26,7 @@ of `test_integrate_station.py` gets to move it:
     excluded from "code", and so is the mechanical refresh commit (WI-386: it
     lands AFTER the review by construction, so counting it as code would make
     the gate unpassable) — bookkeeping cannot stale a good verdict.
-  * **the declared bar** (§4) — a missing `docs/stack.ini`, an absent
+  * **the declared checks** (§4) — a missing `docs/stack.ini`, an absent
     `[product] test`, or a declared-but-EMPTY one is a REFUSAL, never a skip.
   * **the BRANCH tree's own harness** (WI-368, relocated by WI-386) — which
     copy of `trunk_step.py` runs, probed across the layouts an invoker can be
@@ -348,7 +348,7 @@ def test_a_branchs_own_terminal_outcome_move_is_admitted(tmp_path):
 def test_a_partial_close_its_report_and_its_artefact_are_admitted(tmp_path):
     # The third outcome (§A3 as amended by SR-144). A partial close ADDS its own
     # spec back under `partial/`, writes an immutable per-close REPORT under
-    # docs/handbacks/, and may drop a bar-inert `.patch` beside it. None of the
+    # docs/handbacks/, and may drop a checks-inert `.patch` beside it. None of the
     # three is a mint: the closed spec's id is claimed, and neither the report
     # nor the artefact carries a spec filename at all — the report deliberately
     # lives OUTSIDE docs/work/ so `spec_files`' rglob never walks it.
@@ -1113,7 +1113,7 @@ def write_verdict(root, text, when):
 
 def test_verdict_is_not_required_at_review_policy_zero(tmp_path):
     # The dial off is a real configuration, not a loophole: at 0 the harness
-    # gates ARE the bar and the queue asks for no verdict artifact.
+    # gates ARE the checks and the queue asks for no verdict artifact.
     root = verdict_repo(tmp_path, policy="0")
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
@@ -1171,7 +1171,7 @@ def test_a_malformed_review_policy_fails_closed(tmp_path):
     assert "sometimes" in refusal and "fail closed" in refusal
 
 
-# --- 4. the declared bar (§4): undeclared is a refusal, never a skip ----------
+# --- 4. the declared checks (§4): undeclared is a refusal, never a skip ----------
 
 
 def _stack_ini(tmp_path, text):
@@ -1189,7 +1189,7 @@ def test_an_absent_stack_ini_is_a_refusal(tmp_path):
 
 def test_a_stack_ini_without_a_product_test_key_is_a_refusal(tmp_path):
     # A [product] section that declares format/lint but no test is a repo whose
-    # bar was never stated. Skipping it is how `bar_failures: 0` came to mean
+    # checks were never stated. Skipping it is how `bar_failures: 0` came to mean
     # "nothing ran" (the §4.4 fail-open lesson).
     _stack_ini(tmp_path, "[product]\nformat = ruff format --check src\n")
     refusal = integ._declared_checks_or_refusal(tmp_path)
@@ -1204,15 +1204,15 @@ def test_a_declared_but_empty_test_command_is_a_refusal(tmp_path):
     assert refusal is not None and "declared but EMPTY" in refusal
 
 
-def test_a_declared_test_command_passes_the_bar_declaration_check(tmp_path):
+def test_a_declared_test_command_passes_the_checks_declaration_check(tmp_path):
     _stack_ini(tmp_path, "[product]\ntest = {py} -m pytest -q\n")
     assert integ._declared_checks_or_refusal(tmp_path) is None
 
 
-def test_a_declared_toolchain_without_its_venv_refuses_the_bar(tmp_path):
+def test_a_declared_toolchain_without_its_venv_refuses_the_checks(tmp_path):
     # WI-361: the re-homed WI-286 floor. A repo that DECLARES the pinned toolchain
     # (requirements-dev.txt) but has no ./.venv would otherwise run the composed-
-    # tree bar on the ambient interpreter, whose green may be false. The queue
+    # tree checks on the ambient interpreter, whose green may be false. The queue
     # refuses instead, loudly and by name, before it composes anything.
     _stack_ini(tmp_path, "[product]\ntest = {py} -m pytest -q\n")
     (tmp_path / "requirements-dev.txt").write_text("pytest\n", encoding="utf-8")
@@ -1222,7 +1222,7 @@ def test_a_declared_toolchain_without_its_venv_refuses_the_bar(tmp_path):
     assert "no runnable ./.venv" in refusal and "dev-setup --install" in refusal
 
 
-def test_a_scaffold_that_declares_no_toolchain_still_runs_the_bar(tmp_path):
+def test_a_scaffold_that_declares_no_toolchain_still_runs_the_checks(tmp_path):
     # The arming boundary from the wired side: the SAME venv-less root without the
     # declaration is not refused. This is the property the whole venv-less fixture
     # fleet (including the e2e scaffolds in this file) depends on.
@@ -1234,7 +1234,7 @@ def test_a_scaffold_that_declares_no_toolchain_still_runs_the_bar(tmp_path):
 #
 # These four covered "the COMPOSED tree's copy of the harness must run, not the
 # invoker's" — and the composed tree is exactly what WI-386 deleted. The
-# behaviour did not go with it: the refresh regenerates and bars the BRANCH
+# behaviour did not go with it: the refresh regenerates and checks the BRANCH
 # tree, and the invoker is still trunk-vintage whenever drive.py drives the loop
 # in-process, so a branch that changes a generator must still be regenerated
 # with its own copy. Coverage relocated, not deleted (the Phase 5 precedent).
@@ -1574,7 +1574,7 @@ def test_a_person_s_own_lane_is_judged_like_any_other(tmp_path, monkeypatch):
 def test_the_same_change_on_a_released_rung_passes_the_lane_rule(tmp_path, monkeypatch):
     # DevStg-Needs holds the needs alone: the frame's rung is the loop's, so
     # the lane rule admits the lane and the ladder moves on to its next
-    # question (this fixture declares no bar, which is what then stops it).
+    # question (this fixture declares no checks, which is what then stops it).
     root = _held_lane(tmp_path, monkeypatch, "frame-flip", dial="DevStg-Needs")
     refusal = integ.integrate_one(root, "wi-401", "smoke")
     assert "no [product] test declaration" in refusal, refusal

@@ -834,7 +834,7 @@ def _removed_rows(before_rows, live_rows, id_col):
     """`{row id: {ROW_REMOVED: ("recorded", "absent")}}` for each recorded row
     that claims acceptance and that the live registry no longer carries — the
     removals `refresh_ledger` absorbs beside the amendments. Split out so the
-    ledger's walk stays under the complexity bar. A recorded row below acceptance
+    ledger's walk stays under the complexity limit. A recorded row below acceptance
     is not here: its text was never blessed, so dropping it re-blesses
     nothing."""
     live_ids = {str(row.get(id_col) or "").strip() for row in live_rows}
@@ -931,7 +931,7 @@ def _ledger_live_rows(entry, rel, id_col, before_rows, live_rows):
     copy claims acceptance and whose accepted cells moved is absorbed. A row the
     copy does not carry, or whose copy reads below acceptance (a flipped row's
     included), is neither absorbed nor judged here. Split out so the ledger's
-    walk stays under the complexity bar (WI-806).
+    walk stays under the complexity limit (WI-806).
 
     Implements: SR-207, LLR-245"""
     for row in live_rows:
@@ -1092,7 +1092,7 @@ def _refusal_text(blocked, scope):
 
     A sibling of `refresh_refusal` rather than a tail inside it, because the
     scoped rule gave that function a second decision to make and the rendering
-    was what pushed it over the cognitive bar — the check names decomposing
+    was what pushed it over the cognitive limit — the check names decomposing
     OUTWARD as the first escape, and a message builder is the seam that comes
     apart cleanly (WI-584)."""
     lines = [
@@ -1337,7 +1337,7 @@ def _refresh_targets(root, accepts, seed, base, reaccepts=frozenset()):
     back so `copy_live` stamps the acceptance only on a genuine refresh, never on
     the initial blessing. Split from `copy_live` so the scope decision — a
     self-contained job with its own refusal — does not push the writer's branch
-    count over the C901 bar (WI-571). `seed` rides into the refusal because a
+    count over the C901 limit (WI-571). `seed` rides into the refusal because a
     re-seed over a standing record writes all seven registries, and the gate is
     scoped to what the act writes (WI-584); `reaccepts` rides into both, since
     it is both a scope and a blessing (SR-207)."""
@@ -1482,7 +1482,7 @@ def _copy_registry(root, base, rel):
     """Copy one registry's live carrier into the record under `base`; the
     repo-relative path written, or None when the registry has no live carrier.
     Extracted from `copy_live`'s loop body unchanged (WI-791), so the writer
-    stays under the complexity bar as it grows its verdict argument."""
+    stays under the complexity limit as it grows its verdict argument."""
     suffixes = (
         spine_carrier.NEED_CARRIERS if rel == NEEDS_REL else spine_carrier.CARRIERS
     )
@@ -1946,7 +1946,7 @@ def _missing_registry_findings(rel, live):
     `FIRST_COPY_AT_ACCEPTANCE`, none while no live row of it claims acceptance: its
     first copy is the acceptance act's to write, so its absence before then is
     the record's honest state. Split out of `unanchored_findings`, whose walk
-    it would otherwise push past the complexity bar."""
+    it would otherwise push past the complexity limit."""
     first_copy_pending = rel in FIRST_COPY_AT_ACCEPTANCE and not any(
         _claims_acceptance(row) for row in live
     )

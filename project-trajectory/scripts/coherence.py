@@ -409,7 +409,7 @@ def status_criterion_findings(srs, scope):
     status_findings = []
     phase_deferred = []
     for r in srs:
-        # The DevStg-Impl status bar applies to every accepted SR regardless of
+        # The DevStg-Impl status rule applies to every accepted SR regardless of
         # Verification method — matching spine_rules.sr_gate, which already
         # demands is_accepted for any decomposed SR before DevStg-Impl with no
         # per-method carve-out (WI-259, review-2026-07-21 M-5: a Demonstration/
@@ -417,7 +417,7 @@ def status_criterion_findings(srs, scope):
         # to pass this Test-only check — the two scripts disagreeing about the
         # gate is the false-green the kit exists to prevent). A Drafted SR is
         # pre-acceptance (below DevStg-Reqs, derived-gate §3): it makes no acceptance
-        # claim yet, so the bar stands down — surfaced in the draft count so
+        # claim yet, so the rule stands down — surfaced in the draft count so
         # the exemption stays auditable. Pinned equivalent to sr_gate's
         # is_accepted-for-decomposed rule by test_rule_sync.
         if is_drafted(r):
@@ -431,12 +431,12 @@ def status_criterion_findings(srs, scope):
         # `is_founded` JOINS THE PASS TEST AT D-9 STEP 8, mirroring
         # `spine_rules.spine_stage`'s Impl->Release discriminator: `Founded`
         # is `Accepted` PLUS a demonstration, so a row at the top rung has
-        # more than cleared a bar that asks whether its text is blessed.
+        # more than cleared a rule that asks whether its text is blessed.
         # Reading `is_accepted` alone would have made arming the word FLAG
         # the rows that reached it — an arming that fails what it promotes.
         #
         # WHAT THIS LEAVES, stated because it is not obvious: under the
-        # closed enum every live value now either stands the bar down
+        # closed enum every live value now either stands the rule down
         # (`Drafted`) or passes it, so this finding is UNREACHABLE-BY-CELL
         # for a conformant repo — the `--require-verified` twin of the
         # stage-axis gap OI-30 D2 ceilinged on the bar axis. It still fires,

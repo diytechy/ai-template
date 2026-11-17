@@ -283,7 +283,7 @@ def _scoped_chain_rows(model, scope):
     """`(chains, cells_of)`: each drifted row IN `scope` with accepted cells
     to show, keyed `(tier, row id)`, mapped to the SR chains it hangs under
     and to those accepted cells. Split out of `_amended_rows` so the selection
-    and the rendering each stay under the complexity bar."""
+    and the rendering each stay under the complexity limit."""
     chains, cells_of = {}, {}
     for entry in model:
         for chain_row in entry["rows"]:

@@ -244,7 +244,7 @@ def test_run_steps_gate_promotes_the_warn_first_floor(scaffold):
     assert declared and declared["stage"] == "DevStg-Impl", declared
     warn = run_py(["scripts/check.py", "--run-steps", "trajectory"], cwd=scaffold)
     assert warn.returncode == 0, "R-E must warn, not block, at the commit floor"
-    # Explicitly asking for the DevStg-Impl bar really gates it (the WI-354 session read
+    # Explicitly asking for the DevStg-Impl checks really gates it (the WI-354 session read
     # 18/18 PASS from this command while two real DevStg-Impl errors were live).
     gated = run_py(
         ["scripts/check.py", "--gate", "DevStg-Impl", "--run-steps", "trajectory"],

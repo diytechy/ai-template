@@ -604,7 +604,7 @@ STATUS_VALUES = _spine.STATUS_VALUES
 # schema-class (D-9 migration correction C1). `schema_findings` only runs under
 # `--strict-schema`, which `check.py` appends at DevStg-Impl alone — so a
 # Status vocabulary declared there would be INERT for every repo below the top
-# bar, which is every repo the migration is being run for. A retired Status word
+# checks, which is every repo the migration is being run for. A retired Status word
 # is wrong at ANY stage, exactly like a duplicated id, so it joins the always-on
 # `--strict-integrity` floor instead. The vocabulary still has ONE home —
 # `ENUM_FIELDS` below — and this names only which pipe reads it.
@@ -5562,7 +5562,7 @@ def integrity_sweep(reg, raw):
     # bare `SN-###` token in a paragraph is part of that tier's id universe).
     # Only the Status vocabulary was owed — and it was MISSING: `ENUM_FIELDS`
     # declared the SN entry (2026-08-17k) while `raw` named three tiers, so
-    # `status = "Bananas"` on a need produced no finding at any bar. That is the
+    # `status = "Bananas"` on a need produced no finding at any stage. That is the
     # exact defect the LLR comment above records, one tier up.
     integrity += enum_integrity_findings("SN", reg.raw_sns)
     # ...and the stakeholder list, the needs file's other acceptance tier.
@@ -6388,7 +6388,7 @@ def render_console(reg, findings, args, out, html_out):
     for f in form:
         print(f"FINDING (requirement form): {f}")
     # Gating findings print here too, not only as counts: the report file is
-    # gitignored, and the harness bar is "print the real output — never
+    # gitignored, and the harness checks are "print the real output — never
     # summarize a failure away" (check.py). Mirrors exit_code()'s composition;
     # capped per class, the report holds the full lists.
     cap = 10
@@ -6977,7 +6977,7 @@ def main():
     #
     # INTEGRITY, NEVER SCHEMA (correction C1): `--strict-schema` runs at
     # DevStg-Impl alone, so a laundering rule routed there would be inert for
-    # every repo below the top bar. Still VACUOUS BY ABSENCE for a repo that has
+    # every repo below the top stage. Still VACUOUS BY ABSENCE for a repo that has
     # accepted nothing, and off git. `wm_root` rather than `args.root`, for the
     # reason stated just above it.
     #

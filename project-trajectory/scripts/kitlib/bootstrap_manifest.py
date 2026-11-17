@@ -525,7 +525,7 @@ MAPPING = [
     ("scripts/check_vocab.py", "scripts/check_vocab.py"),
     # The need-form check (SN-033, WI-454): warn-first lint keeping SN `need`
     # cells in stakeholder language. Shipped because the registry it scans is
-    # the adopter's own, and check.py's step table names it at every bar.
+    # the adopter's own, and check.py's step table names it at every stage.
     ("scripts/check_need_form.py", "scripts/check_need_form.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
     ("scripts/trajectory_arch.py", "scripts/trajectory_arch.py"),

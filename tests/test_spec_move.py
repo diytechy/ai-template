@@ -218,7 +218,7 @@ def test_the_rebase_preserves_crlf(tmp_path):
     assert "\n" not in out.replace("\r\n", ""), "a lone LF was introduced"
 
 
-# --- the guard and its mutation twin (the WI-393 deliverable's own bar) ---------
+# --- the guard and its mutation twin (the WI-393 deliverable's own checks) ---------
 
 
 def test_the_archived_spec_passes_check_docs(tmp_path):

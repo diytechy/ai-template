@@ -66,7 +66,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   verify and commit through `integrate.py record-checks` (§6), and SendMessage resumes the same builder (WI-911,
   2026-10-15). In a headless leg the resumed builder runs in the
   background and reports only while the leg's turn still runs: wait in
-  the foreground on the file it writes last (its bar log, then its
+  the foreground on the file it writes last (its checks log, then its
   spine change list), never end the turn on it (wi-925 D-008).
   Ask it to create a `.done` file as its very last act and poll for that
   file in one foreground Python command (`time.sleep` in a loop; a bare
@@ -118,7 +118,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     round 1; a `single` row takes it after its pass record (SKILL §3,
     "Intent").
   - Terra's own pytest check has failed on a basetemp lock at every turn
-    (wi-956 D-001, D-007): run its spine tests yourself with the bar, and
+    (wi-956 D-001, D-007): run its spine tests yourself with the checks, and
     normalize its CRLF writes to LF before the commit.
   - Fill `"$TOOLS/terra-spine-prompt.template.md"` with `mkprompt.py`, then add
     the intent or checkpoint instructions from the skill. Its default brief
@@ -153,7 +153,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     (flows, prose outside the registries, contract bodies) and the
     RESYNC entry (wi-962 D-001).
   - An intent row naming a module the build creates (a new IF row's
-    owner) reds the bar before that module exists
+    owner) reds the checks before that module exists
     (`test_seam_resolution`; `check_trajectory --strict` also errors on
     an IF no TC cites): keep the set as a patch and let it ride the
     build commit that creates the module, recorded as a decision
@@ -287,7 +287,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      whose count matches its findings. It picks `NNN` itself: read the filed
      name before a commit subject or brief cites the round. A verdict
      quoting a fixture's markdown link files a broken link, which
-     `check_docs` reds in the bar: make that link a code span in the
+     `check_docs` reds in the checks: make that link a code span in the
      scratch verdict (backticks only), delete the filed copy and
      re-file (wi-925 D-011). Each round file
      gets its own coverage plan (`plan_coverage.py --findings` takes one).
@@ -308,7 +308,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     and a stage recorded over a narrow list (a docs or pack stage) hands
     the round that narrow line. Before a round over a staged build, make
     one empty record-checks commit over the lane's touched test modules;
-    the render finds it beneath record-only commits. Under load that bar
+    the render finds it beneath record-only commits. Under load that checks
     ran 50 minutes (wi-977, 2026-10-31): start it with time left for the
     round's two reviewer runs.
 - **Scope critique:** render
@@ -400,7 +400,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      run no `plan-file` and change no file in the checkout: with it, eleven
      plan critiques left their lanes untouched (2026-10-18a). Several
      lanes' plans, critiques and records run in parallel, each from its
-     own lane, its records committed alone behind its own bar.
+     own lane, its records committed alone behind its own checks.
   A plan that quotes a relative markdown link meant for another file (a
   suggested pointer) reds `check_docs` once committed, and the plan
   commit's hook does not run it: run `check_docs.py --root .` before
@@ -784,7 +784,7 @@ commit of its own, move it to trunk's tip
   Taken on trunk inside the squash, text-then-act refuses it (WI-887,
   2026-10-11). Adding an IF to an accepted TC's `Verifies` (the strict gate refuses
   an IF row no TC cites) is traced-only too: the composer refuses an
-  amendment sitting for it, and the re-anchor is the step (WI-902's archived lane tip `d3d301216`). The bar command on the staged squash (below) catches
+  amendment sitting for it, and the re-anchor is the step (WI-902's archived lane tip `d3d301216`). The checks command on the staged squash (below) catches
   this drift; the lane hook does not.
 - **Accept a parent with its children, never after them** (WI-850):
   the pre-commit `parent-first` step and the slot's third lane-commit
@@ -812,7 +812,7 @@ commit of its own, move it to trunk's tip
   off a list of act turns, one per partial verdict.
 - **Run the commit checks in the lane after the act turn,** before the
   squash. When trunk still equals the lane's base (no rebase was owed),
-  the staged squash's tree is the lane tip's, so the bar on the staged
+  the staged squash's tree is the lane tip's, so the checks on the staged
   squash below is that run; a red there resets the squash and is fixed in
   the lane (leg 28). An act that accepts a row arms checks a Drafted row escapes:
   an accepted Smoke TC whose evidence sits in a `SLOW_MODULES` module reds
@@ -907,7 +907,7 @@ commit of its own, move it to trunk's tip
 - **RESYNC:** anchor the entry at the landing's parent, never at a lane-only
   sha. Fold a fix round's entry into its parent entry, and flag forced
   migrations.
-  The bar's `check_resync` refuses every commit of a lane rebased past
+  The checks' `check_resync` refuses every commit of a lane rebased past
   WI-916 until its entry exists, so a plan step that writes the entry
   later moves into the first commit after the rebase (wi-927 D-005).
   So does a lane's first commit that touches a shipped path, a test
@@ -980,7 +980,7 @@ lane commit being replayed.
 | Generated views | `git checkout --ours`, continue, regenerate once at the end |
 | Registries | resolve per table using this replay's base/ours/theirs (`git show :1:<path>`, `:2:<path>`, `:3:<path>`); keep independent changes from both sides and judge same-row conflicts; never take the whole file `--ours` |
 | `docs/id-watermark` | `"$PY" "$SCRIPTS/trace.py" --fold-ids`, then `git add docs/id-watermark` |
-| RESYNC_PACK | both sides' entries, trunk's first; when the replayed commit rewrites the lane's own earlier entry, keep its rewrite and drop the entry it replaces; then re-anchor the lane's own entry at its new base, since the bar's `check_resync` step refuses an entry anchored elsewhere (WI-916, 2026-10-18b) |
+| RESYNC_PACK | both sides' entries, trunk's first; when the replayed commit rewrites the lane's own earlier entry, keep its rewrite and drop the entry it replaces; then re-anchor the lane's own entry at its new base, since the checks' `check_resync` step refuses an entry anchored elsewhere (WI-916, 2026-10-18b) |
 | Byte-budget skill rows | each side's own row |
 | `stack.ini`, size-ratchet notes | both sides' notes |
 | Smoke-ceiling restamp | trunk's note plus the lane's count; restamp only past the ceiling |
@@ -1014,7 +1014,7 @@ lane commit being replayed.
   amends what the sitting accepted, and the round reviews the tip that
   lands (wi-946 D-006). Conflicts across several replayed commits can go to
   a kit-builder briefed to keep both sides' behaviour and stop on any
-  semantic choice; read the resolved functions and re-run the bar yourself
+  semantic choice; read the resolved functions and re-run the checks yourself
   (wi-946 D-007).
 - A long-stale lane continued by rebase (WI-798, 245 commits): a clean
   auto-merge can drop the lane's behaviour where trunk moved a call into a
@@ -1114,7 +1114,7 @@ lane commit being replayed.
 - A row split leaves `Implements:` tags on the old id; retag them in a
   coordinator commit.
 - A lane writes a test's `Implements:` tag and its `evidence` part in one
-  commit, since the bar runs `check_trajectory.py --strict`; an intent row's
+  commit, since the checks run `check_trajectory.py --strict`; an intent row's
   cell follows `spine-authoring`, `references/in-lane.md`, "Author it before
   the build". A renamed test moves both.
 - When a move makes an accepted cell's module-qualified name false, drop
@@ -1260,7 +1260,7 @@ lane commit being replayed.
   tier's seconds. Run it from the primary checkout, `"$PY"
   "$SCRIPTS/integrate.py" --root "$REPO" record-checks --branch <lane> --checks
   commit --message-file <file>`: it finds the lane by
-  branch and runs the bar there under the primary checkout's
+  branch and runs the checks there under the primary checkout's
   interpreter. Run from the lane with the default root, its harness floor
   reads the lane's own root, finds no `.venv` and refuses (wi-957 D-007).
 - The tests-first commit goes through `integrate.py record-checks` with a test
@@ -1269,13 +1269,13 @@ lane commit being replayed.
   test file's count of the mark `[product] expected_failure_marker` declares against the
   lane's last commit record, and the refresh and the hand landing's check
   (§3) refuse a tree that still holds one: a refresh or a hand landing (§3)
-  refused for a mark ends in the code commit or a quarantine. A test the bar skips takes no mark, because a skip is never
+  refused for a mark ends in the code commit or a quarantine. A test the checks skip takes no mark, because a skip is never
   evidence: it is named, with its disposition, in the lane's decisions
   record.
-- The declared bar runs the tier once: the lints run first, then the
+- The declared checks run the tier once: the lints run first, then the
   budget step's run, which exits with the tier's own code on a red tier
   and prints its CPU-seconds and wall time, with a WARN line for a limit
-  over. No bar fails on seconds: `run.cmd audit` (`[run] audit`, the same
+  over. No checks fail on seconds: `run.cmd audit` (`[run] audit`, the same
   step in enforce mode) judges them and the tier's count against
   `max-tests`, by hand and at phase close, and a breach there is filed
   as a re-tier row, never charged to the lane that ran it. A hand wrapper
@@ -1314,7 +1314,7 @@ lane commit being replayed.
   rounds read leaves its rollups to the trunk landing.
 - `test_the_live_repos_own_mark_covers_its_live_ids` reads the working
   tree: an uncommitted row numbered above the mark reds the smoke tier. Set
-  unrelated uncommitted rows aside before running the bar for a commit
+  unrelated uncommitted rows aside before running the checks for a commit
   (2026-10-14).
 - `git add -A <paths>` aborts entirely if one path is missing. `2>/dev/null`
   hides that, and `staged-divergence` then fails. `components.derived.toml`
@@ -1340,7 +1340,7 @@ lane commit being replayed.
   the `C:` of a path as a remote host and fails (leg 38).
 - `record-checks` derives its tests from the row: its `sr_refs`, every LLR under
   them, the test cases verifying either, and the test files whose
-  `Implements:` lines name those cases. It refuses before any bar, and the
+  `Implements:` lines name those cases. It refuses before any checks, and the
   render and the loop's draw refuse with that text. Each refusal has its
   fix:
   - `partial` names every gap: tag the test or write it, in the lane.
@@ -1354,7 +1354,7 @@ lane commit being replayed.
   passed-checks record (registry text), or is staged into the record-checks run that
   carries those tests. The first record-checks run after it must hold their tagged tests, or it
   refuses as partial.
-- `record-checks`'s refusal prints only the bar's last lines, never the
+- `record-checks`'s refusal prints only the checks' last lines, never the
   failing test: run `"$PY" "$SCRIPTS/run_menu.py" smoke` in the lane,
   to a log, to name it. A red that run passes is load-sensitive: file
   it under status.md's follow-ups and re-accept; never charge it to the
@@ -1411,8 +1411,8 @@ lane commit being replayed.
   (`ls tests/test_*.py | awk 'NR%2==1'`, then `NR%2==0`), each with its
   own basetemp, deleted after it: on 2026-10-25c they took 19:41 and
   12:08.
-  Give every bar, record-checks and full-suite run the whole raised cap
-  (3600000 ms): on a box other sessions loaded a record-checks run's bar ran 30
+  Give every checks, record-checks and full-suite run the whole raised cap
+  (3600000 ms): on a box other sessions loaded a record-checks run's checks ran 30
   minutes and the full suite 54, and a 30-minute timeout moved the record-checks run
   to the background, where a leg loses it (2026-10-22).
   Launch each background call as its own command: in `A=… && (x) & (y) &`
@@ -1454,13 +1454,13 @@ lane commit being replayed.
   `F` empty reads stdin (2026-10-21c); check the path first. A message
   composed with `sed` over a wrapped line rewrites the wrong text: write
   commit messages with the file tool (2026-10-21a).
-- **The first bar in a freshly added worktree reads cold:** with no
+- **The first checks in a freshly added worktree reads cold:** with no
   bytecode cache it read 64.9 to 68.7 s where the same tree, warm, read
   52 to 54 s (2026-10-21a, five readings). A parent timed in a new scratch
-  worktree is that cold reading: run its bar twice and take the second,
+  worktree is that cold reading: run its checks twice and take the second,
   or record the first as cold, never charge the gap to the change.
-- **The bar runs no hook step:** `skills-sync` (and every other pre-commit
-  step) runs only at the commit, so a green bar can meet a refused commit;
+- **The checks run no hook step:** `skills-sync` (and every other pre-commit
+  step) runs only at the commit, so passing checks can meet a refused commit;
   read the hook log, fix, and commit again (2026-10-21a).
 - **Scratch:** one dated root, `$REPO.wt/review-tmp/<date>-<session>/`, with one literal
   `--basetemp` per kind of run (`$TEMP` is empty in the Codex shell). Delete
@@ -1475,7 +1475,7 @@ lane commit being replayed.
   worktree: re-derive there (`derive_stage.py`) and re-run the test
   before treating it as a defect (wi-921 D-020).
 - **Test jobs while the operator's applications load the box:** when the
-  operator asks, run every local test job (bars, the full suite, Codex
+  operator asks, run every local test job (checks, the full suite, Codex
   launches, the Claude reviewers' pytest) at below-normal priority
   through a stdlib wrapper
   (`subprocess.call(cmd, creationflags=subprocess.BELOW_NORMAL_PRIORITY_CLASS)`;
@@ -1483,14 +1483,14 @@ lane commit being replayed.
   (`C:/Program Files/Git/usr/bin/bash.exe`), since Windows resolves a
   bare `bash` by its own search order (2026-10-15g). The wrapper resolves
   its program with `shutil.which`: a bare `codex` (an npm `.cmd` shim) is
-  not found by `CreateProcess` (2026-10-16d). No bar fails on the smoke
+  not found by `CreateProcess` (2026-10-16d). No checks fail on the smoke
   tier's seconds, so a slow reading under load holds nothing: the
   audit (`run.cmd audit`) judges them, by hand and at phase close.
-- A bar that stops mid-tier with no summary line was terminated, not
+- A check run that stops mid-tier with no summary line was terminated, not
   failed: a test error still prints a summary, and pytest locks a live
   run's default basetemp, so concurrent runs do not prune each other
   (checked on pytest 9.1.1). A lane and parent pair died that way beside
-  two builders on 2026-10-18d, cause unknown. Write every bar to a fresh
+  two builders on 2026-10-18d, cause unknown. Write every checks to a fresh
   log path so the dead run's output survives, re-run it, and file a
   defect row with the kept log if it recurs.
 - Never grep or `du` the whole scratch root (a `du` there outran a
@@ -1528,7 +1528,7 @@ lane commit being replayed.
   breaks the shallow-clone tests' `git clone` of a file URI ("'/C:/...'
   does not appear to be a git repository"; WI-913, 2026-10-15).
 
-- A bar can hang instead of dying: under other jobs' load a record-checks run's
+- A check run can hang instead of dying: under other jobs' load a record-checks run's
   smoke tier ran over an hour with no summary line, and the tool cap
   moved it to the background. Stop its process tree
   (`taskkill //PID <the integrate.py pid> //T //F` from Git Bash), re-run

@@ -35,15 +35,15 @@ the ladder, and the ID scheme. The short version needed every session:
   Engineer → Software Engineer → Test Engineer). Spawn subagents deliberately
   (process.md §6).
 - **Everything traces:** `SN → SR → LLR → TC`. Intent lives once, as an id;
-  children link to it. The matrix is generated (`scripts/trace.py`) and must
-  report **0 orphans** before a bar.
+  children link to it. The generated matrix (`scripts/trace.py`) must
+  report **0 orphans** before a gate.
 - **Write the test first (TDD).** A requirement's test case is a *failing*
   test before the code that satisfies it: red → green → refactor — within the
   traceability spine, not instead of it.
 - **The stage ladder:** `DevStg-` Needs · Boundary · Reqs · Arch · LLReqs ·
   Tests · Impl · Release. You are IN one; an operator signs three rung boundaries,
   per `docs/process.toml` and process.md §4. Never self-advance; log it.
-- **The check harness is the bar:** `python scripts/check.py` runs format,
+- **The check harness is the gate:** `python scripts/check.py` runs format,
   lint, tests, coverage, traceability, flows and freshness at or above the
   derived stage (`docs/stage`); `--tier smoke` is the fast subset. Never
   report a result you didn't run: paste the real output.
@@ -150,7 +150,7 @@ Direct and concrete; explain the *why* before the *how*.
   before writing code — one question, with a **recommended default**.
   Unattended: pick the most reasonable reading, proceed, and **record it**
   under *Assumptions* in `docs/status.md` to confirm or revert at the next
-  bar. When reality contradicts the plan, **the contradiction is the
+  gate. When reality contradicts the plan, **the contradiction is the
   deliverable**: raise the conflict as a finding — never silently resolve,
   average, or route around it (process.md §4 "Consistency review"). The
   **decision dial** (process.md §6) sets asking eagerness: high-risk accepts

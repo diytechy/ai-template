@@ -82,7 +82,7 @@ always true.
 
 ## 3. End green (gates)
 
-Run the one declared bar command and paste the real output — never a green
+Run the one declared checks command and paste the real output — never a green
 you didn't produce:
 
 ```
@@ -91,14 +91,14 @@ python project-trajectory/scripts/run_menu.py smoke    # from a shell
 ```
 
 It must pass before **each** commit — this is the **commit checks**. Its steps
-are declared once, in `docs/stack.ini` `[run] smoke`, so a build round's bar
+are declared once, in `docs/stack.ini` `[run] smoke`, so a build round's checks
 cannot skip the strict lints it carries (review-churn ruling 6, 2026-10-11;
 they never run in the commit hook). The lints run first; the budget check runs
-last, and its run is the bar's only tier run.
+last, and its run is the checks' only tier run.
 `-m smoke` is the fast per-commit tier; `check_smoke_budget.py --mode warn`
 runs it once, FAILS the commit on a red tier (with the tier's own exit code),
 and reports the tier's CPU-seconds and wall time against `docs/stack.ini`
-`[smoke-budget]`, with a WARN line for a limit over. No bar fails on seconds
+`[smoke-budget]`, with a WARN line for a limit over. No checks fail on seconds
 (the operator, 2026-10-20): `run.cmd audit` judges them, running the same step
 with `--mode enforce` against the tier's own CPU-seconds (`cpu-seconds`;
 other load on the box moves it far less than wall time), a looser wall cap (`wall-seconds`)
@@ -109,7 +109,7 @@ most of the suite. Tiering is
 opt-out: smoke drops the **subprocess/scaffold-heavy** modules
 (`tests/conftest.py` `SLOW_MODULES` — the hook/gate/scaffold/heavy-script runs
 the commit hook and the gate re-exercise anyway), so a **new (in-process) test
-is in the bar by default**. Every bar judges the tier's membership through a
+is in the checks by default**. Every checks judge the tier's membership through a
 deterministic ratchet against `max-tests`, `tests/test_smoke_budget.py`
 (it bites if the tier grows back toward the full suite; re-stamp deliberately,
 reason in the log). Run the **full** unfiltered suite (`pytest -q -n auto`)

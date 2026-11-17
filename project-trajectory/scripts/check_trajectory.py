@@ -1580,7 +1580,7 @@ _TITLE_STOPWORDS = frozenset(
 )
 # Jaccard over title token SETS. 0.8 is deliberately high: this rung's job is to
 # catch the same job minted twice (near-identical wording), not to editorialize
-# about two rows in the same area. A lower bar turns a useful warn into noise
+# about two rows in the same area. A lower threshold turns a useful warn into noise
 # that gets ignored, which is worse than not having it.
 _TITLE_SIMILARITY = 0.8
 

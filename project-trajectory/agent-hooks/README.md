@@ -3,7 +3,7 @@
 **These are convenience extras, not the source of truth.** Enforcement of the
 process floor lives in the agent-neutral substrate — the git `pre-commit` hook
 (`hooks/pre-commit`, enabled by `setup.sh`/`setup.ps1`) and CI (`ci/check.yml`).
-Those run the same checks for every agent *and* for bare `git`, so the bar holds
+Those run the same checks for every agent *and* for bare `git`, so the standard holds
 no matter who (or what) commits.
 
 Agent hook systems do **not** standardize: Claude Code uses

@@ -78,7 +78,7 @@ it would add no independent value. Tiers required by the selected verification
 method and real verification links remain in scope; a row count is not evidence
 of proportionality.
 
-## Quality bar (the rubric you will be judged against)
+## Quality standard (the rubric you will be judged against)
 
 - Each WI is completable by one build session, with a nameable deliverable and
   a checkable done-condition (solvability).

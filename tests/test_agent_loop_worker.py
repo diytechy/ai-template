@@ -34,7 +34,7 @@ import sys
 
 import pytest
 from conftest import (
-    declare_review_bar,
+    declare_commit_checks,
     declare_trunk,
     hooks_on,
     env_gate_skipif,
@@ -366,11 +366,11 @@ def test_the_one_row_prompt_renders_as_today(tmp_path):
     assert prompt == expected
 
 
-def test_worker_brief_names_the_one_turn_close_bar_scratch_and_amendments(tmp_path):
+def test_worker_brief_names_the_one_turn_close_checks_scratch_and_amendments(tmp_path):
     # WI-580 Done-when 1 / 4 / 5 (WI-559 item 1, WI-560 item 2, WI-562 item 2):
     # three clauses the shipped brief must carry, asserted on the RENDERED
     # prompt so an edit that drops one from the template fails here.
-    #   1. the close bar fits in one turn — refresh runs the stage-declared bar
+    #   1. the close checks fits in one turn — refresh runs the stage-declared checks
     #      in the merge slot and the full suite belongs to phase close
     #      (WI-540 lost three sessions ending their turn to await an ~11-minute
     #      suite against a 10-minute cap, and a finished row closed `partial`);
@@ -379,7 +379,9 @@ def test_worker_brief_names_the_one_turn_close_bar_scratch_and_amendments(tmp_pa
     #   3. scratch has a home, so the lane unload stops refusing it by name.
     row = {"WI-ID": "WI-005", "Title": "t", "SR-Refs": "", "Predecessors": ""}
     prompt = agent_loop.worker_prompt(tmp_path, {"WI-005": row}, "WI-005", "w", "0" * 7)
-    assert "THE CLOSE BAR IS THE COMMIT CHECKS, and it must fit in ONE turn" in prompt
+    assert (
+        "THE CLOSE CHECKS IS THE COMMIT CHECKS, and it must fit in ONE turn" in prompt
+    )
     assert "You do NOT owe the full unfiltered suite at close" in prompt
     assert "NEVER end a turn waiting on one" in prompt
     assert "AMENDED THE TEXT OF AN ALREADY-ACCEPTED CELL" in prompt
@@ -561,7 +563,7 @@ def test_worker_review_evidence_names_exact_reviewed_commit(tmp_path):
     repo, base, ctl, fake = _setup(tmp_path)
     # The worker runs in its lane worktree, `main` staying in the primary.
     repo = claim_on_branch(lane_checkout(repo, "llm/train/t1"), "WI-201")
-    declare_review_bar(repo, ctl)
+    declare_commit_checks(repo, ctl)
     template = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
         sys.executable, fake, ctl
     )
@@ -920,7 +922,7 @@ def test_the_false_partial_class_turns_only_on_the_close_ritual(tmp_path):
     takes the `_lane_close` arm (the stall candidate) over the refresh arm.
     Moving the spec to a terminal directory, and NOTHING else, flips both
     reads. The close ritual alone separates a merge from a `partial`, which is
-    why the shipped brief's close bar has to fit inside one turn.
+    why the shipped brief's close checks have to fit inside one turn.
 
     The `== []` is not an empty scan: the identical call on the identical
     scaffold answers `["wi-201"]` four lines later, so the reader is live and

@@ -58,7 +58,7 @@ for).
 READERS NEVER WRITE (plan §3). Nothing in this module opens a file for writing.
 The committed `docs/stage` is load-bearing history — the phase-drop and tier
 signals (slice 4) are deltas of the COMMITTED file — so regeneration stays an
-auditable act at the trunk regen points and the commit-bar `--check` still
+auditable act at the trunk regen points and the commit-check `--check` still
 refuses a commit whose committed copy is stale. A reader that healed the file on
 disk would rewrite that history from whichever process happened to look first,
 and would do it on claimed branches and in CI where the freshness step is
@@ -687,7 +687,7 @@ def read_stage(root, derive, memo=_DEFAULT):
 
     IT NEVER WRITES. On a mismatch the file on disk is left exactly as it was; the
     trunk regen points and the operator's post-acceptance run are the only writers,
-    and the commit-bar `--check` is what stops a stale copy from being committed.
+    and the commit-check `--check` is what stops a stale copy from being committed.
 
     THIS CLOSES BOTH STALE WINDOWS THE SCHEDULE MAP FOUND, BY CONSTRUCTION rather
     than by scheduling. The branch-lane window (`derived-stage` stands down on a

@@ -239,10 +239,10 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     text = html_of(tmp_path)
     assert 'data-tab="process"' in text and 'id="process"' in text
     # the three panels are present and titled (WI-498 slice 5 re-keyed panels 1
-    # and 3 onto the stage ladder and the surviving sense of "bar")
+    # and 3 onto the stage ladder and the surviving sense of "bar", now "checks")
     assert "Artifact lifecycle × the stage ladder" in text
     assert "The station cycle" in text
-    assert "Slices → phase → the check bars" in text
+    assert "Slices → phase → the checks" in text
     # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Accepted,
     # 3 LLR, 4 TC) — live counts, not prose
     assert "1 SN" in text
@@ -254,16 +254,16 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     # handback outcome and the surface arm, asserted by the station tests).
     assert "The resume loop" not in text
     assert "Page the operator" not in text
-    # panel 3 states the two bars and joins the WI registry (4 WIs, 1 done).
-    # "rung bar", not "gate bar": the dashboard is the kit's highest-traffic
+    # panel 3 states the two sets of checks and joins the WI registry (4 WIs, 1 done).
+    # "gate checks", the glossary's term, not "rung bar" or "gate bar": the dashboard is the kit's highest-traffic
     # surface and was still teaching the deleted axis and the deprecated
     # `--gate` spelling (ROUND-OPUS 9) — invisible to check_vocab, which
     # refuses retired TAGS and exempts generated files, so this assertion was
     # the only thing holding the string and it was holding the wrong one.
-    # "gate checks" is that deleted name as the bar-to-checks rename would
+    # "rung bar" was the dashboard's word until the glossary named the full gate
     # spell it, so neither spelling may come back.
-    assert "commit checks" in text and "rung bar" in text
-    for deleted in ("gate bar", "gate checks"):
+    assert "commit checks" in text and "gate checks" in text
+    for deleted in ("gate bar", "rung bar"):
         assert deleted not in text, "the deleted bar axis is back on the dashboard"
     assert "4 work items · 1 done." in text
     # still fully offline with the new tab present
@@ -520,7 +520,7 @@ def test_station_refresh_pins_the_passed_checks_record(tmp_path):
     # THE SYNC PIN for §A2: the refresh card carries the shipped passed-checks record's
     # label (integrate.CHECKS_PASSED, the trailer the merge slot verifies) and the
     # refresh sequence the integrator actually runs (merge trunk in, trunk_step,
-    # the bar) — derived/pinned, never folklore.
+    # the checks) — derived/pinned, never folklore.
     integ = load_script("integrate")
     with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
@@ -638,17 +638,17 @@ def test_station_byte_identical_without_data(tmp_path):
 def test_station_advance_card_names_the_shipped_merge(tmp_path):
     # WI-415 finding 1 (WI-389 REVIEW-A #1): trunk advances via integrate.py's
     # --no-ff merge commit, never a fast-forward — a true ff is what the
-    # RULING-6 audit reds. The card used to say "ff trunk to the barred tree",
+    # RULING-6 audit reds. The card used to say "ff trunk to the barred tree" (now "checked"),
     # misstating the shipped act; it now says "advance", which also still fits
     # the notemax budget (no truncating "…").
     tp = load_script("gen_trajectory").traj_panels
     with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     station = _station_div(html_of(tmp_path))
-    assert "advance trunk to the barred tree" in station
+    assert "advance trunk to the checked tree" in station
     assert "ff trunk to the barred tree" not in station
-    assert len("advance trunk to the barred tree") <= tp.STATION_GEOM["notemax"]
-    assert "advance trunk to the barred tree…" not in station  # not truncated
+    assert len("advance trunk to the checked tree") <= tp.STATION_GEOM["notemax"]
+    assert "advance trunk to the checked tree…" not in station  # not truncated
 
 
 def test_station_narrow_width_scrolls_instead_of_blurring(tmp_path):

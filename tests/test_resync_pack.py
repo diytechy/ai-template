@@ -220,7 +220,7 @@ def test_the_entry_grammar_has_one_home():
     """The commit checks' RESYNC entry check and these shape tests read one grammar.
 
     The check owns it; this module imports it, so a change to the grammar
-    cannot leave the bar and the shape tests disagreeing about what an entry is.
+    cannot leave the checks and the shape tests disagreeing about what an entry is.
     """
     spec = importlib.util.spec_from_file_location(
         "check_resync_home", ROOT / "scripts" / "check_resync.py"

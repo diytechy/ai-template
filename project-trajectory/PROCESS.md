@@ -26,7 +26,7 @@ notes — are summarized here with an **applies-when** and expanded in
 
 **Minimum profile — a standalone one-module project needs exactly:** the five
 spine hats (§1), the id scheme (§2), the §3 traceability/anti-duplication
-discipline, the bars **DevStg-Reqs→DevStg-Tests→DevStg-Impl** + the operator's final read (§4), the verdict protocol (§5),
+discipline, the stages **DevStg-Reqs→DevStg-Tests→DevStg-Impl** + the operator's final read (§4), the verdict protocol (§5),
 review triage (§6), and the harness (§7). Everything else is opt-in: skip §8,
 §9, §10, the `Phase`/`Lifecycle` tags, and every "optional" tripwire until the
 scope forces it. (Skipping the `Lifecycle` *tag* doesn't skip DevStg-Reqs's per-phase
@@ -134,7 +134,7 @@ Stable, zero-padded, never reused.
   the rest; pointer columns (`Module`, `CodeSymbol`, `TestRefs`, `Evidence`, a
   need's `source`) are out of scope by design.
 - **One requirement, one `shall`** — exactly one obligation, one testable
-  behavior, never a compound "and/or". The full quality bar and the statement
+  behavior, never a compound "and/or". The full quality standard and the statement
   pattern that carries it are stated once, just below the bullets.
 - **One decision per row; one home per method.** A single interface or method is
   fully defined by exactly one requirement, and a requirement calls out at most
@@ -193,12 +193,12 @@ Stable, zero-padded, never reused.
   live LLR rows a literal `Implements:` declaration must name, and the harness
   reports the measured share every run. It ships at `0` — report the number,
   gate nothing — and rises by writing the declarations, never by lowering the
-  bar. A regulated setting raises it rather than being handed a softened guide.
+  minimum. A regulated setting raises it rather than being handed a softened guide.
 - **Architecture is derived, never committed**: the module/function map, import
   graph and seams are read live from the source tree and the registries into the
   dashboard, so there is no markdown copy to drift. The one authored narrative
   that survives is `docs/runtime-flows.md` (the Runtime flows the DevStg-Tests
-  bar requires).
+  stage requires).
 - **Modularity/dedup**: shared logic in exactly one place; pure cores separated
   from I/O/GUI shells; small functions; one-page-readable architecture.
 - **Consolidate, don't duplicate — the 0→A→B rule.** Edit-conservatively (agent
@@ -338,7 +338,7 @@ single-purpose commit at each green step (one finding closed, one requirement
 decomposed, one registry edit plus its regenerated blocks), never a
 session-sized batch. The pre-commit floor (§7) is deliberately fast and
 **always-valid** *so that* frequent commits stay cheap — that is its design
-intent, not a coincidence. A commit is not a release and not a gate: the bar is
+intent, not a coincidence. A commit is not a release and not a gate: the standard is
 "floor-green plus a coherent, describable change", never perfection — polish
 arrives as further commits. End every session with a **clean tree**: work
 either committed or explicitly parked as a finding/assumption in `status.md`,
@@ -469,7 +469,7 @@ edit to its own Done-when holds its next build and its close (never the edit
 or the tests) until an adjudicator's verdict or the operator's ruling binds that
 exact text; no un-run
 greens; the
-harness is still the bar (LLM judgment never waives a red check); accepted
+harness is still the standard (LLM judgment never waives a red check); accepted
 operator decisions are never re-decided by an agent. A coordinator can loop fresh
 driver sessions under any level, stopping where the level requires an operator —
 the stop banner + typed exit codes:
@@ -658,7 +658,7 @@ through a `STAGE_ORDER` lookup that raises on an unknown label**; ordering
 operators on the raw value are banned, and are now obviously wrong rather than
 accidentally right (`DevStg-Arch` sorts *before* `DevStg-Boundary`).
 **There is no `DevStg-Below` you sit at** — it is the internal sentinel below the
-lowest runnable bar; say "stage Needs", never "at DevStg-Below".
+lowest runnable stage; say "stage Needs", never "at DevStg-Below".
 
 **The acceptance dial is a rung, on this same ladder.** `[authority]
 operator_accepts_through` takes a `DevStg-*` value (or `DevStg-Below` for
@@ -1022,7 +1022,7 @@ flowchart TD
   Authoring is not acceptance. Use the `spine-authoring` skill questions
   to distinguish an unsuitable LLR from a changed stakeholder obligation.
 - **Requirement gap** — no row speaks to it, or its promised outcome must change:
-  walk the DevStg-Reqs/DevStg-Tests bar for that slice
+  walk the DevStg-Reqs/DevStg-Tests stages for that slice
   only; the new rows then scope the solution (each new interface, component, or
   purchased part lands as its own registry row, so the next reader finds the
   decision where the ids live).
@@ -1145,13 +1145,13 @@ lives in `docs/stage` — **generated** by
 gates"; the model:
 [process-options.md](process-options.md#derived-gate-model)). `check.py` defaults
 `--stage` to it and selects by rung or declared paths (below), so **CI enforces the
-bar the project has actually earned** — a fresh scaffold deriving DevStg-Reqs is
+stage the project has actually earned** — a fresh scaffold deriving DevStg-Reqs is
 green, and more steps select when a batch of artifacts is **accepted in a reviewed
 commit** and `docs/stage` is regenerated. The `derived-stage` step
 (`derive_stage.py --check`) guards the cache against rot on every trunk-lane
 commit and gate (a claimed work branch reads the cache as-of-base); a release tag
-runs the full bar regardless.
-Without a derived stage, CI would apply the end-state DevStg-Impl bar from day one and
+runs the full checks regardless.
+Without a derived stage, CI would apply the end-state DevStg-Impl checks from day one and
 stay red for months — training everyone to ignore it.
 
 **Push authority.** Who may *publish* (`git push`) is likewise declared, not

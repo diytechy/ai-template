@@ -219,10 +219,10 @@ def test_the_top_two_rungs_are_held_by_the_TOP_OF_THE_RETIRED_DIAL_ALONE(
     """The hole the strictly-less-than fix opened, and the reason the top of
     the ladder is absolute.
 
-    `DevStg-Impl` and `DevStg-Release` cover PRECISELY the states a bar-advance
+    `DevStg-Impl` and `DevStg-Release` cover PRECISELY the states a stage advance
     row runs in. With the top rung reading as not-held, the SHIPPED DEFAULT
     (documented as "every tier operator-held; the most conservative setting") let
-    the loop dispatch and self-accept the final bar. Below the top, the retired
+    the loop dispatch and self-accept the final stage. Below the top, the retired
     ordinal was about which SPINE tier is being worked, and neither of these two
     is one — so no setting under it reached them.
 
@@ -241,7 +241,7 @@ def test_the_top_two_rungs_are_held_by_the_TOP_OF_THE_RETIRED_DIAL_ALONE(
     assert ac.operator_holds(impl, dg.STAGE_RELEASE) is False
 
 
-def test_the_shipped_default_holds_a_bar_advance(tmp_path):
+def test_the_shipped_default_holds_a_stage_advance(tmp_path):
     # The same fact stated where it bites: at the default, with a fully
     # verified spine, a `gate` row must SURFACE rather than dispatch.
     dispatch = load_script("dispatch")
@@ -698,7 +698,7 @@ def test_a_draft_need_or_an_empty_spine_is_the_NEEDS_rung():
 def test_a_accepted_but_UNCITED_need_is_the_NEEDS_rung():
     # WI-401's coverage rung, which the stage axis did not apply: a need with
     # no requirement answering it is unfinished work AT THE NEEDS RUNG. Without
-    # this such a spine read the top rung ("nothing in work") while the bar
+    # this such a spine read the top rung ("nothing in work") while the checks
     # arithmetic put the same repo at DevStg-Below — the two axes contradicting
     # each other, in the one function whose job is to reconcile them.
     assert _stage(sn_ids=("SN-001", "SN-002")) == dg.STAGE_NEEDS

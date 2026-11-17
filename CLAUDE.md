@@ -30,7 +30,7 @@ that easier to achieve in a real project — or get out of the way.
 
 - **Dogfood the philosophy.** The templates preach single-source-of-truth,
   decompose-don't-paraphrase, and generated-not-hand-maintained. Hold the kit to
-  the same bar: don't restate a rule in five files — state it in
+  the same standard: don't restate a rule in five files — state it in
   [`PROCESS.md`](project-trajectory/PROCESS.md) and link to it.
 - **Keep scripts stdlib-preferred and cross-platform; dependencies need a
   ledger row.** The kit's own scripts run on a clean Python 3.11+ on Windows
@@ -58,7 +58,7 @@ that easier to achieve in a real project — or get out of the way.
 - **Self-test before claiming done.** The per-commit checks are one declared
   command, `run.cmd smoke` (`run_menu.py smoke` from a shell; its steps are
   [`docs/stack.ini`](docs/stack.ini) `[run]`). It runs the smoke tier once: a
-  red tier FAILS the bar; its CPU-seconds and wall time are only reported
+  red tier FAILS the checks; its CPU-seconds and wall time are only reported
   (operator, 2026-10-20). `run.cmd audit` judges them, and the tier's test
   count, against `[smoke-budget]`, by hand and at phase close; a breach is
   filed as a re-tier row, never charged to the lane that ran it. Heavy cases
@@ -66,7 +66,7 @@ that easier to achieve in a real project — or get out of the way.
   in-process pin. A mid-phase WI/slice ends at those commit checks. Run the **full**
   unfiltered suite (`python -m pytest -q -n auto`, ~10 min on a quiet box,
   3–4× that while other sessions load it) once at phase close; the lane refresh
-  runs the full bar declared for its current stage in the merge slot. The
+  runs the full checks declared for its current stage in the merge slot. The
   unfiltered suite bootstraps a temp scaffold and exercises every script
   end-to-end. Paste the real output; never report a green you didn't produce.
   Commit hooks are on before any work (`core.hooksPath` at `.githooks`, which

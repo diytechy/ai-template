@@ -145,8 +145,8 @@ REGISTRY = "docs/requirements/work-items.csv"
 # classification"). The DECLARED values a WI may carry in its SafetyClass cell.
 # `adjudication` (WI-388, docs/concurrency-v2.md §A5.2) is the mechanical
 # scope-judgement kind minted trunk-side at intake: exclusive, rank 1, and its
-# lane runs NO product bar (integrate.refresh's no-bar arm) — its outputs are
-# Status cells and the work registry, nothing a product bar can speak to. ---
+# lane runs NO product checks (integrate.refresh's no-checks arm) — its outputs are
+# Status cells and the work registry, nothing a product checks can speak to. ---
 # Implements: SR-148, LLR-152
 SAFETY_CLASSES = (
     "ordinary",
@@ -204,7 +204,7 @@ _KIND_CONCURRENCY = {
 # builds on a premise the diff may have moved.
 _KIND_RANK = {
     "spine": 0,
-    "adjudication": 1,  # WI-388, §A5.2: exclusive, runs no bar
+    "adjudication": 1,  # WI-388, §A5.2: exclusive, runs no checks
     "acceptance": 2,
     "gate": 2,
     "protected": 3,

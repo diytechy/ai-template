@@ -72,8 +72,8 @@ chasing it.
 ## The kit's headline pieces
 
 - **A gated process** ([`PROCESS.md`](project-trajectory/PROCESS.md)) — roles as
-  "hats", acceptance bars (DevStg-Reqs→DevStg-Tests→DevStg-Impl, then DevStg-Release and the operator's final read; DevStg-Release only for
-  versioned releases), and a verdict protocol; each gate's bar **fails, never
+  "hats", acceptance stages (DevStg-Reqs→DevStg-Tests→DevStg-Impl, then DevStg-Release and the operator's final read; DevStg-Release only for
+  versioned releases), and a verdict protocol; each gate's checks **fail, never
   silently skips** (SN-004, SN-008).
 - **A traceability spine** — `SN → SR → LLR → TC` registries joined by a
   generated matrix that must report **zero orphans** before each gate (SN-002).
@@ -139,7 +139,7 @@ chasing it.
     **critic** against a written [`docs/rubrics/`](project-trajectory/rubrics/README.template.md)
     rubric with numbered good/bad anchors derived from the SN/SR intent. Family
     heterogeneity is required on the unattended path; the operator chooses the
-    reviewer for attended acceptance. Rework iterates toward the bar and
+    reviewer for attended acceptance. Rework iterates toward the standard and
     escalates on budget exhaustion; a lax-TC ratchet keeps the fix landing in
     the chain (SN-024).
   - Optional **tier-conditional guardrails** — the `guardrails` dial
@@ -172,7 +172,7 @@ chasing it.
   - **Shipped.** System-requirement boundary references resolve against declared
     crossings, unresolved ones mechanical findings (SN-037 — `boundary_refs`
     resolution). A stakeholder need readable without repo-internal vocabulary
-    (SN-033) — `scripts/check_need_form.py`, wired at all three bars in
+    (SN-033) — `scripts/check_need_form.py`, wired at all three stages in
     `check.py`, traced SR-150 → LLR-170 → TC-164; **warn-first by design**, since
     promoting a form heuristic over accepted stakeholder prose to a gate is an
     operator ruling that has not been made.
@@ -446,7 +446,7 @@ This repo's ways in, what each is for and what it checks:
   offers to switch them on, in its machine-local
   `.claude/settings.local.json`, bound to the interpreter dev-setup resolved.
 - **`run.*`** (root) runs the same check first on a bare double-click, then
-  this repo's actions menu (`docs/stack.ini [run]`: the smoke bar, the
+  this repo's actions menu (`docs/stack.ini [run]`: the smoke tier, the
   trajectory and docs checks, the dashboard). An actions menu, not a product
   launcher.
 - **A Claude Code coordinator session** runs under those hooks: the context
@@ -512,7 +512,7 @@ set:
 | `process.toml` `components_check` | `true`, warn-first | **opt-out** `false` | `true` — current component inventory is generated in the [dashboard](PROJECT_STATE.html) |
 | `process.toml` `live_status` | `false` | **opt-in** `true` (same as `agent_loop.py --live-status`; TTY-only either way) | `false` |
 | `process.toml` `subagent_gate` | `"off"` | **opt-in** `"ask"` / `"deny"` (Claude hook example) | `"off"` |
-| `process.toml` `backlink_coverage_min` | `0` — report the number, gate nothing (the one `[checks]` dial that is a percentage, not a switch) | **opt-in** raise it to the share of live LLR rows a literal `Implements:` back-link must name; below it the `backlink-coverage` step warns, and errors from `DevStg-Tests` | `50` — raised 2026-08-21 once the tags landed: **83 of 165 live LLR rows (50.3%)**, measured by `gen_arch_map.py --backlink-coverage`. The dial rose because the campaign wrote the declarations, never because the bar came down |
+| `process.toml` `backlink_coverage_min` | `0` — report the number, gate nothing (the one `[checks]` dial that is a percentage, not a switch) | **opt-in** raise it to the share of live LLR rows a literal `Implements:` back-link must name; below it the `backlink-coverage` step warns, and errors from `DevStg-Tests` | `50` — raised 2026-08-21 once the tags landed: **83 of 165 live LLR rows (50.3%)**, measured by `gen_arch_map.py --backlink-coverage`. The dial rose because the campaign wrote the declarations, never because the minimum came down |
 | `process.toml` `test_first_since` | `""` — no start declared, so the `test-first` step judges the whole history (the one `[checks]` key whose value is a commit id) | declare the commit the rule starts after; only requirements accepted after it are judged, and the step stays warn-only either way | `"f537fc53…"` — the parent of the phase-6 acceptance act (cbb6649f), so the chains that act accepted are the first judged; read whole, the history reports requirements whose code predates the rule |
 | `agents.toml` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — the current routes are declared in [agents.toml](docs/agents.toml) and selected by [agents-enabled](docs/agents-enabled) |
 

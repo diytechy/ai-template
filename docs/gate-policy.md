@@ -59,7 +59,7 @@ in-chat directive + this register update, 2026-07-15.)_
   perceptual `Critique` — e.g. WI-144's rendered dashboard judgment — still
   needs a real rendered verdict under `autonomous`; the level never lets the
   loop fabricate an APPROVE it could not run.)_
-- **The harness is still the bar** — LLM judgment supplements the checks; it
+- **The harness is still the standard** — LLM judgment supplements the checks; it
   never waives a red one.
 - **Accepted operator decisions are never re-decided by an agent** — flag a
   problematic one as Blocked instead.

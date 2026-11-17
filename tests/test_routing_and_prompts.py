@@ -104,7 +104,7 @@ def test_the_implementer_s_escalation_overrides_do_NOT_reach_an_adjudicator():
 
 
 def test_an_adjudication_commit_never_triggers_a_review_round():
-    # Its lane runs no product bar (`integrate.refresh`'s no-bar arm) because
+    # Its lane runs no product checks (`integrate.refresh`'s no-checks arm) because
     # its outputs are Status cells and the work registry. A review round over
     # it would be a fresh-context reviewer asked to judge a judgement with no
     # product diff to judge.

@@ -90,7 +90,7 @@ from conftest import ROOT, SCRIPTS, run_py, skip_without_env_gates
 #      this commit leaves a harness that runs four real steps and passes. Reaching
 #      further back (e.g. `main`'s tip, 2026-06-28) produces a scaffold whose
 #      surviving old `check.py` prints "No checks defined for gate DevStg-Reqs" and exits
-#      0 — a green that means nothing. A test whose bar can be met vacuously is
+#      0 — a green that means nothing. A test whose standard can be met vacuously is
 #      worse than no test, so the pin stops on the near side of that line and
 #      `test_old_kit_scaffold_syncs_forward_to_a_green_harness` asserts against
 #      the vacuous shape directly.
@@ -253,7 +253,7 @@ def test_old_kit_scaffold_syncs_forward_to_a_green_harness(resync):
     assertions below require the harness to have actually run steps and passed
     them.
     """
-    # The bar is passed in the RETIRED vocabulary, deliberately. The re-synced
+    # The stage is passed in the RETIRED vocabulary, deliberately. The re-synced
     # repo still carries its OLD check.py — that is this module's whole premise,
     # stated in the docstring above — and that binary knows only the retired
     # tags. Passing the canonical `DevStg-Reqs` here would test the CURRENT kit's

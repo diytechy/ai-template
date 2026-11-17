@@ -235,5 +235,5 @@ record an explicit n/a where one truly doesn't apply.
   later — see process.md §10 / `MULTI_REPO.md`. You almost certainly want one repo.)_
 - **Non-goals (explicitly out of scope):**
 - **Starting point (from scratch / existing draft or spec — link it):**
-- **Coverage threshold / quality bar:**
+- **Coverage threshold / quality standard:**
 - **Definition of done (what the acceptance run must demonstrate):**

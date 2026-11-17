@@ -163,7 +163,7 @@ def _past_the_git_reads(monkeypatch):
         rb, "lane_commits", lambda root, base, sha: ("wi-900", BASE, SHA)
     )
     _derives_a_set(monkeypatch)
-    monkeypatch.setattr(rb, "_review_bar_refusal", lambda root, lane, sha, t: sha)
+    monkeypatch.setattr(rb, "_commit_checks_refusal", lambda root, lane, sha, t: sha)
 
 
 def test_an_unfilled_slot_refuses_and_no_brief_is_written(

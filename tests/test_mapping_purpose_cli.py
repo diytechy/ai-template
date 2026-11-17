@@ -1,7 +1,7 @@
 """TC-204 (CLI half) — the SR-163 mapping-purpose checker driven as a subprocess.
 
 The in-process unit module (test_mapping_purpose.py) grades the checker's
-functions directly and stays in the commit smoke bar, where it is cheap. This
+functions directly and stays in the commit smoke tier, where it is cheap. This
 module drives the SHIPPED `gen_arch_map.py --mapping-purpose` command the way an
 adopter's `stack.ini` would — a real interpreter subprocess — so a regression
 that unwired the CLI mode is caught end-to-end: were the checker left defined but

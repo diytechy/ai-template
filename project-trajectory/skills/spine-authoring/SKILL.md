@@ -165,7 +165,7 @@ file: change it there.
 - **The accept brief.** `scripts/trace.py --accept <scope>` renders the batch's
   SN→SR→LLR→TC hierarchy with prose for the acceptor to read, and
   `--accept modified` renders the per-cell before/after re-acceptance brief.
-  Link the brief; never hand-copy rows into it. (Running the bar itself: the
+  Link the brief; never hand-copy rows into it. (Running the checks themselves: the
   `gate-advance` skill. Orphans, integrity and schema findings:
   `registry-hygiene`.)
 

@@ -91,7 +91,7 @@ jobs:
   # floor and already runs in the test job above; THIS job runs `-m smoke` once
   # under the budget step in warn mode and prints its CPU seconds and wall time
   # against docs/stack.ini [smoke-budget] cpu-seconds and wall-seconds, with a
-  # WARN annotation for a limit over. No bar fails on the tier's seconds: the
+  # WARN annotation for a limit over. No run of the checks fails on the tier's seconds: the
   # run menu's audit (docs/stack.ini [run] audit) judges them, by hand and at
   # phase close. A red tier still fails this job with the tier's own code. The
   # CPU budget is stamped on one workstation and applies everywhere, so a WARN
@@ -115,7 +115,7 @@ jobs:
         run: python scripts/check_smoke_budget.py --mode warn
 
   # The kit self-adopts its own gated process (IMPROVEMENT_PLAN.md Thread 47): this
-  # job runs the kit's OWN check.py at the stage docs/stage declares — the same bar
+  # job runs the kit's OWN check.py at the stage docs/stage declares — the same checks
   # a contributor runs locally.
   #   WHAT THAT ACTUALLY ENFORCES, corrected 2026-08-20 (WI-473, repo review C-01):
   # the plan is SELECTED BY THE DERIVED STAGE — every step whose declared
@@ -130,7 +130,7 @@ jobs:
   # matrix job above (the full pytest suite, every OS/py) was actually providing.
   # A downstream adopter has no such matrix — which is what WI-473 is about.
   # One platform: the matrix above already proves cross-OS/py portability; the gate
-  # is a code-quality bar (coverage, lint, trace), not an OS-dependent one.
+  # is a code-quality standard (coverage, lint, trace), not an OS-dependent one.
   gate:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest

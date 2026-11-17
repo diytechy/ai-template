@@ -1,7 +1,7 @@
 """WI-281 — the smoke commit checks stay a smoke test (their membership ratchet).
 
 The per-commit checks run `-m smoke`; WI-122 keeps that tier OPT-OUT (a new test
-is in the bar by default). WI-281 gave the tier a BUDGET — the bar must answer
+is in the checks by default). WI-281 gave the tier a BUDGET — the checks must answer
 "is it basically alive?" — and split the budget item in two, because a timing
 assert is machine-/core-count-dependent and flaky:
 
@@ -9,16 +9,16 @@ assert is machine-/core-count-dependent and flaky:
     MEMBERSHIP (the collected-count) — and BITES when the tier grows back toward
     the full suite (the regression this exists to catch);
   * the tier's CPU seconds and wall time are metered by
-    scripts/check_smoke_budget.py, which every bar and CI run in warn mode
+    scripts/check_smoke_budget.py, which every checks and CI run in warn mode
     (reported, never failed on) and the run menu's audit runs in enforce mode.
     They are not a hard assert here.
 
 This is a growth SENSOR with headroom (the test_dashboard_size_budget idiom), not
-an exact freeze: new in-process unit tests SHOULD accrue into the bar (that is
+an exact freeze: new in-process unit tests SHOULD accrue into the checks (that is
 the WI-122 opt-out intent) and are cheap. It fails only if the smoke tier
 balloons past the generous ceiling declared in docs/stack.ini [smoke-budget] —
 the signature of a heavy subprocess/scaffold module un-slowed
-(conftest.SLOW_MODULES) or the bar accreting back toward 79% of the suite. When
+(conftest.SLOW_MODULES) or the checks accreting back toward 79% of the suite. When
 it fails: re-tier the offending module to slow, OR — if the growth is legitimate
 in-process units — re-stamp max-tests in docs/stack.ini with the reason in the
 WI/session log, never silently.
@@ -59,7 +59,7 @@ def test_smoke_tier_stays_within_its_membership_budget():
         "smoke tier collects {} tests, over its {}-test membership budget "
         "(docs/stack.ini [smoke-budget] max-tests). The per-commit checks must stay "
         "a smoke test. If a heavy subprocess/scaffold module "
-        "slipped back into the bar, re-tier it into conftest.SLOW_MODULES; if "
+        "slipped back into the checks, re-tier it into conftest.SLOW_MODULES; if "
         "this is legitimate in-process growth, re-stamp max-tests with the reason "
         "in the WI/session log."
     ).format(count, ceiling)
@@ -68,7 +68,7 @@ def test_smoke_tier_stays_within_its_membership_budget():
 def test_membership_ratchet_bites_past_the_ceiling():
     # Bite-proof: the sensor FAILS the moment the tier exceeds its ceiling — the
     # regression it exists to catch (a heavy subprocess/scaffold module un-slowed
-    # back into the bar, e.g. re-adding test_agent_loop's ~113 tests or
+    # back into the checks, e.g. re-adding test_agent_loop's ~113 tests or
     # test_gen_trajectory's ~98). Proves the guard's teeth without a real (and
     # self-defeating) re-tier, via the same comparison the live assertion applies.
     ceiling = _budget("max-tests")
@@ -77,14 +77,14 @@ def test_membership_ratchet_bites_past_the_ceiling():
     assert not _within_budget(ceiling + 1, ceiling)  # one past the line: bites
 
 
-def test_the_declared_commit_bar_runs_the_strict_lints_before_its_budget():
-    # This repo's one declared commit-bar command, docs/stack.ini [run] smoke,
+def test_the_declared_commit_checks_run_the_strict_lints_before_their_budget():
+    # This repo's one declared commit-check command, docs/stack.ini [run] smoke,
     # runs both strict lints, the docs staleness check and the RESYNC entry
     # check first, then the budget check in warn mode, whose own metered run is
-    # the bar's only smoke-tier run: a red tier fails the bar, and its seconds
-    # are reported, never failed on. A lint red stops the bar before the tier
+    # the checks' only smoke-tier run: a red tier fails the checks, and its seconds
+    # are reported, never failed on. A lint red stops the checks before the tier
     # runs. A chain that dropped a step, moved the budget check ahead of the
-    # lints, or ran the tier a second time would let a build round's bar skip a
+    # lints, or ran the tier a second time would let a build round's checks skip a
     # check or pay for the tier twice.
     cp = configparser.ConfigParser(interpolation=None)
     cp.read(STACK_INI, encoding="utf-8-sig")

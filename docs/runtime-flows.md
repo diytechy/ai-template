@@ -53,7 +53,7 @@ lives in [`requirements/`](requirements/) + [`test/`](test/).
 > **The inherited drift this section used to record is RESOLVED (Flow 4).** Flow
 > 4 renders the code as it stands after the concurrency-v2 program
 > (WI-380/381/383/386/387/388). Three requirement rows it cited still described
-> the model that program replaced — the composed-tree bar on a candidate
+> the model that program replaced — the landing checks on a candidate
 > worktree, and the five-class scheduling ladder — and LLR-143 still named the
 > deleted `drive.py` as its Module. **The WI-451 re-tier closed all four**:
 > those three rows were DEMOTED to the design tier, so the stale requirement
@@ -194,10 +194,10 @@ sequenceDiagram
         Disp->>Lane: spawn the refresh — mechanical, no agent
         Lane->>Lane: merge trunk in, a conflict on docs/id-watermark alone settled by the fold (LLR-363)
         Lane->>Lane: while an id carrier exists, fold its tip into the lane's watermark (LLR-363)
-        Lane->>Lane: then trunk_step, then the expected-failure marker refusal (a tree whose tests hold a declared mark is refused, LLR-368), then the check.py bar
-        Lane->>Lane: commit a Checks-Passed trailer naming the landing checks (or none), the tree it barred and its work parent
+        Lane->>Lane: then trunk_step, then the expected-failure marker refusal (a tree whose tests hold a declared mark is refused, LLR-368), then the check.py checks
+        Lane->>Lane: commit a Checks-Passed trailer naming the landing checks (or none), the tree it checked and its work parent
         alt refresh red
-            Note over Disp,Hand: a branch asserting DONE stops the run; one that merges<br/>nothing is quarantined once (code reverted, diff kept<br/>as a bar-inert patch) and refreshed again
+            Note over Disp,Hand: a branch asserting DONE stops the run; one that merges<br/>nothing is quarantined once (code reverted, diff kept<br/>as a checks-inert patch) and refreshed again
         else refresh green
             Disp->>Slot: merge this lane's branch only — the slot is sub-second
             Slot->>Slot: refusal ladder: R1, then the reserved-ids rung (each carrier-space id the lane adds over its base in the lane's own carrier record, LLR-363), then the rest

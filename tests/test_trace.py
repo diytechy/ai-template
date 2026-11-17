@@ -102,9 +102,9 @@ def test_strict_integrity_ignores_orphans_but_fails_bad_ids(scaffold):
 
 # SR-002 is Status=Modified — a RETIRED value since D-9 step 7, and deliberately
 # kept here as the mid-migration fixture. The phase scoping of --require-verified
-# is what these tests exercise, so the row has to be one the bar FLAGS: a Drafted
+# is what these tests exercise, so the row has to be one the checks FLAGS: a Drafted
 # SR is exempt from --require-verified entirely (WI-089, a different axis), and
-# `Accepted`/`Founded` both pass, which leaves no LIVE value that reaches the bar.
+# `Accepted`/`Founded` both pass, which leaves no LIVE value that reaches the checks.
 # The cost is that this fixture also reds the enum floor, which
 # `test_phase_scopes_require_verified` states rather than works around. Every
 # row carries its Phase: in a phased spine a row with no Phase cell is itself an
@@ -144,7 +144,7 @@ def test_phase_scopes_require_verified(scaffold):
     THE ASSERTIONS MOVED FROM EXIT CODES TO COUNTERS AT D-9 STEPS 7/8, and the
     reason is the fixture, not the property. `--require-verified`'s population
     is now unreachable-by-cell for a conformant repo — every live value either
-    stands the bar down or passes it — so the only row that can drive this test
+    stands the checks down or passes it — so the only row that can drive this test
     is the mid-migration one PHASED_SRS carries, whose out-of-vocabulary Status
     ALSO reds the always-on integrity floor. The exit code therefore stays 1
     throughout and can no longer tell the deferred run from the scoped one.
@@ -160,7 +160,7 @@ def test_phase_scopes_require_verified(scaffold):
         ["scripts/trace.py", "--strict", "--require-verified", "--phase", "v1"],
         cwd=scaffold,
     )
-    # DEFERRED: the bar stood down for the out-of-phase row...
+    # DEFERRED: the checks stood down for the out-of-phase row...
     assert "status-findings=0" in proc.stdout, proc.stdout
     assert "phase-deferred=1" in proc.stdout
     # ...and the ONLY thing still failing is the enum floor, which is phase-blind
@@ -346,7 +346,7 @@ def test_demonstrated_sr_is_its_own_category_and_gate_required(scaffold):
 
     # The headline widening (M-5): regress SR-002 to Modified. sr_bar already
     # caps it at DevStg-Tests, but the OLD --require-verified (VerificationMethod=Test only)
-    # silently PASSED it. The widened bar now flags it, naming the real method.
+    # silently PASSED it. The widened checks now flags it, naming the real method.
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
         DEMO_SRS.replace(",H,Analysis,Accepted", ",H,Analysis,Modified"),
@@ -676,19 +676,19 @@ def test_no_aspect_values_no_report_section(scaffold):
 
 
 def test_require_verified_flags_an_UNMIGRATED_status(scaffold):
-    """The bar's surviving population since D-9 steps 7/8, and it is smaller
+    """The checks' surviving population since D-9 steps 7/8, and it is smaller
     than it was — stated rather than discovered.
 
-    Under the closed enum every LIVE value either stands the bar down
+    Under the closed enum every LIVE value either stands the checks down
     (`Drafted`, pre-acceptance) or passes it (`Accepted`, `Founded`), so a
     conformant repo can no longer reach this finding by cell. The case that
     remains is the one that matters most: a DOWNSTREAM repo mid-migration
     whose rows still read `Modified` (or `Implemented`, or anything else) must
     not pass a DevStg-Impl gate silently. So the fixture drives an
-    out-of-vocabulary value deliberately, and asserts BOTH findings — this bar
+    out-of-vocabulary value deliberately, and asserts BOTH findings — this checks
     ("this row is not blessed") and the integrity floor ("this word is not in
     the vocabulary"). Two findings for one fault is the right count: they
-    answer different questions, and only the second survives if the bar is
+    answer different questions, and only the second survives if the checks are
     never run.
     """
     make_minimal_project(scaffold)
@@ -701,13 +701,13 @@ def test_require_verified_flags_an_UNMIGRATED_status(scaffold):
     )
     # Without the flag: the ENUM floor already names it (D-9 correction C1 —
     # a retired word is wrong at any stage, so it does not wait for the top
-    # bar). This used to read "still a clean trace"; the closure is what
+    # checks). This used to read "still a clean trace"; the closure is what
     # changed, and it changed in the loud direction.
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "not in the closed vocabulary" in proc.stdout
-    assert "status-findings=" not in proc.stdout  # the bar did not run
-    # With the flag: the unblessed Test SR fails the DevStg-Impl bar too.
+    assert "status-findings=" not in proc.stdout  # the checks did not run
+    # With the flag: the unblessed Test SR fails the DevStg-Impl checks too.
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1
     assert "status-findings=1" in proc.stdout
@@ -717,9 +717,9 @@ def test_require_verified_flags_an_UNMIGRATED_status(scaffold):
 
 def test_require_verified_passes_EVERY_blessed_value(scaffold):
     """The mutation half, and the one that would have failed silently: D-9
-    step 8 armed `Founded`, and a bar reading `is_accepted` alone would have
+    step 8 armed `Founded`, and a check run reading `is_accepted` alone would have
     FLAGGED every row that reached the top rung — an arming that fails what it
-    promotes. Both blessed values pass; `Drafted` stands the bar down."""
+    promotes. Both blessed values pass; `Drafted` stands the checks down."""
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     original = csv_path.read_text(encoding="utf-8")
@@ -1062,7 +1062,7 @@ def test_accepted_prefixed_phase_fails_strict_schema(scaffold):
 def test_require_verified_strips_padded_verification_cell(scaffold):
     # M-1: a padded '"Test "' cell must not create a false PASS. The original bug
     # was that --require-verified matched Verification == "Test" unstripped, so a
-    # padded cell was silently skipped. WI-259 widened the bar to every accepted
+    # padded cell was silently skipped. WI-259 widened the checks to every accepted
     # SR of any method, so a padded cell can no longer skip it on the method axis
     # either — a not-Accepted accepted SR is flagged regardless of its method cell.
     make_minimal_project(scaffold)
@@ -1081,7 +1081,7 @@ def test_require_verified_strips_padded_verification_cell(scaffold):
 def test_strict_failure_prints_findings_to_console(scaffold):
     # M-3: the gitignored report must not be the only place failing rows
     # appear — a --strict failure names the rows on stdout (check.py's "print
-    # the real output" bar), capped per class.
+    # the real output" checks), capped per class.
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     text = csv_path.read_text(encoding="utf-8")

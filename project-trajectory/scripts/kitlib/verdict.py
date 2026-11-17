@@ -476,14 +476,14 @@ def refresh_subject(branch):
 
 
 def refresh_passed_checks(root, branch, rev=None):
-    """`(work_tip_sha, bar summary)` if `rev` is a GENUINE refresh commit for
+    """`(work_tip_sha, checks summary)` if `rev` is a GENUINE refresh commit for
     `branch`, else None. `rev` defaults to the branch tip.
 
     The checks are recorded against a TREE, and this is where that sentence is made
     true rather than merely written down. A commit message is not evidence: it
     can be copied, hand-written, amended onto different content, cherry-picked
     or rebased, and every one of those carries the words onto a tree nobody
-    barred (REVIEW-A round 1, driven both ways - a forged trailer on an
+    checked (REVIEW-A round 1, driven both ways - a forged trailer on an
     ordinary work commit, and `commit --amend` adding a file to a real one).
 
     So the trailer NAMES what it records, and `passed_checks` verifies it
@@ -498,7 +498,7 @@ def refresh_passed_checks(root, branch, rev=None):
       * `tree=` must equal the commit's OWN tree. This is the load-bearing one:
         no edit that changes content can keep it, because the tree sha IS the
         content. `git write-tree` is what lets the refresh know the value
-        before it commits - the index it barred is the tree it commits.
+        before it commits - the index it checked is the tree it commits.
       * `work=` must equal the commit's first parent, so the disposable-commit
         peel below has a stated target rather than a guessed one, and a
         cherry-pick or rebase (new parent) is rejected.
@@ -509,20 +509,20 @@ def refresh_passed_checks(root, branch, rev=None):
     THE HONEST BOUND: this defeats ACCIDENT, not INTENT. Every accidental
     carrier refuses - a copied message, an amend, a rebase, a cherry-pick, a
     trailer quoted in an ordinary commit. But forging one deliberately is FOUR
-    git invocations in the lane worktree and no bar at all: `add -A`, `T=$(git
+    git invocations in the lane worktree and no checks at all: `add -A`, `T=$(git
     write-tree)`, `P=$(git rev-parse <branch>)`, and the `commit` that carries
     those two values in the trailer. REVIEW-A round 2 drove exactly that and landed an
     unbarred file on trunk. The format is printed in every refresh commit, so
     the cost is reading, not reverse-engineering.
 
-    That is accepted, deliberately. The only structural closure is a bar the
+    That is accepted, deliberately. The only structural closure is a check run the
     slot itself runs and cannot skip, and DECISION 3 (operator ruling 2026-07-31)
-    deleted the merge bar outright: a kept-just-in-case bar is exactly the
+    deleted the landing checks outright: a kept-just-in-case checks are exactly the
     shape §0's governing principle warns against. So the threat model here is
     the same one the rest of the coordinator holds - bugs, drift and a lane that
     goes wrong, not a lane that lies on purpose. A lane is trusted code the
     operator chose to run. If that ever stops being true, the answer is a
-    slot-side bar and a reopened DECISION 3, not a longer trailer.
+    slot-side checks and a reopened DECISION 3, not a longer trailer.
     """
     rev = rev or branch
     message = git_out(root, ["log", "-1", "--format=%B", rev]) or ""
@@ -616,7 +616,7 @@ def read_passed_checks(root, rev):
             "tree=<40 hex> work=<40 hex> checks=<checks> tests=<64 hex|none>",
         )
     if matched.group(3) not in CHECK_SETS:
-        return None, "its `{}` line names bar {!r}, outside {}".format(
+        return None, "its `{}` line names checks {!r}, outside {}".format(
             CHECKS_PASSED, matched.group(3), ", ".join(CHECK_SETS)
         )
     passed = PassedChecks(*matched.group(1, 2, 3, 4), (matched.group(5) or "").strip())
@@ -988,10 +988,10 @@ def commit_passed_checks(root, rev, tests):
     The walk looks at `rev`, then steps to the first parent only while the
     non-record identity is unchanged (`_identity_step`, the step
     `governing_rev` takes), so a round file, a telemetry fragment or an empty
-    commit above a recorded commit needs no new bar. The first verified record
+    commit above a recorded commit needs no new checks. The first verified record
     it meets decides: another set, a refresh's `landing` included, is refused
     as one, and so is another tests digest. It never peels a disposable commit
-    and never runs the bar: it reads the record.
+    and never runs the checks: it reads the record.
 
     Implements: SR-241, LLR-341
     """
@@ -1393,7 +1393,7 @@ def format_failed_record(sha, summary):
     """`{"checks-failed": sha, "checks-summary": one line}`, the header fields of a
     failed-checks record. The summary's whitespace folds to single spaces; a longer line
     keeps its first `_SUMMARY_HEAD` characters (the refusal's cause) and its
-    tail (where a bar prints its final diagnostic), joined by `_SUMMARY_GAP`,
+    tail (where a check run prints its final diagnostic), joined by `_SUMMARY_GAP`,
     within `_SUMMARY_MAX` characters. This line is the only copy a resumed
     build is handed, so the tail is the part it cannot lose. A sha that is not
     40 lowercase hex raises, so the writer cannot emit a record the reader
@@ -1467,7 +1467,7 @@ def failed_rounds(root, branch, base):
 def failed_record(root, branch, base, sha):
     """The summary of the failed-checks record `base..branch`'s session logs hold for the
     build commit `sha`, or None when none does: whether the commit checks already
-    refused that build, so a draw over it rebuilds without running the bar
+    refused that build, so a draw over it rebuilds without running the checks
     again. A log git cannot show names no build, so it answers nothing here.
 
     Implements: SR-242, LLR-343

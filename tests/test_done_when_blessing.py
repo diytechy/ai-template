@@ -1928,7 +1928,7 @@ def test_a_relink_reaching_an_existing_lanes_claim_copy_across_the_landing(
       point, `y_tip0` its first work commit (original link);
     * `x_land` is X's squash landing on `main` (Y's trunk copy relinked);
     * `y_tip1` is the lane after it merges trunk in (relinked), the tree
-      `integrate.refresh` builds before its trunk step and bar, which do not
+      `integrate.refresh` builds before its trunk step and checks, which do not
       touch a claim copy: its first step is `git merge --no-ff --no-commit`
       of trunk;
     * `y_land` is Y's own squash landing after its ritual close.

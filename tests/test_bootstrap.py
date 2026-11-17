@@ -1030,9 +1030,9 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
         "live_status": False,
         "subagent_gate": "off",
         # WI-486 / OI-42's seventh dial, and the first NUMBER in this section:
-        # the reverse back-link coverage bar. `0` is its off position, and the
+        # the reverse back-link coverage minimum. `0` is its off position, and the
         # same argument as the two opt-in dials above applies — shipping the
-        # recorded 50% target here would arm a bar every fresh scaffold fails
+        # recorded 50% target here would arm a minimum every fresh scaffold fails
         # on its first run.
         "backlink_coverage_min": 0,
         # SR-217's declared start for the test-first order: empty declares

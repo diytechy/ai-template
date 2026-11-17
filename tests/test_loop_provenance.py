@@ -32,7 +32,7 @@ chain rather than four features:
 Every git fixture is a real repository and the loop's own entry points run for
 real; the only stand-ins are the two harness scripts a lane's refresh runs,
 which record nothing and pass, because what is asserted is the message the
-refresh commits, not the bar it ran.
+refresh commits, not the checks it ran.
 
 Implements: TC-242, TC-243
 """
@@ -831,7 +831,7 @@ def _station_repo(tmp_path):
     scripts.mkdir(exist_ok=True)
     (scripts / "trunk_step.py").write_text(STUB_TRUNK_STEP, encoding="utf-8")
     (scripts / "check.py").write_text(STUB_CHECK_GREEN, encoding="utf-8")
-    _commit(root, "chore: the stub harness and the declared bar", when=T_CODE)
+    _commit(root, "chore: the stub harness and the declared checks", when=T_CODE)
     return root
 
 
@@ -903,10 +903,10 @@ def test_the_handback_close_and_telemetry_writers_carry_the_trailer(
     # The quarantine, driven for real: the residue left a product file on the
     # lane, which is what a red close reverts.
     tip = _rev(root, "wi-401")
-    assert handback.quarantine(root, "wi-401", "bar exit 1") is None
+    assert handback.quarantine(root, "wi-401", "checks exit 1") is None
     message = _message(root, "wi-401")
     assert _rev(root, "wi-401") != tip
-    assert message.startswith("handback: revert wi-401 to a bar-inert artefact")
+    assert message.startswith("handback: revert wi-401 to a checks-inert artefact")
     assert provenance.parse_loop_trailer(message) == SESSION
     assert integ._marked_loop_writer(message, "wi-401"), message
 

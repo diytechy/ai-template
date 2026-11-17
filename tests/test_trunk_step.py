@@ -328,10 +328,10 @@ def test_regen_really_writes_the_verdict_rollup(tmp_path, capsys):
 def test_regen_really_writes_the_acceptance_brief(tmp_path, capsys):
     # The live acceptance brief is a generated artifact (`docs/ratify/ = accept`
     # in [generated]) whose freshness `check.py`'s `acceptance-fresh` step gates
-    # on the refresh bar. Measured 2026-09-04 on the WI-590 adjudication lane:
+    # on the landing checks. Measured 2026-09-04 on the WI-590 adjudication lane:
     # the lane's acceptance act moved the snapshot, its tip carried a stale brief,
     # the station's refresh regenerated everything in this table EXCEPT the
-    # brief, and the bar went red on a file only the trunk step could have
+    # brief, and the checks failed on a file only the trunk step could have
     # refreshed inside the one commit the verdict gate peels. Driven, not read
     # off the table, for the same reason the rollup test above is.
     _seed_regen_repo(tmp_path)

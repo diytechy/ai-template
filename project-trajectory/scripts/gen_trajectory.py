@@ -35,7 +35,7 @@ accepted AXES artifact spec — formerly `docs/trajectory.html`):
   6. **Process** — the method reference (WI-085): *how this project is built* —
      the artifact lifecycle x gates flow (live tier counts from the spine, the
      current derived stage highlighted from `docs/stage`), the agent-resume loop,
-     the slice -> phase -> check-bar cadence, and (WI-142/LLR-056) the two circular working loops —
+     the slice -> phase -> gate-check cadence, and (WI-142/LLR-056) the two circular working loops —
      intake and operator-decision — sharing one LLM_Agent entry. Data-derived where
      a canonical source exists; links out to the process docs and the canonical
      working surfaces. Omitted when there is no `docs/stage`, so a stage-less

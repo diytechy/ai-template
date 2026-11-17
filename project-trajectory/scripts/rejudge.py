@@ -99,7 +99,7 @@ WORK = "docs/work"
 TC_REGISTRY = "docs/test/test-cases.toml"
 
 # The declared `Brief` a re-judge item carries, and the kind that routes it.
-# An adjudication runs no build bar and is briefed as a judge: re-judging is a
+# An adjudication runs no build checks and is briefed as a judge: re-judging is a
 # judgment, and the brief (`adjudicate_brief`) is filled from this module's
 # live decision rather than from the item's own prose.
 # Implements: SR-215, LLR-254

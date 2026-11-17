@@ -52,9 +52,9 @@ Design choices that keep it honest and CI-friendly:
       TRUNK lane's (concurrency-restructure.md §5.2). On a claimed work branch —
       one with a `docs/work/active/<branch>/` spec directory — each is reported
       SKIP with its reason instead of running. Fail-closed: off git, on a
-      detached HEAD, or unclaimed, the full bar applies. See
+      detached HEAD, or unclaimed, the full checks apply. See
       `_TRUNK_FRESHNESS_STEPS`. `--trunk-lane` forces them ON: the station
-      refresh (`integrate.py refresh`) regenerates on the branch and then bars
+      refresh (`integrate.py refresh`) regenerates on the branch and then checks
       it, and that tree IS the tree that becomes trunk, so the branch stands in
       the trunk lane for exactly that one run.
     - **Non-interactive.** No prompts; deterministic exit codes for automation.
@@ -593,7 +593,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
     # The retired-vocabulary enforcer (OI-21) rides check_trajectory's severity
     # ladder EXACTLY — same condition, same `if`, deliberately not a second one.
     # The reason is the same too: a repo mid-conversion must SEE every remaining
-    # site without being blocked by it, while a repo past its requirements bar has
+    # site without being blocked by it, while a repo past its requirements stage has
     # no excuse. "all" is excluded so the pre-commit floor (which passes no
     # --gate) stays warn-first for both.
     traj_cmd = [sys.executable, str(_SCRIPTS / "check_trajectory.py")]
@@ -601,7 +601,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
     # Reverse back-link coverage (OI-42 ruled (e), WI-486) rides the SAME
     # severity ladder, third of three, for the same reason: the number must be
     # visible at every commit and gate only where a repo past its requirements
-    # bar has no excuse. It is vacuous while `[checks] backlink_coverage_min`
+    # stage has no excuse. It is vacuous while `[checks] backlink_coverage_min`
     # is 0, which is what the kit ships — the step then reports the percentage
     # and can never fail.
     backlink_cmd = [
@@ -743,10 +743,10 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # min-fold meant a fully decomposed spine — the same repo, named by its
         # rung instead of by the bar that implied it.
         ("traceability", (), trace_cmd, _kitladder.STAGE_IMPL, "process"),
-        # Retired-vocabulary enforcer (OI-21). AT EVERY BAR, deliberately: the
+        # Retired-vocabulary enforcer (OI-21). AT EVERY STAGE, deliberately: the
         # whole point is that the retired tags cannot grow back, and the surface
         # they grow back into (registries, briefs, status prose) is authored
-        # hardest at the LOWEST bar — a DevStg-Impl-only step would not run in
+        # hardest at the LOWEST stage — a DevStg-Impl-only step would not run in
         # this kit's own CI for the whole of its requirements phase, which is
         # exactly the window the drift it guards against happened in. The
         # severity, not the wiring, is what stays warn-first.
@@ -760,8 +760,8 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # Need-form check (SN-033's declared checker, WI-454): each SN `need`
         # cell is scanned for internal paths, implementation-only identifiers
         # and process citations against the reviewed exception list in
-        # docs/need-form-allow (ships empty). At every bar, like vocabulary —
-        # the need registry is authored hardest at the LOWEST bar — but
+        # docs/need-form-allow (ships empty). At every stage, like vocabulary —
+        # the need registry is authored hardest at the LOWEST stage — but
         # WARN-FIRST ALWAYS: no `--strict` promotion here, deliberately unlike
         # vocab_cmd/traj_cmd. Promoting a form heuristic over accepted
         # stakeholder prose to a gate is an operator ruling that has not been
@@ -1067,7 +1067,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # — is asked at the moment of an ACCEPTANCE, and acceptance happens at
         # every rung of the ladder, not only near the end of it. The old
         # `{DevStg-Tests, DevStg-Impl}` tag put it out of reach for exactly the
-        # repos that accept most often: an early one, whose derived bar sits at
+        # repos that accept most often: an early one, whose derived stage sits at
         # the floor for the whole of its requirements work. Doubly self-arming
         # already, so a repo with no brief still pays nothing.
         (
@@ -1165,12 +1165,12 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # clean for this one, and the close's review measured what warn-only
         # costs (ROUND-SOL-RAW 1, CRITICAL): stage a registry edit, regenerate
         # `docs/stage`, forget the `git add`, and every freshness step passes on
-        # bytes the commit does not contain. So the bar now vouches for the tree
+        # bytes the commit does not contain. So the checks now vouch for the tree
         # being COMMITTED. The bare `--staged-divergence` stays warn-only: the
         # severity lives at the WIRING, where the ruling put it. Adopter-visible
         # and deliberate — a partially-staged commit that leaves a regenerated
         # artifact behind is refused (RESYNC_PACK entry, this program).
-        #   AT EVERY BAR, like vocabulary/need-form: the question is about the
+        #   AT EVERY STAGE, like vocabulary/need-form: the question is about the
         # commit in front of you, which a DevStg-Reqs repo makes exactly as often
         # as a DevStg-Impl one. Deliberately NOT in _TRUNK_FRESHNESS_STEPS either:
         # that stand-down exists because a work branch must not COMMIT a
@@ -1189,7 +1189,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             "process",
         ),
         # Re-acceptance brief immutability (WI-503). A sibling of
-        # staged-divergence above, same shape and same reason for AT EVERY BAR
+        # staged-divergence above, same shape and same reason for AT EVERY STAGE
         # / NOT in _TRUNK_FRESHNESS_STEPS: it reads the staged tree rather than
         # a regenerated artifact's freshness, so it is as true on a work branch
         # as on trunk, and it never demands a regeneration — only that an
@@ -1208,10 +1208,10 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             "process",
         ),
         # The held status (SR-208), the staged-tree sibling of the two above and
-        # at every bar for their reason. A squash landing is judged by its lane
+        # at every stage for their reason. A squash landing is judged by its lane
         # commits, marked or not; a commit made under the loop marker outside a
         # claimed lane by the narrowed marker arm, a merge in progress (the
-        # station refresh's bar runs mid-merge) by what NEITHER side carried.
+        # station refresh's checks run mid-merge) by what NEITHER side carried.
         # Every lane commit is judged again at the merge slot, whether or not a
         # hook ran; an unmarked plain trunk commit is not judged.
         (
@@ -1236,7 +1236,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         ),
         # The ruling sync (WI-790, OI-102 Q3): a commit that takes an open item
         # out of `pending` updates the Done-when of each row citing it, or
-        # closes or removes the row. Staged tree against HEAD, at every bar and
+        # closes or removes the row. Staged tree against HEAD, at every stage and
         # for every committer; the merge slot asks the same question of each
         # lane commit against its first parent, so `--no-verify` lands nothing.
         # The same step refuses a commit that overrules a delegated decision
@@ -1667,10 +1667,10 @@ _WORK_BRANCH_CACHE = {}
 # Set by `--trunk-lane`. The stand-down above rests on "a work branch never
 # commits a generated artifact", which the station refresh (concurrency-v2.md
 # §A2) makes false for exactly one commit: it merges trunk in, runs trunk_step
-# ON the branch and bars the result — a tree byte-identical to the one the merge
+# ON the branch and checks the result — a tree byte-identical to the one the merge
 # produces, so it owes the trunk lane's gates. Without the flag those seven
 # steps SKIP, and the integrator reads any SKIP as a refusal, so the refresh
-# could never go green: the flag is what MAKES the mechanical bar possible, not
+# could never go green: the flag is what MAKES the mechanical checks possible, not
 # a rescue from a false pass (REVIEW-A round 1 — the first version of this
 # comment had the failure direction backwards). Opt-IN all the same, so a
 # caller that forgets it gets the stricter-for-trunk answer.
@@ -1751,7 +1751,7 @@ def staged_divergence(root=".", strict=False):
     0 unless `strict`, and the PLAN STEP passes `--strict` (steps(), OI-31's
     promotion taken at the WI-498 close). So the bare
     `check.py --staged-divergence` stays the detector an author runs mid-work,
-    while the bar — hook floor and CI alike — refuses.
+    while the checks — hook floor and CI alike — refuse.
 
     DEGRADES, never crashes and never fails: no git binary, not a checkout, a
     root that is not the checkout's top level, or a failing git call each SKIP
@@ -1851,7 +1851,7 @@ def staged_divergence(root=".", strict=False):
     print(
         "    Fix: `git add` them, then re-commit — or revert them. Leaving\n"
         "    them out is not free: the PLAN step runs --strict (OI-31's ruled\n"
-        "    promotion, WI-498 close), so the bar vouches for the tree being\n"
+        "    promotion, WI-498 close), so the checks vouch for the tree being\n"
         "    COMMITTED. This bare detector reports only.\n"
         "    GAP, so this is not read as a guarantee: it does NOT catch an\n"
         "    artifact that was STAGED WHILE STALE. The freshness gates read the\n"
@@ -2276,7 +2276,7 @@ def _claimed_work_branch(root):
     """The uncached answer behind `_work_branch` — see it for the contract. The
     reader's one home is `kitlib.git.claimed_work_branch`; check.py adds only
     its stderr notice for an implausible branch name. None (no git, a failing
-    git, a detached HEAD, no claim) reads as the TRUNK lane and its STRICT bar.
+    git, a detached HEAD, no claim) reads as the TRUNK lane and its STRICT checks.
 
     Implements: SR-006, SR-170, LLR-141
     """
@@ -2295,7 +2295,7 @@ def _work_branch(root="."):
 
     Fail-CLOSED by construction: off git, on a detached HEAD, or with neither a
     matching `active/` directory nor a claim in history the answer is None and the
-    STRICT bar applies. The trunk is simply the branch nobody claimed a work item
+    STRICT checks apply. The trunk is simply the branch nobody claimed a work item
     on."""
     key = str(Path(root).resolve())
     if key not in _WORK_BRANCH_CACHE:
@@ -2409,9 +2409,7 @@ def missing_tool_banner(skipped):
         "!! Install the toolchain (scripts/dev-setup) — a step that skips on",
         file=sys.stderr,
     )
-    print(
-        "!! every commit of a branch is a bar that is not being run.", file=sys.stderr
-    )
+    print("!! every commit of a branch skips the checks.", file=sys.stderr)
     print("!" * 72, file=sys.stderr)
 
 
@@ -2627,7 +2625,7 @@ def main():
     ap.add_argument(
         "--path-triggered",
         action="store_true",
-        help="run only steps declaring paths except smoke, selected by rung or changed paths (the hook's sensor bar)",
+        help="run only steps declaring paths except smoke, selected by rung or changed paths (the hook's sensor checks)",
     )
     ap.add_argument("--tier", choices=list(TIERS), default="all")
     ap.add_argument(
@@ -2652,7 +2650,7 @@ def main():
         "--trunk-lane",
         action="store_true",
         help="run the generated-artifact freshness gates even on a claimed "
-        "work branch — the station refresh's bar (integrate.py refresh), where "
+        "work branch — the station refresh's checks (integrate.py refresh), where "
         "the branch tree IS the tree that becomes trunk",
     )
     ap.add_argument(

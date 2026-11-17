@@ -335,7 +335,7 @@ def test_claim_refuses_a_bare_fragment_specref(tmp_path, capsys):
 
 def test_claim_refuses_a_directory_specref(tmp_path, capsys):
     # R-E's other path-half shape: a directory is not a document. `.exists()`
-    # accepted it; the rung must hold `.is_file()`, the same bar R-E holds.
+    # accepted it; the rung must hold `.is_file()`, the same checks R-E holds.
     root = claim_repo(tmp_path, specref="docs")
     assert integ.claim(root, "WI-401", "wi-401") == 1
     err = capsys.readouterr().err

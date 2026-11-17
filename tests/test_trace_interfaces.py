@@ -417,7 +417,7 @@ def test_cmp_state_refuses_an_unknown_value_as_a_warn(scaffold):
 
 # --- the SN tier's Status vocabulary (the enum floor's fourth tier) -----------
 # `ENUM_FIELDS["SN"]["Status"]` was DECLARED while analyze()'s enum fold ran over
-# `{"SR", "LLR", "TC"}` only, so a need could carry any word at all and no bar
+# `{"SR", "LLR", "TC"}` only, so a need could carry any word at all and no checks
 # said so. These two are the always-on floor's fires-on-a-defect / silent-on-a-
 # clean-row pair, run through the CLI like every other vocabulary case above.
 NEEDS_TOML = """[need.SN-001]

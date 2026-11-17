@@ -603,7 +603,7 @@ def _session(tmp_path, repo, wi, verdict_line):
 
 
 def test_a_disposition_rows_session_receives_the_disposition_brief(tmp_path):
-    """The end-to-end bar: a claimed adjudication row's session is handed ITS
+    """The end-to-end checks: a claimed adjudication row's session is handed ITS
     OWN brief — not the worker assignment — and the typed verdict line the
     brief demands lands at the declared path."""
     repo = _disposition_repo(tmp_path)
@@ -1857,7 +1857,7 @@ def test_a_judge_that_commits_without_ruling_does_not_complete(tmp_path):
     assert "INDEPENDENT adjudicator" in prompts, "the brief was not even sent"
     assert proc.returncode != agent_loop.EXIT_DONE, proc.stdout
     assert "not complete — no verdict was written" in proc.stdout
-    # The trailer IS there — which is exactly why the trailer alone is not the bar.
+    # The trailer IS there — which is exactly why the trailer alone is not the checks.
     assert "WI-301" in _git(repo, "log", "--format=%(trailers:key=WI,valueonly)")
 
 

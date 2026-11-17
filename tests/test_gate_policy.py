@@ -89,7 +89,7 @@ def test_gate_policy_autonomous_scaffolds_register(tmp_path):
     for point in (
         "the final read is the operator's",
         "No un-run greens",
-        "The harness is still the bar",
+        "The harness is still the standard",
         "never re-decided by an agent",
     ):
         assert point in register, "missing fixed point: " + point

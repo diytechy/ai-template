@@ -1,4 +1,4 @@
-"""The iterate bar's selection: a change selects the tests it names, a shared
+"""The iterate checks' selection: a change selects the tests it names, a shared
 module is narrowed by the definitions it touches, and what cannot be focused
 widens or is reported, never passed silently (scripts/check_iterate.py)."""
 
@@ -279,7 +279,7 @@ def test_an_inventory_of_script_names_does_not_name_each_script():
     assert not driver.inventory and STEP.names_module(driver, module)
 
 
-def test_the_lints_are_the_declared_commit_bars_own_and_none_is_the_tier_step():
+def test_the_lints_are_the_declared_commit_checks_own_and_none_is_the_tier_step():
     lints = STEP.declared_lints(ROOT)
     assert lints and all("check_smoke_budget" not in step for step in lints)
     assert lints[0] == "python project-trajectory/scripts/trace.py --strict"

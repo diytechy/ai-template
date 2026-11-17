@@ -476,19 +476,19 @@ def test_the_audit_fails_over_each_limit_naming_its_key(
     assert len(fail) == 1 and key in fail[0], err
 
 
-# --- The bars: no bar fails on the tier's seconds, and a red tier fails each.
+# --- The checks: no checks fail on the tier's seconds, and a red tier fails each.
 
-BARS = ["commit", "review"]
+ROUTES = ["by-hand", "record-checks"]
 
 
-def _bar_budget_argv(bar):
-    """The budget step's arguments in one bar's command, read from the real
+def _route_budget_argv(route):
+    """The budget step's arguments in one checks' command, read from the real
     docs/stack.ini. The commit checks run by hand are [run] smoke; the ones
     `integrate.py record-checks` runs (`review`) are the check suite docs/process.toml
     [required-checks] commit names, whose [check-suites] line runs the run
     menu's smoke action, so it resolves to the same line."""
     cp = _stack_ini()
-    if bar == "review":
+    if route == "record-checks":
         suite = process_key(ROOT, "required-checks", "commit")
         assert cp["check-suites"][suite].strip() == (
             "python project-trajectory/scripts/run_menu.py smoke"
@@ -500,9 +500,9 @@ def _bar_budget_argv(bar):
     return argv[2:]
 
 
-@pytest.mark.parametrize("bar", BARS)
-def test_neither_bar_fails_on_seconds(monkeypatch, tmp_path, capsys, bar):
-    argv = _bar_budget_argv(bar)
+@pytest.mark.parametrize("route", ROUTES)
+def test_neither_route_fails_on_seconds(monkeypatch, tmp_path, capsys, route):
+    argv = _route_budget_argv(route)
     step, calls = _stand_in(
         monkeypatch,
         tmp_path,
@@ -519,9 +519,9 @@ def test_neither_bar_fails_on_seconds(monkeypatch, tmp_path, capsys, bar):
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("bar", BARS)
-def test_a_red_tier_still_fails_each_bar(monkeypatch, tmp_path, capsys, bar):
-    argv = _bar_budget_argv(bar)
+@pytest.mark.parametrize("route", ROUTES)
+def test_a_failing_tier_still_fails_each_route(monkeypatch, tmp_path, capsys, route):
+    argv = _route_budget_argv(route)
     step, _ = _stand_in(monkeypatch, tmp_path, code=3)
     assert step.main(argv) == 3
     _, err = capsys.readouterr()

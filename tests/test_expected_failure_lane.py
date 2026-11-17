@@ -160,14 +160,14 @@ def _refresh_refused(root):
     return refusal
 
 
-def _bar_ran(wt):
+def _checks_ran(wt):
     return any(step.startswith("check") for step in _order(wt))
 
 
 def _refresh_arm(tmp_path, arm):
-    """`(root, wt, where)` for a refresh bar: `where` is the checkout a marked
-    file goes in. A `no-bar` lane's own delta must stay registry-shaped or the
-    scope rung runs the bar, so its mark arrives from trunk."""
+    """`(root, wt, where)` for a landing checks: `where` is the checkout a marked
+    file goes in. A `no-checks` lane's own delta must stay registry-shaped or the
+    scope rung runs the checks, so its mark arrives from trunk."""
     if arm == "landing":
         root = station_repo(tmp_path)
         wt = _lane(root, BRANCH)
@@ -180,7 +180,7 @@ def _refresh_arm(tmp_path, arm):
 
 
 @pytest.mark.parametrize("section, cause", UNDECLARED, ids=UNDECLARED_IDS)
-def test_record_checks_refuses_each_undeclared_state_before_the_bar(
+def test_record_checks_refuses_each_undeclared_state_before_the_checks(
     tmp_path, section, cause
 ):
     """Implements: TC-424"""
@@ -371,14 +371,16 @@ def test_every_mark_refusal_leaves_branch_and_index(tmp_path, arm):
     before, runs = _state(root, wt), len(_ran(wt))
     _refused(root)
     assert _state(root, wt) == before
-    assert len(_ran(wt)) == runs, "the bar ran"
+    assert len(_ran(wt)) == runs, "the checks ran"
 
 
 # --- the refresh --------------------------------------------------------------
 
 
 @pytest.mark.parametrize("section, cause", UNDECLARED, ids=UNDECLARED_IDS)
-def test_refresh_refuses_each_undeclared_state_before_the_bar(tmp_path, section, cause):
+def test_refresh_refuses_each_undeclared_state_before_the_checks(
+    tmp_path, section, cause
+):
     """Implements: TC-425"""
     root = station_repo(tmp_path)
     wt = _lane(root, BRANCH)
@@ -387,7 +389,7 @@ def test_refresh_refuses_each_undeclared_state_before_the_bar(tmp_path, section,
     tip = _rev(root, BRANCH)
     refusal = _refresh_refused(root)
     assert MARKER_AT + cause in refusal
-    assert not _bar_ran(wt)
+    assert not _checks_ran(wt)
     assert _rev(root, BRANCH) == tip
 
 
@@ -416,7 +418,7 @@ def test_refresh_refuses_a_marked_tree_naming_each_file_and_count(tmp_path, arm)
     refusal = _refresh_refused(root)
     for rel, n in counts.items():
         assert re.search(re.escape(rel) + r"\D*" + str(n), refusal), refusal
-    assert not _bar_ran(wt)
+    assert not _checks_ran(wt)
 
 
 def test_a_refused_refresh_leaves_the_lane_at_its_work_tip(tmp_path):
@@ -434,7 +436,7 @@ def test_a_refused_refresh_leaves_the_lane_at_its_work_tip(tmp_path):
 @pytest.mark.parametrize("arm", ["landing", "none"])
 def test_a_tree_with_no_marks_refreshes_as_today(tmp_path, arm):
     """Adequacy witness: a check that refuses an empty count map fails here,
-    on a tests root holding no mark, or none at all on the no-bar lane.
+    on a tests root holding no mark, or none at all on the no-checks lane.
 
     Implements: TC-425
     """
@@ -442,7 +444,7 @@ def test_a_tree_with_no_marks_refreshes_as_today(tmp_path, arm):
     sha, refusal = _refresh(root)
     assert refusal is None, refusal
     assert kv.passed_checks(root, sha).checks == arm
-    assert _bar_ran(wt) == (arm == "landing")
+    assert _checks_ran(wt) == (arm == "landing")
 
 
 # --- the routes a lane reaches them by ----------------------------------------

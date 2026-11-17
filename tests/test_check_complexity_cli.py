@@ -4,7 +4,7 @@ The CLI half of the census's tests: every mode driven the way an adopter's
 `stack.ini` would, against synthetic `project-trajectory/scripts/` fixtures. Kept
 SEPARATE from the in-process unit module (test_check_complexity.py) and re-tiered
 into conftest.SLOW_MODULES: each case pays interpreter startup, so this is the
-subprocess-dominated class that the per-commit smoke bar drops and the
+subprocess-dominated class that the per-commit smoke tier drops and the
 slice/phase-close + CI run exercises in full. The counting metric itself is
 pinned in-process next door, where it is cheap.
 

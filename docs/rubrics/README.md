@@ -12,7 +12,7 @@ Why it exists: an implementer session cannot judge its own output, and the
 original TC may have been lax — a project shipped awkward render artifacts because
 "the agent didn't know how to judge it, it just shipped it". The critique loop
 gives another agent a *different hat* to say **where and why** something isn't good
-enough, and drives rework toward a written bar rather than a fresh opinion each
+enough, and drives rework toward a written standard rather than a fresh opinion each
 round.
 
 ## Derived from the SN/SR intent, never from the TC
@@ -38,10 +38,10 @@ A rubric file is `rubric-<name>.md` (see the worked example
   across sessions.
 - **The artifact recipe** lives on the TC's `Parameters` cell (the command/steps
   that produce the screenshot/render/output under judgment) — the rubric names the
-  bar, the TC names how to produce what's judged.
+  standard, the TC names how to produce what's judged.
 
 The kit also seeds one shared rubric,
-[`architecture-decomposition.md`](architecture-decomposition.md): the bar a
+[`architecture-decomposition.md`](architecture-decomposition.md): the standard a
 component scope's decomposition is judged against at `DevStg-Arch`, when a work
 item's plan answers its architectural-delta question, and in an audit.
 
@@ -60,7 +60,7 @@ intent already covers, reached by a supported workflow — never a new
 requirement, and never a mechanism the artifact's intent does not need. Work
 past the intent is filed as its own item through change-intake (process.md
 §5). A rubric for scope (a work item's spec judged before it is claimed)
-states the same bar as one of its own anchors: a recommendation that adds a
+states the same standard as one of its own anchors: a recommendation that adds a
 check, a refusal or a record names the scenario that needs it, or is not
 made, and a work item that changes no behaviour gains no mechanism.
 

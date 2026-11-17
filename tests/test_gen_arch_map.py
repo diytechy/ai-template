@@ -730,7 +730,7 @@ def test_godot_source_is_a_recognised_module_type(tmp_path):
 
 def test_the_dial_reads_zero_for_everything_it_cannot_trust(tmp_path):
     """0 is report-only AND the fallback: a threshold has no conservative
-    default to fail toward, so an unreadable dial must not invent a bar. The
+    default to fail toward, so an unreadable dial must not invent a minimum. The
     loud half is `agent_common.PROCESS_ONLY_KEYS`, which refuses the wrong type
     outright — pinned in tests/test_rule_sync.py."""
     root, _src = _backlink_repo(tmp_path, ["LLR-001"], dial=50)

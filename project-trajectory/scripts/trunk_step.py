@@ -590,7 +590,7 @@ REGEN_STEPS = (
     # The live acceptance brief (`docs/ratify/CURRENT.md`, declared `accept` in
     # docs/stack.ini [generated]). It projects the registry against the
     # docs/archive/last_accepted snapshot, and `check.py`'s `acceptance-fresh`
-    # step (`trace.py --accept modified --check`) reds the refresh bar the
+    # step (`trace.py --accept modified --check`) reds the landing checks the
     # moment either side moves under it. A LEAF like the rollup — nothing reads
     # it back — so its position is free. It belongs HERE because the refresh
     # commit is the one commit the verdict gate peels: an adjudication lane

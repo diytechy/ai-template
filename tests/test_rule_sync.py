@@ -349,7 +349,7 @@ def test_status_enum_is_declared_for_every_spine_tier():
 def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
     # Correction C1 of the migration plan, mechanized. `--strict-schema` runs
     # only at DevStg-Impl (check.py), so a Status closure routed through
-    # `schema_findings` would be INERT for every repo below the top bar — which
+    # `schema_findings` would be INERT for every repo below the top stage — which
     # is every repo the closure exists for. Assert BOTH directions: the
     # integrity producer sees a retired word, and the schema producer does not
     # (a double report would make one of the two pipes a duplicate rather than
@@ -372,7 +372,7 @@ def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
     assert TRACE.enum_integrity_findings("SR", [dict(row, **{"SR-ID": "SR-000"})]) == []
 
 
-# The --require-verified bar's method-blind pin, which drives trace.py over a
+# The --require-verified check's method-blind pin, which drives trace.py over a
 # bootstrapped scaffold, lives in test_rule_sync_driven.py, outside the
 # per-commit smoke tier.
 
@@ -1065,7 +1065,7 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         "live_status": False,
         "subagent_gate": "off",
         # SEVENTH, added by OI-42's ruling (WI-486) and the first one here that
-        # is not a yes/no: the reverse back-link coverage BAR, a percentage.
+        # is not a yes/no: the reverse back-link coverage MINIMUM, a percentage.
         # `0` is its off position and must stay the shipped value — 50 is the
         # recorded target, and shipping the target as the default would fire
         # the check on its first run in every fresh scaffold, which is the
@@ -1099,7 +1099,7 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         # at `0` for a fresh adopter (nobody has written back-links yet), but
         # this repo just wrote them — 83 of 165 live LLR rows (50.3%), measured
         # by `gen_arch_map.py --backlink-coverage`. The dial rises because the
-        # tags landed, never because the bar came down; docs/process.toml's own
+        # tags landed, never because the minimum came down; docs/process.toml's own
         # comment and docs/log.d/2026-08-20-program-grind.md carry the figure.
         "backlink_coverage_min": 50,
         # WI-640 (SR-217): this repo's history predates the rule and reaches
@@ -1113,7 +1113,7 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
     # (2026-08-21 review, M-13). The dial was raised 0 -> 50 and both documents
     # that state its value went on saying 0 for the rest of the batch, because
     # nothing compared them: a future worker consulting the declared one-stop
-    # tour of the policy home would have been told the bar is off. The pin is
+    # tour of the policy home would have been told the minimum is off. The pin is
     # the value's presence in the row, not the row's prose.
     row = [
         ln
@@ -1126,11 +1126,11 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
     ), "README's dial table states a different value than docs/process.toml: " + row[0]
 
 
-def test_the_backlink_bar_is_type_checked_where_its_reader_stays_quiet(tmp_path):
+def test_the_backlink_minimum_is_type_checked_where_its_reader_stays_quiet(tmp_path):
     """WI-486 / OI-42: `[checks] backlink_coverage_min` is read by
     `gen_arch_map.read_backlink_min`, which answers 0 — report-only — for
     anything it cannot read as an int in 0..100. That is right for a THRESHOLD
-    (a malformed file cannot tell you what bar the adopter meant) and it is
+    (a malformed file cannot tell you what minimum the adopter meant) and it is
     exactly the shape that once turned a quoted `review_rounds` into "no review
     required". So the LOUD half must live in `config_conflicts`, and this pins
     the two halves as one decision: the reader degrades, the refusal fires."""
@@ -1159,7 +1159,7 @@ def test_the_test_first_start_is_type_checked_as_text(tmp_path):
     (`kitlib.config.process_check_text`) refuses a non-string rather than
     guessing, which reaches only the warn-only step's own output; the loud half
     for the three guarded entry points is `config_conflicts`, exactly as for
-    the backlink bar above."""
+    the backlink minimum above."""
     ac = load_script("agent_common")
     assert ac.PROCESS_ONLY_KEYS[("checks", "test_first_since")] == "str"
     docs = tmp_path / "docs"

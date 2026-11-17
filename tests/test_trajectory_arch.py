@@ -1414,7 +1414,7 @@ def _contained_two_module_tree(tmp_path, src="scripts"):
 def test_untagged_module_on_disk_reds_the_containment_rule(tmp_path):
     # The WI-387 topology under the live inventory: a new module on disk with
     # no Component tag is uncontained the moment it exists — the lane's own
-    # bar reds; no committed-map staleness can hide it from anyone.
+    # checks fail; no committed-map staleness can hide it from anyone.
     _contained_two_module_tree(tmp_path)
     write_module(tmp_path, "mod_new.py")
     plain = run_traj(tmp_path)

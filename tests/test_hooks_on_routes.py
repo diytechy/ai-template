@@ -199,8 +199,8 @@ def test_the_hooks_refusal_comes_before_the_coordinator_guards(tmp_path, capsys)
 
 def test_refresh_refuses_a_hookless_checkout(tmp_path):
     """Implements: TC-370"""
-    # The station fixture declares a product bar and a green stub harness, so
-    # with the hooks on this refresh runs its bar and commits; with them off it
+    # The station fixture declares a product checks and a green stub harness, so
+    # with the hooks on this refresh runs its checks and commits; with them off it
     # refuses before the lane is touched.
     root = station_repo(tmp_path)
     tip = _rev(root, "wi-401")
@@ -215,8 +215,8 @@ def test_refresh_refuses_a_hookless_checkout(tmp_path):
 def test_record_checks_refuses_a_hookless_checkout(tmp_path):
     """Implements: TC-370"""
     # The record-checks fixture declares the commit checks and a green stub harness, so
-    # with the hooks on this record-checks call runs its bar and commits the staged file;
-    # with them off it refuses before the bar, leaving branch and index.
+    # with the hooks on this record-checks call runs its checks and commits the staged file;
+    # with them off it refuses before the checks, leaving branch and index.
     root = checks_repo(tmp_path)
     wt = _lane(root, "wi-401")
     (wt / "staged.txt").write_text("staged\n", encoding="utf-8", newline="\n")
@@ -233,7 +233,7 @@ def test_record_checks_refuses_a_hookless_checkout(tmp_path):
 
 def test_merge_slot_refuses_a_hookless_checkout(tmp_path, capsys):
     """Implements: TC-370"""
-    # The same declared bar lets the slot refresh and merge this branch with
+    # The same declared checks lets the slot refresh and merge this branch with
     # the hooks on; with them off it takes no lock and trunk does not move.
     root = station_repo(tmp_path)
     assert "wi-401" in integ.finished_branches(root)

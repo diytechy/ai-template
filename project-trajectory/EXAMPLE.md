@@ -244,7 +244,7 @@ Traceability: SN=2 SR=2 LLR=2 TC=2 orphans=0. Report -> docs/test/report.md
 ```
 
 **Zero orphans**: every SN has an SR, every SR has an LLR + a TC, every LLR has a
-parent + a TC, every TC verifies a known id. That is the bar each gate enforces.
+parent + a TC, every TC verifies a known id. That is the standard each gate enforces.
 
 ## 7. A different shape — an infrastructure / operational requirement
 

@@ -1300,7 +1300,7 @@ def test_audit_reads_the_LEGACY_carrier_the_live_one_has_not_migrated_from(
 def test_the_live_audit_runs_clean_and_reports_the_repos_own_shape(capsys):
     """The kit's own registries, read from disk — the run the `spine-authoring`
     skill tells an adjudicator to make. Pinned loosely on purpose: the counts
-    move as needs are tagged, but ZERO unknown tokens is a standing bar (a typo
+    move as needs are tagged, but ZERO unknown tokens is a standing rule (a typo
     here is a need no lens can see) and the matrix must actually carry rows."""
     code = hats.main(["--root", str(ROOT), "audit", "--strict"])
     out = capsys.readouterr().out

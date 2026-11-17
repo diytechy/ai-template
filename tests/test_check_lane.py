@@ -7,7 +7,7 @@ it is forbidden to fix. This module pins the two halves of that rule:
 
   1. `_work_branch` — who counts as a claimed work branch, and (louder) who does
      NOT. The detector is fail-CLOSED: every uncertain answer is None, which
-     means the full strict bar applies. A regression that made it answer
+     means the full strict checks apply. A regression that made it answer
      truthily by accident would silently switch the freshness gates OFF on the
      trunk, and nothing else in the suite would notice.
   2. The skip itself — exactly the seven trunk-derived freshness steps, never
@@ -16,7 +16,7 @@ it is forbidden to fix. This module pins the two halves of that rule:
   3. `--trunk-lane`, its one deliberate exception (WI-386). The rule rests on "a
      work branch never commits a generated artifact", which the station refresh
      (docs/concurrency-v2.md §A2) makes false for exactly one commit: it merges
-     trunk in, regenerates ON the branch, and bars the result — a tree that is
+     trunk in, regenerates ON the branch, and checks the result — a tree that is
      byte-identical to the one the merge produces, so it owes the trunk lane's
      gates. Opt-IN, so a caller that forgets the flag gets the stricter-for-the-
      trunk answer this module's fail-closed direction already prefers.
@@ -106,7 +106,7 @@ def close(root, branch):
 
 
 def test_off_git_is_not_a_work_branch(check, tmp_path):
-    # No repo at all: the answer must be None, i.e. the STRICT bar. An adopter
+    # No repo at all: the answer must be None, i.e. the STRICT checks. An adopter
     # running the harness from an unpacked tarball gets the full checks.
     claim(tmp_path, "main")  # even a claim dir cannot make it truthy off-git
     assert check._work_branch(tmp_path) is None
@@ -353,10 +353,10 @@ def test_branch_edit_gates_still_run_in_the_g3_plan(check, tmp_path, monkeypatch
 
 
 def test_trunk_lane_forces_every_freshness_step_back_on(check, tmp_path, monkeypatch):
-    # WI-386. The refresh bar runs on the branch, and the integrator reads any
+    # WI-386. The landing checks run on the branch, and the integrator reads any
     # SKIP as a refusal — so without this flag the seven freshness steps stand
-    # down, the bar reports SKIP, and the refresh can never go green at all.
-    # The flag MAKES the mechanical bar possible; it is not a rescue from a
+    # down, the checks report SKIP, and the refresh can never go green at all.
+    # The flag MAKES the mechanical checks possible; it is not a rescue from a
     # false pass (REVIEW-A round 1 drove the direction). The branch is
     # genuinely claimed here (the detector still says so), which is what makes
     # this a forced OVERRIDE rather than a detection change.
@@ -368,7 +368,7 @@ def test_trunk_lane_forces_every_freshness_step_back_on(check, tmp_path, monkeyp
     for name in check._TRUNK_FRESHNESS_STEPS:
         assert check.run_step(name, (), FAILING, lenient=False)[0] == "FAIL", name
     # The captured (parallel) runner shares the same decision, or `--jobs N`
-    # and `--jobs 1` would bar different things.
+    # and `--jobs 1` would check different things.
     assert check.run_step_captured("okf", (), FAILING, lenient=False)[0] == "FAIL"
 
 
@@ -432,7 +432,7 @@ def test_cache_key_is_the_root_not_the_process(check, tmp_path):
 
 def test_the_primary_checkout_is_not_a_work_branch(check):
     # The kit's PRIMARY checkout — the trunk lane — has no
-    # docs/work/active/<branch>/ claim, so its own harness runs the full bar.
+    # docs/work/active/<branch>/ claim, so its own harness runs the full checks.
     # This is the guard that would catch a detector so loose it matched the
     # trunk — the failure mode that turns every freshness gate off everywhere.
     #

@@ -790,7 +790,7 @@ def test_an_unreadable_policy_file_is_refused(tmp_path):
 @pytest.mark.parametrize("value", [-1, 101])
 def test_an_out_of_range_dial_is_refused_not_defaulted(tmp_path, value):
     """TC-150 (SR-137: an out-of-range dial is refused rather than defaulted).
-    The coverage bar's own reader answers report-only for a value it cannot
+    The coverage minimum's own reader answers report-only for a value it cannot
     use, so the refusal is what makes the value visible. (The rung dial's
     out-of-range ordinal is `test_acceptance_level`'s
     `test_a_malformed_dial_is_REFUSED_not_silently_defaulted`.)

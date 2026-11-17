@@ -14,7 +14,7 @@ swallowed — a run that merged everything but left a branch held exits NONZERO,
 because §5.6's stop is drained AND unloaded and nothing ever retries the unload.
 
 The declared tool residue is the other half: a lane may be shed only when what
-is left in it is EXACTLY the bar's own leavings, measured against the declared
+is left in it is EXACTLY the checks' own leavings, measured against the declared
 set rather than a wildcard, and one undeclared file beside it refuses by name.
 """
 
@@ -339,16 +339,16 @@ def test_the_integrators_own_lock_file_is_shed_like_the_loops(tmp_path):
     assert _worktree_count(repo) == 1
 
 
-def test_the_declared_residue_set_is_exactly_the_bars_own_leavings():
+def test_the_declared_residue_set_is_exactly_the_checks_own_leavings():
     # The declaration, stated as data: every measured 2026-08-01 path is
     # declared residue; every name that CAN hold sole-copy evidence is not.
     for rel in MEASURED_RESIDUE:
         assert integ._is_declared_residue(rel), rel
     # Widened on measurement, the WI-400 scope guard working as designed:
-    # check.py passes --html to its trace step at DevStg-Tests/DevStg-Impl, so the DECLARED bar
+    # check.py passes --html to its trace step at DevStg-Tests/DevStg-Impl, so the DECLARED checks
     # writes docs/test/report.html in whatever lane it runs in, and on
     # 2026-08-02 the wi-402 lane was measured holding exactly that file at
-    # unload. Same class as report.md — rebuilt by the next bar run, sole-copy
+    # unload. Same class as report.md — rebuilt by the next check run, sole-copy
     # evidence never (WI-407, REVIEW-A finding 2).
     assert integ._is_declared_residue("docs/test/report.html")
     # C6 (2026-08-30, WI-548): the loop's OWN artifacts joined the declared
@@ -377,9 +377,9 @@ def test_the_declared_residue_set_is_exactly_the_bars_own_leavings():
         assert not integ._is_declared_residue(rel), rel
 
 
-def test_a_lane_holding_the_bars_html_report_unloads_clean(tmp_path):
+def test_a_lane_holding_the_checks_html_report_unloads_clean(tmp_path):
     # REVIEW-A finding 2's judgment, taken with its test: the measured residue
-    # set plus the bar's OWN html report unloads clean through the integrator's
+    # set plus the checks' OWN html report unloads clean through the integrator's
     # arm — and the shed still operates only inside the lane, so the repo-root
     # out/ (WI-398's refresh-refused logs, outside any lane) is never reached.
     repo, worker = residue_lane(tmp_path)
@@ -560,8 +560,8 @@ def test_the_queue_gcs_a_clean_worker_worktree_end_to_end(tmp_path):
     assert not worker.exists(), out
     assert "wi-401" not in _branches(repo)
     # The trunk is the only registration left — the drained-and-unloaded stop,
-    # in full. Note WHERE the bar ran to get here: in this very worktree. The
-    # refresh sheds its own bar residue precisely so the §5.6 GC still sees a
+    # in full. Note WHERE the checks ran to get here: in this very worktree. The
+    # refresh sheds its own checks residue precisely so the §5.6 GC still sees a
     # clean tree; without that, every merge would exit nonzero over caches the
     # integrator had just created itself.
     assert _worktree_count(repo) == 1

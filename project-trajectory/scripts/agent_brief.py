@@ -134,8 +134,8 @@ NON_BUILD_PHASES = frozenset(kverdict.REVIEW_PHASES) | {
     "DESIGN-CHECK",
     "CRITIQUE",
     # SN-026: an adjudication commit changes Status cells and the work
-    # registry, which is what its lane runs no product bar for
-    # (`integrate.refresh`'s no-bar arm). A review round over it would be a
+    # registry, which is what its lane runs no product checks for
+    # (`integrate.refresh`'s no-checks arm). A review round over it would be a
     # fresh-context reviewer asked to judge a judgement, with no product diff
     # to judge — the corroboration loop the review rounds exist to avoid.
     "ADJUDICATE",

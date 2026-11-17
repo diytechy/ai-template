@@ -1073,10 +1073,10 @@ def _write(path, text):
         fh.write(text + "\n")
 
 
-def _review_bar_refusal(root, lane, sha, tests):
+def _commit_checks_refusal(root, lane, sha, tests):
     """The commit whose verified `commit` record for `tests` stands for
     the reviewed commit `sha`, or `BriefError` naming `sha`, the cause and the
-    step that records one. The render trusts the record and never runs the bar.
+    step that records one. The render trusts the record and never runs the checks.
 
     Implements: SR-241, LLR-341
     """
@@ -1116,7 +1116,7 @@ def _cmd_review(args):
         rubric=args.rubric,
         stance=args.stance,
     )
-    passed = _review_bar_refusal(args.root, lane, sha, rnd.tests)
+    passed = _commit_checks_refusal(args.root, lane, sha, rnd.tests)
     text, verdict = render_review(args.root, rnd)
     _write(args.out, text)
     print(

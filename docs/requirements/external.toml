@@ -136,7 +136,7 @@ status = "Accepted"
 [entity.EXT-007]
 name = "Hosted CI"
 class = "interoperating"
-description = """A remote runner that invokes the declared bar on a push, pull request or schedule, across the OS x Python matrix the job declares, and reports the job verdict and step log."""
+description = """A remote runner that invokes the declared checks on a push, pull request or schedule, across the OS x Python matrix the job declares, and reports the job verdict and step log."""
 status = "Accepted"
 notes = """Outside this system's design control: it may or may not honour the workflow it is handed. That is what makes it an external party; the obligation the system can carry stays on the shipped workflow (B-05 content)."""
 
@@ -166,7 +166,7 @@ system = "operation"
 carries = """Guardrail verdicts during a session: hook-floor accept/reject and subagent_gate PreToolUse allow/deny."""
 status = "Accepted"
 absorbs = "v1 BIF-012/X-07, and the verdict halves of BIF-006 and BIF-026"
-notes = """The honest limit belongs in this crossing's SR: a local hook floor is bypassable (git commit --no-verify), so "no unchecked write enters governed state" rests on this verdict at the moment of the act PLUS a re-run of the same bar away from that bypass. Where hosted CI is configured, that re-run crosses B-11. The system holds no design control over whether the runner honours the workflow it is handed, so the obligation it carries stays on the shipped workflow (B-05 content, SR-151 and SR-152)."""
+notes = """The honest limit belongs in this crossing's SR: a local hook floor is bypassable (git commit --no-verify), so "no unchecked write enters governed state" rests on this verdict at the moment of the act PLUS a re-run of the same checks away from that bypass. Where hosted CI is configured, that re-run crosses B-11. The system holds no design control over whether the runner honours the workflow it is handed, so the obligation it carries stays on the shipped workflow (B-05 content, SR-151 and SR-152)."""
 
 [boundary.B-05]
 entity = "EXT-002"
@@ -198,7 +198,7 @@ notes = """The backoff obligation stays a requirement on the loop content that m
 entity = "EXT-007"
 direction = "inout"
 system = "operation"
-carries = """A hosted run of the declared bar: the trigger and the declared OS x Python matrix in; the job verdict and step log out."""
+carries = """A hosted run of the declared checks: the trigger and the declared OS x Python matrix in; the job verdict and step log out."""
 status = "Accepted"
 absorbs = "EXT-004's cut crossings B-06 (trigger in) and B-07 (verdict out)"
 

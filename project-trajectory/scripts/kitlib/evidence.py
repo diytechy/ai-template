@@ -29,7 +29,7 @@ sources the program measured absent all failed on one of these):
      record — and because the evidence file is a DECLARED STAGE INPUT and the
      stage fingerprint folds this source digest whenever the file is present, a
      source edit moves the stage fingerprint too: the committed `docs/stage`
-     reads STALE and `derive_stage --check` (the commit-bar and CI freshness
+     reads STALE and `derive_stage --check` (the commit-check and CI freshness
      step) FAILS. Stale evidence is a hard finding in the consumer, never a
      warning and never silently ridden.
 
@@ -82,7 +82,7 @@ def source_paths(root):
 
     ONE HOME, NOT A SECOND LIST. `[paths] src` / `tests` is where the adopter
     already declares what their harness runs over; restating it here would let
-    the evidence bind to a surface the bar does not measure, which is the exact
+    the evidence bind to a surface the checks do not measure, which is the exact
     shape of a claim that is true about the wrong thing.
 
     An absent or malformed `docs/stack.ini` answers `[]` rather than raising: the
@@ -106,7 +106,7 @@ def source_paths(root):
 
 def source_files(root):
     """Every file of the declared source surface, as `[(relpath, Path)]` sorted by
-    relpath — plus `docs/stack.ini` itself, because it DECLARES the bar (a change
+    relpath — plus `docs/stack.ini` itself, because it DECLARES the checks (a change
     to the test command or the tier expressions changes what a green meant).
 
     Residue is skipped (`_SKIP_DIRS`/`_SKIP_SUFFIXES`); a declared path that is a

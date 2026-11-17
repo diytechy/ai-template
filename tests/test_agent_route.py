@@ -196,7 +196,7 @@ def test_escalate_continue_and_win_stay():
     ]
     d = route.escalate(rounds, c)
     assert d["action"] == "continue" and d["next_primary"] == "OPENAI"
-    # A margin below the bar does not move the primary.
+    # A margin below the threshold does not move the primary.
     rounds2 = [
         {"verdict": "APPROVE", "tier": "strong", "margin": 0.05, "primary": "OPENAI"}
     ]

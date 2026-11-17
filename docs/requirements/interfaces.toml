@@ -329,7 +329,7 @@ status = "Drafted"
 owner = "scripts/gen_arch_map"
 consumers = ["scripts/check", "scripts/trunk_step"]
 channel = "exit-code"
-data = "0 current · 1 a stale target under --check, an unparseable module under --strict-parse, or coverage below the bar under --strict-backlinks"
+data = "0 current · 1 a stale target under --check, an unparseable module under --strict-parse, or coverage below the minimum under --strict-backlinks"
 version = "v1"
 status = "Drafted"
 
@@ -494,7 +494,7 @@ coincident = """The format is what the adopter writes and every reader parses; a
 owner = "docs/stack.ini"
 consumers = ["scripts/check", "external:downstream adopter"]
 channel = "file"
-data = "sections: paths, product, tiers, coverage, arch-map, readability, bars, step:NAME"
+data = "sections: paths, product, tiers, coverage, arch-map, readability, check-suites, step:NAME"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -1711,7 +1711,7 @@ component = "CMP-007"
 interface_from_external = "B-01"
 bridged_by = ["DA-003", "DA-004"]
 interface_to_external = "B-04"
-notes = """The FACING row for the hook floor, and it is deliberately separate from the rows that model the floor's COMPOSITION. Those state which script the hook runs - an internal call between two in-tree endpoints - while the crossing is the contract git holds the hook to: git invokes, the exit code admits or refuses. A tie-back on an internal-call row would claim a realization that row's own contract does not state, so the gap was never a missing surface but a missing FACING. The bypass rides the contract rather than hiding behind it: what discharges `no unchecked write enters governed state` is this seam PAIRED with a re-run of the same bar away from the bypass, never this seam alone."""
+notes = """The FACING row for the hook floor, and it is deliberately separate from the rows that model the floor's COMPOSITION. Those state which script the hook runs - an internal call between two in-tree endpoints - while the crossing is the contract git holds the hook to: git invokes, the exit code admits or refuses. A tie-back on an internal-call row would claim a realization that row's own contract does not state, so the gap was never a missing surface but a missing FACING. The bypass rides the contract rather than hiding behind it: what discharges `no unchecked write enters governed state` is this seam PAIRED with a re-run of the same checks away from the bypass, never this seam alone."""
 
 [interface.IF-135]
 owner = "hooks/pre-push"

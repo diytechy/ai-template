@@ -69,7 +69,7 @@ measured clean (0 of 27 need cells), and the point of landing it then was to
 lock that state in: the FIRST row to dirty the tier is the one that reports.
 
 SEVERITY IS WARN-FIRST, ALWAYS, in the shipped wiring. check.py runs this step
-with no `--strict` at every bar — deliberately unlike check_vocab, which
+with no `--strict` at every stage — deliberately unlike check_vocab, which
 promotes from DevStg-Tests on. Promoting this check to a gate is an operator
 ruling that has not been made (WI-454's scope guard): a form heuristic over
 stakeholder prose must not block work on the strength of a regex. `--strict`
@@ -253,7 +253,7 @@ def need_form_allow_parse_findings(root):
     Shares this checker's own WARN-plain / ERROR-under-`--strict` severity
     (`main`, below) — there is no separate opt-out to ride here, unlike the
     kernel/interfaces siblings: `check_need_form` is not wired into `check.py`
-    at any bar (WI-454's scope guard), so its `--strict` flag is the whole
+    at any stage (WI-454's scope guard), so its `--strict` flag is the whole
     dial."""
     path = Path(root) / ALLOW
     if not path.is_file():
@@ -349,7 +349,7 @@ def main():
         "--strict",
         action="store_true",
         help="promote findings from WARN to ERROR (exit 1). NOT wired by "
-        "check.py at any bar — gating on this check needs an operator ruling "
+        "check.py at any stage — gating on this check needs an operator ruling "
         "(WI-454's scope guard).",
     )
     args = ap.parse_args()

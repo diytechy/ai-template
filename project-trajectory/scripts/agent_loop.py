@@ -501,7 +501,7 @@ class RoutingState:
         self.impl_exclude = set()  # families to avoid for the next BUILD
         # WI-264: the win-stay directive from the last escalation — a reviewer
         # FAMILY to prefer as the next review round's primary feedback source
-        # when the last round's margin cleared the bar, else None (lose-shift ->
+        # when the last round's margin cleared the threshold, else None (lose-shift ->
         # the ordinary weighted draw). apply_decision refreshes it every round;
         # the review draw validates it against the live pool (fail-open).
         self.next_primary = None
@@ -3371,8 +3371,8 @@ def review_draw_gate(ctx):
     drawn only over a tip carrying a verified `commit` record for the
     row's derived set, and its range is pointed at that recorded commit.
     Without one, a red already recorded for the governing build commit drops
-    the round and rebuilds with its summary, running no bar; with no record,
-    the commit checks run once here and `record_bar_result` records it, green
+    the round and rebuilds with its summary, running no checks; with no record,
+    the commit checks run once here and `record_checks_result` records it, green
     drawing the round and red dropping it. A derivation refusal leaves no
     record to compare, so `integrate.record_checks` refuses with the same text and it
     is recorded as any failure is. Returns the failure cap's exit code after a
@@ -3393,7 +3393,7 @@ def review_draw_gate(ctx):
         red = kverdict.failed_record(root, "HEAD", worker["base"], build)
         if red is None:
             passed, red = integrate.record_checks(root, branch, "commit")
-            record_bar_result(ctx, build, red)
+            record_checks_result(ctx, build, red)
         if red is not None:
             st.refuse_round()
             worker["rework"] = red
@@ -3429,8 +3429,8 @@ def failure_cap_check(ctx):
     return EXIT_CHECK_FAILURE_CAP
 
 
-def record_bar_result(ctx, build, refusal):
-    """The loop's record of a review-bar run it made at a draw: a log of phase
+def record_checks_result(ctx, build, refusal):
+    """The loop's record of a commit-check run it made at a draw: a log of phase
     `CHECKS` written through the session service's one writer
     (`session_service.record`) and committed in its own telemetry commit,
     never a rewrite of an existing log. A failure carries the failed-checks record

@@ -42,7 +42,7 @@ stopped, so the count is outside it: the test node ids a collect-only
 `-m smoke` run from the repository root collects. tests/test_smoke_budget.py's
 membership ratchet counts through the same function. A collect-only run that
 exits nonzero, or that yields no node id, is a failed count, never a pass.
-Warn mode does not count: the bars judge membership through the ratchet,
+Warn mode does not count: the checks judge membership through the ratchet,
 which runs inside the tier.
 
 THE MODES AND THE EXITS. `--mode warn` (the default) prints a WARN line for a
@@ -52,7 +52,7 @@ verdict line still printed, and a green tier whose reading (or, in enforce
 mode, whose count) failed exits 2. Callers test only for nonzero; the lines
 name the cause.
 
-THE CALLERS. Every bar runs warn mode, so no bar fails on the tier's seconds:
+THE CALLERS. Every checks run warn mode, so no checks fail on the tier's seconds:
 docs/stack.ini [run] smoke (the commit checks, which [required-checks] commit runs through
 the run menu), the [step:smoke] harness step, and the CI workflow's
 smoke-budget job. Only the run menu's audit, [run] audit, runs enforce mode,
@@ -221,7 +221,7 @@ def select_meter(platform=sys.platform):
 
 def smoke_argv(cp):
     """The declared smoke command: [product] test + the [tiers] smoke selector,
-    with {py} bound to this interpreter — so this runs exactly the bar sessions
+    with {py} bound to this interpreter — so this runs exactly the checks sessions
     run (`python -m pytest -q -n auto -m smoke`), read from the single source."""
     test = cp.get("product", "test", fallback="{py} -m pytest -q -n auto")
     tier = cp.get("tiers", "smoke", fallback="-m smoke")

@@ -15,7 +15,7 @@ TRACE = load_script("trace")
 GATE = load_script("spine_rules")
 
 
-def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
+def test_require_verified_at_impl_matches_sr_gate_regardless_of_method(scaffold):
     # WI-259 (repo-review-2026-07-21 M-5): trace's --require-verified DevStg-Impl bar and
     # spine_rules.sr_bar must agree about which SRs must be Accepted before DevStg-Impl.
     # sr_bar has always demanded is_accepted for ANY decomposed SR with no

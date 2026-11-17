@@ -22,7 +22,7 @@ repos, a real claim, a real lane worktree, real commits. What each group pins:
     status vocabulary that four copies enforce, so all four are driven over one
     real file — the drift this repo closes by test rather than by extraction
     (WI-291);
-  * the QUARANTINE is bar-inert AND lossless: the product paths go back to the
+  * the QUARANTINE is checks-inert AND lossless: the product paths go back to the
     base byte for byte, the `.patch` re-applies, and the bookkeeping the
     handback just wrote survives untouched, as do the lane's review rounds and
     its id watermark, which only ever rises.
@@ -155,7 +155,7 @@ def report_path(root, wid="WI-401", branch="wi-401"):
 
 
 def merge_branch(root, branch="wi-401"):
-    """Land the branch on trunk the way the slot would — without the bar, which
+    """Land the branch on trunk the way the slot would — without the checks, which
     is `integrate`'s own suite's subject. Lets a test read the RETURNED spec on
     trunk, which is where the invariant says it has to end up."""
     _git(root, "merge", "--no-ff", "-q", "-m", "integrate: merge " + branch, branch)
@@ -1106,11 +1106,11 @@ def quarantined_repo(tmp_path):
 def test_quarantine_reverts_the_product_and_keeps_the_failing_diff(tmp_path):
     root, wt = quarantined_repo(tmp_path)
 
-    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+    assert hb.quarantine(root, "wi-401", "checks exit 1") is None
 
-    # Bar-inert: every product path is back to what the base had, in all THREE
+    # Checks-inert: every product path is back to what the base had, in all THREE
     # diff shapes the lane produced. A revert that only handled modifications
-    # would leave added.py — the unparseable file — right where the bar looks,
+    # would leave added.py — the unparseable file — right where the checks looks,
     # and a revert that ignored deletions would leave .gitignore missing.
     assert (wt / "seed.txt").read_text(encoding="utf-8") == "seed\n"
     assert not (wt / "added.py").exists()
@@ -1144,7 +1144,7 @@ def test_quarantine_reverts_a_rename_and_keeps_the_failing_file(tmp_path):
     _commit(wt, "WI-401: rename a module and break a file")
     assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
 
-    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+    assert hb.quarantine(root, "wi-401", "checks exit 1") is None
 
     tree = _git(root, "ls-tree", "-r", "--name-only", "wi-401").split()
     # The rename is undone in BOTH directions...
@@ -1177,7 +1177,7 @@ def test_a_failed_revert_step_refuses_and_restores_rather_than_reporting(
         return real_git(cwd, *args)
 
     monkeypatch.setattr(hb.ac, "git", flaky)
-    refusal = hb.quarantine(root, "wi-401", "bar exit 1")
+    refusal = hb.quarantine(root, "wi-401", "checks exit 1")
     monkeypatch.undo()
 
     assert refusal is not None
@@ -1201,7 +1201,7 @@ def test_quarantine_leaves_the_handback_bookkeeping_alone(tmp_path):
     )
     _commit(wt, "log: WI-401 fragment")
 
-    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+    assert hb.quarantine(root, "wi-401", "checks exit 1") is None
     assert (wt / "docs" / "work" / "partial" / "WI-401-widget.md").is_file()
     assert fragment.is_file()
     # The per-close REPORT is bookkeeping too — reverting it would destroy the
@@ -1235,7 +1235,7 @@ def test_quarantine_leaves_the_monotone_watermark_as_the_lane_left_it(tmp_path):
     _commit(wt, "WI-401: allocate IF-6 and break a file")
     assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
 
-    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+    assert hb.quarantine(root, "wi-401", "checks exit 1") is None
 
     assert not (wt / "added.py").exists()  # the product still reverts
     assert (wt / tr.WATERMARK).read_text(encoding="utf-8") == raised
@@ -1268,7 +1268,7 @@ def test_a_product_file_sharing_the_watermarks_prefix_still_reverts(tmp_path):
     _commit(wt, "WI-401: allocate IF-6 and leave a backup")
     assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
 
-    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+    assert hb.quarantine(root, "wi-401", "checks exit 1") is None
 
     assert not backup.exists()
     tree = _git(root, "ls-tree", "-r", "--name-only", "wi-401").split()
@@ -1296,7 +1296,7 @@ def test_quarantine_keeps_the_lanes_review_record(tmp_path):
     )
     _commit(wt, "review: WI-401 round 1")
 
-    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+    assert hb.quarantine(root, "wi-401", "checks exit 1") is None
 
     assert not (wt / "added.py").exists()
     assert round_file.read_text(encoding="utf-8") == (
@@ -1309,12 +1309,12 @@ def test_quarantine_keeps_the_lanes_review_record(tmp_path):
 def test_quarantine_refuses_when_the_red_is_not_the_lanes_own_code(tmp_path):
     # A lane that changed nothing outside the bookkeeping surfaces cannot have
     # caused the red, so there is nothing to revert and reverting nothing would
-    # only buy a second identical bar run. It says so instead.
+    # only buy a second identical check run. It says so instead.
     root = claimed_repo(tmp_path)
     lane(root)
     assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
 
-    refusal = hb.quarantine(root, "wi-401", "bar exit 1")
+    refusal = hb.quarantine(root, "wi-401", "checks exit 1")
     assert refusal is not None
     assert "nothing outside the bookkeeping surfaces" in refusal
 

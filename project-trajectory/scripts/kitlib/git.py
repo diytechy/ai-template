@@ -317,7 +317,7 @@ def claimed_work_branch(root, notice=None):
     the specs to their terminal directory, in its own history. Off git, on a
     detached HEAD, with an implausible branch name, or with neither a matching
     `active/` directory nor a claim in history, the answer is None; what None
-    MEANS (the strict bar, a judged commit) is each caller's to declare.
+    MEANS (the strict checks, a judged commit) is each caller's to declare.
 
     `notice`, when given, is called with an implausible branch name before the
     reader answers None for it, so a caller can say out loud that something fed
@@ -350,7 +350,7 @@ def claimed_work_branch(root, notice=None):
     # outlives the move: the commit that cut the branch added the directory, and
     # that add stays reachable. One path-limited git call, stopped at the first
     # hit. FAIL-DIRECTION: no git, a failing git or an empty answer all read as
-    # unclaimed, because a false positive would relax the trunk's own bar.
+    # unclaimed, because a false positive would relax the trunk's own checks.
     # Residual (review-confirmed breadth): ANY branch whose name ever appeared
     # under docs/work/active/ in reachable history reads as claimed forever (a
     # retired WI branch re-cut, or a throwaway reusing its name); bounding the

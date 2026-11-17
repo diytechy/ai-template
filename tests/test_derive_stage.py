@@ -561,7 +561,7 @@ def _assert_committed_stage_current(root):
     """`root`'s committed `docs/stage` records the live inputs, or SKIP on a
     claimed work branch.
 
-    The skip is the commit-bar twin's: check.py stands the `derived-stage` step
+    The skip is the commit-check twin's: check.py stands the `derived-stage` step
     down on a claimed work branch because generated freshness is the trunk
     lane's (concurrency-restructure §5.2). It asks `check._work_branch`, the
     same detector, so there is one notion of "work branch", fail-closed: off
@@ -581,13 +581,13 @@ def _assert_committed_stage_current(root):
 
 def test_this_repo_s_committed_stage_is_current():
     """The meta-repo's own committed `docs/stage` records the live inputs. This is
-    the same claim the commit-bar `--check` step makes; asserting it here too is
+    the same claim the commit-check `--check` step makes; asserting it here too is
     what makes a stale commit visible to a plain `pytest` run as well."""
     _assert_committed_stage_current(ROOT)
 
 
 def test_the_stage_currency_claim_stands_down_on_a_claimed_branch_only(scaffold):
-    """The claim above is exempt where its commit-bar twin is, and nowhere else.
+    """The claim above is exempt where its commit-check twin is, and nowhere else.
     Amending a settled row moves the stage's input digest, so a claimed work
     branch doing the routine amendment meets a stale `docs/stage` it may not
     regenerate; the trunk, with the same stale file, must still go red."""

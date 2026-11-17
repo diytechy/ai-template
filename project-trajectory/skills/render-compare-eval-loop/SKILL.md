@@ -23,6 +23,6 @@ comparison silently degenerates into copying.
 4. Guard against saturation: the moment the model borrows appearance from the capture, same-view
    error is circular. Score on a **novel view** (a stereo pair's other eye is free; a second camera
    is stronger) and report coverage. State explicitly which layers the metric no longer tests.
-5. **Done when:** the bar is met on the *discriminative* (novel-view) form of the metric, the
+5. **Done when:** the standard is met on the *discriminative* (novel-view) form of the metric, the
    residual breakdown says where the next rung would attack, and any saturated/untested layer is
    named in the write-up.

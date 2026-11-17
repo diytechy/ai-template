@@ -23,7 +23,7 @@ Implements: TC-235, TC-252
 # NameError instead of skipping — the safety net failing exactly where it was
 # supposed to catch. Nothing noticed because every machine that has run this
 # suite had git (WI-333; the DevStg-Impl-only `lint` step that reports it had been
-# dropped from the bar by an open re-acceptance window). (WI-277 moved this
+# dropped from the checks by an open re-acceptance window). (WI-277 moved this
 # note with the tests it guards — it was authored in tests/test_trace.py, whose
 # git-backed tests are now all here.)
 

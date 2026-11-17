@@ -1,7 +1,7 @@
 """integrate.py `record-checks` — a build round's own record of green (WI-956).
 
 `record-checks` commits the lane's staged work (or, with nothing staged, an empty
-commit on the tip) carrying a `Checks-Passed:` line that names the `review` bar and
+commit on the tip) carrying a `Checks-Passed:` line that names `checks=commit` and
 the digest of the tests it ran, through the one producer the station refresh
 also commits through. It derives the row's review test set, runs the commit
 checks (the check suite `docs/process.toml` `[required-checks] commit` names,
@@ -10,11 +10,11 @@ files through `[product] test` under the lane's own `--basetemp`, and commits
 only when both are green.
 
 Every failed write leaves the branch and the index exactly as they were: a
-red bar or a red named test, a dirty worktree (refused before the bar),
-undeclared commit checks (refused before the bar), a message that already carries
+failing checks or a red named test, a dirty worktree (refused before the checks),
+undeclared commit checks (refused before the checks), a message that already carries
 the label, a commit a hook refuses, and a commit a hook rewrites. The merge
 seam reads the record too: a tip carrying only a `commit` record is not
-merge-ready, and the refusal names both bars. The review render reads it as
+merge-ready, and the refusal names both checks. The review render reads it as
 its gate (WI-957): it renders over what `record-checks` writes, deriving the same set.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES` with its station
@@ -143,9 +143,9 @@ def test_record_checks_with_nothing_staged_writes_an_empty_commit_that_verifies(
         ("the commit checks", STUB_CHECK_RED, None, "check"),
         ("a named test", None, STUB_NAMED_TESTS_RED, "named"),
     ],
-    ids=["red-bar", "red-named-test"],
+    ids=["red-checks", "red-named-test"],
 )
-def test_a_red_review_bar_commits_nothing_and_leaves_branch_and_index(
+def test_failing_commit_checks_commit_nothing_and_leave_branch_and_index(
     tmp_path, arm, check_src, named_src, ran
 ):
     kw = {"check_src": check_src} if check_src else {"named_src": named_src}
@@ -164,18 +164,18 @@ def test_a_red_review_bar_commits_nothing_and_leaves_branch_and_index(
     [("tracked", True), ("untracked", True), ("ignored", False)],
     ids=["unstaged-tracked-edit", "untracked-file", "ignored-file"],
 )
-def test_record_checks_refuses_a_dirty_worktree_before_running_the_bar(
+def test_record_checks_refuses_a_dirty_worktree_before_running_the_checks(
     tmp_path, dirt, refuses
 ):
-    # The bar runs on the index as staged, so the worktree must equal it: an
-    # unstaged edit or an untracked file would be barred-but-not-committed.
+    # The checks run on the index as staged, so the worktree must equal it: an
+    # unstaged edit or an untracked file would be checked-but-not-committed.
     # An ignored file is not the index's business and does not refuse.
     root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     path = {
         "tracked": "wi-401.txt",
         "untracked": "loose.txt",
-        "ignored": "bar-cache/mine.txt",
+        "ignored": "checks-cache/mine.txt",
     }[dirt]
     (wt / path).parent.mkdir(parents=True, exist_ok=True)
     (wt / path).write_text("not staged\n", encoding="utf-8", newline="\n")
@@ -183,16 +183,16 @@ def test_record_checks_refuses_a_dirty_worktree_before_running_the_bar(
     sha, refusal = _record_checks(root)
     if refuses:
         assert sha is None and path in (refusal or ""), refusal
-        assert _ran(wt) == [], "the bar ran on a dirty worktree"
+        assert _ran(wt) == [], "the checks ran on a dirty worktree"
         assert _state(root, wt) == before
     else:
         assert refusal is None, refusal
-        assert _ran(wt), "the bar never ran"
+        assert _ran(wt), "the checks never ran"
 
 
 def test_record_checks_counts_untracked_files_whatever_status_shows(tmp_path):
     # `status.showUntrackedFiles=no` hides an untracked file from a plain
-    # `git status`; the bar would still see it, so it still refuses.
+    # `git status`; the checks would still see it, so it still refuses.
     root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _git(wt, "config", "status.showUntrackedFiles", "no")
@@ -200,7 +200,7 @@ def test_record_checks_counts_untracked_files_whatever_status_shows(tmp_path):
     before = _state(root, wt)
     sha, refusal = _record_checks(root)
     assert sha is None and "loose.txt" in (refusal or ""), refusal
-    assert _ran(wt) == [], "the bar ran on a dirty worktree"
+    assert _ran(wt) == [], "the checks ran on a dirty worktree"
     assert _state(root, wt) == before
 
 
@@ -306,10 +306,10 @@ RETIRED_REVIEW = "; the retired [bars] review still declares it and is no longer
         "a-name-with-no-line",
     ],
 )
-def test_record_checks_refuses_a_missing_review_bar_key_naming_it(
+def test_record_checks_refuses_a_missing_commit_checks_key_naming_it(
     tmp_path, rel, declared, named
 ):
-    # No default and no fallback to another bar: the declaration staged in the
+    # No default and no fallback to another checks: the declaration staged in the
     # lane the record is for is absent or unusable, so record-checks names the file,
     # the key and the cause and runs nothing, though the primary checkout's
     # own declaration is whole. `declared` is the lane's `rel`, None removing
@@ -334,7 +334,7 @@ def test_record_checks_refuses_a_missing_review_bar_key_naming_it(
 def test_record_checks_runs_the_declarations_staged_in_the_lane_not_the_primarys(
     tmp_path,
 ):
-    # The record binds the staged tree, so the bar and the named-tests command
+    # The record binds the staged tree, so the checks and the named-tests command
     # it runs are the ones that tree declares: the suite the lane's policy
     # file names, by the line the lane's stack file gives it. The primary
     # checkout declares others; neither of them runs.
@@ -359,7 +359,7 @@ def test_record_checks_runs_the_declarations_staged_in_the_lane_not_the_primarys
     assert passed is not None and passed.checks == "commit"
 
 
-def test_the_named_tests_run_after_the_review_bar_under_the_lanes_basetemp(tmp_path):
+def test_the_named_tests_run_after_the_commit_checks_under_the_lanes_basetemp(tmp_path):
     root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     _sha, refusal = _record_checks(root)
@@ -386,13 +386,13 @@ def test_a_hook_refused_record_checks_commit_leaves_branch_and_index(tmp_path):
     before = _state(root, wt)
     sha, refusal = _record_checks(root)
     assert sha is None and refusal
-    assert _ran(wt), "the refusal came before the bar, not at the commit"
+    assert _ran(wt), "the refusal came before the checks, not at the commit"
     assert _state(root, wt) == before
 
 
 def test_a_rewritten_record_checks_commit_is_undone_by_the_self_check(tmp_path):
     # A pre-commit hook that stages a file of its own moves the committed tree
-    # off the one the bar saw; the line then names a tree that is not there,
+    # off the one the checks saw; the line then names a tree that is not there,
     # and the producer undoes the commit and the hook's staging both.
     root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
@@ -405,11 +405,11 @@ def test_a_rewritten_record_checks_commit_is_undone_by_the_self_check(tmp_path):
     before = _state(root, wt)
     sha, refusal = _record_checks(root)
     assert sha is None and refusal
-    assert _ran(wt), "the refusal came before the bar, not at the self-check"
+    assert _ran(wt), "the refusal came before the checks, not at the self-check"
     assert _state(root, wt) == before
 
 
-# A declared bar is the adopter's command and may write the tree it checks:
+# A declared checks are the adopter's command and may write the tree it checks:
 # a formatter rewriting a tracked file, or a step that stages its own edit.
 # Each stub records its run like the station's, then moves the tree.
 STUB_CHECK_EDITS = STUB_CHECK_GREEN + (
@@ -422,15 +422,15 @@ import sys
 pathlib.Path("..", "harness-order.txt").open("a", encoding="utf-8").write(
     "check-stages\\n"
 )
-pathlib.Path("wi-401.txt").write_text("staged by the bar\\n", encoding="utf-8")
+pathlib.Path("wi-401.txt").write_text("staged by the checks\\n", encoding="utf-8")
 subprocess.run(["git", "add", "wi-401.txt"], check=True)
 sys.exit({code})
 """
 
 
 @pytest.mark.parametrize("route", ["record-checks", "refresh"])
-def test_a_bar_that_edits_a_tracked_file_records_nothing(tmp_path, route):
-    # The tree is named before the bar runs, so a bar that rewrites a tracked
+def test_checks_that_edit_a_tracked_file_record_nothing(tmp_path, route):
+    # The tree is named before the checks run, so a check run that rewrites a tracked
     # file is caught: what it tested is no longer what would be committed.
     root = checks_repo(tmp_path, check_src=STUB_CHECK_EDITS)
     wt = _lane(root, BRANCH)
@@ -444,15 +444,15 @@ def test_a_bar_that_edits_a_tracked_file_records_nothing(tmp_path, route):
     )
     sha, refusal = run(root)
     assert sha is None and "wi-401.txt" in (refusal or ""), refusal
-    assert _ran(wt), "the refusal came before the bar"
+    assert _ran(wt), "the refusal came before the checks"
     assert _rev(root, BRANCH) == tip
     if route == "record-checks":
         assert _git(wt, "write-tree").strip() == index
 
 
 @pytest.mark.parametrize("code", [1, 0], ids=["red", "green"])
-def test_a_bar_that_stages_an_edit_leaves_the_index_as_staged(tmp_path, code):
-    # Red or green, a bar that moves the index records nothing, and the index
+def test_checks_that_stage_an_edit_leave_the_index_as_staged(tmp_path, code):
+    # Red or green, a check run that moves the index records nothing, and the index
     # goes back to the tree the caller staged.
     root = checks_repo(tmp_path, check_src=STUB_CHECK_STAGES.format(code=code))
     wt = _lane(root, BRANCH)
@@ -490,7 +490,7 @@ def test_the_passed_checks_record_joins_a_message_files_trailer_block(tmp_path):
     assert passed is not None and passed.checks == "commit"
 
 
-def test_record_checks_refuses_below_the_harness_floor_before_the_bar(tmp_path):
+def test_record_checks_refuses_below_the_harness_floor_before_the_checks(tmp_path):
     # The refresh's floor: a repo that declares the pinned toolchain but has
     # no runnable .venv must not record a green run on ambient Python.
     root = checks_repo(tmp_path)
@@ -500,11 +500,11 @@ def test_record_checks_refuses_below_the_harness_floor_before_the_bar(tmp_path):
     before = _state(root, wt)
     sha, refusal = _record_checks(root)
     assert sha is None and "harness floor" in (refusal or ""), refusal
-    assert _ran(wt) == [], "the bar ran below the floor"
+    assert _ran(wt) == [], "the checks ran below the floor"
     assert _state(root, wt) == before
 
 
-def test_a_message_file_carrying_the_label_is_refused_before_the_bar(tmp_path):
+def test_a_message_file_carrying_the_label_is_refused_before_the_checks(tmp_path):
     # The producer writes the one label line; a message that brings its own
     # would make two, or a forged one.
     root = checks_repo(tmp_path)
@@ -658,7 +658,7 @@ def _empty():
     [(_no_sr, "names no SR"), (_partial, "partial"), (_empty, "empty")],
     ids=["no-sr", "partial", "empty"],
 )
-def test_a_derivation_refusal_runs_no_bar_and_leaves_branch_and_index(
+def test_a_derivation_refusal_runs_no_checks_and_leaves_branch_and_index(
     tmp_path, seed, kind
 ):
     """Implements: TC-417"""
@@ -667,11 +667,11 @@ def test_a_derivation_refusal_runs_no_bar_and_leaves_branch_and_index(
     proc = _cli(root)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert kind in proc.stderr, proc.stderr
-    assert _ran(wt) == [], "a bar ran before the derivation refused"
+    assert _ran(wt) == [], "a check run ran before the derivation refused"
     assert _state(root, wt) == before
 
 
-def test_record_checks_runs_the_review_bar_then_the_derived_files(tmp_path):
+def test_record_checks_runs_the_commit_checks_then_the_derived_files(tmp_path):
     """Implements: TC-417"""
     root, wt = _seeded(tmp_path, **_derived())
     proc = _cli(root)
@@ -702,12 +702,12 @@ def test_record_checks_prints_the_gaps_a_row_touching_no_code_reports(tmp_path):
     assert "SR-001: no test case verifies it" in proc.stdout, proc.stdout
 
 
-def test_a_row_touching_no_code_runs_the_bar_alone(tmp_path):
+def test_a_row_touching_no_code_runs_the_check_suite_alone(tmp_path):
     """Implements: TC-417"""
     # TC-417. Characterization: a row touching no code and naming no SR has an
     # empty set, so the commit checks run alone and the record digests `none`, as
     # it does before the derivation exists. Adequacy witness: an implementation
-    # that widened an empty set to the whole bar runs `[product] test` with no
+    # that widened an empty set to the whole checks run `[product] test` with no
     # paths here, and `_ran` then ends in `named`.
     root, wt = _seeded(tmp_path, code=False, sr_refs=[])
     proc = _cli(root)

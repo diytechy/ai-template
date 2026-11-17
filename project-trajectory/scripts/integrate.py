@@ -11,10 +11,10 @@ here follows from that line. A merge CONFLICT becomes unrepresentable (if
 trunk is an ancestor, the --no-ff merge is trivially clean and its tree is
 byte-identical to the branch tip), so there is no conflict arm, no `merge
 --abort` path and no half-merge to park. The composed tree IS the branch
-tree, so the bar runs ONCE per WI — on the branch, at refresh — instead of
+tree, so the checks run ONCE per WI — on the branch, at refresh — instead of
 once by the builder and again by the integrator on a candidate worktree.
 Class C composition failures are still caught, and better: whichever branch
-merges second must refresh onto a trunk containing the first and bar THERE,
+merges second must refresh onto a trunk containing the first and check THERE,
 so every pair composes exactly once, on the real tree, with the red
 attributable to the refresh that caused it.
 
@@ -43,7 +43,7 @@ Five operations here; the two lane closes that are NOT a merge (`hand_back`,
              the R-E debt is unpayable once the closing branch exists).
   refresh    the STATION REFRESH (§A2), lane-side and mechanical: in the
              branch's own lane worktree, merge trunk IN, run trunk_step.py
-             (compile the fragments, then regenerate), run the DECLARED bar
+             (compile the fragments, then regenerate), run the DECLARED checks
              --trunk-lane, and commit the result carrying a `Checks-Passed:`
              trailer. The order is fixed and load-bearing (§A2.1). The
              refresh commit is DISPOSABLE: a retry resets to the last work
@@ -69,7 +69,7 @@ Five operations here; the two lane closes that are NOT a merge (`hand_back`,
              the ancestor relation and VERIFIES the `Checks-Passed:` record
              at the branch tip, then merges --no-ff. A branch that is not
              merge-ready is refreshed RIGHT THERE, inside the slot — which is
-             the pessimistic sequence (take slot -> refresh -> bar -> merge)
+             the pessimistic sequence (take slot -> refresh -> checks -> merge)
              and is why that path can never rot: every drain that merges a
              second branch reaches it, because the first merge moved trunk
              out from under it. The merged branch is then UNLOADED: a clean
@@ -101,17 +101,17 @@ Five operations here; the two lane closes that are NOT a merge (`hand_back`,
 
 Fail-closed by construction, against the dispatcher's recorded fail-open: a
 missing docs/stack.ini, an absent or EMPTY [product] test declaration, or
-any SKIP in the bar's own report is a REFUSAL, never a pass — exit 0 alone
-is not evidence the bar ran (the `bar_failures: 0` lesson, §4.4 of the
+any SKIP in the checks' own report is a REFUSAL, never a pass — exit 0 alone
+is not evidence the checks ran (the `bar_failures: 0` lesson, §4.4 of the
 Phase 4 inventory). The checks are recorded against a TREE, and the record NAMES
 that tree: the refresh commit carries `Checks-Passed: tree=<sha> work=<sha>
 checks=landing tests=none <summary>` (`checks=none` on the adjudication arm), and
 the slot re-derives both names from git before it merges. A
 message alone would prove nothing — amend, rebase, cherry-pick and copy all
-carry words onto content nobody barred — so the trailer is checked, never
+carry words onto content nobody checked — so the trailer is checked, never
 read. That closes ACCIDENT, not INTENT: a lane that deliberately names the
 tree and the parent (four git invocations) merges unbarred, and the design
-accepts it because DECISION 3 ruled out a slot-side bar and a lane is trusted
+accepts it because DECISION 3 ruled out a slot-side checks and a lane is trusted
 code (`refresh_passed_checks` states the bound in full). Verdict freshness is
 git-derived the same way: the
 verdict's last commit on the branch must be no older than the branch's last
@@ -119,7 +119,7 @@ non-review, non-fragment WORK commit (the disposable refresh is peeled off
 first — mechanical bookkeeping must not stale an honest APPROVE).
 
 Never pushes; the trunk only ever moves inside the slot, to a branch whose
-own bar passed on this exact tree.
+own checks passed on this exact tree.
 
 Contracts: IF-080, IF-154, IF-173 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
@@ -134,16 +134,16 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     rewritten: the move's relink passes them by, so they are never a path the
     claim must write and never a reason it refuses.
     `refresh` runs the station refresh on a claimed branch, refusing before
-    its bar an undeclared expected-failure marker or a tree whose test files hold it, naming
+    its checks an undeclared expected-failure marker or a tree whose test files hold it, naming
     each file and its count. `record-checks` commits a
     lane's staged work carrying a `commit` record, refusing before any
-    bar runs on missing hooks, an undeclared commit checks or expected-failure marker, a
+    checks run on missing hooks, an undeclared commit checks or expected-failure marker, a
     worktree that holds work the index does not, or a test file whose expected-failure
     marker count rose outside the round's test set or fell without the lane's
     last commit record over the same set naming it, and committing nothing on
-    a red bar or a named test's red. `integrate` is the
+    failing checks or a named test's red. `integrate` is the
     serial fail-closed merge queue: a `--no-ff` merge onto a candidate
-    worktree, the trunk step folded in, then the DECLARED bar on the composed
+    worktree, the trunk step folded in, then the DECLARED checks on the composed
     tree — a missing or empty declaration, or any SKIP in it, refuses — and
     the verdict gate with git-derived freshness before the fast-forward-only
     trunk advance; a lane whose changed Done-when no verdict or operator ruling
@@ -153,7 +153,7 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     delta or a current branch git cannot read is refused too, naming why.
     `audit` is the non-merge
     product-commit window check. The
-    trunk only ever moves inside the slot, to a branch whose own bar passed on
+    trunk only ever moves inside the slot, to a branch whose own checks passed on
     exactly the tree being advanced, and nothing here ever pushes. Every
     subcommand exits nonzero on refusal with the reason named; the caller
     needs no other channel to know what happened.
@@ -419,7 +419,7 @@ def _specref_refusal(root, meta, wi_id):
     if not (root / path_part).is_file():
         return (
             "{} SpecRef {!r} does not resolve to an in-repo FILE (R-E: a "
-            "directory or missing path reds the bar) - fix the queued spec, "
+            "directory or missing path reds the checks) - fix the queued spec, "
             "then claim (WI-370)".format(wi_id, ref)
         )
     return None
@@ -830,7 +830,7 @@ def claim(root, wi_id, branch, dispatch_lock_held=False):
     whose parent just passed them, but two are not: `acceptance-fresh` reads the
     registry this commit MUTATES, and the secrets floor would otherwise scan
     the regenerated artifacts. So trunk advances to a commit no hook inspected,
-    and the next thing to bar it is a lane's §A2 refresh. Accepted for the
+    and the next thing to check it is a lane's §A2 refresh. Accepted for the
     window it buys, not because nothing is given up.
 
     Implements: SR-156, SR-229, LLR-140, LLR-151, LLR-300
@@ -1016,7 +1016,7 @@ def _spec_id(name):
     R1 mint rung (`_minted_id_refusal`) have to agree exactly on what id a name
     carries: the rung's whole question is "is this id in that set", and two
     parsers that disagree would answer it wrongly in one direction or the other.
-    Strict on purpose - the `.md` suffix is required, so a handback's bar-inert
+    Strict on purpose - the `.md` suffix is required, so a handback's checks-inert
     `docs/work/handback/<branch>.patch` is not a spec by the same extension rule
     that makes it inert to every other checker (handback.ARTEFACTS).
     """
@@ -1117,7 +1117,7 @@ def _minted_id_refusal(root, branch, claimed):
         and a handback's return to `queued/` both re-ADD a file whose id the
         branch already holds claimed, so the id is in the set;
       * an EDIT to a claimed row's body arrives as `M`, never `A`;
-      * a handback's bar-inert `docs/work/handback/<branch>.patch` carries no
+      * a handback's checks-inert `docs/work/handback/<branch>.patch` carries no
         spec filename at all.
 
     `--no-renames` is load-bearing, not tidiness: with rename detection on, git
@@ -1206,7 +1206,7 @@ def _claimed_spec_frontmatters(root, branch):
     claim records the authority a lane acts under, so a reader that answered
     `None` let a caller's `if not metas` read it as "nothing claimed" and drop
     that authority's bounds. Each caller now chooses its own direction out of
-    an explicit refusal: the acceptance rung and the early close refuse; the bar
+    an explicit refusal: the acceptance rung and the early close refuse; the checks
     and the review gate fail toward more checking.
 
     Implements: SR-156, LLR-140"""
@@ -1223,10 +1223,10 @@ def _adjudication_lane(root, branch, metas=None):
     """Does EVERY claimed spec on `branch` declare the `adjudication` kind?
 
     `_lane_checks_directives`' `skip` test and the review gate's: whether the lane
-    runs a bar and owes a round. The acceptance rung does not ask it (WI-849: any
+    runs a check run and owes a round. The acceptance rung does not ask it (WI-849: any
     claimed row recording a scope bounds the lane's acts, read off the metas by
     `acceptance_record.merge_acceptance_refusal`). UNREADABLE FRONTMATTER ANSWERS
-    FALSE, which runs the bar and owes the round: more checking."""
+    FALSE, which runs the checks and owes the round: more checking."""
     metas = _claimed_spec_frontmatters(root, branch)[0] if metas is None else metas
     return bool(metas) and all(
         str(meta.get("safety_class") or "").strip().lower() == "adjudication"
@@ -1771,29 +1771,29 @@ def _head(root):
 
 def _declared_checks_or_refusal(root):
     """§4: a missing or EMPTY check declaration is a refusal, never a skip - and
-    so is a declared bar with no floor-satisfying interpreter to run it on.
+    so is a declared checks with no floor-satisfying interpreter to run it on.
 
     WI-361: this is the surviving home of the WI-286 harness floor, which had
     exactly one enforcement point (the deleted dispatcher's preflight). It runs
-    HERE, ahead of the compose/merge/bar sequence in `integrate_one`, so a
+    HERE, ahead of the compose/merge/checks sequence in `integrate_one`, so a
     declared-toolchain repo without its pinned .venv is a named refusal rather
-    than a silent ambient-Python bar run whose green may be false. The guard
+    than a silent ambient-Python check run whose green may be false. The guard
     arms only on a repo that declares the pinned toolchain - see
     `agent_common.harness_floor_failures`."""
     ini = root / "docs" / "stack.ini"
     if not ini.exists():
-        return "docs/stack.ini is absent - the required bar is undeclared"
+        return "docs/stack.ini is absent - the required checks are undeclared"
     argv = ac._declared_test_command(ini)
     if argv is None:
-        return "no [product] test declaration - the required bar is undeclared"
+        return "no [product] test declaration - the required checks are undeclared"
     if argv == []:
         return "[product] test is declared but EMPTY - a misconfiguration, not a skip"
     return _harness_floor_refusal(root)
 
 
 def _harness_floor_refusal(root):
-    """The harness floor's refusal for a bar about to run on `root`'s
-    interpreter, or None: the one rung the refresh's and the slot's bar
+    """The harness floor's refusal for a check run about to run on `root`'s
+    interpreter, or None: the one rung the refresh's and the slot's checks
     declaration check and `record-checks`'s preflight share, so no route records a
     green run on an interpreter the floor rejects (see
     `agent_common.harness_floor_failures` for when it arms).
@@ -1802,13 +1802,13 @@ def _harness_floor_refusal(root):
     """
     floor = ac.harness_floor_failures(root)
     if floor:
-        return "the harness floor REFUSES this bar run: " + floor[0]
+        return "the harness floor REFUSES this check run: " + floor[0]
     return None
 
 
 def _run(argv, cwd, **kw):
     """One captured child run: (returncode, stdout+stderr folded). The single
-    subprocess seam for the bars and the trunk step, so the capture keywords
+    subprocess seam for the checks and the trunk step, so the capture keywords
     have one home in this file; `kw` carries the commit checks' `shell` and
     `env`."""
     proc = subprocess.run(
@@ -1828,7 +1828,7 @@ def _run(argv, cwd, **kw):
 def _branch_tree_script(wt, root, name):
     """The BRANCH tree's copy of harness script `name`, else the invoker's.
 
-    The trunk step and the bar must be the refreshed branch's own: a work
+    The trunk step and the checks must be the refreshed branch's own: a work
     branch may change a generator or the harness itself, and regenerating that
     tree with the invoker's trunk-vintage copy writes artifacts the refresh
     commit's own floor - which runs the branch's version - then refuses them as
@@ -1858,7 +1858,7 @@ def _passed_steps(out):
 
     Counted by name, not by line (WI-377): under --jobs each step's status
     line prints twice - once by the lane runner as it finishes, once in the
-    final summary block - so a line count reported a 20-step bar as "40
+    final summary block - so a line count reported a 20-step checks as "40
     steps", a false measurement in the merge record. Distinct names give the
     same answer at --jobs 1 and --jobs N.
     """
@@ -1871,11 +1871,11 @@ def _passed_steps(out):
     return names
 
 
-def _run_bar(wt, root, tier, stage=None):
+def _run_landing_checks(wt, root, tier, stage=None):
     """check.py at the derived gate on the refreshed branch; fail-closed reading.
 
     Green means: exit 0 AND the report carries no SKIP line. `--trunk-lane` is
-    passed because the tree being barred IS the tree that becomes trunk (the
+    passed because the tree being checked IS the tree that becomes trunk (the
     --no-ff merge of a branch containing trunk reproduces it byte for byte), so
     the §5.2 freshness gates - which stand down on a work branch, and which
     this very step just regenerated - have to run here or nothing checks them.
@@ -1893,17 +1893,17 @@ def _run_bar(wt, root, tier, stage=None):
     code, out = _run(argv, wt)
     skips = [ln for ln in out.splitlines() if re.match(r"\s*SKIP\s", ln)]
     if code != 0:
-        return False, out, "bar exit {}".format(code)
+        return False, out, "checks exit {}".format(code)
     if skips:
         return (
             False,
             out,
-            "bar reported SKIP - a skip is a refusal here:\n" + "\n".join(skips),
+            "checks reported SKIP - a skip is a refusal here:\n" + "\n".join(skips),
         )
     return (
         True,
         out,
-        "bar PASS ({} steps, tier {}{})".format(
+        "checks PASS ({} steps, tier {}{})".format(
             len(_passed_steps(out)), tier, ", stage " + stage if stage else ""
         ),
     )
@@ -1958,8 +1958,8 @@ def _normalize_checks_stage(value):
 
 
 # The surfaces an adjudication lane's non-refresh delta may touch and still
-# take the NO-BAR path (WI-388 REVIEW-A finding 1) — §A5.2's premise ("it
-# touches Status cells and the work registry, nothing a product bar can speak
+# take the NO-CHECKS path (WI-388 REVIEW-A finding 1) — §A5.2's premise ("it
+# touches Status cells and the work registry, nothing a product checks can speak
 # to") made CHECKED rather than asserted. Derived from what the kind's ruled
 # outcomes actually write: the work registry (spec moves, dispositions,
 # drafted follow-ups), the three spine registries (the Status flip — the
@@ -1972,20 +1972,20 @@ def _normalize_checks_stage(value):
 # `docs/stage` needs NO row of its own here: it is declared `[generated]`, so
 # it arrives with that set. (Its predecessor `docs/gate` was listed literally
 # and RETIRED at WI-498 slice 5; a dead pathspec silently NARROWS this
-# allowlist, failing lanes toward the full bar for no reason.)
+# allowlist, failing lanes toward the full checks for no reason.)
 _ADJUDICATION_SURFACES = (
     "docs/work/",
     # WI-504 (OI-55 ruled (a)): a disposition's terminal close now moves the
     # spec under the archive, one directory deeper — without this row that
     # exact move (spec moves are named above as a ruled disposition outcome)
-    # would fail an adjudication lane off the no-bar path.
+    # would fail an adjudication lane off the no-checks path.
     "docs/archive/work/",
     "docs/log.d/",
     "docs/reviews/",
     # BOTH carrier paths per spine tier: this is a pathspec
     # allowlist matched against `git diff --name-only`, and a repo that has not
     # migrated stages the `.csv` name. Naming one suffix would fail the lane
-    # TOWARD the full bar there — safe, but wrong, and invisible until someone
+    # TOWARD the full checks there — safe, but wrong, and invisible until someone
     # wonders why adjudication never takes the cheap path.
     "docs/requirements/system-requirements.toml",
     "docs/requirements/system-requirements.csv",
@@ -1997,26 +1997,26 @@ _ADJUDICATION_SURFACES = (
     "docs/requirements/open-items.csv",
     # SR-144's per-close reports: an adjudication lane READS them and, on an
     # override, may write a corrective one. Without this row a lane that
-    # touches a report falls off the no-bar path into the full bar — a
-    # ~11-minute penalty for editing a document no product bar can speak to.
+    # touches a report falls off the no-checks path into the full checks — a
+    # ~11-minute penalty for editing a document no product checks can speak to.
     "docs/handbacks/",
     # SR-225's per-run decisions record: an adjudicator owes one at its close
-    # under a recording dial, and no product bar can speak to it either.
+    # under a recording dial, and no product checks can speak to it either.
     "docs/decisions/",
 )
 
 
 def _adjudication_scope_ok(root, branch):
-    """May this adjudication-only lane take the no-bar path? True only when
+    """May this adjudication-only lane take the no-checks path? True only when
     the branch's NON-REFRESH delta — merge-base(trunk, branch) to the peeled
     work tip, the same branch-delta read `_minted_id_refusal` makes at the
     same slot — touches nothing outside `_ADJUDICATION_SURFACES` plus the
     declared [generated] set.
 
-    ANY other path — product code above all — fails TOWARD the full bar:
-    REVIEW-A drove a product file with a red check harness through the no-bar
+    ANY other path — product code above all — fails TOWARD the full checks:
+    REVIEW-A drove a product file with a red check harness through the no-checks
     arm onto trunk with the harness never invoked, an un-run green against
-    §A8's fixed points ("no un-run greens; the harness is still the bar").
+    §A8's fixed points ("no un-run greens; the harness is still the standard").
     Unreadable git answers False, the same direction."""
     code, base = ac.git(root, "merge-base", _head(root), branch)
     if code != 0 or not base.strip():
@@ -2044,14 +2044,14 @@ def _adjudication_scope_ok(root, branch):
 
 
 def _lane_checks_directives(root, branch):
-    """The claimed row's say over the refresh bar (WI-388): `(skip, stage,
+    """The claimed row's say over the landing checks (WI-388): `(skip, stage,
     refusal)`.
 
     * `skip` — True when the lane's one claimed spec declares the
-      `adjudication` kind: adjudication runs NO bar (§A5.2 — its outputs are
-      Status cells and the work registry, nothing a product bar can speak to;
-      that is why the kind needs its own no-bar arm rather than a tier). Fails
-      TOWARD the bar: an unreadable frontmatter or any other kind runs it.
+      `adjudication` kind: adjudication runs NO checks (§A5.2 — its outputs are
+      Status cells and the work registry, nothing a product checks can speak to;
+      that is why the kind needs its own no-checks arm rather than a tier). Fails
+      TOWARD the checks: an unreadable frontmatter or any other kind runs it.
     * `stage` — that row's `checks_stage` key (one of DevStg-Reqs,
       DevStg-Tests, DevStg-Impl), handed to check.py --stage. None when it
       declares none.
@@ -2069,7 +2069,7 @@ def _lane_checks_directives(root, branch):
     kinds, stages = [], []
     metas, unreadable = _claimed_spec_frontmatters(root, branch)
     if unreadable:
-        return False, None, None  # unreadable: run the bar, fail toward it
+        return False, None, None  # unreadable: run the checks, fail toward it
     for name, meta in metas:
         kinds.append(str(meta.get("safety_class") or "").strip().lower())
         declared = _normalize_checks_stage(meta.get("checks_stage"))
@@ -2092,7 +2092,7 @@ def _lane_checks_directives(root, branch):
             stages.append(declared)
     skip = bool(kinds) and all(kind == "adjudication" for kind in kinds)
     # The scope rung (REVIEW-A finding 1): the kind alone never earns the
-    # no-bar path — the branch's delta must LOOK like adjudication too.
+    # no-checks path — the branch's delta must LOOK like adjudication too.
     if skip and not _adjudication_scope_ok(root, branch):
         skip = False
     return skip, (stages[0] if stages else None), None
@@ -2148,10 +2148,10 @@ def _worktree_dirt(wt):
 # next trace.py run. A short enumerated list on purpose - not a glob
 # configuration surface and not a dial; everything outside it stays evidence.
 # Widened on measurement, once (WI-407): check.py passes --html to its trace
-# step at DevStg-Tests/DevStg-Impl, so the declared bar writes docs/test/report.html in whatever
+# step at DevStg-Tests/DevStg-Impl, so the declared checks write docs/test/report.html in whatever
 # lane it runs in, and on 2026-08-02 the wi-402 lane was measured holding
 # exactly that file at unload - same class as report.md, rebuilt by the next
-# bar run, sole-copy evidence never.
+# check run, sole-copy evidence never.
 _RESIDUE_DIR_NAMES = frozenset({".pytest_cache", ".ruff_cache", "__pycache__"})
 _RESIDUE_FILES = frozenset({"docs/test/report.md", "docs/test/report.html"})
 # The loop's OWN artifacts (C6, docs/plans/2026-08-30-stall-guard-plan.md):
@@ -2245,7 +2245,7 @@ def _shed_declared_residue(wt):
     """Delete the declared tool-residue from a merged lane worktree.
 
     `_shed_residue` cannot cover this case by design: it sheds only what the
-    REFRESH'S OWN bar added (a before/after baseline), while the residue that
+    REFRESH'S OWN checks added (a before/after baseline), while the residue that
     held every 2026-08-01 lane was the WORKER'S - written before the station
     ever saw the branch. So the unload gets its own shed, locked twice: a path
     must be IGNORED by git (`ignored_files`; a trackable file is evidence) AND
@@ -2334,7 +2334,7 @@ def _unload_branch(root, branch):
     the MAIN checkout is never removed at all. A worktree can hold orphaned
     files that exist nowhere else (2026-07-26), so dirt is evidence, not
     garbage - but the DECLARED tool-residue set is shed first (WI-400), because
-    a cache the bar rebuilds on every run is the one kind of dirt that
+    a cache the checks rebuild on every run is the one kind of dirt that
     provably is.
     """
     code, out = ac.git(root, "branch", "-d", branch)
@@ -2427,7 +2427,7 @@ def ignored_files(wt):
     at any `-u` setting - so a before/after diff of those lines cannot see a
     file added to a directory that already existed (REVIEW-A round 1: driven,
     and it is the NORMAL case, because the worker builds in the same lane
-    worktree the refresh then bars). `ls-files -o -i` enumerates the files
+    worktree the refresh then checks). `ls-files -o -i` enumerates the files
     themselves. `-z` because a path with an odd character would otherwise come
     back quoted and have to be guessed at.
 
@@ -2456,14 +2456,14 @@ def existing_directories(wt):
     """Every directory under `wt` right now, as a set of paths.
 
     The other half of `_shed_residue`'s baseline. An empty ignored directory
-    IS reported by `git status --ignored` (measured), so a directory the bar
+    IS reported by `git status --ignored` (measured), so a directory the checks
     emptied has to be removed or §5.6's unload refuses over it - but a
     directory that was already there, empty, belongs to the lane and must
     survive. Only a snapshot can tell those apart: git lists no empty
     directory as "pre-existing" because git does not track directories at all.
 
     Cheap relative to what it guards - one tree walk beside an eleven-minute
-    bar. `.git` is skipped because nothing under it is ever the bar's residue.
+    checks. `.git` is skipped because nothing under it is ever the checks' residue.
     """
     found = set()
     for parent, dirs, _files in os.walk(wt):
@@ -2475,11 +2475,11 @@ def existing_directories(wt):
 
 
 def _shed_residue(wt, baseline, baseline_dirs):
-    """Delete the ignored FILES this refresh's own bar added to `wt`.
+    """Delete the ignored FILES this refresh's own checks added to `wt`.
 
     The refresh's promise is that it leaves the lane worktree as it found it
     plus (at most) one commit. Without this the promise breaks in one specific
-    way: the bar runs in the lane worktree now, and a declared bar leaves tool
+    way: the checks run in the lane worktree now, and a declared checks leave tool
     residue - `.pytest_cache/`, `__pycache__/`, a coverage report - which git
     ignores and which §5.6's unload reads, correctly, as DIRT.
 
@@ -2509,7 +2509,7 @@ def _shed_residue(wt, baseline, baseline_dirs):
             # Left behind rather than fought over: the unload will report it as
             # dirt, which is a loud, recoverable outcome.
             continue
-    # A directory the bar CREATED is residue too, once it is empty - otherwise
+    # A directory the checks CREATED is residue too, once it is empty - otherwise
     # git reports the emptied directory and the unload refuses over it. Two
     # stops, and the second is the one REVIEW-A round 2 added: a directory that
     # still holds a pre-existing file is the lane's (rmdir simply fails), and a
@@ -2563,7 +2563,7 @@ def _refresh_preflight(root, branch):
     Ends by resetting the lane to its work tip, so the caller begins from a
     known state whatever the previous run left. Split out from `refresh` so the
     sequence itself reads as the four steps §A2.1 fixes the order of, with the
-    preconditions - a declared bar, a trunk to merge in, a lane that is not
+    preconditions - a declared checks, a trunk to merge in, a lane that is not
     holding uncommitted work - stated once, here.
     """
     refusal = _declared_checks_or_refusal(root)
@@ -2625,7 +2625,7 @@ def _keep_refused_output(root, branch, detail):
 # a reason (§5.3, and the [generated] comment says exactly that). Both sides of
 # a conflict there therefore carry a reviewed reason, no command re-derives
 # them, and taking the trunk side would silently drop the lane's. Every other
-# kind names a regenerator the trunk step (or the bar's freshness gates) runs
+# kind names a regenerator the trunk step (or the checks' freshness gates) runs
 # moments later, so whichever side the merge leaves in the tree cannot survive
 # to be wrong.
 _HAND_STAMPED_GENERATED_KINDS = frozenset({"linecounts"})
@@ -2747,7 +2747,7 @@ def _fold_watermark_conflict(wt, remaining):
 
 def _fold_carrier_in(wt):
     """The refresh's carrier fold, once trunk is merged in: while an id carrier
-    exists, fold its tip into the lane's watermark and stage it, so the barred
+    exists, fold its tip into the lane's watermark and stage it, so the checked
     tree holds the fold; with no carrier nothing changes. A refusal, or None.
 
     Implements: SR-174, LLR-363
@@ -2771,15 +2771,15 @@ def refresh(root, branch, tier):
     Mechanical - no agent, no judgement. In the branch's own lane worktree:
 
         merge trunk IN  ->  trunk_step (compile, then regen)  ->  expected-failure marker
-            ->  bar  ->  commit
+            ->  checks  ->  commit
 
     That order is fixed and load-bearing (§A2.1): the compile has to see the
-    trunk's log before it appends, and the bar has to see what the compile and
+    trunk's log before it appends, and the checks have to see what the compile and
     the regen wrote. The expected-failure marker (`kitlib.expected_failure.landing_refusal`) is read
-    from that staged tree before either bar: an undeclared `[product] expected_failure_marker`,
+    from that staged tree before either checks: an undeclared `[product] expected_failure_marker`,
     an unreadable tree or a test file holding the mark refuses, naming each
-    file and its count, since a marked test passes the bar while it is red.
-    The commit carries a `Checks-Passed:` trailer NAMING the tree it barred and
+    file and its count, since a marked test passes the checks while it is red.
+    The commit carries a `Checks-Passed:` trailer NAMING the tree it checked and
     the work commit it sits on, and refuses to exist unless it verifies
     against git - see `refresh_passed_checks`.
 
@@ -2795,18 +2795,18 @@ def refresh(root, branch, tier):
     Called from TWO places, deliberately the same code: the dispatcher runs it
     speculatively OUTSIDE the merge slot (via lane.py's refresh subprocess or
     dispatch.py's drain) (the ruled DECISION 4 - the 11-minute
-    bar must not hold the exclusive turn to advance trunk), and `integrate_one`
+    checks must not hold the exclusive turn to advance trunk), and `integrate_one`
     runs it INSIDE the slot for any branch that arrives un-refreshed or stale,
     which is the pessimistic sequence and is why that sequence never rots.
 
     Implements: SR-156, LLR-368
     """
     # The commit hooks are on before anything is read (WI-926). Then the
-    # claimed rows' say over the bar (WI-388): the adjudication no-bar arm
+    # claimed rows' say over the checks (WI-388): the adjudication no-checks arm
     # and the `checks_stage` pin, both read before anything runs so a
     # malformed key refuses with the lane untouched.
     hooks_off = _kitcommit_hooks.hooks_refusal(root)
-    skip_bar, checks_stage, refusal = (
+    skip_checks, checks_stage, refusal = (
         _lane_checks_directives(root, branch)
         if hooks_off is None
         else (False, None, hooks_off)
@@ -2839,13 +2839,13 @@ def refresh(root, branch, tier):
     code, out = _run_trunk_step(wt, root)
     if code != 0:
         return undo("the trunk step failed on the refreshed tree", out)
-    # STAGE, then bar, then commit the staged index, through the one producer
-    # `record-checks` also commits through. The bar is the last thing to touch this
-    # tree, and a declared bar is the adopter's command: staging first means
+    # STAGE, then checks, then commit the staged index, through the one producer
+    # `record-checks` also commits through. The checks are the last thing to touch this
+    # tree, and a declared checks are the adopter's command: staging first means
     # whatever it writes (a coverage report, a cache) can never be swept into
     # the recorded commit by an `add -A` that ran after it. The staged tree is
     # the first that holds the merged declaration and everything regenerated,
-    # so the expected-failure marker is read and counted there, before either bar.
+    # so the expected-failure marker is read and counted there, before either checks.
     ac.git(wt, "add", "-A")
     marked = _kitexpected.landing_refusal(wt)
     if marked:
@@ -2854,9 +2854,9 @@ def refresh(root, branch, tier):
         wt,
         root,
         branch,
-        checks="none" if skip_bar else "landing",
+        checks="none" if skip_checks else "landing",
         tests=(),
-        run_bar=lambda: _refresh_bar(wt, root, tier, skip_bar, checks_stage),
+        run_checks=lambda: _refresh_checks(wt, root, tier, skip_checks, checks_stage),
         message="{}{}\n\n{}".format(
             kverdict.refresh_subject(branch), trunk[:10], _REFRESH_BODY
         ),
@@ -2888,45 +2888,45 @@ def refresh(root, branch, tier):
 # subject and above the `Checks-Passed:` line the producer appends.
 _REFRESH_BODY = (
     "The §A2 station refresh: trunk merged in, the §5.1 fragment compile and\n"
-    "§5.2 regeneration folded on, and the declared bar run on THIS tree. The\n"
-    "trailer NAMES what it records - the tree the bar saw, the work commit it\n"
-    "sits on and the bar it ran - so the merge slot verifies them against git\n"
+    "§5.2 regeneration folded on, and the declared check run on THIS tree. The\n"
+    "trailer NAMES what it records - the tree the checks saw, the work commit it\n"
+    "sits on and the checks it ran - so the merge slot verifies them against git\n"
     "instead of trusting a message. A --no-ff merge of a branch that contains\n"
-    "trunk reproduces this tree byte for byte, which is why no second bar is\n"
+    "trunk reproduces this tree byte for byte, which is why no second checks are\n"
     "owed at the slot."
 )
 
 
-def _refresh_bar(wt, root, tier, skip_bar, checks_stage):
-    """The refresh's bar step, with the WI-388 no-bar arm: `(ok, out, summary)`.
+def _refresh_checks(wt, root, tier, skip_checks, checks_stage):
+    """The refresh's checks step, with the WI-388 no-checks arm: `(ok, out, summary)`.
 
-    `skip_bar` is the adjudication arm (§A5.2): the trunk step still ran and
+    `skip_checks` is the adjudication arm (§A5.2): the trunk step still ran and
     the refresh commit still records THIS tree — the trailer verifies the same
-    way — but no product bar is invoked, and the summary says so honestly,
-    because the kind has nothing a product bar can speak to. Extracted from
+    way — but no product checks are invoked, and the summary says so honestly,
+    because the kind has nothing a product checks can speak to. Extracted from
     `refresh` so the sequence stays readable under the complexity ratchet.
 
     Implements: SR-174, LLR-154
     """
-    if skip_bar:
+    if skip_checks:
         return True, "", "no checks run (adjudication, §A5.2)"
-    return _run_bar(wt, root, tier, checks_stage)
+    return _run_landing_checks(wt, root, tier, checks_stage)
 
 
-def _record_checks_commit(wt, root, branch, checks, tests, run_bar, message):
+def _record_checks_commit(wt, root, branch, checks, tests, run_checks, message):
     """The one producer of a `Checks-Passed:` record: `(sha, None)`, or
     `(None, (reason, output))` with nothing committed. `refresh` calls it for
     `landing` / `none` and `record-checks` for `commit` (PROCESS.md §3, 0->A->B).
 
     The caller has staged the tree and guarantees the worktree equals the
-    index. The index is written as a tree BEFORE the bar runs, so the record
-    names the tree the bar was handed, not whatever the bar leaves: `run_bar()`
-    runs the named bar and answers `(ok, output, summary)`, the residue it
-    leaves is shed, and a bar that moved the index or the worktree off that
+    index. The index is written as a tree BEFORE the checks run, so the record
+    names the tree the checks were handed, not whatever the checks leave: `run_checks()`
+    runs the named checks and answers `(ok, output, summary)`, the residue it
+    leaves is shed, and a check run that moved the index or the worktree off that
     tree (a formatter rewriting a tracked file, a step staging its own edit)
-    is refused, naming what moved. On a red bar or any refusal the index is set
+    is refused, naming what moved. On failing checks or any refusal the index is set
     back to that tree. Green and unmoved, the line names that tree, the tip it
-    sits on, the bar and the digest of `tests`, appended to the message's
+    sits on, the checks and the digest of `tests`, appended to the message's
     trailer block. The commit then has to verify as that record, so a
     hook that refuses the commit or rewrites its tree leaves no false record:
     the tip is restored and the index set back too. The refresh's harder undo
@@ -2941,9 +2941,9 @@ def _record_checks_commit(wt, root, branch, checks, tests, run_bar, message):
     tip, tree, digest = tip.strip(), tree.strip(), kverdict.tests_digest(tests)
     baseline = ignored_files(wt)
     baseline_dirs = existing_directories(wt)
-    ok, out, summary = run_bar()
+    ok, out, summary = run_checks()
     _shed_residue(wt, baseline, baseline_dirs)
-    refusal = _bar_refusal(wt, tree, checks, ok, summary)
+    refusal = _checks_refusal(wt, tree, checks, ok, summary)
     if refusal:
         ac.git(wt, "read-tree", tree)
         return None, (refusal, out)
@@ -2973,7 +2973,7 @@ def _record_checks_commit(wt, root, branch, checks, tests, run_bar, message):
         ac.git(wt, "read-tree", tree)
         return None, (
             "the checks={} commit does not verify as its own record - the "
-            "committed tree or parent is not the one the bar saw (a rewriting "
+            "committed tree or parent is not the one the checks saw (a rewriting "
             "commit hook?); nothing is recorded and the branch is "
             "restored".format(checks),
             out,
@@ -2981,8 +2981,8 @@ def _record_checks_commit(wt, root, branch, checks, tests, run_bar, message):
     return _head(wt), None
 
 
-def _bar_refusal(wt, tree, checks, ok, summary):
-    """Why the bar's run records nothing, or None: a red bar, or a bar that
+def _checks_refusal(wt, tree, checks, ok, summary):
+    """Why the checks' run records nothing, or None: failing checks, or a check run that
     left the index or the worktree off the staged `tree` it was handed, naming
     the paths that moved.
 
@@ -2994,18 +2994,18 @@ def _bar_refusal(wt, tree, checks, ok, summary):
             if checks == "commit"
             else ("refreshed", "refresh")
         )
-        return "the bar is RED on the {} tree ({}) - fix it on the branch, then {} again".format(
+        return "the checks FAIL on the {} tree ({}) - fix it on the branch, then {} again".format(
             tree_word, summary, route
         )
     staged = git_out(wt, ["diff", "--cached", "--name-only", "-z", tree])
     unstaged = _unstaged_dirt(wt)
     if staged is None or unstaged is None:
-        return "git could not compare the tree after the bar with {}".format(tree)
+        return "git could not compare the tree after the checks with {}".format(tree)
     moved = sorted({p for p in staged.split("\0") if p} | set(unstaged))
     if not moved:
         return None
     return (
-        "the bar moved the tree it was run on (the index or the worktree no "
+        "the checks moved the tree it was run on (the index or the worktree no "
         "longer matches {}: {}) - nothing is recorded; the index is set back to "
         "the staged tree".format(tree[:10], ", ".join(moved))
     )
@@ -3033,7 +3033,7 @@ def _unstaged_dirt(wt):
     Implements: SR-156, LLR-207
     """
     # Untracked files pinned to `all`: a `status.showUntrackedFiles=no` setting
-    # must not hide a file the bar would see.
+    # must not hide a file the checks would see.
     out = git_out(wt, ["status", "--porcelain", "-z", "--untracked-files=all"])
     if out is None:
         return None
@@ -3048,14 +3048,14 @@ def _unstaged_dirt(wt):
     return dirt
 
 
-def _run_review_bar(wt, root, command, tests, branch):
+def _run_commit_checks(wt, root, command, tests, branch):
     """The commit checks, then the derived tests: `(ok, output, summary)`.
 
     The declared shell line runs in the lane worktree with the harness
     interpreter's directory first on PATH, so its `python` is the harness's
     (the rule `run_menu` states for `[run]` lines). Green, the derived tests run
     through the lane checkout's `[product] test` (the staged tree's
-    declaration, as the bar is) with their paths appended and a `--basetemp`
+    declaration, as the checks are) with their paths appended and a `--basetemp`
     of this lane's own, outside the worktree. The interpreter stays the
     primary checkout's. Green is exit 0 for each step.
 
@@ -3121,7 +3121,7 @@ class _RecordChecksPlan(NamedTuple):
 
 
 def _record_checks_preflight(root, branch, checks, message_file):
-    """Everything `record-checks` refuses before any bar runs: `(_RecordChecksPlan, None)`,
+    """Everything `record-checks` refuses before any checks run: `(_RecordChecksPlan, None)`,
     or `(None, refusal)`.
 
     The lane comes through the refresh's boundary (`_lane_off_trunk`), and the
@@ -3129,7 +3129,7 @@ def _record_checks_preflight(root, branch, checks, message_file):
     checkout once it is known to equal the index, so what they read is what is
     staged. Both are declared values (`kitlib.expected_failure.read_commit_check_settings`), required
     with no default; an undeclared one is named with its cause. The expected-failure marker check
-    runs last, on the derived set, before any bar.
+    runs last, on the derived set, before any checks.
 
     Implements: SR-156, LLR-207
     """
@@ -3145,7 +3145,7 @@ def _record_checks_preflight(root, branch, checks, message_file):
     dirt = _unstaged_dirt(wt)
     if dirt is None or dirt:
         return None, (
-            "the worktree {} holds work the index does not ({}) - the bar runs "
+            "the worktree {} holds work the index does not ({}) - the checks run "
             "on the index as staged; stage or remove it first".format(
                 wt, ", ".join(dirt) if dirt else "git status failed"
             )
@@ -3174,7 +3174,7 @@ def record_checks(root, branch, checks, message_file=None):
     commit checks and expected-failure marker the lane declares, the message, the row's derived
     review set and the expected-failure marker check over it, all before anything runs.
     Then the shared producer runs the commit checks and the derived files, and
-    commits only when both are green; an empty set runs the bar alone. The
+    commits only when both are green; an empty set runs the checks alone. The
     set's lines are printed. Every refusal leaves the branch and the index
     as they were.
 
@@ -3193,7 +3193,7 @@ def record_checks(root, branch, checks, message_file=None):
         branch,
         checks=checks,
         tests=tests,
-        run_bar=lambda: _run_review_bar(wt, root, plan.command, tests, branch),
+        run_checks=lambda: _run_commit_checks(wt, root, plan.command, tests, branch),
         message=plan.message,
     )
     if refused:
@@ -3211,7 +3211,7 @@ def _merge_ready(root, branch):
     Two facts, both read off git: trunk is already an ancestor, and the tip
     carries the passed-checks record FOR THAT TIP. The second is not a second
     check bolted onto the first - it is what makes the first sufficient, since
-    an ancestor relation alone says nothing about whether anyone barred the
+    an ancestor relation alone says nothing about whether anyone checked the
     composition.
     """
     if not trunk_is_ancestor(root, branch):
@@ -3512,7 +3512,7 @@ def integrate_one(root, branch, tier, held=None):
     ready, why = _landing_ready(root, branch)
     if not ready:
         # THE PESSIMISTIC SEQUENCE - slot already held, so this is exactly
-        # "take slot -> merge trunk in -> bar -> merge". It is reached on every
+        # "take slot -> merge trunk in -> checks -> merge". It is reached on every
         # drain that merges a SECOND branch (the first merge moved trunk out
         # from under it) and by any branch that never refreshed at all, so it
         # is production code that runs and passes, not a fallback that rots
@@ -3538,7 +3538,7 @@ def integrate_one(root, branch, tier, held=None):
         "--no-ff",
         "-m",
         _kitprovenance.with_loop_trailer(
-            "integrate: merge {} ({})\n\nThe §A2 merge: trunk was already an ancestor of this branch, so the\nmerge is trivially clean and its tree IS the branch tip's - the tree the\nbranch's own refresh bar passed ({}).\n\nOutcomes (§A3): {}".format(
+            "integrate: merge {} ({})\n\nThe §A2 merge: trunk was already an ancestor of this branch, so the\nmerge is trivially clean and its tree IS the branch tip's - the tree the\nbranch's own landing checks passed ({}).\n\nOutcomes (§A3): {}".format(
                 branch,
                 ", ".join(wi_ids),
                 why,
@@ -3589,10 +3589,10 @@ def _slot(root):
     """TAKE THE SLOT - the exclusive turn to advance trunk. Error string or None.
 
     THE ONE ACQUISITION SITE IN THIS FILE, and it must stay that way (§A2.0
-    requirement 1). The design is speculative: the 11-minute bar runs OUTSIDE
+    requirement 1). The design is speculative: the 11-minute checks run OUTSIDE
     this lock, and only the ancestor check plus the merge run inside it, so the
     slot is held for well under a second and extra lanes buy throughput instead
-    of queueing behind one bar. Restricting the design to pessimistic - the
+    of queueing behind one checks. Restricting the design to pessimistic - the
     operator's recorded caveat - is then a ONE-LINE change: delete dispatch.py's
     speculative refresh call, and every refresh happens under
     this already-held lock via `integrate_one`'s not-merge-ready arm. Nothing
@@ -3771,13 +3771,14 @@ def main(argv=None):
     p_claim.add_argument("--wi", required=True)
     p_claim.add_argument("--branch", required=True)
     p_ref = sub.add_parser(
-        "refresh", help="the §A2 station refresh (merge trunk in, regen, bar, commit)"
+        "refresh",
+        help="the §A2 station refresh (merge trunk in, regen, checks, commit)",
     )
     p_ref.add_argument("--branch", required=True)
     p_ref.add_argument(
         "--tier",
         default="all",
-        help="declared bar tier for the refresh bar (default: all - the full gate checks)",
+        help="declared check tier for the landing checks (default: all - the full gate checks)",
     )
     p_rec = sub.add_parser(
         "record-checks",
@@ -3790,7 +3791,7 @@ def main(argv=None):
     p_int.add_argument(
         "--tier",
         default="all",
-        help="declared bar tier for an in-slot refresh (default: all - the full gate checks)",
+        help="declared check tier for an in-slot refresh (default: all - the full gate checks)",
     )
     sub.add_parser(
         "done-when-hold",

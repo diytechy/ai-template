@@ -9,7 +9,7 @@ scope: kit
 ---
 **When to use.** Any gate where the pass/fail judgment is an LLM's. *Why:* judge scores carry a
 measurable noise floor (we measured ±0.29 mean and MAJOR/MINOR severity flips on byte-identical
-images); a single APPROVE is a coin flip near the bar.
+images); a single APPROVE is a coin flip near the threshold.
 
 **Procedure.**
 1. Pin a rubric (hash it); build an evidence pack; compute a content hash over everything that

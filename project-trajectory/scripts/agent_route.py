@@ -1126,7 +1126,7 @@ def select(
         cooling down.
       - Walk from `tier` UP to strong; never select a weaker tier than asked.
       - A `preferred_ids` pin (AGENT_PREFER_MAP) wins its phase outright when it
-        is legal; unknown, disabled, wrong-tier, cooling, or heterogeneity-barred
+        is legal; unknown, disabled, wrong-tier, cooling, or heterogeneity-checked
         pins simply fall through (a preference never changes the requested tier).
       - When prefer_different, prefer an id whose FAMILY (who trained it — never
         the route it is reached by) is not in exclude_families; if none
@@ -1172,7 +1172,7 @@ def select(
 
 def winstay_preferred_ids(next_primary, enabled, registry, cooldowns=None, now=0.0):
     """Resolve a win-stay `next_primary` (the reviewer FAMILY `escalate` returns
-    when the last round's margin cleared the bar) into the enabled model ids of
+    when the last round's margin cleared the threshold) into the enabled model ids of
     that family's entries, for use as `select()`'s `preferred_ids` — this is how the
     documented win-stay policy actually biases the next draw (WI-264, M-34).
 
@@ -1347,7 +1347,7 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False, fails_sin
 
     # A clean approve, or a single failure still inside the streak budget: keep
     # going. The higher-substance family becomes next round's primary feedback
-    # source only when this round's margin cleared the bar (win-stay).
+    # source only when this round's margin cleared the threshold (win-stay).
     next_primary = last.get("primary") if last.get("margin", 0) >= c["margin"] else None
     return {
         "action": "continue",

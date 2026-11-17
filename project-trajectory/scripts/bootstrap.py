@@ -69,7 +69,7 @@ What it creates in the destination:
     docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/rubrics/architecture-decomposition.md <- rubrics/architecture-decomposition.template.md
-                                               (the shared bar a component scope's decomposition is judged against)
+                                               (the shared standard a component scope's decomposition is judged against)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
     scripts/trace.py, trace_text.py, absolute_terms.py, spine_rules.py, derive_stage.py, record_test_evidence.py, record_observation.py, retire.py, id_carrier.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_coverage.py, check_readability.py, check_complexity.py, flag_axis.py, check_test_first.py, check_assumption_gate.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
@@ -87,7 +87,7 @@ What it creates in the destination:
     scripts/integrate.py                       (the local integrator: claim + serial
                                                 fail-closed merge queue + RULING-6 audit)
     scripts/handback.py                        (the two lane closes that are not a merge:
-                                                handback + its bar-inert quarantine; WI-387)
+                                                handback + its checks-inert quarantine; WI-387)
     scripts/spec_move.py                       (the link-aware spec-move ritual:
                                                 move + relink as one operation; WI-393)
     scripts/bookkeeping.py                     (the one trunk bookkeeping commit the
@@ -917,7 +917,7 @@ GATE_POLICY_FIXED_POINTS = """## Fixed points (nothing in this file overrides th
 - **the final read is the operator's.**
 - **No un-run greens** — a verdict or test result that wasn't actually
   executed is a process violation regardless of tier.
-- **The harness is still the bar** — LLM judgment supplements the checks; it
+- **The harness is still the standard** — LLM judgment supplements the checks; it
   never waives a red one.
 - **Accepted operator decisions are never re-decided by an agent** — flag a
   problematic one as Blocked instead.

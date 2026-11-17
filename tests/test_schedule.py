@@ -402,7 +402,7 @@ def test_legacy_blocked_status_is_excluded_fail_closed():
 
 # §A1's ruled table, restated as data the tests read: kind -> (concurrency, rank).
 # Rank 1 was RESERVED for `adjudication` when the ladder was written whole
-# (§A1's gap); WI-388 fills it — exclusive, rank 1, the §A5.2 no-bar kind.
+# (§A1's gap); WI-388 fills it — exclusive, rank 1, the §A5.2 no-checks kind.
 RULED_TABLE = {
     "spine": (EXCL, 0),
     "adjudication": (EXCL, 1),

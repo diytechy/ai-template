@@ -88,7 +88,7 @@ def test_link_example_in_double_backtick_span_is_not_a_link(scaffold):
     # `` [`foo`](foo.md) ``. That span is code, not a navigational link, so it
     # must not surface as a broken link to foo.md. A single-backtick regex
     # mis-splits the run and leaks a phantom `[](foo.md)`; equal-length matching
-    # doesn't. (This is the exact false positive that reddened the meta bar.)
+    # doesn't. (This is the exact false positive that reddened the meta checks.)
     (scaffold / "docs" / "guide.md").write_text(
         "# Guide\n\nRender the label as a link, e.g. `` [`foo`](foo.md) ``.\n",
         encoding="utf-8",

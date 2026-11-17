@@ -44,11 +44,11 @@ accepts). The three retired enum words
 (`attended` / `single-approve` / `autonomous`) each named one cell of that
 two-dial table, which is why they could not express the fourth. The fixed
 points hold at every level: the final read is the operator's, no un-run greens, the
-harness is still the bar, accepted operator decisions are never re-decided.
+harness is still the checks, accepted operator decisions are never re-decided.
 
 Beyond admission it adds ORDERING only, no authority: every refusal stays
 where it already lives (the tracked docs/work/pause, a dirty trunk, the
-SpecRef and status-prose claim rungs, the §A2 refresh bar, the RULING-7
+SpecRef and status-prose claim rungs, the §A2 landing checks, the RULING-7
 verdict gate, docs/push-policy). Any refusal from a composed part STOPS the
 run loudly — admission halts, the in-flight lanes drain, and the run exits
 with the refusal's code; the dispatcher never skips past one, never
@@ -280,7 +280,7 @@ def _drain(root, tier):
     of counting beforehand.
 
     THE SPECULATIVE HALF of the station protocol (docs/concurrency-v2.md §A2.0,
-    ruled 2026-07-31). The 11-minute bar runs HERE, outside the slot, so the
+    ruled 2026-07-31). The 11-minute checks run HERE, outside the slot, so the
     exclusive turn to advance trunk is held for a sub-second ancestor check and
     the merge itself; a lane that loses a race redoes a refresh it would have
     owed anyway going second, and nothing else is reconciled because ancestry
@@ -289,11 +289,11 @@ def _drain(root, tier):
     THIS CALL IS THE WHOLE SPECULATION. Deleting the refresh loop below
     restricts the design to pessimistic: `integrate_one` refreshes in-slot for
     any branch that arrives un-refreshed, so the queue keeps working, one lane
-    at a time, with the bar inside the lock. That is the operator's recorded
+    at a time, with the checks inside the lock. That is the operator's recorded
     caveat priced at one line.
 
     A red refresh STOPS the run for a branch that asserts it is DONE - it is
-    the same failure a red merge bar used to be, moved to where the lane that
+    the same failure a red landing checks used to be, moved to where the lane that
     caused it can fix it. A branch that asserts the opposite is the §A3
     exception the ruling covers: see `_refresh_or_quarantine`.
     """
@@ -304,7 +304,7 @@ def _drain(root, tier):
             # landing checks for this exact tip against the current trunk, and its watermark holds the
             # id carrier's fold: the slot's own readiness question, so the slot
             # will not refresh it again — redoing the disposable commit would
-            # spend a full bar to reproduce it.
+            # spend a full checks to reproduce it.
             continue
         refusal = _refresh_or_quarantine(root, branch, tier)
         if refusal:
@@ -317,13 +317,13 @@ def _refresh_or_quarantine(root, branch, tier):
     """The §A2 refresh, with the §A3 red-handback ruling behind it. A refusal
     string, or None.
 
-    A merged lane that reds the bar has broken something and is told so: its
+    A merged lane that reds the checks have broken something and is told so: its
     outcome ASSERTS the work is done, and the run stops for the lane to fix it.
     A lane that merged nothing asserts the opposite - it is handing the work
     back, or throwing it away - and stopping the run over red code nobody
     claimed was finished is exactly the hanging branch this design abolishes.
     So it is quarantined once (ruled option 1: revert the code, keep the failing
-    diff as a bar-inert `.patch`) and refreshed again. Once, deliberately: a
+    diff as a checks-inert `.patch`) and refreshed again. Once, deliberately: a
     second red on a tree whose product changes have all been reverted is a real
     anomaly, not a case to loop on.
     """
@@ -829,7 +829,7 @@ def _advance(root, ln, tier, restarting=False):
                 return ("fatal", rc)
         if ln.branch in integrate.finished_branches(root):
             # The lane's tree named an outcome — run ITS refresh in ITS own
-            # subprocess (§A4.3: N bars must overlap, not queue here).
+            # subprocess (§A4.3: N checks must overlap, not queue here).
             ln.phase = "refresh"
             ln.proc = lane.spawn_refresh(root, ln.branch, tier)
             return None
@@ -871,7 +871,7 @@ def _refresh_failed(root, ln, tier, rc):
     refusal = handback.quarantine(
         root,
         ln.branch,
-        "the §A2 refresh bar refused (exit {}; see the run log above and "
+        "the §A2 landing checks refused (exit {}; see the run log above and "
         "out/run-logs/refresh-refused-*.log)".format(rc),
     )
     if refusal:
@@ -1457,7 +1457,7 @@ def _station_exit(root, tier, verb, payload, state):
         # EXIT_DONE, deliberately, and this is the part worth being careful
         # about. `NEEDS-OPERATOR` means BLOCKED — something is owed before work can
         # continue — and a clean drain is the opposite of that: everything
-        # merged, the bar is green, nothing is owed by the machine. Returning 7
+        # merged, the checks pass, nothing is owed by the machine. Returning 7
         # here would make every successful walk-away run report failure to the
         # launchers, which is how a dial meant to add a READ ends up inverting
         # an exit-code contract.
@@ -1475,7 +1475,7 @@ def _station_exit(root, tier, verb, payload, state):
 
 
 # The tick loop's poll cadence while lanes are busy: long enough not to spin,
-# short enough that a finished worker starts its refresh promptly (the bars
+# short enough that a finished worker starts its refresh promptly (the checks
 # behind it run minutes, so half a second is noise).
 _POLL_SECONDS = 0.5
 
@@ -1494,7 +1494,7 @@ def run(root, args, worker=None, tier="all"):
     """The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one
     injection seam (tests): a callable `(root, branch, wi_id, args) -> exit
     code` standing in for the worker session launch, run synchronously at
-    admission; None means lane.py's real subprocess launch. `tier` is the bar
+    admission; None means lane.py's real subprocess launch. `tier` is the checks
     tier the §A2 refresh runs (default: the full gate checks).
 
     EACH TICK: poll the live lanes (a worker exit decides an outcome; a

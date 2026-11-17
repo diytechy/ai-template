@@ -68,7 +68,7 @@ MARK = kprovenance.LOOP_SESSION_ENV
 SESSION = "20261023T101500Z-a1b2c3"
 STEP = [SCRIPTS / "check.py", "--run-steps", "held-status"]
 NO_REGEN = "import sys\nsys.exit(0)\n"
-BAR = "no [product] test declaration"
+UNDECLARED = "no [product] test declaration"
 GAP = "SR-001 is not Accepted (Status=Drafted)"
 
 # Each need: (status, need text, source). `source` is a traced cell.
@@ -222,9 +222,9 @@ def _refused_by_the_rule(root, rid, rung):
 
 def _lands(root):
     """The slot admits the lane through every rule, stopping only at this
-    fixture's undeclared product bar."""
+    fixture's undeclared product checks."""
     refusal = integ.integrate_one(root, "wi-401", "smoke")
-    assert refusal and BAR in refusal, refusal
+    assert refusal and UNDECLARED in refusal, refusal
 
 
 def _the_rule_rides_the_walk():

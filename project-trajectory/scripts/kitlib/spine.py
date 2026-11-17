@@ -820,7 +820,7 @@ def root_prefix(root):
 
 def declared_roots(profile):
     """`(src, tests)`: the source and test roots the parsed `docs/stack.ini`
-    `profile` declares under `[paths]`, each defaulting as a bar's command
+    `profile` declares under `[paths]`, each defaulting as a check run's command
     reads it (`src`, `tests`) when absent or blank. The one home of that
     reading, so the review set and the expected-failure marker check resolve one test root.
 

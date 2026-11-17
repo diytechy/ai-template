@@ -79,7 +79,7 @@ Questions:
   clause, and the SR that *does* carry it reads need-less forever. Ask of each
   clause: **if a stranger derived only from `need` + `acceptance`, would this
   obligation appear?** If not, move it up into the normative text.
-- **(c) Is the quality bar written down, or is it in someone's head?** "A reader
+- **(c) Is the quality standard written down, or is it in someone's head?** "A reader
   can see progress" is not "the view is legible, uniform and operable". If a
   perceptual or quality obligation is wanted, **the need that wants it has to
   exist**; otherwise the requirements built on it are underivable from every

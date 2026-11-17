@@ -13,10 +13,10 @@ lane ends in a merge and no branch is ever left hanging:
                  reachable history, and the run keeps going.
 
   quarantine     the RULED red arm (operator decision 1, 2026-07-31). Every outcome
-                 merges and a merge needs a green bar, so a lane handing back
-                 code the bar refuses would be the one branch that could still
+                 merges and a merge needs passing checks, so a lane handing back
+                 code the checks refuse would be the one branch that could still
                  hang. The ruling: revert the code, keep the record — the
-                 failing diff lands as a bar-inert `.patch` under `docs/work/`,
+                 failing diff lands as a checks-inert `.patch` under `docs/work/`,
                  the product paths go back to what trunk had, and nothing live
                  can red anything.
 
@@ -73,7 +73,7 @@ Contract IF-137: the terminal-outcome WRITES for the two lane closes that are
     spec to the terminal `partial/` folder; it returns `(closed WI ids, None)`
     or `(None, refusal)` and refuses rather than half-closing.
     `quarantine(root, branch, why)` is the ruled red arm: the failing diff is
-    kept as a bar-inert `.patch` under the work tree, every non-bookkeeping path
+    kept as a checks-inert `.patch` under the work tree, every non-bookkeeping path
     is reverted to the lane's merge base, and it returns a refusal string or
     None. Neither function DECIDES which outcome a lane reached — that judgement
     is the caller's — so decision and write stay in separate modules and every
@@ -119,7 +119,7 @@ def spec_move_split(text):
 
 # Where a quarantined red close's failing diff lands. Under `docs/work/` because
 # that is where the work item's own record lives, and as a `.patch` because no
-# bar reads one: the doc checkers discover `*.md`, the stub check reads
+# checks read one: the doc checkers discover `*.md`, the stub check reads
 # `src/**/*.py`, and check.py ignores `docs/work/*` outright — so the artefact is
 # inert by its extension, not by a rule someone has to keep.
 ARTEFACTS = integrate.WORK + "/handback"
@@ -444,7 +444,7 @@ def _commit_residue_as_is(root, wt, branch, ids, reason):
     a clean tree or a good commit.
 
     The hook is skipped because "as-is" has to mean it: the branch's own §A2
-    refresh regenerates and BARS this tree before anything merges, so a hook
+    refresh regenerates and CHECKS this tree before anything merges, so a hook
     refusal here would only trade a merge that is checked for a branch that
     hangs.
 
@@ -478,7 +478,7 @@ def close_partial(root, branch, reason, fields=None):
     `(None, refusal)`.
 
     Three deliberate choices. The as-is commit skips the commit hook, because
-    "as-is" has to mean it: the branch's own §A2 refresh regenerates and BARS
+    "as-is" has to mean it: the branch's own §A2 refresh regenerates and CHECKS
     this tree before anything merges, so a hook refusal here would only trade a
     merge that is checked for a branch that hangs. The spec moves to the
     TERMINAL `partial/` rather than back to `queued/`, because terminal is what
@@ -1017,7 +1017,7 @@ def close_adjudication(root, branch):
 
 
 def quarantine(root, branch, why):
-    """Turn a RED non-merged lane into a BAR-INERT artefact. A refusal, or None.
+    """Turn a RED non-merged lane into a CHECKS-INERT artefact. A refusal, or None.
 
     Bookkeeping paths are exempt by construction — the spec moves, the close
     report, the log fragments and the review rounds ARE the record being kept,
@@ -1055,7 +1055,7 @@ def quarantine(root, branch, why):
     if not changed:
         return (
             "{} changed nothing outside the bookkeeping surfaces, so its red "
-            "bar is not its own code to revert - there is nothing to "
+            "checks are not its own code to revert - there is nothing to "
             "quarantine and the refusal stands".format(branch)
         )
     # Every path of every record, renames included, so the patch carries the
@@ -1081,7 +1081,7 @@ def quarantine(root, branch, why):
     code, out = _loop_commit(
         root,
         wt,
-        "handback: revert {} to a bar-inert artefact\n\nThe §A3 red-close ruling: this lane's code is red and the lane cannot\nfix it, so the code goes back to {} and the failing diff lands as {} -\nin trunk, findable, pickable by a future WI, and unable to red anything.\nThe reverted commits stay reachable in trunk history once this merges.\n\nThe bar said: {}".format(
+        "handback: revert {} to a checks-inert artefact\n\nThe §A3 red-close ruling: this lane's code is red and the lane cannot\nfix it, so the code goes back to {} and the failing diff lands as {} -\nin trunk, findable, pickable by a future WI, and unable to red anything.\nThe reverted commits stay reachable in trunk history once this merges.\n\nThe checks said: {}".format(
             branch, base[:10], rel, why
         ),
     )

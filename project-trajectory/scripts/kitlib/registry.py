@@ -14,7 +14,7 @@ rule, with `tests/test_wi_loader_sync.py` pinning the three parsers equal
 because extraction had been refused (operator ruling 2026-07-12). D-8 reversed
 that ruling. The extraction also settled a live question the pins could not
 see: the three copies were NOT verbatim at the moment they were merged —
-`agent_common`'s carried `a DevStg-* value` in the `Bar` comment where the
+`agent_common`'s carried `a DevStg-* value` in the `Checks` comment where the
 other two carried the literal `DevStg-Reqs|DevStg-Tests|DevStg-Impl` enum, a
 comment-only drift from the 2026-08-18 one-vocabulary rename reaching two homes
 of three. Behaviour-equal, so a behavioural pin was structurally blind to it;

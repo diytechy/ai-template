@@ -3,7 +3,7 @@
 SN-011 and SR-034 draw a distinction the ledger's own suite does not check:
 a dependency reached by a check an **adopter runs** forces every adopting repo
 to install it, so it needs an operator ruling and stdlib stays *preferred* there;
-a `coordinator` dependency only this repo installs carries a far lower bar.
+a `coordinator` dependency only this repo installs carries a far lower standard.
 `test_dependency_ledger.py` asks one question — *is this import declared?* — and
 never reads the `Tier` column, so before this module nothing stopped a
 `coordinator`-tier package (or an unruled one) from being imported by
@@ -14,19 +14,19 @@ already tags each step `layer="process"` (kit-owned, identical in every project
 — the checks an adopter runs) or `"product"` (wire it to your stack). This
 module takes the `process` steps' entry scripts, walks their *transitive* sibling
 imports inside `scripts/`, and holds every non-stdlib module in that closure to
-the shipped bar. Transitive matters: `trace.py` importing a sibling that imports
+the shipped standard. Transitive matters: `trace.py` importing a sibling that imports
 a package ships that package just as surely as a direct import.
 
 The plan is built with `profile=None` — the **built-in** process steps, i.e. what
-the kit ships — not this repo's `docs/stack.ini`, because the bar is about what
+the kit ships — not this repo's `docs/stack.ini`, because the standard is about what
 adopters inherit, not what this meta-repo happens to run locally.
 
 Today this is green with nothing to check: the ledger declares zero `Kind=python`
 rows (only the `git`/`gh` substrates), so the closure is pure stdlib. That is the
 point — it bites the day the first adopter-facing package is proposed, which is
 exactly when a human should be reading. Per the standing vacuous-guard rule the
-mutation proof lives in this file: `test_bar_catches_a_coordinator_tier_import`
-and `test_bar_catches_an_unruled_shipped_import` drive the checker over
+mutation proof lives in this file: `test_the_standard_catches_a_coordinator_tier_import`
+and `test_the_standard_catches_an_unruled_shipped_import` drive the checker over
 synthetic trees and assert it CATCHES, so the green above is demonstrated able
 to fail before it is trusted to pass.
 
@@ -51,7 +51,7 @@ def process_entry_scripts() -> set[str]:
     """Module stems of the entry scripts of every `layer="process"` check step.
 
     Read from check.py's own plan rather than a hand-copied list, so a step that
-    changes layer or command cannot drift away from this bar.
+    changes layer or command cannot drift away from this standard.
     """
     check = load_script("check")
     plan = check.steps(
@@ -86,11 +86,11 @@ def sibling_sources(script_dir: Path, name: str) -> list[Path]:
     DIRECTORY — a subdirectory holding `__init__.py` (WI-448 added the first,
     `kitlib/`). Before that, `siblings` was a set of top-level `*.py` stems and
     a package read as a THIRD-PARTY dependency: `kitlib` is not in
-    `sys.stdlib_module_names`, so the shipped bar demanded a
+    `sys.stdlib_module_names`, so the shipped standard demanded a
     `docs/dependencies.md` row for the kit's own code. Worse than the false
     red, and the reason this returns a file LIST rather than one path: the walk
     would then never open the package's modules, so a real non-stdlib import
-    hidden inside `kitlib/` would be invisible to the bar it is most subject
+    hidden inside `kitlib/` would be invisible to the standard it is most subject
     to — the package is adopter-facing by construction.
     """
     module = script_dir / (name + ".py")
@@ -132,7 +132,7 @@ def reachable_nonstdlib(script_dir: Path, entries: set[str]) -> dict[str, set[st
 def shipped_bar_violations(
     script_dir: Path, entries: set[str], rows: list[dict]
 ) -> dict[str, str]:
-    """Reachable non-stdlib modules that fail the shipped bar, module -> reason.
+    """Reachable non-stdlib modules that fail the shipped standard, module -> reason.
 
     A module passes only as a `Kind=python` ledger row that is `Tier=shipped`
     AND carries a non-empty `Ruled` cell. Undeclared, coordinator-tier and
@@ -152,7 +152,7 @@ def shipped_bar_violations(
             bad[module] = (
                 f"imported by {via} (adopter-facing) but its ledger row is "
                 f"Tier={row['tier']!r} — an adopter-facing dependency must be "
-                "Tier=shipped, which carries the higher bar"
+                "Tier=shipped, which carries the higher standard"
             )
         elif not row["ruled"] or row["ruled"] in {"—", "-"}:
             bad[module] = (
@@ -163,20 +163,20 @@ def shipped_bar_violations(
     return bad
 
 
-def test_adopter_facing_checks_meet_the_shipped_bar():
-    """The real bar: nothing an adopter runs pulls an unruled/coordinator dep."""
+def test_adopter_facing_checks_meet_the_shipped_standard():
+    """The real standard: nothing an adopter runs pulls an unruled/coordinator dep."""
     entries = process_entry_scripts()
     assert entries, "no process-layer steps found — check.py's plan or layer tags moved"
     violations = shipped_bar_violations(SCRIPTS, entries, ledger_rows())
     assert violations == {}, (
         "adopter-facing (`process`-layer) checks reach dependencies that fail the "
-        "shipped-tier bar of SR-034/SN-011: {}".format(violations)
+        "shipped-tier standard of SR-034/SN-011: {}".format(violations)
     )
 
 
 def test_the_process_layer_still_covers_the_kit_floor():
     """Guard the derivation itself: if check.py stopped tagging the traceability
-    or derived-stage steps `process`, this bar would silently cover nothing.
+    or derived-stage steps `process`, this standard would silently cover nothing.
 
     `spine_rules` was on this list as `derive_gate`, the entry script of the
     `derived-gate` step. WI-498 slice 5 retired `docs/gate` and that step with
@@ -186,7 +186,7 @@ def test_the_process_layer_still_covers_the_kit_floor():
     for expected in ("trace", "derive_stage", "check_docs"):
         assert expected in entries, (
             f"{expected}.py is no longer an entry script of any `process`-layer "
-            "step — either check.py's layer tags moved or this bar has gone blind"
+            "step — either check.py's layer tags moved or this standard has gone blind"
         )
 
 
@@ -196,7 +196,7 @@ def _fixture_tree(tmp_path, files):
     return tmp_path
 
 
-def test_bar_catches_a_coordinator_tier_import(tmp_path):
+def test_the_standard_catches_a_coordinator_tier_import(tmp_path):
     """Mutation proof: a coordinator-tier package reached by a process check is
     CAUGHT — the distinction this module exists to draw."""
     tree = _fixture_tree(
@@ -212,7 +212,7 @@ def test_bar_catches_a_coordinator_tier_import(tmp_path):
     assert "helper" in bad["pandas"]  # attributed to the file that imports it
 
 
-def test_bar_catches_an_unruled_shipped_import(tmp_path):
+def test_the_standard_catches_an_unruled_shipped_import(tmp_path):
     """Mutation proof: Tier=shipped with no operator ruling is still a failure."""
     tree = _fixture_tree(tmp_path, {"trace.py": "import yaml\n"})
     rows = [{"name": "yaml", "kind": "python", "tier": "shipped", "ruled": ""}]
@@ -220,7 +220,7 @@ def test_bar_catches_an_unruled_shipped_import(tmp_path):
     assert "yaml" in bad and "operator ruling" in bad["yaml"]
 
 
-def test_bar_catches_an_undeclared_import(tmp_path):
+def test_the_standard_catches_an_undeclared_import(tmp_path):
     """Mutation proof: no ledger row at all is caught, naming the ledger."""
     tree = _fixture_tree(tmp_path, {"trace.py": "import requests\n"})
     bad = shipped_bar_violations(tree, {"trace"}, [])
@@ -228,7 +228,7 @@ def test_bar_catches_an_undeclared_import(tmp_path):
 
 
 def test_a_ruled_shipped_dependency_passes(tmp_path):
-    """The bar is a bar, not a ban: a properly ruled shipped row is allowed, so
+    """The standard is a standard, not a ban: a properly ruled shipped row is allowed, so
     the check cannot be mistaken for the stdlib-only rule it replaced."""
     tree = _fixture_tree(tmp_path, {"trace.py": "import tomlkit\nimport os\n"})
     rows = [

@@ -9,7 +9,7 @@ WHAT THIS IS. `DevStg-Release` is the rung a repo earns when every declared test
 case PASSES. That is a claim about a harness run, and OI-30 D2 rules that no
 Status cell and no hand-written file may ever be its source — so until this
 driver existed the rung was returned by nothing, deliberately (WI-498 slice 3).
-This script is the only sanctioned producer: it RUNS the declared bar itself,
+This script is the only sanctioned producer: it RUNS the declared checks themselves,
 through the documented harness entry point, and writes `docs/test/evidence` only
 if that run exits 0. There is no flag that writes the record without running the
 suite, and none that records a failure: a failing run leaves the previous state
@@ -18,7 +18,7 @@ untouched and says so.
 WHY IT WRAPS `check.py` INSTEAD OF BEING A CHECK STEP. The evidence is a verdict
 ABOUT the whole harness run, so it can only be written by something that outlives
 that run — a step inside the plan would be recording a verdict it is itself part
-of. Wrapping is also what keeps the definition of "the declared bar" in ONE home:
+of. Wrapping is also what keeps the definition of "the declared checks" in ONE home:
 this driver names no test command, it names a TIER declared in `docs/stack.ini`
 and lets `check.py` expand it, exactly as CI does.
 
@@ -118,7 +118,7 @@ def _refuse_without_a_surface(root):
     than no record at all, so an undeclared or empty `[paths]` is refused by name.
 
     THE COUNT IS COMPARED AGAINST ONE, not zero: `docs/stack.ini` folds itself in
-    (it declares the bar), so a surface that resolved to nothing at all still
+    (it declares the checks), so a surface that resolved to nothing at all still
     hashes one file. Testing for "non-empty" would have accepted exactly the state
     this refuses."""
     if kitevidence.source_paths(root) and len(kitevidence.source_files(root)) > 1:

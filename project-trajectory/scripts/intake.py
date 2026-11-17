@@ -1211,7 +1211,7 @@ def _close_drafts(root, outcomes):
     Every `partial` and `cancelled` close gets a disposition — both carry a
     claim about what was NOT delivered, and a claim is what an adjudicator is
     for. `complete` closes are spot-checked at a declared rate rather than
-    gated: the merge slot already ran the declared bar on the composed tree and
+    gated: the merge slot already ran the declared checks on the composed tree and
     the review rounds already judged the work, so adjudicating every green close
     would rebuild the verdict gate under a new name.
 
@@ -1556,7 +1556,7 @@ def _complete_spot_checks(root, outcomes):
                 "buildtier": "medium",
                 "specref": relpath,
                 "context": (
-                    "This close was GREEN: the merge slot ran the declared bar "
+                    "This close was GREEN: the merge slot ran the declared checks "
                     "on the composed tree and the review rounds judged the "
                     "work. Nothing is alleged. It is here because "
                     "`docs/process.toml [authority] complete_review` is "

@@ -184,7 +184,7 @@ yet — a fold value, never a rung a repo sits at (§4):
   TC). **DevStg-Release is not reachable from a cell** (the 2026-08-15 ruling,
   carried onto this axis at WI-498 slice 3): release is what the harness computes
   from test evidence. The carrier landed at WI-500 — `record_test_evidence.py`
-  runs the declared bar and writes `docs/test/evidence` only on a green, and that
+  runs the declared checks and writes `docs/test/evidence` only on a green, and that
   record's verdict is `spine_stage`'s ONE input to the top rung. It is bound by
   VALUE to the tree measured (the spine registries plus the declared source and
   test trees), so a byte moved on either side drops the rung back to
@@ -429,7 +429,7 @@ scaffolds the skeleton pre-filled for the chosen level.
 
 **Machine surface: none beyond the two files.** `check.py`/`trace.py` behave
 identically at every level — authority is *who accepts*, not what runs. The
-harness is the bar everywhere; a red check is a red check.
+harness is the standard everywhere; a red check is a red check.
 
 ### Who performs the acceptance act
 
@@ -547,7 +547,7 @@ The three words are `--gate-policy` **presets**: each *translates* into the
   never a mid-run pause (the acceptor accepted bounded risk; momentum is the
   level's value): LOW → decide + record in the Decisions log; MEDIUM/HIGH →
   the Blocked register.
-- **`autonomous`** — every bar except the operator's final read closes on the LLM verdict;
+- **`autonomous`** — every gate except the operator's final read closes on the LLM verdict;
   mid-run operator escalation is replaced by the Blocked register, ask-the-operator
   by the Decisions log (HIGH revert-cost decisions get an independent
   peer-tier second opinion *before* execution), a person's `Vouch` by a delegated one.
@@ -1327,7 +1327,7 @@ cannot judge its own output (a real project shipped awkward render artifacts
 because "the agent didn't know how to judge it, it just shipped it"), and the
 original TC may have been lax. `Critique` gives another agent a **different hat**:
 an independent critical eye that says *where and why* something isn't good enough
-and drives rework toward a written bar. Built on the S8 chassis (fresh sessions,
+and drives rework toward a written standard. Built on the S8 chassis (fresh sessions,
 redacted prompts, verdict files, hold-keyed escalation).
 
 - **`Critique` is a first-class Verification value** (PROCESS.md §4). A perceptual
@@ -1596,7 +1596,7 @@ classified by the **strongest** mechanism that holds it up:
 - **Harness** — a deterministic check at a lifecycle event (a git hook, a
   `check.py`/`trace.py` step, CI). The script decides; the rule cannot be
   forgotten. Strongest, and the default home for anything mechanizable.
-- **Test** — a regression net (`tests/`): a bar checkable only by executing
+- **Test** — a regression net (`tests/`): a standard checkable only by executing
   against a fixture. The enforcer for behaviors that are outcome, not syntax.
 - **Reviewer** — delegated to an independent reviewer charter (the reviewer
   dial above), which gains a perspective a hook can't: judgment on method,
@@ -1615,7 +1615,7 @@ detector is a **worklist, not a definition of done**: its vocabulary is always
 narrower than the rule it stands for, so a cleanup that stops when the checker
 goes quiet has proved only that the checker is quiet.
 
-The bar is **honesty**: a rule with no enforcer is either rewritten into one of
+The standard is **honesty**: a rule with no enforcer is either rewritten into one of
 the classes above or flagged plainly as unbacked — **zero unenforceable rules
 without a stated reason**. Recording the result as a short table in `docs/`
 (one row per rule → its primary enforcer + the file) turns "we have rules" into
@@ -1644,7 +1644,7 @@ The rule has three parts, in order:
    destroy lands its evidence *before* the fix, in the repo rather than in a
    session transcript: the exact command, the file manifest it ran over,
    before/after hashes or counts, raw tool output. An evidence file beside the
-   WI's spec is enough. The bar is that a second person can rerun it, or check
+   WI's spec is enough. The standard is that a second person can rerun it, or check
    the artifact it produced.
 2. **Otherwise mark it historical.** A number already taken on state that is
    gone is written as a *historical, non-reproducible observation* — in the same
@@ -1653,7 +1653,7 @@ The rule has three parts, in order:
 3. **Declare the figure — the `fig:` marker (WI-392, rung 1).** <!-- fig-ok: this heading names the marker --> A driven
    figure may opt in by carrying, on its own line (in markdown, inside an HTML
    comment), `fig: cmd="<command>" rev=<revision>` — the exact command that
-   produced it and the revision it was driven at. Two bars ride the marker.
+   produced it and the revision it was driven at. Two standards ride the marker.
    *Population:* when the figure is a count over a population, `cmd` is a
    command that **enumerates** that population (`git log … | wc -l` does); a
    hand-picked input set names its selection principle inside the cmd string —
@@ -1887,7 +1887,7 @@ A **skill** is a small, focused capability — a procedure grounded in this repo
 actual commands and files — that an agent loads on demand to work faster and more
 correctly. Skills are **opt-in accelerators, not process gates** (the
 Proportionality doctrine applied to tooling): the gates, the traceability spine,
-and the git/CI floor are the bar; a skill only helps an agent clear it. The full
+and the git/CI floor are the standard; a skill only helps an agent clear it. The full
 contract lives in the kit's `skills/README.md`; the shape:
 
 - **Neutral source → per-agent materialization.** The kit ships skills as
@@ -2070,7 +2070,7 @@ an agent resume surface authored session-to-session. Under parallel dispatch it
 becomes an **integrator-generated reference snapshot** — regenerated only on the
 integration branch after a successful integration and gated by generated
 freshness (like `PROJECT_STATE.html`), never written on a worker branch. It
-carries only: the derived gate/bar pointers; queued/deferred/blocked counts + a
+carries only: the derived stage pointers; queued/deferred/blocked counts + a
 link to the WI dashboard; pending `Needs <operator>` items linked to the operator
 decision surface; the ready frontier; and
 project scope/constraints whose canonical homes are linked, not copied. The
@@ -2895,7 +2895,7 @@ claimed branch in turn: a `--no-ff` merge straight onto trunk — there is no
 separate composed tree or candidate worktree to merge onto (docs/concurrency-v2.md
 §A2 deleted both: trunk-is-ancestor makes a merge conflict unrepresentable, so
 the merge is trivially clean and its tree is byte-identical to the branch tip)
-— with the trunk step folded into the merge commit, and the **declared bar**
+— with the trunk step folded into the merge commit, and the **declared checks**
 already run ONCE, on the branch itself at refresh, read fail-closed — a
 missing or empty check declaration is a **refusal**, never a skip, and any SKIP
 in the report refuses (the fail-open lesson, stated as a contract). The `[authority]` dials

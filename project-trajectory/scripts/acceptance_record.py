@@ -1607,7 +1607,7 @@ def _amended_cells(csv_path, id_col, rid, head, row):
     """One row's `split_changed_cells` when it is an AMENDMENT — present on
     both sides, reading the same accepted-text Status on both, with a cell
     moved — else None. `staged_spine_amendments`' per-row judgement, extracted
-    unchanged at WI-791 to keep the walk under the complexity bar."""
+    unchanged at WI-791 to keep the walk under the complexity limit."""
     if not rid or rid.endswith("-000") or head is None:
         return None
     head_status = (head.get("Status") or "").strip().lower()
