@@ -13,7 +13,7 @@ where the sharp edges are.
 
 **A durable artifact rewritten in place with no all-or-nothing boundary.** The
 kit's answer, where it is disciplined, is to move the boundary onto an operation
-that is already atomic. Two exemplars to hold as the bar:
+that is already atomic. Two exemplars to hold as the standard:
 
 - The **log-fragment compile** (`trunk_step.py --compile-log`, contract IF-168 in
   `docs/log.d/README.md`). *Every* fragment is validated before *any* is written,

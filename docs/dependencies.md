@@ -15,7 +15,7 @@ Tiers:
 - **`coordinator`** — used by this repo's coordination tooling; installed by
   dev-setup; never forced on an adopter.
 - **`shipped`** — imported by a check an adopter runs; forces every adopter to
-  install it, so the bar is highest (operator ruling required, expected rare,
+  install it, so the threshold is highest (operator ruling required, expected rare,
   ideally never — stdlib remains *preferred* for shipped checks).
 - **`system`** — a binary on PATH, not a Python package; same entry
   discipline.

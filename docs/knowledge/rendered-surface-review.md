@@ -10,7 +10,7 @@ software/how tabs); the operator decision surface `docs/open-items.html` from
 `gen_open_items.py`; and the console reports the checkers print. In THIS repo the
 two UX hats are ruled `always` (the `hats.toml` VALUES-DIVERGE note, lines 63–66)
 because these are real pages a session reads to decide what to do next — not a
-hypothetical adopter's UI. The bar for all three is written down: SR-052
+hypothetical adopter's UI. The standard for all three is written down: SR-052
 (accessibility), SR-053 (cross-view uniformity), SR-054 (task-level usability) in
 `docs/requirements/system-requirements.toml`.
 
@@ -48,9 +48,9 @@ raises instead of silently truncating under `python -O` (the L-02 fix,
 set let a promised view silently go unmet (117-CRITIQUE). Robustness here means
 verified rendered, at real volume, with the empty/huge/malformed branch exercised.
 
-### ACCESSIBILITY — is keyboard / screen-reader / low-vision a stated bar?
+### ACCESSIBILITY — is keyboard / screen-reader / low-vision a stated standard?
 The charter listens for "a surface whose acceptance names only how it looks to a
-sighted mouse user." SR-052 is that bar made explicit and mechanical: every
+sighted mouse user." SR-052 is that standard made explicit and mechanical: every
 interactive element keyboard-reachable and carrying an accessible name, no
 information by colour alone, a readable contrast floor, swept over EVERY emitted
 view (not a sample). The generator already carries the scaffolding to check

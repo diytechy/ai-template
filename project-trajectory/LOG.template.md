@@ -6,7 +6,7 @@ here, **newest last**, and are never rewritten. The working surface — what to
 do *next* — lives in [status.md](status.md), which points here; this file is
 **evidence, never normative**: a rule or requirement belongs in the process
 doc or a registry, not in a log entry. Entries here and in status.md cite
-**stable ids** (OI-n, stage/bar names, dates), never iteration-branch commit
+**stable ids** (OI-n, stage names, dates), never iteration-branch commit
 SHAs — sync scrub/collation may rewrite those (process-options.md "Agent
 iteration branch & sync").
 

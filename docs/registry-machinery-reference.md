@@ -190,7 +190,7 @@ Three separate mechanisms read this cell.
    bucket, so an unknown method is never counted as a runnable check.
 3. **`--strict-schema`** rejects any value outside the closed set.
 
-**Important:** `--require-verified` (the DevStg-Impl bar) applies to **every accepted SR
+**Important:** `--require-verified` (a DevStg-Impl gate check) applies to **every accepted SR
 regardless of method**. It was once Test-only, which let a `Demonstration` SR
 sitting at `Implemented` pass `trace.py` while `spine_rules` refused it DevStg-Impl — the
 two scripts disagreeing about the gate.
@@ -479,7 +479,7 @@ it; you accept artifacts and regenerate.
 | Tier | DevStg-Below | DevStg-Reqs | DevStg-Tests | DevStg-Impl |
 |---|---|---|---|---|
 | **SN** | under a "draft" heading, **or accepted with no covering SR** (the WI-401 coverage rung) | — | — | accepted **and cited by ≥1 SR `SN-Refs`**: such an SN owes nothing past DevStg-Reqs, so it contributes DevStg-Impl and **never caps** |
-| **SR** | `Status=Drafted` | accepted, **not decomposed** | **decomposed** = has its required LLR (unless `VerificationMethod ∈ LLR_EXEMPT`) **AND** a TC — **and this is the ceiling** (OI-30 D2) | *unreachable by cell*: the release bar is the harness's answer, not a Status value |
+| **SR** | `Status=Drafted` | accepted, **not decomposed** | **decomposed** = has its required LLR (unless `VerificationMethod ∈ LLR_EXEMPT`) **AND** a TC — **and this is the ceiling** (OI-30 D2) | *unreachable by cell*: the release stage is the harness's answer, not a Status value |
 | **LLR / TC** | `Status=Drafted` | — | — | once present, contributes DevStg-Impl and **never caps** |
 
 A below-`Accepted` SR needs no rule of its own: it is decomposed-but-not-accepted, so
@@ -568,7 +568,7 @@ sites reach `read_stage` — `check.py`, `agent_common.py`, `check_trajectory.py
   threshold sits at or below it. An out-of-vocabulary value is a hard exit, not
   a fallback.
 - **No file → the `derived-stage` step FAILS**, naming the command to run. A repo
-  that deleted the record never gets a silently weaker bar.
+  that deleted the record never gets silently weaker checks.
 - Freshness is guarded by `derive_stage.py --check`, wired as the `derived-stage`
   step at **every** rung and in the pre-commit hook. It recomputes and fails on
   drift. A file still in `stage.template`'s comment-only placeholder form counts
@@ -580,7 +580,7 @@ sites reach `read_stage` — `check.py`, `agent_common.py`, `check_trajectory.py
 Because the gate is a `min()`, a single Drafted row **drops the gate,
 and the harness then drops every step tagged for the higher gate.** `lint` and
 `--require-verified` simply stop running for the duration. That is
-not a relaxed bar — it is a blind spot, and it has bitten this repo: twelve
+not a relaxed standard — it is a blind spot, and it has bitten this repo: twelve
 commits went green over those steps during the 2026-07-26/27 window, and the debt
 surfaced in one lump when the window closed. (The debt of record was the
 duplication census's; that census was torn down later, D-7/WI-426. The blind
@@ -644,7 +644,7 @@ keeps only the steps whose `gates` set contains the resolved gate.
 
 Two consequences worth internalising:
 
-- **The entire product bar — format, lint and the test suite — is DevStg-Impl-only.** At
+- **All the product checks — format, lint and the test suite — are DevStg-Impl-only.** At
   DevStg-Reqs and DevStg-Tests the harness runs process checks and does not run the tests.
 - `--stage` on the command line wins (the retired `--gate` spelling is still
   accepted); a *defaulted* stage for `--run-step` / `--run-steps` resolves to
@@ -671,10 +671,10 @@ This repo additionally budgets the smoke tier in `[smoke-budget]`, three keys:
 `cpu-seconds`, the budget on the CPU seconds the tier's own processes use;
 `wall-seconds`, a looser cap on its wall time; and `max-tests`, a deterministic,
 machine-independent membership ceiling. `check_smoke_budget.py` meters the
-first two; the bars run it in warn mode, so they report the seconds and fail
+first two; the checks run it in warn mode, so they report the seconds and fail
 only on a red tier, and the run menu's audit (`[run] audit`) runs it in enforce
 mode against all three. `tests/test_smoke_budget.py` enforces `max-tests`
-inside the tier on every bar. All three are **growth sensors with headroom**,
+inside the tier on every check run. All three are **growth sensors with headroom**,
 not freezes — a ratchet stamped at current+1 bites on the first legitimate
 addition.
 
@@ -722,12 +722,12 @@ branch — one with a `docs/work/active/<branch>/` spec directory — the steps 
 reason instead of running. Gating a branch on freshness would red every branch
 for drift it is forbidden to fix.
 
-It is **fail-closed**: off git, on a detached HEAD, or unclaimed, the full bar
-applies. `--trunk-lane` forces them back on, which is what the station refresh
+It is **fail-closed**: off git, on a detached HEAD, or unclaimed, the full checks
+apply. `--trunk-lane` forces them back on, which is what the station refresh
 uses — that tree *is* the tree that becomes trunk, so the branch stands in the
 trunk lane for exactly that one run.
 
-**The practical consequence:** a work branch runs a genuinely weaker bar than
+**The practical consequence:** a work branch runs genuinely weaker checks than
 trunk, including the `derived-stage` freshness check. The stage a branch reports
 is the value as-of-base.
 
@@ -972,7 +972,7 @@ suite** while the registry still reads as pre-merge-covered. Same for a TC
 declared `Smoke` whose test carries no `smoke` marker: absent from the cheap
 gate, covered on paper.
 
-### 12.3 The entire product bar is DevStg-Impl-only
+### 12.3 All the product checks are DevStg-Impl-only
 
 `format`, `lint` and `tests+coverage` are tagged `{"DevStg-Impl"}`. Combined with §8.4,
 this is the sharp edge: **one Drafted row drops the gate below DevStg-Impl and
@@ -1040,10 +1040,10 @@ not.
 # integrity floor only (what the pre-commit hook runs)
 python project-trajectory/scripts/trace.py --strict-integrity
 
-# the DevStg-Tests bar
+# the DevStg-Tests gate checks
 python project-trajectory/scripts/trace.py --strict --no-placeholders --html
 
-# the DevStg-Impl bar
+# the DevStg-Impl gate checks
 python project-trajectory/scripts/trace.py --strict --no-placeholders --html \
     --require-verified --strict-schema [--phase 2]
 

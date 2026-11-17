@@ -18,7 +18,7 @@ scripts run on stdlib plus ledger-declared dependencies) — both tagged
 realizing SN-011 — are what CLAUDE.md's "stdlib-preferred and cross-platform"
 principle discharges. The two interlock: a shipped check must run on a clean
 interpreter with *nothing installed* so an adopter can run it on any of the three
-OSes without a toolchain, which is also why the stdlib bar is strictest for
+OSes without a toolchain, which is also why the stdlib rule is strictest for
 *shipped* checks (SR-034's acceptance singles out the shipped tier).
 
 The evidence surface is the CI matrix in `.github/workflows/test.yml`: Linux,
