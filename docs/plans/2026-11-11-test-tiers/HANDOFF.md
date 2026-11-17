@@ -403,7 +403,8 @@ is a verification method.
 - Alternatives: `checks_stage`; `gate`, which the kit already uses for the
   stage gates and would overload.
 
-Operator:
+Operator: ruled 2026-11-16, with §12.4's change: the key is `checks_stage`
+and the term **checks stage** (§12.2). Done, §9.11.
 
 #### §4.5.3 evidence gap
 
@@ -418,7 +419,7 @@ Operator:
 - Alternatives: "unproven test case"; "unverified test case", which collides
   with the row status Verified.
 
-Operator:
+Operator: as drafted, 2026-11-16 (§12.2). Done, §9.11.
 
 #### §4.5.4 commit-check settings (the reader of the two declared values)
 
@@ -433,7 +434,7 @@ counting rules.
 - Registry: LLR-368 binds the module and these symbols; LLR-343 binds
   `red_rounds_max`.
 
-Operator:
+Operator: as drafted, 2026-11-16 (§12.2). Done, §9.11.
 
 #### §4.5.5 stage, not bar, for the retired dial
 
@@ -450,7 +451,7 @@ the retired spelling and in a few live names.
 - Needs a look by whoever does it: `trace.py` and `kitlib/config.py`, to
   confirm each `*_bar` name is the stage and not something else.
 
-Operator:
+Operator: as drafted, 2026-11-16 (§12.2). Done, §9.11.
 
 #### §4.5.6 failed, not red, in running prose
 
@@ -462,7 +463,8 @@ Not a glossary term: a usage rule for the glossary's preamble.
 
 - Applies to prose, comments and messages. For test names see D4.
 
-Operator:
+Operator: as drafted, 2026-11-16 (§12.2). The glossary rule and the test
+names are done (§9.11); the prose is not, and §9.11 lists it.
 
 #### §4.5.7 minimum or standard, not bar, for a threshold
 
@@ -471,7 +473,7 @@ shipped bar", "raise the bar"), write the specific thing: minimum, standard,
 level. 109 lines of shipped prose hold the bare word; 32 are in the
 coordinator's recipes (see B8, which may remove them).
 
-Operator:
+Operator: as drafted, 2026-11-16 (§12.2). Done, §9.11.
 
 ## §5. Doing the migration
 
@@ -817,6 +819,7 @@ committed (D14).
 | The migrator, continued | a third step: the policy file's table and dial key, by line edit proved by a second parse (an inline or dotted table is refused, not guessed). 22 tests. Its manifest row is in. Its spine rows are written as `Drafted`: SR-247, LLR-369, TC-427, component CMP-006, with the id watermark raised. `docs/stage` now reads settled `DevStg-Impl`, live `DevStg-Reqs`, which is what three drafted rows in phase 6 mean; the operator's acceptance of them is owed (D18) |
 | §4.2, the act (§10.5) | done in four passes, six commits on `maint/vocabulary` (`deb642747` to `a40b38de4`): re-attest, the brief kind and safety class, approve and attest, then the status, the record and its ledger through the migrator. §9.9 |
 | §4.1 and §4.5.1, the passed-checks and failed-checks records (§10.6) | done, three commits on `maint/vocabulary` (`80b853c24`, `9cba92a1e`, `5a07a2675`): `Checks-Passed: ... checks=<commit\|landing\|none>`, `integrate.py record-checks --checks commit`, the phase `CHECKS`, the headers `# checks-failed:` / `# checks-summary:`, every name of both tables, the glossary's failed-checks record. No migrator step. §9.10 |
+| §4.5.2 to §4.5.7, the glossary, plain "accept" (§10.7 items 1 to 3) | done, nine commits on `maint/vocabulary` (`e8a844f10` to `99cb31ea5`): the work-item key `checks_stage` with a migrator step, `kitlib/expected_failure.py` and the failure cap's reader, the evidence gap with its brief kind, "bar" by its sense, the glossary's **stage**, **checks stage**, **evidence gap** and passes/fails rule, "step", 13 "accept" and 37 pass/fail test names, the record. §4.5.6's prose is left. §9.11 |
 
 Traps this session walked into:
 
@@ -1588,6 +1591,165 @@ Traps found:
     old value as a bare word ("review"), which no rule could rename safely.
     After changing a message's wording, grep the tests for its old words.
 
+### §9.11 The ninth session: closing the branch, items 1 to 3 (§10.7)
+
+Written 2026-11-16. It did §10.7 items 1 to 3 on `maint/vocabulary` from
+`08d4cde6b`, through §10.3's loop, every line of every dry run read. Hook
+bypassed (D14); nothing pushed. The rule, name, line and hand-edit files are
+in `vocab-tools/` under the names below; `hline.py` is new (edits addressed
+by line, for the long tail of one-word sense fixes).
+
+| Concept | Commit | What moved |
+|---|---|---|
+| §4.5.2, the checks stage | `e8a844f10` | `r47a_checks_stage.py` 48 lines in 8 files; `n47a_names.py` 16 lines (and `_run_bar`'s `gate` to `stage`); `h47a.py`, `h47b.py`, `h47c.py` 48 edits; `h47a_rows.py` (SR-247, LLR-369, TC-427). The key `bar` is `checks_stage` (column `ChecksStage`). Migrator step `work item` with 4 tests; run here: **33 keys in 31 archived work items** |
+| §4.5.4, the commit-check settings and the failure cap | `b0cbdda57` | `git mv` of `kitlib/red_mark.py` and three test modules; `r47b_expected_failure.py` 132 lines in 23 files; `n47b_names.py` 57 lines (59 with `n47b2`); `h47d.py`, `h47e.py` 33 edits |
+| §4.5.3, the evidence gap | `613c849ef` | `git mv` of the prompt; `r47c_evidence_gap.py` 214 lines in 39 files; `h47f.py`, `h47f2.py` 28 edits; `h47f_migrator.py`: `POLICY_ITEMS` respells the brief kind in `retain_for`, one test; run here (`docs/process.toml`); the WI-000 example recopied |
+| §4.5.5, §4.5.7 and 9.10's "bar" for running checks | `3cf264ccd` | `r47e_checks_names.py` 243 lines in 52 files; `n47e_names.py` 20 lines; `r47e_checks_prose.py` 502 lines in 89 files (scripts, tests); `r47e_checks_docs.py` 165 lines in 22 files (skills, stack file, specs, two prompts and the worker golden); `r47e_checks_rows.py` 86 lines in 5 registries; `h47g_code.py` 92, `h47g_rows.py` 47, `h47g_prose.py` 67, `h47g_fix.py` 5, `h47g_budget.py` 4 line edits |
+| §12.4 and §10.7 item 2, the glossary and "step" | `394dc63ec` | `h47h_glossary.py` (10 edits), `h47h_step.py` (13) |
+| §10.7 item 3, plain "accept" | `31a41910b` | `r47i_accept.py` 13 test names |
+| §4.5.6, test names | `a57a85553` | `r47f_pass_fail.py` 37 test names; `h47f_ids.py` 2 parametrize ids |
+| the record | `675f5b7a4` | the migrator's record step: 142 cells in 94 rows absorbed (LLR 28, SR 16, TC 42, SN 5, external 3), named in `vocab-tools/s47_record_absorbed.txt`; then `99cb31ea5` regenerated the open-items view (trap 46) |
+
+**What the names became.**
+
+| Today | Now |
+|---|---|
+| work-item key `bar`, column `Bar`; `WI_BARS`, `_BAR_GATES`, `normalize_bar`, `_normalize_bar`, `_lane_bar_directives`, `_declared_bar_or_refusal`, `bar_gate` | `checks_stage`, `ChecksStage`; `WI_CHECKS_STAGES`, `_CHECKS_STAGES`, `normalize_checks_stage`, `_normalize_checks_stage`, `_lane_checks_directives`, `_declared_checks_or_refusal`, `checks_stage` |
+| `kitlib/red_mark.py`, `Bars` (fields `review`, `red_mark`), `read_bars` | `kitlib/expected_failure.py`, `CommitCheckSettings` (`commit_checks`, `marker`), `read_commit_check_settings` |
+| `kconfig.red_rounds_max()`, `RED_ROUNDS_KEY`, `RED_ROUNDS_RETIRED_KEY`, `RED_ROUNDS_MAX_DEFAULT`; the loop's `ctx.red_rounds_max` | `commit_check_failure_cap()`, `FAILURE_CAP_KEY`, `FAILURE_CAP_RETIRED_KEY`, `FAILURE_CAP_DEFAULT`; `ctx.failure_cap` |
+| `red_tc_census`, `parse_red_tc`, `red_tc_values`, `RED_TC_PREFIX`, `RED_ASSUMPTION_TC_PREFIX`, `ADJUDICATE_RED_TC`, `_TC_NOT_RED`; brief kind `red-tc`, prompt `adjudicate-red-tc.template.md`, key `ADJUDICATE-RED-TC`; census lines `red TC ...`, `red assumption TC ...` | `evidence_gap_census`, `parse_evidence_gap`, `evidence_gap_values`, `EVIDENCE_GAP_PREFIX`, `ASSUMPTION_GAP_PREFIX`, `ADJUDICATE_EVIDENCE_GAP`, `_GAP_EXEMPT_STATUSES`; `evidence-gap`, `adjudicate-evidence-gap.template.md`, `ADJUDICATE-EVIDENCE-GAP`; `evidence gap ...`, `assumption evidence gap ...` |
+| `_run_bar`, `_refresh_bar`, `_run_review_bar`, `_bar_refusal`, `_review_bar_refusal`, `skip_bar`, `run_bar`, `record_bar_result`; fixtures `declare_review_bar`, `ctl/bar_red`, `ctl/bar_plan`, `bar_runs.txt`, `bar-cache`, `BAR-FAIL-MARKER` | `_run_landing_checks`, `_refresh_checks`, `_run_commit_checks`, `_checks_refusal`, `_commit_checks_refusal`, `skip_checks`, `run_checks`, `record_checks_result`; `declare_commit_checks`, `ctl/checks_fail`, `ctl/checks_plan`, `check_runs.txt`, `checks-cache`, `CHECKS-FAIL-MARKER` |
+| "the no-bar arm", "bar-inert", "review bar", "commit bar", "landing/refresh bar", "gate/rung bar", "smoke bar" | "the no-checks arm", "checks-inert", "commit checks", "landing checks", "gate checks", "smoke tier" |
+| "bar" for a threshold; for a stage | minimum, standard, limit, threshold; stage |
+
+**Decisions taken here.**
+
+(a) **The retired-tag readers keep "bar"** (§4.5.5): `_RETIRED_WI_BARS`
+and `_RETIRED_BARS` read the retired `G1`..`G3` and `DevBar-*` values of the
+key, and are on D11's list. So do the prose and tests that describe the
+retired bar axis as retired (the MIN over rows, the stage-to-bar crossing,
+the bar ordinals): `spine_rules.py`, `kitlib/ladder.py`, `kitlib/stage.py`,
+`traj_status.py`, `derive_stage.py`, `check_vocab.py`, `kitlib/config.py`'s
+legacy threshold table, and the history lines of `check.py` and
+`check_trajectory.py`, with their tests.
+
+(b) **The brief kind `red-tc` is `evidence-gap`.** §4.5.3 lists the code
+names; the kind, the prompt file and its `--prompt-map` key name the same
+thing, so they moved with it. The kind is stored in `docs/process.toml`
+`[adjudicator] retain_for`, so the migrator's list step respells it, as it
+did `first-approval`. Old verdict files and bindings keep the old kind
+(D15).
+
+(c) **No migrator step for the work-items CSV.** Its header gained
+`ChecksStage` in the template; the CSV is the interchange form
+(`wi_convert`), not a registry a current script reads in place.
+
+(d) **Code names for the running-checks sense** follow the glossary's
+terms: the commit checks (`_run_commit_checks`), the landing checks
+(`_run_landing_checks`), the check suite's declaration
+(`_declared_checks_or_refusal`). `_run_bar`'s parameter `gate` is `stage`,
+the flag it feeds having been `check.py --stage` since WI-498.
+
+(e) **The dashboard says "gate checks".** Its panel 3 called the full gate
+the "rung bar", and `test_traj_panels` forbade "gate checks" as the deleted
+axis's name spelt anew. The glossary has since kept **gate checks** for the
+full gate of a stage, so the panel uses it, and the test now asserts it and
+keeps "gate bar" and "rung bar" out.
+
+(f) **The settings' fields and the cap's names.** `CommitCheckSettings` has
+`commit_checks` and `marker` as §4.5.4 proposed; the retired `[bars]` keys
+`review` and `red_mark` stay where the refusal names them. The cap's
+constants are `FAILURE_CAP_*` and the loop's field `failure_cap`, shorter
+than the function `commit_check_failure_cap()`.
+
+(g) **Rows.** The phrase map ran over the five registries holding "bar";
+47 lines were then put right by hand (a field of the trailer, the work-item
+key, a threshold, a stage, the retired axis, a glyph). The interface row's
+exit label `RED-CAP` is `CHECK-FAILURE-CAP`; its list of `docs/stack.ini`
+sections says `check-suites`, not the retired `bars`. All vocabulary (D5),
+absorbed into the record by the migrator (`675f5b7a4`).
+
+(h) **Item 3** renamed 13 test names in which a verdict, ruling, typed line,
+adoption record, open item, review session, sitting or record was
+"accepted" by a reader or a check. "Accept" for a value a parser takes stays.
+
+**Left for later**, by count on the live surface at the end of this session:
+
+- **§4.5.6 prose**: about 1,040 lines still say "red" or "green" (tests 536,
+  kit scripts 209, rows 89, kit prose 45, skills 33, docs 24, CI 10); some are
+  colours. Only test names (D4) moved here. A pass like `r47e_checks_prose.py`
+  (a marked plural, an agreement rule) fits it; colours in `rendering/` and
+  the dashboard tests, and the red, green, refactor cycle, stay.
+- **"bar" in this repository's own docs**, not shipped: `docs/enforcement-
+  audit.md` (8), `docs/registry-machinery-reference.md` (15),
+  `docs/dependencies.md`, `docs/knowledge/*`, `docs/declared-absences`,
+  `docs/concurrency-v2.md`; and `LOG.template.md`'s "stage/bar names".
+- The evidence-gap prompt still says the status is "not `Verified`" (a fact,
+  not vocabulary).
+- Records and generated views keep their words (`docs/status.md`, the
+  handoffs, `docs/cli-reference.md`, `docs/interface-reference.md`,
+  `PROJECT_STATE.html`, `components.derived.toml` regenerates).
+
+**For the re-sync entry (§10.7 item 5).** The key `checks_stage` and the
+migrator's `work item` step; the brief kind `evidence-gap`, its prompt and
+`--prompt-map` key, `retain_for` respelled by the migrator; the module
+`kitlib/expected_failure.py` (a re-sync that copies kit files leaves the old
+`red_mark.py` beside it: delete it); `CommitCheckSettings`; the cap's reader;
+the census line grammar; and that an adopter's own scripts that import the
+old names change by hand.
+
+**Tests** (8 workers, Git Bash, `PYTEST_DEBUG_TEMPROOT` unset; each list is in `vocab-tools/`.
+
+| Concept | Modules | Result |
+|---|---|---|
+| §4.5.2 | 18 (`s47a_tests.txt`) | 1 failed, 656 passed, 1 skipped in 266.04s; the failure the module-size re-stamp |
+| §4.5.4 | 24 (`s47b_tests.txt`) | 2 failed, 859 passed, 1 skipped in 309.52s; both re-stamps |
+| §4.5.3 | 24 (`s47c_tests.txt`) | 2 failed, 1379 passed, 1 skipped in 291.61s; both re-stamps |
+| "bar" | 75 (`s47e_tests.txt`) | 3 failed, 3188 passed, 5 skipped in 945.61s; one real: `AGENTS.template.md` was 10,019 bytes, over its hard cap of 10,000. Three of its "bar"s became "gate" and one sentence lost six bytes (`h47g_budget.py`): 9,994, and `test_agents_template_stays_within_size_budget` passed (1 failed, 1 passed: the other, the table re-stamp) |
+| glossary, step | 11 | 2 failed, 289 passed, 1 skipped in 86.39s; both re-stamps |
+| accept | the 13 renamed tests in 11 modules (`-k`) | 44 passed in 90.60s |
+| pass/fail names | the renamed tests (`-k`); the canary's readers and `test_dogfood_sync`; six modules whose fixtures named a fake red test | 70 passed in 43.69s; 66 passed, 1 skipped in 1.90s; 247 passed in 34.54s |
+| final tree `99cb31ea5` | the standing six with `test_traj_panels`, `test_skills_sync`, `test_check_iterate` | 1 failed, 207 passed, 1 skipped in 28.92s; the module-size re-stamp |
+
+The unfiltered suite was not run (§10.7 item 7).)
+
+**Standing checks** (on `99cb31ea5`: `trace.py --strict` exit 0 (`integrity=0`); `check_trajectory.py --strict` clean, 254 advisory WARNs; `check_docs.py --stale` 0 broken; `scripts/check_resync.py` OK; `migrate_vocabulary.py --check` "nothing stored in an earlier spelling"; `gen_open_items.py`, `derive_stage.py`, `gen_prompt_catalog.py`, `gen_skills_index.py` `--check` fresh; `ruff format --check` and `ruff check` clean; skill mirrors identical. `check_complexity.py --mode enforce` fails exactly as §9.9 lists; no renamed function is in `docs/complexity-baseline`)
+
+**Known failures left** (§10.7 item 6, D17), re-stamps only: `test_capped_doc_baselines_match_the_real_sizes` (`CLAUDE.md` 8,037 to 8,049 bytes; `AGENTS.template.md` 9,999 to 9,993, under its cap); `test_module_sizes_exactly_match_the_committed_baseline` (`integrate.py` 1,793 to 1,805, `trace.py` 3,851 to 3,852, and `check.py` 1,393 to 1,391, which shrank); `check.py`'s complexity step as §9.9.
+
+Traps found:
+
+58. *A Python heredoc in Bash writes `\b` as a backspace.* Trap 56 again,
+    for regex word edges: `(r"\bbar\b", ...)` became `\x08bar\x08`. Write
+    rule files with the file tool; `D:\v47\fixctl.py` repaired one.
+59. *A pyname span read before a formatter pass drifts.* `ruff format` moved
+    the lines; two uses outside the span kept the old name. Read spans after
+    the last format, and grep the old name after the rename.
+60. *A plural replacing a singular breaks agreement, both ways.* "the bar
+    runs" needs "the checks run", but "record-checks writes" and "the commit
+    checks is" (a record of them) must keep their verbs. Mark the words a
+    rule writes (U+2063), fix verbs only after a mark, then drop the marks.
+61. *A generic word rule renames Python names.* `def ...(tmp_path, bar)`
+    lost its parameter while its uses kept theirs. Rename locals by token
+    first (`pyname.py`) and protect the code shapes left.
+62. *One spelling, five senses, often in one file*: a run of checks, a
+    threshold, a stage, the retired axis, a glyph or a placeholder. List the
+    files whose senses mix and edit them by line (`hline.py`).
+63. *vapply matches SKIP glob by glob.* Thousands of exact paths made a dry
+    run take minutes; top-level globs take seconds.
+64. *A test can pin the old word as a forbidden one* (`test_traj_panels`
+    forbade "gate checks"). Read a guard's reason before renaming past it.
+65. *A rule can move a hand edit's target.* A REGEX rewrote the census
+    prefix's value before the hand edit that expected the old one; hand.py
+    refused cleanly. Dry-run the hand edits after the rules.
+66. *`cp -r` of the kit's skills into a mirror copies every skill.* The
+    mirrors hold only the tracked ones; 48 untracked files appeared and were
+    deleted by name. Copy the files `git ls-files` lists in the mirror.
+67. *A byte cap is a hard test, not only a re-stamp.* `AGENTS.template.md`
+    may not pass 10,000 bytes (`test_agents_template_stays_within_size_budget`);
+    "standard" for "bar" took it over. Measure the capped files after prose
+    edits.
+
 ## §10. Runbook: finishing the migration
 
 Written 2026-11-11 for the session that takes over, which has none of the
@@ -1907,6 +2069,8 @@ only. The glossary's "commit checks" entry still describes the old command;
 rewrite it here.
 
 ### §10.7 Closing the branch
+
+**Items 1 to 3 are done (ninth session, 2026-11-16): §9.11.** Left from them: §4.5.6's prose ("red" and "green" in comments, docstrings, messages and rows; only test names moved) and "bar" in this repository's own docs, both listed in §9.11. Item 4 onward is next.
 
 1. The rest of §4.5, as the operator rules each line.
 2. The glossary's older entries, by hand: "the owner" in *independence* and
@@ -2324,3 +2488,29 @@ list is fixed unless §12.6 says so.
     unaccepted amendment pending, and to read the absorbed-cell lines it
     prints. `migrate_vocabulary --check` here now reports TC-403's evidence
     cell as owed; that is this, not a missed spelling.
+- **2026-11-16, §10.7 items 1 to 3 are done, apart from §4.5.6's prose.**
+  `maint/vocabulary`, nine commits: `e8a844f10` (the work-item key
+  `checks_stage`; the migrator's `work item` step, run here on 33 keys in 31
+  archived items), `b0cbdda57` (`kitlib/expected_failure.py`,
+  `CommitCheckSettings`, `commit_check_failure_cap()`), `613c849ef` (the
+  evidence gap; the brief kind `evidence-gap`, respelled in `retain_for` by
+  the migrator), `3cf264ccd` ("bar" by its sense: the checks that run, a
+  stage, a standard), `394dc63ec` (the glossary and "step"), `31a41910b`
+  (plain "accept" in test names), `a57a85553` (pass/fail test names),
+  `675f5b7a4` (the record: 142 cells in 94 rows absorbed) and `99cb31ea5`
+  (the open-items view). §9.11 has the counts, the decisions (a) to (h), the
+  tests, the traps (58 to 67) and what is left. The row amendments of
+  `ROW-AMENDMENTS.md` were not applied; they follow this, the last migrator
+  run.
+  - **For the operator:** (1) §4.5.6's prose is not done: about 1,040 live
+    lines still say "red" or "green" (some are colours); only the test
+    names moved. (2) The dashboard now says "gate checks" (the glossary's
+    term) where `test_traj_panels` had forbidden it (§9.11 decision (e)).
+    (3) The brief kind `red-tc` became `evidence-gap` with its prompt file
+    and `--prompt-map` key, beyond §4.5.3's list of code names (decision
+    (b)). (4) A re-sync that copies kit files leaves the old
+    `kitlib/red_mark.py` beside `expected_failure.py`; the RESYNC entry
+    (item 5) should say to delete it.
+  - **Still owed by §10.7:** items 4 to 9, with the re-stamps of item 6 now
+    covering `check.py` (shrank to 1,391) beside `integrate.py` and
+    `trace.py`.
