@@ -1721,7 +1721,7 @@ Traps found:
 
 58. *A Python heredoc in Bash writes `\b` as a backspace.* Trap 56 again,
     for regex word edges: `(r"\bbar\b", ...)` became `\x08bar\x08`. Write
-    rule files with the file tool; `D:\v47\fixctl.py` repaired one.
+    rule files with the file tool; `vocab-tools/fixctl.py` repairs one.
 59. *A pyname span read before a formatter pass drifts.* `ruff format` moved
     the lines; two uses outside the span kept the old name. Read spans after
     the last format, and grep the old name after the rename.
