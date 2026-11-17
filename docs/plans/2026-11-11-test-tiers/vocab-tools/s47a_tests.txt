@@ -1,0 +1,17 @@
+tests/test_migrate_vocabulary.py
+tests/test_integrate_station.py
+tests/test_integrate_admission.py
+tests/test_integrate.py
+tests/test_stage_ladder.py
+tests/test_wi_convert.py
+tests/test_wi_loader_sync.py
+tests/test_dispatch.py
+tests/test_plan_artifacts.py
+tests/test_intake.py
+tests/test_disposition_adoption.py
+tests/test_schedule.py
+tests/test_dogfood_sync.py
+tests/test_generated_freshness_wiring.py
+tests/test_complexity_ratchet.py
+tests/test_module_size_ratchet.py
+tests/test_derive_stage.py
