@@ -2003,6 +2003,195 @@ environment):
 `gen_open_items.py`, `gen_prompt_catalog.py`, `gen_skills_index.py` fresh;
 ruff format and check clean; skill mirrors identical.
 
+### §9.14 The twelfth session: §10.7 item 8, D11 (the legacy readers leave the core)
+
+Written 2026-11-17, on `maint/vocabulary` from `2378c1776`, by a sub-agent
+following `D11-PLAN.md` and the rulings A to F (§12.2). Hook bypassed (D14);
+nothing pushed. The plan's commit order, steps 1 to 6, then the record, then
+step 7's first half (the amendment drafts). The edit scripts are not kept in
+`vocab-tools/`: each was a one-off that asserted the text it replaced.
+
+| Step | Commit | What moved |
+|---|---|---|
+| 1, the migrator learns the older spellings | `c5649451f` (8 files, +451 −22) | The policy step renames the dial's earliest key, `human_ratification_through`, under either table name, and the failure cap's `[build] red_rounds_max` (E); `POLICY_ORDINALS` respells the dial's bare 0-4 integer as the quoted rung (`type(v) is int`, so a bool never matches); a table carrying two spellings of one key is refused. A new step, `stack profile`, rewrites each `[step:*] gates = <list>` in `docs/stack.ini` to `from-stage =` the stage it meant (B), proved by re-parsing through `kitlib.config.parse_stack_ini`, split out of `read_stack_ini` for text in hand. SR-247, LLR-369, TC-427 (Drafted) extended; 7 test functions, 21 cases |
+| 2, bootstrap | `631b68b06` (9 files, +62 −265) | `_migrate_dial_key_name`, `_migrate_dial_ordinal` and bootstrap's copies of the key and the 0-4 table go from `--migrate-config` (C keeps the one-word fold). `LEGACY_ACCEPTANCE` is `GATE_POLICY_DIALS` (F). Three bootstrap tests go; their cases became migrator parameters. Traced cells: LLR-155 `module` and `code_symbol`, LLR-156 `code_symbol`, TC-150 and TC-152 `evidence` |
+| 3, the core dial readers | `8ade46c95` (13 files, +169 −522) | `kitlib/authority.py` loses the 0-4 table, the old key, the gate-policy word's dial table and the read of `docs/gate-policy`; `read_dial` is merged into `dial_from_config`, which `dial_at` and `acceptance_through` run. `agent_policy` loses its copy of the word's three dials, `legacy_acceptance`, the `final_review` and `keep_nondependent` fallbacks, the `PROCESS_KEYS["gate-policy"]` row, the migration window and its integer branches, and the migration note; `agent_common` its seven re-exports. IF-195 (Drafted) loses `read_dial`; LLR-246 `code_symbol`, TC-241 `evidence` follow |
+| 4, the stage tags | `1571d94dd` (17 files, +189 −446) | `kitlib/config.py` loses the alias table and the `gates =` translation, keeping a refusal that names the section and the migrator. `check.py` loses the stage-value aliases and `--stage-cleared`; argparse refuses both, `--gate` stays (A). The work-item tag tables go from `intake.py` and `integrate.py`. `check_vocab`'s DECLARATION SITES paragraph and `SUGGEST["G2"]`. Prose: `ADOPTING.md`, `stack.ini.template`, the gate-advance skill and its two mirrors, `PROCESS.md`, `process.toml.template` (in step 3). `docs/cli-reference.md` regenerated |
+| 5, the re-sync entry | `ad02b2987` (+55 −2) | The vocabulary entry gains what stopped being read, five table rows, a sentence in step 7 and `docs/stack.ini` among the files the migrator rewrites; seven supersession notes |
+| 6, the re-stamps | `5d60ea41e` | Module sizes, each a reviewed downward re-stamp with its reason: `check.py` 1,391 to 1,344, `bootstrap.py` 1,612 to 1,531, `agent_common.py` 1,100 to 1,093, `intake.py` 1,957 to 1,947, `integrate.py` 1,805 to 1,795. Complexity: `check.main` 40 to 39 (sloc 231), the `read_dial` row deleted. No capped file moved |
+| the record | `b1d81b66a`, then `88dcdb933` (the open-items view, trap 46) | The migrator's record step wrote four copies equal to live (below) |
+| 7, first half | `proposal/test-tiers` | The amendment drafts: `ROW-AMENDMENTS.md` §7 to §15, not applied |
+
+The kit's scripts, the migrator aside: 146 lines in, 786 out (the plan said
+about 110 and 650). The migrator: 207 in, 10 out.
+
+**What the migrator absorbed** (the run that wrote the record, on
+`5d60ea41e`). Before it ran, every live-versus-copy difference was this
+change's own, read cell by cell: the Drafted rows IF-195, LLR-369, SR-247 and
+TC-427, and traced cells of accepted rows. Its `absorbs` lines, all traced
+(D4), none a text cell:
+
+    docs/requirements/low-level-requirements.toml absorbs LLR-155 code_symbol
+    docs/requirements/low-level-requirements.toml absorbs LLR-155 module
+    docs/requirements/low-level-requirements.toml absorbs LLR-156 code_symbol
+    docs/requirements/low-level-requirements.toml absorbs LLR-246 code_symbol
+    docs/test/test-cases.toml absorbs TC-150 evidence
+    docs/test/test-cases.toml absorbs TC-152 evidence
+    docs/test/test-cases.toml absorbs TC-241 evidence
+
+`migrate_vocabulary.py --check` after it: "nothing stored in an earlier
+spelling". This repository stored none of the older spellings, so the run
+rewrote only the record.
+
+**Decisions taken here** (where the plan was silent or proved wrong on reading
+the code; each the smallest course consistent with A to F):
+
+(a) **`kitlib.config.parse_stack_ini(text)`.** The migrator must prove a
+rewrite before it writes, and `read_stack_ini` took only a path. The parse
+moved into `parse_stack_ini`, which `read_stack_ini` now calls, so the
+options still have one home and `test_the_stack_ini_parse_is_one_home`
+holds. The migrator imports it inside `_stack_parse` alone, and its docstring
+and LLR-369 say so.
+
+(b) **The stack-profile step leaves the whole file on any problem**: an
+unknown token (a trailing `; note` included, since the parse keeps it in the
+value), a list continued onto a second line, `gates` under `[DEFAULT]`, both
+keys in a section, a file that does not parse, a look-alike line the
+re-parse catches, a file that is not UTF-8. A `gates` key in a section that
+is not a step is not the core's, and stays.
+
+(c) **Two earlier names of one key are refused together.** The dial's two
+earlier keys both become `operator_accepts_through`; a table holding both
+would have kept whichever the parse met last, so `_policy_table` refuses it,
+naming both.
+
+(d) **The integer is matched bare and decimal.** `+3`, `0x3`, an inline
+table and a look-alike line inside a multi-line string are refused by the
+re-parse, never guessed.
+
+(e) **The bootstrap cases moved as parameters**, not functions: the inline
+table, the bare `[authority]` header and the look-alike line inside a string
+are parameters of the migrator's tests (TC-427's method says so).
+
+(f) **`test_rule_sync`'s translation pin** is
+`test_each_gate_policy_word_lands_the_three_dials_it_always_meant`: with one
+table there is nothing to keep equal, so it pins each word's three dials by
+value. `test_gate_policy` names postures from `GATE_POLICY_DIALS`.
+
+(g) **The retired levels' equivalence is driven through the migrator's
+table** in `test_acceptance_level` (`RETIRED_RUNG`): the rung the migrator
+writes for level N holds what level N held, and the integer left unmigrated
+holds every rung. The window's tests became one that refuses the integer
+and one that refuses a bool; the three legacy-file tests became one that
+shows the word is not read, as the file or the TOML key.
+
+(h) **`test_the_pre_commit_step_reads_a_legacy_dial_as_the_writers_do`** is
+`..._holds_a_retired_dial_as_the_writers_do`: the integer now holds the
+Arch-rung row it once released. **`test_dispatch`** no longer writes a
+`docs/gate-policy` file that nothing reads (`attended` is the default).
+Two fixtures (`test_check_harness`, `test_check_coverage_driven`) declared a
+step's stage as `gates = DevStg-Impl`; they declare `from-stage` now.
+
+(i) **Seven supersession notes, not six.** The anchor `08c985cb` carries two
+entries, the recipe ("Nothing breaks on day one") and the translation table
+("Every reader accepts the left-hand column as an alias"); both said a tag is
+read.
+
+(j) **`PROCESS.md`'s retired-vocabulary sentence**, not in the plan's prose
+list, said the tags survive "as read-side aliases, which is `check.py`'s ...
+behaviour". It now names `check_vocab`'s refusal and the phase-anchor reading
+(D left `PHASE_ANCHOR_RE`). PROCESS.md is a watched file: +16 bytes, flagged
+here; no capped file moved, so no byte budget was re-stamped.
+
+(k) **`SUGGEST["G2"]`** reads "DevStg-Impl (cleared) / DevStg-Tests (the
+rung in work)": only the cleared half was wrong. `DevBar-Tests`'s suggestion
+is left; it named the `checks_stage` reading, which mapped to `DevStg-Tests`.
+
+(l) **The refusals.** `gates =` names `python scripts/migrate_vocabulary.py`
+(the adopter's path). The `red_rounds_max` refusal is unchanged (E keeps it);
+it says to rename the key. An unmigrated integer dial meets
+`config_conflicts`'s generic "is a int, expected str"; `check_vocab` names the
+migrator beside it.
+
+(m) **The complexity baseline was re-stamped by hand** for the two D11 rows. A
+full `--restamp` would also have moved nine unrelated `sloc` cells.
+
+(n) **`docs/cli-reference.md`** was stale before D11 (vocabulary-era help
+texts); its regeneration carries those too.
+
+(o) **The drafts live on `proposal/test-tiers`**, the home of
+`ROW-AMENDMENTS.md`, and reach `maint/vocabulary` by the merge.
+
+**Found, not fixed (for the operator or a later row).**
+
+- Accepted text D11 makes stale, drafted in `ROW-AMENDMENTS.md` §7 to §15 and
+  not applied: SR-139, LLR-155, TC-150, TC-151, LLR-156, TC-152, LLR-246,
+  TC-241, and LLR-038 (optional, already stale). Apply after the last
+  migrator run and accept with SR-247, LLR-369 and TC-427 (D18).
+- PictureSorter's own CI passes `--gate G3`, now refused: its one line
+  changes by hand to `--gate DevStg-Impl` (A). The three adopters holding
+  `gates =` (gilbert, Finance-Auditor, NotHomeWrecker) get it rewritten by the
+  migrator at their re-sync.
+- `bootstrap.py --gate-policy`'s help still says the word is "written to
+  docs/process.toml [authority] gate_policy"; it writes the three dials
+  (stale since SN-029, not D11's).
+- `docs/interface-reference.md` still names `read_dial`; it regenerates
+  before trunk with the other generated views (§12.6).
+- The commit message of `c5649451f` says "15 tests"; it added 7 test
+  functions, 21 cases (49 to 70 in the module).
+- LLR-246 and LLR-249 both name `dial_from_config` in `code_symbol`, as the
+  plan said.
+
+**Tests** (8 workers, Git Bash, `PYTEST_DEBUG_TEMPROOT` unset; every failure
+named is a re-stamp of step 6 or the stage fingerprint, regenerated):
+
+| Step | Modules | Result |
+|---|---|---|
+| 1 | the migrator, `test_stack_profile`, `test_selection_at_or_above` and the standing six | 349 passed, 1 skipped in 205.93s |
+| 2 | 12: bootstrap, rule sync, gate policy, migrator, process config, old-kit re-sync and the standing six | 2 failed (the size re-stamp; `docs/stage`, regenerated), 462 passed, 1 skipped in 117.05s |
+| 3 | 21: acceptance level, loop provenance, integrate admission, dispatch, process config, gate policy, rule sync, held status (both), held-rung doctrine, decision record, intake held act, agent loop policy, migrator, interface owner reach and the standing six | 2 failed (the same two), 871 passed, 1 skipped in 369.38s |
+| 4 | 18: selection, stack profile, stage ladder, the two fixtures' modules, intake, integrate station, schedule, migrator, registry checks, pre-commit hook, gen_arch_map, bootstrap and the standing six | 1 failed (the size re-stamp), 865 passed, 2 skipped in 248.69s |
+| 5 | 13: eight modules reading `RESYNC_PACK.md` and five of the standing six (the size ratchet waited for step 6) | 232 passed, 1 skipped in 52.55s |
+| 6 | the two ratchets and `test_check_complexity` | 52 passed in 2.35s |
+| final tree `88dcdb933` | the 39 modules above together | 1684 passed, 2 skipped in 503.71s |
+
+The unfiltered suite was not run (the parent session runs it).
+
+**Standing checks** on `88dcdb933`: `check_complexity.py --mode enforce` OK
+(181 rows); `trace.py --strict` exit 0 (`integrity=0`);
+`check_trajectory.py --strict` clean, 257 advisory WARNs, the only one naming
+anything D11 touched the migrator's standing "declares no Consumes seam"
+(IF-312's notes do not say `source`); `check_docs.py --stale` 0 broken;
+`scripts/check_resync.py` OK; `check_vocab.py --strict` clean;
+`migrate_vocabulary.py --check` "nothing stored in an earlier spelling";
+`derive_stage.py`, `gen_open_items.py`, `gen_prompt_catalog.py`,
+`gen_skills_index.py`, `gen_arch_map.py --cli-doc` fresh; `ruff format
+--check` (418 files) and `ruff check` clean; skill mirrors identical.
+
+Traps found:
+
+76. *A loop over a window that spans a cut never ends.* A script collapsing
+    blank lines checked a slice on both sides of the cut and replaced only on
+    one; it spun until stopped. Nothing was written (the write came last).
+    Let `ruff format` collapse them.
+77. *Trap 68 again, for `\n`.* A Python edit fed to `python -` through a
+    quoted heredoc lost its `\\n`; the script's assertion caught it. Every
+    edit script here was written with the file tool after that.
+78. *The Edit tool writes a typed `"﻿"` as the character.* The migrator
+    already held five literal byte-order marks; the two new ones were turned
+    back into the escape by script.
+79. *`check_vocab` reads code, not only strings.* A test constant named `G2`
+    is a finding wherever it is used; name tag constants `TAG_2` and mark the
+    one line that spells the tag.
+80. *An anchor note wraps mid-sentence.* "the whole re-sync" began on the line
+    before; an assertion-first edit failed cleanly. Match a quoted span from a
+    line start you have read.
+81. *Two earlier names can map to one current key.* A parse-level rename
+    keeps whichever it meets last; refuse the pair.
+82. *Fixtures hold retired spellings for convenience.* Two harness fixtures
+    used `gates = DevStg-Impl` as an ordinary step; after a reader goes, grep
+    the fixtures for its spelling.
+
 ## §10. Runbook: finishing the migration
 
 Written 2026-11-11 for the session that takes over, which has none of the
@@ -2324,6 +2513,8 @@ rewrite it here.
 ### §10.7 Closing the branch
 
 **Items 1 to 3 are done (ninth session, 2026-11-16): §9.11.** **Item 1 is done (tenth session, 2026-11-16): §9.12** records its two leftovers, §4.5.6's prose and "bar" in this repository's own docs. **Items 4 to 7 are done (eleventh session, 2026-11-16): §9.13**, with the ruled fixes of §12.2 and WI-1007. Item 8 (D11) is planned in `D11-PLAN.md`, its decisions ruled (§12.2); `ROW-AMENDMENTS.md` follows the last migrator run, which D11 includes.
+
+**Item 8 (D11) is built (twelfth session, 2026-11-17): §9.14.** Its accepted-row amendments are drafted in `ROW-AMENDMENTS.md` §7 to §15 and not applied: applying them is the operator's act, after the last migrator run.
 
 1. The rest of §4.5, as the operator rules each line.
 2. The glossary's older entries, by hand: "the owner" in *independence* and
@@ -2812,3 +3003,25 @@ list is fixed unless §12.6 says so.
   bigger legacy reader D11 did not list. The operator ruled A to D as
   recommended (§12.2); E and F were taken as recommended. Eight accepted
   rows will need the operator's act (drafts in the plan).
+- **2026-11-17, §10.7 item 8 (D11) is built.** On `maint/vocabulary`, eight
+  commits: `c5649451f` (the migrator learns the older spellings: the dial's
+  earliest key and 0-4 integer, `[build] red_rounds_max`, and a `[step:*]
+  gates =` list in `docs/stack.ini`), `631b68b06` (bootstrap drops its dial
+  steps; `LEGACY_ACCEPTANCE` is `GATE_POLICY_DIALS`), `8ade46c95` (the core
+  dial readers go; `read_dial` merged into `dial_from_config`), `1571d94dd`
+  (the retired stage tags and `--stage-cleared` refused, not translated),
+  `ad02b2987` (the RESYNC entry and seven supersession notes), `5d60ea41e`
+  (the re-stamps), `b1d81b66a` (the record: seven traced cells absorbed, no
+  text cell) and `88dcdb933` (the open-items view). The 39 touched and
+  standing test modules on the final tree: 1,684 passed, 2 skipped. §9.14 has
+  the decisions (a) to (o), the tests, the standing checks, the traps (76 to
+  82) and what is left. The unfiltered suite was not run.
+  - **For the operator:** (1) the D11 amendment drafts, `ROW-AMENDMENTS.md`
+    §7 to §15, to apply after the last migrator run and accept with SR-247,
+    LLR-369 and TC-427 (D18); (2) PictureSorter's CI passes `--gate G3`,
+    which is now refused: that line changes by hand; (3) seven supersession
+    notes, not the plan's six (§9.14 (i)); (4) `PROCESS.md`'s
+    retired-vocabulary sentence was corrected beyond the plan's prose list
+    (§9.14 (j)).
+  - **Still owed by §10.7:** the unfiltered suite once on this tree, then
+    item 9 (§6).
