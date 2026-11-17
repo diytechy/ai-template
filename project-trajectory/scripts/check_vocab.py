@@ -60,10 +60,11 @@ THE CARVE-OUTS, and why each one is a carve-out rather than an oversight:
     conversion (one forced regenerate — the proven precedent).
   - **The operator's scratchpad is nobody's working surface.**
 
-DECLARATION SITES. Some live code must NAME the retired tags — the translation
-tables that let an adopter's `--gate G2`, `gates = G2 G3` and `checks_stage = G3` keep
-working across the re-sync. Those carry an explicit marker rather than being
-guessed at:
+DECLARATION SITES. Some live code must NAME the retired tags — the vocabulary
+migrator's table of the stage each tag in a `[step:*] gates =` list meant, the
+`SUGGEST` table below, a re-sync note, a test feeding one in as the input it
+refuses. The core reads none of them (D11). Those carry an explicit marker
+rather than being guessed at:
 
     check_vocab: allow-file     anywhere in a file  -> the whole file is exempt
     check_vocab: allow          on a line           -> that line is exempt
@@ -141,7 +142,9 @@ RETIRED_TAG_RE = re.compile(
 SUGGEST = {
     "G0": "DevStg-Below (the internal sentinel) / DevStg-Needs (the rung)",
     "G1": "DevStg-Reqs (cleared) / DevStg-Reqs (the rung in work)",
-    "G2": "DevStg-Tests (cleared) / DevStg-Tests (the rung in work)",
+    # Cleared, `G2` meant the stage a repo at that bar had REACHED, the Impl
+    # rung, as `check.py` read `--stage G2` (WI-498 ROUND-OPUS 8).
+    "G2": "DevStg-Impl (cleared) / DevStg-Tests (the rung in work)",
     "G3": "DevStg-Impl (cleared) / DevStg-Impl or DevStg-Release (the rung)",
     "G-Release": "DevStg-Impl (cleared) / DevStg-Release (the rung)",
     "G-Final": "the operator's final read (final_review), which is its own dial",

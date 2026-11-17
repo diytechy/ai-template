@@ -201,44 +201,28 @@ ARCHIVE_WORK = "docs/archive/work"
 
 # --- the WI `checks_stage` vocabulary (OI-21 contract break 3) ------------------
 # The stage a work item pins its landing checks to, a rung of the stage ladder.
-# A WI's `checks_stage` is a value the AUTHOR writes, so the retired tags
-# (`_RETIRED_WI_BARS`, named for the retired bar axis) translate on read —
-# silently, like `docs/stack.ini`'s `gates=` and for the same reason: check_vocab.py sees the authored spec file and can name the line, which
-# is a better message than a loader could produce. New rows author the new form.
+# A WI's `checks_stage` is a value the AUTHOR writes in the current spelling: the
+# retired tags are not translated (D11), and come back unchanged for the mint
+# and the landing to refuse by name; check_vocab.py names the line besides.
 #
 # The retired matching was `.upper()` + an uppercase tuple, which is why this is a
 # named helper now rather than an inline expression: `"DevStg-Reqs".upper()` is
 # `"DEVBAR-REQS"`, so a case-folding comparison would have silently rejected every
 # correctly-authored new value.
 WI_CHECKS_STAGES = ("DevStg-Reqs", "DevStg-Tests", "DevStg-Impl")
-_RETIRED_WI_BARS = {
-    "g1": "DevStg-Reqs",
-    "g2": "DevStg-Tests",
-    "g3": "DevStg-Impl",
-    # The `DevBar-*` prefix, retired 2026-08-18 (one vocabulary; the verb carries
-    # the axis). Keyed lower-case like the rows above, since this table is looked
-    # up case-insensitively. The Release row translates to `DevStg-Impl`, NOT to
-    # `DevStg-Release`: that bar closed the Impl rung and `DevStg-Release` is not
-    # clearable at all, so the alias carries the correction, not a prefix swap.
-    "devbar-reqs": "DevStg-Reqs",  # check_vocab: allow
-    "devbar-tests": "DevStg-Tests",  # check_vocab: allow
-    "devbar-release": "DevStg-Impl",  # check_vocab: allow
-}
 
 
 def normalize_checks_stage(value):
     """A `checks_stage` cell as a canonical `DevStg-*` name ("" when blank).
 
-    Retired tags translate case-insensitively; a canonical value is matched
-    case-insensitively too and returned in its declared casing, so `devbar-reqs`
-    is accepted without the value ever being stored mis-cased. Anything else comes
-    back stripped and unchanged, for the caller to refuse by name."""
+    A canonical value is matched case-insensitively and returned in its
+    declared casing, so `devstg-reqs` is accepted without the value ever being
+    stored mis-cased. Anything else, a retired tag included, comes back
+    stripped and unchanged, for the caller to refuse by name."""
     raw = str(value or "").strip()
     if not raw:
         return ""
     low = raw.lower()
-    if low in _RETIRED_WI_BARS:
-        return _RETIRED_WI_BARS[low]
     for canonical in WI_CHECKS_STAGES:
         if low == canonical.lower():
             return canonical

@@ -522,7 +522,7 @@ def test_module_coverage_full_then_smoke_run_scopes_the_report(scaffold):
     text += (
         "\n[step:module-coverage]\n"
         "command = {py} scripts/check_coverage.py --tier {tier} --skip-tiers smoke\n"
-        "gates = DevStg-Impl\nlayer = product\nlane = tests+coverage\n"
+        "from-stage = DevStg-Impl\nlayer = product\nlane = tests+coverage\n"
     )
     stack.write_text(text, encoding="utf-8")
     (scaffold / "docs" / "coverage-floors").write_text(

@@ -295,8 +295,8 @@ smoke = python scripts/check.py --jobs 0 --tier smoke
 #            thing it grades is required to exist. The default names the rung
 #            implementation begins at, because a project-specific gate normally
 #            grades a built thing.
-#            (The retired `gates = <list of bars>` spelling is still read and
-#            translated, with one notice per run naming this section.)
+#            (The retired `gates = <list of bars>` spelling is refused, naming
+#            this section; scripts/migrate_vocabulary.py rewrites it.)
 #   layer    (optional, default product) process|product — the --list tag only.
 # The name may not shadow a built-in step (format, lint, tests+coverage,
 # traceability, …). Example (commented — delete the # to activate):

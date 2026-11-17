@@ -121,7 +121,7 @@ built-in Python-reference defaults — identical values.)
   license-lint, capability/dataflow integrity, …) as its own section:
   `command =` (required), `from-stage =` (ONE rung of the eight-stage ladder,
   default `DevStg-Impl`; the step runs from that rung UP — the retired
-  `gates =` membership list is still read and translated),
+  `gates =` membership list is refused, and `migrate_vocabulary.py` rewrites it),
   `layer =` (`process|product`, default product). `check.py` runs it alongside
   the built-in plan, so CI and the local harness pick it up with no code change
   — and, crucially, your custom gates live **here**, not hand-edited into

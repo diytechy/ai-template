@@ -76,7 +76,7 @@ Usage:
                 has reached, not the end-state. From DevStg-Impl on, traceability
                 also requires every VerificationMethod=Test SR to be Status=Accepted
                 (trace.py --require-verified). `--gate` is the accepted prior
-                spelling; `--stage-cleared` is accepted and warns.
+                spelling.
     --tier      Which test tier to run (default: all). Mark fast critical-path
                 tests @pytest.mark.smoke and expensive ones @pytest.mark.release
                 (markers registered in pytest.ini); leave ordinary tests unmarked —
@@ -164,13 +164,11 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import (
-    RETIRED_STAGE_ALIASES,
     STACK_INI,
     StackIniError,
     read_stack_ini,
     step_paths,
     step_threshold as _step_threshold,
-    _LEGACY_GATES_WARNED as _LEGACY_GATES_WARNED,
 )
 from kitlib.config import utf8_console as _utf8_console
 import fnmatch
@@ -411,7 +409,7 @@ def extra_steps(profile, subs):
 
     `from-stage` is the rung the step becomes RELEVANT at and the step runs
     whenever the repo is at or above it (see _step_threshold; the retired
-    `gates =` membership list still translates). Optional `paths =` patterns
+    `gates =` membership list is refused). Optional `paths =` patterns
     also select it below that rung; an unknown change runs every such step.
     Patterns are repo-relative, case-sensitive fnmatch globs (`*` spans `/`),
     comma/whitespace separated. Include the baseline, script and config.
@@ -1358,47 +1356,13 @@ ALL = "all"
 # it can neither be written to `docs/stage` nor sorted onto the ladder.
 STAGES = list(_kitladder.STAGE_ORDER) + [ALL]
 
-# THE RETIRED-TAG ALIASES (check_vocab: allow-file is NOT used — only these
-# declaration lines are marked). `--gate G2` is a string an adopter's hook  check_vocab: allow
-# and CI workflow pass LITERALLY, so refusing it would break every adopter's
-# pipeline at the re-sync — and this kit's own rule is that a breaking change to
-# a downstream-visible CLI needs a migration, not a cliff. So the retired tags
-# are ACCEPTED here and WARNED about (`_resolve_stage_alias` prints the canonical
-# form to stderr once per run).
-#
-# WHY WARNED RATHER THAN SILENT OR REFUSED. Silent acceptance is how the retired
-# vocabulary grows back — the tags would live in adopters' hooks forever with
-# nothing ever telling anyone. Refusal breaks working pipelines for a vocabulary
-# change. A warning is the only posture that both keeps the pipeline passing and
-# guarantees the operator is told; it costs one stderr line per run and it stops
-# the moment the hook is updated. The AUTHORED surface (docs/stack.ini's
-# per-step threshold) translates with its own one-line notice instead, because
-# there the FILE can be named.
-#
-# A THIRD ALIAS GENERATION IS NOT OWED, which the census expected to be. The
-# three bar spellings are all rungs on the ladder, so an adopter passing
-# `DevStg-Tests` keeps a legal value — what changed is the READING (the repo is
-# at that rung, rather than that bar must next be cleared), and a reading is
-# migrated by the RESYNC note, not by a translation table.
-# THE VALUES ARE ARRIVAL RUNGS, BY MEANING — never the same-spelled rung
-# (corrected at the WI-498 close, ROUND-OPUS 8). A retired tag names a BAR the
-# repo had CLEARED, and the bar was a MIN over every in-scope row, so the rung a
-# repo at that bar had actually reached is what the tag translates to. That is
-# the same by-meaning rule `_LEGACY_BAR_THRESHOLD` states for `gates =` lists
-# and the same one the phase-anchor grammar uses; this table was the one place
-# taking the SPELLING.
-#
-# WHAT IT COST, driven: `--gate G2` resolved to `DevStg-Tests` and produced a
-# 12-step plan where the equivalent arrival (`DevStg-Impl`) produces 26. The 14
-# steps that silently dropped out included `traceability`, `tests+coverage`,
-# `lint`, `format` and `backlink-coverage` — so an adopter's CI passing
-# `--gate G2` literally (the exact case the silent-`--gate` concession exists to
-# protect) kept passing while quietly stopping most of its checks.
-#
-# COMPOSITION IS UNCHANGED for `gates =` step lists: `_step_threshold` maps
-# through this table and then through `_LEGACY_BAR_THRESHOLD`, and every entry
-# below lands on the same threshold it did before (Impl -> Impl, Reqs -> Needs).
-# Only the CURRENT-STAGE direction moves, which is the one that was wrong.
+# THE RETIRED SPELLINGS ARE NOT READ (D11). The `G*` tags and the `DevBar-*`  check_vocab: allow
+# prefix as a stage value, and the prior flag `--stage-cleared`, are refused by
+# argparse before any step is planned: a translation once read `--gate G2` as  check_vocab: allow
+# the same-spelled rung and dropped fourteen steps from an adopter's CI behind
+# one line of reassurance. The re-sync entry gives each spelling's stage, and
+# an adopter's own CI line changes by hand. `--gate` itself stays: the word was
+# never retired where it means a check that can fail.
 
 
 def at_or_above(current, threshold):
@@ -1415,67 +1379,6 @@ def at_or_above(current, threshold):
     if current == ALL:
         return True
     return _kitladder.stage_ord(current) >= _kitladder.stage_ord(threshold)
-
-
-def _resolve_stage_alias(value, what):
-    """Translate a retired `G1`/`G2`/`G3` tag to a canonical rung, warning once.  check_vocab: allow
-    Anything else passes through untouched for the caller's own validation.
-
-    THE WARNING NAMES THE TRANSLATION'S DIRECTION, because the value moving is
-    the thing an operator most needs to see (ROUND-OPUS 8): the tag translates
-    BY MEANING, so a bar-era value can resolve to a rung several above the word
-    it shares with the ladder, and the plan the run executes changes with it.
-    The old text reported only the re-reading and said nothing about the plan,
-    so an adopter's pipeline could shrink by fourteen steps behind one line of
-    reassurance."""
-    v = (value or "").strip()
-    if v in RETIRED_STAGE_ALIASES:
-        canonical = RETIRED_STAGE_ALIASES[v]
-        note = (
-            ""
-            if canonical == v.replace("DevBar-", "DevStg-")
-            else (
-                " NOTE: that is NOT the same-spelled rung — a retired tag named "
-                "a BAR the repo had CLEARED, and the bar was a MIN over every "
-                "in-scope row, so it translates to the rung a repo at that bar "
-                "had actually REACHED. The plan is the one for {!r}, which runs "
-                "every step at or above it; `--list` shows exactly which."
-            ).format(canonical)
-        )
-        print(
-            "check: {} {!r} uses the RETIRED gate vocabulary — reading it as {!r}. "
-            "The tags retired at OI-21; update to the stage-ladder rung names "
-            "({}).{}".format(
-                what, v, canonical, "|".join(_kitladder.STAGE_ORDER), note
-            ),
-            file=sys.stderr,
-        )
-        return canonical
-    return v
-
-
-# The one prior flag spelling that makes a CLAIM about the axis, and therefore
-# the one that warns (`--gate` does not — see the argparse block for why the two
-# postures differ). argparse records only the DEST, never which spelling reached
-# it, so this reads argv directly; both `--stage-cleared X` and
-# `--stage-cleared=X` forms count.
-_RETIRED_FLAG = "--stage-cleared"
-
-
-def _warn_retired_flag_spelling(argv=None):
-    """One stderr line when the run was invoked with `--stage-cleared`."""
-    args = sys.argv[1:] if argv is None else argv
-    if not any(a == _RETIRED_FLAG or a.startswith(_RETIRED_FLAG + "=") for a in args):
-        return False
-    print(
-        "check: `{0}` names the RETIRED bar reading — reading it as `--stage`, "
-        "the rung the repo is IN, which selects every step at or above it "
-        "(OI-51). Update the flag; the value spellings are unchanged.".format(
-            _RETIRED_FLAG
-        ),
-        file=sys.stderr,
-    )
-    return True
 
 
 # --- THE DERIVED STAGE, READ THROUGH THE COMMON READER ------------------------
@@ -2583,44 +2486,26 @@ def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    # THE CLI CONTRACT, OI-21 break 1. `choices=` deliberately lists the retired
-    # tags TOO, because argparse rejects an out-of-choices value before any code of
-    # ours runs — so an adopter's `--gate G2` dies with a bare argparse usage  check_vocab: allow
-    # error naming no migration. Listing them lets `_resolve_bar_alias` translate
-    # and explain instead. The `metavar` keeps `--help` teaching only the canonical
-    # form, so the aliases are reachable without being advertised.
     # `--stage` IS THE CANONICAL SPELLING (OI-51, ruled 2026-08-21): the value is
     # the rung the repo is IN, and every step whose threshold that rung is at or
-    # above runs. Two prior spellings stay accepted, with DIFFERENT postures for
-    # a stated reason:
-    #   `--gate` — SILENT, unchanged. It is the flag name an adopter's hooks, CI
-    # and launchers pass literally (and, measured this slice, the only spelling
-    # anything in this repo actually passes); the word "gate" was never retired
-    # where it means a check that can fail; `spine_rules.py` keeps its name by
-    # that same ruling (`docs/gate` did too, until slice 5 deleted the file).
-    #   `--stage-cleared` — WARNS. Unlike `--gate` it makes a CLAIM about the
-    # axis, and the claim is now the wrong one: it says the value is a bar being
-    # cleared. That is the exact vocabulary trap OI-51 retires (it survived
-    # inside the 2026-08-18 rename that was meant to remove it), so leaving it
-    # silent would let the retired reading live on in adopters' pipelines with
-    # nothing ever saying so. It keeps working — the three bar spellings are all
-    # ladder rungs, so the value stays legal — and it says once per run what it
-    # is now read as.
+    # above runs. `--gate` is the prior spelling and stays accepted, silently: it
+    # is the flag name an adopter's hooks, CI and launchers pass literally, and
+    # the word "gate" was never retired where it means a check that can fail;
+    # `spine_rules.py` keeps its name by that same ruling. The retired value
+    # spellings and the prior flag `--stage-cleared` are refused (D11).
     ap.add_argument(
         "--stage",
-        "--stage-cleared",
         "--gate",
         dest="stage",
-        choices=STAGES + list(RETIRED_STAGE_ALIASES),
+        choices=STAGES,
         metavar="{" + ",".join(STAGES) + "}",
         default=None,
         help="the rung the repo is IN: every step whose threshold this rung is "
         "AT OR ABOVE runs; paths can also select below it (default: the derived effective stage in docs/stage, "
         "else all). Drafting a row cannot lower it — the derivation reads the "
         "SETTLED spine — so there is no dial that turns product checks off by "
-        "opening an acceptance window. The retired G1/G2/G3 and DevBar-* "  # check_vocab: allow
-        "value spellings are accepted as aliases and warn; `--gate` is accepted "
-        "silently as the prior flag name, `--stage-cleared` warns.",
+        "opening an acceptance window. `--gate` is accepted as the prior flag "
+        "name.",
     )
     ap.add_argument(
         "--path-triggered",
@@ -2775,12 +2660,6 @@ def main():
     _ruling_sync_mode(args)  # exits when --ruling-sync selects it
     _text_then_act_mode(args)  # exits when --text-then-act selects it
     _parent_first_mode(args)  # exits when --parent-first selects it
-    # Translate a retired `--stage G2` (warning once) before anything consumes  check_vocab: allow
-    # it, so `resolve_stage` and `_step_stage` both see only canonical rungs.
-    args.stage = (
-        _resolve_stage_alias(args.stage, "--stage") if args.stage else args.stage
-    )
-    _warn_retired_flag_spelling()
     profile = load_profile()
 
     # --coverage wins; else the profile's declared threshold; else the built-in.

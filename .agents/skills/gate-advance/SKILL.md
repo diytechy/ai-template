@@ -57,8 +57,8 @@ carry the unfiltered reading beside it, and that is where a reopened phase shows
 up. Two fields, one ladder — not two axes.
 
 **The retired `G*` tags.** `G1`/`G2`/`G3` (and `G0`/`G-Release`/`G-Final`)  <!-- check_vocab: allow -->
-retired with this ladder. They are accepted as **read-side aliases** so existing
-hooks keep working (`check.py --gate G2` warns and runs `DevStg-Tests`), and  <!-- check_vocab: allow -->
+retired with this ladder. `check.py` refuses them as a stage value (`--gate G2`  <!-- check_vocab: allow -->
+stops at a usage error; the re-sync entry gives each tag's stage), and
 `check_vocab.py` refuses them in authored text. Never write one into a new file.
 The **phase anchors** moved with them: a WI title now carries
 `[<phase>]-[DevStg-<Rung>]`, and the retired `[g1]`/`[reqs]` and `[g2]`/`[tests]` <!-- check_vocab: allow -->

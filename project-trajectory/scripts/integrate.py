@@ -1921,36 +1921,16 @@ def _run_trunk_step(wt, root):
 # declared value outside it is refused.
 _CHECKS_STAGES = ("DevStg-Reqs", "DevStg-Tests", "DevStg-Impl")
 
-# A WI `checks_stage` is AUTHOR-WRITTEN, so the retired tags translate on read (OI-21
-# contract break 3) — silently, because check_vocab.py sees the spec file and can
-# name the line. Duplicated from intake.normalize_checks_stage per the F5 rule.
-_RETIRED_BARS = {
-    "g1": "DevStg-Reqs",
-    "g2": "DevStg-Tests",
-    "g3": "DevStg-Impl",
-    # The `DevBar-*` prefix, retired 2026-08-18 (one vocabulary; the verb
-    # carries the axis). Keyed lower-case like the rows above, since this
-    # table is looked up case-insensitively. The Release row translates to
-    # `DevStg-Impl`, NOT to `DevStg-Release`: that bar closed the Impl rung
-    # and `DevStg-Release` is not clearable at all, so the alias carries the
-    # correction rather than a bare prefix swap.
-    "devbar-reqs": "DevStg-Reqs",  # check_vocab: allow
-    "devbar-tests": "DevStg-Tests",  # check_vocab: allow
-    "devbar-release": "DevStg-Impl",  # check_vocab: allow
-}
-
 
 def _normalize_checks_stage(value):
-    """A `checks_stage` cell as a canonical `DevStg-*` name ("" when blank), retired tags
-    translated. Matched case-insensitively — the retired reader did `.upper()`,
-    which would turn a correctly-authored `DevStg-Reqs` into `DEVBAR-REQS` and
-    refuse it."""
+    """A `checks_stage` cell as a canonical `DevStg-*` name ("" when blank).
+    Matched case-insensitively, as intake.normalize_checks_stage matches it (F5);
+    anything else, a retired tag included (D11), comes back unchanged for the
+    caller to refuse by name."""
     raw = str(value or "").strip()
     if not raw:
         return ""
     low = raw.lower()
-    if low in _RETIRED_BARS:
-        return _RETIRED_BARS[low]
     for canonical in _CHECKS_STAGES:
         if low == canonical.lower():
             return canonical

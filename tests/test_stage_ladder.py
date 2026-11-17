@@ -137,6 +137,16 @@ def test_check_selects_on_the_SHARED_ladder_and_restates_no_vocabulary():
         assert not hasattr(dg, gone), "the bar axis is retired from spine_rules"
     for gone in ("main", "compute", "basis_line", "bar_label"):
         assert not hasattr(dg, gone), "spine_rules writes nothing and has no CLI"
+    # AND THE RETIRED SPELLINGS ARE NOT READ (D11): no alias table for a stage
+    # value, no prior flag that warns, no translated `gates =` list.
+    for gone in (
+        "RETIRED_STAGE_ALIASES",
+        "_resolve_stage_alias",
+        "_RETIRED_FLAG",
+        "_warn_retired_flag_spelling",
+        "_LEGACY_GATES_WARNED",
+    ):
+        assert not hasattr(check, gone), "check.py reads the current spellings"
 
 
 def test_selection_is_at_or_above_and_routes_through_the_shared_ordinal():
@@ -155,7 +165,7 @@ def test_selection_is_at_or_above_and_routes_through_the_shared_ordinal():
 
 def test_the_integrate_and_intake_WI_stage_vocabularies_agree_too():
     """The WI `checks_stage` key is read by two modules, each with its own copy of the
-    translation (F5 again). A row accepted by one and refused by the other would
+    vocabulary (F5 again). A row accepted by one and refused by the other would
     strand a claimed lane.
 
     RE-ANCHORED AT WI-498 slice 5. The three copies used to be pinned against
@@ -173,11 +183,11 @@ def test_the_integrate_and_intake_WI_stage_vocabularies_agree_too():
     integrate = load_script("integrate")
     assert set(intake.WI_CHECKS_STAGES) == set(integrate._CHECKS_STAGES)
     assert set(intake.WI_CHECKS_STAGES) <= set(dg.STAGE_ORDER)
-    # The two hand-authored RETIRED-tag tables still have to agree with each
-    # other — that half of the pin never depended on the bar axis.
-    for retired, canonical in intake._RETIRED_WI_BARS.items():
-        assert intake.normalize_checks_stage(retired) == canonical
-        assert integrate._normalize_checks_stage(retired) == canonical
+    # A retired tag is not translated (D11): both readers hand it back
+    # unchanged, for the mint and the landing to refuse by name.
+    for retired in ("g1", "G3", "DevBar-Reqs", "devbar-release"):  # check_vocab: allow
+        assert intake.normalize_checks_stage(retired) == retired
+        assert integrate._normalize_checks_stage(retired) == retired
     # ...and a correctly-authored value survives BOTH readers unchanged. The
     # retired readers case-folded with `.upper()`, which would have mangled every
     # canonical value into `DEVBAR-REQS` and refused it.

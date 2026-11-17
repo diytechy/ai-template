@@ -706,9 +706,10 @@ any of that, which is exactly why acceptance is an **event an operator records**
 and not a function of the state. A repo that inferred its sign-offs from its
 derived rung would have dropped the whole human half.
 
-**The retired vocabulary** — the tags this ladder replaced survive only as
-read-side aliases, which is `check.py`'s and `check_vocab.py`'s behaviour, not a
-rule prose has to carry; the retirement record, the translation table and the
+**The retired vocabulary** — the tags this ladder replaced survive only in
+`check_vocab.py`'s refusal and the phase-anchor reading of a work item's
+title, behaviour, not a rule prose has to carry; the retirement record, the
+translation table and the
 never-reword rule for acceptances are archived in the kit repo at
 `docs/archive/retired-vocabulary.md`.
 

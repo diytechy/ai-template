@@ -243,30 +243,23 @@ def test_extra_step_joins_the_plan_with_derived_requires():
     assert lic[3] == "DevStg-Impl"  # the default rung
 
 
-def test_a_retired_gates_value_in_stack_ini_TRANSLATES():
-    """TWO retirements, one reader, applied in order.
-
-    `gates =` is a value the ADOPTER authors, so the retired `G1|G2|G3` tags  # check_vocab: allow
-    still translate on read (OI-21 break 2). Since WI-498 slice 2 the `gates =`
-    MEMBERSHIP LIST is itself retired in favour of a single `from-stage` rung, so
-    the translated list is then folded to the rung it effectively meant. An
-    adopter's stack.ini from either era keeps working until their re-sync.
-
-    THE FOLD IS NOT THE SPAN FLOOR, which is the part worth pinning: the
-    DevStg-Tests BAR was a MIN over every row and so was reached only by a fully
-    decomposed spine — the DevStg-Impl RUNG — while the DevStg-Reqs bar is the
-    floor every repo already sits at, so it folds to DevStg-Needs and the step
-    keeps running always."""
+def test_a_retired_gates_value_in_stack_ini_is_REFUSED():
+    """`gates =` is a value the ADOPTER authors, in the retired tags or the
+    stage names, and since WI-498 slice 2 the membership list is itself retired
+    in favour of a single `from-stage` rung. The core reads the current
+    spelling only (D11), and refuses the list rather than ignoring it: a list
+    naming the requirements stage ran its step from `DevStg-Needs`, so reading
+    it as absent would move the step to the `DevStg-Impl` default without a
+    word. The refusal names the vocabulary migrator, which rewrites the list as
+    the one stage it meant (`test_migrate_vocabulary`)."""
     prof = _profile(
         "[step:dup-code]\ncommand = {py} -m duplo {src}\ngates = G2 G3\n"  # check_vocab: allow
         "[step:legacy-mixed]\ncommand = npx thing\ngates = G1, DevStg-Impl\n"  # check_vocab: allow
     )
-    check._LEGACY_GATES_WARNED.clear()
-    plan = check.steps(80, "all", "all", None, prof)
-    dup = next(s for s in plan if s[0] == "dup-code")
-    assert dup[3] == "DevStg-Impl"
-    mixed = next(s for s in plan if s[0] == "legacy-mixed")
-    assert mixed[3] == "DevStg-Needs"
+    with pytest.raises(SystemExit) as exc:
+        check.steps(80, "all", "all", None, prof)
+    assert "[step:dup-code] declares the retired `gates`" in str(exc.value)
+    assert "migrate_vocabulary.py" in str(exc.value)
 
 
 def test_extra_step_is_stage_scoped(scaffold):
@@ -338,7 +331,7 @@ def test_stack_ini_command_preserves_windows_backslash_path(scaffold):
 
 def test_extra_step_without_command_fails_loudly(scaffold):
     (scaffold / "docs" / "stack.ini").write_text(
-        "[step:foo]\ngates = DevStg-Impl\n", encoding="utf-8"
+        "[step:foo]\nfrom-stage = DevStg-Impl\n", encoding="utf-8"
     )
     proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
     assert proc.returncode != 0
@@ -347,10 +340,12 @@ def test_extra_step_without_command_fails_loudly(scaffold):
 
 def test_extra_step_bad_gate_and_layer_fail_loudly(scaffold):
     ini = scaffold / "docs" / "stack.ini"
-    ini.write_text("[step:foo]\ncommand = {py} x.py\ngates = G9\n", encoding="utf-8")
+    ini.write_text(
+        "[step:foo]\ncommand = {py} x.py\nfrom-stage = G9\n", encoding="utf-8"
+    )
     bad_gate = run_py(["scripts/check.py", "--list"], cwd=scaffold)
     assert bad_gate.returncode != 0
-    assert "gates" in (bad_gate.stdout + bad_gate.stderr) and "G9" in (
+    assert "from-stage" in (bad_gate.stdout + bad_gate.stderr) and "G9" in (
         bad_gate.stdout + bad_gate.stderr
     )
     ini.write_text("[step:foo]\ncommand = {py} x.py\nlayer = weird\n", encoding="utf-8")
