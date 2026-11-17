@@ -176,7 +176,7 @@ def test_secrets_floor_in_repo_and_range_modes_with_privacy_off(scaffold):
 
 
 @needs_git
-def test_staged_home_dir_paths_red_placeholders_and_marker_green(scaffold):
+def test_staged_home_dir_paths_fail_placeholders_and_marker_pass(scaffold):
     init_repo(scaffold)
     set_privacy(scaffold)
     stage(scaffold, "notes.md", "data at C:\\Users\\bobsmith\\proj\n")
@@ -267,7 +267,7 @@ def test_removing_a_leak_is_never_flagged(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-def test_repo_sweep_fresh_scaffold_green_then_seeded_leak_red(scaffold):
+def test_repo_sweep_fresh_scaffold_passes_then_seeded_leak_fails(scaffold):
     # A fresh scaffold must itself survive the privacy gate — the kit can't
     # ship content its own lint flags. (No git repo here: the sweep's
     # filesystem-walk fallback is exercised too.)
@@ -333,7 +333,7 @@ def test_check_py_wires_privacy_as_process_step(scaffold):
     assert "RESULT: PASS" in proc.stdout
 
 
-def test_check_py_gate_red_on_seeded_leak(scaffold):
+def test_check_py_gate_fails_on_seeded_leak(scaffold):
     # Under a declared policy the same DevStg-Reqs gate goes red on a tracked leak —
     # the CI-side net for what slipped past --no-verify or predates the policy.
     set_privacy(scaffold)

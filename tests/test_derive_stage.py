@@ -457,7 +457,7 @@ def test_the_written_file_is_LF_and_parses_back(scaffold):
     assert kitstage.parse(raw.decode("utf-8")) is not None
 
 
-def test_the_check_py_STEP_goes_red_on_a_stale_cache(scaffold):
+def test_the_check_py_STEP_fails_on_a_stale_cache(scaffold):
     """NON-VACUITY, at the level the claim is actually made. The script's own
     `--check` is driven above, but what the commit checks run is `check.py`'s
     `derived-stage` STEP — a step can be wired and still be unable to fail (the
@@ -484,7 +484,7 @@ def test_the_check_py_STEP_goes_red_on_a_stale_cache(scaffold):
     assert "derived-stage" in red.stdout + red.stderr
 
 
-def test_a_freshly_scaffolded_repo_is_GREEN_on_the_placeholder(scaffold):
+def test_a_freshly_scaffolded_repo_PASSES_on_the_placeholder(scaffold):
     """The shipped promise (`ci/check.yml`: "a freshly-scaffolded DevStg-Reqs repo
     is green") must survive the new step. The scaffold ships a comment-only
     placeholder rather than invented values, and `--check` passes it with a note

@@ -881,9 +881,7 @@ def test_an_adoption_of_a_superseding_row_closes_and_writes_the_record(
         "no-supersedes",
     ],
 )
-def test_an_invalid_adoption_refuses_the_close(
-    tmp_path, dispositions, seed, reason
-):
+def test_an_invalid_adoption_refuses_the_close(tmp_path, dispositions, seed, reason):
     """Implements: TC-156"""
     root = adopting_repo(tmp_path, dispositions=dispositions, seed=[seed])
     head = _git(lane(root), "rev-parse", "HEAD").strip()
@@ -1306,7 +1304,7 @@ def test_quarantine_keeps_the_lanes_review_record(tmp_path):
     assert "docs/reviews/wi-401/001-REVIEW-A-abc1234.md" in tree
 
 
-def test_quarantine_refuses_when_the_red_is_not_the_lanes_own_code(tmp_path):
+def test_quarantine_refuses_when_the_failure_is_not_the_lanes_own_code(tmp_path):
     # A lane that changed nothing outside the bookkeeping surfaces cannot have
     # caused the red, so there is nothing to revert and reverting nothing would
     # only buy a second identical check run. It says so instead.

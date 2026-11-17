@@ -143,7 +143,7 @@ def test_record_checks_with_nothing_staged_writes_an_empty_commit_that_verifies(
         ("the commit checks", STUB_CHECK_RED, None, "check"),
         ("a named test", None, STUB_NAMED_TESTS_RED, "named"),
     ],
-    ids=["red-checks", "red-named-test"],
+    ids=["failing-checks", "failing-named-test"],
 )
 def test_failing_commit_checks_commit_nothing_and_leave_branch_and_index(
     tmp_path, arm, check_src, named_src, ran

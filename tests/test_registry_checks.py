@@ -85,7 +85,7 @@ def test_unquoted_comma_fails_strict_too(scaffold):
     assert proc.returncode == 1, proc.stdout + proc.stderr
 
 
-def test_quoted_comma_control_stays_green(scaffold):
+def test_quoted_comma_control_passes(scaffold):
     make_minimal_project(scaffold)
     sr_path(scaffold).write_text(QUOTED_COMMA_SRS, encoding="utf-8")
     proc = run_py(["scripts/trace.py", "--strict", "--strict-integrity"], cwd=scaffold)
@@ -215,7 +215,7 @@ def test_incoherent_sr_llr_pair_fails_strict_too(scaffold):
     assert proc.returncode == 1, proc.stdout + proc.stderr
 
 
-def test_coherent_sr_llr_pairs_stay_green(scaffold):
+def test_coherent_sr_llr_pairs_pass(scaffold):
     make_minimal_project(scaffold)
     _write_chain(scaffold, _TWO_SRS, _TWO_LLRS, COHERENT_TCS)
     proc = run_py(["scripts/trace.py", "--strict", "--strict-integrity"], cwd=scaffold)

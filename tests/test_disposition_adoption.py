@@ -180,9 +180,7 @@ _OTHER = _entry("queued", "WI-460", supersedes='"WI-005"')
         "no-supersedes",
     ],
 )
-def test_validity_is_read_against_the_registry_with_distinct_refusals(
-    listing, reason
-):
+def test_validity_is_read_against_the_registry_with_distinct_refusals(listing, reason):
     """Implements: TC-360"""
     refusal = adoption.row_refusal(listing, "WI-450", "WI-005")
     if reason is None:

@@ -174,7 +174,7 @@ def test_over_a_limit_warns_and_passes_in_warn_mode(monkeypatch, tmp_path, capsy
 
 
 @pytest.mark.parametrize("mode", ["warn", "enforce"])
-def test_a_red_tier_exits_with_its_own_code_and_the_verdict_line(
+def test_a_failing_tier_exits_with_its_own_code_and_the_verdict_line(
     monkeypatch, tmp_path, capsys, mode
 ):
     # The real tier runner, over an interpreter command that exits 3.
@@ -192,7 +192,7 @@ def test_a_red_tier_exits_with_its_own_code_and_the_verdict_line(
     assert "note: smoke tier exited 3" in err
 
 
-def test_a_red_tier_with_a_failed_reading_names_both(monkeypatch, tmp_path, capsys):
+def test_a_failing_tier_with_a_failed_reading_names_both(monkeypatch, tmp_path, capsys):
     meter = FakeMeter(stop_error=OSError("the query failed"))
     step, _ = _stand_in(monkeypatch, tmp_path, code=3, meter=meter)
     assert step.main(["--mode", "enforce"]) == 3
@@ -202,7 +202,7 @@ def test_a_red_tier_with_a_failed_reading_names_both(monkeypatch, tmp_path, caps
 
 
 @pytest.mark.parametrize("mode", ["warn", "enforce"])
-def test_a_green_tier_with_a_failed_reading_exits_two(
+def test_a_passing_tier_with_a_failed_reading_exits_two(
     monkeypatch, tmp_path, capsys, mode
 ):
     meter = FakeMeter(stop_error=OSError("the query failed"))
@@ -357,7 +357,7 @@ def test_a_failed_or_empty_count_exits_two(monkeypatch, tmp_path, capsys, cause)
     assert "smoke tier count FAILED ({})".format(cause) in out, out
 
 
-def test_a_red_tier_over_max_tests_keeps_its_code_and_names_the_count(
+def test_a_failing_tier_over_max_tests_keeps_its_code_and_names_the_count(
     monkeypatch, tmp_path, capsys
 ):
     step, _ = _stand_in(monkeypatch, tmp_path, code=3, counter=FakeCounter(3001))

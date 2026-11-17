@@ -683,7 +683,9 @@ def test_failing_landing_checks_commit_nothing_and_leave_the_branch_clean(tmp_pa
     assert not ready
 
 
-def test_a_red_refusal_carries_the_steps_own_output_and_names_the_kept_log(tmp_path):
+def test_a_failure_refusal_carries_the_steps_own_output_and_names_the_kept_log(
+    tmp_path,
+):
     # WI-398, driven end-to-end. Two halves of one loss: (1) the refusal's
     # bounded tail must be the failing STEP's own output — not check.py's
     # closing summary re-print, which is all the WI-240 anchor could ever reach
@@ -1277,7 +1279,7 @@ def _conflicting_generated(root, wt, rel, kind=None):
     _commit(root, "docs: the trunk regenerated it", when=T_LATER)
 
 
-def test_a_conflict_only_on_declared_generated_paths_refreshes_green(tmp_path):
+def test_a_conflict_only_on_declared_generated_paths_refreshes_and_passes(tmp_path):
     # Measured 2026-09-04: three lane refreshes refused with "merging trunk in
     # CONFLICTS" where the ONLY conflicted path was an artifact BOTH sides had
     # regenerated (PROJECT_STATE.html, docs/ratify/CURRENT.md), and a

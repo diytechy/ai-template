@@ -1792,7 +1792,7 @@ method = """Scaffold with a non-Python bootstrap profile into a temp dir and run
 tier = "Full"
 expected = "Satisfies SR-035 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_profile.py::test_every_profile_permutation_scaffolds_green; tests/test_language_neutral_scheme.py"
+evidence = "tests/test_profile.py::test_every_profile_permutation_scaffolds_and_passes; tests/test_language_neutral_scheme.py"
 status = "Accepted"
 phase = 1
 
@@ -1847,7 +1847,7 @@ method = """Run the trunk-step regen order/commit cases: the executed step seque
 tier = "Full"
 expected = "Satisfies SR-173 AcceptanceCriteria via the LLR-142 detail contract"
 automated = "Yes"
-evidence = """tests/test_trunk_step_plan.py::test_regen_runs_in_declared_dependency_order; tests/test_trunk_step.py::test_regen_never_commits_the_caller_owns_the_commit; tests/test_trunk_step.py::test_regen_failure_after_green_steps_commits_nothing"""
+evidence = """tests/test_trunk_step_plan.py::test_regen_runs_in_declared_dependency_order; tests/test_trunk_step.py::test_regen_never_commits_the_caller_owns_the_commit; tests/test_trunk_step.py::test_regen_failure_after_passing_steps_commits_nothing"""
 status = "Accepted"
 phase = 4
 
@@ -1968,7 +1968,7 @@ method = """The remaining four corner cases, driven over real registry rows in a
 tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-186 (parent SR-139)"
 automated = "Yes"
-evidence = """tests/test_derive_stage.py::test_ONE_drafted_row_does_not_drop_the_effective_stage; tests/test_derive_stage.py::test_a_draft_that_OPENS_A_NEW_PHASE_does_not_drop_it_either; tests/test_derive_stage.py::test_per_phase_stages_exist_and_the_global_reading_is_defined_over_them; tests/test_derive_stage.py::test_the_need_coverage_rung_stays_REPO_GLOBAL_across_phases; tests/test_derive_stage.py::test_a_fresh_scaffold_reads_a_DEFINED_non_raising_selection_value; tests/test_derive_stage.py::test_on_a_CLAIMED_BRANCH_the_reader_derives_from_the_branch_s_own_registries; tests/test_derive_stage.py::test_the_check_py_STEP_goes_red_on_a_stale_cache; tests/test_derive_stage.py::test_a_freshly_scaffolded_repo_is_GREEN_on_the_placeholder"""
+evidence = """tests/test_derive_stage.py::test_ONE_drafted_row_does_not_drop_the_effective_stage; tests/test_derive_stage.py::test_a_draft_that_OPENS_A_NEW_PHASE_does_not_drop_it_either; tests/test_derive_stage.py::test_per_phase_stages_exist_and_the_global_reading_is_defined_over_them; tests/test_derive_stage.py::test_the_need_coverage_rung_stays_REPO_GLOBAL_across_phases; tests/test_derive_stage.py::test_a_fresh_scaffold_reads_a_DEFINED_non_raising_selection_value; tests/test_derive_stage.py::test_on_a_CLAIMED_BRANCH_the_reader_derives_from_the_branch_s_own_registries; tests/test_derive_stage.py::test_the_check_py_STEP_fails_on_a_stale_cache; tests/test_derive_stage.py::test_a_freshly_scaffolded_repo_PASSES_on_the_placeholder"""
 status = "Accepted"
 phase = 5
 
@@ -2034,7 +2034,7 @@ method = """Two carriers, both driven. THE SHIPPED WORKFLOW: no continue-on-erro
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-191 (parent SR-152)"
 automated = "Yes"
-evidence = """tests/test_ci_tier_declaration.py; tests/test_test_evidence.py::test_a_GREEN_run_writes_a_record_that_HOLDS; tests/test_test_evidence.py::test_a_RED_run_writes_NOTHING; tests/test_test_evidence.py::test_a_RED_run_does_not_overwrite_an_existing_record; tests/test_test_evidence.py::test_the_writer_refuses_a_PARTIAL_tier; tests/test_test_evidence.py::test_dry_run_runs_nothing_and_writes_nothing; tests/test_test_evidence.py::test_check_reports_the_verdict_and_exits_nonzero_when_it_does_not_hold; tests/test_test_evidence.py::test_the_producer_names_the_documented_harness_entry_point; tests/test_test_evidence.py::test_the_binding_written_is_the_one_the_reader_recomputes; tests/test_test_evidence.py::test_the_shipped_harness_the_driver_names_actually_exists; tests/test_test_evidence.py::test_an_UNDECLARED_source_surface_binds_to_nothing_and_is_refused"""
+evidence = """tests/test_ci_tier_declaration.py; tests/test_test_evidence.py::test_a_PASSING_run_writes_a_record_that_HOLDS; tests/test_test_evidence.py::test_a_FAILING_run_writes_NOTHING; tests/test_test_evidence.py::test_a_FAILING_run_does_not_overwrite_an_existing_record; tests/test_test_evidence.py::test_the_writer_refuses_a_PARTIAL_tier; tests/test_test_evidence.py::test_dry_run_runs_nothing_and_writes_nothing; tests/test_test_evidence.py::test_check_reports_the_verdict_and_exits_nonzero_when_it_does_not_hold; tests/test_test_evidence.py::test_the_producer_names_the_documented_harness_entry_point; tests/test_test_evidence.py::test_the_binding_written_is_the_one_the_reader_recomputes; tests/test_test_evidence.py::test_the_shipped_harness_the_driver_names_actually_exists; tests/test_test_evidence.py::test_an_UNDECLARED_source_surface_binds_to_nothing_and_is_refused"""
 status = "Accepted"
 phase = 5
 
@@ -3819,7 +3819,7 @@ method = "Run a red commit-check build and assert that no review is drawn, one f
 tier = "Full"
 expected = "failing checks suppresses the review and routes one rebuild with its recorded failure summary."
 automated = "Yes"
-evidence = "tests/test_agent_loop_review_gate.py::test_failed_checks_draw_no_review_record_a_failed_round_and_rebuild_with_the_tail; tests/test_agent_loop_review_gate.py::test_a_resumed_build_receives_the_tail_of_a_long_recorded_refusal; tests/test_agent_loop_review_gate.py::test_a_long_red_summary_keeps_its_cause_and_its_final_diagnostic"
+evidence = "tests/test_agent_loop_review_gate.py::test_failed_checks_draw_no_review_record_a_failed_round_and_rebuild_with_the_tail; tests/test_agent_loop_review_gate.py::test_a_resumed_build_receives_the_tail_of_a_long_recorded_refusal; tests/test_agent_loop_review_gate.py::test_a_long_failure_summary_keeps_its_cause_and_its_final_diagnostic"
 status = "Accepted"
 phase = 6
 
@@ -3852,7 +3852,7 @@ method = "Run failed rounds across a process resume and through a commit record,
 tier = "Full"
 expected = "Distinct red build records survive resume, and a verified passed-checks record resets their consecutive count; a log that cannot be read counts as one red, and a history that cannot be listed answers no count, read as at the cap."
 automated = "Yes"
-evidence = "tests/test_agent_loop_review_gate.py::test_red_count_survives_a_resume_and_a_green_resets_it; tests/test_agent_loop_review_gate.py::test_failed_rounds_counts_distinct_failed_builds_and_a_passed_checks_record_resets_it; tests/test_agent_loop_review_gate.py::test_failed_rounds_counts_an_unreadable_log_and_answers_none_for_no_history; tests/test_agent_loop_review_gate.py::test_red_count_survives_a_resume_to_the_cap_and_exits_12; tests/test_agent_loop_review_gate.py::test_a_lane_resumed_at_the_cap_exits_12_before_any_session"
+evidence = "tests/test_agent_loop_review_gate.py::test_the_failure_count_survives_a_resume_and_a_pass_resets_it; tests/test_agent_loop_review_gate.py::test_failed_rounds_counts_distinct_failed_builds_and_a_passed_checks_record_resets_it; tests/test_agent_loop_review_gate.py::test_failed_rounds_counts_an_unreadable_log_and_answers_none_for_no_history; tests/test_agent_loop_review_gate.py::test_the_failure_count_survives_a_resume_to_the_cap_and_exits_12; tests/test_agent_loop_review_gate.py::test_a_lane_resumed_at_the_cap_exits_12_before_any_session"
 status = "Accepted"
 phase = 6
 
@@ -3863,7 +3863,7 @@ method = "Resume after an unrecorded red result and assert that the governing bu
 tier = "Full"
 expected = "Interrupted red evidence is recovered once and distinct build commits define the count."
 automated = "Yes"
-evidence = "tests/test_agent_loop_review_gate.py::test_an_interrupted_red_is_rechecked_once_at_the_draw_and_counted_once; tests/test_agent_loop_review_gate.py::test_a_header_in_the_earlier_form_is_not_a_failed_checks_record; tests/test_agent_loop_review_gate.py::test_a_build_ending_in_a_record_only_commit_is_recorded_and_counted_once; tests/test_agent_loop_review_gate.py::test_failed_rounds_counts_one_build_recorded_twice_once; tests/test_agent_loop_review_gate.py::test_checks_phase_is_inert_to_every_phase_reader"
+evidence = "tests/test_agent_loop_review_gate.py::test_an_interrupted_failure_is_rechecked_once_at_the_draw_and_counted_once; tests/test_agent_loop_review_gate.py::test_a_header_in_the_earlier_form_is_not_a_failed_checks_record; tests/test_agent_loop_review_gate.py::test_a_build_ending_in_a_record_only_commit_is_recorded_and_counted_once; tests/test_agent_loop_review_gate.py::test_failed_rounds_counts_one_build_recorded_twice_once; tests/test_agent_loop_review_gate.py::test_checks_phase_is_inert_to_every_phase_reader"
 status = "Accepted"
 phase = 6
 

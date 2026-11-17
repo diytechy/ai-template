@@ -1305,7 +1305,7 @@ def test_a_clean_copy_satisfies_the_mirror_invariant(tmp_path):
     assert CT.staged_snapshot_findings(root) == []
 
 
-def test_a_SCOPED_refresh_leaves_the_UNTOUCHED_offspine_mirror_GREEN(tmp_path):
+def test_a_SCOPED_refresh_leaves_the_UNTOUCHED_offspine_mirror_PASSING(tmp_path):
     """WI-571 against the mirror: a spine flip copies only the spine registry,
     so the off-spine registry it did NOT copy keeps its seed-commit bytes. Both
     mirror rules stay green with no flag, because each is pinned to the file it
@@ -1553,7 +1553,7 @@ def test_the_mirror_repair_names_a_registry_the_resolver_accepts_per_carrier():
         assert list(SNAP.parse_accepts(m.group(1))) == [SR_REL], repair
 
 
-def test_a_PENDING_AMENDMENT_leaves_the_committed_mirror_GREEN(tmp_path):
+def test_a_PENDING_AMENDMENT_leaves_the_committed_mirror_PASSING(tmp_path):
     """THE RULE THAT WOULD HAVE BEEN WRONG, refused deliberately. Comparing the
     snapshot to live in the WORKING TREE reds every pending amendment — and the
     lag between an amendment and its acceptance is the signal the whole

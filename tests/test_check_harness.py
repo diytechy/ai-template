@@ -37,7 +37,7 @@ def test_subprocess_coverage_wiring_survives_pytest_cov_7():
     )
 
 
-def test_minimal_project_is_green(scaffold):
+def test_minimal_project_passes(scaffold):
     # The full documented flow: scaffold -> code + traced registries -> harness.
     # This is the regression test for "fresh clone fails": check.py must find
     # ruff/pytest via the running interpreter, not a PATH that lacks the venv.

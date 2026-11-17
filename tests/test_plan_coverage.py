@@ -81,7 +81,7 @@ def run(tmp_path, names, extra=()):
     )
 
 
-def test_two_plans_green_with_coverage_diff(tmp_path):
+def test_two_plans_pass_with_coverage_diff(tmp_path):
     names = write_inputs(tmp_path, plans=GATED)
     proc = run(tmp_path, names)
     assert proc.returncode == 0, proc.stdout + proc.stderr

@@ -9,7 +9,7 @@
 #
 # One node id per line, then `#` and the capability it stands for.
 tests/test_bootstrap.py::test_scaffold_contains_expected_files  # bootstrap.py: a scaffold carries every shipped file
-tests/test_check_harness.py::test_minimal_project_is_green  # check.py: the gate harness passes a fresh scaffold
+tests/test_check_harness.py::test_minimal_project_passes  # check.py: the gate harness passes a fresh scaffold
 tests/test_trace_golden.py::test_golden_clean_spine  # trace.py: a clean spine traces with no orphan
 tests/test_pre_commit_hook.py::test_hook_checks_pass_on_clean_project  # the shipped pre-commit floor
 tests/test_check_docs.py::test_clean_scaffold_passes  # check_docs.py: links and reachability

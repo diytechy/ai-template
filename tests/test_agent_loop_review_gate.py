@@ -564,7 +564,7 @@ def test_post_narrow_and_adjudication_rounds_draw_only_over_a_verified_passed_ch
 # --- D5: the count survives a resume; the cap -----------------------------------
 
 
-def test_red_count_survives_a_resume_and_a_green_resets_it(tmp_path):
+def test_the_failure_count_survives_a_resume_and_a_pass_resets_it(tmp_path):
     """Implements: TC-378"""
     # TC-378. The red count is read from the lane's committed logs: a fresh
     # process continues it, and its first build carries the recorded failure
@@ -589,7 +589,7 @@ def test_red_count_survives_a_resume_and_a_green_resets_it(tmp_path):
     assert _red_count(lane).count == 2, _out(proc)
 
 
-def test_red_count_survives_a_resume_to_the_cap_and_exits_12(tmp_path):
+def test_the_failure_count_survives_a_resume_to_the_cap_and_exits_12(tmp_path):
     """Implements: TC-378"""
     # TC-378. Two reds in one run and a third in a fresh process reach a cap
     # of 3: the resumed worker ends with the cap's own code and banner.
@@ -645,7 +645,9 @@ def test_a_lane_resumed_at_the_cap_exits_12_before_any_session(tmp_path, reds):
 # --- D6: an interrupted record --------------------------------------------------
 
 
-def test_an_interrupted_red_is_rechecked_once_at_the_draw_and_counted_once(tmp_path):
+def test_an_interrupted_failure_is_rechecked_once_at_the_draw_and_counted_once(
+    tmp_path,
+):
     """Implements: TC-379"""
     # TC-379. A build commit left with neither a passed-checks record nor a failed-checks record
     # is re-checked once at the next draw, and the CHECKS log records its red;
@@ -818,7 +820,7 @@ def test_failed_rounds_counts_distinct_failed_builds_and_a_passed_checks_record_
     )
 
 
-def test_a_long_red_summary_keeps_its_cause_and_its_final_diagnostic():
+def test_a_long_failure_summary_keeps_its_cause_and_its_final_diagnostic():
     """Implements: TC-375"""
     # TC-375. The one persisted summary of a red result is bounded, and a
     # refusal longer than the bound keeps both ends: the cause at its head and

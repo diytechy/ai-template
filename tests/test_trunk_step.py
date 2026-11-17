@@ -383,7 +383,7 @@ def _seed_regen_repo(root):
     )
 
 
-def test_regen_failure_after_green_steps_commits_nothing(tmp_path, capsys):
+def test_regen_failure_after_passing_steps_commits_nothing(tmp_path, capsys):
     """Implements: TC-170"""
     # Round-2 F9 pin — the failure half of the SR-173 no-partial-set claim,
     # EXECUTED rather than inferred from the green path: an earlier step runs

@@ -48,7 +48,7 @@ def test_report_mode_exits_zero_and_prints_every_function(tmp_path):
     assert "\tsimple\t0\t" in proc.stdout
 
 
-def test_restamp_then_enforce_is_green(tmp_path):
+def test_restamp_then_enforce_passes(tmp_path):
     _write_sample_repo(tmp_path)
     assert drive(tmp_path, "--restamp").returncode == 0
     proc = drive(tmp_path, "--mode", "enforce")

@@ -151,7 +151,7 @@ def test_an_outcome_other_than_pass_is_refused(tmp_path):
             lambda r: (r / "docs" / "stack.ini").write_text(
                 "[paths]\nsrc = src\ntests = tests\n[product]\ntest = pytest -k nothing\n"
             ),
-            id="the-declared-checks-itself",
+            id="the-declared-checks-themselves",
         ),
         pytest.param(
             lambda r: (
@@ -357,7 +357,7 @@ def _fake_harness(exit_code):
     ]
 
 
-def test_a_GREEN_run_writes_a_record_that_HOLDS(tmp_path, monkeypatch):
+def test_a_PASSING_run_writes_a_record_that_HOLDS(tmp_path, monkeypatch):
     """Implements: TC-186"""
     root = _repo(tmp_path)
     monkeypatch.setattr(PRODUCER, "harness_command", _fake_harness(0))
@@ -365,7 +365,7 @@ def test_a_GREEN_run_writes_a_record_that_HOLDS(tmp_path, monkeypatch):
     assert kitstage.evidence_verdict(root, memo=None)[0] is True
 
 
-def test_a_RED_run_writes_NOTHING(tmp_path, monkeypatch):
+def test_a_FAILING_run_writes_NOTHING(tmp_path, monkeypatch):
     """There is no `outcome = fail` state and no flag that records without
     running: a red run leaves the committed state exactly as it was (OI-30 D2 —
     only the harness's own exit may be the source of the claim).
@@ -378,7 +378,7 @@ def test_a_RED_run_writes_NOTHING(tmp_path, monkeypatch):
     assert not (root / kitevidence.EVIDENCE_FILE).exists()
 
 
-def test_a_RED_run_does_not_overwrite_an_existing_record(tmp_path, monkeypatch):
+def test_a_FAILING_run_does_not_overwrite_an_existing_record(tmp_path, monkeypatch):
     """Implements: TC-186"""
     root = _repo(tmp_path)
     monkeypatch.setattr(PRODUCER, "harness_command", _fake_harness(0))

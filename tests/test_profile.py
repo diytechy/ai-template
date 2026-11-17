@@ -122,7 +122,7 @@ def test_scaffold_carries_no_marker_or_copyme_leftovers(scaffold):
             assert phrase not in text, "{}: leftover {!r}".format(md.name, phrase)
 
 
-def test_default_scaffold_is_fully_green_including_warnings(scaffold):
+def test_default_scaffold_passes_fully_including_warnings(scaffold):
     # R8/C2: zero findings of any class on a fresh scaffold — the README links
     # docs/interfaces.md and the stakeholder-needs registry so no doc is an
     # orphan, and the generated trace report is --ignore'd as check.py does.
@@ -151,7 +151,7 @@ def test_default_scaffold_keeps_all_gated_sections(scaffold):
     ),
     ids=lambda v: (",".join(v) or "none") if isinstance(v, tuple) else v,
 )
-def test_every_profile_permutation_scaffolds_green(tmp_path, omit, stack):
+def test_every_profile_permutation_scaffolds_and_passes(tmp_path, omit, stack):
     """Every profile, the non-Python stacks among them, scaffolds a repo the
     strict registry checks pass unmodified, schema tier included.
 

@@ -88,7 +88,7 @@ Implements: TC-050, TC-141
 #       `tests/test_derive_stage.py::test_write_then_check_roundtrips`,
 #       `::test_check_detects_state_drift`,
 #       `::test_check_on_an_ABSENT_file_asks_for_the_first_generation` and
-#       `::test_a_freshly_scaffolded_repo_is_GREEN_on_the_placeholder` (the
+#       `::test_a_freshly_scaffolded_repo_PASSES_on_the_placeholder` (the
 #       smooth-transition path the legacy-marker test used to hold).
 #
 #   `test_draft_sn_drops_the_gate`

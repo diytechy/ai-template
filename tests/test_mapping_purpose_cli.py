@@ -22,7 +22,7 @@ gen_arch_map = load_script("gen_arch_map")
 _GAM = Path(gen_arch_map.__file__)
 
 
-def test_cli_mapping_purpose_is_green_over_the_real_repo():
+def test_cli_mapping_purpose_passes_over_the_real_repo():
     # Warn-first: the real inventory carries warn-class rows (the burn-down) but
     # no gate-class finding, so the delivered command exits 0 and reports every
     # class on stdout.

@@ -461,13 +461,13 @@ def test_a_tests_root_of_dot_counts_only_the_files_the_review_set_reads(tmp_path
     _git(repo, "add", "-A")
     assert kef.read_commit_check_settings(repo).tests_prefix == ""
     assert kef.landing_refusal(repo) is None
-    write_lf(repo, "test_red.py", quoted)
+    write_lf(repo, "test_failing.py", quoted)
     _git(repo, "add", "-A")
     tree = _git(repo, "write-tree")
     counts = kef.tree_counts(repo, tree, "", EXPECTED_FAILURE_MARKER)
-    assert counts == {"test_plain.py": 0, "test_red.py": 1}
+    assert counts == {"test_plain.py": 0, "test_failing.py": 1}
     refusal = kef.landing_refusal(repo)
-    assert "test_red.py: 1 marked" in refusal
+    assert "test_failing.py: 1 marked" in refusal
     assert "stack.ini" not in refusal.split(":\n", 1)[1]
 
 

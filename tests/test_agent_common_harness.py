@@ -86,7 +86,7 @@ WI398_JOBS_CHECKS_OUT = (
     "..F..F.\n"
     "=========================== short test summary info ===========================\n"
     "FAILED tests/test_refresh.py::test_the_lost_diagnosis - AssertionError: gone\n"
-    "FAILED tests/test_refresh.py::test_the_other_red - AssertionError\n"
+    "FAILED tests/test_refresh.py::test_the_other_failing - AssertionError\n"
     "2 failed, 5 passed in 3.2s\n"
     "  FAIL  tests+coverage   exit 1 (3.4s)\n"
     "\n=== trajectory : python check_trajectory.py --root . ===\n"
@@ -105,7 +105,7 @@ def test_failure_tail_extracts_the_failing_steps_own_output_not_the_summary():
     tail = _failure_tail(WI398_JOBS_CHECKS_OUT)
     # The step's OWN output — the failing test names a re-run had to recover.
     assert "FAILED tests/test_refresh.py::test_the_lost_diagnosis" in tail
-    assert "FAILED tests/test_refresh.py::test_the_other_red" in tail
+    assert "FAILED tests/test_refresh.py::test_the_other_failing" in tail
     # ... still names the failing step and its exit ...
     assert "  FAIL  tests+coverage" in tail
     # ... and NEVER the summary re-print or a later passing step's window.
@@ -239,7 +239,7 @@ WI405_NESTED_CHECKS_OTHER_STEP = (
     "..F\n"
     "=== format : stub ruff format --check ===\n"
     "  FAIL  format           exit 1 (0.1s)\n"
-    "FAILED tests/test_integrate.py::test_red_bar - AssertionError: OUTER REAL\n"
+    "FAILED tests/test_integrate.py::test_failing_checks - AssertionError: OUTER REAL\n"
     "1 failed, 2 passed in 0.9s\n"
     "  FAIL  tests+coverage   exit 1 (1.0s)\n"
     "\n" + "=" * 56 + "\n"

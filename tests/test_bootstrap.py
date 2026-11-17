@@ -1536,7 +1536,7 @@ def test_domain_skills_require_matching_explicit_opt_in(tmp_path):
     assert "registry-hygiene" in neutral_skills
 
 
-def test_scaffold_with_agents_still_green(tmp_path):
+def test_scaffold_with_agents_still_passes(tmp_path):
     # Materializing the agent layer must not break the out-of-the-box harness.
     dest = _bootstrap(tmp_path, "--agents", "both")
     proc = run_py(["scripts/trace.py", "--strict"], cwd=dest)

@@ -43,7 +43,7 @@ WHAT IT DOES NOT COVER, stated plainly because the gap is the point
     scaffold ends up carrying its spine registries under BOTH carriers, a state
     the current kit hard-REFUSES, and it still reports green because the
     checker that would refuse it is one of the stale files
-    (`test_the_green_holds_only_because_the_old_checkers_survived`). Read that
+    (`test_the_pass_holds_only_because_the_old_checkers_survived`). Read that
     test before trusting the headline one.
   - It exercises ONE range (the pin below), not every range; a migration recipe
     that only applies to some other range is untested by construction.
@@ -92,7 +92,7 @@ from conftest import ROOT, SCRIPTS, run_py, skip_without_env_gates
 #      surviving old `check.py` prints "No checks defined for gate DevStg-Reqs" and exits
 #      0 — a green that means nothing. A test whose standard can be met vacuously is
 #      worse than no test, so the pin stops on the near side of that line and
-#      `test_old_kit_scaffold_syncs_forward_to_a_green_harness` asserts against
+#      `test_old_kit_scaffold_syncs_forward_to_a_passing_harness` asserts against
 #      the vacuous shape directly.
 # Re-pinning is expected as the kit ages; keep the three criteria, not the SHA.
 PINNED_OLD_KIT_SHA = "fd5916b976dc3d77ff11a2d2d6bc4a7fa924641d"
@@ -243,7 +243,7 @@ def resync(tmp_path_factory):
     )
 
 
-def test_old_kit_scaffold_syncs_forward_to_a_green_harness(resync):
+def test_old_kit_scaffold_syncs_forward_to_a_passing_harness(resync):
     """The headline claim: old scaffold + documented re-sync => green harness.
 
     Green is checked for SUBSTANCE as well as exit code. A re-synced repo still
@@ -368,7 +368,7 @@ def test_documented_resync_is_add_only_today(resync):
     )
 
 
-def test_the_green_holds_only_because_the_old_checkers_survived(resync):
+def test_the_pass_holds_only_because_the_old_checkers_survived(resync):
     """The sharpest thing this module measures, and the reason it exists.
 
     Add-only has a consequence beyond "some files are stale". Because the
@@ -408,7 +408,7 @@ def test_the_green_holds_only_because_the_old_checkers_survived(resync):
     assert "BOTH carriers" in current.stdout + current.stderr
 
 
-def test_force_resync_installs_current_checkers_and_the_tree_cannot_false_green(
+def test_force_resync_installs_current_checkers_and_the_tree_cannot_falsely_pass(
     resync, tmp_path
 ):
     """The OTHER half of the procedure — the wholesale overwrite — with --force.
