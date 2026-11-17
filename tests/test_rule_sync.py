@@ -456,44 +456,36 @@ def test_the_sn_scrapes_answer_by_value():
         assert CARRIER.draft_ids_from_text(text, ".md") == want, text
 
 
-def test_the_legacy_acceptance_translation_agrees():
+def test_each_gate_policy_word_lands_the_three_dials_it_always_meant():
     """Implements: TC-152"""
-    # SN-029. `bootstrap.py` imports no kit sibling — it is the one script an
-    # adopter may run from a bare download — so it carries its own copy of the
-    # retired gate-authority enum's translation. This is duplicated POLICY, not
-    # plumbing: if the migrator and the readers disagreed about what
-    # `single-approve` meant, a repo would scaffold with one posture and run with
-    # another, which is precisely the shadowing defect SN-029 removed.
-    BOOT = load_script("bootstrap")
-    COMMON = load_script("agent_common")
-    assert BOOT.LEGACY_ACCEPTANCE == COMMON.LEGACY_ACCEPTANCE
-    assert set(BOOT.LEGACY_ACCEPTANCE) == {"attended", "single-approve", "autonomous"}
-    # And the two ends are what the words always meant, stated here so a future
-    # edit to either copy has to argue with a named expectation rather than
-    # merely keeping two dictionaries equal to each other.
+    # SN-029. A `--gate-policy` word is a preset: bootstrap writes the three
+    # dials it means, and folds a `docs/gate-policy` file holding it into the
+    # same three (`_migrate_gate_policy`), from the one table. The core scripts
+    # read the dials only (D11), so no other copy exists to keep equal; what is
+    # pinned is what each word always meant, stated here so a future edit has
+    # to argue with a named expectation. If the preset and the fold disagreed
+    # about what `single-approve` meant, a repo would scaffold with one posture
+    # and run with another, the shadowing defect SN-029 removed.
     # RE-KEYED AT WI-493 (folded into WI-498 slice 5): the dial is a rung, not a
     # 0-4 ordinal. The two ends still mean what the words always meant — the top
     # of the ladder holds everything, and the sentinel below it holds nothing.
-    assert (
-        BOOT.LEGACY_ACCEPTANCE["attended"]["operator_accepts_through"]
-        == "DevStg-Release"
-    )
-    assert (
-        BOOT.LEGACY_ACCEPTANCE["autonomous"]["operator_accepts_through"]
-        == "DevStg-Below"
-    )
-    # THE SECOND F5 COPY THE RE-KEY CREATED, pinned for the same reason as the
-    # first: `--migrate-config` rewrites an adopter's retired ordinal using
-    # bootstrap's table, while every kit script READS one through
-    # `agent_common`'s. If the two disagreed, a repo would be migrated to one
-    # rung and run at another — the SN-029 shadowing defect, in a new costume.
-    assert BOOT.LEGACY_DIAL_ORDINALS == COMMON.LEGACY_DIAL_ORDINALS
-    assert BOOT.LEGACY_DIAL_ORDINALS == {
-        0: "DevStg-Below",
-        1: "DevStg-Boundary",
-        2: "DevStg-Arch",
-        3: "DevStg-LLReqs",
-        4: "DevStg-Release",
+    BOOT = load_script("bootstrap")
+    assert BOOT.GATE_POLICY_DIALS == {
+        "attended": {
+            "operator_accepts_through": "DevStg-Release",
+            "keep_nondependent": False,
+            "final_review": "always",
+        },
+        "single-approve": {
+            "operator_accepts_through": "DevStg-Below",
+            "keep_nondependent": True,
+            "final_review": "always",
+        },
+        "autonomous": {
+            "operator_accepts_through": "DevStg-Below",
+            "keep_nondependent": True,
+            "final_review": "off",
+        },
     }
 
 

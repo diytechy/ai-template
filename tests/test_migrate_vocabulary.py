@@ -358,6 +358,9 @@ def test_the_retained_evidence_gap_kind_is_respelled_beside_the_others(tmp_path)
         "[authority]\noperator_accepts_through = +3\n",
         "[authority]\noperator_accepts_through = 0x3\n",
         "build = { red_rounds_max = 5 }\n",
+        'authority = { human_ratification_through = "DevStg-Arch" }\n',  # check_vocab: allow
+        '[authority]\nnote = """\noperator_accepts_through = 2\n"""\n'
+        "operator_accepts_through = 3\n",
     ),
     ids=(
         "inline-table",
@@ -370,6 +373,8 @@ def test_the_retained_evidence_gap_kind_is_respelled_beside_the_others(tmp_path)
         "ordinal-with-a-sign",
         "ordinal-in-hexadecimal",
         "failure-cap-in-an-inline-table",
+        "earliest-key-in-an-inline-table",
+        "ordinal-look-alike-in-a-string",
     ),
 )
 def test_a_dial_the_line_edit_cannot_reach_is_refused_not_guessed(tmp_path, text):
@@ -390,7 +395,7 @@ def test_a_policy_file_in_the_current_vocabulary_is_untouched(tmp_path):
 
 # The dial under its earliest key name, holding the retired integer.
 EARLIEST_KEY = "human_ratification_through"  # check_vocab: allow
-DIAL = "# The dial.\n[attestation]\n{} = {}  # the old ordinal\nfinal_review = 1\n"
+DIAL = "# The dial.\n[{}]\n{} = {}  # the old ordinal\nfinal_review = 1\n"
 
 
 @pytest.mark.parametrize(
@@ -403,11 +408,12 @@ DIAL = "# The dial.\n[attestation]\n{} = {}  # the old ordinal\nfinal_review = 1
         (4, "DevStg-Release"),
     ),
 )
+@pytest.mark.parametrize("header", ("attestation", "authority"))
 def test_the_dials_earliest_key_and_retired_integer_are_respelled_in_place(
-    tmp_path, ordinal, rung
+    tmp_path, header, ordinal, rung
 ):
     """Implements: TC-427"""
-    text = DIAL.format(EARLIEST_KEY, ordinal)
+    text = DIAL.format(header, EARLIEST_KEY, ordinal)
     path = _write(tmp_path, "docs/process.toml", text.replace("\n", "\r\n"))
     assert _run(tmp_path) == 0
     expected = (

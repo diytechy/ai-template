@@ -19,6 +19,7 @@ import re
 from conftest import KIT, SCRIPTS, load_script, process_key, run_py
 
 COMMON = load_script("agent_common")
+BOOT = load_script("bootstrap")
 
 
 def _posture(root):
@@ -37,10 +38,10 @@ def _posture(root):
 
 
 def _level(root):
-    """The posture, named by the legacy word it corresponds to — so these tests
+    """The posture, named by the `--gate-policy` word it corresponds to — so these tests
     can keep speaking the vocabulary the CLI flag and the register still use."""
     posture = _posture(root)
-    for word, dials in COMMON.LEGACY_ACCEPTANCE.items():
+    for word, dials in BOOT.GATE_POLICY_DIALS.items():
         if posture == dials:
             return word
     return posture

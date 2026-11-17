@@ -1103,7 +1103,7 @@ def apply_gate_policy(dest, level, dry_run):
 
     `--gate-policy` still takes the familiar word, because that is how the
     posture is talked about — but the word is TRANSLATED here (SN-029,
-    `LEGACY_ACCEPTANCE` above) rather than stored. Storing it was the
+    `GATE_POLICY_DIALS` below) rather than stored. Storing it was the
     defect: the template ships `operator_accepts_through`, and
     `acceptance_through` prefers that key, so a `gate_policy = "autonomous"`
     written beside it was read by nothing and every repo that chose a
@@ -1116,7 +1116,7 @@ def apply_gate_policy(dest, level, dry_run):
     list of dest-relative paths written."""
     if level == "attended" or dry_run:
         return []
-    for key, value in sorted(LEGACY_ACCEPTANCE.get(level, {}).items()):
+    for key, value in sorted(GATE_POLICY_DIALS.get(level, {}).items()):
         _written("[authority] " + key, set_process_key(dest, "authority", key, value))
     register = dest / "docs" / "gate-policy.md"
     written = [PROCESS_TOML_REL]
@@ -1208,19 +1208,19 @@ def _report_flag(outcome, label, value, answer):
     print("  {}: {}".format(label, value))
 
 
-# SN-029: the retired gate-authority enum, translated to the three dials that
-# replaced it. DUPLICATED from `agent_common.LEGACY_ACCEPTANCE` under the F5
-# rule — bootstrap imports no kit sibling, because it is the one script an
-# adopter may run from a bare download before anything else exists — and pinned
-# equal by tests/test_rule_sync.py, which is how this kit keeps a duplicated
-# POLICY (as opposed to duplicated plumbing) from drifting.
+# SN-029: what each `--gate-policy` word means, as the three dials that replaced
+# the retired gate-authority enum. The ONE statement of it: the preset
+# (`apply_gate_policy`) writes these dials for a word, and the fold of a
+# `docs/gate-policy` file (`_migrate_gate_policy`) writes the same ones, so a
+# repository scaffolded with a word and one folded from it run alike. No other
+# script holds a copy; the core scripts read the dials only (D11).
 #
 # What each word meant, and why one key could not hold it: `attended` held every
 # tier and drained the station at an acceptance; `single-approve` held NO tier
 # (LLM-gate review ran through DevStg-Reqs+DevStg-Tests) but sat ONE operator at the close and kept
 # non-dependent work running; `autonomous` did the same without the final read.
 # Implements: SR-138, LLR-156
-LEGACY_ACCEPTANCE = {
+GATE_POLICY_DIALS = {
     "attended": {
         "operator_accepts_through": "DevStg-Release",
         "keep_nondependent": False,
@@ -1236,21 +1236,6 @@ LEGACY_ACCEPTANCE = {
         "keep_nondependent": True,
         "final_review": "off",
     },
-}
-
-# The retired 0-4 ordinal this dial took before WI-493 (OI-21 shape (ii)),
-# mapped onto the rungs each level used to hold. DUPLICATED from
-# `agent_common.LEGACY_DIAL_ORDINALS` under the same F5 rule as the table above
-# and pinned equal by tests/test_rule_sync.py: bootstrap imports no kit sibling,
-# because it is the one script an adopter may run from a bare download.
-# `--migrate-config` uses it to rewrite an adopter's number in place, so the
-# reader's per-run warning has an end.
-LEGACY_DIAL_ORDINALS = {
-    0: "DevStg-Below",
-    1: "DevStg-Boundary",
-    2: "DevStg-Arch",
-    3: "DevStg-LLReqs",
-    4: "DevStg-Release",
 }
 
 
@@ -1309,133 +1294,6 @@ LEGACY_CONFIG = (
 _first_declared_line = _kitconfig.first_declared_line
 
 
-# The dial's RETIRED KEY NAME (WI-499, operator-ruled 2026-08-21: "ratification  # check_vocab: allow
-# holds a weight to it that the semantics here don't need" — check_vocab: allow,
-# a declaration site must name the retired word). A repo scaffolded
-# before this rename still carries `human_ratification_through` in  # check_vocab: allow
-# `[authority]`; `_migrate_dial_key_name` below rewrites the KEY (not the
-# value — that is `_migrate_dial_ordinal`'s job, and it runs second so an
-# adopter still on BOTH the old key AND the retired 0-4 ordinal gets both
-# fixed in one `--migrate-config` pass) and `agent_common.acceptance_through`
-# reads it as a loud fallback for a repo that runs a kit script without ever
-# migrating (the same read-translate-warn shape WI-493 used for the ordinal).
-LEGACY_DIAL_KEY = "human_ratification_through"  # check_vocab: allow
-
-
-def _migrate_dial_key_name(dest, notes, dry_run):
-    """Rewrite `[authority] human_ratification_through` to  # check_vocab: allow
-    `operator_accepts_through`, keeping whatever value it held (a rung string OR
-    the retired 0-4 ordinal — `_migrate_dial_ordinal`, called right after this
-    in `migrate_legacy_config`, normalizes that half).
-
-    The parse says whether the old key is there and what it holds; the rename
-    is a line edit kept only when the parse of the edited text holds exactly
-    that rename (`_confirmed_edit`), so a key-like line inside a string is
-    never the one renamed, and an old key the edit cannot reach is REFUSED.
-    Silent when the file does not parse (each write that follows refuses
-    it), when the old key is absent, or when BOTH keys are present (the new
-    one wins; the old line is left as a harmless duplicate for an operator to
-    remove, not silently deleted out from under a repo that may have meant to
-    keep it visible during a manual re-key).
-
-    Implements: SR-137, SR-139, LLR-155
-    """
-    path = Path(dest) / PROCESS_TOML_REL
-    if not path.is_file():
-        return
-    old, new = LEGACY_DIAL_KEY, "operator_accepts_through"
-    text = path.read_text(encoding="utf-8-sig")
-    data = _kitconfig.read_toml_text(text) or {}
-    table = data.get("authority")
-    if not isinstance(table, dict) or old not in table or new in table:
-        return
-    renamed = {k: v for k, v in table.items() if k != old}
-    renamed[new] = table[old]
-    raw_value = _toml_scalar(table[old])
-    edited = _confirmed_edit(
-        text.splitlines(),
-        "authority",
-        old,
-        "{} = {}".format(new, raw_value),
-        dict(data, authority=renamed),
-    )
-    if edited is None:
-        raise PolicyWriteRefused(
-            _refusal("authority", old, _unconfirmed_form(text, "authority", True))
-        )
-    if not dry_run:
-        _write_text_lf(path, edited)
-    notes.append(
-        # check_vocab: allow -- the printed note must name the retired word so
-        # an adopter searching their own history for it finds the fix.
-        "{} [authority] {} {} `operator_accepts_through` (WI-499: "
-        '"ratification" is retired kit vocabulary). The value ({}) is '  # check_vocab: allow
-        "unchanged by this step.".format(
-            PROCESS_TOML_REL,
-            old,
-            "would rename to" if dry_run else "renamed to",
-            raw_value,
-        )
-    )
-
-
-def _migrate_dial_ordinal(dest, notes, dry_run):
-    """Rewrite an `operator_accepts_through` still holding the retired 0-4
-    ordinal as the `DevStg-*` rung that ordinal meant (WI-493).
-
-    NOT A LEGACY *FILE* migration like its siblings — the value is already in
-    `docs/process.toml`; only its VOCABULARY is old. It rides here because this
-    is the one command an adopter is told to run at re-sync, and because the
-    alternative is `agent_common.acceptance_through` printing its translation
-    warning on every run of every kit script, forever.
-
-    The value is read from the parse, never off a line (a key-like line may be
-    text inside a multi-line string), and written through `set_process_key`.
-    Silent when the file does not parse (each write that follows refuses
-    it), or when the dial is absent or already a rung. A number OUTSIDE the
-    retired range is left alone and named in `notes` rather than guessed at:
-    there is no rung it meant, and an out-of-range dial is the one input that
-    reads as LESS operator involvement than the operator asked for, so a migrator that
-    picked a value for it would be making an acceptance-authority decision.
-
-    Implements: SR-138, LLR-156
-    """
-    key = "operator_accepts_through"
-    path = Path(dest) / PROCESS_TOML_REL
-    if not path.is_file():
-        return
-    data = _kitconfig.read_toml_text(path.read_text(encoding="utf-8-sig")) or {}
-    table = data.get("authority")
-    raw = table.get(key) if isinstance(table, dict) else None
-    if not isinstance(raw, int) or isinstance(raw, bool):
-        return
-    rung = LEGACY_DIAL_ORDINALS.get(raw)
-    if rung is None:
-        notes.append(
-            "{} [authority] {} = {} is outside the retired 0-4 range, so "
-            "there is no rung it meant — left in place. Set it to a DevStg-* "
-            "rung, or one of {}; until then it reads as the most conservative "
-            "setting.".format(
-                PROCESS_TOML_REL,
-                key,
-                raw,
-                ", ".join(LEGACY_DIAL_ORDINALS.values()),
-            )
-        )
-        return
-    set_process_key(dest, "authority", key, rung, dry_run=dry_run)
-    notes.append(
-        "{} [authority] {} {} the retired ordinal {} -> `{}` (WI-493). The "
-        "rungs held are unchanged.".format(
-            PROCESS_TOML_REL,
-            key,
-            "would migrate" if dry_run else "migrated",
-            raw,
-            rung,
-        )
-    )
-
-
 def migrate_legacy_config(dest, dry_run=False):
     """Fold every legacy one-word policy file into docs/process.toml and DELETE
     it. Returns `(moved, notes)` — the dest-relative legacy paths absorbed, and
@@ -1463,8 +1321,6 @@ def migrate_legacy_config(dest, dry_run=False):
     moved, notes = [], []
     steps = [
         functools.partial(_migrate_gate_policy, dest, moved, notes, dry_run),
-        functools.partial(_migrate_dial_key_name, dest, notes, dry_run),
-        functools.partial(_migrate_dial_ordinal, dest, notes, dry_run),
     ] + [
         functools.partial(_migrate_legacy_file, dest, row, moved, notes, dry_run)
         for row in LEGACY_CONFIG
@@ -1539,10 +1395,10 @@ def _migrate_gate_policy(dest, moved, notes, dry_run):
     Its own arm rather than a `LEGACY_CONFIG` row because it is the one legacy
     file that is not a one-key rename: `single-approve` carried a tier hold, a
     drain policy AND an end-of-run hold at once, and folding it to a single key
-    is what loses two of the three (SN-029). The translation itself lives in
-    `agent_common.LEGACY_ACCEPTANCE`, so the migrator and the readers cannot
-    disagree about what a word meant. A refused write raises past the
-    delete, so the legacy file stays.
+    is what loses two of the three (SN-029). The dials come from
+    `GATE_POLICY_DIALS`, the table the `--gate-policy` preset writes, so a
+    word folded here and the same word given at scaffold land alike. A
+    refused write raises past the delete, so the legacy file stays.
 
     Implements: SR-138, LLR-156
     """
@@ -1550,12 +1406,12 @@ def _migrate_gate_policy(dest, moved, notes, dry_run):
     if not path.is_file():
         return
     word = _first_declared_line(path)
-    dials = LEGACY_ACCEPTANCE.get((word or "").strip().lower())
+    dials = GATE_POLICY_DIALS.get((word or "").strip().lower())
     if word is not None and dials is None:
         notes.append(
             "docs/gate-policy holds {!r}, which is not one of {} — left in "
             "place; fix it, then re-run --migrate-config.".format(
-                word, " / ".join(sorted(LEGACY_ACCEPTANCE))
+                word, " / ".join(sorted(GATE_POLICY_DIALS))
             )
         )
         return

@@ -1355,64 +1355,6 @@ def test_migration_writes_the_real_key_never_a_line_inside_a_string(tmp_path):
     assert not (tmp_path / "docs" / "privacy-check").exists()
 
 
-def test_the_ordinal_migration_reads_the_dial_never_a_line_inside_a_string(
-    tmp_path,
-):
-    """Implements: TC-152"""
-    text = (
-        "[authority]\n"
-        "note = '''\n"
-        "operator_accepts_through = 2\n"
-        "'''\n"
-        'operator_accepts_through = "DevStg-Arch"\n'
-    )
-    path = _policy_repo(tmp_path, text)
-    load_script("bootstrap").migrate_legacy_config(tmp_path)
-    assert path.read_bytes() == text.encode("utf-8")
-
-
-def test_the_dial_key_rename_refuses_an_old_key_held_in_an_inline_table(tmp_path):
-    """The migration's rename of the retired dial key refuses an
-    old key the parse holds inside an inline `authority` table: the file's
-    bytes are unchanged, the old declaration stays, and a note says so.
-
-    Adequacy witness: a rename that returns silently when its line edit is
-    not confirmed (as the line-scan rename did, finding no line under a
-    bare header) leaves no note; one that keeps an unconfirmed edit appends
-    a second `[authority]` table and changes the bytes; either fails here.
-
-    Implements: TC-150
-    """
-    boot = load_script("bootstrap")
-    old = boot.LEGACY_DIAL_KEY
-    text = 'authority = {{ {} = "DevStg-Arch" }}\n'.format(old)
-    path = _policy_repo(tmp_path, text)
-    _moved, notes = boot.migrate_legacy_config(tmp_path)
-    assert path.read_bytes() == text.encode("utf-8"), "wrote anyway"
-    authority = process_toml(tmp_path)["authority"]
-    assert authority == {old: "DevStg-Arch"}, "the old declaration was lost"
-    assert any(old in n and "LEFT IN PLACE" in n for n in notes), notes
-
-
-def test_the_dial_key_under_a_bare_authority_header_is_renamed_in_place(tmp_path):
-    """The migration renames the retired dial key on its own line under a bare
-    `[authority]` header, keeping its value and every other line.
-
-    Adequacy witness: a rename that looks for the line under any other header
-    (the table's earlier name, as it did after the table was renamed) finds no
-    line, refuses the file and leaves the old key in place; that fails here.
-
-    Implements: TC-152
-    """
-    boot = load_script("bootstrap")
-    old = boot.LEGACY_DIAL_KEY
-    text = '# kept\n[authority]\n{} = "DevStg-Arch"\nfinal_review = "off"\n'
-    path = _policy_repo(tmp_path, text.format(old))
-    _moved, notes = boot.migrate_legacy_config(tmp_path)
-    assert path.read_bytes() == text.format("operator_accepts_through").encode("utf-8")
-    assert not any("LEFT IN PLACE" in n for n in notes), notes
-
-
 def test_an_ordinary_policy_file_still_migrates_and_sets_in_place(tmp_path):
     """Implements: TC-152"""
     # The characterization: one `key = value` line per dial under its header
