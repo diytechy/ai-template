@@ -51,10 +51,10 @@ check. Existing project obligations and approval authority still apply.
 ### 0.1 Spine rebuild: the short route
 
 Keep one scoped rebuild record with the selected kit commit, current step,
-owner decisions, remaining gaps and next action. Link the live registries and
+operator decisions, remaining gaps and next action. Link the live registries and
 review evidence; avoid copying their prose into parallel summaries. Use the
 [spine-authoring skill](skills/spine-authoring/SKILL.md) for tier questions and
-approval rules rather than inventing another method.
+acceptance rules rather than inventing another method.
 
 1. **Establish the baseline.** Work on an isolated branch/worktree when the
    existing checkout is active. Read the product vision, user workflows, existing
@@ -73,15 +73,15 @@ approval rules rather than inventing another method.
    Record the selected files, revision and deferred integration in the rebuild
    record. **Do not advance the whole-kit stamp for this partial resync**, and do
    not run whole-repo bootstrap merely to copy spine tools: it can re-stamp the
-   repo. With owner authorization, new optional hooks may stay disabled while
+   repo. With the operator's authorization, new optional hooks may stay disabled while
    relevant spine checks run manually and are enabled as integration becomes ready.
-   Preserve existing enforced checks unless the owner explicitly changes them.
+   Preserve existing enforced checks unless the operator explicitly changes them.
 3. **Review stakeholder needs, then the frame and assumptions.** Recheck users,
    outcomes and applicable review perspectives against the product's purpose.
    Draft needs in user terms, including realistic limits on guarantees. Review
    system boundaries, external actors and assumptions before deriving SRs. An
    assumption that needs detection or a response must have an explicit requirement
-   disposition. Present each affected approval scope when ready; obtain its required
+   disposition. Present each affected acceptance scope when ready; obtain its required
    acceptance before treating it as the baseline for the next tier. Do not reopen
    accepted material merely because another review round starts.
 4. **Derive and reconcile SRs.** Derive measurable system obligations from those
@@ -103,9 +103,9 @@ approval rules rather than inventing another method.
    integrity/schema/trace and documentation checks against the adopter, plus its
    applicable product checks. Resolve affected broken links and contradictions;
    list remaining findings and their effect on readiness without suppressing them
-   to obtain a green result. Hand off the accepted inputs, reviewed design and
+   to obtain a passing result. Hand off the accepted inputs, reviewed design and
    interfaces, implementation/test bindings, and a short ordered work plan. State
-   which approvals or evidence remain outstanding. Implementation readiness is
+   which acceptances or evidence remain outstanding. Implementation readiness is
    not full verification, release qualification or a completed whole-kit upgrade.
 
 Resume from the recorded step and accepted decisions. Expand into the detailed
@@ -189,17 +189,17 @@ no-semantic-impact conclusion when that is the upgrade's actual result.
    `skills-sync` gate flags a drifted copy), and commit the stamps as the
    **last** step so the record reflects the state you actually landed on.
 
-### 1.4 Verify — and why a green can lie
+### 1.4 Verify — and why a pass can lie
 
 Run the harness (`scripts/check.py` / `check.{sh,ps1}`) and `scripts/check_docs.py`.
-A re-sync that leaves the harness red is not done.
+A re-sync that leaves the harness failing is not done.
 
-**A green is only as new as your checkers.** If step 3 left any kit-owned script
+**A pass is only as new as your checkers.** If step 3 left any kit-owned script
 un-updated, the repo is being judged by the OLD one — which cannot see what the
 new kit refuses. This is measured, not hypothetical: on a three-week range, an
 add-only re-sync leaves the spine registries under **both** carriers, a state the
 current kit hard-refuses, and the surviving old `trace.py` passes it
-(`tests/test_old_kit_resync.py` pins exactly this). Before believing the green,
+(`tests/test_old_kit_resync.py` pins exactly this). Before believing the pass,
 run the **target** kit's checkers against your tree —
 `python <kit>/scripts/trace.py --strict` from your repo root — and treat any
 disagreement between the two as the list of moves step 3 still owes.
@@ -246,7 +246,7 @@ destination is yours, and no re-sync rule applies to it.
   `kit-profile`.
 - **Overwrite, then re-apply your dials (kit-owned, but hand-edited).**
   `docs/process.toml` — the one home for every process dial (gate authority, the
-  human-approval level, push authority, the reviewer count, the privacy and
+  operator-acceptance level, push authority, the reviewer count, the privacy and
   secrets gates, guardrails, the blackout window). Unlike `docs/stack.ini` it is
   **kit-owned**: its explanatory header and its key set come from
   `process.toml.template`, so take the kit's version on re-sync and re-apply your
@@ -10831,12 +10831,12 @@ new file. Nothing about what they do changed.
   what it declared was policy: which set of checks a commit on a lane must
   pass. `docs/process.toml` now says which, by name, as `[required-checks]
   commit`, and `docs/stack.ini` says how this stack runs it, as a line of that
-  name under `[check-suites]`. `integrate.py attest` runs the named suite
+  name under `[check-suites]`. `integrate.py record-checks` runs the named suite
   exactly as it ran the old line, then the row's derived review tests.
 - **`[bars] red_mark` is `[product] expected_failure_marker`.** It is the
   text your test framework uses to mark a test that is expected to fail, so
-  it sits beside `[product] test`. `attest` and the refresh count it as
-  before.
+  it sits beside `[product] test`. `record-checks` and the refresh count it
+  as before.
 - **`[build] red_rounds_max` is `[build]
   stop_lane_after_consecutive_commit_check_failures`.** It was never a count
   of review rounds: it is the number of consecutive build rounds whose commit
@@ -10850,13 +10850,14 @@ new file. Nothing about what they do changed.
 - **The words in the prose and the messages follow.** "Commit bar" and
   "review bar" read "commit checks", "landing bar" reads "landing checks",
   "gate bar" reads "gate checks", and "red mark" reads "expected-failure
-  marker". The attestation itself is unchanged: the trailer still reads
-  `Bar-Green: ... bar=review`, the verb is still `attest --bar review`, and
-  the session log's `# bar-red:` header keeps its name, so a lane in flight
-  and the history both read as before.
+  marker". The record of a passing run is renamed by the vocabulary entry
+  below, anchored at the same commit: the trailer `Bar-Green: ... bar=review`
+  is `Checks-Passed: ... checks=commit`, `attest --bar review` is
+  `record-checks --checks commit`, and the session log's `# bar-red:` header
+  is `# checks-failed:`.
 
 **What to do (forced migration).** `docs/stack.ini` is yours, so these are
-hand edits; `attest` and the refresh refuse until they are made.
+hand edits; `record-checks` and the refresh refuse until they are made.
 
 1. In `docs/stack.ini`, move the marker: delete `red_mark = ...` from
    `[bars]` and add `expected_failure_marker = ...` with the same value under
@@ -10871,9 +10872,9 @@ hand edits; `attest` and the refresh refuse until they are made.
 4. In `docs/process.toml`, rename `red_rounds_max` under `[build]` if you
    declared it. An absent key needs nothing.
 5. In-flight lanes carry the new declarations only after a rebase or refresh
-   onto the trunk that has them. Until then their `attest` refuses.
+   onto the trunk that has them. Until then their `record-checks` refuses.
 
-**Kit-owned files — overwrite:** `scripts/kitlib/red_mark.py`,
+**Kit-owned files — overwrite:** `scripts/kitlib/expected_failure.py`,
 `scripts/kitlib/config.py`, `scripts/integrate.py`, `scripts/agent_loop.py`,
 `scripts/dispatch.py`, `scripts/agent_common.py`, `scripts/review_brief.py`,
 `scripts/review_set.py`, `scripts/check.py`, `scripts/check_trajectory.py`,
@@ -10994,6 +10995,123 @@ eight cells.
 
 **Adopter-merged files:** `docs/requirements/components.toml`, where your rows
 gain the cells; `registries/components.template.toml`'s `-000` row shows each one.
+
+### The kit's vocabulary is one word for one thing, and a migrator rewrites what a repository stores [since 3e7a3a6ee]
+
+*(Anchored at the preceding commit: the change lands after it.)*
+
+**What changed.** The kit's words were unified, so that one word names one
+thing. `GLOSSARY.md` defines each one. The core scripts read only the current
+spellings, with no reader of an earlier one, so a repository that still stores
+an earlier spelling reads as if the value were absent. A new script,
+`scripts/migrate_vocabulary.py`, rewrites the stored values in place. It is the
+one home for the earlier spellings, and `check_vocab.py` reports each value it
+still owes: a WARN, and an ERROR from `DevStg-Impl` on. Messages say passed
+and failed where they said green and red, so check any script of yours that
+matches the kit's output.
+
+The renames, by thing:
+
+| The thing | Was | Is |
+|---|---|---|
+| The role holding the reserved acts | owner, human | operator |
+| A rung's holder; escalation | `owner-held`, `owner-ruled`, `human-held`, `HUMAN-HELD`; `NEEDS-HUMAN`, `PAGE-HUMAN`, `page-human`, `EXIT_NEEDS_HUMAN` (7) | `operator-held`, `operator-ruled`, `operator-held`, `OPERATOR-HELD`; `NEEDS-OPERATOR`, `PAGE-OPERATOR`, `page-operator`, `EXIT_NEEDS_OPERATOR` (still 7) |
+| The act that takes a row as agreed | approve, attest, re-attest; first approval | accept, re-accept; first acceptance |
+| A row's status once taken | `Approved` | `Accepted` |
+| The acceptance record | `docs/archive/last_approved/`; ledger keys `approved`, `reattested` | `docs/archive/last_accepted/`; `accepted`, `reaccepted` |
+| The dial and its table | `[attestation] human_approval_through` | `[authority] operator_accepts_through` |
+| Push authority | `push = "human"` | `push = "operator"`: a session the operator delegated to may push, where `"human"` excluded even an attended one |
+| A delegated decision's verdict | `owner = "confirmed"` / `"overruled"` | `operator = …` |
+| The requirement's method field; the method resting on someone's word | `verification`; `Attest` | `verification_method`; `Vouch` |
+| The operator's notes file | `OWNER_SCRATCHPAD.md` | `OPERATOR_SCRATCHPAD.md` |
+| The status file's asks | `Needs <human>` | `Needs <operator>` |
+| Work-item front matter | `safety_class = "attestation"`; `brief = "first-approval"`; `bar = "DevStg-…"` | `"acceptance"`; `"first-acceptance"`; `checks_stage = "DevStg-…"` |
+| Brief kinds in `[adjudicator] retain_for` | `"first-approval"`, `"red-tc"` | `"first-acceptance"`, `"evidence-gap"` |
+| A verdict binding's outcome (`docs/reviews/**/*.requested`) | `outcome = accepted` | `outcome = recorded` |
+| The adjudicator's ruling on a first acceptance | `APPROVE`, `- [APPROVE]`, `OUTCOME: APPROVE` | `ACCEPT`, `- [ACCEPT]`, `OUTCOME: ACCEPT`. A review verdict keeps `APPROVE` |
+| Acceptance flags and check steps | `intake.py snapshot --approves`, `--reattests`; `trace.py --approve`, `--mint-approval-brief`, `--approval-immutable`; steps `approval-fresh`, `approval-immutable` | `--accepts`, `--reaccepts`; `trace.py --accept`, `--mint-acceptance-brief`, `--acceptance-immutable`; `acceptance-fresh`, `acceptance-immutable` |
+| The passed-checks record (a commit trailer) | `Bar-Green: … bar=<review\|landing\|no-bar>`; `integrate.py attest --bar review` | `Checks-Passed: … checks=<commit\|landing\|none>`; `integrate.py record-checks --checks commit` |
+| The failed-checks record (a session log's headers) | `# bar-red:`, `# bar-summary:`; log phase `ATTEST`, labels `ATTEST GREEN`/`ATTEST RED` | `# checks-failed:`, `# checks-summary:`; `CHECKS`, `CHECKS PASSED`/`CHECKS FAILED` |
+| The commit-check failure cap's exit label | `RED-CAP` | `CHECK-FAILURE-CAP` |
+| A test case not accepted though its work is done | red TC; census lines `red TC …` | evidence gap; `evidence gap …` |
+| The commit-check settings reader | `kitlib/red_mark.py`: `Bars` (`review`, `red_mark`), `read_bars`; `kconfig.red_rounds_max()` | `kitlib/expected_failure.py`: `CommitCheckSettings` (`commit_checks`, `marker`), `read_commit_check_settings`; `commit_check_failure_cap()` |
+| Prompt slots and keys | `{{OWNER_PROMPT}}`; `{approval_act}`, `{approves_rows}`; `--prompt-map` keys `ADJUDICATE-FIRST-APPROVAL`, `ADJUDICATE-RED-TC` | `{{OPERATOR_PROMPT}}`; `{acceptance_act}`, `{accepts_rows}`; `ADJUDICATE-FIRST-ACCEPTANCE`, `ADJUDICATE-EVIDENCE-GAP` |
+
+"Bar" is gone from live names. A run of checks is the commit checks, the
+landing checks or the gate checks; a stage is a stage; a threshold is a
+minimum, standard or limit. A run of checks passes or fails, never goes red or
+green. "Owner" keeps its other senses: an interface row's `owner` key, a lock's
+holder, a rule's single home. "Human" stays in prose that says a person is
+meant.
+
+**What to do (forced migration).** In §1.3's order, with these additions.
+
+1. **Before the re-sync, leave no amendment awaiting its act.** The migrator
+   writes each copy in the acceptance record equal to its live registry, so it
+   absorbs whatever differs, not only the vocabulary. Accept or withdraw every
+   pending amendment first. Rewording your accepted rows into the new
+   vocabulary is the exception. Do it before the migrator runs, so that it
+   absorbs that rewording and names each cell.
+2. **Fold first, then migrate.** `bootstrap.py --migrate-config` folds a
+   one-word `docs/push-policy` as it reads (§1.3 step 1). The migrator then
+   respells the value.
+3. **Run the migrator straight after taking the kit's scripts**, and before
+   any kit command that writes. Until it runs, the scripts read every
+   `Approved` row as never accepted, and `intake.py snapshot` would write an
+   act for all of them. Run `python scripts/migrate_vocabulary.py --check`,
+   then `python scripts/migrate_vocabulary.py`. Read each line it prints. An
+   `absorbs` line names an accepted cell that differed from the record, and
+   each one should be wording you meant. A `NOT rewritten` line (exit 1) names
+   a file it could not prove safe, or both spellings present: merge by hand,
+   then run it again. A second run finds nothing to do.
+4. **The hook refuses the migration commit**, whatever is done. The record
+   changes directory, so every ledger entry reads as new, and its copies are
+   written in the same commit as the rows. The operator commits it with the
+   hook bypassed (`git commit --no-verify`). Then run `scripts/check.py` and
+   `python scripts/trace.py --strict` on the committed tree; both must pass.
+5. **Move `[checks] test_first_since`** in `docs/process.toml` to the
+   migration commit. History before it stores `Approved`, which the current
+   reader does not read, so every requirement accepted before the cut reads as
+   accepted at the cut, inexactly, and `check_test_first` warns that it
+   cannot be read. Moving the start leaves those requirements out of scope.
+   The cost: those judged since the old start are no longer judged.
+6. **Delete what a copy-over leaves beside its successor**:
+   `scripts/kitlib/red_mark.py`, `prompts/adjudicate-red-tc.template.md`,
+   `prompts/adjudicate-first-approval.template.md`, and, if you vendored them,
+   `registries/last-approved-README.template.md` and
+   `OWNER_SCRATCHPAD.template.md`.
+7. **Change by hand what is yours**: your prompt overrides (the slots and
+   keys above), your own scripts, CI and hooks that type a renamed command,
+   flag, exit label or import, and your prose. Use the table; the glossary's
+   entries for **operator** and **accept** say which senses of "owner",
+   "human" and "accept" stay.
+8. **Lanes in flight.** No reader of the earlier trailer or headers is kept.
+   A lane cut before the re-sync records its commit checks once more, and its
+   failure count restarts. If its tip is a refresh commit in the earlier form,
+   drop that commit before refreshing, or `docs/log.md` conflicts. Landing or
+   closing lanes before the re-sync avoids all three.
+9. **Observations read due.** A recorded observation's digest covers the
+   row's `status`, so each observed case reads due at its next checkpoint.
+   That is correct: the digest records what was judged, so do not recompute it.
+
+What the migrator does not touch: dated records (`docs/log.md`, archived
+reviews, handoffs) keep their words, except that Markdown links into the
+moved record are re-based (the link target only). Commit messages are
+history; an old trailer is simply not read.
+
+**Kit-owned files — overwrite:** every script under `scripts/` and
+`scripts/kitlib/`, `hooks/`, `prompts/`, `skills/`, the templates and
+`PROCESS.md`, `PROCESS_OPTIONS.md`, `GLOSSARY.md`, `README.md`. The change
+touches most of them, so take the kit wholesale, then apply step 6.
+`scripts/migrate_vocabulary.py` is new.
+
+**Regenerated files:** `docs/process.md`, `docs/process-options.md`,
+`prompts/CATALOG.md`, `skills/INDEX.csv`, `docs/open-items.html`,
+`PROJECT_STATE.html`, `docs/stage`.
+
+**Adopter-merged files:** `docs/process.toml` and the registries (rewritten
+by the migrator), `docs/archive/last_accepted/` (moved by it), your prompt
+overrides and `docs/stack.ini` (by hand, if they name a renamed key).
 
 ## 5. Promotion: when this pack stops being prose
 
