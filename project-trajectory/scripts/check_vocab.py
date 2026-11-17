@@ -25,7 +25,11 @@ weight to it that the semantics here don't need"), also any inflection of
 `ratifiable`, `ratifier`, ...) — EXCEPT the literal `docs/ratify/` path, which
 kept its name as a record home for the immutable dated re-acceptance briefs
 that already lived there; that one spelling is not retired vocabulary, it is a
-directory name. Nothing else.
+directory name. And since the 2026-11 vocabulary, each value a repository
+still stores in an earlier spelling (a row's status, a policy key, the
+acceptance record's directory), as `migrate_vocabulary.py` names it: that
+script is the earlier spellings' one home, so this asks it rather than
+naming them again, and the fix it prints is to run it. Nothing else.
 
 WHAT IT DOES NOT TOUCH — and this is the load-bearing half. **The word "gate"
 survives wherever it means a check that can fail.** `test_env_gates`,
@@ -85,6 +89,7 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
+from migrate_vocabulary import spellings_owed
 
 # The retired TAGS, as whole words. `G-Release`/`G-Final` are matched before the
 # bare digits by putting them first in the alternation.
@@ -420,13 +425,19 @@ def main():
     args = ap.parse_args()
 
     findings, scanned = scan(args.root, args.list_scope)
+    # A value stored in an earlier spelling reads as absent to the kit.
+    findings += [
+        "{} - stored in an earlier spelling; run "
+        "`python scripts/migrate_vocabulary.py`".format(line)
+        for line in spellings_owed(Path(args.root).resolve())
+    ]
     label = "check_vocab: ERROR" if args.strict else "check_vocab: WARN"
     for f in findings:
         print("{} - {}".format(label, f))
     if not findings:
         print(
             "check_vocab: clean ({} live authored file(s); no retired gate "
-            "tags).".format(scanned)
+            "tags; nothing stored in an earlier spelling).".format(scanned)
         )
         return 0
     print(

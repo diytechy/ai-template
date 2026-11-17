@@ -63,6 +63,22 @@ A registry is a `.toml` or `.csv` file directly under `docs/requirements/` or
 in place, byte for byte outside the values named above, then parsed again: a
 file whose parse would differ in anything else is left untouched and named.
 
+`check_vocab.py` reports what this script would still rewrite
+(`spellings_owed`), so a repository that skipped it hears what it owes.
+The record's copies are left out of that report: a copy that differs from
+its live registry is an amendment awaiting its act, not an earlier
+spelling.
+
+Contracts: IF-312 — the seam this module declares (process.md §8; row of record
+in docs/requirements/interfaces.toml).
+
+Contract IF-312: `spellings_owed(root)` for `check_vocab`, which reports what
+    a repository still stores in an earlier spelling. The answer is a list of
+    lines, one per value owed and one per file that cannot be rewritten
+    safely, worded as `--check` words them, with the record's copies left
+    out. It writes nothing. The requestor reports each line unchanged as a
+    finding and adds the fix.
+
 Usage:
     python scripts/migrate_vocabulary.py [--root .] [--check]
 
@@ -992,12 +1008,14 @@ def _write_record(home, target, ledger, owed):
         (target / path.relative_to(home)).write_bytes(want)
 
 
-def record(root, check):
+def record(root, check, copies=True):
     """The acceptance record under its earlier name moved to the current one,
     its act ledger's keys respelled, and each registry copy in it written
     equal to its live registry, naming every accepted cell that absorbs:
     `([what moved], [problem])`. Both names present, or a ledger the line
-    edit cannot prove, is a problem, and nothing is touched.
+    edit cannot prove, is a problem, and nothing is touched. With `copies`
+    false the copies are left out, so only what the record stores in an
+    earlier spelling is named.
 
     Implements: SR-247, LLR-369
     """
@@ -1008,7 +1026,7 @@ def record(root, check):
     if not home.is_dir():
         return [], []
     ledger, problems = _ledger_owed(root, home)
-    owed, lines, missing = _copies_owed(root, home)
+    owed, lines, missing = _copies_owed(root, home) if copies else ([], [], [])
     if problems:
         return [], problems + missing
     done = ["{} -> {}".format(*RECORD_DIRS)] if home == old else []
@@ -1108,6 +1126,26 @@ STEPS = (
     ("acceptance record", record),
     ("acceptance-record link", links),
 )
+
+
+def spellings_owed(root):
+    """One line for each value still stored in an earlier spelling and each
+    file that cannot be rewritten safely, as `--check` names them, with the
+    record's copies left out: a copy that differs from its live registry is
+    an amendment awaiting its act, and only a run writes it. `check_vocab.py`
+    reports these lines, so the earlier spellings keep this one home.
+
+    Implements: SR-247, LLR-369
+    """
+    lines = []
+    for name, step in STEPS:
+        if step is record:
+            done, problems = record(root, True, copies=False)
+        else:
+            done, problems = step(root, True)
+        lines += ["{} owes the rewrite: {}".format(name, item) for item in done]
+        lines += ["{} cannot be rewritten: {}".format(name, p) for p in problems]
+    return lines
 
 
 def main(argv=None):

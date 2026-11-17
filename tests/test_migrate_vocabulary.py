@@ -719,6 +719,77 @@ def test_a_ledger_the_line_edit_cannot_prove_leaves_the_record_untouched(
     assert not (tmp_path / migrate.RECORD_DIRS[1]).exists()
 
 
+def _current(text):
+    """`text` with the earlier spellings this module's fixtures hold respelled."""
+    return (
+        text.replace('"Approved"', '"Accepted"')
+        .replace("\napproved = ", "\naccepted = ")
+        .replace("\nreattested = ", "\nreaccepted = ")
+    )
+
+
+def test_spellings_owed_names_what_check_names_less_the_records_copies(tmp_path):
+    """Implements: TC-427"""
+    _record(tmp_path)
+    owed = migrate.spellings_owed(tmp_path)
+    rel = "docs/requirements/system-requirements.toml"
+    assert "registry owes the rewrite: " + rel in owed, owed
+    assert (
+        "acceptance record owes the rewrite: docs/archive/last_approved -> "
+        "docs/archive/last_accepted" in owed
+    ), owed
+    assert any(
+        line.startswith("acceptance record owes the rewrite: ") and "keys" in line
+        for line in owed
+    ), owed
+    assert not [
+        line for line in owed if "written equal" in line or " absorbs " in line
+    ], owed
+    assert (tmp_path / migrate.RECORD_DIRS[0]).is_dir(), "spellings_owed wrote"
+
+
+def test_a_record_copy_that_differs_from_live_is_owed_by_a_run_but_not_a_spelling(
+    tmp_path,
+):
+    """Implements: TC-427"""
+    home = migrate.RECORD_DIRS[1]
+    _write(tmp_path, "docs/requirements/system-requirements.toml", _current(LIVE_SR))
+    _write(tmp_path, home + "/acts.toml", _current(LEDGER))
+    _write(
+        tmp_path,
+        home + "/docs/requirements/system-requirements.toml",
+        _current(COPY_SR),
+    )
+    assert migrate.spellings_owed(tmp_path) == []
+    # A run would still write the copy, absorbing its accepted cells.
+    assert _run(tmp_path, "--check") == 1
+
+
+def _check_vocab(root, *flags):
+    return run_py([SCRIPTS / "check_vocab.py", "--root", str(root), *flags], root)
+
+
+def test_check_vocab_reports_what_the_migrator_owes_until_it_has_run(tmp_path):
+    """Implements: TC-427"""
+    _record(tmp_path)
+    warn = _check_vocab(tmp_path)
+    assert warn.returncode == 0, warn.stdout + warn.stderr
+    line = (
+        "check_vocab: WARN - registry owes the rewrite: "
+        "docs/requirements/system-requirements.toml - stored in an earlier "
+        "spelling; run `python scripts/migrate_vocabulary.py`"
+    )
+    assert line in warn.stdout, warn.stdout
+    strict = _check_vocab(tmp_path, "--strict")
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+    assert "acceptance record owes the rewrite" in strict.stdout
+    assert " absorbs " not in strict.stdout and "written equal" not in strict.stdout
+    assert _run(tmp_path) == 0
+    clean = _check_vocab(tmp_path, "--strict")
+    assert clean.returncode == 0, clean.stdout + clean.stderr
+    assert "nothing stored in an earlier spelling" in clean.stdout
+
+
 # A page linking into the record by its earlier directory, inline and by a
 # reference definition, beside the name in a label, in prose, in a code span
 # and inside a longer path segment, none of which is a link target.
