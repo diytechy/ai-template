@@ -1135,6 +1135,13 @@ is a hard refusal). **The IF tier also changes shape — read before running:**
 
 ### The `G*` gate tags retire for the eight-rung stage ladder [since 08c985cb]
 
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: no reader translates a
+retired tag now, so "Nothing breaks on day one" and steps 3 and 4 no longer
+hold. `check.py` refuses a tag as a stage value, a `docs/stack.ini` `gates =`
+list is refused until the migrator rewrites it, and a work item's tag is refused
+by name.)*
+
 **The biggest vocabulary change the kit has shipped, and it reaches your own
 files.** `G0`/`G1`/`G2`/`G3`/`G-Release`/`G-Final` are gone as tags. In their
 place:
@@ -2307,6 +2314,11 @@ answered is part of the fingerprint.
 
 *(Anchored at the preceding commit — an entry cannot know its own SHA.)*
 
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: a `gates =` list is no longer
+translated on read but refused until the migrator rewrites it, `--stage-cleared`
+is refused, and the retired value aliases no longer translate.)*
+
 **THIS ONE CHANGES WHICH CHECKS RUN IN YOUR CI. Read it before you take the
 files.** Everything else in this range was additive; this is not.
 
@@ -2769,6 +2781,11 @@ shadows nothing and drifts silently.
 
 ### `G0|G1|G2|G3|G-Release|G-Final` → the stage ladder [since 08c985cb]
 
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: no reader accepts the
+left-hand column as an alias now; that entry gives the stage each tag means as a
+`check.py` value.)*
+
 The tags retire; the traceability survives. Grep your own prose, scripts, CI,
 hooks and registry cells for the left-hand spelling — **as a whole-word TAG, not
 as the word "gate"**, which survives wherever it means a check that can fail
@@ -2811,6 +2828,11 @@ kit-owned teaching cell worth taking, but a no-op if you deleted the example row
 on your first real entry, as intended.
 
 ### The `DevBar-*` prefix retires — ONE vocabulary, the verb carries the axis [since 7ccbd3a6]
+
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: "Nothing breaks at the
+re-sync" no longer holds. No reader accepts a retired spelling as an alias, and
+the flag `--stage-cleared` is refused; `--gate` stays.)*
 
 **The `DevBar-` prefix is gone.** A repo is **IN** a stage and **CLEARS** a
 stage, and the same `DevStg-` token names both readings — what tells them apart
@@ -3368,6 +3390,12 @@ the LAST entry of the WI-498 stage-unification program and is written so the
 whole re-sync can be executed from this entry alone; the six entries above it
 land the machinery in stages, this one lands the migration.)*
 
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: a `gates =` list is refused
+until the migrator rewrites it, `--stage-cleared` is refused, and a dial still
+holding the 0-4 number no longer "keeps working": it reads as the most-held rung
+until the migrator rewrites it.)*
+
 **Kit-owned files — overwrite and move on:** every `scripts/*.py`,
 `project-trajectory/PROCESS.md`, `PROCESS_OPTIONS.md`, `ADOPTING.md`,
 `README.md`, `skills/gate-advance/SKILL.md`, `process.toml.template`,
@@ -3716,6 +3744,11 @@ repo has departed from full auto-selection.
 
 *(Anchored at the PRECEDING commit — this entry ships with the changes,
 the same convention the `docs/gate` RETIRES entry above uses.)*
+
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: skipping step 1 is no longer
+harmless. No reader reads the old key, so the dial reads as the most-held rung
+until `migrate_vocabulary.py` renames it; `--migrate-config` no longer does.)*
 
 **What changed.** Owner ruling 2026-08-21 ("ratification holds a weight to it
 that the semantics here don't need"): the kit's vocabulary unifies on
@@ -5694,6 +5727,10 @@ shallowly sees an unreadable line from this step until it fetches full history.
 ### Loop commits carry a `Loop-Session` trailer, and the loop may not move a held off-spine status [since c907d31b]
 
 *(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: the retired spellings are no
+longer translated, silently or otherwise; each reads as the most-held rung.)*
 
 **What changed.** The unattended loop marks its own process once per run with
 the `KIT_LOOP_SESSION` environment variable (set by `dispatch.run` and by
@@ -11016,6 +11053,13 @@ still owes: a WARN, and an ERROR from `DevStg-Impl` on. Messages say passed
 and failed where they said green and red, so check any script of yours that
 matches the kit's output.
 
+The scripts also stop reading the spellings older than this vocabulary: the
+`G1`-`G3` and `DevBar-*` tags as a `check.py` stage value, in a `[step:*]
+gates =` list and in a work item's `checks_stage`; the flag `--stage-cleared`;
+the dial's 0-4 value and its key `human_ratification_through`; and the
+`gate-policy` word where no dial is declared. The migrator rewrites the ones a
+repository stores.
+
 The renames, by thing:
 
 | The thing | Was | Is |
@@ -11042,6 +11086,11 @@ The renames, by thing:
 | A test case not accepted though its work is done | red TC; census lines `red TC …` | evidence gap; `evidence gap …` |
 | The commit-check settings reader | `kitlib/red_mark.py`: `Bars` (`review`, `red_mark`), `read_bars`; `kconfig.red_rounds_max()` | `kitlib/expected_failure.py`: `CommitCheckSettings` (`commit_checks`, `marker`), `read_commit_check_settings`; `commit_check_failure_cap()` |
 | Prompt slots and keys | `{{OWNER_PROMPT}}`; `{approval_act}`, `{approves_rows}`; `--prompt-map` keys `ADJUDICATE-FIRST-APPROVAL`, `ADJUDICATE-RED-TC` | `{{OPERATOR_PROMPT}}`; `{acceptance_act}`, `{accepts_rows}`; `ADJUDICATE-FIRST-ACCEPTANCE`, `ADJUDICATE-EVIDENCE-GAP` |
+| A `[step:*]` section's stage in `docs/stack.ini` | `gates = <list>` | `from-stage = <stage>`: `DevStg-Needs` when the list names the requirements stage (`G1`, `DevBar-Reqs` or `DevStg-Reqs`), else `DevStg-Impl` |
+| The dial's earliest key; its value before stages | `human_ratification_through`; `0`-`4` | `operator_accepts_through`; `0` `"DevStg-Below"`, `1` `"DevStg-Boundary"`, `2` `"DevStg-Arch"`, `3` `"DevStg-LLReqs"`, `4` `"DevStg-Release"` |
+| The commit-check failure cap's key | `[build] red_rounds_max` | `[build] stop_lane_after_consecutive_commit_check_failures` |
+| A `check.py --stage` (or `--gate`) value | `G1`, `DevBar-Reqs`; `G2`, `G3`, `DevBar-Tests`, `DevBar-Release` | `DevStg-Reqs`; `DevStg-Impl` |
+| The flag for the stage | `--stage-cleared` | `--stage` (`--gate` stays) |
 
 "Bar" is gone from live names. A run of checks is the commit checks, the
 landing checks or the gate checks; a stage is a stage; a threshold is a
@@ -11090,7 +11139,9 @@ meant.
    keys above), your own scripts, CI and hooks that type a renamed command,
    flag, exit label or import, and your prose. Use the table; the glossary's
    entries for **operator** and **accept** say which senses of "owner",
-   "human" and "accept" stay.
+   "human" and "accept" stay. `check.py` refuses a retired tag as a stage
+   value and the flag `--stage-cleared`; the migrator cannot reach your CI, so
+   change it by the table.
 8. **Lanes in flight.** No reader of the earlier trailer or headers is kept.
    A lane cut before the re-sync records its commit checks once more, and its
    failure count restarts. If its tip is a refresh commit in the earlier form,
@@ -11117,7 +11168,9 @@ touches most of them, so take the kit wholesale, then apply step 6.
 
 **Adopter-merged files:** `docs/process.toml` and the registries (rewritten
 by the migrator), `docs/archive/last_accepted/` (moved by it), your prompt
-overrides and `docs/stack.ini` (by hand, if they name a renamed key).
+overrides and `docs/stack.ini` (by hand, if they name a renamed key;
+`docs/stack.ini` is rewritten by the migrator where a `[step:*]` holds
+`gates =`).
 
 ## 5. Promotion: when this pack stops being prose
 
