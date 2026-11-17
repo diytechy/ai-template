@@ -105,7 +105,7 @@ def test_strict_integrity_ignores_orphans_but_fails_bad_ids(scaffold):
 # is what these tests exercise, so the row has to be one the checks FLAGS: a Drafted
 # SR is exempt from --require-verified entirely (WI-089, a different axis), and
 # `Accepted`/`Founded` both pass, which leaves no LIVE value that reaches the checks.
-# The cost is that this fixture also reds the enum floor, which
+# The cost is that this fixture also fails the enum floor, which
 # `test_phase_scopes_require_verified` states rather than works around. Every
 # row carries its Phase: in a phased spine a row with no Phase cell is itself an
 # integrity finding, which is not the property these tests drive.
@@ -146,7 +146,7 @@ def test_phase_scopes_require_verified(scaffold):
     is now unreachable-by-cell for a conformant repo — every live value either
     stands the checks down or passes it — so the only row that can drive this test
     is the mid-migration one PHASED_SRS carries, whose out-of-vocabulary Status
-    ALSO reds the always-on integrity floor. The exit code therefore stays 1
+    ALSO fails the always-on integrity floor. The exit code therefore stays 1
     throughout and can no longer tell the deferred run from the scoped one.
     `status-findings=` / `phase-deferred=` can, and they are what the phase
     scoping actually moves."""
@@ -578,7 +578,7 @@ def test_shipped_tc_template_carries_evidence_column():
 
 def test_aspect_values_yield_report_section(scaffold):
     # A registry with real Aspect values gets a per-aspect SR count in the
-    # report — report-only: the run stays green, and blank cells count as
+    # report — report-only: the run keeps passing, and blank cells count as
     # untagged (a row that is not cross-cutting carries no aspect, by the rule).
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
@@ -1001,7 +1001,7 @@ def test_phase_accepted_rule_is_numeric_only():
     # A single prefixed cell beside bare integers fires alone, naming the row.
     fired = f(_real(["SR-001,Accepted,1", "SR-002,Accepted,P1"]))
     assert len(fired) == 1 and "SR-002" in fired[0]
-    # Bare integers stay green (surrounding whitespace is stripped, not judged).
+    # Bare integers keep passing (surrounding whitespace is stripped, not judged).
     assert f(_real(["SR-001,Accepted,1", "SR-002,Accepted, 2 "])) == []
     # A Drafted row is exempt even with a prefixed cell (its phase is not yet
     # accepted scope; it takes its bare number at acceptance).
@@ -1399,7 +1399,7 @@ def test_an_unreadable_allow_line_reds_the_integrity_floor(scaffold):
 def test_an_unresolved_allow_entry_reds_the_integrity_floor(scaffold):
     # HARD AT BIRTH, on the always-on floor the pre-commit hook runs: a field
     # with no false positives needs no warn-first program. The fixture files a
-    # pending OI-1, so the repaired entry is green.
+    # pending OI-1, so the repaired entry passes.
     _file_pending_oi1(scaffold)
     (scaffold / "docs" / "provenance-allow").write_text(
         "SR-001 Rationale added 2026-08-16 — owes an open-item row at the sitting.\n",

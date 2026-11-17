@@ -242,7 +242,7 @@ def test_no_caller_forges_an_argparse_namespace_for_the_engine():
     """Implements: TC-197"""
     # The reason AnalysisFlags exists: census.gap_census imported argparse to
     # build a four-field Namespace, because the CLI namespace WAS the config
-    # type. A future caller reaching for the same trick should red here.
+    # type. A future caller reaching for the same trick should fail here.
     tree = ast.parse(pathlib.Path(SCRIPTS, "census.py").read_text(encoding="utf-8"))
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):

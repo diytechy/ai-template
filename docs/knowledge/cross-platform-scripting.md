@@ -26,9 +26,9 @@ Windows and macOS × Python 3.11 and 3.x, with the macOS+3.11 cell deliberately
 excluded (the 3.11 floor is a language/stdlib guarantee already covered on Linux
 + Windows; macOS's job is OS-specific behavior — `fcntl.flock`, paths, git
 worktrees — that does not vary by Python version). A rule "true only on the
-author's platform" is caught by a red cell there, not by review prose — so the
+author's platform" is caught by a failing cell there, not by review prose — so the
 hat's real job is the surfaces the matrix cannot see, or the changes that ship
-*before* a green matrix exists.
+*before* a passing matrix exists.
 
 The recurring hazards, each with a real carrier in this repo:
 
@@ -78,7 +78,7 @@ The recurring hazards, each with a real carrier in this repo:
 ## Open questions / bounded here
 
 - The matrix is the evidence, but it runs *after* a change; nothing catches a
-  platform assumption at authoring time except this hat. Treat a green Linux
+  platform assumption at authoring time except this hat. Treat a pass Linux
   local run as necessary-not-sufficient.
 - Case sensitivity (the charter names it) has no dedicated instrument here today;
   it lives on the reviewer's checklist, not in a check. Flag a filename that

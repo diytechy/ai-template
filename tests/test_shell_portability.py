@@ -4,7 +4,7 @@ WHY THESE TESTS EXIST. macOS still ships bash 3.2 as /bin/sh. It reads an
 apostrophe inside a double-quoted expansion word ("${VAR:-it's}") as an opening
 quote, so the file fails to parse. dash (Linux) and bash 5 (Git Bash) accept
 it. WI-880's hook probe shipped that shape, and every git hook refused on a
-stock Mac while the Linux and Windows checks stayed green.
+stock Mac while the Linux and Windows checks kept passing.
 
 Two checks, so the class is caught on every platform, not only on a Mac:
 

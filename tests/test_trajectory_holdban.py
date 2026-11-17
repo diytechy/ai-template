@@ -137,7 +137,7 @@ def test_renamed_ref_is_named_and_warns_then_gates(tmp_path):
     assert ACTIVE_BRANCH in r.stderr
     assert "OI-70" in r.stderr
     assert r.returncode == 0
-    # DevStg-Impl gate: --strict promotes it to an ERROR that reds the run.
+    # DevStg-Impl gate: --strict promotes it to an ERROR that fails the run.
     rs = run_traj(tmp_path, "--strict")
     assert "hold-by-rename" in rs.stderr
     assert "ERROR" in rs.stderr

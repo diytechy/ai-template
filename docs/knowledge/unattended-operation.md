@@ -7,7 +7,7 @@ This repo runs itself unattended: `agent-resume.*` drives
 `dispatch.py` and merges through a serial integrator. The charter in
 `docs/requirements/hats.toml` (`[hat.UNATTENDED-OPS]`) asks what this looks like
 at 3am with no human, and listens for four failure shapes: a silent degrade, a
-partial write left behind, an unbounded retry, and a green that is green because
+partial write left behind, an unbounded retry, and a pass that passes only because
 nothing looked. The most valuable evidence here is that this repo has already
 been bitten by the fourth, measured it, and hardened against the first three by
 construction — so the hat's job is to hold new work to the standard already met,
@@ -15,7 +15,7 @@ not to invent one.
 
 ## What this hat looks for here
 
-- **A green because nothing looked — the measured instance.** `LLR-037` carried
+- **A pass because nothing looked — the measured instance.** `LLR-037` carried
   `status_size_warning` as a live design claim for **five weeks** after the
   symbol was deleted (at `c4aeab9f`, WI-210), and it was caught **by a census,
   not by a check** (`docs/requirements/open-items.toml`, the OI-38 body near

@@ -43,7 +43,7 @@ one at a time and exclusive (a recorded fresh-context reviewer verdict
 accepts). The three retired enum words
 (`attended` / `single-approve` / `autonomous`) each named one cell of that
 two-dial table, which is why they could not express the fourth. The fixed
-points hold at every level: the final read is the operator's, no un-run greens, the
+points hold at every level: the final read is the operator's, no un-run passes, the
 harness is still the checks, accepted operator decisions are never re-decided.
 
 Beyond admission it adds ORDERING only, no authority: every refusal stays
@@ -292,8 +292,8 @@ def _drain(root, tier):
     at a time, with the checks inside the lock. That is the operator's recorded
     caveat priced at one line.
 
-    A red refresh STOPS the run for a branch that asserts it is DONE - it is
-    the same failure a red landing checks used to be, moved to where the lane that
+    A failing refresh STOPS the run for a branch that asserts it is DONE - it is
+    the same failure that failing landing checks used to be, moved to where the lane that
     caused it can fix it. A branch that asserts the opposite is the §A3
     exception the ruling covers: see `_refresh_or_quarantine`.
     """
@@ -314,17 +314,17 @@ def _drain(root, tier):
 
 
 def _refresh_or_quarantine(root, branch, tier):
-    """The §A2 refresh, with the §A3 red-handback ruling behind it. A refusal
+    """The §A2 refresh, with the §A3 ruling on a failing handback behind it. A refusal
     string, or None.
 
-    A merged lane that reds the checks have broken something and is told so: its
+    A merged lane that fails the checks has broken something and is told so: its
     outcome ASSERTS the work is done, and the run stops for the lane to fix it.
     A lane that merged nothing asserts the opposite - it is handing the work
-    back, or throwing it away - and stopping the run over red code nobody
+    back, or throwing it away - and stopping the run over failing code nobody
     claimed was finished is exactly the hanging branch this design abolishes.
     So it is quarantined once (ruled option 1: revert the code, keep the failing
     diff as a checks-inert `.patch`) and refreshed again. Once, deliberately: a
-    second red on a tree whose product changes have all been reverted is a real
+    second failure on a tree whose product changes have all been reverted is a real
     anomaly, not a case to loop on.
     """
     _sha, refusal = integrate.refresh(root, branch, tier)
@@ -572,7 +572,7 @@ def _branch_exclusive(root, branch):
 # the TERMINAL `partial/`, which `schedule._disposition` reads as `partial` (never
 # ready), so an unattended run can never pick that WI up again until a successor
 # is minted. §A3's ruling is "any non-zero worker exit that is not a crash", and
-# its justification (the dominant shape is green-but-not-accepted or
+# its justification (the dominant shape is passing-but-not-accepted or
 # cannot-proceed-for-config-reasons) is about EXIT_NEEDS_OPERATOR, not about a
 # ceiling. The alternative — a handback that stays resumable — re-opens the
 # claim/return/re-claim loop this row closed, bounded then only by
@@ -847,16 +847,16 @@ def _advance(root, ln, tier, restarting=False):
 
 
 def _refresh_failed(root, ln, tier, rc):
-    """The §A3 red-refresh ruling for a lane whose refresh subprocess exited
+    """The §A3 ruling on a failed refresh, for a lane whose refresh subprocess exited
     nonzero — the same decision `_refresh_or_quarantine` makes for residue
     branches, read off the subprocess's exit code (its refusal detail is its
     own stderr in the walk-away log, plus the retained out/run-logs file):
     fatal for a branch that asserts DONE, quarantine-once for one that merges
-    nothing, and a second red after the quarantine is a real anomaly."""
+    nothing, and a second failure after the quarantine is a real anomaly."""
     outcomes, unresolved = integrate.branch_outcomes(root, ln.branch)
     if unresolved or "merged" in outcomes.values() or ln.retried:
         _say(
-            "the refresh is RED for {} (exit {}){} - the reason is printed "
+            "the refresh FAILED for {} (exit {}){} - the reason is printed "
             "above by the refresh itself; the run stops for the lane to fix "
             "it.".format(ln.branch, rc, " after its quarantine" if ln.retried else ""),
             err=True,
@@ -1339,8 +1339,8 @@ def _admit_frontier(
         # the banner's contract — every WI integrated in the run is counted,
         # whatever admission path merged it — true for the barrier-open arm
         # too (WI-412, WI-381 REVIEW-A finding 3; the same undercount rounds 1
-        # and 2 fixed for the exit arm). Credited only on a GREEN drain - a
-        # red one CAN also have merged branches, but that arm prints no count,
+        # and 2 fixed for the exit arm). Credited only on a PASSING drain - a
+        # failing one CAN also have merged branches, but that arm prints no count,
         # so there is nothing to misreport (see `_drain`).
         residue = _residue_wi_count(root)
         code = _drain(root, tier)
@@ -1369,7 +1369,7 @@ def _paused_exit(root, tier, paused, state):
 
     The residue is counted BEFORE the drain, for the reason `_station_exit`
     gives: after the merge those branches are no longer residue and the number
-    is unrecoverable. A red drain returns the refusal's code instead — the
+    is unrecoverable. A failing drain returns the refusal's code instead — the
     integrator's refusal is the one thing §5.6 says may end a pause with work
     still on a branch, and it is the gate working, not the pause failing."""
     residue = _residue_wi_count(root)
@@ -1498,9 +1498,9 @@ def run(root, args, worker=None, tier="all"):
     tier the §A2 refresh runs (default: the full gate checks).
 
     EACH TICK: poll the live lanes (a worker exit decides an outcome; a
-    finished branch refreshes in its own subprocess; a green refresh merges
+    finished branch refreshes in its own subprocess; a passing refresh merges
     through the slot), then admit per `_admission` — the §A8 policy table plus
-    the spine barrier. A fatal event (a red refresh of a done-asserting
+    the spine barrier. A fatal event (a failing refresh of a done-asserting
     branch, a failed handback, a merge refusal, the stall guard) freezes
     admission at once, drains the in-flight lanes, and exits with the first
     fatal code.

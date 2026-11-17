@@ -136,11 +136,11 @@ OUT_REL = "docs/open-items.html"
 # The theme tokens the two operator surfaces must agree on. This is a NAME list,
 # not a value mirror: 122-REVIEW-A refuted the value-mirror version — nine of the
 # twelve emitted tokens were rewritten (dark `--text:#444444`) and the guard
-# stayed green, because the mirror was a test-only dict nothing rendered from.
+# kept passing, because the mirror was a test-only dict nothing rendered from.
 # The values now live in ONE place, the emitted CSS below, and the drift guard
 # parses them out of it (`theme_tokens`) so it cannot pass while the page ships
 # something else. Still a guard rather than an extraction: importing the
-# dashboard's tokens would edit gen_trajectory and re-red `perceptual-stale`
+# dashboard's tokens would edit gen_trajectory and fail `perceptual-stale` again
 # for a refactor (the WI-291 precedent, and the F5 ruling against _kitcommon).
 THEME_TOKENS = ("--bg", "--surface", "--border", "--text", "--muted", "--accent")
 
@@ -313,7 +313,7 @@ def normalize(text):
     multi-line CSV cell carries): `write_text` turned that into CR CR LF and read
     it back as two LFs, so the view failed `--check` the moment it was generated
     (122-REVIEW-A). But a *checkout* can also carry CRLF line endings by local
-    git convention, and a byte-exact compare would then red every fresh worktree
+    git convention, and a byte-exact compare would then fail every fresh worktree
     — which the WI-322 rework caught when the integrate suite's detached view
     worktree went STALE. So: emitted cell text is stripped of CR at the source
     (`esc`), the file is written LF-only, and the compare normalizes both sides —
@@ -1617,9 +1617,9 @@ def main(argv=None):
     # The migration has a detector, on BOTH paths. A resynced adopter keeps the
     # retired docs/open-items.md, whose GENERATED PENDING block nothing writes
     # any more — it can sit there asserting a stale operator action, with their
-    # status.md still pointing at it, while every gate stays green (122-REVIEW-A
+    # status.md still pointing at it, while every gate keeps passing (122-REVIEW-A
     # planted a fabricated "WI-999 blocked" line and nothing noticed). Warn-only:
-    # the migration is the operator's, and failing here would red a repo midway
+    # the migration is the operator's, and failing here would fail a repo midway
     # through it.
     if (root / "docs" / "open-items.md").is_file() and spine_carrier.resolve(
         root / OPEN_ITEMS_REL

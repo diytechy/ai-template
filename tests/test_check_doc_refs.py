@@ -117,7 +117,7 @@ def test_node_id_file_half_is_judged_and_joined_lists_stay_out_of_scope(tmp_path
 
 def test_an_invented_node_id_citation_gates_on_its_file_half(tmp_path):
     # The invented-citation case WI-394 was filed on: warn-first by default
-    # (the WI-062 precedent), red under --strict, and the finding quotes the
+    # (the WI-062 precedent), failing under --strict, and the finding quotes the
     # token AS WRITTEN so a reader can find it in the doc.
     make_repo(tmp_path, "Evidence `tests/never_written.py::test_invented`.\n")
     proc = refs(tmp_path)
@@ -420,7 +420,7 @@ def test_declared_absences_is_a_declaration_not_a_suppression_list(tmp_path):
 # that carry the spine's claim to be grounded in the code. The FILE half of each
 # citation must exist; the `::node` selector is ruled PROSE (accepted gap). The
 # tier's absence-skip needs no test of its own: every fixture above runs the tool
-# without the registries and stays green.
+# without the registries and keeps passing.
 
 TC_HEADER = "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase\n"
 LLR_HEADER = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,Rationale,TestRefs,Status,Component,Phase\n"
@@ -500,7 +500,7 @@ def test_registry_placeholder_rows_and_symbol_joins_stay_out_of_scope(tmp_path):
 # identifier-shaped CodeSymbol token must bind in a named `.py` Module — for
 # the reason the census established: the cell has no stated grammar and really
 # does carry locals, attributes, CSS tokens and prose, so a per-token rule
-# would red 31 of this repo's 149 live rows on arrival.
+# would fail 31 of this repo's 149 live rows on arrival.
 
 
 def test_llr_symbol_anchor_reds_on_a_planted_defect(tmp_path):

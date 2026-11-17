@@ -39,9 +39,9 @@ standing = "active"
 
 [assumption.DA-002]
 effect_at = ["B-01", "B-09"]
-assumption = """A scaffold whose harness runs green straight after generation is one an adopting team can work in: it can write its first registry rows and advance through its first gate without reading the kit's source."""
+assumption = """A scaffold whose harness passes straight after generation is one an adopting team can work in: it can write its first registry rows and advance through its first gate without reading the kit's source."""
 holds_when = """The team's stack is one of the shipped profiles, and the team reads the adoption guide before first use."""
-obstacle = """A team scaffolds green, never fills a registry, and operates a spine that resolves and says nothing, because the step from the green scaffold to a first real row needs knowledge only the kit's source holds."""
+obstacle = """A team scaffolds a repository that passes, never fills a registry, and operates a spine that resolves and says nothing, because the step from the passing scaffold to a first real row needs knowledge only the kit's source holds."""
 falsifier = """A first-time team, given a shipped profile and the adoption guide, fails to reach a first filled registry without reading the kit's source."""
 obstacle_hats = ["FIRST-RUN-ADOPTER"]
 status = "Drafted"
@@ -62,7 +62,7 @@ effect_at = ["B-01"]
 assumption = """A write the local hook floor admitted was checked: the floor was not bypassed, or a re-run of the same checks away from the session agrees with it."""
 holds_when = """Commits and pushes are made through the installed hooks rather than with them skipped, or a re-run of the declared checks away from the session is in place for each change that reaches a shared branch."""
 obstacle = """A commit or push made with the hooks skipped (a --no-verify commit or push, or a checkout where the hooks were never installed) admits an unchecked write, and nothing re-runs the checks before it is shared."""
-falsifier = """A pushed commit carrying a secret-class match the hook would have refused, or a merged commit whose re-run checks are red while its local hooks reported green."""
+falsifier = """A pushed commit carrying a secret-class match the hook would have refused, or a merged commit whose re-run checks fail while its local hooks reported a pass."""
 obstacle_hats = ["SECURITY"]
 status = "Drafted"
 standing = "active"

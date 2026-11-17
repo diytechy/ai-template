@@ -268,7 +268,7 @@ def _string_constants(path):
     """Every string literal in a module EXCEPT its docstrings.
 
     Prose has to be excluded or these pins invert: the clearest way to record a
-    retired defect is to NAME it, and a grep-shaped test then reds on the comment
+    retired defect is to NAME it, and a grep-shaped test then fails on the comment
     that explains why the code is gone."""
     import ast
 

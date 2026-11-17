@@ -4,7 +4,7 @@ The policy is "no *unargued* dependencies": every non-stdlib Python import in
 `project-trajectory/scripts/` must be declared as a `Kind=python` row in
 `docs/dependencies.md`. This module scans real imports with `ast` and compares
 against the ledger — so adding a dependency without a reviewed ledger row is a
-red suite, and deleting the ledger reds it too.
+failing suite, and deleting the ledger fails it too.
 
 The mutation proof lives INSIDE this suite (the standing vacuous-guard rule):
 `test_scanner_detects_undeclared_import` drives the scanner over a fixture

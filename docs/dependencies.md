@@ -8,7 +8,7 @@ replaces, why hand-rolling is worse, and the ruling that admitted it.
 `tests/test_dependency_ledger.py` scans every import in
 `project-trajectory/scripts/` against this table and **fails on any Python
 import not declared here** — adding a dependency without a reviewed ledger row
-is a red suite, by design.
+is a failing suite, by design.
 
 Tiers:
 

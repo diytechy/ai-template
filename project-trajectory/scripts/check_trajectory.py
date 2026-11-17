@@ -84,7 +84,7 @@ arm the marker. The traced half is not discarded: it is carried structurally by
 trajectory_check` reads `false` (or, for the SN-028 migration window, the
 legacy `docs/trajectory-check` reads the one word `off`); and an *absent* or *placeholder-only* registry (nothing but
 the inert `WI-000` example row) passes vacuously. So a fresh scaffold and a repo
-that never adopts the layer both stay green for free — WI is an off-spine
+that never adopts the layer both keep passing for free — WI is an off-spine
 optional registry, like procurement / assets, whose placeholder never blocks a
 gate (`trace.py` does not read WI ids at all).
 
@@ -1439,7 +1439,7 @@ def _restructured_lineage_findings(w, lineage, statuses):
 
     Liveness is otherwise deliberately "is a registry row", not "is still open":
     a successor that later closes `done` (or `cancelled`, or `partial`) must not
-    turn its predecessor's archived record into a red. `restructured` is the one
+    make its predecessor's archived record fail. `restructured` is the one
     terminal that is excluded, because it is the one that redirects again.
     """
     text = w["deliverable"].strip()
@@ -1523,10 +1523,10 @@ def ssot_findings(wis, root):
         # unsatisfiable by construction, because SR-144's whole point is that
         # an early close leaves the spec's DEFINITION byte-identical ("scope
         # definitions never change; only whether they were fully delivered").
-        # A rule no honest close can satisfy is not a rule; it is a red at
+        # A rule no honest close can satisfy is not a rule; it is a failure at
         # every run, and in the loop it is worse than that — the dispatcher's
-        # refresh reds, `_refresh_failed` quarantines the lane's work, the
-        # retry reds again (the spec move is bookkeeping and exempt from the
+        # refresh fails, `_refresh_failed` quarantines the lane's work, the
+        # retry fails again (the spec move is bookkeeping and exempt from the
         # revert) and the run dies. Driven at review.
         if st in TERMINAL_STATUSES and not w["deliverable"] and st != "partial":
             reason = _TERMINAL_DELIVERABLE_REASON[st]
@@ -1695,7 +1695,7 @@ def spec_lifecycle_findings(root, wis):
     SpecRefs before the rule existed. Two findings, both message-only (the
     caller tags `R-F` and owns the warn-plain / error-under-`--strict`
     promotion, the R-E warn tier — so a rotting spec surface cannot reach a
-    green DevStg-Tests/DevStg-Impl gate while a plain commit stays warn-first):
+    passing DevStg-Tests/DevStg-Impl gate while a plain commit stays warn-first):
 
       - a **terminal** WI (`done` or `cancelled`, WI-267) whose `SpecRef` is still
         set — the terminal transition clears it (the Deliverable + log carry the
@@ -3163,7 +3163,7 @@ def critique_staleness_findings(root):
 
     TIERED severity (set by the caller): WARN at the commit checks, ERROR under
     `--strict` (the DevStg-Impl gate) — fail-closed per the operator's 2026-07-20 ruling, a
-    stale render surface cannot reach a green gate; main() routes it through the
+    stale render surface cannot reach a passing gate; main() routes it through the
     strict-promotable findings loop (the R-E warn tier). Silent off-git
     and vacuous when the repo declares no perceptual SR (so a downstream repo
     without a `VerificationMethod=Critique` SR — none ship — pays nothing at either
@@ -3348,7 +3348,7 @@ def main():
     # PROMOTABLE half of seam-TC coverage is `if_tc_coverage_findings`, below,
     # deliberately kept out of this loop.
     # ...and the loop-commit held-status report (SR-210) rides it too: the
-    # change has already landed, so it asks for an operator's look, never a red.
+    # change has already landed, so it asks for an operator's look, never a failure.
     # ...and the count of IF rows the definition gate below passed unjudged
     # rides it too: it names a vacuous pass, and changes no verdict.
     for w in (
@@ -3493,7 +3493,7 @@ def main():
     # Perceptual re-fire (WI-243) — a VerificationMethod=Critique SR whose latest CRITIQUE
     # evidence predates a dashboard render-surface change is judging an older render.
     # WARN at the commit checks; **fail-closed under --strict** (the DevStg-Impl gate) per the
-    # operator's 2026-07-20 ruling — a stale render surface cannot reach a green gate.
+    # operator's 2026-07-20 ruling — a stale render surface cannot reach a passing gate.
     # hard=False rides the same warn-plain / error-under-strict tier as R-E,
     # so main() gains no branch. Vacuous when no perceptual SR / evidence / render
     # surface (a downstream repo without a VerificationMethod=Critique SR — none ship —

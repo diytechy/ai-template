@@ -1212,7 +1212,7 @@ def _close_drafts(root, outcomes):
     claim about what was NOT delivered, and a claim is what an adjudicator is
     for. `complete` closes are spot-checked at a declared rate rather than
     gated: the merge slot already ran the declared checks on the composed tree and
-    the review rounds already judged the work, so adjudicating every green close
+    the review rounds already judged the work, so adjudicating every passing close
     would rebuild the verdict gate under a new name.
 
     That last sentence described a dial nothing read for one review round —
@@ -1547,7 +1547,7 @@ def _complete_spot_checks(root, outcomes):
                     )
                 ),
                 "kind": "adjudication",
-                # NO `brief`, for the cancellation arm's reason: a GREEN close
+                # NO `brief`, for the cancellation arm's reason: a PASSING close
                 # writes no report, so the disposition brief cannot be built
                 # for it and the kit ships no "spot-check a clean close"
                 # template. Declaring one would be a claim the assembler
@@ -1556,7 +1556,7 @@ def _complete_spot_checks(root, outcomes):
                 "buildtier": "medium",
                 "specref": relpath,
                 "context": (
-                    "This close was GREEN: the merge slot ran the declared checks "
+                    "This close PASSED: the merge slot ran the declared checks "
                     "on the composed tree and the review rounds judged the "
                     "work. Nothing is alleged. It is here because "
                     "`docs/process.toml [authority] complete_review` is "
@@ -2158,9 +2158,9 @@ def _evidence_gap_draft(root, line, targets):
     The difference is who decides. An ordinary gap row says "the registry is
     missing a link; go add it" — mechanical, medium tier, mint and go. An evidence gap
     says something stronger and unresolved: a work item is CLOSED and the test
-    for it is not green. That is one of three quite different situations — the
+    for it is not accepted. That is one of three quite different situations — the
     TC is stale and its Status simply owes an update; the close was optimistic
-    and owes a fix-to-green successor; or the requirement moved and the TC is
+    and owes a successor that makes it pass; or the requirement moved and the TC is
     now testing the wrong thing — and picking between them is a judgement, which
     is exactly what the `adjudication` kind is for.
 
@@ -2197,16 +2197,16 @@ def _evidence_gap_context(line, targets):
     live readings WITHOUT choosing between them — a brief that pre-selects an
     outcome is not a brief."""
     return (
-        "The dispatcher's census found a TEST CASE that is not green while the "
+        "The dispatcher's census found a TEST CASE that is not accepted while the "
         "work claiming to satisfy it is CLOSED. The census line, verbatim:\n\n"
         "> {line}\n\n"
         "Read `{tc}` for the TC row and the `docs/work/complete/` (or "
         "`partial/`) spec of whichever row cites {targets} — the contradiction "
         "is between those two documents and nothing here has judged it.\n\n"
         "Three readings are live and this row does not pick one: (1) the TC's "
-        "Status is merely STALE and owes an update — the evidence is green and "
+        "Status is merely STALE and owes an update — the evidence passes and "
         "the registry is behind; (2) the close was OPTIMISTIC and owes a "
-        "fix-to-green successor row (draft it with `supersedes` naming the "
+        "successor row that makes it pass (draft it with `supersedes` naming the "
         "closed row, so the thread survives the id change); (3) the "
         "REQUIREMENT moved and the TC now verifies the wrong thing, which is "
         "an amendment, not a bug. Say which, and why, before proposing work."
@@ -3652,7 +3652,7 @@ def _cmd_snapshot(args):
     refresh_refusal`, 2026-08-20; per row since SR-207). It is the door the
     adversarial round found standing open: creating the record was guarded and
     rewriting it was not, so a two-commit path — amend an Accepted row, then
-    refresh — re-blessed the amendment with every check green. A row whose
+    refresh — re-blessed the amendment with every check passing. A row whose
     accepted text drifted from its recorded copy rides a refresh only on its own
     `Status` flip or when `--reaccepts <ROW-ID>[,<ROW-ID>...]` names it — the
     re-acceptance a sitting rules without moving the Status; the ids land in

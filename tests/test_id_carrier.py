@@ -10,7 +10,7 @@ and drive every refusal of the reserve verb's argument table through
 `trace.py`'s CLI, in process, asserting that nothing is written: the carrier
 ref stays where it was and the working watermark is byte-identical.
 
-A missing module or symbol is turned into `pytest.fail`, so a red is this
+A missing module or symbol is turned into `pytest.fail`, so a failure is this
 file's own, never an import error. The real-repository cases (a lost race,
 two worktrees, a conflicted fold, the landings) are in test_id_carrier_git.py
 and test_id_landing.py, outside the smoke tier.

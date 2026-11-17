@@ -562,7 +562,7 @@ def test_the_round_block_asks_one_outcome_line_per_hat_in_a_non_ruling_form(
 # A round's verdict states, for each chain it retains, why further splitting
 # would only paraphrase or duplicate. The tests match the line's literal form,
 # as the tests above match `- HAT `, so a missing symbol cannot stand in for a
-# red.
+# failure.
 
 _STOPPING_FORM = "- STOPPING BOUNDARY "
 

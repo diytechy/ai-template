@@ -10,8 +10,8 @@ scope: kit
 
 # Stage advance (leave DevStg-Reqs → DevStg-Tests → DevStg-Impl honestly)
 
-Advancing is a **decision recorded in a reviewed commit**, backed by a green
-harness. Never self-advance; never report a green you didn't run.
+Advancing is a **decision recorded in a reviewed commit**, backed by a passing
+harness. Never self-advance; never report a pass you didn't run.
 Authority: `docs/process.md` §4 (the stage ladder), §5 (verdict protocol), §7
 (the derived stage). The **acceptor** is whoever the
 `[authority] operator_accepts_through` dial in `docs/process.toml` declares
@@ -191,8 +191,8 @@ row per boundary.
   in `docs/log.md`.
 - **`DevStg-Tests` (Arch · LLReqs · Tests certified).** If the repo declares a
   `components` registry, no component is still `planned` or `has-gap`. Every SR
-  decomposes to LLR/TC; each requirement's TC exists as a **failing test first**
-  (red → green). The harness at `DevStg-Tests` runs traceability +
+  decomposes to LLR/TC; each requirement's TC exists as a **failing test first**.
+  The harness at `DevStg-Tests` runs traceability +
   `--no-placeholders` + runnable tests + flow checks. `orphans=0`. **A tests
   batch also authors/updates the `IF-###` interface rows its new LLRs imply** —
   when a decomposition mints a seam (a module now provides/consumes a contract),
@@ -202,7 +202,7 @@ row per boundary.
   `Implements:` back-links; the full harness passes: `trace.py --strict
   --no-placeholders --strict-schema --require-verified`, coverage ≥ threshold,
   arch-map fresh, flows current. Every test-verifiable SR is `Accepted`
-  with its tests green.
+  with its tests passing.
 
 Run the checks with `scripts/check.py` (it selects every step at or above the rung
 in `docs/stage`); paste the real output into the `docs/log.md` audit log.
@@ -248,5 +248,5 @@ fake subjective work into a `Test`; give it an honest `Vouch` home.
 `trace.py` always emits a **"Verification basis (vouched vs mechanized)"**
 count. When reporting a stage's readiness, state that split honestly — how many SRs
 are machine-verified vs. resting on someone's word — so a reviewer sees the
-trust footprint rather than a single "all green". A vouched stage can be
+trust footprint rather than a single "all passed". A vouched stage can be
 legitimate; hiding that it's vouched is not.

@@ -1,9 +1,9 @@
 # Floating-latest canary (WI-104). The test + gate workflows install the CONSTRAINED
-# requirements-dev.txt so a tool major can't turn them red unannounced — but that
+# requirements-dev.txt so a tool major can't make them fail unannounced — but that
 # same ranges hide *upcoming* breakage (the next ruff format-rule change, the next
 # pytest-cov contract shift). This job runs the self-tests + ruff against UNPINNED
 # latest on a schedule (and on demand), NON-gating — nothing here blocks a merge,
-# so an incoming break surfaces as a heads-up to bump the pin, not a surprise red
+# so an incoming break surfaces as a heads-up to bump the pin, not a surprise failure
 # on some contributor's PR. This is the early-warning the unpinned CI used to give
 # for free, kept alive after constraining the gating toolchain.
 name: canary-latest
@@ -35,7 +35,7 @@ jobs:
       # to today and whether the suite still passes against it.
       - name: Install latest (unpinned) dev tooling
         run: python -m pip install ruff pytest pytest-cov pytest-xdist
-      # ruff format is the specific gate M6 flagged as most likely to drift red on
+      # ruff format is the specific gate M6 flagged as most likely to start failing on
       # a rule change, so check it explicitly alongside the suite.
       - name: ruff format + lint (latest)
         run: |

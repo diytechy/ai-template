@@ -636,7 +636,7 @@ def test_no_defensive_getattr_reads_survive_on_the_context():
 def test_main_stays_a_composer():
     al = load_script("agent_loop")
     src, _ = inspect.getsourcelines(al.main)
-    # 402 lines at WI-483 slice 5; the ceiling is a red for re-accretion, not a
+    # 402 lines at WI-483 slice 5; the ceiling is a failure for re-accretion, not a
     # target. `main` also nests no def — the C901 trap the program records is
     # that a helper extracted INWARD is charged to its enclosing function.
     assert len(src) < 200, "main is re-accreting; decompose OUTWARD"
@@ -777,7 +777,7 @@ def test_session_meta_is_the_log_row_in_the_logs_own_column_order():
     al = load_script("agent_loop")
     src = inspect.getsource(al.session_meta)
     # The projection stays a dict because it IS write_session_log's column set;
-    # pin the order so a reorder is a red rather than a silently reshaped log.
+    # pin the order so a reorder is a failure rather than a silently reshaped log.
     keys = [m for m in re.findall(r'^\s{8}"([a-z-]+)":', src, re.M)]
     assert keys == [
         "session",
@@ -816,7 +816,7 @@ def test_session_meta_is_the_log_row_in_the_logs_own_column_order():
 def test_the_session_ladders_stay_composers(name, ceiling):
     al = load_script("agent_loop")
     src, _ = inspect.getsourcelines(getattr(al, name))
-    # 325 and 326 lines respectively before WI-483 slice 6; the ceiling is a red
+    # 325 and 326 lines respectively before WI-483 slice 6; the ceiling is a failure
     # for re-accretion, not a target. Neither may nest a def — the recorded C901
     # trap is that a helper extracted INWARD is charged to its enclosing
     # function, so the extraction raises the number it was meant to lower.

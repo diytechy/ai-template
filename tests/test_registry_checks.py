@@ -1,5 +1,5 @@
 """trace.py integrity / placeholder / schema checks and their harness wiring
-(template-review findings F3 'placeholders → false green' and F4 'data quality').
+(template-review findings F3 'placeholders → false pass' and F4 'data quality').
 
 Implements: TC-002, TC-003
 """
@@ -54,7 +54,7 @@ UNQUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCrit
 SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",set{a,b},M,Test,Accepted
 """
 
-# Same row properly quoted -> exactly 10 columns; the control must stay green.
+# Same row properly quoted -> exactly 10 columns; the control must keep passing.
 QUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3","set{a,b}",M,Test,Accepted
 """
@@ -263,7 +263,7 @@ def test_triangle_findings_unit_multi_parent_and_empty_parent():
     )
 
 
-# --- Placeholders: a fresh scaffold is green by default, fails opt-in ----------
+# --- Placeholders: a fresh scaffold passes by default, fails opt-in ----------
 
 
 def test_fresh_scaffold_ignores_placeholders_by_default(scaffold):
@@ -303,7 +303,7 @@ def test_check_flows_no_placeholders_flags_cited_000(scaffold):
     proc = run_py(["scripts/check_flows.py", "--no-placeholders"], cwd=scaffold)
     assert proc.returncode == 1
     assert "placeholder id still cited" in proc.stdout
-    # Without the flag the same scaffold is green (placeholders ignored).
+    # Without the flag the same scaffold passes (placeholders ignored).
     proc = run_py(["scripts/check_flows.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
@@ -358,8 +358,8 @@ def tc_path(root):
 
 def test_strict_schema_requires_evidence_on_automated_yes(scaffold):
     # Thread 51 (operator-ruled 2026-07-09): a TC claiming Automated=Yes with no
-    # cited Evidence is a soft false-green -> a --strict-schema (DevStg-Impl) finding.
-    # Plain --strict stays green (the chain is structurally fine).
+    # cited Evidence is a soft false-pass -> a --strict-schema (DevStg-Impl) finding.
+    # Plain --strict keeps passing (the chain is structurally fine).
     make_minimal_project(scaffold)
     csv = tc_path(scaffold)
     csv.write_text(

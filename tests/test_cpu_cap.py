@@ -57,7 +57,7 @@ def test_the_declared_default_is_half_the_machine():
 
     Everything else here compares against `DEFAULT_CAP_PERCENT` itself, which
     made those assertions self-referential: raising the default to 90 kept the
-    whole module green while quietly withdrawing the guarantee it exists to
+    whole module passing while quietly withdrawing the guarantee it exists to
     make (operator's constraint, 2026-07-27: a test run must not throttle this
     machine or any other personal machine). Changing the dial is legitimate —
     change it HERE too, deliberately, with the reason in the session log."""

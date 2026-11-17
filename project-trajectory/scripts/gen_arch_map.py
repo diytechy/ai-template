@@ -1367,7 +1367,7 @@ def build_contract_reference(src_roots, owner_files=()):
     ]
 
     if unreadable:
-        # Loud, and in the document itself: the alternative is a green check
+        # Loud, and in the document itself: the alternative is a passing check
         # over a tree the generator could not read.
         sections.append("\n## Modules the scan could not read")
         sections.append(
@@ -2250,7 +2250,7 @@ def backlink_report(src_roots, root, exts=BACKLINK_EXTS, registry=LLR_REGISTRY):
 # for unmapped stays warn-only; the flip of either class to "gate" is a reviewed
 # commit taken once that class reaches zero. Missing files and stale exclusions
 # are already delivered and gated by the dogfood/bootstrap checks, so they gate
-# here too (they stand at zero, or those checks are already red).
+# here too (they stand at zero, or those checks already fail).
 # Implements: SR-163, LLR-276
 MAPPING_FINDING_POLICY = {
     "missing_file": "gate",
@@ -2643,7 +2643,7 @@ def main():
     # touches. AND THEY COMPOSE. Dispatching straight into `sys.exit` on the
     # first match ran only the FIRST mode an invocation named and left the rest
     # unexamined: `--cli-doc X --contracts-doc Y --check` reported X and exited 0
-    # over a stale Y — a green verdict on a document nothing looked at. Every
+    # over a stale Y — a passing verdict on a document nothing looked at. Every
     # named mode runs, in this order, and the verdict is the worst of them.
     modes = (
         (args.backlink_coverage, _backlink_exit),

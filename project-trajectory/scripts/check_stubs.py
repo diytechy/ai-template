@@ -3,7 +3,7 @@
 
 The kit's gates verify *traceability + coverage + tests pass*; none of them, on
 its own, asserts that an implementation has **substance**. TDD (DevStg-Impl) mitigates
-this — a red-first test should fail against a stub — but coverage can be satisfied
+this — a failing-first test should fail against a stub — but coverage can be satisfied
 by a test that exercises a stub's trivial path, and Demonstration / Manual /
 Analysis SRs have no automated test to fail. The DevStg-Impl *no-stub* exit criterion
 (process.md §4) closes that gap, classified **Inspection/Analysis** — human/LLM

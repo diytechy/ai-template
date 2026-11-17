@@ -18,7 +18,7 @@ Four things are checked, and the fourth is the one that makes the layer real:
    test above.
 
 The vacuous-guard rule applies here as everywhere: the malformed cases drive the
-reader over trees built to break it, so the green above is demonstrated able to
+reader over trees built to break it, so the pass above is demonstrated able to
 fail before it is trusted to pass.
 
 Implements: TC-162, TC-245
@@ -1106,7 +1106,7 @@ tags = ["scripts"]
 need = "An adopting team can run every check on a clean interpreter."
 why = "Portability."
 priority = "M"
-acceptance = "The CI matrix is green on Linux, Windows and macOS."
+acceptance = "The CI matrix passes on Linux, Windows and macOS."
 
 [need.SN-002]
 kind = "core"
@@ -1223,7 +1223,7 @@ def test_audit_over_a_scaffold_with_no_needs_registry_says_so_and_passes(
 ):
     """A fresh scaffold has a roster before it has needs. The audit must say the
     result is VACUOUS rather than print an empty clean report — an audit of
-    nothing that reads as "nothing wrong" is the false green this repo refuses."""
+    nothing that reads as "nothing wrong" is the false pass this repo refuses."""
     _write(tmp_path, AUDIT_ROSTER)
     code, out = _audit(tmp_path, capsys, "--strict")
     assert code == 0
@@ -1263,7 +1263,7 @@ def test_audit_REFUSES_an_unreadable_needs_registry_over_auditing_zero_needs(
     raises on a carrier that EXISTS and will not parse; read with `tomllib`
     directly, a broken registry comes back as no rows and the audit prints its
     VACUOUS line — "no need row exists to face them" — about a registry full of
-    needs. That is a worse green than a red: it names its own emptiness and is
+    needs. That is a worse pass than a failure: it names its own emptiness and is
     wrong about which registry is empty."""
     _write(tmp_path, AUDIT_ROSTER)
     _write_needs(tmp_path, '[need.SN-001]\nneed = "unterminated\n')

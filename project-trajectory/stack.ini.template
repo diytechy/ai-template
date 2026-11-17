@@ -111,7 +111,7 @@ args = --cov={src} --cov-report=term-missing --cov-fail-under={coverage}
 # check_doc_refs' sym: tier all scan the source tree live):
 #   symbols  (default) the Python-AST inventory.
 #   files    declares "no Python source here", keeping those layers dormant
-#            rather than vacuously green — the honest choice for a non-Python
+#            rather than passing vacuously — the honest choice for a non-Python
 #            stack (ADOPTING.md §3). An explicitly non-Python bootstrap
 #            (--stack node|go|rust|powershell) seeds it.
 mode = symbols

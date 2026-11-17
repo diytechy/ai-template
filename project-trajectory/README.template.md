@@ -56,7 +56,7 @@ consent-first script that explains itself before acting:
    installs only with consent.
 3. **Product toolchain:** `scripts/setup.*` — dependencies + the pre-commit
    hook.
-4. **Verify:** `scripts/check.*` — the gate harness; green means you're set.
+4. **Verify:** `scripts/check.*` — the gate harness; when it passes, you're set.
 
 **After you edit the registries** (`docs/requirements/`, `docs/test/`): record
 new ids with `python scripts/trace.py --bump-ids`, rewrite the generated files

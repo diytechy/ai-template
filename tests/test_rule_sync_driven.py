@@ -92,7 +92,7 @@ def test_require_verified_at_impl_matches_sr_gate_regardless_of_method(scaffold)
 
     # The predicate pins above are necessary but not sufficient: because is_drafted/
     # is_accepted read Status (not VerificationMethod), restoring a VerificationMethod=="Test"
-    # guard INSIDE analyze()'s --require-verified loop would leave them all green.
+    # guard INSIDE analyze()'s --require-verified loop would leave them all passing.
     # So drive the real loop end-to-end — a decomposed, non-Test (Demonstration) SR
     # left below `Accepted` MUST produce a status finding. This is the assertion that
     # actually pins the loop side method-blind: restore the Test-only guard and it

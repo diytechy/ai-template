@@ -7,7 +7,7 @@ Contract IF-029: the authored runtime-flow narrative, read as a checked
     section (the document title does not count), the section holds at least one
     fenced mermaid diagram, and every diagram cites at least one SR or LLR id
     that exists in the registries. A cited `-000` placeholder id satisfies the
-    citation rule and is never resolved, so a fresh scaffold starts green; the
+    citation rule and is never resolved, so a fresh scaffold passes from the start; the
     no-placeholders mode instead flags every such cite. Each heading owning a
     mermaid fence is one titled flow, which is the unit the dashboard embeds
     and the export summarizes.
@@ -113,7 +113,7 @@ sequenceDiagram
     Boot->>Boot: select file+skill set for the profile (SR-009/LLR-009)
     alt fresh scaffold
         Boot->>Dest: write mapped kit files (SR-010/LLR-010)
-        Dest-->>User: harness runs green out of the box
+        Dest-->>User: harness passes out of the box
     else re-run / re-sync onto existing repo
         Boot->>Dest: skip every existing file unless --force (SR-011/LLR-011)
         Boot->>Boot: stamp docs/kit-version so the re-sync is diffable
@@ -196,9 +196,9 @@ sequenceDiagram
         Lane->>Lane: while an id carrier exists, fold its tip into the lane's watermark (LLR-363)
         Lane->>Lane: then trunk_step, then the expected-failure marker refusal (a tree whose tests hold a declared mark is refused, LLR-368), then the check.py checks
         Lane->>Lane: commit a Checks-Passed trailer naming the landing checks (or none), the tree it checked and its work parent
-        alt refresh red
+        alt refresh fails
             Note over Disp,Hand: a branch asserting DONE stops the run; one that merges<br/>nothing is quarantined once (code reverted, diff kept<br/>as a checks-inert patch) and refreshed again
-        else refresh green
+        else refresh passes
             Disp->>Slot: merge this lane's branch only — the slot is sub-second
             Slot->>Slot: refusal ladder: R1, then the reserved-ids rung (each carrier-space id the lane adds over its base in the lane's own carrier record, LLR-363), then the rest
             Slot->>Slot: is trunk already an ancestor, does the tip record the landing checks for its OWN tree, and does its watermark hold the id carrier's fold?

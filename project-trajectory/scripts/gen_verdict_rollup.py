@@ -77,7 +77,7 @@ def scopes(root):
     directory layout, because a second notion of "what a review scope is" is a
     notion that can disagree with the first. Enumerating DIRECTORIES missed the
     pre-train FLAT layout that `round_file` explicitly supports (`train` == ""):
-    an adopter on it got a silently empty `docs/reviews/rollup/` AND a green
+    an adopter on it got a silently empty `docs/reviews/rollup/` AND a pass
     `--check`, since the check compares against the same empty target set —
     "reports a state its own remedy cannot clear", in the direction where
     nothing is reported at all. `rollup/` is this module's own output and so is

@@ -47,8 +47,8 @@ which runs inside the tier.
 
 THE MODES AND THE EXITS. `--mode warn` (the default) prints a WARN line for a
 limit over and exits 0; `--mode enforce` exits 1 for it, a count over
-`max-tests` included. In both modes a red tier exits with its own code, the
-verdict line still printed, and a green tier whose reading (or, in enforce
+`max-tests` included. In both modes a failing tier exits with its own code, the
+verdict line still printed, and a passing tier whose reading (or, in enforce
 mode, whose count) failed exits 2. Callers test only for nonzero; the lines
 name the cause.
 
@@ -386,7 +386,7 @@ def _verdict_line(reading, limits, meter, overs):
 
 def report(reading, limits, meter, mode, count=None):
     """Print the verdict (and, in enforce mode, the count) and return the exit
-    code, in precedence order: a red tier's own code, then 2 for a failed
+    code, in precedence order: a failing tier's own code, then 2 for a failed
     reading or count, then 1 for an enforced limit over, else 0."""
     overs = _overs(reading, limits, count)
     print(_verdict_line(reading, limits, meter, overs), flush=True)

@@ -61,7 +61,7 @@ the record of what an operator blessed cannot be quietly rewritten.
 
 - **Prefer git-commit atomicity to in-place rewrite.** Crash recovery here is
   "the tree is whatever the last commit says" — the fail-closed integrator ff's
-  only on green and refuses on red (`concurrency-restructure.md`), and id
+  only on a pass and refuses on a failure (`concurrency-restructure.md`), and id
   allocation and claims live in serial trunk commits, so a killed lane leaves no
   torn allocation to reconcile.
 - **If a write is not atomic, name the reader that refuses the torn state.** The

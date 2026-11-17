@@ -368,7 +368,7 @@ def test_a_retired_value_alias_resolves_BY_MEANING_and_says_so(scaffold):
     where the arrival reading
     selects 26, silently dropping `traceability`, `tests+coverage`, `lint`,
     `format` and ten others. An adopter's CI passing the tag literally — the
-    exact case the silent-`--gate` concession exists to protect — stayed green
+    exact case the silent-`--gate` concession exists to protect — kept passing
     while quietly stopping most of its checks."""
     make_minimal_project(scaffold)
     proc = run_py(

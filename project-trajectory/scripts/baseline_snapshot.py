@@ -53,7 +53,7 @@ resolve.
 WHY `docs/archive/` IS THE RIGHT HOME, despite "archive is design history, not
 a working surface": the placement is ACTIVELY load-bearing.
 `check_vocab.EXEMPT_GLOBS` exempts `docs/archive/*`, and the snapshot
-legitimately holds the PREVIOUS vocabulary — so anywhere else would red the
+legitimately holds the PREVIOUS vocabulary — so anywhere else would fail the
 vocabulary enforcer on every signing. `check_docs._in_archive` exempts it from
 orphan/stale findings and `check_doc_refs.RECORD_PREFIXES` keeps its inherited
 citations from dangling. `check_trajectory.ARCHIVE_SPECS_DIR` already reads
@@ -66,7 +66,7 @@ signing act seeded `docs/archive/last_accepted/` in the post-rename vocabulary
 INTEGRITY-class ERROR on the always-on `--strict-integrity` floor plus the
 pre-commit hook. The order was the safety property, not ceremony: run against a
 pre-seed snapshot (there was none) or a pre-rename one (it spoke the retired
-vocabulary), this rule reds every row in the repo, and a check that reds
+vocabulary), this rule fails every row in the repo, and a check that fails
 everything is a check that gets switched off. It stays VACUOUS BY ABSENCE for a
 repo that has accepted nothing, which is a fresh adopter's honest state.
 
@@ -956,7 +956,7 @@ def refresh_refusal(root, accepts=None, snapshot=None, *, seed=False, reaccepts=
     The hole was exact and was executed end to end: `copy_live` refused only to
     CREATE the directory, so once a repo had signed, `intake.py snapshot`
     re-blessed whatever text happened to be in the tree. Two commits — rewrite an
-    Accepted requirement, then refresh — left every check green with the record
+    Accepted requirement, then refresh — left every check passing with the record
     rewritten to match, and the drift the mechanism exists to render had been
     absorbed into the baseline.
 
@@ -1038,7 +1038,7 @@ def refresh_refusal(root, accepts=None, snapshot=None, *, seed=False, reaccepts=
         # path for exactly that state (a stale other-carrier file, a snapshot
         # that does not parse). Refusing here would brick the only tool that
         # fixes it. The bypass this leaves is real and is bounded: corrupting the
-        # record first means COMMITTING the corruption, which reds both mirror
+        # record first means COMMITTING the corruption, which fails both mirror
         # rules — the staged one in the commit that does it, and the committed
         # one on every strict run afterwards.
         return ""
@@ -1199,7 +1199,7 @@ def _authorised_registries(root, accepts, snapshot, reaccepts=frozenset()):
     registry `accepts` names, every registry holding a row `reaccepts` names,
     plus every registry an accepting `Status` move happened in. Everything else keeps the bytes it already has, so a spine-only
     acceptance no longer drags off-spine drift into the record (WI-571) — and both
-    mirror rules stay green because each is pinned to the file it judges (an
+    mirror rules keep passing because each is pinned to the file it judges (an
     untouched registry is not "written", so `staged_snapshot_findings` never sees
     it in the commit and `committed_snapshot_findings` still compares it to live
     at its own writing commit).
@@ -1984,7 +1984,7 @@ def unanchored_findings(root, snapshot=None):
     its README and nothing else, deliberately ("an empty snapshot is the HONEST
     state for a repo that has accepted nothing yet"), so a directory test would
     report every tier missing in EVERY fresh adopter repo on day one — the
-    reds-everything failure the arming note below exists to avoid, shipped
+    failure of every check that the arming note below exists to avoid, shipped
     downstream. Caught when this producer was first wired to `trace.py`
     (adversarial round 2, 2026-08-15): until then nothing called this, so
     nothing could notice. The deletion half is not lost with it — the mirror

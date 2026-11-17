@@ -39,7 +39,7 @@ def _append_readme(scaffold, text):
 
 def test_clean_scaffold_passes(scaffold):
     # A fresh scaffold has no broken links; its standalone docs are orphan
-    # WARNINGS only, so the harness floor stays green out of the box.
+    # WARNINGS only, so the harness floor keeps passing out of the box.
     proc = run_py(
         ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
     )
@@ -71,7 +71,7 @@ def test_broken_anchor_fails(scaffold):
 
 def test_valid_anchor_link_passes(scaffold):
     # A correct same-file anchor (GitHub heading slug) is not a broken link;
-    # the doc is still an orphan warning, but the run is green.
+    # the doc is still an orphan warning, but the run passes.
     (scaffold / "docs" / "guide.md").write_text(
         "# Guide\n\n## My Section\n\nBack to [it](#my-section).\n", encoding="utf-8"
     )
@@ -88,7 +88,7 @@ def test_link_example_in_double_backtick_span_is_not_a_link(scaffold):
     # `` [`foo`](foo.md) ``. That span is code, not a navigational link, so it
     # must not surface as a broken link to foo.md. A single-backtick regex
     # mis-splits the run and leaks a phantom `[](foo.md)`; equal-length matching
-    # doesn't. (This is the exact false positive that reddened the meta checks.)
+    # doesn't. (This is the exact false positive that failed the meta checks.)
     (scaffold / "docs" / "guide.md").write_text(
         "# Guide\n\nRender the label as a link, e.g. `` [`foo`](foo.md) ``.\n",
         encoding="utf-8",
@@ -292,7 +292,7 @@ def test_ignore_glob_spans_directories(scaffold):
 
 def test_missing_vision_tag_fails(scaffold):
     # The scaffolded README carries the singleton tag; a README rewritten
-    # without it loses the canonical vision statement and the run goes red.
+    # without it loses the canonical vision statement and the run fails.
     (scaffold / "README.md").write_text("# proj\n\nNo vision here.\n", encoding="utf-8")
     proc = run_py(
         ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
@@ -318,7 +318,7 @@ def test_duplicate_vision_tag_fails(scaffold):
 
 def test_vision_tag_in_code_is_not_a_statement(scaffold):
     # Quoting the convention in a code span or fence isn't stating a vision:
-    # the scaffold README keeps its one real tag and the run stays green.
+    # the scaffold README keeps its one real tag and the run keeps passing.
     readme = scaffold / "README.md"
     readme.write_text(
         readme.read_text(encoding="utf-8")
@@ -484,7 +484,7 @@ def test_registry_needs_exempts_draft_section_from_must_floor(tmp_path):
 
 def test_inventory_draft_must_need_not_required_in_readme(scaffold):
     # End-to-end: a Must need still at DRAFT does NOT force a README citation
-    # (it is unaccepted); the check stays green. Drafted-ness is `status` now, not
+    # (it is unaccepted); the check keeps passing. Drafted-ness is `status` now, not
     # a heading — the carrier cutover retired section-as-state,
     # which is what stopped a prose mention under a heading from re-drafting an
     # accepted need.
@@ -1068,7 +1068,7 @@ def test_expected_orphan_never_fails_even_under_strict(tmp_path):
     # "Baseline the residue, never fail history": an EXPECTED live-orphan is
     # exempt from failure even under --strict-orphans (a genuine orphan is not).
     # A bare docs tree (no root README) keeps the vision/inventory checks quiet,
-    # so the ONLY orphan here is the classified review — strict stays green.
+    # so the ONLY orphan here is the classified review — strict keeps passing.
     docs = tmp_path / "docs"
     (docs / "reviews").mkdir(parents=True)
     (docs / "reviews" / "003-REVIEW-A.md").write_text("# R\n", encoding="utf-8")
@@ -1158,7 +1158,7 @@ def test_partition_orphans_splits_on_declared_globs():
 # integration). The requirement's real acceptance criterion is COUNT-INDEPENDENT:
 # every live orphan on the meta tree is classified, zero unexplained residue.
 # This mechanizes exactly that, dogfooding the ratchet on the kit's own tree — it
-# goes red the moment an unclassified orphan lands, whatever the census count is.
+# fails the moment an unclassified orphan lands, whatever the census count is.
 
 
 def test_meta_repo_has_zero_unexplained_orphans():

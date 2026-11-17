@@ -12,7 +12,7 @@ differs from, so a verifier that refused everything fails here too.
 
 The peel half is the one that destroys work when it is wrong: `work_tip` feeds
 the refresh's `reset --hard`, so a `commit` record sitting on the tip (a
-build round's own record of green) must never be peeled, while a verified
+build round's own record of a pass) must never be peeled, while a verified
 `landing` or `none` refresh still is.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: each case but the digest's

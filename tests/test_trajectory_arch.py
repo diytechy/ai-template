@@ -318,7 +318,7 @@ def write_arch(root, text):
             body += '"""' + doc
             if mod["contracts"]:
                 # Declared AND stated (OI-67 slice 6): the armed definition
-                # gate reds a declared seam with no body, and these fixtures
+                # gate fails a declared seam with no body, and these fixtures
                 # are about coverage, containment and seams — not about that
                 # gate, which has its own scenarios below.
                 body += "\n\nContracts: " + ", ".join(mod["contracts"]) + "\n"
@@ -543,7 +543,7 @@ def test_seam_tc_promotion_errors_under_strict_when_not_allowlisted(tmp_path):
 
 def test_seam_tc_promotion_allowlisted_seam_stays_warn_under_strict(tmp_path):
     # Same uncited IF-002, but listed on the migration allowlist: --strict
-    # stays green (no ERROR, no "migration allowlist" WARN line either — an
+    # keeps passing (no ERROR, no "migration allowlist" WARN line either — an
     # allowlisted seam is silent on THIS check), while the informational total
     # in `interface_findings` still reports it (the debt stays visible).
     write_arch(tmp_path, ARCH_2MOD)
@@ -602,7 +602,7 @@ SEEDED_IF_TC_ALLOW = (
     # Opus m-16). A count pin would let an id be SWAPPED inside the baseline —
     # drop a seam that has since gained a TC, add the new uncited one — with no
     # signal at all, which is precisely the one-line edit the reviewers showed
-    # greens the gate. Do NOT relitigate the seed itself: it was independently
+    # passes the gate. Do NOT relitigate the seed itself: it was independently
     # reproduced as an honest measurement of the seeding tree (120 uncited of
     # 130 live, nothing padded, nothing pre-empted). This pin exists so that
     # the list's FUTURE is reviewed. Pruning an entry whose seam gained a TC is
@@ -662,7 +662,7 @@ def test_this_repos_seam_tc_allowlist_is_exactly_its_seeded_set():
 
 
 def test_a_bare_addition_past_the_seed_suppresses_nothing(tmp_path):
-    # THE ONE-LINE EDIT THE REVIEW EXECUTED: a new seam reds --strict, and
+    # THE ONE-LINE EDIT THE REVIEW EXECUTED: a new seam fails --strict, and
     # appending its bare id greened it — indistinguishable from the 120 seeded
     # lines, no hygiene line, no test. Now the bare addition is DROPPED by the
     # reader (the seam still errors) and the growth is reported.
@@ -1475,7 +1475,7 @@ def test_symbols_mode_sees_only_python(tmp_path):
 
 def test_inventory_skips_hidden_and_pycache(tmp_path):
     # The hidden-part rule (dot-/__pycache__-prefixed parts under the root are
-    # not source) holds in the live scan, so caches never red a lane.
+    # not source) holds in the live scan, so caches never fail a lane.
     _contained_two_module_tree(tmp_path)
     for sub in ("__pycache__", ".vendored"):
         write_module(tmp_path, "mod_cache.py", src="scripts/" + sub)

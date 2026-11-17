@@ -58,7 +58,7 @@ that easier to achieve in a real project — or get out of the way.
 - **Self-test before claiming done.** The per-commit checks are one declared
   command, `run.cmd smoke` (`run_menu.py smoke` from a shell; its steps are
   [`docs/stack.ini`](docs/stack.ini) `[run]`). It runs the smoke tier once: a
-  red tier FAILS the checks; its CPU-seconds and wall time are only reported
+  failing tier FAILS the checks; its CPU-seconds and wall time are only reported
   (operator, 2026-10-20). `run.cmd audit` judges them, and the tier's test
   count, against `[smoke-budget]`, by hand and at phase close; a breach is
   filed as a re-tier row, never charged to the lane that ran it. Heavy cases
@@ -68,7 +68,7 @@ that easier to achieve in a real project — or get out of the way.
   3–4× that while other sessions load it) once at phase close; the lane refresh
   runs the full checks declared for its current stage in the merge slot. The
   unfiltered suite bootstraps a temp scaffold and exercises every script
-  end-to-end. Paste the real output; never report a green you didn't produce.
+  end-to-end. Paste the real output; never report a pass you didn't produce.
   Commit hooks are on before any work (`core.hooksPath` at `.githooks`, which
   dev-setup sets); every agent route refuses without them, and no commit
   bypasses them.

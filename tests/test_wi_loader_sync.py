@@ -42,7 +42,7 @@ which is the same assertion aimed at the same defect (a cell that means one thin
 in one form and another in the other), so they are kept rather than retired.
 
 Both new guards are mutation-proven at the bottom of the file: a single corrupted
-spec cell must red the equivalence, and a reader that skips a file must red the
+spec cell must fail the equivalence, and a reader that skips a file must fail the
 three-way comparison. A guard nobody has seen fail is not a guard (WI-293).
 """
 
@@ -515,7 +515,7 @@ def test_the_soft_prefix_survives_the_round_trip_into_load_wis(both_homes):
 
 
 def test_mutation_one_corrupted_spec_cell_reds_the_equivalence(both_homes, tmp_path):
-    """Drive the failure shape rather than trusting the green: retype ONE
+    """Drive the failure shape rather than trusting the pass: retype ONE
     frontmatter value in the folder and the cell-exact compare must name it."""
     csv_path, work_dir = both_homes
     victim = next(p for p in work_dir.rglob("WI-002-*.md"))

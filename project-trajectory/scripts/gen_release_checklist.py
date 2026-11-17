@@ -451,7 +451,7 @@ def main():
         "",
         "## 6. Release hygiene",
         "",
-        "- [ ] `python scripts/check.py --stage DevStg-Impl --tier release` is green "
+        "- [ ] `python scripts/check.py --stage DevStg-Impl --tier release` passes "
         "(paste the output in the audit log).",
         _rejudge_checklist_line(docs.resolve().parent),
         "- [ ] CHANGELOG / release notes updated.",

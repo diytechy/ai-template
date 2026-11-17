@@ -10,7 +10,7 @@ module pins the three rungs that were not already built:
      outranks everything ready, including a spine work item — and the ruled §A1
      rank table is NOT renumbered to achieve it.
   6. **The evidence-gap census** (`census.evidence_gap_census` + `intake._evidence_gap_draft`):
-     a TC left red under a CLOSED implementation is a contradiction, routed to
+     a TC left unaccepted under a CLOSED implementation is a contradiction, routed to
      an adjudicator with an estimated tier rather than minted at a default one.
   3. **Queue-conflict vetting** (`check_trajectory.queue_conflict_findings`):
      the cheap mechanical half — two open rows that overlap are made VISIBLE,
@@ -154,7 +154,7 @@ def _spine(root, *, tc_status, wi_status="done", verifies="SR-001"):
 def test_an_evidence_gap_under_a_closed_row_is_named(tmp_path):
     """Implements: TC-183"""
     # The contradiction the registries state plainly and nothing was reading:
-    # the work item is CLOSED and the evidence for it is not green.
+    # the work item is CLOSED and the evidence for it is not accepted.
     _spine(tmp_path, tc_status="Failed")
     census = dsp.evidence_gap_census(tmp_path)
     assert len(census) == 1
@@ -164,12 +164,12 @@ def test_an_evidence_gap_under_a_closed_row_is_named(tmp_path):
 @pytest.mark.parametrize("status", ["Accepted", "Drafted", "Founded"])
 def test_the_three_exempt_statuses_are_never_an_evidence_gap(tmp_path, status):
     """Implements: TC-183"""
-    # Stated as EXEMPTIONS rather than as a list of red words: anything else is
-    # red, so the rule fails toward naming a gap rather than missing one, and it
+    # Stated as EXEMPTIONS rather than as a list of gap statuses: any other status is
+    # a gap, so the rule fails toward naming a gap rather than missing one, and it
     # keeps working for a downstream repo mid-migration.
-    # Accepted is green; Drafted is pre-acceptance, where "not yet green" is
+    # Accepted is no gap; Drafted is pre-acceptance, where "not yet accepted" is
     # correct; Founded (armed at D-9 step 8) is Accepted plus a demonstration, so
-    # it is green a fortiori. It REPLACED `Modified` here at step 7 — that word
+    # it is no gap a fortiori. It REPLACED `Modified` here at step 7 — that word
     # belonged to the §A5.1 amendment adjudication and retired with the marker,
     # and a set still exempting it would be a live reader of a retired word.
     _spine(tmp_path, tc_status=status)
@@ -179,7 +179,7 @@ def test_the_three_exempt_statuses_are_never_an_evidence_gap(tmp_path, status):
 def test_an_OPEN_row_never_makes_an_evidence_gap(tmp_path):
     """Implements: TC-183"""
     # The whole premise is "a closed row CLAIMS the work". A queued row claims
-    # nothing, so its TC being red is simply work not started — which the
+    # nothing, so its TC being unaccepted is simply work not started — which the
     # orphan/status rungs already name, and a second row would double-count.
     _spine(tmp_path, tc_status="Failed", wi_status="queued")
     assert dsp.evidence_gap_census(tmp_path) == []
@@ -198,7 +198,7 @@ def test_a_partial_close_never_makes_an_evidence_gap(tmp_path):
 def test_a_tc_verifying_a_MIX_of_claimed_and_unclaimed_is_no_evidence_gap(tmp_path):
     """Implements: TC-183"""
     # "All of whose targets are implemented" is the rule, and the reason is the
-    # premise: if any target is still open the TC is legitimately not green yet.
+    # premise: if any target is still open the TC is legitimately not accepted yet.
     _spine(tmp_path, tc_status="Failed", verifies="SR-001;SR-999")
     assert dsp.evidence_gap_census(tmp_path) == []
 
@@ -315,7 +315,7 @@ def test_a_minted_evidence_gap_row_reaches_the_FRONTIER(tmp_path):
     """End to end, through the real scheduler: the census names it, the draft
     is built, and `schedule.classify` gives it a real kind and rank rather than
     `unclassified`. Nothing else in the suite drove a minted row through the
-    scheduler, which is how the shape above survived a green suite."""
+    scheduler, which is how the shape above survived a passing suite."""
     _spine(tmp_path, tc_status="Failed", verifies="SR-001")
     drafts = intake._census_drafts(tmp_path, dsp.gap_census(tmp_path))
     red = [d for d in drafts if d["kind"] == "adjudication"]

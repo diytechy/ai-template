@@ -236,7 +236,7 @@ def test_open_row_whose_spec_reports_finished_warns(tmp_path):
 
 def test_open_row_whose_spec_reports_finished_errors_under_strict(tmp_path):
     """Gate tier: a contradiction between two homes for one fact cannot reach a
-    green DevStg-Tests/DevStg-Impl, matching R-E/R-F."""
+    passing DevStg-Tests/DevStg-Impl, matching R-E/R-F."""
     _write_spec(tmp_path, "WI-001.md", DONE_WHEN_ALL_TICKED)
     write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/specs/WI-001.md\n")
     proc = run_traj(tmp_path, "--strict")

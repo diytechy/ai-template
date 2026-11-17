@@ -929,7 +929,7 @@ def worker_endstate(
     no review/critique/rework is pending. A worker never reads run-state.
 
     Per WI the LATEST trailer wins (train_evidence, WI-239): a resumed worker
-    that re-runs green and commits `WI:` supersedes its own earlier
+    that re-runs, passes and commits `WI:` supersedes its own earlier
     `Blocked-WI:`, so this reports DONE, not BLOCKED. `allow_block_exit=False`
     (the resumed worker's FIRST session, before it has run) declines to
     short-circuit on a PRE-EXISTING block so the worker gets its one chance to
@@ -2299,7 +2299,7 @@ def schedule_review_round(ctx, after):
     review scope (WI-183, LLR-140): a worker schedules the round only once
     EVERY assigned WI is built, and the round covers the combined train diff
     base..HEAD — never a per-WI slice of it. An intermediate constituent commit
-    is admitted-on-train (locally green and committed), not reviewed; the cycle
+    is admitted-on-train (passing locally and committed), not reviewed; the cycle
     comes once, at the end.
 
     NO ROUND IS DRAWN ON A TREE A VERDICT ALREADY NAMED (measured 2026-09-03).
@@ -2483,9 +2483,9 @@ def record_build_checks(ctx, plan, outcome, meta):
     """The commit checks at the event: a committed build (or design-check) that
     completes the assignment, under managed routing with a reviewer dial, runs
     the lane's commit checks once through its one producer, `integrate.record_checks`,
-    before the session's log is written. A refusal of any kind is red, its
-    text the cause. Green leaves the recorded commit on `plan` for the round's
-    range; red writes the failed-checks record into this session's own log header and
+    before the session's log is written. A refusal of any kind is a failure, its
+    text the cause. A pass leaves the recorded commit on `plan` for the round's
+    range; a failure writes the failed-checks record into this session's own log header and
     leaves the refusal on `plan`. The record is keyed by the build commit as
     the draw names it (`kverdict.governing_rev`, which walks past record-only
     commits), so a build whose last commit is a log fragment is found again at
@@ -3209,7 +3209,7 @@ def resume_owed_round(root, setup, st, rp_int, iter_dir):
     that shape scanned an EMPTY range and `review_owed_by_evidence` cannot say
     (it answers None) for any range that holds no train trailer. Answering "nothing
     owed" for it dropped a genuinely parked round and ran another BUILD — the
-    C2 contract inverted, red on this branch for five commits and invisible to
+    C2 contract inverted, failing on this branch for five commits and invisible to
     the smoke tier (REVIEW-A round 034). The marker's `base` field re-points
     the SAME derivation at the range that holds the train's trailers; the
     committed facts still give the answer, and a lane whose evidence is
@@ -3370,10 +3370,10 @@ def review_draw_gate(ctx):
     (fresh, post-narrow, resumed and adjudication rounds alike): the round is
     drawn only over a tip carrying a verified `commit` record for the
     row's derived set, and its range is pointed at that recorded commit.
-    Without one, a red already recorded for the governing build commit drops
+    Without one, a failure already recorded for the governing build commit drops
     the round and rebuilds with its summary, running no checks; with no record,
-    the commit checks run once here and `record_checks_result` records it, green
-    drawing the round and red dropping it. A derivation refusal leaves no
+    the commit checks run once here and `record_checks_result` records it, a pass
+    drawing the round and a failure dropping it. A derivation refusal leaves no
     record to compare, so `integrate.record_checks` refuses with the same text and it
     is recorded as any failure is. Returns the failure cap's exit code after a
     failure (`failure_cap_check`), else None: the session is routed next.
@@ -3446,7 +3446,7 @@ def record_checks_result(ctx, build, refusal):
     meta["outcome"] = "FAILED" if refusal else "PASSED"
     if refusal:
         meta.update(kverdict.format_failed_record(build, refusal))
-    text = refusal or "green"
+    text = refusal or "passed"
     ran = session_service.Outcome(ctx.root, int(bool(refusal)), text, False, text, {})
     label = "CHECKS " + meta["outcome"]
     session_service.record(

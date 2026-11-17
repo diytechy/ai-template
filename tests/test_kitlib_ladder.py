@@ -7,7 +7,7 @@ descriptions, pinned by NOTHING), and prose. WI-498 slice 0 collapsed that to on
 module, so the pins retired: drift became UNREPRESENTABLE rather than DETECTED.
 
 What is worth asserting AFTER that collapse is not "the copies agree" — a test
-that a frozenset equals itself is vacuous and reads green while checking
+that a frozenset equals itself is vacuous and passes while checking
 nothing. It is the three properties the one home must actually hold:
 
   * the ladder's SHAPE (eight rungs, the ruled order, the derived size, a

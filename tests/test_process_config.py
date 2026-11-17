@@ -979,7 +979,7 @@ def test_migration_folds_every_dial_in_and_deletes_the_file(tmp_path):
 def test_migration_never_deletes_a_file_it_could_not_write(tmp_path):
     """The defect this test exists for: `set_process_key` answered "missing" on
     a hand-trimmed process.toml, the caller deleted the legacy file anyway, and
-    a declared `privacy_check = true` vanished under a green `migrated:` line.
+    a declared `privacy_check = true` vanished under a pass `migrated:` line.
 
     The fix makes the write TOTAL (the key is appended under its section), so
     the honest assertion is that the value SURVIVES — either folded in or left

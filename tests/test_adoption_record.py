@@ -15,8 +15,8 @@ squash landings included.
 Real git throughout, so this module is in `tests/conftest.py` `SLOW_MODULES`;
 its in-process pins are test_disposition_adoption.py's record-change table and
 close-shape oracle. Every test here is new behaviour (coordinator-cycle skill
-§3, Intent): each refusal test was red while no rule existed and the commit
-was accepted; the pass tests were red while trunk's close refused the
+§3, Intent): each refusal test failed while no rule existed and the commit
+was accepted; the pass tests failed while trunk's close refused the
 adoption it closes.
 """
 

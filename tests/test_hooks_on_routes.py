@@ -199,7 +199,7 @@ def test_the_hooks_refusal_comes_before_the_coordinator_guards(tmp_path, capsys)
 
 def test_refresh_refuses_a_hookless_checkout(tmp_path):
     """Implements: TC-370"""
-    # The station fixture declares a product checks and a green stub harness, so
+    # The station fixture declares a product checks and a passing stub harness, so
     # with the hooks on this refresh runs its checks and commits; with them off it
     # refuses before the lane is touched.
     root = station_repo(tmp_path)
@@ -214,7 +214,7 @@ def test_refresh_refuses_a_hookless_checkout(tmp_path):
 
 def test_record_checks_refuses_a_hookless_checkout(tmp_path):
     """Implements: TC-370"""
-    # The record-checks fixture declares the commit checks and a green stub harness, so
+    # The record-checks fixture declares the commit checks and a passing stub harness, so
     # with the hooks on this record-checks call runs its checks and commits the staged file;
     # with them off it refuses before the checks, leaving branch and index.
     root = checks_repo(tmp_path)

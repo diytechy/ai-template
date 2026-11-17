@@ -41,7 +41,7 @@ way to change the worker brief.
 ## Authoring rules
 
 These are enforced, not hoped. Each rule below has a test; a template that
-breaks one reds the suite rather than quietly changing how a session behaves.
+breaks one fails the suite rather than quietly changing how a session behaves.
 
 ### 1. Every slot is named and bounded
 

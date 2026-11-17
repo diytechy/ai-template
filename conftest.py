@@ -73,7 +73,7 @@ metered job by name and burn inside it. Absent or blank keeps the named job;
 any other value says so on stderr and keeps it too.
 
 Never fatal. A machine that refuses any of this gets a warning and a normal test
-run — a resource nicety must not be able to red a suite.
+run — a resource nicety must not be able to fail a suite.
 """
 
 import os
@@ -263,7 +263,7 @@ def pytest_configure(config):
         else:
             # No cgroup-free hard cap exists here; say what this actually is.
             os.nice(5)
-    except Exception as exc:  # noqa: BLE001 - a nicety must never red a suite
+    except Exception as exc:  # noqa: BLE001 - a nicety must never fail a suite
         _warn(
             "could not bound CPU use ({}: {}) — this run is NOT capped.".format(
                 type(exc).__name__, exc

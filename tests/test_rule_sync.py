@@ -7,7 +7,7 @@ are LLR-exempt, what "Drafted"/"Accepted"/"Founded" mean, what a `Phase` cell
 parses to, which SN ids exist and which are cited: nine duplicated bodies, nine
 equality pins, one home now (`kitlib.spine`). Policy disagreement between the
 module that ENFORCES the spine and the module that DERIVES its stage is a false
-green or false red at a gate — the exact failure class the kit exists to prevent
+pass or false failure at a gate — the exact failure class the kit exists to prevent
 (repo-review-2026-07-12b.md M1 -> WI-099) — and it is now unrepresentable rather
 than detected. The block below the imports records the deletion and keeps the
 half of those batteries that was about VALUES, not sameness.
@@ -75,7 +75,7 @@ GATE = load_script("spine_rules")
 # `trace_text.py` and `spine_rules.py` re-export them, so "the copies agree" is
 # no longer a property that can FAIL — there are no copies. A test asserting a
 # function equals itself is not a weaker pin, it is a VACUOUS one, and this
-# file's `_sn_fields` lesson is that vacuous agreement reads green while checking
+# file's `_sn_fields` lesson is that vacuous agreement passes while checking
 # nothing. Drift is now UNREPRESENTABLE rather than DETECTED, which is this
 # repo's stated preference (the declared-line precedent, further down).
 #
@@ -177,7 +177,7 @@ def test_the_llr_exemption_answers_by_value():
     """Implements: TC-193"""
     # Review 017's case, kept: the two former copies disagreed on a
     # whitespace-padded valid method (one stripped, one did not), which is a
-    # false green on one surface and a false red on the other for ONE registry
+    # false pass on one surface and a false failure on the other for ONE registry
     # state. The direction is pinned, not merely the sameness.
     assert set(KITSPINE.LLR_EXEMPT) == {"Analysis", "Inspection", "Vouch"}
     for row, want in [
@@ -681,7 +681,7 @@ def test_the_schema_of_record_covers_every_registry_the_carrier_names():
 # order and RAISES on a key the tier does not declare, so the drift the pin
 # detected cannot be written at all. What it protected — a brief filed under an
 # unmapped key renders empty while `check_docs` S-3 reports the ask as briefed —
-# is now covered from both ends: the refusal is driven red below, and
+# is now covered from both ends: the refusal is driven to fail below, and
 # `tests/test_profile.py::test_the_scaffolded_oi3_brief_is_an_append_not_a_reserialization`
 # bootstraps a real node scaffold and reads OI-3 back through the carrier.
 
@@ -726,7 +726,7 @@ def test_the_scaffolded_brief_is_written_through_the_schema():
 def test_the_scaffolded_brief_refuses_a_key_the_schema_does_not_declare(
     tmp_path, monkeypatch
 ):
-    # DRIVEN RED, because a refusal nothing exercises is a claim. `check_docs`
+    # DRIVEN TO FAIL, because a refusal nothing exercises is a claim. `check_docs`
     # S-3 reads the brief's cells; a cell under an unmapped key comes back from
     # the carrier as a column no consumer reads, so the ask renders as briefed
     # with an empty brief. The scaffolder now raises instead of writing it.
@@ -780,7 +780,7 @@ def test_every_live_spine_column_round_trips_through_the_carrier_vocabulary():
             assert TRACE.SPINE_COLUMN[MIGRATE.KEY[column]] == column
             checked += 1
     # Non-vacuous by construction: the three live tiers carry ~30 columns
-    # between them, so a resolver that quietly found nothing reds here.
+    # between them, so a resolver that quietly found nothing fails here.
     assert checked > 20, checked
 
 
@@ -1214,7 +1214,7 @@ def test_the_migration_table_and_the_converter_name_the_same_six():
 # property that can FAIL — there are no copies. A test asserting a function
 # equals itself is not a weaker pin, it is a VACUOUS one, and this file's own
 # `_sn_fields` lesson is that vacuous agreement is worse than no agreement: it
-# reads green while checking nothing. The drift is now UNREPRESENTABLE rather
+# passes while checking nothing. The drift is now UNREPRESENTABLE rather
 # than DETECTED, which is this repo's stated preference.
 #
 # What survives below is the part that is still a real choice: the subagent

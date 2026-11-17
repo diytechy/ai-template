@@ -106,7 +106,7 @@ def test_a_BASELINE_read_stays_permissive_about_empty_strings(tmp_path):
 
     `rows_from_text` is what the baseline/two-tree reads go through, and a
     revision that predates the rule cannot be fixed by anyone. Refusing there
-    would red a check over a file nobody can edit — the opposite of the
+    would fail a check over a file nobody can edit — the opposite of the
     live-read case, where there IS a file to fix and a person to tell.
     """
     rows = sc.rows_from_text('[requirement.SR-001]\ntitle = ""\n', SR, ".toml")
@@ -214,9 +214,9 @@ def test_the_vocabulary_unions_without_redefining_a_shared_column():
 
 
 def test_an_open_items_registry_that_does_not_parse_is_absent_never_empty(tmp_path):
-    """The false green this whole rule exists for: `{}` on a DECISION QUEUE
+    """The false pass this whole rule exists for: `{}` on a DECISION QUEUE
     reads as "no open items", so an unreadable registry would publish "nothing
-    is waiting on the operator" and every gate would stay green."""
+    is waiting on the operator" and every gate would keep passing."""
     p = tmp_path / "open-items.toml"
     p.write_text('[open_item.OI-1]\ntitle = "unterminated\n', encoding="utf-8")
     assert sc.rows_from_toml(p.read_text(encoding="utf-8"), "OI-ID") is None

@@ -17,7 +17,7 @@ branch, extracted from the tick loop that decides WHICH branches run. A lane
 and it REPORTS an outcome rather than deciding one: a lane declares itself
 finished by moving its spec out of active/<branch>/ — the tree-derived signal
 `integrate.finished_branches` reads — and every decision about what an exit
-code or a red refresh MEANS stays in dispatch.py, where the serial trunk
+code or a failing refresh MEANS stays in dispatch.py, where the serial trunk
 writes live. There is deliberately no back-channel and no state file: the
 worker subprocess, the refresh subprocess and the spec moves are the whole
 protocol (§A4.2 — "the handshake the sketch worried about does not exist").
@@ -38,7 +38,7 @@ Contract IF-136: the dispatcher's admitted lane table calls three functions
     concurrently instead of queueing at the dispatcher. What comes back is
     only the tree-derived signal — the spec moved out of `active/<branch>/` —
     plus each subprocess's exit code: no state file and no back-channel. This
-    module runs and reports; what an exit code or a red refresh MEANS is the
+    module runs and reports; what an exit code or a failing refresh MEANS is the
     caller's to decide.
 """
 

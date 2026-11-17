@@ -1,7 +1,7 @@
 # Reference CI workflow for the trajectory kit (GitHub Actions).
 #
 # Copies to .github/workflows/check.yml. It runs the SAME harness you run
-# locally (`scripts/check.py`) so a green CI means exactly what a green local
+# locally (`scripts/check.py`) so a passing CI means exactly what a passing local
 # run means — no second, drifting definition of "passing". Swap the Python
 # setup + install step for your stack; keep the single `check.py` invocation so
 # the gate definition stays in one place.
@@ -29,7 +29,7 @@ jobs:
     # The kit's own scripts are cross-platform, so the choice is driven by YOUR
     # project's deps/toolchain. A portable project should "hold its own" on every
     # OS it claims — uncomment the rows below; a project that can only build on one
-    # platform trims to it. Don't claim CI for an OS your deps can't run on: a red
+    # platform trims to it. Don't claim CI for an OS your deps can't run on: a failing
     # cell nobody can fix is worse than an honest single-platform matrix.
     strategy:
       fail-fast: false   # see every platform's result, not just the first failure
@@ -79,7 +79,7 @@ jobs:
       #   The STAGE is orthogonal and comes from the repo's committed `docs/stage`
       # file (check.py reads it and runs every step declared at or above that
       # rung), so CI enforces what the project has actually earned — a
-      # freshly-scaffolded DevStg-Reqs repo is green, and more steps select when
+      # freshly-scaffolded DevStg-Reqs repo passes, and more steps select when
       # artifacts are accepted in a reviewed commit and docs/stage is regenerated
       # (it is DERIVED from the artifact states by derive_stage.py, not hand-set;
       # the derived-stage step guards its freshness). In CI we do NOT pass

@@ -203,7 +203,7 @@ def test_non_integer_coverage_threshold_fails_loudly(scaffold):
 
 def test_profile_missing_binary_hits_the_run_step_guard():
     # A non-Python profile naming a tool that isn't installed must be a designed
-    # FAIL (Thread 29's guard), not a false green — the command flows from the
+    # FAIL (Thread 29's guard), not a false pass — the command flows from the
     # profile through steps() into run_step's PATH check.
     prof = _profile("[product]\nlint = no-such-tool-t30 {src}\n")
     plan = check.steps(80, "smoke", "all", None, prof)
@@ -464,8 +464,8 @@ def test_arch_map_invalid_mode_fails_loudly(scaffold):
 def test_non_python_stack_seeds_files_mode_and_starts_fresh(tmp_path):
     # bootstrap --stack node seeds [arch-map] mode = files in the scaffolded
     # profile, telling the AST-inventory readers (WI-455) there is no Python
-    # source to scan — their layers stay dormant, not vacuously green — and
-    # the fresh repo's harness floor is green on day one.
+    # source to scan — their layers stay dormant, not passing vacuously — and
+    # the fresh repo's harness floor passes on day one.
     dest = tmp_path / "repo"
     proc = run_py(
         [SCRIPTS / "bootstrap.py", "--dest", dest, "--stack", "node"], cwd=tmp_path

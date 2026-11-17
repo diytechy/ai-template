@@ -13,10 +13,10 @@
 # operator or their delegate pushes), and the 2026-08-18 staged-divergence step
 # (docs/log.d/2026-08-18-divergence-step.md) exists specifically because a
 # mechanically-regenerated artifact committed without an operator looking at the diff is
-# how this repo's worst false-green incident happened. So instead: regenerate both
+# how this repo's worst false-pass incident happened. So instead: regenerate both
 # locks fresh, diff against the committed copies, and FAIL LOUDLY if either moved —
 # same posture as canary-latest, a heads-up on its own schedule rather than a
-# surprise red on an unrelated PR. The freshly regenerated files are uploaded as a
+# surprise failure on an unrelated PR. The freshly regenerated files are uploaded as a
 # build artifact either way, so acting on the finding never requires re-deriving the
 # command by hand.
 #

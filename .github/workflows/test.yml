@@ -1,5 +1,5 @@
 # Self-tests for the kit: every script is exercised against a real temp
-# scaffold, so a green run means the documented quick-start actually works —
+# scaffold, so a passing run means the documented quick-start actually works —
 # on all three desktop OS families (Linux, Windows, macOS) and on the oldest
 # Python the kit claims (3.11).
 name: kit-tests
@@ -10,7 +10,7 @@ on:
     # branch push only triggered a run while someone kept a PR open — and the
     # 2026-07-25 DevStg-Impl sitting proved what that costs: an entire test layer
     # (`agent_loop_*`) could not execute on the operator's machine at all, so the
-    # local gate was green over a blind spot only an independent environment
+    # local gate passed over a blind spot only an independent environment
     # sees. A push trigger is repo state that travels with the branch and
     # cannot lapse; naming individual branches would just re-lapse at the next
     # one. (The shipped reference, project-trajectory/ci/check.yml, already
@@ -76,7 +76,7 @@ jobs:
       # The kit scripts themselves are stdlib-only; these tools are what the
       # harness tests drive — CONSTRAINED in requirements-dev.txt (WI-104), the same
       # file scripts/dev-setup installs, so every machine runs one machinery and
-      # a tool major can't turn the suite red unannounced (canary.yml floats
+      # a tool major can't make the suite fail unannounced (canary.yml floats
       # latest on a schedule to catch that early). pytest-xdist runs the suite in
       # parallel (WI-075) — the same `-n auto` command developers and the gate job
       # run, so all three OSes also exercise the parallel path.
@@ -93,7 +93,7 @@ jobs:
   # against docs/stack.ini [smoke-budget] cpu-seconds and wall-seconds, with a
   # WARN annotation for a limit over. No run of the checks fails on the tier's seconds: the
   # run menu's audit (docs/stack.ini [run] audit) judges them, by hand and at
-  # phase close. A red tier still fails this job with the tier's own code. The
+  # phase close. A failing tier still fails this job with the tier's own code. The
   # CPU budget is stamped on one workstation and applies everywhere, so a WARN
   # here is a finding for the operator, not a re-stamp (the step's docstring owns
   # the meters and their bounds). One lane: this is a timing signal, not a

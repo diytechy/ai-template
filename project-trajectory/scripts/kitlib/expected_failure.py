@@ -377,7 +377,7 @@ def landing_refusal(wt):
     return _refusal(
         "the tree holds the declared expected-failure marker, and a landing "
         "tree holds none: "
-        "remove each in the code commit that turns its tests green, or "
+        "remove each in the code commit that makes its tests pass, or "
         "quarantine the lane",
         marked,
     )

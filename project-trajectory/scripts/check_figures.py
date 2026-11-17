@@ -138,7 +138,7 @@ WORD = re.compile(r"[0-9A-Za-z]")
 EXTRA_SURFACES = ("docs/stack.ini",)
 # A verdict record quotes findings — including bare and half-carrying markers
 # — verbatim as evidence, and judging the quotation convicts the quoter: every
-# branch a review lands on would red on the review's own repro lines. Reviews
+# branch a review lands on would fail on the review's own repro lines. Reviews
 # are records, not declaration surfaces (the check_doc_refs record stance),
 # so they are out of scope by design. The log is deliberately NOT here: its
 # watched totals are exactly the figures this convention exists to cover.

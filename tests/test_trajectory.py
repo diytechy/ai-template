@@ -4,7 +4,7 @@ The layer's whole value is what it blocks (cycles, dangling predecessors,
 malformed/duplicate ids) *and* what it deliberately lets through: a
 placeholder-only or absent registry is vacuously clean, a dangling SR ref only
 warns (draft SRs are legitimate), and `docs/trajectory-check: off` silences the
-check entirely. Each is pinned red/green by running the real script over a
+check entirely. Each is pinned failing and passing by running the real script over a
 minimal temp registry (no full scaffold needed — the validator reads the
 `docs/work/` spec folder, which a fixture writes file by file).
 
@@ -675,7 +675,7 @@ def test_nearest_anchor_prefix_pass_beats_difflib_on_a_severe_truncation():
     """The prefix pass must EARN its place, measured — not asserted.
 
     131-REVIEW-A MINOR 5 refuted the original rationale by deleting the branch and
-    watching every test stay green: WI-326's own 44-of-76-char truncation scores
+    watching every test keep passing: WI-326's own 44-of-76-char truncation scores
     0.733 and plain difflib finds it unaided. The branch survives because a
     SEVERER truncation defeats difflib outright, and this pins that exact pair, so
     deleting the branch now fails and the docstring cannot rot back into the
@@ -865,7 +865,7 @@ def test_rf_scaffold_boilerplate_excluded(tmp_path):
     """Implements: TC-100"""
     # R-F negative: the scaffolded README + -000 exemplar are permanent (the
     # WI-251 banner fix) and never read as archivable residue — a fresh scaffold
-    # stays vacuously green.
+    # keeps passing vacuously.
     write_spec(tmp_path, "docs/specs/README.md")
     write_spec(tmp_path, "docs/specs/WI-000.md")
     write_wis_sr(tmp_path, "WI-001,A,scripts,,,done,shipped it,\n")
@@ -1023,8 +1023,8 @@ def test_cancelled_id_in_status_md_is_not_forward_only_finding(tmp_path):
 def test_compliant_registry_and_status_passes_strict(tmp_path):
     """Implements: TC-077"""
     # The whole model, coherent: a done row with a Deliverable and no SpecRef, an
-    # open row with an empty Deliverable + resolvable SpecRef -> --strict is fully
-    # green (R-A + R-E). status.md names only the open WI-002, so the restored
+    # open row with an empty Deliverable + resolvable SpecRef -> --strict fully
+    # passes (R-A + R-E). status.md names only the open WI-002, so the restored
     # R-D done-id rule (WI-200) finds nothing (R-B/R-C stay retired, WI-180).
     write_spec(tmp_path, "docs/specs/WI-002.md")
     write_wis_sr(

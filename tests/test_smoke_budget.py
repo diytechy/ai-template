@@ -81,8 +81,8 @@ def test_the_declared_commit_checks_run_the_strict_lints_before_their_budget():
     # This repo's one declared commit-check command, docs/stack.ini [run] smoke,
     # runs both strict lints, the docs staleness check and the RESYNC entry
     # check first, then the budget check in warn mode, whose own metered run is
-    # the checks' only smoke-tier run: a red tier fails the checks, and its seconds
-    # are reported, never failed on. A lint red stops the checks before the tier
+    # the checks' only smoke-tier run: a failing tier fails the checks, and its seconds
+    # are reported, never failed on. A lint failure stops the checks before the tier
     # runs. A chain that dropped a step, moved the budget check ahead of the
     # lints, or ran the tier a second time would let a build round's checks skip a
     # check or pay for the tier twice.

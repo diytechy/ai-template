@@ -71,13 +71,13 @@ def test_failure_tail_no_fail_marker_is_bounded_tail_not_head():
 
 # --- WI-398: the refusal carries the failing STEP's output, never the summary ---
 
-# A full `check.py --jobs 0` red, the `_run_landing_checks` shape: each step's captured
+# A full `check.py --jobs 0` failure, the `_run_landing_checks` shape: each step's captured
 # output prints under the lane lock with its own inline status line, and then
 # the closing summary block RE-prints every step's status after a `====` rule.
 # The WI-240 anchor (LAST `  FAIL` line) always landed in that summary copy, so
 # the window walked back to the LAST step's banner and the refusal carried
 # summary rows instead of the failing step's own output — the WI-387 refresh
-# red cost three lost diagnoses of one failure exactly this way.
+# failure cost three lost diagnoses of one failure exactly this way.
 WI398_JOBS_CHECKS_OUT = (
     "\n=== format : python -m ruff format --check . ===\n"
     "74 files already formatted\n"
@@ -114,7 +114,7 @@ def test_failure_tail_extracts_the_failing_steps_own_output_not_the_summary():
     assert "check_trajectory: OK" not in tail
 
 
-# The same red at `--jobs 1`: step output STREAMS with no inline status line, so
+# The same failure at `--jobs 1`: step output STREAMS with no inline status line, so
 # the only `  FAIL` markers in the whole output are the summary rows. The window
 # must still be the failing step's own banner-to-end block (found by the NAME the
 # summary row carries), with that row appended so the refusal names the step.
@@ -158,12 +158,12 @@ def test_failure_tail_reaches_the_step_output_when_statuses_only_print_in_summar
 # structural parser — and a first-to-last-match swap merely mirrors the hole
 # (it would break the symmetric shape, a failing step whose banner a LATER
 # passing step quotes, that first-match handles). These tests pin the current
-# wrong-window outcomes so the choice stays explicit; if one reds, the anchor
+# wrong-window outcomes so the choice stays explicit; if one fails, the anchor
 # changed and the docstring's limit clause is stale.
 
 # Shape 1: a PASSING tests+coverage step's output quotes an old
 # `  FAIL  tests+coverage` log row at line start (a pasted log in test output);
-# the real red is lint (F401). The quoted row is the FIRST FAIL line, so the
+# the real failure is lint (F401). The quoted row is the FIRST FAIL line, so the
 # window is the passing step's own banner section.
 WI405_QUOTED_FAIL_ROW_CHECKS = (
     "\n=== tests+coverage : .venv/bin/python -m pytest -q -m smoke ===\n"
@@ -187,7 +187,7 @@ def test_known_limit_a_quoted_fail_row_hijacks_the_window_onto_a_passing_step():
     # PINNED LIMIT: the window is the passing quoter's section ...
     assert "all good" in tail
     assert "  PASS  tests+coverage" in tail
-    # ... with zero bytes of the real red.
+    # ... with zero bytes of the real failure.
     assert "F401" not in tail
     assert "  FAIL  lint" not in tail
 
@@ -224,13 +224,13 @@ def test_known_limit_a_quoted_mock_banner_carries_the_quoting_steps_text():
     assert "  FAIL  tests+coverage" in tail
 
 
-# Shape 3 (the realistic one for THIS repo): a RED tests+coverage whose pytest
+# Shape 3 (the realistic one for THIS repo): a FAILING tests+coverage whose pytest
 # output embeds a nested scaffold checks (captured stdout of a failing
 # integrate/check test — the STUB_CHECK_RED shape) whose FAIL row names a
 # DIFFERENT step. The nested `  FAIL  format` is the FIRST FAIL line, so the
 # window becomes the passing format step's own output — an actively wrong
 # attribution, silent. (When the nested row names the SAME step as the outer
-# red — the common stub shape — the window is correct; REVIEW-A drove that.)
+# failure — the common stub shape — the window is correct; REVIEW-A drove that.)
 WI405_NESTED_CHECKS_OTHER_STEP = (
     "\n=== format : python -m ruff format --check . ===\n"
     "146 files already formatted\n"
@@ -339,12 +339,12 @@ def test_harness_floor_refuses_a_below_floor_venv(tmp_path, monkeypatch):
 def test_harness_floor_refuses_a_missing_venv(tmp_path, monkeypatch):
     # REVIEW-A MAJOR: a missing (or incomplete-layout) root .venv fails CLOSED —
     # the harness must not fall back to the ambient interpreter, whose pinned dev
-    # tools may be absent even at a satisfying version (a false green).
+    # tools may be absent even at a satisfying version (a false pass).
     _declare_toolchain(tmp_path)
     monkeypatch.setattr(agent_common, "venv_python", lambda root: None)
     fails = agent_common.harness_floor_failures(tmp_path)
     assert len(fails) == 1
-    assert "no runnable ./.venv" in fails[0] and "false green" in fails[0]
+    assert "no runnable ./.venv" in fails[0] and "false pass" in fails[0]
     # The message points at the surviving remedy, not the retired dispatcher.
     assert "dev-setup --install" in fails[0]
 

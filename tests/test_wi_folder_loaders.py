@@ -533,7 +533,7 @@ def test_a_restructured_successor_must_be_a_distinct_forward_carrier(tmp_path):
       same arm twice.
 
     The control is WI-006 -> WI-001: a plain, mutual, live successor is clean,
-    so these are the new arms talking and not a checker that reds everything."""
+    so these are the new arms talking and not a checker that fails everything."""
     write_spec(tmp_path, "queued", "WI-001", order=0, supersedes="WI-006;WI-003;WI-005")
     write_archived_spec(
         tmp_path,
@@ -838,7 +838,7 @@ def _validator_repo(tmp_path):
 
 def test_the_validator_runs_clean_over_a_folder_registry(tmp_path):
     """The whole of `main()` in folder mode — every rule below the loader reads
-    the same 17-key rows, so a green here is the "zero behaviour change" claim
+    the same 17-key rows, so a pass here is the "zero behaviour change" claim
     exercised from the other side."""
     _validator_repo(tmp_path)
     proc = run_py([SCRIPTS / "check_trajectory.py", "--strict"], cwd=tmp_path)

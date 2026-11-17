@@ -148,7 +148,7 @@ final_review = "always"
 keep_nondependent = false
 # How a CLEAN (`complete/`) lane close is adjudicated. `partial` and
 # `cancelled` closes are ALWAYS adjudicated — they carry a claim about what was
-# not delivered. A green close already passed its required checks and the review
+# not delivered. A passing close already passed its required checks and the review
 # rounds, so adjudicating every one of them prices a strong-tier session onto
 # work two gates already judged.
 #   "off"    — never (the review rounds are the judgement)

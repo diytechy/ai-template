@@ -32,7 +32,7 @@ Standing rules, in addition to the prompt:
   - Tag each new function `Implements: <SR>, <LLR>` with the LLR whose `module` is
     that file, and list the function in that LLR's `code_symbol`.
 - **Tests.**
-  - Record a red result before the change and a green one after, with one fixed
+  - Record a failing result before the change and a passing one after, with one fixed
     `--basetemp "$TEMP/pt-<wi>"`, `-p no:cacheprovider` and
     `GIT_CEILING_DIRECTORIES` set to your lane's parent folder (the checkout's
     sibling `.wt`). Disk space is tight, so never vary the basetemp path; a
@@ -47,7 +47,7 @@ Standing rules, in addition to the prompt:
   - A shipped change needs a RESYNC_PACK entry anchored `[since <lane base>]`.
 - **Final message:**
   1. The changes, file by file.
-  2. Red and green results, with the exact commands.
+  2. Failing and passing results, with the exact commands.
   3. Every amended cell, quoted before and after.
   4. Anything you stopped on.
   5. The line `Commit SHA: none (left for the coordinator)`.

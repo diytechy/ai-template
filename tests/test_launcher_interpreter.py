@@ -12,10 +12,10 @@ THE METHOD, and why it is not circular. A fake interpreter here is the REAL
 python with `sys.version_info` SPOOFED, executing the launcher's own probe string
 (`exec(sys.argv[1])`). That is what makes the tests measure the selection RULE
 rather than a rehearsal of it: a launcher that probes only runnability (`-c ""`,
-the pre-WI-475 behaviour) picks the fake and the below-floor tests go red, while
+the pre-WI-475 behaviour) picks the fake and the below-floor tests fail, while
 one that asks `sys.version_info` rejects it and says so. `test_the_fake_is
 _runnable_and_only_its_version_is_fake` pins that discrimination directly, so a
-green here can never come from a fake that was simply broken.
+pass here can never come from a fake that was simply broken.
 
 COVERAGE, and the one honest exception. Four launcher surfaces carry a probe —
 the live root `agent-resume.{sh,cmd}` and their shipped `*.template.*` twins —

@@ -1,4 +1,4 @@
-"""check.py end-to-end: the documented flow must be green on a minimal project,
+"""check.py end-to-end: the documented flow must pass on a minimal project,
 and the tier/coverage wiring must not silently skip tests.
 
 Implements: TC-006, TC-237
@@ -280,7 +280,7 @@ def test_missing_command_is_designed_failure():
 
 def test_run_steps_batch_passes_on_clean_project(scaffold):
     # The pre-commit hook's batched floor: several independent steps in one
-    # interpreter spawn, run concurrently, each reported. Green on a fully
+    # interpreter spawn, run concurrently, each reported. Passes on a fully
     # traced, freshly mapped project. Mirrors the shipped hook's batch (which
     # includes derived-stage, the docs/stage freshness guard — it was
     # derived-gate over docs/gate until WI-498 slice 5 retired that axis).
@@ -389,7 +389,7 @@ def test_step_stage_honours_an_explicit_stage(scaffold):
     # at ALL...
     assert [s for s in check.steps(80, "full", check.ALL) if s[0] == "format"]
     # ...and at an explicit LOW rung too (WI-360, WI-355-REVIEW-A MINOR 2). The
-    # ALL assertion alone would stay green if steps() started filtering its
+    # ALL assertion alone would keep passing if steps() started filtering its
     # returned table, and DevStg-Reqs is the case that would break, so pin it.
     # `steps()` BUILDS the table; `resolve_plan` is what selects from it.
     assert [s for s in check.steps(80, "full", ladder.STAGE_REQS) if s[0] == "format"]
@@ -426,7 +426,7 @@ def test_jobs_parallel_plan_matches_sequential(scaffold):
         if ln.strip().startswith("- "):
             name = ln.strip().split()[1]
             assert name in par.stdout, name
-    # And a failure still fails the parallel run (never a false green).
+    # And a failure still fails the parallel run (never a false pass).
     (scaffold / "tests" / "test_broken.py").write_text(
         '"""Deliberately failing test."""\n\n\n'
         "import pytest\n\n\n"
@@ -480,7 +480,7 @@ def test_declared_lane_serializes_a_dependent_step_under_jobs(tmp_path):
 
 def test_bad_lane_fails_loudly(scaffold):
     # A [step:] whose `lane` names no real step must fail LOUDLY at plan time,
-    # never silently re-race the step (a false green under --jobs>1).
+    # never silently re-race the step (a false pass under --jobs>1).
     make_minimal_project(scaffold)
     stack = scaffold / "docs" / "stack.ini"
     stack.write_text(
@@ -547,7 +547,7 @@ def test_module_coverage_full_then_smoke_run_scopes_the_report(scaffold):
     assert "module floor(s) hold" in full.stdout
 
     # Smoke tier: the stale full report is cleared before the (no-coverage) run,
-    # the step SKIPs instead of grading it, and the run stays honest-green.
+    # the step SKIPs instead of grading it, and the run keeps honestly passing.
     smoke = run_py(
         [
             "scripts/check.py",
@@ -568,8 +568,8 @@ def test_module_coverage_full_then_smoke_run_scopes_the_report(scaffold):
 
 def test_the_default_stage_comes_from_the_derived_stage_file(scaffold):
     """check.py without --stage reads the repo's DERIVED effective stage, so CI
-    enforces the rung the project is actually on — a fresh scaffold must be
-    green, not red-until-Impl (the day-one false-red regression).
+    enforces the rung the project is actually on — a fresh scaffold must
+    pass, not fail until Impl (the day-one false-failure regression).
 
     THE SOURCE FILE CHANGED AT WI-498 slice 2: `docs/gate` (a bar) → `docs/stage`
     (a rung), read through `kitlib.stage.read_stage` rather than by scraping a
@@ -642,7 +642,7 @@ def test_list_tags_process_and_product_layers(scaffold):
 #
 # The gap it closes (OI-31, ruled option (b) 2026-08-18): every freshness step
 # resolves its artifact from the filesystem, so an author who regenerates and
-# forgets to `git add` gets an honest green over a stale commit. Measured at
+# forgets to `git add` gets an honest pass over a stale commit. Measured at
 # 3b8d306d, where PROJECT_STATE.html was modified in the worktree, absent from
 # the index, and the committed tree failed the very gate that guarded it.
 #
@@ -763,7 +763,7 @@ def test_the_PLAN_STEP_refuses_a_regenerated_but_unstaged_derived_stage(tmp_path
     #
     # Driven through `--run-steps`, NOT the bare `--staged-divergence` flag,
     # because the defect was never in the detector: it was in the WIRING, which
-    # did not pass --strict. A test of the flag alone would have stayed green
+    # did not pass --strict. A test of the flag alone would have kept passing
     # through the entire defect (it did — the old positive case asserted the
     # promotion was *reachable*, never that it was *taken*).
     repo = _stale_stage_repo(tmp_path)
@@ -778,8 +778,8 @@ def test_the_PLAN_STEP_refuses_a_regenerated_but_unstaged_derived_stage(tmp_path
 
 def test_the_PLAN_STEP_passes_once_the_regeneration_is_staged(tmp_path):
     # The other half, so the refusal above is a decision and not a step that
-    # reds on every tree: stage the regeneration — the correct workflow — and
-    # the same checks go green.
+    # fails on every tree: stage the regeneration — the correct workflow — and
+    # the same checks pass.
     repo = _stale_stage_repo(tmp_path)
     _git(repo, "add", "docs/stage")
     proc = run_py([SCRIPTS / "check.py", "--run-steps", "staged-divergence"], cwd=repo)

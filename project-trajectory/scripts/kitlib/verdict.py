@@ -492,7 +492,7 @@ def refresh_passed_checks(root, branch, rev=None):
         Checks-Passed: tree=<40 hex> work=<40 hex> checks=<commit|landing|none> tests=<64 hex|none> <summary>
 
       * `checks=` must be `landing` or `none` here: a `commit` record is a
-        build round's record of green, never a refresh, so it is never peeled
+        build round's record of a pass, never a refresh, so it is never peeled
         and never satisfies the merge slot. A line in an earlier grammar is not
         read at all.
       * `tree=` must equal the commit's OWN tree. This is the load-bearing one:

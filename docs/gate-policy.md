@@ -54,12 +54,12 @@ in-chat directive + this register update, 2026-07-15.)_
 ## Fixed points (nothing in this file overrides these)
 
 - **the final read is the operator's.**
-- **No un-run greens** — a verdict or test result that wasn't actually
+- **No un-run passes** — a verdict or test result that wasn't actually
   executed is a process violation regardless of tier. _(This is why a
   perceptual `Critique` — e.g. WI-144's rendered dashboard judgment — still
   needs a real rendered verdict under `autonomous`; the level never lets the
   loop fabricate an APPROVE it could not run.)_
 - **The harness is still the standard** — LLM judgment supplements the checks; it
-  never waives a red one.
+  never waives a failing one.
 - **Accepted operator decisions are never re-decided by an agent** — flag a
   problematic one as Blocked instead.

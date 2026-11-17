@@ -15,7 +15,7 @@ Its three rules, straight from §5.5, are the whole design brief:
     **idempotent** — a second run on a clean trunk is a no-op ("0 fragments",
       every generator already fresh), so re-running is always safe.
     **fails loudly** — ANY problem exits nonzero with the offending file named.
-      A red trunk lane halts claiming; it must never fail open (the fail-open
+      A failing trunk lane halts claiming; it must never fail open (the fail-open
       lesson applied to the new machinery on day one).
 
 It never commits. Staging and committing belong to the caller (the integrator,
@@ -45,7 +45,7 @@ Compile-log (`--compile-log`)
 Regen (`--regen`)
     Re-derives the generated artifacts in DEPENDENCY order (see REGEN_STEPS): a
     generator that reads another's output must run after it, or one pass leaves
-    the tree stale and the next `check.py` reds the trunk for no real defect. A
+    the tree stale and the next `check.py` fails the trunk for no real defect. A
     generator whose artifact family this repo does not carry is skipped with a
     printed notice — a non-adopter pays nothing, and the skip is visible rather
     than silent.
@@ -65,7 +65,7 @@ Contract IF-081: the serial trunk lane's exit alphabet, and there are only two
     git the order cannot be read and is never invented), or a generator that
     returned nonzero and stopped the rest. There is no partial success to
     report — the compile is all-or-nothing and the regen halts at the first
-    failure — because a red trunk lane must halt claiming rather than fail
+    failure — because a failing trunk lane must halt claiming rather than fail
     open. It never commits, so the caller reading this code owns what is left
     staged.
 Contract IF-155: the argv surface of the trunk step. `--root` (default the cwd)
@@ -590,7 +590,7 @@ REGEN_STEPS = (
     # The live acceptance brief (`docs/ratify/CURRENT.md`, declared `accept` in
     # docs/stack.ini [generated]). It projects the registry against the
     # docs/archive/last_accepted snapshot, and `check.py`'s `acceptance-fresh`
-    # step (`trace.py --accept modified --check`) reds the landing checks the
+    # step (`trace.py --accept modified --check`) fails the landing checks the
     # moment either side moves under it. A LEAF like the rollup — nothing reads
     # it back — so its position is free. It belongs HERE because the refresh
     # commit is the one commit the verdict gate peels: an adjudication lane
@@ -655,7 +655,7 @@ def regen(root, dry_run=False):
             for stream in (proc.stdout, proc.stderr):
                 if stream and stream.strip():
                     print(stream.rstrip(), file=sys.stderr)
-            _err("the trunk lane is RED — fix this before claiming resumes (§5.5).")
+            _err("the trunk lane FAILED — fix this before claiming resumes (§5.5).")
             return 1
         print("trunk_step: regen — {} ok.".format(name))
     return 0

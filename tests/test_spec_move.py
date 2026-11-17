@@ -79,7 +79,7 @@ def test_move_relinks_inbound_links_from_every_depth(tmp_path):
     """Archival must redirect inbound markdown links, or it strands a dangling
     link — the live 2026-07-24 failure, where a train's own docs/log.md entry
     linked the spec it was closing and the break only surfaced on the composed
-    tree as a red check_docs. Resolution is by resolved PATH, so all three
+    tree as a failure check_docs. Resolution is by resolved PATH, so all three
     depths are covered by one rule, and each replacement is re-relativised to
     its own file's directory."""
     repo = tmp_path

@@ -289,8 +289,8 @@ def test_the_loops_own_lock_file_is_shed_with_its_streams(tmp_path):
     # out/agent-loop.lock — the loop's own per-checkout coordinator lock, dead
     # with the process that took it — was still sitting in it, and the re-read
     # reported the collapsed `!! out/`. Every mechanized lane refused unload on
-    # exactly this file while the fixtures, which never planted it, stayed
-    # green. A lane whose out/ holds ONLY the lock and one properly-named
+    # exactly this file while the fixtures, which never planted it, kept
+    # passing. A lane whose out/ holds ONLY the lock and one properly-named
     # stream unloads clean, and the repo-root out/ is still never reached.
     repo = merged_branch_repo(tmp_path, ignore=LANE_IGNORE)
     worker = tmp_path / "worker"
@@ -571,7 +571,7 @@ def test_the_queue_exits_nonzero_when_a_merged_branch_stays_held(tmp_path):
     # The other half, and the assertion that the silent swallow is gone. §5.6's
     # stop is drained AND unloaded, and nothing ever retries an unload — a merged
     # branch is no longer a finished claimed branch, so the next queue run will
-    # not see it. A green exit here would report a stop the run did not reach, so
+    # not see it. A passing exit here would report a stop the run did not reach, so
     # the remainder is named on STDERR by branch and path and carried to the
     # exit code. The MERGE still stands: the trunk fast-forwarded before the
     # unload, and the nonzero code reports debt, it does not undo work.

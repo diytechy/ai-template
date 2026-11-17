@@ -1,6 +1,6 @@
 """The deterministic secrets + privacy lint (Thread 39 Layer 1; Thread 44 split).
 
-Every detection class is exercised red/green on real staged diffs / trees /
+Every detection class is exercised failing and passing on real staged diffs / trees /
 commit ranges in a bootstrapped scaffold, because the lint's whole value is
 what it blocks *and* what it deliberately lets through (placeholders, RFC 2606
 example domains, `privacy-ok`-marked lines). Two layers are pinned separately:
@@ -334,7 +334,7 @@ def test_check_py_wires_privacy_as_process_step(scaffold):
 
 
 def test_check_py_gate_fails_on_seeded_leak(scaffold):
-    # Under a declared policy the same DevStg-Reqs gate goes red on a tracked leak —
+    # Under a declared policy the same DevStg-Reqs gate fails on a tracked leak —
     # the CI-side net for what slipped past --no-verify or predates the policy.
     set_privacy(scaffold)
     (scaffold / "docs" / "notes.md").write_text(

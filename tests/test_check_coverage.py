@@ -83,10 +83,10 @@ def test_load_report_absent_is_none_and_parses_percent(tmp_path):
 
 
 def test_load_report_rejects_non_finite_and_out_of_range(tmp_path):
-    # A corrupt report must be a LOUD failure, never a silent green. Python's
+    # A corrupt report must be a LOUD failure, never a silent pass. Python's
     # json parser accepts the non-standard NaN/Infinity literals, and a NaN would
     # otherwise pass the float check and grade as OK (`NaN < floor` is False) —
-    # the exact false-green the honest gate exists to prevent (REVIEW-A).
+    # the exact false-pass the honest gate exists to prevent (REVIEW-A).
     import pytest
 
     for bad in (float("nan"), float("inf"), float("-inf"), 150.0, -5.0):
@@ -192,7 +192,7 @@ def test_cli_fails_loudly_on_malformed_floors(tmp_path):
 
 def test_cli_fails_loudly_on_corrupt_report_percent(tmp_path):
     # A damaged report (a NaN percent, which Python's json accepts) must FAIL
-    # loudly, not grade as a silent green — the honest floor is defeated when its
+    # loudly, not grade as a silent pass — the honest floor is defeated when its
     # input is corrupt (REVIEW-A). json.dumps emits the bare `NaN` literal.
     report = _report(tmp_path / "c.json", {MOD: float("nan")})
     floors = _floors(tmp_path / "f", MOD + " 72\n")

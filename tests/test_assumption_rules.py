@@ -44,7 +44,7 @@ import kitlib.spine as SPINE  # noqa: E402  (after the load above puts scripts/ 
 @pytest.fixture(scope="module")
 def rules():
     """The module under test, loaded once. A fixture rather than a module-level
-    load, so a missing module reds every case on its own line."""
+    load, so a missing module fails every case on its own line."""
     return load_script("assumption_rules")
 
 

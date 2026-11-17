@@ -21,8 +21,8 @@ WHAT THIS ADDED THAT THE RETIRED `docs/gate` DID NOT HAVE.
    what a fresh scaffold reads — C-01 on the new axis.
 3. **A floor.** The bar axis floors at DevStg-Reqs and the stage axis did not, so
    the stage could reach ord 0, below every runnable rung. Under the at-or-above
-   selection slice 2 lands, that is a repo where nothing runs and the run goes
-   green because of it.
+   selection slice 2 lands, that is a repo where nothing runs and the run
+   passes because of it.
 4. **A fingerprint of the declared inputs**, which is what lets any reader tell a
    current record from a stale one without parsing the registries.
 
@@ -238,7 +238,7 @@ def _stage_map(spine, settled, evidence_passed=False):
         # reason the need/boundary/component rows do: it is a REPO-WIDE fact, and
         # a per-phase call must see the same one the global call did. A phase
         # whose own rows are all settled reads Release exactly when the repo's
-        # suite is green on this tree — never on its own say-so.
+        # suite passes on this tree — never on its own say-so.
         evidence_passed=evidence_passed,
     )
     overall = spine_rules.spine_stage(srs, llrs, tcs, **frame)
@@ -410,7 +410,7 @@ def _effective(spine):
     THE TEST-EVIDENCE VERDICT IS DELIBERATELY LEFT AT ITS DEFAULT (False) HERE,
     on BOTH sides of the phase rule's before/after comparison (WI-500). The rule
     polices SPINE AUTHORING — an edit that lowers the reading must surface as a
-    phase change — and evidence is not an authored row: a suite that went red, or
+    phase change — and evidence is not an authored row: a suite that failed, or
     a record that went stale, would otherwise read as an un-phased authoring
     decrease and demand a phase tag nobody can supply. Symmetric omission keeps
     the comparison about the rows, which is what the rule is for."""
@@ -678,9 +678,9 @@ def main():
             # derived: it is `stage.template` as `bootstrap.py` copied it, or an
             # adopter's tree between the resync and the first regeneration.
             # There is nothing to compare it against and nothing it can be
-            # stale relative to, so failing here would red every freshly
-            # scaffolded repo — the shipped promise is that such a repo is
-            # green. It is a NOTE, not a silent pass: the message names the one
+            # stale relative to, so failing here would fail every freshly
+            # scaffolded repo — the shipped promise is that such a repo
+            # passes. It is a NOTE, not a silent pass: the message names the one
             # command that ends the state, and `trunk_step --regen` runs it
             # unprompted at the next trunk regeneration point.
             print(
@@ -699,7 +699,7 @@ def main():
             return 0
         # THE CAUSE IS BRANCHED, because one message was false in the case the
         # design calls NORMAL (ROUND-OPUS 14). An input edit that moves no rung
-        # still reds `--check` — correctly, and the fragment banks that as the
+        # still fails `--check` — correctly, and the fragment banks that as the
         # intended direction — but the message said "the derived stage moved"
         # precisely when it had not, and the `cached:`/`now:` blocks printed
         # underneath REFUTE it: every derived value byte-identical, only the

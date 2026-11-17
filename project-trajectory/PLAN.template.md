@@ -37,7 +37,7 @@ Discipline (same bullet rules as status.md Open items):
   `SR-000`'s acceptance predicate.
   **Scope:** `src/export.py` (new), `LLR-000`, `TC-000`.
   **Done-when:** `TC-000` passes in the smoke tier; `scripts/check.py --stage DevStg-Tests`
-  green.
+  passes.
 
 ## Notes for the next PLAN session
 

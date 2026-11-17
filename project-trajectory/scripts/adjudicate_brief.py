@@ -522,7 +522,7 @@ def evidence_gap_values(root, row):
     gives the judge the state of the world it is actually ruling on — a row
     whose gap closed between mint and claim refuses here rather than briefing a
     session about a contradiction that no longer exists. It also means the
-    brief shows EVERY currently-red case, not only the one line that minted
+    brief shows EVERY currently failing case, not only the one line that minted
     this row: the template asks for one drafted row per distinct CAUSE
     precisely because one missing helper often explains several, and the row's
     own line is untyped (it lives inside the Title), so selecting by it would

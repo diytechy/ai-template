@@ -201,7 +201,7 @@ def test_the_disposition_brief_carries_the_report_the_spec_and_the_commit_facts(
 
 
 def test_a_clean_close_has_no_report_so_the_disposition_brief_is_refused(tmp_path):
-    """`intake._complete_spot_checks` mints a disposition row for a GREEN close,
+    """`intake._complete_spot_checks` mints a disposition row for a PASSING close,
     which writes no report. The brief is built around the lane's report, so
     composing one here would ask the judge to rule on an absence — the refusal
     names what is missing, and the caller HOLDS the row rather than
@@ -367,7 +367,7 @@ def test_a_census_that_has_come_clean_refuses_rather_than_briefing_an_empty_one(
 
 
 # `Verifies` is required too, but it cannot be driven through the census: a row
-# with no targets is not red by definition (`evidence_gap_census` skips it), so the
+# with no targets is not a gap by definition (`evidence_gap_census` skips it), so the
 # empty-census refusal fires first. It stays in `TC_CELLS` as a guard for any
 # future caller that does not come through the census.
 @pytest.mark.parametrize("cell", [c for c in ab.TC_CELLS if c != "Verifies"])
@@ -1461,7 +1461,7 @@ def _first_acceptance_repo(tmp_path):
     falls back to the shipped `DevStg-Release`, which holds every rung, so an
     undeclared fixture is not this arm's scenario at all — it is the operator's.
     That omission is what let the first cut ship a brief with no dial filter and
-    a green test beside it (WI-572 REVIEW-A).
+    a passing test beside it (WI-572 REVIEW-A).
 
     AND THE SCOPE IS DECLARED, for the same class of reason. The mint writes the
     rows it handed over into `Adjudicates`; a fixture that omitted the cell would

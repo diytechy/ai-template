@@ -205,7 +205,7 @@ def test_a_row_with_no_in_tree_endpoint_is_a_strict_finding(scaffold):
 # --- WI-443 / OI-14 part B: the IF+CMP schema tier, WARN-FIRST -----------------
 # The ruled sequencing is advisory-until-the-corpus-converges, so EVERY test in
 # this section asserts the WARN TEXT and `returncode == 0` under `--strict`. A
-# rule that reddens a gate here would be this slice overreaching its ruling; a
+# rule that fails a gate here would be this slice overreaching its ruling; a
 # rule that says nothing would be the state OI-14 spent three days measuring the
 # drift of. Both halves are pinned, per rule.
 
@@ -334,7 +334,7 @@ def test_an_empty_retired_cell_and_a_nested_sub_table_are_refused_by_the_carrier
     # carrier an unset cell is an ABSENT key); `[interface.IF-002.legacy]` is
     # the nested-table refusal (a cell that is itself a table is not a cell).
     # Both land as a REFUSAL rather than a report — the fail-closed half of the
-    # carrier fork — so `--strict` reds either way.
+    # carrier fork — so `--strict` fails either way.
     make_minimal_project(scaffold)
     ifs = scaffold / "docs" / "requirements" / "interfaces.toml"
     clean = (
@@ -559,7 +559,7 @@ def test_untagged_endpoint_advisory_classifies_instead_of_staying_silent(scaffol
     `cross_component_findings` VACUOUS for them — and the containment rule that
     was assumed to cover them CANNOT, because it ranges over arch-map modules
     while these endpoints are data files, directories and external actors. Both
-    checks were green and neither was saying anything. This advisory does not
+    checks passed and neither was saying anything. This advisory does not
     make them findings; it makes them VISIBLE, and it names individually only
     the endpoints that resolve to nothing, which are the only actionable ones."""
     make_minimal_project(scaffold)
@@ -854,7 +854,7 @@ def test_the_retired_direction_column_closes_no_vocabulary_here(scaffold):
 
 
 def test_if_placeholder_and_absent_are_free(scaffold):
-    # The scaffold ships an inert IF-000 placeholder: no interface section, green.
+    # The scaffold ships an inert IF-000 placeholder: no interface section, passes.
     make_minimal_project(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -1179,7 +1179,7 @@ def test_a_requirement_reference_on_an_interface_is_still_refused(bridge_project
 # --- the IF-208 seam's hat half, through the delivered checker ----------------
 # (SR-213, SR-214.) The rule tests in tests/test_trace_hats.py and
 # tests/test_assumption_rules.py call `hat_findings` and `obstacle_hat_findings`
-# directly, so they stay green if the checker stops reading a hat's
+# directly, so they keep passing if the checker stops reading a hat's
 # `speaks_for` or stops composing the obstacle rule. These cases drive
 # `trace.py --strict` itself: each reference must become a strict `hat`
 # finding, fail the run and be counted in the report. The needs move onto the

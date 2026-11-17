@@ -626,9 +626,9 @@ def symbol_findings(root):
     for the LLR tier — `Status = Founded` means "the artifacts this row calls
     for exist", and for an LLR (which has no children in this schema) that is
     resolving code. A per-token rule answers a different, harsher question —
-    "is every name in this cell exact" — and on real data it reds 31 of 149
+    "is every name in this cell exact" — and on real data it fails 31 of 149
     rows, 18 of them for tokens that were never symbol claims: a local, an
-    attribute, a CSS variable, a prose fragment. That is a check that reds the
+    attribute, a CSS variable, a prose fragment. That is a check that fails the
     tree on arrival, enforcing a grammar no ruling ever gave the cell. The
     anchor is the same trade ruling R2 made on the sibling cell: validate the
     coarse claim (the code is real, at a module that is real, under a name that

@@ -234,7 +234,7 @@ def _open_item_lines(root, queue):
 # the worst place for a silent copy: a reworded or inserted rung would have shown
 # the dashboard's readers the OLD sentence, or dropped the stage bullet entirely
 # (the `stage in _STAGE_LABELS` guard below degrades to bar-only wording), with
-# every test still green. The table now has one home in `kitlib.ladder`, which
+# every test still passing. The table now has one home in `kitlib.ladder`, which
 # this module imports DIRECTLY rather than through `spine_rules`: a render leaf
 # should not have to load a 1,400-line derivation engine to read eight strings —
 # the same direction WI-483 took `station` out of the merge coordinator.

@@ -168,7 +168,7 @@ def test_an_empty_fold_is_the_FLOOR_and_never_raises():
     """Corner case 3 at the fold level — a fresh scaffold, an empty spine and an
     all-draft repo all arrive here, and all three need a defined SELECTION
     meaning. Below the floor nothing is selected by an at-or-above rule, so the
-    run would go green because no check ran.
+    run would pass because no check ran.
 
     Implements: TC-180
     """
@@ -307,7 +307,7 @@ def test_content_still_moves_the_fingerprint(tmp_path):
 
 def test_process_toml_is_NOT_an_input(tmp_path):
     """Operator ruling 2026-08-21 (amending plan §2): dials govern who may accept,
-    not what stage is derived — and an over-inclusive fingerprint costs red
+    not what stage is derived — and an over-inclusive fingerprint costs failing
     commit checks after every policy-dial edit, not "milliseconds". A process.toml
     edit must not move the fingerprint."""
     root = _tree(tmp_path)
@@ -348,9 +348,9 @@ def test_every_file_the_DERIVATION_READS_is_a_declared_input(tmp_path):
     The existing pin is one-directional by construction: `test_process_toml_is_
     NOT_an_input` proves a NAMED file is not an input. Nothing proved an UNNAMED
     file is not one — and that is the expensive direction. The over-inclusive
-    error costs a spurious re-derivation (red commit checks, which is how the
+    error costs a spurious re-derivation (failing commit checks, which is how the
     process.toml ruling got made). The under-inclusive error costs a PERMANENT
-    false green: the moment `load_spine` reads a registry `DECLARED_INPUTS` does
+    false pass: the moment `load_spine` reads a registry `DECLARED_INPUTS` does
     not name, the fingerprint stops covering it, `read_stage` matches on a hash
     that ignores every edit to it, and every consumer returns a stale stage
     forever — with `derive_stage --check` passing, because it compares the same
@@ -367,7 +367,7 @@ def test_every_file_the_DERIVATION_READS_is_a_declared_input(tmp_path):
     ladder does not yet read, while two rungs already key on off-spine ones) —
     and the audit fails if the derivation touches any of them. Verified
     non-vacuous by mutation: teaching `load_spine` to read `interfaces.toml`
-    reds this test.
+    fails this test.
     """
     spine_rules = load_script("spine_rules")
     root = _tree(tmp_path)

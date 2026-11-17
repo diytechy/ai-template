@@ -7,7 +7,7 @@ carry a requirement reference as a tolerant third element, and a checker
 under a declared warn-vs-gate policy. This module proves the CHECKER catches
 each of the four classes on a planted scaffold — remove a file, plant a bogus
 reference, leave a bare pair, and add a stale exclusion — so the test claims
-exactly what it exercises. Its green over the independently enumerated REAL
+exactly what it exercises. Its pass over the independently enumerated REAL
 DELIVERY UNIVERSE is the standing every-file-maps evidence.
 """
 

@@ -1,11 +1,11 @@
 """The loop's review gate and its commit-check failure cap (WI-958).
 
 A managed worker draws a review only over a tip whose declared commit checks
-are recorded as passed. failing checks draws no review: the red is recorded in the build's
+are recorded as passed. Failing checks draw no review: the failure is recorded in the build's
 committed session log, keyed by the build commit, and the next build carries
-the checks' failure tail. The red count lives in those committed logs, so it
+the checks' failure tail. The failure count lives in those committed logs, so it
 survives a resume and resets at a verified passed-checks record; at
-`[build] stop_lane_after_consecutive_commit_check_failures` consecutive reds
+`[build] stop_lane_after_consecutive_commit_check_failures` consecutive failures
 the worker ends with its own exit code, and the dispatcher closes the lane
 partial (`tests/test_dispatch.py`).
 
@@ -57,7 +57,7 @@ TRAIN = "llm/train/t1"
 # scripted typed verdict and commits with the row's trailer. A reviewer (its
 # brief names a verdict path) writes the next scripted verdict body and
 # commits. Anything else builds: before committing, the n-th build sets the
-# stand-in checks red or green from `checks_plan` (one R or G per build), commits
+# stand-in checks to fail or pass from `checks_plan` (one R or G per build), commits
 # `work.txt` with the WI trailer and records its sha; under `code_work` it
 # writes `src/work.py` beside it; under `record_last` it then commits a
 # record-only log fragment on top; under `no_commit` it records the launch and
@@ -345,8 +345,8 @@ def test_failed_checks_draw_no_review_record_a_failed_round_and_rebuild_with_the
     tmp_path,
 ):
     """Implements: TC-375"""
-    # TC-375. A committed build whose commit checks are red draws no review: the
-    # red is written into that build's committed session log, keyed by its
+    # TC-375. A committed build whose commit checks fail draws no review: the
+    # failure is written into that build's committed session log, keyed by its
     # sha, and the next build's prompt carries the checks' failure tail.
     lane, ctl, cmd = _lane(tmp_path)
     (ctl / "checks_fail").write_text("on\n", encoding="utf-8")
@@ -416,7 +416,7 @@ def test_a_resumed_build_receives_the_tail_of_a_long_recorded_refusal(tmp_path):
 
 def test_passed_commit_checks_are_recorded_once_then_the_review_is_drawn(tmp_path):
     """Implements: TC-376"""
-    # TC-376. A committed build whose commit checks are green gets exactly one
+    # TC-376. A committed build whose commit checks pass gets exactly one
     # `commit` record commit, and the review round is drawn after it.
     lane, ctl, cmd = _lane(tmp_path)
     _configure(lane)
@@ -450,8 +450,8 @@ def test_passed_commit_checks_are_recorded_once_then_the_review_is_drawn(tmp_pat
 def test_resumed_round_on_an_unrecorded_tip_runs_the_producer_once(tmp_path, outcome):
     """Implements: TC-377"""
     # TC-377. A resumed lane whose committed build owes a round but carries no
-    # passed-checks record runs the commit checks once at the draw: green draws the round
-    # and a CHECKS log records the result, red draws no reviewer.
+    # passed-checks record runs the commit checks once at the draw: a pass draws the round
+    # and a CHECKS log records the result, a failure draws no reviewer.
     lane, ctl, cmd = _lane(tmp_path)
     _configure(lane)
     _hand_build(lane, ctl, red=(outcome == "failed"))
@@ -495,7 +495,7 @@ def _adjudication_rows(repo):
 
 
 def _post_narrow_round(tmp_path):
-    """CHANGES-REQUESTED, a green rework, a narrow APPROVE and the fresh full
+    """CHANGES-REQUESTED, a passing rework, a narrow APPROVE and the fresh full
     round. Returns `(lane, ctl, proc)`."""
     lane, ctl, cmd = _lane(tmp_path)
     (ctl / "verdicts.json").write_text(
@@ -566,7 +566,7 @@ def test_post_narrow_and_adjudication_rounds_draw_only_over_a_verified_passed_ch
 
 def test_the_failure_count_survives_a_resume_and_a_pass_resets_it(tmp_path):
     """Implements: TC-378"""
-    # TC-378. The red count is read from the lane's committed logs: a fresh
+    # TC-378. The failure count is read from the lane's committed logs: a fresh
     # process continues it, and its first build carries the recorded failure
     # tail. A verified passed-checks record resets it.
     lane, ctl, cmd = _lane(tmp_path / "a")
@@ -580,7 +580,7 @@ def test_the_failure_count_survives_a_resume_and_a_pass_resets_it(tmp_path):
     resumed = _build_prompts(ctl)[seen:]
     assert resumed and "CHECKS-FAIL-MARKER" in resumed[0], _out(second)
 
-    # red, green (its round asks for changes), red, red: two since the green.
+    # failing, passing (its round asks for changes), failing, failing: two since the pass.
     lane, ctl, cmd = _lane(tmp_path / "b")
     (ctl / "checks_plan").write_text("RGRR\n", encoding="utf-8")
     (ctl / "verdicts.json").write_text(json.dumps([CHANGES_REQUESTED]), "utf-8")
@@ -591,7 +591,7 @@ def test_the_failure_count_survives_a_resume_and_a_pass_resets_it(tmp_path):
 
 def test_the_failure_count_survives_a_resume_to_the_cap_and_exits_12(tmp_path):
     """Implements: TC-378"""
-    # TC-378. Two reds in one run and a third in a fresh process reach a cap
+    # TC-378. Two failures in one run and a third in a fresh process reach a cap
     # of 3: the resumed worker ends with the cap's own code and banner.
     lane, ctl, cmd = _lane(tmp_path)
     (ctl / "checks_fail").write_text("on\n", encoding="utf-8")
@@ -610,9 +610,9 @@ def test_a_lane_resumed_at_the_cap_exits_12_before_any_session(tmp_path, reds):
     # TC-378, TC-381. A lane resumed with the cap's count of failed-checks records
     # already committed (a stop after the record and before the exit) ends at
     # run start: no builder, reviewer or checks run and nothing is committed,
-    # whatever round its committed trailer owes. One red fewer is no cap: the
+    # whatever round its committed trailer owes. One failure fewer is no cap: the
     # resumed run launches a build (one that commits nothing, so it records no
-    # further red); its run is given one session, since a build that commits
+    # further failure); its run is given one session, since a build that commits
     # nothing does not end the run and a second session would build again.
     lane, ctl, cmd = _lane(tmp_path)
     (ctl / "checks_fail").write_text("on\n", encoding="utf-8")
@@ -650,8 +650,8 @@ def test_an_interrupted_failure_is_rechecked_once_at_the_draw_and_counted_once(
 ):
     """Implements: TC-379"""
     # TC-379. A build commit left with neither a passed-checks record nor a failed-checks record
-    # is re-checked once at the next draw, and the CHECKS log records its red;
-    # the same red recorded twice for one build commit counts once.
+    # is re-checked once at the next draw, and the CHECKS log records its failure;
+    # the same failure recorded twice for one build commit counts once.
     lane, ctl, cmd = _lane(tmp_path)
     _configure(lane)
     build = _hand_build(lane, ctl, red=True)
@@ -663,7 +663,7 @@ def test_an_interrupted_failure_is_rechecked_once_at_the_draw_and_counted_once(
     checks_logs = [t for t in _committed_logs(lane).values() if _phase(t) == "CHECKS"]
     assert any(build in _CHECKS_FAILED_RE.findall(t) for t in checks_logs), _out(proc)
 
-    # The same red, recorded a second time in a log of its own.
+    # The same failure, recorded a second time in a log of its own.
     again = lane / "docs" / "iteration" / "t1-090-20261021-000000.log"
     again.write_text(
         "# agent session log\n# session: 090\n# train: t1\n# phase: CHECKS\n"
@@ -673,7 +673,7 @@ def test_an_interrupted_failure_is_rechecked_once_at_the_draw_and_counted_once(
         encoding="utf-8",
     )
     _git(lane, "add", "-A")
-    _git(lane, "commit", "-q", "-m", "telemetry: the red, recorded twice")
+    _git(lane, "commit", "-q", "-m", "telemetry: the failure, recorded twice")
     assert _red_count(lane).count == 1
 
 
@@ -682,9 +682,9 @@ def test_a_build_ending_in_a_record_only_commit_is_recorded_and_counted_once(
 ):
     """Implements: TC-379"""
     # TC-379. A build session whose last commit touches only records (its log
-    # fragment) is the same build commit at the event and at the draw: the red
+    # fragment) is the same build commit at the event and at the draw: the failure
     # recorded at the event is found again on resume, so the checks do not run
-    # twice for it and two red builds count two.
+    # twice for it and two failing builds count two.
     lane, ctl, cmd = _lane(tmp_path)
     (ctl / "checks_fail").write_text("on\n", encoding="utf-8")
     (ctl / "record_last").write_text("on\n", encoding="utf-8")
@@ -788,7 +788,7 @@ def _reader_green(repo):
     """An empty commit carrying a verified `commit` record of the tip."""
     tree = _git(repo, "rev-parse", "HEAD^{tree}")
     work = _git(repo, "rev-parse", "HEAD")
-    line = kverdict.format_passed_checks(tree, work, "commit", "none", "green")
+    line = kverdict.format_passed_checks(tree, work, "commit", "none", "passed")
     _git(repo, "commit", "-q", "--allow-empty", "-m", "record-checks\n\n" + line)
 
 
@@ -798,7 +798,7 @@ def test_failed_rounds_counts_distinct_failed_builds_and_a_passed_checks_record_
     """Implements: TC-378"""
     # TC-378. The count is read from the committed logs alone, so a fresh
     # process reads what an earlier one recorded; the newest verified commit
-    # record resets it, and the last summary is the newest red's.
+    # record resets it, and the last summary is the newest failure's.
     repo = _reader_lane(tmp_path)
     first = _reader_build(repo, 1)
     _reader_log(repo, 1, "BUILD", (first, "checks failed:\n  one"))
@@ -822,7 +822,7 @@ def test_failed_rounds_counts_distinct_failed_builds_and_a_passed_checks_record_
 
 def test_a_long_failure_summary_keeps_its_cause_and_its_final_diagnostic():
     """Implements: TC-375"""
-    # TC-375. The one persisted summary of a red result is bounded, and a
+    # TC-375. The one persisted summary of a failing result is bounded, and a
     # refusal longer than the bound keeps both ends: the cause at its head and
     # the diagnostic a check run prints last. A short one is kept whole.
     sha = "a" * 40
@@ -858,7 +858,7 @@ def test_a_header_in_the_earlier_form_is_not_a_failed_checks_record():
 
 def test_failed_rounds_counts_one_build_recorded_twice_once(tmp_path):
     """Implements: TC-379"""
-    # TC-379. A red recorded for one build commit in two logs (the build's own
+    # TC-379. A failure recorded for one build commit in two logs (the build's own
     # and a later re-check's) counts once; the record's grammar round-trips,
     # its summary folded to one line, and a transcript line is no record.
     repo = _reader_lane(tmp_path)
@@ -880,7 +880,7 @@ def test_failed_rounds_counts_an_unreadable_log_and_answers_none_for_no_history(
     tmp_path, monkeypatch
 ):
     """Implements: TC-378"""
-    # TC-378. A log git cannot show counts as one red keyed by its path,
+    # TC-378. A log git cannot show counts as one failure keyed by its path,
     # toward the cap; a range git cannot list answers None.
     repo = _reader_lane(tmp_path)
     build = _reader_build(repo, 1)
@@ -1094,9 +1094,9 @@ def test_a_bad_failure_cap_refuses_before_any_session(tmp_path, key, value):
 
 def test_failure_cap_exits_with_its_own_code_and_one_fewer_does_not(tmp_path):
     """Implements: TC-381"""
-    # TC-381. Two consecutive reds under a cap of 2 end the worker with exit
+    # TC-381. Two consecutive failures under a cap of 2 end the worker with exit
     # 12 and the cap's stop banner, which names the count, the declared key
-    # and its value; the same two reds under a cap of 3 end on
+    # and its value; the same two failures under a cap of 3 end on
     # the iteration budget instead. The cap closes partial rather than
     # escalating through the declared acceptance level: the worker never
     # consults the page ladder (no failure-action line, no PAGE-OPERATOR stop)

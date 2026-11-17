@@ -588,7 +588,7 @@ def test_a_later_session_rewriting_a_round_cannot_change_what_the_gate_counts(
     # neither the governing identity nor the implementer-touch tripwire (which
     # excludes the train's own review folder) - and the gate used to read each
     # round at the BRANCH TIP. A later session turning the reviewer's
-    # CHANGES-REQUESTED into an APPROVE therefore turned the gate green, with no
+    # CHANGES-REQUESTED into an APPROVE therefore made the gate pass, with no
     # trailer on the lane to contradict it. A round is now read as its review
     # session COMMITTED it: at the end of the range that session's log records.
     root = rounds_repo(tmp_path)
@@ -904,10 +904,10 @@ def _refresh_commit(root, branch, when):
         "-m",
         "{}0123456789\n\n{}".format(
             kv.refresh_subject(branch),
-            kv.format_passed_checks(tree, work, "landing", "none", "checks green"),
+            kv.format_passed_checks(tree, work, "landing", "none", "checks passed"),
         ),
     )
-    assert kv.refresh_passed_checks(root, branch) == (work, "checks green")
+    assert kv.refresh_passed_checks(root, branch) == (work, "checks passed")
     return work
 
 
@@ -1321,7 +1321,7 @@ def test_the_peel_still_refuses_a_close_whose_relink_leaves_docs_work(tmp_path):
     inbound relink rewrites a review file outside `docs/work/` is not peeled
     (the adoption-record rule admits that relink; the peel does not).
 
-    A characterization, green before and after the shared close shape lands.
+    A characterization, passing before and after the shared close shape lands.
     Adequacy witness: a peel that handed the shared close shape the relink
     oracle (`spec_move.exact_relink`), widening the peel, would return the
     close's parent here and fail it.
@@ -1618,7 +1618,7 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
     # (round 015). A retired review scope leaves an EXTRA rollup behind; the
     # `--check` arm reported it and the write path never removed it, so the
     # remedy the failure message names could not clear the failure — an
-    # unbreakable red on the pre-commit floor and in `_TRUNK_FRESHNESS_STEPS`,
+    # unbreakable failure on the pre-commit floor and in `_TRUNK_FRESHNESS_STEPS`,
     # under a misleading instruction. The generator OWNS the directory now, so
     # what matters is not that STALE is reported but that regenerating clears
     # it.
@@ -1627,7 +1627,7 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
 
     # THE FLAT PRE-TRAIN LAYOUT, which `round_file` supports and the DIRECTORY
     # enumeration silently skipped: an adopter on it got an empty rollup
-    # directory AND a green `--check`, because the check compared against the
+    # directory AND a pass `--check`, because the check compared against the
     # same empty target set. The scope set is now the round files' own `train`.
     flat = root / "docs" / "reviews" / "004-REVIEW-A-abc1234.md"
     flat.write_text(APPROVE, encoding="utf-8", newline="\n")
@@ -1783,7 +1783,7 @@ def test_a_stale_owed_marker_over_served_evidence_redraws_nothing(tmp_path):
     # "both phases served" against evidence the derivation never read — the
     # round-033 defect reproduced inside the regression written to close it,
     # and the reason `resume_owed_round` could invert its C2 contract with
-    # this test still green (ROUND 034).
+    # this test still passing (ROUND 034).
     _git(root, "checkout", "-q", "wi-401")
     (root / "src" / "widget.py").write_text(
         "VALUE = 2\n", encoding="utf-8", newline="\n"
@@ -1838,8 +1838,8 @@ def test_a_resume_that_cannot_read_its_evidence_still_draws_the_parked_round(
     #
     # IN-PROCESS, and that is the point. The end-to-end test that caught this
     # lives in `test_agent_loop_review`, which `conftest.SLOW_MODULES` drops
-    # from the smoke tier — so the inversion sat red on the branch for five
-    # commits under green commit checks. The guard belongs where the checks run.
+    # from the smoke tier — so the inversion kept failing on the branch for five
+    # commits under passing commit checks. The guard belongs where the checks run.
     al = _al()
     root = rounds_repo(tmp_path)
     _git(root, "checkout", "-q", "wi-401")

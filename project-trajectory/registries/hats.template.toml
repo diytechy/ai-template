@@ -128,7 +128,7 @@ listens_for = """A requirement satisfiable only with undocumented project knowle
 [hat.UNATTENDED-OPS]
 applies_when = 'tags contains "unattended" or tags contains "loop"'
 asks = """What does this look like at 3am with no human — what happens when its input is missing, stale, or half-written?"""
-listens_for = """A failure that pages nobody: a silent degrade, a partial write left behind, an unbounded retry, a green that is green because nothing looked."""
+listens_for = """A failure that pages nobody: a silent degrade, a partial write left behind, an unbounded retry, a pass that passes only because nothing looked."""
 
 [hat.CROSS-PLATFORM]
 applies_when = 'tags contains "scripts" or tags contains "launcher" or tags contains "shell"'

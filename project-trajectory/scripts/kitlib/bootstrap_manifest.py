@@ -280,7 +280,7 @@ MAPPING = [
     # answers the other way (rule R-F archives a spec-of-record at close), and a
     # reader with only the specs README in hand generalizes the wrong lifecycle.
     ("work/README.template.md", "docs/work/README.md"),
-    # ...and the declaration that makes it green: a work spec is a REGISTRY
+    # ...and the declaration that makes it pass: a work spec is a REGISTRY
     # ENTRY that happens to be Markdown, not a page anyone navigates to, so
     # `docs/work/*` is a declared expected-live-orphan class rather than a wall
     # of check_docs warnings (WI-228's census idiom, one glob with its reason).
@@ -329,7 +329,7 @@ MAPPING = [
     # asserts the copied package imports and matches the kit's file set. That
     # test exists because THIS IS THE LINE THE REPO HAS ALREADY GOT WRONG ONCE:
     # MAPPING omitted `schedule.py`, and every fresh scaffold died on its first
-    # claim while this repo stayed green, invisible to re-sync because an
+    # claim while this repo kept passing, invisible to re-sync because an
     # already-adopted repo carries the file from an older kit.
     ("scripts/kitlib/__init__.py", "scripts/kitlib/__init__.py"),
     ("scripts/kitlib/config.py", "scripts/kitlib/config.py"),
@@ -675,7 +675,7 @@ MAPPING = [
     ("scripts/lane.py", "scripts/lane.py"),
     # The two lane closes that are NOT a merge (WI-387, concurrency-v2 §A3):
     # handback (the work so far committed as-is, the specs back in queued/) and
-    # its ruled red arm, quarantine. drive.py imports it unguarded, so a
+    # its ruled failure arm, quarantine. drive.py imports it unguarded, so a
     # scaffold without it cannot run the walk-away loop at all.
     ("scripts/handback.py", "scripts/handback.py"),
     # The link-aware spec-move ritual (WI-393, rehoming WI-288/WI-353): move a

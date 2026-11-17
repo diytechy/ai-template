@@ -44,7 +44,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   Tell every builder never to run a full `check_complexity.py --restamp`
   (one rewrote four rows' line counts upward, WI-798) and to delete any
   `.ruff_cache` its ruff run leaves in the tree: one under
-  `project-trajectory/scripts/` reddened `test_mapping_purpose` in the smoke
+  `project-trajectory/scripts/` failed `test_mapping_purpose` in the smoke
   tier (WI-798, 2026-10-11).
   Tell every builder never to fold parametrized cases into one looping
   test to stay under the smoke tier's `max-tests`: in-process growth
@@ -153,7 +153,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     (flows, prose outside the registries, contract bodies) and the
     RESYNC entry (wi-962 D-001).
   - An intent row naming a module the build creates (a new IF row's
-    owner) reds the checks before that module exists
+    owner) fails the checks before that module exists
     (`test_seam_resolution`; `check_trajectory --strict` also errors on
     an IF no TC cites): keep the set as a patch and let it ride the
     build commit that creates the module, recorded as a decision
@@ -221,8 +221,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      to run. A spine-checkpoint commit and a decisions-record commit change
      non-record paths, so record checks for them (stage them into the next record-checks run, or
      make an empty record-checks commit) before the round.
-     A red the tip already shows (a known failing test) is fixed in a build
-     stage before the round, so the round reviews a green tip (item 13;
+     A failure the tip already shows (a known failing test) is fixed in a build
+     stage before the round, so the round reviews a passing tip (item 13;
      wi-926 D-007).
      Counted rounds 1 and 2 pass no `--stance` (the ordinary default). The
      third counted round, the last the cap allows (ruling 4), the gate over
@@ -287,7 +287,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      whose count matches its findings. It picks `NNN` itself: read the filed
      name before a commit subject or brief cites the round. A verdict
      quoting a fixture's markdown link files a broken link, which
-     `check_docs` reds in the checks: make that link a code span in the
+     `check_docs` fails in the checks: make that link a code span in the
      scratch verdict (backticks only), delete the filed copy and
      re-file (wi-925 D-011). Each round file
      gets its own coverage plan (`plan_coverage.py --findings` takes one).
@@ -402,7 +402,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      lanes' plans, critiques and records run in parallel, each from its
      own lane, its records committed alone behind its own checks.
   A plan that quotes a relative markdown link meant for another file (a
-  suggested pointer) reds `check_docs` once committed, and the plan
+  suggested pointer) fails `check_docs` once committed, and the plan
   commit's hook does not run it: run `check_docs.py --root .` before
   committing a plan, since the repair edits the plan and unbinds its pass
   record, owing a fresh critique (wi-979 D-001).
@@ -628,7 +628,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      text verbatim) and `position` (the holder's position verbatim). Never
      name a finding `G` plus a digit: `check_vocab` reads it as a retired gate
      tag wherever the id is quoted in an authored file (a decisions record),
-     and the smoke tier goes red. Commit the
+     and the smoke tier fails. Commit the
      file and keep it: the composed brief names it, its binding records
      that path, and the coverage gate reads that file alone.
   2. Compose: `"$PY" "$TOOLS/compose_lane.py" WI-NNN dispute "<findings path>" "" <verdict> <brief>`
@@ -813,9 +813,9 @@ commit of its own, move it to trunk's tip
 - **Run the commit checks in the lane after the act turn,** before the
   squash. When trunk still equals the lane's base (no rebase was owed),
   the staged squash's tree is the lane tip's, so the checks on the staged
-  squash below is that run; a red there resets the squash and is fixed in
+  squash below is that run; a failure there resets the squash and is fixed in
   the lane (leg 28). An act that accepts a row arms checks a Drafted row escapes:
-  an accepted Smoke TC whose evidence sits in a `SLOW_MODULES` module reds
+  an accepted Smoke TC whose evidence sits in a `SLOW_MODULES` module fails
   `test_every_accepted_smoke_case_has_evidence_in_the_smoke_tier`. Fix it
   in the lane (move the case to a fast module, a traced-only change) and
   re-anchor there, never on trunk (wi-958 D-019).
@@ -1053,7 +1053,7 @@ lane commit being replayed.
   across the sides: identical cells (`tier = "Full"`) belong to both rows,
   and a dedupe meant for import lists dropped three of TC-370's (wi-926
   D-006). Run `ruff format` on each resolved Python file: a joined import
-  line reds the hook's format step.
+  line fails the hook's format step.
 - After a rebase, run trunk's and the lane's changed test modules on the
   rebased lane: the smoke tier skips the slow ones, where trunk's new
   tests meet the lane's new refusals. A failure the pre-rebase tip shares is the lane's,
@@ -1128,7 +1128,7 @@ lane commit being replayed.
   long cell on its `key = ` line inside the row's table block. Verify the
   change-list path in the prompt before launching: a stale path wastes a turn.
 - An IF row's `channel` is a closed set (`kitlib.spine.IF_CHANNELS`); a value
-  outside it passes the commit hook and reddens the smoke tier
+  outside it passes the commit hook and fails the smoke tier
   (`test_seam_resolution`). An invocation with an exit code is `cli`.
 - The local Codex sandbox has failed shallow-clone tests and `git worktree add`,
   and hit Windows locks at `-n 2`. Ask for `-n 0`; confirm those failures with
@@ -1247,12 +1247,12 @@ lane commit being replayed.
   commit runs it through `"$PY" "$SCRIPTS/integrate.py" record-checks --branch
   <lane> --checks commit --message-file <msg>` from the
   primary checkout, which runs `[required-checks] commit` and the row's derived test
-  set, refuses red, and commits the staged work with the passed-checks record the review render
+  set, refuses on a failure, and commits the staged work with the passed-checks record the review render
   requires (SKILL §3, Iterate step 1). A trunk commit runs the one
   declared command by hand, `run.cmd smoke` (`"$PY" "$SCRIPTS/run_menu.py" smoke` from
   a shell), whose steps are `docs/stack.ini` `[run] smoke`. Read the summary
   lines for `failed` and for each lint's findings before committing; a chain
-  gated only on the command's exit code inside `$(...)` committed a red tier
+  gated only on the command's exit code inside `$(...)` committed a failing tier
   (2026-10-10). The commit hook does not run it: run it yourself, before a
   landing commit rather than after it.
 - `integrate.py record-checks` runs `[required-checks] commit`, the smoke action with its
@@ -1273,14 +1273,14 @@ lane commit being replayed.
   evidence: it is named, with its disposition, in the lane's decisions
   record.
 - The declared checks run the tier once: the lints run first, then the
-  budget step's run, which exits with the tier's own code on a red tier
+  budget step's run, which exits with the tier's own code on a failing tier
   and prints its CPU-seconds and wall time, with a WARN line for a limit
   over. No checks fail on seconds: `run.cmd audit` (`[run] audit`, the same
   step in enforce mode) judges them and the tier's count against
   `max-tests`, by hand and at phase close, and a breach there is filed
   as a re-tier row, never charged to the lane that ran it. A hand wrapper
   passes the step's exit code through, so a chained `&& git commit` never
-  records a red tier.
+  records a failing tier.
 - A build whose in-process tests take the smoke tier past `max-tests`
   re-stamps the ceiling in that commit, with its reason, fig line and a
   decision, not at the landing: failed checks are not left standing (wi-911
@@ -1313,7 +1313,7 @@ lane commit being replayed.
 - `gen_verdict_rollup.py` refuses on a work branch; a lane that changes how
   rounds read leaves its rollups to the trunk landing.
 - `test_the_live_repos_own_mark_covers_its_live_ids` reads the working
-  tree: an uncommitted row numbered above the mark reds the smoke tier. Set
+  tree: an uncommitted row numbered above the mark fails the smoke tier. Set
   unrelated uncommitted rows aside before running the checks for a commit
   (2026-10-14).
 - `git add -A <paths>` aborts entirely if one path is missing. `2>/dev/null`
@@ -1356,7 +1356,7 @@ lane commit being replayed.
   refuses as partial.
 - `record-checks`'s refusal prints only the checks' last lines, never the
   failing test: run `"$PY" "$SCRIPTS/run_menu.py" smoke` in the lane,
-  to a log, to name it. A red that run passes is load-sensitive: file
+  to a log, to name it. A failure that run passes is load-sensitive: file
   it under status.md's follow-ups and re-accept; never charge it to the
   lane (2026-10-24a).
 - A tests stage's in-process cases can carry the smoke tier past
@@ -1471,7 +1471,7 @@ lane commit being replayed.
   after recording.
   Off a claimed branch the suite asserts the trunk-only `docs/stage` in
   full (`test_this_repo_s_committed_stage_is_current`), so a lane whose
-  close moved the derived stage reads that one red in a detached
+  close moved the derived stage reads that one failure in a detached
   worktree: re-derive there (`derive_stage.py`) and re-run the test
   before treating it as a defect (wi-921 D-020).
 - **Test jobs while the operator's applications load the box:** when the
@@ -1504,7 +1504,7 @@ lane commit being replayed.
   Ubuntu distro (Python 3.12, pytest 7.4, no xdist; nothing installed).
   Name it, `wsl.exe -d Ubuntu`: the default distro here is
   `podman-machine-default`, which has no git. Run the same modules at
-  the lane's base in the same clone, so a red the base shares is not
+  the lane's base in the same clone, so a failure the base shares is not
   charged to the lane (two `run.command` cases, 2026-10-18c).
   To confirm that a fix's regression test fails on the pre-fix code on
   POSIX, check out the pre-fix scripts over today's tests in the WSL
@@ -1543,7 +1543,7 @@ lane commit being replayed.
 - Tool calls in one message run one after the other, an Agent call included:
   a planner's 54 minutes passed before the two Sol critiques beside it began
   (leg 34). Real overlap needs one script that starts its children and waits.
-- A landed lane's deleted branch reds the next record-checks run of an open lane whose
+- A landed lane's deleted branch fails the next record-checks run of an open lane whose
   base still holds that claim folder (hold-by-rename). Rebase the open lane
   first, with `git stash` around staged work (wi-993, leg 34).
 - Tell every builder to exclude `OPERATOR_SCRATCHPAD.md` from a broad search: a

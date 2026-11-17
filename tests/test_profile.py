@@ -3,7 +3,7 @@
 The kit masters carry ALL permutations; bootstrap generates each repo's docs by
 omitting what the declared profile turns off. The properties pinned here are
 the ruling's own constraints: § labels never renumber, omissions leave
-resolvable stubs, every permutation scaffolds fully green, the default profile
+resolvable stubs, every permutation scaffolds a repository that passes, the default profile
 changes nothing, and a re-sync regenerates from the recorded docs/kit-profile.
 
 Implements: TC-009
@@ -157,7 +157,7 @@ def test_every_profile_permutation_scaffolds_and_passes(tmp_path, omit, stack):
 
     Implements: TC-165"""
     # The permutation matrix that holds the Q8 line: every profile must
-    # scaffold green (docs + trace), keep every § label, and leave a stub
+    # scaffold a repository that passes (docs + trace), keep every § label, and leave a stub
     # exactly where a section was omitted.
     args = ["--stack", stack]
     if omit:
@@ -364,7 +364,7 @@ def test_the_scaffolded_oi3_is_filed_with_its_queued_placeholder(tmp_path):
     non-Python profile's OI-3 lands together with a queued WI-001 whose `needs`
     cites it and whose `specref` is the item's own registry record, both
     watermarks cover what was allocated, the row reads blocked, and the fresh
-    scaffold's checker is green under --strict (no uncited pending item).
+    scaffold's checker passes under --strict (no uncited pending item).
 
     Implements: TC-010
     """

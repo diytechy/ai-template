@@ -272,9 +272,9 @@ def test_the_FRAME_rungs_are_repo_global_and_cap_every_phase(scaffold):
 def test_a_fresh_scaffold_reads_a_DEFINED_non_raising_selection_value(scaffold):
     """Two opposite failure modes were driven on the old axis: before the first
     derivation there was no stage at all to read (`None`), and after it the stage
-    was ord 0 — under at-or-above, a repo where NOTHING runs and the run goes
-    green because of it, breaking the shipped promise that a freshly-scaffolded
-    repo is green because its checks PASSED.
+    was ord 0 — under at-or-above, a repo where NOTHING runs and the run
+    passes because of it, breaking the shipped promise that a freshly-scaffolded
+    repo passes because its checks PASSED.
 
     The floor is the answer, and the honest ord-0 reading is reported beside
     it.
@@ -372,7 +372,7 @@ def test_on_a_CLAIMED_BRANCH_the_reader_derives_from_the_branch_s_own_registries
     """W-1, THE LARGEST STALE WINDOW THE SCHEDULE MAP FOUND, closed by
     construction. `derived-stage` is a member of `_TRUNK_FRESHNESS_STEPS`, so it
     reports SKIP on any claimed work branch — and a skipped step never affects the
-    exit code, which makes a GREEN run over a stale cache reachable there and
+    exit code, which makes a PASSING run over a stale cache reachable there and
     nowhere else.
 
     The common reader does not depend on that step: it verifies per call, so on a
@@ -461,7 +461,7 @@ def test_the_check_py_STEP_fails_on_a_stale_cache(scaffold):
     """NON-VACUITY, at the level the claim is actually made. The script's own
     `--check` is driven above, but what the commit checks run is `check.py`'s
     `derived-stage` STEP — a step can be wired and still be unable to fail (the
-    exact silent green SN-008 forbids). So: plant the defect, run the step, and
+    exact silent pass SN-008 forbids). So: plant the defect, run the step, and
     require a non-zero exit.
 
     Implements: TC-181
@@ -486,10 +486,10 @@ def test_the_check_py_STEP_fails_on_a_stale_cache(scaffold):
 
 def test_a_freshly_scaffolded_repo_PASSES_on_the_placeholder(scaffold):
     """The shipped promise (`ci/check.yml`: "a freshly-scaffolded DevStg-Reqs repo
-    is green") must survive the new step. The scaffold ships a comment-only
+    passes") must survive the new step. The scaffold ships a comment-only
     placeholder rather than invented values, and `--check` passes it with a note
     — the same smooth-transition path `docs/gate` gives a legacy hand-set marker.
-    Green because there is genuinely nothing to be stale against, not because the
+    Passing because there is genuinely nothing to be stale against, not because the
     check was sanctioned.
 
     Implements: TC-181
@@ -590,7 +590,7 @@ def test_the_stage_currency_claim_stands_down_on_a_claimed_branch_only(scaffold)
     """The claim above is exempt where its commit-check twin is, and nowhere else.
     Amending a settled row moves the stage's input digest, so a claimed work
     branch doing the routine amendment meets a stale `docs/stage` it may not
-    regenerate; the trunk, with the same stale file, must still go red."""
+    regenerate; the trunk, with the same stale file, must still fail."""
     skip_without_env_gates("git")
     make_minimal_project(scaffold)
     _no_frame(scaffold)

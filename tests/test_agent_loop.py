@@ -831,7 +831,7 @@ def test_a_reset_landing_EXACTLY_on_the_ceiling_is_slept_not_abandoned(
     slept and retried, *past* it the run stops at EXIT_WAITING — so the equal
     case belongs to the sleeping arm. Nothing pinned it: mutating
     `wait <= args.wait_on_limit` to `wait <` left the whole agent-loop suite
-    green (88 passed, 1 skipped), because the one parsed-reset test uses a
+    passing (88 passed, 1 skipped), because the one parsed-reset test uses a
     ceiling of 90000 against a wait structurally under 86400, a 3600-second gap
     the boundary can never be reached through.
 

@@ -3,7 +3,7 @@
 
 The mechanism replaces a DERIVED baseline (a git walk for the newest commit at
 which a row read `Accepted`) with a copied one. Its whole value rests on five
-properties, and each gets a red->green test here:
+properties, and each gets a test here driven to fail, then to pass:
 
   * drift is measured against the copy, over a real tree, and only ACCEPTED
     cells arm it;
@@ -95,7 +95,7 @@ def test_accepts_format_and_parse_share_one_multi_registry_syntax():
 def test_with_no_snapshot_every_reader_is_vacuous_by_ABSENCE_not_by_silence(tmp_path):
     # The pre-signing state, which is also every fresh adopter's state. `None`
     # rather than `{}` is the whole point: `{}` claims "the snapshot recorded no
-    # rows", which a drift reader would read as "nothing is anchored" and red
+    # rows", which a drift reader would read as "nothing is anchored" and fail
     # the entire spine.
     root = _tree(tmp_path)
     assert SNAP.exists(root) is False
@@ -111,7 +111,7 @@ def test_a_SCAFFOLDED_but_unsigned_snapshot_is_VACUOUS_TOO(tmp_path):
     test gets wrong. `bootstrap.py` scaffolds `docs/archive/last_accepted/` with
     its README and nothing else, deliberately — so a vacuum keyed on the
     DIRECTORY would report all eight tiers missing in every new repo on day one,
-    which is precisely the reds-everything failure the design defers arming to
+    which is precisely the failure of every check that the design defers arming to
     avoid. The vacuum is keyed on "holds no registry" instead. (Found when the
     producer was first wired to trace.py — adversarial round 2, 2026-08-15.)"""
     root = _tree(tmp_path)
@@ -226,7 +226,7 @@ def test_a_TRACED_only_refresh_needs_no_authority_at_all(tmp_path):
 def test_a_ACCEPTED_amendment_with_no_flip_and_no_ref_is_REFUSED(tmp_path):
     """THE LAUNDERING SCENARIO, executed. Rewrite an Accepted requirement's
     accepted text, then refresh: before this gate the copy landed, the drift
-    vanished and every check went green with the record rewritten to match."""
+    vanished and every check passed with the record rewritten to match."""
     root = _seeded(tmp_path)
     sid, row = _first_row_at(root, "accepted")
     before = (SNAP.snapshot_root(root) / SR_REL).read_bytes()
@@ -1082,7 +1082,7 @@ def test_an_ACCEPTANCE_cell_tier_is_drift_compared_like_the_spine(tmp_path):
         tmp_path, IF_REL, "IF-ID", "Status", ("Drafted", "Accepted")
     )
     before = SNAP.rows_for(SNAP.load_all(root), IF_REL, "IF-ID")
-    assert not SNAP.is_drifted(IF_REL, "IF-ID", row, before)  # green first
+    assert not SNAP.is_drifted(IF_REL, "IF-ID", row, before)  # passing first
     moved = dict(row, Contract=(row.get("Contract") or "") + " (amended)")
     assert SNAP.is_drifted(IF_REL, "IF-ID", moved, before)
     assert set(SNAP.drifted_cells(IF_REL, "IF-ID", moved, before)) == {"Contract"}
@@ -1101,7 +1101,7 @@ def test_a_STATE_cell_tier_is_drift_compared_like_the_spine(tmp_path):
         tmp_path, CMP_REL, "CMP-ID", "Status", ("Drafted", "Founded")
     )
     before = SNAP.rows_for(SNAP.load_all(root), CMP_REL, "CMP-ID")
-    assert not SNAP.is_drifted(CMP_REL, "CMP-ID", row, before)  # green first
+    assert not SNAP.is_drifted(CMP_REL, "CMP-ID", row, before)  # passing first
     moved = dict(row, Name=(row.get("Name") or "") + " (renamed)")
     assert SNAP.is_drifted(CMP_REL, "CMP-ID", moved, before)
 
@@ -1148,7 +1148,7 @@ def test_the_needs_files_two_tiers_are_COMPARED_tiers():
 
 def test_an_accepted_row_ABSENT_from_the_snapshot_is_unanchored(tmp_path):
     root = _seeded(tmp_path)
-    assert SNAP.unanchored_findings(root) == []  # green first
+    assert SNAP.unanchored_findings(root) == []  # passing first
     sid, row = _first_row_at(root, "accepted")
     # Delete the row from the SNAPSHOT copy: the live tree still claims it.
     snap_sr = SNAP.snapshot_root(root) / SR_REL
@@ -1296,7 +1296,7 @@ def _git_tree(tmp_path, prepare=None):
 
 def test_a_clean_copy_satisfies_the_mirror_invariant(tmp_path):
     """Implements: TC-173"""
-    # Green first, and it must be green by CONSTRUCTION: a legitimate copy is
+    # Passing first, and it must pass by CONSTRUCTION: a legitimate copy is
     # byte-for-byte and rides the same commit, so this can never warn.
     root, run_git = _git_tree(tmp_path)
     _rewrite(root, SR_REL, 'status = "Accepted"', 'status = "Accepted"')
@@ -1308,7 +1308,7 @@ def test_a_clean_copy_satisfies_the_mirror_invariant(tmp_path):
 def test_a_SCOPED_refresh_leaves_the_UNTOUCHED_offspine_mirror_PASSING(tmp_path):
     """WI-571 against the mirror: a spine flip copies only the spine registry,
     so the off-spine registry it did NOT copy keeps its seed-commit bytes. Both
-    mirror rules stay green with no flag, because each is pinned to the file it
+    mirror rules keep passing with no flag, because each is pinned to the file it
     judges — the untouched file is never in the commit (staged) and still matches
     live at ITS OWN writing commit, the seed (committed). "An untouched file is
     not written." """
@@ -1323,7 +1323,7 @@ def test_a_SCOPED_refresh_leaves_the_UNTOUCHED_offspine_mirror_PASSING(tmp_path)
     assert CT.staged_snapshot_findings(root) == []
     run_git("commit", "-m", "spine flip; off-spine drift left standing")
     # The interfaces snapshot's writing commit is STILL the seed, where it
-    # matched live byte-for-byte, so the committed rule is green too.
+    # matched live byte-for-byte, so the committed rule passes too.
     assert CT.committed_snapshot_findings(root) == []
     # And the drift survived the act — the census is intact, not zeroed.
     assert (SNAP.snapshot_root(root) / IF_REL).read_bytes() == seed_if
@@ -1410,7 +1410,7 @@ def test_a_HOLE_in_the_snapshot_REDS_A_REAL_STRICT_INTEGRITY_RUN(scaffold):
     `findings.integrity += findings.snapshot_findings`, and the review executed
     two plausible routing refactors that keep every such string in place while
     the floor stops firing — the acceptance-record rules disarmed with the whole
-    suite green. A grep cannot tell you what a program does.
+    suite passing. A grep cannot tell you what a program does.
 
     So this runs the real command over a real repo: bootstrap a scaffold, put ONE
     accepted requirement in it, seed the record, and then punch the exact hole the
@@ -1418,15 +1418,15 @@ def test_a_HOLE_in_the_snapshot_REDS_A_REAL_STRICT_INTEGRITY_RUN(scaffold):
     what the pre-commit hook and the DevStg-Reqs `registry-integrity` step both
     run.
 
-    THE GREEN BASELINE IS LOAD-BEARING: every step before the hole asserts exit
-    0, so the red at the end can only be the hole. And the summary's own
+    THE PASSING BASELINE IS LOAD-BEARING: every step before the hole asserts exit
+    0, so the failure at the end can only be the hole. And the summary's own
     `integrity=1` is asserted, not just the exit code — that is what pins the
     finding to the ALWAYS-ON pipe rather than to `--strict-schema`, which runs at
     DevStg-Impl alone and would leave the rule inert for every repo below the top
     checks."""
     sr = scaffold / SR_REL
     sr.write_text(sr.read_text(encoding="utf-8") + _WORKED_SR, encoding="utf-8")
-    # A hand-authored id owes the watermark; recording it keeps the baseline green
+    # A hand-authored id owes the watermark; recording it keeps the baseline passing
     # for the one reason that is not this rule's business.
     assert run_py(["scripts/trace.py", "--bump-ids"], cwd=scaffold).returncode == 0
     green = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
@@ -1504,7 +1504,7 @@ def test_a_LANDED_forgery_reds_EVERY_LATER_RUN_though_nothing_is_staged(tmp_path
     hand-edited snapshot with the hook bypassed, then ask the always-on floor
     again with a clean index. Before this rule the answer was exit 0, forever."""
     root, run_git = _git_tree(tmp_path)
-    # Green first, over the committed state the seed just made.
+    # Passing first, over the committed state the seed just made.
     assert CT.committed_snapshot_findings(root) == []
     snap_sr = SNAP.snapshot_root(root) / SR_REL
     snap_sr.write_text(
@@ -1555,7 +1555,7 @@ def test_the_mirror_repair_names_a_registry_the_resolver_accepts_per_carrier():
 
 def test_a_PENDING_AMENDMENT_leaves_the_committed_mirror_PASSING(tmp_path):
     """THE RULE THAT WOULD HAVE BEEN WRONG, refused deliberately. Comparing the
-    snapshot to live in the WORKING TREE reds every pending amendment — and the
+    snapshot to live in the WORKING TREE fails every pending amendment — and the
     lag between an amendment and its acceptance is the signal the whole
     mechanism exists to render. The comparison is pinned to the commit that
     WROTE each copy, so live moving on afterwards is silent here."""
@@ -1656,7 +1656,7 @@ def test_the_README_is_prose_and_is_exempt_from_the_mirror(tmp_path):
 def test_the_act_ledger_is_exempt_from_the_mirror(tmp_path):
     # The ledger is the snapshot's own record of its acts, with no live
     # counterpart, so neither mirror rule compares it with one: the seed commit
-    # carrying it and a later act appending to it stay green.
+    # carrying it and a later act appending to it keep passing.
     root, run_git = _git_tree(tmp_path)
     assert (SNAP.snapshot_root(root) / SNAP.ACTS).is_file()
     assert CT.committed_snapshot_findings(root) == []

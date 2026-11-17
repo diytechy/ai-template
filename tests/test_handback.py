@@ -16,7 +16,7 @@ repos, a real claim, a real lane worktree, real commits. What each group pins:
     would claim, close and re-claim the same WI forever. The assertion is
     against `schedule.frontier` itself, either way;
   * a `partial` report that omits the KEEP/DISCARD split refuses the merge —
-    the rung a live incident bought, where a green close merged rejected code
+    the rung a live incident bought, where a passing close merged rejected code
     onto trunk because nothing had asked which commits should survive;
   * every registry reader still parses a closed spec. `partial/` widened a
     status vocabulary that four copies enforce, so all four are driven over one
@@ -27,7 +27,7 @@ repos, a real claim, a real lane worktree, real commits. What each group pins:
     handback just wrote survives untouched, as do the lane's review rounds and
     its id watermark, which only ever rises.
 
-Mutation notes are inline where a green could be vacuous — a revert that
+Mutation notes are inline where a pass could be vacuous — a revert that
 reverted nothing, or a "blocked" assertion that would pass on an unblocked row.
 
 Implements: TC-138, TC-156, TC-184
@@ -216,7 +216,7 @@ def test_the_partial_close_lands_terminal_with_its_report_and_finishes_the_branc
 
 
 def test_a_partial_report_silent_about_the_keep_discard_split_refuses(tmp_path):
-    """The rung a LIVE incident bought (2026-08-03): a close merged green and
+    """The rung a LIVE incident bought (2026-08-03): a close passed and merged, and
     the code the lane had REJECTED landed on trunk as-is, because nothing had
     asked which commits should survive.
 
@@ -259,8 +259,8 @@ def test_a_partial_close_is_CLEAN_under_the_real_trajectory_check(tmp_path):
     early close leaves the spec's definition byte-identical.
 
     A rule no honest close can satisfy is not a rule. In the loop it is worse
-    than a red gate: the dispatcher's post-close refresh reds, `_refresh_failed`
-    quarantines the lane's work, the retry reds again (the spec move is
+    than a failing gate: the dispatcher's post-close refresh fails, `_refresh_failed`
+    quarantines the lane's work, the retry fails again (the spec move is
     bookkeeping and exempt from the revert), and the run dies — so every partial
     close would destroy the lane's work and stop the run, over bookkeeping.
 
@@ -1085,7 +1085,7 @@ def test_an_adjudication_close_moves_its_one_row(tmp_path):
     assert hb.close_adjudication(root, "wi-401") == (None, None)
 
 
-# --- the quarantine (the RULED red arm) ---------------------------------------
+# --- the quarantine (the RULED failure arm) -----------------------------------
 
 
 def quarantined_repo(tmp_path):
@@ -1219,7 +1219,7 @@ def _marks(**raised):
 
 def test_quarantine_leaves_the_monotone_watermark_as_the_lane_left_it(tmp_path):
     # A minted id is BURNED whether or not its row survives: the lane raised
-    # the IF mark when it allocated, the red revert takes the row away, and the
+    # the IF mark when it allocated, the failure revert takes the row away, and the
     # mark must stay where the lane left it. Reverting it with the product diff
     # lowered a mark in the quarantine commit itself, so the reverted tree
     # could never pass registry-integrity and the run stopped on the very
@@ -1254,7 +1254,7 @@ def test_quarantine_leaves_the_monotone_watermark_as_the_lane_left_it(tmp_path):
 
 def test_a_product_file_sharing_the_watermarks_prefix_still_reverts(tmp_path):
     # The watermark is exempt by EXACT path. A prefix match spared
-    # `docs/id-watermark.bak` too, a product file the red lane added, leaving
+    # `docs/id-watermark.bak` too, a product file the failing lane added, leaving
     # it live on trunk after a quarantine that claimed to revert the product.
     tr = load_script("trace")
     root = claimed_repo(tmp_path, extra=[(tr.WATERMARK, _marks(WI=401, IF=5))])
@@ -1283,7 +1283,7 @@ def test_the_monotone_exemption_names_the_watermarks_one_home():
 
 def test_quarantine_keeps_the_lanes_review_record(tmp_path):
     # Evidence of what happened survives the reverting of what was done: the
-    # red revert deleted a lane's round files with its product diff, and the
+    # revert of a failing lane deleted a lane's round files with its product diff, and the
     # disposition adjudicator then judged a close whose review it could not
     # read (WI-540, the one merged row on trunk with zero round files).
     root, wt = quarantined_repo(tmp_path)
@@ -1306,7 +1306,7 @@ def test_quarantine_keeps_the_lanes_review_record(tmp_path):
 
 def test_quarantine_refuses_when_the_failure_is_not_the_lanes_own_code(tmp_path):
     # A lane that changed nothing outside the bookkeeping surfaces cannot have
-    # caused the red, so there is nothing to revert and reverting nothing would
+    # caused the failure, so there is nothing to revert and reverting nothing would
     # only buy a second identical check run. It says so instead.
     root = claimed_repo(tmp_path)
     lane(root)
@@ -1319,7 +1319,7 @@ def test_quarantine_refuses_when_the_failure_is_not_the_lanes_own_code(tmp_path)
 
 def test_the_git_dependency_is_declared_for_this_module():
     # This suite drives real repositories end to end; without git on PATH every
-    # test above would SKIP and the module would still print a green. The
+    # test above would SKIP and the module would still print a pass. The
     # declared gate (conftest.ENV_GATES) is what makes that skip COUNTED in the
     # terminal summary rather than invisible (WI-326).
     assert shutil.which("git"), "the module-level env gate should have skipped"

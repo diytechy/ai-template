@@ -69,7 +69,7 @@ Contract IF-139: the derived view's generator, delivered as a CLI. A plain run
     exits 1 when the committed view is missing or stale — naming the command
     that regenerates it — and 0 when it is current. A repo that declares no
     real `CMP-###` row and carries no view is VACUOUS: exit 0, nothing written,
-    so an optional layer nobody opted into can never red a gate. `--root` and
+    so an optional layer nobody opted into can never fail a gate. `--root` and
     `--out` relocate the read and the write.
 Contract IF-140: the derived view itself — a TOML document carrying one
     `[derived]` census table, one `[component_view.CMP-###]` table per declared
@@ -322,7 +322,7 @@ def main(argv=None):
     out = Path(args.out) if args.out else root / OUT_REL
     # Vacuous — exit 0, write nothing — for a repo that declares no component and
     # carries no view: a fresh scaffold ships only the inert CMP-000 row, and the
-    # gate must not red it over an optional layer it never opted into.
+    # gate must not fail it over an optional layer it never opted into.
     if not _has_components(root) and not out.is_file():
         print(
             "gen_components: no real CMP row in {} and no {} — nothing to "

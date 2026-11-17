@@ -35,12 +35,12 @@ THE TWO KINDS OF CHECKS IN THIS MODULE ARE A DELIBERATE SPLIT, stated because a
 reader who misses it will think one of them is cheating. The end-to-end test
 stands in the REAL checks: a bootstrapped scaffold with a traced SN->SR->LLR->TC
 chain whose `check.py --tier smoke` genuinely passes on the refreshed branch, and
-`_run_landing_checks` is never monkeypatched — a stubbed checks are exactly the vacuous green
+`_run_landing_checks` is never monkeypatched — a stubbed checks are exactly the vacuous pass
 this script exists to make impossible. The station-protocol tests use STUB
 harness scripts instead, and that is a different claim, made honestly: they
 measure ORDER and TOPOLOGY (which script ran when, which commit has which
 parents), which a real 11-minute checks would measure no better and far more
-slowly. The real checks are still the one that decides green, in the e2e.
+slowly. The real checks are still the one that decides a pass, in the e2e.
 
 `integrate()` itself is only ever run as a SUBPROCESS here, for the reason
 `tests/test_integrate.py` states: it takes the process-global coordinator lock
@@ -102,7 +102,7 @@ pytestmark = env_gate_skipif("git")
 # OUTSIDE the worktree — the refresh sheds the residue its own checks leave, and
 # rightly, so a recorder placed inside the tree would be swept away by the very
 # behaviour it is there to record. That file is what makes the ORDER assertion
-# possible at all: the real checks can say "green", but only a recording stub can
+# possible at all: the real checks can say "passed", but only a recording stub can
 # say "and I ran after the trunk step".
 STUB_TRUNK_STEP = """import pathlib
 
@@ -569,10 +569,10 @@ def test_a_product_touching_adjudication_lane_fails_toward_the_checks(tmp_path):
     # REVIEW-A finding 1, the reviewer's own drive kept as the regression: a
     # product file plus a check harness that FAILS if invoked rode an
     # adjudication-only lane through the no-checks arm onto trunk — an un-run
-    # green, against §A8's fixed points ("no un-run greens; the harness is
-    # still the checks"). The scope rung closes it: the branch's non-refresh
+    # pass, against §A8's fixed points ("no un-run passes; the harness is
+    # still the standard"). The scope rung closes it: the branch's non-refresh
     # delta touches a path outside the §A5.2 surfaces (the product file), so
-    # the refresh runs the FULL checks — which is red, and says so.
+    # the refresh runs the FULL checks — which fails, and says so.
     root = station_repo(tmp_path, check_src=STUB_CHECK_RED, safety="adjudication")
     wt = _lane(root, "wi-401")
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
@@ -691,7 +691,7 @@ def test_a_failure_refusal_carries_the_steps_own_output_and_names_the_kept_log(
     # closing summary re-print, which is all the WI-240 anchor could ever reach
     # on a full checks; (2) the undo below resets the very tree that produced the
     # evidence, so the FULL checks output must survive OUTSIDE the lane worktree,
-    # at a path the refusal message itself names. The WI-387 red cost three
+    # at a path the refusal message itself names. The WI-387 failure cost three
     # lost diagnoses of one failure because neither half held.
     root = station_repo(tmp_path, check_src=STUB_CHECK_RED)
     wt = _lane(root, "wi-401")
@@ -750,8 +750,8 @@ def test_slot_acquisition_has_exactly_one_call_site():
     # And the SLOT, not just the lock call: counting `acquire_lock(` alone let
     # a second acquisition through the existing helper pass (REVIEW-A round 1
     # drove it — `_extra = _slot(root)` at the top of `integrate_one` was
-    # green). `_slot(` must occur exactly twice: the definition and its one
-    # call, so a second acquisition by EITHER route reds here.
+    # passing). `_slot(` must occur exactly twice: the definition and its one
+    # call, so a second acquisition by EITHER route fails here.
     calls = [ln for ln in src.splitlines() if "_slot(" in ln]
     assert len(calls) == 2, calls
     assert any(ln.strip().startswith("def _slot(") for ln in calls), calls
@@ -1172,7 +1172,7 @@ def test_claim_build_and_integrate_end_to_end(tmp_path):
 
 def test_integrate_is_a_noop_when_no_claimed_branch_has_finished(tmp_path):
     # The quiet steady state — the queue runs on a schedule, so "nothing to
-    # merge" must be a cheap green, never a nonzero that would halt claiming.
+    # merge" must be a cheap pass, never a nonzero that would halt claiming.
     # Run as a SUBPROCESS: integrate() takes the process-global lock fd.
     root = claim_repo(tmp_path)
     assert integ.claim(root, "WI-401", "wi-401") == 0

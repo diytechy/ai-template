@@ -110,7 +110,7 @@ def _refused(root):
 
 
 def _marked_round(root, wt):
-    """One green round over a lane that adds a mark to `WIDGET`: the review
+    """One passing round over a lane that adds a mark to `WIDGET`: the review
     record a removal stands on. Returns its commit."""
     _stage(wt, WIDGET, _source(TAG))
     return _green(root)
@@ -464,7 +464,7 @@ def test_a_plain_commit_removal_then_an_empty_record_checks_commit_is_judged(tmp
 def test_a_plain_commit_removal_over_a_matching_record_passes(tmp_path):
     """Adequacy witness: a check that takes the record from HEAD finds none on
     the plain commit and refuses; so does one that refuses every lowered
-    count. Its red sibling above catches a reference taken from HEAD.
+    count. Its failure sibling above catches a reference taken from HEAD.
 
     Implements: TC-426
     """

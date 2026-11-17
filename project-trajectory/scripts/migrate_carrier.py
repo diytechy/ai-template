@@ -543,7 +543,7 @@ def raw_id_findings(rel, table, raw, text):
     THIS IS THE LEG THAT CATCHES THE DOTTED ID. `[agent.ANTHROPIC-OPUS-4.8]`
     written bare parses cleanly as two nested tables, so the emitted file is
     valid TOML, `compare` finds the row under a key it constructed the same
-    wrong way, and nothing reds — while the registry has quietly lost a model
+    wrong way, and nothing fails — while the registry has quietly lost a model
     row. Reading the ids off the source and demanding each one back as a
     top-level key is the only check that does not inherit the mistake."""
     try:

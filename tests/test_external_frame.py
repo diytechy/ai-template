@@ -145,7 +145,7 @@ def test_the_live_frame_acceptance_state_is_pinned():
     accepted the locked frame in writing (log Decisions 2026-08-20a); this
     edit IS that acceptance's sanctioned update. The tripwire now points the
     other way: the frame is uniformly Accepted, and any row leaving that state
-    is again a red test rather than a quiet line in a diff."""
+    is again a failing test rather than a quiet line in a diff."""
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
     acceptances = {
         row.get("status")
@@ -217,13 +217,13 @@ def test_an_IF_tieback_naming_an_undeclared_crossing_is_a_FINDING(scaffold):
 
 
 def test_crossings_with_NO_entity_declared_is_a_FINDING_not_a_vacuous_pass(scaffold):
-    """THE FALSE GREEN AN ADVERSARIAL ROUND CAUGHT, pinned so it cannot return.
+    """THE FALSE PASS AN ADVERSARIAL ROUND CAUGHT, pinned so it cannot return.
 
     The first version returned `[]` the moment the entity set was empty,
     reasoning that the rules below had nothing to resolve against. They did: six
     crossings referencing five entities that do not exist resolved to SILENCE,
     and the report then printed "every crossing Entity ... resolves" over the
-    top of it — a literal false green in the checker whose job is to prevent
+    top of it — a literal false pass in the checker whose job is to prevent
     one. Not an exotic state either: it is the natural authoring order (draw the
     boundary, then name who is on the far side) and what a refactor that drops
     an entity block leaves behind.
@@ -354,9 +354,9 @@ def test_an_SR_naming_a_DECLARED_crossing_is_clean(scaffold):
 def test_SR_boundary_COVERAGE_is_a_summary_advisory_and_never_an_error(scaffold):
     """The other half, and the severity split is the point. "Every SR references
     a declared interface" is SN-037's wording, but enforcing it the day the column
-    ships would red every row in the registry for work the re-tier campaign owns
+    ships would fail every row in the registry for work the re-tier campaign owns
     — and under a form rule that is itself a guideline with recorded waivers. A
-    gate that is 100% red on day one is a gate someone turns off.
+    gate that fails everything on day one is a gate someone turns off.
 
     So: ONE line carrying the count the campaign has to move, on the advisory
     pipe, with the exit code untouched.
@@ -419,7 +419,7 @@ def test_an_out_of_vocabulary_frame_value_WARNS_and_never_fails(scaffold):
     # ...and it did not join the failure set. The EXIT CODE is the half this
     # test is NAMED for, and asserting only the absent FINDING line left "never
     # fails" untested — promoting the frame schema tier to --strict would have
-    # kept this green.
+    # kept this passing.
     assert "FINDING (frame)" not in proc.stdout
     assert proc.returncode == 0
 

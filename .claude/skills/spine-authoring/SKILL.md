@@ -158,7 +158,7 @@ file: change it there.
   the one you came for. A row mechanized out of `Critique` typically leaves the
   claim in three places: the AC (the instrument), the rationale (the argument
   that the instrument was *necessary* — often phrased as "a mechanized
-  verification would assert a green nothing checks", which the row's own passing
+  verification would assert a pass nothing checks", which the row's own passing
   tests then refute), and the retired instrument's own header. Sweep the row,
   its children, and anything citing the retired instrument, in the same commit
   as the flip.

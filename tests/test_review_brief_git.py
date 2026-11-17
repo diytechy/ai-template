@@ -283,7 +283,7 @@ def test_an_ordinary_review_reads_the_decisions_record(git_lane):
 def _refused(root, out, capsys, sha):
     """The render refused `sha`: exit 2 (asserted by the caller), no brief,
     an untouched lane, and a refusal naming the reviewed commit and the step
-    that records green commit checks. Returns the refusal text for the cause
+    that records passing commit checks. Returns the refusal text for the cause
     the caller asserts."""
     err = capsys.readouterr().err
     assert list(out.iterdir()) == []

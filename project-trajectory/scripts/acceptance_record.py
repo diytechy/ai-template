@@ -512,7 +512,7 @@ def spine_cell_class(csv_path, column):
     on paths that carry a carrier SUFFIX, and the callers do not agree on which
     one: a staged-diff scan names whichever file git reported, while a live read
     names the constant. Under the CSV carrier a `.toml`-keyed lookup misses, and
-    a miss here does not red — every column reads `accepted`, so a traced-only
+    a miss here does not fail — every column reads `accepted`, so a traced-only
     edit arms a re-accept window that was ruled not to. `stem` drops the suffix,
     which is what `spine_carrier` exists to make possible.
 
@@ -1928,7 +1928,7 @@ def committed_snapshot_findings(root):
     `baseline_snapshot`'s header). A rule that redded every pending amendment
     would be switched off within a day. Here, live moving on afterwards changes
     nothing: the comparison is pinned to the snapshot's own writing commit, so a
-    legitimate copy stays green forever and a forgery stays red forever.
+    legitimate copy keeps passing forever and a forgery keeps failing forever.
 
     Blob-identity via `git cat-file --batch-check` rather than two `git show`s
     per file: git names identical content with the identical object id, so

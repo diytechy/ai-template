@@ -54,7 +54,7 @@ _put_scripts_on_path()
 # AGENT_* routing contract (AGENT_CMD, AGENT_MODEL_MAP, AGENT_TIER_MAP, ...).
 # The agent_loop tests build their own scaffolds and env, but an *ambient*
 # AGENT_TIER_MAP (e.g. BUILD=strong) re-routes their subprocess loops and fails
-# 8 of them — so the unattended layer could never produce green commit checks
+# 8 of them — so the unattended layer could never produce passing commit checks
 # (WI-118, found live 2026-07-12). Scrub the whole namespace at import, before
 # any test copies os.environ; tests that need these vars set them explicitly.
 for _k in [k for k in os.environ if k.startswith("AGENT_")]:
@@ -72,7 +72,7 @@ os.environ["CODEX_HOME"] = str(ROOT / "tests" / "_no-codex-home")
 # smoke = -m smoke); the FULL suite runs at slice/phase close and in CI
 # (PROCESS_OPTIONS.md phased-delivery cadence). Tiering is OPT-OUT: every
 # collected test is `smoke` UNLESS its module is listed below, so a NEW test is
-# in the commit checks by default ("never a false green" by omission) and a test
+# in the commit checks by default ("never a false pass" by omission) and a test
 # leaves the checks only by being named here. `smoke` and `slow` PARTITION the
 # suite (every test gets exactly one) — test_smoke_tier.py guards the invariant
 # and that each name below is a real test module.
@@ -252,25 +252,25 @@ SLOW_MODULES = frozenset(
         # WI-281 rework (review A, finding 1): the run_session subprocess/shim
         # transport module. It drives real CLI subprocesses through run_session
         # (including Windows .cmd/.bat shim launchers), and it HOSTS the known
-        # Windows batch-shim reds that are WI-275's open subject — one of which
+        # Windows batch-shim failures that are WI-275's open subject — one of which
         # (test_run_session_codex_reads_last_message_not_transcript) still fails
-        # on a Windows checkout and would red the per-commit checks there. It runs at
-        # slice/phase close + CI (where the full suite exposes those reds for
-        # WI-275 to fix); holding it out of the commit checks keeps them green on
+        # on a Windows checkout and would fail the per-commit checks there. It runs at
+        # slice/phase close + CI (where the full suite exposes those failures for
+        # WI-275 to fix); holding it out of the commit checks keeps them passing on
         # every supported OS until WI-275 lands. No test deleted or weakened — the
         # module is re-tiered whole (module-granular, like every entry here), so
         # its healthy in-process units still run at close + CI. The reviewer named
         # this the in-scope alternative to landing WI-275's fix from this WI.
-        "test_session_stdin",  # run_session subprocess/shim transport (WI-275 reds)
+        "test_session_stdin",  # run_session subprocess/shim transport (WI-275 failures)
         # The toolchain prereq, re-tiered on the SAME precedent as test_session_stdin
-        # directly above: it is DESIGNED to red on a below-floor checkout, so leaving
+        # directly above: it is DESIGNED to fail on a below-floor checkout, so leaving
         # it in the checks would make the commit checks unpassable on such a machine — a
         # developer could then never commit the very fix that installs the floor.
         # Nothing is weakened: the `pytest_sessionstart` banner still fires on EVERY
         # run including `-m smoke`, so the commit checks keep the loud warning and
         # lose only the hard stop; the hard failure lands at slice/phase close and
         # in CI, which is where a gate result is claimed.
-        "test_prereq_toolchain",  # designed to red below the declared Python floor
+        "test_prereq_toolchain",  # designed to fail below the declared Python floor
         # WI-475: the launcher interpreter-selection suite. Filed here by the
         # MECHANICAL boundary this set is drawn on, not by preference — every
         # test in it RUNS a launcher (sh / cmd.exe / pwsh) against fake
@@ -292,7 +292,7 @@ SLOW_MODULES = frozenset(
         # `python -m pytest -q -n auto -m smoke --durations=0`, warm): these
         # five modules summed to 157.0 s of the tier's 304.5 s total PER-TEST
         # duration (51.5%) while the wall clock sat at 58.77 s — 0.98x budget,
-        # one bad scheduling tick from a red honest commit. Every one is the
+        # one bad scheduling tick from a failure honest commit. Every one is the
         # SAME heavy class already filed above (subprocess-driving a real
         # script over a real scaffold/repo, exercised again wholesale at
         # slice/phase close + CI), just not named "end-to-end":
@@ -522,9 +522,9 @@ def load_script(name, directory=SCRIPTS):
 # `git init` in any tmp dir inherits it, so `git add` silently folds a
 # working-tree `\r\n` to `\n` on the way into the object database. A fixture
 # asserting on committed BYTES then tests LF-only content on a stock Windows
-# box while reading green everywhere else — `test_integrate.py::git_repo`
+# box while passing everywhere else — `test_integrate.py::git_repo`
 # hit exactly this (docs/log.md 2026-08-16a): the forged CRLF relay never
-# reached the object database, so the byte-exact conviction test went red and
+# reached the object database, so the byte-exact conviction test failed and
 # its excuse-test sibling passed VACUOUSLY. POSIX boxes default autocrlf to
 # false and never see it, which is exactly the shape of bug that survives
 # until someone runs the suite on a stock Windows install.
@@ -675,7 +675,7 @@ def hooked_checkout(root):
 # interpreter and dozens of tests fail deep inside machinery that is working
 # exactly as designed (dev-setup's PATH probe finds no 3.11+ to offer, and the
 # toolchain-dependent fixtures build from *this* process's base). Those
-# reds read like branch defects but are purely environmental — measured
+# failures read like branch defects but are purely environmental — measured
 # 2026-07-25 on a CLT-Python 3.9.6 .venv: 49 failures, a byte-identical set on a
 # clean tree. The guards below turn that into one loud, correct diagnosis plus
 # honest skips. The floor itself is READ from the source of truth, never
@@ -714,9 +714,9 @@ def skip_below_floor(what):
 
     For tests whose PRECONDITION is a floor-satisfying toolchain — not tests that
     merely happen to fail without one. Skipping is the honest verdict there: the
-    behaviour under test genuinely cannot be exercised, so a red would be
+    behaviour under test genuinely cannot be exercised, so a failure would be
     reporting the environment as a defect. `test_prereq_toolchain.py` fails hard
-    in the same run, so a below-floor session can never read as green."""
+    in the same run, so a below-floor session can never read as a pass."""
     short = floor_shortfall()
     if short:
         pytest.skip(
@@ -733,7 +733,7 @@ def skip_below_floor(what):
 # the same tree, the same commit, run twice — 1540 passed / 54 skipped without
 # `Git\bin` on PATH, 1587 passed / 7 skipped with it. Forty-seven tests were
 # never asked, 26 of them the two hook suites guarding the commit floor, and BOTH
-# printed a green. That is SN-008's dishonest-green shape one level up: not a
+# printed a pass. That is SN-008's dishonest-pass shape one level up: not a
 # skipped check, but a skipped check-of-the-check.
 #
 # Declared ONCE here because the skip guards and the gate must read the same
@@ -747,7 +747,7 @@ def skip_below_floor(what):
 # Deliberately NOT done, per the row: auto-prepending the directory to PATH. A
 # harness that silently repairs its own environment hides the identical fact one
 # layer down — the same standing rule that forbids editing a declared list (a
-# coverage floor, an orphan glob, a ratchet baseline) to green a step instead of
+# coverage floor, an orphan glob, a ratchet baseline) to make a step pass instead of
 # fixing what it measures.
 #
 # The declaration lives here rather than in docs/stack.ini (where [smoke-budget]
@@ -882,7 +882,7 @@ def env_gate_banner():
         )
         lines.append("       remedy: {}".format(gate.remedy()))
     lines.append(
-        "   Those tests will SKIP, so this run is PARTIAL — a green here is not"
+        "   Those tests will SKIP, so this run is PARTIAL — a pass here is not"
     )
     lines.append(
         "   a gate result. test_prereq_toolchain.py FAILS on a required gate at"
@@ -945,7 +945,7 @@ def pytest_terminal_summary(terminalreporter):
 
     The session-start banner predicts from the probes; this states what actually
     happened. It is the line whose absence let two sessions record `1579 passed,
-    7 skipped` and `1540 passed, 54 skipped` as comparable greens — the count was
+    7 skipped` and `1540 passed, 54 skipped` as comparable passes — the count was
     always one `-rs` flag away, and nobody passes `-rs`."""
     if hasattr(terminalreporter.config, "workerinput"):
         return
@@ -1536,7 +1536,7 @@ def declare_commit_checks(repo, ctl):
     """Declare the commit checks under `repo` as a stand-in checks driven from
     the control directory `ctl`: each run appends one line to
     `ctl/check_runs.txt`, and the checks fail (exit 1, printing
-    `CHECKS-FAIL-MARKER`) while `ctl/checks_fail` exists, green (exit 0) otherwise.
+    `CHECKS-FAIL-MARKER`) while `ctl/checks_fail` exists, and pass (exit 0) otherwise.
     It is declared the way a real repository declares its own: the command as
     the `COMMIT_SUITE` line of `docs/stack.ini` `[check-suites]`, and that
     suite's name in `docs/process.toml` `[required-checks] commit`
@@ -1629,8 +1629,8 @@ def seed_row(root, srs=(), llrs=None, tcs=None, tags=None, sr_refs=None):
 # to a session-driving fixture gave `agent_loop` a live window, which it
 # correctly honors by SLEEPING: measured 2026-08-11,
 # `blackout_wake("12:00-19:00", 14:22Z) == 16650` s (4 h 37 m). The tests did
-# not fail, they never ran, and the runner reported green on the rest — so
-# "full checks green" was a function of UTC time-of-day, and a 2026-08-10 probe
+# not fail, they never ran, and the runner reported a pass on the rest — so
+# "full checks passing" was a function of UTC time-of-day, and a 2026-08-10 probe
 # outside the window recorded the module as "not reproduced ... flaky". It is
 # not flaky; it is deterministic in the clock.
 #
@@ -1643,7 +1643,7 @@ def seed_row(root, srs=(), llrs=None, tcs=None, tags=None, sr_refs=None):
 # Everything below therefore stays, as defence in depth rather than as the only
 # defence. Test scaffolds still opt out explicitly through the dial's own
 # documented disable form (an empty value), so a session test exercises session
-# behavior rather than the wall clock, and the autouse sweep still reds on a
+# behavior rather than the wall clock, and the autouse sweep still fails on a
 # live window however it arrived. tests/test_blackout_isolation.py holds both
 # halves — that the shipped dial is really inert, and that a POPULATED window
 # really does block, so the machinery is proven live and not merely unused.
@@ -1727,7 +1727,7 @@ def _no_live_blackout_in_session_scaffolds(request):
     assert not live, (
         "WI-428: a session-driving test scaffold inherited a LIVE blackout "
         "window — the loop under test will SLEEP rather than run, and the "
-        "suite will report green on the tests that did run. Seed through "
+        "suite will report a pass on the tests that did run. Seed through "
         "conftest.set_process_key or call conftest.disable_blackout(root). "
         + "; ".join("{} -> {!r}".format(p, v) for p, v in live)
     )
@@ -1948,7 +1948,7 @@ def use_legacy_spine_carrier(root):
     # ...and the scaffolded PROSE follows the carrier, or the repo is internally
     # inconsistent: README.md and docs/status.md link the registry by name, and
     # a link to the file this function just deleted is a real broken link that
-    # reds check_docs — a fixture artefact masquerading as a finding.
+    # fails check_docs — a fixture artefact masquerading as a finding.
     for rel in ("README.md", "docs/status.md"):
         doc = root / rel
         if not doc.is_file():
@@ -2005,7 +2005,7 @@ def make_minimal_project(root):
     # The derived STAGE: this is a full DevStg-Impl chain, so docs/stage is
     # regenerated from the artifact states — the scaffold shipped a placeholder,
     # and accepting artifacts up to a settled spine is what advances the derived
-    # rung. Keeps the `derived-stage` freshness step green.
+    # rung. Keeps the `derived-stage` freshness step passing.
     #
     # It ran `derive_gate.py` until WI-498 slice 5 retired `docs/gate` along with
     # that module's whole CLI (what survives is `spine_rules.py`, a pure library

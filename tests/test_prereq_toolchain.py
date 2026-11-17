@@ -4,7 +4,7 @@ Runs in the SLOW tier (`conftest.SLOW_MODULES`), so the hard stop lands at slice
 close and in CI — where a gate result is actually claimed — while the per-commit
 checks stay passable on a machine that has not been provisioned yet. It is the one
 place an environment shortfall is reported as what it is: named once and loudly,
-rather than ~50 downstream skips-and-reds that read like branch defects. The
+rather than ~50 downstream skips-and-failures that read like branch defects. The
 `pytest_sessionstart` banner in `conftest.py` still fires on EVERY run including
 `-m smoke`, so the commit checks keep the warning and lose only the failure.
 
@@ -12,7 +12,7 @@ Two shortfalls live here, on the same division of labour with `conftest.py`:
 
 - the **interpreter floor** — `skip_below_floor` marks the toolchain-DEPENDENT
   tests skipped, because their preconditions genuinely cannot be met, and this
-  module FAILS so a below-floor session can never be mistaken for green;
+  module FAILS so a below-floor session can never be mistaken for a pass;
 - the **environment gates** (WI-326) — `skip_without_env_gates` /
   `env_gate_skipif` mark the shell- and git-driven tests skipped, and this module
   FAILS on any gate declared `required`.
@@ -27,7 +27,7 @@ claimed.** The environment gate hard-fails wherever the full suite runs, which
 includes CI's `windows-latest` lane. Whether that runner puts `sh.exe` on PATH
 could not be determined from the runner-images documentation, and this branch has
 never been pushed, so there is no CI evidence either way. If it does not, the
-first push turns a *silent* skip of ~250 tests into a red cell — which is this
+first push turns a *silent* skip of ~250 tests into a failing cell — which is this
 check working, not a regression, and the remedy is one PATH line in the workflow.
 The branch has already been wrong twice about what an OS permits, in opposite
 directions (127- and 128-REVIEW-A), so the rule stands: one machine is one data
@@ -72,7 +72,7 @@ def _diagnosis(subject, short, remedy_extra=""):
         "\ntoolchain SKIPS (the agent_loop dispatch/integrate/train/recovery/"
         "\nmigration/dualplan modules and the dev-setup install path). The suite's"
         "\nremaining result is therefore PARTIAL — it is not a gate result, and a"
-        "\nfull-suite green cannot be produced on this machine."
+        "\nfull-suite pass cannot be produced on this machine."
         "\n"
         "\nRemedy: install a Python {floor}+ interpreter, then recreate the venv:"
         "\n    scripts/dev-setup --install{extra}"
@@ -92,7 +92,7 @@ def test_interpreter_meets_the_declared_floor():
     """The RUNNING interpreter clears the floor.
 
     Toolchain-dependent fixtures build from this process's own base, so a
-    below-floor runner turns environmental shortfall into opaque deep reds —
+    below-floor runner turns environmental shortfall into opaque deep failures —
     this test names the real cause first.
     """
     short = floor_shortfall()
@@ -106,7 +106,7 @@ def test_root_venv_meets_the_declared_floor():
     prefer the ROOT .venv over the running interpreter, so an
     ambient-but-modern Python running a stale .venv still runs the stale
     toolchain. Absent .venv is not this test's business (CI runs the suite
-    without one) — so it skips rather than inventing a red.
+    without one) — so it skips rather than inventing a failure.
     """
     venv_py = load_script("agent_common").venv_python(ROOT)
     if venv_py is None:
@@ -137,7 +137,7 @@ def _gate_diagnosis(missing):
         "{body}"
         "\n"
         "\nWhat this costs: the tests gated on them do not RUN, and the suite still"
-        "\nprints a green — the dishonest-green shape SN-008 forbids, one level up"
+        "\nprints a pass — the dishonest-pass shape SN-008 forbids, one level up"
         "\n(not a skipped check, but a skipped check-OF-the-check). Measured"
         "\n2026-07-26 on Windows: 1540 passed / 54 skipped without Git\\bin on PATH"
         "\nversus 1587 passed / 7 skipped with it. Re-measured 2026-07-28 once the"
@@ -186,7 +186,7 @@ def test_a_gate_closed_run_announces_itself_at_both_ends(tmp_path):
     The SATISFIED twin is constructed too, via `KIT_ENV_GATES_SATISFIED` (read by
     `conftest.env_gate_shortfalls`), rather than by running on this machine and
     hoping it is provisioned. The first version of this test inherited the
-    runner's PATH for that half, so it PASSED here and would have RED on exactly
+    runner's PATH for that half, so it PASSED here and would have FAILED on exactly
     the unprovisioned Windows box WI-326 targets — an adversarial review measured
     it. It also ran `--collect-only`, so zero tests ran and the count path was
     never exercised at all; both halves now run the real thing.

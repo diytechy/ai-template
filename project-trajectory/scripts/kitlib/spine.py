@@ -11,7 +11,7 @@ pins, because the retired F5 rule licensed the duplication and D-7 could only
 CONTAIN the drift rather than remove it.
 
 Those questions are POLICY, not plumbing, and a policy disagreement between
-those two modules is a false green or a false red AT A GATE — the exact failure
+those two modules is a false pass or a false failure AT A GATE — the exact failure
 class the kit exists to prevent (repo-review-2026-07-12b M1 -> WI-099). Operator
 ruling D-8 (`OI-16`) replaced F5: the rule lives here, once, and both modules
 import it under their existing local names, so no call site moved.
@@ -620,8 +620,8 @@ def llr_exempt(row):
 
     The stripping is load-bearing and was once a live divergence: review 017
     caught the two former copies disagreeing on a whitespace-padded valid method
-    (one stripped, one did not), which is a false green on one surface and a
-    false red on the other for one registry state.
+    (one stripped, one did not), which is a false pass on one surface and a
+    false failure on the other for one registry state.
 
     Contract:
       Inputs:  row: an SR row mapping

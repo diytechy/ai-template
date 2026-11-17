@@ -476,7 +476,7 @@ def test_the_audit_fails_over_each_limit_naming_its_key(
     assert len(fail) == 1 and key in fail[0], err
 
 
-# --- The checks: no checks fail on the tier's seconds, and a red tier fails each.
+# --- The checks: no checks fail on the tier's seconds, and a failing tier fails each.
 
 ROUTES = ["by-hand", "record-checks"]
 

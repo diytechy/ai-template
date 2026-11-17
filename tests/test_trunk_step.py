@@ -91,8 +91,8 @@ def log_text(root):
 
 def test_no_fragments_is_a_clean_idempotent_noop(tmp_path, capsys):
     # The steady state of a quiet trunk: the step runs on every merge, so the
-    # empty case must be cheap, silent-ish and green — never a "nothing to do"
-    # nonzero that would red the lane for doing its job.
+    # empty case must be cheap, silent-ish and passing — never a "nothing to do"
+    # nonzero that would fail the lane for doing its job.
     root = repo(tmp_path)
     assert ts.compile_log(root) == 0
     assert "0 fragments" in capsys.readouterr().out
@@ -249,7 +249,7 @@ def test_dry_run_plans_both_operations_without_writing(tmp_path, capsys):
 
 def test_regen_fails_loudly_on_a_broken_generator(tmp_path, capsys):
     """Implements: TC-135"""
-    # The §5.5 fail-loud contract on the regen half: a red generator stops the
+    # The §5.5 fail-loud contract on the regen half: a failing generator stops the
     # step at that step (a later one may read its output), exits nonzero, and
     # prints the child's own diagnosis rather than summarizing it away.
     # The okf family arms on docs/okf/ presence; a registry the generator
@@ -263,7 +263,7 @@ def test_regen_fails_loudly_on_a_broken_generator(tmp_path, capsys):
     assert ts.regen(tmp_path) == 1
     err = capsys.readouterr().err
     assert "regen FAILED at okf" in err
-    assert "trunk lane is RED" in err
+    assert "trunk lane FAILED" in err
 
 
 def test_regen_creates_the_okf_bundle_a_fresh_scaffold_lacks(tmp_path, capsys):
@@ -288,7 +288,7 @@ def test_regen_really_writes_the_verdict_rollup(tmp_path, capsys):
     # "the serial merge step runs" the regenerator — and that pairing is the whole
     # contract: a work branch commits the round files but stands the rollup step
     # down, so if the trunk step does not run this generator, the artifact is
-    # written by nobody and the freshness gate is a permanent red.
+    # written by nobody and the freshness gate is a permanent failure.
     #
     # WHY IT IS DRIVEN AND NOT READ OFF THE TABLE (WI-588). Deleting the entire
     # `verdict-rollup` row from REGEN_STEPS leaves this module syntactically
@@ -352,7 +352,7 @@ def test_regen_really_writes_the_acceptance_brief(tmp_path, capsys):
 
 
 def _seed_regen_repo(root):
-    """A git repo where `okf` regenerates green AND EMITS: the `docs/okf/`
+    """A git repo where `okf` regenerates without failing AND EMITS: the `docs/okf/`
     arming directory plus a minimal but non-vacuous four-tier spine (the
     bundle's vacuity gate emits nothing for a placeholder-only registry, so a
     thinner spine would leave the tree clean and the dirtiness assertions
@@ -386,9 +386,9 @@ def _seed_regen_repo(root):
 def test_regen_failure_after_passing_steps_commits_nothing(tmp_path, capsys):
     """Implements: TC-170"""
     # Round-2 F9 pin — the failure half of the SR-173 no-partial-set claim,
-    # EXECUTED rather than inferred from the green path: an earlier step runs
-    # green and dirties the tree, then a MID-RUN step fails — the run exits
-    # nonzero, HEAD has not moved, the green step's output is still sitting
+    # EXECUTED rather than inferred from the passing path: an earlier step
+    # passes and dirties the tree, then a MID-RUN step fails — the run exits
+    # nonzero, HEAD has not moved, the passing step's output is still sitting
     # uncommitted in the working tree, and the steps AFTER the failure never
     # ran at all.
     #
@@ -396,16 +396,16 @@ def test_regen_failure_after_passing_steps_commits_nothing(tmp_path, capsys):
     # F14). A failure planted in the LAST entry makes "a later step fails"
     # vacuous — the early `return 1` would skip nothing observable, and a
     # mutation making regen carry on (`_rc = 1; continue`) would leave this
-    # test green. Here `derived-stage` (step 2 of 5) fails while `open-items`
-    # (step 5) is APPLICABLE and would run green if reached, so the
+    # test passing. Here `derived-stage` (step 2 of 5) fails while `open-items`
+    # (step 5) is APPLICABLE and would pass if reached, so the
     # stop-at-first-failure contract is what the assertions turn on.
     #
-    # WHY THE FAILURE IS AN UNWRITABLE OUTPUT (WI-455): the green step used to
+    # WHY THE FAILURE IS AN UNWRITABLE OUTPUT (WI-455): the passing step used to
     # be `arch-map` and the mid-list failure a registry the deriver could not
     # parse. `arch-map` retired, which makes `okf` step 1 — and `okf` reads
     # every registry, so a malformed-registry failure now lands FIRST, with no
-    # green step before it. Occupying the output path is the remaining way to
-    # fail a generator strictly after a green one; the contract under test is
+    # passing step before it. Occupying the output path is the remaining way to
+    # fail a generator strictly after a passing one; the contract under test is
     # unchanged.
     _seed_regen_repo(tmp_path)
     _commit(tmp_path, "seed")
@@ -418,7 +418,7 @@ def test_regen_failure_after_passing_steps_commits_nothing(tmp_path, capsys):
 
     assert ts.regen(tmp_path) == 1
     captured = capsys.readouterr()
-    assert "regen — okf ok" in captured.out, "a green step must precede"
+    assert "regen — okf ok" in captured.out, "a passing step must precede"
     assert "regen FAILED at derived-stage" in captured.err
     # THE CONTINUATION ASSERTION — the one the last-step placement could not
     # make. `open-items` applies, so had regen carried on it would have printed
@@ -429,16 +429,16 @@ def test_regen_failure_after_passing_steps_commits_nothing(tmp_path, capsys):
         "a mid-run failure must never leave a partially regenerated set in history"
     )
     assert _git(tmp_path, "status", "--porcelain").strip(), (
-        "the green steps' output must still be uncommitted in the tree"
+        "the passing steps' output must still be uncommitted in the tree"
     )
 
 
 def test_regen_never_commits_the_caller_owns_the_commit(tmp_path):
     """Implements: TC-170"""
     # SR-173: no partially regenerated set is ever left COMMITTED, because the
-    # regen itself never commits at all — a green step's output stays in the
+    # regen itself never commits at all — a passing step's output stays in the
     # working tree for the caller's one serial commit, so a later step's failure
-    # cannot strand half a set in history. Here the generators run green over a
+    # cannot strand half a set in history. Here the generators pass over a
     # real spine: HEAD must not move, and their output must sit uncommitted in
     # the tree.
     _seed_regen_repo(tmp_path)
@@ -448,7 +448,7 @@ def test_regen_never_commits_the_caller_owns_the_commit(tmp_path):
     assert ts.regen(tmp_path) == 0
     assert _git(tmp_path, "rev-parse", "HEAD").strip() == head_before
     assert _git(tmp_path, "status", "--porcelain").strip(), (
-        "the green step's output must be left in the working tree "
+        "the passing step's output must be left in the working tree "
         "for the caller's serial commit"
     )
 

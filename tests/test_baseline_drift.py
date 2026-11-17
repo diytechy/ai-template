@@ -26,7 +26,7 @@ def test_a_accepted_cell_moving_under_an_accepted_row_is_DRIFT(tmp_path):
     live = {
         r["SR-ID"]: r for r in load_script("spine_carrier").load(root / SR_REL, "SR-ID")
     }
-    # Green first: a freshly copied tree has drifted nowhere. Without this the
+    # Passing first: a freshly copied tree has drifted nowhere. Without this the
     # assertion below could pass on a comparison that always says "changed".
     assert not SNAP.is_drifted(SR_REL, "SR-ID", live[sid], before)
     _rewrite(root, SR_REL, live[sid]["Title"], live[sid]["Title"] + " (amended)")

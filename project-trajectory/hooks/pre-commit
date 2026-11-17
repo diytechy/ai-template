@@ -147,7 +147,7 @@ kit_policy pre-commit commit || exit 1
 #                        TREE: it asks which declared generated artifact is
 #                        modified on disk but absent from the INDEX, i.e. which
 #                        one you regenerated and did not `git add`. Without it a
-#                        regenerate-and-forget commit is honestly green and
+#                        regenerate-and-forget commit honestly passes and
 #                        lands stale (measured: 3b8d306d). IT BLOCKS since the
 #                        WI-498 close: OI-31 ruled option (b) warn-first and
 #                        promoted "once it has run clean for a program", and
@@ -282,7 +282,7 @@ kit_policy pre-commit commit || exit 1
 #    (it reads the fresh gate), then the operator surface via `gen_open_items.py`
 #    — then STAGE THE REGENERATED FILES (`git add`) and re-commit. Staging is
 #    not a formality: these steps compare the tree ON DISK, so regenerating
-#    without staging turns them green over a commit that still carries the
+#    without staging makes them pass over a commit that still carries the
 #    stale bytes — the staged-divergence step above reports exactly that.
 #    The two kit-only index/catalogue steps stand alone: each regenerates with
 #    its own single command and feeds nothing else.

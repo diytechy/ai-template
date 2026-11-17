@@ -332,7 +332,7 @@ appends the harness-rewiring checklist to the fresh status.md's Open items,
 so the remaining hand-edits are visible work items.
 
 It then runs `trace.py` and `gen_open_items.py` once in the new repo so the
-scaffold starts green. (The architecture is DERIVED — the dashboard and the
+scaffold passes from the start. (The architecture is DERIVED — the dashboard and the
 checks read the registries and the source AST directly; the retired
 `docs/architecture.md` way-station is not scaffolded. WI-455, sitting-2
 decision 8.)
@@ -696,7 +696,7 @@ def sync_agent_skills(dest, dry_run):
     false-refresh). Within a synced `<agent>/skills/<name>/` subtree — which is
     kit-owned by contract — a dest file with no source counterpart is DELETED
     (and emptied subdirs removed): when a kit skill drops a file, the
-    `--check-agents` floor goes red on the stray and prescribes `--sync`, so
+    `--check-agents` floor fails on the stray and prescribes `--sync`, so
     `--sync` must actually be able to fix it (M-14). Returns the list of
     refreshed/removed dest-relative file paths."""
     source = KIT / "skills"
@@ -915,10 +915,10 @@ GATE_POLICY_DEVIATIONS = {
 GATE_POLICY_FIXED_POINTS = """## Fixed points (nothing in this file overrides these)
 
 - **the final read is the operator's.**
-- **No un-run greens** — a verdict or test result that wasn't actually
+- **No un-run passes** — a verdict or test result that wasn't actually
   executed is a process violation regardless of tier.
 - **The harness is still the standard** — LLM judgment supplements the checks; it
-  never waives a red one.
+  never waives a failing one.
 - **Accepted operator decisions are never re-decided by an agent** — flag a
   problematic one as Blocked instead.
 """
@@ -1617,7 +1617,7 @@ def _has_comment_lines(path):
 #       omitted; an omitted region is replaced by a one-line resolvable stub.
 #
 # Axes are FEW AND BOOLEAN by design (the per-permutation test matrix is what
-# holds the scaffold-green line; every new axis doubles it):
+# holds the line that every scaffold passes; every new axis doubles it):
 #   nfr           — §9 non-functional/perf budgets + its process-options
 #                   expansions (the registries stay: referenced config).
 #   multi-module  — the §10 scale ladder + its rung-2 expansion.
@@ -1783,7 +1783,7 @@ STACK_OI3_ROW = (
     (
         "blast_radius",
         "every gate run and CI job shells these commands - a wrong entry "
-        "green-washes the harness.",
+        "makes the harness pass falsely.",
     ),
     (
         "options",
@@ -1812,7 +1812,7 @@ def file_stack_placeholder(dest, stack):
     (`wi_convert.write_spec_file`, IF-159, which re-reads and verifies what it
     wrote), run in the new repo the way the generators below are, because this
     module imports nothing but the shared package. Raises on a failed write: a
-    scaffold with an uncited pending item is red on its first check.
+    scaffold with an uncited pending item fails on its first check.
 
     Implements: SR-010, LLR-010
     """
@@ -2207,7 +2207,7 @@ def apply_template_rewrites(dst_rel, dst):
 
 
 def initialize_generated_docs(dest, created):
-    """Run the generators once so the fresh scaffold starts green (the fully
+    """Run the generators once so the fresh scaffold passes from the start (the fully
     generated artifacts would otherwise read as stale/missing to their
     freshness gates until the first manual run).
 
@@ -2223,7 +2223,7 @@ def initialize_generated_docs(dest, created):
         ["scripts/trace.py"],
         # WI-322: the operator decision surface is a fully-generated file, so a
         # MISSING one reads as stale to its freshness gate (the C9 posture its
-        # siblings take). Seeding it here is what keeps a fresh scaffold green
+        # siblings take). Seeding it here is what keeps a fresh scaffold passing
         # on its first `check.py` — the scaffolded registry already carries the
         # example rows the status template's Needs-<operator> bullets name.
         ["scripts/gen_open_items.py"],
@@ -2358,7 +2358,7 @@ KIT_LICENSE_HEADER = (
     "#\n"
     "# (That line carries the `privacy-ok` marker deliberately: a real name is a\n"
     "# LEGAL REQUIREMENT here, not a leak, so a privacy-checked adopting repo must\n"
-    "# not red on it. The License text below carries no personal name — the stock\n"
+    "# not fail on it. The License text below carries no personal name — the stock\n"
     "# Apache appendix placeholder — so this is the only such line.)\n"
     "#\n"
     "# Generated, like docs/kit-version: rewritten on every scaffold/re-sync.\n"

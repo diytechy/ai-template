@@ -21,7 +21,7 @@ drafts-not-mints arm:
       merge — an in-lane mint would trip WI-397's R1 rung at the row's own
       merge slot.
 
-Every trigger below is driven red-then-green against the real git plumbing and
+Every trigger below is driven to fail, then to pass, against the real git plumbing and
 the real spec folder — no seam is stubbed.
 
 Implements: TC-147, TC-156, TC-248
@@ -1638,7 +1638,7 @@ def test_a_replay_with_nothing_left_to_re_point_commits_nothing(tmp_path):
     """A replay whose re-point has nothing left to change writes nothing and
     commits nothing: the pin P8's adoption-only replays lean on.
 
-    A characterization (green at trunk for drafts). Adequacy witness: a
+    A characterization (passing at trunk for drafts). Adequacy witness: a
     replay that committed its bookkeeping, or rewrote an already re-pointed
     `needs` line, whether or not anything changed would move HEAD here.
 

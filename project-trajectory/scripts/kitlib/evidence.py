@@ -60,7 +60,7 @@ EVIDENCE_FILE = "docs/test/evidence"
 STACK_FILE = STACK_INI
 
 # THE TIERS A WHOLE-SUITE CLAIM MAY CARRY. `smoke` is deliberately absent: it is
-# a declared SUBSET (docs/stack.ini `[tiers]`), so a green smoke run is not the
+# a declared SUBSET (docs/stack.ini `[tiers]`), so a passing smoke run is not the
 # sentence "every declared test case passed" and a record carrying it could only
 # be a weaker claim wearing the same field. The producer refuses to write one and
 # the verdict refuses to read one — two refusals for one rule, because the file
@@ -107,7 +107,7 @@ def source_paths(root):
 def source_files(root):
     """Every file of the declared source surface, as `[(relpath, Path)]` sorted by
     relpath — plus `docs/stack.ini` itself, because it DECLARES the checks (a change
-    to the test command or the tier expressions changes what a green meant).
+    to the test command or the tier expressions changes what a pass meant).
 
     Residue is skipped (`_SKIP_DIRS`/`_SKIP_SUFFIXES`); a declared path that is a
     single file is taken as itself; a declared path that does not exist
@@ -200,8 +200,8 @@ HEADER = [
     "#             THE CLAIM IS BOUND TO THE TREE IT WAS MEASURED ON: move a",
     "#             byte either side and this record stops holding, the",
     "#             DevStg-Release rung becomes unreachable again, and",
-    "#             `derive_stage --check` reds until the suite is re-run or the",
-    "#             record is removed. Never edit it to make a red go away.",
+    "#             `derive_stage --check` fails until the suite is re-run or the",
+    "#             record is removed. Never edit it to make a failure go away.",
     "#",
     "# Regenerate: python scripts/record_test_evidence.py",
     "#",

@@ -159,7 +159,7 @@ def _specs_by_id(work_dir):
 def _spec_row_diff(before, after):
     """Every differing cell between two `{id: row}` maps — the folder branch's
     comparison, exposed like `_cell_mismatches` so its mutation proof can drive
-    it directly instead of trusting a green."""
+    it directly instead of trusting a pass."""
     findings = []
     if set(before) != set(after):
         findings.append(
@@ -183,7 +183,7 @@ def _folder_home_round_trip(work_dir, scratch):
     Compared by PARSE, not by bytes, and that is the honest instrument in this
     direction: a HAND-FILED spec carries no `order` key (the converter mints one
     on the way back) and its filename slug is cosmetic, so byte-equality would
-    be a stricter claim than "the same registry" and would red on a difference
+    be a stricter claim than "the same registry" and would fail on a difference
     that is not a loss. Parse-equality over all 17 columns of every spec is
     exactly the claim being made.
     """
@@ -308,7 +308,7 @@ def test_an_in_flight_claim_refuses_conversion_by_name(tmp_path):
 
 
 def test_mutation_a_corrupted_rebuilt_spec_reds_the_folder_home_round_trip(tmp_path):
-    """The folder branch's own failure shape, driven — otherwise its green is an
+    """The folder branch's own failure shape, driven — otherwise its pass is an
     unfalsified claim (WI-293). Two defects, one dropped and one retyped, both
     edited into the REBUILT tree after a clean round-trip proved the comparison
     is capable of reporting no findings at all."""
@@ -335,7 +335,7 @@ def test_mutation_a_corrupted_rebuilt_spec_reds_the_folder_home_round_trip(tmp_p
     )
     next(rebuilt.rglob("WI-002-*.md")).unlink()
 
-    # Spelled out rather than summarized: a dropped spec reds BOTH the id-set
+    # Spelled out rather than summarized: a dropped spec fails BOTH the id-set
     # line and every cell it carried, which is the report you want when the
     # failure is real, and is only visible if the guard asserts it.
     assert _spec_row_diff(before, _specs_by_id(rebuilt)) == [
@@ -395,8 +395,8 @@ def test_status_becomes_the_directory_and_cancellation_stays_visible(
         #     plainly prose.
         #   * The KEY-ASSIGNMENT match separates prose from schema inside the
         #     frontmatter, which the split cannot: WI-356's `title` quotes a
-        #     stale "By disposition" census line, so the split alone still reds
-        #     it. (The key match alone, over the whole file, reds nothing today
+        #     stale "By disposition" census line, so the split alone still fails
+        #     it. (The key match alone, over the whole file, fails nothing today
         #     — but its subject would be unbounded, convicting a body that
         #     quoted the old schema at line start.)
         # Found on WI-386's composed tree, the first DRAINED registry this test

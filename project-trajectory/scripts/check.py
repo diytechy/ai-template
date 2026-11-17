@@ -22,7 +22,7 @@ Contract IF-267: --path-triggered runs only steps declaring nonempty paths,
     and ordinary gate plans. The hook reads the normal results and exit status.
 
 Design choices that keep it honest and CI-friendly:
-    - **Never a false green.** Any failing required step makes the whole run exit
+    - **Never a false pass.** Any failing required step makes the whole run exit
       nonzero. We print the real command output; we do not summarize it away.
     - **Missing tool != pass.** If a step's required module isn't importable, or
       its command's executable can't be found (a rewired non-Python toolchain
@@ -72,7 +72,7 @@ Usage:
                 Default: the repo's **derived effective stage** from
                 `docs/stage`, computed by derive_stage.py over the SETTLED spine
                 and never hand-set; `all` when no stage file exists. This keeps a
-                young project's CI green-and-honest: it enforces what the project
+                young project's CI passing and honest: it enforces what the project
                 has reached, not the end-state. From DevStg-Impl on, traceability
                 also requires every VerificationMethod=Test SR to be Status=Accepted
                 (trace.py --require-verified). `--gate` is the accepted prior
@@ -474,7 +474,7 @@ def _resolve_lane_map(profile, coverage, tier, phase):
     `[step:]` `lane = <producer>` declaration (extra_step_lanes). A declared lane
     must name a REAL step (resolved at gate "all" so a lane onto another gate's
     step still maps), so a typo fails LOUDLY here instead of silently re-racing
-    the step under --jobs>1 (a false green)."""
+    the step under --jobs>1 (a false pass)."""
     lane_map = dict(_SHARED_OUTPUT_LANES)
     declared = extra_step_lanes(profile)
     if declared:
@@ -737,7 +737,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # `--strict` fails on ORPHANS, and the two orphan rules — "SR has no LLR"
         # and "SR has no test" — are LITERALLY the predicates that hold a repo at
         # the LLReqs and Tests rungs (spine_rules.spine_stage). So this step
-        # cannot be green below DevStg-Impl by construction: running it lower
+        # cannot pass below DevStg-Impl by construction: running it lower
         # would demand the output of the very rung the repo is standing on. The
         # retired tag said "from the DevStg-Tests BAR on", which under the bar's
         # min-fold meant a fully decomposed spine — the same repo, named by its
@@ -1110,7 +1110,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # (arch-map / trajectory-map / status-map / open-items / okf) is DevStg-Impl-only
         # for a stated reason — those are views of the project's own evolving
         # spine and "churn while the plan is still forming", so gating them early
-        # reds a repo for drift in an artifact whose inputs are still being
+        # fails a repo for drift in an artifact whose inputs are still being
         # written. These two have the opposite input profile: they index the
         # APPARATUS (the kit's skill library, the loop's prompt templates), which
         # does not move as a downstream plan matures, so there is no early-stage
@@ -1369,7 +1369,7 @@ STAGES = list(_kitladder.STAGE_ORDER) + [ALL]
 # WHY WARNED RATHER THAN SILENT OR REFUSED. Silent acceptance is how the retired
 # vocabulary grows back — the tags would live in adopters' hooks forever with
 # nothing ever telling anyone. Refusal breaks working pipelines for a vocabulary
-# change. A warning is the only posture that both keeps the pipeline green and
+# change. A warning is the only posture that both keeps the pipeline passing and
 # guarantees the operator is told; it costs one stderr line per run and it stops
 # the moment the hook is updated. The AUTHORED surface (docs/stack.ini's
 # per-step threshold) translates with its own one-line notice instead, because
@@ -1393,7 +1393,7 @@ STAGES = list(_kitladder.STAGE_ORDER) + [ALL]
 # steps that silently dropped out included `traceability`, `tests+coverage`,
 # `lint`, `format` and `backlink-coverage` — so an adopter's CI passing
 # `--gate G2` literally (the exact case the silent-`--gate` concession exists to
-# protect) stayed green while quietly stopping most of its checks.
+# protect) kept passing while quietly stopping most of its checks.
 #
 # COMPOSITION IS UNCHANGED for `gates =` step lists: `_step_threshold` maps
 # through this table and then through `_LEGACY_BAR_THRESHOLD`, and every entry
@@ -1486,7 +1486,7 @@ def _warn_retired_flag_spelling(argv=None):
 # and otherwise derives fresh IN MEMORY. So this module can no longer select a
 # plan from a stale value — including on a claimed work branch, where the
 # freshness step is deliberately stood down (`_TRUNK_FRESHNESS_STEPS`) and a
-# green run over a stale cache used to be reachable.
+# passing run over a stale cache used to be reachable.
 #
 # `docs/gate` IS GONE (WI-498 slice 5). The file, its producer's writer half,
 # its `derived-gate` freshness step and the three-value BAR axis it carried are
@@ -1634,7 +1634,7 @@ _COVERAGE_ENV_VARS = (
 # --- The trunk lane: generated-artifact freshness is not a work branch's job ----
 # concurrency-restructure.md §5.2: work branches NEVER commit generated artifacts
 # — the trunk regenerates them in one serial step after each merge. Gating a
-# branch on their freshness would red every branch for drift it is forbidden to
+# branch on their freshness would fail every branch for drift it is forbidden to
 # fix, and would push workers to commit exactly the artifacts whose conflicts
 # this restructure exists to delete. Reads are unaffected: a branch-local check
 # reads a generated artifact as-of-base, and the composed tree re-derives at the
@@ -1647,7 +1647,7 @@ _COVERAGE_ENV_VARS = (
 # re-derives six DOCUMENT families and neither of these is among them. Standing
 # them down on a branch would leave the artifact ungated on the only side that
 # can fix it (the branch editing the SKILL.md / prompt template) and unfixable on
-# the side that gates it — the trunk would red with no mechanical regen to run.
+# the side that gates it — the trunk would fail with no mechanical regen to run.
 # The `[generated]` section declares OWNERSHIP, not lane; this set encodes which
 # owners the trunk can actually regenerate.
 #   `cli-reference` IS in the set, and the difference from those two is exactly
@@ -1670,7 +1670,7 @@ _WORK_BRANCH_CACHE = {}
 # ON the branch and checks the result — a tree byte-identical to the one the merge
 # produces, so it owes the trunk lane's gates. Without the flag those seven
 # steps SKIP, and the integrator reads any SKIP as a refusal, so the refresh
-# could never go green: the flag is what MAKES the mechanical checks possible, not
+# could never pass: the flag is what MAKES the mechanical checks possible, not
 # a rescue from a false pass (REVIEW-A round 1 — the first version of this
 # comment had the failure direction backwards). Opt-IN all the same, so a
 # caller that forgets it gets the stricter-for-trunk answer.
@@ -1693,7 +1693,7 @@ _git_out = _kitgit.git_out
 # reader takes it to mean "the artifact about to be committed does". Those
 # diverge exactly when an author regenerates and forgets to `git add`.
 # THE MEASURED INSTANCE: at 3b8d306d, PROJECT_STATE.html was modified in the
-# worktree and absent from the index; the hook was honestly green on the tree on
+# worktree and absent from the index; the hook honestly passed on the tree on
 # disk and the committed tree failed the very gate that guarded it — undetected
 # until an adversarial review re-measured a log fragment's claim.
 
@@ -2500,7 +2500,7 @@ def run_plan(plan, lenient, jobs, lane_map=None):
     concurrently in *lanes* (see _SHARED_OUTPUT_LANES and a step's declared
     `lane =`), capturing each step's output and printing it whole under a lock
     when the step finishes, so output never interleaves; the summary and exit
-    semantics are unchanged (never a false green — an unexpected runner
+    semantics are unchanged (never a false pass — an unexpected runner
     exception propagates). `lane_map` (name -> lane) defaults to the built-in
     write-write map; main() passes it merged with the profile's `lane =`
     declarations."""
@@ -2546,7 +2546,7 @@ def _clear_stale_coverage_report(plan):
     [step:module-coverage] consumer correctly SKIPs instead of grading a stale
     full-tier measurement (repo-review 2026-07-22 REVIEW-A). A locked/undeletable
     stale report is a LOUD failure — it must not silently survive into a consumer
-    as a false green (the fail-closed stance)."""
+    as a false pass (the fail-closed stance)."""
     if not any(s[0] == "tests+coverage" for s in plan):
         return
     try:

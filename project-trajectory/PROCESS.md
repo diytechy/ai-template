@@ -334,12 +334,12 @@ above buys its value at **commit granularity**: line-diffable registries, the
 drift-gated map, committed goldens — none of it protects work sitting
 uncommitted in a working tree, which can't be diffed, reviewed, reverted, or
 bisected, and can simply be lost. So **commit early and often**: a small,
-single-purpose commit at each green step (one finding closed, one requirement
+single-purpose commit at each passing step (one finding closed, one requirement
 decomposed, one registry edit plus its regenerated blocks), never a
 session-sized batch. The pre-commit floor (§7) is deliberately fast and
 **always-valid** *so that* frequent commits stay cheap — that is its design
 intent, not a coincidence. A commit is not a release and not a gate: the standard is
-"floor-green plus a coherent, describable change", never perfection — polish
+"the floor passes, plus a coherent, describable change", never perfection — polish
 arrives as further commits. End every session with a **clean tree**: work
 either committed or explicitly parked as a finding/assumption in `status.md`,
 never silently stranded. Agent-driven work can keep this cadence *and* a
@@ -468,8 +468,8 @@ acceptance act"](process-options.md#who-performs-the-acceptance-act)); a lane's
 edit to its own Done-when holds its next build and its close (never the edit
 or the tests) until an adjudicator's verdict or the operator's ruling binds that
 exact text; no un-run
-greens; the
-harness is still the standard (LLM judgment never waives a red check); accepted
+passes; the
+harness is still the standard (LLM judgment never waives a failing check); accepted
 operator decisions are never re-decided by an agent. A coordinator can loop fresh
 driver sessions under any level, stopping where the level requires an operator —
 the stop banner + typed exit codes:
@@ -750,13 +750,13 @@ only when **unattended**; when an operator is available, **solicit clarification
 Track unresolved ambiguities in `status.md` *Open items*, and re-run the review at
 DevStg-Tests when SRs decompose into LLRs.
 
-**No-stub / substance review (DevStg-Impl).** Traceability, coverage, and a green suite
+**No-stub / substance review (DevStg-Impl).** Traceability, coverage, and a passing suite
 confirm an implementation *exists* and *passes*; none confirms it has
 **substance**. A body that is `pass` / `...` / `raise NotImplementedError` / a
 bare `return None` / a placeholder return satisfies its trace links and can even
 hold a coverage line, yet does nothing. So the DevStg-Impl criterion adds: **every in-scope
 SR's implementing symbol does real work, not a stub.** TDD mitigates this (a
-red-first test should fail against a stub), but coverage can be met by exercising
+failing-first test should fail against a stub), but coverage can be met by exercising
 a stub's trivial path, and Demonstration/Manual/Analysis SRs have **no** automated
 test to fail — so name it. It is **Inspection** (human/LLM judgment, **never a
 machine verdict**): fold the prompt into §6's independent-reviewer checklist — a
@@ -1035,7 +1035,7 @@ flowchart TD
 
 - **High-risk** (security, data loss, crash-safety, money, irreversible, gate
   closure): spawn an **independent** reviewer with a fresh-context, defect-
-  hunting prompt. Verify its file edits; never trust an unverified "green."
+  hunting prompt. Verify its file edits; never trust an unverified "pass."
 - **Medium**: self-review against the gate checklist + run the harness.
   (Self-review catches wrong *work*, not wrong *claims* — an author believes
   their own claims; that class needs the independent reviewer.)
@@ -1145,14 +1145,14 @@ lives in `docs/stage` — **generated** by
 gates"; the model:
 [process-options.md](process-options.md#derived-gate-model)). `check.py` defaults
 `--stage` to it and selects by rung or declared paths (below), so **CI enforces the
-stage the project has actually earned** — a fresh scaffold deriving DevStg-Reqs is
-green, and more steps select when a batch of artifacts is **accepted in a reviewed
+stage the project has actually earned** — a fresh scaffold deriving DevStg-Reqs
+passes, and more steps select when a batch of artifacts is **accepted in a reviewed
 commit** and `docs/stage` is regenerated. The `derived-stage` step
 (`derive_stage.py --check`) guards the cache against rot on every trunk-lane
 commit and gate (a claimed work branch reads the cache as-of-base); a release tag
 runs the full checks regardless.
 Without a derived stage, CI would apply the end-state DevStg-Impl checks from day one and
-stay red for months — training everyone to ignore it.
+keep failing for months — training everyone to ignore it.
 
 **Push authority.** Who may *publish* (`git push`) is likewise declared, not
 assumed: the `[policies] push` dial (default **`operator`** — the operator, or

@@ -116,7 +116,7 @@ def git_repo(root, branch="main"):
     and assert on the BYTES `git cat-file` gives back (WI-403), so on an
     unpinned Windows box the forged CRLF never reaches git at all —
     `_relinked_exactly` would compare two LF blobs, excusing the claim, and
-    `test_a_whole_file_crlf_relay_in_a_claim_shape_convicts` would go red
+    `test_a_whole_file_crlf_relay_in_a_claim_shape_convicts` would fail
     while `test_a_crashed_claim_that_relinked_a_crlf_doc_is_still_excused`
     passes vacuously (WI-337: a fixture that takes the platform's translation
     cannot test the platform's bytes)."""
@@ -412,7 +412,7 @@ def scaffolded_closed_branch(tmp_path):
       * NO `.venv` is seeded. `agent_common.harness_python` prefers the repo's
         own `.venv` and falls back to `sys.executable`; a `seed_venv`-style
         `venv.create(with_pip=False)` interpreter carries neither pytest nor
-        ruff, so it would red the format/lint/test steps of the very checks these
+        ruff, so it would fail the format/lint/test steps of the very checks these
         tests need to pass honestly. The fallback lands on THIS suite's
         interpreter, which is floor-satisfying and carries the pinned tools.
       * `out/` is gitignored by the fixture wholesale, where the shipped

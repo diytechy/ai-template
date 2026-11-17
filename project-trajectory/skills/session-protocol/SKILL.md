@@ -56,7 +56,7 @@ always true.
   `integrate._status_prose_refusal` refuses it at claim time; generated blocks
   are exempt. Point at `docs/work/queued/` and let the generated frontier name
   ids.
-- **Never revert a real fix, or sanction a check, to green a step.** Editing a
+- **Never revert a real fix, or sanction a check, to make a step pass.** Editing a
   declared list — a coverage floor, an orphan glob, a ratchet baseline — to
   clear a finding IS accepting what it measures. If a ratchet fires on
   legitimate work, re-stamp it deliberately and record the reason.
@@ -80,9 +80,9 @@ always true.
   must close or it gets lost, as the wi508 hold nearly was — and
   `check_trajectory` reports any active claim with no matching branch ref.
 
-## 3. End green (gates)
+## 3. End with the checks passing (gates)
 
-Run the one declared checks command and paste the real output — never a green
+Run the one declared checks command and paste the real output — never a pass
 you didn't produce:
 
 ```
@@ -96,7 +96,7 @@ cannot skip the strict lints it carries (review-churn ruling 6, 2026-10-11;
 they never run in the commit hook). The lints run first; the budget check runs
 last, and its run is the checks' only tier run.
 `-m smoke` is the fast per-commit tier; `check_smoke_budget.py --mode warn`
-runs it once, FAILS the commit on a red tier (with the tier's own exit code),
+runs it once, FAILS the commit on a failing tier (with the tier's own exit code),
 and reports the tier's CPU-seconds and wall time against `docs/stack.ini`
 `[smoke-budget]`, with a WARN line for a limit over. No checks fail on seconds
 (the operator, 2026-10-20): `run.cmd audit` judges them, running the same step
@@ -168,7 +168,7 @@ session's results are recorded.
   record").
 - **Section order inside the spec file is load-bearing.**
   `check_trajectory.parse_spec_deliverable` clips the body at `## Context`, so
-  a `## Deliverable` placed *after* Context parses as EMPTY and the close reds
+  a `## Deliverable` placed *after* Context parses as EMPTY and the close fails
   (R-A hard error). `## Deliverable` before `## Context`, always.
 - **Order the close against the verdict round.** Under `review_rounds >= 1` the
   merge queue wants a verdict that NAMES the branch's current **non-record**

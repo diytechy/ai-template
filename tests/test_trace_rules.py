@@ -472,7 +472,7 @@ def test_a_requirement_states_one_testable_obligation():
     # ZERO 'shall' is NOT a finding. A placeholder, or a project whose obligation
     # keyword is not the English word "shall", is following a different convention
     # rather than making an error — and this rule ships downstream, where flagging
-    # it would red a legitimate scaffold on its first re-sync.
+    # it would fail a legitimate scaffold on its first re-sync.
     assert not flags(sr={"Requirement": "x does a."})
     # 'must' likewise: 29148 reserves `shall`, but a repo that standardised on
     # 'must' would have EVERY row flagged, which is the cry-wolf failure.
@@ -648,7 +648,7 @@ def _set_status(path, old, new):
 
 def test_an_accepted_sr_under_a_drafted_sn_reds_strict_integrity(scaffold):
     """The need tier is a parent tier too: an Accepted SR citing a Drafted SN
-    reds the integrity floor, naming both rows and statuses. Adequacy witness:
+    fails the integrity floor, naming both rows and statuses. Adequacy witness:
     a standing finding that read only the SR, LLR and TC tiers (the need tier's
     rows not passed to the rule) would leave this run at exit 0.
 
@@ -832,7 +832,7 @@ def _exit_code_attrs(trace):
     defaults, so the two were independent schemas. It drifted the moment
     `exit_code` gained an arm (WI-484): the stub lacked the attribute and the
     tests below raised `AttributeError` instead of testing the rule — and
-    because this module is outside the smoke tier, the commit checks stayed green
+    because this module is outside the smoke tier, the commit checks kept passing
     and the FULL suite found it later. Deriving the set means a new arm can no
     longer crash these tests, and `test_the_stub_matches_what_exit_code_reads`
     makes the addition visible rather than silent."""
@@ -1258,7 +1258,7 @@ def test_the_two_tiering_detectors_warn_but_never_gate():
     # Mirrors the paraphrase advisory's never-gates half. Warn-first is the
     # RULING, not an implementation convenience: the live registries trip both
     # today (seven fan-out offenders, several rows naming a script), and a gate
-    # that is red on the day it ships is a gate someone turns off.
+    # that fails on the day it ships is a gate someone turns off.
     import argparse
 
     from conftest import load_script

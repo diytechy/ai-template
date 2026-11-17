@@ -107,7 +107,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # POLICY — what a Status word means, which Verification methods decompose to a TC
 # but no LLR, what a Phase cell parses to, which SN ids exist and which are cited
 # — and a policy disagreement between the module that ENFORCES the spine and the
-# module that DERIVES its stage is a false green or false red AT A GATE (WI-099).
+# module that DERIVES its stage is a false pass or false failure AT A GATE (WI-099).
 # D-8 replaced the pins with one home: `kitlib/spine.py`. The names are
 # RE-EXPORTED here, exactly as the ladder's were at WI-498 slice 0, because
 # `spine_rules.is_accepted` is the spelling `derive_stage` and the test suite

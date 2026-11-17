@@ -457,7 +457,7 @@ def test_html_escapes_registry_prose(tmp_path):
 # discipline alone (the module docstring's own claim: "ins/del carries
 # line-through + box-shadow ... pills carry words"). These are that closure's
 # equivalent for THIS module's own two encodings — each pinned so a future
-# edit that quietly drops the non-colour half reds here instead of shipping.
+# edit that quietly drops the non-colour half fails here instead of shipping.
 #
 # OUT OF SCOPE, stated rather than silently narrowed: `.empty`'s
 # `--pending`-coloured left border (the callout accent on an explanatory
@@ -565,7 +565,7 @@ def test_crlf_cell_is_stripped_at_the_source(tmp_path):
 def test_check_is_agnostic_to_the_checkouts_line_endings(tmp_path):
     """The mirror hazard, caught by the WI-322 rework rather than the review: a
     CHECKOUT can carry CRLF line endings by local git convention (a fresh
-    worktree on Windows), and a byte-exact compare then reds a file nothing
+    worktree on Windows), and a byte-exact compare then fails a file nothing
     touched. Stripping CR at the source cannot help here — the CRs are the
     file's own line endings — so the compare normalizes both sides."""
     root = repo(tmp_path, oi_rows=PENDING_OI)
@@ -613,7 +613,7 @@ def test_empty_acceptance_state_names_only_what_it_checked(tmp_path):
 def test_retired_markdown_surface_is_reported(tmp_path):
     """122-REVIEW-A: a resynced adopter keeps docs/open-items.md, whose generated
     block nothing writes any more — it can assert a stale operator action with every
-    gate green. Warn-only: the migration is the operator's, and failing would red a
+    gate passing. Warn-only: the migration is the operator's, and failing would fail a
     repo midway through it."""
     root = repo(tmp_path, oi_rows=PENDING_OI)
     assert gen(root).returncode == 0
@@ -622,7 +622,7 @@ def test_retired_markdown_surface_is_reported(tmp_path):
         encoding="utf-8",
     )
     proc = gen(root, "--check")
-    assert proc.returncode == 0, "warn-only — it must not red a repo mid-migration"
+    assert proc.returncode == 0, "warn-only — it must not fail a repo mid-migration"
     assert "still present beside the registry" in proc.stdout
     assert "RESYNC_PACK.md" in proc.stdout  # the recipe's one home (OI-27)
     # The negative half: no stale file, no warning.
@@ -762,7 +762,7 @@ def test_sr_text_renders_when_only_a_child_row_was_amended(tmp_path):
 
 
 def test_an_unreadable_decision_queue_refuses_rather_than_rendering_it_empty(tmp_path):
-    """THE FALSE GREEN THIS MIGRATION'S SHAPE EXISTS TO REFUSE.
+    """THE FALSE PASS THIS MIGRATION'S SHAPE EXISTS TO REFUSE.
 
     Under the CSV carrier a malformed registry still parsed into *something*,
     and a registry that vanished parsed into nothing — either way this view
@@ -870,7 +870,7 @@ def test_offspine_census_names_the_interfaces_registry_in_the_html_view(tmp_path
     # The prose `contract` cell left the row at OI-67; the typed `data` cell is
     # the one a census amendment is driven through now.
     # Keyed on the cell's SHAPE (the `data = "..."` line of IF-001's block),
-    # never on its text: a re-worded cell must not red a census test.
+    # never on its text: a re-worded cell must not fail a census test.
     m = re.search(rb'(?ms)^\[interface\.IF-001\]\n.*?^(data = ".*?")$', data)
     assert m, "fixture: IF-001's data cell not found"
     needle = m.group(1)

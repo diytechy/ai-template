@@ -544,7 +544,7 @@ _SHALL_RE = re.compile(r"\bshall\b", re.IGNORECASE)
 # of the alternative), so widening this cries wolf on correct prose.
 # `must` is deliberately ABSENT. 29148 reserves `shall`, but a project that uses
 # `must` as its obligation keyword is following a different convention, not making
-# an error — and this rule ships downstream, where flagging it would red every SR
+# an error — and this rule ships downstream, where flagging it would fail every SR
 # in such a repo on their first re-sync. The kit does not adjudicate that choice;
 # it flags the modals that are ambiguous ALONGSIDE an obligation keyword.
 _MODAL_RE = re.compile(
@@ -605,7 +605,7 @@ def provenance_findings(srs, llrs, tcs):
     carried a WI id in their normative text — and **26 LLRs, 8 TCs and 9 more SR
     Title/Rationale cells did too**, none of them watched. The largest pocket was
     the layer the SR-only rule could not see, and it kept growing while the rule
-    was green (an `LLR` written the same week the lint landed carried three).
+    passed (an `LLR` written the same week the lint landed carried three).
 
     Narrow BY MEASUREMENT, not by taste. It flags exactly two token shapes. A
     SCRIPT name (65 SR rows), an ARTIFACT PATH (6) and a RUBRIC (5) are NOT
@@ -718,7 +718,7 @@ def provenance_advisories(needs, srs, llrs, tcs, allow=()):
     population is ~300 tokens over ~150 live rows; a gate would stop the harness
     on a prose-rewriting campaign, and the rows that matter most — the ones whose
     frame is the only record of an unresolved question — need a reviewed
-    exception, not a red build. `allow` carries those, TOKEN-SCOPED: each key is
+    exception, not a failing build. `allow` carries those, TOKEN-SCOPED: each key is
     `<ROW-ID> <Cell> <token>` and silences that token alone (see `is_allowed`).
 
     Rows arrive in two shapes. The SN tier comes from `spine_carrier.load_needs`
@@ -838,7 +838,7 @@ def form_findings(srs, llrs, tcs):
             continue
         # MORE than one, never zero. A row with no `shall` is not necessarily
         # wrong — a placeholder, or a project whose obligation keyword is not the
-        # English word "shall" — and flagging it would red a legitimate scaffold.
+        # English word "shall" — and flagging it would fail a legitimate scaffold.
         # The measured defect was two-obligations-in-one-row, and that is what
         # this catches.
         n = len(_SHALL_RE.findall(req))

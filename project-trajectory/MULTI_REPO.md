@@ -143,7 +143,7 @@ side, each pinning its own module versions.
 ### 3.5 Coordinator gating = mechanical aggregation, judgment escalated
 
 The coordinator (as agent) runs the **mechanical** cross-module gate — every module
-passed its own gates, integration/plant tests are green, the interface catalog is
+passed its own gates, integration/plant tests pass, the interface catalog is
 consistent — and surfaces only the **judgment** gates to the operator. The operator signs
 the **integration** gate; module agents (and their operators) gate the modules. This is
 the §6 review-depth triage at the coordinator level; it **does not remove the operator**,
@@ -161,8 +161,8 @@ the kit uses everywhere, applied across the repo boundary.
 A repo boundary breaks the single-repo safety net. In one repo a shared contract is
 kept honest by its **fixture/contract test at the seam** (§8), re-run whenever either
 side changes. Across repos, the owner can change an interface's *content* and ship a
-new version while a **consumer in another repo stays pinned to the old one and builds
-green in ignorance** — the drift the coordinator exists to catch. Split the job the
+new version while a **consumer in another repo stays pinned to the old one and keeps
+passing in ignorance** — the drift the coordinator exists to catch. Split the job the
 same way §3.5 splits gating:
 
 - **The coordinator reconciles *versions* (mechanical).** The catalog records, per
@@ -212,7 +212,7 @@ A runtime test / simulation environment — assemble the modules' built runnable
 (SIL / HIL / E2E) — is a **first-class module the coordinator delegates to**, exactly
 like a functional module. It has its own `SN` (delegated from a coordinator SR),
 consumes the other modules' published artifacts, and **gates itself**. So "all deps
-green → queue the plant repo to assemble and run" is still *sequencing + triggering*
+pass → queue the plant repo to assemble and run" is still *sequencing + triggering*
 (read status, dispatch CI or open a PR, pass the version pins) — never the coordinator
 building or running anything.
 
@@ -276,8 +276,8 @@ future decision; the model above is what they will operationalize.
   **aggregation** that reads each module's *exported* trace summary, **not** one
   `trace.py` over many checkouts. Open: **pull** (the coordinator clones/reads) vs.
   **push** (modules publish a trace artifact it ingests).
-- **Coordinator gate aggregation** — the mechanical "all modules green + integration
-  green + catalog consistent" check (§3.5) as an actual stdlib command reading
+- **Coordinator gate aggregation** — the mechanical "all modules pass + integration
+  passes + catalog consistent" check (§3.5) as an actual stdlib command reading
   module-published gate/status artifacts, with escalation rules for the judgment gates.
 - **Interface catalog + compatibility reconciliation** — the `CIF-###` catalog registry
   (§3.3) and the §3.7 version-reconciliation check: flag a consumer pinned below the

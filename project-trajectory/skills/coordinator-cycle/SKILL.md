@@ -201,8 +201,8 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
      `@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))`).
      The mark is written as the declared text verbatim, with no added
      arguments: `record-checks` and the refresh count only that text, so a mark
-     carrying an added `reason=` is not counted and its test can land red.
-     Its red reaches the test's own assertion, never an import error; a
+     carrying an added `reason=` is not counted and its test can land while it fails.
+     Its failure reaches the test's own assertion, never an import error; a
      stub is the builder's choice. The code commit removes the marks.
    - **Characterization of already-correct behaviour:** unmarked, with a
      stated adequacy witness, the wrong implementation it would catch,
@@ -395,8 +395,8 @@ them where reasonable, and the spawner's bounds hold for each one:
 - one `--basetemp` per test runner;
 - free disk is checked before lanes fan out, and the full suite runs alone
   at phase close;
-- a red that passes when re-run quietly is filed as a load-sensitive defect,
-  never charged to the lane or re-run until green.
+- a failure that passes when re-run quietly is filed as a load-sensitive defect,
+  never charged to the lane or re-run until it passes.
 
 ## 4. Land
 

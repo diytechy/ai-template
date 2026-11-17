@@ -35,7 +35,7 @@ def test_open_items_theme_tokens_match_the_dashboard():
     `assert value in CSS` sat OUTSIDE the token loop (so it checked one token per
     theme), and it compared against a module-level `THEME` dict that nothing
     rendered from — nine of the twelve EMITTED tokens were rewritten, including
-    dark `--text:#444444`, and it stayed green. Both halves are now closed: the
+    dark `--text:#444444`, and it kept passing. Both halves are now closed: the
     values are parsed out of the CSS the page actually ships
     (`gen_open_items.theme_tokens`), and every token is asserted."""
     gi = load_script("gen_open_items")
@@ -177,7 +177,7 @@ def test_normalize_survives_the_carrier_change_and_this_is_why(tmp_path):
 
     NOT RETIRED, and this is the load-bearing half: the guard also covers the
     *checkout's own* line endings. A clone with `core.autocrlf` on stores the
-    generated HTML with CRLF, and a byte-exact freshness compare would then red
+    generated HTML with CRLF, and a byte-exact freshness compare would then fail
     every fresh worktree — which is not a registry fact at all and is untouched
     by which carrier the registry uses. Removing `normalize` would re-break the
     WI-322 rework's detached view worktree.

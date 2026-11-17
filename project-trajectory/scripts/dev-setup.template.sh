@@ -301,7 +301,7 @@ else
   say "Product toolchain: run scripts/setup.sh to create .venv + install test tools."
 fi
 
-# --- --check stops here: pure report, always green ---------------------------
+# --- --check stops here: pure report, always passes --------------------------
 if [ "$TIER" = "check" ]; then
   say
   say "$missing component(s) missing. Install them with: sh $0 --baseline"

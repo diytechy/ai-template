@@ -1,4 +1,4 @@
-"""integrate.py `record-checks` — a build round's own record of green (WI-956).
+"""integrate.py `record-checks` — a build round's own record of a pass (WI-956).
 
 `record-checks` commits the lane's staged work (or, with nothing staged, an empty
 commit on the tip) carrying a `Checks-Passed:` line that names `checks=commit` and
@@ -7,10 +7,10 @@ also commits through. It derives the row's review test set, runs the commit
 checks (the check suite `docs/process.toml` `[required-checks] commit` names,
 by the line `docs/stack.ini` `[check-suites]` gives it), then the derived
 files through `[product] test` under the lane's own `--basetemp`, and commits
-only when both are green.
+only when both pass.
 
 Every failed write leaves the branch and the index exactly as they were: a
-failing checks or a red named test, a dirty worktree (refused before the checks),
+failing checks or a failing named test, a dirty worktree (refused before the checks),
 undeclared commit checks (refused before the checks), a message that already carries
 the label, a commit a hook refuses, and a commit a hook rewrites. The merge
 seam reads the record too: a tip carrying only a `commit` record is not
@@ -107,7 +107,7 @@ def _record_checks(root, message_file=None):
     return integ.record_checks(root, BRANCH, "commit", message_file=message_file)
 
 
-# --- the record a green build round leaves ------------------------------------
+# --- the record a passing build round leaves ------------------------------------
 
 
 def test_record_checks_commits_staged_work_carrying_a_trailer_that_verifies(tmp_path):
@@ -155,7 +155,7 @@ def test_failing_commit_checks_commit_nothing_and_leave_branch_and_index(
     before = _state(root, wt)
     sha, refusal = _record_checks(root)
     assert sha is None and refusal, arm
-    assert _ran(wt) and ran in _ran(wt)[-1], "the red came from {}".format(arm)
+    assert _ran(wt) and ran in _ran(wt)[-1], "the failure came from {}".format(arm)
     assert _state(root, wt) == before
 
 
@@ -450,9 +450,9 @@ def test_checks_that_edit_a_tracked_file_record_nothing(tmp_path, route):
         assert _git(wt, "write-tree").strip() == index
 
 
-@pytest.mark.parametrize("code", [1, 0], ids=["red", "green"])
+@pytest.mark.parametrize("code", [1, 0], ids=["failing", "passing"])
 def test_checks_that_stage_an_edit_leave_the_index_as_staged(tmp_path, code):
-    # Red or green, a check run that moves the index records nothing, and the index
+    # Failing or passing, a check run that moves the index records nothing, and the index
     # goes back to the tree the caller staged.
     root = checks_repo(tmp_path, check_src=STUB_CHECK_STAGES.format(code=code))
     wt = _lane(root, BRANCH)
@@ -492,7 +492,7 @@ def test_the_passed_checks_record_joins_a_message_files_trailer_block(tmp_path):
 
 def test_record_checks_refuses_below_the_harness_floor_before_the_checks(tmp_path):
     # The refresh's floor: a repo that declares the pinned toolchain but has
-    # no runnable .venv must not record a green run on ambient Python.
+    # no runnable .venv must not record a passing run on ambient Python.
     root = checks_repo(tmp_path)
     wt = _lane(root, BRANCH)
     (root / "requirements-dev.txt").write_text("pytest\n", encoding="utf-8")

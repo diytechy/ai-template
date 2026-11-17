@@ -7,7 +7,7 @@ field record names three distinct re-sync breakages, each caught downstream by a
 human rather than by this suite. This module builds the missing shape: extract a
 pinned older commit of THIS repo's own history, bootstrap a scaffold from it, run
 the re-sync procedure the kit documents today, and require the result to be a
-green harness. That procedure's home moved at OI-27's ruling — from ADOPTING.md
+passing harness. That procedure's home moved at OI-27's ruling — from ADOPTING.md
 §6 to `project-trajectory/RESYNC_PACK.md` §1, which is where the mechanical steps
 below are now written; §6 keeps the framing and points there.
 
@@ -17,7 +17,7 @@ WHAT IT HONESTLY COVERS
   - The scaffold that comes out the far side passes the kit's own harness
     (`check.py` at its gate, `trace.py --strict`), and passes it NON-vacuously:
     an old `check.py` that no longer recognises the repo prints "No checks
-    defined" and would otherwise hand us a false green, so that is asserted
+    defined" and would otherwise hand us a false pass, so that is asserted
     against explicitly.
   - The re-stamp works: `docs/kit-version` moves from the old kit's label to the
     current kit's SHA, which is what makes the NEXT re-sync a diff.
@@ -36,12 +36,12 @@ WHAT IT DOES NOT COVER, stated plainly because the gap is the point
     per-change entries — is prose an operator executes by hand, and SR-036
     declares that judgment deliberately non-mechanized
     (`verification_method = "Inspection"`). None of that half is exercised here.
-  - Consequently a GREEN here means "the documented mechanical steps leave a
+  - Consequently a PASS here means "the documented mechanical steps leave a
     repo whose OWN harness passes", not "the repo is now on the current kit".
     Those are different claims and this file only makes the first — and the
     distinction is not academic: the measured result is that the re-synced
     scaffold ends up carrying its spine registries under BOTH carriers, a state
-    the current kit hard-REFUSES, and it still reports green because the
+    the current kit hard-REFUSES, and it still reports a pass because the
     checker that would refuse it is one of the stale files
     (`test_the_pass_holds_only_because_the_old_checkers_survived`). Read that
     test before trusting the headline one.
@@ -86,11 +86,11 @@ from conftest import ROOT, SCRIPTS, run_py, skip_without_env_gates
 #   2. IT IS A CLEAN CLOSE POINT on the trunk's first-parent history (a "mark
 #      done + registry/dashboard close" commit), not a mid-claim state, so the
 #      scaffold it produces is a coherent kit rather than a half-landed one.
-#   3. ITS GREEN IS NOT VACUOUS. Measured while choosing: re-syncing forward from
+#   3. ITS PASS IS NOT VACUOUS. Measured while choosing: re-syncing forward from
 #      this commit leaves a harness that runs four real steps and passes. Reaching
 #      further back (e.g. `main`'s tip, 2026-06-28) produces a scaffold whose
 #      surviving old `check.py` prints "No checks defined for gate DevStg-Reqs" and exits
-#      0 — a green that means nothing. A test whose standard can be met vacuously is
+#      0 — a pass that means nothing. A test whose standard can be met vacuously is
 #      worse than no test, so the pin stops on the near side of that line and
 #      `test_old_kit_scaffold_syncs_forward_to_a_passing_harness` asserts against
 #      the vacuous shape directly.
@@ -244,12 +244,12 @@ def resync(tmp_path_factory):
 
 
 def test_old_kit_scaffold_syncs_forward_to_a_passing_harness(resync):
-    """The headline claim: old scaffold + documented re-sync => green harness.
+    """The headline claim: old scaffold + documented re-sync => passing harness.
 
-    Green is checked for SUBSTANCE as well as exit code. A re-synced repo still
+    A pass is checked for SUBSTANCE as well as exit code. A re-synced repo still
     carries its OLD `check.py`, and an old enough one no longer recognises the
     repo it is standing in and reports "No checks defined for gate <G>" at exit
-    0. That is the false green this whole class of test exists to catch, so the
+    0. That is the false pass this whole class of test exists to catch, so the
     assertions below require the harness to have actually run steps and passed
     them.
     """
@@ -268,7 +268,7 @@ def test_old_kit_scaffold_syncs_forward_to_a_passing_harness(resync):
     assert proc.returncode == 0, out
     assert "RESULT: PASS" in out, out
     assert "No checks defined" not in out, (
-        "the re-synced scaffold's harness ran NO steps — this green is vacuous, "
+        "the re-synced scaffold's harness ran NO steps — this pass is vacuous, "
         "which means the pin is too old for the surviving check.py:\n" + out
     )
     passed = [ln for ln in out.splitlines() if ln.strip().startswith("PASS ")]
@@ -377,13 +377,13 @@ def test_the_pass_holds_only_because_the_old_checkers_survived(resync):
     exact dual-home state the kit hard-REFUSES (`spine_carrier.resolve` raises
     on it, by the same rule `--migrate-config` applies to the policy dials).
 
-    And it reports green anyway, because the checker that would refuse it is one
+    And it reports a pass anyway, because the checker that would refuse it is one
     of the kit-owned scripts the re-sync did not update: the repo is still being
     judged by the OLD `trace.py`, which predates the carrier and cannot see the
     problem. Run the CURRENT kit's `trace.py` against the very same tree and it
     exits nonzero.
 
-    That is SN-008's dishonest green one level up — not a skipped check, but a
+    That is SN-008's dishonest pass one level up — not a skipped check, but a
     check that no longer matches the repo it is checking — and it is a MEASURED
     fact about the documented procedure, not a hypothesis. Pinned here so the
     OI-27 re-sync pack has a concrete thing to fix and a way to prove it did.
@@ -395,7 +395,7 @@ def test_the_pass_holds_only_because_the_old_checkers_survived(resync):
         "does, the add-only contract changed — re-baseline this module"
     )
 
-    # The repo's own (old) harness: green.
+    # The repo's own (old) harness: passes.
     own = run_py(["scripts/trace.py", "--strict"], cwd=resync.repo)
     assert own.returncode == 0, own.stdout + own.stderr
 
@@ -414,13 +414,13 @@ def test_force_resync_installs_current_checkers_and_the_tree_cannot_falsely_pass
     """The OTHER half of the procedure — the wholesale overwrite — with --force.
 
     The add-only leg above proves the DOCUMENTED DEFAULT and pins its known
-    dishonest green (the surviving old checkers accept a tree the current kit
+    dishonest pass (the surviving old checkers accept a tree the current kit
     refuses). This leg proves the overwrite path: after `bootstrap.py --force`
     plus the documented `--migrate-config`, the tree's checkers ARE current —
     so whatever they report is the CURRENT kit's honest verdict on a
-    July-era scaffold, and the one outcome this test forbids is a green that
+    July-era scaffold, and the one outcome this test forbids is a pass that
     hides un-run migrations (SN-008 one level up, the adversarial round's
-    point). Either the current harness runs green with substance, or it
+    point). Either the current harness passes with substance, or it
     refuses LOUDLY naming what a re-sync still owes — both are honest; silence
     is the defect.
     """
@@ -443,14 +443,14 @@ def test_force_resync_installs_current_checkers_and_the_tree_cannot_falsely_pass
     verdict = run_py(["scripts/trace.py", "--strict-integrity"], cwd=repo)
     out = verdict.stdout + verdict.stderr
     if verdict.returncode == 0:
-        # Honest green: the current integrity floor really passed — require
+        # Honest pass: the current integrity floor really passed — require
         # substance so a vacuous pass cannot slip through as acceptance.
         assert "orphans=0" in out or "integrity=0" in out, (
-            "green with no substance is the false green this test exists "
+            "a pass with no substance is the false pass this test exists "
             "to refuse:\n" + out
         )
     else:
-        # Honest red: the refusal must NAME what is owed, so the operator
+        # Honest failure: the refusal must NAME what is owed, so the operator
         # is routed to the migration rather than left with a bare exit code.
         assert out.strip(), "a silent nonzero teaches nothing:\n" + out
 
@@ -605,7 +605,7 @@ def test_node_adopter_upgrade_preserves_populated_operator_content(resync, tmp_p
     # rather than a script-only update that leaves stale kit documents behind.
     # This leg does NOT test preservation: the byte-restore below is the test's
     # own operator step. What it proves is that the documented overwrite plus
-    # carrier conversion leaves the restored files alone and lands a green
+    # carrier conversion leaves the restored files alone and lands a pass
     # current harness. The add-only leg above is the preservation oracle.
     supported = tmp_path / "node-adopter-supported"
     shutil.copytree(repo, supported)

@@ -73,7 +73,7 @@ REGISTRIES = {
     # 122-REVIEW-A finding that put it here stands — drifting
     # Status/Raised/OneLine in the template passed all 23 dogfood tests, and a
     # scaffold on that template then rendered "the operator queue is empty" for a
-    # registry holding two pending decisions: exit 0, gate green, silent wrong
+    # registry holding two pending decisions: exit 0, gate passing, silent wrong
     # content on the surface an operator rules from.)
     #
     # THIS CENSUS IS NOW EMPTY, and that is the carrier migration finishing
@@ -446,9 +446,9 @@ def test_template_declares_every_key_the_live_registry_uses(id_col):
     registry no longer declares a column it does not use — `Permutations` is
     the live case today, a column the CSV header carried with all 147 cells
     empty and which simply does not exist under TOML. Holding the live side to
-    "declares every template column" would red on that legitimate state, and
-    the only way to keep it green would be to stop checking, which is the
-    "green hides a skipped check" failure SN-008 forbids.
+    "declares every template column" would fail on that legitimate state, and
+    the only way to keep it passing would be to stop checking, which is the
+    "a pass hides a skipped check" failure SN-008 forbids.
 
     What survives is the same class of drift, anchored to a STATED schema
     (`spine_carrier.REGISTRY_KEYS`) rather than to whichever of the two
@@ -490,7 +490,7 @@ def test_the_live_registries_carry_more_than_the_template_example(tmp_path):
     registries are honestly different sizes: the spine tiers carry >10 rows, and
     the decision queue and the model registry are small by nature — but "more
     than the example row" is the property that matters, and a registry that
-    shrank to its example would still red here."""
+    shrank to its example would still fail here."""
     floors = {
         "SN-ID": 10,
         "SR-ID": 10,
@@ -555,7 +555,7 @@ def test_bite_removed_live_registry_column():
 
 def test_bite_the_spine_key_rule_fails_on_a_planted_defect(tmp_path):
     """DRIVEN AGAINST REAL PLANTED DEFECTS, in temp copies of the real files —
-    because a containment rule that cannot be made to fail is the vacuous green
+    because a containment rule that cannot be made to fail is the vacuous pass
     this suite exists to refuse.
 
     FOUR mutations, one per leg of the rule. The third is the one that matters

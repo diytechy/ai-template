@@ -106,7 +106,7 @@ tags = ["templates", "scripts"]
 need = """An adopting team can add this process to a new or existing repository and get a working gated, requirement-traced process, without hand-building the tooling."""
 why = "It is the kit's reason to exist — a *reusable starting point*."
 priority = "M"
-acceptance = """A single scaffolding action against a destination repository produces a scaffold whose harness runs green out of the box; a re-sync onto an existing repo never clobbers the repo's own files."""
+acceptance = """A single scaffolding action against a destination repository produces a scaffold whose harness passes out of the box; a re-sync onto an existing repo never clobbers the repo's own files."""
 
 [need.SN-002]
 status = "Accepted"
@@ -157,7 +157,7 @@ stakeholder_refs = ["STK-04"]
 need = """The people maintaining this kit hold it to its own standard: it stays traceable and tested through every change."""
 why = """The kit is a foundation many repos inherit; a regression here propagates downstream."""
 priority = "M"
-acceptance = """The declared checks are green before a change lands. The Full-suite run bootstraps a temp scaffold and exercises every delivered script."""
+acceptance = """The declared checks pass before a change lands. The Full-suite run bootstraps a temp scaffold and exercises every delivered script."""
 
 [need.SN-008]
 status = "Accepted"
@@ -191,7 +191,7 @@ tags = ["scripts", "legal"]
 need ="""An adopting team can run every check on a **clean Python 3.11+ with minimal, argued dependencies** — stdlib by default, a non-stdlib dependency admitted only through a reviewed ledger row — on Windows and POSIX (and macOS)."""
 why = """Portability — the kit must not impose an *unargued* dependency stack on a downstream repo to run its checks. But a blanket "no dependencies" rule is itself a design constraint: it can force a worse hand-rolled alternative than a well-chosen tool, so the standard is **argument, not abstinence**."""
 priority = "M"
-acceptance = """Every non-stdlib import in the kit's scripts is declared as a row in the dependency ledger naming what it replaces, why hand-rolling is worse, and the ruling that admitted it — the suite fails on an undeclared import; checks an adopter runs (`shipped` tier) stay stdlib-*preferred*, since a dependency there forces every adopter to install it; the CI matrix is green on Linux + Windows + macOS."""
+acceptance = """Every non-stdlib import in the kit's scripts is declared as a row in the dependency ledger naming what it replaces, why hand-rolling is worse, and the ruling that admitted it — the suite fails on an undeclared import; checks an adopter runs (`shipped` tier) stay stdlib-*preferred*, since a dependency there forces every adopter to install it; the CI matrix passes on Linux + Windows + macOS."""
 
 [need.SN-012]
 status = "Accepted"

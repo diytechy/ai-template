@@ -134,7 +134,7 @@ def test_it_does_not_import_the_module_it_came_out_of():
     """The extracted module sits BELOW its reader (WI-483's layering rule).
 
     `check_trajectory` imports this one unguarded; the reverse edge would be a
-    cycle, and `tests/test_import_layers.py` would red on it. Pinned here too
+    cycle, and `tests/test_import_layers.py` would fail on it. Pinned here too
     because that file measures the whole graph while this states the one edge
     the split created, so a reader of either learns the direction.
     """

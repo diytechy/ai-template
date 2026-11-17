@@ -37,7 +37,7 @@ def _build(value, key=KEY):
 @pytest.mark.parametrize(
     "body, value",
     [
-        # The shipped default for an absent table or key. Green on the stub
+        # The shipped default for an absent table or key. Passes on the stub
         # too, which answers the shipped 3; the adequacy witness is a reader
         # that answers anything else, or refuses, for a file that is silent.
         pytest.param("", 3, id="absent-table"),

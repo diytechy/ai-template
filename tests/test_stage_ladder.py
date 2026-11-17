@@ -121,7 +121,7 @@ def test_check_selects_on_the_SHARED_ladder_and_restates_no_vocabulary():
     drop-in that never imports a SIBLING SCRIPT — and nothing but an equality
     pin stopped its selection vocabulary from drifting away from the value
     `spine_rules.py` writes, a drift that would have presented as "no checks
-    defined": a green that ran nothing. It restates nothing now. Selection keys
+    defined": a pass that ran nothing. It restates nothing now. Selection keys
     on `kitlib.ladder`, the sanctioned shared package, so the drift became
     UNREPRESENTABLE rather than detected — the WI-448 precedent slice 0 followed.
     What is pinned instead is that the retirement actually happened, because a

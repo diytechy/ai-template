@@ -501,7 +501,7 @@ def test_the_lane_refusal_names_every_act_and_the_snapshot_write(tmp_path):
     # The rule it names is operator ruling 6 (2026-10-07, WI-849).
     assert "The act is an independent adjudicator's" in refusal
     assert "Leave the rows `Drafted`" in refusal  # the remedy, not just the verdict
-    # The green half of the same fixture: the AUTHORING commit is admitted.
+    # The passing half of the same fixture: the AUTHORING commit is admitted.
     assert ar.lane_acceptance_refusal(tmp_path, "HEAD~2", "HEAD~1") is None
 
 
@@ -592,7 +592,7 @@ def test_staged_spine_traced_cells_do_not_arm_the_reaccept_warn(tmp_path):
     # Automated/Phase — with every accepted cell and every Status untouched.
     # Silence is the whole point: before this split each of these armed the warn
     # exactly as if requirement prose had changed (mutation-proof: reverting
-    # `spine_cell_class` to "everything but Status is accepted" reds this).
+    # `spine_cell_class` to "everything but Status is accepted" fails this).
     run_git = _init_full_spine_repo(tmp_path)
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
         _SPINE_SR_HEADER
@@ -1377,7 +1377,7 @@ def test_critique_staleness_vacuous_without_a_critique_sr(tmp_path):
 
 def test_critique_staleness_fails_closed_under_strict(tmp_path):
     # FAIL-CLOSED (WI-243, operator 2026-07-20): under --strict (the DevStg-Impl gate) a stale
-    # render surface is an ERROR (exit 1), not just a warn — it cannot reach green.
+    # render surface is an ERROR (exit 1), not just a warn — it cannot reach a pass.
     _init_critique_staleness_repo(tmp_path)
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 1, proc.stdout + proc.stderr
@@ -1454,10 +1454,10 @@ def test_render_surface_covers_the_whole_generator_family():
     `VerificationMethod=Critique` SR whose judged render surface changed after the
     verdict must re-fire. WI-280 split every EMITTER out of gen_trajectory.py
     into HTML emitter modules, so a facade-only surface would leave that warn
-    running and always passing — the exact silent-green shape the warn exists
+    running and always passing — the exact silent-pass shape the warn exists
     to prevent. This pins the family, both because the change was unguarded
     (round-1 review, MINOR) and because the failure mode is invisible: nothing
-    else goes red when the surface silently narrows."""
+    else fails when the surface silently narrows."""
     ct = load_script("check_trajectory")
     paths = ct._render_surface_paths(ROOT)
     assert paths, "vacuous — the surface resolved to nothing"

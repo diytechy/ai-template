@@ -278,7 +278,7 @@ def test_reference_workflow_runs_the_documented_human_entry_point():
 def test_no_job_level_guard_can_disable_a_declared_moment():
     # The step guards above are only meaningful if nothing ABOVE them can veto
     # the whole job: a job-level `if:` on the reference workflow would disable
-    # declared moments while every step-level pin stays green. The reference
+    # declared moments while every step-level pin keeps passing. The reference
     # workflow has none, and growing one is a reviewed edit here.
     ci = CI_REFERENCE.read_text(encoding="utf-8")
     assert not re.search(r"(?m)^ {4}if:", ci), (
@@ -301,7 +301,7 @@ def test_the_declared_tag_moment_can_actually_fire():
 def test_the_workflow_comments_point_at_the_declaration_and_do_not_restate_it():
     # ONE HOME, enforced. The comment that used to carry the table now points at
     # it; no comment may pair a moment with a tier again, because a prose copy
-    # is precisely what drifts silently while the `run:` lines stay green.
+    # is precisely what drifts silently while the `run:` lines keep passing.
     ci = CI_REFERENCE.read_text(encoding="utf-8")
     assert "[ci-tiers]" in ci, "the workflow no longer points at the declaration"
     offenders = [
@@ -373,7 +373,7 @@ def test_this_repos_own_gate_runs_the_same_entry_point():
     )
 
 
-# --- bite proofs: each pin driven RED on a planted defect ----------------------
+# --- bite proofs: each pin driven to FAIL on a planted defect ----------------------
 
 
 def test_bite_a_retiered_workflow_step_is_caught():
@@ -427,7 +427,7 @@ def test_bite_a_mentioned_but_not_invoked_harness_is_not_counted():
 
 def test_bite_a_duplicate_tier_flag_reads_as_what_argparse_runs():
     # `--tier smoke --tier all` executes all (argparse last-wins); a first-match
-    # read would have reported smoke and kept the pin green through a real
+    # read would have reported smoke and kept the pin passing through a real
     # scope change.
     steps = harness_steps(
         "      - name: sneaky\n"

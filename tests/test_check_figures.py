@@ -306,7 +306,7 @@ def test_a_mixed_marker_with_a_placeholder_cmd_flags_its_missing_cmd(tmp_path):
 def test_a_review_record_quoting_defective_markers_is_out_of_scope(tmp_path):
     # A verdict record under docs/reviews/ quotes findings — including bare
     # and half-carrying markers — verbatim as evidence; judging the quotation
-    # would convict the quoter and red every branch a review lands on. The
+    # would convict the quoter and fail every branch a review lands on. The
     # check_doc_refs record-surface stance, applied: reviews are skipped.
     make_repo(tmp_path, "No figures at the root.\n")
     reviews = tmp_path / "docs" / "reviews"

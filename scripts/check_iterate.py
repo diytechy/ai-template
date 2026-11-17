@@ -18,7 +18,7 @@ The declared lints run beside the tests, not before them: they are the steps
 of docs/stack.ini [run] smoke ahead of its tier step, read from there so the
 list keeps one home.
 
-A SENSOR, NEVER A PROOF. A green here says the change works and nothing is
+A SENSOR, NEVER A PROOF. A pass here says the change works and nothing is
 obviously broken. It makes no claim about a test this change does not name: a
 dependency the selection missed stays unrun until a deeper run, and the plan
 this step prints lists every changed path it could not map and every module
@@ -179,7 +179,7 @@ _TEST_DEF = re.compile(r"^\s*(?:async\s+)?def test_", re.M)
 
 def read_test_file(text, sibling_stems=(), source_stems=()):
     """The `TestFile` for one file's source text. A file that does not parse
-    names nothing: it will fail its own collection, which is a red already."""
+    names nothing: it will fail its own collection, which is a failure already."""
     imports, loaded, files, helpers = set(), set(), set(), set()
     try:
         tree = ast.parse(text)
@@ -799,7 +799,7 @@ def main(argv=None):
     print(
         "iterate: {} in {:.1f}s wall. This is the change's own evidence, not a "
         "landing claim.".format(
-            "green" if worst == 0 else "RED", time.perf_counter() - start
+            "passed" if worst == 0 else "FAILED", time.perf_counter() - start
         )
     )
     return worst

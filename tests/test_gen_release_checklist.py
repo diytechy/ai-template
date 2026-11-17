@@ -175,8 +175,8 @@ def test_absent_registries_still_produce_a_sane_checklist(tmp_path):
 
 def test_fresh_scaffold_example_rows_do_not_count(scaffold):
     # A fresh scaffold carries only the -000 example rows — ignored like
-    # everywhere else in the kit, so the counts are all zero and the run is
-    # green out of the box.
+    # everywhere else in the kit, so the counts are all zero and the run
+    # passes out of the box.
     proc = gen(scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "SN=0 human-SR=0 manual-TC=0 IF=0 PB=0" in proc.stdout

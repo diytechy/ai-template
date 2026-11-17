@@ -253,7 +253,7 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # than only inside the collapsible `.ctx`) and threaded `tr.truncate_cell`
     # through `_context_block` and `_chain_row`'s full-cell branch, all above
     # this site. That churn is the price of pinning a SITE rather than a
-    # count, and it is the right trade: a count would stay green if this site
+    # count, and it is the right trade: a count would keep passing if this site
     # were deleted and a different one added.
     # 1234 -> 1266 when WI-518 (the off-spine census) added `_offspine_census_block`
     # and wired its `{offspine}` slot through `render`'s format call, all above
@@ -362,7 +362,7 @@ def test_write_text_accepts_newline_on_the_declared_floor():
         # `("spine_rules.py", "docs/gate")` was the third case until WI-498
         # slice 5: the artifact was deleted and `spine_rules.py` lost its CLI,
         # so the case wrote nothing and took the `pytest.skip` below FOREVER —
-        # a green that proved nothing, which is exactly what that skip exists
+        # a pass that proved nothing, which is exactly what that skip exists
         # to make visible rather than to absorb.
         ("derive_stage.py", "docs/stage"),
         ("gen_okf.py", "docs/okf"),

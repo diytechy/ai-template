@@ -2,7 +2,7 @@
 
 The per-commit checks run `-m smoke`; the full suite runs at slice/phase close
 and in CI. These guard the two ways that split could silently rot into a false
-green: a test landing outside both tiers, or a SLOW_MODULES entry going stale.
+pass: a test landing outside both tiers, or a SLOW_MODULES entry going stale.
 """
 
 from conftest import ROOT, SLOW_MODULES, smoke_tier_for

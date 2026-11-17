@@ -2,7 +2,7 @@
 trunk only (docs/concurrency-restructure.md §5.2).
 
 Work branches never commit generated artifacts — the trunk regenerates them in
-one serial post-merge step — so freshness-gating a branch would red it for drift
+one serial post-merge step — so freshness-gating a branch would fail it for drift
 it is forbidden to fix. This module pins the two halves of that rule:
 
   1. `_work_branch` — who counts as a claimed work branch, and (louder) who does
@@ -41,7 +41,7 @@ NOTICE = (
 
 # A command that CANNOT pass. Every "was it skipped?" assertion below runs a step
 # whose command would fail, so a skip is proven by the absence of the failure —
-# not merely by a green that a vacuous check would also produce.
+# not merely by a pass that a vacuous check would also produce.
 FAILING = [sys.executable, "-c", "raise SystemExit(1)"]
 
 
@@ -355,7 +355,7 @@ def test_branch_edit_gates_still_run_in_the_g3_plan(check, tmp_path, monkeypatch
 def test_trunk_lane_forces_every_freshness_step_back_on(check, tmp_path, monkeypatch):
     # WI-386. The landing checks run on the branch, and the integrator reads any
     # SKIP as a refusal — so without this flag the seven freshness steps stand
-    # down, the checks report SKIP, and the refresh can never go green at all.
+    # down, the checks report SKIP, and the refresh can never pass at all.
     # The flag MAKES the mechanical checks possible; it is not a rescue from a
     # false pass (REVIEW-A round 1 drove the direction). The branch is
     # genuinely claimed here (the detector still says so), which is what makes
@@ -375,7 +375,7 @@ def test_trunk_lane_forces_every_freshness_step_back_on(check, tmp_path, monkeyp
 def test_trunk_lane_is_opt_in_and_off_by_default(check, tmp_path, monkeypatch):
     # The arming boundary from the other side: the same claimed branch, the same
     # steps, no flag — every one still SKIPs. A default that had drifted to "on"
-    # would red every honest work branch for drift §5.2 forbids it to fix.
+    # would fail every honest work branch for drift §5.2 forbids it to fix.
     git_repo(tmp_path, branch="wi-360")
     claim(tmp_path, "wi-360")
     monkeypatch.chdir(tmp_path)
@@ -407,7 +407,7 @@ def test_trunk_lane_reaches_the_step_runner_through_the_real_cli(tmp_path):
 
 def test_run_steps_end_to_end_reports_the_skip_and_exits_zero(tmp_path):
     # The pre-commit hook's real entry point, as a subprocess: a claimed branch
-    # gets the notice and a green exit; the freshness step never runs.
+    # gets the notice and a passing exit; the freshness step never runs.
     git_repo(tmp_path, branch="wi-360")
     claim(tmp_path, "wi-360")
     proc = run_py([SCRIPTS / "check.py", "--run-steps", "status-map"], cwd=tmp_path)
@@ -440,7 +440,7 @@ def test_the_primary_checkout_is_not_a_work_branch(check):
     # run". Before the station protocol (WI-386) those were the same thing; a
     # lane worktree now runs this suite as a GATE during `integrate.py refresh`,
     # and a lane by construction HAS a claim — so asserting about the current
-    # root made the guard false exactly where the protocol needs it green, and
+    # root made the guard false exactly where the protocol needs it to pass, and
     # the intent (the detector must not match trunk) is unchanged by naming the
     # trunk explicitly. The constructed both-ways proof is the test above; this
     # one is the live-repo canary over the real registry.

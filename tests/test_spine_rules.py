@@ -369,7 +369,7 @@ def test_meta_repo_phases_match_an_independent_derivation():
     # BAR AXIS TO THE STAGE LADDER at WI-498 slice 5. The per-phase values are
     # checked against an INDEPENDENT re-derivation from the raw registry TOML
     # (never against the deriver itself — that comparison could never fail), so a
-    # broken rung in `spine_stage` reds the dogfood.
+    # broken rung in `spine_stage` fails the dogfood.
     #
     # THE LIVE READING is the comparable one: it is the same fold over the same
     # rows the retired `_per_phase` did. The SETTLED (draft-excluded) reading is
@@ -383,7 +383,7 @@ def test_meta_repo_phases_match_an_independent_derivation():
     record = DS.derive(ROOT)
     assert record["per-phase-live"] == expect, (record["per-phase-live"], expect)
     # A deliberate SNAPSHOT of the meta-repo's own derived phase, so a silent
-    # phase drift reds here rather than passing unnoticed. Bump it when a
+    # phase drift fails here rather than passing unnoticed. Bump it when a
     # acceptance legitimately advances the phase (4 -> 5 at the 2026-08-13
     # re-accept sitting, which accepted the last draft SNs and SR-137..149;
     # 5 -> 6 at the 2026-09-25 phase-6 acceptance act, cbb6649f, which accepted
@@ -455,7 +455,7 @@ def test_example_rows_are_ignored_by_the_coverage_rung(scaffold):
 def test_per_phase_resolves_tc_citing_only_its_llr(scaffold):
     # Repo-review 2026-07-21 M-6: a Drafted TC citing only its LLR (a legal shape
     # the orphan rules accept) dropped the repo's global reading while the
-    # per-phase view stayed green — the phase-drop detector then pointed at
+    # per-phase view kept passing — the phase-drop detector then pointed at
     # nothing. TC refs resolve through the LLR->SR map, so the phase bucket sees
     # it.
     #

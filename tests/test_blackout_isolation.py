@@ -5,7 +5,7 @@ window, `blackout = "12:00-19:00"`. A test scaffold seeded from that template an
 handed to a session-driving fixture gave `agent_loop` a LIVE window, which it
 correctly honors by sleeping — so on a weekday between 12:00 and 19:00 UTC the
 ten tests of `tests/test_agent_loop_critique.py` did not fail, they never ran,
-and the runner reported green on the other 2232. "Full checks green" was a function
+and the runner reported a pass on the other 2232. "Full checks passing" was a function
 of the wall clock; a probe outside the window recorded the module as "not
 reproduced ... flaky" on 2026-08-10.
 
@@ -22,7 +22,7 @@ last two are what keep it honest:
   - a POPULATED window really does block — 35 weekday hours a week, up to 7 h at
     a stretch — so the machinery under test is proven live, not merely unused;
   - no test scaffold a session-driving fixture builds carries a live window, at
-    ANY clock time, and the guard that says so REDS on a planted one.
+    ANY clock time, and the guard that says so FAILS on a planted one.
 
 Every assertion here drives an INJECTED clock. A test that read
 `datetime.now()` would re-create the defect it exists to prevent.
@@ -178,10 +178,10 @@ def test_a_seeded_test_scaffold_never_sleeps_at_any_clock_time(tmp_path):
 def test_the_guard_reds_on_a_planted_live_window(tmp_path):
     # Non-vacuity. Re-enable the dial in a seeded scaffold — the exact state the
     # defect shipped in — and the guard must NAME it; disable it again and the
-    # guard must go quiet. A guard that cannot go red is the false green it was
+    # guard must go quiet. A guard that cannot fail is the false pass it was
     # written to remove.
     set_process_key(tmp_path, "policies", "review_rounds", 0)
-    assert live_blackout_scaffolds(tmp_path) == []  # green
+    assert live_blackout_scaffolds(tmp_path) == []  # passes
 
     set_process_key(tmp_path, "policies", "blackout", OPERATOR_WINDOW)  # planted
     caught = live_blackout_scaffolds(tmp_path)
@@ -193,7 +193,7 @@ def test_the_guard_reds_on_a_planted_live_window(tmp_path):
     # 14:22 UTC), not a string comparison.
     assert wakes(caught[0][1], [datetime.datetime(2026, 8, 11, 14, 22)]) == [16680]
 
-    disable_blackout(tmp_path)  # green again
+    disable_blackout(tmp_path)  # passes again
     assert live_blackout_scaffolds(tmp_path) == []
 
 

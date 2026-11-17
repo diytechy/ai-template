@@ -12,13 +12,13 @@ lane ends in a merge and no branch is ever left hanging:
                  whole point: the close is a trunk fact, the partial work is
                  reachable history, and the run keeps going.
 
-  quarantine     the RULED red arm (operator decision 1, 2026-07-31). Every outcome
+  quarantine     the RULED failure arm (operator decision 1, 2026-07-31). Every outcome
                  merges and a merge needs passing checks, so a lane handing back
                  code the checks refuse would be the one branch that could still
                  hang. The ruling: revert the code, keep the record — the
                  failing diff lands as a checks-inert `.patch` under `docs/work/`,
                  the product paths go back to what trunk had, and nothing live
-                 can red anything.
+                 can fail anything.
 
 WHAT CHANGED, AND WHY IT HAD TO. The old contract moved a returned spec back to
 `queued/` with a `## Handback` section and a `blockref`, and **that was the whole
@@ -72,7 +72,7 @@ Contract IF-137: the terminal-outcome WRITES for the two lane closes that are
     `docs/handbacks/` in the SAME commit as the move, and moves every claimed
     spec to the terminal `partial/` folder; it returns `(closed WI ids, None)`
     or `(None, refusal)` and refuses rather than half-closing.
-    `quarantine(root, branch, why)` is the ruled red arm: the failing diff is
+    `quarantine(root, branch, why)` is the ruled failure arm: the failing diff is
     kept as a checks-inert `.patch` under the work tree, every non-bookkeeping path
     is reverted to the lane's merge base, and it returns a refusal string or
     None. Neither function DECIDES which outcome a lane reached — that judgement
@@ -117,7 +117,7 @@ def spec_move_split(text):
     return "\n".join(lines[1:close]) + "\n", "\n".join(lines[close + 1 :])
 
 
-# Where a quarantined red close's failing diff lands. Under `docs/work/` because
+# Where a quarantined failing close's failing diff lands. Under `docs/work/` because
 # that is where the work item's own record lives, and as a `.patch` because no
 # checks read one: the doc checkers discover `*.md`, the stub check reads
 # `src/**/*.py`, and check.py ignores `docs/work/*` outright — so the artefact is
@@ -1017,7 +1017,7 @@ def close_adjudication(root, branch):
 
 
 def quarantine(root, branch, why):
-    """Turn a RED non-merged lane into a CHECKS-INERT artefact. A refusal, or None.
+    """Turn a FAILING non-merged lane into a CHECKS-INERT artefact. A refusal, or None.
 
     Bookkeeping paths are exempt by construction — the spec moves, the close
     report, the log fragments and the review rounds ARE the record being kept,
@@ -1054,7 +1054,7 @@ def quarantine(root, branch, why):
     ]
     if not changed:
         return (
-            "{} changed nothing outside the bookkeeping surfaces, so its red "
+            "{} changed nothing outside the bookkeeping surfaces, so its failing "
             "checks are not its own code to revert - there is nothing to "
             "quarantine and the refusal stands".format(branch)
         )
@@ -1081,7 +1081,7 @@ def quarantine(root, branch, why):
     code, out = _loop_commit(
         root,
         wt,
-        "handback: revert {} to a checks-inert artefact\n\nThe §A3 red-close ruling: this lane's code is red and the lane cannot\nfix it, so the code goes back to {} and the failing diff lands as {} -\nin trunk, findable, pickable by a future WI, and unable to red anything.\nThe reverted commits stay reachable in trunk history once this merges.\n\nThe checks said: {}".format(
+        "handback: revert {} to a checks-inert artefact\n\nThe §A3 ruling on a failing close: this lane's code fails and the lane cannot\nfix it, so the code goes back to {} and the failing diff lands as {} -\nin trunk, findable, pickable by a future WI, and unable to fail anything.\nThe reverted commits stay reachable in trunk history once this merges.\n\nThe checks said: {}".format(
             branch, base[:10], rel, why
         ),
     )

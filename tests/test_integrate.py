@@ -13,7 +13,7 @@ already exists, a branch name that would not map to a flat claim directory,
 debt that becomes unpayable once the closing branch exists, hoisted the same way
 R-D was — a WI that is not on the scheduler's ready frontier, and (WI-358) a
 claimed id named in hand-authored `docs/status.md` prose, the forward-only debt
-that would red R-D on the composed tree at close, hoisted to where a single
+that would fail R-D on the composed tree at close, hoisted to where a single
 trunk commit can still pay it.
 
 Two harder things ride with it, because both are about telling a real claim from
@@ -301,7 +301,7 @@ def test_a_claim_of_a_row_with_a_done_when_is_silent_about_it(tmp_path, capsys):
 
 
 def test_claim_refuses_a_spec_without_a_specref(tmp_path, capsys):
-    # WI-370: an open WI without a SpecRef reds R-E under --strict on every
+    # WI-370: an open WI without a SpecRef fails R-E under --strict on every
     # composed tree that sees it, and the debt is unpayable once the closing
     # branch exists — so the claim is where it must be caught.
     root = claim_repo(tmp_path, specref=None)
@@ -370,7 +370,7 @@ def test_claim_refuses_a_wi_that_is_not_on_the_ready_frontier(tmp_path, capsys):
 
 
 def test_claim_moves_the_spec_commits_the_trunk_and_cuts_the_branch(tmp_path, capsys):
-    # The green path, and the shape the rest of the queue depends on: ONE
+    # The passing path, and the shape the rest of the queue depends on: ONE
     # bookkeeping commit that moves the spec, and a branch cut FROM that commit
     # (§2.3 steps 1+2) — so the claim is atomic in history and the branch's own
     # first parent is the claim.
@@ -866,11 +866,11 @@ def write_status(root, text, when=T_VERDICT):
 
 def test_claim_refuses_when_status_md_hand_prose_names_the_claimed_id(tmp_path, capsys):
     # WI-358. status.md is trunk-owned and forward-only, so the id named here
-    # reds R-D on the COMPOSED tree the moment the WI closes — and the work
-    # branch cannot scrub a file it does not own, so the red is undischargeable
+    # fails R-D on the COMPOSED tree the moment the WI closes — and the work
+    # branch cannot scrub a file it does not own, so the failure is undischargeable
     # from where it is discovered. The claim is the structural home: refuse now,
     # while the debt is one trunk commit, rather than at merge after the branch
-    # is built. A warn would simply be ignored and the red would still land.
+    # is built. A warn would simply be ignored and the failure would still land.
     root = claim_repo(tmp_path)
     write_status(
         root,
@@ -1067,7 +1067,7 @@ def test_a_claim_dir_with_no_matching_branch_is_ignored(tmp_path):
 
 def test_the_git_dependency_is_declared_for_this_module():
     # This suite drives real repositories end to end; without git on PATH every
-    # test above would SKIP and the module would still print a green. The
+    # test above would SKIP and the module would still print a pass. The
     # declared gate (conftest.ENV_GATES) is what makes that skip COUNTED in the
     # terminal summary rather than invisible (WI-326).
     assert shutil.which("git"), "the module-level env gate should have skipped"

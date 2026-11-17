@@ -137,7 +137,7 @@ def test_the_reviewer_brief_carries_the_construction_first_clause():
     # the remedy's WORDING, never the verdict, and the MINOR/`for clarity` arm
     # and trust-boundary validation are exempt. Pinned here the same way the
     # other reviewer load-bearing clauses are, so an edit that quietly drops the
-    # discipline reds a test instead of a review round.
+    # discipline fails a test instead of a review round.
     reviewer = pr.load(pr.REVIEWER)
     assert "cannot be made UNREPRESENTABLE instead" in reviewer
     assert "the `antidote` skill" in reviewer
@@ -375,7 +375,7 @@ def test_the_hand_landing_checks_the_staged_squash_for_an_expected_failure_marke
     # hand landing squashes without one, so recipes §3 runs the same arm on
     # the staged squash before the commit checks and resets the squash on a
     # refusal. Adequacy witness: a recipe that lands the squash on the smoke
-    # checks alone, where a strictly marked red test reads green, lacks the step.
+    # checks alone, where a strictly marked failing test passes, lacks the step.
     recipes = " ".join(
         (KIT / "skills" / "coordinator-cycle" / "references" / "recipes.md")
         .read_text(encoding="utf-8")
@@ -1135,7 +1135,7 @@ def test_the_worker_brief_carries_the_standing_state_ritual():
     # BEFORE heavy verification, so a session killed or reaped mid-verification
     # leaves a resumable record rather than silent, uncommitted residue. Pinned
     # here the same way the reviewer/critique load-bearing clauses are, so an
-    # edit that quietly drops the instruction reds a test instead of a review.
+    # edit that quietly drops the instruction fails a test instead of a review.
     worker = pr.load(pr.WORKER)
     assert "Standing-state discipline" in worker
     assert "before spending effort on heavy verification" in worker

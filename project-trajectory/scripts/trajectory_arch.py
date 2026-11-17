@@ -565,7 +565,7 @@ def contract_body_findings(root):
     WHAT STAYS A WARN, on record: an owner that declares NOTHING is the
     owner-exact reverse check's finding (`_owner_exact_findings`, warn-only),
     not this gate's — the ruled rule is "a DECLARED seam with no body", and
-    promoting the undeclared case would red every fixture and adopter row
+    promoting the undeclared case would fail every fixture and adopter row
     whose owner has not yet been headed at all, which is the migration list
     rather than a defect in a stated definition. The dodge that leaves —
     never declare, never owe a body — is visible in that warn and in the
@@ -732,7 +732,7 @@ def read_if_tc_allow(root):
 
     AN ADDITION BEYOND THE DECLARED SEED NEEDS A REASON, and a bare one
     SUPPRESSES NOTHING — the same fail-soft-loud direction. The 2026-08-21
-    review measured why: a new seam reds `--strict`, and the one-line edit that
+    review measured why: a new seam fails `--strict`, and the one-line edit that
     greened it was appending its bare id, which was lexically indistinguishable
     from the 120 seeded lines and produced no hygiene signal, no test failure
     and no reason anyone could review. The list is a burn-down; growth has to
@@ -775,7 +775,7 @@ def if_tc_coverage_findings(root):
     THE ALLOWLIST IS A MIGRATION DEVICE, NOT A PERMANENT EXEMPTION SURFACE. It
     was seeded at the population measured when the ruling executed (the file's
     own header carries the exact count, command and revision) — the standing
-    never-green-by-list-edit rule (session-protocol skill §2) governs every
+    rule that no list edit makes a check pass (session-protocol skill §2) governs every
     entry: adding one to silence a genuinely NEW uncited seam is ACCEPTING what
     it measures, not laundering it, and should carry its own reason. An
     allowlisted seam still counts in `interface_findings`' total; it simply does
@@ -838,7 +838,7 @@ def if_tc_allow_hygiene_findings(root):
     never a defect to fix under pressure. Two shapes:
 
     - a listed seam has since gained a TC citation — burn-down PROGRESS, so
-      pruning the entry is housekeeping, not a fix owed to a red build;
+      pruning the entry is housekeeping, not a fix owed to a failing build;
     - a listed id resolves to no live IF-### row (retired/renumbered).
 
     Kept structurally apart from `if_tc_coverage_findings` so a shrinking
@@ -1980,7 +1980,7 @@ def spec_interface_findings(root):
     which is a vocabulary decision (D-9/decision 12), not a checker's to invent.
 
     **Vacuous-until-armed:** a spec with no `## Interfaces` heading is skipped, so
-    existing specs and downstream repos stay green until they adopt the section.
+    existing specs and downstream repos keep passing until they adopt the section.
     An armed section that cites no resolvable IF-### AND states no intra-module
     escape (PROCESS.md §8) is itself a finding — an empty-ceremony section."""
     specs = root / SPECS_DIR

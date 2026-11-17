@@ -274,7 +274,7 @@ Write-Host ""
 if (Test-Path ".venv") { Write-Host "Product toolchain: .venv present (run scripts/setup.ps1 to refresh)." }
 else { Write-Host "Product toolchain: run scripts/setup.ps1 to create .venv + install test tools." }
 
-# --- -Check stops here: pure report, always green ----------------------------
+# --- -Check stops here: pure report, always passes ---------------------------
 if ($tier -eq "check") {
     Write-Host ""
     Write-Host "$script:missing component(s) missing. Install them with: dev-setup.ps1 -Baseline"

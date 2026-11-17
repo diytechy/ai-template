@@ -1341,7 +1341,7 @@ def restructured_text(text, successor):
     `partial` follows, for the reason R-F's carve-out states: the successor's
     lineage is worth nothing if the thread it continues has already been cut.
     The only edit is the Deliverable, which is exactly one line, before
-    `## Context` (a Deliverable placed after it parses as EMPTY and reds R-A)."""
+    `## Context` (a Deliverable placed after it parses as EMPTY and fails R-A)."""
     lines = text.split("\n")
     close = _fence_close(lines)
     if close is None:

@@ -1,7 +1,7 @@
 """The expected-failure marker's rule in process (WI-996): the declaration, the
 count and the per-file table `integrate.py record-checks` and the refresh both apply.
 
-A test's red-before is proven by a strict expected-failure mark. The mark is
+That a test failed before the code is proven by a strict expected-failure mark. The mark is
 declared once, as `docs/stack.ini` `[product] expected_failure_marker`; a
 file's count of it is taken from its bytes with ASCII whitespace removed; and
 the table compares each test file's count at the lane's last recorded tree

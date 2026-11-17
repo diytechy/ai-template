@@ -398,7 +398,7 @@ same artifacts and run the gates with you.
   decidable half is checked; necessary/complete/feasible stay the review's, and
   the kit says so rather than offering a proxy metric.
 - **Test-driven** — the DevStg-Tests test case for each requirement is written as a
-  *failing* test before the code that satisfies it (red → green → refactor), so
+  *failing* test before the code that satisfies it, so
   implementation is pulled by the spec, not retrofitted to it.
 - **Single source of truth** — facts live once and are referenced by id, so docs
   and code can't quietly contradict each other.

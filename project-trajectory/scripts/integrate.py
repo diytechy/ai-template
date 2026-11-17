@@ -15,7 +15,7 @@ tree, so the checks run ONCE per WI — on the branch, at refresh — instead of
 once by the builder and again by the integrator on a candidate worktree.
 Class C composition failures are still caught, and better: whichever branch
 merges second must refresh onto a trunk containing the first and check THERE,
-so every pair composes exactly once, on the real tree, with the red
+so every pair composes exactly once, on the real tree, with the failure
 attributable to the refresh that caused it.
 
 THREE TERMINAL OUTCOMES, NO FOURTH (§A3). Every lane ends in a merge: `merged`
@@ -141,7 +141,7 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     worktree that holds work the index does not, or a test file whose expected-failure
     marker count rose outside the round's test set or fell without the lane's
     last commit record over the same set naming it, and committing nothing on
-    failing checks or a named test's red. `integrate` is the
+    failing checks or a named test's failure. `integrate` is the
     serial fail-closed merge queue: a `--no-ff` merge onto a candidate
     worktree, the trunk step folded in, then the DECLARED checks on the composed
     tree — a missing or empty declaration, or any SKIP in it, refuses — and
@@ -244,7 +244,7 @@ ARCHIVE_WORK = "docs/archive/work"
 
 # One LANE worktree home per repo, sibling to the checkout; one subdirectory per
 # claimed branch. The worker builds there and the station refresh runs there —
-# the same tree, on purpose: a red refresh has to be fixable where the lane
+# the same tree, on purpose: a failing refresh has to be fixable where the lane
 # already lives. §5.6's unload GCs a clean one after its merge.
 LANE_WORKTREE_SUFFIX = "-drive"
 
@@ -266,7 +266,7 @@ _work_tip = kverdict.work_tip
 # raises the mark in the same bookkeeping commit that files the specs
 # (intake.py, "RAISE THE MARK IN THE SAME COMMIT"), so an integrator run that
 # mints anything touches this path — and without it declared, the run's own
-# audit flags its own bookkeeping and the queue fails on a false red. It does
+# audit flags its own bookkeeping and the queue fails on a false failure. It does
 # not belong in [generated] because every artifact there is REGENERABLE from
 # the tree, while the watermark is the only record of ids that have been
 # DELETED; regenerating it from live rows is precisely the id re-use the mark
@@ -306,7 +306,7 @@ def _queued_spec(root, wi_id):
 # The R-D id-token shape and the generated-block split, matched HERE rather than
 # imported from check_trajectory: that module's `status_forward_only_findings`
 # flags only ids whose registry status is already `done`, and a claimed id is
-# still queued - the debt only becomes a red at close. The regex and the
+# still queued - the debt only becomes a failure at close. The regex and the
 # BEGIN/END sentinels are kept identical to it so claim-time and merge-time agree
 # on what is a token and what is hand prose.
 _WI_TOKEN_RE = re.compile(r"\bWI-\d+\b")
@@ -359,9 +359,9 @@ def _status_prose_refusal(root, wi_id):
     """The WI-358 claim rung: a refusal string, or None.
 
     status.md is trunk-owned and forward-only, so an id named in its HAND prose
-    reds R-D on the composed tree the moment the WI closes - and the work branch
+    fails R-D on the composed tree the moment the WI closes - and the work branch
     cannot scrub a file it does not own. Refuse (not warn): the debt is payable
-    now, in one trunk commit, and a warn would only resurface as a red merge
+    now, in one trunk commit, and a warn would only resurface as a failing merge
     after the whole branch was built.
     """
     try:
@@ -379,7 +379,7 @@ def _status_prose_refusal(root, wi_id):
         return None
     return (
         "{} is named in hand-authored docs/status.md prose (line{} {}) - "
-        "status.md is forward-only, so this id reds R-D on the composed tree "
+        "status.md is forward-only, so this id fails R-D on the composed tree "
         "the moment the WI closes, and the work branch cannot scrub "
         "trunk-owned status.md. Move that prose to its home (docs/log.md, or "
         "the generated block) in a trunk commit, then claim:\n{}".format(
@@ -395,7 +395,7 @@ def _specref_refusal(root, meta, wi_id):
     """The WI-370 claim rung: a refusal string, or None.
 
     R-E, hoisted to claim time - the WI-358 shape again. An open WI without a
-    resolving SpecRef reds --strict on every composed tree that sees it, and
+    resolving SpecRef fails --strict on every composed tree that sees it, and
     the debt is unpayable once the closing branch exists: open wants the ref
     and terminal wants it cleared, so a trunk-side repair rename-merges the
     ref INTO the closed copy and trips R-F instead. The rung checks the
@@ -404,7 +404,7 @@ def _specref_refusal(root, meta, wi_id):
     ref = str(meta.get("specref", "") or "").strip()
     if not ref:
         return (
-            "{} carries no SpecRef - an open WI without one reds R-E under "
+            "{} carries no SpecRef - an open WI without one fails R-E under "
             "--strict on every composed tree, from a file the closing branch "
             "cannot amend (WI-370). Name the spec-of-record in the queued "
             "spec in one trunk commit, then claim".format(wi_id)
@@ -419,7 +419,7 @@ def _specref_refusal(root, meta, wi_id):
     if not (root / path_part).is_file():
         return (
             "{} SpecRef {!r} does not resolve to an in-repo FILE (R-E: a "
-            "directory or missing path reds the checks) - fix the queued spec, "
+            "directory or missing path fails the checks) - fix the queued spec, "
             "then claim (WI-370)".format(wi_id, ref)
         )
     return None
@@ -1722,7 +1722,7 @@ def lane_worktree(root, branch):
 
     Order matters. A REGISTERED holder wins - the worker's own tree, wherever
     the operator put it - because the refresh must land where the lane can fix
-    a red. Only when nothing holds the branch is one added at the lane home,
+    a failure. Only when nothing holds the branch is one added at the lane home,
     which is the ordinary case for work built by hand between runs; §5.6's
     unload GCs it after the merge, so the creation owns no teardown of its own.
 
@@ -1777,7 +1777,7 @@ def _declared_checks_or_refusal(root):
     exactly one enforcement point (the deleted dispatcher's preflight). It runs
     HERE, ahead of the compose/merge/checks sequence in `integrate_one`, so a
     declared-toolchain repo without its pinned .venv is a named refusal rather
-    than a silent ambient-Python check run whose green may be false. The guard
+    than a silent ambient-Python check run whose pass may be false. The guard
     arms only on a repo that declares the pinned toolchain - see
     `agent_common.harness_floor_failures`."""
     ini = root / "docs" / "stack.ini"
@@ -1795,7 +1795,7 @@ def _harness_floor_refusal(root):
     """The harness floor's refusal for a check run about to run on `root`'s
     interpreter, or None: the one rung the refresh's and the slot's checks
     declaration check and `record-checks`'s preflight share, so no route records a
-    green run on an interpreter the floor rejects (see
+    passing run on an interpreter the floor rejects (see
     `agent_common.harness_floor_failures` for when it arms).
 
     Implements: SR-156, LLR-207
@@ -1874,7 +1874,7 @@ def _passed_steps(out):
 def _run_landing_checks(wt, root, tier, stage=None):
     """check.py at the derived gate on the refreshed branch; fail-closed reading.
 
-    Green means: exit 0 AND the report carries no SKIP line. `--trunk-lane` is
+    Passing means: exit 0 AND the report carries no SKIP line. `--trunk-lane` is
     passed because the tree being checked IS the tree that becomes trunk (the
     --no-ff merge of a branch containing trunk reproduces it byte for byte), so
     the §5.2 freshness gates - which stand down on a work branch, and which
@@ -2014,9 +2014,9 @@ def _adjudication_scope_ok(root, branch):
     declared [generated] set.
 
     ANY other path — product code above all — fails TOWARD the full checks:
-    REVIEW-A drove a product file with a red check harness through the no-checks
-    arm onto trunk with the harness never invoked, an un-run green against
-    §A8's fixed points ("no un-run greens; the harness is still the standard").
+    REVIEW-A drove a product file with a failing check harness through the no-checks
+    arm onto trunk with the harness never invoked, an un-run pass against
+    §A8's fixed points ("no un-run passes; the harness is still the standard").
     Unreadable git answers False, the same direction."""
     code, base = ac.git(root, "merge-base", _head(root), branch)
     if code != 0 or not base.strip():
@@ -2598,7 +2598,7 @@ def _keep_refused_output(root, branch, detail):
 
     The refusal message carries only `_failure_tail`'s bounded window, and the
     undo resets the very tree that produced the evidence — so before WI-398 a
-    red's full diagnosis survived NOWHERE (the WI-387 refresh red was diagnosed
+    failure's full diagnosis survived NOWHERE (the WI-387 refresh failure was diagnosed
     three times and lost three times, each refusal all that remained). One
     retained file per branch in the ROOT checkout's gitignored `out/run-logs/`
     home — outside the lane worktree, so neither the reset nor `_shed_residue`
@@ -2778,7 +2778,7 @@ def refresh(root, branch, tier):
     the regen wrote. The expected-failure marker (`kitlib.expected_failure.landing_refusal`) is read
     from that staged tree before either checks: an undeclared `[product] expected_failure_marker`,
     an unreadable tree or a test file holding the mark refuses, naming each
-    file and its count, since a marked test passes the checks while it is red.
+    file and its count, since a marked test passes the checks while it fails.
     The commit carries a `Checks-Passed:` trailer NAMING the tree it checked and
     the work commit it sits on, and refuses to exist unless it verifies
     against git - see `refresh_passed_checks`.
@@ -2787,7 +2787,7 @@ def refresh(root, branch, tier):
     That is the disposable-commit rule doing double duty: it is what makes a
     retry safe (a second merge stacked on the first would conflict on
     docs/log.md's appended end), and it is why a failed refresh parks nothing
-    for an operator to unpick. Reproduce a red by running the refresh again - it is
+    for an operator to unpick. Reproduce a failure by running the refresh again - it is
     deterministic given the same trunk. The refusal carries the failing step's
     own output window and NAMES the retained full log (`_keep_refused_output`),
     because the undo erases the tree that produced the evidence (WI-398).
@@ -2925,7 +2925,7 @@ def _record_checks_commit(wt, root, branch, checks, tests, run_checks, message):
     leaves is shed, and a check run that moved the index or the worktree off that
     tree (a formatter rewriting a tracked file, a step staging its own edit)
     is refused, naming what moved. On failing checks or any refusal the index is set
-    back to that tree. Green and unmoved, the line names that tree, the tip it
+    back to that tree. Passing and unmoved, the line names that tree, the tip it
     sits on, the checks and the digest of `tests`, appended to the message's
     trailer block. The commit then has to verify as that record, so a
     hook that refuses the commit or rewrites its tree leaves no false record:
@@ -3053,11 +3053,11 @@ def _run_commit_checks(wt, root, command, tests, branch):
 
     The declared shell line runs in the lane worktree with the harness
     interpreter's directory first on PATH, so its `python` is the harness's
-    (the rule `run_menu` states for `[run]` lines). Green, the derived tests run
+    (the rule `run_menu` states for `[run]` lines). When they pass, the derived tests run
     through the lane checkout's `[product] test` (the staged tree's
     declaration, as the checks are) with their paths appended and a `--basetemp`
     of this lane's own, outside the worktree. The interpreter stays the
-    primary checkout's. Green is exit 0 for each step.
+    primary checkout's. Passing is exit 0 for each step.
 
     Implements: SR-156, LLR-207
     """
@@ -3174,7 +3174,7 @@ def record_checks(root, branch, checks, message_file=None):
     commit checks and expected-failure marker the lane declares, the message, the row's derived
     review set and the expected-failure marker check over it, all before anything runs.
     Then the shared producer runs the commit checks and the derived files, and
-    commits only when both are green; an empty set runs the checks alone. The
+    commits only when both pass; an empty set runs the checks alone. The
     set's lines are printed. Every refusal leaves the branch and the index
     as they were.
 
@@ -3256,7 +3256,7 @@ def _partial_report_refusal(root, branch, outcomes):
     KEEP/DISCARD split. A refusal string, or None.
 
     This rung exists because of a live incident (2026-08-03): a lane handed
-    work back, the branch merged green, and the code the lane had REJECTED
+    work back, the branch passed and merged, and the code the lane had REJECTED
     landed on trunk as-is — because nothing had asked which of its commits
     should survive. The split turns that into the adjudicator's explicit call
     instead of a hand cleanup someone has to notice is owed.
@@ -3482,7 +3482,7 @@ def _merge_refusal(root, branch, wi_ids):
 
 
 def integrate_one(root, branch, tier, held=None):
-    """One branch through the merge slot. Returns None on green, else the refusal.
+    """One branch through the merge slot. Returns None on a pass, else the refusal.
 
     Runs with the slot HELD (see `integrate`), so everything here is either
     sub-second or the deliberate pessimistic fallback.
@@ -3528,7 +3528,7 @@ def integrate_one(root, branch, tier, held=None):
         if not ready:
             return (
                 "{} is still not merge-ready after its in-slot refresh ({}) - "
-                "the refresh reported green, so this is a real anomaly, not a "
+                "the refresh reported a pass, so this is a real anomaly, not a "
                 "lost race; nothing was merged".format(branch, why)
             )
     pre_merge_head = _head(root)
@@ -3637,8 +3637,8 @@ def integrate(root, tier, branches=None):
         for branch in finished:
             refusal = integrate_one(root, branch, tier, held)
             if refusal:
-                # A red queue STOPS (§5.5) - it never skips to the next branch,
-                # because later merges would compose against a tree the red one
+                # A failing queue STOPS (§5.5) - it never skips to the next branch,
+                # because later merges would compose against a tree the failing one
                 # was supposed to reach first.
                 return fail(refusal)
         code = audit(root, base)
@@ -3689,7 +3689,7 @@ def _generated_table(root):
     because a marker pair narrows which REGION a regenerator rewrites, not
     which path is declared."""
     # Keys are PATHS, read as written: folding them would make
-    # PROJECT_STATE.html unmatchable and red the audit on the very bookkeeping
+    # PROJECT_STATE.html unmatchable and fail the audit on the very bookkeeping
     # it exists to permit.
     try:
         cp = _kitconfig.read_stack_ini(

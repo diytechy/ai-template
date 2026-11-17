@@ -79,9 +79,9 @@ STAGE_FILE = "docs/stage"
 # THE SELECTION FLOOR. The effective stage is never reported below this rung, for
 # the reason the BAR axis floors at the same place (`spine_rules`'s
 # `max(BAR_REQS, raw)`): a value below it selects NOTHING under an at-or-above
-# rule, so a fresh scaffold would go green because no check ran — the silent green
+# rule, so a fresh scaffold would pass because no check ran — the silent pass
 # SN-008 forbids, and the exact promise `ci/check.yml` makes ("a freshly-scaffolded
-# DevStg-Reqs repo is green"). The floor is a SELECTION guarantee, not a claim
+# DevStg-Reqs repo passes"). The floor is a SELECTION guarantee, not a claim
 # about the repo: `live-stage=` beside it carries the honest, unfloored reading,
 # and `floored=yes` says plainly that the two differ. This is the direction
 # process.md §4 mandates — a derived reading shown BESIDE the honest one, never
@@ -149,7 +149,7 @@ DECLARED_INPUTS = (
     # `process.toml` is DELIBERATELY NOT an input (operator ruling 2026-08-21,
     # amending the plan's §2 list): the derivation does not read it, and the
     # original "over-inclusion costs milliseconds" argument priced the wrong
-    # cost — the real price was RED commit checks after every policy-dial edit,
+    # cost — the real price was FAILING commit checks after every policy-dial edit,
     # because the committed fingerprint went stale over a file whose value never
     # reaches the stage. Dials govern who may accept, not what stage is derived.
     # If a dial ever DOES enter the derivation, add its file here in the same
@@ -271,7 +271,7 @@ def fingerprint(root, memo=_DEFAULT):
     recorded rung was returned, and no consumer ever asked whether the evidence
     still held. Folding the source digest makes a code edit move this value, so
     `read_stage` derives fresh (and derives Impl, because the binding no longer
-    matches) and `derive_stage --check` reds on the committed copy.
+    matches) and `derive_stage --check` fails on the committed copy.
 
     THE COST IS PAID ONLY BY A REPO THAT MAKES THE CLAIM. With no evidence file —
     every adopter below the Release rung, and every fresh scaffold — the extra
@@ -294,7 +294,7 @@ def evidence_binding(root, memo=_DEFAULT):
     with the declared product source and test surface.
 
     Both halves are load-bearing and each covers what the other cannot. Without
-    the spine half, a test case authored after the run would ride a green that
+    the spine half, a test case authored after the run would ride a pass that
     never executed it; without the source half, any code edit would."""
     if memo is _DEFAULT:
         memo = _DIGEST_MEMO
@@ -318,7 +318,7 @@ def evidence_verdict(root, memo=_DEFAULT):
     a partial tier, a stale binding — all of them mean the claim "every declared
     test case passes on THIS tree" is unsupported, and the honest rung is the one
     below. The loudness lives in `fingerprint` above, which makes a stale record
-    red the freshness check rather than letting it sit quietly unread."""
+    fail the freshness check rather than letting it sit quietly unread."""
     record = evidence.read(root)
     if record is None:
         return False, "no test-evidence record at {}".format(evidence.EVIDENCE_FILE)
@@ -691,7 +691,7 @@ def read_stage(root, derive, memo=_DEFAULT):
 
     THIS CLOSES BOTH STALE WINDOWS THE SCHEDULE MAP FOUND, BY CONSTRUCTION rather
     than by scheduling. The branch-lane window (`derived-stage` stands down on a
-    claimed branch, so a green run over a stale cache is reachable there) closes
+    claimed branch, so a passing run over a stale cache is reachable there) closes
     because a reader no longer trusts a cache the freshness step cannot police —
     it verifies per call, and on a claimed branch derives from that branch's OWN
     registries, which is the trust model the operator confirmed. The read-once-per-run

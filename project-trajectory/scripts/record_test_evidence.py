@@ -35,7 +35,7 @@ evaporates, and a hosted runner committing back would need write credentials, a
 bot identity, and a lane no reviewer signs. So the operator (or the agent under the
 usual gates) runs this, reads the record, and commits it. CI's half needs no new
 machinery: because the record is a declared stage input and the stage fingerprint
-covers the source surface it binds to, a stale record already reds
+covers the source surface it binds to, a stale record already fails
 `derive_stage --check` wherever that step runs.
 
 STALENESS IS NOT THIS SCRIPT'S JOB TO FORGIVE. `--check` reports the verdict and
@@ -99,7 +99,7 @@ def _command_text(root, argv):
 
 
 def build_record(root, tier, command_text):
-    """The record for a green run on the tree at `root`."""
+    """The record for a passing run on the tree at `root`."""
     return {
         "outcome": kitevidence.PASS,
         "tier": tier,
@@ -153,7 +153,7 @@ def main(argv=None):
     ap.add_argument(
         "--dry-run",
         action="store_true",
-        help="print the record a green run would write; run nothing, write nothing",
+        help="print the record a passing run would write; run nothing, write nothing",
     )
     args = ap.parse_args(argv)
     root = Path(args.root)
@@ -201,7 +201,7 @@ def main(argv=None):
     if proc.returncode != 0:
         print(
             "record_test_evidence: the harness exited {} — NOTHING WRITTEN. The "
-            "record only ever states a pass, so a red run leaves the committed "
+            "record only ever states a pass, so a failing run leaves the committed "
             "state exactly as it was.".format(proc.returncode),
             file=sys.stderr,
         )

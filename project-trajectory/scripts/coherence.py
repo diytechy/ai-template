@@ -415,7 +415,7 @@ def status_criterion_findings(srs, scope):
         # per-method carve-out (WI-259, review-2026-07-21 M-5: a Demonstration/
         # Analysis/Inspection SR left Implemented can never derive DevStg-Impl yet used
         # to pass this Test-only check — the two scripts disagreeing about the
-        # gate is the false-green the kit exists to prevent). A Drafted SR is
+        # gate is the false-pass the kit exists to prevent). A Drafted SR is
         # pre-acceptance (below DevStg-Reqs, derived-gate §3): it makes no acceptance
         # claim yet, so the rule stands down — surfaced in the draft count so
         # the exemption stays auditable. Pinned equivalent to sr_gate's

@@ -664,7 +664,7 @@ def test_a_root_outside_any_repository_is_refused(
     tmp_path, monkeypatch, launched, capsys
 ):
     """Otherwise valid inputs (policy, enabled route, brief): only the lane
-    check can refuse, so removing it turns this red.
+    check can refuse, so removing it makes this fail.
 
     Implements: TC-321
     """

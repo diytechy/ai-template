@@ -192,7 +192,7 @@ def test_a_lane_cannot_close_into_the_restructured_folder(tmp_path):
     # The trunk-side restructured row is inert for this lane's read...
     _close_to(root, "wi-401", "complete", archive=True)
     assert integ.branch_outcomes(root, "wi-401") == ({"WI-401": "merged"}, [])
-    # BOTH sides of the split, so a revert of either one reds this: the STATUS
+    # BOTH sides of the split, so a revert of either one fails this: the STATUS
     # vocabulary declares the folder...
     assert kit_registry.SPEC_STATUS_DIRS["restructured"] == "restructured"
     # ...and the lane-outcome vocabulary deliberately does not.
@@ -1212,7 +1212,7 @@ def test_a_declared_test_command_passes_the_checks_declaration_check(tmp_path):
 def test_a_declared_toolchain_without_its_venv_refuses_the_checks(tmp_path):
     # WI-361: the re-homed WI-286 floor. A repo that DECLARES the pinned toolchain
     # (requirements-dev.txt) but has no ./.venv would otherwise run the composed-
-    # tree checks on the ambient interpreter, whose green may be false. The queue
+    # tree checks on the ambient interpreter, whose pass may be false. The queue
     # refuses instead, loudly and by name, before it composes anything.
     _stack_ini(tmp_path, "[product]\ntest = {py} -m pytest -q\n")
     (tmp_path / "requirements-dev.txt").write_text("pytest\n", encoding="utf-8")

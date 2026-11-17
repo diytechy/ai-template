@@ -26,7 +26,7 @@ An ABSENT registry is a clean skip (the pre-scaffold case). A registry that is
 PRESENT but yields zero scannable need cells — an empty file, or real rows
 none of which carries a `need` field — is reported as VACUOUS, never clean:
 zero need cells reading as a clean tier on exactly the registry this check
-guards is the false green SN-008 forbids (the round-1 adversarial review drove
+guards is the false pass SN-008 forbids (the round-1 adversarial review drove
 this: at DevStg-Reqs an emptied registry hard-fails nothing else in the
 harness). A scaffold's `-000`-only registry stays clean — example rows are a
 form, not a vacuous tier.
@@ -88,7 +88,7 @@ Contract IF-121: the need-form verdict, delivered as a CLI. It scans SN `need`
     registry is a clean skip; a registry that is present but yields zero
     scannable `need` cells is reported VACUOUS, never clean, because zero rows
     reading as a clean tier on exactly the registry this guards is the false
-    green the harness exists to prevent. Severity is WARN-FIRST at every stage
+    pass the harness exists to prevent. Severity is WARN-FIRST at every stage
     in the shipped wiring — exit 0 with findings printed; `--strict` is a
     per-repo choice and exits 1.
 """

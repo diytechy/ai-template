@@ -213,7 +213,7 @@ def _relink_inbound_links(root, moves):
     `_relink_archived_specs`, generalised to any spec move). Without this, a
     move strands a DANGLING link: a train whose own `docs/log.md` entry links
     its live spec breaks the moment the spec moves, and the break surfaces on
-    the composed tree as a red `check_docs` — after the work is done.
+    the composed tree as a failure `check_docs` — after the work is done.
 
     Resolution is by PATH, not by pattern: each link target is resolved
     relative to the file containing it and compared against the moved source,

@@ -12,7 +12,7 @@ The claims this module holds, one per thing the ruling actually decided:
     are indistinguishable from the outside;
   * the STANDING CONSTRAINT — a generated file never carries an acceptance
     (OI-30 D3);
-  * the FRESHNESS CONTRACT — `--check` reds on a stale view and greens once
+  * the FRESHNESS CONTRACT — `--check` fails on a stale view and passes once
     regenerated. A check that cannot fail converts a visible gap into an
     invisible one.
 """
@@ -268,7 +268,7 @@ def test_the_written_file_is_LF_and_reproducible(repo):
 def test_a_repo_with_no_real_component_is_VACUOUS(tmp_path):
     """Implements: TC-195"""
     # The layer is optional and off-spine: a fresh scaffold ships only the inert
-    # CMP-000 row, and the gate must not red it over something it never adopted.
+    # CMP-000 row, and the gate must not fail it over something it never adopted.
     _write(
         tmp_path,
         "docs/requirements/components.toml",
@@ -283,7 +283,7 @@ def test_a_repo_with_no_real_component_is_VACUOUS(tmp_path):
 def test_the_cli_runs_out_of_process(repo):
     """Implements: TC-195"""
     # The step check.py wires is a subprocess, so the import path has to hold
-    # there too (a sibling import that only resolves in-process is a green here
-    # and a red in the gate).
+    # there too (a sibling import that only resolves in-process is a pass here
+    # and a failure in the gate).
     proc = run_py([SCRIPTS / "gen_components.py", "--root", str(repo)], cwd=repo)
     assert proc.returncode == 0, proc.stdout + proc.stderr

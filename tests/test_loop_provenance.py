@@ -901,7 +901,7 @@ def test_the_handback_close_and_telemetry_writers_carry_the_trailer(
         assert integ._marked_loop_writer(message, "wi-401"), message
 
     # The quarantine, driven for real: the residue left a product file on the
-    # lane, which is what a red close reverts.
+    # lane, which is what a failing close reverts.
     tip = _rev(root, "wi-401")
     assert handback.quarantine(root, "wi-401", "checks exit 1") is None
     message = _message(root, "wi-401")

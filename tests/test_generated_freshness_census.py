@@ -57,7 +57,7 @@ def test_the_cli_reference_path_has_one_spelling_in_three_places():
     # another: `check.py` and `trunk_step.py` are standalone-copied scripts. So
     # the constant is duplicated by design and pinned here instead, which is the
     # duplicated-policy rule applied to a path. Drift would not be silent (the
-    # step would red while the regen wrote elsewhere), but it would be
+    # step would fail while the regen wrote elsewhere), but it would be
     # baffling, and this says so in one line.
     check = load_script("check")
     trunk = load_script("trunk_step")

@@ -59,7 +59,7 @@ def _repo(tmp_path, marks=None, srs=("SR-001",), ruling=False):
         (reg / "open-items.toml").write_text(_RULED_OI, encoding="utf-8")
         if marks is not None:
             # OI-47 is now a LIVE id in this tree; leaving the OI mark at 0
-            # would red rule 2 and mask what the test is about.
+            # would fail rule 2 and mask what the test is about.
             marks = dict(marks)
             marks["OI"] = max(marks.get("OI", 0), 47)
     if marks is not None:
@@ -118,7 +118,7 @@ def test_every_id_space_is_covered_by_the_mark_file():
         "SUR",
     }
     # ...and hold the derivation to it, so a registry added to ID_PATTERNS
-    # without a mark row reds HERE rather than going silently unguarded.
+    # without a mark row fails HERE rather than going silently unguarded.
     assert set(TRACE.ID_PATTERNS) <= set(TRACE.WATERMARK_SPACES)
 
 
@@ -234,7 +234,7 @@ def test_an_id_above_the_mark_is_a_finding_ON_THE_TOML_CARRIER(tmp_path):
     # and `docs/test/*.csv` by LOCATION, so the D-5 carrier cutover moved
     # SR/LLR/TC out from under it and rule 2 ("no live id exceeds its mark")
     # went VACUOUS on three of the four spine tiers — silently, and already
-    # false-green in this repo (LLR-167 and TC-161 stood above their marks with
+    # false-pass in this repo (LLR-167 and TC-161 stood above their marks with
     # zero findings). These are the tiers with NO minter at all, so this rule is
     # the only thing standing between a deleted id and its silent re-use.
     root = _toml_repo(
@@ -509,7 +509,7 @@ def test_the_rules_are_actually_WIRED_INTO_the_integrity_floor(tmp_path):
     """Implements: TC-158"""
     # THE GAP THE REVIEW FOUND. Every other test here calls `watermark_findings`
     # directly, so deleting the one line in `main()` that appends it to
-    # `findings.integrity` left all of them green — and the whole argument for
+    # `findings.integrity` left all of them passing — and the whole argument for
     # this design is that the rules run in trace.py's always-on
     # `--strict-integrity` floor rather than behind a toggle or a DevStg-Impl gate.
     # So drive the CLI and assert the finding reaches the EXIT CODE.
@@ -628,7 +628,7 @@ def _attack_repo(tmp_path, marks, corrections):
 # ── The four attacks the 2026-08-21 adversarial round executed against the
 # first cut of the correction verb. Each was ACCEPTED with no findings then;
 # each is a finding now. They are written against `watermark_findings(root,
-# previous)` — the same two-argument call the pre-fix code exposed — so the red
+# previous)` — the same two-argument call the pre-fix code exposed — so the failure
 # is the behaviour changing, not the signature.
 
 
@@ -868,7 +868,7 @@ def test_an_unchanged_committed_baseline_passes_the_floor(
     """Implements: TC-158"""
     # The control for the cases below: the fixture tree is clean on the floor,
     # so each case's exit code is its own rule's, not the tree's. Adequacy
-    # witness: a fixture missing a file the floor requires would red here
+    # witness: a fixture missing a file the floor requires would fail here
     # first, instead of passing or failing every case below for that reason.
     root = _committed(tmp_path, {"SR": 1})
     code, out = _strict_integrity(monkeypatch, capsys, root)

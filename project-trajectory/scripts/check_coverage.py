@@ -127,7 +127,7 @@ def load_report(path):
     `percent_covered` that is PRESENT but not a finite number in 0..100 also
     raises. That last guard is load-bearing — Python's json parser accepts the
     non-standard `NaN`/`Infinity` literals, and a NaN would otherwise pass the
-    float check, store, and grade as a false green (`NaN < floor` is False, so a
+    float check, store, and grade as a false pass (`NaN < floor` is False, so a
     damaged report reads `OK`). A file entry with NO percent is skipped (it
     becomes MISSING -> FAIL for any module that declares a floor on it)."""
     if not path.exists():

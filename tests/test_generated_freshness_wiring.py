@@ -1,5 +1,5 @@
 """WI-427 — SN-010's universal, enforced: every DECLARED generated artifact has a
-freshness enforcer, and each newly wired one can actually go RED.
+freshness enforcer, and each newly wired one can actually FAIL.
 
 SN-010 says *every* generated artifact carries a `--check` freshness contract.
 That is a universal, so it is false at one counterexample — and it had two.
@@ -15,9 +15,9 @@ Two rules live here, and the second is the one that matters most:
   * **the census** — every `[generated]` row's kind resolves to a named
     enforcer. This is the durable guard: it catches the THIRD unwired artifact
     the day it is declared, which is how these two were found by hand.
-  * **non-vacuity** — each newly wired step is driven RED against a planted
+  * **non-vacuity** — each newly wired step is driven to FAIL against a planted
     defect. Wiring a check that cannot fail converts a visible gap into an
-    invisible one, which is exactly the "green hides a skipped check" failure
+    invisible one, which is exactly the "a pass hides a skipped check" failure
     SN-008 forbids. The defect is planted in a COPY of the harness under
     `tmp_path`; the live tree is never corrupted.
 
@@ -112,7 +112,7 @@ def _step(name, gate="all"):
 # test_generated_freshness_census.py, in the per-commit smoke tier.
 
 
-# --- non-vacuity: each new step driven RED on a planted defect ---------------
+# --- non-vacuity: each new step driven to FAIL on a planted defect ---------------
 
 
 def _kit_copy(tmp_path, *, prompts=False, skills=False):
@@ -157,8 +157,8 @@ def test_prompt_catalog_step_reds_when_a_template_changes(tmp_path):
     """Implements: TC-192"""
     # The real failure mode: someone edits a shipped prompt template and does not
     # regenerate the catalogue, so every later `prompt-sha` lookup resolves to a
-    # template that no longer exists. Green first (the copy is faithful), then
-    # red on the defect, then green again once regenerated — so the step is shown
+    # template that no longer exists. Passing first (the copy is faithful), then
+    # failing on the defect, then passing again once regenerated — so the step is shown
     # to track the artifact, not merely to have an opinion.
     kit = _kit_copy(tmp_path, prompts=True)
     before = _run_step(kit, "prompt-catalog", tmp_path)
@@ -184,7 +184,7 @@ def test_prompt_catalog_step_reds_when_the_composed_question_home_changes(tmp_pa
     # WI-882: `prompts/spine-questions.md` is composed into the first-acceptance
     # and amendment briefs at render time, so it is a source of a launched
     # brief's text like any template. An edit to it that leaves the catalogue
-    # alone must red the wired step, not pass it.
+    # alone must fail the wired step, not pass it.
     kit = _kit_copy(tmp_path, prompts=True)
     before = _run_step(kit, "prompt-catalog", tmp_path)
     assert before.returncode == 0, before.stdout + before.stderr
@@ -239,7 +239,7 @@ def test_skills_index_step_never_falls_back_to_the_cwd_default(tmp_path):
     # `--skills` to a CWD-relative `skills`, and in this kit the source lives at
     # project-trajectory/skills — so the default resolves to nothing and the
     # generator exits 0 with "no skills dir". Wiring the step that way would have
-    # produced a permanently green check of nothing. The step therefore passes an
+    # produced a permanently passing check of nothing. The step therefore passes an
     # explicit path derived from the script's own location.
     check = load_script("check")
     cmd = _step("skills-index")[2]
@@ -259,7 +259,7 @@ def test_skills_sync_cannot_see_index_staleness(tmp_path):
     # WHY THESE ARE TWO STEPS AND NOT ONE. The wired `skills-sync` step runs
     # --check-agents, which compares hand-authored per-agent COPIES to the
     # hand-authored SOURCE and never reads INDEX.csv at all. Plant the exact
-    # defect the new step catches and --check-agents stays green — different
+    # defect the new step catches and --check-agents keeps passing — different
     # inputs, different fix (gen_skills_index.py vs bootstrap.py --sync), so
     # folding them into one step would report one failure for two properties.
     kit = _kit_copy(tmp_path, skills=True)

@@ -167,7 +167,7 @@ gate) guards the cache against rot — an acceptance that moved the states but n
 the cache fails loudly. **Hybrid:** the cache means the value is known on
 checkout with no recompute; a `stage.template` placeholder with no derived record
 yet is accepted **with a note** until the first derivation (so an
-adopter upgrades without a red day). The record also carries §4's `stage-ord`
+adopter upgrades without a day of failing checks). The record also carries §4's `stage-ord`
 and the unfloored `live-stage`.
 
 **Artifact states (one field, every tier).** Maturity is the row's own `Status`,
@@ -184,11 +184,11 @@ yet — a fold value, never a rung a repo sits at (§4):
   TC). **DevStg-Release is not reachable from a cell** (the 2026-08-15 ruling,
   carried onto this axis at WI-498 slice 3): release is what the harness computes
   from test evidence. The carrier landed at WI-500 — `record_test_evidence.py`
-  runs the declared checks and writes `docs/test/evidence` only on a green, and that
+  runs the declared checks and writes `docs/test/evidence` only on a pass, and that
   record's verdict is `spine_stage`'s ONE input to the top rung. It is bound by
   VALUE to the tree measured (the spine registries plus the declared source and
   test trees), so a byte moved on either side drops the rung back to
-  `DevStg-Impl` and reds `derive_stage --check`; a partial (`smoke`) tier is
+  `DevStg-Impl` and fails `derive_stage --check`; a partial (`smoke`) tier is
   refused at the writer and again at the reader. An LLR/TC caps only when
   `Drafted`; once present its
   own Status doesn't gate — the SR's does.
@@ -324,7 +324,7 @@ filter and derive while `--strict-schema` migrates the live cells. Semantics:
   SR/LLR/TC (`Accepted`/`Founded`) — and transitively an accepted SN — must carry a
   full-cell bare-integer Phase, or `trace.py --strict-schema` reports a schema
   finding. The rule is **vacuous until ≥1 artifact is phased** (the same arming idiom
-  the component checks use), so a fully-blank downstream registry stays green: the
+  the component checks use), so a fully-blank downstream registry keeps passing: the
   rule is unarmed and the `--phase` filter treats blank as always-in-scope — exactly
   what "blank = every phase" bought before the phase model.
 - **Traceability is phase-blind.** Every SR keeps its LLR + TC rows from DevStg-Tests on,
@@ -429,7 +429,7 @@ scaffolds the skeleton pre-filled for the chosen level.
 
 **Machine surface: none beyond the two files.** `check.py`/`trace.py` behave
 identically at every level — authority is *who accepts*, not what runs. The
-harness is the standard everywhere; a red check is a red check.
+harness is the standard everywhere; a failing check is a failing check.
 
 ### Who performs the acceptance act
 
@@ -709,7 +709,7 @@ gate closes, or the project's scope is complete. Five steps:
 4. **Collate.** A separate agent reorganizes the leg's commits into
    **categorical commits** — Conventional-Commit style with optional scope
    (`feat(addon):` / `fix(biome):` / `perf(noise):` / `docs:` / `build:`) —
-   each a coherent, reviewable, why-and-impact-shaped change. Many tiny green
+   each a coherent, reviewable, why-and-impact-shaped change. Many tiny passing
    commits in; few subject-shaped commits out. **The type list is a default
    vocabulary, never a restriction:** a project renames or extends the types
    to fit its domain, and nothing lints the exact set.
@@ -814,7 +814,7 @@ control input — was retired):
   `ask: <one-line ask>` headline (the dispatcher-era generated
   `docs/run-state` file retired with the dispatcher at
   concurrency-restructure Phase 5 — git history and the integrator's own
-  refusals are the durable record). **A wrong DONE is a false green** (§4);
+  refusals are the durable record). **A wrong DONE is a false pass** (§4);
   a worker's exit code and committed trailers are its whole result channel.
 - **REVIEW-OWED parking** is **exit code 9** (`EXIT_REVIEW_OWED`, appended at
   the end of the exit alphabet 2026-08-30, the stall-guard change set): the
@@ -849,7 +849,7 @@ full stop is a *drained and unloaded* stop; finished work is never stranded on
 a branch. The only thing that stops an unload is the integrator's own refusal
 (failed landing checks, missing required verdict) — that is the gate working, not the pause:
 a pause ends either fully merged and quiet, or fully merged except N branches
-parked red, each red a finding to work. The file is **tracked and committed**
+parked failing, each failure a finding to work. The file is **tracked and committed**
 by the bookkeeping lane: it survives clones, its reason is diffable history,
 and unpausing is an auditable deletion commit. The coordinator reads it before
 every claim; status generation surfaces `paused since <date>: <reason>` so an
@@ -2539,7 +2539,7 @@ informationally, warn-first at every gate; a NEW function,
 wired the same way (`check.py` passes `--strict` from `DevStg-Tests` on). The
 allowlist was seeded at the population measured when the ruling executed, with
 a declared burn-down expectation stated in the file's own header — a migration
-device, subject to the never-green-by-list-edit rule, never a permanent
+device, subject to the rule that no list edit makes a check pass, never a permanent
 exemption surface. A listed seam that gains a TC, or an entry naming a retired
 id, is reported (never blocked) by `if_tc_allow_hygiene_findings`, so the
 burn-down stays visible. There is deliberately no separate opt-out dial: the
@@ -2815,7 +2815,7 @@ releases as a whole.
   source of truth** — `trace.py --strict` still requires **0 orphans across the
   whole repo, seams included**. The kit deliberately ships **no**
   `--module`/`--area` filter on `trace.py`/`check.py`: a per-module gate would
-  either hide the cross-module seams (a false "green" masking exactly the
+  either hide the cross-module seams (a false "pass" masking exactly the
   integration gaps this method wants first-class) or need real machinery to tell a
   legitimate seam from an orphan. The whole-repo gate already spans every module;
   per-module *ownership* is a reading convention, not a gate of its own.
@@ -2823,7 +2823,7 @@ releases as a whole.
   agree, so it gets its **own** TCs — not merely each module's internal unit tests.
   These are integration/system-level, usually `Tier=Full` or `Release` (§4 "Test
   tiers"), so the seam is a tested contract rather than an untested gap between two
-  individually-green modules.
+  individually passing modules.
 - **`IF-###` applies *within* a repo, too.** The interface registry (§8) is not
   only for separate repos: two modules in one repo that share a contract record it
   as an `IF-###`, with the counterpart naming the **other module** instead of
@@ -2901,7 +2901,7 @@ missing or empty check declaration is a **refusal**, never a skip, and any SKIP
 in the report refuses (the fail-open lesson, stated as a contract). The `[authority]` dials
 (RULING-7) are enforced by requiring the corresponding **verdict artifact**
 (review file `docs/reviews/WI-<n>-<PHASE>.md`, critique, acceptance) with
-git-derived freshness before the trunk fast-forwards; a red queue parks
+git-derived freshness before the trunk fast-forwards; a failing queue parks
 loudly. `integrate.py audit` is the RULING-6 window check: coordinator
 bookkeeping (claims, fragment compile, regeneration — the `[generated]` set
 in `stack.ini`) commits directly to the trunk, while **product changes reach
@@ -2929,8 +2929,8 @@ form is a **tracked** `docs/work/pause` (TOML `reason` + `since`), committed
 by the bookkeeping lane, so the reason is diffable history and unpausing is
 an auditable deletion commit. The only thing that stops an unload is the
 integrator's own refusal — that is the gate working, not the pause; a pause
-ends fully merged and quiet, or fully merged except N branches parked red,
-each red a finding. Status generation surfaces `Paused since <date>:
+ends fully merged and quiet, or fully merged except N branches parked failing,
+each failure a finding. Status generation surfaces `Paused since <date>:
 <reason>` so an open pause is a visible accruing cost. What no file can do —
 stop a running session — stays stated plainly: that remains "kill the
 worker." A declared blackout window still starts no new session.

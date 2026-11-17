@@ -144,12 +144,12 @@ Two shipped scripts parse **Python source specifically**:
   WI-455: the dashboard's How-SW tab, the connectivity/containment coverage
   and the `sym:` oracle all scan the source live; there is no committed
   `docs/architecture.md` anymore). On a repo with no `.py` under `SRC` the
-  scan is empty, and those layers would read **vacuously green** while the
+  scan is empty, and those layers would **pass vacuously** while the
   docs still claim the guarantee. Pick one, explicitly:
   1. **Declare `[arch-map] mode = files`** in `docs/stack.ini` (a fresh
      `bootstrap.py --stack node|go|rust|powershell` seeds it): the honest
      "no Python source here" declaration — the derived-architecture layers go
-     **dormant** instead of vacuously green, and nothing else changes. This is
+     **dormant** instead of passing vacuously, and nothing else changes. This is
      the default posture until you port.
   2. **Port the walk** (recommended for a repo you'll live in): any tool that
      can enumerate modules/symbols in your language (ts-morph, `go doc`, a
@@ -226,7 +226,7 @@ and affected SRs before backfilling its implementation.
   row and tag the test with `Implements: TC-###` (process.md §3) — no rewrite
   needed.
 
-## 5. First green run
+## 5. First passing run
 
 ```
 python scripts/derive_stage.py     # compute docs/stage (the effective stage) from the artifact states
@@ -242,7 +242,7 @@ and it rises as you **accept artifacts in a reviewed commit** (`Status`
 CI reads the cached record and selects the higher steps with you. A fresh scaffold
 ships the comment-only `stage.template` placeholder; the first `derive_stage.py`
 run above turns it into a real record (until then the `derived-stage --check` step
-passes with a note, so you upgrade without a red day).
+passes with a note, so you upgrade without a day of failing checks).
 
 **Weigh the opt-in layers now** — they cost nothing until enabled, and adoption
 is the cheapest moment to decide: the unattended coordinator, the reviewer dial,

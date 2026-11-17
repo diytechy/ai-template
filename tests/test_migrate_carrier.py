@@ -2,8 +2,8 @@
 
 The conversion's whole claim is that it is LOSSLESS, so the tests that matter
 are the ones proving the loss detector can actually fail. A round-trip check
-that cannot report a dropped cell is worth nothing, and a green from it would
-be exactly the "a green never hides a skipped check" failure SN-008 forbids —
+that cannot report a dropped cell is worth nothing, and a pass from it would
+be exactly the "a pass never hides a skipped check" failure SN-008 forbids —
 so every corruption class is driven here, not just the happy path.
 
 Implements: TC-159
@@ -272,7 +272,7 @@ def test_neither_new_registry_survives_under_its_old_carrier():
     """The house rule, asserted on the TREE rather than on a fixture: the
     conversion is only finished when the CSV is GONE. Both homes at once is a
     hard refusal (`spine_carrier.resolve`), so a lingering source file would
-    red every reader — this catches it in one place instead."""
+    fail every reader — this catches it in one place instead."""
     for stale in (
         "docs/requirements/interfaces.csv",
         "docs/requirements/components.csv",

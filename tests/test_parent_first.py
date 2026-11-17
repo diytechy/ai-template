@@ -11,7 +11,7 @@ the real-repository cases live in `test_parent_first_git.py` (slow tier), whose
 in-process pin this module is. The wiring pins (the lane-commit rider, the
 pre-commit step) close the module.
 
-Two evidence classes: new behaviour, each test red at its own assertion before
+Two evidence classes: new behaviour, each test failing at its own assertion before
 the rule existed; and a characterization of behaviour already correct, which
 names in its docstring the wrong implementation it would catch.
 """
@@ -178,7 +178,7 @@ def test_only_declared_tier_parents_are_judged():
 
 def test_the_shipped_templates_example_rows_raise_no_finding():
     """The shipped registry templates yield no entry, so a freshly scaffolded
-    project is not red. Adequacy witness: a rule that does not skip the `-000`
+    project does not fail. Adequacy witness: a rule that does not skip the `-000`
     example rows reports the template's `LLR-000` (Accepted) under its `SR-000`
     (Drafted).
 

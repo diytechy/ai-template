@@ -375,7 +375,7 @@ def test_worker_brief_names_the_one_turn_close_checks_scratch_and_amendments(tmp
     #      (WI-540 lost three sessions ending their turn to await an ~11-minute
     #      suite against a 10-minute cap, and a finished row closed `partial`);
     #   2. an AMENDMENT of an accepted cell stales the acceptance brief exactly
-    #      as a mint does (WI-538 / LLR-206, an `acceptance-fresh` red);
+    #      as a mint does (WI-538 / LLR-206, an `acceptance-fresh` failure);
     #   3. scratch has a home, so the lane unload stops refusing it by name.
     row = {"WI-ID": "WI-005", "Title": "t", "SR-Refs": "", "Predecessors": ""}
     prompt = agent_loop.worker_prompt(tmp_path, {"WI-005": row}, "WI-005", "w", "0" * 7)

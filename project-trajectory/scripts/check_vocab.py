@@ -104,7 +104,7 @@ from kitlib.config import utf8_console as _utf8_console
 # been a finding with no translation to offer (see the SUGGEST pin below).
 # `[reqs]`/`[tests]` are refused only in the ANCHOR POSITION (`]-[reqs]`), and
 # the asymmetry is deliberate rather than tidy — those two spellings are ordinary
-# English in square brackets, so a bare match reds every markdown link whose text
+# English in square brackets, so a bare match fails every markdown link whose text
 # happens to be "tests". A checker that cries wolf on link text is a checker
 # people learn to scroll past, which is the failure this file's own docstring
 # names.
@@ -221,7 +221,7 @@ SKIP_DIRS = {
     "__pycache__",
     ".pytest_cache",
     # Agent worktrees are OTHER checkouts parked under this tree — their files
-    # are scanned in their own checkout, and a stale worktree must not red
+    # are scanned in their own checkout, and a stale worktree must not fail
     # this one (found the day the enforcer shipped: a leftover worktree's
     # scratchpad carried pre-sweep vocabulary).
     "worktrees",

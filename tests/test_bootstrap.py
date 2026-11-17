@@ -1,4 +1,4 @@
-"""Bootstrap must produce a scaffold that is green out of the box.
+"""Bootstrap must produce a scaffold that passes out of the box.
 
 Implements: TC-010, TC-011
 """
@@ -99,7 +99,7 @@ def test_scaffold_contains_expected_files(scaffold):
         # what removed the `disposition` attribute that told the two apart;
         # SR-144's third terminal, `.../partial`, and the 2026-09-02 plan's
         # fourth, `.../restructured`, are pinned here so the shipped folder set
-        # cannot quietly lose one again — reverting bootstrap's folder reds this.
+        # cannot quietly lose one again — reverting bootstrap's folder fails this.
         "docs/archive/work/cancelled/.gitkeep",
         "docs/archive/work/partial/.gitkeep",
         "docs/archive/work/restructured/.gitkeep",
@@ -525,7 +525,7 @@ def test_capped_doc_baselines_match_the_real_sizes():
     above checks size <= cap and would happily watch the baseline drift. The
     failure that produces is the one the skill exists to prevent: an author
     follows the procedure, records "before = 4,925", adds 40 bytes, computes
-    4,965, commits, and reds at 5,022.
+    4,965, commits, and fails at 5,022.
     """
     table = ROOT / "project-trajectory" / "skills" / "byte-budget-guard" / "SKILL.md"
     rows = {}
@@ -797,7 +797,7 @@ def test_scaffold_pins_hook_line_endings(scaffold):
     # MINOR-15). Five test modules rely on this line for CRLF-safety — fixture
     # trees are built by copying kit files and then diffed byte-for-byte — and
     # nothing pinned it: deleting it from the template left every hook-specific
-    # assertion above green while Windows fixtures began producing CRLF diffs
+    # assertion above passing while Windows fixtures began producing CRLF diffs
     # and snapshot mismatches. The default is the load-bearing half; the
     # per-path rules below it are the exceptions.
     assert "* text=auto eol=lf" in text, (
@@ -1683,7 +1683,7 @@ def test_the_common_package_ships_complete(scaffold):
     cannot answer this one: it compares TOP-LEVEL import names, so once any
     `scripts/kitlib/*.py` row is in MAPPING the name `kitlib` reads as mapped
     and a MISSING MODULE INSIDE the package is invisible to it. Probed, not
-    assumed — deleting the `config.py` row leaves that guard green.
+    assumed — deleting the `config.py` row leaves that guard passing.
 
     Per-file completeness is a MANIFEST question, so it is asked of a real
     scaffold: the copied package must hold exactly the kit's module set, and

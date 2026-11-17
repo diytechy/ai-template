@@ -266,7 +266,7 @@ def test_a_url_span_stops_at_prose_delimiters(tmp_path):
 def test_a_present_but_vacuous_registry_is_reported_not_clean(tmp_path):
     # The round-1 review's driven find: an emptied registry scanned as a clean
     # tier, and at DevStg-Reqs nothing else in the harness hard-fails on it —
-    # the false green SN-008 forbids, on exactly the registry this check
+    # the false pass SN-008 forbids, on exactly the registry this check
     # guards. Absent stays a clean skip; present-but-empty reports.
     reg = tmp_path / "docs" / "requirements"
     reg.mkdir(parents=True)

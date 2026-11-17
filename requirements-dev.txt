@@ -5,8 +5,8 @@
 # drive, and CI (.github/workflows/test.yml) and scripts/dev-setup.{sh,ps1,command}
 # both install from this file so every machine runs the same machinery.
 #
-# WHY CONSTRAIN: floating latest can let the next ruff format-rule change turn the
-# `format` gate red or a coverage-tool major silently reweight the floor (the
+# WHY CONSTRAIN: floating latest can let the next ruff format-rule change make the
+# `format` gate fail or a coverage-tool major silently reweight the floor (the
 # pytest-cov 7 contract
 # break tests/conftest.py already had to absorb) — a gate that lies for reasons
 # unrelated to any commit. These are compatible-release ranges (~=), so accepted

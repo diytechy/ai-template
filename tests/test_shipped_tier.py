@@ -21,13 +21,13 @@ The plan is built with `profile=None` — the **built-in** process steps, i.e. w
 the kit ships — not this repo's `docs/stack.ini`, because the standard is about what
 adopters inherit, not what this meta-repo happens to run locally.
 
-Today this is green with nothing to check: the ledger declares zero `Kind=python`
+Today this passes with nothing to check: the ledger declares zero `Kind=python`
 rows (only the `git`/`gh` substrates), so the closure is pure stdlib. That is the
 point — it bites the day the first adopter-facing package is proposed, which is
 exactly when a human should be reading. Per the standing vacuous-guard rule the
 mutation proof lives in this file: `test_the_standard_catches_a_coordinator_tier_import`
 and `test_the_standard_catches_an_unruled_shipped_import` drive the checker over
-synthetic trees and assert it CATCHES, so the green above is demonstrated able
+synthetic trees and assert it CATCHES, so the pass above is demonstrated able
 to fail before it is trusted to pass.
 
 Enforcement-audit note (docs/enforcement-audit.md): this is the EVAL/test-class
@@ -88,7 +88,7 @@ def sibling_sources(script_dir: Path, name: str) -> list[Path]:
     a package read as a THIRD-PARTY dependency: `kitlib` is not in
     `sys.stdlib_module_names`, so the shipped standard demanded a
     `docs/dependencies.md` row for the kit's own code. Worse than the false
-    red, and the reason this returns a file LIST rather than one path: the walk
+    failure, and the reason this returns a file LIST rather than one path: the walk
     would then never open the package's modules, so a real non-stdlib import
     hidden inside `kitlib/` would be invisible to the standard it is most subject
     to — the package is adopter-facing by construction.

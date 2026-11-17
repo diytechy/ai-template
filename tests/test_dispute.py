@@ -22,7 +22,7 @@ prompts = load_script("prompts")
 
 
 def _dispute():
-    """The grammar module, imported per test so a missing one reds each case."""
+    """The grammar module, imported per test so a missing one fails each case."""
     from kitlib import dispute
 
     return dispute

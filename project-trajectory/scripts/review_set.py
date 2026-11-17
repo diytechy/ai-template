@@ -23,7 +23,7 @@ in docs/requirements/interfaces.toml).
 Contract IF-309: `derive(lane, branch)` answers `(ReviewSet, None)` or `(None,
     refusal)` and never raises for a bad input: a refusal is a value, opening
     with its kind (`names no SR`, `malformed`, `empty`, `partial`), so the loop
-    can route it as a red. `ReviewSet` supplies `files` (the sorted test paths,
+    can route it as a failure. `ReviewSet` supplies `files` (the sorted test paths,
     the list a record digests), `listed` (evidence beside the set, never run),
     `gaps` (reported on a row touching no code), `code_touching`, and the
     printed `lines()` and `notes()`. Requestors do not interpret the derivation
@@ -179,7 +179,7 @@ def _roots(lane):
 def _registry(lane, rel, id_col):
     """The live rows of the registry at `rel`. An absent registry refuses, and
     the carrier's `SystemExit` becomes a refusal, so an unparseable registry
-    takes the loop's red route instead of ending it.
+    takes the loop's failure route instead of ending it.
 
     Implements: SR-241, LLR-367
     """

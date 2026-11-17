@@ -16,7 +16,7 @@ function bodies. It is the topology sibling of `test_module_size_ratchet.py`
 the same ratchet convention:
 
 - A cycle that GREW, or a NEW cycle: the fix is DECOMPOSITION, not a baseline
-  edit. Adding a module to `CYCLES` to get green is accepting what it measures.
+  edit. Adding a module to `CYCLES` to get a pass is accepting what it measures.
 - A cycle that SHRANK or disappeared: re-stamp the baseline downward — or delete
   the entry — in the same commit, so the ratchet only ever tightens.
 
@@ -26,13 +26,13 @@ it. The baseline was a debt statement with a live owner (`WI-483`), not an
 acceptance: every entry was architectural debt that program is paid to remove. It
 is now EMPTY — WI-483 slices 1 and 2 removed all seven modules — and because the
 ratchet compares for equality, an empty baseline is the strongest form of the
-same test: any new cycle anywhere reds. The shape stays a list rather than
+same test: any new cycle anywhere fails. The shape stays a list rather than
 becoming `assert not cycles` so that a future component, if one is ever
 deliberately accepted, is recorded with a size that can only shrink.
 
 THE SELF-TEST MATTERS AS MUCH AS THE RATCHET. A walker that quietly stopped
 descending into function bodies would make every cycle here vanish and this
-whole file go green — the exact failure mode the review describes, reproduced in
+whole file pass — the exact failure mode the review describes, reproduced in
 the instrument meant to catch it. `test_the_graph_sees_imports_inside_function_
 bodies` pins a known deferred edge so that regression fails loudly.
 
@@ -41,7 +41,7 @@ tangle, so the file also carries the DECLARED LAYER ORDER of the lifecycle band
 (`LIFECYCLE_RANK`, WI-483 slice 7) and asserts every edge inside it points
 strictly down — the property "`dispatch` is the sole composer" had been prose in
 a spec file with nothing measuring it, and a sideways edge between two peers
-leaves both cycle tests green.
+leaves both cycle tests passing.
 """
 
 import ast
@@ -97,7 +97,7 @@ LIFECYCLE = frozenset({"dispatch", "handback", "intake", "integrate", "lane"})
 # (serial by construction, all-or-nothing on one trunk commit), so it is part of
 # what taking the slot MEANS, not a lifecycle step sequenced from above.
 #
-# RE-RANKING TO GET GREEN IS ACCEPTING WHAT THIS MEASURES, exactly like editing
+# RE-RANKING TO GET A PASS IS ACCEPTING WHAT THIS MEASURES, exactly like editing
 # CYCLES. A new edge that points up is decomposition work: move what crosses to
 # a module below both (`kitlib/station.py`, `census.py`, `pending.py` are the
 # three worked precedents in this program).
@@ -138,8 +138,8 @@ CYCLES = [
     # turns program shape item 4 into a test instead of a sentence.
     #
     # AN EMPTY LIST IS NOW A REAL ASSERTION: `test_no_new_import_cycle` compares
-    # for EQUALITY, so any new cycle anywhere under `scripts/` reds here. Do not
-    # add an entry back to get green — decompose.
+    # for EQUALITY, so any new cycle anywhere under `scripts/` fails here. Do not
+    # add an entry back to get a pass — decompose.
 ]
 
 # --- the cycle DENSITY baseline (2026-08-21 review, M-12 / Sol 4) ------------
@@ -148,14 +148,14 @@ CYCLES = [
 # two modules already in the same component leaves it byte-identical. The
 # review proved the hole by mutation: two brand-new deferred cycle edges
 # appended to `lane.py` (`import dispatch`, `import handback` inside a
-# function) left all three tests green. That is the exact pattern this file's
+# function) left all three tests passing. That is the exact pattern this file's
 # docstring calls "the failure mode the review describes", and WI-483's
 # remaining slices were paid to REMOVE three such edges — a ratchet that reports
 # success while the tangle tightens is worse than none. (Those three are gone,
 # and WI-483 slice 7 re-ran the review's mutation rather than assuming: the
-# deferred `lane -> dispatch` / `lane -> handback` pair now reds all three
+# deferred `lane -> dispatch` / `lane -> handback` pair now fails all three
 # tests. The residual hole it leaves is the SIDEWAYS edge — `handback -> lane`,
-# two peers, no cycle formed, both cycle tests green — and that is exactly what
+# two peers, no cycle formed, both cycle tests passing — and that is exactly what
 # `test_a_lifecycle_edge_never_points_up` was added to catch. Mutation-checked
 # the same way.)
 #
@@ -314,7 +314,7 @@ def test_the_graph_sees_imports_inside_function_bodies():
 
     `integrate.py` imports `intake` INSIDE a function — the post-merge mint at
     the held slot. If the walker ever stops descending into function bodies,
-    every deferred edge disappears, the cycle baseline below goes green for
+    every deferred edge disappears, the cycle baseline below passes for
     free, and the file reports the opposite of the truth. Pin a known deferred
     edge so that failure is loud.
 
@@ -463,7 +463,7 @@ def test_no_new_import_cycle():
         "  found:    {}\n"
         "  baseline: {}\n"
         "A cycle that GREW or APPEARED is decomposition work (WI-545) — do "
-        "NOT widen CYCLES to get green, because editing this list IS "
+        "NOT widen CYCLES to get a pass, because editing this list IS "
         "accepting what it measures. A cycle that SHRANK is a win: re-stamp "
         "the entry downward, or delete it, in the same commit, with the "
         "reason in the session log.".format(found, baseline)
@@ -492,7 +492,7 @@ def test_no_new_edge_inside_an_existing_cycle():
         "edges against a baseline of {}.\n  {}\nAdding an edge between two "
         "modules already in one component leaves the CYCLES partition "
         "identical, which is why this count exists. Do NOT raise the number to "
-        "get green — that IS accepting what it measures. Route the new call "
+        "get a pass — that IS accepting what it measures. Route the new call "
         "through a lower layer (`kitlib.station` is the precedent), or cut an "
         "existing edge to pay for it.".format(
             len(edges),
@@ -602,7 +602,7 @@ def test_a_lifecycle_edge_never_points_up():
     `dispatch` is the sole composer and the rest of the band runs one way below
     it. See `LIFECYCLE_RANK` for the measured order, for why
     `integrate -> intake` is a DOWNWARD edge rather than the inversion WI-483's
-    spec called it for two slices, and for why re-ranking to get green is
+    spec called it for two slices, and for why re-ranking to get a pass is
     accepting what this measures.
     """
     graph = import_graph()

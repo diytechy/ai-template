@@ -18,12 +18,12 @@ What this module pins is the loop's own contract — the joints, not the parts
     loop's own stall guard (the trunk-unmoved counter);
   * a worker that could not finish HANDS BACK (WI-387, §A3) — NEEDS-OPERATOR no
     longer stops the run, the WI returns to trunk blocked, and the loop drives
-    on to the drained banner; a red handback is reverted to a checks-inert
+    on to the drained banner; a failing handback is reverted to a checks-inert
     artefact and merges anyway; a CRASHED worker is not a handback and keeps
     the parked-resume path;
   * end-to-end on a REAL scaffold: claim -> injected worker close -> the REAL
     §A2 landing checks -> merge -> drained banner; and the same flow with a
-    breaking change stops on the RED checks with the branch still parked;
+    breaking change stops on the FAILING checks with the branch still parked;
   * the SPECULATIVE half of the station protocol (WI-386): `_drain` refreshes
     every finished branch BEFORE it takes the merge slot, so the 11-minute checks
     never holds the exclusive turn to advance trunk. That one call is the whole
@@ -33,7 +33,7 @@ What this module pins is the loop's own contract — the joints, not the parts
 The worker seam is injected in every test (`run(root, args, worker=...)`) —
 the real subprocess launch of agent_loop.py --wi is agent_loop's own tested
 surface — but integrate.py and the checks are REAL: a stubbed checks here would be
-exactly the vacuous green the integrator exists to make impossible. Git
+exactly the vacuous pass the integrator exists to make impossible. Git
 fixtures are real repositories for the same reason as tests/test_integrate.py
 (the queue derives everything from history), and the helper shapes are copied
 from that module per this suite's no-cross-test-import idiom.
@@ -584,10 +584,10 @@ def test_a_parked_lane_citing_a_ruled_item_still_resumes_first(tmp_path, capfd):
 # These run the WHOLE cycle — claim, worker, close, refresh, merge, next cycle —
 # against a stub harness rather than a bootstrapped scaffold, because what is
 # under test is the loop's decision and the shape it lands in trunk, not the
-# checks. The stub check is CONDITIONAL (red exactly while the lane's own broken
-# file is present), which is what lets the red-handback ruling be driven end to
-# end instead of asserted about: an always-red stub could not show the second
-# refresh going green. Helper shapes are copied from tests/test_integrate.py per
+# checks. The stub check is CONDITIONAL (failing exactly while the lane's own broken
+# file is present), which is what lets the ruling on a failing handback be driven end to
+# end instead of asserted about: an always-failing stub could not show the second
+# refresh passing. Helper shapes are copied from tests/test_integrate.py per
 # this suite's no-cross-test-import idiom.
 
 STUB_TRUNK_STEP = "pass\n"
@@ -782,8 +782,8 @@ def test_a_failing_handback_is_reverted_to_a_checks_inert_artefact_and_merges(
     # THE RULED CASE (operator decision 1). The lane hands back code the checks
     # refuses, which would be the one branch that could still hang. Instead the
     # code is reverted, the failing diff lands as a `.patch`, the second
-    # refresh goes green and the branch merges — so trunk ends with the record
-    # and without the red.
+    # refresh passes and the branch merges — so trunk ends with the record
+    # and without the failure.
     root = stub_harness_repo(tmp_path)
     worker = then_closing(building_worker(7, [("broken.py", "VALUE = (\n")]))
 
@@ -794,7 +794,7 @@ def test_a_failing_handback_is_reverted_to_a_checks_inert_artefact_and_merges(
     assert "handback: quarantined wi-401-widget" in captured.out, captured.out
     assert "merged (WI-401=partial)" in captured.out, captured.out
 
-    assert not (root / "broken.py").exists()  # nothing live to red anything
+    assert not (root / "broken.py").exists()  # nothing live to fail anything
     patch = root / "docs" / "work" / "handback" / "wi-401-widget.patch"
     assert patch.is_file()
     assert "VALUE = (" in patch.read_text(encoding="utf-8")
@@ -805,8 +805,8 @@ def test_a_failing_handback_is_reverted_to_a_checks_inert_artefact_and_merges(
 
 
 def failure_capped_worker(reds):
-    """A worker whose build stayed red at its commit checks for `reds` rounds:
-    each round commits a red build and then the loop's own record of it, a
+    """A worker whose build kept failing at its commit checks for `reds` rounds:
+    each round commits a failing build and then the loop's own record of it, a
     session log keyed by that build's sha with the checks' summary. It then ends
     with the failure cap's exit code, specs still in active/."""
 
@@ -840,7 +840,7 @@ def test_a_failure_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_dr
     """Implements: TC-381"""
     # TC-381. The failure cap is a decided worker outcome: the dispatcher closes
     # the lane partial with typed fields, its reason naming the count and the
-    # last checks summary, and the drain's red refresh quarantines the lane.
+    # last checks summary, and the drain's failing refresh quarantines the lane.
     root = stub_harness_repo(tmp_path)
     worker = then_closing(failure_capped_worker(3))
 
@@ -979,7 +979,7 @@ def test_drive_end_to_end_claims_builds_merges_and_drains(tmp_path, capfd):
 
 
 def test_drive_stops_on_failing_landing_checks(tmp_path, capfd):
-    # The worker's "close" breaks the product test: the REAL checks go red at the
+    # The worker's "close" breaks the product test: the REAL checks fail at the
     # §A2 refresh — on the branch, where the lane that caused it can fix it —
     # and the driver STOPS with the branch still claimed. Nothing merged,
     # nothing skipped, and (unlike the landing checks this replaced) nothing

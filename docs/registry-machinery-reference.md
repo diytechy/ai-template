@@ -48,7 +48,7 @@ Shared rules USED to be duplicated between them per the retired F5
 independently-copyable convention and pinned equal by `tests/test_rule_sync.py`.
 Since WI-448 slice 3 they have ONE home — `project-trajectory/scripts/kitlib/spine.py`,
 the spine ROW vocabulary — which both modules re-export under their existing
-names, so a divergence between them (precisely the false-green the kit exists to
+names, so a divergence between them (precisely the false-pass the kit exists to
 prevent) is now unrepresentable rather than pinned.
 
 **Three cross-cutting conventions, stated once:**
@@ -331,7 +331,7 @@ are therefore **honestly unfounded** rather than founded by widening the grammar
 to fit them — the cell names a function local, a label that never existed, or an
 HTML attribute that merely looks like an identifier.
 
-**Why anchor and not per-token.** A per-token rule reds 31 of 149 rows on
+**Why anchor and not per-token.** A per-token rule fails 31 of 149 rows on
 arrival, 18 for tokens that were never symbol claims — enforcing a grammar no
 ruling had given the cell. Per-token misses file as *untraced* and are counted
 every run, so a later tightening stays available rather than hidden. Same trade
@@ -370,7 +370,7 @@ hidden.
 | `Tier` | ✔ | **closed**: `Smoke`, `Full`, `Release` | The only closed TC vocabulary. Wrong value → schema finding. Selects release-checklist items (§9.5); **not** joined to the pytest marker that selects tests — see §12.2. |
 | `Parameters` | ✘ | `param=a; other=x` | Read as the artifact recipe in the critique brief. Not validated. |
 | `Expected` | ✔ | cite the AcceptanceCriteria **by id** | Accepted prose. |
-| `Automated` | ✔ | `Yes` / `No` (open) | **Conditional rule:** `Yes` + empty `Evidence` → schema finding ("a claimed-automated test with no cited location is a soft false-green"). `No` marks an **observation test case**, which declares the five cells below `Phase` (`assumption_rules.is_observation_tc`). |
+| `Automated` | ✔ | `Yes` / `No` (open) | **Conditional rule:** `Yes` + empty `Evidence` → schema finding ("a claimed-automated test with no cited location is a soft false-pass"). `No` marks an **observation test case**, which declares the five cells below `Phase` (`assumption_rules.is_observation_tc`). |
 | `Evidence` | ✘* | pytest node / path / procedure link | *Required only when `Automated=Yes`. |
 | `Status` | ✔ | closed, as SR | `Drafted` → DevStg-Below. Otherwise does not gate (same as LLR). |
 | `Phase` | ✘ | digit-parseable | = the max Phase of what it verifies. Same arming rule. |
@@ -573,7 +573,7 @@ sites reach `read_stage` — `check.py`, `agent_common.py`, `check_trajectory.py
   step at **every** rung and in the pre-commit hook. It recomputes and fails on
   drift. A file still in `stage.template`'s comment-only placeholder form counts
   as "not yet in derived form" and passes with a note, so a not-yet-migrated repo
-  stays green.
+  keeps passing.
 
 ### 8.4 The suppressed-gate window
 
@@ -581,7 +581,7 @@ Because the gate is a `min()`, a single Drafted row **drops the gate,
 and the harness then drops every step tagged for the higher gate.** `lint` and
 `--require-verified` simply stop running for the duration. That is
 not a relaxed standard — it is a blind spot, and it has bitten this repo: twelve
-commits went green over those steps during the 2026-07-26/27 window, and the debt
+commits passed over those steps during the 2026-07-26/27 window, and the debt
 surfaced in one lump when the window closed. (The debt of record was the
 duplication census's; that census was torn down later, D-7/WI-426. The blind
 spot is the point, not which step fell into it.)
@@ -672,7 +672,7 @@ This repo additionally budgets the smoke tier in `[smoke-budget]`, three keys:
 `wall-seconds`, a looser cap on its wall time; and `max-tests`, a deterministic,
 machine-independent membership ceiling. `check_smoke_budget.py` meters the
 first two; the checks run it in warn mode, so they report the seconds and fail
-only on a red tier, and the run menu's audit (`[run] audit`) runs it in enforce
+only on a failing tier, and the run menu's audit (`[run] audit`) runs it in enforce
 mode against all three. `tests/test_smoke_budget.py` enforces `max-tests`
 inside the tier on every check run. All three are **growth sensors with headroom**,
 not freezes — a ratchet stamped at current+1 bites on the first legitimate
@@ -719,7 +719,7 @@ Generated-artifact freshness is the **trunk lane's** job. On a claimed work
 branch — one with a `docs/work/active/<branch>/` spec directory — the steps in
 `_TRUNK_FRESHNESS_STEPS` (`derived-stage`, `trajectory-map`,
 `status-map`, `open-items`, `okf`, `acceptance-fresh`) are reported SKIP with their
-reason instead of running. Gating a branch on freshness would red every branch
+reason instead of running. Gating a branch on freshness would fail every branch
 for drift it is forbidden to fix.
 
 It is **fail-closed**: off git, on a detached HEAD, or unclaimed, the full checks
@@ -1008,7 +1008,7 @@ enforced by nobody. Only `SR.Verification` and `TC.Tier` are closed sets.
 ### 12.7 The phase rule arms globally from one row
 
 Phase a single SR anywhere and *every* accepted SR, LLR and TC across the repo
-instantly owes a bare-integer `Phase` or `--strict-schema` reds. Intended, but a
+instantly owes a bare-integer `Phase` or `--strict-schema` fails. Intended, but a
 cliff rather than a ramp — worth knowing before someone phases one row to try it.
 
 ### 12.8 `refs()` splits on whitespace

@@ -231,7 +231,7 @@ def test_files_mode_end_to_end_and_staleness(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     arch = (scaffold / doc).read_text(encoding="utf-8")
     assert "src/app.ts" in arch and "The TS entry point." in arch
-    # freshly generated ⇒ --check is green
+    # freshly generated ⇒ --check passes
     proc = run_py(
         ["scripts/gen_arch_map.py", "--mode", "files", "--doc", doc, "--check"],
         cwd=scaffold,
@@ -282,7 +282,7 @@ def test_files_mode_zero_source_warns_without_self_reference(scaffold):
 
 def test_zero_source_scan_warns_loudly(scaffold):
     # A repo whose code isn't Python (or has none yet) must not get a silently
-    # vacuous map + freshness gate: the run stays green (pre-code repos are
+    # vacuous map + freshness gate: the run keeps passing (pre-code repos are
     # legitimate) but says on stderr that the guarantee is not in force and
     # points at the porting contract (ADOPTING.md).
     from conftest import run_py
@@ -493,7 +493,7 @@ def test_module_bindings_covers_every_rendered_public_item():
     rather than copying a parser into the consumer (the D-6/F5 hazard). This
     pins them: every public item the map RENDERS for a module must be a name
     `module_bindings` reports for that module, across every module in this repo.
-    A node type one walk learns and the other does not then reds here instead of
+    A node type one walk learns and the other does not then fails here instead of
     silently reporting "that symbol does not exist" on the spine.
 
     Implements: TC-175
@@ -882,7 +882,7 @@ def test_cli_doc_splices_and_check_reds_on_drift(tmp_path, cli_src):
     script = Path(gen_arch_map.__file__)
     args = ["--src", str(cli_src), "--cli-doc", str(doc)]
 
-    # A bare run writes the block; --check is then green.
+    # A bare run writes the block; --check then passes.
     assert run_py([script] + args, cwd=tmp_path).returncode == 0
     assert "--tier" in doc.read_text(encoding="utf-8")
     assert run_py([script] + args + ["--check"], cwd=tmp_path).returncode == 0
@@ -1147,7 +1147,7 @@ def test_contracts_doc_splices_and_check_reds_on_drift(tmp_path, contract_src):
 def test_both_doc_targets_are_processed_on_one_invocation(tmp_path, contract_src):
     # The modes COMPOSE. main() used to dispatch straight into `sys.exit` on the
     # first mode an invocation named, so `--cli-doc A --contracts-doc B --check`
-    # reported A and exited 0 over a STALE B — a green verdict on a document
+    # reported A and exited 0 over a STALE B — a passing verdict on a document
     # nothing had opened. Every named mode runs and the verdict is the worst.
     from conftest import run_py
 
@@ -1173,14 +1173,14 @@ def test_both_doc_targets_are_processed_on_one_invocation(tmp_path, contract_src
         str(contracts_doc),
     ]
 
-    # One invocation fills BOTH targets, and --check is then green on both.
+    # One invocation fills BOTH targets, and --check then passes on both.
     assert run_py([script] + args, cwd=tmp_path).returncode == 0
     assert "no command-line surface scanned" in cli_doc.read_text(encoding="utf-8")
     assert "IF-901" in contracts_doc.read_text(encoding="utf-8")
     assert run_py([script] + args + ["--check"], cwd=tmp_path).returncode == 0
 
     # Drift ONLY the contract body. The CLI reference is still fresh, so the
-    # first mode named is green — and the run must still red on the second.
+    # first mode named passes — and the run must still fail on the second.
     (contract_src / "widget.py").write_text(
         CONTRACT_MOD.replace("writes report.md", "writes summary.md"),
         encoding="utf-8",

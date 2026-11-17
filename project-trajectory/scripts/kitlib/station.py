@@ -241,7 +241,7 @@ def render_report(wi_id, branch, claimed_outcome, reason, span, fields=None):
 
     Typed, not prose, for the fields anything downstream keys off — the
     disposition's review tier reads `suggested_tier`, not a substring of
-    `reason`. `keep_commits` / `discard_commits` exist because a green handback
+    `reason`. `keep_commits` / `discard_commits` exist because a passing handback
     once merged REJECTED code onto trunk as-is (2026-08-03, live): under this
     contract a `partial` close must say which commits are keep and which are
     discard, and the integrator refuses one that does not. The revert decision

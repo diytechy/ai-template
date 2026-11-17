@@ -16,8 +16,8 @@ whether the rule is adoptable rather than merely correct:
    would punish the wrong file, and `hats.py` raises on that same file the
    moment any composer touches it.
 3. COVERAGE NEVER GATES — the cell is empty on nearly every row the day it
-   exists, so presence is one advisory count and never a finding. A rule that is
-   100% red on the day it ships is a rule somebody switches off.
+   exists, so presence is one advisory count and never a finding. A rule that
+   fails everything on the day it ships is a rule somebody switches off.
 4. THE EFFECTIVE SET IS DERIVED — `effective_hats` unions a row's own refs with
    its parents', so re-ruling one SR moves every child's answer with no child
    cell edited.
@@ -28,8 +28,8 @@ validator of roster CONTENT) rather than importing `hats`, because the declared
 crossing between those two components already runs the other way. A TEST may
 import both, so the two paths are pinned equal here.
 
-Every green below is demonstrated able to fail: the vacuity cases are driven
-over a tree that reds when the roster is present, so "reported nothing" is never
+Every pass below is demonstrated able to fail: the vacuity cases are driven
+over a tree that fails when the roster is present, so "reported nothing" is never
 confused with "looked at nothing".
 
 Implements: TC-245
@@ -109,7 +109,7 @@ def test_a_declared_name_is_silent():
 
 def test_the_rule_is_vacuous_without_a_roster():
     """Implements: TC-178"""
-    # The SAME rows that red above report nothing when no roster is declared:
+    # The SAME rows that fail above report nothing when no roster is declared:
     # absence is opt-out for the whole hats layer, so there is no declared name
     # a row could fail to cite.
     findings, advisories = trace.hat_findings([sr("SR-002", "SECRUITY")], [], set())
@@ -358,12 +358,12 @@ def test_with_no_stakeholder_list_the_speaks_for_rule_produces_nothing():
 
 # --- both perspective rules, through the checker's own load and compose -------
 # (SR-213, SR-214.) The rule cases above and in tests/test_assumption_rules.py
-# call `hat_findings` and `obstacle_hat_findings` directly, so they stay green
+# call `hat_findings` and `obstacle_hat_findings` directly, so they keep passing
 # if `load_registries` stops reading a hat's `speaks_for` or `analyze` stops
 # composing either rule. These drive the checker in process over a tree on
 # disk: the registries are loaded, analyzed, gated and reported the way a
 # `--strict` run does, so a finding that never reaches the `hat` class, the
-# exit code or the report's summary count reds here.
+# exit code or the report's summary count fails here.
 
 STAKEHOLDERS = """
 [stakeholder.STK-01]

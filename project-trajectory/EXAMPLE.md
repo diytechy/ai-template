@@ -163,7 +163,7 @@ The `Evidence` column names the **concrete test that provides the proof** — a
 pytest node id, a script path, or a procedure-doc link (inspection-only text,
 never a mechanized resolve). It is optional in general, but a row claiming
 `Automated=Yes` must cite it under `--strict-schema` (DevStg-Impl): a claimed-automated
-test with no cited location is a soft false-green. Keep `Parameters` for the
+test with no cited location is a soft false-pass. Keep `Parameters` for the
 *dimensional inputs* a test exercises (the `gen_cases.py` grammar below) — the
 test's location never belongs there.
 
@@ -432,7 +432,7 @@ Contract IF-001: writes the export file at the configured path as RFC-4180 CSV �
 ```
 
 And the seam gets its **own** integration TC — covered by neither module's internal
-unit tests — so the boundary is a tested contract, not a gap between two green
+unit tests — so the boundary is a tested contract, not a gap between two passing
 modules (process.md §10). (A *low-level* seam, where the parent functionality's
 tests are honestly what cover it, says so instead: `verified_by = "TC-050"` on
 the IF row, warn-first that the pointer resolves. Empty — as the row above

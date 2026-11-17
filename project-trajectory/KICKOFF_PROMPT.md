@@ -136,7 +136,7 @@ gate; the `single-approve`/`autonomous` levels and their mechanics:
   Analysis/Inspection/Vouch); every SR and LLR has ≥1 TC; traceability reports
   **0 orphans**; the harness runs locally and in CI.
 - **DevStg-Impl — Implementation (test-first).** Each DevStg-Tests TC becomes a *failing* test
-  before the code that satisfies it (red → green → refactor). Build green, lint
+  before the code that satisfies it. Build passing, lint
   clean, the **full** test tier passes, coverage ≥ threshold; every
   test-verifiable SR is **Accepted**, and every remaining SR is explicitly
   classified **Demonstration / Manual / Inspection / Analysis / Vouch /
@@ -163,7 +163,7 @@ heavy combinations to the `Release` tier. See PROCESS.md "Dimensional coverage".
 
 Record every gate decision and persona verdict in `docs/log.md` using the
 verdict protocol in `PROCESS.md` (status.md cites the current gate and points
-at the log). Never report a green result you didn't run — paste the actual
+at the log). Never report a passing result you didn't run — paste the actual
 command output.
 
 ## End-user / edge-case lens (apply throughout, especially at DevStg-Reqs and the final read)

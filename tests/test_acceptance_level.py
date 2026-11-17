@@ -477,7 +477,7 @@ def test_the_dial_VOCABULARY_is_the_LADDER_plus_the_BELOW_sentinel():
     to `kitlib.ladder`; both names now RESOLVE to that one object, so "the copies
     agree" is no longer a property that can fail — there are no copies. A test
     asserting a frozenset equals itself is not a weaker pin, it is a VACUOUS one,
-    which reads green while checking nothing. Drift is now UNREPRESENTABLE rather
+    which passes while checking nothing. Drift is now UNREPRESENTABLE rather
     than DETECTED, this repo's stated preference and exactly the trade WI-448
     made when the five-way declared-line reader collapsed to one home
     (`tests/test_rule_sync.py`, "the declared-line reader: WAS 5-way, now ONE
@@ -654,7 +654,7 @@ TC = {"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Accepted"}
 # of the ladder. Spelling `dg.STAGE_RELEASE` at each of them made those tests
 # LOOK like top-rung pins, which is exactly why the deep-check's pin census
 # (`docs/plans/2026-08-21-stage-rekey-deep-check.md`, "The test pins that would
-# move") counted five and nine went red: it found the tests ABOUT the rung and
+# move") counted five and nine failed: it found the tests ABOUT the rung and
 # missed the ones that merely USED it. One name, so the next re-discrimination
 # moves one line.
 SETTLED = dg.STAGE_IMPL
@@ -785,7 +785,7 @@ def _returns_provably_below_release(func):
     (`_ladder.STAGE_RELEASE`), a call (`_top()`), a conditional — is reported,
     because none of those can be settled by reading this one function.
 
-    That deliberately reds on a legitimate refactor that returns a computed
+    That deliberately fails on a legitimate refactor that returns a computed
     rung. It should: the rung is evidence-gated with NO producer, so a
     `spine_stage` that computes its answer is exactly the change an operator must
     look at. Widening this helper is an act, the same as deleting it."""
@@ -867,7 +867,7 @@ def test_the_RELEASE_rung_has_EXACTLY_ONE_PRODUCER_and_it_is_the_EVIDENCE_VERDIC
 
     REBUILT AT THE WI-498 PROGRAM CLOSE, because BOTH reviewers defeated the
     version that shipped, with two DIFFERENT mutants, and both mutants left the
-    whole ladder suite green:
+    whole ladder suite passing:
 
       * a literal `return "DevStg-Release"` — the name-grep sees no name;
       * `return _ladder.STAGE_ORDER[-1]` behind a new `EvidencePassed` field —
@@ -961,7 +961,7 @@ def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
     unification plan §5 item 3), AND THIS TEST IS THE ONE THAT SAID IT WOULD BE.
     Its previous body ended: "the assertions below therefore pin the CURRENT
     truth, INCLUDING THE UNREACHABILITY, so that landing the harness driver
-    reddens this test rather than sliding past it." It reddened. The history it
+    fails this test rather than sliding past it." It failed. The history it
     recorded, kept because the sequence is the argument:
 
       * D-9 step 5 made the rung unreachable-by-cell. The state it describes —
@@ -1163,11 +1163,11 @@ def test_every_declared_registry_enum_value_has_a_maturity_mapping():
     COMPARED CASE-NORMALIZED, and that is not a loosening. The registries speak
     the spine's Title-case words; these tables are keyed lowercase because
     `_maturity` lowercases before the lookup. A raw set comparison would have
-    been red the moment the vocabulary re-cased — the two sides never disagreed
+    failed the moment the vocabulary re-cased — the two sides never disagreed
     about WHICH values map, only about how the lookup spells them, and this
     normalization is exactly the transform `_maturity` itself applies.
 
-    What must NOT be done to make this green is lower-casing the registries: the
+    What must NOT be done to make this pass is lower-casing the registries: the
     Title-case word IS the unification (2026-08-17), and a check that pulled the
     cells back down to keep itself simple would have undone the change it is
     supposed to be guarding."""
@@ -1248,7 +1248,7 @@ def test_the_two_ruled_label_typos_never_shipped():
 # table was a reader's reconciliation. Selection now keys on the stage alone
 # (`check.at_or_above`), so there is no second axis to reconcile against and the
 # pins were holding a mapping with no consumer. Deleted rather than re-pointed:
-# a test that pins a table nobody reads is the kind of green this repo treats as
+# a test that pins a table nobody reads is the kind of pass this repo treats as
 # a liability. The ladder's own pins above (order, labels, `stage_ord` raising)
 # are untouched, because those DO have consumers.
 
@@ -1348,7 +1348,7 @@ def test_ACCEPTANCE_RUNGS_is_the_off_spine_sibling_of_THE_DIAL(tmp_path):
     root = _Path(__file__).resolve().parents[1]
     # BOTH paths must EXIST. The template's was spelled `process.template.toml`
     # here — the file is `process.toml.template` — under an `if not exists:
-    # continue`, so half this guard read green against a path that could never be
+    # continue`, so half this guard passed against a path that could never be
     # there. A silently-skipped guard is the failure mode this module opens by
     # naming; it does not get to have one.
     for rel in ("docs/process.toml", "project-trajectory/process.toml.template"):
@@ -1504,7 +1504,7 @@ def test_no_shipped_loop_module_WRITES_an_acceptance_cell():
     RE-KEYED 2026-08-17, and this is the trap the registry status unification was
     written to walk around. The cell used to be spelled `approval`; it is
     `status` now. A regex still hunting `approval = "approved"` would have gone
-    on passing FOREVER, green against a spelling no registry uses — the exact
+    on passing FOREVER, against a spelling no registry uses — the exact
     silently-disarmed-guard failure this whole change exists to prevent. So the
     pattern hunts the LIVE spelling, and it hunts the retired one too: a writer
     added against the old name is still a writer.

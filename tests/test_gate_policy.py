@@ -88,7 +88,7 @@ def test_gate_policy_autonomous_scaffolds_register(tmp_path):
     # The fixed points nothing overrides ship with every register.
     for point in (
         "the final read is the operator's",
-        "No un-run greens",
+        "No un-run passes",
         "The harness is still the standard",
         "never re-decided by an agent",
     ):

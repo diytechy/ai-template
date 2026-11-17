@@ -380,7 +380,7 @@ def pause_reason(lane):
 # fix is to run the harness under the repo's OWN .venv — the pinned ≥3.11
 # toolchain — shared into each worktree by absolute path (the dispatcher points a
 # worker's PATH at it and sets the integrator checks' {py} to it), plus a preflight
-# so a below-floor interpreter is caught before it can produce a false green.
+# so a below-floor interpreter is caught before it can produce a false pass.
 
 # The kit's Python floor (WI-262/WI-270; the setup scripts enforce the same
 # `sys.version_info >= (3, 11)`). An adopter deliberately targeting an older
@@ -455,7 +455,7 @@ def harness_floor_failures(root):
     20260723T0202 inherited 3.8), so a below-floor idiom passes locally and only
     fails in CI - and an ambient-MODERN interpreter is the worse half, clearing
     the version floor while lacking the pinned dev tools the checks assumes, which
-    makes its green FALSE. integrate.py is the refusing seam: it calls this
+    makes its pass FALSE. integrate.py is the refusing seam: it calls this
     before the landing checks rather than running the checks on ambient Python.
 
     ARMING BOUNDARY: the floor guards only a repo that DECLARES the pinned
@@ -485,7 +485,7 @@ def harness_floor_failures(root):
             "toolchain (requirements-dev.txt), so the harness - tests plus those "
             "pinned dev tools - must run under the repo's OWN Python {}+ .venv, "
             "NOT the ambient interpreter, which may clear the version floor yet "
-            "lack the pinned tools and produce a false green. Run scripts/"
+            "lack the pinned tools and produce a false pass. Run scripts/"
             "dev-setup --install to create ./.venv (WI-286/WI-361).".format(root, floor)
         ]
     ver = interpreter_version(py)
@@ -1047,7 +1047,7 @@ def _failure_tail(out, budget=600):
     so the last FAIL was always the summary copy, the nearest banner above it
     the LAST step's, and the extracted window was summary rows — the failing
     step's own output structurally never reached a refusal, at any --jobs
-    (WI-398; the WI-387 refresh red cost three lost diagnoses of one failure).
+    (WI-398; the WI-387 refresh failure cost three lost diagnoses of one failure).
 
     Now the FIRST `  FAIL  <step>` line names the failing step, and the window
     is that step's OWN `=== <step> :` banner down to the next banner or the

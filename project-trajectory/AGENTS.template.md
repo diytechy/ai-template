@@ -38,7 +38,7 @@ the ladder, and the ID scheme. The short version needed every session:
   children link to it. The generated matrix (`scripts/trace.py`) must
   report **0 orphans** before a gate.
 - **Write the test first (TDD).** A requirement's test case is a *failing*
-  test before the code that satisfies it: red → green → refactor — within the
+  test before the code that satisfies it, within the
   traceability spine, not instead of it.
 - **The stage ladder:** `DevStg-` Needs · Boundary · Reqs · Arch · LLReqs ·
   Tests · Impl · Release. You are IN one; an operator signs three rung boundaries,
@@ -62,7 +62,7 @@ the ladder, and the ID scheme. The short version needed every session:
   [docs/status.md](docs/status.md); end each turn by updating it (stage, what
   changed, next action). **Commit hooks on before any work** (`bash
   scripts/setup.sh` or `scripts\setup.ps1`); never bypass them.
-  **Commit early and often**, small and green per step; the `push` dial says
+  **Commit early and often**, small and passing per step; the `push` dial says
   who publishes (default: operator). End with a clean tree.
 
 ## Code we want (readability for humans *and* agents)

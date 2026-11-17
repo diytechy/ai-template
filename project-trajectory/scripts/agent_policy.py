@@ -869,7 +869,7 @@ def complete_review(docs):
 
     `partial` and `cancelled` closes are ALWAYS adjudicated: each carries a
     claim about what was not delivered, and a claim is what an adjudicator is
-    for. A green close already passed the declared checks and the review rounds,
+    for. A passing close already passed the declared checks and the review rounds,
     so gating every one of them would rebuild the verdict gate under a new
     name — but never looking at any of them means the review rounds are the
     only thing that ever judged the work. The sample is the middle.
@@ -1061,7 +1061,7 @@ def spine_stage_of(root):
     of this cut-over (WI-498 slice 5, ruled plan §3). The retired form scraped
     `stage=` off a comment on the generated `docs/gate` and justified itself by
     saying the file was freshness-gated, "so the cached value is either current
-    or the `derived-gate` step is already red". THAT WAS NOT TRUE IN TWO PLACES
+    or the `derived-gate` step already fails". THAT WAS NOT TRUE IN TWO PLACES
     the gate schedule map measured: the freshness step STANDS DOWN on a claimed
     branch, and `agent_loop`/`dispatch` hoist this value once per run and thread
     it down, so a mid-session acceptance was invisible to every later consumer.

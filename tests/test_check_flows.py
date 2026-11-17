@@ -61,7 +61,7 @@ def flows_path(root):
 
 def test_fresh_scaffold_template_section_passes(scaffold):
     # The copied RUNTIME_FLOWS template ships a placeholder flow (ids ending
-    # -000) and must start green, like every other template artifact.
+    # -000) and must pass from the start, like every other template artifact.
     proc = run_py(["scripts/check_flows.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "check_flows: OK" in proc.stdout

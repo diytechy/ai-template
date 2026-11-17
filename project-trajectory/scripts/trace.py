@@ -23,7 +23,7 @@ Reads (under --docs, default "<root>/docs"; --root defaults to "."): the spine �
     (CMP/IF + PB/REPO/PART/ASSET, each documented on its own *.template.* and in
     process.md §8/§9 + process-options.md; the legacy modules.csv/MOD- form is
     still read). Absent optional files and "-000" example rows are ignored, so a
-    fresh scaffold is green.
+    fresh scaffold passes.
 
 Writes:
     test/report.md — counts, the SR->LLR->TC matrix, the orphan/integrity/
@@ -383,7 +383,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # `spine_rules.py` under the retired F5 rule, held equal by
 # `tests/test_rule_sync.py` pins. They are POLICY — this module ENFORCES the
 # spine, that one DERIVES its stage, and a disagreement between them is a false
-# green or false red AT A GATE (WI-099). Operator ruling D-8 (`OI-16`) replaced the
+# pass or false failure AT A GATE (WI-099). Operator ruling D-8 (`OI-16`) replaced the
 # pins with one home, `kitlib/spine.py`; the names are re-exported here so no
 # call site in this 5,000-line module moved. Each rule's own rationale travelled
 # with it and is NOT restated here.
@@ -725,7 +725,7 @@ IF_DATA_MAX = 160
 
 # --- the FIFTH rule: does the surviving prose name anything that is GONE? ------
 # The four rules above read FORM only, which is why a contract can name a
-# deleted constant for months and stay green — the measured exhibit is a live
+# deleted constant for months and keep passing — the measured exhibit is a live
 # row still naming `SCHED_*` classification constants that the concurrency
 # program deleted, with the presence-only module back-link reporting 27/27
 # complete over it. This rule reads CONTENT, at the one resolution a grammar
@@ -932,7 +932,7 @@ def _spine_ids(docs):
     glob then matched NOTHING for them — silently — so rule 2 ("no live id
     exceeds its mark") went VACUOUS on three of the four spine tiers, which are
     precisely the tiers with NO minter: a hand-authored id arriving past the
-    mark is the only signal there is. It was already false-green when found
+    mark is the only signal there is. It was already false-pass when found
     (LLR-167 and TC-161 stood above their marks, zero findings reported).
 
     So this reads through `spine_carrier` — the sanctioned reader, which
@@ -1663,7 +1663,7 @@ def correct_watermark(root, space, new_value, ruling_id):
         )
     # THE WRITER CHECKS THE AUTHORITY TOO, and not because the checker is in
     # doubt: `_correction_record_findings` is the authority, but a verb that
-    # writes an unresolvable record and leaves the repo red at the NEXT run has
+    # writes an unresolvable record and leaves the repo failing at the NEXT run has
     # taught the operator nothing at the moment they could still fix it.
     refusals = _one_correction_findings(
         space, [(was, new_value, str(ruling_id))], ruled_open_item_texts(root)
@@ -1971,7 +1971,7 @@ def _retired_cell_findings(ifs, root):
     unset cell is an ABSENT key, and an explicit empty is the third state the
     readers disagree about) and a cell that is itself a table,
     `[interface.IF-002.legacy]` (`nested_table_findings`). Both land as a hard
-    refusal carrying their own text, so `--strict` reds either way; a second
+    refusal carrying their own text, so `--strict` fails either way; a second
     copy of a rule that already fires is what the 0→A→B rule forbids.
 
     `root` is None only for a caller passing rows with no tree behind them; the
@@ -2136,7 +2136,7 @@ def schema_findings(label, rows):
             out.append(f"TC {rid} has empty required field Verifies")
         # A TC claiming Automated=Yes must
         # cite its Evidence (pytest node / path / procedure link) — a
-        # claimed-automated test with no cited location is a soft false-green.
+        # claimed-automated test with no cited location is a soft false-pass.
         # Conditional on the claim, so it can't live in REQUIRED_FIELDS; a
         # legacy CSV without the column reads as empty and is flagged the same
         # way (the ADOPTING §6 migration adds the column).
@@ -2166,7 +2166,7 @@ def schema_advisories(label, rows):
     NO cell-level guarantee on CSV (no schema tier existed at all — the OI-14
     finding), and the structural floor's TOML equivalent is the carrier parse
     error plus the dual-carrier refusal, both already hard. Hardening
-    cell-emptiness here would red every migrating adopter for a guarantee the
+    cell-emptiness here would fail every migrating adopter for a guarantee the
     registry never had; the ruled warn-first-then-promote path stands."""
     key = id_key(label)
     out = []
@@ -2208,7 +2208,7 @@ def frame_findings(exts, bifs, rels):
     vocabulary by design, so there is nothing here that could grow one.
 
     NO ENTITIES IS ONLY VACUOUS WHEN NOTHING REFERENCES THEM, and getting that
-    wrong was a false green — the one failure this file exists to prevent. The
+    wrong was a false pass — the one failure this file exists to prevent. The
     first version returned `[]` on an empty entity set, reasoning that the rules
     below had nothing to resolve against. They did: 6 crossings referencing 5
     entities that do not exist resolved to silence, and `_frame_report_section`
@@ -2256,10 +2256,10 @@ def sr_boundary_findings(srs, bifs, ifs):
         rules. It is also the only half that can be true today.
 
       * COVERAGE IS ADVISORY, and deliberately so. Making "every SR names a
-        crossing" an error would red 148 rows the moment the column existed, for
+        crossing" an error would fail 148 rows the moment the column existed, for
         work that belongs to the re-tier campaign (WI-451 slice 2) and under a
         form rule that is itself a GUIDELINE with recorded per-row waivers
-        (2026-08-13v). A gate that is 100% red on the day it ships is a gate
+        (2026-08-13v). A gate that fails everything on the day it ships is a gate
         someone turns off. So the uncovered count is reported as ONE summary
         line — the number the campaign has to move — and never as 148 findings.
 
@@ -2425,7 +2425,7 @@ def hat_findings(
 
       * COVERAGE IS AN ADVISORY, and never anything else. `Hat-Refs` is absent on
         almost every row the day it ships, because the backfill is its own work
-        item; making presence an error would red the whole spine on day one,
+        item; making presence an error would fail the whole spine on day one,
         which is how a gate becomes a gate somebody turns off. So the uncovered
         count is ONE summary line — the number the backfill has to move.
 
@@ -3032,7 +3032,7 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
     cannot, because the two rules range over disjoint object classes. Containment
     tests that every arch-map MODULE is in some CMP; the untagged endpoints are
     data files, directories and external actors, which are never arch-map
-    modules. So a green from either rule said nothing at all about these rows.
+    modules. So a pass from either rule said nothing at all about these rows.
 
     THE RULE, since the 2026-08-15 rework (plan step 2): an endpoint — in
     `Owner`, `Requestors` **or** `Consumers` (`ThisProject`/`Counterpart` until WI-455,
@@ -3044,7 +3044,7 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
 
     Warn-first, like every rule in this pipe: it never joins a failure set at any
     gate. Promotion is a later, separate decision, and the reason to hold is that
-    the marker is a NEW convention — an adopter mid-migration would be red for a
+    the marker is a NEW convention — an adopter mid-migration would fail for a
     vocabulary their registry predates."""
     norm_modules = {_norm_module(m) for m in module_ids}
     norm_modules.discard("")
@@ -3292,7 +3292,7 @@ def phase_accepted_findings(real):
     grandfathering, so historical labels still parse in the filters and the
     derived max while this rule migrates the live cells. The rule is **vacuous
     until >=1 artifact is phased** — the arming idiom the component checks use —
-    so a fully-blank downstream registry stays green (a `Drafted` row may always
+    so a fully-blank downstream registry keeps passing (a `Drafted` row may always
     leave `Phase` blank). SN is covered transitively: at DevStg-Reqs+ every accepted SN
     has >=1 SR (the orphan rule) and SRs are phased; pre-DevStg-Reqs it is vacuously
     exempt. Part of --strict-schema; extends the schema tier rather than forking
@@ -3709,7 +3709,7 @@ def truncate_cell(text, limit=CELL_TRUNCATE_LIMIT):
     """`text` clipped to `limit` characters with an EXPLICIT marker naming how
     much was dropped — never a silent cut. The brief this feeds is an operator
     acceptance surface: a cell trimmed without saying so reads identically to a
-    cell that was always short, which is exactly the false-green shape the
+    cell that was always short, which is exactly the false-pass shape the
     rest of this kit refuses. Below the limit, `text` is returned unchanged —
     the common case pays nothing, not even a length check past the compare."""
     text = text or ""
@@ -4194,7 +4194,7 @@ def acceptance_check(root, srs, llrs, tcs, out_path):
     regenerate-and-compare, like every other freshness gate in the kit.
 
     Fails CLOSED on a difference — a stale brief is read by an operator about to
-    accept, and the cost of a false green here is an operator blessing rows they
+    accept, and the cost of a false pass here is an operator blessing rows they
     were never shown.
 
     Two silences, both the arming idiom the component checks use rather than
@@ -5419,7 +5419,7 @@ def load_registries(docs):
         # (the enum floor in analyze()). NOT `spine_carrier.folded_needs`: that
         # fold projects onto `SN_CORE`, which has no `status` key at all, so a
         # Status check reading it would see a blank cell on every row and pass
-        # vacuously — the silent-green shape this whole tier keeps re-learning.
+        # vacuously — the silent-pass shape this whole tier keeps re-learning.
         # Loaded ONCE and kept whole: `sn_rows` is the two-key projection the
         # enum floor reads, while `sn_needs` keeps every cell for the text rules
         # (`sn_artifact_advisories` reads `acceptance` and `why`). Same trap, one
@@ -6971,7 +6971,7 @@ def main():
     # THE ARMING ORDER WAS THE POINT: these ran warn-first from step 4, because
     # against a pre-seed snapshot (there was none) or a pre-rename one (it spoke
     # the retired vocabulary) they would have redded every row, and a check that
-    # reds everything gets switched off. The signing seeded the snapshot in the
+    # fails everything gets switched off. The signing seeded the snapshot in the
     # post-rename vocabulary (step 6); only then was the promotion a one-line
     # change to rules already proven quiet.
     #
