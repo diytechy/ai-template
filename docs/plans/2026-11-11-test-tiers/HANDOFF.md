@@ -2155,7 +2155,18 @@ named is a re-stamp of step 6 or the stage fingerprint, regenerated):
 | 6 | the two ratchets and `test_check_complexity` | 52 passed in 2.35s |
 | final tree `88dcdb933` | the 39 modules above together | 1684 passed, 2 skipped in 503.71s |
 
-The unfiltered suite was not run (the parent session runs it).
+**The unfiltered suite** (run by the parent session on `7d08ba957`, 8
+workers, `-p no:cacheprovider`, `PYTEST_DEBUG_TEMPROOT` unset): 1 failed,
+8,117 passed, 29 skipped, 18 warnings (advisory tier notes) in 1813.36s
+(30 min 13 s). The failure was
+`test_import_layers::test_the_graph_sees_imports_inside_function_bodies`:
+deferred function-body imports read 44 against the stamped window 14..43.
+The one new edge is `migrate_vocabulary -> kitlib.config`, inside
+`_stack_parse` (decision (a)'s re-parse, deferred so every other step
+imports nothing from the kit); none of the 39 modules above was this one.
+Re-stamped 43 -> 44 with the reason in the test (`bba5fab53`); the module
+then passed, 7 of 7. The whole suite was not re-run for that test-only
+change.
 
 **Standing checks** on `88dcdb933`: `check_complexity.py --mode enforce` OK
 (181 rows); `trace.py --strict` exit 0 (`integrity=0`);
@@ -2514,7 +2525,7 @@ rewrite it here.
 
 **Items 1 to 3 are done (ninth session, 2026-11-16): §9.11.** **Item 1 is done (tenth session, 2026-11-16): §9.12** records its two leftovers, §4.5.6's prose and "bar" in this repository's own docs. **Items 4 to 7 are done (eleventh session, 2026-11-16): §9.13**, with the ruled fixes of §12.2 and WI-1007. Item 8 (D11) is planned in `D11-PLAN.md`, its decisions ruled (§12.2); `ROW-AMENDMENTS.md` follows the last migrator run, which D11 includes.
 
-**Item 8 (D11) is built (twelfth session, 2026-11-17): §9.14.** Its accepted-row amendments are drafted in `ROW-AMENDMENTS.md` §7 to §15 and not applied: applying them is the operator's act, after the last migrator run.
+**Item 8 (D11) is built (twelfth session, 2026-11-17): §9.14.** Its accepted-row amendments are drafted in `ROW-AMENDMENTS.md` §7 to §15 and not applied: applying them is the operator's act, after the last migrator run. The unfiltered suite on `7d08ba957` failed one test, the deferred-import window, re-stamped in `bba5fab53` (§9.14); every other test passed.
 
 1. The rest of §4.5, as the operator rules each line.
 2. The glossary's older entries, by hand: "the owner" in *independence* and
@@ -3025,3 +3036,18 @@ list is fixed unless §12.6 says so.
     (§9.14 (j)).
   - **Still owed by §10.7:** the unfiltered suite once on this tree, then
     item 9 (§6).
+- **2026-11-17, the unfiltered suite on the D11 tip.** On `7d08ba957`:
+  1 failed, 8,117 passed, 29 skipped, in 30 min 13 s. The failure was the
+  deferred-import window in `test_import_layers` (44 against 43), from the
+  migrator's deferred `kitlib.config` import; re-stamped with its reason
+  (`bba5fab53`), and the module passes. The parent session also checked the
+  sub-agent's claims: the four lints, `check_vocab --strict`, the
+  complexity ratchet and `migrate_vocabulary --check` are clean on the tip;
+  the record step's absorbed cells on accepted rows are traced cells only
+  (IF-195's text cells were Drafted before D11); and the `gates =` rewrite,
+  run in memory over gilbert, Finance-Auditor and NotHomeWrecker (main
+  checkouts and spine worktrees), proves all six files with no refusal and
+  matches the deleted reader (`G3`, `G2 G3` -> `DevStg-Impl`; `G1 G2 G3`
+  -> `DevStg-Needs`).
+  - **Still owed by §10.7:** `ROW-AMENDMENTS.md` §1 to §15 with SR-247,
+    LLR-369 and TC-427, applied for the operator's act; then item 9 (§6).
