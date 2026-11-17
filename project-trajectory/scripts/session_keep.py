@@ -194,7 +194,7 @@ class KeepConfig:
     """
 
     context_reset_pct: int = 0
-    retain_for: tuple = ("disposition", "amendment", "red-tc")
+    retain_for: tuple = ("disposition", "amendment", "evidence-gap")
     keepwarm_minutes: int = 0
     reset_on_same_artifact: bool = False
     review_reset_pct: int = 0

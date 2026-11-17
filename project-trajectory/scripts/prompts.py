@@ -124,7 +124,7 @@ ADJUDICATE_DISPOSITION = "ADJUDICATE-DISPOSITION"
 # questions survive here; the fourth exit (CONSOLIDATE) and the census that
 # mints the row are what make them reachable.
 ADJUDICATE_CONSOLIDATE = "ADJUDICATE-CONSOLIDATE"
-ADJUDICATE_RED_TC = "ADJUDICATE-RED-TC"
+ADJUDICATE_EVIDENCE_GAP = "ADJUDICATE-EVIDENCE-GAP"
 # The CHECKPOINT RE-JUDGE brief (SR-215): an observation test case a merge or
 # release preparation found due, judged afresh and recorded.
 ADJUDICATE_REJUDGE = "ADJUDICATE-REJUDGE"
@@ -152,7 +152,7 @@ KIT_PROMPTS = {
     ADJUDICATE_FIRST_ACCEPTANCE: "adjudicate-first-acceptance.template.md",
     ADJUDICATE_DISPOSITION: "adjudicate-disposition.template.md",
     ADJUDICATE_CONSOLIDATE: "adjudicate-consolidate.template.md",
-    ADJUDICATE_RED_TC: "adjudicate-red-tc.template.md",
+    ADJUDICATE_EVIDENCE_GAP: "adjudicate-evidence-gap.template.md",
     ADJUDICATE_REJUDGE: "adjudicate-rejudge.template.md",
     ADJUDICATE_DONE_WHEN: "adjudicate-done-when.template.md",
     ADJUDICATE_COMBINED: "adjudicate-combined.template.md",

@@ -38,7 +38,7 @@ import spine_carrier
 from kitlib import sitting as ksitting
 
 # The TC registry, one of the tiers `_REGISTRY_OF` joins; the composer's
-# red-TC brief reads it from here too.
+# evidence-gap brief reads it from here too.
 TC_REGISTRY = "docs/test/test-cases.toml"
 
 

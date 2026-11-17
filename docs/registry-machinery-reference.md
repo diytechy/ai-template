@@ -374,7 +374,7 @@ hidden.
 | `Evidence` | ✘* | pytest node / path / procedure link | *Required only when `Automated=Yes`. |
 | `Status` | ✔ | closed, as SR | `Drafted` → DevStg-Below. Otherwise does not gate (same as LLR). |
 | `Phase` | ✘ | digit-parseable | = the max Phase of what it verifies. Same arming rule. |
-| `Assumption-Refs` | ✘ | `DA-###` ids | The assumptions the case can falsify (SR-197). Unknown id → orphan naming the case. An assumption-only case joins the phase of every SR citing its assumptions, sits under `(assumption evidence)` in the outline, and is counted apart in the report and the red-TC census (`trace.assumption_evidence_rows`); the orphan rules, the matrix and the triangle rule read `Verifies` alone. Traced. |
+| `Assumption-Refs` | ✘ | `DA-###` ids | The assumptions the case can falsify (SR-197). Unknown id → orphan naming the case. An assumption-only case joins the phase of every SR citing its assumptions, sits under `(assumption evidence)` in the outline, and is counted apart in the report and the evidence-gap census (`trace.assumption_evidence_rows`); the orphan rules, the matrix and the triangle rule read `Verifies` alone. Traced. |
 | `Inputs` | ✘ | `;`-joined paths / row ids | Observation cases: what the judgment reads (SR-198). Omitted → advisory. On an automated case → advisory. |
 | `MaxAge` | ✘ | whole days, ≥ 7 | Observation cases: how long the result holds. Omitted → advisory; under 7 or not whole → integrity finding. On an automated case → advisory. |
 | `Sampling` | ✘ | **closed**: `sampled`, `monitored` | Observation cases citing assumptions. Omitted → advisory; other value → integrity finding. On an automated case → advisory. |

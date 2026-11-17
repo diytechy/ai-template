@@ -170,7 +170,7 @@ complete_sample_rate = 4
 #   "when-minting" — a round is scheduled, and demanded, when the verdict drafts
 #                    ANY successor at `spine` or `high-risk`, or when the brief
 #                    is `consolidate`. An amendment that only recommends a flip,
-#                    a red-tc drafting ordinary fix rows, a clean-close spot
+#                    an evidence-gap drafting ordinary fix rows, a clean-close spot
 #                    check: no round.
 #   "always"       — every adjudication gets one
 adjudication_review = "when-minting"
@@ -305,7 +305,7 @@ context_reset_pct = 55           # 0 = off
 # since WI-841 the Done-when brief and the combined lane-checkpoint sitting; and
 # since WI-865 the dispute sitting that rules a contested review finding.
 retain_for = [
-    "disposition", "amendment", "red-tc", "first-acceptance", "done-when", "combined",
+    "disposition", "amendment", "evidence-gap", "first-acceptance", "done-when", "combined",
     "dispute",
 ]
 keepwarm_minutes = 0             # e.g. 50

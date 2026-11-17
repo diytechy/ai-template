@@ -1205,12 +1205,12 @@ def _docs(tmp_path, mode):
         ("never", "consolidate", ["spine"], False),
         # when-minting: the verdict creates exclusive work, or moves scope.
         ("when-minting", "amendment", ["spine"], True),
-        ("when-minting", "red-tc", ["high-risk"], True),
+        ("when-minting", "evidence-gap", ["high-risk"], True),
         ("when-minting", "consolidate", [], True),
         # ...and the cases the policy exists to SKIP: a flip recommendation, a
-        # red-tc drafting ordinary fix rows, a clean-close spot check.
+        # evidence-gap drafting ordinary fix rows, a clean-close spot check.
         ("when-minting", "amendment", [], False),
-        ("when-minting", "red-tc", ["ordinary", "ordinary"], False),
+        ("when-minting", "evidence-gap", ["ordinary", "ordinary"], False),
         ("when-minting", "", [], False),
         # always: the intended-but-broken behaviour, made real.
         ("always", "", [], True),

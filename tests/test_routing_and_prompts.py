@@ -76,7 +76,7 @@ def test_an_adjudicator_never_shares_the_judged_party_s_family():
 
 def test_the_row_s_measured_tier_pins_the_adjudication_draw():
     # `intake.tier_signal` estimates the tier from MEASURED breadth (rows
-    # touched, gate moved, how many requirements a red TC's contradiction
+    # touched, gate moved, how many requirements an evidence gap's contradiction
     # spans). A measured estimate beats a phase default, so the pin applies —
     # but the pin is the ONLY thing that lowers it.
     st = _state(last_impl_family="ANTHROPIC")

@@ -90,10 +90,10 @@ WI_COLUMNS = (
     # moment it matters.
     "Supersedes",
     # SN-032 BRIEF ROUTING. Which adjudicator brief this row's session is sent
-    # (`amendment` | `disposition` | `conflict` | `red-tc`), empty on every row
+    # (`amendment` | `disposition` | `conflict` | `evidence-gap`), empty on every row
     # that is not an adjudication. DECLARED rather than inferred from `SpecRef`
     # because the inference is provably ambiguous: an amendment to a test-case
-    # row and a red-TC census row both carry `docs/test/test-cases.toml`, and
+    # row and an evidence-gap census row both carry `docs/test/test-cases.toml`, and
     # those two briefs give contradictory instructions. A real column for the
     # `Supersedes` reason above — `intake` writes it through
     # `wi_convert.write_spec_file`, which serializes from this table.

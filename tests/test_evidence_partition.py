@@ -113,9 +113,9 @@ def test_the_forest_lists_an_assumption_only_case_under_its_own_group():
 
 def test_the_census_counts_assumption_evidence_apart(census, tmp_path):
     reg = SimpleNamespace(srs=SRS, llrs=LLRS, tcs=_spine(status="Failed"))
-    requirement = census.red_tc_census(tmp_path, reg)
-    assumption = census.red_tc_census(tmp_path, reg, assumptions=True)
-    parsed = [census.parse_red_tc(line) for line in requirement]
+    requirement = census.evidence_gap_census(tmp_path, reg)
+    assumption = census.evidence_gap_census(tmp_path, reg, assumptions=True)
+    parsed = [census.parse_evidence_gap(line) for line in requirement]
     assert parsed == [
         ("TC-001", ["SR-001", "LLR-001"]),
         ("TC-003", ["SR-001", "LLR-001"]),
@@ -124,7 +124,7 @@ def test_the_census_counts_assumption_evidence_apart(census, tmp_path):
     assert all("DA-001" in line for line in assumption)
     # A distinct line class: the requirement census's one reader never takes an
     # assumption line for one of its own.
-    assert all(census.parse_red_tc(line) is None for line in assumption)
+    assert all(census.parse_evidence_gap(line) is None for line in assumption)
 
 
 def test_the_census_names_no_assumption_case_whose_argument_is_not_claimed(
@@ -132,7 +132,7 @@ def test_the_census_names_no_assumption_case_whose_argument_is_not_claimed(
 ):
     unclaimed = [dict(SRS[0], **{"SR-ID": "SR-002"})]
     reg = SimpleNamespace(srs=unclaimed, llrs=[], tcs=_spine(status="Failed"))
-    assert census.red_tc_census(tmp_path, reg, assumptions=True) == []
+    assert census.evidence_gap_census(tmp_path, reg, assumptions=True) == []
 
 
 def test_the_report_counts_assumption_evidence_beside_requirement_evidence():

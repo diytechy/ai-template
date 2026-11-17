@@ -146,10 +146,10 @@ COLUMNS = [
     # moment it matters.
     "Supersedes",
     # SN-032 BRIEF ROUTING. Which adjudicator brief this row's session is sent
-    # (`amendment` | `disposition` | `conflict` | `red-tc`), empty on every row
+    # (`amendment` | `disposition` | `conflict` | `evidence-gap`), empty on every row
     # that is not an adjudication. DECLARED rather than inferred from `SpecRef`
     # because the inference is provably ambiguous: an amendment to a test-case
-    # row and a red-TC census row both carry `docs/test/test-cases.toml`, and
+    # row and an evidence-gap census row both carry `docs/test/test-cases.toml`, and
     # those two briefs give contradictory instructions. A real column for the
     # same reason `Supersedes` is one — `intake` writes it through
     # `write_spec_file`, which serializes from this table.
@@ -161,7 +161,7 @@ COLUMNS = [
     #
     # A REAL COLUMN because the alternative is unsound in a way this ruling makes
     # expensive. `adjudicate_brief` re-derives its population LIVE at composition
-    # time (`red_tc_values`' rule: brief the world the judge is actually in), and
+    # time (`evidence_gap_values`' rule: brief the world the judge is actually in), and
     # a live re-derivation with no scope to intersect against re-derives a WIDER
     # question than the mint asked — the first-acceptance brief handed its session
     # every `Drafted` row in the repo, across unrelated workstreams, and derived

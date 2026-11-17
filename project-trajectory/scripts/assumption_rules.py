@@ -5,7 +5,7 @@ JOIN ACROSS ROWS, it reads no file, and `trace.analyze` composes it and stays
 the only caller of its rules. `trace.py` is held to an exact size ratchet, so
 the tier's rules land here and `trace.py` grows by the composition lines alone
 (spine map D21). Two other readers take one derivation from here and no rule:
-the stage derivation and the red-TC census read `da_citing_srs`, because an
+the stage derivation and the evidence-gap census read `da_citing_srs`, because an
 assumption's citing requirements are what place and count its evidence. And
 the observation writer reads one rule, `record_policy_problem`, so the record
 it refuses is exactly the record the checker would fail.
@@ -126,7 +126,7 @@ Contract IF-200: the observation test declaration's rules `trace.py` imports.
     normalized, or None for an escaping one.
 Contract IF-201: the one derivation of an assumption's citing requirements,
     `da_citing_srs(srs) -> {assumption id: [requirement ids]}` in row order,
-    read by the stage derivation and the red-TC census. Pure over requirement
+    read by the stage derivation and the evidence-gap census. Pure over requirement
     rows in the carrier's column names; a `-000` row contributes nothing, and a
     requirement citing no assumption appears nowhere in the map.
 

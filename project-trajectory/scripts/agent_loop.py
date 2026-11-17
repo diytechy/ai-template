@@ -566,7 +566,7 @@ class RoutingState:
             #     the party it judges corroborates rather than checks;
             #   * its tier is PINNED by the row, because `intake.tier_signal`
             #     estimated it from measured breadth (rows touched, gate moved,
-            #     targets in a red-TC contradiction) and a measured estimate
+            #     targets in an evidence-gap contradiction) and a measured estimate
             #     beats a phase default.
             # The escalation overrides are deliberately NOT read here: they
             # describe the implementer's trouble, and an adjudication row is

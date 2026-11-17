@@ -98,8 +98,8 @@ MAPPING = [
         "SR-146",
     ),
     (
-        "prompts/adjudicate-red-tc.template.md",
-        "prompts/adjudicate-red-tc.template.md",
+        "prompts/adjudicate-evidence-gap.template.md",
+        "prompts/adjudicate-evidence-gap.template.md",
         "SR-146",
     ),
     (

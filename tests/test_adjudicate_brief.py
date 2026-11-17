@@ -14,7 +14,7 @@ importantly — the two properties that make the seam safe to have at all:
     the refusal names the missing derivation.
   - **the discriminator is DECLARED.** `Brief` is a typed cell, not a shape
     inferred from `SpecRef` — because that inference is provably ambiguous
-    (an amended test-case row and a red-TC census row both cite the TC
+    (an amended test-case row and an evidence-gap census row both cite the TC
     registry) and inferring from the Title is the `NEEDS-OPERATOR` fold.
 
 Every shipped brief is routed, and that is pinned both ways: the routed set
@@ -272,21 +272,21 @@ def test_a_range_git_cannot_resolve_refuses_naming_gits_failure(tmp_path):
     assert "fatal:" in why
 
 
-# --- the red-TC brief (SN-030 rung 6) -----------------------------------------
+# --- the evidence-gap brief (SN-030 rung 6) -----------------------------------------
 
 
-# THE RED-TC FIXTURE'S DEFAULT MOVED OUT OF VOCABULARY AT D-9 STEP 5, and the
-# move is a finding rather than a tidy-up. `red_tc_census` names a red TC by
-# EXEMPTION — anything outside `dispatch._TC_NOT_RED` is red — and this fixture
+# THE EVIDENCE-GAP FIXTURE'S DEFAULT MOVED OUT OF VOCABULARY AT D-9 STEP 5, and the
+# move is a finding rather than a tidy-up. `evidence_gap_census` names an evidence gap by
+# EXEMPTION — anything outside `dispatch._GAP_EXEMPT_STATUSES` is a gap — and this fixture
 # used `Planned`, the one LIVE value that sat outside it. OI-30 D1 folded
 # `Planned` into `Accepted`, and the narrowed enum is now EXACTLY the exempt set,
-# so no conformant repo can carry a red TC any more. `Implemented` is the honest
+# so no conformant repo can carry an evidence gap any more. `Implemented` is the honest
 # remaining population: the value a downstream repo mid-migration still carries,
 # which the integrity floor names and this rung still judges. That the rung is
 # otherwise vacuous on a migrated tree is recorded for the sitting (log
 # 2026-08-15m) — it is the step-2 note's own "deleted feature" hazard arriving
 # through the rename rather than through the exempt set.
-def _red_tc_repo(tmp_path, tc_status="Implemented"):
+def _evidence_gap_repo(tmp_path, tc_status="Implemented"):
     repo = _repo(tmp_path)
     req = repo / "docs" / "requirements"
     req.mkdir(parents=True)
@@ -309,9 +309,9 @@ def _red_tc_repo(tmp_path, tc_status="Implemented"):
             },
             {
                 "WI-ID": "WI-301",
-                "Title": "adjudicate red TC TC-001",
+                "Title": "adjudicate evidence gap TC-001",
                 "SafetyClass": "adjudication",
-                "Brief": "red-tc",
+                "Brief": "evidence-gap",
                 "SpecRef": "docs/test/test-cases.toml",
             },
         ],
@@ -321,23 +321,23 @@ def _red_tc_repo(tmp_path, tc_status="Implemented"):
     return repo
 
 
-RED_TC_ROW = {
+EVIDENCE_GAP_ROW = {
     "WI-ID": "WI-301",
     "SafetyClass": "adjudication",
-    "Brief": "red-tc",
+    "Brief": "evidence-gap",
     "SpecRef": "docs/test/test-cases.toml",
 }
 
 
-def test_the_red_tc_brief_carries_the_live_census_and_the_obligation_it_covers(
+def test_the_evidence_gap_brief_carries_the_live_census_and_the_obligation_it_covers(
     tmp_path,
 ):
     """`{tcs}` is assembled from the TC REGISTRY — the census line alone carries
     no Method/Expected/Evidence — and `{spine}` from the SR/LLR rows its
     parsed targets name. The census is RE-RUN here, not remembered, so the
     judge rules on the state of the world it is actually in."""
-    repo = _red_tc_repo(tmp_path)
-    text, why = ab.compose(repo, RED_TC_ROW, repo / "docs/reviews/v.md")
+    repo = _evidence_gap_repo(tmp_path)
+    text, why = ab.compose(repo, EVIDENCE_GAP_ROW, repo / "docs/reviews/v.md")
     assert why is None, why
     assert "the registry stores no test RESULT" in text
     # The TC row's own cells, joined from the registry.
@@ -360,14 +360,14 @@ def test_a_census_that_has_come_clean_refuses_rather_than_briefing_an_empty_one(
     is what makes that observable: an empty `{tcs}` would read as "we looked
     and there is nothing", which is exactly the hollow section the fill rule
     exists to prevent."""
-    repo = _red_tc_repo(tmp_path, tc_status=green)
-    text, why = ab.compose(repo, RED_TC_ROW, repo / "docs/reviews/v.md")
+    repo = _evidence_gap_repo(tmp_path, tc_status=green)
+    text, why = ab.compose(repo, EVIDENCE_GAP_ROW, repo / "docs/reviews/v.md")
     assert text is None
     assert "census is now empty" in why
 
 
 # `Verifies` is required too, but it cannot be driven through the census: a row
-# with no targets is not red by definition (`red_tc_census` skips it), so the
+# with no targets is not red by definition (`evidence_gap_census` skips it), so the
 # empty-census refusal fires first. It stays in `TC_CELLS` as a guard for any
 # future caller that does not come through the census.
 @pytest.mark.parametrize("cell", [c for c in ab.TC_CELLS if c != "Verifies"])
@@ -379,7 +379,7 @@ def test_a_tc_row_missing_any_listed_cell_refuses_rather_than_rendering_a_dash(
     said" — and this brief's whole method is *run the cited evidence and say
     what you observed*, which a row missing its Evidence/Method/Expected cannot
     support. So every listed cell is required, and the refusal names it."""
-    repo = _red_tc_repo(tmp_path)
+    repo = _evidence_gap_repo(tmp_path)
     tcs = repo / "docs" / "test" / "test-cases.csv"
     header, row = tcs.read_text(encoding="utf-8").splitlines()[:2]
     cells = next(csv.reader([row]))
@@ -387,7 +387,7 @@ def test_a_tc_row_missing_any_listed_cell_refuses_rather_than_rendering_a_dash(
     out = io.StringIO()
     csv.writer(out, lineterminator="\n").writerows([next(csv.reader([header])), cells])
     tcs.write_text(out.getvalue(), encoding="utf-8")
-    text, why = ab.compose(repo, RED_TC_ROW, repo / "v.md")
+    text, why = ab.compose(repo, EVIDENCE_GAP_ROW, repo / "v.md")
     assert text is None
     assert cell in why and "placeholder" in why
 
@@ -397,13 +397,13 @@ def test_a_target_with_no_normative_text_refuses(tmp_path):
     RETURNED by `_spine_excerpt`, never silently dropped. A dropped target
     leaves a `{spine}` section that still looks complete, which is the
     half-filled brief in its quietest form."""
-    repo = _red_tc_repo(tmp_path)
+    repo = _evidence_gap_repo(tmp_path)
     llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
     llrs.write_text(
         llrs.read_text(encoding="utf-8").replace("add() returns a + b.", ""),
         encoding="utf-8",
     )
-    text, why = ab.compose(repo, RED_TC_ROW, repo / "v.md")
+    text, why = ab.compose(repo, EVIDENCE_GAP_ROW, repo / "v.md")
     assert text is None
     assert "LLR-001" in why and "placeholder" in why
 
@@ -414,13 +414,13 @@ def test_a_target_with_no_normative_text_refuses(tmp_path):
 def test_the_discriminator_is_the_declared_cell_not_the_specref(tmp_path):
     """THE MEASURED REASON the schema cost was paid. `intake._amendment_drafts`
     sets `specref` to the amended registry, so an amendment to a TEST-CASE row
-    carries exactly the `SpecRef` a red-TC census row carries. Under a
-    SpecRef-derived discriminator the amendment row would receive the red-TC
+    carries exactly the `SpecRef` an evidence-gap census row carries. Under a
+    SpecRef-derived discriminator the amendment row would receive the evidence-gap
     brief — two briefs whose instructions contradict each other. The declared
     cell tells them apart on identical SpecRefs."""
-    repo = _red_tc_repo(tmp_path)
-    same_specref = dict(RED_TC_ROW, Brief="amendment")
-    routed, _why = ab.compose(repo, RED_TC_ROW, repo / "v.md")
+    repo = _evidence_gap_repo(tmp_path)
+    same_specref = dict(EVIDENCE_GAP_ROW, Brief="amendment")
+    routed, _why = ab.compose(repo, EVIDENCE_GAP_ROW, repo / "v.md")
     other, why = ab.compose(repo, same_specref, repo / "v.md")
     assert "the registry stores no test RESULT" in routed
     assert other is None and "amendment" in why
@@ -624,8 +624,8 @@ def test_a_disposition_rows_session_receives_the_disposition_brief(tmp_path):
     assert "OUTCOME: PARTIAL successors=1" in verdicts[0].read_text(encoding="utf-8")
 
 
-def test_a_red_tc_rows_session_receives_the_red_tc_brief(tmp_path):
-    repo = _red_tc_repo(tmp_path)
+def test_an_evidence_gap_rows_session_receives_the_evidence_gap_brief(tmp_path):
+    repo = _evidence_gap_repo(tmp_path)
     proc, prompts = _session(
         tmp_path, repo, "WI-301", "OUTCOME: DRAFTED cases=1 drafts=1"
     )
@@ -691,8 +691,8 @@ def test_the_live_amendment_mint_is_now_BRIEFED_not_held(tmp_path):
 
 def _spine_repo(tmp_path):
     """A repo carrying the demo spine and nothing else — the base both the
-    red-TC and the amendment fixtures build on. Written separately from
-    `_red_tc_repo` because that one also mints its OWN `WI-301`, and a second
+    evidence-gap and the amendment fixtures build on. Written separately from
+    `_evidence_gap_repo` because that one also mints its OWN `WI-301`, and a second
     row with the same id would leave the loader picking between two briefs."""
     repo = _repo(tmp_path)
     req = repo / "docs" / "requirements"
@@ -1602,7 +1602,7 @@ def test_no_judging_brief_orders_an_act(tmp_path, case):
 
 
 def test_the_first_acceptance_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
-    # Rule 2, and `red_tc_values`' live-recompute rule applied to this arm: the
+    # Rule 2, and `evidence_gap_values`' live-recompute rule applied to this arm: the
     # row is minted at a merge and claimed later, so by composition time another
     # act may have accepted or withdrawn every row it was minted for. A brief
     # built from the mint's remembered listing would ask the judge to rule on a
@@ -1794,7 +1794,7 @@ def test_an_adjudication_row_declaring_no_brief_still_builds(tmp_path):
     "brief,line",
     [
         ("disposition", "OUTCOME: PARTIAL successors=1"),
-        ("red-tc", "OUTCOME: DRAFTED cases=2 drafts=1"),
+        ("evidence-gap", "OUTCOME: DRAFTED cases=2 drafts=1"),
         ("amendment", "VERDICT: MEANING rows=3"),
         ("consolidate", "OUTCOME: QUEUE-WITH-EDGE needs=WI-009 absorbs=-"),
         ("consolidate", "OUTCOME: CONSOLIDATE needs=- absorbs=WI-1;WI-2"),
@@ -2015,7 +2015,7 @@ def test_a_cluster_row_that_left_the_queue_refuses_by_name(tmp_path):
 
 
 def test_a_cluster_whose_overlap_dissolved_refuses_rather_than_briefing(tmp_path):
-    """`red_tc_values`' rule, one brief over: the census is RE-RUN at
+    """`evidence_gap_values`' rule, one brief over: the census is RE-RUN at
     composition time, so a judge rules on the state of the world it is actually
     in. A cluster whose overlap is gone would otherwise brief a session about a
     contradiction that no longer exists."""
@@ -2559,7 +2559,7 @@ _NO_HATS_BRIEFS = sorted(
 @pytest.mark.parametrize("key", _NO_HATS_BRIEFS)
 def test_no_other_brief_declares_the_hats_slot(key):
     """Only the two spine sitting templates carry the perspectives slot; the
-    done-when, red-TC, rejudge, disposition, consolidate, dispute, act and
+    done-when, evidence-gap, rejudge, disposition, consolidate, dispute, act and
     combined templates do not. Adequacy witness: a `{hats}` slot added to the
     done-when template (or a combined template that declared it beside its
     sections' own) fails here.

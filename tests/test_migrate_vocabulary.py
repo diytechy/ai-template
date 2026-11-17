@@ -330,6 +330,21 @@ def test_the_adjudicators_retained_brief_kinds_are_respelled_in_place(tmp_path):
     assert path.read_bytes() == one_line.replace("approval", "acceptance").encode()
 
 
+def test_the_retained_evidence_gap_kind_is_respelled_beside_the_others(tmp_path):
+    """Implements: TC-427"""
+    text = (
+        "[adjudicator]\n"
+        'retain_for = ["disposition", "red-tc", "first-approval"]  # red-tc\n'
+    )
+    path = _write(tmp_path, "docs/process.toml", text)
+    assert _run(tmp_path) == 0
+    assert path.read_text(encoding="utf-8") == (
+        "[adjudicator]\n"
+        'retain_for = ["disposition", "evidence-gap", "first-acceptance"]'
+        "  # red-tc\n"
+    )
+
+
 @pytest.mark.parametrize(
     "text",
     (

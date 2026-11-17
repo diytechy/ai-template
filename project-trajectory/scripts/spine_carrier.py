@@ -149,7 +149,7 @@ Contract IF-112: check_docs holds the root README to the need tier through
     detector. Existence checking of cited ids stays check_docs' own whole-file
     scrape; only the floor and the open-items read cross this seam.
 
-Contract IF-114: adjudicate_brief lists a red-TC brief's cases from
+Contract IF-114: adjudicate_brief lists an evidence-gap brief's cases from
     load(root / rel, id_col): the TC rows (Verifies, Status, Method, Expected,
     Evidence) and the SR Requirement / LLR Detail text naming the obligation
     each case covers. Every cell it lists is REQUIRED — a row missing one

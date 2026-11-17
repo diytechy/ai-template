@@ -29,8 +29,9 @@ words they were written in.
                                    `operator_accepts_through`; in `[policies]`,
                                    `push = "human"`  ->  `push = "operator"`;
                                    in `[adjudicator] retain_for`, the brief
-                                   kind `"first-approval"`  ->
-                                   `"first-acceptance"`
+                                   kinds `"first-approval"`  ->
+                                   `"first-acceptance"` and `"red-tc"`  ->
+                                   `"evidence-gap"`
     docs/decisions/*.toml         in each `[decision.<id>]` entry, the key
                                    `owner`  ->  `operator`
     docs/work/**/*.md,             in each work item's front matter and in each
@@ -417,13 +418,21 @@ def registries(root, check):
 # spelled `human`; the role is now the operator, a person or a session that
 # person delegated the push to. ITEMS: within a table and a key holding a list
 # of strings, an earlier element and the current one. The adjudicator's
-# retained sittings are named by brief kind, and the sitting that takes a row
-# into acceptance was the kind `first-approval`.
+# retained sittings are named by brief kind: the sitting that takes a row
+# into acceptance was the kind `first-approval`, and the one that judges an
+# evidence gap (a test case left unaccepted under closed work) `red-tc`.
 POLICY_REL = "docs/process.toml"
 POLICY_TABLES = {"attestation": "authority"}
 POLICY_KEYS = {"authority": {"human_approval_through": "operator_accepts_through"}}
 POLICY_VALUES = {"policies": {"push": {"human": "operator"}}}
-POLICY_ITEMS = {"adjudicator": {"retain_for": {"first-approval": "first-acceptance"}}}
+POLICY_ITEMS = {
+    "adjudicator": {
+        "retain_for": {
+            "first-approval": "first-acceptance",
+            "red-tc": "evidence-gap",
+        }
+    }
+}
 
 _TABLE_HEADER = re.compile(
     r"^(?P<lead>[ \t]*\[)(?P<name>[A-Za-z0-9_-]+)(?P<tail>\][ \t]*(?:#[^\r\n]*)?\r?)$"

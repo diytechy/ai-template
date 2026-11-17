@@ -349,7 +349,7 @@ def test_the_loop_composes_the_same_keep_request_as_before(
     """The pre-extraction composition, written out: the loop's request is
     unchanged by moving it into the shared step, except the template identity,
     which since round 4 covers every class the dial retains (the shipped
-    default: amendment, disposition, red-tc), each by its override text when
+    default: amendment, disposition, evidence-gap), each by its override text when
     one is loaded, else its shipped path.
 
     Implements: TC-322
@@ -362,7 +362,11 @@ def test_the_loop_composes_the_same_keep_request_as_before(
     )
     al.adjudication_keep(_loop_ctx(tmp_path, templates, timeout), PLAN, "WI-7")
     override = templates.get("ADJUDICATE-DISPOSITION")
-    shipped = ["ADJUDICATE-AMENDMENT", "ADJUDICATE-DISPOSITION", "ADJUDICATE-RED-TC"]
+    shipped = [
+        "ADJUDICATE-AMENDMENT",
+        "ADJUDICATE-DISPOSITION",
+        "ADJUDICATE-EVIDENCE-GAP",
+    ]
     assert seen == [
         {
             "route": LOOP_ROW,  # the row the loop selected, carried whole
@@ -401,8 +405,8 @@ def test_the_identity_covers_each_class_and_nothing_for_a_class_without_a_templa
     assert ab.governing_templates(["no-such-class"]) == ([], [])
     assert ab.governing_templates([]) == ([], [])
     paths, texts = ab.governing_templates(
-        ["red-tc", "no-such-class", "amendment"],
-        {"ADJUDICATE-RED-TC": "an override"},
+        ["evidence-gap", "no-such-class", "amendment"],
+        {"ADJUDICATE-EVIDENCE-GAP": "an override"},
     )
     # The amendment brief composes the tier questions' home, so the home is
     # one of its governing inputs: a change to it drains a retained session.
@@ -412,8 +416,8 @@ def test_the_identity_covers_each_class_and_nothing_for_a_class_without_a_templa
         ab.prompts.template_path("ADJUDICATE-ACT"),
     ]
     assert texts == ["an override"]
-    assert ab.governing_templates(["red-tc"])[0] == [
-        ab.prompts.template_path("ADJUDICATE-RED-TC")
+    assert ab.governing_templates(["evidence-gap"])[0] == [
+        ab.prompts.template_path("ADJUDICATE-EVIDENCE-GAP")
     ]
 
 
@@ -429,7 +433,7 @@ def test_the_identity_covers_the_act_brief_for_an_actable_retained_class():
     act_path = ab.prompts.template_path(ab.prompts.ADJUDICATE_ACT)
     for cls in ("amendment", "first-acceptance", "combined"):
         assert act_path in ab.governing_templates([cls])[0], cls
-    assert act_path not in ab.governing_templates(["red-tc", "disposition"])[0]
+    assert act_path not in ab.governing_templates(["evidence-gap", "disposition"])[0]
     paths, texts = ab.governing_templates(
         ["amendment"], {ab.prompts.ADJUDICATE_ACT: "an act override"}
     )
@@ -872,7 +876,7 @@ def test_a_verdict_path_under_a_missing_directory_is_reserved_and_launches(
     assert verdict.read_text(encoding="utf-8").startswith("VERDICT: MEANING")
 
 
-RETAINED = '["disposition", "amendment", "red-tc", "first-acceptance"]'
+RETAINED = '["disposition", "amendment", "evidence-gap", "first-acceptance"]'
 
 
 def _retaining(tmp_path):
@@ -917,8 +921,10 @@ def test_editing_another_retained_class_template_drains_the_session(
             (copied / name).write_bytes(source.read_bytes())
     monkeypatch.setattr(prompts, "PROMPTS", copied)
     _adjudicate(root, "WI-1", brief="amendment")
-    red_tc = copied / prompts.KIT_PROMPTS[prompts.ADJUDICATE_RED_TC]
-    red_tc.write_text(red_tc.read_text(encoding="utf-8") + "\nA new rule.\n")
+    evidence_gap = copied / prompts.KIT_PROMPTS[prompts.ADJUDICATE_EVIDENCE_GAP]
+    evidence_gap.write_text(
+        evidence_gap.read_text(encoding="utf-8") + "\nA new rule.\n"
+    )
     _adjudicate(root, "WI-1", brief="amendment")
     record = _state(root)
     assert record["state"] == "draining"

@@ -127,7 +127,7 @@ prompts/critique.template.md — see the `prompts/` line above (kit home: projec
 prompts/adjudicate-amendment.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-amendment.template.md).
 prompts/adjudicate-first-acceptance.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-first-acceptance.template.md).
 prompts/adjudicate-disposition.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-disposition.template.md).
-prompts/adjudicate-red-tc.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-red-tc.template.md).
+prompts/adjudicate-evidence-gap.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-evidence-gap.template.md).
 prompts/adjudicate-consolidate.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-consolidate.template.md). The fifth routed adjudication brief, SHIPPED by WI-583.
 prompts/adjudicate-rejudge.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-rejudge.template.md). The sixth routed adjudication brief, the checkpoint re-judge of an observation test case.
 prompts/adjudicate-done-when.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-done-when.template.md). The Done-when brief: a lane's own Done-when change, judged in the lane (WI-841).

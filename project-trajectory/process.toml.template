@@ -145,7 +145,7 @@ complete_sample_rate = 4
 #   "when-minting" — a round is scheduled, and demanded, when the verdict drafts
 #                    ANY successor at `spine` or `high-risk`, or when the brief
 #                    is `consolidate`. An amendment that only recommends a flip,
-#                    a red-tc drafting ordinary fix rows, a clean-close spot
+#                    an evidence-gap drafting ordinary fix rows, a clean-close spot
 #                    check: no round.
 #   "always"       — every adjudication gets one
 adjudication_review = "when-minting"
@@ -394,7 +394,7 @@ assumption_gate = false
 # entry under the person's own login. Provision a login account's home first.
 context_reset_pct = 0            # e.g. 55
 # Retain the session across these adjudication classes only (Brief cell values).
-retain_for = ["disposition", "amendment", "red-tc"]
+retain_for = ["disposition", "amendment", "evidence-gap"]
 # ANTHROPIC only: minutes between keep-warm pings of an idle retained session
 # while lanes are active, so its hour-long prompt cache is not rewritten; 0 =
 # off. A ping is a real one-turn call (resumed, --max-turns 1, recorded in the

@@ -47,7 +47,7 @@ WHICH BRIEF: A DECLARED CELL, NOT AN INFERENCE. The row carries `Brief`
 knows which judgement it is asking for. Deriving it from `SpecRef` instead
 would cost no schema, and is unsound: `intake._amendment_drafts` sets
 `specref` to the amended registry, so an amendment to a TEST-CASE row and a
-red-TC census row BOTH read `docs/test/test-cases.toml` — and those two briefs
+evidence-gap census row BOTH read `docs/test/test-cases.toml` — and those two briefs
 give contradictory instructions (one forbids touching a registry, the other
 asks for a `Status` cell to be judged). Deriving it from the TITLE instead is
 the `NEEDS-OPERATOR` fold this repo wrote in blood (WI-417): prose that carries
@@ -145,7 +145,7 @@ BRIEF_PROMPTS = {
     "first-acceptance": prompts.ADJUDICATE_FIRST_ACCEPTANCE,
     "disposition": prompts.ADJUDICATE_DISPOSITION,
     "consolidate": prompts.ADJUDICATE_CONSOLIDATE,
-    "red-tc": prompts.ADJUDICATE_RED_TC,
+    "evidence-gap": prompts.ADJUDICATE_EVIDENCE_GAP,
     rejudge.BRIEF: prompts.ADJUDICATE_REJUDGE,
     DONE_WHEN: prompts.ADJUDICATE_DONE_WHEN,
     COMBINED: prompts.ADJUDICATE_COMBINED,
@@ -212,7 +212,7 @@ VERDICT_GRAMMAR = {
         ("QUEUE", "QUEUE-WITH-EDGE", "RETURN-TO-DRAFT", "CONSOLIDATE"),
         ("needs", "absorbs"),
     ),
-    "red-tc": ("OUTCOME", ("DRAFTED", "NEEDS-JUDGEMENT"), ("cases", "drafts")),
+    "evidence-gap": ("OUTCOME", ("DRAFTED", "NEEDS-JUDGEMENT"), ("cases", "drafts")),
     # The CHECKPOINT RE-JUDGE (SR-215): the session judged the observation case
     # and committed its record, naming the outcome, or the judgment is a
     # person's act and it recorded nothing (`result=-`).
@@ -510,14 +510,14 @@ def _commit_facts(root, span):
     return _clip(body, EVIDENCE_CLIP), None
 
 
-# --- the red-TC brief (SN-030 rung 6) -----------------------------------------
+# --- the evidence-gap brief (SN-030 rung 6) -----------------------------------------
 
 
-def red_tc_values(root, row):
+def evidence_gap_values(root, row):
     """`({tcs, spine}, None)` for the idle-frontier census's unverified test
     cases, or `(None, reason)`.
 
-    THE CENSUS IS RE-RUN LIVE, not remembered. `census.red_tc_census` is the
+    THE CENSUS IS RE-RUN LIVE, not remembered. `census.evidence_gap_census` is the
     same producer that minted the row, so re-running it at composition time
     gives the judge the state of the world it is actually ruling on — a row
     whose gap closed between mint and claim refuses here rather than briefing a
@@ -544,9 +544,9 @@ def red_tc_values(root, row):
         import census
     except Exception as exc:  # a stripped-down copy without the sibling
         return None, "the census producer is unavailable ({})".format(exc)
-    lines_in = census.red_tc_census(root)
+    lines_in = census.evidence_gap_census(root)
     if not lines_in:
-        return None, "the red-TC census is now empty — there is nothing to judge"
+        return None, "the evidence-gap census is now empty — there is nothing to judge"
     tc_rows = {
         r.get("TC-ID"): r
         for r in spine_carrier.load(Path(root) / amendment_brief.TC_REGISTRY, "TC-ID")
@@ -554,7 +554,7 @@ def red_tc_values(root, row):
     lines = []
     targets = set()
     for line in lines_in:
-        parsed = census.parse_red_tc(line)
+        parsed = census.parse_evidence_gap(line)
         if parsed is None:
             return None, "a census line did not parse: {!r}".format(line)
         tc_id, tc_targets = parsed
@@ -785,7 +785,7 @@ def first_acceptance_values(root, row):
     plausible-looking, and exactly rule 2's failure.
 
     STILL RE-COMPUTED LIVE, never simply replayed from the mint
-    (`red_tc_values`' rule): the row was minted at a merge, and by the time a
+    (`evidence_gap_values`' rule): the row was minted at a merge, and by the time a
     session claims it another lane may have accepted or withdrawn some of those
     rows. A brief replaying the mint's listing would ask the judge to rule on a
     world that no longer exists — so a scope whose rows are all settled REFUSES
@@ -984,7 +984,7 @@ def consolidate_values(root, row):
     RE-DERIVED LIVE against it — the two halves `first_acceptance_values` was
     rebuilt around, for the same two reasons. The cell BOUNDS the question (a
     live re-derivation with no scope to intersect asks a wider question than the
-    mint asked), and the live read ANSWERS it (`red_tc_values`' rule: brief the
+    mint asked), and the live read ANSWERS it (`evidence_gap_values`' rule: brief the
     world the judge is actually in, so a cluster whose overlap dissolved between
     mint and claim refuses rather than briefing a session about a contradiction
     that no longer exists).
@@ -1150,7 +1150,7 @@ REJUDGE_CELLS = ("Verifies", "Method", "Expected", "MaxAge")
 def rejudge_values(root, row):
     """`({case, reason, tc}, None)` for a re-judge row, or `(None, reason)`.
 
-    THE DECISION IS RE-RUN LIVE (`red_tc_values`' rule). The row's typed
+    THE DECISION IS RE-RUN LIVE (`evidence_gap_values`' rule). The row's typed
     `Adjudicates` cell names its one case, and `rejudge.due_cases` at HEAD, the
     decision that filed it, says why it is due now; a case re-judged since the
     mint refuses here rather than briefing a session to judge it twice. A case
@@ -1291,7 +1291,7 @@ def done_when_values(root, row):
     one work item this row's `Adjudicates` cell names, whose Done-when differs
     from the one it was claimed with, or `(None, reason)`.
 
-    Re-derived live from git (`red_tc_values`' rule): a change since blessed
+    Re-derived live from git (`evidence_gap_values`' rule): a change since blessed
     away, or reverted, refuses rather than briefing a judge on a text that is
     no longer the lane's. The digest is `kitlib.done_when.digest`, the one the
     hold points compute, so the verdict line binds exactly the text shown.
@@ -1486,7 +1486,7 @@ _ASSEMBLERS = {
     "first-acceptance": first_acceptance_values,
     "consolidate": consolidate_values,
     "disposition": disposition_values,
-    "red-tc": red_tc_values,
+    "evidence-gap": evidence_gap_values,
     rejudge.BRIEF: rejudge_values,
     DONE_WHEN: done_when_values,
     # Composes the others, so it is handed the verdict path and the overrides

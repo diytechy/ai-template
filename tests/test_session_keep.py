@@ -205,7 +205,7 @@ def test_the_shipped_dial_is_off_and_this_repo_shares_its_structure():
         retain_for=(
             "disposition",
             "amendment",
-            "red-tc",
+            "evidence-gap",
             "first-acceptance",
             "done-when",
             "combined",

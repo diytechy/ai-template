@@ -544,7 +544,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   1. Compose the brief:
      `"$PY" "$TOOLS/compose_lane.py" WI-NNN <brief> "<ids>" "<srs>" <verdict> <out>`.
      The classes are `amendment`, `first-acceptance`, `done-when`, `combined`,
-     `disposition`, `consolidate`, `red-tc`, `rejudge` and `dispute` (below).
+     `disposition`, `consolidate`, `evidence-gap`, `rejudge` and `dispute` (below).
      For `combined`, `<ids>` is **kind-prefixed**, for example
      `"amendment:LLR-123;first-acceptance:SR-234;first-acceptance:LLR-345;first-acceptance:TC-456;done-when:WI-NNN"`.
      Include only kinds actually owed (`amendment`, `first-acceptance`,

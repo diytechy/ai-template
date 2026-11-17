@@ -111,10 +111,10 @@ a wall of `= ""`.
   never scheduled, so a repo enables parallelism only after its own audit.
 - `brief` — on a `safety_class = "adjudication"` row only: which adjudicator
   brief the unattended coordinator composes that row's session from
-  (`amendment|disposition|conflict|red-tc`, `prompts/adjudicate-*.template.md`).
+  (`amendment|disposition|conflict|evidence-gap`, `prompts/adjudicate-*.template.md`).
   Written by `intake.py` at the mint, because the mint is what knows which
   judgement it is asking for. DECLARED rather than inferred from `specref`,
-  which cannot tell an amended test-case row from a red-TC census row — both
+  which cannot tell an amended test-case row from an evidence-gap census row — both
   cite the TC registry. Absent, or a brief whose evidence cannot be assembled
   in full, sends the ordinary worker assignment instead.
 - `adopted` — on a disposition row (one judging a partial or cancelled close)

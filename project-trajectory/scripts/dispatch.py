@@ -1055,9 +1055,9 @@ def _surface_banner(root, surfaced):
 # the names they always did. Same shape as `integrate`'s re-export of the
 # lane-close outcome vocabulary after slice 1.
 gap_census = census.gap_census
-red_tc_census = census.red_tc_census
-parse_red_tc = census.parse_red_tc
-RED_TC_PREFIX = census.RED_TC_PREFIX
+evidence_gap_census = census.evidence_gap_census
+parse_evidence_gap = census.parse_evidence_gap
+EVIDENCE_GAP_PREFIX = census.EVIDENCE_GAP_PREFIX
 
 
 def _pre_admit(args, table, state, config_refusal):

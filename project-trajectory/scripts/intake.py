@@ -476,12 +476,12 @@ def tier_signal(trigger, *, rows_touched=0, stage_moved=False):
     typed field."""
     if trigger == "amendment":
         return "strong" if stage_moved or rows_touched > 3 else "medium"
-    if trigger == "red-tc":
+    if trigger == "evidence-gap":
         # LLR-159. One target is a local question (is this TC stale, or
         # was the close optimistic?); several mean the closed row's claim spans
         # requirements, and the judgement has to hold all of them at once. Same
         # shape as the amendment arm — breadth, counted, never judged — with the
-        # threshold at 1 rather than 3 because a red TC is already a
+        # threshold at 1 rather than 3 because an evidence gap is already a
         # contradiction, not a routine registry edit.
         return "strong" if rows_touched > 1 else "medium"
     return "medium"  # census gap closure: mechanical registry work
@@ -1006,7 +1006,7 @@ def _first_acceptance_context(records):
     lane did to it. The CHAIN is not rendered here: `adjudicate_brief`'s
     assembler builds it live at composition time from `trace.reaccept_model`, so
     the judge rules on the state of the world it is actually in rather than on a
-    snapshot of it taken at mint (`red_tc_values`' rule, applied to this arm)."""
+    snapshot of it taken at mint (`evidence_gap_values`' rule, applied to this arm)."""
     lines = [
         "Derived from `staged_drafted_rows` on the merged commit (§A5.2).",
         "These spine rows are BELOW acceptance and no act has blessed them.",
@@ -1071,7 +1071,7 @@ def _first_acceptance_drafts(root, before, after, authoring_tags=()):
             ],
             # THE ACT'S SCOPE, and the only durable statement of it. The brief
             # RE-DERIVES its population live at composition time (a row minted
-            # at a merge is claimed later, and `red_tc_values`' rule says brief
+            # at a merge is claimed later, and `evidence_gap_values`' rule says brief
             # the world the judge is actually in) — so without this cell the
             # re-derivation asks a WIDER question than the merge asked, and the
             # session is handed every `Drafted` row in the repo, across
@@ -2127,9 +2127,9 @@ def _census_drafts(root, lines):
     titles = _existing_titles(root)
     drafts = []
     for line in lines:
-        red = census.parse_red_tc(line)
+        red = census.parse_evidence_gap(line)
         if red is not None:
-            draft = _red_tc_draft(root, line, red[1])
+            draft = _evidence_gap_draft(root, line, red[1])
         else:
             draft = {
                 "title": "close registry gap: {}".format(_clip(line, _LINE_CLIP)),
@@ -2151,12 +2151,12 @@ def _census_drafts(root, lines):
     return drafts
 
 
-def _red_tc_draft(root, line, targets):
-    """LLR-159: a red TC under a claimed implementation becomes an
+def _evidence_gap_draft(root, line, targets):
+    """LLR-159: an evidence gap under a claimed implementation becomes an
     ADJUDICATION row, not an ordinary gap-closure row.
 
     The difference is who decides. An ordinary gap row says "the registry is
-    missing a link; go add it" — mechanical, medium tier, mint and go. A red TC
+    missing a link; go add it" — mechanical, medium tier, mint and go. An evidence gap
     says something stronger and unresolved: a work item is CLOSED and the test
     for it is not green. That is one of three quite different situations — the
     TC is stale and its Status simply owes an update; the close was optimistic
@@ -2166,7 +2166,7 @@ def _red_tc_draft(root, line, targets):
 
     The tier is ESTIMATED rather than defaulted (§4 rung 1's "estimator"): the
     breadth of the contradiction is what makes it expensive to judge, and that
-    is countable — `targets` comes from `census.parse_red_tc`, the one reader
+    is countable — `targets` comes from `census.parse_evidence_gap`, the one reader
     of the census grammar, never from re-splitting this line's prose.
 
     NO `planmode` CELL, and the reason is a defect this row shipped with for
@@ -2184,16 +2184,16 @@ def _red_tc_draft(root, line, targets):
         # dedupes exactly and a status change is legitimately a new judgement.
         "title": "adjudicate {}".format(_clip(line, _LINE_CLIP)),
         "kind": "adjudication",
-        "brief": "red-tc",
+        "brief": "evidence-gap",
         "workstream": "process",
-        "buildtier": tier_signal("red-tc", rows_touched=len(targets)),
+        "buildtier": tier_signal("evidence-gap", rows_touched=len(targets)),
         "specref": _live_registry(root, _TC_CSV),
-        "context": _red_tc_context(line, targets),
+        "context": _evidence_gap_context(line, targets),
     }
 
 
-def _red_tc_context(line, targets):
-    """The judge's brief for a red TC. Names the contradiction and the three
+def _evidence_gap_context(line, targets):
+    """The judge's brief for an evidence gap. Names the contradiction and the three
     live readings WITHOUT choosing between them — a brief that pre-selects an
     outcome is not a brief."""
     return (

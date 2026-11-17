@@ -987,7 +987,7 @@ def test_a_rejected_combined_sitting_blesses_nothing(tmp_path):
 
 def test_an_unrequested_section_refuses_the_combined_verdict(tmp_path):
     """Sol final MAJOR 2: a sitting that requested `amendment` alone, whose
-    verdict also carries a `## red-tc` section, is refused: any `## <kind>`
+    verdict also carries a `## evidence-gap` section, is refused: any `## <kind>`
     heading counts, and every section not requested refuses.
 
     Implements: TC-327
@@ -995,12 +995,12 @@ def test_an_unrequested_section_refuses_the_combined_verdict(tmp_path):
     path = tmp_path / "s.md"
     path.write_text(
         "## amendment\n\nVERDICT: CLARITY rows=1\n\n"
-        "## red-tc\n\nOUTCOME: DRAFTED cases=1 drafts=1\n\n"
+        "## evidence-gap\n\nOUTCOME: DRAFTED cases=1 drafts=1\n\n"
         "SITTING: JUDGED kinds=amendment\n",
         encoding="utf-8",
     )
     refusal = ab.verdict_refusal("combined", path, kinds=("amendment",))
-    assert refusal and "red-tc" in refusal
+    assert refusal and "evidence-gap" in refusal
 
 
 def test_a_valid_sitting_with_an_unrequested_section_blesses_nothing(tmp_path):
@@ -1014,7 +1014,7 @@ def test_a_valid_sitting_with_an_unrequested_section_blesses_nothing(tmp_path):
     _bless(
         lane,
         "## done-when\n\nDONE-WHEN: BLESSED changes=2 digest={}\n\n"
-        "## red-tc\n\nOUTCOME: DRAFTED cases=1 drafts=1\n\n"
+        "## evidence-gap\n\nOUTCOME: DRAFTED cases=1 drafts=1\n\n"
         "SITTING: JUDGED kinds=done-when\n".format(_digest()),
     )
     assert _digest() not in kdone.covering(lane, "HEAD")

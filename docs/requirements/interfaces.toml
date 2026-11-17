@@ -1519,7 +1519,7 @@ rationale = """The loader's both-ways strictness is load-bearing here rather tha
 owner = "scripts/prompts"
 requestors = ["scripts/adjudicate_brief", "scripts/amendment_brief", "scripts/adjudicate_act"]
 channel = "call"
-data = "ADJUDICATE-AMENDMENT · ADJUDICATE-DISPOSITION · ADJUDICATE-RED-TC · ADJUDICATE-DONE-WHEN · ADJUDICATE-COMBINED · ADJUDICATE-ACT · PROMPTS / SPINE_QUESTIONS"
+data = "ADJUDICATE-AMENDMENT · ADJUDICATE-DISPOSITION · ADJUDICATE-EVIDENCE-GAP · ADJUDICATE-DONE-WHEN · ADJUDICATE-COMBINED · ADJUDICATE-ACT · PROMPTS / SPINE_QUESTIONS"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -1990,7 +1990,7 @@ component = "CMP-006"
 notes = """source - the declaration rules read the test-case rows and the two constants kitlib.spine declares for them, with no I/O, no git and no filesystem."""
 
 [interface.IF-201]
-rationale = """An assumption's citing requirements are derived in one place and read wherever evidence for the assumption is placed or counted, so the stage derivation and the red-TC census agree with the checker about which requirements rely on which assumption; a second derivation in either reader could drift and place or count the same test case differently."""
+rationale = """An assumption's citing requirements are derived in one place and read wherever evidence for the assumption is placed or counted, so the stage derivation and the evidence-gap census agree with the checker about which requirements rely on which assumption; a second derivation in either reader could drift and place or count the same test case differently."""
 owner = "scripts/assumption_rules"
 requestors = ["scripts/derive_stage", "scripts/census"]
 channel = "call"

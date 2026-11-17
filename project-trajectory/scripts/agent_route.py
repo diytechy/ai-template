@@ -196,7 +196,7 @@ _CONST_ENV = {
 # byte-identically to before (uniform weight == today's line-order tie-break).
 # SN-026: `ADJUDICATE` joins the vocabulary. An adjudication row is
 # not a build — it judges a CLAIM another session made (a lane's partial close,
-# an amendment's meaning-vs-clarity, a red TC under a closed row) — so it is a
+# an amendment's meaning-vs-clarity, an evidence gap under a closed row) — so it is a
 # job type in exactly the sense the phase weights exist to express, and routing
 # it as an ordinary BUILD drew from the implementer pool at the implementer
 # tier. Cross-family preference is ON for it, for the reviewers' reason: a judge
