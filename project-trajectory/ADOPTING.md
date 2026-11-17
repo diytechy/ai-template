@@ -225,6 +225,14 @@ and affected SRs before backfilling its implementation.
 - Existing tests can be adopted as TCs: give each meaningful test a `TC-###`
   row and tag the test with `Implements: TC-###` (process.md §3) — no rewrite
   needed.
+- **A converted row keeps its status only while it keeps its meaning.** When
+  existing requirements come into the spine, whether through
+  `migrate_carrier.py` or rewritten from your own documents, a row whose
+  converted text says what the accepted one said stays `Accepted`. A row the
+  conversion changed in meaning (merged, split, narrowed, widened or newly
+  derived) is `Drafted` until it is accepted again. `migrate_carrier.py`
+  converts the carrier only, so a need outside a draft heading arrives
+  `Accepted`: set the ones whose meaning changed back to `Drafted` by hand.
 
 ## 5. First passing run
 

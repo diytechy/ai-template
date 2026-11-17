@@ -63,6 +63,11 @@ new ids with `python scripts/trace.py --bump-ids`, rewrite the generated files
 the commit hook checks with `python scripts/trunk_step.py --regen`, then `git
 add` what they changed. A refused commit names the command that clears it.
 
+**When you accept your first chain** (a need with its requirements and
+tests), delete the template's example rows, whose ids end in `-000`, and the
+example diagram in `docs/runtime-flows.md`. From `DevStg-Tests` on the checks
+refuse the diagram, and from `DevStg-Impl` on the example rows.
+
 ## Development
 
 This repo follows a gated, requirement-traced process. The working brief is

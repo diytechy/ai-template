@@ -90,7 +90,8 @@ Use the ordinary scoped change/review record for the following decisions:
 4. **Reconcile and review the affected chain.** Identify changed LLRs, TCs,
    interfaces, evidence and queued/active work. Keep IDs where meaning remains;
    preserve previous acceptances as history and submit the scoped amendments under
-   the current authority. Rejected proposals leave authoritative content intact.
+   the current authority. A conversion keeps a row's status where it keeps the
+   row's meaning; a row whose meaning it changes is `Drafted`. Rejected proposals leave authoritative content intact.
    Do not automatically re-seed snapshots, cancel work or copy the kit's own
    objectives, hats or needs into another product.
 

@@ -10949,6 +10949,12 @@ No setting is renamed; each fix is in a script or template.
 - **Quieter hook, smaller default.** The pre-commit hook no longer prints "No
   checks defined at stage all." New scaffolds' dev-setup declares only the
   `code` role.
+- **The examples, and converted rows.** The README template tells a new
+  project to delete the example rows (`-000`) and the example diagram when
+  it accepts its first chain, since the checks refuse them from
+  `DevStg-Tests` and `DevStg-Impl`. `ADOPTING.md` §4 and the spine-authoring
+  skill say a converted row keeps its status only while it keeps its
+  meaning; `migrate_carrier.py` still converts the carrier only.
 
 **What to do.** Nothing is required of an adopter. The scripts and templates
 above are taken wholesale. Two files are copied once at scaffold and are not
