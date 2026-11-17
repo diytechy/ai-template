@@ -2710,6 +2710,21 @@ def _pyproject_has_pytest(dest):
     return "pytest" in (_kitconfig.read_toml_text(text) or {}).get("tool", {})
 
 
+def _pytest_ini_withheld(dst, dest, plan):
+    """Whether the copy pass skips `pytest.ini`. An explicitly non-Python
+    stack gets no dead Python artifacts (Thread 34, R7/C3): its rewiring
+    checklist lands in docs/status.md instead (append_stack_checklist).
+    And pytest reads pytest.ini before pyproject.toml, so writing one beside
+    a pyproject that configures pytest would drop that config (its
+    pythonpath, say) from every test run; that skip is said aloud."""
+    if plan.stack in NON_PYTHON_STACKS:
+        return True
+    if dst.exists() or not _pyproject_has_pytest(dest):
+        return False
+    print(PYTEST_INI_SKIPPED)
+    return True
+
+
 def copy_kit_files(dest, plan):
     """The MAPPING copy pass + the GITKEEP_DIRS placeholders, as a
     `CopyOutcome`. Write-once by default (an existing file is skipped, not
@@ -2723,16 +2738,7 @@ def copy_kit_files(dest, plan):
     for src_rel, dst_rel, *_ref in MAPPING:
         src = KIT / src_rel
         dst = dest / dst_rel
-        # Stack-gated artifacts (Thread 34, R7/C3): an explicitly non-Python
-        # stack gets no dead Python artifacts — the rewiring checklist lands
-        # in docs/status.md instead (append_stack_checklist below).
-        if dst_rel == "pytest.ini" and plan.stack in NON_PYTHON_STACKS:
-            continue
-        # pytest reads pytest.ini before pyproject.toml, so writing one beside a
-        # pyproject that configures pytest would drop that config (its
-        # pythonpath, say) from every test run.
-        if dst_rel == "pytest.ini" and not dst.exists() and _pyproject_has_pytest(dest):
-            print(PYTEST_INI_SKIPPED)
+        if dst_rel == "pytest.ini" and _pytest_ini_withheld(dst, dest, plan):
             continue
         if not src.exists():
             missing.append(src_rel)

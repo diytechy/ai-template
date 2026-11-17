@@ -6317,6 +6317,17 @@ def render_report(reg, findings, args, forest):
     return "\n".join(lines) + "\n"
 
 
+def _schema_note(schema, args):
+    """The summary line's note that schema findings were reported and did not
+    fail the run. Deliberate (TC-189): --strict-schema adds the rules and
+    --strict gates them, so findings beside exit 0 must not read as missed."""
+    if schema and not args.strict:
+        return (
+            " (reported, not failing: --strict-schema fails the run only with --strict)"
+        )
+    return ""
+
+
 def render_console(reg, findings, args, out, html_out):
     """Print the warn-only advisory lines and the one-line Traceability summary to stdout (loud but never gating)."""
     sn_ids = reg.sn_ids
@@ -6434,12 +6445,7 @@ def render_console(reg, findings, args, out, html_out):
         + (f" drafts={n_draft}" if n_draft else "")
         + (f" placeholders={len(placeholders)}" if args.no_placeholders else "")
         + (f" schema-findings={len(schema)}" if args.strict_schema else "")
-        # Deliberate (TC-189): --strict-schema adds the rules, --strict gates.
-        + (
-            " (reported, not failing: --strict-schema fails the run only with --strict)"
-            if schema and not args.strict
-            else ""
-        )
+        + _schema_note(schema, args)
         + (f" phase-deferred={len(phase_deferred)}" if phases else "")
         + (f" budgets={len(pbs)} budget-findings={len(budget_findings)}" if pbs else "")
         + (
