@@ -2323,7 +2323,7 @@ rewrite it here.
 
 ### §10.7 Closing the branch
 
-**Items 1 to 3 are done (ninth session, 2026-11-16): §9.11.** **Item 1 is done (tenth session, 2026-11-16): §9.12** records its two leftovers, §4.5.6's prose and "bar" in this repository's own docs. **Items 4 to 7 are done (eleventh session, 2026-11-16): §9.13**, with the ruled fixes of §12.2 and WI-1007. Item 8 (D11) is next; `ROW-AMENDMENTS.md` follows the last migrator run, which D11 is expected to include.
+**Items 1 to 3 are done (ninth session, 2026-11-16): §9.11.** **Item 1 is done (tenth session, 2026-11-16): §9.12** records its two leftovers, §4.5.6's prose and "bar" in this repository's own docs. **Items 4 to 7 are done (eleventh session, 2026-11-16): §9.13**, with the ruled fixes of §12.2 and WI-1007. Item 8 (D11) is planned in `D11-PLAN.md`, its decisions ruled (§12.2); `ROW-AMENDMENTS.md` follows the last migrator run, which D11 includes.
 
 1. The rest of §4.5, as the operator rules each line.
 2. The glossary's older entries, by hand: "the owner" in *independence* and
@@ -2411,6 +2411,11 @@ the hold above.
 | TC-403's real-landing replay | **Retired** (`bfbc5a413`): it replayed two pre-cut landings and could only skip; the fixtures pin the arm. Dropped from TC-403's evidence, a traced cell |
 | Links into the moved record | **The migrator re-bases them** (`bfbc5a413`): link targets only, never prose. The operator asked "isn't it just find/replace?"; it is, confined to link targets |
 | The record's README heading | Followed the rename (`80c52d173`); its dated entries keep their words. Taken under the vocabulary ruling, not asked |
+| D11, the retired CLI spellings | **Cut** `--gate G1..G3`/`DevBar-*` values and `--stage-cleared`; argparse refuses, the RESYNC entry gives the mapping, PictureSorter's one CI line changes by hand. `--gate` itself stays (`D11-PLAN.md`, decision A) |
+| D11, `gates =` in `docs/stack.ini` | **The migrator rewrites them** by meaning to `from-stage =`; the core keeps a short refusal naming the fix (decision B) |
+| D11, bootstrap's one-word fold | **Stays in bootstrap**; only the dial's key and integer respellings move to the migrator (decision C) |
+| D11, SN-028's one-word-file window | **Left out** of D11, to close under SN-028's own ruling (decision D) |
+| D11, `red_rounds_max`; bootstrap's `LEGACY_ACCEPTANCE` | Taken as recommended, not asked: a migrator row beside the kept refusal (E); renamed `GATE_POLICY_DIALS`, since it backs the live `--gate-policy` preset (F) |
 
 ### §12.3 Why a test run crashed the machine, and how to run one safely
 
@@ -2798,3 +2803,12 @@ list is fixed unless §12.6 says so.
   what was found.
   - **Still owed by §10.7:** item 8 (D11), then `ROW-AMENDMENTS.md` after
     the last migrator run, then §6.
+- **2026-11-16, D11 planned and ruled.** A read-only pass at `887d36c66`
+  mapped the twelve tables (`D11-PLAN.md`): three stay (the detector, a
+  refusal, bootstrap's live preset table), four read nothing stored and
+  are deleted, and the rest move to the migrator or are cut. It found that
+  adopters hold two of the spellings (`gates =` at three, `--gate G3` in
+  PictureSorter's CI, both checked by hand) and that SN-028's window is a
+  bigger legacy reader D11 did not list. The operator ruled A to D as
+  recommended (§12.2); E and F were taken as recommended. Eight accepted
+  rows will need the operator's act (drafts in the plan).
