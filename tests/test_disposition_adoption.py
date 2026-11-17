@@ -180,7 +180,7 @@ _OTHER = _entry("queued", "WI-460", supersedes='"WI-005"')
         "no-supersedes",
     ],
 )
-def test_acceptance_is_read_against_the_registry_with_distinct_refusals(
+def test_validity_is_read_against_the_registry_with_distinct_refusals(
     listing, reason
 ):
     """Implements: TC-360"""

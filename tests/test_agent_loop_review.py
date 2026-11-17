@@ -1452,7 +1452,7 @@ def _builds(ctl):
     return len(p.read_text(encoding="utf-8").splitlines()) if p.exists() else 0
 
 
-def test_a_clean_review_session_is_accepted(managed_repo):
+def test_a_clean_review_session_passes(managed_repo):
     """Implements: TC-257"""
     repo, ctl, proc = _misbehaving_round(managed_repo, "")
     assert proc.returncode == 0, proc.stdout + proc.stderr

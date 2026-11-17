@@ -2155,7 +2155,7 @@ def test_an_open_item_table_with_an_unknown_cell_is_refused():
     assert drafts == [] and refusal is not None and "blast_radus" in refusal
 
 
-def test_the_typed_open_item_table_is_accepted_whole():
+def test_the_typed_open_item_table_is_read_whole():
     drafts, refusal = intake.parse_dispositions(_OPERATOR_OWED, _WHERE)
     assert refusal is None, refusal
     assert len(drafts) == 1 and drafts[0]["open_item"] == _BRIEF

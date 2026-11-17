@@ -234,7 +234,7 @@ RULING: R2-3 DISMISS out-of-scope it needs a fake runner binary
 """
 
 
-def test_a_well_formed_verdict_is_accepted_and_parsed(tmp_path):
+def test_a_well_formed_verdict_is_read_and_parsed(tmp_path):
     """Implements: TC-334"""
     dispute = _dispute()
     rulings, why = dispute.parse(VALID, ("F1", "R2-3", "R4"), "v.md")
@@ -283,7 +283,7 @@ def test_a_malformed_or_incomplete_verdict_is_refused(tmp_path, text, needle):
     assert ab.verdict_refusal("dispute", verdict, kinds=("F1", "R2"))
 
 
-def test_a_successor_ruling_is_accepted_and_parsed(tmp_path):
+def test_a_successor_ruling_is_read_and_parsed(tmp_path):
     """WI-911: the sitting may rule a finding SUCCESSOR, a row of its own filed
     on trunk at the landing (the operator's ruling of 2026-10-14, in session).
 

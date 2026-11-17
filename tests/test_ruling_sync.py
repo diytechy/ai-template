@@ -101,7 +101,7 @@ def test_a_ruling_with_the_citing_rows_done_when_untouched_is_refused(tmp_path):
     assert "OI-5" in proc.stdout
 
 
-def test_the_same_ruling_with_the_done_when_updated_is_accepted(tmp_path):
+def test_the_same_ruling_with_the_done_when_updated_passes(tmp_path):
     """Implements: TC-313"""
     root = _base(tmp_path)
     _items(root, OI_5="ruled", OI_6="pending")
@@ -127,7 +127,7 @@ def test_removing_the_token_in_the_ruling_commit_does_not_discharge_it(tmp_path)
     assert "WI-001 cites OI-5" in line  # the citing set is the parent tree's
 
 
-def test_a_row_closed_in_the_ruling_commit_is_accepted(tmp_path):
+def test_a_row_closed_in_the_ruling_commit_passes(tmp_path):
     """Implements: TC-313"""
     root = _base(tmp_path)
     _items(root, OI_5="ruled", OI_6="pending")

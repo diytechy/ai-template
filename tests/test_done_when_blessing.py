@@ -1439,7 +1439,7 @@ def test_a_failed_loop_call_keeps_its_obligation_and_reads_no_verdict(
     assert ab.ksitting.read_requested(text)[2] == "failed"
 
 
-def test_the_loop_route_accepts_a_combined_sitting_on_its_bound_kinds(
+def test_the_loop_route_takes_a_combined_sitting_on_its_bound_kinds(
     tmp_path, monkeypatch
 ):
     """Sol final8 MAJOR 1: the loop composes a claimed `combined` row with

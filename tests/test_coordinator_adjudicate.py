@@ -981,7 +981,7 @@ def _dispute_call(tmp_path, monkeypatch, verdict_text, brief=DISPUTE_BRIEF):
     return root, _adjudicate(root, brief="dispute")
 
 
-def test_the_entry_point_accepts_the_dispute_class():
+def test_the_entry_point_takes_the_dispute_class():
     """Implements: TC-334"""
     args = cli._parser().parse_args(
         ["adjudicate", "--brief-file", "b", "--brief", "dispute", "--wi", "WI-1"]

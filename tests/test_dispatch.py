@@ -1248,7 +1248,7 @@ def test_a_finished_branch_that_owes_nothing_goes_straight_to_the_slot(tmp_path,
     assert all(branch != "wi-777" for branch, _ids in worker.calls), worker.calls
 
 
-def test_the_worker_preflight_accepts_the_resumed_finished_lane(tmp_path):
+def test_the_worker_preflight_passes_the_resumed_finished_lane(tmp_path):
     # The far end of the resume: `agent_loop --wi WI-777` on a lane whose rows
     # the LANE ITSELF already closed. The preflight's terminal-status rung
     # refuses a STALE assignment, and the 2026-09-04 fix tells the two apart by

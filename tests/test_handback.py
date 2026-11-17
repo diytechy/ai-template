@@ -881,7 +881,7 @@ def test_an_adoption_of_a_superseding_row_closes_and_writes_the_record(
         "no-supersedes",
     ],
 )
-def test_an_adoption_that_is_not_accepted_refuses_the_close(
+def test_an_invalid_adoption_refuses_the_close(
     tmp_path, dispositions, seed, reason
 ):
     """Implements: TC-156"""

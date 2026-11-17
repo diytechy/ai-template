@@ -551,7 +551,7 @@ title = "A widget under review"
 """
 
 
-def test_the_review_render_accepts_what_record_checks_writes(tmp_path, capsys):
+def test_the_review_render_reads_what_record_checks_writes(tmp_path, capsys):
     """Implements: TC-371"""
     # TC-371 (WI-957): the set `record-checks` derived and the set the render derives
     # agree. Adequacy witness: a render that never reads the record names no

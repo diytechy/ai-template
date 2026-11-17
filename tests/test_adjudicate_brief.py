@@ -1800,7 +1800,7 @@ def test_an_adjudication_row_declaring_no_brief_still_builds(tmp_path):
         ("consolidate", "OUTCOME: CONSOLIDATE needs=- absorbs=WI-1;WI-2"),
     ],
 )
-def test_a_well_formed_typed_line_is_accepted_for_every_brief(tmp_path, brief, line):
+def test_a_well_formed_typed_line_is_read_for_every_brief(tmp_path, brief, line):
     """The grammar lives beside the assemblers because the brief and the verdict
     it demands are ONE contract — a template whose enum moved and a checker that
     did not is the drift this table prevents. Four of the five routed briefs
