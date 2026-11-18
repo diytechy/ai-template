@@ -1690,11 +1690,13 @@ def boundary_gate_findings(srs, das, surs, reach, have_frame):
     assumption and the unmet condition.
 
     A requirement recorded coincident (`Coincident`) passes. Any other
-    requirement fails when it cites no assumption, and once for each unmet
-    condition of each assumption it cites: not `Accepted`, `Standing` not
-    active, reported by the reach check (`reach`, `reach_gaps`' map), or a
-    fidelity assumption whose `RealizedBy` surrogate is not `Accepted`. With
-    no assumptions registry every requirement not recorded coincident
+    requirement fails when it cites no assumption, unless it is joint (its
+    `Delivered-With` names a declared sibling sharing one of its needs, the
+    class `_classify` gives it), and once for each unmet condition of each
+    assumption it cites, joint or not: not `Accepted`, `Standing` not active,
+    reported by the reach check (`reach`, `reach_gaps`' map), or a fidelity
+    assumption whose `RealizedBy` surrogate is not `Accepted`. With no
+    assumptions registry every requirement neither coincident nor joint
     therefore fails: enabling the gate asks for the argument.
 
     Nothing when `have_frame` is false: with no declared crossing an
@@ -1706,12 +1708,14 @@ def boundary_gate_findings(srs, das, surs, reach, have_frame):
         return []
     declared = dict(_real(das, "DA-ID"))
     surrogates = dict(_real(surs, "SUR-ID"))
+    requirements = dict(_real(srs, "SR-ID"))
     out = []
-    for sid, row in _real(srs, "SR-ID"):
+    for sid, row in requirements.items():
         if _cell(row, "Coincident"):
             continue
         cited = refs(row.get("DA-Refs"))
-        if not cited:
+        joint = _classify(row, declared, requirements)[0] == "joint"
+        if not (cited or joint):
             out.append(
                 "SR {} cites no assumption in DA-Refs and records no Coincident "
                 "waiver: the gate asks every requirement for the argument that "

@@ -116,7 +116,9 @@ def _assumption(did, *, status="Accepted", standing="active", lands="B-01", **ce
     ).format(did, lands, status, standing, extra)
 
 
-def _requirement(sid, *, da=(), coincident=None, form=None, boundary=("B-01",)):
+def _requirement(
+    sid, *, da=(), coincident=None, form=None, boundary=("B-01",), siblings=()
+):
     lines = [
         "\n[requirement.{}]".format(sid),
         'title = "Requirement {}"'.format(sid),
@@ -131,6 +133,12 @@ def _requirement(sid, *, da=(), coincident=None, form=None, boundary=("B-01",)):
         lines.append('coincident = "{}"'.format(coincident))
     if form:
         lines.append('form = "{}"'.format(form))
+    if siblings:
+        lines.append(
+            "delivered_with = [{}]".format(
+                ", ".join('"{}"'.format(s) for s in siblings)
+            )
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -329,6 +337,38 @@ def test_with_the_gate_on_each_unmet_condition_fails_naming_it(scaffold):
     for sid in ("SR-001", "SR-002", "SR-008"):
         assert not [line for line in failed if sid in line], (sid, failed)
     assert len(failed) == len(BOUNDARY_FAILURES), failed
+
+
+# Joint delivery (SR-205 as amended 2026-11-16): SR-009 and SR-010 name SR-002,
+# which shares their need SN-001, so both are joint; SR-011 names a requirement
+# that is not declared, so it is not.
+JOINT_SRS = (
+    BOUNDARY_SRS
+    + _requirement("SR-009", siblings=["SR-002"])
+    + _requirement("SR-010", da=["DA-002"], siblings=["SR-002"])
+    + _requirement("SR-011", siblings=["SR-099"])
+)
+
+
+def test_a_joint_requirement_citing_no_assumption_passes_the_boundary_gate(scaffold):
+    root = _project(scaffold, {**BOUNDARY, SR_REL: JOINT_SRS}, gate=True)
+    proc = _step(root, "assumption-gate")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert _findings(proc, "FAIL", "SR-009") == [], proc.stdout
+    # Only a declared sibling sharing a need makes a requirement joint.
+    assert len(_findings(proc, "FAIL", "SR-011", "cites no assumption")) == 1, (
+        proc.stdout
+    )
+
+
+def test_an_assumption_a_joint_requirement_cites_is_judged_like_any_other(scaffold):
+    root = _project(scaffold, {**BOUNDARY, SR_REL: JOINT_SRS}, gate=True)
+    proc = _step(root, "assumption-gate")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert len(_findings(proc, "FAIL", "SR-010", "DA-002", "not accepted")) == 1, (
+        proc.stdout
+    )
+    assert _findings(proc, "FAIL", "SR-010", "cites no assumption") == [], proc.stdout
 
 
 def test_a_frame_with_no_assumptions_registry_fails_every_non_coincident_requirement(
