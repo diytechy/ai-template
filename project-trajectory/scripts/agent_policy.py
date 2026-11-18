@@ -976,13 +976,7 @@ def _key_value_findings(data, section, key, kind):
         return []
     value = table[key]
     if _coerce(value, kind) is None:
-        return [
-            "docs/{} [{}] {} = {!r} is a {}, expected {} — a wrong-typed "
-            "dial must never fall through to a default (a quoted "
-            "`review_rounds` once meant NO review verdict was required).".format(
-                PROCESS_TOML, section, key, value, type(value).__name__, kind
-            )
-        ]
+        return [_wrong_type_finding(section, key, value, kind)]
     low_high = PROCESS_KEY_RANGES.get((section, key))
     if low_high and not (low_high[0] <= value <= low_high[1]):
         return [
@@ -994,6 +988,28 @@ def _key_value_findings(data, section, key, kind):
             )
         ]
     return _vocab_findings(section, key, value)
+
+
+def _wrong_type_finding(section, key, value, kind):
+    """The refusal of one dial declared with the wrong type. The acceptance
+    dial's 0-4 integer, its spelling before it named a stage, also names the
+    fix: the core no longer reads it (D11), and the vocabulary migrator
+    rewrites it as the stage it meant."""
+    line = (
+        "docs/{} [{}] {} = {!r} is a {}, expected {} — a wrong-typed "
+        "dial must never fall through to a default (a quoted "
+        "`review_rounds` once meant NO review verdict was required).".format(
+            PROCESS_TOML, section, key, value, type(value).__name__, kind
+        )
+    )
+    ordinal = type(value) is int and 0 <= value <= 4
+    if ordinal and (section, key) == ("authority", "operator_accepts_through"):
+        line += (
+            " It is the 0-4 level the kit read before the dial named a stage; "
+            "run `python scripts/migrate_vocabulary.py`, which rewrites it as "
+            "the stage it meant."
+        )
+    return line
 
 
 def _vocab_findings(section, key, value):
@@ -1212,6 +1228,7 @@ __all__ = (
     "spine_stage_of",
     "_legacy_present",
     "_key_value_findings",
+    "_wrong_type_finding",
     "_vocab_findings",
     "mode_word",
     "_mode_vocab_findings",

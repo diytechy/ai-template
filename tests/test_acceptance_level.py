@@ -521,8 +521,9 @@ def test_a_retired_ORDINAL_is_refused_and_held_never_translated(
     `operator_accepts_through = 4` was once translated and warned about; the
     vocabulary migrator now rewrites it as the rung it meant, and a repository
     that has not run it holds a wrong-typed dial. That dial is refused by
-    `config_conflicts` and read as the top rung, silently: never as the rung
-    the int meant, which for every level but 4 holds less.
+    `config_conflicts`, naming the migrator as the fix, and read as the top
+    rung, silently: never as the rung the int meant, which for every level but
+    4 holds less.
 
     The migrator's translation is pinned as a literal expectation table: level 4
     is the top rung, level 0 is the sentinel, and the three between are the
@@ -542,6 +543,7 @@ def test_a_retired_ORDINAL_is_refused_and_held_never_translated(
     conflicts = ac.config_conflicts(docs)
     assert len(conflicts) == 1, conflicts
     assert "is a int, expected str" in conflicts[0], conflicts
+    assert "run `python scripts/migrate_vocabulary.py`" in conflicts[0], conflicts
 
 
 def test_a_BOOL_dial_is_refused_though_True_equals_one(tmp_path):
@@ -555,6 +557,8 @@ def test_a_BOOL_dial_is_refused_though_True_equals_one(tmp_path):
     conflicts = ac.config_conflicts(docs)
     assert len(conflicts) == 1, conflicts
     assert "is a bool, expected str" in conflicts[0]
+    # The migrator rewrites only the integers 0 to 4, so a bool is not sent there.
+    assert "migrate_vocabulary" not in conflicts[0], conflicts
     assert ac.acceptance_through(docs) == dg.STAGE_RELEASE
     assert ac.acceptance_through(docs) != dg.STAGE_BOUNDARY
 
