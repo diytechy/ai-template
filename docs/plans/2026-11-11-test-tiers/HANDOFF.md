@@ -2525,7 +2525,7 @@ rewrite it here.
 
 **Items 1 to 3 are done (ninth session, 2026-11-16): §9.11.** **Item 1 is done (tenth session, 2026-11-16): §9.12** records its two leftovers, §4.5.6's prose and "bar" in this repository's own docs. **Items 4 to 7 are done (eleventh session, 2026-11-16): §9.13**, with the ruled fixes of §12.2 and WI-1007. Item 8 (D11) is planned in `D11-PLAN.md`, its decisions ruled (§12.2); `ROW-AMENDMENTS.md` follows the last migrator run, which D11 includes.
 
-**Item 8 (D11) is built (twelfth session, 2026-11-17): §9.14.** Its accepted-row amendments are drafted in `ROW-AMENDMENTS.md` §7 to §15 and not applied: applying them is the operator's act, after the last migrator run. The unfiltered suite on `7d08ba957` failed one test, the deferred-import window, re-stamped in `bba5fab53` (§9.14); every other test passed.
+**Item 8 (D11) is built (twelfth session, 2026-11-17): §9.14.** Its accepted-row amendments are drafted in `ROW-AMENDMENTS.md` §7 to §15 and not applied: applying them is the operator's act, after the last migrator run. The unfiltered suite on `7d08ba957` failed one test, the deferred-import window, re-stamped in `bba5fab53` (§9.14); every other test passed. **The amendments are applied as text (2026-11-17, `6d707bf7d`)**, with the joint gate's code (`8a2e5c686`) and the dial refusal naming the migrator (`bea3ee398`); the operator's act is owed (§12.6).
 
 1. The rest of §4.5, as the operator rules each line.
 2. The glossary's older entries, by hand: "the owner" in *independence* and
@@ -3051,3 +3051,27 @@ list is fixed unless §12.6 says so.
   -> `DevStg-Needs`).
   - **Still owed by §10.7:** `ROW-AMENDMENTS.md` §1 to §15 with SR-247,
     LLR-369 and TC-427, applied for the operator's act; then item 9 (§6).
+- **2026-11-17, the ruled amendments applied as text; the act is owed.**
+  On `maint/vocabulary`, the operator having said yes to both:
+  `bea3ee398`, an unmigrated 0-4 acceptance dial's refusal names the
+  vocabulary migrator (only the integers 0 to 4 on that dial, the values it
+  rewrites); `8a2e5c686`, the boundary gate skips "cites no assumption"
+  for a joint requirement (SR-205 as amended), two tests in TC-237's file;
+  `6d707bf7d`, `ROW-AMENDMENTS.md` §1 to §15 written into the live
+  registries, 21 cells, each file re-parsed to prove only those changed.
+  **Statuses are unchanged:** PROCESS.md says an amended accepted row stays
+  `Accepted` and shows as drift from the record, so the drafts' "as
+  Drafted" was not followed. Departures, all in `ROW-AMENDMENTS.md`'s
+  applied note: SR-195 keeps one "shall" (strict trace); LLR-172 drops
+  "Built by WI-999" (a spine row cites no history); TC-151 names the
+  migrator; SR-205's title already read as drafted. The four lints are
+  clean; 30 modules, 1,192 passed, 2 skipped; the open-items view lists 10
+  SR chains owing a re-accept, 24 row changes.
+  - **The act (the operator's):** flip SR-247, LLR-369 and TC-427 to
+    `Accepted` and, in the same commit, `intake.py snapshot --accepts ...
+    --reaccepts` the sixteen amended rows (SR-139, SR-195, SR-205, LLR-038,
+    LLR-155, LLR-156, LLR-172, LLR-227, LLR-242, LLR-246, TC-150, TC-151,
+    TC-152, TC-166, TC-223, TC-241). Until then, never run
+    `migrate_vocabulary.py` without `--check`: its record step would write
+    the copies without the act. Then the unfiltered suite once, then item 9
+    (§6).

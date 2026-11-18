@@ -5,6 +5,26 @@ Written in the post-§10.5 vocabulary ("accepted", `Accepted`). Apply after
 cells shown change; new text is marked **[new]** in the explanation, the cell
 itself is the full replacement.
 
+**Applied 2026-11-17** on `maint/vocabulary` as text (`6d707bf7d`), with
+§4's code (`8a2e5c686`); the operator's act is owed (HANDOFF §12.6).
+Statuses were left as they were: PROCESS.md says an amended accepted row
+stays `Accepted` and is caught by diffing against the record, so "as
+Drafted" above was not followed. Where the applied text departs from the
+drafts below:
+
+- §1, SR-195 `requirement`: one "shall", since the strict trace refuses
+  two. Its end reads "..., or to a party that mediates for it, giving
+  those findings as one line with their count while no stakeholder is
+  agreed with a party."
+- §3, SR-205 `title`: it already read as drafted; unchanged.
+- §5, LLR-172 `detail`: "Built by WI-999;" dropped, since a spine row may
+  not cite its own history; it reads "... and on the example -000 rows.
+  CMP-006 holds this repository's record and CMP-007 to CMP-009 cite it."
+- §10, TC-151 `method`: "a bare integer (refused naming the vocabulary
+  migrator)", for the refusal the operator asked for on 2026-11-17
+  (`bea3ee398`).
+- §15, LLR-038: applied.
+
 ## 1. SR-195: the count line while no stakeholder is agreed
 
 `requirement`, full replacement:
