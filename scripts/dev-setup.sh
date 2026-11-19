@@ -28,8 +28,9 @@
 #              reversible). Then OFFERS the agent CLIs (claude, codex) — each
 #              its own [y/N] (WI-112): most users want the agentic workflow, but
 #              both are deferrable for someone driving sessions with their own
-#              tools or an IDE extension. Last it offers the coordinator
-#              hooks' machine-local opt-in (WI-880).
+#              tools or an IDE extension. Then it offers the coordinator
+#              hooks' machine-local opt-in (WI-880), and last the optional
+#              GitHub CLI, gh (WI-1011).
 #
 # Windows contributors: use scripts/dev-setup.ps1.
 set -eu
@@ -128,6 +129,34 @@ offer_python() { # (WI-302) one consented offer of a 3.11+ RUNTIME — and only
   esac
   return 0
 }
+offer_gh() { # (WI-1011) the optional GitHub CLI: the offer_cli pattern, one
+  # consented [y/N] through the package manager GH_INSTALL names (one already
+  # on this machine); any answer but y/Y, or closed input, runs nothing. Never
+  # fails setup: every arm returns 0.
+  have gh && return 0
+  echo
+  echo "Optional: the GitHub CLI (gh) reads a pushed branch's CI state."
+  if [ -z "$GH_INSTALL" ]; then
+    echo "  [skip] gh — no package manager for it found; install it your own way: $GH_HINT; then sign in: gh auth login"
+    return 0
+  fi
+  printf 'Install the GitHub CLI now (%s)? [y/N] ' "$GH_INSTALL"
+  # IFS= keeps a leading blank, so " y" does not begin with y and installs
+  # nothing, as PowerShell's anchored match reads it.
+  IFS= read -r ans || ans=""
+  case "$ans" in
+    [Yy]*)
+      # Unquoted on purpose: $GH_INSTALL is a multi-word command to be word-split.
+      if $GH_INSTALL; then
+        echo "  [ok] gh installed — sign in with: gh auth login (a new shell may be needed to find it)"
+      else
+        echo "  [warn] $GH_INSTALL did not finish — install gh your own way: $GH_HINT; then sign in: gh auth login"
+      fi
+      ;;
+    *) echo "  Skipped gh — it is optional; install it later with: $GH_HINT; then sign in: gh auth login" ;;
+  esac
+  return 0
+}
 
 # Prefer the project venv --install creates, so the report reflects what the
 # harness will actually import; fall back to the ambient interpreter.
@@ -175,6 +204,28 @@ case "$(uname 2>/dev/null || echo unknown)" in
     PY_HINT="install Python 3.11+ — e.g. 'uv python install 3.13', your distro's python3.13 package, or the python.org installer"
     ;;
 esac
+# The GitHub CLI (WI-1011): optional. It reads a pushed branch's CI state and
+# nothing here needs it. GH_HINT is the platform's manual route; GH_INSTALL the
+# install through a package manager already on this machine ("" when none),
+# which --install offers. Git Bash reads as Windows (winget).
+GH_INSTALL=""
+case "$(uname 2>/dev/null || echo unknown)" in
+  Darwin)
+    GH_HINT="brew install gh (or the macOS package from https://cli.github.com)"
+    if have brew; then GH_INSTALL="brew install gh"; fi
+    ;;
+  MINGW* | MSYS* | CYGWIN*)
+    GH_HINT="winget install --id GitHub.cli (or the installer from https://cli.github.com)"
+    if have winget; then GH_INSTALL="winget install --id GitHub.cli"; fi
+    ;;
+  *)
+    GH_HINT="your distribution's gh package (e.g. sudo apt-get install gh, sudo dnf install gh) or GitHub's apt repository: https://github.com/cli/cli/blob/trunk/docs/install_linux.md"
+    if have apt-get; then GH_INSTALL="sudo apt-get install gh"
+    elif have dnf; then GH_INSTALL="sudo dnf install gh"
+    elif have brew; then GH_INSTALL="brew install gh"
+    fi
+    ;;
+esac
 echo "dev-setup (ai-template meta-repo). Run tests with: python -m pytest -q"
 echo
 report "runtime (python3)" "$([ -n "$PY" ] && echo 1 || echo 0)" "$PY_HINT"
@@ -200,6 +251,7 @@ report "pytest-xdist (parallel -n auto)" "$([ -n "$PY" ] && "$PY" -c 'import imp
 # row's CLI); everything above still works without them.
 report "claude CLI (agent sessions: agent-resume.*)" "$(have claude && echo 1 || echo 0)" "npm install -g @anthropic-ai/claude-code; then run claude once to sign in"
 report "codex CLI (the OPENAI-* rows in docs/agents.csv)" "$(have codex && echo 1 || echo 0)" "npm install -g @openai/codex; then: codex login"
+report "GitHub CLI gh (optional: a pushed branch's CI state)" "$(have gh && echo 1 || echo 0)" "$GH_HINT; then sign in: gh auth login"
 report "offline Mermaid renderer" "$( { have code || have mmdc || have npx; } && echo 1 || echo 0)" "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
 # Optional, dev-only (WI-189): the dashboard render-critique loop. NOT installed
 # by --install and NOT shipped downstream (the kit's install-nothing posture
@@ -367,7 +419,7 @@ if [ "$MODE" = "check" ]; then
     echo "skipping is fine with your own tools / an IDE extension."
     echo
   fi
-  echo "To install the Python dev tools into ./.venv (and be offered the agent CLIs): sh scripts/dev-setup.sh --install"
+  echo "To install the Python dev tools into ./.venv (and be offered the agent CLIs and the optional GitHub CLI): sh scripts/dev-setup.sh --install"
   exit 0
 fi
 
@@ -470,3 +522,4 @@ if ! have claude || ! have codex; then
   echo "Skipping is fine if you drive sessions with your own tools or an IDE"
   echo "extension; then trim docs/agents-enabled to the rows whose CLIs you keep."
 fi
+offer_gh

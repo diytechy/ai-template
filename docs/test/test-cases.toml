@@ -4273,3 +4273,25 @@ automated = "Yes"
 evidence = "tests/test_trajectory_arch.py::test_a_lanes_order_never_meets_the_undeclared_finding; tests/test_trajectory_arch.py::test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict; tests/test_trajectory_arch.py::test_the_undeclared_finding_on_a_bootstrapped_scaffold"
 status = "Drafted"
 phase = 6
+
+[test.TC-433]
+verifies = ["SR-032", "LLR-372"]
+level = "Integration"
+method = "On a PATH of stand-ins only, run each developer setup's standalone check, this repository's and the shipped template's on both script families, with and without a gh stand-in; run the POSIX ones under each platform name they distinguish."
+tier = "Full"
+expected = "The check reports gh present or missing, marked optional; missing names the platform's install command and gh auth login; the check exits 0 either way, and the template's missing count is the same with and without gh."
+automated = "Yes"
+evidence = "tests/test_run_devsetup.py::test_the_check_reports_gh_as_optional_with_its_install_and_sign_in; tests/test_run_devsetup.py::test_the_powershell_check_reports_gh_as_optional_with_winget_and_sign_in"
+status = "Drafted"
+phase = 6
+
+[test.TC-434]
+verifies = ["SR-032", "LLR-372"]
+level = "Integration"
+method = "On a PATH of stand-ins only, with package-manager stand-ins that record their arguments and nothing really installed, run this repository's install operation on each platform's package manager answering yes, no, an empty line and with closed input, then with no package manager, a failing one and gh present; run the template's install tier with piped input and, at a terminal or a real console, answering yes and no; run the bare run's readiness operation at a terminal answering yes throughout."
+tier = "Full"
+expected = "Only a yes runs the package manager, once, with the platform's install arguments; a no, an empty line, closed input or the template's non-interactive run runs nothing; with no package manager nothing is asked and the manual command is printed; a failed install prints a warning naming it; a present gh is not offered; the readiness operation reports gh and never offers it; every run exits 0."
+automated = "Yes"
+evidence = "tests/test_run_devsetup.py::test_install_offers_gh_and_runs_it_only_on_a_yes; tests/test_run_devsetup.py::test_install_without_a_package_manager_or_with_a_failure_never_fails; tests/test_run_devsetup.py::test_the_templates_install_tier_offers_gh_only_at_a_terminal; tests/test_run_devsetup.py::test_at_a_terminal_the_templates_install_tier_installs_gh_only_on_a_yes; tests/test_run_devsetup.py::test_at_a_terminal_the_bare_runs_check_reports_gh_and_never_offers_it; tests/test_run_devsetup.py::test_powershell_install_offers_gh_and_runs_winget_only_on_a_yes; tests/test_run_devsetup.py::test_the_powershell_templates_install_tier_offers_gh_only_at_a_console; tests/test_run_devsetup.py::test_at_a_windows_console_the_templates_install_tier_installs_gh_on_a_yes; tests/test_run_devsetup.py::test_at_a_windows_console_the_bare_runs_check_never_offers_gh"
+status = "Drafted"
+phase = 6

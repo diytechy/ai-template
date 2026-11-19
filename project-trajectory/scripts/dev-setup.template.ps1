@@ -22,7 +22,8 @@
 #              here. Exits 0 when it satisfies the 3.11 floor, 1 with the
 #              step to take when not.
 #   -Baseline  ensure runtime + git + an offline Mermaid renderer, plus the
-#              selected role(s)' tools. Asks before each install.
+#              selected role(s)' tools and the optional GitHub CLI (gh).
+#              Asks before each install.
 #   -Full      baseline + an IDE and editor extensions. Opt-in; skipped headless.
 #   -Profile   install only that role's tools (plus the shared baseline) — the
 #              opt-down for a contributor who wants just their slice. DEFAULT
@@ -113,9 +114,13 @@ function RolePresent($role) {
 }
 
 $script:missing = 0
-function Report($label, $present, $hint) {
+# -Optional: an optional item is reported, never counted missing.
+function Report($label, $present, $hint, [switch]$Optional) {
     if ($present) { Write-Host "  [ok]      $label" }
-    else { Write-Host "  [missing] $label  — $hint"; $script:missing++ }
+    else {
+        Write-Host "  [missing] $label  — $hint"
+        if (-not $Optional) { $script:missing++ }
+    }
 }
 function MaybeInstall($label, $cmd) {
     if (-not $cmd) {
@@ -125,6 +130,33 @@ function MaybeInstall($label, $cmd) {
     if (-not (Interactive)) { Write-Host "  - ${label}: non-interactive; skipping install ($cmd)"; return }
     $ans = Read-Host "  Install $label via `"$cmd`"? [y/N]"
     if ($ans -match '^[Yy]') { Invoke-Expression $cmd } else { Write-Host "  - skipped $label" }
+}
+
+# The GitHub CLI: optional (it reads a pushed branch's CI state; nothing here
+# needs it), so it is reported but never counted missing. The install tiers
+# offer it through winget when winget is already on this machine; nothing is
+# fetched or piped into a shell.
+$GhInstall = if (Have "winget") { "winget install --id GitHub.cli" } else { "" }
+$GhHint = "winget install --id GitHub.cli (or the installer from https://cli.github.com); then sign in: gh auth login"
+# MaybeInstall's pattern (interactive console only, default no). No arm fails
+# setup: a failed install warns. winget puts gh on PATH for new consoles only,
+# so its exit code is read.
+function OfferGh {
+    if (Have "gh") { return }
+    if (-not $GhInstall) {
+        Write-Host "  - GitHub CLI (optional): winget not found; install it your own way: $GhHint"
+        return
+    }
+    if (-not (Interactive)) { Write-Host "  - GitHub CLI (optional): non-interactive; skipping install ($GhInstall)"; return }
+    $ans = Read-Host "  Install the GitHub CLI (optional) via `"$GhInstall`"? [y/N]"
+    if ($ans -match '^[Yy]') {
+        try {
+            & winget install --id GitHub.cli
+            $installed = ($LASTEXITCODE -eq 0)
+        } catch { $installed = $false }
+        if ($installed) { Write-Host "  [ok] gh installed; open a new console to find it, then sign in: gh auth login" }
+        else { Write-Host "  [warn] winget could not install gh; install it your own way: $GhHint" }
+    } else { Write-Host "  - skipped GitHub CLI (optional); install it later with: $GhHint" }
 }
 
 $profileLabel = if ($Profile) { $Profile } else { "all" }
@@ -172,6 +204,7 @@ foreach ($r in $selected) {
 if ($tier -eq "full") {
     Report "IDE (VS Code 'code')" (Have "code") "install an editor; run again with -Full to add extensions"
 }
+Report "GitHub CLI gh (optional: a pushed branch's CI state)" (Have "gh") $GhHint -Optional
 
 # The retained adjudicator's sign-in (WI-834, WI-798): with [adjudicator]
 # retention on, the adjudicator's entry runs under its declared account: a token
@@ -347,6 +380,9 @@ if (($tier -eq "run") -and -not (Interactive)) {
         if (Interactive) { MaybeInstall "IDE" $IdeInstall }
         else { Write-Host "  - IDE: headless/non-interactive; skipped (opt-in, -Full only)." }
     }
+    # The optional GitHub CLI is the install tiers' alone: a bare run reports
+    # it and offers nothing for it.
+    if ($tier -ne "run") { OfferGh }
     OfferSignin
     OfferHooks
 }

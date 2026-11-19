@@ -24,7 +24,8 @@
 #               interpreter only, never one found here. Exits 0 when it
 #               satisfies the 3.11 floor, 1 with the step to take when not.
 #   --baseline  ensure runtime + git + an offline Mermaid renderer, plus the
-#               selected role(s)' tools. Asks before each install.
+#               selected role(s)' tools and the optional GitHub CLI (gh).
+#               Asks before each install.
 #   --full      baseline + an IDE and editor extensions. Opt-in, and skipped when
 #               headless / non-interactive (no TTY or $CI set).
 #   --profile <role>  install only that role's tools (plus the shared baseline) —
@@ -87,7 +88,7 @@ while [ $# -gt 0 ]; do
     --python=*)  RUN_PYTHON="${1#*=}" ;;
     --profile)   shift; PROFILE="${1:-}" ;;
     --profile=*) PROFILE="${1#*=}" ;;
-    -h|--help)   sed -n '2,33p' "$0"; exit 0 ;;
+    -h|--help)   sed -n '2,34p' "$0"; exit 0 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -132,12 +133,12 @@ fi
 interactive() { [ -t 0 ] && [ -z "${CI:-}" ]; }
 
 missing=0
-report() { # <label> <present:0/1> <hint>
+report() { # <label> <present:0/1> <hint> [optional]  (an optional item is not counted missing)
   if [ "$2" -eq 1 ]; then
     say "  [ok]      $1"
   else
     say "  [missing] $1  — $3"
-    missing=$((missing + 1))
+    [ "${4:-}" = "optional" ] || missing=$((missing + 1))
   fi
 }
 
@@ -155,6 +156,38 @@ maybe_install() { # <label> <install-cmd>
   printf '  Install %s via "%s"? [y/N] ' "$1" "$2"
   read -r ans
   case "$ans" in [Yy]*) sh -c "$2" ;; *) say "  - skipped $1" ;; esac
+}
+
+# The optional GitHub CLI, offered by the install tiers only: maybe_install's
+# pattern (interactive terminal only, default no) through the package manager
+# GH_INSTALL names, one already on this machine. Optional, so no arm fails
+# setup: a failed install warns and every arm returns 0.
+offer_gh() {
+  have gh && return 0
+  if [ -z "$GH_INSTALL" ]; then
+    say "  - GitHub CLI (optional): no package manager for it found; install it your own way: $GH_HINT; then sign in: gh auth login"
+    return 0
+  fi
+  if ! interactive; then
+    say "  - GitHub CLI (optional): non-interactive; skipping install ($GH_INSTALL)"
+    return 0
+  fi
+  printf '  Install the GitHub CLI (optional) via "%s"? [y/N] ' "$GH_INSTALL"
+  # IFS= keeps a leading blank, so " y" does not begin with y and installs
+  # nothing, as PowerShell's anchored match reads it.
+  IFS= read -r ans || ans=""
+  case "$ans" in
+    [Yy]*)
+      # Unquoted on purpose: $GH_INSTALL is a multi-word command to be word-split.
+      if $GH_INSTALL; then
+        say "  [ok] gh installed; sign in with: gh auth login (a new shell may be needed to find it)"
+      else
+        say "  [warn] \"$GH_INSTALL\" did not finish; install gh your own way: $GH_HINT; then sign in: gh auth login"
+      fi
+      ;;
+    *) say "  - skipped GitHub CLI (optional); install it later with: $GH_HINT; then sign in: gh auth login" ;;
+  esac
+  return 0
 }
 
 renderer_present() { have code || have mmdc || have npx; }
@@ -202,6 +235,29 @@ case "$(uname 2>/dev/null || echo unknown)" in
   Darwin) PY_HINT="install a Python 3.11+ runtime — e.g. 'uv python install 3.13', 'brew install python@3.13', or the python.org macOS installer. NOT xcode-select / Command Line Tools: those ship Python 3.9, below this floor." ;;
   *)      PY_HINT="install a Python 3.11+ runtime — e.g. 'uv python install 3.13', your distro's python3.13 package, or the python.org installer" ;;
 esac
+# The GitHub CLI: optional (it reads a pushed branch's CI state; nothing here
+# needs it), so it is reported but never counted missing. GH_HINT is the
+# platform's manual route; GH_INSTALL the install through a package manager
+# already on this machine ("" when none), which the install tiers offer. Git
+# Bash reads as Windows (winget). Nothing is fetched or piped into a shell.
+GH_INSTALL=""
+case "$(uname 2>/dev/null || echo unknown)" in
+  Darwin)
+    GH_HINT="brew install gh (or the macOS package from https://cli.github.com)"
+    if have brew; then GH_INSTALL="brew install gh"; fi
+    ;;
+  MINGW* | MSYS* | CYGWIN*)
+    GH_HINT="winget install --id GitHub.cli (or the installer from https://cli.github.com)"
+    if have winget; then GH_INSTALL="winget install --id GitHub.cli"; fi
+    ;;
+  *)
+    GH_HINT="your distribution's gh package (e.g. sudo apt-get install gh, sudo dnf install gh) or GitHub's apt repository: https://github.com/cli/cli/blob/trunk/docs/install_linux.md"
+    if have apt-get; then GH_INSTALL="sudo apt-get install gh"
+    elif have dnf; then GH_INSTALL="sudo dnf install gh"
+    elif have brew; then GH_INSTALL="brew install gh"
+    fi
+    ;;
+esac
 report "runtime (python3)"          "$RUNTIME"                        "$PY_HINT"
 report "git"                        "$(real git && echo 1 || echo 0)" "install git — needed to make reviewable changes (macOS: xcode-select --install)"
 report "offline Markdown+Mermaid renderer" \
@@ -219,6 +275,7 @@ done
 if [ "$TIER" = "full" ]; then
   report "IDE (VS Code 'code')" "$(have code && echo 1 || echo 0)" "install an editor; run again with --full to add extensions"
 fi
+report "GitHub CLI gh (optional: a pushed branch's CI state)"        "$(have gh && echo 1 || echo 0)"        "$GH_HINT; then sign in: gh auth login" optional
 
 # The retained adjudicator's sign-in (WI-834, WI-798): with [adjudicator]
 # retention on, the adjudicator's entry runs under its declared account: a token
@@ -369,6 +426,9 @@ else
       say "  - IDE: headless/non-interactive; skipped (opt-in, --full only)."
     fi
   fi
+  # The optional GitHub CLI is the install tiers' alone: a bare run reports it
+  # and offers nothing for it.
+  if [ "$TIER" != "run" ]; then offer_gh; fi
   offer_signin
   offer_hooks
 fi
