@@ -405,9 +405,14 @@ may be tagged before its TC is accepted. The same read holds the tags equal to
 the `Evidence` cells, the rule `PROCESS.md` §3 states: `tc_tag_findings` reads each cell
 through `kitlib.spine.evidence_items`, as `trace.py` does, and reports each
 difference by TC and node, `evidence without a tag` or `tag without evidence`, at
-the same severity. A test no cell names and a TC with neither a tag nor a part
-under the tests root are no finding. The comparison retires when the `Evidence`
-column is generated.
+the same severity. A test no cell names is no finding. The comparison retires
+when the `Evidence` column is generated. A TC with no tag at all is a finding
+only when it is `Accepted` or `Founded` and its `Automated` cell reads `Yes`:
+`<TC>: no test declares it`, at the same severity, whatever its `Evidence` cell
+holds (a note, nothing, a part outside the tests root, a path the tree lacks). A
+`Drafted` TC, an `Automated=No` or blank one and a `-000` row owe no tag, and a
+TC with a part in a file refused as unreadable adds nothing beside that file's
+finding. This rule stays when the comparison retires.
 
 ### 5.1 The SR/LLR/TC triangle rule
 

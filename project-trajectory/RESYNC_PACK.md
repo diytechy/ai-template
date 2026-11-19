@@ -11172,6 +11172,76 @@ overrides and `docs/stack.ini` (by hand, if they name a renamed key;
 `docs/stack.ini` is rewritten by the migrator where a `[step:*]` holds
 `gates =`).
 
+### An accepted automated test case needs a test declaring it [since b696b6c36]
+
+*(Anchored at the preceding commit: the change lands after it.)*
+
+**What changed.** `check_trajectory.py`'s test-file tag rule gains one
+finding. A test case whose `status` is `Accepted` or `Founded` and whose
+`automated` cell reads `Yes` (stripped, in any case) must be named by at least
+one `Implements:` tag under the declared `[paths] tests` root. One that no tag
+names reads **`<TC>: no test declares it`**, whatever its `evidence` cell
+holds: a note, nothing, a file or test part, a CI or document path outside the
+tests root, or a path your tree lacks. It takes the earlier tag findings'
+severity: a WARN, and an ERROR under `--strict`, so `check.py` refuses with it
+from `DevStg-Impl`, and with it CI, `[bars] review` and the landing checks; a
+plain commit's hook stays a WARN.
+
+Not held: a `Drafted` case; a case whose `automated` is `No`, blank, absent or
+another word; a `-000` row; and a case with a part in a file refused as
+`unreadable`, whose own finding stands. With no tests root or no test-case
+registry the rule is vacuous. A tag declares a test and says nothing of its
+result, so a tagged test that still fails is clean here.
+
+`trace.py`'s `Automated=Yes` schema message now asks for the test whose
+`Implements:` line declares the case, or `Automated=No` for a procedure,
+where it offered a script path or a procedure link.
+
+**The sequence.** Nothing new decides the severity: each checkpoint is the
+existing `--strict` choice.
+
+- A lane in its ordinary order never meets the finding. The intent row is
+  `Drafted` with an `(owed by the tests commit)` note, the tests commit adds the
+  tag and the part, and the case is tagged before its act accepts it.
+- Below `DevStg-Impl`, a case accepted before its test warns from `check.py`
+  and the hook, and the exit code is unchanged.
+- The commit accepting your last `Drafted` case still commits (the hook
+  warns), and `docs/stage` then reads `DevStg-Impl`.
+- From `DevStg-Impl`, each accepted automated case with no tag is an ERROR, and
+  the reading is repo-wide: a lane cannot go green by tagging only its own
+  cases. A row's `checks_stage` key is no way round it.
+- Once a tagged test lands, failing or not, the case is clean.
+
+**What to do (forced migration).** The test-file tag entries above said no
+second migration would follow; this one does. Take the kit files, run
+`scripts/check_trajectory.py` on your tree, and settle each case a `no test
+declares it` line names:
+
+- **An automated case:** tag a test that runs it (`Implements: TC-###` in the
+  test's docstring or its module's) and name that test in `evidence`. A tagged
+  failing test clears the finding; whether it passes stays the harness's
+  answer.
+- **A procedure a person carries out** (an Analysis, Inspection,
+  Demonstration or Manual case, or reading a CI result): set
+  `automated = "No"`. `automated` is a traced cell, so the change re-accepts
+  nothing. The case then reads as an observation case: `trace.py` advises
+  declaring its `inputs` and `max_age`, and the release checklist lists it.
+
+If you are at `DevStg-Impl` or later, take `process.md` §4's test-first order
+up front: the first work at that rung lands a failing test, with its tag and
+`evidence` part, for every accepted automated case. A phased repository meets
+the ERROR when its last phase reaches `DevStg-Impl`, since `docs/stage` is the
+minimum over the phases. `[checks] trajectory_check = false` still turns the
+whole check off. No setting and no schema changes.
+
+**Kit-owned files — overwrite:** `scripts/trajectory_arch.py`,
+`scripts/check_trajectory.py`, `scripts/trace.py`, `PROCESS.md`.
+
+**Regenerated files:** `docs/process.md`.
+
+**Adopter-merged files:** `docs/test/test-cases.toml`, where a procedure
+case's `automated` cell becomes `No`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

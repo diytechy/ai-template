@@ -186,7 +186,10 @@ Stable, zero-padded, never reused.
   `Evidence` parts under the tests root, until that column is generated from
   the tags: a file part matches a file-level tag, a test part that test's tag
   (a `[case]` dropped), and each difference is a finding naming the TC and the
-  node, `evidence without a tag` or `tag without evidence`. The registry rows
+  node, `evidence without a tag` or `tag without evidence`. An accepted TC with
+  `Automated=Yes` that no tag names is `<TC>: no test declares it`, whatever its
+  `Evidence` cell holds: tag a test, or, for a procedure a person carries out,
+  set `Automated=No`. The registry rows
   are authoritative. The code-side obligation is a DIAL, not a
   blanket rule:
   `docs/process.toml` `[checks] backlink_coverage_min` is the minimum share of

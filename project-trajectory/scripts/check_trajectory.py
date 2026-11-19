@@ -120,9 +120,13 @@ that is unreadable, each by file, line and shape. It holds the tags equal to
 each live TC's `Evidence` parts under that root, a Drafted TC included: a part
 no tag declares reads `evidence without a tag`, and a tag no part names `tag
 without evidence`, each naming the TC and the node. A part outside the root and
-a file refused as unreadable add no such finding. It reads no tag as a pass, and
-with no tests root or no TC registry it is vacuous. An adopter's gate refuses
-from `DevStg-Impl`, where `check.py` first adds `--strict`.
+a file refused as unreadable add no such finding. An Accepted or Founded TC
+whose `Automated` cell reads `Yes` needs a tag: one no tag names reads `<TC>: no
+test declares it`, whatever its `Evidence` cell holds, unless a part of it names
+a file refused as unreadable. A Drafted TC, a `-000` row and a TC not automated
+owe none. It reads no tag as a pass, and with no tests root or no TC registry it
+is vacuous. An adopter's gate refuses from `DevStg-Impl`, where `check.py` first
+adds `--strict`.
 
 **How-SW top-view right-sizing** (WI-073/FB5; process-options.md "Component
 layer"). The software-architecture diagram's *first view* must show at most
