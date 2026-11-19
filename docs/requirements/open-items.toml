@@ -1302,6 +1302,7 @@ status = "ruled"
 raised = "2026-08-18"
 ruled_date = "2026-08-18"
 ruling_ref = "docs/log.d/2026-08-18-owner-rulings.md"
+follow_up = """carried out in its ruling commit 4b8f9ab49 (2026-08-18): the headers of stakeholder-needs.toml, interfaces.toml, external.toml and hats.toml were rewritten as field guides, 59 detector tokens to 0, as this row's decision records."""
 one_line = """RULED 2026-08-18: YES, THE RULE REACHES HEADERS - a registry header is a LIGHT FIELD GUIDE (what the field is, a very short why/how it is used) and carries no history reference at all; executed the same date over four headers, 59 tokens to 0"""
 decision = """RULED (owner, 2026-08-18): YES - THE RULE REACHES REGISTRY HEADERS, and the ruling goes further than the brief's (a) by saying what a header should BE rather than only what it may not contain.
 
@@ -3553,6 +3554,7 @@ recommendation = "(a) keep it derived for now: it exists to serve SN-043, and a 
 wi_refs = ["WI-627", "WI-643"]
 ruled_date = "2026-09-26"
 ruling_ref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
+follow_up = """none — the ruling, (a), kept SR-187 a derived requirement as it stood, so no row changed; the owner's question, how the kit carries a derived requirement, was answered in the ruling record docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md (commit cd7a4ae9a)."""
 
 [open_item.OI-90]
 title = "Which test cases count as observation tests (spine map D22)?"
@@ -3571,6 +3573,7 @@ recommendation = "(a) confirm: a manual or demonstration result also goes stale 
 wi_refs = ["WI-631", "WI-638"]
 ruled_date = "2026-09-26"
 ruling_ref = "docs/log.d/2026-09-26-owner-rulings-oi82-oi94.md"
+follow_up = """WI-638 (commit f7885a49e, 2026-09-27) gave TC-036, TC-055, TC-209, TC-210 and TC-211 their inputs and max_age, which cleared the ten missing-inputs and lifetime advisories the ruling called real work."""
 
 [open_item.OI-91]
 title = "SR-178 promises need-text drift reporting that is not built: fund the detector or amend SR-178 (spine map D29)"
