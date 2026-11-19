@@ -38,17 +38,20 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
      exercised, and architectural changes that keep the code clean and
      modular are in scope. B8's overnight launcher goes.
   2. **The queue:** the ready frontier below. Every queued row owes its scope
-     critique before a claim. WI-1010 turns the assumption gate on, and it
+     critique before a claim. The row that turns the assumption gate on
      comes last: its four steps report 91 findings today.
-  3. **Downstream (HANDOFF §7):** a second `migrate_vocabulary.py` pass over
-     the 13 converted repositories, PictureSorter's CI line (`--gate G3` is
-     now refused), then HomeHub's adoption.
+  3. **Downstream (HANDOFF §7):** the second migrator pass is done where it
+     was safe (HANDOFF §12.6, 2026-11-19). Left: FileBackup, held by the
+     operator until its conversion is merged; the four conversions paused
+     partway; PictureSorter's CI line, which passes a retired stage tag to
+     `--gate` and changes when the kit's scripts are copied in; then
+     HomeHub's adoption.
 
   The operator's open items render on [open-items.html](open-items.html);
   the rows they hold are under "Blocked" below. Reviews (operator,
-  2026-11-19): prose and requirement text by Gemini Carbon at low effort,
-  code by Sol (`gpt-6.1-sol`) at low effort. Pushing is the operator's
-  (`push = "operator"`).
+  2026-11-19): prose and requirement text by Gemini Argon
+  (`opencode-go/gemini-4-argon`) at low effort, code by Sol (`gpt-6.1-sol`)
+  at low effort. Pushing is the operator's (`push = "operator"`).
 - **Assumption tier — C1 and C2 have landed and are approved:** the
   redrawn frame, checkpoint re-judging of observation tests, the assumption
   gate's four steps (behind `[checks] assumption_gate = false`), and C2's
