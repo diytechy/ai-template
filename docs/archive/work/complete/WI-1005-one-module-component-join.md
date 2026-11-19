@@ -3,12 +3,93 @@ id = "WI-1005"
 title = "The module to component join has one home, which gen_components and trajectory_arch both call"
 workstream = "process"
 sr_refs = ["SR-159", "SR-169"]
-specref = "docs/plans/2026-11-11-oi130-rescore/README.md#defects-in-the-live-partition"
+specref = ""
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 3
 planmode = "none"
 +++
+
+## Deliverable
+
+`kitlib.spine.module_components(llrs)` is the module-to-component join's one
+home. `gen_components.build` passes it the design rows its loader returned.
+`trajectory_arch`'s `component_top_view` and `_classifiable_edges` pass it
+`spine_carrier.load` of the LLR registry. Both copies are deleted, and so is
+`check_trajectory`'s re-export of the second. Both callers already imported
+the package, so no import edge, interface row or boundary is added. The spec
+of record is defect 3 under "Defects in the live partition" in
+[`docs/plans/2026-11-11-oi130-rescore/README.md`](../../../plans/2026-11-11-oi130-rescore/README.md).
+The row's SpecRef cell was cleared at close, as R-F asks of a terminal row.
+
+The two copies disagreed on three inputs. The kept answer for each is
+`trajectory_arch`'s:
+
+- **A `-000` example row.** `gen_components`' copy joined one if handed it,
+  though its own loader never handed it one; `trajectory_arch`'s skipped it.
+  Kept: skipped. The shipped template's `LLR-000` row is the live instance:
+  the old `gen_components` copy, handed the template's rows unfiltered, mapped
+  `path/to/module` to `CMP-000`.
+- **A row whose id does not start with `LLR-`.** `gen_components`' copy joined
+  it; `trajectory_arch`'s skipped it. Kept: skipped.
+- **A `Component` token that does not start with `CMP-`.** `gen_components`'
+  copy kept it; `trajectory_arch`'s dropped it. Kept: dropped.
+
+Why the narrower answer: a placeholder row, or a token that cannot name a
+component, should not make a membership that the gate-bearing containment and
+cross-component rules read. That copy was also the one with a test. No caller
+wanted the wider answer, since each intersects the map with the ids it
+declares. `test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed`
+pins all three, one case each, beside a control row whose well-formed dangling
+tag is kept.
+
+A registry `trace.py --strict` passes carries none of the three, apart from
+`-000` rows, which `gen_components`' loader already drops, so each caller's
+output on it is unchanged. Measured on this repository: the one home's map
+equals each deleted copy's, each fed the rows its caller fed it, and the
+current generator over the trunk-base registries reproduces the trunk-base
+component view byte for byte.
+
+- **Critique dispositions** (7a88dba75): S3, S5 and S4 adopted. The
+  Done-when states the input contract, the three disagreements, the kept
+  answer and the home. `planmode = "none"`.
+- **Regressions** (5a4f2e201), red before the code in all five cases: four on
+  the missing `kitlib.spine.module_components`, one on `gen_components`'
+  copy still bound. The WI-429 split test now drives the one home over the
+  rows `spine_carrier` loads, and the three disagreement arms sit beside it in
+  `tests/test_components_registry.py`.
+  `tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join`
+  pins three things: the generator binds no copy, it hands the one home its
+  loaded design rows once, and it places seams by the answer. A stubbed empty
+  map leaves all three seams unplaced.
+- **Code** (8abc17fc8): the function in `kitlib/spine.py` and the two
+  callers' calls. The ratchet re-stamps down: `trajectory_arch.py` from 1145
+  to 1130 SLOC and `check_trajectory.py` from 1660 to 1659.
+  `kitlib/spine.py` is 627 SLOC, under the threshold. RESYNC entry "The
+  module-to-component join has one home, in kitlib.spine": nothing forced;
+  overwrite the four files together. The OI-130 re-score's `live.py` calls
+  the one home, so its README re-run recipe still runs.
+- **Registry rows** (5f3245c7b): LLR-373 and TC-435, both new and `Drafted`.
+  LLR-049's and LLR-199's `code_symbol` (traced) drop `module_components`,
+  which neither module defines now. Watermark LLR 373, TC 435.
+- **The component view** changes only by the new row. CMP-006 gains LLR-373
+  and SR-169 (now shared with CMP-009, so it enters both `sr_shared_refs`),
+  and gains the UX-ENGINEER hat SR-169 carries. `design_rows` goes from 336
+  to 337. No module or seam moves. The stage, status, open-items,
+  acceptance-brief and `PROJECT_STATE` views were regenerated for the two
+  new `Drafted` rows.
+
+Left undone:
+
+- **The review bar.** Built on the maintenance branch `maint/wi-1005`,
+  outside the lane workflow: no claim and no lane review rounds. The parent
+  session reviews the diff and merges it.
+- **TC-436** was allotted and not minted: one case verifies LLR-373, the
+  call pin included.
+- **The re-score's other two defects** (membership drift and the seam check's
+  blindness to dotted imports) are their own rows. `kitlib/spine.py` stays
+  tagged into CMP-006, CMP-008 and CMP-009. LLR-373 tags CMP-006, where the
+  module already was, so it adds no tag.
 
 ## Context
 
@@ -41,11 +122,11 @@ row and no boundary. `check_trajectory` stops re-exporting the deleted
 
 ## Done-when
 
-- [ ] One function owns the join: `kitlib.spine.module_components(llrs)`.
+- [x] One function owns the join: `kitlib.spine.module_components(llrs)`.
       `gen_components` (CMP-009) and `trajectory_arch` (CMP-006) both call it,
       both copies are deleted, and so is `check_trajectory`'s re-export of the
       second.
-- [ ] The join's input contract is closed:
+- [x] The join's input contract is closed:
       - It takes the LLR rows its caller loaded and loads nothing.
         `gen_components` passes its own `_load` rows (examples dropped), and
         `trajectory_arch` passes `spine_carrier.load(<llr registry>, "LLR-ID")`.
@@ -57,7 +138,7 @@ row and no boundary. `check_trajectory` stops re-exporting the deleted
       - It does not filter tags against the component registry: every caller
         intersects with the ids it declares, and a tag naming no row is
         `trace.py`'s finding.
-- [ ] The two copies disagreed on three inputs, and the kept answer for each
+- [x] The two copies disagreed on three inputs, and the kept answer for each
       is `trajectory_arch`'s, named in the Deliverable and pinned by a test of
       the one home:
       - a `-000` example row is skipped;
@@ -68,9 +149,9 @@ row and no boundary. `check_trajectory` stops re-exporting the deleted
       `trace.py --strict` passes carries none of the three, apart from `-000`
       rows, which `gen_components`' loader already drops. On such a registry,
       each caller's output is unchanged.
-- [ ] The existing test covers the one home, and `gen_components` keeps a pin
+- [x] The existing test covers the one home, and `gen_components` keeps a pin
       that it calls it.
-- [ ] `trace.py --strict` and `check_trajectory.py --strict` are clean, and
+- [x] `trace.py --strict` and `check_trajectory.py --strict` are clean, and
       the component view regenerates unchanged or its changes are explained
       in the Deliverable.
 
