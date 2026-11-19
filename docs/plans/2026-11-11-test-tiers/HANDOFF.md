@@ -3199,3 +3199,39 @@ list is fixed unless §12.6 says so.
   offers `gh`) and WI-1012 (the light-spine variant). The lints are clean;
   `test_dogfood_sync`, `test_profile` and `test_check_docs` pass. Next: the
   unfiltered suite, the regenerated views, then the trunk merge.
+- **2026-11-19, reviews.** Sol (`gpt-6.1-sol`, low) on the day's code diff
+  (the fold's four reference lines): no findings. Gemini Argon
+  (`opencode-go/gemini-4-argon`, low; the operator chose it over Carbon,
+  which needs OpenCode Zen credits) on the day's prose: three findings, all
+  applied in `87a334b0f`.
+- **2026-11-19, CI (B6), read with `gh` for the first time.** Every run since
+  at least 2026-11-05 fails, on every branch. The run on the pushed
+  `maint/vocabulary` (44467646336): `test (ubuntu-latest, 3.11)` ran the whole
+  suite in 19 min, 18 failed and 8,060 passed, and its failure cancelled the
+  other five matrix jobs. The failures are the runner's environment, not the
+  branch: no git identity (`git commit-tree failed`, "Committer identity
+  unknown": five `test_id_carrier_git` tests and one `test_trunk_step`),
+  `run.sh` without its execute bit (two `test_run_devsetup` cases; WI-910's
+  subject), the session service refusing a checkout without commit hooks
+  (four `test_session_adapters` tests), and two `test_accounts` cases that do
+  not raise there. `smoke-budget` fails the same way (6 of 3,615). B6 owns
+  the fix: set a git identity and the hooks in the workflow, or make those
+  tests set their own, then run the iterate checks on push and the matrix
+  nightly, with `fail-fast: false`.
+- **2026-11-19, downstream: the second migrator pass (§7).** `migrate_vocabulary
+  --check` over the 13 conversion worktrees (`C:\Projects\<Repo>-wt-spine`,
+  branch `spine/kit-conversion-2026-11-12`). Applied and committed with the
+  hook bypassed (the operator's 2026-11-12 permission for those branches) in
+  six: Finance-Auditor, gilbert, NagLight, NotHomeWrecker, PictureSorter,
+  Pictures2VideoSlideShow. Each diff is `Approved` -> `Accepted`, `gates =` ->
+  `from-stage =` and, in gilbert, the scratchpad's file name; a re-check owes
+  nothing. Six owed nothing: BandWars, MinecraftKeeper, MiniPC-Deployer,
+  OfficeWallNaglight, EntertainmentPC, OtterTube (four of them are still
+  paused partway through the conversion). **FileBackup is held:** it carries
+  an acceptance record, and the migrator's record step would absorb 547
+  cells into it. 242 are the `verification` -> `verification_method` rename;
+  the rest are the conversion's own text changes to accepted rows (51
+  `requirement`, 80 `acceptance_criteria`, 27 `rationale`, 20 `need` and
+  more), which a run would accept without FileBackup's operator reading
+  them. PictureSorter's CI line `--gate G3` changes when the kit's scripts are
+  copied into that repository, not before: its CI still runs the old scripts.
