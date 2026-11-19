@@ -684,6 +684,8 @@ and it also shrinks the canary set's 30 to 40 s.
 **B5. Change the prose that only adds tests.** Nothing in the method merges
 or retires a test. Proposed wording for six passages and one new rule is in
 README §8. Operator ruling needed: reviewers will read it as weakening.
+**Ruled 2026-11-19 (§12.2):** the rule leads with requirements, and
+architectural changes that keep the code modular are in scope.
 
 **B6. CI.** Jobs have a 20-minute timeout for a suite that takes 33 minutes or
 more locally, and the root conftest halves the worker count even with the CPU cap
@@ -2623,6 +2625,19 @@ the hold above.
 | D11, SN-028's one-word-file window | **Left out** of D11, to close under SN-028's own ruling (decision D) |
 | D11, `red_rounds_max`; bootstrap's `LEGACY_ACCEPTANCE` | Taken as recommended, not asked: a migrator row beside the kept refusal (E); renamed `GATE_POLICY_DIALS`, since it backs the live `--gate-policy` preset (F) |
 
+**Rulings taken on 2026-11-19.**
+
+| | Ruling |
+|---|---|
+| Push (B14) | The operator pushed `maint/vocabulary` (`origin/maint/vocabulary`) |
+| The pause (B10) | **Lifted.** `docs/work/pause` deleted (`de133ce18`) |
+| Trunk | **Merge `maint/vocabulary` into `refactor_again` when ready**: the unfiltered suite, the regenerated views, the resume text, then a merge commit, then `test_first_since` moved to it (§12.2) |
+| B5, tests that only add | **The rule leads with requirements.** The operator: "if tests are duplicating or no longer serving a requirement, they and their respective code should be cut. Architectural changes are permitted to keep code clean and modular for maintainability." README §8's proposed rule becomes: *A test earns its place by the requirement it verifies. A test that duplicates another's verification of the same requirement, or no longer serves one, is removed together with the code only it exercised. A test that pins how a refactor was carried out is removed when the work item that needed it lands. Cases that differ only in input are one parametrized test.* Restructuring that keeps the code clean and modular is in scope of the work item that touches it |
+| B6, CI | `gh` installed on this workstation (2.105.0); `gh auth login` is the operator's. dev-setup offers it as an optional tool: WI-1011 |
+| Light-spine repositories | An open item there may move from `ruled` to `implemented`, since no work item records the work done. A comment in the shipped open-items template only; no mechanism or test here changes. The variant those repositories adopt is WI-1012, a follow-up |
+| Downstream (§7) | Yes: the second migrator pass over the 13 converted repositories, PictureSorter's CI line, then HomeHub |
+| Reviews | Prose and spine requirement text: Gemini Carbon at low effort. Code: Sol (`gpt-6.1-sol`) at low effort. Carbon is offered only as `opencode/gemini-4-carbon` (OpenCode Zen), which refused for lack of credits on 2026-11-19; the Go plan covers `opencode-go/*`, whose Gemini is `gemini-4-argon`. Asked |
+
 ### §12.3 Why a test run crashed the machine, and how to run one safely
 
 **Cause, measured 2026-11-16.** The user environment variable
@@ -3175,3 +3190,12 @@ list is fixed unless §12.6 says so.
   skip. `docs/open-items.html` does not render assumptions or surrogates,
   so WI-1010 recommends adding them to §2 before the operator's act. The flip
   to `assumption_gate = true` is its last step.
+- **2026-11-19, the operator's answers on the way to trunk** (§12.2, third
+  table). On `maint/vocabulary`: `de133ce18` deletes `docs/work/pause` and
+  rewrites `docs/status.md`'s resume text (the old block's link to the
+  newest coordinator handoff is kept, since the handoff chain hangs from it:
+  cutting it orphaned 72 documents); `b9b71b225` puts the light-spine
+  `implemented` comment in the open-items template and files WI-1011 (dev-setup
+  offers `gh`) and WI-1012 (the light-spine variant). The lints are clean;
+  `test_dogfood_sync`, `test_profile` and `test_check_docs` pass. Next: the
+  unfiltered suite, the regenerated views, then the trunk merge.
