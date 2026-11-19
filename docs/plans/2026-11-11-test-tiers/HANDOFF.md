@@ -2638,6 +2638,7 @@ the hold above.
 | Downstream (§7) | Yes: the second migrator pass over the 13 converted repositories, PictureSorter's CI line, then HomeHub |
 | FileBackup | **Held (option (c)):** no migrator run until its conversion is merged; the operator will come back to it |
 | The queue | **Proceed with the available queued work items** once trunk is merged |
+| How the queue is built | **As maintenance branches (option 3).** The operator, 2026-11-19: "Since it is touching the underlying mechanisms I think it will have to be built as maintenance branches." No claim and no coordinator lease (a claim refuses without the lease while `[coordinator] context_guard_pct` is on). Each row on `maint/wi-NNNN` in a worktree under `D:\`, commits with the hooks ON (the bypass was granted for `maint/vocabulary` only), reviewed by Sol (code) and Argon (prose), merged into `refactor_again` by hand, the unfiltered suite once per batch |
 | Reviews | Prose and spine requirement text: Gemini Carbon at low effort, then **Argon** (`opencode-go/gemini-4-argon`, low) when Carbon proved unavailable. Code: Sol (`gpt-6.1-sol`) at low effort. Carbon is offered only as `opencode/gemini-4-carbon` (OpenCode Zen), which refused for lack of credits on 2026-11-19; the Go plan covers `opencode-go/*`, whose Gemini is `gemini-4-argon`. Asked |
 
 ### §12.3 Why a test run crashed the machine, and how to run one safely
@@ -3246,3 +3247,16 @@ list is fixed unless §12.6 says so.
   `381d68548` on `maint/vocabulary`, and the test passes.
   Gotcha: hand-authored `docs/status.md` must name no retired tag and no id
   a later claim needs (`integrate._status_prose_refusal`).
+
+- **2026-11-19, the queue, batch 1.** Trunk `refactor_again` holds the merge
+  (`f6dd5b87a`), `test_first_since` moved to it (`baabd52bd`, hooks on: 77 s),
+  and the round-1 scope critiques of WI-1003, 1005, 1006, 1007 and 1011
+  (`b696b6c36`, `docs/reviews/2026-11-19-scope-critiques/`: all
+  CHANGES-REQUESTED, each owing a `planmode`). Batch 1, built in parallel by
+  sub-agents from the rules in this session's brief: WI-1001
+  (`D:i-template-wt-wi1001`), WI-1006 (`...-wi1006`) and WI-1011
+  (`...-wi1011`), each with its own ids (TC-428..434, LLR-370..372, IF-313)
+  so the merges do not collide. Batch 2 runs one after another, since all
+  three edit `trajectory_arch.py`: WI-1005, then WI-1003, then WI-1007. The
+  three merged worktrees (fix-a, fix-b, wi999) were removed; their branches
+  stay.
