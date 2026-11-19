@@ -2,8 +2,9 @@
 
 Planned on branch `maint/wi-1006` at `8e08e7bbd`, a maintenance branch cut
 from trunk `refactor_again` at `b696b6c36`. Read in full: the row, its spec
-of record `docs/specs/WI-1006.md` and the scope critique. Also read: SR-148,
-LLR-298, LLR-299, IF-073, IF-102, IF-118, the open-items template and this
+of record `docs/specs/WI-1006.md` (archived at the close as
+`docs/archive/specs/WI-1006.2026-11-19.md`) and the scope critique. Also
+read: SR-148, LLR-298, LLR-299, IF-073, IF-102, IF-118, the open-items template and this
 repository's registry, `kitlib/spine.py` (`open_item_queue`, `open_items_at`),
 `kitlib/registry.py` (the status directories), `pending.py` (`open_item_queue`,
 `citing_rows`), `gen_open_items.py` (`main`) and `docs/stack.ini` `[run]`.

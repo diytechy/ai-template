@@ -3,12 +3,59 @@ id = "WI-1006"
 title = "run.cmd audit reports each ruled open item with no action planned, done or handed on to a later open item"
 workstream = "process"
 sr_refs = ["SR-148"]
-specref = "docs/specs/WI-1006.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 planmode = "single"
 +++
+
+## Deliverable
+
+`gen_open_items.py --ruled-cover` reports, warn-only, each `ruled` open item
+whose action no work item, other open item or `follow_up` cell carries, and
+`run.cmd audit` runs it ahead of the smoke budget. Built on the maintenance
+branch `maint/wi-1006`, cut from `b696b6c36`, outside the lane workflow. The
+spec of record is archived as `docs/archive/specs/WI-1006.2026-11-19.md`.
+
+- **The critique's dispositions** (`8e08e7bbd`): `planmode = "single"`; the
+  architectural delta (SR-148, a new LLR-370, IF-073's contract, no new
+  module, seam or SR, and the check ships); the input space closed in the spec
+  of record's "What is matched, exactly".
+- **The plan** (`f2b1e08c6`): `docs/plans/WI-1006/plan.md`.
+- **Tests first** (`b53384a44`): `tests/test_ruled_open_item_cover.py`, 27
+  cases failing before the code because the report did not exist yet.
+- **The check** (`6a9462d09`): the rule in `kitlib/spine.py`
+  (`ruled_uncovered`), the read and the lines in `pending.py` (`ruled_cover`,
+  `work_item_naming`, `ruled_cover_lines`), and the flag in
+  `gen_open_items.py`, which stays under the module-size threshold (987 to
+  996 code lines). It also carries the schema (`follow_up` in
+  `OFFSPINE_KEYS`, both carrier maps, the template's header and `-000` row,
+  this registry's header and `-000` row), IF-073's cells, the `[run] audit`
+  line, LLR-370, TC-430 and TC-431 (Drafted), and the RESYNC entry, which
+  adds an optional key and forces nothing.
+- **The four items** (`c14c78489`): `follow_up` cells on OI-35, OI-89 and
+  OI-90, each citing the commit, work item or record that carried its
+  ruling out.
+
+**Measured at close.** Over this repository's 116 ruled items the report
+finds 0. With this row's own file set aside it finds 1, OI-79.
+
+**Left undone, and why.**
+
+- **OI-79 has no `follow_up` cell.** Its ruling deletes the remote ref
+  `wi508-architectural-remap-HELD-for-owner-verdict`, which is the operator's
+  push. The fetch of 2026-11-19 still lists that ref at `fa3c99c4`, so there
+  is nothing to cite. The report reads OI-79 as covered only because this
+  row's Done-when names it. That is rule 1's stated upper bound, and this case
+  is a real instance of it. Two ways out are the operator's to choose: record
+  the delete in a `follow_up` cell once it is done, or file an operator-act
+  row.
+- **No SR states the coupling** between operator decisions and the work that
+  cites them, as WI-790 recorded. LLR-370 sits under SR-148 beside LLR-298
+  and LLR-299.
+- **No review rounds.** On this maintenance branch the parent session reviews
+  the diff.
 
 ## Context
 
@@ -21,25 +68,29 @@ IF-073's registry contract carries it.
 
 ## Done-when
 
-- [ ] A check reports, warn-only, each `ruled` open item that has none of: a
+- [x] A check reports, warn-only, each `ruled` open item that has none of: a
       work item in an open or complete directory whose text names it; a later
       open item naming it that is `pending`, or `ruled` and itself covered;
       a `follow_up` cell. The rule is the spec's.
-- [ ] The open-items template's header documents the optional `follow_up`
+- [x] The open-items template's header documents the optional `follow_up`
       cell and asks a follow-up item to name the item it continues; the `-000`
       row shows it. This repo's registry follows.
-- [ ] `run.cmd audit` runs the check, and a finding does not change its exit
+- [x] `run.cmd audit` runs the check, and a finding does not change its exit
       code.
 - [ ] The four ruled items it reports at filing (OI-35, OI-79, OI-89, OI-90)
       each gain a `follow_up` cell or a citing row, so it lands with 0
       findings.
-- [ ] Regressions name each arm: covered by a draft, queued, active, deferred
+      Open: OI-35, OI-89 and OI-90 carry cells citing their evidence, and the
+      report lands with 0 findings. OI-79's ruled act, deleting a remote ref,
+      is not done, so it has no cell, and only this row's own text covers it
+      (see the Deliverable).
+- [x] Regressions name each arm: covered by a draft, queued, active, deferred
       or complete row; not covered by a cancelled, partial or restructured
       row; handed to a pending item; handed through a ruled item
       that is itself covered; a cycle of ruled items with no row; a
       `follow_up` cell; no registry (vacuous); a registry that does not parse
       (stops, as the readers do).
-- [ ] A RESYNC entry if the check ships to adopters: a new optional key, no
+- [x] A RESYNC entry if the check ships to adopters: a new optional key, no
       forced migration.
 
 ## Critique dispositions
