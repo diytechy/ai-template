@@ -453,8 +453,11 @@ def _stack_ini():
 
 
 def _audit_argv():
-    """The [run] audit action's step, read from the real docs/stack.ini."""
-    return [step.strip() for step in _stack_ini()["run"]["audit"].split("&&")]
+    """The [run] audit action's budget step, read from the real docs/stack.ini.
+    The audit runs other steps beside it (WI-1006's ruled-item report runs
+    first), so the budget step is the one that calls this script."""
+    steps = [step.strip() for step in _stack_ini()["run"]["audit"].split("&&")]
+    return [step for step in steps if "scripts/check_smoke_budget.py" in step]
 
 
 def test_the_audit_runs_the_step_in_enforce_mode():
