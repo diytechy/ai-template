@@ -2561,12 +2561,13 @@ migrator's rows once it is complete). Nothing blocks the runbook now.
 
 | | Blocks | Until then |
 |---|---|---|
-| D18's act itself: the operator accepts SR-247, LLR-369, TC-427 and IF-312, and re-accepts the sixteen amended rows (§12.6, 2026-11-17) and the SR-015 fold's three (SR-157, LLR-005, TC-005; §12.6, 2026-11-18). All but IF-312 are on `docs/open-items.html` §2, eleven chain cards | the live stage returning to `DevStg-Impl` | the four rows stay `Drafted`; never run `migrate_vocabulary.py` without `--check` |
 | §7, the order for reaching other repositories | nothing in this runbook | |
 
 §4.5.2 to §4.5.7 were ruled and done on 2026-11-16 (§12.2, §9.11). The SR-015
 fold was ruled and applied on 2026-11-18, and the premises of SR-033, SR-223
-and SR-225 were filed as WI-1008 (§12.6).
+and SR-225 were filed as WI-1008 (§12.6). D18's act was taken on 2026-11-18,
+act seq 183 (§12.6). The assumption gate waits on WI-1010, whose act is the
+operator's.
 
 **Needs no answer unless the operator disagrees:** the reading of "operator
 time" in §9.1.
@@ -3154,3 +3155,23 @@ list is fixed unless §12.6 says so.
   - **The delegated decisions already have a home:** each run's record,
     `docs/decisions/<run>.toml` (132 files, 1,194 entries). The page only
     renders them through `pending.decisions_to_review`.
+- **2026-11-18, D18's act taken.** The operator: "All the spine changes look
+  appropriate, I accept." On `maint/vocabulary`, `9b377be1e`, act seq 183:
+  SR-247, LLR-369, TC-427 and IF-312 flipped to `Accepted`; `intake.py
+  snapshot --reaccepts` the sixteen amended rows, SR-157, LLR-005, TC-005,
+  and SR-015, LLR-015, TC-015. The snapshot refuses to drop a removed row
+  unless the act names it, so a retirement's ids go in `--reaccepts` like an
+  amendment. The four registries' copies equal live; the live stage is
+  `DevStg-Impl` again; `migrate_vocabulary --check` owes nothing; the page's
+  §2 is empty. Log fragment `docs/log.d/2026-11-18-operator-accepts-vocabulary-act.md`.
+  The `migrate_vocabulary` caution in §11 no longer applies.
+- **2026-11-18, the assumption gate (the operator: "turn on the assumption
+  check when ready").** Nothing queued it; filed as WI-1010 (`f1f428eb8`).
+  With the gate off its four steps print what turning it on would fail: 91
+  findings after the act. 55 are the 17 assumptions and 3 surrogates, all
+  `Drafted`; 21 are requirements citing no assumption and no waiver (mostly
+  SR-224 onward, written after C2's bridging); 15 are SR-229 to SR-235 at the
+  crossing and interface steps. SR-033, SR-223 and SR-225 pass on the joint
+  skip. `docs/open-items.html` does not render assumptions or surrogates,
+  so WI-1010 recommends adding them to §2 before the operator's act. The flip
+  to `assumption_gate = true` is its last step.
