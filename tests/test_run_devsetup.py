@@ -2056,11 +2056,11 @@ def _shell_tools():
     return found
 
 
-def _gh_stand_ins(tmp_path, platform, tools=(), gh=False, fails=False):
+def _gh_stand_ins(tmp_path, platform, tools=(), status=0, present=()):
     """A PATH holding only stand-ins (see above), for the POSIX dev-setup.
     Each package manager in `tools` appends its arguments to
-    `<tmp_path>/<tool>.log` and exits 1 when `fails`; `sudo` runs its
-    arguments."""
+    `<tmp_path>/<tool>.log` and exits `status`; each command in `present`
+    (gh) exits 0; `sudo` runs its arguments."""
     stand_ins = tmp_path / "stand-ins"
     stand_ins.mkdir(parents=True)
 
@@ -2074,11 +2074,11 @@ def _gh_stand_ins(tmp_path, platform, tools=(), gh=False, fails=False):
         stand_in(name, 'exec {} "$@"'.format(real))
     for name in ("python3", "python"):
         stand_in(name, 'exec "{}" "$@"'.format(Path(sys.executable).as_posix()))
-    if gh:
-        stand_in("gh", "exit 0")
+    for name in present:
+        stand_in(name, "exit 0")
     for tool in tools:
         log = (tmp_path / (tool + ".log")).as_posix()
-        stand_in(tool, "echo \"$*\" >> '{}'\nexit {}".format(log, int(fails)))
+        stand_in(tool, "echo \"$*\" >> '{}'\nexit {}".format(log, status))
     stand_in("sudo", 'exec "$@"')
     return str(stand_ins)
 
@@ -2137,7 +2137,7 @@ def test_the_check_reports_gh_as_optional_with_its_install_and_sign_in(
     """
     missing = _gh_sh(tmp_path / "missing", family, ["--check"], platform=platform)
     present = _gh_sh(
-        tmp_path / "present", family, ["--check"], platform=platform, gh=True
+        tmp_path / "present", family, ["--check"], platform=platform, present=["gh"]
     )
     for proc in (missing, present):
         assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -2192,8 +2192,8 @@ def test_install_without_a_package_manager_or_with_a_failure_never_fails(tmp_pat
         "n\ny\n",
         platform="Darwin",
         tools=tools,
-        fails=arm == "failed install",
-        gh=arm == "present",
+        status=int(arm == "failed install"),
+        present=["gh"] if arm == "present" else [],
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     out = proc.stdout
