@@ -279,8 +279,10 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # this site. 1667 -> 1670 when WI-993 widened the card's label, the
     # uncited notice and its docstring for a claimed citer, all above this site.
     # 1670 -> 1672 when the "owner" to "operator" rewording above the site added
-    # two lines (2026-11-12, maintenance branch).
-    assert sites == [("gen_open_items.py", 1672)], sites
+    # two lines (2026-11-12, maintenance branch). 1672 -> 1687 when WI-1006
+    # added the `--ruled-cover` report's argument and help above the site
+    # (2026-11-19, maintenance branch).
+    assert sites == [("gen_open_items.py", 1687)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still
