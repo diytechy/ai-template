@@ -139,27 +139,6 @@ def _load(root):
     )
 
 
-def module_components(llrs):
-    """`{normalized module path: {CMP ids}}` from the design tier's own cells.
-
-    The join key is `trace_text.norm_module`, the SAME normalizer
-    `trace.interface_findings` uses to test an IF endpoint against the LLR module
-    inventory — the two naming conventions (`scripts/x` on a seam,
-    `project-trajectory/scripts/x.py` on a design row) are reconciled in one
-    place, and a second reconciliation here would be a second answer waiting to
-    disagree."""
-    out = {}
-    for row in llrs:
-        comps = set(refs(row.get("Component")))
-        if not comps:
-            continue
-        for module in refs(row.get("Module")):
-            key = trace_text.norm_module(module)
-            if key:
-                out.setdefault(key, set()).update(comps)
-    return out
-
-
 def seam_placement(row, mod_comps):
     """One IF row as `(placed, internal)` — the components it touches, and the
     subset it is INTERNAL to.
@@ -244,10 +223,16 @@ def build(cmps, srs, llrs, ifs):
     """The whole view as plain data: `(per_component, unplaced)`.
 
     Separated from `render` so the derivation is testable without parsing TOML
-    back out of a string."""
+    back out of a string.
+
+    The module -> component map the seams are placed by is
+    `kitlib.spine.module_components`, the join's one home, which the checker's
+    containment and cross-component rules read too (WI-1005). It normalizes with
+    the same `norm_module` the endpoints go through here (`trace_text` binds
+    it), so a seam and a design row meet on one key."""
     view = {r["CMP-ID"]: _blank((r.get("Name") or "").strip()) for r in cmps}
     sr_components = _add_members(view, srs, llrs)
-    unplaced_seams = _add_seams(view, ifs, module_components(llrs))
+    unplaced_seams = _add_seams(view, ifs, _kitspine.module_components(llrs))
     unplaced_srs = sorted(r["SR-ID"] for r in srs if r["SR-ID"] not in sr_components)
     return view, {"sr_refs": unplaced_srs, "seam_refs": sorted(unplaced_seams)}
 

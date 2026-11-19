@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 336
+design_rows = 337
 seam_rows = 259
 requirements_placed = 133
 requirements_unplaced = 5
@@ -45,6 +45,7 @@ sr_refs = [
   "SR-164",
   "SR-165",
   "SR-166",
+  "SR-169",
   "SR-174",
   "SR-176",
   "SR-178",
@@ -91,6 +92,7 @@ sr_shared_refs = [
   "SR-155",
   "SR-161",
   "SR-163",
+  "SR-169",
   "SR-174",
   "SR-176",
   "SR-178",
@@ -200,6 +202,7 @@ llr_refs = [
   "LLR-365",
   "LLR-366",
   "LLR-369",
+  "LLR-373",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -214,6 +217,7 @@ hat_refs = [
   "TEST-ENGINEER",
   "UNATTENDED-OPS",
   "UX-DESIGNER",
+  "UX-ENGINEER",
 ]
 modules = [
   "project-trajectory/registries/assumptions.template.toml",
@@ -1181,6 +1185,7 @@ sr_shared_refs = [
   "SR-146",
   "SR-148",
   "SR-163",
+  "SR-169",
   "SR-170",
   "SR-226",
 ]

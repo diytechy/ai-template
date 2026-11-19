@@ -4317,3 +4317,14 @@ automated = "Yes"
 evidence = "tests/test_ruled_open_item_cover.py"
 status = "Drafted"
 phase = 6
+
+[test.TC-435]
+verifies = ["SR-159", "LLR-373"]
+level = "Unit"
+method = "Load a design registry through the carrier and join it with kitlib.spine.module_components: a row whose Module cell joins two modules and a row tagged into two components; then, beside a control row carrying a well-formed tag that names no component row, in turn a -000 example row, a row whose id does not start with LLR-, and a row mixing a lower-case and a bare token with a CMP- one. Separately, stub the join under gen_components' build over a two-component spine, and read which design rows it is handed and where the seams land."
+tier = "Smoke"
+expected = "Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced."
+automated = "Yes"
+evidence = "tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join"
+status = "Drafted"
+phase = 6

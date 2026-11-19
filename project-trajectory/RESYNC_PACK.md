@@ -11324,6 +11324,44 @@ never sets the cell reads exactly as before.
 the template's header paragraph and the `-000` row's `follow_up` line) and
 `docs/stack.ini` (optional: the `[run]` line above).
 
+### The module-to-component join has one home, in kitlib.spine [since 10bb4122e]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The join from a design row's `component` tags to the
+modules its `module` cell names had two copies,
+`gen_components.module_components(llrs)` and
+`trajectory_arch.module_components(root)`. Both are deleted, and
+`check_trajectory` no longer re-exports the second. The one home is
+`kitlib.spine.module_components(llrs)`. It takes the LLR rows its caller
+loaded and loads nothing. The component view, the How-SW top view and the
+cross-component check all read it. Where the copies disagreed, it keeps the
+checker's answer:
+
+- a `-000` example row makes no membership;
+- nor does a row whose id does not start with `LLR-`;
+- a `component` token that does not start with `CMP-` is dropped.
+
+A registry that `trace.py --strict` passes holds none of these, apart from
+example rows, which `gen_components` already dropped. On such a registry
+every output is unchanged.
+
+**What to do.** Nothing is forced. Overwrite the kit-owned files below
+together: `gen_components.py` and `trajectory_arch.py` call
+`kitlib.spine.module_components`, which an older `kitlib/spine.py` lacks. A
+local script that called `check_trajectory.module_components(root)` or
+`trajectory_arch.module_components(root)` now calls
+`kitlib.spine.module_components(spine_carrier.load(root /
+"docs/requirements/low-level-requirements.toml", "LLR-ID"))`. One that called
+`gen_components.module_components(llrs)` calls
+`kitlib.spine.module_components(llrs)`.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/spine.py`,
+`scripts/gen_components.py`, `scripts/trajectory_arch.py`,
+`scripts/check_trajectory.py`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

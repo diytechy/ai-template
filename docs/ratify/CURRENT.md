@@ -618,7 +618,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 3 chain(s): SR-032, SR-148, SR-157</summary>
+<summary>Waiting for automated adjudication — 5 chain(s): SR-032, SR-148, SR-157, SR-159, SR-169</summary>
 
 ## SR-032 — Onboarding and dev-setup scaffold
 
@@ -736,6 +736,75 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: A lane's order reads no finding at any step; an Accepted case with no tag warns with exit 0 in a plain run and errors with exit 1 under strict checking until it is tagged; and a newly created project warns and exits 0 at DevStg-Tests, fails at DevStg-Impl, and is clean once the case is tagged.
 - **Automated**: Yes
 - **Evidence**: tests/test_trajectory_arch.py::test_a_lanes_order_never_meets_the_undeclared_finding; tests/test_trajectory_arch.py::test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict; tests/test_trajectory_arch.py::test_the_undeclared_finding_on_a_bootstrapped_scaffold
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-159 — Declared-architecture connectivity gaps are reported
+
+> **Requirement.** The delivered harness shall report declared-architecture connectivity gaps — an unresolvable interface row, an undeclared endpoint or direction, a cross-component import no declared interface covers, an invalid spec interface citation, and a top view past its declared bound — warn-first with --strict gating, vacuous where the optional inventories are absent.
+
+> **Rationale.** Realizes SN-023 (the parts' connections are as much of the truth as the requirement tree, checked mechanically warn-first — the need's own words), SN-002 (interface rows stay resolvable) and SN-012 (opt-out and vacuity keep the layer free for non-users). One row: the delivered contract is one connectivity verdict; the checkers below it are its decomposition.
+
+
+### LLR LLR-049
+- **CodeSymbol**
+  - before: component_top_view/component_findings/module_components/load_cmps/_cmp_roots
+  - after: component_top_view/component_findings/load_cmps/_cmp_roots
+
+### LLR LLR-373 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-373
+- **SR-Refs**: SR-159;SR-169
+- **Title**: The module-to-component join has one home, which the component view and the architecture checks both read
+- **Module**: project-trajectory/scripts/kitlib/spine.py
+- **CodeSymbol**: module_components
+- **Detail**: module_components in kitlib/spine.py joins the design rows its caller passes in and does not read a file itself. It skips a row whose id is a -000 example or does not start with LLR-. From a kept row it takes the Component tokens that start with CMP-, drops the rest, splits the Module cell with refs, normalizes the parts with norm_module, and adds those tokens to the map under the non-empty keys. The tags are not filtered against the component registry: the callers intersect them with the ids they declare. gen_components places seams by the map; trajectory_arch's How-SW top view, which the right-sizing rule and the containment render share, and its cross-component scan read membership from it. Neither module holds a join of its own.
+- **Rationale**: The join had two copies, in gen_components and in trajectory_arch, and they disagreed on three inputs: a -000 example row, an id not starting LLR- and a token not starting CMP-. On a registry that trace.py --strict passes they agreed, so the disagreement stayed invisible until a registry broke, which is when two answers to one question cost the most. The checker's narrower answer is kept: a placeholder row, or a token that cannot name a component, should not make a membership that the gate-bearing containment and cross-component rules read, and no caller wanted the wider answer, since each intersects the map with its declared ids.
+- **TestRefs**: TC-435
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-435 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-435
+- **Verifies**: SR-159;LLR-373
+- **Level**: Unit
+- **Method**: Load a design registry through the carrier and join it with kitlib.spine.module_components: a row whose Module cell joins two modules and a row tagged into two components; then, beside a control row carrying a well-formed tag that names no component row, in turn a -000 example row, a row whose id does not start with LLR-, and a row mixing a lower-case and a bare token with a CMP- one. Separately, stub the join under gen_components' build over a two-component spine, and read which design rows it is handed and where the seams land.
+- **Tier**: Smoke
+- **Expected**: Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced.
+- **Automated**: Yes
+- **Evidence**: tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-169 — The state view shows how the parts connect
+
+> **Requirement.** The delivered generator set shall render the adopted repository's declared components and the interfaces between them as a navigable graph — showing which components sit inside which at more than one level, drawing an interface whose endpoint lies inside an unopened container to that container's edge, and showing a stated "no interfaces declared" view rather than an empty one when the repository carries the component and interface registries but declares no interface in them (a repository carrying no such registry at all omits the view under SR-070, not under this row).
+
+> **Rationale.** Realizes SN-023's SECOND conjunct, in the need's own words: the relationships between the parts (which module talks to which, over what contract) are as much of the project's truth as its requirement tree, and scattering them hides architectural drift. ONE DECISION PER ROW: artifact integrity is SR-070's, view content is this tier's, and the content half divides exactly where SN-023 divides. Kept separate from SR-168 rather than filed as one content row because the two fail independently and are built by different means — the progress views read the requirement and work registries, this one reads the declared component and interface registries, and either can be complete while the other is absent. The empty-view clause is load-bearing: a repository that has declared no interfaces yet must get a stated, legible surface, because an empty graph is indistinguishable from a broken generator. WORDED FOR A COLD READER: the row had read "structural units", "seams terminating at the containing boundary" and "the artifact contract's omission rule" — vocabulary a first-time reader cannot resolve, the last of them an internal cross-reference with no id. Same obligations, plainer words, and the absent-registry case now names SR-070 explicitly; the empty-vs-absent split itself is unchanged. `phase` inherits the parent's 1; its children span 1 and 2, the ordinary child-later-than-parent case, which is intended.
+
+
+### LLR LLR-373 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-373
+- **SR-Refs**: SR-159;SR-169
+- **Title**: The module-to-component join has one home, which the component view and the architecture checks both read
+- **Module**: project-trajectory/scripts/kitlib/spine.py
+- **CodeSymbol**: module_components
+- **Detail**: module_components in kitlib/spine.py joins the design rows its caller passes in and does not read a file itself. It skips a row whose id is a -000 example or does not start with LLR-. From a kept row it takes the Component tokens that start with CMP-, drops the rest, splits the Module cell with refs, normalizes the parts with norm_module, and adds those tokens to the map under the non-empty keys. The tags are not filtered against the component registry: the callers intersect them with the ids they declare. gen_components places seams by the map; trajectory_arch's How-SW top view, which the right-sizing rule and the containment render share, and its cross-component scan read membership from it. Neither module holds a join of its own.
+- **Rationale**: The join had two copies, in gen_components and in trajectory_arch, and they disagreed on three inputs: a -000 example row, an id not starting LLR- and a token not starting CMP-. On a registry that trace.py --strict passes they agreed, so the disagreement stayed invisible until a registry broke, which is when two answers to one question cost the most. The checker's narrower answer is kept: a placeholder row, or a token that cannot name a component, should not make a membership that the gate-bearing containment and cross-component rules read, and no caller wanted the wider answer, since each intersects the map with its declared ids.
+- **TestRefs**: TC-435
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-435 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-435
+- **Verifies**: SR-159;LLR-373
+- **Level**: Unit
+- **Method**: Load a design registry through the carrier and join it with kitlib.spine.module_components: a row whose Module cell joins two modules and a row tagged into two components; then, beside a control row carrying a well-formed tag that names no component row, in turn a -000 example row, a row whose id does not start with LLR-, and a row mixing a lower-case and a bare token with a CMP- one. Separately, stub the join under gen_components' build over a two-component spine, and read which design rows it is handed and where the seams land.
+- **Tier**: Smoke
+- **Expected**: Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced.
+- **Automated**: Yes
+- **Evidence**: tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join
 - **Status**: Drafted
 - **Phase**: 6
 
