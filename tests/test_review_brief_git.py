@@ -9,11 +9,11 @@ exit 2 and no output file, and a review render and a filing each exit 0 and
 write only their requested file. They spawn git, so this module is registered
 in `tests/conftest.py`'s `SLOW_MODULES`.
 
-A review renders only over a commit whose review bar is attested green for
+A review renders only over a commit whose commit checks are recorded as passed for
 the round's named tests (WI-957, TC-371): the fixture's reviewed commits carry
-that attestation, written by the kit's own `Bar-Green:` writer, and the gate's
-cases commit the absent, unverified, malformed, other-bar and other-tests
-records and the commits above an attested one.
+that record, written by the kit's own `Checks-Passed:` writer, and the gate's
+cases commit the absent, unverified, malformed, other-checks and other-tests
+records and the commits above a recorded one.
 """
 
 import re
@@ -74,29 +74,31 @@ def _git(root, *args):
     return done.stdout.strip()
 
 
-def _attest_tip(root, message, tests=TESTS, bar="review", tree=None, work=None):
-    """Commit the staged work (or nothing) carrying a `Bar-Green:` line written
+def _passed_checks_tip(
+    root, message, tests=TESTS, checks="commit", tree=None, work=None
+):
+    """Commit the staged work (or nothing) carrying a `Checks-Passed:` line written
     by the kit's one writer: by default a verified `review` record for `tests`
     over the commit's own tree and first parent. `tree` and `work` override
     the named values, so a caller writes a record that names another tree or
     another parent. Returns the new commit's full id."""
     own_tree = _git(root, "write-tree")
     parent = _git(root, "rev-parse", "HEAD")
-    line = kverdict.format_bar_green(
+    line = kverdict.format_passed_checks(
         tree or own_tree,
         work or parent,
-        bar,
+        checks,
         kverdict.tests_digest(tests),
-        "{} bar PASS".format(bar),
+        "{} checks PASS".format(checks),
     )
     return _commit_message(root, message + "\n\n" + line)
 
 
-def _malformed_attest_tip(root, message, tests=TESTS):
-    """Commit the staged work carrying the older `Bar-Green:` grammar, with no
-    `bar=` field: a line no reader verifies."""
-    line = "{} tree={} work={} tests={} review bar PASS".format(
-        kverdict.BAR_GREEN,
+def _malformed_record_tip(root, message, tests=TESTS):
+    """Commit the staged work carrying a `Checks-Passed:` line with no
+    `checks=` field: a line no reader verifies."""
+    line = "{} tree={} work={} tests={} commit checks PASS".format(
+        kverdict.CHECKS_PASSED,
         _git(root, "write-tree"),
         _git(root, "rev-parse", "HEAD"),
         kverdict.tests_digest(tests),
@@ -126,7 +128,7 @@ def _derives(monkeypatch, tests):
 @pytest.fixture
 def git_lane(tmp_path, monkeypatch):
     """A real lane: branch `wi-900` holding the spec at `base` and one more
-    commit at `tip`, attested green for the review bar over `TESTS`, and a
+    commit at `tip`, recorded as passed for the commit checks over `TESTS`, and a
     `side` commit off `base` that is not on the lane. The row derives `TESTS`."""
     _derives(monkeypatch, TESTS)
     root = _lane(tmp_path / "lane")
@@ -137,7 +139,7 @@ def git_lane(tmp_path, monkeypatch):
     base = _git(root, "rev-parse", "HEAD")
     (root / "a.txt").write_text("a\n", encoding="utf-8")
     _git(root, "add", "-A")
-    tip = _attest_tip(root, "tip")
+    tip = _passed_checks_tip(root, "tip")
     _git(root, "checkout", "-q", "-b", "side", base)
     (root / "b.txt").write_text("b\n", encoding="utf-8")
     _git(root, "add", "-A")
@@ -239,7 +241,7 @@ def test_the_reading_scope_never_shows_a_record_of_earlier_findings(git_lane):
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
         (root / rel).write_text("F1: an earlier finding\n", encoding="utf-8")
     _git(root, "add", "-A")
-    tip = _attest_tip(root, "records")
+    tip = _passed_checks_tip(root, "records")
     argv = _review_argv(root, base, tip, out) + ["--stance", "convergence"]
     assert rb.main(argv) == 0
     brief = (out / "brief.md").read_text(encoding="utf-8")
@@ -264,7 +266,7 @@ def test_an_ordinary_review_reads_the_decisions_record(git_lane):
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
         (root / rel).write_text("F1: an earlier finding\n", encoding="utf-8")
     _git(root, "add", "-A")
-    tip = _attest_tip(root, "records")
+    tip = _passed_checks_tip(root, "records")
     assert rb.main(_review_argv(root, base, tip, out)) == 0
     brief = (out / "brief.md").read_text(encoding="utf-8")
     command = re.search(r"`(git diff {}\.\.\.{} -- [^`]+)`".format(base, tip), brief)
@@ -275,41 +277,43 @@ def test_an_ordinary_review_reads_the_decisions_record(git_lane):
     assert "docs/reviews/wi-900/001-REVIEW-A-1111111.md" not in shown
 
 
-# --- the review renders only over an attested tip (WI-957, TC-371) ------------------
+# --- the review renders only over a recorded tip (WI-957, TC-371) ------------------
 
 
 def _refused(root, out, capsys, sha):
     """The render refused `sha`: exit 2 (asserted by the caller), no brief,
     an untouched lane, and a refusal naming the reviewed commit and the step
-    that records a green review bar. Returns the refusal text for the cause
+    that records passing commit checks. Returns the refusal text for the cause
     the caller asserts."""
     err = capsys.readouterr().err
     assert list(out.iterdir()) == []
     assert _git(root, "status", "--porcelain", "--untracked-files=all") == ""
     assert sha in err, err
-    for named in ("integrate.py attest", "--branch wi-900", "--bar review"):
+    for named in ("integrate.py record-checks", "--branch wi-900", "--checks commit"):
         assert named in err, (named, err)
     return err
 
 
-def _attested_line(stdout, sha, tests=TESTS):
-    """The console line naming the attested commit and its tests digest."""
+def _record_line(stdout, sha, tests=TESTS):
+    """The console line naming the recorded commit and its tests digest."""
     digest = kverdict.tests_digest(tests)
     return [line for line in stdout.splitlines() if sha in line and digest in line]
 
 
-def test_a_tip_with_no_attestation_refuses_naming_the_attest_command(git_lane, capsys):
+def test_a_tip_with_no_passed_checks_record_refuses_naming_the_record_checks_command(
+    git_lane, capsys
+):
     """Implements: TC-371"""
     # TC-371. Adequacy witness: a render that ignores the record (today's)
     # writes the brief and exits 0.
     root, base, _tip, _side, out = git_lane
     _work(root, "src/app.py")
-    _git(root, "commit", "-q", "-m", "unattested work")
+    _git(root, "commit", "-q", "-m", "unrecorded work")
     sha = _git(root, "rev-parse", "HEAD")
     assert rb.main(_review_argv(root, base, sha, out)) == 2
     err = _refused(root, out, capsys, sha)
-    assert "has no verified attestation" in err, err
-    assert "carries 0 `Bar-Green:` lines" in err, err
+    assert "has no verified passed-checks record" in err, err
+    assert "carries 0 `Checks-Passed:` lines" in err, err
 
 
 def _unverified_commit(root, case, tip):
@@ -319,27 +323,27 @@ def _unverified_commit(root, case, tip):
         _work(root, "src/other.py")
         other = _git(root, "write-tree")
         _work(root, "src/app.py")
-        sha = _attest_tip(root, "names another tree", tree=other)
+        sha = _passed_checks_tip(root, "names another tree", tree=other)
         return sha, "names tree", (other, _git(root, "rev-parse", sha + "^{tree}"))
     if case == "another-parent":
         # The rebase and cherry-pick case: the same tree over another parent,
-        # the record still naming the parent it was attested over.
+        # the record still naming the parent it was recorded over.
         _work(root, "src/app.py")
-        attested = _attest_tip(root, "attested over the tip")
+        passed = _passed_checks_tip(root, "recorded over the tip")
         _git(root, "reset", "-q", "--hard", tip)
         _git(root, "commit", "-q", "--allow-empty", "-m", "another parent")
         moved = _git(root, "rev-parse", "HEAD")
-        _git(root, "cherry-pick", attested)
+        _git(root, "cherry-pick", passed)
         sha = _git(root, "rev-parse", "HEAD")
-        trees = [_git(root, "rev-parse", rev + "^{tree}") for rev in (sha, attested)]
+        trees = [_git(root, "rev-parse", rev + "^{tree}") for rev in (sha, passed)]
         assert trees[0] == trees[1], "the picked commit's tree moved"
         return sha, "first parent", (tip, moved)
     _work(root, "src/app.py")
-    return _malformed_attest_tip(root, "the older grammar"), "grammar", ()
+    return _malformed_record_tip(root, "the older grammar"), "grammar", ()
 
 
 @pytest.mark.parametrize("case", ["another-tree", "another-parent", "malformed"])
-def test_an_attestation_that_does_not_name_the_tip_refuses_naming_the_cause(
+def test_a_passed_checks_record_that_does_not_name_the_tip_refuses_naming_the_cause(
     git_lane, capsys, case
 ):
     """Implements: TC-371"""
@@ -347,7 +351,7 @@ def test_an_attestation_that_does_not_name_the_tip_refuses_naming_the_cause(
     # a record's `tree=`/`work=` without comparing them, renders here.
     root, base, tip, _side, out = git_lane
     sha, cause, values = _unverified_commit(root, case, tip)
-    assert kverdict.bar_attestation(root, sha) is None, "the record verifies"
+    assert kverdict.passed_checks(root, sha) is None, "the record verifies"
     assert rb.main(_review_argv(root, base, sha, out)) == 2
     err = _refused(root, out, capsys, sha)
     assert cause in err, err
@@ -355,25 +359,27 @@ def test_an_attestation_that_does_not_name_the_tip_refuses_naming_the_cause(
         assert value in err, (value, err)
 
 
-def test_a_landing_attestation_refuses_naming_both_bars(git_lane, capsys):
+def test_a_landing_record_refuses_naming_both_check_sets(git_lane, capsys):
     """Implements: TC-371"""
-    # TC-371. A refresh's verified landing record is another bar, never a
+    # TC-371. A refresh's verified landing record is another checks, never a
     # review one. Adequacy witness: a render that accepts any verified
     # record renders here.
     root, base, _tip, _side, out = git_lane
     _work(root, "src/trunk.py")
-    sha = _attest_tip(root, "refresh: wi-900 onto trunk 0123456789", bar="landing")
-    assert kverdict.bar_attestation(root, sha).bar == "landing"
+    sha = _passed_checks_tip(
+        root, "refresh: wi-900 onto trunk 0123456789", checks="landing"
+    )
+    assert kverdict.passed_checks(root, sha).checks == "landing"
     assert rb.main(_review_argv(root, base, sha, out)) == 2
     err = _refused(root, out, capsys, sha)
-    assert "a verified `landing` attestation, not a `review` one" in err, err
+    assert "a verified `checks=landing` record, not a `checks=commit` one" in err, err
 
 
-def test_a_review_attestation_for_other_tests_refuses_naming_both_digests(
+def test_a_commit_checks_record_for_other_tests_refuses_naming_both_digests(
     git_lane, capsys, monkeypatch
 ):
     """Implements: TC-371"""
-    # TC-371. Adequacy witness: a render that checks the bar but not the
+    # TC-371. Adequacy witness: a render that checks the checks but not the
     # tests digest renders here.
     root, base, tip, _side, out = git_lane
     other = ("tests/test_b.py",)
@@ -384,26 +390,26 @@ def test_a_review_attestation_for_other_tests_refuses_naming_both_digests(
     assert kverdict.tests_digest(other) in err, err
 
 
-def test_a_matching_review_attestation_renders_and_names_it(
+def test_a_matching_commit_checks_record_renders_and_names_it(
     git_lane, capsys, monkeypatch
 ):
     """Implements: TC-371"""
     # TC-371. Another spelling of the same set has the same digest. Adequacy
     # witness: a render that compares the paths as typed refuses here, and
-    # one that never reads the record names no attested commit.
+    # one that never reads the record names no recorded commit.
     root, base, tip, _side, out = git_lane
     spelled = ("./tests\\test_a.py",)
     _derives(monkeypatch, spelled)
-    assert kverdict.bar_attestation(root, tip).bar == "review"
+    assert kverdict.passed_checks(root, tip).checks == "commit"
     assert rb.main(_review_argv(root, base, tip, out)) == 0
     assert [p.name for p in out.iterdir()] == ["brief.md"]
-    assert _attested_line(capsys.readouterr().out, tip), "no attested-commit line"
+    assert _record_line(capsys.readouterr().out, tip), "no recorded-commit line"
 
 
-def test_record_only_commits_above_the_attested_one_render(git_lane, capsys):
+def test_record_only_commits_above_the_recorded_one_render(git_lane, capsys):
     """Implements: TC-371"""
     # TC-371. An empty commit, a round file and a telemetry fragment above
-    # the attested commit force no new bar. Adequacy witness: a render that
+    # the recorded commit force no new checks. Adequacy witness: a render that
     # reads only the reviewed commit's own record refuses here.
     root, base, tip, _side, out = git_lane
     _git(root, "commit", "-q", "--allow-empty", "-m", "an empty commit")
@@ -413,7 +419,7 @@ def test_record_only_commits_above_the_attested_one_render(git_lane, capsys):
     head = _git(root, "rev-parse", "HEAD")
     assert rb.main(_review_argv(root, base, head, out)) == 0
     assert [p.name for p in out.iterdir()] == ["brief.md"]
-    assert _attested_line(capsys.readouterr().out, tip), "no attested-commit line"
+    assert _record_line(capsys.readouterr().out, tip), "no recorded-commit line"
 
 
 def _empty_commits(root, count):
@@ -442,29 +448,29 @@ def _empty_commits(root, count):
 def test_a_search_past_the_walk_bound_refuses(git_lane, capsys):
     """Implements: TC-371"""
     # TC-371. The walk below the reviewed commit is bounded: one bound short
-    # of it the attested commit still stands, one past it the render refuses
+    # of it the recorded commit still stands, one past it the render refuses
     # naming the bound. Adequacy witness: an unbounded walk renders past the
     # bound, and one that refuses below the bound refuses the first render.
     root, base, tip, _side, out = git_lane
     bound = kverdict._MAX_GOVERNING_WALK
     head = _empty_commits(root, bound - 1)
     assert rb.main(_review_argv(root, base, head, out)) == 0
-    assert _attested_line(capsys.readouterr().out, tip), "no attested-commit line"
+    assert _record_line(capsys.readouterr().out, tip), "no recorded-commit line"
     (out / "brief.md").unlink()
     head = _empty_commits(root, 2)
     assert rb.main(_review_argv(root, base, head, out)) == 2
     err = _refused(root, out, capsys, head)
-    assert "no verified attestation within 64 record-only commits" in err, err
+    assert "no verified passed-checks record within 64 record-only commits" in err, err
 
 
 @pytest.mark.parametrize("rel", ["src/app.py", "docs/decisions/wi-900.toml"])
-def test_a_work_commit_above_the_attested_one_refuses(git_lane, capsys, rel):
+def test_a_work_commit_above_the_recorded_one_refuses(git_lane, capsys, rel):
     """Implements: TC-371"""
-    # TC-371. The decisions record is not a record path, so it needs the bar
+    # TC-371. The decisions record is not a record path, so it needs the checks
     # too. Adequacy witness: a walk that steps over any commit renders here.
     root, base, _tip, _side, out = git_lane
     _work(root, rel)
-    _git(root, "commit", "-q", "-m", "work above the attested commit")
+    _git(root, "commit", "-q", "-m", "work above the recorded commit")
     sha = _git(root, "rev-parse", "HEAD")
     assert rb.main(_review_argv(root, base, sha, out)) == 2
     err = _refused(root, out, capsys, sha)
@@ -518,7 +524,7 @@ def test_the_render_takes_no_tests_argument(tmp_path, capsys):
     """Implements: TC-419"""
     lane, base, out = _row_lane(tmp_path, **_tagged())
     _work(lane, "src/app.py")
-    tip = _attest_tip(lane, "tip", tests=DERIVED)
+    tip = _passed_checks_tip(lane, "tip", tests=DERIVED)
     argv = _derived_argv(lane, base, tip, out)
     assert _render(argv) == 0, capsys.readouterr().err
     assert _render(argv + ["--tests", *DERIVED]) == 2
@@ -529,11 +535,11 @@ def test_the_render_lists_the_derived_files(tmp_path, capsys):
     """Implements: TC-419"""
     lane, base, out = _row_lane(tmp_path, **_tagged())
     _work(lane, "src/app.py")
-    tip = _attest_tip(lane, "tip", tests=DERIVED)
+    tip = _passed_checks_tip(lane, "tip", tests=DERIVED)
     assert _render(_derived_argv(lane, base, tip, out)) == 0, capsys.readouterr().err
     brief = (out / "brief.md").read_text(encoding="utf-8")
     assert [ln for ln in brief.splitlines() if "-m pytest" in ln and DERIVED[0] in ln]
-    assert _attested_line(capsys.readouterr().out, tip, DERIVED)
+    assert _record_line(capsys.readouterr().out, tip, DERIVED)
 
 
 def test_a_working_tree_tag_edit_refuses_naming_both_digests(tmp_path, capsys):
@@ -542,7 +548,7 @@ def test_a_working_tree_tag_edit_refuses_naming_both_digests(tmp_path, capsys):
     # no longer matches it: the edit can refuse, never render another set.
     lane, base, out = _row_lane(tmp_path, **_tagged())
     _work(lane, "src/app.py")
-    tip = _attest_tip(lane, "tip", tests=DERIVED)
+    tip = _passed_checks_tip(lane, "tip", tests=DERIVED)
     moved = ("tests/test_b.py",)
     seed_row(
         lane,
@@ -564,26 +570,26 @@ def test_a_derivation_refusal_refuses_the_render_with_its_text(tmp_path, capsys)
     seed["tags"] = {DERIVED[0]: []}
     lane, base, out = _row_lane(tmp_path, **seed)
     _work(lane, "src/app.py")
-    tip = _attest_tip(lane, "tip", tests=DERIVED)
+    tip = _passed_checks_tip(lane, "tip", tests=DERIVED)
     assert _render(_derived_argv(lane, base, tip, out)) == 2
     err = capsys.readouterr().err
     reason = "partial: 1 gap(s) in WI-900's review set:\n"
     reason += "  TC-001: no test file tags it (evidence names {})".format(DERIVED[0])
     assert reason in err, err
     assert tip in err, err
-    assert "integrate.py attest --branch wi-900 --bar review" in err, err
+    assert "integrate.py record-checks --branch wi-900 --checks commit" in err, err
     assert list(out.iterdir()) == []
 
 
-def test_the_refusal_hint_names_attest_without_tests(tmp_path, capsys):
+def test_the_refusal_hint_names_record_checks_without_tests(tmp_path, capsys):
     """Implements: TC-419"""
     lane, base, out = _row_lane(tmp_path, **_tagged())
     _work(lane, "src/app.py")
-    _git(lane, "commit", "-q", "-m", "unattested work")
+    _git(lane, "commit", "-q", "-m", "unrecorded work")
     sha = _git(lane, "rev-parse", "HEAD")
     assert _render(_derived_argv(lane, base, sha, out)) == 2
     err = capsys.readouterr().err
-    assert "integrate.py attest --branch wi-900 --bar review" in err, err
+    assert "integrate.py record-checks --branch wi-900 --checks commit" in err, err
     assert "--tests" not in err, err
 
 
@@ -591,7 +597,7 @@ def test_an_empty_set_renders_no_pytest_line_and_says_why(tmp_path, capsys):
     """Implements: TC-419"""
     lane, base, out = _row_lane(tmp_path)
     _work(lane, "docs/note.md")
-    tip = _attest_tip(lane, "tip", tests=())
+    tip = _passed_checks_tip(lane, "tip", tests=())
     assert _render(_derived_argv(lane, base, tip, out)) == 0, capsys.readouterr().err
     brief = (out / "brief.md").read_text(encoding="utf-8")
     assert "-m pytest" not in brief

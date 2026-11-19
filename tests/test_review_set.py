@@ -4,7 +4,7 @@ A lane's set is derived from its row's SRs through the test-file tags: the row
 read from its claim copy or its closed copy, the changed paths since the merge
 base with the declared trunk, the declared roots, the three registries and the
 tag reader. The answer is the set or exactly one named refusal, and it never
-widens to the whole bar. The pure walk is in `tests/test_review_set_walk.py`.
+widens to the whole checks. The pure walk is in `tests/test_review_set_walk.py`.
 
 Every case builds a real repository and lane, so this module is filed in
 `tests/conftest.py`'s `SLOW_MODULES`.

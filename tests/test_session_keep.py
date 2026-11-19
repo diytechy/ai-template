@@ -187,7 +187,7 @@ def _keep(
 
 def test_the_shipped_dial_is_off_and_this_repo_shares_its_structure():
     """The template ships the dial off; this repo's VALUE may diverge (it is
-    on at 55 since WI-835, owner ruling (b)) while its keys stay the same."""
+    on at 55 since WI-835, operator ruling (b)) while its keys stay the same."""
     live = tomllib.loads((ROOT / "docs" / "process.toml").read_text(encoding="utf-8"))
     kit = (ROOT / "project-trajectory" / "process.toml.template").read_text(
         encoding="utf-8"
@@ -196,7 +196,7 @@ def test_the_shipped_dial_is_off_and_this_repo_shares_its_structure():
     assert template["adjudicator"]["context_reset_pct"] == 0
     assert live["adjudicator"]["context_reset_pct"] == 55
     assert set(live["adjudicator"]) == set(template["adjudicator"])
-    # And retains first approvals too (owner, 2026-10-05,
+    # And retains first acceptances too (operator, 2026-10-05,
     # docs/decisions/wi-835.toml#D-007), since WI-841 the Done-when brief and
     # the combined lane-checkpoint sitting, and since WI-865 the dispute
     # sitting; the template's list is unchanged.
@@ -205,8 +205,8 @@ def test_the_shipped_dial_is_off_and_this_repo_shares_its_structure():
         retain_for=(
             "disposition",
             "amendment",
-            "red-tc",
-            "first-approval",
+            "evidence-gap",
+            "first-acceptance",
             "done-when",
             "combined",
             "dispute",
@@ -250,7 +250,7 @@ def test_a_missing_or_malformed_table_reads_as_the_off_dial(tmp_path):
 
 
 def test_only_a_retained_adjudication_class_is_kept(tmp_path):
-    assert _keep(tmp_path, ON, brief="first-approval") is None
+    assert _keep(tmp_path, ON, brief="first-acceptance") is None
     assert not keep.applies(ON, "REVIEW-A", "disposition", "R")
     assert _keep(tmp_path, ON) is not None
 

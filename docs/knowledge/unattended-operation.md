@@ -1,13 +1,13 @@
 # Unattended operation: the 3am failure that pages nobody — DRAFT
 
-> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.UNATTENDED-OPS` roster entry has a `knowledge` value to point at; the owner reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a settled finding.
+> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.UNATTENDED-OPS` roster entry has a `knowledge` value to point at; the operator reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a settled finding.
 
 This repo runs itself unattended: `agent-resume.*` drives
 `project-trajectory/scripts/agent_loop.py`, which claims work through
 `dispatch.py` and merges through a serial integrator. The charter in
 `docs/requirements/hats.toml` (`[hat.UNATTENDED-OPS]`) asks what this looks like
 at 3am with no human, and listens for four failure shapes: a silent degrade, a
-partial write left behind, an unbounded retry, and a green that is green because
+partial write left behind, an unbounded retry, and a pass that passes only because
 nothing looked. The most valuable evidence here is that this repo has already
 been bitten by the fourth, measured it, and hardened against the first three by
 construction — so the hat's job is to hold new work to the standard already met,
@@ -15,7 +15,7 @@ not to invent one.
 
 ## What this hat looks for here
 
-- **A green because nothing looked — the measured instance.** `LLR-037` carried
+- **A pass because nothing looked — the measured instance.** `LLR-037` carried
   `status_size_warning` as a live design claim for **five weeks** after the
   symbol was deleted (at `c4aeab9f`, WI-210), and it was caught **by a census,
   not by a check** (`docs/requirements/open-items.toml`, the OI-38 body near
@@ -24,7 +24,7 @@ not to invent one.
   PROSE while its token pointed elsewhere. Worse, the retired tripwire itself
   only *warned and never blocked* (:1527) — a smell, printed, that could not
   fail a run or a gate. Two silent-failure shapes stacked: an unenforced warning,
-  then a stale Approved row publishing a deleted symbol into the generated
+  then a stale Accepted row publishing a deleted symbol into the generated
   bundle. The lesson the hat carries: an anchor that verifies a token is not the
   same as one that verifies the sentence around it.
 
@@ -46,7 +46,7 @@ not to invent one.
   should say what bounds it.
 
 - **A failure that pages nobody.** When a lane cannot proceed, the exit is
-  `EXIT_NEEDS_HUMAN` (`agent_common.py:134`, value 7). `agent_loop.py`
+  `EXIT_NEEDS_OPERATOR` (`agent_common.py:134`, value 7). `agent_loop.py`
   (~:640-641) turns it into `handback.close_partial` — an immutable per-close
   report and a move to the terminal `partial/`, which `schedule._disposition`
   reads as `partial` (never ready) — so the hold is a visible, durable page

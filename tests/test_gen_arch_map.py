@@ -231,7 +231,7 @@ def test_files_mode_end_to_end_and_staleness(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     arch = (scaffold / doc).read_text(encoding="utf-8")
     assert "src/app.ts" in arch and "The TS entry point." in arch
-    # freshly generated ⇒ --check is green
+    # freshly generated ⇒ --check passes
     proc = run_py(
         ["scripts/gen_arch_map.py", "--mode", "files", "--doc", doc, "--check"],
         cwd=scaffold,
@@ -282,7 +282,7 @@ def test_files_mode_zero_source_warns_without_self_reference(scaffold):
 
 def test_zero_source_scan_warns_loudly(scaffold):
     # A repo whose code isn't Python (or has none yet) must not get a silently
-    # vacuous map + freshness gate: the run stays green (pre-code repos are
+    # vacuous map + freshness gate: the run keeps passing (pre-code repos are
     # legitimate) but says on stderr that the guarantee is not in force and
     # points at the porting contract (ADOPTING.md).
     from conftest import run_py
@@ -493,7 +493,7 @@ def test_module_bindings_covers_every_rendered_public_item():
     rather than copying a parser into the consumer (the D-6/F5 hazard). This
     pins them: every public item the map RENDERS for a module must be a name
     `module_bindings` reports for that module, across every module in this repo.
-    A node type one walk learns and the other does not then reds here instead of
+    A node type one walk learns and the other does not then fails here instead of
     silently reporting "that symbol does not exist" on the spine.
 
     Implements: TC-175
@@ -718,9 +718,19 @@ def test_reverse_coverage_reads_non_python_source_but_not_unlisted_types(tmp_pat
     assert "LLR-002" in gen_arch_map.scan_backlinks([src], (".md",))
 
 
+def test_godot_source_is_a_recognised_module_type(tmp_path):
+    # GDScript comments are `#`; a Godot project's `.gd` tags were skipped.
+    _root, src = _backlink_repo(tmp_path, ["LLR-001"])
+    (tmp_path / "src" / "game.gd").write_text(
+        "# Implements: LLR-001\nextends Node\n", encoding="utf-8"
+    )
+    assert gen_arch_map.scan_backlinks([src]) == {"LLR-001": ["src/game.gd"]}
+    assert gen_arch_map._norm_module("game/scripts/game.gd") == "game/scripts/game"
+
+
 def test_the_dial_reads_zero_for_everything_it_cannot_trust(tmp_path):
     """0 is report-only AND the fallback: a threshold has no conservative
-    default to fail toward, so an unreadable dial must not invent a bar. The
+    default to fail toward, so an unreadable dial must not invent a minimum. The
     loud half is `agent_common.PROCESS_ONLY_KEYS`, which refuses the wrong type
     outright — pinned in tests/test_rule_sync.py."""
     root, _src = _backlink_repo(tmp_path, ["LLR-001"], dial=50)
@@ -872,7 +882,7 @@ def test_cli_doc_splices_and_check_reds_on_drift(tmp_path, cli_src):
     script = Path(gen_arch_map.__file__)
     args = ["--src", str(cli_src), "--cli-doc", str(doc)]
 
-    # A bare run writes the block; --check is then green.
+    # A bare run writes the block; --check then passes.
     assert run_py([script] + args, cwd=tmp_path).returncode == 0
     assert "--tier" in doc.read_text(encoding="utf-8")
     assert run_py([script] + args + ["--check"], cwd=tmp_path).returncode == 0
@@ -1137,7 +1147,7 @@ def test_contracts_doc_splices_and_check_reds_on_drift(tmp_path, contract_src):
 def test_both_doc_targets_are_processed_on_one_invocation(tmp_path, contract_src):
     # The modes COMPOSE. main() used to dispatch straight into `sys.exit` on the
     # first mode an invocation named, so `--cli-doc A --contracts-doc B --check`
-    # reported A and exited 0 over a STALE B — a green verdict on a document
+    # reported A and exited 0 over a STALE B — a passing verdict on a document
     # nothing had opened. Every named mode runs and the verdict is the worst.
     from conftest import run_py
 
@@ -1163,14 +1173,14 @@ def test_both_doc_targets_are_processed_on_one_invocation(tmp_path, contract_src
         str(contracts_doc),
     ]
 
-    # One invocation fills BOTH targets, and --check is then green on both.
+    # One invocation fills BOTH targets, and --check then passes on both.
     assert run_py([script] + args, cwd=tmp_path).returncode == 0
     assert "no command-line surface scanned" in cli_doc.read_text(encoding="utf-8")
     assert "IF-901" in contracts_doc.read_text(encoding="utf-8")
     assert run_py([script] + args + ["--check"], cwd=tmp_path).returncode == 0
 
     # Drift ONLY the contract body. The CLI reference is still fresh, so the
-    # first mode named is green — and the run must still red on the second.
+    # first mode named passes — and the run must still fail on the second.
     (contract_src / "widget.py").write_text(
         CONTRACT_MOD.replace("writes report.md", "writes summary.md"),
         encoding="utf-8",
@@ -1371,6 +1381,56 @@ def test_a_non_python_owner_declares_through_its_comment_header(tmp_path):
     late = tmp_path / "late.toml"
     late.write_text("[table]\n# Contracts: IF-953\n", encoding="utf-8")
     assert gen_arch_map.file_contracts(late) == ([], {})
+
+
+# Each language's own comment form carries the same header: read for `#`
+# alone, every one of these declared nothing in the adopting repositories.
+
+
+def _declared(tmp_path, name, text, encoding="utf-8"):
+    path = tmp_path / name
+    path.write_text(text, encoding=encoding)
+    return gen_arch_map.file_contracts(path)
+
+
+def test_a_slash_line_comment_header_declares(tmp_path):
+    rust = "//! Pipeline.\n//!\n//! Contracts: IF-970\n//! Contract IF-970: frames in order.\nuse std::io;\n"
+    assert _declared(tmp_path, "pipeline.rs", rust) == (
+        ["IF-970"],
+        {"IF-970": "frames in order."},
+    )
+    cs = "// Log.\n// Contracts: IF-971\n//\n// Contract IF-971: one line per event,\n//     UTC first.\nusing System;\n"
+    assert _declared(tmp_path, "AppLog.cs", cs) == (
+        ["IF-971"],
+        {"IF-971": "one line per event, UTC first."},
+    )
+
+
+def test_a_slash_block_comment_header_declares(tmp_path):
+    ts = "/**\n * Store.\n *\n * Contracts: IF-972\n *\n * Contract IF-972: reads the catalog.\n */\nexport {};\n"
+    assert _declared(tmp_path, "store.ts", ts) == (
+        ["IF-972"],
+        {"IF-972": "reads the catalog."},
+    )
+
+
+def test_a_powershell_header_declares_through_a_bom_and_block_help(tmp_path):
+    ps = (
+        "#Requires -Version 7.2\n<#\n.SYNOPSIS\n  Try a voice.\n#>\n"
+        "# Contracts: IF-973\n#\n# Contract IF-973: returns 3 when busy.\nparam()\n"
+    )
+    assert _declared(tmp_path, "Try-Voice.ps1", ps, encoding="utf-8-sig") == (
+        ["IF-973"],
+        {"IF-973": "returns 3 when busy."},
+    )
+
+
+def test_a_batch_header_declares_below_echo_off(tmp_path):
+    cmd = "@echo off\nREM Launcher.\nREM Contracts: IF-974\n:: Contract IF-974: runs the build.\nsetlocal\n"
+    assert _declared(tmp_path, "run.cmd", cmd) == (
+        ["IF-974"],
+        {"IF-974": "runs the build."},
+    )
 
 
 def test_the_reference_lists_a_file_owner_beside_the_modules(tmp_path):

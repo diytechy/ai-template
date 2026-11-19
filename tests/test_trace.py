@@ -2,10 +2,10 @@
 
 WI-277 split this module by behavior boundary. What stays here is the
 scaffold-driven half: the strict/schema gates, the verification-category
-buckets (Test / Attest / Demonstrated / Critique), the Drafted exemptions, and
+buckets (Test / Vouch / Demonstrated / Critique), the Drafted exemptions, and
 the generated report/HTML render. WI-521 slice 3 moved the IF-### interface-seam
 tier to tests/test_trace_interfaces.py; the pure in-process rule decisions moved
-to tests/test_trace_rules.py, the git-backed re-attestation brief to
+to tests/test_trace_rules.py, the git-backed re-acceptance brief to
 tests/test_trace_briefs.py.
 
 Implements: TC-001
@@ -20,12 +20,12 @@ from conftest import (
     run_py,
 )
 
-# SR-002 is a genuine (approved, non-Drafted) orphan: Status=Approved, so the
+# SR-002 is a genuine (accepted, non-Drafted) orphan: Status=Accepted, so the
 # derived-gate Drafted exemption (WI-089) does NOT apply and the decomposition
 # rules still fire. A Drafted SR would be exempt — see the WI-089 section below.
-ORPHAN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
-SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Approved
+ORPHAN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted
+SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Accepted
 """
 
 
@@ -38,9 +38,9 @@ def test_happy_chain_is_orphan_free(scaffold):
 
 def test_verified_triple_prints_when_only_mechanized_is_nonzero(scaffold):
     # WI-466: the summary line's print guard used to read `(demonstrated_verified
-    # or attested_verified)`, so a nonzero mechanized-only count — the common
+    # or vouched_verified)`, so a nonzero mechanized-only count — the common
     # case, and what a happy-chain minimal project produces (SR-001 is
-    # Test/Approved) — silently hid the whole triple once the other two legs
+    # Test/Accepted) — silently hid the whole triple once the other two legs
     # drained to zero (re-tier v2 S3, log 2026-08-16e: SR-034/SR-036 were the
     # registry's only demonstrated-verified rows and both flipped Modified).
     make_minimal_project(scaffold)
@@ -48,7 +48,7 @@ def test_verified_triple_prints_when_only_mechanized_is_nonzero(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "verified-mechanized=1" in proc.stdout
     assert "verified-demonstrated=0" in proc.stdout
-    assert "verified-attested=0" in proc.stdout
+    assert "verified-vouched=0" in proc.stdout
 
 
 def test_orphan_sr_fails_strict(scaffold):
@@ -63,8 +63,8 @@ def test_orphan_sr_fails_strict(scaffold):
     assert "SR SR-002 has no test (TC)" in report
 
 
-NO_SN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,,"The system shall add two numbers.","Rootless.","add(1,2) == 3",,M,Test,Approved
+NO_SN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,,"The system shall add two numbers.","Rootless.","add(1,2) == 3",,M,Test,Accepted
 """
 
 
@@ -102,27 +102,27 @@ def test_strict_integrity_ignores_orphans_but_fails_bad_ids(scaffold):
 
 # SR-002 is Status=Modified — a RETIRED value since D-9 step 7, and deliberately
 # kept here as the mid-migration fixture. The phase scoping of --require-verified
-# is what these tests exercise, so the row has to be one the bar FLAGS: a Drafted
+# is what these tests exercise, so the row has to be one the checks FLAGS: a Drafted
 # SR is exempt from --require-verified entirely (WI-089, a different axis), and
-# `Approved`/`Founded` both pass, which leaves no LIVE value that reaches the bar.
-# The cost is that this fixture also reds the enum floor, which
+# `Accepted`/`Founded` both pass, which leaves no LIVE value that reaches the checks.
+# The cost is that this fixture also fails the enum floor, which
 # `test_phase_scopes_require_verified` states rather than works around. Every
 # row carries its Phase: in a phased spine a row with no Phase cell is itself an
 # integrity finding, which is not the property these tests drive.
-PHASED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,v1
+PHASED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Phase
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted,v1
 SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Modified,v2
 """
 
-# LLR-002 is Drafted: its SR-002 is not approved, and an approved child under
-# an unapproved parent is an integrity finding of its own (parent first).
+# LLR-002 is Drafted: its SR-002 is not accepted, and an accepted child under
+# an unaccepted parent is an integrity finding of its own (parent first).
 PHASED_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Phase
-LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Approved,v1
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Accepted,v1
 LLR-002,SR-002,Future part,src/future,todo,"Drafted decomposition of the v2 SR.",(see TC),Drafted,v2
 """
 
 PHASED_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status,Phase
-TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Approved,v1
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Accepted,v1
 TC-002,SR-002;LLR-002,Unit,planned v2 test,Full,,"Satisfies SR-002 AcceptanceCriteria",Yes,Drafted,v2
 """
 
@@ -138,15 +138,15 @@ def make_phased_project(scaffold):
 
 
 def test_phase_scopes_require_verified(scaffold):
-    """A v2 SR that is not yet Approved fails an unscoped DevStg-Impl check; a
+    """A v2 SR that is not yet Accepted fails an unscoped DevStg-Impl check; a
     `--phase v1` closure DEFERS it explicitly, and the deferral is reported.
 
     THE ASSERTIONS MOVED FROM EXIT CODES TO COUNTERS AT D-9 STEPS 7/8, and the
     reason is the fixture, not the property. `--require-verified`'s population
     is now unreachable-by-cell for a conformant repo — every live value either
-    stands the bar down or passes it — so the only row that can drive this test
+    stands the checks down or passes it — so the only row that can drive this test
     is the mid-migration one PHASED_SRS carries, whose out-of-vocabulary Status
-    ALSO reds the always-on integrity floor. The exit code therefore stays 1
+    ALSO fails the always-on integrity floor. The exit code therefore stays 1
     throughout and can no longer tell the deferred run from the scoped one.
     `status-findings=` / `phase-deferred=` can, and they are what the phase
     scoping actually moves."""
@@ -160,7 +160,7 @@ def test_phase_scopes_require_verified(scaffold):
         ["scripts/trace.py", "--strict", "--require-verified", "--phase", "v1"],
         cwd=scaffold,
     )
-    # DEFERRED: the bar stood down for the out-of-phase row...
+    # DEFERRED: the checks stood down for the out-of-phase row...
     assert "status-findings=0" in proc.stdout, proc.stdout
     assert "phase-deferred=1" in proc.stdout
     # ...and the ONLY thing still failing is the enum floor, which is phase-blind
@@ -219,33 +219,33 @@ def test_check_py_passes_phase_to_trace():
     assert "--phase" not in trace_cmd
 
 
-# --- WI-1.7: human-attestation verification kind (Attest) ---------------------
+# --- WI-1.7: the verification method that rests on someone's word (Vouch) ----
 
-# An Attest SR: a named human's recorded judgment, no code to decompose (so
-# LLR-exempt), but it still needs a TC that records who/when attested.
-ATTEST_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
-SR-002,Theme mood fit,SN-001,"The main theme shall match the mood brief.","Subjective; no automated check.","Creative lead records pass against the brief.",,H,Attest,Approved
+# A Vouch SR: the operator's recorded word, no code to decompose (so
+# LLR-exempt), but it still needs a TC that records who vouched and when.
+VOUCH_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted
+SR-002,Theme mood fit,SN-001,"The main theme shall match the mood brief.","Subjective; no automated check.","Creative lead records pass against the brief.",,H,Vouch,Accepted
 """
 
-ATTEST_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
-TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Approved
-TC-002,SR-002,System,creative review of the theme,Release,"attested-by=A. Rivera; attested-on=2026-07-02","Recorded pass judgment for SR-002",No,,Approved
+VOUCH_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Accepted
+TC-002,SR-002,System,creative review of the theme,Release,"vouched-by=A. Rivera; vouched-on=2026-07-02","Recorded pass judgment for SR-002",No,,Accepted
 """
 
 
 def make_attest_project(scaffold):
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
-    (req / "system-requirements.csv").write_text(ATTEST_SRS, encoding="utf-8")
+    (req / "system-requirements.csv").write_text(VOUCH_SRS, encoding="utf-8")
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(
-        ATTEST_TCS, encoding="utf-8"
+        VOUCH_TCS, encoding="utf-8"
     )
     record_ids(scaffold)
 
 
-def test_attest_sr_is_llr_exempt_but_needs_tc(scaffold):
-    # SR-002 (Attest) has no LLR yet is not an orphan; it still needs its TC.
+def test_a_vouch_sr_is_llr_exempt_but_needs_tc(scaffold):
+    # SR-002 (Vouch) has no LLR yet is not an orphan; it still needs its TC.
     make_attest_project(scaffold)
     record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
@@ -254,10 +254,10 @@ def test_attest_sr_is_llr_exempt_but_needs_tc(scaffold):
     assert "SR SR-002 has no LLR" not in report
     # Drop its TC -> now it is an orphan (every SR needs >=1 TC regardless of method).
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(
-        ATTEST_TCS.replace(
+        VOUCH_TCS.replace(
             "TC-002,SR-002,System,creative review of the theme,Release,"
-            '"attested-by=A. Rivera; attested-on=2026-07-02",'
-            '"Recorded pass judgment for SR-002",No,,Approved\n',
+            '"vouched-by=A. Rivera; vouched-on=2026-07-02",'
+            '"Recorded pass judgment for SR-002",No,,Accepted\n',
             "",
         ),
         encoding="utf-8",
@@ -268,8 +268,8 @@ def test_attest_sr_is_llr_exempt_but_needs_tc(scaffold):
     assert "SR SR-002 has no test (TC)" in report
 
 
-def test_attest_verified_accepted_and_surfaced_distinctly(scaffold):
-    # Under --require-verified (DevStg-Impl), an Attest SR marked Approved passes, and the
+def test_a_verified_vouch_sr_passes_and_is_surfaced_distinctly(scaffold):
+    # Under --require-verified (DevStg-Impl), a Vouch SR marked Accepted passes, and the
     # report surfaces it in the three-way verification-basis split (WI-259) so the
     # trust footprint is auditable: SR-001 is mechanized (Test), SR-002 attested.
     make_attest_project(scaffold)
@@ -280,39 +280,39 @@ def test_attest_verified_accepted_and_surfaced_distinctly(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "verified-mechanized=1" in proc.stdout
     assert "verified-demonstrated=0" in proc.stdout
-    assert "verified-attested=1" in proc.stdout
+    assert "verified-vouched=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "Verification basis (mechanized / demonstrated / attested)" in report
-    assert "Attested (Attest): 1 — SR-002" in report
-    assert "Approved SRs — attested (human, §4) | 1 |" in report
-    assert "Approved SRs — mechanized (Test) | 1 |" in report
-    assert "Approved SRs — demonstrated/observed | 0 |" in report
+    assert "Verification basis (mechanized / demonstrated / vouched)" in report
+    assert "Vouched (Vouch): 1 — SR-002" in report
+    assert "Accepted SRs — vouched (operator, §4) | 1 |" in report
+    assert "Accepted SRs — mechanized (Test) | 1 |" in report
+    assert "Accepted SRs — demonstrated/observed | 0 |" in report
 
 
-def test_attest_is_in_verification_vocabulary(scaffold):
-    # --strict-schema must accept Attest (not reject it as out-of-vocabulary).
+def test_vouch_is_in_the_verification_vocabulary(scaffold):
+    # --strict-schema must accept Vouch (not reject it as out-of-vocabulary).
     make_attest_project(scaffold)
     proc = run_py(["scripts/trace.py", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "SR-002 has Verification=" not in report  # no enum-violation finding
+    assert "SR-002 has VerificationMethod=" not in report  # no enum-violation finding
 
 
 # --- WI-259: --require-verified is method-blind; the split has a third bucket ---
 
-# A non-Test, non-Attest SR (Analysis here — representative of the
-# Demonstration/Manual/Analysis/Inspection/Critique family): its Approved state
+# A non-Test, non-Vouch SR (Analysis here — representative of the
+# Demonstration/Manual/Analysis/Inspection/Critique family): its Accepted state
 # rests on a human observing an outcome, not a runnable check. Analysis is
 # LLR-exempt so it decomposes to a TC alone. SR-001 stays the mechanized (Test)
 # control.
-DEMO_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
-SR-002,Analyzed property,SN-001,"The system shall hold an analyzed property.","Judged by analysis, no runnable check.","An analyst records the property holds.",,H,Analysis,Approved
+DEMO_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted
+SR-002,Analyzed property,SN-001,"The system shall hold an analyzed property.","Judged by analysis, no runnable check.","An analyst records the property holds.",,H,Analysis,Accepted
 """
 
 DEMO_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
-TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Approved
-TC-002,SR-002,System,analyze the property against the model,Release,"analyst=A. Rivera; analyzed-on=2026-07-21","Recorded analysis pass for SR-002",No,,Approved
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Accepted
+TC-002,SR-002,System,analyze the property against the model,Release,"analyst=A. Rivera; analyzed-on=2026-07-21","Recorded analysis pass for SR-002",No,,Accepted
 """
 
 
@@ -327,7 +327,7 @@ def make_demo_project(scaffold):
 
 
 def test_demonstrated_sr_is_its_own_category_and_gate_required(scaffold):
-    # M-5/WI-259: a non-Test, non-Attest Approved SR is reported in its own
+    # M-5/WI-259: a non-Test, non-Vouch Accepted SR is reported in its own
     # "demonstrated/observed" bucket (never folded into mechanized), listed by id
     # so the audit sees it.
     make_demo_project(scaffold)
@@ -339,40 +339,40 @@ def test_demonstrated_sr_is_its_own_category_and_gate_required(scaffold):
     assert "verified-mechanized=1" in proc.stdout
     assert "verified-demonstrated=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "Approved SRs — mechanized (Test) | 1 |" in report
-    assert "Approved SRs — demonstrated/observed | 1 |" in report
+    assert "Accepted SRs — mechanized (Test) | 1 |" in report
+    assert "Accepted SRs — demonstrated/observed | 1 |" in report
     # Listed by id under demonstrated/observed — not miscounted as mechanized.
     assert "Demonstrated/observed" in report and "SR-002" in report
 
     # The headline widening (M-5): regress SR-002 to Modified. sr_bar already
-    # caps it at DevStg-Tests, but the OLD --require-verified (Verification=Test only)
-    # silently PASSED it. The widened bar now flags it, naming the real method.
+    # caps it at DevStg-Tests, but the OLD --require-verified (VerificationMethod=Test only)
+    # silently PASSED it. The widened checks now flags it, naming the real method.
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
-        DEMO_SRS.replace(",H,Analysis,Approved", ",H,Analysis,Modified"),
+        DEMO_SRS.replace(",H,Analysis,Accepted", ",H,Analysis,Modified"),
         encoding="utf-8",
     )
     record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "status-findings=1" in proc.stdout
-    assert "Verification=Analysis but Status=Modified" in proc.stdout
-    assert "DevStg-Impl requires Approved" in proc.stdout
+    assert "VerificationMethod=Analysis but Status=Modified" in proc.stdout
+    assert "DevStg-Impl requires Accepted" in proc.stdout
 
 
 # --- WI-068: the Critique verification value ----------------------------------
 
 # A Critique SR: subjective acceptance judged by an independent critical eye
-# against a rubric. Unlike Attest, its artifact is PRODUCED BY CODE (only the
+# against a rubric. Unlike Vouch, its artifact is PRODUCED BY CODE (only the
 # acceptance is perceptual), so it is NOT LLR-exempt.
-CRITIQUE_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
-SR-002,Render realism,SN-001,"The rendered scene shall look realistic.","Subjective; judged by a critic against a rubric.","Critic judges the render against docs/rubrics/render.md anchors.",,S,Critique,Approved
+CRITIQUE_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted
+SR-002,Render realism,SN-001,"The rendered scene shall look realistic.","Subjective; judged by a critic against a rubric.","Critic judges the render against docs/rubrics/render.md anchors.",,S,Critique,Accepted
 """
 
 CRITIQUE_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
-TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Approved
-TC-002,SR-002,System,critique the render against the rubric,Release,"rubric=docs/rubrics/render.md; artifact=render.png","Critic APPROVE per the rubric anchors",No,,Approved
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Accepted
+TC-002,SR-002,System,critique the render against the rubric,Release,"rubric=docs/rubrics/render.md; artifact=render.png","Critic APPROVE per the rubric anchors",No,,Accepted
 """
 
 
@@ -394,8 +394,8 @@ def test_critique_verification_value(scaffold):
     proc = run_py(["scripts/trace.py", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "SR-002 has Verification=" not in report
-    # 2) A Critique SR is NOT LLR-exempt (unlike Attest): SR-002 has no LLR, so it
+    assert "SR-002 has VerificationMethod=" not in report
+    # 2) A Critique SR is NOT LLR-exempt (unlike Vouch): SR-002 has no LLR, so it
     #    is an orphan (the artifact is produced by code — only acceptance is
     #    subjective).
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
@@ -444,7 +444,7 @@ def test_orphan_node_flagged_in_outline_and_graph(scaffold):
     proc = run_py(["scripts/trace.py"], cwd=scaffold)  # views render regardless of exit
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    # Mermaid: the orphan (Approved) SR-002 gets the distinct class.
+    # Mermaid: the orphan (Accepted) SR-002 gets the distinct class.
     assert "classDef orphan" in report
     assert "class SR_002 orphan" in report
     # Outline: the same node carries an inline flag on its own line.
@@ -475,8 +475,8 @@ def test_gitignore_ignores_the_html_artifact(scaffold):
 
 # --- Thread 5: the optional Lifecycle tag is a schema-safe extra column ---------
 
-LIFECYCLE_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Lifecycle
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,Startup
+LIFECYCLE_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Lifecycle
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted,Startup
 """
 
 
@@ -496,8 +496,8 @@ def test_lifecycle_column_is_schema_safe(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-ASPECT_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Aspect
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,perf
+ASPECT_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Aspect
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted,perf
 """
 
 
@@ -520,9 +520,9 @@ def test_aspect_column_is_schema_safe(scaffold):
 
 # --- Thread 35: Area is a first-class (still optional) SR column ---------------
 
-ASPECT_MIXED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Aspect
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,perf
-SR-002,Addition report,SN-001,"The system shall report the sum.","Realizes SN-001.","Sum is printed.",,M,Attest,Approved,
+ASPECT_MIXED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Aspect
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted,perf
+SR-002,Addition report,SN-001,"The system shall report the sum.","Realizes SN-001.","Sum is printed.",,M,Vouch,Accepted,
 """
 
 
@@ -578,20 +578,20 @@ def test_shipped_tc_template_carries_evidence_column():
 
 def test_aspect_values_yield_report_section(scaffold):
     # A registry with real Aspect values gets a per-aspect SR count in the
-    # report — report-only: the run stays green, and blank cells count as
+    # report — report-only: the run keeps passing, and blank cells count as
     # untagged (a row that is not cross-cutting carries no aspect, by the rule).
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
     (req / "system-requirements.csv").write_text(ASPECT_MIXED_SRS, encoding="utf-8")
     (req / "low-level-requirements.csv").write_text(
         "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
-        'LLR-001,SR-001,Pure adder,src/demo,add,"Two numbers -> sum.",(see TC),Approved\n',
+        'LLR-001,SR-001,Pure adder,src/demo,add,"Two numbers -> sum.",(see TC),Accepted\n',
         encoding="utf-8",
     )
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status\n"
-        'TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2",Sum,Yes,Approved\n'
-        "TC-002,SR-002,Manual,read the report,Full,,Sum printed,No,Approved\n",
+        'TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2",Sum,Yes,Accepted\n'
+        "TC-002,SR-002,Manual,read the report,Full,,Sum printed,No,Accepted\n",
         encoding="utf-8",
     )
     record_ids(scaffold)
@@ -616,7 +616,7 @@ def test_out_of_vocabulary_aspect_is_a_schema_finding(scaffold):
         ASPECT_SRS.replace(",perf\n", ",Parallel dispatch\n"), encoding="utf-8"
     )
     # Reported at the schema tier, and GATING only under --strict — the same
-    # severity contract its Verification/Tier siblings carry.
+    # severity contract its VerificationMethod/Tier siblings carry.
     proc = run_py(["scripts/trace.py", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "schema-findings=1" in proc.stdout
@@ -627,6 +627,27 @@ def test_out_of_vocabulary_aspect_is_a_schema_finding(scaffold):
     assert "SR-001" in strict.stdout
     assert "Parallel dispatch" in strict.stdout
     assert "portability" in strict.stdout, "the allowed set must be reported"
+
+
+def test_strict_schema_alone_says_on_its_summary_line_that_it_does_not_fail(
+    scaffold,
+):
+    # Exit 0 without --strict is the pinned contract (the test above); the
+    # summary line states it, so findings printed beside exit 0 are not read
+    # as a gate that missed them.
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        ASPECT_SRS.replace(",perf\n", ",Parallel dispatch\n"), encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert (
+        "schema-findings=1 (reported, not failing: --strict-schema fails the run "
+        "only with --strict)" in proc.stdout
+    )
+    strict = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+    assert "not failing" not in strict.stdout
 
 
 def test_blank_aspect_is_never_a_schema_finding(scaffold):
@@ -655,56 +676,56 @@ def test_no_aspect_values_no_report_section(scaffold):
 
 
 def test_require_verified_flags_an_UNMIGRATED_status(scaffold):
-    """The bar's surviving population since D-9 steps 7/8, and it is smaller
+    """The checks' surviving population since D-9 steps 7/8, and it is smaller
     than it was — stated rather than discovered.
 
-    Under the closed enum every LIVE value either stands the bar down
-    (`Drafted`, pre-approval) or passes it (`Approved`, `Founded`), so a
+    Under the closed enum every LIVE value either stands the checks down
+    (`Drafted`, pre-acceptance) or passes it (`Accepted`, `Founded`), so a
     conformant repo can no longer reach this finding by cell. The case that
     remains is the one that matters most: a DOWNSTREAM repo mid-migration
     whose rows still read `Modified` (or `Implemented`, or anything else) must
     not pass a DevStg-Impl gate silently. So the fixture drives an
-    out-of-vocabulary value deliberately, and asserts BOTH findings — this bar
+    out-of-vocabulary value deliberately, and asserts BOTH findings — this checks
     ("this row is not blessed") and the integrity floor ("this word is not in
     the vocabulary"). Two findings for one fault is the right count: they
-    answer different questions, and only the second survives if the bar is
+    answer different questions, and only the second survives if the checks are
     never run.
     """
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
         csv_path.read_text(encoding="utf-8").replace(
-            ",M,Test,Approved", ",M,Test,Modified"
+            ",M,Test,Accepted", ",M,Test,Modified"
         ),
         encoding="utf-8",
     )
     # Without the flag: the ENUM floor already names it (D-9 correction C1 —
     # a retired word is wrong at any stage, so it does not wait for the top
-    # bar). This used to read "still a clean trace"; the closure is what
+    # checks). This used to read "still a clean trace"; the closure is what
     # changed, and it changed in the loud direction.
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "not in the closed vocabulary" in proc.stdout
-    assert "status-findings=" not in proc.stdout  # the bar did not run
-    # With the flag: the unblessed Test SR fails the DevStg-Impl bar too.
+    assert "status-findings=" not in proc.stdout  # the checks did not run
+    # With the flag: the unblessed Test SR fails the DevStg-Impl checks too.
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1
     assert "status-findings=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "DevStg-Impl requires Approved" in report
+    assert "DevStg-Impl requires Accepted" in report
 
 
 def test_require_verified_passes_EVERY_blessed_value(scaffold):
     """The mutation half, and the one that would have failed silently: D-9
-    step 8 armed `Founded`, and a bar reading `is_approved` alone would have
+    step 8 armed `Founded`, and a check run reading `is_accepted` alone would have
     FLAGGED every row that reached the top rung — an arming that fails what it
-    promotes. Both blessed values pass; `Drafted` stands the bar down."""
+    promotes. Both blessed values pass; `Drafted` stands the checks down."""
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     original = csv_path.read_text(encoding="utf-8")
-    for value in ("Approved", "Founded", "Drafted"):
+    for value in ("Accepted", "Founded", "Drafted"):
         csv_path.write_text(
-            original.replace(",M,Test,Approved", ",M,Test," + value),
+            original.replace(",M,Test,Accepted", ",M,Test," + value),
             encoding="utf-8",
         )
         proc = run_py(
@@ -723,8 +744,8 @@ def test_require_verified_passes_EVERY_blessed_value(scaffold):
 
 # SR-002 is Drafted with NO LLR and NO TC (undecomposed), but it links SN-001. It
 # must NOT orphan. SR-001 keeps the fully-traced happy chain.
-DRAFT_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
+DRAFT_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted
 SR-002,Drafted requirement,SN-001,"The system shall do a not-yet-decomposed thing.","Being drafted requirement-first.","some measurable outcome",,M,Test,Drafted
 """
 
@@ -744,9 +765,9 @@ def test_draft_sr_is_exempt_from_decomposition(scaffold):
     assert "SR SR-002 has no test (TC)" not in report
     assert "## Drafted artifacts (decomposition-exempt)" in report
     assert "SR-002 — Drafted requirement" in report
-    # Approve it (Drafted -> Approved) and the decomposition rules fire again.
+    # Accept it (Drafted -> Accepted) and the decomposition rules fire again.
     srs.write_text(
-        DRAFT_SR.replace(",M,Test,Drafted", ",M,Test,Approved"), encoding="utf-8"
+        DRAFT_SR.replace(",M,Test,Drafted", ",M,Test,Accepted"), encoding="utf-8"
     )
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1
@@ -757,7 +778,7 @@ def test_draft_sr_is_exempt_from_decomposition(scaffold):
 
 # A Drafted LLR decomposing SR-001 but with no TC: exempt from the "no TC" rule.
 DRAFT_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Approved
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Accepted
 LLR-002,SR-001,Drafted sub-part,src/demo,addfast,"A not-yet-tested decomposition.",(see TC),Drafted
 """
 
@@ -771,9 +792,9 @@ def test_draft_llr_is_exempt_from_tc_rule(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "LLR LLR-002 has no test (TC)" not in report
-    # Mark it Approved and the missing TC is an orphan again.
+    # Mark it Accepted and the missing TC is an orphan again.
     llrs.write_text(
-        DRAFT_LLRS.replace("(see TC),Drafted", "(see TC),Approved"), encoding="utf-8"
+        DRAFT_LLRS.replace("(see TC),Drafted", "(see TC),Accepted"), encoding="utf-8"
     )
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1
@@ -782,17 +803,17 @@ def test_draft_llr_is_exempt_from_tc_rule(scaffold):
 
 
 # SR-002 is fully decomposed (LLR-002 + TC-002) so ONLY the status axis varies:
-# Drafted -> exempt from --require-verified; Approved -> flagged.
-RV_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
+# Drafted -> exempt from --require-verified; Accepted -> flagged.
+RV_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted
 SR-002,Drafted requirement,SN-001,"The system shall do a drafted thing.","Being drafted.","some measurable outcome",,M,Test,Drafted
 """
 RV_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Approved
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Accepted
 LLR-002,SR-002,Drafted sub-part,src/demo,addfast,"A drafted decomposition.",(see TC),Drafted
 """
 RV_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
-TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Approved
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Accepted
 TC-002,SR-002;LLR-002,Unit,drafted test,Full,,"Satisfies SR-002 AcceptanceCriteria",No,,Drafted
 """
 
@@ -804,12 +825,12 @@ def test_draft_sr_is_exempt_from_require_verified(scaffold):
     (req / "low-level-requirements.csv").write_text(RV_LLRS, encoding="utf-8")
     srs = req / "system-requirements.csv"
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(RV_TCS, encoding="utf-8")
-    # Drafted SR-002 is pre-approval: --require-verified does not flag it.
+    # Drafted SR-002 is pre-acceptance: --require-verified does not flag it.
     record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "status-findings=0" in proc.stdout
-    # Approving it (Verification=Test, not yet `Approved`) flags it.
+    # Accepting it (VerificationMethod=Test, not yet `Accepted`) flags it.
     srs.write_text(
         RV_SRS.replace(",M,Test,Drafted", ",M,Test,Modified"), encoding="utf-8"
     )
@@ -845,8 +866,8 @@ def test_draft_sr_still_needs_sn_and_stays_integral(scaffold):
 
 
 # --- WI-090: SN maturity via section-as-state ---------------------------------
-# An SN under a heading whose text contains "draft" is unapproved (DevStg-Below) and exempt
-# from the "every SN needs an SR" rule; SNs under any other heading are approved.
+# An SN under a heading whose text contains "draft" is unaccepted (DevStg-Below) and exempt
+# from the "every SN needs an SR" rule; SNs under any other heading are accepted.
 
 DRAFT_SN_MD = """# Stakeholder Needs (SN-###)
 
@@ -856,7 +877,7 @@ DRAFT_SN_MD = """# Stakeholder Needs (SN-###)
 |---|---|---|---|---|
 | SN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
 
-## Draft needs (unapproved)
+## Draft needs (unaccepted)
 
 | SN-ID | Need | Why | Priority | Acceptance intent |
 |---|---|---|---|---|
@@ -874,13 +895,13 @@ def test_draft_sn_is_exempt_from_sr_rule(scaffold):
     assert "drafts=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "SN SN-002 has no SR" not in report
-    assert "SN-002 (SN, unapproved section)" in report
+    assert "SN-002 (SN, unaccepted section)" in report
     # The DAG flags the draft SN like a Status=Drafted row.
     assert "class SN_002 draft" in report
-    # Approve SN-002 by moving its row under a non-draft heading -> the SN-with-no-SR
+    # Accept SN-002 by moving its row under a non-draft heading -> the SN-with-no-SR
     # rule fires again (it now claims to be a real need with no decomposition).
-    approved = DRAFT_SN_MD.replace("## Draft needs (unapproved)", "## More core needs")
-    sn.write_text(approved, encoding="utf-8")
+    accepted = DRAFT_SN_MD.replace("## Draft needs (unaccepted)", "## More core needs")
+    sn.write_text(accepted, encoding="utf-8")
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1
     assert "SN SN-002 has no SR" in (
@@ -895,7 +916,7 @@ def test_sn_draft_ids_reader():
     assert trace.sn_draft_ids(DRAFT_SN_MD, ".md") == {"SN-002"}
     # A -000 placeholder in a draft section is excluded (like every other scan).
     assert trace.sn_draft_ids("## Draft needs\nSN-000 SN-005\n", ".md") == {"SN-005"}
-    # No draft heading -> nothing is draft (the approved default).
+    # No draft heading -> nothing is draft (the accepted default).
     assert trace.sn_draft_ids("# Needs\n\n## Core\nSN-001\n", ".md") == set()
     # The "draft" match is on the heading text, case-insensitive, not the body.
     assert trace.sn_draft_ids("## DRAFT items\nSN-009\n", ".md") == {"SN-009"}
@@ -924,12 +945,12 @@ def test_predicate_markers_are_word_bounded():
     assert warns("indistinguishable from the reference")
 
 
-# --- WI-188: the approved-phase completeness rule -----------------------------
+# --- WI-188: the accepted-phase completeness rule -----------------------------
 TRACE = load_script("trace")
 
 
 def _real(sr=(), llr=(), tc=()):
-    """The {label: [dict-rows]} shape phase_approved_findings takes — minimal
+    """The {label: [dict-rows]} shape phase_accepted_findings takes — minimal
     id/Status/Phase columns are all the rule reads."""
     import csv
     import io
@@ -945,46 +966,46 @@ def _real(sr=(), llr=(), tc=()):
     }
 
 
-def test_phase_approved_rule_arms_and_fires():
-    f = TRACE.phase_approved_findings
+def test_phase_accepted_rule_arms_and_fires():
+    f = TRACE.phase_accepted_findings
     # Unarmed: nothing phased -> vacuous (a fully-blank downstream registry).
-    assert f(_real(["SR-001,Approved,", "SR-002,Approved,"])) == []
-    # Armed by SR-001's phase; SR-002 approved with a blank phase -> one finding.
-    fired = f(_real(["SR-001,Approved,1", "SR-002,Approved,"]))
+    assert f(_real(["SR-001,Accepted,", "SR-002,Accepted,"])) == []
+    # Armed by SR-001's phase; SR-002 accepted with a blank phase -> one finding.
+    fired = f(_real(["SR-001,Accepted,1", "SR-002,Accepted,"]))
     assert len(fired) == 1 and "SR-002" in fired[0]
-    # An unparseable approved phase fails (armed by SR-001).
-    fired = f(_real(["SR-001,Approved,1", "SR-002,Approved,later"]))
+    # An unparseable accepted phase fails (armed by SR-001).
+    fired = f(_real(["SR-001,Accepted,1", "SR-002,Accepted,later"]))
     assert len(fired) == 1 and "SR-002" in fired[0]
     # A Drafted row may leave Phase blank even when armed.
-    assert f(_real(["SR-001,Approved,1", "SR-002,Drafted,"])) == []
+    assert f(_real(["SR-001,Accepted,1", "SR-002,Drafted,"])) == []
     # The rule spans LLR and TC too, not just SR.
     fired = f(
-        _real(["SR-001,Approved,1"], ["LLR-001,Approved,"], ["TC-001,Approved,2"])
+        _real(["SR-001,Accepted,1"], ["LLR-001,Accepted,"], ["TC-001,Accepted,2"])
     )
     assert len(fired) == 1 and "LLR-001" in fired[0]
 
 
-def test_phase_approved_rule_is_numeric_only():
-    # Owner ruling 2026-08-01 (WI-402): once armed, an approved Phase cell is a
+def test_phase_accepted_rule_is_numeric_only():
+    # Operator ruling 2026-08-01 (WI-402): once armed, an accepted Phase cell is a
     # BARE INTEGER — digits only, full cell. A prefixed label still digit-parses
     # (phase_num is untouched, so legacy labels keep arming/filtering/deriving —
-    # grandfathering), but the literal joins (--phase/--approve scope match,
+    # grandfathering), but the literal joins (--phase/--accept scope match,
     # check_trajectory's per-phase= vs [phase]-[gN] anchor join) miss it
     # SILENTLY, which is worse than a crash — so the live cell must be numeric.
-    f = TRACE.phase_approved_findings
-    # A vN-tagged approved registry now arms the rule AND fails it, per cell
+    f = TRACE.phase_accepted_findings
+    # A vN-tagged accepted registry now arms the rule AND fails it, per cell
     # (the pre-WI-402 vN-passes compatibility guarantee, deliberately retired).
-    fired = f(_real(["SR-001,Approved,v1", "SR-002,Approved,v2"]))
+    fired = f(_real(["SR-001,Accepted,v1", "SR-002,Accepted,v2"]))
     assert len(fired) == 2
     assert all("bare integer" in msg for msg in fired)
     # A single prefixed cell beside bare integers fires alone, naming the row.
-    fired = f(_real(["SR-001,Approved,1", "SR-002,Approved,P1"]))
+    fired = f(_real(["SR-001,Accepted,1", "SR-002,Accepted,P1"]))
     assert len(fired) == 1 and "SR-002" in fired[0]
-    # Bare integers stay green (surrounding whitespace is stripped, not judged).
-    assert f(_real(["SR-001,Approved,1", "SR-002,Approved, 2 "])) == []
+    # Bare integers keep passing (surrounding whitespace is stripped, not judged).
+    assert f(_real(["SR-001,Accepted,1", "SR-002,Accepted, 2 "])) == []
     # A Drafted row is exempt even with a prefixed cell (its phase is not yet
-    # approved scope; it takes its bare number at approval).
-    assert f(_real(["SR-001,Approved,1", "SR-002,Drafted,v9"])) == []
+    # accepted scope; it takes its bare number at acceptance).
+    assert f(_real(["SR-001,Accepted,1", "SR-002,Drafted,v9"])) == []
 
 
 def _phase_scaffold(scaffold, sr="1", llr="1", tc="1"):
@@ -1004,25 +1025,25 @@ def _phase_scaffold(scaffold, sr="1", llr="1", tc="1"):
 
 
 def test_phased_scaffold_passes_strict_schema(scaffold):
-    # A fully phased spine (arming the rule) with every approved row numeric passes.
+    # A fully phased spine (arming the rule) with every accepted row numeric passes.
     make_minimal_project(scaffold)
     _phase_scaffold(scaffold, sr="1", llr="1", tc="1")
     proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-def test_approved_blank_phase_fails_strict_schema(scaffold):
-    # Armed by the SR/LLR phases; the approved TC left blank is a schema finding
+def test_accepted_blank_phase_fails_strict_schema(scaffold):
+    # Armed by the SR/LLR phases; the accepted TC left blank is a schema finding
     # that gates under --strict (the schema tier's standing exit convention).
     make_minimal_project(scaffold)
     _phase_scaffold(scaffold, sr="1", llr="1", tc="")
     proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "approved but its Phase" in report and "TC-001" in report
+    assert "accepted but its Phase" in report and "TC-001" in report
 
 
-def test_approved_prefixed_phase_fails_strict_schema(scaffold):
+def test_accepted_prefixed_phase_fails_strict_schema(scaffold):
     # WI-402: a prefixed-but-parseable cell (P1) arms the rule (digit-extract
     # arming) and fails it — the silently-vacuous literal-join shape, now a
     # schema finding rather than a quiet disarm.
@@ -1031,7 +1052,7 @@ def test_approved_prefixed_phase_fails_strict_schema(scaffold):
     proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "approved but its Phase" in report and "TC-001" in report
+    assert "accepted but its Phase" in report and "TC-001" in report
     assert "bare integer" in report
 
 
@@ -1041,26 +1062,26 @@ def test_approved_prefixed_phase_fails_strict_schema(scaffold):
 def test_require_verified_strips_padded_verification_cell(scaffold):
     # M-1: a padded '"Test "' cell must not create a false PASS. The original bug
     # was that --require-verified matched Verification == "Test" unstripped, so a
-    # padded cell was silently skipped. WI-259 widened the bar to every approved
+    # padded cell was silently skipped. WI-259 widened the checks to every accepted
     # SR of any method, so a padded cell can no longer skip it on the method axis
-    # either — a not-Approved approved SR is flagged regardless of its method cell.
+    # either — a not-Accepted accepted SR is flagged regardless of its method cell.
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
         csv_path.read_text(encoding="utf-8").replace(
-            ",M,Test,Approved", ',M,"Test ",Modified'
+            ",M,Test,Accepted", ',M,"Test ",Modified'
         ),
         encoding="utf-8",
     )
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
-    assert "DevStg-Impl requires Approved" in proc.stdout
+    assert "DevStg-Impl requires Accepted" in proc.stdout
 
 
 def test_strict_failure_prints_findings_to_console(scaffold):
     # M-3: the gitignored report must not be the only place failing rows
     # appear — a --strict failure names the rows on stdout (check.py's "print
-    # the real output" bar), capped per class.
+    # the real output" checks), capped per class.
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     text = csv_path.read_text(encoding="utf-8")
@@ -1076,7 +1097,7 @@ def test_strict_failure_prints_findings_to_console(scaffold):
 def test_sn_integrity_flags_duplicate_and_double_state_ids():
     # L-4: the SN tier (prose registry) gets the duplicate-id protection every
     # CSV tier already has — repeated table rows, and an id under both a draft
-    # and a non-draft heading (simultaneously exempt and approved).
+    # and a non-draft heading (simultaneously exempt and accepted).
     trace = load_script("trace")
     text = (
         "# Needs\n"
@@ -1084,7 +1105,7 @@ def test_sn_integrity_flags_duplicate_and_double_state_ids():
         "|SN-001| again | b | c |\n"
         "## Drafted candidates\n"
         "|SN-002| c | d | e |\n"
-        "## Approved\n"
+        "## Accepted\n"
         "|SN-002| c2 | d | e |\n"
         "|SN-000| placeholder | x | y |\n"
     )
@@ -1277,7 +1298,7 @@ def test_an_allow_entry_names_the_open_item_it_defers(tmp_path):
 def test_the_allow_field_is_a_position_not_a_mention(tmp_path):
     # A field, not a phrase match: the id is the FIRST token of the reason. An id
     # discussed later in the sentence is prose — accepting it would re-introduce
-    # exactly the "grabs items that are not applicable" failure the owner refused.
+    # exactly the "grabs items that are not applicable" failure the operator refused.
     trace = load_script("trace")
     root = _allow_repo(
         tmp_path,
@@ -1378,7 +1399,7 @@ def test_an_unreadable_allow_line_reds_the_integrity_floor(scaffold):
 def test_an_unresolved_allow_entry_reds_the_integrity_floor(scaffold):
     # HARD AT BIRTH, on the always-on floor the pre-commit hook runs: a field
     # with no false positives needs no warn-first program. The fixture files a
-    # pending OI-1, so the repaired entry is green.
+    # pending OI-1, so the repaired entry passes.
     _file_pending_oi1(scaffold)
     (scaffold / "docs" / "provenance-allow").write_text(
         "SR-001 Rationale added 2026-08-16 — owes an open-item row at the sitting.\n",

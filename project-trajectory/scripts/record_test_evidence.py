@@ -9,7 +9,7 @@ WHAT THIS IS. `DevStg-Release` is the rung a repo earns when every declared test
 case PASSES. That is a claim about a harness run, and OI-30 D2 rules that no
 Status cell and no hand-written file may ever be its source — so until this
 driver existed the rung was returned by nothing, deliberately (WI-498 slice 3).
-This script is the only sanctioned producer: it RUNS the declared bar itself,
+This script is the only sanctioned producer: it RUNS the declared checks themselves,
 through the documented harness entry point, and writes `docs/test/evidence` only
 if that run exits 0. There is no flag that writes the record without running the
 suite, and none that records a failure: a failing run leaves the previous state
@@ -18,7 +18,7 @@ untouched and says so.
 WHY IT WRAPS `check.py` INSTEAD OF BEING A CHECK STEP. The evidence is a verdict
 ABOUT the whole harness run, so it can only be written by something that outlives
 that run — a step inside the plan would be recording a verdict it is itself part
-of. Wrapping is also what keeps the definition of "the declared bar" in ONE home:
+of. Wrapping is also what keeps the definition of "the declared checks" in ONE home:
 this driver names no test command, it names a TIER declared in `docs/stack.ini`
 and lets `check.py` expand it, exactly as CI does.
 
@@ -30,12 +30,12 @@ consumer must not have to trust its writer.
 
 WHY THE RECORD IS COMMITTED, AND WHY CI DOES NOT WRITE IT. The rung is a
 statement the repository makes about itself, so its evidence has to be reviewable
-history like every other approving act in this kit — a value in a run log
+history like every other accepting act in this kit — a value in a run log
 evaporates, and a hosted runner committing back would need write credentials, a
-bot identity, and a lane no reviewer signs. So the human (or the agent under the
+bot identity, and a lane no reviewer signs. So the operator (or the agent under the
 usual gates) runs this, reads the record, and commits it. CI's half needs no new
 machinery: because the record is a declared stage input and the stage fingerprint
-covers the source surface it binds to, a stale record already reds
+covers the source surface it binds to, a stale record already fails
 `derive_stage --check` wherever that step runs.
 
 STALENESS IS NOT THIS SCRIPT'S JOB TO FORGIVE. `--check` reports the verdict and
@@ -99,7 +99,7 @@ def _command_text(root, argv):
 
 
 def build_record(root, tier, command_text):
-    """The record for a green run on the tree at `root`."""
+    """The record for a passing run on the tree at `root`."""
     return {
         "outcome": kitevidence.PASS,
         "tier": tier,
@@ -118,7 +118,7 @@ def _refuse_without_a_surface(root):
     than no record at all, so an undeclared or empty `[paths]` is refused by name.
 
     THE COUNT IS COMPARED AGAINST ONE, not zero: `docs/stack.ini` folds itself in
-    (it declares the bar), so a surface that resolved to nothing at all still
+    (it declares the checks), so a surface that resolved to nothing at all still
     hashes one file. Testing for "non-empty" would have accepted exactly the state
     this refuses."""
     if kitevidence.source_paths(root) and len(kitevidence.source_files(root)) > 1:
@@ -153,7 +153,7 @@ def main(argv=None):
     ap.add_argument(
         "--dry-run",
         action="store_true",
-        help="print the record a green run would write; run nothing, write nothing",
+        help="print the record a passing run would write; run nothing, write nothing",
     )
     args = ap.parse_args(argv)
     root = Path(args.root)
@@ -201,7 +201,7 @@ def main(argv=None):
     if proc.returncode != 0:
         print(
             "record_test_evidence: the harness exited {} — NOTHING WRITTEN. The "
-            "record only ever states a pass, so a red run leaves the committed "
+            "record only ever states a pass, so a failing run leaves the committed "
             "state exactly as it was.".format(proc.returncode),
             file=sys.stderr,
         )

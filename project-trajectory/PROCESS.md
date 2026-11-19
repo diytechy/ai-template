@@ -8,7 +8,7 @@ omitted section keeps its heading plus a one-line stub.
 Canonical method for a gated, requirement-traced project. It is
 **stack-agnostic** — wire the harness commands to your project's
 language/tooling — but it **requires a git repository**: diffable registries,
-the append-only log, reviewed Status-change commits, and gate approval
+the append-only log, reviewed Status-change commits, and gate acceptance
 all presume git. That substrate was always assumed; it is named here so no
 one designs around its absence. Other docs reference this file by section rather than
 restating it. Its terms are defined once in [`glossary.md`](glossary.md),
@@ -26,7 +26,7 @@ notes — are summarized here with an **applies-when** and expanded in
 
 **Minimum profile — a standalone one-module project needs exactly:** the five
 spine hats (§1), the id scheme (§2), the §3 traceability/anti-duplication
-discipline, the bars **DevStg-Reqs→DevStg-Tests→DevStg-Impl** + the owner's final read (§4), the verdict protocol (§5),
+discipline, the stages **DevStg-Reqs→DevStg-Tests→DevStg-Impl** + the operator's final read (§4), the verdict protocol (§5),
 review triage (§6), and the harness (§7). Everything else is opt-in: skip §8,
 §9, §10, the `Phase`/`Lifecycle` tags, and every "optional" tripwire until the
 scope forces it. (Skipping the `Lifecycle` *tag* doesn't skip DevStg-Reqs's per-phase
@@ -36,14 +36,14 @@ owes.) That default is rung 1 of the §10 ladder.
 **Proportionality — the process right-sizes itself.** Text-representable,
 change-trackable artifacts are the **ideal** this process reaches for, not an
 entry requirement: track *about* an asset in text even where the asset itself
-can't be diffed. Where verification can't be mechanized, a **recorded human
-attestation** (§4 `Attest`) is the honest floor — trust-based by nature (the box
+can't be diffed. Where verification can't be mechanized, the **operator's
+recorded word** (§4 `Vouch`) is the honest floor — trust-based by nature (the box
 can be checked without the work having happened), so the process's job is to make
 it **explicit, named, and auditable**, never to pass it off as a mechanized
 check. Over-aggressive traceability is itself a failure mode: right-sizing is the
 process working, not a compromise of it (see §3 "Right-sizing"). The same
 calibration sets the **decision-surfacing dial** at project setup — how often the
-driver pauses for a human decision (§6). Full doctrine — including the
+driver pauses for an operator decision (§6). Full doctrine — including the
 creative/subjective stance and the dial — in
 [`process-options.md`](process-options.md#proportionality-doctrine).
 
@@ -74,7 +74,7 @@ cross-module budgets (`performance-budgets.csv`, §9) — are declared in the
 shipped **hats roster** (`requirements/hats.toml`): one `[hat.NAME]` per
 perspective carrying `applies_when` (a closed, evaluable condition), `asks`
 (the question put to the decomposition) and `listens_for` (the failure class
-it catches — a hat naming no failure is ceremony). The roster is **owner
+it catches — a hat naming no failure is ceremony). The roster is **operator
 text**, tailored with the frame at `DevStg-Boundary`; `scripts/hats.py` reads
 it and the planning briefs and a decomposition round's sitting brief put
 each applicable hat's question to the decomposition, and the sitting's
@@ -134,7 +134,7 @@ Stable, zero-padded, never reused.
   the rest; pointer columns (`Module`, `CodeSymbol`, `TestRefs`, `Evidence`, a
   need's `source`) are out of scope by design.
 - **One requirement, one `shall`** — exactly one obligation, one testable
-  behavior, never a compound "and/or". The full quality bar and the statement
+  behavior, never a compound "and/or". The full quality standard and the statement
   pattern that carries it are stated once, just below the bullets.
 - **One decision per row; one home per method.** A single interface or method is
   fully defined by exactly one requirement, and a requirement calls out at most
@@ -193,21 +193,21 @@ Stable, zero-padded, never reused.
   live LLR rows a literal `Implements:` declaration must name, and the harness
   reports the measured share every run. It ships at `0` — report the number,
   gate nothing — and rises by writing the declarations, never by lowering the
-  bar. A regulated setting raises it rather than being handed a softened guide.
+  minimum. A regulated setting raises it rather than being handed a softened guide.
 - **Architecture is derived, never committed**: the module/function map, import
   graph and seams are read live from the source tree and the registries into the
   dashboard, so there is no markdown copy to drift. The one authored narrative
   that survives is `docs/runtime-flows.md` (the Runtime flows the DevStg-Tests
-  bar requires).
+  stage requires).
 - **Modularity/dedup**: shared logic in exactly one place; pure cores separated
   from I/O/GUI shells; small functions; one-page-readable architecture.
 - **Consolidate, don't duplicate — the 0→A→B rule.** Edit-conservatively (agent
   guide, "Working agreement") is scoped to the task in front of you: smallest
   diff, within that one change. Across the codebase the goal is the opposite —
   prefer the change that minimizes **total** behavior. When a fix wants the
-  same code in two places, don't patch each site: extract the shared stage
+  same code in two places, don't patch each site: extract the shared step
   both sites call through, so two independent paths to a result (0→B, 0→D)
-  become one shared stage feeding both (0→A→B, 0→A→D). Where two or more
+  become one shared step feeding both (0→A→B, 0→A→D). Where two or more
   existing outputs already overlap, restructure so each behavior has exactly
   one home — never an original plus a near-copy. The same principle governs
   validation and error handling: implement once, at the boundary that owns the
@@ -224,7 +224,7 @@ Stable, zero-padded, never reused.
 - **Record a decision where it is made.** A decision a later step depends on
   is recorded by the step that makes it, in the commit where it is made, and
   checked against that commit's parent. A later reader trusts the record and
-  never recomputes the decision from history or from current state (owner
+  never recomputes the decision from history or from current state (operator
   ruling 2026-10-11).
 - **A structural move is its own commit.** A behaviour-preserving move
   (a rename, an extraction, a file split) lands in a commit that changes no
@@ -302,7 +302,7 @@ human-judged): there the spine's value is at **high altitude** — `SN→SR` to
 ensure nothing key is missed or silently broken as work moves forward — and you
 **descend to LLR/TC granularity only where a mechanized check earns its keep**,
 not to decompose inherently subjective work into fine-grained rows a script still
-can't verify. Where the honest floor is a human's judgment, name it `Attest`
+can't verify. Where the honest floor is a human's judgment, name it `Vouch`
 (§4) rather than inflate a subjective call into a false `Test`.
 
 **Reviewability — review the source, not the render.** The registries (the
@@ -334,12 +334,12 @@ above buys its value at **commit granularity**: line-diffable registries, the
 drift-gated map, committed goldens — none of it protects work sitting
 uncommitted in a working tree, which can't be diffed, reviewed, reverted, or
 bisected, and can simply be lost. So **commit early and often**: a small,
-single-purpose commit at each green step (one finding closed, one requirement
+single-purpose commit at each passing step (one finding closed, one requirement
 decomposed, one registry edit plus its regenerated blocks), never a
 session-sized batch. The pre-commit floor (§7) is deliberately fast and
 **always-valid** *so that* frequent commits stay cheap — that is its design
-intent, not a coincidence. A commit is not a release and not a gate: the bar is
-"floor-green plus a coherent, describable change", never perfection — polish
+intent, not a coincidence. A commit is not a release and not a gate: the standard is
+"the floor passes, plus a coherent, describable change", never perfection — polish
 arrives as further commits. End every session with a **clean tree**: work
 either committed or explicitly parked as a finding/assumption in `status.md`,
 never silently stranded. Agent-driven work can keep this cadence *and* a
@@ -353,8 +353,8 @@ The freshness gate above keeps *generated* blocks honest; the hand-written docs
 get the same guarantee. `scripts/check_docs.py` (stdlib, a process check — §7)
 parses the Markdown under `docs/` plus root `*.md`, builds the link graph, and
 **fails on broken intra-repo links** (a missing target file or `#anchor`) — the
-machine version of the "verify no broken intra-doc links" step the gates ask a
-human to do. It also **warns on orphan docs** (no path from an entry root —
+machine version of the "verify no broken intra-doc links" step the gates ask an
+operator to do. It also **warns on orphan docs** (no path from an entry root —
 root `*.md`, an optional `docs/index.md` Map-of-Content, or a configured entry)
 and, with `--stale` (git-gated), on a doc left frozen beside a non-doc file it
 links that has changed. Broken links are a hard finding; orphans/staleness are
@@ -417,7 +417,7 @@ file if you route a map there. It complements, not replaces,
 the hand-written flow overview.
 
 **Design-time runtime flows (authored at DevStg-Tests, checked).** Everything above is
-harvested from code, so none of it exists at DevStg-Tests — yet DevStg-Tests is when a human reviews
+harvested from code, so none of it exists at DevStg-Tests — yet DevStg-Tests is when an operator reviews
 the LLRs, and runtime *behavior* (ordering, concurrency, background work, what
 blocks on what) is the thing most easily misread from registry rows. So the Software
 Engineer hat authors **`docs/runtime-flows.md`** ("Runtime flows") **with
@@ -426,7 +426,7 @@ user-visible scenario, and always one for any concurrent / asynchronous /
 non-blocking behavior. Participants are the planned modules (the LLR `Module`
 column); each diagram cites the SR/LLR ids it renders. `scripts/check_flows.py`
 (DevStg-Tests/DevStg-Impl) fails when the doc is missing, has no diagrams, a diagram cites no
-SR/LLR id, or a cited id doesn't exist. The human's DevStg-Tests review starts from these
+SR/LLR id, or a cited id doesn't exist. The operator's DevStg-Tests review starts from these
 diagrams — verify the flow there, then spot-check the rows. Update a flow in the
 same change that alters its LLRs; from DevStg-Impl on the generated map/flow corroborates
 these authored diagrams rather than replacing them.
@@ -448,85 +448,85 @@ outside the kit's required path.
 ## 4. Objectives, gates, and exit criteria
 
 Advance only when criteria pass. **Who accepts an advance is the repo's
-declared gate authority** — the `[attestation] human_approval_through` dial
+declared gate authority** — the `[authority] operator_accepts_through` dial
 in `docs/process.toml`, a `DevStg-*` rung: every rung **at or below** it is
-**human-held** (the shipped default, `DevStg-Release`, holds them all;
-`DevStg-Below` holds none — "The approval dial is a rung" below). A held tier's gate
-waits for a per-gate human approval; a released tier's closes on an independent
+**operator-held** (the shipped default, `DevStg-Release`, holds them all;
+`DevStg-Below` holds none — "The acceptance dial is a rung" below). A held tier's gate
+waits for a per-gate operator acceptance; a released tier's closes on an independent
 fresh-context LLM reviewer's recorded verdict. The words `attended` /
 `single-approve` / `autonomous` are `--gate-policy` **presets** that *translate*
-into the `[attestation]` dials and are never stored. Full
+into the `[authority]` dials and are never stored. Full
 mechanics + the deviation-register pattern:
 [process-options.md "Gate authority levels"](process-options.md#gate-authority-levels).
-**Fixed points at every level:** the owner's final read is the human's; **the
-approval act — a spine row's `Status` flip and the `docs/archive/last_approved/`
+**Fixed points at every level:** the final read is the operator's; **the
+acceptance act — a spine row's `Status` flip and the `docs/archive/last_accepted/`
 copy that anchors it — is an independent adjudicator's, never the session's that
 authored the rows, taken in the authoring lane or on trunk** (a lane authors
 `Drafted` rows and amends text; its merge is REFUSED for any act no accepted
 verdict judging that act's own rows backs — [process-options.md "Who performs the
-approval act"](process-options.md#who-performs-the-approval-act)); a lane's
+acceptance act"](process-options.md#who-performs-the-acceptance-act)); a lane's
 edit to its own Done-when holds its next build and its close (never the edit
-or the tests) until an adjudicator's verdict or the owner's ruling binds that
+or the tests) until an adjudicator's verdict or the operator's ruling binds that
 exact text; no un-run
-greens; the
-harness is still the bar (LLM judgment never waives a red check); approved
-owner decisions are never re-decided by an agent. A coordinator can loop fresh
-driver sessions under any level, stopping where the level requires a human —
+passes; the
+harness is still the standard (LLM judgment never waives a failing check); accepted
+operator decisions are never re-decided by an agent. A coordinator can loop fresh
+driver sessions under any level, stopping where the level requires an operator —
 the stop banner + typed exit codes:
 [process-options.md "Unattended operation"](process-options.md#unattended-operation-walk-away-runs).
 The rung in `docs/stage` is **derived from the artifact states**, not
 hand-set: `scripts/derive_stage.py` generates it as the **min over every in-scope
 artifact's own rung**, so it names the rung the repo is IN and thereby
 selects the strictness the harness runs at ("Stages and gates" below). Crossing a
-gate = **approving a batch of artifacts in a reviewed commit** (`Status`
-`Drafted`→`Approved`, at every tier including SN), never a manual bump (§7
+gate = **accepting a batch of artifacts in a reviewed commit** (`Status`
+`Drafted`→`Accepted`, at every tier including SN), never a manual bump (§7
 "The derived gate"; the model + parallel/series workflow:
 [process-options.md "Derived gate model"](process-options.md#derived-gate-model)).
 A `Drafted` artifact lives in the live spine (exempt from the decomposition rules),
 retiring the old `-000`/off-spine drafting workaround.
-`Status` is a **closed** vocabulary — `Drafted`, `Approved`, `Founded` — matched
+`Status` is a **closed** vocabulary — `Drafted`, `Accepted`, `Founded` — matched
 **case-insensitively** (write them Title-Case); a value outside it is an
 always-on integrity finding, not a free label — it was open until 2026-08-15,
 and a word no predicate read announced nothing.
-`Approved` says the row's TEXT is blessed and says nothing about tests passing —
+`Accepted` says the row's TEXT is blessed and says nothing about tests passing —
 whether they pass is the harness's answer, never a cell's. `Founded` is
-`Approved` plus a demonstration: the artifacts the row calls for EXIST (SRs
+`Accepted` plus a demonstration: the artifacts the row calls for EXIST (SRs
 under an SN, LLR+TC under an SR, resolving code under an LLR, a written test
 under a TC). It is COMPUTED, never a claim you type to advance a gate.
-**A post-approval amendment has no value of its own** — an approved row whose
-text is later changed stays `Approved` and the change is caught by DIFFING it
-against the last approval. (A transitional `Modified` marked that state until
+**A post-acceptance amendment has no value of its own** — an accepted row whose
+text is later changed stays `Accepted` and the change is caught by DIFFING it
+against the last acceptance. (A transitional `Modified` marked that state until
 2026-08-20; it is retired, and an adopter carrying it migrates —
-`RESYNC_PACK.md`.) A re-attest is a reviewed commit that re-reads the changed
+`RESYNC_PACK.md`.) A re-accept is a reviewed commit that re-reads the changed
 cells and re-copies the record. The baseline those before/after diffs run against is a
-**byte-for-byte copy** of the registries at the last approval —
-`docs/archive/last_approved/`, written only by the approval act itself
+**byte-for-byte copy** of the registries at the last acceptance —
+`docs/archive/last_accepted/`, written only by the acceptance act itself
 (`intake.py snapshot`, in the same commit as the `Status` write; a snapshot
 file must always equal its live counterpart), scoped to the registries that act
 authorises. **Text first, the act second:** a commit writing the record
 changes no spine cell but `Status` and adds or removes no row (hook- and
 merge-slot-enforced; a lane's squash landing is exempt); amend-plus-flip is
-not approval. A row's `Status` answers for its **own cells** — a child
-(LLR/TC) amendment never touches its parent SR (owner ruling 2026-08-17). A
+not acceptance. A row's `Status` answers for its **own cells** — a child
+(LLR/TC) amendment never touches its parent SR (operator ruling 2026-08-17). A
 child change surfaces through the snapshot-drift arm; chain-completeness is the
 derived `Founded` state's claim (D-9), never the signature's. **Sequence requirement-text work *into* an open window, not after it:**
 a prose standard, a registry schema change or a cleanup lands while the sitting
-is still owed, so its rows join the batch a human is already reading. Landing it
-after a re-attest drifts freshly-blessed rows straight away from the record and
+is still owed, so its rows join the batch an operator is already reading. Landing it
+after a re-accept drifts freshly-blessed rows straight away from the record and
 buys a second sitting for the same reading.
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
 - **DevStg-Reqs — Requirements, UX & constraints.** The `PROJECT-VISION:` tag exists in
   `README.md#vision` (the purpose fact's canonical home; other docs point at
   it, never restate it) and the consistency review reads each need against it —
-  human-judged, like the rest of that review. SN complete (priority + measurable
+  operator-judged, like the rest of that review. SN complete (priority + measurable
   acceptance intent + edge cases, the edge cases covering **each lifecycle
   phase** in the project's vocabulary — Provision/Startup/Runtime at minimum —
   or recording an explicit n/a per phase; see "Lifecycle phase" below); every
   SR links ≥1 SN with measurable acceptance criteria; usability/doc needs +
   constraints + non-goals captured. Sign-offs: Stakeholder, UX, System Engineer.
 - **DevStg-Tests — Decomposition & test coverage.** Every SR → ≥1 LLR (or
-  Analysis/Inspection/Attest); every SR and LLR → ≥1 TC; traceability **0 orphans** and
+  Analysis/Inspection/Vouch); every SR and LLR → ≥1 TC; traceability **0 orphans** and
   ids unique/well-formed; **no `-000` placeholder rows or flow citations remain**
   (`trace.py`/`check_flows.py --no-placeholders`); **every SR with variable
   inputs has its dimensions enumerated (`Permutations`) and a stated combination
@@ -537,47 +537,47 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
 - **DevStg-Impl — Implementation (test-first).** Code is written **test-first**: each DevStg-Tests
   TC becomes a *failing* test before the code that satisfies it, then the minimal
   code to pass, then refactor (red → green → refactor). In a lane, the failing
-  test is proven by the mark `[bars] red_mark` declares, attested before the
+  test is proven by the marker `[product] expected_failure_marker` declares, recorded before the
   code and removed by it, and never landed. TDD is *how* DevStg-Impl code gets
   written; the SN→SR→LLR→TC spine is *what* it must satisfy — it operates within
   the traceability discipline, not instead of it. The exit criteria below
-  (coverage, every in-scope SR Approved) are what that loop drives toward.
-  The warn-only `test-first` step reads that order from history: an SR approved
-  after `[checks] test_first_since` (empty: all history) with a TC approved
+  (coverage, every in-scope SR Accepted) are what that loop drives toward.
+  The warn-only `test-first` step reads that order from history: an SR accepted
+  after `[checks] test_first_since` (empty: all history) with a TC accepted
   after its code landed is reported. Format/lint clean; every source module parses
   (`gen_arch_map.py --strict-parse`); the **full** test tier passes; coverage ≥
   `COVERAGE_THRESHOLD`; registry **schema** holds (required fields non-empty,
-  `Verification`/`Tier` in vocabulary — `trace.py --strict-schema`); every
-  **in-scope** test-verifiable SR **Approved** (phase-scoped — see "Phased
+  `VerificationMethod`/`Tier` in vocabulary — `trace.py --strict-schema`); every
+  **in-scope** test-verifiable SR **Accepted** (phase-scoped — see "Phased
   delivery" below); every other SR explicitly **Demonstration / Manual /
-  Inspection / Analysis / Attest / Critique**; each in-scope SR's implementing symbol is **substantive, not a
+  Inspection / Analysis / Vouch / Critique**; each in-scope SR's implementing symbol is **substantive, not a
   stub** (Inspection — see "No-stub / substance review" below). Sign-offs: System
   Engineer, Test Engineer.
 - **`DevStg-Release` — Release readiness** *(per release; skip for a one-off
   deliverable)*. The **release** test tier passes (incl. slow/hardware tests);
   the generated **release checklist** (`scripts/gen_release_checklist.py`) is
-  completed and signed; version bumped; changed `approved` interface versions
+  completed and signed; version bumped; changed `accepted` interface versions
   communicated to counterparts; docs/changelog updated. Sign-offs: Test Engineer,
   any active domain hats, Human.
-- **Acceptance — the owner's final read.** Human/stakeholder exercises the real product (incl.
-  Demonstration/Manual items) and approves. For shipped software this is the
+- **The operator's final read.** A person or stakeholder exercises the real product (incl.
+  Demonstration/Manual items) and signs off. For shipped software this is the
   human half of DevStg-Release; for a bespoke deliverable it stands alone.
 
 **The stage ladder — one vocabulary, one axis.** **A stage is a STATE: the repo
 is *in* exactly one rung, and that rung is DERIVED from the artifact states, never
-declared.** Approval is an **event** that moves it — a named human signing off
+declared.** Acceptance is an **event** that moves it — a named operator signing off
 a reviewed Status-change commit — and an event is recorded where events are (the
 phase anchors, §5), not as a second value beside the state. There is no separate
 "bar" axis and no second spelling: a certified rung boundary is **a rung that a
-named human signs off**, and the **three signed boundaries are a strict subset of
-the eight rungs**. (Owner rulings 2026-08-18 and OI-51. Three vocabularies have
+named operator signs off**, and the **three signed boundaries are a strict subset of
+the eight rungs**. (Operator rulings 2026-08-18 and OI-51. Three vocabularies have
 now failed here, each the same way — by carrying two questions on one token. The
 `G*` tags had one axis saying both "already met" and "to pass next"; the  <!-- check_vocab: allow -->
 `DevBar-` prefix split the spelling instead of the question; and the derived  <!-- check_vocab: allow -->
 three-value bar that followed was a MIN over every row, so one drafted
 requirement collapsed it to what a fresh scaffold reads. The ladder answers
 "where is this repo" once, and everything else asks it.) **Eight rungs; the three
-whose boundary a human signs are marked:**
+whose boundary an operator signs are marked:**
 
 ```
 DevStg-Needs      vision and stakeholder needs in work
@@ -603,8 +603,8 @@ DevStg-Release    nothing in work; release checklist available
 **One value, and everything reads it.** `docs/stage` records the rung the repo is
 **in**, derived over its SETTLED spine so a draft cannot lower it, with the
 honest unfloored reading beside it. `check.py --stage <rung>` runs every step
-declared at or **below** that rung (OI-51); `[attestation]
-human_approval_through` names the highest rung a human still approves, and
+declared at or **below** that rung (OI-51); `[authority]
+operator_accepts_through` names the highest rung an operator still accepts, and
 holds every rung at or **below** it — the same ladder read from each end. A
 sign-off record names the rung whose boundary was **just** signed and therefore
 the rung the project has **entered**. **`DevStg-Release` has no signed boundary
@@ -658,38 +658,38 @@ through a `STAGE_ORDER` lookup that raises on an unknown label**; ordering
 operators on the raw value are banned, and are now obviously wrong rather than
 accidentally right (`DevStg-Arch` sorts *before* `DevStg-Boundary`).
 **There is no `DevStg-Below` you sit at** — it is the internal sentinel below the
-lowest runnable bar; say "stage Needs", never "at DevStg-Below".
+lowest runnable stage; say "stage Needs", never "at DevStg-Below".
 
-**The approval dial is a rung, on this same ladder.** `[attestation]
-human_approval_through` takes a `DevStg-*` value (or `DevStg-Below` for
-"nothing is human-held"), and every rung **at or below** it is the human's to
-approve. It was a 0–4 tier ordinal mapped onto the ladder by a declared table
+**The acceptance dial is a rung, on this same ladder.** `[authority]
+operator_accepts_through` takes a `DevStg-*` value (or `DevStg-Below` for
+"nothing is operator-held"), and every rung **at or below** it is the operator's to
+accept. It was a 0–4 tier ordinal mapped onto the ladder by a declared table
 until OI-21 shape (ii) landed; a repo still carrying the number is read,
 translated and warned, and `bootstrap.py --migrate-config` rewrites it. The two
 inserted rungs need no special case any more: `DevStg-Boundary` sits immediately
 above `DevStg-Needs` and `DevStg-Arch` immediately above `DevStg-Reqs`, so each
 is held whenever the rung below it is — the direction that errs toward *more*
-human involvement — and now by the ORDER rather than by a hand-written pairing.
+operator involvement — and now by the ORDER rather than by a hand-written pairing.
 
-**A held rung's approval is the owner's act**, taken by the owner or by an
-attended session on the owner's explicit delegation, the delegation and its
-scope recorded in the approving commit or its log entry. A mechanically
+**A held rung's acceptance is the operator's act**, taken by the operator or by an
+attended session on the operator's explicit delegation, the delegation and its
+scope recorded in the accepting commit or its log entry. A mechanically
 triggered session (the unattended loop, a launcher-spawned worker) never
-approves on a held rung; that is what the hold is for. One stated case: an
-independent adjudicator session may **re-attest** an amended row it rules
-CLARITY — that approves no new text, it records that the owner's signature
+accepts on a held rung; that is what the hold is for. One stated case: an
+independent adjudicator session may **re-accept** an amended row it rules
+CLARITY — that accepts no new text, it records that the operator's signature
 still describes the row — bound to the text it judged: the verdict's binding
 records it, and an edit after the verdict refuses the act. The act names its
 verdict (`--verdict`) for audit. A MEANING row and a first draft stay the
-owner's, and neither holds a lane (§5, "Open items"). MECHANICAL: the merge slot judges every lane commit against trunk's
-dial, so a held row's approval lands from a lane only as such a bound
-re-attestation (`scripts/held_status.py`), and `check.py`'s `held-status` step
+operator's, and neither holds a lane (§5, "Open items"). MECHANICAL: the merge slot judges every lane commit against trunk's
+dial, so a held row's acceptance lands from a lane only as such a bound
+re-acceptance (`scripts/held_status.py`), and `check.py`'s `held-status` step
 judges a squash landing by its lane commits. A loop-started commit must carry
 its `Loop-Session` trailer (`scripts/kitlib/provenance.py`); outside a lane
 the `held-status` step and each loop writer refuse a held status move or
-approval claim it makes, and `check_trajectory.py` reports one that lands.
+acceptance claim it makes, and `check_trajectory.py` reports one that lands.
 REVIEW-ENFORCED: the delegation record, and an unmarked plain trunk commit,
-which nothing judges: the risk the owner accepts by delegating.
+which nothing judges: the risk the operator takes on by delegating.
 
 **Keep or mint, when a row's meaning changes.** A changed requirement leans
 toward a new id. It keeps its id only when the id's spirit is retained and
@@ -702,14 +702,15 @@ instead.
 **What a signature certifies is NOT derivable from the rung.** Leaving
 `DevStg-Reqs` also requires non-goals captured and a UX sign-off; leaving
 `DevStg-Tests` requires the key runtime flows diagrammed. No derivation can see
-any of that, which is exactly why approval is an **event a human records**
+any of that, which is exactly why acceptance is an **event an operator records**
 and not a function of the state. A repo that inferred its sign-offs from its
 derived rung would have dropped the whole human half.
 
-**The retired vocabulary** — the tags this ladder replaced survive only as
-read-side aliases, which is `check.py`'s and `check_vocab.py`'s behaviour, not a
-rule prose has to carry; the retirement record, the translation table and the
-never-reword rule for attestations are archived in the kit repo at
+**The retired vocabulary** — the tags this ladder replaced survive only in
+`check_vocab.py`'s refusal and the phase-anchor reading of a work item's
+title, behaviour, not a rule prose has to carry; the retirement record, the
+translation table and the
+never-reword rule for acceptances are archived in the kit repo at
 `docs/archive/retired-vocabulary.md`.
 
 **And the derived value floors — it does not achieve.** Being a min, one
@@ -742,21 +743,21 @@ This is the **consistency**
 complement to DevStg-Reqs's *completeness* criteria, not a restatement of them, and it is
 **human/LLM judgment, not a machine check** — classify it as a Manual/Analysis
 activity and never imply `trace.py` performs it. (An independent LLM reviewer
-(§6) is well-suited to a first-pass contradiction sweep, but the **human makes the
+(§6) is well-suited to a first-pass contradiction sweep, but the **operator makes the
 call**.) Route each contradiction or ambiguity through the §5 findings protocol to
-its owner; where it needs a human decision, **pause and ask — don't guess**. This
-is the reachable-human flip side of *Assumptions* logging: record an assumption
-only when **unattended**; when a human is available, **solicit clarification**.
+its owner; where it needs an operator decision, **pause and ask — don't guess**. This
+is the reachable-operator flip side of *Assumptions* logging: record an assumption
+only when **unattended**; when an operator is available, **solicit clarification**.
 Track unresolved ambiguities in `status.md` *Open items*, and re-run the review at
 DevStg-Tests when SRs decompose into LLRs.
 
-**No-stub / substance review (DevStg-Impl).** Traceability, coverage, and a green suite
+**No-stub / substance review (DevStg-Impl).** Traceability, coverage, and a passing suite
 confirm an implementation *exists* and *passes*; none confirms it has
 **substance**. A body that is `pass` / `...` / `raise NotImplementedError` / a
 bare `return None` / a placeholder return satisfies its trace links and can even
 hold a coverage line, yet does nothing. So the DevStg-Impl criterion adds: **every in-scope
 SR's implementing symbol does real work, not a stub.** TDD mitigates this (a
-red-first test should fail against a stub), but coverage can be met by exercising
+failing-first test should fail against a stub), but coverage can be met by exercising
 a stub's trivial path, and Demonstration/Manual/Analysis SRs have **no** automated
 test to fail — so name it. It is **Inspection** (human/LLM judgment, **never a
 machine verdict**): fold the prompt into §6's independent-reviewer checklist — a
@@ -770,15 +771,15 @@ replaces it. Same stance as `ruff`/`pytest`: name the criterion; the project wir
 the tool.
 
 **Phased delivery (version subsets) — opt-in.** *Applies when* a roadmap ships
-phase 1 before 2/3. Every approved SR/LLR/TC carries the **`Phase`** it was
-approved in — a bare integer, digits only (an approved prefixed/blank cell is a
+phase 1 before 2/3. Every accepted SR/LLR/TC carries the **`Phase`** it was
+accepted in — a bare integer, digits only (an accepted prefixed/blank cell is a
 schema finding once any row is phased); an SN's phase is
 derived from its SRs. The project's **current phase is derived** = the highest
-approved phase, mirroring the derived rung (`derive_stage.py --next-phase` prints
+accepted phase, mirroring the derived rung (`derive_stage.py --next-phase` prints
 the next number); a phase increments only when re-opened scope is **confirmed**
-— an adjudication verdict that scope moved, or an approved draft-SN batch —
+— an adjudication verdict that scope moved, or an accepted draft-SN batch —
 never on the raw derived-stage drop.
-Traceability stays phase-blind while the DevStg-Impl approval criterion and DevStg-Release
+Traceability stays phase-blind while the DevStg-Impl acceptance criterion and DevStg-Release
 scope by phase (`check.py --gate DevStg-Impl --phase 1`; the foundation phase is always in
 scope), reporting out-of-phase SRs as **phase-deferred**.
 Full semantics in
@@ -796,31 +797,31 @@ steady-state requirements. Full vocabulary, the "discriminate by when/how-often"
 rule, and the config-straddles-Provision↔Startup guidance are in
 [`process-options.md`](process-options.md#lifecycle-phase).
 
-**Constants:** `MAX_ROUNDS = 4` per gate (then escalate to the human);
+**Constants:** `MAX_ROUNDS = 4` per gate (then escalate to the operator);
 `COVERAGE_THRESHOLD = 80%` line coverage (adjust by agreement; record it in
 `docs/stack.ini` `[coverage]` — §7's declared home).
 
 **Verification methods:** the classic four — `Test` · `Demonstration` ·
 `Inspection` · `Analysis` (`TDIA`, per MIL-STD-961E / ISO/IEC/IEEE 29148 / INCOSE
-SE Handbook) — plus three the kit names: `Manual` (a human procedure that isn't
-`Attest`), `Attest`, and `Critique`. Definitions follow the standard rather than being restated
+SE Handbook) — plus three the kit names: `Manual` (a procedure a person carries out, whose result
+another could repeat), `Vouch`, and `Critique`. Definitions follow the standard rather than being restated
 here; pick the cheapest method that actually establishes the criterion, and don't
-claim `Test` for something only a human can confirm. **`Attest`** is the kit's
+claim `Test` for something only a human can confirm. **`Vouch`** is the kit's
 honest extension (nearest standard analog: a witnessed test / QA sign-off record,
-but the attested-vs-mechanized *reporting* is deliberately beyond the standards):
+but the vouched-vs-mechanized *reporting* is deliberately beyond the standards):
 the floor for what can't be mechanized at all (a playtest, a creative review, a
-physical action) — a **named human's recorded judgment**, **trust-based, the box
+physical action) — the **operator's recorded word**, **trust-based, the box
 can be checked without the work having happened** (Proportionality doctrine); the
 process's job is to make it explicit, named, and auditable, not pass it off as a
-check. Its TC records **who** attested and **when** (`Parameters`/`Expected` cell,
-`Automated=No`); `trace.py` accepts an `Attest` SR as Approved **and** reports it
-under "attested vs mechanized" so an audit sees the trust footprint. **`Critique`**
+check. Its TC records **who** vouched and **when** (`Parameters`/`Expected` cell,
+`Automated=No`); `trace.py` accepts a `Vouch` SR as Accepted **and** reports it
+under "vouched vs mechanized" so an audit sees the trust footprint. **`Critique`**
 is the mechanized sibling for *subjective* acceptance: an independent critical eye
-(an LLM one, deliberately separated from human `Attest`) judges a **code-produced**
+(an LLM one, deliberately separated from `Vouch`) judges a **code-produced**
 artifact against a **written rubric** (`docs/rubrics/`) — never the authoring
 session (process-options.md "Critique verification & the critique loop"). Method drives
-what `trace.py` requires: only `Analysis`/`Inspection`/`Attest` SRs are LLR-exempt
-(no code to decompose — `Attest` typically covers a subjective/binary asset with no
+what `trace.py` requires: only `Analysis`/`Inspection`/`Vouch` SRs are LLR-exempt
+(no code to decompose — `Vouch` typically covers a subjective/binary asset with no
 code symbol). `Demonstration` (observe functional behavior, no instrumented
 pass/fail), `Manual`, and `Critique` still exercise code the system runs, so **they
 keep the LLR** — the standard reading puts `Demonstration` closer to `Test`, and a
@@ -912,7 +913,7 @@ the source; do not hand-curate combinations the generator should produce.
 Two files split *now* from *history*: `status.md` is the **working surface** —
 the whole file holds only what must be performed next (open items, pending
 decisions, the next action) — and `log.md` is the **append-only history** it
-points at (sign-offs, verdicts, approved decisions, session notes; evidence,
+points at (sign-offs, verdicts, accepted decisions, session notes; evidence,
 never normative). Act from status.md; append evidence to log.md — directly on
 the serial trunk lane, or as a `docs/log.d/<WI-id>-<slug>.md` fragment on a
 work branch, compiled into `log.md` in merge order by `trunk_step.py` (the
@@ -926,25 +927,25 @@ A retired spine row is deleted and leaves one record, `docs/log.d/retired/<ID>.m
 are for **lookup, not browsing**: read the record of a spent id you meet; never
 survey the set.
 
-**Open items — the owner decision surface, always shipped.** An open item is
-anything keeping a row from building forward: an owner decision, an owner act,
-an approval or signature, a credential, the owner's presence. It is a **row** in
+**Open items — the operator decision surface, always shipped.** An open item is
+anything keeping a row from building forward: an operator decision, an operator act,
+an acceptance or signature, a credential, the operator's presence. It is a **row** in
 `docs/requirements/open-items.toml`, rendered by
-`gen_open_items.py` into `docs/open-items.html`; status.md's `Needs <human>`
+`gen_open_items.py` into `docs/open-items.html`; status.md's `Needs <operator>`
 bullets stay one-liners pointing at it. It is filed as a pending row the held
 work item's `needs` cites in the same commit, and that work item reads
 `blocked`; every pending item is filed with the queued or claimed row citing
 it, and ruling it updates that row in the same commit
 (IF-073 in the registry's header, IF-054 in `docs/work/README.md`). A routine
-push files no item, and an act's item closes by the owner's ruling or a
-delegated decision. A lane keeps its claim at a planned owner-held step, one its
+push files no item, and an act's item closes by the operator's ruling or a
+delegated decision. A lane keeps its claim at a planned operator-held step, one its
 claim copy's Done-when names, only while the item is filed and cited on trunk;
 the item goes on the claim copy when the lane reaches the step, since a row
-citing a pending item cannot be claimed. Otherwise, or on an owner answer that
-re-scopes the row, the lane closes partial. A held-rung approval is never such
+citing a pending item cannot be claimed. Otherwise, or on an operator answer that
+re-scopes the row, the lane closes partial. A held-rung acceptance is never such
 a step: the lane lands its text and the act is ruled on trunk, on
 `open-items.html`, and the merge slot's mint files that item for a row a sitting
-ruled MEANING. An approval on a released rung, or one delegated to the
+ruled MEANING. An acceptance on a released rung, or one delegated to the
 adjudicator, stays in the lane. Nothing reads an item to keep, drop or release a
 claim: that is the coordinator's rule, and review holds it. Every
 scaffold gets both whatever its
@@ -953,9 +954,9 @@ that HAS the registry can act on. Three mechanisms keep the announcement and the
 queue from being two artifacts: a `docs/provenance-allow` entry **names** the
 `OI-###` it defers (a required field, integrity-class); a `docs/log.d/` fragment
 **declares** the ids its session deferred (`Deferred open items: OI-45` / `…
-none — <why>`), warn-only at the commit bar; and zero pending rows while entries
+none — <why>`), warn-only at the commit checks; and zero pending rows while entries
 still stand is reported as a contradiction naming them. The surface is the
-substrate, never the mechanism — a fresh registry renders *the owner queue is
+substrate, never the mechanism — a fresh registry renders *the operator queue is
 empty* perfectly truthfully.
 
 Reviews use this block — in `log.md`, or as a `docs/reviews/WI-<n>-<PHASE>.md`
@@ -1018,11 +1019,11 @@ flowchart TD
 - **Coverage gap** — the requirement was right and untested: the fix *starts*
   as a failing TC against the existing SR/LLR, never code-first.
 - **Design replacement** — use the ordinary scoped amendment and its tier's
-  approval authority; preserve enduring behavioral regression tests and parent constraints.
-  Authoring is not approval. Use the `spine-authoring` skill questions
+  acceptance authority; preserve enduring behavioral regression tests and parent constraints.
+  Authoring is not acceptance. Use the `spine-authoring` skill questions
   to distinguish an unsuitable LLR from a changed stakeholder obligation.
 - **Requirement gap** — no row speaks to it, or its promised outcome must change:
-  walk the DevStg-Reqs/DevStg-Tests bar for that slice
+  walk the DevStg-Reqs/DevStg-Tests stages for that slice
   only; the new rows then scope the solution (each new interface, component, or
   purchased part lands as its own registry row, so the next reader finds the
   decision where the ids live).
@@ -1035,7 +1036,7 @@ flowchart TD
 
 - **High-risk** (security, data loss, crash-safety, money, irreversible, gate
   closure): spawn an **independent** reviewer with a fresh-context, defect-
-  hunting prompt. Verify its file edits; never trust an unverified "green."
+  hunting prompt. Verify its file edits; never trust an unverified "pass."
 - **Medium**: self-review against the gate checklist + run the harness.
   (Self-review catches wrong *work*, not wrong *claims* — an author believes
   their own claims; that class needs the independent reviewer.)
@@ -1051,7 +1052,7 @@ or tool) is out of scope: it is dismissed in one recorded line by whoever
 rules the finding, in the response to the review verdict (and in the
 delegated-decisions record too, when the run keeps one), and never answered
 with code. A finding whose reproduction needs a contrived, improbable scenario
-is dismissed the same way (owner ruling 2026-10-13): a hand act the process
+is dismissed the same way (operator ruling 2026-10-13): a hand act the process
 forbids (rewinding the trunk branch, skipping or disabling a hook,
 hand-editing a generated view or a ruled record), or ordinary tools run in an
 order no supported workflow or kit route produces. Severity tracks
@@ -1104,13 +1105,13 @@ denied spawn tools today, and the one hook sees a single host's spawn tools —
 and fan-out budgets wait on the same design.
 
 **Decision-surfacing rate — same axis, set at setup.** The risk triage above
-also calibrates **how often the driver pauses for a human decision**. It is a
+also calibrates **how often the driver pauses for an operator decision**. It is a
 project-setup dial, not a constant: a specialized or high-consequence domain
 (safety even as an *ancillary* risk, money, irreversible actions) surfaces
-decisions often — the human decides even medium calls; a low-risk domain
+decisions often — the operator decides even medium calls; a low-risk domain
 (creative content) where a reverted decision costs little tech debt lets a
 **confident** agent decide autonomously, **provided the decision is recorded**
-(pending → `status.md` Assumptions/Open items; approved → the `log.md`
+(pending → `status.md` Assumptions/Open items; accepted → the `log.md`
 Decisions log, §5) so it stays auditable and revertible. The dial never moves the fixed points — gates still close only per the declared gate authority (§4),
 contradictions still route as findings. Full doctrine: point (e) of the
 [proportionality doctrine](process-options.md#proportionality-doctrine).
@@ -1145,18 +1146,19 @@ lives in `docs/stage` — **generated** by
 gates"; the model:
 [process-options.md](process-options.md#derived-gate-model)). `check.py` defaults
 `--stage` to it and selects by rung or declared paths (below), so **CI enforces the
-bar the project has actually earned** — a fresh scaffold deriving DevStg-Reqs is
-green, and more steps select when a batch of artifacts is **approved in a reviewed
+stage the project has actually earned** — a fresh scaffold deriving DevStg-Reqs
+passes, and more steps select when a batch of artifacts is **accepted in a reviewed
 commit** and `docs/stage` is regenerated. The `derived-stage` step
 (`derive_stage.py --check`) guards the cache against rot on every trunk-lane
 commit and gate (a claimed work branch reads the cache as-of-base); a release tag
-runs the full bar regardless.
-Without a derived stage, CI would apply the end-state DevStg-Impl bar from day one and
-stay red for months — training everyone to ignore it.
+runs the full checks regardless.
+Without a derived stage, CI would apply the end-state DevStg-Impl checks from day one and
+keep failing for months — training everyone to ignore it.
 
 **Push authority.** Who may *publish* (`git push`) is likewise declared, not
-assumed: the `[policies] push` dial (default **`human`** — an agent never
-pushes, even if asked mid-session; it prepares the branch and requests). A
+assumed: the `[policies] push` dial (default **`operator`** — the operator, or
+a session they delegated it to; no other agent pushes, even if asked
+mid-session: it prepares the branch and requests). A
 process rule honored by agent drivers, not a hook guarantee (hooks are
 per-clone). Levels + the iteration-branch sync ritual:
 [`process-options.md`](process-options.md) "Agent iteration branch & sync".
@@ -1264,10 +1266,10 @@ pip needed to run them):
   structure — the TOML carrier makes a duplicate id a parse error, and a legacy
   CSV's data rows must parse to the header's column count); `--strict-integrity`
   fails on *only* that class (the always-valid pre-commit floor).
-  `--require-verified` adds the DevStg-Impl status criterion (every `Verification=Test` SR
-  must be `Approved`); `--phase v1` scopes it for phased delivery (§4).
+  `--require-verified` adds the DevStg-Impl status criterion (every `VerificationMethod=Test` SR
+  must be `Accepted`); `--phase v1` scopes it for phased delivery (§4).
   `--no-placeholders` rejects leftover `-000` rows; `--strict-schema` requires the
-  non-empty fields and the two closed vocabularies (`Verification`, `Tier`) —
+  non-empty fields and the two closed vocabularies (`VerificationMethod`, `Tier`) —
   `Priority`/`Status` stay open. Called by `check.py` at every gate — at DevStg-Reqs as
   the `registry-integrity` floor (`--strict-integrity`), then at DevStg-Tests/DevStg-Impl (DevStg-Tests+ adds
   `--no-placeholders`; DevStg-Impl adds `--require-verified` and `--strict-schema`, plus
@@ -1341,8 +1343,8 @@ name the bundle that carries it (`CarriedBy` — a constituent is still one
 owner and one channel), and a low-level seam may say the parent's tests cover
 it (`VerifiedBy`: a `TC-###` or an `LLR-###`, warn-first that it resolves;
 empty means "verified in its own right"). `Version` and `Status` (`Drafted` ·
-`Approved` — the spine's words minus `Founded`, which never applies: an
-approval says the seam is agreed, not demonstrated) complete the row. The
+`Accepted` — the spine's words minus `Founded`, which never applies: an
+acceptance says the seam is agreed, not demonstrated) complete the row. The
 owner's side closes the final read; a consuming side links the same `IF-###`
 and pins the version. A row ties back to a declared boundary crossing (`B-##`
 in `requirements/external.toml`, §4) via `interface_from_external` /
@@ -1426,7 +1428,7 @@ should be **minimized within reason**, not guessed at). At DevStg-Reqs, run the
 1. *Allocation / coordination* NFRs (perf budgets, capacity, availability) → the
    **`performance-budgets.csv`** registry below.
 2. *Behavioral* NFRs (security, observability, safety, data integrity) → ordinary
-   **SRs** with measurable `AcceptanceCriteria` + honest `Verification`, owned by
+   **SRs** with measurable `AcceptanceCriteria` + honest `VerificationMethod`, owned by
    a domain hat.
 3. *Hard external limits* (compliance, supported platforms) → `status.md`
    constraints.

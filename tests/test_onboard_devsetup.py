@@ -119,18 +119,35 @@ def test_devsetup_wires_the_process_floor_and_offers_setup_chain(scaffold):
     assert "pre-commit floor (core.hooksPath)" in proc.stdout, proc.stdout
 
 
-def test_devsetup_default_reports_every_role(scaffold):
-    # No --profile installs/reports every declared role (the owner ruling: the
+def _two_roles(scaffold, root):
+    """A copy of the scaffold's dev-setup.sh under `root` that also declares
+    the template's example `design` role; the shipped default declares only
+    `code`, so a fresh scaffold reports no role nobody asked for."""
+    text = (scaffold / "scripts" / "dev-setup.sh").read_text(encoding="utf-8")
+    assert '\nROLES="code"\n' in text
+    (root / "scripts").mkdir(parents=True)
+    (root / "scripts" / "dev-setup.sh").write_text(
+        text.replace('\nROLES="code"\n', '\nROLES="code design"\n'),
+        encoding="utf-8",
+        newline="\n",
+    )
+    return root
+
+
+def test_devsetup_default_reports_every_role(scaffold, tmp_path):
+    # No --profile installs/reports every declared role (the operator ruling: the
     # default does everything; a role is the opt-down).
-    proc = _devsetup_check(scaffold)
+    proc = _devsetup_check(_two_roles(scaffold, tmp_path / "two-roles"))
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "profile=all" in proc.stdout
     assert "role: code" in proc.stdout and "role: design" in proc.stdout
 
 
-def test_devsetup_profile_narrows_to_one_role(scaffold):
+def test_devsetup_profile_narrows_to_one_role(scaffold, tmp_path):
     # --profile <role> narrows to the shared baseline + that role only.
-    proc = _devsetup_check(scaffold, "--profile", "design")
+    proc = _devsetup_check(
+        _two_roles(scaffold, tmp_path / "two-roles"), "--profile", "design"
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "role: design" in proc.stdout
     assert "role: code" not in proc.stdout
@@ -142,7 +159,15 @@ def test_devsetup_unknown_profile_errors(scaffold):
     proc = _devsetup_check(scaffold, "--profile", "bogus")
     assert proc.returncode == 2
     assert "Unknown --profile 'bogus'" in proc.stderr
-    assert "code design" in proc.stderr
+    assert "Declared roles: code" in proc.stderr
+
+
+def test_a_fresh_scaffold_reports_no_undeclared_role(scaffold):
+    # The shipped default declares `code` only: a first-day --check must not
+    # report a `design` role the adopter never declared as missing.
+    proc = _devsetup_check(scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "role: code" in proc.stdout and "role: design" not in proc.stdout
 
 
 def test_devsetup_check_runs_and_reports(scaffold):
@@ -689,7 +714,7 @@ def test_each_verification_gate_fails_closed():
 
 
 def test_the_shipped_template_does_not_fetch_a_runtime():
-    # Owner ruling 2026-07-25 (blast radius): auto-provisioning stays in THIS repo
+    # Operator ruling 2026-07-25 (blast radius): auto-provisioning stays in THIS repo
     # until proven. Adopters must not inherit a network-fetching setup script.
     for rel in (
         "project-trajectory/scripts/dev-setup.template.command",

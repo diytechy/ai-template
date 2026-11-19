@@ -5,7 +5,7 @@ The spine-prose predicates (a row states the system not its own history; one
 testable obligation; the paraphrase advisory that warns but never gates; the
 optional LLR Rationale column), the parent-first standing finding (which
 retired the WI-129 LLR/TC status-coherence lint), the WI-146(a)
---approve hierarchy view, and the WI-081 Slice C render/exit helpers
+--accept hierarchy view, and the WI-081 Slice C render/exit helpers
 (_bucket_by_ref pre-indexing + the exit_code gate policy).
 
 Implements: TC-216
@@ -16,7 +16,7 @@ from conftest import load_script, make_minimal_project, run_py
 
 def test_a_spine_row_states_the_system_not_its_own_history():
     """Implements: TC-126"""
-    # Owner-raised at the first re-attestation sitting, on LLR-050's `WI-316:`
+    # Operator-raised at the first re-acceptance sitting, on LLR-050's `WI-316:`
     # changelog prefix: a spine row must be stand-alone — a reader with none of
     # this repo's history reads one row and knows what the system does and why.
     # Provenance has better homes (work-items.csv, the log's Decisions), and the
@@ -41,7 +41,7 @@ def test_a_spine_row_states_the_system_not_its_own_history():
     # The two token shapes, in the normative cells of all THREE registries — the
     # scope the SR-only version could not see, and where 43 of the 45 rows lived.
     assert flags(sr={"Requirement": "Shall resume (WI-210, one path)."})
-    assert flags(sr={"AcceptanceCriteria": "Modified (WI-316) rows re-attest."})
+    assert flags(sr={"AcceptanceCriteria": "Modified (WI-316) rows re-accept."})
     assert flags(sr={"Rationale": "Re-scoped by WI-210 to one path."})
     assert flags(sr={"Title": "Resume authority (WI-210)"})
     assert flags(llr={"Detail": "WI-316: is_modified recognized."})
@@ -86,7 +86,7 @@ def test_a_spine_row_states_the_system_not_its_own_history():
 
 
 def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
-    # The owner ruling that repealed "a ruling reference is optional context on
+    # The operator ruling that repealed "a ruling reference is optional context on
     # top of a sentence that stands alone": NO provenance citation in a living
     # registry cell, on all FOUR spine tiers, in the reason cell as loudly as in
     # the normative ones. Warn-first by the same ruling — the population is ~300
@@ -111,7 +111,7 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
             allow,
         )
 
-    # THE NEED TIER, which the gating rule cannot see and where the owner's own
+    # THE NEED TIER, which the gating rule cannot see and where the operator's own
     # worked examples lived. Its rows arrive lower-cased off `load_needs`.
     assert flags(
         need={"why": "AMENDED 2026-08-17 (C-ACC-2): the hue is not the signal."}
@@ -134,7 +134,7 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
     # in the registries reporting nothing while the plain-date form beside them
     # reported. The suffix must END the token, so a word beginning with the same
     # letter cannot drag the date into it.
-    assert flags(sr={"Rationale": "The owner ruling 2026-08-13u settled this."})
+    assert flags(sr={"Rationale": "The operator ruling 2026-08-13u settled this."})
     assert flags(llr={"Rationale": "Cut by 2026-08-16q with the frame locked."})
     assert not flags(sr={"Rationale": "Held 2026-08-13until the sitting ruled."})
     # A NORMATIVE cell reports an edit stamp, never a bare date: a requirement
@@ -161,7 +161,7 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
     assert not flags(sr={"Rationale": "The M-10 crossing carries the verdict."})
     assert not flags(llr={"Rationale": "Joined against B-04, M-10 and REL-003."})
     # (2) `ruling` / `retired` / `amended` / `attestation` are SUBJECT NOUNS in
-    # every row that specifies the approval machinery itself — 217
+    # every row that specifies the acceptance machinery itself — 217
     # occurrences over 108 live rows. The stamp shape needs a DATE behind the
     # verb, so a row ABOUT amendment is silent and a row RECORDING its own
     # amendment is not.
@@ -173,11 +173,11 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
     # PARTICIPLES mid-sentence, and every one of these is a live cell's real
     # wording. The clause-opening constraint is the whole separation — measured
     # over every live spine + IF cell at 36 hits, 36 of them genuine stamps.
-    assert not flags(llr={"Detail": "An APPROVED SN cited by zero SRs caps the bar."})
+    assert not flags(llr={"Detail": "An ACCEPTED SN cited by zero SRs caps the bar."})
     assert not flags(sr={"Rationale": "So an AMENDED requirement drops the stage."})
     assert not flags(tc={"Method": "A stale file is DELETED in the same act."})
     assert not flags(tc={"Method": "Assert a RULED row does not render as a brief."})
-    assert not flags(llr={"Detail": "Arm the comparison on the APPROVED half only."})
+    assert not flags(llr={"Detail": "Arm the comparison on the ACCEPTED half only."})
     # (4) THE REVIEW-CODE ARM IS GONE, and this is the case that removed it. A
     # `C-<HAT>-<n>` "review-round code" pattern shipped and measured 20 hits, 20
     # of them FALSE — every live occurrence names a hat-charter CLAUSE as the
@@ -280,7 +280,9 @@ def test_the_if_reason_cells_are_swept_for_citation_frames_warn_only():
         return trace.if_note_advisories([row], allow)
 
     assert flags({"Notes": "MINTED 2026-08-15 (log 2026-08-15h) with LLR-173."})
-    assert flags({"Notes": "One home is an owner ruling (2026-08-10, repo-lock D-6)."})
+    assert flags(
+        {"Notes": "One home is an operator ruling (2026-08-10, repo-lock D-6)."}
+    )
     # `SignalNote` RETIRED WITH ITS COLUMN at OI-67 (ruled (a), 2026-08-29), so
     # this arm no longer sweeps it — a rule ranging over a cell no row may carry
     # is a rule reporting about nothing. Pinned rather than deleted: the cell
@@ -470,12 +472,12 @@ def test_a_requirement_states_one_testable_obligation():
     # ZERO 'shall' is NOT a finding. A placeholder, or a project whose obligation
     # keyword is not the English word "shall", is following a different convention
     # rather than making an error — and this rule ships downstream, where flagging
-    # it would red a legitimate scaffold on its first re-sync.
+    # it would fail a legitimate scaffold on its first re-sync.
     assert not flags(sr={"Requirement": "x does a."})
     # 'must' likewise: 29148 reserves `shall`, but a repo that standardised on
     # 'must' would have EVERY row flagged, which is the cry-wolf failure.
     assert not flags(sr={"Requirement": "trace.py must exit nonzero."})
-    # A Drafted row is pre-approval and process.md §4 already exempts it from
+    # A Drafted row is pre-acceptance and process.md §4 already exempts it from
     # the decomposition rules — 'TBD' in a Drafted acceptance criterion is what
     # Drafted MEANS, so flagging it would break the state's whole purpose.
     assert not flags(
@@ -487,7 +489,7 @@ def test_a_requirement_states_one_testable_obligation():
     )
     assert flags(
         sr={
-            "Status": "Approved",
+            "Status": "Accepted",
             "Requirement": "y shall b.",
             "AcceptanceCriteria": "TBD",
         }
@@ -596,7 +598,7 @@ def test_the_llr_carries_a_rationale_column_and_it_is_optional():
         "Module": "m",
         "CodeSymbol": "c",
         "Detail": "d",
-        "Status": "Approved",
+        "Status": "Accepted",
     }
     assert trace.schema_findings("LLR", [bare]) == []
     # ...and an SR with an empty one is not (zero-to-zero: all 110 carry one).
@@ -608,8 +610,8 @@ def test_the_llr_carries_a_rationale_column_and_it_is_optional():
         "Rationale": "",
         "AcceptanceCriteria": "a",
         "Priority": "1",
-        "Verification": "Test",
-        "Status": "Approved",
+        "VerificationMethod": "Test",
+        "Status": "Accepted",
     }
     (found,) = trace.schema_findings("SR", [sr])
     assert "empty required field Rationale" in found
@@ -644,9 +646,9 @@ def _set_status(path, old, new):
     )
 
 
-def test_an_approved_sr_under_a_drafted_sn_reds_strict_integrity(scaffold):
-    """The need tier is a parent tier too: an Approved SR citing a Drafted SN
-    reds the integrity floor, naming both rows and statuses. Adequacy witness:
+def test_an_accepted_sr_under_a_drafted_sn_reds_strict_integrity(scaffold):
+    """The need tier is a parent tier too: an Accepted SR citing a Drafted SN
+    fails the integrity floor, naming both rows and statuses. Adequacy witness:
     a standing finding that read only the SR, LLR and TC tiers (the need tier's
     rows not passed to the rule) would leave this run at exit 0.
 
@@ -664,32 +666,32 @@ def test_an_approved_sr_under_a_drafted_sn_reds_strict_integrity(scaffold):
     proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 1, out
-    assert "parent-first: SR-001 (Approved) is approved under SN-001 (Drafted)" in out
+    assert "parent-first: SR-001 (Accepted) is accepted under SN-001 (Drafted)" in out
 
 
-def test_an_approved_llr_under_a_drafted_sr_reds_strict_integrity(scaffold):
+def test_an_accepted_llr_under_a_drafted_sr_reds_strict_integrity(scaffold):
     """Implements: TC-396"""
     make_minimal_project(scaffold)
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
-    _set_status(srs, ",M,Test,Approved", ",M,Test,Drafted")
+    _set_status(srs, ",M,Test,Accepted", ",M,Test,Drafted")
     proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 1, out
     assert "parent-first:" in out, out
-    assert "LLR-001 (Approved) is approved under SR-001 (Drafted)" in out, out
+    assert "LLR-001 (Accepted) is accepted under SR-001 (Drafted)" in out, out
 
 
-def test_a_drafted_llr_whose_citing_tcs_are_approved_is_an_integrity_finding(
+def test_a_drafted_llr_whose_citing_tcs_are_accepted_is_an_integrity_finding(
     scaffold,
 ):
     """Implements: TC-396"""
     make_minimal_project(scaffold)
     llrs = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
-    _set_status(llrs, ",(see TC),Approved", ",(see TC),Drafted")
+    _set_status(llrs, ",(see TC),Accepted", ",(see TC),Drafted")
     proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 1, out
-    assert "TC-001 (Approved) is approved under LLR-001 (Drafted)" in out, out
+    assert "TC-001 (Accepted) is accepted under LLR-001 (Drafted)" in out, out
 
 
 def test_the_llr_status_advisory_is_retired(scaffold):
@@ -698,32 +700,32 @@ def test_the_llr_status_advisory_is_retired(scaffold):
     assert not hasattr(trace, "llr_status_advisories")
     make_minimal_project(scaffold)
     llrs = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
-    _set_status(llrs, ",(see TC),Approved", ",(see TC),Drafted")
+    _set_status(llrs, ",(see TC),Accepted", ",(see TC),Drafted")
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert "llr-status-advisories=" not in proc.stdout, proc.stdout
 
 
-# --- WI-146(a): the --approve batch-scoped approval hierarchy view ---------
-# A generated SN->SR->LLR/TC tree carrying the prose an approver needs (Requirement/
+# --- WI-146(a): the --accept batch-scoped acceptance hierarchy view ---------
+# A generated SN->SR->LLR/TC tree carrying the prose an acceptor needs (Requirement/
 # AC, LLR Detail, TC Method/Expected, cited rubric), scoped by an SR-id list or a
 # phase tag. A generator mode: it runs no checks and always exits 0.
 
 # An SR with a Phase cell and a rubric citation, still traced to LLR-001/TC-001.
 PHASED_RUBRIC_SR = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status,Phase\n"
+    "Permutations,Priority,VerificationMethod,Status,Phase\n"
     'SR-001,Addition,SN-001,"The system shall add two numbers.",'
     '"Realizes SN-001.","Judged against docs/rubrics/adder.md",,'
-    "M,Critique,Approved,v9\n"
+    "M,Critique,Accepted,v9\n"
 )
 
 
-def test_approval_sr_list_emits_prose(scaffold):
+def test_acceptance_sr_list_emits_prose(scaffold):
     make_minimal_project(scaffold)
-    proc = run_py(["scripts/trace.py", "--approve", "SR-001"], cwd=scaffold)
+    proc = run_py(["scripts/trace.py", "--accept", "SR-001"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     out = proc.stdout
-    assert "# Approval hierarchy" in out and "scope: SR-001" in out
+    assert "# Acceptance hierarchy" in out and "scope: SR-001" in out
     assert "1 SR(s)" in out
     assert "SR-001" in out and "Addition" in out
     # The stakeholder need's own prose heads its subtree, not a bare SN id
@@ -737,41 +739,41 @@ def test_approval_sr_list_emits_prose(scaffold):
     assert "TC-001" in out and "Satisfies SR-001 AcceptanceCriteria" in out  # TC
 
 
-def test_approval_phase_scope_and_rubric(scaffold):
+def test_acceptance_phase_scope_and_rubric(scaffold):
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
         PHASED_RUBRIC_SR, encoding="utf-8"
     )
-    proc = run_py(["scripts/trace.py", "--approve", "v9"], cwd=scaffold)
+    proc = run_py(["scripts/trace.py", "--accept", "v9"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "SR-001" in proc.stdout and "Addition" in proc.stdout
     assert "**Rubrics.** docs/rubrics/adder.md" in proc.stdout
     # A non-matching phase is REFUSED, not rendered empty (D-9 §F2). Until this
     # hardening it fell through to a brief that read "there is nothing to
-    # approve" at exit 0 — the most expensive way for this tool to be wrong,
+    # accept" at exit 0 — the most expensive way for this tool to be wrong,
     # because a typo, a retired phase tag or an unknown reserved word all
-    # produced a document a human then signed.
-    empty = run_py(["scripts/trace.py", "--approve", "v1"], cwd=scaffold)
+    # produced a document an operator then signed.
+    empty = run_py(["scripts/trace.py", "--accept", "v1"], cwd=scaffold)
     assert empty.returncode != 0
     combined = empty.stdout + empty.stderr
     assert "matches no SR" in combined and "refusing to emit an empty" in combined
     # ...and NOTHING is written to stdout: the old behaviour emitted a document
-    # whose own body said "no SR matched this scope", which is a brief a human
+    # whose own body said "no SR matched this scope", which is a brief an operator
     # can read and act on. A refusal must leave no artifact at all.
     assert empty.stdout == ""
 
 
-def test_approval_out_writes_linkable_file(scaffold):
+def test_acceptance_out_writes_linkable_file(scaffold):
     make_minimal_project(scaffold)
     proc = run_py(
-        ["scripts/trace.py", "--approve", "SR-001", "--out", "docs/ratify/x.md"],
+        ["scripts/trace.py", "--accept", "SR-001", "--out", "docs/ratify/x.md"],
         cwd=scaffold,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     written = (scaffold / "docs" / "ratify" / "x.md").read_text(encoding="utf-8")
-    assert "# Approval hierarchy" in written
+    assert "# Acceptance hierarchy" in written
     assert "The system shall add two numbers." in written
-    assert "trace: wrote approval view" in proc.stdout
+    assert "trace: wrote acceptance view" in proc.stdout
 
 
 # --- WI-081 Slice C: the render/exit extraction + M8 pre-indexing --------------
@@ -830,7 +832,7 @@ def _exit_code_attrs(trace):
     defaults, so the two were independent schemas. It drifted the moment
     `exit_code` gained an arm (WI-484): the stub lacked the attribute and the
     tests below raised `AttributeError` instead of testing the rule — and
-    because this module is outside the smoke tier, the commit bar stayed green
+    because this module is outside the smoke tier, the commit checks kept passing
     and the FULL suite found it later. Deriving the set means a new arm can no
     longer crash these tests, and `test_the_stub_matches_what_exit_code_reads`
     makes the addition visible rather than silent."""
@@ -895,7 +897,7 @@ def test_exit_code_gate_policy():
 
 
 # --- Re-tier v2 R2/R3: the two warn-first tiering detectors -------------------
-# Owner ruling 2026-08-15 (log `2026-08-15p`). Both report a TIERING smell — a
+# Operator ruling 2026-08-15 (log `2026-08-15p`). Both report a TIERING smell — a
 # requirement that decided which artifact carries a capability, and a row whose
 # fan of children says it merged several decisions — and both stay advisory
 # forever, because clearing them means re-writing requirements, which is the
@@ -907,20 +909,20 @@ def test_a_row_stating_two_verification_methods_warns():
     rows flipped `Critique`->`Test` when their anchors were bound to tests, and
     their prose went on demanding an APPROVE verdict from rubrics that by then
     declared themselves RETIRED. Every strict gate passed at rc=0 for three
-    weeks, because nothing compared the `Verification` field against the prose
+    weeks, because nothing compared the `VerificationMethod` field against the prose
     that says how anyone would know the row is satisfied."""
     trace = load_script("trace")
 
     # The defect, in both cells that can carry it.
     ac_rot = {
         "SR-ID": "SR-101",
-        "Verification": "Test",
+        "VerificationMethod": "Test",
         "AcceptanceCriteria": "A fresh CRITIQUE session returns APPROVE citing "
         "numbered anchors.",
     }
     rationale_rot = {
         "SR-ID": "SR-102",
-        "Verification": "Test",
+        "VerificationMethod": "Test",
         "Rationale": "Acceptance is adjudicated by an independent critical eye "
         "against a written rubric instead.",
     }
@@ -933,7 +935,7 @@ def test_a_row_stating_two_verification_methods_warns():
     # itself — the lint runs one direction only.
     assert (
         trace.verification_coherence_advisories(
-            [dict(ac_rot, **{"Verification": "Critique"})]
+            [dict(ac_rot, **{"VerificationMethod": "Critique"})]
         )
         == []
     )
@@ -945,9 +947,9 @@ def test_a_row_stating_two_verification_methods_warns():
     # correct rows and teach an author to skip the pipe.
     for prose in (
         "Refusals fire at the integrator's verdict gate and intake's adjudication arm.",
-        "The owner approves the split before it lands.",
+        "The operator accepts the split before it lands.",
     ):
-        clean = {"SR-ID": "SR-103", "Verification": "Test", "Rationale": prose}
+        clean = {"SR-ID": "SR-103", "VerificationMethod": "Test", "Rationale": prose}
         assert trace.verification_coherence_advisories([clean]) == []
 
     # `Requirement` is deliberately NOT scanned: SR-040's shall enumerates the
@@ -955,7 +957,7 @@ def test_a_row_stating_two_verification_methods_warns():
     # word NAMES a phase rather than claiming a verdict.
     phase_list = {
         "SR-ID": "SR-104",
-        "Verification": "Test",
+        "VerificationMethod": "Test",
         "Requirement": "The coordinator shall route each phase "
         "(PLAN/BUILD/REVIEW-A/CRITIQUE) through its declared template.",
     }
@@ -963,7 +965,9 @@ def test_a_row_stating_two_verification_methods_warns():
 
     # A row with no declared method cannot contradict one.
     assert (
-        trace.verification_coherence_advisories([dict(ac_rot, **{"Verification": ""})])
+        trace.verification_coherence_advisories(
+            [dict(ac_rot, **{"VerificationMethod": ""})]
+        )
         == []
     )
     # A `-000` example row is a blank form, not a requirement.
@@ -1070,7 +1074,7 @@ def test_a_recorded_waiver_silences_the_row_but_not_a_shared_artifact():
 
 
 def test_a_need_whose_acceptance_names_a_concrete_artifact_warns():
-    """The SN arm of the artifact-voice rule (owner directive 2026-08-18).
+    """The SN arm of the artifact-voice rule (operator directive 2026-08-18).
 
     Rows arrive in the `spine_carrier.load_needs` shape — lower-case `id` and
     cells — NOT the `<TIER>-ID`/Title-case shape the SR rules read, so the
@@ -1186,7 +1190,7 @@ def test_a_recorded_why_waiver_silences_a_need_and_there_is_no_shared_census():
     )
     # A `why` that records something else does not silence it.
     assert trace.sn_artifact_advisories(
-        [dict(waived, why="One home per dial is cheaper for the owner.")]
+        [dict(waived, why="One home per dial is cheaper for the operator.")]
     )
 
     # NO PER-ARTIFACT CENSUS at SN, unlike the SR arm: two needs may honestly
@@ -1254,7 +1258,7 @@ def test_the_two_tiering_detectors_warn_but_never_gate():
     # Mirrors the paraphrase advisory's never-gates half. Warn-first is the
     # RULING, not an implementation convenience: the live registries trip both
     # today (seven fan-out offenders, several rows naming a script), and a gate
-    # that is red on the day it ships is a gate someone turns off.
+    # that fails on the day it ships is a gate someone turns off.
     import argparse
 
     from conftest import load_script
@@ -1497,7 +1501,7 @@ def test_verified_by_is_optional_and_its_pointer_must_resolve():
 
 _SOURCE_NEED = """
 [need.SN-001]
-status = "Approved"
+status = "Accepted"
 need = "Add two numbers."
 why = "Demo."
 priority = "M"

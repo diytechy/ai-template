@@ -78,9 +78,9 @@ def test_an_EXPLICIT_empty_string_is_REFUSED_not_quietly_accepted(tmp_path):
 
     FAIL CLOSED: refused, naming the row and the key, rather than normalised
     away. Normalising would leave the file and the loaded row disagreeing about
-    what the author wrote. (Owner ruling owed; this fork was never ruled.)
+    what the author wrote. (Operator ruling owed; this fork was never ruled.)
     """
-    path = _write(tmp_path, '[requirement.SR-001]\ntitle = ""\nstatus = "Approved"\n')
+    path = _write(tmp_path, '[requirement.SR-001]\ntitle = ""\nstatus = "Accepted"\n')
     with pytest.raises(SystemExit) as excinfo:
         sc.load(path, SR)
     message = str(excinfo.value)
@@ -106,7 +106,7 @@ def test_a_BASELINE_read_stays_permissive_about_empty_strings(tmp_path):
 
     `rows_from_text` is what the baseline/two-tree reads go through, and a
     revision that predates the rule cannot be fixed by anyone. Refusing there
-    would red a check over a file nobody can edit — the opposite of the
+    would fail a check over a file nobody can edit — the opposite of the
     live-read case, where there IS a file to fix and a person to tell.
     """
     rows = sc.rows_from_text('[requirement.SR-001]\ntitle = ""\n', SR, ".toml")
@@ -115,7 +115,7 @@ def test_a_BASELINE_read_stays_permissive_about_empty_strings(tmp_path):
 
 def test_a_MULTILINE_string_round_trips_including_its_newlines(tmp_path):
     # The prose cells are multi-line by nature; a reader that flattened or
-    # truncated them would silently shorten attested text.
+    # truncated them would silently shorten accepted text.
     body = "First line.\nSecond line, with a # hash and an = sign.\nThird."
     path = _write(
         tmp_path,
@@ -152,7 +152,7 @@ def test_the_live_loader_keeps_DUPLICATE_csv_ids_for_the_integrity_check(tmp_pat
     (SR-002)."""
     path = tmp_path / "system-requirements.csv"
     path.write_text(
-        "SR-ID,Title,Status\nSR-001,one,Approved\nSR-001,two,Approved\n",
+        "SR-ID,Title,Status\nSR-001,one,Accepted\nSR-001,two,Accepted\n",
         encoding="utf-8",
     )
     rows = sc.load(path, SR)
@@ -214,9 +214,9 @@ def test_the_vocabulary_unions_without_redefining_a_shared_column():
 
 
 def test_an_open_items_registry_that_does_not_parse_is_absent_never_empty(tmp_path):
-    """The false green this whole rule exists for: `{}` on a DECISION QUEUE
+    """The false pass this whole rule exists for: `{}` on a DECISION QUEUE
     reads as "no open items", so an unreadable registry would publish "nothing
-    is waiting on the owner" and every gate would stay green."""
+    is waiting on the operator" and every gate would keep passing."""
     p = tmp_path / "open-items.toml"
     p.write_text('[open_item.OI-1]\ntitle = "unterminated\n', encoding="utf-8")
     assert sc.rows_from_toml(p.read_text(encoding="utf-8"), "OI-ID") is None
@@ -286,7 +286,7 @@ def test_draft_need_ids_reads_STATUS_and_nothing_else():
     """
     needs = [
         {"id": "SN-001", "status": "Drafted"},
-        {"id": "SN-002", "status": "Approved"},
+        {"id": "SN-002", "status": "Accepted"},
         {"id": "SN-003", "status": "Modified"},
     ]
     assert sc.draft_need_ids(needs) == {"SN-001"}
@@ -310,10 +310,10 @@ def test_draft_need_ids_reads_STATUS_and_nothing_else():
     # OPPOSITE — "the word is closed and case-sensitive", so `drafted` was "an
     # unrecognized value" — and that reading was wrong in the unsafe direction:
     # an unrecognized value here does not report anything, it returns False, and
-    # False on this predicate means APPROVED. A mis-cased need silently floated
+    # False on this predicate means ACCEPTED. A mis-cased need silently floated
     # the derived gate up, which is the one failure `is_draft_need`'s own
     # docstring says this tier can least afford. The other three spine tiers
-    # already lower the cell before comparing (`trace.is_drafted`/`is_approved`/
+    # already lower the cell before comparing (`trace.is_drafted`/`is_accepted`/
     # `is_modified`, the one Status-casing rule of process.md §4), so this is the
     # SN tier joining them rather than a new leniency. Closure is still enforced
     # — by `trace.enum_integrity_findings` over `ENUM_FIELDS["SN"]`, which
@@ -325,7 +325,7 @@ def test_draft_need_ids_reads_STATUS_and_nothing_else():
     # still a different word.
     assert sc.is_draft_need({"id": "SN-008", "status": "draft"}) is False
     assert sc.draft_need_ids(
-        [{"id": "SN-009", "status": "approved"}, {"id": "SN-010", "status": "drafted"}]
+        [{"id": "SN-009", "status": "accepted"}, {"id": "SN-010", "status": "drafted"}]
     ) == {"SN-010"}
 
 
@@ -335,18 +335,18 @@ def test_legacy_markdown_draftness_survives_the_field_it_moved_to():
     The legacy carrier had no maturity FIELD; it had a heading. The reader
     translates that at the boundary, and this pins the translation — because the
     failure mode when it is missing is silent and upward: every drafted need in
-    an un-migrated repo reads as approved and the derived gate RISES.
+    an un-migrated repo reads as accepted and the derived gate RISES.
     """
     text = (
         "## Core needs\n\n| SN-ID | Need | Priority | Acceptance |\n|---|---|---|---|\n"
-        "| SN-001 | approved | M | x |\n\n"
-        "## Draft needs (unapproved)\n\n"
+        "| SN-001 | accepted | M | x |\n\n"
+        "## Draft needs (unaccepted)\n\n"
         "| SN-ID | Need | Priority | Acceptance |\n|---|---|---|---|\n"
         "| SN-050 | not yet | M | x |\n"
     )
     needs = sc.needs_from_markdown(text)
     assert {n["id"]: n["status"] for n in needs} == {
-        "SN-001": "Approved",
+        "SN-001": "Accepted",
         "SN-050": "Drafted",
     }
     assert sc.draft_need_ids(needs) == {"SN-050"}
@@ -385,7 +385,7 @@ def test_draft_ids_refuse_a_toml_text_that_does_not_parse_and_an_unknown_carrier
     Falling back to the heading scan would choose the carrier from the text
     again, and it is not safe in either direction: malformed TOML with a need
     id and no markdown draft heading scans to "no drafts", every need then reads
-    as approved, and the derived stage RISES on a file nobody could read. The
+    as accepted, and the derived stage RISES on a file nobody could read. The
     stage derivation does not re-read the needs through the refusing loader
     afterwards, so the refusal has to be here.
     """
@@ -411,7 +411,7 @@ def test_draft_ids_refuse_a_toml_text_that_does_not_parse_and_an_unknown_carrier
 _COMMENT_ONLY_TOML = "# Needs are written below once drafted, e.g. SN-005.\n"
 # A valid TOML needs file with no need table and no `need.` in it, whose one
 # stakeholder description carries a markdown table row: sniffed, it read as the
-# markdown carrier and yielded SN-005 as an approved Must need.
+# markdown carrier and yielded SN-005 as an accepted Must need.
 _TABLE_IN_A_STRING = (
     "[stakeholder.STK-01]\n"
     'name = "Owner"\n'
@@ -453,7 +453,7 @@ def test_needs_or_refuse_names_the_file_it_cannot_read(tmp_path):
 
 
 def test_every_needs_text_caller_takes_the_carrier_from_the_file(tmp_path):
-    """The README floor (`check_docs`) and the approval view's need prose
+    """The README floor (`check_docs`) and the acceptance view's need prose
     (`trace._sn_prose`) read no need out of a TOML needs file that declares
     none, and the README floor refuses an unparseable one by name. The
     snapshot's history reader is driven over git in

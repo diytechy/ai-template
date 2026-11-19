@@ -51,11 +51,11 @@ classes links can't see, with false-positive control as the design center
      retired). You *assert* a symbol exists and the check holds you to it.
      No scannable source / files mode -> the tier skips cleanly (a
      non-Python stack degrades gracefully).
-  3. REGISTRY TIER (WI-394, owner ruling R2 2026-08-01, option (c)): the
+  3. REGISTRY TIER (WI-394, operator ruling R2 2026-08-01, option (c)): the
      spine's Evidence-class cells — TC `Evidence`, LLR `Module`/`CodeSymbol`/
      `TestRefs`, the four pointers OUT of the registries into the code and
      test tree — must cite files that EXIST. These cells are exactly what
-     answers "how do you know this row is Approved", and every other link in
+     answers "how do you know this row is Accepted", and every other link in
      the chain is mechanized; a deletion never asks what cited the deleted
      file, so they rot silently. A cell is a KNOWN joined list, split before
      the shape test; the FILE half of a `tests/x.py::node` citation is
@@ -221,7 +221,7 @@ def is_path_shaped(token):
         return False
     # `;`/`,` join a list of paths — not a single filesystem path, so they
     # stay out of the path tier's scope (false-positive control is the point).
-    # `::` used to keep a whole pytest node id out with them; WI-394 (owner
+    # `::` used to keep a whole pytest node id out with them; WI-394 (operator
     # ruling R2, option (c)) RE-SCOPED that guard: a node id
     # (tests/x.py::test_name — the kit's sanctioned Evidence form) is a real
     # FILE plus a selector, so the file half is judged like any path while the
@@ -587,14 +587,14 @@ def _row_bindings(root, mods, cache):
 
 def symbol_findings(root):
     """`(dangling, untraced, advisory, unbound)` for the LLR `CodeSymbol` ANCHOR rule
-    (WI-429, approved as built by owner ruling OI-20 2026-08-13).
+    (WI-429, accepted as built by operator ruling OI-20 2026-08-13).
 
     THE RULE: a live LLR row must carry at least ONE identifier-shaped
     `CodeSymbol` token that BINDS in one of the `.py` modules its `Module` cell
     names. Everything else about the cell is filed untraced.
 
     THE GRAMMAR — WHAT A `CodeSymbol` CELL MAY NAME (ruled with the
-    approval, OI-20, on the conservative default; before it the cell had no
+    acceptance, OI-20, on the conservative default; before it the cell had no
     stated grammar at all, which is the rot the census measured). ADMISSIBLE:
 
     - a RESOLVABLE CODE SYMBOL — a function, class, method or constant that
@@ -626,9 +626,9 @@ def symbol_findings(root):
     for the LLR tier — `Status = Founded` means "the artifacts this row calls
     for exist", and for an LLR (which has no children in this schema) that is
     resolving code. A per-token rule answers a different, harsher question —
-    "is every name in this cell exact" — and on real data it reds 31 of 149
+    "is every name in this cell exact" — and on real data it fails 31 of 149
     rows, 18 of them for tokens that were never symbol claims: a local, an
-    attribute, a CSS variable, a prose fragment. That is a check that reds the
+    attribute, a CSS variable, a prose fragment. That is a check that fails the
     tree on arrival, enforcing a grammar no ruling ever gave the cell. The
     anchor is the same trade ruling R2 made on the sibling cell: validate the
     coarse claim (the code is real, at a module that is real, under a name that
@@ -735,7 +735,7 @@ def unbound_modules(root, anchored, cache):
     anchored row lists in which none of its identifier tokens binds.
 
     A design row's `module` cell lists the modules holding its `code_symbol`
-    entries (the coordinator's ruling on the cell, open to the owner's
+    entries (the coordinator's ruling on the cell, open to the operator's
     overturn), so a listed module holding none of them sends a reader to the
     wrong file, and the union anchor above lets it pass. The count is
     untraced-class, never dangling and never the exit code: most such rows

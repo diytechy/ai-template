@@ -170,7 +170,7 @@ _EARLIER_RUNGS = (
     "_close_record_refusal",
     "_done_when_refusal",
     "_minted_id_refusal",
-    "_approval_act_refusal",
+    "_acceptance_act_refusal",
     "_loop_trailer_refusal",
     "_ruling_sync_refusal",
     "_text_then_act_refusal",
@@ -624,7 +624,7 @@ def test_a_branch_holding_no_claim_folder_is_judged_at_head_with_the_trunk_undec
 
 def _spy_shared_walk(monkeypatch):
     """Wrap `kitlib.git.lane_commit_walk` with a spy recording each call's
-    commits and riders, then walking them as the owner does."""
+    commits and riders, then walking them as the operator does."""
     from kitlib import git as kgit
 
     real = getattr(kgit, "lane_commit_walk", None)

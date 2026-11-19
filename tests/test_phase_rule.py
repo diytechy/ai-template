@@ -1,7 +1,7 @@
 """The authoring-time stage-decrease rule (`derive_stage.phase_rule_findings`).
 
 WI-498 slice 3, ruled plan `docs/plans/2026-08-21-stage-unification-plan.md` §4
-with the owner's answers §6.1 (phase stays DERIVED; the decrease rule is an
+with the operator's answers §6.1 (phase stays DERIVED; the decrease rule is an
 AUTHORING-TIME check, not a stored counter) and §6.2 (the exemption is EXACTLY
 the one permutation `DevStg-LLReqs -> DevStg-Arch`, the permitted decomposition
 cycle).
@@ -27,27 +27,27 @@ DS = load_script("derive_stage")
 
 SRS_H = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
-    "Priority,Verification,Status,Phase\n"
+    "Priority,VerificationMethod,Status,Phase\n"
 )
 LLRS_H = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Phase\n"
 TCS_H = (
     "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,"
     "Status,Phase\n"
 )
-NEEDS = "# Stakeholder needs\n\n## SN-001 — A demo need [Approved]\n\nBody.\n"
+NEEDS = "# Stakeholder needs\n\n## SN-001 — A demo need [Accepted]\n\nBody.\n"
 
 
-def _sr(sid, phase, status="Approved"):
+def _sr(sid, phase, status="Accepted"):
     return '{},T,SN-001,"r","why","ac",,M,Test,{},{}\n'.format(sid, status, phase)
 
 
-def _llr(lid, sr, phase, status="Approved"):
+def _llr(lid, sr, phase, status="Accepted"):
     return '{},{},Adder,src/demo,add,"d",(see TC),{},{}\n'.format(
         lid, sr, status, phase
     )
 
 
-def _tc(tid, verifies, phase, status="Approved"):
+def _tc(tid, verifies, phase, status="Accepted"):
     return '{},{},Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,{},{}\n'.format(
         tid, verifies, status, phase
     )
@@ -105,7 +105,7 @@ def _commit(root, message="state"):
 
 
 def _settled(sr, phase):
-    """One phase whose single SR is Approved, decomposed and verified — the
+    """One phase whose single SR is Accepted, decomposed and verified — the
     shape that reads `DevStg-Impl` since slice 3 re-discriminated the ladder."""
     n = sr.split("-")[1]
     return (_sr(sr, phase), _llr("LLR-" + n, sr, phase), _tc("TC-" + n, sr, phase))
@@ -136,7 +136,7 @@ def test_a_lowering_edit_in_the_STANDING_phase_FIRES(repo):
     _write(repo, srs, llrs, tcs)
     _commit(repo)
 
-    # a second requirement in the SAME phase, approved, not yet decomposed
+    # a second requirement in the SAME phase, accepted, not yet decomposed
     _write(repo, srs + _sr("SR-002", "1"), llrs, tcs)
     assert _stage(repo) == ladder.STAGE_LLREQS  # Impl -> LLReqs, a real decrease
 
@@ -185,7 +185,7 @@ def test_an_ALREADY_OPEN_LOWER_phase_also_satisfies_the_rule(repo):
 
 # --- DIRECTION 3: the ONE exempt permutation passes with no phase tag ----------
 def test_the_LLREQS_to_ARCH_decrease_is_EXEMPT(repo):
-    """Owner answer §6.2: exactly the one permutation `LLReqs -> Arch`, the
+    """Operator answer §6.2: exactly the one permutation `LLReqs -> Arch`, the
     PERMITTED DECOMPOSITION CYCLE. Architecture rework surfaced by breaking a
     requirement down is within-phase churn; any deeply decomposed problem would
     otherwise run the phase counter up.
@@ -200,7 +200,7 @@ def test_the_LLREQS_to_ARCH_decrease_is_EXEMPT(repo):
     req = repo / "docs" / "requirements"
     cmp_h = "CMP-ID,Name,Status,Standing\n"
     (req / "components.csv").write_text(
-        cmp_h + "CMP-001,Core,Approved,\n", encoding="utf-8", newline="\n"
+        cmp_h + "CMP-001,Core,Accepted,\n", encoding="utf-8", newline="\n"
     )
     # an SR with no LLR holds the spine at LLReqs; the partition is settled
     _write(repo, _sr("SR-001", "1"), "", _tc("TC-001", "SR-001", "1"))
@@ -216,7 +216,7 @@ def test_the_LLREQS_to_ARCH_decrease_is_EXEMPT(repo):
     # row, so it cannot move the effective stage at all. A settled row honestly
     # reporting `has-gap` is the reachable route.
     (req / "components.csv").write_text(
-        cmp_h + "CMP-001,Core,Approved,has-gap\n", encoding="utf-8", newline="\n"
+        cmp_h + "CMP-001,Core,Accepted,has-gap\n", encoding="utf-8", newline="\n"
     )
     assert _stage(repo) == ladder.STAGE_ARCH
     assert DS.phase_rule_findings(repo) == []
@@ -233,7 +233,7 @@ def test_a_TWO_RUNG_decrease_that_merely_ENDS_at_Arch_is_NOT_exempt(repo):
     req = repo / "docs" / "requirements"
     cmp_h = "CMP-ID,Name,Status,Standing\n"
     (req / "components.csv").write_text(
-        cmp_h + "CMP-001,Core,Approved,\n", encoding="utf-8", newline="\n"
+        cmp_h + "CMP-001,Core,Accepted,\n", encoding="utf-8", newline="\n"
     )
     srs, llrs, tcs = _settled("SR-001", "1")
     _write(repo, srs, llrs, tcs)
@@ -242,7 +242,7 @@ def test_a_TWO_RUNG_decrease_that_merely_ENDS_at_Arch_is_NOT_exempt(repo):
 
     # the partition records a gap AND a same-phase requirement arrives undecomposed
     (req / "components.csv").write_text(
-        cmp_h + "CMP-001,Core,Approved,has-gap\n", encoding="utf-8", newline="\n"
+        cmp_h + "CMP-001,Core,Accepted,has-gap\n", encoding="utf-8", newline="\n"
     )
     _write(repo, srs + _sr("SR-002", "1"), llrs, tcs)
     assert _stage(repo) == ladder.STAGE_ARCH  # Impl -> Arch, three rungs
@@ -285,7 +285,7 @@ def test_a_COMPONENT_ONLY_decrease_FIRES(repo):
     req = repo / "docs" / "requirements"
     cmp_h = "CMP-ID,Name,Status,Standing\n"
     (req / "components.csv").write_text(
-        cmp_h + "CMP-001,Core,Approved,\n", encoding="utf-8", newline="\n"
+        cmp_h + "CMP-001,Core,Accepted,\n", encoding="utf-8", newline="\n"
     )
     srs, llrs, tcs = _settled("SR-001", "1")
     _write(repo, srs, llrs, tcs)
@@ -294,7 +294,7 @@ def test_a_COMPONENT_ONLY_decrease_FIRES(repo):
 
     # THE WHOLE EDIT: one component cell, and no spine row touched at all.
     (req / "components.csv").write_text(
-        cmp_h + "CMP-001,Core,Approved,has-gap\n", encoding="utf-8", newline="\n"
+        cmp_h + "CMP-001,Core,Accepted,has-gap\n", encoding="utf-8", newline="\n"
     )
     assert _stage(repo) == ladder.STAGE_ARCH
 
@@ -316,7 +316,7 @@ def test_a_BOUNDARY_ONLY_decrease_FIRES(repo):
     req = repo / "docs" / "requirements"
     ext_h = "B-ID,Entity,Direction,Carries,Status\n"
     (req / "external.csv").write_text(
-        ext_h + "B-01,EXT-001,in,A crossing,Approved\n", encoding="utf-8", newline="\n"
+        ext_h + "B-01,EXT-001,in,A crossing,Accepted\n", encoding="utf-8", newline="\n"
     )
     srs, llrs, tcs = _settled("SR-001", "1")
     _write(repo, srs, llrs, tcs)
@@ -353,7 +353,7 @@ def test_a_REDRAFTED_child_in_the_standing_phase_FIRES(repo):
     findings = DS.phase_rule_findings(repo)
     assert len(findings) == 1, findings
     assert "LLR-001" in findings[0]
-    assert "Approved -> Drafted" in findings[0]
+    assert "Accepted -> Drafted" in findings[0]
 
 
 # --- the measurement that shaped the trigger set ------------------------------

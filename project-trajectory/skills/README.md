@@ -21,7 +21,7 @@ Agent-neutral **skill** definitions the kit ships, plus the contract for adding
 more. A *skill* is a small, focused capability — a repeatable procedure grounded
 in this repo's actual commands and files — that an agent loads on demand to work
 faster and more correctly. Skills are **opt-in accelerators, not process gates**:
-the gates, the traceability spine, and the git/CI floor are the bar (see
+the gates, the traceability spine, and the git/CI floor are the standard (see
 [`../PROCESS.md`](../PROCESS.md)); a skill just helps an agent clear it. A repo
 with no agent, or an agent that ignores them, loses nothing.
 
@@ -187,7 +187,7 @@ posture — lives in [`EXTERNAL_SKILLS.md`](../EXTERNAL_SKILLS.md).
 | `coordinator-cycle` | this-repo | The coordinator's one procedure here: scope critique where a row is born, claims, the in-lane intent → iterate → checkpoint cycle, review, disputes and landing. |
 | `registry-hygiene` | kit | Run `trace.py`/`check.py` with the right flags; read orphan/schema findings and fix them. |
 | `downstream-resync` | kit | Walk `ADOPTING.md` §6 to upgrade an adopted repo to kit HEAD. |
-| `gate-advance` | kit | Move DevStg-Reqs→DevStg-Tests→DevStg-Impl honestly — including `Attest` usage and attested-vs-mechanized reporting. |
+| `gate-advance` | kit | Move DevStg-Reqs→DevStg-Tests→DevStg-Impl honestly — including `Vouch` usage and vouched-vs-mechanized reporting. |
 | `antidote` | kit | Root-cause-vs-patch review at the single fix in front of you — the per-fix companion to `PROCESS.md` §3's consolidation doctrine. Vendored (OI-58, WI-507; source + ledger row in `docs/dependencies.md`), not authored here. |
 
 The curated domain library adds web/rendering/model-inference skills for `web`,

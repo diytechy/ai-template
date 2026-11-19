@@ -14,7 +14,7 @@ never reads any of it.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES`: every case runs the
 harness of a bootstrapped scaffold as a subprocess (one bootstrap per module,
-copied per case), and the release half commits an approval act to a real git
+copied per case), and the release half commits an acceptance act to a real git
 repository. The pure rules live in `assumption_rules.py`.
 
 Implements: TC-237, TC-238, TC-239
@@ -22,6 +22,7 @@ Implements: TC-237, TC-238, TC-239
 
 import datetime
 import inspect
+import re
 import shutil
 import subprocess
 
@@ -55,13 +56,13 @@ why = "A silent system is indistinguishable from a broken one."
 priority = "M"
 acceptance = "The operator names the outcome from what the system shows."
 stakeholder_refs = ["STK-001"]
-status = "Approved"
+status = "Accepted"
 
 [stakeholder.STK-001]
 name = "Operator"
 description = "Runs the system and owns what it shows."
 party = "EXT-001"
-status = "Approved"
+status = "Accepted"
 """
 
 FRAME = """
@@ -69,38 +70,38 @@ FRAME = """
 name = "Operator"
 class = "operational"
 description = "The person running the system."
-status = "Approved"
+status = "Accepted"
 
 [entity.EXT-002]
 name = "Archive"
 class = "operational"
 description = "A store the system writes to."
-status = "Approved"
+status = "Accepted"
 
 [boundary.B-01]
 entity = "EXT-001"
 direction = "out"
 carries = "the outcome shown to the operator"
 system = "operation"
-status = "Approved"
+status = "Accepted"
 
 [boundary.B-02]
 entity = "EXT-002"
 direction = "out"
 carries = "the record kept"
 system = "operation"
-status = "Approved"
+status = "Accepted"
 
 [boundary.B-03]
 entity = "EXT-001"
 direction = "in"
 carries = "the operator's request"
 system = "operation"
-status = "Approved"
+status = "Accepted"
 """
 
 
-def _assumption(did, *, status="Approved", standing="active", lands="B-01", **cells):
+def _assumption(did, *, status="Accepted", standing="active", lands="B-01", **cells):
     extra = "".join('{} = "{}"\n'.format(k, v) for k, v in cells.items())
     return (
         "\n[assumption.{}]\n"
@@ -115,14 +116,16 @@ def _assumption(did, *, status="Approved", standing="active", lands="B-01", **ce
     ).format(did, lands, status, standing, extra)
 
 
-def _requirement(sid, *, da=(), coincident=None, form=None, boundary=("B-01",)):
+def _requirement(
+    sid, *, da=(), coincident=None, form=None, boundary=("B-01",), siblings=()
+):
     lines = [
         "\n[requirement.{}]".format(sid),
         'title = "Requirement {}"'.format(sid),
         'sn_refs = ["SN-001"]',
         "boundary_refs = [{}]".format(", ".join('"{}"'.format(b) for b in boundary)),
         'requirement = "The system shall show the outcome."',
-        'status = "Approved"',
+        'status = "Accepted"',
     ]
     if da:
         lines.append("da_refs = [{}]".format(", ".join('"{}"'.format(d) for d in da)))
@@ -130,6 +133,12 @@ def _requirement(sid, *, da=(), coincident=None, form=None, boundary=("B-01",)):
         lines.append('coincident = "{}"'.format(coincident))
     if form:
         lines.append('form = "{}"'.format(form))
+    if siblings:
+        lines.append(
+            "delivered_with = [{}]".format(
+                ", ".join('"{}"'.format(s) for s in siblings)
+            )
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -236,10 +245,10 @@ description = "A driver reading the screen."
 status = "Drafted"
 
 [surrogate.SUR-002]
-name = "Scripted operator, approved"
+name = "Scripted operator, accepted"
 emulates = ["EXT-001"]
 description = "A driver reading the screen."
-status = "Approved"
+status = "Accepted"
 """
 )
 
@@ -253,10 +262,10 @@ BOUNDARY = {
 # Each failing requirement, with what its finding must name.
 BOUNDARY_FAILURES = {
     "SR-003": ("cites no assumption",),
-    "SR-004": ("DA-002", "not approved"),
+    "SR-004": ("DA-002", "not accepted"),
     "SR-005": ("DA-003", "not active"),
     "SR-006": ("DA-004", "does not reach"),
-    "SR-007": ("DA-005", "SUR-001", "not approved"),
+    "SR-007": ("DA-005", "SUR-001", "not accepted"),
 }
 
 
@@ -279,6 +288,42 @@ def test_with_the_gate_absent_or_off_each_condition_is_an_advisory(scaffold, gat
         assert len(_findings(proc, "ADVISORY", sid, *needles)) == 1, (sid, proc.stdout)
 
 
+def test_with_no_agreed_stakeholder_the_reach_advisories_fold_into_one_count(
+    scaffold,
+):
+    # Reach cannot be judged while no stakeholder is agreed, so the
+    # reach-caused advisories are one line with their count. Every other
+    # finding is still listed by name, and failures are never folded.
+    drafted = NEEDS.replace(
+        'party = "EXT-001"\nstatus = "Accepted"',
+        'party = "EXT-001"\nstatus = "Drafted"',
+    )
+    root = _project(scaffold, {**BOUNDARY, NEEDS_REL: drafted}, gate=False)
+    proc = _step(root, "assumption-gate")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    for sid, needles in BOUNDARY_FAILURES.items():
+        if "does not reach" not in needles:
+            assert len(_findings(proc, "ADVISORY", sid, *needles)) == 1, (
+                sid,
+                proc.stdout,
+            )
+    assert _findings(proc, "ADVISORY", "does not reach") == [], proc.stdout
+    folded = _findings(proc, "ADVISORY", "not listed one by one")
+    assert len(folded) == 1, proc.stdout
+    total = int(re.search(r"assumption-gate: (\d+) finding\(s\)", proc.stdout)[1])
+    listed = len(_findings(proc, "ADVISORY")) - 1
+    assert listed == len(BOUNDARY_FAILURES) - 1, proc.stdout
+    assert folded[0].startswith(
+        "ADVISORY: {} reach finding(s) not listed".format(total - listed)
+    ), folded
+    assert "accept the stakeholders" in folded[0], folded
+    _policy(root, True)
+    proc = _step(root, "assumption-gate")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert len(_findings(proc, "FAIL")) == total, proc.stdout
+    assert len(_findings(proc, "FAIL", "does not reach")) == total - listed
+
+
 def test_with_the_gate_on_each_unmet_condition_fails_naming_it(scaffold):
     root = _project(scaffold, BOUNDARY, gate=True)
     proc = _step(root, "assumption-gate")
@@ -286,12 +331,44 @@ def test_with_the_gate_on_each_unmet_condition_fails_naming_it(scaffold):
     failed = _findings(proc, "FAIL")
     for sid, needles in BOUNDARY_FAILURES.items():
         assert len(_findings(proc, "FAIL", sid, *needles)) == 1, (sid, proc.stdout)
-    # A coincident requirement, one citing only approved, active, reaching
-    # assumptions, and one whose fidelity assumption's surrogate is approved,
+    # A coincident requirement, one citing only accepted, active, reaching
+    # assumptions, and one whose fidelity assumption's surrogate is accepted,
     # all pass: nothing names them.
     for sid in ("SR-001", "SR-002", "SR-008"):
         assert not [line for line in failed if sid in line], (sid, failed)
     assert len(failed) == len(BOUNDARY_FAILURES), failed
+
+
+# Joint delivery (SR-205 as amended 2026-11-16): SR-009 and SR-010 name SR-002,
+# which shares their need SN-001, so both are joint; SR-011 names a requirement
+# that is not declared, so it is not.
+JOINT_SRS = (
+    BOUNDARY_SRS
+    + _requirement("SR-009", siblings=["SR-002"])
+    + _requirement("SR-010", da=["DA-002"], siblings=["SR-002"])
+    + _requirement("SR-011", siblings=["SR-099"])
+)
+
+
+def test_a_joint_requirement_citing_no_assumption_passes_the_boundary_gate(scaffold):
+    root = _project(scaffold, {**BOUNDARY, SR_REL: JOINT_SRS}, gate=True)
+    proc = _step(root, "assumption-gate")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert _findings(proc, "FAIL", "SR-009") == [], proc.stdout
+    # Only a declared sibling sharing a need makes a requirement joint.
+    assert len(_findings(proc, "FAIL", "SR-011", "cites no assumption")) == 1, (
+        proc.stdout
+    )
+
+
+def test_an_assumption_a_joint_requirement_cites_is_judged_like_any_other(scaffold):
+    root = _project(scaffold, {**BOUNDARY, SR_REL: JOINT_SRS}, gate=True)
+    proc = _step(root, "assumption-gate")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert len(_findings(proc, "FAIL", "SR-010", "DA-002", "not accepted")) == 1, (
+        proc.stdout
+    )
+    assert _findings(proc, "FAIL", "SR-010", "cites no assumption") == [], proc.stdout
 
 
 def test_a_frame_with_no_assumptions_registry_fails_every_non_coincident_requirement(
@@ -357,7 +434,7 @@ def _design(lid, module, sid):
         'module = "{}"\n'
         'code_symbol = "run"\n'
         'detail = "How {} is built."\n'
-        'status = "Approved"\n'
+        'status = "Accepted"\n'
     ).format(lid, sid, lid, module, sid)
 
 
@@ -380,7 +457,7 @@ def _interface(iid, owner, *, bridged=(), coincident=None):
         'channel = "stdout"',
         'data = "the outcome"',
         'version = "v1"',
-        'status = "Approved"',
+        'status = "Accepted"',
         'interface_to_external = ["B-01"]',
     ]
     if bridged:
@@ -401,7 +478,7 @@ ARCH_IFS = (
     # An internal seam realizes no crossing and reaches nothing.
     + '\n[interface.IF-006]\nowner = "scripts/epsilon"\nconsumers = '
     '["scripts/alpha"]\nchannel = "call"\ndata = "x"\nversion = "v1"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
 )
 
 ARCH = {
@@ -420,7 +497,7 @@ ARCH_FAILURES = {
 }
 
 # THE BOUNDARY ARM: the same form judged against the frame's crossings, the
-# level-0 interfaces approved with the frame. SR-011 is recorded coincident;
+# level-0 interfaces accepted with the frame. SR-011 is recorded coincident;
 # SR-012 cites an assumption landing on its crossing; SR-013 cites one landing
 # elsewhere; SR-014 names two crossings and is bridged on one; SR-015 cites
 # nothing. SR-016 is of assumption form, and SR-017 names a crossing the frame
@@ -521,7 +598,7 @@ def test_the_arms_list_at_their_rungs_and_the_stage_fold_takes_no_interface(
 
 
 # --- TC-238: the release half (SR-206) -----------------------------------------
-# An assumption carries no evidence level (owner ruling 2026-10-02), so release
+# An assumption carries no evidence level (operator ruling 2026-10-02), so release
 # asks no assumption for a passing result: it reads standing. Each assumption is
 # cited by one requirement. DA-001 is active with no result at all, and DA-002
 # active beside a failing observation that no person has acted on: both pass,
@@ -557,7 +634,7 @@ def _case(tid, did, sampling):
         'expected = "The outcome is read."\n'
         'automated = "No"\n'
         'evidence = "docs/notes.md"\n'
-        'status = "Approved"\n'
+        'status = "Accepted"\n'
         'inputs = ["docs/notes.md"]\n'
         "max_age = 30\n"
         'sampling = "{}"\n'
@@ -618,7 +695,7 @@ def _observe(root, tid, outcome="pass"):
 
 
 def _release_repo(scaffold, gate):
-    """The release project in a git repository: the assumptions approved, with
+    """The release project in a git repository: the assumptions accepted, with
     their accepted risks, in one act; then DA-005's text edited after it, and
     failing samples recorded against DA-002 and DA-006."""
     root = _project(scaffold, RELEASE, gate=gate)
@@ -631,7 +708,7 @@ def _release_repo(scaffold, gate):
     _git(root, "commit", "-qm", "the project")
     SNAP.copy_live(root, seed=True)
     _git(root, "add", "-A")
-    _git(root, "commit", "-qm", "approve the assumptions and their accepted risks")
+    _git(root, "commit", "-qm", "accept the assumptions and their accepted risks")
     da = root / DA_REL
     text = da.read_text(encoding="utf-8")
     marker = "[assumption.DA-005]\n"
@@ -696,10 +773,10 @@ def test_the_release_step_lists_at_the_release_rung_and_the_producer_pin_holds(
     assert len(_listed_at(listing, "assumption-evidence", LADDER.STAGE_RELEASE)) == 1
     assert "assumption-evidence" in CHECK.BUILTIN_STEP_NAMES
     # The stage's single release producer, the harness evidence verdict, is
-    # untouched: the approval-level pin on it still holds.
-    import test_approval_level as approval_level
+    # untouched: the acceptance-level pin on it still holds.
+    import test_acceptance_level as acceptance_level
 
-    approval_level.test_the_RELEASE_rung_has_EXACTLY_ONE_PRODUCER_and_it_is_the_EVIDENCE_VERDICT()
+    acceptance_level.test_the_RELEASE_rung_has_EXACTLY_ONE_PRODUCER_and_it_is_the_EVIDENCE_VERDICT()
 
 
 def test_the_release_step_judges_a_project_that_declares_no_frame(scaffold):

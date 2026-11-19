@@ -36,7 +36,7 @@ safety_class = "spine"
 buildtier = "medium"
 priority = 2
 specref = "docs/requirements/low-level-requirements.toml"
-bar = "DevStg-Reqs"
+checks_stage = "DevStg-Reqs"
 ```
 
 VERDICT THIS CONTINUES: `docs/reviews/wi-573-adjudicate-llr-136-llr-158/001-ADJUDICATE-07cbabb.md`,

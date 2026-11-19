@@ -1,7 +1,7 @@
 # Reference CI workflow for the trajectory kit (GitHub Actions).
 #
 # Copies to .github/workflows/check.yml. It runs the SAME harness you run
-# locally (`scripts/check.py`) so a green CI means exactly what a green local
+# locally (`scripts/check.py`) so a passing CI means exactly what a passing local
 # run means — no second, drifting definition of "passing". Swap the Python
 # setup + install step for your stack; keep the single `check.py` invocation so
 # the gate definition stays in one place.
@@ -29,7 +29,7 @@ jobs:
     # The kit's own scripts are cross-platform, so the choice is driven by YOUR
     # project's deps/toolchain. A portable project should "hold its own" on every
     # OS it claims — uncomment the rows below; a project that can only build on one
-    # platform trims to it. Don't claim CI for an OS your deps can't run on: a red
+    # platform trims to it. Don't claim CI for an OS your deps can't run on: a failing
     # cell nobody can fix is worse than an honest single-platform matrix.
     strategy:
       fail-fast: false   # see every platform's result, not just the first failure
@@ -44,6 +44,11 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # Full history: some checks read it (the order test cases were
+          # accepted in, the commit that last wrote an accepted row) and
+          # cannot judge either on the default one-commit clone.
+          fetch-depth: 0
 
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
@@ -55,13 +60,17 @@ jobs:
       # never restates a check command. The reference harness uses ruff + pytest
       # (+ pytest-cov); trace.py and gen_arch_map.py are stdlib-only.
       - name: Install tooling
+        shell: bash
         run: |
           python -m pip install --upgrade pip
           pip install ruff pytest pytest-cov
-          # Then install YOUR project's deps — pick the one that fits and let it
-          # fail loudly (don't add `|| true`, which would hide an install error):
-          #   pip install -e .                 # if you have a pyproject.toml
-          #   pip install -r requirements.txt  # if you pin deps in a file
+          # Then YOUR project's deps, the same choice scripts/setup.sh makes, so
+          # tests can import your package here as they do locally. Let it fail
+          # loudly (don't add `|| true`, which would hide an install error).
+          # A pyproject holding only tool config ([tool.*]) has nothing to install.
+          if [ -f pyproject.toml ] && grep -qE '^\[(project|build-system)\]' pyproject.toml; then pip install -e .
+          elif [ -f requirements.txt ]; then pip install -r requirements.txt
+          fi
 
       # Tier by moment. WHICH tier runs at which moment is declared ONCE in
       # `docs/stack.ini` `[ci-tiers]`; the `if:` guards and `--tier` flags below
@@ -70,8 +79,8 @@ jobs:
       #   The STAGE is orthogonal and comes from the repo's committed `docs/stage`
       # file (check.py reads it and runs every step declared at or above that
       # rung), so CI enforces what the project has actually earned — a
-      # freshly-scaffolded DevStg-Reqs repo is green, and more steps select when
-      # artifacts are approved in a reviewed commit and docs/stage is regenerated
+      # freshly-scaffolded DevStg-Reqs repo passes, and more steps select when
+      # artifacts are accepted in a reviewed commit and docs/stage is regenerated
       # (it is DERIVED from the artifact states by derive_stage.py, not hand-set;
       # the derived-stage step guards its freshness). In CI we do NOT pass
       # --lenient: a missing required tool must fail, so checks can't be

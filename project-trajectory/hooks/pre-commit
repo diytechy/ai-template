@@ -15,8 +15,8 @@
 # in CI, not in any one agent's hook config, so it holds for Claude, Gemini,
 # Codex, and bare git alike.
 #
-# This is the universal *floor*; the full gate bar (placeholder rejection, schema
-# checks, tests, coverage) is gate-scoped and lives in check.py / CI. Those
+# This is the universal *floor*; the full gate checks (placeholder rejection, schema
+# checks, tests, coverage) are gate-scoped and live in check.py / CI. Those
 # heavier checks are deliberately NOT here: they would block legitimate
 # early-stage (stage 0/1) commits. See process.md §7 (process vs product checks).
 #
@@ -41,9 +41,11 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # commit through this hook at all (the interpreter step below refuses), so the
 # check holds wherever the hook runs.
 
-# No step of this hook is ever skipped: a missing interpreter refuses
+# The hook as a whole is never skipped: a missing interpreter refuses
 # (WI-880), and so does a missing kit scripts dir (WI-926), whatever the
-# privacy policy says. A repo whose harness lives elsewhere sets
+# privacy policy says. A single step may still report SKIP or "nothing to
+# check" when it does not apply (format with no formatter installed, step 4,
+# prints SKIP by name). A repo whose harness lives elsewhere sets
 # KIT_SCRIPTS_DIR (relative to the repo root, or absolute) so this one shipped
 # hook fits ANY layout, e.g. the kit's own meta-repo, where .githooks/pre-commit
 # is a two-line wrapper that sets the var and delegates here (WI-1.42); the
@@ -83,13 +85,13 @@ kit_policy pre-commit commit || exit 1
 #                        the step is vacuous for a non-adopter; checks needing
 #                        the product toolchain or gate context (tests, perf,
 #                        flows) stay in check.py / CI.
-#      - approval-fresh    the re-attestation brief fresh against the registry it
+#      - acceptance-fresh    the re-acceptance brief fresh against the registry it
 #                        summarizes (WI-325). It self-stamps its baseline, so the
 #                        compare uses the one the FILE declares, never a re-derived
 #                        one. Doubly self-arming: silent with no brief, and silent
 #                        once the window is closed. Here rather than only at the
-#                        gate because a stale brief is read by a HUMAN about to
-#                        attest, and the sitting can happen between gate runs.
+#                        gate because a stale brief is read by an OPERATOR about to
+#                        accept, and the sitting can happen between gate runs.
 #      - status-map      docs/status.md's GENERATED STATUS block fresh (WI-202):
 #                        the derived snapshot (spine + derived gate + open-items
 #                        one-liners) regenerates + byte-compares like trajectory-map,
@@ -109,7 +111,7 @@ kit_policy pre-commit commit || exit 1
 #                        (a mid-DevStg-Reqs registry legitimately has SRs with no LLR/TC
 #                        yet); the floor must never block an early-stage commit.
 #      - derived-stage   docs/stage is GENERATED from artifact states by
-#                        derive_stage.py; --check fails if an approve/reopen moved
+#                        derive_stage.py; --check fails if an accept/reopen moved
 #                        the derived rung, or any declared derivation input, but
 #                        the recorded file did not. Its predecessor `derived-gate`
 #                        retired with `docs/gate` and the three-value bar axis.
@@ -132,12 +134,12 @@ kit_policy pre-commit commit || exit 1
 #                        `gen_prompt_catalog.py`. Both steps are no-ops where the
 #                        kit-only generator isn't beside check.py, so a
 #                        non-adopter pays nothing.
-#      - approval-immutable  refuses a STAGED change (other than a brand-new add)
+#      - acceptance-immutable  refuses a STAGED change (other than a brand-new add)
 #                        to an existing docs/ratify/<date>-*.md (WI-503): a
-#                        dated re-attestation brief is the record of what a
-#                        human was shown at a sitting, and rewriting it in
+#                        dated re-acceptance brief is the record of what an
+#                        operator was shown at a sitting, and rewriting it in
 #                        place is the defect the CURRENT.md/dated split fixes.
-#                        Mint a new one with `trace.py --mint-approval-brief
+#                        Mint a new one with `trace.py --mint-acceptance-brief
 #                        SLUG`; regenerate the live surface at
 #                        docs/ratify/CURRENT.md. Fail-closed, no warn mode.
 #      - staged-divergence  the one step here that is NOT a freshness check, and
@@ -145,7 +147,7 @@ kit_policy pre-commit commit || exit 1
 #                        TREE: it asks which declared generated artifact is
 #                        modified on disk but absent from the INDEX, i.e. which
 #                        one you regenerated and did not `git add`. Without it a
-#                        regenerate-and-forget commit is honestly green and
+#                        regenerate-and-forget commit honestly passes and
 #                        lands stale (measured: 3b8d306d). IT BLOCKS since the
 #                        WI-498 close: OI-31 ruled option (b) warn-first and
 #                        promoted "once it has run clean for a program", and
@@ -159,11 +161,11 @@ kit_policy pre-commit commit || exit 1
 #      - held-status     not a freshness check either, and it reads the index
 #                        (SR-208), under the dial committed at HEAD. A squash
 #                        landing is judged by its lane commits, marked or not:
-#                        a held-rung row's approval lands from a lane only as a
-#                        CLARITY re-attestation bound to its judged text. A
+#                        a held-rung row's acceptance lands from a lane only as a
+#                        CLARITY re-acceptance bound to its judged text. A
 #                        commit made under the loop marker outside a claimed
 #                        lane may not move a held status or make a held
-#                        approval claim; a merge in progress is judged only for
+#                        acceptance claim; a merge in progress is judged only for
 #                        a status neither side carried. A marked commit inside
 #                        a lane, and an unmarked plain trunk commit, pass here.
 #                        The merge slot judges every lane commit whether or not
@@ -183,15 +185,15 @@ kit_policy pre-commit commit || exit 1
 #                        committer, no dial. The merge slot asks the same of
 #                        each lane commit against its first parent.
 #      - text-then-act   reads the index too (WI-806, OI-101 Q2): a commit that
-#                        writes docs/archive/last_approved/ changes no spine
+#                        writes docs/archive/last_accepted/ changes no spine
 #                        cell but Status and adds or removes no row, so the
 #                        text is committed first and the act second. Every
 #                        committer, a direct trunk commit included; a squash
 #                        landing passes when each commit it squashes does. The
 #                        merge slot asks the same of each lane commit.
 #      - parent-first    reads the index too (WI-850): a commit that leaves an
-#                        approved spine row under a cited parent that is not
-#                        approved, where it moved either row's status, is
+#                        accepted spine row under a cited parent that is not
+#                        accepted, where it moved either row's status, is
 #                        refused (against HEAD, and MERGE_HEAD during a
 #                        merge). Every committer; the first commit is not
 #                        judged. The merge slot asks the same of each lane
@@ -199,7 +201,7 @@ kit_policy pre-commit commit || exit 1
 #                        standing case.
 #      - done-when-blessed  reads the index too (WI-841, WI-921, WI-925): it
 #                        refuses a staged close whose changed Done-when no
-#                        accepted verdict or owner ruling in the index binds,
+#                        recorded verdict or operator ruling in the index binds,
 #                        and a trunk commit that changes a claim copy's
 #                        Done-when unblessed. A read it cannot complete (the
 #                        index delta, the current branch) holds, naming why.
@@ -250,7 +252,7 @@ kit_policy pre-commit commit || exit 1
 #                             the ritual's byte-exact relink, which the
 #                             exemption above, reading only a close's move,
 #                             would not pass), and its later reach is held as
-#                             above. An owner ruling releases each.
+#                             above. An operator ruling releases each.
 #      - plan-gate       reads the index too (WI-913): in a lane whose claimed
 #                        row declares `planmode = "single"`, a commit carrying
 #                        build output is refused until a pass record under
@@ -277,15 +279,15 @@ kit_policy pre-commit commit || exit 1
 #    trajectory (the dashboard consumes the bundle); the gate marker via
 #    spine_rules.py and the stage marker via derive_stage.py, then the status
 #    snapshot via `gen_trajectory.py --status`
-#    (it reads the fresh gate), then the owner surface via `gen_open_items.py`
+#    (it reads the fresh gate), then the operator surface via `gen_open_items.py`
 #    — then STAGE THE REGENERATED FILES (`git add`) and re-commit. Staging is
 #    not a formality: these steps compare the tree ON DISK, so regenerating
-#    without staging turns them green over a commit that still carries the
+#    without staging makes them pass over a commit that still carries the
 #    stale bytes — the staged-divergence step above reports exactly that.
 #    The two kit-only index/catalogue steps stand alone: each regenerates with
 #    its own single command and feeds nothing else.
 "$PY" "$SCRIPTS_DIR/check.py" --path-triggered
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,component-view,cli-reference,interface-reference,trajectory,registry-integrity,derived-stage,skills-sync,skills-index,prompt-catalog,verdict-rollup,approval-fresh,approval-immutable,staged-divergence,held-status,reserved-ids,ruling-sync,text-then-act,parent-first,done-when-blessed,plan-gate,adoption-record
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,component-view,cli-reference,interface-reference,trajectory,registry-integrity,derived-stage,skills-sync,skills-index,prompt-catalog,verdict-rollup,acceptance-fresh,acceptance-immutable,staged-divergence,held-status,reserved-ids,ruling-sync,text-then-act,parent-first,done-when-blessed,plan-gate,adoption-record
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already

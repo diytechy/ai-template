@@ -38,7 +38,8 @@ python -m pip install --upgrade pip
 # tiers, coverage) is declared once in docs/stack.ini — edit there, not in
 # check.py. Install whatever those commands name.
 pip install ruff pytest pytest-cov
-if [ -f pyproject.toml ]; then pip install -e .
+# A pyproject holding only tool config ([tool.*]) has nothing to install.
+if [ -f pyproject.toml ] && grep -qE '^\[(project|build-system)\]' pyproject.toml; then pip install -e .
 elif [ -f requirements.txt ]; then pip install -r requirements.txt
 fi
 # ------------------------------------------------------------------------------
@@ -68,5 +69,5 @@ if [ -f docs/privacy-check ] && git rev-parse --is-inside-work-tree >/dev/null 2
 fi
 
 echo
-echo "Setup complete. Run the harness with: ./scripts/check.sh --stage DevStg-Impl"
+echo "Setup complete. Run the harness with: ./scripts/check.sh"
 echo "(check.sh uses the venv python directly; activating is optional.)"

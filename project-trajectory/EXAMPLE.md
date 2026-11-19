@@ -20,14 +20,14 @@ checks each need against. A worked one for this project:
 
 ```toml
 [need.SN-001]
-status = "Approved"
+status = "Accepted"
 need = "Export my records to a file I can open in a spreadsheet."
 why = "The data is useless if I can't get it into Excel/Sheets."
 priority = "M"
 acceptance = "A new user clicks export and the file opens in a spreadsheet with the right columns and all their rows."
 
 [need.SN-013]
-status = "Approved"
+status = "Accepted"
 need = """If an export is interrupted (crash / power loss / cancel) mid-write, I never end up with a half-written file that looks complete; I can just run it again."""
 why = "A partial file that opens cleanly in a spreadsheet is silent data loss."
 priority = "M"
@@ -39,7 +39,7 @@ is no separate edge tier. What keeps such needs from being forgotten is the
 **hats roster** (`hats.toml`, process.md §1): each applicable hat's question is
 put to every decomposition it applies to, so edge coverage is regenerated per
 need rather than maintained as a standing checklist. Maturity is the `status`
-field (`Drafted`/`Approved`) — the same word at every tier — never a section
+field (`Drafted`/`Accepted`) — the same word at every tier — never a section
 heading, and an absent key IS the empty cell.
 
 ## 2. System specifications — `requirements/system-requirements.toml`
@@ -53,8 +53,8 @@ rationale = "Realizes SN-001 so the file opens cleanly in any spreadsheet."
 acceptance_criteria = """Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180."""
 permutations = "field=set{plain,comma,quote,newline}"
 priority = "M"
-verification = "Test"
-status = "Approved"
+verification_method = "Test"
+status = "Accepted"
 
 [requirement.SR-002]
 title = "Atomic export write"
@@ -64,8 +64,8 @@ rationale = "Realizes SN-013 so an interrupted run never leaves a complete-looki
 acceptance_criteria = """A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally."""
 permutations = "interrupt=set{during-write,before-rename}"
 priority = "M"
-verification = "Demonstration"
-status = "Approved"
+verification_method = "Demonstration"
+status = "Accepted"
 ```
 
 Note the **statement pattern**: both rows are EARS *ubiquitous* (`The <system>
@@ -78,18 +78,18 @@ distinction is why `trace.py` warns on a non-EARS opening rather than gating it.
 
 Note also: each SR has **measurable** acceptance criteria a test can assert (not
 "exports correctly"), links its SN, and uses `permutations` so one row covers
-many cases. `status` is the **closed** vocabulary — `Drafted`, `Approved`,
-`Founded` (process.md §4): `Approved` blesses the row's *text* and says
+many cases. `status` is the **closed** vocabulary — `Drafted`, `Accepted`,
+`Founded` (process.md §4): `Accepted` blesses the row's *text* and says
 nothing about tests passing (that is the harness's answer), `Founded` adds
 that the artifacts the row calls for exist and is COMPUTED rather than typed,
 and an out-of-vocabulary word is an always-on integrity finding, not a free
-label. A post-approval amendment has no value of its own — it is caught by
-diffing the row against `docs/archive/last_approved/`. The `phase` key is omitted
+label. A post-acceptance amendment has no value of its own — it is caught by
+diffing the row against `docs/archive/last_accepted/`. The `phase` key is omitted
 throughout because this is a single-shot deliverable (no phased roadmap): with
-nothing phased the approved-row Phase rule stays unarmed, and an absent key
-means in scope for every phase. A phased roadmap instead tags every approved
+nothing phased the accepted-row Phase rule stays unarmed, and an absent key
+means in scope for every phase. A phased roadmap instead tags every accepted
 SR/LLR/TC with the integer phase it shipped in (`1`/`2`/… — digits only, full
-cell; a prefixed `v2` on an approved row is a `--strict-schema` finding), the
+cell; a prefixed `v2` on an accepted row is a `--strict-schema` finding), the
 project's current phase is *derived* as the highest, and only a `Drafted` row
 may then omit `phase` — see process.md §4 "Phased delivery". `aspect`
 (optional, process.md §1) is omitted throughout because none of these rows is
@@ -107,7 +107,7 @@ module = "src/export/csv"
 code_symbol = "to_csv"
 detail = """Pure function: records -> String. Header from the schema; values quoted per RFC-4180. No I/O — unit-testable in isolation."""
 test_refs = "(see TC)"
-status = "Approved"
+status = "Accepted"
 
 [design.LLR-002]
 sr_refs = ["SR-002"]
@@ -117,7 +117,7 @@ code_symbol = "write_atomic"
 detail = """Write bytes to <path>.tmp, then rename to <path>; remove the tmp on any error. Rename is atomic on the same volume. The I/O shell around the pure core."""
 rationale = """Streaming the write in place was ruled out: a crash mid-write leaves a half-file the next run reads as valid. Costs one temp file per export."""
 test_refs = "(see TC)"
-status = "Approved"
+status = "Accepted"
 ```
 
 Note the split: **`to_csv` is a pure core** (cheap, exhaustive unit tests);
@@ -145,7 +145,7 @@ parameters = "field=set{plain,comma,quote,newline}"
 expected = "Satisfies SR-001 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_export.rs"
-status = "Approved"
+status = "Accepted"
 
 [test.TC-002]
 verifies = ["SR-002", "LLR-002"]
@@ -156,14 +156,14 @@ parameters = "interrupt=set{during-write,before-rename}"
 expected = "Satisfies SR-002 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_export.rs"
-status = "Approved"
+status = "Accepted"
 ```
 
 The `Evidence` column names the **concrete test that provides the proof** — a
 pytest node id, a script path, or a procedure-doc link (inspection-only text,
 never a mechanized resolve). It is optional in general, but a row claiming
 `Automated=Yes` must cite it under `--strict-schema` (DevStg-Impl): a claimed-automated
-test with no cited location is a soft false-green. Keep `Parameters` for the
+test with no cited location is a soft false-pass. Keep `Parameters` for the
 *dimensional inputs* a test exercises (the `gen_cases.py` grammar below) — the
 test's location never belongs there.
 
@@ -244,7 +244,7 @@ Traceability: SN=2 SR=2 LLR=2 TC=2 orphans=0. Report -> docs/test/report.md
 ```
 
 **Zero orphans**: every SN has an SR, every SR has an LLR + a TC, every LLR has a
-parent + a TC, every TC verifies a known id. That is the bar each gate enforces.
+parent + a TC, every TC verifies a known id. That is the standard each gate enforces.
 
 ## 7. A different shape — an infrastructure / operational requirement
 
@@ -260,8 +260,8 @@ Say the **SRE/Ops** hat owns availability and the **DBA** hat owns the data
 store. A reliability need (`SN-020`) becomes an SR verified by demonstration:
 
 ```csv
-SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Lifecycle
-SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Approved,,Runtime
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Phase,Lifecycle
+SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Accepted,,Runtime
 ```
 
 The domain hat filters and owns its slice through the rows' LLR
@@ -283,46 +283,46 @@ that writes only the failover SR has silently skipped two:
 Each is a real SR with its own LLR + TC; tagging them by lifecycle is what makes
 the missing Provision/Startup rows obvious at DevStg-Reqs. The failover *logic* is still
 real code, so `SR-101` keeps an LLR (`LLR-101 reconnect/promote-on-primary-loss`,
-owned by the same hat) — only `Analysis`/`Inspection`/`Attest` SRs skip the LLR
-(§7.1 shows an `Attest` one). The TC
+owned by the same hat) — only `Analysis`/`Inspection`/`Vouch` SRs skip the LLR
+(§7.1 shows a `Vouch` one). The TC
 records the **procedure**, not an assertion, and is `Automated=No`, so the release
 checklist (`gen_release_checklist.py`) finds it:
 
 ```csv
 TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
-TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a write committed just before the kill is readable after",Release,"failure=set{kill,network-loss,disk-full}","Satisfies SR-101 AcceptanceCriteria",No,docs/test/failover-procedure.md,Approved,
+TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a write committed just before the kill is readable after",Release,"failure=set{kill,network-loss,disk-full}","Satisfies SR-101 AcceptanceCriteria",No,docs/test/failover-procedure.md,Accepted,
 ```
 
 `Tier=Release` keeps this slow, environment-heavy test out of the per-push and
-pre-merge runs; it executes at `DevStg-Release`, where the human signs the generated
+pre-merge runs; it executes at `DevStg-Release`, where the operator signs the generated
 checklist. Same registries, same traceability join, same gates — only the
 verification method and the owning hat change.
 
-### 7.1 The honest floor — an `Attest` requirement (human judgment, not a check)
+### 7.1 The honest floor — a `Vouch` requirement (human judgment, not a check)
 
 Some acceptance criteria can't be mechanized *at all* — a subjective, mostly
 binary asset judged by a person: does this cutscene land emotionally, does the
 main theme fit the game's mood, did the voice actor deliver the line. For these
-the honest verification method is **`Attest`**: a **named human's recorded
-judgment** (process.md §4 "Verification methods" + the Proportionality doctrine).
+the honest verification method is **`Vouch`**: the **operator's recorded
+word** (process.md §4 "Verification methods" + the Proportionality doctrine).
 It is trust-based — the box can be checked without the work having happened — so
-the process makes the attestation *explicit, named, and auditable* rather than
-pretending it's a check. An `Attest` SR is **LLR-exempt** (there's no code symbol
+the process makes the vouch *explicit, named, and auditable* rather than
+pretending it's a check. A `Vouch` SR is **LLR-exempt** (there's no code symbol
 to decompose — the deliverable is the asset itself), but like every SR it still
-needs ≥1 TC, whose cell records **who attested and when**:
+needs ≥1 TC, whose cell records **who vouched and when**:
 
 ```csv
-SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Aspect
-SR-201,Main-theme mood fit,SN-040,"The main theme shall match the game's established mood (heroic, wistful undertone) as judged by the creative lead.","Realizes SN-040: the score sets the emotional tone; no automated check can judge 'fit'.","The creative lead reviews the rendered track against the mood brief and records a pass/fail with notes.",,H,Attest,Approved,,
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Phase,Aspect
+SR-201,Main-theme mood fit,SN-040,"The main theme shall match the game's established mood (heroic, wistful undertone) as judged by the creative lead.","Realizes SN-040: the score sets the emotional tone; no automated check can judge 'fit'.","The creative lead reviews the rendered track against the mood brief and records a pass/fail with notes.",,H,Vouch,Accepted,,
 ```
 
 ```csv
 TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
-TC-201,SR-201,System,"Creative review of the rendered main theme against the mood brief",Release,"attested-by=A. Rivera (creative lead); attested-on=2026-07-02","Recorded judgment that SR-201's mood-fit criterion is met (pass, with notes)",No,docs/reviews/main-theme-signoff.md,Approved,
+TC-201,SR-201,System,"Creative review of the rendered main theme against the mood brief",Release,"vouched-by=A. Rivera (creative lead); vouched-on=2026-07-02","Recorded judgment that SR-201's mood-fit criterion is met (pass, with notes)",No,docs/reviews/main-theme-signoff.md,Accepted,
 ```
 
-`trace.py` accepts `SR-201` as legitimately `Approved` but reports it under
-**"Verification basis (attested vs mechanized)"** — so an audit always sees how
+`trace.py` accepts `SR-201` as legitimately `Accepted` but reports it under
+**"Verification basis (vouched vs mechanized)"** — so an audit always sees how
 much of the project rests on trust versus a runnable check. Note the spine here
 stays at **high altitude**: `SN-040 → SR-201` ensures the theme's mood isn't
 missed or silently broken, and it deliberately *doesn't* decompose "is it
@@ -381,8 +381,8 @@ rationale = "Realizes SN-001."
 acceptance_criteria = """Output parses as CSV; columns match the schema; special-char fields quoted per RFC-4180."""
 permutations = "field=set{plain,comma,quote,newline}"
 priority = "M"
-verification = "Test"
-status = "Approved"
+verification_method = "Test"
+status = "Accepted"
 
 [requirement.SR-050]
 title = "Deliver export to destination"
@@ -392,8 +392,8 @@ rationale = "Realizes SN-030: the file is useless until it reaches the target."
 acceptance_criteria = """A completed export reaches the destination and receipt is confirmed; a failed upload is retried and surfaced, never silently dropped."""
 permutations = "dest=set{local,s3,sftp}"
 priority = "M"
-verification = "Test"
-status = "Approved"
+verification_method = "Test"
+status = "Accepted"
 ```
 
 The boundary between the two is a **contract**, so it is an `IF-###` (process.md
@@ -410,7 +410,7 @@ consumers = ["src/delivery"]
 channel = "file"
 data = "the export file: RFC-4180 CSV at the configured path, header row first"
 version = "v1"
-status = "Approved"
+status = "Accepted"
 ```
 
 `owner` is the providing **thing** — the module the information plugs into, in
@@ -432,7 +432,7 @@ Contract IF-001: writes the export file at the configured path as RFC-4180 CSV �
 ```
 
 And the seam gets its **own** integration TC — covered by neither module's internal
-unit tests — so the boundary is a tested contract, not a gap between two green
+unit tests — so the boundary is a tested contract, not a gap between two passing
 modules (process.md §10). (A *low-level* seam, where the parent functionality's
 tests are honestly what cover it, says so instead: `verified_by = "TC-050"` on
 the IF row, warn-first that the pointer resolves. Empty — as the row above
@@ -451,7 +451,7 @@ parameters = "dest=set{local,s3,sftp}"
 expected = "Satisfies SR-050 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_delivery_seam.py"
-status = "Approved"
+status = "Accepted"
 ```
 
 Each module's SRs still decompose into their own `Module`-tagged LLRs as usual (§3;
@@ -520,7 +520,7 @@ consumers = ["src/delivery"]
 channel = "file"
 data = "RFC-4180 CSV at the agreed path, header row first — stated once, in the export repo"
 version = "v2"
-status = "Approved"
+status = "Accepted"
 
 [interface.IF-011]
 owner = "external:object-store"
@@ -528,7 +528,7 @@ requestors = ["src/delivery"]
 channel = "call"
 data = "S3 PutObject of the purchased store; the vendor datasheet is the definition of record"
 version = "vendor-2024"
-status = "Approved"
+status = "Accepted"
 ```
 
 `IF-010`'s definition is owned by a repo that **builds** the surface (`export` — its
@@ -546,13 +546,13 @@ records the owner's current version and each consumer's pin. That mapping is wha
 the coordinator catch **drift**: if the `export` repo ships its row at `v3` while
 `delivery`'s `IF-010` still pins `v2`, the coordinator flags the stale pin (weighted by `Status`) and
 sequences `delivery`'s contract-test re-run against v3 — the interface's own §8 fixture
-judges actual compatibility, the human signs a real break. The catalog registry and
+judges actual compatibility, the operator signs a real break. The catalog registry and
 that check are deferred tooling (`MULTI_REPO.md` §3.3, §3.7, §7).
 
 **Two requirement scopes.** `SR-010` is *module-scoped* — verified inside the delivery
 repo. But "an exported file arrives intact at the destination end-to-end" is
 *composition-scoped*: it exists only for the assembled whole and no single module owns
-it. It is a coordinator SR (`SR-011`, `Verification=Demonstration`) delegated to the
+it. It is a coordinator SR (`SR-011`, `VerificationMethod=Demonstration`) delegated to the
 **plant repo** (`REPO-003`), which assembles export + delivery + a virtualized
 destination and runs the demonstration — "the module whose deliverable is a runnable
 verification of the assembly."
@@ -576,7 +576,7 @@ coordinator sequences and reads status; it never builds or runs anything.
 - Tests **cite** acceptance criteria by id; code **annotates** the ids; the matrix
   is **generated**, never hand-kept.
 - **Operational requirements use the same spine** (§7) — a domain hat owns them,
-  `Verification=Demonstration`/`Manual`, and a
+  `VerificationMethod=Demonstration`/`Manual`, and a
   procedure-recording `Release`-tier TC the release checklist finds.
 - **Tag the lifecycle phase** (§7) so the phase your product tends to neglect
   gets written — Provision/Startup for tools, the Runtime *operating environment*

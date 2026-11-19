@@ -26,7 +26,7 @@ which is the whole point of this module existing: the carrier change is data
 plus a loader, not a sixteen-module rename braided into a migration. D-3 is the
 pass that renames things, and it renames them on this carrier afterwards.
 
-WHY THIS IS A SIBLING MODULE AND NOT ELEVEN COPIES — OWNER RULING 2026-08-10,
+WHY THIS IS A SIBLING MODULE AND NOT ELEVEN COPIES — OPERATOR RULING 2026-08-10,
 AMENDING the F5 ruling that rejected a shared `_kitcommon.py` at WI-078. The F5 rule buys cross-script copy-ability, and it
 is a good rule; it was written for small stable PLUMBING (a five-line CSV
 loader, the argparse preamble), where a divergence between copies is visible
@@ -59,7 +59,7 @@ Contract IF-270: SPINE_COLUMN maps TOML registry keys to legacy column names. To
     registry tier, including cells a generated automated case leaves blank.
 
 Contract IF-265: `load(path, "OI-ID")` supplies the scheduler's IF-073
-    owner-registry rows under carrier-neutral column names. An absent file
+    operator-registry rows under carrier-neutral column names. An absent file
     returns no rows; malformed content raises rather than publishing an empty
     queue. Both TOML and legacy CSV use the same load boundary.
 Contract IF-102: the carrier's whole read surface, as trace.py imports it — and
@@ -118,7 +118,7 @@ Contract IF-108: plan_briefs reads the system-requirements and interfaces
     will not parse raises instead of quietly narrowing what the planner is told.
 
 Contract IF-109: agent_brief reads SR and TC rows through load() for two
-    purposes at once — the SR Verification cell decides whether a critique
+    purposes at once — the SR VerificationMethod cell decides whether a critique
     round is owed, and SR/TC prose is lifted verbatim into the session brief.
     Both take the same rows under the same column names, so a gate decision and
     the brief beside it can never be drawn from different vocabularies;
@@ -149,14 +149,14 @@ Contract IF-112: check_docs holds the root README to the need tier through
     detector. Existence checking of cited ids stays check_docs' own whole-file
     scrape; only the floor and the open-items read cross this seam.
 
-Contract IF-114: adjudicate_brief lists a red-TC brief's cases from
+Contract IF-114: adjudicate_brief lists an evidence-gap brief's cases from
     load(root / rel, id_col): the TC rows (Verifies, Status, Method, Expected,
     Evidence) and the SR Requirement / LLR Detail text naming the obligation
     each case covers. Every cell it lists is REQUIRED — a row missing one
     refuses rather than rendering a dash. Read-only: nothing on this seam
     writes a registry.
 
-Contract IF-118: the owner decision view reads docs/requirements/open-items
+Contract IF-118: the operator decision view reads docs/requirements/open-items
     through resolve() and load(), so it answers whichever carrier is live and
     the rows arrive under today's column names. load() returns [] only when the
     registry is genuinely absent and raises on one that exists and will not
@@ -239,7 +239,7 @@ from kitlib import spine as _kitspine
 # The tier each registry's rows live under, keyed by the registry's ID COLUMN
 # rather than by its path. A path carries a carrier suffix and therefore moves;
 # the tier is the thing that does not.
-# `SN-ID` JOINED 2026-08-17 (owner ruling 2026-08-17k, "Yes add in"). The need
+# `SN-ID` JOINED 2026-08-17 (operator ruling 2026-08-17k, "Yes add in"). The need
 # tier had no declared schema at all, which is the guard gap that let the
 # shipped template ship without `tags` and let three fields accumulate for one
 # axis — the census is what makes a fourth impossible to add quietly.
@@ -341,7 +341,7 @@ SPINE_COLUMN = {
     "acceptance_criteria": "AcceptanceCriteria",
     "permutations": "Permutations",
     "priority": "Priority",
-    "verification": "Verification",
+    "verification_method": "VerificationMethod",
     "status": "Status",
     # the SN tier's own four, plus the `tags` cell the hats roster reads
     "need": "Need",
@@ -396,7 +396,7 @@ SPINE_COLUMN = {
 # the two halves union cleanly and a second entry for a shared column would be
 # precisely the drift a single stated map exists to prevent.
 OFFSPINE_COLUMN = {
-    # open-items (the owner decision queue)
+    # open-items (the operator decision queue)
     "raised": "Raised",
     "one_line": "OneLine",
     "decision": "Decision",
@@ -450,7 +450,7 @@ OFFSPINE_COLUMN = {
     "data": "Data",
     # OI-61's sub-question, sanctioned 2026-08-23: the OPTIONAL seam-tier
     # verification pointer. A `TC-###` or an `LLR-###`; empty means "verified in
-    # its own right". It is not a second `Verification` column — the IF tier has
+    # its own right". It is not a second `VerificationMethod` column — the IF tier has
     # none — it is the pointer that makes "the parent functionality's tests
     # cover this" sayable at all.
     "verified_by": "VerifiedBy",
@@ -459,7 +459,7 @@ OFFSPINE_COLUMN = {
     "carried_by": "CarriedBy",
     # The far side names the DIRECTION: `requestors` put information into the
     # surface the owner defines, `consumers` take what it emits — exactly one
-    # per row (OI-67, the owner's own addition).
+    # per row (OI-67, the operator's own addition).
     "requestors": "Requestors",
     "consumers": "Consumers",
     # `contract` LEFT the row with them once every definition had moved into
@@ -519,6 +519,16 @@ OFFSPINE_COLUMN = {
     "knowledge": "Knowledge",
     "standing": "Standing",
     "part_of": "PartOf",
+    # the component derivation record (SR-165, WI-999). The inverse lives in
+    # migrate_carrier.KEY.
+    "candidates": "Candidates",
+    "objective": "Objective",
+    "constraints": "Constraints",
+    "scores": "Scores",
+    "selected": "Selected",
+    "ruling": "Ruling",
+    "override": "Override",
+    "derivation": "Derivation",
 }
 REGISTRY_COLUMN = dict(SPINE_COLUMN, **OFFSPINE_COLUMN)
 
@@ -760,7 +770,7 @@ def empty_value_findings(rows, id_col, rel=""):
     row disagree — the file says the author wrote something, the reader says
     they did not — and every writer downstream would then re-emit a row it never
     read. Refusing names the row and the key and asks for a one-character edit:
-    delete the line. (Owner ruling owed — this fork was never ruled; the
+    delete the line. (Operator ruling owed — this fork was never ruled; the
     fail-closed option is taken and flagged.)"""
     out = []
     for row in rows:
@@ -864,7 +874,7 @@ def columns(path, id_col):
 #     text contains the word draft", scraped by one function while the id
 #     universe was scraped by another — and during the 2026-08-10 sitting a
 #     prose MENTION of an id under the draft heading silently re-drafted an
-#     already-attested need. `kind` is now a field on the need itself.
+#     already-accepted need. `kind` is now a field on the need itself.
 #   * THE EDGE-CASE TIER keeps its own fields (`lifecycle` / `scenario` /
 #     `expected`) instead of being folded onto the core four at read time.
 NEED_TABLE = "need"
@@ -915,7 +925,7 @@ def _names_from_header(cells):
 def _edge_folded(need):
     """A legacy edge-table row read as an ORDINARY need.
 
-    The `edge` row TYPE is retired (owner ruling 2026-08-17j) — no live carrier
+    The `edge` row TYPE is retired (operator ruling 2026-08-17j) — no live carrier
     emits it and no reader downstream defines it — but legacy markdown files
     still HAVE edge tables, and their cells are content. So the shape is
     resolved here, at the one boundary that still meets it, rather than left for
@@ -933,7 +943,7 @@ def _edge_folded(need):
     without deciding anything about it."""
     return {
         "id": need["id"],
-        "status": need.get("status", "Approved"),
+        "status": need.get("status", "Accepted"),
         "need": need.get("scenario", ""),
         "why": need.get("lifecycle", ""),
         "priority": need.get("priority", "n/a"),
@@ -987,11 +997,11 @@ def needs_from_markdown(text):
         # legacy markdown had exactly two maturities — under the draft heading
         # or not — so the mapping is total and loses nothing. Emitting it here
         # is what keeps `is_draft_need` honest over legacy text; without it a
-        # draft-heading row reads as approved and the derived gate RISES, the
+        # draft-heading row reads as accepted and the derived gate RISES, the
         # one failure shape this carrier exists to prevent.
         need = {
             "id": cells[0],
-            "status": "Drafted" if row_kind == "draft" else "Approved",
+            "status": "Drafted" if row_kind == "draft" else "Accepted",
         }
         for name, value in zip(names, cells[1:]):
             if name:
@@ -1020,7 +1030,7 @@ def needs_from_text(text, carrier):
     it was read from (`.toml` or `.md`, the resolved file's suffix).
 
     Exists because some readers hold the registry's TEXT rather than its path:
-    the approval view's need prose, the README's Must/Should floor, and the
+    the acceptance view's need prose, the README's Must/Should floor, and the
     snapshot's reads of a needs file at a past commit. Each read that text from
     a file it resolved, so each knows the carrier.
 
@@ -1164,7 +1174,7 @@ def folded(need):
     saying "change both together"; they drifted, and the dashboard rendered a
     phantom `SN-000` root (§6 F-6).
 
-    THE EDGE ARM IS GONE (owner ruling 2026-08-17j, "edge is dropped"). It
+    THE EDGE ARM IS GONE (operator ruling 2026-08-17j, "edge is dropped"). It
     re-titled an edge row — scenario as the need, lifecycle phase as the why —
     and there is nothing left to re-title: the row TYPE is retired along with
     the `kind` field that declared it, and edge coverage is the hats
@@ -1181,7 +1191,7 @@ def draft_ids_from_text(text, carrier):
     `is_draft_need`), which is what
     retires section-as-state and kills the sharp edge the 2026-08-10 sitting
     hit — a prose MENTION of an id under the draft heading silently re-drafted
-    an already-attested need, because the id universe is a whole-text scrape
+    an already-accepted need, because the id universe is a whole-text scrape
     while draft-ness was a heading scan. Under MARKDOWN the heading scan is
     reproduced EXACTLY as it always behaved, prose mentions and all.
 
@@ -1202,7 +1212,7 @@ def draft_ids_from_text(text, carrier):
     A `.toml` TEXT THAT DOES NOT PARSE RAISES, and so does a carrier the need
     tier does not have. There is no safe guess: a heading-scan fallback over
     malformed TOML with no markdown draft heading answers "no drafts", every
-    need then reads as approved, and the derived stage rises on a file nobody
+    need then reads as accepted, and the derived stage rises on a file nobody
     could read. ValueError, not SystemExit, because the policy is the
     caller's: the two readers of the gate turn it into a refusal naming the
     file, the way `load_needs` refuses."""
@@ -1237,7 +1247,7 @@ def draft_ids_or_refuse(path, text):
 
     The refusal is a SystemExit naming the file, the way `load_needs` refuses:
     answering "no drafts" for an unreadable file would read every need as
-    approved and let the derived stage rise. It has one home because its two
+    accepted and let the derived stage rise. It has one home because its two
     callers are the two readers of the gate, `trace.load_registries` and
     `spine_rules.load_spine`, and a refusal policy stated twice is one that
     drifts. The stage derivation reads the needs file nowhere else, so this is
@@ -1300,21 +1310,21 @@ def is_draft_need(need):
     """Is this need still at draft — the ONE predicate that answers it.
 
     Drafted-ness lives in `status`, the same field and the same Title-case word
-    the other three spine tiers use (`Drafted | Approved | Founded`); the SN
+    the other three spine tiers use (`Drafted | Accepted | Founded`); the SN
     tier used to spell it `kind = "draft"`, a field that also carried row TYPE.
 
     A NEED WITH NO `status` IS NOT DRAFT, and that default is deliberate rather
     than incidental: the failure mode this tier can least afford is the one the
     markdown carrier had — a row silently reading as un-drafted floats the
-    derived gate UPWARD. Here the absent-key case reads as approved only because
+    derived gate UPWARD. Here the absent-key case reads as accepted only because
     an absent `status` is caught upstream, as a SCHEMA finding on a required
     key, rather than being invented into a maturity by a reader.
 
     MATCHED CASE-INSENSITIVELY, the one Status-casing rule the other three tiers
-    already follow (`trace.is_drafted`/`is_approved`/`is_founded` all lower the
+    already follow (`trace.is_drafted`/`is_accepted`/`is_founded` all lower the
     cell before comparing; process.md §4). It was an EXACT compare here, and the
     asymmetry failed in the unsafe direction: a need written `status = "drafted"`
-    read as approved, floating the derived gate upward — the same silent
+    read as accepted, floating the derived gate upward — the same silent
     float this docstring's absent-key paragraph exists to prevent, arriving by
     casing instead of by an absent key. Casing is not a maturity, so a
     mis-cased word must not decide one; a word that is not in the vocabulary at

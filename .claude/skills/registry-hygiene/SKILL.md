@@ -27,8 +27,8 @@ python scripts/trace.py --strict
 # DevStg-Tests+: also reject leftover template example rows (ids ending -000).
 python scripts/trace.py --strict --no-placeholders
 
-# DevStg-Impl: required fields non-empty + closed Verification/Tier vocabularies, plus
-# --require-verified: every non-Drafted SR must read Status=Approved.
+# DevStg-Impl: required fields non-empty + closed VerificationMethod/Tier vocabularies, plus
+# --require-verified: every non-Drafted SR must read Status=Accepted.
 python scripts/trace.py --strict --no-placeholders --strict-schema --require-verified
 ```
 
@@ -50,8 +50,8 @@ call `trace.py` directly to iterate on a specific finding.
   covers every `*.csv` under `docs/requirements/` and `docs/test/`, including
   registries `trace.py` never joins (interfaces, project-added ones).
 - **schema** (`--strict-schema`) — a required field is empty, or a
-  `Verification`/`Tier` value is outside the closed vocabulary
-  (`Test|Demonstration|Inspection|Analysis|Manual|Attest|Critique`;
+  `VerificationMethod`/`Tier` value is outside the closed vocabulary
+  (`Test|Demonstration|Inspection|Analysis|Manual|Vouch|Critique`;
   `Smoke|Full|Release`).
   Fill the field or correct the value.
 - **placeholder** (`--no-placeholders`) — a template `-000` example row survived;
@@ -62,12 +62,12 @@ call `trace.py` directly to iterate on a specific finding.
   identical *in what*, judged *how* — or accept the wording knowingly at the DevStg-Reqs
   consistency review (process.md §4).
 - **LLR status-coherence advisory** (`WARNING (advisory)`, warn-only — never
-  fails a run) — an LLR reads below `Approved` while every TC that cites it is
-  `Approved`, so the evidence to lift it already exists. Fix: edit the LLR's
-  `Status` cell to `Approved` (registries are hand-owned — no generator writes
+  fails a run) — an LLR reads below `Accepted` while every TC that cites it is
+  `Accepted`, so the evidence to lift it already exists. Fix: edit the LLR's
+  `Status` cell to `Accepted` (registries are hand-owned — no generator writes
   them back). It never gates: LLR status is non-gating under the derived-stage
-  model (the SR's `Approved` drives DevStg-Tests→DevStg-Impl), so a lagging LLR is a readout drift,
-  not a coverage hole. A `Founded` LLR is exempt — it reads ABOVE `Approved`,
+  model (the SR's `Accepted` drives DevStg-Tests→DevStg-Impl), so a lagging LLR is a readout drift,
+  not a coverage hole. A `Founded` LLR is exempt — it reads ABOVE `Accepted`,
   so there is nothing to lift and the nag would push it DOWN the ladder. (The
   exemption named `Modified` until that value retired, 2026-08-20.)
 

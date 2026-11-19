@@ -1,8 +1,8 @@
 """Loop provenance: the `Loop-Session` trailer, the loop marker, and the history
-check for a loop commit that changed a human-held status (TC-242, TC-243).
+check for a loop commit that changed an operator-held status (TC-242, TC-243).
 
-A status change on a rung the approval level holds for a human is supposed to
-mean a human judged. The loop's commits can be told apart from a person's only
+A status change on a rung the acceptance level holds for an operator is supposed to
+mean an operator judged. The loop's commits can be told apart from a person's only
 if every one of them says it is the loop's, so the pieces pinned here are one
 chain rather than four features:
 
@@ -32,7 +32,7 @@ chain rather than four features:
 Every git fixture is a real repository and the loop's own entry points run for
 real; the only stand-ins are the two harness scripts a lane's refresh runs,
 which record nothing and pass, because what is asserted is the message the
-refresh commits, not the bar it ran.
+refresh commits, not the checks it ran.
 
 Implements: TC-242, TC-243
 """
@@ -44,7 +44,7 @@ import sys
 
 import pytest
 from conftest import (
-    BARS_RED_MARK,
+    MARKER_DECLARATION,
     ROOT,
     SCRIPTS,
     claim_on_trunk,
@@ -90,7 +90,7 @@ FRAME = "docs/requirements/external.toml"
 INTERFACES = "docs/requirements/interfaces.toml"
 POLICY = "docs/process.toml"
 
-GAP = "SR-001 is not Approved (Status=Drafted)"
+GAP = "SR-001 is not Accepted (Status=Drafted)"
 
 
 def _trailered(message, session=SESSION):
@@ -650,7 +650,7 @@ def test_a_marked_loop_writer_commit_after_a_reclaim_reopens_the_window(
 
 def test_a_lane_never_marked_stays_a_persons(tmp_path, monkeypatch):
     # The trailer rung's window only: a held rung reads no window, and a
-    # re-claimed lane's held approvals are the lane rule's
+    # re-claimed lane's held acceptances are the lane rule's
     # (tests/test_held_status_git.py).
     root = _lane(tmp_path / "person", monkeypatch, loop=False)
     _reclaim(root)
@@ -821,7 +821,7 @@ def _station_repo(tmp_path):
     root = claim_repo(tmp_path)
     (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
     (root / "docs" / "stack.ini").write_text(
-        "[product]\ntest = {py} -m pytest -q\n" + BARS_RED_MARK,
+        "[product]\ntest = {py} -m pytest -q\n" + MARKER_DECLARATION,
         encoding="utf-8",
         newline="\n",
     )
@@ -831,7 +831,7 @@ def _station_repo(tmp_path):
     scripts.mkdir(exist_ok=True)
     (scripts / "trunk_step.py").write_text(STUB_TRUNK_STEP, encoding="utf-8")
     (scripts / "check.py").write_text(STUB_CHECK_GREEN, encoding="utf-8")
-    _commit(root, "chore: the stub harness and the declared bar", when=T_CODE)
+    _commit(root, "chore: the stub harness and the declared checks", when=T_CODE)
     return root
 
 
@@ -859,11 +859,11 @@ def test_the_claim_refresh_merge_and_mint_writers_carry_the_trailer(
     _git(wt, "rm", "-q", "docs/work/active/wi-401/WI-401-widget.md")
     _commit(wt, _trailered("WI-401: build + close"), when=T_VERDICT)
 
-    # The refresh: the trailer rides beside Bar-Green, which still verifies.
+    # The refresh: the trailer rides beside Checks-Passed, which still verifies.
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
     assert provenance.parse_loop_trailer(_message(root, sha)) == SESSION
-    assert integ.refresh_attestation(root, "wi-401", sha)
+    assert integ.refresh_passed_checks(root, "wi-401", sha)
     # ...and the slot reads it as one of the loop's own writers' commits, the
     # mark that makes a lane the loop's.
     assert integ._marked_loop_writer(_message(root, sha), "wi-401")
@@ -901,12 +901,12 @@ def test_the_handback_close_and_telemetry_writers_carry_the_trailer(
         assert integ._marked_loop_writer(message, "wi-401"), message
 
     # The quarantine, driven for real: the residue left a product file on the
-    # lane, which is what a red close reverts.
+    # lane, which is what a failing close reverts.
     tip = _rev(root, "wi-401")
-    assert handback.quarantine(root, "wi-401", "bar exit 1") is None
+    assert handback.quarantine(root, "wi-401", "checks exit 1") is None
     message = _message(root, "wi-401")
     assert _rev(root, "wi-401") != tip
-    assert message.startswith("handback: revert wi-401 to a bar-inert artefact")
+    assert message.startswith("handback: revert wi-401 to a checks-inert artefact")
     assert provenance.parse_loop_trailer(message) == SESSION
     assert integ._marked_loop_writer(message, "wi-401"), message
 
@@ -966,7 +966,7 @@ def _write(root, rel, text):
 
 
 def _dial(value):
-    return '[attestation]\nhuman_approval_through = "{}"\n'.format(value)
+    return '[authority]\noperator_accepts_through = "{}"\n'.format(value)
 
 
 def _rows(table, **statuses):
@@ -998,10 +998,10 @@ def _commit_all(root, message, when):
 def _history(tmp_path):
     """Three trunk commits after a seed, and a merged lane:
 
-    c1  trailer   B-01 Drafted -> Approved   Boundary, held by its dial
-    c2  trailer   IF-001 Drafted -> Approved  Arch, released by its dial
-    c3  none      B-01 Approved -> Drafted   held, but a person's commit
-    l1  trailer   B-01 Drafted -> Approved   inside a lane, merged by m
+    c1  trailer   B-01 Drafted -> Accepted   Boundary, held by its dial
+    c2  trailer   IF-001 Drafted -> Accepted  Arch, released by its dial
+    c3  none      B-01 Accepted -> Drafted   held, but a person's commit
+    l1  trailer   B-01 Drafted -> Accepted   inside a lane, merged by m
     m   trailer   the --no-ff merge of the lane: its changes are l1's
     """
     root = _bare(tmp_path / "history")
@@ -1009,15 +1009,15 @@ def _history(tmp_path):
     _write(root, FRAME, _rows("boundary", B_01="Drafted"))
     _write(root, INTERFACES, _rows("interface", IF_001="Drafted"))
     shas = {"seed": _commit_all(root, "seed: the frame", T_BASE)}
-    _write(root, FRAME, _rows("boundary", B_01="Approved"))
-    shas["c1"] = _commit_all(root, _trailered("loop: approve B-01"), T_BASE + 1)
-    _write(root, INTERFACES, _rows("interface", IF_001="Approved"))
-    shas["c2"] = _commit_all(root, _trailered("loop: approve IF-001"), T_BASE + 2)
+    _write(root, FRAME, _rows("boundary", B_01="Accepted"))
+    shas["c1"] = _commit_all(root, _trailered("loop: accept B-01"), T_BASE + 1)
+    _write(root, INTERFACES, _rows("interface", IF_001="Accepted"))
+    shas["c2"] = _commit_all(root, _trailered("loop: accept IF-001"), T_BASE + 2)
     _write(root, FRAME, _rows("boundary", B_01="Drafted"))
     shas["c3"] = _commit_all(root, "owner: reopen B-01", T_BASE + 3)
     _git(root, "checkout", "-q", "-b", "lane")
-    _write(root, FRAME, _rows("boundary", B_01="Approved"))
-    shas["l1"] = _commit_all(root, _trailered("lane: approve B-01"), T_BASE + 4)
+    _write(root, FRAME, _rows("boundary", B_01="Accepted"))
+    shas["l1"] = _commit_all(root, _trailered("lane: accept B-01"), T_BASE + 4)
     _git(root, "checkout", "-q", "main")
     _write(root, "notes.txt", "trunk moved\n")
     shas["c4"] = _commit_all(root, "owner: a note", T_BASE + 5)
@@ -1065,7 +1065,7 @@ def test_raising_the_dial_later_does_not_change_an_earlier_verdict(tmp_path):
 def test_a_root_commit_is_compared_with_the_empty_tree(tmp_path):
     root = _bare(tmp_path / "rooted")
     _write(root, POLICY, _dial("DevStg-Boundary"))
-    _write(root, FRAME, _rows("boundary", B_01="Approved"))
+    _write(root, FRAME, _rows("boundary", B_01="Accepted"))
     sha = _commit_all(root, _trailered("loop: the first frame"), T_BASE)
     findings = ctraj.loop_held_status_findings(root)
     assert len(findings) == 1 and sha[:10] in findings[0], findings
@@ -1077,11 +1077,11 @@ def test_a_commit_with_no_dial_is_judged_most_held_and_warns_nothing(tmp_path, c
     _write(root, POLICY, "[policies]\nreview_rounds = 0\n")
     _write(root, INTERFACES, _rows("interface", IF_001="Drafted"))
     _commit_all(root, "seed", T_BASE)
-    _write(root, INTERFACES, _rows("interface", IF_001="Approved"))
-    no_dial = _commit_all(root, _trailered("loop: approve IF-001"), T_BASE + 1)
-    # A LEGACY ordinal reads as most-held too. The live reader would translate
-    # `1` to DevStg-Boundary and release Arch; the history check must not guess.
-    _write(root, POLICY, "[attestation]\nhuman_approval_through = 1\n")
+    _write(root, INTERFACES, _rows("interface", IF_001="Accepted"))
+    no_dial = _commit_all(root, _trailered("loop: accept IF-001"), T_BASE + 1)
+    # A retired ordinal reads as most-held too: no reader translates it (D11),
+    # and translating `1` to DevStg-Boundary would release Arch.
+    _write(root, POLICY, "[authority]\noperator_accepts_through = 1\n")
     _write(root, INTERFACES, _rows("interface", IF_001="Drafted"))
     legacy = _commit_all(root, _trailered("loop: reopen IF-001"), T_BASE + 2)
     capsys.readouterr()
@@ -1102,7 +1102,7 @@ def test_the_dial_comparison_holds_every_rung_at_or_below_it():
             assert authority.holds_under(dial, rung) is (j <= i), (dial, rung)
     for rung in rungs:
         assert authority.holds_under(kitstage.BELOW, rung) is False, rung
-    # The two unreadable ends fail toward the human.
+    # The two unreadable ends fail toward the operator.
     assert authority.holds_under(ladder.STAGE_NEEDS, "DevStg-Nowhere") is True
     assert authority.holds_under("devstg-needs", ladder.STAGE_RELEASE) is True
     assert authority.holds_under(ladder.STAGE_RELEASE, None) is True
@@ -1110,18 +1110,18 @@ def test_the_dial_comparison_holds_every_rung_at_or_below_it():
 
 def test_the_dial_is_read_from_a_parsed_policy_and_fails_toward_most_held(capsys):
     def table(**att):
-        return {"attestation": att}
+        return {"authority": att}
 
     read = authority.dial_from_config
     for rung in list(ladder.STAGE_ORDER) + [kitstage.BELOW]:
-        assert read(table(human_approval_through=rung)) == rung
+        assert read(table(operator_accepts_through=rung)) == rung
     most = ladder.STAGE_RELEASE
     for policy in (
         {},
-        {"attestation": "not a table"},
+        {"authority": "not a table"},
         table(),
-        table(human_approval_through=1),
-        table(human_approval_through="devstg-arch"),
+        table(operator_accepts_through=1),
+        table(operator_accepts_through="devstg-arch"),
         table(human_ratification_through="DevStg-Arch"),
         None,
     ):
@@ -1134,10 +1134,10 @@ def test_the_rung_map_names_every_off_spine_status_registry():
     """Implements: TC-241"""
     # The assumptions registry joins the frame at DevStg-Boundary; the shared
     # coordinator re-exports the one table rather than keeping a copy.
-    assert authority.APPROVAL_RUNGS["assumptions"] == ladder.STAGE_BOUNDARY
-    assert authority.APPROVAL_RUNGS["external"] == ladder.STAGE_BOUNDARY
-    assert ac.APPROVAL_RUNGS is authority.APPROVAL_RUNGS
-    assert ac.SPINE_APPROVAL_RUNGS is authority.SPINE_APPROVAL_RUNGS
+    assert authority.ACCEPTANCE_RUNGS["assumptions"] == ladder.STAGE_BOUNDARY
+    assert authority.ACCEPTANCE_RUNGS["external"] == ladder.STAGE_BOUNDARY
+    assert ac.ACCEPTANCE_RUNGS is authority.ACCEPTANCE_RUNGS
+    assert ac.SPINE_ACCEPTANCE_RUNGS is authority.SPINE_ACCEPTANCE_RUNGS
 
 
 # --- the review's rulings: the needs' rung, and one meaning of the live dial ----
@@ -1147,7 +1147,7 @@ NEEDS = "docs/requirements/stakeholder-needs.toml"
 
 def test_needs_and_stakeholder_statuses_are_held_at_the_needs_rung(tmp_path):
     # The needs file carries the needs (a spine tier) and the stakeholder list
-    # (an off-spine one), both approved at DevStg-Needs. Each move is reported
+    # (an off-spine one), both accepted at DevStg-Needs. Each move is reported
     # once where that rung is held, although both walks read the one file, and
     # nothing is reported where the dial holds nothing.
     for dial, held in (("DevStg-Needs", True), ("DevStg-Below", False)):
@@ -1162,9 +1162,9 @@ def test_needs_and_stakeholder_statuses_are_held_at_the_needs_rung(tmp_path):
         _write(
             root,
             NEEDS,
-            _rows("need", SN_001="Approved") + _rows("stakeholder", STK_01="Approved"),
+            _rows("need", SN_001="Accepted") + _rows("stakeholder", STK_01="Accepted"),
         )
-        sha = _commit_all(root, _trailered("loop: approve the needs"), T_BASE + 1)
+        sha = _commit_all(root, _trailered("loop: accept the needs"), T_BASE + 1)
         findings = ctraj.loop_held_status_findings(root)
         if not held:
             assert findings == [], findings
@@ -1183,24 +1183,24 @@ def test_the_needs_file_is_read_at_the_needs_rung_by_the_authority_alone():
     assert authority.rung_for("docs/requirements/stakeholder-needs") == (
         ladder.STAGE_NEEDS
     )
-    assert "docs/requirements/stakeholder-needs" not in authority.SPINE_APPROVAL_RUNGS
+    assert "docs/requirements/stakeholder-needs" not in authority.SPINE_ACCEPTANCE_RUNGS
 
 
-def test_the_live_dial_reads_every_legacy_spelling_silently_from_a_chosen_tree(
+def test_the_live_dial_reads_the_current_spelling_silently_from_a_chosen_tree(
     tmp_path, capsys
 ):
     """Implements: TC-241"""
     root = _bare(tmp_path / "dials")
     cases = (
-        ('[attestation]\nhuman_approval_through = "DevStg-Arch"\n', "DevStg-Arch"),
-        # the retired 0-4 ordinal, translated rather than guessed
-        ("[attestation]\nhuman_approval_through = 1\n", "DevStg-Boundary"),
-        # the retired key name
-        ('[attestation]\nhuman_ratification_through = "DevStg-Reqs"\n', "DevStg-Reqs"),
-        # the retired enum, where no dial is declared at all
-        ('[attestation]\ngate_policy = "autonomous"\n', "DevStg-Below"),
+        ('[authority]\noperator_accepts_through = "DevStg-Arch"\n', "DevStg-Arch"),
+        # Spellings older than the vocabulary are not read (D11), so each is the
+        # most held, never translated: the retired 0-4 ordinal, the retired key
+        # name, and the retired enum where no dial is declared at all.
+        ("[authority]\noperator_accepts_through = 1\n", "DevStg-Release"),
+        ('[authority]\nhuman_ratification_through = "DevStg-Reqs"\n', "DevStg-Release"),
+        ('[authority]\ngate_policy = "autonomous"\n', "DevStg-Release"),
         # a value no reader recognises, and no policy at all: the most held
-        ('[attestation]\nhuman_approval_through = "devstg-arch"\n', "DevStg-Release"),
+        ('[authority]\noperator_accepts_through = "devstg-arch"\n', "DevStg-Release"),
         ("", "DevStg-Release"),
     )
     for i, (text, rung) in enumerate(cases):
@@ -1208,19 +1208,17 @@ def test_the_live_dial_reads_every_legacy_spelling_silently_from_a_chosen_tree(
         sha = _commit_all(root, "dial {}".format(i), T_BASE + i)
         assert authority.dial_at(root, sha) == rung, text
         assert authority.dial_at(root, "HEAD") == rung, text
-    # The retired one-word FILE, where the policy file says nothing.
+    # The retired one-word FILE is not read either.
     _write(root, POLICY, "[policies]\nreview_rounds = 0\n")
     _write(root, "docs/gate-policy", "# the old enum\nsingle-approve\n")
     _commit_all(root, "the old gate-policy file", T_LATER)
-    assert authority.dial_at(root, "HEAD") == "DevStg-Below"
+    assert authority.dial_at(root, "HEAD") == "DevStg-Release"
     # An explicitly chosen tree: the index answers for itself.
-    _write(root, POLICY, "[attestation]\nhuman_approval_through = 1\n")
+    _write(root, POLICY, '[authority]\noperator_accepts_through = "DevStg-Boundary"\n')
     _git(root, "add", "--", POLICY)
     assert authority.dial_at(root, None) == "DevStg-Boundary"
-    assert authority.dial_at(root, "HEAD") == "DevStg-Below"
+    assert authority.dial_at(root, "HEAD") == "DevStg-Release"
+    # The live reader of the working tree gives the same rung, and prints nothing.
+    assert ac.acceptance_through(root / "docs") == "DevStg-Boundary"
     out = capsys.readouterr()
     assert out.out == "" and out.err == "", out  # silent, every time
-    # The live reader of the working tree gives the same rung; its migration
-    # note is presentation, printed by it alone.
-    assert ac.approval_through(root / "docs") == "DevStg-Boundary"
-    assert "RETIRED" in capsys.readouterr().err

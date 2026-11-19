@@ -22,13 +22,13 @@ required for the minimum profile). Rows are in document order; each maps to the
 |---|---|---|
 | Proportionality doctrine | **always** — the mindset that frames how hard every layer below is applied | nothing (tells you when *not* to reach for machinery) |
 | Derived gate model | **not opt-in** — the model is core ([`process.md`](process.md) §4 "Stages and gates"); this expands the mechanics | `docs/stage` (generated) + `derive_stage.py` |
-| Phased delivery | a roadmap ships phase 1 before 2/3 (a single-shot deliverable skips it) | a `Phase` on every approved SR/LLR/TC + a derived current phase + a per-phase gate |
+| Phased delivery | a roadmap ships phase 1 before 2/3 (a single-shot deliverable skips it) | a `Phase` on every accepted SR/LLR/TC + a derived current phase + a per-phase gate |
 | Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
-| Gate authority levels | a repo approves fewer tiers by hand than the default | `docs/process.toml` `[attestation] human_approval_through` + a deviation register |
+| Gate authority levels | a repo accepts fewer tiers by hand than the default | `docs/process.toml` `[authority] operator_accepts_through` + a deviation register |
 | Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
 | Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py` + `dispatch.py`/`lane.py`, `integrate.py`, `agents.toml`, the launchers |
-| Delegated decisions record | a run acts on the owner's behalf while the owner is away (unattended or delegated) | `docs/process.toml` `[attestation] decision_recording` + one `docs/decisions/<run>.toml` per run |
-| Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Attest`/critique TCs |
+| Delegated decisions record | a run acts on the operator's behalf while the operator is away (unattended or delegated) | `docs/process.toml` `[authority] decision_recording` + one `docs/decisions/<run>.toml` per run |
+| Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Vouch`/critique TCs |
 | Dual-plan decomposition | a goal is design-shaping enough that one planner's WI decomposition should not go unchallenged | two rival plans + a coverage diff + one critique round + an arbiter verdict (`docs/plans/`) |
 | Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/process.toml` `[policies] guardrails` |
 | Enforcement audit | your process outgrew one reader's head and you want to know which rules actually bind | `docs/enforcement-audit.md` |
@@ -49,7 +49,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Parallel work — the integration seam (multi-lane operation) | one repo runs many WIs concurrently — git + the serial integrator (the track-lane and dispatcher machinery are retired) | claims + the fail-closed merge queue |
 
 **Where the dials live.** Every *process* dial this file names — gate authority,
-the human-approval level, push authority, the reviewer count, the privacy
+the operator-acceptance level, push authority, the reviewer count, the privacy
 and secrets gates, guardrails, the blackout window — is declared once in
 **`docs/process.toml`**, read as TOML; the file's own header explains why
 every reader takes one parse of it (since the git hooks refuse without Python
@@ -61,7 +61,7 @@ running with both homes live is refused, not resolved by precedence. Three kinds
 declared file stay outside it: the adopter-owned toolchain `docs/stack.ini`, the
 presence-as-semantics markers (`docs/work/pause`, `docs/agents-enabled`), and
 the generated `docs/stage`. The six per-checker enablement toggles are **in** it,
-as the `[checks]` section (owner 2026-08-11, overturning WI-423: absence as a
+as the `[checks]` section (operator 2026-08-11, overturning WI-423: absence as a
 declaration is unreadable, so each ships as a visible key at its current
 default — four `true`, `live_status = false`, `subagent_gate = "off"`).
 
@@ -92,17 +92,17 @@ into a straitjacket. Four points, one voice:
   *about* it in text** — provenance, license, version, a content hash (§8
   "Binary assets") — so the *record* is change-tracked even when the *asset*
   isn't. The ideal is a direction, not an admission ticket.
-- **(b) Attestation is the honest floor — and honestly trust-based.** Where
-  verification cannot be mechanized, the floor is a **recorded human
-  attestation**: a named person's recorded judgment that the acceptance
+- **(b) A vouch is the honest floor — and honestly trust-based.** Where
+  verification cannot be mechanized, the floor is the **operator's recorded
+  word**: a named person's recorded judgment that the acceptance
   criterion is met (a playtest, a creative review, a physical action). Be honest
   about what this is: **the box can be checked without the work having
-  happened.** Attestation is trust; a mechanized check is proof. The process does
-  **not** pretend they are equivalent — its job is to make the attestation
+  happened.** A vouch is trust; a mechanized check is proof. The process does
+  **not** pretend they are equivalent — its job is to make the vouch
   **explicit** (a real verification kind, not a silent "Verified"), **named** (who
-  attested), and **auditable** (when, against which criterion), so a reader can
-  always see how much of the project rests on trust. That is the `Attest`
-  verification kind (§4) and the "attested vs mechanized" split in the trace
+  vouched), and **auditable** (when, against which criterion), so a reader can
+  always see how much of the project rests on trust. That is the `Vouch`
+  verification kind (§4) and the "vouched vs mechanized" split in the trace
   report.
 - **(c) Over-aggressive traceability is a failure mode.** Traceability founds
   sustainability — *and* pushed past what a scope earns, it becomes an overly
@@ -121,7 +121,7 @@ into a straitjacket. Four points, one voice:
   check earns its keep** — a save-file schema, an audio-loudness bound, a
   build-size budget — and stop there. Decomposing a subjective judgment ("is this
   scene moving?") into finer rows a script still can't check adds process weight
-  with no verification return; mark it `Attest` and move on.
+  with no verification return; mark it `Vouch` and move on.
 - **(d2) Record the stopping boundary.** In the existing scoped decomposition or
   review record, name the independent decision or verification purpose of each
   retained child and state why further splitting would add no independent value.
@@ -129,17 +129,17 @@ into a straitjacket. Four points, one voice:
   omitting a tier required by the selected verification method or replacing
   real verification with a count.
 - **(e) Decision-surfacing rate is a setup dial, not a constant.** How often the
-  driver pauses for the human to **approve a decision** is project-specific:
+  driver pauses for the operator to **accept a decision** is project-specific:
   calibrate it **at project setup** on the same risk axis as review-depth triage
   (PROCESS.md §6) and record the setting in `AGENTS.md` (Project section). In
   specialized or high-consequence domains — where safety is a risk even an
   *ancillary* one, money, privacy, anything irreversible — surface decisions
-  **often**: bring even medium calls to the human to approve. In low-risk domains
+  **often**: bring even medium calls to the operator to accept. In low-risk domains
   (creative content is the archetype), where a wrong call is cheap to revert and
   carries little tech debt, a **confident** agent may decide **autonomously** —
   and the non-negotiable price of that autonomy is that every autonomous
   decision is **recorded** (an *Assumptions* / Open-items entry in `status.md`,
-  moved to `log.md`'s *Decisions log* once approved — the call, the alternatives
+  moved to `log.md`'s *Decisions log* once accepted — the call, the alternatives
   passed over, why; PROCESS.md §5) so it stays visible,
   auditable, and cheaply revertible. The dial moves *how often you ask*, never
   the fixed points: gates still close only per the declared gate authority
@@ -161,13 +161,13 @@ where it and §4 disagree, §4 rules.)
 `scripts/derive_stage.py` computes the record from the spine and caches it (a
 `key = value` block: the rung, its ordinal, the per-phase breakdown, and a
 `fingerprint` over the inputs so no reader trusts a stale one).
-Approve artifacts, then regenerate: `python scripts/derive_stage.py`. The
+Accept artifacts, then regenerate: `python scripts/derive_stage.py`. The
 `derived-stage` step (`derive_stage.py --check`, a pre-commit floor + every
-gate) guards the cache against rot — an approval that moved the states but not
+gate) guards the cache against rot — an acceptance that moved the states but not
 the cache fails loudly. **Hybrid:** the cache means the value is known on
 checkout with no recompute; a `stage.template` placeholder with no derived record
 yet is accepted **with a note** until the first derivation (so an
-adopter upgrades without a red day). The record also carries §4's `stage-ord`
+adopter upgrades without a day of failing checks). The record also carries §4's `stage-ord`
 and the unfloored `live-stage`.
 
 **Artifact states (one field, every tier).** Maturity is the row's own `Status`,
@@ -176,25 +176,25 @@ is the axis's **below-the-ladder sentinel** for a row that has not earned a rung
 yet — a fold value, never a rung a repo sits at (§4):
 
 - **SR / LLR / TC** — the CLOSED `Status` vocabulary is
-  `Drafted` → `Approved` → `Founded` (the last COMPUTED, never typed). An
-  approved row whose text later moves stays `Approved`; the change is caught
-  by diffing it against `docs/archive/last_approved/`. Per-artifact stage: an SR is **DevStg-Below** while
-  `Drafted`, **DevStg-Reqs** once approved (Status past `Drafted`), **DevStg-Tests** once decomposed (its
-  LLR — unless the Verification is LLR-exempt Analysis/Inspection/Attest — plus a
+  `Drafted` → `Accepted` → `Founded` (the last COMPUTED, never typed). An
+  accepted row whose text later moves stays `Accepted`; the change is caught
+  by diffing it against `docs/archive/last_accepted/`. Per-artifact stage: an SR is **DevStg-Below** while
+  `Drafted`, **DevStg-Reqs** once accepted (Status past `Drafted`), **DevStg-Tests** once decomposed (its
+  LLR — unless the verification method is LLR-exempt Analysis/Inspection/Vouch — plus a
   TC). **DevStg-Release is not reachable from a cell** (the 2026-08-15 ruling,
   carried onto this axis at WI-498 slice 3): release is what the harness computes
   from test evidence. The carrier landed at WI-500 — `record_test_evidence.py`
-  runs the declared bar and writes `docs/test/evidence` only on a green, and that
+  runs the declared checks and writes `docs/test/evidence` only on a pass, and that
   record's verdict is `spine_stage`'s ONE input to the top rung. It is bound by
   VALUE to the tree measured (the spine registries plus the declared source and
   test trees), so a byte moved on either side drops the rung back to
-  `DevStg-Impl` and reds `derive_stage --check`; a partial (`smoke`) tier is
+  `DevStg-Impl` and fails `derive_stage --check`; a partial (`smoke`) tier is
   refused at the writer and again at the reader. An LLR/TC caps only when
   `Drafted`; once present its
   own Status doesn't gate — the SR's does.
 - **SN** — maturity is the **same field**: `status = "Drafted"` on a
   `[need.SN-###]` table in `stakeholder-needs.toml` is DevStg-Below, anything
-  else reads approved (DevStg-Reqs). An approved need must also be cited by ≥1
+  else reads accepted (DevStg-Reqs). An accepted need must also be cited by ≥1
   SR (`sn_refs`) or it caps the level at DevStg-Below — the WI-401 coverage
   rung. **Section-as-state is retired** (it was "appears under a heading
   containing the word draft", which a prose *mention* of an id could trip); the
@@ -202,7 +202,7 @@ yet — a fold value, never a rung a repo sits at (§4):
   the carrier is **sniffed rather than assumed** because a heading scan over
   TOML finds no headings, reports zero drafts, and floats the gate upward.
 
-The **approval date is git-derived** — the commit that moved the `status`.
+The **acceptance date is git-derived** — the commit that moved the `status`.
 No new field, at any tier.
 
 **A window cannot create a blind spot, because it no longer lowers what runs**
@@ -218,7 +218,7 @@ bar did I pass that permits it?"*.
 mechanisms used to exist because the derived **bar** was a MIN over every
 in-scope row and one draft collapsed it: an **advisory tier** that re-ran the
 suppressed steps warn-only, and a **product-regression floor** that re-selected
-product-layer steps at the level the approved rows earned. Both are deleted with
+product-layer steps at the level the accepted rows earned. Both are deleted with
 the collapse they answered. Nothing is lost by the deletion — what the advisory
 tier ran warn-only now *gates*, and the floor's guarantee ("drafting cannot lower
 this") now holds for **every** step rather than only the product ones. There is
@@ -235,14 +235,14 @@ Drafted SR needs no LLR/TC, a Drafted LLR no TC, a Drafted SN no SR (`trace.py`'
 child-completeness orphan rules), so a requirement is drafted in the live
 registry before it is decomposed. Parent-linkage + integrity
 still apply (a Drafted SR still links an SN; ids stay unique/well-formed), and a
-Drafted SR is skipped by the DevStg-Impl approval criterion (pre-approval).
+Drafted SR is skipped by the DevStg-Impl acceptance criterion (pre-acceptance).
 
-**Approval = a reviewed Status-change commit** (§4). That commit *is* the
+**Acceptance = a reviewed Status-change commit** (§4). That commit *is* the
 sign-off (`gate-advance` skill), and it composes with
-the gate-authority levels (below): `attended` approves each batch; `single-approve`
-approves the batch once at its `[phase]-[DevStg-Impl]` close (one review per
+the gate-authority levels (below): `attended` accepts each batch; `single-approve`
+accepts the batch once at its `[phase]-[DevStg-Impl]` close (one review per
 phase); `autonomous` on a fresh-context reviewer's recorded verdict. An agent may
-make the approving commit, governed by the level.
+make the accepting commit, governed by the level.
 
 **Phase = a derived detector + a committed anchor.** §4's drop — a phase's
 derived stage falling **below the rung its last-closed anchor recorded**, because
@@ -255,7 +255,7 @@ a rebase/squash moves and which carries no membership).
 **An anchor names THE RUNG THE PHASE STANDS AT once that anchor closes**, which
 is not the rung the batch was working on, and the difference is the one trap in
 this grammar. `[<phase>]-[DevStg-LLReqs]` is the requirement-structuring batch:
-closing it means the phase's SRs are authored *and* approved, so the phase has
+closing it means the phase's SRs are authored *and* accepted, so the phase has
 LEFT `DevStg-Reqs` and now stands at `DevStg-LLReqs`.
 `[<phase>]-[DevStg-Impl]` is the decomposition + TC batch: closing it clears both
 the LLReqs and the Tests predicates, so the phase stands at `DevStg-Impl`. Each
@@ -268,14 +268,14 @@ translate BY MEANING, to `DevStg-LLReqs` and `DevStg-Impl` respectively, not to
 the same-named rung. `check_vocab` refuses them in newly authored text.
 
 **Parallel for pre-dev, series for dev.** A phase's requirement work is a **batch,
-in parallel** — draft + approve all the new/reopened SN/SR together, which is
+in parallel** — draft + accept all the new/reopened SN/SR together, which is
 exactly where "this also modifies SR-12" and other conflicts surface in one review
 — then each work item runs **DevStg-Tests → DevStg-Impl in series** (the per-WI vertical slice):
 
 ```
-Phase N:  [N]-[DevStg-LLReqs]  draft+approve ALL new/reopened SN/SR  (parallel, batch)
+Phase N:  [N]-[DevStg-LLReqs]  draft+accept ALL new/reopened SN/SR  (parallel, batch)
               │
-          [N]-[DevStg-Impl]     decompose to LLR/TC, all Approved   (parallel, batch)
+          [N]-[DevStg-Impl]     decompose to LLR/TC, all Accepted   (parallel, batch)
               │
           WI-a ─ DevStg-Tests→DevStg-Impl ─┐
           WI-b ─ DevStg-Tests→DevStg-Impl ─┤  (series, per-WI vertical slices)
@@ -283,12 +283,12 @@ Phase N:  [N]-[DevStg-LLReqs]  draft+approve ALL new/reopened SN/SR  (parallel, 
 ```
 
 A reopen during a later phase's requirement batch revs the phase: the affected
-approved artifact returns to `Drafted`, that phase's derived stage drops, and the
+accepted artifact returns to `Drafted`, that phase's derived stage drops, and the
 batch review sees it alongside the new work. (One sanctioned relaxation of the series
 rule: a run of *independent, off-spine* dev slices may batch into one BUILD
 session + one review round — "Dev-slice batching" under Unattended operation;
 spine-touching slices always stay per-slice.) Within a phase the derived value
-only rises (draft → approve → decompose → verify), so a **drop from a closed level
+only rises (draft → accept → decompose → verify), so a **drop from a closed level
 is an unambiguous boundary**; the committed anchor makes membership legible.
 
 ## Phased delivery
@@ -296,23 +296,23 @@ is an unambiguous boundary**; the committed anchor makes membership legible.
 *Referenced from PROCESS.md §4.* **Applies when** a roadmap ships phase 1 before
 2/3; a single-shot deliverable skips it. Builds on the **Derived gate model**
 above: just as the gate is computed from artifact states, the project's **current
-phase is derived** — the highest phase any approved spine row carries — so a scope
+phase is derived** — the highest phase any accepted spine row carries — so a scope
 change surfaces as a phase bump, never a hand-set marker. **The phase boundary is
-a confirmation event** (owner ruling 2026-08-01): a phase increments when
+a confirmation event** (operator ruling 2026-08-01): a phase increments when
 re-opened scope is *confirmed* — an adjudication verdict that scope moved, or a
-new draft-SN batch approved into scope — **never on the raw derived-stage drop**;
-a spurious re-attest window must not burn a phase number (the counterexample:
+new draft-SN batch accepted into scope — **never on the raw derived-stage drop**;
+a spurious re-accept window must not burn a phase number (the counterexample:
 19 traced cells once flipped 11 SRs and dropped the gate, and no scope had
 moved). `derive_stage.py --next-phase` prints the derived max + 1 — the one call
 every agent (and the intake mint helper) uses for a newly confirmed phase's
 number.
 
 A roadmap that ships phase 1 before 2/3 needs gates that close *per phase* without
-dishonesty. **Every approved SR/LLR/TC carries the `Phase` it was approved in** — a
+dishonesty. **Every accepted SR/LLR/TC carries the `Phase` it was accepted in** — a
 **bare integer** (`1`, `2`, `3`…), digits only, full cell; an SN's phase is
 *derived* as the minimum phase of its
 referencing SRs (no `stakeholder-needs.toml` schema change). Numeric-only is a
-correctness rule, not a style (owner ruling 2026-08-01): the `--phase`/`--approve`
+correctness rule, not a style (operator ruling 2026-08-01): the `--phase`/`--accept`
 scope filters and the phase-drop detector's per-phase-to-anchor join match the
 cell **literally**, so a prefixed label (`v2`, `P1`) does not fail them — it goes
 *silently vacuous*, disarming a warn without telling anyone, which is worse than
@@ -320,18 +320,18 @@ a crash. The digit-extract parse is retained for grandfathering (`phase_num`:
 `v2` → 2, `2` → 2, the same parse `spine_rules` uses), so legacy labels still
 filter and derive while `--strict-schema` migrates the live cells. Semantics:
 
-- **A blank `Phase` is legal only on a pre-approval (`Drafted`) row.** An approved
-  SR/LLR/TC (`Approved`/`Founded`) — and transitively an approved SN — must carry a
+- **A blank `Phase` is legal only on a pre-acceptance (`Drafted`) row.** An accepted
+  SR/LLR/TC (`Accepted`/`Founded`) — and transitively an accepted SN — must carry a
   full-cell bare-integer Phase, or `trace.py --strict-schema` reports a schema
   finding. The rule is **vacuous until ≥1 artifact is phased** (the same arming idiom
-  the component checks use), so a fully-blank downstream registry stays green: the
+  the component checks use), so a fully-blank downstream registry keeps passing: the
   rule is unarmed and the `--phase` filter treats blank as always-in-scope — exactly
   what "blank = every phase" bought before the phase model.
 - **Traceability is phase-blind.** Every SR keeps its LLR + TC rows from DevStg-Tests on,
   whatever its phase — decomposition is cheap and pins the design. An LLR's Phase is
   its parent SR's; a TC's is the max over what it verifies.
-- **The DevStg-Impl approval criterion is phase-scoped.** `check.py --gate DevStg-Impl --phase 1`
-  (cumulative for later closures: `--phase 1,2`) requires `Approved` only for
+- **The DevStg-Impl acceptance criterion is phase-scoped.** `check.py --gate DevStg-Impl --phase 1`
+  (cumulative for later closures: `--phase 1,2`) requires `Accepted` only for
   in-scope SRs; out-of-scope SRs are listed in the trace report as
   **phase-deferred** — an explicit, recorded exemption, never a silent skip. **The
   foundation (minimum) phase is always in scope** — never phase-deferred — so
@@ -348,10 +348,10 @@ filter and derive while `--strict-schema` migrates the live cells. Semantics:
   `[phase]-[g*]` signal) while the shipped phase stays at its level; the shipped
   set still closes at DevStg-Impl with `check.py --gate DevStg-Impl --phase <shipped>` (per-phase
   scoping, not a marker rewind — rewinding would discard the closed phase's
-  attestation). Traceability is phase-blind, so a new-phase SR still reaches
-  **DevStg-Tests-completeness (LLR + TC)** before it is *Approved* — but it no longer waits
+  acceptance). Traceability is phase-blind, so a new-phase SR still reaches
+  **DevStg-Tests-completeness (LLR + TC)** before it is *Accepted* — but it no longer waits
   off-spine to be *drafted*: it is a live `Drafted` row from the start (its Phase may
-  stay blank while `Drafted` and takes its number at approval). Only *Approved*
+  stay blank while `Drafted` and takes its number at acceptance). Only *Accepted*
   and *DevStg-Release* defer by phase; the new phase's SRs read phase-deferred until
   their own DevStg-Impl.
 
@@ -403,9 +403,9 @@ the set when the scope needs them.
 ## Gate authority levels
 
 *Referenced from PROCESS.md §4.* **Applies when** a repo lowers
-`[attestation] human_approval_through` below its shipped `"DevStg-Release"`
-— i.e. wants some rung's gate accepted by something other than a per-gate human
-pause. The default (`"DevStg-Release"`, every rung **human-held**) needs none of
+`[authority] operator_accepts_through` below its shipped `"DevStg-Release"`
+— i.e. wants some rung's gate accepted by something other than a per-gate operator
+pause. The default (`"DevStg-Release"`, every rung **operator-held**) needs none of
 this section — it is exactly the §4/§5 flow. Generalized from a field adoption's
 approved deviation register (a spatial-capture pilot), this layer's worked
 reference.
@@ -416,44 +416,44 @@ owner, with an agent recommendation from the project brief
 KICKOFF_PROMPT.md carries the recommendation step). Calibrate on the §6
 risk axis: safety, money, privacy, or irreversibility ⇒ `attended`; low-risk
 creative/tooling scopes are `autonomous`-eligible. Changing it later is a
-reviewed commit that edits the `[attestation]` dials in `docs/process.toml`
+reviewed commit that edits the `[authority]` dials in `docs/process.toml`
 and the register below.
 
 **The deviation register (`docs/gate-policy.md`).** The kit-owned process doc
 is never edited per-repo (it is overwritten on re-sync); a non-default level
 lives in a repo-local register that *amends* it: a table of `process.md`
-clause → standard behavior → this repo's behavior, approved by the owner,
+clause → standard behavior → this repo's behavior, accepted by the operator,
 with the fixed points at the bottom that nothing overrides. Where the two
 disagree, the register wins — except the fixed points. `bootstrap.py`
 scaffolds the skeleton pre-filled for the chosen level.
 
 **Machine surface: none beyond the two files.** `check.py`/`trace.py` behave
 identically at every level — authority is *who accepts*, not what runs. The
-harness is the bar everywhere; a red check is a red check.
+harness is the standard everywhere; a failing check is a failing check.
 
-### Who performs the approval act
+### Who performs the acceptance act
 
-*Referenced from PROCESS.md §4.* The dial above says **which rungs** a human
+*Referenced from PROCESS.md §4.* The dial above says **which rungs** an operator
 still accepts. It never said **who acts** on the rungs it releases, and for a
 single-lane repo the question does not arise — the session that authors a row
 is the only session there is. It arises the moment work runs in parallel lanes.
-The owner ruled it (2026-09-01) and widened where the act may be taken (ruling 6,
+The operator ruled it (2026-09-01) and widened where the act may be taken (ruling 6,
 2026-10-07, superseding the earlier trunk-side clause):
 
-> The approval act on a spine row — the `Status` flip `Drafted` → `Approved`
-> (and on to `Founded`), and the `docs/archive/last_approved/` copy that anchors
+> The acceptance act on a spine row — the `Status` flip `Drafted` → `Accepted`
+> (and on to `Founded`), and the `docs/archive/last_accepted/` copy that anchors
 > it — belongs to an **independent adjudicator**, never to the session that
 > authored the row. It may be taken **in the authoring lane or on trunk**.
 
 Two reasons, and both are properties of the session rather than of the model
 driving it:
 
-- **Context.** Approving a row means reading its whole chain — the parent
+- **Context.** Accepting a row means reading its whole chain — the parent
   requirement, the sibling decomposition rows, the tests that claim to cover
   it — and deciding the row belongs where it sits. The authoring session holds
   its own scope; the adjudicator's brief carries the chain.
 - **Independence.** The writer does not judge its own writes. An act is admitted
-  only when an accepted verdict judged that act's rows, and the snapshot copies
+  only when a recorded verdict judged that act's rows, and the snapshot copies
   only the registries those rows sit in, so an act cannot seal text nobody
   judged. **Independence is established by route, and that is its honest
   bound:** a verdict's binding (`<verdict>.requested`) records `accepted` only
@@ -469,18 +469,18 @@ driving it:
 | | The authoring session | An independent adjudicator |
 |---|---|---|
 | Authors spine rows | Yes — new rows are written `Drafted`, chain links, rationale and evidence cells filled. | No. |
-| Amends spine text | Yes — any cell, on any row, `Approved` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
-| Flips `Status` | **Never on a spine row** (SN/SR/LLR/TC). | Yes, on the rungs the dial releases, backed by its accepted verdict over exactly those rows, in the authoring lane or on trunk. |
-| Writes `docs/archive/last_approved/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
-| Judges a post-approval amendment | No; it records what it changed and why. | Yes — meaning or clarity; its act is a later adjudicator turn taken from the committed verdict, which re-attests a *meaning* row on a released rung only when the verdict blesses it; on a held rung the row goes to the owner. |
+| Amends spine text | Yes — any cell, on any row, `Accepted` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
+| Flips `Status` | **Never on a spine row** (SN/SR/LLR/TC). | Yes, on the rungs the dial releases, backed by its recorded verdict over exactly those rows, in the authoring lane or on trunk. |
+| Writes `docs/archive/last_accepted/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
+| Judges a post-acceptance amendment | No; it records what it changed and why. | Yes — meaning or clarity; its act is a later adjudicator turn taken from the committed verdict, which re-accepts a *meaning* row on a released rung only when the verdict blesses it; on a held rung the row goes to the operator. |
 | Where | Its own lane, beside other lanes. | In the authoring lane, where the act merges with that lane; or as a trunk-side adjudication lane, which runs alone. A verdict may be sat at any time; its act keeps landing order (WI-912). |
 
 **How it is held.** Three mechanisms, none of them a new detector:
 
 1. The merge slot REFUSES a branch whose spine delta flips a `Status` into
-   `Approved`/`Founded`, mints a row already claiming one, records one
-   approved in its act ledger, or re-attests one, unless every such act is backed by an accepted verdict among the branch's
-   bindings that judged that act's own rows (a meaning row's re-attestation
+   `Accepted`/`Founded`, mints a row already claiming one, records one
+   accepted in its act ledger, or re-accepts one, unless every such act is backed by a recorded verdict among the branch's
+   bindings that judged that act's own rows (a meaning row's re-acceptance
    only by a verdict that blesses it); it names each unbacked act and
    why. The copies must match the acts: each flip carries its registry's copy,
    and a copy of a registry no act moved is refused (WIDENED). It reads
@@ -488,26 +488,26 @@ driving it:
    cannot be invisible to both.
 
    **"Spine" here is SN/SR/LLR/TC — all four tiers**, needs included: a need is
-   a spine row, and `DevStg-Reqs` is the rung the human-approval dial most often
+   a spine row, and `DevStg-Reqs` is the rung the operator-acceptance dial most often
    holds, so a lane flipping one is the worst case of this act rather than an
    exempt one. The OFF-SPINE three — interfaces, the frame registry, components
-   — are outside this rule and are not refused; their approval cells are
+   — are outside this rule and are not refused; their acceptance cells are
    governed by OI-30 D3, which is a separate ruling. That bound is stated
    rather than left as an absence: the reader's registry set
-   (`acceptance_record.APPROVAL_ACT_CSVS`) and the exclusions
-   (`OUTSIDE_THE_APPROVAL_ACT`) are pinned to the snapshot's as one closed
+   (`acceptance_record.ACCEPTANCE_ACT_CSVS`) and the exclusions
+   (`OUTSIDE_THE_ACCEPTANCE_ACT`) are pinned to the snapshot's as one closed
    statement, so a tier added to the snapshot must be placed on one side or the
-   other by a deliberate edit and cannot quietly reach no approval reader at
+   other by a deliberate edit and cannot quietly reach no acceptance reader at
    all.
-2. That same merge MINTS a first-approval adjudication over the `Drafted` rows
+2. That same merge MINTS a first-acceptance adjudication over the `Drafted` rows
    the lane handed over, on the rungs the dial releases — with each row's whole
-   chain in its brief, asking one question: approve, or return with findings. A
-   rung the dial still holds is not minted; it surfaces to the owner as before.
+   chain in its brief, asking one question: accept, or return with findings. A
+   rung the dial still holds is not minted; it surfaces to the operator as before.
    Those row ids are RECORDED ON THE MINTED ROW, and the brief — which re-derives
    its population live, because the row is claimed long after the merge — acts
    only on the intersection. Otherwise "the rows the lane handed over" is a
    sentence the machinery does not keep: the live model is repo-wide, so one
-   lane's merge would hand its adjudicator every unapproved row in the tree, and
+   lane's merge would hand its adjudicator every unaccepted row in the tree, and
    the snapshot would move across workstreams the concurrency reason above says
    it must not.
 3. An adjudication row is not `ordinary`, so the coordinator runs it as an
@@ -515,42 +515,42 @@ driving it:
    that claims it besides.
 
 **What this is not.** It is not a change to the dial or to which rungs are
-human-held — a held rung still surfaces to the owner exactly as before, and the
-adjudicator acts only where the dial has released. The owner's approval brief
-(`trace.py --approve modified`) still shows every owing chain: one whose every
+operator-held — a held rung still surfaces to the operator exactly as before, and the
+adjudicator acts only where the dial has released. The operator's acceptance brief
+(`trace.py --accept modified`) still shows every owing chain: one whose every
 owing row sits on a released rung renders in full under "Waiting for automated
-adjudication", collapsed by default — in sight, apart from what the owner
+adjudication", collapsed by default — in sight, apart from what the operator
 signs. It is not a return of
-mechanical approval: no hook, step or helper writes a `Status` cell. The act is
+mechanical acceptance: no hook, step or helper writes a `Status` cell. The act is
 a *session's* reviewed commit, and what changed is which session may take it.
 
 ### The three presets
 
 The three words are `--gate-policy` **presets**: each *translates* into the
-`[attestation]` dials (`human_approval_through`, `keep_nondependent`,
+`[authority]` dials (`operator_accepts_through`, `keep_nondependent`,
 `final_review`) and is never stored. The dials are what the machinery reads.
 
-- **`attended`** *(default)* — a human approves each gate (DevStg-Reqs/DevStg-Tests/DevStg-Impl/DevStg-Release)
-  and the owner's final read. The standard §4/§5 flow; nothing else here applies.
+- **`attended`** *(default)* — an operator accepts each gate (DevStg-Reqs/DevStg-Tests/DevStg-Impl/DevStg-Release)
+  and the operator's final read. The standard §4/§5 flow; nothing else here applies.
 - **`single-approve`** — the driver advances through DevStg-Reqs+DevStg-Tests with LLM-gate review
-  (below), **queuing every human call** instead of pausing: each becomes a
-  `Needs <human>` Open-items bullet in `status.md` plus, where the driver had
-  to proceed, a provisional decision. At the **approval point — fixed at
-  DevStg-Tests close** — the human reviews the accumulated list + gate evidence in one
-  sitting and approves or amends (approved decisions move to `log.md`'s
-  Decisions log, §5); DevStg-Impl→DevStg-Release then run under `autonomous` rules. The owner's final read
-  stays human. *Why DevStg-Tests close:* every requirement/design ambiguity is resolved
+  (below), **queuing every operator call** instead of pausing: each becomes a
+  `Needs <operator>` Open-items bullet in `status.md` plus, where the driver had
+  to proceed, a provisional decision. At the **acceptance point — fixed at
+  DevStg-Tests close** — the operator reviews the accumulated list + gate evidence in one
+  sitting and accepts or amends (accepted decisions move to `log.md`'s
+  Decisions log, §5); DevStg-Impl→DevStg-Release then run under `autonomous` rules. The final read
+  stays the operator's. *Why DevStg-Tests close:* every requirement/design ambiguity is resolved
   exactly once, over cheap artifacts (registries and docs, not code), before
   the expensive autonomous implementation stretch. An adopting repo *may*
-  relocate the approval point by amending its own register — the kit does
-  not parameterize it. **Post-approval questions route by revert-cost**,
-  never a mid-run pause (the approver accepted bounded risk; momentum is the
+  relocate the acceptance point by amending its own register — the kit does
+  not parameterize it. **Post-acceptance questions route by revert-cost**,
+  never a mid-run pause (the acceptor accepted bounded risk; momentum is the
   level's value): LOW → decide + record in the Decisions log; MEDIUM/HIGH →
   the Blocked register.
-- **`autonomous`** — every bar except the owner's final read closes on the LLM verdict;
-  mid-run human escalation is replaced by the Blocked register, ask-the-human
+- **`autonomous`** — every gate except the operator's final read closes on the LLM verdict;
+  mid-run operator escalation is replaced by the Blocked register, ask-the-operator
   by the Decisions log (HIGH revert-cost decisions get an independent
-  peer-tier second opinion *before* execution), human `Attest` by LLM-Attest.
+  peer-tier second opinion *before* execution), a person's `Vouch` by a delegated one.
   The **gate-closure** reviewer tier is the strong-model floor (§6 tiering) and
   is never delegated down. (This floor governs a **gate advance** only. The
   cheaper *iteration-loop* reviewers the coordinator schedules between builds
@@ -570,9 +570,9 @@ A gate closes only on the verdict of an **independent LLM reviewer**:
   and quotes real output; a verdict citing a run it didn't perform is invalid.
 - **Verdict recorded** in `log.md` per §5, extended with `Model: <model id>`
   and `Role: LLM-GATE`; the Sittings acceptor column reads `LLM-GATE`.
-  APPROVE → the driver makes the **approving Status-change commit** (and
+  APPROVE → the driver makes the **accepting Status-change commit** (and
   regenerates `docs/stage` via `derive_stage.py`), citing the verdict block (the
-  verdict is the review of record — this is the `autonomous` approval the
+  verdict is the review of record — this is the `autonomous` acceptance the
   "Derived gate model" describes). CHANGES-REQUESTED → findings route to their
   owner hats; re-review up to `MAX_ROUNDS`, then the Blocked register.
 
@@ -582,7 +582,7 @@ the tree, and that is now an IDENTITY rather than a comparison:
 `integrate._verdict_gate` requires the verdict to **name the branch's current
 non-record tree** — the tree with `docs/reviews/`, `docs/log.d/` and
 `docs/iteration/` removed, read at the **governing rev** — the tip with the
-station's `refresh` commit peeled off at the work sha it attests, and with any
+station's `refresh` commit peeled off at the work sha it records, and with any
 commit that left that tree untouched stepped through to reach it (a mechanical
 re-merge is not a change the reviewer could conclude differently about, and
 neither is the commit that records the round). There is no ordering rule
@@ -596,7 +596,7 @@ what ships, *and equally* when it corrected a claim the verdict rested on, so
 "no code changed" is never by itself an argument for skipping the round. Two
 ordering rules make the avoidable part avoidable, and the lane owes both:
 **close before the final verdict round** (Deliverable filled, spec moved to its
-terminal folder, any approving Status-change commit made — so the reviewer sees
+terminal folder, any accepting Status-change commit made — so the reviewer sees
 the record it is blessing rather than invalidating it afterwards), and **never
 hand-merge trunk on a work branch** (only the station's `refresh` commit is
 peeled). They are **necessary, not sufficient**: a verdict's own finding can
@@ -622,7 +622,7 @@ finding names a concrete, falsifiable failure scenario (these inputs → this
 wrong behavior); its owner **confirms** it by reproducing that scenario — or
 **refutes** it — *before* changing code. A refutation is a legitimate
 outcome, recorded in the round record with its evidence: it counts against
-the reviewer's confirmed-finding rate, never against the owner's standing.
+the reviewer's confirmed-finding rate, never against the operator's standing.
 This is the reviewer's own skepticism pointed the other way — the reviewer
 re-runs the implementer's claims; the implementer re-derives the reviewer's.
 And a **re-review round verifies that the fixes landed — it does not hunt
@@ -639,29 +639,29 @@ case is what turns costly rework from a unilateral act into a decidable one.
 ### The Blocked register (replaces mid-run escalation)
 
 When a finding survives `MAX_ROUNDS`, a call is MEDIUM/HIGH revert-cost after
-approval, or a step is impossible without the owner (a purchase, an
+acceptance, or a step is impossible without the operator (a purchase, an
 account, a physical action): record it under **Blocked** in `status.md` —
 what, why, rounds spent, the driver's best-judgment recommendation — and
 **continue with independent work**. Every Blocked item surfaces prominently
 in the end-of-run report; a block that gates the deliverable itself downgrades
 it honestly (partial + explanation), never silently.
 
-### The Decisions log (replaces ask-the-human)
+### The Decisions log (replaces ask-the-operator)
 
 Where the process says *ask / pause / solicit clarification*, an autonomous
 driver decides and appends to the `log.md` Decisions log (§5): what was
 chosen, why, the alternatives, `Revert cost: LOW|MEDIUM|HIGH`, `Model:`. A
 decision is never a license to expand scope — one that would contradict an
-approved owner decision is a Blocked item, not a new decision. Under a
+accepted operator decision is a Blocked item, not a new decision. Under a
 recording `decision_recording` dial, a call the owner should see is disclosed
 in the run's "Delegated decisions record" as well.
 
-### LLM-Attest (replaces human Attest at `autonomous`)
+### Delegated `Vouch` (in place of a person's at `autonomous`)
 
 For subjective judgments that must not fake being tests: the TC records
-`Attest` with **which model** attested, when, and the one-line judgment —
-reported in the attested-vs-mechanized split as *machine* attestation, never
-disguised as `Test`. The owner's final read is where the owner's eyes replace these.
+`Vouch` with **which model** vouched, when, and the one-line judgment —
+reported in the vouched-vs-mechanized split as a *delegated* vouch, never
+disguised as `Test`. The operator's final read is where a person's eyes replace these.
 
 ## Agent iteration branch & sync
 
@@ -679,7 +679,7 @@ work happens on an **iteration branch — `llm/{branch}`** (slash namespacing
 groups every agent branch under one prefix in git tooling): the pre-commit
 floor runs there per commit, cheap and unchanged, and the §3 commit-often
 cadence lives there, where granularity is free. What lands on the development
-branch is scrubbed and curated **by construction** — the branch a human pushes
+branch is scrubbed and curated **by construction** — the branch an operator pushes
 never contained the leak or the noise. Hooks cannot carry this guarantee
 (they are per-clone and tool-circumventable: a user pushing with a different
 tool may never hit them); the branch structure can.
@@ -709,7 +709,7 @@ gate closes, or the project's scope is complete. Five steps:
 4. **Collate.** A separate agent reorganizes the leg's commits into
    **categorical commits** — Conventional-Commit style with optional scope
    (`feat(addon):` / `fix(biome):` / `perf(noise):` / `docs:` / `build:`) —
-   each a coherent, reviewable, why-and-impact-shaped change. Many tiny green
+   each a coherent, reviewable, why-and-impact-shaped change. Many tiny passing
    commits in; few subject-shaped commits out. **The type list is a default
    vocabulary, never a restriction:** a project renames or extends the types
    to fit its domain, and nothing lints the exact set.
@@ -717,23 +717,25 @@ gate closes, or the project's scope is complete. Five steps:
    rebase/cherry-pick — dev history stays linear, no merge bubbles; a
    conflict during landing is a **Blocked item**, never a silent
    force-through. After landing, the iteration branch resets onto the new dev
-   head for the next leg. The human pushes at their leisure (the default
+   head for the next leg. The operator pushes at their leisure (the default
    policy) — or the agent does, iff the policy says so. **Landing is not a
    stopping point:** under an autonomous gate authority the loop syncs and
    rolls straight into the next leg — unpushed landed legs accumulate, and
-   the human may push several at once; the run pauses only when intervention
+   the operator may push several at once; the run pauses only when intervention
    is *required*, never merely because a sync happened.
 
 **Push authority is a declared policy — `[policies] push`** in
-`docs/process.toml` (one word, tracked; scaffolded `human` in every repo):
+`docs/process.toml` (one word, tracked; scaffolded `operator` in every repo):
 
-- **`human`** *(default)* — the agent **never pushes, even if asked
-  mid-session**; it prepares the branch and requests the push. Publication is
-  a deliberate human act, immune to hook/tool circumvention by construction;
-  the human is a cheap bottleneck, because pushing is rare and takes seconds.
+- **`operator`** *(default)* — the operator pushes: a person, or a session
+  that person delegated the push to, with the delegation recorded. Any other
+  agent **never pushes, even if asked mid-session**; it prepares the branch and
+  requests the push. Publication is a deliberate operator act, immune to
+  hook/tool circumvention by construction; the operator is a cheap bottleneck,
+  because pushing is rare and takes seconds.
 - **`agent-iteration`** — the agent may push only the *scrubbed iteration
   branch* (remote backup + visibility); the development branch stays
-  human-pushed.
+  operator-pushed.
 - **`agent`** — full delegation: the agent may push the development branch
   after a landed sync, still gated by the sync ritual.
 
@@ -766,8 +768,8 @@ too.
 wants a coordinator to grind work from a single entry point while nobody
 watches. The loop runs under **every** gate authority level — what differs is
 where it stops: fully walk-away under `autonomous` (or `single-approve` after
-its approval point), while an `attended` repo's run grinds the in-gate
-work and stops *at* each human act with the ask stated, rather than being
+its acceptance point), while an `attended` repo's run grinds the in-gate
+work and stops *at* each operator act with the ask stated, rather than being
 refused or, worse, inferring its way past. Generalized from a field adoption's
 proven coordinator (a spatial-capture pilot's `trigger.ps1`), which
 `scripts/agent_loop.py` supersedes — the protocol here is agent-neutral repo
@@ -792,7 +794,7 @@ SpecRef + predecessor context + branch diff), never a "resume from
 stall guard trips (N consecutive sessions without a commit), or an iteration
 budget ceiling hits. Work happens on claimed branches (never the development
 branch), merging is the serial fail-closed queue and honors the declared
-`push` policy — under the default `human` the coordinator never pushes,
+`push` policy — under the default `operator` the coordinator never pushes,
 even if asked. At worker start a dirty worktree (residue from an interrupted
 run) is surfaced into the first session's prompt as a reconcile instruction;
 stash/rollback is deliberately *not* automated — that judgment belongs to the
@@ -802,17 +804,17 @@ session.
 serial resume driver — the loop that read `status.md`/`run-state` back as its
 control input — was retired):
 
-- **Intake/triage of new scope** belongs to the **human + the gate-stage
-  sessions**: new WIs enter the registry at planning/approval (or through
+- **Intake/triage of new scope** belongs to the **operator + the gate-stage
+  sessions**: new WIs enter the registry at planning/acceptance (or through
   a dual-plan round's filed children), never by a session inventing scope
   mid-run.
 - **Drained-queue handling** is the run's **end-state banner** — the run
   reports what integrated, what needs attention, and what remains queued.
-- **NEEDS-HUMAN surfacing** is the **stop banner + exit code 7**, with one
+- **NEEDS-OPERATOR surfacing** is the **stop banner + exit code 7**, with one
   `ask: <one-line ask>` headline (the dispatcher-era generated
   `docs/run-state` file retired with the dispatcher at
   concurrency-restructure Phase 5 — git history and the integrator's own
-  refusals are the durable record). **A wrong DONE is a false green** (§4);
+  refusals are the durable record). **A wrong DONE is a false pass** (§4);
   a worker's exit code and committed trailers are its whole result channel.
 - **REVIEW-OWED parking** is **exit code 9** (`EXIT_REVIEW_OWED`, appended at
   the end of the exit alphabet 2026-08-30, the stall-guard change set): the
@@ -829,11 +831,12 @@ control input — was retired):
   that failed earlier in the run must answer a 30 s `OK` liveness probe on
   its own command template before another real session is spent on it; a
   route with a clean history is never probed (recovery aid, not a tax).
-- **RED-CAP** is **exit code 12** (`EXIT_RED_CAP`): a red review bar draws no
-  review, and the lane's red build rounds reached `[build] red_rounds_max`
-  (`docs/process.toml`, shipped `3`). Checked at run start and after each red
-  record; unlike exit 9 it is a decided outcome, so the dispatcher closes the
-  lane `partial` through the handback's red arm.
+- **The commit-check failure cap** is **exit code 12** (`EXIT_CHECK_FAILURE_CAP`): failed
+  commit checks draw no review, and the lane's consecutive failed rounds reached
+  `[build] stop_lane_after_consecutive_commit_check_failures`
+  (`docs/process.toml`, shipped `3`). Checked at run start and after each
+  recorded failure; unlike exit 9 it is a decided outcome, so the dispatcher
+  closes the lane `partial` through the handback's failed-build arm.
 - **The resume-from-`status.md` prompt is retired** with the path: the
   generated `status.md` block (`gen_trajectory.py --status`) is a snapshot for
   humans, never a session's input — the hand-authored remainder stays the
@@ -844,9 +847,9 @@ control input — was retired):
 stop claiming. Everything in flight finishes, integrates, and archives** — a
 full stop is a *drained and unloaded* stop; finished work is never stranded on
 a branch. The only thing that stops an unload is the integrator's own refusal
-(red bar, missing required verdict) — that is the gate working, not the pause:
+(failed landing checks, missing required verdict) — that is the gate working, not the pause:
 a pause ends either fully merged and quiet, or fully merged except N branches
-parked red, each red a finding to work. The file is **tracked and committed**
+parked failing, each failure a finding to work. The file is **tracked and committed**
 by the bookkeeping lane: it survives clones, its reason is diffable history,
 and unpausing is an auditable deletion commit. The coordinator reads it before
 every claim; status generation surfaces `paused since <date>: <reason>` so an
@@ -878,7 +881,7 @@ its end is retired at the first keep call after it. The window is half-open
 `start == end` disables, and so does an empty value (disabled is
 byte-identical to before). The scaffold ships it **DISABLED but shaped** —
 `"12:00-12:00"` — so a fresh repo inherits nobody's hours while still seeing
-the format it edits (owner ruling 2026-08-11, replacing the shipped
+the format it edits (operator ruling 2026-08-11, replacing the shipped
 `12:00-19:00`: a populated dial an adopter does not notice costs seven hours a
 day of a loop that looks broken).
 
@@ -950,7 +953,7 @@ mechanized, but it can be steered:
   PLAN session reads the recent rows before re-chunking and coarsens or splits
   against the evidence, not a guess.
 
-The cadence needs no coordinator to be useful — an attended human alternating
+The cadence needs no coordinator to be useful — an attended operator alternating
 "plan on the strong tier, execute on the cheap one" across hands-on sessions is
 the same protocol with a person as the model map.
 
@@ -1092,7 +1095,7 @@ behavior**, so a fresh scaffold pays nothing.
   preferred tier is available the loop walks the **next tier up — never a weaker
   one**, and pages rather than silently downgrade. **Every selection and
   cooldown is logged before launch** (consent = the enabled set + these declared
-  rules). Failure context rides the registry's `Notes` column: the page-human
+  rules). Failure context rides the registry's `Notes` column: the page-operator
   banner renders the enabled pool per row (tier, family, cooling state, Notes),
   and a cooled or preflight-failed row's Notes is echoed at the failure point —
   put the provider's install/sign-in hint there (e.g. `opencode auth login`),
@@ -1149,7 +1152,7 @@ behavior**, so a fresh scaffold pays nothing.
   are gates, never scores; length never scores positively.** The tripwires
   (finding-cap pinning / count gaming, near-duplicate review text, an
   implementer diff touching a review or policy path, mass finding-rejection) are
-  **non-scored hard stops** that page the human. The scoreboard is one small
+  **non-scored hard stops** that page the operator. The scoreboard is one small
   decayed-tally text file (`docs/reviews/scoreboard.txt`: per-provider substance
   + the round history) — the declared policy picks, nothing auto-optimizes.
 - **A fixed escalation policy, not a learned router** (per-project sample sizes
@@ -1157,18 +1160,18 @@ behavior**, so a fresh scaffold pays nothing.
   family becomes the next round's primary feedback source only on a **margin
   >= 2**; the implementer's family **swaps after 2 consecutive failed review
   gates**; the tier rises **only after the swap also fails**; and the loop
-  **pages the human** on 2 top-tier failures (the shared-failure regime — the
+  **pages the operator** on 2 top-tier failures (the shared-failure regime — the
   spec is wrong, not the model), on opposite verdicts twice running, or on any
   tripwire. The constants ship as legible **per-repo-overridable defaults**
   (`AGENT_ROUTE_MARGIN`, `AGENT_ROUTE_SWAP_AFTER`, `AGENT_ROUTE_PAGE_TOP_TIER_FAILS`)
   — calibration values, not spine facts.
-- **Failure semantics follow the session hold.** On a page-the-human condition
+- **Failure semantics follow the session hold.** On a page-the-operator condition
   the causing WI **and its hard-edge dependents pause** either way; the hold
-  (is the tier still **human-held**, and `keep_nondependent`) decides the rest —
-  **human-held, `keep_nondependent = false`:** start nothing new, let
-  in-flight sessions close out, then the loop stops `NEEDS-HUMAN` and alerts;
-  **human-held, `keep_nondependent = true`:** keep working non-dependent WIs to
-  completion, surface the block for approval; **loop-held:** schedule a
+  (is the tier still **operator-held**, and `keep_nondependent`) decides the rest —
+  **operator-held, `keep_nondependent = false`:** start nothing new, let
+  in-flight sessions close out, then the loop stops `NEEDS-OPERATOR` and alerts;
+  **operator-held, `keep_nondependent = true`:** keep working non-dependent WIs to
+  completion, surface the block for acceptance; **loop-held:** schedule a
   fresh **design-check session** (different provider, strong tier) to rule
   grind-through vs. genuine redesign, document every assumption, and continue —
   a redesign verdict re-enters the change-intake flow (process.md §5). A
@@ -1232,7 +1235,7 @@ distinct from `NO-COMMIT` (a healthy session that simply idled). It still counts
 toward the stall guard, but when a whole stall run was `ERROR`s the abort banner
 names an **unavailable agent**, not a stuck task, and points at the fix — an
 unsupported model is repointed by hand (`--model` / the model map). Auto-fallback
-to a substitute model is deliberately **not** done: the human consented to a
+to a substitute model is deliberately **not** done: the operator consented to a
 specific tier, and a silent swap could run an unlisted (unguarded) model.
 
 **A reviewer outage is not the builder's stall** (2026-08-30): the stall
@@ -1245,7 +1248,7 @@ default 900 s; 0 disables) that kills a child this long after its LAST output
 line — a silent hang is discovered in minutes, not at the two-hour wall.
 
 **Consent is unmissable.** Unattended mode passes the agent CLI's
-permission-bypass flag. The human consents by (1) filling the launcher's
+permission-bypass flag. The operator consents by (1) filling the launcher's
 `AGENT_CMD` slot, (2) declaring the gate policy, and (3) running it — and the
 loop banner and README say so plainly. git + CI remain the enforcement floor.
 The coordinator's preflight refuses to start iteration 1 while
@@ -1264,10 +1267,10 @@ doesn't want the entry point deletes the launchers; the protocol stands alone.
 
 ## Delegated decisions record
 
-**Applies when** a run acts on the owner's behalf while the owner is away — the
+**Applies when** a run acts on the operator's behalf while the operator is away — the
 unattended loop's build and adjudication sessions, or a supervising session
-handed the owner's authority for a run. Governed by `docs/process.toml`
-`[attestation] decision_recording`: `"off"` (shipped), `"record"`, or
+handed the operator's authority for a run. Governed by `docs/process.toml`
+`[authority] decision_recording`: `"off"` (shipped), `"record"`, or
 `"escalate-first"`.
 
 **The record.** One TOML file per delegated run at `docs/decisions/<run>.toml`
@@ -1275,22 +1278,22 @@ handed the owner's authority for a run. Governed by `docs/process.toml`
 in the format of `decisions.template.toml`: a top-level `high_risk` list naming
 the entries the owner should read first, then one `[decision.D-<n>]` table per
 call carrying `decided`, `alternative`, `reversal_cost`, `why_not_escalated`
-and `review = ""`. The owner rules **in place**: `owner = "confirmed"` or
-`"overruled"`; absent is not yet seen, listed on the owner surface's
+and `review = ""`. The operator rules **in place**: `operator = "confirmed"` or
+`"overruled"`; absent is not yet seen, listed on the operator surface's
 "Decisions to review". The fields are required because a prose list of calls
 loses them as soon as nothing reads them.
 
-**The record is not an exit.** It tells the owner about calls already made.
+**The record is not an exit.** It tells the operator about calls already made.
 Work still routes only through the process's exits — a successor work item, an
-open item the owner rules, a Blocked item — and a call that is the owner's to
+open item the operator rules, a Blocked item — and a call that is the operator's to
 make goes there, never only into the record.
 
 **Route on the action, never on confidence.** The initial table, which the
-owner may adjust:
+operator may adjust:
 
 | The action | Route |
 |---|---|
-| irreversible or external (a push, deleting reviewed text, a purchase), a ruled open item, the approval dial | the exits — never decided under delegation |
+| irreversible or external (a push, deleting reviewed text, a purchase), a ruled open item, the acceptance dial | the exits — never decided under delegation |
 | touches a registry, the spine or a kit-owned file | decide, and record it (at minimum) |
 | scratch work, regenerating a generated file | decide silently |
 
@@ -1299,7 +1302,7 @@ delegate less, ask more. **The confidence ratchet is one-way:** low confidence,
 or a reviewer's dissent, may promote a call (silent to recorded, recorded to an
 exit); high confidence or consensus never demotes one, because a model's
 self-assessment is too unreliable to route on. **The dial never moves the
-safety boundary:** it allocates the owner's reading, and the exits bind at
+safety boundary:** it allocates the operator's reading, and the exits bind at
 every setting, `off` included.
 
 **What the close enforces.** Under `record` or `escalate-first` the merge slot
@@ -1324,14 +1327,14 @@ cannot judge its own output (a real project shipped awkward render artifacts
 because "the agent didn't know how to judge it, it just shipped it"), and the
 original TC may have been lax. `Critique` gives another agent a **different hat**:
 an independent critical eye that says *where and why* something isn't good enough
-and drives rework toward a written bar. Built on the S8 chassis (fresh sessions,
+and drives rework toward a written standard. Built on the S8 chassis (fresh sessions,
 redacted prompts, verdict files, hold-keyed escalation).
 
 - **`Critique` is a first-class Verification value** (PROCESS.md §4). A perceptual
-  TC declares `Verification=Critique`; its `Method` names the critique procedure and
+  TC declares `VerificationMethod=Critique`; its `Method` names the critique procedure and
   its `Parameters` name a **rubric** (`docs/rubrics/<name>.md`) plus the **artifact
   recipe** (the command/steps that produce the render/output under judgment). The
-  `CRITIQUE` leg is its mechanization; human **`Attest`** stays a distinct, unmixed
+  `CRITIQUE` leg is its mechanization; **`Vouch`** stays a distinct, unmixed
   value — that separation is the point of the ruling.
 - **The rubric derives from the SN/SR intent, never the TC** — the inversion that
   catches a lax TC instead of inheriting it. A rubric carries **numbered good
@@ -1343,14 +1346,14 @@ redacted prompts, verdict files, hold-keyed escalation).
 - **The existing critique record carries its provenance.** The verdict identifies
   the fresh non-author session. In unattended use, the assigned verdict
   path/round binds to the coordinator's session log; in attended use, identify
-  the human-chosen fresh reviewer and its sitting/review record supplied by the
+  the operator-chosen fresh reviewer and its sitting/review record supplied by the
   invocation. A provider session id is included when supplied but is not a
   hidden prerequisite. It names the rubric path/revision
   and applicable SN/SR intent sources, then records the numbered anchors judged;
   an `APPROVE` with zero findings still records anchor coverage. Never invent
   metadata. This is an inspection of the review record's process and provenance,
   while `Critique` remains the judgment of the produced artifact; no new schema
-  or approval form is needed.
+  or acceptance form is needed.
 - **Redaction by construction.** The critic gets the rubric + the SN/SR intent +
   the artifact recipe and **never the implementer's self-assessment** (`status.md`,
   `log.md`, the session transcript) — the same rule the reviewer prompt follows.
@@ -1360,10 +1363,10 @@ redacted prompts, verdict files, hold-keyed escalation).
   available (`agent_route`), strong-tier by default.
 - **The optimization loop, bounded.** BUILD → CRITIQUE → rework, iterating until
   `APPROVE` or the budget (`AGENT_CRITIQUE_MAX`, default **3**, env-overridable
-  like the S8 knobs) trips the session-hold page-the-human path. A WI row may
+  like the S8 knobs) trips the session-hold page-the-operator path. A WI row may
   override that run-wide default with `CritiqueBudget=n|inf` (`inf` means iterate
   until `APPROVE`) and set `CritiqueExhaustion=move-on|block`; absent/invalid cells
-  preserve the global default + move-on, while `block` forces `NEEDS-HUMAN` under
+  preserve the global default + move-on, while `block` forces `NEEDS-OPERATOR` under
   either hold. `inf` remains bounded operationally by `--max-iterations`,
   the per-session CLI limits, and the declared pause/blackout controls. In a
   batched build, `inf` and `block` win; otherwise the largest budget wins. The trigger is a
@@ -1375,9 +1378,9 @@ redacted prompts, verdict files, hold-keyed escalation).
   (`check_trajectory --staged`): the fix must land in the chain, not just the
   artifact. This is the specific mechanism that stops "shipped it because nothing
   judged it" from recurring.
-- **The arbiter split.** Working default: **the critic gates iteration; the human
+- **The arbiter split.** Working default: **the critic gates iteration; the operator
   owns acceptance.** A critic `APPROVE` ends rework; gate closure still carries the
-  human `Attest` (the strong-model floor and the attested-vs-mechanized split
+  operator's `Vouch` (the strong-model floor and the vouched-vs-mechanized split
   stand). On a **loop-held** tier the critic verdict closes
   iteration-level acceptance and the recorded-verdict rules govern the gate as they
   do today. (This does not contradict the S8 "no LLM-judge tiebreaker" ruling —
@@ -1444,8 +1447,8 @@ files, `agent_route` family heterogeneity, budgets) — **no new engine**:
    (an arbiter sharing a family with a planner is recorded and mitigated —
    self-preference bias): **provenance-anonymized, position-swapped** pairwise
    comparison — run the arbiter prompt twice with the plan order swapped; the
-   verdicts must agree, disagreement is a position-bias page-the-human —
-   against the rubric + the coverage report + the owner's original prompt,
+   verdicts must agree, disagreement is a position-bias page-the-operator —
+   against the rubric + the coverage report + the operator's original prompt,
    warned that **more WIs ≠ better** (verbosity bias). It selects **one** plan
    and **ports named loser-WIs** that close coverage gaps, each port a cited
    delta in the verdict file. Never a merge. (The S8 "no LLM-judge tiebreaker
@@ -1454,7 +1457,7 @@ files, `agent_route` family heterogeneity, budgets) — **no new engine**:
    (goal brief, both plans and revisions, critiques, `coverage.md`,
    `verdict.md` with the ports), the verdict summarized in `log.md`. The
    selected plan's rows are then filed as real WIs through normal intake.
-7. **Acceptance:** human `Attest` closes the round per the gate philosophy;
+7. **Acceptance:** the operator's acceptance closes the round per the gate philosophy;
    on a **loop-held** tier the recorded-verdict rules govern, as they
    do for the critique loop.
 
@@ -1473,7 +1476,7 @@ and the stronger-isolation option (empty-cwd sessions).
 specs and their generated OKF/dashboard views must validate together: if a
 present generator rejects the new registry, the round pages with the
 generator/validator tail and the `docs/plans/DP-*` evidence stays on disk for
-the human. Committing evidence with stale views is not a portable fallback —
+the operator. Committing evidence with stale views is not a portable fallback —
 the shipped freshness hook would reject it — and bypassing the hook would
 make a known-invalid registry authoritative.
 
@@ -1593,7 +1596,7 @@ classified by the **strongest** mechanism that holds it up:
 - **Harness** — a deterministic check at a lifecycle event (a git hook, a
   `check.py`/`trace.py` step, CI). The script decides; the rule cannot be
   forgotten. Strongest, and the default home for anything mechanizable.
-- **Test** — a regression net (`tests/`): a bar checkable only by executing
+- **Test** — a regression net (`tests/`): a standard checkable only by executing
   against a fixture. The enforcer for behaviors that are outcome, not syntax.
 - **Reviewer** — delegated to an independent reviewer charter (the reviewer
   dial above), which gains a perspective a hook can't: judgment on method,
@@ -1612,7 +1615,7 @@ detector is a **worklist, not a definition of done**: its vocabulary is always
 narrower than the rule it stands for, so a cleanup that stops when the checker
 goes quiet has proved only that the checker is quiet.
 
-The bar is **honesty**: a rule with no enforcer is either rewritten into one of
+The standard is **honesty**: a rule with no enforcer is either rewritten into one of
 the classes above or flagged plainly as unbacked — **zero unenforceable rules
 without a stated reason**. Recording the result as a short table in `docs/`
 (one row per rule → its primary enforcer + the file) turns "we have rules" into
@@ -1641,7 +1644,7 @@ The rule has three parts, in order:
    destroy lands its evidence *before* the fix, in the repo rather than in a
    session transcript: the exact command, the file manifest it ran over,
    before/after hashes or counts, raw tool output. An evidence file beside the
-   WI's spec is enough. The bar is that a second person can rerun it, or check
+   WI's spec is enough. The standard is that a second person can rerun it, or check
    the artifact it produced.
 2. **Otherwise mark it historical.** A number already taken on state that is
    gone is written as a *historical, non-reproducible observation* — in the same
@@ -1650,7 +1653,7 @@ The rule has three parts, in order:
 3. **Declare the figure — the `fig:` marker (WI-392, rung 1).** <!-- fig-ok: this heading names the marker --> A driven
    figure may opt in by carrying, on its own line (in markdown, inside an HTML
    comment), `fig: cmd="<command>" rev=<revision>` — the exact command that
-   produced it and the revision it was driven at. Two bars ride the marker.
+   produced it and the revision it was driven at. Two standards ride the marker.
    *Population:* when the figure is a count over a population, `cmd` is a
    command that **enumerates** that population (`git log … | wc -l` does); a
    hand-picked input set names its selection principle inside the cmd string —
@@ -1700,7 +1703,7 @@ The kit ships the measure **report-only**, and arming it is this layer:
 2. **Stamp your own baseline**, over your own `[paths]` roots and never the
    kit's numbers: `python scripts/check_complexity.py --root . --include
    "src/**/*.py" --include "tests/**/*.py" --restamp`. Each row is a **debt
-   statement, not an approval**; review the diff, not the run.
+   statement, not an acceptance**; review the diff, not the run.
 3. **Arm it once its false-positive rate on your code is known**, either by
    naming `complexity` in `gating` (the per-change view refuses) or with a
    whole-tree step of your own running `--mode enforce`, which fails in both
@@ -1846,12 +1849,12 @@ erodes the single-source-of-truth discipline the kit is built on.
 
 **The promote rule.** When a working note ripens into something durable — a
 decision, a constraint, a gotcha, an assumption confirmed — **promote it into the
-repo**: record a decision in `status.md` *Open items* (approved: `log.md`'s
+repo**: record a decision in `status.md` *Open items* (accepted: `log.md`'s
 *Decisions log*), add a
 constraint to `status.md`'s constraints block, update `AGENTS.md` if it changes
 how contributors should behave, or amend the relevant registry row. This is the
 flip side of the *Assumptions* log (§4, Thread 3): an unattended assumption is
-logged to `status.md` so a human can confirm or revert it; a confirmed finding is
+logged to `status.md` so an operator can confirm or revert it; a confirmed finding is
 committed into the appropriate artifact and drops out of the assumptions list.
 
 **No agent-memory tooling is installed or required.** Dev-setup provisions the
@@ -1862,14 +1865,14 @@ cheap), and a query-time semantic index (§7 map-vs-index note) can help chase
 references across a large tree — but both are optional, downstream, and orthogonal
 to the promote rule.
 
-**The owner scratchpad is human scratch, not a working surface.** Bootstrap
-scaffolds a root `OWNER_SCRATCHPAD.md` — the human owner's counterpart to the
+**The operator scratchpad is a person's scratch, not a working surface.** Bootstrap
+scaffolds a root `OPERATOR_SCRATCHPAD.md` — the operator's counterpart to the
 agent scratch above: free-form notes that may be old, contradictory, augmented, or
 half-formed. **LLM agents must not read, index, summarize, cite, or act on it**;
 its own loud header says so and is the primary defense (the meta repo's `CLAUDE.md`
 carries the same one-liner). Nothing there is a requirement, ruling, or working
 surface — those stay `docs/status.md`, the registries, and `docs/log.md`.
-`check_docs.py` exempts the file entirely (links, orphans, stale hints — owner
+`check_docs.py` exempts the file entirely (links, orphans, stale hints — operator
 notes never gate a commit); the always-on secrets floor still scans it, so it is
 not a secrets-safe zone. A repo that doesn't want it just deletes it.
 
@@ -1884,7 +1887,7 @@ A **skill** is a small, focused capability — a procedure grounded in this repo
 actual commands and files — that an agent loads on demand to work faster and more
 correctly. Skills are **opt-in accelerators, not process gates** (the
 Proportionality doctrine applied to tooling): the gates, the traceability spine,
-and the git/CI floor are the bar; a skill only helps an agent clear it. The full
+and the git/CI floor are the standard; a skill only helps an agent clear it. The full
 contract lives in the kit's `skills/README.md`; the shape:
 
 - **Neutral source → per-agent materialization.** The kit ships skills as
@@ -1960,7 +1963,7 @@ independent tracks meet, which task is in flight, how far along the whole is. A
   ranking, and the acyclicity rule); a `~`-prefixed id (`~WI-013`) is a **soft**
   edge (advisory ordering — must resolve, never blocks, dashed in the render);
   and a bare `OI-###` is a **hard open-item** edge (OI-73) — the row waits until
-  that open item leaves `pending`, so an owner ruling gates it (an open item is
+  that open item leaves `pending`, so an operator ruling gates it (an open item is
   not a DAG node: no acyclicity, no ranking). The grammar widened tolerantly, so
   a bare WI id still means exactly what it always did;
 - it moves through a **lifecycle**: `draft → queued → active → done`; `draft`
@@ -2006,7 +2009,7 @@ way, so the declaration makes the reservation checked, not merely possible);
 `blocked` has
 no directory of its own — the `blockref` mechanism that once expressed it
 retired at WI-553/OI-70, and a stopped lane now closes PARTIAL, save a planned
-owner-held step (process.md §5, "Open items"); and `cancelled`
+operator-held step (process.md §5, "Open items"); and `cancelled`
 (WI-267, spelled `retired` until
 WI-384) is terminal — a deliberate won't-build, counted separately
 from `done`, never scheduled, its reason in the body. `partial` (SR-144) is the
@@ -2067,8 +2070,8 @@ an agent resume surface authored session-to-session. Under parallel dispatch it
 becomes an **integrator-generated reference snapshot** — regenerated only on the
 integration branch after a successful integration and gated by generated
 freshness (like `PROJECT_STATE.html`), never written on a worker branch. It
-carries only: the derived gate/bar pointers; queued/deferred/blocked counts + a
-link to the WI dashboard; pending `Needs <human>` items linked to the owner
+carries only: the derived stage pointers; queued/deferred/blocked counts + a
+link to the WI dashboard; pending `Needs <operator>` items linked to the operator
 decision surface; the ready frontier; and
 project scope/constraints whose canonical homes are linked, not copied. The
 former **R-B/R-C** rules — every open WI repeated as a token in `status.md` —
@@ -2078,17 +2081,17 @@ forward-only (WI-200):** a `done` WI id lingering in `status.md` is a finding
 again — warn at commit, ERROR under `--strict` at DevStg-Tests+ — except inside a
 generated snapshot block, which cannot accrete prose.
 
-**The owner decision surface's depth + the status-surface lint.** The surface
+**The operator decision surface's depth + the status-surface lint.** The surface
 itself is **not a layer here** — registry and generated view are always-shipped
 process ([`process.md`](process.md) §5), scaffolded into every profile; what
-stays here is the depth. The Needs-\<human> bullets in `status.md` stay
+stays here is the depth. The Needs-\<operator> bullets in `status.md` stay
 **one-liners** (id + one-line recommendation), or the blackboard re-bloats; the
 *depth* of each pending decision — blast radius, options with pros/cons, the
 driver's recommendation — is what the row carries, so the review is **one page
 with all context**.
 
 Registry-plus-view rather than a markdown file, for a reason worth stating: the
-same surface must also carry the *attestation* depth — every `Drafted` or
+same surface must also carry the *acceptance* depth — every `Drafted` or
 DRIFTED spine row's per-cell before/after — and the only readable form of
 that is a **word-level diff**, which markdown cannot mark. Generating the view
 also lets it show what a pointer cannot: which rows ride an SR's line, and the
@@ -2102,7 +2105,7 @@ never the exit code** (content quality is reviewer-class, and gate promotion is
 this layer's un-defer trigger for a spine SR): **S-1** `status.md` over its line
 budget (default 120; `docs/status-lint` overrides with an integer, `off`
 disables S-1..S-3); **S-2** the Open-items marker must precede `## Scope`;
-**S-3** every Needs-\<human> `OI-N` has a pending row in the registry and every
+**S-3** every Needs-\<operator> `OI-N` has a pending row in the registry and every
 pending id appears in `status.md`. S-3 is **no longer vacuous without the
 registry**: the layer is always on, so an absent `open-items.toml` is the finding
 rather than the opt-out (it stands down only under a generated status block,
@@ -2164,14 +2167,14 @@ would false-positive on `DevStg-Impl`, `SR-###`, and the like, so a narrow lint 
 until a real recurring pattern earns it.
 
 **Phase cadence.** Any batch of spine-touching work headed for the same
-re-attestation should land as **one phase** — batch the changes so a **single
-owner sitting** covers each re-attestation, rather than paying for several
+re-acceptance should land as **one phase** — batch the changes so a **single
+operator sitting** covers each re-acceptance, rather than paying for several
 (what is owed is the DIFFERENCE between the amended rows and their copies in
-`docs/archive/last_approved/` — process.md §7 — so the pending batch is tree
-state the sitting reads via `trace.py --approve modified`, never commit-message
+`docs/archive/last_accepted/` — process.md §7 — so the pending batch is tree
+state the sitting reads via `trace.py --accept modified`, never commit-message
 prose). A
 phase's spec is one shared `docs/specs/` doc with a `#anchor` per WI. **Its
-cadence:** mid-phase WI sessions end at the **commit bar** (the pre-commit
+cadence:** mid-phase WI sessions end at the **commit checks** (the pre-commit
 hook floor + the project's test command + `check_docs --stale`), not the full
 gate; the full `check.py --gate <gate>` runs **once at phase close** (the
 coordinating close), and CI runs the gate job on every push regardless — a
@@ -2184,7 +2187,7 @@ guessed subset. A WI's phase is **derived** from the delivery `Phase` of the SRs
 it delivers (§4 "Phased delivery"), and the When-view dashboard tiers the WI DAG
 by **phase ⊃ workstream ⊃ work-item** — there is no separate grouping column.
 
-**Whole-registry contradiction audit (WI-206).** The per-commit reviewer sweep is change-scoped — it checks each new SN/SR/TC row against the whole registry as it lands (inductive pairwise coverage), but never re-audits **old-vs-old** drift between rows that both predate it. *Applies when* the registry is mature enough for that to bite (>= 2 closed phases or >= 30 SRs). *Occasion:* at **phase close** (with the gate bar) and **before the owner's final read**. *Execution:* one independent fresh-context session, redacted to the registries + `docs/rubrics/registry-contradiction-audit.md`, writing a recorded `docs/reviews/<phase-or-scope>-AUDIT.md` verdict (scope-named, not serial-numbered). *Disposition:* findings route as WIs through change-intake; the audit never edits the spine. Per-commit coverage stays the change-scoped reviewer sweep — unchanged.
+**Whole-registry contradiction audit (WI-206).** The per-commit reviewer sweep is change-scoped — it checks each new SN/SR/TC row against the whole registry as it lands (inductive pairwise coverage), but never re-audits **old-vs-old** drift between rows that both predate it. *Applies when* the registry is mature enough for that to bite (>= 2 closed phases or >= 30 SRs). *Occasion:* at **phase close** (with the gate checks) and **before the operator's final read**. *Execution:* one independent fresh-context session, redacted to the registries + `docs/rubrics/registry-contradiction-audit.md`, writing a recorded `docs/reviews/<phase-or-scope>-AUDIT.md` verdict (scope-named, not serial-numbered). *Disposition:* findings route as WIs through change-intake; the audit never edits the spine. Per-commit coverage stays the change-scoped reviewer sweep — unchanged.
 
 **Parallel test execution.** Running the suite across cores is a **`docs/stack.ini`
 concern**, not a process rule: append `-n auto` to `[product] test` and the harness,
@@ -2360,7 +2363,7 @@ secrets floor above still runs).
   unwired case (lint findings and a wired reviewer's BLOCK still block; the
   hook's failure message names this escape at the moment it fires). Honesty:
   hooks are per-clone and tool-circumventable, and `git push --no-verify`
-  remains git's own escape hatch for a human; that is why the primary home is
+  remains git's own escape hatch for an operator; that is why the primary home is
   the branch structure, not this hook. Cost note: review runs **per push**,
   never per commit — an LLM call in every commit would tax the commit-often
   cadence into batching, which is worse for privacy *and* review.
@@ -2456,7 +2459,7 @@ binary; the **record of it** is text, tracked, and reviewable.
     (e.g. `sha256:…`) + **`Version`** make that pointer **verifiable** — you can
     confirm the bytes on the store match the row even though you can't diff them.
   - **`Refs`** back-link the SR/LLR the asset realizes, keeping it on the spine's
-    high-altitude thread (usually an `Attest` SR — this file, "Proportionality
+    high-altitude thread (usually a `Vouch` SR — this file, "Proportionality
     doctrine" (d)); `trace.py` integrity-checks the `ASSET-` id only, off-spine
     like `PART-###`.
 - **Privacy advisory:** binary assets carry **EXIF/author metadata** (camera
@@ -2488,7 +2491,7 @@ binary; the **record of it** is text, tracked, and reviewable.
 
 *Builds on PROCESS.md §8 (the seam registry).* **Applies when** a repo has more
 than one module and wants its architecture view to show **how the modules
-connect** — the seam the AXES approval sanctioned ("a cross-component edge
+connect** — the seam the AXES acceptance sanctioned ("a cross-component edge
 without a declared interface is a finding"). §8 records a shared surface once as
 an `IF-###`; the same registry serves an **intra-repo** seam (module→module,
 module→file, module→external-actor) exactly as it serves a cross-project one — one
@@ -2536,7 +2539,7 @@ informationally, warn-first at every gate; a NEW function,
 wired the same way (`check.py` passes `--strict` from `DevStg-Tests` on). The
 allowlist was seeded at the population measured when the ruling executed, with
 a declared burn-down expectation stated in the file's own header — a migration
-device, subject to the never-green-by-list-edit rule, never a permanent
+device, subject to the rule that no list edit makes a check pass, never a permanent
 exemption surface. A listed seam that gains a TC, or an entry naming a retired
 id, is reported (never blocked) by `if_tc_allow_hygiene_findings`, so the
 burn-down stays visible. There is deliberately no separate opt-out dial: the
@@ -2632,10 +2635,11 @@ an LLR *is* the WHAT being rewritten. The registry is optional and off-spine
 a repo that never names a component pays nothing.
 
 **The row is deliberately slim** —
-`CMP-ID,Name,Category,Knowledge,Status,Standing,SupersededBy,PartOf,Notes`
+`CMP-ID,Name,Category,Knowledge,Status,Standing,SupersededBy,PartOf,Notes`,
+plus the derivation record's cells below
 — and holds **only what a tag can't**: the knowledge refs (`;`-joined skill
 names, `docs/knowledge/` labels, URLs), maturity
-(`Status ∈ Drafted|Approved|Founded`, the one spine vocabulary) and lifecycle
+(`Status ∈ Drafted|Accepted|Founded`, the one spine vocabulary) and lifecycle
 (`Standing ∈ active|has-gap|deprecated`; omit = active), with `SupersededBy`
 naming the successor so identity survives a rewrite, and nesting (`PartOf`).
 `Category` is an open value set (`software`, `physical`). **What the component
@@ -2646,7 +2650,7 @@ modules, and its internal/boundary seams), freshness-gated like every other
 generated artifact. That view retired the `DetailDoc` column, which named a
 prose home no kit ever created and no script ever read; a generated view is
 stale-*detectable*, where a prose file's staleness is undetectable by
-construction. It carries **no** approval cell — maturity stays on the
+construction. It carries **no** acceptance cell — maturity stays on the
 hand-authored row (OI-30 D3).
 
 When findings need to outlive the session that produced them, use the
@@ -2667,6 +2671,24 @@ IFs is legal.
 integrity; `PartOf`/`SupersededBy` resolve to real CMP ids; and every primitive
 `Component` tag resolves to a real CMP row (the membership join — checked on
 all four registries `trace.py` reads: LLR/IF/PART/ASSET).
+
+**The partition carries its derivation record** (SR-165). The record of how
+the partition was chosen lives in the registry, not in session prose. One row
+per partition holds it: `Candidates` (the candidate partitions, best first),
+`Objective` (`minimize <metric>` or `maximize <metric>`), `Constraints`
+(`<constraint>: <violating candidates>`, or the single entry `none`), `Scores`
+(`<candidate>=<number>`, one per candidate), `Selected`, `Ruling` (who ruled,
+when, and where it is recorded) and an optional `Override`
+(`<selected>: <reason>`). Every other row of the partition carries only
+`Derivation`, the holding row's id. `check_trajectory.py` reports a real row
+whose record is absent, incomplete, malformed or inconsistent — **WARN** at
+the plain run, **ERROR under `--strict`** — sharing the
+`[checks] components_check` opt-out. It recomputes the ranking from the
+record's own cells: a candidate no constraint names ranks above every one a
+constraint names, then by score in the objective's direction, equal scores
+tying. A selection the scores do not rank first needs the `Override` that
+names it. The check covers form and arithmetic; whether `Ruling` reports a real
+human act is for review and the acceptance route.
 
 **A cross-component edge needs a declared seam** (WI-064 — the AXES
 enforceability rule, mechanized for software). `check_trajectory.py` joins the
@@ -2793,7 +2815,7 @@ releases as a whole.
   source of truth** — `trace.py --strict` still requires **0 orphans across the
   whole repo, seams included**. The kit deliberately ships **no**
   `--module`/`--area` filter on `trace.py`/`check.py`: a per-module gate would
-  either hide the cross-module seams (a false "green" masking exactly the
+  either hide the cross-module seams (a false "pass" masking exactly the
   integration gaps this method wants first-class) or need real machinery to tell a
   legitimate seam from an orphan. The whole-repo gate already spans every module;
   per-module *ownership* is a reading convention, not a gate of its own.
@@ -2801,12 +2823,12 @@ releases as a whole.
   agree, so it gets its **own** TCs — not merely each module's internal unit tests.
   These are integration/system-level, usually `Tier=Full` or `Release` (§4 "Test
   tiers"), so the seam is a tested contract rather than an untested gap between two
-  individually-green modules.
+  individually passing modules.
 - **`IF-###` applies *within* a repo, too.** The interface registry (§8) is not
   only for separate repos: two modules in one repo that share a contract record it
   as an `IF-###`, with the counterpart naming the **other module** instead of
   another repo and both rows living in the one `interfaces.toml`. Same
-  direction/owner/version/approval discipline, same "one contract, one home,
+  direction/owner/version/acceptance discipline, same "one contract, one home,
   backed by a test" rule — applied to the internal seam, with no cross-repo build
   machinery.
 <!-- /profile -->
@@ -2873,13 +2895,13 @@ claimed branch in turn: a `--no-ff` merge straight onto trunk — there is no
 separate composed tree or candidate worktree to merge onto (docs/concurrency-v2.md
 §A2 deleted both: trunk-is-ancestor makes a merge conflict unrepresentable, so
 the merge is trivially clean and its tree is byte-identical to the branch tip)
-— with the trunk step folded into the merge commit, and the **declared bar**
+— with the trunk step folded into the merge commit, and the **declared checks**
 already run ONCE, on the branch itself at refresh, read fail-closed — a
 missing or empty check declaration is a **refusal**, never a skip, and any SKIP
-in the report refuses (the fail-open lesson, stated as a contract). The `[attestation]` dials
+in the report refuses (the fail-open lesson, stated as a contract). The `[authority]` dials
 (RULING-7) are enforced by requiring the corresponding **verdict artifact**
-(review file `docs/reviews/WI-<n>-<PHASE>.md`, critique, attestation) with
-git-derived freshness before the trunk fast-forwards; a red queue parks
+(review file `docs/reviews/WI-<n>-<PHASE>.md`, critique, acceptance) with
+git-derived freshness before the trunk fast-forwards; a failing queue parks
 loudly. `integrate.py audit` is the RULING-6 window check: coordinator
 bookkeeping (claims, fragment compile, regeneration — the `[generated]` set
 in `stack.ini`) commits directly to the trunk, while **product changes reach
@@ -2907,8 +2929,8 @@ form is a **tracked** `docs/work/pause` (TOML `reason` + `since`), committed
 by the bookkeeping lane, so the reason is diffable history and unpausing is
 an auditable deletion commit. The only thing that stops an unload is the
 integrator's own refusal — that is the gate working, not the pause; a pause
-ends fully merged and quiet, or fully merged except N branches parked red,
-each red a finding. Status generation surfaces `Paused since <date>:
+ends fully merged and quiet, or fully merged except N branches parked failing,
+each failure a finding. Status generation surfaces `Paused since <date>:
 <reason>` so an open pause is a visible accruing cost. What no file can do —
 stop a running session — stays stated plainly: that remains "kill the
 worker." A declared blackout window still starts no new session.
@@ -2929,8 +2951,8 @@ threat model is bugs and fail-open, not malice). The second-approver-identity
 question is forge-mode-only and deferred until approval-required lanes are
 used there.
 
-**Throughput caution.** Under `attended` gate authority, every branch's human
-asks converge on **one** approver; parallel branches multiply the
-`NEEDS-HUMAN` queue. Two to three concurrently *active* branches is the
-realistic ceiling while one approver works the queue — a queued spec costs nothing
+**Throughput caution.** Under `attended` gate authority, every branch's operator
+asks converge on **one** acceptor; parallel branches multiply the
+`NEEDS-OPERATOR` queue. Two to three concurrently *active* branches is the
+realistic ceiling while one acceptor works the queue — a queued spec costs nothing
 until claimed.

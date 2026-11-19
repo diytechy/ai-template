@@ -78,7 +78,7 @@ def test_write_mode_prunes_and_check_flags_extras(scaffold):
 
 def test_placeholder_only_scaffold_is_vacuous(scaffold):
     # The fresh scaffold carries only -000 rows: nothing is emitted and --check
-    # passes out of the box (the ruled fresh-scaffold-green requirement).
+    # passes out of the box (the ruled requirement that a fresh scaffold passes).
     proc = okf(scaffold, "--check")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "vacuously clean" in proc.stdout
@@ -209,8 +209,8 @@ def test_process_guides_skip_absent_docs(scaffold):
 
 def test_process_guides_absent_on_vacuous_scaffold(scaffold):
     # The vacuity gate: process docs exist in a fresh scaffold, but with only
-    # placeholder registries nothing is emitted at all — so fresh-scaffold-green
-    # and the zero-cost opt-out hold (guides ride the real-spine gate).
+    # placeholder registries nothing is emitted at all — so a fresh scaffold still passes
+    # and the zero-cost opt-out holds (guides ride the real-spine gate).
     proc = okf(scaffold, "--check")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert not bundle(scaffold).exists()
@@ -224,7 +224,7 @@ def test_malformed_id_is_ignored_not_path_escape(scaffold):
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
         srs.read_text(encoding="utf-8")
-        + 'SR-/../../evil,Bad,SN-001,"x",R,"y",,M,Test,Approved\n',
+        + 'SR-/../../evil,Bad,SN-001,"x",R,"y",,M,Test,Accepted\n',
         encoding="utf-8",
     )
     proc = okf(scaffold)
@@ -233,7 +233,7 @@ def test_malformed_id_is_ignored_not_path_escape(scaffold):
     assert not (scaffold / "docs" / "evil.md").exists()
 
 
-def test_an_IF_one_pager_exports_the_live_approval_value(scaffold):
+def test_an_IF_one_pager_exports_the_live_acceptance_value(scaffold):
     # WI-442 REVIEW-A: the generator kept reading the RETIRED `Stability`
     # column after the Approval migration, so every IF one-pager shipped
     # `tags: []` while the row's `status` cell — the tier's one maturity
@@ -258,7 +258,7 @@ def test_prune_removes_emptied_tier_directory(scaffold):
     (req / "interfaces.toml").write_text(
         '[interface.IF-001]\nname = "Seam"\nowner = "src/demo"\n'
         'consumers = ["external:downstream"]\nchannel = "call"\n'
-        'status = "Approved"\n',
+        'status = "Accepted"\n',
         encoding="utf-8",
     )
     assert okf(scaffold).returncode == 0

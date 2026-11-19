@@ -56,14 +56,26 @@ consent-first script that explains itself before acting:
    installs only with consent.
 3. **Product toolchain:** `scripts/setup.*` — dependencies + the pre-commit
    hook.
-4. **Verify:** `scripts/check.*` — the gate harness; green means you're set.
+4. **Verify:** `scripts/check.*` — the gate harness; when it passes, you're set.
+
+**After you edit the registries** (`docs/requirements/`, `docs/test/`): record
+new ids with `python scripts/trace.py --bump-ids`, rewrite the generated files
+the commit hook checks with `python scripts/trunk_step.py --regen`, then `git
+add` what they changed. A refused commit names the command that clears it.
+
+**When you accept your first chain** (a need with its requirements and
+tests), delete the template's example rows, whose ids end in `-000`, and the
+example diagram in `docs/runtime-flows.md`. From `DevStg-Tests` on the checks
+refuse the diagram, and from `DevStg-Impl` on the example rows.
 
 ## Development
 
 This repo follows a gated, requirement-traced process. The working brief is
 [AGENTS.md](AGENTS.md); the method is [docs/process.md](docs/process.md). Start
-with the derived code map in `PROJECT_STATE.html` (How-SW tab) and the
-current state in [docs/status.md](docs/status.md). The requirement spine starts
+with the current state in [docs/status.md](docs/status.md) and the derived code
+map in `PROJECT_STATE.html` (How-SW tab), which `python
+scripts/gen_trajectory.py` writes once the first work item is filed under
+`docs/work/`. The requirement spine starts
 at [docs/requirements/stakeholder-needs.toml](docs/requirements/stakeholder-needs.toml);
 durable project findings live in [docs/knowledge/](docs/knowledge/README.md);
 shared cross-project contracts — only if this repo provides or consumes one —

@@ -16,7 +16,7 @@ of refusing, and the dispatcher composes the independently-proven parts:
     integrate.py integrate (IF-080) -> the merge slot
 
 The frontier is re-derived from the registry at the top of EVERY tick, so a
-WI filed mid-run (by a worker, a review, or a human) is picked up in the same
+WI filed mid-run (by a worker, a review, or an operator) is picked up in the same
 run — no restart needed. Up to `lanes` worker lanes run at once (the §A4.3
 dial: CLI --lanes > AGENT_LANES > docs/stack.ini [agent-loop] lanes > 1; the
 template seeds 2, an absent key means 1 so no adopter is upgraded into
@@ -28,27 +28,27 @@ authority the deleted `_claim_refusal` safety arm moved here). The §A8 policy
 table, per kind x session hold: ordinary/critique dispatch parallel at
 every level; high-risk/protected dispatch exclusive at every level; a `spine`
 row dispatches at every level — building a scope change is WORK, not an
-approval — but EXCLUSIVELY, one row per exclusive turn: an exclusive-kind
+acceptance — but EXCLUSIVELY, one row per exclusive turn: an exclusive-kind
 row on the frontier stops new admission, the dispatcher waits for every lane
 back in the station, then admits the first spine row ALONE (one branch, one
-`agent_loop --wi WI-###` worker, one re-attest window); the remaining spine
+`agent_loop --wi WI-###` worker, one re-accept window); the remaining spine
 rows stay queued for later exclusive turns. A lane carries exactly one work
-item. An `attestation`/`gate` row does NOT dispatch while the tier in process
-is still HUMAN-HELD: the lanes drain, the cards stay on open-items.html, and
+item. An `acceptance`/`gate` row does NOT dispatch while the tier in process
+is still OPERATOR-HELD: the lanes drain, the cards stay on open-items.html, and
 the run exits 0 — the machine finished everything it was allowed to do
-(`agent_route.failure_action(human_held=True)` is the contract this
+(`agent_route.failure_action(operator_held=True)` is the contract this
 implements). `keep_nondependent` never releases that hold: once nothing else
 remains, those rows still surface; on a LOOP-HELD tier they dispatch outright,
 one at a time and exclusive (a recorded fresh-context reviewer verdict
-approves). The three retired enum words
+accepts). The three retired enum words
 (`attended` / `single-approve` / `autonomous`) each named one cell of that
 two-dial table, which is why they could not express the fourth. The fixed
-points hold at every level: the owner's final read is the human's, no un-run greens, the
-harness is still the bar, approved owner decisions are never re-decided.
+points hold at every level: the final read is the operator's, no un-run passes, the
+harness is still the checks, accepted operator decisions are never re-decided.
 
 Beyond admission it adds ORDERING only, no authority: every refusal stays
 where it already lives (the tracked docs/work/pause, a dirty trunk, the
-SpecRef and status-prose claim rungs, the §A2 refresh bar, the RULING-7
+SpecRef and status-prose claim rungs, the §A2 landing checks, the RULING-7
 verdict gate, docs/push-policy). Any refusal from a composed part STOPS the
 run loudly — admission halts, the in-flight lanes drain, and the run exits
 with the refusal's code; the dispatcher never skips past one, never
@@ -147,7 +147,7 @@ def _round_owed(root, branch):
     file is invalid evidence (WI-884) — which is exactly the refusal class a
     worker can discharge. A refusal with nothing owed is one of the gate's
     other three answers — a dissent, a reroll-until-green, or a contradicted
-    attestation — and none of them is fixed by drawing another round.
+    trailer — and none of them is fixed by drawing another round.
 
     Fails toward NOT owed at every unreadable step: git that cannot name the
     tree, or a lane with no readable claim commit, leaves the gate's own
@@ -218,7 +218,7 @@ def _session_config_refusal(root, args):
     managed-routing enable-list means every worker would refuse at its own
     preflight - AFTER the claim had already parked a branch. Refuse here
     instead, with nothing claimed yet. Returns the refusal string, or None.
-    A `[build] red_rounds_max` its reader refuses is refused here too, so no
+    A `[build] stop_lane_after_consecutive_commit_check_failures` its reader refuses is refused here too, so no
     lane is claimed for a worker that could never start.
 
     Implements: SR-242, LLR-343
@@ -230,7 +230,7 @@ def _session_config_refusal(root, args):
     conflicts = ac.config_conflicts(root / "docs")
     if conflicts:
         return conflicts[0]
-    _, refusal = kconfig.red_rounds_max(root)
+    _, refusal = kconfig.commit_check_failure_cap(root)
     if refusal is not None:
         return refusal
     template = (
@@ -280,7 +280,7 @@ def _drain(root, tier):
     of counting beforehand.
 
     THE SPECULATIVE HALF of the station protocol (docs/concurrency-v2.md §A2.0,
-    ruled 2026-07-31). The 11-minute bar runs HERE, outside the slot, so the
+    ruled 2026-07-31). The 11-minute checks run HERE, outside the slot, so the
     exclusive turn to advance trunk is held for a sub-second ancestor check and
     the merge itself; a lane that loses a race redoes a refresh it would have
     owed anyway going second, and nothing else is reconciled because ancestry
@@ -289,22 +289,22 @@ def _drain(root, tier):
     THIS CALL IS THE WHOLE SPECULATION. Deleting the refresh loop below
     restricts the design to pessimistic: `integrate_one` refreshes in-slot for
     any branch that arrives un-refreshed, so the queue keeps working, one lane
-    at a time, with the bar inside the lock. That is the owner's recorded
+    at a time, with the checks inside the lock. That is the operator's recorded
     caveat priced at one line.
 
-    A red refresh STOPS the run for a branch that asserts it is DONE - it is
-    the same failure a red merge bar used to be, moved to where the lane that
+    A failing refresh STOPS the run for a branch that asserts it is DONE - it is
+    the same failure that failing landing checks used to be, moved to where the lane that
     caused it can fix it. A branch that asserts the opposite is the §A3
     exception the ruling covers: see `_refresh_or_quarantine`.
     """
     for branch in integrate.finished_branches(root):
         ready, _why = integrate._landing_ready(root, branch)
         if ready:
-            # A lane's own refresh (or a hand refresh) already attested this
-            # exact tip against the current trunk, and its watermark holds the
+            # A lane's own refresh (or a hand refresh) already recorded the
+            # landing checks for this exact tip against the current trunk, and its watermark holds the
             # id carrier's fold: the slot's own readiness question, so the slot
             # will not refresh it again — redoing the disposable commit would
-            # spend a full bar to reproduce it.
+            # spend a full checks to reproduce it.
             continue
         refusal = _refresh_or_quarantine(root, branch, tier)
         if refusal:
@@ -314,17 +314,17 @@ def _drain(root, tier):
 
 
 def _refresh_or_quarantine(root, branch, tier):
-    """The §A2 refresh, with the §A3 red-handback ruling behind it. A refusal
+    """The §A2 refresh, with the §A3 ruling on a failing handback behind it. A refusal
     string, or None.
 
-    A merged lane that reds the bar has broken something and is told so: its
+    A merged lane that fails the checks has broken something and is told so: its
     outcome ASSERTS the work is done, and the run stops for the lane to fix it.
     A lane that merged nothing asserts the opposite - it is handing the work
-    back, or throwing it away - and stopping the run over red code nobody
+    back, or throwing it away - and stopping the run over failing code nobody
     claimed was finished is exactly the hanging branch this design abolishes.
     So it is quarantined once (ruled option 1: revert the code, keep the failing
-    diff as a bar-inert `.patch`) and refreshed again. Once, deliberately: a
-    second red on a tree whose product changes have all been reverted is a real
+    diff as a checks-inert `.patch`) and refreshed again. Once, deliberately: a
+    second failure on a tree whose product changes have all been reverted is a real
     anomaly, not a case to loop on.
     """
     _sha, refusal = integrate.refresh(root, branch, tier)
@@ -341,40 +341,40 @@ def _refresh_or_quarantine(root, branch, tier):
     return refusal
 
 
-def _kind_action(kind, human_held, approval_held=False):
+def _kind_action(kind, operator_held, acceptance_held=False):
     """The §A8 policy table — what the dispatcher does with a frontier row of
     `kind`, and the one place this module must not invent policy:
 
-        kind                  human-held tier      loop-held tier
+        kind                  operator-held tier      loop-held tier
         ordinary, critique    parallel             parallel
         high-risk, protected  exclusive            exclusive
         spine                 exclusive            exclusive
-        attestation, gate     surface              exclusive
+        acceptance, gate     surface              exclusive
 
-    `human_held` is the SN-029 comparison already made: is the tier this repo's
-    spine is currently in process at still the human's to approve
-    (`agent_common.human_holds`)? It replaces the three-value gate-authority enum,
-    which could not express "TCs are human-held but LLRs are not" — the whole
-    reason the approval dial became an ordinal read against the 0-5 spine
+    `operator_held` is the SN-029 comparison already made: is the tier this repo's
+    spine is currently in process at still the operator's to accept
+    (`agent_common.operator_holds`)? It replaces the three-value gate-authority enum,
+    which could not express "TCs are operator-held but LLRs are not" — the whole
+    reason the acceptance dial became an ordinal read against the 0-5 spine
     stage ladder (the dial's own levels stay 0-4: the four SPINE tiers plus
-    "nothing", and implementation is not an approval tier).
+    "nothing", and implementation is not an acceptance tier).
 
     A `spine` row dispatches EITHER WAY because building a scope change is
-    WORK, not an approval — it opens a window; closing it is the next row's
-    job. `attestation`/`gate` close a window, which on a human-held tier is the
-    human's act (drain, surface the cards, exit 0) and otherwise dispatches — a
+    WORK, not an acceptance — it opens a window; closing it is the next row's
+    job. `acceptance`/`gate` close a window, which on an operator-held tier is the
+    operator's act (drain, surface the cards, exit 0) and otherwise dispatches — a
     recorded fresh-context reviewer verdict approves. The last arm also covers
     `adjudication`: exclusive, like every non-parallel kind.
 
-    `approval_held` IS THE OFF-SPINE AXIS (owner ruling OI-30 D3, 2026-08-15),
+    `acceptance_held` IS THE OFF-SPINE AXIS (operator ruling OI-30 D3, 2026-08-15),
     and it is a SECOND reason to surface rather than a widening of the first.
-    `human_held` answers about the SPINE tier the repo is in; a WI whose action
+    `operator_held` answers about the SPINE tier the repo is in; a WI whose action
     would move an `approval` cell in an off-spine registry is governed by THAT
-    registry's own rung — `agent_common.human_approves(docs, registry)`, which
-    reads the same `human_approval_through` dial through
-    `agent_common.APPROVAL_RUNGS`. Either hold surfaces: a loop session must not
-    write an approval a human owes, even on a spine tier the project has
-    declared machine-approvable.
+    registry's own rung — `agent_common.operator_accepts(docs, registry)`, which
+    reads the same `operator_accepts_through` dial through
+    `agent_common.ACCEPTANCE_RUNGS`. Either hold surfaces: a loop session must not
+    write an acceptance an operator owes, even on a spine tier the project has
+    declared machine-acceptable.
 
     IT DEFAULTS FALSE AND EVERY CALLER IN THIS MODULE PASSES THE DEFAULT, which
     is stated rather than hidden: NO WI KIND CARRIES A REGISTRY IDENTITY TODAY.
@@ -382,7 +382,7 @@ def _kind_action(kind, human_held, approval_held=False):
     admission to satisfy a rule with no live writer would be building the wrong
     half first. This parameter is the SEAM the rule is enforced at, placed so the
     caller that first learns which registry a row would touch has somewhere to
-    say so — and `tests/test_approval_level.py` pins that no shipped loop
+    say so — and `tests/test_acceptance_level.py` pins that no shipped loop
     module writes an `approval` cell in the meantime, which is the guard that
     actually bites today.
 
@@ -392,8 +392,8 @@ def _kind_action(kind, human_held, approval_held=False):
         return "parallel"
     if kind == "spine":
         return "exclusive"
-    if kind in ("attestation", "gate"):
-        return "surface" if (human_held or approval_held) else "exclusive"
+    if kind in ("acceptance", "gate"):
+        return "surface" if (operator_held or acceptance_held) else "exclusive"
     return "exclusive"
 
 
@@ -411,22 +411,22 @@ def _judgement_first(ready_kinds):
     WHY dispositions outrank even a scope change: an adjudication row exists
     because a lane CLAIMED an outcome (a partial close, a cancellation, an
     amendment that may have moved meaning) and nothing has judged that claim
-    yet. A spine row re-attests requirements. Running the spine row first
-    re-approves a spine on a premise the pending judgement may overturn, and an
-    approval is the one thing this loop cannot cheaply take back — the
-    attestation ledger is append-only by design. Judge, then build."""
+    yet. A spine row re-accepts requirements. Running the spine row first
+    re-accepts a spine on a premise the pending judgement may overturn, and an
+    acceptance is the one thing this loop cannot cheaply take back — the
+    acceptance ledger is append-only by design. Judge, then build."""
     return sorted(ready_kinds, key=lambda wk: wk[1] != "adjudication")
 
 
-def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
+def _admission(ready_kinds, operator_held, busy, free, keep_nondependent=False):
     """THE SPINE BARRIER, as a pure decision (§A4/§A8): what may start now?
 
     `ready_kinds` is the ordered frontier as `(wi_id, kind)` pairs (rank
-    already sorted spine first), `human_held` the SN-029 comparison (is the
-    tier in process still the human's to approve?), `busy` whether any lane is
+    already sorted spine first), `operator_held` the SN-029 comparison (is the
+    tier in process still the operator's to accept?), `busy` whether any lane is
     out, `free` how many lanes are open, and `keep_nondependent` the orthogonal
     dial an ordinal cannot carry — may other work keep running while an
-    approval is queued? Returns `(verb, payload)`:
+    acceptance is queued? Returns `(verb, payload)`:
 
       ("admit", [[id], ...])        fill lanes with parallel rows, one per lane
       ("admit-exclusive", [id])     the first exclusive row, spine included,
@@ -434,7 +434,7 @@ def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
                                     wait for later exclusive turns
       ("wait", [])                  an exclusive-kind row is pending: stop
                                     admitting and let the lanes come home
-      ("surface", ids)              attestation/gate rows that may not dispatch
+      ("surface", ids)              acceptance/gate rows that may not dispatch
                                     at this level: drain, surface, exit 0
       ("empty", [])                 nothing ready at all
 
@@ -449,41 +449,43 @@ def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
     if not ready_kinds:
         return "empty", []
     ready_kinds = _judgement_first(ready_kinds)
-    surfaced = [w for w, k in ready_kinds if _kind_action(k, human_held) == "surface"]
+    surfaced = [
+        w for w, k in ready_kinds if _kind_action(k, operator_held) == "surface"
+    ]
     dispatchable = [
-        (w, k) for w, k in ready_kinds if _kind_action(k, human_held) != "surface"
+        (w, k) for w, k in ready_kinds if _kind_action(k, operator_held) != "surface"
     ]
     if surfaced and not keep_nondependent:
-        # The human-held stop (§A8 premise: once an approval is pending, no
-        # work can be taken): drain and exit 0 into the owner's queue.
+        # The operator-held stop (§A8 premise: once an acceptance is pending, no
+        # work can be taken): drain and exit 0 into the operator's queue.
         return "surface", surfaced
     if not dispatchable:
         if not surfaced:
             return "empty", []
         # THE CLOSE UNDER `keep_nondependent`: the non-dependent work has all
-        # drained and only the approval rows remain. They still SURFACE.
+        # drained and only the acceptance rows remain. They still SURFACE.
         #
         # This arm used to admit them, inherited from the retired
         # `single-approve` word — "dispatches only as the queued batch once
         # nothing else remains". Under the ordinal that is a contradiction:
-        # `human_held` is TRUE here, which is the statement that this tier is
-        # the human's to approve, and `keep_nondependent` answers an entirely
+        # `operator_held` is TRUE here, which is the statement that this tier is
+        # the operator's to accept, and `keep_nondependent` answers an entirely
         # different question — may OTHER lanes keep running while a
-        # approval is queued. Letting the second dial override the first is
-        # the machine approving what a human declared theirs, reached by a
+        # acceptance is queued. Letting the second dial override the first is
+        # the machine accepting what an operator declared theirs, reached by a
         # combination the enum could not even express (level 4 +
         # keep_nondependent, the fourth cell).
         if busy:
             return "wait", []
         return "surface", surfaced
     first_w, first_k = dispatchable[0]
-    action = _kind_action(first_k, human_held)
+    action = _kind_action(first_k, operator_held)
     if action == "exclusive":
         if busy:
             return "wait", []
         return "admit-exclusive", [first_w]
     assignments = [
-        [w] for w, k in dispatchable if _kind_action(k, human_held) == "parallel"
+        [w] for w, k in dispatchable if _kind_action(k, operator_held) == "parallel"
     ]
     assignments = assignments[: max(0, free)]
     if not assignments:
@@ -570,11 +572,11 @@ def _branch_exclusive(root, branch):
 # the TERMINAL `partial/`, which `schedule._disposition` reads as `partial` (never
 # ready), so an unattended run can never pick that WI up again until a successor
 # is minted. §A3's ruling is "any non-zero worker exit that is not a crash", and
-# its justification (the dominant shape is green-but-not-approved or
-# cannot-proceed-for-config-reasons) is about EXIT_NEEDS_HUMAN, not about a
+# its justification (the dominant shape is passing-but-not-accepted or
+# cannot-proceed-for-config-reasons) is about EXIT_NEEDS_OPERATOR, not about a
 # ceiling. The alternative — a handback that stays resumable — re-opens the
 # claim/return/re-claim loop this row closed, bounded then only by
-# --max-iterations, so it is an owner call rather than a builder's: filed as a
+# --max-iterations, so it is an operator call rather than a builder's: filed as a
 # finding, not decided here.
 #
 # `EXIT_PREFLIGHT` IS NOT IN THE SET, and that is a 2026-09-04 ruling rather
@@ -587,7 +589,7 @@ def _branch_exclusive(root, branch):
 # handback then committed the lane's uncommitted residue as "the work so far,
 # committed as-is (partial close)" and moved rows to the TERMINAL `partial/` -
 # recording an outcome for a failure the lane could not have caused and no
-# human had read. A lane whose worker never started is parked exactly like a
+# operator had read. A lane whose worker never started is parked exactly like a
 # CRASHED one: the claim stays in `active/`, the next cycle resumes it, and a
 # worker that keeps refusing trips the stall guard. Nothing is committed on its
 # behalf.
@@ -597,30 +599,36 @@ _WORKER_OUTCOMES = frozenset(
         ac.EXIT_STALL,
         ac.EXIT_WAITING,
         ac.EXIT_BUDGET,
-        ac.EXIT_NEEDS_HUMAN,
+        ac.EXIT_NEEDS_OPERATOR,
         ac.EXIT_PAUSED,
-        ac.EXIT_RED_CAP,
+        ac.EXIT_CHECK_FAILURE_CAP,
     }
 )
 
 
-def _red_cap_close(root, branch):
-    """`(reason, not_delivered)` for a lane whose worker hit the red cap: the
-    count and the last bar summary read through `kverdict.red_rounds` from the
-    lane's merge base with trunk, and the declared `[build] red_rounds_max`.
+def _failure_cap_close(root, branch):
+    """`(reason, not_delivered)` for a lane whose worker hit the commit-check
+    failure cap: the count and the last run's summary read through
+    `kverdict.failed_rounds` from the lane's merge base with trunk, and the
+    declared cap (`kconfig.FAILURE_CAP_KEY`).
 
     Implements: SR-242, LLR-343
     """
     code, base = ac.git(root, "merge-base", ac.trunk_name(root), branch)
-    red = kverdict.red_rounds(root, branch, base.strip()) if code == 0 else None
+    red = kverdict.failed_rounds(root, branch, base.strip()) if code == 0 else None
     count, last = (red.count, red.last_summary) if red else ("unreadable", "-")
     reason = (
-        "red bar cap: {} consecutive red rounds ([build] red_rounds_max = {}); "
-        "last bar: {}".format(count, kconfig.red_rounds_max(root)[0], last)
+        "commit-check failure cap: {} consecutive failed rounds ([build] {} = "
+        "{}); last run: {}".format(
+            count,
+            kconfig.FAILURE_CAP_KEY,
+            kconfig.commit_check_failure_cap(root)[0],
+            last,
+        )
     )
     return reason, (
-        "The lane's review bar stayed red, so its build is not delivered: "
-        "last bar: {}".format(last)
+        "The lane's commit checks kept failing, so its build is not delivered: "
+        "last run: {}".format(last)
     )
 
 
@@ -628,12 +636,12 @@ def _lane_close(root, branch, code):
     """What a non-DONE worker outcome does to the lane: None to keep driving,
     else the exit code the run ends with (§A3).
 
-    THE RUN-STOPS THIS REPLACES. `EXIT_NEEDS_HUMAN` used to end the whole drive
+    THE RUN-STOPS THIS REPLACES. `EXIT_NEEDS_OPERATOR` used to end the whole drive
     loop and any other non-zero exit stopped it with the branch parked — so one
-    WI wanting a human froze a walk-away run, and its partial work sat where
+    WI wanting an operator froze a walk-away run, and its partial work sat where
     nobody would find it. Neither is an exceptional outcome that deserves an
     exceptional path: the lane hands back, the WI returns to trunk blocked and
-    visible on the owner surface, and the dispatcher moves to the next one.
+    visible on the operator surface, and the dispatcher moves to the next one.
 
     A process restart preserves the lane before any work-outcome decision.
     Otherwise a lane that ALREADY CLOSED its specs is left alone.
@@ -669,7 +677,7 @@ def _lane_close(root, branch, code):
         # committed and no reviewer could be drawn. Deliberately parked, not
         # decided — the next cycle resumes the lane, whose worker schedules
         # the owed round first (the out/review-owed marker). A reviewer
-        # outage never hands finished work back (owner direction 2026-08-30).
+        # outage never hands finished work back (operator direction 2026-08-30).
         _say(
             "worker on {} exited REVIEW OWED (exit {}) - the build is "
             "committed and no reviewer could be drawn; the lane stays parked "
@@ -696,19 +704,19 @@ def _lane_close(root, branch, code):
         )
         return None
     reason = "worker exit {}{}".format(
-        code, " (NEEDS-JUDGEMENT)" if code == ac.EXIT_NEEDS_HUMAN else ""
+        code, " (NEEDS-JUDGEMENT)" if code == ac.EXIT_NEEDS_OPERATOR else ""
     )
     # SR-144: the dispatcher's own close carries the TYPED fields the report
     # schema declares, rather than smuggling them through the reason string.
     # (SR-144 owns the report's SHAPE; LLR-161 owns what the disposition row
     # minted from it may then do — lineage, not fields.)
     # The tier is keyed off the EXIT-CODE CLASS — a fact the dispatcher already
-    # holds — not off a substring of prose: `NEEDS_HUMAN`, `needs human` or any
+    # holds — not off a substring of prose: `NEEDS_OPERATOR`, `needs operator` or any
     # typo used to downgrade a disposition silently, because a case-folded
-    # search for `NEEDS-HUMAN` was the tier's only input. The label in the
+    # search for `NEEDS-OPERATOR` was the tier's only input. The label in the
     # reason is now decoration; the field is the contract.
     fields = {
-        "suggested_tier": "strong" if code == ac.EXIT_NEEDS_HUMAN else "medium",
+        "suggested_tier": "strong" if code == ac.EXIT_NEEDS_OPERATOR else "medium",
         # THE DISPATCHER CANNOT JUDGE THE KEEP/DISCARD SPLIT and says so, in a
         # typed field, rather than leaving the report silent. It has no view of
         # the work at all — the worker exited or crashed — so the honest answer
@@ -722,8 +730,8 @@ def _lane_close(root, branch, code):
             "commit range above.".format(code, branch)
         ),
     }
-    if code == ac.EXIT_RED_CAP:
-        reason, fields["not_delivered"] = _red_cap_close(root, branch)
+    if code == ac.EXIT_CHECK_FAILURE_CAP:
+        reason, fields["not_delivered"] = _failure_cap_close(root, branch)
     _ids, refusal = handback.close_partial(root, branch, reason, fields)
     if refusal:
         _say("cannot close {} as partial: {}".format(branch, refusal), err=True)
@@ -821,7 +829,7 @@ def _advance(root, ln, tier, restarting=False):
                 return ("fatal", rc)
         if ln.branch in integrate.finished_branches(root):
             # The lane's tree named an outcome — run ITS refresh in ITS own
-            # subprocess (§A4.3: N bars must overlap, not queue here).
+            # subprocess (§A4.3: N checks must overlap, not queue here).
             ln.phase = "refresh"
             ln.proc = lane.spawn_refresh(root, ln.branch, tier)
             return None
@@ -830,7 +838,7 @@ def _advance(root, ln, tier, restarting=False):
     if rc == 0:
         # THE MERGE SLOT, scoped to this lane's branch: another lane may be
         # mid-refresh on its own branch and must not be pulled into the slot
-        # half-attested.
+        # half-refreshed.
         code = integrate.integrate(root, tier, branches=[ln.branch])
         if code != 0:
             return ("fatal", code)
@@ -839,16 +847,16 @@ def _advance(root, ln, tier, restarting=False):
 
 
 def _refresh_failed(root, ln, tier, rc):
-    """The §A3 red-refresh ruling for a lane whose refresh subprocess exited
+    """The §A3 ruling on a failed refresh, for a lane whose refresh subprocess exited
     nonzero — the same decision `_refresh_or_quarantine` makes for residue
     branches, read off the subprocess's exit code (its refusal detail is its
     own stderr in the walk-away log, plus the retained out/run-logs file):
     fatal for a branch that asserts DONE, quarantine-once for one that merges
-    nothing, and a second red after the quarantine is a real anomaly."""
+    nothing, and a second failure after the quarantine is a real anomaly."""
     outcomes, unresolved = integrate.branch_outcomes(root, ln.branch)
     if unresolved or "merged" in outcomes.values() or ln.retried:
         _say(
-            "the refresh is RED for {} (exit {}){} - the reason is printed "
+            "the refresh FAILED for {} (exit {}){} - the reason is printed "
             "above by the refresh itself; the run stops for the lane to fix "
             "it.".format(ln.branch, rc, " after its quarantine" if ln.retried else ""),
             err=True,
@@ -863,7 +871,7 @@ def _refresh_failed(root, ln, tier, rc):
     refusal = handback.quarantine(
         root,
         ln.branch,
-        "the §A2 refresh bar refused (exit {}; see the run log above and "
+        "the §A2 landing checks refused (exit {}; see the run log above and "
         "out/run-logs/refresh-refused-*.log)".format(rc),
     )
     if refusal:
@@ -959,11 +967,11 @@ def _budget_exit(args, state):
 
 
 def _pending_cards(root):
-    """The pending owner cards, from the SAME `pending_block(root)` read the
+    """The pending operator cards, from the SAME `pending_block(root)` read the
     dashboard and open-items.html share (the WI-381 amendment, ruled
     2026-08-01: gen_open_items renders `pending.pending_block` verbatim, and
     the dispatcher's exit banner must derive from that one read so
-    agent-resume and the owner surfaces can never disagree about what is
+    agent-resume and the operator surfaces can never disagree about what is
     blocking). Drafted/drifted spine rows; the tracked-pause card is excluded
     because a pause has its own earlier exit, and the coordinator's git-trailer
     reads stay for in-flight lanes only. (A blocked-rows-with-a-BlockRef source
@@ -977,15 +985,15 @@ def _pending_cards(root):
     query, through private names used as a cross-module API (H-02, M-02). The
     old judgment note argued the facade crossed no *forbidden* seam, which was
     true and beside the point: a scheduling composer does not depend on a
-    dashboard to learn what the owner owes. The derivation now sits in
+    dashboard to learn what the operator owes. The derivation now sits in
     `pending.py`, below all three of its readers, and this asks it in its own
-    vocabulary — `owner_cards`, which is `pending_items` minus the pause,
+    vocabulary — `operator_cards`, which is `pending_items` minus the pause,
     declared once there rather than re-assembled here from two of the three
     sources. Still deferred, so the tick loop pays the read only at an exit
     banner."""
     import pending
 
-    return pending.owner_cards(root)
+    return pending.operator_cards(root)
 
 
 def _surface_banner(root, surfaced):
@@ -994,7 +1002,7 @@ def _surface_banner(root, surfaced):
 
     The count used to be `max(cards, surfaced)`. That did not merely
     over-report, it MISLABELED: with a queued gate row and zero pending cards
-    it sent the owner to open-items.html to read "None - no durable owner
+    it sent the operator to open-items.html to read "None - no durable owner
     action is pending", exactly the disagreement the ruled amendment forbids
     ("must derive from the SAME pending_block(root) read ... can never
     disagree").
@@ -1002,10 +1010,10 @@ def _surface_banner(root, surfaced):
     THE JUDGMENT, REVISED UNDER REVIEW. The first attempt made the two arms
     exclusive: cards if any exist, else the queued rows. That still could not
     disagree with `pending_block`, but review drove the cost — one unrelated
-    card silently SUPPRESSED two genuinely queued attestation rows, hiding
-    work the owner had every reason to see. The reason given for suppressing
+    card silently SUPPRESSED two genuinely queued acceptance rows, hiding
+    work the operator had every reason to see. The reason given for suppressing
     them (that the populations overlap, since `_pending_cards` yields
-    Drafted/drifted spine rows while `surfaced` yields queued gate/attestation
+    Drafted/drifted spine rows while `surfaced` yields queued gate/acceptance
     frontier rows, and one row can be both)
     justifies never SUMMING them — it does not justify hiding one.
 
@@ -1018,14 +1026,16 @@ def _surface_banner(root, surfaced):
     queued = len(surfaced)
     if cards and queued:
         return (
-            "queue drained - {} approval(s) waiting in open-items.html; "
-            "{} queued attestation row(s) on the frontier (the two reads may "
+            "queue drained - {} acceptance(s) waiting in open-items.html; "
+            "{} queued acceptance row(s) on the frontier (the two reads may "
             "name the same row)".format(cards, queued)
         )
     if cards:
-        return "queue drained - {} approval(s) waiting in open-items.html".format(cards)
+        return "queue drained - {} acceptance(s) waiting in open-items.html".format(
+            cards
+        )
     return (
-        "queue drained - {} queued attestation row(s); no card has projected "
+        "queue drained - {} queued acceptance row(s); no card has projected "
         "to open-items.html yet".format(queued)
     )
 
@@ -1045,9 +1055,9 @@ def _surface_banner(root, surfaced):
 # the names they always did. Same shape as `integrate`'s re-export of the
 # lane-close outcome vocabulary after slice 1.
 gap_census = census.gap_census
-red_tc_census = census.red_tc_census
-parse_red_tc = census.parse_red_tc
-RED_TC_PREFIX = census.RED_TC_PREFIX
+evidence_gap_census = census.evidence_gap_census
+parse_evidence_gap = census.parse_evidence_gap
+EVIDENCE_GAP_PREFIX = census.EVIDENCE_GAP_PREFIX
 
 
 def _pre_admit(args, table, state, config_refusal):
@@ -1173,7 +1183,7 @@ def _admit(
     args,
     worker,
     tier,
-    human_held,
+    operator_held,
     keep_going,
     lanes_total,
     config_refusal,
@@ -1182,7 +1192,7 @@ def _admit(
 ):
     """One tick's admission, enacted: `(admitted, exit_code)`. The exit code
     is non-None only when the run ends here — the drained queue, the surfaced
-    approvals, a refusal — and only ever with the station idle.
+    acceptances, a refusal — and only ever with the station idle.
 
     `paused` is the tracked pause's parsed body (None when absent), and it
     gates exactly ONE of the three things this function does: the CLAIM. §5.6
@@ -1239,7 +1249,7 @@ def _admit(
         args,
         worker,
         tier,
-        human_held,
+        operator_held,
         keep_going,
         free,
         busy,
@@ -1281,7 +1291,7 @@ def _admit_frontier(
     args,
     worker,
     tier,
-    human_held,
+    operator_held,
     keep_going,
     free,
     busy,
@@ -1307,7 +1317,7 @@ def _admit_frontier(
     kinds = {w["id"]: schedule.kind_of(w) for w in wis}
     verb, payload = _admission(
         [(r["id"], kinds.get(r["id"])) for r in ready],
-        human_held,
+        operator_held,
         busy,
         free,
         keep_going,
@@ -1329,8 +1339,8 @@ def _admit_frontier(
         # the banner's contract — every WI integrated in the run is counted,
         # whatever admission path merged it — true for the barrier-open arm
         # too (WI-412, WI-381 REVIEW-A finding 3; the same undercount rounds 1
-        # and 2 fixed for the exit arm). Credited only on a GREEN drain - a
-        # red one CAN also have merged branches, but that arm prints no count,
+        # and 2 fixed for the exit arm). Credited only on a PASSING drain - a
+        # failing one CAN also have merged branches, but that arm prints no count,
         # so there is nothing to misreport (see `_drain`).
         residue = _residue_wi_count(root)
         code = _drain(root, tier)
@@ -1359,7 +1369,7 @@ def _paused_exit(root, tier, paused, state):
 
     The residue is counted BEFORE the drain, for the reason `_station_exit`
     gives: after the merge those branches are no longer residue and the number
-    is unrecoverable. A red drain returns the refusal's code instead — the
+    is unrecoverable. A failing drain returns the refusal's code instead — the
     integrator's refusal is the one thing §5.6 says may end a pause with work
     still on a branch, and it is the gate working, not the pause failing."""
     residue = _residue_wi_count(root)
@@ -1379,7 +1389,7 @@ def _paused_exit(root, tier, paused, state):
 
 
 def _station_exit(root, tier, verb, payload, state):
-    """The run's honest ends, station idle: the surfaced-approval stop
+    """The run's honest ends, station idle: the surfaced-acceptance stop
     (§A8 attended: drain, leave the cards, exit 0) and the drained queue — or,
     on rung 1, NOT an end at all: a minted gap row re-fills the frontier and
     the return is None (keep driving). A finished branch may still be waiting
@@ -1398,7 +1408,7 @@ def _station_exit(root, tier, verb, payload, state):
     # the WI-388 intake mint, which turns each gap into a concrete gap-closure
     # row (derived description, no model in the path) and dedupes against the
     # rows that already exist, so the ladder cannot mint one gap forever.
-    # Rung 2: census empty but a pending attestation exists — that is not
+    # Rung 2: census empty but a pending acceptance exists — that is not
     # missing work; the cards are on open-items.html and the banner counts
     # them off the shared read. Rung 3: census empty and registries complete —
     # honest drain.
@@ -1420,13 +1430,13 @@ def _station_exit(root, tier, verb, payload, state):
         _say(
             "empty frontier - {} registry gap(s) named above already carry "
             "minted rows (open or built); nothing new to mint - the remainder "
-            "is the owner's to read.".format(len(census))
+            "is the operator's to read.".format(len(census))
         )
         return ac.EXIT_DONE
     cards = _pending_cards(root)
     if cards:
         _say(
-            "queue drained - {} approval(s) waiting in open-items.html".format(
+            "queue drained - {} acceptance(s) waiting in open-items.html".format(
                 len(cards)
             )
         )
@@ -1437,35 +1447,35 @@ def _station_exit(root, tier, verb, payload, state):
         )
     )
     # SN-029's separate end-of-run hold. The ordinal answers "which TIER is the
-    # human's"; this answers "do I get a last look before the run walks away",
+    # operator's"; this answers "do I get a last look before the run walks away",
     # and they are different questions — which is exactly why it is its own
     # dial. Without a reader it was a declared, type-checked promise that
     # nothing kept: a run at level 0 with `final_review = "always"` closed
-    # silently, which is the state an owner sets this dial to prevent.
+    # silently, which is the state an operator sets this dial to prevent.
     _say(drained)
     if ac.final_review(root / "docs"):
         # EXIT_DONE, deliberately, and this is the part worth being careful
-        # about. `NEEDS-HUMAN` means BLOCKED — something is owed before work can
+        # about. `NEEDS-OPERATOR` means BLOCKED — something is owed before work can
         # continue — and a clean drain is the opposite of that: everything
-        # merged, the bar is green, nothing is owed by the machine. Returning 7
+        # merged, the checks pass, nothing is owed by the machine. Returning 7
         # here would make every successful walk-away run report failure to the
         # launchers, which is how a dial meant to add a READ ends up inverting
         # an exit-code contract.
         #
         # What the dial actually buys is that the run does not close SILENTLY:
         # the loop stops (this IS the end of the run) and says so loudly enough
-        # that a human reads it rather than discovering it in a log later.
+        # that the operator reads it rather than discovering it in a log later.
         _say(
             "FINAL REVIEW - the run is COMPLETE and nothing is blocked, but "
-            "docs/process.toml [attestation] final_review is not 'off', so it "
-            "ends here for a human read rather than closing quietly. Read the "
+            "docs/process.toml [authority] final_review is not 'off', so it "
+            "ends here for an operator read rather than closing quietly. Read the "
             "run; set the dial to 'off' when you no longer want the stop."
         )
     return ac.EXIT_DONE
 
 
 # The tick loop's poll cadence while lanes are busy: long enough not to spin,
-# short enough that a finished worker starts its refresh promptly (the bars
+# short enough that a finished worker starts its refresh promptly (the checks
 # behind it run minutes, so half a second is noise).
 _POLL_SECONDS = 0.5
 
@@ -1484,13 +1494,13 @@ def run(root, args, worker=None, tier="all"):
     """The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one
     injection seam (tests): a callable `(root, branch, wi_id, args) -> exit
     code` standing in for the worker session launch, run synchronously at
-    admission; None means lane.py's real subprocess launch. `tier` is the bar
-    tier the §A2 refresh runs (default: the full gate bar).
+    admission; None means lane.py's real subprocess launch. `tier` is the checks
+    tier the §A2 refresh runs (default: the full gate checks).
 
     EACH TICK: poll the live lanes (a worker exit decides an outcome; a
-    finished branch refreshes in its own subprocess; a green refresh merges
+    finished branch refreshes in its own subprocess; a passing refresh merges
     through the slot), then admit per `_admission` — the §A8 policy table plus
-    the spine barrier. A fatal event (a red refresh of a done-asserting
+    the spine barrier. A fatal event (a failing refresh of a done-asserting
     branch, a failed handback, a merge refusal, the stall guard) freezes
     admission at once, drains the in-flight lanes, and exits with the first
     fatal code.
@@ -1521,9 +1531,9 @@ def run(root, args, worker=None, tier="all"):
     lanes_total = _lane_count(args, root)
     # SN-029: one ordinal comparison, made once per run, threaded down exactly
     # as the enum was. `spine_stage_of` reads the tier currently in process
-    # through `kitlib.stage.read_stage`; `human_holds` compares it against the
-    # declared `human_approval_through`.
-    human_held = ac.human_holds(root / "docs", ac.spine_stage_of(root))
+    # through `kitlib.stage.read_stage`; `operator_holds` compares it against the
+    # declared `operator_accepts_through`.
+    operator_held = ac.operator_holds(root / "docs", ac.spine_stage_of(root))
     keep_going = ac.keep_nondependent(root / "docs")
     # Computed once, APPLIED lazily: admission refuses on it only when work
     # actually needs a worker, so an empty queue still drains to exit 0 on an
@@ -1547,9 +1557,9 @@ def run(root, args, worker=None, tier="all"):
         paused = ac.tracked_pause(root / "docs")
         # The clean-trunk refusal at the tick top, so the PARKED-resume path
         # meets it too; with lanes live it only freezes admission (their own
-        # merges refuse on dirt by themselves). The owner-only paths are read
+        # merges refuse on dirt by themselves). The operator-only paths are read
         # past (WI-612), as resume and done detection already read past them:
-        # the owner's scratchpad is never a lane's deliverable, and no
+        # the operator's scratchpad is never a lane's deliverable, and no
         # bookkeeping commit stages it, so a mid-edit note is not residue.
         dirty = ac.substantive_working_tree_dirty(root)
         if dirty and not table:
@@ -1576,7 +1586,7 @@ def run(root, args, worker=None, tier="all"):
                 args,
                 worker,
                 tier,
-                human_held,
+                operator_held,
                 keep_going,
                 lanes_total,
                 config_refusal,

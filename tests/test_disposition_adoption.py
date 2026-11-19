@@ -11,7 +11,7 @@ test_verdict_record.py and test_consolidate_close.py (slow tier); each family
 keeps its in-process pin here, in the smoke tier.
 
 Two evidence classes (coordinator-cycle skill §3, Intent): new or corrected
-behaviour is a strict expected failure (`_RED`) whose red reaches the test's
+behaviour is a strict expected failure (`_RED`) whose failure reaches the test's
 own assertion, the absent functions standing as stubs; a characterization of
 behaviour already correct is unmarked and names, in its docstring, the wrong
 implementation it would catch.
@@ -35,8 +35,8 @@ from kitlib import verdict as kverdict  # noqa: E402
 intake = load_script("intake")
 consolidate = load_script("consolidate")
 
-#: New or corrected behaviour: red until its build row lands, at its own
-#: assertion (an import or attribute error is not this class's red).
+#: New or corrected behaviour: failing until its build row lands, at its own
+#: assertion (an import or attribute error is not this class's failure).
 _RED = {"strict": True, "raises": (AssertionError, pytest.fail.Exception)}
 
 _PARTIAL_TITLE = (
@@ -180,9 +180,7 @@ _OTHER = _entry("queued", "WI-460", supersedes='"WI-005"')
         "no-supersedes",
     ],
 )
-def test_acceptance_is_read_against_the_registry_with_distinct_refusals(
-    listing, reason
-):
+def test_validity_is_read_against_the_registry_with_distinct_refusals(listing, reason):
     """Implements: TC-360"""
     refusal = adoption.row_refusal(listing, "WI-450", "WI-005")
     if reason is None:

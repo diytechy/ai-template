@@ -7,7 +7,7 @@ field record names three distinct re-sync breakages, each caught downstream by a
 human rather than by this suite. This module builds the missing shape: extract a
 pinned older commit of THIS repo's own history, bootstrap a scaffold from it, run
 the re-sync procedure the kit documents today, and require the result to be a
-green harness. That procedure's home moved at OI-27's ruling — from ADOPTING.md
+passing harness. That procedure's home moved at OI-27's ruling — from ADOPTING.md
 §6 to `project-trajectory/RESYNC_PACK.md` §1, which is where the mechanical steps
 below are now written; §6 keeps the framing and points there.
 
@@ -17,7 +17,7 @@ WHAT IT HONESTLY COVERS
   - The scaffold that comes out the far side passes the kit's own harness
     (`check.py` at its gate, `trace.py --strict`), and passes it NON-vacuously:
     an old `check.py` that no longer recognises the repo prints "No checks
-    defined" and would otherwise hand us a false green, so that is asserted
+    defined" and would otherwise hand us a false pass, so that is asserted
     against explicitly.
   - The re-stamp works: `docs/kit-version` moves from the old kit's label to the
     current kit's SHA, which is what makes the NEXT re-sync a diff.
@@ -35,15 +35,15 @@ WHAT IT DOES NOT COVER, stated plainly because the gap is the point
     ones. The rest of the procedure — the pack's §2 deviation review and its §3
     per-change entries — is prose an operator executes by hand, and SR-036
     declares that judgment deliberately non-mechanized
-    (`verification = "Inspection"`). None of that half is exercised here.
-  - Consequently a GREEN here means "the documented mechanical steps leave a
+    (`verification_method = "Inspection"`). None of that half is exercised here.
+  - Consequently a PASS here means "the documented mechanical steps leave a
     repo whose OWN harness passes", not "the repo is now on the current kit".
     Those are different claims and this file only makes the first — and the
     distinction is not academic: the measured result is that the re-synced
     scaffold ends up carrying its spine registries under BOTH carriers, a state
-    the current kit hard-REFUSES, and it still reports green because the
+    the current kit hard-REFUSES, and it still reports a pass because the
     checker that would refuse it is one of the stale files
-    (`test_the_green_holds_only_because_the_old_checkers_survived`). Read that
+    (`test_the_pass_holds_only_because_the_old_checkers_survived`). Read that
     test before trusting the headline one.
   - It exercises ONE range (the pin below), not every range; a migration recipe
     that only applies to some other range is untested by construction.
@@ -86,13 +86,13 @@ from conftest import ROOT, SCRIPTS, run_py, skip_without_env_gates
 #   2. IT IS A CLEAN CLOSE POINT on the trunk's first-parent history (a "mark
 #      done + registry/dashboard close" commit), not a mid-claim state, so the
 #      scaffold it produces is a coherent kit rather than a half-landed one.
-#   3. ITS GREEN IS NOT VACUOUS. Measured while choosing: re-syncing forward from
+#   3. ITS PASS IS NOT VACUOUS. Measured while choosing: re-syncing forward from
 #      this commit leaves a harness that runs four real steps and passes. Reaching
 #      further back (e.g. `main`'s tip, 2026-06-28) produces a scaffold whose
 #      surviving old `check.py` prints "No checks defined for gate DevStg-Reqs" and exits
-#      0 — a green that means nothing. A test whose bar can be met vacuously is
+#      0 — a pass that means nothing. A test whose standard can be met vacuously is
 #      worse than no test, so the pin stops on the near side of that line and
-#      `test_old_kit_scaffold_syncs_forward_to_a_green_harness` asserts against
+#      `test_old_kit_scaffold_syncs_forward_to_a_passing_harness` asserts against
 #      the vacuous shape directly.
 # Re-pinning is expected as the kit ages; keep the three criteria, not the SHA.
 PINNED_OLD_KIT_SHA = "fd5916b976dc3d77ff11a2d2d6bc4a7fa924641d"
@@ -243,17 +243,17 @@ def resync(tmp_path_factory):
     )
 
 
-def test_old_kit_scaffold_syncs_forward_to_a_green_harness(resync):
-    """The headline claim: old scaffold + documented re-sync => green harness.
+def test_old_kit_scaffold_syncs_forward_to_a_passing_harness(resync):
+    """The headline claim: old scaffold + documented re-sync => passing harness.
 
-    Green is checked for SUBSTANCE as well as exit code. A re-synced repo still
+    A pass is checked for SUBSTANCE as well as exit code. A re-synced repo still
     carries its OLD `check.py`, and an old enough one no longer recognises the
     repo it is standing in and reports "No checks defined for gate <G>" at exit
-    0. That is the false green this whole class of test exists to catch, so the
+    0. That is the false pass this whole class of test exists to catch, so the
     assertions below require the harness to have actually run steps and passed
     them.
     """
-    # The bar is passed in the RETIRED vocabulary, deliberately. The re-synced
+    # The stage is passed in the RETIRED vocabulary, deliberately. The re-synced
     # repo still carries its OLD check.py — that is this module's whole premise,
     # stated in the docstring above — and that binary knows only the retired
     # tags. Passing the canonical `DevStg-Reqs` here would test the CURRENT kit's
@@ -268,7 +268,7 @@ def test_old_kit_scaffold_syncs_forward_to_a_green_harness(resync):
     assert proc.returncode == 0, out
     assert "RESULT: PASS" in out, out
     assert "No checks defined" not in out, (
-        "the re-synced scaffold's harness ran NO steps — this green is vacuous, "
+        "the re-synced scaffold's harness ran NO steps — this pass is vacuous, "
         "which means the pin is too old for the surviving check.py:\n" + out
     )
     passed = [ln for ln in out.splitlines() if ln.strip().startswith("PASS ")]
@@ -368,7 +368,7 @@ def test_documented_resync_is_add_only_today(resync):
     )
 
 
-def test_the_green_holds_only_because_the_old_checkers_survived(resync):
+def test_the_pass_holds_only_because_the_old_checkers_survived(resync):
     """The sharpest thing this module measures, and the reason it exists.
 
     Add-only has a consequence beyond "some files are stale". Because the
@@ -377,13 +377,13 @@ def test_the_green_holds_only_because_the_old_checkers_survived(resync):
     exact dual-home state the kit hard-REFUSES (`spine_carrier.resolve` raises
     on it, by the same rule `--migrate-config` applies to the policy dials).
 
-    And it reports green anyway, because the checker that would refuse it is one
+    And it reports a pass anyway, because the checker that would refuse it is one
     of the kit-owned scripts the re-sync did not update: the repo is still being
     judged by the OLD `trace.py`, which predates the carrier and cannot see the
     problem. Run the CURRENT kit's `trace.py` against the very same tree and it
     exits nonzero.
 
-    That is SN-008's dishonest green one level up — not a skipped check, but a
+    That is SN-008's dishonest pass one level up — not a skipped check, but a
     check that no longer matches the repo it is checking — and it is a MEASURED
     fact about the documented procedure, not a hypothesis. Pinned here so the
     OI-27 re-sync pack has a concrete thing to fix and a way to prove it did.
@@ -395,7 +395,7 @@ def test_the_green_holds_only_because_the_old_checkers_survived(resync):
         "does, the add-only contract changed — re-baseline this module"
     )
 
-    # The repo's own (old) harness: green.
+    # The repo's own (old) harness: passes.
     own = run_py(["scripts/trace.py", "--strict"], cwd=resync.repo)
     assert own.returncode == 0, own.stdout + own.stderr
 
@@ -408,19 +408,19 @@ def test_the_green_holds_only_because_the_old_checkers_survived(resync):
     assert "BOTH carriers" in current.stdout + current.stderr
 
 
-def test_force_resync_installs_current_checkers_and_the_tree_cannot_false_green(
+def test_force_resync_installs_current_checkers_and_the_tree_cannot_falsely_pass(
     resync, tmp_path
 ):
     """The OTHER half of the procedure — the wholesale overwrite — with --force.
 
     The add-only leg above proves the DOCUMENTED DEFAULT and pins its known
-    dishonest green (the surviving old checkers approve a tree the current kit
+    dishonest pass (the surviving old checkers accept a tree the current kit
     refuses). This leg proves the overwrite path: after `bootstrap.py --force`
     plus the documented `--migrate-config`, the tree's checkers ARE current —
     so whatever they report is the CURRENT kit's honest verdict on a
-    July-era scaffold, and the one outcome this test forbids is a green that
+    July-era scaffold, and the one outcome this test forbids is a pass that
     hides un-run migrations (SN-008 one level up, the adversarial round's
-    point). Either the current harness runs green with substance, or it
+    point). Either the current harness passes with substance, or it
     refuses LOUDLY naming what a re-sync still owes — both are honest; silence
     is the defect.
     """
@@ -443,14 +443,14 @@ def test_force_resync_installs_current_checkers_and_the_tree_cannot_false_green(
     verdict = run_py(["scripts/trace.py", "--strict-integrity"], cwd=repo)
     out = verdict.stdout + verdict.stderr
     if verdict.returncode == 0:
-        # Honest green: the current integrity floor really passed — require
-        # substance so a vacuous pass cannot slip through as approval.
+        # Honest pass: the current integrity floor really passed — require
+        # substance so a vacuous pass cannot slip through as acceptance.
         assert "orphans=0" in out or "integrity=0" in out, (
-            "green with no substance is the false green this test exists "
+            "a pass with no substance is the false pass this test exists "
             "to refuse:\n" + out
         )
     else:
-        # Honest red: the refusal must NAME what is owed, so the operator
+        # Honest failure: the refusal must NAME what is owed, so the operator
         # is routed to the migration rather than left with a bare exit code.
         assert out.strip(), "a silent nonzero teaches nothing:\n" + out
 
@@ -472,25 +472,25 @@ def test_fresh_node_scaffold_generates_its_required_prompt_catalog(tmp_path):
     assert "PASS  prompt-catalog" in harness.stdout
 
 
-def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path):
+def test_node_adopter_upgrade_preserves_populated_operator_content(resync, tmp_path):
     """A populated non-Python adopter survives the documented target re-sync.
 
     This is deliberately a copy of the archived old-kit scaffold, not a fresh
     current fixture: the target bootstrap must encounter an adopter's existing
     README, legacy SN/SR carriers, application, Node harness configuration and
-    recorded history.  It adds the current hats carrier as owner-authored text
+    recorded history.  It adds the current hats carrier as operator-authored text
     before the first target run, then proves that neither the initial add-only
     re-sync, the profile-driven process-doc regeneration, nor ``--sync``
     replaces any of those records.
 
     A second copy follows the full documented overwrite, then explicitly merges
-    the owner-controlled application, README, hats, stack config, work record,
+    the operator-controlled application, README, hats, stack config, work record,
     and history before it migrates the carriers and policy file.
     """
     repo = tmp_path / "node-adopter-upgrade"
     shutil.copytree(resync.pristine, repo)
 
-    owner_content = {
+    operator_content = {
         "README.md": """# Signal Triage\n\n## Vision\n\n**PROJECT-VISION:** Dispatch teams shall see a trustworthy incident timeline\nfrom browser-collected signals without losing the source or confidence of an\nevent.\n\n## What it does\n\n- **Incident timeline** — responders inspect the ordered browser signals (SN-701).\n\n## Migration record\n\n[Source-confidence note](docs/adopter-notes.md)\n""",
         "docs/requirements/hats.toml": """[hat.DATA-PROVENANCE]\napplies_when = 'tags contains "telemetry"'\nasks = "Can a responder distinguish reported events from inferred events?"\nlistens_for = "A timeline that makes uncertain or derived events appear authoritative."\n""",
         "src/timeline.js": """export function label(event) {\n  return `${event.source}: ${event.message}`;\n}\n""",
@@ -498,7 +498,7 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
         "package.json": """{\n  "name": "signal-triage",\n  "private": true,\n  "type": "module",\n  "scripts": {"test": "node --test"}\n}\n""",
         "docs/stack.ini": """[paths]\nsrc = src\ntests = test\n\n[product]\nformat = npx --no-install prettier --check {src} {tests}\nlint = npx --no-install eslint {src} {tests}\ntest = node --test\n\n[tiers]\nsmoke = test/smoke\nfull =\nrelease =\nall =\n\n[coverage]\nthreshold = 0\nargs =\n\n[arch-map]\nmode = files\n""",
     }
-    for rel, text in owner_content.items():
+    for rel, text in operator_content.items():
         path = repo / rel
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
@@ -547,7 +547,7 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
     history.write_text(
         history.read_text(encoding="utf-8")
         + "\n## 2026-09-06 — source-confidence decision\n\n"
-        "The owner retained source and confidence in incident evidence.\n",
+        "The operator retained source and confidence in incident evidence.\n",
         encoding="utf-8",
     )
     _adopter_git(repo, "init", "-q")
@@ -558,7 +558,7 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
     initial_commit = _adopter_git(repo, "rev-parse", "HEAD").strip()
     preserved = _digests(
         repo,
-        tuple(owner_content)
+        tuple(operator_content)
         + (
             "docs/requirements/stakeholder-needs.md",
             "docs/requirements/system-requirements.csv",
@@ -600,12 +600,12 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
     _adopter_git(repo, "commit", "-qm", "resync: record Node profile")
 
     # The migration is deliberately on a copy. Take the complete current kit
-    # mapping first, then restore the owner-controlled records before converting
-    # carriers. This is the documented overwrite plus intentional owner merge,
+    # mapping first, then restore the operator-controlled records before converting
+    # carriers. This is the documented overwrite plus intentional operator merge,
     # rather than a script-only update that leaves stale kit documents behind.
     # This leg does NOT test preservation: the byte-restore below is the test's
     # own operator step. What it proves is that the documented overwrite plus
-    # carrier conversion leaves the restored files alone and lands a green
+    # carrier conversion leaves the restored files alone and lands a pass
     # current harness. The add-only leg above is the preservation oracle.
     supported = tmp_path / "node-adopter-supported"
     shutil.copytree(repo, supported)
@@ -614,7 +614,7 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
         cwd=supported,
     )
     assert forced.returncode == 0, forced.stdout + forced.stderr
-    restored = tuple(owner_content) + (
+    restored = tuple(operator_content) + (
         "docs/requirements/stakeholder-needs.md",
         "docs/requirements/system-requirements.csv",
         "docs/log.md",
@@ -672,14 +672,14 @@ def test_node_adopter_upgrade_preserves_populated_owner_content(resync, tmp_path
             encoding="utf-8"
         )
     )["requirement"]
-    assert needs["SN-701"]["status"] == "Approved"
+    assert needs["SN-701"]["status"] == "Accepted"
     assert (
         needs["SN-701"]["need"] == "Responders need each event's source and confidence."
     )
     assert requirements["SR-701"]["sn_refs"] == ["SN-701"]
     assert requirements["SR-701"]["status"] == "Drafted"
-    assert _digests(supported, tuple(owner_content) + ("docs/log.md",)) == _digests(
-        repo, tuple(owner_content) + ("docs/log.md",)
+    assert _digests(supported, tuple(operator_content) + ("docs/log.md",)) == _digests(
+        repo, tuple(operator_content) + ("docs/log.md",)
     )
     note.write_text(
         note.read_text(encoding="utf-8").replace(

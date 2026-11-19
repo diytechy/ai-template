@@ -62,7 +62,7 @@ monorepo.
 
 ## 3. The confirmed model
 
-Six decisions, confirmed with the product owner. Each extends a seam the kit already
+Six decisions, confirmed with the operator. Each extends a seam the kit already
 has (`IF-###`, the Integration/Coordination hat, `PB-###`, the recursive spine) across
 a repo boundary — they are not new machinery.
 
@@ -143,10 +143,10 @@ side, each pinning its own module versions.
 ### 3.5 Coordinator gating = mechanical aggregation, judgment escalated
 
 The coordinator (as agent) runs the **mechanical** cross-module gate — every module
-passed its own gates, integration/plant tests are green, the interface catalog is
-consistent — and surfaces only the **judgment** gates to the human. The human signs
-the **integration** gate; module agents (and their humans) gate the modules. This is
-the §6 review-depth triage at the coordinator level; it **does not remove the human**,
+passed its own gates, integration/plant tests pass, the interface catalog is
+consistent — and surfaces only the **judgment** gates to the operator. The operator signs
+the **integration** gate; module agents (and their operators) gate the modules. This is
+the §6 review-depth triage at the coordinator level; it **does not remove the operator**,
 it routes the mechanical part away from them.
 
 ### 3.6 Cross-repo communication = async text + PR
@@ -161,15 +161,15 @@ the kit uses everywhere, applied across the repo boundary.
 A repo boundary breaks the single-repo safety net. In one repo a shared contract is
 kept honest by its **fixture/contract test at the seam** (§8), re-run whenever either
 side changes. Across repos, the owner can change an interface's *content* and ship a
-new version while a **consumer in another repo stays pinned to the old one and builds
-green in ignorance** — the drift the coordinator exists to catch. Split the job the
+new version while a **consumer in another repo stays pinned to the old one and keeps
+passing in ignorance** — the drift the coordinator exists to catch. Split the job the
 same way §3.5 splits gating:
 
 - **The coordinator reconciles *versions* (mechanical).** The catalog records, per
   `CIF-###`, the owner's **current published version** and each consumer's **pinned**
   version. A consumer pinned below the owner's current version — the owner (parent)
   moved and the dependent didn't — is a **compatibility finding**, weighted by the §8
-  `Status` cell (a `Drafted` change is expected; an `Approved` one past a pin is
+  `Status` cell (a `Drafted` change is expected; an `Accepted` one past a pin is
   a blocker). This is comparing versions the repos publish as text: no build engine.
 - **The interface's own contract test verifies *compatibility* (already exists).**
   Whether the new version is actually compatible is answered by the dependent repo
@@ -177,12 +177,12 @@ same way §3.5 splits gating:
   backs every interface. The coordinator doesn't judge semantics; on a divergence it
   **sequences** the dependent's re-verification (async text + PR: open a
   bump-and-re-run in the dependent repo, §3.6) and escalates a genuine break to the
-  human.
+  operator.
 
 So "the parent changed — can every dependent adjust?" becomes a pipeline:
 *coordinator detects the version divergence → triggers each dependent's contract test
-against the new version → human signs any real break.* Same three layers as §3.5
-(mechanical aggregation · existing test · human judgment). The reconciliation tool is
+against the new version → operator signs any real break.* Same three layers as §3.5
+(mechanical aggregation · existing test · operator judgment). The reconciliation tool is
 deferred (§7); the **design decision that makes it buildable** is §3.3's
 coordinator-level id carrying the owner + consumer versions.
 
@@ -198,7 +198,7 @@ trap:
   A→B→C, closed-loop stability of a controller against its plant, cross-module latency
   / throughput, disturbance rejection. These live in the **coordinator's** `SN→SR`
   chain and are **verified by the integration/plant repo's TCs** (typically
-  `Verification=Demonstration` — run the sim), *not* by any module.
+  `VerificationMethod=Demonstration` — run the sim), *not* by any module.
 
 The handoff **generalizes the §3.1 SR-tier rule**: a composition SR delegates to the
 **plant repo's `SN`** ("verify the composed product satisfies this"), exactly as a
@@ -212,7 +212,7 @@ A runtime test / simulation environment — assemble the modules' built runnable
 (SIL / HIL / E2E) — is a **first-class module the coordinator delegates to**, exactly
 like a functional module. It has its own `SN` (delegated from a coordinator SR),
 consumes the other modules' published artifacts, and **gates itself**. So "all deps
-green → queue the plant repo to assemble and run" is still *sequencing + triggering*
+pass → queue the plant repo to assemble and run" is still *sequencing + triggering*
 (read status, dispatch CI or open a PR, pass the version pins) — never the coordinator
 building or running anything.
 
@@ -276,8 +276,8 @@ future decision; the model above is what they will operationalize.
   **aggregation** that reads each module's *exported* trace summary, **not** one
   `trace.py` over many checkouts. Open: **pull** (the coordinator clones/reads) vs.
   **push** (modules publish a trace artifact it ingests).
-- **Coordinator gate aggregation** — the mechanical "all modules green + integration
-  green + catalog consistent" check (§3.5) as an actual stdlib command reading
+- **Coordinator gate aggregation** — the mechanical "all modules pass + integration
+  passes + catalog consistent" check (§3.5) as an actual stdlib command reading
   module-published gate/status artifacts, with escalation rules for the judgment gates.
 - **Interface catalog + compatibility reconciliation** — the `CIF-###` catalog registry
   (§3.3) and the §3.7 version-reconciliation check: flag a consumer pinned below the

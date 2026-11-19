@@ -52,7 +52,7 @@ IFS = (
     'consumers = ["scripts/b"]\n'
     'channel = "call"\n'
     'version = "v1"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
 )
 SRS = "SR-ID,Title,Requirement\nSR-001,One,shall\n"
 
@@ -81,7 +81,7 @@ def run(tmp_path, names, extra=()):
     )
 
 
-def test_two_plans_green_with_coverage_diff(tmp_path):
+def test_two_plans_pass_with_coverage_diff(tmp_path):
     names = write_inputs(tmp_path, plans=GATED)
     proc = run(tmp_path, names)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -220,11 +220,11 @@ Excludes: D3 — the verdict writer lands with the dual pickup row.
 TCS = (
     "[test.TC-001]\n"
     'verifies = ["SR-001"]\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     "\n"
     "[test.TC-002]\n"
     'verifies = ["SR-001"]\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
 )
 
 FINDINGS = """# Open review findings
@@ -430,7 +430,7 @@ def test_a_bold_exclusion_label_is_an_exclusion(tmp_path):
 def test_a_tc_verifying_only_a_non_item_sr_stays_out_of_the_single_diff(tmp_path):
     """The SR/TC diff asks only for the TCs that verify one of the item's own
     SRs; a TC on another SR is not this plan's to name or exclude."""
-    other = TCS + '\n[test.TC-003]\nverifies = ["SR-002"]\nstatus = "Approved"\n'
+    other = TCS + '\n[test.TC-003]\nverifies = ["SR-002"]\nstatus = "Accepted"\n'
     proc = write_single(tmp_path, tcs=other)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "TC-003" not in proc.stdout
@@ -489,7 +489,7 @@ FIRST = object()
 def write_dispute(
     root,
     ruling,
-    outcome="accepted",
+    outcome="recorded",
     kinds="F2",
     findings=(),
     verdict=DISPUTE_VERDICT,
@@ -699,7 +699,7 @@ def test_a_dismissal_whose_finding_cannot_be_shown_refuses(tmp_path):
 
 
 def test_a_cited_ruling_that_does_not_dismiss_refuses(tmp_path):
-    """A FIX or ESCALATE ruling, an unaccepted call, a ruling of another
+    """A FIX or ESCALATE ruling, an unrecorded call, a ruling of another
     finding and a missing verdict each refuse the exclusion that cites them.
     The refusal of a ruling that resolves nothing names the set this gate
     accepts (WI-911: a DISMISS or a SUCCESSOR).
@@ -708,13 +708,13 @@ def test_a_cited_ruling_that_does_not_dismiss_refuses(tmp_path):
     """
     accepts = "only a DISMISS or a SUCCESSOR resolves a finding"
     cases = (
-        ("RULING: F2 FIX the wording is wrong", "accepted", "F2", "rules F2 FIX"),
-        ("RULING: F2 FIX the wording is wrong", "accepted", "F2", accepts),
-        ("RULING: F2 ESCALATE high risk", "accepted", "F2", "rules F2 ESCALATE"),
-        ("RULING: F2 ESCALATE high risk", "accepted", "F2", accepts),
+        ("RULING: F2 FIX the wording is wrong", "recorded", "F2", "rules F2 FIX"),
+        ("RULING: F2 FIX the wording is wrong", "recorded", "F2", accepts),
+        ("RULING: F2 ESCALATE high risk", "recorded", "F2", "rules F2 ESCALATE"),
+        ("RULING: F2 ESCALATE high risk", "recorded", "F2", accepts),
         ("RULING: F2 DISMISS refuted no", "pending", "F2", "outcome pending"),
         ("RULING: F2 SUCCESSOR file it", "pending", "F2", "outcome pending"),
-        ("RULING: F1 DISMISS refuted no", "accepted", "F1", "does not rule F2"),
+        ("RULING: F1 DISMISS refuted no", "recorded", "F1", "does not rule F2"),
     )
     for n, (ruling, outcome, kinds, says) in enumerate(cases):
         root = tmp_path / str(n)
@@ -731,7 +731,7 @@ def test_a_cited_ruling_that_does_not_dismiss_refuses(tmp_path):
 
 
 def test_a_successor_ruling_citing_its_verdict_passes(tmp_path):
-    """WI-911: an accepted verdict ruling the finding SUCCESSOR resolves its
+    """WI-911: a recorded verdict ruling the finding SUCCESSOR resolves its
     exclusion on the rework gate, as a dismissal does: the finding becomes
     its own row, filed on trunk at the landing.
 

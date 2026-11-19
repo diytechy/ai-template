@@ -1,11 +1,11 @@
-"""The owner's verdict on a delegated decision, on the owner surface (WI-818;
-owner direction 2026-10-04, superseding WI-790's `reviewed` key).
+"""The operator's verdict on a delegated decision, on the operator surface (WI-818;
+operator direction 2026-10-04, superseding WI-790's `reviewed` key).
 
-One key, `owner`, carries the owner's verdict: `confirmed` or `overruled`. An
+One key, `operator`, carries the operator's verdict: `confirmed` or `overruled`. An
 absent key is NOT YET SEEN and lists the entry under "Decisions to review",
 high-risk first. Any other value, and the retired `reviewed` key, is a format
 finding and reads as not yet seen, so a typo never hides a decision; the
-reader never reads `reviewed` beside `owner` (the migrator rewrites it). An
+reader never reads `reviewed` beside `operator` (the migrator rewrites it). An
 overruled entry states the direction instead in its `review` note (a blank
 note is a finding) and is listed under its own heading with the work item
 that cites it, so an overrule never disappears silently.
@@ -24,7 +24,7 @@ decisions = pending._kitdecisions
 
 
 def _entry(eid, owner=None, review="", extra=""):
-    line = "" if owner is None else "owner = {}\n".format(owner)
+    line = "" if owner is None else "operator = {}\n".format(owner)
     return (
         '[decision.{}]\ndecided = "chose {}"\nalternative = "a"\n'
         'reversal_cost = "c"\nwhy_not_escalated = "w"\nreview = "{}"\n{}{}\n'.format(
@@ -117,13 +117,13 @@ def test_an_unrecognized_value_is_shown_and_is_a_format_finding(tmp_path, value)
     _record(tmp_path, "run.toml", [_entry("D-001", value)])
     assert "chose D-001" in _section(tmp_path)
     (finding,) = decisions.record_findings(_text(tmp_path))
-    assert finding.startswith("D-001: `owner`") and "not yet seen" in finding
+    assert finding.startswith("D-001: `operator`") and "not yet seen" in finding
     assert "Format findings" in _band(tmp_path)
 
 
 @pytest.mark.parametrize("owner", [None, '"confirmed"'])
 def test_the_retired_reviewed_key_is_a_finding_and_never_read(tmp_path, owner):
-    # An entry still carrying `reviewed` reads as NOT YET SEEN whatever `owner`
+    # An entry still carrying `reviewed` reads as NOT YET SEEN whatever `operator`
     # says (the spec's first Done-when bullet): the stale key keeps it in the
     # queue until the migrator removes it.
     _record(tmp_path, "run.toml", [_entry("D-001", owner, extra="reviewed = true\n")])
@@ -186,16 +186,16 @@ def test_no_decisions_directory_has_nothing_to_review(tmp_path):
     assert "Decisions to review" not in status.status_block(tmp_path)
 
 
-def test_the_shipped_template_entry_leaves_the_owner_key_unset():
+def test_the_shipped_template_entry_leaves_the_operator_key_unset():
     text = (KIT / "decisions.template.toml").read_text(encoding="utf-8")
-    assert "\nreviewed" not in text and "\nowner =" not in text
+    assert "\nreviewed" not in text and "\noperator =" not in text
     assert decisions.record_findings(text) == []
     assert decisions.review_queue(text) == ([], [], 0)  # -000 is never listed
-    assert decisions.owner_state(None) == ""
-    assert decisions.owner_state("confirmed") == decisions.CONFIRMED
-    assert decisions.owner_state("overruled") == decisions.OVERRULED
-    assert decisions.owner_state(True) is None
-    assert decisions.owner_state("perhaps") is None
+    assert decisions.operator_state(None) == ""
+    assert decisions.operator_state("confirmed") == decisions.CONFIRMED
+    assert decisions.operator_state("overruled") == decisions.OVERRULED
+    assert decisions.operator_state(True) is None
+    assert decisions.operator_state("perhaps") is None
 
 
 def test_a_malformed_hoist_is_shown_as_a_finding_not_a_crash(tmp_path):

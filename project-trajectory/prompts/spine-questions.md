@@ -3,7 +3,7 @@
      THE ONE HOME of the questions an adjudicator puts to a spine row, per
      tier. Two readers, and neither holds a copy:
        - scripts/adjudicate_brief.py composes the sections whose tiers match
-         the rows a first-approval or amendment brief judges (and each combined
+         the rows a first-acceptance or amendment brief judges (and each combined
          section composing those briefs) into that brief's {questions} slot at
          render time, so the brief stays self-contained in a repo with no
          skills installed;
@@ -17,7 +17,7 @@
      the first `## ` heading is not composed. Keep the section numbers: other
      kit text cites them (e.g. "§2(c)").
 
-     §3's first bullet (WI-911) is ruling 5 of the review-churn plan's owner
+     §3's first bullet (WI-911) is ruling 5 of the review-churn plan's operator
      rulings of 2026-10-11, as revisions 35 and 36 refine it: an LLR in
      contract voice, no implementation carrier in row text, and the traced
      `module` and `code_symbol` cells kept filled and binding until the plan's
@@ -26,7 +26,7 @@
      tier's brief, so an SN or SR sitting reads the same rule as an LLR or TC
      one; §1(e), §2(b), §2(d) and §3 point at it.
 
-     §4 serves the LLR tier because DevStg-Arch has no approval act of its
+     §4 serves the LLR tier because DevStg-Arch has no acceptance act of its
      own: the first LLR sitting at a component scope, or one that re-cuts
      it, is the act a decomposition judgement feeds. Every LLR brief carries
      §4, so its line states that applies-when itself: at any other LLR
@@ -56,13 +56,13 @@
   implementation carrier (a code file, function or symbol). A shipped boundary
   artifact (a registry, template, config file or launcher) may be named at the
   LLR and TC tiers only; SN and SR rows name no file in any cell, acceptance and
-  rationale included. An approved cell keeps its approved text verbatim, names
+  rationale included. An accepted cell keeps its accepted text verbatim, names
   included, until it is amended through its authority, and an amendment adds no
   name the rule forbids.
 - **Keep or mint:** a row whose meaning changed keeps its id only as
   `docs/process.md` §4 "Keep or mint" allows.
 
-## 1. At SN intake — answer these before the need is approved
+## 1. At SN intake — answer these before the need is accepted
 <!-- tiers: SN -->
 
 A defect admitted here becomes a whole subtree of need-less requirements later.
@@ -79,7 +79,7 @@ Questions:
   clause, and the SR that *does* carry it reads need-less forever. Ask of each
   clause: **if a stranger derived only from `need` + `acceptance`, would this
   obligation appear?** If not, move it up into the normative text.
-- **(c) Is the quality bar written down, or is it in someone's head?** "A reader
+- **(c) Is the quality standard written down, or is it in someone's head?** "A reader
   can see progress" is not "the view is legible, uniform and operable". If a
   perceptual or quality obligation is wanted, **the need that wants it has to
   exist**; otherwise the requirements built on it are underivable from every
@@ -88,7 +88,7 @@ Questions:
   alone?** The honest test of a need. Where the answer is no, the defect is in
   the need — file it as a needs defect, not as an SR problem.
 - **(e) Does the acceptance intent name an INSTRUMENT?** The no-concrete-artifact
-  rule reaches this tier too (owner directive 2026-08-18, extending it from SR up
+  rule reaches this tier too (operator directive 2026-08-18, extending it from SR up
   to SN), and it bites hardest here: the SN `acceptance` cell is where a need
   quietly becomes a sentence about a file. "`trace.py --strict` reports zero
   orphans" fixes a *stakeholder outcome* to one script — it cannot survive the
@@ -194,7 +194,7 @@ Questions:
 - **(c3) In a decomposition round, the review record names each applicable
   hat's outcome.** `Hat-Refs` cannot say that a perspective was weighed and
   found nothing, and no file beside the decomposition says it either. A round
-  that adds an SR under a need, or amends an approved need, carries each
+  that adds an SR under a need, or amends an accepted need, carries each
   applicable hat's question in its brief, and the sitting's verdict, the
   review record, names every one of them once: the rows it raised, by their
   `Hat-Refs`, or no finding with the reason. A missing outcome is a finding
@@ -216,7 +216,7 @@ Questions:
   not a cap: a hard cap invites merging two LLRs into one to slip under it,
   hiding the defect the number exists to surface. Clearing one is a **recorded
   per-row re-stamp** — the waiver token in the tier's reason cell (`Rationale`
-  at SR, `why` at SN) for an approved cell's kept name (§0), never for a new
+  at SR, `why` at SN) for an accepted cell's kept name (§0), never for a new
   one, the
   `fan-out re-stamp: <reason>` phrase for fan-out — and the reason must be one a
   later reader can **argue with**. "Accepted" is not a reason.
@@ -258,12 +258,12 @@ Questions:
   parent outcome remains sound but the LLR's mechanism causes the problem,
   compare the old/new design, retained parent clauses and behavioral regressions,
   affected trace/evidence/work references, and the code that becomes removable.
-  Amend the LLR and its mechanism-specific verification together; an Approved
+  Amend the LLR and its mechanism-specific verification together; an Accepted
   LLR does not require keeping an obsolete shim. Preserve unchanged parent
-  approval, re-attest changed child content through the applicable authority,
+  acceptance, re-accept changed child content through the applicable authority,
   and let the derived stage expose incomplete evidence. A changed stakeholder
   outcome, justified SR constraint or active WI scope returns to its own intake
-  and approval path; it cannot be hidden as a design-only replacement.
+  and acceptance path; it cannot be hidden as a design-only replacement.
 - **An LLR's `Hat-Refs` holds only what its OWN decomposition raised — never a
   copy of its parent's.** The row's EFFECTIVE set is derived (own refs unioned
   with its `SR-Refs` parents'), so an own ref is earned only where the design
@@ -294,7 +294,7 @@ Questions:
   usually *the chain, passing, closed over the clauses*.
 - **Descend only where a mechanized check earns its keep** (`docs/process.md`
   §3, "over-aggressive traceability is a failure mode in its own right"). Where
-  the honest floor is a human's judgement, name the verification `Attest` rather
+  the honest floor is a human's judgement, name the verification `Vouch` rather
   than inflate a subjective call into a false `Test`.
 - **Record the stopping boundary in the existing scoped review.** For every
   retained child, state the independent decision or verification purpose it adds;

@@ -13,7 +13,7 @@ living in four places, held together by equality tests, is the accreted
 duplication this repo's doctrine refuses. It predates `kitlib`; the D-7-era
 pins-over-extraction choice is what left it this way.
 
-`kitlib` is the sanctioned landing (owner ruling D-8, `OI-16`), and the pins
+`kitlib` is the sanctioned landing (operator ruling D-8, `OI-16`), and the pins
 retire because drift becomes UNREPRESENTABLE rather than DETECTED — the same
 move WI-448 already made for the five-way declared-line reader
 (`tests/test_rule_sync.py`, "the declared-line reader: WAS 5-way, now ONE home",
@@ -52,9 +52,9 @@ work performed twice. The axis is gone repo-wide as of slice 5.
 """
 
 # --- THE LADDER (SN-029 / OI-21, ruled 2026-08-13; moved here WI-498) ----------
-# THE RULED MODEL (owner, 2026-08-12; the ladder re-ruled 2026-08-13 as OI-21):
+# THE RULED MODEL (operator, 2026-08-12; the ladder re-ruled 2026-08-13 as OI-21):
 # **stages are the rungs of the decomposition — a repo is IN one; bars are the
-# subset of rung boundaries a human must certify — you CLEAR one.** The stage is
+# subset of rung boundaries an operator must certify — you CLEAR one.** The stage is
 # state, the bar is an event.
 #
 # THE LADDER — REQUIREMENTS BEFORE ARCHITECTURE. Architecture is a RESPONSE to
@@ -80,7 +80,7 @@ work performed twice. The axis is gone repo-wide as of slice 5.
 #   6 DevStg-Impl       IMPLEMENTATION in work
 #   7 DevStg-Release    all complete; release checklist and version tagging
 #
-# (Which of those rung boundaries a HUMAN must certify is the bar axis, and it is
+# (Which of those rung boundaries an OPERATOR must certify is the bar axis, and it is
 # `spine_rules`'s until slice 2 retires it. The crossings it names today —
 # DevStg-Reqs, DevStg-Tests, DevStg-Impl — are stated there, once.)
 #
@@ -93,7 +93,7 @@ work performed twice. The axis is gone repo-wide as of slice 5.
 # show "stage 4 of 8, <description>", so inserting a rung self-corrects every
 # ordinal with no citation moved. That is exactly the failure an integer ladder
 # produced here on 2026-08-12: an inserted rung shifted every cached number
-# silently, in the direction of LESS human involvement.
+# silently, in the direction of LESS operator involvement.
 #
 # THE LADDER IS NOT MONOTONIC, and that is the truth about iterative
 # decomposition rather than a defect in the report. Rungs 2 and 3 oscillate as
@@ -177,8 +177,8 @@ def stage_ord(stage):
     THIS IS THE ONLY LEGAL WAY TO COMPARE TWO STAGES, and it RAISES on an unknown
     label rather than degrading to a default. The reason is the whole argument for
     the label carrier: an unknown stage means the ladder moved under a cached
-    value, and the wrong-answer direction of a silent default is LESS human
-    involvement (`human_holds` compares against this axis). Failing loudly turns a
+    value, and the wrong-answer direction of a silent default is LESS operator
+    involvement (`operator_holds` compares against this axis). Failing loudly turns a
     silent policy change into a visible one.
 
     It lives WITH the data rather than beside it: a closed vocabulary and the one

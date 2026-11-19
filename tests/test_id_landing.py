@@ -19,7 +19,7 @@ conflict is the watermark resolves it by the same fold.
 Every fixture is a real git repository built like the merge slot's own tests
 (`tests/integrate_fixtures.py`): a trunk claiming WI-401 onto `wi-401`, a
 lane worktree that closes it, and, for the slot, the stub harness the station
-tests use, so the slot's order and topology are real and the bar is not what
+tests use, so the slot's order and topology are real and the checks are not what
 is measured. The carrier is planted by git plumbing (`conftest.
 plant_id_carrier`), so these cases judge the landing, not the reserve verb.
 
@@ -34,7 +34,7 @@ import subprocess
 
 import pytest
 from conftest import (
-    BARS_RED_MARK,
+    MARKER_DECLARATION,
     ROOT,
     SCRIPTS,
     env_gate_skipif,
@@ -69,7 +69,7 @@ FOLD = [SCRIPTS / "trace.py", "--root", ".", "--fold-ids"]
 TRUNK_SPACES = {"WI", "OI", "DP"}
 
 # The station's stub harness (the shape test_integrate_station.py uses): a
-# trunk step and a green bar that record nothing this module reads.
+# trunk step and passing checks that record nothing this module reads.
 STUB_TRUNK_STEP = "import sys\nsys.exit(0)\n"
 STUB_CHECK_GREEN = 'print("  PASS  tests+coverage   0.1s")\n'
 
@@ -87,7 +87,7 @@ def _rows(*numbers):
 
 def _trunk(home, harness=True, sr_mark=5, attributes=None, sr_rows=(), records=()):
     """A trunk with WI-401 claimed onto `wi-401` and a full watermark (SR at
-    `sr_mark`); with `harness`, the station's stub harness and declared bar,
+    `sr_mark`); with `harness`, the station's stub harness and declared checks,
     with `attributes`, that `.gitattributes`, with `sr_rows`, those SR
     rows live, and with `records`, a retirement record for each of those SR
     numbers beside its still-live row (a pair an earlier kit let land); each
@@ -107,7 +107,7 @@ def _trunk(home, harness=True, sr_mark=5, attributes=None, sr_rows=(), records=(
         write_lf(
             root,
             "docs/stack.ini",
-            "[product]\ntest = {py} -m pytest -q\n" + BARS_RED_MARK,
+            "[product]\ntest = {py} -m pytest -q\n" + MARKER_DECLARATION,
         )
         declare_generated(root)
         write_lf(root, "docs/review-policy", "0\n")

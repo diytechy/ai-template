@@ -5,7 +5,7 @@ The harness already gates the freshness of *generated* blocks (the code map —
 `gen_arch_map.py --check`), but nothing checks that the **hand-written** docs
 stay navigable: that every intra-repo link resolves, every doc is reachable,
 and a doc hasn't been frozen beside churning code. This operationalizes the
-"verify no broken intra-doc links" step several gates ask a human to do by hand,
+"verify no broken intra-doc links" step several gates ask an operator to do by hand,
 extending the "the map must stay honest" guarantee from code to docs
 (process.md §3 "Reviewability").
 
@@ -43,9 +43,9 @@ finding classes:
     kit's core value, so the root README is held to it too — every SN id cited
     anywhere in it must exist in the stakeholder-needs registry, and every
     Must/Should need in that registry must be cited somewhere in the README, so a
-    requirements change mechanically ages the README. Draft/unapproved needs (under
+    requirements change mechanically ages the README. Draft/unaccepted needs (under
     a "draft" heading — SN maturity is section-as-state, §4a) are exempt from that
-    floor until approved. No delimiter markers: any
+    floor until accepted. No delimiter markers: any
     `SN-###` in the README counts as a citation. A README opts out with an
     `<!-- sn-inventory: off -->` comment; a repo with no real needs yet (only the
     `-000` placeholder) is vacuously clean, so a fresh scaffold passes.
@@ -65,7 +65,7 @@ finding classes:
     disables S-1..S-3); (S-2) its Open-items marker must precede the `## Scope`
     heading (open items surface at the top); (S-3) with
     `docs/requirements/open-items.toml` present, every `OI-N` inside the
-    Needs-<human> block has a PENDING row there (no undocumented owner ask) and
+    Needs-<operator> block has a PENDING row there (no undocumented operator ask) and
     every pending id appears in status.md (no orphan brief). S-3 **retires under
     a generated snapshot** (WI-202): once status.md carries the
     `<!-- BEGIN GENERATED STATUS -->` block, its open-items list is PROJECTED
@@ -75,8 +75,8 @@ finding classes:
     shape; a custom layout misses warnings, never false-fails. Vacuous when
     status.md (or, for S-3, the registry) is absent.
 
-The root `OWNER_SCRATCHPAD.md` is exempt from all of the above: it holds the
-human owner's free-form private notes and is dropped from doc discovery entirely
+The root `OPERATOR_SCRATCHPAD.md` is exempt from all of the above: it holds the
+operator's free-form private notes and is dropped from doc discovery entirely
 (agents must not read or act on it; its own header says so).
 
 Scope (the high-value 80%): inline links `[text](dest)` and same-file/`file#frag`
@@ -165,13 +165,23 @@ MD_SUFFIXES = (".md", ".markdown")
 # generated output (the gen_arch_map/gen_trajectory/check_doc_refs idiom); the
 # path constant matches gen_okf's own OUT_DIR.
 OKF_DIR = "docs/okf"
-# The root owner scratchpad: free-form notes the human owner keeps, off-limits to
+# The kit's own generated reports under docs/test/ — the Markdown composites the
+# shipped .gitignore template lists there (trace.py, check_perf.py,
+# check_stubs.py write them). Dropped from doc discovery by default for the same
+# reason as OKF_DIR: nothing links to a regenerated report, so it read as an
+# orphan in every repository that ran the checks without `--ignore`.
+GENERATED_REPORTS = (
+    "docs/test/report.md",
+    "docs/test/perf-report.md",
+    "docs/test/stub-report.md",
+)
+# The root operator scratchpad: free-form notes the operator keeps, off-limits to
 # agents (its own loud header says so). Dropped from doc discovery entirely — its
-# links, orphanhood, and staleness never gate a commit (owner notes aren't a
+# links, orphanhood, and staleness never gate a commit (operator notes aren't a
 # working surface) — via the same "never lint this file" idiom as OKF_DIR. It
 # still resolves as a link *target* (the file is on disk) and the always-on
 # secrets floor still scans it.
-SCRATCHPAD = "OWNER_SCRATCHPAD.md"
+SCRATCHPAD = "OPERATOR_SCRATCHPAD.md"
 # The design-history archive: frozen context. Archived docs KEEP broken-link
 # validation (a dead link in the history still misleads a future reader, and the
 # archival flow re-bases links once at archive time), but are DROPPED from orphan
@@ -225,7 +235,7 @@ def blank_frontmatter(text):
     a markdown link is DESCRIBING one, never making one. Parsed as document
     body, `title = "... ([WI-n](specs/WI-n.md)) ..."` becomes a link to a file
     that was never meant to exist — a false positive that costs the link check
-    its authority, since a bar nobody believes is a bar nobody reads.
+    its authority, since a standard nobody believes is a standard nobody reads.
 
     The fence rule matches `agent_common.parse_spec_frontmatter` exactly — line
     one is the fence, the close is the next whole `+++` line — because two
@@ -312,14 +322,16 @@ def collect_docs(root, docs_dir, ignore=()):
     The gen_okf.py bundle under `docs/okf/` is dropped unconditionally: it is a
     fully-generated tree whose freshness `gen_okf.py --check` owns, so the doc set
     never lints its own generated output (the gen_arch_map/gen_trajectory idiom).
-    The root `OWNER_SCRATCHPAD.md` is dropped the same way: free-form owner notes
+    The root `OPERATOR_SCRATCHPAD.md` is dropped the same way: free-form operator notes
     never gate (SCRATCHPAD).
 
     Paths matching an `ignore` glob (repo-relative POSIX) are dropped entirely —
-    not parsed, not orphan-reported — so generated composites (the gitignored
-    `docs/test/report.md`) don't show up as findings. Both the bundle and ignored
-    files still resolve as link *targets*, since the file is on disk.
+    not parsed, not orphan-reported — and so are the kit's generated reports
+    (GENERATED_REPORTS, the gitignored `docs/test/report.md` among them), so
+    generated composites don't show up as findings. The bundle and every dropped
+    file still resolve as link *targets*, since the file is on disk.
     """
+    ignore = GENERATED_REPORTS + tuple(ignore)
     found = {}
     for p in sorted(root.glob("*.md")):
         found[p.resolve()] = True
@@ -333,7 +345,7 @@ def collect_docs(root, docs_dir, ignore=()):
         # Never lint generated output: gen_okf.py --check owns docs/okf/ freshness.
         if relpath == OKF_DIR or relpath.startswith(OKF_DIR + "/"):
             continue
-        # Owner-only free-form notes never gate: drop the scratchpad entirely.
+        # Operator-only free-form notes never gate: drop the scratchpad entirely.
         if relpath == SCRATCHPAD:
             continue
         # fnmatch, not Path.match: the house glob convention (see orphans-allow
@@ -735,7 +747,7 @@ def find_stale(parsed, root, lookup):
 
 STATUS_BUDGET_DEFAULT = 120
 _OI_RE = re.compile(r"\bOI-\d+\b")
-_NEEDS_HUMAN_RE = re.compile(r"needs\s*\\?<human>", re.I)
+_NEEDS_OPERATOR_RE = re.compile(r"needs\s*\\?<operator>", re.I)
 _SCOPE_HEADING_RE = re.compile(r"^##\s+scope\b", re.I | re.M)
 _OPEN_ITEMS_MARKER_RE = re.compile(r"open items", re.I)
 # The kit's generated-block sentinel (gen_arch_map / gen_trajectory --status):
@@ -761,15 +773,15 @@ def _status_lint_policy(root, docs_dir):
         return None
 
 
-def _needs_human_block(text):
-    """The Needs-<human> block of status.md, best-effort over the template's
+def _needs_operator_block(text):
+    """The Needs-<operator> block of status.md, best-effort over the template's
     mandated shape: from the marker line, a bullet's block runs while lines are
     blank or indented deeper than the marker; a heading's block runs to the next
     heading. Returns "" when no marker is found (S-3 then only checks the
     orphan-brief direction)."""
     lines = text.splitlines()
     for i, line in enumerate(lines):
-        if not _NEEDS_HUMAN_RE.search(line):
+        if not _NEEDS_OPERATOR_RE.search(line):
             continue
         block = [line]
         if line.lstrip().startswith("#"):
@@ -840,7 +852,7 @@ OPEN_ITEMS_NAME = "requirements/open-items.toml"
 
 
 def _oi_coherence_warns(open_items, text):
-    """S-3 alone: the open-items registry against status.md's Needs-<human>
+    """S-3 alone: the open-items registry against status.md's Needs-<operator>
     block, both directions. Split out of `check_status_surface` when the
     always-on arm pushed that function over the complexity ratchet —
     decomposition rather than a baseline bump, which is the escape the ratchet
@@ -851,7 +863,7 @@ def _oi_coherence_warns(open_items, text):
     list is PROJECTED from the registry by `gen_trajectory --status`, so the two
     surfaces cannot disagree — the `status-map` freshness gate is the invariant.
     The check stays live only for a hand-authored status.md, where the two lists
-    can drift. WI-322 moved briefs from markdown sections to ROWS (the owner
+    can drift. WI-322 moved briefs from markdown sections to ROWS (the operator
     reads the generated view), so the brief set is the registry's PENDING ids: a
     carrier read, no heading parse, and a ruled row is not a brief — its record
     is the log.
@@ -868,7 +880,7 @@ def _oi_coherence_warns(open_items, text):
     must never be the exit code."""
     if spine_carrier.resolve(open_items) is None:
         return [
-            "the open-items registry is absent — the owner decision surface is "
+            "the open-items registry is absent — the operator decision surface is "
             "always-shipped process (process.md §5), not an opt-in layer: "
             "scaffold {} (kit template registries/open-items.template.toml) and "
             "render it with gen_open_items.py, or every deferred decision has "
@@ -888,10 +900,10 @@ def _oi_coherence_warns(open_items, text):
         and (r.get("Status") or "").strip().lower() == "pending"
     }
     warns = [
-        "{}: a Needs-<human> item in status.md with no pending `{}` row in "
+        "{}: a Needs-<operator> item in status.md with no pending `{}` row in "
         "requirements/open-items.toml (every owner ask carries its "
         "brief)".format(oid, oid)
-        for oid in sorted(set(_OI_RE.findall(_needs_human_block(text))) - briefed)
+        for oid in sorted(set(_OI_RE.findall(_needs_operator_block(text))) - briefed)
         if not oid.endswith("-000")  # the template's inert example (WI-790)
     ]
     warns += [
@@ -927,7 +939,8 @@ def main():
         default=[],
         metavar="GLOB",
         help="repo-relative glob to drop from the scanned set, e.g. a generated "
-        "composite like docs/test/report.md (repeatable)",
+        "composite; the kit's own docs/test/ reports are dropped already "
+        "(repeatable)",
     )
     ap.add_argument(
         "--strict-orphans",

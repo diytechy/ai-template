@@ -1,13 +1,13 @@
 """The evidence join — a test case's `Evidence` cell, read two ways: which
 tests the spine links to a module (`trace.py --tests-for`, over
-`kitlib.spine.module_tests`), and whether an approved case's `Tier` agrees with
+`kitlib.spine.module_tests`), and whether an accepted case's `Tier` agrees with
 the tier its evidence runs in (`kitlib.spine.tier_findings`).
 
 In-process throughout: synthetic registries under `tmp_path` and the live
 registries read as data, with no scaffold, subprocess or git, so the module
 rides the per-commit smoke tier. That placement is the point of its last case:
 the tier check over the live registry, bound to this repository's module
-tiering, runs in the commit bar itself, so an approved Smoke case whose
+tiering, runs in the commit checks themselves, so an accepted Smoke case whose
 evidence moved to a slow module (or whose slow module carries a stale pin
 nobody runs per commit) fails the next commit rather than waiting for a close
 run to notice.
@@ -28,7 +28,7 @@ LLR_REL = "docs/requirements/low-level-requirements.toml"
 TC_REL = "docs/test/test-cases.toml"
 
 
-def _case(tier, evidence, status="Approved", cid="TC-001"):
+def _case(tier, evidence, status="Accepted", cid="TC-001"):
     return {
         "TC-ID": cid,
         "Verifies": "LLR-001",
@@ -133,10 +133,10 @@ def test_a_full_case_with_slow_evidence_or_a_release_case_is_silent():
     assert spine.tier_findings(cases, tier_of) == ([], [])
 
 
-def test_a_case_below_approval_is_not_judged():
+def test_a_case_below_acceptance_is_not_judged():
     """Implements: TC-255"""
     # A Drafted row's tier is a proposal still in work; the tier cell the rule
-    # holds true is the one a human approved.
+    # holds true is the one an operator accepted.
     case = _case("Smoke", "tests/test_heavy.py", status="Drafted")
     assert spine.tier_findings([case], _tiers({"tests/test_heavy.py": "slow"})) == (
         [],
@@ -149,12 +149,12 @@ def test_a_case_below_approval_is_not_judged():
 LLRS = """[design.LLR-001]
 sr_refs = ["SR-001"]
 module = "src/pay.py;src/ledger.py"
-status = "Approved"
+status = "Accepted"
 
 [design.LLR-002]
 sr_refs = ["SR-001"]
 module = "src/other.py"
-status = "Approved"
+status = "Accepted"
 
 [design.LLR-003]
 sr_refs = ["SR-001"]
@@ -166,19 +166,19 @@ TCS = """[test.TC-001]
 verifies = ["SR-001", "LLR-001"]
 tier = "Smoke"
 evidence = "tests/test_checkout.py::test_total; tests/test_ledger.py"
-status = "Approved"
+status = "Accepted"
 
 [test.TC-002]
 verifies = ["SR-001"]
 tier = "Smoke"
 evidence = "tests/test_sr_only.py"
-status = "Approved"
+status = "Accepted"
 
 [test.TC-003]
 verifies = ["LLR-002"]
 tier = "Full"
 evidence = "tests/test_other.py"
-status = "Approved"
+status = "Accepted"
 
 [test.TC-004]
 verifies = ["LLR-001"]
@@ -334,7 +334,7 @@ def _live_tier_of(path):
     return smoke_tier_for(p.stem)
 
 
-def test_every_approved_smoke_case_has_evidence_in_the_smoke_tier():
+def test_every_accepted_smoke_case_has_evidence_in_the_smoke_tier():
     """Implements: TC-255"""
     _llrs, tcs = _rows(ROOT)
     errors, advisories = spine.tier_findings(tcs, _live_tier_of)
@@ -342,7 +342,7 @@ def test_every_approved_smoke_case_has_evidence_in_the_smoke_tier():
         warnings.warn(advisory, stacklevel=1)
     if errors:
         pytest.fail(
-            "{} approved Smoke test case(s) have no evidence in the per-commit "
+            "{} accepted Smoke test case(s) have no evidence in the per-commit "
             "tier. Move the case's in-memory clauses into a fast module and "
             "point `evidence` at it, or amend `tier` to Full:\n  {}".format(
                 len(errors), "\n  ".join(errors)

@@ -36,7 +36,7 @@ CHECK = load_script("check")
 
 SRS_H = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
-    "Priority,Verification,Status,Phase\n"
+    "Priority,VerificationMethod,Status,Phase\n"
 )
 LLRS_H = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Phase\n"
 TCS_H = (
@@ -45,17 +45,17 @@ TCS_H = (
 )
 
 
-def _sr(sid, status="Approved", sn="SN-001", phase=""):
+def _sr(sid, status="Accepted", sn="SN-001", phase=""):
     return '{},T,{},"r","why","ac",,M,Test,{},{}\n'.format(sid, sn, status, phase)
 
 
-def _llr(lid, sr, status="Approved", phase=""):
+def _llr(lid, sr, status="Accepted", phase=""):
     return '{},{},Adder,src/demo,add,"d",(see TC),{},{}\n'.format(
         lid, sr, status, phase
     )
 
 
-def _tc(tid, verifies, status="Approved", phase=""):
+def _tc(tid, verifies, status="Accepted", phase=""):
     return '{},{},Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,{},{}\n'.format(
         tid, verifies, status, phase
     )
@@ -100,7 +100,7 @@ def _no_frame(scaffold):
 
 
 def _settled_phase(name, sr, phase):
-    """One phase whose single SR is Approved, decomposed and verified."""
+    """One phase whose single SR is Accepted, decomposed and verified."""
     return (
         _sr(sr, phase=phase),
         _llr("LLR-" + name, sr, phase=phase),
@@ -185,7 +185,7 @@ def test_per_phase_stages_exist_and_the_global_reading_is_defined_over_them(scaf
     make_minimal_project(scaffold)
     _no_frame(scaffold)
     srs1, llrs1, tcs1 = _settled_phase("001", "SR-001", "1")
-    # phase 2: an approved requirement nobody has decomposed yet
+    # phase 2: an accepted requirement nobody has decomposed yet
     _write(
         scaffold,
         srs=srs1 + _sr("SR-002", phase="2"),
@@ -204,7 +204,7 @@ def test_per_phase_stages_exist_and_the_global_reading_is_defined_over_them(scaf
 
 def test_the_need_coverage_rung_stays_REPO_GLOBAL_across_phases(scaffold):
     """The seam `cited_srs` exists for. The coverage question — does every
-    approved need have a requirement answering it — is repo-wide: a need answered
+    accepted need have a requirement answering it — is repo-wide: a need answered
     by phase 1's requirements is answered. Without the seam, running the
     derivation over one phase's rows reads every OTHER phase's needs as uncovered
     and reports DevStg-Needs for every phase but the first.
@@ -248,12 +248,12 @@ def test_the_FRAME_rungs_are_repo_global_and_cap_every_phase(scaffold):
     make_minimal_project(scaffold)
     srs, llrs, tcs = _settled_phase("001", "SR-001", "1")
     _write(scaffold, srs=srs, llrs=llrs, tcs=tcs)
-    # An ADOPTED frame: one real crossing, declared and not yet approved.
+    # An ADOPTED frame: one real crossing, declared and not yet accepted.
     ext = scaffold / "docs" / "requirements" / "external.toml"
     ext.write_text(
         ext.read_text(encoding="utf-8")
         + '\n[boundary.B-01]\nentity = "EXT-000"\ndirection = "in"\n'
-        'carries = "A real crossing, declared and not yet approved."\n'
+        'carries = "A real crossing, declared and not yet accepted."\n'
         'status = "Drafted"\n',
         encoding="utf-8",
     )
@@ -272,9 +272,9 @@ def test_the_FRAME_rungs_are_repo_global_and_cap_every_phase(scaffold):
 def test_a_fresh_scaffold_reads_a_DEFINED_non_raising_selection_value(scaffold):
     """Two opposite failure modes were driven on the old axis: before the first
     derivation there was no stage at all to read (`None`), and after it the stage
-    was ord 0 — under at-or-above, a repo where NOTHING runs and the run goes
-    green because of it, breaking the shipped promise that a freshly-scaffolded
-    repo is green because its checks PASSED.
+    was ord 0 — under at-or-above, a repo where NOTHING runs and the run
+    passes because of it, breaking the shipped promise that a freshly-scaffolded
+    repo passes because its checks PASSED.
 
     The floor is the answer, and the honest ord-0 reading is reported beside
     it.
@@ -307,7 +307,7 @@ def test_an_UNMODIFIED_bootstrap_reaches_Impl_on_a_settled_spine(scaffold):
     from the derived value in every adopting repo, permanently.
 
     So: NO deletions, no edits to anything `bootstrap.py` wrote outside the
-    spine. Fill the spine, approve it, and the ladder must climb.
+    spine. Fill the spine, accept it, and the ladder must climb.
     """
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
@@ -372,12 +372,12 @@ def test_on_a_CLAIMED_BRANCH_the_reader_derives_from_the_branch_s_own_registries
     """W-1, THE LARGEST STALE WINDOW THE SCHEDULE MAP FOUND, closed by
     construction. `derived-stage` is a member of `_TRUNK_FRESHNESS_STEPS`, so it
     reports SKIP on any claimed work branch — and a skipped step never affects the
-    exit code, which makes a GREEN run over a stale cache reachable there and
+    exit code, which makes a PASSING run over a stale cache reachable there and
     nowhere else.
 
     The common reader does not depend on that step: it verifies per call, so on a
     claimed branch it derives from the branch's OWN registries. That is the trust
-    model the owner confirmed (§6.4) — spine work happens in series, so the
+    model the operator confirmed (§6.4) — spine work happens in series, so the
     branch's derived result IS the trunk's next value.
 
     It also must not WRITE there: a work branch never commits a generated
@@ -457,11 +457,11 @@ def test_the_written_file_is_LF_and_parses_back(scaffold):
     assert kitstage.parse(raw.decode("utf-8")) is not None
 
 
-def test_the_check_py_STEP_goes_red_on_a_stale_cache(scaffold):
+def test_the_check_py_STEP_fails_on_a_stale_cache(scaffold):
     """NON-VACUITY, at the level the claim is actually made. The script's own
-    `--check` is driven above, but what the commit bar runs is `check.py`'s
+    `--check` is driven above, but what the commit checks run is `check.py`'s
     `derived-stage` STEP — a step can be wired and still be unable to fail (the
-    exact silent green SN-008 forbids). So: plant the defect, run the step, and
+    exact silent pass SN-008 forbids). So: plant the defect, run the step, and
     require a non-zero exit.
 
     Implements: TC-181
@@ -484,12 +484,12 @@ def test_the_check_py_STEP_goes_red_on_a_stale_cache(scaffold):
     assert "derived-stage" in red.stdout + red.stderr
 
 
-def test_a_freshly_scaffolded_repo_is_GREEN_on_the_placeholder(scaffold):
+def test_a_freshly_scaffolded_repo_PASSES_on_the_placeholder(scaffold):
     """The shipped promise (`ci/check.yml`: "a freshly-scaffolded DevStg-Reqs repo
-    is green") must survive the new step. The scaffold ships a comment-only
+    passes") must survive the new step. The scaffold ships a comment-only
     placeholder rather than invented values, and `--check` passes it with a note
     — the same smooth-transition path `docs/gate` gives a legacy hand-set marker.
-    Green because there is genuinely nothing to be stale against, not because the
+    Passing because there is genuinely nothing to be stale against, not because the
     check was sanctioned.
 
     Implements: TC-181
@@ -539,7 +539,7 @@ def test_next_phase_prints_max_plus_one(scaffold):
         [SCRIPTS / "derive_stage.py", "--root", scaffold, "--next-phase"], cwd=scaffold
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert proc.stdout.strip() == "4"  # max approved = 3; the Drafted 4 is excluded
+    assert proc.stdout.strip() == "4"  # max accepted = 3; the Drafted 4 is excluded
     # An output mode over the existing derivation: docs/stage is not rewritten.
     assert stage_file.read_text(encoding="utf-8") == before
 
@@ -561,7 +561,7 @@ def _assert_committed_stage_current(root):
     """`root`'s committed `docs/stage` records the live inputs, or SKIP on a
     claimed work branch.
 
-    The skip is the commit-bar twin's: check.py stands the `derived-stage` step
+    The skip is the commit-check twin's: check.py stands the `derived-stage` step
     down on a claimed work branch because generated freshness is the trunk
     lane's (concurrency-restructure §5.2). It asks `check._work_branch`, the
     same detector, so there is one notion of "work branch", fail-closed: off
@@ -581,16 +581,16 @@ def _assert_committed_stage_current(root):
 
 def test_this_repo_s_committed_stage_is_current():
     """The meta-repo's own committed `docs/stage` records the live inputs. This is
-    the same claim the commit-bar `--check` step makes; asserting it here too is
+    the same claim the commit-check `--check` step makes; asserting it here too is
     what makes a stale commit visible to a plain `pytest` run as well."""
     _assert_committed_stage_current(ROOT)
 
 
 def test_the_stage_currency_claim_stands_down_on_a_claimed_branch_only(scaffold):
-    """The claim above is exempt where its commit-bar twin is, and nowhere else.
+    """The claim above is exempt where its commit-check twin is, and nowhere else.
     Amending a settled row moves the stage's input digest, so a claimed work
     branch doing the routine amendment meets a stale `docs/stage` it may not
-    regenerate; the trunk, with the same stale file, must still go red."""
+    regenerate; the trunk, with the same stale file, must still fail."""
     skip_without_env_gates("git")
     make_minimal_project(scaffold)
     _no_frame(scaffold)
@@ -608,7 +608,7 @@ def test_the_stage_currency_claim_stands_down_on_a_claimed_branch_only(scaffold)
     on_branch("main")
     _assert_committed_stage_current(scaffold)  # fresh on the trunk: the baseline
 
-    # A settled row amended, its status left Approved: the recorded copy is stale.
+    # A settled row amended, its status left Accepted: the recorded copy is stale.
     _write(scaffold, srs=srs.replace('"r"', '"r, amended"'), llrs=llrs, tcs=tcs)
     with pytest.raises(AssertionError):
         _assert_committed_stage_current(scaffold)
@@ -662,14 +662,14 @@ def test_an_assumption_only_case_joins_each_phase_citing_its_assumption():
 def test_the_stage_map_places_the_case_itself():
     """`_stage_map` derives the map from the requirements it is handed, so a
     Drafted assumption-only case holds BOTH phases' live reading at Tests."""
-    srs = [dict(r, Status="Approved", Verification="Test") for r in PHASED]
+    srs = [dict(r, Status="Accepted", VerificationMethod="Test") for r in PHASED]
     llrs = [
-        _row("LLR-ID", "LLR-001", **{"SR-Refs": "SR-001", "Status": "Approved"}),
-        _row("LLR-ID", "LLR-002", **{"SR-Refs": "SR-002", "Status": "Approved"}),
+        _row("LLR-ID", "LLR-001", **{"SR-Refs": "SR-001", "Status": "Accepted"}),
+        _row("LLR-ID", "LLR-002", **{"SR-Refs": "SR-002", "Status": "Accepted"}),
     ]
     tcs = [
-        _row("TC-ID", "TC-001", Verifies="SR-001;LLR-001", Status="Approved"),
-        _row("TC-ID", "TC-002", Verifies="SR-002;LLR-002", Status="Approved"),
+        _row("TC-ID", "TC-001", Verifies="SR-001;LLR-001", Status="Accepted"),
+        _row("TC-ID", "TC-002", Verifies="SR-002;LLR-002", Status="Accepted"),
         _row("TC-ID", "TC-003", Status="Drafted", **{"Assumption-Refs": "DA-001"}),
     ]
     spine = dict(
@@ -695,14 +695,14 @@ def _toml_spine(root, assumption):
     req.mkdir(parents=True, exist_ok=True)
     (root / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (req / "stakeholder-needs.md").write_text(
-        "# Stakeholder needs\n\n## SN-001 — A demo need [Approved]\n\nBody.\n",
+        "# Stakeholder needs\n\n## SN-001 — A demo need [Accepted]\n\nBody.\n",
         encoding="utf-8",
         newline="\n",
     )
     srs = "".join(
         '[requirement.{}]\ntitle = "T"\nsn_refs = ["SN-001"]\nrequirement = "r"\n'
         'rationale = "why"\nacceptance_criteria = "ac"\npriority = "M"\n'
-        'verification = "Test"\nstatus = "Approved"\nphase = {}\n'
+        'verification_method = "Test"\nstatus = "Accepted"\nphase = {}\n'
         'da_refs = ["{}"]\n\n'.format(sid, phase, did)
         for sid, phase, did in (("SR-001", 5, "DA-001"), ("SR-002", 6, "DA-002"))
     )
@@ -710,7 +710,7 @@ def _toml_spine(root, assumption):
     (req / "low-level-requirements.toml").write_text("", encoding="utf-8")
     (root / "docs" / "test" / "test-cases.toml").write_text(
         '[test.TC-003]\nlevel = "Unit"\nmethod = "m"\ntier = "Full"\n'
-        'expected = "e"\nautomated = "No"\nstatus = "Approved"\n'
+        'expected = "e"\nautomated = "No"\nstatus = "Accepted"\n'
         'assumption_refs = ["{}"]\n'.format(assumption),
         encoding="utf-8",
         newline="\n",
@@ -756,11 +756,11 @@ def test_a_moved_assumption_reference_is_attributed_to_the_case_s_phases(tmp_pat
 
 
 # --- TC-236: the assumption, surrogate and stakeholder tiers join the stage at
-# their first approval, each tier read on its own (SR-204, LLR-241) ----------
+# their first acceptance, each tier read on its own (SR-204, LLR-241) ----------
 # A tier holding only Drafted rows reads, to its rung, as a frame declared and
-# not approved; reading it before its first approval would lower the derived
+# not accepted; reading it before its first acceptance would lower the derived
 # stage of every tree in between. So a tier is read only once one of its rows
-# is Approved, and then a Drafted row of it holds its rung in the live reading.
+# is Accepted, and then a Drafted row of it holds its rung in the live reading.
 
 
 def _settled_spine(**tiers):
@@ -772,13 +772,13 @@ def _settled_spine(**tiers):
             _row(
                 "SR-ID",
                 "SR-001",
-                Status="Approved",
-                Verification="Test",
+                Status="Accepted",
+                VerificationMethod="Test",
                 **{"SN-Refs": "SN-001"},
             )
         ],
-        llrs=[_row("LLR-ID", "LLR-001", Status="Approved", **{"SR-Refs": "SR-001"})],
-        tcs=[_row("TC-ID", "TC-001", Status="Approved", Verifies="SR-001;LLR-001")],
+        llrs=[_row("LLR-ID", "LLR-001", Status="Accepted", **{"SR-Refs": "SR-001"})],
+        tcs=[_row("TC-ID", "TC-001", Status="Accepted", Verifies="SR-001;LLR-001")],
         sn_ids={"SN-001"},
         sn_draft=set(),
         bifs=[],
@@ -825,23 +825,23 @@ def test_a_tier_holding_only_drafted_rows_moves_neither_reading():
         assert _readings(_settled_spine(**tiers)) == IMPL, tiers
 
 
-def test_after_the_first_approval_a_draft_holds_its_rung_in_the_live_reading_only():
+def test_after_the_first_acceptance_a_draft_holds_its_rung_in_the_live_reading_only():
     held = {
-        "das": ([_da("DA-001", "Approved"), _da("DA-002", "Drafted")], "BOUNDARY"),
-        "surs": ([_sur("SUR-001", "Approved"), _sur("SUR-002", "Drafted")], "BOUNDARY"),
-        "stks": ([_stk("STK-01", "Approved"), _stk("STK-02", "Drafted")], "NEEDS"),
+        "das": ([_da("DA-001", "Accepted"), _da("DA-002", "Drafted")], "BOUNDARY"),
+        "surs": ([_sur("SUR-001", "Accepted"), _sur("SUR-002", "Drafted")], "BOUNDARY"),
+        "stks": ([_stk("STK-01", "Accepted"), _stk("STK-02", "Drafted")], "NEEDS"),
     }
     for key, (rows, rung) in held.items():
         live, settled = _readings(_settled_spine(**{key: rows}))
         assert live == getattr(ladder, "STAGE_" + rung), key
         assert settled == ladder.STAGE_IMPL, key
-    # With every row of each tier approved, nothing holds.
+    # With every row of each tier accepted, nothing holds.
     assert (
         _readings(
             _settled_spine(
-                das=[_da("DA-001", "Approved")],
-                surs=[_sur("SUR-001", "Approved")],
-                stks=[_stk("STK-01", "Approved")],
+                das=[_da("DA-001", "Accepted")],
+                surs=[_sur("SUR-001", "Accepted")],
+                stks=[_stk("STK-01", "Accepted")],
             )
         )
         == IMPL
@@ -849,12 +849,12 @@ def test_after_the_first_approval_a_draft_holds_its_rung_in_the_live_reading_onl
 
 
 def test_the_two_tiers_sharing_the_assumptions_file_stay_apart():
-    """An approved assumption does not activate the surrogate tier, and an
-    approved surrogate does not activate the assumption tier."""
+    """An accepted assumption does not activate the surrogate tier, and an
+    accepted surrogate does not activate the assumption tier."""
     assert (
         _readings(
             _settled_spine(
-                das=[_da("DA-001", "Approved")], surs=[_sur("SUR-001", "Drafted")]
+                das=[_da("DA-001", "Accepted")], surs=[_sur("SUR-001", "Drafted")]
             )
         )
         == IMPL
@@ -862,7 +862,7 @@ def test_the_two_tiers_sharing_the_assumptions_file_stay_apart():
     assert (
         _readings(
             _settled_spine(
-                das=[_da("DA-001", "Drafted")], surs=[_sur("SUR-001", "Approved")]
+                das=[_da("DA-001", "Drafted")], surs=[_sur("SUR-001", "Accepted")]
             )
         )
         == IMPL
@@ -871,14 +871,14 @@ def test_the_two_tiers_sharing_the_assumptions_file_stay_apart():
 
 def test_no_setting_turns_a_tier_on():
     """`tier_active` reads the rows and nothing else: the one input is whether
-    any row of the tier reads Approved (LLR-241; Founded does not count)."""
+    any row of the tier reads Accepted (LLR-241; Founded does not count)."""
     rules = DS.spine_rules
     assert not rules.tier_active([])
     assert not rules.tier_active([_da("DA-001", "Drafted")])
-    assert rules.tier_active([_da("DA-001", "Drafted"), _da("DA-002", "Approved")])
-    assert rules.tier_active([_da("DA-001", "approved")])
-    # "Reads Approved" is the switch (LLR-241): a tier whose only non-draft row
-    # reads Founded holds no Approved row, so it is not read.
+    assert rules.tier_active([_da("DA-001", "Drafted"), _da("DA-002", "Accepted")])
+    assert rules.tier_active([_da("DA-001", "accepted")])
+    # "Reads Accepted" is the switch (LLR-241): a tier whose only non-draft row
+    # reads Founded holds no Accepted row, so it is not read.
     assert not rules.tier_active([_sur("SUR-001", "Founded")])
 
 
@@ -892,27 +892,27 @@ def _needs_file(root, need_status, stakeholder_status):
         '[stakeholder.STK-01]\nname = "Operator"\ndescription = "Runs it."\n'
         'status = "{}"\n\n'
         '[stakeholder.STK-02]\nname = "Reviewer"\ndescription = "Reads it."\n'
-        'status = "Approved"\n'.format(need_status, stakeholder_status),
+        'status = "Accepted"\n'.format(need_status, stakeholder_status),
         encoding="utf-8",
         newline="\n",
     )
     (req / "system-requirements.toml").write_text(
         '[requirement.SR-001]\ntitle = "T"\nsn_refs = ["SN-001"]\n'
         'requirement = "r"\nrationale = "why"\nacceptance_criteria = "ac"\n'
-        'priority = "M"\nverification = "Test"\nstatus = "Approved"\n',
+        'priority = "M"\nverification_method = "Test"\nstatus = "Accepted"\n',
         encoding="utf-8",
         newline="\n",
     )
     (req / "low-level-requirements.toml").write_text(
         '[design.LLR-001]\nsr_refs = ["SR-001"]\ntitle = "t"\nmodule = "m.py"\n'
-        'code_symbol = "f"\ndetail = "d"\nstatus = "Approved"\n',
+        'code_symbol = "f"\ndetail = "d"\nstatus = "Accepted"\n',
         encoding="utf-8",
         newline="\n",
     )
     (root / "docs" / "test" / "test-cases.toml").write_text(
         '[test.TC-001]\nverifies = ["SR-001", "LLR-001"]\nlevel = "Unit"\n'
         'method = "m"\ntier = "Smoke"\nexpected = "e"\nautomated = "Yes"\n'
-        'evidence = "tests/t.py::t"\nstatus = "Approved"\n',
+        'evidence = "tests/t.py::t"\nstatus = "Accepted"\n',
         encoding="utf-8",
         newline="\n",
     )
@@ -920,10 +920,10 @@ def _needs_file(root, need_status, stakeholder_status):
 
 def test_a_stakeholder_s_status_never_answers_for_a_need(tmp_path):
     """The two tiers share the needs file and are loaded by their own id
-    columns: a Drafted stakeholder beside an approved need is not a drafted
-    need, and an approved stakeholder does not settle a Drafted need."""
+    columns: a Drafted stakeholder beside an accepted need is not a drafted
+    need, and an accepted stakeholder does not settle a Drafted need."""
     drafted_stk = tmp_path / "drafted-stakeholder"
-    _needs_file(drafted_stk, "Approved", "Drafted")
+    _needs_file(drafted_stk, "Accepted", "Drafted")
     spine = DS.spine_rules.load_spine(drafted_stk / "docs")
     assert spine["sn_draft"] == set()
     assert [r["STK-ID"] for r in spine["stks"]] == ["STK-01", "STK-02"]
@@ -934,14 +934,14 @@ def test_a_stakeholder_s_status_never_answers_for_a_need(tmp_path):
     assert record["settled-stage"] == ladder.STAGE_IMPL
 
     drafted_need = tmp_path / "drafted-need"
-    _needs_file(drafted_need, "Drafted", "Approved")
+    _needs_file(drafted_need, "Drafted", "Accepted")
     spine = DS.spine_rules.load_spine(drafted_need / "docs")
     assert spine["sn_draft"] == {"SN-001"}
     assert DS.derive(drafted_need)["live-stage"] == ladder.STAGE_NEEDS
 
 
 def test_derive_counts_the_three_tiers_drafts(tmp_path):
-    _needs_file(tmp_path, "Approved", "Drafted")
+    _needs_file(tmp_path, "Accepted", "Drafted")
     (tmp_path / "docs" / "requirements" / "assumptions.toml").write_text(
         '[assumption.DA-001]\neffect_at = ["B-01"]\nassumption = "a"\n'
         'holds_when = "h"\nobstacle = "o"\nstatus = "Drafted"\nstanding = "active"\n\n'
@@ -974,16 +974,16 @@ def test_the_derivation_reads_the_assumptions_registry_as_a_declared_input(
     from pathlib import Path
     from unittest import mock
 
-    _needs_file(tmp_path, "Approved", "Approved")
+    _needs_file(tmp_path, "Accepted", "Accepted")
     req = tmp_path / "docs" / "requirements"
     (req / "assumptions.toml").write_text(
         '[surrogate.SUR-001]\nname = "s"\nemulates = ["EXT-001"]\n'
-        'description = "d"\nstatus = "Approved"\n',
+        'description = "d"\nstatus = "Accepted"\n',
         encoding="utf-8",
         newline="\n",
     )
     (tmp_path / "docs" / "process.toml").write_text(
-        '[attestation]\nhuman_approval_through = "DevStg-Reqs"\n', encoding="utf-8"
+        '[authority]\noperator_accepts_through = "DevStg-Reqs"\n', encoding="utf-8"
     )
     opened = []
     real_open = io.open
@@ -1008,7 +1008,7 @@ def test_the_derivation_reads_the_assumptions_registry_as_a_declared_input(
 
 
 def test_the_new_maturity_tables_equal_the_check_s_enum_vocabulary():
-    """Compared case-normalized, as the approval-level test pins the existing
+    """Compared case-normalized, as the acceptance-level test pins the existing
     tables: the tables are keyed lowercase because `_maturity` lowercases."""
     rules = DS.spine_rules
     trace = load_script("trace")

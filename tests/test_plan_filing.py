@@ -182,7 +182,7 @@ def second_critique(tmp_path, second):
 def cap(
     tmp_path,
     ruling="RULING: F1 DISMISS refuted the plan has the test",
-    outcome="accepted",
+    outcome="recorded",
     second=(MAJOR,),
     recorded=True,
 ):
@@ -211,7 +211,7 @@ def blocking(text):
     return [k for k, v in rb.critique_findings(text).items() if "[MINOR]" not in v]
 
 
-def test_at_the_cap_an_accepted_dismissal_of_every_blocking_finding_passes(tmp_path):
+def test_at_the_cap_a_recorded_dismissal_of_every_blocking_finding_passes(tmp_path):
     """Implements: TC-333"""
     lane, _sha = cap(tmp_path)
     assert rb.write_pass(lane, WI, VERDICT).is_file()
@@ -228,12 +228,12 @@ def test_at_the_cap_an_accepted_dismissal_of_every_blocking_finding_passes(tmp_p
 @pytest.mark.parametrize(
     "ruling, outcome",
     [
-        ("RULING: F1 FIX the plan lacks the test", "accepted"),
-        ("RULING: F1 ESCALATE owner call", "accepted"),
+        ("RULING: F1 FIX the plan lacks the test", "recorded"),
+        ("RULING: F1 ESCALATE owner call", "recorded"),
         ("RULING: F1 DISMISS refuted no", "failed"),
     ],
 )
-def test_at_the_cap_anything_but_an_accepted_dismissal_is_refused(
+def test_at_the_cap_anything_but_a_recorded_dismissal_is_refused(
     tmp_path, ruling, outcome
 ):
     """Implements: TC-333"""

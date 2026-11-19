@@ -1,6 +1,6 @@
 ---
 name: autonomous-gate-operations
-description: Use when driving or reviewing an unattended LLM-gated engineering process — enforce "no un-run greens" (reviewers execute the harness themselves), guard exit codes from pipe-masking, root-fix named flakes, and keep resumable state plus a written terminal state.
+description: Use when driving or reviewing an unattended LLM-gated engineering process — enforce "no un-run passes" (reviewers execute the harness themselves), guard exit codes from pipe-masking, root-fix named flakes, and keep resumable state plus a written terminal state.
 stacks: [python, powershell, any]
 domains: [any]
 phases: [gate, release]
@@ -15,12 +15,12 @@ defects precisely because the reviewer re-ran everything instead of reading the 
 1. Reviewers run the harness/trace/probes themselves and quote real output; a verdict citing an
    un-run result is invalid. Fresh context per round; findings routed with severities; verdict blocks
    recorded append-only.
-2. Never mask exit codes (`cmd | tail` in a `&&` chain ate a red test through two commits); check
+2. Never mask exit codes (`cmd | tail` in a `&&` chain ate a failing test through two commits); check
    `$?` explicitly. Never run the test suite concurrently with pipeline jobs sharing output dirs.
-3. Decide-and-log instead of blocking on absent humans: every judgment call gets a rationale in the
-   append-only log; approved decisions are extended or corrected by entry, never silently re-decided.
-4. Keep honest-red visible: failing baselines recorded before fixes; Drafted/blocked items never
-   claimed; disclosures (e.g. judge noise floor) promoted to the surface the human signs.
+3. Decide-and-log instead of blocking on an absent operator: every judgment call gets a rationale in the
+   append-only log; accepted decisions are extended or corrected by entry, never silently re-decided.
+4. Keep honest failures visible: failing baselines recorded before fixes; Drafted/blocked items never
+   claimed; disclosures (e.g. judge noise floor) promoted to the surface the operator signs.
 5. Root-fix flakes an unattended loop would trip on (ours: Windows `os.replace` sharing violation →
    bounded winerror-scoped retry + two tests), and maintain a per-turn resume note ending with the
    explicit terminal state ("no pending agent action — do not reopen gates").

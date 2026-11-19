@@ -2,12 +2,12 @@
 trunk only (docs/concurrency-restructure.md §5.2).
 
 Work branches never commit generated artifacts — the trunk regenerates them in
-one serial post-merge step — so freshness-gating a branch would red it for drift
+one serial post-merge step — so freshness-gating a branch would fail it for drift
 it is forbidden to fix. This module pins the two halves of that rule:
 
   1. `_work_branch` — who counts as a claimed work branch, and (louder) who does
      NOT. The detector is fail-CLOSED: every uncertain answer is None, which
-     means the full strict bar applies. A regression that made it answer
+     means the full strict checks apply. A regression that made it answer
      truthily by accident would silently switch the freshness gates OFF on the
      trunk, and nothing else in the suite would notice.
   2. The skip itself — exactly the seven trunk-derived freshness steps, never
@@ -16,7 +16,7 @@ it is forbidden to fix. This module pins the two halves of that rule:
   3. `--trunk-lane`, its one deliberate exception (WI-386). The rule rests on "a
      work branch never commits a generated artifact", which the station refresh
      (docs/concurrency-v2.md §A2) makes false for exactly one commit: it merges
-     trunk in, regenerates ON the branch, and bars the result — a tree that is
+     trunk in, regenerates ON the branch, and checks the result — a tree that is
      byte-identical to the one the merge produces, so it owes the trunk lane's
      gates. Opt-IN, so a caller that forgets the flag gets the stricter-for-the-
      trunk answer this module's fail-closed direction already prefers.
@@ -41,7 +41,7 @@ NOTICE = (
 
 # A command that CANNOT pass. Every "was it skipped?" assertion below runs a step
 # whose command would fail, so a skip is proven by the absence of the failure —
-# not merely by a green that a vacuous check would also produce.
+# not merely by a pass that a vacuous check would also produce.
 FAILING = [sys.executable, "-c", "raise SystemExit(1)"]
 
 
@@ -106,7 +106,7 @@ def close(root, branch):
 
 
 def test_off_git_is_not_a_work_branch(check, tmp_path):
-    # No repo at all: the answer must be None, i.e. the STRICT bar. An adopter
+    # No repo at all: the answer must be None, i.e. the STRICT checks. An adopter
     # running the harness from an unpacked tarball gets the full checks.
     claim(tmp_path, "main")  # even a claim dir cannot make it truthy off-git
     assert check._work_branch(tmp_path) is None
@@ -143,7 +143,7 @@ def test_slashed_branch_needs_the_nested_dir_not_a_flattened_one(check, tmp_path
 
 def test_the_closing_commit_does_not_un_claim_its_own_branch(check, tmp_path):
     # WI-357, hit three times in the Phase 4 acceptance. The close commit stages
-    # active/<branch>/ -> complete/, so at the moment its own pre-commit bar runs
+    # active/<branch>/ -> complete/, so at the moment its own pre-commit checks run
     # the working tree holds no claim and the trunk-freshness gates re-arm inside
     # the very commit that closes the WI — demanding artifacts §5.2 forbids the
     # branch to commit. The signal has to outlive the move, and history does.
@@ -301,7 +301,7 @@ def test_every_declared_freshness_step_is_skipped(check, tmp_path, monkeypatch):
         # for its freshness.
         "component-view",
         "okf",
-        "approval-fresh",
+        "acceptance-fresh",
         # OI-61 ruled (a)'s second step: the generated CLI reference. Its SOURCE
         # is code a work branch edits, which is exactly why the branch must not
         # be asked to commit the derived block — and it joined `trunk_step.py
@@ -353,10 +353,10 @@ def test_branch_edit_gates_still_run_in_the_g3_plan(check, tmp_path, monkeypatch
 
 
 def test_trunk_lane_forces_every_freshness_step_back_on(check, tmp_path, monkeypatch):
-    # WI-386. The refresh bar runs on the branch, and the integrator reads any
+    # WI-386. The landing checks run on the branch, and the integrator reads any
     # SKIP as a refusal — so without this flag the seven freshness steps stand
-    # down, the bar reports SKIP, and the refresh can never go green at all.
-    # The flag MAKES the mechanical bar possible; it is not a rescue from a
+    # down, the checks report SKIP, and the refresh can never pass at all.
+    # The flag MAKES the mechanical checks possible; it is not a rescue from a
     # false pass (REVIEW-A round 1 drove the direction). The branch is
     # genuinely claimed here (the detector still says so), which is what makes
     # this a forced OVERRIDE rather than a detection change.
@@ -368,14 +368,14 @@ def test_trunk_lane_forces_every_freshness_step_back_on(check, tmp_path, monkeyp
     for name in check._TRUNK_FRESHNESS_STEPS:
         assert check.run_step(name, (), FAILING, lenient=False)[0] == "FAIL", name
     # The captured (parallel) runner shares the same decision, or `--jobs N`
-    # and `--jobs 1` would bar different things.
+    # and `--jobs 1` would check different things.
     assert check.run_step_captured("okf", (), FAILING, lenient=False)[0] == "FAIL"
 
 
 def test_trunk_lane_is_opt_in_and_off_by_default(check, tmp_path, monkeypatch):
     # The arming boundary from the other side: the same claimed branch, the same
     # steps, no flag — every one still SKIPs. A default that had drifted to "on"
-    # would red every honest work branch for drift §5.2 forbids it to fix.
+    # would fail every honest work branch for drift §5.2 forbids it to fix.
     git_repo(tmp_path, branch="wi-360")
     claim(tmp_path, "wi-360")
     monkeypatch.chdir(tmp_path)
@@ -407,7 +407,7 @@ def test_trunk_lane_reaches_the_step_runner_through_the_real_cli(tmp_path):
 
 def test_run_steps_end_to_end_reports_the_skip_and_exits_zero(tmp_path):
     # The pre-commit hook's real entry point, as a subprocess: a claimed branch
-    # gets the notice and a green exit; the freshness step never runs.
+    # gets the notice and a passing exit; the freshness step never runs.
     git_repo(tmp_path, branch="wi-360")
     claim(tmp_path, "wi-360")
     proc = run_py([SCRIPTS / "check.py", "--run-steps", "status-map"], cwd=tmp_path)
@@ -432,7 +432,7 @@ def test_cache_key_is_the_root_not_the_process(check, tmp_path):
 
 def test_the_primary_checkout_is_not_a_work_branch(check):
     # The kit's PRIMARY checkout — the trunk lane — has no
-    # docs/work/active/<branch>/ claim, so its own harness runs the full bar.
+    # docs/work/active/<branch>/ claim, so its own harness runs the full checks.
     # This is the guard that would catch a detector so loose it matched the
     # trunk — the failure mode that turns every freshness gate off everywhere.
     #
@@ -440,7 +440,7 @@ def test_the_primary_checkout_is_not_a_work_branch(check):
     # run". Before the station protocol (WI-386) those were the same thing; a
     # lane worktree now runs this suite as a GATE during `integrate.py refresh`,
     # and a lane by construction HAS a claim — so asserting about the current
-    # root made the guard false exactly where the protocol needs it green, and
+    # root made the guard false exactly where the protocol needs it to pass, and
     # the intent (the detector must not match trunk) is unchanged by naming the
     # trunk explicitly. The constructed both-ways proof is the test above; this
     # one is the live-repo canary over the real registry.

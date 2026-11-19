@@ -162,7 +162,7 @@ def test_sync_is_vacuous_without_per_agent_dirs(tmp_path):
 def test_drifted_copy_fails_and_sync_restores(tmp_path):
     """Implements: TC-045"""
     # TC-045 headline, over the real kit source + the production commands: a
-    # drifted copy fails --check-agents; --sync restores byte-identity; green.
+    # drifted copy fails --check-agents; --sync restores byte-identity; passes.
     name = "gate-advance"
     claude = tmp_path / ".claude" / "skills" / name
     claude.mkdir(parents=True)
@@ -181,8 +181,8 @@ def test_drifted_copy_fails_and_sync_restores(tmp_path):
 
 def test_sync_deletes_dest_files_absent_from_source(tmp_path):
     # M-14: within the kit-owned <agent>/skills/<name>/ subtree, --sync must
-    # also DELETE a copy file with no source counterpart — --check-agents goes
-    # red on the stray ("file set differs") and prescribes --sync, so --sync
+    # also DELETE a copy file with no source counterpart — --check-agents
+    # fails on the stray ("file set differs") and prescribes --sync, so --sync
     # has to be able to fix it. Production commands over the real kit source;
     # a stray file plus a stray nested subdir (which must be pruned once
     # emptied).

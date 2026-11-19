@@ -21,8 +21,8 @@ WHAT THIS ADDED THAT THE RETIRED `docs/gate` DID NOT HAVE.
    what a fresh scaffold reads — C-01 on the new axis.
 3. **A floor.** The bar axis floors at DevStg-Reqs and the stage axis did not, so
    the stage could reach ord 0, below every runnable rung. Under the at-or-above
-   selection slice 2 lands, that is a repo where nothing runs and the run goes
-   green because of it.
+   selection slice 2 lands, that is a repo where nothing runs and the run
+   passes because of it.
 4. **A fingerprint of the declared inputs**, which is what lets any reader tell a
    current record from a stale one without parsing the registries.
 
@@ -44,12 +44,12 @@ Contract IF-050: the derived stage RECORD at `docs/stage`. A plain run writes th
     FINGERPRINT of the declared derivation inputs, one `key = value` per line
     under a comment header. Every field is addressed BY NAME, so a reordered
     record can never hand a reader the wrong value. The fingerprint is the
-    contract for the two reading postures: a selection or approval consumer
+    contract for the two reading postures: a selection or acceptance consumer
     reads through `kitlib.stage.read_stage`, which recomputes the fingerprint
     and trusts the recorded values only on a match, deriving fresh in memory
     otherwise, so none can act on a stale rung; a render leaf parses the
     committed record as it stands, so the page and the file it cites describe
-    one commit. The record is DERIVED and never hand-set: it moves by approving
+    one commit. The record is DERIVED and never hand-set: it moves by accepting
     artifacts in a reviewed commit, and a hand-edited or cross-ladder value
     raises rather than reading as a rung.
 Contract IF-165: the verdict every arm of this CLI answers in, 0 and 1 alone.
@@ -186,11 +186,11 @@ def _settled_off_spine(rows, table):
     ]
 
 
-# THE THREE TIERS THE STAGE READS FROM THEIR FIRST APPROVAL (SR-204), each
+# THE THREE TIERS THE STAGE READS FROM THEIR FIRST ACCEPTANCE (SR-204), each
 # with the maturity table its settled reading filters by: the settled branch
 # drops their Drafted rows as it does every tier's, so a settled reading is
 # never held by them, and the live reading holds a rung once a tier is active.
-_FIRST_APPROVAL_TIERS = {
+_FIRST_ACCEPTANCE_TIERS = {
     "das": spine_rules.DA_MATURITY,
     "surs": spine_rules.SUR_MATURITY,
     "stks": spine_rules.STK_MATURITY,
@@ -208,9 +208,9 @@ def _stage_map(spine, settled, evidence_passed=False):
     srs, llrs, tcs = spine["srs"], spine["llrs"], spine["tcs"]
     sn_ids, sn_draft = spine["sn_ids"], spine["sn_draft"]
     bifs, cmps = spine["bifs"], spine["cmps"]
-    # The three tiers read from their first approval (SR-204). A spine built
+    # The three tiers read from their first acceptance (SR-204). A spine built
     # before they existed carries none of them, and reads as an empty tier.
-    tiers = {key: spine.get(key, []) for key in _FIRST_APPROVAL_TIERS}
+    tiers = {key: spine.get(key, []) for key in _FIRST_ACCEPTANCE_TIERS}
     live_labels = set(_phase_groups(srs, llrs, tcs))
 
     if settled:
@@ -222,7 +222,7 @@ def _stage_map(spine, settled, evidence_passed=False):
         bifs = _settled_off_spine(bifs, spine_rules.BIF_MATURITY)
         cmps = _settled_off_spine(cmps, spine_rules.CMP_MATURITY)
         tiers = {
-            key: _settled_off_spine(rows, _FIRST_APPROVAL_TIERS[key])
+            key: _settled_off_spine(rows, _FIRST_ACCEPTANCE_TIERS[key])
             for key, rows in tiers.items()
         }
 
@@ -238,7 +238,7 @@ def _stage_map(spine, settled, evidence_passed=False):
         # reason the need/boundary/component rows do: it is a REPO-WIDE fact, and
         # a per-phase call must see the same one the global call did. A phase
         # whose own rows are all settled reads Release exactly when the repo's
-        # suite is green on this tree — never on its own say-so.
+        # suite passes on this tree — never on its own say-so.
         evidence_passed=evidence_passed,
     )
     overall = spine_rules.spine_stage(srs, llrs, tcs, **frame)
@@ -273,9 +273,9 @@ def derive(root):
     settled_stage = min(earned, key=kitstage.order) if earned else kitstage.BELOW
 
     rows = spine["srs"] + spine["llrs"] + spine["tcs"]
-    # The three first-approval tiers' drafts are counted too, whether or not
+    # The three first-acceptance tiers' drafts are counted too, whether or not
     # their tier is read yet: the count is of rows in work, not a rung.
-    tier_rows = [r for key in _FIRST_APPROVAL_TIERS for r in spine.get(key, [])]
+    tier_rows = [r for key in _FIRST_ACCEPTANCE_TIERS for r in spine.get(key, [])]
     drafted = sum(1 for r in rows + tier_rows if spine_rules.is_drafted(r)) + len(
         spine["sn_draft"]
     )
@@ -303,7 +303,7 @@ def read(root):
     return kitstage.read_stage(root, derive)
 
 
-# --- THE PHASE RULE (ruled plan §4 + owner answer §6.1/§6.2) ------------------
+# --- THE PHASE RULE (ruled plan §4 + operator answer §6.1/§6.2) ---------------
 # EVERY ROW THIS RULE CAN ATTRIBUTE A DECREASE TO, as
 # `(id-column, spine key, the cells the DERIVATION reads)`.
 #
@@ -321,7 +321,7 @@ def read(root):
 # Two independent blind spots, both closed here: the frame REGISTRIES were not
 # walked at all, and the cell set was `Status` only, while the derivation also
 # reads a CMP's `Standing` (a lifecycle fact that holds rung 3 on its own), an
-# SR's `SN-Refs` (the coverage rung) and `Verification` (the LLR exemption), and
+# SR's `SN-Refs` (the coverage rung) and `VerificationMethod` (the LLR exemption), and
 # the child rows' parent refs (the decomposition rungs). A rule that reads a
 # narrower input set than the derivation it polices can always be walked past.
 #
@@ -334,7 +334,7 @@ def read(root):
 # so a change to it is attributed like a change to `Verifies`.
 # Implements: SR-197, LLR-230
 _ATTRIBUTED_ROWS = (
-    ("SR-ID", "srs", ("Status", "SN-Refs", "Verification")),
+    ("SR-ID", "srs", ("Status", "SN-Refs", "VerificationMethod")),
     ("LLR-ID", "llrs", ("Status", "SR-Refs")),
     ("TC-ID", "tcs", ("Status", "Verifies", "Assumption-Refs")),
     ("B-ID", "bifs", ("Status",)),
@@ -347,11 +347,11 @@ _ATTRIBUTED_ROWS = (
 # its finding says so rather than asking for something the row cannot carry.
 _PHASELESS_KEYS = frozenset({"bifs", "cmps"})
 
-# THE EXEMPTION, and it is exactly one permutation (owner answer §6.2): a
+# THE EXEMPTION, and it is exactly one permutation (operator answer §6.2): a
 # decrease landing precisely on DevStg-LLReqs -> DevStg-Arch is the PERMITTED
 # DECOMPOSITION CYCLE — architecture rework surfaced by breaking a requirement
 # down is within-phase churn, and any deeply decomposed problem would otherwise
-# run the phase counter up. The owner declined a wider Arch-tier exemption, so
+# run the phase counter up. The operator declined a wider Arch-tier exemption, so
 # this is a pair, not a predicate over the Arch rung: a two-rung drop that
 # happens to END at Arch is NOT exempt, and neither is Arch -> anything.
 _EXEMPT_DECREASE = (kitladder.STAGE_LLREQS, kitladder.STAGE_ARCH)
@@ -373,7 +373,7 @@ def _spine_at(root, rev):
     THE WHOLE FRAME IS READ AT `rev`, NOT HELD AT THE LIVE TREE. Holding it
     constant was tried first and is wrong: the ruled exemption is
     `DevStg-LLReqs -> DevStg-Arch`, and the Arch rung is derived from the
-    COMPONENT registry, so a frame pinned to the live tree makes the owner's one
+    COMPONENT registry, so a frame pinned to the live tree makes the operator's one
     permitted decrease unreachable — the rule would be unable to see the very
     transition it is required to forgive."""
     if _git(root, ["rev-parse", "--verify", "--quiet", rev]) is None:
@@ -410,7 +410,7 @@ def _effective(spine):
     THE TEST-EVIDENCE VERDICT IS DELIBERATELY LEFT AT ITS DEFAULT (False) HERE,
     on BOTH sides of the phase rule's before/after comparison (WI-500). The rule
     polices SPINE AUTHORING — an edit that lowers the reading must surface as a
-    phase change — and evidence is not an authored row: a suite that went red, or
+    phase change — and evidence is not an authored row: a suite that failed, or
     a record that went stale, would otherwise read as an un-phased authoring
     decrease and demand a phase tag nobody can supply. Symmetric omission keeps
     the comparison about the rows, which is what the rule is for."""
@@ -427,7 +427,7 @@ def _changed_rows(live, before_rows):
     (slice 3), a newly DRAFTED row cannot decrease the effective stage AT ALL —
     slice 1 excludes drafts from the settled fold, so that half of the phrase is
     inert by construction. What actually decreases it is a redrafted child
-    (Impl -> LLReqs for an LLR, Impl -> Tests for a TC) and a newly APPROVED
+    (Impl -> LLReqs for an LLR, Impl -> Tests for a TC) and a newly ACCEPTED
     parent with no children yet (Impl -> LLReqs). Narrowing to the literal words
     would have shipped a rule that cannot fire on the two shapes that matter, so
     the trigger is "added, or a stage-affecting cell moved" — which CONTAINS the
@@ -462,7 +462,7 @@ def _changed_rows(live, before_rows):
 
 
 def phase_rule_findings(root):
-    """The authoring-time decrease rule (plan §4, owner answer §6.1).
+    """The authoring-time decrease rule (plan §4, operator answer §6.1).
 
     **An edit that LOWERS the effective stage must surface as a phase change.**
     When the effective stage decreased, every row this edit added or moved a
@@ -500,12 +500,12 @@ def phase_rule_findings(root):
 
     RE-POINTED AT WI-501 (OI-53 (b), 2026-08-22). This carried
     `Implements: SR-139` until the WI-498 close, which was a mis-trace: SR-139
-    is "Approval as an ordinal over a derived spine stage" — it governs the
-    `human_approval_through` dial — while this rule's obligation is "a
+    is "Acceptance as an ordinal over a derived spine stage" — it governs the
+    `operator_accepts_through` dial — while this rule's obligation is "a
     spine edit that LOWERS the effective stage must surface as a phase change"
-    (ruled plan §4, owner answer §6.1). Unrelated obligations at different
+    (ruled plan §4, operator answer §6.1). Unrelated obligations at different
     tiers, so `backlink-coverage` was crediting a requirement about
-    approval authority with a realization edge from a function that does
+    acceptance authority with a realization edge from a function that does
     not realize it — inflating its coverage with a false edge while leaving
     this rule rowless (ROUND-OPUS 12). WI-501 removed the false edge and
     minted SR-181, which states this obligation directly; the declaration
@@ -622,8 +622,8 @@ def main():
 
     if args.next_phase:
         # The one derived answer to "a confirmed scope change opens a new phase —
-        # what number does it take?" (owner ruling 2026-08-01, WI-402: a phase
-        # increments on an adjudication-confirmed scope change or an approved
+        # what number does it take?" (operator ruling 2026-08-01, WI-402: a phase
+        # increments on an adjudication-confirmed scope change or an accepted
         # draft-SN batch, NEVER on a raw derived-value drop — a spurious window
         # must not burn a phase number). Printed bare so the intake mint helper
         # (WI-388) can int() the output. A Drafted row's phase is not yet scope,
@@ -678,9 +678,9 @@ def main():
             # derived: it is `stage.template` as `bootstrap.py` copied it, or an
             # adopter's tree between the resync and the first regeneration.
             # There is nothing to compare it against and nothing it can be
-            # stale relative to, so failing here would red every freshly
-            # scaffolded repo — the shipped promise is that such a repo is
-            # green. It is a NOTE, not a silent pass: the message names the one
+            # stale relative to, so failing here would fail every freshly
+            # scaffolded repo — the shipped promise is that such a repo
+            # passes. It is a NOTE, not a silent pass: the message names the one
             # command that ends the state, and `trunk_step --regen` runs it
             # unprompted at the next trunk regeneration point.
             print(
@@ -699,7 +699,7 @@ def main():
             return 0
         # THE CAUSE IS BRANCHED, because one message was false in the case the
         # design calls NORMAL (ROUND-OPUS 14). An input edit that moves no rung
-        # still reds `--check` — correctly, and the fragment banks that as the
+        # still fails `--check` — correctly, and the fragment banks that as the
         # intended direction — but the message said "the derived stage moved"
         # precisely when it had not, and the `cached:`/`now:` blocks printed
         # underneath REFUTE it: every derived value byte-identical, only the

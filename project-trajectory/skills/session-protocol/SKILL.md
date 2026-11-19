@@ -33,7 +33,7 @@ kit's design history — the old thread specs and the WI-1.x log — is archived
   part of the scope, and record which in the log. (The unattended loop surfaces
   this into the session prompt; the judgment is yours — it never auto-stashes.)
 - **Treat a declared-policy change as a status-staleness event.** In the same
-  sitting, grep `docs/status.md` for pause/stop/approval
+  sitting, grep `docs/status.md` for pause/stop/acceptance
   language predicated on the old `gate_policy`, `push`, `review_rounds`, or
   `guardrails` value; point to `docs/process.toml` instead of paraphrasing it.
 
@@ -56,7 +56,7 @@ always true.
   `integrate._status_prose_refusal` refuses it at claim time; generated blocks
   are exempt. Point at `docs/work/queued/` and let the generated frontier name
   ids.
-- **Never revert a real fix, or sanction a check, to green a step.** Editing a
+- **Never revert a real fix, or sanction a check, to make a step pass.** Editing a
   declared list — a coverage floor, an orphan glob, a ratchet baseline — to
   clear a finding IS accepting what it measures. If a ratchet fires on
   legitimate work, re-stamp it deliberately and record the reason.
@@ -72,7 +72,7 @@ always true.
 - **The coordinator's procedure has one home, the `coordinator-cycle` skill**
   (adjudication, rendered review briefs, the rework coverage gate, disputes).
 - **A stopped lane CLOSES; it is never held by renaming its ref (OI-70).** The
-  only sanctioned stop, save a planned owner-held step (process.md §5, "Open items"), is
+  only sanctioned stop, save a planned operator-held step (process.md §5, "Open items"), is
   the partial close (§4): the spec moves to the terminal
   `docs/archive/work/partial/` with a handback report an adjudicator then judges
   (queue a successor, or mint an open item). Parking a lane by renaming its
@@ -80,9 +80,9 @@ always true.
   must close or it gets lost, as the wi508 hold nearly was — and
   `check_trajectory` reports any active claim with no matching branch ref.
 
-## 3. End green (gates)
+## 3. End with the checks passing (gates)
 
-Run the one declared bar command and paste the real output — never a green
+Run the one declared checks command and paste the real output — never a pass
 you didn't produce:
 
 ```
@@ -90,16 +90,16 @@ run.cmd smoke                                          # Windows launcher
 python project-trajectory/scripts/run_menu.py smoke    # from a shell
 ```
 
-It must pass before **each** commit — this is the **commit bar**. Its steps
-are declared once, in `docs/stack.ini` `[run] smoke`, so a build round's bar
+It must pass before **each** commit — this is the **commit checks**. Its steps
+are declared once, in `docs/stack.ini` `[run] smoke`, so a build round's checks
 cannot skip the strict lints it carries (review-churn ruling 6, 2026-10-11;
 they never run in the commit hook). The lints run first; the budget check runs
-last, and its run is the bar's only tier run.
+last, and its run is the checks' only tier run.
 `-m smoke` is the fast per-commit tier; `check_smoke_budget.py --mode warn`
-runs it once, FAILS the commit on a red tier (with the tier's own exit code),
+runs it once, FAILS the commit on a failing tier (with the tier's own exit code),
 and reports the tier's CPU-seconds and wall time against `docs/stack.ini`
-`[smoke-budget]`, with a WARN line for a limit over. No bar fails on seconds
-(the owner, 2026-10-20): `run.cmd audit` judges them, running the same step
+`[smoke-budget]`, with a WARN line for a limit over. No checks fail on seconds
+(the operator, 2026-10-20): `run.cmd audit` judges them, running the same step
 with `--mode enforce` against the tier's own CPU-seconds (`cpu-seconds`;
 other load on the box moves it far less than wall time), a looser wall cap (`wall-seconds`)
 and the tier's test count (`max-tests`), by hand and at phase close. A breach
@@ -109,16 +109,16 @@ most of the suite. Tiering is
 opt-out: smoke drops the **subprocess/scaffold-heavy** modules
 (`tests/conftest.py` `SLOW_MODULES` — the hook/gate/scaffold/heavy-script runs
 the commit hook and the gate re-exercise anyway), so a **new (in-process) test
-is in the bar by default**. Every bar judges the tier's membership through a
+is in the checks by default**. Every checks judge the tier's membership through a
 deterministic ratchet against `max-tests`, `tests/test_smoke_budget.py`
 (it bites if the tier grows back toward the full suite; re-stamp deliberately,
 reason in the log). Run the **full** unfiltered suite (`pytest -q -n auto`)
 once at phase close; mid-phase, only when it demonstrably fits inside one turn,
 and never end a turn waiting on one. The
-full `check.py --gate <gate>` is the **gate bar** (unfiltered suite + coverage):
+full `check.py --gate <gate>` is the **gate checks** (unfiltered suite + coverage):
 it belongs to gate advancement, phase close, and CI, not to each
 mid-phase slice; `--jobs 0` runs its independent steps concurrently. A per-WI
-slice inside a phase ends at the commit bar (PROCESS_OPTIONS.md, "Phase
+slice inside a phase ends at the commit checks (PROCESS_OPTIONS.md, "Phase
 cadence"). New behavior needs new tests
 (`tests/`); update `test_bootstrap.py` file lists and `README.md` kit-contents /
 `bootstrap.py` `MAPPING` when the scaffold surface changes.
@@ -156,19 +156,19 @@ session's results are recorded.
   `## <YYYY-MM-DD> — <title>` heading; links authored relative to
   `docs/log.d/`) — `trunk_step.py` compiles fragments into the log in merge
   order and deletes them. Never hand-edit `docs/log.md` on a work branch. A
-  session that ends owing the owner a decision **declares it** in the fragment —
-  `Deferred open items: OI-45` (or `… none — <why>`), checked at the commit bar
+  session that ends owing the operator a decision **declares it** in the fragment —
+  `Deferred open items: OI-45` (or `… none — <why>`), checked at the commit checks
   by `gen_open_items.py --check` (process.md §5, OI-41 ARM 2).
-- **A delegated decisions record is the owner's to rule.** Write each entry
-  of `docs/decisions/<run>.toml` with `review` empty and no `owner` key. The
-  owner sets `owner = "confirmed"` or `"overruled"`; an overrule's commit
+- **A delegated decisions record is the operator's to rule.** Write each entry
+  of `docs/decisions/<run>.toml` with `review` empty and no `operator` key. The
+  operator sets `operator = "confirmed"` or `"overruled"`; an overrule's commit
   states the new direction in `review` and files or amends a queued or active
   work item citing `docs/decisions/<run>.toml#D-NNN`, or the ruling-sync step
   and the merge slot refuse it (process-options.md, "Delegated decisions
   record").
 - **Section order inside the spec file is load-bearing.**
   `check_trajectory.parse_spec_deliverable` clips the body at `## Context`, so
-  a `## Deliverable` placed *after* Context parses as EMPTY and the close reds
+  a `## Deliverable` placed *after* Context parses as EMPTY and the close fails
   (R-A hard error). `## Deliverable` before `## Context`, always.
 - **Order the close against the verdict round.** Under `review_rounds >= 1` the
   merge queue wants a verdict that NAMES the branch's current **non-record**
@@ -176,7 +176,7 @@ session's results are recorded.
   `docs/work/` is not), so any commit after it that CHANGES that tree buys
   another round — and one that does not, cannot.
   Close **first** — Deliverable filled, spec moved to its terminal folder, any
-  approving Status-change commit — and take the final verdict round **last**;
+  accepting Status-change commit — and take the final verdict round **last**;
   never hand-merge trunk, since only the station's `refresh` commit is peeled.
   A correction the verdict itself demanded still costs a round: that is the gate
   working, not a defect (process-options.md, "The LLM-gate verdict protocol").
@@ -208,19 +208,19 @@ session's results are recorded.
   pause point, the last finished step whose evidence is committed; a lane
   whose next step is a review, rework or any launch the window refuses stops
   there, and the review cycle is not completed to reach a pause; a lane stays
-  `active`, and a stop the owner must act on follows process.md §5, "Open items".
+  `active`, and a stop the operator must act on follows process.md §5, "Open items".
   (2) Write the
   handoff naming each lane and its next obligation. (3) End the session: no
   relaunch is requested inside the window (a pending one is cancelled at the
   exit), and the lease is kept, not handed back. To resume after the window,
-  the owner reopens the same session (a context-threshold latch still set
-  needs the owner's recorded `clear` too) or releases the lease and takes it
+  the operator reopens the same session (a context-threshold latch still set
+  needs the operator's recorded `clear` too) or releases the lease and takes it
   in a fresh one. The handoff also classifies each compaction the
   lease recorded (`coordinator_guard.py status`) as a **missed threshold**
   (auto-compaction before the latch), a **manual** compaction, or a
   compaction **during the drain**. A coordinator session takes the lease with `coordinator_guard.py
-  take`; a crashed holder's lease is freed only by the owner's recorded
-  `release --reason`, and a latch only by the owner's recorded `clear`, the
+  take`; a crashed holder's lease is freed only by the operator's recorded
+  `release --reason`, and a latch only by the operator's recorded `clear`, the
   holder's hand-back or the relaunched successor's take.
 - WI ordering is derived from the registry by `schedule.py` (the DAG +
   `Priority` + gate class), not a hand-curated `docs/next-wi` — that pointer

@@ -240,7 +240,7 @@ def test_tab_button_and_panel_helpers_emit_the_aria_pattern():
 # --- WI-144: the 042-CRITIQUE rubric-meeting build round (dashboard-*.md) -------
 # Regression guards for the six rubric-meeting fixes (A4/U4/A3/U3/U1 done here;
 # T2 knowledge-density is the round's handed-off remainder). These guard the build
-# against regressions; they are NOT the owner-gated formal TC-HARDEN cases (the
+# against regressions; they are NOT the operator-gated formal TC-HARDEN cases (the
 # per-<text> WCAG parse / dead-selector / legend-per-fill TCs route via §5 intake).
 
 
@@ -530,9 +530,9 @@ def test_u3_svg_corner_radii_match_the_declared_scale(tmp_path):
 # commit message:
 #
 #   WITHIN a vocabulary — 15. Every member can sit beside every other in one
-#   legend, so the bar is the strict one the phase accents already met.
+#   legend, so the stage is the strict one the phase accents already met.
 #   ACROSS vocabularies — 12. Two colours from different vocabularies meet less
-#   often (a status fill and a phase accent share no legend), so the bar is
+#   often (a status fill and a phase accent share no legend), so the stage is
 #   lower — but not absent, because 120-CRITIQUE reported a reader conflating
 #   exactly such a pair. 12 clears every confirmed conflation without forcing a
 #   wholesale re-hue; the closest surviving pair is 12.5.

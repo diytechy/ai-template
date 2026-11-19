@@ -96,7 +96,7 @@ amendment—not another large instruction file.
 - [Prompt migration skill](https://www.reddit.com/r/claudeskills/s/5XKJ90ojRW) — Instruction-maintenance lead; avoid vendor-specific kit rules.
 - [Architecture review skill](https://www.reddit.com/r/claudeskills/s/kTiGFoiGvU) — Candidate companion for architecture decisions; must point to requirements and evidence.
 - [Engineering-process graph](https://www.reddit.com/r/claudeskills/s/9K1CjfF5Wm) — Strong lead for traceability/architecture visualization.
-- [System design skill](https://www.reddit.com/r/ClaudeCode/s/bICp4hC49X) — Candidate for reasoning, separate from approval authority.
+- [System design skill](https://www.reddit.com/r/ClaudeCode/s/bICp4hC49X) — Candidate for reasoning, separate from acceptance authority.
 - [Claude Code complaint discussion](https://www.reddit.com/r/ClaudeCode/s/D09o8UHzWM) — Lead for evidence-backed defects over tool complaints.
 - [Fable orchestration guidance](https://www.reddit.com/r/ClaudeCode/s/dWvuPhSLVt) — Plan/execute separation lead.
 - [Stop asking AI for ideas](https://www.reddit.com/r/claudeskills/s/tbX4CnL1Rh) — Problem-framing and human-judgment lead.
@@ -129,7 +129,7 @@ fan-out.
 
 - [Recurring bug](https://www.reddit.com/r/ClaudeAI/s/jnyhQw0kIB) — Reproduction and regression-proof verification lead.
 - [Over-agreement](https://www.reddit.com/r/claudeskills/s/sXbV1q48iU) — Adversarial review and explicit-dissent lead.
-- [Autonomy control](https://www.reddit.com/r/ClaudeAI/s/bDkKKxm3Bt) — Consent, approval, and execution-boundary lead.
+- [Autonomy control](https://www.reddit.com/r/ClaudeAI/s/bDkKKxm3Bt) — Consent, acceptance, and execution-boundary lead.
 
 ## Research inputs, model operations, and cost claims
 

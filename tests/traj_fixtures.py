@@ -94,7 +94,7 @@ def if_row(iid, owner, consumers, channel="call", **cells):
         "consumers = [{}]".format(", ".join('"%s"' % c for c in consumers)),
         'channel = "{}"'.format(channel),
         'version = "v1"',
-        'status = "{}"'.format(cells.pop("status", "Approved")),
+        'status = "{}"'.format(cells.pop("status", "Accepted")),
     ]
     lines += ['{} = "{}"'.format(k, v) for k, v in sorted(cells.items())]
     return "\n".join(lines) + "\n\n"
@@ -173,10 +173,10 @@ def write_cont_src(root):
 
 
 CONT_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component
-LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Approved,CMP-001
-LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Approved,CMP-001
-LLR-003,SR-002,C,scripts/mod_c,gen,d,(see TC),Approved,CMP-002
-LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Approved,CMP-002
+LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Accepted,CMP-001
+LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Accepted,CMP-001
+LLR-003,SR-002,C,scripts/mod_c,gen,d,(see TC),Accepted,CMP-002
+LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Accepted,CMP-002
 """
 
 CONT_CMPS = cmp_row("CMP-001", "Core") + cmp_row("CMP-002", "Gen")
@@ -218,11 +218,11 @@ SMALL_WIS = (
 # tiers), so a WI's phase is derived from the SR it delivers.
 TIER_SRS = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
-    "Priority,Verification,Status,Phase\n"
-    'SR-001,P1,SN-001,"r",R,"a",,M,Test,Approved,v1\n'
-    'SR-002,P2,SN-001,"r",R,"a",,M,Test,Approved,v2\n'
-    'SR-003,P3,SN-001,"r",R,"a",,M,Test,Approved,v3\n'
-    'SR-004,P4,SN-001,"r",R,"a",,M,Test,Approved,v4\n'
+    "Priority,VerificationMethod,Status,Phase\n"
+    'SR-001,P1,SN-001,"r",R,"a",,M,Test,Accepted,v1\n'
+    'SR-002,P2,SN-001,"r",R,"a",,M,Test,Accepted,v2\n'
+    'SR-003,P3,SN-001,"r",R,"a",,M,Test,Accepted,v3\n'
+    'SR-004,P4,SN-001,"r",R,"a",,M,Test,Accepted,v4\n'
 )
 
 TIER_HDR = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
@@ -370,7 +370,7 @@ def _every_emitter_document(tmp_path):
       test.
 
     The trap that mixture sets is the CALLER's to disarm, and deliberately so
-    (the shared fresh-emitting fixture was considered and rejected — owner
+    (the shared fresh-emitting fixture was considered and rejected — operator
     ruling 2026-07-30, log.md Decisions). A change that TIGHTENS an invariant
     reds through the stale shipped copy rather than through the emitter it
     changed: the failure names an older renderer's markup while the code under

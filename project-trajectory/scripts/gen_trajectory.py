@@ -8,7 +8,7 @@ the committed code map. The registry loading and validation are **reused from
 One self-contained HTML file — a vision header, a git-derived **as-of stamp**
 visible on open (never `now()`; excluded from the freshness compare, see
 ASOF_RE), definition + execution %-meters, and the model's views (WI-039, the
-approved AXES artifact spec — formerly `docs/trajectory.html`):
+accepted AXES artifact spec — formerly `docs/trajectory.html`):
 
   1. **What** — an SVG *icicle* of the SN->SR->LLR->TC spine (block height
      leaf-proportional; hover highlights a subtree, click reads the full text).
@@ -24,7 +24,7 @@ approved AXES artifact spec — formerly `docs/trajectory.html`):
      inventory, e.g. files-mode.
   4. **How (physical)** — the `CMP-###` component table when the optional
      component layer carries real rows (the graph rendering is deferred-on-need
-     per the AXES approval); omitted otherwise.
+     per the AXES acceptance); omitted otherwise.
   5. **Knowledge** — the committed `docs/okf/` OKF bundle as a typed concept
      graph (the dashboard is the bundle's first real *consumer*, WI-070): nodes
      fill-keyed by OKF `type`, directed spine edges from the link lists, laid out
@@ -35,8 +35,8 @@ approved AXES artifact spec — formerly `docs/trajectory.html`):
   6. **Process** — the method reference (WI-085): *how this project is built* —
      the artifact lifecycle x gates flow (live tier counts from the spine, the
      current derived stage highlighted from `docs/stage`), the agent-resume loop,
-     the slice -> phase -> check-bar cadence, and (WI-142/LLR-056) the two circular working loops —
-     intake and human-decision — sharing one LLM_Agent entry. Data-derived where
+     the slice -> phase -> gate-check cadence, and (WI-142/LLR-056) the two circular working loops —
+     intake and operator-decision — sharing one LLM_Agent entry. Data-derived where
      a canonical source exists; links out to the process docs and the canonical
      working surfaces. Omitted when there is no `docs/stage`, so a stage-less
      repo renders byte-identically.
@@ -51,7 +51,7 @@ Stdlib only. Usage:  python scripts/gen_trajectory.py [--root .] [--check] [--st
              registry is invalid or the committed HTML is stale.
   --status   splice the derived-facts snapshot (spine + derived stage + open-items
              one-liners) into docs/status.md's `<!-- BEGIN GENERATED STATUS -->`
-             block (WI-202) AND the durable pending-owner-actions projection into
+             block (WI-202) AND the durable pending-operator-actions projection into
              (WI-234); with --check, byte-compare BOTH for freshness — the
              successor invariant to the WI-200 forward-only token guard. Vacuous
              (exit 0) per file when it is absent or has no marker pair.
@@ -75,7 +75,7 @@ Contract IF-011: the dashboard generator's verdict, delivered as a CLI. A plain
     run regenerates the root `PROJECT_STATE.html` from the work-item registry,
     the spine registries and the live source tree. `--check` writes nothing and
     exits 1 when the registry is invalid or the committed HTML is stale.
-    `--status` splices the derived-facts snapshot and the pending-owner-actions
+    `--status` splices the derived-facts snapshot and the pending-operator-actions
     projection into the marked blocks of `docs/status.md`, byte-comparing both
     under `--check` and passing vacuously per file when the file is absent or
     has no marker pair. The freshness compare EXCLUDES the git-derived as-of
@@ -277,7 +277,7 @@ else:
         route_graph,
     )
 
-# The unified project-state artifact at the repo ROOT (WI-039, the approved
+# The unified project-state artifact at the repo ROOT (WI-039, the accepted
 # AXES spec): what was docs/trajectory.html, plus the How-SW view and the
 # git-derived as-of stamp. One self-contained file, all diagrams inside.
 OUT_HTML = "PROJECT_STATE.html"
@@ -598,7 +598,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         <div class="card">
           <div class="label">Definition completeness</div>
           <div class="big">$def_pct%</div>
-          <div class="sub">$sr_verified of $sr_total system specifications approved</div>
+          <div class="sub">$sr_verified of $sr_total system specifications accepted</div>
           <div class="meter def" role="img" aria-label="Definition completeness meter, $def_pct% filled"><span style="width:$def_pct%"></span></div>
         </div>
         <div class="card">
@@ -1104,7 +1104,7 @@ def main():
         "open-items one-liners) into docs/status.md instead of rendering the "
         "dashboard; with --check, byte-compare it for freshness (the WI-200 "
         "forward-only guard's successor). Vacuous without the marker pair. The "
-        "pending-owner-actions projection moved to gen_open_items.py with "
+        "pending-operator-actions projection moved to gen_open_items.py with "
         "WI-322 — this still DERIVES it (`pending_block`), that renders it.",
     )
     args = ap.parse_args()
@@ -1112,7 +1112,7 @@ def main():
 
     if args.status:
         # `--status` gates the status snapshot alone since WI-322: the
-        # pending-owner-actions projection moved to the generated owner surface
+        # pending-operator-actions projection moved to the generated operator surface
         # docs/open-items.html (its own `open-items` harness step), because the
         # markdown file it used to splice into is retired. `pending_block` stays
         # here — it is still the ONE derivation of what is pending; gen_open_items

@@ -87,10 +87,10 @@ DEFAULT_ROUND_BUDGET = 14
 # coordinator owns executing these; the map keeps the wording in one place.
 _PAGE_ACTIONS = {
     # SN-029: keyed on the two independent bits the retired three-value enum
-    # bundled — (is the tier human-held, may other work keep running) — so each
+    # bundled — (is the tier operator-held, may other work keep running) — so each
     # dial means exactly one thing and the third combination stops being
     # unreachable.
-    (True, False): "stop-needs-human",
+    (True, False): "stop-needs-operator",
     (True, True): "surface-block-continue-others",
     (False, False): "design-check-session",
     (False, True): "design-check-session",
@@ -321,20 +321,20 @@ def disposition(state):
     return DISP_CONTINUE
 
 
-def page_action(human_held, keep_nondependent=False):
+def page_action(operator_held, keep_nondependent=False):
     """The documented failure-semantics action for a PAGE at the declared
-    approval level (SN-029).
+    acceptance level (SN-029).
 
-    `human_held` is `agent_common.human_holds`' answer — anything unreadable
+    `operator_held` is `agent_common.operator_holds`' answer — anything unreadable
     already resolved to True there, which is why this takes a bool rather than
     re-deriving one. But `bool(None)` is False, i.e. the MOST PERMISSIVE cell,
     so a caller that passes an un-resolved value reaches the opposite of the
     fail-safe direction this module claims. Since this is an independently
     copyable script with a public API, `None` is normalised here to the
     strictest cell rather than trusted to never arrive."""
-    if human_held is None:
-        human_held = True
-    return _PAGE_ACTIONS[(bool(human_held), bool(keep_nondependent))]
+    if operator_held is None:
+        operator_held = True
+    return _PAGE_ACTIONS[(bool(operator_held), bool(keep_nondependent))]
 
 
 def main():

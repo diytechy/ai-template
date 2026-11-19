@@ -12,7 +12,7 @@ on it instead, each at the rung where the question can first be answered
 honestly (`check.py` places them):
 
   assumption-gate       DevStg-Boundary  each requirement not recorded
-                                          coincident cites approved, active
+                                          coincident cites accepted, active
                                           assumptions that reach its
                                           stakeholders (SR-205)
   crossing-allocation   DevStg-Boundary  each interface-form requirement's
@@ -31,15 +31,18 @@ honestly (`check.py` places them):
 
 WHY OFF MEANS ADVISORY, NOT SILENT. With the setting absent or off the step
 prints the same findings as advisories and passes, so a project weighing the
-gate sees exactly what turning it on would fail before it does.
+gate sees exactly what turning it on would fail before it does. One exception:
+while no stakeholder is accepted with a party, reach cannot be judged, so the
+`assumption-gate` step prints its reach-caused advisories as one line with
+their count; every other advisory is still listed.
 
 WHAT IT NEVER TOUCHES. The findings are the step's alone: the derived stage
 never reads them and its single release producer stays the harness evidence
 verdict (spine map D16). The rules are `assumption_rules.py`'s, pure; this
-module reads the registries, the observation records and the approval acts
+module reads the registries, the observation records and the acceptance acts
 once, and hands them in. The release step keeps its name,
 `assumption-evidence`, for the projects already running it, though an
-assumption carries no evidence level (owner ruling 2026-10-02).
+assumption carries no evidence level (operator ruling 2026-10-02).
 
 Implements: SR-205, SR-206, SR-212, LLR-242, LLR-243, LLR-244
 
@@ -49,10 +52,13 @@ in docs/requirements/interfaces.toml).
 Contract IF-230: the assumption gate's steps, as a command.
     `check_assumption_gate.py --step <STEPS member> [--root <dir>]` prints one
     line per finding, `FAIL: <finding>` with the gate on (`[checks]
-    assumption_gate = true`) or `ADVISORY: <finding>` otherwise, then a summary
-    line naming the step, and exits 1 when a finding FAILS, else 0. It reads
+    assumption_gate = true`) or `ADVISORY: <finding>` otherwise (the
+    `assumption-gate` step's reach-caused advisories become one `ADVISORY:`
+    count line while no stakeholder is agreed), then a summary line naming the
+    step, and exits
+    1 when a finding FAILS, else 0. It reads
     the registries under `<root>/docs`, and for `assumption-evidence` the
-    observation records and the approval acts accepting risks; it writes
+    observation records and the acceptance acts accepting risks; it writes
     nothing. `check.py` runs it as the built-in steps of the same names.
 
 Python 3.11+, stdlib only; Windows + POSIX.
@@ -94,12 +100,12 @@ def _evidence_findings(root, reg):
     return rules.release_gate_findings(reg.das, reg.srs, risks)
 
 
-def step_findings(root, step):
-    """The findings `step` reports for the project at `root`.
+def step_findings(root, step, reg):
+    """The findings `step` reports for the project at `root`, over `reg`, its
+    registries as `trace.load_registries` reads them.
 
     Implements: SR-205, SR-206, SR-212, LLR-242, LLR-243, LLR-244
     """
-    reg = trace.load_registries(Path(root) / "docs")
     if step == "assumption-gate":
         reach = rules.reach_gaps(
             reg.das, reg.srs, reg.sn_needs, reg.stks, reg.exts, reg.bifs, reg.surs
@@ -112,6 +118,20 @@ def step_findings(root, step):
     if step == "interface-allocation":
         return rules.interface_form_gate_findings(reg.srs, reg.ifs, reg.llrs)
     return _evidence_findings(root, reg)
+
+
+def _fold_reach_caused(findings, reg):
+    """The `assumption-gate` advisories with only the reach-caused ones passed
+    through `held_until_agreed`; every other finding stays listed. A line is
+    reach-caused when the same judgement with an empty reach map lacks it."""
+    plain = set(
+        rules.boundary_gate_findings(reg.srs, reg.das, reg.surs, {}, bool(reg.bifs))
+    )
+    caused = [line for line in findings if line not in plain]
+    folded = rules.held_until_agreed(caused, reg.stks, "reach finding(s)")
+    if folded == caused:
+        return findings
+    return [line for line in findings if line in plain] + folded
 
 
 def main(argv=None):
@@ -128,9 +148,15 @@ def main(argv=None):
     args = ap.parse_args(argv)
     root = Path(args.root)
     enabled = kitconfig.assumption_gate_enabled(root / "docs")
-    findings = step_findings(root, args.step)
+    reg = trace.load_registries(root / "docs")
+    findings = step_findings(root, args.step, reg)
     kind = "FAIL" if enabled else "ADVISORY"
-    for line in findings:
+    shown = findings
+    # Advisories only: with no stakeholder agreed, one count line stands in for
+    # the reach-caused ones. A failure is never folded.
+    if not enabled and args.step == "assumption-gate":
+        shown = _fold_reach_caused(findings, reg)
+    for line in shown:
         print("{}: {}".format(kind, line))
     print(
         "{}: {} finding(s), the assumption gate is {}{}".format(

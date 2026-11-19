@@ -79,7 +79,7 @@ def test_move_relinks_inbound_links_from_every_depth(tmp_path):
     """Archival must redirect inbound markdown links, or it strands a dangling
     link — the live 2026-07-24 failure, where a train's own docs/log.md entry
     linked the spec it was closing and the break only surfaced on the composed
-    tree as a red check_docs. Resolution is by resolved PATH, so all three
+    tree as a failure check_docs. Resolution is by resolved PATH, so all three
     depths are covered by one rule, and each replacement is re-relativised to
     its own file's directory."""
     repo = tmp_path
@@ -140,14 +140,14 @@ def test_relink_preserves_crlf_and_skips_unrelated_files(tmp_path):
     assert "docs/other.md" not in touched
 
 
-def test_the_owners_scratchpad_is_never_planned_or_rewritten(tmp_path):
-    """The owner-only notes are outside every kit write: a scratchpad linking
-    the moved spec keeps its link as typed (stale is the owner's to fix), is
+def test_the_operators_scratchpad_is_never_planned_or_rewritten(tmp_path):
+    """The operator-only notes are outside every kit write: a scratchpad linking
+    the moved spec keeps its link as typed (stale is the operator's to fix), is
     absent from the plan a bookkeeping commit refuses a dirty path against, and
     is absent from what the ritual reports it touched."""
     repo = tmp_path
     _spec_with_links(repo)
-    pad = repo / sm.ac.OWNER_ONLY_PATHS[0]
+    pad = repo / sm.ac.OPERATOR_ONLY_PATHS[0]
     pad.write_bytes(b"next: [WI-001](docs/specs/WI-001.md)\r\n")
     before = pad.read_bytes()
 
@@ -218,7 +218,7 @@ def test_the_rebase_preserves_crlf(tmp_path):
     assert "\n" not in out.replace("\r\n", ""), "a lone LF was introduced"
 
 
-# --- the guard and its mutation twin (the WI-393 deliverable's own bar) ---------
+# --- the guard and its mutation twin (the WI-393 deliverable's own checks) ---------
 
 
 def test_the_archived_spec_passes_check_docs(tmp_path):

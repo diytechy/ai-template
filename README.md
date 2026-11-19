@@ -6,7 +6,7 @@
 **PROJECT-VISION:** A reusable starting point for building **maintainable,
 requirement-traced projects** with AI agents and humans working from the same
 playbook. The goal: code and analytics that stay readable and correct over the
-long run, built **test-first** with **explicit approval gates** so you can
+long run, built **test-first** with **explicit acceptance gates** so you can
 trust what ships.
 
 It is **stack-agnostic** with **Python-first reference scripts** — drop it into
@@ -36,7 +36,7 @@ limitations and protection against publishing secrets or private information.
 <a id="objective-o4"></a>
 ### (O4) Explicit authority
 
-Advance through clear approval boundaries, keeping human and delegated
+Advance through clear acceptance boundaries, keeping the operator's own and delegated
 decisions visible and preventing automation from granting itself more authority.
 
 <a id="objective-o5"></a>
@@ -67,13 +67,13 @@ chasing it.
 | [`project-trajectory/`](project-trajectory/) | The portable kit: the gated, requirement-traced development process plus all templates and runnable scripts. **This is the thing you copy into new repos.** |
 | [`project-trajectory/README.md`](project-trajectory/README.md) | Full contents + rationale for the kit. |
 | [`CLAUDE.md`](CLAUDE.md) | Guide for working **in this template repo** (developing the templates themselves). |
-| [`docs/status.md`](docs/status.md) · [current handoff](docs/handoff-2026-09-26-coordinator.md) | Resume kit development: the assumption tier's build continues, the queued work, and the owner acts outstanding. |
+| [`docs/status.md`](docs/status.md) · [current handoff](docs/handoff-2026-09-26-coordinator.md) | Resume kit development: the assumption tier's build continues, the queued work, and the operator acts outstanding. |
 
 ## The kit's headline pieces
 
 - **A gated process** ([`PROCESS.md`](project-trajectory/PROCESS.md)) — roles as
-  "hats", approval bars (DevStg-Reqs→DevStg-Tests→DevStg-Impl, then DevStg-Release and the owner's final read; DevStg-Release only for
-  versioned releases), and a verdict protocol; each gate's bar **fails, never
+  "hats", acceptance stages (DevStg-Reqs→DevStg-Tests→DevStg-Impl, then DevStg-Release and the operator's final read; DevStg-Release only for
+  versioned releases), and a verdict protocol; each gate's checks **fail, never
   silently skips** (SN-004, SN-008).
 - **A traceability spine** — `SN → SR → LLR → TC` registries joined by a
   generated matrix that must report **zero orphans** before each gate (SN-002).
@@ -134,19 +134,19 @@ chasing it.
     the enable-list, behavior is unchanged (see
     [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Unattended
     operation").
-  - Optional **subjective-quality critique loop** — a `Verification=Critique`
+  - Optional **subjective-quality critique loop** — a `VerificationMethod=Critique`
     requirement's perceptual acceptance is judged by a fresh, independent
     **critic** against a written [`docs/rubrics/`](project-trajectory/rubrics/README.template.md)
     rubric with numbered good/bad anchors derived from the SN/SR intent. Family
-    heterogeneity is required on the unattended path; the human chooses the
-    reviewer for attended acceptance. Rework iterates toward the bar and
+    heterogeneity is required on the unattended path; the operator chooses the
+    reviewer for attended acceptance. Rework iterates toward the standard and
     escalates on budget exhaustion; a lax-TC ratchet keeps the fix landing in
     the chain (SN-024).
   - Optional **tier-conditional guardrails** — the `guardrails` dial
     injects a vendored discipline core into weaker-tier sessions, drift-checked
     by `check_vendored.py`.
   - Consent is explicit via the dials scaffolded into `docs/process.toml`:
-    `human_approval_through` (which tiers a human approves — the row
+    `operator_accepts_through` (which tiers an operator accepts — the row
     below; the retired `gate_policy` enum is **not** shipped), `push`
     (who may push), and
     `privacy_check` (the PII/identity gate, enforced by the git hooks +
@@ -165,17 +165,17 @@ chasing it.
   our readability/maintainability conventions and points agents at the
   process. It scaffolds to `AGENTS.md` (the cross-tool standard), with thin
   `CLAUDE.md`/`GEMINI.md` stubs pointing back at it.
-- **Approved at the 2026-08-13 sitting, commissioned rather than shipped** —
-  seven needs the owner attested whose machinery was scheduled, not built. They
-  are listed here because an approved promise should be visible before its code
+- **Accepted at the 2026-08-13 sitting, commissioned rather than shipped** —
+  seven needs the operator accepted whose machinery was scheduled, not built. They
+  are listed here because an accepted promise should be visible before its code
   is, not after. State each one at the half it actually reached:
   - **Shipped.** System-requirement boundary references resolve against declared
     crossings, unresolved ones mechanical findings (SN-037 — `boundary_refs`
     resolution). A stakeholder need readable without repo-internal vocabulary
-    (SN-033) — `scripts/check_need_form.py`, wired at all three bars in
+    (SN-033) — `scripts/check_need_form.py`, wired at all three stages in
     `check.py`, traced SR-150 → LLR-170 → TC-164; **warn-first by design**, since
-    promoting a form heuristic over approved stakeholder prose to a gate is an
-    owner ruling that has not been made.
+    promoting a form heuristic over accepted stakeholder prose to a gate is an
+    operator ruling that has not been made.
   - **Half shipped.** The record of which expert and downstream-user
     perspectives a decomposition was examined from (SN-036). The **roster and
     injection** halves are built — `hats.template.toml` + `scripts/hats.py`, with
@@ -184,7 +184,7 @@ chasing it.
     applicable perspective reported — is **deliberately not built** (`hats.py`
     says so in its header: injection alone already changes the output, while a
     record built first is a form with nothing behind it). SR-161 states that
-    obligation and is `Approved` with no LLR or TC under it. Nothing gates on a
+    obligation and is `Accepted` with no LLR or TC under it. Nothing gates on a
     hat today.
   - **Still owed.** One front-door action per platform for **each** of the two
     universal contributor actions — preparing the dev environment and resuming
@@ -201,11 +201,11 @@ chasing it.
   a chain describing machinery that is not built. Read a row's state as a
   statement about the registry, and read this list for what an adopter can
   actually run.
-- **Approved at the 2026-09-25 sitting, commissioned rather than shipped** —
-  four needs whose chains are approved down to test cases, with none of their
+- **Accepted at the 2026-09-25 sitting, commissioned rather than shipped** —
+  four needs whose chains are accepted down to test cases, with none of their
   machinery built yet
   ([the assumption-tier spine map](docs/plans/2026-09-25-assumption-tier-spine-map.md)).
-  The owner's stand-in signed them, and the owner's re-attestation is owed:
+  The operator's stand-in signed them, and the operator's re-acceptance is owed:
   - Code and analytics a later reader can understand, and change one part of
     without reworking unrelated parts (SN-041).
   - Every required behavior checked by tests written from its requirement
@@ -278,7 +278,7 @@ graph LR
 | [`stakeholder-needs`](project-trajectory/registries/stakeholder-needs.template.toml) | `SN-###` | Why the project exists — one need per row, in the stakeholder's words. The root every other row must trace back to. |
 | [`system-requirements`](project-trajectory/registries/system-requirements.template.toml) | `SR-###` | One testable *shall*-statement per row — written in simple technical English on an **EARS** pattern, against the eight quality characteristics ([`PROCESS.md`](project-trajectory/PROCESS.md) §3) — with measurable acceptance criteria and input `Permutations` for test design; cites the `SN` it serves. |
 | [`low-level-requirements`](project-trajectory/registries/low-level-requirements.template.toml) | `LLR-###` | The design decomposition — pins an SR onto real code (`Module` + `CodeSymbol`). Adds detail; never paraphrases its parent. |
-| [`test-cases`](project-trajectory/registries/test-cases.template.toml) | `TC-###` | Verifies SR/LLR ids; states its `Method` (how it runs) and `Tier`. The verification class (Test / Demonstration / Inspection / Attest) rides the SR's `Verification` column. Written failing-first at DevStg-Tests. |
+| [`test-cases`](project-trajectory/registries/test-cases.template.toml) | `TC-###` | Verifies SR/LLR ids; states its `Method` (how it runs) and `Tier`. The verification class (Test / Demonstration / Inspection / Vouch) rides the SR's `VerificationMethod` column. Written failing-first at DevStg-Tests. |
 
 [`trace.py`](project-trajectory/scripts/trace.py) joins the four tiers into the
 traceability matrix (`docs/test/report.md`; `--html` adds a collapsible map) and
@@ -310,7 +310,7 @@ integrity-check the ids the moment real rows exist.
 | [`performance-budgets`](project-trajectory/registries/performance-budgets.template.csv) | `PB-###` | Quantitative NFR budgets (latency, RAM, artifact size) that behavior tests can't express; `check_perf.py` compares emitted metrics against budget + baseline (§9). |
 | [`procurement`](project-trajectory/registries/procurement.template.csv) | `PART-###` | Parts the project **buys rather than builds** (motor, board, camera): vendor, cost, status, quantity. The owning `IF-###` row is each part's owner-of-record. |
 | [`assets`](project-trajectory/registries/assets.template.csv) | `ASSET-###` | The facts *about* an un-diffable binary (art, music, CAD, voice): provenance (AI-content disclosure), license, attribution, contract link, location + hash. |
-| [`components`](project-trajectory/registries/components.template.toml) | `CMP-###` | The durable **set-grained** home for knowledge + lifecycle — a subsystem, "the left arm", a package group. It exists because no finer tier can hold either: an IF is one seam, a workstream is mutable by design, and an LLR *is* the thing a rewrite replaces — while `Status` (maturity), `Standing` (the lifecycle axis: `active`/`has-gap`/`deprecated`) and `SupersededBy` carry identity across the rewrite. **Structure is derived, never authored**: membership is a `Component` tag on LLR/IF/ASSET/PART rows; an IF with both endpoints inside a CMP is *internal*, with one endpoint inside it is that CMP's *boundary*. (Approved design: [`AXES_AND_WORKSTREAMS.md`](docs/archive/AXES_AND_WORKSTREAMS.md); live spec: [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Component layer".) |
+| [`components`](project-trajectory/registries/components.template.toml) | `CMP-###` | The durable **set-grained** home for knowledge + lifecycle — a subsystem, "the left arm", a package group. It exists because no finer tier can hold either: an IF is one seam, a workstream is mutable by design, and an LLR *is* the thing a rewrite replaces — while `Status` (maturity), `Standing` (the lifecycle axis: `active`/`has-gap`/`deprecated`) and `SupersededBy` carry identity across the rewrite. **Structure is derived, never authored**: membership is a `Component` tag on LLR/IF/ASSET/PART rows; an IF with both endpoints inside a CMP is *internal*, with one endpoint inside it is that CMP's *boundary*. (Accepted design: [`AXES_AND_WORKSTREAMS.md`](docs/archive/AXES_AND_WORKSTREAMS.md); live spec: [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Component layer".) |
 | [`work-items`](project-trajectory/work/WI-000.template.md) | `WI-###` | The execution DAG — *when/how* atop the spine's *what*: each WI delivers SRs, belongs to a workstream, and depends on predecessors (a bare id blocks; a `~`-prefixed id only orders). The live carrier is the **`docs/work/` spec folder** (one file per WI, status = its directory; [`work-items.template.csv`](project-trajectory/registries/work-items.template.csv) survives as the legacy migration format `wi_convert.py` reads). Validated by `check_trajectory.py`; rendered into `PROJECT_STATE.html`. |
 | [`repos`](project-trajectory/registries/repos.template.csv) | `REPO-###` | Coordinator-only, for the rare multi-repo rung: one row per delegated repo plus the coordinator SRs it fulfils ([`MULTI_REPO.md`](project-trajectory/MULTI_REPO.md) §6). |
 | [`hats`](project-trajectory/registries/hats.template.toml) | *names, no id space* | The **declared expert perspectives** every applicable decomposition must face. Each `[hat.NAME]` carries `applies_when` (a closed, evaluable condition — `always`, `scope`/`kind` equality, `tags contains`), `asks` (the question that lands in the brief) and `listens_for` (the **failure class** it catches — a hat naming no failure is refused as ceremony). Unlike the rows above it ships with **content**, because an empty roster is a form with nothing behind it, and it is **owner text**: adopters edit it, which is what keeps an inherited `applies_when` honest. `scripts/hats.py` reads it; `scripts/plan_briefs.py` injects the applicable questions into the dual-plan **planner** (decomposition) brief. Deleting it is a supported opt-out; a broken one refuses loudly. |
@@ -318,7 +318,7 @@ integrity-check the ids the moment real rows exist.
 This meta-repo dogfoods the component knowledge layer in its
 [`docs/knowledge/` index](docs/knowledge/README.md).
 
-*(Spine-touching work batches as a **phase** so one owner sitting re-attests
+*(Spine-touching work batches as a **phase** so one owner sitting re-accepts
 the whole batch, with the gate cadence riding the same convention — see
 [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Phase cadence".)*
 
@@ -398,7 +398,7 @@ same artifacts and run the gates with you.
   decidable half is checked; necessary/complete/feasible stay the review's, and
   the kit says so rather than offering a proxy metric.
 - **Test-driven** — the DevStg-Tests test case for each requirement is written as a
-  *failing* test before the code that satisfies it (red → green → refactor), so
+  *failing* test before the code that satisfies it, so
   implementation is pulled by the spec, not retrofitted to it.
 - **Single source of truth** — facts live once and are referenced by id, so docs
   and code can't quietly contradict each other.
@@ -446,7 +446,7 @@ This repo's ways in, what each is for and what it checks:
   offers to switch them on, in its machine-local
   `.claude/settings.local.json`, bound to the interpreter dev-setup resolved.
 - **`run.*`** (root) runs the same check first on a bare double-click, then
-  this repo's actions menu (`docs/stack.ini [run]`: the smoke bar, the
+  this repo's actions menu (`docs/stack.ini [run]`: the smoke tier, the
   trajectory and docs checks, the dashboard). An actions menu, not a product
   launcher.
 - **A Claude Code coordinator session** runs under those hooks: the context
@@ -479,7 +479,7 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
   [`docs/status.md`](docs/status.md) and [`PROJECT_STATE.html`](PROJECT_STATE.html)
   from the live registries and [`docs/stage`](docs/stage). The
   [current handoff](docs/handoff-2026-09-26-coordinator.md) gives the read order, what is
-  next, and the owner acts outstanding.
+  next, and the operator acts outstanding.
 
 ### Configuration at a glance (defaults vs. this repo)
 
@@ -496,10 +496,10 @@ set:
 
 | Option (`docs/…`) | Fresh-scaffold default | Turn on / off | This repo |
 |---|---|---|---|
-| `stage` | **generated** — `derive_stage.py` computes it from artifact states (a fresh scaffold reads `DevStg-Reqs`) | never hand-edited; advances by *approving* artifacts | see the [generated current state](docs/status.md#current-state) |
+| `stage` | **generated** — `derive_stage.py` computes it from artifact states (a fresh scaffold reads `DevStg-Reqs`) | never hand-edited; advances by *accepting* artifacts | see the [generated current state](docs/status.md#current-state) |
 | `process.toml` `gate_policy` | **not shipped** — SN-029 retired the enum for the dial below; a legacy key is read only as a migration fallback | `bootstrap.py --gate-policy <word>` still takes `"attended"` / `"single-approve"` / `"autonomous"`, but **translates** it to the dials rather than storing it (and scaffolds a deviation register) | not declared; the `"autonomous"` posture is recorded in its [register](docs/gate-policy.md) |
-| `process.toml` `human_approval_through` | `"DevStg-Release"` (every rung human-held) | name a lower rung — every rung **at or below** the value is human-held, down to `"DevStg-Below"` (nothing human-held) | `"DevStg-Needs"` — higher rungs use the delegated artifact approval route; read the live [dial](docs/process.toml) |
-| `process.toml` `push` | `"human"` | opt-in `"agent-iteration"` / `"agent"` | `"human"` |
+| `process.toml` `operator_accepts_through` | `"DevStg-Release"` (every rung operator-held) | name a lower rung — every rung **at or below** the value is operator-held, down to `"DevStg-Below"` (nothing operator-held) | `"DevStg-Needs"` — higher rungs use the delegated artifact acceptance route; read the live [dial](docs/process.toml) |
+| `process.toml` `push` | `"operator"` | opt-in `"agent-iteration"` / `"agent"` | `"operator"` |
 | `process.toml` `review_rounds` | `1` | reviewer dial `0`–`2` (an **int**, not a word) | `1` |
 | `process.toml` `privacy_check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
 | `process.toml` `secrets_scan` | `true` | **opt-out** `false` | `true` |
@@ -512,8 +512,8 @@ set:
 | `process.toml` `components_check` | `true`, warn-first | **opt-out** `false` | `true` — current component inventory is generated in the [dashboard](PROJECT_STATE.html) |
 | `process.toml` `live_status` | `false` | **opt-in** `true` (same as `agent_loop.py --live-status`; TTY-only either way) | `false` |
 | `process.toml` `subagent_gate` | `"off"` | **opt-in** `"ask"` / `"deny"` (Claude hook example) | `"off"` |
-| `process.toml` `backlink_coverage_min` | `0` — report the number, gate nothing (the one `[checks]` dial that is a percentage, not a switch) | **opt-in** raise it to the share of live LLR rows a literal `Implements:` back-link must name; below it the `backlink-coverage` step warns, and errors from `DevStg-Tests` | `50` — raised 2026-08-21 once the tags landed: **83 of 165 live LLR rows (50.3%)**, measured by `gen_arch_map.py --backlink-coverage`. The dial rose because the campaign wrote the declarations, never because the bar came down |
-| `process.toml` `test_first_since` | `""` — no start declared, so the `test-first` step judges the whole history (the one `[checks]` key whose value is a commit id) | declare the commit the rule starts after; only requirements approved after it are judged, and the step stays warn-only either way | `"f537fc53…"` — the parent of the phase-6 approval act (cbb6649f), so the chains that act approved are the first judged; read whole, the history reports requirements whose code predates the rule |
+| `process.toml` `backlink_coverage_min` | `0` — report the number, gate nothing (the one `[checks]` dial that is a percentage, not a switch) | **opt-in** raise it to the share of live LLR rows a literal `Implements:` back-link must name; below it the `backlink-coverage` step warns, and errors from `DevStg-Tests` | `50` — raised 2026-08-21 once the tags landed: **83 of 165 live LLR rows (50.3%)**, measured by `gen_arch_map.py --backlink-coverage`. The dial rose because the campaign wrote the declarations, never because the minimum came down |
+| `process.toml` `test_first_since` | `""` — no start declared, so the `test-first` step judges the whole history (the one `[checks]` key whose value is a commit id) | declare the commit the rule starts after; only requirements accepted after it are judged, and the step stays warn-only either way | `"f537fc53…"` — the parent of the phase-6 acceptance act (cbb6649f), so the chains that act accepted are the first judged; read whole, the history reports requirements whose code predates the rule |
 | `agents.toml` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — the current routes are declared in [agents.toml](docs/agents.toml) and selected by [agents-enabled](docs/agents-enabled) |
 
 Scaffold-time *structure* (which process sections your generated docs carry) is
@@ -523,22 +523,22 @@ specified in [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md).
 
 ### The gates at a glance
 
-What each approval gate certifies — full criteria in
+What each acceptance gate certifies — full criteria in
 [`PROCESS.md`](project-trajectory/PROCESS.md) §4, which also carries the ruled
 **stage** model: a repo is *in* exactly one stage (one of the eight rungs of
 §4's `DevStg-*` ladder), and there is no second axis — a certified rung boundary
-is simply one a named human signs. The value in `docs/stage` is *derived*, not
+is simply one a named operator signs. The value in `docs/stage` is *derived*, not
 declared — `derive_stage.py` computes it from the artifact states over the
 SETTLED spine (so drafting cannot lower it) and records it, generated and never
 hand-edited, as **the rung the repo is in**, which is also what the harness
 selects its checks at: every step declared at or below it runs. It advances when
-a batch of artifacts is **approved** in a reviewed `Status`-change commit, and it
-*pulls back* when attested content is amended. There is no status value for that
+a batch of artifacts is **accepted** in a reviewed `Status`-change commit, and it
+*pulls back* when accepted content is amended. There is no status value for that
 state: the transitional `Modified` marker retired at the 2026-08-20 signing, and
 an amendment is now detected by **drift** — the row compared against its copy in
-`docs/archive/last_approved/`, which cannot be forgotten the way setting a marker
-could. Such a row owes a re-attest until the sitting blesses it (`trace.py
---approve modified` still names that reserved scope and emits the before/after
+`docs/archive/last_accepted/`, which cannot be forgotten the way setting a marker
+could. Such a row owes a re-accept until the sitting blesses it (`trace.py
+--accept modified` still names that reserved scope and emits the before/after
 brief; semantics: PROCESS.md §7) (process-options.md "Derived gate model").
 
 - **DevStg-Reqs — Requirements/UX/Constraints.** Needs + requirements are complete,
@@ -549,12 +549,12 @@ brief; semantics: PROCESS.md §7) (process-options.md "Derived gate model").
   no placeholder rows; key runtime flows diagrammed.
 - **DevStg-Impl — Implementation.** Code is written **test-first** and passes the full
   harness: format/lint, full test tier, coverage ≥ threshold, schema, every
-  in-scope requirement `Approved`, no stubs.
+  in-scope requirement `Accepted`, no stubs.
 - **DevStg-Release — Release readiness** *(per release)*. The release test tier
   passes; the generated release checklist is completed and signed; version
   bumped; changelog + interface versions updated.
-- **Acceptance — the owner's final read.** A human exercises the real product (including
-  manual/demonstration items) and approves.
+- **The operator's final read.** A person exercises the real product (including
+  manual/demonstration items) and signs off.
 
 See [`project-trajectory/README.md`](project-trajectory/README.md) for the full
 tour and the tuning knobs (`COVERAGE_THRESHOLD`, `MAX_ROUNDS`, dropping hats for

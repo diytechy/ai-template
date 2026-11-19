@@ -2,12 +2,12 @@
 consolidated, pin that there is nothing left to hold equal.
 
 THE FILE'S ORIGINAL SUBJECT — the gate policy `trace.py` and `spine_rules.py`
-each carried a copy of — IS GONE (WI-448 slice 3). Which SR Verification methods
-are LLR-exempt, what "Drafted"/"Approved"/"Founded" mean, what a `Phase` cell
+each carried a copy of — IS GONE (WI-448 slice 3). Which SR verification methods
+are LLR-exempt, what "Drafted"/"Accepted"/"Founded" mean, what a `Phase` cell
 parses to, which SN ids exist and which are cited: nine duplicated bodies, nine
 equality pins, one home now (`kitlib.spine`). Policy disagreement between the
 module that ENFORCES the spine and the module that DERIVES its stage is a false
-green or false red at a gate — the exact failure class the kit exists to prevent
+pass or false failure at a gate — the exact failure class the kit exists to prevent
 (repo-review-2026-07-12b.md M1 -> WI-099) — and it is now unrepresentable rather
 than detected. The block below the imports records the deletion and keeps the
 half of those batteries that was about VALUES, not sameness.
@@ -21,13 +21,13 @@ policy the kit genuinely still states twice: the carrier reader/writer inverse,
 and `subagent_gate`'s separate WORD-valued dial reader, whose values can never
 be equal to the bool reader's and whose aligned DIRECTION is what is held.
 
-THE F5 RULE'S LIVE HOME, AND THE ANTI-DRIFT TOOL OF RECORD (owner ruling
+THE F5 RULE'S LIVE HOME, AND THE ANTI-DRIFT TOOL OF RECORD (operator ruling
 2026-08-10, repo-lock D-7; executed WI-426). F5 is the kit's standing ruling
-(owner, 2026-07-12) that a shared `_kitcommon.py` is REJECTED: each kit script
+(operator, 2026-07-12) that a shared `_kitcommon.py` is REJECTED: each kit script
 must stay stdlib-only and independently copy-able, so small stable helpers —
 `_utf8_console`, the one-line declared-policy readers, argparse/exit
 scaffolding, the spec-folder registry reader — were duplicated on purpose. Read
-that list as HISTORY: owner ruling D-8 (`OI-16`) superseded F5 for three of the
+that list as HISTORY: operator ruling D-8 (`OI-16`) superseded F5 for three of the
 four, and the console guard was the last to go (WI-448 slice 2, 2026-08-22) —
 all 34 copies now resolve to `kitlib.config.utf8_console`, so nothing is left
 for a pin here to hold equal. See the D-8 note above the declared-line pins. That
@@ -64,18 +64,18 @@ GATE = load_script("spine_rules")
 # --- the spine ROW vocabulary: WAS a duplicated PAIR, now ONE home (WI-448) ----
 # EIGHT EQUALITY TESTS STOOD HERE AND THEY ARE GONE, which is the point of this
 # block. `test_llr_exempt_sets_agree`, `test_is_drafted_agrees`,
-# `test_is_approved_agrees`, `test_is_founded_agrees`, `test_llr_exempt_agrees`,
+# `test_is_accepted_agrees`, `test_is_founded_agrees`, `test_llr_exempt_agrees`,
 # `test_sn_all_ids_agrees`, `test_sn_cited_ids_agrees` and
 # `test_sn_draft_ids_agrees` each imported both modules and asserted one
 # predicate answered identically in each, over a casing/whitespace/None battery.
 # They were the D-7 bar's whole content for this pair: F5 licensed the
 # duplication, so the best a test could do was CONTAIN the drift.
 #
-# Owner ruling D-8 (`OI-16`) moved the rules into `kitlib.spine`; `trace.py`,
+# Operator ruling D-8 (`OI-16`) moved the rules into `kitlib.spine`; `trace.py`,
 # `trace_text.py` and `spine_rules.py` re-export them, so "the copies agree" is
 # no longer a property that can FAIL — there are no copies. A test asserting a
 # function equals itself is not a weaker pin, it is a VACUOUS one, and this
-# file's `_sn_fields` lesson is that vacuous agreement reads green while checking
+# file's `_sn_fields` lesson is that vacuous agreement passes while checking
 # nothing. Drift is now UNREPRESENTABLE rather than DETECTED, which is this
 # repo's stated preference (the declared-line precedent, further down).
 #
@@ -100,7 +100,7 @@ def test_the_spine_row_vocabulary_is_one_home():
     # `is_drafted`/`is_example`/`refs` reach trace.py through `trace_text`, which
     # re-exports the same objects, so the chain is asserted end to end.
     for name in (
-        "is_approved",
+        "is_accepted",
         "is_founded",
         "llr_exempt",
         "phase_num",
@@ -143,16 +143,16 @@ def test_the_status_predicates_answer_by_value():
         ({"Status": "drafted"}, True),
         ({"Status": "  DRAFTED  "}, True),
         ({"Status": "Draft"}, False),  # RETIRED spelling
-        ({"Status": "Approved"}, False),
+        ({"Status": "Accepted"}, False),
         ({"Status": ""}, False),
         ({"Status": None}, False),
         ({}, False),
     ]:
         assert KITSPINE.is_drafted(row) is want, row
     for row, want in [
-        ({"Status": "Approved"}, True),
-        ({"Status": "approved"}, True),
-        ({"Status": "  APPROVED  "}, True),
+        ({"Status": "Accepted"}, True),
+        ({"Status": "accepted"}, True),
+        ({"Status": "  ACCEPTED  "}, True),
         ({"Status": "Verified"}, False),  # RETIRED — folded, not honoured
         ({"Status": "Planned"}, False),  # RETIRED — folded (OI-30 D1)
         ({"Status": "Modified"}, False),  # RETIRED at step 7
@@ -160,12 +160,12 @@ def test_the_status_predicates_answer_by_value():
         ({"Status": None}, False),
         ({}, False),
     ]:
-        assert KITSPINE.is_approved(row) is want, row
+        assert KITSPINE.is_accepted(row) is want, row
     for row, want in [
         ({"Status": "Founded"}, True),
         ({"Status": "founded"}, True),
         ({"Status": "  FOUNDED  "}, True),
-        ({"Status": "Approved"}, False),
+        ({"Status": "Accepted"}, False),
         ({"Status": "Modified"}, False),
         ({"Status": None}, False),
         ({}, False),
@@ -177,18 +177,21 @@ def test_the_llr_exemption_answers_by_value():
     """Implements: TC-193"""
     # Review 017's case, kept: the two former copies disagreed on a
     # whitespace-padded valid method (one stripped, one did not), which is a
-    # false green on one surface and a false red on the other for ONE registry
+    # false pass on one surface and a false failure on the other for ONE registry
     # state. The direction is pinned, not merely the sameness.
-    assert set(KITSPINE.LLR_EXEMPT) == {"Analysis", "Inspection", "Attest"}
+    assert set(KITSPINE.LLR_EXEMPT) == {"Analysis", "Inspection", "Vouch"}
     for row, want in [
-        ({"Verification": "Analysis"}, True),
-        ({"Verification": " Analysis "}, True),  # the 017 case itself
-        ({"Verification": "Attest  "}, True),
-        ({"Verification": "Inspection"}, True),
-        ({"Verification": "analysis"}, False),  # closed vocab stays case-sensitive
-        ({"Verification": "Test"}, False),
-        ({"Verification": ""}, False),
-        ({"Verification": None}, False),
+        ({"VerificationMethod": "Analysis"}, True),
+        ({"VerificationMethod": " Analysis "}, True),  # the 017 case itself
+        ({"VerificationMethod": "Vouch  "}, True),
+        ({"VerificationMethod": "Inspection"}, True),
+        (
+            {"VerificationMethod": "analysis"},
+            False,
+        ),  # closed vocab stays case-sensitive
+        ({"VerificationMethod": "Test"}, False),
+        ({"VerificationMethod": ""}, False),
+        ({"VerificationMethod": None}, False),
         ({}, False),
     ]:
         assert KITSPINE.llr_exempt(row) is want, row
@@ -200,12 +203,12 @@ def test_the_llr_exemption_answers_by_value():
 
 
 def test_is_modified_is_GONE_from_both_copies():
-    # D-9 STEP 7. `Modified` was the TRANSITIONAL marker for "approved text that
+    # D-9 STEP 7. `Modified` was the TRANSITIONAL marker for "accepted text that
     # has since moved" and its own docstring named this commit: the predicate
     # survived step 5's rename only so the kit never had a commit with no drift
     # detector at all, and it retired once its successor — the
     # `baseline_snapshot` comparison — had run live alongside it through the
-    # owner's signing act. Deleted, not re-keyed: a surviving copy would be a
+    # operator's signing act. Deleted, not re-keyed: a surviving copy would be a
     # second reader of a retired word, which is exactly what the grep below
     # forbids for every module at once.
     assert not hasattr(TRACE, "is_modified")
@@ -219,13 +222,13 @@ def test_is_modified_is_GONE_from_both_copies():
     # third reader of it, one the predicate grep below cannot see (it is a dict
     # KEY, not a comparison).
     assert "modified" not in GATE.SPINE_MATURITY
-    assert set(GATE.SPINE_MATURITY) == {"drafted", "approved", "founded"}
+    assert set(GATE.SPINE_MATURITY) == {"drafted", "accepted", "founded"}
 
 
 def test_is_planned_is_GONE_from_both_copies():
     # `is_planned` was step-2 INSURANCE and D-9 step 5 DELETED it, which is what
     # its own docstring promised — deleted, not re-keyed. OI-30 D1 folded
-    # `Planned` into `Approved`, so the predicate had nothing left to answer for,
+    # `Planned` into `Accepted`, so the predicate had nothing left to answer for,
     # and a surviving copy would be a second reader of a retired word.
     assert not hasattr(TRACE, "is_planned")
     assert not hasattr(GATE, "is_planned")
@@ -244,11 +247,11 @@ def test_the_three_recognized_status_values_are_mutually_exclusive():
     # the declared set equals the set at least one live predicate recognizes,
     # and this is where "at least one" and "at most one" are both checked.
     # THE END STATE, since step 7 retired `Modified` and step 8 armed `Founded`
-    # in one act: D-9's ruled ladder, {Drafted, Approved, Founded}. The enum
+    # in one act: D-9's ruled ladder, {Drafted, Accepted, Founded}. The enum
     # never held four values and never held two — the rule is that it equals the
     # live predicate set at EVERY commit, which is why the two moved together.
-    predicates = ("is_drafted", "is_founded", "is_approved")
-    assert TRACE.STATUS_VALUES == frozenset({"Drafted", "Approved", "Founded"})
+    predicates = ("is_drafted", "is_founded", "is_accepted")
+    assert TRACE.STATUS_VALUES == frozenset({"Drafted", "Accepted", "Founded"})
     for val in sorted(TRACE.STATUS_VALUES):
         row = {"Status": val}
         hits = [name for name in predicates if getattr(KITSPINE, name)(row)]
@@ -309,29 +312,29 @@ def test_no_predicate_anywhere_still_honours_a_RETIRED_status_word():
 
 def test_no_declared_status_vocabulary_still_lists_a_RETIRED_word():
     # The declaration half of the same rule: the closed enum and every
-    # approval-claim set must speak only live words. `_APPROVAL_CLAIMED` is here
+    # acceptance-claim set must speak only live words. `_ACCEPTANCE_CLAIMED` is here
     # because it is the set `baseline_snapshot` reads INSTEAD of importing a
     # predicate (it cannot: `trace` imports it), so it is exactly the third copy
     # the grep above exists to catch, and it is worth pinning by value too.
     snap = load_script("baseline_snapshot")
-    assert snap._APPROVAL_CLAIMED == frozenset({"approved"})
+    assert snap._ACCEPTANCE_CLAIMED == frozenset({"accepted"})
     # The OTHER two sets keyed on Status words that the source grep above CANNOT
     # see, because neither is a comparison — one is a dict's KEYS, the other a
     # bare frozenset with no `status` token on its line. Both were live readers
     # of `Modified` until step 7, so both are pinned by value here; that is the
     # whole reason this test exists beside the grep rather than inside it.
-    # `_TC_NOT_RED` left `dispatch` with the whole registry-gap census at
+    # `_GAP_EXEMPT_STATUSES` left `dispatch` with the whole registry-gap census at
     # WI-483 slice 2 (it now lives in `census.py`, below the census's three
     # readers); the pin follows the set, not the module it used to sit in.
     census = load_script("census")
     lowered = {v.lower() for v in TRACE.STATUS_VALUES}
     assert set(GATE.SPINE_MATURITY) == lowered
-    assert census._TC_NOT_RED == lowered
+    assert census._GAP_EXEMPT_STATUSES == lowered
     for word in _RETIRED_STATUS_WORDS:
         assert word.title() not in TRACE.STATUS_VALUES
-        assert word not in snap._APPROVAL_CLAIMED
+        assert word not in snap._ACCEPTANCE_CLAIMED
         assert word not in GATE.SPINE_MATURITY
-        assert word not in census._TC_NOT_RED
+        assert word not in census._GAP_EXEMPT_STATUSES
 
 
 def test_status_enum_is_declared_for_every_spine_tier():
@@ -346,7 +349,7 @@ def test_status_enum_is_declared_for_every_spine_tier():
 def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
     # Correction C1 of the migration plan, mechanized. `--strict-schema` runs
     # only at DevStg-Impl (check.py), so a Status closure routed through
-    # `schema_findings` would be INERT for every repo below the top bar — which
+    # `schema_findings` would be INERT for every repo below the top stage — which
     # is every repo the closure exists for. Assert BOTH directions: the
     # integrity producer sees a retired word, and the schema producer does not
     # (a double report would make one of the two pipes a duplicate rather than
@@ -358,7 +361,7 @@ def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
         "Requirement": "r",
         "Rationale": "why",
         "AcceptanceCriteria": "ac",
-        "Verification": "Test",
+        "VerificationMethod": "Test",
         "Priority": "P1",
         "SN-Refs": "SN-001",
     }
@@ -369,7 +372,7 @@ def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
     assert TRACE.enum_integrity_findings("SR", [dict(row, **{"SR-ID": "SR-000"})]) == []
 
 
-# The --require-verified bar's method-blind pin, which drives trace.py over a
+# The --require-verified check's method-blind pin, which drives trace.py over a
 # bootstrapped scaffold, lives in test_rule_sync_driven.py, outside the
 # per-commit smoke tier.
 
@@ -383,7 +386,7 @@ def test_the_sn_scrapes_answer_by_value():
     #
     # The scrape is a TOKEN scrape: a prose-mentioned id is in the universe
     # exactly like a table row (the registry-machinery-reference §2.1 sharp edge
-    # — approved + uncited caps the derived stage through the coverage rung).
+    # — accepted + uncited caps the derived stage through the coverage rung).
     # Drafted-section ids are INCLUDED; the draft/coverage split happens later,
     # on sn_draft_ids. Only -000 placeholders are excluded.
     assert KITSPINE.sn_all_ids("prose SN-010\n## Drafted\nSN-011 and SN-000\n") == {
@@ -440,63 +443,57 @@ def test_the_sn_scrapes_answer_by_value():
     # at the next heading, and -000 is excluded here too.
     CARRIER = load_script("spine_carrier")
     for text, want in [
-        ("## Drafted\nSN-010 x\n## Approved\nSN-011 done\n", {"SN-010"}),
+        ("## Drafted\nSN-010 x\n## Accepted\nSN-011 done\n", {"SN-010"}),
         (
             "# Needs\nSN-001\n### Drafted candidates\nSN-020\nSN-021\n",
             {"SN-020", "SN-021"},
         ),
         ("## DRAFT (in review)\nSN-030 SN-000 SN-031\n", {"SN-030", "SN-031"}),
-        ("## Approved only\nSN-040\n", set()),
+        ("## Accepted only\nSN-040\n", set()),
         ("SN-050 no heading at all\n", set()),
         ("", set()),
     ]:
         assert CARRIER.draft_ids_from_text(text, ".md") == want, text
 
 
-def test_the_legacy_approval_translation_agrees():
+def test_each_gate_policy_word_lands_the_three_dials_it_always_meant():
     """Implements: TC-152"""
-    # SN-029. `bootstrap.py` imports no kit sibling — it is the one script an
-    # adopter may run from a bare download — so it carries its own copy of the
-    # retired gate-authority enum's translation. This is duplicated POLICY, not
-    # plumbing: if the migrator and the readers disagreed about what
-    # `single-approve` meant, a repo would scaffold with one posture and run with
-    # another, which is precisely the shadowing defect SN-029 removed.
-    BOOT = load_script("bootstrap")
-    COMMON = load_script("agent_common")
-    assert BOOT.LEGACY_APPROVAL == COMMON.LEGACY_APPROVAL
-    assert set(BOOT.LEGACY_APPROVAL) == {"attended", "single-approve", "autonomous"}
-    # And the two ends are what the words always meant, stated here so a future
-    # edit to either copy has to argue with a named expectation rather than
-    # merely keeping two dictionaries equal to each other.
+    # SN-029. A `--gate-policy` word is a preset: bootstrap writes the three
+    # dials it means, and folds a `docs/gate-policy` file holding it into the
+    # same three (`_migrate_gate_policy`), from the one table. The core scripts
+    # read the dials only (D11), so no other copy exists to keep equal; what is
+    # pinned is what each word always meant, stated here so a future edit has
+    # to argue with a named expectation. If the preset and the fold disagreed
+    # about what `single-approve` meant, a repo would scaffold with one posture
+    # and run with another, the shadowing defect SN-029 removed.
     # RE-KEYED AT WI-493 (folded into WI-498 slice 5): the dial is a rung, not a
     # 0-4 ordinal. The two ends still mean what the words always meant — the top
     # of the ladder holds everything, and the sentinel below it holds nothing.
-    assert (
-        BOOT.LEGACY_APPROVAL["attended"]["human_approval_through"] == "DevStg-Release"
-    )
-    assert (
-        BOOT.LEGACY_APPROVAL["autonomous"]["human_approval_through"] == "DevStg-Below"
-    )
-    # THE SECOND F5 COPY THE RE-KEY CREATED, pinned for the same reason as the
-    # first: `--migrate-config` rewrites an adopter's retired ordinal using
-    # bootstrap's table, while every kit script READS one through
-    # `agent_common`'s. If the two disagreed, a repo would be migrated to one
-    # rung and run at another — the SN-029 shadowing defect, in a new costume.
-    assert BOOT.LEGACY_DIAL_ORDINALS == COMMON.LEGACY_DIAL_ORDINALS
-    assert BOOT.LEGACY_DIAL_ORDINALS == {
-        0: "DevStg-Below",
-        1: "DevStg-Boundary",
-        2: "DevStg-Arch",
-        3: "DevStg-LLReqs",
-        4: "DevStg-Release",
+    BOOT = load_script("bootstrap")
+    assert BOOT.GATE_POLICY_DIALS == {
+        "attended": {
+            "operator_accepts_through": "DevStg-Release",
+            "keep_nondependent": False,
+            "final_review": "always",
+        },
+        "single-approve": {
+            "operator_accepts_through": "DevStg-Below",
+            "keep_nondependent": True,
+            "final_review": "always",
+        },
+        "autonomous": {
+            "operator_accepts_through": "DevStg-Below",
+            "keep_nondependent": True,
+            "final_review": "off",
+        },
     }
 
 
 def test_the_retired_enum_key_is_no_longer_shipped():
     """Implements: TC-152"""
     # The shadowing defect, pinned so it cannot come back: the template used to
-    # ship BOTH `gate_policy = "attended"` and `human_approval_through = 4`,
-    # and since `approval_through` prefers the explicit dial, every repo that
+    # ship BOTH `gate_policy = "attended"` and `operator_accepts_through = 4`,
+    # and since `acceptance_through` prefers the explicit dial, every repo that
     # chose a non-default posture scaffolded as fully attended with no
     # diagnostic.
     from conftest import KIT
@@ -508,7 +505,7 @@ def test_the_retired_enum_key_is_no_longer_shipped():
         if ln.strip().startswith("gate_policy") and "=" in ln
     ]
     assert declared == [], declared
-    assert 'human_approval_through = "DevStg-Release"' in text
+    assert 'operator_accepts_through = "DevStg-Release"' in text
 
 
 def test_sn_field_mapping_agrees_across_all_three_readers(tmp_path):
@@ -620,7 +617,7 @@ MIGRATE = load_script("migrate_carrier")
 
 def test_the_two_spine_carrier_readers_agree():
     """Implements: TC-160"""
-    # trace.py owns the approve brief's baseline read; check_trajectory.py owns
+    # trace.py owns the accept brief's baseline read; check_trajectory.py owns
     # the two-tree amendment scan. Both resolve a registry to a tier and a
     # column vocabulary, and both are consulted about the SAME commit.
     assert TRACE.SPINE_TABLE == CHECK_TRAJ.SPINE_TABLE
@@ -676,7 +673,7 @@ def test_the_schema_of_record_covers_every_registry_the_carrier_names():
 # order and RAISES on a key the tier does not declare, so the drift the pin
 # detected cannot be written at all. What it protected — a brief filed under an
 # unmapped key renders empty while `check_docs` S-3 reports the ask as briefed —
-# is now covered from both ends: the refusal is driven red below, and
+# is now covered from both ends: the refusal is driven to fail below, and
 # `tests/test_profile.py::test_the_scaffolded_oi3_brief_is_an_append_not_a_reserialization`
 # bootstraps a real node scaffold and reads OI-3 back through the carrier.
 
@@ -721,7 +718,7 @@ def test_the_scaffolded_brief_is_written_through_the_schema():
 def test_the_scaffolded_brief_refuses_a_key_the_schema_does_not_declare(
     tmp_path, monkeypatch
 ):
-    # DRIVEN RED, because a refusal nothing exercises is a claim. `check_docs`
+    # DRIVEN TO FAIL, because a refusal nothing exercises is a claim. `check_docs`
     # S-3 reads the brief's cells; a cell under an unmapped key comes back from
     # the carrier as a column no consumer reads, so the ask renders as briefed
     # with an empty brief. The scaffolder now raises instead of writing it.
@@ -733,7 +730,7 @@ def test_the_scaffolded_brief_refuses_a_key_the_schema_does_not_declare(
     (docs / "requirements").mkdir(parents=True)
     (docs / "requirements" / "open-items.toml").write_text("", encoding="utf-8")
     (docs / "status.md").write_text(
-        "  - **In flight** _(driver; no approval needed)_:\n"
+        "  - **In flight** _(driver; no acceptance needed)_:\n"
         "- **Assumptions (unattended):**\n",
         encoding="utf-8",
     )
@@ -775,7 +772,7 @@ def test_every_live_spine_column_round_trips_through_the_carrier_vocabulary():
             assert TRACE.SPINE_COLUMN[MIGRATE.KEY[column]] == column
             checked += 1
     # Non-vacuous by construction: the three live tiers carry ~30 columns
-    # between them, so a resolver that quietly found nothing reds here.
+    # between them, so a resolver that quietly found nothing fails here.
     assert checked > 20, checked
 
 
@@ -814,7 +811,7 @@ def test_the_edge_case_fold_is_not_titled_by_its_lifecycle_phase():
     edge = SPINE._edge_folded(
         {
             "id": "SN-013",
-            "status": "Approved",
+            "status": "Accepted",
             "lifecycle": "Provision",
             "scenario": "No Python 3 on PATH",
             "expected": "Probe and fail with a remedy",
@@ -847,7 +844,7 @@ def test_the_edge_case_fold_is_not_titled_by_its_lifecycle_phase():
     # A core need passes through unchanged.
     core = {
         "id": "SN-001",
-        "status": "Approved",
+        "status": "Accepted",
         "need": "n",
         "why": "w",
         "priority": "M",
@@ -873,10 +870,10 @@ def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
     assert SPINE.draft_ids_from_text(legacy, ".md") == {"SN-005"}
 
     # The same claim under the new carrier is a field, and a MENTION does not
-    # set it: SN-006 is named in SN-005's prose and stays approved.
+    # set it: SN-006 is named in SN-005's prose and stays accepted.
     modern = (
         '[need.SN-005]\nstatus = "Drafted"\nneed = "n"\n\n'
-        '[need.SN-006]\nstatus = "Approved"\nneed = "supersedes SN-005"\n'
+        '[need.SN-006]\nstatus = "Accepted"\nneed = "supersedes SN-005"\n'
     )
     assert SPINE.draft_ids_from_text(modern, ".toml") == {"SN-005"}
 
@@ -919,7 +916,7 @@ _CHECK_TOML_CASES = [
     ("[checks]\ntrajectory_check = true\n", True),
     ("[checks]\ntrajectory_check = false\n", False),
     # Undeclared, in every shape that is not a declaration.
-    ('[policies]\npush = "human"\n', None),
+    ('[policies]\npush = "operator"\n', None),
     ("[checks]\ninterfaces_check = false\n", None),
     ("", None),
     ("# trajectory_check = false\n", None),
@@ -1044,7 +1041,7 @@ def test_every_checks_dial_falls_back_to_its_legacy_file_and_toml_wins(tmp_path)
 
 def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
     # The overturn's whole content: the six are VISIBLE. Absence used to be the
-    # declaration, which is exactly what the owner called confusing — so the
+    # declaration, which is exactly what the operator called confusing — so the
     # anti-regression here is that a key is not quietly dropped again, and that
     # the two opt-in dials did not get flipped on the way in.
     text = (KIT / "process.toml.template").read_text(encoding="utf-8")
@@ -1060,7 +1057,7 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         "live_status": False,
         "subagent_gate": "off",
         # SEVENTH, added by OI-42's ruling (WI-486) and the first one here that
-        # is not a yes/no: the reverse back-link coverage BAR, a percentage.
+        # is not a yes/no: the reverse back-link coverage MINIMUM, a percentage.
         # `0` is its off position and must stay the shipped value — 50 is the
         # recorded target, and shipping the target as the default would fire
         # the check on its first run in every fresh scaffold, which is the
@@ -1081,11 +1078,11 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
     # that must not drift (CLAUDE.md: "VALUES may diverge … STRUCTURE must not").
     live = tomllib.loads((ROOT / "docs" / "process.toml").read_text(encoding="utf-8"))
     assert set(live["checks"]) == set(checks)
-    # Every value matches the shipped default except the owner dials listed here,
+    # Every value matches the shipped default except the operator dials listed here,
     # each with its reason. A divergence NOT listed is the finding: it means a
     # dial moved in this repo without anyone recording why.
-    OWNER_DIALS = {
-        # 2026-08-18 owner directive: the LAYER still ships at `true` (asserted
+    OPERATOR_DIALS = {
+        # 2026-08-18 operator directive: the LAYER still ships at `true` (asserted
         # above) — this repo stopped exporting its OWN bundle and deleted
         # docs/okf/ (551 files, 27% of the tracked tree). docs/declared-absences
         # carries the absence; docs/log.d/2026-08-18-okf-off.md the decision.
@@ -1094,21 +1091,21 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         # at `0` for a fresh adopter (nobody has written back-links yet), but
         # this repo just wrote them — 83 of 165 live LLR rows (50.3%), measured
         # by `gen_arch_map.py --backlink-coverage`. The dial rises because the
-        # tags landed, never because the bar came down; docs/process.toml's own
+        # tags landed, never because the minimum came down; docs/process.toml's own
         # comment and docs/log.d/2026-08-20-program-grind.md carry the figure.
         "backlink_coverage_min": 50,
         # WI-640 (SR-217): this repo's history predates the rule and reaches
         # back before the TOML registries, so it declares the start at the
-        # PARENT of the phase-6 approval act (cbb6649f): the chains that act
-        # approved are the first judged by the rule they include.
+        # PARENT of the phase-6 acceptance act (cbb6649f): the chains that act
+        # accepted are the first judged by the rule they include.
         "test_first_since": "f537fc531dd37b372259ba84f8836a290d1efddb",
     }
-    assert live["checks"] == {**checks, **OWNER_DIALS}
+    assert live["checks"] == {**checks, **OPERATOR_DIALS}
     # AND THE README'S DIAL TABLE, whose third column is this repo's own value
     # (2026-08-21 review, M-13). The dial was raised 0 -> 50 and both documents
     # that state its value went on saying 0 for the rest of the batch, because
     # nothing compared them: a future worker consulting the declared one-stop
-    # tour of the policy home would have been told the bar is off. The pin is
+    # tour of the policy home would have been told the minimum is off. The pin is
     # the value's presence in the row, not the row's prose.
     row = [
         ln
@@ -1117,15 +1114,15 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
     ]
     assert len(row) == 1, "the README dial table lost its backlink row"
     assert (
-        "`{}`".format(OWNER_DIALS["backlink_coverage_min"]) in row[0].split("|")[-2]
+        "`{}`".format(OPERATOR_DIALS["backlink_coverage_min"]) in row[0].split("|")[-2]
     ), "README's dial table states a different value than docs/process.toml: " + row[0]
 
 
-def test_the_backlink_bar_is_type_checked_where_its_reader_stays_quiet(tmp_path):
+def test_the_backlink_minimum_is_type_checked_where_its_reader_stays_quiet(tmp_path):
     """WI-486 / OI-42: `[checks] backlink_coverage_min` is read by
     `gen_arch_map.read_backlink_min`, which answers 0 — report-only — for
     anything it cannot read as an int in 0..100. That is right for a THRESHOLD
-    (a malformed file cannot tell you what bar the adopter meant) and it is
+    (a malformed file cannot tell you what minimum the adopter meant) and it is
     exactly the shape that once turned a quoted `review_rounds` into "no review
     required". So the LOUD half must live in `config_conflicts`, and this pins
     the two halves as one decision: the reader degrades, the refusal fires."""
@@ -1154,7 +1151,7 @@ def test_the_test_first_start_is_type_checked_as_text(tmp_path):
     (`kitlib.config.process_check_text`) refuses a non-string rather than
     guessing, which reaches only the warn-only step's own output; the loud half
     for the three guarded entry points is `config_conflicts`, exactly as for
-    the backlink bar above."""
+    the backlink minimum above."""
     ac = load_script("agent_common")
     assert ac.PROCESS_ONLY_KEYS[("checks", "test_first_since")] == "str"
     docs = tmp_path / "docs"
@@ -1203,13 +1200,13 @@ def test_the_migration_table_and_the_converter_name_the_same_six():
 # lived here to hold the copies in step, because F5 licensed the duplication
 # and D-7 could only CONTAIN the drift, not remove it.
 #
-# THOSE TWO TESTS ARE GONE, AND THE REASON IS THE POINT. Owner ruling D-8
+# THOSE TWO TESTS ARE GONE, AND THE REASON IS THE POINT. Operator ruling D-8
 # (`OI-16`) moved the rule into `kitlib.config.first_declared_line`; all five
 # names now resolve to that one function, so "the copies agree" is no longer a
 # property that can FAIL — there are no copies. A test asserting a function
 # equals itself is not a weaker pin, it is a VACUOUS one, and this file's own
 # `_sn_fields` lesson is that vacuous agreement is worse than no agreement: it
-# reads green while checking nothing. The drift is now UNREPRESENTABLE rather
+# passes while checking nothing. The drift is now UNREPRESENTABLE rather
 # than DETECTED, which is this repo's stated preference.
 #
 # What survives below is the part that is still a real choice: the subagent
@@ -1270,7 +1267,7 @@ def test_the_subagent_copy_diverges_only_where_its_docstring_now_says(tmp_path):
     #   2. "" instead of None on absent/blank/comments-only — also deliberate:
     #      decide() below documents its own `policy` param as `"" = off`, so
     #      this reader has to hand back "" to compose with that contract.
-    # Both are load-bearing (this module's fail-open posture is owner-ruled
+    # Both are load-bearing (this module's fail-open posture is operator-ruled
     # 2026-08-11 — do NOT "fix" either away), so the docstring was corrected
     # to name divergence 2 rather than leaving the "same parse" claim to imply
     # casing is the only difference.
@@ -1429,14 +1426,14 @@ def test_is_drifted_has_exactly_ONE_home():
     """The F5 predicate-copy sanction does NOT extend to `is_drifted`, and the
     distinction is worth pinning rather than remembering.
 
-    `is_drafted`/`is_planned`/`is_modified`/`is_approved` are duplicated between
+    `is_drafted`/`is_planned`/`is_modified`/`is_accepted` are duplicated between
     `trace.py` and `spine_rules.py` on purpose: each reads ONE cell, each script
     stays independently copyable, and the tests above pin the copies equal by
     value. `is_drifted` is a different animal — it joins a live registry against
     a snapshot tree through the carrier resolver and the §A5.1 cell split, so a
     second copy would not be a five-line duplicate, it would be a second opinion
-    about what "the approved text" is. Two answers to that question is the
-    failure the whole `last_approved` mechanism exists to prevent.
+    about what "the accepted text" is. Two answers to that question is the
+    failure the whole `last_accepted` mechanism exists to prevent.
 
     So: exactly one definition, in `baseline_snapshot.py`, and every consumer
     imports it."""
@@ -1464,9 +1461,9 @@ def test_branch_length_ceiling_mirrors_wi_convert_slug_chars():
 
 
 # --- WI-821: the burn-down of the census's last groups and the named near-copies
-# Each shared stage below took ONE home and its former copies call it. The
+# Each shared step below took ONE home and its former copies call it. The
 # identity assertions are the deletions' warrant; the value batteries pin what
-# the shared stage DOES, so a later edit to the home is checked by value rather
+# the shared step DOES, so a later edit to the home is checked by value rather
 # than by sameness (the `_sn_fields` lesson above).
 import ast  # noqa: E402
 import inspect  # noqa: E402
@@ -1567,7 +1564,10 @@ def test_the_open_items_status_filter_is_one_home():
     assert KITSPINE.open_items_at([], "pending") == []
     assert not hasattr(KITSPINE, "_pending_items")
     # Both near-copy readers now call it: neither carries its own id filter.
-    for mod, fn in ((CT, "approval_brief_findings"), (TRACE, "ruled_open_item_texts")):
+    for mod, fn in (
+        (CT, "acceptance_brief_findings"),
+        (TRACE, "ruled_open_item_texts"),
+    ):
         src = inspect.getsource(getattr(mod, fn))
         assert "open_items_at" in src and 'endswith("-000")' not in src, fn
 
@@ -1576,7 +1576,7 @@ def test_the_open_items_readers_answer_by_value(tmp_path):
     """Implements: TC-314"""
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True)
-    brief = "Approve the [p]-[DevStg-Reqs] batch: a human approval"
+    brief = "Accept the [p]-[DevStg-Reqs] batch: an operator acceptance"
     (req / "open-items.toml").write_text(
         "[open_item.OI-000]\n"
         'status = "pending"\n'
@@ -1590,14 +1590,14 @@ def test_the_open_items_readers_answer_by_value(tmp_path):
         encoding="utf-8",
         newline="\n",
     )
-    briefs = CT.approval_brief_findings(tmp_path)
+    briefs = CT.acceptance_brief_findings(tmp_path)
     assert [b.split(":")[0] for b in briefs] == ["OI-001"], briefs
     ruled = TRACE.ruled_open_item_texts(tmp_path)
     assert list(ruled) == ["OI-002"] and "B = 8 is ruled" in ruled["OI-002"]
 
 
 def test_the_open_items_stage_keeps_duplicate_rows_in_sequence(tmp_path):
-    """Two pending rows sharing an id are two rows to the shared stage: it
+    """Two pending rows sharing an id are two rows to the shared step: it
     returns `(id, row)` pairs in row order, never a map that drops the first.
     The brief lint read rows in sequence before WI-821 and still warns on the
     first; the readers that want a by-id map build it, so the last row wins
@@ -1624,14 +1624,14 @@ def test_the_open_items_stage_keeps_duplicate_rows_in_sequence(tmp_path):
     req.mkdir(parents=True)
     (req / "open-items.csv").write_text(
         "OI-ID,Status,OneLine\n"
-        "OI-001,pending,Approve the [p]-[DevStg-Reqs] batch\n"
+        "OI-001,pending,Accept the [p]-[DevStg-Reqs] batch\n"
         "OI-001,pending,Unrelated decision\n"
         "OI-002,ruled,r1\n"
         "OI-002,ruled,r2\n",
         encoding="utf-8",
         newline="\n",
     )
-    briefs = CT.approval_brief_findings(tmp_path)
+    briefs = CT.acceptance_brief_findings(tmp_path)
     assert [b.split(":")[0] for b in briefs] == ["OI-001"], briefs
     ruled = TRACE.ruled_open_item_texts(tmp_path)
     assert list(ruled) == ["OI-002"] and "r2" in ruled["OI-002"]
@@ -1639,24 +1639,24 @@ def test_the_open_items_stage_keeps_duplicate_rows_in_sequence(tmp_path):
 
 def test_the_brief_lint_reports_a_duplicate_row_in_either_position(tmp_path):
     """Two pending rows sharing an id are both read by the brief lint: the
-    link-less approval row warns whether it comes first or second, so no
+    link-less acceptance row warns whether it comes first or second, so no
     by-id map that keeps only one of them can hide it.
 
     Implements: TC-314
     """
-    approval = "Approve the [p]-[DevStg-Reqs] batch"
+    acceptance = "Accept the [p]-[DevStg-Reqs] batch"
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True)
     for first, second in (
-        ("Unrelated decision", approval),
-        (approval, "Unrelated decision"),
+        ("Unrelated decision", acceptance),
+        (acceptance, "Unrelated decision"),
     ):
         (req / "open-items.csv").write_text(
             f"OI-ID,Status,OneLine\nOI-001,pending,{first}\nOI-001,pending,{second}\n",
             encoding="utf-8",
             newline="\n",
         )
-        briefs = CT.approval_brief_findings(tmp_path)
+        briefs = CT.acceptance_brief_findings(tmp_path)
         assert [b.split(":")[0] for b in briefs] == ["OI-001"], (first, briefs)
 
 
@@ -1667,7 +1667,7 @@ def test_the_one_line_clip_is_one_home():
     assert clip("abcdef", 6) == "abcdef"
     assert clip("abcdefg", 6) == "abcde…"
     # Each caller keeps its own reading of a missing value: the copies differed
-    # there, and the shared stage takes text so neither had to move.
+    # there, and the shared step takes text so neither had to move.
     hats, intake = load_script("hats"), load_script("intake")
     assert hats._clip(None, 10) == ""
     assert intake._clip(None, 10) == "None"
@@ -1775,8 +1775,8 @@ def test_the_reference_doc_argv_differs_only_by_its_doc(tmp_path):
 def test_the_two_held_status_predicates_agree_by_value(tmp_path):
     """DUPLICATED POLICY, KEPT DELIBERATELY (the duplicated-stage research,
     docs/plans/2026-09-28-duplicated-stage-detection.md §7 and its appendix's
-    M0 sample): `human_approves` states the WRITER-side contract and
-    `human_approves_spine` the READER-side one, two contracts that today share
+    M0 sample): `operator_accepts` states the WRITER-side contract and
+    `operator_accepts_spine` the READER-side one, two contracts that today share
     one body. This file's rule licenses a second copy of a decision only with
     a behavioural pin, so they are held equal BY VALUE over every registry
     spelling at every dial. A deliberate divergence edits this pin.
@@ -1800,12 +1800,12 @@ def test_the_two_held_status_predicates_agree_by_value(tmp_path):
         docs = tmp_path / dial / "docs"
         docs.mkdir(parents=True)
         (docs / "process.toml").write_text(
-            '[attestation]\nhuman_approval_through = "{}"\n'.format(dial),
+            '[authority]\noperator_accepts_through = "{}"\n'.format(dial),
             encoding="utf-8",
         )
         for registry in registries:
-            writer = AGENT_COMMON.human_approves(docs, registry)
-            reader = AGENT_COMMON.human_approves_spine(docs, registry)
+            writer = AGENT_COMMON.operator_accepts(docs, registry)
+            reader = AGENT_COMMON.operator_accepts_spine(docs, registry)
             assert writer == reader, (dial, registry, writer, reader)
             seen.add((registry, writer))
     # Not vacuous: the dial moves the answer for a mapped registry, and an

@@ -1,5 +1,5 @@
 """The subjective-quality critique loop (WI-068). Managed mode: a committing
-build whose WI touches a Verification=Critique SR schedules a fresh,
+build whose WI touches a VerificationMethod=Critique SR schedules a fresh,
 provider-heterogeneous CRITIQUE session against a rubric before the next build.
 Exercised end-to-end against a fake agent that plays both builder and critic, so
 no test touches a real CLI. Absent an enable-list OR any Critique SR, nothing
@@ -87,28 +87,28 @@ STATUS_MD = """# Status
 ## Current State
 
 - **Open items:**
-  - **Needs <human>**: OI-9 — a pending ask
+  - **Needs <operator>**: OI-9 — a pending ask
 """
 
 # SR-050 is Critique; its Requirement carries a marker so the redaction test can
 # assert the intent reached the critic. TC-050 names the rubric in Parameters.
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status\n"
+    "Permutations,Priority,VerificationMethod,Status\n"
 )
 SR_CRITIQUE = (
     'SR-050,Render realism,SN-001,"SR-INTENT-MARKER the render shall look real.",'
-    '"Subjective.","Judged against the rubric.",,S,Critique,Approved\n'
+    '"Subjective.","Judged against the rubric.",,S,Critique,Accepted\n'
 )
 SR_TEST = (
     'SR-050,Render realism,SN-001,"The render shall look real.",'
-    '"Objective.","render(x)==y.",,S,Test,Approved\n'
+    '"Objective.","render(x)==y.",,S,Test,Accepted\n'
 )
 
 TC_ROW = (
     "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
     "TC-050,SR-050,System,critique against the rubric,Release,"
-    '"rubric=docs/rubrics/render.md; artifact=art.txt","Critic APPROVE",No,,Approved\n'
+    '"rubric=docs/rubrics/render.md; artifact=art.txt","Critic APPROVE",No,,Accepted\n'
 )
 
 # The registry's one home is `docs/work/` spec files, so the fixture hands
@@ -334,10 +334,10 @@ def test_prompt_map_slots_a_custom_critique_template(critique_repo):
     assert "RUBRIC-MARKER" in prompts  # {brief} still slotted
 
 
-def test_critique_budget_exhaustion_pages_human(critique_repo):
+def test_critique_budget_exhaustion_pages_the_operator(critique_repo):
     """Implements: TC-085"""
     # A perpetually CHANGES-REQUESTED critique trips the budget after
-    # AGENT_CRITIQUE_MAX rounds and pages the human (attended -> NEEDS-HUMAN, 7).
+    # AGENT_CRITIQUE_MAX rounds and pages the operator (attended -> NEEDS-OPERATOR, 7).
     import os
 
     repo, ctl, cmd = critique_repo
@@ -395,13 +395,13 @@ def test_per_wi_exhaustion_disposition_overrides_autonomous(
     repo, ctl, cmd = critique_repo
     _set_critique_control(repo, "1", disposition)
     # SN-029: the loop-held end of the ladder. `DevStg-Below` is the sentinel
-    # BELOW every rung, so no rung is at-or-below it and nothing is human-held
+    # BELOW every rung, so no rung is at-or-below it and nothing is operator-held
     # (WI-498 slice 5 / WI-493 re-keyed this dial off the 0-4 ordinal; the
     # retired `0` still reads through the migration window, but a fixture that
     # spells it leaves the re-key untested exactly here).
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Below")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Below")
     _git(repo, "add", "docs/process.toml")
-    _git(repo, "commit", "-qm", "set the loop-held approval level")
+    _git(repo, "commit", "-qm", "set the loop-held acceptance level")
     (ctl / "verdict.txt").write_text(CHANGES, encoding="utf-8")
     proc = _loop(repo, cmd, "--max-iterations", "3")
     assert proc.returncode == expected, proc.stdout + proc.stderr

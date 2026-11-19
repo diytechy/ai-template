@@ -46,7 +46,7 @@ the system frame ([`external.toml`](external.toml)), the domain assumptions
 and the test surrogates ([`assumptions.toml`](assumptions.toml)), the seams
 ([`interfaces.toml`](interfaces.toml)), the components
 ([`components.toml`](components.toml) and its derived counterpart), the
-perspectives ([`hats.toml`](hats.toml)), the owner decisions
+perspectives ([`hats.toml`](hats.toml)), the operator decisions
 ([`open-items.toml`](open-items.toml)) and the performance budgets
 ([`performance-budgets.csv`](performance-budgets.csv)). Every row's id is the
 table key, so a duplicate id cannot be written; a `-000` row is a permanent

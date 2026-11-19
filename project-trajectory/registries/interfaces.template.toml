@@ -97,10 +97,10 @@
 #
 # version — the contract version the other side codes against.
 #
-# status — the one maturity field, the SPINE'S words: `Drafted` | `Approved`,
+# status — the one maturity field, the SPINE'S words: `Drafted` | `Accepted`,
 # shared with external.toml. `Founded` is NOT APPLICABLE to this tier — it
-# means settled AND DEMONSTRATED, and an approval says the seam is AGREED.
-# Flipping a cell to `Approved` is a human act in a reviewed commit.
+# means settled AND DEMONSTRATED, and an acceptance says the seam is AGREED.
+# Flipping a cell to `Accepted` is an operator act in a reviewed commit.
 #
 # component — OPTIONAL `CMP-###` membership tag.
 #
@@ -116,7 +116,7 @@
 # `bridged_by` entry naming an assumption the registry does not declare is a
 # `trace.py --strict` finding. Neither is checked until your assumptions registry
 # holds its first real (non-`-000`) row: until then nothing here is asked. `bridged_by` is a pointer (moving it re-opens no
-# approval); `coincident` is a statement the row makes, so declaring or changing
+# acceptance); `coincident` is a statement the row makes, so declaring or changing
 # it re-opens the row's. No requirement id goes here: the requirement a seam
 # answers is reached through its owner, as above.
 #

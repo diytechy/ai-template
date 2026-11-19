@@ -15,8 +15,8 @@ squash landings included.
 Real git throughout, so this module is in `tests/conftest.py` `SLOW_MODULES`;
 its in-process pins are test_disposition_adoption.py's record-change table and
 close-shape oracle. Every test here is new behaviour (coordinator-cycle skill
-§3, Intent): each refusal test was red while no rule existed and the commit
-was accepted; the pass tests were red while trunk's close refused the
+§3, Intent): each refusal test failed while no rule existed and the commit
+was accepted; the pass tests failed while trunk's close refused the
 adoption it closes.
 """
 
@@ -204,7 +204,7 @@ def test_a_real_close_relinking_a_file_outside_docs_work_passes_the_rider_and_th
     # The case is real: the close rewrote the review's link to the spec.
     assert review in _git(root, "diff", "--name-only", close + "^", close).split()
     # The peel is unchanged: a close whose relink leaves docs/work is not peeled.
-    assert kverdict.mechanical_close_attestation(root, close) is None
+    assert kverdict.mechanical_close_peel(root, close) is None
     assert _slot(root) is None
     _squash(root)
     assert _hook(root) == 0
@@ -470,7 +470,7 @@ def test_a_record_refusal_at_the_slot_does_not_carry_the_text_then_act_remedy(
 
 def _spy_shared_walk(monkeypatch):
     """Wrap `kitlib.git.lane_commit_walk` with a spy recording each call's
-    commits and riders, then walking them as the owner does."""
+    commits and riders, then walking them as the operator does."""
     from kitlib import git as kgit
 
     real = getattr(kgit, "lane_commit_walk", None)

@@ -157,13 +157,13 @@ def _derives_a_set(monkeypatch):
 
 def _past_the_git_reads(monkeypatch):
     """Drive the command line in process past its git reads: the lane's
-    commits, and the review bar's attestation the render requires (the real
+    commits, and the commit checks' record the render requires (the real
     record read is pinned in `tests/test_review_brief_git.py`)."""
     monkeypatch.setattr(
         rb, "lane_commits", lambda root, base, sha: ("wi-900", BASE, SHA)
     )
     _derives_a_set(monkeypatch)
-    monkeypatch.setattr(rb, "_review_bar_refusal", lambda root, lane, sha, t: sha)
+    monkeypatch.setattr(rb, "_commit_checks_refusal", lambda root, lane, sha, t: sha)
 
 
 def test_an_unfilled_slot_refuses_and_no_brief_is_written(
@@ -572,7 +572,7 @@ def test_a_bracketed_word_that_is_not_a_severity_never_refuses_a_filing(tmp_path
         # count that is not a whole number, a label outside the enum on a
         # second line, and a label that only starts like one all refuse.
         (REVIEW.format(sha=SHA).replace("findings=2", "findings=2.5"), "2.5"),
-        (REVIEW.format(sha=SHA) + "VERDICT: NEEDS-HUMAN findings=0\n", "2 VERDICT"),
+        (REVIEW.format(sha=SHA) + "VERDICT: NEEDS-OPERATOR findings=0\n", "2 VERDICT"),
         (REVIEW.format(sha=SHA).replace("REQUESTED f", "REQUESTEDX f"), "REQUESTEDX"),
         (
             "Reviewed: {}\n\nVERDICT: CHANGES-REQUESTED findings=0\n".format(SHA),

@@ -1,6 +1,6 @@
 """Gate authority as declared policy (Thread 32, process.md §4).
 
-Who accepts a gate advance is the `[attestation]` posture in
+Who accepts a gate advance is the `[authority]` posture in
 `docs/process.toml`, stated canonically in process.md §4 and referenced (never
 restated) everywhere else; a non-default level ships with a repo-local
 deviation register. The tripwire test keeps the de-duplication honest: a future
@@ -8,7 +8,7 @@ edit must not re-scatter the gate-authority claim across the kit's prose.
 
 WI-437 (OI-25) adds the second tripwire: the name `gate_policy` belongs to the
 RETIRED enum alone. The live runtime label — who is holding the session,
-`human-held`/`loop-held` — is `session_hold`, and nothing may take the spent
+`operator-held`/`loop-held` — is `session_hold`, and nothing may take the spent
 name back.
 
 Implements: TC-031
@@ -19,6 +19,7 @@ import re
 from conftest import KIT, SCRIPTS, load_script, process_key, run_py
 
 COMMON = load_script("agent_common")
+BOOT = load_script("bootstrap")
 
 
 def _posture(root):
@@ -26,21 +27,21 @@ def _posture(root):
 
     SN-028 moved the one-word `docs/gate-policy` file into
     `docs/process.toml`; SN-029 then RETIRED the enum key itself, because
-    shipping `gate_policy` beside `human_approval_through` meant the
+    shipping `gate_policy` beside `operator_accepts_through` meant the
     template's default silently shadowed whatever word bootstrap had written.
     So a posture is read back as a dict and compared against the translation,
     never as a stored word."""
     return {
-        key: process_key(root, "attestation", key)
-        for key in ("human_approval_through", "keep_nondependent", "final_review")
+        key: process_key(root, "authority", key)
+        for key in ("operator_accepts_through", "keep_nondependent", "final_review")
     }
 
 
 def _level(root):
-    """The posture, named by the legacy word it corresponds to — so these tests
+    """The posture, named by the `--gate-policy` word it corresponds to — so these tests
     can keep speaking the vocabulary the CLI flag and the register still use."""
     posture = _posture(root)
-    for word, dials in COMMON.LEGACY_APPROVAL.items():
+    for word, dials in BOOT.GATE_POLICY_DIALS.items():
         if posture == dials:
             return word
     return posture
@@ -51,10 +52,10 @@ def test_scaffold_gate_policy_defaults_attended(scaffold):
     # adopters and default scaffolds see zero change; no register is laid down.
     assert _level(scaffold) == "attended"
     # ...and the retired enum key is not shipped at all. This is the assertion
-    # the shadowing defect needed: with both keys present, `approval_level`
+    # the shadowing defect needed: with both keys present, `acceptance_level`
     # prefers the ordinal, so every repo that chose a non-default posture
     # scaffolded fully attended and nothing anywhere said so.
-    assert process_key(scaffold, "attestation", "gate_policy") is None
+    assert process_key(scaffold, "authority", "gate_policy") is None
     assert not (scaffold / "docs" / "gate-policy.md").exists(), (
         "the deviation register is for non-default levels only"
     )
@@ -76,9 +77,9 @@ def test_gate_policy_autonomous_scaffolds_register(tmp_path):
     policy = dest / "docs" / "process.toml"
     assert _level(dest) == "autonomous"
     # WI-493 re-keyed the dial from the 0-4 ordinal to the DevStg-* rung it
-    # always meant, and `approval_level` with it: the loop-held end is no
-    # longer `0` but `DevStg-Below` — no rung a human still approves.
-    assert COMMON.approval_through(dest / "docs") == "DevStg-Below", (
+    # always meant, and `acceptance_level` with it: the loop-held end is no
+    # longer `0` but `DevStg-Below` — no rung an operator still accepts.
+    assert COMMON.acceptance_through(dest / "docs") == "DevStg-Below", (
         "the posture must READ as loop-held, which is the whole point"
     )
     assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
@@ -87,9 +88,9 @@ def test_gate_policy_autonomous_scaffolds_register(tmp_path):
     assert "LLM-GATE" in register  # the verdict mechanism is pre-filled
     # The fixed points nothing overrides ship with every register.
     for point in (
-        "the owner's final read is the human's",
-        "No un-run greens",
-        "The harness is still the bar",
+        "the final read is the operator's",
+        "No un-run passes",
+        "The harness is still the standard",
         "never re-decided by an agent",
     ):
         assert point in register, "missing fixed point: " + point
@@ -99,9 +100,9 @@ def test_gate_policy_single_approval_scaffolds_register(tmp_path):
     dest = _bootstrap(tmp_path, "--gate-policy", "single-approve")
     assert _level(dest) == "single-approve"
     register = (dest / "docs" / "gate-policy.md").read_text(encoding="utf-8")
-    assert "DevStg-Tests close" in register  # the fixed approval point (Q5)
+    assert "DevStg-Tests close" in register  # the fixed acceptance point (Q5)
     assert "Blocked register" in register  # MEDIUM/HIGH routing (Q6 Hybrid)
-    assert "the owner's final read is the human's" in register
+    assert "the final read is the operator's" in register
 
 
 def test_gate_policy_explicit_attended_matches_default(tmp_path):
@@ -113,9 +114,9 @@ def test_gate_policy_explicit_attended_matches_default(tmp_path):
 # --- WI-437 (OI-25): one name, one meaning ------------------------------------
 
 # The runtime hold's two values. They describe WHO IS HOLDING a session and are
-# derived (`agent_common.human_holds`), never declared — which is exactly why
+# derived (`agent_common.operator_holds`), never declared — which is exactly why
 # naming them after a configuration enum produced false stale-text findings.
-_HOLD_VALUES = '"human-held" if human_held else "loop-held"'
+_HOLD_VALUES = '"operator-held" if operator_held else "loop-held"'
 
 # The modules that DERIVE or PRINT the runtime hold. `bootstrap.py` is absent on
 # purpose: it owns the live `--gate-policy` flag and the `docs/gate-policy.md`
@@ -157,8 +158,8 @@ def test_process_options_teaches_only_the_live_gate_policy_interface():
     text = (KIT / "PROCESS_OPTIONS.md").read_text(encoding="utf-8")
     assert "gate_policy" not in text, (
         "PROCESS_OPTIONS.md instructs through the RETIRED `gate_policy` enum; "
-        "rewrite onto `[attestation] human_approval_through` / "
-        "`keep_nondependent` and the `human-held`/`loop-held` session hold"
+        "rewrite onto `[authority] operator_accepts_through` / "
+        "`keep_nondependent` and the `operator-held`/`loop-held` session hold"
     )
     stray = [
         hit
@@ -171,10 +172,10 @@ def test_process_options_teaches_only_the_live_gate_policy_interface():
 
 
 # The gate-authority claim, in the variants the kit's prose has historically
-# used. "human approval/decision" (the §6 decision-surfacing dial) is a
+# used. "operator acceptance/decision" (the §6 decision-surfacing dial) is a
 # different fact and deliberately not matched.
 _AUTHORITY_CLAIM = re.compile(
-    r"human\s+approval|human\s+approves|pausing\s+for\s+your\s+approval",
+    r"operator\s+acceptance|operator\s+accepts|pausing\s+for\s+your\s+acceptance",
     re.IGNORECASE,
 )
 

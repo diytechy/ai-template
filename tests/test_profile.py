@@ -3,7 +3,7 @@
 The kit masters carry ALL permutations; bootstrap generates each repo's docs by
 omitting what the declared profile turns off. The properties pinned here are
 the ruling's own constraints: § labels never renumber, omissions leave
-resolvable stubs, every permutation scaffolds fully green, the default profile
+resolvable stubs, every permutation scaffolds a repository that passes, the default profile
 changes nothing, and a re-sync regenerates from the recorded docs/kit-profile.
 
 Implements: TC-009
@@ -30,7 +30,7 @@ LEFTOVER_PHRASES = (
 )
 
 # Every §-numbered heading the profile axes gate; these labels must be literal,
-# stable text in EVERY permutation (the owner's §N-constancy constraint).
+# stable text in EVERY permutation (the operator's §N-constancy constraint).
 GATED_HEADINGS = {
     "docs/process.md": (
         "## 9. Non-functional requirements & performance budgets",
@@ -122,7 +122,7 @@ def test_scaffold_carries_no_marker_or_copyme_leftovers(scaffold):
             assert phrase not in text, "{}: leftover {!r}".format(md.name, phrase)
 
 
-def test_default_scaffold_is_fully_green_including_warnings(scaffold):
+def test_default_scaffold_passes_fully_including_warnings(scaffold):
     # R8/C2: zero findings of any class on a fresh scaffold — the README links
     # docs/interfaces.md and the stakeholder-needs registry so no doc is an
     # orphan, and the generated trace report is --ignore'd as check.py does.
@@ -151,13 +151,13 @@ def test_default_scaffold_keeps_all_gated_sections(scaffold):
     ),
     ids=lambda v: (",".join(v) or "none") if isinstance(v, tuple) else v,
 )
-def test_every_profile_permutation_scaffolds_green(tmp_path, omit, stack):
+def test_every_profile_permutation_scaffolds_and_passes(tmp_path, omit, stack):
     """Every profile, the non-Python stacks among them, scaffolds a repo the
     strict registry checks pass unmodified, schema tier included.
 
     Implements: TC-165"""
     # The permutation matrix that holds the Q8 line: every profile must
-    # scaffold green (docs + trace), keep every § label, and leave a stub
+    # scaffold a repository that passes (docs + trace), keep every § label, and leave a stub
     # exactly where a section was omitted.
     args = ["--stack", stack]
     if omit:
@@ -175,7 +175,7 @@ def test_every_profile_permutation_scaffolds_green(tmp_path, omit, stack):
     _zero_findings(dest)
     proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=dest)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    # THE OWNER DECISION SURFACE IS ALWAYS ON (OI-41, ruled 2026-08-20): the
+    # THE OPERATOR DECISION SURFACE IS ALWAYS ON (OI-41, ruled 2026-08-20): the
     # registry AND its generated view land in every permutation, so `check_docs`
     # S-3 means the same thing in every adopting repo instead of standing down
     # wherever the layer was declined. Both halves, because a missing view reads
@@ -223,6 +223,41 @@ def test_python_and_default_scaffolds_keep_pytest_ini(tmp_path):
         assert (dest / "pytest.ini").exists()
         status = (dest / "docs" / "status.md").read_text(encoding="utf-8")
         assert "OI-3" not in status, "checklist must not appear for " + str(extra)
+
+
+def test_pytest_ini_is_not_written_over_a_pyproject_pytest_config(tmp_path, capsys):
+    # pytest reads pytest.ini before pyproject.toml, so a scaffolded one would
+    # silently drop the adopter's own pytest config (a src layout's pythonpath).
+    # A dry run walks the same copy pass without writing anything.
+    plan = boot.ScaffoldPlan(
+        stack="python",
+        omit=frozenset(),
+        agent_choice="none",
+        agents=[],
+        domain="any",
+        skills=[],
+        gate_policy="attended",
+        push_policy="operator",
+        privacy_check="false",
+        force=False,
+        dry_run=True,
+    )
+    assert "pytest.ini" in boot.copy_kit_files(tmp_path, plan).created
+    # A pyproject with no pytest table still gets pytest.ini: the skip is that
+    # narrow, not "any pyproject.toml".
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "x"\n\n[tool.ruff]\nline-length = 88\n', encoding="utf-8"
+    )
+    assert "pytest.ini" in boot.copy_kit_files(tmp_path, plan).created
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "x"\n\n[tool.pytest.ini_options]\npythonpath = ["src"]\n',
+        encoding="utf-8",
+    )
+    capsys.readouterr()
+    assert "pytest.ini" not in boot.copy_kit_files(tmp_path, plan).created
+    assert "skipped: pytest.ini (pyproject.toml already configures pytest" in (
+        capsys.readouterr().out
+    )
 
 
 # --- The recorded profile & re-sync regeneration ------------------------------
@@ -297,7 +332,7 @@ def test_the_scaffolded_oi3_brief_is_an_append_not_a_reserialization(tmp_path):
       * the appended row PARSES and comes back through the real reader, so the
         keys it invents are the keys the reader maps (a brief written under an
         unmapped key renders as a brief with no text, and `check_docs` S-3 then
-        reports the owner ask as briefed);
+        reports the operator ask as briefed);
       * the file stays LF. The CSV writer this replaced defaulted to CRLF, which
         is the exact defect this migration was warned about.
     """
@@ -329,7 +364,7 @@ def test_the_scaffolded_oi3_is_filed_with_its_queued_placeholder(tmp_path):
     non-Python profile's OI-3 lands together with a queued WI-001 whose `needs`
     cites it and whose `specref` is the item's own registry record, both
     watermarks cover what was allocated, the row reads blocked, and the fresh
-    scaffold's checker is green under --strict (no uncited pending item).
+    scaffold's checker passes under --strict (no uncited pending item).
 
     Implements: TC-010
     """

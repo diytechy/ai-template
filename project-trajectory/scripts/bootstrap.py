@@ -22,7 +22,7 @@ What it creates in the destination:
                                                   derived — run scripts/derive_stage.py)
     docs/id-watermark                          <- id-watermark.template  (id high-water marks)
     docs/process.toml                          <- process.toml.template  (EVERY policy dial:
-                                                  gate authority, the human-approval level,
+                                                  gate authority, the operator-acceptance level,
                                                   push, reviewer count, privacy + secrets,
                                                   guardrails, blackout, and the six
                                                   check-enablement toggles — SN-028's one home)
@@ -44,7 +44,7 @@ What it creates in the destination:
     docs/requirements/components.toml          <- registries/components.template.toml
     docs/requirements/hats.toml                <- registries/hats.template.toml  (the
                                                 declared expert perspectives every
-                                                applicable decomposition faces; OWNER
+                                                applicable decomposition faces; OPERATOR
                                                 text — adopters are expected to edit)
     docs/decisions/run-000-example.toml        <- decisions.template.toml  (the
                                                 delegated-decisions record's format)
@@ -69,7 +69,7 @@ What it creates in the destination:
     docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/rubrics/architecture-decomposition.md <- rubrics/architecture-decomposition.template.md
-                                               (the shared bar a component scope's decomposition is judged against)
+                                               (the shared standard a component scope's decomposition is judged against)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
     scripts/trace.py, trace_text.py, absolute_terms.py, spine_rules.py, derive_stage.py, record_test_evidence.py, record_observation.py, retire.py, id_carrier.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_coverage.py, check_readability.py, check_complexity.py, flag_axis.py, check_test_first.py, check_assumption_gate.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
@@ -87,7 +87,7 @@ What it creates in the destination:
     scripts/integrate.py                       (the local integrator: claim + serial
                                                 fail-closed merge queue + RULING-6 audit)
     scripts/handback.py                        (the two lane closes that are not a merge:
-                                                handback + its bar-inert quarantine; WI-387)
+                                                handback + its checks-inert quarantine; WI-387)
     scripts/spec_move.py                       (the link-aware spec-move ritual:
                                                 move + relink as one operation; WI-393)
     scripts/bookkeeping.py                     (the one trunk bookkeeping commit the
@@ -106,7 +106,7 @@ What it creates in the destination:
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
     scripts/dev-setup.{sh,ps1,command,cmd}     <- dev-setup.template.* (workstation setup)
     README.md                                  <- README.template.md (human front door; kept if one exists)
-    OWNER_SCRATCHPAD.md                        <- OWNER_SCRATCHPAD.template.md (owner-only notes; agents ignore)
+    OPERATOR_SCRATCHPAD.md                        <- OPERATOR_SCRATCHPAD.template.md (operator-only notes; agents ignore)
     scripts/run_menu.py                        (capability-menu reader the run.* launchers delegate to)
     run.{cmd,sh,command}                       <- run.template.*  (root product launchers)
     agent-resume.{cmd,sh,command}              <- agent-resume.template.*  (root agent launchers)
@@ -129,7 +129,8 @@ What it creates in the destination:
     .githooks/pre-push                         <- hooks/pre-push  (privacy-review backstop)
     docs/stack.ini                             <- stack.ini.template  (declared product toolchain)
     pytest.ini                                 (test-tier markers; skipped when
-                                                --stack is explicitly non-Python)
+                                                --stack is explicitly non-Python
+                                                or pyproject.toml configures pytest)
     docs/kit-profile                           (generated stamp: stack + omitted axes)
     .gitignore                                 <- gitignore.template
     .gitattributes                             <- gitattributes.template (eol=lf hook pin)
@@ -263,13 +264,13 @@ as --agents; non-interactive runs keep `false`). The always-on secrets floor
 .githooks/pre-push (the outgoing range + LLM review).
 
 `docs/push-policy` (process-options.md "Agent iteration branch & sync")
-declares who may publish (`git push`): `human` (the scaffolded default — an
-agent never pushes, even if asked mid-session; it prepares the branch and
-requests), `agent-iteration` (only the scrubbed llm/<branch> iteration
+declares who may publish (`git push`): `operator` (the scaffolded default —
+the operator, or a session they delegated it to; no other agent pushes, even
+if asked mid-session), `agent-iteration` (only the scrubbed llm/<branch> iteration
 branch), or `agent` (the development branch after a landed sync).
 `--push-policy` sets it at scaffold time; run interactively without the flag
 and bootstrap ASKS (the same consent-first shape as --gate-policy;
-non-interactive runs keep `human`). It is a process rule honored by agent
+non-interactive runs keep `operator`). It is a process rule honored by agent
 drivers and coordinators, not a hook guarantee — hooks are per-clone and can
 only assist, which is why the authority is declared rather than enforced at
 push time.
@@ -331,7 +332,7 @@ appends the harness-rewiring checklist to the fresh status.md's Open items,
 so the remaining hand-edits are visible work items.
 
 It then runs `trace.py` and `gen_open_items.py` once in the new repo so the
-scaffold starts green. (The architecture is DERIVED — the dashboard and the
+scaffold passes from the start. (The architecture is DERIVED — the dashboard and the
 checks read the registries and the source AST directly; the retired
 `docs/architecture.md` way-station is not scaffolded. WI-455, sitting-2
 decision 8.)
@@ -366,7 +367,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 # THE ONE SIBLING THIS MODULE IMPORTS, AND THE RULE IS ASSERTED, NOT PROMISED.
-# Owner ruling D-8 (`OI-16`) directed shared helpers into one shipped home and
+# Operator ruling D-8 (`OI-16`) directed shared helpers into one shipped home and
 # `bootstrap.py` to import FROM it — the INVERSION of its literal step 2, which
 # was unbuildable: `bootstrap.py` is deliberately absent from its own MAPPING
 # (the scaffolder is not shipped), so a downstream script doing `import
@@ -695,7 +696,7 @@ def sync_agent_skills(dest, dry_run):
     false-refresh). Within a synced `<agent>/skills/<name>/` subtree — which is
     kit-owned by contract — a dest file with no source counterpart is DELETED
     (and emptied subdirs removed): when a kit skill drops a file, the
-    `--check-agents` floor goes red on the stray and prescribes `--sync`, so
+    `--check-agents` floor fails on the stray and prescribes `--sync`, so
     `--sync` must actually be able to fix it (M-14). Returns the list of
     refreshed/removed dest-relative file paths."""
     source = KIT / "skills"
@@ -858,25 +859,25 @@ GATE_POLICY_DEVIATIONS = {
     "single-approve": [
         (
             "§4 acceptor, DevStg-Reqs+DevStg-Tests",
-            "a human approves each gate",
-            "LLM-gate review; every human call queued as a `Needs <human>` "
+            "an operator accepts each gate",
+            "LLM-gate review; every operator call queued as a `Needs <operator>` "
             "Open item (+ provisional decision where the driver proceeded)",
         ),
         (
-            "§4 approval point",
-            "per-gate approval",
-            "one human sitting at **DevStg-Tests close** approves/amends the queue; "
-            "approved decisions move to docs/log.md (relocating the point = "
+            "§4 acceptance point",
+            "per-gate acceptance",
+            "one operator sitting at **DevStg-Tests close** accepts/amends the queue; "
+            "accepted decisions move to docs/log.md (relocating the point = "
             "amending this register)",
         ),
         (
             "§4 acceptor, DevStg-Impl→DevStg-Impl",
-            "a human approves each gate",
-            "autonomous rules after approval (LLM-gate verdicts)",
+            "an operator accepts each gate",
+            "autonomous rules after acceptance (LLM-gate verdicts)",
         ),
         (
             "§4 consistency review 'pause and ask'",
-            "solicit the human",
+            "solicit the operator",
             "route by revert-cost: LOW → decide + record (log.md Decisions "
             "log); MEDIUM/HIGH → the Blocked register; never a mid-run pause",
         ),
@@ -884,41 +885,41 @@ GATE_POLICY_DEVIATIONS = {
     "autonomous": [
         (
             "§4 acceptor, DevStg-Reqs→DevStg-Impl",
-            "a human approves each gate",
+            "an operator accepts each gate",
             "LLM-gate: an independent fresh-context reviewer runs the harness "
             "itself; verdict recorded in docs/log.md with `Model:` + "
-            "`Role: LLM-GATE`; the driver makes the approving Status-change "
+            "`Role: LLM-GATE`; the driver makes the accepting Status-change "
             "commit + regenerates docs/stage (derive_stage.py) citing it",
         ),
         (
-            "mid-run escalation to the human",
+            "mid-run escalation to the operator",
             "escalate and wait",
             "Blocked register in status.md; continue independent work; all "
             "blocks surface in the end-of-run report",
         ),
         (
-            "ask-the-human / solicit clarification",
+            "ask-the-operator / solicit clarification",
             "pause and ask",
             "decide + record in the log.md Decisions log; HIGH revert-cost "
             "gets an independent peer-tier second opinion before execution",
         ),
         (
-            "§4 `Attest` (named human judgment)",
-            "a human attests",
-            "LLM-Attest: named *model* judgment, reported honestly as machine "
-            "attestation in the trace report's attested-vs-mechanized split",
+            "§4 `Vouch` (the operator's recorded word)",
+            "the operator vouches",
+            "a delegated `Vouch`: a named *model*'s word, reported as delegated "
+            "in the trace report's vouched-vs-mechanized split",
         ),
     ],
 }
 
 GATE_POLICY_FIXED_POINTS = """## Fixed points (nothing in this file overrides these)
 
-- **the owner's final read is the human's.**
-- **No un-run greens** — a verdict or test result that wasn't actually
+- **the final read is the operator's.**
+- **No un-run passes** — a verdict or test result that wasn't actually
   executed is a process violation regardless of tier.
-- **The harness is still the bar** — LLM judgment supplements the checks; it
-  never waives a red one.
-- **Approved owner decisions are never re-decided by an agent** — flag a
+- **The harness is still the standard** — LLM judgment supplements the checks; it
+  never waives a failing one.
+- **Accepted operator decisions are never re-decided by an agent** — flag a
   problematic one as Blocked instead.
 """
 
@@ -1102,9 +1103,9 @@ def apply_gate_policy(dest, level, dry_run):
 
     `--gate-policy` still takes the familiar word, because that is how the
     posture is talked about — but the word is TRANSLATED here (SN-029,
-    `LEGACY_APPROVAL` above) rather than stored. Storing it was the
-    defect: the template ships `human_approval_through`, and
-    `approval_through` prefers that key, so a `gate_policy = "autonomous"`
+    `GATE_POLICY_DIALS` below) rather than stored. Storing it was the
+    defect: the template ships `operator_accepts_through`, and
+    `acceptance_through` prefers that key, so a `gate_policy = "autonomous"`
     written beside it was read by nothing and every repo that chose a
     non-default posture scaffolded as fully attended — silently, since neither
     dial is wrong on its own and `config_conflicts` had no rule against the
@@ -1115,10 +1116,8 @@ def apply_gate_policy(dest, level, dry_run):
     list of dest-relative paths written."""
     if level == "attended" or dry_run:
         return []
-    for key, value in sorted(LEGACY_APPROVAL.get(level, {}).items()):
-        _written(
-            "[attestation] " + key, set_process_key(dest, "attestation", key, value)
-        )
+    for key, value in sorted(GATE_POLICY_DIALS.get(level, {}).items()):
+        _written("[authority] " + key, set_process_key(dest, "authority", key, value))
     register = dest / "docs" / "gate-policy.md"
     written = [PROCESS_TOML_REL]
     if not register.exists():
@@ -1128,10 +1127,10 @@ def apply_gate_policy(dest, level, dry_run):
         _write_text_lf(
             register,
             "# Gate-authority deviation register — `{level}`\n\n"
-            "**Status:** DRAFT — approve with the owner, then keep in version "
+            "**Status:** DRAFT — accept with the operator, then keep in version "
             "control.\n"
             "**What this is:** this repo declares the `{level}` gate authority "
-            "(`docs/process.toml` `[attestation] human_approval_through` "
+            "(`docs/process.toml` `[authority] operator_accepts_through` "
             "plus `keep_nondependent` and `final_review`; process.md "
             "§4). "
             "The kit-owned process doc is "
@@ -1153,7 +1152,7 @@ def apply_gate_policy(dest, level, dry_run):
 # sync"). Declared once at scaffold time like the gate authority; the value is
 # honored by agent drivers/coordinators as a process rule (hooks are per-clone
 # and can only assist).
-PUSH_POLICY_CHOICES = ("human", "agent-iteration", "agent")
+PUSH_POLICY_CHOICES = ("operator", "agent-iteration", "agent")
 
 
 def apply_push_policy(dest, policy, dry_run):
@@ -1161,7 +1160,7 @@ def apply_push_policy(dest, policy, dry_run):
     docs/process.toml (SN-028; same shape as apply_privacy_check). Returns
     `set_process_key`'s answer, or None when nothing was to be written; a
     refused write raises."""
-    if policy == "human" or dry_run:
+    if policy == "operator" or dry_run:
         return None
     return set_process_key(dest, "policies", "push", policy)
 
@@ -1209,49 +1208,34 @@ def _report_flag(outcome, label, value, answer):
     print("  {}: {}".format(label, value))
 
 
-# SN-029: the retired gate-authority enum, translated to the three dials that
-# replaced it. DUPLICATED from `agent_common.LEGACY_APPROVAL` under the F5
-# rule — bootstrap imports no kit sibling, because it is the one script an
-# adopter may run from a bare download before anything else exists — and pinned
-# equal by tests/test_rule_sync.py, which is how this kit keeps a duplicated
-# POLICY (as opposed to duplicated plumbing) from drifting.
+# SN-029: what each `--gate-policy` word means, as the three dials that replaced
+# the retired gate-authority enum. The ONE statement of it: the preset
+# (`apply_gate_policy`) writes these dials for a word, and the fold of a
+# `docs/gate-policy` file (`_migrate_gate_policy`) writes the same ones, so a
+# repository scaffolded with a word and one folded from it run alike. No other
+# script holds a copy; the core scripts read the dials only (D11).
 #
 # What each word meant, and why one key could not hold it: `attended` held every
-# tier and drained the station at an approval; `single-approve` held NO tier
-# (LLM-gate review ran through DevStg-Reqs+DevStg-Tests) but sat ONE human at the close and kept
+# tier and drained the station at an acceptance; `single-approve` held NO tier
+# (LLM-gate review ran through DevStg-Reqs+DevStg-Tests) but sat ONE operator at the close and kept
 # non-dependent work running; `autonomous` did the same without the final read.
 # Implements: SR-138, LLR-156
-LEGACY_APPROVAL = {
+GATE_POLICY_DIALS = {
     "attended": {
-        "human_approval_through": "DevStg-Release",
+        "operator_accepts_through": "DevStg-Release",
         "keep_nondependent": False,
         "final_review": "always",
     },
     "single-approve": {
-        "human_approval_through": "DevStg-Below",
+        "operator_accepts_through": "DevStg-Below",
         "keep_nondependent": True,
         "final_review": "always",
     },
     "autonomous": {
-        "human_approval_through": "DevStg-Below",
+        "operator_accepts_through": "DevStg-Below",
         "keep_nondependent": True,
         "final_review": "off",
     },
-}
-
-# The retired 0-4 ordinal this dial took before WI-493 (OI-21 shape (ii)),
-# mapped onto the rungs each level used to hold. DUPLICATED from
-# `agent_common.LEGACY_DIAL_ORDINALS` under the same F5 rule as the table above
-# and pinned equal by tests/test_rule_sync.py: bootstrap imports no kit sibling,
-# because it is the one script an adopter may run from a bare download.
-# `--migrate-config` uses it to rewrite an adopter's number in place, so the
-# reader's per-run warning has an end.
-LEGACY_DIAL_ORDINALS = {
-    0: "DevStg-Below",
-    1: "DevStg-Boundary",
-    2: "DevStg-Arch",
-    3: "DevStg-LLReqs",
-    4: "DevStg-Release",
 }
 
 
@@ -1310,133 +1294,6 @@ LEGACY_CONFIG = (
 _first_declared_line = _kitconfig.first_declared_line
 
 
-# The dial's RETIRED KEY NAME (WI-499, owner-ruled 2026-08-21: "ratification  # check_vocab: allow
-# holds a weight to it that the semantics here don't need" — check_vocab: allow,
-# a declaration site must name the retired word). A repo scaffolded
-# before this rename still carries `human_ratification_through` in  # check_vocab: allow
-# `[attestation]`; `_migrate_dial_key_name` below rewrites the KEY (not the
-# value — that is `_migrate_dial_ordinal`'s job, and it runs second so an
-# adopter still on BOTH the old key AND the retired 0-4 ordinal gets both
-# fixed in one `--migrate-config` pass) and `agent_common.approval_through`
-# reads it as a loud fallback for a repo that runs a kit script without ever
-# migrating (the same read-translate-warn shape WI-493 used for the ordinal).
-LEGACY_ATTESTATION_KEY = "human_ratification_through"  # check_vocab: allow
-
-
-def _migrate_dial_key_name(dest, notes, dry_run):
-    """Rewrite `[attestation] human_ratification_through` to  # check_vocab: allow
-    `human_approval_through`, keeping whatever value it held (a rung string OR
-    the retired 0-4 ordinal — `_migrate_dial_ordinal`, called right after this
-    in `migrate_legacy_config`, normalizes that half).
-
-    The parse says whether the old key is there and what it holds; the rename
-    is a line edit kept only when the parse of the edited text holds exactly
-    that rename (`_confirmed_edit`), so a key-like line inside a string is
-    never the one renamed, and an old key the edit cannot reach is REFUSED.
-    Silent when the file does not parse (each write that follows refuses
-    it), when the old key is absent, or when BOTH keys are present (the new
-    one wins; the old line is left as a harmless duplicate for a human to
-    remove, not silently deleted out from under a repo that may have meant to
-    keep it visible during a manual re-key).
-
-    Implements: SR-137, SR-139, LLR-155
-    """
-    path = Path(dest) / PROCESS_TOML_REL
-    if not path.is_file():
-        return
-    old, new = LEGACY_ATTESTATION_KEY, "human_approval_through"
-    text = path.read_text(encoding="utf-8-sig")
-    data = _kitconfig.read_toml_text(text) or {}
-    table = data.get("attestation")
-    if not isinstance(table, dict) or old not in table or new in table:
-        return
-    renamed = {k: v for k, v in table.items() if k != old}
-    renamed[new] = table[old]
-    raw_value = _toml_scalar(table[old])
-    edited = _confirmed_edit(
-        text.splitlines(),
-        "attestation",
-        old,
-        "{} = {}".format(new, raw_value),
-        dict(data, attestation=renamed),
-    )
-    if edited is None:
-        raise PolicyWriteRefused(
-            _refusal("attestation", old, _unconfirmed_form(text, "attestation", True))
-        )
-    if not dry_run:
-        _write_text_lf(path, edited)
-    notes.append(
-        # check_vocab: allow -- the printed note must name the retired word so
-        # an adopter searching their own history for it finds the fix.
-        "{} [attestation] {} {} `human_approval_through` (WI-499: "
-        '"ratification" is retired kit vocabulary). The value ({}) is '  # check_vocab: allow
-        "unchanged by this step.".format(
-            PROCESS_TOML_REL,
-            old,
-            "would rename to" if dry_run else "renamed to",
-            raw_value,
-        )
-    )
-
-
-def _migrate_dial_ordinal(dest, notes, dry_run):
-    """Rewrite a `human_approval_through` still holding the retired 0-4
-    ordinal as the `DevStg-*` rung that ordinal meant (WI-493).
-
-    NOT A LEGACY *FILE* migration like its siblings — the value is already in
-    `docs/process.toml`; only its VOCABULARY is old. It rides here because this
-    is the one command an adopter is told to run at re-sync, and because the
-    alternative is `agent_common.approval_through` printing its translation
-    warning on every run of every kit script, forever.
-
-    The value is read from the parse, never off a line (a key-like line may be
-    text inside a multi-line string), and written through `set_process_key`.
-    Silent when the file does not parse (each write that follows refuses
-    it), or when the dial is absent or already a rung. A number OUTSIDE the
-    retired range is left alone and named in `notes` rather than guessed at:
-    there is no rung it meant, and an out-of-range dial is the one input that
-    reads as LESS human involvement than the owner asked for, so a migrator that
-    picked a value for it would be making an approval-authority decision.
-
-    Implements: SR-138, LLR-156
-    """
-    key = "human_approval_through"
-    path = Path(dest) / PROCESS_TOML_REL
-    if not path.is_file():
-        return
-    data = _kitconfig.read_toml_text(path.read_text(encoding="utf-8-sig")) or {}
-    table = data.get("attestation")
-    raw = table.get(key) if isinstance(table, dict) else None
-    if not isinstance(raw, int) or isinstance(raw, bool):
-        return
-    rung = LEGACY_DIAL_ORDINALS.get(raw)
-    if rung is None:
-        notes.append(
-            "{} [attestation] {} = {} is outside the retired 0-4 range, so "
-            "there is no rung it meant — left in place. Set it to a DevStg-* "
-            "rung, or one of {}; until then it reads as the most conservative "
-            "setting.".format(
-                PROCESS_TOML_REL,
-                key,
-                raw,
-                ", ".join(LEGACY_DIAL_ORDINALS.values()),
-            )
-        )
-        return
-    set_process_key(dest, "attestation", key, rung, dry_run=dry_run)
-    notes.append(
-        "{} [attestation] {} {} the retired ordinal {} -> `{}` (WI-493). The "
-        "rungs held are unchanged.".format(
-            PROCESS_TOML_REL,
-            key,
-            "would migrate" if dry_run else "migrated",
-            raw,
-            rung,
-        )
-    )
-
-
 def migrate_legacy_config(dest, dry_run=False):
     """Fold every legacy one-word policy file into docs/process.toml and DELETE
     it. Returns `(moved, notes)` — the dest-relative legacy paths absorbed, and
@@ -1464,8 +1321,6 @@ def migrate_legacy_config(dest, dry_run=False):
     moved, notes = [], []
     steps = [
         functools.partial(_migrate_gate_policy, dest, moved, notes, dry_run),
-        functools.partial(_migrate_dial_key_name, dest, notes, dry_run),
-        functools.partial(_migrate_dial_ordinal, dest, notes, dry_run),
     ] + [
         functools.partial(_migrate_legacy_file, dest, row, moved, notes, dry_run)
         for row in LEGACY_CONFIG
@@ -1540,10 +1395,10 @@ def _migrate_gate_policy(dest, moved, notes, dry_run):
     Its own arm rather than a `LEGACY_CONFIG` row because it is the one legacy
     file that is not a one-key rename: `single-approve` carried a tier hold, a
     drain policy AND an end-of-run hold at once, and folding it to a single key
-    is what loses two of the three (SN-029). The translation itself lives in
-    `agent_common.LEGACY_APPROVAL`, so the migrator and the readers cannot
-    disagree about what a word meant. A refused write raises past the
-    delete, so the legacy file stays.
+    is what loses two of the three (SN-029). The dials come from
+    `GATE_POLICY_DIALS`, the table the `--gate-policy` preset writes, so a
+    word folded here and the same word given at scaffold land alike. A
+    refused write raises past the delete, so the legacy file stays.
 
     Implements: SR-138, LLR-156
     """
@@ -1551,24 +1406,24 @@ def _migrate_gate_policy(dest, moved, notes, dry_run):
     if not path.is_file():
         return
     word = _first_declared_line(path)
-    dials = LEGACY_APPROVAL.get((word or "").strip().lower())
+    dials = GATE_POLICY_DIALS.get((word or "").strip().lower())
     if word is not None and dials is None:
         notes.append(
             "docs/gate-policy holds {!r}, which is not one of {} — left in "
             "place; fix it, then re-run --migrate-config.".format(
-                word, " / ".join(sorted(LEGACY_APPROVAL))
+                word, " / ".join(sorted(GATE_POLICY_DIALS))
             )
         )
         return
     for key, value in sorted((dials or {}).items()):
         if (
             set_process_key(
-                dest, "attestation", key, value, dry_run=dry_run, add_if_missing=True
+                dest, "authority", key, value, dry_run=dry_run, add_if_missing=True
             )
             == "missing"
         ):
             notes.append(
-                "docs/gate-policy could NOT be folded into {} [attestation] {} "
+                "docs/gate-policy could NOT be folded into {} [authority] {} "
                 "— the legacy file is LEFT IN PLACE with its value intact. Fix "
                 "the TOML, then re-run --migrate-config.".format(PROCESS_TOML_REL, key)
             )
@@ -1618,7 +1473,7 @@ def _has_comment_lines(path):
 #       omitted; an omitted region is replaced by a one-line resolvable stub.
 #
 # Axes are FEW AND BOOLEAN by design (the per-permutation test matrix is what
-# holds the scaffold-green line; every new axis doubles it):
+# holds the line that every scaffold passes; every new axis doubles it):
 #   nfr           — §9 non-functional/perf budgets + its process-options
 #                   expansions (the registries stay: referenced config).
 #   multi-module  — the §10 scale ladder + its rung-2 expansion.
@@ -1733,7 +1588,7 @@ def write_kit_profile(dest, stack, omit, dry_run):
 # the hand-edits a non-Python stack still owes (ADOPTING.md §2); making them
 # visible work items keeps them from becoming folklore. OI-1/OI-2 are the
 # template's seeded examples, so the checklist starts at OI-3.
-STACK_NEEDS_HUMAN = (
+STACK_NEEDS_OPERATOR = (
     "    - OI-3 — decide: the {stack} toolchain commands (format / lint / "
     "test) in docs/stack.ini's [product] section (blocks: DevStg-Reqs) → "
     "[stack.ini](stack.ini)\n"
@@ -1747,11 +1602,11 @@ STACK_IN_FLIGHT = (
     "runner in docs/stack.ini's [tiers] (pytest.ini deliberately not "
     "scaffolded) → [stack.ini](stack.ini)\n"
 )
-# The Needs-<human> OI-3 carries its decision brief in the open-items REGISTRY
+# The Needs-<operator> OI-3 carries its decision brief in the open-items REGISTRY
 # (check_docs S-3: every owner ask has its brief); the In-flight OI-4..6 are
 # driver work and need none. WI-322 retired the markdown surface — briefs are
 # ROWS in docs/requirements/open-items, rendered into the generated
-# docs/open-items.html the owner reads — so the brief is APPENDED as a row
+# docs/open-items.html the operator reads — so the brief is APPENDED as a row
 # instead of spliced above a marker.
 #
 # KEYS, not a positional tuple, since the carrier moved to TOML (repo-lock
@@ -1784,7 +1639,7 @@ STACK_OI3_ROW = (
     (
         "blast_radius",
         "every gate run and CI job shells these commands - a wrong entry "
-        "green-washes the harness.",
+        "makes the harness pass falsely.",
     ),
     (
         "options",
@@ -1813,7 +1668,7 @@ def file_stack_placeholder(dest, stack):
     (`wi_convert.write_spec_file`, IF-159, which re-reads and verifies what it
     wrote), run in the new repo the way the generators below are, because this
     module imports nothing but the shared package. Raises on a failed write: a
-    scaffold with an uncited pending item is red on its first check.
+    scaffold with an uncited pending item fails on its first check.
 
     Implements: SR-010, LLR-010
     """
@@ -1857,7 +1712,7 @@ def seed_arch_map_mode(dest, stack, created, dry_run):
 
 def append_stack_checklist(dest, stack, dry_run):
     """Insert the rewiring checklist into the freshly scaffolded status.md's
-    Open-items sub-lists (Needs <human> / In flight). Only called when this
+    Open-items sub-lists (Needs <operator> / In flight). Only called when this
     run created status.md and the declared stack is explicitly non-Python."""
     status = dest / "docs" / "status.md"
     if dry_run or not status.exists():
@@ -1865,12 +1720,12 @@ def append_stack_checklist(dest, stack, dry_run):
     text = status.read_text(encoding="utf-8")
     # Anchor on the template's seeded sub-list heads; insert after each head's
     # example bullet (the next "  - " line at the outer level closes it).
-    human_anchor = "  - **In flight** _(driver; no approval needed)_:\n"
+    needs_anchor = "  - **In flight** _(driver; no acceptance needed)_:\n"
     flight_anchor = "- **Assumptions (unattended):**"
-    if human_anchor not in text or flight_anchor not in text:
+    if needs_anchor not in text or flight_anchor not in text:
         return False
     text = text.replace(
-        human_anchor, STACK_NEEDS_HUMAN.format(stack=stack) + human_anchor, 1
+        needs_anchor, STACK_NEEDS_OPERATOR.format(stack=stack) + needs_anchor, 1
     )
     text = text.replace(
         flight_anchor,
@@ -1878,8 +1733,8 @@ def append_stack_checklist(dest, stack, dry_run):
         1,
     )
     _write_text_lf(status, text)
-    # OI-3 is a Needs-<human> ask, so it owes a brief (check_docs S-3): append it
-    # as a row of the open-items registry, which the generated owner surface
+    # OI-3 is a Needs-<operator> ask, so it owes a brief (check_docs S-3): append it
+    # as a row of the open-items registry, which the generated operator surface
     # renders, together with its queued placeholder row (WI-790), which is what
     # puts the decision on the queue. Idempotent — re-running bootstrap must not
     # file OI-3 or its row twice.
@@ -2208,7 +2063,7 @@ def apply_template_rewrites(dst_rel, dst):
 
 
 def initialize_generated_docs(dest, created):
-    """Run the generators once so the fresh scaffold starts green (the fully
+    """Run the generators once so the fresh scaffold passes from the start (the fully
     generated artifacts would otherwise read as stale/missing to their
     freshness gates until the first manual run).
 
@@ -2222,11 +2077,11 @@ def initialize_generated_docs(dest, created):
         return
     for rel_cmd in (
         ["scripts/trace.py"],
-        # WI-322: the owner decision surface is a fully-generated file, so a
+        # WI-322: the operator decision surface is a fully-generated file, so a
         # MISSING one reads as stale to its freshness gate (the C9 posture its
-        # siblings take). Seeding it here is what keeps a fresh scaffold green
+        # siblings take). Seeding it here is what keeps a fresh scaffold passing
         # on its first `check.py` — the scaffolded registry already carries the
-        # example rows the status template's Needs-<human> bullets name.
+        # example rows the status template's Needs-<operator> bullets name.
         ["scripts/gen_open_items.py"],
         # The prompt catalogue is a required freshness artifact too. Generate
         # it with the templates it inventories so a fresh Node scaffold reaches
@@ -2359,7 +2214,7 @@ KIT_LICENSE_HEADER = (
     "#\n"
     "# (That line carries the `privacy-ok` marker deliberately: a real name is a\n"
     "# LEGAL REQUIREMENT here, not a leak, so a privacy-checked adopting repo must\n"
-    "# not red on it. The License text below carries no personal name — the stock\n"
+    "# not fail on it. The License text below carries no personal name — the stock\n"
     "# Apache appendix placeholder — so this is the only such line.)\n"
     "#\n"
     "# Generated, like docs/kit-version: rewritten on every scaffold/re-sync.\n"
@@ -2518,7 +2373,7 @@ def build_parser():
         choices=GATE_POLICY_CHOICES,
         default=None,
         help="declared gate authority, written to docs/process.toml "
-        "[attestation] gate_policy (process.md §4): "
+        "[authority] gate_policy (process.md §4): "
         "attended|single-approve|autonomous. Omitted + interactive TTY -> ASK; "
         "non-interactive -> 'attended' (the default level; zero change). A "
         "non-default level also scaffolds the deviation-register skeleton "
@@ -2529,9 +2384,9 @@ def build_parser():
         choices=PUSH_POLICY_CHOICES,
         default=None,
         help="declared push authority for docs/push-policy (process-options.md "
-        '"Agent iteration branch & sync"): human|agent-iteration|agent. '
-        "Omitted + interactive TTY -> ASK; non-interactive -> 'human' (the "
-        "default: an agent never pushes; it prepares the branch and requests).",
+        '"Agent iteration branch & sync"): operator|agent-iteration|agent. '
+        "Omitted + interactive TTY -> ASK; non-interactive -> 'operator' (the "
+        "default: only the operator, or a session they delegated it to, pushes).",
     )
     ap.add_argument(
         "--privacy-check",
@@ -2618,8 +2473,8 @@ def resolve_choices(args, stack, omit):
     )
 
     # Resolve the push authority the same consent-first way: explicit flag
-    # wins; else ASK on an interactive TTY; else 'human' (CI-safe — the
-    # scaffolded default file already says human, so nothing extra happens).
+    # wins; else ASK on an interactive TTY; else 'operator' (CI-safe — the
+    # scaffolded default file already says operator, so nothing extra happens).
     push_policy = (
         args.push_policy
         if args.push_policy is not None
@@ -2627,7 +2482,7 @@ def resolve_choices(args, stack, omit):
             "Push policy for this repo? (who may `git push` — "
             'process-options.md "Agent iteration branch & sync")',
             PUSH_POLICY_CHOICES,
-            "human",
+            "operator",
         )
     )
 
@@ -2698,6 +2553,34 @@ def _write_scaffold_file(src, dst, src_rel, dst_rel, dest, plan):
         dst.chmod(dst.stat().st_mode | 0o111)
 
 
+PYTEST_INI_SKIPPED = (
+    "  skipped: pytest.ini (pyproject.toml already configures pytest; to use "
+    "check.py --tier, add the smoke/full/release markers there)"
+)
+
+
+def _pyproject_has_pytest(dest):
+    """Whether dest's pyproject.toml has a [tool.pytest...] table."""
+    path = dest / "pyproject.toml"
+    text = path.read_text(encoding="utf-8-sig") if path.is_file() else ""
+    return "pytest" in (_kitconfig.read_toml_text(text) or {}).get("tool", {})
+
+
+def _pytest_ini_withheld(dst, dest, plan):
+    """Whether the copy pass skips `pytest.ini`. An explicitly non-Python
+    stack gets no dead Python artifacts (Thread 34, R7/C3): its rewiring
+    checklist lands in docs/status.md instead (append_stack_checklist).
+    And pytest reads pytest.ini before pyproject.toml, so writing one beside
+    a pyproject that configures pytest would drop that config (its
+    pythonpath, say) from every test run; that skip is said aloud."""
+    if plan.stack in NON_PYTHON_STACKS:
+        return True
+    if dst.exists() or not _pyproject_has_pytest(dest):
+        return False
+    print(PYTEST_INI_SKIPPED)
+    return True
+
+
 def copy_kit_files(dest, plan):
     """The MAPPING copy pass + the GITKEEP_DIRS placeholders, as a
     `CopyOutcome`. Write-once by default (an existing file is skipped, not
@@ -2711,10 +2594,7 @@ def copy_kit_files(dest, plan):
     for src_rel, dst_rel, *_ref in MAPPING:
         src = KIT / src_rel
         dst = dest / dst_rel
-        # Stack-gated artifacts (Thread 34, R7/C3): an explicitly non-Python
-        # stack gets no dead Python artifacts — the rewiring checklist lands
-        # in docs/status.md instead (append_stack_checklist below).
-        if dst_rel == "pytest.ini" and plan.stack in NON_PYTHON_STACKS:
+        if dst_rel == "pytest.ini" and _pytest_ini_withheld(dst, dest, plan):
             continue
         if not src.exists():
             missing.append(src_rel)
@@ -2842,7 +2722,7 @@ def apply_declared_policies(dest, plan, outcome):
 
     Runs the LEGACY CONVERTER first. On a fresh scaffold that is a no-op; on a
     re-sync onto a repo that predates SN-028 it is what keeps the hard
-    mixed-config refusal from ever reaching a human — the legacy files are
+    mixed-config refusal from ever reaching an operator — the legacy files are
     folded in and deleted before anything reads a policy.
     """
     moved, notes = migrate_legacy_config(dest, plan.dry_run)
@@ -2862,8 +2742,8 @@ def apply_declared_policies(dest, plan, outcome):
         print("  gate-authority level: {}".format(plan.gate_policy))
 
     # A declared non-default push authority overwrites the scaffolded default
-    # (the file itself was just copied with `human` on its value line).
-    if plan.push_policy != "human":
+    # (the file itself was just copied with `operator` on its value line).
+    if plan.push_policy != "operator":
         answer = apply_push_policy(dest, plan.push_policy, plan.dry_run)
         _report_flag(outcome, "push policy", plan.push_policy, answer)
 
@@ -3017,7 +2897,7 @@ def main():
     if not plan.dry_run and outcome.created:
         print(
             "Next: fill the PROJECT BRIEF in AGENTS.md + docs/status.md, then "
-            "run gate DevStg-Reqs (docs/process.md)."
+            "run python scripts/check.py (the checks for the derived stage)."
         )
     if outcome.missing:
         sys.exit(1)

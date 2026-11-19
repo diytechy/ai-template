@@ -58,9 +58,9 @@ Findings (exit 1):
     - an `Excludes:` line with no reason, or naming an undeclared clause;
     - an `F#` exclusion whose reason cites a dispute verdict
       (`.../NNN-ADJUDICATE-<sha>.md`, optionally `#<the sitting's id>`) that
-      is not an accepted dispute verdict ruling that finding DISMISS or
+      is not a recorded dispute verdict ruling that finding DISMISS or
       SUCCESSOR — only a dismissal, or a successor row filed at the landing
-      (WI-911, the owner's ruling of 2026-10-14), resolves a finding; a FIX
+      (WI-911, the operator's ruling of 2026-10-14), resolves a finding; a FIX
       is covered by a row — or whose
       ruled finding is not shown to be that `F#` finding: the one findings
       file the verdict's binding records, read in the same reading as the
@@ -159,7 +159,7 @@ RULING_CITE_RE = re.compile(
 )
 # The rulings that resolve an `F#` exclusion on the rework gate's path
 # (`resolution_findings`): a DISMISS, or a SUCCESSOR, whose finding becomes
-# its own row filed on trunk at the landing (WI-911; the owner's ruling of
+# its own row filed on trunk at the landing (WI-911; the operator's ruling of
 # 2026-10-14, in session, that only the dispute sitting defers a finding).
 # The plan cap's own callers keep `ruling_problem`'s DISMISS-only default.
 RESOLVING = ("DISMISS", "SUCCESSOR")
@@ -544,11 +544,11 @@ def ruling_problem(root, cite, fid, text, rev=None, resolving=("DISMISS",)):
     (clause text `text`), or None when it does. `cite` is a `RULING_CITE_RE`
     match: the verdict's path under `root` and, optionally, the sitting's own
     id for the finding (default `fid`). It resolves only as a recorded,
-    ACCEPTED dispute verdict (its binding beside it) whose ruling of that id is
+    RECORDED dispute verdict (its binding beside it) whose ruling of that id is
     one its consumer accepts, `resolving`: DISMISS by default, as the plan cap
     reads it, and `RESOLVING` on the rework gate's path, which adds SUCCESSOR
-    (WI-911, the owner's ruling of 2026-10-14) - a FIX ruling is work a row
-    covers, and an ESCALATE ruling is the owner's to decide - AND whose ruled
+    (WI-911, the operator's ruling of 2026-10-14) - a FIX ruling is work a row
+    covers, and an ESCALATE ruling is the operator's to decide - AND whose ruled
     finding is `fid` itself, as the
     findings file the verdict's binding records shows it
     (`_correspondence_problem`): a dismissal of another finding, or of another
@@ -568,7 +568,7 @@ def ruling_problem(root, cite, fid, text, rev=None, resolving=("DISMISS",)):
     bound = _sitting.read_requested(binding_text)
     if bound is None or bound[0] != _dispute.BRIEF:
         return "cites {}, which is not a dispute verdict".format(path)
-    if bound[2] != "accepted":
+    if bound[2] != "recorded":
         return "cites {}, whose call has outcome {}".format(path, bound[2])
     rulings, why = _dispute.parse(verdict_text, bound[1], path)
     if why:

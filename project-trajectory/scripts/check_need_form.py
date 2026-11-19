@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Need-form check: stakeholder-need cells stay in stakeholder language.
 
-SN-033 (approved 2026-08-13) commissions this check by its own acceptance text:
+SN-033 (accepted 2026-08-13) commissions this check by its own acceptance text:
 "A declared check reports the row and phrase when a need cell contains an
 internal path, implementation-only identifier or process citation; a reviewed
 exception list distinguishes names that are themselves user-facing interfaces."
 A need written in internal engineering vocabulary can stay technically current
 while becoming unreadable to the person whose intent it preserves — the failure
-is an approved requirement spine no stakeholder can independently validate.
+is an accepted requirement spine no stakeholder can independently validate.
 
 Stdlib only, like trace.py / check_vocab.py:
 
@@ -17,7 +17,7 @@ WHAT IT SCANS — `need` cells ONLY. SN-033 scopes itself by its own text: "the
 rule applies specifically to each SN `need` cell, not to engineering
 requirements or acceptance evidence". `why` and `acceptance` stay EXEMPT HERE —
 but NO LONGER because acceptance evidence may name its machinery freely (what
-the ruling-day 16-of-27 measurement was read as licensing): the owner directive
+the ruling-day 16-of-27 measurement was read as licensing): the operator directive
 of 2026-08-18 extends R2's no-concrete-artifact rule up to SN acceptance, and
 `trace_text.sn_artifact_advisories` owns that cell so one token is never
 reported twice. `-000` rows are ignored; the edge tier carries no `need`.
@@ -26,7 +26,7 @@ An ABSENT registry is a clean skip (the pre-scaffold case). A registry that is
 PRESENT but yields zero scannable need cells — an empty file, or real rows
 none of which carries a `need` field — is reported as VACUOUS, never clean:
 zero need cells reading as a clean tier on exactly the registry this check
-guards is the false green SN-008 forbids (the round-1 adversarial review drove
+guards is the false pass SN-008 forbids (the round-1 adversarial review drove
 this: at DevStg-Reqs an emptied registry hard-fails nothing else in the
 harness). A scaffold's `-000`-only registry stays clean — example rows are a
 form, not a vacuous tier.
@@ -47,7 +47,7 @@ THE THREE TOKEN CLASSES, from SN-033's acceptance verbatim:
     is judged or reported, so its reviewed exception matches.
   - **implementation-only identifier** — a code-suffixed filename
     (`trace.py`, `stack.ini`), an underscore-joined identifier
-    (`human_approval_through`), or a `--flag` token.
+    (`operator_accepts_through`), or a `--flag` token.
   - **process citation** — a sub-stakeholder registry id (`SR-137`, `WI-454`,
     ...) or a `§`-section reference. A stakeholder should not need the process
     docs to recognize the outcome they asked for. `SN-###` is deliberately NOT
@@ -69,8 +69,8 @@ measured clean (0 of 27 need cells), and the point of landing it then was to
 lock that state in: the FIRST row to dirty the tier is the one that reports.
 
 SEVERITY IS WARN-FIRST, ALWAYS, in the shipped wiring. check.py runs this step
-with no `--strict` at every bar — deliberately unlike check_vocab, which
-promotes from DevStg-Tests on. Promoting this check to a gate is an owner
+with no `--strict` at every stage — deliberately unlike check_vocab, which
+promotes from DevStg-Tests on. Promoting this check to a gate is an operator
 ruling that has not been made (WI-454's scope guard): a form heuristic over
 stakeholder prose must not block work on the strength of a regex. `--strict`
 exists for a repo that makes that ruling for itself.
@@ -88,7 +88,7 @@ Contract IF-121: the need-form verdict, delivered as a CLI. It scans SN `need`
     registry is a clean skip; a registry that is present but yields zero
     scannable `need` cells is reported VACUOUS, never clean, because zero rows
     reading as a clean tier on exactly the registry this guards is the false
-    green the harness exists to prevent. Severity is WARN-FIRST at every stage
+    pass the harness exists to prevent. Severity is WARN-FIRST at every stage
     in the shipped wiring — exit 0 with findings printed; `--strict` is a
     per-repo choice and exits 1.
 """
@@ -134,7 +134,7 @@ CLASSES = (
         # the kit's own path alphabet. A single-slash, dot-free token is then
         # judged by _looks_like_path below: "subjective/perceptual" and
         # "requirement/test" are English either/or pairs that resolve to
-        # nothing on disk (both live in the approved registry), while
+        # nothing on disk (both live in the accepted registry), while
         # `docs/archive` names a real directory and reports. The residual,
         # documented miss is a one-level dot-free path whose target no longer
         # exists in the scanned tree.
@@ -253,7 +253,7 @@ def need_form_allow_parse_findings(root):
     Shares this checker's own WARN-plain / ERROR-under-`--strict` severity
     (`main`, below) — there is no separate opt-out to ride here, unlike the
     kernel/interfaces siblings: `check_need_form` is not wired into `check.py`
-    at any bar (WI-454's scope guard), so its `--strict` flag is the whole
+    at any stage (WI-454's scope guard), so its `--strict` flag is the whole
     dial."""
     path = Path(root) / ALLOW
     if not path.is_file():
@@ -349,7 +349,7 @@ def main():
         "--strict",
         action="store_true",
         help="promote findings from WARN to ERROR (exit 1). NOT wired by "
-        "check.py at any bar — gating on this check needs an owner ruling "
+        "check.py at any stage — gating on this check needs an operator ruling "
         "(WI-454's scope guard).",
     )
     args = ap.parse_args()

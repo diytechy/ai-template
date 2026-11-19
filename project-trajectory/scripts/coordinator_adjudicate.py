@@ -73,8 +73,8 @@ Contract IF-284: the command's exit codes. `adjudicate` exits 0 for a valid
     is not a lane, an unusable route, a brief file that cannot be read or
     decoded, a PATH that exists or cannot be reserved, or a launch the
     blackout window refuses (the session service admits only an
-    adjudication of a work item whose claim is active there); and 7 (needs a
-    human) when the launch is refused because its account cannot
+    adjudication of a work item whose claim is active there); and 7 (needs an
+    operator) when the launch is refused because its account cannot
     authenticate (a token that cannot be read, a login home absent or not
     signed in) or its environment conflicts. `act` exits 0 only when
     the call succeeded, HEAD then carries in full every act the verdict
@@ -133,7 +133,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 from kitlib.config import utf8_console
 from kitlib.git import git_out
 
-# The coordinator's adjudicator: the strong Anthropic route (owner, 2026-10-05),
+# The coordinator's adjudicator: the strong Anthropic route (operator, 2026-10-05),
 # run on the declared token account ADJUDICATOR (WI-798), whose table names the
 # variable locating its long-lived token (OI-110 (b)). A repository that does
 # not declare that account names its entry with --route.
@@ -146,7 +146,7 @@ IDLE_TIMEOUT = 900
 
 def resolve_route(root, entry):
     """`(registry, None)` when the enabled `entry` may launch, else `(None,
-    reason)`: the entry's own enable-list line is the owner's consent to
+    reason)`: the entry's own enable-list line is the operator's consent to
     launch it, here as in the loop (an unqualified entry is its route id, a
     qualified one `ROUTE@ACCOUNT`). Refused, never discarded (WI-798): a
     registry error (a malformed row or account table), an agents-enabled
@@ -394,7 +394,7 @@ def adjudicate(args):
     except session_service.SigninRefused as refused:
         _release(args.verdict)
         print("adjudicate: {}".format(refused))
-        return agent_common.EXIT_NEEDS_HUMAN
+        return agent_common.EXIT_NEEDS_OPERATOR
     print(_keep_line(kept))
     try:
         outcome = _call(root, row, request, kept, prompt, env)
@@ -436,7 +436,7 @@ def _act_inputs(root, args):
     `(None, None, None, why)`: a lane root, an enabled entry, a lane with no
     uncommitted change, and the act brief composed from the verdict accepted
     at HEAD (`adjudicate_act.compose_act`), which refuses a verdict that is
-    not accepted there, owes no act, or judged a row in a state no act
+    not recorded there, owes no act, or judged a row in a state no act
     explains.
 
     Implements: SR-231, LLR-306
@@ -490,7 +490,7 @@ def _act_report(root, args, outcome, before):
 
 
 def act(args):
-    """Take the act a committed, accepted verdict authorizes: compose the act
+    """Take the act a committed, recorded verdict authorizes: compose the act
     brief from it at HEAD, plan the keep by the verdict's bound class, launch,
     and report whether the act is complete. Reserves no verdict path, writes
     no binding and records no outcome (WI-912).
@@ -516,7 +516,7 @@ def act(args):
         env = session_service.launch_env(root, row, request.account)
     except session_service.SigninRefused as refused:
         print("act: {}".format(refused))
-        return agent_common.EXIT_NEEDS_HUMAN
+        return agent_common.EXIT_NEEDS_OPERATOR
     print(_keep_line(kept))
     before = (git_out(root, ["rev-parse", "HEAD"]) or "").strip()
     try:
@@ -619,7 +619,7 @@ def _parser():
     run.add_argument("--timeout", type=int, default=session_service.DEFAULT_DEADLINE)
     run.set_defaults(handler=adjudicate)
     take = sub.add_parser(
-        "act", help="take the act a committed, accepted verdict authorizes"
+        "act", help="take the act a committed, recorded verdict authorizes"
     )
     take.add_argument("--root", default=".")
     take.add_argument("--verdict", required=True)

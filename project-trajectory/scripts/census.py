@@ -11,7 +11,7 @@ and they are deliberately three different kinds of caller:
     intake.py           `mint_gap_rows` and the `intake.py census` hand path,
                         which turn census lines into concrete gap-closure and
                         adjudication rows
-    adjudicate_brief.py the disposition brief, which re-runs the red-TC census
+    adjudicate_brief.py the disposition brief, which re-runs the evidence-gap census
                         LIVE rather than trusting a remembered one
 
 WHY THIS IS A MODULE AND NOT PART OF THE DISPATCHER (WI-483, slice 2). Until
@@ -34,11 +34,11 @@ re-derive it, so it imports a sibling by construction and is a plain sibling
 itself.
 
 THE SEAM CARRIES STRINGS, and the grammar for the one structured line class has
-exactly one home — here, both halves of it. `_red_tc_line` formats and
-`parse_red_tc` reads; they sit adjacent on purpose, because a producer and a
+exactly one home — here, both halves of it. `_evidence_gap_line` formats and
+`parse_evidence_gap` reads; they sit adjacent on purpose, because a producer and a
 parser in separate modules is a contract nothing checks. Everything else on the
 seam is free prose a human reads, and the mint keys off it only through
-`parse_red_tc`.
+`parse_evidence_gap`.
 
 Implements: SR-148, LLR-159, LLR-188
 """
@@ -65,9 +65,9 @@ def gap_census(root):
     strings; [] when the registries are complete (or absent — a scaffold with
     no spine yet has no gaps to name).
 
-    It carries the red-TC census's REQUIREMENT half only. The assumption half
-    (`red_tc_census(..., assumptions=True)`) is deliberately not on this seam
-    until its routing is decided: whether a red assumption-evidence case mints
+    It carries the evidence-gap census's REQUIREMENT half only. The assumption half
+    (`evidence_gap_census(..., assumptions=True)`) is deliberately not on this seam
+    until its routing is decided: whether an assumption evidence gap mints
     a row, and of what kind, is policy no requirement states yet."""
     import trace as tr
 
@@ -79,9 +79,9 @@ def gap_census(root):
     census = list(findings.orphans)
     census += list(findings.status_findings)
     census += [
-        "SN {} is a draft need (unapproved)".format(s) for s in sorted(reg.sn_draft)
+        "SN {} is a draft need (unaccepted)".format(s) for s in sorted(reg.sn_draft)
     ]
-    census += red_tc_census(root, reg)
+    census += evidence_gap_census(root, reg)
     return census
 
 
@@ -89,16 +89,16 @@ def gap_census(root):
 # `intake.mint_gap_rows` consumes), so a distinct class announces itself with a
 # distinct prefix rather than by growing the seam a second shape. `intake.
 # _census_drafts` routes on exactly this token; nothing else parses the line.
-RED_TC_PREFIX = "red TC "
+EVIDENCE_GAP_PREFIX = "evidence gap "
 
 # The ASSUMPTION-EVIDENCE half of the same rung (SR-197), counted apart: a
-# prefix of its own, so `parse_red_tc`, the requirement half's one reader, never
+# prefix of its own, so `parse_evidence_gap`, the requirement half's one reader, never
 # takes one of these lines for one of its own.
-RED_ASSUMPTION_TC_PREFIX = "red assumption TC "
+ASSUMPTION_GAP_PREFIX = "assumption evidence gap "
 
-# The three statuses this rung does NOT call red, each because another rung
+# The three statuses this rung does NOT call a gap, each because another rung
 # owns it. Stated as exemptions because Status was an open vocabulary when this
-# was written — see `red_tc_census`; D-9 step 1 closed it, and the exemption
+# was written — see `evidence_gap_census`; D-9 step 1 closed it, and the exemption
 # form is kept because it still fails toward NAMING a gap.
 #
 # THE `planned` QUESTION DISSOLVED AT D-9 STEP 5, exactly as the step-2 entry
@@ -108,47 +108,47 @@ RED_ASSUMPTION_TC_PREFIX = "red assumption TC "
 # census firing only on a row with no Status at all — a state the schema tier
 # refuses and `adjudicate_brief.TC_CELLS` will not brief, so census -> mint ->
 # brief would have been unreachable end to end (a deleted feature, LLR-159, not
-# a narrowed rung). OI-30 D1 then folded `Planned` into `Approved`, and the
+# a narrowed rung). OI-30 D1 then folded `Planned` into `Accepted`, and the
 # arithmetic now cuts the OTHER way: the enum narrowed to exactly these three
 # states, so the exemption covers the WHOLE vocabulary and the census is
 # structurally dead in any conformant repo (tests/test_adjudicate_brief.py
 # records the same fact and moved its fixtures out-of-enum to stay meaningful).
 # Deliberately kept rather than deleted: whether the rung RETIRES or re-arms on
-# a narrower exempt set is the owner's call, recorded as a judgement item at
+# a narrower exempt set is the operator's call, recorded as a judgement item at
 # the 2026-08-15 sitting sweep.
 #
 # D-9 STEPS 7/8 SWAPPED ONE MEMBER FOR ANOTHER AND THE ARITHMETIC IS UNMOVED:
 # `modified` left with the value (it can no longer appear in a conformant repo,
 # and a set that exempts a retired word is a live reader of one), `founded`
-# joined — a TC at the top rung is green a fortiori, so exempting it is not a
+# joined — a TC at the top rung is accepted a fortiori, so exempting it is not a
 # widening. The set still covers the WHOLE closed vocabulary, so the census
 # remains structurally dead in a conformant repo, which is precisely the fact
-# the owner's judgement item is about. A DOWNSTREAM repo still carrying
-# `Modified` TCs now sees them as red here — that repo is already failing the
+# the operator's judgement item is about. A DOWNSTREAM repo still carrying
+# `Modified` TCs now sees them as gaps here — that repo is already failing the
 # always-on integrity floor on the same cells, so the rung is naming a gap the
 # floor has already named rather than inventing one.
-_TC_NOT_RED = frozenset({"approved", "drafted", "founded"})
+_GAP_EXEMPT_STATUSES = frozenset({"accepted", "drafted", "founded"})
 
 
-def red_tc_census(root, reg=None, *, assumptions=False):
-    """LLR-159: TEST CASES LEFT RED UNDER A CLAIMED IMPLEMENTATION.
+def evidence_gap_census(root, reg=None, *, assumptions=False):
+    """LLR-159: TEST CASES LEFT UNACCEPTED UNDER A CLAIMED IMPLEMENTATION.
 
-    A TC that is not `Approved` is ordinary unfinished work — unless something
+    A TC that is not `Accepted` is ordinary unfinished work — unless something
     already claims to have BUILT what it verifies, and that is the state this
     names: a TC outside the three exempt statuses, all of whose `Verifies`
     targets are cited by at least one WI recorded `done`. The pair is a
     contradiction the registries state plainly and nothing was reading: the work
-    is closed and the evidence for it is red.
+    is closed and the evidence for it is not.
 
     Status is CLOSED (D-9 step 1) but the rule stays stated as exemptions rather
-    than as a list of red words — anything else is red, which fails toward
+    than as a list of gap words — anything else is a gap, which fails toward
     naming a gap rather than toward missing one, and keeps working for a
     downstream repo mid-migration:
 
-      Approved  green, by definition.
-      Drafted   pre-approval; "not yet green" is its CORRECT state.
-      Founded   Approved plus a demonstration — green a fortiori (D-9 step 8).
-                It replaced `Modified`, which named the post-approval amendment
+      Accepted  no gap, by definition.
+      Drafted   pre-acceptance; "not yet accepted" is its CORRECT state.
+      Founded   Accepted plus a demonstration — no gap a fortiori (D-9 step 8).
+                It replaced `Modified`, which named the post-acceptance amendment
                 state the §A5.1 adjudication owns; that state no longer has a
                 word, and the amendment path still owns it via snapshot drift.
 
@@ -164,9 +164,9 @@ def red_tc_census(root, reg=None, *, assumptions=False):
     With `assumptions=True` it is the ASSUMPTION half instead: a case outside
     the exempt statuses naming assumptions whose citing requirements
     (`assumption_rules.da_citing_srs`) are ALL claimed built — the work relying
-    on the premise is closed, and the evidence for the premise is red. A case
+    on the premise is closed, and the evidence for the premise is not. A case
     citing both is counted once in each half, and its lines carry their own
-    prefix (`RED_ASSUMPTION_TC_PREFIX`), so the disposition brief, which reads
+    prefix (`ASSUMPTION_GAP_PREFIX`), so the disposition brief, which reads
     only the requirement half, is never handed a premise as a requirement. The
     assumption half is not on the dispatch seam (`gap_census`) until its
     routing is decided, so today it mints nothing.
@@ -184,31 +184,31 @@ def red_tc_census(root, reg=None, *, assumptions=False):
         return []
     requirement, assumption = tr.assumption_evidence_rows(reg.tcs)
     if assumptions:
-        return _red_assumption_census(assumption, reg.srs, claimed)
+        return _assumption_gap_census(assumption, reg.srs, claimed)
     census = []
     for row in requirement:
         tc_id = (row.get("TC-ID") or "").strip()
         status = (row.get("Status") or "").strip().lower()
-        if not tc_id or tc_id.endswith("-000") or status in _TC_NOT_RED:
+        if not tc_id or tc_id.endswith("-000") or status in _GAP_EXEMPT_STATUSES:
             continue
         targets = [t for t in ac._refs(row.get("Verifies")) if not t.endswith("-000")]
         if not targets or not all(t in claimed for t in targets):
             continue
-        census.append(_red_tc_line(tc_id, status, targets))
+        census.append(_evidence_gap_line(tc_id, status, targets))
     return census
 
 
-def _red_assumption_census(rows, srs, claimed):
-    """The assumption half of `red_tc_census`: one line per assumption-evidence
+def _assumption_gap_census(rows, srs, claimed):
+    """The assumption half of `evidence_gap_census`: one line per assumption-evidence
     case outside the exempt statuses whose named assumptions are relied on only
     by requirements `claimed` built. An assumption no requirement cites claims
-    nothing, so a case naming only such assumptions is not red."""
+    nothing, so a case naming only such assumptions is no gap."""
     citing = assumption_rules.da_citing_srs(srs)
     census = []
     for row in rows:
         tc_id = (row.get("TC-ID") or "").strip()
         status = (row.get("Status") or "").strip().lower()
-        if not tc_id or tc_id.endswith("-000") or status in _TC_NOT_RED:
+        if not tc_id or tc_id.endswith("-000") or status in _GAP_EXEMPT_STATUSES:
             continue
         named = [
             d for d in ac._refs(row.get("Assumption-Refs")) if not d.endswith("-000")
@@ -218,9 +218,9 @@ def _red_assumption_census(rows, srs, claimed):
             continue
         census.append(
             "{}{} [{}] is {} while every requirement relying on it is claimed "
-            "built ({}): the premise their argument rests on has no green "
+            "built ({}): the premise their argument rests on has no accepted "
             "evidence".format(
-                RED_ASSUMPTION_TC_PREFIX,
+                ASSUMPTION_GAP_PREFIX,
                 tc_id,
                 ";".join(named),
                 status or "unset",
@@ -230,30 +230,30 @@ def _red_assumption_census(rows, srs, claimed):
     return census
 
 
-def _red_tc_line(tc_id, status, targets):
-    """Format ONE red-TC census line. Paired with `parse_red_tc` below, and the
+def _evidence_gap_line(tc_id, status, targets):
+    """Format ONE evidence-gap census line. Paired with `parse_evidence_gap` below, and the
     two must stay adjacent: the seam carries strings, so this grammar gets
     exactly one home — which is now this module, so the producer and the reader
     are no longer a contract between two modules at all."""
     return (
         "{}{} [{}] is {} under a claimed implementation (a closed row "
-        "claims the work; its evidence is not green)".format(
-            RED_TC_PREFIX, tc_id, ";".join(targets), status or "unset"
+        "claims the work; its evidence is not accepted)".format(
+            EVIDENCE_GAP_PREFIX, tc_id, ";".join(targets), status or "unset"
         )
     )
 
 
-_RED_TC_RE = re.compile(re.escape(RED_TC_PREFIX) + r"(\S+) \[([^\]]*)\]")
+_EVIDENCE_GAP_RE = re.compile(re.escape(EVIDENCE_GAP_PREFIX) + r"(\S+) \[([^\]]*)\]")
 
 
-def parse_red_tc(line):
-    """`(tc_id, [target, ...])` for a red-TC census line, or None for any other
-    line. The ONE reader of `_red_tc_line`'s grammar — `intake._census_drafts`
+def parse_evidence_gap(line):
+    """`(tc_id, [target, ...])` for an evidence-gap census line, or None for any other
+    line. The ONE reader of `_evidence_gap_line`'s grammar — `intake._census_drafts`
     routes through this rather than re-splitting the prose, because prose that
     carries control flow has to be a parsed field with a refusal, not a
-    substring search that silently matches nothing (the `NEEDS-HUMAN` lesson,
+    substring search that silently matches nothing (the `NEEDS-OPERATOR` lesson,
     LLR-161)."""
-    matched = _RED_TC_RE.match(line or "")
+    matched = _EVIDENCE_GAP_RE.match(line or "")
     if not matched:
         return None
     return matched.group(1), [t for t in matched.group(2).split(";") if t]
@@ -267,7 +267,7 @@ def _implemented_ids(root):
     those SRs own, because a TC usually verifies the LLR while the work item
     cites the SR. A row in any non-`done` status contributes nothing: `partial`
     and `cancelled` are precisely the outcomes that say the work is NOT
-    delivered, so a red TC under one of those is expected, not a contradiction —
+    delivered, so an evidence gap under one of those is expected, not a contradiction —
     and its close already earned a disposition row of its own.
 
     The work registry is read through `agent_common.load_registry_rows`, the one

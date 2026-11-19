@@ -36,7 +36,7 @@ the slot), and a staged spec equal to the tip's own is carried; any other
 staged record change is judged like any commit's. The ancestry test, the
 range and the walk are the shared lane-commit walk's (`kitlib.git`'s
 `squash_lines`), with this rule as the one rider and its own line for a range
-git cannot list. Text then act's squash exemption is keyed to the approval-act
+git cannot list. Text then act's squash exemption is keyed to the acceptance-act
 registries, so it is not borrowed.
 
 Contracts: IF-303, IF-304 - the seams this module declares (process.md §8;
@@ -50,7 +50,7 @@ Contract IF-303: the adoption record, as calls the close and the lane-commit
     order, validated in the tree of `rev`; `commit_adoption_record_lines(root,
     rev)` returns one refusal line per record change the commit `rev` makes
     against its parents that only the close may make, `[]` when it makes
-    none. The owner reads named git trees and writes nothing.
+    none. The operator reads named git trees and writes nothing.
 
 Contract IF-304: the adoption-record step, as a command.
     `adoption_record.py [--root <dir>]` judges the commit being made in the

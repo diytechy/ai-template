@@ -44,8 +44,8 @@ def set_dial(scaffold, section, key, value):
     commit floor's `derived-stage` step reported the committed record stale
     two steps before the real assertion was reached.
 
-    The owner's 2026-08-21 ruling removed `process.toml` from
-    `kitlib/stage.py DECLARED_INPUTS` — dials govern who may approve, not what
+    The operator's 2026-08-21 ruling removed `process.toml` from
+    `kitlib/stage.py DECLARED_INPUTS` — dials govern who may accept, not what
     stage is derived — so writing a dial no longer touches the fingerprint and
     the regeneration had become a no-op performed for a reason that no longer
     existed. The ruling's sweep reached the code and missed this docstring and
@@ -64,7 +64,7 @@ def test_bootstrap_copies_pre_commit_hook(scaffold):
 
 def test_hook_checks_pass_on_clean_project(scaffold):
     # The stdlib integrity check the hook always runs must pass on a fully
-    # traced project (the hook's "green commit" path). (The gen_arch_map
+    # traced project (the hook's "passing commit" path). (The gen_arch_map
     # --check arm retired at WI-455 with the committed map itself.)
     make_minimal_project(scaffold)
     trace = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
@@ -90,7 +90,7 @@ def test_hook_trajectory_map_step(scaffold):
     # step (delegated, like arch-map) so a registry edit that stales
     # docs/trajectory.html is caught at commit, not first in CI. The floor rule:
     # vacuous for a repo that never adopted the layer; with real work items a
-    # missing/stale dashboard blocks, actionably; regenerating turns it green.
+    # missing/stale dashboard blocks, actionably; regenerating makes it pass.
     make_minimal_project(scaffold)
     # Non-adopter: the scaffolded placeholder-only registry passes vacuously.
     ok = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
@@ -103,7 +103,7 @@ def test_hook_trajectory_map_step(scaffold):
     stale = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
     assert stale.returncode != 0, "a missing dashboard over real WIs must block"
     assert "STALE" in (stale.stdout + stale.stderr)
-    # Regenerate: the same step goes green.
+    # Regenerate: the same step passes.
     regen = run_py(["scripts/gen_trajectory.py"], cwd=scaffold)
     assert regen.returncode == 0, regen.stdout + regen.stderr
     ok = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
@@ -141,9 +141,9 @@ def test_hook_skills_index_and_prompt_catalog_steps(scaffold):
     # A SCAFFOLD IS THE CASE THAT MATTERS HERE. Both generators are kit-only, so
     # downstream neither is beside check.py and both steps must degrade to a
     # vacuous no-op that still RESOLVES — the 130-REVIEW-A failure (`check: no
-    # step named 'approval-fresh'`, exit 1, every commit blocked for an adopter)
+    # step named 'acceptance-fresh'`, exit 1, every commit blocked for an adopter)
     # is the reason these are built-in steps rather than docs/stack.ini
-    # `[step:]` sections. Their ability to actually go RED where the generator
+    # `[step:]` sections. Their ability to actually FAIL where the generator
     # IS present is pinned in tests/test_generated_freshness_wiring.py.
     make_minimal_project(scaffold)
     for step in ("skills-index", "prompt-catalog"):
@@ -189,7 +189,7 @@ def test_hook_trajectory_step_is_the_ra_floor(scaffold):
     _wi_001("", "docs/specs/WI-404.md")
     warn = run_py(["scripts/check.py", "--run-step", "trajectory"], cwd=scaffold)
     assert warn.returncode == 0, "R-E must warn, not block, at the commit floor"
-    # Coherent open row (empty Deliverable + resolvable SpecRef) -> green.
+    # Coherent open row (empty Deliverable + resolvable SpecRef) -> passes.
     (scaffold / "docs" / "specs").mkdir(parents=True, exist_ok=True)
     (scaffold / "docs" / "specs" / "WI-001.md").write_text("# spec\n", "utf-8")
     _wi_001("", "docs/specs/WI-001.md")
@@ -225,7 +225,7 @@ def test_run_steps_gate_promotes_the_warn_first_floor(scaffold):
     #
     # THE FRAME HAS TO GO FIRST, and that is not fixture noise — it is slices 2
     # and 3's banked finding driven here. `boundary_incomplete` applies whenever
-    # `external.toml` EXISTS, and the scaffold ships one carrying no approved
+    # `external.toml` EXISTS, and the scaffold ships one carrying no accepted
     # crossing, so a minimal project reads `DevStg-Boundary` and FLOORS to
     # `DevStg-Reqs` — the floor itself, which would make this test vacuous
     # (nothing is above the warn-first floor, so a defaulted `--gate` resolving
@@ -244,7 +244,7 @@ def test_run_steps_gate_promotes_the_warn_first_floor(scaffold):
     assert declared and declared["stage"] == "DevStg-Impl", declared
     warn = run_py(["scripts/check.py", "--run-steps", "trajectory"], cwd=scaffold)
     assert warn.returncode == 0, "R-E must warn, not block, at the commit floor"
-    # Explicitly asking for the DevStg-Impl bar really gates it (the WI-354 session read
+    # Explicitly asking for the DevStg-Impl checks really gates it (the WI-354 session read
     # 18/18 PASS from this command while two real DevStg-Impl errors were live).
     gated = run_py(
         ["scripts/check.py", "--gate", "DevStg-Impl", "--run-steps", "trajectory"],
@@ -254,7 +254,7 @@ def test_run_steps_gate_promotes_the_warn_first_floor(scaffold):
         "--gate DevStg-Impl --run-steps must run the --strict command"
     )
     assert "R-E" in (gated.stdout + gated.stderr)
-    # Not a blanket "--gate DevStg-Impl always fails": repair the SpecRef and it goes green.
+    # Not a blanket "--gate DevStg-Impl always fails": repair the SpecRef and it passes.
     (scaffold / "docs" / "specs").mkdir(parents=True, exist_ok=True)
     (scaffold / "docs" / "specs" / "WI-001.md").write_text("# spec\n", "utf-8")
     _wi_001("docs/specs/WI-001.md")
@@ -320,7 +320,7 @@ def test_hook_honors_kit_scripts_dir_override(scaffold):
     # WI-1.42: a repo whose harness is not at scripts/ (e.g. the kit's own
     # meta-repo, under project-trajectory/scripts/) points the shipped hook via
     # KIT_SCRIPTS_DIR, so one hook fits any layout. Positive: an explicit override
-    # to the real dir runs green (the override branch produces a working
+    # to the real dir passes (the override branch produces a working
     # SCRIPTS_DIR); negative: a bogus override with no scripts/ to fall back on
     # REFUSES the commit and names the fixes (WI-926: a hook that cannot find
     # the kit scripts checks nothing, so it must never pass the commit).
@@ -693,7 +693,7 @@ def test_hook_privacy_author_guard(scaffold):
     assert blocked.returncode != 0, "a private author must be blocked"
     assert "exempt allowlist" in blocked.stderr
 
-    # An exempt no-reply author: green again.
+    # An exempt no-reply author: passes again.
     git("config", "user.email", "12345+user@users.noreply.github.com")
     ok = run_hook()
     assert ok.returncode == 0, ok.stdout + ok.stderr

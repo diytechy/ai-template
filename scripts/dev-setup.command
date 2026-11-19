@@ -54,7 +54,7 @@ fi
 # Scope is held tight on purpose: macOS only, this launcher only. dev-setup.sh
 # stays detect-only on every platform, and the SHIPPED
 # dev-setup.template.command stays detect-only too — adopters do not inherit a
-# network fetch until this is proven here (owner ruling 2026-07-25).
+# network fetch until this is proven here (operator ruling 2026-07-25).
 #
 # MAINTENANCE: the pin below must be re-stamped when the kit moves Python.
 # Re-stamp with: curl -fsSL <url> -o p.pkg && shasum -a 256 p.pkg &&

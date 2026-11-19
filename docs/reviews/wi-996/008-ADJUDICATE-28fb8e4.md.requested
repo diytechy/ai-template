@@ -1,4 +1,4 @@
 brief = dispute
 kinds = LAND
-outcome = accepted
+outcome = recorded
 findings_file = docs/reviews/wi-996/008-DISPUTE-findings.toml

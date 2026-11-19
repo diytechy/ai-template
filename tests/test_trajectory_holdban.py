@@ -4,7 +4,7 @@ A `docs/work/active/<branch>/` claim directory with no matching branch ref is
 the exact signature OI-70 bans: a lane parked by renaming its ref while its
 claim stays on trunk. These tests drive the detector both ways on a real git
 scaffold (matching ref: silent; renamed ref: named) and pin the severity tier
-(WARN at the commit bar, ERROR under --strict, the DevStg-Impl gate), plus the
+(WARN at the commit checks, ERROR under --strict, the DevStg-Impl gate), plus the
 two fail-soft edges (an empty claim dir is ignored; off-git degrades silently).
 """
 
@@ -130,14 +130,14 @@ def test_matching_ref_is_silent(tmp_path):
 def test_renamed_ref_is_named_and_warns_then_gates(tmp_path):
     run_git = _init_repo(tmp_path)
     # The literal hold-by-rename: the ref is renamed away, the claim stays.
-    run_git("branch", "-m", ACTIVE_BRANCH, ACTIVE_BRANCH + "-HELD-for-owner-verdict")
-    # Commit bar: WARN, never the exit code.
+    run_git("branch", "-m", ACTIVE_BRANCH, ACTIVE_BRANCH + "-HELD-for-operator-verdict")
+    # Commit checks: WARN, never the exit code.
     r = run_traj(tmp_path)
     assert "hold-by-rename" in r.stderr
     assert ACTIVE_BRANCH in r.stderr
     assert "OI-70" in r.stderr
     assert r.returncode == 0
-    # DevStg-Impl gate: --strict promotes it to an ERROR that reds the run.
+    # DevStg-Impl gate: --strict promotes it to an ERROR that fails the run.
     rs = run_traj(tmp_path, "--strict")
     assert "hold-by-rename" in rs.stderr
     assert "ERROR" in rs.stderr
@@ -150,7 +150,7 @@ def test_the_finding_names_a_recovery_the_trunk_floor_permits(tmp_path):
     names the route the kit supports: restore the branch ref at the claim
     commit, then close the lane PARTIAL and land that close."""
     run_git = _init_repo(tmp_path)
-    run_git("branch", "-m", ACTIVE_BRANCH, ACTIVE_BRANCH + "-HELD-for-owner-verdict")
+    run_git("branch", "-m", ACTIVE_BRANCH, ACTIVE_BRANCH + "-HELD-for-operator-verdict")
     (finding,) = check_trajectory.holdbyrename_findings(tmp_path)
     assert "delete the stranded claim" not in finding
     assert "git branch {} <sha>".format(ACTIVE_BRANCH) in finding

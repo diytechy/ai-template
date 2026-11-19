@@ -1,6 +1,6 @@
 """A contested or repeated review finding, ruled by the adjudicator (WI-865).
 
-The owner's ruling of 2026-10-08 (docs/log.d/2026-10-08-owner-ruling-review-
+The operator's ruling of 2026-10-08 (docs/log.d/2026-10-08-owner-ruling-review-
 threat-model.md, rule 2): the adjudicator, not the coordinator, makes the call
 on a finding the builder or coordinator contests, or one that keeps coming
 back. The `dispute` brief class carries each finding as the reviewer wrote
@@ -22,7 +22,7 @@ prompts = load_script("prompts")
 
 
 def _dispute():
-    """The grammar module, imported per test so a missing one reds each case."""
+    """The grammar module, imported per test so a missing one fails each case."""
     from kitlib import dispute
 
     return dispute
@@ -234,7 +234,7 @@ RULING: R2-3 DISMISS out-of-scope it needs a fake runner binary
 """
 
 
-def test_a_well_formed_verdict_is_accepted_and_parsed(tmp_path):
+def test_a_well_formed_verdict_is_read_and_parsed(tmp_path):
     """Implements: TC-334"""
     dispute = _dispute()
     rulings, why = dispute.parse(VALID, ("F1", "R2-3", "R4"), "v.md")
@@ -283,9 +283,9 @@ def test_a_malformed_or_incomplete_verdict_is_refused(tmp_path, text, needle):
     assert ab.verdict_refusal("dispute", verdict, kinds=("F1", "R2"))
 
 
-def test_a_successor_ruling_is_accepted_and_parsed(tmp_path):
+def test_a_successor_ruling_is_read_and_parsed(tmp_path):
     """WI-911: the sitting may rule a finding SUCCESSOR, a row of its own filed
-    on trunk at the landing (the owner's ruling of 2026-10-14, in session).
+    on trunk at the landing (the operator's ruling of 2026-10-14, in session).
 
     Implements: TC-334
     """
@@ -311,16 +311,16 @@ def test_a_verdict_judged_against_no_requested_findings_is_refused():
     assert _dispute().parse(VALID, (), "v.md")[1]
 
 
-def test_an_accepted_dispute_verdict_authorizes_no_approval_act():
+def test_a_recorded_dispute_verdict_authorizes_no_acceptance_act():
     """The binding records the finding ids a dispute was asked to rule; no
-    approval act reads a ruling on a finding as a judgement of a row.
+    acceptance act reads a ruling on a finding as a judgement of a row.
 
     Implements: TC-334
     """
     from kitlib import sitting
 
-    binding = sitting.render_requested("dispute", ("F1", "R2-3", "R4"), "accepted")
-    assert sitting.accepted(VALID, binding) is None
+    binding = sitting.render_requested("dispute", ("F1", "R2-3", "R4"), "recorded")
+    assert sitting.recorded(VALID, binding) is None
 
 
 def test_the_dispute_class_is_routed_and_its_template_ships():

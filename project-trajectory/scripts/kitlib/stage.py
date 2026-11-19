@@ -44,7 +44,7 @@ wiring every production consumer calls.
 
 WHO THE FRESHNESS GUARANTEE COVERS, stated once so no surface has to overclaim
 it. `read_stage` recomputes the fingerprint on every call and derives fresh on a
-mismatch, so no SELECTION or APPROVAL consumer can read a stale stage, on
+mismatch, so no SELECTION or ACCEPTANCE consumer can read a stale stage, on
 any lane — and those are exactly the three call sites that reach it (`check.py`,
 `agent_common`, `check_trajectory`). The DISPLAY surfaces deliberately do not:
 `traj_parse._stage_value` and `traj_status._stage_facts` parse the recorded file
@@ -58,7 +58,7 @@ for).
 READERS NEVER WRITE (plan §3). Nothing in this module opens a file for writing.
 The committed `docs/stage` is load-bearing history — the phase-drop and tier
 signals (slice 4) are deltas of the COMMITTED file — so regeneration stays an
-auditable act at the trunk regen points and the commit-bar `--check` still
+auditable act at the trunk regen points and the commit-check `--check` still
 refuses a commit whose committed copy is stale. A reader that healed the file on
 disk would rewrite that history from whichever process happened to look first,
 and would do it on claimed branches and in CI where the freshness step is
@@ -79,9 +79,9 @@ STAGE_FILE = "docs/stage"
 # THE SELECTION FLOOR. The effective stage is never reported below this rung, for
 # the reason the BAR axis floors at the same place (`spine_rules`'s
 # `max(BAR_REQS, raw)`): a value below it selects NOTHING under an at-or-above
-# rule, so a fresh scaffold would go green because no check ran — the silent green
+# rule, so a fresh scaffold would pass because no check ran — the silent pass
 # SN-008 forbids, and the exact promise `ci/check.yml` makes ("a freshly-scaffolded
-# DevStg-Reqs repo is green"). The floor is a SELECTION guarantee, not a claim
+# DevStg-Reqs repo passes"). The floor is a SELECTION guarantee, not a claim
 # about the repo: `live-stage=` beside it carries the honest, unfloored reading,
 # and `floored=yes` says plainly that the two differ. This is the direction
 # process.md §4 mandates — a derived reading shown BESIDE the honest one, never
@@ -123,7 +123,7 @@ REPO_GLOBAL_RUNGS = frozenset(
 # files; adding an input (the test-evidence carrier, when the Release rung is
 # evidence-gated) is an edit HERE and the fingerprint covers it automatically.
 #
-# The owner's concern was that fingerprinting "the repository" is expensive and
+# The operator's concern was that fingerprinting "the repository" is expensive and
 # duplicates other scans. It dissolves with the inventory: the input set is not
 # the repository, it is under a dozen files totalling a few hundred KB. Every
 # current consumer already PARSES these same files wholesale, which costs far more
@@ -143,15 +143,15 @@ DECLARED_INPUTS = (
     ("docs/requirements/components", (".toml", ".csv")),
     ("docs/test/test-cases", (".toml", ".csv")),
     # THE ASSUMPTIONS REGISTRY (SR-204): the derivation reads its assumption
-    # and surrogate tiers from their first approval. TOML is its one carrier.
+    # and surrogate tiers from their first acceptance. TOML is its one carrier.
     # The stakeholder tier needs no line: it lives in the needs file above.
     ("docs/requirements/assumptions", (".toml",)),
-    # `process.toml` is DELIBERATELY NOT an input (owner ruling 2026-08-21,
+    # `process.toml` is DELIBERATELY NOT an input (operator ruling 2026-08-21,
     # amending the plan's §2 list): the derivation does not read it, and the
     # original "over-inclusion costs milliseconds" argument priced the wrong
-    # cost — the real price was a RED commit bar after every policy-dial edit,
+    # cost — the real price was FAILING commit checks after every policy-dial edit,
     # because the committed fingerprint went stale over a file whose value never
-    # reaches the stage. Dials govern who may approve, not what stage is derived.
+    # reaches the stage. Dials govern who may accept, not what stage is derived.
     # If a dial ever DOES enter the derivation, add its file here in the same
     # change that reads it.
     #
@@ -271,7 +271,7 @@ def fingerprint(root, memo=_DEFAULT):
     recorded rung was returned, and no consumer ever asked whether the evidence
     still held. Folding the source digest makes a code edit move this value, so
     `read_stage` derives fresh (and derives Impl, because the binding no longer
-    matches) and `derive_stage --check` reds on the committed copy.
+    matches) and `derive_stage --check` fails on the committed copy.
 
     THE COST IS PAID ONLY BY A REPO THAT MAKES THE CLAIM. With no evidence file —
     every adopter below the Release rung, and every fresh scaffold — the extra
@@ -294,7 +294,7 @@ def evidence_binding(root, memo=_DEFAULT):
     with the declared product source and test surface.
 
     Both halves are load-bearing and each covers what the other cannot. Without
-    the spine half, a test case authored after the run would ride a green that
+    the spine half, a test case authored after the run would ride a pass that
     never executed it; without the source half, any code edit would."""
     if memo is _DEFAULT:
         memo = _DIGEST_MEMO
@@ -318,7 +318,7 @@ def evidence_verdict(root, memo=_DEFAULT):
     a partial tier, a stale binding — all of them mean the claim "every declared
     test case passes on THIS tree" is unsupported, and the honest rung is the one
     below. The loudness lives in `fingerprint` above, which makes a stale record
-    red the freshness check rather than letting it sit quietly unread."""
+    fail the freshness check rather than letting it sit quietly unread."""
     record = evidence.read(root)
     if record is None:
         return False, "no test-evidence record at {}".format(evidence.EVIDENCE_FILE)
@@ -478,7 +478,7 @@ HEADER = [
     "# `fingerprint` is a SHA-256 over the LF-normalized content of the declared",
     "# derivation inputs (kitlib/stage.py DECLARED_INPUTS). A reader recomputes",
     "# it and trusts the values above ONLY on a match, deriving fresh in memory",
-    "# otherwise — so no SELECTION or APPROVAL consumer can read a stale",
+    "# otherwise — so no SELECTION or ACCEPTANCE consumer can read a stale",
     "# stage, on any lane. THE DISPLAY SURFACES ARE THE NAMED EXCEPTION and read",
     "# the recorded values directly, on purpose: PROJECT_STATE.html and the",
     "# generated block in docs/status.md describe the commit they ship with, so",
@@ -486,7 +486,7 @@ HEADER = [
     "# harness derives fresh. That is the design; it is not a guarantee, so the",
     "# sentence above says which consumers it covers.",
     "#",
-    "# HOW IT MOVES: by approving artifacts in a reviewed commit, never by editing",
+    "# HOW IT MOVES: by accepting artifacts in a reviewed commit, never by editing",
     "# this file. Regenerate: python scripts/derive_stage.py",
     "# Freshness is guarded by `--check` (a pre-commit + gate step).",
     "#",
@@ -553,7 +553,7 @@ def parse(text):
     the file is generated and marked do-not-hand-edit, so a bad value there means
     either a hand edit or a ladder that moved under a cached value, and the ruled
     direction for both (`ladder.stage_ord`'s own docstring) is to fail loudly
-    rather than degrade toward less human involvement."""
+    rather than degrade toward less operator involvement."""
     record = {}
     for line in text.splitlines():
         stripped = line.strip()
@@ -627,9 +627,9 @@ class DerivationError(Exception):
     RAISED, NOT HANDLED HERE, because the two production callers want OPPOSITE
     failure policies and both are right: `check.py` exits with a message (a CLI
     that cannot select its plan must not guess one), while
-    `agent_common.spine_stage_of` answers None, which `human_holds` reads as
-    HUMAN-HELD (a coordinator that cannot establish the stage must not let an
-    agent approve). One mechanism, one home; the policy stays at the call site."""
+    `agent_common.spine_stage_of` answers None, which `operator_holds` reads as
+    OPERATOR-HELD (a coordinator that cannot establish the stage must not let an
+    agent accept). One mechanism, one home; the policy stays at the call site."""
 
 
 def derive_via_subprocess(scripts_dir, root):
@@ -648,7 +648,7 @@ def derive_via_subprocess(scripts_dir, root):
     `check.py`; slice 5 cut `spine_stage_of` onto the same reader, and copying it
     would have minted exactly the kind of F5 duplicate this package exists to
     retire — with the sharper edge that the copies would be a plan selector and an
-    approval authority drifting apart in silence."""
+    acceptance authority drifting apart in silence."""
     script = Path(scripts_dir) / "derive_stage.py"
     if not script.exists():
         raise DerivationError(
@@ -686,18 +686,18 @@ def read_stage(root, derive, memo=_DEFAULT):
     path it took can, and so the fast path is observable to a test.
 
     IT NEVER WRITES. On a mismatch the file on disk is left exactly as it was; the
-    trunk regen points and the human's post-approval run are the only writers,
-    and the commit-bar `--check` is what stops a stale copy from being committed.
+    trunk regen points and the operator's post-acceptance run are the only writers,
+    and the commit-check `--check` is what stops a stale copy from being committed.
 
     THIS CLOSES BOTH STALE WINDOWS THE SCHEDULE MAP FOUND, BY CONSTRUCTION rather
     than by scheduling. The branch-lane window (`derived-stage` stands down on a
-    claimed branch, so a green run over a stale cache is reachable there) closes
+    claimed branch, so a passing run over a stale cache is reachable there) closes
     because a reader no longer trusts a cache the freshness step cannot police —
     it verifies per call, and on a claimed branch derives from that branch's OWN
-    registries, which is the trust model the owner confirmed. The read-once-per-run
+    registries, which is the trust model the operator confirmed. The read-once-per-run
     window (a value hoisted at the top of `agent_loop`/`dispatch` and threaded
     down for the rest of the run) closes because verification is per CALL, so a
-    mid-session approval is visible to the next consumer that asks."""
+    mid-session acceptance is visible to the next consumer that asks."""
     if memo is _DEFAULT:
         memo = _DIGEST_MEMO
     current = fingerprint(root, memo)

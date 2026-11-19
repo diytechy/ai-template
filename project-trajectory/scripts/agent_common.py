@@ -5,7 +5,7 @@ unchanged). The session engine (agent_loop) and the serial integrator
 (integrate.py) both stand on this layer:
 
   - the typed exit codes + `END_STATES`;
-  - `git`/`head_sha`/`head_sha_full` and the dirty-tree family (owner-only
+  - `git`/`head_sha`/`head_sha_full` and the dirty-tree family (operator-only
     scratchpad exemption, WI-203);
   - the declared-surface reads — `read_declared`, `pause_reason`, the WI-148
     blackout window — and the stop banner + Current State excerpt;
@@ -50,8 +50,8 @@ Contract IF-189: `default_base(root)`, the integration base a claimed branch's
     HEAD on an unrelated history, None on an unborn HEAD — which the caller
     treats as an unreadable change rather than an empty one; and
     `TrunkUndeclared` when the trunk's declaration cannot be read.
-Contract IF-224: `human_approves_spine(docs, registry)`, read by the owner's
-    approval brief to set apart the owing chains the human-approval dial
+Contract IF-224: `operator_accepts_spine(docs, registry)`, read by the operator's
+    acceptance brief to set apart the owing chains the operator-acceptance dial
     releases to an adjudicator: True (held) for a spine registry whose rung the
     dial holds and for one no rung map names, False for a released one. The
     brief asks it once per spine tier per rendering and keeps no rung table of
@@ -70,7 +70,7 @@ import sys
 import time
 from pathlib import Path
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`, executed
 # WI-448): one home for behaviours this module used to spell out itself — the
 # declared-policy line reader, the `docs/work/` spec-folder registry reader, and
 # (WI-498 slice 0) the stage ladder's closed rung vocabulary.
@@ -117,7 +117,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import agent_policy
 
-# The declared-policy and approval subsystem moved as one behavior cluster;
+# The declared-policy and acceptance subsystem moved as one behavior cluster;
 # retain the historical shared-primitives surface for existing consumers.
 read_declared = agent_policy.read_declared
 PROCESS_TOML = agent_policy.PROCESS_TOML
@@ -125,7 +125,6 @@ PROCESS_KEYS = agent_policy.PROCESS_KEYS
 PROCESS_ONLY_KEYS = agent_policy.PROCESS_ONLY_KEYS
 PROCESS_KEY_RANGES = agent_policy.PROCESS_KEY_RANGES
 PROCESS_KEY_VOCAB = agent_policy.PROCESS_KEY_VOCAB
-PROCESS_KEY_LEGACY_VALUES = agent_policy.PROCESS_KEY_LEGACY_VALUES
 _process_toml_path = agent_policy._process_toml_path
 process_config = agent_policy.process_config
 read_toml_text = agent_policy.read_toml_text
@@ -134,20 +133,15 @@ _coerce = agent_policy._coerce
 declared_policy = agent_policy.declared_policy
 parse_blackout = agent_policy.parse_blackout
 blackout_at = agent_policy.blackout_at
-LEGACY_APPROVAL = agent_policy.LEGACY_APPROVAL
-APPROVAL_DIAL_RUNGS = agent_policy.APPROVAL_DIAL_RUNGS
-LEGACY_DIAL_ORDINALS = agent_policy.LEGACY_DIAL_ORDINALS
-APPROVAL_FALLBACK = agent_policy.APPROVAL_FALLBACK
-LEGACY_ATTESTATION_KEY = agent_policy.LEGACY_ATTESTATION_KEY
-legacy_approval = agent_policy.legacy_approval
-approval_through = agent_policy.approval_through
-_retired_dial_note = agent_policy._retired_dial_note
+ACCEPTANCE_DIAL_RUNGS = agent_policy.ACCEPTANCE_DIAL_RUNGS
+ACCEPTANCE_FALLBACK = agent_policy.ACCEPTANCE_FALLBACK
+acceptance_through = agent_policy.acceptance_through
 LADDER_RUNGS = agent_policy.LADDER_RUNGS
-APPROVAL_RUNGS = agent_policy.APPROVAL_RUNGS
-SPINE_APPROVAL_RUNGS = agent_policy.SPINE_APPROVAL_RUNGS
-human_holds = agent_policy.human_holds
-human_approves = agent_policy.human_approves
-human_approves_spine = agent_policy.human_approves_spine
+ACCEPTANCE_RUNGS = agent_policy.ACCEPTANCE_RUNGS
+SPINE_ACCEPTANCE_RUNGS = agent_policy.SPINE_ACCEPTANCE_RUNGS
+operator_holds = agent_policy.operator_holds
+operator_accepts = agent_policy.operator_accepts
+operator_accepts_spine = agent_policy.operator_accepts_spine
 loop_held_status_refusal = agent_policy.loop_held_status_refusal
 final_review = agent_policy.final_review
 complete_review = agent_policy.complete_review
@@ -164,7 +158,6 @@ authoritative_spec = agent_policy.authoritative_spec
 keep_nondependent = agent_policy.keep_nondependent
 spine_stage_of = agent_policy.spine_stage_of
 _legacy_present = agent_policy._legacy_present
-_in_legacy_window = agent_policy._in_legacy_window
 _key_value_findings = agent_policy._key_value_findings
 _vocab_findings = agent_policy._vocab_findings
 mode_word = agent_policy.mode_word
@@ -249,9 +242,9 @@ LOG_MAX_BYTES = 65536
 # The terminal end states a session/loop outcome may carry. (Their old durable
 # home, the dispatcher-generated `docs/run-state` file, retired with the
 # dispatcher at concurrency-restructure Phase 5 — the stop banner and exit
-# codes carry the outcome now.) NEEDS-HUMAN's one-line ask is the stop
+# codes carry the outcome now.) NEEDS-OPERATOR's one-line ask is the stop
 # banner's headline (WI-127).
-END_STATES = ("DONE", "BLOCKED", "NEEDS-HUMAN")
+END_STATES = ("DONE", "BLOCKED", "NEEDS-OPERATOR")
 
 
 EXIT_DONE = 0
@@ -272,7 +265,7 @@ EXIT_WAITING = 5
 EXIT_BUDGET = 6
 
 
-EXIT_NEEDS_HUMAN = 7
+EXIT_NEEDS_OPERATOR = 7
 
 
 EXIT_PAUSED = 8
@@ -283,7 +276,7 @@ EXIT_PAUSED = 8
 # reviewer ladder errored, hung or was cooled. Deliberately NOT a decided
 # worker outcome (dispatch._WORKER_OUTCOMES): the lane parks with its work,
 # like a crash, and the next cycle resumes it to draw the round — finished
-# work is never handed back over a reviewer outage (owner direction
+# work is never handed back over a reviewer outage (operator direction
 # 2026-08-30). Appended at the END of the exit alphabet; 10 stays retired.
 EXIT_REVIEW_OWED = 9
 
@@ -301,21 +294,22 @@ EXIT_REVIEW_OWED = 9
 EXIT_RESTART = 11
 
 
-# RED CAP: the lane's build stayed red at its review bar for the declared
-# `[build] red_rounds_max` consecutive rounds. A decided worker outcome, after
+# COMMIT-CHECK FAILURE CAP: the lane's build failed its commit checks for the
+# declared number of consecutive rounds (`[build]
+# stop_lane_after_consecutive_commit_check_failures`). A decided worker outcome, after
 # the permanently retired 10 and RESTART.
-EXIT_RED_CAP = 12
+EXIT_CHECK_FAILURE_CAP = 12
 
 
-# The FB3 owner-only path(s): OWNER_SCRATCHPAD.md is free-form owner notes the
-# human edits continuously (check_docs.py drops it from doc discovery the same
+# The FB3 operator-only path(s): OPERATOR_SCRATCHPAD.md is free-form operator notes the
+# operator edits continuously (check_docs.py drops it from doc discovery the same
 # way — check_docs.SCRATCHPAD). Because it is tracked and perpetually edited, an
-# owner-only-dirty tree is NOT interrupted-session residue: it must not fire the
+# operator-only-dirty tree is NOT interrupted-session residue: it must not fire the
 # WI-076 resume note or flip the done detection (WI-203). Mirrored, not imported
 # — importing the doc-checker into the coordinator would add a CMP-008→CMP-007
 # edge + an IF seam for one fixed filename; the name is a bootstrap contract
 # (test_bootstrap asserts the scaffold ships it), so the mirror cannot drift.
-OWNER_ONLY_PATHS = ("OWNER_SCRATCHPAD.md",)
+OPERATOR_ONLY_PATHS = ("OPERATOR_SCRATCHPAD.md",)
 
 
 PAUSE_MALFORMED = "<malformed docs/work/pause — fix or delete it>"
@@ -327,7 +321,7 @@ def tracked_pause(docs_dir):
     because one meaning needs none: **pause = stop claiming.** Everything in
     flight finishes, integrates, and archives — a traincar always unloads, so a
     pause never strands finished work on a branch; the only thing that stops an
-    unload is the integrator's own refusal (red bar, missing verdict), which is
+    unload is the integrator's own refusal (failing checks, missing verdict), which is
     the gate working, not the pause.
 
     Presence pauses. An **unpause is a tracked deletion commit** — which is the
@@ -378,8 +372,8 @@ def pause_reason(lane):
 # fails in CI, and the pinned dev tools (requirements-dev.txt) may be absent. The
 # fix is to run the harness under the repo's OWN .venv — the pinned ≥3.11
 # toolchain — shared into each worktree by absolute path (the dispatcher points a
-# worker's PATH at it and sets the integrator bar's {py} to it), plus a preflight
-# so a below-floor interpreter is caught before it can produce a false green.
+# worker's PATH at it and sets the integrator checks' {py} to it), plus a preflight
+# so a below-floor interpreter is caught before it can produce a false pass.
 
 # The kit's Python floor (WI-262/WI-270; the setup scripts enforce the same
 # `sys.version_info >= (3, 11)`). An adopter deliberately targeting an older
@@ -404,7 +398,7 @@ def harness_python(root):
     """The interpreter the test harness (pytest + the pinned dev tools) should run
     under for a worktree session: the repo's own .venv when present (shared by
     absolute path — one pinned ≥3.11 toolchain, no per-worktree install).
-    Returns a str path — a bar runner substitutes it for {py} so the bar runs
+    Returns a str path — a check runner substitutes it for {py} so the checks run
     under the floor-satisfying interpreter even when the caller was itself
     launched on ambient Python (WI-286).
 
@@ -412,7 +406,7 @@ def harness_python(root):
     stdlib-only resolver must return SOMETHING), and it is the honest answer
     ONLY for a repo that has not declared the pinned toolchain. A repo that has
     is refused UPSTREAM by `harness_floor_failures` below - integrate.py calls
-    it before the bar - so a declared repo never reaches this fallback
+    it before the checks - so a declared repo never reaches this fallback
     (WI-361; the dispatcher-era gate this replaces died at Phase 5)."""
     py = venv_python(root)
     return str(py) if py else sys.executable
@@ -453,9 +447,9 @@ def harness_floor_failures(root):
     else []. A tree without the repo's own .venv resolves ambient PATH (run
     20260723T0202 inherited 3.8), so a below-floor idiom passes locally and only
     fails in CI - and an ambient-MODERN interpreter is the worse half, clearing
-    the version floor while lacking the pinned dev tools the bar assumes, which
-    makes its green FALSE. integrate.py is the refusing seam: it calls this
-    before the composed-tree bar rather than running the bar on ambient Python.
+    the version floor while lacking the pinned dev tools the checks assumes, which
+    makes its pass FALSE. integrate.py is the refusing seam: it calls this
+    before the landing checks rather than running the checks on ambient Python.
 
     ARMING BOUNDARY: the floor guards only a repo that DECLARES the pinned
     toolchain - concretely, one carrying `requirements-dev.txt` at its root. A
@@ -484,7 +478,7 @@ def harness_floor_failures(root):
             "toolchain (requirements-dev.txt), so the harness - tests plus those "
             "pinned dev tools - must run under the repo's OWN Python {}+ .venv, "
             "NOT the ambient interpreter, which may clear the version floor yet "
-            "lack the pinned tools and produce a false green. Run scripts/"
+            "lack the pinned tools and produce a false pass. Run scripts/"
             "dev-setup --install to create ./.venv (WI-286/WI-361).".format(root, floor)
         ]
     ver = interpreter_version(py)
@@ -506,9 +500,9 @@ def harness_floor_failures(root):
 
 def _declared_test_command(ini, py=None):
     """The repo's declared test command as a tokenized argv, read from a
-    docs/stack.ini path — the stack-schema home a bar runner reads so it runs
-    the bar the repo actually declares. Mirrors check.py's stack schema rather
-    than importing it — the OWNER_ONLY_PATHS precedent above: a CMP-008→CMP-007
+    docs/stack.ini path — the stack-schema home a check runner reads so it runs
+    the checks the repo actually declares. Mirrors check.py's stack schema rather
+    than importing it — the OPERATOR_ONLY_PATHS precedent above: a CMP-008→CMP-007
     import for one small read would owe an IF seam; the tests pin it against
     drift. The kit schema is `[product] test` (with {py}/{src}/{tests} the same
     placeholders check.py fills), with the legacy raw `[stack] test` as a
@@ -682,7 +676,7 @@ def parse_wi_id(value, source):
 # STATUS encoded as the DIRECTORY (docs/concurrency-restructure.md §2.1). The
 # 270-line reader that used to sit here VERBATIM, and identically in the other
 # two of schedule.py, check_trajectory.py and agent_common.py, now lives once in
-# `kitlib/registry.py`: owner ruling D-8 (`OI-16`, inversion confirmed
+# `kitlib/registry.py`: operator ruling D-8 (`OI-16`, inversion confirmed
 # 2026-08-13) retired the F5 no-shared-module rule that had licensed the copies.
 #
 # RE-EXPORTED under the names this module has always carried, so no call site
@@ -1046,7 +1040,7 @@ def _failure_tail(out, budget=600):
     so the last FAIL was always the summary copy, the nearest banner above it
     the LAST step's, and the extracted window was summary rows — the failing
     step's own output structurally never reached a refusal, at any --jobs
-    (WI-398; the WI-387 refresh red cost three lost diagnoses of one failure).
+    (WI-398; the WI-387 refresh failure cost three lost diagnoses of one failure).
 
     Now the FIRST `  FAIL  <step>` line names the failing step, and the window
     is that step's OWN `=== <step> :` banner down to the next banner or the
@@ -1088,8 +1082,8 @@ def _own_step_window(lines, fail_idx):
     name or no banner names it, so the caller keeps its bounded fallback.
 
     Known limit (WI-398 REVIEW-A finding 1, pinned by WI-405): both anchors
-    trust line SHAPE, so bar-shaped text EMBEDDED in a step's own captured
-    output — a quoted FAIL row, a quoted banner, a nested scaffold bar naming
+    trust line SHAPE, so harness-shaped text EMBEDDED in a step's own captured
+    output — a quoted FAIL row, a quoted banner, a nested scaffold checks naming
     another step — can silently misanchor the window onto a passing step's
     text; deliberately not parsed away (WI-398's scope guard), and on the
     refresh path the kept full log (out/run-logs/refresh-refused-<branch>.log)
@@ -1351,7 +1345,7 @@ def working_tree_dirty(root):
 def _porcelain_path(line):
     """The repo-relative path a `git status --porcelain` line names — the
     destination side of a rename/copy (`R  old -> new`), surrounding quotes
-    stripped — used to match a dirty line against OWNER_ONLY_PATHS. Splits the
+    stripped — used to match a dirty line against OPERATOR_ONLY_PATHS. Splits the
     XY status token off the front rather than assuming a fixed column width (a
     leading blank status column may or may not survive to here)."""
     body = line.strip()
@@ -1362,16 +1356,16 @@ def _porcelain_path(line):
 
 
 def substantive_working_tree_dirty(root):
-    """`working_tree_dirty` minus the FB3 owner-only paths (OWNER_ONLY_PATHS) —
+    """`working_tree_dirty` minus the FB3 operator-only paths (OPERATOR_ONLY_PATHS) —
     the view the loop's WI-076 resume note (loop start) and done detection use,
-    so a tree whose ONLY changes are the owner scratchpad (perpetually edited,
+    so a tree whose ONLY changes are the operator scratchpad (perpetually edited,
     never the loop's or a worker's deliverable) reads clean and the interrupted-
     residue signal fires only on genuine residue. The raw primitive stays
     available for a caller that wants every uncommitted path (WI-203)."""
     return [
         ln
         for ln in working_tree_dirty(root)
-        if _porcelain_path(ln) not in OWNER_ONLY_PATHS
+        if _porcelain_path(ln) not in OPERATOR_ONLY_PATHS
     ]
 
 
@@ -1496,10 +1490,11 @@ def write_session_log(iter_dir, meta, transcript):
         # `full|narrow <base>..<reviewed sha>` (kitlib.verdict.gating_span):
         # the reviewed range, base and tip.
         "review-scope",
-        # WI-958: a red review bar's record, keyed by the build commit it
-        # refused (kitlib.verdict.format_red_record); empty on every other log.
-        "bar-red",
-        "bar-summary",
+        # WI-958: the failed-checks record, keyed by the build commit the commit
+        # checks refused (kitlib.verdict.format_failed_record); empty on every
+        # other log.
+        "checks-failed",
+        "checks-summary",
         "tokens",
         "cost-usd",
         "wall-secs",
@@ -1730,10 +1725,10 @@ def commit_telemetry(root, session, label, paths, trailer=None):
     files in the tree exactly as before — never fatal, so the fix can only help
     (a walk-away run that today dangles telemetry keeps working either way).
 
-    `trailer` is the round's `Review-Verdict:` ATTESTATION (OI-76 alternative C,
-    the `Bar-Green:` pattern), and it changes one rule: an attestation must land
+    `trailer` is the round's `Review-Verdict:` TRAILER (OI-76 alternative C,
+    the `Checks-Passed:` pattern), and it changes one rule: a trailer must land
     even when the bookkeeping it rides did not change, so a trailer commits
-    EMPTY rather than not at all. That is the same trade `Bar-Green` makes: the
+    EMPTY rather than not at all. That is the same trade `Checks-Passed` makes: the
     commit's value is the words, not the diff. "An empty commit changes no tree"
     is only HALF of what makes that free, and the missing half was a defect: the
     identity is read through `verdict.governing_rev`, whose walk used to step by
@@ -1747,7 +1742,7 @@ def commit_telemetry(root, session, label, paths, trailer=None):
     stands unchanged: no empty commits for bookkeeping.
 
     UNDER THE LOOP MARKER the commit carries the loop's provenance trailer
-    (SR-209), and a tree that would change a status the dial holds for a human
+    (SR-209), and a tree that would change a status the dial holds for an operator
     is refused before it is written (SR-208) — telemetry names its paths, so
     that tree is HEAD plus exactly those paths. A refused commit, that way or
     by a hook's veto, is RETURNED as well as printed, so a caller can tell the
@@ -1788,12 +1783,12 @@ def _telemetry_argv(session, label, trailer, dirty, rels):
     pathspec commits THE INDEX, so a single unrelated staged file (the caller's
     own `pre_staged` restore proves a non-empty index here is a state the
     authors already expect) lands inside a commit labelled `telemetry:`,
-    carrying a `Review-Verdict:` attestation on a commit that changed the work
+    carrying a `Review-Verdict:` trailer on a commit that changed the work
     tree. Round 015 closed that for `--allow-empty` REPLACING the pathspec, but
     left the scope itself conditional on `rels` — and a scope that exists only
     when its input is non-empty is no scope at all on the arm that matters:
     `commit_telemetry(root, s, l, [], trailer=…)` went on sweeping a staged
-    `src.py` into the attestation's carrier, driven. So the scope is STATED, by
+    `src.py` into the trailer's carrier, driven. So the scope is STATED, by
     `--only`, and holds on every arm instead of on the arms that happen to carry
     paths. With paths that is what `-- <paths>` already implied; with none,
     git-commit(1) documents `--only` together with `--allow-empty` as needing no
@@ -2091,7 +2086,7 @@ def preflight(root, template, args):
             elif stale_terminal_assignment(root, wid, row):
                 # WI-267: a WI CANCELLED mid-assignment is terminal too — a
                 # worker must never build a WON'T-BUILD row. The scheduler
-                # never freshly dispatches a cancelled WI, but an owner can
+                # never freshly dispatches a cancelled WI, but an operator can
                 # cancel one already leased to a worker; this closes that
                 # narrow mid-flight race the done-only check missed.
                 status = (row.get("Status") or "").strip().lower()

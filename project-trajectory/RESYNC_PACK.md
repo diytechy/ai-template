@@ -1,7 +1,8 @@
 # The LLM re-sync pack (bringing an adopted repo forward to a newer kit)
 
 **Who reads this:** an LLM agent (or a human) carrying a repo that adopted this
-kit at some earlier commit forward to a newer one. It is the single home for the
+kit at some earlier commit forward to a newer one, or rebuilding its stale
+requirements spine with selected current tooling. It is the single home for the
 re-sync *rules* — the file classes, the per-change migration entries, the
 concept renames. `ADOPTING.md` §6 frames the job and points here; the
 `downstream-resync` skill sequences it and points here. **If a rule is wrong,
@@ -32,10 +33,91 @@ that range. See §5 for what happens when the entries stop being prose.
 
 ---
 
+## 0. Choose the scope
+
+A **kit upgrade** changes the process/tooling version; a **spine rebuild**
+rechecks what the product owes its users. Choose from the user's request:
+
+| Request | Route |
+| --- | --- |
+| Update the adopted kit, preserving sound project requirements | Full upgrade: §1–§4, selecting migrations by commit range. |
+| Reassess stale requirements and reconnect them to an existing or replacement implementation | Spine rebuild: §0.1. Take only the supporting kit changes it needs. |
+| Do both | Track the two outcomes separately; use §1 for the full upgrade and §0.1 for the semantic work. |
+
+Routine tooling updates do not require whole-spine rederivation. A spine rebuild
+need not adopt the coordinator, work-item lanes, dashboard or every optional
+check. Existing project obligations and approval authority still apply.
+
+### 0.1 Spine rebuild: the short route
+
+Keep one scoped rebuild record with the selected kit commit, current step,
+operator decisions, remaining gaps and next action. Link the live registries and
+review evidence; avoid copying their prose into parallel summaries. Use the
+[spine-authoring skill](skills/spine-authoring/SKILL.md) for tier questions and
+acceptance rules rather than inventing another method.
+
+1. **Establish the baseline.** Work on an isolated branch/worktree when the
+   existing checkout is active. Read the product vision, user workflows, existing
+   requirements and a bounded sample of implementation/tests. Record what is
+   implemented, intended, obsolete or unknown; current behavior is evidence, not
+   automatically a requirement. Keep the previous definitions recoverable in git
+   or an archive. If an independent fresh derivation is useful, give that reviewer
+   the agreed inputs without legacy requirements/code; call other reviews informed
+   reviews, not blind derivations.
+2. **Refresh the minimum coherent tooling.** Select a committed kit revision and
+   compare its spine templates and checkers with the adopter's. Preserve filled
+   registries, project policies and stack-specific harnesses. Follow §2's ownership
+   and set-together rules and only the §3 migrations needed by the selected files.
+   An isolated vendored checker copy must include its imports/resources, provenance
+   and license; exercise it against this project's carriers before switching over.
+   Record the selected files, revision and deferred integration in the rebuild
+   record. **Do not advance the whole-kit stamp for this partial resync**, and do
+   not run whole-repo bootstrap merely to copy spine tools: it can re-stamp the
+   repo. With the operator's authorization, new optional hooks may stay disabled while
+   relevant spine checks run manually and are enabled as integration becomes ready.
+   Preserve existing enforced checks unless the operator explicitly changes them.
+3. **Review stakeholder needs, then the frame and assumptions.** Recheck users,
+   outcomes and applicable review perspectives against the product's purpose.
+   Draft needs in user terms, including realistic limits on guarantees. Review
+   system boundaries, external actors and assumptions before deriving SRs. An
+   assumption that needs detection or a response must have an explicit requirement
+   disposition. Present each affected acceptance scope when ready; obtain its required
+   acceptance before treating it as the baseline for the next tier. Do not reopen
+   accepted material merely because another review round starts.
+4. **Derive and reconcile SRs.** Derive measurable system obligations from those
+   accepted inputs, then compare with legacy requirements and their rationales.
+   Keep IDs when meaning survives; record splits, replacements and retirements.
+   Distinguish a missing requirement from an unmet requirement that needs code.
+   Seek cross-review where useful and available: prioritize material omissions,
+   contradictions, unsafe promises and infeasible budgets. Disposition suggestions
+   against actual users and failure impact; a hypothetical edge case alone does
+   not justify another mechanism. Reviews advise; the declared authority accepts.
+5. **Break down the accepted SRs into a buildable design.** Allocate modules,
+   interfaces, LLRs and verification cases with trace links. Document contracts at
+   real seams and reuse common behavior. Reconcile existing code and tests against
+   this design: retain, adapt, replace or remove. With authorized cleanup, remove
+   obsolete live definitions and stale links; git/archive preserves their history.
+   Planned tests and passing legacy tests do not establish verification of a newly
+   changed obligation. Record actual evidence only when it exists.
+6. **Validate and hand off to implementation.** Run the selected target-version
+   integrity/schema/trace and documentation checks against the adopter, plus its
+   applicable product checks. Resolve affected broken links and contradictions;
+   list remaining findings and their effect on readiness without suppressing them
+   to obtain a passing result. Hand off the accepted inputs, reviewed design and
+   interfaces, implementation/test bindings, and a short ordered work plan. State
+   which acceptances or evidence remain outstanding. Implementation readiness is
+   not full verification, release qualification or a completed whole-kit upgrade.
+
+Resume from the recorded step and accepted decisions. Expand into the detailed
+migration entries only when the selected tooling actually needs them.
+
+---
+
 ## 1. The procedure
 
-Bounded on purpose: this is what to read, in what order, and where the judgement
-sits. Do not improvise a wider sweep — the deviation review in §2 is the sweep.
+For a full kit upgrade, this is what to read, in what order, and where the
+judgement sits. Do not improvise a wider sweep — the deviation review in §2 is
+the sweep.
 
 ### 1.1 Establish the range
 
@@ -107,17 +189,17 @@ no-semantic-impact conclusion when that is the upgrade's actual result.
    `skills-sync` gate flags a drifted copy), and commit the stamps as the
    **last** step so the record reflects the state you actually landed on.
 
-### 1.4 Verify — and why a green can lie
+### 1.4 Verify — and why a pass can lie
 
 Run the harness (`scripts/check.py` / `check.{sh,ps1}`) and `scripts/check_docs.py`.
-A re-sync that leaves the harness red is not done.
+A re-sync that leaves the harness failing is not done.
 
-**A green is only as new as your checkers.** If step 3 left any kit-owned script
+**A pass is only as new as your checkers.** If step 3 left any kit-owned script
 un-updated, the repo is being judged by the OLD one — which cannot see what the
 new kit refuses. This is measured, not hypothetical: on a three-week range, an
 add-only re-sync leaves the spine registries under **both** carriers, a state the
 current kit hard-refuses, and the surviving old `trace.py` passes it
-(`tests/test_old_kit_resync.py` pins exactly this). Before believing the green,
+(`tests/test_old_kit_resync.py` pins exactly this). Before believing the pass,
 run the **target** kit's checkers against your tree —
 `python <kit>/scripts/trace.py --strict` from your repo root — and treat any
 disagreement between the two as the list of moves step 3 still owes.
@@ -164,7 +246,7 @@ destination is yours, and no re-sync rule applies to it.
   `kit-profile`.
 - **Overwrite, then re-apply your dials (kit-owned, but hand-edited).**
   `docs/process.toml` — the one home for every process dial (gate authority, the
-  human-approval level, push authority, the reviewer count, the privacy and
+  operator-acceptance level, push authority, the reviewer count, the privacy and
   secrets gates, guardrails, the blackout window). Unlike `docs/stack.ini` it is
   **kit-owned**: its explanatory header and its key set come from
   `process.toml.template`, so take the kit's version on re-sync and re-apply your
@@ -1052,6 +1134,13 @@ is a hard refusal). **The IF tier also changes shape — read before running:**
   at any gate — so an unmigrated repo goes noisy, never red.
 
 ### The `G*` gate tags retire for the eight-rung stage ladder [since 08c985cb]
+
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: no reader translates a
+retired tag now, so "Nothing breaks on day one" and steps 3 and 4 no longer
+hold. `check.py` refuses a tag as a stage value, a `docs/stack.ini` `gates =`
+list is refused until the migrator rewrites it, and a work item's tag is refused
+by name.)*
 
 **The biggest vocabulary change the kit has shipped, and it reaches your own
 files.** `G0`/`G1`/`G2`/`G3`/`G-Release`/`G-Final` are gone as tags. In their
@@ -2225,6 +2314,11 @@ answered is part of the fingerprint.
 
 *(Anchored at the preceding commit — an entry cannot know its own SHA.)*
 
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: a `gates =` list is no longer
+translated on read but refused until the migrator rewrites it, `--stage-cleared`
+is refused, and the retired value aliases no longer translate.)*
+
 **THIS ONE CHANGES WHICH CHECKS RUN IN YOUR CI. Read it before you take the
 files.** Everything else in this range was additive; this is not.
 
@@ -2687,6 +2781,11 @@ shadows nothing and drifts silently.
 
 ### `G0|G1|G2|G3|G-Release|G-Final` → the stage ladder [since 08c985cb]
 
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: no reader accepts the
+left-hand column as an alias now; that entry gives the stage each tag means as a
+`check.py` value.)*
+
 The tags retire; the traceability survives. Grep your own prose, scripts, CI,
 hooks and registry cells for the left-hand spelling — **as a whole-word TAG, not
 as the word "gate"**, which survives wherever it means a check that can fail
@@ -2729,6 +2828,11 @@ kit-owned teaching cell worth taking, but a no-op if you deleted the example row
 on your first real entry, as intended.
 
 ### The `DevBar-*` prefix retires — ONE vocabulary, the verb carries the axis [since 7ccbd3a6]
+
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: "Nothing breaks at the
+re-sync" no longer holds. No reader accepts a retired spelling as an alias, and
+the flag `--stage-cleared` is refused; `--gate` stays.)*
 
 **The `DevBar-` prefix is gone.** A repo is **IN** a stage and **CLEARS** a
 stage, and the same `DevStg-` token names both readings — what tells them apart
@@ -3286,6 +3390,12 @@ the LAST entry of the WI-498 stage-unification program and is written so the
 whole re-sync can be executed from this entry alone; the six entries above it
 land the machinery in stages, this one lands the migration.)*
 
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: a `gates =` list is refused
+until the migrator rewrites it, `--stage-cleared` is refused, and a dial still
+holding the 0-4 number no longer "keeps working": it reads as the most-held rung
+until the migrator rewrites it.)*
+
 **Kit-owned files — overwrite and move on:** every `scripts/*.py`,
 `project-trajectory/PROCESS.md`, `PROCESS_OPTIONS.md`, `ADOPTING.md`,
 `README.md`, `skills/gate-advance/SKILL.md`, `process.toml.template`,
@@ -3634,6 +3744,11 @@ repo has departed from full auto-selection.
 
 *(Anchored at the PRECEDING commit — this entry ships with the changes,
 the same convention the `docs/gate` RETIRES entry above uses.)*
+
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: skipping step 1 is no longer
+harmless. No reader reads the old key, so the dial reads as the most-held rung
+until `migrate_vocabulary.py` renames it; `--migrate-config` no longer does.)*
 
 **What changed.** Owner ruling 2026-08-21 ("ratification holds a weight to it
 that the semantics here don't need"): the kit's vocabulary unifies on
@@ -5612,6 +5727,10 @@ shallowly sees an unreadable line from this step until it fetches full history.
 ### Loop commits carry a `Loop-Session` trailer, and the loop may not move a held off-spine status [since c907d31b]
 
 *(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+*(Superseded in part by "The kit's vocabulary is one word for one thing, and a
+migrator rewrites what a repository stores" below: the retired spellings are no
+longer translated, silently or otherwise; each reads as the most-held rung.)*
 
 **What changed.** The unattended loop marks its own process once per run with
 the `KIT_LOOP_SESSION` environment variable (set by `dispatch.run` and by
@@ -10737,6 +10856,321 @@ too, only if you vendored them: `skills/coordinator-cycle/` and
 `skills/byte-budget-guard/SKILL.md`.
 
 **Regenerated files:** `docs/process.md`.
+
+### The commit checks and the expected-failure marker are renamed and re-homed [since 3e7a3a6ee]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Three declared settings have new names, and one of them a
+new file. Nothing about what they do changed.
+
+- **`[bars] review` becomes two declarations.** It held a shell line, but
+  what it declared was policy: which set of checks a commit on a lane must
+  pass. `docs/process.toml` now says which, by name, as `[required-checks]
+  commit`, and `docs/stack.ini` says how this stack runs it, as a line of that
+  name under `[check-suites]`. `integrate.py record-checks` runs the named suite
+  exactly as it ran the old line, then the row's derived review tests.
+- **`[bars] red_mark` is `[product] expected_failure_marker`.** It is the
+  text your test framework uses to mark a test that is expected to fail, so
+  it sits beside `[product] test`. `record-checks` and the refresh count it
+  as before.
+- **`[build] red_rounds_max` is `[build]
+  stop_lane_after_consecutive_commit_check_failures`.** It was never a count
+  of review rounds: it is the number of consecutive build rounds whose commit
+  checks fail before the worker stops and the dispatcher closes the lane
+  partial. Value, default (3) and refusals are unchanged.
+- **The old names are refused, never read.** A `[bars]` section is ignored;
+  when it still declares `review` or `red_mark` and the new value is absent,
+  the refusal says so. A `[build] red_rounds_max` still declared is refused
+  at the loop's preflight and before a lane is claimed, naming the new key:
+  read as absent, it would silently restore the shipped 3.
+- **The words in the prose and the messages follow.** "Commit bar" and
+  "review bar" read "commit checks", "landing bar" reads "landing checks",
+  "gate bar" reads "gate checks", and "red mark" reads "expected-failure
+  marker". The record of a passing run is renamed by the vocabulary entry
+  below, anchored at the same commit: the trailer `Bar-Green: ... bar=review`
+  is `Checks-Passed: ... checks=commit`, `attest --bar review` is
+  `record-checks --checks commit`, and the session log's `# bar-red:` header
+  is `# checks-failed:`.
+
+**What to do (forced migration).** `docs/stack.ini` is yours, so these are
+hand edits; `record-checks` and the refresh refuse until they are made.
+
+1. In `docs/stack.ini`, move the marker: delete `red_mark = ...` from
+   `[bars]` and add `expected_failure_marker = ...` with the same value under
+   `[product]`.
+2. In `docs/stack.ini`, replace what is left of `[bars]` with a
+   `[check-suites]` section, and give your old `review` line a name there.
+   The shipped name is `smoke`:
+   `smoke = python scripts/check.py --jobs 0 --tier smoke`.
+3. In `docs/process.toml`, add `[required-checks]` with `commit = "smoke"`
+   (or the name you chose). A name `[check-suites]` does not declare is
+   refused, naming both files.
+4. In `docs/process.toml`, rename `red_rounds_max` under `[build]` if you
+   declared it. An absent key needs nothing.
+5. In-flight lanes carry the new declarations only after a rebase or refresh
+   onto the trunk that has them. Until then their `record-checks` refuses.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/expected_failure.py`,
+`scripts/kitlib/config.py`, `scripts/integrate.py`, `scripts/agent_loop.py`,
+`scripts/dispatch.py`, `scripts/agent_common.py`, `scripts/review_brief.py`,
+`scripts/review_set.py`, `scripts/check.py`, `scripts/check_trajectory.py`,
+`scripts/gen_arch_map.py`, `scripts/kitlib/spine.py`,
+`scripts/kitlib/stage.py`, `scripts/kitlib/verdict.py`,
+`scripts/rendering/traj_panels.py`, `hooks/pre-commit`,
+`prompts/worker.template.md`, `specs/README.template.md`,
+`stack.ini.template`, `process.toml.template`, `PROCESS.md`,
+`PROCESS_OPTIONS.md`, `README.md`, `GLOSSARY.md` (it gains a Checks section
+defining these terms). Three `scope: this-repo` skills changed
+too, only if you vendored them: `skills/coordinator-cycle/`,
+`skills/session-protocol/SKILL.md` and `skills/byte-budget-guard/SKILL.md`.
+
+**Regenerated files:** `docs/process.md`, `PROJECT_STATE.html`.
+
+### Spine rebuilds have a scoped route alongside full kit upgrades [since 3e7a3a6ee]
+
+*(Anchored at the preceding commit: the change lands after it.)*
+
+**What changed.** §0 separates full-kit migration from reassessing a project's
+needs and rebuilding its traced design. §0.1 provides the short route, including
+partial-tooling provenance, staged check integration under owner authority,
+parent-first acceptance, reconciliation and an implementation handoff. It does
+not change approval policy, checker behavior or the full-upgrade procedure.
+
+**What to do.** Refresh the `downstream-resync` skill and generated skill index;
+read §0 from the target kit when choosing scope. No registry conversion is
+required by this documentation change. A partial spine resync keeps the previous
+whole-kit stamp and records its selected tooling separately.
+
+### First-day and conversion fixes: what thirteen adoptions and a fresh scaffold ran into [since 3e7a3a6ee]
+
+*(Anchored at the preceding commit: the changes land after it.)*
+
+**What changed.** Fixes to what a fresh scaffold and thirteen conversions hit.
+No setting is renamed; each fix is in a script or template.
+
+- **Contract headers are read in each language's own comments.** `//`, `//!`,
+  `///`, `/* */` and `/** */` in Rust, TS/JS, Go and C#; `#` and `<# #>` in
+  PowerShell; `REM` and `::` in `.cmd` files (below an optional `@echo off`). A
+  UTF-8 BOM no longer hides a header. Owners that read as "declares nothing"
+  may now declare their seams, so a "declared, not stated" finding can appear
+  where a contract body is missing. `.gd` files count as source modules and
+  test files.
+- **Advisories fold while no stakeholder is Approved with a Party.** Trace's
+  stakeholder-reach advisories print one count line, and the `assumption-gate`
+  step (gate off) prints one count line for its reach-caused advisories and
+  still lists every other finding. With the gate on, every failure is listed.
+- **`check_trajectory` counts what it could not check.** One warn line gives
+  the IF rows its contract-body gate passed unchecked (`[arch-map] mode =
+  files`, or an external-owned row with no far side in the tree).
+- **`check_docs` ignores the kit's generated reports** (`docs/test/report.md`,
+  `perf-report.md`, `stub-report.md`) by default; your own `--ignore` for them
+  can go.
+- **`trace.py`.** `--strict-schema` without `--strict` still exits 0; its
+  summary line now says the findings are reported and do not fail the run.
+  `--no-placeholders` no longer reports `SN-000` from the needs template's
+  header comment.
+- **Setup wording.** Docs and the hooks-off refusal say `bash scripts/setup.sh`
+  (`sh` fails under dash and leaves hooks off). Setup, dev-setup and bootstrap
+  all point at the plain `python scripts/check.py` run with no `--stage`.
+- **`trunk_step.py --regen` writes `docs/okf/`** on a repo that has registries
+  but no bundle, so the regeneration and the commit check agree: commit the
+  bundle, or set `[checks] okf_export = false`. The README template names the
+  commands to run after editing a registry.
+- **Bootstrap and installs.** Bootstrap no longer writes `pytest.ini` beside a
+  `pyproject.toml` that configures pytest (an existing `pytest.ini` is
+  untouched; add the smoke/full/release markers to pyproject to use
+  `check.py --tier`). `setup.sh`, `setup.ps1` and the CI template run `pip
+  install -e .` only when `pyproject.toml` declares `[project]` or
+  `[build-system]`, else install from `requirements.txt`.
+- **Quieter hook, smaller default.** The pre-commit hook no longer prints "No
+  checks defined at stage all." New scaffolds' dev-setup declares only the
+  `code` role.
+- **The examples, and converted rows.** The README template tells a new
+  project to delete the example rows (`-000`) and the example diagram when
+  it accepts its first chain, since the checks refuse them from
+  `DevStg-Tests` and `DevStg-Impl`. `ADOPTING.md` §4 and the spine-authoring
+  skill say a converted row keeps its status only while it keeps its
+  meaning; `migrate_carrier.py` still converts the carrier only.
+
+**What to do.** Nothing is required of an adopter. The scripts and templates
+above are taken wholesale. Two files are copied once at scaffold and are not
+re-synced: the CI workflow and dev-setup. To take their fixes by hand, add
+`fetch-depth: 0` to the checkout step of `.github/workflows/check.yml`, and add
+the guarded install step (with `shell: bash`).
+
+### Live component rows carry a derivation record [since 3e7a3a6ee]
+
+*(Anchored at the preceding commit: the change lands after it.)*
+
+**What changed.** A component partition records how it was chosen, in
+`docs/requirements/components.toml` (SR-165). The component tier gains eight
+flat cells. One row per partition holds the record: `candidates` (best first),
+`objective` (`minimize|maximize <metric>`), `constraints` (`<constraint>:
+<violators>` or the single entry `none`), `scores` (`<candidate>=<number>`, one
+each), `selected`, `ruling` (who ruled, when, where recorded) and an optional
+`override` (`<selected>: <reason>`). The partition's other rows carry only
+`derivation`, the holding row's id. `check_trajectory.py`'s component pass
+reports a live row whose record is absent, incomplete, malformed or
+inconsistent, a WARN plain and an ERROR under `--strict`. It recomputes the
+ranking from the record's own cells, and a selection the scores do not rank
+first needs the `override` naming it. The `-000` row is vacuous, and a project
+with no live component row hears nothing.
+
+**What to do (forced migration).** While `[checks] components_check` is on (the
+default), every live CMP row needs a record or a `derivation`, or your strict
+run fails from this entry. Before re-syncing past it, write one record per
+partition from the ruling that adopted it, in a reviewed commit: the record is a
+fact about your own partition, not something to fill in bulk. The new cells are
+approved content, so on an `Approved` row the commit also carries your approval
+act (`intake.py snapshot --reattests <CMP ids>`). A partition nobody ever ruled
+cannot have an honest record: set `[checks] components_check = false` in
+`docs/process.toml` until one is ruled. That switch turns off the whole
+component pass, the top-view bound and cross-component seam rule included, as it
+always has.
+
+**Kit-owned files — overwrite:** `scripts/trajectory_arch.py`,
+`scripts/kitlib/spine.py`, `scripts/spine_carrier.py`,
+`scripts/migrate_carrier.py`, together: the schema and the reader name the same
+eight cells.
+
+**Regenerated files:** `docs/process-options.md`.
+
+**Adopter-merged files:** `docs/requirements/components.toml`, where your rows
+gain the cells; `registries/components.template.toml`'s `-000` row shows each one.
+
+### The kit's vocabulary is one word for one thing, and a migrator rewrites what a repository stores [since 3e7a3a6ee]
+
+*(Anchored at the preceding commit: the change lands after it.)*
+
+**What changed.** The kit's words were unified, so that one word names one
+thing. `GLOSSARY.md` defines each one. The core scripts read only the current
+spellings, with no reader of an earlier one, so a repository that still stores
+an earlier spelling reads as if the value were absent. A new script,
+`scripts/migrate_vocabulary.py`, rewrites the stored values in place. It is the
+one home for the earlier spellings, and `check_vocab.py` reports each value it
+still owes: a WARN, and an ERROR from `DevStg-Impl` on. Messages say passed
+and failed where they said green and red, so check any script of yours that
+matches the kit's output.
+
+The scripts also stop reading the spellings older than this vocabulary: the
+`G1`-`G3` and `DevBar-*` tags as a `check.py` stage value, in a `[step:*]
+gates =` list and in a work item's `checks_stage`; the flag `--stage-cleared`;
+the dial's 0-4 value and its key `human_ratification_through`; and the
+`gate-policy` word where no dial is declared. The migrator rewrites the ones a
+repository stores.
+
+The renames, by thing:
+
+| The thing | Was | Is |
+|---|---|---|
+| The role holding the reserved acts | owner, human | operator |
+| A rung's holder; escalation | `owner-held`, `owner-ruled`, `human-held`, `HUMAN-HELD`; `NEEDS-HUMAN`, `PAGE-HUMAN`, `page-human`, `EXIT_NEEDS_HUMAN` (7) | `operator-held`, `operator-ruled`, `operator-held`, `OPERATOR-HELD`; `NEEDS-OPERATOR`, `PAGE-OPERATOR`, `page-operator`, `EXIT_NEEDS_OPERATOR` (still 7) |
+| The act that takes a row as agreed | approve, attest, re-attest; first approval | accept, re-accept; first acceptance |
+| A row's status once taken | `Approved` | `Accepted` |
+| The acceptance record | `docs/archive/last_approved/`; ledger keys `approved`, `reattested` | `docs/archive/last_accepted/`; `accepted`, `reaccepted` |
+| The dial and its table | `[attestation] human_approval_through` | `[authority] operator_accepts_through` |
+| Push authority | `push = "human"` | `push = "operator"`: a session the operator delegated to may push, where `"human"` excluded even an attended one |
+| A delegated decision's verdict | `owner = "confirmed"` / `"overruled"` | `operator = …` |
+| The requirement's method field; the method resting on someone's word | `verification`; `Attest` | `verification_method`; `Vouch` |
+| The operator's notes file | `OWNER_SCRATCHPAD.md` | `OPERATOR_SCRATCHPAD.md` |
+| The status file's asks | `Needs <human>` | `Needs <operator>` |
+| Work-item front matter | `safety_class = "attestation"`; `brief = "first-approval"`; `bar = "DevStg-…"` | `"acceptance"`; `"first-acceptance"`; `checks_stage = "DevStg-…"` |
+| Brief kinds in `[adjudicator] retain_for` | `"first-approval"`, `"red-tc"` | `"first-acceptance"`, `"evidence-gap"` |
+| A verdict binding's outcome (`docs/reviews/**/*.requested`) | `outcome = accepted` | `outcome = recorded` |
+| The adjudicator's ruling on a first acceptance | `APPROVE`, `- [APPROVE]`, `OUTCOME: APPROVE` | `ACCEPT`, `- [ACCEPT]`, `OUTCOME: ACCEPT`. A review verdict keeps `APPROVE` |
+| Acceptance flags and check steps | `intake.py snapshot --approves`, `--reattests`; `trace.py --approve`, `--mint-approval-brief`, `--approval-immutable`; steps `approval-fresh`, `approval-immutable` | `--accepts`, `--reaccepts`; `trace.py --accept`, `--mint-acceptance-brief`, `--acceptance-immutable`; `acceptance-fresh`, `acceptance-immutable` |
+| The passed-checks record (a commit trailer) | `Bar-Green: … bar=<review\|landing\|no-bar>`; `integrate.py attest --bar review` | `Checks-Passed: … checks=<commit\|landing\|none>`; `integrate.py record-checks --checks commit` |
+| The failed-checks record (a session log's headers) | `# bar-red:`, `# bar-summary:`; log phase `ATTEST`, labels `ATTEST GREEN`/`ATTEST RED` | `# checks-failed:`, `# checks-summary:`; `CHECKS`, `CHECKS PASSED`/`CHECKS FAILED` |
+| The commit-check failure cap's exit label | `RED-CAP` | `CHECK-FAILURE-CAP` |
+| A test case not accepted though its work is done | red TC; census lines `red TC …` | evidence gap; `evidence gap …` |
+| The commit-check settings reader | `kitlib/red_mark.py`: `Bars` (`review`, `red_mark`), `read_bars`; `kconfig.red_rounds_max()` | `kitlib/expected_failure.py`: `CommitCheckSettings` (`commit_checks`, `marker`), `read_commit_check_settings`; `commit_check_failure_cap()` |
+| Prompt slots and keys | `{{OWNER_PROMPT}}`; `{approval_act}`, `{approves_rows}`; `--prompt-map` keys `ADJUDICATE-FIRST-APPROVAL`, `ADJUDICATE-RED-TC` | `{{OPERATOR_PROMPT}}`; `{acceptance_act}`, `{accepts_rows}`; `ADJUDICATE-FIRST-ACCEPTANCE`, `ADJUDICATE-EVIDENCE-GAP` |
+| A `[step:*]` section's stage in `docs/stack.ini` | `gates = <list>` | `from-stage = <stage>`: `DevStg-Needs` when the list names the requirements stage (`G1`, `DevBar-Reqs` or `DevStg-Reqs`), else `DevStg-Impl` |
+| The dial's earliest key; its value before stages | `human_ratification_through`; `0`-`4` | `operator_accepts_through`; `0` `"DevStg-Below"`, `1` `"DevStg-Boundary"`, `2` `"DevStg-Arch"`, `3` `"DevStg-LLReqs"`, `4` `"DevStg-Release"` |
+| The commit-check failure cap's key | `[build] red_rounds_max` | `[build] stop_lane_after_consecutive_commit_check_failures` |
+| A `check.py --stage` (or `--gate`) value | `G1`, `DevBar-Reqs`; `G2`, `G3`, `DevBar-Tests`, `DevBar-Release` | `DevStg-Reqs`; `DevStg-Impl` |
+| The flag for the stage | `--stage-cleared` | `--stage` (`--gate` stays) |
+
+"Bar" is gone from live names. A run of checks is the commit checks, the
+landing checks or the gate checks; a stage is a stage; a threshold is a
+minimum, standard or limit. A run of checks passes or fails, never goes red or
+green. "Owner" keeps its other senses: an interface row's `owner` key, a lock's
+holder, a rule's single home. "Human" stays in prose that says a person is
+meant.
+
+**What to do (forced migration).** In §1.3's order, with these additions.
+
+1. **Before the re-sync, leave no amendment awaiting its act.** The migrator
+   writes each copy in the acceptance record equal to its live registry, so it
+   absorbs whatever differs, not only the vocabulary. Accept or withdraw every
+   pending amendment first. Rewording your accepted rows into the new
+   vocabulary is the exception. Do it before the migrator runs, so that it
+   absorbs that rewording and names each cell.
+2. **Fold first, then migrate.** `bootstrap.py --migrate-config` folds a
+   one-word `docs/push-policy` as it reads (§1.3 step 1). The migrator then
+   respells the value.
+3. **Run the migrator straight after taking the kit's scripts**, and before
+   any kit command that writes. Until it runs, the scripts read every
+   `Approved` row as never accepted, and `intake.py snapshot` would write an
+   act for all of them. Run `python scripts/migrate_vocabulary.py --check`,
+   then `python scripts/migrate_vocabulary.py`. Read each line it prints. An
+   `absorbs` line names an accepted cell that differed from the record, and
+   each one should be wording you meant. A `NOT rewritten` line (exit 1) names
+   a file it could not prove safe, or both spellings present: merge by hand,
+   then run it again. A second run finds nothing to do.
+4. **The hook refuses the migration commit**, whatever is done. The record
+   changes directory, so every ledger entry reads as new, and its copies are
+   written in the same commit as the rows. The operator commits it with the
+   hook bypassed (`git commit --no-verify`). Then run `scripts/check.py` and
+   `python scripts/trace.py --strict` on the committed tree; both must pass.
+5. **Move `[checks] test_first_since`** in `docs/process.toml` to the
+   migration commit. History before it stores `Approved`, which the current
+   reader does not read, so every requirement accepted before the cut reads as
+   accepted at the cut, inexactly, and `check_test_first` warns that it
+   cannot be read. Moving the start leaves those requirements out of scope.
+   The cost: those judged since the old start are no longer judged.
+6. **Delete what a copy-over leaves beside its successor**:
+   `scripts/kitlib/red_mark.py`, `prompts/adjudicate-red-tc.template.md`,
+   `prompts/adjudicate-first-approval.template.md`, and, if you vendored them,
+   `registries/last-approved-README.template.md` and
+   `OWNER_SCRATCHPAD.template.md`.
+7. **Change by hand what is yours**: your prompt overrides (the slots and
+   keys above), your own scripts, CI and hooks that type a renamed command,
+   flag, exit label or import, and your prose. Use the table; the glossary's
+   entries for **operator** and **accept** say which senses of "owner",
+   "human" and "accept" stay. `check.py` refuses a retired tag as a stage
+   value and the flag `--stage-cleared`; the migrator cannot reach your CI, so
+   change it by the table.
+8. **Lanes in flight.** No reader of the earlier trailer or headers is kept.
+   A lane cut before the re-sync records its commit checks once more, and its
+   failure count restarts. If its tip is a refresh commit in the earlier form,
+   drop that commit before refreshing, or `docs/log.md` conflicts. Landing or
+   closing lanes before the re-sync avoids all three.
+9. **Observations read due.** A recorded observation's digest covers the
+   row's `status`, so each observed case reads due at its next checkpoint.
+   That is correct: the digest records what was judged, so do not recompute it.
+
+What the migrator does not touch: dated records (`docs/log.md`, archived
+reviews, handoffs) keep their words, except that Markdown links into the
+moved record are re-based (the link target only). Commit messages are
+history; an old trailer is simply not read.
+
+**Kit-owned files — overwrite:** every script under `scripts/` and
+`scripts/kitlib/`, `hooks/`, `prompts/`, `skills/`, the templates and
+`PROCESS.md`, `PROCESS_OPTIONS.md`, `GLOSSARY.md`, `README.md`. The change
+touches most of them, so take the kit wholesale, then apply step 6.
+`scripts/migrate_vocabulary.py` is new.
+
+**Regenerated files:** `docs/process.md`, `docs/process-options.md`,
+`prompts/CATALOG.md`, `skills/INDEX.csv`, `docs/open-items.html`,
+`PROJECT_STATE.html`, `docs/stage`.
+
+**Adopter-merged files:** `docs/process.toml` and the registries (rewritten
+by the migrator), `docs/archive/last_accepted/` (moved by it), your prompt
+overrides and `docs/stack.ini` (by hand, if they name a renamed key;
+`docs/stack.ini` is rewritten by the migrator where a `[step:*]` holds
+`gates =`).
 
 ## 5. Promotion: when this pack stops being prose
 

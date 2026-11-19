@@ -4400,10 +4400,23 @@ wi_refs = ["WI-999", "WI-1000"]
 
 [open_item.OI-130]
 title = """WI-999's derivation record for the live components: which ruling adopted the P5 partition, and which objective the record declares"""
-status = "pending"
+status = "ruled"
 raised = "2026-11-08"
-one_line = "WI-999 builds SR-165's derivation record, but writing the record for CMP-006..CMP-009 needs two answers only the owner can give: which human ruling adopted the P5 partition, and which objective the record declares (no declared objective reproduces the recorded ranking)."
-decision = """Filed by headless leg 39 on 2026-11-08 under the owner's 2026-10-25 ruling that an owner-held step is an open item, after WI-999's scope critique (coordinator-2026-11-08 D-005).
+ruled_date = "2026-11-16"
+ruling_ref = "docs/log.d/2026-11-16-operator-rules-oi130.md"
+one_line = "RULED 2026-11-16, Q1 (b) and Q2 as the re-score states it: the operator accepts P5 as the depth-0 partition on today's numbers; the record declares OI-14's objective, the one-home constraint violated by every candidate and cut as the tie-breaker, so P5 ranks first with no override. SR-165's record is built as written. Written into WI-999."
+decision = """RULED by the operator, attended. On 2026-11-15, asked whether to approve P5 on the re-score's terms: "Yes I did not have a strong opinion on that, I think I was okay deferring to the recommendation". On 2026-11-16: "I have not looked in some time, but given the evidence is for P5 I approve." On whether SR-165's record is built as written: "If any optionality, build as opt-out configurable (on by default), but I believe without it tracability becomes incomplete."
+
+WHAT THE RULING IS.
+
+- Q1 (b): P5 is accepted now as the depth-0 partition, a fresh ruling dated 2026-11-16 that the record cites. It closes decision 10 of 2026-08-13.
+- Q2: neither option as filed. The evidence is the re-score of 2026-11-11 on today's 130-module tree (docs/plans/2026-11-11-oi130-rescore/README.md): cut P5 140, P3 152, P4 235; boundaries 6, 9, 22; policy straddle 12, 15 and 14 of 19. The record declares OI-14 as ruled: objective "minimize cut", the one-home-per-behaviour constraint violated by every candidate. P5 ranks first on those scores, so no override is recorded.
+- The record's shape: SR-165 as written. The `hides` and `stops` keys of the 2026-11-05 review (its 13.32) are not taken.
+- Optionality: the check is on by default and `[checks] components_check = false` turns it off, as it does today. No new setting.
+
+The text below is the item as filed.
+
+Filed by headless leg 39 on 2026-11-08 under the owner's 2026-10-25 ruling that an owner-held step is an open item, after WI-999's scope critique (coordinator-2026-11-08 D-005).
 
 WHAT IS TRUE. OI-129 (ruled 2026-11-08) said WI-999 is built because its derivation "was already worked in the 2026-08-16 derivation plans". It was not: those plans derived SR-165 itself. The partition behind CMP-006..CMP-009 was derived by WI-441 on 2026-08-13. Its data pack (docs/archive/plans/2026-08-13-part-a-data-pack.md, summary table) records five candidates with several metrics each (cut P1 33, P2 48, P3 30, P4 48, P5 31; straddle of 12: P1 10, P2 11, P3 10, P4 9, P5 7). Its shortlist (docs/archive/plans/2026-08-13-part-a-shortlist-ruling.md, "The ranking") ranks P5, P3, P4, P1, P2 by judgement. OI-14 ruled the objective as "one home per behaviour as a hard constraint and cut-count as the tie-breaker"; every candidate violates that constraint, so cut alone ranks P3 first, not P5. Straddle alone ranks P5, P4, then P3 and P1 tied. No single declared objective reproduces the recorded order. The ruling is also unclear: decision 10 of 2026-08-13 DEFERRED approving P5 until after WI-448 and the re-tier, on re-derived numbers (docs/log.md); on 2026-08-22 the owner approved the four CMP rows ("looks good, approve", commit 4fd20f898); on 2026-08-23 the log still called "the deferred P5 approval" the owner's to take.
 

@@ -11,14 +11,14 @@ scope: this-repo
 # Coordinator cycle (this template repo)
 
 This skill is the coordinator's **procedure**, its one home; the current
-handoff is **state** (what landed, what is open, what the owner owes). Read
+handoff is **state** (what landed, what is open, what the operator owes). Read
 `CLAUDE.md` and `docs/status.md` first. Exact commands, landing steps and
 environment traps are in [references/recipes.md](references/recipes.md). Read
 it before your first claim and when a step below points there.
 
 Read beside it:
 
-- `session-protocol`: standing rules (§2), commit bar (§3), records and
+- `session-protocol`: standing rules (§2), commit checks (§3), records and
   coordinator close-out (§4), commit style (§5).
 - `spine-authoring`: "Three ways a spine grows" and its
   `references/in-lane.md`.
@@ -53,8 +53,8 @@ Keep judgement independent: Terra authors and Opus judges, Opus builds and
 the full-lane reviewers review, none of them the builder's session. The
 adjudicator never drafts the text it judges. Its ruling on a dispute is final.
 
-The review shape follows the review-churn plan's owner rulings of 2026-10-11
-(`docs/plans/2026-10-11-review-churn/README.md`, "Owner rulings, 2026-10-11"),
+The review shape follows the review-churn plan's operator rulings of 2026-10-11
+(`docs/plans/2026-10-11-review-churn/README.md`, "Operator rulings, 2026-10-11"),
 cited below by ruling or revision number (rulings 4 and 7, revisions 6 to 8
 and 33):
 
@@ -63,7 +63,7 @@ and 33):
   with its own `--scratch`, so each has its own verdict path and its own
   `--basetemp`.
 - A Claude REVIEW-B is recorded as a substitution in the lane's decisions
-  each time it stands in (ruling 7). The owner chose Claude Opus at high for
+  each time it stands in (ruling 7). The operator chose Claude Opus at high for
   the slot when the program's three-reviewer trial ended (revision 37's
   trial; coordinator-2026-10-16 D-008): it caught what Sol missed, while the
   second stand-in's unique catches never changed a round.
@@ -79,7 +79,7 @@ the architectural delta (S5) and dependencies (S6); the brief names the
 registries they are judged against. Two of its questions shape the spec most:
 
 - **Name each independently landable deliverable, and which lands first.** If
-  the owner keeps several together on purpose, record that in the spec so no
+  the operator keeps several together on purpose, record that in the spec so no
   later session argues it again.
 - **Does any deliverable give a file authority over a hold, an act or a gate?**
   If yes, the spec gains a `## Trust` section before the claim:
@@ -92,7 +92,7 @@ registries they are judged against. Two of its questions shape the spec most:
     supported route), and what the authority binds to. One shared ruling
     where the consumers allow (rubric S2).
 
-  Route the Ruling to the owner for confirmation or overrule (§5). Apply
+  Route the Ruling to the operator for confirmation or overrule (§5). Apply
   `project-trajectory/PROCESS.md` §3, "When a guard is owed".
   Why: an unstated trust boundary produces separate fixes in every consumer.
 
@@ -104,7 +104,7 @@ registries they are judged against. Two of its questions shape the spec most:
   intent (the rubric's S7); never adopt one only to make a round pass.
   When the adopted dispositions leave the spec more than three times its
   size in bytes at its filing commit, list the row under the handoff's
-  "For the owner".
+  "For the operator".
 - A fresh confirming round checks the adopted ones before the claim. It runs
   in convergence stance, which the rubric's verdict section states, so its
   brief needs only one appended line saying it is a confirming round of
@@ -115,7 +115,7 @@ registries they are judged against. Two of its questions shape the spec most:
 - A queued row born before S3, S4 and the delta question is re-critiqued when
   it comes up for claim, one row at a time.
 
-Name the change set's **anchor** in the spec: the approved SN or SR it hangs
+Name the change set's **anchor** in the spec: the accepted SN or SR it hangs
 from. Label any derived SR with its lens (`spine-authoring` §2(c)). File splits
 and preparatory rows on trunk before claiming them.
 
@@ -160,7 +160,7 @@ The commands are in recipes §1, "Single plan".
    makes a sitting bless before the build. A Done-when edit (not a tick)
    unbinds the pass record, so adopt it before the critique round meant to
    pass, which it then consumes; after the second critique, write it into
-   the Trust section or take it to the owner.
+   the Trust section or take it to the operator.
 
 Reviewers receive the WI definition (spec, Done-when, Trust, touched rows),
 never the builder's rework coverage plan, the Plan-WI table answering a
@@ -172,7 +172,7 @@ its author.
 
 Run intent, iterate and checkpoint. Draft the connected spine set once,
 iterate code, then reconcile and judge the set against settled code.
-Why: alternating code fixes and row re-attestations buys a sitting per fix.
+Why: alternating code fixes and row re-acceptances buys a sitting per fix.
 
 Omit spine authoring and sittings when no new rows, row-text amendments or
 Done-when change are owed; traced-only updates owe no sitting.
@@ -186,44 +186,44 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    before build round 1 (for a `single` row, after its pass record), from
    the anchor down, plus the arms map (`spine-authoring`,
    `references/in-lane.md`). Keep new spine rows `Drafted` and existing
-   statuses unchanged; interface rows have no approval status. Verify and
+   statuses unchanged; interface rows have no acceptance status. Verify and
    commit the set without a sitting yet. These rows give the builder the
    tests to write and reviewers the obligations the code is meant to meet.
    A TC row's `Evidence` cell follows `references/in-lane.md`, "Author it
    before the build". Fill the prompt's `HATS` slot as
    `references/recipes.md`, "Terra, first turn", defines it.
 2. Build round 1's first deliverable is the tests, committed alone before
-   the code through `integrate.py attest` (recipes §6), with their tags and
+   the code through `integrate.py record-checks` (recipes §6), with their tags and
    `Evidence` parts by that same rule, each under one evidence class (plan
    item 13's typed evidence):
    - **New or corrected executable behaviour:** a strict expected assertion
-     failure, the mark `[bars] red_mark` declares (Python:
+     failure, the mark `[product] expected_failure_marker` declares (Python:
      `@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))`).
      The mark is written as the declared text verbatim, with no added
-     arguments: `attest` and the refresh count only that text, so a mark
-     carrying an added `reason=` is not counted and its test can land red.
-     Its red reaches the test's own assertion, never an import error; a
+     arguments: `record-checks` and the refresh count only that text, so a mark
+     carrying an added `reason=` is not counted and its test can land while it fails.
+     Its failure reaches the test's own assertion, never an import error; a
      stub is the builder's choice. The code commit removes the marks.
    - **Characterization of already-correct behaviour:** unmarked, with a
      stated adequacy witness, the wrong implementation it would catch,
      written in the test itself (its docstring or a comment).
-   - **An Inspection, Analysis or Attest TC:** the independently checkable
+   - **An Inspection, Analysis or Vouch TC:** the independently checkable
      evidence its declared method names, as the TC row states it.
 
    A test that fits none is named, with its disposition, in the lane's
    decisions record before the code commit.
 
-   The tests-first commit goes through `integrate.py attest` with a test
+   The tests-first commit goes through `integrate.py record-checks` with a test
    set that names each marked file: the file carries a tag to a TC in the
-   row's scope, and `attest` refuses a marked file the set does not name.
+   row's scope, and `record-checks` refuses a marked file the set does not name.
    The code commit that removes the marks names the same set: change no
-   tag, TC row or `sr_refs` between the two, and attest a set that must
+   tag, TC row or `sr_refs` between the two, and record checks for a set that must
    change with the marks kept first. A refresh or a hand landing (recipes
-   §3) refused for a mark ends in the code commit or a quarantine. A test the bar skips takes no mark,
+   §3) refused for a mark ends in the code commit or a quarantine. A test the checks skip takes no mark,
    because a skip is never evidence: it is named, with its disposition,
    in the lane's decisions record.
 3. The builder then builds the code. Re-run its claimed results yourself,
-   then verify, regenerate and commit through `integrate.py attest`
+   then verify, regenerate and commit through `integrate.py record-checks`
    (recipes §6).
 
 A lane claimed before this order landed keeps the order it started with;
@@ -233,13 +233,13 @@ record that as a decision in its decisions record.
 
 Each round:
 
-1. **The tip carries the review bar's attestation** before any review:
-   commit lane work through `integrate.py attest`, which derives the
+1. **The tip carries the commit checks' record** before any review:
+   commit lane work through `integrate.py record-checks`, which derives the
    row's review test set, and `review_brief.py review` refuses any other
-   tip. A hook-refused commit or a red bar attests nothing, and the render then
+   tip. A hook-refused commit or failed commit checks record nothing, and the render then
    refuses.
 2. **Run the lints after the build round** (ruling 6): `trace.py --strict`
-   and `check_trajectory.py --strict`, with the commit bar. They run here,
+   and `check_trajectory.py --strict`, with the commit checks. They run here,
    at the closure check and at the landing check, never in the commit hook.
 3. **The full-lane reviewers, in parallel** (the shape under Roles), each
    from its own brief rendered by `review_brief.py review --scope full` from
@@ -286,7 +286,7 @@ Each round:
    `dispute` sitting before another build round (recipes §1). Route the
    builder's position verbatim; do not argue the finding. Each finding comes
    back FIX, SUCCESSOR (a row of its own, filed on trunk at the landing),
-   DISMISS with a reason class, or ESCALATE to the owner; the ruling is
+   DISMISS with a reason class, or ESCALATE to the operator; the ruling is
    final. Record each ruling in the lane's decisions record, never re-raise a
    dismissed finding, and exclude a dismissed or successor finding from the
    next coverage plan by citing the verdict.
@@ -302,7 +302,7 @@ Each round:
    checkpoint, subject to the Done-when hold below.
 
 If the lane changes its Done-when, obtain a verdict bound to that exact text
-or an owner ruling before dispatching another build or closing the row.
+or an operator ruling before dispatching another build or closing the row.
 Use an early checkpoint if necessary; the ordinary cadence does not release
 this hold (`project-trajectory/PROCESS.md` §4).
 
@@ -311,10 +311,10 @@ this hold (`project-trajectory/PROCESS.md` §4).
 - **The cap** (ruling 4, revision 7): at most three counted full rounds
   before the checkpoint. Rounds run until one has no BLOCKER or MAJOR code
   finding, and the checkpoint follows it.
-- **The red cap** (revisions 17 and 18): a red bar draws no review. Count
-  each red `integrate.py attest` as a red round in the lane's decisions
-  record; at `[build] red_rounds_max` consecutive red rounds, close the lane
-  partial (recipes §8, "Close a lane partial"), never a new stop.
+- **The commit-check failure cap** (revisions 17 and 18): failed commit checks
+  draw no review. Count each failed `integrate.py record-checks` as a failed round in
+  the lane's decisions record; at `[build] stop_lane_after_consecutive_commit_check_failures`
+  consecutive failed rounds, close the lane partial (recipes §8, "Close a lane partial"), never a new stop.
 - **Which rounds run in convergence stance.** The third counted round, the
   last the cap allows, renders `review --scope full --stance convergence`
   (ruling 4: the last allowed round runs in convergence mode). The gate over
@@ -336,7 +336,7 @@ this hold (`project-trajectory/PROCESS.md` §4).
   Done-when gap) is never deferred: the sitting orders one more fix round or
   escalates. A reviewer's `convergence-class` tag is advice to the sitting.
 - **Successor rows** are filed on trunk at the landing, one per SUCCESSOR
-  ruling of an accepted verdict, from its binding (§4). Without one nothing
+  ruling of a recorded verdict, from its binding (§4). Without one nothing
   is filed, and the finding holds the landing.
 - **A lane in flight when this shape landed** starts its count at zero at
   its next review, recorded as a decision.
@@ -348,14 +348,14 @@ this hold (`project-trajectory/PROCESS.md` §4).
    commit the reconciled text before composing the sitting. When the set
    was reconciled at an earlier checkpoint and since then no round proposed
    row text and no code moved, omit the turn and record why, after checking
-   mechanically that each changed approved cell keeps its approved text
+   mechanically that each changed accepted cell keeps its accepted text
    (WI-914, WI-923). Fill the turn's `HATS` slot as at intent.
 2. **The closure check passes** before the sitting (`spine-authoring`,
    `references/in-lane.md`: parents, the arms, TC-to-LLR-and-SR, interface
    citations, the strict integrity checks).
 3. **One combined sitting** (`coordinator_adjudicate.py adjudicate
    --brief-file <composed brief> --brief combined`) judges every amendment,
-   first approval and Done-when change together, top-down (recipes §1). The
+   first acceptance and Done-when change together, top-down (recipes §1). The
    sitting ends at its committed verdict; its act is the later act turn (§4).
    Carry retired rows into scope explicitly. A parent's return carries its
    children; have
@@ -385,18 +385,18 @@ them where reasonable, and the spawner's bounds hold for each one:
 - a reviewer's sub-agents see only what its brief gives it, never builder
   material or another reviewer's verdict, and write only in its scratch;
 - a builder's sub-agents work in its lane, never two writers on one file at
-  once, and the builder stays accountable for the change and runs the bar;
+  once, and the builder stays accountable for the change and runs the checks;
 - no sub-agent reviews or adjudicates the work of the agent that spawned it;
 - each test runner has its own `--basetemp` beside its spawner's, or leaves
   the runs to its spawner.
 
-**Tests across parallel lanes** (owner, 2026-10-14):
+**Tests across parallel lanes** (operator, 2026-10-14):
 
 - one `--basetemp` per test runner;
 - free disk is checked before lanes fan out, and the full suite runs alone
   at phase close;
-- a red that passes when re-run quietly is filed as a load-sensitive defect,
-  never charged to the lane or re-run until green.
+- a failure that passes when re-run quietly is filed as a load-sensitive defect,
+  never charged to the lane or re-run until it passes.
 
 ## 4. Land
 
@@ -411,7 +411,7 @@ it judged them: the rows at the verdict's own commit, before the rebase,
 against the rebased tip. A renumbered row counts as changed; re-sit any changed
 row (recipes §3).
 
-Two landing rules for the machinery itself (owner, 2026-10-14; revision 37):
+Two landing rules for the machinery itself (operator, 2026-10-14; revision 37):
 
 - **A lane that changes the machinery the cycle runs on lands alone.** The
   next such lane lands only after the cycle has run through the last one's
@@ -419,7 +419,7 @@ Two landing rules for the machinery itself (owner, 2026-10-14; revision 37):
 - **A defect in a landed mechanism change is fixed forward,** in a lane with
   a regression test, never by reverting a landing. A step the defect blocks
   runs by hand, attended and recorded, never through a bypass flag or a
-  fallback path. A hook that refuses the fix commit is the owner's to decide.
+  fallback path. A hook that refuses the fix commit is the operator's to decide.
 
 1. Rebase onto current trunk before the final act. Use recipes §3–§4; if the
    rebase changes code or authored rows, repeat the affected checkpoint and
@@ -428,23 +428,23 @@ Two landing rules for the machinery itself (owner, 2026-10-14; revision 37):
    `coordinator_adjudicate.py act --verdict <path> --wi WI-NNN` (recipes §3).
    Its act is the lane's last **spine** commit: Status flips and the snapshot
    only, with verdicts committed first. Telemetry may follow.
-3. Squash, regenerate, run the commit bar on the staged squash, close the
+3. Squash, regenerate, run the commit checks on the staged squash, close the
    row, archive the tips, and sweep. Every step and its trap is in recipes
    §3.
 4. File one successor row on trunk per SUCCESSOR ruling of an accepted
    dispute verdict, from its binding (recipes §3).
 
-## 5. Decisions and the owner
+## 5. Decisions and the operator
 
 Record calls not already settled by the spec or a ruled item in
 `docs/decisions/<branch>.toml` (`coordinator-<date>.toml` for calls on trunk),
-with the riskiest in `high_risk`. Ask the owner to **confirm or overrule**,
+with the riskiest in `high_risk`. Ask the operator to **confirm or overrule**,
 never to approve. Anything keeping a row from building forward is filed as
 `project-trajectory/PROCESS.md` §5, "Open items", states; then move to the next
-row. A held-rung approval stops no lane, a new need's or a frame external
+row. A held-rung acceptance stops no lane, a new need's or a frame external
 crossing's included: the lane lands its text, and §5 says what stays in the
-lane. An explicit owner checkpoint is a planned step, held as §5 states. A
-high-risk finding goes to the owner. Leave held signatures and open-item rulings to the owner,
+lane. An explicit operator checkpoint is a planned step, held as §5 states. A
+high-risk finding goes to the operator. Leave held signatures and open-item rulings to the operator,
 along with push and merge to main.
 
 ## 6. Close-out
@@ -453,7 +453,7 @@ Follow `session-protocol` §4, "Coordinator close-out", including the lease
 handback or relaunch, and its blackout close-down inside an armed window.
 Record procedural corrections here or in the recipes.
 The handoff links the one it replaces, points here for procedure, and holds
-state only: what landed, what is open, what the owner owes, and the session
+state only: what landed, what is open, what the operator owes, and the session
 prompt. It carries no cycle, recipe or "corrections learned" section.
 
 **Record the session's usage** before the handoff is written, from the
@@ -478,7 +478,7 @@ primary checkout (`$PY` and `$SCRIPTS` as in the recipes' section 0):
 
 This section is the headless procedure's one home. It carries the review-churn
 plan's revisions 35 ("The coordinator role") and 36 ("Headless coordinator
-legs are marked now"), the owner's 2026-10-14 split ruling (WI-918 takes the
+legs are marked now"), the operator's 2026-10-14 split ruling (WI-918 takes the
 merge slot's reading of the re-claim), and
 `docs/decisions/coordinator-2026-10-14.toml` D-015 (the lane-mode reading) and
 D-016 (the design calls).
@@ -513,32 +513,32 @@ a leg's work stays in lane worktrees.
 - Every builder, reviewer and planner is told to run its commands in the
   foreground.
 
-**Owner-held steps.** A leg never takes a step only the owner can take:
+**Operator-held steps.** A leg never takes a step only the operator can take:
 
 - an act the marker refuses (a status move on a held rung): the lane lands its
   text, and the act is ruled on trunk;
 - an ESCALATE ruling;
 - an open item's ruling;
-- a Done-when item that needs an owner act or credential;
+- a Done-when item that needs an operator act or credential;
 - a push or a merge to main (a routine push files no item).
 
-Any other step the session prompt's Never list or §5 reserves to the owner is
+Any other step the session prompt's Never list or §5 reserves to the operator is
 treated the same way. For each such step, the leg:
 
 1. brings the lane to a safe committed point;
 2. records the step and its evidence (the verdict, the rows, the command) in
-   the lane's decisions record and under the new handoff's "For the owner";
+   the lane's decisions record and under the new handoff's "For the operator";
 3. files the step as an open item where none holds it
    (`project-trajectory/PROCESS.md` §5, "Open items");
 4. moves to the next row.
 
-**Not an owner-held step: an approved row with nothing built behind it.**
+**Not an operator-held step: an accepted row with nothing built behind it.**
 That is build debt, and the coordinator files a work item that builds it, with
-no `needs` on an open item. Retiring an approved row becomes the owner's
+no `needs` on an open item. Retiring an accepted row becomes the operator's
 question only when evidence shows substantial work to build it, and the open
-item then states that evidence (owner, 2026-11-08, OI-129).
+item then states that evidence (operator, 2026-11-08, OI-129).
 
-When no row can move without the owner, the leg closes out with the
+When no row can move without the operator, the leg closes out with the
 `Overnight: stop` line in the new handoff. A Codex limit is answered with a
 `Resume-not-before:` line, as the launcher reads it.
 
@@ -593,12 +593,12 @@ check reads the re-claim as the merge slot does.
 
 ## Never
 
-Owner-reserved acts and standing prohibitions:
+Operator-reserved acts and standing prohibitions:
 
-- Push or merge to main. Push is the owner's.
-- Rule an open item, or sign a held rung or any act reserved to the owner.
+- Push or merge to main. Push is the operator's.
+- Rule an open item, or sign a held rung or any act reserved to the operator.
 - Leave `docs/work/pause` deleted.
-- Read `OWNER_SCRATCHPAD.md` or the adjudicator's token file. Keep only the
+- Read `OPERATOR_SCRATCHPAD.md` or the adjudicator's token file. Keep only the
   token file's path.
 - Self-review, or adjudicate through a subagent. If Codex is rate-limited,
   wait for its reset. After Codex has been unavailable for more than two hours,

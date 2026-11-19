@@ -19,19 +19,19 @@ SN_MD = """# Stakeholder Needs (SN-###)
 |---|---|---|---|---|
 | SN-001 | Do the thing well. | Users need it. | M | works end to end. |
 """
-SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Core add,SN-001,"Shall add.",R,"add works",,M,Test,Approved
+SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Core add,SN-001,"Shall add.",R,"add works",,M,Test,Accepted
 SR-002,Core sub,SN-001,"Shall sub.",R,"sub works",,M,Test,Drafted
 """
 LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Adder,src/m,add,"a+b",(see TC),Approved
-LLR-002,SR-001,Adder edge,src/m,add,"overflow guard",(see TC),Approved
-LLR-003,SR-002,Subber,src/m,sub,"a-b",(see TC),Approved
+LLR-001,SR-001,Adder,src/m,add,"a+b",(see TC),Accepted
+LLR-002,SR-001,Adder edge,src/m,add,"overflow guard",(see TC),Accepted
+LLR-003,SR-002,Subber,src/m,sub,"a-b",(see TC),Accepted
 """
 TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
-TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1",ok,Yes,Approved
-TC-002,LLR-001,Unit,call add,Smoke,"a=2",ok,Yes,Approved
-TC-003,LLR-002,Unit,call add,Full,"a=3",ok,Yes,Approved
+TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1",ok,Yes,Accepted
+TC-002,LLR-001,Unit,call add,Smoke,"a=2",ok,Yes,Accepted
+TC-003,LLR-002,Unit,call add,Full,"a=3",ok,Yes,Accepted
 TC-004,SR-002;LLR-003,Unit,call sub,Full,"a=4",ok,No,Drafted
 """
 GOOD_WIS = (

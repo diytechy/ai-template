@@ -1,4 +1,4 @@
-"""Bootstrap must produce a scaffold that is green out of the box.
+"""Bootstrap must produce a scaffold that passes out of the box.
 
 Implements: TC-010, TC-011
 """
@@ -99,7 +99,7 @@ def test_scaffold_contains_expected_files(scaffold):
         # what removed the `disposition` attribute that told the two apart;
         # SR-144's third terminal, `.../partial`, and the 2026-09-02 plan's
         # fourth, `.../restructured`, are pinned here so the shipped folder set
-        # cannot quietly lose one again — reverting bootstrap's folder reds this.
+        # cannot quietly lose one again — reverting bootstrap's folder fails this.
         "docs/archive/work/cancelled/.gitkeep",
         "docs/archive/work/partial/.gitkeep",
         "docs/archive/work/restructured/.gitkeep",
@@ -198,7 +198,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "src/.gitkeep",
         "tests/.gitkeep",
         "README.md",
-        "OWNER_SCRATCHPAD.md",
+        "OPERATOR_SCRATCHPAD.md",
         "run.cmd",
         "run.sh",
         "run.command",
@@ -477,7 +477,7 @@ def test_agents_template_stays_within_size_budget():
 # here, since a second home is what let the withdrawn ones survive. Each cap is
 # ~20-25% headroom
 # over the file's size when the cap landed, so ordinary edits pass and a
-# doubling does not; the owner may retune any of them (the skill's Budgets
+# doubling does not; the operator may retune any of them (the skill's Budgets
 # table is the readable statement of the same values).
 BYTE_CAPS = {
     # Loaded into every agent session in this repo (project instructions).
@@ -509,7 +509,7 @@ def test_always_loaded_docs_stay_within_byte_caps():
     assert not oversize, (
         "; ".join(oversize) + " — tighten the file (history belongs in "
         "docs/log.md, not in a nested parenthetical) or argue the cap up with "
-        "the owner in the same commit; the byte-budget-guard skill's Budgets "
+        "the operator in the same commit; the byte-budget-guard skill's Budgets "
         "table states the same numbers and must be re-stamped with them"
     )
 
@@ -525,7 +525,7 @@ def test_capped_doc_baselines_match_the_real_sizes():
     above checks size <= cap and would happily watch the baseline drift. The
     failure that produces is the one the skill exists to prevent: an author
     follows the procedure, records "before = 4,925", adds 40 bytes, computes
-    4,965, commits, and reds at 5,022.
+    4,965, commits, and fails at 5,022.
     """
     table = ROOT / "project-trajectory" / "skills" / "byte-budget-guard" / "SKILL.md"
     rows = {}
@@ -575,7 +575,7 @@ def test_status_is_working_surface_history_lives_in_log(scaffold):
     # The sittings table moved intact, and each row names the RUNG RANGE it
     # certifies (OI-21 break 6) rather than being one row per boundary.
     assert "| Sitting | Rungs certified |" in log
-    assert "| Acceptance | `DevStg-Release` (the owner's final read)" in log
+    assert "| Final read | `DevStg-Release` (the operator's final read)" in log
 
 
 def test_plan_build_cadence_surfaces(scaffold):
@@ -797,7 +797,7 @@ def test_scaffold_pins_hook_line_endings(scaffold):
     # MINOR-15). Five test modules rely on this line for CRLF-safety — fixture
     # trees are built by copying kit files and then diffed byte-for-byte — and
     # nothing pinned it: deleting it from the template left every hook-specific
-    # assertion above green while Windows fixtures began producing CRLF diffs
+    # assertion above passing while Windows fixtures began producing CRLF diffs
     # and snapshot mismatches. The default is the load-bearing half; the
     # per-path rules below it are the exceptions.
     assert "* text=auto eol=lf" in text, (
@@ -872,17 +872,17 @@ def test_readme_vision_tag_and_needs_pointer(scaffold):
     assert "](../../README.md#vision)" in needs
 
 
-def test_scaffolds_owner_scratchpad(scaffold):
-    # FB3: the owner scratchpad ships at the root with a loud agents-ignore header
+def test_scaffolds_operator_scratchpad(scaffold):
+    # FB3: the operator scratchpad ships at the root with a loud agents-ignore header
     # and the secrets-floor caveat. It carries no placeholders, so the scaffolded
     # copy is content-identical to the kit template.
-    pad = scaffold / "OWNER_SCRATCHPAD.md"
-    assert pad.exists(), "bootstrap must scaffold OWNER_SCRATCHPAD.md"
+    pad = scaffold / "OPERATOR_SCRATCHPAD.md"
+    assert pad.exists(), "bootstrap must scaffold OPERATOR_SCRATCHPAD.md"
     text = pad.read_text(encoding="utf-8")
-    assert "For the human owner only" in text
+    assert "For the operator only, as a person" in text
     assert "do **NOT** read" in text  # the agents-ignore instruction
     assert "secrets floor still scans this file" in text  # not a secrets-safe zone
-    template = (KIT / "OWNER_SCRATCHPAD.template.md").read_text(encoding="utf-8")
+    template = (KIT / "OPERATOR_SCRATCHPAD.template.md").read_text(encoding="utf-8")
     assert text == template, "scaffolded scratchpad must match the kit template"
 
 
@@ -988,7 +988,7 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
     # and each is TYPED (a bool is a bool, the reviewer count is an int) rather
     # than a one-word string every reader re-parses. Every VALUE is the one the
     # file it replaced shipped, with ONE deliberate exception carrying its own
-    # ruling: WI-433 (owner 2026-08-11) ships `blackout` DISABLED
+    # ruling: WI-433 (operator 2026-08-11) ships `blackout` DISABLED
     # (`12:00-12:00`, start == end) rather than the kit author's own
     # 12:00-19:00 window, because an adopter should not inherit a
     # business-hours blackout in a timezone they did not choose. Folding a file
@@ -1001,12 +1001,12 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
     # orthogonal dials, not a stored enum word. The default is the conservative
     # end — WI-493 re-keyed the dial from the 0-4 ordinal to the DevStg-* rung
     # string it always meant, and `4` is now `"DevStg-Release"`.
-    assert cfg["attestation"]["human_approval_through"] == "DevStg-Release"
-    assert cfg["attestation"]["keep_nondependent"] is False
-    assert "gate_policy" not in cfg["attestation"]
-    assert cfg["attestation"]["human_approval_through"] == "DevStg-Release"
+    assert cfg["authority"]["operator_accepts_through"] == "DevStg-Release"
+    assert cfg["authority"]["keep_nondependent"] is False
+    assert "gate_policy" not in cfg["authority"]
+    assert cfg["authority"]["operator_accepts_through"] == "DevStg-Release"
     assert cfg["policies"] == {
-        "push": "human",
+        "push": "operator",
         "review_rounds": 1,
         "privacy_check": False,
         "secrets_scan": True,
@@ -1030,9 +1030,9 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
         "live_status": False,
         "subagent_gate": "off",
         # WI-486 / OI-42's seventh dial, and the first NUMBER in this section:
-        # the reverse back-link coverage bar. `0` is its off position, and the
+        # the reverse back-link coverage minimum. `0` is its off position, and the
         # same argument as the two opt-in dials above applies — shipping the
-        # recorded 50% target here would arm a bar every fresh scaffold fails
+        # recorded 50% target here would arm a minimum every fresh scaffold fails
         # on its first run.
         "backlink_coverage_min": 0,
         # SR-217's declared start for the test-first order: empty declares
@@ -1208,8 +1208,8 @@ def test_privacy_check_flag_sets_toggle(tmp_path):
 # string. These drive the writer's real callers, the scaffold flags and the
 # migration, and read the result back through the parse.
 
-_INLINE_POLICIES = 'policies = { push = "human", privacy_check = false }\n'
-_DOTTED_POLICIES = 'policies.push = "human"\npolicies.privacy_check = false\n'
+_INLINE_POLICIES = 'policies = { push = "operator", privacy_check = false }\n'
+_DOTTED_POLICIES = 'policies.push = "operator"\npolicies.privacy_check = false\n'
 _DECOY_POLICIES = (
     '[policies]\nnote = """\nprivacy_check = false\n"""\nprivacy_check = false\n'
 )
@@ -1260,7 +1260,7 @@ def test_a_scaffold_flag_names_a_key_the_file_does_not_declare(tmp_path):
     # nothing (an absent key was removed on purpose), so it must not report
     # the value it did not write.
     dest = tmp_path / "repo"
-    path = _policy_repo(dest, '[policies]\npush = "human"\n')
+    path = _policy_repo(dest, '[policies]\npush = "operator"\n')
     proc = run_py(
         [SCRIPTS / "bootstrap.py", "--dest", dest, "--privacy-check", "true"],
         tmp_path,
@@ -1268,7 +1268,7 @@ def test_a_scaffold_flag_names_a_key_the_file_does_not_declare(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "privacy-check: true" not in proc.stdout
     assert "NOTE: privacy-check not written" in proc.stdout
-    assert path.read_text(encoding="utf-8") == '[policies]\npush = "human"\n'
+    assert path.read_text(encoding="utf-8") == '[policies]\npush = "operator"\n'
 
 
 @pytest.mark.parametrize(
@@ -1287,7 +1287,7 @@ def test_set_process_key_refuses_a_dial_it_cannot_edit_in_place(tmp_path, text):
 
 
 _UNPARSEABLE_POLICIES = (
-    '[policies]\npush = "human"\nprivacy_check = false\nunfinished =\n'
+    '[policies]\npush = "operator"\nprivacy_check = false\nunfinished =\n'
 )
 
 
@@ -1355,52 +1355,11 @@ def test_migration_writes_the_real_key_never_a_line_inside_a_string(tmp_path):
     assert not (tmp_path / "docs" / "privacy-check").exists()
 
 
-def test_the_ordinal_migration_reads_the_dial_never_a_line_inside_a_string(
-    tmp_path,
-):
-    """Implements: TC-152"""
-    text = (
-        "[attestation]\n"
-        "note = '''\n"
-        "human_approval_through = 2\n"
-        "'''\n"
-        'human_approval_through = "DevStg-Arch"\n'
-    )
-    path = _policy_repo(tmp_path, text)
-    load_script("bootstrap").migrate_legacy_config(tmp_path)
-    assert path.read_bytes() == text.encode("utf-8")
-
-
-def test_the_dial_key_rename_refuses_an_old_key_held_in_an_inline_table(tmp_path):
-    """The migration's rename of the retired attestation dial key refuses an
-    old key the parse holds inside an inline `attestation` table: the file's
-    bytes are unchanged, the old declaration stays, and a note says so.
-
-    Adequacy witness: a rename that returns silently when its line edit is
-    not confirmed (as the line-scan rename did, finding no line under a
-    bare header) leaves no note; one that keeps an unconfirmed edit appends
-    a second `[attestation]` table and changes the bytes; either fails here.
-
-    Implements: TC-150
-    """
-    boot = load_script("bootstrap")
-    old = boot.LEGACY_ATTESTATION_KEY
-    text = 'attestation = {{ {} = "DevStg-Arch" }}\n'.format(old)
-    path = _policy_repo(tmp_path, text)
-    _moved, notes = boot.migrate_legacy_config(tmp_path)
-    assert path.read_bytes() == text.encode("utf-8"), "wrote anyway"
-    attestation = process_toml(tmp_path)["attestation"]
-    assert attestation == {old: "DevStg-Arch"}, "the old declaration was lost"
-    assert any(old in n and "LEFT IN PLACE" in n for n in notes), notes
-
-
 def test_an_ordinary_policy_file_still_migrates_and_sets_in_place(tmp_path):
     """Implements: TC-152"""
     # The characterization: one `key = value` line per dial under its header
     # is rewritten on that line, and a new key lands under its own header.
-    text = (
-        '# header kept\n[policies]\npush = "human"\nprivacy_check = false\n\n[checks]\n'
-    )
+    text = '# header kept\n[policies]\npush = "operator"\nprivacy_check = false\n\n[checks]\n'
     path = _policy_repo(tmp_path, text, {"privacy-check": "true", "review-policy": "2"})
     boot = load_script("bootstrap")
     moved, notes = boot.migrate_legacy_config(tmp_path)
@@ -1519,7 +1478,7 @@ def test_domain_skills_require_matching_explicit_opt_in(tmp_path):
     assert "registry-hygiene" in neutral_skills
 
 
-def test_scaffold_with_agents_still_green(tmp_path):
+def test_scaffold_with_agents_still_passes(tmp_path):
     # Materializing the agent layer must not break the out-of-the-box harness.
     dest = _bootstrap(tmp_path, "--agents", "both")
     proc = run_py(["scripts/trace.py", "--strict"], cwd=dest)
@@ -1666,7 +1625,7 @@ def test_the_common_package_ships_complete(scaffold):
     cannot answer this one: it compares TOP-LEVEL import names, so once any
     `scripts/kitlib/*.py` row is in MAPPING the name `kitlib` reads as mapped
     and a MISSING MODULE INSIDE the package is invisible to it. Probed, not
-    assumed — deleting the `config.py` row leaves that guard green.
+    assumed — deleting the `config.py` row leaves that guard passing.
 
     Per-file completeness is a MANIFEST question, so it is asked of a real
     scaffold: the copied package must hold exactly the kit's module set, and
@@ -1705,7 +1664,7 @@ def test_the_common_package_ships_complete(scaffold):
 def test_bootstrap_imports_only_the_common_package():
     """THE RULE THAT REPLACED F5, ASSERTED RATHER THAN COMMENTED.
 
-    Owner ruling D-8 (`OI-16`) inverted its own step 2: shared helpers live in
+    Operator ruling D-8 (`OI-16`) inverted its own step 2: shared helpers live in
     the shipped package and `bootstrap.py` imports FROM it. The replacing rule
     — *bootstrap imports the common package and nothing else* — had only ever
     been prose. It is load-bearing in one specific way: `bootstrap.py` is

@@ -407,7 +407,7 @@ class _Watched:
             return True
 
     def reap(self):
-        """Test hygiene only: kill a survivor so a red run leaks nothing."""
+        """Test hygiene only: kill a survivor so a failing run leaks nothing."""
         if os.name == "nt":
             self.k32.TerminateProcess(self.handle, 1)
             self.k32.CloseHandle(self.handle)

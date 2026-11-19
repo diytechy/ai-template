@@ -21,7 +21,7 @@ steers automation, and each one is a rule the templates now carry:
   * The reviewer brief's redaction-by-construction (diff + requirements only)
     exists because a leaked self-assessment collapses review finding rates
     several-fold — and a test pins the exact clause that says so.
-  * WI-417 — `NEEDS-HUMAN`, a prose token, silently selected the review tier,
+  * WI-417 — `NEEDS-OPERATOR`, a prose token, silently selected the review tier,
     and a typo downgraded it. So: **prose that carries control flow must be a
     typed field, never a magic substring.**
 
@@ -115,7 +115,7 @@ WORKER = "WORKER"
 REVIEWER = "REVIEWER"
 CRITIQUE = "CRITIQUE"
 ADJUDICATE_AMENDMENT = "ADJUDICATE-AMENDMENT"
-ADJUDICATE_FIRST_APPROVAL = "ADJUDICATE-FIRST-APPROVAL"
+ADJUDICATE_FIRST_ACCEPTANCE = "ADJUDICATE-FIRST-ACCEPTANCE"
 ADJUDICATE_DISPOSITION = "ADJUDICATE-DISPOSITION"
 # The CONSOLIDATION brief (the 2026-09-02 backlog-restructure plan §1.1). It
 # REPLACES the retired `ADJUDICATE-CONFLICT`: that template carried the three
@@ -124,7 +124,7 @@ ADJUDICATE_DISPOSITION = "ADJUDICATE-DISPOSITION"
 # questions survive here; the fourth exit (CONSOLIDATE) and the census that
 # mints the row are what make them reachable.
 ADJUDICATE_CONSOLIDATE = "ADJUDICATE-CONSOLIDATE"
-ADJUDICATE_RED_TC = "ADJUDICATE-RED-TC"
+ADJUDICATE_EVIDENCE_GAP = "ADJUDICATE-EVIDENCE-GAP"
 # The CHECKPOINT RE-JUDGE brief (SR-215): an observation test case a merge or
 # release preparation found due, judged afresh and recorded.
 ADJUDICATE_REJUDGE = "ADJUDICATE-REJUDGE"
@@ -149,10 +149,10 @@ KIT_PROMPTS = {
     REVIEWER: "reviewer.template.md",
     CRITIQUE: "critique.template.md",
     ADJUDICATE_AMENDMENT: "adjudicate-amendment.template.md",
-    ADJUDICATE_FIRST_APPROVAL: "adjudicate-first-approval.template.md",
+    ADJUDICATE_FIRST_ACCEPTANCE: "adjudicate-first-acceptance.template.md",
     ADJUDICATE_DISPOSITION: "adjudicate-disposition.template.md",
     ADJUDICATE_CONSOLIDATE: "adjudicate-consolidate.template.md",
-    ADJUDICATE_RED_TC: "adjudicate-red-tc.template.md",
+    ADJUDICATE_EVIDENCE_GAP: "adjudicate-evidence-gap.template.md",
     ADJUDICATE_REJUDGE: "adjudicate-rejudge.template.md",
     ADJUDICATE_DONE_WHEN: "adjudicate-done-when.template.md",
     ADJUDICATE_COMBINED: "adjudicate-combined.template.md",

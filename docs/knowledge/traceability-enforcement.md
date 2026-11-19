@@ -200,7 +200,7 @@ human ruling, by making the human ruling *demanded at the right moment* instead.
 
 - **Automated link recovery as a gate** — best classical F≈48.7, LLMs no better
   and worse under a realistic candidate distribution. Fine as a suggester, never
-  as a bar.
+  as a check.
 - **Mechanizing a repoint campaign** — refuted in this repo at WI-425: 69 sites,
   11 of them accurate history, one a fixture that would have gained a fabricated
   link. The token does not decide.

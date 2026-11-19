@@ -16,18 +16,18 @@ repos, a real claim, a real lane worktree, real commits. What each group pins:
     would claim, close and re-claim the same WI forever. The assertion is
     against `schedule.frontier` itself, either way;
   * a `partial` report that omits the KEEP/DISCARD split refuses the merge —
-    the rung a live incident bought, where a green close merged rejected code
+    the rung a live incident bought, where a passing close merged rejected code
     onto trunk because nothing had asked which commits should survive;
   * every registry reader still parses a closed spec. `partial/` widened a
     status vocabulary that four copies enforce, so all four are driven over one
     real file — the drift this repo closes by test rather than by extraction
     (WI-291);
-  * the QUARANTINE is bar-inert AND lossless: the product paths go back to the
+  * the QUARANTINE is checks-inert AND lossless: the product paths go back to the
     base byte for byte, the `.patch` re-applies, and the bookkeeping the
     handback just wrote survives untouched, as do the lane's review rounds and
     its id watermark, which only ever rises.
 
-Mutation notes are inline where a green could be vacuous — a revert that
+Mutation notes are inline where a pass could be vacuous — a revert that
 reverted nothing, or a "blocked" assertion that would pass on an unblocked row.
 
 Implements: TC-138, TC-156, TC-184
@@ -155,7 +155,7 @@ def report_path(root, wid="WI-401", branch="wi-401"):
 
 
 def merge_branch(root, branch="wi-401"):
-    """Land the branch on trunk the way the slot would — without the bar, which
+    """Land the branch on trunk the way the slot would — without the checks, which
     is `integrate`'s own suite's subject. Lets a test read the RETURNED spec on
     trunk, which is where the invariant says it has to end up."""
     _git(root, "merge", "--no-ff", "-q", "-m", "integrate: merge " + branch, branch)
@@ -203,7 +203,7 @@ def test_the_partial_close_lands_terminal_with_its_report_and_finishes_the_branc
     assert not list((root / "docs" / "work" / "active").rglob("WI-*.md"))
 
     # The REPORT is the event's identity, and it carries typed fields — not a
-    # magic substring inside prose (the `NEEDS-HUMAN` defect).
+    # magic substring inside prose (the `NEEDS-OPERATOR` defect).
     report = report_path(root).read_text(encoding="utf-8")
     assert 'wi = "WI-401"' in report
     assert 'claimed_outcome = "partial"' in report
@@ -216,7 +216,7 @@ def test_the_partial_close_lands_terminal_with_its_report_and_finishes_the_branc
 
 
 def test_a_partial_report_silent_about_the_keep_discard_split_refuses(tmp_path):
-    """The rung a LIVE incident bought (2026-08-03): a close merged green and
+    """The rung a LIVE incident bought (2026-08-03): a close passed and merged, and
     the code the lane had REJECTED landed on trunk as-is, because nothing had
     asked which commits should survive.
 
@@ -259,8 +259,8 @@ def test_a_partial_close_is_CLEAN_under_the_real_trajectory_check(tmp_path):
     early close leaves the spec's definition byte-identical.
 
     A rule no honest close can satisfy is not a rule. In the loop it is worse
-    than a red gate: the dispatcher's post-close refresh reds, `_refresh_failed`
-    quarantines the lane's work, the retry reds again (the spec move is
+    than a failing gate: the dispatcher's post-close refresh fails, `_refresh_failed`
+    quarantines the lane's work, the retry fails again (the spec move is
     bookkeeping and exempt from the revert), and the run dies — so every partial
     close would destroy the lane's work and stop the run, over bookkeeping.
 
@@ -481,7 +481,7 @@ def test_a_disposition_rows_own_handback_is_refused_structurally(tmp_path):
     # only outcomes are cancel / defer / re-queue with drafted follow-up /
     # surface an open item. The refusal is structural (the function that would
     # perform the act refuses), never prose, and it leaves the claim exactly
-    # where it was for a human to read.
+    # where it was for an operator to read.
     root = claimed_repo(tmp_path)
     spec = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
     spec.write_text(
@@ -493,7 +493,7 @@ def test_a_disposition_rows_own_handback_is_refused_structurally(tmp_path):
     )
     _commit(root, "fixture: the claim is an adjudication row", when=T_CODE)
 
-    ids, refusal = hb.close_partial(root, "wi-401", "worker exit 7 (NEEDS-HUMAN)")
+    ids, refusal = hb.close_partial(root, "wi-401", "worker exit 7 (NEEDS-OPERATOR)")
     assert ids is None
     assert "never closes early" in refusal and "R3" in refusal
     assert spec.is_file()  # the claim did not move
@@ -668,12 +668,12 @@ def test_the_mechanical_adjudication_close_archives_terminal_and_finishes(tmp_pa
     assert rows["WI-401"]["Status"] == "done"
 
 
-def test_the_close_the_writer_lands_is_one_the_attestor_peels(tmp_path):
+def test_the_close_the_writer_lands_is_one_the_verifier_peels(tmp_path):
     """Implements: TC-205"""
     # THE WRITER↔VERIFIER LOOP, closed on a REAL close rather than a
-    # hand-composed one. `verdict.mechanical_close_attestation` re-derives this
+    # hand-composed one. `verdict.mechanical_close_peel` re-derives this
     # subject from the one row the diff moves and compares it exactly, so the
-    # writer and the attestor share one composer and one spelling; if they
+    # writer and the peel share one composer and one spelling; if they
     # drift, every adjudication close silently stops peeling and re-opens the
     # staled-APPROVE failure the peel exists to close. The peel test suite
     # composes its own fixtures, so nothing else drives the producer here.
@@ -684,7 +684,7 @@ def test_the_close_the_writer_lands_is_one_the_attestor_peels(tmp_path):
     assert ids == ["WI-401"]
     landed = _git(root, "rev-parse", "wi-401").strip()
     assert landed != before  # the close really committed
-    assert kv.mechanical_close_attestation(root, landed) == before
+    assert kv.mechanical_close_peel(root, landed) == before
 
 
 def test_the_mechanical_close_mints_the_drafted_successor_at_merge(tmp_path):
@@ -712,7 +712,7 @@ def test_the_refusal_invariant_stops_a_disposition_with_no_successor(tmp_path):
     ids, refusal = hb.close_adjudication(root, "wi-401")
     assert ids is None
     assert refusal is not None and "no successor" in refusal.lower()
-    # The claim did NOT move: the row stays in active/ for a human.
+    # The claim did NOT move: the row stays in active/ for an operator.
     assert (
         root / "docs" / "work" / "active" / "wi-401" / "WI-401-dispose.md"
     ).is_file()
@@ -727,7 +727,7 @@ def test_the_refusal_invariant_stops_a_cancelled_close_with_no_successor(tmp_pat
     ids, refusal = hb.close_adjudication(root, "wi-401")
     assert ids is None
     assert refusal is not None and "no successor" in refusal.lower()
-    # The claim did NOT move: the row stays in active/ for a human.
+    # The claim did NOT move: the row stays in active/ for an operator.
     assert (
         root / "docs" / "work" / "active" / "wi-401" / "WI-401-dispose.md"
     ).is_file()
@@ -881,9 +881,7 @@ def test_an_adoption_of_a_superseding_row_closes_and_writes_the_record(
         "no-supersedes",
     ],
 )
-def test_an_adoption_that_is_not_accepted_refuses_the_close(
-    tmp_path, dispositions, seed, reason
-):
+def test_an_invalid_adoption_refuses_the_close(tmp_path, dispositions, seed, reason):
     """Implements: TC-156"""
     root = adopting_repo(tmp_path, dispositions=dispositions, seed=[seed])
     head = _git(lane(root), "rev-parse", "HEAD").strip()
@@ -1087,7 +1085,7 @@ def test_an_adjudication_close_moves_its_one_row(tmp_path):
     assert hb.close_adjudication(root, "wi-401") == (None, None)
 
 
-# --- the quarantine (the RULED red arm) ---------------------------------------
+# --- the quarantine (the RULED failure arm) -----------------------------------
 
 
 def quarantined_repo(tmp_path):
@@ -1106,11 +1104,11 @@ def quarantined_repo(tmp_path):
 def test_quarantine_reverts_the_product_and_keeps_the_failing_diff(tmp_path):
     root, wt = quarantined_repo(tmp_path)
 
-    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+    assert hb.quarantine(root, "wi-401", "checks exit 1") is None
 
-    # Bar-inert: every product path is back to what the base had, in all THREE
+    # Checks-inert: every product path is back to what the base had, in all THREE
     # diff shapes the lane produced. A revert that only handled modifications
-    # would leave added.py — the unparseable file — right where the bar looks,
+    # would leave added.py — the unparseable file — right where the checks looks,
     # and a revert that ignored deletions would leave .gitignore missing.
     assert (wt / "seed.txt").read_text(encoding="utf-8") == "seed\n"
     assert not (wt / "added.py").exists()
@@ -1144,7 +1142,7 @@ def test_quarantine_reverts_a_rename_and_keeps_the_failing_file(tmp_path):
     _commit(wt, "WI-401: rename a module and break a file")
     assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
 
-    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+    assert hb.quarantine(root, "wi-401", "checks exit 1") is None
 
     tree = _git(root, "ls-tree", "-r", "--name-only", "wi-401").split()
     # The rename is undone in BOTH directions...
@@ -1177,7 +1175,7 @@ def test_a_failed_revert_step_refuses_and_restores_rather_than_reporting(
         return real_git(cwd, *args)
 
     monkeypatch.setattr(hb.ac, "git", flaky)
-    refusal = hb.quarantine(root, "wi-401", "bar exit 1")
+    refusal = hb.quarantine(root, "wi-401", "checks exit 1")
     monkeypatch.undo()
 
     assert refusal is not None
@@ -1201,7 +1199,7 @@ def test_quarantine_leaves_the_handback_bookkeeping_alone(tmp_path):
     )
     _commit(wt, "log: WI-401 fragment")
 
-    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+    assert hb.quarantine(root, "wi-401", "checks exit 1") is None
     assert (wt / "docs" / "work" / "partial" / "WI-401-widget.md").is_file()
     assert fragment.is_file()
     # The per-close REPORT is bookkeeping too — reverting it would destroy the
@@ -1221,7 +1219,7 @@ def _marks(**raised):
 
 def test_quarantine_leaves_the_monotone_watermark_as_the_lane_left_it(tmp_path):
     # A minted id is BURNED whether or not its row survives: the lane raised
-    # the IF mark when it allocated, the red revert takes the row away, and the
+    # the IF mark when it allocated, the failure revert takes the row away, and the
     # mark must stay where the lane left it. Reverting it with the product diff
     # lowered a mark in the quarantine commit itself, so the reverted tree
     # could never pass registry-integrity and the run stopped on the very
@@ -1235,7 +1233,7 @@ def test_quarantine_leaves_the_monotone_watermark_as_the_lane_left_it(tmp_path):
     _commit(wt, "WI-401: allocate IF-6 and break a file")
     assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
 
-    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+    assert hb.quarantine(root, "wi-401", "checks exit 1") is None
 
     assert not (wt / "added.py").exists()  # the product still reverts
     assert (wt / tr.WATERMARK).read_text(encoding="utf-8") == raised
@@ -1256,7 +1254,7 @@ def test_quarantine_leaves_the_monotone_watermark_as_the_lane_left_it(tmp_path):
 
 def test_a_product_file_sharing_the_watermarks_prefix_still_reverts(tmp_path):
     # The watermark is exempt by EXACT path. A prefix match spared
-    # `docs/id-watermark.bak` too, a product file the red lane added, leaving
+    # `docs/id-watermark.bak` too, a product file the failing lane added, leaving
     # it live on trunk after a quarantine that claimed to revert the product.
     tr = load_script("trace")
     root = claimed_repo(tmp_path, extra=[(tr.WATERMARK, _marks(WI=401, IF=5))])
@@ -1268,7 +1266,7 @@ def test_a_product_file_sharing_the_watermarks_prefix_still_reverts(tmp_path):
     _commit(wt, "WI-401: allocate IF-6 and leave a backup")
     assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
 
-    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+    assert hb.quarantine(root, "wi-401", "checks exit 1") is None
 
     assert not backup.exists()
     tree = _git(root, "ls-tree", "-r", "--name-only", "wi-401").split()
@@ -1285,7 +1283,7 @@ def test_the_monotone_exemption_names_the_watermarks_one_home():
 
 def test_quarantine_keeps_the_lanes_review_record(tmp_path):
     # Evidence of what happened survives the reverting of what was done: the
-    # red revert deleted a lane's round files with its product diff, and the
+    # revert of a failing lane deleted a lane's round files with its product diff, and the
     # disposition adjudicator then judged a close whose review it could not
     # read (WI-540, the one merged row on trunk with zero round files).
     root, wt = quarantined_repo(tmp_path)
@@ -1296,7 +1294,7 @@ def test_quarantine_keeps_the_lanes_review_record(tmp_path):
     )
     _commit(wt, "review: WI-401 round 1")
 
-    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+    assert hb.quarantine(root, "wi-401", "checks exit 1") is None
 
     assert not (wt / "added.py").exists()
     assert round_file.read_text(encoding="utf-8") == (
@@ -1306,22 +1304,22 @@ def test_quarantine_keeps_the_lanes_review_record(tmp_path):
     assert "docs/reviews/wi-401/001-REVIEW-A-abc1234.md" in tree
 
 
-def test_quarantine_refuses_when_the_red_is_not_the_lanes_own_code(tmp_path):
+def test_quarantine_refuses_when_the_failure_is_not_the_lanes_own_code(tmp_path):
     # A lane that changed nothing outside the bookkeeping surfaces cannot have
-    # caused the red, so there is nothing to revert and reverting nothing would
-    # only buy a second identical bar run. It says so instead.
+    # caused the failure, so there is nothing to revert and reverting nothing would
+    # only buy a second identical check run. It says so instead.
     root = claimed_repo(tmp_path)
     lane(root)
     assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
 
-    refusal = hb.quarantine(root, "wi-401", "bar exit 1")
+    refusal = hb.quarantine(root, "wi-401", "checks exit 1")
     assert refusal is not None
     assert "nothing outside the bookkeeping surfaces" in refusal
 
 
 def test_the_git_dependency_is_declared_for_this_module():
     # This suite drives real repositories end to end; without git on PATH every
-    # test above would SKIP and the module would still print a green. The
+    # test above would SKIP and the module would still print a pass. The
     # declared gate (conftest.ENV_GATES) is what makes that skip COUNTED in the
     # terminal summary rather than invisible (WI-326).
     assert shutil.which("git"), "the module-level env gate should have skipped"

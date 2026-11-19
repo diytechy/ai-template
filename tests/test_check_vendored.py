@@ -154,7 +154,7 @@ def test_text_is_not_mistaken_for_binary():
 
 def test_the_normalization_is_mutation_proven(tmp_path):
     """Done-when 4, in the form that cannot rot: run the REAL comparison with the
-    normalization removed and assert the cross-line-ending guard goes red. The
+    normalization removed and assert the cross-line-ending guard fails. The
     proof lives inside the suite because a mutation done by hand once, in a
     session, is not evidence a successor can re-derive."""
     import hashlib

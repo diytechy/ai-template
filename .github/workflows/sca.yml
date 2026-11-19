@@ -1,6 +1,6 @@
 # Scheduled Python software-composition-analysis (repo-review 2026-08-19 M-11).
 # requirements-dev.txt CONSTRAINS the dev toolchain (WI-104) so a tool major
-# can't turn the gate red unannounced, but a compatible-release range can also
+# can't make the gate fail unannounced, but a compatible-release range can also
 # retain a KNOWN VULNERABILITY indefinitely if the fix landed in the next major
 # (exactly what happened: pytest~=8.3 excluded the 9.0.3 fix for
 # GHSA-6w46-j5rx-g56g). canary.yml catches upcoming *compatibility* breakage;
@@ -9,7 +9,7 @@
 # PyPA/OSV advisory data, on the same weekly cadence as the canary, and is
 # NON-gating for the same reason canary is — a merge must not fail because a
 # new advisory was published against an already-merged pin; it fails LOUDLY on
-# its own schedule so the finding is a heads-up, not a surprise red on some
+# its own schedule so the finding is a heads-up, not a surprise failure on some
 # contributor's unrelated PR. WI-480 added this workflow; pip-audit is a
 # reviewed row in docs/dependencies.md (Kind=python, Tier=coordinator) per the
 # dependency-ledger rule — it is dev/CI-only, never forced on an adopter.

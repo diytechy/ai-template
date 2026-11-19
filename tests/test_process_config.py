@@ -51,7 +51,7 @@ check_privacy = load_script("check_privacy")
 
 def test_declared_policy_surface_is_reexported_from_its_behavior_module():
     policy = load_script("agent_policy")
-    for name in ("process_config", "config_conflicts", "human_holds"):
+    for name in ("process_config", "config_conflicts", "operator_holds"):
         exported = getattr(ac, name)
         owned = getattr(policy, name)
         assert exported.__module__ == "agent_policy"
@@ -232,8 +232,8 @@ OTHER_TOML_FORMS = [
         '[policies]\nnote = """\nprivacy_check = false\n"""\n',
         None,
     ),
-    ("wrong-section-true", "[attestation]\nprivacy_check = true\n", True),
-    ("wrong-section-false", "[attestation]\nprivacy_check = false\n", True),
+    ("wrong-section-true", "[authority]\nprivacy_check = true\n", True),
+    ("wrong-section-false", "[authority]\nprivacy_check = false\n", True),
 ]
 
 # A dial that is not the boolean `false` reads ON.
@@ -790,9 +790,9 @@ def test_an_unreadable_policy_file_is_refused(tmp_path):
 @pytest.mark.parametrize("value", [-1, 101])
 def test_an_out_of_range_dial_is_refused_not_defaulted(tmp_path, value):
     """TC-150 (SR-137: an out-of-range dial is refused rather than defaulted).
-    The coverage bar's own reader answers report-only for a value it cannot
+    The coverage minimum's own reader answers report-only for a value it cannot
     use, so the refusal is what makes the value visible. (The rung dial's
-    out-of-range ordinal is `test_approval_level`'s
+    out-of-range ordinal is `test_acceptance_level`'s
     `test_a_malformed_dial_is_REFUSED_not_silently_defaulted`.)
 
     Adequacy witness: a check that clamped the value into range, or let the
@@ -841,19 +841,19 @@ def test_every_guarded_entry_point_refuses_a_mixed_config(tmp_path):
 # the config layer must read}).
 VALID_CONFIG_SHAPES = [
     pytest.param(
-        'policies.review_rounds = 2\npolicies.push = "human"\n',
-        {"review-policy": "2", "push-policy": "human"},
+        'policies.review_rounds = 2\npolicies.push = "operator"\n',
+        {"review-policy": "2", "push-policy": "operator"},
         id="dotted-key",
     ),
     pytest.param(
-        'policies = { review_rounds = 2, push = "human" }\n',
-        {"review-policy": "2", "push-policy": "human"},
+        'policies = { review_rounds = 2, push = "operator" }\n',
+        {"review-policy": "2", "push-policy": "operator"},
         id="inline-table",
     ),
     pytest.param(
-        '[policies]\nreview_rounds = 2\npush = """human"""\n'
+        '[policies]\nreview_rounds = 2\npush = """operator"""\n'
         'note = """\nfirst line\nsecond line\n"""\n',
-        {"review-policy": "2", "push-policy": "human"},
+        {"review-policy": "2", "push-policy": "operator"},
         id="multiline-string",
     ),
 ]
@@ -887,13 +887,13 @@ def test_declared_policy_prefers_the_toml_then_the_legacy_file_then_the_default(
     tmp_path,
 ):
     docs = _docs(tmp_path)
-    assert ac.declared_policy(docs, "push-policy", "human") == "human"
+    assert ac.declared_policy(docs, "push-policy", "operator") == "operator"
 
     (docs / "push-policy").write_text("# note\nagent\n", encoding="utf-8")
-    assert ac.declared_policy(docs, "push-policy", "human") == "agent"
+    assert ac.declared_policy(docs, "push-policy", "operator") == "agent"
 
     write_toml(tmp_path, '[policies]\npush = "agent-iteration"\n')
-    assert ac.declared_policy(docs, "push-policy", "human") == "agent-iteration"
+    assert ac.declared_policy(docs, "push-policy", "operator") == "agent-iteration"
 
 
 def test_a_typed_value_renders_in_the_legacy_string_vocabulary(tmp_path):
@@ -950,13 +950,13 @@ def test_migration_folds_every_dial_in_and_deletes_the_file(tmp_path):
     # posture while running with another.
     # WI-493 re-keyed the dial to the DevStg-* rung it always meant: the
     # loop-held end that used to be the ordinal `0` is now `DevStg-Below`, the
-    # sentinel for "no rung is a human's to approve".
-    assert cfg["attestation"]["human_approval_through"] == "DevStg-Below"
-    assert cfg["attestation"]["keep_nondependent"] is True
-    assert cfg["attestation"]["final_review"] == "off"
-    assert "gate_policy" not in cfg["attestation"]
-    assert ac.approval_through(tmp_path / "docs") == "DevStg-Below"
-    assert ac.human_holds(tmp_path / "docs", "DevStg-Needs") is False, (
+    # sentinel for "no rung is an operator's to accept".
+    assert cfg["authority"]["operator_accepts_through"] == "DevStg-Below"
+    assert cfg["authority"]["keep_nondependent"] is True
+    assert cfg["authority"]["final_review"] == "off"
+    assert "gate_policy" not in cfg["authority"]
+    assert ac.acceptance_through(tmp_path / "docs") == "DevStg-Below"
+    assert ac.operator_holds(tmp_path / "docs", "DevStg-Needs") is False, (
         "the whole point: `autonomous` must actually read as loop-held"
     )
     assert cfg["policies"] == {
@@ -979,7 +979,7 @@ def test_migration_folds_every_dial_in_and_deletes_the_file(tmp_path):
 def test_migration_never_deletes_a_file_it_could_not_write(tmp_path):
     """The defect this test exists for: `set_process_key` answered "missing" on
     a hand-trimmed process.toml, the caller deleted the legacy file anyway, and
-    a declared `privacy_check = true` vanished under a green `migrated:` line.
+    a declared `privacy_check = true` vanished under a pass `migrated:` line.
 
     The fix makes the write TOTAL (the key is appended under its section), so
     the honest assertion is that the value SURVIVES — either folded in or left
@@ -988,7 +988,7 @@ def test_migration_never_deletes_a_file_it_could_not_write(tmp_path):
     Implements: TC-152
     """
     _docs(tmp_path)
-    write_toml(tmp_path, '# my customized file\n[policies]\npush = "human"\n')
+    write_toml(tmp_path, '# my customized file\n[policies]\npush = "operator"\n')
     (tmp_path / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
     (tmp_path / "docs" / "review-policy").write_text("2\n", encoding="utf-8")
 

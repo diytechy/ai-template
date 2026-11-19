@@ -15,11 +15,11 @@ Its three rules, straight from §5.5, are the whole design brief:
     **idempotent** — a second run on a clean trunk is a no-op ("0 fragments",
       every generator already fresh), so re-running is always safe.
     **fails loudly** — ANY problem exits nonzero with the offending file named.
-      A red trunk lane halts claiming; it must never fail open (the fail-open
+      A failing trunk lane halts claiming; it must never fail open (the fail-open
       lesson applied to the new machinery on day one).
 
 It never commits. Staging and committing belong to the caller (the integrator,
-the Action, or a human), so this step composes with whatever wraps it.
+the Action, or an operator), so this step composes with whatever wraps it.
 
 Compile-log (`--compile-log`)
     Every fragment is validated BEFORE anything is written — all-or-nothing, so a
@@ -45,7 +45,7 @@ Compile-log (`--compile-log`)
 Regen (`--regen`)
     Re-derives the generated artifacts in DEPENDENCY order (see REGEN_STEPS): a
     generator that reads another's output must run after it, or one pass leaves
-    the tree stale and the next `check.py` reds the trunk for no real defect. A
+    the tree stale and the next `check.py` fails the trunk for no real defect. A
     generator whose artifact family this repo does not carry is skipped with a
     printed notice — a non-adopter pays nothing, and the skip is visible rather
     than silent.
@@ -65,7 +65,7 @@ Contract IF-081: the serial trunk lane's exit alphabet, and there are only two
     git the order cannot be read and is never invented), or a generator that
     returned nonzero and stopped the rest. There is no partial success to
     report — the compile is all-or-nothing and the regen halts at the first
-    failure — because a red trunk lane must halt claiming rather than fail
+    failure — because a failing trunk lane must halt claiming rather than fail
     open. It never commits, so the caller reading this code owns what is left
     staged.
 Contract IF-155: the argv surface of the trunk step. `--root` (default the cwd)
@@ -89,7 +89,7 @@ from kitlib.config import STACK_INI, StackIniError, read_stack_ini
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`, executed
 # WI-448): the best-effort-off-git subprocess pattern this module used to spell
 # out itself. Run as a subprocess this script's own dir is sys.path[0] so a
 # plain import resolves; the guard covers an in-process import (a test) whose
@@ -126,7 +126,7 @@ LOG_D = "docs/log.d"
 # than it has rungs, so a row names the RUNG RANGE it certifies rather than being
 # one-per-boundary. This constant, `LOG.template.md`'s heading and
 # tests/test_trunk_step.py move together; an adopter's existing log renames the
-# heading at re-sync (the rows underneath stay verbatim — they are attestations).
+# heading at re-sync (the rows underneath stay verbatim — they are acceptances).
 RESERVED_HEADINGS = ("## Sittings", "## Decisions log", "## Audit log")
 
 # `<id>-<slug>.md`. The `WI-<n>-<slug>` form is the house convention; a bare
@@ -514,11 +514,15 @@ def _open_items(root):
 #                so it has no edge at all and its position is free for the same
 #                reason component-view's is.
 REGEN_STEPS = (
+    # okf arms on the registries as well as on the bundle: `gen_okf.py --check`
+    # demands docs/okf/ from the first real row, so the regen must create it.
     (
         "okf",
-        lambda root: (Path(root) / "docs" / "okf").is_dir(),
+        lambda root: any(
+            (Path(root) / "docs" / d).is_dir() for d in ("okf", "requirements")
+        ),
         _cmd("gen_okf.py"),
-        "docs/okf/ absent",
+        "neither docs/okf/ nor docs/requirements/",
         ("docs/okf/",),
     ),
     (
@@ -583,21 +587,21 @@ REGEN_STEPS = (
         "docs/reviews/ absent",
         ("docs/reviews/rollup/",),
     ),
-    # The live approval brief (`docs/ratify/CURRENT.md`, declared `approve` in
+    # The live acceptance brief (`docs/ratify/CURRENT.md`, declared `accept` in
     # docs/stack.ini [generated]). It projects the registry against the
-    # docs/archive/last_approved snapshot, and `check.py`'s `approval-fresh`
-    # step (`trace.py --approve modified --check`) reds the refresh bar the
+    # docs/archive/last_accepted snapshot, and `check.py`'s `acceptance-fresh`
+    # step (`trace.py --accept modified --check`) fails the landing checks the
     # moment either side moves under it. A LEAF like the rollup — nothing reads
     # it back — so its position is free. It belongs HERE because the refresh
     # commit is the one commit the verdict gate peels: an adjudication lane
-    # whose approval act moved the snapshot left the brief stale at its tip
+    # whose acceptance act moved the snapshot left the brief stale at its tip
     # (WI-590, 2026-09-04), and regenerating it on the lane AFTER the round
     # would have staled the round's tree identity, while the station's refresh
     # could not regenerate it because this table did not name it.
     (
-        "approval-brief",
+        "acceptance-brief",
         _has("docs/ratify/CURRENT.md"),
-        _cmd("trace.py", "--approve", "modified", "--out", "docs/ratify/CURRENT.md"),
+        _cmd("trace.py", "--accept", "modified", "--out", "docs/ratify/CURRENT.md"),
         "docs/ratify/CURRENT.md absent",
         ("docs/ratify/CURRENT.md",),
     ),
@@ -651,7 +655,7 @@ def regen(root, dry_run=False):
             for stream in (proc.stdout, proc.stderr):
                 if stream and stream.strip():
                     print(stream.rstrip(), file=sys.stderr)
-            _err("the trunk lane is RED — fix this before claiming resumes (§5.5).")
+            _err("the trunk lane FAILED — fix this before claiming resumes (§5.5).")
             return 1
         print("trunk_step: regen — {} ok.".format(name))
     return 0

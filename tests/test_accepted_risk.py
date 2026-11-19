@@ -1,17 +1,17 @@
-"""An accepted risk, bound to the approval act that accepted it (TC-234).
+"""An accepted risk, bound to the acceptance act that accepted it (TC-234).
 
 An assumption may carry a recorded accepted risk, and while that acceptance
 stands it reads COVERED by it (SR-202). The acceptance is a judgment about one
 assumption serving particular needs, so it is bound to their texts as they
 stood in the act that accepted it: a later change to either, even one
-re-approved on its own, or a failed sample added after the act, reopens it,
+re-accepted on its own, or a failed sample added after the act, reopens it,
 and it reads UNPROVEN, naming the trigger, until an act accepts the risk
 again. A passing result restores nothing: an assumption carries no evidence
-level (owner ruling 2026-10-02), and a passed sample proves nothing beyond
+level (operator ruling 2026-10-02), and a passed sample proves nothing beyond
 itself. Time alone never reopens it, and the order of a failed sample is read
 from commit ancestry, never from the timestamp the record carries.
 
-Driven on real git repositories, with the approval act performed the way the
+Driven on real git repositories, with the acceptance act performed the way the
 kit performs one (`baseline_snapshot.copy_live`, then a commit), so the
 module is registered in `tests/conftest.py`'s `SLOW_MODULES`. The pure state
 rule is `assumption_rules.accepted_risk_state`; the act is read from history by
@@ -45,21 +45,21 @@ need = "A reviewer can tell which requirements a claim about the world supports.
 why = "A false claim hides behind a verified system."
 priority = "M"
 acceptance = "The reviewer names the requirements from the report alone."
-status = "Approved"
+status = "Accepted"
 
 [need.SN-002]
 need = "An adopter can resume work from the record alone."
 why = "Sessions end mid-task."
 priority = "S"
 acceptance = "A fresh session names the next step from the record."
-status = "Approved"
+status = "Accepted"
 
 [need.SN-009]
 need = "An unrelated need."
 why = "It serves nothing the assumption touches."
 priority = "C"
 acceptance = "Nothing here moves the risk."
-status = "Approved"
+status = "Accepted"
 """
 
 REQUIREMENTS = """
@@ -68,30 +68,30 @@ title = "Report the claims under each requirement"
 sn_refs = ["SN-001"]
 requirement = "The kit shall report the assumptions each requirement cites."
 da_refs = ["DA-001"]
-status = "Approved"
+status = "Accepted"
 
 [requirement.SR-002]
 title = "Resume from the record"
 sn_refs = ["SN-002"]
 requirement = "The kit shall name the next step from the record."
 da_refs = ["DA-001"]
-status = "Approved"
+status = "Accepted"
 
 [requirement.SR-009]
 title = "Unrelated"
 sn_refs = ["SN-009"]
 requirement = "The kit shall do something unrelated."
-status = "Approved"
+status = "Accepted"
 """
 
 ASSUMPTIONS = """
 [assumption.DA-001]
 effect_at = ["B-01"]
-assumption = "A reviewer reads the brief before approving."
+assumption = "A reviewer reads the brief before accepting."
 holds_when = "The brief is short enough to read in one sitting."
 obstacle = "The brief grows past what one sitting reads."
-falsifier = "An approval recorded before the brief was opened."
-accepted_risk = "No reviewer population to sample yet; proceeding on the owner's say-so."
+falsifier = "An acceptance recorded before the brief was opened."
+accepted_risk = "No reviewer population to sample yet; proceeding on the operator's say-so."
 status = "Drafted"
 standing = "active"
 """
@@ -102,10 +102,10 @@ assumption_refs = ["DA-001"]
 level = "System"
 method = "A reviewer is watched approving a brief."
 tier = "Release"
-expected = "The brief is opened before the approval is recorded."
+expected = "The brief is opened before the acceptance is recorded."
 automated = "No"
 evidence = "docs/notes.md"
-status = "Approved"
+status = "Accepted"
 inputs = ["docs/notes.md"]
 max_age = 30
 sampling = "monitored"
@@ -115,13 +115,13 @@ FRAME = """
 [entity.EXT-001]
 name = "Reviewer"
 class = "operational"
-description = "The person approving a brief."
+description = "The person accepting a brief."
 status = "Drafted"
 
 [boundary.B-01]
 entity = "EXT-001"
 direction = "out"
-carries = "the approval brief"
+carries = "the acceptance brief"
 system = "operation"
 status = "Drafted"
 """
@@ -159,7 +159,7 @@ def _edit(root, rel, old, new):
 
 @pytest.fixture
 def repo(tmp_path):
-    """A repository whose DA-001, carrying an accepted risk, was approved in
+    """A repository whose DA-001, carrying an accepted risk, was accepted in
     an act: the row's Status flip and the record's copy in one commit."""
     root = tmp_path / "repo"
     root.mkdir()
@@ -171,9 +171,9 @@ def repo(tmp_path):
     _git(root, "config", "user.email", "test@example.com")
     _git(root, "config", "user.name", "Test")
     _commit(root, "draft the assumption")
-    _edit(root, DA_REL, 'status = "Drafted"', 'status = "Approved"')
+    _edit(root, DA_REL, 'status = "Drafted"', 'status = "Accepted"')
     SNAP.copy_live(root, seed=True)
-    act = _commit(root, "approve DA-001 and its accepted risk")
+    act = _commit(root, "accept DA-001 and its accepted risk")
     return root, act
 
 
@@ -215,27 +215,27 @@ def _observe(root, outcome, observed=None, expires=None):
     return path
 
 
-def _reattest(root):
-    """Accept the risk again: an act re-attesting DA-001, its text unchanged by
+def _reaccept(root):
+    """Accept the risk again: an act re-accepting DA-001, its text unchanged by
     the act itself."""
-    SNAP.copy_live(root, reattests={"DA-001"})
+    SNAP.copy_live(root, reaccepts={"DA-001"})
     return _commit(root, "re-accept DA-001's risk")
 
 
 def _restorations(root):
     """From one reopened state: a current passing result restores nothing, and
-    an act re-attesting the assumption re-binds the risk."""
+    an act re-accepting the assumption re-binds the risk."""
     path = _observe(root, "pass")
     assert _state(root)[0] == RULES.RISK_UNPROVEN
     path.unlink()
-    _reattest(root)
+    _reaccept(root)
     assert _state(root) == (RULES.RISK_COVERED, [])
 
 
 # --- the act and the covered reading -------------------------------------------
 
 
-def test_the_act_that_approved_it_is_the_anchor(repo):
+def test_the_act_that_accepted_it_is_the_anchor(repo):
     root, act = repo
     anchor, reason = SNAP.risk_acceptance_act(root, "DA-001")
     assert anchor == act, reason
@@ -257,7 +257,7 @@ def test_an_assumption_with_no_accepted_risk_has_no_risk_state(repo):
     )
 
 
-def test_two_identical_re_attestations_on_one_day_are_two_acts(repo):
+def test_two_identical_re_acceptances_on_one_day_are_two_acts(repo):
     """Each act is its own entry in the act ledger, so the latest act moves the
     anchor even when an earlier one the same day named the same rows in the
     same words: the second re-acceptance here re-binds the risk to the text it
@@ -265,12 +265,12 @@ def test_two_identical_re_attestations_on_one_day_are_two_acts(repo):
     root, _act = repo
     _edit(root, DA_REL, "reads the brief", "reads the whole brief")
     _commit(root, "amend DA-001")
-    first = _reattest(root)
+    first = _reaccept(root)
     assert _state(root) == (RULES.RISK_COVERED, [])
     _edit(root, DA_REL, "reads the whole brief", "reads every page of the brief")
     _commit(root, "amend DA-001 again")
     assert _state(root)[0] == RULES.RISK_UNPROVEN
-    second = _reattest(root)
+    second = _reaccept(root)
     assert second != first
     assert SNAP.risk_acceptance_act(root, "DA-001")[0] == second
     assert _state(root) == (RULES.RISK_COVERED, [])
@@ -284,8 +284,8 @@ def test_the_prose_stamp_moves_no_anchor(repo):
     stamp = SNAP.snapshot_root(root) / SNAP.README
     stamp.write_text(
         (stamp.read_text(encoding="utf-8") if stamp.is_file() else "")
-        + "- 2026-09-26 — refresh under approval. Copied: assumptions.toml "
-        "(re-attested: DA-001).\n",
+        + "- 2026-09-26 — refresh under acceptance. Copied: assumptions.toml "
+        "(re-accepted: DA-001).\n",
         encoding="utf-8",
     )
     _commit(root, "amend DA-001 and write a stamp line by hand")
@@ -298,7 +298,7 @@ def test_a_malformed_act_ledger_in_history_refuses_rather_than_guesses(repo):
     so the anchor is not read at all: the reason names the ledger, and the
     risk reads unproven until the ledger is repaired."""
     root, _act = repo
-    _reattest(root)
+    _reaccept(root)
     ledger = SNAP.snapshot_root(root) / SNAP.ACTS
     _edit(root, "{}/{}".format(SNAP.SNAPSHOT_DIR, SNAP.ACTS), "seq = 2", "seq = 1")
     assert ledger.is_file()
@@ -313,7 +313,7 @@ def test_a_malformed_act_ledger_in_history_refuses_rather_than_guesses(repo):
 # --- the three triggers, each with both restorations ----------------------------
 
 
-def test_a_need_amended_then_re_approved_on_its_own_still_reads_unproven(repo):
+def test_a_need_amended_then_re_accepted_on_its_own_still_reads_unproven(repo):
     root, act = repo
     _edit(
         root,
@@ -325,15 +325,15 @@ def test_a_need_amended_then_re_approved_on_its_own_still_reads_unproven(repo):
     state, reasons = _state(root)
     assert state == RULES.RISK_UNPROVEN
     assert any("SN-001" in r for r in reasons), reasons
-    # The need is re-approved in a later act of its own: the record's copy of
+    # The need is re-accepted in a later act of its own: the record's copy of
     # the needs now holds the new text, and the risk still reads unproven,
     # because the comparison is with the act that accepted the risk.
-    # Needs are compared tiers, so the act re-approving the drifted need names
-    # it (`--reattests`); naming the registry alone is refused.
+    # Needs are compared tiers, so the act re-accepting the drifted need names
+    # it (`--reaccepts`); naming the registry alone is refused.
     SNAP.copy_live(
-        root, approves={NEEDS_REL: "SN-001 re-approved"}, reattests={"SN-001"}
+        root, accepts={NEEDS_REL: "SN-001 re-accepted"}, reaccepts={"SN-001"}
     )
-    _commit(root, "re-approve SN-001")
+    _commit(root, "re-accept SN-001")
     assert SNAP.risk_acceptance_act(root, "DA-001")[0] == act
     state, reasons = _state(root)
     assert state == RULES.RISK_UNPROVEN
@@ -354,8 +354,8 @@ def test_amending_the_assumptions_own_text_reads_unproven(repo):
     _edit(
         root,
         DA_REL,
-        "A reviewer reads the brief before approving.",
-        "A reviewer reads the whole brief before approving.",
+        "A reviewer reads the brief before accepting.",
+        "A reviewer reads the whole brief before accepting.",
     )
     _commit(root, "amend DA-001")
     state, reasons = _state(root)
@@ -392,9 +392,9 @@ def test_a_failing_record_the_act_already_held_does_not_reopen_it(tmp_path):
     _git(root, "config", "user.name", "Test")
     _observe(root, "fail")
     _commit(root, "draft, with a failed sample on record")
-    _edit(root, DA_REL, 'status = "Drafted"', 'status = "Approved"')
+    _edit(root, DA_REL, 'status = "Drafted"', 'status = "Accepted"')
     SNAP.copy_live(root, seed=True)
-    _commit(root, "approve DA-001, accepting the risk over the failure")
+    _commit(root, "accept DA-001, accepting the risk over the failure")
     assert _state(root) == (RULES.RISK_COVERED, [])
 
 

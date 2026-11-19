@@ -5,11 +5,11 @@
      finding, or a finding class reaches its third review round. The
      adjudicator makes the call, not the coordinator by sending the finding
      back to the builder; its call is final, and a high-risk finding goes to
-     the owner. The findings file's shape and the verdict grammar have one
+     the operator. The findings file's shape and the verdict grammar have one
      home, scripts/kitlib/dispute.py; the coordinator's route is the
      coordinator-cycle skill's (this repository's).
 
-     SUCCESSOR (WI-911; the owner's ruling of 2026-10-14, in session, that
+     SUCCESSOR (WI-911; the operator's ruling of 2026-10-14, in session, that
      only the dispute sitting moves a finding to a successor row): a fourth
      ruling, for a real finding that belongs in its own row, filed on trunk
      when the lane lands, from this verdict's binding. A convergence-class
@@ -58,7 +58,7 @@ Method:
   - `out-of-scope`: its reproduction needs what the scope bound excludes;
   - `refuted`: you checked it and it does not hold at this range;
   - `not-worth-cost`: it is real and in scope, but its fix costs more than the defect it removes.
-- ESCALATE when the finding is high risk in {process_doc} §6's triage sense and the call should be the owner's. Say what the risk is.
+- ESCALATE when the finding is high risk in {process_doc} §6's triage sense and the call should be the operator's. Say what the risk is.
 - A position is evidence about the finding, not a vote: a finding the builder contests can still be FIX, and one the reviewer repeats can still be DISMISS.
 
 Write your verdict to {verdict}. A paragraph of reasoning per finding is welcome; then exactly one machine line per finding named on the `DISPUTE:` line above, each on its own line, each starting with `RULING:`, and no other `RULING:` line:

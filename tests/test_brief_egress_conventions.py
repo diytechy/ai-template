@@ -5,14 +5,14 @@ composers keep a real inclusion discipline -- no commit authorship is ever
 formatted into a prompt -- that until this row was held in place by nothing but
 the code itself. The WI-468 intake measurement swept the prompt path for
 authorship tokens and found zero hits; this module turns that one-time
-measurement into a bar, so a composer that starts formatting `%an`/`%ae` into
+measurement into a standard, so a composer that starts formatting `%an`/`%ae` into
 a brief fails here rather than shipping quietly. The functional half of TC-171
 (a sentinel planted in status.md/log.md never reaches the planning surface)
 lives in test_plan_briefs.py.
 
 The sweep asserts the ABSENCE CLASS, not any particular formatting: every
 prompt-composing module and every shipped prompt template is scanned, so a new
-template joins the bar by default without editing this file.
+template joins the checks by default without editing this file.
 """
 
 import re

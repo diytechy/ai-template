@@ -1,7 +1,7 @@
 # Glossary
 
-The kit's working terms for lanes, sessions and adjudication, each defined once
-here. Other docs link to a term rather than restating it. One term names one
+The kit's working terms for lanes, sessions, adjudication and checks, each
+defined once here. Other docs link to a term rather than restating it. One term names one
 concept: where two words were used for the same thing, the entry says which one
 is kept.
 
@@ -10,6 +10,16 @@ built; its **Today** line says what runs in its place. Read a planned entry as
 the vocabulary the next changes are written in, never as a claim about the
 current scripts. Links are authored for the scaffolded home (`docs/glossary.md`
 beside `docs/process.md` and `docs/process-options.md`).
+
+**Human.** The tooling cannot know whether a person acted. No field, value,
+flag or exit code that controls who may do what says "human"; those say
+[operator](#operator). "Human" appears only in prose, where it states that a
+person is intended.
+
+**Passes and fails.** A run of checks **passes** or **fails**. "Red" and
+"green" are not used for either, except once, where `process.md` names the
+red, green, refactor cycle. A threshold is named for what it is (a minimum,
+a standard, a level), never a "bar".
 
 ## Sessions and routing
 
@@ -49,7 +59,7 @@ table in `docs/process.toml`); every other call starts a fresh session.
 A judgement never runs in a session that authored what it judges. There are
 two exceptions. First, the [adjudicator](#adjudicator)'s final pass over its own
 spine draft after an [adjudication reviewer](#adjudication-reviewer) has edited
-it: it approves only if it changes nothing. Second, in a decomposition round's
+it: it [accepts](#accept) the rows only if the pass changes nothing. Second, in a decomposition round's
 selection (see [arbiter](#arbiter)), the losing drafter's concession: its vote
 for the rival plan, cast against its own interest, decides; a drafter's vote for
 its own plan carries no weight alone. Excluding a **session** is hard. Preferring
@@ -59,7 +69,7 @@ the eligible families cannot meet it, so a fresh session of an eligible family
 is always available, and each unmet preference is logged. One the declared
 families make impossible (a kind with a single eligible family) is logged
 only; one that availability prevented (a cooldown, an outage) is also listed
-for the owner's review. **Planned:** the ranked form. **Today:** reviewers run
+for the [operator](#operator)'s review. **Planned:** the ranked form. **Today:** reviewers run
 in a fresh session, and the different-family filter runs before pins and
 weights.
 
@@ -100,10 +110,20 @@ tier, and a planning dial may set the tier per item.
 
 ## Roles
 
+### operator
+
+The role that holds the kit's reserved acts: [accepting](#accept) rows on an
+operator-held rung, ruling open items, confirming or overruling delegated
+decisions, the final read, the push. A person, or a session that person has
+delegated to, with the delegation and its scope recorded. Never a session the
+loop or a launcher started; that is the one line the tooling enforces.
+Formerly "the owner" and "the human", two words for one role; **operator** is
+kept.
+
 ### adjudicator
 
 The role that rules on spine rows, disputes and dispositions and takes the
-approval act, performed by an [adjudicate] session, retained until its
+[acceptance](#accept) act, performed by an [adjudicate] session, retained until its
 [reset terms](#reset-terms) are met. One term: a retained adjudicator, and an
 "independent adjudicator" launched by the loop or by a person's coordinating
 session, are this same role under the same rules, not separate roles.
@@ -131,10 +151,48 @@ family is planned.
 
 Whoever selects among rival plans in a decomposition round. **Planned:** the
 drafters select, by concession, never one drafter's vote for its own plan
-alone; when each selects its own, the round becomes an open item for the owner,
-which offers running an independent third agent of the owner's choosing, only
-if the owner picks it. **Today:** two position-swapped arbiter runs must agree
+alone; when each selects its own, the round becomes an open item for the
+[operator](#operator), which offers running an independent third agent of the
+operator's choosing, only if the operator picks it. **Today:** two position-swapped arbiter runs must agree
 ([process-options.md "Dual-plan decomposition"](process-options.md#dual-plan-decomposition)).
+
+## Rows
+
+### accept
+
+The act that takes a row as agreed. Its `status` moves from `Drafted` to
+`Accepted`; after an amendment the row is **re-accepted** and its status does
+not move. The [operator](#operator) takes the act on an operator-held rung,
+and an independent [adjudicator](#adjudicator) on a released one. Accepting a
+row takes it as an outcome to build on. It does not claim that every nuance
+was reviewed, and it says nothing about tests passing. Formerly "approve",
+"attest" and "re-attest", three words for one act; **accept** is kept. A
+project's own approval ceremonies are outside the kit.
+
+### approve
+
+A [reviewer](#reviewer)'s verdict on a build round or a plan, written
+`VERDICT: APPROVE` against `CHANGES-REQUESTED`, and a critic's in a critique.
+It judges work: it takes no row as agreed and moves no `status`. The act on a
+row is [accept](#accept); an adjudicator's ruling on a row in a
+first-acceptance sitting is `ACCEPT`.
+
+### Vouch
+
+The verification method for what no check can establish, such as a playtest, a
+creative review or a physical action: the [operator](#operator)'s recorded
+word that the requirement is met, naming who and when. It rests on trust, and
+the trace report counts it apart from mechanized results so that an audit sees
+how much does. Declared as `verification_method = "Vouch"`. Formerly `Attest`;
+**Vouch** is kept.
+
+### evidence gap
+
+A test case that is not [accepted](#accept) although every requirement it
+verifies is cited by a work item recorded done: the work is closed and its
+evidence is not. The gap census names each one, and the landing mints an
+adjudication row for it, briefed as the `evidence-gap` kind. Formerly a
+"red TC"; **evidence gap** is kept.
 
 ## Lanes
 
@@ -142,7 +200,7 @@ if the owner picks it. **Today:** two position-swapped arbiter runs must agree
 
 **Planned.** Where a lane is in its lifecycle, derived from committed evidence
 and live ownership on every read, never stored: `PLANNING`, `BUILD`,
-`REVIEW_REWORK`, `ADJUDICATION`, `MERGE` or `ARCHIVE`. A state names the stage
+`REVIEW_REWORK`, `ADJUDICATION`, `MERGE` or `ARCHIVE`. A state names the step
 whose work is owed next or is running now; after `ARCHIVE` the lane is closed.
 
 - **Substate:** `PLANNING` is `SINGLE` or `DUAL` (`DRAFT`, `CROSS_CRITIQUE`,
@@ -188,6 +246,104 @@ outcome folder the lane moved its work item into is the merge intent.
 **Planned.** The one squash commit per lane (a batch of work items lands as
 one, naming every item); the lane tip is kept on `archive/lanes`. **Today:** a
 lane lands as a `--no-ff` merge of its refreshed branch.
+
+## Checks
+
+### stage
+
+The development stage: the rung of the `DevStg-*` ladder a repository stands
+at, derived from its registries and recorded in `docs/stage`
+(`process.md` §4, "A stage is a STATE"). `check.py --stage`
+selects the steps that run at it. The word names this and nothing else: a
+step of a lane or of a pipeline in code is a **step**, and git's index keeps
+its own word, "staged". The retired axis of stage thresholds was the "bar";
+**stage** is kept.
+
+### checks stage
+
+The [stage](#stage) a work item pins its [landing checks](#landing-checks) to.
+A row claimed to deliver evidence at a stage is checked at that stage even if
+the repository's derived stage moves while its lane is in flight. Declared in
+the work item as `checks_stage`. Formerly the item's `bar`; **checks stage**
+is kept.
+
+### required checks
+
+The checks a change must pass at a given moment. `docs/process.toml`
+`[required-checks]` names, for a moment, the [check suite](#check-suite) that
+is required; it declares one moment today, `commit`. Formerly a "bar";
+**required checks** is kept.
+
+### commit checks
+
+The [required checks](#required-checks) for a commit a lane builds.
+`integrate.py record-checks --checks commit` runs the named
+[check suite](#check-suite), then the row's derived review tests, and when
+both pass commits the lane's staged work carrying a
+[passed-checks record](#passed-checks-record) with `checks=commit`. When they
+fail, the loop writes a [failed-checks record](#failed-checks-record).
+Formerly the "commit bar" and the "review bar", two words for one thing;
+**commit checks** is kept.
+
+### landing checks
+
+The checks a lane's refreshed tree must pass before its
+[landing](#landing): the full gate, run by the station refresh on the tree
+that becomes trunk, at the repository's [stage](#stage) or the work item's
+[checks stage](#checks-stage). Not a declared setting. Formerly the "landing bar";
+**landing checks** is kept.
+
+### passed-checks record
+
+The line in a commit message recording that a named set of checks passed on a
+named tree: `Checks-Passed: tree=<sha> work=<sha>
+checks=<commit|landing|none> tests=<digest|none> <summary>`.
+`integrate.py record-checks` writes it for the
+[commit checks](#commit-checks) and the station refresh writes it for the
+[landing checks](#landing-checks); the merge slot re-derives both ids from git
+before it trusts one. It is a script's record of a result. Nobody decides
+anything, so it is not an [acceptance](#accept). Formerly the "bar
+attestation", written `Bar-Green: ... bar=<review|landing|no-bar>`;
+**passed-checks record** is kept, and a trailer in the earlier form is not
+read.
+
+### failed-checks record
+
+The two header lines a build's session log carries when its
+[commit checks](#commit-checks) failed: the build commit they refused and a
+one-line summary, written `# checks-failed: <sha>` and
+`# checks-summary: <line>`. The
+[commit-check failure cap](#commit-check-failure-cap) counts these since the
+last [passed-checks record](#passed-checks-record). Formerly the "red
+record", written `# bar-red:` and `# bar-summary:`; **failed-checks record**
+is kept, and headers in the earlier form are not read.
+
+### gate checks
+
+The full gate for a [stage](#stage): `check.py` at that stage, with the unfiltered suite
+and coverage. Formerly the "gate bar"; **gate checks** is kept.
+
+### check suite
+
+A named set of checks and the shell line that runs it on this stack: one line
+under `docs/stack.ini` `[check-suites]`. The policy file names a suite; the
+stack file says how to run it.
+
+### expected-failure marker
+
+The text a test framework uses to mark a test that is expected to fail,
+declared as `docs/stack.ini` `[product] expected_failure_marker`. A lane's new
+tests go in under it before the code that makes them pass, and none may remain
+at a [landing](#landing). Formerly the "red mark"; **expected-failure marker**
+is kept.
+
+### commit-check failure cap
+
+The number of consecutive build rounds whose [commit checks](#commit-checks)
+fail before the worker stops and the lane is closed partial:
+`docs/process.toml` `[build]
+stop_lane_after_consecutive_commit_check_failures`. Formerly the "red-round
+cap"; **commit-check failure cap** is kept.
 
 ## Planning
 

@@ -1,6 +1,6 @@
 ---
 name: kit-builder
-description: Builds one ai-template work item in a pre-cut lane worktree, as the coordinator's dispatched builder (owner direction 2026-10-03: Claude Opus at medium effort). Use only when the coordinator hands it a lane path and a build prompt; it leaves its change uncommitted for the coordinator to verify and commit.
+description: Builds one ai-template work item in a pre-cut lane worktree, as the coordinator's dispatched builder (operator direction 2026-10-03: Claude Opus at medium effort). Use only when the coordinator hands it a lane path and a build prompt; it leaves its change uncommitted for the coordinator to verify and commit.
 model: opus
 effort: medium
 ---
@@ -18,21 +18,21 @@ Standing rules, in addition to the prompt:
     verifies it, regenerates generated files and commits it on the lane.
   - Do not regenerate or edit `PROJECT_STATE.html`, `docs/status.md`'s generated
     block, or other generated artifacts.
-- **Read first:** `CLAUDE.md` and the spec in full, including any owner ruling or
+- **Read first:** `CLAUDE.md` and the spec in full, including any operator ruling or
   adjudicator draft it quotes. A quoted draft is byte-exact: apply it as written.
 - **Rows.**
-  - Never edit an approved row's cells beyond the grant, and never flip a Status.
-    If an approved row is wrong or impossible as written, stop that part and
+  - Never edit an accepted row's cells beyond the grant, and never flip a Status.
+    If an accepted row is wrong or impossible as written, stop that part and
     report it.
   - Search for an existing home before creating a file or function, and
     name the nearest existing home you considered in your final message
     (`PROCESS.md` §3, "Consolidate, don't duplicate").
-  - Owner ruling R2: a requirement (SR) cell never names a concrete script,
+  - Operator ruling R2: a requirement (SR) cell never names a concrete script,
     command, file or function.
   - Tag each new function `Implements: <SR>, <LLR>` with the LLR whose `module` is
     that file, and list the function in that LLR's `code_symbol`.
 - **Tests.**
-  - Record a red result before the change and a green one after, with one fixed
+  - Record a failing result before the change and a passing one after, with one fixed
     `--basetemp "$TEMP/pt-<wi>"`, `-p no:cacheprovider` and
     `GIT_CEILING_DIRECTORIES` set to your lane's parent folder (the checkout's
     sibling `.wt`). Disk space is tight, so never vary the basetemp path; a
@@ -47,7 +47,7 @@ Standing rules, in addition to the prompt:
   - A shipped change needs a RESYNC_PACK entry anchored `[since <lane base>]`.
 - **Final message:**
   1. The changes, file by file.
-  2. Red and green results, with the exact commands.
+  2. Failing and passing results, with the exact commands.
   3. Every amended cell, quoted before and after.
   4. Anything you stopped on.
   5. The line `Commit SHA: none (left for the coordinator)`.

@@ -349,7 +349,7 @@ def test_the_loop_composes_the_same_keep_request_as_before(
     """The pre-extraction composition, written out: the loop's request is
     unchanged by moving it into the shared step, except the template identity,
     which since round 4 covers every class the dial retains (the shipped
-    default: amendment, disposition, red-tc), each by its override text when
+    default: amendment, disposition, evidence-gap), each by its override text when
     one is loaded, else its shipped path.
 
     Implements: TC-322
@@ -362,7 +362,11 @@ def test_the_loop_composes_the_same_keep_request_as_before(
     )
     al.adjudication_keep(_loop_ctx(tmp_path, templates, timeout), PLAN, "WI-7")
     override = templates.get("ADJUDICATE-DISPOSITION")
-    shipped = ["ADJUDICATE-AMENDMENT", "ADJUDICATE-DISPOSITION", "ADJUDICATE-RED-TC"]
+    shipped = [
+        "ADJUDICATE-AMENDMENT",
+        "ADJUDICATE-DISPOSITION",
+        "ADJUDICATE-EVIDENCE-GAP",
+    ]
     assert seen == [
         {
             "route": LOOP_ROW,  # the row the loop selected, carried whole
@@ -401,8 +405,8 @@ def test_the_identity_covers_each_class_and_nothing_for_a_class_without_a_templa
     assert ab.governing_templates(["no-such-class"]) == ([], [])
     assert ab.governing_templates([]) == ([], [])
     paths, texts = ab.governing_templates(
-        ["red-tc", "no-such-class", "amendment"],
-        {"ADJUDICATE-RED-TC": "an override"},
+        ["evidence-gap", "no-such-class", "amendment"],
+        {"ADJUDICATE-EVIDENCE-GAP": "an override"},
     )
     # The amendment brief composes the tier questions' home, so the home is
     # one of its governing inputs: a change to it drains a retained session.
@@ -412,8 +416,8 @@ def test_the_identity_covers_each_class_and_nothing_for_a_class_without_a_templa
         ab.prompts.template_path("ADJUDICATE-ACT"),
     ]
     assert texts == ["an override"]
-    assert ab.governing_templates(["red-tc"])[0] == [
-        ab.prompts.template_path("ADJUDICATE-RED-TC")
+    assert ab.governing_templates(["evidence-gap"])[0] == [
+        ab.prompts.template_path("ADJUDICATE-EVIDENCE-GAP")
     ]
 
 
@@ -427,9 +431,9 @@ def test_the_identity_covers_the_act_brief_for_an_actable_retained_class():
     """
     ab = cli.adjudicate_brief
     act_path = ab.prompts.template_path(ab.prompts.ADJUDICATE_ACT)
-    for cls in ("amendment", "first-approval", "combined"):
+    for cls in ("amendment", "first-acceptance", "combined"):
         assert act_path in ab.governing_templates([cls])[0], cls
-    assert act_path not in ab.governing_templates(["red-tc", "disposition"])[0]
+    assert act_path not in ab.governing_templates(["evidence-gap", "disposition"])[0]
     paths, texts = ab.governing_templates(
         ["amendment"], {ab.prompts.ADJUDICATE_ACT: "an act override"}
     )
@@ -530,7 +534,7 @@ def test_the_coordinator_route_refuses_a_retained_launch_not_signed_in(
     """Implements: TC-324"""
     root = _repo(tmp_path)
     _signed_in(monkeypatch, status)
-    assert _adjudicate(root) == svc.agent_common.EXIT_NEEDS_HUMAN
+    assert _adjudicate(root) == svc.agent_common.EXIT_NEEDS_OPERATOR
     out = capsys.readouterr().out
     assert "dev-setup" in out and status in out
     assert launched["argv"] == []  # no launch, fresh or otherwise
@@ -555,10 +559,10 @@ def test_the_loop_route_refuses_a_retained_launch_not_signed_in(
     ctx.use_live = False
     ctx.args.no_session_echo = True
     plan = dict(PLAN, route_id=ROUTE, entry=ENTRY, session_env=None)
-    assert al.launch_session(ctx, plan, "WI-1") == al.EXIT_NEEDS_HUMAN
+    assert al.launch_session(ctx, plan, "WI-1") == al.EXIT_NEEDS_OPERATOR
     assert ran == []
     out = capsys.readouterr().out
-    assert "NEEDS-HUMAN" in out and "dev-setup" in out
+    assert "NEEDS-OPERATOR" in out and "dev-setup" in out
 
 
 def test_an_unretained_call_is_never_probed(tmp_path, monkeypatch, launched):
@@ -572,8 +576,8 @@ def test_an_unretained_call_is_never_probed(tmp_path, monkeypatch, launched):
     root = _repo(tmp_path, dial=0)
     assert _adjudicate(root) == 0
     root2 = _repo(tmp_path / "two")
-    # the stub's verdict line is an amendment's, not a first approval's: 1
-    assert _adjudicate(root2, brief="first-approval") == 1
+    # the stub's verdict line is an amendment's, not a first acceptance's: 1
+    assert _adjudicate(root2, brief="first-acceptance") == 1
     assert calls == []
     assert all("--session-id" not in a for a in launched["argv"])
 
@@ -660,7 +664,7 @@ def test_a_root_outside_any_repository_is_refused(
     tmp_path, monkeypatch, launched, capsys
 ):
     """Otherwise valid inputs (policy, enabled route, brief): only the lane
-    check can refuse, so removing it turns this red.
+    check can refuse, so removing it makes this fail.
 
     Implements: TC-321
     """
@@ -836,7 +840,7 @@ def test_a_call_refused_before_launch_releases_its_reservation(
     root = _repo(tmp_path)
     _signed_in(monkeypatch, "missing")
     verdict = root / "refused-verdict.md"
-    assert cli.main(_argv(root, verdict)) == svc.agent_common.EXIT_NEEDS_HUMAN
+    assert cli.main(_argv(root, verdict)) == svc.agent_common.EXIT_NEEDS_OPERATOR
     assert not verdict.exists() and launched["argv"] == []
 
 
@@ -872,7 +876,7 @@ def test_a_verdict_path_under_a_missing_directory_is_reserved_and_launches(
     assert verdict.read_text(encoding="utf-8").startswith("VERDICT: MEANING")
 
 
-RETAINED = '["disposition", "amendment", "red-tc", "first-approval"]'
+RETAINED = '["disposition", "amendment", "evidence-gap", "first-acceptance"]'
 
 
 def _retaining(tmp_path):
@@ -892,7 +896,7 @@ def test_switching_retained_classes_with_nothing_edited_keeps_the_session(
     root = _retaining(tmp_path)
     _signed_in(monkeypatch)
     _adjudicate(root, "WI-1", brief="amendment")
-    _adjudicate(root, "WI-1", brief="first-approval")
+    _adjudicate(root, "WI-1", brief="first-acceptance")
     assert "--resume" in launched["argv"][1]
     record = _state(root)
     assert record["state"] == "active" and record["reset_reason"] == ""
@@ -917,8 +921,10 @@ def test_editing_another_retained_class_template_drains_the_session(
             (copied / name).write_bytes(source.read_bytes())
     monkeypatch.setattr(prompts, "PROMPTS", copied)
     _adjudicate(root, "WI-1", brief="amendment")
-    red_tc = copied / prompts.KIT_PROMPTS[prompts.ADJUDICATE_RED_TC]
-    red_tc.write_text(red_tc.read_text(encoding="utf-8") + "\nA new rule.\n")
+    evidence_gap = copied / prompts.KIT_PROMPTS[prompts.ADJUDICATE_EVIDENCE_GAP]
+    evidence_gap.write_text(
+        evidence_gap.read_text(encoding="utf-8") + "\nA new rule.\n"
+    )
     _adjudicate(root, "WI-1", brief="amendment")
     record = _state(root)
     assert record["state"] == "draining"
@@ -975,7 +981,7 @@ def _dispute_call(tmp_path, monkeypatch, verdict_text, brief=DISPUTE_BRIEF):
     return root, _adjudicate(root, brief="dispute")
 
 
-def test_the_entry_point_accepts_the_dispute_class():
+def test_the_entry_point_takes_the_dispute_class():
     """Implements: TC-334"""
     args = cli._parser().parse_args(
         ["adjudicate", "--brief-file", "b", "--brief", "dispute", "--wi", "WI-1"]
@@ -994,7 +1000,7 @@ def test_a_dispute_verdict_ruling_every_finding_is_valid_and_bound(
     assert "verdict valid" in capsys.readouterr().out
     binding = Path(str(VERDICT["path"]) + ".requested").read_text(encoding="utf-8")
     assert "brief = dispute" in binding and "kinds = F1;R2" in binding
-    assert "outcome = accepted" in binding
+    assert "outcome = recorded" in binding
 
 
 def test_a_dispute_verdict_ruling_a_finding_successor_is_valid_and_bound(
@@ -1010,7 +1016,7 @@ def test_a_dispute_verdict_ruling_a_finding_successor_is_valid_and_bound(
     assert code == 0
     assert "verdict valid" in capsys.readouterr().out
     binding = Path(str(VERDICT["path"]) + ".requested").read_text(encoding="utf-8")
-    assert "outcome = accepted" in binding
+    assert "outcome = recorded" in binding
 
 
 def test_a_dispute_verdict_leaving_a_finding_unruled_fails(
@@ -1053,7 +1059,7 @@ def test_a_dispute_binding_records_its_findings_file_through_the_outcome(
     tmp_path, monkeypatch, launched
 ):
     """The brief's findings-file line is bound beside the verdict and kept
-    through the outcome rewrite, accepted or failed; a brief without the
+    through the outcome rewrite, recorded or failed; a brief without the
     line binds no record.
 
     Implements: TC-327
@@ -1062,7 +1068,7 @@ def test_a_dispute_binding_records_its_findings_file_through_the_outcome(
     text = "RULING: F1 FIX real\nRULING: R2 DISMISS refuted it does not hold\n"
     _root, code = _dispute_call(tmp_path / "a", monkeypatch, text, RECORDED_BRIEF)
     assert code == 0
-    assert line in _binding() and "outcome = accepted" in _binding(), _binding()
+    assert line in _binding() and "outcome = recorded" in _binding(), _binding()
     unruled = "RULING: F1 FIX real\n"
     _root, code = _dispute_call(tmp_path / "f", monkeypatch, unruled, RECORDED_BRIEF)
     assert code == 1

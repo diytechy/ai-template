@@ -11,10 +11,10 @@ materializes the folder; this module is its read half.
 WHAT THIS REPLACES. Until WI-448 this 270-line block was copied VERBATIM into
 `schedule.py`, `check_trajectory.py` and `agent_common.py` under the retired F5
 rule, with `tests/test_wi_loader_sync.py` pinning the three parsers equal
-because extraction had been refused (owner ruling 2026-07-12). D-8 reversed
+because extraction had been refused (operator ruling 2026-07-12). D-8 reversed
 that ruling. The extraction also settled a live question the pins could not
 see: the three copies were NOT verbatim at the moment they were merged —
-`agent_common`'s carried `a DevStg-* value` in the `Bar` comment where the
+`agent_common`'s carried `a DevStg-* value` in the `Checks` comment where the
 other two carried the literal `DevStg-Reqs|DevStg-Tests|DevStg-Impl` enum, a
 comment-only drift from the 2026-08-18 one-vocabulary rename reaching two homes
 of three. Behaviour-equal, so a behavioural pin was structurally blind to it;
@@ -80,7 +80,7 @@ WI_COLUMNS = (
     "EstTokens",
     "SafetyClass",
     "PlanMode",
-    "Bar",
+    "ChecksStage",
     # LLR-161 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
     # reviving the closed row — so the successor must be able to say which row
     # it continues, or the thread is lost at the id change. A real column, not
@@ -90,10 +90,10 @@ WI_COLUMNS = (
     # moment it matters.
     "Supersedes",
     # SN-032 BRIEF ROUTING. Which adjudicator brief this row's session is sent
-    # (`amendment` | `disposition` | `conflict` | `red-tc`), empty on every row
+    # (`amendment` | `disposition` | `conflict` | `evidence-gap`), empty on every row
     # that is not an adjudication. DECLARED rather than inferred from `SpecRef`
     # because the inference is provably ambiguous: an amendment to a test-case
-    # row and a red-TC census row both carry `docs/test/test-cases.toml`, and
+    # row and an evidence-gap census row both carry `docs/test/test-cases.toml`, and
     # those two briefs give contradictory instructions. A real column for the
     # `Supersedes` reason above — `intake` writes it through
     # `wi_convert.write_spec_file`, which serializes from this table.
@@ -122,7 +122,7 @@ WI_COLUMNS = (
     # registry read.
     "Adopted",
     # WI-982 THE AUTHORING TAGS. The `;`-joined Workstream and SafetyClass
-    # values of the work items a minted first-approval or amendment row was
+    # values of the work items a minted first-acceptance or amendment row was
     # authored under, or empty when no route named one. NOT the routing
     # `SafetyClass`, which stays `adjudication`: the one reader is the hat
     # composer, `hats.context_from_work_item`. A real column for the
@@ -141,10 +141,11 @@ SPEC_SCALARS = (
     ("EstTokens", "est_tokens"),
     ("SafetyClass", "safety_class"),
     ("PlanMode", "planmode"),
-    # WI-388: bar declares verification strictness for this row's lane; it
-    # never affects scheduling. (DevStg-Reqs|DevStg-Tests|DevStg-Impl — integrate.refresh passes it to
-    # check.py --gate; load_wis deliberately does not parse it.)
-    ("Bar", "bar"),
+    # WI-388: checks_stage pins the stage this row's landing checks run at;
+    # it never affects scheduling. (DevStg-Reqs|DevStg-Tests|DevStg-Impl —
+    # integrate.refresh passes it to check.py --stage; load_wis deliberately
+    # does not parse it.)
+    ("ChecksStage", "checks_stage"),
     ("Supersedes", "supersedes"),
     ("Brief", "brief"),
     ("Digests", "digests"),

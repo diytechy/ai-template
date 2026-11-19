@@ -127,7 +127,7 @@ def _spine(root, skip_example=False):
 
     `skip_example=True` additionally drops the `-000` placeholder rows a
     freshly copied template carries. That is the pending projection's rule — an
-    example row owes no approval — stated once in the loader rather than
+    example row owes no acceptance — stated once in the loader rather than
     re-derived at the call site. The default keeps them, because the icicle and
     the maturity counts render whatever the registry holds."""
 
@@ -259,7 +259,7 @@ def _need_entry(rows, declared, classes, cases_of):
 
 def spine_stats(root):
     """Definition-maturity numbers. 'Definition completeness' = SRs marked
-    `Approved` / total SRs — how much of the requirement definition is decomposed
+    `Accepted` / total SRs — how much of the requirement definition is decomposed
     and blessed, distinct from execution (work items done). The key stays
     `sr_verified` across D-9 step 5's rename: it is a dict key two renderers and
     their tests read, and re-keying a data contract is a separate act from
@@ -267,7 +267,7 @@ def spine_stats(root):
     srs, llrs, tcs = _spine(root)
     sr_total = len(srs)
     sr_verified = sum(
-        1 for r in srs if (r.get("Status") or "").strip().lower() == "approved"
+        1 for r in srs if (r.get("Status") or "").strip().lower() == "accepted"
     )
     return {
         "sn_total": len(read_sns(root)),

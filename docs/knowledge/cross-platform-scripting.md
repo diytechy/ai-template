@@ -1,6 +1,6 @@
 # Cross-platform scripting: Windows, macOS and Linux from one stdlib-preferred kit — DRAFT
 
-> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.CROSS-PLATFORM` roster entry has a `knowledge` value to point at; the owner reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a settled finding.
+> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.CROSS-PLATFORM` roster entry has a `knowledge` value to point at; the operator reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a settled finding.
 
 This pack records what a reviewer wearing the CROSS-PLATFORM hat looks for HERE.
 The charter question — "Which of Windows, macOS and Linux breaks this — path
@@ -18,7 +18,7 @@ scripts run on stdlib plus ledger-declared dependencies) — both tagged
 realizing SN-011 — are what CLAUDE.md's "stdlib-preferred and cross-platform"
 principle discharges. The two interlock: a shipped check must run on a clean
 interpreter with *nothing installed* so an adopter can run it on any of the three
-OSes without a toolchain, which is also why the stdlib bar is strictest for
+OSes without a toolchain, which is also why the stdlib rule is strictest for
 *shipped* checks (SR-034's acceptance singles out the shipped tier).
 
 The evidence surface is the CI matrix in `.github/workflows/test.yml`: Linux,
@@ -26,9 +26,9 @@ Windows and macOS × Python 3.11 and 3.x, with the macOS+3.11 cell deliberately
 excluded (the 3.11 floor is a language/stdlib guarantee already covered on Linux
 + Windows; macOS's job is OS-specific behavior — `fcntl.flock`, paths, git
 worktrees — that does not vary by Python version). A rule "true only on the
-author's platform" is caught by a red cell there, not by review prose — so the
+author's platform" is caught by a failing cell there, not by review prose — so the
 hat's real job is the surfaces the matrix cannot see, or the changes that ship
-*before* a green matrix exists.
+*before* a passing matrix exists.
 
 The recurring hazards, each with a real carrier in this repo:
 
@@ -78,7 +78,7 @@ The recurring hazards, each with a real carrier in this repo:
 ## Open questions / bounded here
 
 - The matrix is the evidence, but it runs *after* a change; nothing catches a
-  platform assumption at authoring time except this hat. Treat a green Linux
+  platform assumption at authoring time except this hat. Treat a pass Linux
   local run as necessary-not-sufficient.
 - Case sensitivity (the charter names it) has no dedicated instrument here today;
   it lives on the reviewer's checklist, not in a check. Flag a filename that

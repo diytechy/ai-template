@@ -125,7 +125,7 @@ buildtier = "medium"
 priority = 3
 specref = "docs/requirements/system-requirements.toml"
 sr_refs = ["SR-222", "SR-227", "SR-193"]
-bar = "DevStg-Reqs"
+checks_stage = "DevStg-Reqs"
 ```
 
 IN SCOPE: the cells below, amended in place. Every `Status` stays as it is:

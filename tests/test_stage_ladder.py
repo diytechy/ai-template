@@ -104,7 +104,7 @@ def test_the_grep_would_actually_catch_the_thing_it_bans():
     must_not_catch = [
         "assert stage_ord(a) > stage_ord(b)",
         '_LEGACY_BAR_THRESHOLD[STAGE_REQS] = "DevStg-Reqs"',
-        "max(bars, key=_BAR_GATES.index)",
+        "max(bars, key=_CHECKS_STAGES.index)",
         "min(rungs, key=_kitladder.stage_ord)",
     ]
     for line in must_not_catch:
@@ -121,7 +121,7 @@ def test_check_selects_on_the_SHARED_ladder_and_restates_no_vocabulary():
     drop-in that never imports a SIBLING SCRIPT — and nothing but an equality
     pin stopped its selection vocabulary from drifting away from the value
     `spine_rules.py` writes, a drift that would have presented as "no checks
-    defined": a green that ran nothing. It restates nothing now. Selection keys
+    defined": a pass that ran nothing. It restates nothing now. Selection keys
     on `kitlib.ladder`, the sanctioned shared package, so the drift became
     UNREPRESENTABLE rather than detected — the WI-448 precedent slice 0 followed.
     What is pinned instead is that the retirement actually happened, because a
@@ -137,10 +137,20 @@ def test_check_selects_on_the_SHARED_ladder_and_restates_no_vocabulary():
         assert not hasattr(dg, gone), "the bar axis is retired from spine_rules"
     for gone in ("main", "compute", "basis_line", "bar_label"):
         assert not hasattr(dg, gone), "spine_rules writes nothing and has no CLI"
+    # AND THE RETIRED SPELLINGS ARE NOT READ (D11): no alias table for a stage
+    # value, no prior flag that warns, no translated `gates =` list.
+    for gone in (
+        "RETIRED_STAGE_ALIASES",
+        "_resolve_stage_alias",
+        "_RETIRED_FLAG",
+        "_warn_retired_flag_spelling",
+        "_LEGACY_GATES_WARNED",
+    ):
+        assert not hasattr(check, gone), "check.py reads the current spellings"
 
 
 def test_selection_is_at_or_above_and_routes_through_the_shared_ordinal():
-    """The owner's rule (OI-51) pinned as BEHAVIOR rather than as prose: a step
+    """The operator's rule (OI-51) pinned as BEHAVIOR rather than as prose: a step
     runs because the repo is at or above its threshold, `all` is above
     everything without being a rung, and an unknown rung RAISES instead of
     degrading to a default that would silently change which checks run."""
@@ -154,8 +164,8 @@ def test_selection_is_at_or_above_and_routes_through_the_shared_ordinal():
 
 
 def test_the_integrate_and_intake_WI_stage_vocabularies_agree_too():
-    """The WI `bar:` key is read by two modules, each with its own copy of the
-    translation (F5 again). A row accepted by one and refused by the other would
+    """The WI `checks_stage` key is read by two modules, each with its own copy of the
+    vocabulary (F5 again). A row accepted by one and refused by the other would
     strand a claimed lane.
 
     RE-ANCHORED AT WI-498 slice 5. The three copies used to be pinned against
@@ -166,25 +176,24 @@ def test_the_integrate_and_intake_WI_stage_vocabularies_agree_too():
     guarantee (the copies agree, and every value they accept is a real rung)
     without freezing WHICH rungs a WI may name.
 
-    The KEY is still spelled `bar:`, and that is the last adopter-authored
-    surface carrying the retired word. Renaming it is a migration entry of its
-    own and is deliberately NOT folded in here (no WI spec in this repo sets it,
-    so nothing is wrong today — only old-flavoured)."""
+    The KEY was spelled `bar:` until the vocabulary migration of 2026-11, the
+    last adopter-authored surface carrying the retired word; it is
+    `checks_stage` now, and `migrate_vocabulary.py` rewrites the earlier key."""
     intake = load_script("intake")
     integrate = load_script("integrate")
-    assert set(intake.WI_BARS) == set(integrate._BAR_GATES)
-    assert set(intake.WI_BARS) <= set(dg.STAGE_ORDER)
-    # The two hand-authored RETIRED-tag tables still have to agree with each
-    # other — that half of the pin never depended on the bar axis.
-    for retired, canonical in intake._RETIRED_WI_BARS.items():
-        assert intake.normalize_bar(retired) == canonical
-        assert integrate._normalize_bar(retired) == canonical
+    assert set(intake.WI_CHECKS_STAGES) == set(integrate._CHECKS_STAGES)
+    assert set(intake.WI_CHECKS_STAGES) <= set(dg.STAGE_ORDER)
+    # A retired tag is not translated (D11): both readers hand it back
+    # unchanged, for the mint and the landing to refuse by name.
+    for retired in ("g1", "G3", "DevBar-Reqs", "devbar-release"):  # check_vocab: allow
+        assert intake.normalize_checks_stage(retired) == retired
+        assert integrate._normalize_checks_stage(retired) == retired
     # ...and a correctly-authored value survives BOTH readers unchanged. The
     # retired readers case-folded with `.upper()`, which would have mangled every
     # canonical value into `DEVBAR-REQS` and refused it.
-    for name in intake.WI_BARS:
-        assert intake.normalize_bar(name) == name
-        assert integrate._normalize_bar(name) == name
+    for name in intake.WI_CHECKS_STAGES:
+        assert intake.normalize_checks_stage(name) == name
+        assert integrate._normalize_checks_stage(name) == name
 
 
 # --- condition 2: the enforcer ------------------------------------------------
@@ -214,7 +223,7 @@ def planted(tmp_path):
         "docs/work/complete/WI-001-x.md",
         "docs/okf/k.md",
         "docs/log.md",
-        "OWNER_SCRATCHPAD.md",
+        "OPERATOR_SCRATCHPAD.md",
     ):
         (tmp_path / rel).write_text(
             "the repo passed G1 and G2 on 2026-01-01\n", encoding="utf-8"
@@ -253,11 +262,11 @@ def test_severity_is_WARN_FIRST_and_promotes_under_strict(planted):
         "docs/work/complete/WI-001-x.md",
         "docs/okf/k.md",
         "docs/log.md",
-        "OWNER_SCRATCHPAD.md",
+        "OPERATOR_SCRATCHPAD.md",
     ],
 )
 def test_the_ruled_carve_outs_are_never_reported(planted, rel):
-    """History is not rewritten and attestations are not re-worded — the ruling's
+    """History is not rewritten and acceptances are not re-worded — the ruling's
     hardest condition, because the tempting fix (sweep everything) makes a signed
     record claim something was signed that was not. Each carve-out is planted with
     a real tag, so a glob that stopped matching shows up as a NEW finding here."""

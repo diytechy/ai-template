@@ -7,7 +7,7 @@ WHAT THIS IS (SR-199). An observation test case is one recorded as not
 automated: a judgment the harness cannot rerun, like a person reading a render
 or a measurement over an adopter's first week. Its result is not written on
 the test case, which would mix what the test IS with what it last FOUND and
-force the row's re-attestation after every sample. This command writes it as a
+force the row's re-acceptance after every sample. This command writes it as a
 record of its own (`kitlib/observation.py`): the case, the outcome, the moment
 it was observed (now, in UTC), who or what observed it, when it expires and a
 digest of the inputs the case declares it reads, as they stand now.
@@ -34,11 +34,11 @@ edit to its neighbours does not.
 
 AND WHAT JUDGING THEM READS. The checker's rules read no file, so the reads
 they need live beside the writer that produces the records:
-`evidence_inputs` reads the record files and each accepted risk's approval
+`evidence_inputs` reads the record files and each accepted risk's acceptance
 act, once per run, and `trace.py` hands them to the rules.
 
 WHAT IT NEVER DOES. It never opens the test-case registry for writing, so
-recording a sample re-opens no approval. And the records' directory is not a
+recording a sample re-opens no acceptance. And the records' directory is not a
 declared stage input and lies outside the release evidence's source surface,
 so recording a sample never makes the stage's fingerprint or a release claim
 stale.
@@ -301,7 +301,7 @@ def evidence_inputs(root, das, bifs, framed=None):
 
     The FILE READ half of those rules, which read no file: the record files
     and their parsed records always; and where the frame declares a crossing
-    and the registry an assumption, each accepted risk's approval act
+    and the registry an assumption, each accepted risk's acceptance act
     (`baseline_snapshot.risk_acceptance_view`). No digest and no suite record
     is read: an assumption carries no evidence level, so nothing asks whether
     a result is current. `framed` overrides whether a crossing is declared:

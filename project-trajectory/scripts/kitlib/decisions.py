@@ -1,16 +1,16 @@
-"""The DELEGATED-DECISIONS RECORD: what one delegated run tells the owner about
-the calls it made on the owner's behalf — its path, its format, which closes
+"""The DELEGATED-DECISIONS RECORD: what one delegated run tells the operator about
+the calls it made on the operator's behalf — its path, its format, which closes
 owe one, and the note a delegated session is handed.
 
 WHY A RECORD AND NOT AN EXIT (SR-225). A delegated session decides things the
-owner would want a second look at: too settled for a pending open item, which
+operator would want a second look at: too settled for a pending open item, which
 blocks by design, and not settled enough for the log, which records settled
 decisions. Such calls had no home, and a prose "decisions for review" file
 degraded within one session: the fields it asked for were left out as soon as
 nothing read them. So the record is structural — one table per decision, each
 carrying four REQUIRED disclosure fields — and it is a RECORD of calls already
-made, never a route for work: a call the owner must make, or an act that cannot
-be undone, still goes to the owner through the process's exits.
+made, never a route for work: a call the operator must make, or an act that cannot
+be undone, still goes to the operator through the process's exits.
 
 ONE FILE PER RUN (`DECISIONS_DIR/<run>.toml`), named by the lane's branch, so
 the directory is never a merge-conflict surface, the way the log's per-branch
@@ -22,18 +22,18 @@ that as an absent record (WI-818 dispute 1). The residue is stated, not
 claimed away: `a/b` and `a-b`, and a branch name reused by a second lane,
 share one record.
 
-THE OWNER'S VERDICT IS ONE KEY, AND AN OVERRULE IS ACTED ON (WI-818). A
-decision is a direction already taken, so the owner does not approve it: the
-owner CONFIRMS it or OVERRULES it (owner, 2026-10-04). Each entry may carry
-`owner`, set in place to `confirmed` or `overruled`; an absent key is NOT YET
-SEEN. `owner_state` is the one reading, and any other value reads as not yet
+THE OPERATOR'S VERDICT IS ONE KEY, AND AN OVERRULE IS ACTED ON (WI-818). A
+decision is a direction already taken, so the operator does not accept it: the
+operator CONFIRMS it or OVERRULES it (operator, 2026-10-04). Each entry may carry
+`operator`, set in place to `confirmed` or `overruled`; an absent key is NOT YET
+SEEN. `operator_state` is the one reading, and any other value reads as not yet
 seen AND is a format finding, so a typo never hides a decision. The retired
 `reviewed` key (WI-790) is a format finding wherever it appears and is never
-read: an entry still carrying it reads as not yet seen, whatever `owner` says.
+read: an entry still carrying it reads as not yet seen, whatever `operator` says.
 The migrator (`migrate_text`, run by `migrate_decisions.py`) rewrites it, and
 no reader keeps a legacy path. An
 overrule states the direction instead in the `review` note, so an overruled
-entry with a blank note is a finding. The generated owner surface lists every
+entry with a blank note is a finding. The generated operator surface lists every
 entry not yet seen under "Decisions to review" and every overruled entry
 under its own heading beside the work item citing it (`review_queue`).
 
@@ -44,11 +44,11 @@ whose spec cites the entry as `docs/decisions/<run>.toml#D-NNN` (`citation`,
 `citations`, `newly_overruled`, and the coupling itself, `overrule_sync_lines`,
 handed the two trees as readers; the git read is the ruling sync's, in
 `acceptance_record`, which asks it of the same diff). Amending the queued row the decision was scoped to is
-enough; nothing has to be minted. The coupling reads the `owner` key as
+enough; nothing has to be minted. The coupling reads the `operator` key as
 written, and FAILS CLOSED: a record the commit's tree carries but cannot parse
 is refused, since an unreadable verdict is never "no overrule". Who sets the key stays a convention: git
-cannot tell the owner's commit from an agent's without a marker, which the
-owner has ruled out.
+cannot tell the operator's commit from an agent's without a marker, which the
+operator has ruled out.
 
 WHAT IS JUDGED, AND HOW LOUDLY. The merge slot refuses a close that OWES a
 record and carries none (`owed`), because a missing record is silence about
@@ -57,7 +57,7 @@ the machinery closed with no session present is refused too, and the refusal is
 a hold for a person to write the record. A malformed entry — a missing or blank
 disclosure field, a non-text value, a hoist naming an entry the record lacks —
 is REPORTED and never refused (`record_findings`; the one refusal is the
-overrule sync's unparseable record above): the record exists, the owner
+overrule sync's unparseable record above): the record exists, the operator
 can read what is there, and refusing the merge over one field would strand
 finished work for a reporting defect. An entry numbered `-000` is the template's
 example and is never judged, so the template stays copy-ready.
@@ -73,13 +73,13 @@ Contract IF-255: the delegated-decisions record, as a FILE. One TOML file per
     character git refuses has no record), committed on the lane's branch by the
     session that made the calls and read off that branch's tree by the merge
     slot. A top-level `high_risk` list of entry ids names the entries the
-    writer judges deserve the owner's eyes first (empty when none). Each
+    writer judges deserve the operator's eyes first (empty when none). Each
     decision is a table
     `[decision.D-<digits>]` carrying `decided`, `alternative`, `reversal_cost`
     and `why_not_escalated` as non-blank text and `review` as text, empty until
-    the owner writes a note in place, and may carry `owner`, the owner's
+    the operator writes a note in place, and may carry `operator`, the operator's
     verdict: `confirmed` or `overruled`, absent meaning not yet seen
-    (`owner_state` reads it). An overruled entry's `review` note states the
+    (`operator_state` reads it). An overruled entry's `review` note states the
     direction instead and is not blank. `reviewed` is retired: a format
     finding wherever it appears, never read, and the entry carrying it reads
     as not yet seen. A work item cites an entry as
@@ -98,7 +98,7 @@ Contract IF-256: the delegated-decisions record, as a CALL. `MODES` is the
     close with no record at its run's path, or with a run name no record
     can carry;
     `session_note(mode, run)` the instruction a delegated session is handed,
-    `""` under `off`; `owner_state(value)` `confirmed`, `overruled`, `""` for
+    `""` under `off`; `operator_state(value)` `confirmed`, `overruled`, `""` for
     the absent key (not yet seen), or None for a value it does not recognize;
     `review_queue(text)` the entries not yet seen and the entries overruled,
     each high-risk first, and the count confirmed; `citation(rel, entry_id)`
@@ -125,14 +125,14 @@ import tomllib
 # Implements: SR-225, LLR-283
 DECISIONS_DIR = "docs/decisions"
 
-# The `[attestation] decision_recording` alphabet, in order of how much it asks:
+# The `[authority] decision_recording` alphabet, in order of how much it asks:
 # no obligation; a delegated run's close owes the record; and, beyond recording,
 # prefer the process's exits over deciding.
 # Implements: SR-225, LLR-283
 MODES = ("off", "record", "escalate-first")
 
 # The keys every entry carries. The first four are the DISCLOSURE, and must say
-# something; `review` is the owner's cell, empty until the owner writes in it.
+# something; `review` is the owner's cell, empty until the operator writes in it.
 # Implements: SR-225, LLR-283
 REQUIRED_KEYS = (
     "decided",
@@ -145,15 +145,15 @@ _DISCLOSURE = REQUIRED_KEYS[:4]
 
 _ENTRY_ID_RE = re.compile(r"^D-\d+$")
 
-# The owner's verdict (WI-818; the owner, 2026-10-04: a decision is "either
+# The operator's verdict (WI-818; the operator, 2026-10-04: a decision is "either
 # confirmed by the user or overruled (or empty / ignored)"). Exact words: the
 # vocabulary is closed and the migrator writes it, so any other value is a
 # format finding and reads as not yet seen.
 # Implements: SR-225, LLR-283
-OWNER_KEY = "owner"
+OPERATOR_KEY = "operator"
 CONFIRMED = "confirmed"
 OVERRULED = "overruled"
-OWNER_VALUES = (CONFIRMED, OVERRULED)
+OPERATOR_VALUES = (CONFIRMED, OVERRULED)
 
 # WI-790's key, retired by WI-818: a format finding wherever it appears, never
 # read as a verdict. `migrate_text` is the one place its vocabulary survives.
@@ -211,41 +211,41 @@ def _inert(entry_id):
     return str(entry_id).endswith("-000")
 
 
-def owner_state(value):
-    """The owner's verdict on one entry: `CONFIRMED`, `OVERRULED`, `""` for
+def operator_state(value):
+    """The operator's verdict on one entry: `CONFIRMED`, `OVERRULED`, `""` for
     the absent key (`None` as the argument: not yet seen), or None for a value
-    the `owner` key does not recognize (which the caller reads as not yet seen
+    the `operator` key does not recognize (which the caller reads as not yet seen
     and reports).
 
     Implements: SR-225, LLR-283
     """
     if value is None:
         return ""
-    if isinstance(value, str) and value in OWNER_VALUES:
+    if isinstance(value, str) and value in OPERATOR_VALUES:
         return value
     return None
 
 
-def _owner_findings(entry_id, entry):
-    """The verdict's findings for one entry: an unrecognized `owner`, the
+def _operator_findings(entry_id, entry):
+    """The verdict's findings for one entry: an unrecognized `operator`, the
     retired key, and an overrule with no stated direction.
 
     Implements: SR-225, LLR-283
     """
     out = []
-    state = owner_state(entry.get(OWNER_KEY))
+    state = operator_state(entry.get(OPERATOR_KEY))
     if state is None:
         out.append(
             "{}: `{}` = {!r} is not `{}` or `{}`, so the entry reads as not "
             "yet seen".format(
-                entry_id, OWNER_KEY, entry.get(OWNER_KEY), CONFIRMED, OVERRULED
+                entry_id, OPERATOR_KEY, entry.get(OPERATOR_KEY), CONFIRMED, OVERRULED
             )
         )
     if RETIRED_KEY in entry:
         out.append(
             "{}: `{}` is retired and never read; the entry reads as not yet "
             "seen, whatever `{}` says, until it is gone (migrate_decisions.py "
-            "rewrites it)".format(entry_id, RETIRED_KEY, OWNER_KEY)
+            "rewrites it)".format(entry_id, RETIRED_KEY, OPERATOR_KEY)
         )
     if state == OVERRULED and not str(entry.get("review") or "").strip():
         out.append(
@@ -260,7 +260,7 @@ def _entry_findings(entry_id, entry):
         return ["{}: an entry id is D-<number>".format(entry_id)]
     if not isinstance(entry, dict):
         return ["{}: an entry is a table of its fields".format(entry_id)]
-    out = _owner_findings(entry_id, entry)
+    out = _operator_findings(entry_id, entry)
     for key in REQUIRED_KEYS:
         value = entry.get(key)
         if value is None:
@@ -293,7 +293,7 @@ def record_findings(text):
     if not isinstance(hoist, list) or not all(isinstance(h, str) for h in hoist):
         out.append(
             "no top-level `high_risk` list of entry ids (empty when no entry "
-            "deserves the owner's eyes first)"
+            "deserves the operator's eyes first)"
         )
         return out
     out.extend(
@@ -315,7 +315,7 @@ def _entries(data):
         return {}, set()
     hoist = data.get("high_risk")
     # A malformed hoist is `record_findings`' to report; the queue still lists
-    # every entry, so the owner page shows the finding beside them.
+    # every entry, so the operator page shows the finding beside them.
     hoisted = (
         {h for h in hoist if isinstance(h, str)} if isinstance(hoist, list) else set()
     )
@@ -335,11 +335,11 @@ def _parsed(text):
 
 def review_queue(text):
     """`(unseen, overruled, confirmed)` for one record's text: the entries NOT
-    YET SEEN (an absent or unrecognized `owner`) and the entries OVERRULED,
+    YET SEEN (an absent or unrecognized `operator`) and the entries OVERRULED,
     each `{"id", "high_risk", "fields", "owner"}` (`fields` the entry's table,
-    `owner` the raw value), each list the record's `high_risk` entries first
+    `operator` the raw value), each list the record's `high_risk` entries first
     and then id order; and how many entries are confirmed. An entry still
-    carrying the retired key is not yet seen whatever its `owner` says. A
+    carrying the retired key is not yet seen whatever its `operator` says. A
     `-000` entry is never listed or counted, and a text that does not parse
     lists nothing (`record_findings` reports it). Never raises.
 
@@ -348,7 +348,9 @@ def review_queue(text):
     entries, hoisted = _parsed(text)
     unseen, overruled, confirmed = [], [], 0
     for entry_id, entry in entries.items():
-        state = None if RETIRED_KEY in entry else owner_state(entry.get(OWNER_KEY))
+        state = (
+            None if RETIRED_KEY in entry else operator_state(entry.get(OPERATOR_KEY))
+        )
         if state == CONFIRMED:
             confirmed += 1
             continue
@@ -356,7 +358,7 @@ def review_queue(text):
             "id": entry_id,
             "high_risk": entry_id in hoisted,
             "fields": entry,
-            "owner": entry.get(OWNER_KEY),
+            "operator": entry.get(OPERATOR_KEY),
         }
         (overruled if state == OVERRULED else unseen).append(shown)
     for listed in (unseen, overruled):
@@ -382,12 +384,14 @@ def citations(text):
 
 
 def _overruled_ids(entries):
-    """The ids whose `owner` key, as written, is `overruled`: the coupling
+    """The ids whose `operator` key, as written, is `overruled`: the coupling
     reads the key alone, so neither the retired key beside it nor a blank note
     lets an overrule skip its work.
     """
     return {
-        eid for eid, e in entries.items() if owner_state(e.get(OWNER_KEY)) == OVERRULED
+        eid
+        for eid, e in entries.items()
+        if operator_state(e.get(OPERATOR_KEY)) == OVERRULED
     }
 
 
@@ -410,7 +414,7 @@ def newly_overruled(before, after):
 
 
 # --- THE OVERRULE SYNC: an overrule files or amends its work (WI-818) --------
-# The owner's overrule of a delegated decision is coupled to work the way a
+# The operator's overrule of a delegated decision is coupled to work the way a
 # ruling is coupled to its citing row: one commit against its parent. The
 # trigger is the record's state (an entry overruled in the new tree and not in
 # the parent's); the act is a queued or active spec this same diff adds or
@@ -513,12 +517,12 @@ def _retired_verdict(value):
 
 def _verdict_action(entry):
     """What the migration does to one entry's retired key: `"drop"` beside an
-    `owner` key already set or for a not-reviewed value, `"confirm"` for a
+    `operator` key already set or for a not-reviewed value, `"confirm"` for a
     reviewed value, `"keep"` for a value outside the retired vocabulary.
 
     Implements: SR-225, LLR-304
     """
-    if OWNER_KEY in entry:
+    if OPERATOR_KEY in entry:
         return "drop"
     verdict = _retired_verdict(entry.get(RETIRED_KEY))
     if verdict is None:
@@ -598,7 +602,7 @@ def _comment_start(statement):
 
 def _migrated_statement(statement, entry):
     """What one top-level `reviewed = <value>` statement becomes, its whole
-    value span included: `owner = "confirmed"` (keeping its indent, its
+    value span included: `operator = "confirmed"` (keeping its indent, its
     trailing comment and the space before it, and its line ending); when
     dropped, its trailing comment alone on the line, or "" with none; or the
     statement itself when kept.
@@ -617,12 +621,12 @@ def _migrated_statement(statement, entry):
         tail = statement[len(statement[:at].rstrip()) :]
     if action == "drop":
         return "" if at is None else indent + tail.lstrip()
-    return '{}{} = "{}"{}'.format(indent, OWNER_KEY, CONFIRMED, tail)
+    return '{}{} = "{}"{}'.format(indent, OPERATOR_KEY, CONFIRMED, tail)
 
 
 def _expected_parse(data, entries):
     """The parse a correct migration of `data` yields: each entry's retired
-    key dropped, or replaced by `owner = "confirmed"`, or kept, and nothing
+    key dropped, or replaced by `operator = "confirmed"`, or kept, and nothing
     else changed.
 
     Implements: SR-225, LLR-304
@@ -637,7 +641,7 @@ def _expected_parse(data, entries):
             continue
         new = {k: v for k, v in entry.items() if k != RETIRED_KEY}
         if action == "confirm":
-            new[OWNER_KEY] = CONFIRMED
+            new[OPERATOR_KEY] = CONFIRMED
         want["decision"][eid] = new
     return want
 
@@ -683,7 +687,7 @@ def _checked(new_text, want):
 def migrate_text(text):
     """`(new_text, left)`: one record with the retired key rewritten in place —
     `reviewed = true` (or any word that read as reviewed) becomes
-    `owner = "confirmed"`, a not-reviewed value or one beside an `owner` key
+    `operator = "confirmed"`, a not-reviewed value or one beside an `operator` key
     is dropped — and the ids whose value is outside the retired vocabulary,
     left as they are (still a format finding). It rewrites complete top-level
     assignments only (`_statements`), never a string's contents, so every
@@ -748,7 +752,7 @@ def missing_record_refusal(mode, run):
             run, exc
         )
     return (
-        "{} closed without its decisions record ({}): [attestation] "
+        "{} closed without its decisions record ({}): [authority] "
         "decision_recording = {!r} makes the record owed at every "
         "close, even with no entries - write it on the branch; nothing "
         "was merged".format(run, rel, mode)
@@ -765,18 +769,18 @@ def session_note(mode, run):
     if str(mode) not in MODES[1:]:
         return ""
     note = (
-        "\n\nDECISIONS RECORD (docs/process.toml [attestation] "
+        "\n\nDECISIONS RECORD (docs/process.toml [authority] "
         'decision_recording = "{mode}"): this run owes one record of the calls '
-        "it made on the owner's behalf, at {path} — the format and the routing "
+        "it made on the operator's behalf, at {path} — the format and the routing "
         'rules are the process options\' "Delegated decisions record" layer. '
         "Write one [decision.D-<n>] table per call that touched a registry, the "
         "spine or a kit file, or that you are unsure of, each carrying "
-        "{keys} (leave review empty and set no owner key — the owner "
-        'confirms or overrules each entry in place: owner = "confirmed" or '
+        "{keys} (leave review empty and set no operator key — the operator "
+        'confirms or overrules each entry in place: operator = "confirmed" or '
         '"overruled"), and a top-level '
         "high_risk list naming the entries the owner should read first (empty "
-        "when none). The record is not an exit: a call that is the owner's to "
-        "make, or an act that cannot be undone, still goes to the owner through "
+        "when none). The record is not an exit: a call that is the operator's to "
+        "make, or an act that cannot be undone, still goes to the operator through "
         "the process's exits, never only into this file. Commit it on this "
         "branch before your close commit, even with no entries: a lane that "
         "closes its work without it is refused at the merge."

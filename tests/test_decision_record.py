@@ -1,11 +1,11 @@
 """The delegated-decisions record: its format, the dial that owes it, and the
 note a delegated session is handed — the in-memory half (SR-225).
 
-A delegated run makes calls on the owner's behalf that are too settled for a
+A delegated run makes calls on the operator's behalf that are too settled for a
 pending open item and not settled enough for the log. The record is where the
-owner is TOLD about them: one TOML file per run, one table per decision, each
-carrying the four disclosure fields and a `review` cell the owner fills in place.
-The `[attestation] decision_recording` dial decides whether a run owes one.
+operator is TOLD about them: one TOML file per run, one table per decision, each
+carrying the four disclosure fields and a `review` cell the operator fills in place.
+The `[authority] decision_recording` dial decides whether a run owes one.
 
 Nothing here touches git: the merge-slot rung that refuses a lane closing
 without its record is driven on a scaffold in `test_decision_record_merge.py`.
@@ -54,8 +54,8 @@ review = ""
 [decision.D-002]
 decided = "authored a derived requirement"
 alternative = "cited a need whose text does not demand it"
-reversal_cost = "an amendment and a re-approval"
-why_not_escalated = "the row is Drafted; approval stays the owner's act"
+reversal_cost = "an amendment and a re-acceptance"
+why_not_escalated = "the row is Drafted; acceptance stays the operator's act"
 review = "fine by me"
 """
 
@@ -68,7 +68,7 @@ def _docs(tmp_path, body):
 
 
 def _dial(tmp_path, value):
-    return _docs(tmp_path, "[attestation]\ndecision_recording = {}\n".format(value))
+    return _docs(tmp_path, "[authority]\ndecision_recording = {}\n".format(value))
 
 
 def _one_entry(key, literal):
@@ -95,8 +95,8 @@ def test_each_declared_value_reads_as_itself(tmp_path, mode):
 def test_an_undeclared_dial_reads_off(tmp_path):
     """Implements: TC-292"""
     # The template's shipped value and the reading of a repo that never set it:
-    # no obligation until an owner asks for one.
-    assert ac.decision_recording(_docs(tmp_path, "[attestation]\n")) == "off"
+    # no obligation until an operator asks for one.
+    assert ac.decision_recording(_docs(tmp_path, "[authority]\n")) == "off"
     assert ac.decision_recording(tmp_path / "absent") == "off"
 
 
@@ -152,8 +152,8 @@ def test_the_template_ships_off_and_this_repo_records():
     """Implements: TC-292"""
     template = tomllib.loads((KIT / "process.toml.template").read_text("utf-8"))
     live = tomllib.loads((ROOT / "docs" / "process.toml").read_text("utf-8"))
-    assert template["attestation"]["decision_recording"] == "off"
-    assert live["attestation"]["decision_recording"] == "record"
+    assert template["authority"]["decision_recording"] == "off"
+    assert live["authority"]["decision_recording"] == "record"
 
 
 # --- TC-293: the format, the obligation, the session note ------------------------
@@ -164,7 +164,7 @@ def test_a_sound_record_yields_no_finding():
 
 
 def test_a_record_with_no_entries_is_sound():
-    # A run that made no call worth the owner's eyes still closes with its
+    # A run that made no call worth the operator's eyes still closes with its
     # record; the empty hoist says so.
     assert kd.record_findings("high_risk = []\n") == []
 
@@ -190,7 +190,7 @@ def test_each_required_key_holding_non_text_is_reported(key, literal):
 def test_each_required_key_left_blank(key, literal):
     findings = kd.record_findings(_one_entry(key, literal))
     if key == "review":
-        # The owner's cell: any string, blank included, is the owner's to write.
+        # The owner's cell: any string, blank included, is the operator's to write.
         assert findings == []
     else:
         assert findings == ["D-001: `{}` is blank".format(key)]
@@ -310,9 +310,9 @@ def test_the_session_note_names_the_path_only_under_a_recording_dial():
         assert key in note
     assert "high_risk" in note
     assert "escalate-first" not in note
-    # WI-818: the owner's verdict key is named, the retired key is not.
-    assert 'owner = "confirmed"' in note and "reviewed" not in note
-    assert "set no owner key" in note  # the session leaves the verdict unset
+    # WI-818: the operator's verdict key is named, the retired key is not.
+    assert 'operator = "confirmed"' in note and "reviewed" not in note
+    assert "set no operator key" in note  # the session leaves the verdict unset
     ask_more = kd.session_note("escalate-first", "wi-1-x")
     assert "docs/decisions/wi-1-x.toml" in ask_more
     assert len(ask_more) > len(note), "escalate-first adds the prefer-the-exits rule"

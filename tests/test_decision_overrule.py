@@ -1,7 +1,7 @@
 """An overrule is acted on in the same commit, and the retired key migrates
-(WI-818; owner direction 2026-10-04).
+(WI-818; operator direction 2026-10-04).
 
-The commit that sets a delegated-decisions entry `owner = "overruled"` must,
+The commit that sets a delegated-decisions entry `operator = "overruled"` must,
 in the same diff, file or amend a queued or active work item whose spec cites
 the entry as `docs/decisions/<run>.toml#D-NNN`. It is the ruling sync's
 commit-against-its-parent shape (OI-102 Q3) and runs in the same two places:
@@ -10,7 +10,7 @@ the merge slot over each lane commit against its first parent, so a
 `--no-verify` commit is still refused before it lands. Amending the queued row
 the decision is scoped to satisfies it: nothing is minted.
 
-The migrator rewrites `reviewed = true` to `owner = "confirmed"` and drops
+The migrator rewrites `reviewed = true` to `operator = "confirmed"` and drops
 `reviewed = false`, keeping each note and every other line.
 """
 
@@ -40,20 +40,20 @@ def _git(root, *args):
 
 
 def _entry(eid, owner=None, review=""):
-    line = "" if owner is None else 'owner = "{}"\n'.format(owner)
+    line = "" if owner is None else 'operator = "{}"\n'.format(owner)
     return (
         '[decision.{}]\ndecided = "d"\nalternative = "a"\nreversal_cost = "c"\n'
         'why_not_escalated = "w"\nreview = "{}"\n{}\n'.format(eid, review, line)
     )
 
 
-def _record(root, d002_owner=None, rel=None):
+def _record(root, d002_operator=None, rel=None):
     path = root / (rel or RECORD)
     path.parent.mkdir(parents=True, exist_ok=True)
-    note = "Overruled: keep the flag." if d002_owner == "overruled" else ""
+    note = "Overruled: keep the flag." if d002_operator == "overruled" else ""
     path.write_text(
         "high_risk = []\n\n{}{}".format(
-            _entry("D-001", "confirmed"), _entry("D-002", d002_owner, note)
+            _entry("D-001", "confirmed"), _entry("D-002", d002_operator, note)
         ),
         encoding="utf-8",
         newline="\n",
@@ -213,7 +213,7 @@ def test_a_record_that_does_not_parse_is_refused_at_the_commit_and_the_merge_slo
     tmp_path,
 ):
     """Implements: TC-319"""
-    # Fail closed (owner rule: no degenerate path): an overrule behind a syntax
+    # Fail closed (operator rule: no degenerate path): an overrule behind a syntax
     # error is unreadable, never "no overrule". Both admission points refuse,
     # naming the record and the parse error, and a later commit that repairs
     # the syntax while dropping the verdict does not launder the lane.
@@ -250,7 +250,7 @@ def test_a_repair_of_an_unparseable_parent_owes_every_overrule_it_shows(tmp_path
 def test_an_overrule_beside_the_retired_key_still_owes_its_work(tmp_path):
     """Implements: TC-319"""
     # The surface reads such an entry as not yet seen, but the coupling reads
-    # the `owner` key as written: a stale key never lets an overrule skip it.
+    # the `operator` key as written: a stale key never lets an overrule skip it.
     root = _base(tmp_path)
     _record(root, "overruled")
     path = root / RECORD
@@ -335,7 +335,7 @@ def test_a_citing_spec_path_git_would_quote_discharges_the_overrule(tmp_path):
     [
         "owner+cleanup",
         "owner@cleanup",
-        "owner-cleanup",
+        "operator-cleanup",
         "feat/x.y_z",
         "ré",
         "owner\u00a0cleanup",
@@ -410,12 +410,15 @@ def test_the_run_name_alphabet_is_what_git_refuses_plus_two_delimiters():
 
 def test_a_run_name_carrying_the_citation_delimiter_has_no_record(tmp_path):
     """Implements: TC-319"""
-    # `owner#cleanup` and `owner.toml#D-002` are valid branches. No record is
-    # named by either: `#` is refused, never folded into `owner-cleanup`'s file.
-    for run in ("owner#cleanup", "owner.toml#D-002"):
+    # `operator#cleanup` and `owner.toml#D-002` are valid branches. No record is
+    # named by either: `#` is refused, never folded into `operator-cleanup`'s file.
+    for run in ("operator#cleanup", "owner.toml#D-002"):
         with pytest.raises(ValueError, match="'#'"):
             decisions.record_path(run)
-    assert decisions.record_path("owner-cleanup") == "docs/decisions/owner-cleanup.toml"
+    assert (
+        decisions.record_path("operator-cleanup")
+        == "docs/decisions/operator-cleanup.toml"
+    )
     # One parse: a spec citing `owner.toml#D-002` discharges that entry and
     # no other record's D-002.
     cite = decisions.record_path("owner") + "#D-002"
@@ -486,7 +489,7 @@ decided = "d1"
 alternative = "a"
 reversal_cost = "c"
 why_not_escalated = "w"
-review = "Confirmed by the owner, 2026-10-04."
+review = "Confirmed by the operator, 2026-10-04."
 reviewed = true
 
 [decision.D-002]
@@ -512,8 +515,9 @@ def test_the_migrator_rewrites_the_retired_key_keeping_each_note():
     text, left = decisions.migrate_text(FIXTURE)
     assert left == ["D-003"]  # outside the retired vocabulary: left, still a finding
     assert "reviewed = true" not in text and "reviewed = false" not in text
-    assert 'review = "Confirmed by the owner, 2026-10-04."\nowner = "confirmed"\n' in (
-        text
+    assert (
+        'review = "Confirmed by the operator, 2026-10-04."\noperator = "confirmed"\n'
+        in (text)
     )
     assert text.startswith("# a record from before WI-818\n")
     unseen, overruled, confirmed = decisions.review_queue(text)
@@ -530,7 +534,9 @@ ENTRY += 'why_not_escalated = "w"\n'
 
 def test_the_migrator_drops_a_retired_line_beside_an_existing_owner():
     """Implements: TC-320"""
-    text = 'high_risk = []\n\n{}review = "Undo."\nowner = "overruled"\n'.format(ENTRY)
+    text = 'high_risk = []\n\n{}review = "Undo."\noperator = "overruled"\n'.format(
+        ENTRY
+    )
     new, left = decisions.migrate_text(text + "reviewed = true\n")
     assert (new, left) == (text, [])
 
@@ -541,10 +547,10 @@ def test_the_migrator_never_rewrites_inside_a_multiline_note():
     head = "high_risk = []\n\n{}review = {}\n".format(ENTRY, note)
     text = head + "reviewed = true\n"
     new, left = decisions.migrate_text(text)
-    assert (new, left) == (head + 'owner = "confirmed"\n', [])
+    assert (new, left) == (head + 'operator = "confirmed"\n', [])
     entry = tomllib.loads(new)["decision"]["D-001"]
     assert entry["review"] == tomllib.loads(text)["decision"]["D-001"]["review"]
-    assert entry["owner"] == "confirmed" and "reviewed" not in entry
+    assert entry["operator"] == "confirmed" and "reviewed" not in entry
 
 
 def test_the_migrator_rewrites_a_multiline_string_verdict_whole():
@@ -555,8 +561,8 @@ def test_the_migrator_rewrites_a_multiline_string_verdict_whole():
         )
         new, left = decisions.migrate_text(text)
         assert left == []
-        assert new.endswith('review = "r"\nowner = "confirmed"\n# after\n'), new
-        assert tomllib.loads(new)["decision"]["D-001"]["owner"] == "confirmed"
+        assert new.endswith('review = "r"\noperator = "confirmed"\n# after\n'), new
+        assert tomllib.loads(new)["decision"]["D-001"]["operator"] == "confirmed"
 
 
 def test_the_migrator_refuses_what_it_cannot_rewrite_in_place():
@@ -573,11 +579,11 @@ def test_the_migrator_keeps_a_trailing_comment_on_the_line_it_rewrites():
     head = 'high_risk = []\n\n{}review = "r"\n'.format(ENTRY)
     note = "# Owner confirmed after discussing the rollback"
     new, left = decisions.migrate_text(head + "  reviewed = true  {}\r\n".format(note))
-    assert (new, left) == (head + '  owner = "confirmed"  {}\r\n'.format(note), [])
+    assert (new, left) == (head + '  operator = "confirmed"  {}\r\n'.format(note), [])
     new, left = decisions.migrate_text(head + "reviewed = false # Waiting\n")
     assert (new, left) == (head + "# Waiting\n", [])
     new, _ = decisions.migrate_text(head + "reviewed = 'yes' # kept\n")
-    assert new == head + 'owner = "confirmed" # kept\n'
+    assert new == head + 'operator = "confirmed" # kept\n'
     statement = 'reviewed = "a # b" # c\n'  # a `#` inside a string is no comment
     assert decisions._comment_start(statement) == statement.rindex("#")
     new, _ = decisions.migrate_text(head + 'reviewed = """\n# no\ntrue\n""" # kept\n')
@@ -591,7 +597,7 @@ def test_the_migrator_accepts_a_record_carrying_nan(tmp_path, nan):
     assert decisions.record_findings(clean) == []
     assert decisions.migrate_text(clean) == (clean, [])
     old = clean + "reviewed = true\n"
-    assert decisions.migrate_text(old) == (clean + 'owner = "confirmed"\n', [])
+    assert decisions.migrate_text(old) == (clean + 'operator = "confirmed"\n', [])
     folder = tmp_path / "docs/decisions"
     folder.mkdir(parents=True)
     (folder / "clean.toml").write_text(clean, encoding="utf-8")
@@ -624,7 +630,7 @@ OLD_HEAD = 'high_risk = []\n\n{}review = "r"\n'.format(ENTRY)
 def test_the_migrator_reads_a_numeric_retired_value():
     """Implements: TC-320"""
     assert decisions.migrate_text(OLD_HEAD + "reviewed = 1\n") == (
-        OLD_HEAD + 'owner = "confirmed"\n',
+        OLD_HEAD + 'operator = "confirmed"\n',
         [],
     )
     assert decisions.migrate_text(OLD_HEAD + "reviewed = 0\n") == (OLD_HEAD, [])
@@ -637,7 +643,7 @@ def test_the_migrator_reads_a_multiline_note_holding_a_lone_quote():
     note = '"""a "quoted\nreviewed = true\n"""'
     head = "high_risk = []\n\n{}review = {}\n".format(ENTRY, note)
     new, left = decisions.migrate_text(head + "reviewed = true\n")
-    assert (new, left) == (head + 'owner = "confirmed"\n', [])
+    assert (new, left) == (head + 'operator = "confirmed"\n', [])
     assert tomllib.loads(new)["decision"]["D-001"]["review"] == (
         'a "quoted\nreviewed = true\n'
     )
@@ -645,10 +651,10 @@ def test_the_migrator_reads_a_multiline_note_holding_a_lone_quote():
 
 def test_the_migrator_reads_past_a_comment_holding_a_quote_or_bracket():
     """Implements: TC-320"""
-    text = OLD_HEAD + "# the owner's \"call [see\nreviewed = true\n"
+    text = OLD_HEAD + "# the operator's \"call [see\nreviewed = true\n"
     new, left = decisions.migrate_text(text)
     assert (new, left) == (
-        OLD_HEAD + '# the owner\'s "call [see\nowner = "confirmed"\n',
+        OLD_HEAD + '# the operator\'s "call [see\noperator = "confirmed"\n',
         [],
     )
 
@@ -657,7 +663,7 @@ def test_the_migrator_reads_past_a_comment_holding_a_quote_or_bracket():
 def test_the_migrator_rewrites_a_quoted_retired_key(line):
     """Implements: TC-320"""
     new, left = decisions.migrate_text(OLD_HEAD + line + "\n")
-    assert (new, left) == (OLD_HEAD + 'owner = "confirmed"\n', [])
+    assert (new, left) == (OLD_HEAD + 'operator = "confirmed"\n', [])
 
 
 def _records(tmp_path, **texts):
@@ -671,7 +677,7 @@ def _records(tmp_path, **texts):
 def test_the_migrator_cli_keeps_a_records_line_endings(tmp_path):
     """Implements: TC-320"""
     old = (OLD_HEAD + "reviewed = true\n").replace("\n", "\r\n")
-    clean = (OLD_HEAD + 'owner = "confirmed"\n').replace("\n", "\r\n")
+    clean = (OLD_HEAD + 'operator = "confirmed"\n').replace("\n", "\r\n")
     folder = _records(tmp_path, old=old, clean=clean)
     assert migrate.main(["--root", str(tmp_path)]) == 0
     assert (folder / "old.toml").read_bytes() == clean.encode("utf-8")

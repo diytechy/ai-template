@@ -137,7 +137,7 @@ def main(argv=None):
         text = render()
     except prompts.PromptError as exc:
         # Before any write, so the previous catalogue stands; and for `--check`
-        # too, so an unreadable source is a red gate rather than a green one.
+        # too, so an unreadable source is a failing gate rather than a passing one.
         print("gen_prompt_catalog: {}".format(exc), file=sys.stderr)
         return 1
     if args.show:

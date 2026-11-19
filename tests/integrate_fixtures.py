@@ -10,10 +10,10 @@ seven behaviour sections rather than by line count:
 
     test_integrate.py            the CLAIM rung and the refusals in front of it
     test_integrate_admission.py  what the slot ADMITS: outcome, the R1 mint
-                                 refusal, the verdict gate, the declared bar,
+                                 refusal, the verdict gate, the declared checks,
                                  the branch tree's harness, the window audit
-    test_integrate_station.py    the station protocol — refresh, attestation,
-                                 the merge slot — and the real-bar end-to-end
+    test_integrate_station.py    the station protocol — refresh, passed-checks record,
+                                 the merge slot — and the real-checks end-to-end
     test_integrate_unload.py     the §5.6 unload of the branch and its worktree
 
 WHAT LIVES HERE is exactly what MORE THAN ONE of those modules uses, measured
@@ -116,7 +116,7 @@ def git_repo(root, branch="main"):
     and assert on the BYTES `git cat-file` gives back (WI-403), so on an
     unpinned Windows box the forged CRLF never reaches git at all —
     `_relinked_exactly` would compare two LF blobs, excusing the claim, and
-    `test_a_whole_file_crlf_relay_in_a_claim_shape_convicts` would go red
+    `test_a_whole_file_crlf_relay_in_a_claim_shape_convicts` would fail
     while `test_a_crashed_claim_that_relinked_a_crlf_doc_is_still_excused`
     passes vacuously (WI-337: a fixture that takes the platform's translation
     cannot test the platform's bytes)."""
@@ -147,7 +147,7 @@ def spec_text(
     order=0,
     deliverable="A widget, shipped.",
     specref=None,
-    bar=None,
+    checks_stage=None,
     brief=None,
     adjudicates=(),
 ):
@@ -171,8 +171,8 @@ def spec_text(
     ]
     if specref:
         lines.append('specref = "{}"'.format(specref))
-    if bar:
-        lines.append('bar = "{}"'.format(bar))
+    if checks_stage:
+        lines.append('checks_stage = "{}"'.format(checks_stage))
     if brief:
         lines.append('brief = "{}"'.format(brief))
     if adjudicates:
@@ -273,14 +273,14 @@ def logged_full_round(lane, train, text, when, ordinal=3):
     _commit(lane, "telemetry: session {}-{:03d}".format(train, ordinal), when=when + 1)
 
 
-def refused(root, branch, bar):
+def refused(root, branch, tier):
     """Drive the merge slot on `branch` and return its refusal, having
     asserted that NOTHING MERGED: trunk's HEAD is the commit it was before the
     call, and the branch tip is not its ancestor. `HEAD != branch` alone
     proves nothing, since a successful `--no-ff` merge leaves it true as well
     (WI-849, Sol r1 MINOR 3)."""
     before = _rev(root, "HEAD")
-    refusal = integ.integrate_one(root, branch, bar)
+    refusal = integ.integrate_one(root, branch, tier)
     assert refusal is not None, "the slot admitted {}".format(branch)
     assert _rev(root, "HEAD") == before, "trunk moved: {}".format(refusal)
     ancestor = subprocess.run(
@@ -379,7 +379,7 @@ VERDICT: APPROVE findings=0
 """
 
 
-# --- 6. end to end, against a REAL green bar ---------------------------------
+# --- 6. end to end, against a REAL passing checks ---------------------------------
 
 
 E2E_DEMO_SRC = '''"""Demo pure core for the kit self-test. Pure — no I/O."""
@@ -400,11 +400,11 @@ def scaffolded_closed_branch(tmp_path):
     """A bootstrapped scaffold whose WI-401 is claimed, built and CLOSED on
     `wi-401`: exactly the state the queue runs against. Returns (repo, claim_sha).
 
-    The bar this sets up for is REAL. `make_minimal_project` gives the scaffold a
+    The checks this sets up for is REAL. `make_minimal_project` gives the scaffold a
     fully traced SN->SR->LLR->TC chain, so `check.py --trunk-lane` at the derived
     gate (DevStg-Impl) and the smoke tier genuinely passes on the refreshed branch —
-    measured 17 PASS steps, zero SKIP. `_run_bar` is deliberately NOT stubbed by
-    any caller: a monkeypatched bar would make every downstream assertion true of
+    measured 17 PASS steps, zero SKIP. `_run_landing_checks` is deliberately NOT stubbed by
+    any caller: a monkeypatched checks would make every downstream assertion true of
     a queue that merges anything.
 
     Two fixture notes, each a real property of the script under test:
@@ -412,7 +412,7 @@ def scaffolded_closed_branch(tmp_path):
       * NO `.venv` is seeded. `agent_common.harness_python` prefers the repo's
         own `.venv` and falls back to `sys.executable`; a `seed_venv`-style
         `venv.create(with_pip=False)` interpreter carries neither pytest nor
-        ruff, so it would red the format/lint/test steps of the very bar these
+        ruff, so it would fail the format/lint/test steps of the very checks these
         tests need to pass honestly. The fallback lands on THIS suite's
         interpreter, which is floor-satisfying and carries the pinned tools.
       * `out/` is gitignored by the fixture wholesale, where the shipped

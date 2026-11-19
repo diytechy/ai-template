@@ -1,6 +1,6 @@
 """RESYNC_PACK.md — the LLM re-sync pack's structural contract (OI-27).
 
-WHY THESE TESTS EXIST. The ruling (owner, 2026-08-13) picked option (e), the
+WHY THESE TESTS EXIST. The ruling (operator, 2026-08-13) picked option (e), the
 prose pack, over (c), a detector-carrying migration registry — but named (c) as
 the promotion target and made ONE discipline non-negotiable: **every entry is
 SHA-anchored**, naming the kit commit range it applies to. That anchor is what
@@ -34,7 +34,7 @@ PACK = KIT / "RESYNC_PACK.md"
 # that carries its anchor is checkable with a regex and liftable into a registry
 # row without re-reading the prose under it. `pre-<sha>` is the honest escape for
 # a change whose landing commit predates the earliest recoverable history. Its
-# one home is the commit bar's RESYNC entry check, which reads the same grammar.
+# one home is the commit checks' RESYNC entry check, which reads the same grammar.
 #
 # A change that has NOT LANDED has no SHA, and inventing one would defeat the
 # whole discipline — so a reserved placeholder is the one anchor-free heading
@@ -217,10 +217,10 @@ def test_bite_the_grammar_rejects_a_planted_unanchored_entry():
 
 
 def test_the_entry_grammar_has_one_home():
-    """The commit bar's RESYNC entry check and these shape tests read one grammar.
+    """The commit checks' RESYNC entry check and these shape tests read one grammar.
 
     The check owns it; this module imports it, so a change to the grammar
-    cannot leave the bar and the shape tests disagreeing about what an entry is.
+    cannot leave the checks and the shape tests disagreeing about what an entry is.
     """
     spec = importlib.util.spec_from_file_location(
         "check_resync_home", ROOT / "scripts" / "check_resync.py"

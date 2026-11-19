@@ -81,4 +81,4 @@ def test_the_merge_coordinator_still_exports_the_former_names():
     import integrate
 
     assert integrate.OUTCOME_DIRS is station.OUTCOME_DIRS
-    assert integrate.BAR_GREEN == station.BAR_GREEN
+    assert integrate.CHECKS_PASSED == station.CHECKS_PASSED

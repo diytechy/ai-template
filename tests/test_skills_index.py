@@ -138,7 +138,7 @@ _A8_TESTS = (
 
 
 def test_architecture_decomposition_skill_walks_four_steps_and_cites_the_rubric():
-    """The skill is the author's procedure; the rubric is the bar. The skill
+    """The skill is the author's procedure; the rubric is the standard. The skill
     cites the rubric's anchors by id, writes each step's result to a home the
     project already has, and restates no anchor.
 

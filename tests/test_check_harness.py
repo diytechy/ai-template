@@ -1,4 +1,4 @@
-"""check.py end-to-end: the documented flow must be green on a minimal project,
+"""check.py end-to-end: the documented flow must pass on a minimal project,
 and the tier/coverage wiring must not silently skip tests.
 
 Implements: TC-006, TC-237
@@ -37,7 +37,7 @@ def test_subprocess_coverage_wiring_survives_pytest_cov_7():
     )
 
 
-def test_minimal_project_is_green(scaffold):
+def test_minimal_project_passes(scaffold):
     # The full documented flow: scaffold -> code + traced registries -> harness.
     # This is the regression test for "fresh clone fails": check.py must find
     # ruff/pytest via the running interpreter, not a PATH that lacks the venv.
@@ -121,7 +121,7 @@ def test_failing_test_fails_the_harness(scaffold):
     assert "RESULT: FAIL" in proc.stdout
 
 
-def test_backlink_coverage_step_is_wired_at_the_right_bars(tmp_path):
+def test_backlink_coverage_step_is_wired_at_the_right_stages(tmp_path):
     """THE WIRING NOBODY PINNED (2026-08-20, the batch review's MINOR-20). Every
     other part of the reverse-coverage layer has a test — the grammar, the
     percentage, the dial reader, the report's vacuity — while the fact that
@@ -280,7 +280,7 @@ def test_missing_command_is_designed_failure():
 
 def test_run_steps_batch_passes_on_clean_project(scaffold):
     # The pre-commit hook's batched floor: several independent steps in one
-    # interpreter spawn, run concurrently, each reported. Green on a fully
+    # interpreter spawn, run concurrently, each reported. Passes on a fully
     # traced, freshly mapped project. Mirrors the shipped hook's batch (which
     # includes derived-stage, the docs/stage freshness guard — it was
     # derived-gate over docs/gate until WI-498 slice 5 retired that axis).
@@ -317,14 +317,14 @@ def test_derived_stage_step_wired_at_every_rung_and_runs(scaffold):
         assert match, "derived-stage missing at {}".format(stage)
         assert match[0][4] == "process" and match[0][1] == ()  # stdlib, no tool
     # End-to-end: on a DevStg-Impl-complete project (docs/stage regenerated to
-    # DevStg-Impl) the step passes; un-approving an SR without regenerating
+    # DevStg-Impl) the step passes; un-accepting an SR without regenerating
     # docs/stage makes it FAIL.
     make_minimal_project(scaffold)
     ok = run_py(["scripts/check.py", "--run-step", "derived-stage"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
     sr = scaffold / "docs" / "requirements" / "system-requirements.csv"
     sr.write_text(
-        sr.read_text(encoding="utf-8").replace(",Test,Approved", ",Test,Drafted"),
+        sr.read_text(encoding="utf-8").replace(",Test,Accepted", ",Test,Drafted"),
         encoding="utf-8",
     )
     bad = run_py(["scripts/check.py", "--run-step", "derived-stage"], cwd=scaffold)
@@ -389,7 +389,7 @@ def test_step_stage_honours_an_explicit_stage(scaffold):
     # at ALL...
     assert [s for s in check.steps(80, "full", check.ALL) if s[0] == "format"]
     # ...and at an explicit LOW rung too (WI-360, WI-355-REVIEW-A MINOR 2). The
-    # ALL assertion alone would stay green if steps() started filtering its
+    # ALL assertion alone would keep passing if steps() started filtering its
     # returned table, and DevStg-Reqs is the case that would break, so pin it.
     # `steps()` BUILDS the table; `resolve_plan` is what selects from it.
     assert [s for s in check.steps(80, "full", ladder.STAGE_REQS) if s[0] == "format"]
@@ -426,7 +426,7 @@ def test_jobs_parallel_plan_matches_sequential(scaffold):
         if ln.strip().startswith("- "):
             name = ln.strip().split()[1]
             assert name in par.stdout, name
-    # And a failure still fails the parallel run (never a false green).
+    # And a failure still fails the parallel run (never a false pass).
     (scaffold / "tests" / "test_broken.py").write_text(
         '"""Deliberately failing test."""\n\n\n'
         "import pytest\n\n\n"
@@ -480,7 +480,7 @@ def test_declared_lane_serializes_a_dependent_step_under_jobs(tmp_path):
 
 def test_bad_lane_fails_loudly(scaffold):
     # A [step:] whose `lane` names no real step must fail LOUDLY at plan time,
-    # never silently re-race the step (a false green under --jobs>1).
+    # never silently re-race the step (a false pass under --jobs>1).
     make_minimal_project(scaffold)
     stack = scaffold / "docs" / "stack.ini"
     stack.write_text(
@@ -522,7 +522,7 @@ def test_module_coverage_full_then_smoke_run_scopes_the_report(scaffold):
     text += (
         "\n[step:module-coverage]\n"
         "command = {py} scripts/check_coverage.py --tier {tier} --skip-tiers smoke\n"
-        "gates = DevStg-Impl\nlayer = product\nlane = tests+coverage\n"
+        "from-stage = DevStg-Impl\nlayer = product\nlane = tests+coverage\n"
     )
     stack.write_text(text, encoding="utf-8")
     (scaffold / "docs" / "coverage-floors").write_text(
@@ -547,7 +547,7 @@ def test_module_coverage_full_then_smoke_run_scopes_the_report(scaffold):
     assert "module floor(s) hold" in full.stdout
 
     # Smoke tier: the stale full report is cleared before the (no-coverage) run,
-    # the step SKIPs instead of grading it, and the run stays honest-green.
+    # the step SKIPs instead of grading it, and the run keeps honestly passing.
     smoke = run_py(
         [
             "scripts/check.py",
@@ -568,8 +568,8 @@ def test_module_coverage_full_then_smoke_run_scopes_the_report(scaffold):
 
 def test_the_default_stage_comes_from_the_derived_stage_file(scaffold):
     """check.py without --stage reads the repo's DERIVED effective stage, so CI
-    enforces the rung the project is actually on — a fresh scaffold must be
-    green, not red-until-Impl (the day-one false-red regression).
+    enforces the rung the project is actually on — a fresh scaffold must
+    pass, not fail until Impl (the day-one false-failure regression).
 
     THE SOURCE FILE CHANGED AT WI-498 slice 2: `docs/gate` (a bar) → `docs/stage`
     (a rung), read through `kitlib.stage.read_stage` rather than by scraping a
@@ -642,7 +642,7 @@ def test_list_tags_process_and_product_layers(scaffold):
 #
 # The gap it closes (OI-31, ruled option (b) 2026-08-18): every freshness step
 # resolves its artifact from the filesystem, so an author who regenerates and
-# forgets to `git add` gets an honest green over a stale commit. Measured at
+# forgets to `git add` gets an honest pass over a stale commit. Measured at
 # 3b8d306d, where PROJECT_STATE.html was modified in the worktree, absent from
 # the index, and the committed tree failed the very gate that guarded it.
 #
@@ -747,7 +747,7 @@ def _stale_stage_repo(tmp_path):
     _git(tmp_path, "add", "-A")
     _git(tmp_path, "commit", "-q", "-m", "base")
     # The edit that moves the derived stage, STAGED …
-    reg.write_text('[req.SR-001]\nstatus = "Approved"\n', encoding="utf-8")
+    reg.write_text('[req.SR-001]\nstatus = "Accepted"\n', encoding="utf-8")
     _git(tmp_path, "add", "docs/requirements/system-requirements.toml")
     # … and the regeneration that answers it, NOT staged.
     (tmp_path / "docs" / "stage").write_text("stage: DevStg-Impl\n", encoding="utf-8")
@@ -756,21 +756,21 @@ def _stale_stage_repo(tmp_path):
 
 def test_the_PLAN_STEP_refuses_a_regenerated_but_unstaged_derived_stage(tmp_path):
     # THE CRITICAL THIS CLOSES (OI-31's ruled promotion, taken at the WI-498
-    # close). Before it, this exact tree — the one Sol drove — passed the whole
-    # commit bar: `derived-stage --check` reads the WORKING TREE and sees the
+    # close). Before it, this exact tree — the one Sol drove — passed all the
+    # commit checks: `derived-stage --check` reads the WORKING TREE and sees the
     # fresh bytes, the divergence detector warned and exited 0, and the commit
     # landed the edited registry beside the OLD derived stage.
     #
     # Driven through `--run-steps`, NOT the bare `--staged-divergence` flag,
     # because the defect was never in the detector: it was in the WIRING, which
-    # did not pass --strict. A test of the flag alone would have stayed green
+    # did not pass --strict. A test of the flag alone would have kept passing
     # through the entire defect (it did — the old positive case asserted the
     # promotion was *reachable*, never that it was *taken*).
     repo = _stale_stage_repo(tmp_path)
     proc = run_py([SCRIPTS / "check.py", "--run-steps", "staged-divergence"], cwd=repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode != 0, (
-        "the bar must REFUSE a commit whose derived stage is regenerated but "
+        "the checks must REFUSE a commit whose derived stage is regenerated but "
         "unstaged — this is the exact tree that used to pass: " + out
     )
     assert "FAIL" in out and "docs/stage" in out, out
@@ -778,8 +778,8 @@ def test_the_PLAN_STEP_refuses_a_regenerated_but_unstaged_derived_stage(tmp_path
 
 def test_the_PLAN_STEP_passes_once_the_regeneration_is_staged(tmp_path):
     # The other half, so the refusal above is a decision and not a step that
-    # reds on every tree: stage the regeneration — the correct workflow — and
-    # the same bar goes green.
+    # fails on every tree: stage the regeneration — the correct workflow — and
+    # the same checks pass.
     repo = _stale_stage_repo(tmp_path)
     _git(repo, "add", "docs/stage")
     proc = run_py([SCRIPTS / "check.py", "--run-steps", "staged-divergence"], cwd=repo)
@@ -846,7 +846,7 @@ def test_strict_is_refused_without_the_detector(tmp_path):
     assert "--strict applies only to --staged-divergence" in (proc.stdout + proc.stderr)
 
 
-# --- WI-503: the re-attestation brief's immutability enforcer -----------------
+# --- WI-503: the re-acceptance brief's immutability enforcer -----------------
 # staged_divergence's sibling: it reads the STAGED tree (what a commit is
 # about to contain) rather than the unstaged worktree, and asks a different
 # question — not "did you forget to stage a regeneration" but "does this
@@ -854,14 +854,14 @@ def test_strict_is_refused_without_the_detector(tmp_path):
 # property has no honest partial-compliance state.
 
 
-def _approval_repo_for_immutability(tmp_path):
+def _acceptance_repo_for_immutability(tmp_path):
     """A git repo with a committed CURRENT.md and one committed dated brief —
     the tree an ordinary re-sync commit finds."""
-    approve = tmp_path / "docs" / "ratify"
-    approve.mkdir(parents=True)
-    (approve / "CURRENT.md").write_text("live v1\n", encoding="utf-8")
-    (approve / "2026-08-13-wi444.md").write_text("dated v1\n", encoding="utf-8")
-    (approve / "README.md").write_text("# approve\n", encoding="utf-8")
+    accept = tmp_path / "docs" / "ratify"
+    accept.mkdir(parents=True)
+    (accept / "CURRENT.md").write_text("live v1\n", encoding="utf-8")
+    (accept / "2026-08-13-wi444.md").write_text("dated v1\n", encoding="utf-8")
+    (accept / "README.md").write_text("# accept\n", encoding="utf-8")
     _git(tmp_path, "init", "-q")
     pin_autocrlf(tmp_path)
     _git(tmp_path, "config", "user.email", "t@example.com")
@@ -871,82 +871,84 @@ def _approval_repo_for_immutability(tmp_path):
     return tmp_path
 
 
-def _approval_immutable(repo):
-    return run_py([SCRIPTS / "check.py", "--approval-immutable"], cwd=repo)
+def _acceptance_immutable(repo):
+    return run_py([SCRIPTS / "check.py", "--acceptance-immutable"], cwd=repo)
 
 
-def test_approval_immutable_refuses_a_staged_edit_to_an_existing_dated_brief(tmp_path):
-    repo = _approval_repo_for_immutability(tmp_path)
+def test_acceptance_immutable_refuses_a_staged_edit_to_an_existing_dated_brief(
+    tmp_path,
+):
+    repo = _acceptance_repo_for_immutability(tmp_path)
     (repo / "docs" / "ratify" / "2026-08-13-wi444.md").write_text(
         "dated v2 — rewritten\n", encoding="utf-8"
     )
     _git(repo, "add", "docs/ratify/2026-08-13-wi444.md")
-    proc = _approval_immutable(repo)
+    proc = _acceptance_immutable(repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode != 0, out
     assert "FAIL" in out and "2026-08-13-wi444.md" in out, out
     assert "IMMUTABLE" in out, out
 
 
-def test_approval_immutable_refuses_a_staged_delete_of_a_dated_brief(tmp_path):
-    repo = _approval_repo_for_immutability(tmp_path)
+def test_acceptance_immutable_refuses_a_staged_delete_of_a_dated_brief(tmp_path):
+    repo = _acceptance_repo_for_immutability(tmp_path)
     _git(repo, "rm", "-q", "docs/ratify/2026-08-13-wi444.md")
-    proc = _approval_immutable(repo)
+    proc = _acceptance_immutable(repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode != 0, out
     assert "FAIL" in out and "2026-08-13-wi444.md" in out, out
 
 
-def test_approval_immutable_permits_a_brand_new_dated_brief(tmp_path):
+def test_acceptance_immutable_permits_a_brand_new_dated_brief(tmp_path):
     # THE MINT'S SHAPE: a plain add of a name that never existed before. This
-    # is what `trace.py --mint-approval-brief` ever produces, and the enforcer
+    # is what `trace.py --mint-acceptance-brief` ever produces, and the enforcer
     # must not stand in its way.
-    repo = _approval_repo_for_immutability(tmp_path)
+    repo = _acceptance_repo_for_immutability(tmp_path)
     (repo / "docs" / "ratify" / "2026-08-22-wi503.md").write_text(
         "live v1\n", encoding="utf-8"
     )
     _git(repo, "add", "docs/ratify/2026-08-22-wi503.md")
-    proc = _approval_immutable(repo)
+    proc = _acceptance_immutable(repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
     assert "ok" in out, out
 
 
-def test_approval_immutable_permits_regenerating_CURRENT_and_README(tmp_path):
-    repo = _approval_repo_for_immutability(tmp_path)
+def test_acceptance_immutable_permits_regenerating_CURRENT_and_README(tmp_path):
+    repo = _acceptance_repo_for_immutability(tmp_path)
     (repo / "docs" / "ratify" / "CURRENT.md").write_text("live v2\n", encoding="utf-8")
     (repo / "docs" / "ratify" / "README.md").write_text(
-        "# approve, re-worded\n", encoding="utf-8"
+        "# accept, re-worded\n", encoding="utf-8"
     )
     _git(repo, "add", "docs/ratify/CURRENT.md", "docs/ratify/README.md")
-    proc = _approval_immutable(repo)
+    proc = _acceptance_immutable(repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
 
 
-def test_approval_immutable_ignores_an_unstaged_edit(tmp_path):
+def test_acceptance_immutable_ignores_an_unstaged_edit(tmp_path):
     # Only the STAGED tree is read — an edit sitting in the worktree but not
     # `git add`ed is not (yet) about to be committed.
-    repo = _approval_repo_for_immutability(tmp_path)
+    repo = _acceptance_repo_for_immutability(tmp_path)
     (repo / "docs" / "ratify" / "2026-08-13-wi444.md").write_text(
         "dated v2 — not staged\n", encoding="utf-8"
     )
-    proc = _approval_immutable(repo)
+    proc = _acceptance_immutable(repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
 
 
-def test_approval_immutable_is_silent_on_a_clean_tree(tmp_path):
-    repo = _approval_repo_for_immutability(tmp_path)
-    proc = _approval_immutable(repo)
+def test_acceptance_immutable_is_silent_on_a_clean_tree(tmp_path):
+    repo = _acceptance_repo_for_immutability(tmp_path)
+    proc = _acceptance_immutable(repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
     assert "FAIL" not in out, out
 
 
-def test_approval_immutable_skips_cleanly_outside_a_git_checkout(tmp_path):
+def test_acceptance_immutable_skips_cleanly_outside_a_git_checkout(tmp_path):
     (tmp_path / "docs" / "ratify").mkdir(parents=True)
-    proc = _approval_immutable(tmp_path)
+    proc = _acceptance_immutable(tmp_path)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
     assert "SKIP" in out and "not a git checkout" in out, out
@@ -955,12 +957,14 @@ def test_approval_immutable_skips_cleanly_outside_a_git_checkout(tmp_path):
 def test_the_PLAN_STEP_refuses_the_same_rewrite(tmp_path):
     # Driven through --run-steps, the wiring the pre-commit hook and check.py's
     # own plan actually use — not just the bare flag.
-    repo = _approval_repo_for_immutability(tmp_path)
+    repo = _acceptance_repo_for_immutability(tmp_path)
     (repo / "docs" / "ratify" / "2026-08-13-wi444.md").write_text(
         "dated v2 — rewritten\n", encoding="utf-8"
     )
     _git(repo, "add", "docs/ratify/2026-08-13-wi444.md")
-    proc = run_py([SCRIPTS / "check.py", "--run-steps", "approval-immutable"], cwd=repo)
+    proc = run_py(
+        [SCRIPTS / "check.py", "--run-steps", "acceptance-immutable"], cwd=repo
+    )
     out = proc.stdout + proc.stderr
     assert proc.returncode != 0, out
     assert "FAIL" in out, out

@@ -313,7 +313,7 @@ def arch_icicle(root):
 
 # --- the per-need assumption view (SR-218) -----------------------------------
 # A reviewer starting from an outcome asks what it relies on and whether any of
-# it has been shown false; the per-assumption reports and the approval brief
+# it has been shown false; the per-assumption reports and the acceptance brief
 # answer other questions. So each need's detail panel in the spine view lists the
 # assumptions its requirements cite, from `traj_parse.need_assumptions`. The
 # style and the one line of script the block needs are emitted only when a
@@ -321,7 +321,7 @@ def arch_icicle(root):
 
 # The label a falsified premise carries in words, so the signal survives for a
 # reader who does not see color. No premise is labelled for lacking a result:
-# an assumption carries no evidence level (owner ruling 2026-10-02).
+# an assumption carries no evidence level (operator ruling 2026-10-02).
 FALSIFIED_LABEL = "FALSIFIED"
 
 NEED_DA_STYLE = (
@@ -1019,7 +1019,7 @@ def _wi_st(w):
 #
 # A phase -> workstream -> work-item hierarchy: a tier collapses into native
 # <details> blocks only when its LOCAL group count exceeds 3 (flat at or below —
-# the owner's "> 3" rule), the work items are the bottom tier, each WI carries a
+# the operator's "> 3" rule), the work items are the bottom tier, each WI carries a
 # per-phase color accent (the grouping-primary encoding, ruling Q2), and every
 # rendered tier draws one deduped parent-to-parent edge per crossing pair,
 # aggregated from the union of its members' crossing edges (the FB5 boundary idiom,

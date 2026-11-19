@@ -213,7 +213,7 @@ def _relink_inbound_links(root, moves):
     `_relink_archived_specs`, generalised to any spec move). Without this, a
     move strands a DANGLING link: a train whose own `docs/log.md` entry links
     its live spec breaks the moment the spec moves, and the break surfaces on
-    the composed tree as a red `check_docs` — after the work is done.
+    the composed tree as a failure `check_docs` — after the work is done.
 
     Resolution is by PATH, not by pattern: each link target is resolved
     relative to the file containing it and compared against the moved source,
@@ -242,10 +242,10 @@ def _markdown_files(root):
     redirect visits - ONE traversal, shared by the ritual and its plan
     (`planned_writes`), so the two cannot disagree about which files exist.
 
-    The owner-only paths (`agent_common.OWNER_ONLY_PATHS`) are not visited:
-    they are the human owner's free-form notes, and no kit step rewrites them.
-    A stale link there is the owner's to fix. Relinking it put the scratchpad
-    in a claim's write set, so an owner mid-edit had the claim refused by name
+    The operator-only paths (`agent_common.OPERATOR_ONLY_PATHS`) are not visited:
+    they are the operator's free-form notes, and no kit step rewrites them.
+    A stale link there is the operator's to fix. Relinking it put the scratchpad
+    in a claim's write set, so an operator mid-edit had the claim refused by name
     over their own notes. Excluded HERE, in the one traversal, the plan and the
     write agree without a second rule."""
     root = Path(root)
@@ -253,7 +253,7 @@ def _markdown_files(root):
         rel = path.relative_to(root)
         if ".git" in rel.parts or "node_modules" in rel.parts:
             continue
-        if rel.as_posix() in ac.OWNER_ONLY_PATHS:
+        if rel.as_posix() in ac.OPERATOR_ONLY_PATHS:
             continue
         yield path, rel.as_posix()
 

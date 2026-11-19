@@ -67,8 +67,8 @@ _MAJOR = "- [MAJOR] src/a.py:1 -> x -> y\n"
         "VERDICT: APPROVE findings=0.5\n",
         # Two VERDICT lines: the later APPROVE must not win.
         _MAJOR + "VERDICT: CHANGES-REQUESTED findings=1\nVERDICT: APPROVE findings=0\n",
-        # A NEEDS-HUMAN line is a VERDICT line, not prose to skip.
-        "VERDICT: NEEDS-HUMAN findings=0\nVERDICT: APPROVE findings=0\n",
+        # A NEEDS-OPERATOR line is a VERDICT line, not prose to skip.
+        "VERDICT: NEEDS-OPERATOR findings=0\nVERDICT: APPROVE findings=0\n",
         # A duplicated field is ambiguous, whichever copy a reader keeps.
         "VERDICT: APPROVE findings=7 findings=0\n",
     ],

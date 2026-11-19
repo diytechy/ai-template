@@ -10,14 +10,14 @@ branch, extracted from the tick loop that decides WHICH branches run. A lane
                                session loop on the claimed branch's worktree,
                                agent_loop.py --worktree --wi A), and
     runs the §A2 refresh      (`spawn_refresh` — the WI-386 station refresh as
-                               its own subprocess, so N lanes' 11-minute bars
+                               its own subprocess, so N lanes' 11-minute checks
                                genuinely overlap instead of queueing at the
                                dispatcher; §A4.3 is why that matters),
 
 and it REPORTS an outcome rather than deciding one: a lane declares itself
 finished by moving its spec out of active/<branch>/ — the tree-derived signal
 `integrate.finished_branches` reads — and every decision about what an exit
-code or a red refresh MEANS stays in dispatch.py, where the serial trunk
+code or a failing refresh MEANS stays in dispatch.py, where the serial trunk
 writes live. There is deliberately no back-channel and no state file: the
 worker subprocess, the refresh subprocess and the spec moves are the whole
 protocol (§A4.2 — "the handshake the sketch worried about does not exist").
@@ -34,11 +34,11 @@ Contract IF-136: the dispatcher's admitted lane table calls three functions
     on that worktree, non-blocking and with stdio inherited, the resolved
     session dials forwarded as explicit flags so nothing a launcher set is
     silently dropped. `spawn_refresh(root, branch, tier)` returns a Popen
-    running the station refresh as its own subprocess, so N lanes' bars run
+    running the station refresh as its own subprocess, so N lanes' checks run
     concurrently instead of queueing at the dispatcher. What comes back is
     only the tree-derived signal — the spec moved out of `active/<branch>/` —
     plus each subprocess's exit code: no state file and no back-channel. This
-    module runs and reports; what an exit code or a red refresh MEANS is the
+    module runs and reports; what an exit code or a failing refresh MEANS is the
     caller's to decide.
 """
 
@@ -149,8 +149,8 @@ def spawn_refresh(root, branch, tier):
     `integrate.py refresh` as its own subprocess with inherited stdio.
 
     A subprocess, not a thread and not an in-dispatcher call, for one reason
-    (§A4.3): the refresh carries the ~11-minute bar, and N lanes finishing
-    together must run N bars CONCURRENTLY — an in-dispatcher refresh would
+    (§A4.3): the refresh carries the ~11-minute checks, and N lanes finishing
+    together must run N checks CONCURRENTLY — an in-dispatcher refresh would
     queue them at the station and put the whole contention win back. The
     invoker's own integrate.py is launched (its `_branch_tree_script` still
     picks the BRANCH's trunk_step/check.py copies, exactly as the in-process

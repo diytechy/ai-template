@@ -267,7 +267,7 @@ def test_a_positive_advisory_rides_its_own_pipe_through_analyze_and_never_gates(
     trace = load_script("trace")
     empty = trace.load_registries(tmp_path / "docs")
     row = dict(_sr(requirement="The harness shall catch a secret in every repo."))
-    row.update(Verification="Test", Status="Drafted")
+    row.update(VerificationMethod="Test", Status="Drafted")
     findings = trace.analyze(
         dataclasses.replace(empty, srs=[row]), trace.AnalysisFlags()
     )

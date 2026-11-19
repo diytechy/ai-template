@@ -22,9 +22,9 @@ immune to the OS command-line caps; see build_argv/run_session).
 Empty template -> guidance and exit 2 (the launchers ship inert, like run.*).
 
 CONSENT: an unattended run typically wires the agent CLI's permission-bypass
-flag into AGENT_CMD — sessions then run with no permission prompts. The human
-consents by filling the slot, declaring how far a human approves
-(docs/process.toml [attestation]), and running this; git + CI remain the
+flag into AGENT_CMD — sessions then run with no permission prompts. The operator
+consents by filling the slot, declaring how far an operator accepts
+(docs/process.toml [authority]), and running this; git + CI remain the
 enforcement floor. The banner restates this every run.
 
 During worker/review sessions this module:
@@ -113,7 +113,7 @@ coordinator per checkout; the OS releases it on process death).
 Exit codes: 0 DONE · 2 preflight/config failure (incl. the inert unfilled
 slot) · 3 BLOCKED · 4 stall abort (work stall or an all-ERROR agent-unavailable
 run — the banner distinguishes them) · 5 WAITING on a rate limit · 6 iteration
-budget exhausted while still RUNNING · 7 NEEDS-HUMAN (act, then re-run) · 8
+budget exhausted while still RUNNING · 7 NEEDS-OPERATOR (act, then re-run) · 8
 paused (the tracked docs/work/pause present — unpause and re-run to resume) · 9
 REVIEW-OWED · 11 RESTART with freshly imported coordinator code.
 
@@ -129,15 +129,15 @@ Contracts: IF-015, IF-253 — the interface seams this module declares (process.
 Contract IF-015: the unattended coordinator's effect on the repository it runs
     in. A plain launch drives the claim / work / merge cycle by COMMITTING to
     its own checkout and never pushing while the declared push policy is
-    `human`, which is what ships — advancing the remote stays a human act. A
+    `operator`, which is what ships — advancing the remote stays an operator act. A
     per-checkout kernel advisory lock refuses a second coordinator in the same
     worktree rather than letting two of them interleave commits. The stop is
     always named by an exit code: 0 DONE, 2 preflight or config failure, 3
     BLOCKED, 4 stall abort, 5 WAITING on a rate limit, 6 iteration budget
-    exhausted while still running, 7 NEEDS-HUMAN, 8 paused on the tracked pause
+    exhausted while still running, 7 NEEDS-OPERATOR, 8 paused on the tracked pause
     file, 9 REVIEW-OWED, 11 RESTART after the imported Python source moves, 12
-    RED-CAP when the lane's red build rounds reach the declared cap, checked at
-    run start for a resumed lane and after each red record (10 remains
+    the commit-check failure cap when the lane's consecutive failed rounds reach
+    it, checked at run start for a resumed lane and after each recorded failure (10 remains
     retired). A restart stops at the session/admission boundary and
     preserves the branch evidence for a fresh launcher invocation. Preflight
     refuses to start iteration 1 — rather than hanging or committing under a
@@ -217,7 +217,7 @@ from kitlib import provenance as kprovenance
 # before the lock, and a hookless checkout never starts the loop.
 from kitlib import commit_hooks as kcommit_hooks
 
-# The red-round cap's one reader (SR-242): read at preflight, before any
+# The commit-check failure cap's one reader (SR-242): read at preflight, before any
 # session, and carried on `LoopContext`.
 from kitlib import config as kconfig
 
@@ -246,13 +246,13 @@ EXIT_BLOCKED = agent_common.EXIT_BLOCKED
 EXIT_STALL = agent_common.EXIT_STALL
 EXIT_WAITING = agent_common.EXIT_WAITING
 EXIT_BUDGET = agent_common.EXIT_BUDGET
-EXIT_NEEDS_HUMAN = agent_common.EXIT_NEEDS_HUMAN
+EXIT_NEEDS_OPERATOR = agent_common.EXIT_NEEDS_OPERATOR
 EXIT_PAUSED = agent_common.EXIT_PAUSED
 EXIT_REVIEW_OWED = agent_common.EXIT_REVIEW_OWED
 EXIT_RESTART = agent_common.EXIT_RESTART
-EXIT_RED_CAP = agent_common.EXIT_RED_CAP
+EXIT_CHECK_FAILURE_CAP = agent_common.EXIT_CHECK_FAILURE_CAP
 END_STATES = agent_common.END_STATES
-OWNER_ONLY_PATHS = agent_common.OWNER_ONLY_PATHS
+OPERATOR_ONLY_PATHS = agent_common.OPERATOR_ONLY_PATHS
 read_declared = agent_common.read_declared
 declared_policy = agent_common.declared_policy
 process_config = agent_common.process_config
@@ -398,7 +398,7 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
     A row that declares NO brief keeps the ordinary assignment: that is not a
     claim the kit failed to honour, it is an adjudication class the kit has
     never authored a brief for (the clean-close spot check, a cancellation that
-    owes no report), and holding those would page a human for routine work."""
+    owes no report), and holding those would page an operator for routine work."""
     row = worker["rows"].get(current_wi) if worker and current_wi else None
     brief = adjudicate_brief.declared_brief(row) if row and adjudicating(row) else ""
     if brief:
@@ -501,7 +501,7 @@ class RoutingState:
         self.impl_exclude = set()  # families to avoid for the next BUILD
         # WI-264: the win-stay directive from the last escalation — a reviewer
         # FAMILY to prefer as the next review round's primary feedback source
-        # when the last round's margin cleared the bar, else None (lose-shift ->
+        # when the last round's margin cleared the threshold, else None (lose-shift ->
         # the ordinary weighted draw). apply_decision refreshes it every round;
         # the review draw validates it against the live pool (fail-open).
         self.next_primary = None
@@ -566,7 +566,7 @@ class RoutingState:
             #     the party it judges corroborates rather than checks;
             #   * its tier is PINNED by the row, because `intake.tier_signal`
             #     estimated it from measured breadth (rows touched, gate moved,
-            #     targets in a red-TC contradiction) and a measured estimate
+            #     targets in an evidence-gap contradiction) and a measured estimate
             #     beats a phase default.
             # The escalation overrides are deliberately NOT read here: they
             # describe the implementer's trouble, and an adjudication row is
@@ -660,7 +660,7 @@ class RoutingState:
         (fail-open), and refreshed every round — a win sets the family, a
         loss/page/swap/tier-up returns None and clears it (lose-shift)."""
         self.next_primary = next_primary
-        if action == "page-human":
+        if action == "page-operator":
             # Re-arm the shared-failure tally so already-paged strong-tier fails
             # can't re-page every subsequent round — only NEW fails accumulate.
             self.page_fails_since = len(self.rounds)
@@ -727,7 +727,7 @@ class RoutingState:
         return list(self.review_queue)
 
     def refuse_round(self):
-        """Drop the queued review round, whose tip the review bar refused, and
+        """Drop the queued review round, whose tip the commit checks refused, and
         route the next session to BUILD.
 
         Implements: SR-154, LLR-344
@@ -929,7 +929,7 @@ def worker_endstate(
     no review/critique/rework is pending. A worker never reads run-state.
 
     Per WI the LATEST trailer wins (train_evidence, WI-239): a resumed worker
-    that re-runs green and commits `WI:` supersedes its own earlier
+    that re-runs, passes and commits `WI:` supersedes its own earlier
     `Blocked-WI:`, so this reports DONE, not BLOCKED. `allow_block_exit=False`
     (the resumed worker's FIRST session, before it has run) declines to
     short-circuit on a PRE-EXISTING block so the worker gets its one chance to
@@ -964,7 +964,7 @@ def worker_endstate(
         # routed to a strong cross-family judge to produce.
         return None
     if substantive_working_tree_dirty(root):
-        return None  # committed evidence only — a dirty tree (owner-only exempt) is not done
+        return None  # committed evidence only — a dirty tree (operator-only exempt) is not done
     return _done_endstate(worker, managed, rp_int, rounds)
 
 
@@ -988,9 +988,9 @@ def routed_session(ctx, i, current_wi, session, resume_reconcile, now):
 
 
 def build_hold(root, worker):
-    """`(EXIT_NEEDS_HUMAN, "HELD", reason)` when the lane's next build session
+    """`(EXIT_NEEDS_OPERATOR, "HELD", reason)` when the lane's next build session
     would build on a Done-when that differs from the claimed one with no
-    verdict or owner ruling binding its exact text, else None. Asked of the
+    verdict or operator ruling binding its exact text, else None. Asked of the
     lane's committed HEAD against the claim copy at its integration base,
     through the one predicate the close and merge points ask
     (`kitlib.done_when.lane_hold`). An adjudication row is never held: it is
@@ -1001,7 +1001,7 @@ def build_hold(root, worker):
     rows = worker.get("rows") or {}
     ids = [w for w in worker["assigned"] if not adjudicating(rows.get(w) or {})]
     reason = kdone.lane_hold(root, "HEAD", worker["base"], lane_branch(root), ids)
-    return (EXIT_NEEDS_HUMAN, "HELD", reason) if reason else None
+    return (EXIT_NEEDS_OPERATOR, "HELD", reason) if reason else None
 
 
 def _done_endstate(worker, managed, rp_int, rounds):
@@ -1570,7 +1570,7 @@ def print_run_banner(
         )
     print(
         "session-hold: {} | push-policy: {} (the coordinator never pushes "
-        "under 'human') | review-policy: {} (docs/process.toml [policies] "
+        "under 'operator') | review-policy: {} (docs/process.toml [policies] "
         "review_rounds — the reviewer dial: {})".format(
             session_hold,
             push_policy,
@@ -1658,9 +1658,9 @@ class LoopContext:
     populated as an attribute bag, which hid three things a declaration makes
     plain: that nothing in the loop ever re-resolves a dial mid-run; that
     `session_hold` was carried for no reader at all (dropped); and that
-    `human_held` / `keep_nondependent` were read through
+    `operator_held` / `keep_nondependent` were read through
     `getattr(ctx, ..., <default>)`, so a field the constructor forgot would
-    have silently become "human-held, don't keep going" instead of failing.
+    have silently become "operator-held, don't keep going" instead of failing.
     A total record cannot be missing a field, so those two reads are now
     direct. Everything a session may WRITE lives behind `.run`, the one
     mutable field.
@@ -1683,7 +1683,7 @@ class LoopContext:
     prefer_map: dict
     weight_map: dict
     guardrails_policy: str
-    human_held: bool
+    operator_held: bool
     keep_nondependent: bool
     start_dirty: list
     raw_dir: Path
@@ -1694,7 +1694,7 @@ class LoopContext:
     reviews_dir: Path
     scoreboard: Path
     rp_int: int
-    red_rounds_max: int
+    failure_cap: int
     run: LoopRun
 
 
@@ -1702,7 +1702,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     """Pick the phase + model + prompt for this worker session (managed
     routing or the single-model path; WI-210 — every loop session is a
     claimed worker session). Returns an int exit code to end the
-    run (no routable model -> EXIT_NEEDS_HUMAN; a {model} template with no
+    run (no routable model -> EXIT_NEEDS_OPERATOR; a {model} template with no
     model -> EXIT_PREFLIGHT) or a `plan` dict the caller launches."""
     args = ctx.args
     root = ctx.root
@@ -1789,7 +1789,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             session_env = session_service.entry_env(root, registry, entry)
         except session_service.SigninRefused as refused:
             stop_banner(status_path, SIGNIN_HOLD, str(refused))
-            return EXIT_NEEDS_HUMAN
+            return EXIT_NEEDS_OPERATOR
         if not is_review and (phase == "BUILD" or phase == ""):
             st.note_build_tier(tier)
         # A worker's verdict filename names the exact reviewed code HEAD
@@ -1856,10 +1856,12 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         # instructions. The exit code is what makes the hold durable.
         stop_banner(
             status_path,
-            "NEEDS-HUMAN — adjudication row {} has no usable brief".format(current_wi),
+            "NEEDS-OPERATOR — adjudication row {} has no usable brief".format(
+                current_wi
+            ),
             hold + "\n\n" + ADJUDICATION_HOLD_NOTE,
         )
-        return EXIT_NEEDS_HUMAN
+        return EXIT_NEEDS_OPERATOR
     prompt, guarded = compose_session_prompt(
         model,
         body,
@@ -1949,9 +1951,9 @@ def adjudication_bookkeeping(plan, worker, st, managed, entry, now, root=None):
 
 @dataclass(frozen=True)
 class PageConsequence:
-    """What a page-human ruling MEANS for this run — the ONE rule both S8 page
+    """What a page-operator ruling MEANS for this run — the ONE rule both S8 page
     paths (a review escalation, an exhausted critique budget) obey, stated once
-    (WI-483 slice 6). `stop` ends the run with EXIT_NEEDS_HUMAN; `design_check`
+    (WI-483 slice 6). `stop` ends the run with EXIT_NEEDS_OPERATOR; `design_check`
     re-arms the design-check phase instead, and is only ever true when the run
     is NOT stopping (the stop path returns before that arm, as it always did).
     """
@@ -1965,13 +1967,15 @@ def page_consequence(fa, force_block=False):
     ordinal produced, not on the retired enum word. `force_block` is the
     critique arm's declared `exhaustion = block`, which stops the run whatever
     the hold says."""
-    stop = (fa["mode"] == "human-held" and not fa["keep_nondependent"]) or force_block
+    stop = (
+        fa["mode"] == "operator-held" and not fa["keep_nondependent"]
+    ) or force_block
     return PageConsequence(
         stop=stop, design_check=(not stop) and bool(fa.get("design_check"))
     )
 
 
-def page_human(ctx, title, reason, fa=None, force_block=False):
+def page_operator(ctx, title, reason, fa=None, force_block=False):
     """DECIDE + ENACT one page: the two lines every caller of the page ladder
     had in duplicate (`agent_route.failure_action` -> `page_consequence` ->
     `apply_page_consequence`, and the `reason | note` detail the banner carries).
@@ -1981,7 +1985,7 @@ def page_human(ctx, title, reason, fa=None, force_block=False):
     not, the ladder is consulted here and its posture printed — so a page says
     which mode decided it exactly once, whoever asked."""
     if fa is None:
-        fa = agent_route.failure_action(ctx.human_held, ctx.keep_nondependent)
+        fa = agent_route.failure_action(ctx.operator_held, ctx.keep_nondependent)
         print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
     cons = page_consequence(fa, force_block=force_block)
     return apply_page_consequence(ctx, cons, title, reason + " | " + fa["note"])
@@ -1989,11 +1993,11 @@ def page_human(ctx, title, reason, fa=None, force_block=False):
 
 def apply_page_consequence(ctx, cons, title, detail):
     """The EFFECT half of a page: a worker has no lane files, so its exit code
-    and the stop banner carry the page. Returns EXIT_NEEDS_HUMAN to end the
+    and the stop banner carry the page. Returns EXIT_NEEDS_OPERATOR to end the
     run, else None."""
     if cons.stop:
         stop_banner(ctx.status_path, title, detail)
-        return EXIT_NEEDS_HUMAN
+        return EXIT_NEEDS_OPERATOR
     if cons.design_check:
         ctx.run.routing.set_design_check()
     return None
@@ -2122,7 +2126,7 @@ def apply_rework_scope(worker, st, merged):
 
 def complete_review_round(ctx, session):
     """The round is full: merge, score, record, escalate, and apply. Returns an
-    int exit code (a page-human) or None."""
+    int exit code (a page-operator) or None."""
     st = ctx.run.routing
     scoreboard = ctx.scoreboard
     # C2: a completed round IS the owed review landing — drop the parked
@@ -2162,10 +2166,10 @@ def complete_review_round(ctx, session):
     # telemetry commit the moment the round records (WI-137), not on the next
     # session's commit. That commit also carries the round's MACHINE HALF: the
     # `Review-Verdict:` trailer naming the tree this round judged (OI-76's
-    # alternative C, the `Bar-Green:` pattern). It is written HERE, by the
+    # alternative C, the `Checks-Passed:` pattern). It is written HERE, by the
     # coordinator, and never by a session — see `review_verdict_trailer`.
     #
-    # A round that derives NO attestation is SAID SO, once, on stderr. The gate
+    # A round that derives NO trailer is SAID SO, once, on stderr. The gate
     # cannot report it: a missing trailer is never a refusal (it is additive,
     # and an adopter's loop may write none), so absence is exactly the state the
     # cross-check must stand down on — which means a writer that quietly stops
@@ -2175,7 +2179,7 @@ def complete_review_round(ctx, session):
     # could not be read at all, which is worth a line and is not worth a stop.
     trailer = review_verdict_trailer(ctx.root, merged, ctx.worker)
     if trailer is None:  # a LINE, never a stop: the gate reads the round FILES
-        print("review round: no Review-Verdict attestation derived", file=sys.stderr)
+        print("review round: no Review-Verdict trailer derived", file=sys.stderr)
     commit_telemetry(ctx.root, session, "review scoreboard", [scoreboard], trailer)
     print(
         "review round: merged={} margin={:.2f} tripwires={} heterogeneity={} "
@@ -2199,9 +2203,9 @@ def complete_review_round(ctx, session):
     # the I/O (failure_action / banner / run-state). apply_decision first is
     # safe — failure_action does not read page_fails_since.
     st.apply_decision(decision["action"], merged, decision.get("next_primary"))
-    if decision["action"] != "page-human":
+    if decision["action"] != "page-operator":
         return None
-    return page_human(ctx, "PAGE-HUMAN — review escalation", decision["reason"])
+    return page_operator(ctx, "PAGE-OPERATOR — review escalation", decision["reason"])
 
 
 def review_bookkeeping(ctx, plan, outcome, session, now):
@@ -2215,21 +2219,21 @@ def review_bookkeeping(ctx, plan, outcome, session, now):
 
 
 def critique_budget_page(ctx, pre_rounds):
-    """The critique budget is spent -> the S8 page-the-human semantics, keyed
+    """The critique budget is spent -> the S8 page-the-operator semantics, keyed
     to the session hold (the same failure_action the review round uses). The
-    critic gates iteration; the human owns final acceptance via Attest at gate
+    critic gates iteration; the operator owns final acceptance at gate
     closure."""
     st = ctx.run.routing
-    fa = agent_route.failure_action(ctx.human_held, ctx.keep_nondependent)
+    fa = agent_route.failure_action(ctx.operator_held, ctx.keep_nondependent)
     print(
         "critique/budget ({}): {} CHANGES-REQUESTED round(s) >= "
-        "{} -> page-human: {}".format(
+        "{} -> page-operator: {}".format(
             fa["mode"], pre_rounds + 1, st.critique_limit, fa["note"]
         )
     )
-    return page_human(
+    return page_operator(
         ctx,
-        "PAGE-HUMAN — critique budget exhausted",
+        "PAGE-OPERATOR — critique budget exhausted",
         "the critique loop hit its {}-round budget still CHANGES-REQUESTED".format(
             st.critique_limit
         ),
@@ -2295,7 +2299,7 @@ def schedule_review_round(ctx, after):
     review scope (WI-183, LLR-140): a worker schedules the round only once
     EVERY assigned WI is built, and the round covers the combined train diff
     base..HEAD — never a per-WI slice of it. An intermediate constituent commit
-    is accepted-on-train (locally green and committed), not reviewed; the cycle
+    is admitted-on-train (passing locally and committed), not reviewed; the cycle
     comes once, at the end.
 
     NO ROUND IS DRAWN ON A TREE A VERDICT ALREADY NAMED (measured 2026-09-03).
@@ -2303,8 +2307,8 @@ def schedule_review_round(ctx, after):
     `docs/reviews/` — a record path — so the identity never moved; the redrawn
     round approved the very tree the first had refused and the merge slot
     refused the pair as a reroll-until-green. The page uses the existing ladder,
-    so a human-held run stops and a loop-held one degrades to DESIGN-CHECK
-    (owner ruling 2026-09-03 leaves that degrade uncapped); what this arm adds
+    so an operator-held run stops and a loop-held one degrades to DESIGN-CHECK
+    (operator ruling 2026-09-03 leaves that degrade uncapped); what this arm adds
     is the CAUSE line, without which an operator re-runs the same rework.
 
     Returns an int exit code when the run must end, else None."""
@@ -2319,7 +2323,7 @@ def schedule_review_round(ctx, after):
         ctx.root, worker["train"], worker.get("claim"), score_reviews.parse_verdict
     ):
         print("dispatch: no review round scheduled — " + kverdict.UNCHANGED_REWORK)
-        return page_human(ctx, kverdict.UNCHANGED_PAGE, kverdict.UNCHANGED_REWORK)
+        return page_operator(ctx, kverdict.UNCHANGED_PAGE, kverdict.UNCHANGED_REWORK)
     st.set_train_range("{}..{}".format(worker["base"], after))
     queued = st.schedule_review_round(kverdict.declared_phases(ctx.rp_int))
     print(
@@ -2384,7 +2388,7 @@ def schedule_adjudication_round(ctx, plan, commits, after, wi_label):
     if not agent_common.adjudication_review_owed(ctx.docs, plan.get("brief"), drafts):
         print(
             "dispatch: adjudication review not owed "
-            "([attestation] adjudication_review = {!r}) -> no round".format(
+            "([authority] adjudication_review = {!r}) -> no round".format(
                 agent_common.adjudication_review(ctx.docs)
             )
         )
@@ -2448,21 +2452,21 @@ def committed_build_rounds(ctx, plan, commits, after, wi_label):
     The design-check arm had all three in duplicate — a committing design-check
     IS the rework, so it owes exactly what a build owes (WI-579, measured
     2026-09-03) — and a rule kept in two copies is a rule that drifts.
-    A build whose review bar refused it (`attest_build`) owes no review round:
+    A build whose commit checks refused it (`record_build_checks`) owes no review round:
     the refusal is the next build's rework, as a round's findings would be.
-    Returns `schedule_review_round`'s exit code, the red cap's after a red
-    (`red_cap_check`), or None.
+    Returns `schedule_review_round`'s exit code, the failure cap's after a
+    refused build (`failure_cap_check`), or None.
 
     Implements: SR-154, LLR-344
     """
     ctx.run.routing.on_committed_build(plan["route_family"], wi_label, commits)
     paged = None
-    if plan.get("bar_red"):
-        ctx.worker["rework"] = plan["bar_red"]
-        print("dispatch: review bar red -> no review round; rework carries its tail")
-        paged = red_cap_check(ctx)
+    if plan.get("checks_failed"):
+        ctx.worker["rework"] = plan["checks_failed"]
+        print("dispatch: commit checks failed -> no review; rework carries the tail")
+        paged = failure_cap_check(ctx)
     else:
-        paged = schedule_review_round(ctx, plan.get("attested") or after)
+        paged = schedule_review_round(ctx, plan.get("passed") or after)
     schedule_critique_round(ctx, commits)
     return paged
 
@@ -2475,13 +2479,13 @@ def lane_branch(root):
     return git(root, "branch", "--show-current")[1].strip()
 
 
-def attest_build(ctx, plan, outcome, meta):
-    """The review bar at the event: a committed build (or design-check) that
+def record_build_checks(ctx, plan, outcome, meta):
+    """The commit checks at the event: a committed build (or design-check) that
     completes the assignment, under managed routing with a reviewer dial, runs
-    the lane's review bar once through its one producer, `integrate.attest`,
-    before the session's log is written. A refusal of any kind is red, its
-    text the cause. Green leaves the attested commit on `plan` for the round's
-    range; red writes the red record into this session's own log header and
+    the lane's commit checks once through its one producer, `integrate.record_checks`,
+    before the session's log is written. A refusal of any kind is a failure, its
+    text the cause. A pass leaves the recorded commit on `plan` for the round's
+    range; a failure writes the failed-checks record into this session's own log header and
     leaves the refusal on `plan`. The record is keyed by the build commit as
     the draw names it (`kverdict.governing_rev`, which walks past record-only
     commits), so a build whose last commit is a log fragment is found again at
@@ -2497,10 +2501,10 @@ def attest_build(ctx, plan, outcome, meta):
     if not all(w in built for w in worker["assigned"]):
         return
     build = kverdict.governing_rev(ctx.root, lane_branch(ctx.root))
-    attested, red = integrate.attest(ctx.root, lane_branch(ctx.root), "review")
-    plan["attested"], plan["bar_red"] = attested, red
+    passed, red = integrate.record_checks(ctx.root, lane_branch(ctx.root), "commit")
+    plan["passed"], plan["checks_failed"] = passed, red
     if red:
-        meta.update(kverdict.format_red_record(build, red))
+        meta.update(kverdict.format_failed_record(build, red))
 
 
 def build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now):
@@ -2547,7 +2551,7 @@ def session_bookkeeping(
     (S8): cool+re-route, review-round merge/scoreboard/escalation, critique
     arbitration, committed-build scheduling, design-check reset. Returns None
     (fall through), "reroute" (the managed-WAITING re-route), or an int exit
-    code (a page-human).
+    code (a page-operator).
 
     WI-483 slice 6 decomposed this OUTWARD into the four arms below plus the
     decisions each of them makes; what is left is the ladder itself, so a
@@ -2607,11 +2611,11 @@ def judging_session_integrity(ctx, plan, commits, session, now):
       * a REVIEW session whose range changed anything but its own verdict file
         is REFUSED, by name: its commits are in the lane now, and the merge
         slot will refuse the same range from the committed log, so the run
-        stops for a human rather than build on it (`stop` = NEEDS-HUMAN);
+        stops for an operator rather than build on it (`stop` = NEEDS-OPERATOR);
       * a session that left the tree DIRTY fails its draw through the existing
         failed-draw path - cooled, the same phase re-drawn - with the leftovers
         stashed so the re-drawn session starts clean; when the stash fails the
-        run stops needing a human instead, since a redraw on that tree would
+        run stops needing an operator instead, since a redraw on that tree would
         record the residue as pre-existing. Checked now because only
         now can they be attributed: left in place, the next build session would
         commit them under its own name. An uncommitted verdict is such dirt,
@@ -2630,7 +2634,7 @@ def judging_session_integrity(ctx, plan, commits, session, now):
     if offenders:
         stop_banner(
             ctx.status_path,
-            "NEEDS-HUMAN — {} session {} committed outside its verdict".format(
+            "NEEDS-OPERATOR — {} session {} committed outside its verdict".format(
                 phase, session
             ),
             "range {} changed {} beside its own verdict file; the merge slot "
@@ -2638,7 +2642,7 @@ def judging_session_integrity(ctx, plan, commits, session, now):
                 commits, ", ".join(offenders)
             ),
         )
-        return True, EXIT_NEEDS_HUMAN
+        return True, EXIT_NEEDS_OPERATOR
     # The coordinator's own session log is not the session's dirt: it is
     # written and committed before this runs, and a vetoed telemetry commit
     # (best-effort by contract) must not fail every later draw.
@@ -2661,11 +2665,11 @@ def judging_session_integrity(ctx, plan, commits, session, now):
         # over the leftovers and record them as already there.
         stop_banner(
             ctx.status_path,
-            "NEEDS-HUMAN — {} session {} left the tree dirty".format(phase, session),
+            "NEEDS-OPERATOR — {} session {} left the tree dirty".format(phase, session),
             "leftovers {} could not be stashed ({}); no review is re-drawn on "
             "them".format(left, failure),
         )
-        return True, EXIT_NEEDS_HUMAN
+        return True, EXIT_NEEDS_OPERATOR
     st.cool(plan["entry"], now)
     if plan["is_review"]:
         st.note_review_draw_failure()
@@ -2727,7 +2731,7 @@ def resolve_idle_timeout(args):
     return idle if idle and idle > 0 else None
 
 
-SIGNIN_HOLD = "NEEDS-HUMAN — the drawn entry's account cannot authenticate"
+SIGNIN_HOLD = "NEEDS-OPERATOR — the drawn entry's account cannot authenticate"
 
 
 def review_keep_scope(ctx, plan):
@@ -2787,7 +2791,7 @@ def launch_session(ctx, plan, wi=None):
     emitting JSON (spawn failure, timeout, crash). The loop hands over only
     the route's data and the console renderer. A launch whose account
     cannot authenticate launches nothing: the run stops needing
-    a human (EXIT_NEEDS_HUMAN is returned in place of an Outcome). A launch
+    an operator (EXIT_NEEDS_OPERATOR is returned in place of an Outcome). A launch
     the blackout window refuses waits the window out and is retried
     (`session_service.through_blackout`); the call carries its work item, so
     a wrap-up adjudication of an active claim is admitted inside it.
@@ -2832,7 +2836,7 @@ def launch_session(ctx, plan, wi=None):
         outcome = session_service.through_blackout(attempt)
     except session_service.SigninRefused as refused:
         stop_banner(ctx.status_path, SIGNIN_HOLD, str(refused))
-        return EXIT_NEEDS_HUMAN
+        return EXIT_NEEDS_OPERATOR
     if live is not None:
         live.finish()
     return outcome
@@ -2916,7 +2920,7 @@ def session_meta(
 @dataclass(frozen=True)
 class LimitWait:
     """What a throttled session's reset hint BUYS: either a bounded nap and a
-    retry, or nothing — in which case the run stops and the human resumes it
+    retry, or nothing — in which case the run stops and the operator resumes it
     after the reset. `nap` is the discriminator, so a zero-second wait is not
     mistaken for "no wait" (WI-483 slice 6)."""
 
@@ -2934,7 +2938,7 @@ def rate_limit_wait(args, reset_hint):
     wait = seconds_until_reset(reset_hint)
     if args.wait_on_limit and wait is None:
         # Unrecognized reset wording (locale/format drift): a bounded fallback
-        # nap keeps the walk-away run alive, capped at the ceiling the human
+        # nap keeps the walk-away run alive, capped at the ceiling the operator
         # already consented to waiting.
         wait = min(args.limit_retry_fallback, args.wait_on_limit)
         return LimitWait(
@@ -3049,7 +3053,7 @@ def draw_session_route(
     for a review phase whose cross-family pool is exhausted, the RELAXED retry
     (heterogeneity dropped, recorded by the caller off the typed family fact);
     and, when nothing is routable at all for a worker's review, the REVIEW
-    OWED park — never a NEEDS-HUMAN page the dispatcher would turn into a
+    OWED park — never a NEEDS-OPERATOR page the dispatcher would turn into a
     handback of finished work. Returns `(entry, reason, exit_code)`; a
     non-None exit_code ends the run (the banner is already written). A review
     round's keep scope is settled here (`session_keep.review_retention`,
@@ -3102,12 +3106,12 @@ def draw_session_route(
         # declared home for the provider's sign-in/install hint, WI-109.)
         stop_banner(
             ctx.status_path,
-            "NEEDS-HUMAN — no routable model",
+            "NEEDS-OPERATOR — no routable model",
             reason + " (add/enable a model of this tier, or wait for a "
             "cooldown; the loop never silently drops to a weaker tier).\n"
             + agent_route.pool_context(ctx.enabled, ctx.registry, st.cooldowns, now),
         )
-        return None, reason, EXIT_NEEDS_HUMAN
+        return None, reason, EXIT_NEEDS_OPERATOR
     return entry, reason, None
 
 
@@ -3205,7 +3209,7 @@ def resume_owed_round(root, setup, st, rp_int, iter_dir):
     that shape scanned an EMPTY range and `review_owed_by_evidence` cannot say
     (it answers None) for any range that holds no train trailer. Answering "nothing
     owed" for it dropped a genuinely parked round and ran another BUILD — the
-    C2 contract inverted, red on this branch for five commits and invisible to
+    C2 contract inverted, failing on this branch for five commits and invisible to
     the smoke tier (REVIEW-A round 034). The marker's `base` field re-points
     the SAME derivation at the range that holds the train's trailers; the
     committed facts still give the answer, and a lane whose evidence is
@@ -3255,7 +3259,7 @@ def review_owed_stop(ctx):
     when the ladder is exhausted — the build is committed, a round is still
     queued, and `--stall-limit` consecutive draws failed. The exit code is
     deliberately NOT a decided dispatcher outcome: the lane parks with its
-    work and the next cycle resumes it to draw the round (owner direction
+    work and the next cycle resumes it to draw the round (operator direction
     2026-08-30 — a reviewer outage never closes finished work partial)."""
     st = ctx.run.routing
     if not st.review_queue or st.review_draw_failures < max(1, ctx.args.stall_limit):
@@ -3313,7 +3317,7 @@ def after_session(ctx, i, outcome, reset_hint, committed, judging=False):
     the post-session worker end state, the stall guard, and the inter-session
     pause. Returns an int exit code to END the run, else None.
 
-    (The run-state DONE/BLOCKED/NEEDS-HUMAN ladder retired with the serial
+    (The run-state DONE/BLOCKED/NEEDS-OPERATOR ladder retired with the serial
     driver, WI-210: a worker's state is always RUNNING here — its end states
     are judged from committed evidence, and the coordinator generates the root
     run-state.)"""
@@ -3364,15 +3368,15 @@ def session_commit_range(root, before):
 def review_draw_gate(ctx):
     """The one choke point every queued review round passes before it is drawn
     (fresh, post-narrow, resumed and adjudication rounds alike): the round is
-    drawn only over a tip carrying a verified `review` attestation for the
-    row's derived set, and its range is pointed at that attested commit.
-    Without one, a red already recorded for the governing build commit drops
-    the round and rebuilds with its summary, running no bar; with no record,
-    the review bar runs once here and `record_bar_result` records it, green
-    drawing the round and red dropping it. A derivation refusal leaves no
-    record to compare, so `integrate.attest` refuses with the same text and it
-    is recorded as any red is. Returns the red cap's exit code after a red
-    (`red_cap_check`), else None: the session is routed next.
+    drawn only over a tip carrying a verified `commit` record for the
+    row's derived set, and its range is pointed at that recorded commit.
+    Without one, a failure already recorded for the governing build commit drops
+    the round and rebuilds with its summary, running no checks; with no record,
+    the commit checks run once here and `record_checks_result` records it, a pass
+    drawing the round and a failure dropping it. A derivation refusal leaves no
+    record to compare, so `integrate.record_checks` refuses with the same text and it
+    is recorded as any failure is. Returns the failure cap's exit code after a
+    failure (`failure_cap_check`), else None: the session is routed next.
 
     Implements: SR-154, LLR-344
     """
@@ -3381,55 +3385,56 @@ def review_draw_gate(ctx):
         return None
     branch = lane_branch(root)
     derived, refused = review_set.derive(root, branch)
-    attested = None
+    passed = None
     if not refused:
-        attested, _cause = kverdict.review_attestation(root, "HEAD", derived.files)
-    if attested is None:
+        passed, _cause = kverdict.commit_passed_checks(root, "HEAD", derived.files)
+    if passed is None:
         build = kverdict.governing_rev(root, branch)
-        red = kverdict.red_record(root, "HEAD", worker["base"], build)
+        red = kverdict.failed_record(root, "HEAD", worker["base"], build)
         if red is None:
-            attested, red = integrate.attest(root, branch, "review")
-            record_bar_result(ctx, build, red)
+            passed, red = integrate.record_checks(root, branch, "commit")
+            record_checks_result(ctx, build, red)
         if red is not None:
             st.refuse_round()
             worker["rework"] = red
-            print("dispatch: review bar red at the draw -> no round; rebuilding")
-            return red_cap_check(ctx)
-    st.set_train_range("{}..{}".format(worker["base"], attested))
+            print("dispatch: commit checks failed at the draw -> no round; rebuilding")
+            return failure_cap_check(ctx)
+    st.set_train_range("{}..{}".format(worker["base"], passed))
     return None
 
 
-def red_cap_check(ctx):
-    """`EXIT_RED_CAP` with its stop banner once the lane's committed red
-    records, counted from the worker's base (its merge base with trunk, as the
-    dispatcher reads it), reach `[build] red_rounds_max` or cannot be read;
+def failure_cap_check(ctx):
+    """`EXIT_CHECK_FAILURE_CAP` with its stop banner once the lane's committed
+    failed-check records, counted from the worker's base (its merge base with
+    trunk, as the dispatcher reads it), reach the declared commit-check
+    failure cap (`kconfig.FAILURE_CAP_KEY`) or cannot be read;
     else None. Armed where a review is drawn; run at the run's start and after
-    each committed red record.
+    each committed failed-checks record.
 
     Implements: SR-242, LLR-343
     """
     if not (ctx.managed and ctx.rp_int >= 1 and ctx.worker):
         return None
-    red = kverdict.red_rounds(ctx.root, "HEAD", ctx.worker["base"])
-    if red is not None and red.count < ctx.red_rounds_max:
+    failed = kverdict.failed_rounds(ctx.root, "HEAD", ctx.worker["base"])
+    if failed is not None and failed.count < ctx.failure_cap:
         return None
-    count = "unreadable" if red is None else red.count
+    count, last = (failed.count, failed.last_summary) if failed else ("unreadable", "-")
     stop_banner(
         ctx.status_path,
-        "RED CAP — {} consecutive red rounds".format(count),
-        "[build] red_rounds_max = {}; last bar: {}. The lane closes partial.".format(
-            ctx.red_rounds_max, red.last_summary if red else "-"
+        "COMMIT-CHECK FAILURE CAP — {} consecutive failed rounds".format(count),
+        "[build] {} = {}; last run: {}. The lane closes partial.".format(
+            kconfig.FAILURE_CAP_KEY, ctx.failure_cap, last
         ),
     )
-    return EXIT_RED_CAP
+    return EXIT_CHECK_FAILURE_CAP
 
 
-def record_bar_result(ctx, build, refusal):
-    """The loop's record of a review-bar run it made at a draw: a log of phase
-    `ATTEST` written through the session service's one writer
+def record_checks_result(ctx, build, refusal):
+    """The loop's record of a commit-check run it made at a draw: a log of phase
+    `CHECKS` written through the session service's one writer
     (`session_service.record`) and committed in its own telemetry commit,
-    never a rewrite of an existing log. A red carries the red record keyed by
-    the build commit `build`.
+    never a rewrite of an existing log. A failure carries the failed-checks record
+    keyed by the build commit `build`.
 
     Implements: SR-154, LLR-344
     """
@@ -3437,13 +3442,13 @@ def record_bar_result(ctx, build, refusal):
     session = "{:03d}".format(next_session_number(ctx.iter_dir, worker["train"]))
     meta = {"session": session, "stamp": time.strftime("%Y%m%d-%H%M%S")}
     meta["date"] = time.strftime("%Y-%m-%d %H:%M")
-    meta.update(train=worker["train"], base=worker["base"][:12], phase="ATTEST")
-    meta["outcome"] = "RED" if refusal else "GREEN"
+    meta.update(train=worker["train"], base=worker["base"][:12], phase="CHECKS")
+    meta["outcome"] = "FAILED" if refusal else "PASSED"
     if refusal:
-        meta.update(kverdict.format_red_record(build, refusal))
-    text = refusal or "green"
+        meta.update(kverdict.format_failed_record(build, refusal))
+    text = refusal or "passed"
     ran = session_service.Outcome(ctx.root, int(bool(refusal)), text, False, text, {})
-    label = "ATTEST " + meta["outcome"]
+    label = "CHECKS " + meta["outcome"]
     session_service.record(
         ran, meta, iter_dir=ctx.iter_dir, session=ctx.tag + session, label=label
     )
@@ -3553,7 +3558,7 @@ def run_iteration(ctx, i):
         ctx, plan, data, session, stamp, current_wi, outcome, commits, code, wall_secs
     )
     stamp_session_meta(meta, plan, timed_out)
-    attest_build(ctx, plan, outcome, meta)
+    record_build_checks(ctx, plan, outcome, meta)
     # The service's one writer: the tracked log, the raw stream in the
     # untracked run-logs, and its own telemetry commit — never riding the next
     # session's work commit (WI-137). A worker never regenerates the iteration
@@ -3747,7 +3752,7 @@ class SessionSetup:
     prompt_templates: dict
     routing: RoutingSetup
     worker: dict
-    red_rounds_max: int
+    failure_cap: int
 
 
 def resolve_session_setup(args, root):
@@ -3755,7 +3760,7 @@ def resolve_session_setup(args, root):
     when a map is malformed, a preflight check fails, or the worker assignment
     is not a legal one — the three refusals that used to be inline arms of
     `main`. Every refusal prints exactly what it printed before. A
-    `[build] red_rounds_max` its reader refuses is one more preflight
+    `[build] stop_lane_after_consecutive_commit_check_failures` its reader refuses is one more preflight
     failure, so no session starts under a cap nobody declared.
 
     Implements: SR-242, LLR-343
@@ -3795,7 +3800,7 @@ def resolve_session_setup(args, root):
         return None, err
     # After the assignment: its undeclared-trunk refusal already names the
     # line an absent docs/process.toml lacks.
-    red_max, refusal = kconfig.red_rounds_max(root)
+    cap, refusal = kconfig.commit_check_failure_cap(root)
     if refusal is not None:
         print("agent_loop: preflight failed —\n  - " + refusal, file=sys.stderr)
         return None, EXIT_PREFLIGHT
@@ -3810,7 +3815,7 @@ def resolve_session_setup(args, root):
             prompt_templates=prompt_templates,
             routing=routing,
             worker=worker,
-            red_rounds_max=red_max,
+            failure_cap=cap,
         ),
         None,
     )
@@ -3822,11 +3827,11 @@ class SessionPolicies:
     home (docs/process.toml, legacy one-word file as the SN-028 migration
     fallback). SN-029: the three-value gate-authority enum retired for an
     ORDINAL comparison — is the tier the spine is in process at still the
-    human's to approve? `human_held` answers it once; `keep_nondependent` is
+    operator's to accept? `operator_held` answers it once; `keep_nondependent` is
     the orthogonal dial the enum bundled. WI-437 (OI-25): `session_hold` is the
     derived label — WHO HOLDS this run."""
 
-    human_held: bool
+    operator_held: bool
     keep_nondependent: bool
     session_hold: str
     push: str
@@ -3836,19 +3841,19 @@ class SessionPolicies:
 
 
 def resolve_session_policies(root, docs):
-    human_held = agent_common.human_holds(docs, agent_common.spine_stage_of(root))
+    operator_held = agent_common.operator_holds(docs, agent_common.spine_stage_of(root))
     # Spelled as its own statement, not folded into the constructor call below:
     # the WI-437 / OI-25 one-name-one-meaning rule reads this module's SOURCE for
     # the exact `session_hold = <the two derived values>` form, so that the
     # derived hold can be checked to mean one thing across every module that
     # derives it (the rule also forbids the retired enum's name appearing here at
     # all, which is why this comment does not spell the test module either).
-    session_hold = "human-held" if human_held else "loop-held"
+    session_hold = "operator-held" if operator_held else "loop-held"
     return SessionPolicies(
-        human_held=human_held,
+        operator_held=operator_held,
         keep_nondependent=agent_common.keep_nondependent(docs),
         session_hold=session_hold,
-        push=declared_policy(docs, "push-policy", "human"),
+        push=declared_policy(docs, "push-policy", "operator"),
         review=declared_policy(docs, "review-policy", "1"),
         guardrails=declared_policy(docs, "guardrails-policy", "off"),
         blackout=blackout_at(docs).window,
@@ -3944,24 +3949,24 @@ def _dual_plan_entry(root, docs, args, setup, policies):
     if outcome == "SELECTED":
         print("agent_loop: dual-plan {}: {}".format(wid, detail))
         return EXIT_DONE
-    action = _plan_round.page_action(policies.human_held, policies.keep_nondependent)
+    action = _plan_round.page_action(policies.operator_held, policies.keep_nondependent)
     print(
         "agent_loop: dual-plan {} PAGED: {} (session-hold {} -> {})".format(
             wid, detail, policies.session_hold, action
         ),
         file=sys.stderr,
     )
-    if action == "stop-needs-human":
-        stop_banner(docs / "status.md", "NEEDS-HUMAN", detail)
-        return EXIT_NEEDS_HUMAN
+    if action == "stop-needs-operator":
+        stop_banner(docs / "status.md", "NEEDS-OPERATOR", detail)
+        return EXIT_NEEDS_OPERATOR
     # Every other action honors the pause-free invariant (WI-204, WI-209):
-    # an attention-only outcome lands on EXIT_STALL, never a NEEDS-HUMAN
+    # an attention-only outcome lands on EXIT_STALL, never a NEEDS-OPERATOR
     # gate. The PAGE evidence is on disk under docs/plans/DP-*; relaunching
-    # re-runs the round. (page_action's non-stop-needs-human strings are
+    # re-runs the round. (page_action's non-stop-needs-operator strings are
     # intent labels.)
     stop_banner(
         docs / "status.md",
-        "dual-plan round paged — attention (no human hold on this tier)",
+        "dual-plan round paged — attention (no operator hold on this tier)",
         detail,
     )
     return EXIT_STALL
@@ -4054,8 +4059,8 @@ def moved_scripts_stop():
 def run_loop(ctx):
     """Iterate until an iteration returns an exit code, or until the declared
     budget runs out — which is itself an exit with a banner, never a silent
-    stop. A lane already at its red cap ends before any session."""
-    code = red_cap_check(ctx)
+    stop. A lane already at its failure cap ends before any session."""
+    code = failure_cap_check(ctx)
     if code is not None:
         return code
     for i in range(1, ctx.args.max_iterations + 1):
@@ -4134,8 +4139,8 @@ def main():
     # out/agent-loop.lock (and, later, docs/iteration/*.log) — so the check sees
     # genuine interrupted-session residue, never our own artifacts. In a scaffold
     # out/ is gitignored, so the lock would not show anyway; taking the snapshot
-    # first is correct regardless of a repo's .gitignore hygiene. Owner-only paths
-    # (OWNER_ONLY_PATHS) are dropped so the perpetually-edited scratchpad never
+    # first is correct regardless of a repo's .gitignore hygiene. Operator-only paths
+    # (OPERATOR_ONLY_PATHS) are dropped so the perpetually-edited scratchpad never
     # reads as residue and fires the reconcile note on every resume (WI-203).
     start_dirty = substantive_working_tree_dirty(root)
 
@@ -4221,7 +4226,7 @@ def main():
             prefer_map=setup.prefer_map,
             weight_map=setup.routing.weight_map,
             guardrails_policy=policies.guardrails,
-            human_held=policies.human_held,
+            operator_held=policies.operator_held,
             keep_nondependent=policies.keep_nondependent,
             start_dirty=start_dirty,
             raw_dir=root / "out" / "run-logs",
@@ -4243,7 +4248,7 @@ def main():
             reviews_dir=reviews_dir,
             scoreboard=reviews_dir / "scoreboard.txt",
             rp_int=rp_int,
-            red_rounds_max=setup.red_rounds_max,
+            failure_cap=setup.failure_cap,
             run=LoopRun(routing=st, warned_no_core=warned_no_core),
         )
     )

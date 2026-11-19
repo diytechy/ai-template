@@ -23,7 +23,7 @@ Two detectors, two very different starting conditions:
     the static header — so it answered False unconditionally and
     `tier_signal`'s `strong` arm was unreachable.
 
-THIS MODULE IS THE IN-PROCESS HALF and stays in the commit bar by the
+THIS MODULE IS THE IN-PROCESS HALF and stays in the commit checks by the
 in-process default. Its sibling `test_stage_event_detectors_driven.py` carries
 everything that needs a real bootstrapped scaffold or a real git repo — the
 `test_kitlib_stage` / `test_derive_stage` split of slice 1, applied again for
@@ -58,7 +58,7 @@ def test_the_anchor_translation_is_by_MEANING_and_the_spellings_are_the_trap():
     rung and neither means it:
 
       `[p]-[reqs]`  requirement structuring — the phase's SRs are authored AND
-                    approved, which clears `spine_stage`'s `any(is_drafted(sr))`
+                    accepted, which clears `spine_stage`'s `any(is_drafted(sr))`
                     test. The phase has just LEFT DevStg-Reqs; where it lands is
                     DevStg-LLReqs, two rungs up.
       `[p]-[tests]` decomposition — LLRs and TCs authored and non-Drafted, which
@@ -97,7 +97,7 @@ def test_the_legacy_anchors_are_TRANSLATED_not_re_recorded():
 
 
 def test_the_two_anchor_patterns_accept_THE_SAME_TOKEN_SET():
-    """`PHASE_ANCHOR_RE` (anchored at a Title's start) and `APPROVAL_ANCHOR_RE`
+    """`PHASE_ANCHOR_RE` (anchored at a Title's start) and `ACCEPTANCE_ANCHOR_RE`
     (mid-cell, for the brief lint) are deliberately separate patterns over one
     vocabulary. Held equal here rather than by a comment, because the comment is
     what drifted at the last changeover."""
@@ -105,7 +105,7 @@ def test_the_two_anchor_patterns_accept_THE_SAME_TOKEN_SET():
     for token in tokens:
         title = "[v1]-[{}] x".format(token)
         assert bool(CT.PHASE_ANCHOR_RE.match(title)) is bool(
-            CT.APPROVAL_ANCHOR_RE.search("... {} ...".format(title))
+            CT.ACCEPTANCE_ANCHOR_RE.search("... {} ...".format(title))
         ), token
 
 
@@ -163,7 +163,7 @@ def test_the_detector_reads_the_LIVE_per_phase_field_not_the_settled_one(
     exactly its own subject.
 
     The fixture states the divergence the two fields exist to carry: settled says
-    the phase is still at Impl (nothing approved has moved), live says it is back
+    the phase is still at Impl (nothing accepted has moved), live says it is back
     at Tests (a TC is in redraft). Keying on `per-phase` finds nothing; keying on
     `per-phase-live` finds the event."""
     settled = {"v1": ladder.STAGE_IMPL}
@@ -268,7 +268,7 @@ def _string_constants(path):
     """Every string literal in a module EXCEPT its docstrings.
 
     Prose has to be excluded or these pins invert: the clearest way to record a
-    retired defect is to NAME it, and a grep-shaped test then reds on the comment
+    retired defect is to NAME it, and a grep-shaped test then fails on the comment
     that explains why the code is gone."""
     import ast
 

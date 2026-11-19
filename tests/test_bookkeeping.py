@@ -1,7 +1,7 @@
 """bookkeeping.py — the ONE trunk bookkeeping commit the claim and the mint share.
 
 The loop's two trunk-side writers, `integrate.claim` and the intake mint, run in
-the PRIMARY checkout, which is also where the owner works. Before WI-612 each
+the PRIMARY checkout, which is also where the operator works. Before WI-612 each
 treated that whole working tree as its own: `git add -A` swept whatever was
 lying there into the claim or mint commit, and `git reset --hard HEAD` (plus the
 mint's `git clean -fd`) discarded it when either refused. What is pinned here is
@@ -19,7 +19,7 @@ regeneration:
   * the scope is planned over HEAD: an uncommitted note ADDING a link to the
     spec neither widens the claim nor is touched;
   * the step and its regeneration run in a scratch worktree cut from HEAD
-    (WI-647): an owner edit to an in-scope path made while the regeneration is
+    (WI-647): an operator edit to an in-scope path made while the regeneration is
     blocked survives, is absent from the commit, and the step refuses naming
     it; an uncommitted edit to a generator INPUT outside the scope does not
     shape the artifacts the commit carries; and the regeneration runs the kit
@@ -30,9 +30,9 @@ regeneration:
   * a step that RAISES leaves the checkout untouched and says so, and a scratch
     worktree that will not remove is named instead of leaving silent residue;
   * a refusal inside the install restores what the install wrote, while an
-    owner edit landing on an in-scope path in that window is left and named;
+    operator edit landing on an in-scope path in that window is left and named;
   * no bookkeeping path in the primary checkout keeps a whole-tree git write;
-  * the owner-only scratchpad no longer stops the merge slot (the dispatcher's
+  * the operator-only scratchpad no longer stops the merge slot (the dispatcher's
     own tick-top check is pinned beside its siblings in tests/test_dispatch.py),
     and the claim never rewrites it, so a dirty one linking the claimed spec
     no longer refuses the claim.
@@ -70,17 +70,17 @@ pytestmark = env_gate_skipif("git")
 
 intake = load_script("intake")
 
-GAP = "SR-001 is not Approved (Status=Drafted)"
+GAP = "SR-001 is not Accepted (Status=Drafted)"
 
-# The owner's work, left lying in the primary checkout: one tracked file
+# The operator's work, left lying in the primary checkout: one tracked file
 # modified, one untracked, one STAGED. The staged one is the edit a commit built
 # from the real index would carry even if it staged nothing else itself.
-OWNER_EDITS = {
-    "seed.txt": "the owner's half-written edit\n",
+OPERATOR_EDITS = {
+    "seed.txt": "the operator's half-written edit\n",
     "notes.txt": "an untracked note\n",
     "staged.txt": "a staged edit\n",
 }
-OWNER_STATUS = {"seed.txt": " M", "notes.txt": "??", "staged.txt": "M "}
+OPERATOR_STATUS = {"seed.txt": " M", "notes.txt": "??", "staged.txt": "M "}
 
 # A trunk step that gets as far as writing a declared artifact and then fails -
 # the refusal arrives AFTER the step has written, so the restore is exercised.
@@ -98,7 +98,7 @@ pathlib.Path(sys.argv[0]).with_name("ran").write_text("ran\\n", encoding="utf-8"
 # The REAL trunk step, held at its door: it records where it was started, says
 # it is blocked, and waits for the test to release it before running the real
 # regeneration with the same arguments. What the test does while it waits is
-# what an owner could do while a claim runs.
+# what an operator could do while a claim runs.
 BLOCKING_REGEN = """import pathlib, subprocess, sys, time
 here = pathlib.Path(sys.argv[0]).resolve().parent
 (here / "cwd").write_text(str(pathlib.Path.cwd()), encoding="utf-8")
@@ -112,7 +112,7 @@ sys.exit(subprocess.call([sys.executable, {real!r}, *sys.argv[1:]]))
 """
 
 # A status page whose generated block the real regeneration rewrites, so the
-# claim's own tree writes docs/status.md; the prose outside it is the owner's.
+# claim's own tree writes docs/status.md; the prose outside it is the operator's.
 STATUS_WITH_BLOCK = (
     "# Status\n\nhand-authored\n\n<!-- BEGIN GENERATED STATUS -->\nstale\n"
     "<!-- END GENERATED STATUS -->\n"
@@ -122,7 +122,7 @@ STATUS_WITH_BLOCK = (
 def trunk(tmp_path):
     """Two queued WIs on a committed trunk that also carries a hand-authored
     `docs/status.md` (a path the regeneration writes), plus the three files the
-    owner is about to edit."""
+    operator is about to edit."""
     root = tmp_path / "repo"
     root.mkdir()
     claim_repo(root)
@@ -138,21 +138,21 @@ def trunk(tmp_path):
     return root
 
 
-def leave_owner_edits(root):
-    for name, text in OWNER_EDITS.items():
+def leave_operator_edits(root):
+    for name, text in OPERATOR_EDITS.items():
         (root / name).write_text(text, encoding="utf-8", newline="\n")
     _git(root, "add", "--", "staged.txt")
 
 
-def assert_owner_edits_untouched(root):
-    for name, text in OWNER_EDITS.items():
+def assert_operator_edits_untouched(root):
+    for name, text in OPERATOR_EDITS.items():
         assert (root / name).read_text(encoding="utf-8") == text, name
     status = {
         line[3:]: line[:2]
         for line in _git(root, "status", "--porcelain").splitlines()
         if line.strip()
     }
-    for name, code in OWNER_STATUS.items():
+    for name, code in OPERATOR_STATUS.items():
         assert status.get(name) == code, (name, status)
 
 
@@ -204,13 +204,13 @@ def count_writes(monkeypatch):
     return calls
 
 
-# --- the owner's uncommitted work survives every bookkeeping outcome ----------
+# --- the operator's uncommitted work survives every bookkeeping outcome ----------
 
 
 def test_claims_and_mints_commit_only_what_they_wrote(tmp_path, monkeypatch, capsys):
     root = trunk(tmp_path)
     setup = _rev(root, "HEAD")
-    leave_owner_edits(root)
+    leave_operator_edits(root)
     # ONE shared helper: both callers hold the same module object, and every
     # outcome below passes through its single entry point.
     bk = integ.bookkeeping
@@ -231,7 +231,7 @@ def test_claims_and_mints_commit_only_what_they_wrote(tmp_path, monkeypatch, cap
     assert integ.claim(root, "WI-401", "wi-401") == 0, capsys.readouterr().err
     assert writes == ["write", "move_spec"]
     assert (root / "docs/work/active/wi-401/WI-401-widget.md").is_file()
-    assert_owner_edits_untouched(root)
+    assert_operator_edits_untouched(root)
     head = _rev(root, "HEAD")
     state = (root / "PROJECT_STATE.html").read_bytes()
     mark = (root / "docs/id-watermark").read_bytes()
@@ -246,7 +246,7 @@ def test_claims_and_mints_commit_only_what_they_wrote(tmp_path, monkeypatch, cap
     assert not (root / "docs/work/active/wi-402/WI-402-gadget.md").exists()
     assert (root / "PROJECT_STATE.html").read_bytes() == state
     assert _rev(root, "HEAD") == head and "wi-402" not in _branches(root)
-    assert_owner_edits_untouched(root)
+    assert_operator_edits_untouched(root)
 
     # 3. A refused mint: the spec and the raised watermark are written in the
     #    scratch worktree, then the same regeneration fails.
@@ -256,7 +256,7 @@ def test_claims_and_mints_commit_only_what_they_wrote(tmp_path, monkeypatch, cap
     assert (root / "docs/id-watermark").read_bytes() == mark
     assert (root / "PROJECT_STATE.html").read_bytes() == state
     assert _rev(root, "HEAD") == head
-    assert_owner_edits_untouched(root)
+    assert_operator_edits_untouched(root)
 
     # 4. A successful mint - and its id is WI-403, because the refused mint's
     #    raised mark never left the scratch worktree the spec was minted in.
@@ -267,13 +267,13 @@ def test_claims_and_mints_commit_only_what_they_wrote(tmp_path, monkeypatch, cap
     assert writes == ["write", "_write_draft", "bump_watermark"]
     assert [w for w, _ in minted] == ["WI-403"]
     assert _rev(root, "HEAD") != head
-    assert_owner_edits_untouched(root)
+    assert_operator_edits_untouched(root)
 
     # Absent from EVERY commit since the setup, on trunk and on the claim branch.
     touched = _git(root, "log", "--all", "--format=", "--name-only", "^" + setup)
     touched = {ln for ln in touched.splitlines() if ln.strip()}
     assert "docs/work/active/wi-401/WI-401-widget.md" in touched
-    assert set(OWNER_EDITS).isdisjoint(touched), touched
+    assert set(OPERATOR_EDITS).isdisjoint(touched), touched
     assert labels == ["the claim", "the claim", "the intake mint", "the intake mint"]
     assert _worktree_count(root) == 1  # every scratch worktree was removed
 
@@ -327,7 +327,7 @@ def test_an_uncommitted_link_to_the_spec_does_not_widen_the_claim(tmp_path, caps
     # rewritten. The plan is HEAD's, read in the scratch worktree the move runs
     # in, so an UNCOMMITTED note that adds a link to the spec is no path the
     # claim writes: it is neither refused, rewritten nor committed, and the
-    # owner's draft stays exactly as typed.
+    # operator's draft stays exactly as typed.
     root = trunk(tmp_path)
     note = root / "plans" / "next.md"
     note.parent.mkdir()
@@ -347,7 +347,7 @@ def test_an_uncommitted_link_to_the_spec_does_not_widen_the_claim(tmp_path, caps
 def test_an_uncommitted_edit_hiding_a_committed_link_refuses_by_name(
     tmp_path, monkeypatch, capsys
 ):
-    # The other half: a COMMITTED note links the spec, and the owner's
+    # The other half: a COMMITTED note links the spec, and the operator's
     # uncommitted edit removes that link. HEAD's note is one the move must
     # rewrite, so it is in the plan whatever the checkout says, and its dirty
     # copy refuses by name before anything is written - rather than the scratch
@@ -385,11 +385,11 @@ def _wait_for(path, worker, seconds=120):
         time.sleep(0.05)
 
 
-def test_an_owner_edit_while_the_regeneration_is_blocked_survives_and_refuses(
+def test_an_operator_edit_while_the_regeneration_is_blocked_survives_and_refuses(
     tmp_path, monkeypatch, capsys
 ):
     # The window the helper used to state and not close: the pre-check has
-    # passed, the step is running, and the owner types into an in-scope path -
+    # passed, the step is running, and the operator types into an in-scope path -
     # here the prose of docs/status.md, which the regeneration also rewrites.
     # The step and its regeneration must be running somewhere else, the edit
     # must survive byte for byte, the commit the step built must not carry it,
@@ -421,7 +421,7 @@ def test_an_owner_edit_while_the_regeneration_is_blocked_survives_and_refuses(
 
     worker = threading.Thread(target=run)
     worker.start()
-    owner = STATUS_WITH_BLOCK + "\nan owner line, typed while the claim ran\n"
+    owner = STATUS_WITH_BLOCK + "\nan operator line, typed while the claim ran\n"
     try:
         _wait_for(stub / "blocked", worker)
         # Blocked: the step has moved the spec by now, wherever it runs.
@@ -440,7 +440,7 @@ def test_an_owner_edit_while_the_regeneration_is_blocked_survives_and_refuses(
     # Outside the primary checkout: nothing the step wrote was visible here.
     assert ran_in != root.resolve()
     assert still_queued and not moved_here
-    # The owner's edit survives, and nothing was installed or advanced.
+    # The operator's edit survives, and nothing was installed or advanced.
     assert status.read_text(encoding="utf-8") == owner
     assert _rev(root, "HEAD") == head
     assert (root / "docs/work/queued/WI-401-widget.md").is_file()
@@ -448,13 +448,13 @@ def test_an_owner_edit_while_the_regeneration_is_blocked_survives_and_refuses(
     # The drift check runs after the branch cut, so the refusal leaves the
     # abandoned-claim branch the next claim re-cuts, and says so.
     assert "wi-401" in _branches(root) and "re-cuts" in err
-    # The commit the step built wrote docs/status.md - and not the owner's line.
+    # The commit the step built wrote docs/status.md - and not the operator's line.
     [sha] = built
     changed = _git(root, "diff-tree", "--name-only", "-r", head, sha).split()
     assert "docs/status.md" in changed, changed
     assert "docs/work/active/wi-401/WI-401-widget.md" in changed, changed
     committed = _git(root, "show", sha + ":docs/status.md")
-    assert "an owner line" not in committed
+    assert "an operator line" not in committed
     assert "WI-402" in committed  # the regenerated block, from the step's tree
     assert _worktree_count(root) == 1  # the scratch worktree is gone
 
@@ -463,21 +463,21 @@ def test_an_uncommitted_generator_input_stays_out_of_the_committed_artifacts(
     tmp_path, capsys
 ):
     # A path OUTSIDE the claim's scope that a generator READS: another queued
-    # spec, whose title the dashboard renders. The owner's uncommitted retitle
+    # spec, whose title the dashboard renders. The operator's uncommitted retitle
     # is not the claim's to commit, and it must not shape the artifacts the
     # claim commits either: they are derived from HEAD plus the claim's writes.
     root = trunk(tmp_path)
     spec = root / "docs/work/queued/WI-402-gadget.md"
     draft = spec.read_text(encoding="utf-8").replace(
-        'title = "Gadget"', 'title = "Gadget OwnerDraftRetitle"'
+        'title = "Gadget"', 'title = "Gadget OperatorDraftRetitle"'
     )
-    assert "OwnerDraftRetitle" in draft
+    assert "OperatorDraftRetitle" in draft
     spec.write_text(draft, encoding="utf-8", newline="\n")
 
     assert integ.claim(root, "WI-401", "wi-401") == 0, capsys.readouterr().err
     committed = _git(root, "show", "HEAD:PROJECT_STATE.html")
     assert "Gadget" in committed  # the committed title is rendered...
-    assert "OwnerDraftRetitle" not in committed  # ...and the draft is not
+    assert "OperatorDraftRetitle" not in committed  # ...and the draft is not
     assert spec.read_text(encoding="utf-8") == draft
     # Everything the claim wrote is installed as committed; the draft stays.
     left = _git(root, "status", "--porcelain").splitlines()
@@ -558,16 +558,16 @@ def test_a_trunk_that_moved_while_the_step_ran_refuses_before_installing(
 
     def write(scratch):
         (scratch / "made.txt").write_text("the step's file\n", encoding="utf-8")
-        # ...while, in the checkout, the owner commits something else.
-        (root / "other.txt").write_text("the owner's commit\n", encoding="utf-8")
-        _commit(root, "the owner commits while the step runs", when=T_VERDICT)
+        # ...while, in the checkout, the operator commits something else.
+        (root / "other.txt").write_text("the operator's commit\n", encoding="utf-8")
+        _commit(root, "the operator commits while the step runs", when=T_VERDICT)
 
     sha, refusal = bk.commit(root, ["made.txt"], write, "unused", label="the step")
     assert sha is None and "trunk moved" in refusal, refusal
     assert "the step wrote nothing in the checkout" in refusal
     assert not (root / "made.txt").exists()
     subject = _git(root, "log", "-1", "--format=%s").strip()
-    assert subject == "the owner commits while the step runs"
+    assert subject == "the operator commits while the step runs"
 
 
 def test_the_drift_check_runs_after_before_advance(tmp_path, monkeypatch):
@@ -578,7 +578,7 @@ def test_the_drift_check_runs_after_before_advance(tmp_path, monkeypatch):
     head = _rev(root, "HEAD")
     bk = integ.bookkeeping
     monkeypatch.setattr(bk, "SCRIPTS", stub_regen(tmp_path, RECORDING_REGEN))
-    owner = "the owner's edit, made while before_advance ran\n"
+    owner = "the operator's edit, made while before_advance ran\n"
 
     def write(scratch):
         (scratch / "seed.txt").write_text("the step's edit\n", encoding="utf-8")
@@ -606,13 +606,13 @@ def test_a_drift_after_the_branch_cut_leaves_a_claim_the_next_one_re_cuts(
     # Through the claim: the edit lands while the branch is being cut. The
     # claim refuses naming the path and installs nothing; the branch it cut
     # holds a claim trunk never took, the abandoned-claim shape, and the next
-    # claim re-cuts it once the owner has set the edit aside.
+    # claim re-cuts it once the operator has set the edit aside.
     root = trunk(tmp_path)
     head = _rev(root, "HEAD")
     status = root / "docs" / "status.md"
     bk = integ.bookkeeping
     real_commit = bk.commit
-    owner = "# Status\n\nan owner line, typed during the branch cut\n"
+    owner = "# Status\n\nan operator line, typed during the branch cut\n"
 
     def commit(*args, before_advance=None, **kwargs):
         def racing(sha):
@@ -685,9 +685,9 @@ def test_a_refusal_inside_the_install_restores_it_and_leaves_an_edit_made_there(
     tmp_path, monkeypatch
 ):
     # The one window left: the install's own few git calls. The commit's paths
-    # are in the checkout when the owner edits an in-scope path, and then trunk
+    # are in the checkout when the operator edits an in-scope path, and then trunk
     # refuses to advance (a compare-and-swap lost to a trunk that moved). The
-    # owner's line must SURVIVE and be named, while everything the install
+    # operator's line must SURVIVE and be named, while everything the install
     # wrote is restored. docs/status.md is a path the regeneration writes (its
     # status splice); here the step's own `write` stands in for that splice,
     # because the fixture carries no generated-status markers.
@@ -703,9 +703,11 @@ def test_a_refusal_inside_the_install_restores_it_and_leaves_an_edit_made_there(
     def racing(where, *args, **kwargs):
         if args[:1] == ("update-ref",):
             with status.open("a", encoding="utf-8", newline="\n") as fh:
-                fh.write("an owner line\n")
+                fh.write("an operator line\n")
             # ...and an in-scope path the install never wrote at all.
-            (root / "PROJECT_STATE.html").write_text("owner draft\n", encoding="utf-8")
+            (root / "PROJECT_STATE.html").write_text(
+                "operator draft\n", encoding="utf-8"
+            )
             return 1, "fatal: cannot lock ref 'HEAD': is at another commit"
         return real_git(where, *args, **kwargs)
 
@@ -724,8 +726,12 @@ def test_a_refusal_inside_the_install_restores_it_and_leaves_an_edit_made_there(
     assert sha is None and "trunk did not advance" in refusal, refusal
     assert "LEFT" in refusal
     assert "docs/status.md" in refusal and "PROJECT_STATE.html" in refusal
-    assert status.read_text(encoding="utf-8") == "# Status\n\nspliced\nan owner line\n"
-    assert (root / "PROJECT_STATE.html").read_text(encoding="utf-8") == "owner draft\n"
+    assert (
+        status.read_text(encoding="utf-8") == "# Status\n\nspliced\nan operator line\n"
+    )
+    assert (root / "PROJECT_STATE.html").read_text(
+        encoding="utf-8"
+    ) == "operator draft\n"
     assert not (root / "made.txt").exists()
     assert (root / "seed.txt").read_text(encoding="utf-8") == "seed\n"
     assert _rev(root, "HEAD") == head
@@ -785,39 +791,39 @@ def test_no_bookkeeping_path_keeps_a_whole_tree_git_write():
     assert hits == []
 
 
-# --- the owner-only scratchpad does not stop the merge slot -------------------
+# --- the operator-only scratchpad does not stop the merge slot -------------------
 
 
-def test_the_merge_slot_reads_past_a_dirty_owner_scratchpad(tmp_path):
+def test_the_merge_slot_reads_past_a_dirty_operator_scratchpad(tmp_path):
     root = trunk(tmp_path)
-    pad = root / integ.ac.OWNER_ONLY_PATHS[0]
-    pad.write_text("owner notes\n", encoding="utf-8", newline="\n")
-    _commit(root, "the owner's scratchpad", when=T_VERDICT + 1)
-    pad.write_text("owner notes, mid-edit\n", encoding="utf-8", newline="\n")
+    pad = root / integ.ac.OPERATOR_ONLY_PATHS[0]
+    pad.write_text("operator notes\n", encoding="utf-8", newline="\n")
+    _commit(root, "the operator's scratchpad", when=T_VERDICT + 1)
+    pad.write_text("operator notes, mid-edit\n", encoding="utf-8", newline="\n")
 
     proc = run_py([SCRIPTS / "integrate.py", "--root", ".", "integrate"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "dirty" not in proc.stderr
-    assert pad.read_text(encoding="utf-8") == "owner notes, mid-edit\n"
+    assert pad.read_text(encoding="utf-8") == "operator notes, mid-edit\n"
 
 
-def test_the_claim_never_rewrites_a_dirty_owner_scratchpad_naming_its_spec(
+def test_the_claim_never_rewrites_a_dirty_operator_scratchpad_naming_its_spec(
     tmp_path, capsys
 ):
     # The claim's link-aware move relinks every markdown file linking the moved
-    # spec, and it reached the owner's scratchpad: a committed pad linking the
-    # queued spec landed in the claim's write set, so an owner mid-edit had the
-    # claim refused by name over their own notes. The pad is owner-only - no
+    # spec, and it reached the operator's scratchpad: a committed pad linking the
+    # queued spec landed in the claim's write set, so an operator mid-edit had the
+    # claim refused by name over their own notes. The pad is operator-only - no
     # kit step rewrites it - so the claim succeeds and leaves it byte-identical,
     # dirty edit and stale link alike, and the claim commit does not touch it.
     root = trunk(tmp_path)
-    pad = root / integ.ac.OWNER_ONLY_PATHS[0]
+    pad = root / integ.ac.OPERATOR_ONLY_PATHS[0]
     pad.write_text(
         "- [WI-401](docs/work/queued/WI-401-widget.md) next\n",
         encoding="utf-8",
         newline="\n",
     )
-    _commit(root, "the owner's scratchpad", when=T_VERDICT + 1)
+    _commit(root, "the operator's scratchpad", when=T_VERDICT + 1)
     mid_edit = (
         b"- [WI-401](docs/work/queued/WI-401-widget.md) next, then WI-402\r\n"
         b"- half a thought"

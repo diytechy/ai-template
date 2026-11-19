@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """overnight_legs.py — run coordinator sessions back to back, unattended, as
-headless `claude -p` legs (owner, 2026-10-09: "Headless leg loop").
+headless `claude -p` legs (operator, 2026-10-09: "Headless leg loop").
 
 Why it exists: one coordinator session holds about five rows before the 50%
 context guard latches, and the guard's own relaunch fires only when a session
@@ -18,7 +18,7 @@ foreground cap (the plain environment variable is not read).
 
 A run is an autonomous run, marked (review-churn plan revisions 35, "The
 coordinator role", and 36, "Headless coordinator legs are marked now"; the
-owner's 2026-10-14 split ruling; docs/decisions/coordinator-2026-10-14.toml
+operator's 2026-10-14 split ruling; docs/decisions/coordinator-2026-10-14.toml
 D-015 and D-016):
   - the marker. Before the first leg the launcher calls the kit's
     `provenance.mark_loop_process()` once, in its own process, and logs the
@@ -47,7 +47,7 @@ Stops (never retries blindly):
     empty; the provenance note is empty; no `claude` resolves on PATH; the
     trunk reader refuses (the run prints its message);
   - the newest handoff carries the line `Overnight: stop` (queue drained, or
-    nothing can move without the owner);
+    nothing can move without the operator);
   - exit 3, before a leg: the snapshot does not hold the bound trunk, or the
     checkout is not on it (its HEAD is detached, unreadable or unparseable,
     or names another branch);
@@ -89,7 +89,7 @@ trunk is off procedure while landings are squashes after `check-lane` (once
 WI-808 puts landings on the merge slot, its trailer rung judges the lane it
 merges). The audit judges provenance only, not which branches a leg may
 move: a marked commit on a branch the lane rule reads as a person's (`main`
-included) passes it, and the owner-held steps belong to the procedure (the
+included) passes it, and the operator-held steps belong to the procedure (the
 coordinator-cycle skill's headless-leg section), not to the audit. Until
 WI-925 declares the trunk's name, `check-lane` reads trunk at its own run as
 the branch the primary checkout is on at that moment, or, when the primary
@@ -132,7 +132,9 @@ from layout import REPO, WTROOT
 
 LOGDIR = WTROOT / "overnight-logs"
 HEADLESS_BLOCK = Path(__file__).with_name("headless-leg.md")
-SETTINGS = {"env": {"BASH_MAX_TIMEOUT_MS": "3600000", "BASH_DEFAULT_TIMEOUT_MS": "600000"}}
+SETTINGS = {
+    "env": {"BASH_MAX_TIMEOUT_MS": "3600000", "BASH_DEFAULT_TIMEOUT_MS": "600000"}
+}
 STOP_RE = re.compile(r"^\s*Overnight:\s*stop\b", re.M | re.I)
 WAIT_RE = re.compile(r"^\s*Resume-not-before:\s*(\S+)", re.M)
 
@@ -146,20 +148,35 @@ def log(msg):
 
 def git(repo, *args):
     return subprocess.run(
-        ["git", "-C", str(repo), *args], capture_output=True, text=True, encoding="utf-8"
+        ["git", "-C", str(repo), *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
     ).stdout.strip()
 
 
 def newest_handoff(repo):
     """The handoff most recently ADDED on the checked-out branch."""
-    name = git(repo, "log", "-1", "--diff-filter=A", "--format=", "--name-only", "--", "docs/handoff-*.md")
+    name = git(
+        repo,
+        "log",
+        "-1",
+        "--diff-filter=A",
+        "--format=",
+        "--name-only",
+        "--",
+        "docs/handoff-*.md",
+    )
     return (repo / name) if name else None
 
 
 def lease_holder(repo):
     out = subprocess.run(
         [sys.executable, "project-trajectory/scripts/coordinator_guard.py", "status"],
-        cwd=repo, capture_output=True, text=True, encoding="utf-8",
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
     ).stdout
     try:
         return (json.loads(out).get("lease") or {}).get("holder")
@@ -200,10 +217,18 @@ def prepare_run(repo):
 
     inherited = provenance.loop_session()
     session = provenance.mark_loop_process()
-    log("run session {} ({})".format(session, "inherited" if inherited == session else "new"))
+    log(
+        "run session {} ({})".format(
+            session, "inherited" if inherited == session else "new"
+        )
+    )
     note = agent_brief.loop_provenance_note()
     if not note.strip():
-        log("stop: the loop provenance note is empty under run session {}".format(session))
+        log(
+            "stop: the loop provenance note is empty under run session {}".format(
+                session
+            )
+        )
         return None
     claude = shutil.which("claude")
     if not claude:
@@ -234,7 +259,12 @@ def run_leg(cmd, prompt, repo, out):
     """Run one leg with its prompt on stdin and its output in `out`; its exit code."""
     with out.open("w", encoding="utf-8") as fh:
         return subprocess.run(
-            cmd, cwd=repo, input=prompt, encoding="utf-8", stdout=fh, stderr=subprocess.STDOUT
+            cmd,
+            cwd=repo,
+            input=prompt,
+            encoding="utf-8",
+            stdout=fh,
+            stderr=subprocess.STDOUT,
         ).returncode
 
 
@@ -257,7 +287,10 @@ class AuditStop(Exception):
 def run_git(repo, args):
     """(exit code, stdout, stderr) of one git command in `repo`."""
     proc = subprocess.run(
-        ["git", "-C", str(repo), *args], capture_output=True, encoding="utf-8", errors="replace"
+        ["git", "-C", str(repo), *args],
+        capture_output=True,
+        encoding="utf-8",
+        errors="replace",
     )
     return proc.returncode, proc.stdout, proc.stderr
 
@@ -268,8 +301,11 @@ def read(repo, *args, answers=(0,)):
     code, out, err = run_git(repo, list(args))
     if code not in answers:
         detail = (err or "").strip().splitlines()
-        raise AuditStop("git {} failed (exit {}){}".format(
-            " ".join(args), code, ": " + detail[0] if detail else ""))
+        raise AuditStop(
+            "git {} failed (exit {}){}".format(
+                " ".join(args), code, ": " + detail[0] if detail else ""
+            )
+        )
     return code, out
 
 
@@ -283,7 +319,11 @@ def log_records(repo, *args):
             continue
         sha, nul, message = record.partition("\x00")
         if not nul or not SHA_RE.fullmatch(sha):
-            raise AuditStop("unparseable record {!r} from git log {}".format(record[:60], " ".join(args)))
+            raise AuditStop(
+                "unparseable record {!r} from git log {}".format(
+                    record[:60], " ".join(args)
+                )
+            )
         commits.append((sha, message))
     return commits
 
@@ -296,11 +336,17 @@ def checkout_refusal(repo, trunk_ref):
     code, out = read(repo, "symbolic-ref", "-q", "HEAD", answers=(0, 1))
     ref = out.strip()
     if code == 1:
-        raise AuditStop("the checkout's HEAD is detached, not on the run's trunk {}".format(trunk_ref))
+        raise AuditStop(
+            "the checkout's HEAD is detached, not on the run's trunk {}".format(
+                trunk_ref
+            )
+        )
     if not ref.startswith(HEADS):
         raise AuditStop("unparseable branch {!r} from git symbolic-ref".format(ref))
     if ref != trunk_ref:
-        raise AuditStop("the checkout is on {}, not on the run's trunk {}".format(ref, trunk_ref))
+        raise AuditStop(
+            "the checkout is on {}, not on the run's trunk {}".format(ref, trunk_ref)
+        )
 
 
 def snapshot(repo):
@@ -320,7 +366,9 @@ def pre_leg(repo, trunk_ref):
     hold the run's trunk, with the checkout on it."""
     refs = snapshot(repo)
     if trunk_ref not in refs:
-        raise AuditStop("the run's trunk {} does not resolve before the leg".format(trunk_ref))
+        raise AuditStop(
+            "the run's trunk {} does not resolve before the leg".format(trunk_ref)
+        )
     checkout_refusal(repo, trunk_ref)
     return refs
 
@@ -353,14 +401,26 @@ def judge_descent(repo, ref, pre, post, session, may_create):
         span = [after, "--not", *sorted(set(pre.values()))]
     else:
         if after is None:
-            raise AuditStop("{} does not resolve after the leg; its pre-leg tip was {}".format(where, before[:10]))
+            raise AuditStop(
+                "{} does not resolve after the leg; its pre-leg tip was {}".format(
+                    where, before[:10]
+                )
+            )
         if after == before:
             return "unmoved"
-        code, _out = read(repo, "merge-base", "--is-ancestor", before, after, answers=(0, 1))
+        code, _out = read(
+            repo, "merge-base", "--is-ancestor", before, after, answers=(0, 1)
+        )
         if code == 1:
-            raise AuditStop("{} no longer descends from its pre-leg tip {}".format(where, before[:10]))
+            raise AuditStop(
+                "{} no longer descends from its pre-leg tip {}".format(
+                    where, before[:10]
+                )
+            )
         span = ["{}..{}".format(before, after)]
-    return "{} commit(s)".format(judge(log_records(repo, "--first-parent", *span), session, where))
+    return "{} commit(s)".format(
+        judge(log_records(repo, "--first-parent", *span), session, where)
+    )
 
 
 LANE_FORMAT = "--format=%m%x00%H%x00%P%x00%T%x00%B%x1e"
@@ -373,15 +433,23 @@ def lane_records(repo, trunk_tip, branch):
     reads. A record missing a field, with a sha that is not one, or with a
     mark other than `-`, `>` or none stops the audit, naming it."""
     span = "{}..{}{}".format(trunk_tip, HEADS, branch)
-    _code, out = read(repo, "log", "--reverse", "--topo-order", "--boundary", LANE_FORMAT, span)
+    _code, out = read(
+        repo, "log", "--reverse", "--topo-order", "--boundary", LANE_FORMAT, span
+    )
     commits, boundary = [], {}
     for record in out.split("\x1e"):
         record = record.lstrip("\r\n")
         if not record.strip():
             continue
         fields = record.split("\x00", 4)
-        if len(fields) != 5 or fields[0] not in ("-", ">", "") or not SHA_RE.fullmatch(fields[1]):
-            raise AuditStop("unparseable record {!r} from git log {}".format(record[:60], span))
+        if (
+            len(fields) != 5
+            or fields[0] not in ("-", ">", "")
+            or not SHA_RE.fullmatch(fields[1])
+        ):
+            raise AuditStop(
+                "unparseable record {!r} from git log {}".format(record[:60], span)
+            )
         mark, sha, parents, tree, message = fields
         if mark == "-":
             boundary[sha] = tree
@@ -408,7 +476,9 @@ def lane_refusal(repo, branch, trunk_tip):
     for sha, message, *_shape in window or ():
         refusal = provenance.loop_trailer_refusal(message)
         if refusal:
-            return "lane {} holds {} - {}".format(branch, sha[:10], refusal), len(window)
+            return "lane {} holds {} - {}".format(branch, sha[:10], refusal), len(
+                window
+            )
     return None, None if window is None else len(window)
 
 
@@ -420,17 +490,25 @@ def audit(repo, trunk_ref, pre, session):
     refusal or failed read."""
     post = snapshot(repo)
     parts = [
-        "trunk {}".format(judge_descent(repo, trunk_ref, pre, post, session, may_create=False)),
-        "archive/lanes {}".format(judge_descent(repo, ARCHIVE, pre, post, session, may_create=True)),
+        "trunk {}".format(
+            judge_descent(repo, trunk_ref, pre, post, session, may_create=False)
+        ),
+        "archive/lanes {}".format(
+            judge_descent(repo, ARCHIVE, pre, post, session, may_create=True)
+        ),
     ]
     for ref in sorted(post):
         if ref in (trunk_ref, ARCHIVE) or pre.get(ref) == post[ref]:
             continue
-        refusal, window = lane_refusal(repo, ref[len(HEADS):], post[trunk_ref])
+        refusal, window = lane_refusal(repo, ref[len(HEADS) :], post[trunk_ref])
         if refusal:
             raise AuditStop(refusal)
-        parts.append("lane {} window {}".format(ref[len(HEADS):], "none" if window is None else window))
-    deleted = sorted(ref[len(HEADS):] for ref in pre if ref not in post)
+        parts.append(
+            "lane {} window {}".format(
+                ref[len(HEADS) :], "none" if window is None else window
+            )
+        )
+    deleted = sorted(ref[len(HEADS) :] for ref in pre if ref not in post)
     if deleted:
         parts.append("deleted, not judged: " + ", ".join(deleted))
     checkout_refusal(repo, trunk_ref)
@@ -451,7 +529,9 @@ def check_lane(repo, branch):
         _code, tip = read(repo, "rev-parse", "--verify", trunk_ref + "^{commit}")
         read(repo, "rev-parse", "--verify", HEADS + branch + "^{commit}")
         if not SHA_RE.fullmatch(tip.strip()):
-            raise AuditStop("unparseable trunk tip {!r} from git rev-parse".format(tip.strip()))
+            raise AuditStop(
+                "unparseable trunk tip {!r} from git rev-parse".format(tip.strip())
+            )
         refusal, window = lane_refusal(repo, branch, tip.strip())
     except AuditStop as exc:
         print("check-lane {}: cannot judge - {}".format(branch, exc))
@@ -459,7 +539,11 @@ def check_lane(repo, branch):
     if refusal:
         print("check-lane {}: refused - {}".format(branch, refusal))
         return 3
-    print("check-lane {}: passes (window {})".format(branch, "none, a person's lane" if window is None else window))
+    print(
+        "check-lane {}: passes (window {})".format(
+            branch, "none, a person's lane" if window is None else window
+        )
+    )
     return 0
 
 
@@ -489,7 +573,11 @@ def run_and_audit(repo, leg, cmd, prompt, out, session, trunk_ref):
         log("stop: leg {} audit: {}".format(leg, exc))
         return 3
     log("leg {} audit: {}".format(leg, summary))
-    log("leg {} exit {}; trunk {} -> {}".format(leg, code, pre[trunk_ref][:8], post[trunk_ref][:8]))
+    log(
+        "leg {} exit {}; trunk {} -> {}".format(
+            leg, code, pre[trunk_ref][:8], post[trunk_ref][:8]
+        )
+    )
     if code != 0:
         log("stop: leg {} exited {}".format(leg, code))
         return 3
@@ -541,7 +629,11 @@ def main(argv=None):
                     until = until.astimezone()
                 delay = (until - dt.datetime.now().astimezone()).total_seconds()
                 if delay > 0:
-                    log("waiting {:.0f} s until {} ({})".format(delay, until, handoff.name))
+                    log(
+                        "waiting {:.0f} s until {} ({})".format(
+                            delay, until, handoff.name
+                        )
+                    )
                     if not args.dry_run:
                         time.sleep(delay)
             except ValueError:
@@ -552,21 +644,35 @@ def main(argv=None):
             return 2
         holder = lease_holder(repo)
         if holder:
-            log("stop: the coordinator lease is held by {} before leg {}".format(holder, leg))
+            log(
+                "stop: the coordinator lease is held by {} before leg {}".format(
+                    holder, leg
+                )
+            )
             return 2
         prompt = leg_prompt(prompt, block, note)
         cmd = [
-            claude, "-p",
-            "--model", args.model,
-            "--permission-mode", "bypassPermissions",
-            "--settings", json.dumps(SETTINGS),
-            "--output-format", "text",
+            claude,
+            "-p",
+            "--model",
+            args.model,
+            "--permission-mode",
+            "bypassPermissions",
+            "--settings",
+            json.dumps(SETTINGS),
+            "--output-format",
+            "text",
         ]
-        out = LOGDIR / "leg-{:02d}-{}.log".format(leg, dt.datetime.now().strftime("%Y%m%d-%H%M%S"))
+        out = LOGDIR / "leg-{:02d}-{}.log".format(
+            leg, dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+        )
         log("leg {} from {} -> {}".format(leg, handoff.name, out.name))
         if args.dry_run:
-            log("dry run: would run {} -p --model {} with <{} chars> on stdin".format(
-                claude, args.model, len(prompt)))
+            log(
+                "dry run: would run {} -p --model {} with <{} chars> on stdin".format(
+                    claude, args.model, len(prompt)
+                )
+            )
             return 0
         stop = run_and_audit(repo, leg, cmd, prompt, out, session, trunk_ref)
         if stop is not None:

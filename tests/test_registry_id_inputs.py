@@ -25,12 +25,12 @@ REJUDGE = load_script("rejudge")
 SRS = """[requirement.SR-184]
 title = "The inspected row"
 requirement = "The delivered record shall name its rubric."
-status = "Approved"
+status = "Accepted"
 
 [requirement.SR-185]
 title = "Its neighbour"
 requirement = "The delivered review shall name its counterpart."
-status = "Approved"
+status = "Accepted"
 """
 
 

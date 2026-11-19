@@ -29,7 +29,7 @@ sources the program measured absent all failed on one of these):
      record — and because the evidence file is a DECLARED STAGE INPUT and the
      stage fingerprint folds this source digest whenever the file is present, a
      source edit moves the stage fingerprint too: the committed `docs/stage`
-     reads STALE and `derive_stage --check` (the commit-bar and CI freshness
+     reads STALE and `derive_stage --check` (the commit-check and CI freshness
      step) FAILS. Stale evidence is a hard finding in the consumer, never a
      warning and never silently ridden.
 
@@ -60,7 +60,7 @@ EVIDENCE_FILE = "docs/test/evidence"
 STACK_FILE = STACK_INI
 
 # THE TIERS A WHOLE-SUITE CLAIM MAY CARRY. `smoke` is deliberately absent: it is
-# a declared SUBSET (docs/stack.ini `[tiers]`), so a green smoke run is not the
+# a declared SUBSET (docs/stack.ini `[tiers]`), so a passing smoke run is not the
 # sentence "every declared test case passed" and a record carrying it could only
 # be a weaker claim wearing the same field. The producer refuses to write one and
 # the verdict refuses to read one — two refusals for one rule, because the file
@@ -82,7 +82,7 @@ def source_paths(root):
 
     ONE HOME, NOT A SECOND LIST. `[paths] src` / `tests` is where the adopter
     already declares what their harness runs over; restating it here would let
-    the evidence bind to a surface the bar does not measure, which is the exact
+    the evidence bind to a surface the checks do not measure, which is the exact
     shape of a claim that is true about the wrong thing.
 
     An absent or malformed `docs/stack.ini` answers `[]` rather than raising: the
@@ -106,8 +106,8 @@ def source_paths(root):
 
 def source_files(root):
     """Every file of the declared source surface, as `[(relpath, Path)]` sorted by
-    relpath — plus `docs/stack.ini` itself, because it DECLARES the bar (a change
-    to the test command or the tier expressions changes what a green meant).
+    relpath — plus `docs/stack.ini` itself, because it DECLARES the checks (a change
+    to the test command or the tier expressions changes what a pass meant).
 
     Residue is skipped (`_SKIP_DIRS`/`_SKIP_SUFFIXES`); a declared path that is a
     single file is taken as itself; a declared path that does not exist
@@ -200,8 +200,8 @@ HEADER = [
     "#             THE CLAIM IS BOUND TO THE TREE IT WAS MEASURED ON: move a",
     "#             byte either side and this record stops holding, the",
     "#             DevStg-Release rung becomes unreachable again, and",
-    "#             `derive_stage --check` reds until the suite is re-run or the",
-    "#             record is removed. Never edit it to make a red go away.",
+    "#             `derive_stage --check` fails until the suite is re-run or the",
+    "#             record is removed. Never edit it to make a failure go away.",
     "#",
     "# Regenerate: python scripts/record_test_evidence.py",
     "#",

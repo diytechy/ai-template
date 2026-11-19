@@ -1,8 +1,8 @@
 """A COMBINED lane-checkpoint sitting: its scope tokens and its verdict sections.
 
 WHY THIS EXISTS (WI-841). A lane can owe several in-lane judgements at one
-checkpoint - drifted approved rows (the amendment kind), Drafted rows (the
-first-approval kind) and a changed Done-when - and one sitting judges them
+checkpoint - drifted accepted rows (the amendment kind), Drafted rows (the
+first-acceptance kind) and a changed Done-when - and one sitting judges them
 all. Its row's `Adjudicates` cell holds `<kind>:<id>` tokens and its verdict
 holds one `## <kind>` section per kind. Three readers ask about that shape and
 must not disagree: the brief that composes the sitting
@@ -33,29 +33,29 @@ Contract IF-287: a combined sitting's grammar. `SITTING` is the brief class and
     requested kinds), which the coordinator's verdict check and the Done-when
     holds both consume; `requested_path`/`render_requested`/`read_requested`
     are the binding of a sitting's requested kinds beside its verdict;
-    `write_binding` is its one writer and `accepted`/`accepted_at` the one
+    `write_binding` is its one writer and `recorded`/`recorded_at` the one
     reader every consumer of a verdict goes through (round 11). A binding may
     also carry the identity cell, `rows = <ID>=sha256:<16 lowercase hex>`
     joined by `;`, naming each row its brief showed with the digest of that
-    row's approved text: `render_requested(..., identities)` and
+    row's accepted text: `render_requested(..., identities)` and
     `write_binding(..., identities)` write it only when identities are given,
     `read_requested` ignores it, `read_identities(text)` returns
     `({id: digest}, None)`, or `(None, reason)` for no cell, a malformed
-    token or a repeated id, and `accepted_identities(root, rev, verdict)` is
-    the one reader of an ACCEPTED verdict's bound identities, `(None,
-    reason)` for a verdict `accepted_at` does not read as accepted. A dispute
+    token or a repeated id, and `recorded_identities(root, rev, verdict)` is
+    the one reader of a RECORDED verdict's bound identities, `(None,
+    reason)` for a verdict `recorded_at` does not read as recorded. A dispute
     binding may also carry the findings-file record cell, `findings_file =
     <repo-relative path>`, naming the findings file its brief was composed
     over: `render_requested(..., findings_file)` and `write_binding(...,
     findings_file)` write it only when a path is given, `read_requested`
     ignores it, and `read_findings_file(text)` returns the path, or None for
     no cell or an empty one; `judged_rows(parsed)` is the ONE reader of the
-    rows an accepted verdict authorizes an act on - an APPROVE row, a CLARITY
+    rows a recorded verdict authorizes an act on - an ACCEPT row, a CLARITY
     row, and a MEANING row only with its bless mark - which the merge's
     backing checks and the act assembler both read. `review_line(text)`
     is the ONE reader of a review round's `VERDICT:` line, which the attended
     filing boundary and the merge gate's round reader both consume. Pure
-    functions over text, except `write_binding` (one file) and `accepted_at`
+    functions over text, except `write_binding` (one file) and `recorded_at`
     (git reads).
 """
 
@@ -93,19 +93,19 @@ __all__ = [
     "REQUESTED_SUFFIX",
     "OUTCOMES",
     "write_binding",
-    "accepted",
-    "accepted_part",
-    "accepted_at",
-    "accepted_identities",
+    "recorded",
+    "recorded_part",
+    "recorded_at",
+    "recorded_identities",
     "judged_rows",
-    "unaccepted_refusal",
+    "unrecorded_refusal",
     "REVIEWS",
     "branch_verdicts",
     "uncovered_refusal",
 ]
 
 SITTING = "combined"
-KINDS = ("amendment", "first-approval", "done-when")
+KINDS = ("amendment", "first-acceptance", "done-when")
 # A combined verdict's section heading: a KIND-FORM heading (a lower-case,
 # hyphenated brief-class token) alone on its line - any kind, not only the
 # composable three, so an unrequested section is seen and refused (round 9).
@@ -209,8 +209,8 @@ def brief_scope(meta, kind):
 
 def bounds_acts(meta):
     """Does this claimed row's frontmatter RECORD a scope that bounds its
-    lane's approval acts: an adjudication-kind row (its scope may be empty,
-    which bounds every act out), a row scoping a first approval or an
+    lane's acceptance acts: an adjudication-kind row (its scope may be empty,
+    which bounds every act out), a row scoping a first acceptance or an
     amendment, or a combined row with a malformed token? The merge slot asks
     it of every claimed row, so one such row bounds the whole lane (WI-849).
 
@@ -221,7 +221,7 @@ def bounds_acts(meta):
     return (
         kind == "adjudication"
         or bool(bad)
-        or any(k in found for k in ("first-approval", "amendment"))
+        or any(k in found for k in ("first-acceptance", "amendment"))
     )
 
 
@@ -258,7 +258,7 @@ def malformed_refusal(metas):
 DONE_WHEN_OUTCOMES = ("CLARITY", "BLESSED", "SUCCESSOR")
 GRAMMAR = {
     "amendment": ("VERDICT", ("MEANING", "CLARITY"), ("rows",)),
-    "first-approval": ("OUTCOME", ("APPROVE", "RETURN"), ("rows",)),
+    "first-acceptance": ("OUTCOME", ("ACCEPT", "RETURN"), ("rows",)),
     "done-when": ("DONE-WHEN", DONE_WHEN_OUTCOMES, ("changes", "digest")),
     SITTING: ("SITTING", ("JUDGED",), ("kinds",)),
 }
@@ -276,8 +276,8 @@ def requested_path(verdict_path):
 
 
 # The OUTCOME a binding records: `pending` from reservation until the route
-# that ran the call records `accepted` (its own validation passed) or `failed`.
-OUTCOMES = ("pending", "accepted", "failed")
+# that ran the call writes `recorded` (its own validation passed) or `failed`.
+OUTCOMES = ("pending", "recorded", "failed")
 
 
 def render_requested(
@@ -287,7 +287,7 @@ def render_requested(
     call's recorded outcome; when `findings_file` is given, the record of the
     findings file a dispute brief was composed over; and, when `identities`
     (`{row id: digest}`) is given, the identity cell naming each judged row's
-    approved-text digest.
+    accepted-text digest.
 
     Implements: SR-232, SR-178, LLR-310, LLR-359
     """
@@ -617,7 +617,7 @@ def sitting_refusal(text, where, kinds):
     return parse(text, SITTING, kinds, where)[1]
 
 
-# --- acceptance is a RECORDED fact (WI-841 round 11) --------------------------
+# --- the outcome is a RECORDED fact (WI-841 round 11) -------------------------
 
 
 def write_binding(
@@ -634,7 +634,7 @@ def write_binding(
     `identities` is given, and its findings-file record when `findings_file`
     is given. `exclusive` creates it (the entry point's
     reservation, which refuses an existing one); otherwise it overwrites,
-    which is how the route that ran the call records `accepted` or `failed`.
+    which is how the route that ran the call writes `recorded` or `failed`.
     Raises OSError as `open` does; the caller says what it means.
 
     Implements: SR-232, SR-178, LLR-310, LLR-359
@@ -644,21 +644,22 @@ def write_binding(
         fh.write(render_requested(brief, kinds, outcome, identities, findings_file))
 
 
-def accepted(text, binding_text):
+def recorded(text, binding_text):
     """THE one reader every consumer of a verdict file goes through:
     `{kind: (label, fields, body, rows)}` (`rows`: the part's per-row
-    rulings, `kitlib.verdict.row_rulings`) for a verdict whose binding records it
-    ACCEPTED by the route that ran the call and which `parse` reads as valid
-    against that binding's brief and requested kinds; None for anything else -
+    rulings, `kitlib.verdict.row_rulings`) for a verdict whose binding holds
+    the outcome `recorded`, written by the route that ran the call, and which
+    `parse` reads as valid against that binding's brief and requested kinds;
+    None for anything else -
     no binding, a pending or failed outcome, an invalid verdict, or a brief
     class this grammar does not cover (which is simply no blessing of these
-    kinds, never an error). A verdict's acceptance is the recorded fact, never
+    kinds, never an error). A verdict's outcome is the recorded fact, never
     an inference from its text.
 
     Implements: SR-232, LLR-310
     """
     bound = read_requested(binding_text)
-    if not bound or bound[2] != "accepted":
+    if not bound or bound[2] != "recorded":
         return None
     brief, kinds, _outcome = bound
     lines, _refusal = parse(text or "", brief, kinds)
@@ -671,23 +672,23 @@ def accepted(text, binding_text):
     }
 
 
-def accepted_part(text, binding_text, kind):
-    """`kind`'s own text in an accepted verdict (`accepted`), or None.
+def recorded_part(text, binding_text, kind):
+    """`kind`'s own text in a recorded verdict (`recorded`), or None.
 
     Implements: SR-232, LLR-310
     """
-    found = accepted(text, binding_text) or {}
+    found = recorded(text, binding_text) or {}
     return found[kind][2] if kind in found else None
 
 
-def accepted_at(root, rev, verdict_path):
-    """`accepted` for the verdict file at `verdict_path` and its binding, both
+def recorded_at(root, rev, verdict_path):
+    """`recorded` for the verdict file at `verdict_path` and its binding, both
     read at the commit `rev` (None: the index) - the git side of the one
     reader, so no consumer fetches a verdict and decides about it alone.
 
     Implements: SR-232, LLR-310
     """
-    return accepted(*_texts_at(root, rev, verdict_path)) if verdict_path else None
+    return recorded(*_texts_at(root, rev, verdict_path)) if verdict_path else None
 
 
 def _texts_at(root, rev, verdict_path):
@@ -700,41 +701,41 @@ def _texts_at(root, rev, verdict_path):
     ]
 
 
-def accepted_identities(root, rev, verdict_path):
-    """`({row id: digest}, None)`: the identities the binding of an ACCEPTED
+def recorded_identities(root, rev, verdict_path):
+    """`({row id: digest}, None)`: the identities the binding of a RECORDED
     verdict records, both read at the commit `rev`, or `(None, reason)`. A
-    verdict `accepted` does not read as accepted binds nothing, and a binding
+    verdict `recorded` does not read as recorded binds nothing, and a binding
     with no identity cell, or a malformed one, binds no text
     (`read_identities`).
 
     Implements: SR-178, LLR-359
     """
     texts = _texts_at(root, rev, verdict_path) if verdict_path else [None, None]
-    if not accepted(*texts):
-        return None, "the verdict {} is not accepted at {}".format(
+    if not recorded(*texts):
+        return None, "the verdict {} is not recorded at {}".format(
             verdict_path, "the index" if rev is None else rev
         )
     return read_identities(texts[1])
 
 
-# The rulings that authorize each kind's act on a row: a first approval's
-# APPROVE flips it, an amendment's CLARITY re-attests it, and so does its
+# The rulings that authorize each kind's act on a row: a first acceptance's
+# ACCEPT flips it, an amendment's CLARITY re-accepts it, and so does its
 # MEANING, but only on a row the part marks `[MEANING+BLESS]` (`judged_rows`).
 # The held-rung CLARITY-only rule is acceptance_record's, on top of this.
-_AUTHORIZING = {"first-approval": ("APPROVE",), "amendment": ("MEANING", "CLARITY")}
+_AUTHORIZING = {"first-acceptance": ("ACCEPT",), "amendment": ("MEANING", "CLARITY")}
 # The sentence a refusal carries when an amendment row it names is
 # unauthorized; a refusal naming no such row omits it.
 _BLESS_REMEDY = (
-    "An amendment's MEANING row authorizes a re-attestation only when its "
+    "An amendment's MEANING row authorizes a re-acceptance only when its "
     "verdict marks it `[MEANING+BLESS]`: re-sit that row."
 )
 
 
 def judged_rows(parsed):
-    """`{(kind, row)}` an accepted parsed verdict (`accepted`) rules in a way
-    that authorizes that kind's act on the row: the ONE reader of what an
-    accepted verdict authorizes an act on, which the merge's backing checks
-    and the act assembler both read. An APPROVE row, a CLARITY row, and an
+    """`{(kind, row)}` a recorded parsed verdict (`recorded`) rules in a way
+    that authorizes that kind's act on the row: the ONE reader of what a
+    recorded verdict authorizes an act on, which the merge's backing checks
+    and the act assembler both read. An ACCEPT row, a CLARITY row, and an
     amendment's MEANING row only when its part marks it blessed
     (`kitlib.verdict.blessed_rows`, which reads a row tagged two ways as
     unblessed).
@@ -755,23 +756,23 @@ def judged_rows(parsed):
 
 def _named_line(root, rev, act):
     """The refusal line for one act naming a verdict, or None: the verdict is
-    not accepted, or it does not authorize a row the act re-attests."""
+    not recorded, or it does not authorize a row the act re-accepts."""
     verdict = str(act["verdict"]).strip()
-    parsed = accepted_at(root, rev, verdict)
+    parsed = recorded_at(root, rev, verdict)
     if not parsed:
         return "  {}".format(verdict)
     judged = judged_rows(parsed)
-    rows = [str(r) for r in act.get("reattested") or []]
+    rows = [str(r) for r in act.get("reaccepted") or []]
     unjudged = [r for r in rows if ("amendment", r) not in judged]
     if not unjudged:
         return None
     return "  {} (does not authorize {})".format(verdict, ", ".join(unjudged))
 
 
-def unaccepted_refusal(root, rev, acts):
-    """Why a merge must refuse the approval acts it adds, or None: EVERY act
-    that names a verdict must name one `accepted_at` reads as accepted at
-    `rev` AND that authorizes each row the act re-attests (`judged_rows`;
+def unrecorded_refusal(root, rev, acts):
+    """Why a merge must refuse the acceptance acts it adds, or None: EVERY act
+    that names a verdict must name one `recorded_at` reads as recorded at
+    `rev` AND that authorizes each row the act re-accepts (`judged_rows`;
     round 16). An act naming no verdict is `uncovered_refusal`'s; acts
     already on trunk are never passed here.
 
@@ -781,15 +782,15 @@ def unaccepted_refusal(root, rev, acts):
     lines = [line for line in (_named_line(root, rev, act) for act in named) if line]
     if not lines:
         return None
-    # Only an accepted verdict's "(does not authorize ...)" line names an
-    # amendment row a mark could authorize; an unaccepted verdict's does not.
+    # Only a recorded verdict's "(does not authorize ...)" line names an
+    # amendment row a mark could authorize; an unrecorded verdict's does not.
     unmarked = any(" (does not authorize " in line for line in lines)
     return (
-        "the adjudication's act names a verdict no route recorded ACCEPTED, or "
-        "one that does not authorize the rows it re-attests; nothing was "
+        "the adjudication's act names a verdict no route RECORDED, or "
+        "one that does not authorize the rows it re-accepts; nothing was "
         "merged:\n{}\nRemedy: re-sit the adjudication through the loop or the "
         "coordinator's entry point, which records its outcome beside the "
-        "verdict, and name the accepted verdict that authorizes those "
+        "verdict, and name the recorded verdict that authorizes those "
         "rows.{}".format("\n".join(lines), " " + _BLESS_REMEDY if unmarked else "")
     )
 
@@ -797,8 +798,8 @@ def unaccepted_refusal(root, rev, acts):
 # The review records a lane's verdicts and their bindings live under.
 REVIEWS = "docs/reviews"
 # Which adjudication kind an act-ledger entry's key needs: a flip is a first
-# approval's act, a re-attestation an amendment's.
-_ACT_KINDS = (("approved", "first-approval"), ("reattested", "amendment"))
+# acceptance's act, a re-acceptance an amendment's.
+_ACT_KINDS = (("accepted", "first-acceptance"), ("reaccepted", "amendment"))
 
 
 def branch_verdicts(root, base, rev):
@@ -815,14 +816,14 @@ def branch_verdicts(root, base, rev):
 
 
 def uncovered_refusal(root, base, rev, acts):
-    """Why a merge must refuse the approval acts it adds, or None, WHETHER OR
+    """Why a merge must refuse the acceptance acts it adds, or None, WHETHER OR
     NOT an act names a verdict (WI-841 rounds 14, 16): every ROW an added act
-    flips must be ruled APPROVE in a first-approval part, and every row it
-    re-attests ruled CLARITY, or MEANING with the bless mark, in an amendment
-    part (`judged_rows`), of an ACCEPTED
-    verdict (`accepted_at`) among the bindings this branch carries
+    flips must be ruled ACCEPT in a first-acceptance part, and every row it
+    re-accepts ruled CLARITY, or MEANING with the bless mark, in an amendment
+    part (`judged_rows`), of a RECORDED
+    verdict (`recorded_at`) among the bindings this branch carries
     (`branch_verdicts`), single-kind or combined. An act's authority is the
-    judgement of ITS rows: an accepted verdict over other rows authorizes
+    judgement of ITS rows: a recorded verdict over other rows authorizes
     nothing here. Each unauthorized row is named with its kind,
     and the bless-mark remedy follows only when one is an amendment row.
 
@@ -839,19 +840,19 @@ def uncovered_refusal(root, base, rev, acts):
     )
     judged = set()
     for verdict in branch_verdicts(root, base, rev) if needed else ():
-        judged |= judged_rows(accepted_at(root, rev, verdict))
+        judged |= judged_rows(recorded_at(root, rev, verdict))
     missing = [(kind, rid) for kind, rid in needed if (kind, rid) not in judged]
     if not missing:
         return None
     amended = any(kind == "amendment" for kind, _rid in missing)
     return (
-        "the adjudication's act takes rows no ACCEPTED verdict in this branch "
+        "the adjudication's act takes rows no RECORDED verdict in this branch "
         "authorizes (an act's authority is the judgement of its own rows, "
         "named or not); nothing was merged:\n{}\nRemedy: re-sit the "
         "adjudication of those rows through the loop or the coordinator's "
-        "entry point, whose binding records it accepted.{}".format(
+        "entry point, whose binding records the outcome.{}".format(
             "\n".join(
-                "  {} ({}) is authorized by no accepted verdict".format(r, k)
+                "  {} ({}) is authorized by no recorded verdict".format(r, k)
                 for k, r in missing
             ),
             " " + _BLESS_REMEDY if amended else "",

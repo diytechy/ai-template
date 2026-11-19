@@ -67,7 +67,7 @@ token_file_variable = "AGENT_CLAUDE_TOKEN_FILE"
 """.replace("{template}", TEMPLATE)
 VERDICT = taa.VERDICT
 WI = "WI-9"
-RETAIN = '["amendment", "first-approval", "combined"]'
+RETAIN = '["amendment", "first-acceptance", "combined"]'
 SESSION = "20261017T000000Z-abc123"
 
 
@@ -119,7 +119,7 @@ def _lane(tmp_path, dial="DevStg-Needs", retained=True):
     taa._write(lane, taa.TCS, taa.SPINE_TCS)
     taa._write(lane, "docs/agents.toml", AGENTS)
     taa._write(lane, "docs/agents-enabled", ENTRY + "\n")
-    set_process_key(lane, "attestation", "human_approval_through", dial)
+    set_process_key(lane, "authority", "operator_accepts_through", dial)
     _dial(lane, retained)
     baseline_snapshot.copy_live(lane, seed=True)
     _commit(lane, "claim and seed")
@@ -137,10 +137,10 @@ def _combined(tmp_path, **kw):
     return primary, lane
 
 
-def _first_approval(tmp_path):
+def _first_acceptance(tmp_path):
     primary, lane = _lane(tmp_path)
     taa._draft(lane)
-    taa._verdict(lane, taa.FIRST_APPROVAL_MIXED, "first-approval")
+    taa._verdict(lane, taa.FIRST_ACCEPTANCE_MIXED, "first-acceptance")
     return primary, lane
 
 
@@ -183,13 +183,13 @@ def _commands(prompt):
     ]
 
 
-def _reattest(lane, prompt):
+def _reaccept(lane, prompt):
     for argv in _commands(prompt):
-        if "--reattests" in argv:
+        if "--reaccepts" in argv:
             verdict = argv[argv.index("--verdict") + 1] if "--verdict" in argv else None
-            ids = baseline_snapshot.parse_reattests(argv[argv.index("--reattests") + 1])
-            baseline_snapshot.copy_live(lane, reattests=ids, verdict=verdict)
-            _commit(lane, "re-attest\n\nWI: {}".format(WI))
+            ids = baseline_snapshot.parse_reaccepts(argv[argv.index("--reaccepts") + 1])
+            baseline_snapshot.copy_live(lane, reaccepts=ids, verdict=verdict)
+            _commit(lane, "re-accept\n\nWI: {}".format(WI))
 
 
 def _flip(lane, prompt):
@@ -198,29 +198,27 @@ def _flip(lane, prompt):
         rel = taa.LLRS if rid.startswith("LLR") else taa.TCS
         text = (lane / rel).read_text(encoding="utf-8")
         line = next(ln for ln in text.splitlines() if ln.startswith(rid + ","))
-        taa._replace(lane, rel, line, line.replace(",Drafted,", ",Approved,"))
+        taa._replace(lane, rel, line, line.replace(",Drafted,", ",Accepted,"))
     return bool(match)
 
 
-def _approve(lane, prompt):
+def _accept(lane, prompt):
     if not _flip(lane, prompt):
         return
     for argv in _commands(prompt):
-        if "--approves" in argv:
-            approves = baseline_snapshot.parse_approves(
-                argv[argv.index("--approves") + 1]
-            )
-            baseline_snapshot.copy_live(lane, approves=approves)
-    _commit(lane, "approve\n\nWI: {}".format(WI))
+        if "--accepts" in argv:
+            accepts = baseline_snapshot.parse_accepts(argv[argv.index("--accepts") + 1])
+            baseline_snapshot.copy_live(lane, accepts=accepts)
+    _commit(lane, "accept\n\nWI: {}".format(WI))
 
 
 def full(lane, prompt):
-    _reattest(lane, prompt)
-    _approve(lane, prompt)
+    _reaccept(lane, prompt)
+    _accept(lane, prompt)
 
 
 def skip_flip(lane, prompt):
-    _reattest(lane, prompt)
+    _reaccept(lane, prompt)
 
 
 def flip_uncommitted(lane, prompt):
@@ -329,7 +327,7 @@ def _owes_no_act(tmp_path, primary, lane):
 
 
 def _inconsistent(tmp_path, primary, lane):
-    # A re-attest of a row below Approved: no act explains it. (A row absent
+    # A re-accept of a row below Accepted: no act explains it. (A row absent
     # from the committed tree is a retirement, not an inconsistent state.)
     taa._draft(lane)
     taa._write(
@@ -337,7 +335,7 @@ def _inconsistent(tmp_path, primary, lane):
         VERDICT,
         "- [CLARITY] LLR-002 Detail -> a -> a -> same\n\nVERDICT: CLARITY rows=1\n",
     )
-    _commit(lane, "a verdict re-attesting a Drafted row")
+    _commit(lane, "a verdict re-accepting a Drafted row")
 
 
 def _dirty(tmp_path, primary, lane):
@@ -382,7 +380,7 @@ def test_the_act_turn_refuses_before_launch_when_held_text_moved(
 ):
     """Implements: TC-398"""
     # A held CLARITY verdict bound to SR-001's text at the sitting; the text
-    # is edited after it, so the act it would take re-attests text nobody
+    # is edited after it, so the act it would take re-accepts text nobody
     # judged. The entry point refuses before launching an adjudicator.
     primary, lane = _lane(tmp_path, dial="DevStg-Release")
     taa._amend(lane)
@@ -403,7 +401,7 @@ def test_the_act_turn_refuses_before_launch_when_held_text_moved(
 def _head_rows(lane):
     return {
         rel: _git(lane, "show", "HEAD:" + rel)
-        for rel in (taa.SRS, "docs/archive/last_approved/" + taa.SRS)
+        for rel in (taa.SRS, "docs/archive/last_accepted/" + taa.SRS)
     }
 
 
@@ -421,20 +419,20 @@ def test_a_retained_and_a_fresh_act_turn_take_the_same_act_from_one_verdict(
     assert "keep: minting a retained session" in results["kept"][0]
     assert "keep: none" in results["fresh"][0]
     assert results["kept"][1] == results["fresh"][1]
-    copy = results["kept"][1]["docs/archive/last_approved/" + taa.SRS]
+    copy = results["kept"][1]["docs/archive/last_accepted/" + taa.SRS]
     assert "add two integers." in copy
     assert "act: complete" in results["kept"][0]
 
 
-def test_a_combined_act_commits_its_amendment_act_before_its_first_approval_act(
+def test_a_combined_act_commits_its_amendment_act_before_its_first_acceptance_act(
     tmp_path, launched
 ):
     """Implements: TC-321"""
     _primary, lane = _combined(tmp_path)
     assert _act(launched, lane) == 0
     subjects = _git(lane, "log", "--format=%s", "-4").splitlines()
-    acts = [s for s in subjects if s in ("re-attest", "approve")]
-    assert acts == ["approve", "re-attest"]  # newest first
+    acts = [s for s in subjects if s in ("re-accept", "accept")]
+    assert acts == ["accept", "re-accept"]  # newest first
 
 
 def test_the_act_turn_reports_success_only_when_no_listed_act_is_left(
@@ -463,7 +461,7 @@ def test_an_act_interrupted_between_flip_and_snapshot_is_refused_dirty_then_reru
     tmp_path, launched, capsys
 ):
     """Implements: TC-321"""
-    _primary, lane = _first_approval(tmp_path)
+    _primary, lane = _first_acceptance(tmp_path)
     launched["act"] = flip_uncommitted
     assert _act(launched, lane) == 1
     assert _act(launched, lane) == 2
@@ -477,7 +475,7 @@ def test_an_act_interrupted_between_flip_and_snapshot_is_refused_dirty_then_reru
     assert "LLR-002" in launched["prompts"][1]
 
 
-def test_a_combined_act_interrupted_between_commits_reruns_with_only_its_first_approval_act(
+def test_a_combined_act_interrupted_between_commits_reruns_with_only_its_first_acceptance_act(
     tmp_path, launched
 ):
     """Implements: TC-321"""
@@ -487,15 +485,15 @@ def test_a_combined_act_interrupted_between_commits_reruns_with_only_its_first_a
     launched["act"] = full
     assert _act(launched, lane) == 0
     first, second = launched["prompts"]
-    assert ["--reattests" in argv for argv in _commands(first)] == [True, False]
+    assert ["--reaccepts" in argv for argv in _commands(first)] == [True, False]
     (only,) = _commands(second)
-    assert "--approves" in only
+    assert "--accepts" in only
     assert _amendment_part(second) == cli.adjudicate_act.NONE_OWED
 
 
 def _amendment_part(prompt):
     """The rendered amendment act of a delivered act brief."""
-    part = prompt.split("--- 1. THE AMENDMENT ACT (re-attestation) ---\n", 1)[1]
+    part = prompt.split("--- 1. THE AMENDMENT ACT (re-acceptance) ---\n", 1)[1]
     return part.split("\n--- 2.", 1)[0]
 
 

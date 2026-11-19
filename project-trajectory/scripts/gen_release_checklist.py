@@ -4,18 +4,18 @@
 Stack-agnostic kit, stdlib-only (Python 3.11+). Most of the harness is machine-
 checkable, but a release still needs a human to *exercise the real product* —
 the Demonstration / Manual / Inspection items that no automated test can honestly
-cover (the owner's final read in process.md). This script collects exactly those, back-linked to
+cover (the operator's final read in process.md). This script collects exactly those, back-linked to
 their requirement ids, into a tick-box checklist so the release sign-off is
 concrete and traceable instead of a vibe.
 
 It pulls, from `docs/`:
     - Stakeholder needs (SN) + their acceptance intent -> "Does the product meet the need?"
-    - System specifications whose Verification is Demonstration / Manual / Inspection
+    - System specifications whose verification method is Demonstration / Manual / Inspection
     - Release-tier test cases, and any non-automated (manual) test cases
     - Provided cross-project interfaces (IF, if present) -> contract still honored?
     - Performance budgets (PB, if present) -> still within allocation? (§9; the
       warn-tier runtime budgets never fail the gate, so a human confirms them here)
-    - Active Approved assumptions and any missing falsifier -> recall whether
+    - Active Accepted assumptions and any missing falsifier -> recall whether
       the assumption has been falsified; a person sets standing
     - A REQUIRED re-judge item (SR-215): the command that files one re-judge
       work item per observation test case due at the release commit, with
@@ -43,10 +43,10 @@ of record in docs/requirements/interfaces.toml).
 Contract IF-018: the human release checklist, written as a Markdown document
     whose ordinary items are `- [ ] <ID> — <what to confirm> (refs)`. It collects
     exactly the rows a machine cannot honestly close: stakeholder needs and
-    their acceptance intent, system specifications whose Verification is
+    their acceptance intent, system specifications whose verification method is
     Demonstration, Manual or Inspection, release-tier and manual test cases,
     the declared interface seams, and the performance budgets whose runtime
-    tier never fails a gate. Its assumptions section lists each active Approved
+    tier never fails a gate. Its assumptions section lists each active Accepted
     assumption and any assumption with no falsifier, once each, marked
     `- [ ] ASSUMPTION <DA-ID> — <falsifier question> (method: <TC IDs>)`.
     Checking an assumption asserts only that it has not been falsified; this
@@ -170,7 +170,7 @@ def assumption_checklist_lines(docs, tcs):
     for row in rows:
         falsifier = (row.get("Falsifier") or "").strip()
         if falsifier and not (
-            row.get("Status") == "Approved" and row.get("Standing") == "active"
+            row.get("Status") == "Accepted" and row.get("Standing") == "active"
         ):
             continue
         rid = row["DA-ID"]
@@ -296,7 +296,7 @@ def _checklist_inputs(docs, phase):
     human_srs = [
         r
         for r in srs
-        if r.get("Verification", "") in HUMAN_METHODS
+        if r.get("VerificationMethod", "") in HUMAN_METHODS
         and _in_phase(r, phases, foundation_phase)
     ]
     # Blank Automated means unclassified: keep it visible for a person.
@@ -332,7 +332,7 @@ def _human_requirement_lines(human_srs):
             L.append(
                 "- [ ] **{}** [{}] — {} (AcceptanceCriteria of {})".format(
                     r["SR-ID"],
-                    r.get("Verification", ""),
+                    r.get("VerificationMethod", ""),
                     r.get("Title", "").strip(),
                     r["SR-ID"],
                 )
@@ -451,11 +451,11 @@ def main():
         "",
         "## 6. Release hygiene",
         "",
-        "- [ ] `python scripts/check.py --stage DevStg-Impl --tier release` is green "
+        "- [ ] `python scripts/check.py --stage DevStg-Impl --tier release` passes "
         "(paste the output in the audit log).",
         _rejudge_checklist_line(docs.resolve().parent),
         "- [ ] CHANGELOG / release notes updated.",
-        "- [ ] Version bumped; any changed `Approved` interface versions "
+        "- [ ] Version bumped; any changed `Accepted` interface versions "
         "communicated to counterparts.",
         "- [ ] Docs (README / quick-reference) match the shipped behavior.",
         "- [ ] README `sn-inventory` bullets still reflect the current "

@@ -1,6 +1,6 @@
 """check_need_form.py — SN-033's declared need-cell form check (WI-454).
 
-SN-033's approved acceptance commissions "a declared check [that] reports the
+SN-033's accepted acceptance commissions "a declared check [that] reports the
 row and phrase when a need cell contains an internal path, implementation-only
 identifier or process citation", with a reviewed exception list for names that
 are themselves user-facing interfaces. The check scans `need` cells ONLY —
@@ -17,7 +17,7 @@ from conftest import ROOT, SCRIPTS, run_py
 # A need cell carrying one token of each of the three classes SN-033 names.
 DIRTY_NEED = (
     "A user can resume work from docs/status.md by setting "
-    "human_approval_through, as SR-137 and process.md §4 describe."
+    "operator_accepts_through, as SR-137 and process.md §4 describe."
 )
 
 
@@ -48,10 +48,10 @@ def test_dirty_need_cell_names_the_row_and_each_offending_phrase(tmp_path):
     assert proc.returncode == 0, "warn-first: findings must not gate by default"
     # SN-033's acceptance requires BOTH the row and the phrase in the report.
     assert "SN-050" in proc.stdout
-    for phrase in ("docs/status.md", "human_approval_through", "SR-137"):
+    for phrase in ("docs/status.md", "operator_accepts_through", "SR-137"):
         assert phrase in proc.stdout, "offending phrase not named: " + phrase
     # One finding per token, once: docs/status.md (path — its inner status.md
-    # is NOT a second finding), human_approval_through, process.md, §4,
+    # is NOT a second finding), operator_accepts_through, process.md, §4,
     # SR-137.
     assert "5 finding(s)" in proc.stdout
 
@@ -266,7 +266,7 @@ def test_a_url_span_stops_at_prose_delimiters(tmp_path):
 def test_a_present_but_vacuous_registry_is_reported_not_clean(tmp_path):
     # The round-1 review's driven find: an emptied registry scanned as a clean
     # tier, and at DevStg-Reqs nothing else in the harness hard-fails on it —
-    # the false green SN-008 forbids, on exactly the registry this check
+    # the false pass SN-008 forbids, on exactly the registry this check
     # guards. Absent stays a clean skip; present-but-empty reports.
     reg = tmp_path / "docs" / "requirements"
     reg.mkdir(parents=True)
@@ -302,7 +302,7 @@ def test_an_example_only_registry_is_a_blank_form_not_a_vacuous_tier(tmp_path):
 
 
 def test_the_live_registry_is_clean_at_zero_findings():
-    # The WI's premise, held as a test: the check landed while the approved
+    # The WI's premise, held as a test: the check landed while the accepted
     # tier was clean (measured 2026-08-13, decision 7 rider 2), so the first
     # row to dirty the tier is the one that reports. A finding here is a real
     # regression of the registry, not of the checker.

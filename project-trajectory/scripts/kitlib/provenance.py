@@ -1,8 +1,8 @@
 """Loop provenance: the trailer every commit the unattended loop makes carries,
 and the marker that tells a commit floor a commit is the loop's.
 
-WHY IT EXISTS. A status change on a rung the approval level holds for a human
-is supposed to mean a human judged. The one observation that would show
+WHY IT EXISTS. A status change on a rung the acceptance level holds for an operator
+is supposed to mean an operator judged. The one observation that would show
 otherwise is such a change arriving in a commit the loop made, and that is
 observable only if every loop-made commit says it is one. Trailers the loop
 wrote before this module appeared on some of its commits and nothing checked
@@ -223,7 +223,7 @@ LOOP_WRITER_SUBJECTS = (
     r"refresh: {branch} onto trunk .+",
     r"partial: .+ -> partial/ \(.*",
     r".+: the work so far, committed as-is \(partial close\)",
-    r"handback: revert {branch} to a bar-inert artefact",
+    r"handback: revert {branch} to a checks-inert artefact",
     r"adjudicate: .+ -> complete/ \(mechanical close\)",
     r"telemetry: session .+",
 )

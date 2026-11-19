@@ -61,14 +61,15 @@ IDE_INSTALL=""
 # Declared roles (space-separated). For each <role>, set:
 #   <role>_CMDS     detection commands; if ANY is on PATH the role reads present
 #   <role>_INSTALL  the install command (empty = nothing to install here)
-ROLES="code design"
+ROLES="code"
 
 # code — a code contributor. The linter/test toolchain is setup.sh's job, so
 # this usually stays empty (baseline runtime + git is what they need here).
 code_CMDS=""
 code_INSTALL=""
 
-# design — a non-code asset designer (art/UI). Example: an SVG editor.
+# design — an EXAMPLE second role, a non-code asset designer (art/UI); add it
+# to ROLES to declare it. Example: an SVG editor.
 design_CMDS="inkscape"
 design_INSTALL=""   # e.g. "sudo apt-get install -y inkscape"
 # ===========================================================================
@@ -300,7 +301,7 @@ else
   say "Product toolchain: run scripts/setup.sh to create .venv + install test tools."
 fi
 
-# --- --check stops here: pure report, always green ---------------------------
+# --- --check stops here: pure report, always passes --------------------------
 if [ "$TIER" = "check" ]; then
   say
   say "$missing component(s) missing. Install them with: sh $0 --baseline"
@@ -407,7 +408,7 @@ case " $SELECTED " in
     if interactive; then
       printf 'Run scripts/setup.sh now for the product toolchain (venv + test tools)? [y/N] '
       read -r ans
-      case "$ans" in [Yy]*) sh scripts/setup.sh ;; *) say "  - skipped setup.sh (run it when ready)" ;; esac
+      case "$ans" in [Yy]*) bash scripts/setup.sh ;; *) say "  - skipped setup.sh (run it when ready)" ;; esac
     fi
     ;;
 esac
@@ -415,4 +416,4 @@ esac
 say
 say "Done. Workstation ready; the pre-commit floor is wired."
 say "If you skipped it above, run scripts/setup.sh for the product toolchain, then"
-say "./scripts/check.sh --stage DevStg-Impl to run the gates."
+say "./scripts/check.sh to run the gates."

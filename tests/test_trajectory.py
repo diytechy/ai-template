@@ -4,7 +4,7 @@ The layer's whole value is what it blocks (cycles, dangling predecessors,
 malformed/duplicate ids) *and* what it deliberately lets through: a
 placeholder-only or absent registry is vacuously clean, a dangling SR ref only
 warns (draft SRs are legitimate), and `docs/trajectory-check: off` silences the
-check entirely. Each is pinned red/green by running the real script over a
+check entirely. Each is pinned failing and passing by running the real script over a
 minimal temp registry (no full scaffold needed — the validator reads the
 `docs/work/` spec folder, which a fixture writes file by file).
 
@@ -39,7 +39,7 @@ WI_COLUMNS = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable"
 SR_WI_COLUMNS = WI_COLUMNS + ",SpecRef"
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status\n"
+    "Permutations,Priority,VerificationMethod,Status\n"
 )
 
 PLACEHOLDER_ROW = (
@@ -558,7 +558,7 @@ def _need_registry(root):
 @pytest.mark.parametrize("need_id", ["SN-1", "SN-404"])
 def test_specref_on_a_registry_carrier_resolves_a_bare_row_id(tmp_path, path, need_id):
     # 2026-09-06: the dual-plan composer refuses any need-carrier fragment that
-    # is not an exact row id, so R-E must hold the same line at the commit bar.
+    # is not an exact row id, so R-E must hold the same line at the commit checks.
     _need_registry(tmp_path)
     write_wis_sr(
         tmp_path,
@@ -675,7 +675,7 @@ def test_nearest_anchor_prefix_pass_beats_difflib_on_a_severe_truncation():
     """The prefix pass must EARN its place, measured — not asserted.
 
     131-REVIEW-A MINOR 5 refuted the original rationale by deleting the branch and
-    watching every test stay green: WI-326's own 44-of-76-char truncation scores
+    watching every test keep passing: WI-326's own 44-of-76-char truncation scores
     0.733 and plain difflib finds it unaided. The branch survives because a
     SEVERER truncation defeats difflib outright, and this pins that exact pair, so
     deleting the branch now fails and the docstring cannot rot back into the
@@ -865,7 +865,7 @@ def test_rf_scaffold_boilerplate_excluded(tmp_path):
     """Implements: TC-100"""
     # R-F negative: the scaffolded README + -000 exemplar are permanent (the
     # WI-251 banner fix) and never read as archivable residue — a fresh scaffold
-    # stays vacuously green.
+    # keeps passing vacuously.
     write_spec(tmp_path, "docs/specs/README.md")
     write_spec(tmp_path, "docs/specs/WI-000.md")
     write_wis_sr(tmp_path, "WI-001,A,scripts,,,done,shipped it,\n")
@@ -959,7 +959,7 @@ def test_a_draft_wi_with_a_filled_deliverable_fails_ra(tmp_path):
 def test_open_wi_depending_on_cancelled_pred_is_flagged(tmp_path):
     # Decision 3 (dead-dep): a live WI whose hard predecessor is cancelled can
     # never become ready — surfaced (warn plain, ERROR under --strict) so the
-    # owner re-homes or cancels it, rather than waiting forever.
+    # operator re-homes or cancels it, rather than waiting forever.
     write_spec(tmp_path, "docs/specs/WI-002.md")
     write_wis_sr(
         tmp_path,
@@ -1023,8 +1023,8 @@ def test_cancelled_id_in_status_md_is_not_forward_only_finding(tmp_path):
 def test_compliant_registry_and_status_passes_strict(tmp_path):
     """Implements: TC-077"""
     # The whole model, coherent: a done row with a Deliverable and no SpecRef, an
-    # open row with an empty Deliverable + resolvable SpecRef -> --strict is fully
-    # green (R-A + R-E). status.md names only the open WI-002, so the restored
+    # open row with an empty Deliverable + resolvable SpecRef -> --strict fully
+    # passes (R-A + R-E). status.md names only the open WI-002, so the restored
     # R-D done-id rule (WI-200) finds nothing (R-B/R-C stay retired, WI-180).
     write_spec(tmp_path, "docs/specs/WI-002.md")
     write_wis_sr(
@@ -1082,7 +1082,7 @@ def test_clean_status_has_no_forward_only_finding(tmp_path):
     # A done WI whose id is NOT echoed in status.md is clean (the file names only
     # the open work ahead), under --strict too.
     write_wis_sr(tmp_path, "WI-001,Shipped,scripts,,,done,shipped it,\n")
-    write_status(tmp_path, "## Next action\n- everything closed; await the owner.\n")
+    write_status(tmp_path, "## Next action\n- everything closed; await the operator.\n")
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert FORWARD_ONLY not in proc.stderr
@@ -1158,7 +1158,7 @@ def test_generated_marker_exempts_only_the_block(tmp_path):
     # And a hybrid file whose hand region is clean stays clean.
     write_status(
         tmp_path,
-        "## Next action\n- await the owner.\n\n"
+        "## Next action\n- await the operator.\n\n"
         + GENERATED_MARKER
         + "\n- WI-001 (from the registry snapshot)\n"
         "<!-- END GENERATED TRAJECTORY SNAPSHOT -->\n",

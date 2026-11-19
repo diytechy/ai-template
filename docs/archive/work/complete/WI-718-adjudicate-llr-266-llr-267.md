@@ -88,7 +88,7 @@ buildtier = "quick"
 priority = 3
 specref = "docs/requirements/system-requirements.toml"
 sr_refs = ["SR-222", "SR-227"]
-bar = "DevStg-Reqs"
+checks_stage = "DevStg-Reqs"
 ```
 
 IN SCOPE — fourteen cells across ten Drafted rows, amended in place with every

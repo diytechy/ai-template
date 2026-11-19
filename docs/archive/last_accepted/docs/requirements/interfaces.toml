@@ -1,0 +1,2833 @@
+# docs/requirements/interfaces.toml — INTERFACE DEFINITIONS, the kit's own.
+#
+# ONE ROW IS ONE OWNER, ITS CONSUMERS, AND A TYPED STATEMENT OF THE INFORMATION
+# (OI-67 ruled (a), 2026-08-29). An interface says what the information plugs
+# into, who it serves, and what the data is — and nothing else. A request and
+# its answer are two rows. A module that reads one file and writes another is
+# two rows. A crossing of the SYSTEM boundary is not a row here: those live in
+# `docs/requirements/external.toml`, and a row here ties BACK to one only when
+# it realizes a crossing. Everything else is an internal seam. A row whose
+# owner AND far side are all `external:` parties has no in-tree endpoint — no
+# kit module whose header can hold our reading of the surface — so it is not
+# a seam of this system, and `trace.py --strict` refuses it.
+#
+# THE FIELDS — what each one is, and how it is used.
+#
+#   owner            REQUIRED. The providing THING — the thing the information
+#                    plugs into — in the ONE spelling `consumers` uses: a module
+#                    path (`scripts/check`), a file or directory path
+#                    (`docs/stack.ini`, `docs/work/`), or an `external:` party
+#                    (`external:git`). NEVER a requirement or design id: the
+#                    requirement this seam answers to is REACHED through the
+#                    owner — the design rows whose `module` names it, or the
+#                    `Implements:` line in its header — and is not stated on the
+#                    row. `trace.py` fails a row whose owner is id-shaped or
+#                    names several things, and WARNS (never gates) on a
+#                    module-shaped owner that reaches no requirement either way.
+#                    A file- or directory-owned seam legitimately has no design
+#                    row; 31 rows are owned that way today.
+#
+#                    A GENERATED FILE IS OWNED BY THE MODULE THAT WRITES IT —
+#                    the writer is the one home a check can hold to the code;
+#                    a hand-edited file (a registry, `stack.ini`, `process.toml`)
+#                    is owned as itself and declares in its own header.
+#
+#   requestors /     THE FAR SIDE NAMES THE DIRECTION. Exactly ONE of the two
+#   consumers        is set, a LIST either way. `requestors` are the sides that
+#                    put information INTO the surface the owner defines — they
+#                    call the function, invoke the CLI, set the env var, write
+#                    the file. `consumers` are the sides that take what the
+#                    owner emits — they read the file, the exit code, the
+#                    stdout. The owner DEFINES the surface in both cases; the
+#                    key says which way the information runs, so one row is one
+#                    direction by construction. A row naming both or neither is
+#                    a `trace.py` finding. Name the sides you have MEASURED, and
+#                    an open-ended class as `external:<class>`. Every endpoint
+#                    cell is validated against the tree, warn-first. THE SEEDED
+#                    CHOICE ON THIS TREE FOLLOWS THE CHANNEL (`cli`, `env` and
+#                    `call` rows name requestors; the rest name consumers) and
+#                    is confirmed row by row as the definitions move.
+#
+#   channel          REQUIRED, CLOSED (`kitlib.spine.IF_CHANNELS`): what
+#                    crosses, typed —
+#                      cli        an invocation surface: argv flags and arguments
+#                      exit-code  a finite code alphabet a process returns
+#                      stdout     text a process emits: findings, a report
+#                      file       a file or directory medium with a schema
+#                      call       an in-process API another module imports
+#                      env        an environment variable or launcher slot
+#                      git        repository state: refs, trailers, a staged diff
+#                      bytes      opaque content: fetched sources, a vendored tree
+#                    A dial read from a config file is `file` (the medium is the
+#                    file; `data` names the key). A source tree walked by AST is
+#                    `file`. THE SEEDED VALUES ON THIS TREE ARE A CLASSIFICATION,
+#                    NOT A READING: every row's channel was seeded mechanically
+#                    from a per-row read on 2026-08-29 and is confirmed row by
+#                    row as the definitions move (below).
+#
+#   data             OPTIONAL — the finite alphabet when there is one
+#                    (`0 pass · 1 fail · 2 usage`, `off | ask | deny`) or a
+#                    one-clause schema pointer. Ceiling 160 characters; no
+#                    work-item id, no decision citation, no rationale
+#                    connective; a named symbol or path must resolve
+#                    (warn-first, `trace.py`). It is the row's typed summary,
+#                    not the definition.
+#
+#   THE DEFINITION LIVES BESIDE THE CODE. What the owner promises — the flags,
+#   the schema, the guarantees — is the `Contract IF-###:` body under the
+#   owner's `Contracts:` marker (a module docstring, or a `#` header at the top
+#   of a registry, config or hook file), harvested into
+#   `docs/interface-reference.md` under a freshness gate. It is stated ONCE,
+#   there; a row points at it by declaring the seam and stops.
+#
+#   THE GATE IS ARMED. A row whose owner declares it but states no `Contract
+#                    IF-###:` body is a `check_trajectory --strict` finding — an
+#                    interface with no definition — and so is a source whose
+#                    header the contract grammar refuses (its declared rows
+#                    count as unstated). An owner that declares NOTHING only
+#                    WARNS (the owner-exact reverse check): the row is still on
+#                    the migration list, visible in the reference's summary
+#                    line, and is not gated. An `external:`-owned row is stated by the kit
+#                    module on its FAR SIDE (the consumer that reads the external
+#                    surface, or the requestor that drives it): the external
+#                    party's header is not ours to write, and that module is the
+#                    one in-tree home of OUR READING of the surface. A source
+#                    declaring a row the registry owns to another in-tree source
+#                    is a finding too — the owner is the one declaration site.
+#                    The retired cells (`contract`, `provider`, `req_refs`,
+#                    `signal`, `signal_note`) are `trace.py --strict` findings
+#                    wherever they still appear.
+#
+#   rationale        OPTIONAL — WHY the seam is drawn HERE: what breaks without
+#                    it, which alternative lost. A reason cell like `notes` — it
+#                    takes the ARGUMENT, never the CITATION: no work-item id,
+#                    ruling, review-round or open-item reference, decision id,
+#                    edit verb or date stamp; that history belongs in the log
+#                    (process.md §3). `trace.py`'s IF citation-frame arm reads
+#                    it, warn-first. An EMPTY string is a hard carrier refusal:
+#                    a row either carries the key or omits it.
+#
+#   verified_by      OPTIONAL, and an EMPTY cell is the ordinary answer: this
+#                    seam is verified in its own right. Filled, it names the
+#                    parent whose tests cover a low-level seam — a `TC-###` or
+#                    an `LLR-###`. Warn-first that the pointer resolves; nothing
+#                    reads whether the named test really exercises the seam.
+#
+#   carried_by       OPTIONAL interface composition: a constituent naming the
+#                    bundle that carries it (`carried_by = "IF-###"`). A
+#                    constituent is still one owner and one channel; the bundle
+#                    is the unit a consumer pins. The carriage graph must
+#                    resolve and be acyclic; depth past 2 warns.
+#
+#   version          The contract's own version string, this row's to set.
+#
+#   status           The ONE maturity field, the spine's words: `Drafted` |
+#                    `Accepted`, shared with `external.toml`. `Founded` is NOT
+#                    APPLICABLE here — it means settled AND demonstrated, while
+#                    an acceptance says the seam is AGREED.
+#
+#                    FLIP AUTHORITY IS DERIVED, NOT DECLARED: a `status` cell
+#                    here may be machine-flipped only when this registry's stage
+#                    rung — DevStg-Arch — is not operator-held under the
+#                    `[authority] operator_accepts_through` dial; the predicate
+#                    is `agent_common.operator_accepts(docs, "interfaces")`. READ
+#                    THE DIAL, DO NOT ASSUME IT: this repo runs `DevStg-Needs`-
+#                    held only, so the predicate answers FALSE here. What keeps
+#                    the cells the owner's today is that the kit ships NO
+#                    automated writer for an off-spine `status` — they are
+#                    hand-edited, in a reviewed Status-change commit. Every live
+#                    row reads `Drafted`: a deliberate non-claim, not a backlog.
+#
+#   interface_from_external / interface_to_external
+#                    OPTIONAL and directional — `"B-##"`, naming the boundary
+#                    crossing in `external.toml` this row REALIZES: `_from_` for
+#                    a crossing that comes in, `_to_` for one that goes out. A
+#                    row with neither key is an internal seam, and that ABSENCE
+#                    is the statement.
+#
+#                    ONE CROSSING IS DELIBERATELY REALIZED BY NOTHING: `B-02`
+#                    (authority in — rulings, acceptances and Status flips)
+#                    has no port of its own. Authority enters as CONTENT on
+#                    B-01's write path: an operator edits a Status cell and commits,
+#                    and the hook floor admits that write as it admits any
+#                    other. The condition that changes the answer is concrete —
+#                    when the recorder requiring an acceptance to be stamped on
+#                    the accepted artifact's own row ships (`SR-140`), its
+#                    contract IS an admission surface for authority. Until then
+#                    `trace.py`'s advisory naming B-02 unrealized reports a
+#                    deliberate state.
+#
+#   component        OPTIONAL — the `CMP-###` this seam belongs to.
+#
+#   bridged_by / coincident
+#                    OPTIONAL, and read only on a row with a tie-back above: a
+#                    boundary seam's reading reaches a stakeholder's outcome
+#                    either through claims about the world, `bridged_by` naming
+#                    those assumptions (`DA-###` in `assumptions.toml`), or
+#                    because its reading IS the outcome, `coincident` saying
+#                    why. A boundary row with neither is one `trace.py`
+#                    advisory; a `bridged_by` entry no assumption row declares
+#                    is a `trace.py --strict` finding. The whole rule waits for
+#                    the first real row in `assumptions.toml`; this repository
+#                    has its rows, so every boundary row here carries one of
+#                    the two. A registry format an adopter writes is
+#                    coincident: the seam delivers the format, and what the
+#                    rows say is judged at their own tiers.
+#
+#   notes            OPTIONAL free prose about the row. A reason cell: argument,
+#                    never citation. Honesty valve — the word `source` (produces
+#                    output, consumes nothing declared) or `sink` (consumes,
+#                    produces nothing) silences the missing-seam coverage
+#                    warning: `source` marks the row's OWNER, `sink` marks its
+#                    far side.
+#
+#   ONE ROW, ONE KIND. A request and its answer are two rows with one owner (a
+#   `cli` row in, an `exit-code` row out); a read and a write of one medium are
+#   two rows; a bundle a consumer really pins is declared once with its
+#   constituents on `carried_by`. The one class deliberately left un-split is
+#   the harness's argv into each checker it runs: `scripts/check`'s step table
+#   is the single requestor of all of them, and the exit-code rows are where
+#   its decision plugs in.
+#
+# Contracts: IF-057 — the interface seam this file declares (process.md §8; row of
+# record in docs/requirements/interfaces.toml).
+#
+# Contract IF-057: this registry as a RESOLUTION surface — one
+#     `[interface.IF-###]` table per seam, addressable by id, its cells as
+#     documented above. An `IF-###` cite in a proposed decomposition resolves
+#     against these ids: a cite matching no table is a finding, and an absent
+#     registry leaves such cites unvalidated with an honest note rather than
+#     manufacturing findings against a file that is not there.
+
+[interface.IF-001]
+owner = "scripts/trace"
+consumers = ["scripts/check"]
+channel = "stdout"
+data = "orphan, integrity, status and advisory findings, printed whole for the harness to relay"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-145]
+owner = "scripts/trace"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 clean · 1 a finding under --strict, an integrity finding under --strict-integrity, or a stale brief under --accept modified --check"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-146]
+owner = "scripts/trace"
+consumers = ["external:downstream adopter"]
+channel = "file"
+data = "docs/test/report.md — metric counts, the orphan and finding lists, the joined SN -> SR -> LLR -> TC forest"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+bridged_by = ["DA-001"]
+
+[interface.IF-166]
+owner = "scripts/trace"
+consumers = ["external:downstream adopter"]
+channel = "file"
+data = "docs/test/report.html — a self-contained collapsible <details> tree of the SN -> SR -> LLR -> TC forest, written only under --html"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+bridged_by = ["DA-001"]
+
+[interface.IF-002]
+owner = "scripts/check_docs"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 pass · 1 broken link, README finding, or strict-mode orphan"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-003]
+owner = "scripts/check_flows"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 pass | 1 findings | 2 usage"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-004]
+owner = "scripts/check_perf"
+consumers = ["scripts/check"]
+channel = "stdout"
+data = "check_perf: OK - <summary> or FAIL - <summary>, plus one <status> - <PB-ID> <metric> line per non-clean budget"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-147]
+owner = "scripts/check_perf"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 OK, SKIP or WARN · 1 a Gate=fail budget breached in the run tier, or --update-baseline with no metrics"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-167]
+owner = "scripts/check_perf"
+consumers = ["external:downstream adopter"]
+channel = "file"
+data = "docs/test/perf-report.md — one row per in-tier budget: status, PB id, metric, measured, baseline, delta, budget, direction, gate, plus a findings list"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The report states each in-tier budget's measured value against its budget; the stated result is the outcome, and what it gates is the harness's own verdict."""
+
+[interface.IF-005]
+owner = "scripts/check_privacy"
+consumers = ["scripts/check"]
+channel = "stdout"
+data = "one line per leak: <location>: [<label>] <excerpt>, then one summary line naming the scan and the armed layers"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-148]
+owner = "scripts/check_privacy"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 clean or both layers off · 1 one or more findings in the tracked-file sweep"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-006]
+owner = "scripts/check_stubs"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 pass or warn · 1 stub found under --strict"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-008]
+owner = "scripts/check_doc_refs"
+consumers = ["scripts/check"]
+channel = "stdout"
+data = "dangling and untraced findings by file:line, with per-tier counts"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-009]
+owner = "scripts/check_trajectory"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 clean · 1 hard error · 2 usage"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-010]
+owner = "scripts/gen_arch_map"
+requestors = ["scripts/check", "scripts/trunk_step"]
+channel = "cli"
+data = "--doc | --cli-doc | --contracts-doc | --src | --mode | --check | --strict-parse | --backlink-coverage | --strict-backlinks"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-150]
+owner = "scripts/gen_arch_map"
+consumers = ["scripts/check", "scripts/trunk_step"]
+channel = "exit-code"
+data = "0 current · 1 a stale target under --check, an unparseable module under --strict-parse, or coverage below the minimum under --strict-backlinks"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-011]
+owner = "scripts/gen_trajectory"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 clean or vacuous · 1 invalid registry, stale HTML, or stale status snapshot under --check"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-012]
+owner = "scripts/gen_okf"
+consumers = ["scripts/check", "scripts/trunk_step"]
+channel = "exit-code"
+data = "0 clean, vacuous or opted out · 1 stale, missing or extra bundle file under --check"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-149]
+owner = "scripts/gen_okf"
+consumers = ["scripts/traj_parse", "external:downstream adopter"]
+channel = "file"
+data = "docs/okf/ — one GENERATED-bannered file per concept, sorted, clockless; extras pruned on write"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The exported concept files are the output an adopter asked for, regenerated whole from the registries; the files are the outcome."""
+
+[interface.IF-013]
+owner = "scripts/check"
+consumers = ["external:downstream adopter"]
+channel = "exit-code"
+data = "0 pass · 1 fail · 2 usage"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+bridged_by = ["DA-001", "DA-002"]
+
+[interface.IF-014]
+owner = "scripts/bootstrap"
+consumers = ["external:downstream adopter"]
+channel = "bytes"
+data = "the scaffolded template tree written under the destination root"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+bridged_by = ["DA-002", "DA-009", "DA-014"]
+
+[interface.IF-015]
+owner = "scripts/agent_loop"
+consumers = ["external:downstream adopter"]
+channel = "git"
+data = "0 DONE · 2 preflight · 3 BLOCKED · 4 stall · 5 WAITING · 6 budget · 7 NEEDS-OPERATOR · 8 paused · 9 REVIEW-OWED · 11 RESTART · 12 CHECK-FAILURE-CAP"
+version = "v5"
+status = "Drafted"
+interface_to_external = "B-05"
+bridged_by = ["DA-006", "DA-013"]
+
+[interface.IF-016]
+owner = "scripts/check_vendored"
+consumers = ["external:downstream adopter"]
+channel = "stdout"
+data = "one WARN line per drifted or missing vendored file, then an OK, finding-count, or FAIL summary line"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The drift lines name each vendored file that no longer matches its source, which is the reader's whole outcome: they learn which copy to refresh."""
+
+[interface.IF-017]
+owner = "scripts/gen_cases"
+consumers = ["external:downstream adopter"]
+channel = "stdout"
+data = "cases as table | params | toml | csv"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The generated cases are the output the person asked for; nothing interprets them between the generator and the test author who pastes them."""
+notes = "source"
+
+[interface.IF-018]
+owner = "scripts/gen_release_checklist"
+consumers = ["external:downstream adopter"]
+channel = "file"
+data = "docs/release-checklist.md — human-verified rows use `- [ ] <ID> — <what to confirm> (refs)`; assumption confirmations use `- [ ] ASSUMPTION <DA-ID> — <falsifier question> (method: <TC IDs>)`"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The file lists each item a person must confirm before release; listing it is the whole promise, and the confirmation is the release act's own."""
+
+[interface.IF-019]
+owner = "scripts/gen_skills_index"
+consumers = ["external:downstream adopter"]
+channel = "file"
+data = "skills/INDEX.csv: banner comment, header, one row per skill (name, scope, stacks, domains, phases, tags, description)"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The index row per skill is what an agent or a person reads to find a skill; the listing is the outcome."""
+
+[interface.IF-020]
+owner = "scripts/subagent_gate"
+consumers = ["external:agent CLI"]
+channel = "exit-code"
+data = "0 allow, ask or defer · 2 deny"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-04"
+coincident = """The exit code is the spawn decision itself: the agent CLI admits or refuses the spawn on it, so the reading is the outcome."""
+
+[interface.IF-169]
+owner = "scripts/subagent_gate"
+consumers = ["external:agent CLI"]
+channel = "stdout"
+data = "one JSON line: hookSpecificOutput with permissionDecision allow | ask | deny and its reason; a defer and the fail-open arm print nothing"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-04"
+coincident = """The decision line is what the agent CLI acts on, allow, ask or deny with its reason; the reading is the outcome."""
+
+[interface.IF-170]
+owner = "scripts/subagent_gate"
+consumers = ["scripts/agent_loop", "external:downstream adopter"]
+channel = "file"
+data = "one tab-separated line per non-deferred decision - tool, decision, reason - appended best-effort to the gate log under out/"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The log line records each decision where the loop and a person read it back; the record is the outcome."""
+
+[interface.IF-151]
+owner = "scripts/subagent_gate"
+requestors = ["external:agent CLI"]
+channel = "cli"
+data = "the PreToolUse tool-call JSON on stdin; only tool_name (or toolName) is read"
+version = "v1"
+status = "Drafted"
+notes = "No tie-back: the frame declares the verdict OUT (B-04, on IF-020) and no crossing for the tool call IN — invoking our hook is the session's own act, the reasoning IF-041 records."
+
+[interface.IF-021]
+owner = "docs/requirements/"
+consumers = ["scripts/trace", "external:downstream adopter"]
+channel = "file"
+data = "id-keyed TOML, one file per spine tier; ids are the table keys"
+version = "v2"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = """Published contract, not a single consumer: 14+ kit scripts independently join the SR registry (trace, spine_rules, gen_okf, plan_briefs, check_trajectory, agent_loop and more), and every downstream adopter fills in their own copy and reads it with the same shipped scripts - naming one reader would misstate the file's role. Ties to B-05 as the template's own delivered spine-registry format."""
+
+[interface.IF-161]
+owner = "docs/test/"
+consumers = ["scripts/acceptance_record", "scripts/adjudicate_brief", "scripts/amendment_brief", "scripts/agent_loop", "scripts/baseline_snapshot", "scripts/check_doc_refs", "scripts/check_flows", "scripts/check_trajectory", "scripts/gen_okf", "scripts/gen_release_checklist", "scripts/intake", "scripts/plan_coverage", "scripts/spine_rules", "scripts/trace", "scripts/traj_parse", "external:downstream adopter"]
+channel = "file"
+data = "test-cases.toml: id-keyed TOML, one [test.TC-###] table per case; ids are the table keys"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+
+[interface.IF-022]
+owner = "docs/stack.ini"
+consumers = ["scripts/check", "external:downstream adopter"]
+channel = "file"
+data = "sections: paths, product, tiers, coverage, arch-map, readability, check-suites, step:NAME"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = """Published contract, not a single consumer: 9 kit scripts read docs/stack.ini directly (check, agent_common, dispatch, check_doc_refs, check_trajectory, integrate, run_menu, trunk_step, plus this row), and every downstream adopter authors their own copy - naming one reader would misstate the file's role. Ties to B-05 as the template's own delivered declared-policy format."""
+
+[interface.IF-023]
+owner = "docs/work/"
+consumers = ["scripts/check_trajectory", "external:downstream adopter"]
+channel = "file"
+data = "one Markdown spec per row; status is the directory"
+version = "v3"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = """Published contract, not a single consumer: at least 9 kit scripts walk the docs/work/ spec folder through the shared kitlib.registry/agent_common readers (check_trajectory, gen_trajectory, schedule, wi_convert, intake, dispatch, traj_panels, traj_status and more), and every downstream adopter's own WI registry is content they author - naming one reader would misstate the file's role. Ties to B-05 as the template's own delivered work-item format."""
+
+[interface.IF-058]
+owner = "scripts/plan_round"
+requestors = ["scripts/plan_runner", "scripts/agent_loop"]
+channel = "call"
+data = "disposition: CONTINUE · SELECTED · PAGE"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - a pure library: consumes nothing, the coordinator feeds results in"""
+
+[interface.IF-059]
+owner = "docs/requirements/"
+consumers = ["scripts/plan_briefs", "external:downstream adopter"]
+channel = "file"
+data = "SR id, title, requirement; IF id, owner, far side, channel, data"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = """sink - the assembled briefs feed the round's fresh sessions (agent_loop.run_dual_plan_round drives it in-process). Published contract, not a single consumer: reads both the SR registry (14+ readers, IF-021's population) and interfaces.toml (11 readers, IF-057's population); every downstream adopter fills in their own copies. Ties to B-05 as the template's own delivered spine-registry format."""
+
+[interface.IF-060]
+owner = "scripts/plan_coverage"
+consumers = ["scripts/plan_coverage_step"]
+channel = "exit-code"
+data = "0 clean | 1 findings, including unexplained clause gaps or SINGLE SR/TC misses | 2 malformed input, including missing Done-when or findings"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """sink - the typed result feeds the coordinator's record() call (agent_loop.run_dual_plan_round drives it in-process)."""
+
+[interface.IF-152]
+owner = "scripts/plan_coverage"
+requestors = ["scripts/plan_coverage_step"]
+channel = "cli"
+data = "--goal | --item [--findings], --root, --out, then the plan paths"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-153]
+owner = "scripts/plan_coverage"
+consumers = ["scripts/plan_coverage_step"]
+channel = "file"
+data = "the --out coverage report: coverage and exclusions per plan, a SINGLE SR/TC diff, and a pairwise diff over two or more plans"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-061]
+owner = "scripts/plan_artifacts"
+requestors = ["scripts/plan_runner"]
+channel = "call"
+data = "allocate_round_dir, write_stage, append_log_summary, file_selected_wis"
+version = "v2"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - the coordinator (agent_loop) drives these effects"""
+
+[interface.IF-057]
+owner = "docs/requirements/interfaces.toml"
+consumers = ["scripts/plan_coverage", "external:downstream adopter"]
+channel = "file"
+data = "one table per seam, keyed by IF id; cells per the file header"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = """sink - the coverage report feeds the dual-plan round's critique/arbiter sessions and the operator, not a kit module (the agent_loop consumer seam is IF-060's to declare). Published contract, not a single consumer: 11 kit scripts join interfaces.toml directly (baseline_snapshot, check_trajectory, gen_arch_map, gen_okf, gen_release_checklist, intake, migrate_carrier, plan_briefs, trace, traj_status, traj_views, plus this row), and every downstream adopter fills in their own IF registry. Ties to B-05 as the template's own delivered spine-registry format."""
+
+[interface.IF-024]
+owner = "docs/work/"
+consumers = ["scripts/gen_trajectory", "external:downstream adopter"]
+channel = "file"
+version = "v3"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = """Published contract, not a single consumer: same population as IF-023/054/079 - the WI registry is read directly by gen_trajectory's own facade main() (this read stays local, unlike the docs/stage read it delegates to traj_parse, IF-052) alongside 8+ other kit scripts, and every downstream adopter's own registry is content they author. Ties to B-05 as the template's own delivered work-item format."""
+
+[interface.IF-025]
+owner = "project-trajectory/scripts"
+consumers = ["scripts/gen_arch_map"]
+channel = "file"
+version = "v1"
+status = "Drafted"
+notes = """gen_arch_map.scan_inventory is the sole direct AST walker of the tree; check_doc_refs/check_trajectory/traj_parse consume its computed OUTPUT (a separate script-to-script seam, IF-028 and its siblings), not the raw directory."""
+
+[interface.IF-026]
+owner = "project-trajectory/scripts"
+consumers = ["scripts/check_stubs"]
+channel = "file"
+version = "v1"
+status = "Drafted"
+notes = """check_stubs runs its own independent AST walk of it, distinct from gen_arch_map's inventory (IF-025): two separate walkers of the same tree for two different questions, and nothing else reads the raw directory this way."""
+
+[interface.IF-028]
+rationale = """Successor to the retired docs/architecture.md MODULE MAP parse. Sibling of IF-117, which consumes module_bindings for the LLR CodeSymbol anchor rule: two oracles for two questions, both now AST-side."""
+owner = "scripts/gen_arch_map"
+requestors = ["scripts/check_doc_refs"]
+channel = "call"
+data = "scan_inventory(src_roots, strict=False) -> (rel, summary, imports, contracts, rows) per module"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-029]
+owner = "docs/runtime-flows.md"
+consumers = ["scripts/check_flows", "scripts/gen_okf", "scripts/traj_parse"]
+channel = "file"
+data = "mermaid sequence blocks under a Runtime flows heading, each citing SR/LLR ids"
+version = "v1"
+status = "Drafted"
+notes = """Low fan-out: exactly three direct readers of the moved doc - check_flows (this row, --strict structural validation), gen_okf (title/summary extraction into the okf bundle) and traj_parse (dashboard render). A closed, nameable set, not a published contract."""
+
+[interface.IF-030]
+owner = "docs/"
+consumers = ["scripts/check_docs", "external:downstream adopter"]
+channel = "file"
+data = "root-level Markdown plus everything under docs"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The seam is the documentation tree itself, root-level Markdown and everything under docs, which a reader navigates as it stands; its links resolving and its vision declared once, as the documentation check reads it, is the outcome the reader asked for, with no party between the checked tree and the reading."""
+notes = """Published contract, not a single consumer: this row and check_doc_refs each walk the whole docs tree for their own purpose, and check_vocab/check_privacy sweep it as part of a broader whole-repo scan - an open, ever-growing population as every downstream adopter authors their own docs tree and validates it with the same shipped checker. Ties to B-05 as the template's own delivered doc-tree convention."""
+
+[interface.IF-031]
+owner = "docs/requirements/performance-budgets.csv"
+consumers = ["scripts/check_perf"]
+channel = "file"
+data = "Gate: warn | fail; Direction: lower-better | higher-better"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-032]
+owner = "external:git"
+consumers = ["scripts/check_privacy"]
+channel = "git"
+data = "staged diff, commit message, outgoing range"
+version = "v1"
+status = "Drafted"
+notes = """No tie-back, and the absence is the statement. `git` is not a party of its own in the boundary frame - the entity that holds the checkout absorbs it - so reading a staged range through git is this system reading the session's own working copy, not an exchange with a fourth party. What crosses at the hook floor is the admission verdict, and the hook-facing rows carry that tie-back; this row states the scanner's INPUT to that floor, which is machinery behind the crossing rather than the crossing."""
+
+[interface.IF-033]
+owner = "docs/requirements/"
+consumers = ["scripts/gen_okf", "external:downstream adopter"]
+channel = "file"
+version = "v2"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = """Published contract, not a single consumer: same population as IF-021 - 14+ kit scripts join the SR registry, and every downstream adopter fills in their own copy. Ties to B-05 as the template's own delivered spine-registry format."""
+
+[interface.IF-034]
+owner = "docs/requirements/"
+consumers = ["scripts/gen_release_checklist", "external:downstream adopter"]
+channel = "file"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = """Published contract, not a single consumer: 11 kit scripts read the SN registry directly (baseline_snapshot, check_docs, check_flows, check_need_form, spine_rules, gen_okf, hats, migrate_carrier, trace, traj_parse, plus this row), and every downstream adopter authors their own stakeholder-needs. Ties to B-05 as the template's own delivered spine-registry format."""
+
+[interface.IF-035]
+owner = "project-trajectory/skills/"
+consumers = ["scripts/gen_skills_index", "scripts/bootstrap"]
+channel = "file"
+data = "SKILL.md frontmatter: name, scope, stacks, domains, phases, tags; each other file in the skill directory, materialized with it at the same relative path"
+version = "v1"
+status = "Drafted"
+notes = """Low fan-out: two direct walkers of a skill directory - bootstrap (select_skills filtering on the SKILL.md frontmatter at scaffold time, then skill_copies materializing and inventorying the whole directory) and gen_skills_index (the INDEX.csv generator, and the fan-out drift check comparing the whole file set). A closed, nameable set."""
+
+[interface.IF-036]
+owner = "external:upstream docs"
+consumers = ["scripts/check_vendored"]
+channel = "bytes"
+data = "the declared upstream sources, compared byte for byte"
+version = "v1"
+status = "Drafted"
+notes = """No tie-back, and the gap is in the FRAME rather than in this row: the far side is a network source the locked boundary table names no entity for, so there is no crossing id this row could honestly point at. The `external:` marker therefore records only that the endpoint is outside this tree. Whether a vendored-source upstream is a party the frame should carry is a live question for the operator; until it is answered this row must not manufacture a tie-back to a crossing that describes something else."""
+
+[interface.IF-037]
+owner = "docs/process.toml"
+consumers = ["scripts/agent_common", "scripts/agent_loop", "scripts/bootstrap", "scripts/check_privacy", "scripts/check_trajectory", "scripts/dispatch", "scripts/gen_arch_map", "scripts/gen_okf", "scripts/integrate", "scripts/kitlib/config", "scripts/subagent_gate", "external:downstream adopter"]
+channel = "file"
+data = "TOML tables: authority, policies, checks, build; a privacy gate key outside [policies] reads as gate on, and a reviewer key there as review required"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The dial file is what the operator edits and every enforcer reads; one value per dial, read alike by each reader, is the outcome the operator asked for."""
+
+[interface.IF-163]
+owner = "docs/status.md"
+consumers = ["scripts/agent_common", "scripts/check_docs", "scripts/check_trajectory", "scripts/gen_okf", "scripts/integrate", "scripts/trunk_step"]
+channel = "file"
+data = "the hand-authored blackboard outside the GENERATED STATUS marker pair; the block between the markers is its writer's row"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-164]
+owner = "scripts/traj_status"
+consumers = ["scripts/agent_common", "external:downstream adopter"]
+channel = "file"
+data = """docs/status.md generated block: stage, spine counts, ready frontier, cited items and held rows, uncited items, review count, Blocked list"""
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The generated status block shows the derived stage, the counts and the ready frontier the reader came for; the block is the outcome."""
+
+[interface.IF-038]
+owner = "docs/process.toml"
+consumers = ["scripts/subagent_gate", "external:downstream adopter"]
+channel = "file"
+data = "off | ask | deny"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The declared subagent-gate value is what the gate enforces; the reading is the outcome."""
+notes = """Published contract, not a single consumer: 9 kit scripts read docs/process.toml directly (agent_common, agent_loop, bootstrap, check_privacy, check_trajectory, dispatch, gen_arch_map, gen_okf, plus this row), and every downstream adopter authors their own dials (gate_policy, push, review_rounds, subagent_gate). Ties to B-05 as the template's own delivered declared-policy format."""
+
+[interface.IF-039]
+owner = "registries"
+consumers = ["scripts/bootstrap"]
+channel = "bytes"
+data = "one template file per registry tier"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-040]
+owner = "scripts/check"
+consumers = ["project-trajectory/hooks/pre-commit"]
+channel = "exit-code"
+data = "0 pass or SKIP · 1 any step FAILs"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-041]
+rationale = """The Windows refusal is there because the OS may reparse a prompt carried in argv via cmd.exe even with shell=False."""
+owner = "external:agent CLI"
+requestors = ["scripts/agent_session"]
+channel = "cli"
+data = "headless invocation; the prompt on stdin"
+version = "v1"
+status = "Drafted"
+notes = """No tie-back yet, though one is owed: invoking a configured agent CLI is the loop invoking a model runner, which crosses the operation frame at B-10, and tying this row to that crossing is interface-allocation work. Contrast the subagent-gate row, which faces the same CLI across a different crossing - what crosses there is a guardrail verdict this system emits, and that is a system output whoever consumes it. Consuming an external tool and emitting a verdict to one are not the same act."""
+
+[interface.IF-042]
+owner = "scripts/trace"
+consumers = ["project-trajectory/hooks/pre-commit"]
+channel = "exit-code"
+data = "0 no integrity finding · 1 integrity finding"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-043]
+owner = "scripts/check_privacy"
+consumers = ["project-trajectory/hooks/pre-push"]
+channel = "exit-code"
+data = "0 clean | 1 findings | 2 scan not performed"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-044]
+owner = "scripts/agent_route"
+requestors = ["scripts/agent_loop", "scripts/session_service", "scripts/plan_runner", "scripts/coordinator_adjudicate"]
+channel = "call"
+data = "resolve_enabled(tokens, registry) -> enabled entries, errors; resolve_entry(token, registry) -> entry or why; account_of(registry, entry) -> Account or None; load_enabled_entries raises EnabledUnreadable; select() -> entry, reason; entry_route(entry) -> registry id; load_registry(path) -> rows, errors"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-045]
+owner = "docs/agents.toml"
+consumers = ["scripts/agent_route"]
+channel = "file"
+data = "route rows: Id, Family, Model, Version, Tier, CmdTemplate, Env, Notes; account tables: cli, notes, optional env, token_file_variable and verified; Tier: strong | medium | quick"
+version = "v1"
+status = "Drafted"
+notes = """FAN-OUT IS NOT 1: agent_route is the sole reader of the pair-row MODEL registry, but dispatch reads docs/agents-enabled DIRECTLY - its own bytes-and-lines parse, deciding whether routing is wired at all, with no call into agent_route - and migrate_carrier names the registry in its carrier table. agent_loop and plan_runner do call agent_route's load_registry/load_enabled/load_tag_rank API (a script-to-script seam, IF-044 and plan_runner's analogue) rather than reading the files themselves."""
+
+[interface.IF-162]
+owner = "docs/agents-enabled"
+consumers = ["scripts/agent_route", "scripts/dispatch"]
+channel = "file"
+data = "one entry per line in preference order (a registry id, optionally ROUTE@ACCOUNT), optional <PHASE>=<weight> annotations; presence turns routing on; an existing unreadable file is an error"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-046]
+owner = "scripts/score_reviews"
+requestors = ["scripts/agent_loop", "scripts/dispatch", "scripts/integrate", "scripts/gen_verdict_rollup", "scripts/kitlib/verdict", "scripts/plan_coverage", "scripts/review_brief"]
+channel = "call"
+data = "parse_verdict: typed verdict findings, where a finding is a bullet whose bracket names one of the module's declared SEVERITIES (BLOCKER, MAJOR, MINOR), without regard to case; its verdict word and declared count are taken only from the shared strict review-line reader, neither returned when that reader refuses. substance, merge_verdict, fired_tripwires, record_round and latest_phase_verdicts: advisory review-scoring data. kitlib/verdict does not import this module - it takes the parse function as an ARGUMENT, so the verdict leaf keeps no edge back into scoring; the row names it because the seam is exercised on its behalf by whichever reader supplies the function."
+version = "v1"
+status = "Drafted"
+
+[interface.IF-047]
+owner = "docs/reviews/"
+consumers = ["scripts/score_reviews", "scripts/check_trajectory", "scripts/integrate", "scripts/kitlib/verdict", "scripts/gen_verdict_rollup", "scripts/plan_coverage", "scripts/review_brief"]
+channel = "file"
+data = "VERDICT: APPROVE | CHANGES-REQUESTED findings=N; finding is - [BLOCKER|MAJOR|MINOR] <text>, case-insensitive; another bracketed bullet is prose."
+version = "v1"
+status = "Drafted"
+notes = """Low fan-out, and the set is still closed and nameable: check_trajectory (_latest_critique_verdict), score_reviews (this row, read_scoreboard/record_round), kitlib/verdict (the round-file NAME grammar and the git-shown blob, on behalf of the merge gate and the loop's review-owed derivation), gen_verdict_rollup (the same files, rendered for a human) and integrate (through kitlib/verdict, plus the legacy hand-authored rollup for the length of its migration window). agent_loop calls score_reviews.record_round rather than reading a review file itself. The directory's content grammar is the VERDICT: line; its NAME grammar - ordinal, phase and reviewed sha - is load-bearing too, and kitlib/verdict is its one home."""
+
+[interface.IF-160]
+owner = "docs/reviews/"
+requestors = ["scripts/score_reviews"]
+channel = "file"
+data = "scoreboard.txt — the decayed per-provider substance tallies and the round history"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-048]
+owner = "scripts/run_menu"
+consumers = ["external:run.* launchers"]
+channel = "stdout"
+data = "one capability per line as name, tab, description, in declaration order"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The listing names each declared capability for the launcher to offer; the list is the outcome."""
+
+[interface.IF-157]
+owner = "scripts/run_menu"
+requestors = ["external:run.* launchers"]
+channel = "cli"
+data = "no argument (the menu) · --list · <capability> [args...] appended as quoted data values · --file docs/stack.ini"
+version = "v1"
+status = "Drafted"
+notes = """No tie-back: the launchers hand argv IN to the menu and the frame declares no IN crossing for an invocation — running the launcher is the session's own act; the delivered contract ties on the exit-code row."""
+
+[interface.IF-158]
+owner = "scripts/run_menu"
+consumers = ["external:run.* launchers"]
+channel = "exit-code"
+data = "the launched capability's code passed through · 0 --list or a menu quit · 1 nothing declared or input closed · 2 unknown name"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The exit code passes the launched capability's own result through, or names why nothing ran; the reading is the outcome."""
+
+[interface.IF-049]
+owner = "docs/stack.ini"
+consumers = ["scripts/run_menu", "external:downstream adopter"]
+channel = "file"
+data = "[run] section: one name = command line per capability, plus a desc line"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = """Published contract, not a single consumer: same population as IF-022/068 - 9 kit scripts read docs/stack.ini directly, and every downstream adopter authors their own [run] section. Ties to B-05 as the template's own delivered declared-policy format."""
+
+[interface.IF-050]
+owner = "scripts/derive_stage"
+consumers = ["scripts/check", "scripts/agent_common", "scripts/check_trajectory", "scripts/traj_parse", "scripts/intake"]
+channel = "file"
+data = "docs/stage — key = value fields plus a sha256 fingerprint of the declared inputs"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-165]
+owner = "scripts/derive_stage"
+consumers = ["scripts/check", "scripts/trunk_step", "scripts/kitlib/stage"]
+channel = "exit-code"
+data = "0 fresh, placeholder, printed or written · 1 an absent or stale docs/stage under --check, or a --phase-rule finding under --strict"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-051]
+owner = "docs/requirements/"
+consumers = ["scripts/spine_rules", "external:downstream adopter"]
+channel = "file"
+data = "row Status: Drafted | Accepted | Founded"
+version = "v2"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+component = "CMP-006"
+notes = """Published contract, not a single consumer: same population as IF-021/033 - 14+ kit scripts join the SR registry, and every downstream adopter fills in their own copy. Ties to B-05 as the template's own delivered spine-registry format."""
+
+[interface.IF-052]
+rationale = """The read is traj_parse._stage_value and the tab traj_panels.process_panel, both re-exported by the facade that declares this seam."""
+owner = "scripts/traj_parse"
+requestors = ["scripts/rendering/traj_panels"]
+channel = "call"
+data = "traj_parse._stage_value: the stage field of docs/stage, or None (the Process tab's omit condition)"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+
+[interface.IF-053]
+owner = "scripts/schedule"
+requestors = ["scripts/census", "scripts/dispatch", "scripts/intake"]
+channel = "call"
+data = "load_wis · _load, frontier, kind_of · SAFETY_CLASSES — the symbols census, dispatch and intake take; no write, no spawn, no git"
+version = "v2"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-298]
+rationale = "The three hook gates need one parse's answer rather than their own reading of the file."
+owner = "scripts/check_privacy"
+consumers = ["hooks/pre-commit", "hooks/commit-msg", "hooks/pre-push"]
+channel = "stdout"
+data = "one answer, no newline: privacy=off | privacy=on review=require | privacy=on review=warn-unwired | refuse=mixed | refuse=unreadable (cause on stderr); a nonzero exit or any other answer is refused by the hook"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+notes = "intra-component"
+
+[interface.IF-054]
+owner = "docs/work/"
+consumers = ["scripts/schedule", "external:downstream adopter"]
+channel = "file"
+data = """status; needs edges (WI-### or OI-###; ~ is soft); pending OI blocks its citer; absent safety class = unclassified"""
+version = "v2"
+status = "Drafted"
+component = "CMP-008"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = """Published contract, not a single consumer: kit scripts walk the work registry and downstream adopters author it. An open row — draft, queued, active, deferred, or blocked — whose SpecRef names the open-items registry under either carrier errors when its #OI anchor is not one of its needs OI tokens, or when every cited item is non-pending; a missing item remains pending and the dangling-edge check reports it. A queued placeholder cites a pending OI through needs."""
+
+[interface.IF-055]
+owner = "scripts/schedule"
+requestors = ["scripts/integrate"]
+channel = "call"
+data = "frontier over the loaded rows, in deterministic order"
+version = "v2"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-056]
+rationale = """This is the DERIVATION seam (validate); the dashboard's ready-frontier DECISION is read SEPARATELY from schedule.py via IF-071 (decide), and the two are distinct concerns. The facade imports the validator; the split siblings that now carry their own imports declare the same seam as IF-082 (traj_parse) / IF-083 (traj_views) / IF-084 (traj_status) - one contract stated once here."""
+owner = "scripts/check_trajectory"
+requestors = ["scripts/gen_trajectory"]
+channel = "call"
+data = "check_trajectory loaders: validate, read_registry_rows, load_wis, load_known_srs, read_trajectory_enabled, WI_CSV, TOP_VIEW_MAX"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+
+[interface.IF-064]
+rationale = """The module is the session-launch layer split out of agent_loop, which is why the crossing states a re-export guarantee at all: the extraction owes its caller an unchanged public surface."""
+owner = "scripts/agent_session"
+requestors = ["scripts/agent_loop", "scripts/session_service", "scripts/plan_runner"]
+channel = "call"
+data = "build_argv, run_session, parse_json_result and the console renderers"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-065]
+owner = "scripts/agent_common"
+requestors = ["scripts/agent_loop", "scripts/integrate", "scripts/session_service", "scripts/usage_ingest"]
+channel = "call"
+data = "END_STATES, git, head_sha, acquire_lock, release_lock, preflight, parse_map, process_config, load_wi_registry, substantive_working_tree_dirty, write_session_log, commit_telemetry, loop_claimed, log_meta_text, worktree_records"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-066]
+owner = "scripts/plan_runner"
+requestors = ["scripts/agent_loop"]
+channel = "call"
+data = "plan_runner.wi_plan_mode and run_dual_plan_round -> (SELECTED | PAGE, detail)"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-068]
+rationale = """One declared home for the dials is what lets the agent-resume launchers carry no dial copies of their own."""
+owner = "docs/stack.ini"
+consumers = ["scripts/agent_loop", "external:downstream adopter"]
+channel = "file"
+data = "[agent-loop]: model, model-map"
+version = "v2"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = "built and consumed together; same population as IF-022/049 - this row's own read routes through agent_common.read_agent_loop_config rather than a bespoke parse, but docs/stack.ini remains the same 9-plus-reader published contract, and every downstream adopter authors their own copy. Ties to B-05 as the template's own delivered declared-policy format."
+
+[interface.IF-069]
+owner = "scripts/check_coverage"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 every floor holds or unmeasured · 1 below floor, absent module, or corrupt input"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-070]
+owner = "docs/coverage-floors"
+consumers = ["scripts/check_coverage"]
+channel = "file"
+data = "one line: module path then minimum percent"
+version = "v1"
+status = "Drafted"
+notes = """The far side is the declared census file; the pytest-cov JSON is the run artifact the contract also names, and it is transient (check.py clears it before a covered run). check_coverage is the SOLE parser of the JSON content. check.py is deliberately NOT an endpoint here: it touches the report only as a constant and an unlink - lifecycle ownership, not content consumption - and a dependency analysis that sent a coverage-format change to check.py on the strength of this row would send it to a module that never parses the format."""
+
+[interface.IF-071]
+rationale = """The frontier DECISION seam, distinct from the derivation-loader seam to check_trajectory (IF-056). The guarded `import schedule` has its ONE home in traj_parse.py (IF-085 is that module-level row) and traj_status/traj_panels read it as traj_parse.schedule; this row remains the seam as the facade declares it. The ordering is derived once in schedule.py, which IF-053 already names as shared by the dashboard."""
+owner = "scripts/schedule"
+requestors = ["scripts/gen_trajectory"]
+channel = "call"
+data = "load_registry_rows, load_wis, frontier, evaluate; empty when the module is absent"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """Completes the dashboard side IF-053 already names: the import was wired without this row."""
+
+[interface.IF-072]
+rationale = """The seam exists because a second reader needs the same facts: tests/test_dogfood_sync.py loads the file as its SCAFFOLD_OMISSIONS declaration, so the file - not an import - is the shared home, which keeps the stdlib-only kit script free of any dependency on a test module."""
+owner = "docs/declared-absences"
+consumers = ["scripts/check_doc_refs", "scripts/trace", "tests/test_dogfood_sync.py"]
+channel = "file"
+data = "one line: path then em dash then reason"
+version = "v1"
+status = "Drafted"
+notes = """Built and consumed together. The endpoints are the OTHER readers of the declared-absence grammar: trace (_declared_absences) and tests/test_dogfood_sync.py, which loads the file as its SCAFFOLD_OMISSIONS declaration through this row's own loader. check_vocab is NOT one: it carries the filename in a byte-scan inclusion set (TEXT_NAMES) and never parses the `<path> - <reason>` grammar this contract defines. check_need_form.py compares prose only, not a read."""
+
+[interface.IF-073]
+owner = "docs/requirements/open-items.toml"
+consumers = ["scripts/gen_open_items", "external:downstream adopter"]
+channel = "file"
+data = """status: pending | ruled; queued or claimed work-item needs edges cite pending items"""
+version = "v2"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = """A pending item has at least one queued or claimed work-item citer. A ruling updates every citing row in the same commit: its Done-when adds a criterion citing the item, or, on a claimed citer whose Done-when already names the step, the ruling ticks that item and adds no evidence there; its SpecRef must name a real specification once every item it cites is non-pending, and any other changed field is synchronized. The queued citer is the item's placeholder; a claimed citer holds a step its Done-when names; wi_refs is historical metadata. Published contract, not a single consumer: kit scripts parse the registry and downstream adopters author decisions."""
+
+[interface.IF-074]
+owner = "scripts/gen_open_items"
+consumers = ["external:downstream adopter"]
+channel = "file"
+data = """docs/open-items.html — pending items a queued or claimed row cites, uncited items, acceptance/re-accept chains and owing needs and stakeholders, verdict audit, operator actions; Decisions to review last"""
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The page lists the pending decisions and the re-acceptance chains for the operator to rule on; showing them is the page's whole promise, and the ruling is the authority crossing's own."""
+
+[interface.IF-075]
+rationale = """Split out of reaccept_lines rather than reimplemented, because a second copy of the baseline derivation in a second module is the paraphrase-not-decompose failure this kit exists to prevent. The cross-component import (Generators -> Traceability core) is declared here rather than retagged: the model belongs with the registries it reads, and the renderer belongs with the generators."""
+owner = "scripts/trace"
+requestors = ["scripts/gen_open_items", "scripts/adjudicate_brief", "scripts/amendment_brief"]
+channel = "call"
+data = "reaccept_model entries: chain rows, changed cells, baseline rev and date, and each spine registry's own copy stamp; an empty model is a valid answer"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-076]
+rationale = """The module is the spine-row TEXT layer split out of trace.py, and the byte-for-byte finding-string assertions are what make that split provably behaviour-preserving."""
+owner = "scripts/trace_text"
+requestors = ["scripts/trace"]
+channel = "call"
+data = "gating: provenance_findings, form_findings; advisory: ac_advisories, paraphrase_advisories and siblings"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - trace_text consumes NOTHING by design: it is the pure predicate layer (rows in, findings out; no I/O, no git, no filesystem, no argv), which is what makes it testable in isolation and what the pure-core / I-O-shell split asks for. A consumed medium here would mean the extraction failed to separate the concerns."""
+
+[interface.IF-077]
+rationale = """The import is lazy and degrades to path-only because this module runs in the SHIPPED pre-commit hook, where a hard requirement would block an adopter's every commit. The ship-and-re-sync-together obligation is the same ground IF-056 stands on."""
+owner = "scripts/check_docs"
+requestors = ["scripts/check_trajectory"]
+channel = "call"
+data = "parse_doc: one document's outbound links and its anchor set"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-078]
+owner = "scripts/wi_convert"
+requestors = ["scripts/plan_artifacts"]
+channel = "call"
+data = "wi_convert.write_spec_file with work_dir_for and spec_paths; ConvertError on a status the format has no directory for"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-079]
+owner = "docs/work/"
+consumers = ["scripts/wi_convert", "external:downstream adopter"]
+channel = "file"
+data = "the spec-folder form and the legacy row-per-line CSV form"
+version = "v2"
+status = "Drafted"
+component = "CMP-006"
+interface_to_external = "B-05"
+coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
+notes = """Published contract, not a single consumer: same population as IF-023/024/054 - this row's own read_specs/spec_paths IS the format's definition module, and 8+ other kit scripts walk the same WI registry; every downstream adopter's own registry is content they author. Ties to B-05 as the template's own delivered work-item format."""
+
+[interface.IF-159]
+owner = "docs/work/"
+requestors = ["scripts/wi_convert"]
+channel = "file"
+data = "one spec file per row, written and read back cell-exact before its path is returned"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-080]
+owner = "scripts/integrate"
+consumers = ["external:downstream adopter"]
+channel = "exit-code"
+data = "claim | refresh | record-checks | integrate | done-when-hold | audit; nonzero exit on any refusal, with the reason named"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+interface_to_external = "B-05"
+bridged_by = ["DA-013"]
+
+[interface.IF-154]
+owner = "scripts/integrate"
+requestors = ["scripts/lane", "external:downstream adopter"]
+channel = "cli"
+data = "claim --wi --branch · refresh --branch --tier · record-checks --branch --checks --message-file · integrate --tier · done-when-hold (no arguments) · audit --since, each with --root"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """No tie-back: the argv comes IN from the adopter's own session (a claim, an audit) or from the dispatcher's lane, and the frame declares no IN crossing for an invocation — driving our integrator is the session's own act, the reasoning the agent-CLI row records; the delivered contract ties on the exit-code row."""
+
+[interface.IF-175]
+owner = "scripts/kitlib/verdict"
+requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/dispatch", "scripts/gen_verdict_rollup", "scripts/score_reviews", "scripts/acceptance_record", "scripts/adjudicate_act", "scripts/review_brief", "scripts/adoption_record"]
+channel = "call"
+data = "tree identity; branch rounds/trailers; row rulings and blessed rows; scope, phase, filing and trailer readers; the passed-checks record grammar, verifier and tests digest; the commit-record walk; the failed-checks record and the failed-round count; a shared close-shape reader whose optional relink oracle admits only byte-exact inbound relinks, while the peel calls it without that oracle"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """The seam exists because two callers ask ONE question from two sides - the merge slot's may-this-merge and the loop's does-this-lane-still-owe-a-round - and answering it twice is what let a lane draw two identical rounds over a verdict nothing had invalidated. So this row is not bookkeeping over an import: it is the declaration that there is exactly one definition, and a second reader of round evidence anywhere else is a finding against this row rather than a new one. That definition includes the REV the identity is measured at, which is why the refresh peel is owned here and not by the merge slot: while it lived there, one reader peeled and the other measured at HEAD, and the row's whole claim was false across exactly one commit class. The peel has TWO shapes on purpose and they must not be merged: work_tip peels only a refresh sitting on the tip because it feeds a reset --hard where one commit too far destroys work, while governing_rev walks through any commit whose non-record identity equals its first parent's, to reach a disposable commit it would otherwise hide - a read-only question can afford an answer a destructive one cannot. Those two SHAPES are what this row governs; WHICH machine-authored commits are disposable is a class list, it belongs to the owner's own row (LLR-207 names both the station refresh and the machinery's adjudication close), and it is deliberately not restated here, so a reader meeting one seam sentence and one design sentence is never choosing which is current. That step condition is the row's own sentence rather than a proxy for it, so no commit SHAPE gets a case here: a walk that classified the paths a commit touched stopped at the zero-path ones it could not read, and the empty commit a trailer rides when its bookkeeping is unchanged is that shape, so the commit recording an acceptance buried the refresh. The singularity binds the BINDINGS too, not only the two named readers: the identity a round file's reviewed sha names and the identity a trailer's carrier names are asked through governing_identity at that commit, because a raw fold is this composition with the peel dropped and it disagrees across exactly the commit class the peel exists for - which is how a round drawn after a refresh became invisible to both readers at once, with nothing on the branch able to reconcile them. The rollup generator is a requestor for the NAME grammar only, and score_reviews for the PHASE SPAN only - it holds a hard `from kitlib.verdict import declared_phases` so latest_phase_verdicts keys the merge boundary's map by exactly the phases the loop schedules, and it reads no round evidence at all, so naming it here adds a requestor and NOT a fourth reader of the verdict. It is named because an import no requestors entry carries is an undeclared seam, which is the completeness rule this cell answers to; the singularity sentence above is about round evidence and does not reach a span reader either way. The span crosses as the CONSTANT too, not only through declared_phases: agent_loop's non-build phase set and its dial ceiling ask it at module scope, and that module deliberately keeps no tuple of its own, so a phase added here reaches the scheduler, the routing set and the clamp together. Off git every function answers None and this module never says what that means; each requestor declares its own direction, and both declared directions are toward more review. The gate-bearing round contract crosses here too: format_scope records full, narrow or final review scope; gating_span admits a fresh full scope rooted at the claim base in either mode, admits final only with reviewer retention on and final_reviewer persisted, and admits neither narrow nor retained full scope; filing_refusal gives both filing and gate reading one invalid-evidence boundary. dispatch is also a requestor, so the requestor list names every current reader."""
+
+[interface.IF-173]
+owner = "scripts/integrate"
+requestors = ["scripts/agent_loop", "scripts/dispatch", "scripts/handback", "scripts/lane"]
+channel = "call"
+data = "claim, refresh, record_checks, integrate, finished_branches, branch_outcomes, lane_worktree, the ACTIVE and WORK constants, seven _-prefixed readers"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-081]
+owner = "scripts/trunk_step"
+consumers = ["scripts/integrate", "scripts/bookkeeping", "external:downstream adopter"]
+channel = "exit-code"
+data = "0 all clean · 1 any failure, the offending file named"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+bridged_by = ["DA-013"]
+component = "CMP-008"
+
+[interface.IF-155]
+owner = "scripts/trunk_step"
+requestors = ["scripts/integrate", "scripts/bookkeeping", "external:downstream adopter"]
+channel = "cli"
+data = "--compile-log · --regen · neither = both, compile first; --root and --dry-run on either"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """No tie-back: the trunk step's argv comes IN from the integrator, the mint, or the adopter running it by hand, and the frame declares no IN crossing for an invocation; the delivered contract ties on the exit-code row."""
+
+[interface.IF-156]
+owner = "docs/log.d/"
+consumers = ["scripts/trunk_step"]
+channel = "file"
+data = "one fragment per session, <id>-<slug>.md, opening with a `## ` heading; links written relative to docs/log.d/"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-168]
+owner = "docs/log.d/"
+requestors = ["scripts/trunk_step", "external:downstream adopter"]
+channel = "file"
+data = "a session adds one fragment; trunk_step --compile-log unlinks each fragment it appended, all-or-nothing, the caller committing the removal"
+version = "v1"
+status = "Drafted"
+notes = "No tie-back: a fragment enters through the same hook floor every governed write does, and that crossing's facing row is the hook's; this row states the mutation of the medium and stops."
+
+[interface.IF-082]
+rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam moved to this split sibling - so the row is held here rather than on the facade."""
+owner = "scripts/check_trajectory"
+requestors = ["scripts/traj_parse"]
+channel = "call"
+data = "check_trajectory loaders: read_rows, spine_carrier, SR_CSV, _arch_scan_profile"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """sink — gen_trajectory.py's decomposition moved the import, not the seam. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-009."""
+
+[interface.IF-083]
+rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam moved to this split sibling with the views it serves."""
+owner = "scripts/check_trajectory"
+requestors = ["scripts/rendering/traj_views"]
+channel = "call"
+data = "check_trajectory joins: read_rows, load_seams, component_top_view, _norm_module, _split_refs, SR_CSV, TOP_VIEW_MAX"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """sink — the import moved with the views; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-009."""
+
+[interface.IF-084]
+rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam moved to this split sibling with the --status layer."""
+owner = "scripts/check_trajectory"
+requestors = ["scripts/traj_status"]
+channel = "call"
+data = "check_trajectory loaders: load_ifs, IF_CSV, spine_carrier"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """sink — the import moved with the --status layer; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-009."""
+
+[interface.IF-085]
+rationale = """A seam is declared per importing module, and the guarded import that holds IF-071's frontier DECISION seam has its one home in this split sibling."""
+owner = "scripts/schedule"
+requestors = ["scripts/traj_parse"]
+channel = "call"
+data = "the module object or None, the guarded import's two outcomes"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """The guarded import lives in traj_parse, its one home, so the seam is IF-071's."""
+
+[interface.IF-086]
+owner = "scripts/check_figures"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 warn-first · 1 under --strict"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-087]
+owner = "scripts/check_doc_refs"
+requestors = ["scripts/check_figures"]
+channel = "call"
+data = "doc_files: the scanned markdown set; authored_lines: (lineno, line) pairs"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-088]
+rationale = """The import is deferred, paid only at an exit banner."""
+owner = "scripts/pending"
+requestors = ["scripts/dispatch"]
+channel = "call"
+data = "pending.operator_cards -> PendingItem(kind, line) with kind blocked or spine; the pause kind excluded"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """sink — the banner renders what the read model derives; a scheduling composer reaching through a render family for two private functions is a crossing a seam registry can only record, never make sound, so the derivation sits below all three of its readers. The crossing, the CMP-008 to CMP-009 pair and the never-disagree contract are unchanged by that siting"""
+
+[interface.IF-089]
+owner = "scripts/trace"
+requestors = ["scripts/census", "scripts/check_assumption_gate"]
+channel = "call"
+data = "load_registries then analyze: orphans, status_findings and the findings bag; load_registries alone for check_assumption_gate"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """sink — the census consumes the validator's one orphan/status engine; deferred import inside gap_census so the tick loop never pays it. The endpoint is the census module rather than the dispatcher because the derivation has three readers and two of them sit below the dispatcher; the crossing, the component pair and the contract are the same ones the seam always carried"""
+
+[interface.IF-090]
+owner = "scripts/intake"
+requestors = ["scripts/integrate", "scripts/dispatch", "scripts/agent_loop", "scripts/adjudicate_act", "scripts/amendment_brief"]
+channel = "call"
+data = "merge intake, gap minting, advisory context, and adjudication-action policy"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-091]
+owner = "scripts/acceptance_record"
+requestors = ["scripts/intake", "scripts/integrate"]
+channel = "call"
+data = "Acceptance delta; merge_acceptance_refusal(root, base, head, metas, trunk) -> acceptance or refusal; settled_amendments(...) -> (settled ids, refusal); unanchored_rows(root, head, ids, routed_cells) -> ({row id: registry}, refusal); text_as_bound(root, head, ruled) -> ids at their bound text"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-092]
+owner = "scripts/wi_convert"
+requestors = ["scripts/intake"]
+channel = "call"
+data = "wi_convert.COLUMNS with AuthoringTags (authoring tags, ;-joined, or empty) and write_spec_file; ConvertError is the mint's refusal input"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-093]
+rationale = """The dashboard's outcome vocabulary is READ from the vocabulary's own module instead of drifting as folklore."""
+owner = "scripts/kitlib/station"
+requestors = ["scripts/rendering/traj_panels"]
+channel = "call"
+data = "OUTCOME_DIRS: complete · cancelled · partial; CHECKS_PASSED"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """sink - a render leaf: provides nothing across components (consumed only inside CMP-009 by the gen_trajectory facade); seam driven by TC-056's station sync pins. The provider was the merge coordinator until the vocabulary was given its own module below both: a render leaf reaching into a service that claims lanes and moves specs is the direction a layered system forbids, and that import was an edge of the runtime scripts' strongly connected component. The seam stays POLICED across the same component pair, because the new provider carries a single owning component rather than the shared kernel's usage tag"""
+
+[interface.IF-094]
+owner = "scripts/schedule"
+requestors = ["scripts/rendering/traj_panels"]
+channel = "call"
+data = "_KIND_CONCURRENCY, _KIND_RANK and CONCURRENCY_EXCLUSIVE, read as constants"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """seam driven by TC-056's station sync pin (test_station_barrier_and_admission_arms_pin_to_the_dispatcher: the rendered exclusive-kind list must equal the schedule-derived one)"""
+
+[interface.IF-171]
+owner = "scripts/schedule"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "--root before the subcommand; ready --explain --format text|json; simulate --jobs N --format text|json; no write, no spawn, no git"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: the argv comes IN from the adopter's own session and the frame declares no IN crossing for an invocation - running the derivation is the session's own act; the delivered contract ties on the stdout row."
+
+[interface.IF-172]
+owner = "scripts/schedule"
+consumers = ["external:downstream adopter"]
+channel = "stdout"
+data = "the frontier or the simulation rounds: fixed-width text lines, or JSON - a record array for ready, a jobs/rounds object for simulate"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+interface_to_external = "B-05"
+coincident = """The frontier or simulation lines are what the caller asked the scheduler for; the output is the outcome."""
+
+[interface.IF-097]
+owner = "scripts/prompts"
+requestors = ["scripts/agent_loop", "scripts/plan_briefs"]
+channel = "call"
+data = "load | fill | preflight | digest | template_path | strip_dispatcher_block; KIT_PROMPTS | KIT_FRAGMENTS | SPINE_QUESTIONS"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source: the templates are files under project-trajectory/prompts/, not code."
+
+[interface.IF-098]
+owner = "scripts/prompts"
+requestors = ["scripts/gen_prompt_catalog"]
+channel = "call"
+data = "catalog_rows() -> (key, file, slots, digest); fragment_rows() -> (file, slot, digest)"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """sink: its output is a generated DOCUMENT, not an API any module calls. Freshness-gated and declared in docs/stack.ini [generated]."""
+
+[interface.IF-099]
+rationale = """Resolution is never at import because a missing template must be a named PREFLIGHT refusal rather than an ImportError for every consumer of the module."""
+owner = "scripts/prompts"
+requestors = ["scripts/agent_loop"]
+channel = "call"
+data = "WORKER · REVIEWER · CRITIQUE"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "intra-component: both endpoints are CMP-008 under the narrow-waist partition, which puts the coordinator and the prompt loader in one unit, so the architecture rule no longer demands this row; it stands as the declared consumption of the loader contract, whose provider side is IF-097. The reviewer template is read uncached for each review round."
+
+[interface.IF-100]
+owner = "scripts/prompts"
+requestors = ["scripts/plan_briefs"]
+channel = "call"
+data = "strip_dispatcher_block, strict_check — the {{NAME}} hat fill"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """intra-component: both endpoints are CMP-008 under the narrow-waist partition, which puts the coordinator and the prompt loader in one unit, so the architecture rule no longer demands this row; it stands as the declared consumption of the loader contract, whose provider side is IF-097. The dual-plan templates are NOT yet in prompts.KIT_PROMPTS, so they are absent from CATALOG.md and from the per-session prompt-sha telemetry - tracked, not silently omitted."""
+
+[interface.IF-101]
+rationale = """Shared rather than duplicated because the mint and the checker must agree on what an id is: a second copy of that rule is the defect the check exists to catch."""
+owner = "scripts/trace"
+requestors = ["scripts/intake", "scripts/plan_artifacts", "scripts/integrate", "scripts/check"]
+channel = "call"
+data = "read_watermark, bump_watermark, reserve_ids, fold_watermark, landing_id_refusal, landing_fold_lag over docs/id-watermark and the id carrier ref"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-102]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/text_then_act", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status", "scripts/check_test_first", "scripts/rejudge", "scripts/retire", "scripts/observation_cadence"]
+channel = "call"
+data = "spine_carrier readers: load, resolve, tier_carriers, tier_rows_from_text, rows_from_text, status_cells; rows or None on TOML decode error"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - spine_carrier consumes nothing by design, the trace_text pattern: text in, rows out, with resolve()'s existence check the single deliberate exception because the dual-home refusal must have one home. ONE module rather than twelve copies, which is the one admitted exception to the rejection of a shared _kitcommon: F5 buys cross-script copy-ability and was written for small stable plumbing, but a duplicated VOCABULARY fails silently rather than visibly."""
+
+[interface.IF-103]
+owner = "scripts/migrate_carrier"
+consumers = ["docs/requirements"]
+channel = "bytes"
+data = "docs/requirements registries rewritten in place; LOSSY - lines and exit 1 on a cell that does not round-trip"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - reads the registries and writes beside them; consumes no kit module. It ships to adopters because every adopting repo migrates too and the round-trip proof is the migration's evidence (SR-129's 140-cell lesson). NOT one-shot, and NOT awaiting retirement: a downstream repo re-syncing onto a newer kit AFTER the carrier cutover still holds its registries on a legacy carrier, so this converter is the standing path for that conversion and has no terminus to wait for. The CSV fallback in spine_carrier does expire - once no supported baseline predates the migration - and this module does not expire with it, which is why its maturity is its own affair rather than the conversion programme's."""
+
+[interface.IF-104]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/check_doc_refs"]
+channel = "call"
+data = "spine_carrier.resolve then load over the TC and LLR tiers; cells under today's column names (Evidence, Module, CodeSymbol, TestRefs)"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-007 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
+
+[interface.IF-105]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/check_flows"]
+channel = "call"
+data = "spine_carrier.load for the SR, LLR, SN and TC id sets; resolve with NEED_CARRIERS for the live need carrier"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-007 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
+
+[interface.IF-106]
+rationale = """The bundle is generated and --check-gated, so a cell this seam failed to hand over would surface as bundle drift rather than silently - which is why the export reads through the carrier rather than keeping a private CSV reader."""
+owner = "scripts/spine_carrier"
+requestors = ["scripts/gen_okf"]
+channel = "call"
+data = "spine_carrier.load for SR, LLR, TC and IF rows; needs_for_root for the need tier; resolve, stem, CARRIERS, NEED_CARRIERS for the live suffix"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
+
+[interface.IF-107]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/gen_release_checklist"]
+channel = "call"
+data = "spine_carrier.load for SR, TC, LLR and IF rows by phase; folded_needs for the need tier; an int phase renders to its CSV cell text"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
+
+[interface.IF-108]
+rationale = """This seam feeds a MODEL, not a check: a cell the reader failed to map would not fail loudly, it would quietly narrow what the planner was told. That asymmetry is the reason the vocabulary has one home rather than a copy here."""
+owner = "scripts/spine_carrier"
+requestors = ["scripts/plan_briefs"]
+channel = "call"
+data = "spine_carrier.load over system-requirements and interfaces; rows in file order under today's column names"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
+
+[interface.IF-109]
+rationale = """A cell lost in translation would either skip a required round or narrow what the model was told - neither of which fails loudly."""
+owner = "scripts/spine_carrier"
+requestors = ["scripts/agent_brief"]
+channel = "call"
+data = "spine_carrier.load over the SR and TC tiers; SR VerificationMethod gates the critique round, SR and TC prose rides verbatim into the brief"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006. The vocabulary has one home rather than a copy per script: a duplicated vocabulary fails silently, handing back a row with a cell missing instead of raising."""
+
+[interface.IF-110]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/intake"]
+channel = "call"
+data = "spine_carrier.load over LLR, TC, IF, CMP and open-item rows; resolve, stem, CARRIERS, NEED_CARRIERS, SPINE_TABLE for the live carrier and its tier"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006. The vocabulary has one home rather than a copy per script: a duplicated vocabulary fails silently, handing back a row with a cell missing instead of raising."""
+
+[interface.IF-111]
+rationale = """This module held one of the three copies that drifted and rendered a phantom SN-000 root in the icicle, which is why the seam is declared rather than left as an import."""
+owner = "scripts/spine_carrier"
+requestors = ["scripts/traj_parse"]
+channel = "call"
+data = "spine_carrier.needs_for_root for the folded need tier; load for the row and off-spine tiers"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006. The vocabulary has one home rather than a copy per script: a duplicated vocabulary fails silently, handing back a row with a cell missing instead of raising."""
+
+[interface.IF-112]
+rationale = """Replaces a markdown table walk that discovered its `Priority` column by header text and tracked draft-ness by heading - both shapes the markdown carrier forced. The heading arm is the one that mattered: over a TOML file it finds no headings, so NO need reads as draft, and every draft need would be ADDED to a floor that gates the README."""
+owner = "scripts/spine_carrier"
+requestors = ["scripts/check_docs"]
+channel = "call"
+data = "spine_carrier.needs_or_refuse, the carrier taken from the file's suffix and an unparseable TOML file refused by name, with is_draft_need for the Must/Should floor; resolve with NEED_CARRIERS as the presence test; load for open-items"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+notes = """cross-component crossing declared per the architecture rule. Existence checking stays this module's own whole-file scrape, byte-for-byte the rule trace.py uses — only the Must/Should floor moved to the carrier."""
+
+[interface.IF-113]
+rationale = """The loader's both-ways strictness is load-bearing here rather than merely tidy: a judge's brief whose evidence section is thin reads as an investigation that was run and found nothing, so there is deliberately no partially-filled path across this seam."""
+owner = "scripts/prompts"
+requestors = ["scripts/adjudicate_brief", "scripts/amendment_brief", "scripts/adjudicate_act"]
+channel = "call"
+data = "ADJUDICATE-AMENDMENT · ADJUDICATE-DISPOSITION · ADJUDICATE-EVIDENCE-GAP · ADJUDICATE-DONE-WHEN · ADJUDICATE-COMBINED · ADJUDICATE-ACT · PROMPTS / SPINE_QUESTIONS"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """intra-component: both endpoints are CMP-008 under the narrow-waist partition, which puts the coordinator and the prompt loader in one unit, so the architecture rule no longer demands this row; it stands as the declared consumption of the loader contract, whose provider side is IF-097. Sibling of IF-099 (the session engine's own use of the same loader): the difference is that a failed fill here HOLDS the work item for an operator rather than degrading, because the alternative brief would be the implementer's."""
+
+[interface.IF-114]
+rationale = """Read through the carrier rather than a path with a suffix because the brief must assemble identically either side of the carrier cutover. Every listed cell is required rather than dash-filled, since a dash in an evidence listing reads as "checked, not applicable" when the truth is "the registry never said"."""
+owner = "scripts/spine_carrier"
+requestors = ["scripts/adjudicate_brief", "scripts/amendment_brief"]
+channel = "call"
+data = "spine_carrier.load over the TC, SR and LLR tiers; every listed cell required, read-only"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """the cross-component edge CMP-008 -> CMP-006, declared per the architecture rule. Read-only: this module never writes a registry - the flip a verdict may earn is the mechanical tool's act, which is also what the briefs themselves tell the session."""
+
+[interface.IF-115]
+owner = "scripts/adjudicate_brief"
+requestors = ["scripts/agent_loop"]
+channel = "call"
+data = "compose(...) -> text | reason; record_outcome(...) -> (recorded | failed, why | None)"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "intra-component (both CMP-008), declared because the fail-closed obligation lives on the CALLER and would otherwise be recorded nowhere. `ROUTED` names all eight shipped briefs with an assembler; `conflict` is retired, with its missing derivation named in the module header. The judging composer derives no acceptance-registry token; the act brief joins the retained identity of actable classes."
+
+[interface.IF-117]
+owner = "scripts/gen_arch_map"
+requestors = ["scripts/check_doc_refs"]
+channel = "call"
+data = "module_bindings(tree) -> the module-scope names plus class-level def names"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+
+[interface.IF-118]
+rationale = """The fail-closed half is what this seam is FOR: read directly, a registry that existed and would not parse came back as no rows, and this view then published "0 pending decisions" - which on a decision queue reads as "nothing is waiting on you"."""
+owner = "scripts/spine_carrier"
+requestors = ["scripts/gen_open_items"]
+channel = "call"
+data = "spine_carrier.resolve and load over docs/requirements/open-items; [] only when absent, SystemExit when present and unparseable"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006. Added by the batch-2 carrier sweep (repo-lock section 8.1), which moved open-items onto the spine's carrier."""
+
+[interface.IF-119]
+rationale = """The CSV branch keeps its own header check because a declared-header schema is a property of that carrier and TOML's analogue is a decode failure. An empty pool is refused rather than returned because {} under managed routing reads as a consent decision rather than a broken file, so the operator is never paged."""
+owner = "scripts/spine_carrier"
+requestors = ["scripts/agent_route"]
+channel = "call"
+data = "spine_carrier.resolve and rows_seq_from_text over docs/agents; an unparseable registry is an error, never an empty pool"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006. Added by the batch-2 carrier sweep (repo-lock section 8.1). The `# tag-rank:` line load_tag_rank parses is a TOML comment now and survives byte-for-byte; only finding the file changed."""
+
+[interface.IF-120]
+rationale = """Naming a suffix inline instead would make the step SKIP silently on a migrated repo, and a skipped freshness step is the shape SN-008 forbids: the generated surface stops being regenerated and nothing says so."""
+owner = "scripts/spine_carrier"
+requestors = ["scripts/trunk_step"]
+channel = "call"
+data = "spine_carrier.resolve as the applicability predicate; None when absent, raises on a stem live under both carriers"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006. Added by the batch-2 carrier sweep (repo-lock section 8.1)."""
+
+[interface.IF-121]
+owner = "scripts/check_need_form"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 warn-first · 1 under --strict"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-122]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/check_need_form"]
+channel = "call"
+data = "spine_carrier.load_needs with resolve over NEED_CARRIERS; absent clean, present-but-empty VACUOUS, unreadable SystemExit"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-007 (LLR-170) and spine_carrier is CMP-006 (LLR-166). The IF-118/119/120 carrier-consumption shape."""
+
+[interface.IF-123]
+owner = "scripts/baseline_snapshot"
+requestors = ["scripts/intake"]
+channel = "call"
+data = "copy_live, parse_accepts, parse_reaccepts, act_summary, tier_owing, load_all, rows_for, exists, stamp, is_drifted, unanchored_findings"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-124]
+owner = "scripts/baseline_snapshot"
+requestors = ["scripts/adjudicate_brief", "scripts/amendment_brief", "scripts/adjudicate_act"]
+channel = "call"
+data = "exists, stamp, SNAPSHOT_DIR, SNAPSHOT_TIERS and format_accepts"
+carried_by = "IF-123"
+version = "v1"
+status = "Drafted"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 (LLR-159) and baseline_snapshot is CMP-006 (LLR-173). The IF-104/IF-122 consumption shape. The anchor is PROVABLY not the text under judgement: the mirror invariant (check_trajectory.staged_snapshot_findings) proves the copy rode a reviewed acceptance commit, and nothing but a copy can write it. Covered by TC-161's amendment arm."""
+
+[interface.IF-125]
+owner = "scripts/baseline_snapshot"
+requestors = ["scripts/pending"]
+channel = "call"
+data = "load_all, rows_for, is_drifted and SNAPSHOT_DIR"
+carried_by = "IF-123"
+version = "v1"
+status = "Drafted"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). The endpoint is the pending read model rather than the dashboard sibling, because the drift arm that performs this read lives there — an endpoint names the module that makes the call, not the one that renders its answer. Read-only side of IF-123; the write half is intake's alone. A generator that REFRESHED the snapshot would defeat the mechanism — the lag between the snapshot and live is the very signal it renders. Cited by no TC today, which the 'IF seams cited by no TC' advisory names."""
+
+[interface.IF-126]
+owner = "scripts/baseline_snapshot"
+requestors = ["scripts/gen_open_items"]
+channel = "call"
+data = "registry_stamps, needs_owing and SNAPSHOT_DIR"
+carried_by = "IF-123"
+version = "v1"
+status = "Drafted"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). Read-only side of IF-123, for the reason IF-125 records: a generator that refreshed the baseline would erase the lag it exists to report. Cited by TC-271."""
+
+[interface.IF-128]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/baseline_snapshot"]
+channel = "call"
+data = "spine_carrier.resolve, carriers, stem, load, load_needs, CARRIERS, NEED_CARRIERS; snapshot and live join on the carrier-stripped stem"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+notes = """intra-component (both endpoints are CMP-006), so the cross-component rule never demanded this row; it is declared as the module genuinely consumes, and a `source` marker would have been a false claim. The IF-104/IF-118/IF-122 carrier-consumption shape. The dual-carrier refusal is what makes copy_live delete the stale carrier file in the same act. The unparseable-file refusal is the right answer for a snapshot precisely where it would be wrong for git history: a snapshot is on disk and a person can fix it. OFFSPINE_TABLE is deliberately absent from the consumed-symbol list: baseline_snapshot cites that constant only in a comment (the SNAPSHOT_TIERS explanation), never in code, so listing it as consumed would be a false claim."""
+
+[interface.IF-129]
+owner = "scripts/acceptance_record"
+requestors = ["scripts/baseline_snapshot", "scripts/held_status", "scripts/amendment_brief", "scripts/adjudicate_act"]
+channel = "call"
+data = "split_changed_cells; accepted_text_digest(registry, id_col, row) -> sha256:<16 lowercase hex>"
+version = "v1"
+status = "Drafted"
+notes = "The digest uses the same accepted-cell classification as split_changed_cells, so a carrier representation and an absent versus empty cell do not change it."
+
+[interface.IF-131]
+rationale = """The rules read the live source AST instead of parsing the retired docs/architecture.md MODULE MAP block back. One walk, one grammar: the module keys and import names are exactly what the map rendered, so every downstream join (stem resolution, CMP membership) is unchanged."""
+owner = "scripts/gen_arch_map"
+requestors = ["scripts/check_trajectory"]
+channel = "call"
+data = "scan_inventory, contracts_grammar_findings, file_contracts, file_grammar_findings, owner_files, ContractsGrammarError, read_test_tags"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """intra-CMP-006 import, declared anyway because gen_arch_map is multi-tagged (CMP-006/CMP-009 via LLR-080) and the multi-tag advisory names an undeclared edge into such a module; the seam of record is honest coverage, not silence. The IF-117 why-an-import-and-not-a-copy reasoning applies verbatim: a second AST walk in the consumer is the silent-divergence hazard a duplicated parser always is."""
+
+[interface.IF-132]
+rationale = """The read replaces the retired parse of docs/architecture.md's committed MODULE MAP block - registries/source -> dashboard, no markdown way-station."""
+owner = "scripts/gen_arch_map"
+requestors = ["scripts/traj_parse"]
+channel = "call"
+data = "scan_inventory(src_roots) -> per-module records; kept where the module has at least one public function symbol"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and gen_arch_map straddles CMP-006/CMP-009 (LLR-080). Same scan_inventory seam as IF-131; declared separately because the two consumers sit in different components and the rule covers PAIRS."""
+
+[interface.IF-133]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/hats"]
+channel = "call"
+data = "spine_carrier.load_needs, resolve, stem, folded, NEED_CARRIERS; absent registry [] and VACUOUS, unreadable carrier SystemExit"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 (LLR-168) and spine_carrier is CMP-006 (LLR-166). The IF-118/119/120/122 carrier-consumption shape. The ROSTER beside it is read with tomllib directly and the two reads do not contradict: a roster row is keyed by name, is no tier and traces nowhere, while a need row is a spine row whose vocabulary - which carrier is live, what an unreadable registry means - has one home. The consumer-side contract test is tests/test_hats.py, which drives both halves this row states: an unreadable needs registry refuses instead of auditing as zero needs, and a legacy .md registry still reaches the worksheet."""
+
+[interface.IF-134]
+owner = "hooks/pre-commit"
+consumers = ["external:git"]
+channel = "exit-code"
+data = "exit 0 admits the commit; nonzero refuses it"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+interface_from_external = "B-01"
+bridged_by = ["DA-003", "DA-004"]
+interface_to_external = "B-04"
+notes = """The FACING row for the hook floor, and it is deliberately separate from the rows that model the floor's COMPOSITION. Those state which script the hook runs - an internal call between two in-tree endpoints - while the crossing is the contract git holds the hook to: git invokes, the exit code admits or refuses. A tie-back on an internal-call row would claim a realization that row's own contract does not state, so the gap was never a missing surface but a missing FACING. The bypass rides the contract rather than hiding behind it: what discharges `no unchecked write enters governed state` is this seam PAIRED with a re-run of the same checks away from the bypass, never this seam alone."""
+
+[interface.IF-135]
+owner = "hooks/pre-push"
+consumers = ["external:git"]
+channel = "exit-code"
+data = "exit 0 releases the push; nonzero refuses it"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+interface_to_external = "B-04"
+bridged_by = ["DA-004"]
+notes = """Ties back to the VERDICT crossing only, and the asymmetry with the commit-side hook is recorded rather than smoothed away. SR-020 carries both the write-in and the verdict-out crossing, but what this hook gates is content LEAVING the machine, while the write-in crossing describes the one write path INTO governed state; claiming it here would widen that crossing by assertion instead of by a frame decision. If the frame intends its write-in crossing to cover the whole git hook floor in both directions, the crossing's own text is what needs widening, not this row's attribution."""
+
+[interface.IF-136]
+owner = "scripts/lane"
+requestors = ["scripts/dispatch"]
+channel = "call"
+data = "lane.ensure_worktree -> (path, error); spawn_worker -> (Popen, refusal); spawn_refresh -> Popen"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-137]
+owner = "scripts/handback"
+requestors = ["scripts/dispatch"]
+channel = "call"
+data = "close_partial and quarantine"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-139]
+owner = "scripts/gen_components"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 current or vacuous · 1 stale or missing"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-140]
+owner = "scripts/gen_components"
+consumers = ["external:downstream adopter"]
+channel = "file"
+data = "docs/requirements/components.derived.toml — [derived], [component_view.CMP-###] and [unplaced] tables"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The derived component view is regenerated whole from the registries and read as it stands; the file is the outcome."""
+
+[interface.IF-141]
+rationale = """The derivation is IMPORTED, not re-implemented: a second copy would be a second answer, and the whole point of the cell is that a parent re-ruling propagates with no child edit."""
+owner = "scripts/trace"
+requestors = ["scripts/gen_components"]
+channel = "call"
+data = "effective_hats: one design row's sorted hat names"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and trace is CMP-006. The IF-075 shape (gen_open_items -> trace), applied again"""
+
+[interface.IF-142]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/gen_components"]
+channel = "call"
+data = "spine_carrier.load over components, system-requirements, low-level-requirements and interfaces; keep_examples off for the placement view"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006. The IF-106/IF-118 shape, applied again"""
+
+[interface.IF-143]
+rationale = """A second reconciliation would be a second answer waiting to disagree with the advisory that already reports an unresolvable endpoint."""
+owner = "scripts/trace_text"
+requestors = ["scripts/gen_components"]
+channel = "call"
+data = "norm_module(endpoint) -> the extension-free, prefix-free module key"
+carried_by = "IF-076"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and trace_text is CMP-006"""
+
+[interface.IF-144]
+owner = "scripts/check"
+consumers = ["external:downstream adopter"]
+channel = "exit-code"
+data = "severity: OK · SKIP · WARN · FAIL"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = """The severity alphabet is the protocol a reader and a caller act on, and it is honoured by construction across the shipped checkers; the reading is the outcome."""
+rationale = """The PROTOCOL is fixed here, never the DISPOSITION: per-class severity stays each requirement's own declaration, and fixing it here would over-constrain rows whose needs differ.
+
+Two clauses are deliberately absent. "Every degrade is named, never silent" is not stated: SR-181's acceptance permits a silent degrade where no prior committed state exists while SN-008 forbids one, so stating it would fail an Accepted row on the day this one landed. And the closed set is four DISPOSITIONS, not twelve exact tokens: the delivered checkers spell those four with twelve labels, and this row states the contract they already honour, not a rename they do not."""
+notes = """A census of 430 emission sites plus a two-way drive of every shipped checker found the protocol already honoured: 141 of 158 per-finding sites name a location (11 population-level, 6 thin), no advisory anywhere reaches an exit code, and 12 of 14 checkers exit zero on an absent optional input and name it. This row states a delivered property, not new work."""
+
+[interface.IF-176]
+owner = "scripts/trace"
+requestors = ["scripts/schedule"]
+channel = "call"
+data = "open_item_states(root) -> {OI-###: lowercased status}, or None where the repo carries no open-items registry"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """The scheduler reads ONE half of trace: the open-item STATES map, and nothing else. The registry rows are the readiness gate's other predecessor kind - a hard OI edge stays unsatisfied while its row reads `pending` - so the frontier derivation needs the same reading of that file the spine enforcer already owns, and a second parse in the scheduler is the two-readers-disagreeing failure this declaration exists to refuse. The row is directional on purpose: nothing here flows back, the caller treats the answer as read-only vocabulary, and the None-versus-empty distinction the owner draws (absent registry versus every id unresolved) is part of the surface rather than an implementation detail - the caller collapses None to an empty map at its own boundary, which is the non-adopter posture where there are no OI edges to resolve. THE IMPORT IS LAZY AND INSIDE THE FUNCTION, and that is a property of the seam and not a coding tic: the scheduler is a pure library that a generated surface, a dispatcher and the loop all import at load time, while the owner is the heaviest module in the kit's script tree; binding it at module scope would pull the whole enforcer into every one of those import graphs for a map most of their calls never ask for. Deferring it to the call keeps the requestor's load-time graph small and makes the dependency pay only where the readiness gate actually resolves an open-item edge."""
+
+[interface.IF-177]
+owner = "scripts/check_trajectory"
+requestors = ["scripts/consolidate"]
+channel = "call"
+data = "queue_conflict_pairs(model) -> the (row, row, signal) pairs the queue-conflict detector reports; the consolidation census reads them as its cluster seeds"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """The consolidation census (scripts/consolidate, CMP-008) seeds its clusters from the SAME queue-conflict detector check_trajectory runs at the gate, so a pair the validator would report is the pair the census offers a consolidate adjudicator — one detector, two readers, and the arrow is paid lazily (the import sits inside the census function) because the validator is heavy and only a census tick needs it. Declared 2026-09-05 by the supervising session after check_trajectory's cross-component ERROR at the DevStg-Impl gate; the seam existed since WI-583's merge (f395907b)."""
+
+[interface.IF-178]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/consolidate"]
+channel = "call"
+data = "resolve(root) -> the spine carrier (TOML or CSV) the repo declares; the consolidation digests hash the spine through it"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """The consolidation's spine digest (§1.3 of the 2026-09-02 restructure plan) must hash the SAME registry bytes every other spine reader sees, so it resolves the carrier through spine_carrier rather than guessing a path — the F5 rule against a second copy of the carrier decision. Declared 2026-09-05 by the supervising session after the DevStg-Impl gate's cross-component ERROR; the seam existed since WI-583's merge (f395907b)."""
+
+[interface.IF-179]
+owner = "scripts/agent_common"
+requestors = ["scripts/gen_verdict_rollup"]
+channel = "call"
+data = "git(root, *argv) -> (code, out); trunk_name(root) -> the declared trunk's name, or raises TrunkUndeclared naming the key"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """The rollup generator's off-trunk refusal (7ea3cce7, LLR-208's exclusive-writer clause enforced) asks agent_common which branch is the trunk — the one home for that question, shared with the loop's brief composer and the worker preflight — instead of deriving a second answer. The import is deferred into the refusal so `--check` pays nothing. Declared 2026-09-05 by the supervising session after the DevStg-Impl gate's cross-component ERROR."""
+
+[interface.IF-180]
+rationale = """The frame and need-tier rules are a pure join layer beside the coherence rules, so the checker composes them and stays their only caller; drawing the seam here keeps the checker growing by composition lines alone while the rules stay testable on in-memory rows."""
+owner = "scripts/frame_rules"
+requestors = ["scripts/trace"]
+channel = "call"
+data = "gating: frame_system, stakeholder, need_source and mediation findings; advisory: the first two, sr_system_advisories; data: crossing_systems, source_documents"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - frame_rules consumes NOTHING by design: rows in, findings out, with no I/O, no git and no filesystem, which is what lets every rule be driven on in-memory rows."""
+
+[interface.IF-186]
+rationale = """The claim and the intake mint are the loop's two trunk-side writers and both run against the primary checkout, where the operator's uncommitted work also lives. One helper owning the whole write sequence - plan the write set over HEAD, refuse a dirty path inside it before writing, write and regenerate with the committed kit in a scratch worktree cut from HEAD, commit exactly what changed there from a temporary index, refuse any in-scope drift in the checkout after the caller's own pre-advance step and before installing, advance trunk by compare-and-swap - keeps both callers from sweeping in, overwriting or discarding an edit of the operator's, and keeps an uncommitted edit from shaping what either commits, instead of two copies of a whole-tree sequence each guarded separately."""
+owner = "scripts/bookkeeping"
+requestors = ["scripts/integrate", "scripts/intake"]
+channel = "call"
+data = "commit(root, scope | scope(scratch) -> (paths, refusal), write(scratch), message, label, before_advance) -> (sha, refusal); inactive floor refuses first"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """Every refusal is a return value; an exception from the step propagates with a note saying what it left. The step and the regeneration run in a scratch worktree cut from HEAD and removed afterwards (`write` is handed its root), so the commit is HEAD plus the step's writes plus what the regeneration derives from them, and no uncommitted edit in the checkout, a generator input included, reaches or shapes it. The scope may be a callable handed the scratch root, so a plan that reads files (the claim's relink plan) is HEAD's, and the pre-check and the commit use that one plan: an uncommitted edit hiding or adding a link neither narrows nor widens it. The regeneration runs the scratch's committed copy of the trunk step, and so its generators, whenever the running kit lies inside the repository; a kit the repository does not carry is no input of it and runs as loaded, and the process already running (the helper, its caller, the harness interpreter) is the checkout's. A path outside the scope is never touched or committed, and a write the step makes outside it is discarded with the scratch. A path inside it is guarded at the pre-check and again immediately before the install, after the caller's `before_advance`, which refuses by name any in-scope path that no longer equals HEAD, or a trunk that moved, and installs nothing. The one window left is the install itself: an edit landing on a path the commit writes between that check and the trunk advance can be overwritten, and a refusal inside the install restores what it wrote, leaving and naming any path edited since. Every path the trunk step's regeneration may write joins the scope, because every bookkeeping commit folds the regeneration in."""
+
+[interface.IF-187]
+rationale = """The report runs as a declared step, so the harness reads it back the way it reads every project step: by exit code, with the lines on stdout for the reviewer. Refusing only where the profile declares a measure gating keeps the report proportionate: a project pays for a refusal once it has opted into one, and a misspelt name or an unreadable change is reported rather than refused, because neither is a worsening."""
+owner = "scripts/check_readability"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "1 only when a gating measure worsened · 0 otherwise: no or only reporting worsenings, no or an unknown measure, an empty or unreadable change"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+
+[interface.IF-188]
+rationale = """The readability report measures complexity through the census's own scoring, naming, baseline reader and comparison, so a function the report calls worse is one the complexity step calls worse; a second copy of any of them would be a second answer waiting to disagree."""
+owner = "scripts/check_complexity"
+requestors = ["scripts/check_readability", "scripts/flag_axis"]
+channel = "call"
+data = "census, functions, source_paths, read_baseline, compare, BASELINE, DEFAULT_THRESHOLD"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+notes = """source - check_complexity consumes no other module's surface: its inputs are the source trees it scores and the baseline file it writes itself."""
+
+[interface.IF-189]
+rationale = """On a claimed branch the change under review is everything since the lane's integration base, and the loop already owns that answer; a second merge-base rule in the gatekeeper would be a second answer to the same question."""
+owner = "scripts/agent_common"
+requestors = ["scripts/check_readability"]
+channel = "call"
+data = "default_base(root) -> the merge base of HEAD with the declared trunk (HEAD on an unrelated history, None on an unborn HEAD), or raises TrunkUndeclared naming the key"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """cross-component crossing declared per the architecture rule: check_readability is CMP-007 and agent_common is CMP-008. The import is deferred into the claimed-branch path, so a trunk run of the report loads nothing from the coordinator's primitives."""
+
+[interface.IF-190]
+rationale = """The assumption tier's rules are a pure join layer beside the frame rules, so the checker composes them and stays their only caller; drawing the seam here keeps the checker growing by composition lines alone while every rule stays testable on in-memory rows. One tier entry point owns the tier's classified findings, keeping the choice of which class each one joins beside the rules that produce it; the two reach reports ride the same seam as advisories, which the checker composes into its warn pipe itself."""
+owner = "scripts/assumption_rules"
+requestors = ["scripts/trace", "scripts/traj_parse"]
+channel = "call"
+data = "assumption_tier_findings -> (frame, integrity, advisories), its six rules and the two reach reports; data: da_citing_srs, classify_srs, reaching_parties"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - assumption_rules consumes nothing but the row vocabulary it reads from kitlib.spine: rows in, findings out, with no I/O, no git and no filesystem."""
+
+[interface.IF-194]
+rationale = "A loop commit can be told apart from a person's only if every one says it is the loop's, and every floor that checks it and every reader that relies on it must agree on the words: the trailer key, the session grammar, which trailer counts, the name of the marker a loop-started process carries, and which commits mark a lane as the loop's and which attended record closes it. One vocabulary module below every writer, floor and reader keeps a writer from emitting a trailer a floor calls malformed, keeps the merge slot and the writers agreeing on what a loop writer's commit looks like, and keeps the history check reading the mark the writers wrote."
+owner = "scripts/kitlib/provenance"
+requestors = ["scripts/agent_common", "scripts/agent_loop", "scripts/bookkeeping", "scripts/check", "scripts/check_trajectory", "scripts/dispatch", "scripts/handback", "scripts/integrate", "scripts/session_service"]
+channel = "call"
+data = "LOOP_TRAILER/LOOP_SESSION_ENV;format/parse_loop_trailer, loop_{trailer_refusal,writer_commit,lane_window}, reclaim_subject; mark_loop_process, with_loop_trailer, append_trailer"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - provenance consumes no other module's surface; its one input beyond its arguments is the process environment. The marker crosses processes as an environment variable rather than as an argument: the loop sets it in its own process once per run and every child inherits it, which is what makes a commit made from a loop-started process known as the loop's without any launcher passing it on; the commit-msg hook reads it by name only to fail closed when the floor cannot run."""
+
+[interface.IF-195]
+rationale = "Every reader that asks whether a dial holds a rung - the loop's writers, the pre-commit step, the merge slot and the history check - asks it here, so the rung tables, the comparison and the reading of the dial itself cannot differ between them. Every reader runs the one resolution: the live readers read the dial committed in a tree they name and the history reader each past commit's dial, each printing nothing, and a value that is not a rung reads as the most-held one, which only ever asks the operator for more. None of them reaches a coordinator primitive to ask a question about a string, a table and a tree."
+owner = "scripts/kitlib/authority"
+requestors = ["scripts/acceptance_record", "scripts/agent_common", "scripts/check", "scripts/check_trajectory", "scripts/integrate", "scripts/adjudicate_act"]
+channel = "call"
+data = "ACCEPTANCE_RUNGS, SPINE_ACCEPTANCE_RUNGS; rung_for -> rung|None; dial_from_config -> rung; dial_at -> rung; holds_under -> bool"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = "source - authority consumes the ladder vocabulary and one git read: the dial of a named commit or of the index, read through the kit's git-or-None primitive, so no git, no repository and an unknown commit all read as the most-held rung. It prints nothing, and reads no spelling older than the current vocabulary: the vocabulary migrator rewrites one a repository stores."
+
+[interface.IF-196]
+rationale = """Which status cells and copied acceptance text a delta moves, and whether a dial holds them, is one judgement read from the lane rider, the marked autonomous-commit check and the history check. Drawing it beside the two-tree spine walk it reuses keeps one comparison basis for each route, makes the lane rule independent of who made the lane commit, and keeps the universe of watched registries declared apart from the rung map, so a registry the map does not name reads as held rather than as absent."""
+owner = "scripts/held_status"
+requestors = ["scripts/agent_policy", "scripts/check", "scripts/check_trajectory", "scripts/text_then_act"]
+channel = "call"
+data = "status moves; held_status_lines; held_status_refusal; HELD_TIERS; HELD_PATHS; registry_held; held_claims; held_acceptance_lines; commit_held_acceptance_lines; marked_refusal"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "A delta git cannot read is an empty list, the status-move readers' degrade; a registry side that does not parse is one move naming the registry, never an empty delta, so an unreadable change is refused where the rung is held. The needs file is shared by a spine tier and an off-spine one: the off-spine walk reads its stakeholder tier alone and the spine walk its needs, so each row is reported once. A delta git cannot read is a refusal rather than an empty claim where the lane rule reads it; a registry side that does not parse is a refusal naming the registry. A held claim is evaluated against every parent, so a refresh merge carrying trunk acceptance makes no lane claim."
+
+[interface.IF-197]
+rationale = """The commit-msg hook is a shell script and the trailer rule is Python, and the rule must be the same wherever the commit floor runs. The hook therefore hands the message file to the harness and reads the exit code, so the grammar lives once and the hook carries only the knowledge of whether the loop marker is set, which it needs to fail closed when the harness cannot run."""
+owner = "scripts/check"
+consumers = ["hooks/commit-msg"]
+channel = "exit-code"
+data = "--loop-trailer MSGFILE: 0 unmarked, or a valid trailer naming the marked session · 1 marked and the trailer missing, malformed or naming another session"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+
+[interface.IF-198]
+rationale = """The order runs as a built-in harness step, so the harness reads it back the way it reads every step: by exit code, with the report on stdout for the reviewer. Warn-only means the exit stays 0 for a finding and for a history the order cannot be read from, because the order is evidence a reviewer weighs; a project that rules it a gate says so with `--strict`, and the shipped step does not."""
+owner = "scripts/check_test_first"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 for every report: none, a finding, an unreadable history or an unreadable declared start · 1 only under --strict, for any of them but none"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+
+[interface.IF-199]
+rationale = """An implementation lands where a commit adds a line declaring it, and a line declares an implementation exactly when the back-link grammar says it does. Calling the grammar the reverse-coverage scan and the module map already read keeps all three agreeing on what a declaration is; a second copy of the rule in the history reader would be a second answer waiting to drift."""
+owner = "scripts/gen_arch_map"
+requestors = ["scripts/check_test_first"]
+channel = "call"
+data = "backlink_ids(line) -> the spine ids one line declares · IMPLEMENTS_MARKER · BACKLINK_EXTS"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """cross-component crossing declared per the architecture rule: check_test_first is CMP-007 and gen_arch_map is CMP-006/CMP-009."""
+
+[interface.IF-200]
+rationale = """An observation test case's declaration is judged by the same pure join layer as the assumption tier, beside it rather than inside the tier's entry point, because the declaration applies to every case the harness cannot rerun whether or not the frame declares a crossing; drawing the seam here keeps the checker growing by composition lines alone while the rules stay testable on in-memory rows."""
+owner = "scripts/assumption_rules"
+requestors = ["scripts/trace", "scripts/rejudge", "scripts/record_observation", "scripts/observation_cadence", "scripts/gen_release_checklist"]
+channel = "call"
+data = "observation_tc_findings -> (failures, advisories); data: is_observation_tc, sampling_model_declared, input_escape, input_path"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - the declaration rules read the test-case rows and the two constants kitlib.spine declares for them, with no I/O, no git and no filesystem."""
+
+[interface.IF-201]
+rationale = """An assumption's citing requirements are derived in one place and read wherever evidence for the assumption is placed or counted, so the stage derivation and the evidence-gap census agree with the checker about which requirements rely on which assumption; a second derivation in either reader could drift and place or count the same test case differently."""
+owner = "scripts/assumption_rules"
+requestors = ["scripts/derive_stage", "scripts/census"]
+channel = "call"
+data = "da_citing_srs(srs) -> {assumption id: [requirement ids]}"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - the derivation reads requirement rows alone, with no I/O; the stage derivation places an assumption-only test case by it and the census counts assumption evidence by it."""
+
+[interface.IF-208]
+rationale = """Two of the assumption tier's rules resolve a cell against another registry and land in classes the tier entry point does not return: an interface's bridging assumptions join the interface findings, and an assumption's obstacle perspectives join the dangling-hat findings. Keeping both in the pure rule module, beside the rows they read, lets the checker compose each into its own class by one line, and keeps the rules testable on in-memory rows."""
+owner = "scripts/assumption_rules"
+requestors = ["scripts/trace"]
+channel = "call"
+data = "interface_bridge_findings -> (failures, advisories); obstacle_hat_findings -> failures"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - assumption_rules consumes nothing but the row vocabulary it reads from kitlib.spine: rows in, findings out, with no I/O, no git and no filesystem."""
+
+[interface.IF-214]
+rationale = """An observation result is kept apart from its test case, one file per result, so recording a sample never edits an accepted row; one shipped module owns the file's format, its strict reader and its atomic write, and the writer and the checker both go through it, so neither can read half a record as a result or disagree with the other about what a record is."""
+owner = "scripts/kitlib/observation"
+consumers = ["scripts/record_observation", "scripts/assumption_rules", "scripts/baseline_snapshot", "scripts/kitlib/evidence"]
+channel = "file"
+data = "one TOML record per result: tc, outcome pass | fail, observed_at and expires in canonical UTC, provenance, judged inputs digest"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - the module consumes only the shipped package's TOML string emitter. The records live under docs/test/observations/, one file named by its case and its colon-free UTC instant, so records written on different lanes never collide; a leading-dot name is the temporary file of a write in progress and is never read. The directory is not a declared stage input and lies outside the release evidence's source surface, so recording a sample moves neither."""
+
+[interface.IF-215]
+rationale = """A result the harness cannot produce needs one sanctioned writer, which judges a record before it exists: the same format and policy rules the checker applies to a record it finds, so a refused record is never written and a written one never fails the check. The module's second face is the checker's read of what judging the records needs - the records and each accepted risk's act - so the writer and the checker read one record format and the checker grows by composition lines alone."""
+owner = "scripts/record_observation"
+requestors = ["external:downstream adopter", "scripts/check_assumption_gate", "scripts/rejudge", "scripts/trace"]
+channel = "cli"
+data = "--tc --outcome pass|fail --by [--expires] [--root]: one record or a REFUSED line and exit 1; evidence_inputs, inputs_digest for trace; inputs_digest(root, inputs, outside) and REGISTRY_DIRS for rejudge; evidence_inputs for check_assumption_gate"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """No tie-back: the argv comes IN from the adopter's own session, and the frame declares no IN crossing for an invocation - recording a sample is the session's own act. The command never opens the test-case registry for writing."""
+
+[interface.IF-216]
+rationale = """The observation records are judged, and turned into a falsification worklist and an accepted risk's reading, by the same pure join layer as the rest of the assumption tier; the checker reads every file and every commit these rules need and hands them in, so the rules stay testable on in-memory rows and the checker grows by composition lines alone."""
+owner = "scripts/assumption_rules"
+requestors = ["scripts/trace", "scripts/record_observation"]
+channel = "call"
+data = "observation_evidence_findings -> (integrity, advisories); record_policy_problem, falsification_worklist, accepted_risk_state"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """The rules read no file, no clock and no git: the records and each accepted risk's act arrive already read. No evidence level is derived: an assumption carries none. The writer reads the one policy rule, record_policy_problem, so its refusal and the checker's finding are one statement."""
+
+[interface.IF-217]
+rationale = """An accepted risk is bound to the acceptance act that accepted it, and only the history of the acceptance record says which act that was; the module that writes the record is the one that reads it back, so the reading follows the record's own format and the pure rule compares texts it never has to find."""
+owner = "scripts/baseline_snapshot"
+requestors = ["scripts/record_observation"]
+channel = "call"
+data = "risk_acceptance_act(root, da_id) -> (commit, reason); risk_acceptance_view -> act, reason, assumption, srs, needs, known"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """Read-only and off-clock: an act is found by the entry it added to the act ledger (IF-220), naming the row accepted or re-accepted, never by the snapshot's prose stamp, and a failed sample is ordered by whether the act's tree held it. A shallow clone whose window holds no such act answers no anchor, with the reason stated."""
+
+[interface.IF-220]
+rationale = """Re-accepting a risk is re-accepting its row, and a re-acceptance moves no cell of the recorded copies, so which rows an acceptance act named must be written somewhere a reader may parse; the snapshot's stamp is prose that nothing parses. One typed entry per act, numbered, keeps two acts naming the same rows on the same day distinct, so the latest act always moves an accepted risk's anchor. The module that writes the record appends the entry in the same act and is the one that reads it back."""
+owner = "scripts/baseline_snapshot"
+consumers = ["scripts/acceptance_record", "scripts/gen_open_items", "scripts/kitlib/sitting", "scripts/trace"]
+channel = "file"
+data = "acts.toml [[act]]: seq, date, accepted, reaccepted, optional verdict; copied = sorted SNAPSHOTTED paths the act wrote, absent on a legacy entry"
+version = "v2"
+status = "Drafted"
+component = "CMP-006"
+notes = """Appended by every snapshot act that copied a registry, the first signing included, and by none that copied nothing. A malformed ledger is refused whole, never read in part: the snapshot act refuses before it moves any byte of the record, trace.py reports it on the always-on integrity floor, and risk_acceptance_act returns no anchor with the reason. risk_acceptance_act reads the entries a commit added by comparing entry numbers with its parent's. The acceptance record's mirror rules skip the file by name, as they skip the prose stamp, since it copies no live registry. No party outside the kit reads the format: the owner writes it and reads it back, and the file reaches history as one more governed write of the act, committed with its copies. The verdict path is recorded for audit and no held-rung rule requires the act ledger's verdict cell. Fields: seq (a positive integer, unique and increasing in file order), date (an ISO day), accepted = [row ids], reaccepted = [row ids], verdict (an optional non-empty in-tree verdict path), copied (a non-empty, sorted list of distinct repo-relative registry paths, the files the act wrote). A legacy entry's copy set is unknown, never empty, never inferred or backfilled. An entry a commit adds, identified by seq against its parent and against MERGE_HEAD during a merge, must carry copied naming only the snapshot's registry files. In the whole file, no entry may omit copied after one that carries it. A malformed parent and a hand-edited ledger are outside the coverage bound, since no supported route produces either. A copied file is no evidence that its rows were judged."""
+
+[interface.IF-224]
+rationale = """The operator's acceptance brief sets apart the owing chains the operator-acceptance dial releases, and which rows the dial releases is a question the loop already answers for the rows it mints and the adjudication brief it composes. Reading that one predicate keeps the operator's surface, the mint and the adjudicator agreeing about who signs a row; a rung table in the brief would be a third answer to one question, free to disagree with the other two."""
+owner = "scripts/agent_common"
+requestors = ["scripts/trace", "scripts/intake"]
+channel = "call"
+data = "operator_accepts_spine(docs, registry) -> True when the dial holds the registry's rung or no rung map names it; False when the dial releases it; trunk_name(root) -> declared trunk or TrunkUndeclared; parse_wi_id(value, source) -> one WI id or ValueError"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """Cross-component crossing: trace is CMP-006 and agent_common is CMP-008. The imports are deferred: acceptance-brief rendering reads operator_accepts_spine, while a reservation reads trunk_name and parse_wi_id; trace paths outside those uses load nothing from the coordinator's primitives. The shipped dial holds every rung, so a repo that has released none sees the brief it saw before."""
+
+[interface.IF-226]
+rationale = """An assumption is accepted for what it lets the requirements claim, so the brief an acceptor reads must show, for each one, the requirements citing it, the needs they reach, where its outcome lands, the test cases that can falsify it and its falsifier. Gathering that chain in the pure join layer that judges the tier keeps the acceptor reading the same rows, joined the same way, as the checker judges, and keeps the brief's module growing by rendering lines alone."""
+owner = "scripts/assumption_rules"
+requestors = ["scripts/trace"]
+channel = "call"
+data = "assumption_chain(da_id, reg) -> {id, kind, row, citing, needs, landing, cases, falsifier, surrogate} or {id, kind, row, emulates, named_by}, or None"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """Rows in, one dict out, with no I/O: the brief reads the registries once and hands them in. No result is read and no evidence level is shown: cases lists the test cases that can falsify the assumption."""
+
+[interface.IF-227]
+rationale = """A reviewer starting from an outcome needs to see what it relies on and whether any of it has been shown false, and neither the per-assumption reports nor the acceptance brief starts from a need. Deriving the view from the registries in the dashboard's source layer, through the same classification rule the checker applies, keeps it from going stale the way a hand-written summary does and keeps the page and the checker agreeing."""
+owner = "scripts/traj_parse"
+requestors = ["scripts/gen_trajectory"]
+channel = "call"
+data = "need_assumptions(root) -> {need id: {assumptions: [{id, text, status, standing, falsifier, cases, citing}], coincident, unclassified}}, or {} (no assumption)"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """The facade hands each need's entry to traj_views.need_assumption_block, which renders it into the need's detail panel. An empty map is the view's omit condition, so a project without the tier renders byte-identically. No evidence level is read or shown, so no clock moves the page."""
+
+[interface.IF-233]
+rationale = """A builder changing a module needs the tests that pin it while iterating, and the spine already records that link: the module's design rows, the test cases verifying them and those cases' evidence. Printing it from the registries, one file per line, gives the inner loop a list a test runner takes whole, with no second map to keep in step and no file-name guess that misses the suites named for the script they drive."""
+owner = "scripts/trace"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "--tests-for MODULE: linked test files, one per line · exit 0 listed, 1 no module matches, 2 several match"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """No tie-back: the argv comes IN from the adopter's own session, and the frame declares no IN crossing for an invocation - asking which tests to run is the session's own act. The arm reads the design and test-case registries, runs no check and writes nothing."""
+
+[interface.IF-228]
+rationale = """Which observation test cases a checkpoint finds due is one decision with three readers: the mint that files a re-judge item at a merge and at release, the release checklist that counts them, and the re-judge brief that re-derives a filed case before a session judges it. One pure module answering it, reading only git at the checkpoint's commit and hashing inputs with the observation writer's own digest, keeps the three from disagreeing about what is due and keeps the mint's own module free of the hashing."""
+owner = "scripts/rejudge"
+requestors = ["scripts/intake", "scripts/gen_release_checklist", "scripts/adjudicate_brief"]
+channel = "call"
+data = "observation_test_cases(root, rev) · due_cases(root, rev, now) -> tc, row, why, digest, record, changed · checkpoint_drafts(root, rev, checkpoint, now, rows) -> intake drafts · explain(due) · BRIEF, CHECKPOINTS, RejudgeError"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """Reads git and hashes files; runs no model and writes nothing. The inputs, the registry and the records are read at the commit, never from the working tree, so an uncommitted edit neither makes a case due nor hides one. An open re-judge item is found by its typed Brief and Adjudicates cells, since the registry reader unions the archive and a title would find closed items there. The release checklist is a view and may not import the mint, so it reads this decision directly."""
+
+[interface.IF-229]
+rationale = """Release preparation is a person's act, so its checkpoint is a command that person runs rather than a hook; naming it on the release checklist as a required item is what makes the checkpoint happen at every release. Filing through the mint's one bookkeeping commit keeps the person's uncommitted work in the checkout out of the commit and in place."""
+owner = "scripts/intake"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "rejudge --checkpoint release [--rev <commit>] [--root]: one queued rejudge adjudication row per due observation test case without an open one, exit 0 naming the count; a refusal mints nothing and exits 1"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """No tie-back: the argv comes in from the person preparing the release, and the frame declares no inbound crossing for an invocation. The merge checkpoint runs the same decision only inside the merge slot, through the importer seam of the mint, once per merged work item; this command accepts the release checkpoint alone."""
+
+[interface.IF-230]
+rationale = """The assumption gate is four questions asked at four rungs, and the harness reads every step the same way: by exit code, with the findings on stdout for the reviewer. One command taking the step's name keeps the registry reads and the choice between failing and advising in one place, so the four steps cannot disagree about what the setting means, and the checker's own module stays free of the gate's reads."""
+owner = "scripts/check_assumption_gate"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "--step assumption-gate|crossing-allocation|interface-allocation|assumption-evidence [--root]: FAIL: or ADVISORY: lines, a summary line; 1 when the gate is on and a finding stands, else 0"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+notes = """The gate's setting is read from `[checks] assumption_gate`, absent or unreadable reading off, so a project that never opts in sees advisories and never a failure. It writes nothing."""
+
+[interface.IF-231]
+rationale = """Whether a requirement's argument holds is a join across rows the tier already judges, and the reach check and the accepted risk each have one derivation here. Keeping the gate's four rules beside them, pure, means the gate fails exactly what the reports report, and the step that runs them grows by its reads alone."""
+owner = "scripts/assumption_rules"
+requestors = ["scripts/check_assumption_gate"]
+channel = "call"
+data = "boundary_gate_findings(srs, das, surs, reach, have_frame) · reach_gaps(...) -> {DA id: [reasons]} · crossing_gate_findings(srs, das, bifs) · interface_form_gate_findings(srs, ifs, llrs) · if_reached_srs(ifs, llrs) · module_srs(llrs) · release_gate_findings(das, srs, risks) -> [finding]"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """Rows and derived readings in, finding strings out, with no I/O. The relation between a boundary interface and the requirements it reaches is derived through its owner's design rows and never recorded on the interface."""
+
+[interface.IF-239]
+rationale = """The readability report measures the flag axis through the count's own reading, comparison and baseline reader, so a module the report calls worse is one the count's own report calls worse; a second copy of any of them would be a second answer waiting to disagree."""
+owner = "scripts/flag_axis"
+requestors = ["scripts/check_readability"]
+channel = "call"
+data = "reading, compare, read_baseline, BASELINE"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+
+[interface.IF-240]
+rationale = """The whole-tree reading, per module with totals, and its re-stamp are a maintainer's act that the per-change report cannot give. Exiting 0 in every case keeps a count of candidates from ever becoming a gate."""
+owner = "scripts/flag_axis"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "--root · --include GLOB · --baseline · --restamp; always exit 0"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+notes = """No tie-back: the argv comes IN from the adopter's own session, and the frame declares no IN crossing for an invocation. It reads the source tree and the baseline file, and writes only the baseline, under --restamp."""
+
+[interface.IF-242]
+rationale = """A reviewer maps each Done-when item to its covering test, so the list is the checklist a lane is judged against, and the lane being judged can rewrite it. Three readers ask about that list - the claim (does the row have one?), the reviewer's brief and the merge-time mint (did the lane change it?) - and a tick with evidence is the normal way an item is closed. Deciding what an item is and what counts as a change once, below all three, keeps them from disagreeing about whether a lane moved its own goalposts."""
+owner = "scripts/kitlib/done_when"
+requestors = ["scripts/integrate", "scripts/intake", "scripts/agent_loop", "scripts/plan_coverage", "scripts/adjudicate_brief"]
+channel = "call"
+data = "Done-when item and comparison schema; see Contract IF-242 in the owner module."
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - consumes no declared seam: pure text functions plus one read of the claim-time copy through kitlib.git. The section itself comes from kitlib.registry.done_when_section, so the tolerant heading rule keeps one home. Ticks, strikethrough and appended evidence in the form closed specs use (an evidence separator and an evidence token) read as the item unchanged; any other appended text is a change, closing punctuation or not, because that is how an item gets narrowed."""
+
+[interface.IF-243]
+rationale = """Running the consolidation census is a person's act whenever the loop is not the one running it, and a census that proposes nothing is the usual answer, so the command prints the census's own reason to keep that answer legible. Minting through the mint's one bookkeeping commit keeps the person's uncommitted work in the checkout out of the commit and in place."""
+owner = "scripts/intake"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "consolidate [--dry-run] [--root] · exit 0 minted one row, proposed nothing (its reason printed) or dry run · 1 the mint refused, nothing minted"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """No tie-back: the argv comes in from the person running the census, and the frame declares no inbound crossing for an invocation. The dispatcher's idle arm mints the same draft through the importer seam of the mint."""
+
+[interface.IF-244]
+rationale = """A merge made outside the merge slot mints nothing, so the person who made it runs the slot's intake by hand; naming the rows that merge closed gives the sweep the outcomes map the slot reads off the branch, which neither the range shape nor the whole-history terminal scan supplies. Minting through the mint's one bookkeeping commit keeps that person's uncommitted work out of the commit and in place."""
+owner = "scripts/intake"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "sweep [--before SHA] [--after SHA] [--branch LABEL] [--with-terminal | --merged WI-###[;WI-###]] [--root] · 0 minted or none owed · 1 refused"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """No tie-back: the argv comes in from the person recovering or completing a merge, and the frame declares no inbound crossing for an invocation. The merge slot runs the same intake through the importer seam of the mint, with the outcomes it reads off the merged branch."""
+
+[interface.IF-252]
+rationale = """The absolute-term rule carries its own vocabulary tables and tokenization, so it sits beside the text rules as a pure sibling the checker composes and stays its only caller; drawing the seam here keeps the checker growing by composition lines alone while the rule stays testable on in-memory rows, and keeps the text-rule module from growing past its size pin."""
+owner = "scripts/absolute_terms"
+requestors = ["scripts/trace"]
+channel = "call"
+data = "advisory: absolute_advisories(needs, srs, llrs), one per row and cell; absolute_summary and absolute_report_lines; absolutes(cell); ABSOLUTE_CELLS"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - absolute_terms consumes NOTHING by design: rows in, advisories out, with no I/O, no git and no filesystem, reading only the waiver marker the text rules declare."""
+
+[interface.IF-253]
+rationale = """A repository that runs several model tiers wants a different guardrails posture per model, and the kit must not name a model to give it one. A file per model-name substring beside the default core lets the repository carry the mapping in its own file names, read by the same substring matcher the policy uses, so the choice is a reviewed file in the repository rather than a model name in shared configuration."""
+owner = "scripts/agent_loop"
+consumers = ["external:downstream adopter"]
+channel = "file"
+data = "core.<substring>.md beside the vendored guardrails core: a payload for models whose name contains the substring"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+interface_to_external = "B-05"
+notes = """Published contract, as the declared toolchain file is: the loop reads the file and the adopter authors it, so the owner is the module that states the naming rule and reads it. Ties to B-05 as part of the delivered loop's own contract with the repository it runs in."""
+
+[interface.IF-254]
+owner = "scripts/gen_skills_index"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "--check: 0 index fresh and descriptions at or over the floor, or no skills dir · 1 stale index or a description under the floor"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+
+[interface.IF-255]
+rationale = """A delegated run's record is a file the session that made the calls writes and the merge slot reads off the lane's branch, and the operator edits in place afterwards. Declaring the file's path and fields as one contract keeps the writer and the reader on one shape, so a record a session writes to its instructions is the record the slot looks for."""
+owner = "scripts/kitlib/decisions"
+consumers = ['scripts/acceptance_record', 'scripts/integrate', 'scripts/pending']
+channel = "file"
+data = 'docs/decisions/<run>.toml: high_risk (entry ids); [decision.D-<n>] decided, alternative, reversal_cost, why_not_escalated, review, operator (optional: confirmed | overruled; absent = not yet seen); a work item cites an entry as docs/decisions/<run>.toml#D-<n>'
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "The owner is the module that states the file's shape; the file arrives on the lane's branch and the merge slot reads it there. operator is the operator's verdict. reviewed is retired: it is a format finding, never read as a verdict, and an entry carrying it reads as not yet seen whatever operator value accompanies it; the migrator rewrites its recognized vocabulary. An overruled entry has a non-blank review note. An entry numbered -000 is the shipped example and is never judged."
+
+[interface.IF-256]
+rationale = """The merge slot, the loop and the dial reader each ask the record's questions - where a run's record belongs, what makes an entry malformed, whether a close owes one, what a session is told, and which words the dial takes - and answering them in three places is how a session gets told one path while the slot reads another. One imported module answers all of them."""
+owner = "scripts/kitlib/decisions"
+requestors = ['scripts/acceptance_record', 'scripts/agent_common', 'scripts/agent_loop', 'scripts/gen_open_items', 'scripts/integrate', 'scripts/migrate_decisions', 'scripts/pending']
+channel = "call"
+data = "record_path (raises ValueError for a run name no record can carry: # or a character git refuses); record_findings; operator_state; review_queue(text) -> (unseen, overruled, confirmed_count); citation; citations; newly_overruled (raises ValueError for an unparseable after side); overrule_sync_lines(changed, before, after) -> refusal lines (before/after read a path's text in the parent and resulting tree, None when absent; what they raise propagates); migrate_text -> (text, left_ids) (raises ValueError for unparseable input or failed re-parse equivalence); MODES, REQUIRED_KEYS, OPERATOR_KEY, CONFIRMED, OVERRULED, OPERATOR_VALUES, RETIRED_KEY; owed; missing_record_refusal(mode, run) -> the merge slot refusal of an owed close with no record, or with a run name no record can carry; session_note"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = 'source — the module imports nothing and reads no file, git or environment, so every answer is a function of its arguments; the git read of a record and the policy-file read of the dial stay with the merge slot and the dial reader. review_queue returns entry dictionaries with id, high_risk, fields, and raw operator value; it orders high-risk entries first then id, skips -000, reads an entry carrying reviewed as unseen whatever operator it carries, and returns empty unseen and overruled lists with zero confirmed for unparseable text. newly_overruled fails closed when its resulting side does not parse. migrate_text raises ValueError for unparseable text or when a rewrite re-parses differently from the expected verdict-only change. record_path maps / to - and rewrites no other character; a run name carrying # or a character git refuses has no record, and record_path raises ValueError naming the run and character rather than folding it into another name.'
+
+[interface.IF-257]
+rationale = """A retired row's record is written by the retirement and read by three parties: the traceability check that reports a missing or moved record, the dashboard that lists the records with their deleting commits, and a session that meets a spent id and looks it up. Declaring the files' path and shape as one contract keeps the writer and every reader on one shape, and one file per id keeps the lookup a path rather than a search and the write conflict-free across parallel branches."""
+owner = "scripts/retire"
+consumers = ["scripts/trace", "scripts/gen_trajectory", "external:downstream adopter"]
+channel = "file"
+data = "docs/log.d/retired/<ID>.md: +++ exactly id, date, successor, reason +++, no body, never rewritten; docs/log.d/retired/before-the-record.toml: <tier> = id ranges"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """No tie-back: the reader outside the kit is the adopter's own session looking up a spent id it met, and the frame declares no crossing for a read of the repository's own files. The files are written only through the command, whose arm is its own seam. The fold of session records into the activity log reads only the directory above and never reaches these files."""
+
+[interface.IF-258]
+rationale = """Retiring a row is a person's or a session's act, and the command is the one sanctioned way to perform it, so its arguments and its exit protocol are a contract of their own: a caller must be able to tell a retirement done from one refused with nothing written, whatever the files' format later becomes."""
+owner = "scripts/retire"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "<ID> --reason [--successor] [--date] | --seed [--exclude ID,..] [--replace]; [--root] · 0 done · 1 REFUSED, nothing written · 2 usage"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """No tie-back: the argv comes in from the adopter's own session, and the frame declares no inbound crossing for an invocation."""
+
+[interface.IF-245]
+rationale = """Each provider runner differs in the flags that make it emit structured output, where its final text is, which events carry its usage and how full its context is. Scattered through the launching roles those differences drift apart, so one module answers them per runner and the session layer imports it."""
+owner = "scripts/session_adapters"
+requestors = ["scripts/session_service", "scripts/agent_route", "scripts/usage_ingest"]
+channel = "call"
+data = "USAGE_KEYS, OTEL_SEMCONV; adapter_for(argv) -> adapter; adapter methods; HOME_VARIABLES, TOKEN_VARIABLES; cli_named(executable), home_env(cli, home), claude_session(home, session_id), transcript_usage(messages), TranscriptRefused, TRANSCRIPT_TYPES, CLAUDE_RESULT_COUNTS_SUBAGENTS, claude_home(env), transcript_time(value)"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - the module imports no kit sibling; the only files it touches are the codex last-message temp file it creates and removes, and a codex rollout file it reads by exact thread id under the launch's CODEX_HOME. It also reads the Claude Code transcripts and metas of the one session its caller names under the ambient Claude home, and never writes there."""
+
+[interface.IF-246]
+rationale = """Every role that makes a model call needs the same launch, accounting and record, and a role that keeps its own copy of any of them drifts: a usage fix lands in one path and not the others. One service owns the call and its record, and a role hands it only the data it differs by."""
+owner = "scripts/session_service"
+requestors = ["scripts/agent_loop", "scripts/plan_runner", "scripts/dispatch", "scripts/coordinator/codex_call", "scripts/usage_ingest"]
+channel = "call"
+data = "Call (including wi and resume), Outcome; act -> Outcome or BlackoutRefused or HooksOffRefused; call(between, report) -> Outcome; through_blackout(launch) -> Outcome; record(report) -> path; spool_dir(root); lane_branch(root); lane_wis(root); is_call_log(name) -> bool; CALL_LOG_RE (its stamp group); record writes to the primary spool without a commit outside a claimed lane and reports whether its log was spooled, committed, or refused; call_succeeded(outcome) -> bool; keep plan, version, warmer and route_runner(entry)"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - the session log and its telemetry commit are written through the shared primitives' writer, and the raw stream to the untracked run-logs directory a caller names."""
+
+[interface.IF-305]
+rationale = "The coordinator needs one explicit ingest invocation surface so it can distinguish a completed, deferred, absent, or refused transcript read without interpreting the command's internals."
+owner = "scripts/usage_ingest"
+requestors = ["external:coordinator"]
+channel = "cli"
+data = "[--session ID] [--root DIR]; ambient home and session selection"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator invokes this local command from its own repository session; the locked frame declares no inbound crossing for that invocation. The command reads one ambient transcript home and writes usage records through its declared service seam."
+
+[interface.IF-306]
+rationale = "The coordinator needs the command's human-readable operational reading separate from its arguments and exit code, so it can see each transcript contribution's outcome without parsing a result number."
+owner = "scripts/usage_ingest"
+consumers = ["external:coordinator"]
+channel = "stdout"
+data = "recorded, unchanged, open, skipped, refused, absent, parent-unresolved lines prefixed by role, agent type and agent id; a shape refusal names file and field"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator reads this local command output in its own repository session; the locked frame declares no outbound crossing for that output."
+
+[interface.IF-307]
+rationale = "The coordinator needs a result surface distinct from command arguments and printed outcomes, so it can distinguish successful ingest, an absent or refused transcript, and an invocation without a selected session."
+owner = "scripts/usage_ingest"
+consumers = ["external:coordinator"]
+channel = "exit-code"
+data = "0 no refusal, absence, or record-commit refusal; 1 refusal, absent transcript, or refused record commit; 2 no selected session"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."
+
+[interface.IF-308]
+rationale = "The staged check and lane-commit rider need one owner for parent-first refusal lines, so both judge the same parent tree comparison instead of accepting different acceptance relationships."
+owner = "scripts/acceptance_record"
+requestors = ["scripts/check", "scripts/text_then_act"]
+channel = "call"
+data = "staged_parent_first_lines(root) and commit_parent_first_lines(root, rev) return parent-first refusal lines"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source - reads staged or committed registry trees and their parents; writes nothing."
+
+[interface.IF-247]
+rationale = """A retained adjudicator session must outlive the lane worktree whose loop minted it, and a keep-warm tick in the dispatcher must read the same record an adjudication writes, so the record is a file under the primary checkout that one owner writes whole and both read."""
+owner = "scripts/session_keep"
+consumers = ["scripts/agent_loop", "scripts/dispatch"]
+channel = "file"
+data = "out/adjudicator/<FAMILY>-<hash of route id, NUL scope, NUL account>.json; identity family, route_id, account, scope; missing account is not its own; .mark carries that identity"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """No tie-back: the record is per-clone runtime state under the ignored out/ directory, read and written by the one module that owns it; it crosses no boundary and publishes nothing. Every record write holds the store lock; markers are written whole without it and are applied and deleted only under it. One reader decides every load and scan: a record naming another family, route or scope, not one of the declared variants with every consumed field typed and each optional field of its writer's type, or filed under another record's name, reads as no session, so the next launch mints."""
+
+[interface.IF-248]
+rationale = """The retention rules and the store are read by the service before and after every retained call and by the keep-warm schedule, and a copy of any rule in the service would let the launch side and the bookkeeping side disagree about when a session resets; one module owns them and the service imports it."""
+owner = "scripts/session_keep"
+requestors = ["scripts/session_service"]
+channel = "call"
+data = "KeepConfig; keep_for; keep_bookkeep; keep_release; keep_abandon; take_warm_lease; review_retention; scoped_route; retire_scope; publish_marker; fold_marker"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - the module launches nothing and writes no log; its only effects are the retained-session records and the store lock under out/adjudicator, and the account home directories it creates there."""
+
+[interface.IF-260]
+owner = "scripts/agent_brief"
+requestors = ["scripts/agent_loop", "scripts/adjudicate_brief", "scripts/coordinator_adjudicate"]
+channel = "call"
+data = "brief constructors, prompt routing, guardrails payload selection, and assignment-facing lane evidence"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-261]
+owner = "scripts/agent_policy"
+requestors = ["scripts/agent_common"]
+channel = "call"
+data = "process-config readers and findings, acceptance authority decisions, and normalized coordinator dials"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-262]
+owner = "scripts/kitlib/bootstrap_manifest"
+requestors = ["scripts/bootstrap"]
+channel = "call"
+data = "MAPPING and mapping_entries: the ordered scaffold source, destination, and optional requirement-reference inventory"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+
+[interface.IF-263]
+owner = "scripts/trajectory_arch"
+requestors = ["scripts/check_trajectory"]
+channel = "call"
+data = "architecture inventories and findings for seams, contracts, components, code symbols, spec boundaries, test-file tags, and tag/evidence equality"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-264]
+owner = "scripts/schedule"
+consumers = ["scripts/traj_status", "scripts/agent_brief", "scripts/dispatch", "scripts/integrate"]
+channel = "call"
+data = """work rows and their needs OI edges -> readiness records carrying unmet item ids and titles"""
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = """One readiness calculation projects each unmet open-item edge as a blocked record, so every consumer presents the same held work and item title."""
+
+[interface.IF-265]
+owner = "scripts/spine_carrier"
+consumers = ["scripts/schedule"]
+channel = "call"
+data = "open-items registry path -> carrier-neutral OI rows"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+rationale = """Read the titles of cited open items through the carrier boundary, refusing unreadable data."""
+
+[interface.IF-266]
+owner = "scripts/session_adapters"
+consumers = ["scripts/session_service", "scripts/session_keep"]
+channel = "call"
+data = "compaction(stream, env, session_id) -> {reported: bool, prompts: list[int], totals: list[int]} for codex, else {}"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "Keep provider event shapes in the adapter while retained bookkeeping owns comparisons across calls and resets."
+
+[interface.IF-267]
+owner = "scripts/check"
+consumers = ["hooks/pre-commit"]
+channel = "cli"
+data = "--path-triggered: run only path-declaring steps except smoke selected by the shared rung-or-change rule; ordinary gate plans also use the rule and retain smoke"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+rationale = "The hook must select opted-in sensors without inheriting the full gate plan or copying its selection logic."
+
+[interface.IF-269]
+owner = "scripts/observation_cadence"
+requestors = ["scripts/rejudge", "scripts/check_trajectory"]
+channel = "call"
+data = "Cadence(root, revision, snapshot, checkpoint, git).eligible(row, since, checkpoint) -> bool; observation_rubric_findings(rows) -> warnings. Reads committed process policy and closed-WI git history."
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "One cadence decision hides history and trigger interpretation from snapshot extraction, while the same observation policy module supplies the rubric advisory to trajectory validation."
+
+[interface.IF-270]
+owner = "scripts/spine_carrier"
+requestors = ["scripts/gen_cases"]
+channel = "call"
+data = "SPINE_COLUMN: TOML registry key -> legacy column name; used with kitlib.spine.REGISTRY_KEYS to construct the ordered TC CSV header."
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+rationale = "The generated legacy case header must use the registry vocabulary instead of copying it, so new observation cells stay paste-ready without a second schema."
+
+
+[interface.IF-271]
+owner = "scripts/coordinator_guard"
+requestors = ["scripts/integrate"]
+channel = "call"
+data = "claim_refusal(root, env=None) -> None | blackout or guard refusal text"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The integrator must ask one guard-owned admission question, so every non-dispatcher route receives the same lease and drain decision."
+
+[interface.IF-272]
+owner = "scripts/session_keep"
+requestors = ["scripts/coordinator_guard"]
+channel = "call"
+data = "primary_out_dir(root) -> Path"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "Coordinator and retained-session state must resolve the same primary checkout, or a lane worktree can split their runtime state."
+
+[interface.IF-273]
+owner = "scripts/session_keep"
+requestors = ["scripts/coordinator_guard"]
+channel = "call"
+data = "dir_lock(directory, wait=10.0) -> context manager yielding Path; raises StoreBusy"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "One exclusive-file lock primitive keeps coordinator lease updates and other runtime-store updates from growing incompatible lock behavior."
+
+[interface.IF-274]
+owner = "scripts/coordinator_guard"
+requestors = ["external:agent CLI"]
+channel = "cli"
+data = "hook event JSON on stdin: hook_event_name, session_id, transcript_path, agent_id?, reason?, trigger?, tool_name?, tool_input?"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The guard can identify the lease holder and event only from the hook payload, so its accepted event vocabulary must have one declared surface."
+
+notes = """No tie-back: the hook invocation and response are Claude Code's own process protocol; the locked frame declares no crossing for this local tool exchange."""
+
+[interface.IF-275]
+owner = "scripts/coordinator_guard"
+consumers = ["external:agent CLI"]
+channel = "stdout"
+data = "hook JSON: hookEventName/context; blackout denial adds permissionDecision=deny and reason, including unreadable command lines"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The hook caller needs one response shape so a latch instruction reaches the coordinator without turning a hook response into a tool refusal."
+
+notes = """No tie-back: the hook invocation and response are Claude Code's own process protocol; the locked frame declares no crossing for this local tool exchange."""
+
+[interface.IF-277]
+owner = "external:agent CLI"
+consumers = ["scripts/coordinator_guard"]
+channel = "env"
+data = "CLAUDE_CODE_SESSION_ID: session id; CLAUDE_PROJECT_DIR: default repository root for guard processes"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The guard reads session identity and its default root through one declared agent-CLI environment surface, so claim and hook paths cannot disagree."
+notes = """No tie-back: the agent CLI's process environment reaches the local guard only; the locked frame declares no crossing for it."""
+
+[interface.IF-278]
+owner = "scripts/coordinator_guard"
+requestors = ["scripts/coordinator-relaunch.cmd", "scripts/coordinator-relaunch.sh"]
+channel = "env"
+data = "PT_COORDINATOR_TAKE: successor token supplied for SessionStart lease take"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+rationale = "Both platform launchers set one successor-token environment surface, so SessionStart takes exactly the token its holder issued."
+
+[interface.IF-279]
+owner = "scripts/coordinator_guard"
+consumers = ["scripts/coordinator-relaunch.cmd", "scripts/coordinator-relaunch.sh"]
+channel = "cli"
+data = "REPO_ROOT PROMPT_FILE TOKEN; POSIX reads PROMPT_FILE, Windows calls exec-claude --prompt-file"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+rationale = "The guard launches both platform helpers through one argument shape, so root, prompt and token remain aligned with their consumers."
+
+[interface.IF-280]
+owner = "scripts/coordinator_guard"
+requestors = ["external:agent CLI"]
+channel = "cli"
+data = "take | request-relaunch --handoff | handback --handoff | release --reason | clear --reason | status | window-check | hooks --example E [--offer]"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "Coordinator-facing operations need one declared argument surface, so recovery instructions and command invocation cannot drift."
+notes = """No tie-back: a coordinator invokes this local command from its own repository session; the locked frame declares no inbound crossing for that invocation."""
+
+[interface.IF-281]
+owner = "scripts/coordinator_guard"
+consumers = ["external:agent CLI"]
+channel = "exit-code"
+data = "0 success; 1 refusal or window-check inside blackout; 2 usage error; hook always 0"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The agent CLI needs a separately declared result surface to distinguish success, refusal and usage error without conflating it with command arguments."
+notes = """No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."""
+
+
+[interface.IF-282]
+rationale = "The loop and coordinator need one request shape for the retention plan; if either assembled its own inputs, a retained session could be judged under a different template identity or lease. The sign-in reading belongs beside that plan because refusal must happen before it changes retained state."
+owner = "scripts/session_service"
+requestors = ["scripts/agent_loop", "scripts/coordinator_adjudicate", "scripts/coordinator/codex_call"]
+channel = "call"
+data = "AdjudicationRequest(route, scope, account); route_runner(entry); prepare_launch(root, row, account) -> Prepared; launch_env/entry_env; cli_version; compose_env; probe_env; refuse_competing; launch_credential(account); signin_status(root, account); require_signin"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source - the request is planned but not launched here; a retained account-home reading other than signed-in raises before a lease or home is created. The act turn is a second request from scripts/coordinator_adjudicate and uses its verdict-bound brief class."
+
+[interface.IF-283]
+rationale = "The coordinator needs one declared argument surface for an adjudication it starts outside the loop, so the caller, parser and command contract agree on which inputs are admissible."
+owner = "scripts/coordinator_adjudicate"
+requestors = ["external:coordinator"]
+channel = "cli"
+data = "adjudicate and act command lines; --route names an enabled entry (default ANTHROPIC-OPUS-STRONG@ADJUDICATOR); act --verdict PATH --wi WI-N [--route ID] [--root DIR] [--timeout SECONDS]; signin reads that entry account; --retained reports off without probing when retention is off; adjudicate carries wi"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator invokes this local command from its own repository session; the locked frame declares no inbound crossing for that invocation. source - adjudicate uses the enabled default route when none is given and signin creates no home."
+
+
+[interface.IF-284]
+rationale = "The coordinator needs a result surface distinct from command arguments and printed diagnostics, so it can distinguish a valid verdict, a failed call, a preflight refusal and a sign-in hold."
+owner = "scripts/coordinator_adjudicate"
+consumers = ["external:coordinator"]
+channel = "exit-code"
+data = "adjudicate: 0 valid|1 failed|2 pre-launch/blackout refusal|7 account authentication, account-home, or launch-environment; act: 0 complete|1 after launch|2 pre-launch/blackout refusal|7 sign-in; signin: 0"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."
+
+[interface.IF-285]
+rationale = "The coordinator needs the command's human-readable operational reading separate from its arguments and exit code, so a person can see retention, refusal and verdict state without parsing a result number."
+owner = "scripts/coordinator_adjudicate"
+consumers = ["external:coordinator"]
+channel = "stdout"
+data = "adjudicate and act readings: keep, exit and refusal; act also reports owed-after, verdict-record writes or complete; stdout includes sign-in reading (account and token/login kind, ambient, retained-off, or unresolved), blackout refusal, and call outcome; see Contract IF-285."
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator reads this local command output in its own repository session; the locked frame declares no outbound crossing for that output."
+
+[interface.IF-286]
+rationale = "Dispatch, close, merge and brief composition need one reading of whether a changed Done-when has the exact blessing it owes; separate readers could release a different text or apply a verdict's scope inconsistently."
+owner = "scripts/kitlib/done_when"
+requestors = ["scripts/agent_loop", "scripts/integrate", "scripts/intake", "scripts/adjudicate_brief"]
+channel = "call"
+data = "Done-when blessing, cover, hold and closure schema; see Contract IF-286 in the owner module."
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source - this seam reads version-control trees and review or decision records; its staged hold accepts an injected relink oracle, and callers decide the transition they hold."
+
+[interface.IF-287]
+rationale = "Combined brief composition, review verdict checking, merge-time disposition and acceptance acts need one interpretation of their machine lines, kind-scoped tokens, bound row identities and sections; separate parsers could let one judgement act outside its requested scope or let a malformed review verdict reach a different consumer."
+owner = "scripts/kitlib/sitting"
+requestors = ["scripts/adjudicate_brief", "scripts/amendment_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake", "scripts/review_brief", "scripts/score_reviews", "scripts/plan_coverage", "scripts/adjudicate_act", "scripts/held_status"]
+channel = "call"
+data = "binding/path grammar; requested, identity and findings-file cells; outcome; combined-scope and review-verdict readers"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source - consumes no declared seam; pure functions. An identity cell is preserved when a pending binding is rewritten as recorded or failed; absent, malformed or repeated identities read as no identity with a reason. A findings-file record is carried the same way when a pending binding is rewritten as recorded or failed; an absent record reads as none."
+
+[interface.IF-290]
+owner = "scripts/kitlib/dispute"
+requestors = ["scripts/adjudicate_brief", "scripts/plan_coverage", "scripts/plan_gate", "scripts/review_brief"]
+channel = "call"
+data = "read_findings(text, where); request_line(ids); file_line(path); requested_ids(brief_text); requested_file(brief_text); parse(text, requested, where)"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "Brief composition needs one owner for the findings and verdict grammars, so it cannot render a request that validation reads differently."
+notes = "source - pure text parsers; the owner does not read a file or launch a process."
+
+[interface.IF-288]
+rationale = "An attended coordinator needs one declared command-input surface for rendering a review or critique and filing a review, so the caller and parser agree on the admissible lane, specification, rubric, revision and output inputs."
+owner = "scripts/review_brief"
+requestors = ["external:coordinator"]
+channel = "cli"
+data = "review / critique [--plan --sha] / file / plan [--revise] / plan-file (--critique --sha | --pass [--dispute] | --dispute-findings PATH --positions FILE)."
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator invokes this local command from its own repository session; the locked frame declares no inbound crossing for that invocation."
+
+[interface.IF-289]
+rationale = "An attended coordinator needs a command-result surface distinct from its arguments and brief output, so it can distinguish a rendered or filed result from a preflight refusal without inferring state from the filesystem."
+owner = "scripts/review_brief"
+consumers = ["external:coordinator"]
+channel = "exit-code"
+data = "0 brief written, or review, critique, dispute findings or pass record filed | 2 refused; a refusal writes no requested brief or record."
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."
+
+[interface.IF-291]
+rationale = "Every pause consumer needs one boundary interpretation, because separate parsing would disagree over wrapping weekdays, end instants or the interval whose end resets retained work."
+owner = "scripts/agent_policy"
+requestors = ["scripts/agent_loop", "scripts/session_service", "scripts/session_keep", "scripts/dispatch", "scripts/coordinator_guard"]
+channel = "call"
+data = "blackout_at(docs, t=None) -> Blackout(window, at, end?, last_end?); inside and wake_seconds"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source - a pure policy reading at the supplied instant; the owner writes neither state nor a launch."
+
+[interface.IF-292]
+rationale = "A bare actions-menu launch needs one readiness invocation before it offers work, while direct and discovery calls remain non-interactive."
+owner = "scripts/dev-setup.template.sh"
+requestors = ["external:run.* launcher templates"]
+channel = "cli"
+data = "bare run invokes --for-run/-ForRun once from the repository root, passing --python/-Python its menu interpreter when one resolves"
+version = "v2"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = "The launcher supplies this invocation before it offers the actions menu."
+
+[interface.IF-293]
+rationale = "A bare actions-menu launcher needs a readiness result separate from its invocation so it can decide whether to open the menu."
+owner = "scripts/dev-setup.template.sh"
+consumers = ["external:run.* launcher templates"]
+channel = "exit-code"
+data = "0 says the handed interpreter meets the runtime floor; nonzero, including none handed, leaves the bare-run menu unopened after guidance"
+version = "v2"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = "The readiness result determines whether the launcher opens its menu."
+
+[interface.IF-295]
+rationale = "The commit checker needs one fail-closed plan-gate result so it can reject unbound single-plan build output without interpreting the gate's findings."
+owner = "scripts/plan_gate"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "[--root DIR]: exit 0 when the commit being made is not held, 1 naming each hold; writes nothing."
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "Reads the staged commit and its parent records; writes nothing."
+
+[interface.IF-296]
+rationale = "The coordinator needs one fail-closed derivation of the later act so it cannot construct a partial brief, reinterpret a committed verdict, or act on held text the verdict did not bind."
+owner = "scripts/adjudicate_act"
+requestors = ["scripts/coordinator_adjudicate", "scripts/adjudicate_brief"]
+channel = "call"
+data = "ACTABLE; owed_acts; left_owed; bound_brief; amendment retires; act_values; compose_act; held-text identity refusal"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "intra-component: the owner reads committed verdict, registry, record and dial state and writes nothing. A missing, malformed or unequal held identity returns a row-naming refusal before an adjudicator is launched."
+
+[interface.IF-297]
+rationale = "Every agent route needs the same answer before it can begin governed work; one owner prevents route-specific meanings of an active commit floor."
+owner = "scripts/kitlib/commit_hooks"
+requestors = ["scripts/agent_loop", "scripts/session_service", "scripts/bookkeeping", "scripts/integrate", "scripts/coordinator_guard"]
+channel = "call"
+data = "hooks_refusal(root) -> None | cause and matching repair text"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-302]
+rationale = "The session controller needs one shared Windows job contract; IF-297 is the nearest existing kitlib call seam but its commit-floor refusal is a different method."
+owner = "scripts/kitlib/winjob"
+requestors = ["scripts/agent_session"]
+channel = "call"
+data = "win32() -> (kernel32, ntdll); JobAccounting; job_active_processes(job) -> int; create_joined_job() -> job; job_cpu_seconds(job) -> float"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source - imports only ctypes and functools; consumes no kit module. It also serves untraced local callers outside the architecture map."
+
+[interface.IF-294]
+rationale = "The close, sweep and commit check need one pure interpretation of an adoption request and record, so they cannot disagree about its grammar, disposed identity or successor validity."
+owner = "scripts/kitlib/adoption"
+requestors = ["scripts/intake", "scripts/handback", "scripts/adoption_record"]
+channel = "call"
+data = "parse_block; disposed_id; row_refusal over a supplied listing; record_ids and record-change judgement"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source - pure request, record and listing interpretation; it reads neither git nor a working tree and writes nothing."
+
+[interface.IF-303]
+rationale = "The close and commit rule need one owner for validation at a named revision, so both bind an adoption record to the same parent-tree result."
+owner = "scripts/adoption_record"
+requestors = ["scripts/handback", "scripts/text_then_act"]
+channel = "call"
+data = "tree_specs(root, rev); validate_at(root, rev, title, owes, adoptions) -> record or refusal; commit_adoption_record_lines(root, rev) -> refusal lines"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "CMP-008; the owner reads named git trees and writes nothing."
+
+[interface.IF-304]
+rationale = "The commit checker needs one fail-closed adoption-record result so it can reject an unauthorized record change without interpreting the rule's internal findings."
+owner = "scripts/adoption_record"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "[--root DIR]: exit 0 when the staged adoption-record change is admitted, 1 naming each refusal; writes nothing."
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "Reads the staged commit and its parent records; writes nothing."
+
+[interface.IF-309]
+rationale = "The three consumers need one derivation so a recorded, drawn, or rendered review cannot disagree about its test set or refusal."
+owner = "scripts/review_set"
+requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/review_brief"]
+channel = "call"
+data = "derive -> review set or named refusal; the set supplies files, listed evidence, gaps, and printed lines"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "Requestors do not interpret the derivation or create a hand list."
+
+[interface.IF-310]
+rationale = "The derivation needs one test-declaration reader so malformed declarations have one interpretation and refusal."
+owner = "scripts/gen_arch_map"
+requestors = ["scripts/review_set"]
+channel = "call"
+data = "read test declarations over the lane tests root and live test cases -> declarations or refusal findings"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "The requestor passes the owner's refusal through unchanged."
+
+[interface.IF-311]
+rationale = "The derivation needs the live requirement tiers from one carrier so its scope has one registry interpretation."
+owner = "scripts/spine_carrier"
+requestors = ["scripts/review_set"]
+channel = "call"
+data = "resolve and load over the SR, LLR, and TC tiers -> live rows or carrier refusal"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "The requestor does not create a second registry interpretation."
+
+[interface.IF-312]
+rationale = "The vocabulary check names each value a repository still stores in an earlier spelling, and the migrator is the one home of those spellings, so the check asks it rather than naming them a second time."
+owner = "scripts/migrate_vocabulary"
+requestors = ["scripts/check_vocab"]
+channel = "call"
+data = "spellings_owed(root) -> one line per value stored in an earlier spelling and per file that cannot be rewritten safely, the record's copies left out; writes nothing"
+version = "v1"
+status = "Accepted"
+component = "CMP-006"
+notes = "The requestor reports each line unchanged as a finding at its own severity and adds the fix, running the migrator."

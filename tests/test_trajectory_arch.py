@@ -3,8 +3,9 @@ verbatim from tests/test_trajectory.py by behavior boundary).
 
 Interface-connectivity coverage (WI-056), the How-SW top-view right-sizing
 bound (WI-073/FB5), knowledge⇒component coupling (WI-153), cross-CMP edges
-without a declared IF (WI-064), and specs
-acting on declared interface boundaries (WI-191).
+without a declared IF (WI-064), specs
+acting on declared interface boundaries (WI-191), and the component
+partition's derivation record (WI-999).
 
 check_vocab: allow-file — THE ANCHOR FIXTURES MUST AUTHOR THE RETIRED SPELLING.
 `check_trajectory` TRANSLATES `[p]-[g1]`/`[p]-[reqs]` on read and never rewrites
@@ -36,6 +37,7 @@ if str(SCRIPTS) not in sys.path:
 
 wi_convert = load_script("wi_convert")
 check_trajectory = load_script("check_trajectory")
+trajectory_arch = load_script("trajectory_arch")
 
 
 def test_architecture_rules_are_reexported_from_their_behavior_module():
@@ -183,7 +185,7 @@ IF_HDR = (
 # The two maturity columns these bodies carry collapse into the ONE the tier
 # has: a body that reads `Stability=draft`, or `Status=Proposed` with no
 # `Stability`, translates to `status = "Drafted"`; anything else to
-# `status = "Approved"` (OI-67 put the spine's own two words on the row).
+# `status = "Accepted"` (OI-67 put the spine's own two words on the row).
 def _csv_body_to_toml(header, table, body):
     import csv as _csv
     import io as _io
@@ -226,7 +228,7 @@ def _csv_body_to_toml(header, table, body):
         maturity = (row.get("Stability") or "").strip() or (
             "draft"
             if (row.get("Status") or "").strip().lower() == "proposed"
-            else "approved"
+            else "accepted"
         )
         out.append("[{}.{}]".format(table, rid))
         if table == "interface":
@@ -248,7 +250,7 @@ def _csv_body_to_toml(header, table, body):
                 'status = "{}"'.format(
                     "Drafted"
                     if maturity.lower() in ("draft", "drafted", "proposed")
-                    else "Approved"
+                    else "Accepted"
                 )
             )
         for col, key in keys.items():
@@ -316,7 +318,7 @@ def write_arch(root, text):
             body += '"""' + doc
             if mod["contracts"]:
                 # Declared AND stated (OI-67 slice 6): the armed definition
-                # gate reds a declared seam with no body, and these fixtures
+                # gate fails a declared seam with no body, and these fixtures
                 # are about coverage, containment and seams — not about that
                 # gate, which has its own scenarios below.
                 body += "\n\nContracts: " + ", ".join(mod["contracts"]) + "\n"
@@ -418,13 +420,13 @@ def test_seam_tc_citation_warn(tmp_path):
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
         'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     proc = run_traj(tmp_path)
@@ -434,7 +436,7 @@ def test_seam_tc_citation_warn(tmp_path):
     assert len(seam) == 1, proc.stderr
     assert "1 IF seam(s)" in seam[0] and "IF-002" in seam[0]
     assert "IF-001" not in seam[0]  # the TC citation suppresses it
-    # IF-002 is `draft` and IF-001 `approved`, so the row that warns is the one
+    # IF-002 is `draft` and IF-001 `accepted`, so the row that warns is the one
     # NO TC cites regardless of maturity — the arming key really is gone, not
     # merely renamed.
 
@@ -448,7 +450,7 @@ def test_contracts_docstring_citation_warns(tmp_path):
     write_arch(tmp_path, arch)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
         'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     proc = run_traj(tmp_path)
@@ -471,7 +473,7 @@ def test_a_seam_declared_on_the_wrong_module_is_named(tmp_path):
     write_arch(tmp_path, arch)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,approved,Active,,\n',
+        'IF-001,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,accepted,Active,,\n',
     )
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -512,13 +514,13 @@ def test_seam_tc_promotion_errors_under_strict_when_not_allowlisted(tmp_path):
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
         'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     proc = run_traj(tmp_path)
@@ -541,19 +543,19 @@ def test_seam_tc_promotion_errors_under_strict_when_not_allowlisted(tmp_path):
 
 def test_seam_tc_promotion_allowlisted_seam_stays_warn_under_strict(tmp_path):
     # Same uncited IF-002, but listed on the migration allowlist: --strict
-    # stays green (no ERROR, no "migration allowlist" WARN line either — an
+    # keeps passing (no ERROR, no "migration allowlist" WARN line either — an
     # allowlisted seam is silent on THIS check), while the informational total
     # in `interface_findings` still reports it (the debt stays visible).
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
         'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     (tmp_path / "docs" / "if-tc-coverage-allow").write_text(
@@ -572,13 +574,13 @@ def test_if_tc_allow_hygiene_reports_stale_and_unknown_entries(tmp_path):
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
         'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     (tmp_path / "docs" / "if-tc-coverage-allow").write_text(
@@ -600,7 +602,7 @@ SEEDED_IF_TC_ALLOW = (
     # Opus m-16). A count pin would let an id be SWAPPED inside the baseline —
     # drop a seam that has since gained a TC, add the new uncited one — with no
     # signal at all, which is precisely the one-line edit the reviewers showed
-    # greens the gate. Do NOT relitigate the seed itself: it was independently
+    # passes the gate. Do NOT relitigate the seed itself: it was independently
     # reproduced as an honest measurement of the seeding tree (120 uncited of
     # 130 live, nothing padded, nothing pre-empted). This pin exists so that
     # the list's FUTURE is reviewed. Pruning an entry whose seam gained a TC is
@@ -636,7 +638,7 @@ def test_a_multi_valued_endpoint_cell_declares_every_pair_in_it(tmp_path):
     write_ifs(
         tmp_path,
         'IF-001,Provides,scripts/mod_a,"scripts/mod_b; scripts/mod_c","a to b and c",'
-        "SR-001,v1,approved,Active,,\n",
+        "SR-001,v1,accepted,Active,,\n",
     )
     pairs = check_trajectory._declared_seam_pairs(tmp_path)
     assert ("scripts/mod_a", "scripts/mod_b") in pairs
@@ -660,20 +662,20 @@ def test_this_repos_seam_tc_allowlist_is_exactly_its_seeded_set():
 
 
 def test_a_bare_addition_past_the_seed_suppresses_nothing(tmp_path):
-    # THE ONE-LINE EDIT THE REVIEW EXECUTED: a new seam reds --strict, and
+    # THE ONE-LINE EDIT THE REVIEW EXECUTED: a new seam fails --strict, and
     # appending its bare id greened it — indistinguishable from the 120 seeded
     # lines, no hygiene line, no test. Now the bare addition is DROPPED by the
     # reader (the seam still errors) and the growth is reported.
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
         'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     allow = tmp_path / "docs" / "if-tc-coverage-allow"
@@ -758,13 +760,13 @@ def _gate_repo(
     )
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
-        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,approved,Active,,\n',
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,accepted,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001;IF-002,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001;IF-002,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     return tmp_path
@@ -800,7 +802,7 @@ def test_an_owner_that_never_declares_is_the_reverse_checks_warn_not_the_gates(
     # The ruled rule is "a DECLARED seam with no body". An owner that declares
     # nothing is the owner-exact reverse check's warn (the migration list, not a
     # defect in a stated definition) — the dodge that leaves is on record in
-    # the gate's docstring and is the owner's to promote.
+    # the gate's docstring and is the operator's to promote.
     root = _gate_repo(tmp_path, '"""A, silent."""\n')
     proc = run_traj(root, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -820,13 +822,13 @@ def test_an_external_owned_seam_is_stated_by_its_far_side(tmp_path):
     )
     write_ifs(
         root,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
-        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,approved,Active,,\n'
-        'IF-003,Provides,external:git,scripts/mod_b,"refs",SR-001,v1,approved,Active,,\n',
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,accepted,Active,,\n'
+        'IF-003,Provides,external:git,scripts/mod_b,"refs",SR-001,v1,accepted,Active,,\n',
     )
     (root / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001;IF-002;IF-003,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001;IF-002;IF-003,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     proc = run_traj(root, "--strict")
@@ -982,6 +984,42 @@ def test_the_gate_shares_the_interfaces_check_opt_out_and_the_files_mode_vacuity
     assert check_trajectory.contract_body_findings(root) == []
 
 
+def test_the_rows_the_gate_did_not_judge_are_counted_in_one_warn_line(tmp_path):
+    # A vacuous pass says so, and no verdict moves: an external-owned row with
+    # no in-tree far side is one no module can state, and files-mode leaves
+    # every row unjudged.
+    root = _gate_repo(
+        tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a."""\n'
+    )
+    write_ifs(
+        root,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,accepted,Active,,\n'
+        'IF-003,Provides,external:git,external:ci,"refs",SR-001,v1,accepted,Active,,\n',
+    )
+    (root / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+        "TC-001,SR-001;IF-001;IF-002;IF-003,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
+        encoding="utf-8",
+    )
+    assert check_trajectory.unchecked_contract_rows(root) == [
+        "contract bodies not checked for 1 IF row(s): external-owned, and no "
+        "in-tree module on the far side states them"
+    ]
+    assert check_trajectory.contract_body_findings(root) == []
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WARN - contract bodies not checked for 1 IF row(s)" in proc.stderr
+    (root / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = scripts\n[arch-map]\nmode = files\n", encoding="utf-8"
+    )
+    assert check_trajectory.unchecked_contract_rows(root) == [
+        "contract bodies not checked for 3 IF row(s): [arch-map] mode = files "
+        "reads no source headers"
+    ]
+    assert check_trajectory.contract_body_findings(root) == []
+
+
 def test_if_tc_allow_malformed_line_is_reported_end_to_end(tmp_path):
     # The same fixture `test_a_bare_addition_past_the_seed_suppresses_nothing`
     # uses, proving the new arm rides the real `main()` wiring at the same
@@ -990,12 +1028,12 @@ def test_if_tc_allow_malformed_line_is_reported_end_to_end(tmp_path):
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n',
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
     allow = tmp_path / "docs" / "if-tc-coverage-allow"
@@ -1015,7 +1053,7 @@ def test_seam_tc_promotion_shares_the_one_module_vacuity(tmp_path):
     write_arch(tmp_path, ARCH_1MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,downstream adopter,"a to world",SR-001,v1,approved,Active,,\n',
+        'IF-001,Provides,scripts/mod_a,downstream adopter,"a to world",SR-001,v1,accepted,Active,,\n',
     )
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 0, strict.stdout + strict.stderr
@@ -1049,12 +1087,27 @@ def _arch_n(n):
     )
 
 
+# SR-165 (WI-999): a live CMP row with no derivation record is a component
+# finding. These fixtures are about containment and seams, not the record, so
+# the first row holds a one-candidate record and every other row cites it.
+FIXTURE_RECORD = (
+    'candidates = ["A"]\nobjective = "minimize cut"\nconstraints = ["none"]\n'
+    'scores = ["A=1"]\nselected = "A"\nruling = "the fixture"\n'
+)
+
+
 def write_cmps(root, body):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
-    (req / "components.toml").write_text(
-        _csv_body_to_toml(CMP_HDR, "component", body), encoding="utf-8"
-    )
+    text = _csv_body_to_toml(CMP_HDR, "component", body)
+    ids = re.findall(r"(?m)^\[component\.(CMP-\d+)\]$", text)
+    for rid in ids:
+        cells = (
+            FIXTURE_RECORD if rid == ids[0] else 'derivation = "{}"\n'.format(ids[0])
+        )
+        head = "[component.{}]\n".format(rid)
+        text = text.replace(head, head + cells, 1)
+    (req / "components.toml").write_text(text, encoding="utf-8")
 
 
 def write_tagged_llrs(root, pairs):
@@ -1063,7 +1116,7 @@ def write_tagged_llrs(root, pairs):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     body = "".join(
-        "LLR-{:03d},SR-001,T,{},f,d,(see TC),Approved,{}\n".format(i + 1, mod, cmp)
+        "LLR-{:03d},SR-001,T,{},f,d,(see TC),Accepted,{}\n".format(i + 1, mod, cmp)
         for i, (mod, cmp) in enumerate(pairs)
     )
     (req / "low-level-requirements.csv").write_text(
@@ -1361,7 +1414,7 @@ def _contained_two_module_tree(tmp_path, src="scripts"):
 def test_untagged_module_on_disk_reds_the_containment_rule(tmp_path):
     # The WI-387 topology under the live inventory: a new module on disk with
     # no Component tag is uncontained the moment it exists — the lane's own
-    # bar reds; no committed-map staleness can hide it from anyone.
+    # checks fail; no committed-map staleness can hide it from anyone.
     _contained_two_module_tree(tmp_path)
     write_module(tmp_path, "mod_new.py")
     plain = run_traj(tmp_path)
@@ -1422,7 +1475,7 @@ def test_symbols_mode_sees_only_python(tmp_path):
 
 def test_inventory_skips_hidden_and_pycache(tmp_path):
     # The hidden-part rule (dot-/__pycache__-prefixed parts under the root are
-    # not source) holds in the live scan, so caches never red a lane.
+    # not source) holds in the live scan, so caches never fail a lane.
     _contained_two_module_tree(tmp_path)
     for sub in ("__pycache__", ".vendored"):
         write_module(tmp_path, "mod_cache.py", src="scripts/" + sub)
@@ -1492,7 +1545,7 @@ def write_symbol_llrs(root, rows):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     body = "".join(
-        "{},SR-001,T,{},{},d,(see TC),Approved,\n".format(lid, mod, sym)
+        "{},SR-001,T,{},{},d,(see TC),Accepted,\n".format(lid, mod, sym)
         for lid, mod, sym in rows
     )
     (req / "low-level-requirements.csv").write_text(
@@ -1569,7 +1622,7 @@ def test_codesymbol_crosscheck_vacuous_in_files_mode(tmp_path):
 
 # --- WI-064: the cross-CMP-edge-without-IF rule ---------------------------------
 # An internal import edge between two DIFFERENT components with no covering
-# IF-### row is a finding (the AXES approved model's enforceability ruling) —
+# IF-### row is a finding (the AXES accepted model's enforceability ruling) —
 # WARN plain, ERROR under --strict, sharing the docs/components-check opt-out.
 # Edges come from the MODULE MAP block's `Imports (internal):` lines; the seam
 # side joins interfaces.csv endpoints in either direction. Vacuous whenever any
@@ -1628,7 +1681,7 @@ def _write_tc_citing(tmp_path, if_id):
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;{},Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n".format(
+        "TC-001,SR-001;{},Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n".format(
             if_id
         ),
         encoding="utf-8",
@@ -1929,7 +1982,7 @@ def test_kernel_allow_hygiene_shares_the_components_check_opt_out(tmp_path):
 
 # Two declared seams for the spec-citation checks.
 SPEC_IFS_ONE = (
-    'IF-001,Consumes,scripts/mod_a,docs/stack.ini,"reads",SR-001,v1,approved,Stable,,\n'
+    'IF-001,Consumes,scripts/mod_a,docs/stack.ini,"reads",SR-001,v1,accepted,Stable,,\n'
 )
 SPEC_IFS_PROPOSED = SPEC_IFS_ONE + (
     'IF-050,Provides,scripts/mod_a,scripts/mod_b,"new seam",SR-001,v1,'
@@ -1994,7 +2047,7 @@ def test_the_anti_duplication_rationale_arm_is_RETIRED_not_re_keyed(tmp_path):
     slimmed tier has one maturity field with two values, and neither means
     "proposed and not yet pinned by a second consumer". Re-keying onto
     `approval == "draft"` was the obvious move and is the wrong one — it
-    silently becomes "not yet approved", which on a repo that approves nothing
+    silently becomes "not yet accepted", which on a repo that accepts nothing
     before its sitting arms 100% of rows instead of ~4%, at a severity that
     ERRORS under --strict.
 
@@ -2092,7 +2145,7 @@ def test_tag_findings_warn_plain_and_error_under_strict(tmp_path, work_items):
     """Implements: TC-409"""
     if work_items:
         write_wis(tmp_path, "WI-001,A,scripts,,,done,Shipped it.\n")
-    _write_tc_rows(tmp_path, {"TC-001": "Approved"})
+    _write_tc_rows(tmp_path, {"TC-001": "Accepted"})
     rel = "tests/test_tagged.py"
     _write_test_file(tmp_path, rel, TAG_CLEAN_FILE)
     clean = run_traj(tmp_path, "--strict")
@@ -2110,7 +2163,7 @@ def test_tag_findings_warn_plain_and_error_under_strict(tmp_path, work_items):
 @pytest.mark.parametrize("wrap", [", TC-002", "and TC-002"], ids=["comma", "and"])
 def test_a_wrapped_tag_list_is_refused_under_strict(tmp_path, wrap):
     """Implements: TC-409"""
-    _write_tc_rows(tmp_path, {"TC-001": "Approved", "TC-002": "Approved"})
+    _write_tc_rows(tmp_path, {"TC-001": "Accepted", "TC-002": "Accepted"})
     rel = "tests/test_tagged.py"
     text = '"""Module text.\n\nImplements: TC-001\n{}\n"""\n'.format(wrap)
     _write_test_file(tmp_path, rel, text)
@@ -2127,7 +2180,7 @@ def test_the_tag_check_is_vacuous_with_no_tests_root_or_no_registry(tmp_path):
     assert no_registry.returncode == 0, no_registry.stdout + no_registry.stderr
     assert rel not in no_registry.stderr
 
-    _write_tc_rows(tmp_path, {"TC-001": "Approved"})
+    _write_tc_rows(tmp_path, {"TC-001": "Accepted"})
     paired = run_traj(tmp_path, "--strict")
     assert paired.returncode == 1, paired.stdout + paired.stderr
     assert _tag_finding(paired, "ERROR", rel, 3, "unknown"), paired.stderr
@@ -2144,7 +2197,7 @@ def test_a_nested_tests_root_reports_repo_relative_paths(tmp_path):
     (tmp_path / "docs" / "stack.ini").write_text(
         "[paths]\nsrc = src\ntests = qa/tests\n", encoding="utf-8"
     )
-    _write_tc_rows(tmp_path, {"TC-001": "Approved"})
+    _write_tc_rows(tmp_path, {"TC-001": "Accepted"})
     rel = "qa/tests/test_tagged.py"
     _write_test_file(tmp_path, rel, TAG_MISPLACED_FILE)
     _write_test_file(tmp_path, "tests/test_undeclared.py", TAG_MISPLACED_FILE)
@@ -2175,7 +2228,7 @@ def test_a_draft_tc_is_clean_and_an_absent_one_is_refused(tmp_path):
     )
     assert tags == {"TC-001": [rel]}
 
-    _write_tc_rows(tmp_path, {"TC-002": "Approved"})
+    _write_tc_rows(tmp_path, {"TC-002": "Accepted"})
     deleted = run_traj(tmp_path, "--strict")
     assert deleted.returncode == 1, deleted.stdout + deleted.stderr
     assert _tag_finding(deleted, "ERROR", rel, 3, "unknown"), deleted.stderr
@@ -2185,7 +2238,7 @@ def test_the_tag_check_on_a_bootstrapped_scaffold(scaffold):
     """Implements: TC-409"""
     registry = scaffold / "docs" / "test" / "test-cases.toml"
     registry.write_text(
-        registry.read_text(encoding="utf-8") + "\n" + _tc_rows({"TC-001": "Approved"}),
+        registry.read_text(encoding="utf-8") + "\n" + _tc_rows({"TC-001": "Accepted"}),
         encoding="utf-8",
     )
     rel = "tests/test_tagged.py"
@@ -2245,7 +2298,7 @@ def _equality_findings(proc, level):
     ]
 
 
-def _write_equality_tree(root, evidence, text, status="Approved", rel=TAGGED_FILE):
+def _write_equality_tree(root, evidence, text, status="Accepted", rel=TAGGED_FILE):
     """TC-001 citing `evidence`, and the one test file `text` beside it."""
     _write_tc_rows(root, {"TC-001": status}, evidence)
     _write_test_file(root, rel, text)
@@ -2294,7 +2347,7 @@ def test_a_draft_tc_is_judged(tmp_path):
 def test_the_equality_check_on_a_bootstrapped_scaffold(scaffold):
     """Implements: TC-410"""
     registry = scaffold / "docs" / "test" / "test-cases.toml"
-    rows = _tc_rows({"TC-001": "Approved"}, TAGGED_NODE)
+    rows = _tc_rows({"TC-001": "Accepted"}, TAGGED_NODE)
     registry.write_text(
         registry.read_text(encoding="utf-8") + "\n" + rows, encoding="utf-8"
     )
@@ -2474,14 +2527,14 @@ def test_a_placeholder_row_is_outside_the_equality_rule(tmp_path):
     # Adequacy witness: a comparison judging every registry row reads TC-000's
     # untagged part as a difference, and this test fails in both phases.
     _write_test_file(tmp_path, TAGGED_FILE, UNTAGGED_TEST)
-    _write_tc_rows(tmp_path, {"TC-000": "Approved"}, TAGGED_NODE)
+    _write_tc_rows(tmp_path, {"TC-000": "Accepted"}, TAGGED_NODE)
     placeholder_only = run_traj(tmp_path, "--strict")
     assert _equality_findings(placeholder_only, "ERROR") == [], placeholder_only.stderr
     assert placeholder_only.returncode == 0, (
         placeholder_only.stdout + placeholder_only.stderr
     )
 
-    _write_tc_rows(tmp_path, {"TC-000": "Approved", "TC-001": "Approved"}, TAGGED_NODE)
+    _write_tc_rows(tmp_path, {"TC-000": "Accepted", "TC-001": "Accepted"}, TAGGED_NODE)
     beside_a_live_row = run_traj(tmp_path, "--strict")
     assert _equality_findings(beside_a_live_row, "ERROR") == [_no_tag(TAGGED_NODE)], (
         beside_a_live_row.stderr
@@ -2498,7 +2551,7 @@ def test_the_equality_check_is_vacuous_with_no_tests_root_or_no_registry(tmp_pat
     assert no_registry.returncode == 0, no_registry.stdout + no_registry.stderr
     assert _equality_findings(no_registry, "ERROR") == [], no_registry.stderr
 
-    _write_tc_rows(tmp_path, {"TC-001": "Approved"}, TAGGED_NODE)
+    _write_tc_rows(tmp_path, {"TC-001": "Accepted"}, TAGGED_NODE)
     paired = run_traj(tmp_path, "--strict")
     assert _equality_findings(paired, "ERROR") == [_no_tag(TAGGED_NODE)], paired.stderr
     assert paired.returncode == 1, paired.stdout + paired.stderr
@@ -2534,3 +2587,246 @@ def test_a_note_only_cell_has_no_part_and_a_tag_on_it_is_a_finding(tmp_path):
         tagged.stderr
     )
     assert tagged.returncode == 1, tagged.stdout + tagged.stderr
+
+
+# --- SR-165 / WI-999: the partition's derivation record (TC-166) --------------
+# In-process over `component_findings`, the record's one reader. The record is
+# eight flat cells on a CMP row; one row per partition holds it and the
+# partition's other rows cite it with `derivation`. The numbers are OI-130's
+# ruling on this repository's own partition (minimize cut: P5 140, P3 152,
+# P4 235, every candidate violating the one constraint), so the clean case is
+# the record the kit's own CMP-006 holds.
+
+RECORD = {
+    "candidates": '["P5", "P3", "P4"]',
+    "objective": '"minimize cut"',
+    "constraints": '["one-home-per-behaviour: P3 P4 P5"]',
+    "scores": '["P5=140", "P3=152", "P4=235"]',
+    "selected": '"P5"',
+    "ruling": '"the operator, 2026-11-16, recorded under OI-130"',
+}
+CITE = {"derivation": '"CMP-001"'}
+CMP_CSV_PATH = "docs/requirements/components.toml"
+HELD = CMP_CSV_PATH + " CMP-001 (record cited by CMP-002, CMP-003): derivation record: "
+
+
+def _record(**changes):
+    """RECORD with each `changes` cell replaced by a TOML literal, or dropped
+    when the value is None."""
+    cells = dict(RECORD, **changes)
+    return {key: value for key, value in cells.items() if value is not None}
+
+
+def _derivation_findings(root, rows):
+    """`component_findings` over a registry of `rows`, `[(id, {key: TOML
+    literal})]`, written as live `Accepted` rows."""
+    blocks = [
+        '[component.{0}]\nname = "{0}"\nstatus = "Accepted"\n'.format(rid)
+        + "".join("{} = {}\n".format(key, value) for key, value in cells.items())
+        for rid, cells in rows
+    ]
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "components.toml").write_text("\n".join(blocks), encoding="utf-8")
+    return trajectory_arch.component_findings(root)
+
+
+def _partition(root, **changes):
+    """A three-row partition: CMP-001 holds the record, the others cite it."""
+    rows = [("CMP-001", _record(**changes)), ("CMP-002", CITE), ("CMP-003", CITE)]
+    return _derivation_findings(root, rows)
+
+
+def test_a_complete_derivation_record_passes_silently(tmp_path):
+    """(a) The record OI-130 ruled, held once and cited twice, is silent; so is
+    a record declaring no constraint and maximizing its metric.
+
+    Implements: TC-166"""
+    assert _partition(tmp_path) == []
+    assert (
+        _partition(
+            tmp_path,
+            objective='"maximize cohesion"',
+            constraints='["none"]',
+            candidates='["P4", "P3", "P5"]',
+            selected='"P4"',
+        )
+        == []
+    )
+
+
+@pytest.mark.parametrize(
+    "changes,element",
+    [
+        ({"candidates": None}, "`candidates` is missing"),
+        ({"objective": None}, "`objective` is missing"),
+        ({"constraints": None}, "`constraints` is missing"),
+        ({"scores": '["P5=140", "P4=235"]'}, "`scores` has no score for candidate P3"),
+        ({"scores": None}, "`scores` is missing"),
+        ({"selected": None}, "`selected` is missing"),
+        ({"ruling": None}, "`ruling` is missing"),
+    ],
+)
+def test_each_omitted_record_element_is_reported_once(tmp_path, changes, element):
+    """(b) Each element omitted in turn is one finding, naming the row and the
+    element: reported on the holding row, which names the rows citing it.
+
+    Implements: TC-166"""
+    assert _partition(tmp_path, **changes) == [HELD + element]
+
+
+def test_a_ranking_that_does_not_recompute_is_reported(tmp_path):
+    """(c) The recompute: a feasible candidate ranks above every infeasible one,
+    then by score in the objective's direction, and a tie may be listed in
+    either order.
+
+    Implements: TC-166"""
+    misordered = _partition(tmp_path, candidates='["P3", "P5", "P4"]')
+    assert misordered == [HELD + "the recompute ranks P5 above P3, listed before it"]
+    reversed_direction = _partition(tmp_path, objective='"maximize cut"')
+    assert reversed_direction[0].startswith(HELD + "the recompute ranks P3 above P5")
+    # P5 alone violates the constraint, so the worse-scoring P3 and P4 rank
+    # above it, and P3 is the selection the scores rank first.
+    feasible_first = {
+        "candidates": '["P3", "P4", "P5"]',
+        "constraints": '["one-home-per-behaviour: P5"]',
+        "selected": '"P3"',
+    }
+    assert _partition(tmp_path, **feasible_first) == []
+    tied = {"scores": '["P5=140", "P3=140", "P4=235"]'}
+    assert _partition(tmp_path, **tied) == []
+    assert _partition(tmp_path, candidates='["P3", "P5", "P4"]', **tied) == []
+    assert _partition(tmp_path, selected='"P3"', **tied) == []
+
+
+def test_a_selection_not_ranked_first_needs_an_override_naming_it(tmp_path):
+    """(d) A selection the scores do not rank first is a finding; the same
+    record with an override naming the selection is silent; an override
+    naming anything else does not silence it; and an override where the
+    selection ranks first is itself a finding.
+
+    Implements: TC-166"""
+    unexplained = _partition(tmp_path, selected='"P3"')
+    assert unexplained == [
+        HELD + "`selected` P3 is not ranked first and has no `override`"
+    ]
+    overridden = '"P3: the operator keeps the actor split for the review path"'
+    assert _partition(tmp_path, selected='"P3"', override=overridden) == []
+    elsewhere = _partition(tmp_path, selected='"P3"', override='"P4: a reason"')
+    assert elsewhere == [HELD + "`override` names P4, not the selected P3"]
+    needless = _partition(tmp_path, override='"P5: a reason"')
+    assert needless == [
+        HELD + "`override` is present although `selected` P5 ranks first"
+    ]
+
+
+def test_no_components_and_the_example_row_are_vacuous(tmp_path):
+    """(e) A project declaring no components, and the shipped `-000` row, are
+    vacuous; `[checks] components_check = false` turns the whole pass off.
+
+    Implements: TC-166"""
+    assert trajectory_arch.component_findings(tmp_path) == []
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    shutil.copyfile(
+        ROOT / "project-trajectory" / "registries" / "components.template.toml",
+        req / "components.toml",
+    )
+    assert trajectory_arch.component_findings(tmp_path) == []
+    (tmp_path / "docs" / "process.toml").write_text(
+        "[checks]\ncomponents_check = false\n", encoding="utf-8"
+    )
+    assert _derivation_findings(tmp_path, [("CMP-001", {})]) == []
+
+
+@pytest.mark.parametrize(
+    "changes,cause",
+    [
+        ({"objective": '"optimize cut"'}, "`objective` 'optimize cut' is not"),
+        ({"objective": '"minimize"'}, "`objective` 'minimize' is not"),
+        ({"scores": '["P5=140", "P3=many", "P4=235"]'}, "'P3=many' is not `<"),
+        ({"scores": '["P5=140", "P3=152", "P4=235", "P9=1"]'}, "'P9=1' is an extra"),
+        ({"scores": '["P5=140", "P5=141", "P3=152", "P4=235"]'}, "'P5=141' is an ex"),
+        ({"candidates": '["P5", "P3", "P4", "P3"]'}, "lists P3 more than once"),
+        ({"selected": '"P9"'}, "`selected` P9 is not a candidate"),
+        ({"constraints": '["one-home: P3 P9"]'}, "violator P9, which is not a cand"),
+        ({"constraints": '["one-home P3"]'}, "entry 'one-home P3' is not `<name>"),
+        ({"constraints": '["none", "one-home: P3"]'}, "entry 'none' is not `<name>"),
+        ({"override": '"P5"'}, "`override` 'P5' is not `<candidate>: <reason>`"),
+        ({"override": '"P5:"'}, "`override` 'P5:' is not `<candidate>: <reason>`"),
+    ],
+)
+def test_each_malformed_record_cell_is_reported(tmp_path, changes, cause):
+    """Each value outside the record's form is one finding naming the cell and
+    the cause; the ranking does not run on it.
+
+    Implements: TC-166"""
+    findings = _partition(tmp_path, **changes)
+    assert len(findings) == 1 and findings[0].startswith(HELD), findings
+    assert cause in findings[0], findings
+
+
+@pytest.mark.parametrize(
+    "citing,cause",
+    [
+        ({"derivation": '"CMP-099"'}, "names CMP-099, which is no live component"),
+        ({"derivation": '"CMP-000"'}, "names CMP-000, which is no live component"),
+        ({"derivation": '"CMP-002"'}, "points at the row itself"),
+        ({"derivation": '"CMP-003"'}, "names CMP-003, which itself cites another"),
+        (dict(CITE, selected='"P5"'), "sits beside record cells"),
+    ],
+)
+def test_each_malformed_derivation_is_reported(tmp_path, citing, cause):
+    """A `derivation` that is dangling (the vacuous `-000` row included),
+    points at its own row, chains to another citing row, or sits beside record
+    cells is a finding on the citing row.
+
+    Implements: TC-166"""
+    rows = [
+        ("CMP-001", _record()),
+        ("CMP-002", citing),
+        ("CMP-003", CITE),
+    ]
+    findings = _derivation_findings(tmp_path, rows)
+    prefix = CMP_CSV_PATH + " CMP-002: derivation record: `derivation` "
+    assert len(findings) == 1 and findings[0].startswith(prefix), findings
+    assert cause in findings[0], findings
+
+
+def test_an_absent_record_is_reported_once_on_the_row_its_citers_name(tmp_path):
+    """Absent: a row with neither record cells nor `derivation`. A held record
+    is reported once, on the holding row, naming the rows citing it.
+
+    Implements: TC-166"""
+    held = _derivation_findings(
+        tmp_path, [("CMP-001", {}), ("CMP-002", CITE), ("CMP-003", CITE)]
+    )
+    assert len(held) == 1, held
+    assert held[0].startswith(
+        CMP_CSV_PATH
+        + " CMP-001 (record cited by CMP-002, CMP-003): no derivation record"
+    )
+    alone = _derivation_findings(tmp_path, [("CMP-001", _record()), ("CMP-002", {})])
+    assert len(alone) == 1 and alone[0].startswith(
+        CMP_CSV_PATH + " CMP-002: no derivation record"
+    ), alone
+
+
+def test_the_ranking_runs_only_on_a_complete_well_formed_record(tmp_path):
+    """A record that fails the element or form checks has already failed
+    closed: its misordered ranking is not also reported.
+
+    Implements: TC-166"""
+    findings = _partition(tmp_path, candidates='["P3", "P5", "P4"]', ruling=None)
+    assert findings == [HELD + "`ruling` is missing"]
+
+
+def test_a_derivation_finding_warns_plain_and_fails_strict(tmp_path):
+    """Implements: TC-166"""
+    _derivation_findings(tmp_path, [("CMP-001", {})])
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "WARN - " + CMP_CSV_PATH + " CMP-001: no derivation record" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+    assert "ERROR - " + CMP_CSV_PATH + " CMP-001: no derivation record" in strict.stderr

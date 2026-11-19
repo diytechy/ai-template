@@ -23,9 +23,9 @@ from conftest import KIT, hook_check_lines, load_script
 
 HOOK = KIT / "hooks" / "pre-commit"
 
-# The hook header's rule, cited below as GATE-SCOPED: "the full gate bar
-# (placeholder rejection, schema checks, tests, coverage) is gate-scoped and
-# lives in check.py / CI ... they would block legitimate early-stage commits".
+# The hook header's rule, cited below as GATE-SCOPED: "the full gate checks
+# (placeholder rejection, schema checks, tests, coverage) are gate-scoped and
+# live in check.py / CI ... they would block legitimate early-stage commits".
 # The FLOOR RULE is the one the hook states at `trajectory-map`: a check joins
 # the floor when regenerating is one stdlib command and it is vacuous for a
 # non-adopter; "checks needing the product toolchain or gate context (tests,
@@ -51,14 +51,14 @@ NOT_AT_COMMIT = {
     "check, gate-scoped (hook header) and kept in check.py / CI by the floor rule.",
     "vocabulary": "a whole-tree retired-vocabulary scan whose severity rises with "
     "the rung (its step comment): gate-scoped (hook header).",
-    "need-form": "a form heuristic over the approved need prose, warn-first always "
+    "need-form": "a form heuristic over the accepted need prose, warn-first always "
     "(its step comment): gate-scoped (hook header).",
     "doc-navigability": "a whole-tree link and orphan check with a git-history "
     "staleness heuristic (its step comment): gate-scoped (hook header).",
     "backlink-coverage": "the share of LLR rows named by an Implements: line in "
     "source, from the Impl rung, report-only as shipped (its step comment): "
     "gate-scoped (hook header).",
-    "test-first": "reads approval and Implements: order from history, warn-only "
+    "test-first": "reads acceptance and Implements: order from history, warn-only "
     "always (its step comment): gate-scoped (hook header).",
     "assumption-gate": "the assumption gate's requirement question from the "
     "Boundary rung, advisory unless [checks] assumption_gate is set (its step "

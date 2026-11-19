@@ -1,14 +1,14 @@
-"""TEXT THEN ACT — the spine text before the approval act (WI-806).
+"""TEXT THEN ACT — the spine text before the acceptance act (WI-806).
 
-OI-101 Q2, amended for landings by the owner's README Q-8 answer: a commit that
-writes the approval record changes, as its own, no cell of an approval-act row
+OI-101 Q2, amended for landings by the operator's README Q-8 answer: a commit that
+writes the acceptance record changes, as its own, no cell of an acceptance-act row
 but `Status` and adds or removes no row (`text_then_act_lines`), so
-amend-plus-flip is no longer approval. The hook asks it of the staged tree
+amend-plus-flip is no longer acceptance. The hook asks it of the staged tree
 (`staged_text_then_act_lines`, a squash landing judged by the commits it folds
 in) and the merge slot of each lane commit (`commit_text_then_act_lines`).
 
 A separate judgement from the acceptance record's, moved here whole and
-unchanged by WI-892. It reads that module's approval-act registries, record
+unchanged by WI-892. It reads that module's acceptance-act registries, record
 directory and row reader, and shares `acceptance_record._commit_parents`, the
 ruling sync's parent reader, which stays there as its one home.
 
@@ -24,19 +24,19 @@ git's own words.
 
 from pathlib import PurePosixPath
 
-# What this rule reads of the acceptance record: the approval-act registries,
+# What this rule reads of the acceptance record: the acceptance-act registries,
 # the record directory, a registry's rows at one tree, and the parent reader.
 try:
     import adoption_record
     import spine_carrier
     from acceptance_record import (
-        APPROVAL_ACT_CSVS,
+        ACCEPTANCE_ACT_CSVS,
         SNAPSHOT_DIR,
         _commit_parents,
         _spine_rows_at,
         commit_parent_first_lines,
     )
-    from held_status import commit_held_approval_lines
+    from held_status import commit_held_acceptance_lines
     from kitlib import git as _kitgit
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
@@ -46,13 +46,13 @@ except ImportError:  # pragma: no cover - in-process fallback
     import adoption_record
     import spine_carrier
     from acceptance_record import (
-        APPROVAL_ACT_CSVS,
+        ACCEPTANCE_ACT_CSVS,
         SNAPSHOT_DIR,
         _commit_parents,
         _spine_rows_at,
         commit_parent_first_lines,
     )
-    from held_status import commit_held_approval_lines
+    from held_status import commit_held_acceptance_lines
     from kitlib import git as _kitgit
 
 # The kit's one `git, or None` read, and a tier's carriers, as the acceptance
@@ -61,10 +61,10 @@ _git = _kitgit.git_out
 _tier_carriers = spine_carrier.tier_carriers
 
 
-# --- TEXT THEN ACT: the spine text before the approval act (WI-806) ----------
-# OI-101 Q2 (risk 6), its trunk scope amended for landings by the owner's README
+# --- TEXT THEN ACT: the spine text before the acceptance act (WI-806) ----------
+# OI-101 Q2 (risk 6), its trunk scope amended for landings by the operator's README
 # Q-8 answer, 2026-10-04: a commit that writes under `SNAPSHOT_DIR` changes, as
-# its own, no cell of an `APPROVAL_ACT_CSVS` row except `Status`, and adds or
+# its own, no cell of an `ACCEPTANCE_ACT_CSVS` row except `Status`, and adds or
 # removes no such row. The text is committed first; the act (the flips, the
 # copy, the ledger and the views) second, so every byte a copy blesses was
 # committed, and readable, before the commit that blesses it. Flips and their
@@ -84,7 +84,7 @@ SQUASH_REBASE_HINT = (
 
 def _text_changes(root, bases, head):
     """`{(registry, row id, what)}` the tree `head` (None: the index) writes in
-    the approval-act tiers as its OWN against `bases`, its parents: `what` is a
+    the acceptance-act tiers as its OWN against `bases`, its parents: `what` is a
     cell, `Status` and the id excepted, whose value differs from its value in
     EVERY parent, or `added` / `removed` for a row whose presence differs from
     every parent. Values are compared, never per-parent change labels, so a row
@@ -95,7 +95,7 @@ def _text_changes(root, bases, head):
     """
     new_prefix = ":" if head is None else head + ":"
     out = set()
-    for rel, id_col in APPROVAL_ACT_CSVS:
+    for rel, id_col in ACCEPTANCE_ACT_CSVS:
         now = _spine_rows_at(root, new_prefix, rel, id_col)
         sides = [_spine_rows_at(root, base + ":", rel, id_col) for base in bases]
         for rid in set(now).union(*sides):
@@ -128,8 +128,8 @@ def _row_text_moves(rid, now, sides, id_col):
 
 
 def text_then_act_lines(root, bases, head=None):
-    """One line naming each approval-act row the commit `head` (None: the
-    index) changes as its OWN while it also writes the approval record, judged
+    """One line naming each acceptance-act row the commit `head` (None: the
+    index) changes as its OWN while it also writes the acceptance record, judged
     against `bases`, its parents: a record path or a cell counts only when it
     differs from EVERY base. So a merge is judged by what neither side carried,
     and a lane's refresh merge bringing in trunk's text and act, made as two
@@ -146,7 +146,7 @@ def text_then_act_lines(root, bases, head=None):
         if own is None:
             return [
                 "cannot read the diff against {}, so whether it writes the "
-                "approval record is unknown".format(base)
+                "acceptance record is unknown".format(base)
             ]
         paths = set(own.splitlines()) - {""}
         writes = paths if writes is None else writes & paths
@@ -179,7 +179,7 @@ def commit_text_then_act_lines(root, rev):
 # against its own parents. Text then act is the
 # first rider; the adoption record's rule (WI-969) the second, the
 # parent-first rule (`acceptance_record.commit_parent_first_lines`) the third
-# and the held-rung lane rule (`held_status.commit_held_approval_lines`) the
+# and the held-rung lane rule (`held_status.commit_held_acceptance_lines`) the
 # fourth, each carrying its own remedy. The merge slot walks every rider; each
 # hook step's squash path walks only its own rule (`squash_walk`), and the
 # parent-first step has none: a squash's staged tree is judged like any other.
@@ -187,7 +187,7 @@ LANE_COMMIT_RIDERS = (
     commit_text_then_act_lines,
     adoption_record.commit_adoption_record_lines,
     commit_parent_first_lines,
-    commit_held_approval_lines,
+    commit_held_acceptance_lines,
 )
 
 
@@ -212,12 +212,12 @@ def squash_walk(root, head, tip, paths, riders):
 
 
 def _squash_lines(root, head, tip):
-    """Text then act's squash: `squash_walk` over the approval-act registries
+    """Text then act's squash: `squash_walk` over the acceptance-act registries
     and the record, with this rule's own rider.
 
     Implements: SR-140, LLR-302
     """
-    paths = [c for rel, col in APPROVAL_ACT_CSVS for c in _tier_carriers(rel, col)]
+    paths = [c for rel, col in ACCEPTANCE_ACT_CSVS for c in _tier_carriers(rel, col)]
     return squash_walk(
         root, head, tip, [SNAPSHOT_DIR, *paths], (commit_text_then_act_lines,)
     )
@@ -233,7 +233,7 @@ def staged_text_then_act_lines(root, squashed=()):
     assuming it, since a hand landing never meets the merge slot: `squashed`
     names the commits git's `SQUASH_MSG` lists, newest first (the caller reads
     the file, as this module reads no file). When that tip contains HEAD and
-    the index's approval-act registries and record are the tip's own, each
+    the index's acceptance-act registries and record are the tip's own, each
     commit HEAD..tip is judged and the index is not (`_squash_lines`);
     otherwise the index is judged like any commit, a refusal ending with
     `SQUASH_REBASE_HINT`. Before the first commit nothing is judged.

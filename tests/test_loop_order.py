@@ -1,16 +1,16 @@
 """SR-141 · SR-142 · SR-143 (under SN-025) — the loop-order contract, as a set
 of driven rules.
 
-The plan's §4 states the tick priority as *approved prose the tests pin, not an
+The plan's §4 states the tick priority as *accepted prose the tests pin, not an
 emergent property of the tick loop*: dispositions -> amendment adjudication ->
-surface-or-dispatch by level -> spine work item -> non-spine -> red-TC intake. This
+surface-or-dispatch by level -> spine work item -> non-spine -> evidence-gap intake. This
 module pins the three rungs that were not already built:
 
   1. **Judgement first** (`dispatch._judgement_first`): an `adjudication` row
      outranks everything ready, including a spine work item — and the ruled §A1
      rank table is NOT renumbered to achieve it.
-  6. **The red-TC census** (`census.red_tc_census` + `intake._red_tc_draft`):
-     a TC left red under a CLOSED implementation is a contradiction, routed to
+  6. **The evidence-gap census** (`census.evidence_gap_census` + `intake._evidence_gap_draft`):
+     a TC left unaccepted under a CLOSED implementation is a contradiction, routed to
      an adjudicator with an estimated tier rather than minted at a default one.
   3. **Queue-conflict vetting** (`check_trajectory.queue_conflict_findings`):
      the cheap mechanical half — two open rows that overlap are made VISIBLE,
@@ -21,7 +21,7 @@ seam that rots silently. WI-483 slice 2 moved BOTH halves out of the dispatcher
 into `census.py`, so the formatter and the parser are now in one module — the
 round-trip pin stays because the SEAM is still a seam (the mint reads lines the
 census wrote), and it now also asserts the dispatcher's re-export, which is what
-keeps every existing caller of `dispatch.parse_red_tc` honest.
+keeps every existing caller of `dispatch.parse_evidence_gap` honest.
 
 Implements: TC-154, TC-155
 """
@@ -45,8 +45,8 @@ def test_an_adjudication_row_outranks_a_spine_work_item():
     # Spine is rank 0 and adjudication rank 1, so the FRONTIER hands them over
     # spine-first; admission re-orders. Why: an adjudication row exists because
     # a lane CLAIMED an outcome nothing has judged, and a spine work item
-    # re-attests requirements — running it first approves a spine on a
-    # premise the pending judgement may overturn, and the attestation ledger is
+    # re-accepts requirements — running it first accepts a spine on a
+    # premise the pending judgement may overturn, and the acceptance ledger is
     # append-only by design. Adequacy witness: an admission that dropped the
     # judgement-first rung would admit WI-001 (the spine row, rank 0) and fail.
     frontier = [("WI-001", "spine"), ("WI-002", "adjudication")]
@@ -70,7 +70,7 @@ def test_judgement_first_is_a_STABLE_partition_not_a_sort():
     # — the frontier arrives rank-sorted and this rung must not reshuffle it.
     frontier = [
         ("WI-001", "spine"),
-        ("WI-002", "attestation"),
+        ("WI-002", "acceptance"),
         ("WI-003", "adjudication"),
         ("WI-004", "ordinary"),
         ("WI-005", "adjudication"),
@@ -80,27 +80,27 @@ def test_judgement_first_is_a_STABLE_partition_not_a_sort():
         ("WI-003", "adjudication"),
         ("WI-005", "adjudication"),
         ("WI-001", "spine"),
-        ("WI-002", "attestation"),
+        ("WI-002", "acceptance"),
         ("WI-004", "ordinary"),
         ("WI-006", "ordinary"),
     ]
 
 
-def test_judgement_first_does_not_smuggle_work_past_a_human_held_stop():
-    # The preference reorders; it never CHANGES what may run. A human-held
-    # attestation still drains and surfaces, with the adjudication row waiting
+def test_judgement_first_does_not_smuggle_work_past_an_operator_held_stop():
+    # The preference reorders; it never CHANGES what may run. An operator-held
+    # acceptance row still drains and surfaces, with the adjudication row waiting
     # behind the stop rather than being admitted ahead of it.
-    frontier = [("WI-001", "attestation"), ("WI-002", "adjudication")]
+    frontier = [("WI-001", "acceptance"), ("WI-002", "adjudication")]
     verb, payload = dsp._admission(frontier, True, busy=False, free=2)
     assert verb == "surface"
     assert payload == ["WI-001"]
 
 
-# --- rung 6: the red-TC census ------------------------------------------------
+# --- rung 6: the evidence-gap census ------------------------------------------------
 
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
-    "Priority,Verification,Status,Phase,Area,SupersededBy\n"
+    "Priority,VerificationMethod,Status,Phase,Area,SupersededBy\n"
 )
 LLR_HEADER = (
     "LLR-ID,SR-Refs,Title,Design,Rationale,Module,CodeSymbol,TestRefs,Status,"
@@ -123,13 +123,13 @@ def _spine(root, *, tc_status, wi_status="done", verifies="SR-001"):
     )
     (req / "system-requirements.csv").write_text(
         SR_HEADER + "SR-001,Widget,SN-001,Shall widget.,Because.,Widgets.,,1,"
-        "Test,Approved,,,\n",
+        "Test,Accepted,,,\n",
         encoding="utf-8",
         newline="\n",
     )
     (req / "low-level-requirements.csv").write_text(
         LLR_HEADER + "LLR-001,SR-001,Widget impl,Do it.,Because.,w.py,widget,"
-        "tests/test_w.py,Approved,,\n",
+        "tests/test_w.py,Accepted,,\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -151,98 +151,98 @@ def _spine(root, *, tc_status, wi_status="done", verifies="SR-001"):
     write_wi_registry(root, [row])
 
 
-def test_a_red_tc_under_a_closed_row_is_named(tmp_path):
+def test_an_evidence_gap_under_a_closed_row_is_named(tmp_path):
     """Implements: TC-183"""
     # The contradiction the registries state plainly and nothing was reading:
-    # the work item is CLOSED and the evidence for it is not green.
+    # the work item is CLOSED and the evidence for it is not accepted.
     _spine(tmp_path, tc_status="Failed")
-    census = dsp.red_tc_census(tmp_path)
+    census = dsp.evidence_gap_census(tmp_path)
     assert len(census) == 1
-    assert dsp.parse_red_tc(census[0]) == ("TC-001", ["SR-001"])
+    assert dsp.parse_evidence_gap(census[0]) == ("TC-001", ["SR-001"])
 
 
-@pytest.mark.parametrize("status", ["Approved", "Drafted", "Founded"])
-def test_the_three_exempt_statuses_are_never_red(tmp_path, status):
+@pytest.mark.parametrize("status", ["Accepted", "Drafted", "Founded"])
+def test_the_three_exempt_statuses_are_never_an_evidence_gap(tmp_path, status):
     """Implements: TC-183"""
-    # Stated as EXEMPTIONS rather than as a list of red words: anything else is
-    # red, so the rule fails toward naming a gap rather than missing one, and it
+    # Stated as EXEMPTIONS rather than as a list of gap statuses: any other status is
+    # a gap, so the rule fails toward naming a gap rather than missing one, and it
     # keeps working for a downstream repo mid-migration.
-    # Approved is green; Drafted is pre-approval, where "not yet green" is
-    # correct; Founded (armed at D-9 step 8) is Approved plus a demonstration, so
-    # it is green a fortiori. It REPLACED `Modified` here at step 7 — that word
+    # Accepted is no gap; Drafted is pre-acceptance, where "not yet accepted" is
+    # correct; Founded (armed at D-9 step 8) is Accepted plus a demonstration, so
+    # it is no gap a fortiori. It REPLACED `Modified` here at step 7 — that word
     # belonged to the §A5.1 amendment adjudication and retired with the marker,
     # and a set still exempting it would be a live reader of a retired word.
     _spine(tmp_path, tc_status=status)
-    assert dsp.red_tc_census(tmp_path) == []
+    assert dsp.evidence_gap_census(tmp_path) == []
 
 
-def test_an_OPEN_row_never_makes_a_tc_red(tmp_path):
+def test_an_OPEN_row_never_makes_an_evidence_gap(tmp_path):
     """Implements: TC-183"""
     # The whole premise is "a closed row CLAIMS the work". A queued row claims
-    # nothing, so its TC being red is simply work not started — which the
+    # nothing, so its TC being unaccepted is simply work not started — which the
     # orphan/status rungs already name, and a second row would double-count.
     _spine(tmp_path, tc_status="Failed", wi_status="queued")
-    assert dsp.red_tc_census(tmp_path) == []
+    assert dsp.evidence_gap_census(tmp_path) == []
 
 
-def test_a_partial_close_never_makes_a_tc_red(tmp_path):
+def test_a_partial_close_never_makes_an_evidence_gap(tmp_path):
     """Implements: TC-183"""
     # `partial` and `cancelled` are precisely the outcomes that say the work is
-    # NOT delivered, so a red TC under one of them is expected rather than a
+    # NOT delivered, so an evidence gap under one of them is expected rather than a
     # contradiction — and that close already earned a disposition row of its
     # own. Naming it here would judge one event twice.
     _spine(tmp_path, tc_status="Failed", wi_status="partial")
-    assert dsp.red_tc_census(tmp_path) == []
+    assert dsp.evidence_gap_census(tmp_path) == []
 
 
-def test_a_tc_verifying_a_MIX_of_claimed_and_unclaimed_is_not_red(tmp_path):
+def test_a_tc_verifying_a_MIX_of_claimed_and_unclaimed_is_no_evidence_gap(tmp_path):
     """Implements: TC-183"""
     # "All of whose targets are implemented" is the rule, and the reason is the
-    # premise: if any target is still open the TC is legitimately not green yet.
+    # premise: if any target is still open the TC is legitimately not accepted yet.
     _spine(tmp_path, tc_status="Failed", verifies="SR-001;SR-999")
-    assert dsp.red_tc_census(tmp_path) == []
+    assert dsp.evidence_gap_census(tmp_path) == []
 
 
-def test_the_red_tc_line_grammar_round_trips():
+def test_the_evidence_gap_line_grammar_round_trips():
     """Implements: TC-183"""
     # A STRING CONTRACT BETWEEN TWO MODULES — the seam carries finding strings,
     # so the formatter and the parser are pinned against each other. The
     # alternative (intake re-splitting the prose) is prose carrying control
-    # flow, which is exactly the `NEEDS-HUMAN` defect SR-145 removed.
-    line = cns._red_tc_line("TC-042", "failed", ["SR-007", "LLR-009"])
-    assert cns.parse_red_tc(line) == ("TC-042", ["SR-007", "LLR-009"])
-    assert line.startswith(cns.RED_TC_PREFIX)
+    # flow, which is exactly the `NEEDS-OPERATOR` defect SR-145 removed.
+    line = cns._evidence_gap_line("TC-042", "failed", ["SR-007", "LLR-009"])
+    assert cns.parse_evidence_gap(line) == ("TC-042", ["SR-007", "LLR-009"])
+    assert line.startswith(cns.EVIDENCE_GAP_PREFIX)
     # ...and the dispatcher still answers to the names it always did, so the
     # move cost no caller a change (WI-483 slice 2's re-export shim).
-    assert dsp.parse_red_tc(line) == ("TC-042", ["SR-007", "LLR-009"])
-    assert dsp.RED_TC_PREFIX == cns.RED_TC_PREFIX
-    assert callable(dsp.gap_census) and callable(dsp.red_tc_census)
+    assert dsp.parse_evidence_gap(line) == ("TC-042", ["SR-007", "LLR-009"])
+    assert dsp.EVIDENCE_GAP_PREFIX == cns.EVIDENCE_GAP_PREFIX
+    assert callable(dsp.gap_census) and callable(dsp.evidence_gap_census)
 
 
-def test_parse_red_tc_returns_None_for_every_other_census_line():
+def test_parse_evidence_gap_returns_None_for_every_other_census_line():
     """Implements: TC-183"""
     # The router must not match by accident: an ordinary gap line that merely
-    # mentions a TC id is NOT a red-TC event.
-    assert dsp.parse_red_tc("SN-002 is a draft need (unapproved)") is None
-    assert dsp.parse_red_tc("TC-003 has no Evidence") is None
-    assert dsp.parse_red_tc("") is None
-    assert dsp.parse_red_tc(None) is None
+    # mentions a TC id is NOT an evidence-gap event.
+    assert dsp.parse_evidence_gap("SN-002 is a draft need (unaccepted)") is None
+    assert dsp.parse_evidence_gap("TC-003 has no Evidence") is None
+    assert dsp.parse_evidence_gap("") is None
+    assert dsp.parse_evidence_gap(None) is None
 
 
-def test_the_red_tc_census_rides_the_gap_census_seam(tmp_path):
+def test_the_evidence_gap_census_rides_the_gap_census_seam(tmp_path):
     """Implements: TC-183"""
     # The census hands ONE list of strings to intake; the new class travels
     # on it rather than growing the seam a second shape.
     _spine(tmp_path, tc_status="Failed")
-    assert any(dsp.parse_red_tc(line) for line in dsp.gap_census(tmp_path))
+    assert any(dsp.parse_evidence_gap(line) for line in dsp.gap_census(tmp_path))
 
 
 # --- rung 6, intake side: the estimator ---------------------------------------
 
 
-def test_a_red_tc_mints_an_ADJUDICATION_row_not_an_ordinary_gap_row(tmp_path):
+def test_an_evidence_gap_mints_an_ADJUDICATION_row_not_an_ordinary_gap_row(tmp_path):
     # The difference is WHO DECIDES. An ordinary gap row says "the registry is
-    # missing a link, go add it". A red TC is one of three quite different
+    # missing a link, go add it". An evidence gap is one of three quite different
     # situations (stale TC / optimistic close / moved requirement) and picking
     # between them is a judgement — which is what the kind is for.
     _spine(tmp_path, tc_status="Failed")
@@ -253,22 +253,24 @@ def test_a_red_tc_mints_an_ADJUDICATION_row_not_an_ordinary_gap_row(tmp_path):
     assert "TC-001" in red[0]["title"]
 
 
-def test_the_red_tc_tier_is_ESTIMATED_from_breadth_not_defaulted():
+def test_the_evidence_gap_tier_is_ESTIMATED_from_breadth_not_defaulted():
     # §4 rung 1's "estimator": one target is a local question; several mean the
     # closed row's claim spans requirements and the judgement has to hold all
     # of them at once. Counted, never judged — the same shape as the amendment
-    # arm, with the threshold at 1 because a red TC is already a contradiction.
-    assert intake.tier_signal("red-tc", rows_touched=1) == "medium"
-    assert intake.tier_signal("red-tc", rows_touched=2) == "strong"
-    one = intake._red_tc_draft(".", "red TC TC-1 [SR-1] is failed", ["SR-1"])
-    many = intake._red_tc_draft(
-        ".", "red TC TC-1 [SR-1;SR-2] is failed", ["SR-1", "SR-2"]
+    # arm, with the threshold at 1 because an evidence gap is already a contradiction.
+    assert intake.tier_signal("evidence-gap", rows_touched=1) == "medium"
+    assert intake.tier_signal("evidence-gap", rows_touched=2) == "strong"
+    one = intake._evidence_gap_draft(
+        ".", "evidence gap TC-1 [SR-1] is failed", ["SR-1"]
+    )
+    many = intake._evidence_gap_draft(
+        ".", "evidence gap TC-1 [SR-1;SR-2] is failed", ["SR-1", "SR-2"]
     )
     assert one["buildtier"] == "medium"
     assert many["buildtier"] == "strong"
 
 
-def test_the_red_tc_draft_declares_NO_planmode():
+def test_the_evidence_gap_draft_declares_NO_planmode():
     """The defect this row shipped with for exactly one review round.
 
     `planmode = "dual"` beside `safety_class = "adjudication"` is a shape
@@ -278,15 +280,15 @@ def test_the_red_tc_draft_declares_NO_planmode():
     and then permanently parked, silently, while the census reported the gap as
     handled. Breadth is carried by the TIER, which is a dial the scheduler
     accepts on any kind."""
-    draft = intake._red_tc_draft(
-        ".", "red TC TC-1 [SR-1;SR-2] is failed", ["SR-1", "SR-2"]
+    draft = intake._evidence_gap_draft(
+        ".", "evidence gap TC-1 [SR-1;SR-2] is failed", ["SR-1", "SR-2"]
     )
     assert not draft.get("planmode")
 
 
 def test_every_MINTED_row_is_one_the_scheduler_can_actually_classify():
     """The structural half, and the reason this is a test rather than a fixed
-    cell: `_draft_refusal` validated only the follow-ups a HUMAN wrote into a
+    cell: `_draft_refusal` validated only the follow-ups an OPERATOR wrote into a
     `## Dispositions` block. Every DERIVED draft went straight to `_draft_row`
     and was validated by nothing — so the mint could emit a row that is not
     work at all, with nobody watching at either end."""
@@ -309,11 +311,11 @@ def test_every_MINTED_row_is_one_the_scheduler_can_actually_classify():
     del _pytest
 
 
-def test_a_minted_red_tc_row_reaches_the_FRONTIER(tmp_path):
+def test_a_minted_evidence_gap_row_reaches_the_FRONTIER(tmp_path):
     """End to end, through the real scheduler: the census names it, the draft
     is built, and `schedule.classify` gives it a real kind and rank rather than
     `unclassified`. Nothing else in the suite drove a minted row through the
-    scheduler, which is how the shape above survived a green suite."""
+    scheduler, which is how the shape above survived a passing suite."""
     _spine(tmp_path, tc_status="Failed", verifies="SR-001")
     drafts = intake._census_drafts(tmp_path, dsp.gap_census(tmp_path))
     red = [d for d in drafts if d["kind"] == "adjudication"]
@@ -326,12 +328,14 @@ def test_a_minted_red_tc_row_reaches_the_FRONTIER(tmp_path):
     assert rank == sched._KIND_RANK["adjudication"]
 
 
-def test_the_red_tc_brief_names_all_three_readings_without_choosing():
+def test_the_evidence_gap_brief_names_all_three_readings_without_choosing():
     # A brief that pre-selects an outcome is not a brief. The judge is told the
     # contradiction and where to read it, and the three live readings are
     # listed as alternatives — including the one where nothing is wrong with
     # the code at all and the TC's Status is merely stale.
-    draft = intake._red_tc_draft(".", "red TC TC-1 [SR-1] is failed", ["SR-1"])
+    draft = intake._evidence_gap_draft(
+        ".", "evidence gap TC-1 [SR-1] is failed", ["SR-1"]
+    )
     context = draft["context"]
     assert "STALE" in context
     assert "OPTIMISTIC" in context
@@ -431,7 +435,7 @@ def test_a_CLOSED_row_never_conflicts():
 
 
 def test_unrelated_open_rows_are_silent():
-    # The bar is deliberately high (Jaccard 0.8): this rung catches the same
+    # The threshold is deliberately high (Jaccard 0.8): this rung catches the same
     # job minted twice, not two rows in the same area. A warn that fires on
     # ordinary work gets ignored, which is worse than not having it.
     rows = [

@@ -14,13 +14,13 @@ importantly — the two properties that make the seam safe to have at all:
     the refusal names the missing derivation.
   - **the discriminator is DECLARED.** `Brief` is a typed cell, not a shape
     inferred from `SpecRef` — because that inference is provably ambiguous
-    (an amended test-case row and a red-TC census row both cite the TC
-    registry) and inferring from the Title is the `NEEDS-HUMAN` fold.
+    (an amended test-case row and an evidence-gap census row both cite the TC
+    registry) and inferring from the Title is the `NEEDS-OPERATOR` fold.
 
 Every shipped brief is routed, and that is pinned both ways: the routed set
 equals the shipped set, and a row declaring a brief the kit no longer ships
 refuses as an unknown one. What stays pinned ON PURPOSE is the refusal: a row
-whose declared brief cannot be filled in full is HELD for a human rather than
+whose declared brief cannot be filled in full is HELD for an operator rather than
 composed, because a test that accepted a brief with a slot filled by something
 would be asserting the failure mode.
 
@@ -98,17 +98,17 @@ SPINE_SRS = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Priority,"
     "Verification,Status,Phase,Area\n"
     "SR-001,Adds,SN-001,The system shall add two numbers.,arithmetic is the "
-    "demo,the sum is right,Must,Test,Approved,P1,core\n"
+    "demo,the sum is right,Must,Test,Accepted,P1,core\n"
 )
 SPINE_LLRS = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component,Phase\n"
     "LLR-001,SR-001,add impl,src/demo.py,add,add() returns a + b.,TC-001,"
-    "Approved,,P1\n"
+    "Accepted,,P1\n"
 )
 SPINE_TCS = (
     "TC-ID,Verifies,Level,Method,Tier,Expected,Automated,Evidence,Status,Phase\n"
     'TC-001,LLR-001,unit,run pytest,fast,"add(2, 2) == 4",yes,'
-    "tests/test_demo.py::test_add,Approved,P1\n"
+    "tests/test_demo.py::test_add,Accepted,P1\n"
 )
 
 
@@ -201,7 +201,7 @@ def test_the_disposition_brief_carries_the_report_the_spec_and_the_commit_facts(
 
 
 def test_a_clean_close_has_no_report_so_the_disposition_brief_is_refused(tmp_path):
-    """`intake._complete_spot_checks` mints a disposition row for a GREEN close,
+    """`intake._complete_spot_checks` mints a disposition row for a PASSING close,
     which writes no report. The brief is built around the lane's report, so
     composing one here would ask the judge to rule on an absence — the refusal
     names what is missing, and the caller HOLDS the row rather than
@@ -272,21 +272,21 @@ def test_a_range_git_cannot_resolve_refuses_naming_gits_failure(tmp_path):
     assert "fatal:" in why
 
 
-# --- the red-TC brief (SN-030 rung 6) -----------------------------------------
+# --- the evidence-gap brief (SN-030 rung 6) -----------------------------------------
 
 
-# THE RED-TC FIXTURE'S DEFAULT MOVED OUT OF VOCABULARY AT D-9 STEP 5, and the
-# move is a finding rather than a tidy-up. `red_tc_census` names a red TC by
-# EXEMPTION — anything outside `dispatch._TC_NOT_RED` is red — and this fixture
+# THE EVIDENCE-GAP FIXTURE'S DEFAULT MOVED OUT OF VOCABULARY AT D-9 STEP 5, and the
+# move is a finding rather than a tidy-up. `evidence_gap_census` names an evidence gap by
+# EXEMPTION — anything outside `dispatch._GAP_EXEMPT_STATUSES` is a gap — and this fixture
 # used `Planned`, the one LIVE value that sat outside it. OI-30 D1 folded
-# `Planned` into `Approved`, and the narrowed enum is now EXACTLY the exempt set,
-# so no conformant repo can carry a red TC any more. `Implemented` is the honest
+# `Planned` into `Accepted`, and the narrowed enum is now EXACTLY the exempt set,
+# so no conformant repo can carry an evidence gap any more. `Implemented` is the honest
 # remaining population: the value a downstream repo mid-migration still carries,
 # which the integrity floor names and this rung still judges. That the rung is
 # otherwise vacuous on a migrated tree is recorded for the sitting (log
 # 2026-08-15m) — it is the step-2 note's own "deleted feature" hazard arriving
 # through the rename rather than through the exempt set.
-def _red_tc_repo(tmp_path, tc_status="Implemented"):
+def _evidence_gap_repo(tmp_path, tc_status="Implemented"):
     repo = _repo(tmp_path)
     req = repo / "docs" / "requirements"
     req.mkdir(parents=True)
@@ -295,7 +295,7 @@ def _red_tc_repo(tmp_path, tc_status="Implemented"):
     tests = repo / "docs" / "test"
     tests.mkdir(parents=True)
     (tests / "test-cases.csv").write_text(
-        SPINE_TCS.replace(",Approved,", "," + tc_status + ","), encoding="utf-8"
+        SPINE_TCS.replace(",Accepted,", "," + tc_status + ","), encoding="utf-8"
     )
     _write_rows(
         repo,
@@ -309,9 +309,9 @@ def _red_tc_repo(tmp_path, tc_status="Implemented"):
             },
             {
                 "WI-ID": "WI-301",
-                "Title": "adjudicate red TC TC-001",
+                "Title": "adjudicate evidence gap TC-001",
                 "SafetyClass": "adjudication",
-                "Brief": "red-tc",
+                "Brief": "evidence-gap",
                 "SpecRef": "docs/test/test-cases.toml",
             },
         ],
@@ -321,23 +321,23 @@ def _red_tc_repo(tmp_path, tc_status="Implemented"):
     return repo
 
 
-RED_TC_ROW = {
+EVIDENCE_GAP_ROW = {
     "WI-ID": "WI-301",
     "SafetyClass": "adjudication",
-    "Brief": "red-tc",
+    "Brief": "evidence-gap",
     "SpecRef": "docs/test/test-cases.toml",
 }
 
 
-def test_the_red_tc_brief_carries_the_live_census_and_the_obligation_it_covers(
+def test_the_evidence_gap_brief_carries_the_live_census_and_the_obligation_it_covers(
     tmp_path,
 ):
     """`{tcs}` is assembled from the TC REGISTRY — the census line alone carries
     no Method/Expected/Evidence — and `{spine}` from the SR/LLR rows its
     parsed targets name. The census is RE-RUN here, not remembered, so the
     judge rules on the state of the world it is actually in."""
-    repo = _red_tc_repo(tmp_path)
-    text, why = ab.compose(repo, RED_TC_ROW, repo / "docs/reviews/v.md")
+    repo = _evidence_gap_repo(tmp_path)
+    text, why = ab.compose(repo, EVIDENCE_GAP_ROW, repo / "docs/reviews/v.md")
     assert why is None, why
     assert "the registry stores no test RESULT" in text
     # The TC row's own cells, joined from the registry.
@@ -352,7 +352,7 @@ def test_the_red_tc_brief_carries_the_live_census_and_the_obligation_it_covers(
 
 # `Founded` replaced `Modified` at D-9 steps 7/8: the exempt set is the whole
 # closed enum, so the parametrization is the enum itself.
-@pytest.mark.parametrize("green", ["Approved", "Drafted", "Founded"])
+@pytest.mark.parametrize("green", ["Accepted", "Drafted", "Founded"])
 def test_a_census_that_has_come_clean_refuses_rather_than_briefing_an_empty_one(
     tmp_path, green
 ):
@@ -360,14 +360,14 @@ def test_a_census_that_has_come_clean_refuses_rather_than_briefing_an_empty_one(
     is what makes that observable: an empty `{tcs}` would read as "we looked
     and there is nothing", which is exactly the hollow section the fill rule
     exists to prevent."""
-    repo = _red_tc_repo(tmp_path, tc_status=green)
-    text, why = ab.compose(repo, RED_TC_ROW, repo / "docs/reviews/v.md")
+    repo = _evidence_gap_repo(tmp_path, tc_status=green)
+    text, why = ab.compose(repo, EVIDENCE_GAP_ROW, repo / "docs/reviews/v.md")
     assert text is None
     assert "census is now empty" in why
 
 
 # `Verifies` is required too, but it cannot be driven through the census: a row
-# with no targets is not red by definition (`red_tc_census` skips it), so the
+# with no targets is not a gap by definition (`evidence_gap_census` skips it), so the
 # empty-census refusal fires first. It stays in `TC_CELLS` as a guard for any
 # future caller that does not come through the census.
 @pytest.mark.parametrize("cell", [c for c in ab.TC_CELLS if c != "Verifies"])
@@ -379,7 +379,7 @@ def test_a_tc_row_missing_any_listed_cell_refuses_rather_than_rendering_a_dash(
     said" — and this brief's whole method is *run the cited evidence and say
     what you observed*, which a row missing its Evidence/Method/Expected cannot
     support. So every listed cell is required, and the refusal names it."""
-    repo = _red_tc_repo(tmp_path)
+    repo = _evidence_gap_repo(tmp_path)
     tcs = repo / "docs" / "test" / "test-cases.csv"
     header, row = tcs.read_text(encoding="utf-8").splitlines()[:2]
     cells = next(csv.reader([row]))
@@ -387,7 +387,7 @@ def test_a_tc_row_missing_any_listed_cell_refuses_rather_than_rendering_a_dash(
     out = io.StringIO()
     csv.writer(out, lineterminator="\n").writerows([next(csv.reader([header])), cells])
     tcs.write_text(out.getvalue(), encoding="utf-8")
-    text, why = ab.compose(repo, RED_TC_ROW, repo / "v.md")
+    text, why = ab.compose(repo, EVIDENCE_GAP_ROW, repo / "v.md")
     assert text is None
     assert cell in why and "placeholder" in why
 
@@ -397,13 +397,13 @@ def test_a_target_with_no_normative_text_refuses(tmp_path):
     RETURNED by `_spine_excerpt`, never silently dropped. A dropped target
     leaves a `{spine}` section that still looks complete, which is the
     half-filled brief in its quietest form."""
-    repo = _red_tc_repo(tmp_path)
+    repo = _evidence_gap_repo(tmp_path)
     llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
     llrs.write_text(
         llrs.read_text(encoding="utf-8").replace("add() returns a + b.", ""),
         encoding="utf-8",
     )
-    text, why = ab.compose(repo, RED_TC_ROW, repo / "v.md")
+    text, why = ab.compose(repo, EVIDENCE_GAP_ROW, repo / "v.md")
     assert text is None
     assert "LLR-001" in why and "placeholder" in why
 
@@ -414,13 +414,13 @@ def test_a_target_with_no_normative_text_refuses(tmp_path):
 def test_the_discriminator_is_the_declared_cell_not_the_specref(tmp_path):
     """THE MEASURED REASON the schema cost was paid. `intake._amendment_drafts`
     sets `specref` to the amended registry, so an amendment to a TEST-CASE row
-    carries exactly the `SpecRef` a red-TC census row carries. Under a
-    SpecRef-derived discriminator the amendment row would receive the red-TC
+    carries exactly the `SpecRef` an evidence-gap census row carries. Under a
+    SpecRef-derived discriminator the amendment row would receive the evidence-gap
     brief — two briefs whose instructions contradict each other. The declared
     cell tells them apart on identical SpecRefs."""
-    repo = _red_tc_repo(tmp_path)
-    same_specref = dict(RED_TC_ROW, Brief="amendment")
-    routed, _why = ab.compose(repo, RED_TC_ROW, repo / "v.md")
+    repo = _evidence_gap_repo(tmp_path)
+    same_specref = dict(EVIDENCE_GAP_ROW, Brief="amendment")
+    routed, _why = ab.compose(repo, EVIDENCE_GAP_ROW, repo / "v.md")
     other, why = ab.compose(repo, same_specref, repo / "v.md")
     assert "the registry stores no test RESULT" in routed
     assert other is None and "amendment" in why
@@ -473,14 +473,14 @@ def test_every_routed_brief_names_a_shipped_template():
 def test_no_mint_can_declare_a_brief_the_kit_does_not_ship():
     """The declaration is written where the knowledge is — the mint knows which
     judgement it is asking for — and it is now LOAD-BEARING in the expensive
-    direction: a declared brief the kit cannot compose HOLDS the row for a
-    human. So a typo'd or invented value would not degrade quietly, it would
+    direction: a declared brief the kit cannot compose HOLDS the row for an
+    operator. So a typo'd or invented value would not degrade quietly, it would
     stop an unattended run.
 
     Deliberately NOT asserted: that every mint site declares one. Two arms
     (the report-less cancellation, the clean-close spot check) declare none on
     purpose, because the kit ships no brief for them and a false declaration
-    would page a human for routine work.
+    would page an operator for routine work.
 
     EVERY MINT SOURCE IS SCANNED, not just `intake`: the consolidation census
     lives in its own module (its decision half is testable with no repository)
@@ -603,7 +603,7 @@ def _session(tmp_path, repo, wi, verdict_line):
 
 
 def test_a_disposition_rows_session_receives_the_disposition_brief(tmp_path):
-    """The end-to-end bar: a claimed adjudication row's session is handed ITS
+    """The end-to-end checks: a claimed adjudication row's session is handed ITS
     OWN brief — not the worker assignment — and the typed verdict line the
     brief demands lands at the declared path."""
     repo = _disposition_repo(tmp_path)
@@ -624,8 +624,8 @@ def test_a_disposition_rows_session_receives_the_disposition_brief(tmp_path):
     assert "OUTCOME: PARTIAL successors=1" in verdicts[0].read_text(encoding="utf-8")
 
 
-def test_a_red_tc_rows_session_receives_the_red_tc_brief(tmp_path):
-    repo = _red_tc_repo(tmp_path)
+def test_an_evidence_gap_rows_session_receives_the_evidence_gap_brief(tmp_path):
+    repo = _evidence_gap_repo(tmp_path)
     proc, prompts = _session(
         tmp_path, repo, "WI-301", "OUTCOME: DRAFTED cases=1 drafts=1"
     )
@@ -648,7 +648,7 @@ def test_an_unfillable_declared_brief_HOLDS_rather_than_dispatching_a_builder(
     This is the property the whole seam turns on. Falling back to the ordinary
     assignment here would re-open the defect WI-424 exists to close — the judge
     briefed as a builder — on a routinely minted path, and it would do it
-    QUIETLY, since a builder session ends DONE like any other. `EXIT_NEEDS_HUMAN`
+    QUIETLY, since a builder session ends DONE like any other. `EXIT_NEEDS_OPERATOR`
     is also what makes the hold durable: `dispatch._lane_close` turns it into a
     `handback.close_partial`, whose `blockref` keeps an unattended run from
     re-picking the row."""
@@ -656,7 +656,7 @@ def test_an_unfillable_declared_brief_HOLDS_rather_than_dispatching_a_builder(
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "registry")
     proc, prompts = _session(tmp_path, repo, "WI-301", "unused")
-    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    assert proc.returncode == agent_loop.EXIT_NEEDS_OPERATOR, proc.stdout + proc.stderr
     # No session ran at all — not a judge's, and emphatically not a builder's.
     assert prompts == ""
     assert "no usable brief" in proc.stdout
@@ -669,7 +669,7 @@ def test_an_unfillable_declared_brief_HOLDS_rather_than_dispatching_a_builder(
 def test_the_live_amendment_mint_is_now_BRIEFED_not_held(tmp_path):
     """THE CAPABILITY UNLOCK (D-9 step 4b). `intake._amendment_drafts` mints
     `brief = "amendment"` routinely, and until the snapshot landed every one of
-    those rows HELD for a human — the largest live hold in the machinery. Two
+    those rows HELD for an operator — the largest live hold in the machinery. Two
     things blocked it, and the snapshot answers both: the `{rows}` producer
     selected on a status literal that the minting condition excluded by
     construction, and `{baseline}` resolved to the amendment commit itself, i.e.
@@ -691,8 +691,8 @@ def test_the_live_amendment_mint_is_now_BRIEFED_not_held(tmp_path):
 
 def _spine_repo(tmp_path):
     """A repo carrying the demo spine and nothing else — the base both the
-    red-TC and the amendment fixtures build on. Written separately from
-    `_red_tc_repo` because that one also mints its OWN `WI-301`, and a second
+    evidence-gap and the amendment fixtures build on. Written separately from
+    `_evidence_gap_repo` because that one also mints its OWN `WI-301`, and a second
     row with the same id would leave the loader picking between two briefs."""
     repo = _repo(tmp_path)
     req = repo / "docs" / "requirements"
@@ -706,7 +706,7 @@ def _spine_repo(tmp_path):
 
 
 def _amend(repo):
-    """Move SR-001's `Requirement` — an APPROVED cell — leaving its Status put.
+    """Move SR-001's `Requirement` — an ACCEPTED cell — leaving its Status put.
     This is the D-9 shape exactly: the text changed and nothing flipped."""
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
@@ -719,7 +719,7 @@ def _amend(repo):
 
 
 def _amendment_repo(tmp_path):
-    """A repo with a spine, an approved snapshot, an amended approved cell, and
+    """A repo with a spine, an accepted snapshot, an amended accepted cell, and
     the adjudication row `intake` would have minted for it — scope included,
     because the mint writes the rows it routes into `Adjudicates` and a row
     without one is a row it can no longer produce."""
@@ -731,7 +731,7 @@ def _amendment_repo(tmp_path):
         [
             {
                 "WI-ID": "WI-301",
-                "Title": "adjudicate: SR-001 - approved cell(s) amended",
+                "Title": "adjudicate: SR-001 - accepted cell(s) amended",
                 "SafetyClass": "adjudication",
                 "Brief": "amendment",
                 "Adjudicates": "SR-001",
@@ -750,7 +750,7 @@ def _am_row(**over):
 
 
 def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
-    # Rule 1, mechanized for this brief: the anchor must be the text a human
+    # Rule 1, mechanized for this brief: the anchor must be the text an operator
     # blessed BEFORE the change, never the change itself. Both halves are
     # asserted — the before text is present, and it is labelled as not being
     # the thing under judgement.
@@ -763,8 +763,8 @@ def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
     assert "refuse floats" in values["rows"]  # after
 
 
-def test_only_APPROVED_cells_reach_the_judge(tmp_path):
-    # A traced cell is ruled non-attesting (§A5.1), so asking a judge to rule
+def test_only_ACCEPTED_cells_reach_the_judge(tmp_path):
+    # A traced cell is ruled outside acceptance (§A5.1), so asking a judge to rule
     # "meaning or clarity" on a re-pointed Phase cell asks a question the
     # ruling already answers. Drive it: move ONLY a traced cell.
     repo = _spine_repo(tmp_path)
@@ -772,7 +772,7 @@ def test_only_APPROVED_cells_reach_the_judge(tmp_path):
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
         srs.read_text(encoding="utf-8").replace(
-            ",Test,Approved,P1,", ",Test,Approved,P9,"
+            ",Test,Accepted,P1,", ",Test,Accepted,P9,"
         ),
         encoding="utf-8",
     )
@@ -784,7 +784,7 @@ def test_only_APPROVED_cells_reach_the_judge(tmp_path):
     assert "differs from its" in why, why
 
 
-def test_with_no_snapshot_the_brief_HOLDS_and_says_FIRST_APPROVAL(tmp_path):
+def test_with_no_snapshot_the_brief_HOLDS_and_says_FIRST_ACCEPTANCE(tmp_path):
     # The honest degrade, and it is a HOLD rather than a brief. A repo that has
     # never signed has no accepted anchor at all, so "did this amendment change
     # the meaning?" is not the question its rows pose. Fabricating an anchor is
@@ -795,11 +795,11 @@ def test_with_no_snapshot_the_brief_HOLDS_and_says_FIRST_APPROVAL(tmp_path):
     assert not baseline_snapshot.exists(repo)
     values, why = ab.amendment_brief.amendment_values(repo, _am_row())
     assert values is None
-    assert "FIRST-APPROVAL" in why and "no accepted anchor" in why
+    assert "FIRST-ACCEPTANCE" in why and "no accepted anchor" in why
 
 
 def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tmp_path):
-    # done-when 3 (owner ruling 2026-09-01). This template used to end "the
+    # done-when 3 (operator ruling 2026-09-01). This template used to end "the
     # flip, if one is owed, is the mechanical tool's act, not yours" — true when
     # written, and FALSE since OI-45 ruled (b) retired that tool
     # (intake._apply_flips writes nothing, permanently). So a MEANING verdict on
@@ -807,22 +807,22 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
     # loop-held doctrine. What replaces it is not a longer sentence but a
     # DERIVED one: the dial is a repo declaration the judge would otherwise have
     # to go read mid-verdict, which is the shape that produces a session
-    # confidently performing the owner's act.
+    # confidently performing the operator's act.
     repo = _amendment_repo(tmp_path)
     row = _am_row()
 
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Needs")
     values, why = ab.amendment_brief.amendment_values(repo, row)
     assert why is None, why
     assert "RELEASED" in values["aftermath"]
     assert "[MEANING+BLESS]" in values["aftermath"]
     assert "later act turn" in values["aftermath"]
 
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Release")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Release")
     values, why = ab.amendment_brief.amendment_values(repo, row)
     assert why is None, why
-    assert "still HOLDS for a human" in values["aftermath"]
-    assert "the signature is the owner's" in values["aftermath"]
+    assert "still HOLDS for an operator" in values["aftermath"]
+    assert "the signature is the operator's" in values["aftermath"]
 
     # ...and the retired sentence never reaches the JUDGE, which is the property
     # that matters: a brief that says both things is worse than one that says
@@ -831,7 +831,7 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
     text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
     assert why is None, why
     assert "the mechanical tool's act, not yours" not in text
-    assert "the signature is the owner's" in text  # the aftermath landed instead
+    assert "the signature is the operator's" in text  # the aftermath landed instead
     assert re.findall(r"\{[a-z_]+\}", text) == []
     template = (
         SCRIPTS.parent / "prompts" / "adjudicate-amendment.template.md"
@@ -841,7 +841,7 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
 
 _NEED_TOML = (
     "[need.SN-001]\n"
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     'need = "{}"\n'
     'why = "why"\n'
     'priority = "M"\n'
@@ -850,7 +850,7 @@ _NEED_TOML = (
 
 
 def _need_amendment_repo(tmp_path):
-    """The demo spine plus one approved need, seeded, then the need amended —
+    """The demo spine plus one accepted need, seeded, then the need amended —
     the shape the widened amendment mint routes (OI-100 gap 1)."""
     repo = _spine_repo(tmp_path)
     needs = repo / "docs" / "requirements" / "stakeholder-needs.toml"
@@ -864,7 +864,7 @@ def test_a_need_scoped_amendment_row_composes_with_its_before_and_after(tmp_path
     """Implements: TC-161"""
     # OI-100 gap 1 (WI-791): the mint now routes need amendments, so the brief
     # must render them. The SR-chain model holds no need, so before WI-791 a
-    # need-scoped row refused as "nothing in scope" and held for a human.
+    # need-scoped row refused as "nothing in scope" and held for an operator.
     repo = _need_amendment_repo(tmp_path)
     values, why = ab.amendment_brief.amendment_values(
         repo, _am_row(Adjudicates="SN-001")
@@ -882,12 +882,12 @@ _ASSUMPTION_TOML = (
     'assumption = "{}"\n'
     'holds_when = "always"\n'
     'obstacle = "never"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     "\n[surrogate.SUR-001]\n"
     'name = "the stand-in"\n'
     'emulates = ["EXT-001"]\n'
     'description = "{}"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
 )
 
 
@@ -895,7 +895,7 @@ def test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_sco
     tmp_path,
 ):
     """LLR-167: an assumption- or surrogate-scoped amendment row composes with
-    the drifted row's approved cells before and after, and only the rows its
+    the drifted row's accepted cells before and after, and only the rows its
     Adjudicates scope names are rendered.
 
     Implements: TC-161
@@ -934,27 +934,27 @@ def test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_sco
 
 def test_the_held_aftermath_gives_each_verdict_its_own_arm(tmp_path):
     """LLR-167: on a held rung the aftermath tells a CLARITY verdict that the
-    later act turn re-attests it naming the verdict, and a MEANING verdict
-    that it stops for the owner, never the other way round (WI-912).
+    later act turn re-accepts it naming the verdict, and a MEANING verdict
+    that it stops for the operator, never the other way round (WI-912).
 
     Implements: TC-161
     """
     repo = _need_amendment_repo(tmp_path)
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Needs")
     values, why = ab.amendment_brief.amendment_values(
         repo, _am_row(Adjudicates="SN-001")
     )
     assert why is None, why
     clarity, meaning = values["aftermath"].split("A MEANING verdict on them", 1)
     assert "later act turn" in clarity and "naming this verdict" in clarity, clarity
-    assert "the signature is the owner's" not in clarity, clarity
-    assert "the signature is the owner's" in meaning, meaning
+    assert "the signature is the operator's" not in clarity, clarity
+    assert "the signature is the operator's" in meaning, meaning
     assert "--verdict" not in meaning, meaning
 
 
 # --- the row-text identity the amendment brief states and the binding keeps ---
 #
-# A held CLARITY re-attestation is bound to the text its verdict judged: the
+# A held CLARITY re-acceptance is bound to the text its verdict judged: the
 # brief states one `JUDGED-TEXT: <row> <digest>` line per row it shows, the
 # binding records those identities at reservation, and the route's outcome
 # rewrite keeps them.
@@ -963,8 +963,8 @@ _JUDGED = re.compile(r"^JUDGED-TEXT: (\S+) (\S+)$", re.M)
 
 
 def _committed_digest(repo, rel, id_col, rid):
-    """The approved-text digest of row `rid` as committed at HEAD."""
-    digest = acceptance_record.approved_text_digest
+    """The accepted-text digest of row `rid` as committed at HEAD."""
+    digest = acceptance_record.accepted_text_digest
     row = acceptance_record.rows_at(repo, "HEAD", rel, id_col)[rid]
     return digest(rel, id_col, row)
 
@@ -1013,23 +1013,23 @@ def test_bind_pending_records_the_briefs_identities(tmp_path):
     # A combined prompt carries its lines inside its amendment section.
     combined = tmp_path / "combined.md"
     prompt = (
-        "## amendment\n\n" + _PROMPT_LINES + "\n## first-approval\n\nrows\n\n"
-        "SITTING: JUDGED kinds=amendment;first-approval\n"
+        "## amendment\n\n" + _PROMPT_LINES + "\n## first-acceptance\n\nrows\n\n"
+        "SITTING: JUDGED kinds=amendment;first-acceptance\n"
     )
     assert ab.bind_pending(combined, "combined", prompt) == (
         "amendment",
-        "first-approval",
+        "first-acceptance",
     )
     text = (tmp_path / "combined.md.requested").read_text(encoding="utf-8")
     assert read(text) == (_PROMPT_IDS, None), text
-    # A first-approval-only prompt shows no amended text, so it binds none.
+    # A first-acceptance-only prompt shows no amended text, so it binds none.
     first = tmp_path / "first.md"
-    ab.bind_pending(first, "first-approval", "the brief\n")
+    ab.bind_pending(first, "first-acceptance", "the brief\n")
     text = (tmp_path / "first.md.requested").read_text(encoding="utf-8")
     assert "rows =" not in text, text
 
 
-@pytest.mark.parametrize("call_ok", [True, False], ids=["accepted", "failed"])
+@pytest.mark.parametrize("call_ok", [True, False], ids=["recorded", "failed"])
 def test_record_outcome_keeps_the_identity_cell(tmp_path, call_ok):
     """Implements: TC-398"""
     # Dropping the cell on the rewrite would refuse every held CLARITY act.
@@ -1044,7 +1044,7 @@ def test_record_outcome_keeps_the_identity_cell(tmp_path, call_ok):
     )
     write(verdict, "amendment", ("amendment",), "pending", identities=_PROMPT_IDS)
     outcome, _why = ab.record_outcome(repo, verdict, "amendment", None, call_ok, "001")
-    assert outcome == ("accepted" if call_ok else "failed")
+    assert outcome == ("recorded" if call_ok else "failed")
     text = (repo / "docs" / "reviews" / "v.md.requested").read_text(encoding="utf-8")
     assert ksitting.read_requested(text)[2] == outcome, text
     assert read(text) == (_PROMPT_IDS, None), text
@@ -1053,28 +1053,28 @@ def test_record_outcome_keeps_the_identity_cell(tmp_path, call_ok):
 def test_the_amendment_brief_reanchors_CLARITY_rows_and_keeps_the_sibling_hold():
     # OI-100 gap 0: followed literally, "a CLARITY verdict owes nothing further"
     # left the row drifted from its anchor for good. Gap 3 stays: one MEANING
-    # row holds its CLARITY siblings in the same registry until the owner signs.
+    # row holds its CLARITY siblings in the same registry until the operator signs.
     template = (
         SCRIPTS.parent / "prompts" / "adjudicate-amendment.template.md"
     ).read_text(encoding="utf-8")
     body = template.split("-->", 1)[1]
     assert "owes nothing further" not in body
     assert "CLARITY" in body and "[MEANING+BLESS]" in body
-    assert "--reattests" not in body
+    assert "--reaccepts" not in body
     assert "same sitting" in body
     assert "first draft" in body
 
 
 # --- the amendment brief's scope and its per-registry anchor -----------------
 #
-# The same widening WI-572 closed for the first-approval arm, found live in this
-# one: `reattest_model` is REPO-WIDE, so an amendment row minted for one row
-# rendered every drifted approved row in the tree, and three adjudications that
+# The same widening WI-572 closed for the first-acceptance arm, found live in this
+# one: `reaccept_model` is REPO-WIDE, so an amendment row minted for one row
+# rendered every drifted accepted row in the tree, and three adjudications that
 # each named one row were each handed the same twenty.
 
 _SR_002 = (
     "SR-002,Subtracts,SN-001,The system shall subtract.,arithmetic,the "
-    "difference is right,Must,Test,Approved,P1,core\n"
+    "difference is right,Must,Test,Accepted,P1,core\n"
 )
 SR_TOML = "docs/requirements/system-requirements.toml"
 TC_TOML = "docs/test/test-cases.toml"
@@ -1085,7 +1085,7 @@ def _rev_short(repo):
 
 
 def _two_drift_repo(tmp_path):
-    """An approved two-SR spine where an EARLIER merge's amendment to SR-002 is
+    """An accepted two-SR spine where an EARLIER merge's amendment to SR-002 is
     still unadjudicated when THIS merge amends SR-001. `(repo, before, after)`,
     `before..after` being this merge's delta."""
     repo = _spine_repo(tmp_path)
@@ -1093,7 +1093,7 @@ def _two_drift_repo(tmp_path):
     srs.write_text(srs.read_text(encoding="utf-8") + _SR_002, encoding="utf-8")
     baseline_snapshot.copy_live(repo, seed=True)
     _git(repo, "add", "-A")
-    _git(repo, "commit", "-q", "-m", "the approved spine")
+    _git(repo, "commit", "-q", "-m", "the accepted spine")
     srs.write_text(
         srs.read_text(encoding="utf-8").replace(
             "The system shall subtract.", "The system shall subtract and round."
@@ -1137,9 +1137,9 @@ def test_a_one_row_amendment_mint_renders_that_row_alone(tmp_path):
 
 
 def test_an_amendment_row_with_no_declared_scope_is_REFUSED_not_widened(tmp_path):
-    # `first_approval_values`' WI-572 rule, applied to this arm: an empty cell
+    # `first_acceptance_values`' WI-572 rule, applied to this arm: an empty cell
     # is an unstated boundary, and reading it as "every drifted row in the tree"
-    # is the widening itself. So it fails toward the human, naming the cell.
+    # is the widening itself. So it fails toward the operator, naming the cell.
     repo = _amendment_repo(tmp_path)
     values, why = ab.amendment_brief.amendment_values(repo, _am_row(Adjudicates=""))
     assert values is None
@@ -1150,11 +1150,11 @@ def test_an_amendment_row_with_no_declared_scope_is_REFUSED_not_widened(tmp_path
 
 def test_an_amendment_scope_that_no_longer_differs_REFUSES_by_naming_it(tmp_path):
     # The scope BOUNDS the question and the live model ANSWERS it. The case that
-    # matters is a scoped row that STILL EXISTS, approved, and has been settled
+    # matters is a scoped row that STILL EXISTS, accepted, and has been settled
     # since the mint (re-anchored, or its amendment reverted) while ANOTHER row,
     # outside the scope, still drifts: the repo-wide model is not empty, so only
     # the intersection can tell that this act's question has no subject left.
-    # The refusal names the scope, so a human can tell "already ruled" from "the
+    # The refusal names the scope, so an operator can tell "already ruled" from "the
     # mint and the tree disagree".
     repo = _spine_repo(tmp_path)
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
@@ -1167,7 +1167,7 @@ def test_an_amendment_scope_that_no_longer_differs_REFUSES_by_naming_it(tmp_path
         encoding="utf-8",
     )
     # The premises, or the refusal below proves nothing: the scoped SR-001 is
-    # present, approved and byte-identical to its recorded copy...
+    # present, accepted and byte-identical to its recorded copy...
     copy = baseline_snapshot.snapshot_root(repo) / (
         "docs/requirements/system-requirements.csv"
     )
@@ -1179,7 +1179,7 @@ def test_an_amendment_scope_that_no_longer_differs_REFUSES_by_naming_it(tmp_path
             if line.startswith("SR-001,")
         )
 
-    assert sr_001(srs) == sr_001(copy) and ",Approved," in sr_001(srs)
+    assert sr_001(srs) == sr_001(copy) and ",Accepted," in sr_001(srs)
     # ...and the drift OUTSIDE the scope is real: a scope naming it renders it.
     outside, why = ab.amendment_brief.amendment_values(
         repo, _am_row(Adjudicates="SR-002")
@@ -1203,20 +1203,20 @@ def test_an_amendment_scope_that_no_longer_differs_REFUSES_by_naming_it(tmp_path
 
 # --- a scoped row the lane removed is briefed as a removal ----------------------
 #
-# A row the recorded copy holds approved and the live registry no longer
-# carries is a retirement the sitting rules: its approved cells are the
+# A row the recorded copy holds accepted and the live registry no longer
+# carries is a retirement the sitting rules: its accepted cells are the
 # `before`, the removal is the `after`, and its tier is counted like a drifted
 # row's. A scope token naming a row in neither home refuses by name.
 
 _TC_002 = (
     "TC-002,LLR-001,unit,run the subtraction check,fast,the difference is right,"
-    "yes,tests/test_demo.py::test_sub,Approved,P1\n"
+    "yes,tests/test_demo.py::test_sub,Accepted,P1\n"
 )
 _REMOVED_AFTER = "    - after: ({})".format(baseline_snapshot.ROW_REMOVED)
 
 
 def _removed_tc_repo(tmp_path):
-    """The demo spine plus an approved TC-002, seeded, then TC-002 deleted
+    """The demo spine plus an accepted TC-002, seeded, then TC-002 deleted
     from the live registry: a retirement in a chained tier."""
     repo = _spine_repo(tmp_path)
     tcs = repo / "docs" / "test" / "test-cases.csv"
@@ -1227,7 +1227,7 @@ def _removed_tc_repo(tmp_path):
 
 
 def _removed_da_repo(tmp_path):
-    """The demo spine plus an approved DA-001 and SUR-001, seeded, then DA-001
+    """The demo spine plus an accepted DA-001 and SUR-001, seeded, then DA-001
     deleted from the live registry: a retirement in an unchained tier."""
     repo = _spine_repo(tmp_path)
     path = repo / "docs" / "requirements" / "assumptions.toml"
@@ -1240,9 +1240,9 @@ def _removed_da_repo(tmp_path):
 
 
 def _recorded_digest(repo, rel, id_col, rid):
-    """The approved-text digest of row `rid` as its recorded copy holds it."""
+    """The accepted-text digest of row `rid` as its recorded copy holds it."""
     recorded = baseline_snapshot.rows_for(baseline_snapshot.load_all(repo), rel, id_col)
-    return acceptance_record.approved_text_digest(rel, id_col, recorded[rid])
+    return acceptance_record.accepted_text_digest(rel, id_col, recorded[rid])
 
 
 def _removal_block(rows, kind, rid):
@@ -1324,7 +1324,7 @@ def test_a_present_undrifted_scoped_row_still_drops_beside_a_removal(tmp_path):
 
 
 def test_an_amended_row_under_two_SRs_is_rendered_once(tmp_path):
-    # `reattest_model` groups by owning SR, so a row with two parents sits in
+    # `reaccept_model` groups by owning SR, so a row with two parents sits in
     # two entries. Rendered per entry, a one-row mint showed its row twice and
     # the verdict's `rows=N` could not be counted against the brief.
     repo = _spine_repo(tmp_path)
@@ -1371,14 +1371,14 @@ def test_the_amendment_anchor_names_each_shown_registrys_own_copy(tmp_path):
     # copy is refused nothing), and it is now the newest write in the directory.
     tcs = repo / "docs" / "test" / "test-cases.csv"
     tcs.write_text(
-        tcs.read_text(encoding="utf-8").replace(",Approved,P1", ",Approved,P2"),
+        tcs.read_text(encoding="utf-8").replace(",Accepted,P1", ",Accepted,P2"),
         encoding="utf-8",
     )
-    baseline_snapshot.copy_live(repo, approves={TC_TOML: "WI-9"})
+    baseline_snapshot.copy_live(repo, accepts={TC_TOML: "WI-9"})
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "a later act copies the TC registry")
     tc_copy = _rev_short(repo)
-    # Scoped drift in BOTH tiers at once: an approved SR cell and an approved TC
+    # Scoped drift in BOTH tiers at once: an accepted SR cell and an accepted TC
     # cell, whose copies were written at the two different commits above.
     _amend(repo)
     tcs.write_text(
@@ -1448,30 +1448,30 @@ def test_stamp_reads_one_registrys_copy_under_every_carrier(tmp_path):
     assert baseline_snapshot.stamp(repo, TC_TOML) == ("", "")
 
 
-# --- the first-approval brief (owner ruling 2026-09-01) -----------------------
+# --- the first-acceptance brief (operator ruling 2026-09-01) -----------------------
 
 
-def _first_approval_repo(tmp_path):
-    """A repo whose lane left a `Drafted` LLR under an `Approved` SR — the exact
+def _first_acceptance_repo(tmp_path):
+    """A repo whose lane left a `Drafted` LLR under an `Accepted` SR — the exact
     population the ruling hands to the adjudicator, and the one no drift arm can
-    see: a row below approval has made no claim to fall from.
+    see: a row below acceptance has made no claim to fall from.
 
     THE DIAL IS DECLARED, and it has to be. This arm exists only for rungs the
     declared gate authority has RELEASED; with no `docs/process.toml` the dial
     falls back to the shipped `DevStg-Release`, which holds every rung, so an
-    undeclared fixture is not this arm's scenario at all — it is the owner's.
+    undeclared fixture is not this arm's scenario at all — it is the operator's.
     That omission is what let the first cut ship a brief with no dial filter and
-    a green test beside it (WI-572 REVIEW-A).
+    a passing test beside it (WI-572 REVIEW-A).
 
     AND THE SCOPE IS DECLARED, for the same class of reason. The mint writes the
     rows it handed over into `Adjudicates`; a fixture that omitted the cell would
     exercise a row `intake` cannot produce, and the assembler now refuses one."""
     repo = _spine_repo(tmp_path)
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Needs")
     baseline_snapshot.copy_live(repo, seed=True)
     llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
     llrs.write_text(
-        llrs.read_text(encoding="utf-8").replace("TC-001,Approved,", "TC-001,Drafted,"),
+        llrs.read_text(encoding="utf-8").replace("TC-001,Accepted,", "TC-001,Drafted,"),
         encoding="utf-8",
     )
     _write_rows(
@@ -1479,9 +1479,9 @@ def _first_approval_repo(tmp_path):
         [
             {
                 "WI-ID": "WI-301",
-                "Title": "adjudicate: LLR-001 - await a FIRST APPROVAL",
+                "Title": "adjudicate: LLR-001 - await a FIRST ACCEPTANCE",
                 "SafetyClass": "adjudication",
-                "Brief": "first-approval",
+                "Brief": "first-acceptance",
                 "Adjudicates": "LLR-001",
                 "SpecRef": "docs/requirements/low-level-requirements.toml",
             }
@@ -1494,26 +1494,26 @@ def _first_approval_repo(tmp_path):
 # assembler needs both and a bare `{"Brief": ...}` dict is a row this mint
 # cannot produce.
 def _fa_row(**over):
-    row = {"WI-ID": "WI-301", "Brief": "first-approval", "Adjudicates": "LLR-001"}
+    row = {"WI-ID": "WI-301", "Brief": "first-acceptance", "Adjudicates": "LLR-001"}
     row.update(over)
     return row
 
 
-def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
-    # The owner's CONTEXT reason, mechanized: approving a row means holding its
+def test_the_first_acceptance_brief_carries_the_WHOLE_CHAIN(tmp_path):
+    # The operator's CONTEXT reason, mechanized: accepting a row means holding its
     # whole chain — the parent SR, the sibling LLRs, the tests — which is the
     # thing one work item does not hold and is therefore why the act is the
     # adjudicator's. So the brief must show the chain, not the changed cells.
-    repo = _first_approval_repo(tmp_path)
-    values, why = ab.first_approval_values(repo, _fa_row())
+    repo = _first_acceptance_repo(tmp_path)
+    values, why = ab.first_acceptance_values(repo, _fa_row())
     assert why is None, why
     chain = values["chain"]
     assert "SR-001" in chain and "LLR-001" in chain and "TC-001" in chain
     # The row awaiting the act is MARKED as such — a chain rendered without
     # saying which rows are the question reads as a report, not a brief.
-    assert "LLR-001 [AWAITING FIRST APPROVAL]" in chain
-    assert "SR-001 [approved]" in chain
-    # The act's `--approves` argument is no longer this brief's: the act turn
+    assert "LLR-001 [AWAITING FIRST ACCEPTANCE]" in chain
+    assert "SR-001 [accepted]" in chain
+    # The act's `--accepts` argument is no longer this brief's: the act turn
     # derives it from the committed verdict (WI-912).
     # The SRs it marks as this session's are reported beside the slots, under
     # a key the composer takes out before the fill.
@@ -1533,31 +1533,31 @@ def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
     assert why is None, why
     assert re.findall(r"\{[a-z_]+\}", text) == []
     assert "You are an INDEPENDENT adjudicator" in text
-    assert "OUTCOME: APPROVE|RETURN rows=N" in text
+    assert "OUTCOME: ACCEPT|RETURN rows=N" in text
     # The sitting ends at its committed verdict; the act is a later turn
     # (WI-912), so the judging brief orders no flip and no copy.
     assert "intake.py snapshot" not in text
 
 
-def test_the_first_approval_anchor_names_the_copied_registrys_own_copy(tmp_path):
+def test_the_first_acceptance_anchor_names_the_copied_registrys_own_copy(tmp_path):
     """Implements: TC-271"""
-    # The first-approval brief named the directory's newest write as the record
+    # The first-acceptance brief named the directory's newest write as the record
     # the act moves, whichever registry that write copied. It names, for each
     # registry the act copies, the commit that last wrote THAT copy.
-    repo = _first_approval_repo(tmp_path)
+    repo = _first_acceptance_repo(tmp_path)
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "the seeding signature")
     seeded = _rev_short(repo)
     tcs = repo / "docs" / "test" / "test-cases.csv"
     tcs.write_text(
-        tcs.read_text(encoding="utf-8").replace(",Approved,P1", ",Approved,P2"),
+        tcs.read_text(encoding="utf-8").replace(",Accepted,P1", ",Accepted,P2"),
         encoding="utf-8",
     )
-    baseline_snapshot.copy_live(repo, approves={TC_TOML: "WI-9"})
+    baseline_snapshot.copy_live(repo, accepts={TC_TOML: "WI-9"})
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "a later act copies the TC registry")
     assert baseline_snapshot.stamp(repo)[0] != seeded
-    values, why = ab.first_approval_values(repo, _fa_row())
+    values, why = ab.first_acceptance_values(repo, _fa_row())
     assert why is None, why
     anchors = dict(
         re.findall(
@@ -1571,12 +1571,12 @@ def test_the_first_approval_anchor_names_the_copied_registrys_own_copy(tmp_path)
 
 def _composed_judging_brief(tmp_path, case):
     """A judging brief as the coordinator's checkpoint composes it."""
-    if case == "first-approval":
-        repo, row = _first_approval_repo(tmp_path), _fa_row()
+    if case == "first-acceptance":
+        repo, row = _first_acceptance_repo(tmp_path), _fa_row()
     else:
         repo = _amendment_repo(tmp_path)
         dial = "DevStg-Release" if case == "amendment-held" else "DevStg-Needs"
-        set_process_key(repo, "attestation", "human_approval_through", dial)
+        set_process_key(repo, "authority", "operator_accepts_through", dial)
         row = _am_row()
         if case == "combined":
             row = _am_row(Brief="combined", Adjudicates="amendment:SR-001")
@@ -1586,101 +1586,103 @@ def _composed_judging_brief(tmp_path, case):
 
 
 @pytest.mark.parametrize(
-    "case", ["first-approval", "amendment-released", "amendment-held", "combined"]
+    "case", ["first-acceptance", "amendment-released", "amendment-held", "combined"]
 )
 def test_no_judging_brief_orders_an_act(tmp_path, case):
     """Implements: TC-161"""
     # WI-912 (revisions 32 and 36): a sitting ends at its committed verdict,
     # and its act is a later turn taken from that verdict. So no composed
     # judging brief tells its session to flip a Status, take the copy, or
-    # re-attest by itself; each says the act is a later turn.
+    # re-accept by itself; each says the act is a later turn.
     text = _composed_judging_brief(tmp_path, case)
     assert "intake.py snapshot" not in text
     assert "BY YOU" not in text
-    assert "from `Drafted` to `Approved`" not in text
+    assert "from `Drafted` to `Accepted`" not in text
     assert "later act turn" in text
 
 
-def test_the_first_approval_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
-    # Rule 2, and `red_tc_values`' live-recompute rule applied to this arm: the
+def test_the_first_acceptance_brief_REFUSES_once_the_rows_are_ruled(tmp_path):
+    # Rule 2, and `evidence_gap_values`' live-recompute rule applied to this arm: the
     # row is minted at a merge and claimed later, so by composition time another
-    # act may have approved or withdrawn every row it was minted for. A brief
+    # act may have accepted or withdrawn every row it was minted for. A brief
     # built from the mint's remembered listing would ask the judge to rule on a
     # world that no longer exists; an emptied population refuses instead.
-    repo = _first_approval_repo(tmp_path)
+    repo = _first_acceptance_repo(tmp_path)
     llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
     llrs.write_text(
-        llrs.read_text(encoding="utf-8").replace("TC-001,Drafted,", "TC-001,Approved,"),
+        llrs.read_text(encoding="utf-8").replace("TC-001,Drafted,", "TC-001,Accepted,"),
         encoding="utf-8",
     )
     baseline_snapshot.copy_live(repo, seed=True)  # the act's own anchor moved too
-    values, why = ab.first_approval_values(repo, _fa_row())
+    values, why = ab.first_acceptance_values(repo, _fa_row())
     assert values is None
-    assert "still awaiting a first approval" in why, why
+    assert "still awaiting a first acceptance" in why, why
 
 
-def test_the_first_approval_brief_never_hands_the_judge_a_HELD_row(tmp_path):
+def test_the_first_acceptance_brief_never_hands_the_judge_a_HELD_row(tmp_path):
     # WI-572 REVIEW-A, the MAJOR finding. The mint filters the population by the
     # dial (`intake._released_drafted_rows`); this assembler RE-RESOLVES it live
-    # from `reattest_model`, which is dial-blind by design — and the first cut
+    # from `reaccept_model`, which is dial-blind by design — and the first cut
     # did not put the filter back. Under a MIXED dial that is not a cosmetic
     # gap: the brief rendered a held `Drafted` SR beside a released `Drafted`
-    # LLR, marked both as awaiting the act, and derived a `--approves` argument
+    # LLR, marked both as awaiting the act, and derived a `--accepts` argument
     # naming BOTH registries — a prompt instructing an adjudicator to perform a
-    # signature the owner owes. The filter now lives in ONE table both ends read.
-    repo = _first_approval_repo(tmp_path)
+    # signature the operator owes. The filter now lives in ONE table both ends read.
+    repo = _first_acceptance_repo(tmp_path)
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
         srs.read_text(encoding="utf-8").replace(
-            ",Approved,P1,core", ",Drafted,P1,core"
+            ",Accepted,P1,core", ",Drafted,P1,core"
         ),
         encoding="utf-8",
     )
-    # `DevStg-Reqs` holds the SR tier for the owner and releases the LLR tier
+    # `DevStg-Reqs` holds the SR tier for the operator and releases the LLR tier
     # below it — the exact mixed dial the finding names. The scope names BOTH
     # rows, which is the honest shape of this scenario: the mint filtered by the
-    # dial it saw (`DevStg-Needs`, releasing both), and the owner TIGHTENED it
+    # dial it saw (`DevStg-Needs`, releasing both), and the operator TIGHTENED it
     # afterwards. The dial is therefore re-checked at composition as well as at
     # the mint — a scope check alone would have handed over the SR.
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Reqs")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Reqs")
     row = _fa_row(Adjudicates="SR-001;LLR-001")
-    values, why = ab.first_approval_values(repo, row)
+    values, why = ab.first_acceptance_values(repo, row)
     assert why is None, why
 
     # Both halves. The held row is SHOWN — it is the chain, and holding the
     # chain is the whole reason this act is the adjudicator's — but it is shown
-    # as the owner's...
-    assert "SR-001 [AWAITING FIRST APPROVAL - HELD FOR THE OWNER" in values["chain"]
-    assert "LLR-001 [AWAITING FIRST APPROVAL]" in values["chain"]
+    # as the operator's...
+    assert (
+        "SR-001 [AWAITING FIRST ACCEPTANCE - HELD FOR THE OPERATOR" in values["chain"]
+    )
+    assert "LLR-001 [AWAITING FIRST ACCEPTANCE]" in values["chain"]
     text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
     assert why is None, why
     assert (
-        "Only a row marked `[AWAITING FIRST APPROVAL]` may be ruled `APPROVE`" in text
+        "Only a row marked `[AWAITING FIRST ACCEPTANCE]` may be ruled `ACCEPT`" in text
     )
 
     # And when the dial holds EVERY rung — the kit's shipped default, so this is
     # what an adopter who has declared nothing gets — the arm has no question at
-    # all and REFUSES, rather than composing the owner's sitting as a session's
+    # all and REFUSES, rather than composing the operator's sitting as a session's
     # to-do list.
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Release")
-    values, why = ab.first_approval_values(repo, row)
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Release")
+    values, why = ab.first_acceptance_values(repo, row)
     assert values is None
-    assert "HOLDS for a human" in why, why
+    assert "HOLDS for an operator" in why, why
 
 
-def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over(
+def test_the_first_acceptance_act_cannot_widen_past_the_rows_the_merge_handed_over(
     tmp_path,
 ):
     # WI-572 REVIEW-A round 4, the MAJOR finding. The assembler re-derives its
-    # population LIVE from `trace.reattest_model`, which walks EVERY SR in the
+    # population LIVE from `trace.reaccept_model`, which walks EVERY SR in the
     # repo — so with nothing to intersect against, a merge that staged ONE
     # `Drafted` LLR minted a row whose brief then told its session it held the
-    # approval authority for the whole repo's `Drafted` backlog, and derived a
-    # `--approves` argument naming every registry those rows live in. That
+    # acceptance authority for the whole repo's `Drafted` backlog, and derived a
+    # `--accepts` argument naming every registry those rows live in. That
     # contradicts the doctrine ("over the `Drafted` rows the lane handed over")
-    # and the owner's concurrency reason for moving the act to trunk: the
-    # approval snapshot must not move across a workstream.
-    repo = _first_approval_repo(tmp_path)
+    # and the operator's concurrency reason for moving the act to trunk: the
+    # acceptance snapshot must not move across a workstream.
+    repo = _first_acceptance_repo(tmp_path)
     req = repo / "docs" / "requirements"
     # Two other lanes' rows, both `Drafted` on released rungs, neither in this
     # act's scope. LLR-003 sits in the SAME chain this act must render (so the
@@ -1702,16 +1704,16 @@ def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over
         encoding="utf-8",
     )
 
-    values, why = ab.first_approval_values(repo, _fa_row())
+    values, why = ab.first_acceptance_values(repo, _fa_row())
     assert why is None, why
     chain = values["chain"]
     # The scoped row is still the question, and it is the ONLY one.
-    assert "LLR-001 [AWAITING FIRST APPROVAL]\n" in chain + "\n"
-    assert chain.count("[AWAITING FIRST APPROVAL]") == 1, chain
+    assert "LLR-001 [AWAITING FIRST ACCEPTANCE]\n" in chain + "\n"
+    assert chain.count("[AWAITING FIRST ACCEPTANCE]") == 1, chain
     # The sibling in the same chain is SHOWN — it is evidence — and labelled with
-    # the reason that is actually true of it. Saying "HELD FOR THE OWNER" here
+    # the reason that is actually true of it. Saying "HELD FOR THE OPERATOR" here
     # would tell the session to wait on a signature nobody owes.
-    assert "LLR-003 [AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE" in chain
+    assert "LLR-003 [AWAITING FIRST ACCEPTANCE - OUTSIDE THIS ACT'S SCOPE" in chain
     # The unrelated chain is dropped WHOLE: it is not this act's question and it
     # is not this act's evidence either.
     for rid in ("SR-002", "LLR-002"):
@@ -1721,9 +1723,9 @@ def test_the_first_approval_act_cannot_widen_past_the_rows_the_merge_handed_over
 def test_an_adjudication_with_no_declared_scope_is_REFUSED_not_widened(tmp_path):
     # The unstated boundary. An empty `Adjudicates` cell cannot be read as
     # "every `Drafted` row in the repo" — that IS the widening — so it fails
-    # toward the human (rule 3) and the reason names the cell.
-    repo = _first_approval_repo(tmp_path)
-    values, why = ab.first_approval_values(repo, _fa_row(Adjudicates=""))
+    # toward the operator (rule 3) and the reason names the cell.
+    repo = _first_acceptance_repo(tmp_path)
+    values, why = ab.first_acceptance_values(repo, _fa_row(Adjudicates=""))
     assert values is None
     assert "declares no `Adjudicates` scope" in why, why
     # ...and the caller HOLDS it rather than composing a partial brief.
@@ -1734,42 +1736,42 @@ def test_an_adjudication_with_no_declared_scope_is_REFUSED_not_widened(tmp_path)
 def test_a_scope_whose_rows_are_all_settled_REFUSES_by_naming_them(tmp_path):
     # The second-order harm of the widening: merge B's adjudication, minted
     # while merge A's was still queued, used to find "no spine row awaits a
-    # first approval any more" — one repo-wide sentence for three different
+    # first acceptance any more" — one repo-wide sentence for three different
     # states. The refusal now names WHICH filter emptied the population, because
-    # "ruled on already" (drop the row), "the owner holds the rung" (sign it)
+    # "ruled on already" (drop the row), "the operator holds the rung" (sign it)
     # and "the scope names rows this spine no longer has" (the mint and the tree
     # disagree) take three different actions.
-    repo = _first_approval_repo(tmp_path)
-    values, why = ab.first_approval_values(repo, _fa_row(Adjudicates="LLR-404"))
+    repo = _first_acceptance_repo(tmp_path)
+    values, why = ab.first_acceptance_values(repo, _fa_row(Adjudicates="LLR-404"))
     assert values is None
     assert "LLR-404" in why, why
     assert "no longer has a subject" in why, why
 
 
-def test_the_first_approval_brief_is_ROUTED_and_demands_its_own_verdict(tmp_path):
+def test_the_first_acceptance_brief_is_ROUTED_and_demands_its_own_verdict(tmp_path):
     # The seam, both halves. The brief has an assembler (so a row declaring it
-    # is DISPATCHED, not held for a human), and its verdict grammar is its own:
-    # the amendment arm's MEANING/CLARITY cannot answer "approve or return", and
+    # is DISPATCHED, not held for an operator), and its verdict grammar is its own:
+    # the amendment arm's MEANING/CLARITY cannot answer "accept or return", and
     # a checker still expecting the old enum is exactly the drift the table
     # prevents.
-    assert "first-approval" in ab.ROUTED
-    assert ab.VERDICT_GRAMMAR["first-approval"] == (
+    assert "first-acceptance" in ab.ROUTED
+    assert ab.VERDICT_GRAMMAR["first-acceptance"] == (
         "OUTCOME",
-        ("APPROVE", "RETURN"),
+        ("ACCEPT", "RETURN"),
         ("rows",),
     )
     verdict = tmp_path / "v.md"
     verdict.write_text("OUTCOME: MEANING rows=1\n", encoding="utf-8")
-    assert "not one of APPROVE|RETURN" in ab.verdict_refusal("first-approval", verdict)
-    verdict.write_text("OUTCOME: APPROVE rows=2\n", encoding="utf-8")
-    assert ab.verdict_refusal("first-approval", verdict) is None
+    assert "not one of ACCEPT|RETURN" in ab.verdict_refusal("first-acceptance", verdict)
+    verdict.write_text("OUTCOME: ACCEPT rows=2\n", encoding="utf-8")
+    assert ab.verdict_refusal("first-acceptance", verdict) is None
 
 
 def test_an_adjudication_row_declaring_no_brief_still_builds(tmp_path):
     """The complement, and the reason the hold keys on the DECLARATION rather
     than on `adjudicating()`: a clean-close spot check and a report-less
     cancellation are adjudication classes the kit has never authored a brief
-    for. Holding those would page a human for routine work, and their empty
+    for. Holding those would page an operator for routine work, and their empty
     `brief` cell is an honest statement rather than an unhonoured claim."""
     repo = _disposition_repo(tmp_path, with_report=False)
     spec = next((repo / "docs" / "work").rglob("WI-301-*.md"))
@@ -1792,17 +1794,17 @@ def test_an_adjudication_row_declaring_no_brief_still_builds(tmp_path):
     "brief,line",
     [
         ("disposition", "OUTCOME: PARTIAL successors=1"),
-        ("red-tc", "OUTCOME: DRAFTED cases=2 drafts=1"),
+        ("evidence-gap", "OUTCOME: DRAFTED cases=2 drafts=1"),
         ("amendment", "VERDICT: MEANING rows=3"),
         ("consolidate", "OUTCOME: QUEUE-WITH-EDGE needs=WI-009 absorbs=-"),
         ("consolidate", "OUTCOME: CONSOLIDATE needs=- absorbs=WI-1;WI-2"),
     ],
 )
-def test_a_well_formed_typed_line_is_accepted_for_every_brief(tmp_path, brief, line):
+def test_a_well_formed_typed_line_is_read_for_every_brief(tmp_path, brief, line):
     """The grammar lives beside the assemblers because the brief and the verdict
     it demands are ONE contract — a template whose enum moved and a checker that
     did not is the drift this table prevents. Four of the five routed briefs
-    are covered here; the first-approval grammar is pinned beside its own arm
+    are covered here; the first-acceptance grammar is pinned beside its own arm
     above. `consolidate` appears twice because both of its counters are
     required on EVERY alternative, not only on the one that uses them."""
     path = tmp_path / "v.md"
@@ -1821,7 +1823,7 @@ def test_a_well_formed_typed_line_is_accepted_for_every_brief(tmp_path, brief, l
 )
 def test_an_unusable_verdict_is_refused_and_says_which_way(tmp_path, line, expect):
     """Four ways to fail, four distinct reasons. "The verdict is invalid" is not
-    something a human can act on at 3am, so each arm names what is wrong.
+    something an operator can act on at 3am, so each arm names what is wrong.
 
     Implements: TC-327
     """
@@ -1855,7 +1857,7 @@ def test_a_judge_that_commits_without_ruling_does_not_complete(tmp_path):
     assert "INDEPENDENT adjudicator" in prompts, "the brief was not even sent"
     assert proc.returncode != agent_loop.EXIT_DONE, proc.stdout
     assert "not complete — no verdict was written" in proc.stdout
-    # The trailer IS there — which is exactly why the trailer alone is not the bar.
+    # The trailer IS there — which is exactly why the trailer alone is not the checks.
     assert "WI-301" in _git(repo, "log", "--format=%(trailers:key=WI,valueonly)")
 
 
@@ -1984,7 +1986,7 @@ def test_a_cluster_citing_no_spine_still_composes_with_the_literal(tmp_path):
 def test_a_consolidation_declaring_no_scope_refuses(tmp_path):
     """An unstated boundary read as "every queued row" would let one verdict
     absorb the whole backlog — the same widening `Adjudicates` closed for the
-    first-approval brief."""
+    first-acceptance brief."""
     repo, rows = _consolidate_repo(tmp_path, scope="")
     values, why = ab.consolidate_values(repo, rows["WI-420"])
     assert values is None and "declares no `Adjudicates` scope" in why
@@ -1993,7 +1995,7 @@ def test_a_consolidation_declaring_no_scope_refuses(tmp_path):
 def test_a_consolidation_with_no_digests_cell_refuses(tmp_path):
     """Without the pair, the verdict cannot be told stale from fresh and the
     census cannot tell that this queue state has been judged — so the row is
-    HELD for a human rather than briefed."""
+    HELD for an operator rather than briefed."""
     repo, rows = _consolidate_repo(tmp_path, digests="")
     values, why = ab.consolidate_values(repo, rows["WI-420"])
     assert values is None and "no usable `Digests` cell" in why
@@ -2013,7 +2015,7 @@ def test_a_cluster_row_that_left_the_queue_refuses_by_name(tmp_path):
 
 
 def test_a_cluster_whose_overlap_dissolved_refuses_rather_than_briefing(tmp_path):
-    """`red_tc_values`' rule, one brief over: the census is RE-RUN at
+    """`evidence_gap_values`' rule, one brief over: the census is RE-RUN at
     composition time, so a judge rules on the state of the world it is actually
     in. A cluster whose overlap is gone would otherwise brief a session about a
     contradiction that no longer exists."""
@@ -2089,7 +2091,7 @@ def test_prior_names_what_earlier_consolidations_absorbed(tmp_path):
 # --- the tier questions, composed from one home (WI-854) ----------------------
 #
 # The judging questions per spine tier have ONE home the kit ships beside the
-# prompt templates. The first-approval and amendment briefs (and each combined
+# prompt templates. The first-acceptance and amendment briefs (and each combined
 # section composing them) carry the sections for the tiers of the rows they
 # judge, read from that home at render time; the skill points at it and holds
 # no copy; an absent or unreadable home refuses the render.
@@ -2111,12 +2113,12 @@ def _heads(text):
     return [h for h in heads if h in text]
 
 
-def test_a_first_approval_brief_carries_the_questions_for_its_rows_tiers(tmp_path):
+def test_a_first_acceptance_brief_carries_the_questions_for_its_rows_tiers(tmp_path):
     """Implements: TC-161"""
     # The row judged is an LLR, so the brief carries the every-row questions,
     # the LLR/TC tier's and the architecture stage's, and neither the need
     # tier's nor the requirement tier's.
-    repo = _first_approval_repo(tmp_path)
+    repo = _first_acceptance_repo(tmp_path)
     text, why = ab.compose(repo, _fa_row(), repo / "docs/reviews/v.md")
     assert why is None, why
     assert _heads(text) == [_EVERY_HEAD, _LLR_HEAD, _ARCH_HEAD]
@@ -2138,11 +2140,11 @@ def test_an_amendment_brief_carries_the_questions_for_its_rows_tiers(tmp_path):
 
 def test_each_combined_section_carries_its_own_rows_tier_questions(tmp_path):
     """Implements: TC-161"""
-    repo = _first_approval_repo(tmp_path)
-    row = _fa_row(Brief="combined", Adjudicates="first-approval:LLR-001")
+    repo = _first_acceptance_repo(tmp_path)
+    row = _fa_row(Brief="combined", Adjudicates="first-acceptance:LLR-001")
     text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
     assert why is None, why
-    section = text.split("=== SECTION `## first-approval` ===", 1)[1]
+    section = text.split("=== SECTION `## first-acceptance` ===", 1)[1]
     assert _heads(section) == [_EVERY_HEAD, _LLR_HEAD, _ARCH_HEAD]
 
 
@@ -2153,7 +2155,7 @@ def _home(path, body):
 
 def test_a_change_to_the_home_changes_the_brief(tmp_path, monkeypatch):
     """Implements: TC-161"""
-    repo = _first_approval_repo(tmp_path)
+    repo = _first_acceptance_repo(tmp_path)
     home = _home(
         tmp_path / "home.md",
         "<!-- notes -->\n# Title\n\n## Q for LLR\n<!-- tiers: LLR -->\n"
@@ -2175,7 +2177,7 @@ def test_a_change_to_the_home_changes_the_brief(tmp_path, monkeypatch):
 @pytest.mark.parametrize("make", ["absent", "directory", "undecodable"])
 def test_an_absent_or_unreadable_home_refuses_the_render(tmp_path, monkeypatch, make):
     """Implements: TC-161"""
-    repo = _first_approval_repo(tmp_path)
+    repo = _first_acceptance_repo(tmp_path)
     home = tmp_path / "home.md"
     if make == "directory":
         home.mkdir()
@@ -2184,7 +2186,7 @@ def test_an_absent_or_unreadable_home_refuses_the_render(tmp_path, monkeypatch, 
     monkeypatch.setattr(ab.amendment_brief, "QUESTIONS_HOME", home)
     for row in (
         _fa_row(),
-        _fa_row(Brief="combined", Adjudicates="first-approval:LLR-001"),
+        _fa_row(Brief="combined", Adjudicates="first-acceptance:LLR-001"),
     ):
         text, why = ab.compose(repo, row, repo / "v.md")
         assert text is None
@@ -2203,7 +2205,7 @@ def test_a_home_that_cannot_answer_the_rows_tiers_refuses(
     tmp_path, monkeypatch, body, expect
 ):
     """Implements: TC-161"""
-    repo = _first_approval_repo(tmp_path)
+    repo = _first_acceptance_repo(tmp_path)
     monkeypatch.setattr(
         ab.amendment_brief, "QUESTIONS_HOME", _home(tmp_path / "home.md", body)
     )
@@ -2247,7 +2249,7 @@ def test_no_second_copy_of_the_questions_exists(tmp_path):
 
 # --- the perspectives a decomposition round's sitting brief carries -----------
 #
-# A first approval of an SR, or an amendment of an approved need, is a
+# A first acceptance of an SR, or an amendment of an accepted need, is a
 # decomposition round: the brief carries the question of every declared hat
 # applicable to the round's parent needs and asks for one outcome per hat. Any
 # other sitting says it is none. The slot is filled only where the template
@@ -2289,14 +2291,14 @@ _HAT_QUESTIONS = (
 # the SR-002 a lane drafts.
 _HAT_NEEDS = (
     "[need.SN-001]\n"
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     'need = "{}"\n'
     'why = "why"\n'
     'priority = "M"\n'
     'acceptance = "ac"\n'
     'tags = ["need-a"]\n'
     "\n[need.SN-002]\n"
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     'need = "a team can subtract"\n'
     'why = "why"\n'
     'priority = "M"\n'
@@ -2319,18 +2321,18 @@ def _write_roster(repo, roster):
 def _hat_repo(
     tmp_path, roster=_HAT_ROSTER, amend_need=False, drafted_sr=False, amended_sr=False
 ):
-    """The demo spine with two approved needs, seeded, on a dial that releases
+    """The demo spine with two accepted needs, seeded, on a dial that releases
     the requirement rungs; then SN-001's text amended and/or an SR-002 under
-    SN-002 drafted (or, with `amended_sr`, approved before the seed and its
+    SN-002 drafted (or, with `amended_sr`, accepted before the seed and its
     text amended after it), and the roster written."""
     repo = _spine_repo(tmp_path)
-    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    set_process_key(repo, "authority", "operator_accepts_through", "DevStg-Needs")
     needs = repo / "docs" / "requirements" / "stakeholder-needs.toml"
     needs.write_text(_HAT_NEEDS.format("a team can use it"), encoding="utf-8")
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
     if amended_sr:
-        approved = _DRAFTED_SR.replace(",Drafted,", ",Approved,")
-        srs.write_text(srs.read_text(encoding="utf-8") + approved, encoding="utf-8")
+        accepted = _DRAFTED_SR.replace(",Drafted,", ",Accepted,")
+        srs.write_text(srs.read_text(encoding="utf-8") + accepted, encoding="utf-8")
     baseline_snapshot.copy_live(repo, seed=True)
     if amend_need:
         needs.write_text(_HAT_NEEDS.format("a team can use the kit"), encoding="utf-8")
@@ -2355,11 +2357,11 @@ def _composed(repo, row, prompt_templates=None):
     return text
 
 
-def test_a_first_approval_of_a_drafted_sr_carries_the_hat_block(tmp_path):
+def test_a_first_acceptance_of_a_drafted_sr_carries_the_hat_block(tmp_path):
     """Implements: TC-399"""
     repo = _hat_repo(tmp_path, drafted_sr=True)
     text = _composed(repo, _fa_row(Adjudicates="SR-002"))
-    assert "SR-002 [AWAITING FIRST APPROVAL]" in text
+    assert "SR-002 [AWAITING FIRST ACCEPTANCE]" in text
     assert "always-on question?" in text
     assert "need-b question?" in text  # SR-002's parent need reaches its hat
     assert "need-a question?" not in text  # SN-001 is no parent of this round
@@ -2367,17 +2369,17 @@ def test_a_first_approval_of_a_drafted_sr_carries_the_hat_block(tmp_path):
     assert "- HAT " in text  # the verdict is asked for one outcome per hat
 
 
-def test_a_first_approval_of_llr_and_tc_rows_only_says_no_decomposition_round(
+def test_a_first_acceptance_of_llr_and_tc_rows_only_says_no_decomposition_round(
     tmp_path,
 ):
     """Implements: TC-399"""
-    repo = _write_roster(_first_approval_repo(tmp_path), _HAT_ROSTER)
+    repo = _write_roster(_first_acceptance_repo(tmp_path), _HAT_ROSTER)
     text = _composed(repo, _fa_row())
     assert _not_a_round() in text
     assert not [q for q in _HAT_QUESTIONS if q in text]
 
 
-def test_an_amendment_of_an_approved_need_carries_the_hat_block(tmp_path):
+def test_an_amendment_of_an_accepted_need_carries_the_hat_block(tmp_path):
     """Implements: TC-399"""
     repo = _hat_repo(tmp_path, amend_need=True)
     text = _composed(repo, _am_row(Adjudicates="SN-001"))
@@ -2412,13 +2414,13 @@ def test_a_combined_round_reaches_the_need_of_an_sr_another_section_amends(
     tmp_path,
 ):
     """Implements: TC-399"""
-    # The first-approval section's drafted SR-002 (under SN-002) makes the
+    # The first-acceptance section's drafted SR-002 (under SN-002) makes the
     # round; the amendment section's SR-001 names SN-001, whose hat the
     # sitting's one perspectives part carries too.
     repo = _hat_repo(tmp_path, drafted_sr=True)
     _amend(repo)
     row = _am_row(
-        Brief="combined", Adjudicates="amendment:SR-001;first-approval:SR-002"
+        Brief="combined", Adjudicates="amendment:SR-001;first-acceptance:SR-002"
     )
     text = _composed(repo, row)
     head = text.index(_PERSPECTIVES_HEAD)
@@ -2472,7 +2474,7 @@ def test_the_spine_authors_hats_value_puts_the_sittings_questions(tmp_path):
 
 
 _OVERRIDE = (
-    "An operator's own first-approval brief, written before the hats slot.\n"
+    "An operator's own first-acceptance brief, written before the hats slot.\n"
     "{chain}\n\n{baseline}\n\n{questions}\n\n"
     "Write your verdict to {verdict} for {wi}.\n"
 )
@@ -2485,9 +2487,9 @@ def test_an_override_without_the_hats_slot_composes_unchanged(tmp_path):
     # never read.
     repo = _hat_repo(tmp_path, roster=_MALFORMED_ROSTER, drafted_sr=True)
     row = _fa_row(Adjudicates="SR-002")
-    key = ab.BRIEF_PROMPTS["first-approval"]
+    key = ab.BRIEF_PROMPTS["first-acceptance"]
     text = _composed(repo, row, {key: _OVERRIDE})
-    values, why = ab.first_approval_values(repo, row)
+    values, why = ab.first_acceptance_values(repo, row)
     assert why is None, why
     declared = ab.prompts.slots(_OVERRIDE)
     values = {k: v for k, v in values.items() if k in declared}
@@ -2505,12 +2507,12 @@ _SECTION_HEAD = "=== SECTION `## "
 
 def test_a_combined_sitting_carries_the_hat_questions_once_over_the_union(tmp_path):
     """Implements: TC-399"""
-    # The amendment section amends SN-001 (need-a); the first-approval section
+    # The amendment section amends SN-001 (need-a); the first-acceptance section
     # drafts SR-002 under SN-002 (need-b). One perspectives part follows the
     # last section and carries the union, each question once.
     repo = _hat_repo(tmp_path, amend_need=True, drafted_sr=True)
     row = _am_row(
-        Brief="combined", Adjudicates="amendment:SN-001;first-approval:SR-002"
+        Brief="combined", Adjudicates="amendment:SN-001;first-acceptance:SR-002"
     )
     text = _composed(repo, row)
     assert text.count(_SECTION_HEAD) == 2
@@ -2527,11 +2529,11 @@ def test_a_combined_sitting_that_is_no_round_states_it_once(tmp_path):
     """Implements: TC-399"""
     # An amended SR and a drafted LLR: neither section is a decomposition
     # round, and the sitting says so once.
-    repo = _first_approval_repo(tmp_path)
+    repo = _first_acceptance_repo(tmp_path)
     _amend(repo)
     _write_roster(repo, _HAT_ROSTER)
     row = _fa_row(
-        Brief="combined", Adjudicates="amendment:SR-001;first-approval:LLR-001"
+        Brief="combined", Adjudicates="amendment:SR-001;first-acceptance:LLR-001"
     )
     text = _composed(repo, row)
     assert text.count(_not_a_round()) == 1
@@ -2557,7 +2559,7 @@ _NO_HATS_BRIEFS = sorted(
 @pytest.mark.parametrize("key", _NO_HATS_BRIEFS)
 def test_no_other_brief_declares_the_hats_slot(key):
     """Only the two spine sitting templates carry the perspectives slot; the
-    done-when, red-TC, rejudge, disposition, consolidate, dispute, act and
+    done-when, evidence-gap, rejudge, disposition, consolidate, dispute, act and
     combined templates do not. Adequacy witness: a `{hats}` slot added to the
     done-when template (or a combined template that declared it beside its
     sections' own) fails here.
@@ -2572,15 +2574,15 @@ _HAT_LINES = (
     "- HAT NEED-A -> SR-001 -> it raised the bound\n"
 )
 _AMENDMENT_VERDICT = "VERDICT: CLARITY rows=1\n- [CLARITY] SR-001 -> a rewording\n"
-_FIRST_APPROVAL_VERDICT = (
-    "OUTCOME: APPROVE rows=2\n"
-    "- [APPROVE] LLR-001 -> ready\n"
+_FIRST_ACCEPTANCE_VERDICT = (
+    "OUTCOME: ACCEPT rows=2\n"
+    "- [ACCEPT] LLR-001 -> ready\n"
     "- [RETURN] TC-001 -> its expected result is vague\n"
 )
 _COMBINED_VERDICT = (
-    "SITTING: JUDGED kinds=amendment;first-approval\n\n"
-    "## amendment\n\n" + _AMENDMENT_VERDICT + "\n## first-approval\n\n"
-    "" + _FIRST_APPROVAL_VERDICT
+    "SITTING: JUDGED kinds=amendment;first-acceptance\n\n"
+    "## amendment\n\n" + _AMENDMENT_VERDICT + "\n## first-acceptance\n\n"
+    "" + _FIRST_ACCEPTANCE_VERDICT
 )
 
 
@@ -2589,21 +2591,21 @@ def _rulings(text, brief, kinds):
     rulings, and the rows it authorizes an act on."""
     parsed, why = ksitting.parse(text, brief, kinds)
     assert why is None, why
-    binding = ksitting.render_requested(brief, kinds, "accepted")
-    accepted = ksitting.accepted(text, binding)
-    assert accepted, text
-    rows = {kind: part[3] for kind, part in accepted.items()}
-    return parsed, rows, ksitting.judged_rows(accepted)
+    binding = ksitting.render_requested(brief, kinds, "recorded")
+    recorded = ksitting.recorded(text, binding)
+    assert recorded, text
+    rows = {kind: part[3] for kind, part in recorded.items()}
+    return parsed, rows, ksitting.judged_rows(recorded)
 
 
 @pytest.mark.parametrize(
     "brief, kinds, verdict",
     [
         ("amendment", ("amendment",), _AMENDMENT_VERDICT),
-        ("first-approval", ("first-approval",), _FIRST_APPROVAL_VERDICT),
-        (ksitting.SITTING, ("amendment", "first-approval"), _COMBINED_VERDICT),
+        ("first-acceptance", ("first-acceptance",), _FIRST_ACCEPTANCE_VERDICT),
+        (ksitting.SITTING, ("amendment", "first-acceptance"), _COMBINED_VERDICT),
     ],
-    ids=["amendment", "first-approval", "combined"],
+    ids=["amendment", "first-acceptance", "combined"],
 )
 def test_hat_outcome_lines_change_no_ruling(brief, kinds, verdict):
     """A verdict naming each hat's outcome on `- HAT <NAME> -> ...` lines
@@ -2639,28 +2641,28 @@ listens_for = "unreached failure"
 def _draft_llr(repo):
     llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
     text = llrs.read_text(encoding="utf-8")
-    text = text.replace("TC-001,Approved,", "TC-001,Drafted,")
+    text = text.replace("TC-001,Accepted,", "TC-001,Drafted,")
     llrs.write_text(text, encoding="utf-8")
 
 
-def _round_by_first_approval(tmp_path):
+def _round_by_first_acceptance(tmp_path):
     """A combined sitting whose drafted SR-002 alone makes the round."""
     repo = _hat_repo(tmp_path, drafted_sr=True)
     _amend(repo)
-    return repo, "amendment:SR-001;first-approval:SR-002"
+    return repo, "amendment:SR-001;first-acceptance:SR-002"
 
 
 def _round_by_amendment(tmp_path):
     """A combined sitting whose amended SN-001 alone makes the round."""
     repo = _hat_repo(tmp_path, amend_need=True)
     _draft_llr(repo)
-    return repo, "amendment:SN-001;first-approval:LLR-001"
+    return repo, "amendment:SN-001;first-acceptance:LLR-001"
 
 
 def _round_by_both(tmp_path, roster=_HAT_ROSTER):
     """A combined sitting that both its sections make a round."""
     repo = _hat_repo(tmp_path, roster=roster, amend_need=True, drafted_sr=True)
-    return repo, "amendment:SN-001;first-approval:SR-002"
+    return repo, "amendment:SN-001;first-acceptance:SR-002"
 
 
 def _sr_amended_alone(tmp_path):
@@ -2668,13 +2670,13 @@ def _sr_amended_alone(tmp_path):
 
 
 def _llr_and_tc_rows_only(tmp_path):
-    return _write_roster(_first_approval_repo(tmp_path), _HAT_ROSTER), _fa_row()
+    return _write_roster(_first_acceptance_repo(tmp_path), _HAT_ROSTER), _fa_row()
 
 
 def _combined_non_round(tmp_path):
-    repo = _first_approval_repo(tmp_path)
+    repo = _first_acceptance_repo(tmp_path)
     _amend(repo)
-    scope = "amendment:SR-001;first-approval:LLR-001"
+    scope = "amendment:SR-001;first-acceptance:LLR-001"
     row = _fa_row(Brief="combined", Adjudicates=scope)
     return _write_roster(repo, _HAT_ROSTER), row
 
@@ -2701,8 +2703,8 @@ def test_a_round_sitting_composed_alone_carries_the_stopping_boundary_line_once(
 
 @pytest.mark.parametrize(
     "build",
-    [_round_by_first_approval, _round_by_amendment, _round_by_both],
-    ids=["first-approval-makes-it", "amendment-makes-it", "both-make-it"],
+    [_round_by_first_acceptance, _round_by_amendment, _round_by_both],
+    ids=["first-acceptance-makes-it", "amendment-makes-it", "both-make-it"],
 )
 def test_a_combined_round_carries_the_stopping_boundary_line_once_after_its_last_section(
     tmp_path, build
@@ -2769,10 +2771,10 @@ _STOPPING_LINES = (
     "brief, kinds, verdict",
     [
         ("amendment", ("amendment",), _AMENDMENT_VERDICT),
-        ("first-approval", ("first-approval",), _FIRST_APPROVAL_VERDICT),
-        (ksitting.SITTING, ("amendment", "first-approval"), _COMBINED_VERDICT),
+        ("first-acceptance", ("first-acceptance",), _FIRST_ACCEPTANCE_VERDICT),
+        (ksitting.SITTING, ("amendment", "first-acceptance"), _COMBINED_VERDICT),
     ],
-    ids=["amendment", "first-approval", "combined"],
+    ids=["amendment", "first-acceptance", "combined"],
 )
 def test_stopping_boundary_lines_change_no_ruling(brief, kinds, verdict):
     """A verdict carrying a `- STOPPING BOUNDARY` line parses to the same

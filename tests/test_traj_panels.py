@@ -239,29 +239,32 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     text = html_of(tmp_path)
     assert 'data-tab="process"' in text and 'id="process"' in text
     # the three panels are present and titled (WI-498 slice 5 re-keyed panels 1
-    # and 3 onto the stage ladder and the surviving sense of "bar")
+    # and 3 onto the stage ladder and the surviving sense of "bar", now "checks")
     assert "Artifact lifecycle × the stage ladder" in text
     assert "The station cycle" in text
-    assert "Slices → phase → the check bars" in text
-    # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Approved,
+    assert "Slices → phase → the checks" in text
+    # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Accepted,
     # 3 LLR, 4 TC) — live counts, not prose
     assert "1 SN" in text
-    assert "2 SR · 1 approved" in text
+    assert "2 SR · 1 accepted" in text
     assert "3 LLR" in text and "4 TC" in text
-    assert "1 of 2 SR approved" in text
+    assert "1 of 2 SR accepted" in text
     # the pre-station picture is gone: the serial resume-loop chips and their
     # escalation bullets do not survive the redraw (their successors are the
     # handback outcome and the surface arm, asserted by the station tests).
     assert "The resume loop" not in text
-    assert "Page the human" not in text
-    # panel 3 states the two bars and joins the WI registry (4 WIs, 1 done).
-    # "rung bar", not "gate bar": the dashboard is the kit's highest-traffic
+    assert "Page the operator" not in text
+    # panel 3 states the two sets of checks and joins the WI registry (4 WIs, 1 done).
+    # "gate checks", the glossary's term, not "rung bar" or "gate bar": the dashboard is the kit's highest-traffic
     # surface and was still teaching the deleted axis and the deprecated
     # `--gate` spelling (ROUND-OPUS 9) — invisible to check_vocab, which
     # refuses retired TAGS and exempts generated files, so this assertion was
     # the only thing holding the string and it was holding the wrong one.
-    assert "commit bar" in text and "rung bar" in text
-    assert "gate bar" not in text, "the deleted bar axis is back on the dashboard"
+    # "rung bar" was the dashboard's word until the glossary named the full gate
+    # spell it, so neither spelling may come back.
+    assert "commit checks" in text and "gate checks" in text
+    for deleted in ("gate bar", "rung bar"):
+        assert deleted not in text, "the deleted bar axis is back on the dashboard"
     assert "4 work items · 1 done." in text
     # still fully offline with the new tab present
     low = text.lower()
@@ -414,7 +417,7 @@ def test_meta_process_tab_smoke():
 # 08-01 diagram review's constraint governs this suite: the stage vocabulary must
 # never again pin the dashboard to itself — every assertable stage name is either
 # DERIVED in the panel from the shipped module's own constant (integrate.
-# OUTCOME_DIRS, integrate.BAR_GREEN, schedule's kind tables) or, where a label
+# OUTCOME_DIRS, integrate.CHECKS_PASSED, schedule's kind tables) or, where a label
 # has no exported constant, held by a sync pin against the module it mirrors
 # (dispatch._kind_action, intake.tier_signal), so drift reds.
 
@@ -512,17 +515,17 @@ def test_station_slot_is_the_serial_waist(tmp_path):
     assert "fill:var(--slot)" in text
 
 
-def test_station_refresh_pins_the_bar_attestation(tmp_path):
+def test_station_refresh_pins_the_passed_checks_record(tmp_path):
     """Implements: TC-056"""
-    # THE SYNC PIN for §A2: the refresh card carries the shipped attestation
-    # label (integrate.BAR_GREEN, the trailer the merge slot verifies) and the
+    # THE SYNC PIN for §A2: the refresh card carries the shipped passed-checks record's
+    # label (integrate.CHECKS_PASSED, the trailer the merge slot verifies) and the
     # refresh sequence the integrator actually runs (merge trunk in, trunk_step,
-    # the bar) — derived/pinned, never folklore.
+    # the checks) — derived/pinned, never folklore.
     integ = load_script("integrate")
     with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     station = _station_div(html_of(tmp_path))
-    assert integ.BAR_GREEN.rstrip(":") in station
+    assert integ.CHECKS_PASSED.rstrip(":") in station
     assert "trunk_step" in station
     assert "merge trunk in" in station
 
@@ -605,7 +608,7 @@ def test_station_links_resolve():
     # Over the real meta repo (where every canonical home exists): each linked
     # stage resolves, and the station's canonical homes are the ones the flow
     # actually lands on — the WI registry (claim/intake), the log (the merged
-    # record), and the owner surface (the surfaced approval cards).
+    # record), and the operator surface (the surfaced acceptance cards).
     gt = load_script("gen_trajectory")
     station = gt._station_panel(ROOT)
     hrefs = re.findall(r'href="([^"]+)"', station)
@@ -635,17 +638,17 @@ def test_station_byte_identical_without_data(tmp_path):
 def test_station_advance_card_names_the_shipped_merge(tmp_path):
     # WI-415 finding 1 (WI-389 REVIEW-A #1): trunk advances via integrate.py's
     # --no-ff merge commit, never a fast-forward — a true ff is what the
-    # RULING-6 audit reds. The card used to say "ff trunk to the barred tree",
+    # RULING-6 audit reds. The card used to say "ff trunk to the barred tree" (now "checked"),
     # misstating the shipped act; it now says "advance", which also still fits
     # the notemax budget (no truncating "…").
     tp = load_script("gen_trajectory").traj_panels
     with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     station = _station_div(html_of(tmp_path))
-    assert "advance trunk to the barred tree" in station
+    assert "advance trunk to the checked tree" in station
     assert "ff trunk to the barred tree" not in station
-    assert len("advance trunk to the barred tree") <= tp.STATION_GEOM["notemax"]
-    assert "advance trunk to the barred tree…" not in station  # not truncated
+    assert len("advance trunk to the checked tree") <= tp.STATION_GEOM["notemax"]
+    assert "advance trunk to the checked tree…" not in station  # not truncated
 
 
 def test_station_narrow_width_scrolls_instead_of_blurring(tmp_path):
@@ -968,7 +971,7 @@ def test_t4_an_over_bound_next_work_title_discloses_operably(tmp_path):
 # --- WI-315 (SR-054 T1 binding): the three core reading tasks each reach a
 # LABELLED entry point within one tab switch of the landing view ----------------
 # WI-300's option-(f) pattern applied to T1, the last SR-054 anchor whose
-# mechanizable half had no owner. The 2026-07-26 owner ruling reworded T1 off the
+# mechanizable half had no owner. The 2026-07-26 operator ruling reworded T1 off the
 # word "obvious" onto an operational gloss: each of the three core reading tasks
 # (find the project state / the next work / how the parts connect) is reachable in
 # <= 1 tab switch from the landing view, its entry point a LABELLED nav control or

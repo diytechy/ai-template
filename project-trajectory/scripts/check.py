@@ -18,11 +18,11 @@ Contracts: IF-267
 
 Contract IF-267: --path-triggered runs only steps declaring nonempty paths,
     except smoke, selected by the same rung-or-path rule as ordinary gates.
-    Unknown changes run them. Smoke remains in the manually run commit bar
+    Unknown changes run them. Smoke remains in the manually run commit checks
     and ordinary gate plans. The hook reads the normal results and exit status.
 
 Design choices that keep it honest and CI-friendly:
-    - **Never a false green.** Any failing required step makes the whole run exit
+    - **Never a false pass.** Any failing required step makes the whole run exit
       nonzero. We print the real command output; we do not summarize it away.
     - **Missing tool != pass.** If a step's required module isn't importable, or
       its command's executable can't be found (a rewired non-Python toolchain
@@ -52,9 +52,9 @@ Design choices that keep it honest and CI-friendly:
       TRUNK lane's (concurrency-restructure.md §5.2). On a claimed work branch —
       one with a `docs/work/active/<branch>/` spec directory — each is reported
       SKIP with its reason instead of running. Fail-closed: off git, on a
-      detached HEAD, or unclaimed, the full bar applies. See
+      detached HEAD, or unclaimed, the full checks apply. See
       `_TRUNK_FRESHNESS_STEPS`. `--trunk-lane` forces them ON: the station
-      refresh (`integrate.py refresh`) regenerates on the branch and then bars
+      refresh (`integrate.py refresh`) regenerates on the branch and then checks
       it, and that tree IS the tree that becomes trunk, so the branch stands in
       the trunk lane for exactly that one run.
     - **Non-interactive.** No prompts; deterministic exit codes for automation.
@@ -72,11 +72,11 @@ Usage:
                 Default: the repo's **derived effective stage** from
                 `docs/stage`, computed by derive_stage.py over the SETTLED spine
                 and never hand-set; `all` when no stage file exists. This keeps a
-                young project's CI green-and-honest: it enforces what the project
+                young project's CI passing and honest: it enforces what the project
                 has reached, not the end-state. From DevStg-Impl on, traceability
-                also requires every Verification=Test SR to be Status=Approved
+                also requires every VerificationMethod=Test SR to be Status=Accepted
                 (trace.py --require-verified). `--gate` is the accepted prior
-                spelling; `--stage-cleared` is accepted and warns.
+                spelling.
     --tier      Which test tier to run (default: all). Mark fast critical-path
                 tests @pytest.mark.smoke and expensive ones @pytest.mark.release
                 (markers registered in pytest.ini); leave ordinary tests unmarked —
@@ -164,18 +164,16 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import (
-    RETIRED_STAGE_ALIASES,
     STACK_INI,
     StackIniError,
     read_stack_ini,
     step_paths,
     step_threshold as _step_threshold,
-    _LEGACY_GATES_WARNED as _LEGACY_GATES_WARNED,
 )
 from kitlib.config import utf8_console as _utf8_console
 import fnmatch
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`, executed
 # WI-448): the best-effort-off-git subprocess pattern this module used to spell
 # out itself. Run as a subprocess this script's own dir is sys.path[0] so a
 # plain import resolves; the guard covers an in-process import (a test) whose
@@ -293,12 +291,12 @@ BUILTIN_STEP_NAMES = frozenset(
         "verdict-rollup",
         "interface-reference",
         "okf",
-        "approval-fresh",
+        "acceptance-fresh",
         "skills-sync",
         "skills-index",
         "prompt-catalog",
         "staged-divergence",
-        "approval-immutable",
+        "acceptance-immutable",
         "held-status",
         "reserved-ids",
         "ruling-sync",
@@ -411,7 +409,7 @@ def extra_steps(profile, subs):
 
     `from-stage` is the rung the step becomes RELEVANT at and the step runs
     whenever the repo is at or above it (see _step_threshold; the retired
-    `gates =` membership list still translates). Optional `paths =` patterns
+    `gates =` membership list is refused). Optional `paths =` patterns
     also select it below that rung; an unknown change runs every such step.
     Patterns are repo-relative, case-sensitive fnmatch globs (`*` spans `/`),
     comma/whitespace separated. Include the baseline, script and config.
@@ -474,7 +472,7 @@ def _resolve_lane_map(profile, coverage, tier, phase):
     `[step:]` `lane = <producer>` declaration (extra_step_lanes). A declared lane
     must name a REAL step (resolved at gate "all" so a lane onto another gate's
     step still maps), so a typo fails LOUDLY here instead of silently re-racing
-    the step under --jobs>1 (a false green)."""
+    the step under --jobs>1 (a false pass)."""
     lane_map = dict(_SHARED_OUTPUT_LANES)
     declared = extra_step_lanes(profile)
     if declared:
@@ -551,7 +549,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
     ]
     if at_or_above(
         stage, _kitladder.STAGE_IMPL
-    ):  # the Impl criterion: test-verifiable SRs are Approved
+    ):  # the Impl criterion: test-verifiable SRs are Accepted
         trace_cmd.append("--require-verified")
         trace_cmd.append(
             "--strict-schema"
@@ -587,13 +585,13 @@ def steps(coverage, tier, stage, phase=None, profile=None):
     # every in-scope row — so it was reached ONLY by a spine already fully
     # decomposed and TC'd, which on the stage ladder is the Impl rung, not the
     # Arch rung that opens the bar's span. Keying on Arch would PROMOTE A
-    # SEVERITY the owner ruled warn-first-until-mature, which is a policy change
+    # SEVERITY the operator ruled warn-first-until-mature, which is a policy change
     # and not a re-key. The rung the promotion has always effectively meant is
     # the rung it now names.
     # The retired-vocabulary enforcer (OI-21) rides check_trajectory's severity
     # ladder EXACTLY — same condition, same `if`, deliberately not a second one.
     # The reason is the same too: a repo mid-conversion must SEE every remaining
-    # site without being blocked by it, while a repo past its requirements bar has
+    # site without being blocked by it, while a repo past its requirements stage has
     # no excuse. "all" is excluded so the pre-commit floor (which passes no
     # --gate) stays warn-first for both.
     traj_cmd = [sys.executable, str(_SCRIPTS / "check_trajectory.py")]
@@ -601,7 +599,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
     # Reverse back-link coverage (OI-42 ruled (e), WI-486) rides the SAME
     # severity ladder, third of three, for the same reason: the number must be
     # visible at every commit and gate only where a repo past its requirements
-    # bar has no excuse. It is vacuous while `[checks] backlink_coverage_min`
+    # stage has no excuse. It is vacuous while `[checks] backlink_coverage_min`
     # is 0, which is what the kit ships — the step then reports the percentage
     # and can never fail.
     backlink_cmd = [
@@ -737,16 +735,16 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # `--strict` fails on ORPHANS, and the two orphan rules — "SR has no LLR"
         # and "SR has no test" — are LITERALLY the predicates that hold a repo at
         # the LLReqs and Tests rungs (spine_rules.spine_stage). So this step
-        # cannot be green below DevStg-Impl by construction: running it lower
+        # cannot pass below DevStg-Impl by construction: running it lower
         # would demand the output of the very rung the repo is standing on. The
         # retired tag said "from the DevStg-Tests BAR on", which under the bar's
         # min-fold meant a fully decomposed spine — the same repo, named by its
         # rung instead of by the bar that implied it.
         ("traceability", (), trace_cmd, _kitladder.STAGE_IMPL, "process"),
-        # Retired-vocabulary enforcer (OI-21). AT EVERY BAR, deliberately: the
+        # Retired-vocabulary enforcer (OI-21). AT EVERY STAGE, deliberately: the
         # whole point is that the retired tags cannot grow back, and the surface
         # they grow back into (registries, briefs, status prose) is authored
-        # hardest at the LOWEST bar — a DevStg-Impl-only step would not run in
+        # hardest at the LOWEST stage — a DevStg-Impl-only step would not run in
         # this kit's own CI for the whole of its requirements phase, which is
         # exactly the window the drift it guards against happened in. The
         # severity, not the wiring, is what stays warn-first.
@@ -760,11 +758,11 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # Need-form check (SN-033's declared checker, WI-454): each SN `need`
         # cell is scanned for internal paths, implementation-only identifiers
         # and process citations against the reviewed exception list in
-        # docs/need-form-allow (ships empty). At every bar, like vocabulary —
-        # the need registry is authored hardest at the LOWEST bar — but
+        # docs/need-form-allow (ships empty). At every stage, like vocabulary —
+        # the need registry is authored hardest at the LOWEST stage — but
         # WARN-FIRST ALWAYS: no `--strict` promotion here, deliberately unlike
-        # vocab_cmd/traj_cmd. Promoting a form heuristic over approved
-        # stakeholder prose to a gate is an owner ruling that has not been
+        # vocab_cmd/traj_cmd. Promoting a form heuristic over accepted
+        # stakeholder prose to a gate is an operator ruling that has not been
         # made (WI-454's scope guard); the severity ladder stops at WARN until
         # it is.
         (
@@ -901,8 +899,8 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_IMPL,
             "process",
         ),
-        # The test-first order (SR-217): each requirement approved after the
-        # declared `[checks] test_first_since`, with a test case approved after
+        # The test-first order (SR-217): each requirement accepted after the
+        # declared `[checks] test_first_since`, with a test case accepted after
         # its first `Implements:` line landed, read from history. AT EVERY RUNG,
         # unlike backlink-coverage above, because the gap it reads is the one
         # the ladder leaves: the ladder orders tests before code for the project
@@ -953,7 +951,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_IMPL,
             "process",
         ),
-        # Owner decision-surface freshness (WI-322, OI-10 ruled option (b)):
+        # Operator decision-surface freshness (WI-322, OI-10 ruled option (b)):
         # docs/open-items.html is generated from docs/requirements/open-items.toml
         # plus the spine's Drafted/Modified rows — the surface that replaced the
         # hand-maintained docs/open-items.md. Same generated-artifact contract
@@ -1041,12 +1039,12 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_IMPL,
             "process",
         ),
-        # Re-attestation brief freshness (WI-325). Every other generated surface
+        # Re-acceptance brief freshness (WI-325). Every other generated surface
         # here is freshness-gated; docs/ratify/*.md is generated the same way and
         # was gated by nothing, so it silently drifted behind the registry it
         # summarizes — twice in one day, both times caught only by a human
-        # noticing. It fails CLOSED because a stale brief is read by a HUMAN
-        # ABOUT TO ATTEST: a short brief means an owner blesses rows they were
+        # noticing. It fails CLOSED because a stale brief is read by an OPERATOR
+        # ABOUT TO ACCEPT: a short brief means an operator blesses rows they were
         # never shown. The comparison uses the baseline the brief itself
         # DECLARES, never a re-derived one (re-deriving is the WI-322 BLOCKER,
         # where a regeneration collapsed 43 chain-row diffs to 18 while a
@@ -1055,7 +1053,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # BUILT-IN rather than a docs/stack.ini `[step:]` — 130-REVIEW-A found
         # that shipping the hook while the step lived in a project-owned
         # stack.ini BLOCKS EVERY COMMIT for an adopter whose stack.ini predates
-        # WI-325 ("check: no step named 'approval-fresh'", exit 1). Its siblings
+        # WI-325 ("check: no step named 'acceptance-fresh'", exit 1). Its siblings
         # above are all built-in for exactly this reason: check.py and the hook
         # ship together, so a step declared here can never be missing from under
         # the hook that calls it. Doubly self-arming, so a non-adopter pays
@@ -1063,20 +1061,20 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # Modified (the window is closed, so the brief is a record).
         #   AT EVERY RUNG SINCE WI-498 slice 2, and the re-derivation is the
         # clearest case in the table. The question this step asks — "is the brief
-        # a human is about to attest FROM still the brief the registry supports?"
-        # — is asked at the moment of an ATTESTATION, and attestation happens at
+        # an operator is about to accept FROM still the brief the registry supports?"
+        # — is asked at the moment of an ACCEPTANCE, and acceptance happens at
         # every rung of the ladder, not only near the end of it. The old
         # `{DevStg-Tests, DevStg-Impl}` tag put it out of reach for exactly the
-        # repos that attest most often: an early one, whose derived bar sits at
+        # repos that accept most often: an early one, whose derived stage sits at
         # the floor for the whole of its requirements work. Doubly self-arming
         # already, so a repo with no brief still pays nothing.
         (
-            "approval-fresh",
+            "acceptance-fresh",
             (),
             [
                 sys.executable,
                 str(_SCRIPTS / "trace.py"),
-                "--approve",
+                "--accept",
                 "modified",
                 "--check",
             ],
@@ -1110,7 +1108,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # (arch-map / trajectory-map / status-map / open-items / okf) is DevStg-Impl-only
         # for a stated reason — those are views of the project's own evolving
         # spine and "churn while the plan is still forming", so gating them early
-        # reds a repo for drift in an artifact whose inputs are still being
+        # fails a repo for drift in an artifact whose inputs are still being
         # written. These two have the opposite input profile: they index the
         # APPARATUS (the kit's skill library, the loop's prompt templates), which
         # does not move as a downstream plan matures, so there is no early-stage
@@ -1121,7 +1119,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # behaved oddly. That is `derived-stage`'s shape (an artifact the
         # machinery's own honesty rests on), not the dashboards'. The concrete
         # case this was written against — a repo pinned at the lowest reading for
-        # the whole duration of an approval window, so a `DevStg-Impl` step
+        # the whole duration of an acceptance window, so a `DevStg-Impl` step
         # never ran in its own CI — is the collapse `docs/stage` removes by
         # deriving over the SETTLED spine; the ARGUMENT for the tag survives it.
         (
@@ -1165,12 +1163,12 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # clean for this one, and the close's review measured what warn-only
         # costs (ROUND-SOL-RAW 1, CRITICAL): stage a registry edit, regenerate
         # `docs/stage`, forget the `git add`, and every freshness step passes on
-        # bytes the commit does not contain. So the bar now vouches for the tree
+        # bytes the commit does not contain. So the checks now vouch for the tree
         # being COMMITTED. The bare `--staged-divergence` stays warn-only: the
         # severity lives at the WIRING, where the ruling put it. Adopter-visible
         # and deliberate — a partially-staged commit that leaves a regenerated
         # artifact behind is refused (RESYNC_PACK entry, this program).
-        #   AT EVERY BAR, like vocabulary/need-form: the question is about the
+        #   AT EVERY STAGE, like vocabulary/need-form: the question is about the
         # commit in front of you, which a DevStg-Reqs repo makes exactly as often
         # as a DevStg-Impl one. Deliberately NOT in _TRUNK_FRESHNESS_STEPS either:
         # that stand-down exists because a work branch must not COMMIT a
@@ -1188,8 +1186,8 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_NEEDS,
             "process",
         ),
-        # Re-attestation brief immutability (WI-503). A sibling of
-        # staged-divergence above, same shape and same reason for AT EVERY BAR
+        # Re-acceptance brief immutability (WI-503). A sibling of
+        # staged-divergence above, same shape and same reason for AT EVERY STAGE
         # / NOT in _TRUNK_FRESHNESS_STEPS: it reads the staged tree rather than
         # a regenerated artifact's freshness, so it is as true on a work branch
         # as on trunk, and it never demands a regeneration — only that an
@@ -1197,21 +1195,21 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # no --strict switch: unlike staged-divergence, there is no honest
         # warn-first state for "a historical record just got rewritten".
         (
-            "approval-immutable",
+            "acceptance-immutable",
             (),
             [
                 sys.executable,
                 str(_SCRIPTS / "check.py"),
-                "--approval-immutable",
+                "--acceptance-immutable",
             ],
             _kitladder.STAGE_NEEDS,
             "process",
         ),
         # The held status (SR-208), the staged-tree sibling of the two above and
-        # at every bar for their reason. A squash landing is judged by its lane
+        # at every stage for their reason. A squash landing is judged by its lane
         # commits, marked or not; a commit made under the loop marker outside a
         # claimed lane by the narrowed marker arm, a merge in progress (the
-        # station refresh's bar runs mid-merge) by what NEITHER side carried.
+        # station refresh's checks run mid-merge) by what NEITHER side carried.
         # Every lane commit is judged again at the merge slot, whether or not a
         # hook ran; an unmarked plain trunk commit is not judged.
         (
@@ -1236,7 +1234,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         ),
         # The ruling sync (WI-790, OI-102 Q3): a commit that takes an open item
         # out of `pending` updates the Done-when of each row citing it, or
-        # closes or removes the row. Staged tree against HEAD, at every bar and
+        # closes or removes the row. Staged tree against HEAD, at every stage and
         # for every committer; the merge slot asks the same question of each
         # lane commit against its first parent, so `--no-verify` lands nothing.
         # The same step refuses a commit that overrules a delegated decision
@@ -1249,7 +1247,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             "process",
         ),
         # Text then act (WI-806, OI-101 Q2 amended by README Q-8): a commit that
-        # writes the approval record changes no spine cell but `Status` and
+        # writes the acceptance record changes no spine cell but `Status` and
         # adds or removes no row, for every committer; a squash of a rebased
         # lane passes when each commit it squashes does. The slot asks it of
         # each lane commit, so `--no-verify` lands nothing.
@@ -1260,8 +1258,8 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_NEEDS,
             "process",
         ),
-        # Parent first (WI-850): a commit that leaves an approved spine row
-        # under a cited parent that is not approved, where it moved either
+        # Parent first (WI-850): a commit that leaves an accepted spine row
+        # under a cited parent that is not accepted, where it moved either
         # row's status, is refused for every committer; the slot asks it of
         # each lane commit, so `--no-verify` lands nothing. A standing case the
         # commit did not move is `trace.py --strict-integrity`'s to report.
@@ -1275,7 +1273,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # A hand close's Done-when blessing (WI-841): a commit that moves a
         # spec out of `active/<branch>/` into a closed folder while its
         # Done-when differs from the claimed one is refused unless a verdict or
-        # an owner ruling in the index binds the exact text. On trunk any
+        # an operator ruling in the index binds the exact text. On trunk any
         # commit that changes a claim copy's Done-when, closing it or not, is
         # judged the same way against its parent (WI-921), and an index delta
         # or a current branch git cannot read holds. A lane's commit that edits
@@ -1334,7 +1332,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
 
 
 # --- THE STAGE AXIS: SELECTION IS AT-OR-ABOVE (OI-51, ruled 2026-08-21) --------
-# THE OWNER'S RULE, and this module is what it re-keys: a step runs because the
+# THE OPERATOR'S RULE, and this module is what it re-keys: a step runs because the
 # repo IS AT OR ABOVE the rung that step becomes relevant at — *"when is it
 # relevant for me to run these checks"* — never because some earlier bar was
 # cleared. The eight-rung vocabulary is `kitlib.ladder`'s (one home since WI-498
@@ -1358,47 +1356,13 @@ ALL = "all"
 # it can neither be written to `docs/stage` nor sorted onto the ladder.
 STAGES = list(_kitladder.STAGE_ORDER) + [ALL]
 
-# THE RETIRED-TAG ALIASES (check_vocab: allow-file is NOT used — only these
-# declaration lines are marked). `--gate G2` is a string an adopter's hook  check_vocab: allow
-# and CI workflow pass LITERALLY, so refusing it would break every adopter's
-# pipeline at the re-sync — and this kit's own rule is that a breaking change to
-# a downstream-visible CLI needs a migration, not a cliff. So the retired tags
-# are ACCEPTED here and WARNED about (`_resolve_stage_alias` prints the canonical
-# form to stderr once per run).
-#
-# WHY WARNED RATHER THAN SILENT OR REFUSED. Silent acceptance is how the retired
-# vocabulary grows back — the tags would live in adopters' hooks forever with
-# nothing ever telling anyone. Refusal breaks working pipelines for a vocabulary
-# change. A warning is the only posture that both keeps the pipeline green and
-# guarantees the operator is told; it costs one stderr line per run and it stops
-# the moment the hook is updated. The AUTHORED surface (docs/stack.ini's
-# per-step threshold) translates with its own one-line notice instead, because
-# there the FILE can be named.
-#
-# A THIRD ALIAS GENERATION IS NOT OWED, which the census expected to be. The
-# three bar spellings are all rungs on the ladder, so an adopter passing
-# `DevStg-Tests` keeps a legal value — what changed is the READING (the repo is
-# at that rung, rather than that bar must next be cleared), and a reading is
-# migrated by the RESYNC note, not by a translation table.
-# THE VALUES ARE ARRIVAL RUNGS, BY MEANING — never the same-spelled rung
-# (corrected at the WI-498 close, ROUND-OPUS 8). A retired tag names a BAR the
-# repo had CLEARED, and the bar was a MIN over every in-scope row, so the rung a
-# repo at that bar had actually reached is what the tag translates to. That is
-# the same by-meaning rule `_LEGACY_BAR_THRESHOLD` states for `gates =` lists
-# and the same one the phase-anchor grammar uses; this table was the one place
-# taking the SPELLING.
-#
-# WHAT IT COST, driven: `--gate G2` resolved to `DevStg-Tests` and produced a
-# 12-step plan where the equivalent arrival (`DevStg-Impl`) produces 26. The 14
-# steps that silently dropped out included `traceability`, `tests+coverage`,
-# `lint`, `format` and `backlink-coverage` — so an adopter's CI passing
-# `--gate G2` literally (the exact case the silent-`--gate` concession exists to
-# protect) stayed green while quietly stopping most of its checks.
-#
-# COMPOSITION IS UNCHANGED for `gates =` step lists: `_step_threshold` maps
-# through this table and then through `_LEGACY_BAR_THRESHOLD`, and every entry
-# below lands on the same threshold it did before (Impl -> Impl, Reqs -> Needs).
-# Only the CURRENT-STAGE direction moves, which is the one that was wrong.
+# THE RETIRED SPELLINGS ARE NOT READ (D11). The `G*` tags and the `DevBar-*`  check_vocab: allow
+# prefix as a stage value, and the prior flag `--stage-cleared`, are refused by
+# argparse before any step is planned: a translation once read `--gate G2` as  check_vocab: allow
+# the same-spelled rung and dropped fourteen steps from an adopter's CI behind
+# one line of reassurance. The re-sync entry gives each spelling's stage, and
+# an adopter's own CI line changes by hand. `--gate` itself stays: the word was
+# never retired where it means a check that can fail.
 
 
 def at_or_above(current, threshold):
@@ -1417,67 +1381,6 @@ def at_or_above(current, threshold):
     return _kitladder.stage_ord(current) >= _kitladder.stage_ord(threshold)
 
 
-def _resolve_stage_alias(value, what):
-    """Translate a retired `G1`/`G2`/`G3` tag to a canonical rung, warning once.  check_vocab: allow
-    Anything else passes through untouched for the caller's own validation.
-
-    THE WARNING NAMES THE TRANSLATION'S DIRECTION, because the value moving is
-    the thing an operator most needs to see (ROUND-OPUS 8): the tag translates
-    BY MEANING, so a bar-era value can resolve to a rung several above the word
-    it shares with the ladder, and the plan the run executes changes with it.
-    The old text reported only the re-reading and said nothing about the plan,
-    so an adopter's pipeline could shrink by fourteen steps behind one line of
-    reassurance."""
-    v = (value or "").strip()
-    if v in RETIRED_STAGE_ALIASES:
-        canonical = RETIRED_STAGE_ALIASES[v]
-        note = (
-            ""
-            if canonical == v.replace("DevBar-", "DevStg-")
-            else (
-                " NOTE: that is NOT the same-spelled rung — a retired tag named "
-                "a BAR the repo had CLEARED, and the bar was a MIN over every "
-                "in-scope row, so it translates to the rung a repo at that bar "
-                "had actually REACHED. The plan is the one for {!r}, which runs "
-                "every step at or above it; `--list` shows exactly which."
-            ).format(canonical)
-        )
-        print(
-            "check: {} {!r} uses the RETIRED gate vocabulary — reading it as {!r}. "
-            "The tags retired at OI-21; update to the stage-ladder rung names "
-            "({}).{}".format(
-                what, v, canonical, "|".join(_kitladder.STAGE_ORDER), note
-            ),
-            file=sys.stderr,
-        )
-        return canonical
-    return v
-
-
-# The one prior flag spelling that makes a CLAIM about the axis, and therefore
-# the one that warns (`--gate` does not — see the argparse block for why the two
-# postures differ). argparse records only the DEST, never which spelling reached
-# it, so this reads argv directly; both `--stage-cleared X` and
-# `--stage-cleared=X` forms count.
-_RETIRED_FLAG = "--stage-cleared"
-
-
-def _warn_retired_flag_spelling(argv=None):
-    """One stderr line when the run was invoked with `--stage-cleared`."""
-    args = sys.argv[1:] if argv is None else argv
-    if not any(a == _RETIRED_FLAG or a.startswith(_RETIRED_FLAG + "=") for a in args):
-        return False
-    print(
-        "check: `{0}` names the RETIRED bar reading — reading it as `--stage`, "
-        "the rung the repo is IN, which selects every step at or above it "
-        "(OI-51). Update the flag; the value spellings are unchanged.".format(
-            _RETIRED_FLAG
-        ),
-        file=sys.stderr,
-    )
-    return True
-
-
 # --- THE DERIVED STAGE, READ THROUGH THE COMMON READER ------------------------
 # `docs/stage` is the stage axis's committed record (WI-498 slice 1) and
 # `kitlib.stage.read_stage` is the ONE reader the ruled plan §3 puts every
@@ -1486,7 +1389,7 @@ def _warn_retired_flag_spelling(argv=None):
 # and otherwise derives fresh IN MEMORY. So this module can no longer select a
 # plan from a stale value — including on a claimed work branch, where the
 # freshness step is deliberately stood down (`_TRUNK_FRESHNESS_STEPS`) and a
-# green run over a stale cache used to be reachable.
+# passing run over a stale cache used to be reachable.
 #
 # `docs/gate` IS GONE (WI-498 slice 5). The file, its producer's writer half,
 # its `derived-gate` freshness step and the three-value BAR axis it carried are
@@ -1494,9 +1397,9 @@ def _warn_retired_flag_spelling(argv=None):
 # and 5. The last four were the three DISPLAY readers (`traj_parse`,
 # `traj_panels`, `traj_status`), which now render the stage vocabulary, and
 # `agent_common.spine_stage_of` — not display at all, but the input to
-# `human_holds`, i.e. APPROVAL AUTHORITY — which now comes through the common
+# `operator_holds`, i.e. ACCEPTANCE AUTHORITY — which now comes through the common
 # reader above. That one is why the freshness step could not retire earlier: a
-# stale value there decides who may approve.
+# stale value there decides who may accept.
 STAGE_FILE = Path(_kitstage.STAGE_FILE)
 
 
@@ -1634,7 +1537,7 @@ _COVERAGE_ENV_VARS = (
 # --- The trunk lane: generated-artifact freshness is not a work branch's job ----
 # concurrency-restructure.md §5.2: work branches NEVER commit generated artifacts
 # — the trunk regenerates them in one serial step after each merge. Gating a
-# branch on their freshness would red every branch for drift it is forbidden to
+# branch on their freshness would fail every branch for drift it is forbidden to
 # fix, and would push workers to commit exactly the artifacts whose conflicts
 # this restructure exists to delete. Reads are unaffected: a branch-local check
 # reads a generated artifact as-of-base, and the composed tree re-derives at the
@@ -1647,7 +1550,7 @@ _COVERAGE_ENV_VARS = (
 # re-derives six DOCUMENT families and neither of these is among them. Standing
 # them down on a branch would leave the artifact ungated on the only side that
 # can fix it (the branch editing the SKILL.md / prompt template) and unfixable on
-# the side that gates it — the trunk would red with no mechanical regen to run.
+# the side that gates it — the trunk would fail with no mechanical regen to run.
 # The `[generated]` section declares OWNERSHIP, not lane; this set encodes which
 # owners the trunk can actually regenerate.
 #   `cli-reference` IS in the set, and the difference from those two is exactly
@@ -1657,7 +1560,7 @@ _COVERAGE_ENV_VARS = (
 # be asked to commit the derived block.
 _TRUNK_FRESHNESS_STEPS = frozenset(
     "derived-stage trajectory-map status-map open-items component-view okf "
-    "approval-fresh cli-reference interface-reference verdict-rollup".split()
+    "acceptance-fresh cli-reference interface-reference verdict-rollup".split()
 )
 
 # `_work_branch` shells out to git; unmemoized it would run once per step. Keyed
@@ -1667,10 +1570,10 @@ _WORK_BRANCH_CACHE = {}
 # Set by `--trunk-lane`. The stand-down above rests on "a work branch never
 # commits a generated artifact", which the station refresh (concurrency-v2.md
 # §A2) makes false for exactly one commit: it merges trunk in, runs trunk_step
-# ON the branch and bars the result — a tree byte-identical to the one the merge
+# ON the branch and checks the result — a tree byte-identical to the one the merge
 # produces, so it owes the trunk lane's gates. Without the flag those seven
 # steps SKIP, and the integrator reads any SKIP as a refusal, so the refresh
-# could never go green: the flag is what MAKES the mechanical bar possible, not
+# could never pass: the flag is what MAKES the mechanical checks possible, not
 # a rescue from a false pass (REVIEW-A round 1 — the first version of this
 # comment had the failure direction backwards). Opt-IN all the same, so a
 # caller that forgets it gets the stricter-for-trunk answer.
@@ -1693,7 +1596,7 @@ _git_out = _kitgit.git_out
 # reader takes it to mean "the artifact about to be committed does". Those
 # diverge exactly when an author regenerates and forgets to `git add`.
 # THE MEASURED INSTANCE: at 3b8d306d, PROJECT_STATE.html was modified in the
-# worktree and absent from the index; the hook was honestly green on the tree on
+# worktree and absent from the index; the hook honestly passed on the tree on
 # disk and the committed tree failed the very gate that guarded it — undetected
 # until an adversarial review re-measured a log fragment's claim.
 
@@ -1751,7 +1654,7 @@ def staged_divergence(root=".", strict=False):
     0 unless `strict`, and the PLAN STEP passes `--strict` (steps(), OI-31's
     promotion taken at the WI-498 close). So the bare
     `check.py --staged-divergence` stays the detector an author runs mid-work,
-    while the bar — hook floor and CI alike — refuses.
+    while the checks — hook floor and CI alike — refuse.
 
     DEGRADES, never crashes and never fails: no git binary, not a checkout, a
     root that is not the checkout's top level, or a failing git call each SKIP
@@ -1851,7 +1754,7 @@ def staged_divergence(root=".", strict=False):
     print(
         "    Fix: `git add` them, then re-commit — or revert them. Leaving\n"
         "    them out is not free: the PLAN step runs --strict (OI-31's ruled\n"
-        "    promotion, WI-498 close), so the bar vouches for the tree being\n"
+        "    promotion, WI-498 close), so the checks vouch for the tree being\n"
         "    COMMITTED. This bare detector reports only.\n"
         "    GAP, so this is not read as a guarantee: it does NOT catch an\n"
         "    artifact that was STAGED WHILE STALE. The freshness gates read the\n"
@@ -1861,23 +1764,23 @@ def staged_divergence(root=".", strict=False):
     return 1 if strict else 0
 
 
-# --- WI-503: the re-attestation brief's immutability enforcer -----------------
+# --- WI-503: the re-acceptance brief's immutability enforcer -----------------
 # The defect this closes: `docs/ratify/<date>-*.md` is read as the record of
-# what a human was shown at a sitting, but a regeneration used to find and
+# what an operator was shown at a sitting, but a regeneration used to find and
 # rewrite whichever dated file was newest — ten rewrites on one file, none of
-# them about the WI it was named for. The split (`current_approval_brief`,
-# `mint_approval_brief` in trace.py) makes `docs/ratify/CURRENT.md` the only
-# file a regeneration ever touches and `--mint-approval-brief` the only thing
+# them about the WI it was named for. The split (`current_acceptance_brief`,
+# `mint_acceptance_brief` in trace.py) makes `docs/ratify/CURRENT.md` the only
+# file a regeneration ever touches and `--mint-acceptance-brief` the only thing
 # that ever creates a dated one — but a CONVENTION with no enforcer rots the
 # way the byte baselines did (the spec's own words). This is the enforcer: it
 # reads the STAGED tree (what the commit is about to contain, exactly like
-# `approval_immutability`'s sibling `staged_divergence` reads the unstaged one)
+# `acceptance_immutability`'s sibling `staged_divergence` reads the unstaged one)
 # and refuses any status other than a plain ADD on an existing dated name.
 
-_APPROVAL_EXEMPT_NAMES = frozenset({"current.md", "readme.md"})
+_ACCEPTANCE_EXEMPT_NAMES = frozenset({"current.md", "readme.md"})
 
 
-def _is_dated_approval_brief(path):
+def _is_dated_acceptance_brief(path):
     """True for a `docs/ratify/*.md` path that is neither the live surface
     (`CURRENT.md`) nor the directory's own README — i.e. a dated brief that,
     once committed, must never change again."""
@@ -1885,19 +1788,19 @@ def _is_dated_approval_brief(path):
     if not posix.startswith("docs/ratify/"):
         return False
     name = posix.rsplit("/", 1)[-1]
-    return name.lower() not in _APPROVAL_EXEMPT_NAMES
+    return name.lower() not in _ACCEPTANCE_EXEMPT_NAMES
 
 
-def approval_immutability(root=".", strict=True):
+def acceptance_immutability(root=".", strict=True):
     """Refuse a commit whose STAGED diff modifies or deletes an
-    already-committed dated re-attestation brief. Returns the exit code.
+    already-committed dated re-acceptance brief. Returns the exit code.
 
     Reads `git diff --cached --name-status --no-renames -z` — the tree this
     commit is about to contain, not the working tree `staged_divergence`
     reads. `--no-renames` keeps a delete-and-recreate legible as its own two
     honest halves (D + A) rather than a single R that could hide a rewrite
     behind a fresh-looking status; a plain ADD (a brand-new dated filename,
-    what `trace.py --mint-approval-brief` ever produces) is the ONLY status this
+    what `trace.py --mint-acceptance-brief` ever produces) is the ONLY status this
     permits on a dated brief. `docs/ratify/CURRENT.md` and `README.md` are
     exempt — the live surface and the directory's own reference doc, neither
     of them history.
@@ -1906,7 +1809,7 @@ def approval_immutability(root=".", strict=True):
     is no warn-first promotion path here, because the property this guards —
     "a dated brief never changes after the sitting it recorded" — has no
     honest partial-compliance state to warn through; every rewrite it lets
-    through undermines the same "what did the human see" question the split
+    through undermines the same "what did the operator see" question the split
     exists to answer.
 
     DEGRADES like `staged_divergence`, for the same reason: no git, no
@@ -1916,7 +1819,7 @@ def approval_immutability(root=".", strict=True):
     top = _git_out(root, ["rev-parse", "--show-toplevel"])
     if top is None or not top.strip():
         print(
-            "  SKIP  approval-immutable  no git, or {} is not a git checkout — "
+            "  SKIP  acceptance-immutable  no git, or {} is not a git checkout — "
             "there is no index to compare against.".format(Path(root).resolve())
         )
         return 0
@@ -1926,7 +1829,7 @@ def approval_immutability(root=".", strict=True):
         at_top = False
     if not at_top:
         print(
-            "  SKIP  approval-immutable  {} is not the top level of its git "
+            "  SKIP  acceptance-immutable  {} is not the top level of its git "
             "checkout ({}), so docs/ratify/ does not resolve against this "
             "index.".format(Path(root).resolve(), top.strip())
         )
@@ -1934,7 +1837,7 @@ def approval_immutability(root=".", strict=True):
     diff = _git_out(root, ["diff", "--cached", "--name-status", "--no-renames", "-z"])
     if diff is None:
         print(
-            "  SKIP  approval-immutable  `git diff --cached` failed — the "
+            "  SKIP  acceptance-immutable  `git diff --cached` failed — the "
             "staged tree could not be inspected."
         )
         return 0
@@ -1945,18 +1848,18 @@ def approval_immutability(root=".", strict=True):
     while i + 1 < len(tokens):
         status, path = tokens[i], tokens[i + 1]
         i += 2
-        if not _is_dated_approval_brief(path):
+        if not _is_dated_acceptance_brief(path):
             continue
         if status != "A":
             violations.append((status, path))
     if not violations:
         print(
-            "  ok    approval-immutable  no staged change touches an existing "
+            "  ok    acceptance-immutable  no staged change touches an existing "
             "dated docs/ratify/ brief."
         )
         return 0
     print(
-        "  FAIL  approval-immutable  {} dated re-attestation brief(s) staged "
+        "  FAIL  acceptance-immutable  {} dated re-acceptance brief(s) staged "
         "with a change other than a plain add — a dated brief is IMMUTABLE "
         "once minted:".format(len(violations))
     )
@@ -1965,9 +1868,9 @@ def approval_immutability(root=".", strict=True):
     print(
         "    Fix: revert the change to the existing dated file (`git restore "
         "--staged --worktree -- <path>`); regenerate the LIVE surface at "
-        "`docs/ratify/CURRENT.md` instead (`trace.py --approve modified --out "
+        "`docs/ratify/CURRENT.md` instead (`trace.py --accept modified --out "
         "docs/ratify/CURRENT.md`); mint a NEW dated brief with `trace.py "
-        "--mint-approval-brief SLUG` rather than editing an old one."
+        "--mint-acceptance-brief SLUG` rather than editing an old one."
     )
     return 1 if strict else 0
 
@@ -2022,22 +1925,22 @@ def _held_squash_refusal(root, head, tip):
     import held_status  # leaf readers of two git trees, siblings of this one
     import text_then_act
 
-    riders = (held_status.commit_held_approval_lines,)
+    riders = (held_status.commit_held_acceptance_lines,)
     lines = text_then_act.squash_walk(root, head, tip, held_status.HELD_PATHS, riders)
     if lines is None:
         dial = _kitauthority.dial_at(root, "HEAD")
-        lines = held_status.held_approval_lines(root, [head], None, dial)
+        lines = held_status.held_acceptance_lines(root, [head], None, dial)
         lines = lines and lines + [text_then_act.SQUASH_REBASE_HINT]
     return "; ".join(lines) if lines else None
 
 
 def _held_status_mode(args):
-    """The `--held-status` entry point, `_approval_immutable_mode`'s shape:
+    """The `--held-status` entry point, `_acceptance_immutable_mode`'s shape:
     EXIT 1 printing the refusal, or 0."""
     if not args.held_status:
         return
     refusal = _held_status_refusal(".")
-    msg = refusal or "no held status move or held approval claim to refuse"
+    msg = refusal or "no held status move or held acceptance claim to refuse"
     print("  {:5} held-status  {}".format("FAIL" if refusal else "ok", msg))
     sys.exit(1 if refusal else 0)
 
@@ -2171,7 +2074,7 @@ def _text_then_act_mode(args):
     if not args.text_then_act:
         return
     refusal = _text_then_act_refusal(".")
-    msg = refusal or "no staged commit mixes spine text with the approval act"
+    msg = refusal or "no staged commit mixes spine text with the acceptance act"
     print("  {:5} text-then-act  {}".format("FAIL" if refusal else "ok", msg))
     sys.exit(1 if refusal else 0)
 
@@ -2200,7 +2103,7 @@ def _parent_first_mode(args):
         return
     refusal = _parent_first_refusal(".")
     msg = (
-        refusal or "no staged status leaves an approved row under an unapproved parent"
+        refusal or "no staged status leaves an accepted row under an unaccepted parent"
     )
     print("  {:5} parent-first  {}".format("FAIL" if refusal else "ok", msg))
     sys.exit(1 if refusal else 0)
@@ -2225,13 +2128,13 @@ def _loop_trailer_mode(args):
     sys.exit(1 if refusal else 0)
 
 
-def _approval_immutable_mode(args):
-    """The `--approval-immutable` entry point, the same shape as
+def _acceptance_immutable_mode(args):
+    """The `--acceptance-immutable` entry point, the same shape as
     `_divergence_mode`: EXIT with the detector's code when the flag selects
     it, else return and let main() build the ordinary plan."""
-    if not args.approval_immutable:
+    if not args.acceptance_immutable:
         return
-    sys.exit(approval_immutability("."))
+    sys.exit(acceptance_immutability("."))
 
 
 def _divergence_mode(args):
@@ -2276,7 +2179,7 @@ def _claimed_work_branch(root):
     """The uncached answer behind `_work_branch` — see it for the contract. The
     reader's one home is `kitlib.git.claimed_work_branch`; check.py adds only
     its stderr notice for an implausible branch name. None (no git, a failing
-    git, a detached HEAD, no claim) reads as the TRUNK lane and its STRICT bar.
+    git, a detached HEAD, no claim) reads as the TRUNK lane and its STRICT checks.
 
     Implements: SR-006, SR-170, LLR-141
     """
@@ -2295,7 +2198,7 @@ def _work_branch(root="."):
 
     Fail-CLOSED by construction: off git, on a detached HEAD, or with neither a
     matching `active/` directory nor a claim in history the answer is None and the
-    STRICT bar applies. The trunk is simply the branch nobody claimed a work item
+    STRICT checks apply. The trunk is simply the branch nobody claimed a work item
     on."""
     key = str(Path(root).resolve())
     if key not in _WORK_BRANCH_CACHE:
@@ -2386,7 +2289,7 @@ def missing_tool_banner(skipped):
     trunk-lane freshness skips (`_TRUNK_FRESHNESS_STEPS`) are all process-layer
     — a DELIBERATE, already-explained skip must never be dressed as a defect.
 
-    Refusal was weighed and left to the owner: making a declared-but-absent tool
+    Refusal was weighed and left to the operator: making a declared-but-absent tool
     FAIL on the hook path is the stronger guard, and it breaks every adopter
     whose contributor has not run dev-setup yet — a migration this session has
     no authority to impose. Recorded in the log rather than taken quietly."""
@@ -2409,9 +2312,7 @@ def missing_tool_banner(skipped):
         "!! Install the toolchain (scripts/dev-setup) — a step that skips on",
         file=sys.stderr,
     )
-    print(
-        "!! every commit of a branch is a bar that is not being run.", file=sys.stderr
-    )
+    print("!! every commit of a branch skips the checks.", file=sys.stderr)
     print("!" * 72, file=sys.stderr)
 
 
@@ -2502,7 +2403,7 @@ def run_plan(plan, lenient, jobs, lane_map=None):
     concurrently in *lanes* (see _SHARED_OUTPUT_LANES and a step's declared
     `lane =`), capturing each step's output and printing it whole under a lock
     when the step finishes, so output never interleaves; the summary and exit
-    semantics are unchanged (never a false green — an unexpected runner
+    semantics are unchanged (never a false pass — an unexpected runner
     exception propagates). `lane_map` (name -> lane) defaults to the built-in
     write-write map; main() passes it merged with the profile's `lane =`
     declarations."""
@@ -2548,7 +2449,7 @@ def _clear_stale_coverage_report(plan):
     [step:module-coverage] consumer correctly SKIPs instead of grading a stale
     full-tier measurement (repo-review 2026-07-22 REVIEW-A). A locked/undeletable
     stale report is a LOUD failure — it must not silently survive into a consumer
-    as a false green (the fail-closed stance)."""
+    as a false pass (the fail-closed stance)."""
     if not any(s[0] == "tests+coverage" for s in plan):
         return
     try:
@@ -2562,7 +2463,7 @@ def _clear_stale_coverage_report(plan):
 
 
 def _invocation_plan(args, coverage, profile):
-    """Resolve the gate bar, restricting the hook to opted-in sensors."""
+    """Resolve the gate checks, restricting the hook to opted-in sensors."""
     if args.path_triggered and not step_paths(profile):
         return ALL, []
     stage = resolve_stage(args.stage)
@@ -2572,54 +2473,44 @@ def _invocation_plan(args, coverage, profile):
     return stage, plan
 
 
+def _say_empty_plan(stage, path_triggered):
+    """Say that no check is defined at `stage`, unless the plan asked for was
+    the path-triggered one: the hook asks for that on every commit, most repos
+    declare none, and that is not news worth a line."""
+    if not path_triggered:
+        print("No checks defined at stage {}.".format(stage))
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    # THE CLI CONTRACT, OI-21 break 1. `choices=` deliberately lists the retired
-    # tags TOO, because argparse rejects an out-of-choices value before any code of
-    # ours runs — so an adopter's `--gate G2` dies with a bare argparse usage  check_vocab: allow
-    # error naming no migration. Listing them lets `_resolve_bar_alias` translate
-    # and explain instead. The `metavar` keeps `--help` teaching only the canonical
-    # form, so the aliases are reachable without being advertised.
     # `--stage` IS THE CANONICAL SPELLING (OI-51, ruled 2026-08-21): the value is
     # the rung the repo is IN, and every step whose threshold that rung is at or
-    # above runs. Two prior spellings stay accepted, with DIFFERENT postures for
-    # a stated reason:
-    #   `--gate` — SILENT, unchanged. It is the flag name an adopter's hooks, CI
-    # and launchers pass literally (and, measured this slice, the only spelling
-    # anything in this repo actually passes); the word "gate" was never retired
-    # where it means a check that can fail; `spine_rules.py` keeps its name by
-    # that same ruling (`docs/gate` did too, until slice 5 deleted the file).
-    #   `--stage-cleared` — WARNS. Unlike `--gate` it makes a CLAIM about the
-    # axis, and the claim is now the wrong one: it says the value is a bar being
-    # cleared. That is the exact vocabulary trap OI-51 retires (it survived
-    # inside the 2026-08-18 rename that was meant to remove it), so leaving it
-    # silent would let the retired reading live on in adopters' pipelines with
-    # nothing ever saying so. It keeps working — the three bar spellings are all
-    # ladder rungs, so the value stays legal — and it says once per run what it
-    # is now read as.
+    # above runs. `--gate` is the prior spelling and stays accepted, silently: it
+    # is the flag name an adopter's hooks, CI and launchers pass literally, and
+    # the word "gate" was never retired where it means a check that can fail;
+    # `spine_rules.py` keeps its name by that same ruling. The retired value
+    # spellings and the prior flag `--stage-cleared` are refused (D11).
     ap.add_argument(
         "--stage",
-        "--stage-cleared",
         "--gate",
         dest="stage",
-        choices=STAGES + list(RETIRED_STAGE_ALIASES),
+        choices=STAGES,
         metavar="{" + ",".join(STAGES) + "}",
         default=None,
         help="the rung the repo is IN: every step whose threshold this rung is "
         "AT OR ABOVE runs; paths can also select below it (default: the derived effective stage in docs/stage, "
         "else all). Drafting a row cannot lower it — the derivation reads the "
         "SETTLED spine — so there is no dial that turns product checks off by "
-        "opening an approval window. The retired G1/G2/G3 and DevBar-* "  # check_vocab: allow
-        "value spellings are accepted as aliases and warn; `--gate` is accepted "
-        "silently as the prior flag name, `--stage-cleared` warns.",
+        "opening an acceptance window. `--gate` is accepted as the prior flag "
+        "name.",
     )
     ap.add_argument(
         "--path-triggered",
         action="store_true",
-        help="run only steps declaring paths except smoke, selected by rung or changed paths (the hook's sensor bar)",
+        help="run only steps declaring paths except smoke, selected by rung or changed paths (the hook's sensor checks)",
     )
     ap.add_argument("--tier", choices=list(TIERS), default="all")
     ap.add_argument(
@@ -2633,7 +2524,7 @@ def main():
         "--phase",
         default=None,
         help="delivery phase(s) in scope, e.g. v1 or v1,v2 — scopes the DevStg-Impl "
-        "approval criterion to that phase (process.md §4 'Phased delivery')",
+        "acceptance criterion to that phase (process.md §4 'Phased delivery')",
     )
     ap.add_argument(
         "--lenient",
@@ -2644,7 +2535,7 @@ def main():
         "--trunk-lane",
         action="store_true",
         help="run the generated-artifact freshness gates even on a claimed "
-        "work branch — the station refresh's bar (integrate.py refresh), where "
+        "work branch — the station refresh's checks (integrate.py refresh), where "
         "the branch tree IS the tree that becomes trunk",
     )
     ap.add_argument(
@@ -2687,20 +2578,20 @@ def main():
         "clean for a program'); the step itself does NOT pass it today",
     )
     ap.add_argument(
-        "--approval-immutable",
+        "--acceptance-immutable",
         action="store_true",
-        help="run ONLY the re-attestation-brief immutability enforcer and exit "
+        help="run ONLY the re-acceptance-brief immutability enforcer and exit "
         "(WI-503): refuse a STAGED change (other than a plain add) to an "
         "existing docs/ratify/<date>-*.md. Fail-closed by default — no "
         "--strict, no warn mode. This is the self-invoked body of the "
-        "'approval-immutable' step, not a separate contract",
+        "'acceptance-immutable' step, not a separate contract",
     )
     ap.add_argument(
         "--held-status",
         action="store_true",
         help="run ONLY the 'held-status' step's body and exit (SR-208): judge "
         "a squash landing by its lane commits, and, under the loop marker "
-        "outside a claimed lane, refuse a held status move or approval claim",
+        "outside a claimed lane, refuse a held status move or acceptance claim",
     )
     ap.add_argument(
         "--reserved-ids",
@@ -2720,15 +2611,15 @@ def main():
         "--text-then-act",
         action="store_true",
         help="run ONLY the 'text-then-act' step's body and exit (WI-806): refuse "
-        "a staged tree that writes the approval record while changing a spine "
+        "a staged tree that writes the acceptance record while changing a spine "
         "cell other than Status, or adding or removing a row",
     )
     ap.add_argument(
         "--parent-first",
         action="store_true",
         help="run ONLY the 'parent-first' step's body and exit (WI-850): refuse "
-        "a staged tree that moves a status so an approved spine row sits under "
-        "a cited parent that is not approved",
+        "a staged tree that moves a status so an accepted spine row sits under "
+        "a cited parent that is not accepted",
     )
     ap.add_argument(
         "--loop-trailer",
@@ -2763,18 +2654,12 @@ def main():
             "(the stage and stack-profile reads are CWD-relative)".format(Path.cwd())
         )
     _divergence_mode(args)  # exits when --staged-divergence selects it
-    _approval_immutable_mode(args)  # exits when --approval-immutable selects it
+    _acceptance_immutable_mode(args)  # exits when --acceptance-immutable selects it
     _held_status_mode(args)  # exits when --held-status selects it
     _reserved_ids_mode(args)  # exits when --reserved-ids selects it
     _ruling_sync_mode(args)  # exits when --ruling-sync selects it
     _text_then_act_mode(args)  # exits when --text-then-act selects it
     _parent_first_mode(args)  # exits when --parent-first selects it
-    # Translate a retired `--stage G2` (warning once) before anything consumes  check_vocab: allow
-    # it, so `resolve_stage` and `_step_stage` both see only canonical rungs.
-    args.stage = (
-        _resolve_stage_alias(args.stage, "--stage") if args.stage else args.stage
-    )
-    _warn_retired_flag_spelling()
     profile = load_profile()
 
     # --coverage wins; else the profile's declared threshold; else the built-in.
@@ -2850,7 +2735,7 @@ def main():
         return
 
     if not plan:
-        print("No checks defined at stage {}.".format(stage))
+        _say_empty_plan(stage, args.path_triggered)
         return
 
     # Run-scope the coverage report before the plan (see the helper): a stale,

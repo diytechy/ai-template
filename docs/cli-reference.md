@@ -98,8 +98,8 @@ Contracts (interfaces): IF-014
 | `--omit` |  |
 | `--domain` | declared primary domain, for skill matching and curated knowledge-pack opt-in (web\|game\|hardware\|data\|any). web/hardware materialize their pack sets; any/omitted materializes no packs. Omitted + interactive agent setup -> ASK; non-interactive -> no filter. |
 | `--migrate-config` | SN-028: fold every legacy one-word policy file (docs/gate-policy, docs/push-policy, docs/review-policy, docs/privacy-check, docs/secrets-scan, docs/privacy-review, docs/guardrails-policy, docs/blackout) into docs/process.toml and DELETE it, then exit. Idempotent. A full scaffold pass runs this for you; the flag is for a repo that wants the conversion WITHOUT a re-sync. |
-| `--gate-policy` | declared gate authority, written to docs/process.toml [attestation] gate_policy (process.md §4): attended\|single-approve\|autonomous. Omitted + interactive TTY -> ASK; non-interactive -> 'attended' (the default level; zero change). A non-default level also scaffolds the deviation-register skeleton (docs/gate-policy.md) pre-filled for it. |
-| `--push-policy` | declared push authority for docs/push-policy (process-options.md "Agent iteration branch & sync"): human\|agent-iteration\|agent. Omitted + interactive TTY -> ASK; non-interactive -> 'human' (the default: an agent never pushes; it prepares the branch and requests). |
+| `--gate-policy` | declared gate authority, written to docs/process.toml [authority] gate_policy (process.md §4): attended\|single-approve\|autonomous. Omitted + interactive TTY -> ASK; non-interactive -> 'attended' (the default level; zero change). A non-default level also scaffolds the deviation-register skeleton (docs/gate-policy.md) pre-filled for it. |
+| `--push-policy` | declared push authority for docs/push-policy (process-options.md "Agent iteration branch & sync"): operator\|agent-iteration\|agent. Omitted + interactive TTY -> ASK; non-interactive -> 'operator' (the default: only the operator, or a session they delegated it to, pushes). |
 | `--privacy-check` | privacy gate for docs/privacy-check: 'true' runs the PII/identity leak scan (author email + content must be non-private), 'false' (the default) leaves it off. The always-on secrets floor runs regardless. Omitted + interactive TTY -> ASK; non-interactive -> 'false' (process-options.md "Commit identity & privacy"). |
 
 ### `scripts/check`
@@ -108,24 +108,24 @@ Contracts (interfaces): IF-013, IF-040, IF-144, IF-197, IF-267
 
 | Option | Help |
 |---|---|
-| `--stage`, `--stage-cleared`, `--gate` | the rung the repo is IN: every step whose threshold this rung is AT OR ABOVE runs; paths can also select below it (default: the derived effective stage in docs/stage, else all). Drafting a row cannot lower it — the derivation reads the SETTLED spine — so there is no dial that turns product checks off by opening an approval window. The retired G1/G2/G3 and DevBar-* value spellings are accepted as aliases and warn; `--gate` is accepted silently as the prior flag name, `--stage-cleared` warns. |
-| `--path-triggered` | run only steps declaring paths except smoke, selected by rung or changed paths (the hook's sensor bar) |
+| `--stage`, `--gate` | the rung the repo is IN: every step whose threshold this rung is AT OR ABOVE runs; paths can also select below it (default: the derived effective stage in docs/stage, else all). Drafting a row cannot lower it — the derivation reads the SETTLED spine — so there is no dial that turns product checks off by opening an acceptance window. `--gate` is accepted as the prior flag name. |
+| `--path-triggered` | run only steps declaring paths except smoke, selected by rung or changed paths (the hook's sensor checks) |
 | `--tier` |  |
 | `--coverage` |  |
-| `--phase` | delivery phase(s) in scope, e.g. v1 or v1,v2 — scopes the DevStg-Impl approval criterion to that phase (process.md §4 'Phased delivery') |
+| `--phase` | delivery phase(s) in scope, e.g. v1 or v1,v2 — scopes the DevStg-Impl acceptance criterion to that phase (process.md §4 'Phased delivery') |
 | `--lenient` | treat missing tools as SKIP (local dev only) |
-| `--trunk-lane` | run the generated-artifact freshness gates even on a claimed work branch — the station refresh's bar (integrate.py refresh), where the branch tree IS the tree that becomes trunk |
+| `--trunk-lane` | run the generated-artifact freshness gates even on a claimed work branch — the station refresh's checks (integrate.py refresh), where the branch tree IS the tree that becomes trunk |
 | `--list` | print the plan (with [process]/[product] layer tags) and exit |
 | `--run-step` | run just the named step (e.g. 'format') and exit with its status; a missing tool is SKIP (exit 0), a real failure exits 1 (the pre-commit hook uses this to source its format check from docs/stack.ini) |
 | `--run-steps` | run the named steps (comma-separated, e.g. 'okf,trajectory-map') concurrently with the same lenient semantics as --run-step, reporting every step's result — so a commit with several stale artifacts names them all in one pass (the pre-commit hook's batched floor); exits 1 if any step FAILs |
 | `--staged-divergence` | run ONLY the staged-vs-worktree divergence detector and exit (OI-31): report every declared [generated] artifact modified in the worktree but absent from the index. Warn-only — exit 0 — unless --strict. This is the self-invoked body of the 'staged-divergence' step, not a separate contract |
 | `--strict` | with --staged-divergence: exit 1 on a divergent artifact instead of warning. The ruled promotion path (OI-31: error 'once it has run clean for a program'); the step itself does NOT pass it today |
-| `--approval-immutable` | run ONLY the re-attestation-brief immutability enforcer and exit (WI-503): refuse a STAGED change (other than a plain add) to an existing docs/ratify/<date>-*.md. Fail-closed by default — no --strict, no warn mode. This is the self-invoked body of the 'approval-immutable' step, not a separate contract |
-| `--held-status` | run ONLY the 'held-status' step's body and exit (SR-208): judge a squash landing by its lane commits, and, under the loop marker outside a claimed lane, refuse a held status move or approval claim |
+| `--acceptance-immutable` | run ONLY the re-acceptance-brief immutability enforcer and exit (WI-503): refuse a STAGED change (other than a plain add) to an existing docs/ratify/<date>-*.md. Fail-closed by default — no --strict, no warn mode. This is the self-invoked body of the 'acceptance-immutable' step, not a separate contract |
+| `--held-status` | run ONLY the 'held-status' step's body and exit (SR-208): judge a squash landing by its lane commits, and, under the loop marker outside a claimed lane, refuse a held status move or acceptance claim |
 | `--reserved-ids` | run ONLY the 'reserved-ids' step's body and exit (SR-174): judge a squash landing's added registry ids against the id carrier's records, and refuse a staged watermark that lags the carrier |
 | `--ruling-sync` | run ONLY the 'ruling-sync' step's body and exit (WI-790): refuse a staged tree that rules an open item without updating the Done-when of each row citing it, or closing or removing the row |
-| `--text-then-act` | run ONLY the 'text-then-act' step's body and exit (WI-806): refuse a staged tree that writes the approval record while changing a spine cell other than Status, or adding or removing a row |
-| `--parent-first` | run ONLY the 'parent-first' step's body and exit (WI-850): refuse a staged tree that moves a status so an approved spine row sits under a cited parent that is not approved |
+| `--text-then-act` | run ONLY the 'text-then-act' step's body and exit (WI-806): refuse a staged tree that writes the acceptance record while changing a spine cell other than Status, or adding or removing a row |
+| `--parent-first` | run ONLY the 'parent-first' step's body and exit (WI-850): refuse a staged tree that moves a status so an accepted spine row sits under a cited parent that is not accepted |
 | `--loop-trailer` | the commit-msg hook's loop floor (SR-209): under the loop marker, exit 1 unless the message carries this run's Loop-Session trailer |
 | `--jobs` | run the plan's steps concurrently on N workers (0 = one per step); every step is read-only or writes a distinct artifact, except the two trace.py steps, which share a lane. Default 1: sequential, with each step's output streamed live exactly as before |
 
@@ -185,7 +185,7 @@ Contracts (interfaces): IF-002, IF-077
 | `--root` | repo root (default: .) |
 | `--docs` | docs subdirectory NAME joined under --root (an absolute path also works; note trace.py/check_perf.py treat --docs as a standalone path) |
 | `--entry` | extra entry-root doc for reachability (repeatable) |
-| `--ignore` | repo-relative glob to drop from the scanned set, e.g. a generated composite like docs/test/report.md (repeatable) |
+| `--ignore` | repo-relative glob to drop from the scanned set, e.g. a generated composite; the kit's own docs/test/ reports are dropped already (repeatable) |
 | `--strict-orphans` | treat orphan docs as failures, not warnings |
 | `--stale` | also warn on docs older than the non-doc files they link (needs git) |
 
@@ -224,7 +224,7 @@ Contracts (interfaces): IF-121
 | Option | Help |
 |---|---|
 | `--root` | repo root (default: .) |
-| `--strict` | promote findings from WARN to ERROR (exit 1). NOT wired by check.py at any bar — gating on this check needs an owner ruling (WI-454's scope guard). |
+| `--strict` | promote findings from WARN to ERROR (exit 1). NOT wired by check.py at any stage — gating on this check needs an operator ruling (WI-454's scope guard). |
 
 ### `scripts/check_perf`
 _Performance budget & regression comparator: track the numbers, alert on drift._
@@ -394,7 +394,7 @@ Contracts (interfaces): IF-010, IF-028, IF-117, IF-131, IF-132, IF-150, IF-199, 
 | `--interfaces` | the IF-### interface-seam registry whose module<->module rows are merged into the dependency diagram as distinctly-styled edges (process.md §8); absent file = no IF edges (symbol mode only) |
 | `--check` | do not write; exit 1 if any target is stale |
 | `--strict-parse` | exit 1 if any scanned module fails to parse |
-| `--backlink-coverage` | REPORT MODE (writes nothing, needs no --doc): what share of live LLR rows is named by a literal `Implements:` declaration under --src. The bar is docs/process.toml [checks] backlink_coverage_min |
+| `--backlink-coverage` | REPORT MODE (writes nothing, needs no --doc): what share of live LLR rows is named by a literal `Implements:` declaration under --src. The minimum is docs/process.toml [checks] backlink_coverage_min |
 | `--mapping-purpose` | REPORT MODE (writes nothing, needs no --doc): grade the shipped-file inventory (kitlib.bootstrap_manifest.MAPPING) for SR-163 — each entry maps through a requirement reference to a live stakeholder need, its destination exists, and no declared exclusion is stale. Warn-first: exits 1 only on a gate-class finding (missing file / stale exclusion); unmapped and unresolved rows are reported but never gate (the burn-down) |
 | `--root` | repo root holding docs/process.toml, the LLR registry, the SR/SN spine, and docs/declared-absences (--backlink-coverage / --mapping-purpose; default: .) |
 | `--backlink-ext` | source extension the back-link scan reads (repeatable; REPLACES the default list, which is _MODULE_EXTS plus the wider source families — see BACKLINK_EXTS) |
@@ -432,7 +432,7 @@ Contracts (interfaces): IF-012, IF-149
 | `--check` | regenerate in memory and compare the on-disk bundle (nonzero on stale/extra/missing files); never writes. Missing-target posture (C9): a fully-generated output, so a missing bundle reads as stale/vacuous — unlike arch-map, whose hand-authored target must exist |
 
 ### `scripts/gen_open_items`
-_The owner decision surface, generated (WI-322, OI-10 ruled option (b))._
+_The operator decision surface, generated (WI-322, OI-10 ruled option (b))._
 Contracts (interfaces): IF-074
 
 | Option | Help |
@@ -480,7 +480,7 @@ Contracts (interfaces): IF-011
 |---|---|
 | `--root` | repo root (default: current directory) |
 | `--check` | validate + verify freshness without writing (nonzero on stale/invalid). Missing-target posture (C9): a fully-generated output, so a missing file reads as stale — unlike arch-map, whose hand-authored target must exist |
-| `--status` | splice the derived-facts snapshot (spine + derived stage + open-items one-liners) into docs/status.md instead of rendering the dashboard; with --check, byte-compare it for freshness (the WI-200 forward-only guard's successor). Vacuous without the marker pair. The pending-owner-actions projection moved to gen_open_items.py with WI-322 — this still DERIVES it (`pending_block`), that renders it. |
+| `--status` | splice the derived-facts snapshot (spine + derived stage + open-items one-liners) into docs/status.md instead of rendering the dashboard; with --check, byte-compare it for freshness (the WI-200 forward-only guard's successor). Vacuous without the marker pair. The pending-operator-actions projection moved to gen_open_items.py with WI-322 — this still DERIVES it (`pending_block`), that renders it. |
 
 ### `scripts/gen_verdict_rollup`
 _Generate the per-review-scope verdict rollups — `docs/reviews/rollup/<train>.md`._
@@ -518,10 +518,10 @@ Contracts (interfaces): IF-090, IF-229, IF-243, IF-244
 | `--checkpoint` |  |
 | `--rev` | the commit judged (default: HEAD) |
 | `--rows` | spine row id(s), ;-joined (SR-/LLR-/TC-) |
-| `--seed` | CREATE the snapshot directory. For the FIRST snapshot only, in the owner's signing commit, after every pending row has been ruled — seeding earlier blesses text nobody read. Unreachable from every loop module and hook (pinned by tests/test_baseline_snapshot.py) |
-| `--approves` | NAME THE APPROVAL ACT this refresh rides, PER REGISTRY: `;`-joined `<registry>=<ref>` pairs. A ref copies the ONE registry it names and lands in the snapshot's prose stamp; it clears none of that registry's drifted rows (name those with --reattests) |
-| `--reattests` | RE-ATTEST these rows: comma-joined ids whose drifted approved text this act blesses without moving their Status. The refresh is refused while any row it would copy has drifted text neither flipped nor named here; the ids land in the snapshot's prose stamp |
-| `--verdict` | the verdict file that ruled the --reattests rows, recorded in the act ledger. Required at merge for a session's re-attestation on a held rung, where the verdict must rule each row CLARITY (OI-100) |
+| `--seed` | CREATE the snapshot directory. For the FIRST snapshot only, in the operator's signing commit, after every pending row has been ruled — seeding earlier blesses text nobody read. Unreachable from every loop module and hook (pinned by tests/test_baseline_snapshot.py) |
+| `--accepts` | NAME THE ACCEPTANCE ACT this refresh rides, PER REGISTRY: `;`-joined `<registry>=<ref>` pairs. A ref copies the ONE registry it names and lands in the snapshot's prose stamp; it clears none of that registry's drifted rows (name those with --reaccepts) |
+| `--reaccepts` | RE-ACCEPT these rows: comma-joined ids whose drifted accepted text this act blesses without moving their Status. The refresh is refused while any row it would copy has drifted text neither flipped nor named here; the ids land in the snapshot's prose stamp |
+| `--verdict` | the verdict file that ruled the --reaccepts rows, recorded in the act ledger. Required at merge for a session's re-acceptance on a held rung, where the verdict must rule each row CLARITY (OI-100) |
 
 ### `scripts/integrate`
 _integrate.py — the local integrator: the station protocol and its merge slot._
@@ -533,11 +533,11 @@ Contracts (interfaces): IF-080, IF-154, IF-173
 | `--wi` |  |
 | `--branch` |  |
 | `--branch` |  |
-| `--tier` | declared bar tier for the refresh bar (default: all - the full gate bar) |
+| `--tier` | declared check tier for the landing checks (default: all - the full gate checks) |
 | `--branch` |  |
-| `--bar` |  |
+| `--checks` |  |
 | `--message-file` |  |
-| `--tier` | declared bar tier for an in-slot refresh (default: all - the full gate bar) |
+| `--tier` | declared check tier for an in-slot refresh (default: all - the full gate checks) |
 | `--since` | the window's base revision |
 
 ### `scripts/migrate_carrier`
@@ -557,6 +557,15 @@ _Rewrite every delegated-decisions record off the retired `reviewed` key_
 |---|---|
 | `--root` | repo root (default: cwd) |
 | `--check` | report records owing the rewrite |
+
+### `scripts/migrate_vocabulary`
+_Rewrite a repository's stored values from the kit's earlier vocabulary to_
+Contracts (interfaces): IF-312
+
+| Option | Help |
+|---|---|
+| `--root` | repo root (default: cwd) |
+| `--check` | report what owes the rewrite |
 
 ### `scripts/plan_briefs`
 _Redacted dual-plan brief assembler + the three hat prompt-map keys (DP-001_
@@ -625,7 +634,7 @@ _Record the test evidence — the harness driver that makes `DevStg-Release`_
 | `--root` | repo root (default: .) |
 | `--tier` |  |
 | `--check` | report whether the committed record still holds; exit 1 if not |
-| `--dry-run` | print the record a green run would write; run nothing, write nothing |
+| `--dry-run` | print the record a passing run would write; run nothing, write nothing |
 
 ### `scripts/retire`
 _Retire a spine row and leave its record — the one writer of `docs/log.d/retired/`._
@@ -740,17 +749,17 @@ Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, 
 | `--reserve-ids` | reserve spine and off-spine registry ids for the claimed work item WI on the shared id carrier (COUNTS: SPACE=N[,SPACE=N...], N 1 to 50; WI, OI and DP are minted on trunk), then fold the carrier into docs/id-watermark for the caller to commit, and exit |
 | `--fold-ids` | fold the id carrier into docs/id-watermark (both sides of a conflicted file included) and exit |
 | `--correct-mark` | one-shot RULED raise of a single id-watermark mark to NEW, recording RULING (e.g. OI-47) in the header — the only other way a mark may rise besides allocation (OI-47 (e)); refuses to replay a space that already carries a recorded correction |
-| `--mint-approval-brief` | WI-503: copy docs/ratify/CURRENT.md to a dated, IMMUTABLE docs/ratify/<date>-SLUG.md and exit — the only sanctioned writer of a dated brief (check.py --approval-immutable refuses any OTHER commit that modifies one). Refuses when CURRENT.md is absent or the destination already exists; --mint-date overrides today's date |
-| `--mint-date` | with --mint-approval-brief: use this date instead of today (testing/backfill; the mint itself does not validate the calendar) |
+| `--mint-acceptance-brief` | WI-503: copy docs/ratify/CURRENT.md to a dated, IMMUTABLE docs/ratify/<date>-SLUG.md and exit — the only sanctioned writer of a dated brief (check.py --acceptance-immutable refuses any OTHER commit that modifies one). Refuses when CURRENT.md is absent or the destination already exists; --mint-date overrides today's date |
+| `--mint-date` | with --mint-acceptance-brief: use this date instead of today (testing/backfill; the mint itself does not validate the calendar) |
 | `--strict-integrity` | exit 1 only on integrity findings (duplicate/malformed ids) — the always-valid floor the pre-commit hook runs; orphans stay gate-scoped |
-| `--require-verified` | DevStg-Impl criterion: flag non-Drafted SRs not Status=Approved (any Verification method) |
+| `--require-verified` | DevStg-Impl criterion: flag non-Drafted SRs not Status=Accepted (any Verification method) |
 | `--phase` | comma-separated phases in scope (e.g. v1 or v1,v2): scopes --require-verified to SRs whose Phase is blank or listed |
 | `--no-placeholders` | flag any leftover '-000' template example row (use from DevStg-Tests on) |
-| `--strict-schema` | also require non-empty required fields and valid Verification/Tier values on the real rows |
+| `--strict-schema` | also require non-empty required fields and valid VerificationMethod/Tier values on the real rows |
 | `--html` | also write test/report.html — a dependency-free collapsible tree of the full graph (gitignored composite artifact) |
-| `--approve` | emit ONLY the batch-scoped approval hierarchy (SN->SR->LLR->TC with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list (e.g. 'SR-052,SR-053'); a DevStg-Reqs/DevStg-Tests brief links this instead of hand-copying rows (WI-146). The reserved scope 'modified' (WI-316) emits the RE-ATTESTATION brief instead: per-cell before/after for every row owing a human act, against its copy in docs/archive/last_approved/. The reserved scope 'assumptions', or a DA-/SUR-id list, emits the assumption section: each assumption or surrogate owing an approval, or each one named, with the requirements citing it first. A scope matching nothing is REFUSED, never rendered empty. Prints to stdout unless --out is given; runs no checks |
-| `--check` | with --approve modified: FRESHNESS mode. Re-render the brief and compare it against the committed file (--out, else docs/ratify/CURRENT.md), exiting nonzero when they differ. A plain regenerate-and-compare — the baseline is a directory of files, so there is nothing a re-render could move (WI-325's blocker dissolved with the git-derived baseline). Silent no-op when there is no brief, or when no row owes an act (the window is closed and the brief is a record, not a live surface) |
-| `--out` | with --approve, write the view to FILE (parent dirs created) instead of stdout, so a brief can link a stable path |
+| `--accept` | emit ONLY the batch-scoped acceptance hierarchy (SN->SR->LLR->TC with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list (e.g. 'SR-052,SR-053'); a DevStg-Reqs/DevStg-Tests brief links this instead of hand-copying rows (WI-146). The reserved scope 'modified' (WI-316) emits the RE-ACCEPTANCE brief instead: per-cell before/after for every row owing an operator act, against its copy in docs/archive/last_accepted/. The reserved scope 'assumptions', or a DA-/SUR-id list, emits the assumption section: each assumption or surrogate owing an acceptance, or each one named, with the requirements citing it first. A scope matching nothing is REFUSED, never rendered empty. Prints to stdout unless --out is given; runs no checks |
+| `--check` | with --accept modified: FRESHNESS mode. Re-render the brief and compare it against the committed file (--out, else docs/ratify/CURRENT.md), exiting nonzero when they differ. A plain regenerate-and-compare — the baseline is a directory of files, so there is nothing a re-render could move (WI-325's blocker dissolved with the git-derived baseline). Silent no-op when there is no brief, or when no row owes an act (the window is closed and the brief is a record, not a live surface) |
+| `--out` | with --accept, write the view to FILE (parent dirs created) instead of stdout, so a brief can link a stable path |
 | `--tests-for` | print the test files the spine links to MODULE (a module path, a trailing part of one, or a stem) and exit; runs no checks |
 | `--root` | repo root (default: .) |
 | `--docs` | docs directory path, used as-is (default: <root>/docs) |

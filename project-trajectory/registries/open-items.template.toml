@@ -1,4 +1,4 @@
-# Open items (OI-###) — the owner DECISION registry, TOML carrier.
+# Open items (OI-###) — the operator DECISION registry, TOML carrier.
 #
 # ONE TABLE PER ROW, id-keyed with the prefix retained and the key BARE:
 # `[open_item.OI-1]`. An EMPTY CELL IS AN ABSENT KEY — omit a key rather than
@@ -13,8 +13,19 @@
 #
 # `status` leaves `pending` when the ruling lands in docs/log.md's Decisions
 # log; `scripts/gen_open_items.py` renders every pending row a queued or
-# claimed work item cites into the generated docs/open-items.html the owner
+# claimed work item cites into the generated docs/open-items.html the operator
 # actually reads.
+#
+# A REPOSITORY CARRYING ONLY THE LIGHT SPINE (its stakeholder needs and this
+# registry, with no work-item registry) has no work item to record that what
+# a ruling asked for was done. There an item may move on from `ruled` to
+# `implemented` once that work is done, so the registry still says which
+# items are closed. A repository on the full spine records completion on its
+# work items and never uses the value. The kit's readers treat every status
+# other than `pending` as settled, so `implemented` changes nothing they do.
+# The kit does not yet ship a light-spine variant: the placeholder rule below
+# still assumes a work-item registry, so its checks report each pending item
+# in such a repository as an error.
 #
 # WORK ITEMS POINT TO OPEN ITEMS, NEVER THE REVERSE. What an item is, and when
 # one is filed, is process.md §5, "Open items". The held work item
@@ -25,7 +36,7 @@
 # it. New rows carry none.
 #
 # FILE EVERY OPEN ITEM WITH ITS PLACEHOLDER. A pending item no queued or claimed
-# work item cites never reaches the owner's queue, so the checker reports it as
+# work item cites never reaches the operator's queue, so the checker reports it as
 # an error. A claimed row citing the item, for a step its Done-when names, needs
 # no placeholder beside it; any other item gets a queued one.
 # The placeholder may hold nothing but its item: a `title`, a `safety_class`,
@@ -43,7 +54,7 @@
 # home is the work-item format's readiness contract (IF-054) and this
 # registry's (IF-073).
 #
-# WRITE FOR A RULER, NOT FOR THE RECORD. These cells are read by a human
+# WRITE FOR A RULER, NOT FOR THE RECORD. These cells are read by an operator
 # deciding, usually several at a sitting, and a brief that buries its question
 # under its history costs the ruling it was written to get. The renderer
 # supports three BLOCK forms — a blank line starts a paragraph, `- ` a bullet,
@@ -57,7 +68,7 @@
 #                  affected artifacts and separately-ruleable sub-questions.
 #                  `###` only when the item has genuinely independent parts.
 #   blast_radius   What choosing, deferring and REVERSING each cost. Bullet the
-#                  distinct classes (migration, re-attestation, downstream,
+#                  distinct classes (migration, re-acceptance, downstream,
 #                  compatibility). Do not restate `decision`'s evidence.
 #   options        One bullet per option: the choice, then `FOR:` and
 #                  `AGAINST:`, one or two decisive points each — not a debate.
@@ -72,7 +83,7 @@
 # re-read a cell to find the question is being taxed for the author's
 # convenience.
 [open_item.OI-000]
-title = "Example row - the shape of an owner decision brief"
+title = "Example row - the shape of an operator decision brief"
 status = "pending"
 raised = "2026-01-01"
 one_line = """ONE sentence the status surface projects: what is being decided, the recommended option, and the deciding reason - no history, no measurements"""
@@ -88,7 +99,7 @@ Use a `###` sub-heading only when the item has genuinely independent parts."""
 blast_radius = """What choosing, deferring and REVERSING each cost - the honest cost, not the optimistic one. Bullet the distinct classes rather than running them together:
 
 - migration: what has to be rewritten, and how much of it;
-- re-attestation: whether approved text moves, which opens a window;
+- re-acceptance: whether accepted text moves, which opens a window;
 - downstream: what an adopting repo has to do;
 - reversal: what it costs to undo this later."""
 options = """- (a) THE CHOICE, named in a few words. FOR: its one or two decisive advantages. AGAINST: the honest cost, including the case where it is simply wrong.

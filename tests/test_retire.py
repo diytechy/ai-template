@@ -38,7 +38,7 @@ status = "Drafted"
 title = "Two"
 requirement = \"\"\"The kit shall do two things.
 [not a header, inside a string]\"\"\"
-status = "Approved"
+status = "Accepted"
 
 # A comment that belongs to SR-003.
 [requirement.SR-003]
@@ -49,7 +49,7 @@ status = "Drafted"
 
 SN_TOML = """[need.SN-001]
 need = "A need."
-status = "Approved"
+status = "Accepted"
 """
 
 LLR_TOML = """[design.LLR-001]

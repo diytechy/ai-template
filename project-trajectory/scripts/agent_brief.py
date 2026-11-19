@@ -109,7 +109,7 @@ DEFAULT_PHASE_TIER = {
     "CRITIQUE": "strong",
     # SN-026: an adjudicator rules on a CLAIM — was this delivered, did this
     # amendment move meaning, is this queued row a duplicate — and every one of
-    # those is a judgement whose cost of being wrong is a wrong approval.
+    # those is a judgement whose cost of being wrong is a wrong acceptance.
     # Strong by default, like the other two judging phases. The per-row
     # `BuildTier` still pins it down where a disposition estimated cheaper
     # (`intake.tier_signal`), because that estimate is measured; this is the
@@ -134,8 +134,8 @@ NON_BUILD_PHASES = frozenset(kverdict.REVIEW_PHASES) | {
     "DESIGN-CHECK",
     "CRITIQUE",
     # SN-026: an adjudication commit changes Status cells and the work
-    # registry, which is what its lane runs no product bar for
-    # (`integrate.refresh`'s no-bar arm). A review round over it would be a
+    # registry, which is what its lane runs no product checks for
+    # (`integrate.refresh`'s no-checks arm). A review round over it would be a
     # fresh-context reviewer asked to judge a judgement, with no product diff
     # to judge — the corroboration loop the review rounds exist to avoid.
     "ADJUDICATE",
@@ -143,7 +143,7 @@ NON_BUILD_PHASES = frozenset(kverdict.REVIEW_PHASES) | {
 
 
 # (read_ask retired with the serial driver, WI-210: the engine composes
-# its NEEDS-HUMAN banners from the ask it just generated — the `ask:` line in
+# its NEEDS-OPERATOR banners from the ask it just generated — the `ask:` line in
 # docs/run-state remains the WI-127 contract for humans and launchers.)
 
 
@@ -708,7 +708,7 @@ def scripts_dir(root):
 
 def decision_record_note(root, worker):
     """The delegated-decisions note for this lane's session, or "" when the
-    repository's `[attestation] decision_recording` dial is `off` or there is no
+    repository's `[authority] decision_recording` dial is `off` or there is no
     lane. Appended at the one fork every build and adjudication session takes,
     so both altitudes that close a lane are told where the record the merge
     slot asks for belongs, and a reviewer, which closes nothing, is not."""
@@ -718,9 +718,9 @@ def decision_record_note(root, worker):
     return kdecisions.session_note(mode, worker["train"])
 
 
-# What a held adjudication row tells the human, appended to the stop banner.
+# What a held adjudication row tells the operator, appended to the stop banner.
 # The exit code is the DURABLE half: `dispatch._lane_close` turns
-# EXIT_NEEDS_HUMAN into a `handback.close_partial` — an immutable per-close
+# EXIT_NEEDS_OPERATOR into a `handback.close_partial` — an immutable per-close
 # report and a move to the TERMINAL partial/, which `schedule._disposition`
 # reads as `partial` (never ready) — so an unattended run can never re-pick the
 # row until a successor is minted. A print alone would be gone with the terminal
@@ -816,12 +816,12 @@ RUBRIC_PATH_RE = re.compile(r"docs/rubrics/[\w./\-]+\.md")
 
 
 # --- the critique loop (WI-068) ------------------------------------------------
-# A `Verification=Critique` requirement's subjective acceptance is adjudicated by a
+# A `VerificationMethod=Critique` requirement's subjective acceptance is adjudicated by a
 # fresh, provider-heterogeneous critic against a written rubric, never the authoring
 # session. All of this is gated on managed mode + a real Critique SR, so a repo with
 # neither pays nothing (never-breaking).
 def load_critique_srs(docs):
-    """The SR ids whose Verification is `Critique` (docs/requirements/
+    """The SR ids whose verification method is `Critique` (docs/requirements/
     system-requirements.toml). Empty — absent file, or no such row — makes the whole
     critique layer vacuous, exactly like an absent enable-list makes routing off.
 
@@ -835,7 +835,7 @@ def load_critique_srs(docs):
         if (
             sid
             and not sid.endswith("-000")
-            and (r.get("Verification") or "").strip() == "Critique"
+            and (r.get("VerificationMethod") or "").strip() == "Critique"
         ):
             out.add(sid)
     return out
@@ -1056,7 +1056,7 @@ def lane_completion(root, base):
 
 def review_verdict_trailer(root, merged, worker):
     """The round's `Review-Verdict:` line, or None when there is nothing to
-    attest (no merged verdict, or git cannot name the tree).
+    record (no merged verdict, or git cannot name the tree).
 
     THE TREE IS THE ONE THE TWO READERS KEY ON — `governing_identity` at the
     lane's BRANCH, the same call `review_owed_by_evidence` and
@@ -1064,14 +1064,14 @@ def review_verdict_trailer(root, merged, worker):
     is right only while no station refresh sits below the tip: the fold drops
     `docs/reviews/`, so the round file the reviewer just added does not move the
     identity, but the refresh does, and the peel is what the readers apply to
-    it. Stamping the unpeeled value filed the attestation under a key
+    it. Stamping the unpeeled value filed the trailer under a key
     `integrate._round_refusal` never looks up, so the cross-check silently stood
     down on exactly the branches that had been refreshed (REVIEW-A round 015).
-    The fail-direction was safe — a trailer is never an accept path — but a
+    The fail-direction was safe — a trailer is never an admission path — but a
     third place choosing its own rev is the finding IF-175's contract names.
 
     WHY THE COORDINATOR WRITES IT. A trailer a reviewer could stamp on its own
-    commit attests nothing the round file did not already claim; what makes this
+    commit records nothing the round file did not already claim; what makes this
     one evidence is the same thing that makes the session log evidence — it is
     written by the process that ROUTED the round, after the round completed."""
     if not worker:

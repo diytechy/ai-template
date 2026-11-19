@@ -24,162 +24,34 @@ supervisor prompt at the owner's request). Backward-looking homes:
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE:** start with
-  [handoff-2026-11-11a-attended-oi130-rescore.md](handoff-2026-11-11a-attended-oi130-rescore.md).
-  An attended session re-scored the component partition on today's tree
-  ([record](plans/2026-11-11-oi130-rescore/README.md)): P5 ranks first on
-  every measure, so OI-130 is re-walked with the owner on that evidence,
-  together with the derivation record's shape, before WI-999 builds; every
-  other queued row waits on the owner, so the handoff carries the stop line.
-  The tag-migration row and the dashboard re-judge have landed: test files
-  carry their test-case tags, and a strict finding holds them equal to the
-  evidence cells, so an intent row's evidence cell holds a note until the
-  tests commit. The owner-held-step row has landed: the owner queue counts claimed citers,
-  and the mint writes the owner row and item for a held MEANING ruling. The
-  review test-set row has landed: a review bar's tests are derived from the
-  row's SRs through the tags, and neither attest nor the review render takes a
-  list. The red-mark row has landed: `[bars] red_mark` declares the strict
-  expected-failure mark, `attest` proves a removed mark red by the lane's last
-  review record, and the refresh and the coordinator's hand landing refuse a
-  tree holding one (a forced adopter migration). The parked-resume row has
-  landed: the unattended resume leaves out a lane whose claimed row reads
-  blocked.
-  SN-029's row runs
-  attended only, and the macOS row is unchanged. Lanes
-  reserve their registry ids on the shared id carrier before drafting
-  (`trace.py --reserve-ids`), and both landing routes admit only reserved
-  ids. The trunk mint no longer files an amendment row for a row the
-  merged range already settled (judged from the act ledger's record of
-  what each act copied); a minted amendment row is checked against the
-  lane's own act (the recipes' sweep step).
-  The owner ruled the review-churn program
-  ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
-  every call is ruled; read its Status, then its rulings). The batch's
-  process-text, strict-lints and plan-gate landing-shapes rows have
-  landed, and the reviewer trial has ended: each round runs two reviewers,
-  Sol and Opus. The adjudication split has landed: a checkpoint sitting
-  now ends at its committed verdict, and its act is a later turn
-  (`coordinator_adjudicate.py act`), and the machine-line reader row has
-  landed through it. No bar fails on the
-  smoke tier's seconds: the bars report its CPU-seconds and wall, and
-  `run.cmd audit` judges them and its count (owner, 2026-10-20).
-  The re-sync entry check is in the commit bar: a lane rebased onto a
-  newer trunk re-anchors its own RESYNC entry at its new base.
-  The headless coordinator's marking row has landed, and the guard-hooks
-  row has landed, and so have the bless-mark row, the re-claim reader
-  row, the launcher's follow-ups row, the trunk-by-name row (the trunk
-  is now the branch `docs/process.toml` declares) and the hooks-on row
-  (every agent route refuses a checkout whose commit hooks are not on),
-  and the guard hook's per-call cost row (its PreToolUse group runs only
-  for the launch and shell tools). The two merge-slot rows are claimed; their
-  coordinator-landing gap is the one-landing row's
-  (owner, 2026-10-17). The
-  disposition-adoption row's successor has landed on the owner's route: a
-  disposition can adopt an already-filed successor, recorded at the close
-  and judged by one commit check that admits the close's exact relinks
-  (the hook's `adoption-record` step). The lane
-  lifecycle design's in-lane mint and station authority rows are
-  cancelled, its config-retirement row folded into item 10's program. The
-  account-homes row has landed: the adjudicator runs on its declared
-  token account through a qualified entry. The review gate's queue row is
-  filed as four rows: its text row (test cases before the code in a lane)
-  and its attestation row (one tree-bound bar attestation, and the
-  `attest` verb) have landed, and so has the coordinator's review refusal:
-  a review brief renders only over the tip's attested review bar
-  (`attest` runs from the primary checkout and finds the lane by branch).
-  The loop's refusal (with its red-round cap) has landed: a loop review is
-  drawn only over an attested tip, and `[build] red_rounds_max` closes a
-  lane red that long partial.
-  The lane lifecycle design's remaining rows are deferred until the owner
-  reviews their re-scopes, and the queue table is an explicit list. Item 8's usage
-  record is filed as two rows (the coordinator's Sol and Terra calls
-  through the session service, then the Claude sub-agent usage ingest);
-  the first has landed: every Sol and Terra call goes through one
-  coordinator entry point on the session service, and a call outside a
-  claimed lane spools its log and commits nothing; the second has landed
-  too: each close-out records its session and every sub-agent, at any
-  depth, from their transcripts. Item 10 step 2's row (the
-  hooks' one policy read) has landed, and its shape-rule retirement row
-  is filed. The parent-first row has landed: a commit that leaves an
-  approved row under an unapproved parent is refused at pre-commit and
-  on each lane commit, and a standing case is an integrity finding.
-  The held-rung state row has landed: a lane's held approval claim lands
-  only as a CLARITY re-attestation bound to its judged text (a digest the
-  binding records at reservation, which the act turn also checks), loop
-  and coordinator lanes alike, and a marked commit outside a lane that
-  moves a held status is refused.
-  The shared lane-walk row has landed: every per-commit rule walks a
-  lane's commits and a staged squash range through one owner, and one
-  work-spec listing serves both spec views. So has plan item 12's text
-  row: the `architecture-decomposition` rubric (seeded) and skill, and
-  `spine-questions.md` section 4, put only to the first LLR sitting at a
-  component scope or a re-cut. The perspective-record sidecar row has
-  landed: a decomposition round's sitting and author briefs carry the
-  applicable hats' questions and the verdict names each hat's outcome. The
-  policy file's line-shape rule has retired: every reader takes the one
-  TOML parse, and bootstrap's in-place policy writer keeps an edit only
-  when the parse confirms it. The one-work-item-per-lane row has landed: admission,
-  the claim, both `--wi` flags, the resume and the closes each take exactly
-  one work item, and a parked multi-row lane stops the run by name.
-  The coordinator's procedure lives in the `coordinator-cycle` skill, its
-  headless legs in its section 7. The owner directed (2026-10-18,
-  coordinator-2026-10-18 D-004, D-006) that the queue turn toward headless
-  runs: its two gate rows, the re-claim reader row and the launcher's
-  follow-ups row, have landed, so a handoff without a stop line lets the owner
-  start the overnight launcher (`scripts/coordinator/overnight_legs.py`),
-  and the rest of the queue runs in headless legs, continuing the lanes
-  claimed attended with no re-claim.
-  Delegated decisions take the owner's verdict as `owner = "confirmed"` or
-  `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
-  to review" in [open-items.html](open-items.html), and an overrule must change
-  open work citing it in the same commit.
-  Approval acts run to seq 178 on trunk. The context guard's hooks are machine-local
-  (installed through dev-setup's consented offer, or at a lease take run at a terminal; this
-  workstation is on), and the guard is live where they are: take the coordinator
-  lease (`coordinator_guard.py take`) before any claim, and hand it back
-  (`coordinator_guard.py handback --handoff <path>`) as the close-out's last act.
-  Every adjudication sitting now authenticates with the owner's long-lived token:
-  set `AGENT_CLAUDE_TOKEN_FILE` to its path before `coordinator_adjudicate.py`.
-  0. **The handoff's queue table in order:** the program's first batch,
-     then the lane in flight (claimed, on its branch; the handoff names its
-     returns), then the phase-1 rows.
-     Review rule (owner, 2026-10-11, superseding 2026-10-07): no narrow rounds.
-     Each round runs two full-lane reviewers in parallel (Codex Sol and
-     Claude Opus; the three-reviewer trial ended 2026-10-16), at most three rounds, with a dispute sitting at the cap; the
-     handoff states the rest. Review threat model (owner,
-     2026-10-08, PROCESS.md §6): a finding that needs a compromised or
-     contrived host is dismissed in one recorded line; a contested or
-     third-round finding goes to the coordinator's `dispute` sitting
-     (`coordinator_adjudicate.py adjudicate --brief dispute`), whose ruling is
-     final.
-  1. **Build the S788-* successor rows** of the approved design note
-     ([plans/2026-10-04-wi788-design/README.md](plans/2026-10-04-wi788-design/README.md),
-     its ruling section first; it overrides the chapters), in their `needs`
-     order with the wave-11 cycle, claiming each batch under one scoped unpause.
-     The generated ready frontier below lists the rows that can start; the
-     handoff names them. The owner directed (2026-10-04) that this campaign
-     runs by coordinator session, not the unattended loop. OI-105 (the
-     FreeLLMAPI endpoint and pinned models) waits for the owner's router; it
-     holds only the FreeLLMAPI row of S788-routes.
-  2. OI-98: the owner re-syncs `C:\Projects\FileBackup` (stamp `9b697cc`) as a
-     scratch trial, after TC-036's inputs gain `RESYNC_PACK.md`, then rules it.
+- **RESUME HERE:** read
+  [plans/2026-11-11-test-tiers/HANDOFF.md](plans/2026-11-11-test-tiers/HANDOFF.md)
+  §12 first (its last §12.6 entry is the current state), then §6. The
+  vocabulary migration is landed and accepted (act seq 183); what follows, in
+  order (the coordinator handoffs before it are history, newest first from
+  [handoff-2026-11-11a-attended-oi130-rescore.md](handoff-2026-11-11a-attended-oi130-rescore.md)):
+  1. **§6, the functional changes.** B1 first: a commit runs the `iterate`
+     checks and a landing runs the unfiltered suite once (D6, D7), so the
+     queue below stops paying for the smoke tier on every commit. B5 is
+     ruled (operator, 2026-11-19): a test that duplicates another or no
+     longer serves a requirement is cut, with the code that only it
+     exercised, and architectural changes that keep the code clean and
+     modular are in scope. B8's overnight launcher goes.
+  2. **The queue:** the ready frontier below. Every queued row owes its scope
+     critique before a claim. The row that turns the assumption gate on
+     comes last: its four steps report 91 findings today.
+  3. **Downstream (HANDOFF §7):** the second migrator pass is done where it
+     was safe (HANDOFF §12.6, 2026-11-19). Left: FileBackup, held by the
+     operator until its conversion is merged; the four conversions paused
+     partway; PictureSorter's CI line, which passes a retired stage tag to
+     `--gate` and changes when the kit's scripts are copied in; then
+     HomeHub's adoption.
 
-  `docs/work/pause` is still tracked (since 2026-09-04): the unattended
-  dispatcher claims nothing until a reviewed commit deletes it, so work is
-  taken by a coordinator session, not the loop. Owner direction 2026-10-04: a coordinator
-  session claims its whole batch of rows under ONE scoped unpause (a reviewed
-  deletion commit, the claims, then a byte-identical restore), not one per row;
-  the control ruling's pause deletion is not spent. The roles (owner, 2026-10-04): Claude Opus builds and plans at medium
-  effort and the coordinator commits for it; GPT Terra (`gpt-5.6-terra`,
-  medium) authors spine rows; Codex 6.1 (`gpt-6.1-sol`, high) reviews code
-  through the CLI; and an independent Opus agent adjudicates and resolves
-  disputes. File new work as a row; an open item is filed together with the queued
-  placeholder row whose `needs` cites it, and the commit that rules it updates
-  that row's Done-when (OI-102). The reviewers' `codex exec` launch
-  runs under a temporary `Bash(codex exec *)` allow rule in
-  `.claude/settings.local.json` (owner, 2026-09-28): remove it when the
-  queue drains. Recheck Git and the generated frontier before choosing
-  work; earlier handoffs are historical context.
+  The operator's open items render on [open-items.html](open-items.html);
+  the rows they hold are under "Blocked" below. Reviews (operator,
+  2026-11-19): prose and requirement text by Gemini Argon
+  (`opencode-go/gemini-4-argon`) at low effort, code by Sol (`gpt-6.1-sol`)
+  at low effort. Pushing is the operator's (`push = "operator"`).
 - **Assumption tier — C1 and C2 have landed and are approved:** the
   redrawn frame, checkpoint re-judging of observation tests, the assumption
   gate's four steps (behind `[checks] assumption_gate = false`), and C2's
@@ -200,20 +72,20 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   retention shipped off; its live verification closed 2026-10-03 (a real adjudication peaked at 44% of the codex window), and the dial stays off. S6 is designed
   with the assumption tier before its C3. S14's flag-axis count and
   duplicate-detection research have both landed.
-- **Control launch:** retain the tracked `docs/work/pause` while preparing
-  route-complete spending bounds, including in-flight drain, against the
-  [settled control ruling](ai-template-redesign-2026-09-05-codex/CONTROL-DECISION.md#owner-ruling-2026-09-06).
-  Revalidate the [preflight](ai-template-redesign-2026-09-05-codex/CONTROL-PREFLIGHT.md)
-  at the proposed frozen launch commit, then obtain the ruling's owner-reviewed
-  pause deletion. Replacement packages follow the control's evidence decision.
-- **Standing owner acts the loop will not make:** merge-to-main + push for
+- **Control launch:** the operator lifted the tracked pause on 2026-11-19,
+  so the dispatcher claims from the frontier again when a run is started.
+  The [settled control ruling](ai-template-redesign-2026-09-05-codex/CONTROL-DECISION.md#owner-ruling-2026-09-06)
+  asked for route-complete spending bounds, including in-flight drain, and a
+  revalidated [preflight](ai-template-redesign-2026-09-05-codex/CONTROL-PREFLIGHT.md)
+  first; neither was redone. Check both before starting an unattended run.
+- **Standing operator acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
-  and this branch (`push = "human"`). The held wi508
+  and this branch (`push = "operator"`). The held wi508
   branch is on origin; the queued wi508-partial-close row is the only
   sanctioned act on it (`OI-71`).
-- **Standing constraints:** the depth-0 frame is **LOCKED and APPROVED** (4
+- **Standing constraints:** the depth-0 frame is **LOCKED and ACCEPTED** (4
   entities · 4 crossings · 3 relationships, watermark-held); `OI-61` (c) stays deferred
-  on its condition (a demonstrated residual drift class), not owner-owed.
+  on its condition (a demonstrated residual drift class), not operator-owed.
 - **Unfiled follow-ups** (topics, no ids): from the red-mark row's rounds
   (wi-996 D-004, D-007, D-010): its spec's coverage bound says a near-miss
   spelling (an added `reason=`) is unmarked to the check, so such a red test
@@ -688,29 +560,34 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 _GENERATED by `python project-trajectory/scripts/gen_trajectory.py --status` — do not hand-edit; cite the spine registries + `docs/stage`, not this rendering (the forward-only intent below is hand-authored)._
 
 - **In stage:** **DevStg-Impl** (stage 7 of 8, implementation in work) (per-phase `1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-Impl;6=DevStg-Impl`, derived current **phase=6**) — the rung this repo is IN, derived over its settled spine. [`derive_stage.py`](../project-trajectory/scripts/derive_stage.py) derives it, recorded in [`docs/stage`](stage).
-- **Spine:** **SN=31 SR=138 LLR=334 TC=380** (20 drafts) · 258 seams · 4 components.
-- **Open items** _(the pending rows of [requirements/open-items.toml](requirements/open-items.toml) a queued or claimed work item cites; each item's blast radius, options and recommendation render in [open-items.html](open-items.html), the generated owner surface):_
+- **Spine:** **SN=31 SR=138 LLR=334 TC=380** (20 drafts) · 259 seams · 4 components.
+- **Open items** _(the pending rows of [requirements/open-items.toml](requirements/open-items.toml) a queued or claimed work item cites; each item's blast radius, options and recommendation render in [open-items.html](open-items.html), the generated operator surface):_
   - **OI-98** — The owner must perform the re-sync from 2026-10-03 and rule this item to release WI-684. _(holds WI-684)_
   - **OI-105** — When the owner's FreeLLMAPI router is running, name its endpoint and the models to pin, and confirm it holds a one-model chain per pinned id, so the FreeLLMAPI route row can ship and take its one live call. _(holds WI-795)_
   - **OI-122** — WI-908's login-isolation check needs the owner to sign in a second Claude login under a declared account home and attend the run (OI-114 ruled (a)); say when. _(holds WI-908)_
   - **OI-123** — WI-964 needs the owner to run the full unfiltered suite on the Mac at or after WI-910's landing and record the result. _(holds WI-964)_
   - **OI-124** — WI-910's Done-when records CI's macOS and Linux state on its landing tip, which exists only after a push; push refactor_again, or rule that the WSL POSIX evidence route stands in for CI on that item. _(holds WI-910)_
-  - **OI-130** — WI-999 builds SR-165's derivation record, but writing the record for CMP-006..CMP-009 needs two answers only the owner can give: which human ruling adopted the P5 partition, and which objective the record declares (no declared objective reproduces the recorded ranking). _(holds WI-999)_
 - **Decisions to review:** 1141 — [open-items.html](open-items.html#decisions-to-review)
 - **Ready frontier** _(dependency-ready WIs in build order — generated from the scheduler; a closed WI drops out automatically, so this list is never stale and never names a `done` id):_
+  - **WI-1008** `P3` — SR-033, SR-223 and SR-225 each state the premise their argument rests on, as an assumptio…
+  - **WI-1009** `P3` — docs/open-items.html stops listing delegated decisions one by one; the listing moves to a…
+  - **WI-1010** `P3` — This repository turns its assumption gate on, once its four steps report nothing
+  - **WI-1001** `P5` — An approved automated test case with no tagged test is a strict finding, so an approved c…
+  - **WI-1007** `P5` — trajectory_arch.py is split by the checks it holds, each module under the size line, with…
   - **WI-998** `P5` — TC-211 is re-inspected on the first decomposition round whose record carries the stopping…
   - **WI-1003** `P4` — The seam check resolves dotted and relative imports, so edges into kitlib/* and rendering…
   - **WI-1004** `P4` — The policy duplicates the OI-130 re-score found disagreeing each get one home, with the d…
   - **WI-1005** `P3` — The module to component join has one home, which gen_components and trajectory_arch both…
   - **WI-1006** `P3` — run.cmd audit reports each ruled open item with no action planned, done or handed on to a…
+  - **WI-1011** `P3` — dev-setup reports the GitHub CLI and offers to install it, as an optional tool
   - **WI-827** `P3` — Owner signs SN-029's amendment after text-before-act
+  - _(+1 more ready — see the dashboard)_
 - **Blocked** _(held by a pending open item its `needs` cites):_
   - **WI-684** — re-judge TC-036: no result recorded [sha256:2f2f30dfba87] at merge 77fb093 — [OI-98 — Owner re-sync from 2026-10-03](open-items.html#OI-98)
   - **WI-795** — Owner provisioning: the FreeLLMAPI endpoint and pinned models — [OI-105 — FreeLLMAPI provisioning: the endpoint and the pinned models](open-items.html#OI-105)
   - **WI-908** — Owner-assisted Claude login-isolation check: two account homes on Windows show two logins — [OI-122 — WI-908: the owner provisions a second Claude login and attends the isolation check](open-items.html#OI-122)
   - **WI-910** — The full suite is green on macOS: the run.command fixture runs an executable run.sh, and… — [OI-124 — WI-910: CI's macOS and Linux state on the landing tip needs a push, or the WSL evidence route](open-items.html#OI-124)
   - **WI-964** — Owner: the full unfiltered suite is green on the owner's Mac at WI-910's landing — [OI-123 — WI-964: the owner runs the full suite on the Mac after WI-910 lands](open-items.html#OI-123)
-  - **WI-999** — SR-165's derivation record is built: the record cells, the component check and a record f… — [OI-130 — WI-999's derivation record for the live components: which ruling adopted the P5 partition, and which objective the record declares](open-items.html#OI-130)
 <!-- END GENERATED STATUS -->
 
 - **Bar (per commit)** and the **standing rules** (claim refusal on prose ids,

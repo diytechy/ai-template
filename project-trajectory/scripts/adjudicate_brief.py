@@ -35,7 +35,7 @@ TWO RULES GOVERN EVERYTHING BELOW, and both are load-bearing.
      the worker assignment — that would put the judge back in the builder's
      chair, and a builder session ends DONE like any other, so the miss would
      be silent. `agent_loop.session_body` returns the reason and
-     `route_session` pages (`EXIT_NEEDS_HUMAN`), which `dispatch._lane_close`
+     `route_session` pages (`EXIT_NEEDS_OPERATOR`), which `dispatch._lane_close`
      turns into an immutable per-close report and a move to the TERMINAL
      partial/ — a durable record, not a line in a terminal buffer. A row that
      declares NO brief is
@@ -47,16 +47,16 @@ WHICH BRIEF: A DECLARED CELL, NOT AN INFERENCE. The row carries `Brief`
 knows which judgement it is asking for. Deriving it from `SpecRef` instead
 would cost no schema, and is unsound: `intake._amendment_drafts` sets
 `specref` to the amended registry, so an amendment to a TEST-CASE row and a
-red-TC census row BOTH read `docs/test/test-cases.toml` — and those two briefs
+evidence-gap census row BOTH read `docs/test/test-cases.toml` — and those two briefs
 give contradictory instructions (one forbids touching a registry, the other
 asks for a `Status` cell to be judged). Deriving it from the TITLE instead is
-the `NEEDS-HUMAN` fold this repo wrote in blood (WI-417): prose that carries
+the `NEEDS-OPERATOR` fold this repo wrote in blood (WI-417): prose that carries
 control flow must be a typed field. So it is a typed field.
 
 ALL NINE BRIEFS ARE NOW ROUTED (`ROUTED`), which they were not for most of this
 module's life. Two came with WI-841: `done-when`, a lane's own Done-when
 change judged in the lane, and `combined`, one lane-checkpoint sitting that
-composes the pending amendment, first-approval and done-when briefs. The
+composes the pending amendment, first-acceptance and done-when briefs. The
 newest (WI-865) is `dispute`: a review finding the lane contests, or one at
 its third round, ruled by the adjudicator. The two that were unrouted are worth keeping on record, because
 each says something about what "routed" costs:
@@ -70,10 +70,10 @@ each says something about what "routed" costs:
     same three questions, plus the CONSOLIDATE exit and the idle-station census
     that mints it, so all three gaps close together (the 2026-09-02
     backlog-restructure plan §1).
-  * `amendment` was the OTHER one, and it is the capability the `last_approved`
-    snapshot unlocked (D-9 step 4b, owner
+  * `amendment` was the OTHER one, and it is the capability the `last_accepted`
+    snapshot unlocked (D-9 step 4b, operator
     directive 2026-08-15). Two things blocked it and the snapshot answers both.
-    Its `{rows}` slot named `trace.reattest_model`, which selected rows whose
+    Its `{rows}` slot named `trace.reaccept_model`, which selected rows whose
     Status was `Modified`, while `check_trajectory.staged_spine_amendments` —
     the function that MINTS these rows — fires only when the row and its owning
     SR both stayed put: the two populations were disjoint BY CONSTRUCTION, so
@@ -84,7 +84,7 @@ each says something about what "routed" costs:
     never flipped — resolved to the amendment commit ITSELF, i.e. the text under
     judgement. The snapshot is an accepted anchor that is PROVABLY not the text
     under judgement: the mirror invariant proves it was copied in a reviewed
-    approval commit, and nothing but a copy can write it.
+    acceptance commit, and nothing but a copy can write it.
 
 Contracts: IF-115 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
@@ -99,10 +99,10 @@ Contract IF-115: `compose(root, row, verdict_path, prompt_templates)` returns
     evidence cannot fill is a refusal too, and the caller therefore never
     receives a partially-filled judge's brief. The reason is named so the caller
     can act on it, and what the caller owes in return is the fail-closed half: a
-    row declaring a brief this cannot compose is HELD for a human, never
+    row declaring a brief this cannot compose is HELD for an operator, never
     dispatched as ordinary work, because a judge briefed as a builder ends its
     session done like any other and the miss is silent. The amendment brief
-    states the identity of each row's approved text it shows, one
+    states the identity of each row's accepted text it shows, one
     `JUDGED-TEXT: <row id> <digest>` line per row; `bind_pending` records
     those lines in the binding (IF-287) and `record_outcome` keeps them when
     it rewrites the outcome, so a held CLARITY act is bound to the text judged.
@@ -142,10 +142,10 @@ DISPUTE = kdispute.BRIEF
 # The declared `Brief` cell -> the prompt key its session is composed from.
 BRIEF_PROMPTS = {
     "amendment": prompts.ADJUDICATE_AMENDMENT,
-    "first-approval": prompts.ADJUDICATE_FIRST_APPROVAL,
+    "first-acceptance": prompts.ADJUDICATE_FIRST_ACCEPTANCE,
     "disposition": prompts.ADJUDICATE_DISPOSITION,
     "consolidate": prompts.ADJUDICATE_CONSOLIDATE,
-    "red-tc": prompts.ADJUDICATE_RED_TC,
+    "evidence-gap": prompts.ADJUDICATE_EVIDENCE_GAP,
     rejudge.BRIEF: prompts.ADJUDICATE_REJUDGE,
     DONE_WHEN: prompts.ADJUDICATE_DONE_WHEN,
     COMBINED: prompts.ADJUDICATE_COMBINED,
@@ -188,7 +188,7 @@ VERDICT_GRAMMAR = {
     # their grammar from `kitlib.sitting.GRAMMAR`, the one home the Done-when
     # holds validate a sitting with too (WI-841 round 9).
     "amendment": ksitting.GRAMMAR["amendment"],
-    "first-approval": ksitting.GRAMMAR["first-approval"],
+    "first-acceptance": ksitting.GRAMMAR["first-acceptance"],
     "disposition": ("OUTCOME", ("COMPLETE", "PARTIAL", "CANCELLED"), ("successors",)),
     # The CONSOLIDATION grammar (restructure plan §1.2). Its first three
     # alternatives are the retired `conflict` grammar verbatim; the fourth is
@@ -212,7 +212,7 @@ VERDICT_GRAMMAR = {
         ("QUEUE", "QUEUE-WITH-EDGE", "RETURN-TO-DRAFT", "CONSOLIDATE"),
         ("needs", "absorbs"),
     ),
-    "red-tc": ("OUTCOME", ("DRAFTED", "NEEDS-JUDGEMENT"), ("cases", "drafts")),
+    "evidence-gap": ("OUTCOME", ("DRAFTED", "NEEDS-JUDGEMENT"), ("cases", "drafts")),
     # The CHECKPOINT RE-JUDGE (SR-215): the session judged the observation case
     # and committed its record, naming the outcome, or the judgment is a
     # person's act and it recorded nothing (`result=-`).
@@ -244,7 +244,7 @@ def verdict_refusal(brief, verdict_path, kinds=None):
 
     THE SESSION'S OUTPUT IS THE VERDICT FILE, not its commit. A worker session
     is judged DONE from committed `WI:` trailers, and an adjudicator that
-    committed anything at all would clear that bar while having ruled on
+    committed anything at all would clear that checks while having ruled on
     nothing — the shape where the machinery reports a judgement was made and no
     judgement exists. So completion is gated on the artifact the brief named,
     carrying the closed-enum line the brief demanded.
@@ -252,7 +252,7 @@ def verdict_refusal(brief, verdict_path, kinds=None):
     Checked in the order a reader would: is the file there, does it carry the
     line, is the label one of the declared alternatives, are the counters
     present. Every arm names what is wrong, because "the verdict is invalid" is
-    not something a human can act on at 3am.
+    not something an operator can act on at 3am.
 
     A COMBINED verdict is judged against `kinds`, the kinds its sitting
     requested (`requested_kinds` of the composed brief): without them it is
@@ -309,7 +309,7 @@ def requested_for(brief, prompt):
 
 def bind_pending(verdict_path, brief, prompt, exclusive=False):
     """Bind what this call was asked - its brief and requested kinds, outcome
-    `pending`, and the identity of each row's approved text the prompt showed
+    `pending`, and the identity of each row's accepted text the prompt showed
     (`requested_identities`), and for a dispute the findings file its
     `FINDINGS-FILE:` line names (`kitlib.dispute.requested_file`) - beside
     its verdict, through the one writer; the kinds, or () when a combined
@@ -362,10 +362,10 @@ def bound_kinds(verdict_path, brief):
 
 def record_outcome(root, verdict_path, brief, kinds, call_ok, session):
     """THE one place a route DECIDES and records whether the adjudication it
-    ran was ACCEPTED or FAILED, in the verdict's binding, committed in its own
-    bookkeeping commit; returns `(outcome, why)`, `why` None when accepted.
+    ran is RECORDED or FAILED, in the verdict's binding, committed in its own
+    bookkeeping commit; returns `(outcome, why)`, `why` None when recorded.
     ONE RULE for both routes (the coordinator's entry point and the loop):
-    accepted only when the CALL succeeded (`call_ok`: exit 0 within its
+    recorded only when the CALL succeeded (`call_ok`: exit 0 within its
     deadline, no reported error - `session_service.call_succeeded`) AND the
     verdict validates against `kinds` (`verdict_refusal`, judged here, so no
     route can skip it). A failed call is recorded failed without its verdict
@@ -382,7 +382,7 @@ def record_outcome(root, verdict_path, brief, kinds, call_ok, session):
         why = verdict_refusal(brief, verdict_path, kinds=kinds)
     else:
         why = "the call failed (a non-zero exit, a timeout or a reported error)"
-    outcome = "failed" if why else "accepted"
+    outcome = "failed" if why else "recorded"
     # The rewrite keeps the identities and the findings-file record bound at
     # reservation: dropping them would leave every held CLARITY act bound to
     # no text, and every dispute verdict bound to no findings file.
@@ -510,19 +510,19 @@ def _commit_facts(root, span):
     return _clip(body, EVIDENCE_CLIP), None
 
 
-# --- the red-TC brief (SN-030 rung 6) -----------------------------------------
+# --- the evidence-gap brief (SN-030 rung 6) -----------------------------------------
 
 
-def red_tc_values(root, row):
+def evidence_gap_values(root, row):
     """`({tcs, spine}, None)` for the idle-frontier census's unverified test
     cases, or `(None, reason)`.
 
-    THE CENSUS IS RE-RUN LIVE, not remembered. `census.red_tc_census` is the
+    THE CENSUS IS RE-RUN LIVE, not remembered. `census.evidence_gap_census` is the
     same producer that minted the row, so re-running it at composition time
     gives the judge the state of the world it is actually ruling on — a row
     whose gap closed between mint and claim refuses here rather than briefing a
     session about a contradiction that no longer exists. It also means the
-    brief shows EVERY currently-red case, not only the one line that minted
+    brief shows EVERY currently failing case, not only the one line that minted
     this row: the template asks for one drafted row per distinct CAUSE
     precisely because one missing helper often explains several, and the row's
     own line is untyped (it lives inside the Title), so selecting by it would
@@ -544,9 +544,9 @@ def red_tc_values(root, row):
         import census
     except Exception as exc:  # a stripped-down copy without the sibling
         return None, "the census producer is unavailable ({})".format(exc)
-    lines_in = census.red_tc_census(root)
+    lines_in = census.evidence_gap_census(root)
     if not lines_in:
-        return None, "the red-TC census is now empty — there is nothing to judge"
+        return None, "the evidence-gap census is now empty — there is nothing to judge"
     tc_rows = {
         r.get("TC-ID"): r
         for r in spine_carrier.load(Path(root) / amendment_brief.TC_REGISTRY, "TC-ID")
@@ -554,7 +554,7 @@ def red_tc_values(root, row):
     lines = []
     targets = set()
     for line in lines_in:
-        parsed = census.parse_red_tc(line)
+        parsed = census.parse_evidence_gap(line)
         if parsed is None:
             return None, "a census line did not parse: {!r}".format(line)
         tc_id, tc_targets = parsed
@@ -608,27 +608,27 @@ def _spine_excerpt(root, ids):
 
 # The briefs whose `{questions}` slot the home fills; the combined sitting
 # composes both, so the home governs it too.
-QUESTION_BRIEFS = ("amendment", "first-approval", COMBINED)
+QUESTION_BRIEFS = ("amendment", "first-acceptance", COMBINED)
 
-# --- the first-approval brief (owner ruling 2026-09-01) -----------------------
+# --- the first-acceptance brief (operator ruling 2026-09-01) -----------------------
 
 
 def _render_chain(root, entry, scope, srs, llrs_by_sr, tcs_by_ref, registries):
-    """One SR chain rendered for the first-approval brief:
+    """One SR chain rendered for the first-acceptance brief:
     `(lines, has_a_row_of_this_session's, the_Drafted_ids_seen)`.
 
-    Extracted from `first_approval_values` rather than nested in it because the
+    Extracted from `first_acceptance_values` rather than nested in it because the
     per-row judgement is where every rule of this arm lands — the three-way
     intersection, the label that says WHY a row is not yours, and the registry
     the act will name — and the assembler around it is then just "walk the model,
     keep the chains that hold one of mine, refuse if none do". `registries` is
-    accumulated through rather than returned so the caller's `--approves` set has
+    accumulated through rather than returned so the caller's `--accepts` set has
     one home; a chain the caller then DROPS contributes none, because a dropped
     chain has no `yours` row by construction."""
     lines = ["- chain of {} — {}".format(entry["id"], entry.get("title") or "")]
     import trace as tr
 
-    body, mine, drafted_ids = _render_approval_rows(
+    body, mine, drafted_ids = _render_acceptance_rows(
         root,
         tr.spine_chain(entry["id"], srs, llrs_by_sr, tcs_by_ref),
         scope,
@@ -637,7 +637,7 @@ def _render_chain(root, entry, scope, srs, llrs_by_sr, tcs_by_ref, registries):
     return lines + body, mine, drafted_ids
 
 
-def _render_approval_rows(root, rows, scope, registries):
+def _render_acceptance_rows(root, rows, scope, registries):
     """Apply the same scope and authority to requirement and assumption chains."""
     import trace as tr
 
@@ -649,7 +649,7 @@ def _render_approval_rows(root, rows, scope, registries):
         # Nothing downstream can promote a row that fails any of the three,
         # because `yours` is what mints both the label and the registry.
         in_scope = rid in scope
-        yours = drafted and in_scope and amendment_brief._loop_approves(root, kind)
+        yours = drafted and in_scope and amendment_brief._loop_accepts(root, kind)
         if drafted:
             drafted_ids.add(rid)
         lines.append(
@@ -662,9 +662,9 @@ def _render_approval_rows(root, rows, scope, registries):
         ]
         if yours:
             mine = True
-            # The ROWS each `--approves` token covers, not just that the token
+            # The ROWS each `--accepts` token covers, not just that the token
             # is owed. `{registries}` is fixed at composition time while the
-            # approve/return split exists only after the verdict, so a mixed
+            # accept/return split exists only after the verdict, so a mixed
             # batch has to be able to DROP a token whose rows it returned in
             # full — and dropping is only mechanical if the brief says which
             # rows a token stands for. Accumulated through, same as before.
@@ -680,7 +680,7 @@ def _render_approval_rows(root, rows, scope, registries):
 
 
 def _assumption_case_chain(root, srs, tcs, cases):
-    """Reuse the assumption approval view for observation cases' premises.
+    """Reuse the assumption acceptance view for observation cases' premises.
 
     Implements: SR-146, SR-215, LLR-295
     """
@@ -707,7 +707,7 @@ def _assumption_case_chain(root, srs, tcs, cases):
 
 
 def _render_assumption_cases(root, reg, scope, registries):
-    """Assumption-only cases bypass the SR forest, retaining its approval rules.
+    """Assumption-only cases bypass the SR forest, retaining its acceptance rules.
 
     Implements: SR-146, LLR-295
     """
@@ -718,7 +718,7 @@ def _render_assumption_cases(root, reg, scope, registries):
         and not case.get("Verifies")
         and case["TC-ID"] in scope
     ]
-    body, mine, awaiting = _render_approval_rows(
+    body, mine, awaiting = _render_acceptance_rows(
         root, [("TC", case["TC-ID"], case) for case in cases], scope, registries
     )
     if not mine:
@@ -726,44 +726,44 @@ def _render_assumption_cases(root, reg, scope, registries):
     return _assumption_case_chain(root, reg.srs, reg.tcs, cases) + body, awaiting
 
 
-def first_approval_values(root, row):
+def first_acceptance_values(root, row):
     """`({chain, baseline, questions}, None)` for the spine rows a lane
-    authored `Drafted` and did not approve, or `(None, reason)`; the values
+    authored `Drafted` and did not accept, or `(None, reason)`; the values
     also report the SRs marked as this session's under
     `plan_briefs.HAT_PARENTS`, never a slot.
 
-    THE APPROVAL ACT IS AN INDEPENDENT ADJUDICATOR'S, in the authoring lane or
-    on trunk (owner ruling 6, 2026-10-07): a lane's merge is refused if it
-    flips a `Status` or writes the approval record with no accepted verdict
-    judging those rows behind it (`integrate._approval_act_refusal`), so rows
+    THE ACCEPTANCE ACT IS AN INDEPENDENT ADJUDICATOR'S, in the authoring lane or
+    on trunk (operator ruling 6, 2026-10-07): a lane's merge is refused if it
+    flips a `Status` or writes the acceptance record with no recorded verdict
+    judging those rows behind it (`integrate._acceptance_act_refusal`), so rows
     a lane left `Drafted` are waiting on a session like the one this brief
-    composes. Two reasons the owner gave.
-    CONTEXT: approving means holding the row's WHOLE chain, which one work item
+    composes. Two reasons the operator gave.
+    CONTEXT: accepting means holding the row's WHOLE chain, which one work item
     does not — so `{chain}` is the whole chain, not the changed cells.
     CONCURRENCY: an adjudication lane runs alone, so the act cannot race a
     second one.
 
     WHICH ROWS IS THE ROW'S OWN `Adjudicates` SCOPE, INTERSECTED with
-    `trace.reattest_model`'s `approve` half — the same model behind `trace.py
-    --approve` and `open-items.html`, so the judge, the brief and the owner
+    `trace.reaccept_model`'s `accept` half — the same model behind `trace.py
+    --accept` and `open-items.html`, so the judge, the brief and the operator
     surface cannot show three different pictures of one spine. Its `Drafted`
     selector is chain-wide (the OI-61-sitting widening), so a `Drafted` LLR
-    under an `Approved` SR is a first approval owed and no drift arm can see it
-    — a row below approval has made no claim to fall from.
+    under an `Accepted` SR is a first acceptance owed and no drift arm can see it
+    — a row below acceptance has made no claim to fall from.
 
     BOTH HALVES ARE LOAD-BEARING, and shipping only the second is the WI-572
     REVIEW-A finding this arm was rebuilt around. The model is REPO-WIDE: it
     walks every SR. Re-deriving from it alone gave this brief the whole repo's
     `Drafted` backlog rather than the rows the merge handed over — the mint
     named one row in its title and `## Context`, and the template then told the
-    session it held the approval authority for every row shown. Measured here
-    before the fix: 4 SR chains, 11 `[AWAITING FIRST APPROVAL]` rows and all
-    three spine registries in the derived `--approves` argument, from a mint of
+    session it held the acceptance authority for every row shown. Measured here
+    before the fix: 4 SR chains, 11 `[AWAITING FIRST ACCEPTANCE]` rows and all
+    three spine registries in the derived `--accepts` argument, from a mint of
     one row. That contradicts the doctrine this same change wrote (the merge
-    "MINTS a first-approval adjudication over the `Drafted` rows the lane handed
-    over") and the owner's own concurrency reason for moving the act to trunk:
-    the approval snapshot must not move across a workstream. It also
-    manufactured owner interrupts — a second merge's adjudication, minted while
+    "MINTS a first-acceptance adjudication over the `Drafted` rows the lane handed
+    over") and the operator's own concurrency reason for moving the act to trunk:
+    the acceptance snapshot must not move across a workstream. It also
+    manufactured operator interrupts — a second merge's adjudication, minted while
     the first was still queued, found nothing left and composed to a rule-3 HOLD.
 
     SO THE SCOPE IS A FACT THE ROW CARRIES (`wi_convert`'s `Adjudicates`
@@ -773,20 +773,20 @@ def first_approval_values(root, row):
     filtered out downstream — it is never constructible, because no code path
     turns a repo-wide `Drafted` row into a `yours` label. A row declaring NO
     scope REFUSES: an empty cell is an unstated boundary, and reading it as
-    "everything" is exactly the widening, so it fails toward the human.
+    "everything" is exactly the widening, so it fails toward the operator.
 
     WHAT IS RENDERED is the WHOLE CHAIN of each selected SR, through
     `trace.spine_chain` — NOT the model's own `rows`. That list carries only the
     rows that changed or are `Drafted`, which is the right answer to the
-    re-attest brief's question ("what must I re-bless?") and the wrong one to
+    re-accept brief's question ("what must I re-bless?") and the wrong one to
     this brief's: the settled parent and the passing sibling test ARE the
     evidence that a drafted row belongs where it sits. Rendering the model's
     subset here would have shipped a chain brief with the chain missing —
     plausible-looking, and exactly rule 2's failure.
 
     STILL RE-COMPUTED LIVE, never simply replayed from the mint
-    (`red_tc_values`' rule): the row was minted at a merge, and by the time a
-    session claims it another lane may have approved or withdrawn some of those
+    (`evidence_gap_values`' rule): the row was minted at a merge, and by the time a
+    session claims it another lane may have accepted or withdrawn some of those
     rows. A brief replaying the mint's listing would ask the judge to rule on a
     world that no longer exists — so a scope whose rows are all settled REFUSES
     here rather than composing a session whose whole evidence section is stale.
@@ -795,15 +795,15 @@ def first_approval_values(root, row):
     AND THE DIAL IS RE-APPLIED TO IT, which is the half the first cut missed
     (WI-572 REVIEW-A). `intake._released_drafted_rows` hands over only the rows
     on a rung the dial RELEASES, and this assembler re-derived the population
-    from `reattest_model` — which is dial-blind by design — without putting that
+    from `reaccept_model` — which is dial-blind by design — without putting that
     filter back. At any dial holding a spine rung (every dial above this repo's,
     including the shipped `DevStg-Release` default) the brief therefore rendered
-    the owner's HELD rows as this session's to approve and derived a
-    `--approves` argument for their registry: a prompt instructing an
-    adjudicator to perform a signature the owner owes. So `human_approves_spine`
+    the operator's HELD rows as this session's to accept and derived a
+    `--accepts` argument for their registry: a prompt instructing an
+    adjudicator to perform a signature the operator owes. So `operator_accepts_spine`
     is consulted PER CHAIN ROW here, from the same table the mint reads. The
     dial is checked as well as the scope, not instead of it: the mint filtered
-    by the dial AT THE MINT, and a dial the owner tightens afterwards must bind
+    by the dial AT THE MINT, and a dial the operator tightens afterwards must bind
     the act it has not yet authorised.
 
     AN OUT-OF-SCOPE OR HELD ROW IS STILL SHOWN, and shown as not yours. It is
@@ -811,12 +811,12 @@ def first_approval_values(root, row):
     is what a row must be judged against — but it is labelled, it contributes no
     registry, and an SR whose chain holds no row of this session's at all is
     dropped entirely. If nothing survives, this REFUSES: a brief whose every row
-    belongs to the owner or to another act is not this arm's question.
+    belongs to the operator or to another act is not this arm's question.
 
     The registries the RELEASED rows live in are still walked, for the tiers
-    whose questions `{questions}` carries. The act's `--approves` argument is
+    whose questions `{questions}` carries. The act's `--accepts` argument is
     no longer derived here: the sitting ends at its committed verdict, and the
-    later act turn derives it from the rows that verdict APPROVES
+    later act turn derives it from the rows that verdict ACCEPTS
     (`adjudicate_act`, WI-912).
 
     Implements: SR-146, LLR-167
@@ -836,8 +836,8 @@ def first_approval_values(root, row):
     reg = tr.load_registries(root / "docs")
     model = [
         entry
-        for entry in tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
-        if entry.get("kind") == "approve"
+        for entry in tr.reaccept_model(root, reg.srs, reg.llrs, reg.tcs)
+        if entry.get("kind") == "accept"
     ]
     # No early "the model is empty" return: an empty model is one way the
     # SCOPED population empties, and the refusal below names which of the three
@@ -862,24 +862,24 @@ def first_approval_values(root, row):
     awaiting |= drafted_here
     if not lines:
         # WHICH of the three filters emptied it, named. "Nothing to rule on" is
-        # a HOLD a human then has to diagnose, and the three causes take
+        # a HOLD an operator then has to diagnose, and the three causes take
         # opposite actions: the rows were ruled on already (drop the row), the
-        # owner holds their rung (sign, or move the dial), or the scope names
+        # operator holds their rung (sign, or move the dial), or the scope names
         # rows this spine no longer has (the mint and the tree disagree).
         live = sorted(scope & awaiting)
         if not live:
             return None, (
                 "none of the {} row(s) this adjudication was minted over ({}) is "
-                "still awaiting a first approval — they have been ruled on, "
+                "still awaiting a first acceptance — they have been ruled on, "
                 "withdrawn or renumbered since the mint, so its question no "
                 "longer has a subject".format(len(scope), ", ".join(sorted(scope)))
             )
         return None, (
             "every row in this adjudication's scope that still awaits a first "
-            "approval ({}) sits on a rung the declared gate authority HOLDS for "
-            "a human (`human_approval_through` = {}), so the signature is the "
-            "owner's and this arm has nothing to rule on".format(
-                ", ".join(live), ac.approval_through(root / "docs")
+            "acceptance ({}) sits on a rung the declared gate authority HOLDS for "
+            "an operator (`operator_accepts_through` = {}), so the signature is the "
+            "operator's and this arm has nothing to rule on".format(
+                ", ".join(live), ac.acceptance_through(root / "docs")
             )
         )
     questions, why = amendment_brief.tier_questions(_judged_tiers(registries))
@@ -888,7 +888,7 @@ def first_approval_values(root, row):
     # Each registry the act would copy, with the commit that last wrote ITS
     # copy rather than the directory's newest write (another registry's copy).
     baseline = (
-        "{}, each registry this act copies as last written:\n{}\nApproving "
+        "{}, each registry this act copies as last written:\n{}\nAccepting "
         "these rows moves it for the registries the act flips rows in and for "
         "no others (WI-571), so an off-spine census computed against it "
         "survives the act.".format(
@@ -896,7 +896,7 @@ def first_approval_values(root, row):
             amendment_brief._copy_stamp_lines(root, sorted(registries)),
         )
         if baseline_snapshot.exists(root)
-        else "{} does not exist yet — approving these rows would be this "
+        else "{} does not exist yet — accepting these rows would be this "
         "repo's FIRST signing, which `--seed` creates.".format(
             baseline_snapshot.SNAPSHOT_DIR
         )
@@ -907,7 +907,7 @@ def first_approval_values(root, row):
         # The questions for the tiers of the rows marked as this session's,
         # from the one home (`tier_questions`).
         "questions": questions,
-        # The SRs awaiting a first approval make this a decomposition round.
+        # The SRs awaiting a first acceptance make this a decomposition round.
         plan_briefs.HAT_PARENTS: (
             list(registries.get(amendment_brief._REGISTRY_OF["SR"], ())),
             (),
@@ -917,8 +917,8 @@ def first_approval_values(root, row):
 
 
 def _judged_tiers(registries):
-    """The chain tiers of the rows a first approval marks as this session's:
-    the tiers whose registry its `--approves` walk collected.
+    """The chain tiers of the rows a first acceptance marks as this session's:
+    the tiers whose registry its `--accepts` walk collected.
 
     Implements: SR-146, LLR-167"""
     return {
@@ -933,22 +933,22 @@ def _chain_label(drafted, in_scope, yours):
     when it is not.
 
     Three states, not two, and the reason is the point. A `Drafted` row can fail
-    to be yours because the OWNER holds its rung, or because it belongs to
+    to be yours because the OPERATOR holds its rung, or because it belongs to
     ANOTHER act's scope, and those are opposite instructions: the first waits
     for a signature, the second is already somebody's. Collapsing them into one
-    "HELD FOR THE OWNER" line would have told a session to wait on the owner for
+    "HELD FOR THE OPERATOR" line would have told a session to wait on the operator for
     a row a sibling adjudication is about to rule on — a true label for the
     wrong reason is still a false brief (rule 2)."""
     if not drafted:
-        return "approved"
+        return "accepted"
     if yours:
-        return "AWAITING FIRST APPROVAL"
+        return "AWAITING FIRST ACCEPTANCE"
     if not in_scope:
         return (
-            "AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE, ANOTHER "
+            "AWAITING FIRST ACCEPTANCE - OUTSIDE THIS ACT'S SCOPE, ANOTHER "
             "ADJUDICATION'S ROW; SHOWN AS CHAIN EVIDENCE ONLY"
         )
-    return "AWAITING FIRST APPROVAL - HELD FOR THE OWNER, NOT YOURS TO FLIP"
+    return "AWAITING FIRST ACCEPTANCE - HELD FOR THE OPERATOR, NOT YOURS TO FLIP"
 
 
 # --- the consolidation brief (the 2026-09-02 restructure plan §1.4) -----------
@@ -981,10 +981,10 @@ def consolidate_values(root, row):
     `(None, reason)`.
 
     THE CLUSTER IS THE ROW'S OWN `Adjudicates` CELL, and the population is
-    RE-DERIVED LIVE against it — the two halves `first_approval_values` was
+    RE-DERIVED LIVE against it — the two halves `first_acceptance_values` was
     rebuilt around, for the same two reasons. The cell BOUNDS the question (a
     live re-derivation with no scope to intersect asks a wider question than the
-    mint asked), and the live read ANSWERS it (`red_tc_values`' rule: brief the
+    mint asked), and the live read ANSWERS it (`evidence_gap_values`' rule: brief the
     world the judge is actually in, so a cluster whose overlap dissolved between
     mint and claim refuses rather than briefing a session about a contradiction
     that no longer exists).
@@ -1129,7 +1129,7 @@ def _prior_lines(cons, rows, bodies):
     from a verdict file - rule 1, a judge's evidence is a record and not a
     claim. Each absorbed row says whether a judgement enacted it or a hand
     commit did (`cons.prior_line`), because the brief's "overturning one pages
-    the owner" is true only of the first."""
+    the operator" is true only of the first."""
     prior = cons.prior_absorbs(rows)
     if not prior:
         return NO_PRIOR
@@ -1150,7 +1150,7 @@ REJUDGE_CELLS = ("Verifies", "Method", "Expected", "MaxAge")
 def rejudge_values(root, row):
     """`({case, reason, tc}, None)` for a re-judge row, or `(None, reason)`.
 
-    THE DECISION IS RE-RUN LIVE (`red_tc_values`' rule). The row's typed
+    THE DECISION IS RE-RUN LIVE (`evidence_gap_values`' rule). The row's typed
     `Adjudicates` cell names its one case, and `rejudge.due_cases` at HEAD, the
     decision that filed it, says why it is due now; a case re-judged since the
     mint refuses here rather than briefing a session to judge it twice. A case
@@ -1291,7 +1291,7 @@ def done_when_values(root, row):
     one work item this row's `Adjudicates` cell names, whose Done-when differs
     from the one it was claimed with, or `(None, reason)`.
 
-    Re-derived live from git (`red_tc_values`' rule): a change since blessed
+    Re-derived live from git (`evidence_gap_values`' rule): a change since blessed
     away, or reverted, refuses rather than briefing a judge on a text that is
     no longer the lane's. The digest is `kitlib.done_when.digest`, the one the
     hold points compute, so the verdict line binds exactly the text shown.
@@ -1483,10 +1483,10 @@ def _render_finding(finding):
 # relaxing the fill.
 _ASSEMBLERS = {
     "amendment": amendment_brief.amendment_values,
-    "first-approval": first_approval_values,
+    "first-acceptance": first_acceptance_values,
     "consolidate": consolidate_values,
     "disposition": disposition_values,
-    "red-tc": red_tc_values,
+    "evidence-gap": evidence_gap_values,
     rejudge.BRIEF: rejudge_values,
     DONE_WHEN: done_when_values,
     # Composes the others, so it is handed the verdict path and the overrides
@@ -1560,7 +1560,7 @@ def _add_act_template(classes, prompt_templates, paths, texts):
 def compose(root, row, verdict_path, prompt_templates=None, sitting=None):
     """`(prompt_text, None)` when this adjudication row's declared brief could
     be filled IN FULL, else `(None, reason)` — on which the caller HOLDS the
-    row for a human (rule 3), never quietly downgrading it to a build.
+    row for an operator (rule 3), never quietly downgrading it to a build.
 
     An operator override wired through `--prompt-map` under the brief's prompt
     key wins over the shipped template, exactly as it does for the reviewer and

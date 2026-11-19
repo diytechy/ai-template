@@ -58,13 +58,13 @@ TEST_CASES = (
     "Inputs,MaxAge\n"
     "TC-000,SR-001,Inspection,the example,Release,x,No,docs/m.md,Drafted,"
     "src/a.txt,30\n"
-    "TC-001,SR-001,Unit,call add,Smoke,x,Yes,tests/t.py,Approved,,\n"
+    "TC-001,SR-001,Unit,call add,Smoke,x,Yes,tests/t.py,Accepted,,\n"
     "TC-002,SR-001,Inspection,a reader reads the page,Release,"
-    "the page reads,No,docs/m.md,Approved,src/a.txt;src/b.txt,30\n"
+    "the page reads,No,docs/m.md,Accepted,src/a.txt;src/b.txt,30\n"
     "TC-003,SR-001,Inspection,a reader reads the other page,Release,"
-    "the other page reads,No,docs/m.md,Approved,src/c.txt,30\n"
+    "the other page reads,No,docs/m.md,Accepted,src/c.txt,30\n"
     "TC-004,SR-001,Demonstration,an adopter's first week,Release,"
-    "the week goes well,No,docs/m.md,Approved,,30\n"
+    "the week goes well,No,docs/m.md,Accepted,,30\n"
 )
 
 
@@ -661,7 +661,7 @@ def test_the_release_subcommand_mints_for_an_expired_result_once(tmp_path, capsy
         record(root, tc, observed=observed, expires=expires, inputs=inputs.get(tc))
     _commit(root, "judged")
     # An unrelated uncommitted edit in the checkout, outside the mint's scope.
-    _write(root, "seed.txt", "the owner's uncommitted edit\n")
+    _write(root, "seed.txt", "the operator's uncommitted edit\n")
     code = intake.main(["--root", str(root), "rejudge", "--checkpoint", "release"])
     assert code == 0, capsys.readouterr()
     minted = _queued_rejudges(root)
@@ -669,7 +669,7 @@ def test_the_release_subcommand_mints_for_an_expired_result_once(tmp_path, capsy
     assert minted[0]["SafetyClass"] == "adjudication"
     # The mint is a trunk commit, and it did not sweep in or discard the edit.
     assert (root / "seed.txt").read_text(encoding="utf-8") == (
-        "the owner's uncommitted edit\n"
+        "the operator's uncommitted edit\n"
     )
     assert "seed.txt" in _git(root, "status", "--porcelain")
     assert "seed.txt" not in _git(root, "show", "--name-only", "--format=", "HEAD")
@@ -714,7 +714,7 @@ def test_the_release_checklist_carries_the_required_rejudge_item(tmp_path):
 
 def test_a_minted_rejudge_row_composes_its_brief_and_demands_its_verdict(tmp_path):
     """The kind the draft declares requires a routed brief: an adjudication row
-    declaring a brief the kit cannot compose is held for a human, so the
+    declaring a brief the kit cannot compose is held for an operator, so the
     re-judge brief is filled from the live decision and ends in a typed
     verdict line."""
     root, _ = judged_repo(tmp_path, expired=("TC-003",))
@@ -755,7 +755,7 @@ def _escape_repo(tmp_path, outside):
         "TC-ID,Verifies,Level,Method,Tier,Expected,Automated,Evidence,Status,"
         "Inputs,MaxAge\n"
         "TC-002,SR-001,Inspection,a reader reads,Release,it reads,No,docs/m.md,"
-        "Approved,src/a.txt;{},30\n".format(outside),
+        "Accepted,src/a.txt;{},30\n".format(outside),
     )
     return root
 
@@ -814,7 +814,7 @@ def _many_repo(tmp_path):
         for rel in inputs[tc]:
             _write(root, rel, "as judged\n")
         rows.append(
-            "{},SR-001,Inspection,read {},Release,x,No,docs/m.md,Approved,{},30".format(
+            "{},SR-001,Inspection,read {},Release,x,No,docs/m.md,Accepted,{},30".format(
                 tc, i, ";".join(inputs[tc])
             )
         )
@@ -907,7 +907,7 @@ def test_the_release_mint_runs_the_mint_checks(tmp_path, monkeypatch):
 
 def test_a_pre_staged_unrelated_edit_survives_the_release_mint(tmp_path, capsys):
     root, _ = judged_repo(tmp_path, expired=("TC-003",))
-    _write(root, "seed.txt", "the owner's STAGED edit\n")
+    _write(root, "seed.txt", "the operator's STAGED edit\n")
     _git(root, "add", "seed.txt")
     _write(root, "src/c.txt", "an unstaged edit to an input\n")
     index = _git(root, "diff", "--cached", "--binary", "HEAD", "--", "seed.txt")
@@ -993,7 +993,7 @@ def test_a_dotdot_that_stays_inside_is_read_as_its_normal_path(tmp_path):
         "TC-ID,Verifies,Level,Method,Tier,Expected,Automated,Evidence,Status,"
         "Inputs,MaxAge\n"
         "TC-002,SR-001,Inspection,a reader reads,Release,it reads,No,docs/m.md,"
-        "Approved,{},30\n".format(name),
+        "Accepted,{},30\n".format(name),
     )
     assert record_observation.inputs_digest(
         root, [name]
@@ -1074,7 +1074,7 @@ def _linked_repo(tmp_path, declared, link, target):
         "TC-ID,Verifies,Level,Method,Tier,Expected,Automated,Evidence,Status,"
         "Inputs,MaxAge\n"
         "TC-002,SR-001,Inspection,a reader reads,Release,it reads,No,docs/m.md,"
-        "Approved,{},30\n".format(declared),
+        "Accepted,{},30\n".format(declared),
     )
     _commit(root, "the case")
     _commit_symlink(root, link, target)

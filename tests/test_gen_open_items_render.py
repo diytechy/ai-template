@@ -27,7 +27,7 @@ def test_word_diff_marks_only_what_moved(tmp_path):
 
 def test_open_items_theme_tokens_match_the_dashboard():
     """A drift guard, not an extraction (the WI-291 precedent, and the F5 ruling
-    against a shared `_kitcommon`): the two owner surfaces must read as one
+    against a shared `_kitcommon`): the two operator surfaces must read as one
     system, so every shared theme token must carry the same value the dashboard
     emits.
 
@@ -35,7 +35,7 @@ def test_open_items_theme_tokens_match_the_dashboard():
     `assert value in CSS` sat OUTSIDE the token loop (so it checked one token per
     theme), and it compared against a module-level `THEME` dict that nothing
     rendered from — nine of the twelve EMITTED tokens were rewritten, including
-    dark `--text:#444444`, and it stayed green. Both halves are now closed: the
+    dark `--text:#444444`, and it kept passing. Both halves are now closed: the
     values are parsed out of the CSS the page actually ships
     (`gen_open_items.theme_tokens`), and every token is asserted."""
     gi = load_script("gen_open_items")
@@ -99,8 +99,8 @@ def test_a3_diff_marks_keep_a_shape_cue_not_colour_alone(tmp_path):
 
 def test_unsafe_link_target_is_not_clickable():
     """122-REVIEW-A: `md_inline` emitted a raw href with no scheme allow-list, so
-    an agent-authored cell could ship a `javascript:` URL onto the one document a
-    human reads. The text still shows — degraded, not dropped."""
+    an agent-authored cell could ship a `javascript:` URL onto the one document the
+    operator reads. The text still shows — degraded, not dropped."""
     gi = load_script("gen_open_items")
     out = gi.md_inline("[click](javascript:alert(1)) and [ok](docs/x.md)")
     assert 'href="javascript:' not in out
@@ -112,7 +112,7 @@ def test_unsafe_link_target_is_not_clickable():
 
 
 def test_brief_cells_render_BLOCK_structure_not_one_wall():
-    """The owner, 2026-08-12: the briefs arrived as "huge blocks of single
+    """The operator, 2026-08-12: the briefs arrived as "huge blocks of single
     bloated paragraphs". They were not written that way — `md_inline` renders a
     cell as ONE run of text, so paragraphs, bullets and sub-headings were
     flattened on the way to the screen. A RENDERING defect, so the fix belongs
@@ -138,7 +138,7 @@ def test_brief_cells_render_BLOCK_structure_not_one_wall():
 def test_block_renderer_still_escapes_and_still_refuses_unsafe_links():
     """The block path must not become an escape hatch around the two guarantees
     the inline path already makes — 122-REVIEW-A's `javascript:` refusal is on
-    the one document a human reads, and it has to hold per-line too."""
+    the one document the operator reads, and it has to hold per-line too."""
     gi = load_script("gen_open_items")
     out = gi.md_block("- <script>alert(1)</script>\n- [click](javascript:alert(1))")
     assert "<script>" not in out and "&lt;script&gt;" in out
@@ -160,7 +160,7 @@ def test_unknown_block_syntax_degrades_to_visible_text():
 def test_whitespace_only_edit_does_not_fuse_neighbours():
     """122-REVIEW-A: `word_diff` dropped whitespace-only opcodes, so "a  b" ->
     "a b" rendered as "ab" — the reconstructed after-text must be the cell the
-    owner is actually blessing."""
+    operator is actually blessing."""
     gi = load_script("gen_open_items")
     out = gi.word_diff("a  b", "a b")
     assert re.sub(r"<[^>]+>", "", out) == "a b", out
@@ -177,7 +177,7 @@ def test_normalize_survives_the_carrier_change_and_this_is_why(tmp_path):
 
     NOT RETIRED, and this is the load-bearing half: the guard also covers the
     *checkout's own* line endings. A clone with `core.autocrlf` on stores the
-    generated HTML with CRLF, and a byte-exact freshness compare would then red
+    generated HTML with CRLF, and a byte-exact freshness compare would then fail
     every fresh worktree — which is not a registry fact at all and is untouched
     by which carrier the registry uses. Removing `normalize` would re-break the
     WI-322 rework's detached view worktree.
@@ -227,7 +227,7 @@ def test_a_fragment_declares_the_open_items_it_deferred(tmp_path):
     assert decls[0]["file"] == "docs/log.d/WI-1-ids.md" and decls[0]["line"] == 3
 
 
-def test_a_declared_deferral_must_name_a_row_the_owner_has_still_to_rule(tmp_path):
+def test_a_declared_deferral_must_name_a_row_the_operator_has_still_to_rule(tmp_path):
     gi = load_script("gen_open_items")
     root = repo(tmp_path, oi_rows=PENDING_OI + RULED_OI)
     _log_d(root, "WI-1-x.md", "## s\n\nDeferred open items: OI-4, OI-5, OI-77\n")
@@ -401,36 +401,36 @@ def test_an_ABSENT_registry_with_live_entries_is_a_finding_not_a_silence(tmp_pat
     assert gi.deferral_findings(root, None) == []
 
 
-def test_a_verdict_reattestation_stays_listed_on_the_owner_surface(tmp_path):
+def test_a_verdict_reacceptance_stays_listed_on_the_operator_surface(tmp_path):
     """OI-100 (WI-791): on a held rung an adjudicator's CLARITY verdict carries
-    the owner's signature over, so every act that names a verdict stays listed
-    on the owner's surface, for audit after the fact. An act naming no verdict
-    is the owner's own or a released rung's, and is not listed here.
+    the operator's signature over, so every act that names a verdict stays listed
+    on the operator's surface, for audit after the fact. An act naming no verdict
+    is the operator's own or a released rung's, and is not listed here.
 
     Implements: TC-123
     """
     gi = load_script("gen_open_items")
     acts = [
-        {"seq": 1, "date": "2026-10-03", "approved": ["SR-001"], "reattested": []},
+        {"seq": 1, "date": "2026-10-03", "accepted": ["SR-001"], "reaccepted": []},
         {
             "seq": 2,
             "date": "2026-10-04",
-            "approved": [],
-            "reattested": ["SN-009"],
+            "accepted": [],
+            "reaccepted": ["SN-009"],
             "verdict": "docs/reviews/v.md",
         },
     ]
-    block = gi.verdict_reattest_block(acts)
+    block = gi.verdict_reaccept_block(acts)
     assert "SN-009" in block and "docs/reviews/v.md" in block, block
     assert "act 2" in block and "act 1" not in block, block
-    assert "None recorded" in gi.verdict_reattest_block(acts[:1])
+    assert "None recorded" in gi.verdict_reaccept_block(acts[:1])
     repo(tmp_path, oi_rows=PENDING_OI)
     page = gi.render(tmp_path)
-    assert "re-attested on an adjudicator" in page.lower(), page
+    assert "re-accepted on an adjudicator" in page.lower(), page
 
 
 def test_the_verdict_audit_list_is_newest_first():
-    """LLR-118: the owner's audit list shows the newest verdict-naming act
+    """LLR-118: the operator's audit list shows the newest verdict-naming act
     first.
 
     Implements: TC-123
@@ -440,17 +440,17 @@ def test_the_verdict_audit_list_is_newest_first():
         {
             "seq": 2,
             "date": "2026-10-03",
-            "approved": [],
-            "reattested": ["SN-003"],
+            "accepted": [],
+            "reaccepted": ["SN-003"],
             "verdict": "docs/reviews/a.md",
         },
         {
             "seq": 5,
             "date": "2026-10-04",
-            "approved": [],
-            "reattested": ["SN-009"],
+            "accepted": [],
+            "reaccepted": ["SN-009"],
             "verdict": "docs/reviews/b.md",
         },
     ]
-    block = gi.verdict_reattest_block(acts)
+    block = gi.verdict_reaccept_block(acts)
     assert block.index("act 5") < block.index("act 2"), block

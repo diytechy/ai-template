@@ -5,7 +5,7 @@ The property under test throughout is the trust model, not the file format. A
 committed claim that the declared suite passed is believable only if (a) nothing
 but the harness can write it, (b) it is bound to the tree it was measured on so
 it cannot outlive that tree, and (c) going stale is LOUD — the rung becomes
-underivable AND the freshness check reds — rather than a quiet ride. Each of the
+underivable AND the freshness check fails — rather than a quiet ride. Each of the
 three has its own arm below, and the staleness arm is driven from both
 directions (a spine edit and a source edit), because either alone would leave the
 other invisible.
@@ -151,7 +151,7 @@ def test_an_outcome_other_than_pass_is_refused(tmp_path):
             lambda r: (r / "docs" / "stack.ini").write_text(
                 "[paths]\nsrc = src\ntests = tests\n[product]\ntest = pytest -k nothing\n"
             ),
-            id="the-declared-bar-itself",
+            id="the-declared-checks-themselves",
         ),
         pytest.param(
             lambda r: (
@@ -166,7 +166,7 @@ def test_an_outcome_other_than_pass_is_refused(tmp_path):
 )
 def test_the_claim_is_bound_to_the_TREE_it_was_measured_on(tmp_path, edit):
     """The WI-492 precedent, applied: value-bound, never space-bound. A record
-    that survived any of these edits would be a green measured on a tree that no
+    that survived any of these edits would be a pass measured on a tree that no
     longer exists — the exact failure the stage unification exists to prevent.
 
     Implements: TC-187
@@ -273,7 +273,7 @@ def test_the_binding_does_not_fold_the_record_itself(tmp_path):
 SR = {
     "SR-ID": "SR-001",
     "Status": "Founded",
-    "Verification": "Test",
+    "VerificationMethod": "Test",
     "SN-Refs": "SN-001",
     "Phase": "1",
 }
@@ -300,8 +300,8 @@ def test_a_settled_spine_reaches_RELEASE_only_with_the_evidence_verdict():
 
 def test_the_evidence_argument_cannot_lift_an_UNSETTLED_spine():
     """Evidence is the LAST condition, not an override. A repo whose test cases
-    are still Drafted does not reach Release because a suite went green — the
-    green was measured over a spine that is still being written.
+    are still Drafted does not reach Release because a suite passed — the
+    pass was measured over a spine that is still being written.
 
     Implements: TC-187
     """
@@ -357,7 +357,7 @@ def _fake_harness(exit_code):
     ]
 
 
-def test_a_GREEN_run_writes_a_record_that_HOLDS(tmp_path, monkeypatch):
+def test_a_PASSING_run_writes_a_record_that_HOLDS(tmp_path, monkeypatch):
     """Implements: TC-186"""
     root = _repo(tmp_path)
     monkeypatch.setattr(PRODUCER, "harness_command", _fake_harness(0))
@@ -365,9 +365,9 @@ def test_a_GREEN_run_writes_a_record_that_HOLDS(tmp_path, monkeypatch):
     assert kitstage.evidence_verdict(root, memo=None)[0] is True
 
 
-def test_a_RED_run_writes_NOTHING(tmp_path, monkeypatch):
+def test_a_FAILING_run_writes_NOTHING(tmp_path, monkeypatch):
     """There is no `outcome = fail` state and no flag that records without
-    running: a red run leaves the committed state exactly as it was (OI-30 D2 —
+    running: a failing run leaves the committed state exactly as it was (OI-30 D2 —
     only the harness's own exit may be the source of the claim).
 
     Implements: TC-186
@@ -378,7 +378,7 @@ def test_a_RED_run_writes_NOTHING(tmp_path, monkeypatch):
     assert not (root / kitevidence.EVIDENCE_FILE).exists()
 
 
-def test_a_RED_run_does_not_overwrite_an_existing_record(tmp_path, monkeypatch):
+def test_a_FAILING_run_does_not_overwrite_an_existing_record(tmp_path, monkeypatch):
     """Implements: TC-186"""
     root = _repo(tmp_path)
     monkeypatch.setattr(PRODUCER, "harness_command", _fake_harness(0))
@@ -456,7 +456,7 @@ def test_the_binding_written_is_the_one_the_reader_recomputes(tmp_path, monkeypa
 
 def test_the_shipped_harness_the_driver_names_actually_exists():
     """Not a unit-test artifact: the shipped driver spawns the kit's own
-    `check.py`, so a rename of the harness reddens here rather than at an
+    `check.py`, so a rename of the harness fails here rather than at an
     adopter's first attempt to earn the rung.
 
     Implements: TC-186

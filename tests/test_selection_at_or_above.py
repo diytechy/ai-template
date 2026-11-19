@@ -1,6 +1,6 @@
 """Check selection is AT OR ABOVE the derived stage (OI-51, ruled 2026-08-21).
 
-THE OWNER'S RULE: a step runs because the repo IS AT OR ABOVE the rung the step
+THE OPERATOR'S RULE: a step runs because the repo IS AT OR ABOVE the rung the step
 becomes relevant at — *"when is it relevant for me to run these checks"* — never
 because some earlier bar was cleared.
 
@@ -17,7 +17,7 @@ So the C-01 regression scenario the review asked for is driven here at the
 SELECTION level, which is where it now lives. The floor's own honesty tripwire
 (`test_the_floor_is_dormant_for_the_BUILT_IN_product_steps_and_says_so`) had a
 successor obligation written into it — *"which bar those three belong at is a
-policy question with an owner ruling already sitting on it (OI-51); this test
+policy question with an operator ruling already sitting on it (OI-51); this test
 exists so nobody reads the floor as having fixed it"* — and
 `test_the_three_built_in_product_steps_are_REACHABLE_from_a_derived_value` below
 is that obligation discharged.
@@ -62,7 +62,7 @@ def _mature_frame_free(root):
     (rung 1) and `arch_incomplete` (rung 3) — and each applies only when its
     registry FILE exists (a project that never declares a boundary is not held at
     DevStg-Boundary forever). A scaffold ships `external.toml` and
-    `components.toml` carrying no approved crossing or component, which is
+    `components.toml` carrying no accepted crossing or component, which is
     honestly "the frame is in work", so a scaffold with a perfectly decomposed
     spine still reads DevStg-Boundary and floors to DevStg-Reqs.
 
@@ -159,12 +159,12 @@ def test_the_three_built_in_product_steps_are_REACHABLE_from_a_derived_value(
     SLICE 3 CHANGED THE RUNG THIS REACHES, AND THE PREVIOUS TEXT PREDICTED IT.
     It read: "That the rung actually reached is Release rather than Impl is
     honest and known: rung 6 is vacant under today's closed Status enum, which
-    is why the owner's rule had to be 'in or above' rather than 'in', and slice
+    is why the operator's rule had to be 'in or above' rather than 'in', and slice
     3 re-discriminates the ladder." It did. A settled spine now lands ON the
     threshold rather than above it — the fix is the same size either way, but
     the reading is no longer "nothing in work" for a repo that is being built.
     `at_or_above` is still asserted below, because the RULE is unchanged: the
-    owner's "in or above" survives the vacancy closing."""
+    operator's "in or above" survives the vacancy closing."""
     _mature_frame_free(scaffold)
     proc = run_py([SCRIPTS / "derive_stage.py", "--root", "."], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -267,46 +267,26 @@ def test_a_declared_step_names_its_rung_with_from_stage(scaffold, capsys):
     assert declared["product-canary"] == _ladder.STAGE_REQS
 
 
-def test_the_retired_gates_list_translates_to_the_rung_it_EFFECTIVELY_meant(
-    tmp_path, capsys
-):
-    """`gates = DevStg-Tests` becomes `from-stage = DevStg-Impl`, not
-    `DevStg-Arch`, and the difference is the whole reason the translation is a
-    table rather than a span lookup.
-
-    A `gates =` list named BARS. The bar was a MIN over every in-scope row, so
-    `DevStg-Tests` was reached only by a spine already fully decomposed and TC'd
-    — which is the DevStg-Impl RUNG, not the DevStg-Arch rung that merely opens
-    that bar's span. Translating to the span's floor would silently start running
-    an adopter's step three rungs early, on a repo that has not built what the
-    step grades."""
-    ini = tmp_path / "stack.ini"
-    ini.write_text(
-        "[step:legacy]\ncommand = {py} -c pass\ngates = DevStg-Tests DevStg-Impl\n"
-        "[step:legacy-low]\ncommand = {py} -c pass\ngates = DevStg-Reqs\n",
-        encoding="utf-8",
-    )
-    profile = check.load_profile(ini)
-    check._LEGACY_GATES_WARNED.clear()
-    declared = {s[0]: s[3] for s in check.extra_steps(profile, {"py": "python"})}
-    assert declared["legacy"] == _ladder.STAGE_IMPL
-    assert declared["legacy-low"] == _ladder.STAGE_NEEDS
-    notice = capsys.readouterr().err
-    assert "RETIRED `gates =`" in notice
-    assert "from-stage = DevStg-Impl" in notice
-
-
-def test_declaring_both_spellings_fails_loudly(tmp_path):
-    ini = tmp_path / "stack.ini"
-    ini.write_text(
-        "[step:both]\ncommand = {py} -c pass\ngates = DevStg-Impl\n"
+def test_the_retired_gates_list_is_refused_naming_the_migrator(tmp_path):
+    """`gates =` is not read (D11), and not ignored either: a list naming the
+    requirements stage ran its step from `DevStg-Needs`, so reading it as
+    absent would silently move the step to the `DevStg-Impl` default. The
+    refusal names the section, the current key and the vocabulary migrator,
+    which rewrites the list as the one stage it meant. Beside `from-stage` it
+    is refused the same way."""
+    for text in (
+        "[step:legacy]\ncommand = {py} -c pass\ngates = DevStg-Reqs\n",
+        "[step:legacy]\ncommand = {py} -c pass\ngates = DevStg-Impl\n"
         "from-stage = DevStg-Reqs\n",
-        encoding="utf-8",
-    )
-    profile = check.load_profile(ini)
-    with pytest.raises(SystemExit) as exc:
-        check.extra_steps(profile, {"py": "python"})
-    assert "both `from-stage` and the retired `gates`" in str(exc.value)
+    ):
+        ini = tmp_path / "stack.ini"
+        ini.write_text(text, encoding="utf-8")
+        profile = check.load_profile(ini)
+        with pytest.raises(SystemExit) as exc:
+            check.extra_steps(profile, {"py": "python"})
+        message = str(exc.value)
+        assert "[step:legacy]" in message and "retired `gates`" in message, message
+        assert "from-stage" in message and "migrate_vocabulary.py" in message
 
 
 def test_an_unknown_from_stage_value_fails_loudly(tmp_path):
@@ -324,23 +304,11 @@ def test_an_unknown_from_stage_value_fails_loudly(tmp_path):
 # --- the flag surface ---------------------------------------------------------
 
 
-def test_the_stage_cleared_spelling_warns_and_gate_stays_silent(capsys):
-    """The two prior spellings get DIFFERENT postures, and the asymmetry is the
-    ruling rather than an oversight: `--gate` is a flag NAME an adopter's
-    pipeline passes literally and the word was never retired, while
-    `--stage-cleared` makes a CLAIM about the axis — that the value is a bar
-    being cleared — which is precisely the reading OI-51 retires."""
-    assert check._warn_retired_flag_spelling(["--gate", "all"]) is False
-    assert check._warn_retired_flag_spelling(["--stage", "DevStg-Impl"]) is False
-    assert capsys.readouterr().err == ""
-    assert check._warn_retired_flag_spelling(["--stage-cleared", "DevStg-Impl"])
-    assert check._warn_retired_flag_spelling(["--stage-cleared=DevStg-Impl"])
-    err = capsys.readouterr().err
-    assert err.count("RETIRED bar reading") == 2
-
-
-@pytest.mark.parametrize("flag", ["--stage", "--stage-cleared", "--gate"])
-def test_all_three_spellings_still_select_the_same_plan(scaffold, flag):
+@pytest.mark.parametrize("flag", ["--stage", "--gate"])
+def test_both_spellings_select_the_same_plan(scaffold, flag):
+    """`--gate` is a flag NAME an adopter's pipeline passes literally, and the
+    word was never retired where it means a check that can fail, so it stays
+    the prior spelling of `--stage`."""
     make_minimal_project(scaffold)
     proc = run_py(
         ["scripts/check.py", flag, "DevStg-Reqs", "--list", "--tier", "smoke"],
@@ -350,48 +318,29 @@ def test_all_three_spellings_still_select_the_same_plan(scaffold, flag):
     assert "Plan at stage DevStg-Reqs" in proc.stdout
 
 
-def test_a_retired_value_alias_resolves_BY_MEANING_and_says_so(scaffold):
-    """A retired tag translates to the rung a repo at that BAR had REACHED —
-    never to the same-spelled rung.
-
-    THIS TEST PINNED THE DEFECT UNTIL THE WI-498 CLOSE (ROUND-OPUS 8). It
-    asserted `G2` → `DevStg-Tests`, which is the SPELLING;  check_vocab: allow
-    the bar was a MIN
-    over every in-scope row, so the `DevStg-Tests` bar was reached only by a
-    spine already fully decomposed and TC'd — the `DevStg-Impl` RUNG, three
-    above the shared word. `_LEGACY_BAR_THRESHOLD` had that rule written down
-    for `gates =` lists; `RETIRED_STAGE_ALIASES` did not apply it, and this
-    test held the disagreement in place.
-
-    What it cost, and why the assertion below is the load-bearing one: at the
-    spelling reading `--gate G2` selected 12 steps  check_vocab: allow
-    where the arrival reading
-    selects 26, silently dropping `traceability`, `tests+coverage`, `lint`,
-    `format` and ten others. An adopter's CI passing the tag literally — the
-    exact case the silent-`--gate` concession exists to protect — stayed green
-    while quietly stopping most of its checks."""
+@pytest.mark.parametrize(
+    "argv",
+    (
+        ["--stage-cleared", "DevStg-Reqs"],
+        ["--stage", "G2"],  # check_vocab: allow
+        ["--gate", "DevBar-Reqs"],  # check_vocab: allow
+    ),
+    ids=("stage-cleared", "retired-tag", "retired-prefix"),
+)
+def test_a_retired_flag_or_stage_value_is_refused_not_translated(scaffold, argv):
+    """The CLI reads the current spellings only (D11). `--stage-cleared` made a
+    claim about the axis (that the value is a bar being cleared), and a retired
+    tag or the retired prefix named a bar where the value is now the stage the
+    repo is IN; each is refused by argparse before any step is planned. A
+    translation once took `--gate G2` to the same-spelled rung and dropped  check_vocab: allow
+    fourteen steps from an adopter's CI without a word; a refusal cannot. The
+    re-sync entry gives the mapping, and a pipeline's own line changes by
+    hand."""
     make_minimal_project(scaffold)
-    proc = run_py(
-        # The retired tag is the ARGUMENT under test, not a live citation.
-        [
-            "scripts/check.py",
-            "--stage",
-            "G2",  # check_vocab: allow
-            "--list",
-            "--tier",
-            "smoke",
-        ],
-        cwd=scaffold,
-    )
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "RETIRED gate vocabulary" in proc.stderr
-    assert "Plan at stage DevStg-Impl" in proc.stdout
-    # The warning must SAY the value moved and that the plan moved with it —
-    # the old text reported only the re-reading, so a pipeline could shrink by
-    # fourteen steps behind one line of reassurance.
-    assert "NOT the same-spelled rung" in proc.stderr, proc.stderr
-    # ...and the steps the spelling reading dropped are genuinely back.
-    assert "format" in proc.stdout
+    proc = run_py(["scripts/check.py", *argv, "--list"], cwd=scaffold)
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "Plan at stage" not in proc.stdout
+    assert argv[0] in proc.stderr or argv[1] in proc.stderr, proc.stderr
 
 
 # --- the reader seam ----------------------------------------------------------

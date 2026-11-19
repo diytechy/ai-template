@@ -6,7 +6,7 @@ It is loaded every session: keep it short and current. Project facts live in
 `docs/`; this file points at them.
 
 <!-- kit-only -->
-> Scaffolds to `AGENTS.md` (the cross-tool standard) via `bootstrap.py`.
+> Scaffolds to `AGENTS.md` via `bootstrap.py`.
 <!-- /kit-only -->
 > Thin `CLAUDE.md`/`GEMINI.md` stubs point back here. Fill the **Project**
 > section, delete guidance that doesn't apply. Everything below the line is
@@ -35,15 +35,15 @@ the ladder, and the ID scheme. The short version needed every session:
   Engineer → Software Engineer → Test Engineer). Spawn subagents deliberately
   (process.md §6).
 - **Everything traces:** `SN → SR → LLR → TC`. Intent lives once, as an id;
-  children link to it. The matrix is generated (`scripts/trace.py`) and must
-  report **0 orphans** before a bar.
+  children link to it. The generated matrix (`scripts/trace.py`) must
+  report **0 orphans** before a gate.
 - **Write the test first (TDD).** A requirement's test case is a *failing*
-  test before the code that satisfies it: red → green → refactor — within the
+  test before the code that satisfies it, within the
   traceability spine, not instead of it.
 - **The stage ladder:** `DevStg-` Needs · Boundary · Reqs · Arch · LLReqs ·
-  Tests · Impl · Release. You are IN one; a human signs three rung boundaries,
+  Tests · Impl · Release. You are IN one; an operator signs three rung boundaries,
   per `docs/process.toml` and process.md §4. Never self-advance; log it.
-- **The check harness is the bar:** `python scripts/check.py` runs format,
+- **The check harness is the gate:** `python scripts/check.py` runs format,
   lint, tests, coverage, traceability, flows and freshness at or above the
   derived stage (`docs/stage`); `--tier smoke` is the fast subset. Never
   report a result you didn't run: paste the real output.
@@ -53,17 +53,17 @@ the ladder, and the ID scheme. The short version needed every session:
 - **Versioned releases:** `DevStg-Release` adds the `release` tier and
   `scripts/gen_release_checklist.py`.
 - **The code map is derived from the source AST**: per-module summary and
-  public symbols with `Implements:` back-links, rendered live in
-  `PROJECT_STATE.html`'s How-SW tab. **Read it to find where a capability
-  lives before searching the tree**; `scripts/gen_arch_map.py --doc` splices
-  it here: never hand-edit between `GENERATED` markers or commit exported
-  diagrams.
+  public symbols with `Implements:` back-links, in `PROJECT_STATE.html`'s
+  How-SW tab once a work item exists (`scripts/gen_trajectory.py`). **Read it
+  to find where a capability lives before searching**;
+  `scripts/gen_arch_map.py --doc` splices it here: never hand-edit between
+  `GENERATED` markers or commit exported diagrams.
 - **Start each session** with *Current State* in
   [docs/status.md](docs/status.md); end each turn by updating it (stage, what
-  changed, next action). **Commit hooks on before any work** (`sh
-  scripts/setup.sh`, or `scripts\setup.ps1`); never bypass them.
-  **Commit early and often**, small and green per step; the `push` dial says
-  who publishes (default: human). End with a clean tree.
+  changed, next action). **Commit hooks on before any work** (`bash
+  scripts/setup.sh` or `scripts\setup.ps1`); never bypass them.
+  **Commit early and often**, small and passing per step; the `push` dial says
+  who publishes (default: operator). End with a clean tree.
 
 ## Code we want (readability for humans *and* agents)
 
@@ -77,7 +77,7 @@ Code a newcomer — human or model — can navigate without re-deriving the desi
 - **Entry points orchestrate, they don't compute.** A top-level routine reads
   as a short list of well-named step calls; push logic into the steps.
 - **One fact, one home — in code, and across it.** No copy-paste logic;
-  consolidate duplicates into a shared stage (PROCESS.md §3, 0→A→B).
+  consolidate duplicates into a shared step (PROCESS.md §3, 0→A→B).
 - **Intention-revealing names; no cryptic abbreviations.**
 - **Back-link to requirements** per `[checks] backlink_coverage_min`:
   `Implements: SR-007, LLR-014` on implementing symbols; TC ids in test files
@@ -150,10 +150,10 @@ Direct and concrete; explain the *why* before the *how*.
   before writing code — one question, with a **recommended default**.
   Unattended: pick the most reasonable reading, proceed, and **record it**
   under *Assumptions* in `docs/status.md` to confirm or revert at the next
-  bar. When reality contradicts the plan, **the contradiction is the
+  gate. When reality contradicts the plan, **the contradiction is the
   deliverable**: raise the conflict as a finding — never silently resolve,
   average, or route around it (process.md §4 "Consistency review"). The
-  **decision dial** (process.md §6) sets asking eagerness: high-risk approves
+  **decision dial** (process.md §6) sets asking eagerness: high-risk accepts
   often, low-risk decides-and-records.
 - **Right-size the solution.** The simplest thing that satisfies the
   requirement; no speculative flexibility — **every line is a liability**, so
@@ -186,6 +186,6 @@ Direct and concrete; explain the *why* before the *how*.
 ---
 
 > **Customizing:** add a rule only after you've had to repeat it, and **pay for
-> it by tightening another** — this file has a hard byte budget (keep ≥2k
-> headroom under Gemini's ~12k AGENTS.md cap for project facts). Delete rules
+> it by tightening another** — this file has a hard byte budget (≥2k of
+> Gemini's ~12k AGENTS.md cap stays free for project facts). Delete rules
 > you don't enforce — unbacked rules are noise.

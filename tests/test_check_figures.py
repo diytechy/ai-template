@@ -272,7 +272,7 @@ def test_a_legitimately_redirecting_declaration_counts(tmp_path):
 def test_a_mixed_marker_with_a_placeholder_rev_flags_its_missing_rev(tmp_path):
     # The reviewer's mixed fixture: a half-filled template — a real command
     # typed, `rev=<revision>` left unfilled — was excused wholesale by the
-    # any-value excusal, the silent direction. Under the approved all-values
+    # any-value excusal, the silent direction. Under the accepted all-values
     # Grammar sentence it is a REAL marker, and the placeholder value counts
     # as ABSENT in the completeness judgment (the trap the reviewer named:
     # the bare rev= capture arrives unclosed as `<revision`, which carries
@@ -306,7 +306,7 @@ def test_a_mixed_marker_with_a_placeholder_cmd_flags_its_missing_cmd(tmp_path):
 def test_a_review_record_quoting_defective_markers_is_out_of_scope(tmp_path):
     # A verdict record under docs/reviews/ quotes findings — including bare
     # and half-carrying markers — verbatim as evidence; judging the quotation
-    # would convict the quoter and red every branch a review lands on. The
+    # would convict the quoter and fail every branch a review lands on. The
     # check_doc_refs record-surface stance, applied: reviews are skipped.
     make_repo(tmp_path, "No figures at the root.\n")
     reviews = tmp_path / "docs" / "reviews"

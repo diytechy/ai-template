@@ -20,7 +20,7 @@
 # [policies] reads the gate on and the reviewer required, whatever its value.
 #
 # WHAT IS IN SCOPE: every dial that answers "how is work PROCESSED" — gate
-# authority, the human-approval level, push authority, the reviewer count,
+# authority, the operator-acceptance level, push authority, the reviewer count,
 # the privacy and secrets gates, guardrails, the blackout window — and, since
 # the 2026-08-11 overturn below, every dial that answers "is this CHECK on".
 # What stays outside, and why:
@@ -35,7 +35,7 @@
 #      act, nor survive as a one-line reviewed diff.
 #   3. `docs/stage` — a GENERATED CACHE (derive_stage.py), not configuration.
 #   (There used to be a fourth exception here — the six CHECK-ENABLEMENT
-#   toggles stay one-word files, WI-423. It is OVERTURNED, owner 2026-08-11:
+#   toggles stay one-word files, WI-423. It is OVERTURNED, operator 2026-08-11:
 #   "creating files to toggle something off is also very confusing … far
 #   better to tie those into process.toml and key them all to on / true."
 #   They are now the [checks] section at the bottom of this file. The ruling
@@ -45,7 +45,7 @@
 #   The cost the old text priced is real and is PAID, not hidden: the hooks
 #   never read these six, so folding them widens no hook's read, and each
 #   independently-copyable checker grows its own small
-#   `tomllib` read (F5 — no shared `_kitcommon.py`, owner 2026-07-12). Every
+#   `tomllib` read (F5 — no shared `_kitcommon.py`, operator 2026-07-12). Every
 #   checker also keeps reading its legacy one-word file as a MIGRATION-WINDOW
 #   fallback, the way check_privacy.py reads `docs/privacy-check` — see the
 #   [checks] header for the expiry.)
@@ -57,19 +57,19 @@
 # sources live is REFUSED, not silently resolved — a mixed config is exactly
 # the state where two readers disagree about the same policy.
 
-[attestation]
+[authority]
 # THE GATE-AUTHORITY DIAL. This section used to open with a three-value enum
 # (`gate_policy = "attended" | "single-approve" | "autonomous"`). SN-029 RETIRED
 # it and this file no longer ships the key, because shipping both was itself
-# the bug: the template's `human_approval_through` shadowed whatever
+# the bug: the template's `operator_accepts_through` shadowed whatever
 # word `bootstrap --gate-policy` had written, so a repo that chose `autonomous`
 # scaffolded as fully attended with no diagnostic anywhere.
 #
-# The three words map onto the dials below (`agent_common.LEGACY_APPROVAL`
-# is the one home for the translation, and `bootstrap.py --migrate-config`
-# applies it to a legacy `docs/gate-policy` file):
+# The three words map onto the dials below (`bootstrap.py`'s
+# `GATE_POLICY_DIALS` is the one home: `--gate-policy` writes them, and
+# `--migrate-config` folds a legacy `docs/gate-policy` file into them):
 #
-#   attended       human_approval_through = "DevStg-Release",
+#   attended       operator_accepts_through = "DevStg-Release",
 #                  keep_nondependent = false
 #   single-approve  = "DevStg-Below", keep_nondependent = true,
 #                  final_review = "always"
@@ -79,18 +79,18 @@
 # Note what that makes visible: the enum's words were never one axis. Each
 # bundled a tier hold, a drain policy and an end-of-run hold, which is exactly
 # why four separate tables had to re-interpret the same word.
-# THE HIGHEST STAGE RUNG A HUMAN STILL APPROVES, cumulatively ("through" this
+# THE HIGHEST STAGE RUNG An OPERATOR STILL ACCEPTS, cumulatively ("through" this
 # rung). The dispatcher compares the rung a row is IN against this value: AT OR
-# BELOW it, work SURFACES for the human; above it, the loop dispatches and an
-# LLM verdict carries approval authority. It is the exact mirror of the rule
-# that selects checks — a check runs at or ABOVE its `from-stage`, a human
-# approves at or BELOW this dial.
+# BELOW it, work SURFACES for the operator; above it, the loop dispatches and an
+# LLM verdict carries acceptance authority. It is the exact mirror of the rule
+# that selects checks — a check runs at or ABOVE its `from-stage`, an operator
+# accepts at or BELOW this dial.
 #
 # The value is one of the eight ladder rungs (process.md §4), or `DevStg-Below`
-# for "nothing is human-held; the loop approves every rung itself":
+# for "nothing is operator-held; the loop accepts every rung itself":
 #
-#   DevStg-Below      nothing is human-held
-#   DevStg-Needs      the human approves stakeholder needs
+#   DevStg-Below      nothing is operator-held
+#   DevStg-Needs      the operator accepts stakeholder needs
 #   DevStg-Boundary   ... and the system frame
 #   DevStg-Reqs       ... and the requirements
 #   DevStg-Arch       ... and the partition
@@ -99,9 +99,9 @@
 #   DevStg-Impl       ... and the implementation
 #   DevStg-Release    everything (the most conservative setting)
 #
-# WHO "THE HUMAN" ABOVE MAY BE on a held rung (the owner, and which sessions
-# may take the owner's act) is stated once, with its enforcer, in process.md
-# §4 "A held rung's approval is the owner's act". Read it there.
+# WHO THE OPERATOR MAY BE on a held rung (a person, and which sessions may
+# take the act for them) is stated once, with its enforcer, in process.md
+# §4 "A held rung's acceptance is the operator's act". Read it there.
 #
 # IT WAS A 0-4 ORDINAL UNTIL WI-493 (OI-21 shape (ii)). A repo that still
 # carries the number is READ, TRANSLATED AND WARNED — not refused — and,
@@ -111,25 +111,21 @@
 # notches map 0 -> DevStg-Below, 1 -> DevStg-Boundary, 2 -> DevStg-Arch,
 # 3 -> DevStg-LLReqs, 4 -> DevStg-Release, which holds exactly the rungs each
 # level held before.
-#
-# Named `human_approval_through`, never "attest level": `Attest` is already
-# a Verification method in the SR vocabulary and the collision would be
-# permanent.
-human_approval_through = "DevStg-Release"
+operator_accepts_through = "DevStg-Release"
 # The separate "always show me the full breakdown at the end" hold, split out
 # because it is flipped far more often than the level itself.
-#   "always" — the loop stops for a final human read even when the level would
+#   "always" — the loop stops for a final operator read even when the level would
 #              have let it close
 #   "off"    — no final hold
 final_review = "always"
-# Keep NON-DEPENDENT work running while an approval is queued? This is an
+# Keep NON-DEPENDENT work running while an acceptance is queued? This is an
 # ORTHOGONAL policy an ordinal cannot express (it was the old `single-approve`
-# level's distinguishing behaviour). false = a queued approval drains the
+# level's distinguishing behaviour). false = a queued acceptance drains the
 # station and stops the run; true = other lanes keep going around it.
 keep_nondependent = false
 # How a CLEAN (`complete/`) lane close is adjudicated. `partial` and
 # `cancelled` closes are ALWAYS adjudicated — they carry a claim about what was
-# not delivered. A green close already passed the declared bar and the review
+# not delivered. A passing close already passed its required checks and the review
 # rounds, so adjudicating every one of them prices a strong-tier session onto
 # work two gates already judged.
 #   "off"    — never (the review rounds are the judgement)
@@ -149,17 +145,17 @@ complete_sample_rate = 4
 #   "when-minting" — a round is scheduled, and demanded, when the verdict drafts
 #                    ANY successor at `spine` or `high-risk`, or when the brief
 #                    is `consolidate`. An amendment that only recommends a flip,
-#                    a red-tc drafting ordinary fix rows, a clean-close spot
+#                    an evidence-gap drafting ordinary fix rows, a clean-close spot
 #                    check: no round.
 #   "always"       — every adjudication gets one
 adjudication_review = "when-minting"
-# Whether a DELEGATED run owes the owner a record of the calls it made on the
-# owner's behalf — one TOML file per run under docs/decisions/, one entry per
+# Whether a DELEGATED run owes the operator a record of the calls it made on the
+# operator's behalf — one TOML file per run under docs/decisions/, one entry per
 # decision, each saying what was decided, the alternative, the reversal cost and
-# why it was not escalated, with a `review` cell the owner fills in place. The
+# why it was not escalated, with a `review` cell the operator fills in place. The
 # format and the routing doctrine are process-options.md "Delegated decisions
-# record". The dial allocates the owner's reading; it never moves what must go
-# to the owner through the process's exits — those bind at every setting.
+# record". The dial allocates the operator's reading; it never moves what must go
+# to the operator through the process's exits — those bind at every setting.
 #   "off"            — no record is owed (the shipped value)
 #   "record"         — a delegated run's close owes its record: the merge slot
 #                      refuses a lane that closed its work without one, and
@@ -171,10 +167,12 @@ decision_recording = "off"
 
 [policies]
 # Who may publish (`git push`) this repo — was docs/push-policy.
-#   "human"           the default: an agent never pushes, even if asked
+#   "operator"        the default: the operator pushes, or a session they
+#                     delegated the push to; never the loop, and never an agent
+#                     merely asked mid-session
 #   "agent-iteration" an agent may push only the scrubbed llm/<branch>
 #   "agent"           full delegation, still gated by the sync ritual
-push = "human"
+push = "operator"
 # How many independent fresh-context review verdicts a completed work item gets
 # before the integrator accepts it — was docs/review-policy. 0 | 1 | 2.
 review_rounds = 1
@@ -201,7 +199,7 @@ guardrails = "off"
 # handoff and end, with no relaunch. An empty value, or `start == end` as
 # shipped below, DISABLES it.
 #
-# SHIPPED DISABLED, SHAPE KEPT (owner ruling 2026-08-11). This used to ship
+# SHIPPED DISABLED, SHAPE KEPT (operator ruling 2026-08-11). This used to ship
 # `"12:00-19:00"` — the kit author's own operating window — and every adopter
 # inherited a business-hours blackout in a timezone they did not choose. The
 # asymmetry decided it: a shipped-EMPTY dial an adopter forgets costs some
@@ -235,7 +233,7 @@ trunk = "main"
 observation_min_work_items = 10
 # IS THIS CHECK ON. Six dials that used to be one-word files under docs/ and
 # that no scaffold ever wrote, so ABSENCE was the declaration — which is what
-# the owner overturned WI-423 over (2026-08-11): a repo that has decided
+# the operator overturned WI-423 over (2026-08-11): a repo that has decided
 # nothing and a repo that never heard of the layer looked identical, and the
 # only way to switch a check off was to CREATE a file. They are keys now, and
 # every one of them ships VISIBLE so the decision is readable at a glance.
@@ -247,7 +245,7 @@ observation_min_work_items = 10
 #
 # WHO READS THEM, and the cost that buys: `check_trajectory.py` (the first
 # three), `gen_okf.py`, `subagent_gate.py`, `agent_loop.py`. The first three of
-# those import nothing of the coordinator layer — F5 (owner 2026-07-12, no
+# those import nothing of the coordinator layer — F5 (operator 2026-07-12, no
 # shared `_kitcommon.py`) keeps every kit script independently copy-able — so
 # each carries its OWN small `tomllib` read of this section. That duplication
 # is deliberate and BOUNDED BY A TEST: `tests/test_rule_sync.py` drives the
@@ -289,7 +287,7 @@ live_status = false
 # (subagent_gate.py, a Claude `PreToolUse` hook) — bounded fan-out for an
 # unattended run. NOT a boolean, because it was never one:
 #   "off"   allow every spawn (the default; the hook is a no-op)
-#   "ask"   defer each spawn to approval
+#   "ask"   defer each spawn to acceptance
 #   "deny"  refuse every spawn
 # `ask`/`deny` is a real restriction on what an agent may do, so it stays a
 # thing an adopter TURNS ON. Shipping it visibly at "off" is what the overturn
@@ -304,18 +302,18 @@ subagent_gate = "off"
 # WHY IT SHIPS AT 0 AND NOT AT THE TARGET. The convention this measures is
 # stated in `process.md` and `AGENTS.template.md`, and the kit's own scripts
 # followed it at 2 of 781 public symbols when it was measured: 0.6% of live LLR
-# rows. Shipping the bar at the 50% target would fire on the FIRST RUN in the
-# kit's own repo and in every fresh scaffold, failing a bar its own author
+# rows. Shipping the minimum at the 50% target would fire on the FIRST RUN in the
+# kit's own repo and in every fresh scaffold, failing a minimum its own author
 # misses by roughly 80x — which trains readers to silence the warning rather
-# than to write the tags. So the measurement ships and the bar does not.
+# than to write the tags. So the measurement ships and the minimum does not.
 #
 # 50 IS THE RECORDED TARGET, and the ONLY sanctioned way to reach it is to
-# write the declarations and then raise this number to a bar the tree already
-# clears. The number goes up because the tags landed; never because the bar
+# write the declarations and then raise this number to a level the tree already
+# clears. The number goes up because the tags landed; never because the minimum
 # came down. WHERE THE STEP RUNS, stated exactly (corrected 2026-08-20): the
 # `backlink-coverage` step exists from DevStg-Tests on and NOT below it, so a
 # plain run does not warn — it does not run the step at all. From DevStg-Tests
-# the step reports, and `--strict-backlinks` (which `check.py` adds at that bar
+# the step reports, and `--strict-backlinks` (which `check.py` adds at that rung
 # and above) turns a below-minimum reading into a failure. Born here, so unlike
 # those six it has no legacy one-word file and cannot be double-declared.
 #
@@ -323,11 +321,11 @@ subagent_gate = "off"
 # position restriction, so a spine id inside a string literal or a negated
 # example counts as a carrier. Because the denominator is your live LLR count,
 # that error can only RAISE the score — false passes, never false failures — so
-# a number near your bar deserves a look at what is carrying it.
+# a number near your minimum deserves a look at what is carrying it.
 backlink_coverage_min = 0
 # THE TEST-FIRST ORDER'S DECLARED START (SR-217), a commit id. The `test-first`
 # step (`check_test_first.py`, warn-only, at every rung) reports each
-# requirement approved AFTER this commit that has a test case approved after its
+# requirement accepted AFTER this commit that has a test case accepted after its
 # implementation first landed on trunk, which is the first commit adding a
 # back-link line naming the requirement or one of its design rows. Both events
 # are read from the committed history, never from a cell.
@@ -335,26 +333,26 @@ backlink_coverage_min = 0
 # WHY A START, AND WHY IT SHIPS EMPTY. A project adopting the rule has history
 # written before it, and judging that history would report every requirement
 # whose code came first under a rule nobody had agreed yet. Declare the commit
-# the rule starts after (typically the parent of the commit that approves your
-# first requirements under it), and only requirements approved after it are
+# the rule starts after (typically the parent of the commit that accepts your
+# first requirements under it), and only requirements accepted after it are
 # judged. `""` declares no start and the whole history is judged, which is
 # right for a project that has kept the order since its first commit.
 #
-# The start scopes only WHICH REQUIREMENTS are judged: test-case approvals are
-# read over the whole history, so a test case approved after the code landed is
+# The start scopes only WHICH REQUIREMENTS are judged: test-case acceptances are
+# read over the whole history, so a test case accepted after the code landed is
 # late even when both came before the start.
 #
 # A start the history cannot honour is reported UNREADABLE, never passed: a
 # commit that no longer exists, one that never stood on trunk's first-parent
 # line, a shallow clone, or a start before the TOML registries (registries
-# still under the older carrier are unreadable too). An approval the TOML
+# still under the older carrier are unreadable too). An acceptance the TOML
 # history cannot date exactly still settles the order when it falls at or
 # before the landing (a requirement's own, at or before the start); otherwise
 # it is reported as an order that cannot be read.
 test_first_since = ""
 # THE ASSUMPTION GATE (SR-205, SR-206, SR-212), off by default. Its four
 # built-in check steps (`check_assumption_gate.py`) ask of every requirement the
-# argument that carries it to its needs: at DevStg-Boundary, approved, active
+# argument that carries it to its needs: at DevStg-Boundary, accepted, active
 # assumptions reaching its stakeholders, or a `coincident` waiver
 # (`assumption-gate`), and for an interface-form requirement, each crossing it
 # names coincident or bridged by a cited assumption landing on it
@@ -396,7 +394,7 @@ assumption_gate = false
 # entry under the person's own login. Provision a login account's home first.
 context_reset_pct = 0            # e.g. 55
 # Retain the session across these adjudication classes only (Brief cell values).
-retain_for = ["disposition", "amendment", "red-tc"]
+retain_for = ["disposition", "amendment", "evidence-gap"]
 # ANTHROPIC only: minutes between keep-warm pings of an idle retained session
 # while lanes are active, so its hour-long prompt cache is not rewritten; 0 =
 # off. A ping is a real one-turn call (resumed, --max-turns 1, recorded in the
@@ -449,7 +447,7 @@ final_reviewer = "fresh"
 # session is told to stop starting lanes, bring in-flight rows to a safe point,
 # write its handoff and request a relaunch, which runs at its session end. The
 # latch never clears on a lower reading; only the relaunched successor's lease
-# take or the owner's recorded clear clears it, and no lease ever passes
+# take or the operator's recorded clear clears it, and no lease ever passes
 # because time went by. Claude Code only; the procedure is the session-protocol
 # skill's.
 #
@@ -465,18 +463,35 @@ context_guard_pct = 0            # e.g. 50
 # model declares 1000000).
 context_window_tokens = 200000
 
+[required-checks]
+# WHAT A CHANGE MUST PASS, AND WHEN. Each value names a check suite, and
+# docs/stack.ini [check-suites] holds that suite's command: this file says
+# which suite is required, the stack file says how this stack runs it.
+#
+#   commit   every commit a lane builds. `integrate.py record-checks` runs the named
+#            suite on the staged work, then the row's derived review tests,
+#            and records that they passed in the commit. Required, with no default:
+#            an absent table or key, a value that is not a name, or a name
+#            docs/stack.ini does not declare makes `record-checks` refuse.
+#
+# A landing is not a setting: the merge slot runs the full gate
+# (`check.py --tier all`) on the refreshed tree whatever this table says.
+commit = "smoke"
+
 [build]
-# THE RED-ROUND CAP. A managed loop draws a review only over a tip its
-# declared review bar attested green; a red bar draws no review and hands the
-# bar's failure tail to the next build instead. Each red is recorded in the
-# lane's committed session log, keyed by the build commit it refused, so the
-# count survives a resume, and a verified green attestation resets it. At this
-# many consecutive red rounds the worker stops with its own exit code, and the
-# dispatcher closes the lane partial through the existing red arm.
+# THE COMMIT-CHECK FAILURE CAP. A managed loop draws a review only over a tip
+# whose required commit checks were recorded as passed; a failed run draws no
+# review and hands the failure's tail to the next build instead. Each failure
+# is recorded in the lane's committed session log, keyed by the build commit
+# it refused, so the count survives a resume, and a verified passed-checks record
+# resets it. At this many consecutive failures the worker stops with its own
+# exit code, and the dispatcher closes the lane partial through its existing
+# failed-build arm.
 #
 # A positive integer. An absent [build] table or key reads the shipped 3. Any
 # other value (0, a negative, a bool, a string, a float) is refused at the
 # loop's preflight and before a lane is claimed, naming its line. There is no
-# "off": an unbounded cap would rebuild a red tip forever, since a red build
-# still commits and the stall guard never trips.
-red_rounds_max = 3
+# "off": an unbounded cap would rebuild a failing tip forever, since a failed
+# build still commits and the stall guard never trips. The key's earlier name,
+# `red_rounds_max`, is refused where it is still declared, never read.
+stop_lane_after_consecutive_commit_check_failures = 3

@@ -12,7 +12,7 @@ def assumption_repo(tmp_path):
     (requirements / "assumptions.toml").write_text(
         '[assumption.DA-011]\nassumption = "A new reader understands the code."\n'
         'falsifier = "A reader cannot explain the code."\n'
-        'status = "Approved"\nstanding = "active"\n',
+        'status = "Accepted"\nstanding = "active"\n',
         encoding="utf-8",
     )
     tests = tmp_path / "docs/test"
@@ -24,7 +24,7 @@ def assumption_repo(tmp_path):
         'evidence = "docs/test/inspection.md"\ntier = "Release"\n',
         encoding="utf-8",
     )
-    set_process_key(tmp_path, "attestation", "human_approval_through", "DevStg-Needs")
+    set_process_key(tmp_path, "authority", "operator_accepts_through", "DevStg-Needs")
     return tmp_path
 
 
@@ -37,18 +37,18 @@ def assert_chain(text):
     assert "Ask a new reader." in text
 
 
-def test_first_approval_shows_assumption_only_case(tmp_path):
+def test_first_acceptance_shows_assumption_only_case(tmp_path):
     """Implements: TC-308"""
     root = assumption_repo(tmp_path)
     text, reason = ab.compose(
         root,
-        {"WI-ID": "WI-001", "Brief": "first-approval", "Adjudicates": "TC-279"},
+        {"WI-ID": "WI-001", "Brief": "first-acceptance", "Adjudicates": "TC-279"},
         "verdict.md",
     )
     assert reason is None, reason
     assert_chain(text)
-    assert "TC TC-279 [AWAITING FIRST APPROVAL]" in text
-    # The act's `--approves` argument is the act brief's, derived from the
+    assert "TC TC-279 [AWAITING FIRST ACCEPTANCE]" in text
+    # The act's `--accepts` argument is the act brief's, derived from the
     # committed verdict (WI-912): the judging brief names no registry token.
     assert "=WI-001" not in text
 

@@ -1,6 +1,6 @@
 # Crash, atomicity and recovery: what the next reader finds after an interrupted write — DRAFT
 
-> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.INTEGRITY-RECOVERABILITY` roster entry has a `knowledge` value to point at; the owner reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a settled finding.
+> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.INTEGRITY-RECOVERABILITY` roster entry has a `knowledge` value to point at; the operator reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a settled finding.
 
 This pack is what a reviewer wearing INTEGRITY-RECOVERABILITY looks for HERE. The
 charter's question — "interrupted mid-write, what does the next reader find, and
@@ -13,7 +13,7 @@ where the sharp edges are.
 
 **A durable artifact rewritten in place with no all-or-nothing boundary.** The
 kit's answer, where it is disciplined, is to move the boundary onto an operation
-that is already atomic. Two exemplars to hold as the bar:
+that is already atomic. Two exemplars to hold as the standard:
 
 - The **log-fragment compile** (`trunk_step.py --compile-log`, contract IF-168 in
   `docs/log.d/README.md`). *Every* fragment is validated before *any* is written,
@@ -53,15 +53,15 @@ per-close document*, and the rule refuses a second close of the same event rathe
 than overwriting the first. Read "a close no one can read is indistinguishable
 from a run that finished" as the general test: silence must not be a success
 signal. `baseline_snapshot.refresh_refusal` is the same instinct one tier up — a
-refresh that would absorb a row's drifted approved text is refused unless that
-row's own `Status` flip or an explicit `--reattests` naming it authorises it, so
-the record of what a human blessed cannot be quietly rewritten.
+refresh that would absorb a row's drifted accepted text is refused unless that
+row's own `Status` flip or an explicit `--reaccepts` naming it authorises it, so
+the record of what an operator blessed cannot be quietly rewritten.
 
 ## Application
 
 - **Prefer git-commit atomicity to in-place rewrite.** Crash recovery here is
   "the tree is whatever the last commit says" — the fail-closed integrator ff's
-  only on green and refuses on red (`concurrency-restructure.md`), and id
+  only on a pass and refuses on a failure (`concurrency-restructure.md`), and id
   allocation and claims live in serial trunk commits, so a killed lane leaves no
   torn allocation to reconcile.
 - **If a write is not atomic, name the reader that refuses the torn state.** The
@@ -70,12 +70,12 @@ the record of what a human blessed cannot be quietly rewritten.
   not assume the write.
 - **A recovery path must exist for the ATTENDED reach of a corruption too.** The
   charter's third listen — "a recovery path written only for the unattended run
-  when the same corruption is reachable attended" — means: if a human running the
+  when the same corruption is reachable attended" — means: if an operator running the
   same command by hand can produce the torn state, the guard must fire for them,
   not only inside `agent_loop`. The snapshot guards run on the always-on
   `--strict-integrity` floor and the pre-commit hook, which is the right altitude.
 - **Silence is never done.** A terminal state with no report is LOUD (SR-144); a
-  missing snapshot registry is an error, not "nothing approved". Demand the same
+  missing snapshot registry is an error, not "nothing accepted". Demand the same
   of any new durable artifact.
 
 ## Open questions / bounded here
@@ -90,4 +90,4 @@ the record of what a human blessed cannot be quietly rewritten.
 - SR-144 carries `hat_refs = ["UNATTENDED-OPS"]` today, not this hat; the
   immutable-record and dead-lane-claim reasoning it encodes is the clearest
   in-repo statement of this hat's concern, and whether its hat_ref should widen is
-  an owner call at review.
+  an operator call at review.

@@ -39,7 +39,7 @@ safety_class = "spine"
 buildtier = "medium"
 priority = 2
 specref = "docs/requirements/low-level-requirements.toml"
-bar = "DevStg-Impl"
+checks_stage = "DevStg-Impl"
 ```
 
 VERDICT THIS CONTINUES:

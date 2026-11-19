@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local P9R validation selection; CI and the phase-close Full bar stay full.
+"""Local P9R validation selection; CI and the phase-close Full checks stay full.
 
 Compare the complete proposed change to an explicit recorded base, including
 the index, working tree and untracked files. Unknown impact always broadens.
@@ -230,7 +230,7 @@ def commands(root, selection):
                     "docs/interface-reference.md",
                 ),
             ),
-            ("trace.py", ("--root", ".", "--approve", "modified")),
+            ("trace.py", ("--root", ".", "--accept", "modified")),
         )
     ]
     return [

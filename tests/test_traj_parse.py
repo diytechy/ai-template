@@ -38,28 +38,28 @@ from conftest import load_script
 # artifact change. A sorted fixture could not see that.
 SCRAMBLED_SRS = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status\n"
-    'SR-009,Late,SN-001,"Shall late.",R,"late",,M,Test,Approved\n'
+    "Permutations,Priority,VerificationMethod,Status\n"
+    'SR-009,Late,SN-001,"Shall late.",R,"late",,M,Test,Accepted\n'
     'SR-000,Example,SN-001,"Shall example.",R,"example",,M,Test,Drafted\n'
     'SR-002,Middle,SN-001,"Shall middle.",R,"middle",,M,Test,Drafted\n'
     'NOTE,Not a requirement,SN-001,"Shall not.",R,"nope",,M,Test,Drafted\n'
-    'SR-001,First,SN-001,"Shall first.",R,"first",,M,Test,Approved\n'
+    'SR-001,First,SN-001,"Shall first.",R,"first",,M,Test,Accepted\n'
 )
 
 SCRAMBLED_LLRS = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
-    'LLR-007,SR-001,Late,src/m,add,"late",(see TC),Approved\n'
-    'LLR-000,SR-001,Example,src/m,add,"example",(see TC),Approved\n'
-    "NOTE,SR-001,Not an LLR,src/m,add,nope,(see TC),Approved\n"
-    'LLR-001,SR-001,First,src/m,add,"first",(see TC),Approved\n'
+    'LLR-007,SR-001,Late,src/m,add,"late",(see TC),Accepted\n'
+    'LLR-000,SR-001,Example,src/m,add,"example",(see TC),Accepted\n'
+    "NOTE,SR-001,Not an LLR,src/m,add,nope,(see TC),Accepted\n"
+    'LLR-001,SR-001,First,src/m,add,"first",(see TC),Accepted\n'
 )
 
 SCRAMBLED_TCS = (
     "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status\n"
-    "TC-005,LLR-001,Unit,call add,Smoke,a=5,ok,Yes,Approved\n"
+    "TC-005,LLR-001,Unit,call add,Smoke,a=5,ok,Yes,Accepted\n"
     "NOTE,LLR-001,Unit,not a case,Smoke,a=0,ok,Yes,Drafted\n"
     "TC-000,LLR-001,Unit,call add,Smoke,a=0,ok,Yes,Drafted\n"
-    "TC-001,LLR-001,Unit,call add,Smoke,a=1,ok,Yes,Approved\n"
+    "TC-001,LLR-001,Unit,call add,Smoke,a=1,ok,Yes,Accepted\n"
 )
 
 
@@ -118,18 +118,18 @@ def test_spine_loader_drops_example_rows_only_when_asked(tmp_path):
     assert [r["LLR-ID"] for r in llrs] == ["LLR-007", "LLR-001"]
     assert [r["TC-ID"] for r in tcs] == ["TC-005", "TC-001"]
     # The default keeps them: only the pending projection owes the `-000` rule
-    # (an example row owes no approval); the icicle and the maturity counts
+    # (an example row owes no acceptance); the icicle and the maturity counts
     # render whatever the registry holds.
     d_srs, d_llrs, d_tcs = tp._spine(root)
     assert "SR-000" in [r["SR-ID"] for r in d_srs]
     assert "LLR-000" in [r["LLR-ID"] for r in d_llrs]
     assert "TC-000" in [r["TC-ID"] for r in d_tcs]
     # And the rule reaches its real caller: SR-000 is `Drafted`, so a leaked
-    # example row would invent an approval the owner does not owe.
+    # example row would invent an acceptance the operator does not owe.
     pending = load_script("pending").spine_pending(root)
     assert pending, "the Drafted SRs must still project"
     assert not any("SR-000" in line for line in pending)
-    # SR-002 read `Modified` -> re-attest until D-9 step 7 retired the marker. It
+    # SR-002 read `Modified` -> re-accept until D-9 step 7 retired the marker. It
     # reads `Drafted` now: the projection's second arm is snapshot DRIFT, which
     # needs a seeded snapshot this loader fixture has no business carrying, so
     # the Drafted arm is what keeps a NON-example row projecting here — which is

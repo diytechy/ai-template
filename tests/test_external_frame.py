@@ -4,12 +4,12 @@ Three tiers on one path — entities (`EXT-###`), boundary crossings (`B-##`) an
 external-to-external relationships (`REL-###`) — plus the directional tie-back an
 `IF-###` row carries when it REALIZES a crossing.
 
-The frame's *content* is a human ruling and nothing here judges it. What is
+The frame's *content* is an operator ruling and nothing here judges it. What is
 mechanized, and what this module pins, is the joining: a crossing names a
 declared entity, a relationship names two, a tie-back names a declared crossing,
 and every row carries the one maturity field the boundary rung reads
 (`spine_rules.boundary_incomplete` — its own tests live in
-tests/test_approval_level.py).
+tests/test_acceptance_level.py).
 """
 
 import tomllib
@@ -89,10 +89,10 @@ def test_the_live_frame_is_the_LOCKED_one():
     assumption-tier plan (docs/plans/2026-09-25-c1-sitting-package.md §1,
     ruled 2026-09-25), which redrew the frame sitting-2 §1R.7 locked at
     2026-08-13o (4/4/3 after the 13u removal of B-03 and the 2026-08-16q
-    hosted-CI cut): the human operator and hosted CI drawn as parties, the
+    hosted-CI cut): the person and hosted CI drawn as parties, the
     read set returned as a crossing, the model runner promoted from a
-    relationship to a crossing, and the Adopter folded into the human
-    operator. A count is a weak assertion about most registries and a strong
+    relationship to a crossing, and the Adopter folded into the
+    person. A count is a weak assertion about most registries and a strong
     one here, because this frame is closed by a ruling: a row appearing or
     vanishing without a sitting is the defect, not a growth curve. THIS TEST
     IS EXPECTED TO BE EDITED BY A SITTING and by nothing else — it red-flagged
@@ -106,8 +106,8 @@ def test_the_live_frame_is_the_LOCKED_one():
     # alone would be satisfied by any five entities. Each gap is load-bearing:
     # it keeps id and frame name aligned 1:1 rather than renumbering a locked
     # table, and `docs/id-watermark` keeps a mint from landing on one. EXT-003
-    # (the Adopter) was dropped at C1 — an adopting team is the human operator
-    # of the kit in its own repository (EXT-006); EXT-004 (the cut hosted-CI
+    # (the Adopter) was dropped at C1 — an adopting team is the person operating
+    # the kit in its own repository (EXT-006); EXT-004 (the cut hosted-CI
     # entity) stays spent although hosted CI is drawn again, as EXT-007.
     for gone in ("EXT-003", "EXT-004"):
         assert gone not in tables["entity"], gone
@@ -126,33 +126,33 @@ def test_the_live_frame_is_the_LOCKED_one():
     assert set(tables["relationship"]) == {"REL-002"}
 
 
-def test_every_frame_row_carries_the_approval_element():
-    """D12's requirement, from the file's FIRST commit: a frame with no approval
-    element is un-approvable, and the rung that reads it would have nothing
+def test_every_frame_row_carries_the_acceptance_element():
+    """D12's requirement, from the file's FIRST commit: a frame with no acceptance
+    element can never be accepted, and the rung that reads it would have nothing
     honest to read. Checked over every row of every tier, because a single
-    unapproved-by-omission crossing is what would silently clear rung 1."""
+    unaccepted-by-omission crossing is what would silently clear rung 1."""
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
     for table in ("entity", "boundary", "relationship"):
         for rid, row in tables[table].items():
-            assert row.get("status") in ("Drafted", "Approved"), (table, rid)
+            assert row.get("status") in ("Drafted", "Accepted"), (table, rid)
 
 
-def test_the_live_frame_approval_state_is_pinned():
+def test_the_live_frame_acceptance_state_is_pinned():
     """The flip authority, asserted rather than asked for: a `status` cell here
-    is the OWNER's to flip in a reviewed commit, and nothing the kit builds may
+    is the OPERATOR's to flip in a reviewed commit, and nothing the kit builds may
     set one. The pre-sign form of this test pinned {"Drafted"} and fired — as
-    designed — at the 2026-08-20 sitting-3 approval, where the owner
-    approved the locked frame in writing (log Decisions 2026-08-20a); this
-    edit IS that approval's sanctioned update. The tripwire now points the
-    other way: the frame is uniformly Approved, and any row leaving that state
-    is again a red test rather than a quiet line in a diff."""
+    designed — at the 2026-08-20 sitting-3 acceptance, where the operator
+    accepted the locked frame in writing (log Decisions 2026-08-20a); this
+    edit IS that acceptance's sanctioned update. The tripwire now points the
+    other way: the frame is uniformly Accepted, and any row leaving that state
+    is again a failing test rather than a quiet line in a diff."""
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
-    approvals = {
+    acceptances = {
         row.get("status")
         for table in ("entity", "boundary", "relationship")
         for row in tables[table].values()
     }
-    assert approvals == {"Approved"}
+    assert acceptances == {"Accepted"}
 
 
 # --- the join rules ------------------------------------------------------------
@@ -217,13 +217,13 @@ def test_an_IF_tieback_naming_an_undeclared_crossing_is_a_FINDING(scaffold):
 
 
 def test_crossings_with_NO_entity_declared_is_a_FINDING_not_a_vacuous_pass(scaffold):
-    """THE FALSE GREEN AN ADVERSARIAL ROUND CAUGHT, pinned so it cannot return.
+    """THE FALSE PASS AN ADVERSARIAL ROUND CAUGHT, pinned so it cannot return.
 
     The first version returned `[]` the moment the entity set was empty,
     reasoning that the rules below had nothing to resolve against. They did: six
     crossings referencing five entities that do not exist resolved to SILENCE,
     and the report then printed "every crossing Entity ... resolves" over the
-    top of it — a literal false green in the checker whose job is to prevent
+    top of it — a literal false pass in the checker whose job is to prevent
     one. Not an exotic state either: it is the natural authoring order (draw the
     boundary, then name who is on the far side) and what a refactor that drops
     an entity block leaves behind.
@@ -320,8 +320,8 @@ def _srs(scaffold, extra_keys=""):
         'rationale = "Realizes SN-001."\n'
         'acceptance_criteria = "add(1,2) == 3"\n'
         'priority = "M"\n'
-        'verification = "Test"\n'
-        'status = "Approved"\n'.format(extra_keys),
+        'verification_method = "Test"\n'
+        'status = "Accepted"\n'.format(extra_keys),
         encoding="utf-8",
     )
 
@@ -354,9 +354,9 @@ def test_an_SR_naming_a_DECLARED_crossing_is_clean(scaffold):
 def test_SR_boundary_COVERAGE_is_a_summary_advisory_and_never_an_error(scaffold):
     """The other half, and the severity split is the point. "Every SR references
     a declared interface" is SN-037's wording, but enforcing it the day the column
-    ships would red every row in the registry for work the re-tier campaign owns
+    ships would fail every row in the registry for work the re-tier campaign owns
     — and under a form rule that is itself a guideline with recorded waivers. A
-    gate that is 100% red on day one is a gate someone turns off.
+    gate that fails everything on day one is a gate someone turns off.
 
     So: ONE line carrying the count the campaign has to move, on the advisory
     pipe, with the exit code untouched.
@@ -380,7 +380,7 @@ def test_the_realization_gap_is_REPORTED_and_never_gated(scaffold):
     """Decision 6's question — a crossing with no realizing IF row — deferred BY
     RULING to post-schema. It is visible (a deferral nobody can see is a
     deferral nobody honours) and it changes no exit code, which is the same
-    restraint that keeps `boundary_incomplete` reading approval rather than
+    restraint that keeps `boundary_incomplete` reading acceptance rather than
     realization coverage.
 
     Implements: TC-182
@@ -419,7 +419,7 @@ def test_an_out_of_vocabulary_frame_value_WARNS_and_never_fails(scaffold):
     # ...and it did not join the failure set. The EXIT CODE is the half this
     # test is NAMED for, and asserting only the absent FINDING line left "never
     # fails" untested — promoting the frame schema tier to --strict would have
-    # kept this green.
+    # kept this passing.
     assert "FINDING (frame)" not in proc.stdout
     assert proc.returncode == 0
 

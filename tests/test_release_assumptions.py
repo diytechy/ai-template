@@ -35,7 +35,7 @@ def generate(tmp_path, monkeypatch, rows=None):
 
 
 ACTIVE = (
-    '[assumption.DA-011]\nstatus = "Approved"\nstanding = "active"\n'
+    '[assumption.DA-011]\nstatus = "Accepted"\nstanding = "active"\n'
     'falsifier = "A reader cannot explain it."\n'
 )
 
@@ -58,7 +58,7 @@ def test_no_falsifier_is_visible_even_when_drafted(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "old,new", [('"active"', '"falsified"'), ('"Approved"', '"Drafted"')]
+    "old,new", [('"active"', '"falsified"'), ('"Accepted"', '"Drafted"')]
 )
 def test_ineligible_assumptions_omitted(tmp_path, monkeypatch, old, new):
     text = generate(tmp_path, monkeypatch, ACTIVE.replace(old, new))

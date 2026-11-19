@@ -19,13 +19,17 @@ Stdlib only, like trace.py / check_docs.py:
 
 WHAT IT REFUSES. The TAGS, matched as whole words: `G0`, `G1`, `G2`, `G3`,
 `G-Release`, `G-Final` — and, since the 2026-08-18 one-vocabulary ruling, any
-`DevBar-*` token. Since WI-499 (owner-ruled 2026-08-21, "ratification holds a
+`DevBar-*` token. Since WI-499 (operator-ruled 2026-08-21, "ratification holds a
 weight to it that the semantics here don't need"), also any inflection of
 `ratif*` (`ratify`, `ratified`, `ratification`, `ratifying`, `ratifies`,
 `ratifiable`, `ratifier`, ...) — EXCEPT the literal `docs/ratify/` path, which
-kept its name as a record home for the immutable dated re-attestation briefs
+kept its name as a record home for the immutable dated re-acceptance briefs
 that already lived there; that one spelling is not retired vocabulary, it is a
-directory name. Nothing else.
+directory name. And since the 2026-11 vocabulary, each value a repository
+still stores in an earlier spelling (a row's status, a policy key, the
+acceptance record's directory), as `migrate_vocabulary.py` names it: that
+script is the earlier spellings' one home, so this asks it rather than
+naming them again, and the fix it prints is to run it. Nothing else.
 
 WHAT IT DOES NOT TOUCH — and this is the load-bearing half. **The word "gate"
 survives wherever it means a check that can fail.** `test_env_gates`,
@@ -43,9 +47,9 @@ THE CARVE-OUTS, and why each one is a carve-out rather than an oversight:
     citation, and rewriting a record of what happened makes it a record of
     something else. A reader searching their own history needs the vocabulary
     that history was written in.
-  - **Attestation quotes are not rewritten** — the strongest case. `docs/ratify/`
+  - **Acceptance quotes are not rewritten** — the strongest case. `docs/ratify/`
     briefs quote registry cells byte-for-byte at a pinned baseline, and the log's
-    dated sign-off entries record a NAMED HUMAN approving a thing that was called
+    dated sign-off entries record a NAMED HUMAN accepting a thing that was called
     `G1` at the time. Rewriting those makes a signed record claim something was
     signed that was not. The ruled remedy is a one-line header note naming the
     retired vocabulary, not a rewrite.
@@ -54,12 +58,13 @@ THE CARVE-OUTS, and why each one is a carve-out rather than an oversight:
     checking them would report the same fact twice and could only ever be fixed
     upstream. `docs/gate` is generated too, and its own format migrated with the
     conversion (one forced regenerate — the proven precedent).
-  - **The owner's scratchpad is nobody's working surface.**
+  - **The operator's scratchpad is nobody's working surface.**
 
-DECLARATION SITES. Some live code must NAME the retired tags — the translation
-tables that let an adopter's `--gate G2`, `gates = G2 G3` and `bar: G3` keep
-working across the re-sync. Those carry an explicit marker rather than being
-guessed at:
+DECLARATION SITES. Some live code must NAME the retired tags — the vocabulary
+migrator's table of the stage each tag in a `[step:*] gates =` list meant, the
+`SUGGEST` table below, a re-sync note, a test feeding one in as the input it
+refuses. The core reads none of them (D11). Those carry an explicit marker
+rather than being guessed at:
 
     check_vocab: allow-file     anywhere in a file  -> the whole file is exempt
     check_vocab: allow          on a line           -> that line is exempt
@@ -85,11 +90,12 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
+from migrate_vocabulary import spellings_owed
 
 # The retired TAGS, as whole words. `G-Release`/`G-Final` are matched before the
 # bare digits by putting them first in the alternation.
 #
-# THE `DevBar-*` PREFIX JOINED THIS SET 2026-08-18 (owner ruling: one vocabulary).
+# THE `DevBar-*` PREFIX JOINED THIS SET 2026-08-18 (operator ruling: one vocabulary).
 # It rides the SAME regex rather than a second checker for the reason the `G*`
 # tags ride one: a reader who trips either has made ONE mistake — a retired
 # spelling for a live concept — and two findings for one mistake is how a checker
@@ -104,7 +110,7 @@ from kitlib.config import utf8_console as _utf8_console
 # been a finding with no translation to offer (see the SUGGEST pin below).
 # `[reqs]`/`[tests]` are refused only in the ANCHOR POSITION (`]-[reqs]`), and
 # the asymmetry is deliberate rather than tidy — those two spellings are ordinary
-# English in square brackets, so a bare match reds every markdown link whose text
+# English in square brackets, so a bare match fails every markdown link whose text
 # happens to be "tests". A checker that cries wolf on link text is a checker
 # people learn to scroll past, which is the failure this file's own docstring
 # names.
@@ -113,13 +119,13 @@ RETIRED_TAG_RE = re.compile(
     r"|\bDevBar-\w+"
     r"|\[g[12]\]"
     r"|(?<=\]-)\[(?:reqs|tests)\]"
-    # WI-499 (owner-ruled 2026-08-21): "ratification holds a weight to it that
+    # WI-499 (operator-ruled 2026-08-21): "ratification holds a weight to it that
     # the semantics here don't need" — the kit's vocabulary unifies on
-    # "approval". The `ratif*` word family is retired the same way the G* tags
+    # "approval", and since 2026-11-16 on "acceptance". The `ratif*` word family is retired the same way the G* tags
     # were, riding the same enforcer for the same reason (one checker, one
     # mistake). Carve-outs for the ONE surviving spelling: the `docs/ratify/`
     # directory itself KEPT its name as a record home (the dated
-    # re-attestation briefs already live there and are immutable), so a live
+    # re-acceptance briefs already live there and are immutable), so a live
     # file naming that real path is not quoting retired vocabulary — whether
     # written as the one string `"docs/ratify/..."` (the `docs/` lookbehind),
     # as a markdown-relative link from a doc that already lives under
@@ -136,10 +142,12 @@ RETIRED_TAG_RE = re.compile(
 SUGGEST = {
     "G0": "DevStg-Below (the internal sentinel) / DevStg-Needs (the rung)",
     "G1": "DevStg-Reqs (cleared) / DevStg-Reqs (the rung in work)",
-    "G2": "DevStg-Tests (cleared) / DevStg-Tests (the rung in work)",
+    # Cleared, `G2` meant the stage a repo at that bar had REACHED, the Impl
+    # rung, as `check.py` read `--stage G2` (WI-498 ROUND-OPUS 8).
+    "G2": "DevStg-Impl (cleared) / DevStg-Tests (the rung in work)",
     "G3": "DevStg-Impl (cleared) / DevStg-Impl or DevStg-Release (the rung)",
     "G-Release": "DevStg-Impl (cleared) / DevStg-Release (the rung)",
-    "G-Final": "the owner's final read (final_review), which is its own dial",
+    "G-Final": "the operator's final read (final_review), which is its own dial",
     # The prefix swap is 1:1 EXCEPT for Release, and that exception is the whole
     # reason these are spelled out rather than described as "drop the Bar".
     "DevBar-Reqs": "DevStg-Reqs",
@@ -159,14 +167,14 @@ SUGGEST = {
     # WRONG — it records a reach BELOW where the phase actually stands, which is
     # the failure direction that loses the event a drop detector exists to
     # report. Closing a `reqs`/`g1` anchor means the phase's SRs are authored AND
-    # approved, which is the LLReqs rung — two above the token's spelling.
+    # accepted, which is the LLReqs rung — two above the token's spelling.
     #
     # `check_trajectory` TRANSLATES these on read and never rewrites a committed
     # title; what this table refuses is AUTHORING one afresh, or a live doc
     # TEACHING the retired spelling. A declaration site that must name them (the
     # translation table itself, a re-sync note) carries `check_vocab: allow`.
     "[g1]": "[DevStg-LLReqs] - the rung the phase stands at once its SRs are "
-    "approved, NOT [DevStg-Reqs], which is two rungs below it",
+    "accepted, NOT [DevStg-Reqs], which is two rungs below it",
     "[reqs]": "[DevStg-LLReqs] - same reading as [g1]; the token names what the "
     "anchor CLOSED, the rung names where the phase now stands",
     "[g2]": "[DevStg-Impl] - LLRs and TCs authored and non-Drafted, NOT "
@@ -179,14 +187,14 @@ SUGGEST = {
 # checked after `SUGGEST` misses (case-insensitively, keeping the finding's
 # own casing out of the suggestion).
 RATIF_SUGGEST_SUFFIX = {
-    "ication": "approval",
-    "ications": "approvals",
-    "y": "approve",
-    "ying": "approving",
-    "ies": "approves",
-    "ied": "approved",
-    "iable": "approvable",
-    "ier": "approver",
+    "ication": "acceptance",
+    "ications": "acceptances",
+    "y": "accept",
+    "ying": "accepting",
+    "ies": "accepts",
+    "ied": "accepted",
+    "iable": "acceptable",
+    "ier": "acceptor",
 }
 
 
@@ -200,8 +208,8 @@ def _suggestion_for(tag):
         suffix = lower[len("ratif") :]
         word = RATIF_SUGGEST_SUFFIX.get(suffix)
         if word is not None:
-            return '{} (WI-499 retired "ratif*" for "approv*")'.format(word)
-        return 'approve/approval (WI-499 retired "ratif*" for "approv*")'
+            return '{} (WI-499 retired "ratif*"; the act is now "accept*")'.format(word)
+        return 'accept/acceptance (WI-499 retired "ratif*"; the act is now "accept*")'
     return "(no suggestion on file — check_vocab.SUGGEST)"
 
 
@@ -221,7 +229,7 @@ SKIP_DIRS = {
     "__pycache__",
     ".pytest_cache",
     # Agent worktrees are OTHER checkouts parked under this tree — their files
-    # are scanned in their own checkout, and a stale worktree must not red
+    # are scanned in their own checkout, and a stale worktree must not fail
     # this one (found the day the enforcer shipped: a leftover worktree's
     # scratchpad carried pre-sweep vocabulary).
     "worktrees",
@@ -235,7 +243,7 @@ EXEMPT_GLOBS = (
     # history: the kit's design archive
     "docs/archive/*",
     # history: the append-only project log, including its dated sign-off and
-    # approval entries (the attestation carve-out's other half)
+    # acceptance entries (the acceptance carve-out's other half)
     "docs/log.md",
     # history: the per-branch log FRAGMENTS `trunk_step.py` compiles into
     # docs/log.md in merge order. They are the same record one merge earlier, so
@@ -247,7 +255,7 @@ EXEMPT_GLOBS = (
     # citations: a rubric records the anchor it was AUTHORED at (D-4 — a WI title
     # is a citation, and a citation names the thing as it was called)
     "docs/rubrics/*",
-    # attestation quotes: registry cells quoted byte-for-byte at a pinned baseline
+    # acceptance quotes: registry cells quoted byte-for-byte at a pinned baseline
     "docs/ratify/*",
     # history, ROW-GRANULAR: open-items.toml mixes RULED rows (records of a
     # dated decision, in the vocabulary of when it was ruled — WI-499's own
@@ -295,8 +303,8 @@ EXEMPT_GLOBS = (
     # surface" and this exemption never actually fired. Naming the successor in
     # both places is what makes the skip say WHY.
     "docs/stage",
-    # owner-only, never a working surface
-    "OWNER_SCRATCHPAD.md",
+    # operator-only, never a working surface
+    "OPERATOR_SCRATCHPAD.md",
 )
 
 # Only these suffixes are read (plus the extensionless files named outright
@@ -420,13 +428,19 @@ def main():
     args = ap.parse_args()
 
     findings, scanned = scan(args.root, args.list_scope)
+    # A value stored in an earlier spelling reads as absent to the kit.
+    findings += [
+        "{} - stored in an earlier spelling; run "
+        "`python scripts/migrate_vocabulary.py`".format(line)
+        for line in spellings_owed(Path(args.root).resolve())
+    ]
     label = "check_vocab: ERROR" if args.strict else "check_vocab: WARN"
     for f in findings:
         print("{} - {}".format(label, f))
     if not findings:
         print(
             "check_vocab: clean ({} live authored file(s); no retired gate "
-            "tags).".format(scanned)
+            "tags; nothing stored in an earlier spelling).".format(scanned)
         )
         return 0
     print(

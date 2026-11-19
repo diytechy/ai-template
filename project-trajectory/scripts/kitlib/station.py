@@ -63,8 +63,8 @@ Contract IF-093: the terminal-outcome vocabulary as CONSTANTS a render may
     status directory to the outcome it asserts — `complete` -> MERGED,
     `cancelled` -> CANCELLED, `partial` -> PARTIAL — and only those three: the
     open folders are absent on purpose, so a lane closing into one names no
-    outcome and the merge slot refuses it. `BAR_GREEN` is the one attestation
-    label the refresh and `attest` share. Constants only — no call into a
+    outcome and the merge slot refuses it. `CHECKS_PASSED` is the passed-checks
+    record's label the refresh and `record-checks` share. Constants only — no call into a
     service, no write — and the module depends on nothing else in `scripts/`, which is what
     lets a view read the vocabulary without importing the coordinator that
     claims lanes, merges branches and moves specs. It is the same table the
@@ -83,7 +83,7 @@ from . import config as _kitconfig
 __all__ = [
     "Outcome",
     "OUTCOME_DIRS",
-    "BAR_GREEN",
+    "CHECKS_PASSED",
     "outcome_of",
     "REPORTS",
     "CLAIMED_OUTCOMES",
@@ -124,18 +124,18 @@ OUTCOME_DIRS = MappingProxyType(
     }
 )
 
-#: The one attestation label the refresh and `attest` share, carried as a git
+#: The passed-checks record's label, which the refresh and `record-checks` share, carried as a git
 #: trailer in the commit each writes, NAMING
-#: the tree and the work commit it attests so both can be checked against git.
-#: (`verdict.refresh_attestation` is why the names are the whole point: a
+#: the tree and the work commit it records so both can be checked against git.
+#: (`verdict.refresh_passed_checks` is why the names are the whole point: a
 #: message alone rides through amend, rebase and cherry-pick onto trees nobody
-#: barred.) It lives here because the station render draws the label and must
+#: checked.) It lives here because the station render draws the label and must
 #: not import the coordinator to learn it.
-BAR_GREEN = "Bar-Green:"
+CHECKS_PASSED = "Checks-Passed:"
 
 #: The MECHANICAL adjudication close's commit subject — `handback` writes it and
 #: `verdict.mechanical_close_peel` verifies it, so the two must not hold two
-#: spellings. It is here for the same reason `BAR_GREEN` is: a vocabulary the
+#: spellings. It is here for the same reason `CHECKS_PASSED` is: a vocabulary the
 #: writer and the reader share belongs below both.
 MECHANICAL_CLOSE_PREFIX = "adjudicate: "
 MECHANICAL_CLOSE_SUFFIX = " -> complete/ (mechanical close)"
@@ -147,7 +147,7 @@ def mechanical_close_subject(wi_id):
 
     A close moves one row, so the composer takes one id and refuses anything
     else by type: a list caller left behind would otherwise write a subject
-    the attestor's recomposition no longer matches, and the close would stop
+    the peel's recomposition no longer matches, and the close would stop
     peeling without a word.
     """
     if not isinstance(wi_id, str):
@@ -197,9 +197,9 @@ REPORTS = "docs/handbacks"
 CLAIMED_OUTCOMES = ("complete", "partial", "cancelled")
 
 # The review tier a close SUGGESTS for its disposition — a TYPED field, which is
-# the whole point. Before LLR-161 this rode as the magic substring `NEEDS-HUMAN`
+# the whole point. Before LLR-161 this rode as the magic substring `NEEDS-OPERATOR`
 # inside a free-prose reason, and `tier_signal` case-folded a search for it: so
-# `NEEDS_HUMAN`, `needs human`, or a typo silently downgraded the judgement, with
+# `NEEDS_OPERATOR`, `needs operator`, or a typo silently downgraded the judgement, with
 # no constant, no validation and no refusal on a miss. Prose that carries control
 # flow must be a typed field.
 SUGGESTED_TIERS = ("quick", "medium", "strong")
@@ -241,7 +241,7 @@ def render_report(wi_id, branch, claimed_outcome, reason, span, fields=None):
 
     Typed, not prose, for the fields anything downstream keys off — the
     disposition's review tier reads `suggested_tier`, not a substring of
-    `reason`. `keep_commits` / `discard_commits` exist because a green handback
+    `reason`. `keep_commits` / `discard_commits` exist because a passing handback
     once merged REJECTED code onto trunk as-is (2026-08-03, live): under this
     contract a `partial` close must say which commits are keep and which are
     discard, and the integrator refuses one that does not. The revert decision

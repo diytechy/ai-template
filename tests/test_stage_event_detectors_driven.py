@@ -54,7 +54,7 @@ def test_the_repo_global_rungs_are_the_ones_a_PER_PHASE_call_cannot_own(scaffold
     req = scaffold / "docs" / "requirements"
     srs_h = (
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
-        "Priority,Verification,Status,Phase\n"
+        "Priority,VerificationMethod,Status,Phase\n"
     )
     llrs_h = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Phase\n"
     tcs_h = (
@@ -62,18 +62,18 @@ def test_the_repo_global_rungs_are_the_ones_a_PER_PHASE_call_cannot_own(scaffold
         "Status,Phase\n"
     )
     srs = "".join(
-        '{},T,SN-001,"r","why","ac",,M,Test,Approved,{}\n'.format(sid, phase)
+        '{},T,SN-001,"r","why","ac",,M,Test,Accepted,{}\n'.format(sid, phase)
         for sid, phase in (("SR-001", "1"), ("SR-002", "2"))
     )
     llrs = "".join(
-        '{},{},Adder,src/demo,add,"d",(see TC),Approved,{}\n'.format(lid, sid, phase)
+        '{},{},Adder,src/demo,add,"d",(see TC),Accepted,{}\n'.format(lid, sid, phase)
         for lid, sid, phase in (
             ("LLR-001", "SR-001", "1"),
             ("LLR-002", "SR-002", "2"),
         )
     )
     tcs = "".join(
-        '{},{},Unit,m,Smoke,"a=1","e",Yes,tests/t.py::t,Approved,{}\n'.format(
+        '{},{},Unit,m,Smoke,"a=1","e",Yes,tests/t.py::t,Accepted,{}\n'.format(
             tid, sid, phase
         )
         for tid, sid, phase in (("TC-001", "SR-001", "1"), ("TC-002", "SR-002", "2"))
@@ -275,7 +275,7 @@ def test_tier_signals_STRONG_ARM_CAN_ACTUALLY_FIRE_end_to_end(tmp_path):
     input for the whole derived era — not wrong, DEAD. A unit test of
     `_stage_moved` proves the input; it does not prove the row. So this drives
     `intake._amendment_drafts` over a real two-commit repo whose merged delta
-    both amends an approved spine cell (the mint's trigger) and moves the recorded
+    both amends an accepted spine cell (the mint's trigger) and moves the recorded
     stage (the signal), and asserts the minted row's `buildtier`.
 
     The counterfactual is the same repo with the stage value held still: the row
@@ -286,20 +286,20 @@ def test_tier_signals_STRONG_ARM_CAN_ACTUALLY_FIRE_end_to_end(tmp_path):
     req.mkdir(parents=True, exist_ok=True)
     sr_header = (
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status\n"
+        "Permutations,Priority,VerificationMethod,Status\n"
     )
 
     def write_sr(text):
         (req / "system-requirements.csv").write_text(
             sr_header
-            + 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,Approved\n'.format(text),
+            + 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,Accepted\n'.format(text),
             encoding="utf-8",
             newline="\n",
         )
 
     write_sr("the original text")
     _write_stage_value(root, ladder.STAGE_ARCH)
-    before = _commit(root, "attested baseline")
+    before = _commit(root, "accepted baseline")
 
     write_sr("the AMENDED text")
     _write_stage_value(root, ladder.STAGE_IMPL)
@@ -318,14 +318,14 @@ def test_tier_signals_STRONG_ARM_CAN_ACTUALLY_FIRE_end_to_end(tmp_path):
     def write_sr2(text):
         (req2 / "system-requirements.csv").write_text(
             sr_header
-            + 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,Approved\n'.format(text),
+            + 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,Accepted\n'.format(text),
             encoding="utf-8",
             newline="\n",
         )
 
     write_sr2("the original text")
     _write_stage_value(root2, ladder.STAGE_ARCH)
-    before2 = _commit(root2, "attested baseline")
+    before2 = _commit(root2, "accepted baseline")
     write_sr2("the AMENDED text")
     _write_stage_value(root2, ladder.STAGE_ARCH)
     after2 = _commit(root2, "the merged branch's delta")

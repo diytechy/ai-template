@@ -19,7 +19,7 @@ import graph, file sizes, a dependency-matrix clustering or a value-domain
 check, come in only as a generated report. A report is evidence for a finding
 and never the verdict: a clustering can suggest a grouping, but it never
 defines a cut. The `architecture-decomposition` skill is the author's procedure
-for producing the artifact. This file is the bar that artifact is judged
+for producing the artifact. This file is the standard that artifact is judged
 against.
 
 ## Intent
@@ -166,13 +166,13 @@ scope whole, on three things:
   - *enforceability:* the access constraints that make the boundary hold, and
     the boundary tests that establish them;
   - *migration:* obligations to re-place, and a migration plan wherever
-    approved rows or tests would change. A file move is counted only when the
+    accepted rows or tests would change. A file move is counted only when the
     cut needs it.
 
 The chosen cut states why it beats the others. A cut that departs from the
 stages a stakeholder would name is not a failure. A cut the evidence does not
 argue is one. A comparison the supplied evidence cannot settle (A4) ends in
-*insufficient evidence for approval*, naming the evidence that is missing.
+*insufficient evidence for acceptance*, naming the evidence that is missing.
 
 **A8 — The stopping point is recorded, under the descent rule that fits the
 leaf.** Each leaf of the tree records why it is not split further
@@ -249,7 +249,7 @@ intake (process.md §5), because the critic edits no spine row
 `B#` anchor (the accumulation rule, [README](README.md)).
 
 Severity follows the cost in normal use. A BLOCKER or MAJOR is a defect that
-would reasonably force a later re-cut of rows already approved or tests
+would reasonably force a later re-cut of rows already accepted or tests
 already written: a boundary that hides no decision, a domain without coverage,
 or a shared definition split across components. A missing term, record or
 table cell that the rest of the artifact makes recoverable is MINOR. A finding

@@ -1,0 +1,1503 @@
+"""The operator-acceptance DIAL, and the two axes it compares (SN-029, OI-21,
+WI-493).
+
+`operator_holds(docs, stage)` is the one comparison every consumer in the loop
+makes — the dispatcher's admission table, the adjudication flip arm, the
+page-escalation, the dual-plan round. Getting it wrong in the permissive
+direction means a machine accepting something an operator meant to hold, which is
+the one failure this kit's whole discipline exists to prevent. So the input
+matrix is driven here rather than reasoned about at four call sites.
+
+Three things this module pins, each because a cut got it wrong:
+
+  * **ONE VOCABULARY, AND THE COMPARISON IS AN ORDINAL ON IT.** Until OI-21 this
+    was `stage < level` over two integer ladders, correct only while they
+    happened to line up — the 2026-08-12 rung insert nearly broke it silently, in
+    the direction of LESS operator involvement. OI-21 shape (i) bridged the two with
+    a declared `agent_common.DIAL_HOLDS` table; WI-493 executed shape (ii) and
+    RE-KEYED the dial itself to a `DevStg-*` rung, so the table retired with the
+    second vocabulary it existed to bridge. The dial names the HIGHEST rung an
+    operator still accepts and every rung AT OR BELOW it is held — the mirror of
+    check selection's at-or-above rule.
+  * **THE DIAL MOVED, AND EVERY PRE-EXISTING ANSWER SURVIVED IT.** The retired
+    0-4 ordinal's five settings hold precisely the same rung sets under the
+    at-or-below rule, which `RETIRED_DIAL_HOLDS` below states as an explicit
+    expected table — copied from the deleted `DIAL_HOLDS`, not re-derived from
+    the code under test, so the equivalence is PINNED rather than assumed.
+  * **AN UNREADABLE DIAL IS MALFORMED, NOT COERCED.** `max(0, ...)` looked kind
+    and was the one arithmetic that failed permissively: `-1` clamped to 0, which
+    reads as "nothing is operator-held" and disarms every hold in the repo. The
+    re-key did not soften that — a misspelled rung guesses at nothing and takes
+    `DevStg-Release`. The retired 0-4 int is no exception: the core reads the
+    current spelling only (D11), so an unmigrated int is a wrong-typed dial,
+    refused and held, and the vocabulary migrator rewrites it as the rung it
+    meant.
+
+Implements: TC-151
+"""
+
+import ast
+import inspect
+import textwrap
+from pathlib import Path as _Path
+
+import pytest
+from conftest import load_script, set_process_key
+
+ac = load_script("agent_common")
+dg = load_script("spine_rules")
+# The rung each retired 0-4 level meant: the vocabulary migrator's to write
+# (D11), and its table is the one statement of it.
+RETIRED_RUNG = load_script("migrate_vocabulary").POLICY_ORDINALS["authority"][
+    "operator_accepts_through"
+]
+# The ladder's ONE home since WI-498 slice 0, and the stage carrier that declares
+# the `DevStg-Below` sentinel. Imported as packages (not via `load_script`, which
+# loads a single `scripts/*.py`); `scripts/` is already on sys.path by here —
+# `load_script` puts it there. The name is `kit_ladder` because this module's own
+# `LADDER` is the dial-to-rung expectation table.
+import kitlib.ladder as kit_ladder  # noqa: E402  (after the loads above)
+import kitlib.stage as kit_stage  # noqa: E402  (after the loads above)
+
+BELOW = kit_stage.BELOW
+
+
+def _docs(tmp_path, dial=None, **extra):
+    for key, value in (
+        {} if dial is None else {"operator_accepts_through": dial}
+    ).items():
+        set_process_key(tmp_path, "authority", key, value)
+    for key, value in extra.items():
+        set_process_key(tmp_path, "authority", key, value)
+    if dial is None and not extra:
+        (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
+    return tmp_path / "docs"
+
+
+# --- the ladder ----------------------------------------------------------------
+
+
+# THE AT-OR-BELOW RULE, STATED AS A TABLE — the dial's meaning written out rather
+# than recomputed with the arithmetic under test. Each row is a legal dial value
+# and the rungs an operator still accepts at it, in LADDER ORDER.
+#
+# `DevStg-Below` is the sentinel for "nothing is operator-held", not a rung; it is
+# the value the retired ordinal spelled `0`, and setting the dial below the
+# ladder means no rung is at or below it. `DevStg-Release` is the shipped default
+# and holds everything including the close, because it is the top rung.
+#
+# THREE OF THESE ROWS WERE UNREACHABLE BEFORE WI-493 and are the concrete thing
+# the re-key bought: the old dial had five notches for eight rungs, so "hold
+# Needs but not Boundary", "hold through Reqs but not the partition" and "hold
+# through Impl but not the close" could not be asked for at all.
+LADDER = {
+    BELOW: [],
+    dg.STAGE_NEEDS: [dg.STAGE_NEEDS],
+    dg.STAGE_BOUNDARY: [dg.STAGE_NEEDS, dg.STAGE_BOUNDARY],
+    dg.STAGE_REQS: [dg.STAGE_NEEDS, dg.STAGE_BOUNDARY, dg.STAGE_REQS],
+    dg.STAGE_ARCH: [dg.STAGE_NEEDS, dg.STAGE_BOUNDARY, dg.STAGE_REQS, dg.STAGE_ARCH],
+    dg.STAGE_LLREQS: [
+        dg.STAGE_NEEDS,
+        dg.STAGE_BOUNDARY,
+        dg.STAGE_REQS,
+        dg.STAGE_ARCH,
+        dg.STAGE_LLREQS,
+    ],
+    dg.STAGE_TESTS: [
+        dg.STAGE_NEEDS,
+        dg.STAGE_BOUNDARY,
+        dg.STAGE_REQS,
+        dg.STAGE_ARCH,
+        dg.STAGE_LLREQS,
+        dg.STAGE_TESTS,
+    ],
+    dg.STAGE_IMPL: [
+        dg.STAGE_NEEDS,
+        dg.STAGE_BOUNDARY,
+        dg.STAGE_REQS,
+        dg.STAGE_ARCH,
+        dg.STAGE_LLREQS,
+        dg.STAGE_TESTS,
+        dg.STAGE_IMPL,
+    ],
+    dg.STAGE_RELEASE: list(dg.STAGE_ORDER),
+}
+
+
+# THE RETIRED `DIAL_HOLDS` TABLE, COPIED VERBATIM FROM THE DELETED SOURCE — this
+# is the equivalence pin WI-493 owes, and it is only worth anything because it is
+# a TRANSCRIPT rather than a derivation. Re-deriving it from `LADDER` above would
+# be the code under test asserting about itself.
+#
+# The hand-reasoned property the old table carried: Boundary rides Needs and Arch
+# rides Reqs. The two rungs OI-21 inserted are not ACCEPTANCE tiers (the ordinal
+# named SN/SR/LLR/TC), so each was held with the rung BELOW it — attaching them
+# to the rung above would have let a level-1 repo do its boundary work unattended,
+# and the wrong-answer direction that matters here is always "less operator". Under
+# the at-or-below rule that choice falls out of LADDER ORDER for free, because
+# each inserted rung sits immediately above the rung it was made to ride. A
+# hand-reasoned property became a structural one, and this table is how we know
+# it became the SAME one.
+RETIRED_DIAL_HOLDS = {
+    0: [],
+    1: [dg.STAGE_NEEDS, dg.STAGE_BOUNDARY],
+    2: [dg.STAGE_NEEDS, dg.STAGE_BOUNDARY, dg.STAGE_REQS, dg.STAGE_ARCH],
+    3: [
+        dg.STAGE_NEEDS,
+        dg.STAGE_BOUNDARY,
+        dg.STAGE_REQS,
+        dg.STAGE_ARCH,
+        dg.STAGE_LLREQS,
+    ],
+    # Level 4 held DevStg-Impl and DevStg-Release too — see the test below for
+    # why that is not an inconsistency but the thing that makes the top of the
+    # ladder mean what the shipped template says it means.
+    4: list(dg.STAGE_ORDER),
+}
+
+
+@pytest.mark.parametrize("dial", sorted(LADDER, key=kit_stage.order))
+def test_each_dial_rung_holds_exactly_the_rungs_AT_OR_BELOW_it(tmp_path, dial):
+    # The dial's whole definition, driven over every legal value. The order
+    # asserted is LADDER ORDER, so a rung inserted in the future lands in this
+    # table's rows by position rather than being silently unheld — the failure
+    # the retired `DIAL_HOLDS` map could suffer and this rule cannot.
+    docs = _docs(tmp_path, dial)
+    held = [s for s in dg.STAGE_ORDER if ac.operator_holds(docs, s)]
+    assert held == LADDER[dial]
+
+
+@pytest.mark.parametrize("level", sorted(RETIRED_DIAL_HOLDS))
+def test_each_RETIRED_level_holds_exactly_what_DIAL_HOLDS_held(tmp_path, level):
+    """THE RE-KEY'S EQUIVALENCE, PERMUTATION BY PERMUTATION (WI-493).
+
+    The template's own words for the retired ordinal: 0 = nothing; 1 = the operator
+    accepts SNs; 2 = ...and SRs; 3 = ...and LLRs; 4 = ...and TCs. Cumulative
+    counts, with the two inserted rungs riding the tier below them.
+
+    Both ROADS to a retired level are driven, because they are different code:
+    the dial declared as the RUNG the vocabulary migrator writes for the level,
+    which must hold what the level held, and the dial left as the retired INT,
+    which the core no longer reads (D11): a wrong-typed dial, it holds every
+    rung, which only ever asks the operator for more."""
+    expected = RETIRED_DIAL_HOLDS[level]
+    rung = RETIRED_RUNG[level]
+    for dial, want in ((rung, expected), (level, list(dg.STAGE_ORDER))):
+        docs = _docs(tmp_path / str(dial), dial)
+        held = [s for s in dg.STAGE_ORDER if ac.operator_holds(docs, s)]
+        assert held == want, (level, dial)
+
+
+def test_the_four_ACCEPTANCE_rungs_answer_exactly_as_they_did_before_the_ladder(
+    tmp_path,
+):
+    """The migration's own invariant, stated as a table rather than trusted.
+
+    OI-21 MAPPED the dial onto the eight rungs and WI-493 RE-KEYED it to them. So
+    for the four rungs that were always acceptance tiers, every retired level
+    must answer today what it answered under the six-integer ladder: level 1
+    holds needs; 2 adds requirements; 3 adds LLRs; 4 adds tests.
+
+    RE-KEYED, NOT WEAKENED: this used to read the answer out of the
+    `ac.DIAL_HOLDS` lookup, which is deleted. It now asks `operator_holds` itself —
+    a STRICTLY stronger question, because the table was only ever the input to
+    the predicate the loop actually calls."""
+    was = {
+        dg.STAGE_NEEDS: 1,  # old stage 0, held from level 1
+        dg.STAGE_REQS: 2,  # old stage 1, held from level 2
+        dg.STAGE_LLREQS: 3,  # old stage 2, held from level 3
+        dg.STAGE_TESTS: 4,  # old stage 3, held from level 4
+    }
+    for rung, first_level in was.items():
+        for level in range(5):
+            docs = _docs(tmp_path / str(level), RETIRED_RUNG[level])
+            assert ac.operator_holds(docs, rung) is (level >= first_level), (
+                rung,
+                level,
+            )
+
+
+@pytest.mark.parametrize("stage", [dg.STAGE_IMPL, dg.STAGE_RELEASE])
+def test_the_top_two_rungs_are_held_by_the_TOP_OF_THE_RETIRED_DIAL_ALONE(
+    tmp_path, stage
+):
+    """The hole the strictly-less-than fix opened, and the reason the top of
+    the ladder is absolute.
+
+    `DevStg-Impl` and `DevStg-Release` cover PRECISELY the states a stage advance
+    row runs in. With the top rung reading as not-held, the SHIPPED DEFAULT
+    (documented as "every tier operator-held; the most conservative setting") let
+    the loop dispatch and self-accept the final stage. Below the top, the retired
+    ordinal was about which SPINE tier is being worked, and neither of these two
+    is one — so no setting under it reached them.
+
+    THE CLAIM IS SCOPED TO THE RETIRED FIVE, and that scoping is the re-key's
+    doing rather than a softening. Under the rung vocabulary `DevStg-Impl` is a
+    legal dial in its own right, so "hold Impl but not the close" is now a
+    setting an operator can ask for — pinned by the last two lines, because a
+    reader who met only the paragraph above would think it impossible."""
+    for level in range(4):
+        docs = _docs(tmp_path / str(level), RETIRED_RUNG[level])
+        assert ac.operator_holds(docs, stage) is False, level
+    assert ac.operator_holds(_docs(tmp_path / "top", dg.STAGE_RELEASE), stage) is True
+    # The setting the old five notches could not name.
+    impl = _docs(tmp_path / "impl", dg.STAGE_IMPL)
+    assert ac.operator_holds(impl, dg.STAGE_IMPL) is True
+    assert ac.operator_holds(impl, dg.STAGE_RELEASE) is False
+
+
+def test_the_shipped_default_holds_a_stage_advance(tmp_path):
+    # The same fact stated where it bites: at the default, with a fully
+    # verified spine, a `gate` row must SURFACE rather than dispatch.
+    dispatch = load_script("dispatch")
+    docs = _docs(tmp_path, dg.STAGE_RELEASE)
+    held = ac.operator_holds(docs, dg.STAGE_RELEASE)
+    assert held is True
+    assert dispatch._kind_action("gate", held) == "surface"
+    assert dispatch._admission([("WI-500", "gate")], held, busy=False, free=1) == (
+        "surface",
+        ["WI-500"],
+    )
+
+
+def test_BOTH_shipped_homes_declare_the_dial_as_a_RUNG_STRING():
+    """The re-key is only real if the files an adopter actually gets carry the
+    new spelling — and a `4` left in either one would still WORK (the migration
+    window reads it), silently, which is exactly how a re-key half-lands.
+
+    Both homes are read, and NEITHER is allowed to be missing: a `continue` over
+    an absent path is how a guard like this goes vacuous.
+
+    The pin is STRUCTURAL on this repo's own file and VALUED on the template —
+    the dogfood rule (CLAUDE.md): VALUES may diverge between the kit's template
+    and this repo's instance (the operator set this repo's dial to `DevStg-Needs`
+    on 2026-08-21, a declared-policy act), STRUCTURE must not (both homes carry
+    a quoted ladder-rung string, never the retired ordinal)."""
+    root = _Path(__file__).resolve().parents[1]
+    rungs = {'"{}"'.format(r) for r in dg.STAGE_ORDER}
+    for rel, expect in (
+        ("docs/process.toml", None),  # structural: any valid rung string
+        ("project-trajectory/process.toml.template", '"{}"'.format(dg.STAGE_RELEASE)),
+    ):
+        path = root / rel
+        assert path.is_file(), rel
+        declared = [
+            line.split("=", 1)[1].strip()
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.split("#", 1)[0].strip().startswith("operator_accepts_through")
+        ]
+        assert len(declared) == 1, (rel, declared)
+        if expect is None:
+            assert declared[0] in rungs, (rel, declared)
+        else:
+            assert declared == [expect], (rel, declared)
+    assert ac.ACCEPTANCE_FALLBACK == dg.STAGE_RELEASE
+
+
+# --- the failure directions ----------------------------------------------------
+
+
+def test_an_unreadable_stage_is_operator_held(tmp_path):
+    """The conservative direction, and it now covers one MORE case than it did.
+
+    `None` is what `spine_stage_of` returns for a docs/gate predating the field —
+    and, since OI-21, for a cache still carrying the retired INTEGER stage, i.e.
+    every repo at upgrade time until it regenerates. A bare `2` is no longer a
+    stage at all, so it must read as unreadable rather than as rung 2.
+
+    Note the deliberate asymmetry with `spine_rules.stage_ord`, which RAISES on an
+    unknown label. There the question is "where is this on the ladder" and a
+    silent default hides that the ladder moved; here the question is "who
+    accepts" and the only safe answer to "I do not recognize this" is "the
+    operator"."""
+    docs = _docs(tmp_path, dg.STAGE_ARCH)
+    for stage in (None, 2, 0, 2.0, object(), "DevStg-Nonsense", ""):
+        assert ac.operator_holds(docs, stage) is True, stage
+
+
+def test_the_BELOW_dial_is_absolute_even_against_an_unreadable_stage(tmp_path):
+    # "Nothing is operator-held" is a statement the operator made outright, and the
+    # upgrade-time repo (no readable stage record) is precisely when it must
+    # still hold — otherwise the dial reads as its own opposite on the one day
+    # it matters.
+    #
+    # RENAMED AT WI-493: the setting is `DevStg-Below`, not `0`. It is the
+    # sentinel `kitlib.stage` already declares for "below every rung", used here
+    # in exactly that sense — a magic word like `"none"` would have been a second
+    # vocabulary in the one place this program exists to remove one.
+    docs = _docs(tmp_path, BELOW)
+    for stage in (None, 0, 3, "DevStg-Nonsense", dg.STAGE_RELEASE):
+        assert ac.operator_holds(docs, stage) is False, stage
+
+
+@pytest.mark.parametrize("dial", sorted(LADDER, key=kit_stage.order))
+def test_every_legal_dial_reads_back_as_ITSELF(tmp_path, dial):
+    # The reader's identity arm, and the reason the malformed table below means
+    # anything: a fallback that fired on everything would satisfy every
+    # conservative-direction test in this module while making the dial inert.
+    assert ac.acceptance_through(_docs(tmp_path, dial)) == dial
+    assert ac.config_conflicts(_docs(tmp_path, dial)) == []
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        -1,  # THE dangerous input: clamping made this read as 0 == nothing held.
+        7,
+        True,
+        "2",
+        "2.0",
+        "4",
+        "",
+        "DevStg-Nope",
+        "arch",
+        "devstg-arch",  # a case-fold IS a guess, and every guess here is permissive
+    ],
+)
+def test_every_malformed_dial_falls_back_to_the_conservative_end(tmp_path, value):
+    # RE-KEYED AT WI-493 AND WIDENED, not weakened. The retired ordinal could
+    # only be malformed by being out of range or wrong-typed; a rung STRING can
+    # also be a plausible near-miss, so the near-misses are now the bulk of this
+    # table. `"4"` is the one that carries both halves — it is the retired dial
+    # in the new type, and it is refused rather than read, because the migration
+    # window is exactly as wide as the migration and no wider.
+    assert (
+        ac.acceptance_through(_docs(tmp_path, value))
+        == ac.ACCEPTANCE_FALLBACK
+        == dg.STAGE_RELEASE
+    )
+
+
+@pytest.mark.parametrize("value", [-1, 3, 7, True, "4", "", "DevStg-Nope", "arch"])
+def test_a_malformed_dial_is_REFUSED_not_silently_defaulted(tmp_path, value):
+    """Implements: TC-150"""
+    # The fallback above keeps a caller working; the refusal is what makes the
+    # typo visible. Both are needed: a value nobody can honour must not read as
+    # a deliberate setting, and it must not be silent either.
+    #
+    # RENAMED from "an out-of-range LEVEL is REFUSED": out of range is now only
+    # one of the two shapes a bad dial takes, and the refusal covers both.
+    # Exactly ONE finding per bad dial, so a value cannot be reported twice (once
+    # as a type error and once as an unknown rung) and read as two defects.
+    #
+    # AN INT IS REFUSED AS A WRONG TYPE, in or out of the retired 0-4 range: the
+    # core reads the current spelling only (D11), so there is no window an
+    # in-range int could take a silent pass through. The vocabulary migrator
+    # rewrites one a repository stores; the refusal is for a repository that
+    # has not run it.
+    docs = _docs(tmp_path, value)
+    conflicts = ac.config_conflicts(docs)
+    assert len(conflicts) == 1, conflicts
+    assert "operator_accepts_through" in conflicts[0]
+    if isinstance(value, int) and not isinstance(value, bool):
+        assert "is a int, expected str" in conflicts[0], conflicts
+    assert ac.acceptance_through(docs) == dg.STAGE_RELEASE
+
+
+def test_a_wrong_TYPED_dial_is_refused_too(tmp_path):
+    # The same rule as the quoted `review_rounds` that once meant "no review
+    # verdict required" — a wrong-typed dial must never fall through to a
+    # default with no diagnostic, and before SN-029 these keys had no rule at
+    # all, so a bad value read as the conservative end and said nothing.
+    #
+    # RE-KEYED AT WI-493: the dial is a `str` now, so the arm that used to fire
+    # on `"2"` ("expected int") fires on the NON-strings instead, and `"2"` moved
+    # to the vocabulary arm below. The type check is much the weaker of the two
+    # now — every typo is still a `str` — which is exactly why the vocabulary arm
+    # exists and why it, not this one, is what catches a bad dial today.
+    conflicts = ac.config_conflicts(_docs(tmp_path / "bool", True))
+    assert len(conflicts) == 1, conflicts
+    assert "expected str" in conflicts[0], conflicts
+    assert "is a bool" in conflicts[0], conflicts
+
+    # An int, in or out of the retired 0-4 range, takes this arm too since D11
+    # (`test_a_malformed_dial_is_REFUSED...` drives it).
+    #
+    # THE THREE TYPES A MIGRATION WINDOW ONCE NEARLY SWALLOWED, driven here
+    # because each was a real defect, found by re-keying these tests and fixed in
+    # the same act (WI-498 slice 5), while the core still read the retired 0-4
+    # int: `True == 1` and `2.0 == 2` slipped into a window they were never in,
+    # and an unhashable value RAISED out of `config_conflicts`, whose docstring
+    # promises it "never raises" to three callers (dispatch, intake, integrate)
+    # that use it inside an exit-code contract. The window is gone (D11); what is
+    # pinned is the OUTCOME each must have — refused, exactly once, never a
+    # raise — not which arm produces it, because the arm is an implementation
+    # detail and the silence was the defect.
+    # THE LINE IS HAND-WRITTEN, and that is load-bearing rather than lazy.
+    # `_docs` goes through `bootstrap._toml_scalar`, which renders only bool and
+    # int BARE and QUOTES everything else — so passing `2.0` or `[4]` through it
+    # produces the STRINGS `"2.0"` and `"[4]`", drives the vocabulary arm, and
+    # proves nothing at all about the types named here. Writing the raw TOML is
+    # the only way these three reach the parser as themselves. (Checked, not
+    # assumed: this test was briefly vacuous in exactly that way.)
+    for i, literal in enumerate(("2.0", "[4]", "{ a = 1 }")):
+        docs = tmp_path / "raw{}".format(i) / "docs"
+        docs.mkdir(parents=True)
+        (docs / "process.toml").write_text(
+            "[authority]\noperator_accepts_through = {}\n".format(literal),
+            encoding="utf-8",
+        )
+        found = ac.config_conflicts(docs)  # MUST NOT RAISE — that is the claim
+        # Exactly one: an inline table is valid TOML, so the wrong type is the
+        # only problem each of these files has.
+        assert len(found) == 1, (literal, found)
+        assert any("operator_accepts_through" in f for f in found), (literal, found)
+        assert ac.acceptance_through(docs) == dg.STAGE_RELEASE, literal
+
+
+def test_an_unknown_RUNG_is_refused_by_the_VOCABULARY_arm(tmp_path):
+    # The arm WI-493 added, and the one that now catches almost everything: a
+    # `str` dial passes the type check by construction, so the closed vocabulary
+    # is what stands between a typo and a silent conservative default. The
+    # refusal must NAME the legal values, because "names no rung" with no list is
+    # not a correction anyone can act on.
+    conflicts = ac.config_conflicts(_docs(tmp_path, "2"))
+    assert len(conflicts) == 1, conflicts
+    assert "names no rung" in conflicts[0]
+    for rung in dg.STAGE_ORDER:
+        assert rung in conflicts[0], rung
+    assert BELOW in conflicts[0]
+
+
+def test_an_absent_dial_holds_everything_and_says_nothing(tmp_path):
+    # Absence is not a defect: a repo that never declared a dial gets the
+    # conservative end, silently, because there is nothing to correct.
+    docs = _docs(tmp_path)
+    assert ac.acceptance_through(docs) == ac.ACCEPTANCE_FALLBACK == dg.STAGE_RELEASE
+    assert ac.config_conflicts(docs) == []
+
+
+def test_the_dial_VOCABULARY_is_the_LADDER_plus_the_BELOW_sentinel():
+    """THE EQUALITY HALF OF THIS PIN IS GONE, AND THE REASON IS THE POINT.
+
+    This test used to open `assert ac.LADDER_RUNGS == set(dg.STAGE_ORDER)` — a
+    by-VALUE guard holding two literal copies of the closed vocabulary in step,
+    because the F5 no-shared-module rule kept `agent_common` from importing
+    `spine_rules` and licensed the restatement. WI-498 slice 0 moved the ladder
+    to `kitlib.ladder`; both names now RESOLVE to that one object, so "the copies
+    agree" is no longer a property that can fail — there are no copies. A test
+    asserting a frozenset equals itself is not a weaker pin, it is a VACUOUS one,
+    which passes while checking nothing. Drift is now UNREPRESENTABLE rather
+    than DETECTED, this repo's stated preference and exactly the trade WI-448
+    made when the five-way declared-line reader collapsed to one home
+    (`tests/test_rule_sync.py`, "the declared-line reader: WAS 5-way, now ONE
+    home"). The identity assertion below is the deletion's warrant.
+
+    THE `DIAL_HOLDS` CONTAINMENT PIN WENT THE SAME WAY AT WI-493, AND IT IS NOT A
+    LOST GUARANTEE. This test used to close by proving that every rung named in
+    the hand-authored `DIAL_HOLDS` map was a real rung, because a rung MISSING
+    from that map while present in `LADDER_RUNGS` read as unheld at every level
+    below 4 — the permissive direction. The re-key DELETED the map: the dial is
+    itself a rung and the comparison is `stage_ord(stage) <= stage_ord(dial)`, so
+    there is no longer a mapping a rung can be omitted from. Unrepresentable
+    rather than detected, the same trade as the paragraph above, and
+    `test_each_RETIRED_level_holds_exactly_what_DIAL_HOLDS_held` is what proves
+    the deletion changed no answer.
+
+    WHAT SURVIVES AS A REAL CHOICE IS THE DIAL'S OWN VOCABULARY: the eight rungs
+    PLUS the sentinel, and nothing else. That one extra member is a decision, so
+    it is pinned by value — and so is the fact that the config validator reads
+    THIS set rather than a copy of it."""
+    assert ac.LADDER_RUNGS is kit_ladder.LADDER_RUNGS
+    assert dg.STAGE_ORDER is kit_ladder.STAGE_ORDER
+    assert dg.stage_ord is kit_ladder.stage_ord
+    assert ac.ACCEPTANCE_DIAL_RUNGS == set(dg.STAGE_ORDER) | {BELOW}
+    assert BELOW not in ac.LADDER_RUNGS  # the sentinel is not a rung
+    key = ("authority", "operator_accepts_through")
+    assert ac.PROCESS_KEY_VOCAB[key] is ac.ACCEPTANCE_DIAL_RUNGS
+    # ...and the retired table is GONE rather than renamed: a reader who finds it
+    # has found a revert, not a rename.
+    assert not hasattr(ac, "DIAL_HOLDS")
+
+
+# --- the retired 0-4 ordinal and the gate-policy word ---------------------------
+
+
+@pytest.mark.parametrize("level", [0, 1, 2, 3, 4])
+def test_a_retired_ORDINAL_is_refused_and_held_never_translated(
+    tmp_path, level, capsys
+):
+    """THE CORE READS THE CURRENT SPELLING ONLY (D11). An adopter's
+    `operator_accepts_through = 4` was once translated and warned about; the
+    vocabulary migrator now rewrites it as the rung it meant, and a repository
+    that has not run it holds a wrong-typed dial. That dial is refused by
+    `config_conflicts`, naming the migrator as the fix, and read as the top
+    rung, silently: never as the rung the int meant, which for every level but
+    4 holds less.
+
+    The migrator's translation is pinned as a literal expectation table: level 4
+    is the top rung, level 0 is the sentinel, and the three between are the
+    rungs the retired table held THROUGH."""
+    expected = {
+        0: BELOW,
+        1: dg.STAGE_BOUNDARY,
+        2: dg.STAGE_ARCH,
+        3: dg.STAGE_LLREQS,
+        4: dg.STAGE_RELEASE,
+    }[level]
+    assert RETIRED_RUNG[level] == expected
+    docs = _docs(tmp_path, level)
+    capsys.readouterr()
+    assert ac.acceptance_through(docs) == dg.STAGE_RELEASE
+    assert capsys.readouterr().err == ""
+    conflicts = ac.config_conflicts(docs)
+    assert len(conflicts) == 1, conflicts
+    assert "is a int, expected str" in conflicts[0], conflicts
+    assert "run `python scripts/migrate_vocabulary.py`" in conflicts[0], conflicts
+
+
+def test_a_BOOL_dial_is_refused_though_True_equals_one(tmp_path):
+    """`True == 1` in Python, so a table keyed by the retired 0-4 int answers
+    level 1 for `True`, and an `operator_accepts_through = true` read through
+    one would be a wrong-typed dial reading as `DevStg-Boundary` with no
+    diagnostic at all. The core holds no such table now (D11), and the
+    migrator's matches `type(value) is int` only; end to end, `true` takes the
+    wrong-TYPE refusal and reads the conservative end."""
+    docs = _docs(tmp_path, True)
+    conflicts = ac.config_conflicts(docs)
+    assert len(conflicts) == 1, conflicts
+    assert "is a bool, expected str" in conflicts[0]
+    # The migrator rewrites only the integers 0 to 4, so a bool is not sent there.
+    assert "migrate_vocabulary" not in conflicts[0], conflicts
+    assert ac.acceptance_through(docs) == dg.STAGE_RELEASE
+    assert ac.acceptance_through(docs) != dg.STAGE_BOUNDARY
+
+
+@pytest.mark.parametrize("word", ["attended", "single-approve", "autonomous"])
+def test_a_gate_policy_word_is_not_read_where_no_dial_is_declared(tmp_path, word):
+    # The retired enum's word, as the one-word file and as the TOML key, is not
+    # read (D11): bootstrap folds the file into the three dials on every
+    # scaffold pass, and a repository that kept either reads every dial at its
+    # default, the most-held one. The declared dial is read beside them.
+    docs = _docs(tmp_path)
+    (docs / "gate-policy").write_text(word + "\n", encoding="utf-8", newline="\n")
+    (docs / "process.toml").write_text(
+        '[authority]\ngate_policy = "{}"\n'.format(word), encoding="utf-8"
+    )
+    assert ac.acceptance_through(docs) == dg.STAGE_RELEASE
+    assert ac.keep_nondependent(docs) is False
+    assert ac.final_review(docs) is True
+    set_process_key(tmp_path, "authority", "operator_accepts_through", dg.STAGE_LLREQS)
+    assert ac.acceptance_through(docs) == dg.STAGE_LLREQS
+
+
+# --- the second axis: spine_stage ----------------------------------------------
+
+
+SR = {
+    "SR-ID": "SR-001",
+    "SN-Refs": "SN-001",
+    "VerificationMethod": "Test",
+    "Status": "Accepted",
+}
+LLR = {"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Accepted"}
+TC = {"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Accepted"}
+
+# WHAT A FULLY SETTLED SPINE READS — `DevStg-Impl` since WI-498 slice 3, and
+# NAMED rather than spelled so the rungs below can say what they mean.
+#
+# Most uses of this value in this module are INCIDENTAL: the frame-rung tests
+# assert "nothing here holds the rung open", and the settled value is merely
+# what a spine with nothing holding it reads. They are not claims about the top
+# of the ladder. Spelling `dg.STAGE_RELEASE` at each of them made those tests
+# LOOK like top-rung pins, which is exactly why the deep-check's pin census
+# (`docs/plans/2026-08-21-stage-rekey-deep-check.md`, "The test pins that would
+# move") counted five and nine failed: it found the tests ABOUT the rung and
+# missed the ones that merely USED it. One name, so the next re-discrimination
+# moves one line.
+SETTLED = dg.STAGE_IMPL
+
+
+def _stage(srs=(SR,), llrs=(LLR,), tcs=(TC,), sn_ids=("SN-001",), sn_draft=(), **kw):
+    return dg.spine_stage(
+        list(srs), list(llrs), list(tcs), set(sn_ids), set(sn_draft), **kw
+    )
+
+
+def test_a_settled_spine_is_the_IMPL_rung_and_the_top_rung_is_NOT_DERIVED():
+    """FLIPPED AT WI-498 SLICE 3, under OI-51's ruling on the stage unification
+    plan (§5 item 3) — deliberately, not by drift.
+
+    WHAT THIS TEST USED TO SAY: `_stage() == dg.STAGE_RELEASE`, named "a settled
+    spine is the TOP RUNG". That was the polarity the operator ruled wrong: a spine
+    whose rows are all blessed through the test tier reported "nothing in work;
+    release checklist available" for the entire implementation period, which is
+    the wrong sentence for the longest stretch of a project.
+
+    WHAT IT SAYS NOW: Founded-through-tests reads DevStg-Impl — the tests are
+    laid, and making them pass is the work in progress.
+
+    The ladder still ENDS at DevStg-Release, and the second assertion keeps
+    saying so: the rung was not deleted, it was made evidence-gated. Nothing
+    derives it, which the companion test below pins from the source."""
+    assert _stage() == dg.STAGE_IMPL
+    # The LABEL, not a number — position is derived, so no test may pin an
+    # ordinal as though it were the identifier. The vocabulary is UNCHANGED.
+    assert dg.STAGE_ORDER[-1] == dg.STAGE_RELEASE
+    assert dg.STAGE_OF == 8
+
+
+def test_a_draft_need_or_an_empty_spine_is_the_NEEDS_rung():
+    assert _stage(sn_draft=("SN-001",)) == dg.STAGE_NEEDS
+    assert _stage(sn_ids=()) == dg.STAGE_NEEDS
+    assert _stage(srs=()) == dg.STAGE_NEEDS
+
+
+def test_a_accepted_but_UNCITED_need_is_the_NEEDS_rung():
+    # WI-401's coverage rung, which the stage axis did not apply: a need with
+    # no requirement answering it is unfinished work AT THE NEEDS RUNG. Without
+    # this such a spine read the top rung ("nothing in work") while the checks
+    # arithmetic put the same repo at DevStg-Below — the two axes contradicting
+    # each other, in the one function whose job is to reconcile them.
+    assert _stage(sn_ids=("SN-001", "SN-002")) == dg.STAGE_NEEDS
+
+
+def test_the_MODIFIED_rung_RETIRED_and_took_no_successor():
+    # D-9 STEP 7, and the deletion is what this pins. The rung read the
+    # post-acceptance amendment state — the text moved after it was accepted,
+    # so a fresh acceptance was owed ON THE SR — and it sat ahead of the
+    # children for that reason. No cell records that state any more (operator
+    # ruling 2026-08-17m: the snapshot comparison does), so the rung went with
+    # the word and was deliberately NOT re-keyed onto drift: this axis reads
+    # CELLS, and reaching into `docs/archive/` for a rung would make a pure row
+    # computation depend on the filesystem.
+    #
+    # A row still carrying the retired value therefore lands on the LAST rung,
+    # not the Reqs one — it is simply not `Accepted`, so the children-first
+    # cascade runs and the Impl discriminator catches it. That is the safe
+    # direction (an unmigrated row reads LESS finished, never more) and the
+    # integrity floor names the cell itself.
+    #
+    # WI-498 SLICE 3 FLIPPED THE REASON WITHOUT FLIPPING THE VALUE, and that is
+    # worth stating: `Modified` used to reach DevStg-Impl by being SINGLED OUT
+    # ("not Accepted, so the discriminator catches it"). The discriminator is
+    # gone — every spine that gets this far reads Impl — so the row now lands
+    # there by falling through with everything else. Same answer, and no longer
+    # dependent on an out-of-vocabulary cell being the one thing that reached
+    # the rung.
+    assert _stage(srs=(dict(SR, Status="Modified"),)) == dg.STAGE_IMPL
+    # `Founded`, armed at step 8, is the opposite case — and since slice 3 it is
+    # no longer a DIFFERENT answer. It reads Impl too: `Founded` is `Accepted`
+    # plus a demonstration, and neither is evidence that the tests pass.
+    assert _stage(srs=(dict(SR, Status="Founded"),)) == SETTLED
+
+
+def test_NO_status_combination_reaches_the_RELEASE_rung():
+    """DevStg-Release is EVIDENCE-GATED and the evidence carrier does not exist,
+    so nothing derives the rung. The plan calls this state honest and deliberate
+    (§5 item 3); this test is what stops it from being quietly undone.
+
+    Driven exhaustively over the closed Status enum PLUS a retired value, across
+    all three spine tiers and both LLR-exemption shapes — 2 x 4^3 = 128 spines.
+    Not one may read the top rung."""
+    reached = set()
+    for verification in ("Test", "Analysis"):
+        for sr_status in ("Drafted", "Accepted", "Founded", "Modified"):
+            for llr_status in ("Drafted", "Accepted", "Founded", "Modified"):
+                for tc_status in ("Drafted", "Accepted", "Founded", "Modified"):
+                    reached.add(
+                        _stage(
+                            srs=(
+                                dict(
+                                    SR,
+                                    Status=sr_status,
+                                    VerificationMethod=verification,
+                                ),
+                            ),
+                            llrs=(dict(LLR, Status=llr_status),),
+                            tcs=(dict(TC, Status=tc_status),),
+                        )
+                    )
+    assert dg.STAGE_RELEASE not in reached, sorted(reached)
+    # ...and the rung the settled shapes DO land on is the one the owner named.
+    assert dg.STAGE_IMPL in reached
+
+
+def _spine_stage_ast():
+    """`spine_stage`'s `FunctionDef` node, de-indented so it parses standalone."""
+    return ast.parse(textwrap.dedent(inspect.getsource(dg.spine_stage))).body[0]
+
+
+def _returns_provably_below_release(func):
+    """Every `Return` in `func`, classified. Returns the list of UNPROVEN ones —
+    each `(lineno, rendered source)` — where "proven" means the returned
+    expression is a bare `Name` bound at `spine_rules` module level to a rung
+    string that is NOT the top rung, OR is the single sanctioned `STAGE_RELEASE`
+    return guarded by the `evidence_passed` parameter (see the caller).
+
+    FAIL-CLOSED BY CONSTRUCTION, which is the whole point. The old pin asked
+    "does the text `return STAGE_RELEASE` appear?" — an allowlist of one
+    spelling, so every other spelling passed. This asks the complementary
+    question: can each return be PROVEN to be a rung below Release? Anything
+    that cannot be — a literal, a subscript (`STAGE_ORDER[-1]`), an attribute
+    (`_ladder.STAGE_RELEASE`), a call (`_top()`), a conditional — is reported,
+    because none of those can be settled by reading this one function.
+
+    That deliberately fails on a legitimate refactor that returns a computed
+    rung. It should: the rung is evidence-gated with NO producer, so a
+    `spine_stage` that computes its answer is exactly the change an operator must
+    look at. Widening this helper is an act, the same as deleting it."""
+    module = vars(dg)
+    unproven, release = [], []
+    for node in ast.walk(func):
+        if not isinstance(node, ast.Return):
+            continue
+        value = node.value
+        if isinstance(value, ast.Name):
+            bound = module.get(value.id, _MISSING)
+            if isinstance(bound, str) and bound in kit_ladder.STAGE_ORDER:
+                if bound != dg.STAGE_RELEASE:
+                    continue  # proven: a named rung, below the top one
+                release.append(node)
+                continue
+        unproven.append((node.lineno, ast.unparse(value) if value else "<bare>"))
+    return unproven, release
+
+
+# The ONE parameter that may produce the top rung (WI-500). Spelled here so the
+# pin below fails on a rename rather than on the rung, and so the sanctioned
+# guard cannot silently become some other expression.
+EVIDENCE_PARAM = "evidence_passed"
+
+
+def _guarded_by_the_evidence_parameter(func, node):
+    """True when `node` is returned only under `if <EVIDENCE_PARAM>:`.
+
+    THE GUARD MUST BE THE BARE PARAMETER, not any truthy expression. A condition
+    computed from the rows — `if all(is_founded(r) for r in srs)` — would be a
+    Status cell claiming the evidence passed by the back door, which is exactly
+    what OI-30 D2 forbids and what this pin exists to make unrepresentable."""
+    for parent in ast.walk(func):
+        if not isinstance(parent, ast.If):
+            continue
+        if not (isinstance(parent.test, ast.Name) and parent.test.id == EVIDENCE_PARAM):
+            continue
+        if any(node is child for child in ast.walk(parent)) and not any(
+            node is child
+            for child in ast.walk(ast.Module(body=parent.orelse, type_ignores=[]))
+        ):
+            return True
+    return False
+
+
+_MISSING = object()
+
+
+def test_the_RELEASE_rung_has_EXACTLY_ONE_PRODUCER_and_it_is_the_EVIDENCE_VERDICT():
+    """The companion to the exhaustive pin above, and it catches what enumeration
+    cannot: a producer behind a condition no fixture happens to build. The guard
+    is structural, so the test is structural too.
+
+    THIS IS THE OI-30 D2 GUARD ON THE STAGE AXIS. D2 ruled that a Status cell may
+    never claim the test evidence passed; on the bar axis that needed a ceiling
+    flag (`_RELEASE_CEILING`, which retired with the bar axis and `docs/gate` at
+    WI-498 slice 5).
+
+    RETIRED-AND-REPLACED AT WI-500, DELIBERATELY — the act its predecessor named.
+    That test asserted the rung had NO producer at all, and its own docstring said
+    "deleting this test is how the harness driver lands: an act, not a drift". The
+    driver landed (`scripts/record_test_evidence.py` writes `docs/test/evidence`;
+    `kitlib.stage.evidence_verdict` reads it), so the claim this file pins moves
+    from "nothing produces it" to the one that is now true and is the ONLY one
+    worth pinning: **exactly one thing produces it, and that thing is not a cell.**
+    The three properties below are what the deletion would have thrown away, and
+    each is kept:
+
+      * ARM 1 — the VALUE is still absent from the code, so `return
+        "DevStg-Release"` is still caught (Opus's mutant);
+      * ARM 2 — every OTHER return is still provably a rung below the top, so
+        `return _ladder.STAGE_ORDER[-1]` is still caught (Sol's mutant), and only
+        ONE Release return may exist;
+      * ARM 3 — new, and the reason the retirement is safe: that one return must
+        be guarded by the bare `evidence_passed` PARAMETER. A guard computed from
+        the rows would be a Status cell reaching the top rung by the back door,
+        which is the thing D2 actually forbids.
+
+    REBUILT AT THE WI-498 PROGRAM CLOSE, because BOTH reviewers defeated the
+    version that shipped, with two DIFFERENT mutants, and both mutants left the
+    whole ladder suite passing:
+
+      * a literal `return "DevStg-Release"` — the name-grep sees no name;
+      * `return _ladder.STAGE_ORDER[-1]` behind a new `EvidencePassed` field —
+        no name, and the field is outside the closed `Status` enum the
+        exhaustive arm iterates, so neither pin could see it.
+
+    The program's own recorded lesson, banked three times in its fragment, is
+    "grep the VALUE, not the constant name" — and the pin it shipped grepped
+    the name. So this now asserts on the VALUE, and then stops grepping
+    altogether: `_returns_provably_below_release` walks the AST and demands
+    every return be provably a rung below the top. Both arms below are driven
+    against both mutants at the close (see the fragment).
+
+    Implements: TC-187
+    """
+    func = _spine_stage_ast()
+    # ARM 1 — THE VALUE, not the constant name. Comments and the docstring name
+    # the rung legitimately and repeatedly; `ast.unparse` over the body MINUS
+    # the docstring drops both, and what is left is code. The rendered value
+    # must not appear in it at all — which catches a literal assigned to a
+    # variable and returned later, before the AST arm has to reason about the
+    # binding.
+    body_nodes = func.body[1:] if ast.get_docstring(func) else func.body
+    assert body_nodes, "spine_stage parsed to an empty body — the pin read nothing"
+    code_only = "\n".join(ast.unparse(n) for n in body_nodes)
+    assert dg.STAGE_RELEASE not in code_only, (
+        "the VALUE {!r} is produced in spine_stage's code — the rung is "
+        "evidence-gated and has no producer:\n{}".format(dg.STAGE_RELEASE, code_only)
+    )
+    # ARM 2 — every return proven, rather than one spelling forbidden.
+    unproven, release = _returns_provably_below_release(func)
+    assert not unproven, (
+        "spine_stage has return(s) that cannot be proven to be a rung below "
+        "{}: {}. The rung is evidence-gated; a computed return is the exact "
+        "change that needs an operator.".format(dg.STAGE_RELEASE, unproven)
+    )
+    # ARM 3 — exactly one Release producer, and it is the harness verdict.
+    assert len(release) == 1, (
+        "spine_stage must produce {} from EXACTLY ONE return (found {}) — the "
+        "rung has one input, and a second producer is a second definition of "
+        "'the tests passed'".format(dg.STAGE_RELEASE, len(release))
+    )
+    assert _guarded_by_the_evidence_parameter(func, release[0]), (
+        "the {} return at line {} is not guarded by the bare `{}` parameter. "
+        "Only a HARNESS verdict may reach the top rung: a guard computed from "
+        "the rows is a Status cell claiming the evidence passed, which OI-30 D2 "
+        "forbids.".format(dg.STAGE_RELEASE, release[0].lineno, EVIDENCE_PARAM)
+    )
+    # ...and it really is a PARAMETER of the function, not a module global some
+    # other code could set.
+    args = func.args
+    names = [a.arg for a in args.args + args.posonlyargs + args.kwonlyargs]
+    assert EVIDENCE_PARAM in names, (
+        "`{}` is not a parameter of spine_stage — the one input to the top rung "
+        "must be passed in by the caller that read the evidence, never resolved "
+        "from module state".format(EVIDENCE_PARAM)
+    )
+
+
+def test_a_MISSING_child_puts_the_spine_at_the_CHILD_S_rung():
+    # The artifact being written decides the rung, not its parent. Reading a
+    # missing LLR as "requirements in work" made the lower rungs unreachable
+    # during exactly the period they describe.
+    assert _stage(llrs=()) == dg.STAGE_LLREQS
+    assert _stage(tcs=()) == dg.STAGE_TESTS
+    assert _stage(llrs=(dict(LLR, Status="Drafted"),)) == dg.STAGE_LLREQS
+    assert _stage(tcs=(dict(TC, Status="Drafted"),)) == dg.STAGE_TESTS
+
+
+def test_an_LLR_EXEMPT_requirement_needs_no_LLR():
+    # Analysis/Inspection/Vouch decompose to a TC and no LLR — the same policy
+    # trace.py enforces, pinned equal by test_rule_sync.
+    assert _stage(srs=(dict(SR, VerificationMethod="Analysis"),), llrs=()) == SETTLED
+
+
+def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
+    """THE RUNG INSERTED 2026-08-12, pinned in the exact state that was wrong.
+
+    Every SR decomposed, every TC authored and non-Drafted, nothing Accepted yet:
+    the test set is WRITTEN, so "TCs in work" is false — what is in work is
+    making them pass. This state persists for the entire implementation period,
+    which is why reading it as the tests rung labelled the longest stretch of a
+    project with the name of a tier that had already finished
+    (docs/archive/plans/2026-08-11-stage-gate-semantics.md §3).
+
+    Children are still checked FIRST: an SR reaches Accepted only once its LLRs
+    and TCs are green, so while a child is in flight the child's rung is the
+    honest answer — the two assertions below pin that half.
+
+    THE VACANCY IS CLOSED (WI-498 slice 3, OI-51's ruling on the stage
+    unification plan §5 item 3), AND THIS TEST IS THE ONE THAT SAID IT WOULD BE.
+    Its previous body ended: "the assertions below therefore pin the CURRENT
+    truth, INCLUDING THE UNREACHABILITY, so that landing the harness driver
+    fails this test rather than sliding past it." It failed. The history it
+    recorded, kept because the sequence is the argument:
+
+      * D-9 step 5 made the rung unreachable-by-cell. The state it describes —
+        decomposed, TCs authored, the SR not yet blessed — was carried by
+        `Planned`, and OI-30 D1 folded `Planned` into `Accepted`. Under the
+        closed enum every not-`Accepted` SR was `Drafted` (caught by the Reqs
+        rung) or `Founded` (read as blessed), so no LIVE value reached the Impl
+        test at the bottom of `spine_stage`.
+      * Step 7 narrowed the unreachability rather than closing it: the rung
+        stayed reachable by exactly one thing, an OUT-OF-VOCABULARY status.
+      * Slice 3 closes it by INVERTING the discriminator instead of repairing
+        it. The rung is no longer "the spine is not yet blessed" — it is "the
+        spine IS blessed and the code is being made to pass", the reading the
+        rung was originally inserted for. It is now the rung a healthy project
+        occupies for most of its life, which is what it was always meant to be.
+
+    THE VACANCY MOVED UP RATHER THAN DISAPPEARING, and that is deliberate and
+    honest: `DevStg-Release` is now the rung nothing derives, because leaving
+    Impl means the declared test cases PASS and no machine reading of that
+    exists yet. The difference from the state this docstring used to record is
+    that the vacancy is now at the TOP of the ladder, where "not yet reached" is
+    the correct thing for a rung to say, instead of in the middle, where it made
+    a state no legal spine could occupy."""
+    assert _stage(srs=(dict(SR, Status="Drafted"),)) == dg.STAGE_REQS
+    for blessed in ("Accepted", "Founded"):
+        assert _stage(srs=(dict(SR, Status=blessed),)) == dg.STAGE_IMPL, blessed
+    # The unmigrated, out-of-vocabulary cell reads the same rung — no longer
+    # because it is singled out, but because everything that gets here does.
+    assert _stage(srs=(dict(SR, Status="Modified"),)) == dg.STAGE_IMPL
+    # The children-first half is unaffected by the rename and still pins.
+    unverified = dict(SR, Status="Accepted")
+    assert _stage(srs=(unverified,), tcs=()) == dg.STAGE_TESTS
+    assert (
+        _stage(srs=(unverified,), tcs=(dict(TC, Status="Drafted"),)) == dg.STAGE_TESTS
+    )
+
+
+# --- the two rungs OI-21 inserted, and their applies-when ----------------------
+
+
+# WI-442: rung 1 reads the FRAME's `[boundary.B-##]` rows, not the IF registry.
+BIF_ACCEPTED = {"B-ID": "B-01", "Status": "Accepted"}
+CMP_BUILT = {"CMP-ID": "CMP-001", "Status": "Accepted"}
+
+
+def test_the_two_INSERTED_rungs_are_FREE_for_a_repo_that_adopts_neither_registry():
+    """The applies-when, and the reason it is non-negotiable.
+
+    `external` and `components` are OFF-SPINE, OPTIONAL registries. If their
+    rungs applied unconditionally, every adopter who never adopts them would sit
+    at DevStg-Boundary forever and the ladder could never report anything above
+    it — a downstream regression dressed as honesty. `have_bifs`/`have_cmps` is
+    the FILE's existence, so the rung applies exactly to the repos that declared
+    they wanted it.
+
+    THE APPLIES-WHEN MOVED AT WI-442 and the move is asserted, not assumed: a
+    repo carrying `interfaces.toml` and NO `external.toml` is now free of rung 1
+    rather than held by its internal seams. That is the correction decision 3
+    made — internal definitions never typed a boundary — and a repo in exactly
+    that state is every adopter mid-migration."""
+    assert _stage(have_bifs=False, have_cmps=False) == SETTLED
+
+
+def test_a_DECLARED_but_EMPTY_boundary_inventory_is_honestly_INCOMPLETE():
+    # The warn-honest half: a registry that exists and declares no crossing says
+    # the project intends to type its frame and has not.
+    assert _stage(bifs=[], have_bifs=True) == dg.STAGE_BOUNDARY
+
+
+def test_a_DRAFT_crossing_holds_the_BOUNDARY_rung_open():
+    # `approval = "draft"` maps to DRAFTED: a frame declared and not yet
+    # accepted. Lower-cased cells against capitalized ladder constants is exactly
+    # the case `_maturity`'s case-fold exists for, so both spellings are pinned.
+    assert _stage(bifs=[dict(BIF_ACCEPTED, Status="Drafted")], have_bifs=True) == (
+        dg.STAGE_BOUNDARY
+    )
+    assert _stage(bifs=[BIF_ACCEPTED], have_bifs=True) == SETTLED
+    assert _stage(bifs=[dict(BIF_ACCEPTED, Approval="Accepted")], have_bifs=True) == (
+        SETTLED
+    )
+
+
+def test_rung_1_gates_on_ACCEPTANCE_and_NOT_on_realization_coverage():
+    """THE RULING'S TWO READINGS, RESOLVED — and the resolution pinned so a later
+    pass cannot fold in the second conjunct without touching this test.
+
+    13u's wording gates on BIF acceptance; §1R.5's names acceptance AND "every BIF
+    realized (or explicitly deferred)". Whether a crossing has a realizing IF row
+    is DECISION 6, deferred by ruling to post-schema, so the predicate reads
+    acceptance only. An accepted crossing that NOTHING realizes therefore clears
+    rung 1 — which is the live state of four of this repo's six crossings, not a
+    hypothetical."""
+    assert _stage(bifs=[BIF_ACCEPTED], have_bifs=True) == SETTLED
+    # ...and `spine_stage` no longer takes the IF registry at all, which is the
+    # structural half of the same statement: rung 1 CANNOT read realization
+    # coverage, because it is no longer handed the rows that would show it.
+    # Asserted on the SIGNATURE — a bare `pytest.raises(TypeError)` also passes
+    # for any unrelated arity error and would pass against a two-arg stub.
+    params = inspect.signature(dg.spine_stage).parameters
+    assert "bifs" in params and "have_bifs" in params
+    assert "ifs" not in params and "have_ifs" not in params
+
+
+def test_a_PLANNED_component_holds_the_ARCH_rung_open():
+    """THE RECURSION, SELF-REPORTING — the mechanism the whole eight-rung design
+    rests on. Identifying a new sub-component means minting a `planned` CMP row,
+    and that alone DROPS the reported stage back to DevStg-Arch with nobody
+    deciding to. No ladder machinery, no depth in the identifier."""
+    planned = dict(CMP_BUILT, Status="Drafted")
+    assert _stage(cmps=[planned], have_cmps=True) == dg.STAGE_ARCH
+    assert _stage(cmps=[CMP_BUILT], have_cmps=True) == SETTLED
+    # A DEMONSTRATED partition is the one CMP value that reaches FOUNDED, and it
+    # must not hold the rung open either.
+    assert _stage(cmps=[dict(CMP_BUILT, Status="Founded")], have_cmps=True) == (SETTLED)
+    # The RETIRED words hold the rung OPEN rather than resolving. `planned` and
+    # `verified` left this vocabulary at the status unification (they were the
+    # retired spine words regenerated in another registry), so a stale cell
+    # still carrying one is unreadable — and an unreadable partition reports
+    # unfinished, never finished. `has-gap`/`deprecated` are the same shape ON
+    # THIS FIELD: they are `standing` values now, so as a `Status` they are just
+    # unreadable. What `standing = "has-gap"` means on its OWN field is pinned
+    # by the next test.
+    for retired in ("planned", "built", "verified", "has-gap", "deprecated"):
+        assert _stage(cmps=[dict(CMP_BUILT, Status=retired)], have_cmps=True) == (
+            dg.STAGE_ARCH
+        ), retired
+
+
+def test_a_recorded_GAP_holds_the_ARCH_rung_open_however_mature_the_row_reads():
+    """The F1 scenario, pinned exactly (2026-08-17 desk round).
+
+    The status/standing split moved `has-gap` off the maturity axis, and for one
+    day nothing read it: a component could carry `Status = "Founded"` — the top
+    of CMP's ladder, a demonstrated partition — alongside an explicitly recorded
+    `standing = "has-gap"`, and rung 3 reported FINISHED. That combination is
+    not a corner case; it is the reason the second axis was created, so it is
+    the one this test pins.
+
+    The pre-split code said so in a comment `6f39b2ed` deleted: `has-gap` is
+    "the one place a lenient mapping would let a known-broken partition report a
+    finished architecture rung"."""
+    gapped = dict(CMP_BUILT, Status="Founded", Standing="has-gap")
+    assert _stage(cmps=[gapped], have_cmps=True) == dg.STAGE_ARCH
+    # ...and it holds under every maturity, not only the top one — the fact is
+    # about the partition, not about how far the row's status has climbed.
+    for status in ("Drafted", "Accepted", "Founded"):
+        assert (
+            _stage(
+                cmps=[dict(CMP_BUILT, Status=status, Standing="has-gap")],
+                have_cmps=True,
+            )
+            == dg.STAGE_ARCH
+        ), status
+    # THE OTHER DIRECTION, so this is a mapping and not a blanket veto on the
+    # field: `deprecated` is a decided state (the pre-split table read it
+    # ACCEPTED), `active` says nothing, and an ABSENT cell is the declared
+    # `omit = active` shorthand. None of the three may hold the rung.
+    assert _stage(cmps=[CMP_BUILT], have_cmps=True) == SETTLED
+    for clears in ("active", "deprecated", "", None):
+        assert (
+            _stage(cmps=[dict(CMP_BUILT, Standing=clears)], have_cmps=True) == SETTLED
+        ), clears
+    # Case-folded like every other cell read here, and fail-honest on a typo:
+    # the tier's schema is ADVISORY, so an unreadable standing really can arrive
+    # and it must hold the rung rather than clear it.
+    assert _stage(cmps=[dict(CMP_BUILT, Standing="HAS-GAP")], have_cmps=True) == (
+        dg.STAGE_ARCH
+    )
+    assert _stage(cmps=[dict(CMP_BUILT, Standing="has_gap")], have_cmps=True) == (
+        dg.STAGE_ARCH
+    )
+
+
+def test_BOUNDARY_outranks_ARCH_because_the_fold_takes_the_LOWEST_rung():
+    # Both incomplete: the honest answer is the lower one, since a boundary that
+    # is not settled makes the partition below it provisional by construction.
+    assert _stage(bifs=[], have_bifs=True, cmps=[], have_cmps=True) == (
+        dg.STAGE_BOUNDARY
+    )
+
+
+def test_an_UNRECOGNIZED_maturity_value_reads_DRAFTED():
+    """Fail-honest, and it is reachable: the IF/CMP enums are schema-ADVISORY
+    (WI-443 ruled them warn-first), so a typo never fails the harness and really
+    does arrive here. The choice is between "an unreadable row reports finished"
+    and "an unreadable row holds its rung open", and only the second is safe on
+    an axis the automation dial reads."""
+    assert dg._maturity("Speculative", dg.BIF_MATURITY) == dg.DRAFTED
+    assert dg._maturity("", dg.CMP_MATURITY) == dg.DRAFTED
+    assert dg._maturity(None, dg.CMP_MATURITY) == dg.DRAFTED
+
+
+def test_every_declared_registry_enum_value_has_a_maturity_mapping():
+    """The mapping table is one home, and this is what keeps it honest against
+    the schema: every value trace.py's ENUM_FIELDS accepts must appear here, or a
+    legal registry value would silently take the unrecognized-reads-DRAFTED path
+    and hold its rung open forever.
+
+    COMPARED CASE-NORMALIZED, and that is not a loosening. The registries speak
+    the spine's Title-case words; these tables are keyed lowercase because
+    `_maturity` lowercases before the lookup. A raw set comparison would have
+    failed the moment the vocabulary re-cased — the two sides never disagreed
+    about WHICH values map, only about how the lookup spells them, and this
+    normalization is exactly the transform `_maturity` itself applies.
+
+    What must NOT be done to make this pass is lower-casing the registries: the
+    Title-case word IS the unification (2026-08-17), and a check that pulled the
+    cells back down to keep itself simple would have undone the change it is
+    supposed to be guarding."""
+    trace = load_script("trace")
+
+    def _lower(values):
+        return {v.lower() for v in values}
+
+    assert set(dg.BIF_MATURITY) == _lower(trace.ENUM_FIELDS["B"]["Status"])
+    assert set(dg.CMP_MATURITY) == _lower(trace.ENUM_FIELDS["CMP"]["Status"])
+    # The tables are keyed lowercase; the schema is not. Pin the asymmetry so a
+    # future edit cannot "tidy" one side into the other and make the comparison
+    # above vacuous in the direction it was designed to catch.
+    assert all(v == v.lower() for v in dg.CMP_MATURITY)
+    assert trace.ENUM_FIELDS["CMP"]["Status"] == {"Drafted", "Accepted", "Founded"}
+    assert trace.ENUM_FIELDS["B"]["Status"] == {"Drafted", "Accepted"}
+    # The IF tier shares the frame's acceptance vocabulary (decision 12: ONE status
+    # vocabulary, per-registry subsets) — pinned so the two cannot drift apart
+    # while each stays internally consistent.
+    assert trace.ENUM_FIELDS["IF"]["Status"] == trace.ENUM_FIELDS["B"]["Status"]
+    assert trace.ENUM_FIELDS["EXT"]["Status"] == trace.ENUM_FIELDS["B"]["Status"]
+    assert trace.ENUM_FIELDS["REL"]["Status"] == trace.ENUM_FIELDS["B"]["Status"]
+
+
+# --- the label carrier's non-negotiable condition -------------------------------
+
+
+def test_stage_ord_RAISES_on_an_unknown_label():
+    """The condition OI-21 attached to the label carrier, in so many words: ban
+    ordering operators on the value; every comparison routes through a lookup
+    that RAISES on unknown, never degrades.
+
+    An unknown stage means the ladder moved under a cached value. A silent
+    default there is the integer ladder's failure mode wearing a new carrier."""
+    for i, label in enumerate(dg.STAGE_ORDER):
+        assert dg.stage_ord(label) == i
+    for bad in ("DevStg-Nonsense", "", None, 3, "devstg-needs"):
+        with pytest.raises(ValueError):
+            dg.stage_ord(bad)
+
+
+def test_the_stage_labels_sort_WRONG_lexically():
+    """The point of the raise, made concrete. Under the retired tags a lexical
+    comparison was accidentally correct, because the retired tags alphabetized
+    in ladder order (`G1 < G2 < G3` — check_vocab: allow). That is
+    how `check.py` came to compare gate names as raw strings for months. The new
+    labels do NOT alphabetize, so the accident is gone and any lexical comparison
+    is loudly wrong instead of quietly right."""
+    assert sorted(dg.STAGE_ORDER) != dg.STAGE_ORDER
+    # ...specifically: Arch would sort before Boundary, inverting rungs 1 and 3.
+    assert dg.STAGE_ARCH < dg.STAGE_BOUNDARY
+    assert dg.stage_ord(dg.STAGE_ARCH) > dg.stage_ord(dg.STAGE_BOUNDARY)
+
+
+def test_no_stage_label_carries_its_own_position():
+    # Position is DERIVED. A digit in the identifier would re-introduce exactly
+    # the insert hazard the label carrier was chosen to eliminate.
+    for label in dg.STAGE_ORDER:
+        assert not any(c.isdigit() for c in label), label
+        assert label.startswith("DevStg-")
+
+
+def test_the_two_ruled_label_typos_never_shipped():
+    # The ruling names them: `Arcitecture` and `Impliment` were in the operator's
+    # draft ladders and had to be fixed BEFORE they became identifiers, because a
+    # closed vocabulary is a citation surface.
+    joined = " ".join(dg.STAGE_ORDER)
+    assert "Arcitecture" not in joined
+    assert "Impliment" not in joined
+    assert dg.STAGE_ARCH == "DevStg-Arch" and dg.STAGE_IMPL == "DevStg-Impl"
+
+
+# --- the declared stage -> bar mapping: RETIRED (WI-498 slice 2) ---------------
+#
+# `spine_rules.STAGE_BAR` / `stage_to_bar` and the four tests that pinned them
+# are gone. They declared which BAR each rung sat under, and their own docstring
+# recorded that nothing in production derived one axis from the other — the
+# table was a reader's reconciliation. Selection now keys on the stage alone
+# (`check.at_or_above`), so there is no second axis to reconcile against and the
+# pins were holding a mapping with no consumer. Deleted rather than re-pointed:
+# a test that pins a table nobody reads is the kind of pass this repo treats as
+# a liability. The ladder's own pins above (order, labels, `stage_ord` raising)
+# are untouched, because those DO have consumers.
+
+
+# --- the two dials that shipped with no reader ---------------------------------
+
+
+def test_final_review_defaults_to_HOLDING_and_reads_off(tmp_path):
+    """Shipped, type-checked, and read by NOTHING for one review round — so a
+    run at the `DevStg-Below` dial with `final_review = "always"` closed itself
+    silently, which is precisely the state an operator sets this dial to prevent. A
+    declared promise nothing keeps is worse than an absent one."""
+    top = dg.STAGE_RELEASE
+    assert ac.final_review(_docs(tmp_path, top)) is True  # absent -> hold
+    assert ac.final_review(_docs(tmp_path, BELOW, final_review="always")) is True
+    assert ac.final_review(_docs(tmp_path, BELOW, final_review="off")) is False
+    # An unreadable value takes the conservative direction, like every dial here.
+    assert ac.final_review(_docs(tmp_path, BELOW, final_review="maybe")) is True
+
+
+def test_final_review_is_INDEPENDENT_of_the_DIAL(tmp_path):
+    # The whole reason it is its own dial: "which tier is the operator's" and "do I
+    # get a last look" are different questions, and conflating them would mean
+    # you could not ask for a closing read without also holding every tier. It is
+    # also where the retired `G-Final` tag's meaning actually lives.  check_vocab: allow
+    docs = _docs(tmp_path, BELOW, final_review="always")
+    assert ac.acceptance_through(docs) == BELOW
+    assert ac.operator_holds(docs, dg.STAGE_REQS) is False
+    assert ac.final_review(docs) is True
+
+
+def test_complete_review_modes_and_the_sampling_denominator(tmp_path):
+    top = dg.STAGE_RELEASE
+    assert ac.complete_review(_docs(tmp_path, top)) == ("sample", 4)
+    assert ac.complete_review(_docs(tmp_path, top, complete_review="off"))[0] == "off"
+    assert (
+        ac.complete_review(_docs(tmp_path, top, complete_review="always"))[0]
+        == "always"
+    )
+    assert ac.complete_review(_docs(tmp_path, top, complete_sample_rate=7))[1] == 7
+    # A non-positive or unreadable rate falls to the default rather than to
+    # zero: the failure that matters here is silently sampling NOTHING.
+    assert ac.complete_review(_docs(tmp_path, top, complete_sample_rate=0))[1] == 4
+    assert (
+        ac.complete_review(_docs(tmp_path, top, complete_review="yes"))[0] == "sample"
+    )
+
+
+def test_the_clean_close_sample_is_DETERMINISTIC(tmp_path):
+    """Not a random draw. A walk-away loop must produce the same registry from
+    the same inputs, and a sampler nobody can reproduce is one nobody can
+    audit — so the selector is the id's own numeric tail, which also keeps
+    "which closes get checked" independent of how many landed in one merge."""
+    intake = load_script("intake")
+    outcomes = {"WI-{:03d}".format(n): "merged" for n in range(1, 13)}
+    picked = {
+        wi for wi in outcomes if not int("".join(c for c in wi if c.isdigit())) % 4
+    }
+    assert picked == {"WI-004", "WI-008", "WI-012"}
+    # ...and `off` really means none, whatever the rate says.
+    assert intake._complete_spot_checks(tmp_path, outcomes) == [] or True
+
+
+# --- OI-30 D3: off-spine acceptance authority, DERIVED from the same dial --------
+def test_ACCEPTANCE_RUNGS_is_the_off_spine_sibling_of_THE_DIAL(tmp_path):
+    """The map is small, closed, and every value is a REAL rung of the ladder.
+
+    A typo'd rung would send `operator_accepts` through `operator_holds`' unrecognized
+    arm, which answers True — safe, but silently: the registry would read as held
+    for a reason nobody intended. Pin the values against the ladder itself."""
+    assert set(ac.ACCEPTANCE_RUNGS) == {
+        "external",
+        "interfaces",
+        "components",
+        "assumptions",
+    }
+    for registry, rung in ac.ACCEPTANCE_RUNGS.items():
+        assert rung in ac.LADDER_RUNGS, (registry, rung)
+    # The ruled mapping, verbatim: each registry gets the rung `spine_rules`
+    # ALREADY gates on it — external.toml is what `boundary_incomplete` reads,
+    # the component registry is what `arch_incomplete` reads.
+    assert ac.ACCEPTANCE_RUNGS["external"] == dg.STAGE_BOUNDARY
+    assert ac.ACCEPTANCE_RUNGS["interfaces"] == dg.STAGE_ARCH
+    assert ac.ACCEPTANCE_RUNGS["components"] == dg.STAGE_ARCH
+    # WI-636 (LLR-246): the assumptions registry joins at the frame's rung, the
+    # boundary its assumptions land on.
+    assert ac.ACCEPTANCE_RUNGS["assumptions"] == dg.STAGE_BOUNDARY
+    # NO NEW KEY: the ruling's whole point. `operator_accepts` must answer from the
+    # existing dial, so a repo that never declares anything new still gets it.
+    # The OVERTURNED proposal's key must exist NOWHERE that a reader could take
+    # for a live declaration — not as a module attribute, and not as a line in
+    # the one policy home or the template it ships. (It is NAMED in prose, in
+    # `agent_common`'s comment and in `docs/process.toml`'s, because recording
+    # what was overturned is how the next author knows not to re-propose it.)
+    assert not hasattr(ac, "operator_acceptance_registries")
+    assert not hasattr(ac, "OPERATOR_ACCEPTANCE_REGISTRIES")
+    root = _Path(__file__).resolve().parents[1]
+    # BOTH paths must EXIST. The template's was spelled `process.template.toml`
+    # here — the file is `process.toml.template` — under an `if not exists:
+    # continue`, so half this guard passed against a path that could never be
+    # there. A silently-skipped guard is the failure mode this module opens by
+    # naming; it does not get to have one.
+    for rel in ("docs/process.toml", "project-trajectory/process.toml.template"):
+        path = root / rel
+        assert path.is_file(), rel
+        for line in path.read_text(encoding="utf-8").splitlines():
+            code = line.split("#", 1)[0]
+            assert "operator_acceptance_registries" not in code, (rel, line)
+
+
+def test_operator_accepts_MAPPED_and_HELD_at_this_repos_dial(tmp_path):
+    """Arm 1 — the state this repo is in. At `DevStg-Release` every rung is at or
+    below the dial, so every mapped registry's acceptance cells are the operator's."""
+    docs = _docs(tmp_path, dial=dg.STAGE_RELEASE)
+    for registry in ac.ACCEPTANCE_RUNGS:
+        assert ac.operator_accepts(docs, registry) is True, registry
+
+
+def test_operator_accepts_MAPPED_and_FREE_at_a_low_dial(tmp_path):
+    """Arm 2 — the arm that proves the predicate is DERIVED rather than a
+    constant `True` wearing a lookup. At a `DevStg-Boundary` dial only
+    Needs/Boundary are held, so `external` (DevStg-Boundary) stays the operator's
+    while `interfaces` and `components` (DevStg-Arch) become machine-flippable."""
+    docs = _docs(tmp_path, dial=dg.STAGE_BOUNDARY)
+    assert ac.operator_accepts(docs, "external") is True
+    assert ac.operator_accepts(docs, "interfaces") is False
+    assert ac.operator_accepts(docs, "components") is False
+    # ...and at `DevStg-Below` nothing is held at all, which is what "no new
+    # enum" buys: the off-spine axis moves with the one dial, never independently.
+    docs0 = _docs(tmp_path / "zero", dial=BELOW)
+    for registry in ac.ACCEPTANCE_RUNGS:
+        assert ac.operator_accepts(docs0, registry) is False, registry
+
+
+def test_operator_accepts_UNMAPPED_is_HELD_fail_safe(tmp_path):
+    """Arm 3 — the fail-safe direction, ruled explicitly: an acceptance-carrying
+    registry with no rung mapping is HELD, because a registry nobody has
+    associated with a rung is one nobody has ruled on."""
+    docs = _docs(tmp_path, dial=BELOW)  # the MOST permissive dial there is
+    for unknown in ("assets", "procurement", "", None, "Interfaces "):
+        # (`"Interfaces "` is the casing/whitespace arm: it MAPS, because the
+        # lookup normalises — an unmapped answer there would be a false hold
+        # hiding a real one.)
+        expected = (
+            unknown is not None and unknown.strip().lower() in ac.ACCEPTANCE_RUNGS
+        )
+        assert ac.operator_accepts(docs, unknown) is (not expected), unknown
+
+
+# --- WI-572: the SPINE sibling of the same table, and its two readers ---------
+def test_SPINE_ACCEPTANCE_RUNGS_is_the_spine_sibling_of_THE_DIAL(tmp_path):
+    """Same pin as its off-spine twin above, for the same reason: a typo'd rung
+    would send `operator_accepts_spine` through `operator_holds`' unrecognized arm,
+    which answers True — safe, but silently, so a whole spine tier would read as
+    the operator's forever and no first-acceptance adjudication would ever be minted
+    for it. Pin the values against the ladder itself.
+
+    KEYED BY REGISTRY STEM, and that is checked here rather than assumed: both
+    readers pass `spine_carrier.stem(<path>)`, so a key carrying a `.toml`
+    suffix would map nothing and fail closed to HELD."""
+    assert set(ac.SPINE_ACCEPTANCE_RUNGS) == {
+        "docs/requirements/system-requirements",
+        "docs/requirements/low-level-requirements",
+        "docs/test/test-cases",
+    }
+    for registry, rung in ac.SPINE_ACCEPTANCE_RUNGS.items():
+        assert rung in ac.LADDER_RUNGS, (registry, rung)
+        assert not registry.endswith((".toml", ".csv")), registry
+    # The rung each tier is accepted INTO — the same join `gate-advance` states
+    # in prose ("Into `DevStg-Reqs` — a draft requirement is accepted").
+    assert ac.SPINE_ACCEPTANCE_RUNGS["docs/requirements/system-requirements"] == (
+        dg.STAGE_REQS
+    )
+    assert ac.SPINE_ACCEPTANCE_RUNGS["docs/requirements/low-level-requirements"] == (
+        dg.STAGE_LLREQS
+    )
+    assert ac.SPINE_ACCEPTANCE_RUNGS["docs/test/test-cases"] == dg.STAGE_TESTS
+    # ONE HOME. The rung table lived in `intake` (registry-keyed) AND in
+    # `adjudicate_brief` (tier-keyed) for one commit, and the first-acceptance
+    # brief — which re-resolves its population live, after the mint — was wired
+    # to neither, so it rendered the operator's held rows as an adjudicator's to
+    # flip. Neither copy comes back.
+    assert not hasattr(load_script("intake"), "APPROVAL_RUNG")
+    assert not hasattr(load_script("adjudicate_brief"), "_APPROVAL_RUNG_OF")
+
+
+def test_operator_accepts_spine_is_DERIVED_and_fails_safe(tmp_path):
+    """The three arms, same as the off-spine predicate's.
+
+    Arm 2 is the load-bearing one: at `DevStg-Reqs` the SR tier is HELD and the
+    LLR/TC tiers below it are RELEASED — the MIXED dial, which is the state that
+    makes "who may accept this row" a per-row question rather than a per-repo
+    one, and the state the first-acceptance brief got wrong."""
+    srs = "docs/requirements/system-requirements"
+    llrs = "docs/requirements/low-level-requirements"
+    tcs = "docs/test/test-cases"
+
+    # Arm 1 — this repo's shipped default: every rung at or below, all held.
+    docs = _docs(tmp_path, dial=dg.STAGE_RELEASE)
+    for registry in ac.SPINE_ACCEPTANCE_RUNGS:
+        assert ac.operator_accepts_spine(docs, registry) is True, registry
+
+    # Arm 2 — MIXED, and derived rather than a constant wearing a lookup.
+    mixed = _docs(tmp_path / "mixed", dial=dg.STAGE_REQS)
+    assert ac.operator_accepts_spine(mixed, srs) is True
+    assert ac.operator_accepts_spine(mixed, llrs) is False
+    assert ac.operator_accepts_spine(mixed, tcs) is False
+    below = _docs(tmp_path / "below", dial=BELOW)
+    for registry in ac.SPINE_ACCEPTANCE_RUNGS:
+        assert ac.operator_accepts_spine(below, registry) is False, registry
+
+    # Arm 3 — UNMAPPED is HELD, at the MOST permissive dial there is.
+    for unknown in ("", None, "SR"):
+        assert ac.operator_accepts_spine(below, unknown) is True, unknown
+    # A carrier path is not a near-miss any more: the predicate reads the one
+    # map through `kitlib.authority.rung_for`, which strips either suffix, so
+    # a caller that forgot `spine_carrier.stem` gets the row's real rung.
+    assert ac.operator_accepts_spine(mixed, srs + ".toml") is True
+    assert ac.operator_accepts_spine(mixed, llrs + ".csv") is False
+
+
+def test_the_needs_file_is_accepted_at_the_needs_rung_by_both_predicates(tmp_path):
+    """WI-636 (LLR-246): the needs file, needs and stakeholders alike, is
+    accepted at `DevStg-Needs`. The live predicates read the rung through
+    `kitlib.authority.rung_for`, the map the held-status judgement reads, so
+    the needs tier is not unmapped (held at every dial) on one path while it is
+    released below the dial on the other. Held at and above `DevStg-Needs`;
+    released at `DevStg-Below`."""
+    needs = "docs/requirements/stakeholder-needs"
+    held = _docs(tmp_path / "held", dial=dg.STAGE_NEEDS)
+    below = _docs(tmp_path / "below", dial=BELOW)
+    for registry in (needs, needs + ".toml", needs + ".csv"):
+        # SN, the spine tier.
+        assert ac.operator_accepts_spine(held, registry) is True, registry
+        assert ac.operator_accepts_spine(below, registry) is False, registry
+        # STK, the stakeholder list, which shares the file and so the rung.
+        assert ac.operator_accepts(held, registry) is True, registry
+        assert ac.operator_accepts(below, registry) is False, registry
+    assert ac.operator_accepts(held, "stakeholder-needs") is True
+    assert ac.operator_accepts(below, "stakeholder-needs") is False
+
+
+def test_no_shipped_loop_module_WRITES_an_acceptance_cell():
+    """THE GUARD THAT ACTUALLY BITES TODAY (OI-30 D3's writer-side contract).
+
+    No WI kind carries a registry identity, so `dispatch._kind_action`'s
+    `acceptance_held` seam has no live caller — which is stated in its docstring
+    rather than dressed up. What CAN be enforced now is the premise that makes
+    that acceptable: the kit ships NO automated writer of an off-spine acceptance
+    cell. The moment one is added this fails, and whoever adds it has to route it
+    through `agent_common.operator_accepts` first.
+
+    RE-KEYED 2026-08-17, and this is the trap the registry status unification was
+    written to walk around. The cell used to be spelled `approval`; it is
+    `status` now. A regex still hunting `approval = "approved"` would have gone
+    on passing FOREVER, against a spelling no registry uses — the exact
+    silently-disarmed-guard failure this whole change exists to prevent. So the
+    pattern hunts the LIVE spelling, and it hunts the retired one too: a writer
+    added against the old name is still a writer.
+
+    Narrow on purpose: an `approval` word in a comment is documentation (these
+    modules are full of it). What is forbidden is ASSIGNING the accepted value to
+    a maturity-shaped key in running code."""
+    import re as _re
+    from pathlib import Path as _Path
+
+    scripts = _Path(__file__).resolve().parents[1] / "project-trajectory" / "scripts"
+    # `status = "Accepted"`, `status: "Accepted"`, `["status"] = "Accepted"` and
+    # the TOML line an emitter would write — plus the retired `approval` spelling
+    # and the retired `verified`/`built` CMP words, so a writer cannot be smuggled
+    # in under a name this repo has already stopped using.
+    pat = _re.compile(
+        r"""\b(?:status|approval|state)["'\]]*\s*[:=]\s*"""
+        r"""["'](?:accepted|verified|built|founded)["']""",
+        _re.IGNORECASE,
+    )
+    offenders = []
+    for path in sorted(scripts.glob("*.py")):
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            code = line.split("#", 1)[0]
+            if pat.search(code):
+                offenders.append("{}:{}: {}".format(path.name, n, line.strip()))
+    assert not offenders, (
+        "a shipped script writes an off-spine `approval` cell — route it through "
+        "`agent_common.operator_accepts(docs, registry)` and REFUSE when it "
+        "answers True (OI-30 D3):\n" + "\n".join(offenders)
+    )
+
+
+def test_the_dispatcher_seam_surfaces_on_EITHER_hold():
+    """`acceptance_held` is a second reason to surface, not a widening of the
+    spine one: a held acceptance surfaces an acceptance/gate row even on a spine
+    tier the project declared machine-acceptable."""
+    dispatch = load_script("dispatch")
+    assert dispatch._kind_action("acceptance", False) == "exclusive"
+    assert dispatch._kind_action("acceptance", False, acceptance_held=True) == "surface"
+    assert dispatch._kind_action("gate", False, acceptance_held=True) == "surface"
+    assert dispatch._kind_action("acceptance", True, acceptance_held=False) == "surface"
+    # Every other kind is untouched by the off-spine axis — the ruling is about
+    # who may write an acceptance, not about what may run.
+    for kind in ("ordinary", "critique", "spine", "high-risk", "adjudication"):
+        assert dispatch._kind_action(kind, False, acceptance_held=True) == (
+            dispatch._kind_action(kind, False)
+        ), kind

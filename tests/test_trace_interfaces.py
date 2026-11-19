@@ -11,7 +11,7 @@ came out of, so tests/conftest.py lists it beside test_trace in SLOW_MODULES.
 
 What stays in tests/test_trace.py is the SN->SR->LLR->TC spine: the orphan /
 strict gates, the verification-category buckets, the schema-safe extra columns,
-the SN status vocabulary, the Drafted exemptions and the approved-phase
+the SN status vocabulary, the Drafted exemptions and the accepted-phase
 completeness rule.
 
 Implements: TC-244
@@ -205,13 +205,13 @@ def test_a_row_with_no_in_tree_endpoint_is_a_strict_finding(scaffold):
 # --- WI-443 / OI-14 part B: the IF+CMP schema tier, WARN-FIRST -----------------
 # The ruled sequencing is advisory-until-the-corpus-converges, so EVERY test in
 # this section asserts the WARN TEXT and `returncode == 0` under `--strict`. A
-# rule that reddens a gate here would be this slice overreaching its ruling; a
+# rule that fails a gate here would be this slice overreaching its ruling; a
 # rule that says nothing would be the state OI-14 spent three days measuring the
 # drift of. Both halves are pinned, per rule.
 
 CLEAN_IF = (
     'IF-001,Provides,src/demo,external:git,"reads the ref state",'
-    "SR-001,v1,Approved,Active,,\n"
+    "SR-001,v1,Accepted,Active,,\n"
 )
 
 
@@ -334,7 +334,7 @@ def test_an_empty_retired_cell_and_a_nested_sub_table_are_refused_by_the_carrier
     # carrier an unset cell is an ABSENT key); `[interface.IF-002.legacy]` is
     # the nested-table refusal (a cell that is itself a table is not a cell).
     # Both land as a REFUSAL rather than a report — the fail-closed half of the
-    # carrier fork — so `--strict` reds either way.
+    # carrier fork — so `--strict` fails either way.
     make_minimal_project(scaffold)
     ifs = scaffold / "docs" / "requirements" / "interfaces.toml"
     clean = (
@@ -365,7 +365,7 @@ def test_an_empty_retired_cell_and_a_nested_sub_table_are_refused_by_the_carrier
 
 def test_channel_refuses_an_unknown_value_as_a_warn(scaffold):
     """Implements: TC-182"""
-    # The owner's ruled typing is a CLOSED vocabulary — `Channel` since OI-67,
+    # The operator's ruled typing is a CLOSED vocabulary — `Channel` since OI-67,
     # which subsumed `Signal`'s discrete/variable pair (`exit-code` and `env` are
     # the discrete kinds; the rest are unbounded). Written straight to TOML:
     # `_write_ifs` supplies `channel = "call"`, and the point here is a value the
@@ -378,7 +378,7 @@ def test_channel_refuses_an_unknown_value_as_a_warn(scaffold):
         'channel = "analog"\n'
         'data = "reads the ref state"\n'
         'version = "v1"\n'
-        'status = "Approved"\n',
+        'status = "Accepted"\n',
         encoding="utf-8",
     )
     record_ids(scaffold)
@@ -389,16 +389,16 @@ def test_channel_refuses_an_unknown_value_as_a_warn(scaffold):
     assert "bytes, call, cli, env, exit-code, file, git, stdout" in proc.stdout
 
 
-def test_approval_refuses_an_unknown_value_as_a_warn(scaffold):
+def test_acceptance_refuses_an_unknown_value_as_a_warn(scaffold):
     # The successor of the `Stability=Provisional` case (WI-442). `Provisional`
     # was the real value four live rows carried while `Stability` was declared by
     # process.md §8 and validated by nothing; the vocabulary is closed now, and
     # the check has to bite on the SUCCESSOR column or the lesson was migrated
     # away rather than kept.
     make_minimal_project(scaffold)
-    out = _warn_run(scaffold, CLEAN_IF.replace(",v1,Approved,", ",v1,Provisional,"))
+    out = _warn_run(scaffold, CLEAN_IF.replace(",v1,Accepted,", ",v1,Provisional,"))
     assert "IF IF-001 has Status='Provisional'" in out
-    assert "Approved, Drafted" in out
+    assert "Accepted, Drafted" in out
 
 
 def test_cmp_state_refuses_an_unknown_value_as_a_warn(scaffold):
@@ -417,7 +417,7 @@ def test_cmp_state_refuses_an_unknown_value_as_a_warn(scaffold):
 
 # --- the SN tier's Status vocabulary (the enum floor's fourth tier) -----------
 # `ENUM_FIELDS["SN"]["Status"]` was DECLARED while analyze()'s enum fold ran over
-# `{"SR", "LLR", "TC"}` only, so a need could carry any word at all and no bar
+# `{"SR", "LLR", "TC"}` only, so a need could carry any word at all and no checks
 # said so. These two are the always-on floor's fires-on-a-defect / silent-on-a-
 # clean-row pair, run through the CLI like every other vocabulary case above.
 NEEDS_TOML = """[need.SN-001]
@@ -457,11 +457,11 @@ def test_every_declared_sn_status_leaves_the_enum_floor_silent(scaffold):
     # The other half: a rule that fired on everything would pass the assertions
     # above. All three live vocabulary words, each on its own scaffold run. The
     # word under test sits on a second need nothing cites: SN-001 stays
-    # Approved, since its SR is, and an approved child under an unapproved
+    # Accepted, since its SR is, and an accepted child under an unaccepted
     # parent is an integrity finding of its own (parent first).
     make_minimal_project(scaffold)
-    for status in ("Drafted", "Approved", "Founded"):
-        _needs_on_toml(scaffold, "Approved")
+    for status in ("Drafted", "Accepted", "Founded"):
+        _needs_on_toml(scaffold, "Accepted")
         needs = scaffold / "docs" / "requirements" / "stakeholder-needs.toml"
         second = NEEDS_TOML.replace("SN-001", "SN-002").format(status=status)
         text = needs.read_text(encoding="utf-8") + "\n" + second
@@ -481,7 +481,7 @@ def test_missing_required_if_field_is_a_warn(scaffold):
         'consumers = ["external:git"]\n'
         'data = "reads the ref state"\n'
         'version = "v1"\n'
-        'status = "Approved"\n',  # no `channel`
+        'status = "Accepted"\n',  # no `channel`
         encoding="utf-8",
     )
     record_ids(scaffold)
@@ -559,7 +559,7 @@ def test_untagged_endpoint_advisory_classifies_instead_of_staying_silent(scaffol
     `cross_component_findings` VACUOUS for them — and the containment rule that
     was assumed to cover them CANNOT, because it ranges over arch-map modules
     while these endpoints are data files, directories and external actors. Both
-    checks were green and neither was saying anything. This advisory does not
+    checks passed and neither was saying anything. This advisory does not
     make them findings; it makes them VISIBLE, and it names individually only
     the endpoints that resolve to nothing, which are the only actionable ones."""
     make_minimal_project(scaffold)
@@ -854,7 +854,7 @@ def test_the_retired_direction_column_closes_no_vocabulary_here(scaffold):
 
 
 def test_if_placeholder_and_absent_are_free(scaffold):
-    # The scaffold ships an inert IF-000 placeholder: no interface section, green.
+    # The scaffold ships an inert IF-000 placeholder: no interface section, passes.
     make_minimal_project(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -952,7 +952,7 @@ def _seam_scaffold(scaffold, verifies):
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
         'TC-001,{},Unit,call add and assert the sum,Smoke,"a=1; b=2",'
         '"Satisfies SR-001 AcceptanceCriteria",Yes,'
-        "tests/test_demo.py::test_add_sr001,Approved\n".format(verifies),
+        "tests/test_demo.py::test_add_sr001,Accepted\n".format(verifies),
         encoding="utf-8",
     )
     return scaffold
@@ -1179,7 +1179,7 @@ def test_a_requirement_reference_on_an_interface_is_still_refused(bridge_project
 # --- the IF-208 seam's hat half, through the delivered checker ----------------
 # (SR-213, SR-214.) The rule tests in tests/test_trace_hats.py and
 # tests/test_assumption_rules.py call `hat_findings` and `obstacle_hat_findings`
-# directly, so they stay green if the checker stops reading a hat's
+# directly, so they keep passing if the checker stops reading a hat's
 # `speaks_for` or stops composing the obstacle rule. These cases drive
 # `trace.py --strict` itself: each reference must become a strict `hat`
 # finding, fail the run and be counted in the report. The needs move onto the
@@ -1190,10 +1190,10 @@ HAT_NEEDS = """
 name = "Adopting team"
 description = "A team that adds the package to its own work."
 party = "EXT-001"
-status = "Approved"
+status = "Accepted"
 
 [need.SN-001]
-status = "Approved"
+status = "Accepted"
 need = "Add two numbers."
 why = "Demo."
 priority = "M"

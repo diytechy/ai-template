@@ -10,9 +10,9 @@ The claims this module holds, one per thing the ruling actually decided:
     and whether seams enter the view at all. Each is asserted as a VISIBLE
     answer, because "the generator drops it" and "the generator has a bug"
     are indistinguishable from the outside;
-  * the STANDING CONSTRAINT — a generated file never carries an approval
+  * the STANDING CONSTRAINT — a generated file never carries an acceptance
     (OI-30 D3);
-  * the FRESHNESS CONTRACT — `--check` reds on a stale view and greens once
+  * the FRESHNESS CONTRACT — `--check` fails on a stale view and passes once
     regenerated. A check that cannot fail converts a visible gap into an
     invisible one.
 """
@@ -34,7 +34,7 @@ def _write(root, rel, text):
 CMPS = """[component.CMP-001]
 name = "Alpha"
 category = "software"
-status = "Approved"
+status = "Accepted"
 
 [component.CMP-002]
 name = "Beta"
@@ -45,15 +45,15 @@ status = "Drafted"
 SRS = """[requirement.SR-001]
 title = "shared across two components"
 hat_refs = ["SECURITY"]
-status = "Approved"
+status = "Accepted"
 
 [requirement.SR-002]
 title = "alpha only"
-status = "Approved"
+status = "Accepted"
 
 [requirement.SR-003]
 title = "no design child at all"
-status = "Approved"
+status = "Accepted"
 """
 
 LLRS = """[design.LLR-001]
@@ -61,7 +61,7 @@ sr_refs = ["SR-001"]
 title = "in alpha"
 module = "project-trajectory/scripts/alpha.py"
 component = "CMP-001"
-status = "Approved"
+status = "Accepted"
 
 [design.LLR-002]
 sr_refs = ["SR-001", "SR-002"]
@@ -69,7 +69,7 @@ title = "in beta"
 module = "project-trajectory/scripts/beta.py"
 component = "CMP-002"
 hat_refs = ["MAINTAINER"]
-status = "Approved"
+status = "Accepted"
 """
 
 IFS = """[interface.IF-001]
@@ -213,20 +213,20 @@ def test_an_unplaceable_seam_is_REPORTED_not_silently_excluded(repo):
     assert doc["derived"]["seams_unplaced"] == 1
 
 
-# --- the standing constraint: no approval, ever ------------------------------
+# --- the standing constraint: no acceptance, ever ------------------------------
 
 
-def test_the_generated_view_carries_NO_approval_cell(repo):
+def test_the_generated_view_carries_NO_acceptance_cell(repo):
     """Implements: TC-195"""
-    # OI-30 D3. `components.toml` says CMP-001 is Approved and CMP-002 Drafted;
+    # OI-30 D3. `components.toml` says CMP-001 is Accepted and CMP-002 Drafted;
     # neither word may appear here in any cell, because a generator that wrote
-    # one would route around the very dial human_approval_through governs.
+    # one would route around the very dial operator_accepts_through governs.
     text = load_script(GEN).render(repo)
     doc = _view(repo)
     for row in doc["component_view"].values():
         assert not {"status", "standing", "approval"} & set(row)
     body = "\n".join(ln for ln in text.splitlines() if not ln.lstrip().startswith("#"))
-    assert "Approved" not in body and "Drafted" not in body
+    assert "Accepted" not in body and "Drafted" not in body
 
 
 # --- the freshness contract --------------------------------------------------
@@ -268,7 +268,7 @@ def test_the_written_file_is_LF_and_reproducible(repo):
 def test_a_repo_with_no_real_component_is_VACUOUS(tmp_path):
     """Implements: TC-195"""
     # The layer is optional and off-spine: a fresh scaffold ships only the inert
-    # CMP-000 row, and the gate must not red it over something it never adopted.
+    # CMP-000 row, and the gate must not fail it over something it never adopted.
     _write(
         tmp_path,
         "docs/requirements/components.toml",
@@ -283,7 +283,7 @@ def test_a_repo_with_no_real_component_is_VACUOUS(tmp_path):
 def test_the_cli_runs_out_of_process(repo):
     """Implements: TC-195"""
     # The step check.py wires is a subprocess, so the import path has to hold
-    # there too (a sibling import that only resolves in-process is a green here
-    # and a red in the gate).
+    # there too (a sibling import that only resolves in-process is a pass here
+    # and a failure in the gate).
     proc = run_py([SCRIPTS / "gen_components.py", "--root", str(repo)], cwd=repo)
     assert proc.returncode == 0, proc.stdout + proc.stderr

@@ -21,7 +21,7 @@ translation to get wrong.
 ## Two corrections this module records, because they cost something
 
 **`Path.write_text(newline=...)` is 3.10+, NOT 3.13+.** It is `Path.read_text`
-whose `newline` kwarg is 3.13+, and the two were confused. Approved on the floor
+whose `newline` kwarg is 3.13+, and the two were confused. Accepted on the floor
 interpreter (3.11.9): `write_text(newline=)` works, `read_text(newline=)` raises
 `TypeError`. Three other kit scripts had said "3.10+" in their own comments the
 whole time.
@@ -223,11 +223,11 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # The line number moves whenever anything above it in that module does —
     # 781 -> 835 when `md_block` landed (2026-08-12), 835 -> 836 when the
     # retired-open-items warning was re-pointed at RESYNC_PACK.md (WI-447),
-    # 836 -> 865 when D-9 step 2 gave the attestation cards a third kind,
+    # 836 -> 865 when D-9 step 2 gave the acceptance cards a third kind,
     # 865 -> 874 when step 4 hoisted the baseline and dropped the stamp, and
     # 874 -> 877 when the module's Contracts: docstring line gained IF-126 (log
     # 2026-08-15h), 877 -> 876 when D-9 step 5's rename retired the third
-    # attestation-card kind that step 2 had added (log 2026-08-15m), and
+    # acceptance-card kind that step 2 had added (log 2026-08-15m), and
     # 876 -> 877 when the sitting sweep's M3 fix made the chain-consistency
     # pointer name the warn's real tier (2026-08-15, sweep log entry), and
     # 877 -> 880 when D-9 step 7 retired `Modified` from this module's RENDERED
@@ -245,15 +245,15 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # docstring recorded why (six comment lines above the site; no executable
     # line moved into or out of the region between), and 1156 -> 1183 when
     # WI-513 widened `owes()` past the SR-only test (the OI-61-sitting gap):
-    # `_attestation_cards`' vacuous-state message grew to state the widened
+    # `_acceptance_cards`' vacuous-state message grew to state the widened
     # contract honestly, and `_chain_row` gained the `drafted`-state branch and
-    # the "Drafted, never approved" suffix logic, all above this site, and
+    # the "Drafted, never accepted" suffix logic, all above this site, and
     # 1183 -> 1234 when WI-514 (the SR-177 anchor-text gap) added `_anchor_block`
     # (the anchor SR's Requirement/Rationale, rendered unconditionally rather
     # than only inside the collapsible `.ctx`) and threaded `tr.truncate_cell`
     # through `_context_block` and `_chain_row`'s full-cell branch, all above
     # this site. That churn is the price of pinning a SITE rather than a
-    # count, and it is the right trade: a count would stay green if this site
+    # count, and it is the right trade: a count would keep passing if this site
     # were deleted and a different one added.
     # 1234 -> 1266 when WI-518 (the off-spine census) added `_offspine_census_block`
     # and wired its `{offspine}` slot through `render`'s format call, all above
@@ -262,15 +262,15 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # above everything. 1281 -> 1352 when WI-553 (OI-70) added the fragment-`none`
     # cross-check (`_scope_span` + `_none_declaration_findings`, ARM 4) and its
     # `deferral_findings` wiring, all above this site. 1352 -> 1381 when WI-554
-    # (OI-71 defect 1) fixed the false "approved — re-attestation owed" label on
+    # (OI-71 defect 1) fixed the false "accepted — re-acceptance owed" label on
     # a `Drafted` row and, to keep `_chain_row` under the C901 ratchet, split its
     # changed-cell rendering into `_changed_cell_groups`/`_changed_cell_lines` —
     # all above this site. 1381 -> 1383 when WI-661 made the off-spine census
     # note name every copy trigger (two lines, above this site). 1383 -> 1392
     # when WI-651 made the open-items view list each registry's own copy stamp
     # (the baseline paragraph became a list, above this site). 1392 -> 1443
-    # when WI-791 (OI-100) added the verdict re-attestation audit list
-    # (`verdict_reattest_block`, `_ledger_entries`) above this site. 1443 ->
+    # when WI-791 (OI-100) added the verdict re-acceptance audit list
+    # (`verdict_reaccept_block`, `_ledger_entries`) above this site. 1443 ->
     # 1549 when WI-790 added the queue-projection cards, the integrity notice
     # and the "Decisions to review" section, all above this site. 1549 -> 1580
     # when WI-818 added the overruled heading and the citing-row field to that
@@ -278,7 +278,9 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # `_need_cards`, the shared cell helpers and the needs clauses, all above
     # this site. 1667 -> 1670 when WI-993 widened the card's label, the
     # uncited notice and its docstring for a claimed citer, all above this site.
-    assert sites == [("gen_open_items.py", 1670)], sites
+    # 1670 -> 1672 when the "owner" to "operator" rewording above the site added
+    # two lines (2026-11-12, maintenance branch).
+    assert sites == [("gen_open_items.py", 1672)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still
@@ -360,7 +362,7 @@ def test_write_text_accepts_newline_on_the_declared_floor():
         # `("spine_rules.py", "docs/gate")` was the third case until WI-498
         # slice 5: the artifact was deleted and `spine_rules.py` lost its CLI,
         # so the case wrote nothing and took the `pytest.skip` below FOREVER —
-        # a green that proved nothing, which is exactly what that skip exists
+        # a pass that proved nothing, which is exactly what that skip exists
         # to make visible rather than to absorb.
         ("derive_stage.py", "docs/stage"),
         ("gen_okf.py", "docs/okf"),
@@ -376,8 +378,8 @@ def test_a_regenerated_artifact_has_no_cr_bytes(tmp_path, script, artifact):
     req.mkdir(parents=True)
     (req / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status\n"
-        'SR-001,T,SN-001,"The system shall.",R,AC,,M,Test,Approved\n',
+        "Permutations,Priority,VerificationMethod,Status\n"
+        'SR-001,T,SN-001,"The system shall.",R,AC,,M,Test,Accepted\n',
         encoding="utf-8",
     )
     proc = run_py([SCRIPTS / script, "--root", tmp_path], cwd=tmp_path)

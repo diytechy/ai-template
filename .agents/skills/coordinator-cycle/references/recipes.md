@@ -44,7 +44,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   Tell every builder never to run a full `check_complexity.py --restamp`
   (one rewrote four rows' line counts upward, WI-798) and to delete any
   `.ruff_cache` its ruff run leaves in the tree: one under
-  `project-trajectory/scripts/` reddened `test_mapping_purpose` in the smoke
+  `project-trajectory/scripts/` failed `test_mapping_purpose` in the smoke
   tier (WI-798, 2026-10-11).
   Tell every builder never to fold parametrized cases into one looping
   test to stay under the smoke tier's `max-tests`: in-process growth
@@ -63,10 +63,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   form that gets past the hook was cut off by a safety classifier (WI-834).
   A plan that orders its commits (a pin, then a structural move alone,
   then the rest) is built in stages: the builder stops after each, you
-  verify and commit through `integrate.py attest` (§6), and SendMessage resumes the same builder (WI-911,
+  verify and commit through `integrate.py record-checks` (§6), and SendMessage resumes the same builder (WI-911,
   2026-10-15). In a headless leg the resumed builder runs in the
   background and reports only while the leg's turn still runs: wait in
-  the foreground on the file it writes last (its bar log, then its
+  the foreground on the file it writes last (its checks log, then its
   spine change list), never end the turn on it (wi-925 D-008).
   Ask it to create a `.done` file as its very last act and poll for that
   file in one foreground Python command (`time.sleep` in a loop; a bare
@@ -74,7 +74,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   (2026-10-22c). A sub-agent's write of a file named `report.md` was
   refused by the harness; ask for a `*-notes.md` or the reply inline.
   A stage that changes a shared signature before the stage
-  that moves its callers has a red bar alone: commit the two stages
+  that moves its callers fails the commit checks alone: commit the two stages
   together, never bridge them with a default (wi-918 D-001). A blank line ends a `Contract IF-NNN:` body for the
   interface reference, so text added to a contract continues the body
   without one (wi-922 D-003).
@@ -118,7 +118,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     round 1; a `single` row takes it after its pass record (SKILL §3,
     "Intent").
   - Terra's own pytest check has failed on a basetemp lock at every turn
-    (wi-956 D-001, D-007): run its spine tests yourself with the bar, and
+    (wi-956 D-001, D-007): run its spine tests yourself with the checks, and
     normalize its CRLF writes to LF before the commit.
   - Fill `"$TOOLS/terra-spine-prompt.template.md"` with `mkprompt.py`, then add
     the intent or checkpoint instructions from the skill. Its default brief
@@ -143,7 +143,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     lane, and after an exit 4 commit the named log yourself. A builder's
     unstaged regenerated view (`docs/open-items.html`) makes the log
     commit's `staged-divergence` step refuse: the exit 4 log then rides the
-    next attest commit with that view (wi-987, leg 28). The resumed
+    next record-checks commit with that view (wi-987, leg 28). The resumed
     turn reads its session id from that committed log: a lane resumed
     days later found a noted id only in `~/.codex/sessions/<date>/`, by
     its `cwd` and model (wi-798, 2026-10-20).
@@ -153,7 +153,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     (flows, prose outside the registries, contract bodies) and the
     RESYNC entry (wi-962 D-001).
   - An intent row naming a module the build creates (a new IF row's
-    owner) reds the bar before that module exists
+    owner) fails the checks before that module exists
     (`test_seam_resolution`; `check_trajectory --strict` also errors on
     an IF no TC cites): keep the set as a patch and let it ride the
     build commit that creates the module, recorded as a decision
@@ -173,7 +173,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   one, refuses the turn before launch, naming the log and the cause; it
   never starts a fresh thread in its place. Commit the named log, or run
   a first turn without `--resume`.
-  - A checkpoint reconcile over many approved rows can lose text in four
+  - A checkpoint reconcile over many accepted rows can lose text in four
     ways. All four cost wi-977 a returned sitting, then a re-sit, then a
     gate MAJOR (wi-977 D-019 to D-024).
     - **Compression.** Terra summarizes long cells into pointers such as
@@ -211,18 +211,18 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   directory (so its own verdict path and `--basetemp`).
   1. Render from the lane root, once per reviewer:
      `"$PY" "$SCRIPTS/review_brief.py" review --wi WI-NNN --base <trunk base> --sha <tip> --scope full --scratch <dated root>/<reviewer> --rubric docs/rubrics/kit-change-review.md --out <brief>`.
-     The render derives the row's review test set from the lane, as `attest`
+     The render derives the row's review test set from the lane, as `record-checks`
      does, and a derivation refusal refuses it with that text whole, the
-     reviewed commit and the attest step. It
-     refuses a tip with no verified `review` attestation for that set, naming
+     reviewed commit and the record-checks step. It
+     refuses a tip with no verified `commit` record for that set, naming
      both digests when the record is for another, looking
      beneath it only through record-only commits (round files, log
-     fragments, empty commits), and names the `integrate.py attest` command
+     fragments, empty commits), and names the `integrate.py record-checks` command
      to run. A spine-checkpoint commit and a decisions-record commit change
-     non-record paths, so attest them (stage them into the next attest, or
-     make an empty attestation commit) before the round.
-     A red the tip already shows (a known failing test) is fixed in a build
-     stage before the round, so the round reviews a green tip (item 13;
+     non-record paths, so record checks for them (stage them into the next record-checks run, or
+     make an empty record-checks commit) before the round.
+     A failure the tip already shows (a known failing test) is fixed in a build
+     stage before the round, so the round reviews a passing tip (item 13;
      wi-926 D-007).
      Counted rounds 1 and 2 pass no `--stance` (the ordinary default). The
      third counted round, the last the cap allows (ruling 4), the gate over
@@ -274,11 +274,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      brief's pinned sha and a relaunch on that brief stops at the
      reviewer's checkout identity check, filing nothing: re-render that
      reviewer's brief at the record-only tip (the render finds the
-     attestation beneath it) and relaunch; the other reviewer's verdict
+     record beneath it) and relaunch; the other reviewer's verdict
      at the earlier sha stands, since the range between holds only call
      logs, which the reading scope excludes (wi-878 D-008). A leg that
      ends before its round is filed leaves nothing to file: the next
-     leg renders the round afresh at the same attested tip and records
+     leg renders the round afresh at the same recorded tip and records
      it as that round (wi-878 D-004).
   4. File each: `"$PY" "$SCRIPTS/review_brief.py" file --review <verdict path> --sha <tip> --scope full --phase REVIEW-A`
      (or `--phase REVIEW-B`) writes `docs/reviews/<lane>/NNN-<phase>-<sha7>.md`.
@@ -287,7 +287,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      whose count matches its findings. It picks `NNN` itself: read the filed
      name before a commit subject or brief cites the round. A verdict
      quoting a fixture's markdown link files a broken link, which
-     `check_docs` reds in the bar: make that link a code span in the
+     `check_docs` fails in the checks: make that link a code span in the
      scratch verdict (backticks only), delete the filed copy and
      re-file (wi-925 D-011). Each round file
      gets its own coverage plan (`plan_coverage.py --findings` takes one).
@@ -304,11 +304,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     while Codex is out), move the first one's filed round file outside
     the lane until the second has written its verdict, then put it back
     and file the second (wi-966 D-007).
-  - The render's pytest line is the list the tip was attested with,
-    and a stage attested over a narrow list (a docs or pack stage) hands
+  - The render's pytest line is the list the tip's checks were recorded with,
+    and a stage recorded over a narrow list (a docs or pack stage) hands
     the round that narrow line. Before a round over a staged build, make
-    one empty attestation commit over the lane's touched test modules;
-    the render finds it beneath record-only commits. Under load that bar
+    one empty record-checks commit over the lane's touched test modules;
+    the render finds it beneath record-only commits. Under load that checks
     ran 50 minutes (wi-977, 2026-10-31): start it with time left for the
     round's two reviewer runs.
 - **Scope critique:** render
@@ -317,7 +317,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   session:
   `"$PY" "$TOOLS/codex_call.py" CRITIQUE --root "$REPO.wt/trunk-tmp" --prompt-file <brief> --out <out>`.
   Record the answer before the claim. In an attended session, put
-  the spec's filing calls to the owner first and record them under
+  the spec's filing calls to the operator first and record them under
   `## Calls ruled at filing`, so the critique judges the ruled spec (WI-921
   to WI-923, 2026-10-15). `review_brief.py critique`
   names the same verdict path every round (`WI-NNN-scope-critique.md`): move
@@ -343,7 +343,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   verdict: append a line naming the verdict path and saying to commit
   nothing and change no file in the checkout. Confirming rounds can run
   there beside a lane's reviews (2026-10-17b).
-  A confirming round runs in convergence stance (owner, 2026-10-14). The
+  A confirming round runs in convergence stance (operator, 2026-10-14). The
   rubric's verdict section states that stance, so append one line to its
   brief: that it is a confirming round of round N, checking the adopted
   dispositions the spec records. A disposition that adds a carrier with authority gives the
@@ -360,8 +360,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   drafter answering a row an open item's ruling released to check the
   ruling's stated evidence against the history it cites: WI-999's found
   the derivation the ruling named was the requirement's, not the
-  partition's, so its backfill became an owner-held step (OI-130, leg 39). Once the
-  owner rules a draft's calls, resume the same drafter with the decision ids
+  partition's, so its backfill became an operator-held step (OI-130, leg 39). Once the
+  operator rules a draft's calls, resume the same drafter with the decision ids
   to fold them into a final copy: it keeps its reading (2026-10-15i).
   Drafts have come back CRLF: normalize to LF as you place them. An open
   row needs a `specref` that resolves (R-E: a spec of record or a doc
@@ -400,9 +400,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      run no `plan-file` and change no file in the checkout: with it, eleven
      plan critiques left their lanes untouched (2026-10-18a). Several
      lanes' plans, critiques and records run in parallel, each from its
-     own lane, its records committed alone behind its own bar.
+     own lane, its records committed alone behind its own checks.
   A plan that quotes a relative markdown link meant for another file (a
-  suggested pointer) reds `check_docs` once committed, and the plan
+  suggested pointer) fails `check_docs` once committed, and the plan
   commit's hook does not run it: run `check_docs.py --root .` before
   committing a plan, since the repair edits the plan and unbinds its pass
   record, owing a fresh critique (wi-979 D-001).
@@ -446,16 +446,16 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      (wi-902, 2026-10-20).
      Two lanes' sittings have run in parallel (2026-10-18b). Sit it; commit;
      then `plan-file --wi WI-NNN --pass --dispute <verdict path>`. Anything
-     but an accepted DISMISS of every one is the owner's: close the lane
+     but an accepted DISMISS of every one is the operator's: close the lane
      partial.
   An edited plan or Done-when unbinds the record: remove it, and a fresh
   critique (the cap still counts) must pass the changed plan.
-  When an owner ruling makes the Done-when edit itself owed after the
+  When an operator ruling makes the Done-when edit itself owed after the
   second critique, make it the lane's last commit outside the record
   homes' reach: run first every step that writes elsewhere (an
   inspection's result, a RESYNC re-anchor, a round and any fix it orders),
   then the edit and its `done-when` sitting (wi-976 D-026).
-  An owner ruling recorded on trunk that adds a Done-when item to a
+  An operator ruling recorded on trunk that adds a Done-when item to a
   claimed `single` row whose pass record stands unbinds that record as
   soon as the lane rebases onto it: every replayed commit then carries
   the item, so the landing walk refuses the pass-record commit and every
@@ -481,7 +481,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   by the plan render: carry the spec of record's sections into the row's
   spec byte for byte, and a `combined` sitting of kind
   `done-when:WI-NNN` blesses them before the plan (wi-969 D-001). A plan
-  revision the owner routes to such a successor renders as a fresh
+  revision the operator routes to such a successor renders as a fresh
   `plan --wi`, with the predecessor's plan and critiques appended as
   claims and the ruling as binding; its critique then renders as round 1
   in the ordinary stance, so append the convergence line by hand (wi-969,
@@ -503,7 +503,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   with a reason that cites no verdict. The plan cap takes only a DISMISS.
   A dispute FIX's remedy is checked on the coordinator's own landing
   shape: the remedy WI-963's sitting named (compare with the copy the
-  re-attesting act's commit wrote) closed its finding only on an
+  re-accepting act's commit wrote) closed its finding only on an
   unsquashed range, while every hand landing is a squash; ask the
   builder to drive the fix over a squashed range too (wi-963 D-011).
   When a FIX's builder stops because the remedy breaks another Done-when
@@ -515,7 +515,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   own remedy: a triage that forbade WI ids in shipped comments contradicted
   both reviewers' remedies and a pinned convention (wi-911 D-014). A
   fail-open or Done-when-gap finding the builder accepts, whose only fix is
-  a new boundary beyond the spec's surface, goes to the owner as a choice
+  a new boundary beyond the spec's surface, goes to the operator as a choice
   (a successor, the build, or a sitting): neither you nor a sitting may
   defer it. A successor ruling is stated in the spec's Trust section, never
   its Done-when, so the pass record stays bound (wi-921 D-014).
@@ -543,19 +543,19 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 - **Adjudication,** from the lane root:
   1. Compose the brief:
      `"$PY" "$TOOLS/compose_lane.py" WI-NNN <brief> "<ids>" "<srs>" <verdict> <out>`.
-     The classes are `amendment`, `first-approval`, `done-when`, `combined`,
-     `disposition`, `consolidate`, `red-tc`, `rejudge` and `dispute` (below).
+     The classes are `amendment`, `first-acceptance`, `done-when`, `combined`,
+     `disposition`, `consolidate`, `evidence-gap`, `rejudge` and `dispute` (below).
      For `combined`, `<ids>` is **kind-prefixed**, for example
-     `"amendment:LLR-123;first-approval:SR-234;first-approval:LLR-345;first-approval:TC-456;done-when:WI-NNN"`.
-     Include only kinds actually owed (`amendment`, `first-approval`,
+     `"amendment:LLR-123;first-acceptance:SR-234;first-acceptance:LLR-345;first-acceptance:TC-456;done-when:WI-NNN"`.
+     Include only kinds actually owed (`amendment`, `first-acceptance`,
      `done-when`); `<srs>` is the semicolon-joined SR scope. A checkpoint is
      always `combined`, even when only amendments are owed, and so is a
-     returned row's re-sit (`first-approval:TC-370` alone, wi-926 D-012): sitting 010,
+     returned row's re-sit (`first-acceptance:TC-370` alone, wi-926 D-012): sitting 010,
      composed as the single-kind `amendment` class, came back with a
      `## amendment` section the one verdict parser refuses for a single-kind
      brief, after its act was committed, and was discarded (wi-921 D-018).
      Single-kind briefs use bare ids. An empty section refuses the entire composition.
-     An interface row carries no approval status, so no kind token
+     An interface row carries no acceptance status, so no kind token
      names it: name an amended IF cell as context in the appended arms
      map (wi-966 D-010).
      A `disposition` row that carries an `## Owner route` section (WI-953,
@@ -578,7 +578,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      lands.
   2. Name the verdict `docs/reviews/<wi-slug>/NNN-ADJUDICATE-<lane sha7>.md`.
   3. Check sign-in. The adjudicator runs on the declared ADJUDICATOR account,
-     which authenticates with the owner's long-lived token, read at each
+     which authenticates with the operator's long-lived token, read at each
      launch from the file the `AGENT_CLAUDE_TOKEN_FILE` environment variable
      names. Set that variable
      to the path in the launching shell; never read the file, and never put
@@ -628,7 +628,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      text verbatim) and `position` (the holder's position verbatim). Never
      name a finding `G` plus a digit: `check_vocab` reads it as a retired gate
      tag wherever the id is quoted in an authored file (a decisions record),
-     and the smoke tier goes red. Commit the
+     and the smoke tier fails. Commit the
      file and keep it: the composed brief names it, its binding records
      that path, and the coverage gate reads that file alone.
   2. Compose: `"$PY" "$TOOLS/compose_lane.py" WI-NNN dispute "<findings path>" "" <verdict> <brief>`
@@ -640,25 +640,25 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `not-worth-cost`. A SUCCESSOR's reason says what its row must do; the
      brief never offers it for a convergence-class finding.
   4. Record each ruling in the response to the review and in the lane's
-     `docs/decisions/<branch>.toml`. An ESCALATE goes to the owner. A
+     `docs/decisions/<branch>.toml`. An ESCALATE goes to the operator. A
      SUCCESSOR is filed on trunk at the landing (§3).
 - **Preview spine mints,** from the lane root:
   `"$PY" "$TOOLS/preview_mint.py" <before> [<after>]`.
   `<before>` is the lane/trunk merge base; `<after>` defaults to HEAD. This
-  previews amendments and first approvals only, not every sweep outcome.
+  previews amendments and first acceptances only, not every sweep outcome.
 
 ## 2. Claiming
 
 1. `"$PY" "$SCRIPTS/coordinator_guard.py" take --transcript <path>`.
-   If a stale holder blocks it, the owner releases it. The session
+   If a stale holder blocks it, the operator releases it. The session
    prompt's bare `python` can resolve to an interpreter older than 3.11,
    which fails on `import tomllib` before the take: run it with `$PY`
    (leg 27, 2026-11-01).
 2. Commit the deletion of `docs/work/pause`, carrying the regenerated
    `docs/open-items.html`. Run `trunk_step.py --regen` first: right after
    a landing the deletion commit was refused for a stale status block and
-   `docs/ratify/CURRENT.md` (2026-10-21d). It counts as reviewed when it passes the commit bar
-   and cites the owner's authorization.
+   `docs/ratify/CURRENT.md` (2026-10-21d). It counts as reviewed when it passes the commit checks
+   and cites the operator's authorization.
 3. Confirm HEAD moved. `claim` reads the **working-tree** pause.
 4. Run `"$PY" "$SCRIPTS/integrate.py" claim --wi WI-NNN --branch wi-NNN`
    for each row. Branch names are single-segment. A claim that exits 127
@@ -708,7 +708,7 @@ commit of its own, move it to trunk's tip
   Done-when change) has no checkpoint tip to gate. When its last counted
   round ran in convergence stance, after the map, over the tip that lands,
   with only record-only commits after it, leg 39 ran no separate gate round
-  (wi-1000 D-007, for the owner to confirm or overrule).
+  (wi-1000 D-007, for the operator to confirm or overrule).
 - **Rebase, even when trunk moved only by the pause restore.** Text-then-act
   exempts a squash only of a tip that contains HEAD. Conflicts: §4. When
   trunk moved only by commits the lane does not touch, rebase before the
@@ -742,54 +742,54 @@ commit of its own, move it to trunk's tip
      - 1: the call failed, an act is still owed (printed), or the call wrote
        under `docs/reviews/`;
      - 2: refused before launch: not a lane, uncommitted changes (named), a
-       verdict not accepted at HEAD, one that owes no act (a re-run after a
+       verdict not recorded at HEAD, one that owes no act (a re-run after a
        completed act), or a judged row in a state no act explains (named);
      - 7: as for `adjudicate`.
   4. An act that stopped between its flip and its snapshot leaves the flip
      uncommitted, and the next `act` refuses the lane as dirty. Discard the
      named paths (`git checkout -- <paths>`), record that as a decision, and
      re-run: it lists the whole act again. A combined act stopped between its
-     two commits re-runs with only its first-approval act.
+     two commits re-runs with only its first-acceptance act.
   5. A lane in flight when WI-912 landed: a verdict sat before it whose act is
      still owed carries no bless marks, so re-sit it, recorded as a decision.
      An act a lane already took from such a verdict on a MEANING row is not
      authorized either: the merge slot refuses it, so re-sit the row before
      the landing.
 
-  The act brief lists its own `--reattests` and `--approves` rows: CLARITY
+  The act brief lists its own `--reaccepts` and `--accepts` rows: CLARITY
   rows, a MEANING row the verdict marks `[MEANING+BLESS]` on a released rung,
-  and APPROVE rows on a released rung; on a held rung a CLARITY re-attest
+  and ACCEPT rows on a released rung; on a held rung a CLARITY re-accept
   names the verdict with `--verdict`, for audit, and is owed only while the
   row's committed text still has the identity the verdict's binding records
   (the act turn refuses before launch otherwise: re-sit the row). A row the
   verdict rules CLARITY that
-  the lane deleted (a retired row) is listed in `--reattests` until its
+  the lane deleted (a retired row) is listed in `--reaccepts` until its
   recorded copy drops it; on a held rung it owes no act (removing a held row
-  is the owner's). A first approval of a row absent at HEAD is refused as
+  is the operator's). A first acceptance of a row absent at HEAD is refused as
   inconsistent.
   The act turn takes one act per kind of judgement, in the combined brief's
   order: the amendment act
-  (`--reattests`) first, then the first-approval act (`--approves`). A
-  first-approval copy is refused while an approved row in its registry still
-  drifts unattested, and the amendment act clears that drift first. The old
+  (`--reaccepts`) first, then the first-acceptance act (`--accepts`). A
+  first-acceptance copy is refused while an accepted row in its registry still
+  drifts unaccepted, and the amendment act clears that drift first. The old
   single act covering both kinds is retired, because the spine is decomposed
-  one way in every mode (owner, 2026-10-07). This order is not yet proven on a
-  same-registry checkpoint, so record the first one. `--approves` splits on
+  one way in every mode (operator, 2026-10-07). This order is not yet proven on a
+  same-registry checkpoint, so record the first one. `--accepts` splits on
   `;`, so never put one in a ref. A traced-only change owes no sitting.
   A traced cell changed after the act (a `code_symbol` a later fix adds)
   leaves the registry off its anchor: re-anchor it in the LANE, as its last
   spine commit, with
-  `"$PY" "$SCRIPTS/intake.py" snapshot --approves "<registry>=<ref>"`
-  (no `--reattests`; the ref names the sitting that last anchored it).
+  `"$PY" "$SCRIPTS/intake.py" snapshot --accepts "<registry>=<ref>"`
+  (no `--reaccepts`; the ref names the sitting that last anchored it).
   Taken on trunk inside the squash, text-then-act refuses it (WI-887,
-  2026-10-11). Adding an IF to an approved TC's `Verifies` (the strict gate refuses
+  2026-10-11). Adding an IF to an accepted TC's `Verifies` (the strict gate refuses
   an IF row no TC cites) is traced-only too: the composer refuses an
-  amendment sitting for it, and the re-anchor is the step (WI-902's archived lane tip `d3d301216`). The bar command on the staged squash (below) catches
+  amendment sitting for it, and the re-anchor is the step (WI-902's archived lane tip `d3d301216`). The checks command on the staged squash (below) catches
   this drift; the lane hook does not.
-- **Approve a parent with its children, never after them** (WI-850):
+- **Accept a parent with its children, never after them** (WI-850):
   the pre-commit `parent-first` step and the slot's third lane-commit
-  rider refuse a commit that leaves an approved row under an
-  unapproved parent where either status moved, so an act that flips a
+  rider refuse a commit that leaves an accepted row under an
+  unaccepted parent where either status moved, so an act that flips a
   child whose parent is still Drafted is refused; sit the parent in
   the same combined sitting, or first.
 - **A return in a sitting holds its whole registry.** A row the sitting
@@ -810,13 +810,13 @@ commit of its own, move it to trunk's tip
   compose the whole-set sitting in the same leg: every row an
   `amendment:` token, with the checkpoint's arms map appended. Never hand
   off a list of act turns, one per partial verdict.
-- **Run the commit bar in the lane after the act turn,** before the
+- **Run the commit checks in the lane after the act turn,** before the
   squash. When trunk still equals the lane's base (no rebase was owed),
-  the staged squash's tree is the lane tip's, so the bar on the staged
-  squash below is that run; a red there resets the squash and is fixed in
-  the lane (leg 28). An act that approves a row arms checks a Drafted row escapes:
-  an approved Smoke TC whose evidence sits in a `SLOW_MODULES` module reds
-  `test_every_approved_smoke_case_has_evidence_in_the_smoke_tier`. Fix it
+  the staged squash's tree is the lane tip's, so the checks on the staged
+  squash below is that run; a failure there resets the squash and is fixed in
+  the lane (leg 28). An act that accepts a row arms checks a Drafted row escapes:
+  an accepted Smoke TC whose evidence sits in a `SLOW_MODULES` module fails
+  `test_every_accepted_smoke_case_has_evidence_in_the_smoke_tier`. Fix it
   in the lane (move the case to a fast module, a traced-only change) and
   re-anchor there, never on trunk (wi-958 D-019).
 - **Squash** on trunk with `git merge --squash <lane>`, one per lane.
@@ -830,9 +830,9 @@ commit of its own, move it to trunk's tip
   probe once left a stray file at its root through a redirect from its
   default working directory (wi-798, 2026-10-20). Then read
   `git branch --show-current` against `docs/process.toml`'s `trunk`: the
-  owner can move the checkout during a leg, nothing fails when the new
+  operator can move the checkout during a leg, nothing fails when the new
   branch starts at trunk's tip, and a landing then commits off trunk.
-  Never switch or reset the owner's checkout: fast-forward trunk by a
+  Never switch or reset the operator's checkout: fast-forward trunk by a
   guarded `git update-ref refs/heads/<trunk> <landing> <old tip>`, run the
   rest from `trunk-tmp` on the trunk branch, detach `trunk-tmp` afterwards
   so the branch stays free to check out, and put it first in the handoff
@@ -846,25 +846,25 @@ commit of its own, move it to trunk's tip
   the lane's SOUND full-lane review in the command's description: the
   auto-mode classifier has refused an uncited squash as an unreviewed merge.
   The squash's hook judges text-then-act, held-status (each lane commit's
-  held approval claims, by the lane rule), reserved-ids and ruling-sync, but
-  never the merge slot's approval-act floor, so on this path the act
+  held acceptance claims, by the lane rule), reserved-ids and ruling-sync, but
+  never the merge slot's acceptance-act floor, so on this path the act
   turn's verdict-derived command is the only guard until the one-landing
   row moves coordinator landings onto the slot (coordinator-2026-10-17
   D-009).
-  If the lane recorded an owner overrule in
+  If the lane recorded an operator overrule in
   `docs/decisions`, land two commits: the squash up to the commit before the
   close, then the close. The hook judges the first commit's Done-when change
   against its parent, so that commit carries the lane's covering verdict or
-  owner ruling in its own tree, or the hook refuses it naming the digest; the
+  operator ruling in its own tree, or the hook refuses it naming the digest; the
   close then compares against the blessed copy. Never amend either commit to
   change a Done-when or drop a blessing: an amend is judged against the
   commit it replaces, not its real parent (WI-921's stated residue).
   Ruling-sync needs an open item citing the overrule.
-- **Check the staged squash for the red mark** before the landing commit,
+- **Check the staged squash for the expected-failure marker** before the landing commit,
   from the checkout that holds it:
-  `"$PY" -c "import sys; sys.path.insert(0, '$SCRIPTS'); from kitlib.red_mark import landing_refusal; r = landing_refusal('.'); print(r or 'no red mark staged'); sys.exit(1 if r else 0)"`.
+  `"$PY" -c "import sys; sys.path.insert(0, '$SCRIPTS'); from kitlib.expected_failure import landing_refusal; r = landing_refusal('.'); print(r or 'no expected-failure marker staged'); sys.exit(1 if r else 0)"`.
   It runs the refresh's landing arm on the staged tree: exit 0 when no test
-  file holds the mark `[bars] red_mark` declares; exit 1, printing the
+  file holds the mark `[product] expected_failure_marker` declares; exit 1, printing the
   refusal, when one does (each file named with its count), when the key is
   undeclared, or when git cannot read the staged tree. A hand squash runs no
   refresh, so this is its only mark check. On exit 1, reset the squash with
@@ -875,8 +875,8 @@ commit of its own, move it to trunk's tip
   - pass `--src project-trajectory/scripts` to both `gen_arch_map.py` forms (a
     bare `--contracts-doc` wipes the interface reference);
   - regenerate `docs/ratify/CURRENT.md` with
-    `"$PY" "$SCRIPTS/trace.py" --approve modified --out docs/ratify/CURRENT.md`.
-- **Run the commit bar, `"$PY" "$SCRIPTS/run_menu.py" smoke`, on the staged
+    `"$PY" "$SCRIPTS/trace.py" --accept modified --out docs/ratify/CURRENT.md`.
+- **Run the commit checks, `"$PY" "$SCRIPTS/run_menu.py" smoke`, on the staged
   squash before the landing commit** (ruling 6). Its strict lints catch what the hook's
   non-strict forms pass: R-F (a closed row's `specref`) and a traced cell off
   its anchor. A lane that adds a doc also runs
@@ -907,7 +907,7 @@ commit of its own, move it to trunk's tip
 - **RESYNC:** anchor the entry at the landing's parent, never at a lane-only
   sha. Fold a fix round's entry into its parent entry, and flag forced
   migrations.
-  The bar's `check_resync` refuses every commit of a lane rebased past
+  The checks' `check_resync` refuses every commit of a lane rebased past
   WI-916 until its entry exists, so a plan step that writes the entry
   later moves into the first commit after the rebase (wi-927 D-005).
   So does a lane's first commit that touches a shipped path, a test
@@ -935,12 +935,12 @@ commit of its own, move it to trunk's tip
   act in the range copied the row's registry and the row's routed traced
   cells moved, a row the lane's own act fully judged mints again (LLR-364).
   Check each minted amendment row against the lane's act: when that act
-  re-attested the row and its text is unchanged since, close the row citing
+  re-accepted the row and its text is unchanged since, close the row citing
   that act. Every other row it mints is real work and stays open.
 - **Successor rows:** for each SUCCESSOR ruling of an accepted dispute
-  verdict (its `.requested` binding reads `outcome = accepted`), file one row
+  verdict (its `.requested` binding reads `outcome = recorded`), file one row
   on trunk after the landing, its scope the ruling's reason, citing the
-  verdict by the name read from disk. A verdict not accepted files nothing,
+  verdict by the name read from disk. A verdict not recorded files nothing,
   and its finding holds the landing. Bump the mark as for any hand-filed row
   (§1, "Filing a row by hand").
 - **A gate MINOR** whose fix would move the tip off the gated one, or
@@ -954,7 +954,7 @@ commit of its own, move it to trunk's tip
   open:
   an observation re-judge whose trigger fired, or a goalposts row. A
   held-rung row the sitting ruled MEANING arrives minted, as a queued
-  owner row citing the act's pending open item, and leaves the amendment
+  operator row citing the act's pending open item, and leaves the amendment
   row; nothing is filed by hand. An amendment row the sweep mints for
   another row of that registry waits on the same act, since the act copies
   the whole registry: give it `needs` on that item at the landing.
@@ -980,7 +980,7 @@ lane commit being replayed.
 | Generated views | `git checkout --ours`, continue, regenerate once at the end |
 | Registries | resolve per table using this replay's base/ours/theirs (`git show :1:<path>`, `:2:<path>`, `:3:<path>`); keep independent changes from both sides and judge same-row conflicts; never take the whole file `--ours` |
 | `docs/id-watermark` | `"$PY" "$SCRIPTS/trace.py" --fold-ids`, then `git add docs/id-watermark` |
-| RESYNC_PACK | both sides' entries, trunk's first; when the replayed commit rewrites the lane's own earlier entry, keep its rewrite and drop the entry it replaces; then re-anchor the lane's own entry at its new base, since the bar's `check_resync` step refuses an entry anchored elsewhere (WI-916, 2026-10-18b) |
+| RESYNC_PACK | both sides' entries, trunk's first; when the replayed commit rewrites the lane's own earlier entry, keep its rewrite and drop the entry it replaces; then re-anchor the lane's own entry at its new base, since the checks' `check_resync` step refuses an entry anchored elsewhere (WI-916, 2026-10-18b) |
 | Byte-budget skill rows | each side's own row |
 | `stack.ini`, size-ratchet notes | both sides' notes |
 | Smoke-ceiling restamp | trunk's note plus the lane's count; restamp only past the ceiling |
@@ -1011,10 +1011,10 @@ lane commit being replayed.
 - A lane whose spine set amends rows another open lane is amending, or
   whose code edits the same functions, waits for that lane's landing and
   rebases onto it before its spine turn and first round. Its text then
-  amends what the sitting approved, and the round reviews the tip that
+  amends what the sitting accepted, and the round reviews the tip that
   lands (wi-946 D-006). Conflicts across several replayed commits can go to
   a kit-builder briefed to keep both sides' behaviour and stop on any
-  semantic choice; read the resolved functions and re-run the bar yourself
+  semantic choice; read the resolved functions and re-run the checks yourself
   (wi-946 D-007).
 - A long-stale lane continued by rebase (WI-798, 245 commits): a clean
   auto-merge can drop the lane's behaviour where trunk moved a call into a
@@ -1030,7 +1030,7 @@ lane commit being replayed.
   judged rows still get their unchanged-rows check (wi-927 D-013).
 - Acts collide too: check `acts.toml` after every rebase for duplicate act
   seqs (the skill's §4 latches sittings to avoid them).
-- A lane rebased after its act turn, onto a trunk that moved an approved
+- A lane rebased after its act turn, onto a trunk that moved an accepted
   row's traced cells (`module`, `code_symbol`, `evidence`), replays its act
   commits' snapshot copies unchanged, so each no longer equals its live
   file at that commit. The registry-integrity step reads that as a landed
@@ -1053,7 +1053,7 @@ lane commit being replayed.
   across the sides: identical cells (`tier = "Full"`) belong to both rows,
   and a dedupe meant for import lists dropped three of TC-370's (wi-926
   D-006). Run `ruff format` on each resolved Python file: a joined import
-  line reds the hook's format step.
+  line fails the hook's format step.
 - After a rebase, run trunk's and the lane's changed test modules on the
   rebased lane: the smoke tier skips the slow ones, where trunk's new
   tests meet the lane's new refusals. A failure the pre-rebase tip shares is the lane's,
@@ -1061,9 +1061,9 @@ lane commit being replayed.
 - Launch no review until the rebase has finished. A rebase stopped on
   generated-file conflicts leaves the lane mid-rebase: take `--ours`,
   regenerate, continue, then render the brief at the real tip.
-- A rebase changes every commit's `work=`, so no attestation survives it:
-  attest the rebased tip (`integrate.py attest` with nothing staged makes
-  an empty attestation commit) before its round.
+- A rebase changes every commit's `work=`, so no passed-checks record survives it:
+  record checks for the rebased tip (`integrate.py record-checks` with nothing staged makes
+  an empty record-checks commit) before its round.
 
 ## 5. Spine-cell edits (brief Terra with these)
 
@@ -1114,11 +1114,11 @@ lane commit being replayed.
 - A row split leaves `Implements:` tags on the old id; retag them in a
   coordinator commit.
 - A lane writes a test's `Implements:` tag and its `evidence` part in one
-  commit, since the bar runs `check_trajectory.py --strict`; an intent row's
+  commit, since the checks run `check_trajectory.py --strict`; an intent row's
   cell follows `spine-authoring`, `references/in-lane.md`, "Author it before
   the build". A renamed test moves both.
-- When a move makes an approved cell's module-qualified name false, drop
-  the qualifier and keep the approved symbol: a swapped qualifier adds a
+- When a move makes an accepted cell's module-qualified name false, drop
+  the qualifier and keep the accepted symbol: a swapped qualifier adds a
   name to row text, which a sitting returns (wi-976 sitting 015).
 - Terra has dropped an existing `code_symbol` entry as "nonexistent". Grep
   every symbol it removes before committing.
@@ -1128,38 +1128,38 @@ lane commit being replayed.
   long cell on its `key = ` line inside the row's table block. Verify the
   change-list path in the prompt before launching: a stale path wastes a turn.
 - An IF row's `channel` is a closed set (`kitlib.spine.IF_CHANNELS`); a value
-  outside it passes the commit hook and reddens the smoke tier
+  outside it passes the commit hook and fails the smoke tier
   (`test_seam_resolution`). An invocation with an exit code is `cli`.
 - The local Codex sandbox has failed shallow-clone tests and `git worktree add`,
   and hit Windows locks at `-n 2`. Ask for `-n 0`; confirm those failures with
   decisive tests outside that sandbox before treating them as code defects.
-- Name the sentences a lane added and no sitting approved: Terra may
+- Name the sentences a lane added and no sitting accepted: Terra may
   rewrite those. Told only to amend by addition, it appended a corrective
   sentence after a lane-added one it contradicted, which the coordinator
   removed before the sitting (WI-921 LLR-309, 2026-10-15). A term one row
   defines is defined again, or cited by name, in a sibling row that uses
   it: the sitting returned LLR-309 for an "elsewhere" only LLR-307 defines.
-- Brief Terra to amend an approved row by addition: keep the approved cell
+- Brief Terra to amend an accepted row by addition: keep the accepted cell
   verbatim, function names included (item 5's schema lane migrates them),
   and append the new text in contract voice. Told only to restate the
   builder's function names, it rewrote LLR-313's whole Detail and TC-333's
-  Expected and dropped approved obligations (WI-913, 2026-10-14).
+  Expected and dropped accepted obligations (WI-913, 2026-10-14).
 - Check that every spine item the Done-when names moved its cell at
   intent, by diffing the cell against the lane's trunk base: an intent
   turn reported SR-019's acceptance amended and never applied it, which
   round 1 caught as a MAJOR (wi-926 D-009).
 - Check an intent or reconcile set mechanically before committing it: in
-  each changed cell of an approved row the approved text must occur
+  each changed cell of an accepted row the accepted text must occur
   verbatim (old within new, read with `tomllib`; judge a tier or list
   cell by hand). Compare with the row at the lane's trunk base,
   sentence by sentence, not with HEAD: a lane-added sentence may be
-  rewritten, an approved one may not (wi-925 D-009). Terra follows a
+  rewritten, an accepted one may not (wi-925 D-009). Terra follows a
   plan's literal text: it dropped from an IF data cell a function the
-  owner still serves to a requestor, and restated in an approved row a
+  owner still serves to a requestor, and restated in an accepted row a
   sentence its new row already states. Check each changed IF data
   cell against its requestors' calls, and each new sentence for a
-  second home (wi-925 D-006). Terra reworded two approved phrases in SR-233 while
-  reporting every approved text kept: restore the approved bytes by a
+  second home (wi-925 D-006). Terra reworded two accepted phrases in SR-233 while
+  reporting every accepted text kept: restore the accepted bytes by a
   guarded replace, keep its addition, and record it (wi-911 D-007,
   2026-10-15).
 - An interface row names no file in any cell; a "No tie-back" note belongs
@@ -1189,8 +1189,8 @@ lane commit being replayed.
   (wi-960 D-013).
 - After every Terra turn, diff the registries row by row against the
   last commit and compare the changed rows with the set the turn was
-  given: a checkpoint turn narrowed two approved evidence cells outside
-  the set from a module to named nodes, which the approved-sentence
+  given: a checkpoint turn narrowed two accepted evidence cells outside
+  the set from a module to named nodes, which the accepted-sentence
   check passes, and its report named one under another id. Restore any
   row outside the set by a guarded replace (wi-960 D-012).
 - An LLR detail carries no `shall`: the one-`shall` rule is the SR's.
@@ -1220,17 +1220,17 @@ lane commit being replayed.
   disposition suggested, which one listed outcome did not keep (wi-961
   D-015).
 
-- An intent turn given a plan's amendment list rewrote whole approved
+- An intent turn given a plan's amendment list rewrote whole accepted
   cells (SR-208, LLR-246, TC-241, TC-278): run a sentence-level check
-  before committing (each base sentence of an approved cell, split on
+  before committing (each base sentence of an accepted cell, split on
   `.` and `;`, present verbatim in the new cell), and have an
   independent read-only sub-agent classify each missing sentence as
   retired by the spec or dropped; it found 27 dropped, which a resumed
   turn restored (wi-851 D-003).
-- A checkpoint arms turn may state an arm by amending an approved row
+- A checkpoint arms turn may state an arm by amending an accepted row
   outside the set (TC-243), which then joins the sitting and can be
   returned: name the rows it may touch, and restore any other row to
-  its approved bytes (wi-851 D-012).
+  its accepted bytes (wi-851 D-012).
 
 - Name a new row's `phase` in the intent brief, read from `docs/stage`'s
   `phase`: an intent turn stamped seven rows 1 on a phase-6 spine, which
@@ -1241,53 +1241,53 @@ lane commit being replayed.
 - A commit made by hand in a lane worktree runs the hook under the
   ambient interpreter, which has no ruff, so its format step prints "A
   DECLARED CHECK DID NOT RUN": commit every Python change through
-  `integrate.py attest` (below), which runs under the primary checkout's
+  `integrate.py record-checks` (below), which runs under the primary checkout's
   interpreter; a records-only commit may go by hand (2026-10-22c).
-- Run the commit bar on every commit, docs-only ones included. A lane
-  commit runs it through `"$PY" "$SCRIPTS/integrate.py" attest --branch
-  <lane> --bar review --message-file <msg>` from the
-  primary checkout, which runs `[bars] review` and the row's derived test
-  set, refuses red, and commits the staged work with the attestation the review render
+- Run the commit checks on every commit, docs-only ones included. A lane
+  commit runs it through `"$PY" "$SCRIPTS/integrate.py" record-checks --branch
+  <lane> --checks commit --message-file <msg>` from the
+  primary checkout, which runs `[required-checks] commit` and the row's derived test
+  set, refuses on a failure, and commits the staged work with the passed-checks record the review render
   requires (SKILL §3, Iterate step 1). A trunk commit runs the one
   declared command by hand, `run.cmd smoke` (`"$PY" "$SCRIPTS/run_menu.py" smoke` from
   a shell), whose steps are `docs/stack.ini` `[run] smoke`. Read the summary
   lines for `failed` and for each lint's findings before committing; a chain
-  gated only on the command's exit code inside `$(...)` committed a red tier
+  gated only on the command's exit code inside `$(...)` committed a failing tier
   (2026-10-10). The commit hook does not run it: run it yourself, before a
   landing commit rather than after it.
-- `integrate.py attest` runs `[bars] review`, the smoke action with its
-  budget step in warn mode, so it refuses only a red bar, never the
+- `integrate.py record-checks` runs `[required-checks] commit`, the smoke action with its
+  budget step in warn mode, so it refuses only failed checks, never the
   tier's seconds. Run it from the primary checkout, `"$PY"
-  "$SCRIPTS/integrate.py" --root "$REPO" attest --branch <lane> --bar
-  review --message-file <file>`: it finds the lane by
-  branch and runs the bar there under the primary checkout's
+  "$SCRIPTS/integrate.py" --root "$REPO" record-checks --branch <lane> --checks
+  commit --message-file <file>`: it finds the lane by
+  branch and runs the checks there under the primary checkout's
   interpreter. Run from the lane with the default root, its harness floor
   reads the lane's own root, finds no `.venv` and refuses (wi-957 D-007).
-- The tests-first commit goes through `integrate.py attest` with a test
+- The tests-first commit goes through `integrate.py record-checks` with a test
   set that names each marked file, and the code commit that removes the
-  marks names the same set (SKILL §3, Intent step 2). `attest` judges each
-  test file's count of the mark `[bars] red_mark` declares against the
-  lane's last review record, and the refresh and the hand landing's check
+  marks names the same set (SKILL §3, Intent step 2). `record-checks` judges each
+  test file's count of the mark `[product] expected_failure_marker` declares against the
+  lane's last commit record, and the refresh and the hand landing's check
   (§3) refuse a tree that still holds one: a refresh or a hand landing (§3)
-  refused for a mark ends in the code commit or a quarantine. A test the bar skips takes no mark, because a skip is never
+  refused for a mark ends in the code commit or a quarantine. A test the checks skip takes no mark, because a skip is never
   evidence: it is named, with its disposition, in the lane's decisions
   record.
-- The declared bar runs the tier once: the lints run first, then the
-  budget step's run, which exits with the tier's own code on a red tier
+- The declared checks run the tier once: the lints run first, then the
+  budget step's run, which exits with the tier's own code on a failing tier
   and prints its CPU-seconds and wall time, with a WARN line for a limit
-  over. No bar fails on seconds: `run.cmd audit` (`[run] audit`, the same
+  over. No checks fail on seconds: `run.cmd audit` (`[run] audit`, the same
   step in enforce mode) judges them and the tier's count against
   `max-tests`, by hand and at phase close, and a breach there is filed
   as a re-tier row, never charged to the lane that ran it. A hand wrapper
   passes the step's exit code through, so a chained `&& git commit` never
-  records a red tier.
+  records a failing tier.
 - A build whose in-process tests take the smoke tier past `max-tests`
   re-stamps the ceiling in that commit, with its reason, fig line and a
-  decision, not at the landing: a red bar is not left standing (wi-911
+  decision, not at the landing: failed checks are not left standing (wi-911
   D-005).
 - A commit sometimes exits 1 with every hook step passing. Read the hook
   output and retry with `-F`; never skip the hook.
-- On trunk (or `check.py --trunk-lane`), `approval-fresh` refuses a stale
+- On trunk (or `check.py --trunk-lane`), `acceptance-fresh` refuses a stale
   `docs/ratify/CURRENT.md`. Regenerate it and read what it lists before an act.
 - Where freshness is gated, `interface-reference` refuses a stale view after
   a declared header or contract changes; regenerate it.
@@ -1313,13 +1313,13 @@ lane commit being replayed.
 - `gen_verdict_rollup.py` refuses on a work branch; a lane that changes how
   rounds read leaves its rollups to the trunk landing.
 - `test_the_live_repos_own_mark_covers_its_live_ids` reads the working
-  tree: an uncommitted row numbered above the mark reds the smoke tier. Set
-  unrelated uncommitted rows aside before running the bar for a commit
+  tree: an uncommitted row numbered above the mark fails the smoke tier. Set
+  unrelated uncommitted rows aside before running the checks for a commit
   (2026-10-14).
 - `git add -A <paths>` aborts entirely if one path is missing. `2>/dev/null`
   hides that, and `staged-divergence` then fails. `components.derived.toml`
   lives under `docs/requirements/`.
-- `ruling-sync` refuses an overrule (`owner = "overruled"`) unless the same
+- `ruling-sync` refuses an overrule (`operator = "overruled"`) unless the same
   commit amends a queued or active row citing the decision as
   `docs/decisions/<file>.toml#D-NNN`, in that form; a prose citation does
   not count. Regenerate the views after the commit's last edit: that
@@ -1332,15 +1332,15 @@ lane commit being replayed.
   hook's own step list (WI-913 round 2; WI-841's `done-when-blessed` has
   the same gap).
 
-- `attest` refuses a lane worktree holding work the index does not.
+- `record-checks` refuses a lane worktree holding work the index does not.
   To commit two stages a builder built together on disjoint files,
-  copy the later stage's file aside, check it out at HEAD, attest the
-  first stage, then restore the file and attest the second (wi-977
+  copy the later stage's file aside, check it out at HEAD, record checks for
+  the first stage, then restore the file and record checks for the second (wi-977
   D-014). Set the files aside with `cp --parents`: Git Bash's `tar` reads
   the `C:` of a path as a remote host and fails (leg 38).
-- `attest` derives its tests from the row: its `sr_refs`, every LLR under
+- `record-checks` derives its tests from the row: its `sr_refs`, every LLR under
   them, the test cases verifying either, and the test files whose
-  `Implements:` lines name those cases. It refuses before any bar, and the
+  `Implements:` lines name those cases. It refuses before any checks, and the
   render and the loop's draw refuse with that text. Each refusal has its
   fix:
   - `partial` names every gap: tag the test or write it, in the lane.
@@ -1350,23 +1350,23 @@ lane commit being replayed.
   - `empty`: a code row whose SRs reach only non-executable evidence. Name an
     SR with a test, or add one.
   - `malformed`: fix the input it names.
-- A spine step that adds TC rows before their tests exist commits without an
-  attestation (registry text), or is staged into the attest that carries
-  those tests. The first attest after it must hold their tagged tests, or it
+- A spine step that adds TC rows before their tests exist commits without a
+  passed-checks record (registry text), or is staged into the record-checks run that
+  carries those tests. The first record-checks run after it must hold their tagged tests, or it
   refuses as partial.
-- `attest`'s refusal prints only the bar's last lines, never the
+- `record-checks`'s refusal prints only the checks' last lines, never the
   failing test: run `"$PY" "$SCRIPTS/run_menu.py" smoke` in the lane,
-  to a log, to name it. A red that run passes is load-sensitive: file
-  it under status.md's follow-ups and re-attest; never charge it to the
+  to a log, to name it. A failure that run passes is load-sensitive: file
+  it under status.md's follow-ups and re-accept; never charge it to the
   lane (2026-10-24a).
 - A tests stage's in-process cases can carry the smoke tier past
-  `max-tests` at its first attest: count the tier first
+  `max-tests` at its first record-checks run: count the tier first
   (`pytest -q -m smoke --collect-only`, against `docs/stack.ini`'s
   `max-tests`) and re-stamp in that commit (wi-856 D-002).
 
-- `attest` appends the run's trailer to a message file that already
+- `record-checks` appends the run's trailer to a message file that already
   carries it, so that commit holds it twice. The last wins and `check-lane`
-  passes; leave it out of an attest message (leg 32).
+  passes; leave it out of a record-checks message (leg 32).
 
 ## 7. Environment and limits
 
@@ -1385,7 +1385,7 @@ lane commit being replayed.
   its log spools): the cache listed it and it worked again on 2026-10-10
   at 22:40 local (leg 02). While it is not offered, review through the
   same entry point with `--route <the enabled Luna row>` at
-  `--effort high` (coordinator-2026-10-10 D-017, pending the owner); the
+  `--effort high` (coordinator-2026-10-10 D-017, pending the operator); the
   model is that row's. Record the substitution in every lane's decisions
   record.
 - **Codex usage limit:** wait for the reset the CLI error names. Retain
@@ -1396,7 +1396,7 @@ lane commit being replayed.
   next step is Terra's stops at a committed safe point, and the leg
   closes out with a `Resume-not-before:` line at the reset
   (coordinator-2026-10-26 D-004).
-  Every Codex call runs through the `codex` CLI on `PATH`; the owner switches
+  Every Codex call runs through the `codex` CLI on `PATH`; the operator switches
   accounts with `codex logout` and `codex login`.
 - **Background or foreground.** In an attended session, start each Codex call
   as its own background command; one started in a detached subshell sends no
@@ -1411,9 +1411,9 @@ lane commit being replayed.
   (`ls tests/test_*.py | awk 'NR%2==1'`, then `NR%2==0`), each with its
   own basetemp, deleted after it: on 2026-10-25c they took 19:41 and
   12:08.
-  Give every bar, attest and full-suite run the whole raised cap
-  (3600000 ms): on a box other sessions loaded an attest's bar ran 30
-  minutes and the full suite 54, and a 30-minute timeout moved the attest
+  Give every checks, record-checks and full-suite run the whole raised cap
+  (3600000 ms): on a box other sessions loaded a record-checks run's checks ran 30
+  minutes and the full suite 54, and a 30-minute timeout moved the record-checks run
   to the background, where a leg loses it (2026-10-22).
   Launch each background call as its own command: in `A=… && (x) & (y) &`
   only the first subshell sees `A`, since the first `&` backgrounds the
@@ -1454,13 +1454,13 @@ lane commit being replayed.
   `F` empty reads stdin (2026-10-21c); check the path first. A message
   composed with `sed` over a wrapped line rewrites the wrong text: write
   commit messages with the file tool (2026-10-21a).
-- **The first bar in a freshly added worktree reads cold:** with no
+- **The first checks in a freshly added worktree reads cold:** with no
   bytecode cache it read 64.9 to 68.7 s where the same tree, warm, read
   52 to 54 s (2026-10-21a, five readings). A parent timed in a new scratch
-  worktree is that cold reading: run its bar twice and take the second,
+  worktree is that cold reading: run its checks twice and take the second,
   or record the first as cold, never charge the gap to the change.
-- **The bar runs no hook step:** `skills-sync` (and every other pre-commit
-  step) runs only at the commit, so a green bar can meet a refused commit;
+- **The checks run no hook step:** `skills-sync` (and every other pre-commit
+  step) runs only at the commit, so passing checks can meet a refused commit;
   read the hook log, fix, and commit again (2026-10-21a).
 - **Scratch:** one dated root, `$REPO.wt/review-tmp/<date>-<session>/`, with one literal
   `--basetemp` per kind of run (`$TEMP` is empty in the Codex shell). Delete
@@ -1471,11 +1471,11 @@ lane commit being replayed.
   after recording.
   Off a claimed branch the suite asserts the trunk-only `docs/stage` in
   full (`test_this_repo_s_committed_stage_is_current`), so a lane whose
-  close moved the derived stage reads that one red in a detached
+  close moved the derived stage reads that one failure in a detached
   worktree: re-derive there (`derive_stage.py`) and re-run the test
   before treating it as a defect (wi-921 D-020).
-- **Test jobs while the owner's applications load the box:** when the
-  owner asks, run every local test job (bars, the full suite, Codex
+- **Test jobs while the operator's applications load the box:** when the
+  operator asks, run every local test job (checks, the full suite, Codex
   launches, the Claude reviewers' pytest) at below-normal priority
   through a stdlib wrapper
   (`subprocess.call(cmd, creationflags=subprocess.BELOW_NORMAL_PRIORITY_CLASS)`;
@@ -1483,14 +1483,14 @@ lane commit being replayed.
   (`C:/Program Files/Git/usr/bin/bash.exe`), since Windows resolves a
   bare `bash` by its own search order (2026-10-15g). The wrapper resolves
   its program with `shutil.which`: a bare `codex` (an npm `.cmd` shim) is
-  not found by `CreateProcess` (2026-10-16d). No bar fails on the smoke
+  not found by `CreateProcess` (2026-10-16d). No checks fail on the smoke
   tier's seconds, so a slow reading under load holds nothing: the
   audit (`run.cmd audit`) judges them, by hand and at phase close.
-- A bar that stops mid-tier with no summary line was terminated, not
+- A check run that stops mid-tier with no summary line was terminated, not
   failed: a test error still prints a summary, and pytest locks a live
   run's default basetemp, so concurrent runs do not prune each other
   (checked on pytest 9.1.1). A lane and parent pair died that way beside
-  two builders on 2026-10-18d, cause unknown. Write every bar to a fresh
+  two builders on 2026-10-18d, cause unknown. Write every checks to a fresh
   log path so the dead run's output survives, re-run it, and file a
   defect row with the kept log if it recurs.
 - Never grep or `du` the whole scratch root (a `du` there outran a
@@ -1504,7 +1504,7 @@ lane commit being replayed.
   Ubuntu distro (Python 3.12, pytest 7.4, no xdist; nothing installed).
   Name it, `wsl.exe -d Ubuntu`: the default distro here is
   `podman-machine-default`, which has no git. Run the same modules at
-  the lane's base in the same clone, so a red the base shares is not
+  the lane's base in the same clone, so a failure the base shares is not
   charged to the lane (two `run.command` cases, 2026-10-18c).
   To confirm that a fix's regression test fails on the pre-fix code on
   POSIX, check out the pre-fix scripts over today's tests in the WSL
@@ -1528,7 +1528,7 @@ lane commit being replayed.
   breaks the shallow-clone tests' `git clone` of a file URI ("'/C:/...'
   does not appear to be a git repository"; WI-913, 2026-10-15).
 
-- A bar can hang instead of dying: under other jobs' load an attest's
+- A check run can hang instead of dying: under other jobs' load a record-checks run's
   smoke tier ran over an hour with no summary line, and the tool cap
   moved it to the background. Stop its process tree
   (`taskkill //PID <the integrate.py pid> //T //F` from Git Bash), re-run
@@ -1543,10 +1543,10 @@ lane commit being replayed.
 - Tool calls in one message run one after the other, an Agent call included:
   a planner's 54 minutes passed before the two Sol critiques beside it began
   (leg 34). Real overlap needs one script that starts its children and waits.
-- A landed lane's deleted branch reds the next attest of an open lane whose
+- A landed lane's deleted branch fails the next record-checks run of an open lane whose
   base still holds that claim folder (hold-by-rename). Rebase the open lane
   first, with `git stash` around staged work (wi-993, leg 34).
-- Tell every builder to exclude `OWNER_SCRATCHPAD.md` from a broad search: a
+- Tell every builder to exclude `OPERATOR_SCRATCHPAD.md` from a broad search: a
   repo-wide grep returned two of its lines (leg 34).
 - A long registry cell is a triple-quoted string: a guarded append matches
   the cell's own quote form and parses before it writes (leg 34).
@@ -1584,7 +1584,7 @@ lane commit being replayed.
   neither drafts nor adopts is still refused at the close and at the
   landing's sweep (OI-73). Since WI-901 (2026-10-11) a close whose commit
   range is empty composes its disposition brief.
-- **Close a lane partial for an owner answer that re-scopes it** (OI-70: never
+- **Close a lane partial for an operator answer that re-scopes it** (OI-70: never
   park it claimed, save a planned step under PROCESS.md §5, "Open items"). Save any uncommitted build outside the repository and revert the
   lane first: `handback.close_partial` commits residue as-is with the hook
   skipped. Call it as `handback.close_partial(Path(root).resolve(), branch,
@@ -1625,7 +1625,7 @@ lane commit being replayed.
     directory junction (PowerShell `New-Item -ItemType Junction`), never
     a new install, and never another project's: an empty primary install
     is an open item (OI-128);
-  - a Claude operator sub-agent may render, tile, brief, launch the six
+  - a Claude sub-agent may render, tile, brief, launch the six
     judges (`codex exec -m gpt-6-luna -c model_reasoning_effort=high -s
     read-only`, each verdict captured with `-o`, all six children of
     one foreground command that waits) and compile the record; it
@@ -1644,4 +1644,4 @@ lane commit being replayed.
   its finding goes to one dispute sitting, uncontested, the coordinator
   taking no side, since only that sitting moves a MAJOR to a successor.
 - **TC-279:** the part population is `gen_arch_map.declaration_sites`, never a
-  hand-written scan. Record the first result only after the case is approved.
+  hand-written scan. Record the first result only after the case is accepted.

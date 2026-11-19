@@ -24,7 +24,7 @@ alternative = "(b) a plan round past the cap with a re-cut lane, or (c) a plan-g
 reversal_cost = "Low: one Done-when item moved between sections of an unlanded row's claim copy."
 why_not_escalated = "Escalated: the owner ruled it in session, 2026-11-02."
 review = ""
-owner = "confirmed"
+operator = "confirmed"
 done_when = "sha256:371fa4c3f41d21b6"
 
 [decision.D-004]

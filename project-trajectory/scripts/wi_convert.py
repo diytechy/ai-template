@@ -69,7 +69,7 @@ Usage:
     python scripts/wi_convert.py --to-csv --work docs/work --csv out/work-items.csv
     python scripts/wi_convert.py --verify --csv docs/requirements/work-items.csv
 
-The F5 rule this module's helpers were once duplicated under is RETIRED (owner
+The F5 rule this module's helpers were once duplicated under is RETIRED (operator
 ruling D-8, `OI-16`): the console guard, the spec-folder read side and the TOML
 emitter all live in the shipped `kitlib` package now, and this module imports
 them. It is still a drop-in — `kitlib` copies with it, as ADOPTING.md §6 says.
@@ -136,7 +136,7 @@ COLUMNS = [
     "EstTokens",
     "SafetyClass",
     "PlanMode",
-    "Bar",
+    "ChecksStage",
     # LLR-161 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
     # reviving the closed row — so the successor must be able to say which row
     # it continues, or the thread is lost at the id change. A real column, not
@@ -146,10 +146,10 @@ COLUMNS = [
     # moment it matters.
     "Supersedes",
     # SN-032 BRIEF ROUTING. Which adjudicator brief this row's session is sent
-    # (`amendment` | `disposition` | `conflict` | `red-tc`), empty on every row
+    # (`amendment` | `disposition` | `conflict` | `evidence-gap`), empty on every row
     # that is not an adjudication. DECLARED rather than inferred from `SpecRef`
     # because the inference is provably ambiguous: an amendment to a test-case
-    # row and a red-TC census row both carry `docs/test/test-cases.toml`, and
+    # row and an evidence-gap census row both carry `docs/test/test-cases.toml`, and
     # those two briefs give contradictory instructions. A real column for the
     # same reason `Supersedes` is one — `intake` writes it through
     # `write_spec_file`, which serializes from this table.
@@ -161,12 +161,12 @@ COLUMNS = [
     #
     # A REAL COLUMN because the alternative is unsound in a way this ruling makes
     # expensive. `adjudicate_brief` re-derives its population LIVE at composition
-    # time (`red_tc_values`' rule: brief the world the judge is actually in), and
+    # time (`evidence_gap_values`' rule: brief the world the judge is actually in), and
     # a live re-derivation with no scope to intersect against re-derives a WIDER
-    # question than the mint asked — the first-approval brief handed its session
+    # question than the mint asked — the first-acceptance brief handed its session
     # every `Drafted` row in the repo, across unrelated workstreams, and derived
-    # a `--approves` argument naming all their registries. The owner's
-    # concurrency reason for moving the approval act to trunk is that the
+    # a `--accepts` argument naming all their registries. The operator's
+    # concurrency reason for moving the acceptance act to trunk is that the
     # snapshot must not move across a workstream, so the act's scope has to be a
     # fact the ROW CARRIES rather than one recomputed from the world. Title prose
     # carrying it is the WI-417 fold; a frontmatter key outside this table is
@@ -195,7 +195,7 @@ COLUMNS = [
     # byte-stable. Validated only by `kitlib.adoption.record_ids`.
     "Adopted",
     # WI-982 THE AUTHORING TAGS: the Workstream and SafetyClass values of the
-    # work items a minted first-approval or amendment row was authored under,
+    # work items a minted first-acceptance or amendment row was authored under,
     # deduplicated and `;`-joined, or empty when no route named one. NOT the
     # routing `SafetyClass`, which stays `adjudication`: this cell only feeds
     # the hat composer, `hats.context_from_work_item`. A REAL COLUMN for the
@@ -239,10 +239,11 @@ SCALAR_FIELDS = (
     ("EstTokens", "est_tokens"),
     ("SafetyClass", "safety_class"),
     ("PlanMode", "planmode"),
-    # WI-388: bar declares verification strictness for this row's lane; it
-    # never affects scheduling. (DevStg-Reqs|DevStg-Tests|DevStg-Impl — integrate.refresh passes it to
-    # check.py --gate; the scheduler deliberately does not parse it.)
-    ("Bar", "bar"),
+    # WI-388: checks_stage pins the stage this row's landing checks run at;
+    # it never affects scheduling. (DevStg-Reqs|DevStg-Tests|DevStg-Impl —
+    # integrate.refresh passes it to check.py --stage; the scheduler
+    # deliberately does not parse it.)
+    ("ChecksStage", "checks_stage"),
     ("Supersedes", "supersedes"),
     ("Brief", "brief"),
     ("Digests", "digests"),

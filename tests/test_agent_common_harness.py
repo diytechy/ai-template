@@ -1,4 +1,4 @@
-"""agent_common's harness plumbing — the shared resolvers the bar runs on.
+"""agent_common's harness plumbing — the shared resolvers the checks run on.
 
 Relocated at concurrency-restructure Phase 5 from the retired dispatcher test
 modules (test_agent_dispatch_decisions.py, test_agent_loop_integrate.py): these
@@ -9,7 +9,7 @@ modules only because the dispatcher was their first consumer.
 
 WI-361 added `harness_floor_failures` to that list: the WI-286 fail-closed floor,
 re-homed here as a public agent_common helper with an arming boundary, refused at
-integrate.py's bar seam (see tests/test_integrate.py for the wired half).
+integrate.py's checks seam (see tests/test_integrate.py for the wired half).
 """
 
 import os
@@ -71,14 +71,14 @@ def test_failure_tail_no_fail_marker_is_bounded_tail_not_head():
 
 # --- WI-398: the refusal carries the failing STEP's output, never the summary ---
 
-# A full `check.py --jobs 0` red, the `_run_bar` shape: each step's captured
+# A full `check.py --jobs 0` failure, the `_run_landing_checks` shape: each step's captured
 # output prints under the lane lock with its own inline status line, and then
 # the closing summary block RE-prints every step's status after a `====` rule.
 # The WI-240 anchor (LAST `  FAIL` line) always landed in that summary copy, so
 # the window walked back to the LAST step's banner and the refusal carried
 # summary rows instead of the failing step's own output — the WI-387 refresh
-# red cost three lost diagnoses of one failure exactly this way.
-WI398_JOBS_BAR_OUT = (
+# failure cost three lost diagnoses of one failure exactly this way.
+WI398_JOBS_CHECKS_OUT = (
     "\n=== format : python -m ruff format --check . ===\n"
     "74 files already formatted\n"
     "  PASS  format           0.4s\n"
@@ -86,7 +86,7 @@ WI398_JOBS_BAR_OUT = (
     "..F..F.\n"
     "=========================== short test summary info ===========================\n"
     "FAILED tests/test_refresh.py::test_the_lost_diagnosis - AssertionError: gone\n"
-    "FAILED tests/test_refresh.py::test_the_other_red - AssertionError\n"
+    "FAILED tests/test_refresh.py::test_the_other_failing - AssertionError\n"
     "2 failed, 5 passed in 3.2s\n"
     "  FAIL  tests+coverage   exit 1 (3.4s)\n"
     "\n=== trajectory : python check_trajectory.py --root . ===\n"
@@ -102,10 +102,10 @@ WI398_JOBS_BAR_OUT = (
 
 
 def test_failure_tail_extracts_the_failing_steps_own_output_not_the_summary():
-    tail = _failure_tail(WI398_JOBS_BAR_OUT)
+    tail = _failure_tail(WI398_JOBS_CHECKS_OUT)
     # The step's OWN output — the failing test names a re-run had to recover.
     assert "FAILED tests/test_refresh.py::test_the_lost_diagnosis" in tail
-    assert "FAILED tests/test_refresh.py::test_the_other_red" in tail
+    assert "FAILED tests/test_refresh.py::test_the_other_failing" in tail
     # ... still names the failing step and its exit ...
     assert "  FAIL  tests+coverage" in tail
     # ... and NEVER the summary re-print or a later passing step's window.
@@ -114,11 +114,11 @@ def test_failure_tail_extracts_the_failing_steps_own_output_not_the_summary():
     assert "check_trajectory: OK" not in tail
 
 
-# The same red at `--jobs 1`: step output STREAMS with no inline status line, so
+# The same failure at `--jobs 1`: step output STREAMS with no inline status line, so
 # the only `  FAIL` markers in the whole output are the summary rows. The window
 # must still be the failing step's own banner-to-end block (found by the NAME the
 # summary row carries), with that row appended so the refusal names the step.
-WI398_SEQ_BAR_OUT = (
+WI398_SEQ_CHECKS_OUT = (
     "\n=== format : python -m ruff format --check . ===\n"
     "74 files already formatted\n"
     "\n=== tests+coverage : .venv/bin/python -m pytest -q -m smoke ===\n"
@@ -137,17 +137,17 @@ WI398_SEQ_BAR_OUT = (
 
 
 def test_failure_tail_reaches_the_step_output_when_statuses_only_print_in_summary():
-    tail = _failure_tail(WI398_SEQ_BAR_OUT)
+    tail = _failure_tail(WI398_SEQ_CHECKS_OUT)
     assert "FAILED tests/test_refresh.py::test_the_lost_diagnosis" in tail
     assert "  FAIL  tests+coverage" in tail  # the anchoring row rides along
     assert "Check summary" not in tail
     assert "check_trajectory: OK" not in tail
 
 
-# --- WI-405: KNOWN LIMIT — bar-shaped text EMBEDDED in a step's own output ------
+# --- WI-405: KNOWN LIMIT — harness-shaped text EMBEDDED in a step's own output ------
 
 # WI-398 REVIEW-A finding 1's three constructed shapes, pinned AS THE KNOWN
-# LIMIT, not as designed behavior: both anchors trust line SHAPE, so bar-shaped
+# LIMIT, not as designed behavior: both anchors trust line SHAPE, so harness-shaped
 # text embedded in a step's own captured output silently misanchors the window
 # onto a passing step's text. The remedy stays inside WI-398's scope guard (no
 # parsing machinery): the limit is documented in `_own_step_window`'s docstring
@@ -158,14 +158,14 @@ def test_failure_tail_reaches_the_step_output_when_statuses_only_print_in_summar
 # structural parser — and a first-to-last-match swap merely mirrors the hole
 # (it would break the symmetric shape, a failing step whose banner a LATER
 # passing step quotes, that first-match handles). These tests pin the current
-# wrong-window outcomes so the choice stays explicit; if one reds, the anchor
+# wrong-window outcomes so the choice stays explicit; if one fails, the anchor
 # changed and the docstring's limit clause is stale.
 
 # Shape 1: a PASSING tests+coverage step's output quotes an old
 # `  FAIL  tests+coverage` log row at line start (a pasted log in test output);
-# the real red is lint (F401). The quoted row is the FIRST FAIL line, so the
+# the real failure is lint (F401). The quoted row is the FIRST FAIL line, so the
 # window is the passing step's own banner section.
-WI405_QUOTED_FAIL_ROW_BAR = (
+WI405_QUOTED_FAIL_ROW_CHECKS = (
     "\n=== tests+coverage : .venv/bin/python -m pytest -q -m smoke ===\n"
     "all good\n"
     "  FAIL  tests+coverage   exit 1 (3.4s)\n"
@@ -183,11 +183,11 @@ WI405_QUOTED_FAIL_ROW_BAR = (
 
 
 def test_known_limit_a_quoted_fail_row_hijacks_the_window_onto_a_passing_step():
-    tail = _failure_tail(WI405_QUOTED_FAIL_ROW_BAR)
+    tail = _failure_tail(WI405_QUOTED_FAIL_ROW_CHECKS)
     # PINNED LIMIT: the window is the passing quoter's section ...
     assert "all good" in tail
     assert "  PASS  tests+coverage" in tail
-    # ... with zero bytes of the real red.
+    # ... with zero bytes of the real failure.
     assert "F401" not in tail
     assert "  FAIL  lint" not in tail
 
@@ -196,7 +196,7 @@ def test_known_limit_a_quoted_fail_row_hijacks_the_window_onto_a_passing_step():
 # genuinely fails. The FIRST `=== tests+coverage : ` match is the quoted line,
 # so the window carries the quoting step's text; only the appended anchoring
 # FAIL row names the right step.
-WI405_QUOTED_MOCK_BANNER_BAR = (
+WI405_QUOTED_MOCK_BANNER_CHECKS = (
     "\n=== format : python -m ruff format --check . ===\n"
     "=== tests+coverage : stub pytest -q ===\n"
     "fixture tail\n"
@@ -214,7 +214,7 @@ WI405_QUOTED_MOCK_BANNER_BAR = (
 
 
 def test_known_limit_a_quoted_mock_banner_carries_the_quoting_steps_text():
-    tail = _failure_tail(WI405_QUOTED_MOCK_BANNER_BAR)
+    tail = _failure_tail(WI405_QUOTED_MOCK_BANNER_CHECKS)
     # PINNED LIMIT: anchored on the quoted mock banner, quoter's text carried ...
     assert "=== tests+coverage : stub pytest -q ===" in tail
     assert "fixture tail" in tail
@@ -224,14 +224,14 @@ def test_known_limit_a_quoted_mock_banner_carries_the_quoting_steps_text():
     assert "  FAIL  tests+coverage" in tail
 
 
-# Shape 3 (the realistic one for THIS repo): a RED tests+coverage whose pytest
-# output embeds a nested scaffold bar (captured stdout of a failing
+# Shape 3 (the realistic one for THIS repo): a FAILING tests+coverage whose pytest
+# output embeds a nested scaffold checks (captured stdout of a failing
 # integrate/check test — the STUB_CHECK_RED shape) whose FAIL row names a
 # DIFFERENT step. The nested `  FAIL  format` is the FIRST FAIL line, so the
 # window becomes the passing format step's own output — an actively wrong
 # attribution, silent. (When the nested row names the SAME step as the outer
-# red — the common stub shape — the window is correct; REVIEW-A drove that.)
-WI405_NESTED_BAR_OTHER_STEP = (
+# failure — the common stub shape — the window is correct; REVIEW-A drove that.)
+WI405_NESTED_CHECKS_OTHER_STEP = (
     "\n=== format : python -m ruff format --check . ===\n"
     "146 files already formatted\n"
     "  PASS  format           0.2s\n"
@@ -239,7 +239,7 @@ WI405_NESTED_BAR_OTHER_STEP = (
     "..F\n"
     "=== format : stub ruff format --check ===\n"
     "  FAIL  format           exit 1 (0.1s)\n"
-    "FAILED tests/test_integrate.py::test_red_bar - AssertionError: OUTER REAL\n"
+    "FAILED tests/test_integrate.py::test_failing_checks - AssertionError: OUTER REAL\n"
     "1 failed, 2 passed in 0.9s\n"
     "  FAIL  tests+coverage   exit 1 (1.0s)\n"
     "\n" + "=" * 56 + "\n"
@@ -250,8 +250,8 @@ WI405_NESTED_BAR_OTHER_STEP = (
 )
 
 
-def test_known_limit_a_nested_bar_naming_another_step_misattributes_the_window():
-    tail = _failure_tail(WI405_NESTED_BAR_OTHER_STEP)
+def test_known_limit_a_nested_check_run_naming_another_step_misattributes_the_window():
+    tail = _failure_tail(WI405_NESTED_CHECKS_OTHER_STEP)
     # PINNED LIMIT: the passing format step's output plus the nested FAIL row ...
     assert "146 files already formatted" in tail
     assert "  FAIL  format" in tail
@@ -339,12 +339,12 @@ def test_harness_floor_refuses_a_below_floor_venv(tmp_path, monkeypatch):
 def test_harness_floor_refuses_a_missing_venv(tmp_path, monkeypatch):
     # REVIEW-A MAJOR: a missing (or incomplete-layout) root .venv fails CLOSED —
     # the harness must not fall back to the ambient interpreter, whose pinned dev
-    # tools may be absent even at a satisfying version (a false green).
+    # tools may be absent even at a satisfying version (a false pass).
     _declare_toolchain(tmp_path)
     monkeypatch.setattr(agent_common, "venv_python", lambda root: None)
     fails = agent_common.harness_floor_failures(tmp_path)
     assert len(fails) == 1
-    assert "no runnable ./.venv" in fails[0] and "false green" in fails[0]
+    assert "no runnable ./.venv" in fails[0] and "false pass" in fails[0]
     # The message points at the surviving remedy, not the retired dispatcher.
     assert "dev-setup --install" in fails[0]
 
@@ -392,7 +392,7 @@ def test_the_declaration_alone_arms_the_floor_on_the_same_root(tmp_path):
     assert len(agent_common.harness_floor_failures(tmp_path)) == 1
 
 
-# --- the declared-bar resolver (WI-285) -----------------------------------------
+# --- the declared-checks resolver (WI-285) -----------------------------------------
 
 
 def test_declared_test_command_substitutes_the_given_py(tmp_path):

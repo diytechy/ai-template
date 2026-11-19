@@ -67,7 +67,7 @@ CLARIFICATIONS = {
         "new endpoint crossing",
         "shared schema",
         "unknown remainder",
-        "insufficient evidence for approval",
+        "insufficient evidence for acceptance",
     ),
     "A4": ("not supplied", "not assessable"),
 }

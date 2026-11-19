@@ -23,7 +23,7 @@ Two contracts live here:
 
   * **Deterministic safety classification on TWO axes (LLR-059/LLR-089;
     docs/concurrency-v2.md §A1).** One pure classifier maps a WI's declared
-    `SafetyClass` (`ordinary|spine|gate|attestation|protected|high-risk`), its
+    `SafetyClass` (`ordinary|spine|gate|acceptance|protected|high-risk`), its
     critique flag and the registry `PlanMode=dual` signal (LLR-095 — derived from
     the signal itself, never a second hand-set cell) to **two independent
     answers**, because the two questions are independent:
@@ -53,14 +53,14 @@ Usage:
     python scripts/schedule.py [--root .] simulate --jobs N [--format text|json]
 
 Small CSV loaders are duplicated from trace.py / check_trajectory.py per the kit's
-independently-copyable-script convention (the F5 rule). Owner gates are read
+independently-copyable-script convention (the F5 rule). Operator gates are read
 through the shared `spine_carrier` loader.
 
 Contracts: IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172, IF-264 — the
 interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
-Contract IF-264: `_load(root)` reads the work registry and the IF-073 owner
+Contract IF-264: `_load(root)` reads the work registry and the IF-073 operator
     registry together; `load_wis(rows, open_items=())` attaches to each row the
     id and title of every open item its `needs` cites. `hard_preds_satisfied`
     is the shared readiness predicate, used by disposition and mutex selection:
@@ -145,14 +145,14 @@ REGISTRY = "docs/requirements/work-items.csv"
 # classification"). The DECLARED values a WI may carry in its SafetyClass cell.
 # `adjudication` (WI-388, docs/concurrency-v2.md §A5.2) is the mechanical
 # scope-judgement kind minted trunk-side at intake: exclusive, rank 1, and its
-# lane runs NO product bar (integrate.refresh's no-bar arm) — its outputs are
-# Status cells and the work registry, nothing a product bar can speak to. ---
+# lane runs NO product checks (integrate.refresh's no-checks arm) — its outputs are
+# Status cells and the work registry, nothing a product checks can speak to. ---
 # Implements: SR-148, LLR-152
 SAFETY_CLASSES = (
     "ordinary",
     "spine",
     "gate",
-    "attestation",
+    "acceptance",
     "protected",
     "high-risk",
     "adjudication",
@@ -187,7 +187,7 @@ CONCURRENCY_UNCLASSIFIED = "unclassified"  # fail closed — never scheduled
 _KIND_CONCURRENCY = {
     "spine": CONCURRENCY_EXCLUSIVE,
     "adjudication": CONCURRENCY_EXCLUSIVE,
-    "attestation": CONCURRENCY_EXCLUSIVE,
+    "acceptance": CONCURRENCY_EXCLUSIVE,
     "gate": CONCURRENCY_EXCLUSIVE,
     "protected": CONCURRENCY_EXCLUSIVE,
     "high-risk": CONCURRENCY_EXCLUSIVE,
@@ -204,8 +204,8 @@ _KIND_CONCURRENCY = {
 # builds on a premise the diff may have moved.
 _KIND_RANK = {
     "spine": 0,
-    "adjudication": 1,  # WI-388, §A5.2: exclusive, runs no bar
-    "attestation": 2,
+    "adjudication": 1,  # WI-388, §A5.2: exclusive, runs no checks
+    "acceptance": 2,
     "gate": 2,
     "protected": 3,
     "high-risk": 4,
@@ -223,7 +223,7 @@ RANK_UNCLASSIFIED = 7
 # won't-build row: like `done` it is never in the ready frontier, but UNLIKE
 # `done` a cancelled predecessor does NOT satisfy a successor's hard dependency
 # (a cancelled WI never integrates, so a live WI hard-blocked on one can never
-# run — it stays `waiting`, surfacing to the owner, rather than proceeding on a
+# run — it stays `waiting`, surfacing to the operator, rather than proceeding on a
 # will-never-happen dependency; WI-267 design-decision 3).
 _DONE = "done"
 _CANCELLED = "cancelled"
@@ -250,7 +250,7 @@ def load_rows(path):
 # STATUS encoded as the DIRECTORY (docs/concurrency-restructure.md §2.1). The
 # 270-line reader that used to sit here VERBATIM, and identically in the other
 # two of schedule.py, check_trajectory.py and agent_common.py, now lives once in
-# `kitlib/registry.py`: owner ruling D-8 (`OI-16`, inversion confirmed
+# `kitlib/registry.py`: operator ruling D-8 (`OI-16`, inversion confirmed
 # 2026-08-13) retired the F5 no-shared-module rule that had licensed the copies.
 #
 # RE-EXPORTED under the names this module has always carried, so no call site
@@ -450,7 +450,7 @@ def _status(wis):
 
 
 # The one open-item state that does NOT satisfy a hard OI edge (OI-73): a
-# `pending` open item is an unanswered human question, so a row that cites it
+# `pending` open item is an unanswered operator question, so a row that cites it
 # reads `blocked` until the item is ruled (WI-790). Any other PRESENT
 # state — `ruled` — satisfies the edge; an OI id absent from the states map
 # (never minted, the row gone, or no registry) is NOT satisfied (fails closed,
@@ -703,7 +703,7 @@ _TERMINAL_DISPOSITION = {
     # The fourth terminal (2026-09-02 restructure plan §1.6): a row ABSORBED into
     # a successor by a consolidation judgement. Terminal for the same reason the
     # other two are — nothing re-claims it — but its own code, because the
-    # dead-end reads differently to an owner: the scope did not die, it moved,
+    # dead-end reads differently to an operator: the scope did not die, it moved,
     # and the successor named in the row's one-line Deliverable is where it went.
     _RESTRUCTURED: ("restructured", "restructured:absorbed"),
 }
@@ -727,7 +727,7 @@ def _waiting_reasons(wi, status):
     the 2026-09-02 restructure plan: a cancelled, partial OR restructured
     predecessor is a DEAD hard edge — it is terminal and will never integrate
     `done`, so the WI can never become ready. Each is surfaced as its own reason
-    code (the WI still just waits, never silently satisfied) so the owner sees
+    code (the WI still just waits, never silently satisfied) so the operator sees
     the will-never-happen dependency — and the codes match the validator's
     `dead_dependency_findings`, which flags exactly this SET, so the scheduler
     and the checker never disagree on whether an edge is dead. `restructured`

@@ -17,8 +17,8 @@ SR_REL = "docs/requirements/system-requirements.toml"
 
 def _tree(tmp_path):
     """A tmp repo carrying this repo's seven real registries at their real
-    paths. SR, LLR and TC statuses start Approved so tests plant their own
-    maturity moves instead of depending on the live spine's approval progress.
+    paths. SR, LLR and TC statuses start Accepted so tests plant their own
+    maturity moves instead of depending on the live spine's acceptance progress.
     Everything resolves off `root`, so nothing else needs to come along."""
     root = tmp_path / "repo"
     for rel in SNAP.SNAPSHOTTED:
@@ -36,7 +36,7 @@ def _tree(tmp_path):
             dest.write_bytes(
                 re.sub(
                     rb'(?m)^status = "[^"]+"',
-                    b'status = "Approved"',
+                    b'status = "Accepted"',
                     dest.read_bytes(),
                 )
             )
@@ -61,7 +61,7 @@ def _rewrite(root, rel, old, new):
     ending in the file and git saw the WHOLE registry change — which is the same
     fixture-CRLF class WI-465 swept, and it silently defeats any assertion about
     WHAT a commit touched (it fooled the status-cell pickaxe into reporting a
-    traced-only commit as an approval). Bytes in, bytes out, endings untouched."""
+    traced-only commit as an acceptance). Bytes in, bytes out, endings untouched."""
     path = root / rel
     data = path.read_bytes()
     assert old.encode("utf-8") in data, "fixture substring not found: " + old

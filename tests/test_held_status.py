@@ -1,21 +1,21 @@
 """The held-rung rule's pure halves, in process: the row-text identity, the
-binding's identity cell, and the approval-claim predicate.
+binding's identity cell, and the acceptance-claim predicate.
 
-A held-rung row's approval lands from a lane only as a CLARITY re-attestation
+A held-rung row's acceptance lands from a lane only as a CLARITY re-acceptance
 bound to the text its verdict judged. Two pieces of that rule need no git and
 are pinned here:
 
-  * THE ROW-TEXT IDENTITY. One digest of a row's approved text
-    (`acceptance_record.approved_text_digest`), classed by the same cell split
+  * THE ROW-TEXT IDENTITY. One digest of a row's accepted text
+    (`acceptance_record.accepted_text_digest`), classed by the same cell split
     the amendment comparison uses, and the binding's `rows` cell that records
     it beside a verdict (`kitlib.sitting`). The digest must ignore what is not
-    approved text (the id, `Status`, traced cells, an empty cell versus an
+    accepted text (the id, `Status`, traced cells, an empty cell versus an
     absent one) and move for what is, or a verdict would bind the wrong thing.
   * THE CLAIM PREDICATE (`held_status.held_claims`). Which rows a tree makes an
-    approval claim on against one parent: a live move into approval, or a copy
-    entering, moving in its approved cells or `Status`, or retiring. The cases
+    acceptance claim on against one parent: a live move into acceptance, or a copy
+    entering, moving in its accepted cells or `Status`, or retiring. The cases
     that are NOT claims (a Drafted sibling a whole-registry copy carries, a
-    demotion, a below-approval move, a traced-only copy move, a released rung,
+    demotion, a below-acceptance move, a traced-only copy move, a released rung,
     an example row) are pinned beside one real claim, so an over-reporting
     predicate fails as surely as a silent one.
 
@@ -54,7 +54,7 @@ def _sr_row(**cells):
         "Title": "Adds",
         "Requirement": "The kit shall add two numbers.",
         "Rationale": "the demo",
-        "Status": "Approved",
+        "Status": "Accepted",
         "Phase": "1",
         "SN-Refs": "SN-001",
     }
@@ -64,7 +64,7 @@ def _sr_row(**cells):
 
 def test_the_digest_ignores_the_id_status_and_traced_cells():
     """Implements: TC-398"""
-    digest = ar.approved_text_digest
+    digest = ar.accepted_text_digest
     base = digest(SR_REL, "SR-ID", _sr_row())
     for cells in (
         {"Status": "Drafted"},
@@ -82,12 +82,12 @@ _TOML_SR = (
     'title = "Adds"\n'
     'requirement = "The kit shall add two numbers."\n'
     'rationale = "the demo"\n'
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     "phase = 1\n"
 )
 _CSV_SR = (
     "SR-ID,Title,Requirement,Rationale,Area,Status,Phase\n"
-    "SR-001,Adds,The kit shall add two numbers.,the demo,,Approved,1\n"
+    "SR-001,Adds,The kit shall add two numbers.,the demo,,Accepted,1\n"
 )
 
 
@@ -95,7 +95,7 @@ def test_the_digest_is_carrier_blind_and_empty_equals_absent():
     """Implements: TC-398"""
     # The CSV twin carries an empty `Area` the TOML row does not name at all,
     # so the pair is also the empty-versus-absent case read off real carriers.
-    digest = ar.approved_text_digest
+    digest = ar.accepted_text_digest
     toml_row = spine_carrier.rows_from_text(_TOML_SR, "SR-ID", ".toml")["SR-001"]
     csv_row = spine_carrier.rows_from_text(_CSV_SR, "SR-ID", ".csv")["SR-001"]
     assert digest(SR_REL, "SR-ID", toml_row) == digest(SR_REL, "SR-ID", csv_row)
@@ -105,21 +105,21 @@ def test_the_digest_is_carrier_blind_and_empty_equals_absent():
 
 def test_the_digest_has_the_done_when_shape():
     """Implements: TC-398"""
-    digest = ar.approved_text_digest
+    digest = ar.accepted_text_digest
     assert re.fullmatch(r"sha256:[0-9a-f]{16}", digest(SR_REL, "SR-ID", _sr_row()))
 
 
 # --- the binding's identity cell ------------------------------------------------
 
 _IDS = {"SR-001": "sha256:0123456789abcdef", "SN-001": "sha256:fedcba9876543210"}
-_BINDING = "brief = amendment\nkinds = amendment\noutcome = accepted\n"
+_BINDING = "brief = amendment\nkinds = amendment\noutcome = recorded\n"
 
 
 def test_a_binding_round_trips_its_identities():
     """Implements: TC-398"""
     render = ksitting.render_requested
     read = ksitting.read_identities
-    text = render("amendment", ("amendment",), "accepted", identities=_IDS)
+    text = render("amendment", ("amendment",), "recorded", identities=_IDS)
     assert read(text) == (_IDS, None)
 
 
@@ -128,9 +128,9 @@ def test_read_requested_ignores_the_identity_cell():
     # Every other reader of a binding reads brief, kinds and outcome only, so
     # the cell must neither change that answer nor appear without identities.
     render = ksitting.render_requested
-    text = render("amendment", ("amendment",), "accepted", identities=_IDS)
-    assert ksitting.read_requested(text) == ("amendment", ("amendment",), "accepted")
-    assert render("amendment", ("amendment",), "accepted") == _BINDING
+    text = render("amendment", ("amendment",), "recorded", identities=_IDS)
+    assert ksitting.read_requested(text) == ("amendment", ("amendment",), "recorded")
+    assert render("amendment", ("amendment",), "recorded") == _BINDING
 
 
 @pytest.mark.parametrize(
@@ -151,7 +151,7 @@ def test_a_malformed_or_absent_identity_cell_reads_as_no_identity(cell):
     assert why, cell
 
 
-# --- the approval-claim predicate ---------------------------------------------
+# --- the acceptance-claim predicate ---------------------------------------------
 
 
 def _row(rid, status, text="the text", phase="1"):
@@ -175,20 +175,20 @@ def _held_everywhere(_registry):
 @pytest.mark.parametrize(
     "before, after",
     [
-        (_rows(_row("SR-001", "Drafted")), _rows(_row("SR-001", "Approved"))),
+        (_rows(_row("SR-001", "Drafted")), _rows(_row("SR-001", "Accepted"))),
         (_rows(_row("SR-001", "Drafted")), _rows(_row("SR-001", "Founded"))),
-        (_rows(), _rows(_row("SR-001", "Approved"))),
+        (_rows(), _rows(_row("SR-001", "Accepted"))),
     ],
-    ids=["Approved", "Founded", "born Approved"],
+    ids=["Accepted", "Founded", "born Accepted"],
 )
-def test_a_live_flip_into_approval_is_a_claim(before, after):
+def test_a_live_flip_into_acceptance_is_a_claim(before, after):
     """Implements: TC-241"""
     claims = held_status.held_claims
     got = claims({SR: (after, {})}, {SR: (before, {})}, _held_everywhere)
     assert got == {("SR-001", SR_REL, "SR-ID"): "a"}
 
 
-_LIVE = _rows(_row("SR-001", "Approved", "new"))
+_LIVE = _rows(_row("SR-001", "Accepted", "new"))
 
 
 @pytest.mark.parametrize(
@@ -196,7 +196,7 @@ _LIVE = _rows(_row("SR-001", "Approved", "new"))
     [
         ((_LIVE, {}), (_LIVE, _LIVE)),
         (
-            (_LIVE, _rows(_row("SR-001", "Approved", "old"))),
+            (_LIVE, _rows(_row("SR-001", "Accepted", "old"))),
             (_LIVE, _LIVE),
         ),
         (
@@ -208,7 +208,7 @@ _LIVE = _rows(_row("SR-001", "Approved", "new"))
             ({}, {}),
         ),
     ],
-    ids=["entered", "approved cell moved", "Status moved", "retired"],
+    ids=["entered", "accepted cell moved", "Status moved", "retired"],
 )
 def test_a_copy_entry_move_or_retirement_is_a_claim(before, after):
     """Implements: TC-241"""
@@ -217,9 +217,9 @@ def test_a_copy_entry_move_or_retirement_is_a_claim(before, after):
     assert got == {("SR-001", SR_REL, "SR-ID"): "b"}
 
 
-# One real claim every not-judged case sits beside: SR-009 flips into approval.
+# One real claim every not-judged case sits beside: SR-009 flips into acceptance.
 _CLAIM_BEFORE = _row("SR-009", "Drafted")
-_CLAIM_AFTER = _row("SR-009", "Approved")
+_CLAIM_AFTER = _row("SR-009", "Accepted")
 
 
 def _beside_the_claim(before, after):
@@ -252,22 +252,22 @@ _NOT_JUDGED = {
         ),
     ),
     "demotion": (
-        (_rows(_row("SR-002", "Approved")), _rows(_row("SR-002", "Approved")), {}),
-        (_rows(_row("SR-002", "Drafted")), _rows(_row("SR-002", "Approved")), {}),
+        (_rows(_row("SR-002", "Accepted")), _rows(_row("SR-002", "Accepted")), {}),
+        (_rows(_row("SR-002", "Drafted")), _rows(_row("SR-002", "Accepted")), {}),
     ),
-    "below-approval move": (
+    "below-acceptance move": (
         (_rows(_row("SR-002", "")), {}, {}),
         (_rows(_row("SR-002", "Drafted")), {}, {}),
     ),
     "traced-only copy move": (
         (
-            _rows(_row("SR-002", "Approved", phase="2")),
-            _rows(_row("SR-002", "Approved", phase="1")),
+            _rows(_row("SR-002", "Accepted", phase="2")),
+            _rows(_row("SR-002", "Accepted", phase="1")),
             {},
         ),
         (
-            _rows(_row("SR-002", "Approved", phase="2")),
-            _rows(_row("SR-002", "Approved", phase="2")),
+            _rows(_row("SR-002", "Accepted", phase="2")),
+            _rows(_row("SR-002", "Accepted", phase="2")),
             {},
         ),
     ),
@@ -280,12 +280,12 @@ _NOT_JUDGED = {
         (
             {},
             {},
-            {"LLR-002": {"LLR-ID": "LLR-002", "Detail": "d", "Status": "Approved"}},
+            {"LLR-002": {"LLR-ID": "LLR-002", "Detail": "d", "Status": "Accepted"}},
         ),
     ),
     "-000 row": (
         (_rows(_row("SR-000", "Drafted")), {}, {}),
-        (_rows(_row("SR-000", "Approved")), {}, {}),
+        (_rows(_row("SR-000", "Accepted")), {}, {}),
     ),
 }
 
@@ -313,7 +313,7 @@ def test_an_unmapped_registry_is_held():
     assert held_by("DevStg-Reqs", SR_REL) is True
     tier = (unmapped, "W-ID")
     before = {tier: ({"W-001": {"W-ID": "W-001", "Status": "Drafted"}}, {})}
-    after = {tier: ({"W-001": {"W-ID": "W-001", "Status": "Approved"}}, {})}
+    after = {tier: ({"W-001": {"W-ID": "W-001", "Status": "Accepted"}}, {})}
     got = claims(after, before, functools.partial(held_by, "DevStg-Below"))
     assert got == {("W-001", unmapped, "W-ID"): "a"}
 
@@ -326,8 +326,8 @@ def test_HELD_TIERS_equals_the_snapshotted_tiers():
 def test_the_rule_rides_the_lane_commit_walk():
     """Implements: TC-241"""
     names = [rider.__name__ for rider in tta.LANE_COMMIT_RIDERS]
-    assert "commit_held_approval_lines" in names, names
-    assert names.index("commit_held_approval_lines") > names.index(
+    assert "commit_held_acceptance_lines" in names, names
+    assert names.index("commit_held_acceptance_lines") > names.index(
         "commit_parent_first_lines"
     ), names
 
@@ -344,4 +344,4 @@ def test_the_ledger_clarity_arm_is_retired():
     """Implements: TC-278"""
     # The held CLARITY exception reads the bound identity, never the ledger.
     assert not hasattr(ar, "held_reattest_refusal")
-    assert "held_reattest_refusal" not in inspect.getsource(ar.merge_approval_refusal)
+    assert "held_reattest_refusal" not in inspect.getsource(ar.merge_acceptance_refusal)

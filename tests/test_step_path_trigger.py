@@ -179,7 +179,7 @@ def test_repo_sensors_include_their_inputs():
             ), (name, path)
 
 
-def test_hook_without_path_declarations_needs_no_stage(monkeypatch):
+def test_hook_without_path_declarations_needs_no_stage(monkeypatch, capsys):
     config = profile("")
     monkeypatch.setattr(check.sys, "argv", ["check.py", "--path-triggered"])
     monkeypatch.setattr(check, "load_profile", lambda: config)
@@ -190,6 +190,9 @@ def test_hook_without_path_declarations_needs_no_stage(monkeypatch):
     monkeypatch.setattr(check, "resolve_stage", forbidden)
     monkeypatch.setattr(check, "changed_paths", forbidden)
     check.main()
+    # Nothing to run is the common case on every commit; it prints nothing
+    # (it used to open every hook run with "No checks defined at stage all.").
+    assert capsys.readouterr().out == ""
 
 
 @pytest.mark.parametrize(

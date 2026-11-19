@@ -25,12 +25,12 @@ project-trajectory/scripts/bootstrap.py	copy_kit_files	17	31
 project-trajectory/scripts/bootstrap.py	main	16	41
 project-trajectory/scripts/bootstrap.py	strip_markers	28	36
 project-trajectory/scripts/bootstrap.py	sync_agent_skills	49	41
-project-trajectory/scripts/check.py	main	40	220
+project-trajectory/scripts/check.py	main	39	231	RE-STAMPED DOWN 40 -> 39 (D11, 2026-11-17): the retired stage-value alias resolution and the `--stage-cleared` warning leave `main`.
 project-trajectory/scripts/check.py	staged_divergence	32	84
 project-trajectory/scripts/check_doc_refs.py	main	22	93	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 20 -> 22 with WI-656 (07d552a0): the unbound-symbol count joins the untraced tally and its summary clause, one conditional in the format arguments. Repair is owed on trunk: the tail belongs in a helper.
 project-trajectory/scripts/check_doc_refs.py	registry_findings	18	26
 project-trajectory/scripts/check_doc_refs.py	symbol_findings	35	51
-project-trajectory/scripts/check_docs.py	_needs_human_block	21	19
+project-trajectory/scripts/check_docs.py	_needs_operator_block	21	19
 project-trajectory/scripts/check_docs.py	check_links	39	34
 project-trajectory/scripts/check_docs.py	find_stale	22	21
 project-trajectory/scripts/check_docs.py	git_commit_lookup	16	47
@@ -73,7 +73,6 @@ project-trajectory/scripts/gen_arch_map.py	build_dependency_diagram	17	40
 project-trajectory/scripts/gen_arch_map.py	build_flow	22	42
 project-trajectory/scripts/gen_arch_map.py	build_map	18	36
 project-trajectory/scripts/gen_arch_map.py	first_comment_summary	18	14
-project-trajectory/scripts/gen_arch_map.py	header_lines	19	28
 project-trajectory/scripts/gen_arch_map.py	internal_imports	39	25
 project-trajectory/scripts/gen_arch_map.py	main	40	209
 project-trajectory/scripts/gen_arch_map.py	module_bindings	21	17
@@ -101,7 +100,6 @@ project-trajectory/scripts/intake.py	_close_drafts	19	73
 project-trajectory/scripts/intake.py	_locate_spine_rows	31	31
 project-trajectory/scripts/integrate.py	_claim_delta	16	23
 project-trajectory/scripts/integrate.py	_shed_residue	17	22
-project-trajectory/scripts/kitlib/authority.py	read_dial	16	21	RE-KEYED 2026-09-27 (WI-657): WI-636 (ac96741e) moved the human-approval dial read out of `agent_common.approval_through` (31 -> 1, a delegate) into the authority module; 16 here, net -15. Not a bump.
 project-trajectory/scripts/kitlib/evidence.py	source_files	22	26	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 21 -> 22 with WI-632 (ae3d625e): observation records are excluded from the suite's source binding beside the evidence file, one more operand in the skip condition. Repair is owed on trunk.
 project-trajectory/scripts/migrate_carrier.py	convert	21	39
 project-trajectory/scripts/migrate_carrier.py	read_sn	23	24
@@ -133,7 +131,7 @@ project-trajectory/scripts/trace.py	_cell_diff_lines	18	26	ABSORBED FROM TRUNK, 
 project-trajectory/scripts/trace.py	_csv_ids	16	14
 project-trajectory/scripts/trace.py	_offspine_row_diff	16	20
 project-trajectory/scripts/trace.py	_retired_cell_findings	17	26
-project-trajectory/scripts/trace.py	approval_lines	74	102
+project-trajectory/scripts/trace.py	acceptance_lines	74	102
 project-trajectory/scripts/trace.py	build_forest	17	44	RE-STAMPED DOWN 19 -> 17 (WI-657): WI-631 (8d25242f) moved the verifying-nothing bucket out to `_unheld_tc_groups`; never recorded.
 project-trajectory/scripts/trace.py	frame_findings	20	23
 project-trajectory/scripts/trace.py	hat_findings	21	44
@@ -143,7 +141,7 @@ project-trajectory/scripts/trace.py	integrity_findings	17	17
 project-trajectory/scripts/trace.py	interface_findings	30	58
 project-trajectory/scripts/trace.py	main	20	205	RE-STAMPED DOWN 23 -> 20 (WI-657): WI-633 (6ee918f5) routed two approval-scope branches to `_approval_body`; never recorded.
 project-trajectory/scripts/trace.py	mermaid_graph	31	45
-project-trajectory/scripts/trace.py	reattest_model	34	119
+project-trajectory/scripts/trace.py	reaccept_model	34	119
 project-trajectory/scripts/trace.py	render_console	34	138
 project-trajectory/scripts/trace.py	render_report	65	369	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 65 -> 66 with WI-637 (1be5ca08): a hat finding is counted with no roster (`hat_names or hat_dangling`), so a strict failure never stands without its summary line.
 project-trajectory/scripts/trace.py	schema_findings	29	28	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 25 -> 29 with WI-631 (8d25242f): a test case's Verifies is required unless it evidences assumptions instead (LLR-229), a nested conditional arm. Repair is owed on trunk.

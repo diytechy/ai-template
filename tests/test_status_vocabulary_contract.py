@@ -4,7 +4,7 @@ checked against the enforcement constants it describes (WI-477, repo review
 
 WHY THIS MODULE EXISTS. The maturity vocabulary has been renamed four times
 (`Stability` -> an undeclared `Status` -> `Approval` -> `Status`) and re-valued
-twice (`Draft`/`Verified`/`Planned` folded to `Drafted`/`Approved`; `Modified`
+twice (`Draft`/`Verified`/`Planned` folded to `Drafted`/`Accepted`; `Modified`
 retired, `Founded` added at the 2026-08-20 signing). Every rename landed in the
 enforcing constants and in SOME of the ten documents that teach them, and the
 review found the residue: `INTERFACES.template.md` documented an `Approval`
@@ -50,7 +50,7 @@ EVER_STATUS_WORDS = frozenset(
         "Planned",
         "Modified",
         "Verified",
-        "Approved",
+        "Accepted",
         "Founded",
         "Implemented",
         "Stable",
@@ -103,7 +103,7 @@ NON_INSTRUCTING_KIT_DOCS = {
     "CLAUDE.stub.template.md": "a three-line pointer at AGENTS.md; teaches nothing",
     "GEMINI.stub.template.md": "the same stub for a second agent",
     "LOG.template.md": "an empty append-only log; records, never instructs",
-    "OWNER_SCRATCHPAD.template.md": "the owner's free-form notes surface",
+    "OPERATOR_SCRATCHPAD.template.md": "the operator's free-form notes surface",
     "PLAN.template.md": "an empty plan surface a session fills",
     "STATUS.template.md": "the scaffolded status surface, filled per repo",
     "RUNTIME_FLOWS.template.md": "an authored-narrative shell",
@@ -172,15 +172,15 @@ def test_the_retired_and_live_status_words_never_overlap():
         "Modified retired at D-9 step 7 (2026-08-20 signing) — if it is live "
         "again, this module's premise changed and the docs need re-reading"
     )
-    assert {"Drafted", "Approved"} <= frozenset(trace.STATUS_VALUES)
+    assert {"Drafted", "Accepted"} <= frozenset(trace.STATUS_VALUES)
     assert RETIRED_STATUS_WORDS, "a scan for retired words with none to find"
 
 
 def test_the_interfaces_template_teaches_exactly_the_enforced_if_vocabulary():
     """`INTERFACES.template.md`'s `Status` row is the adopter's field guide for
     the tier. It documented an `Approval` column with `draft`/`approved` while
-    the checker enforced `Status` with `Drafted`/`Approved` — and its own worked
-    example, twenty lines below, already wrote `status = "Approved"`."""
+    the checker enforced `Status` with `Drafted`/`Accepted` — and its own worked
+    example, twenty lines below, already wrote `status = "Accepted"`."""
     text = _text(KIT / "INTERFACES.template.md")
     row = next(
         (ln for ln in text.splitlines() if ln.startswith("| `Status` |")),
@@ -279,7 +279,7 @@ def test_no_instructing_surface_TEACHES_a_retired_status_value_IN_PROSE():
     MAJOR-7). The assignment scan above reads `status = "<word>"`, which is one
     of the two ways a document teaches a value. The other is a sentence:
 
-        Valid statuses are Drafted, Modified, and Approved.
+        Valid statuses are Drafted, Modified, and Accepted.
 
     That plants a retired word in an adopter's head just as effectively, carries
     no `=`, and passed the contract clean — which is what the review demonstrated.
@@ -360,5 +360,5 @@ def test_the_frame_and_interface_tiers_share_one_subset():
     assert IF_STATUS == FRAME_STATUS
     assert IF_STATUS < SPINE_STATUS, (
         "the off-spine subset must stay a strict subset of the spine's ladder — "
-        "`Founded` means settled AND demonstrated, which an approval never says"
+        "`Founded` means settled AND demonstrated, which an acceptance never says"
     )

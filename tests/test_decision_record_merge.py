@@ -2,7 +2,7 @@
 (SR-225, TC-294).
 
 A lane is one delegated run, and the merge slot is where it closes. Under the
-`[attestation] decision_recording` dial at `record` or `escalate-first`, a lane
+`[authority] decision_recording` dial at `record` or `escalate-first`, a lane
 whose work closed complete or cancelled without its record at
 `docs/decisions/<branch>.toml` is refused, naming that path; one carrying it
 merges past the rung, a malformed entry reported rather than refused. Under
@@ -63,7 +63,7 @@ def _lane(tmp_path, directory, record=None, dial=None, rel=RECORD):
         # declared as given; a bare word is quoted.
         literal = dial if dial.startswith('"') else '"{}"'.format(dial)
         (root / "docs" / "process.toml").write_text(
-            "[attestation]\ndecision_recording = {}\n".format(literal),
+            "[authority]\ndecision_recording = {}\n".format(literal),
             encoding="utf-8",
             newline="\n",
         )
@@ -153,14 +153,14 @@ def test_a_padded_or_mixed_case_dial_reads_as_its_word(tmp_path, dial):
 def test_a_branch_name_no_record_can_carry_is_refused(tmp_path):
     """Implements: TC-294"""
     # WI-818 dispute 1: `#` is a valid branch character, and no record name
-    # carries it. The lane's tree holds `owner-cleanup.toml`, another run's
+    # carries it. The lane's tree holds `operator-cleanup.toml`, another run's
     # record, which must not meet the rung: a name no record can carry is an
     # absent record, refused when one is owed.
-    other = "docs/decisions/owner-cleanup.toml"
+    other = "docs/decisions/operator-cleanup.toml"
     root = _lane(tmp_path, "complete", record=SOUND, dial="record", rel=other)
-    _git(root, "branch", "-m", "wi-401", "owner#cleanup")
+    _git(root, "branch", "-m", "wi-401", "operator#cleanup")
     outcomes = {"WI-401": "merged"}
-    refusal = integ._decision_record_refusal(root, "owner#cleanup", outcomes)
-    assert refusal is not None and "owner#cleanup" in refusal, refusal
+    refusal = integ._decision_record_refusal(root, "operator#cleanup", outcomes)
+    assert refusal is not None and "operator#cleanup" in refusal, refusal
     assert "'#'" in refusal and "nothing was merged" in refusal
     assert other not in refusal

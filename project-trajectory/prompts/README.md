@@ -16,7 +16,7 @@ sessions this loop launches, so it belongs where a diff shows it.**
 | `adjudicate-amendment.template.md` | meaning-vs-clarity on an amended spine row | yes |
 | `adjudicate-disposition.template.md` | a `partial/` or `cancelled/` lane close | yes |
 | `adjudicate-consolidate.template.md` | a cluster of queued rows the idle census found overlapping | yes |
-| `adjudicate-red-tc.template.md` | unverified test cases found by the idle census | yes |
+| `adjudicate-evidence-gap.template.md` | evidence gaps found by the idle census | yes |
 | `adjudicate-rejudge.template.md` | an observation test case a merge or release preparation found due for re-judging | yes |
 | `adjudicate-done-when.template.md` | a lane's Done-when that differs from the one it was claimed with | yes |
 | `adjudicate-combined.template.md` | one lane checkpoint's pending in-lane judgements, one section per kind | yes |
@@ -25,7 +25,7 @@ sessions this loop launches, so it belongs where a diff shows it.**
 | `plan-single.template.md` | the in-lane planner of a claimed row whose claim copy declares `planmode = "single"` (`scripts/review_brief.py plan`) | yes (`PLAN-SINGLE`) |
 
 `spine-questions.md` is not a brief: it is the one home of the questions an
-adjudicator puts to a spine row, per tier. The first-approval and amendment
+adjudicator puts to a spine row, per tier. The first-acceptance and amendment
 briefs compose the sections for the tiers they judge into their `{questions}`
 slot at render time, and the `spine-authoring` skill points at it. An absent or
 unreadable copy refuses those briefs; an override of either brief must keep the
@@ -41,7 +41,7 @@ way to change the worker brief.
 ## Authoring rules
 
 These are enforced, not hoped. Each rule below has a test; a template that
-breaks one reds the suite rather than quietly changing how a session behaves.
+breaks one fails the suite rather than quietly changing how a session behaves.
 
 ### 1. Every slot is named and bounded
 
@@ -69,9 +69,9 @@ OUTCOME: QUEUE|QUEUE-WITH-EDGE|RETURN-TO-DRAFT needs=<id or ->
 ```
 
 **Prose that carries control flow must be a typed field.** The rule is written
-in blood: `NEEDS-HUMAN`, a magic substring inside a free-text handback reason,
+in blood: `NEEDS-OPERATOR`, a magic substring inside a free-text handback reason,
 was the *only* input selecting a disposition row's review tier — so a typo
-(`NEEDS_HUMAN`, `needs human`) silently downgraded the judgement, with no
+(`NEEDS_OPERATOR`, `needs operator`) silently downgraded the judgement, with no
 constant, no validation and no refusal on a miss. A closed enum on its own line
 is parseable, testable, and impossible to typo silently.
 

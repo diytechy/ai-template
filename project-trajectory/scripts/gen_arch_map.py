@@ -65,7 +65,7 @@ are symbol-mode only (they need a parser).
 
 Reverse back-link coverage (`--backlink-coverage`): the same `Implements:`
 grammar, run the other way round — for each LIVE LLR row, does any literal
-declaration in the source surface name it? A REPORT, not a gate: the bar lives
+declaration in the source surface name it? A REPORT, not a gate: the minimum lives
 in `docs/process.toml` `[checks] backlink_coverage_min` and ships at `0`, so the
 number appears in every run and nothing fails. It measures PRESENCE, never
 correctness. See the section above `main()` for the direction argument.
@@ -118,7 +118,7 @@ Contract IF-010: this generator's own invocation surface. `--doc`, `--cli-doc` a
     scanned tree for parseability independently of staleness;
     `--backlink-coverage` is a report mode needing no `--doc`, measuring
     reverse `Implements:` coverage against the declared `[checks]
-    backlink_coverage_min` bar, with `--strict-backlinks` promoting a
+    backlink_coverage_min` minimum, with `--strict-backlinks` promoting a
     below-minimum reading from a warning.
 Contract IF-028: the `sym:` ORACLE. `scan_inventory(src_roots, strict=False)`
     yields one `(rel, summary, imports, contracts, rows)` record per module of
@@ -162,7 +162,7 @@ Contract IF-150: the freshness and parse verdict the harness reads back. 0 says
     `--contracts-doc` target is stale under `--check`, when a module in the
     scanned tree fails to parse under `--strict-parse`, and when reverse
     `Implements:` coverage reads below the declared `[checks]
-    backlink_coverage_min` bar under `--strict-backlinks`. An absent
+    backlink_coverage_min` minimum under `--strict-backlinks`. An absent
     `--cli-doc` or `--contracts-doc` target is vacuous and exits 0, while an
     absent `--doc` target, a `--doc` file missing its MODULE MAP marker pair,
     and no `--doc` at all are hard refusals with a message on stderr.
@@ -270,7 +270,7 @@ IF_ID_RE = re.compile(r"IF-\d+")
 _MODULE_EXTS = _kitspine.MODULE_EXTS
 # The file types `--backlink-coverage` reads, and the types a test file is.
 # ONE HOME: `kitlib.spine.BACKLINK_EXTS`, where the list and its widening
-# caution live, so the tag reader and the red-mark count read one domain.
+# caution live, so the tag reader and the expected-failure marker count read one domain.
 BACKLINK_EXTS = _kitspine.BACKLINK_EXTS
 # Comment tokens the file-level fallback (--mode files) reads a summary from.
 # The three most common line-comment markers; override with --comment-prefix.
@@ -678,46 +678,81 @@ def _contract_bodies(lines, declared):
 
 
 # Files whose leading comment block is `#`-prefixed lines. Anything else that
-# is not Markdown is read the same way, so a shell hook, an INI file and an
-# extensionless config all declare through one grammar.
+# is not Markdown or in `_HEADER_FORMS` is read the same way, so a shell hook,
+# an INI file and an extensionless config all declare through one grammar.
 _MARKDOWN_SUFFIXES = (".md", ".markdown", ".html")
+# The other languages' comment forms, by suffix: the line-comment marker and
+# the block comment's opener and closer. A source file states its contracts in
+# its own language's comments; read for `#` alone, every one of these
+# declared nothing in the repositories that adopted the kit.
+_SLASH_FORM = (re.compile(r"//[/!]?"), ("/*", "*/"))
+_HEADER_FORMS = {
+    ".rs": _SLASH_FORM,
+    ".ts": _SLASH_FORM,
+    ".js": _SLASH_FORM,
+    ".go": _SLASH_FORM,
+    ".cs": _SLASH_FORM,
+    ".ps1": (re.compile(r"#+"), ("<#", "#>")),
+    ".cmd": (re.compile(r"@?rem\b|::", re.I), None),
+}
+_HASH_FORM = (re.compile(r"#+"), None)
+# A first line that may sit above the header without ending it.
+_PREAMBLE_RE = re.compile(r"#!|@echo\s+off\b", re.I)
 
 
 def header_lines(path):
     """The leading comment block of a NON-Python file, its comment markers
     stripped, as the lines the marker and body grammar read.
 
-    Two carriers: `#`-prefixed lines at the top of a TOML/INI/CSV/shell/
-    extensionless file (a `#!` shebang on line 1 is skipped; the block ends at
-    the first line that is not a `#` comment), or the FIRST `<!-- ... -->`
-    block at the top of a Markdown file. `[]` when the file opens with anything
-    else — a header is the first thing in the file or it is not a header."""
+    The carriers: the FIRST `<!-- ... -->` block at the top of a Markdown
+    file; line and block comments in the forms `_HEADER_FORMS` lists for
+    Rust, TS/JS, Go, C# (`//`, `//!`, `///`, `/* */`, `/** */`), PowerShell
+    (`#`, `<# #>`) and batch (`REM`, `::`); and `#`-prefixed lines at the top
+    of any other file (TOML/INI/CSV/shell/extensionless). A `#!` shebang or a
+    batch `@echo off` on line 1 is skipped, a UTF-8 BOM is dropped, and the
+    block ends at the first line that is not a comment. `[]` when the file
+    opens with anything else — a header is the first thing in the file or it
+    is not a header."""
     try:
-        lines = path.read_text(encoding="utf-8").splitlines()
+        lines = path.read_text(encoding="utf-8-sig").splitlines()
     except (OSError, UnicodeDecodeError):
         return []
     if path.suffix.lower() in _MARKDOWN_SUFFIXES:
-        i = 0
-        while i < len(lines) and not lines[i].strip():
-            i += 1
-        if i >= len(lines) or not lines[i].lstrip().startswith("<!--"):
-            return []
-        out, first = [], lines[i].lstrip()[4:]
-        rest = [first] + lines[i + 1 :]
-        for line in rest:
-            if "-->" in line:
-                out.append(line[: line.index("-->")].strip())
-                break
-            out.append(line.strip())
-        return out
-    out = []
-    for j, line in enumerate(lines):
+        return _markdown_header(lines)
+    line_re, block = _HEADER_FORMS.get(path.suffix.lower(), _HASH_FORM)
+    if lines and _PREAMBLE_RE.match(lines[0].strip()):
+        lines = lines[1:]
+    out, closer = [], None
+    for line in lines:
         s = line.strip()
-        if j == 0 and s.startswith("#!"):
+        if closer is None and block and s.startswith(block[0]):
+            closer, s = block[1], s[len(block[0]) :]
+        elif closer is None:
+            m = line_re.match(s)
+            if not m:
+                break
+            out.append(s[m.end() :].strip())
             continue
-        if not s.startswith("#"):
+        if closer in s:
+            s, closer = s[: s.index(closer)], None
+        out.append(s.lstrip("*").strip())
+    return out
+
+
+def _markdown_header(lines):
+    """`header_lines` for a Markdown file: its first `<!-- ... -->` block."""
+    i = 0
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    if i >= len(lines) or not lines[i].lstrip().startswith("<!--"):
+        return []
+    out, first = [], lines[i].lstrip()[4:]
+    rest = [first] + lines[i + 1 :]
+    for line in rest:
+        if "-->" in line:
+            out.append(line[: line.index("-->")].strip())
             break
-        out.append(s.lstrip("#").strip())
+        out.append(line.strip())
     return out
 
 
@@ -1332,7 +1367,7 @@ def build_contract_reference(src_roots, owner_files=()):
     ]
 
     if unreadable:
-        # Loud, and in the document itself: the alternative is a green check
+        # Loud, and in the document itself: the alternative is a passing check
         # over a tree the generator could not read.
         sections.append("\n## Modules the scan could not read")
         sections.append(
@@ -2123,7 +2158,7 @@ def read_backlink_min(root):
     both the shipped default and the answer for an absent, unreadable,
     wrong-typed or out-of-range dial.
 
-    A LOCAL `tomllib` READ, per F5 (owner 2026-07-12, no shared `_kitcommon.py`):
+    A LOCAL `tomllib` READ, per F5 (operator 2026-07-12, no shared `_kitcommon.py`):
     this module is imported by three checkers and copied standalone into every
     scaffold, so it must not reach into the coordinator layer that already knows
     how to read this file. It is the same posture `check_trajectory._process_check`
@@ -2131,7 +2166,7 @@ def read_backlink_min(root):
 
     IT FALLS BACK TO 0 RATHER THAN "ON, LOUDLY" — the opposite of those two
     boolean readers, and the reason is that this dial is not a boolean. A
-    malformed file cannot tell us what bar the adopter meant, and inventing one
+    malformed file cannot tell us what minimum the adopter meant, and inventing one
     would gate a repo on a number nobody declared. The loud half is not lost, it
     is elsewhere and stronger: `agent_common.PROCESS_ONLY_KEYS` type-checks this
     key and `config_conflicts` REFUSES a wrong-typed dial outright, so the
@@ -2184,11 +2219,11 @@ def backlink_report(src_roots, root, exts=BACKLINK_EXTS, registry=LLR_REGISTRY):
     if minimum == 0:
         # The shipped position, and it is stated on every run rather than
         # implied by silence: a reader must be able to tell "this repo declined
-        # the bar" from "this repo has never heard of the layer".
+        # the minimum" from "this repo has never heard of the layer".
         lines.append(
             "back-link coverage: REPORT-ONLY — the minimum is 0, so the number "
             "is reported and nothing is gated. Raise it when your practice "
-            "earns the bar."
+            "earns the minimum."
         )
     elif pct < minimum:
         lines.append(
@@ -2215,7 +2250,7 @@ def backlink_report(src_roots, root, exts=BACKLINK_EXTS, registry=LLR_REGISTRY):
 # for unmapped stays warn-only; the flip of either class to "gate" is a reviewed
 # commit taken once that class reaches zero. Missing files and stale exclusions
 # are already delivered and gated by the dogfood/bootstrap checks, so they gate
-# here too (they stand at zero, or those checks are already red).
+# here too (they stand at zero, or those checks already fail).
 # Implements: SR-163, LLR-276
 MAPPING_FINDING_POLICY = {
     "missing_file": "gate",
@@ -2566,7 +2601,7 @@ def main():
         action="store_true",
         help="REPORT MODE (writes nothing, needs no --doc): what share of live "
         "LLR rows is named by a literal `Implements:` declaration under --src. "
-        "The bar is docs/process.toml [checks] backlink_coverage_min",
+        "The minimum is docs/process.toml [checks] backlink_coverage_min",
     )
     ap.add_argument(
         "--mapping-purpose",
@@ -2608,7 +2643,7 @@ def main():
     # touches. AND THEY COMPOSE. Dispatching straight into `sys.exit` on the
     # first match ran only the FIRST mode an invocation named and left the rest
     # unexamined: `--cli-doc X --contracts-doc Y --check` reported X and exited 0
-    # over a stale Y — a green verdict on a document nothing looked at. Every
+    # over a stale Y — a passing verdict on a document nothing looked at. Every
     # named mode runs, in this order, and the verdict is the worst of them.
     modes = (
         (args.backlink_coverage, _backlink_exit),

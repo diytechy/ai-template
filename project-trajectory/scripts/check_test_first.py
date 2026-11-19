@@ -6,7 +6,7 @@ what the code does rather than what was required, so a passing run stops being
 evidence that the requirement is met. The stage ladder puts test cases before
 implementation for a project as a whole, but not requirement by requirement: a
 project whose derived stage still reads DevStg-Tests can already carry
-requirements whose code landed before their test cases were approved. This
+requirements whose code landed before their test cases were accepted. This
 reads that order per requirement, from the one record of order that no registry
 cell can restate after the fact: the commits on trunk.
 
@@ -21,46 +21,46 @@ TWO EVENTS, BOTH READ FROM TRUNK'S FIRST-PARENT HISTORY, OLDEST FIRST.
     counts. Tests and documents are not code declaring an implementation. The
     earlier of the requirement's own line and any design row's line is the
     landing. A merge lands everything it brings at the merge.
-  * A test case is APPROVED FOR A REQUIREMENT at the earliest commit in which
-    it reads approved AND names the requirement or one of its design rows, the
+  * A test case is ACCEPTED FOR A REQUIREMENT at the earliest commit in which
+    it reads accepted AND names the requirement or one of its design rows, the
     design rows being those whose `SR-Refs` name the requirement at that
-    commit. Approval alone is not enough: a test case approved for something
+    commit. Acceptance alone is not enough: a test case accepted for something
     else and re-pointed at the requirement after its code landed would bring
     an order it never had, and re-pointing a design row is the same move one
     tier down. Each commit touching the test-case or design registry is parsed
-    on both sides through `acceptance_record`'s row reader and approval-act
-    rule, never counted: a commit that approves one test case while
-    withdrawing another leaves the number of approved rows unchanged, and a
-    count would see nothing happen. These approvals are read over the whole
+    on both sides through `acceptance_record`'s row reader and acceptance-act
+    rule, never counted: a commit that accepts one test case while
+    withdrawing another leaves the number of accepted rows unchanged, and a
+    count would see nothing happen. These acceptances are read over the whole
     readable history, never from the declared start: SR-217 scopes only the
-    requirement's approval, so a test case approved after the code landed
+    requirement's acceptance, so a test case accepted after the code landed
     stays late even when both happened before the start.
 
-A requirement is judged when its own first approval falls after the declared
+A requirement is judged when its own first acceptance falls after the declared
 start and its implementation has landed. Its test cases are those whose
 `Verifies` names it or one of its design rows at the tip; WHEN each became its
-approved test case is read from history as above. Each one approved for it
+accepted test case is read from history as above. Each one accepted for it
 after the landing is reported, naming the requirement, the implementation
-commit and the approval commit. Each one that does not read approved at the tip
+commit and the acceptance commit. Each one that does not read accepted at the tip
 is reported by name: whatever its run says, it says it against text nobody has
-approved. Every test case the report names carries the warning that its result
+accepted. Every test case the report names carries the warning that its result
 may not reflect the intended behaviour, since that is what the order is
 evidence of. Nothing here stops a test from running. A requirement whose
 implementation has not landed is not judged yet. No cell is ever read for WHEN
 anything happened.
 
-AN APPROVAL WITHOUT AN EXACT DATE. The TOML registries are the readable
-history. A row already approved when its registry arrived under TOML from an
-older carrier, and a row moved into `Approved` from a word outside the closed
-status vocabulary (a rename, not the act), was approved AT OR BEFORE that
+AN ACCEPTANCE WITHOUT AN EXACT DATE. The TOML registries are the readable
+history. A row already accepted when its registry arrived under TOML from an
+older carrier, and a row moved into `Accepted` from a word outside the closed
+status vocabulary (a rename, not the act), was accepted AT OR BEFORE that
 commit. Such a date still settles the order when it falls at or before the
-landing (for a requirement's own approval, at or before the start); when it
+landing (for a requirement's own acceptance, at or before the start); when it
 falls after, the order cannot be read, and the requirement is reported as
 unread, never passed.
 
 THE DECLARED START is `[checks] test_first_since` in `docs/process.toml`: a
 commit id. A project that adopts the rule declares where its judgement begins,
-so requirements approved in history written before the rule are not judged
+so requirements accepted in history written before the rule are not judged
 against it. The shipped template declares the key empty, and an empty or
 absent key judges the whole history.
 
@@ -79,14 +79,14 @@ Contracts: IF-198 — the interface seam this module declares (process.md §8; r
 of record in docs/requirements/interfaces.toml).
 
 Contract IF-198: the test-first verdict the harness reads back from the
-    `test-first` step. Each requirement with a test case approved for it after
-    its implementation landed, or not approved, prints one WARN line naming the
-    requirement, the implementation commit, every late approval commit and
-    every test case not approved, with the warning that their results may not
+    `test-first` step. Each requirement with a test case accepted for it after
+    its implementation landed, or not accepted, prints one WARN line naming the
+    requirement, the implementation commit, every late acceptance commit and
+    every test case not accepted, with the warning that their results may not
     reflect the intended behaviour, and one summary line follows; a history with none prints one OK line. An unreadable history, and
     a declared start that cannot be read, each print one WARN line saying the
     order was not judged and that this is not a pass. A requirement whose
-    order rests on an approval with no exact date is named on its WARN line as
+    order rests on an acceptance with no exact date is named on its WARN line as
     one whose order cannot be read, and counts in the summary. The exit is 0
     for every one of those. `--strict` prints FAIL instead of WARN and exits 1 for each
     of them but the OK line; the shipped step never passes it. argparse's own
@@ -103,11 +103,11 @@ import gen_arch_map
 import spine_carrier
 from kitlib.config import process_check_text, utf8_console
 from kitlib.git import git_out
-from kitlib.spine import STATUS_VALUES, is_approved, is_founded, refs
+from kitlib.spine import STATUS_VALUES, is_accepted, is_founded, refs
 
 START_KEY = "test_first_since"
 
-# The registries, from the approval-act readers' own table so a path has one
+# The registries, from the acceptance-act readers' own table so a path has one
 # home; the history is judged over the requirement and test-case tiers, and the
 # design tier joins a requirement to the code lines that name its design rows
 # and to the test cases that reach it through them.
@@ -118,16 +118,16 @@ TEST_CASES = (_REGISTRY["TC-ID"], "TC-ID")
 # Every registry the order is read from, so each is held to the TOML history.
 READ = (REQUIREMENTS, DESIGN_ROWS, TEST_CASES)
 
-# `late` is ((test case id, approval commit), ...) in trunk order; `unread` is
-# the same shape for each approval with no exact date whose order is unknown;
-# `unapproved` is (test case id, ...) for each that does not read approved.
-Finding = namedtuple("Finding", "requirement implementation late unread unapproved")
+# `late` is ((test case id, acceptance commit), ...) in trunk order; `unread` is
+# the same shape for each acceptance with no exact date whose order is unknown;
+# `unaccepted` is (test case id, ...) for each that does not read accepted.
+Finding = namedtuple("Finding", "requirement implementation late unread unaccepted")
 
-# A row's first approval: the commit, and whether it is the act itself (True)
-# or only a commit the row was approved at or before (False).
-Approval = namedtuple("Approval", "commit exact")
+# A row's first acceptance: the commit, and whether it is the act itself (True)
+# or only a commit the row was accepted at or before (False).
+Acceptance = namedtuple("Acceptance", "commit exact")
 
-# A flip from one of these words is the approval act; from any other, a rename.
+# A flip from one of these words is the acceptance act; from any other, a rename.
 _VOCABULARY = {word.lower() for word in STATUS_VALUES}
 
 
@@ -187,14 +187,14 @@ def history_unreadable(root, start=None, rev="HEAD"):
 
     Each answer here is a history in which a finding could be missing or false,
     so each is reported rather than read: a shallow clone has lost the commits
-    an approval or a landing sits on; a start that names no commit, or one that
+    an acceptance or a landing sits on; a start that names no commit, or one that
     never stood on trunk's first-parent line, gives nothing to order after; and
     registries under the older carrier were written in an older status
-    vocabulary, so a first approval read across them would date the rename
-    rather than the act. That bars registries still under the older carrier
+    vocabulary, so a first acceptance read across them would date the rename
+    rather than the act. That excludes registries still under the older carrier
     at `rev`, and a declared start before the TOML registries; with no start,
-    the history before the cutover is simply not read, and an approval it held
-    carries no exact date (`first_approval_commits`). The design registry is
+    the history before the cutover is simply not read, and an acceptance it held
+    carries no exact date (`first_acceptance_commits`). The design registry is
     held to the same rule as the two judged ones: a test case reaches a
     requirement through a design row, so a design registry the TOML reader
     cannot see would drop that test case in silence rather than report it. A
@@ -232,7 +232,7 @@ def history_unreadable(root, start=None, rev="HEAD"):
     if still:
         return (
             "the registries at {} are still under an older carrier ({}), whose "
-            "status vocabulary cannot date an approval; move them to "
+            "status vocabulary cannot date an acceptance; move them to "
             "TOML".format(rev, ", ".join(still))
         )
     older = _older_carrier_paths(root, start, rev) if start else []
@@ -245,33 +245,33 @@ def history_unreadable(root, start=None, rev="HEAD"):
     return None
 
 
-def first_approval_commits(root, registry, id_col, since=None, rev="HEAD"):
-    """`{row id: Approval}` — the commit at which each row of one spine
-    registry (its TOML carrier) first reads approved, on the first-parent line
+def first_acceptance_commits(root, registry, id_col, since=None, rev="HEAD"):
+    """`{row id: Acceptance}` — the commit at which each row of one spine
+    registry (its TOML carrier) first reads accepted, on the first-parent line
     ending at `rev`, walked from `since` or from the root when None.
 
     Walks the commits that touch the registry oldest first, reading each one's
     rows through `acceptance_record.rows_at` and judging the move from the
-    rows before it with `acceptance_record.approval_acts_between`. The before
+    rows before it with `acceptance_record.acceptance_acts_between`. The before
     side of each commit is the previous touching commit's rows: nothing
     between them on the first-parent line changed the file, so it is the same
-    text a second read would return. A row's later re-approvals are not its
+    text a second read would return. A row's later re-acceptances are not its
     first.
 
-    An approval is EXACT when it is the act: a birth into a registry that
+    An acceptance is EXACT when it is the act: a birth into a registry that
     already stood under TOML or that no carrier held before, or a flip from a
-    word of the closed status vocabulary. Otherwise the row was approved at or
-    before the commit and the date is not exact: a row already approved at
-    `since`, one already approved when the registry arrived from an older
-    carrier (whose history is not read), and one moved into `Approved` from a
+    word of the closed status vocabulary. Otherwise the row was accepted at or
+    before the commit and the date is not exact: a row already accepted at
+    `since`, one already accepted when the registry arrived from an older
+    carrier (whose history is not read), and one moved into `Accepted` from a
     retired word, which is a rename rather than the act.
 
     Implements: SR-217, LLR-257
     """
     before = acceptance_record.rows_at(root, since, registry, id_col) if since else {}
     first = {
-        act["id"]: Approval(since, False)
-        for act in acceptance_record.approval_acts_between(registry, {}, before)
+        act["id"]: Acceptance(since, False)
+        for act in acceptance_record.acceptance_acts_between(registry, {}, before)
     }
     out = git_out(
         root,
@@ -285,7 +285,7 @@ def first_approval_commits(root, registry, id_col, since=None, rev="HEAD"):
     carried = not since and _carried_at(root, shas, (registry, id_col))
     for sha in shas:
         after = acceptance_record.rows_at(root, sha, registry, id_col)
-        _record_first(first, registry, before, after, Approval(sha, not carried))
+        _record_first(first, registry, before, after, Acceptance(sha, not carried))
         before, carried = after, False
     return first
 
@@ -297,15 +297,15 @@ def _carried_at(root, shas, registry):
 
 
 def _record_first(first, registry, before, after, at):
-    """Record in `first` each row's first approval act from `before` to
+    """Record in `first` each row's first acceptance act from `before` to
     `after`, at `at`: exact only when `at` is and the act is a birth or a flip
     from a word of the closed status vocabulary (anything else is a rename)."""
-    for act in acceptance_record.approval_acts_between(registry, before, after):
+    for act in acceptance_record.acceptance_acts_between(registry, before, after):
         if act["id"] not in first:
             exact = at.exact and (
                 act["act"] == "born" or act["before"].lower() in _VOCABULARY
             )
-            first[act["id"]] = Approval(at.commit, exact)
+            first[act["id"]] = Acceptance(at.commit, exact)
 
 
 def _touching(root, paths, rev):
@@ -333,22 +333,22 @@ def _associations(tests, design):
 
 
 def first_association_commits(root, rev="HEAD"):
-    """`{(test case id, requirement id): Approval}` — the commit at which each
-    test case first reads approved AND names the requirement or one of its
+    """`{(test case id, requirement id): Acceptance}` — the commit at which each
+    test case first reads accepted AND names the requirement or one of its
     design rows, on the first-parent line ending at `rev`, walked from the
     root.
 
-    Approval alone does not make a test case a requirement's: re-pointing a
-    test case approved for something else at a requirement whose code has
+    Acceptance alone does not make a test case a requirement's: re-pointing a
+    test case accepted for something else at a requirement whose code has
     already landed, or re-pointing the design row it names, would otherwise
     lend the requirement an order it never had. So the pair is the row: each
     commit touching the test-case or design registry is read through
     `acceptance_record.rows_at`, the pairs it holds are built from both
     registries as they stand at that commit, and the move from the pairs
-    before is judged with the same approval-act rule as a single row's. A pair
-    arriving while its test case already reads approved is born approved, at
-    that commit; a test case flipping to approved while it names the
-    requirement flips its pairs. Exactness is `first_approval_commits`' rule,
+    before is judged with the same acceptance-act rule as a single row's. A pair
+    arriving while its test case already reads accepted is born accepted, at
+    that commit; a test case flipping to accepted while it names the
+    requirement flips its pairs. Exactness is `first_acceptance_commits`' rule,
     and a pair that first shows at the commit either registry moved from an
     older carrier is dated at or before that commit.
 
@@ -368,7 +368,7 @@ def first_association_commits(root, rev="HEAD"):
             if sha in touching[path]:
                 rows[path] = acceptance_record.rows_at(root, sha, path, col)
         after = _associations(rows[TEST_CASES[0]], rows[DESIGN_ROWS[0]])
-        at = Approval(sha, sha not in carried)
+        at = Acceptance(sha, sha not in carried)
         _record_first(first, TEST_CASES[0], before, after, at)
         before = after
     return first
@@ -403,7 +403,7 @@ def first_implementation_commits(root, src="src", rev="HEAD"):
     that adds a line under `src` declaring it implements that id.
 
     One `git log` over the whole first-parent history, not from the declared
-    start: a requirement approved after the start can still have code that
+    start: a requirement accepted after the start can still have code that
     declared it before, and that earlier line is where it landed. `-G` keeps
     the patch to the files whose added or removed lines carry the marker, and
     only added lines are read. Merges are diffed against their first parent,
@@ -453,7 +453,7 @@ def _id_key(rid):
 
 def _members(root, rev):
     """`(design rows by requirement, test cases by verified id, the test cases
-    reading approved)` at the tip."""
+    reading accepted)` at the tip."""
     design, tests, standing = {}, {}, set()
     for lid, row in acceptance_record.rows_at(root, rev, *DESIGN_ROWS).items():
         for sr in refs(row.get("SR-Refs")):
@@ -461,28 +461,28 @@ def _members(root, rev):
     for tid, row in acceptance_record.rows_at(root, rev, *TEST_CASES).items():
         for vid in refs(row.get("Verifies")):
             tests.setdefault(vid, []).append(tid)
-        if is_approved(row) or is_founded(row):
+        if is_accepted(row) or is_founded(row):
             standing.add(tid)
     return design, tests, standing
 
 
 def test_first_findings(root, src="src", start=None, rev="HEAD"):
-    """One `Finding` per requirement first approved after `start` whose
+    """One `Finding` per requirement first accepted after `start` whose
     implementation first landed on trunk before one of its test cases was
-    approved for it, or with one of them not approved — the requirement, the
-    implementation commit, each late test case with its approval commit in
-    trunk order, and each test case not approved — or whose order cannot be
+    accepted for it, or with one of them not accepted — the requirement, the
+    implementation commit, each late test case with its acceptance commit in
+    trunk order, and each test case not accepted — or whose order cannot be
     read.
 
     Raises `HistoryUnreadable` for any history `history_unreadable` names, so
     an unreadable history can never come back as an empty, passing list. A
-    test case approved at the same commit the implementation landed is not
+    test case accepted at the same commit the implementation landed is not
     after it. The start scopes only which requirements are judged: test-case
-    approvals are read over the whole readable history, so one approved after
+    acceptances are read over the whole readable history, so one accepted after
     the landing is late wherever the start sits. A requirement's test cases
-    are its chain's members at the tip; a test case not reading approved there
-    has no approval for it, whatever its history, and each one that does is
-    dated at its first approved-and-associated commit (see the module
+    are its chain's members at the tip; a test case not reading accepted there
+    has no acceptance for it, whatever its history, and each one that does is
+    dated at its first accepted-and-associated commit (see the module
     docstring).
 
     Implements: SR-217, LLR-257
@@ -492,39 +492,39 @@ def test_first_findings(root, src="src", start=None, rev="HEAD"):
         raise HistoryUnreadable(reason)
     start = _commit(root, start) if start else None
     order = {sha: i for i, sha in enumerate(_first_parent(root, rev))}
-    approved = first_approval_commits(root, *REQUIREMENTS, since=start, rev=rev)
+    accepted = first_acceptance_commits(root, *REQUIREMENTS, since=start, rev=rev)
     landed = first_implementation_commits(root, src, rev)
     design, tests, standing = _members(root, rev)
-    tc_approved = {
+    tc_accepted = {
         pair: at
         for pair, at in first_association_commits(root, rev).items()
         if pair[0] in standing
     }
     out = []
-    for sr in sorted(approved, key=_id_key):
-        own = approved[sr]
+    for sr in sorted(accepted, key=_id_key):
+        own = accepted[sr]
         if own.commit == start:
-            continue  # approved at or before the start: not in scope
-        judged = _judged([sr, *design.get(sr, [])], landed, tests, tc_approved, order)
+            continue  # accepted at or before the start: not in scope
+        judged = _judged([sr, *design.get(sr, [])], landed, tests, tc_accepted, order)
         if judged is None:
             continue
-        landing, late, unread, unapproved = judged
+        landing, late, unread, unaccepted = judged
         if start and not own.exact:
-            # Approved at or before a commit after the start: whether it
+            # Accepted at or before a commit after the start: whether it
             # entered scope at all cannot be read.
-            late, unread, unapproved = (), ((sr, own.commit),), ()
-        if late or unread or unapproved:
-            out.append(Finding(sr, landing, late, unread, unapproved))
+            late, unread, unaccepted = (), ((sr, own.commit),), ()
+        if late or unread or unaccepted:
+            out.append(Finding(sr, landing, late, unread, unaccepted))
     return out
 
 
-def _judged(chain, landed, tests, approvals, order):
-    """`(landing, late, unread, unapproved)` for one requirement's chain — the
+def _judged(chain, landed, tests, acceptances, order):
+    """`(landing, late, unread, unaccepted)` for one requirement's chain — the
     requirement first, then its design rows: the earliest landing among them;
-    each test case of the chain approved for the requirement strictly after
-    it; each whose approval has no exact date and falls after it, whose order
-    cannot be read; and each with no approval for the requirement in
-    `approvals`, keyed `(test case, requirement)`. Pairs are
+    each test case of the chain accepted for the requirement strictly after
+    it; each whose acceptance has no exact date and falls after it, whose order
+    cannot be read; and each with no acceptance for the requirement in
+    `acceptances`, keyed `(test case, requirement)`. Pairs are
     `(test case, commit)` in trunk order. None when nothing in the chain has
     landed, which is not judged yet."""
     landings = [landed[i] for i in chain if i in landed]
@@ -532,15 +532,17 @@ def _judged(chain, landed, tests, approvals, order):
         return None
     landing = min(landings, key=order.__getitem__)
     members = {tid for i in chain for tid in tests.get(i, [])}
-    dated = {t: approvals[(t, chain[0])] for t in members if (t, chain[0]) in approvals}
+    dated = {
+        t: acceptances[(t, chain[0])] for t in members if (t, chain[0]) in acceptances
+    }
     after = {(t, a) for t, a in dated.items() if order[a.commit] > order[landing]}
 
     def ordered(exact):
         pairs = {(tid, a.commit) for tid, a in after if a.exact is exact}
         return tuple(sorted(pairs, key=lambda p: (order[p[1]], _id_key(p[0]))))
 
-    unapproved = tuple(sorted(members - set(dated), key=_id_key))
-    return landing, ordered(True), ordered(False), unapproved
+    unaccepted = tuple(sorted(members - set(dated), key=_id_key))
+    return landing, ordered(True), ordered(False), unaccepted
 
 
 def _report(findings, since, level):
@@ -548,14 +550,14 @@ def _report(findings, since, level):
     lines = ["test-first: {} - {}".format(level, _finding_text(f)) for f in findings]
     if findings:
         lines.append(
-            "test-first: {} requirement(s) approved since {} had a test case "
-            "approved after the implementation landed or not approved, or an "
+            "test-first: {} requirement(s) accepted since {} had a test case "
+            "accepted after the implementation landed or not accepted, or an "
             "order that cannot be read".format(len(findings), since)
         )
     else:
         lines.append(
-            "test-first: OK - no requirement approved since {} has a test case "
-            "approved after its implementation landed or not approved".format(since)
+            "test-first: OK - no requirement accepted since {} has a test case "
+            "accepted after its implementation landed or not accepted".format(since)
         )
     return lines
 
@@ -568,24 +570,24 @@ def _finding_text(f):
     parts = []
     if f.late:
         parts.append(
-            "{} test case(s) were approved after it: {}".format(
+            "{} test case(s) were accepted after it: {}".format(
                 len(f.late),
                 ", ".join("{} at {}".format(tid, sha[:10]) for tid, sha in f.late),
             )
         )
-    if f.unapproved:
+    if f.unaccepted:
         parts.append(
-            "{} test case(s) are not approved: {}".format(
-                len(f.unapproved), ", ".join(f.unapproved)
+            "{} test case(s) are not accepted: {}".format(
+                len(f.unaccepted), ", ".join(f.unaccepted)
             )
         )
-    if f.late or f.unapproved:
+    if f.late or f.unaccepted:
         parts.append(
             "a result from those test cases may not reflect the intended behaviour"
         )
     if f.unread:
         parts.append(
-            "the order against {} cannot be read (approved at or before a later "
+            "the order against {} cannot be read (accepted at or before a later "
             "commit, with no exact date)".format(
                 ", ".join(
                     "{} at or before {}".format(rid, sha[:10]) for rid, sha in f.unread

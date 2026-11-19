@@ -6,7 +6,7 @@ specref = ""
 buildtier = "medium"
 priority = 2
 safety_class = "spine"
-bar = "DevStg-Impl"
+checks_stage = "DevStg-Impl"
 +++
 
 ## Deliverable

@@ -323,8 +323,8 @@ BASELINE = {
     # extracted to `_dp_fallback`).
     ("plan_runner.py", "run_dual_plan_round"): 30,
     # WI-259 reviewed bump 50 -> 53: the verification-basis split went binary ->
-    # three-way (mechanized/demonstrated/attested, a new elif branch) and
-    # --require-verified was widened to every approved SR of any method, naming
+    # three-way (mechanized/demonstrated/vouched, a new elif branch) and
+    # --require-verified was widened to every accepted SR of any method, naming
     # the real method in the finding. Trace decomposition remains a follow-up;
     # the added branches are the honest audit surface.
     # 53 -> 50, WI-065: the TC-`Verifies` rules moved OUT to
@@ -351,10 +351,10 @@ BASELINE = {
     # collapsing them would hide which rule fired from the message a reader acts on.
     ("trace_text.py", "form_findings"): 14,
     ("trace.py", "mermaid_graph"): 17,
-    # 28 -> 27: the L-3 approve bucketing removed a nested scan (re-stamped
+    # 28 -> 27: the L-3 accept bucketing removed a nested scan (re-stamped
     # downward per the ratchet's improvement rule).
-    ("trace.py", "approval_lines"): 27,
-    # WI-322 split the git archaeology out of the renderer: reattest_lines went
+    ("trace.py", "acceptance_lines"): 27,
+    # WI-322 split the git archaeology out of the renderer: reaccept_lines went
     # prose-only (25 -> 14) and the extracted model carries the branching (21) —
     # one computation, two renderers. WI-347 then took it UNDER the limit
     # entirely (`_full_row_bullets` absorbed the two whole-row render arms), so
@@ -373,21 +373,21 @@ BASELINE = {
     # child now owes independently of drift.
     # RE-STAMPED DOWN 19 -> 13, 2026-09-01, WI-572: the `chain_of` closure left
     # this function and became the module-level `spine_chain`, paired with
-    # `chain_buckets`. Not tidying — `adjudicate_brief.first_approval_values`
-    # needs the SAME answer to "what is this SR's chain" for the first-approval
-    # brief, and a second copy of that walk is how the judge and the owner's
+    # `chain_buckets`. Not tidying — `adjudicate_brief.first_acceptance_values`
+    # needs the SAME answer to "what is this SR's chain" for the first-acceptance
+    # brief, and a second copy of that walk is how the judge and the operator's
     # surface come to disagree about one spine. Recorded DOWN in the same
     # commit rather than left as headroom, per this file's rule.
-    ("trace.py", "reattest_model"): 13,
-    # `reattest_lines` DELETED, 2026-09-27, WI-577: its per-chain loop (the
+    ("trace.py", "reaccept_model"): 13,
+    # `reaccept_lines` DELETED, 2026-09-27, WI-577: its per-chain loop (the
     # row-state arms WI-513 added, and the census splice WI-518 added beside
     # them) moved into `_entry_lines`, because the OI-82 ruling renders a
-    # chain in two places — the owner's section and the collapsed block of
+    # chain in two places — the operator's section and the collapsed block of
     # chains the dial releases — and one renderer is what keeps a chain reading
     # the same in both. Both functions sit under the threshold, so the entry
     # goes rather than being re-stamped, per this file's rule.
     ("trace.py", "render_report"): 17,
-    # 2026-08-15, the interface rework step 7 (Q3, owner-ruled): the carriage
+    # 2026-08-15, the interface rework step 7 (Q3, operator-ruled): the carriage
     # graph's three rules in one pass — resolve, acyclic, depth-bounded. The
     # branches ARE the distinct findings a reader acts on (unknown carrier,
     # not-an-id, self-carriage, several carriers, cycle, too deep), and folding

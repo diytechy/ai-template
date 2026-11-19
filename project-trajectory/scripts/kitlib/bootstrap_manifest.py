@@ -53,7 +53,7 @@ MAPPING = [
     # `copy_file` therefore exempts it from --force (see WATERMARK_DEST).
     ("id-watermark.template", "docs/id-watermark"),
     # THE ONE POLICY HOME (SN-028). Every process dial — gate authority, the
-    # human-approval level, push authority, the reviewer count, the privacy
+    # operator-acceptance level, push authority, the reviewer count, the privacy
     # toggle, the secrets floor, guardrails, the blackout window — declared once
     # here instead of in ~10 one-word files. A FRESH SCAFFOLD GETS ONLY THIS
     # FILE: shipping both homes would hand every new repo the mixed-config
@@ -83,8 +83,8 @@ MAPPING = [
         "SR-146",
     ),
     (
-        "prompts/adjudicate-first-approval.template.md",
-        "prompts/adjudicate-first-approval.template.md",
+        "prompts/adjudicate-first-acceptance.template.md",
+        "prompts/adjudicate-first-acceptance.template.md",
         "SR-146",
     ),
     (
@@ -98,8 +98,8 @@ MAPPING = [
         "SR-146",
     ),
     (
-        "prompts/adjudicate-red-tc.template.md",
-        "prompts/adjudicate-red-tc.template.md",
+        "prompts/adjudicate-evidence-gap.template.md",
+        "prompts/adjudicate-evidence-gap.template.md",
         "SR-146",
     ),
     (
@@ -134,7 +134,7 @@ MAPPING = [
         "prompts/plan-single.template.md",
         "SR-146",
     ),
-    # The ONE home of the adjudicator's per-tier questions: the first-approval
+    # The ONE home of the adjudicator's per-tier questions: the first-acceptance
     # and amendment briefs compose it at render time (an absent copy refuses
     # them), and the spine-authoring skill points at it.
     ("prompts/spine-questions.md", "prompts/spine-questions.md", "SR-146"),
@@ -169,28 +169,28 @@ MAPPING = [
     # them: it reads the adopting repo's own `docs/<file>`, so the templates
     # are documentation, not an input.)
     ("STATUS.template.md", "docs/status.md"),
-    # The owner decision briefs status.md's Needs-<human> bullets link to
+    # The operator decision briefs status.md's Needs-<operator> bullets link to
     # (process-options.md "Trajectory / work-items layer"): one OI-N section
     # per pending decision, deleted when the ruling lands in log.md Decisions.
     ("registries/open-items.template.toml", "docs/requirements/open-items.toml"),
     # (SN-029's separate attestation ledger was scaffolded here until it was
     # retired, and the on-row anchor that was to replace it was ruled
-    # unnecessary complexity in turn — owner directive 2026-08-15. What an
-    # approval blessed is recorded by COPYING the registries, and the README
+    # unnecessary complexity in turn — operator directive 2026-08-15. What an
+    # acceptance blessed is recorded by COPYING the registries, and the README
     # below is the only part of that mechanism a fresh scaffold receives.)
     #
-    # The `last_approved` snapshot's prose stamp. THE DIRECTORY IS SCAFFOLDED
+    # The `last_accepted` snapshot's prose stamp. THE DIRECTORY IS SCAFFOLDED
     # WITH ONLY THIS FILE, deliberately: an empty snapshot is the HONEST state
-    # for a repo that has approved nothing yet, and shipping pre-filled copies
-    # would hand every new project a record claiming a human blessed text they
+    # for a repo that has accepted nothing yet, and shipping pre-filled copies
+    # would hand every new project a record claiming an operator blessed text they
     # have never seen. The registries land in it at the project's first signing
     # (`intake.py snapshot --seed`), and not before.
     (
-        "registries/last-approved-README.template.md",
-        "docs/archive/last_approved/README.md",
+        "registries/last-accepted-README.template.md",
+        "docs/archive/last_accepted/README.md",
     ),
     # The append-only history status.md points at (Thread 36, process.md §5):
-    # sign-offs, verdicts, and approved decisions append here, keeping the
+    # sign-offs, verdicts, and accepted decisions append here, keeping the
     # per-session status.md reload cheap.
     ("LOG.template.md", "docs/log.md"),
     # The sequenced work-plan the plan/build cadence runs on (WI-1.29,
@@ -232,7 +232,7 @@ MAPPING = [
     (
         "registries/performance-budgets.template.csv",
         "docs/requirements/performance-budgets.csv",
-        "SR-015",
+        "SR-157",
     ),
     (
         "registries/procurement.template.csv",
@@ -251,7 +251,7 @@ MAPPING = [
     # `plan_briefs.hat_surface`. It ships with CONTENT rather than as a blank
     # form — the roster itself is the census — because an empty roster is a
     # form with nothing behind it, only useful if it says something on day one.
-    # OWNER TEXT: adopters are expected to EDIT it (cut, add, rewrite every
+    # OPERATOR TEXT: adopters are expected to EDIT it (cut, add, rewrite every
     # `applies_when` against their own vocabulary), which is the only thing that
     # keeps a roster inherited from a template honest. Deleting the file is a
     # supported opt-out; the composers proceed without hats.
@@ -280,7 +280,7 @@ MAPPING = [
     # answers the other way (rule R-F archives a spec-of-record at close), and a
     # reader with only the specs README in hand generalizes the wrong lifecycle.
     ("work/README.template.md", "docs/work/README.md"),
-    # ...and the declaration that makes it green: a work spec is a REGISTRY
+    # ...and the declaration that makes it pass: a work spec is a REGISTRY
     # ENTRY that happens to be Markdown, not a page anyone navigates to, so
     # `docs/work/*` is a declared expected-live-orphan class rather than a wall
     # of check_docs warnings (WI-228's census idiom, one glob with its reason).
@@ -298,7 +298,7 @@ MAPPING = [
     # requirements remain authoritative in the spine.
     ("knowledge/README.template.md", "docs/knowledge/README.md"),
     # Critique rubrics (process-options.md "Critique verification & the critique
-    # loop", WI-068): the judgment reference a Verification=Critique requirement is
+    # loop", WI-068): the judgment reference a VerificationMethod=Critique requirement is
     # scored against — written from the SN/SR intent (not the possibly-lax TC),
     # carrying numbered good/bad anchors that accumulate at rework. A README
     # explaining the convention + an inert rubric-000 example. Nothing gates on the
@@ -310,7 +310,7 @@ MAPPING = [
         "docs/rubrics/architecture-decomposition.md",
         "SR-186",
     ),
-    # THE SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed WI-448) —
+    # THE SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`, executed WI-448) —
     # AND THIS BLOCK IS THE WHOLE DOWNSTREAM RISK SURFACE OF THAT RULING.
     #
     # `kitlib/` holds the behaviours that used to be copied into script after
@@ -329,7 +329,7 @@ MAPPING = [
     # asserts the copied package imports and matches the kit's file set. That
     # test exists because THIS IS THE LINE THE REPO HAS ALREADY GOT WRONG ONCE:
     # MAPPING omitted `schedule.py`, and every fresh scaffold died on its first
-    # claim while this repo stayed green, invisible to re-sync because an
+    # claim while this repo kept passing, invisible to re-sync because an
     # already-adopted repo carries the file from an older kit.
     ("scripts/kitlib/__init__.py", "scripts/kitlib/__init__.py"),
     ("scripts/kitlib/config.py", "scripts/kitlib/config.py"),
@@ -366,11 +366,11 @@ MAPPING = [
     # the must-be-whole rule applies: a scaffold missing it ImportErrors on the
     # first merge attempt, not on some rare path.
     ("scripts/kitlib/verdict.py", "scripts/kitlib/verdict.py"),
-    # WI-996 added `red_mark`: the declared strict expected-failure mark, its
-    # count and the per-file table `attest` and the refresh apply.
+    # WI-996 added `expected_failure`: the declared strict expected-failure mark, its
+    # count and the per-file table `record-checks` and the refresh apply.
     # `integrate.py`, in this list, imports it, so a scaffold missing it
     # ImportErrors on its first refresh.
-    ("scripts/kitlib/red_mark.py", "scripts/kitlib/red_mark.py"),
+    ("scripts/kitlib/expected_failure.py", "scripts/kitlib/expected_failure.py"),
     # WI-621 added `done_when`: a spec's Done-when as comparable items (S13).
     # `integrate.py` (the claim warning), `intake.py` (the merge-time flag) and
     # `agent_loop.py` (the reviewer's brief) import it, all three in this list.
@@ -432,7 +432,7 @@ MAPPING = [
     # `agent_common.py` import it, so the package must stay whole.
     ("scripts/kitlib/decisions.py", "scripts/kitlib/decisions.py", "SR-225"),
     # WI-636 added `provenance` and `authority`: the loop's `Loop-Session`
-    # trailer and marker, and the approval-rung tables with the one dial
+    # trailer and marker, and the acceptance-rung tables with the one dial
     # comparison. `agent_common.py`, `integrate.py`, `check.py` and
     # `check_trajectory.py` are all in this list and import them, so the
     # must-be-whole rule applies on the first check or claim a scaffold runs.
@@ -462,6 +462,10 @@ MAPPING = [
     # it once at the resync that retires the `reviewed` key, since no reader
     # of that key is kept. Imports `kitlib.decisions` alone.
     ("scripts/migrate_decisions.py", "scripts/migrate_decisions.py", "SR-225"),
+    # The vocabulary migrator: every adopter runs it once, at the re-sync that
+    # brings the unified vocabulary in, since no reader of an earlier spelling
+    # is kept. Imports nothing from the kit.
+    ("scripts/migrate_vocabulary.py", "scripts/migrate_vocabulary.py", "SR-247"),
     ("scripts/spine_rules.py", "scripts/spine_rules.py"),
     # The STAGE axis's producer (WI-498 slice 1). Imports `spine_rules` for the
     # spine load and its rung predicates — so that the two axes can never
@@ -515,17 +519,17 @@ MAPPING = [
     ("scripts/check_vendored.py", "scripts/check_vendored.py"),
     # The retired-vocabulary enforcer (OI-21). Shipped, not kit-only: an adopter
     # re-syncing across the conversion has their OWN authored surfaces carrying
-    # the retired `G*` tags (their WI `bar:` values, their `stack.ini` `gates=`,
+    # the retired `G*` tags (their WI `checks_stage` values, their `stack.ini` `gates=`,
     # their status prose), and the recipe that tells them to convert is worth
     # exactly as much as the check that tells them they missed one.
     ("scripts/check_vocab.py", "scripts/check_vocab.py"),
     # The need-form check (SN-033, WI-454): warn-first lint keeping SN `need`
     # cells in stakeholder language. Shipped because the registry it scans is
-    # the adopter's own, and check.py's step table names it at every bar.
+    # the adopter's own, and check.py's step table names it at every stage.
     ("scripts/check_need_form.py", "scripts/check_need_form.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
     ("scripts/trajectory_arch.py", "scripts/trajectory_arch.py"),
-    # The `last_approved` snapshot reader/writer (owner directive 2026-08-15).
+    # The `last_accepted` snapshot reader/writer (operator directive 2026-08-15).
     # Shipped because it is a SIBLING IMPORT of `intake.py` — the adjudication
     # flip copies the registries in the same act — and because `trace.py` reads
     # it for the drift overlay. A scaffold without it cannot run either.
@@ -639,12 +643,12 @@ MAPPING = [
     # them. Root, not scripts/: the double-click use case is "open the checkout
     # folder and click" — one hop shallower matters for a non-code evaluator.
     ("README.template.md", "README.md"),
-    # The owner's private scratchpad (FB3, owner-feedback-2026-07-11): a root
-    # file for the human owner to keep free-form notes. Its loud header tells LLM
+    # The operator's private scratchpad (FB3, owner-feedback-2026-07-11): a root
+    # file for the operator to keep free-form notes. Its loud header tells LLM
     # agents not to read/cite/act on it, and check_docs.py exempts it entirely
-    # (links, orphans, stale hints) — owner notes never gate. Always scaffolded
+    # (links, orphans, stale hints) — operator notes never gate. Always scaffolded
     # like the README front door; a repo that doesn't want it just deletes it.
-    ("OWNER_SCRATCHPAD.template.md", "OWNER_SCRATCHPAD.md"),
+    ("OPERATOR_SCRATCHPAD.template.md", "OPERATOR_SCRATCHPAD.md"),
     # The capability-menu reader the launchers delegate to (WI-067): reads the
     # docs/stack.ini [run] section and presents a menu / launches by name /
     # lists for an agent, so the launch commands live once in stack.ini instead
@@ -671,7 +675,7 @@ MAPPING = [
     ("scripts/lane.py", "scripts/lane.py"),
     # The two lane closes that are NOT a merge (WI-387, concurrency-v2 §A3):
     # handback (the work so far committed as-is, the specs back in queued/) and
-    # its ruled red arm, quarantine. drive.py imports it unguarded, so a
+    # its ruled failure arm, quarantine. drive.py imports it unguarded, so a
     # scaffold without it cannot run the walk-away loop at all.
     ("scripts/handback.py", "scripts/handback.py"),
     # The link-aware spec-move ritual (WI-393, rehoming WI-288/WI-353): move a
@@ -685,7 +689,7 @@ MAPPING = [
     # scaffold without it cannot claim or mint.
     ("scripts/bookkeeping.py", "scripts/bookkeeping.py"),
     # The unified trunk-side intake mint (WI-388, concurrency-v2 §A5.2;
-    # rulings R1/R3): a WI id is created only by a human trunk commit or this
+    # rulings R1/R3): a WI id is created only by a trunk commit or this
     # helper. integrate.py's post-merge arm and dispatch.py's empty-frontier
     # ladder import it unguarded, so a scaffold without it cannot merge or
     # run the walk-away loop; agent_loop.py imports it lazily (the worker
@@ -709,13 +713,13 @@ MAPPING = [
     # it can neither mint at a merge nor print its release checklist.
     ("scripts/rejudge.py", "scripts/rejudge.py", "SR-215"),
     ("scripts/observation_cadence.py", "scripts/observation_cadence.py", "SR-215"),
-    # The pending-owner-action read model (WI-483 slice 3): the other half of
-    # the same question the census asks — what the OWNER owes, rather than what
+    # The pending-operator-action read model (WI-483 slice 3): the other half of
+    # the same question the census asks — what the OPERATOR owes, rather than what
     # the registries lack. It used to live in traj_status.py, which made the
     # dispatcher and gen_open_items.py import the gen_trajectory render facade
     # for a state query. traj_status.py, gen_open_items.py and dispatch.py all
     # import it, the first two unguarded, so a scaffold without it cannot render
-    # the owner surface.
+    # the operator surface.
     ("scripts/pending.py", "scripts/pending.py"),
     # The checker's cross-row coherence rules (WI-483 slice 4): does every id a
     # row cites name a row that exists, and does every row have the children its
@@ -731,7 +735,7 @@ MAPPING = [
     # imports it unguarded, so a scaffold without it cannot run the checker.
     ("scripts/assumption_rules.py", "scripts/assumption_rules.py"),
     # The acceptance record (WI-521 slice 1): the two-tree spine comparison and
-    # the snapshot mirror — which cells are attested, whether their text has
+    # the snapshot mirror — which cells are accepted, whether their text has
     # moved away from the copy recording its acceptance, and that the copy is
     # only ever written by copying live text. Split out of check_trajectory.py,
     # which imports it UNGUARDED and joins its findings to the failure set, so a

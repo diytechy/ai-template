@@ -11,8 +11,8 @@ and scripts, not a downstream application.
 > it). Don't confuse the two: this file governs editing the kit; that one governs
 > using the kit.
 
-> **`OWNER_SCRATCHPAD.md` is owner-only** — never read, cite, or act on it. It
-> holds the human owner's free-form notes; the working surfaces are
+> **`OPERATOR_SCRATCHPAD.md` is operator-only** — never read, cite, or act on it. It
+> holds the operator's free-form notes; the working surfaces are
 > `docs/status.md`, the registries, and `docs/log.md`.
 
 ---
@@ -23,14 +23,14 @@ The canonical purpose statement is the `PROJECT-VISION:` tag opening the root
 [README.md](README.md) — the same one-home pattern the kit ships downstream.
 In short: the kit exists to make downstream code **maintainable and
 trustworthy** — readable for humans and agents alike, deeply tested, and
-advanced only through explicit approval gates. Every change here should make
+advanced only through explicit acceptance gates. Every change here should make
 that easier to achieve in a real project — or get out of the way.
 
 ## Principles for editing the kit
 
 - **Dogfood the philosophy.** The templates preach single-source-of-truth,
   decompose-don't-paraphrase, and generated-not-hand-maintained. Hold the kit to
-  the same bar: don't restate a rule in five files — state it in
+  the same standard: don't restate a rule in five files — state it in
   [`PROCESS.md`](project-trajectory/PROCESS.md) and link to it.
 - **Keep scripts stdlib-preferred and cross-platform; dependencies need a
   ledger row.** The kit's own scripts run on a clean Python 3.11+ on Windows
@@ -51,35 +51,35 @@ that easier to achieve in a real project — or get out of the way.
   adopter's cell must mean something in **their** repo: a marker naming one of
   this repo's own rulings cites a record they can never read.
 - **Don't let this repo drift from the template it ships.** VALUES may diverge
-  between the kit's template and this repo's own instance (owner dials, filled
+  between the kit's template and this repo's own instance (operator dials, filled
   registry rows, enabled sets); STRUCTURE must not (schema headers, launcher
   command contracts, declared-section shapes) — `tests/test_dogfood_sync.py`
   enforces it.
-- **Self-test before claiming done.** The per-commit bar is one declared
+- **Self-test before claiming done.** The per-commit checks are one declared
   command, `run.cmd smoke` (`run_menu.py smoke` from a shell; its steps are
   [`docs/stack.ini`](docs/stack.ini) `[run]`). It runs the smoke tier once: a
-  red tier FAILS the bar; its CPU-seconds and wall time are only reported
-  (owner, 2026-10-20). `run.cmd audit` judges them, and the tier's test
+  failing tier FAILS the checks; its CPU-seconds and wall time are only reported
+  (operator, 2026-10-20). `run.cmd audit` judges them, and the tier's test
   count, against `[smoke-budget]`, by hand and at phase close; a breach is
   filed as a re-tier row, never charged to the lane that ran it. Heavy cases
   live in `tests/conftest.py` `SLOW_MODULES`, every script family keeping an
-  in-process pin. A mid-phase WI/slice ends at that commit bar. Run the **full**
+  in-process pin. A mid-phase WI/slice ends at those commit checks. Run the **full**
   unfiltered suite (`python -m pytest -q -n auto`, ~10 min on a quiet box,
   3–4× that while other sessions load it) once at phase close; the lane refresh
-  runs the full bar declared for its current stage in the merge slot. The
+  runs the full checks declared for its current stage in the merge slot. The
   unfiltered suite bootstraps a temp scaffold and exercises every script
-  end-to-end. Paste the real output; never report a green you didn't produce.
+  end-to-end. Paste the real output; never report a pass you didn't produce.
   Commit hooks are on before any work (`core.hooksPath` at `.githooks`, which
   dev-setup sets); every agent route refuses without them, and no commit
   bypasses them.
-  (Commit bar vs gate bar, and what the smoke tier drops: the
+  (Commit checks vs gate checks, and what the smoke tier drops: the
   `session-protocol` skill §3.)
 - **Edit conservatively.** This is a foundation many projects inherit; prefer the
   smallest change that fixes the problem, and flag anything that would force
   downstream repos to migrate.
 - **Consolidate across the codebase.** The scope above is per-task; when the
   task itself is consolidation, minimize TOTAL behavior instead — extract the
-  shared stage rather than duplicate a fix (PROCESS.md §3, "Consolidate, don't
+  shared step rather than duplicate a fix (PROCESS.md §3, "Consolidate, don't
   duplicate — the 0→A→B rule").
 
 ## Repo map
@@ -111,9 +111,9 @@ Entry points only — read the directories for the rest.
   `agent-resume.{cmd,sh,command}` run
   `project-trajectory/scripts/agent_loop.py --root .`, resuming from
   `docs/status.md` under the policies declared in
-  [`docs/process.toml`](docs/process.toml) — the human-approval hold is the
-  `human_approval_through` dial there (do not paraphrase its value here;
-  read it), and `push = "human"`.
+  [`docs/process.toml`](docs/process.toml) — the operator-acceptance hold is the
+  `operator_accepts_through` dial there (do not paraphrase its value here;
+  read it), and `push = "operator"`.
 - **Reference, not working surfaces:**
   [`docs/registry-machinery-reference.md`](docs/registry-machinery-reference.md)
   (what the scripts enforce on the spine, field by field),

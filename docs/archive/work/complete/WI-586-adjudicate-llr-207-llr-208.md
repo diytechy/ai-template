@@ -42,7 +42,7 @@ safety_class = "spine"
 buildtier = "strong"
 priority = 2
 specref = "docs/requirements/low-level-requirements.toml"
-bar = "DevStg-Tests"
+checks_stage = "DevStg-Tests"
 ```
 
 VERDICT THIS CONTINUES:
@@ -167,7 +167,7 @@ safety_class = "spine"
 buildtier = "strong"
 priority = 2
 specref = "docs/requirements/low-level-requirements.toml"
-bar = "DevStg-Tests"
+checks_stage = "DevStg-Tests"
 ```
 
 VERDICT THIS CONTINUES:
@@ -223,7 +223,7 @@ safety_class = "spine"
 buildtier = "strong"
 priority = 3
 specref = "docs/requirements/interfaces.toml"
-bar = "DevStg-Tests"
+checks_stage = "DevStg-Tests"
 ```
 
 VERDICT THIS CONTINUES:

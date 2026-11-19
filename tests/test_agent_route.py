@@ -196,7 +196,7 @@ def test_escalate_continue_and_win_stay():
     ]
     d = route.escalate(rounds, c)
     assert d["action"] == "continue" and d["next_primary"] == "OPENAI"
-    # A margin below the bar does not move the primary.
+    # A margin below the threshold does not move the primary.
     rounds2 = [
         {"verdict": "APPROVE", "tier": "strong", "margin": 0.05, "primary": "OPENAI"}
     ]
@@ -229,9 +229,9 @@ def test_escalate_swap_then_tier_up_then_page():
     # Swap already applied and still failing -> raise the tier (only now).
     d2 = route.escalate([cr(), cr()], c, swapped=True, at_top_tier=False)
     assert d2["action"] == "tier-up"
-    # Swap + tier-up exhausted at the top tier -> page the human.
+    # Swap + tier-up exhausted at the top tier -> page the operator.
     d3 = route.escalate([cr(), cr()], c, swapped=True, at_top_tier=True)
-    assert d3["action"] == "page-human"
+    assert d3["action"] == "page-operator"
 
 
 def test_escalate_pages_on_top_tier_shared_failure():
@@ -242,7 +242,7 @@ def test_escalate_pages_on_top_tier_shared_failure():
         {"verdict": "CHANGES-REQUESTED", "tier": "strong", "margin": 0},
     ]
     d = route.escalate(rounds, c)
-    assert d["action"] == "page-human" and "shared-failure" in d["reason"]
+    assert d["action"] == "page-operator" and "shared-failure" in d["reason"]
 
 
 def test_escalate_shared_failure_tally_rearms_after_dispatch():
@@ -258,7 +258,7 @@ def test_escalate_shared_failure_tally_rearms_after_dispatch():
         return {"verdict": "APPROVE", "tier": "strong", "margin": 0}
 
     rounds = [sf(), sf()]  # two strong-tier fails -> the shared-failure regime
-    assert route.escalate(rounds, c)["action"] == "page-human"
+    assert route.escalate(rounds, c)["action"] == "page-operator"
     # The coordinator dispatches and advances the boundary to len(rounds); a
     # later clean APPROVE now counts zero fresh fails, so no re-page (the 094
     # design-check bug: a clean APPROVE was still paging).
@@ -269,7 +269,7 @@ def test_escalate_shared_failure_tally_rearms_after_dispatch():
     # But two FRESH strong-tier fails after the boundary re-page (semantics kept).
     rounds.extend([sf(), sf()])
     d = route.escalate(rounds, c, fails_since=boundary)
-    assert d["action"] == "page-human" and "shared-failure" in d["reason"]
+    assert d["action"] == "page-operator" and "shared-failure" in d["reason"]
 
 
 def test_escalate_pages_on_tripwire_and_double_contradiction():
@@ -279,13 +279,13 @@ def test_escalate_pages_on_tripwire_and_double_contradiction():
         route.escalate([{"verdict": "APPROVE", "tier": "weak", "tripwire": True}], c)[
             "action"
         ]
-        == "page-human"
+        == "page-operator"
     )
     two = [
         {"verdict": "CHANGES-REQUESTED", "tier": "weak", "contradiction": True},
         {"verdict": "CHANGES-REQUESTED", "tier": "weak", "contradiction": True},
     ]
-    assert route.escalate(two, c)["action"] == "page-human"
+    assert route.escalate(two, c)["action"] == "page-operator"
 
 
 def test_constants_overridable_from_env():
@@ -296,20 +296,20 @@ def test_constants_overridable_from_env():
     assert c["margin"] == route.DEFAULT_CONSTANTS["margin"]  # bad value ignored
 
 
-def test_failure_action_keyed_to_the_approval_level():
+def test_failure_action_keyed_to_the_acceptance_level():
     """SN-029: the page-escalation is keyed to the ORDINAL comparison, not the
     retired three-value enum — and to the orthogonal dial the enum bundled with
     it. Every mode still pauses the causing WI and its hard-edge dependents;
     what differs is what happens around that.
 
-    The three old values collapse to (human_held, keep_nondependent):
+    The three old values collapse to (operator_held, keep_nondependent):
     `attended` = (True, False), `single-approve` = (True, True), `autonomous` =
     (False, *). The fourth cell was unreachable under the enum.
 
     Implements: TC-084
     """
     held_alone = route.failure_action(True)
-    assert held_alone["mode"] == "human-held"
+    assert held_alone["mode"] == "operator-held"
     assert held_alone["pause_wi"] is True
     assert held_alone["keep_nondependent"] is False
     assert held_alone["design_check"] is False
@@ -330,15 +330,15 @@ def test_failure_action_keyed_to_the_approval_level():
     # THE FOURTH CELL, and the reason the returned dict must REPORT the dial
     # rather than assume it. A loop-held tier that was told to drain must
     # drain: this arm used to hardcode True, so the dict documented as "what
-    # the coordinator enacts and logs" reported the opposite of an owner's
+    # the coordinator enacts and logs" reported the opposite of an operator's
     # explicit `keep_nondependent = false` — which is this repo's own setting.
     drains = route.failure_action(False)
     assert drains["mode"] == "loop-held"
     assert drains["keep_nondependent"] is False
     assert drains["design_check"] is True
 
-    # The failure direction: an unreadable dial resolves to human-held upstream
-    # (`agent_common.human_holds`), so the strictest cell is what it reaches.
+    # The failure direction: an unreadable dial resolves to operator-held upstream
+    # (`agent_common.operator_holds`), so the strictest cell is what it reaches.
     assert route.failure_action(True) == held_alone
 
 
@@ -582,7 +582,7 @@ def test_cli_resolves_versionless_token(tmp_path):
 
 
 def test_pool_context_lists_state_and_notes(tmp_path):
-    # WI-109: the page-human banner's per-row pool context — tier/family,
+    # WI-109: the page-operator banner's per-row pool context — tier/family,
     # cooling-vs-available, and the Notes cell (the declared home for the
     # provider's sign-in/install hint). Lenient on an unknown enabled id.
     p = tmp_path / "agents.csv"
@@ -733,7 +733,7 @@ def test_planner_fallback_no_responding_family(tmp_path):
 
 
 def test_weak_is_a_legacy_alias_for_quick(tmp_path):
-    # WI-113 (owner rename 2026-07-12): the bottom tier is `quick`; the old
+    # WI-113 (operator rename 2026-07-12): the bottom tier is `quick`; the old
     # `weak` vocabulary still loads, validates, and selects — never-breaking
     # (the Provider->Family precedent). REGISTRY_CSV above deliberately still
     # says `weak`, so this doubles as the legacy-registry proof.

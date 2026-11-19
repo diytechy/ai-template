@@ -1,8 +1,8 @@
 <!-- DISPATCHER NOTES (stripped before the prompt is sent)
 
      ONE SITTING PER LANE CHECKPOINT (SR-156, WI-841). A lane can owe several
-     in-lane judgements at once: approved rows whose text drifted (the
-     amendment question), Drafted rows awaiting a first approval, and a changed
+     in-lane judgements at once: accepted rows whose text drifted (the
+     amendment question), Drafted rows awaiting a first acceptance, and a changed
      Done-when. Judged one sitting each, WI-835's lane took five sittings for
      what one could hold. This brief COMPOSES them: each section below is the
      kind's own shipped brief, composed by the kind's own assembler over the
@@ -16,7 +16,7 @@
 
      Slots (single-brace, strict fill — a missing one refuses):
        {sections}  the composed per-kind briefs, in the order amendment,
-                   first-approval, done-when; each one's {verdict} names its
+                   first-acceptance, done-when; each one's {verdict} names its
                    `## <kind>` section of this sitting's verdict file.
        {kinds}     the `;`-joined kinds composed, which the closing
                    `SITTING:` line restates verbatim.

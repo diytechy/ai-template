@@ -22,10 +22,10 @@ code and become properties of the parse:
     the same string.
 
 WHAT THIS DELIBERATELY DOES NOT DO. Carrier only. `Status` keeps whatever
-vocabulary the tree it converts already uses — `Drafted` / `Approved` /
+vocabulary the tree it converts already uses — `Drafted` / `Accepted` /
 `Founded` since D-9 steps 5/7/8 — and a value this converter does not recognize
 is COPIED, never mapped. That is the rule, not an omission: a downstream tree
-still carrying `Modified` (or `Draft`, or `Verified`) owes a human ruling on
+still carrying `Modified` (or `Draft`, or `Verified`) owes an operator ruling on
 each such row, and a carrier conversion that stamped them clean would launder
 exactly the re-blessing they owe (repo-lock Q11). The always-on integrity floor
 names them after the conversion, which is where they should be named. No anchor
@@ -52,7 +52,7 @@ Contract IF-103: this CLI rewrites the registries under
     later. `--check` performs that same conversion and comparison in memory and
     writes nothing. Carrier only: a Status word the converter does not
     recognize is COPIED, never mapped, so a conversion can never launder a
-    re-blessing a human still owes.
+    re-blessing an operator still owes.
 
 Requirements: SR-147 (one machine-parseable carrier for the spine).
 """
@@ -191,7 +191,7 @@ KEY = {
     "AcceptanceCriteria": "acceptance_criteria",
     "Permutations": "permutations",
     "Priority": "priority",
-    "Verification": "verification",
+    "VerificationMethod": "verification_method",
     "Status": "status",
     "Need": "need",
     "Why": "why",
@@ -278,6 +278,17 @@ KEY = {
     "Knowledge": "knowledge",
     "Standing": "standing",
     "PartOf": "part_of",
+    # the component derivation record (SR-165, WI-999). None is in REF_COLS: a
+    # `Constraints` entry holds spaces and a colon, so the cells convert as
+    # plain strings and round-trip byte-exact; the reader splits on `;`.
+    "Candidates": "candidates",
+    "Objective": "objective",
+    "Constraints": "constraints",
+    "Scores": "scores",
+    "Selected": "selected",
+    "Ruling": "ruling",
+    "Override": "override",
+    "Derivation": "derivation",
     # external — the depth-0 frame (WI-442). This registry never had a CSV
     # carrier and so is never CONVERTED by this script; the entries exist
     # because this map is the writer half of the ONE column vocabulary, pinned
@@ -532,7 +543,7 @@ def raw_id_findings(rel, table, raw, text):
     THIS IS THE LEG THAT CATCHES THE DOTTED ID. `[agent.ANTHROPIC-OPUS-4.8]`
     written bare parses cleanly as two nested tables, so the emitted file is
     valid TOML, `compare` finds the row under a key it constructed the same
-    wrong way, and nothing reds — while the registry has quietly lost a model
+    wrong way, and nothing fails — while the registry has quietly lost a model
     row. Reading the ids off the source and demanding each one back as a
     top-level key is the only check that does not inherit the mistake."""
     try:
@@ -560,7 +571,7 @@ def value_to_cell(col, value):
     a prettier one. Measured over this repo's own spine at the cutover: 271 of
     271 multi-ref cells wrote `A;B`, none wrote `A; B`. Joining on `"; "`
     therefore rewrote every one of them, which put ~40 spurious "cell changed"
-    entries into the re-attestation brief the owner is about to work — the
+    entries into the re-acceptance brief the operator is about to work — the
     carrier migration manufacturing amendments in the one view that must show
     only real ones. The separator is not the meaning (`_cells_differ` compares
     token lists either way), which is exactly why the conversion has no licence
@@ -706,13 +717,13 @@ def sn_status(kind):
     Section-as-state carried exactly two maturities — a row sat under a draft
     heading or it did not — so this mapping is TOTAL and loses nothing. `kind`
     itself does not survive the conversion: it conflated maturity with row TYPE,
-    and the type half (`edge`) is retired (owner ruling 2026-08-17j).
+    and the type half (`edge`) is retired (operator ruling 2026-08-17j).
 
     ONE HOME because the LOSS ORACLE compares against it. If the emitter and the
     oracle each derived the word, a drift between them would make the oracle
     agree with the bug — an oracle built from the thing under test cannot
     fail, which is the defect the raw-source oracle beside it exists to avoid."""
-    return "Drafted" if kind == "draft" else "Approved"
+    return "Drafted" if kind == "draft" else "Accepted"
 
 
 def sn_to_toml(needs):

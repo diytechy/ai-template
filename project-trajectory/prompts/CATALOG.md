@@ -19,20 +19,20 @@ is a refusal rather than a silently empty instruction.
 
 | Key | File | Digest | Slots |
 |---|---|---|---|
-| `ADJUDICATE-ACT` | [adjudicate-act.template.md](adjudicate-act.template.md) | `sha256:41fc9b0c1a37` | `{amendment_act}`, `{approval_act}`, `{approves_rows}`, `{registries}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:2c8703015364` | `{aftermath}`, `{baseline}`, `{hats}`, `{identity}`, `{questions}`, `{rows}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-ACT` | [adjudicate-act.template.md](adjudicate-act.template.md) | `sha256:fc26ac978cf5` | `{acceptance_act}`, `{accepts_rows}`, `{amendment_act}`, `{registries}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:c96597b09a4f` | `{aftermath}`, `{baseline}`, `{hats}`, `{identity}`, `{questions}`, `{rows}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-COMBINED` | [adjudicate-combined.template.md](adjudicate-combined.template.md) | `sha256:d16b4841c8b2` | `{kinds}`, `{sections}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-CONSOLIDATE` | [adjudicate-consolidate.template.md](adjudicate-consolidate.template.md) | `sha256:861339ff1d07` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{prior}`, `{spine}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:3c639127d8b4` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-DISPUTE` | [adjudicate-dispute.template.md](adjudicate-dispute.template.md) | `sha256:dd163810eb3a` | `{commits}`, `{findings}`, `{process_doc}`, `{range}`, `{request}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-CONSOLIDATE` | [adjudicate-consolidate.template.md](adjudicate-consolidate.template.md) | `sha256:d505cbb298ae` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{prior}`, `{spine}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:573978e2a5e7` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-DISPUTE` | [adjudicate-dispute.template.md](adjudicate-dispute.template.md) | `sha256:178821302b00` | `{commits}`, `{findings}`, `{process_doc}`, `{range}`, `{request}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DONE-WHEN` | [adjudicate-done-when.template.md](adjudicate-done-when.template.md) | `sha256:2fd58110f42b` | `{anchor}`, `{changes}`, `{claimed}`, `{context}`, `{current}`, `{digest}`, `{subject}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-FIRST-APPROVAL` | [adjudicate-first-approval.template.md](adjudicate-first-approval.template.md) | `sha256:6c89249ffcea` | `{baseline}`, `{chain}`, `{hats}`, `{questions}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:6c33cffc9727` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-EVIDENCE-GAP` | [adjudicate-evidence-gap.template.md](adjudicate-evidence-gap.template.md) | `sha256:309cb728abd0` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-FIRST-ACCEPTANCE` | [adjudicate-first-acceptance.template.md](adjudicate-first-acceptance.template.md) | `sha256:e5bc38971b88` | `{baseline}`, `{chain}`, `{hats}`, `{questions}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-REJUDGE` | [adjudicate-rejudge.template.md](adjudicate-rejudge.template.md) | `sha256:5a1e40710449` | `{case}`, `{reason}`, `{tc}`, `{verdict}`, `{wi}` |
-| `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:58eb6e1b0a8f` | `{brief}`, `{verdict}` |
-| `PLAN-SINGLE` | [plan-single.template.md](plan-single.template.md) | `sha256:b240ed4cb2a3` | `{clauses}`, `{inputs}`, `{plan}`, `{revision}`, `{spec}`, `{title}`, `{wi}` |
-| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:e125a41b7023` | `{head}`, `{process_doc}`, `{round_facts}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
-| `WORKER` | [worker.template.md](worker.template.md) | `sha256:743b0d6ff1ad` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
+| `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:6f26c312de16` | `{brief}`, `{verdict}` |
+| `PLAN-SINGLE` | [plan-single.template.md](plan-single.template.md) | `sha256:9e9630661ec5` | `{clauses}`, `{inputs}`, `{plan}`, `{revision}`, `{spec}`, `{title}`, `{wi}` |
+| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:cfaf464bf42e` | `{head}`, `{process_doc}`, `{round_facts}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
+| `WORKER` | [worker.template.md](worker.template.md) | `sha256:89bb5b719cb2` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
 
 ## Composed fragments
 
@@ -44,7 +44,7 @@ no key and no override. An absent or unreadable fragment fails generation and
 
 | File | Digest | Fills |
 |---|---|---|
-| [spine-questions.md](spine-questions.md) | `sha256:b91f850e0727` | `{questions}` |
+| [spine-questions.md](spine-questions.md) | `sha256:89bf1d908361` | `{questions}` |
 
 An operator override replaces a template per phase (`--prompt-map`); an
 overridden session's `# prompt-template:` names the override path, so the

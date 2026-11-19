@@ -14,7 +14,7 @@ import pytest
 from conftest import (
     SCRIPTS,
     claim_on_branch,
-    declare_review_bar,
+    declare_commit_checks,
     declare_trunk,
     hooks_on,
     lane_checkout,
@@ -194,7 +194,7 @@ STATUS_MD = """# Status
 ## Current State
 
 - **Open items:**
-  - **Needs <human>**: OI-9 — a pending ask
+  - **Needs <operator>**: OI-9 — a pending ask
 """
 
 CHANGES_REQUESTED_BODY = (
@@ -235,7 +235,7 @@ def _wi_201_row(tier):
 def managed_repo(tmp_path):
     """A git repo wired for managed routing: docs/agents.csv (all rows point at
     ONE fake, distinguished by Provider/Model/Tier) + docs/agents-enabled +
-    run-phase=BUILD, with a stand-in review bar declared. The train branch is
+    run-phase=BUILD, with stand-in commit checks declared. The train branch is
     checked out in a linked lane worktree and `main` stays in the primary, as
     a dispatched worker meets it; `repo` is the lane. Returns (repo,
     control-dir, cmd-template)."""
@@ -260,7 +260,7 @@ def managed_repo(tmp_path):
 
     ctl = tmp_path / "control"
     ctl.mkdir()
-    declare_review_bar(repo, ctl)
+    declare_commit_checks(repo, ctl)
     fake = tmp_path / "fake.py"
     fake.write_text(FAKE, encoding="utf-8")
     cmd = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
@@ -567,10 +567,10 @@ def test_enabled_id_not_in_registry_fails_preflight(managed_repo):
     assert "not a row in docs/agents.toml" in proc.stderr
 
 
-def test_two_top_tier_failures_page_the_human(managed_repo):
+def test_two_top_tier_failures_page_the_operator(managed_repo):
     # Strong-tier BUILD + reviewer, both rounds CHANGES-REQUESTED -> the
-    # shared-failure regime pages the human; under attended the loop stops
-    # NEEDS-HUMAN (exit 7).
+    # shared-failure regime pages the operator; under attended the loop stops
+    # NEEDS-OPERATOR (exit 7).
     repo, ctl, cmd = managed_repo
     (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
     (ctl / "done_after").write_text("1", encoding="utf-8")
@@ -585,7 +585,7 @@ def test_two_top_tier_failures_page_the_human(managed_repo):
     )
     proc = _loop(repo, cmd, "--tier-map", "BUILD=strong,REVIEW-A=strong")
     assert proc.returncode == 7, proc.stdout + proc.stderr
-    assert "PAGE-HUMAN" in proc.stdout
+    assert "PAGE-OPERATOR" in proc.stdout
     assert "top-tier review failures" in proc.stdout  # the shared-failure regime
     # A worker never writes run-state (WI-210): its exit code is the page
     # and the dispatcher generates the root file.
@@ -628,8 +628,8 @@ def test_absent_enable_list_keeps_legacy_behavior(managed_repo):
 
 
 def test_no_routable_model_pages_with_pool_context(managed_repo):
-    # WI-109: the NEEDS-HUMAN "no routable model" banner lists the enabled pool
-    # with each row's Notes — so an exhausted/misconfigured pool tells the human
+    # WI-109: the NEEDS-OPERATOR "no routable model" banner lists the enabled pool
+    # with each row's Notes — so an exhausted/misconfigured pool tells the operator
     # what to DO (here: the opencode sign-in hint). Staged by enabling ONLY a
     # weak row while BUILD routes medium: select() finds nothing at tier+.
     repo, ctl, cmd = managed_repo
@@ -879,7 +879,7 @@ def _winstay_repo(tmp_path):
 
     ctl = tmp_path / "control"
     ctl.mkdir()
-    declare_review_bar(repo, ctl)
+    declare_commit_checks(repo, ctl)
     fake = tmp_path / "fake.py"
     fake.write_text(FAKE, encoding="utf-8")
     cmd = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
@@ -1452,7 +1452,7 @@ def _builds(ctl):
     return len(p.read_text(encoding="utf-8").splitlines()) if p.exists() else 0
 
 
-def test_a_clean_review_session_is_accepted(managed_repo):
+def test_a_clean_review_session_passes(managed_repo):
     """Implements: TC-257"""
     repo, ctl, proc = _misbehaving_round(managed_repo, "")
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -1467,7 +1467,7 @@ def test_a_review_session_committing_beside_its_verdict_is_refused_by_name(
 ):
     """Implements: TC-257"""
     repo, ctl, proc = _misbehaving_round(managed_repo, "extra")
-    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    assert proc.returncode == agent_loop.EXIT_NEEDS_OPERATOR, proc.stdout + proc.stderr
     out = proc.stdout + proc.stderr
     assert "outside its verdict" in out
     assert "helper.txt" in out, "the refusal names the path"
@@ -1500,13 +1500,13 @@ def test_a_review_whose_leftovers_cannot_be_stashed_stops_and_is_not_redrawn(
     # END TO END, through the coordinator's own ladder: the reviewer commits its
     # verdict, leaves a stray file, and holds the index lock, so the stash that
     # would clear the tree fails. A redraw on that tree would record the residue
-    # as already there, so the run must stop needing a human - and the review
+    # as already there, so the run must stop needing an operator - and the review
     # route must have been launched exactly once.
     repo, ctl, proc = _misbehaving_round(managed_repo, "stray-locked")
     lock = repo / _git(repo, "rev-parse", "--git-path", "index.lock")
     if lock.exists():
         lock.unlink()
-    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    assert proc.returncode == agent_loop.EXIT_NEEDS_OPERATOR, proc.stdout + proc.stderr
     assert "could not be stashed" in proc.stdout and "stray.txt" in proc.stdout
     assert len(_routes(proc.stdout, "REVIEW-A")) == 1, "the review was re-drawn"
     reviewers = [m for m in _models(ctl) if m in ("revb", "revc")]
@@ -1614,7 +1614,7 @@ class _RoutingSpy:
         self.draw_failures += 1
 
 
-def test_a_failed_stash_stops_for_a_human_and_redraws_nothing(
+def test_a_failed_stash_stops_for_the_operator_and_redraws_nothing(
     tmp_path, monkeypatch, capsys
 ):
     """Implements: TC-257"""
@@ -1654,8 +1654,8 @@ def test_a_failed_stash_stops_for_a_human_and_redraws_nothing(
         "pre_dirty": [],
     }
     failed, stop = agent_loop.judging_session_integrity(ctx, plan, "", "004", 0.0)
-    assert (failed, stop) == (True, agent_loop.EXIT_NEEDS_HUMAN)
+    assert (failed, stop) == (True, agent_loop.EXIT_NEEDS_OPERATOR)
     assert spy.cooled == [] and spy.draw_failures == 0, "no redraw was armed"
     banner = capsys.readouterr().out
-    assert "NEEDS-HUMAN" in banner
+    assert "NEEDS-OPERATOR" in banner
     assert "stray.txt" in banner and "index.lock held" in banner

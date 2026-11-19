@@ -24,7 +24,7 @@
      consolidation's own successors change the queue digest, so a later census
      sees a genuinely new state; {prior} is what stops it re-litigating this
      verdict, and re-absorbing a row an earlier consolidation minted is a
-     RETURN-TO-DRAFT of THAT judgement, which pages the owner.
+     RETURN-TO-DRAFT of THAT judgement, which pages the operator.
 
      Slots (single-brace, strict fill):
        {candidate}   the cluster's rows, frontmatter + Context + Done-when.
@@ -45,7 +45,7 @@
      TOML block in the ROW'S OWN SPEC, not in the verdict file, for two reasons.
      `handback.close_adjudication` is handed `(root, branch)` and nothing else,
      so it can read the lane's tree and not a path only `agent_loop` knows; and
-     an outcome recovered from prose is the `NEEDS-HUMAN` fold (WI-417) —
+     an outcome recovered from prose is the `NEEDS-OPERATOR` fold (WI-417) —
      control flow must be a typed field. The `absorbs` set is deliberately NOT
      in that block: it is the `supersedes` list of the `## Dispositions` draft,
      which is the value the mint actually uses.
@@ -87,7 +87,7 @@ Look for exactly three shapes, in this order:
 
 2. **Scope overlap.** Two rows that would edit the same behaviour from two directions. Ask: if both are claimed on the same day by two lanes, do they collide? If they collide but each is still its own decision, the answer is a `needs` edge. If they are ONE decision that was written down twice — or a decision and a second half of itself — the answer is consolidation.
 
-3. **Already answered.** A row asks for something an open or CLOSED row already did, or that was deliberately refuted. A refuted proposal returning under a new title is the failure mode that costs the most. So is re-absorbing a row an earlier consolidation already minted: read `{prior}` before you absorb anything, and if the honest answer is that an earlier consolidation got it wrong, say `return-to-draft` and NAME that consolidation — that pages the owner, and it is the right cost. An absorbed row marked `(by hand)` in `{prior}` records no judgement: a successor whose every absorbed row is so marked is an ordinary row, and absorbing it overturns nothing.
+3. **Already answered.** A row asks for something an open or CLOSED row already did, or that was deliberately refuted. A refuted proposal returning under a new title is the failure mode that costs the most. So is re-absorbing a row an earlier consolidation already minted: read `{prior}` before you absorb anything, and if the honest answer is that an earlier consolidation got it wrong, say `return-to-draft` and NAME that consolidation — that pages the operator, and it is the right cost. An absorbed row marked `(by hand)` in `{prior}` records no judgement: a successor whose every absorbed row is so marked is an ordinary row, and absorbing it overturns nothing.
 
 Then choose ONE outcome:
 

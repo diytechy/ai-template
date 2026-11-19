@@ -15,13 +15,13 @@ that column was pointing at, so the column retires with this file.
   -> docs/requirements/components.derived.toml   this view
 
 THE SPLIT, and it is the ruling's: the hand file DECLARES a component (that it
-exists, its name, its category, its knowledge refs, its approval); this file
-DESCRIBES it. A GENERATED FILE NEVER CARRIES AN APPROVAL (OI-30 D3) — machine
-flipping an approval routes around the very dial `human_approval_through`
-governs — so no maturity, standing or approval cell appears here, and nothing
-here may be cited as evidence that a human blessed anything.
+exists, its name, its category, its knowledge refs, its acceptance); this file
+DESCRIBES it. A GENERATED FILE NEVER CARRIES AN ACCEPTANCE (OI-30 D3) — machine
+flipping an acceptance routes around the very dial `operator_accepts_through`
+governs — so no maturity, standing or acceptance cell appears here, and nothing
+here may be cited as evidence that an operator blessed anything.
 
-WHAT IT DOES NOT SHOW, stated because the owner's own ruling states it: NOT
+WHAT IT DOES NOT SHOW, stated because the operator's own ruling states it: NOT
 INTERNALS. A requirement list says what a component is obliged to do and nothing
 about how its parts fit together. That is the ruled trade — the artifact that
 stays true beats the artifact that shows mechanism and drifts — and a reader who
@@ -69,7 +69,7 @@ Contract IF-139: the derived view's generator, delivered as a CLI. A plain run
     exits 1 when the committed view is missing or stale — naming the command
     that regenerates it — and 0 when it is current. A repo that declares no
     real `CMP-###` row and carries no view is VACUOUS: exit 0, nothing written,
-    so an optional layer nobody opted into can never red a gate. `--root` and
+    so an optional layer nobody opted into can never fail a gate. `--root` and
     `--out` relocate the read and the write.
 Contract IF-140: the derived view itself — a TOML document carrying one
     `[derived]` census table, one `[component_view.CMP-###]` table per declared
@@ -78,8 +78,8 @@ Contract IF-140: the derived view itself — a TOML document carrying one
     table naming the requirements and seams that reach no component. Every
     collection is sorted and nothing reads a clock or the environment, so the
     byte-compare behind `--check` is stable in any clone. It carries no
-    maturity, standing or approval cell, ever, and nothing in it may be cited
-    as evidence that a human blessed anything.
+    maturity, standing or acceptance cell, ever, and nothing in it may be cited
+    as evidence that an operator blessed anything.
 """
 
 import argparse
@@ -115,9 +115,9 @@ BANNER = (
     "# rows that already carry the obligation. It shows no internals, by design —\n"
     "# for mechanism, read the design rows named here.\n"
     "#\n"
-    "# NO APPROVAL CELL APPEARS HERE, EVER: maturity lives on the\n"
+    "# NO ACCEPTANCE CELL APPEARS HERE, EVER: maturity lives on the\n"
     "# hand-authored components.toml row, and nothing in this file is evidence\n"
-    "# that a human blessed anything.\n"
+    "# that an operator blessed anything.\n"
     "#\n"
     "# An `[unplaced] sr_refs` entry reaches no component because it has no design\n"
     "# child — either a decomposition not yet written, or a constraint over EVERY\n"
@@ -322,7 +322,7 @@ def main(argv=None):
     out = Path(args.out) if args.out else root / OUT_REL
     # Vacuous — exit 0, write nothing — for a repo that declares no component and
     # carries no view: a fresh scaffold ships only the inert CMP-000 row, and the
-    # gate must not red it over an optional layer it never opted into.
+    # gate must not fail it over an optional layer it never opted into.
     if not _has_components(root) and not out.is_file():
         print(
             "gen_components: no real CMP row in {} and no {} — nothing to "

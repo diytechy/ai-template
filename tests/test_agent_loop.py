@@ -2,7 +2,7 @@
 "Unattended operation") — exercised end-to-end against a fake agent command,
 so no test depends on any real agent CLI. The fake pops one action per
 invocation from a control dir outside the repo: commit / noop / done /
-blocked / needs-human / limit / sleep.
+blocked / needs-operator / limit / sleep.
 
 WI-277 split this module by behavior boundary. What stays here is everything
 that needs the FAKE_AGENT/loop_repo subprocess harness, plus the git-helper and
@@ -155,8 +155,8 @@ STATUS_MD = """# Project Status
 
 - **Active gate:** DevStg-Reqs
 - **Open items:**
-  - **Needs <human>**:
-    - OI-1 — decide: approve the demo gate (blocks: DevStg-Reqs)
+  - **Needs <operator>**:
+    - OI-1 — decide: accept the demo gate (blocks: DevStg-Reqs)
 
 ## Scope
 
@@ -831,7 +831,7 @@ def test_a_reset_landing_EXACTLY_on_the_ceiling_is_slept_not_abandoned(
     slept and retried, *past* it the run stops at EXIT_WAITING — so the equal
     case belongs to the sleeping arm. Nothing pinned it: mutating
     `wait <= args.wait_on_limit` to `wait <` left the whole agent-loop suite
-    green (88 passed, 1 skipped), because the one parsed-reset test uses a
+    passing (88 passed, 1 skipped), because the one parsed-reset test uses a
     ceiling of 90000 against a wait structurally under 86400, a 3600-second gap
     the boundary can never be reached through.
 
@@ -862,7 +862,7 @@ def test_a_reset_ONE_SECOND_past_the_ceiling_abandons_the_run(loop_repo, tmp_pat
     """The other arm of the same fork, so the boundary pin above cannot be
     satisfied by a predicate that simply always sleeps. Same frozen clock, same
     13500s parsed wait, ceiling one second lower: the run must stop at
-    EXIT_WAITING (5) rather than sleep past what the human consented to."""
+    EXIT_WAITING (5) rather than sleep past what the operator consented to."""
     repo, ctl, template = loop_repo
     frozen = datetime.datetime(2026, 1, 1, 12, 0, 0)
     exact = 3 * 3600 + 45 * 60
@@ -1183,8 +1183,8 @@ def test_git_success_returns_stdout_only_unchanged(tmp_path):
     assert "seed with a warning" in out  # stdout summary preserved, unchanged
 
 
-def test_substantive_dirty_drops_owner_scratchpad(tmp_path):
-    # WI-203: OWNER_SCRATCHPAD.md is perpetually owner-edited, so the loop's
+def test_substantive_dirty_drops_operator_scratchpad(tmp_path):
+    # WI-203: OPERATOR_SCRATCHPAD.md is perpetually operator-edited, so the loop's
     # dirty-tree signal drops it — the raw primitive still counts it, but the
     # substantive view (used by the resume note + done detection) reads clean.
     loop = load_script("agent_loop")
@@ -1195,12 +1195,12 @@ def test_substantive_dirty_drops_owner_scratchpad(tmp_path):
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "a@b.com")
     _git(repo, "config", "user.name", "A")
-    (repo / "OWNER_SCRATCHPAD.md").write_text("notes\n", encoding="utf-8")
+    (repo / "OPERATOR_SCRATCHPAD.md").write_text("notes\n", encoding="utf-8")
     (repo / "a.txt").write_text("hi\n", encoding="utf-8")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "seed")
-    # only the owner scratchpad is dirty -> raw sees it, substantive does not
-    (repo / "OWNER_SCRATCHPAD.md").write_text("edited\n", encoding="utf-8")
+    # only the operator scratchpad is dirty -> raw sees it, substantive does not
+    (repo / "OPERATOR_SCRATCHPAD.md").write_text("edited\n", encoding="utf-8")
     assert len(loop.working_tree_dirty(repo)) == 1  # the primitive stays honest
     assert loop.substantive_working_tree_dirty(repo) == []  # the loop reads clean
     # a real deliverable still counts; the scratchpad is still dropped
@@ -1210,13 +1210,13 @@ def test_substantive_dirty_drops_owner_scratchpad(tmp_path):
     assert len(loop.working_tree_dirty(repo)) == 2  # raw counts both
 
 
-def test_owner_scratchpad_dirty_at_start_injects_nothing(loop_repo):
-    # WI-203: an owner-only-dirty tree at loop start is NOT interrupted residue —
+def test_operator_scratchpad_dirty_at_start_injects_nothing(loop_repo):
+    # WI-203: an operator-only-dirty tree at loop start is NOT interrupted residue —
     # no WI-076 reconcile note, no dirty line logged (the prompt stays
     # byte-identical to the clean default), so the note fires only on real residue.
     repo, ctl, template = loop_repo
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
-    (repo / "OWNER_SCRATCHPAD.md").write_text("owner edit\n", encoding="utf-8")
+    (repo / "OPERATOR_SCRATCHPAD.md").write_text("operator edit\n", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     prompt = (ctl / "prompt.txt").read_text(encoding="utf-8")

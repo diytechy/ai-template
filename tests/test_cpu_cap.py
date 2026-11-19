@@ -1,4 +1,4 @@
-"""The root conftest's machine-share bound (2026-07-27, owner-directed).
+"""The root conftest's machine-share bound (2026-07-27, operator-directed).
 
 Why this exists as a test at all: the cap is the kind of thing that silently
 stops working. A wrong flag constant, a truncated handle, an env typo — each
@@ -57,8 +57,8 @@ def test_the_declared_default_is_half_the_machine():
 
     Everything else here compares against `DEFAULT_CAP_PERCENT` itself, which
     made those assertions self-referential: raising the default to 90 kept the
-    whole module green while quietly withdrawing the guarantee it exists to
-    make (owner's constraint, 2026-07-27: a test run must not throttle this
+    whole module passing while quietly withdrawing the guarantee it exists to
+    make (operator's constraint, 2026-07-27: a test run must not throttle this
     machine or any other personal machine). Changing the dial is legitimate —
     change it HERE too, deliberately, with the reason in the session log."""
     assert root_conftest.DEFAULT_CAP_PERCENT == 50

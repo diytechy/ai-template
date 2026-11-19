@@ -6,7 +6,7 @@ Done-when uses it. The one predicate (`kitlib.done_when.blessing_owed`) is
 asked at the lane's next build dispatch (`agent_loop.build_hold`, through
 `worker_endstate`), at a hand close (`integrate.py done-when-hold`, the
 pre-commit hook's `done-when-blessed` step) and at the merge slot
-(`integrate._done_when_refusal`); a verdict line or an owner ruling that binds
+(`integrate._done_when_refusal`); a verdict line or an operator ruling that binds
 the exact text's digest releases all three, and a text changed after it holds
 them again. At merge, intake mints the goalposts row only for an uncovered
 close. One combined sitting composes every pending in-lane judgement.
@@ -151,7 +151,7 @@ def _bless(lane, line, bound=True):
     _write(lane, _VERDICT_REL, line + "\n")
     binding = lane / ab.ksitting.requested_path(_VERDICT_REL)
     if bound and not binding.exists():
-        text = ab.ksitting.render_requested("done-when", ("done-when",), "accepted")
+        text = ab.ksitting.render_requested("done-when", ("done-when",), "recorded")
         _write(lane, ab.ksitting.requested_path(_VERDICT_REL), text)
     _commit(lane, "verdict")
 
@@ -188,7 +188,7 @@ def _dispatch_hold(lane, plan=None, worker=None):
         agent_loop.route_session = original
     if out is plan:
         return None
-    assert out == agent_loop.EXIT_NEEDS_HUMAN, out
+    assert out == agent_loop.EXIT_NEEDS_OPERATOR, out
     return agent_loop.build_hold(lane, worker)
 
 
@@ -213,7 +213,7 @@ def test_an_edit_with_no_verdict_holds_the_dispatch_and_the_close(tmp_path):
     """Implements: TC-325"""
     trunk, lane = _lane(tmp_path)
     held = _dispatch_hold(lane)
-    assert held is not None and held[:2] == (agent_loop.EXIT_NEEDS_HUMAN, "HELD")
+    assert held is not None and held[:2] == (agent_loop.EXIT_NEEDS_OPERATOR, "HELD")
     assert _digest() in held[2] and "60 fps" in held[2] and "30 fps" in held[2]
     _stage_close(lane)
     staged = integrate.staged_done_when_refusal(lane)
@@ -275,7 +275,7 @@ def test_a_covering_verdict_releases_the_dispatch_and_the_close(tmp_path, outcom
     assert integrate._done_when_refusal(trunk, BRANCH, [WI]) is None
 
 
-def test_an_owner_ruling_binding_the_digest_releases_and_an_unseen_one_does_not(
+def test_an_operator_ruling_binding_the_digest_releases_and_an_unseen_one_does_not(
     tmp_path,
 ):
     """Implements: TC-326"""
@@ -288,9 +288,9 @@ def test_an_owner_ruling_binding_the_digest_releases_and_an_unseen_one_does_not(
     )
     _write(lane, "docs/decisions/wi-007.toml", entry)
     _commit(lane, "decisions: the ruling, not yet seen")
-    assert _dispatch_hold(lane) is not None, "an entry the owner has not seen"
-    _write(lane, "docs/decisions/wi-007.toml", entry + 'owner = "confirmed"\n')
-    _commit(lane, "decisions: the owner confirms")
+    assert _dispatch_hold(lane) is not None, "an entry the operator has not seen"
+    _write(lane, "docs/decisions/wi-007.toml", entry + 'operator = "confirmed"\n')
+    _commit(lane, "decisions: the operator confirms")
     assert _dispatch_hold(lane) is None
     assert _merge_refusal(trunk, lane) is None
 
@@ -299,7 +299,7 @@ def test_a_confirmed_ruling_still_carrying_the_retired_reviewed_key_does_not_rel
     tmp_path,
 ):
     """An entry still carrying the retired `reviewed` key reads as NOT YET
-    SEEN whatever its `owner` says (kitlib.decisions), so its matching digest
+    SEEN whatever its `operator` says (kitlib.decisions), so its matching digest
     covers nothing and the hold stands.
 
     Implements: TC-326
@@ -311,7 +311,7 @@ def test_a_confirmed_ruling_still_carrying_the_retired_reviewed_key_does_not_rel
         "[decision.D-001]\n"
         'decided = "WI-007 renders at 30 fps."\nalternative = "60 fps."\n'
         'reversal_cost = "One line."\nwhy_not_escalated = "Owner ruled."\n'
-        'review = ""\ndone_when = "{}"\nowner = "confirmed"\n'
+        'review = ""\ndone_when = "{}"\noperator = "confirmed"\n'
         "{} = true\n".format(_digest(), kdecisions.RETIRED_KEY)
     )
     _write(lane, "docs/decisions/wi-007.toml", entry)
@@ -402,7 +402,7 @@ def test_the_done_when_verdict_grammar(tmp_path):
 
 
 def _fake_spine_assemblers(monkeypatch):
-    """The amendment and first-approval assemblers, stubbed to their slot sets
+    """The amendment and first-acceptance assemblers, stubbed to their slot sets
     and recording the scope each was handed; the done-when one stays real."""
     seen = {}
 
@@ -417,15 +417,15 @@ def _fake_spine_assemblers(monkeypatch):
         }, None
 
     def first(_root, row):
-        seen["first-approval"] = row["Adjudicates"]
+        seen["first-acceptance"] = row["Adjudicates"]
         return {
-            "chain": "- TC TC-1 [AWAITING FIRST APPROVAL]",
+            "chain": "- TC TC-1 [AWAITING FIRST ACCEPTANCE]",
             "baseline": "B",
             "questions": "Q",
         }, None
 
     monkeypatch.setitem(ab._ASSEMBLERS, "amendment", amendment)
-    monkeypatch.setitem(ab._ASSEMBLERS, "first-approval", first)
+    monkeypatch.setitem(ab._ASSEMBLERS, "first-acceptance", first)
     return seen
 
 
@@ -435,14 +435,14 @@ def test_a_combined_sitting_composes_each_kind_from_its_own_brief(
     """Implements: TC-327"""
     _trunk_root, lane = _lane(tmp_path)
     seen = _fake_spine_assemblers(monkeypatch)
-    scope = "amendment:LLR-1;first-approval:TC-1;done-when:{}".format(WI)
+    scope = "amendment:LLR-1;first-acceptance:TC-1;done-when:{}".format(WI)
     text, why = ab.compose(lane, _row("combined", scope), "docs/reviews/s.md")
     assert why is None, why
-    assert seen == {"amendment": "LLR-1", "first-approval": "TC-1"}
+    assert seen == {"amendment": "LLR-1", "first-acceptance": "TC-1"}
     order = [text.index("=== SECTION `## {}`".format(k)) for k in ab.COMBINABLE]
     assert order == sorted(order)
     assert "the `## done-when` section of docs/reviews/s.md" in text
-    assert "kinds=amendment;first-approval;done-when" in text
+    assert "kinds=amendment;first-acceptance;done-when" in text
     assert _digest() in text
     assert "combined" in ab.ROUTED
 
@@ -463,13 +463,13 @@ def test_a_combined_sitting_refuses_whole_when_a_section_cannot_compose(
 SITTING = (
     "## amendment\n\n- [CLARITY] LLR-1 Detail -> a -> a -> same\n\n"
     "VERDICT: CLARITY rows=1\n\n"
-    "## first-approval\n\nOUTCOME: APPROVE rows=1\n\n"
+    "## first-acceptance\n\nOUTCOME: ACCEPT rows=1\n\n"
     "## done-when\n\nDONE-WHEN: BLESSED changes=2 digest={}\n\n"
-    "SITTING: JUDGED kinds=amendment;first-approval;done-when\n"
+    "SITTING: JUDGED kinds=amendment;first-acceptance;done-when\n"
 )
 
 
-KINDS = ("amendment", "first-approval", "done-when")
+KINDS = ("amendment", "first-acceptance", "done-when")
 
 
 def test_a_combined_verdict_is_parsed_section_by_section(tmp_path):
@@ -477,8 +477,8 @@ def test_a_combined_verdict_is_parsed_section_by_section(tmp_path):
     path = tmp_path / "s.md"
     path.write_text(SITTING.format(_digest()), "utf-8")
     assert ab.verdict_refusal("combined", path, kinds=KINDS) is None
-    path.write_text(SITTING.format(_digest()).replace("OUTCOME: APPROVE", "OK"))
-    assert "(## first-approval)" in ab.verdict_refusal("combined", path, kinds=KINDS)
+    path.write_text(SITTING.format(_digest()).replace("OUTCOME: ACCEPT", "OK"))
+    assert "(## first-acceptance)" in ab.verdict_refusal("combined", path, kinds=KINDS)
     path.write_text(SITTING.format(_digest()).replace(";done-when", ""))
     assert "requested" in ab.verdict_refusal("combined", path, kinds=KINDS)
     path.write_text(SITTING.format(_digest()).replace("## done-when\n", ""))
@@ -571,7 +571,7 @@ def _merged(tmp_path, verdict=None, bound=None):
         rel = "docs/reviews/{}/001-ADJUDICATE-x.md".format(BRANCH)
         _write(root, rel, verdict)
         brief, kinds = ("combined", bound) if bound else ("done-when", ("done-when",))
-        binding = ab.ksitting.render_requested(brief, kinds, "accepted")
+        binding = ab.ksitting.render_requested(brief, kinds, "recorded")
         _write(root, ab.ksitting.requested_path(rel), binding)
     return root, before, _commit(root, "integrate: merge " + BRANCH)
 
@@ -644,22 +644,22 @@ def _draft(title):
 def test_at_merge_a_combined_successor_mints_the_done_when_sections_own_draft(
     tmp_path,
 ):
-    """Round 2, MAJOR 3: a combined verdict whose first-approval section
+    """Round 2, MAJOR 3: a combined verdict whose first-acceptance section
     carries a RETURN draft BEFORE the done-when section's SUCCESSOR draft. The
     merge mints the done-when section's own draft, never the first one.
 
     Implements: TC-328
     """
     verdict = (
-        "## first-approval\n\nOUTCOME: RETURN rows=1\n\n"
+        "## first-acceptance\n\nOUTCOME: RETURN rows=1\n\n"
         + _draft("Rework TC-1")
         + "## done-when\n\nDONE-WHEN: SUCCESSOR changes=2 digest={}\n\n".format(
             _digest()
         )
         + _draft("Render the widget at 60 fps")
-        + "SITTING: JUDGED kinds=first-approval;done-when\n"
+        + "SITTING: JUDGED kinds=first-acceptance;done-when\n"
     )
-    bound = ("first-approval", "done-when")
+    bound = ("first-acceptance", "done-when")
     root, before, after = _merged(tmp_path, verdict=verdict, bound=bound)
     minted, refusal = _intake(root, before, after)
     assert refusal is None, refusal
@@ -719,15 +719,15 @@ def test_a_combined_rows_tokens_scope_each_kinds_act():
             "WI-900.md",
             {
                 "brief": "combined",
-                "adjudicates": ["first-approval:TC-001", "amendment:LLR-001"]
+                "adjudicates": ["first-acceptance:TC-001", "amendment:LLR-001"]
                 + ["done-when:WI-007"],
             },
         )
     ]
-    assert ar.first_approval_scope(combined) == {"TC-001"}
+    assert ar.first_acceptance_scope(combined) == {"TC-001"}
     assert ar.amendment_scope(combined) == {"LLR-001"}
     only = [("WI-901.md", {"brief": "combined", "adjudicates": ["amendment:SR-1"]})]
-    assert ar.first_approval_scope(only) is None
+    assert ar.first_acceptance_scope(only) is None
 
 
 # --- round 4: an ABSENT claim is released, an UNREADABLE one is held ----------
@@ -765,7 +765,7 @@ def test_an_unreadable_claim_is_held_naming_why(tmp_path):
     worker = _worker(lane)
     worker["base"] = UNREADABLE
     end = agent_loop.build_hold(lane, worker)
-    assert end and end[:2] == (agent_loop.EXIT_NEEDS_HUMAN, "HELD")
+    assert end and end[:2] == (agent_loop.EXIT_NEEDS_OPERATOR, "HELD")
     assert "cannot be read" in end[2]
 
 
@@ -987,7 +987,7 @@ def test_a_rejected_combined_sitting_blesses_nothing(tmp_path):
 
 def test_an_unrequested_section_refuses_the_combined_verdict(tmp_path):
     """Sol final MAJOR 2: a sitting that requested `amendment` alone, whose
-    verdict also carries a `## red-tc` section, is refused: any `## <kind>`
+    verdict also carries a `## evidence-gap` section, is refused: any `## <kind>`
     heading counts, and every section not requested refuses.
 
     Implements: TC-327
@@ -995,12 +995,12 @@ def test_an_unrequested_section_refuses_the_combined_verdict(tmp_path):
     path = tmp_path / "s.md"
     path.write_text(
         "## amendment\n\nVERDICT: CLARITY rows=1\n\n"
-        "## red-tc\n\nOUTCOME: DRAFTED cases=1 drafts=1\n\n"
+        "## evidence-gap\n\nOUTCOME: DRAFTED cases=1 drafts=1\n\n"
         "SITTING: JUDGED kinds=amendment\n",
         encoding="utf-8",
     )
     refusal = ab.verdict_refusal("combined", path, kinds=("amendment",))
-    assert refusal and "red-tc" in refusal
+    assert refusal and "evidence-gap" in refusal
 
 
 def test_a_valid_sitting_with_an_unrequested_section_blesses_nothing(tmp_path):
@@ -1014,7 +1014,7 @@ def test_a_valid_sitting_with_an_unrequested_section_blesses_nothing(tmp_path):
     _bless(
         lane,
         "## done-when\n\nDONE-WHEN: BLESSED changes=2 digest={}\n\n"
-        "## red-tc\n\nOUTCOME: DRAFTED cases=1 drafts=1\n\n"
+        "## evidence-gap\n\nOUTCOME: DRAFTED cases=1 drafts=1\n\n"
         "SITTING: JUDGED kinds=done-when\n".format(_digest()),
     )
     assert _digest() not in kdone.covering(lane, "HEAD")
@@ -1024,7 +1024,7 @@ def test_a_valid_sitting_with_an_unrequested_section_blesses_nothing(tmp_path):
 # --- round 10: parse, don't validate; the requested kinds are bound ----------
 
 
-def _bind(lane, kinds, brief="combined", outcome="accepted"):
+def _bind(lane, kinds, brief="combined", outcome="recorded"):
     """The binding the routes write: the sitting's requested kinds at
     reservation and the outcome the route that ran the call records,
     beside the verdict, committed."""
@@ -1200,9 +1200,9 @@ def test_a_failed_calls_verdict_releases_nothing(
     assert _dispatch_hold(lane) is not None
 
 
-def test_an_accepted_calls_verdict_releases(tmp_path, monkeypatch):
-    """The positive arm: a call that exits 0 with a valid verdict is recorded
-    ACCEPTED by the route that ran it, and only then covers.
+def test_a_recorded_calls_verdict_releases(tmp_path, monkeypatch):
+    """The positive arm: a call that exits 0 with a valid verdict gets the
+    outcome RECORDED from the route that ran it, and only then covers.
 
     Implements: TC-326
     """
@@ -1212,7 +1212,7 @@ def test_an_accepted_calls_verdict_releases(tmp_path, monkeypatch):
     assert returned == 0
     binding = ab.ksitting.requested_path(verdict)
     assert ab.ksitting.read_requested(open(binding, encoding="utf-8").read())[2] == (
-        "accepted"
+        "recorded"
     )
     assert _digest() in kdone.covering(lane, "HEAD")
     assert _dispatch_hold(lane) is None
@@ -1236,7 +1236,7 @@ def test_another_brief_classes_verdict_covers_nothing_and_never_raises(tmp_path)
     assert _dispatch_hold(lane) is not None
 
 
-@pytest.mark.parametrize("valid,outcome", ((True, "accepted"), (False, "failed")))
+@pytest.mark.parametrize("valid,outcome", ((True, "recorded"), (False, "failed")))
 def test_the_loop_route_records_its_verdicts_outcome(tmp_path, valid, outcome):
     """The loop is the other route that runs adjudications: after validating
     its session's verdict it records the outcome through the same writer and
@@ -1439,7 +1439,7 @@ def test_a_failed_loop_call_keeps_its_obligation_and_reads_no_verdict(
     assert ab.ksitting.read_requested(text)[2] == "failed"
 
 
-def test_the_loop_route_accepts_a_combined_sitting_on_its_bound_kinds(
+def test_the_loop_route_takes_a_combined_sitting_on_its_bound_kinds(
     tmp_path, monkeypatch
 ):
     """Sol final8 MAJOR 1: the loop composes a claimed `combined` row with
@@ -1452,7 +1452,7 @@ def test_the_loop_route_accepts_a_combined_sitting_on_its_bound_kinds(
     """
     _trunk_root, lane = _lane(tmp_path)
     _fake_spine_assemblers(monkeypatch)
-    for kind in ("amendment", "first-approval"):  # the loop's own module copy
+    for kind in ("amendment", "first-acceptance"):  # the loop's own module copy
         loop_assemblers = agent_loop.adjudicate_brief._ASSEMBLERS
         monkeypatch.setitem(loop_assemblers, kind, ab._ASSEMBLERS[kind])
     assigned = _worker(lane)
@@ -1478,7 +1478,7 @@ def test_the_loop_route_accepts_a_combined_sitting_on_its_bound_kinds(
     worker = {"adjudication_owed": ""}
     agent_loop.adjudication_bookkeeping(plan, worker, None, False, None, 0, lane)
     bound = ab.ksitting.read_requested(open(binding, encoding="utf-8").read())
-    assert bound == ("combined", ("amendment", "done-when"), "accepted")
+    assert bound == ("combined", ("amendment", "done-when"), "recorded")
     assert worker["adjudication_owed"] == ""
     assert _digest() in kdone.covering(lane, "HEAD")
 
@@ -1498,7 +1498,7 @@ def test_a_build_after_a_dirty_completed_lane_is_held_at_dispatch(tmp_path):
     worker = _worker(lane)
     assert agent_loop.worker_endstate(lane, worker, False, False, 0) is None
     held = _dispatch_hold(lane, worker=worker)
-    assert held and held[:2] == (agent_loop.EXIT_NEEDS_HUMAN, "HELD")
+    assert held and held[:2] == (agent_loop.EXIT_NEEDS_OPERATOR, "HELD")
 
 
 def test_a_resumed_blocked_lanes_first_build_is_held_at_dispatch(tmp_path):
@@ -1518,7 +1518,7 @@ def test_a_resumed_blocked_lanes_first_build_is_held_at_dispatch(tmp_path):
     )
     assert end is None
     held = _dispatch_hold(lane, worker=worker)
-    assert held and held[:2] == (agent_loop.EXIT_NEEDS_HUMAN, "HELD")
+    assert held and held[:2] == (agent_loop.EXIT_NEEDS_OPERATOR, "HELD")
 
 
 # --- round 19: machine lines are parsed strictly per physical line ----------
@@ -1526,7 +1526,7 @@ def test_a_resumed_blocked_lanes_first_build_is_held_at_dispatch(tmp_path):
 _COMPLETE = {
     "done-when": "DONE-WHEN: BLESSED changes=2 digest={}",
     "amendment": "VERDICT: CLARITY rows=1",
-    "first-approval": "OUTCOME: APPROVE rows=1",
+    "first-acceptance": "OUTCOME: ACCEPT rows=1",
 }
 
 
@@ -1542,7 +1542,7 @@ def _with_bare_extra(kind):
     return "{}\n{}:\n".format(line, line.split(":", 1)[0])
 
 
-@pytest.mark.parametrize("kind", ("done-when", "amendment", "first-approval"))
+@pytest.mark.parametrize("kind", ("done-when", "amendment", "first-acceptance"))
 @pytest.mark.parametrize("shape", (_split_line, _with_bare_extra))
 def test_a_malformed_machine_line_invalidates_the_verdict(tmp_path, kind, shape):
     """Sol final10 MAJOR: a keyword whose label sits on the next line, or a
@@ -1556,7 +1556,7 @@ def test_a_malformed_machine_line_invalidates_the_verdict(tmp_path, kind, shape)
     single.write_text(shape(kind), encoding="utf-8")
     assert ab.verdict_refusal(kind, single), shape.__name__
     combined = tmp_path / "combined.md"
-    other = "amendment" if kind != "amendment" else "first-approval"
+    other = "amendment" if kind != "amendment" else "first-acceptance"
     sections = {kind: shape(kind), other: _COMPLETE[other].format(_digest()) + "\n"}
     kinds = tuple(sorted(sections))
     combined.write_text(
@@ -1569,7 +1569,7 @@ def test_a_malformed_machine_line_invalidates_the_verdict(tmp_path, kind, shape)
 
 @pytest.mark.parametrize("shape", (_split_line, _with_bare_extra))
 def test_a_malformed_done_when_line_releases_no_hold(tmp_path, shape):
-    """The same shapes through the holds: recorded ACCEPTED is not enough -
+    """The same shapes through the holds: an outcome of RECORDED is not enough -
     the one parser every reader uses rejects them, so nothing is covered.
 
     Implements: TC-326
@@ -1602,22 +1602,22 @@ _RULING_REL = "docs/decisions/{}.toml".format(BRANCH)
 
 
 def _ruling(bound):
-    """An owner-confirmed decisions entry binding the Done-when digest `bound`."""
+    """An operator-confirmed decisions entry binding the Done-when digest `bound`."""
     return (
         "[decision.D-001]\n"
         'decided = "WI-007 renders at 30 fps."\nalternative = "60 fps."\n'
         'reversal_cost = "One line."\nwhy_not_escalated = "Owner ruled."\n'
-        'review = ""\ndone_when = "{}"\nowner = "confirmed"\n'.format(bound)
+        'review = ""\ndone_when = "{}"\noperator = "confirmed"\n'.format(bound)
     )
 
 
 def _stage_blessing(root, blessing):
-    """Stage, in `root`'s index, the lane's accepted verdict on the narrowed
-    Done-when, or the owner-confirmed ruling binding its digest."""
+    """Stage, in `root`'s index, the lane's recorded verdict on the narrowed
+    Done-when, or the operator-confirmed ruling binding its digest."""
     if blessing == "verdict":
         line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
         _write(root, _VERDICT_REL, line)
-        text = ab.ksitting.render_requested("done-when", ("done-when",), "accepted")
+        text = ab.ksitting.render_requested("done-when", ("done-when",), "recorded")
         _write(root, ab.ksitting.requested_path(_VERDICT_REL), text)
     else:
         _write(root, _RULING_REL, _ruling(_digest()))
@@ -1673,7 +1673,7 @@ def test_a_trunk_commit_deleting_a_claim_copy_is_held_and_no_blessing_releases_i
 ):
     """A trunk commit whose delta only deletes the claim copy under
     `active/<branch>/` leaves the claimed row with no copy, so it is held
-    naming why, and neither a covering verdict nor an owner ruling releases
+    naming why, and neither a covering verdict nor an operator ruling releases
     it: the kit has no route that returns a claimed spec to the queue.
 
     Implements: TC-325
@@ -1928,7 +1928,7 @@ def test_a_relink_reaching_an_existing_lanes_claim_copy_across_the_landing(
       point, `y_tip0` its first work commit (original link);
     * `x_land` is X's squash landing on `main` (Y's trunk copy relinked);
     * `y_tip1` is the lane after it merges trunk in (relinked), the tree
-      `integrate.refresh` builds before its trunk step and bar, which do not
+      `integrate.refresh` builds before its trunk step and checks, which do not
       touch a claim copy: its first step is `git merge --no-ff --no-commit`
       of trunk;
     * `y_land` is Y's own squash landing after its ritual close.

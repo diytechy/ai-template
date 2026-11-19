@@ -12,7 +12,7 @@ on (SR-191), a surrogate is a stand-in for an outside party in tests (SR-192),
 each requirement cites its assumptions or records why it needs none (SR-193)
 and declares its form (SR-194), and an assumption nothing cites or nothing
 could falsify is reported (SR-196). An assumption carries no evidence level
-(owner ruling 2026-10-02): one shown false is listed with everything relying on
+(operator ruling 2026-10-02): one shown false is listed with everything relying on
 it (SR-201), and the release gate reads its standing (SR-206).
 
 The tier's two reach rules ride here too, on the same in-memory rows: an
@@ -44,7 +44,7 @@ import kitlib.spine as SPINE  # noqa: E402  (after the load above puts scripts/ 
 @pytest.fixture(scope="module")
 def rules():
     """The module under test, loaded once. A fixture rather than a module-level
-    load, so a missing module reds every case on its own line."""
+    load, so a missing module fails every case on its own line."""
     return load_script("assumption_rules")
 
 
@@ -61,10 +61,10 @@ def _da(did="DA-001", **cells):
     row = {
         "DA-ID": did,
         "EffectAt": "B-01",
-        "Assumption": "A reviewer reads the brief before approving.",
+        "Assumption": "A reviewer reads the brief before accepting.",
         "HoldsWhen": "The brief is short enough to read in one sitting.",
         "Obstacle": "The brief grows past what one sitting reads.",
-        "Falsifier": "An approval recorded before the brief was opened.",
+        "Falsifier": "An acceptance recorded before the brief was opened.",
         "Status": "Drafted",
         "Standing": "active",
     }
@@ -449,7 +449,7 @@ def test_with_no_assumptions_registry_no_form_is_asked_for(rules):
 # --- TC-224: uncited and falsifier-less assumptions (SR-196, LLR-228) ----------
 
 
-@pytest.mark.parametrize("status", ["Drafted", "Approved"])
+@pytest.mark.parametrize("status", ["Drafted", "Accepted"])
 def test_an_assumption_no_requirement_cites_is_reported_once(rules, status):
     das = [_da("DA-001", Status=status), _da("DA-002", Status=status)]
     srs = [_sr("SR-001", **{"DA-Refs": "DA-001"})]
@@ -457,7 +457,7 @@ def test_an_assumption_no_requirement_cites_is_reported_once(rules, status):
     assert len(advisories) == 1 and "DA-002" in advisories[0], advisories
 
 
-@pytest.mark.parametrize("status", ["Drafted", "Approved"])
+@pytest.mark.parametrize("status", ["Drafted", "Accepted"])
 def test_an_assumption_with_no_falsifier_is_reported_once(rules, status):
     blank = _da("DA-002", Status=status)
     del blank["Falsifier"]
@@ -467,7 +467,7 @@ def test_an_assumption_with_no_falsifier_is_reported_once(rules, status):
     assert _named(advisories, "DA-002") and _named(advisories, "DA-003")
 
 
-@pytest.mark.parametrize("status", ["Drafted", "Approved"])
+@pytest.mark.parametrize("status", ["Drafted", "Accepted"])
 def test_a_cited_assumption_with_a_falsifier_produces_nothing(rules, status):
     das = [_da("DA-001", Status=status)]
     srs = [_sr("SR-001", **{"DA-Refs": "DA-001"})]
@@ -530,7 +530,7 @@ REACH_BIFS = [
 ]
 
 
-def _stk(sid, party=None, status="Approved"):
+def _stk(sid, party=None, status="Accepted"):
     row = {
         "STK-ID": sid,
         "Name": "Stakeholder " + sid,
@@ -624,7 +624,7 @@ def test_the_entity_tier_ships_its_mediates_cell():
 
 
 def test_reaching_parties_holds_each_needs_parties_and_their_mediators(rules):
-    """A need reaches its approved stakeholders' parties and every entity whose
+    """A need reaches its accepted stakeholders' parties and every entity whose
     `Mediates` names one of them; a need whose stakeholders declare no party
     reaches nobody."""
     assert rules.reaching_parties(REACH_NEEDS, REACH_STKS, REACH_EXTS) == {
@@ -634,9 +634,9 @@ def test_reaching_parties_holds_each_needs_parties_and_their_mediators(rules):
     }
 
 
-@pytest.mark.parametrize("status", ["Approved", "Founded"])
+@pytest.mark.parametrize("status", ["Accepted", "Founded"])
 def test_landing_on_the_served_needs_stakeholders_party_passes(rules, status):
-    """`Founded` reads above `Approved` on the one ladder, so an agreed
+    """`Founded` reads above `Accepted` on the one ladder, so an agreed
     stakeholder at either rung is read."""
     stks = [_stk("STK-01", "EXT-001", status)] + REACH_STKS[1:]
     das = [_da("DA-001", EffectAt="B-01")]
@@ -731,6 +731,25 @@ def test_a_drafted_stakeholders_party_is_not_read(rules):
     das = [_da("DA-001", EffectAt="B-01")]
     advisories = _reach(rules, das, [_citing("SR-001", "SN-001")], stks)
     assert _named(advisories, "DA-001", "SN-001", "unreachable"), advisories
+
+
+def test_with_no_agreed_stakeholder_the_reach_lines_fold_into_one_count(rules):
+    """Every stakeholder still in draft: no need has a party, so each line
+    would restate that one fact. One line carries the count and what to do,
+    and one agreed stakeholder brings the per-row lines back."""
+    drafted = [_stk(s["STK-ID"], s.get("Party"), "Drafted") for s in REACH_STKS]
+    das = [_da("DA-001", EffectAt="B-01"), _da("DA-002", EffectAt="B-04")]
+    srs = [
+        _citing("SR-001", "SN-001;SN-002"),
+        _citing("SR-002", "SN-003", das="DA-002"),
+    ]
+    gaps = rules.reach_gaps(das, srs, REACH_NEEDS, drafted, REACH_EXTS, REACH_BIFS, [])
+    count = sum(len(lines) for lines in gaps.values())
+    folded = _reach(rules, das, srs, drafted)
+    assert len(folded) == 1, folded
+    assert folded[0].startswith("{} stakeholder-reach".format(count)), folded
+    assert "accept the stakeholders" in folded[0], folded
+    assert len(_reach(rules, das, srs)) > 1
 
 
 def test_an_uncited_assumption_is_not_judged(rules):
@@ -1185,7 +1204,7 @@ def test_the_example_row_is_never_judged_for_its_perspectives(rules):
     assert rules.obstacle_hat_findings([example], set()) == []
 
 
-# --- no evidence ladder (owner ruling 2026-10-02, WI-771) ----------------------
+# --- no evidence ladder (operator ruling 2026-10-02, WI-771) ----------------------
 # An assumption carries its status, its standing and its falsifier, and nothing
 # else about whether it holds: a passed observation proves nothing beyond its
 # sample, so no result raises an assumption to a level and no rule asks for
@@ -1244,10 +1263,10 @@ def _observed(rules, das, tcs, records=()):
     )
 
 
-def test_an_approved_active_assumption_with_no_result_is_not_reported(rules):
+def test_an_accepted_active_assumption_with_no_result_is_not_reported(rules):
     """Neither no citing case nor a citing case with no result is a finding: an
     assumption is never asked for evidence that would show it holds."""
-    das = [_da(Status="Approved")]
+    das = [_da(Status="Accepted")]
     assert _observed(rules, das, []) == ([], [])
     assert _observed(rules, das, [_sampled()]) == ([], [])
     assert _observed(rules, das, [_sampled()], [_record()]) == ([], [])
@@ -1255,7 +1274,7 @@ def test_an_approved_active_assumption_with_no_result_is_not_reported(rules):
 
 def test_a_failing_record_is_the_one_signal_reported(rules):
     _integrity, advisories = _observed(
-        rules, [_da(Status="Approved")], [_sampled()], [_record(outcome="fail")]
+        rules, [_da(Status="Accepted")], [_sampled()], [_record(outcome="fail")]
     )
     assert len(advisories) == 1 and "DA-001" in advisories[0], advisories
     assert "evidence level" not in advisories[0]
@@ -1276,23 +1295,23 @@ def _released(rules, das, risks=None):
 
 
 def test_an_active_assumption_passes_release_whatever_its_results(rules):
-    assert _released(rules, [_da(Status="Approved")]) == []
+    assert _released(rules, [_da(Status="Accepted")]) == []
 
 
 def test_a_falsified_assumption_with_no_accepted_risk_fails_release(rules):
-    lines = _released(rules, [_da(Status="Approved", Standing="falsified")])
+    lines = _released(rules, [_da(Status="Accepted", Standing="falsified")])
     assert len(lines) == 1, lines
     assert "DA-001" in lines[0] and "SR-001" in lines[0] and "falsified" in lines[0]
     assert "no accepted risk" in lines[0]
 
 
 def test_a_falsified_assumption_under_a_standing_accepted_risk_passes(rules):
-    da = _da(Status="Approved", Standing="falsified", AcceptedRisk="Ship it.")
+    da = _da(Status="Accepted", Standing="falsified", AcceptedRisk="Ship it.")
     assert _released(rules, [da], {"DA-001": (rules.RISK_COVERED, [])}) == []
 
 
 def test_a_falsified_assumption_under_a_reopened_risk_fails_naming_the_trigger(rules):
-    da = _da(Status="Approved", Standing="falsified", AcceptedRisk="Ship it.")
+    da = _da(Status="Accepted", Standing="falsified", AcceptedRisk="Ship it.")
     risks = {"DA-001": (rules.RISK_UNPROVEN, ["need SN-001's need changed"])}
     lines = _released(rules, [da], risks)
     assert len(lines) == 1 and "reopened" in lines[0], lines
@@ -1371,7 +1390,7 @@ def test_a_falsified_assumption_lists_each_relying_row_exactly_once(rules):
 def test_a_failing_latest_record_is_falsification_evidence_and_leaves_the_standing(
     rules,
 ):
-    da = _da(Status="Approved")
+    da = _da(Status="Accepted")
     before = copy.deepcopy(da)
     lines = _worklist(rules, [da], [_record("TC-002", outcome="fail")])
     assert len(lines) == 1 and "DA-001" in lines[0], lines

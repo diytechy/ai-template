@@ -34,7 +34,7 @@ def repository(tmp_path):
     git(tmp_path, "config", "user.name", "Selection test")
     write(tmp_path, CORE, "value = 1\n")
     write(tmp_path, RENDER, "STYLE = 'old'\n")
-    write(tmp_path, DATA, '[need.SN-1]\nneed="Readable"\nstatus="Approved"\n')
+    write(tmp_path, DATA, '[need.SN-1]\nneed="Readable"\nstatus="Accepted"\n')
     git(tmp_path, "add", ".")
     git(tmp_path, "commit", "-qm", "base")
     return tmp_path, git(tmp_path, "rev-parse", "HEAD")
@@ -49,7 +49,7 @@ def test_complete_proposal_includes_earlier_commit_index_worktree_and_untracked(
     git(root, "commit", "-qm", "rendering change before the latest commit")
     write(root, CORE, "value = 2\n")
     git(root, "add", CORE)
-    write(root, DATA, '[need.SN-1]\nneed="Current data"\nstatus="Approved"\n')
+    write(root, DATA, '[need.SN-1]\nneed="Current data"\nstatus="Accepted"\n')
     write(root, "assets/new icon.svg", "<svg/>")
     result = selection.select(root, base)
     assert result["suite"] == "full"
@@ -70,7 +70,7 @@ def test_existing_registry_value_change_runs_trace_and_real_output_freshness(
     write(
         root,
         DATA,
-        '[need.SN-1]\nneed="Readable <script> & content"\nstatus="Approved"\n',
+        '[need.SN-1]\nneed="Readable <script> & content"\nstatus="Accepted"\n',
     )
     result = selection.select(root, base)
     assert result["suite"] == "core+boundary"
@@ -106,7 +106,7 @@ def test_regenerated_regions_allow_data_changes_but_not_authored_prose(
     git(root, "add", ".")
     git(root, "commit", "-qm", "existing generated region")
     base = git(root, "rev-parse", "HEAD")
-    write(root, DATA, '[need.SN-1]\nneed="Updated intent"\nstatus="Approved"\n')
+    write(root, DATA, '[need.SN-1]\nneed="Updated intent"\nstatus="Accepted"\n')
     write(root, "PROJECT_STATE.html", "regenerated current data")
     write(root, "docs/stage", "current fingerprint")
     write(root, path, marked.replace("old", "current data"))
@@ -132,7 +132,7 @@ def test_generated_output_alone_cannot_authorize_narrowing(repository, path):
 )
 def test_whole_generated_companions_can_follow_a_classified_data_edit(repository, path):
     root, base = repository
-    write(root, DATA, '[need.SN-1]\nneed="Updated intent"\nstatus="Approved"\n')
+    write(root, DATA, '[need.SN-1]\nneed="Updated intent"\nstatus="Accepted"\n')
     write(root, path, "regenerated\n")
     assert selection.select(root, base)["suite"] == "core+boundary"
 
@@ -144,14 +144,14 @@ def test_deleting_a_generated_companion_broadens(repository):
     git(root, "add", path)
     git(root, "commit", "-qm", "record generated brief")
     base = git(root, "rev-parse", "HEAD")
-    write(root, DATA, '[need.SN-1]\nneed="Updated intent"\nstatus="Approved"\n')
+    write(root, DATA, '[need.SN-1]\nneed="Updated intent"\nstatus="Accepted"\n')
     (root / path).unlink()
     assert selection.select(root, base)["suite"] == "full"
 
 
 def test_other_generated_or_immutable_records_still_broaden(repository):
     root, base = repository
-    write(root, DATA, '[need.SN-1]\nneed="Updated intent"\nstatus="Approved"\n')
+    write(root, DATA, '[need.SN-1]\nneed="Updated intent"\nstatus="Accepted"\n')
     for path in ("docs/okf/index.md", "docs/ratify/2026-09-06-approved.md"):
         write(root, path, "generated elsewhere\n")
         assert selection.select(root, base)["suite"] == "full"
@@ -186,9 +186,9 @@ def test_authored_component_carrier_is_real_registry_data(repository):
 @pytest.mark.parametrize(
     "text",
     [
-        '[need.SN-1]\nneed="Readable"\nstatus="Approved"\nnew_field="shape changed"\n',
-        '[need.SN-1]\nneed=123\nstatus="Approved"\n',
-        '[need.SN-2]\nneed="Readable"\nstatus="Approved"\n',
+        '[need.SN-1]\nneed="Readable"\nstatus="Accepted"\nnew_field="shape changed"\n',
+        '[need.SN-1]\nneed=123\nstatus="Accepted"\n',
+        '[need.SN-2]\nneed="Readable"\nstatus="Accepted"\n',
         '[need.SN-1]\nneed="broken\n',
     ],
 )
@@ -270,7 +270,7 @@ def test_full_cadence_override_and_omitted_modules_are_explicit(repository):
 
 def test_narrow_commands_keep_every_affected_generated_surface_fresh(repository):
     root, base = repository
-    write(root, DATA, '[need.SN-1]\nneed="Updated intent"\nstatus="Approved"\n')
+    write(root, DATA, '[need.SN-1]\nneed="Updated intent"\nstatus="Accepted"\n')
     commands = selection.commands(root, selection.select(root, base))
     rendered = [" ".join(command) for command in commands]
     for fragment in (
@@ -283,7 +283,7 @@ def test_narrow_commands_keep_every_affected_generated_surface_fresh(repository)
         "--cli-doc docs/cli-reference.md --check",
         "gen_arch_map.py --root . --src project-trajectory/scripts "
         "--contracts-doc docs/interface-reference.md --check",
-        "trace.py --root . --approve modified --check",
+        "trace.py --root . --accept modified --check",
     ):
         assert any(fragment in command for command in rendered), fragment
 

@@ -6,7 +6,7 @@ The OKF concept graph + type-tiered drill, the method-reference Process tab
 landing-hero Next-work card. The facade re-exports, so consumers are unchanged.
 
 `kitlib.station` and `schedule` are imported for their CONSTANTS only (the
-terminal outcomes, the bar attestation label, the kind tables): the station
+terminal outcomes, the passed-checks record label, the kind tables): the station
 render derives its stage vocabulary from the modules that ship the flow, instead
 of restating it as literals that drift (the 2026-08-01 diagram review's ruling —
 the dashboard must never be pinned to itself).
@@ -461,7 +461,7 @@ def _know_panel(root, svg, details):
 # the spine registries, work-item counts from the docs/work/ registry — and linking out to
 # the process docs everywhere a canonical home exists. The in-view restatement
 # is limited to the relationships no single doc states as one picture (the
-# lifecycle x ladder ordering, the station cycle, the slice -> phase -> gate-bar
+# lifecycle x ladder ordering, the station cycle, the slice -> phase -> gate-check
 # cadence) — the WI-085 anti-duplication ruling.
 
 # --- the station/lane cycle (WI-389, docs/concurrency-v2.md ruled 2026-07-31) ---
@@ -473,7 +473,7 @@ def _know_panel(root, svg, details):
 # advance -> the post-merge intake mint -> the dispatcher tick — with the spine
 # barrier and the intake arm visible. The 2026-08-01 diagram review's
 # constraint governs the vocabulary: stage names are DERIVED from the shipped
-# modules' own constants (station.OUTCOME_DIRS, station.BAR_GREEN,
+# modules' own constants (station.OUTCOME_DIRS, station.CHECKS_PASSED,
 # schedule's kind tables) wherever one exists, and every label that must stay a
 # literal here is held by a sync pin against the module it mirrors
 # (tests/test_traj_panels.py, the station suite) — the dashboard is never again
@@ -604,7 +604,7 @@ def _station_svg(root):
     ow, oh = g["outw"], g["outh"]
     oy = g["oy"]
     outcomes = _outcome_cards()
-    bar_label = station.BAR_GREEN.rstrip(":")
+    record_label = station.CHECKS_PASSED.rstrip(":")
 
     # The ring edges + the outcome fan, one closed directed cycle. Anchors are
     # card-edge points; ends stop 5px short so the arrowheads land cleanly.
@@ -759,8 +759,8 @@ def _station_svg(root):
             "refresh",
             "Station refresh",
             (
-                "merge trunk in · trunk_step · bar",
-                "green ⇒ {} @ branch tip".format(bar_label),
+                "merge trunk in · trunk_step · checks",
+                "pass ⇒ {} @ branch tip".format(record_label),
             ),
             opts_doc,
             R,
@@ -772,7 +772,7 @@ def _station_svg(root):
         # emitted in flow order (refresh → slot → advance): nothing overlaps
         # it, so source order can read as the ring reads.
         '<g class="slot" data-node="st-slot"><title>The merge slot — the '
-        "exclusive turn to advance trunk. Serial and sub-second: the bar runs "
+        "exclusive turn to advance trunk. Serial and sub-second: the checks run "
         "outside it, the slot only re-checks ancestry and merges.</title>"
         '<rect x="{:.1f}" y="{:.1f}" width="{:.1f}" height="{:.1f}" rx="12"/>'
         '<text x="{:.1f}" y="{:.1f}" text-anchor="middle">'
@@ -784,7 +784,7 @@ def _station_svg(root):
         _station_card(
             "advance",
             "Trunk advance",
-            ("advance trunk to the barred tree", "unload the lane worktree"),
+            ("advance trunk to the checked tree", "unload the lane worktree"),
             log_home,
             L,
             B,
@@ -850,12 +850,12 @@ def _station_panel(root):
         "admission; the lanes drain; the exclusive row runs alone, the sole "
         "toucher of trunk.</li>\n"
         "<li><b>Admission arms</b> — what the dispatcher does with a ready row, "
-        "by kind × the declared gate policy: {arms}. Surfaced approvals "
+        "by kind × the declared gate policy: {arms}. Surfaced acceptances "
         "drain to cards on {oi}; the run exits 0 with the asks visible.</li>\n"
         "<li><b>Empty frontier</b> — the exit ladder: a registry gap census "
         "hands the intake its mint (gap-closure rows re-fill the frontier); "
-        "else pending approvals surface; else an honest drain.</li>\n"
-        "<li><b>Red bar · lost race</b> — a red refresh goes back to the lane "
+        "else pending acceptances surface; else an honest drain.</li>\n"
+        "<li><b>Failed checks · lost race</b> — a failed refresh goes back to the lane "
         "to fix on the branch; a slot ancestor miss re-refreshes, and after one "
         "lost race the branch takes the slot for its retry.</li>\n"
         "</ul>"
@@ -887,8 +887,8 @@ def process_panel(root, wis, stats, stage_record=None):
     artifact lifecycle x the stage ladder (live tier counts; the tier whose rung
     the repo currently stands at is highlighted), the station cycle (WI-389 — the
     concurrency-v2 station/lane model as shipped, its vocabulary derived
-    from the flow modules' own constants), and slices -> phase -> the check bars
-    (commit bar vs gate bar). Fully self-contained (style inside the panel, no
+    from the flow modules' own constants), and slices -> phase -> the checks
+    (commit checks vs gate checks). Fully self-contained (style inside the panel, no
     script needed — the shared tab switcher handles it); sorted inputs, no
     clocks."""
     stage = (
@@ -907,7 +907,7 @@ def process_panel(root, wis, stats, stage_record=None):
     # that tier's rung span.
     #
     # RE-KEYED FROM BAR SPANS TO RUNGS (WI-498 slice 5), and this was forced, not
-    # cosmetic: the value fed in here used to be a BAR (one of three) and the
+    # cosmetic: the value fed in here used to be a CHECKS (one of three) and the
     # spans were bar spans, so with `docs/stage` supplying a RUNG (one of eight) a
     # repo standing at DevStg-Arch or DevStg-LLReqs would have matched no row at
     # all and the panel would have highlighted nothing, silently. Under one
@@ -931,7 +931,7 @@ def process_panel(root, wis, stats, stage_record=None):
         (
             "SR",
             "DevStg-Boundary→DevStg-Reqs",
-            "{} SR · {} approved".format(stats["sr_total"], stats["sr_verified"]),
+            "{} SR · {} accepted".format(stats["sr_total"], stats["sr_verified"]),
         ),
         (
             "LLR + architecture",
@@ -942,7 +942,7 @@ def process_panel(root, wis, stats, stage_record=None):
         (
             "code + tests",
             "DevStg-Impl",
-            "{} of {} SR approved".format(stats["sr_verified"], stats["sr_total"]),
+            "{} of {} SR accepted".format(stats["sr_verified"], stats["sr_total"]),
         ),
     ]
     stage_lis = []
@@ -966,20 +966,20 @@ def process_panel(root, wis, stats, stage_record=None):
             )
         )
 
-    # Panel 3 — the slice -> phase -> check-bar cadence (the docs/work/ registry
-    # is canonical). "Bar" here is the SURVIVING sense — a set of checks that must
+    # Panel 3 — the slice -> phase -> gate-check cadence (the docs/work/ registry
+    # is canonical). "Checks" here is the SURVIVING sense — a set of checks that must
     # pass — not the retired three-value axis; the heading says which.
     wi_done = sum(1 for w in wis if w["status"] == "done")
-    bars = [
-        ("per-WI slice", "one scoped work item; ends at the commit bar"),
-        ("commit bar", "the per-commit suite + doc checks — every commit"),
-        ("phase close", "a phase's slices batch to one re-attestation sitting"),
-        ("rung bar", "the full check.py --stage run at phase close / advance"),
-        ("CI", "runs the same bar on every push"),
+    cadence = [
+        ("per-WI slice", "one scoped work item; ends at the commit checks"),
+        ("commit checks", "the per-commit suite + doc checks — every commit"),
+        ("phase close", "a phase's slices batch to one re-acceptance sitting"),
+        ("gate checks", "the full check.py --stage run at phase close / advance"),
+        ("CI", "runs the same checks on every push"),
     ]
-    bar_lis = "".join(
+    check_lis = "".join(
         '<li class="stg"><b>{}</b><span class="n">{}</span></li>'.format(esc(b), esc(n))
-        for b, n in bars
+        for b, n in cadence
     )
 
     # Panel 2 — the station cycle (WI-389). The pre-station resume-loop chips
@@ -1077,7 +1077,7 @@ def process_panel(root, wis, stats, stage_record=None):
         '<p class="gnow">Stage: <b>' + esc(stage) + "</b> — the rung this repo is "
         "IN, derived over its settled spine and recorded in <code>docs/stage</code> "
         "(<code>derive_stage.py</code>). ONE ladder: a stage is a state, and "
-        "approval is the event that moves it. The highlighted tier is the one "
+        "acceptance is the event that moves it. The highlighted tier is the one "
         "whose artifacts are the work in hand at this rung.</p>\n"
         "<h3>1 · Artifact lifecycle × the stage ladder</h3>\n"
         '<p class="cap">Each tier decomposes the one above it; beside it is the '
@@ -1098,9 +1098,9 @@ def process_panel(root, wis, stats, stage_record=None):
         + "</a> “Unattended operation” · “Parallel work”.</p>\n"
         + station_html
         + "\n"
-        "<h3>3 · Slices → phase → the check bars</h3>\n"
-        '<p class="cap">A per-WI slice ends at the <strong>commit bar</strong>; '
-        "a phase closes at the <strong>rung bar</strong> — the commit-bar-vs-rung-bar "
+        "<h3>3 · Slices → phase → the checks</h3>\n"
+        '<p class="cap">A per-WI slice ends at the <strong>commit checks</strong>; '
+        "a phase closes at the <strong>gate checks</strong> — the commit-check-vs-rung-checks "
         'cadence lives in <a href="'
         + esc(opts_doc)
         + '">'
@@ -1111,7 +1111,7 @@ def process_panel(root, wis, stats, stage_record=None):
         + " work items · "
         + esc(wi_done)
         + " done.</p>\n"
-        '<ol class="pflow">' + bar_lis + "</ol>\n"
+        '<ol class="pflow">' + check_lis + "</ol>\n"
         "</section>"
     )
     return tab_button("process", "Process"), panel
@@ -1229,7 +1229,7 @@ def _waiting_item(wid, title, by_id, status):
 
 def _blocked_item(record, title):
     """One Next-work line for a row an open item holds: the row, then each
-    pending item that holds it, named and linked to the owner surface's card.
+    pending item that holds it, named and linked to the operator surface's card.
 
     Implements: SR-054, LLR-115
     """

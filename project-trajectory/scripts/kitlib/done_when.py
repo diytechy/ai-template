@@ -1,6 +1,6 @@
 """A lane's Done-when, fixed at claim: what an item IS, and what counts as a CHANGE.
 
-WHY THIS EXISTS (owner ruling S13, 2026-09-24; review pack B3). A reviewer maps
+WHY THIS EXISTS (operator ruling S13, 2026-09-24; review pack B3). A reviewer maps
 each Done-when item to its covering test, so the list is the checklist a lane
 is judged against - and nothing stopped the lane being judged from rewriting
 it. Across the repository's history builders edited their own Done-when in 14
@@ -19,7 +19,7 @@ TICKING WITH EVIDENCE IS THE NORMAL CONVENTION, so a comparison that fired on
 every tick would be noise: `- [x] item`, `~~item~~ - LANDED ...` and
 `item. (tests/test_x.py::test_y)` all read as the item unchanged. EVIDENCE IS
 A FORM, the one the repository's closed specs use: text appended after the item
-that opens with an evidence separator (a dash, an arrow, a bracket, a bar or a
+that opens with an evidence separator (a dash, an arrow, a bracket, a check run or a
 check mark) AND carries an evidence token - a completion word in capitals
 (LANDED, DONE, MET, VERIFIED, SHIPPED, PASSED, FIXED, COVERED), a path or test
 id, a backticked name, or a commit sha. Anything else appended is prose, and
@@ -51,13 +51,13 @@ Contract IF-242: a spec's Done-when as comparable items. `items` / `has_done_whe
     git at a rev. Pure functions plus one thin read through `kitlib.git`; an
     unreadable claim copy is None, and each caller says what that means.
 
-BLESSED IN THE LANE (WI-841, owner direction 2026-10-06). A lane may edit its
+BLESSED IN THE LANE (WI-841, operator direction 2026-10-06). A lane may edit its
 own Done-when, and an adjudicator, not a guard, blesses the change before what
 consumes the Done-when uses it: the lane's next build dispatch, and its close
 and merge. The verdict is BOUND to the exact text it judged by a digest
-(`digest`), as an approval act binds registry bytes, so a text changed after
-the verdict is unblessed again. An owner ruling counts as that verdict: a
-`docs/decisions/*.toml` entry the owner has confirmed or overruled that
+(`digest`), as an acceptance act binds registry bytes, so a text changed after
+the verdict is unblessed again. An operator ruling counts as that verdict: a
+`docs/decisions/*.toml` entry the operator has confirmed or overruled that
 carries the same digest under `done_when`. `blessing_owed` is THE predicate,
 one rule asked at every hold point and by the merge-time mint; `lane_hold`
 reads it off a tree (a commit, or the index a hand close stages). The commit
@@ -291,7 +291,7 @@ def _copy_at(root, rev, folders, wi_id):
 # Their one home is the sitting grammar (`kitlib.sitting.GRAMMAR`).
 VERDICT_KEYWORD = _kitsitting.GRAMMAR["done-when"][0]
 OUTCOMES = _kitsitting.DONE_WHEN_OUTCOMES
-# The key an owner-ruled decisions entry binds a Done-when text by.
+# The key an operator-ruled decisions entry binds a Done-when text by.
 RULING_KEY = "done_when"
 REVIEWS = _kitsitting.REVIEWS
 DECISIONS = kdecisions.DECISIONS_DIR
@@ -352,16 +352,16 @@ def _show(root, rev, path):
 
 
 def _verdicts(root, rev):
-    """`{digest: (outcome, path)}` for every ACCEPTED Done-when verdict under
+    """`{digest: (outcome, path)}` for every RECORDED Done-when verdict under
     the review records (WI-841 round 11): read through the one reader,
-    `kitlib.sitting.accepted`, which answers only for a verdict whose binding
-    records it accepted by the route that ran the call and which parses as
+    `kitlib.sitting.recorded`, which answers only for a verdict whose binding
+    holds the outcome `recorded` from the route that ran the call and which parses as
     valid against that binding. A failed or pending call, an unbound verdict,
     an invalid sitting and another brief class all cover nothing."""
     found = {}
     pattern = "^[[:space:]]*{}:".format(VERDICT_KEYWORD)
     for path in sorted({p for p, _line in _grep(root, rev, pattern, REVIEWS)}):
-        verdict = _kitsitting.accepted_at(root, rev, path) or {}
+        verdict = _kitsitting.recorded_at(root, rev, path) or {}
         label, fields, _body, _rows = verdict.get("done-when", (None, {}, "", {}))
         if label:
             found[fields["digest"]] = (label, path)
@@ -369,8 +369,8 @@ def _verdicts(root, rev):
 
 
 def _rulings(root, rev):
-    """`{digest: (owner verdict, citation)}` for every decisions entry the
-    owner has confirmed or overruled that binds a Done-when digest."""
+    """`{digest: (operator verdict, citation)}` for every decisions entry the
+    operator has confirmed or overruled that binds a Done-when digest."""
     found = {}
     pattern = "^[[:space:]]*{}[[:space:]]*=".format(RULING_KEY)
     for path in sorted({p for p, _line in _grep(root, rev, pattern, DECISIONS)}):
@@ -385,21 +385,21 @@ def _rulings(root, rev):
 
 
 def _ruling(path, entry_id, entry):
-    """`{digest: (owner verdict, citation)}` for one entry, or {} when it binds
-    no digest or the owner has not ruled on it (an entry still carrying the
+    """`{digest: (operator verdict, citation)}` for one entry, or {} when it binds
+    no digest or the operator has not ruled on it (an entry still carrying the
     retired key reads as not yet seen)."""
     if not isinstance(entry, dict) or kdecisions.RETIRED_KEY in entry:
         return {}
-    state = kdecisions.owner_state(entry.get(kdecisions.OWNER_KEY))
+    state = kdecisions.operator_state(entry.get(kdecisions.OPERATOR_KEY))
     bound = entry.get(RULING_KEY)
-    if state not in kdecisions.OWNER_VALUES or not isinstance(bound, str):
+    if state not in kdecisions.OPERATOR_VALUES or not isinstance(bound, str):
         return {}
     return {bound.strip(): (state, kdecisions.citation(path, entry_id))}
 
 
 def covering(root, rev):
-    """`{digest: (outcome or owner verdict, where)}`: every Done-when text a
-    verdict or an owner ruling in the tree at `rev` (None: the index) binds.
+    """`{digest: (outcome or operator verdict, where)}`: every Done-when text a
+    verdict or an operator ruling in the tree at `rev` (None: the index) binds.
 
     Implements: SR-156, LLR-307
     """
@@ -408,7 +408,7 @@ def covering(root, rev):
 
 def blessing(root, rev, wi_id, claimed, current):
     """`(digest, changes, cover)` for a Done-when that differs from the claimed
-    one (ticks and evidence aside), `cover` being the verdict or owner ruling
+    one (ticks and evidence aside), `cover` being the verdict or operator ruling
     in the tree at `rev` that binds its exact text (`covering`'s value) or
     None; None when nothing changed. A claim copy or a current text that
     cannot be read has no change to bless (the merge-time arm's reading), and
@@ -427,7 +427,7 @@ def blessing(root, rev, wi_id, claimed, current):
 
 def blessing_owed(root, rev, wi_id, claimed, current):
     """THE predicate every hold point asks: `(digest, changes)` while the
-    current Done-when differs from the claimed one and no verdict or owner
+    current Done-when differs from the claimed one and no verdict or operator
     ruling binds its exact text, else None.
 
     Implements: SR-156, LLR-307
@@ -443,9 +443,9 @@ def hold_reason(wi_id, owed):
     """
     bound, found = owed
     return (
-        "{}: its Done-when differs from the claimed one and no verdict or owner "
+        "{}: its Done-when differs from the claimed one and no verdict or operator "
         "ruling binds its text (digest {}): sit the done-when adjudication, or "
-        'record the owner\'s ruling as `{} = "{}"` on a docs/decisions entry, '
+        'record the operator\'s ruling as `{} = "{}"` on a docs/decisions entry, '
         "before the lane builds on it or closes:\n{}".format(
             wi_id, bound, RULING_KEY, bound, "\n".join(describe(found))
         )

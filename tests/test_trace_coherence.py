@@ -49,7 +49,7 @@ def trace():
 
 
 def _sr(sid, **cells):
-    row = {"SR-ID": sid, "Status": "Approved", "Verification": "Test"}
+    row = {"SR-ID": sid, "Status": "Accepted", "VerificationMethod": "Test"}
     row.update(cells)
     return row
 
@@ -62,8 +62,8 @@ def test_the_orphan_rules_emit_sr_then_llr_then_tc_then_sn(coherence):
     # The order is what the report and the console compare, so it is a
     # property of the composer and not of where an append happened to sit.
     srs = [_sr("SR-001", **{"SN-Refs": "SN-001"})]
-    llrs = [{"LLR-ID": "LLR-001", "SR-Refs": "", "Status": "Approved"}]
-    tcs = [{"TC-ID": "TC-001", "Verifies": "", "Status": "Approved"}]
+    llrs = [{"LLR-ID": "LLR-001", "SR-Refs": "", "Status": "Accepted"}]
+    tcs = [{"TC-ID": "TC-001", "Verifies": "", "Status": "Accepted"}]
     orphans, ids = coherence.spine_orphan_findings(
         srs, llrs, tcs, [], {"SR-001"}, {"LLR-001"}, {"SN-001", "SN-002"}, set()
     )
@@ -242,7 +242,7 @@ def test_no_caller_forges_an_argparse_namespace_for_the_engine():
     """Implements: TC-197"""
     # The reason AnalysisFlags exists: census.gap_census imported argparse to
     # build a four-field Namespace, because the CLI namespace WAS the config
-    # type. A future caller reaching for the same trick should red here.
+    # type. A future caller reaching for the same trick should fail here.
     tree = ast.parse(pathlib.Path(SCRIPTS, "census.py").read_text(encoding="utf-8"))
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -335,7 +335,7 @@ def _tc(tid, verifies="", assumptions=None, **cells):
         "Expected": "It answers.",
         "Automated": "Yes",
         "Evidence": "tests/test_it.py",
-        "Status": "Approved",
+        "Status": "Accepted",
     }
     if assumptions is not None:
         row["Assumption-Refs"] = assumptions

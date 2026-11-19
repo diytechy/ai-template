@@ -451,7 +451,7 @@ def test_a_queued_judgement_naming_no_candidate_holds_nothing_back(tmp_path):
         _row("WI-001", SpecRef="docs/plans/a.md"),
         _row("WI-002", SpecRef="docs/plans/a.md"),
         _judge("WI-003", Brief="amendment", Adjudicates="SR-001;LLR-001"),
-        _judge("WI-004", Brief="first-approval"),
+        _judge("WI-004", Brief="first-acceptance"),
     ]
     repo = _repo(tmp_path, rows)
     draft, why = consolidate.census_draft(repo, rows)
@@ -691,7 +691,7 @@ def test_a_queued_judgement_that_would_run_first_refuses_by_name(tmp_path):
 
 def test_prior_labels_a_hand_consolidation_as_unjudged():
     """The judge reads `{prior}` before absorbing anything, and the brief tells
-    it that overturning an earlier consolidation pages the owner. A hand
+    it that overturning an earlier consolidation pages the operator. A hand
     consolidation carries no judgement to overturn, so its line says so.
 
     Implements: TC-208
@@ -735,7 +735,7 @@ def test_a_successor_is_read_from_lineage_and_not_from_how_many_it_absorbed():
 
 def test_re_absorbing_a_row_a_consolidation_minted_is_refused_by_name():
     """Overturning a consolidation is a RETURN-TO-DRAFT of THAT judgement (plan
-    §1.3) — the owner's to rule, never a second machine mint. Distinct from
+    §1.3) — the operator's to rule, never a second machine mint. Distinct from
     `intake._supersedes_refusal`'s absorbed arm, which refuses continuing a row
     somebody already absorbed (a lineage chain).
 
@@ -1063,7 +1063,7 @@ def test_the_close_refuses_a_row_outside_the_adjudicates_cluster(tmp_path):
     census never clustered used to close, merge and archive it — the row's own
     Context says "judge those rows and no others", the brief template says it,
     and plan §1.3 clause 2 says it, while nothing enforced it. The
-    first-approval sibling has bounded its act this way since WI-572."""
+    first-acceptance sibling has bounded its act this way since WI-572."""
     rows = [_row("WI-401"), _row("WI-402"), _row("WI-409")]
     why = _close(
         tmp_path,

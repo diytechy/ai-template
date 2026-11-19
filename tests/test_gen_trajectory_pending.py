@@ -1,9 +1,9 @@
-"""The pending-owner-actions projection (WI-234), as DERIVED (WI-322).
+"""The pending-operator-actions projection (WI-234), as DERIVED (WI-322).
 
 `pending.pending_block` is a pure projection of committed-tree state:
 
-  (a) `blocked` WI rows carrying a BlockRef (the attestation/approval page);
-  (e) Drafted/Modified SR rows (WI-316) owing an approval / re-attest;
+  (a) `blocked` WI rows carrying a BlockRef (the acceptance page);
+  (e) Drafted/Modified SR rows (WI-316) owing an acceptance / re-accept;
   (f) the tracked `docs/work/pause` declaration (concurrency-restructure §5.6).
 
 (The dispatcher-era sources — refs/llm conflict records, quarantined trains,
@@ -29,7 +29,7 @@ from conftest import load_script, pin_autocrlf
 # OPEN_ITEMS.template.md tail. The intro + OI-1 above the marker must never be
 # rewritten by regeneration.
 HAND = (
-    "# Open items — owner decision briefs\n\n"
+    "# Open items — operator decision briefs\n\n"
     "Hand-authored intro paragraph — this text MUST stay byte-identical.\n\n"
     "## OI-1 — a real pending decision\n\n"
     "- **One-line:** rule the thing.\n"
@@ -37,8 +37,8 @@ HAND = (
 )
 OPEN_ITEMS = (
     HAND + "\n---\n\n"
-    "<!-- Generated pending-owner-actions projection (WI-234) — do NOT hand-edit. -->\n\n"
-    "## Pending owner actions (generated)\n\n"
+    "<!-- Generated pending-operator-actions projection (WI-234) — do NOT hand-edit. -->\n\n"
+    "## Pending operator actions (generated)\n\n"
     "<!-- BEGIN GENERATED PENDING -->\n"
     "placeholder — to be regenerated\n"
     "<!-- END GENERATED PENDING -->\n"
@@ -94,14 +94,14 @@ def _block(repo):
 
 # (A former source (a) `blocked` WI rows carrying a BlockRef retired with the
 # blockref vocabulary at WI-553/OI-70 — nothing produces a queued-row blockref
-# now, so the owner surface no longer reads a zero-producer source. The spine
+# now, so the operator surface no longer reads a zero-producer source. The spine
 # and pause arms below are the two surviving sources.)
 
 
 # --- (e) Drafted / DRIFTED spine rows (WI-316) ---------------------------------
 # The second arm read `Modified` until D-9 step 7 retired the marker; it now
 # reads SNAPSHOT DRIFT, which is a property of the live registry against its
-# `docs/archive/last_approved/` copy rather than of a cell. These fixtures
+# `docs/archive/last_accepted/` copy rather than of a cell. These fixtures
 # carry no snapshot, so the DRAFTED arm is what they drive; the drift arm has
 # its own coverage in tests/test_baseline_snapshot.py, where a snapshot exists,
 # and one test below seeds a snapshot to pin the drift line's instruction.
@@ -109,7 +109,7 @@ def _block(repo):
 BOM = bytes([0xEF, 0xBB, 0xBF])
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status,Phase,Area\n"
+    "Permutations,Priority,VerificationMethod,Status,Phase,Area\n"
 )
 
 
@@ -119,10 +119,10 @@ def _write_srs(repo, body):
     )
 
 
-def test_a_RETIRED_marker_no_longer_projects_a_reattest_line(tmp_path):
+def test_a_RETIRED_marker_no_longer_projects_a_reaccept_line(tmp_path):
     """D-9 STEP 7, pinned in the direction that could otherwise go unnoticed.
 
-    This test used to prove that a `Modified` SR projected a re-attest line
+    This test used to prove that a `Modified` SR projected a re-accept line
     naming both flips. The marker retired, and what replaced it is SNAPSHOT
     DRIFT — so a row still carrying the retired word projects NOTHING here,
     which is correct (there is no baseline in this fixture to have drifted
@@ -144,41 +144,41 @@ def test_a_RETIRED_marker_no_longer_projects_a_reattest_line(tmp_path):
     body = _block(tmp_path)
     assert "SR-004" not in body
     assert "SR-000" not in body  # the example row never projects
-    assert "None — no durable owner action is pending" in body
+    assert "None — no durable operator action is pending" in body
 
 
-def test_draft_sr_projects_approval_owed(tmp_path):
-    # A Drafted SR projects an approval-owed line pointing at the per-SR
+def test_draft_sr_projects_acceptance_owed(tmp_path):
+    # A Drafted SR projects an acceptance-owed line pointing at the per-SR
     # hierarchy brief — Drafted rows never surfaced in open-items before WI-316.
     _init(tmp_path)
     _write_srs(tmp_path, 'SR-007,New need,SN-001,"r","x","a",,C,Test,Drafted,3,\n')
     body = _block(tmp_path)
-    assert "SR-007" in body and "approval owed" in body
-    assert "--approve SR-007" in body
+    assert "SR-007" in body and "acceptance owed" in body
+    assert "--accept SR-007" in body
 
 
-def test_a_DRIFTED_sr_line_names_the_row_to_reattest(tmp_path):
+def test_a_DRIFTED_sr_line_names_the_row_to_reaccept(tmp_path):
     """The drift arm's instruction has to be one that WORKS. An amended row
-    still reads `Approved`, so no `Status` flip carries it into the copy, and a
+    still reads `Accepted`, so no `Status` flip carries it into the copy, and a
     bare `intake.py snapshot` refuses a drifted row the act neither flips nor
     names. The line knows the row, so it hands over the whole command."""
     _init(tmp_path)
     _write_srs(
-        tmp_path, 'SR-004,Gate derivation,SN-001,"old",x,a,,C,Test,Approved,2,\n'
+        tmp_path, 'SR-004,Gate derivation,SN-001,"old",x,a,,C,Test,Accepted,2,\n'
     )
     load_script("baseline_snapshot").copy_live(tmp_path, seed=True)
     _write_srs(
-        tmp_path, 'SR-004,Gate derivation,SN-001,"new",x,a,,C,Test,Approved,2,\n'
+        tmp_path, 'SR-004,Gate derivation,SN-001,"new",x,a,,C,Test,Accepted,2,\n'
     )
     body = _block(tmp_path)
-    assert "SR-004 DRIFTED from the approved snapshot" in body
-    assert "`intake.py snapshot --reattests SR-004`" in body
+    assert "SR-004 DRIFTED from the accepted snapshot" in body
+    assert "`intake.py snapshot --reaccepts SR-004`" in body
 
 
 def test_bommed_registry_still_projects(tmp_path):
     # Adversarial-review F4: a BOM'd SR registry (the realistic Excel
     # round-trip) glued the BOM to the SR-ID header and silently hid every
-    # Drafted line — the projection read "None pending" while an approval
+    # Drafted line — the projection read "None pending" while an acceptance
     # was owed. read_rows now reads utf-8-sig.
     _init(tmp_path)
     body = SR_HEADER + 'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Drafted,2,'
@@ -188,10 +188,10 @@ def test_bommed_registry_still_projects(tmp_path):
     assert "SR-004" in _block(tmp_path)
 
 
-def test_approved_sr_does_not_project_and_the_flip_drops_the_line(tmp_path):
-    # An Approved SR projects nothing; flipping Drafted->Approved (the
-    # approval) drops the line on the next regeneration — the projection is
-    # stateless. It drove Modified->Approved until D-9 step 7 retired that
+def test_accepted_sr_does_not_project_and_the_flip_drops_the_line(tmp_path):
+    # An Accepted SR projects nothing; flipping Drafted->Accepted (the
+    # acceptance) drops the line on the next regeneration — the projection is
+    # stateless. It drove Modified->Accepted until D-9 step 7 retired that
     # marker; the surviving flip is the one a Status cell still records.
     _init(tmp_path)
     _write_srs(
@@ -199,11 +199,11 @@ def test_approved_sr_does_not_project_and_the_flip_drops_the_line(tmp_path):
     )
     assert "SR-004" in _block(tmp_path)
     _write_srs(
-        tmp_path, 'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Approved,2,\n'
+        tmp_path, 'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Accepted,2,\n'
     )
     body = _block(tmp_path)
     assert "SR-004" not in body
-    assert "None — no durable owner action is pending" in body
+    assert "None — no durable operator action is pending" in body
 
 
 # --- (f) the tracked pause declaration, docs/work/pause -----------------------
@@ -221,7 +221,7 @@ def test_no_pause_file_projects_no_bullet(tmp_path):
     _init(tmp_path)
     body = _block(tmp_path)
     assert "Paused" not in body
-    assert "None — no durable owner action is pending" in body
+    assert "None — no durable operator action is pending" in body
 
 
 def test_tracked_pause_projects_reason_and_declared_since(tmp_path):
@@ -244,7 +244,7 @@ def test_tracked_pause_without_since_omits_the_stamp(tmp_path):
 def test_malformed_pause_still_projects_fail_closed(tmp_path):
     """Implements: TC-194"""
     # A pause file we cannot read is still a pause: it projects the same loud
-    # message the coordinator's reader returns, routing the owner to the fix.
+    # message the coordinator's reader returns, routing the operator to the fix.
     pending = load_script("pending")
     _init(tmp_path)
     for bad in ("not toml at all\n", 'since = "2026-07-29"\n', "reason = 7\n"):
@@ -290,24 +290,24 @@ def test_the_typed_model_kinds_every_pending_item(tmp_path):
     assert all(i.line for i in items)
 
 
-def test_owner_cards_is_pending_items_minus_the_pause(tmp_path):
+def test_operator_cards_is_pending_items_minus_the_pause(tmp_path):
     """Implements: TC-194"""
     # The dispatcher's drained-queue arm: a paused station has its own earlier
-    # exit, so the pause must never inflate the approvals-waiting count — and
+    # exit, so the pause must never inflate the acceptances-waiting count — and
     # the exclusion is DECLARED in the read model, not re-derived at the banner.
     pending = load_script("pending")
     _init(tmp_path)
     _write_srs(tmp_path, 'SR-007,New need,SN-001,"r","x","a",,C,Test,Drafted,3,\n')
     _pause(tmp_path, 'reason = "draining"\n')
     assert len(pending.pending_items(tmp_path)) == 2
-    cards = pending.owner_cards(tmp_path)
+    cards = pending.operator_cards(tmp_path)
     assert [c.kind for c in cards] == [pending.SPINE]
 
 
 def test_the_block_renders_exactly_the_model(tmp_path):
     """Implements: TC-194"""
     # One derivation, one rendering: every item's line appears in the block, so
-    # the banner's count and the owner surface can never disagree.
+    # the banner's count and the operator surface can never disagree.
     pending = load_script("pending")
     _init(tmp_path)
     _write_srs(tmp_path, 'SR-007,New need,SN-001,"r","x","a",,C,Test,Drafted,3,\n')
@@ -319,7 +319,7 @@ def test_the_block_renders_exactly_the_model(tmp_path):
 def test_the_dispatcher_reads_the_model_not_the_render_facade(tmp_path):
     """Implements: TC-194"""
     # THE EDGE, asserted at the behaviour rather than only in the import
-    # census: the banner's card count is the read model's `owner_cards`, so a
+    # census: the banner's card count is the read model's `operator_cards`, so a
     # future rewrite cannot go back to two private names in a render module
     # without this failing.
     drv = load_script("dispatch")
@@ -329,10 +329,10 @@ def test_the_dispatcher_reads_the_model_not_the_render_facade(tmp_path):
         [("queued", "WI-900", "blocked-one", 'blockref = "docs/x.md"\n', "")],
     )
     _pause(tmp_path, 'reason = "draining"\n')
-    assert drv._pending_cards(tmp_path) == pending.owner_cards(tmp_path)
+    assert drv._pending_cards(tmp_path) == pending.operator_cards(tmp_path)
 
 
-def test_the_owner_surface_reads_the_model_not_the_render_facade(tmp_path):
+def test_the_operator_surface_reads_the_model_not_the_render_facade(tmp_path):
     """Implements: TC-194"""
     # The other documented bad edge: gen_open_items reused `pending_block` by
     # importing the ~1,000-line facade. Same text, one module down.

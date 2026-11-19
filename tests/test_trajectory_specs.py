@@ -205,7 +205,7 @@ def test_the_registry_this_repo_ships_is_control_character_clean(tmp_path):
 
 # --- WI-352: the completion reconciler -----------------------------------------
 #
-# Status stays an ATTESTATION (owner ruling 2026-07-28); what was missing is the
+# Status stays a CLAIM (operator ruling 2026-07-28); what was missing is the
 # RECONCILER every other declared-vs-computed pair here already has. Each signal
 # below is driven against a CONSTRUCTED spec, and each has a twin proving it stays
 # silent in the other direction — the three false-positive classes measured while
@@ -236,7 +236,7 @@ def test_open_row_whose_spec_reports_finished_warns(tmp_path):
 
 def test_open_row_whose_spec_reports_finished_errors_under_strict(tmp_path):
     """Gate tier: a contradiction between two homes for one fact cannot reach a
-    green DevStg-Tests/DevStg-Impl, matching R-E/R-F."""
+    passing DevStg-Tests/DevStg-Impl, matching R-E/R-F."""
     _write_spec(tmp_path, "WI-001.md", DONE_WHEN_ALL_TICKED)
     write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/specs/WI-001.md\n")
     proc = run_traj(tmp_path, "--strict")

@@ -17,7 +17,7 @@
 # NOT all-zeros, which is why this file is generated
 # from a real scaffold rather than written by hand: scaffold into an empty
 # dir, run `trace.py --bump-ids` there, and copy the result. It must cover
-# whatever ids the templates seed, or an adopter is red on day one
+# whatever ids the templates seed, or an adopter fails on day one
 #
 ASSET = 0
 B = 0

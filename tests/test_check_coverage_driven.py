@@ -19,7 +19,7 @@ def test_module_coverage_step_wires_into_the_harness(scaffold):
         stack.read_text(encoding="utf-8")
         + "\n[step:module-coverage]\n"
         + "command = {py} scripts/check_coverage.py\n"
-        + "gates = DevStg-Impl\nlayer = product\n",
+        + "from-stage = DevStg-Impl\nlayer = product\n",
         encoding="utf-8",
     )
     listed = run_py(

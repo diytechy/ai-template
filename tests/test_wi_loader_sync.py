@@ -9,7 +9,7 @@ kit's F5 working agreement keeps them
 separate ON PURPOSE: `schedule.py` stays stdlib-only and self-contained (no kit
 import) so it ships independently copy-able, and IF-053 fixes the dependency
 arrow (the validator consumes the scheduler, never the reverse), so a shared
-`wi_registry.py` was NOT extracted (owner ruling 2026-07-12; WI-291).
+`wi_registry.py` was NOT extracted (operator ruling 2026-07-12; WI-291).
 
 The only real risk of two parsers is that they DRIFT — one starts handling a
 row shape the other doesn't, and the scheduler's frontier silently disagrees
@@ -42,7 +42,7 @@ which is the same assertion aimed at the same defect (a cell that means one thin
 in one form and another in the other), so they are kept rather than retired.
 
 Both new guards are mutation-proven at the bottom of the file: a single corrupted
-spec cell must red the equivalence, and a reader that skips a file must red the
+spec cell must fail the equivalence, and a reader that skips a file must fail the
 three-way comparison. A guard nobody has seen fail is not a guard (WI-293).
 """
 
@@ -78,7 +78,7 @@ def _row(wid, **kw):
         "EstTokens": "",
         "SafetyClass": "ordinary",
         "PlanMode": "",
-        "Bar": "",
+        "ChecksStage": "",
         "Supersedes": "",
         "Brief": "",
         "Adjudicates": "",
@@ -187,7 +187,7 @@ CONVERTIBLE_ROWS = [
         "EstTokens": "1200",
         "SafetyClass": "ordinary",
         "PlanMode": "",
-        "Bar": "",
+        "ChecksStage": "",
         "Supersedes": "",
         "Brief": "",
         "Adjudicates": "",
@@ -213,13 +213,13 @@ CONVERTIBLE_ROWS = [
         "EstTokens": "",
         "SafetyClass": "spine",
         "PlanMode": "dual",
-        # The WI-388 strictness key, carried where the cells most likely to be
-        # lost in translation live: bar declares verification strictness for
-        # this row's lane; it never affects scheduling.
-        "Bar": "DevStg-Tests",
+        # The WI-388 checks-stage key, carried where the cells most likely to
+        # be lost in translation live: it pins the stage this row's landing
+        # checks run at; it never affects scheduling.
+        "ChecksStage": "DevStg-Tests",
         "Supersedes": "WI-000",
         # SN-032 brief routing, carried on the same "most likely to be lost
-        # in translation" row as `Bar`: it selects which adjudicator brief
+        # in translation" row as `ChecksStage`: it selects which adjudicator brief
         # the row's session is composed from, and nothing else.
         "Brief": "disposition",
         # WI-572 scope of the act, carried on the same row for the same reason,
@@ -250,7 +250,7 @@ CONVERTIBLE_ROWS = [
         "EstTokens": "",
         "SafetyClass": "",
         "PlanMode": "",
-        "Bar": "",
+        "ChecksStage": "",
         "Supersedes": "",
         "Brief": "",
         "Adjudicates": "",
@@ -276,7 +276,7 @@ CONVERTIBLE_ROWS = [
         "EstTokens": "",
         "SafetyClass": "ordinary",
         "PlanMode": "",
-        "Bar": "",
+        "ChecksStage": "",
         "Supersedes": "",
         "Brief": "",
         "Adjudicates": "",
@@ -302,7 +302,7 @@ CONVERTIBLE_ROWS = [
         "EstTokens": "",
         "SafetyClass": "",
         "PlanMode": "",
-        "Bar": "",
+        "ChecksStage": "",
         "Supersedes": "",
         "Brief": "",
         "Adjudicates": "",
@@ -369,33 +369,33 @@ def test_the_two_representations_are_the_same_registry(both_homes):
     assert _cell_diff(csv_rows, folder_rows) == []
 
 
-def test_the_bar_key_is_carried_by_every_reader(both_homes):
-    """The WI-388 `bar` column crosses both representations and all three F5
-    readers together (the loader tables gain the column as one edit): bar
-    declares verification strictness for this row's lane; it never affects
-    scheduling — so the scheduler's own load_wis deliberately does NOT parse
+def test_the_checks_stage_key_is_carried_by_every_reader(both_homes):
+    """The WI-388 `ChecksStage` column crosses both representations and all
+    three F5 readers together (the loader tables gain the column as one
+    edit): it pins the stage this row's landing checks run at; it never
+    affects scheduling — so the scheduler's own load_wis deliberately does NOT parse
     it into the decision dicts."""
     csv_path, work_dir = both_homes
     for rows in (sched.load_rows(csv_path),) + tuple(
         mod.read_spec_rows(work_dir) for _name, mod in SPEC_READERS
     ):
         by_id = {r["WI-ID"]: r for r in rows}
-        assert by_id["WI-002"]["Bar"] == "DevStg-Tests"
-        assert by_id["WI-001"]["Bar"] == ""
+        assert by_id["WI-002"]["ChecksStage"] == "DevStg-Tests"
+        assert by_id["WI-001"]["ChecksStage"] == ""
     # Never a scheduling input: the WI dicts the frontier is computed from
-    # carry no bar key at all — structurally, not by convention.
+    # carry no checks_stage key at all — structurally, not by convention.
     for wi in sched.load_wis(sched.read_spec_rows(work_dir)):
-        assert "bar" not in wi
+        assert "checks_stage" not in wi
 
 
 def test_the_brief_key_is_carried_by_every_reader(both_homes):
     """The SN-032 `brief` column crosses both representations and all three F5
-    readers together — the twin of the `bar` guard above, and for the same
+    readers together — the twin of the `checks_stage` guard above, and for the same
     reason: `agent_loop` composes an adjudication session's whole brief from
     this cell, so a reader that silently dropped it would send the judge an
     implementer's instructions with nothing failing.
 
-    Like `bar` it is NOT a scheduling input — which brief a session receives
+    Like `checks_stage` it is NOT a scheduling input — which brief a session receives
     cannot change who may run beside it — so the scheduler's decision dicts
     deliberately carry no `brief` key."""
     csv_path, work_dir = both_homes
@@ -422,7 +422,7 @@ def test_the_adjudicates_key_is_carried_by_every_reader(both_homes):
     only `;`-joined cell outside the two ref columns, so it is the one that
     proves a LIST column survives both representations.
 
-    Not a scheduling input either, for the `bar`/`brief` reason: what an act may
+    Not a scheduling input either, for the `checks_stage`/`brief` reason: what an act may
     touch cannot change who may run beside it."""
     csv_path, work_dir = both_homes
     for rows in (sched.load_rows(csv_path),) + tuple(
@@ -515,7 +515,7 @@ def test_the_soft_prefix_survives_the_round_trip_into_load_wis(both_homes):
 
 
 def test_mutation_one_corrupted_spec_cell_reds_the_equivalence(both_homes, tmp_path):
-    """Drive the failure shape rather than trusting the green: retype ONE
+    """Drive the failure shape rather than trusting the pass: retype ONE
     frontmatter value in the folder and the cell-exact compare must name it."""
     csv_path, work_dir = both_homes
     victim = next(p for p in work_dir.rglob("WI-002-*.md"))

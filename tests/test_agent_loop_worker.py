@@ -34,7 +34,7 @@ import sys
 
 import pytest
 from conftest import (
-    declare_review_bar,
+    declare_commit_checks,
     declare_trunk,
     hooks_on,
     env_gate_skipif,
@@ -366,23 +366,25 @@ def test_the_one_row_prompt_renders_as_today(tmp_path):
     assert prompt == expected
 
 
-def test_worker_brief_names_the_one_turn_close_bar_scratch_and_amendments(tmp_path):
+def test_worker_brief_names_the_one_turn_close_checks_scratch_and_amendments(tmp_path):
     # WI-580 Done-when 1 / 4 / 5 (WI-559 item 1, WI-560 item 2, WI-562 item 2):
     # three clauses the shipped brief must carry, asserted on the RENDERED
     # prompt so an edit that drops one from the template fails here.
-    #   1. the close bar fits in one turn — refresh runs the stage-declared bar
+    #   1. the close checks fits in one turn — refresh runs the stage-declared checks
     #      in the merge slot and the full suite belongs to phase close
     #      (WI-540 lost three sessions ending their turn to await an ~11-minute
     #      suite against a 10-minute cap, and a finished row closed `partial`);
-    #   2. an AMENDMENT of an approved cell stales the approval brief exactly
-    #      as a mint does (WI-538 / LLR-206, an `approval-fresh` red);
+    #   2. an AMENDMENT of an accepted cell stales the acceptance brief exactly
+    #      as a mint does (WI-538 / LLR-206, an `acceptance-fresh` failure);
     #   3. scratch has a home, so the lane unload stops refusing it by name.
     row = {"WI-ID": "WI-005", "Title": "t", "SR-Refs": "", "Predecessors": ""}
     prompt = agent_loop.worker_prompt(tmp_path, {"WI-005": row}, "WI-005", "w", "0" * 7)
-    assert "THE CLOSE BAR IS THE COMMIT BAR, and it must fit in ONE turn" in prompt
+    assert (
+        "THE CLOSE CHECKS IS THE COMMIT CHECKS, and it must fit in ONE turn" in prompt
+    )
     assert "You do NOT owe the full unfiltered suite at close" in prompt
     assert "NEVER end a turn waiting on one" in prompt
-    assert "AMENDED THE TEXT OF AN ALREADY-APPROVED CELL" in prompt
+    assert "AMENDED THE TEXT OF AN ALREADY-ACCEPTED CELL" in prompt
     assert "Scratch belongs OUTSIDE the worktree" in prompt
 
 
@@ -393,14 +395,14 @@ def test_worker_brief_resolves_close_commands_at_the_runtime_scripts_path(tmp_pa
     # already does for its slots; no caller can now emit an unusable command.
     row = {"WI-ID": "WI-005", "Title": "t", "SR-Refs": "", "Predecessors": ""}
     prompt = agent_loop.worker_prompt(tmp_path, {"WI-005": row}, "WI-005", "w", "0" * 7)
-    assert "python project-trajectory/scripts/trace.py --approve modified" in prompt
+    assert "python project-trajectory/scripts/trace.py --accept modified" in prompt
     assert "python project-trajectory/scripts/spec_move.py" in prompt
 
     scaffold = tmp_path / "scaffold"
     (scaffold / "scripts").mkdir(parents=True)
     (scaffold / "scripts" / "check.py").write_text("", encoding="utf-8")
     prompt = agent_loop.worker_prompt(scaffold, {"WI-005": row}, "WI-005", "w", "0" * 7)
-    assert "python scripts/trace.py --approve modified" in prompt
+    assert "python scripts/trace.py --accept modified" in prompt
     assert "python scripts/spec_move.py" in prompt
 
 
@@ -561,7 +563,7 @@ def test_worker_review_evidence_names_exact_reviewed_commit(tmp_path):
     repo, base, ctl, fake = _setup(tmp_path)
     # The worker runs in its lane worktree, `main` staying in the primary.
     repo = claim_on_branch(lane_checkout(repo, "llm/train/t1"), "WI-201")
-    declare_review_bar(repo, ctl)
+    declare_commit_checks(repo, ctl)
     template = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
         sys.executable, fake, ctl
     )
@@ -590,12 +592,12 @@ def test_worker_review_evidence_names_exact_reviewed_commit(tmp_path):
     verdicts = list((repo / "docs" / "reviews" / "t1").glob("*-REVIEW-A-*.md"))
     assert len(verdicts) == 1, "expected one train-scoped verdict"
     sha7 = verdicts[0].stem.rsplit("-", 1)[1]
-    # The named sha is the exact reviewed commit: the review bar's attestation
+    # The named sha is the exact reviewed commit: the commit checks' record
     # of the implementer's commit, sitting directly on it with its tree.
     subjects = _git(repo, "log", "--format=%h %s", "HEAD")
     build_line = [ln for ln in subjects.splitlines() if "build WI-201" in ln][0]
     reviewed = _git(repo, "rev-parse", sha7)
-    assert agent_loop.kverdict.bar_attestation(str(repo), reviewed) is not None
+    assert agent_loop.kverdict.passed_checks(str(repo), reviewed) is not None
     assert _git(repo, "rev-parse", reviewed + "^").startswith(build_line.split()[0])
     assert (repo / "docs" / "reviews" / "t1" / "scoreboard.txt").exists()
     # And no un-scoped lane verdict escaped the train directory.
@@ -804,14 +806,14 @@ def test_worker_endstate_dirty_tree_defers(tmp_path):
     assert al.worker_endstate(str(repo), worker, False, False, 1) is None
 
 
-def test_worker_endstate_owner_scratchpad_stays_done(tmp_path):
-    # WI-203: an owner-only-dirty tree (OWNER_SCRATCHPAD.md) is not interrupted
+def test_worker_endstate_operator_scratchpad_stays_done(tmp_path):
+    # WI-203: an operator-only-dirty tree (OPERATOR_SCRATCHPAD.md) is not interrupted
     # work — done detection must not read it as not-done (contrast the scratch.txt
     # case above, which still defers).
     al = load_script("agent_loop")
     repo, base, worker = _train_repo(tmp_path)
     _build_commit(repo, "WI-201", "t1", base)
-    (repo / "OWNER_SCRATCHPAD.md").write_text("owner notes", encoding="utf-8")
+    (repo / "OPERATOR_SCRATCHPAD.md").write_text("operator notes", encoding="utf-8")
     end = al.worker_endstate(str(repo), worker, False, False, 1)
     assert end is not None and end[0] == al.EXIT_DONE
 
@@ -920,7 +922,7 @@ def test_the_false_partial_class_turns_only_on_the_close_ritual(tmp_path):
     takes the `_lane_close` arm (the stall candidate) over the refresh arm.
     Moving the spec to a terminal directory, and NOTHING else, flips both
     reads. The close ritual alone separates a merge from a `partial`, which is
-    why the shipped brief's close bar has to fit inside one turn.
+    why the shipped brief's close checks have to fit inside one turn.
 
     The `== []` is not an empty scan: the identical call on the identical
     scaffold answers `["wi-201"]` four lines later, so the reader is live and

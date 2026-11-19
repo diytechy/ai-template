@@ -544,8 +544,8 @@ def test_nested_components_render_inside_their_parent(tmp_path):
     )
     (req / "low-level-requirements.csv").write_text(
         CONT_LLRS.replace(
-            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Approved,CMP-001",
-            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Approved,CMP-003",
+            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Accepted,CMP-001",
+            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Accepted,CMP-003",
         ),
         encoding="utf-8",
     )
@@ -1069,10 +1069,10 @@ def test_leaf_wi_block_surfaces_delivery_phase(tmp_path):
 
 # Four one-module components -> the How-SW top view exceeds the > 3 threshold.
 FOUR_CMP_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component
-LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Approved,CMP-001
-LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Approved,CMP-002
-LLR-003,SR-002,C,scripts/mod_c,gen,d,(see TC),Approved,CMP-003
-LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Approved,CMP-004
+LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Accepted,CMP-001
+LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Accepted,CMP-002
+LLR-003,SR-002,C,scripts/mod_c,gen,d,(see TC),Accepted,CMP-003
+LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Accepted,CMP-004
 """
 
 FOUR_CMPS = (
@@ -1153,10 +1153,10 @@ def _spine_with_sns(root, n):
     )
     (req / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status\n"
+        "Permutations,Priority,VerificationMethod,Status\n"
         + "".join(
             'SR-{i:03d},Req {i},SN-{i:03d},"Shall {i}.",R,"ac {i}",,M,Test,'
-            "Approved\n".format(i=i)
+            "Accepted\n".format(i=i)
             for i in range(1, n + 1)
         ),
         encoding="utf-8",
@@ -1165,7 +1165,7 @@ def _spine_with_sns(root, n):
         "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
         + "".join(
             'LLR-{i:03d},SR-{i:03d},Low {i},src/m.py,f{i},"d {i}",(see TC),'
-            "Approved\n".format(i=i)
+            "Accepted\n".format(i=i)
             for i in range(1, n + 1)
         ),
         encoding="utf-8",
@@ -1175,7 +1175,7 @@ def _spine_with_sns(root, n):
         "Evidence,Status\n"
         + "".join(
             'TC-{i:03d},SR-{i:03d};LLR-{i:03d},Unit,m {i},Smoke,"p","e {i}",Yes,'
-            "tests/t.py::t{i},Approved\n".format(i=i)
+            "tests/t.py::t{i},Accepted\n".format(i=i)
             for i in range(1, n + 1)
         ),
         encoding="utf-8",
@@ -1549,30 +1549,30 @@ def test_fit_lines_breaks_on_words_then_ellipsizes():
 # citing it; a need answered only by coincident requirements says so, an
 # unclassified requirement shows as the gap, and a falsified premise is marked
 # in words as well as in color. No evidence level is shown: an assumption
-# carries none (owner ruling 2026-10-02).
+# carries none (operator ruling 2026-10-02).
 
 _GOLDEN_PAGE = ROOT / "tests" / "golden" / "dashboard-no-assumptions.html"
 
 _VIEW_NEEDS = """[need.SN-001]
-status = "Approved"
+status = "Accepted"
 need = "Runs are trustworthy."
 why = "A wrong verdict is acted on."
 priority = "M"
 acceptance = "Every verdict is right."
 
 [need.SN-002]
-status = "Approved"
+status = "Accepted"
 need = "The page loads."
 why = "No page, no reading."
 priority = "M"
 acceptance = "It loads."
 
 [need.SN-003]
-status = "Approved"
-need = "Reports reach the owner."
+status = "Accepted"
+need = "Reports reach the operator."
 why = "An unread report changes nothing."
 priority = "S"
-acceptance = "The owner reads it."
+acceptance = "The operator reads it."
 """
 
 
@@ -1585,8 +1585,8 @@ def _view_sr(sid, need, da_refs=(), coincident="", delivered_with=()):
         'rationale = "why"',
         'acceptance_criteria = "ac"',
         'priority = "M"',
-        'verification = "Test"',
-        'status = "Approved"',
+        'verification_method = "Test"',
+        'status = "Accepted"',
     ]
     if da_refs:
         cells.append("da_refs = [{}]".format(", ".join('"%s"' % d for d in da_refs)))
@@ -1618,7 +1618,7 @@ method = "watch a week of runs"
 tier = "Full"
 expected = "every verdict right"
 automated = "No"
-status = "Approved"
+status = "Accepted"
 assumption_refs = ["DA-001"]
 max_age = 30
 sampling = "monitored"
@@ -1627,21 +1627,21 @@ sampling = "monitored"
 _VIEW_FRAME = """[entity.EXT-001]
 name = "Owner"
 class = "operational"
-description = "The owner."
-status = "Approved"
+description = "The operator."
+status = "Accepted"
 
 [boundary.B-01]
 entity = "EXT-001"
 direction = "out"
 carries = "the verdict"
-status = "Approved"
+status = "Accepted"
 """
 
 
 def _view_da(did, standing, text, falsifier=""):
     return (
         '[assumption.{}]\neffect_at = ["B-01"]\nassumption = "{}"\n'
-        'holds_when = "always"\nobstacle = "never"\nstatus = "Approved"\n'
+        'holds_when = "always"\nobstacle = "never"\nstatus = "Accepted"\n'
         'standing = "{}"\n{}\n'.format(
             did,
             text,
@@ -1655,10 +1655,10 @@ _VIEW_DAS = (
     _view_da(
         "DA-001",
         "active",
-        "The verdict reaches the owner intact.",
-        "A verdict the owner read differently from the run.",
+        "The verdict reaches the operator intact.",
+        "A verdict the operator read differently from the run.",
     )
-    + _view_da("DA-002", "falsified", "The owner reads every verdict.")
+    + _view_da("DA-002", "falsified", "The operator reads every verdict.")
     + _view_da("DA-003", "active", "Reports are opened within a day.")
 )
 
@@ -1666,7 +1666,7 @@ _VIEW_RECORD = {
     "tc": "TC-010",
     "outcome": "pass",
     "observed_at": "2026-09-01T00:00:00Z",
-    "provenance": "the owner",
+    "provenance": "the operator",
     "expires": "2099-01-01T00:00:00Z",
     "judged": "",
 }
@@ -1732,8 +1732,8 @@ def test_need_assumptions_derives_each_need_s_premises_once(tmp_path):
     assert [a["id"] for a in first["assumptions"]] == ["DA-001", "DA-002"]
     da1, da2 = first["assumptions"]
     assert da1["citing"] == ["SR-001", "SR-002"]
-    assert (da1["status"], da1["standing"]) == ("Approved", "active")
-    assert da1["falsifier"] == "A verdict the owner read differently from the run."
+    assert (da1["status"], da1["standing"]) == ("Accepted", "active")
+    assert da1["falsifier"] == "A verdict the operator read differently from the run."
     assert da1["cases"] == ["TC-010"]
     assert (da2["standing"], da2["falsifier"], da2["cases"]) == ("falsified", "", [])
     assert "level" not in da1 and "level" not in da2
@@ -1755,9 +1755,9 @@ def test_each_need_s_detail_lists_its_assumptions_with_their_standing(tmp_path):
     # requirements citing it.
     assert first.count("DA-001") == 1 and first.count("DA-002") == 1
     for needle in (
-        "status: Approved",
+        "status: Accepted",
         "active",
-        "A verdict the owner read differently from the run.",
+        "A verdict the operator read differently from the run.",
         "can be falsified by: TC-010",
         "SR-001",
         "SR-002",

@@ -55,7 +55,7 @@ def test_regen_skips_absent_artifact_families(tmp_path, capsys):
         skip = "trunk_step: regen — skipping {} ({}).".format(name, why)
         ok = "trunk_step: regen — {} ok.".format(name)
         assert skip in lines or ok in lines, name
-    # LLR-208's claim about the rollup's step, named so its loss is a red here
+    # LLR-208's claim about the rollup's step, named so its loss is a failure here
     # even though the table read above would silently shrink with it.
     assert (
         "trunk_step: regen — skipping verdict-rollup (docs/reviews/ absent)." in lines
@@ -74,7 +74,7 @@ def test_regen_runs_in_declared_dependency_order(tmp_path, capsys):
     # (the dashboard's Knowledge tab reads the BUNDLE), derived-stage before
     # trajectory and status (both read docs/stage). These edges are the
     # declared order's reason, so a reorder of the table that breaks one is a
-    # red here even though the executed order would still match the table.
+    # failure here even though the executed order would still match the table.
     for producer, consumer in (
         ("okf", "trajectory"),
         ("derived-stage", "trajectory"),

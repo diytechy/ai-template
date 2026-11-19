@@ -18,7 +18,7 @@ and responsive behavior. It is **meta-only** dev tooling — the runner and its
 Playwright dependency are never shipped downstream (the kit's install-nothing
 posture governs `project-trajectory/scripts`, not this helper).
 
-This is also the **artifact recipe** a future `Verification=Critique` TC on
+This is also the **artifact recipe** a future `VerificationMethod=Critique` TC on
 dashboard quality would name (the critique-loop contract in
 `project-trajectory/PROCESS_OPTIONS.md`, *"Critique verification"*, requires a
 perceptual TC to name its render recipe): build it once, serve both the ad-hoc
@@ -60,7 +60,7 @@ rationale, and the read caveats — live in `scripts/dashboard-shots/README.md`.
    that exits non-zero (a Playwright error, a timeout, a failed regenerate) or
    prints any `NOT shot` tab gives a smaller matrix than the page renders: stop,
    then repair it (add the tab to `TABS`, fix the run) or escalate to the
-   owner. Meanwhile no verdict and no observation record is written, so a
+   operator. Meanwhile no verdict and no observation record is written, so a
    re-judge stays open.
 3. **Read & critique** — Read a representative spread (both themes; the
    graph-heavy `sw` / `dag` tabs; the `390px` mobile landing) and judge:

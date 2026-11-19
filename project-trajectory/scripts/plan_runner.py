@@ -31,7 +31,7 @@ Contract IF-066: agent_loop imports two names from this module and re-exports
     position-swapped arbiter pair — through the headless session layer and
     returns `(outcome, detail)` where outcome is `SELECTED` (verdict recorded,
     the chosen plan's rows filed as queued work items) or `PAGE` (the reason,
-    for the caller to map onto its approval level). Every refusal on the way in
+    for the caller to map onto its acceptance level). Every refusal on the way in
     — no resolvable goal brief, no rubric, an unreadable hat template, an
     unusable roster, nothing routable — returns PAGE with its reason rather
     than falling through to a direct build. Routing-on
@@ -333,7 +333,7 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
     """Run one dual-plan decomposition round for `wi` unattended and return
     `(outcome, detail)` — outcome `SELECTED` (verdict recorded, the selected
     plan's rows filed as queued WIs) or `PAGE` (the round's page reason;
-    the caller maps it onto the declared approval level's failure semantics via
+    the caller maps it onto the declared acceptance level's failure semantics via
     plan_round.page_action). The protocol, its caps, and every safeguard live
     in the WI-194..WI-198 modules — this runner only drives them through the
     existing session machinery and writes the artifacts."""
@@ -536,7 +536,7 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
             prompt = plan_briefs.assemble(
                 plan_briefs.HAT_ARBITER,
                 {
-                    "OWNER_PROMPT": (row.get("Title") or wi).strip(),
+                    "OPERATOR_PROMPT": (row.get("Title") or wi).strip(),
                     "GOAL_BRIEF": goal_text,
                     "RUBRIC": rubric_text,
                     "COVERAGE_REPORT": coverage_report,
@@ -634,7 +634,7 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
             root,
             "## dual-plan round {} ({}): SELECT plan {}, ports={}\n\n"
             "Artifacts: {}/. Filed: {}. Route: {}. Acceptance follows the "
-            "declared approval level in docs/process.toml (the "
+            "declared acceptance level in docs/process.toml (the "
             "recorded-verdict rules).".format(
                 round_dir.name,
                 wi,

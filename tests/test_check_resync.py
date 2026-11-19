@@ -1,4 +1,4 @@
-"""The commit bar's RESYNC entry check (scripts/check_resync.py).
+"""The commit checks' RESYNC entry check (scripts/check_resync.py).
 
 A change to a shipped kit file passes only when it adds a `RESYNC_PACK.md`
 entry heading anchored at its own trunk base. Most cases drive the pure

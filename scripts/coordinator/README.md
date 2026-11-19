@@ -61,8 +61,8 @@ point FROM THE LANE WORKTREE (a primary checkout or an unclaimed worktree is
 refused with exit 2), so the call goes through the loop's keep operation and
 `out/adjudicator/` record, and one retained session judges the whole chain.
 
-1. Compose the brief with `compose_lane.py` (above): `amendment` for approved
-   rows whose text drifted from `docs/archive/last_approved/`, `first-approval`
+1. Compose the brief with `compose_lane.py` (above): `amendment` for accepted
+   rows whose text drifted from `docs/archive/last_accepted/`, `first-acceptance`
    for Drafted rows. Number the verdict `NNN-ADJUDICATE-<lane sha7>.md` under
    `docs/reviews/<wi-slug>/`.
 2. Confirm the adjudicator's declared account is signed in: the command
@@ -82,7 +82,7 @@ refused with exit 2), so the call goes through the loop's keep operation and
    verdict, 2 a refusal before launch, and 7 an ADJUDICATOR account that is
    not signed in (set its token up through dev-setup; nothing falls back).
 4. The adjudicator commits the verdict (trailer `WI: WI-NNN`) and its own
-   re-attest or approve act. The entry point commits the telemetry log. A
+   re-accept or accept act. The entry point commits the telemetry log. A
    returned row's follow-up arrives as a `## Dispositions` block in the spec.
    If it is answered in-lane, replace the section under another heading, since
    intake refuses a `## Dispositions` heading with no toml block.

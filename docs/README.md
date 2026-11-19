@@ -43,7 +43,7 @@ For local validation during kit development,
 [`scripts/check_changed.py`](../scripts/check_changed.py) previews selection
 against an explicit proposal base; its [P9R record](ai-template-redesign-2026-09-05-codex/P9R-EXECUTION.md)
 explains the conservative fallback and evidence limits. It is a meta-repo tool;
-the commit bar in the `session-protocol` skill and CI/phase-close Full checks
+the commit checks in the `session-protocol` skill and CI/phase-close Full checks
 still apply.
 
 Research leads are collected in [`Inspiration.md`](Inspiration.md), an intake

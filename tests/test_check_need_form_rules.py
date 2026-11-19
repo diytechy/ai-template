@@ -13,14 +13,14 @@ nf = load_script("check_need_form")
 
 DIRTY = (
     "A user can resume work from docs/status.md by setting "
-    "human_approval_through, as SR-137 describes."
+    "operator_accepts_through, as SR-137 describes."
 )
 
 
 def test_each_class_is_named_with_its_row_and_phrase():
     found = nf.need_findings([{"id": "SN-050", "need": DIRTY}], set())
     assert ("SN-050", "internal path", "docs/status.md") in found
-    assert ("SN-050", "implementation identifier", "human_approval_through") in found
+    assert ("SN-050", "implementation identifier", "operator_accepts_through") in found
     assert ("SN-050", "process citation", "SR-137") in found
     # One token, one finding: the path's inner filename is not a second one.
     assert not any(phrase == "status.md" for _, _, phrase in found)
@@ -30,7 +30,7 @@ def test_the_exception_list_silences_exactly_its_token():
     found = nf.need_findings([{"id": "SN-050", "need": DIRTY}], {"docs/status.md"})
     phrases = {phrase for _, _, phrase in found}
     assert "docs/status.md" not in phrases
-    assert {"human_approval_through", "SR-137"} <= phrases
+    assert {"operator_accepts_through", "SR-137"} <= phrases
 
 
 def test_pairs_urls_cross_refs_and_example_rows_report_nothing():

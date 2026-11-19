@@ -16,24 +16,24 @@ What this module pins is the loop's own contract — the joints, not the parts
     before the merge slot ever sees it (2026-09-04, WI-590);
   * a worker that reports DONE without finishing its branch trips the drive
     loop's own stall guard (the trunk-unmoved counter);
-  * a worker that could not finish HANDS BACK (WI-387, §A3) — NEEDS-HUMAN no
+  * a worker that could not finish HANDS BACK (WI-387, §A3) — NEEDS-OPERATOR no
     longer stops the run, the WI returns to trunk blocked, and the loop drives
-    on to the drained banner; a red handback is reverted to a bar-inert
+    on to the drained banner; a failing handback is reverted to a checks-inert
     artefact and merges anyway; a CRASHED worker is not a handback and keeps
     the parked-resume path;
   * end-to-end on a REAL scaffold: claim -> injected worker close -> the REAL
-    §A2 refresh bar -> merge -> drained banner; and the same flow with a
-    breaking change stops on the RED bar with the branch still parked;
+    §A2 landing checks -> merge -> drained banner; and the same flow with a
+    breaking change stops on the FAILING checks with the branch still parked;
   * the SPECULATIVE half of the station protocol (WI-386): `_drain` refreshes
-    every finished branch BEFORE it takes the merge slot, so the 11-minute bar
+    every finished branch BEFORE it takes the merge slot, so the 11-minute checks
     never holds the exclusive turn to advance trunk. That one call is the whole
     speculation — deleting it restricts the design to pessimistic, which the
     integrator's own suite covers from the other side.
 
 The worker seam is injected in every test (`run(root, args, worker=...)`) —
 the real subprocess launch of agent_loop.py --wi is agent_loop's own tested
-surface — but integrate.py and the bar are REAL: a stubbed bar here would be
-exactly the vacuous green the integrator exists to make impossible. Git
+surface — but integrate.py and the checks are REAL: a stubbed checks here would be
+exactly the vacuous pass the integrator exists to make impossible. Git
 fixtures are real repositories for the same reason as tests/test_integrate.py
 (the queue derives everything from history), and the helper shapes are copied
 from that module per this suite's no-cross-test-import idiom.
@@ -47,7 +47,7 @@ import subprocess
 import sys
 
 from conftest import (
-    BARS_RED_MARK,
+    MARKER_DECLARATION,
     hooks_on,
     SCRIPTS,
     declare_trunk,
@@ -69,7 +69,7 @@ drv = load_script("dispatch")
 from kitlib import provenance  # noqa: E402
 from integrate_fixtures import claim_by_hand  # noqa: E402
 
-# The attestation constant has ONE home; a literal here would be a second one
+# The trailer's label has ONE home; a literal here would be a second one
 # that could drift silently past every test in this file.
 integ = drv.integrate
 
@@ -148,7 +148,7 @@ def spec_text(
     safety="ordinary",
     specref=None,
     deliverable="A widget, shipped.",
-    bar=None,
+    checks_stage=None,
     needs=(),
 ):
     lines = [
@@ -160,8 +160,8 @@ def spec_text(
         'safety_class = "{}"'.format(safety),
         "order = 0",
     ]
-    if bar:
-        lines.append('bar = "{}"'.format(bar))
+    if checks_stage:
+        lines.append('checks_stage = "{}"'.format(checks_stage))
     if specref:
         lines.append('specref = "{}"'.format(specref))
     text = "+++\n" + "".join(ln + "\n" for ln in lines) + "+++\n"
@@ -294,17 +294,17 @@ def test_drive_refuses_a_dirty_trunk_before_resuming(tmp_path, capfd):
     assert worker.calls == []
 
 
-def test_a_dirty_owner_scratchpad_does_not_stop_the_drive(tmp_path, capfd):
-    # WI-612: the owner-only paths are the owner's, edited continuously and
+def test_a_dirty_operator_scratchpad_does_not_stop_the_drive(tmp_path, capfd):
+    # WI-612: the operator-only paths are the operator's, edited continuously and
     # never a lane's deliverable. Resume and done detection already read past
     # them; the tick-top clean-trunk refusal now does too, so the parked lane
     # resumes (and stalls on this do-nothing worker) instead of the run
-    # stopping at the preflight over the owner's notes.
+    # stopping at the preflight over the operator's notes.
     root = parked_repo(tmp_path)
-    pad = root / drv.ac.OWNER_ONLY_PATHS[0]
-    pad.write_text("owner notes\n", encoding="utf-8", newline="\n")
-    _commit(root, "the owner's scratchpad", when=T_LATER)
-    pad.write_text("owner notes, mid-edit\n", encoding="utf-8", newline="\n")
+    pad = root / drv.ac.OPERATOR_ONLY_PATHS[0]
+    pad.write_text("operator notes\n", encoding="utf-8", newline="\n")
+    _commit(root, "the operator's scratchpad", when=T_LATER)
+    pad.write_text("operator notes, mid-edit\n", encoding="utf-8", newline="\n")
     worker = Recorder(outcomes=(0, 0))
 
     rc = drv.run(root, drive_args(stall_limit=2), worker=worker)
@@ -312,7 +312,7 @@ def test_a_dirty_owner_scratchpad_does_not_stop_the_drive(tmp_path, capfd):
     assert "working tree is dirty" not in err
     assert rc == 4 and "STALL" in err
     assert worker.calls == [("wi-401", "WI-401"), ("wi-401", "WI-401")]
-    assert pad.read_text(encoding="utf-8") == "owner notes, mid-edit\n"
+    assert pad.read_text(encoding="utf-8") == "operator notes, mid-edit\n"
 
 
 def test_drive_empty_frontier_drains_and_exits_zero(tmp_path, capfd):
@@ -393,7 +393,7 @@ def test_a_fresh_launch_under_a_pause_resumes_the_lane_in_flight(tmp_path, capfd
     # mid-work — the pause stranding the very in-flight lane its own contract
     # (§5.6, and the pause file's own header) promises to finish and merge.
     # The claim is the only act a pause stops.
-    root = stub_harness_repo(tmp_path)  # WI-401 queued, and a declared bar
+    root = stub_harness_repo(tmp_path)  # WI-401 queued, and a declared checks
     write_spec(root, "active/wi-402", "WI-402", slug="parked", specref="seed.txt")
     write_pause(root)
     _commit(root, "claim WI-402 + pause: owner says stop", when=T_LATER)
@@ -490,7 +490,7 @@ def test_a_parked_lane_claimed_with_two_specs_stops_the_run(tmp_path, capfd):
     assert (active / "WI-402-beta.md").is_file()
 
 
-# --- a parked lane at a filed owner-held step (LLR-143) -----------------------
+# --- a parked lane at a filed operator-held step (LLR-143) -----------------------
 #
 # A claimed row whose `needs` cites a pending open item reads `blocked` in the
 # shared schedule (LLR-288), and the worker brief composes no assignment for
@@ -506,7 +506,7 @@ def parked_beside_ready_repo(tmp_path, oi_status):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     (req / "open-items.toml").write_text(
-        '[open_item.OI-005]\ntitle = "The owner\'s call"\nstatus = "{}"\n'.format(
+        '[open_item.OI-005]\ntitle = "The operator\'s call"\nstatus = "{}"\n'.format(
             oi_status
         ),
         encoding="utf-8",
@@ -584,10 +584,10 @@ def test_a_parked_lane_citing_a_ruled_item_still_resumes_first(tmp_path, capfd):
 # These run the WHOLE cycle — claim, worker, close, refresh, merge, next cycle —
 # against a stub harness rather than a bootstrapped scaffold, because what is
 # under test is the loop's decision and the shape it lands in trunk, not the
-# bar. The stub check is CONDITIONAL (red exactly while the lane's own broken
-# file is present), which is what lets the red-handback ruling be driven end to
-# end instead of asserted about: an always-red stub could not show the second
-# refresh going green. Helper shapes are copied from tests/test_integrate.py per
+# checks. The stub check is CONDITIONAL (failing exactly while the lane's own broken
+# file is present), which is what lets the ruling on a failing handback be driven end to
+# end instead of asserted about: an always-failing stub could not show the second
+# refresh passing. Helper shapes are copied from tests/test_integrate.py per
 # this suite's no-cross-test-import idiom.
 
 STUB_TRUNK_STEP = "pass\n"
@@ -603,7 +603,7 @@ print("  PASS  tests+coverage   0.2s")
 
 
 def stub_harness_repo(tmp_path):
-    """A trunk with WI-401 queued, a DECLARED bar, and a stub harness in the
+    """A trunk with WI-401 queued, a DECLARED checks, and a stub harness in the
     tree — the smallest repo a full drive cycle can actually run in."""
     root = git_repo(tmp_path)
     (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
@@ -615,7 +615,7 @@ def stub_harness_repo(tmp_path):
     # gives for the claim.
     (root / "docs" / "stack.ini").write_text(
         "[product]\ntest = {py} -m pytest -q\n"
-        + BARS_RED_MARK
+        + MARKER_DECLARATION
         + "[generated]\nPROJECT_STATE.html = trajectory\n",
         encoding="utf-8",
         newline="\n",
@@ -628,7 +628,7 @@ def stub_harness_repo(tmp_path):
     )
     (scripts / "check.py").write_text(STUB_CHECK, encoding="utf-8", newline="\n")
     write_spec(root, "queued", "WI-401", specref="seed.txt")
-    _commit(root, "seed: the stub harness, the declared bar and WI-401", when=T_CODE)
+    _commit(root, "seed: the stub harness, the declared checks and WI-401", when=T_CODE)
     return root
 
 
@@ -699,7 +699,7 @@ Re-land the reviewed parts.
     return worker
 
 
-def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd):
+def test_a_needs_operator_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd):
     # THE RUN-STOP THIS DELETES. Exit 7 used to end the whole walk-away run
     # with the branch parked. Now the lane closes into trunk and the driver
     # carries on to the drained banner — asserted at exit 0, not just by the
@@ -776,12 +776,14 @@ def test_a_decided_exit_after_the_lane_closed_merges_on_its_declared_outcome(
     assert (root / "shipped.py").is_file()
 
 
-def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path, capfd):
-    # THE RULED CASE (owner decision 1). The lane hands back code the bar
+def test_a_failing_handback_is_reverted_to_a_checks_inert_artefact_and_merges(
+    tmp_path, capfd
+):
+    # THE RULED CASE (operator decision 1). The lane hands back code the checks
     # refuses, which would be the one branch that could still hang. Instead the
     # code is reverted, the failing diff lands as a `.patch`, the second
-    # refresh goes green and the branch merges — so trunk ends with the record
-    # and without the red.
+    # refresh passes and the branch merges — so trunk ends with the record
+    # and without the failure.
     root = stub_harness_repo(tmp_path)
     worker = then_closing(building_worker(7, [("broken.py", "VALUE = (\n")]))
 
@@ -792,7 +794,7 @@ def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path,
     assert "handback: quarantined wi-401-widget" in captured.out, captured.out
     assert "merged (WI-401=partial)" in captured.out, captured.out
 
-    assert not (root / "broken.py").exists()  # nothing live to red anything
+    assert not (root / "broken.py").exists()  # nothing live to fail anything
     patch = root / "docs" / "work" / "handback" / "wi-401-widget.patch"
     assert patch.is_file()
     assert "VALUE = (" in patch.read_text(encoding="utf-8")
@@ -802,11 +804,11 @@ def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path,
     assert (root / "docs" / "handbacks" / "WI-401-wi-401-widget.md").is_file()
 
 
-def red_capped_worker(reds):
-    """A worker whose build stayed red at its review bar for `reds` rounds:
-    each round commits a red build and then the loop's own record of it, a
-    session log keyed by that build's sha with the bar's summary. It then ends
-    with the red cap's exit code, specs still in active/."""
+def failure_capped_worker(reds):
+    """A worker whose build kept failing at its commit checks for `reds` rounds:
+    each round commits a failing build and then the loop's own record of it, a
+    session log keyed by that build's sha with the checks' summary. It then ends
+    with the failure cap's exit code, specs still in active/."""
 
     def worker(root, branch, wi_id, args):
         wt, err = drv.integrate.lane_worktree(root, branch)
@@ -821,26 +823,26 @@ def red_capped_worker(reds):
             sha = _git(wt, "rev-parse", "HEAD").strip()
             (logs / "t1-{:03d}-20261021-00000{}.log".format(n, n)).write_text(
                 "# agent session log\n# session: {:03d}\n# train: t1\n"
-                "# phase: BUILD\n# outcome: COMMITTED\n# bar-red: {}\n"
-                "# bar-summary: BAR-FAIL-MARKER {}\n".format(n, sha, n),
+                "# phase: BUILD\n# outcome: COMMITTED\n# checks-failed: {}\n"
+                "# checks-summary: CHECKS-FAIL-MARKER {}\n".format(n, sha, n),
                 encoding="utf-8",
                 newline="\n",
             )
             _commit(wt, "telemetry: round {}".format(n), when=T_LATER + 2 * n + 1)
-        return drv.ac.EXIT_RED_CAP
+        return drv.ac.EXIT_CHECK_FAILURE_CAP
 
     return worker
 
 
-def test_a_red_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_drain_quarantines_it(
+def test_a_failure_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_drain_quarantines_it(
     tmp_path, capfd
 ):
     """Implements: TC-381"""
-    # TC-381. The red cap is a decided worker outcome: the dispatcher closes
+    # TC-381. The failure cap is a decided worker outcome: the dispatcher closes
     # the lane partial with typed fields, its reason naming the count and the
-    # last bar summary, and the drain's red refresh quarantines the lane.
+    # last checks summary, and the drain's failing refresh quarantines the lane.
     root = stub_harness_repo(tmp_path)
-    worker = then_closing(red_capped_worker(3))
+    worker = then_closing(failure_capped_worker(3))
 
     rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
     captured = capfd.readouterr()
@@ -848,9 +850,18 @@ def test_a_red_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_drain_
     assert report.is_file(), captured.out + captured.err
     text = report.read_text(encoding="utf-8")
     assert 'claimed_outcome = "partial"' in text
-    assert "3 consecutive red rounds" in text and "BAR-FAIL-MARKER 3" in text, text
+    reason = (
+        "commit-check failure cap: 3 consecutive failed rounds ([build] "
+        "stop_lane_after_consecutive_commit_check_failures = 3); "
+        "last run: CHECKS-FAIL-MARKER 3"
+    )
+    assert 'reason = "{}"'.format(reason) in text, text
+    assert (
+        "The lane's commit checks kept failing, so its build is not delivered: "
+        "last run: CHECKS-FAIL-MARKER 3"
+    ) in text, text
     assert 'split_decided_by = "adjudicator"' in text
-    # Not the approval-level escalation a NEEDS-HUMAN exit gets: a dispatcher
+    # Not the acceptance-level escalation a NEEDS-OPERATOR exit gets: a dispatcher
     # that closed the cap as a judgement call would tier it strong and label
     # it NEEDS-JUDGEMENT.
     assert 'suggested_tier = "medium"' in text, text
@@ -861,7 +872,7 @@ def test_a_red_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_drain_
     assert rc == 0
 
 
-# --- end to end against the REAL bar ------------------------------------------
+# --- end to end against the REAL checks ------------------------------------------
 
 E2E_GOOD_SRC = '''"""Demo module. Implements: SR-001"""
 
@@ -880,7 +891,7 @@ def add(a, b):
 '''
 
 
-def scaffold_with_queued_wi(tmp_path, bar=None):
+def scaffold_with_queued_wi(tmp_path, checks_stage=None):
     """A bootstrapped, DevStg-Impl-complete scaffold with WI-401 queued — the state a
     plain launch starts from. Mirrors test_integrate.scaffolded_closed_branch
     (fixture notes there), except the WI is still QUEUED: claiming it is the
@@ -899,7 +910,9 @@ def scaffold_with_queued_wi(tmp_path, bar=None):
     disable_blackout(repo)
     with (repo / ".gitignore").open("a", encoding="utf-8", newline="\n") as fh:
         fh.write("out/\n")
-    write_spec(repo, "queued", "WI-401", specref="docs/log.md", bar=bar)
+    write_spec(
+        repo, "queued", "WI-401", specref="docs/log.md", checks_stage=checks_stage
+    )
     record_ids(repo)  # WI-401 is an ALLOCATED id; the mark must cover it
     _git(repo, "init", "-q")
     hooks_on(repo)  # every route refuses a checkout without hooks
@@ -959,25 +972,25 @@ def test_drive_end_to_end_claims_builds_merges_and_drains(tmp_path, capfd):
     # which is the point of asserting it separately from "it merged".
     assert "integrate: refreshed wi-401-widget onto trunk" in out, out
     assert "is not merge-ready" not in out, out
-    # ...and the merged tip is the refresh commit, carrying the bar's own
-    # attestation for exactly that tree.
+    # ...and the merged tip is the refresh commit, carrying the checks' own
+    # record for exactly that tree.
     merged_tip = _git(repo, "rev-list", "--parents", "-n", "1", "HEAD").split()[2]
-    assert integ.refresh_attestation(repo, "wi-401-widget", merged_tip) is not None
+    assert integ.refresh_passed_checks(repo, "wi-401-widget", merged_tip) is not None
 
 
-def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
-    # The worker's "close" breaks the product test: the REAL bar goes red at the
+def test_drive_stops_on_failing_landing_checks(tmp_path, capfd):
+    # The worker's "close" breaks the product test: the REAL checks fail at the
     # §A2 refresh — on the branch, where the lane that caused it can fix it —
     # and the driver STOPS with the branch still claimed. Nothing merged,
-    # nothing skipped, and (unlike the composed-tree bar this replaced) nothing
+    # nothing skipped, and (unlike the landing checks this replaced) nothing
     # parked on a candidate branch for someone to go and read.
     #
-    # THE WI PINS ITS OWN `bar:` SINCE THE OI-30 D2 CEILING, and that is not
+    # THE WI PINS ITS OWN `checks_stage` SINCE THE OI-30 D2 CEILING, and that is not
     # test-plumbing — it is this test proving the escape hatch the ruling rests
-    # on. `sr_bar` now stops at DevStg-Tests, so a fully approved scaffold no
+    # on. `sr_bar` now stops at DevStg-Tests, so a fully accepted scaffold no
     # longer DERIVES DevStg-Impl, and the `tests+coverage` step is tagged for
     # DevStg-Impl alone: without the pin the broken product source below would
-    # sail through a green bar. The `bar:` frontmatter key (WI-388) is exactly
+    # sail through passing checks. The `checks_stage` frontmatter key (WI-388) is exactly
     # the "`--gate DevStg-Impl` stays explicitly invocable" half of the
     # ruling, and it is what a lane that wants the strict plan uses.
     #
@@ -986,17 +999,17 @@ def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
     # `tests+coverage` and `module-coverage` stop being selected by derivation
     # for every repo — they are in `check.ADVISORY_EXCLUDE`, so the open-window
     # advisory tier does not cover them either.
-    repo = scaffold_with_queued_wi(tmp_path, bar="DevStg-Impl")
+    repo = scaffold_with_queued_wi(tmp_path, checks_stage="DevStg-Impl")
 
     rc = drv.run(repo, drive_args(), worker=closing_worker(E2E_BAD_SRC), tier="smoke")
     assert rc == 1
     err = capfd.readouterr().err
-    assert "bar is RED on the refreshed tree" in err
+    assert "checks FAIL on the refreshed tree" in err
     assert "wi-401-widget" in _git(repo, "branch", "--format=%(refname:short)")
     assert not (repo / "docs" / "work" / "complete" / "WI-401-widget.md").exists()
     # The lane is left exactly where the worker left it: no refresh commit, no
-    # attestation, so the slot could not merge it even if something tried.
-    assert integ.refresh_attestation(repo, "wi-401-widget") is None
+    # record, so the slot could not merge it even if something tried.
+    assert integ.refresh_passed_checks(repo, "wi-401-widget") is None
 
 
 # --- the spine barrier, end to end (WI-381, §A4/§A8) ---------------------------
@@ -1235,7 +1248,7 @@ def test_a_finished_branch_that_owes_nothing_goes_straight_to_the_slot(tmp_path,
     assert all(branch != "wi-777" for branch, _ids in worker.calls), worker.calls
 
 
-def test_the_worker_preflight_accepts_the_resumed_finished_lane(tmp_path):
+def test_the_worker_preflight_passes_the_resumed_finished_lane(tmp_path):
     # The far end of the resume: `agent_loop --wi WI-777` on a lane whose rows
     # the LANE ITSELF already closed. The preflight's terminal-status rung
     # refuses a STALE assignment, and the 2026-09-04 fix tells the two apart by
@@ -1259,23 +1272,20 @@ def test_the_worker_preflight_accepts_the_resumed_finished_lane(tmp_path):
     )
 
 
-def test_attended_approval_row_drains_and_exits_zero_with_the_banner(tmp_path, capfd):
+def test_attended_acceptance_row_drains_and_exits_zero_with_the_banner(tmp_path, capfd):
     # THE HONEST CORRECTION (§A8): before WI-381 a queued gate row sorted
     # first, the driver claimed ready[0], `_claim_refusal` rejected it and the
     # run stopped NONZERO — a failure banner over a machine that had finished
     # everything it was allowed to do. Under `attended` the dispatcher must
-    # not dispatch an approval: drain, leave the cards on open-items.html,
+    # not dispatch an acceptance: drain, leave the cards on open-items.html,
     # exit 0 with the honest banner — and take no ordinary work past the
-    # pending approval either (the §A8 premise: no work can be taken).
+    # pending acceptance either (the §A8 premise: no work can be taken).
     root = git_repo(tmp_path)
     write_spec(
-        root, "queued", "WI-600", slug="approve", safety="gate", specref="seed.txt"
+        root, "queued", "WI-600", slug="accept", safety="gate", specref="seed.txt"
     )
     write_spec(root, "queued", "WI-401", specref="seed.txt")
-    (root / "docs" / "gate-policy").write_text(
-        "attended\n", encoding="utf-8", newline="\n"
-    )
-    _commit(root, "file the approval row", when=T_CODE)
+    _commit(root, "file the acceptance row", when=T_CODE)
     worker = Recorder()
 
     rc = drv.run(root, drive_args(), worker=worker)
@@ -1283,13 +1293,13 @@ def test_attended_approval_row_drains_and_exits_zero_with_the_banner(tmp_path, c
     out = capfd.readouterr().out
     # WI-412 (REVIEW-A finding 1): this fixture is the reviewer's driven
     # corner — a queued gate row with ZERO pending cards. The banner must name
-    # the queued row, NOT send the owner to a page that renders "None - no
-    # durable owner action is pending".
-    assert "1 queued attestation row(s)" in out, out
+    # the queued row, NOT send the operator to a page that renders "None - no
+    # durable operator action is pending".
+    assert "1 queued acceptance row(s)" in out, out
     assert "no card has projected to open-items.html yet" in out, out
-    assert "approval(s) waiting in open-items.html" not in out, out
+    assert "acceptance(s) waiting in open-items.html" not in out, out
     assert worker.calls == []
-    assert (root / "docs" / "work" / "queued" / "WI-600-approve.md").is_file()
+    assert (root / "docs" / "work" / "queued" / "WI-600-accept.md").is_file()
 
 
 def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeypatch):
@@ -1297,15 +1307,15 @@ def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeyp
     # can be both a projected card and a queued gate row — so they must never
     # be SUMMED. Review drove the cost of the first fix, which suppressed the
     # queued rows entirely whenever any card existed: one unrelated card hid
-    # two real attestation rows. Both are named, separately, with the overlap
+    # two real acceptance rows. Both are named, separately, with the overlap
     # stated; no total is asserted that neither read supports.
     root = git_repo(tmp_path)
     monkeypatch.setattr(drv, "_pending_cards", lambda _root: ["one waiting card"])
 
     line = drv._surface_banner(root, ["WI-600", "WI-601"])
 
-    assert "1 approval(s) waiting in open-items.html" in line, line
-    assert "2 queued attestation row(s) on the frontier" in line, line
+    assert "1 acceptance(s) waiting in open-items.html" in line, line
+    assert "2 queued acceptance row(s) on the frontier" in line, line
     assert "the two reads may name the same row" in line, line
     # never summed: 1 card + 2 rows must not be reported as 3 of anything
     assert "3" not in line, line
@@ -1313,7 +1323,7 @@ def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeyp
     # ...and with nothing queued, the cards arm is still exactly the classic
     # line the ruled amendment names.
     assert drv._surface_banner(root, []) == (
-        "queue drained - 1 approval(s) waiting in open-items.html"
+        "queue drained - 1 acceptance(s) waiting in open-items.html"
     )
 
 
@@ -1321,13 +1331,13 @@ def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeyp
 
 
 def census_repo(tmp_path):
-    """A drivable repo (declared bar + stub harness) whose registries name
+    """A drivable repo (declared checks + stub harness) whose registries name
     gaps and whose queue is EMPTY — the rung-1 state."""
     root = git_repo(tmp_path)
     (root / "docs").mkdir(exist_ok=True)
     (root / "docs" / "stack.ini").write_text(
         "[product]\ntest = {py} -m pytest -q\n"
-        + BARS_RED_MARK
+        + MARKER_DECLARATION
         + "[generated]\nPROJECT_STATE.html = trajectory\n",
         encoding="utf-8",
         newline="\n",
@@ -1343,9 +1353,9 @@ def census_repo(tmp_path):
     req.mkdir(parents=True)
     (req / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status,Phase,Area,SupersededBy\n"
+        "Permutations,Priority,VerificationMethod,Status,Phase,Area,SupersededBy\n"
         "SR-001,Widget,SN-001,Shall widget.,Because.,Widgets.,,1,Test,"
-        "Approved,,,\n",
+        "Accepted,,,\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -1398,19 +1408,19 @@ def test_the_census_mint_refusal_stops_the_run_loudly(tmp_path, capfd, monkeypat
 def test_empty_frontier_rung_two_banner_derives_from_the_shared_pending_read(
     tmp_path, capfd
 ):
-    # Rung 2: census empty but a pending attestation exists — that is NOT
+    # Rung 2: census empty but a pending acceptance exists — that is NOT
     # missing work. The banner's count comes from the SAME pending_block(root)
     # read the dashboard and open-items.html share (a Drafted spine row owing an
-    # approval is one card), so agent-resume and the owner surfaces can never
+    # acceptance is one card), so agent-resume and the operator surfaces can never
     # disagree about what is blocking. (A blocked WI carrying a BlockRef used to
     # be that card; the blockref vocabulary retired at WI-553/OI-70, so the
-    # surviving owner_card source is the spine arm.)
+    # surviving operator_card source is the spine arm.)
     root = git_repo(tmp_path)
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     (req / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-        "Permutations,Priority,Verification,Status,Phase,Area\n"
+        "Permutations,Priority,VerificationMethod,Status,Phase,Area\n"
         "SR-700,Waiting,SN-001,Shall wait.,Because.,Waits.,,1,Test,Drafted,,\n",
         encoding="utf-8",
         newline="\n",
@@ -1421,7 +1431,7 @@ def test_empty_frontier_rung_two_banner_derives_from_the_shared_pending_read(
     rc = drv.run(root, drive_args(), worker=worker)
     assert rc == 0
     out = capfd.readouterr().out
-    assert "queue drained - 1 approval(s) waiting in open-items.html" in out, out
+    assert "queue drained - 1 acceptance(s) waiting in open-items.html" in out, out
     assert worker.calls == []
 
 

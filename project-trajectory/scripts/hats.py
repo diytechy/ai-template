@@ -144,8 +144,8 @@ COMPANION_ROSTER_RELS = ("project-trajectory/registries/hats.template.toml",)
 # adopter who keeps the shipped roster and tags a need `a11y` gets the same
 # correct reading. Retire a tag of your own here when you rule its hat `always`.
 NON_ROUTING_TOKENS = {
-    "a11y": "hat.ACCESSIBILITY is `always` (owner ruling 2026-08-16)",
-    "perf": "hat.PERFORMANCE is `always` (owner ruling 2026-08-16)",
+    "a11y": "hat.ACCESSIBILITY is `always` (operator ruling 2026-08-16)",
+    "perf": "hat.PERFORMANCE is `always` (operator ruling 2026-08-16)",
 }
 
 # The one top-level table; a roster declaring anything else is malformed.
@@ -550,7 +550,7 @@ def questions(hats):
 
 
 # --- the SN x hat audit -------------------------------------------------------
-# WHY THIS EXISTS (owner framing, 2026-08-16). ~27 stakeholder needs against ~8
+# WHY THIS EXISTS (operator framing, 2026-08-16). ~27 stakeholder needs against ~8
 # tag-gated hats is ~200 applicability permutations, and nobody wades through
 # 200 permutations by hand — so the question the `spine-authoring` skill puts at
 # SN intake ("which hats should derive from this need, and do its declared tags

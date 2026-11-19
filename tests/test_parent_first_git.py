@@ -1,8 +1,8 @@
-"""A spine row is approved only after the rows it hangs from are, on real
+"""A spine row is accepted only after the rows it hangs from are, on real
 repositories.
 
-A commit that leaves an approved row (`Approved` or `Founded`) under a parent
-that is not approved is refused where the commit moved either row's status:
+A commit that leaves an accepted row (`Accepted` or `Founded`) under a parent
+that is not accepted is refused where the commit moved either row's status:
 at pre-commit through `check.py --parent-first` over the index (against HEAD,
 and MERGE_HEAD during a merge), and at the merge slot on each lane commit
 through the shared lane-commit walk, so a `--no-verify` commit lands nothing.
@@ -78,21 +78,21 @@ def _step(root):
 
 
 @pytest.mark.parametrize("pair", sorted(PAIRS), ids=sorted(PAIRS))
-def test_staging_an_approved_child_under_a_drafted_parent_is_refused(tmp_path, pair):
+def test_staging_an_accepted_child_under_a_drafted_parent_is_refused(tmp_path, pair):
     """Implements: TC-397"""
     child, parent = PAIRS[pair]
     root = _repo(tmp_path)
     _commit(root, "drafts", (parent, "Drafted"), (child, "Drafted", parent))
-    _stage(root, (parent, "Drafted"), (child, "Approved", parent))
+    _stage(root, (parent, "Drafted"), (child, "Accepted", parent))
     code, out = _step(root)
     assert code == 1, out
     assert child in out and parent in out, out
 
 
-def test_demoting_a_parent_under_an_approved_child_is_refused(tmp_path):
+def test_demoting_a_parent_under_an_accepted_child_is_refused(tmp_path):
     """Implements: TC-397"""
     root = _repo(tmp_path)
-    _commit(root, "approved", ("SR-001", "Approved"), ("LLR-001", "Approved", "SR-001"))
+    _commit(root, "accepted", ("SR-001", "Accepted"), ("LLR-001", "Accepted", "SR-001"))
     _stage(root, ("SR-001", "Drafted"))
     code, out = _step(root)
     assert code == 1, out
@@ -109,11 +109,11 @@ def test_a_founded_child_flipped_under_a_drafted_parent_is_refused(tmp_path):
     assert "LLR-001" in out and "Founded" in out, out
 
 
-def test_an_act_approving_parent_and_child_together_passes(tmp_path):
+def test_an_act_accepting_parent_and_child_together_passes(tmp_path):
     """Implements: TC-397"""
     root = _repo(tmp_path)
     _commit(root, "drafts", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
-    _stage(root, ("SR-001", "Approved"), ("LLR-001", "Approved", "SR-001"))
+    _stage(root, ("SR-001", "Accepted"), ("LLR-001", "Accepted", "SR-001"))
     code, out = _step(root)
     assert code == 0, out
 
@@ -121,8 +121,8 @@ def test_an_act_approving_parent_and_child_together_passes(tmp_path):
 def test_a_commit_moving_neither_row_passes_over_a_standing_case(tmp_path):
     """Implements: TC-397"""
     root = _repo(tmp_path)
-    _commit(root, "standing", ("SR-001", "Drafted"), ("LLR-001", "Approved", "SR-001"))
-    _stage(root, ("LLR-001", "Approved", "SR-001"), ("LLR-002", "Drafted", "SR-001"))
+    _commit(root, "standing", ("SR-001", "Drafted"), ("LLR-001", "Accepted", "SR-001"))
+    _stage(root, ("LLR-001", "Accepted", "SR-001"), ("LLR-002", "Drafted", "SR-001"))
     code, out = _step(root)
     assert code == 0, out
 
@@ -135,7 +135,7 @@ def test_a_commit_touching_no_registry_is_not_read(tmp_path):
     """
     root = _repo(tmp_path)
     _commit(
-        root, "standing", ("LLR-001", "Approved", "SR-001"), files={SR_PATH: BROKEN}
+        root, "standing", ("LLR-001", "Accepted", "SR-001"), files={SR_PATH: BROKEN}
     )
     _stage(root, files={"README.md": "an unrelated change\n"})
     code, out = _step(root)
@@ -145,7 +145,7 @@ def test_a_commit_touching_no_registry_is_not_read(tmp_path):
 def test_a_registry_added_with_a_violation_is_refused(tmp_path):
     """Implements: TC-397"""
     root = _repo(tmp_path)
-    _stage(root, ("SR-001", "Drafted"), ("LLR-001", "Approved", "SR-001"))
+    _stage(root, ("SR-001", "Drafted"), ("LLR-001", "Accepted", "SR-001"))
     code, out = _step(root)
     assert code == 1, out
     assert "LLR-001" in out and "SR-001" in out, out
@@ -156,8 +156,8 @@ def test_a_commit_repairing_an_unparseable_registry_is_judged_on_its_own_rows(
 ):
     """Implements: TC-397"""
     root = _repo(tmp_path)
-    _commit(root, "broken", ("LLR-001", "Approved", "SR-001"), files={SR_PATH: BROKEN})
-    _stage(root, ("SR-001", "Approved"))
+    _commit(root, "broken", ("LLR-001", "Accepted", "SR-001"), files={SR_PATH: BROKEN})
+    _stage(root, ("SR-001", "Accepted"))
     code, out = _step(root)
     assert code == 0, out
     _stage(root, ("SR-001", "Drafted"))
@@ -167,9 +167,9 @@ def test_a_commit_repairing_an_unparseable_registry_is_judged_on_its_own_rows(
 
 
 def test_a_merge_assembling_a_violation_from_two_sides_is_refused(tmp_path):
-    """Each side is clean alone: the branch approves the LLR under an approved
+    """Each side is clean alone: the branch accepts the LLR under an accepted
     SR, trunk demotes the SR while its child is still Drafted. Only the merge
-    leaves the approved child under the Drafted parent. The LLR's status moves
+    leaves the accepted child under the Drafted parent. The LLR's status moves
     against HEAD here, so a judgement against HEAD alone refuses this merge
     too: it pins the refusal of an assembled case, not that MERGE_HEAD is read
     as a base, which the next case pins.
@@ -177,9 +177,9 @@ def test_a_merge_assembling_a_violation_from_two_sides_is_refused(tmp_path):
     Implements: TC-397
     """
     root = _repo(tmp_path)
-    _commit(root, "base", ("SR-001", "Approved"), ("LLR-001", "Drafted", "SR-001"))
+    _commit(root, "base", ("SR-001", "Accepted"), ("LLR-001", "Drafted", "SR-001"))
     fixture_git(root, "checkout", "-q", "-b", "side")
-    _commit(root, "approve the child", ("LLR-001", "Approved", "SR-001"))
+    _commit(root, "accept the child", ("LLR-001", "Accepted", "SR-001"))
     fixture_git(root, "checkout", "-q", "main")
     _commit(root, "demote the parent", ("SR-001", "Drafted"))
     fixture_git(root, "merge", "-q", "--no-commit", "--no-ff", "side")
@@ -189,7 +189,7 @@ def test_a_merge_assembling_a_violation_from_two_sides_is_refused(tmp_path):
 
 
 def test_a_merge_bringing_a_standing_case_to_the_other_side_is_refused(tmp_path):
-    """HEAD already holds the approved LLR under its Drafted SR, unchanged by
+    """HEAD already holds the accepted LLR under its Drafted SR, unchanged by
     the merge; the merged side holds the LLR Drafted. Against HEAD neither
     status moved, so only a judgement that reads MERGE_HEAD as a base sees the
     merge move the LLR's status into the case. Adequacy witness: a staged
@@ -202,7 +202,7 @@ def test_a_merge_bringing_a_standing_case_to_the_other_side_is_refused(tmp_path)
     fixture_git(root, "checkout", "-q", "-b", "side")
     _commit(root, "unrelated", files={"README.md": "side\n"})
     fixture_git(root, "checkout", "-q", "main")
-    _commit(root, "the standing case", ("LLR-001", "Approved", "SR-001"))
+    _commit(root, "the standing case", ("LLR-001", "Accepted", "SR-001"))
     fixture_git(root, "merge", "-q", "--no-commit", "--no-ff", "side")
     code, out = _step(root)
     assert code == 1, out
@@ -214,7 +214,7 @@ def test_a_no_verify_lane_commit_with_a_violation_is_refused_at_the_slot(tmp_pat
     root = _repo(tmp_path)
     _commit(root, "drafts", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
     fixture_git(root, "checkout", "-q", "-b", "wi-001")
-    bad = _commit(root, "approve the child alone", ("LLR-001", "Approved", "SR-001"))
+    bad = _commit(root, "accept the child alone", ("LLR-001", "Accepted", "SR-001"))
     fixture_git(root, "checkout", "-q", "main")
     refusal = integrate._text_then_act_refusal(root, "wi-001")
     assert refusal is not None
@@ -230,7 +230,7 @@ def test_the_first_commit_is_not_judged(tmp_path):
     fixture_git(root, "init", "-q")
     fixture_git(root, "symbolic-ref", "HEAD", "refs/heads/main")
     pin_autocrlf(root)
-    _stage(root, ("SR-001", "Drafted"), ("LLR-001", "Approved", "SR-001"))
+    _stage(root, ("SR-001", "Drafted"), ("LLR-001", "Accepted", "SR-001"))
     code, out = _step(root)
     assert code == 0, out
 
@@ -247,7 +247,7 @@ def test_a_legacy_csv_carrier_is_judged_like_toml(tmp_path):
         "drafts",
         files={sr: sr_text, llr: llr_head + "LLR-001,SR-001,a,Drafted\n"},
     )
-    _stage(root, files={llr: llr_head + "LLR-001,SR-001,a,Approved\n"})
+    _stage(root, files={llr: llr_head + "LLR-001,SR-001,a,Accepted\n"})
     code, out = _step(root)
     assert code == 1, out
     assert "LLR-001" in out and "SR-001" in out, out
@@ -256,25 +256,25 @@ def test_a_legacy_csv_carrier_is_judged_like_toml(tmp_path):
 # --- characterizations of the settled judgement ------------------------------
 
 LINE = (
-    "LLR-001 (Approved) is approved under SR-001 (Drafted), which is not: "
-    "approve SR-001 in its own approval act, or return LLR-001 to Drafted"
+    "LLR-001 (Accepted) is accepted under SR-001 (Drafted), which is not: "
+    "accept SR-001 in its own acceptance act, or return LLR-001 to Drafted"
 )
 
 
 def _standing_case_on_main_merged_with_a_side(root):
-    """Main approves LLR-001 under its Drafted SR-001; `side`, cut before
+    """Main accepts LLR-001 under its Drafted SR-001; `side`, cut before
     that, touches only the README. Returns the merge commit made on main."""
     _commit(root, "base", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
     fixture_git(root, "checkout", "-q", "-b", "side")
     _commit(root, "unrelated", files={"README.md": "side\n"})
     fixture_git(root, "checkout", "-q", "main")
-    _commit(root, "the standing case", ("LLR-001", "Approved", "SR-001"))
+    _commit(root, "the standing case", ("LLR-001", "Accepted", "SR-001"))
     fixture_git(root, "merge", "-q", "--no-ff", "--no-edit", "side")
     return fixture_git(root, "rev-parse", "HEAD")
 
 
 def test_a_lane_merge_commit_is_judged_against_every_parent(tmp_path):
-    """The merge commit leaves the approved LLR-001 under the Drafted SR-001
+    """The merge commit leaves the accepted LLR-001 under the Drafted SR-001
     unchanged against its first parent and moved against its second, so it is
     refused. Adequacy witness: a judgement against the first parent alone
     passes it.
@@ -298,9 +298,9 @@ def test_each_line_names_its_tree_before_the_relationship(tmp_path):
     """
     root = _repo(tmp_path)
     _commit(root, "drafts", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
-    _stage(root, ("LLR-001", "Approved", "SR-001"))
+    _stage(root, ("LLR-001", "Accepted", "SR-001"))
     assert ar.staged_parent_first_lines(root) == ["the index: " + LINE]
-    sha = _commit(root, "approve the child alone")
+    sha = _commit(root, "accept the child alone")
     assert ar.commit_parent_first_lines(root, sha) == [
         "commit {}: {}".format(sha[:10], LINE)
     ]
@@ -312,10 +312,10 @@ def test_each_line_names_its_tree_before_the_relationship(tmp_path):
 def test_a_parent_with_a_missing_or_unknown_status_refuses_the_commit(
     tmp_path, parent_cell
 ):
-    """A staged commit that approves LLR-001 under an SR-001 with no `Status`
+    """A staged commit that accepts LLR-001 under an SR-001 with no `Status`
     cell, or with a word outside the vocabulary, is refused: neither claims
-    approval. Adequacy witness: a judgement that read only `Drafted` as
-    unapproved passes both.
+    acceptance. Adequacy witness: a judgement that read only `Drafted` as
+    unaccepted passes both.
 
     Implements: TC-397
     """
@@ -323,16 +323,16 @@ def test_a_parent_with_a_missing_or_unknown_status_refuses_the_commit(
     _commit(root, "drafts", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
     _stage(
         root,
-        ("LLR-001", "Approved", "SR-001"),
+        ("LLR-001", "Accepted", "SR-001"),
         files={SR_PATH: "[requirement.SR-001]\n" + parent_cell},
     )
     lines = ar.staged_parent_first_lines(root)
-    assert len(lines) == 1 and "LLR-001 (Approved)" in lines[0], lines
+    assert len(lines) == 1 and "LLR-001 (Accepted)" in lines[0], lines
     assert "under SR-001" in lines[0], lines
 
 
 def test_a_root_commit_is_not_judged(tmp_path):
-    """A commit with no parent in its object, carrying an approved child under
+    """A commit with no parent in its object, carrying an accepted child under
     a Drafted parent, is not refused. Adequacy witness: a judgement that read a
     root commit against the empty tree counts both rows as moved and refuses
     it.
@@ -345,6 +345,6 @@ def test_a_root_commit_is_not_judged(tmp_path):
     fixture_git(root, "symbolic-ref", "HEAD", "refs/heads/main")
     pin_autocrlf(root)
     sha = _commit(
-        root, "root", ("SR-001", "Drafted"), ("LLR-001", "Approved", "SR-001")
+        root, "root", ("SR-001", "Drafted"), ("LLR-001", "Accepted", "SR-001")
     )
     assert ar.commit_parent_first_lines(root, sha) == []

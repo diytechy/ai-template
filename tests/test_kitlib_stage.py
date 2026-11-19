@@ -168,7 +168,7 @@ def test_an_empty_fold_is_the_FLOOR_and_never_raises():
     """Corner case 3 at the fold level — a fresh scaffold, an empty spine and an
     all-draft repo all arrive here, and all three need a defined SELECTION
     meaning. Below the floor nothing is selected by an at-or-above rule, so the
-    run would go green because no check ran.
+    run would pass because no check ran.
 
     Implements: TC-180
     """
@@ -306,9 +306,9 @@ def test_content_still_moves_the_fingerprint(tmp_path):
 
 
 def test_process_toml_is_NOT_an_input(tmp_path):
-    """Owner ruling 2026-08-21 (amending plan §2): dials govern who may approve,
-    not what stage is derived — and an over-inclusive fingerprint costs a red
-    commit bar after every policy-dial edit, not "milliseconds". A process.toml
+    """Operator ruling 2026-08-21 (amending plan §2): dials govern who may accept,
+    not what stage is derived — and an over-inclusive fingerprint costs failing
+    commit checks after every policy-dial edit, not "milliseconds". A process.toml
     edit must not move the fingerprint."""
     root = _tree(tmp_path)
     before = stage.fingerprint(root, memo=None)
@@ -348,9 +348,9 @@ def test_every_file_the_DERIVATION_READS_is_a_declared_input(tmp_path):
     The existing pin is one-directional by construction: `test_process_toml_is_
     NOT_an_input` proves a NAMED file is not an input. Nothing proved an UNNAMED
     file is not one — and that is the expensive direction. The over-inclusive
-    error costs a spurious re-derivation (a red commit bar, which is how the
+    error costs a spurious re-derivation (failing commit checks, which is how the
     process.toml ruling got made). The under-inclusive error costs a PERMANENT
-    false green: the moment `load_spine` reads a registry `DECLARED_INPUTS` does
+    false pass: the moment `load_spine` reads a registry `DECLARED_INPUTS` does
     not name, the fingerprint stops covering it, `read_stage` matches on a hash
     that ignores every edit to it, and every consumer returns a stale stage
     forever — with `derive_stage --check` passing, because it compares the same
@@ -367,7 +367,7 @@ def test_every_file_the_DERIVATION_READS_is_a_declared_input(tmp_path):
     ladder does not yet read, while two rungs already key on off-spine ones) —
     and the audit fails if the derivation touches any of them. Verified
     non-vacuous by mutation: teaching `load_spine` to read `interfaces.toml`
-    reds this test.
+    fails this test.
     """
     spine_rules = load_script("spine_rules")
     root = _tree(tmp_path)
@@ -422,7 +422,7 @@ def test_every_file_the_DERIVATION_READS_is_a_declared_input(tmp_path):
 # --- corner case 7: a mid-process input change -------------------------------
 def test_the_reader_returns_FRESH_values_when_an_input_changes_mid_process(tmp_path):
     """THE HOISTING WINDOW, CLOSED BY CONSTRUCTION. `agent_loop` and `dispatch`
-    read the stage once per run and thread it down, so a mid-session approval
+    read the stage once per run and thread it down, so a mid-session acceptance
     was invisible for the rest of the run. Verification per CALL is what removes
     that window — including across the per-process memo, which is keyed on
     path+size+mtime and must never be mistaken for the freshness truth.
@@ -510,7 +510,7 @@ def test_a_hand_edited_record_RAISES_rather_than_healing_silently(tmp_path):
     field is a file this kit did not write and re-derives; a file that carries a
     stage which is not a rung is a hand edit or a ladder that moved under a cached
     value, and both are the loud case (`ladder.stage_ord`'s ruled direction: the
-    wrong-answer direction of a silent default is LESS human involvement)."""
+    wrong-answer direction of a silent default is LESS operator involvement)."""
     root = _tree(tmp_path)
     path = root / stage.STAGE_FILE
     path.parent.mkdir(parents=True, exist_ok=True)

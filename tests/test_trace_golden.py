@@ -22,7 +22,7 @@ GOLDEN = os.path.join(os.path.dirname(__file__), "golden")
 # Exercises every report section the minimal chain does not: the PB/REPO/PART/
 # ASSET/CMP/IF back-link renders, the knowledge-pack + AC advisories, the draft
 # artifacts section (a Drafted SR + a section-as-state Drafted SN), the three-way
-# verification-basis split (an Attest SR — mechanized/demonstrated/attested,
+# verification-basis split (a Vouch SR — mechanized/demonstrated/vouched,
 # WI-259), and the per-Area counts.
 
 RICH_SN = """# Stakeholder Needs (SN-###)
@@ -32,23 +32,23 @@ RICH_SN = """# Stakeholder Needs (SN-###)
 | SN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
 | SN-002 | Document the adder. | Trust. | S | A page exists. |
 
-## Draft needs (unapproved)
+## Draft needs (unaccepted)
 
 | SN-ID | Need | Why | Priority | Acceptance intent |
 |---|---|---|---|---|
 | SN-003 | A future capability. | Later. | C | TBD. |
 """
 
-RICH_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Aspect
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,process
-SR-002,Docs,SN-002,"The system shall ship a doc.","Realizes SN-002.","the page is identical to the source",,S,Attest,Approved,trajectory
+RICH_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status,Aspect
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted,process
+SR-002,Docs,SN-002,"The system shall ship a doc.","Realizes SN-002.","the page is identical to the source",,S,Vouch,Accepted,trajectory
 SR-003,Future,SN-002,"The system shall do a future thing.","Drafted first.","TBD",,C,Test,Drafted,process
 """
 
-# LLR-001 is deliberately `Drafted` under an `Approved` TC-001 so this fixture
+# LLR-001 is deliberately `Drafted` under an `Accepted` TC-001 so this fixture
 # keeps rendering the POPULATED status-coherence advisory section. Before D-9
 # step 5 the shared minimal project carried that case with `Planned`; the fold
-# lifted it to `Approved` and silenced the lint, so the case moved HERE — the
+# lifted it to `Accepted` and silenced the lint, so the case moved HERE — the
 # fixture whose whole job is exercising every report section — rather than into
 # `make_minimal_project`, where a `Drafted` child would cap the derived gate for
 # every test built on it.
@@ -57,8 +57,8 @@ LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see
 """
 
 RICH_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
-TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001",Yes,tests/test_demo.py::test_add_sr001,Approved
-TC-002,SR-002,Manual,read the page,Full,,"The page exists",No,,Approved
+TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001",Yes,tests/test_demo.py::test_add_sr001,Accepted
+TC-002,SR-002,Manual,read the page,Full,,"The page exists",No,,Accepted
 """
 
 RICH_PBS = """PB-ID,Metric,Refs,Budget,Unit,Tolerance,Direction,Tier,Gate,Owner,Notes
@@ -81,7 +81,7 @@ RICH_CMPS = """[component.CMP-001]
 name = "Adder"
 category = "core"
 knowledge = "docs/knowledge/missing-pack"
-status = "Approved"
+status = "Accepted"
 notes = "demo component"
 """
 
@@ -101,14 +101,14 @@ consumers = ["external:acme/widget"]
 channel = "call"
 data = "two numbers in, their sum out"
 version = "1"
-status = "Approved"
+status = "Accepted"
 component = "CMP-001"
 notes = "demo seam"
 """
 
-ORPHAN_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
-SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Approved
+ORPHAN_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted
+SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Accepted
 """
 
 

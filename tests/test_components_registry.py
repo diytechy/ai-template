@@ -244,7 +244,7 @@ def write_if(root, component):
         'consumers = ["external:downstream"]\n'
         'channel = "call"\n'
         'version = "v1"\n'
-        'status = "Approved"\n'
+        'status = "Accepted"\n'
         'component = "{}"\n'.format(component),
         encoding="utf-8",
     )

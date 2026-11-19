@@ -54,7 +54,7 @@ PLAN_TEXT = """# Selected plan (rev)
 WI_HEADER_LINE = (
     "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,"
     "BuildTier,CritiqueBudget,CritiqueExhaustion,Priority,Exclusive,"
-    "EstTokens,SafetyClass,PlanMode,Bar,Supersedes,Brief,Adjudicates,Digests,"
+    "EstTokens,SafetyClass,PlanMode,ChecksStage,Supersedes,Brief,Adjudicates,Digests,"
     "Adopted,AuthoringTags\n"
 )
 
@@ -323,7 +323,7 @@ def test_a_fresh_folder_first_scaffold_files_specs_without_resurrecting_a_csv(
     never flips READ authority, but an absent CSV must not be created either —
     resurrecting the home the scaffold omitted would be the filer minting a
     second registry. Mutation-proven by construction: the pre-2c-ii filer
-    (folder_is_authoritative alone) is the mutant, and it reds this test by
+    (folder_is_authoritative alone) is the mutant, and it fails this test by
     creating the CSV."""
     _write_spec(_watermark(tmp_path), "queued", "WI-000", slug="example")
     mapping = _file_three(tmp_path)

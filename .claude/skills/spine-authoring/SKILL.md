@@ -1,6 +1,6 @@
 ---
 name: spine-authoring
-description: Use when breaking down or developing the SN → SR → LLR → TC spine — the adjudicator's question list per tier: what a need must carry before it is approved, what belongs at SR versus LLR versus the trace tier, when an obligation is a labelled derived requirement, and which instruments catch a distorted breakdown. Also use when authoring or judging a lane's spine change for a found defect or new scope.
+description: Use when breaking down or developing the SN → SR → LLR → TC spine — the adjudicator's question list per tier: what a need must carry before it is accepted, what belongs at SR versus LLR versus the trace tier, when an obligation is a labelled derived requirement, and which instruments catch a distorted breakdown. Also use when authoring or judging a lane's spine change for a found defect or new scope.
 stacks: [python, node, powershell, go, rust, any]
 domains: [any]
 phases: [dev, gate]
@@ -16,15 +16,15 @@ smell after the fact. The tiering itself is a judgement, and this is the questio
 list to put to a row **before** it lands (the questions themselves have one
 shipped home, named under §1–3 below).
 
-**Authoring is not approving** (owner rulings 2026-09-01 and 2026-10-07;
+**Authoring is not accepting** (operator rulings 2026-09-01 and 2026-10-07;
 `docs/process.md` §4). The authoring session writes its rows `Drafted` and may
-amend any cell of any row, approved ones included. It never flips a `Status` to
-`Approved`/`Founded`, never writes a row already claiming one, and never writes
-`docs/archive/last_approved/` — that act is an independent adjudicator's, never
+amend any cell of any row, accepted ones included. It never flips a `Status` to
+`Accepted`/`Founded`, never writes a row already claiming one, and never writes
+`docs/archive/last_accepted/` — that act is an independent adjudicator's, never
 the session's that authored the rows, taken in the authoring lane or on trunk
 after reading the row's whole chain, and a lane's merge is refused by name for
-any act no accepted verdict judging its own rows backs. So use the question list to make a row *ready*; the answer to "is
-it approved" comes from elsewhere.
+any act no recorded verdict judging its own rows backs. So use the question list to make a row *ready*; the answer to "is
+it accepted" comes from elsewhere.
 
 **Authority, not restated here:** `docs/process.md` §3 (one fact one home;
 decompose don't paraphrase; one decision per row, one home per method; one
@@ -89,34 +89,35 @@ Use the ordinary scoped change/review record for the following decisions:
    not another need.
 4. **Reconcile and review the affected chain.** Identify changed LLRs, TCs,
    interfaces, evidence and queued/active work. Keep IDs where meaning remains;
-   preserve previous approvals as history and submit the scoped amendments under
-   the current authority. Rejected proposals leave authoritative content intact.
+   preserve previous acceptances as history and submit the scoped amendments under
+   the current authority. A conversion keeps a row's status where it keeps the
+   row's meaning; a row whose meaning it changes is `Drafted`. Rejected proposals leave authoritative content intact.
    Do not automatically re-seed snapshots, cancel work or copy the kit's own
    objectives, hats or needs into another product.
 
 Syntax checks prove reference integrity and preservation; independent judgment
 assesses relevance and adequacy. Optional prose objective anchors explain
-purpose without adding a registry tier, approval stage or completion percentage.
+purpose without adding a registry tier, acceptance stage or completion percentage.
 
 ## Three ways a spine grows
 
-Choose the mode before writing. The `human_approval_through` dial in
-`docs/process.toml` holds rungs at or below it for the owner (`docs/process.md`
+Choose the mode before writing. The `operator_accepts_through` dial in
+`docs/process.toml` holds rungs at or below it for the operator (`docs/process.md`
 §4).
 
 | Mode | What it is | How it is judged |
 |---|---|---|
-| **From the vision** | The first breakdown | Tier by tier: approve each tier before deriving the next (§1–§3) |
+| **From the vision** | The first breakdown | Tier by tier: accept each tier before deriving the next (§1–§3) |
 | **In a lane, released rungs** | A defect or new scope whose changed rows are all on released rungs | One change set, authored whole and judged in one sitting |
-| **In a lane, a held rung** | The change touches a held rung | Split at the dial: the lane lands held first drafts and MEANING changes, and their act is ruled on trunk; the sitting may re-attest only held amendments ruled CLARITY in its verdict |
+| **In a lane, a held rung** | The change touches a held rung | Split at the dial: the lane lands held first drafts and MEANING changes, and their act is ruled on trunk; the sitting may re-accept only held amendments ruled CLARITY in its verdict |
 
-**In every mode, a child is approved only after its parent.** An SR waits for
+**In every mode, a child is accepted only after its parent.** An SR waits for
 every SN it cites, an LLR for every SR, and a TC for every SR and LLR it
-verifies. An approved child under a `Drafted` parent claims a chain nobody has
+verifies. An accepted child under a `Drafted` parent claims a chain nobody has
 blessed. The enforcers: `check.py`'s `parent-first` step refuses the commit
 that moves either status into such a case, the merge slot's lane-commit walk
 refuses it on each lane commit, and `trace.py --strict-integrity` reports a
-standing case. Approve parent and child in one act, or the parent first.
+standing case. Accept parent and child in one act, or the parent first.
 
 Before authoring or judging a lane's change, read
 [references/in-lane.md](references/in-lane.md) for closure and held-rung rules.
@@ -152,20 +153,20 @@ file: change it there.
   shared-artifact, fan-out and EARS sections as a worklist of rows to
   re-adjudicate. The
   **verification-coherence** section joins the same sweep: it names a row whose
-  prose claims an instrument its `Verification` field contradicts.
+  prose claims an instrument its `VerificationMethod` field contradicts.
 - **The method-flip sweep — do this by hand, no checker covers it whole.** When
-  a row's `Verification` changes, EVERY prose cell it owns is suspect, not just
+  a row's `VerificationMethod` changes, EVERY prose cell it owns is suspect, not just
   the one you came for. A row mechanized out of `Critique` typically leaves the
   claim in three places: the AC (the instrument), the rationale (the argument
   that the instrument was *necessary* — often phrased as "a mechanized
-  verification would assert a green nothing checks", which the row's own passing
+  verification would assert a pass nothing checks", which the row's own passing
   tests then refute), and the retired instrument's own header. Sweep the row,
   its children, and anything citing the retired instrument, in the same commit
   as the flip.
-- **The approve brief.** `scripts/trace.py --approve <scope>` renders the batch's
+- **The accept brief.** `scripts/trace.py --accept <scope>` renders the batch's
   SN→SR→LLR→TC hierarchy with prose for the acceptor to read, and
-  `--approve modified` renders the per-cell before/after re-attestation brief.
-  Link the brief; never hand-copy rows into it. (Running the bar itself: the
+  `--accept modified` renders the per-cell before/after re-acceptance brief.
+  Link the brief; never hand-copy rows into it. (Running the checks themselves: the
   `gate-advance` skill. Orphans, integrity and schema findings:
   `registry-hygiene`.)
 
@@ -208,7 +209,7 @@ One line each, each one seen in a real spine:
   clause in many rows and as the subject of none is uncovered, however many
   citations it has.
 - **Acceptance rot after a method flip** — a row states one verification method
-  in its `Verification` field and a different one in its prose. Every strict
+  in its `VerificationMethod` field and a different one in its prose. Every strict
   gate passes at rc=0 while the row instructs a reader to obtain a verdict its
   own method cannot produce. (Seen: two rows mechanized out of `Critique`, whose
   acceptance went on demanding an APPROVE verdict from rubrics whose own headers
@@ -228,14 +229,14 @@ One line each, each one seen in a real spine:
   governing `SR`/`LLR`/`TC`, and each had to be extended to the need tier
   afterwards. Guard: writing or amending a spine rule, enumerate all four tiers
   and say why each one is in or out.
-- **A row amended without its own re-attest** — a row's `Status` answers for
-  its OWN cells (`docs/process.md` §4; owner ruling 2026-08-17): re-read the
+- **A row amended without its own re-accept** — a row's `Status` answers for
+  its OWN cells (`docs/process.md` §4; operator ruling 2026-08-17): re-read the
   row whose text changed, and only that row — a child LLR/TC amendment never
   touches its parent SR. There is no marker to set (`Modified` retired
-  2026-08-20); EVERY post-approval amendment is the snapshot-drift arm's find
-  (`docs/archive/last_approved/`), never the parent signature's, and the
+  2026-08-20); EVERY post-acceptance amendment is the snapshot-drift arm's find
+  (`docs/archive/last_accepted/`), never the parent signature's, and the
   chain-completeness claim belongs to the derived `Founded` state (D-9).
-  The amendment is yours to make; the RE-COPY is the approval act and belongs
+  The amendment is yours to make; the RE-COPY is the acceptance act and belongs
   to the adjudication (the preamble above; `docs/process.md` §4), which takes it
   in the same commit as its own ruling on the amendment.
 

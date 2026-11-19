@@ -1,15 +1,15 @@
-"""gen_open_items.py — the generated owner decision surface (WI-322, OI-10 (b)).
+"""gen_open_items.py — the generated operator decision surface (WI-322, OI-10 (b)).
 
 `docs/open-items.md` is retired: decision briefs are ROWS in
 `docs/requirements/open-items.csv`, and this generator renders them — plus every
-spine row owing an approval (`Drafted`) or a re-attest (`Modified`), with a
+spine row owing an acceptance (`Drafted`) or a re-accept (`Modified`), with a
 word-level before/after — into `docs/open-items.html`.
 
 What these guard, in the order the surface can fail a reader:
 
   * the briefs render, and a RULED row does not (it is history, not a decision);
   * `Drafted` AND `Modified` both surface — "new or changed requirement rows
-    awaiting a human" is the whole point, and an earlier draft covered only one;
+    awaiting an operator" is the whole point, and an earlier draft covered only one;
   * an empty section says CHECK THE BASELINE rather than reading as a confident
     "nothing changed" (the failure that shipped a brief missing 2 of 6 rows);
   * the freshness gate bites on drift, MASKS the machine-local region, and
@@ -36,7 +36,7 @@ from conftest import ROOT, SCRIPTS, load_script, pin_autocrlf, run_py
 
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Notes,"
-    "SafetyClass,Verification,Status,Phase,Workstream\n"
+    "SafetyClass,VerificationMethod,Status,Phase,Workstream\n"
 )
 LLR_HEADER = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component,Phase\n"
@@ -75,7 +75,7 @@ def repo(tmp_path, sr_rows="", oi_rows="", llr_rows="", tc_rows=""):
 
 
 def _file_placeholders(docs, oi_rows):
-    """WI-790: a pending open item reaches the owner surface only through a
+    """WI-790: a pending open item reaches the operator surface only through a
     queued work item citing it, so the fixture files that placeholder row for
     every pending row it writes (a decision nothing on the queue cites is an
     integrity notice, not a card)."""
@@ -121,9 +121,9 @@ def _git_init(root):
     _git_commit(root, "seed")
 
 
-def _approve(root):
-    """The approval act, in a fixture: copy the spine into
-    `docs/archive/last_approved/`. Everything the diff renders is measured
+def _accept(root):
+    """The acceptance act, in a fixture: copy the spine into
+    `docs/archive/last_accepted/`. Everything the diff renders is measured
     against what this call captured, so a fixture that amends WITHOUT calling it
     first has no baseline and renders current state — which is a different test."""
     load_script("baseline_snapshot").copy_live(root, seed=True)
@@ -174,14 +174,14 @@ def test_pending_briefs_render_and_ruled_rows_do_not(tmp_path):
 
 def test_draft_and_DRIFTED_rows_both_surface(tmp_path):
     """ "New or changed" is the requirement: a Drafted row owes a first
-    approval, an amended row owes a re-attest, and a view that renders only
-    one of them silently drops half the owner's queue.
+    acceptance, an amended row owes a re-accept, and a view that renders only
+    one of them silently drops half the operator's queue.
 
     THE SECOND ROW IS NOW REACHED BY DRIFT, NOT BY A CELL. It used to read
     `Status = Modified`; D-9 step 7 retired that marker, so an amended row
-    still reads `Approved` and the ONLY thing that can put it in this queue is
-    the comparison against `docs/archive/last_approved/`. The fixture therefore
-    has to approve first and amend after — which is the real sequence, and the
+    still reads `Accepted` and the ONLY thing that can put it in this queue is
+    the comparison against `docs/archive/last_accepted/`. The fixture therefore
+    has to accept first and amend after — which is the real sequence, and the
     reason this test is worth more than it was: it now proves the surface can
     see an amendment nothing in the registry announces.
     """
@@ -189,22 +189,22 @@ def test_draft_and_DRIFTED_rows_both_surface(tmp_path):
         "SR-001,A drafted need,SN-001,shall do the new thing,because,"
         "criteria,,C,Test,Drafted,1,W\n"
     )
-    approved = (
+    accepted = (
         "SR-002,An amended need,SN-001,shall do the ORIGINAL thing,because,"
-        "criteria,,C,Test,Approved,1,W\n"
+        "criteria,,C,Test,Accepted,1,W\n"
     )
-    root = repo(tmp_path, sr_rows=drafted + approved)
+    root = repo(tmp_path, sr_rows=drafted + accepted)
     _git_init(root)
-    _approve(root)
+    _accept(root)
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
-        SR_HEADER + drafted + approved.replace("ORIGINAL", "CHANGED"),
+        SR_HEADER + drafted + accepted.replace("ORIGINAL", "CHANGED"),
         encoding="utf-8",
     )
     assert gen(root).returncode == 0
     page = html_of(root)
-    assert 'id="SR-001-attest"' in page and "approval owed" in page
-    assert 'id="SR-002-attest"' in page and "re-attest owed" in page
-    # ...and the drifted cell is what the owner is shown, before and after.
+    assert 'id="SR-001-accept"' in page and "acceptance owed" in page
+    assert 'id="SR-002-accept"' in page and "re-accept owed" in page
+    # ...and the drifted cell is what the operator is shown, before and after.
     assert "ORIGINAL" in page and "CHANGED" in page
 
 
@@ -213,90 +213,90 @@ def test_verified_rows_are_not_in_the_queue(tmp_path):
     # must not appear, or the surface cries wolf on every spine row.
     repo(
         tmp_path,
-        sr_rows="SR-003,A settled need,SN-001,shall,because,criteria,,C,Test,Approved,1,W\n",
+        sr_rows="SR-003,A settled need,SN-001,shall,because,criteria,,C,Test,Accepted,1,W\n",
     )
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
     assert "SR-003" not in page
-    assert "no SR owes an approval or a re-attest" in page
+    assert "no SR owes an acceptance or a re-accept" in page
 
 
-def test_drafted_child_under_approved_undrifted_sr_owes(tmp_path):
+def test_drafted_child_under_accepted_undrifted_sr_owes(tmp_path):
     """The OI-61-sitting gap
     (docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md): `owes()` used to
     test the SR row's own `Status` alone, so a `Drafted` LLR/TC hanging off an
-    `Approved`, undrifted SR reached no surface — the drift arm cannot catch it
-    either, since a row below approval has made no claim to fall from. Widened:
+    `Accepted`, undrifted SR reached no surface — the drift arm cannot catch it
+    either, since a row below acceptance has made no claim to fall from. Widened:
     the chain is asked too, and the pill says WHY."""
     sr = (
-        "SR-020,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
+        "SR-020,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Accepted,1,W\n"
     )
     root = repo(tmp_path, sr_rows=sr)
     _git_init(root)
-    _approve(root)
+    _accept(root)
     # The SR is untouched after the snapshot — no drift. A brand-new `Drafted`
-    # LLR is added under it: never approved, absent from the snapshot.
+    # LLR is added under it: never accepted, absent from the snapshot.
     llr = "LLR-020,SR-020,A new child,mod.py,sym,detail,TC-020,Drafted,CMP-001,1\n"
     (root / "docs" / "requirements" / "low-level-requirements.csv").write_text(
         LLR_HEADER + llr, encoding="utf-8"
     )
     assert gen(root).returncode == 0
     page = html_of(root)
-    assert 'id="SR-020-attest"' in page and "approval owed" in page
-    assert "LLR-020" in page and "Drafted" in page and "never approved" in page
+    assert 'id="SR-020-accept"' in page and "acceptance owed" in page
+    assert "LLR-020" in page and "Drafted" in page and "never accepted" in page
 
 
-def test_approved_child_under_approved_sr_does_not_owe(tmp_path):
-    """The negative half: an `Approved` child under an `Approved`, undrifted SR
+def test_accepted_child_under_accepted_sr_does_not_owe(tmp_path):
+    """The negative half: an `Accepted` child under an `Accepted`, undrifted SR
     owes nothing — the widening must not turn every settled chain row into a
     false positive."""
     sr = (
-        "SR-021,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
+        "SR-021,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Accepted,1,W\n"
     )
-    llr = "LLR-021,SR-021,A child,mod.py,sym,detail,TC-021,Approved,CMP-001,1\n"
+    llr = "LLR-021,SR-021,A child,mod.py,sym,detail,TC-021,Accepted,CMP-001,1\n"
     root = repo(tmp_path, sr_rows=sr, llr_rows=llr)
     _git_init(root)
-    _approve(root)
+    _accept(root)
     assert gen(root).returncode == 0
     page = html_of(root)
-    assert 'id="SR-021-attest"' not in page
-    assert "no SR owes an approval or a re-attest" in page
+    assert 'id="SR-021-accept"' not in page
+    assert "no SR owes an acceptance or a re-accept" in page
 
 
 def test_drafted_child_unchanged_since_snapshot_still_owes(tmp_path):
-    """A `Drafted` row can sit in `docs/archive/last_approved/` byte-identical to
+    """A `Drafted` row can sit in `docs/archive/last_accepted/` byte-identical to
     its current text — `intake.py snapshot` copies every registry wholesale, not
-    only approved rows — so the widened arm cannot rely on a cell diff to notice
+    only accepted rows — so the widened arm cannot rely on a cell diff to notice
     it; it has to ask `Status` directly, independent of whether anything moved."""
     sr = (
-        "SR-022,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
+        "SR-022,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Accepted,1,W\n"
     )
     llr = "LLR-022,SR-022,A child,mod.py,sym,detail,TC-022,Drafted,CMP-001,1\n"
     root = repo(tmp_path, sr_rows=sr, llr_rows=llr)
     _git_init(root)
-    _approve(root)  # snapshots the Drafted LLR too, unchanged
+    _accept(root)  # snapshots the Drafted LLR too, unchanged
     assert gen(root).returncode == 0
     page = html_of(root)
-    assert 'id="SR-022-attest"' in page and "approval owed" in page
-    assert "No cell differs from the approved snapshot" in page
+    assert 'id="SR-022-accept"' in page and "acceptance owed" in page
+    assert "No cell differs from the accepted snapshot" in page
 
 
-def test_drafted_row_cells_are_not_labelled_approved(tmp_path):
-    """OI-71 defect 1, the HTML half — this view and the `--approve modified`
+def test_drafted_row_cells_are_not_labelled_accepted(tmp_path):
+    """OI-71 defect 1, the HTML half — this view and the `--accept modified`
     markdown brief must agree (IF-074). A `Drafted` TC that drifted in both an
-    approved-class cell (`Method`) and a traced-class cell (`Evidence`) used to
-    render its `Method` change under the §A5.1 heading `approved — re-attestation
-    owed`, keyed on the cell's COLUMN class alone — a re-attestation window on a
-    row that was never approved. It owes a FIRST approval wholesale."""
+    accepted-class cell (`Method`) and a traced-class cell (`Evidence`) used to
+    render its `Method` change under the §A5.1 heading `accepted — re-acceptance
+    owed`, keyed on the cell's COLUMN class alone — a re-acceptance window on a
+    row that was never accepted. It owes a FIRST acceptance wholesale."""
     sr = (
-        "SR-023,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
+        "SR-023,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Accepted,1,W\n"
     )
     tc = "TC-023,SR-023,Unit,drive the old path,Smoke,a=1,sum,Yes,old-ev,Drafted,1\n"
     root = repo(tmp_path, sr_rows=sr, tc_rows=tc)
     _git_init(root)
-    _approve(root)  # snapshots the Drafted TC with its old Method/Evidence
-    # Amend both a Method (approved-class) and an Evidence (traced-class) cell,
-    # still Drafted: both groups would be non-empty on the approved path, so the
+    _accept(root)  # snapshots the Drafted TC with its old Method/Evidence
+    # Amend both a Method (accepted-class) and an Evidence (traced-class) cell,
+    # still Drafted: both groups would be non-empty on the accepted path, so the
     # split heading would show — unless the row's Drafted status collapses it.
     (root / "docs" / "test" / "test-cases.csv").write_text(
         TC_HEADER
@@ -305,9 +305,9 @@ def test_drafted_row_cells_are_not_labelled_approved(tmp_path):
     )
     assert gen(root).returncode == 0
     page = html_of(root)
-    assert "TC-023" in page and "never approved" in page
+    assert "TC-023" in page and "never accepted" in page
     assert "<ins>NEW</ins>" in page  # the change is still shown, via word_diff
-    assert "approved — re-attestation owed" not in page
+    assert "accepted — re-acceptance owed" not in page
 
 
 # --- the SR-177 gap: the anchor SR's own text, unconditional and never -----
@@ -317,26 +317,26 @@ def test_drafted_row_cells_are_not_labelled_approved(tmp_path):
 def test_anchor_sr_requirement_and_rationale_render_unconditionally_and_visibly(
     tmp_path,
 ):
-    """The owner's report, verbatim (2026-08-24): opening open-items.html and
+    """The operator's report, verbatim (2026-08-24): opening open-items.html and
     looking at SR-177, the requirement text itself was nowhere on the page.
 
     It WAS on the page — inside `.ctx`, which is `display:none` until the
     toolbar's "Collapse unchanged text" box (checked by default) is cleared —
-    for exactly the shape SR-177 is: `Approved`, undrifted, its amendment
+    for exactly the shape SR-177 is: `Accepted`, undrifted, its amendment
     living entirely in a `Drafted` child. The anchor block must render the
     SR's own Requirement/Rationale OUTSIDE `.ctx`, before it, so it is visible
     on load with no interaction."""
     sr = (
         "SR-030,Stable parent,SN-001,shall report the DISTINCTIVE requirement,"
-        "because DISTINCTIVE rationale,criteria,,C,Test,Approved,1,W\n"
+        "because DISTINCTIVE rationale,criteria,,C,Test,Accepted,1,W\n"
     )
     llr = "LLR-030,SR-030,A new child,mod.py,sym,detail,TC-030,Drafted,CMP-001,1\n"
     root = repo(tmp_path, sr_rows=sr, llr_rows=llr)
     _git_init(root)
-    _approve(root)
+    _accept(root)
     assert gen(root).returncode == 0
     page = html_of(root)
-    card_start = page.index('id="SR-030-attest"')
+    card_start = page.index('id="SR-030-accept"')
     ctx_start = page.index('class="ctx"', card_start)
     anchor_slice = page[card_start:ctx_start]
     assert "DISTINCTIVE requirement" in anchor_slice
@@ -352,9 +352,9 @@ def test_anchor_requirement_truncates_above_threshold_not_below(tmp_path):
     an explicit marker; a cell comfortably below it renders untouched."""
     long_req = "A" * 1600
     short_req = "B" * 100
-    sr_rows = "SR-031,Long,SN-001,{},because,criteria,,C,Test,Approved,1,W\n".format(
+    sr_rows = "SR-031,Long,SN-001,{},because,criteria,,C,Test,Accepted,1,W\n".format(
         long_req
-    ) + "SR-032,Short,SN-001,{},because,criteria,,C,Test,Approved,1,W\n".format(
+    ) + "SR-032,Short,SN-001,{},because,criteria,,C,Test,Accepted,1,W\n".format(
         short_req
     )
     llr_rows = (
@@ -363,7 +363,7 @@ def test_anchor_requirement_truncates_above_threshold_not_below(tmp_path):
     )
     root = repo(tmp_path, sr_rows=sr_rows, llr_rows=llr_rows)
     _git_init(root)
-    _approve(root)
+    _accept(root)
     assert gen(root).returncode == 0
     page = html_of(root)
     assert "more chars — read the registry row" in page
@@ -381,24 +381,24 @@ def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_p
     is structurally gone and the advice would now be false. The section says
     what is actually true instead."""
     verified = (
-        "SR-004,No visible delta,SN-001,shall,because,criteria,,C,Test,Approved,1,W\n"
+        "SR-004,No visible delta,SN-001,shall,because,criteria,,C,Test,Accepted,1,W\n"
     )
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
-    _approve(root)
-    # Move the Status DOWN without amending anything else: the row asks for a
-    # human by its own Status (`Drafted` owes a first approval) while no cell
+    _accept(root)
+    # Move the Status DOWN without amending anything else: the row asks for an
+    # operator by its own Status (`Drafted` owes a first acceptance) while no cell
     # has moved away from the snapshotted text — which is the exact state this
     # empty section describes. It was reached with `Modified` until D-9 step 7
     # retired that marker; `Drafted` is the surviving value that puts a row in
     # the queue on its own Status rather than on a diff.
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
-        SR_HEADER + verified.replace(",Approved,", ",Drafted,"), encoding="utf-8"
+        SR_HEADER + verified.replace(",Accepted,", ",Drafted,"), encoding="utf-8"
     )
     assert gen(root).returncode == 0
     page = html_of(root)
-    assert "No cell differs from the approved snapshot" in page
-    assert "its own <code>Status</code> asks for a human" in page
+    assert "No cell differs from the accepted snapshot" in page
+    assert "its own <code>Status</code> asks for an operator" in page
     # The negative halves: neither the retired advice nor a settled reading.
     assert "check the baseline" not in page.lower()
     assert "nothing changed" not in page.lower()
@@ -453,11 +453,11 @@ def test_html_escapes_registry_prose(tmp_path):
 # `test_a3_every_painted_vocabulary_member_is_explained_in_words`
 # (test_traj_render_sweeps.py) sweeps gen_trajectory's declared palette dicts —
 # this module has no such dict to enumerate; its colour-differentiated idioms
-# (the diff marks, the approve/re-attest pills) were held apart by comment
+# (the diff marks, the accept/re-accept pills) were held apart by comment
 # discipline alone (the module docstring's own claim: "ins/del carries
 # line-through + box-shadow ... pills carry words"). These are that closure's
 # equivalent for THIS module's own two encodings — each pinned so a future
-# edit that quietly drops the non-colour half reds here instead of shipping.
+# edit that quietly drops the non-colour half fails here instead of shipping.
 #
 # OUT OF SCOPE, stated rather than silently narrowed: `.empty`'s
 # `--pending`-coloured left border (the callout accent on an explanatory
@@ -468,7 +468,7 @@ def test_html_escapes_registry_prose(tmp_path):
 
 
 def test_a3_kind_pills_are_never_distinguished_by_colour_alone(tmp_path):
-    """The `.pill.approve` / `.pill` pair (`_KIND_LABELS`) is the render-level
+    """The `.pill.accept` / `.pill` pair (`_KIND_LABELS`) is the render-level
     half: the two kinds share the same shape and differ only in `--pending`
     vs `--muted` colour (the CSS above), so a colour-only encoding here would
     be a future edit that let two DIFFERENTLY-coloured kinds render the SAME
@@ -480,24 +480,26 @@ def test_a3_kind_pills_are_never_distinguished_by_colour_alone(tmp_path):
         "SR-001,A drafted need,SN-001,shall do the new thing,because,"
         "criteria,,C,Test,Drafted,1,W\n"
     )
-    approved = (
+    accepted = (
         "SR-002,An amended need,SN-001,shall do the ORIGINAL thing,because,"
-        "criteria,,C,Test,Approved,1,W\n"
+        "criteria,,C,Test,Accepted,1,W\n"
     )
-    root = repo(tmp_path, sr_rows=drafted + approved)
+    root = repo(tmp_path, sr_rows=drafted + accepted)
     _git_init(root)
-    _approve(root)
+    _accept(root)
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
-        SR_HEADER + drafted + approved.replace("ORIGINAL", "CHANGED"),
+        SR_HEADER + drafted + accepted.replace("ORIGINAL", "CHANGED"),
         encoding="utf-8",
     )
     assert gen(root).returncode == 0
     page = html_of(root)
-    approval_texts = set(re.findall(r'<span class="pill approve">([^<]*)</span>', page))
+    acceptance_texts = set(
+        re.findall(r'<span class="pill accept">([^<]*)</span>', page)
+    )
     plain_texts = set(re.findall(r'<span class="pill">([^<]*)</span>', page))
-    assert approval_texts, "no approval-kind pill rendered — the sweep is vacuous"
+    assert acceptance_texts, "no acceptance-kind pill rendered — the sweep is vacuous"
     assert plain_texts, "no plain-kind pill rendered — the sweep is vacuous"
-    collide = approval_texts & plain_texts
+    collide = acceptance_texts & plain_texts
     assert not collide, (
         "a colour-differentiated pill kind shares its wording with a "
         "differently-coloured kind — colour alone would be all that told "
@@ -506,22 +508,22 @@ def test_a3_kind_pills_are_never_distinguished_by_colour_alone(tmp_path):
 
 
 def test_the_view_names_its_authority(tmp_path):
-    """If the view and `trace.py --approve` ever disagree, the brief wins and the
+    """If the view and `trace.py --accept` ever disagree, the brief wins and the
     view is the bug. That is only useful if the page SAYS so where a reader
     ruling from it can see it."""
     repo(tmp_path, oi_rows=PENDING_OI)
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
-    assert "reattest_model" in page and "authoritative" in page
+    assert "reaccept_model" in page and "authoritative" in page
 
 
-def test_the_footer_names_reattests_for_blessing_an_amendment(tmp_path):
-    """Blessing an amendment re-copies a row that still reads `Approved`, so no
+def test_the_footer_names_reaccepts_for_blessing_an_amendment(tmp_path):
+    """Blessing an amendment re-copies a row that still reads `Accepted`, so no
     flip carries it, and a bare `intake.py snapshot` refuses it. The footer's
-    instruction has to name the row, or it hands the owner a refusal."""
+    instruction has to name the row, or it hands the operator a refusal."""
     repo(tmp_path, oi_rows=PENDING_OI)
     assert gen(tmp_path).returncode == 0
-    assert "intake.py snapshot --reattests &lt;ROW-ID&gt;" in html_of(tmp_path)
+    assert "intake.py snapshot --reaccepts &lt;ROW-ID&gt;" in html_of(tmp_path)
 
 
 # --- 122-REVIEW-A regressions: one per finding, each proven against the defect --
@@ -529,8 +531,8 @@ def test_the_footer_names_reattests_for_blessing_an_amendment(tmp_path):
 
 # (`test_baseline_is_reused_when_no_since_is_passed` retired at D-9 step 4. It
 # was 122-REVIEW-A's BLOCKER as a regression: regenerating with no `--since`
-# used to fall back to a re-derived baseline and DESTROY the attestation depth
-# an owner was about to read — driven, it collapsed 43 chain-row diffs to 18.
+# used to fall back to a re-derived baseline and DESTROY the acceptance depth
+# an operator was about to read — driven, it collapsed 43 chain-row diffs to 18.
 # The stamp-and-reuse rule it pinned has no subject any more: there is one
 # baseline, it is a directory, and no run can pick a different one.)
 
@@ -563,7 +565,7 @@ def test_crlf_cell_is_stripped_at_the_source(tmp_path):
 def test_check_is_agnostic_to_the_checkouts_line_endings(tmp_path):
     """The mirror hazard, caught by the WI-322 rework rather than the review: a
     CHECKOUT can carry CRLF line endings by local git convention (a fresh
-    worktree on Windows), and a byte-exact compare then reds a file nothing
+    worktree on Windows), and a byte-exact compare then fails a file nothing
     touched. Stripping CR at the source cannot help here — the CRs are the
     file's own line endings — so the compare normalizes both sides."""
     root = repo(tmp_path, oi_rows=PENDING_OI)
@@ -581,20 +583,20 @@ def test_check_is_agnostic_to_the_checkouts_line_endings(tmp_path):
     assert gen(root, "--check").returncode == 1
 
 
-def test_empty_attestation_state_names_only_what_it_checked(tmp_path):
+def test_empty_acceptance_state_names_only_what_it_checked(tmp_path):
     """122-REVIEW-A named a real gap: the whole-section empty state used to
     claim no Drafted/Modified SPINE ROW while the model selected SRs only, so a
-    Drafted LLR under an Approved SR was invisible AND actively denied. That
+    Drafted LLR under an Accepted SR was invisible AND actively denied. That
     gap is CLOSED (the OI-61-sitting widening,
     docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md) — a Drafted LLR now
     surfaces directly, so this fixture no longer reaches the empty state at
-    all; `test_drafted_child_under_approved_undrifted_sr_owes` covers that.
+    all; `test_drafted_child_under_accepted_undrifted_sr_owes` covers that.
     What remains to guard here is the TRULY vacuous state — nothing Drafted
     anywhere, nothing drifted — and that its wording states the widened
     contract honestly rather than the pre-widening SR-only caveat."""
     repo(
         tmp_path,
-        sr_rows="SR-007,Settled,SN-001,shall,because,criteria,,C,Test,Approved,1,W\n",
+        sr_rows="SR-007,Settled,SN-001,shall,because,criteria,,C,Test,Accepted,1,W\n",
     )
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
@@ -610,17 +612,17 @@ def test_empty_attestation_state_names_only_what_it_checked(tmp_path):
 
 def test_retired_markdown_surface_is_reported(tmp_path):
     """122-REVIEW-A: a resynced adopter keeps docs/open-items.md, whose generated
-    block nothing writes any more — it can assert a stale owner action with every
-    gate green. Warn-only: the migration is the owner's, and failing would red a
+    block nothing writes any more — it can assert a stale operator action with every
+    gate passing. Warn-only: the migration is the operator's, and failing would fail a
     repo midway through it."""
     root = repo(tmp_path, oi_rows=PENDING_OI)
     assert gen(root).returncode == 0
     (root / "docs" / "open-items.md").write_text(
-        "# Open items\n\n- **WI-999** blocked, awaiting approval\n",
+        "# Open items\n\n- **WI-999** blocked, awaiting acceptance\n",
         encoding="utf-8",
     )
     proc = gen(root, "--check")
-    assert proc.returncode == 0, "warn-only — it must not red a repo mid-migration"
+    assert proc.returncode == 0, "warn-only — it must not fail a repo mid-migration"
     assert "still present beside the registry" in proc.stdout
     assert "RESYNC_PACK.md" in proc.stdout  # the recipe's one home (OI-27)
     # The negative half: no stale file, no warning.
@@ -636,15 +638,15 @@ def test_collapse_toggle_is_wired_to_the_unchanged_runs(tmp_path):
     stdlib test can drive — that needs the Playwright harness, and asserting it
     here would be the proxy this repo refuses."""
     verified = (
-        "SR-008,Amended,SN-001,shall do a thing,because,criteria,,C,Test,Approved,1,W\n"
+        "SR-008,Amended,SN-001,shall do a thing,because,criteria,,C,Test,Accepted,1,W\n"
     )
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
-    _approve(root)
+    _accept(root)
     # A real amendment, so a real diff renders: the `.eq` runs only exist where
     # unchanged text sits BESIDE a change, which is exactly what the toggle
     # collapses.
-    # NO STATUS FLIP SINCE D-9 STEP 7: the row stays `Approved` and reaches the
+    # NO STATUS FLIP SINCE D-9 STEP 7: the row stays `Accepted` and reaches the
     # queue by DRIFT alone, which is what an amendment looks like under the new
     # ladder. The diff being rendered is the same one.
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
@@ -679,7 +681,7 @@ def ctx_blocks(page):
 
 
 def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
-    """The owner's 2026-07-27 finding: the surface showed WHICH CELLS MOVED and
+    """The operator's 2026-07-27 finding: the surface showed WHICH CELLS MOVED and
     nothing else, so a rewritten `Rationale` arrived with no `Requirement` beside
     it — and "does the existing evidence still verify this row" is a question
     about what the row now SAYS, not only about what changed in it.
@@ -690,12 +692,12 @@ def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
     stdlib test can drive (the same boundary the collapse guard states)."""
     verified = (
         "SR-009,Amended reasoning,SN-001,shall hold the ORIGINAL requirement,"
-        "because of the old reason,the acceptance criteria,,C,Test,Approved,1,W\n"
+        "because of the old reason,the acceptance criteria,,C,Test,Accepted,1,W\n"
     )
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
-    _approve(root)
-    # NO STATUS FLIP SINCE D-9 STEP 7 — the row stays `Approved` and reaches the
+    _accept(root)
+    # NO STATUS FLIP SINCE D-9 STEP 7 — the row stays `Accepted` and reaches the
     # queue by DRIFT on the amended cell alone.
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
         SR_HEADER
@@ -713,7 +715,7 @@ def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
     assert "the acceptance criteria" in block
     # The negative halves. (a) The changed cell is NOT repeated as a plain field:
     # an unmarked second copy of the text under review is exactly what an
-    # attestation must not carry.
+    # acceptance must not carry.
     assert ">Rationale<" not in block
     assert "because of a NEW reason" not in block
     # (b) An empty column is not context — `Notes` is blank in the fixture.
@@ -727,21 +729,21 @@ def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
 
 
 def test_sr_text_renders_when_only_a_child_row_was_amended(tmp_path):
-    """An SR can owe a re-attest while nothing but its Status flipped — the whole
+    """An SR can owe a re-accept while nothing but its Status flipped — the whole
     amendment sitting in an LLR or TC beneath it. That section used to open with
     a child-row diff and never state the requirement it hangs from."""
     sr = (
         "SR-010,A stable requirement,SN-001,shall state the THING BEING VERIFIED,"
         "because,criteria,,C,Test,{},1,W\n"
     )
-    llr = "LLR-010,SR-010,A child,mod.py,sym,{},TC-010,Approved,CMP-001,1\n"
+    llr = "LLR-010,SR-010,A child,mod.py,sym,{},TC-010,Accepted,CMP-001,1\n"
     root = repo(
-        tmp_path, sr_rows=sr.format("Approved"), llr_rows=llr.format("old detail")
+        tmp_path, sr_rows=sr.format("Accepted"), llr_rows=llr.format("old detail")
     )
     _git_init(root)
-    _approve(root)
+    _accept(root)
     # ONLY THE CHILD MOVES SINCE D-9 STEP 7. The SR used to flip to `Modified`
-    # to enter the queue; under the new ladder it stays `Approved` and the
+    # to enter the queue; under the new ladder it stays `Accepted` and the
     # CHAIN DRIFT pulls it in — which is the same state this test was always
     # about (nothing of the SR itself changed) reached the way it now happens.
     (root / "docs" / "requirements" / "low-level-requirements.csv").write_text(
@@ -760,11 +762,11 @@ def test_sr_text_renders_when_only_a_child_row_was_amended(tmp_path):
 
 
 def test_an_unreadable_decision_queue_refuses_rather_than_rendering_it_empty(tmp_path):
-    """THE FALSE GREEN THIS MIGRATION'S SHAPE EXISTS TO REFUSE.
+    """THE FALSE PASS THIS MIGRATION'S SHAPE EXISTS TO REFUSE.
 
     Under the CSV carrier a malformed registry still parsed into *something*,
     and a registry that vanished parsed into nothing — either way this view
-    rendered "0 pending decisions", which on the owner's decision queue reads as
+    rendered "0 pending decisions", which on the operator's decision queue reads as
     "nothing is waiting on you". `spine_carrier.load` raises on a carrier that
     exists and will not parse, so the surface refuses to be published wrong.
     """
@@ -778,7 +780,7 @@ def test_an_unreadable_decision_queue_refuses_rather_than_rendering_it_empty(tmp
 
 
 def test_the_view_points_at_whichever_carrier_is_live(tmp_path):
-    """The pointer an owner follows to edit a brief must name a file that
+    """The pointer an operator follows to edit a brief must name a file that
     exists. Both arms, because the kit ships to repos on either carrier."""
     root = repo(tmp_path, oi_rows=None)
     (root / "docs" / "requirements" / "open-items.toml").write_text(
@@ -830,7 +832,7 @@ def test_the_all_clear_prints_MEASURED_counts_not_a_literal(tmp_path):
 
 def test_the_deferral_arms_print_but_never_move_the_exit_code(tmp_path):
     # Warn-first by the ruling. The exit code of this step stays the FRESHNESS
-    # verdict; a contradiction that redded the commit bar would be switched off.
+    # verdict; a contradiction that redded the commit checks would be switched off.
     root = repo(tmp_path, oi_rows=RULED_OI)
     (root / "docs" / "provenance-allow").write_text(
         "SR-001 Rationale added 2026-08-16 — OI-5: ruled, execution owed.\n",
@@ -868,7 +870,7 @@ def test_offspine_census_names_the_interfaces_registry_in_the_html_view(tmp_path
     # The prose `contract` cell left the row at OI-67; the typed `data` cell is
     # the one a census amendment is driven through now.
     # Keyed on the cell's SHAPE (the `data = "..."` line of IF-001's block),
-    # never on its text: a re-worded cell must not red a census test.
+    # never on its text: a re-worded cell must not fail a census test.
     m = re.search(rb'(?ms)^\[interface\.IF-001\]\n.*?^(data = ".*?")$', data)
     assert m, "fixture: IF-001's data cell not found"
     needle = m.group(1)
@@ -882,9 +884,9 @@ def test_offspine_census_names_the_interfaces_registry_in_the_html_view(tmp_path
     assert "1 changed, 0 added, 0 removed" in html
     # The same copy triggers as the markdown census (see
     # tests/test_trace_briefs.py for where each is driven behaviourally).
-    assert "a row in it moves into approval or arrives approved" in html
-    assert "<code>--reattests</code> names one of its rows" in html
-    assert "moves or <code>--approves</code> names it" not in html
+    assert "a row in it moves into acceptance or arrives accepted" in html
+    assert "<code>--reaccepts</code> names one of its rows" in html
+    assert "moves or <code>--accepts</code> names it" not in html
     assert "when its own Status moves" not in html
     # No-change off-spine tiers render nothing.
     assert "docs/requirements/components.toml" not in html

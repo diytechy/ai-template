@@ -67,7 +67,7 @@ def _fixture_repo(root):
             "AcceptanceCriteria",
             "Permutations",
             "Priority",
-            "Verification",
+            "VerificationMethod",
             "Status",
             "Phase",
             "Area",
@@ -83,7 +83,7 @@ def _fixture_repo(root):
                 "",
                 "M",
                 "Test",
-                "Approved",
+                "Accepted",
                 "4",
                 "Dual-plan",
             ],
@@ -163,7 +163,7 @@ def _slots_for(hat, surface):
             "PLAN": PLAN_A,
         }
     return {
-        "OWNER_PROMPT": GOAL,
+        "OPERATOR_PROMPT": GOAL,
         "GOAL_BRIEF": GOAL,
         "RUBRIC": RUBRIC,
         "COVERAGE_REPORT": COVERAGE,
@@ -356,8 +356,8 @@ def test_cli_surface_prints_registry_material_not_sentinel(tmp_path):
 
 # --- the perspectives a sitting brief carries ---------------------------------
 #
-# A sitting that judges an SR awaiting its first approval, or an amended
-# approved need, is a decomposition round: its brief carries the question of
+# A sitting that judges an SR awaiting its first acceptance, or an amended
+# accepted need, is a decomposition round: its brief carries the question of
 # every declared hat applicable to the round's parent needs and asks the
 # verdict for one outcome line per hat. Any other sitting says it is no
 # decomposition round and reads no roster. Each parent need is one context,
@@ -443,7 +443,7 @@ def _not_a_round():
     return line
 
 
-def test_a_sitting_with_no_first_approval_sr_and_no_amended_need_says_it_is_no_decomposition_round(
+def test_a_sitting_with_no_first_acceptance_sr_and_no_amended_need_says_it_is_no_decomposition_round(
     tmp_path,
 ):
     """Implements: TC-399"""
@@ -562,7 +562,7 @@ def test_the_round_block_asks_one_outcome_line_per_hat_in_a_non_ruling_form(
 # A round's verdict states, for each chain it retains, why further splitting
 # would only paraphrase or duplicate. The tests match the line's literal form,
 # as the tests above match `- HAT `, so a missing symbol cannot stand in for a
-# red.
+# failure.
 
 _STOPPING_FORM = "- STOPPING BOUNDARY "
 
@@ -629,10 +629,10 @@ def test_a_stopping_boundary_form_is_no_row_line_and_no_machine_line(tmp_path):
 @pytest.mark.parametrize(
     "key, parents",
     [
-        (pb.prompts.ADJUDICATE_FIRST_APPROVAL, (("SR-1",), (), ())),
+        (pb.prompts.ADJUDICATE_FIRST_ACCEPTANCE, (("SR-1",), (), ())),
         (pb.prompts.ADJUDICATE_AMENDMENT, ((), ("SN-1",), ())),
     ],
-    ids=["first-approval", "amendment"],
+    ids=["first-acceptance", "amendment"],
 )
 def test_each_shipped_sitting_template_carries_the_stopping_boundary_line(
     tmp_path, key, parents

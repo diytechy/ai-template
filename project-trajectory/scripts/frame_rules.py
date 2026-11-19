@@ -226,7 +226,9 @@ def stakeholder_findings(sn_needs, stks, exts):
         if declared and not cited:
             advisories.append(
                 "need {} names no stakeholder in stakeholder_refs — nobody is "
-                "recorded as the owner who can confirm it is still wanted".format(nid)
+                "recorded as the operator who can confirm it is still wanted".format(
+                    nid
+                )
             )
     return failures, advisories
 

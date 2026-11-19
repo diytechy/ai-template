@@ -12,13 +12,13 @@ lane ends in a merge and no branch is ever left hanging:
                  whole point: the close is a trunk fact, the partial work is
                  reachable history, and the run keeps going.
 
-  quarantine     the RULED red arm (owner decision 1, 2026-07-31). Every outcome
-                 merges and a merge needs a green bar, so a lane handing back
-                 code the bar refuses would be the one branch that could still
+  quarantine     the RULED failure arm (operator decision 1, 2026-07-31). Every outcome
+                 merges and a merge needs passing checks, so a lane handing back
+                 code the checks refuse would be the one branch that could still
                  hang. The ruling: revert the code, keep the record — the
-                 failing diff lands as a bar-inert `.patch` under `docs/work/`,
+                 failing diff lands as a checks-inert `.patch` under `docs/work/`,
                  the product paths go back to what trunk had, and nothing live
-                 can red anything.
+                 can fail anything.
 
 WHAT CHANGED, AND WHY IT HAD TO. The old contract moved a returned spec back to
 `queued/` with a `## Handback` section and a `blockref`, and **that was the whole
@@ -72,14 +72,14 @@ Contract IF-137: the terminal-outcome WRITES for the two lane closes that are
     `docs/handbacks/` in the SAME commit as the move, and moves every claimed
     spec to the terminal `partial/` folder; it returns `(closed WI ids, None)`
     or `(None, refusal)` and refuses rather than half-closing.
-    `quarantine(root, branch, why)` is the ruled red arm: the failing diff is
-    kept as a bar-inert `.patch` under the work tree, every non-bookkeeping path
+    `quarantine(root, branch, why)` is the ruled failure arm: the failing diff is
+    kept as a checks-inert `.patch` under the work tree, every non-bookkeeping path
     is reverted to the lane's merge base, and it returns a refusal string or
     None. Neither function DECIDES which outcome a lane reached — that judgement
     is the caller's — so decision and write stay in separate modules and every
     lane still ends in a merge. Under the loop marker every commit either makes
     carries the `Loop-Session` trailer, and a staged tree that would change a
-    status the approval level holds for a human is refused before it is
+    status the acceptance level holds for an operator is refused before it is
     written.
 """
 
@@ -117,9 +117,9 @@ def spec_move_split(text):
     return "\n".join(lines[1:close]) + "\n", "\n".join(lines[close + 1 :])
 
 
-# Where a quarantined red close's failing diff lands. Under `docs/work/` because
+# Where a quarantined failing close's failing diff lands. Under `docs/work/` because
 # that is where the work item's own record lives, and as a `.patch` because no
-# bar reads one: the doc checkers discover `*.md`, the stub check reads
+# checks read one: the doc checkers discover `*.md`, the stub check reads
 # `src/**/*.py`, and check.py ignores `docs/work/*` outright — so the artefact is
 # inert by its extension, not by a rule someone has to keep.
 ARTEFACTS = integrate.WORK + "/handback"
@@ -316,7 +316,7 @@ def _no_recursion_refusal(root, branch):
     """THE NO-RECURSION INVARIANT (WI-388, ruling R3): a DISPOSITION row — the
     adjudication kind — may never itself close early. Enforced HERE, at the
     machinery that would perform the act, not by prose: the refusal stops the
-    run for a human, because a disposition that cannot dispose is the one
+    run for an operator, because a disposition that cannot dispose is the one
     state the outcome model cannot express. Read off the TRUNK's claimed copy
     through the slot's one reader (`integrate._claimed_spec_frontmatters`). An
     UNREADABLE claim is refused by name (WI-849): nothing later in the partial
@@ -330,7 +330,7 @@ def _no_recursion_refusal(root, branch):
             refusal = (
                 "{} claims the adjudication row {} - a disposition row never "
                 "closes early (ruling R3, no recursion: its outcomes are {}). "
-                "The run stops for a human to read the lane".format(
+                "The run stops for an operator to read the lane".format(
                     branch, name, DISPOSITION_OUTCOMES
                 )
             )
@@ -444,7 +444,7 @@ def _commit_residue_as_is(root, wt, branch, ids, reason):
     a clean tree or a good commit.
 
     The hook is skipped because "as-is" has to mean it: the branch's own §A2
-    refresh regenerates and BARS this tree before anything merges, so a hook
+    refresh regenerates and CHECKS this tree before anything merges, so a hook
     refusal here would only trade a merge that is checked for a branch that
     hangs.
 
@@ -478,7 +478,7 @@ def close_partial(root, branch, reason, fields=None):
     `(None, refusal)`.
 
     Three deliberate choices. The as-is commit skips the commit hook, because
-    "as-is" has to mean it: the branch's own §A2 refresh regenerates and BARS
+    "as-is" has to mean it: the branch's own §A2 refresh regenerates and CHECKS
     this tree before anything merges, so a hook refusal here would only trade a
     merge that is checked for a branch that hangs. The spec moves to the
     TERMINAL `partial/` rather than back to `queued/`, because terminal is what
@@ -564,12 +564,12 @@ def close_partial(root, branch, reason, fields=None):
 
 # The Deliverable a mechanical adjudication close writes when the row itself has
 # not — a valid `## Deliverable` cell that records what happened and points at
-# where the successors and any human-owed answer land.
+# where the successors and any operator-owed answer land.
 _ADJUDICATION_CLOSE_DELIVERABLE = (
     "Adjudication verdict recorded on the lane; this row is closed MECHANICALLY "
     "at its DONE (OI-70/OI-73). Its `## Dispositions` successors mint at this "
     "row's own merge (drafts-not-mints), the mint replaces the superseded row's "
-    "inbound hard edges, and any human-owed answer becomes a `pending` open "
+    "inbound hard edges, and any operator-owed answer becomes a `pending` open "
     "item the successor depends on. The verdict artifact is under "
     "`docs/reviews/`."
 )
@@ -917,7 +917,7 @@ def _archive_one_adjudication_row(root, wt, branch, name):
             "{} judged a partial/cancelled close but drafted NO successor and "
             "adopted none in its ## Dispositions section — such a close must "
             "queue at least one successor (OI-70/OI-73, no third exit). The run "
-            "stops for a human to draft the continuation".format(name)
+            "stops for an operator to draft the continuation".format(name)
         )
     # THE CONSOLIDATION ARM (restructure plan §1.5), before the row is archived:
     # it acts on the QUEUE this verdict judged, and the guards it runs read the
@@ -1017,7 +1017,7 @@ def close_adjudication(root, branch):
 
 
 def quarantine(root, branch, why):
-    """Turn a RED non-merged lane into a BAR-INERT artefact. A refusal, or None.
+    """Turn a FAILING non-merged lane into a CHECKS-INERT artefact. A refusal, or None.
 
     Bookkeeping paths are exempt by construction — the spec moves, the close
     report, the log fragments and the review rounds ARE the record being kept,
@@ -1054,8 +1054,8 @@ def quarantine(root, branch, why):
     ]
     if not changed:
         return (
-            "{} changed nothing outside the bookkeeping surfaces, so its red "
-            "bar is not its own code to revert - there is nothing to "
+            "{} changed nothing outside the bookkeeping surfaces, so its failing "
+            "checks are not its own code to revert - there is nothing to "
             "quarantine and the refusal stands".format(branch)
         )
     # Every path of every record, renames included, so the patch carries the
@@ -1081,7 +1081,7 @@ def quarantine(root, branch, why):
     code, out = _loop_commit(
         root,
         wt,
-        "handback: revert {} to a bar-inert artefact\n\nThe §A3 red-close ruling: this lane's code is red and the lane cannot\nfix it, so the code goes back to {} and the failing diff lands as {} -\nin trunk, findable, pickable by a future WI, and unable to red anything.\nThe reverted commits stay reachable in trunk history once this merges.\n\nThe bar said: {}".format(
+        "handback: revert {} to a checks-inert artefact\n\nThe §A3 ruling on a failing close: this lane's code fails and the lane cannot\nfix it, so the code goes back to {} and the failing diff lands as {} -\nin trunk, findable, pickable by a future WI, and unable to fail anything.\nThe reverted commits stay reachable in trunk history once this merges.\n\nThe checks said: {}".format(
             branch, base[:10], rel, why
         ),
     )

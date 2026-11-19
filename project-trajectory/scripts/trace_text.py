@@ -27,7 +27,7 @@ and duplicated in `spine_rules.py`; `trace.py` still imports them back from this
 module by name, so the dependency runs one way and there is no cycle.
 
 The shared-`_kitcommon` shape this module's split once avoided is no longer ruled
-out — owner ruling D-8 (`OI-16`) replaced F5, and `kitlib` IS that home, shipped
+out — operator ruling D-8 (`OI-16`) replaced F5, and `kitlib` IS that home, shipped
 as a whole directory so a partial copy ImportErrors rather than degrading. What
 stays true of this file is the narrower claim: it is one module's own TEXT core,
 imported by that one module (ADOPTING.md §6).
@@ -65,7 +65,7 @@ import re
 import sys
 from pathlib import Path
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`). Same guarded
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`). Same guarded
 # idiom the other scripts use: run as a subprocess this file's own dir is
 # sys.path[0], so the plain import resolves; the fallback covers an in-process
 # import whose sys.path does not yet carry scripts/.
@@ -83,7 +83,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # because there is nothing left to hold equal.
 #
 # The tier claim this module used to make about `is_drafted` — "the pure text/row
-# predicates live here, while `is_approved`/`is_founded` live in trace.py and
+# predicates live here, while `is_accepted`/`is_founded` live in trace.py and
 # spine_rules.py as the F5-duplicated pair" — EXPIRED with the pair. All three
 # Status predicates now sit at the same tier, below every reader, which is what
 # the claim was reaching for and could not have while F5 stood.
@@ -203,7 +203,7 @@ def _inspects_critique_record(row):
     record: the text before its first `shall` (the EARS subject, with any
     fronted condition) names both "Critique" and a "record". A requirement with
     no `shall` has no subject to read, so nothing is exempt."""
-    if (row.get("Verification") or "").strip() != "Inspection":
+    if (row.get("VerificationMethod") or "").strip() != "Inspection":
         return False
     requirement = row.get("Requirement") or ""
     shall = _SHALL_RE.search(requirement)
@@ -215,10 +215,10 @@ def _inspects_critique_record(row):
 
 def verification_coherence_advisories(srs):
     """Warn-only: a real SR row whose PROSE names a critique instrument while its
-    `Verification` field declares some other method.
+    `VerificationMethod` field declares some other method.
 
     **Two cells describing one thing, compared by nothing.** A row states its
-    verification method twice — once as the `Verification` enum, once in the
+    verification method twice — once as the `VerificationMethod` enum, once in the
     prose that says how anyone would know the row is satisfied. Nothing checked
     that the two agreed, and the failure is silent by construction: the enum
     still validates, the joins still resolve, every strict gate passes at rc=0
@@ -259,7 +259,7 @@ def verification_coherence_advisories(srs):
     names a Critique record without being about one would be exempted, an
     under-detect accepted knowingly.
 
-    ONE DIRECTION ONLY. A `Verification=Critique` row that names no instrument is
+    ONE DIRECTION ONLY. A `VerificationMethod=Critique` row that names no instrument is
     NOT reported: the rubric it is judged against is the `docs/rubrics/`
     convention's business and a row may legitimately leave the naming to its TC,
     so the reverse check would fire on correct rows. Warn-only, never the exit
@@ -273,7 +273,7 @@ def verification_coherence_advisories(srs):
     match would put false accusations in the report."""
     out = []
     for rid, r in _real(srs, "SR-ID"):
-        method = (r.get("Verification") or "").strip()
+        method = (r.get("VerificationMethod") or "").strip()
         if not method or method == "Critique" or _inspects_critique_record(r):
             continue
         hits = [
@@ -284,11 +284,11 @@ def verification_coherence_advisories(srs):
         if hits:
             out.append(
                 "SR {} {} names a CRITIQUE instrument (a CRITIQUE, an APPROVE, a "
-                "VERDICT or a rubric) while Verification is {!r} — one row must "
+                "VERDICT or a rubric) while VerificationMethod is {!r} — one row must "
                 "not state two verification methods: a reader told to obtain a "
                 "verdict cannot, and the row's real acceptance is invisible. "
                 "Re-word the cell to the method the row actually uses, or flip "
-                "Verification to Critique (warn-only, never the exit code)".format(
+                "VerificationMethod to Critique (warn-only, never the exit code)".format(
                     rid, "/".join(hits), method
                 )
             )
@@ -325,7 +325,7 @@ def ac_advisories(srs):
 _WI_TOKEN_RE = re.compile(r"\bWI-\d+", re.IGNORECASE)
 _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 
-# --- The wider provenance vocabulary (owner ruling: NO provenance citation in
+# --- The wider provenance vocabulary (operator ruling: NO provenance citation in
 # any living registry cell) --------------------------------------------------
 #
 # The two shapes above are the GATING class and keep that severity. These are the
@@ -346,7 +346,7 @@ _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 #      literally — `OI-`, `D-`, `RULING-` — and nothing generalises over them.
 #      Re-measured at each widening: `M-10` is matched by none of them.
 #   2. `ruling` / `retired` / `attestation` / `amended` are SUBJECT NOUNS in the
-#      rows that specify the approval machinery itself — 217 occurrences over
+#      rows that specify the acceptance machinery itself — 217 occurrences over
 #      108 live SR/LLR/TC rows, with SR-149, SR-165 and LLR-118 the worked
 #      instances. A verb grep would destroy every one of them. `_EDIT_STAMP_RE`
 #      therefore requires the verb to be followed WITHIN ONE CLAUSE by an ISO
@@ -365,9 +365,9 @@ _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 #      edit-stamp arms below already detect. Where a clause code genuinely rides
 #      inside a stamp ("REWORDED 2026-08-17 (C-PRF-1, applied)") the stamp is
 #      reported and the whole frame is what gets stripped.
-#   4. AN ALL-CAPS EDIT VERB IS A STAMP ONLY WHERE A CLAUSE OPENS. `APPROVED`,
+#   4. AN ALL-CAPS EDIT VERB IS A STAMP ONLY WHERE A CLAUSE OPENS. `ACCEPTED`,
 #      `RETIRED`, `DELETED`, `RULED` and `AMENDED` are also ordinary
-#      participles mid-sentence — "an APPROVED SN cited by zero SRs", "an AMENDED
+#      participles mid-sentence — "an ACCEPTED SN cited by zero SRs", "an AMENDED
 #      requirement drops the derived stage", "a stale file is DELETED in the same
 #      act" — so `_CAPS_EDIT_STAMP_RE` fires only at the start of the cell or of
 #      a clause. Measured over every live spine + IF cell: 36 hits, 36 of them
@@ -383,14 +383,14 @@ _RULING_ID_RE = re.compile(r"\bRULING-\d+\b", re.IGNORECASE)
 _EDIT_VERBS = (
     r"amended|reworded|minted|renumbered|retired|narrowed|revised|superseded|"
     r"restated|added|deleted|moved|extended|clarified|ruled|raised|split|landed|"
-    r"reopened|struck|introduced|widened|promoted|demoted|approved|corrected|"
+    r"reopened|struck|introduced|widened|promoted|demoted|accepted|corrected|"
     r"absorbs|settled|confirmed|investigated|resolved|reverted|joined|"
     r"re-?voiced|re-?based|re-?pointed|re-?affirmed|provisional"
 )
 # THE DATE, WITH ITS RULING SUFFIX. This repo — and the kit's own convention —
 # writes a ruling as the date plus a serial letter (`2026-08-13u`, `2026-08-16q`),
 # which is the CANONICAL citation shape and was invisible to a bare `\d{4}-\d{2}-\d{2}`:
-# `provenance_tokens("The owner ruling 2026-08-13u settled this.")` returned []
+# `provenance_tokens("The operator ruling 2026-08-13u settled this.")` returned []
 # while the plain-date form beside it reported. The optional `[a-z]` closes that,
 # and it cannot over-reach — `\b` after it refuses `2026-08-13until`, because the
 # suffix must end the token.
@@ -414,7 +414,7 @@ _ISO_DATE_RE = re.compile(r"\b(?P<date>" + _ISO_DATE + r")\b")
 _CAPS_STAMP_VERBS = (
     r"AMENDED|REWORDED|MINTED|RENUMBERED|RETIRED|NARROWED|REVISED|SUPERSEDED|"
     r"RESTATED|DELETED|EXTENDED|CLARIFIED|RULED|SPLIT|LANDED|REOPENED|STRUCK|"
-    r"INTRODUCED|WIDENED|PROMOTED|DEMOTED|APPROVED|CORRECTED|ABSORBS|SETTLED|"
+    r"INTRODUCED|WIDENED|PROMOTED|DEMOTED|ACCEPTED|CORRECTED|ABSORBS|SETTLED|"
     r"CONFIRMED|INVESTIGATED|RESOLVED|REVERTED|JOINED|RE-?VOICED|RE-?BASED|"
     r"RE-?POINTED|RE-?AFFIRMED"
 )
@@ -426,7 +426,7 @@ _CAPS_EDIT_STAMP_RE = re.compile(
     # in the run, so the reported token is the stamp's own head word.
     #
     # A prefix word is TWO letters or more, which is not cosmetic: with `*` the
-    # article in "An APPROVED SN cited by zero SRs caps the bar" read as an
+    # article in "An ACCEPTED SN cited by zero SRs caps the bar" read as an
     # all-caps subject whenever the sentence opened a cell, turning the
     # participle hazard this arm exists to avoid back on. The negative test is
     # what found it.
@@ -524,7 +524,7 @@ def is_allowed(allow, rid, col, token):
     parenthetical and nothing else. Measured on 2026-08-18: re-running detection
     with the list ignored exposed 67 tokens over 22 rows that no entry had
     adjudicated, including `RE-VOICED 2026-08-17` and
-    `Minted at the owner's 2026-08-15` — the banned shape itself, riding a
+    `Minted at the operator's 2026-08-15` — the banned shape itself, riding a
     carve-out written for a label. An exception now silences what it NAMES and
     nothing else, so a frame that appears beside an allowed one still reports,
     and re-wording an allowed cell re-opens the question rather than laundering
@@ -544,7 +544,7 @@ _SHALL_RE = re.compile(r"\bshall\b", re.IGNORECASE)
 # of the alternative), so widening this cries wolf on correct prose.
 # `must` is deliberately ABSENT. 29148 reserves `shall`, but a project that uses
 # `must` as its obligation keyword is following a different convention, not making
-# an error — and this rule ships downstream, where flagging it would red every SR
+# an error — and this rule ships downstream, where flagging it would fail every SR
 # in such a repo on their first re-sync. The kit does not adjudicate that choice;
 # it flags the modals that are ambiguous ALONGSIDE an obligation keyword.
 _MODAL_RE = re.compile(
@@ -605,20 +605,20 @@ def provenance_findings(srs, llrs, tcs):
     carried a WI id in their normative text — and **26 LLRs, 8 TCs and 9 more SR
     Title/Rationale cells did too**, none of them watched. The largest pocket was
     the layer the SR-only rule could not see, and it kept growing while the rule
-    was green (an `LLR` written the same week the lint landed carried three).
+    passed (an `LLR` written the same week the lint landed carried three).
 
     Narrow BY MEASUREMENT, not by taste. It flags exactly two token shapes. A
     SCRIPT name (65 SR rows), an ARTIFACT PATH (6) and a RUBRIC (5) are NOT
     flagged and must never be: this kit's product IS its scripts, so the name is
-    the system under specification, and for a `Verification=Critique` row the
+    the system under specification, and for a `VerificationMethod=Critique` row the
     rubric is the acceptance instrument. A rule that cries wolf on 65 legitimate
     rows is a rule that gets scrolled past — the `check_doc_refs` lesson.
 
-    GATING under `--strict` (owner ruling 2026-07-27, raised at the first
-    re-attestation sitting on finding `LLR-050`'s `WI-316:` changelog prefix). It
+    GATING under `--strict` (operator ruling 2026-07-27, raised at the first
+    re-acceptance sitting on finding `LLR-050`'s `WI-316:` changelog prefix). It
     shipped warn-only on the argument that cleaning a `Verified` row flips it
-    `Modified` and owes a re-attestation, so the checker should not pick the
-    owner's schedule. The counter-argument won and is the stronger one: a warn
+    `Modified` and owes a re-acceptance, so the checker should not pick the
+    operator's schedule. The counter-argument won and is the stronger one: a warn
     nobody must act on is how 43 rows accumulated, and the whole population was
     cleaned in one pass at the same sitting, so the rule now guards zero-to-zero
     rather than dictating a cleanup.
@@ -656,7 +656,7 @@ def provenance_findings(srs, llrs, tcs):
 
 
 # The SN tier's cells, and the widened scope of the SR/LLR/TC ones. The need tier
-# joins by owner ruling: the rule was written naming three tiers and the need tier
+# joins by operator ruling: the rule was written naming three tiers and the need tier
 # then accumulated the worked examples of exactly the defect it forbids.
 # The need's three PROSE cells only: its `source` cell (SR-190) is a pointer to
 # the document the need was drawn from, a repository path by design, and
@@ -718,7 +718,7 @@ def provenance_advisories(needs, srs, llrs, tcs, allow=()):
     population is ~300 tokens over ~150 live rows; a gate would stop the harness
     on a prose-rewriting campaign, and the rows that matter most — the ones whose
     frame is the only record of an unresolved question — need a reviewed
-    exception, not a red build. `allow` carries those, TOKEN-SCOPED: each key is
+    exception, not a failing build. `allow` carries those, TOKEN-SCOPED: each key is
     `<ROW-ID> <Cell> <token>` and silences that token alone (see `is_allowed`).
 
     Rows arrive in two shapes. The SN tier comes from `spine_carrier.load_needs`
@@ -838,7 +838,7 @@ def form_findings(srs, llrs, tcs):
             continue
         # MORE than one, never zero. A row with no `shall` is not necessarily
         # wrong — a placeholder, or a project whose obligation keyword is not the
-        # English word "shall" — and flagging it would red a legitimate scaffold.
+        # English word "shall" — and flagging it would fail a legitimate scaffold.
         # The measured defect was two-obligations-in-one-row, and that is what
         # this catches.
         n = len(_SHALL_RE.findall(req))
@@ -864,7 +864,7 @@ def form_findings(srs, llrs, tcs):
             )
     for rows, (label, key, cols) in zip((srs, llrs, tcs), PROVENANCE_COLS):
         for rid, r in _real(rows, key):
-            # A `Draft` row is pre-approval and process.md §4 already exempts
+            # A `Draft` row is pre-acceptance and process.md §4 already exempts
             # it from the decomposition rules. "TBD" in a Draft acceptance
             # criterion is what Draft MEANS; flagging it would make the state
             # unusable for the drafting it exists to allow.
@@ -1007,9 +1007,9 @@ def paraphrase_advisories(srs, llrs):
 # All three are ADVISORY and stay advisory. They report a TIERING smell — a row
 # that decided which artifact carries a capability, or a row that merged several
 # decisions and grew a fan of children to cover them — and a smell is exactly
-# what a human decides. None ever joins the exit code under any flag. R2's
+# what an operator decides. None ever joins the exit code under any flag. R2's
 # no-concrete-artifact rule reaches the SN tier too (`sn_artifact_advisories`,
-# owner directive 2026-08-18); the fan-out rule is SR-only by construction.
+# operator directive 2026-08-18); the fan-out rule is SR-only by construction.
 
 # A concrete Python artifact named in a cell: a bare script (`trace.py`) or a
 # path-qualified one (`scripts/trace.py`). Anchored on the literal `.py`
@@ -1160,7 +1160,7 @@ def sr_artifact_advisories(srs):
     return out
 
 
-# The SN tier's artifact vocabulary (owner directive 2026-08-18, which extends
+# The SN tier's artifact vocabulary (operator directive 2026-08-18, which extends
 # R2's no-concrete-artifact rule from SR up to SN). Deliberately WIDER than
 # `_PY_ARTIFACT_RE` above, and deliberately narrower than "anything with a dot",
 # both for measured reasons taken over the kit's own 27 live needs:
@@ -1190,7 +1190,7 @@ _SN_ARTIFACT_RE = re.compile(
 
 def sn_artifact_advisories(needs):
     """Warn-only: an SN `acceptance` cell that names a concrete artifact
-    (owner directive 2026-08-18, extending re-tier v2 R2 from SR to SN).
+    (operator directive 2026-08-18, extending re-tier v2 R2 from SR to SN).
 
     **A need states the observable condition, never the instrument that observes
     it.** An acceptance cell reading "`trace.py --strict` reports zero orphans"

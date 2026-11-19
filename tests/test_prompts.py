@@ -52,7 +52,7 @@ def test_disposition_brief_makes_the_successor_the_open_items_placeholder():
     text = pr.load(pr.ADJUDICATE_DISPOSITION)
     assert "writes its id into the successor's `needs`" in text
     assert "the successor is the open item's PLACEHOLDER on the queue" in text
-    assert "queued but blocked until the owner rules" in text
+    assert "queued but blocked until the operator rules" in text
     assert "`docs/requirements/open-items.toml#OI-NNN`" in text
     assert "Ruling the item updates the successor in the same commit" in text
     assert "`wi_refs`" not in text
@@ -137,7 +137,7 @@ def test_the_reviewer_brief_carries_the_construction_first_clause():
     # the remedy's WORDING, never the verdict, and the MINOR/`for clarity` arm
     # and trust-boundary validation are exempt. Pinned here the same way the
     # other reviewer load-bearing clauses are, so an edit that quietly drops the
-    # discipline reds a test instead of a review round.
+    # discipline fails a test instead of a review round.
     reviewer = pr.load(pr.REVIEWER)
     assert "cannot be made UNREPRESENTABLE instead" in reviewer
     assert "the `antidote` skill" in reviewer
@@ -227,7 +227,7 @@ def test_the_reviewer_brief_links_the_review_threat_model_and_restates_nothing()
 
 def test_the_review_threat_model_dismisses_contrived_scenarios_and_gates_every_class():
     """Implements: TC-332"""
-    # The owner's ruling of 2026-10-13: a contrived, improbable scenario is
+    # The operator's ruling of 2026-10-13: a contrived, improbable scenario is
     # dismissed like a contrived host, severity tracks plausibility and
     # impact, and reachability gates a fail-open, data-loss or security path
     # as it gates any other; whoever rules a finding re-grades a mislabel.
@@ -236,7 +236,7 @@ def test_the_review_threat_model_dismisses_contrived_scenarios_and_gates_every_c
     paragraph = " ".join(process[start : process.find("\n\n", start)].split())
     for clause in (
         "A finding whose reproduction needs a contrived, improbable scenario is "
-        "dismissed the same way (owner ruling 2026-10-13)",
+        "dismissed the same way (operator ruling 2026-10-13)",
         "a hand act the process forbids (rewinding the trunk branch, skipping "
         "or disabling a hook, hand-editing a generated view or a ruled record)",
         "or ordinary tools run in an order no supported workflow or kit route produces",
@@ -252,7 +252,7 @@ def test_the_review_threat_model_dismisses_contrived_scenarios_and_gates_every_c
 
 def test_a_spec_promise_reaches_only_what_supported_routes_produce():
     """Implements: TC-332"""
-    # The owner's ruling of 2026-10-15: a spec's promise over an input space
+    # The operator's ruling of 2026-10-15: a spec's promise over an input space
     # is bounded by what supported workflows and the kit's own routes
     # produce, stated once in the review threat model; the dispute brief
     # weighs a scenario's plausibility under it, and a cheap fix for a
@@ -319,17 +319,19 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
         "the independently checkable evidence its declared method names",
         "A test that fits none is named, with its disposition, in the lane's "
         "decisions record before the code commit.",
-        # WI-996: the order runs through `attest`, which judges the mark
-        # `[bars] red_mark` declares, and the refresh refuses a landing mark.
-        "a strict expected assertion failure, the mark `[bars] red_mark` declares",
+        # WI-996: the order runs through `record-checks`, which judges the mark
+        # `[product] expected_failure_marker` declares, and the refresh refuses
+        # a landing mark.
+        "a strict expected assertion failure, the mark `[product] "
+        "expected_failure_marker` declares",
         "The mark is written as the declared text verbatim, with no added "
-        "arguments: `attest` and the refresh count only that text",
-        "The tests-first commit goes through `integrate.py attest` with a test "
+        "arguments: `record-checks` and the refresh count only that text",
+        "The tests-first commit goes through `integrate.py record-checks` with a test "
         "set that names each marked file",
         "The code commit that removes the marks names the same set",
         "A refresh or a hand landing (recipes §3) refused for a mark ends in "
         "the code commit or a quarantine.",
-        "A test the bar skips takes no mark, because a skip is never evidence: "
+        "A test the checks skip takes no mark, because a skip is never evidence: "
         "it is named, with its disposition, in the lane's decisions record.",
     ):
         assert clause in skill, clause
@@ -363,28 +365,31 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
     process = " ".join((KIT / "PROCESS.md").read_text(encoding="utf-8").split())
     assert (
         "(red → green → refactor). In a lane, the failing test is proven by the "
-        "mark `[bars] red_mark` declares, attested before the code and removed "
-        "by it, and never landed." in process
+        "marker `[product] expected_failure_marker` declares, recorded before the "
+        "code and removed by it, and never landed." in process
     )
 
 
-def test_the_hand_landing_checks_the_staged_squash_for_a_red_mark():
+def test_the_hand_landing_checks_the_staged_squash_for_an_expected_failure_marker():
     # WI-996: the landing arm runs inside the refresh, and the coordinator's
     # hand landing squashes without one, so recipes §3 runs the same arm on
-    # the staged squash before the commit bar and resets the squash on a
+    # the staged squash before the commit checks and resets the squash on a
     # refusal. Adequacy witness: a recipe that lands the squash on the smoke
-    # bar alone, where a strictly marked red test reads green, lacks the step.
+    # checks alone, where a strictly marked failing test passes, lacks the step.
     recipes = " ".join(
         (KIT / "skills" / "coordinator-cycle" / "references" / "recipes.md")
         .read_text(encoding="utf-8")
         .split()
     )
-    step = "**Check the staged squash for the red mark** before the landing commit"
+    step = (
+        "**Check the staged squash for the expected-failure marker** before the "
+        "landing commit"
+    )
     for clause in (
         step,
         '"$PY" -c "import sys; sys.path.insert(0, \'$SCRIPTS\'); from '
-        "kitlib.red_mark import landing_refusal; r = landing_refusal('.'); "
-        "print(r or 'no red mark staged'); sys.exit(1 if r else 0)\"",
+        "kitlib.expected_failure import landing_refusal; r = landing_refusal('.'); "
+        "print(r or 'no expected-failure marker staged'); sys.exit(1 if r else 0)\"",
         "reset the squash with `git reset --hard HEAD`, never a stash",
         "a hand landing (§3) refused for a mark ends in the code commit or a "
         "quarantine",
@@ -393,15 +398,15 @@ def test_the_hand_landing_checks_the_staged_squash_for_a_red_mark():
     assert (
         recipes.index("**Squash** on trunk with `git merge --squash <lane>`")
         < recipes.index(step)
-        < recipes.index('**Run the commit bar, `"$PY" "$SCRIPTS/run_menu.py" smoke`')
+        < recipes.index('**Run the commit checks, `"$PY" "$SCRIPTS/run_menu.py" smoke`')
     )
 
 
-def test_the_cycle_reviews_only_an_attested_tip():
+def test_the_cycle_reviews_only_a_recorded_tip():
     # Pins WI-957's Done-when item on the coordinator-cycle skill text: the
-    # pre-review check is the review bar's attestation on the tip, not a moved
+    # pre-review check is the commit checks' record on the tip, not a moved
     # `git log -1`, and the skill and its recipes commit lane work through the
-    # attest route. Adequacy witness: a cycle that still
+    # record-checks route. Adequacy witness: a cycle that still
     # checks only that the commit landed keeps the old phrase.
     cycle = KIT / "skills" / "coordinator-cycle"
     texts = {
@@ -409,9 +414,9 @@ def test_the_cycle_reviews_only_an_attested_tip():
         for name in ("SKILL.md", "references/recipes.md")
     }
     step = texts["SKILL.md"].replace("*", "").casefold()
-    assert "the tip carries the review bar's attestation" in step
+    assert "the tip carries the commit checks' record" in step
     for name, flat in texts.items():
-        assert "integrate.py attest" in flat, name
+        assert "integrate.py record-checks" in flat, name
         assert "`git log -1` moved" not in flat, name
 
 
@@ -431,10 +436,10 @@ def test_no_cycle_copy_types_a_review_test_list():
             assert refusal in flat, (copy, refusal)
 
 
-def test_coordinator_cycle_states_the_red_round_cap_citing_the_key():
+def test_coordinator_cycle_states_the_failure_cap_citing_the_key():
     # No TC row names this case yet; it pins WI-958's Done-when item on the
     # coordinator-cycle skill text. Its section on rounds and the cap counts
-    # each red attest as a red round and, at the declared key, closes the lane
+    # each failed record-checks run as a failed round and, at the declared key, closes the lane
     # partial by the recipe. test_skills_sync keeps the copies byte-identical.
     skill = (KIT / "skills" / "coordinator-cycle" / "SKILL.md").read_text(
         encoding="utf-8"
@@ -442,7 +447,7 @@ def test_coordinator_cycle_states_the_red_round_cap_citing_the_key():
     start = skill.index("### Rounds, the cap and the convergence round")
     section = skill[start : skill.index("\n### ", start + 1)]
     flat = " ".join(section.split())
-    assert "[build] red_rounds_max" in flat
+    assert "[build] stop_lane_after_consecutive_commit_check_failures" in flat
     assert "Close a lane partial" in flat
 
 
@@ -698,7 +703,9 @@ def test_the_cycle_reserves_before_drafting_and_folds_the_watermark(copy):
 # sitting reaches, or fills with the stated no-round line for `none`.
 
 
-@pytest.mark.parametrize("key", [pr.ADJUDICATE_FIRST_APPROVAL, pr.ADJUDICATE_AMENDMENT])
+@pytest.mark.parametrize(
+    "key", [pr.ADJUDICATE_FIRST_ACCEPTANCE, pr.ADJUDICATE_AMENDMENT]
+)
 def test_the_two_spine_sitting_templates_declare_the_hats_slot(key):
     assert "hats" in pr.slots(pr.load(key))
 
@@ -729,16 +736,16 @@ listens_for = "unreached failure"
 """
 
 # SN-001 carries tag need-a; SN-002 carries need-b and is the parent of the
-# approved SR-001 a work item may name in its SR-Refs.
+# accepted SR-001 a work item may name in its SR-Refs.
 _LANE_NEEDS = (
-    '[need.SN-001]\nstatus = "Approved"\ntags = ["need-a"]\n\n'
-    '[need.SN-002]\nstatus = "Approved"\ntags = ["need-b"]\n'
+    '[need.SN-001]\nstatus = "Accepted"\ntags = ["need-a"]\n\n'
+    '[need.SN-002]\nstatus = "Accepted"\ntags = ["need-b"]\n'
 )
 _LANE_SRS = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Priority,"
     "Verification,Status,Phase,Area\n"
     "SR-001,Subtracts,SN-002,The system shall subtract two numbers.,r,a,Must,"
-    "Test,Approved,P1,core\n"
+    "Test,Accepted,P1,core\n"
 )
 
 
@@ -1109,8 +1116,8 @@ def test_the_worker_brief_sent_body_cites_no_record_of_this_repository():
     assert "WI-540" in notes and "WI-538" in notes
 
 
-def test_the_worker_close_bar_points_at_its_homes_instead_of_restating_it():
-    # The bar is declared in two homes every scaffold carries: the step table
+def test_the_worker_close_checks_point_at_their_homes_instead_of_restating_them():
+    # The checks are declared in two homes every scaffold carries: the step table
     # check.py selects at the rung in docs/stage, and the test tier selector in
     # docs/stack.ini [tiers]. A restatement naming a wall-time budget told a
     # scaffold's worker to run a budget its repo does not declare.
@@ -1128,22 +1135,22 @@ def test_the_worker_brief_carries_the_standing_state_ritual():
     # BEFORE heavy verification, so a session killed or reaped mid-verification
     # leaves a resumable record rather than silent, uncommitted residue. Pinned
     # here the same way the reviewer/critique load-bearing clauses are, so an
-    # edit that quietly drops the instruction reds a test instead of a review.
+    # edit that quietly drops the instruction fails a test instead of a review.
     worker = pr.load(pr.WORKER)
     assert "Standing-state discipline" in worker
     assert "before spending effort on heavy verification" in worker
     assert "not a one-shot write at the end" in worker
 
 
-def test_the_worker_brief_points_at_the_spine_linked_tests_and_the_bar():
-    # The inner loop and the bar are two different runs: while iterating, the
+def test_the_worker_brief_points_at_the_spine_linked_tests_and_the_checks():
+    # The inner loop and the checks are two different runs: while iterating, the
     # tests the spine links to the module being changed (derived by `trace.py
     # --tests-for`, never a hand-kept map or a file-name guess); before every
-    # commit, the commit bar, whatever the inner loop said.
+    # commit, the commit checks, whatever the inner loop said.
     worker = pr.load(pr.WORKER)
     assert "While iterating, run the tests the spine links to the module" in worker
     assert "{scripts}/trace.py --tests-for <module>" in worker
-    assert "run the commit bar before every commit" in worker
+    assert "run the commit checks before every commit" in worker
 
 
 def test_the_worker_brief_never_leaks_into_a_judge_brief():
@@ -1198,12 +1205,12 @@ JUDGING = (
     pr.ADJUDICATE_AMENDMENT,
     pr.ADJUDICATE_DISPOSITION,
     pr.ADJUDICATE_CONSOLIDATE,
-    pr.ADJUDICATE_RED_TC,
+    pr.ADJUDICATE_EVIDENCE_GAP,
     pr.ADJUDICATE_REJUDGE,
 )
 
 # A machine line: one closed enum, on its own line, with a typed counter. The
-# rule exists because a magic substring in free prose (`NEEDS-HUMAN`) was once
+# rule exists because a magic substring in free prose (`NEEDS-OPERATOR`) was once
 # the ONLY input selecting a disposition's review tier — no constant, no
 # validation, and a typo silently downgraded the judgement.
 MACHINE_LINE = re.compile(r"^\s*(VERDICT|OUTCOME): [A-Z-]+(\|[A-Z-]+)+ [a-z]+=", re.M)

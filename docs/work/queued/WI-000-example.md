@@ -48,7 +48,7 @@ Three consequences worth stating, because they are the reason for the shape:
   `blocked/` directory. A lane that cannot finish CLOSES PARTIAL — its spec
   moves to the terminal `partial/` with an immutable handback report — and the
   adjudicator judges that handback, queueing a successor or minting an open
-  item. The one exception is a planned owner-held step (process.md §5, "Open items").
+  item. The one exception is a planned operator-held step (process.md §5, "Open items").
   Parking a lane by renaming its branch ref is BANNED (OI-70): a lane
   must close or it gets lost, and the harness reports any `active/<branch>/`
   claim with no matching branch ref. (`blocked` survives as a status WORD in
@@ -100,7 +100,7 @@ a wall of `= ""`.
   default plus `move-on`.
 - `priority` (integer, default 0), `exclusive` (semantic mutex keys),
   `est_tokens`, `safety_class`
-  (`ordinary|spine|gate|attestation|protected|high-risk|adjudication`) and `planmode`
+  (`ordinary|spine|gate|acceptance|protected|high-risk|adjudication`) and `planmode`
   are the scheduler's optional inputs. `planmode` is one of `none`, `single` or
   `dual` (absent and empty read as `none`): `dual` opts into dual-plan
   decomposition; `single` plans the claimed row in its lane first, and the
@@ -111,10 +111,10 @@ a wall of `= ""`.
   never scheduled, so a repo enables parallelism only after its own audit.
 - `brief` — on a `safety_class = "adjudication"` row only: which adjudicator
   brief the unattended coordinator composes that row's session from
-  (`amendment|disposition|conflict|red-tc`, `prompts/adjudicate-*.template.md`).
+  (`amendment|disposition|conflict|evidence-gap`, `prompts/adjudicate-*.template.md`).
   Written by `intake.py` at the mint, because the mint is what knows which
   judgement it is asking for. DECLARED rather than inferred from `specref`,
-  which cannot tell an amended test-case row from a red-TC census row — both
+  which cannot tell an amended test-case row from an evidence-gap census row — both
   cite the TC registry. Absent, or a brief whose evidence cannot be assembled
   in full, sends the ordinary worker assignment instead.
 - `adopted` — on a disposition row (one judging a partial or cancelled close)

@@ -1,6 +1,6 @@
 """The kit's small SHIPPED helper package — one home per shared behaviour.
 
-WHY THIS EXISTS, AND WHAT IT REPLACES (owner ruling D-8, `OI-16`, ruled
+WHY THIS EXISTS, AND WHAT IT REPLACES (operator ruling D-8, `OI-16`, ruled
 2026-08-12 and its inversion confirmed 2026-08-13; executed WI-448).
 
 The kit used to run the **F5 rule**: a shared `_kitcommon.py` was REJECTED so
@@ -53,8 +53,8 @@ theme and says so in its own docstring:
                  the derivation as an ARGUMENT — the registry parse needs a
                  sibling this package may not import.
   * `spine`    — the spine ROW vocabulary, one tier over `ladder`: what a
-                 `Status` word means (`Drafted`/`Approved`/`Founded`), which
-                 `Verification` methods decompose to a TC but no LLR, what a
+                 `Status` word means (`Drafted`/`Accepted`/`Founded`), which
+                 `VerificationMethod` methods decompose to a TC but no LLR, what a
                  free-form `Phase` cell parses to, which `SN-###` ids a needs
                  registry mentions and which of them the SRs cite, plus the ref
                  split, the `-000` placeholder test, the module-path key a
@@ -71,7 +71,7 @@ theme and says so in its own docstring:
                  files are one format with different fields.
   * `station`  — the lane-close TERMINAL-OUTCOME vocabulary: the three states a
                  lane can close into, the status directory each is declared by,
-                 the bar-attestation trailer label, and the "exactly one
+                 the passed-checks record's label, and the "exactly one
                  declared directory, or none" decision.
   * `secret_classes` — the credential CLASS vocabulary: which named classes
                  (PEM private key, GitHub token, GitHub fine-grained token,

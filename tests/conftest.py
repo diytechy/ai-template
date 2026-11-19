@@ -50,11 +50,11 @@ def _put_scripts_on_path():
 _put_scripts_on_path()
 
 # Hermeticity: a coordinator-launched session (agent-resume.* -> agent_loop.py ->
-# the agent CLI running this suite as the commit bar) inherits the launcher's
+# the agent CLI running this suite as the commit checks) inherits the launcher's
 # AGENT_* routing contract (AGENT_CMD, AGENT_MODEL_MAP, AGENT_TIER_MAP, ...).
 # The agent_loop tests build their own scaffolds and env, but an *ambient*
 # AGENT_TIER_MAP (e.g. BUILD=strong) re-routes their subprocess loops and fails
-# 8 of them — so the unattended layer could never produce a green commit bar
+# 8 of them — so the unattended layer could never produce passing commit checks
 # (WI-118, found live 2026-07-12). Scrub the whole namespace at import, before
 # any test copies os.environ; tests that need these vars set them explicitly.
 for _k in [k for k in os.environ if k.startswith("AGENT_")]:
@@ -62,40 +62,40 @@ for _k in [k for k in os.environ if k.startswith("AGENT_")]:
 
 # The codex adapter reads a thread's rollout under the inherited CODEX_HOME, or
 # under codex's default home (`~/.codex`) when none is set (WI-787), so a test
-# would otherwise read the owner's real rollouts. Pin it to a home that does not
+# would otherwise read the operator's real rollouts. Pin it to a home that does not
 # exist; a test that needs a codex home sets its own (or unsets this one).
 os.environ["CODEX_HOME"] = str(ROOT / "tests" / "_no-codex-home")
 
 
-# --- WI-122 + WI-281: the meta commit-bar smoke tier --------------------------
-# The per-commit bar runs the fast SMOKE tier (docs/stack.ini [tiers]
+# --- WI-122 + WI-281: the meta commit-check smoke tier --------------------------
+# The per-commit checks run the fast SMOKE tier (docs/stack.ini [tiers]
 # smoke = -m smoke); the FULL suite runs at slice/phase close and in CI
 # (PROCESS_OPTIONS.md phased-delivery cadence). Tiering is OPT-OUT: every
 # collected test is `smoke` UNLESS its module is listed below, so a NEW test is
-# in the commit bar by default ("never a false green" by omission) and a test
-# leaves the bar only by being named here. `smoke` and `slow` PARTITION the
+# in the commit checks by default ("never a false pass" by omission) and a test
+# leaves the checks only by being named here. `smoke` and `slow` PARTITION the
 # suite (every test gets exactly one) — test_smoke_tier.py guards the invariant
 # and that each name below is a real test module.
 #
 # WI-281 re-tiered this set to a BUDGET. A smoke test answers "is it basically
-# alive?", so the commit bar must run <= 60 s wall at -n auto (owner directive
+# alive?", so the commit checks must run <= 60 s wall at -n auto (operator directive
 # 2026-07-23). At 1378 tests the WI-122 opt-out default had inverted its own
 # purpose: 1088/1378 (79%) ran per commit at ~6 min wall (measured 351 s), so
-# the "smoke" bar re-ran most of the full suite every commit. The line below is
+# the "smoke" checks re-ran most of the full suite every commit. The line below is
 # the MECHANICAL boundary the measured module-wall ranking drew (recorded in
 # docs/specs/WI-281.md): a module whose cost is dominated by driving the heavy
 # scripts (gen_trajectory / trace / check* / agent_loop) or bootstrapping a
 # scaffold through conftest.run_py as SUBPROCESSES runs at close + CI, not per
-# commit; the in-process unit modules stay in the bar. Nothing is deleted or
+# commit; the in-process unit modules stay in the checks. Nothing is deleted or
 # weakened — everything cut still runs at slice/phase close + CI. The runtime is
 # its OWN budget item now (declared seconds + a deterministic membership ratchet
-# that bites if this set shrinks the bar back toward the full suite) — see
+# that bites if this set shrinks the checks back toward the full suite) — see
 # docs/stack.ini [smoke-budget] and tests/test_smoke_budget.py.
 SLOW_MODULES = frozenset(
     {
-        # WI-996: the red mark's attest and refresh arms on real lanes;
-        # its in-process pin is tests/test_red_mark.py.
-        "test_red_mark_lane",
+        # WI-996: the expected-failure marker's record-checks and refresh arms on real
+        # lanes; its in-process pin is tests/test_expected_failure.py.
+        "test_expected_failure_lane",
         # P9R selector tests create/commit real Git fixtures and invoke the
         # existing generators (45 cases, 11.57s alone); they are integration
         # assurance at Full/CI, not in-process smoke units. No existing module
@@ -120,7 +120,7 @@ SLOW_MODULES = frozenset(
         # over the result. Same class as test_bootstrap directly above, and the
         # only module here that also reads git history, so it is the one module
         # that SKIPS on a shallow clone; it belongs at close + CI, never in the
-        # commit bar.
+        # commit checks.
         "test_old_kit_resync",  # scaffold at an old kit commit, sync forward
         # Heavy end-to-end session/integrator modules — real subprocesses
         # driving live git repos, the same heavy-integration class as the
@@ -128,27 +128,27 @@ SLOW_MODULES = frozenset(
         # anchored this group retired with the dispatcher at
         # concurrency-restructure Phase 5.)
         "test_dual_plan_round",  # the dual-plan round end-to-end (WI-199)
-        "test_integrate",  # local integrator: real git repos + a real check.py bar
+        "test_integrate",  # local integrator: real git repos + a real check.py checks
         "test_coordinator_guard_e2e",  # the guard via CLI, wrapper, launchers, real git (WI-822)
         # WI-521 slice 2 split test_integrate.py by behavior boundary (M-06).
         # The three new modules are the SAME heavy class as the module they came
-        # out of — real git repos, real worktrees, the real bar in the e2e — so
-        # they are re-tiered WITH it rather than accreting into the commit bar
+        # out of — real git repos, real worktrees, the real checks in the e2e — so
+        # they are re-tiered WITH it rather than accreting into the commit checks
         # by default. The shared fixture surface, tests/integrate_fixtures.py,
         # carries no `test_` prefix and is never collected.
-        "test_integrate_admission",  # what the slot admits: outcome/mint/verdict/bar
+        "test_integrate_admission",  # what the slot admits: outcome/mint/verdict/checks
         "test_integrate_station",  # the station protocol, refresh + merge slot
         "test_integrate_unload",  # the §5.6 branch + worker-worktree unload
-        "test_integrate_attest",  # WI-956: the attest route on station repos and lane worktrees
-        "test_bar_attestation",  # WI-956: the Bar-Green grammar and peel, a real git repo per case
-        "test_dispatch",  # the dispatch loop: real git repos + the real bar (WI-374/WI-381)
+        "test_integrate_record_checks",  # WI-956: the record-checks route on station repos and lane worktrees
+        "test_passed_checks",  # WI-956: the Checks-Passed grammar and peel, a real git repo per case
+        "test_dispatch",  # the dispatch loop: real git repos + the real checks (WI-374/WI-381)
         # The two lane closes: real claims (so the real trunk_step --regen
         # subprocess), real lane worktrees, real reverts — the same heavy class
         # as its two siblings above, filed with them rather than left to the
         # opt-out default where it would spend a fifth of the smoke budget.
         "test_handback",  # handback + quarantine on real git repos (WI-387)
         # WI-281: subprocess/scaffold-heavy modules moved to slow to hold the
-        # <= 60 s commit-bar budget. Each is dominated by run_py subprocesses
+        # <= 60 s commit-check budget. Each is dominated by run_py subprocesses
         # (running gen_trajectory / trace / check* / agent_loop) or the scaffold
         # fixture's full bootstrap — the same heavy class as above, just not
         # "end-to-end" in name. Ordered by measured module-wall cost (the
@@ -170,9 +170,9 @@ SLOW_MODULES = frozenset(
         "test_traj_graph",  # layout + obstacle-aware wire routing
         "test_traj_parse",  # source loaders + the git/subprocess seam
         "test_agent_loop_review",  # review-tail subprocess rounds
-        # WI-958: the review gate and the red-round cap, each case a real
+        # WI-958: the review gate and the commit-check failure cap, each case a real
         # agent_loop.py run on a linked lane worktree; the family's in-process
-        # pins are the setting's reader in test_red_rounds_max and the count
+        # pins are the setting's reader in test_commit_check_failure_cap and the count
         # reader, called in-process inside these cases.
         "test_agent_loop_review_gate",  # review-gate subprocess rounds
         "test_agent_loop",  # agent_loop.py subprocess loops
@@ -186,13 +186,13 @@ SLOW_MODULES = frozenset(
         # WI-277 split test_trace.py by behavior boundary; same cost class as the
         # parent (trace.py run_py subprocesses / real git repos), so same tier —
         # behavior-preserving, not a re-tiering. test_trace_rules is genuinely
-        # in-process; putting it back in the bar is a separate MEASURED call.
+        # in-process; putting it back in the checks are a separate MEASURED call.
         "test_trace_rules",  # pure registry-rule decisions
-        "test_trace_briefs",  # re-attestation brief: git effect + freshness gate
+        "test_trace_briefs",  # re-acceptance brief: git effect + freshness gate
         # WI-521 slice 3 split the IF-### interface-seam tier out of test_trace.py
         # (M-06). Every test still drives a real trace.py over a scaffold through
         # run_py — the SAME heavy class as test_trace above — so it rides that
-        # tier rather than accreting into the commit bar; the split is
+        # tier rather than accreting into the commit checks; the split is
         # behavior-preserving, not a re-tiering.
         "test_trace_interfaces",  # the IF/CMP interface-seam tier subprocess runs
         "test_check_docs",  # check_docs on bootstrapped scaffolds
@@ -205,11 +205,11 @@ SLOW_MODULES = frozenset(
         # modules carry the SAME cost class as their parent (check_trajectory.py
         # run_py subprocesses over temp registries), so they inherit its tier —
         # the split is behavior-preserving, not a re-tiering. (Whether the
-        # decision-only halves belong back in the bar is a separate MEASURED
+        # decision-only halves belong back in the checks are a separate MEASURED
         # decision, deliberately not taken here.)
         "test_trajectory_staged",  # --staged git-effect + git-time recovery
         "test_trajectory_arch",  # decision over architecture inputs
-        "test_trajectory_phase",  # phase anchors + approval-brief evidence
+        "test_trajectory_phase",  # phase anchors + acceptance-brief evidence
         "test_trajectory_specs",  # decision over spec bodies
         "test_trajectory_holdban",  # WI-553 hold-by-rename detector on git scaffolds
         "test_components_registry",  # components gate on scaffolds
@@ -218,7 +218,7 @@ SLOW_MODULES = frozenset(
         # takes the `scaffold` fixture (a full bootstrap) and several drive
         # `derive_stage.py` / `check.py` through run_py. Filed beside its sibling
         # by the declared criterion, not to buy budget: its PURE half is
-        # `test_kitlib_stage`, which stays in the commit bar where the
+        # `test_kitlib_stage`, which stays in the commit checks where the
         # in-process default puts it.
         "test_derive_stage",  # derive_stage on scaffolds
         # WI-498 slice 3: the phase rule's before-state IS `HEAD`, so every test
@@ -231,7 +231,7 @@ SLOW_MODULES = frozenset(
         # driven, not asserted) or builds and commits a real git repo (the tier
         # signal's whole subject is a delta between two committed trees). Filed
         # by the declared criterion, not to buy budget: its in-process half is
-        # `test_stage_event_detectors`, which stays in the commit bar where the
+        # `test_stage_event_detectors`, which stays in the commit checks where the
         # default puts it.
         "test_stage_event_detectors_driven",  # scaffolds + real git repos
         "test_gen_okf",  # gen_okf on scaffolds
@@ -252,25 +252,25 @@ SLOW_MODULES = frozenset(
         # WI-281 rework (review A, finding 1): the run_session subprocess/shim
         # transport module. It drives real CLI subprocesses through run_session
         # (including Windows .cmd/.bat shim launchers), and it HOSTS the known
-        # Windows batch-shim reds that are WI-275's open subject — one of which
+        # Windows batch-shim failures that are WI-275's open subject — one of which
         # (test_run_session_codex_reads_last_message_not_transcript) still fails
-        # on a Windows checkout and would red the per-commit bar there. It runs at
-        # slice/phase close + CI (where the full suite exposes those reds for
-        # WI-275 to fix); holding it out of the commit bar keeps that bar green on
+        # on a Windows checkout and would fail the per-commit checks there. It runs at
+        # slice/phase close + CI (where the full suite exposes those failures for
+        # WI-275 to fix); holding it out of the commit checks keeps them passing on
         # every supported OS until WI-275 lands. No test deleted or weakened — the
         # module is re-tiered whole (module-granular, like every entry here), so
         # its healthy in-process units still run at close + CI. The reviewer named
         # this the in-scope alternative to landing WI-275's fix from this WI.
-        "test_session_stdin",  # run_session subprocess/shim transport (WI-275 reds)
+        "test_session_stdin",  # run_session subprocess/shim transport (WI-275 failures)
         # The toolchain prereq, re-tiered on the SAME precedent as test_session_stdin
-        # directly above: it is DESIGNED to red on a below-floor checkout, so leaving
-        # it in the bar would make the commit bar unpassable on such a machine — a
+        # directly above: it is DESIGNED to fail on a below-floor checkout, so leaving
+        # it in the checks would make the commit checks unpassable on such a machine — a
         # developer could then never commit the very fix that installs the floor.
         # Nothing is weakened: the `pytest_sessionstart` banner still fires on EVERY
-        # run including `-m smoke`, so the commit bar keeps the loud warning and
-        # loses only the hard stop; the hard failure lands at slice/phase close and
+        # run including `-m smoke`, so the commit checks keep the loud warning and
+        # lose only the hard stop; the hard failure lands at slice/phase close and
         # in CI, which is where a gate result is claimed.
-        "test_prereq_toolchain",  # designed to red below the declared Python floor
+        "test_prereq_toolchain",  # designed to fail below the declared Python floor
         # WI-475: the launcher interpreter-selection suite. Filed here by the
         # MECHANICAL boundary this set is drawn on, not by preference — every
         # test in it RUNS a launcher (sh / cmd.exe / pwsh) against fake
@@ -278,7 +278,7 @@ SLOW_MODULES = frozenset(
         # subprocess-dominated exactly like test_bootstrap and test_onboard_devsetup,
         # the two modules that own the rest of the launcher surface. Measured 8.0 s
         # serially for 25 tests on this box (3.11.9, 24 cores) — a seventh of the
-        # 60 s commit bar for a surface that changes about once a year. Nothing is
+        # commit checks' 60 s for a surface that changes about once a year. Nothing is
         # weakened: it runs in full at slice/phase close and in CI.
         "test_launcher_interpreter",  # launchers driven against fake interpreters
         # WI-496 (OI-52 ruling (a), the re-tier owed before enforcement): the
@@ -292,7 +292,7 @@ SLOW_MODULES = frozenset(
         # `python -m pytest -q -n auto -m smoke --durations=0`, warm): these
         # five modules summed to 157.0 s of the tier's 304.5 s total PER-TEST
         # duration (51.5%) while the wall clock sat at 58.77 s — 0.98x budget,
-        # one bad scheduling tick from a red honest commit. Every one is the
+        # one bad scheduling tick from a failure honest commit. Every one is the
         # SAME heavy class already filed above (subprocess-driving a real
         # script over a real scaffold/repo, exercised again wholesale at
         # slice/phase close + CI), just not named "end-to-end":
@@ -312,7 +312,7 @@ SLOW_MODULES = frozenset(
         # is the same interpreter-startup-dominated class as the sibling
         # subprocess suites above — measured ~5 s for the module. The METRIC
         # itself is pinned in-process in test_check_complexity.py, which stays in
-        # the commit bar; only the subprocess CLI half is re-tiered here.
+        # the commit checks; only the subprocess CLI half is re-tiered here.
         "test_check_complexity_cli",  # check_complexity.py driven as a subprocess
         # WI-639 (TC-249): the per-change readability report needs a real git
         # history (a staged change, a claimed branch in a linked worktree).
@@ -320,12 +320,12 @@ SLOW_MODULES = frozenset(
         # WI-638 (TC-247, TC-248): the checkpoint re-judge decision reads inputs
         # at a revision, and its release half drives the intake mint's commit.
         "test_rejudge",  # git init/commit per case + the bookkeeping commit
-        "test_assumption_gate",  # check.py subprocess per case + a git approval act
+        "test_assumption_gate",  # check.py subprocess per case + a git acceptance act
         # WI-543 rework (REVIEW-A): the SR-163 mapping-purpose checker's CLI
         # drives. Each case spawns gen_arch_map.py --mapping-purpose as a
         # subprocess (real interpreter startup) to prove the delivered command is
         # wired end-to-end; the METRIC and the four finding classes are pinned
-        # in-process in test_mapping_purpose.py, which stays in the commit bar —
+        # in-process in test_mapping_purpose.py, which stays in the commit checks —
         # only the subprocess half is re-tiered here, the test_check_complexity_cli
         # split's precedent.
         "test_mapping_purpose_cli",  # gen_arch_map --mapping-purpose as a subprocess
@@ -348,7 +348,7 @@ SLOW_MODULES = frozenset(
         # subprocesses over a bootstrapped scaffold; the record format stays
         # in-memory in test_observation_record.py.
         "test_observation_writer",  # scaffold + writer/trace.py subprocesses
-        # WI-632 (TC-234): the accepted risk's approval act read from real git
+        # WI-632 (TC-234): the accepted risk's acceptance act read from real git
         # repositories, a shallow clone among them.
         "test_accepted_risk",  # git init/commit/clone per case
         # WI-640 (TC-250): the test-first order exists only in commits, so every
@@ -425,7 +425,7 @@ SLOW_MODULES = frozenset(
         # drawn on, and were 43% of that total. Every script family they
         # exercise keeps a smoke pin elsewhere: kitlib.done_when in
         # test_done_when, session_keep in test_session_keep, acceptance_record
-        # in test_acceptance_record, adjudicate_brief in test_approval_level
+        # in test_acceptance_record, adjudicate_brief in test_acceptance_level
         # and test_consolidate, integrate in test_kitlib_station and
         # test_generated_set. Nothing is deleted: all three run at slice/phase
         # close and in CI.
@@ -461,14 +461,40 @@ def smoke_tier_for(module_stem):
     """The tier a test module belongs to: 'slow' for the heavy end-to-end
     modules in SLOW_MODULES, else 'smoke'. Total by construction — one test
     maps to exactly one tier, so nothing lands outside both (the invariant the
-    smoke commit bar leans on)."""
+    smoke commit checks lean on)."""
     return "slow" if module_stem in SLOW_MODULES else "smoke"
+
+
+# --- The canary set: a fixed-size answer to "is it basically alive?" ----------
+# `smoke` and `slow` above sort tests by what they COST, so the smoke tier grows
+# with the suite and holds none of the end-to-end runs. The canary set is
+# chosen by what a test SHOWS, one happy path per capability, and it is capped
+# by count, so it stays the same size while the suite grows. The iterate checks
+# (scripts/check_iterate.py) run it beside the tests a change names. A test is
+# a canary only by being listed in tests/canary.txt, and the mark rides beside
+# its tier mark: the two tiers still partition the suite.
+CANARY_LIST = ROOT / "tests" / "canary.txt"
+CANARY_MAX = 20
+
+
+def read_canary(path=CANARY_LIST):
+    """The listed canary node ids, in file order (`#` opens a comment); an
+    absent list is an empty set."""
+    if not path.is_file():
+        return ()
+    lines = path.read_text(encoding="utf-8").splitlines()
+    return tuple(node for node in (ln.split("#", 1)[0].strip() for ln in lines) if node)
+
+
+CANARY = frozenset(read_canary())
 
 
 def pytest_collection_modifyitems(config, items):
     for item in items:
         stem = Path(item.nodeid.split("::", 1)[0]).stem
         item.add_marker(smoke_tier_for(stem))
+        if item.nodeid in CANARY:
+            item.add_marker("canary")
 
 
 def load_script(name, directory=SCRIPTS):
@@ -496,9 +522,9 @@ def load_script(name, directory=SCRIPTS):
 # `git init` in any tmp dir inherits it, so `git add` silently folds a
 # working-tree `\r\n` to `\n` on the way into the object database. A fixture
 # asserting on committed BYTES then tests LF-only content on a stock Windows
-# box while reading green everywhere else — `test_integrate.py::git_repo`
+# box while passing everywhere else — `test_integrate.py::git_repo`
 # hit exactly this (docs/log.md 2026-08-16a): the forged CRLF relay never
-# reached the object database, so the byte-exact conviction test went red and
+# reached the object database, so the byte-exact conviction test failed and
 # its excuse-test sibling passed VACUOUSLY. POSIX boxes default autocrlf to
 # false and never see it, which is exactly the shape of bug that survives
 # until someone runs the suite on a stock Windows install.
@@ -649,7 +675,7 @@ def hooked_checkout(root):
 # interpreter and dozens of tests fail deep inside machinery that is working
 # exactly as designed (dev-setup's PATH probe finds no 3.11+ to offer, and the
 # toolchain-dependent fixtures build from *this* process's base). Those
-# reds read like branch defects but are purely environmental — measured
+# failures read like branch defects but are purely environmental — measured
 # 2026-07-25 on a CLT-Python 3.9.6 .venv: 49 failures, a byte-identical set on a
 # clean tree. The guards below turn that into one loud, correct diagnosis plus
 # honest skips. The floor itself is READ from the source of truth, never
@@ -688,9 +714,9 @@ def skip_below_floor(what):
 
     For tests whose PRECONDITION is a floor-satisfying toolchain — not tests that
     merely happen to fail without one. Skipping is the honest verdict there: the
-    behaviour under test genuinely cannot be exercised, so a red would be
+    behaviour under test genuinely cannot be exercised, so a failure would be
     reporting the environment as a defect. `test_prereq_toolchain.py` fails hard
-    in the same run, so a below-floor session can never read as green."""
+    in the same run, so a below-floor session can never read as a pass."""
     short = floor_shortfall()
     if short:
         pytest.skip(
@@ -707,7 +733,7 @@ def skip_below_floor(what):
 # the same tree, the same commit, run twice — 1540 passed / 54 skipped without
 # `Git\bin` on PATH, 1587 passed / 7 skipped with it. Forty-seven tests were
 # never asked, 26 of them the two hook suites guarding the commit floor, and BOTH
-# printed a green. That is SN-008's dishonest-green shape one level up: not a
+# printed a pass. That is SN-008's dishonest-pass shape one level up: not a
 # skipped check, but a skipped check-of-the-check.
 #
 # Declared ONCE here because the skip guards and the gate must read the same
@@ -721,7 +747,7 @@ def skip_below_floor(what):
 # Deliberately NOT done, per the row: auto-prepending the directory to PATH. A
 # harness that silently repairs its own environment hides the identical fact one
 # layer down — the same standing rule that forbids editing a declared list (a
-# coverage floor, an orphan glob, a ratchet baseline) to green a step instead of
+# coverage floor, an orphan glob, a ratchet baseline) to make a step pass instead of
 # fixing what it measures.
 #
 # The declaration lives here rather than in docs/stack.ini (where [smoke-budget]
@@ -856,7 +882,7 @@ def env_gate_banner():
         )
         lines.append("       remedy: {}".format(gate.remedy()))
     lines.append(
-        "   Those tests will SKIP, so this run is PARTIAL — a green here is not"
+        "   Those tests will SKIP, so this run is PARTIAL — a pass here is not"
     )
     lines.append(
         "   a gate result. test_prereq_toolchain.py FAILS on a required gate at"
@@ -919,7 +945,7 @@ def pytest_terminal_summary(terminalreporter):
 
     The session-start banner predicts from the probes; this states what actually
     happened. It is the line whose absence let two sessions record `1579 passed,
-    7 skipped` and `1540 passed, 54 skipped` as comparable greens — the count was
+    7 skipped` and `1540 passed, 54 skipped` as comparable passes — the count was
     always one `-rs` flag away, and nobody passes `-rs`."""
     if hasattr(terminalreporter.config, "workerinput"):
         return
@@ -1454,37 +1480,82 @@ def claim_on_branch(lane, wi="WI-9"):
     return lane
 
 
-# The red mark's reference text, built by concatenation so `tests/` never
-# holds it whole: this repository's own landing tree counts 0 (WI-996).
-RED_MARK = (
+# The expected-failure marker's reference text, built by concatenation so
+# `tests/` never holds it whole: this repository's own landing tree counts 0
+# (WI-996).
+EXPECTED_FAILURE_MARKER = (
     "pytest.mark.xfail(strict=True, raises=(Assertion"
     + "Error, pytest.fail.Exception))"
 )
-# The section a `docs/stack.ini` fixture that reaches `attest` or the refresh
-# declares, the key being required with no default.
-BARS_RED_MARK = "[bars]\nred_mark = {}\n".format(RED_MARK)
+# The line a `docs/stack.ini` fixture that reaches `record-checks` or the refresh
+# declares, the key being required with no default. It is a `[product]` key,
+# so a fixture composes it straight after its `[product]` lines, before the
+# next header: `"[product]\ntest = ...\n" + MARKER_DECLARATION`. A second
+# `[product]` header would be a duplicate section, which does not parse. The
+# name is the reader's, `CommitCheckSettings.marker`, not the retired `[bars]` section's.
+MARKER_DECLARATION = "expected_failure_marker = {}\n".format(EXPECTED_FAILURE_MARKER)
+# The check suite a fixture names as the one a commit must pass: the name the
+# shipped templates give theirs.
+COMMIT_SUITE = "smoke"
 
 
-def declare_review_bar(repo, ctl):
-    """Declare `docs/stack.ini [bars] review` under `repo` as a stand-in bar
-    driven from the control directory `ctl`: each run appends one line to
-    `ctl/bar_runs.txt`, and the bar is red (exit 1, printing
-    `BAR-FAIL-MARKER`) while `ctl/bar_red` exists, green (exit 0) otherwise.
-    `[bars] red_mark` is declared beside it, as a real declaration must.
-    The caller commits the file with the rest of its configuration. Returns
-    the declared command."""
+def declare_stack_key(root, section, key, value):
+    """Add `key = value` to `[section]` of `root`'s `docs/stack.ini`, for a
+    fixture that builds its declaration in steps: under the section's header
+    where the file already has one, since a second header would be a
+    duplicate section, else in a new section at the end. An absent file is
+    created. The caller commits it."""
+    path = Path(root) / "docs" / "stack.ini"
+    lines = path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
+    header = "[{}]".format(section)
+    if header not in lines:
+        lines.append(header)
+    lines.insert(lines.index(header) + 1, "{} = {}".format(key, value))
+    write_lf(root, "docs/stack.ini", "\n".join(lines) + "\n")
+
+
+def require_commit_suite(root, name=COMMIT_SUITE):
+    """Name `name` as the check suite a commit must pass, `[required-checks]
+    commit` in `root`'s `docs/process.toml`: the policy half of the commit
+    checks' declaration, whose other half is the suite's line under
+    `docs/stack.ini` `[check-suites]`. The key is set in place through
+    bootstrap's own writer, so every table the fixture already wrote stays as
+    it was. The file must exist: a fixture that reaches `record-checks` has declared
+    its trunk (`declare_trunk`), and this helper never makes a repository
+    with no policy file into one with a file that is silent on every other
+    dial. The caller commits the file."""
+    assert (Path(root) / "docs" / "process.toml").is_file(), (
+        "no docs/process.toml under {}: declare the trunk first".format(root)
+    )
+    return load_script("bootstrap").set_process_key(
+        root, "required-checks", "commit", name, add_if_missing=True
+    )
+
+
+def declare_commit_checks(repo, ctl):
+    """Declare the commit checks under `repo` as a stand-in checks driven from
+    the control directory `ctl`: each run appends one line to
+    `ctl/check_runs.txt`, and the checks fail (exit 1, printing
+    `CHECKS-FAIL-MARKER`) while `ctl/checks_fail` exists, and pass (exit 0) otherwise.
+    It is declared the way a real repository declares its own: the command as
+    the `COMMIT_SUITE` line of `docs/stack.ini` `[check-suites]`, and that
+    suite's name in `docs/process.toml` `[required-checks] commit`
+    (`require_commit_suite`). `[product] expected_failure_marker` is declared
+    beside it, as a real declaration must. The caller commits both files with
+    the rest of its configuration. Returns the declared command."""
     control = Path(ctl).resolve().as_posix()
     code = (
         "import pathlib,sys; c=pathlib.Path('{}'); "
-        "open(c/'bar_runs.txt','a').write('run\\n'); "
-        "r=(c/'bar_red').exists(); r and print('BAR-FAIL-MARKER'); "
+        "open(c/'check_runs.txt','a').write('run\\n'); "
+        "r=(c/'checks_fail').exists(); r and print('CHECKS-FAIL-MARKER'); "
         "sys.exit(1 if r else 0)"
     ).format(control)
     command = '"{}" -c "{}"'.format(Path(sys.executable).as_posix(), code)
-    path = Path(repo) / "docs" / "stack.ini"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8", newline="\n") as fh:
-        fh.write("[bars]\nreview = {}\nred_mark = {}\n".format(command, RED_MARK))
+    declare_stack_key(
+        repo, "product", "expected_failure_marker", EXPECTED_FAILURE_MARKER
+    )
+    declare_stack_key(repo, "check-suites", COMMIT_SUITE, command)
+    require_commit_suite(repo)
     return command
 
 
@@ -1535,7 +1606,7 @@ def seed_row(root, srs=(), llrs=None, tcs=None, tags=None, sr_refs=None):
     default roots."""
     design = {k: {"sr_refs": list(v)} for k, v in (llrs or {}).items()}
     cases = {
-        k: {"verifies": list(v[0]), "evidence": v[1], "status": "Approved"}
+        k: {"verifies": list(v[0]), "evidence": v[1], "status": "Accepted"}
         for k, v in (tcs or {}).items()
     }
     for rel, table, rows in (
@@ -1558,21 +1629,21 @@ def seed_row(root, srs=(), llrs=None, tcs=None, tags=None, sr_refs=None):
 # to a session-driving fixture gave `agent_loop` a live window, which it
 # correctly honors by SLEEPING: measured 2026-08-11,
 # `blackout_wake("12:00-19:00", 14:22Z) == 16650` s (4 h 37 m). The tests did
-# not fail, they never ran, and the runner reported green on the rest — so
-# "full bar green" was a function of UTC time-of-day, and a 2026-08-10 probe
+# not fail, they never ran, and the runner reported a pass on the rest — so
+# "full checks passing" was a function of UTC time-of-day, and a 2026-08-10 probe
 # outside the window recorded the module as "not reproduced ... flaky". It is
 # not flaky; it is deterministic in the clock.
 #
-# WI-433 (owner ruling 2026-08-11) removed the source rather than only the
+# WI-433 (operator ruling 2026-08-11) removed the source rather than only the
 # symptom: the template now ships the dial DISABLED (`"12:00-12:00"`,
 # `start == end`), keeping the window SHAPE so an adopter can still read the
 # format off the line they edit. This repo's OWN dial is unchanged and still
-# the owner's to set.
+# the operator's to set.
 #
 # Everything below therefore stays, as defence in depth rather than as the only
 # defence. Test scaffolds still opt out explicitly through the dial's own
 # documented disable form (an empty value), so a session test exercises session
-# behavior rather than the wall clock, and the autouse sweep still reds on a
+# behavior rather than the wall clock, and the autouse sweep still fails on a
 # live window however it arrived. tests/test_blackout_isolation.py holds both
 # halves — that the shipped dial is really inert, and that a POPULATED window
 # really does block, so the machinery is proven live and not merely unused.
@@ -1656,7 +1727,7 @@ def _no_live_blackout_in_session_scaffolds(request):
     assert not live, (
         "WI-428: a session-driving test scaffold inherited a LIVE blackout "
         "window — the loop under test will SLEEP rather than run, and the "
-        "suite will report green on the tests that did run. Seed through "
+        "suite will report a pass on the tests that did run. Seed through "
         "conftest.set_process_key or call conftest.disable_blackout(root). "
         + "; ".join("{} -> {!r}".format(p, v) for p, v in live)
     )
@@ -1665,7 +1736,7 @@ def _no_live_blackout_in_session_scaffolds(request):
 # WI-636: the loop marker. The loop sets it in its OWN process environment
 # (`kitlib.provenance.mark_loop_process`), so an in-process test of the
 # dispatcher leaves it set for every later test in the same worker, and a loop
-# session running this suite as its commit bar hands it to every test at once.
+# session running this suite as its commit checks hands it to every test at once.
 # Either way a person's commit would read as the loop's and every claim, merge
 # and telemetry commit under test would gain a trailer nobody asked for.
 LOOP_SESSION_ENV = "KIT_LOOP_SESSION"
@@ -1683,8 +1754,8 @@ def _no_loop_marker_leaks():
 
 
 @pytest.fixture(autouse=True)
-def _no_owner_token_file(monkeypatch):
-    """WI-846: no test reads the owner's real long-lived token. The variable
+def _no_operator_token_file(monkeypatch):
+    """WI-846: no test reads the operator's real long-lived token. The variable
     naming its file, and the variable the Claude CLI reads a token from, are
     removed from every test's environment; a test that needs a token writes a
     canary file of its own."""
@@ -1693,10 +1764,10 @@ def _no_owner_token_file(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _no_owner_account_homes(monkeypatch, tmp_path_factory, request):
+def _no_operator_account_homes(monkeypatch, tmp_path_factory, request):
     """WI-798: account homes live under the user configuration directory
     (`%APPDATA%` on Windows, `$XDG_CONFIG_HOME` on POSIX), shared by every
-    repository on the box. No test reads, or creates a home in, the owner's
+    repository on the box. No test reads, or creates a home in, the operator's
     real one: each test gets a temporary one of its own, named under the
     basetemp and created only if something writes there."""
     tag = hashlib.sha256(request.node.nodeid.encode("utf-8")).hexdigest()[:16]
@@ -1821,16 +1892,16 @@ STAKEHOLDER_NEEDS = """# Stakeholder Needs (SN-###)
 | SN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
 """
 
-SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
+SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Accepted
 """
 
 LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Approved
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Accepted
 """
 
 TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
-TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Approved
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Accepted
 """
 
 
@@ -1877,7 +1948,7 @@ def use_legacy_spine_carrier(root):
     # ...and the scaffolded PROSE follows the carrier, or the repo is internally
     # inconsistent: README.md and docs/status.md link the registry by name, and
     # a link to the file this function just deleted is a real broken link that
-    # reds check_docs — a fixture artefact masquerading as a finding.
+    # fails check_docs — a fixture artefact masquerading as a finding.
     for rel in ("README.md", "docs/status.md"):
         doc = root / rel
         if not doc.is_file():
@@ -1933,8 +2004,8 @@ def make_minimal_project(root):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # The derived STAGE: this is a full DevStg-Impl chain, so docs/stage is
     # regenerated from the artifact states — the scaffold shipped a placeholder,
-    # and approving artifacts up to a settled spine is what advances the derived
-    # rung. Keeps the `derived-stage` freshness step green.
+    # and accepting artifacts up to a settled spine is what advances the derived
+    # rung. Keeps the `derived-stage` freshness step passing.
     #
     # It ran `derive_gate.py` until WI-498 slice 5 retired `docs/gate` along with
     # that module's whole CLI (what survives is `spine_rules.py`, a pure library

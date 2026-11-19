@@ -12,7 +12,7 @@ from conftest import SCRIPTS, run_py, use_legacy_spine_carrier
 
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status,Phase,Area\n"
+    "Permutations,Priority,VerificationMethod,Status,Phase,Area\n"
 )
 LLR_HEADER = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component,Phase\n"
@@ -20,14 +20,14 @@ LLR_HEADER = (
 TC_HEADER = "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase\n"
 
 
-def sr_row(rid, title, phase="", verification="Demonstration", status="Approved"):
+def sr_row(rid, title, phase="", verification="Demonstration", status="Accepted"):
     return '{},{},SN-001,"The system shall {}.","Why.","Observable.",,M,{},{},{},\n'.format(
         rid, title, title.lower(), verification, status, phase
     )
 
 
 def llr_row(rid, sr_refs):
-    return '{},{},Decomposition,src/mod,func,"Detail.",(see TC),Approved,,\n'.format(
+    return '{},{},Decomposition,src/mod,func,"Detail.",(see TC),Accepted,,\n'.format(
         rid, sr_refs
     )
 
@@ -175,8 +175,8 @@ def test_absent_registries_still_produce_a_sane_checklist(tmp_path):
 
 def test_fresh_scaffold_example_rows_do_not_count(scaffold):
     # A fresh scaffold carries only the -000 example rows — ignored like
-    # everywhere else in the kit, so the counts are all zero and the run is
-    # green out of the box.
+    # everywhere else in the kit, so the counts are all zero and the run
+    # passes out of the box.
     proc = gen(scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "SN=0 human-SR=0 manual-TC=0 IF=0 PB=0" in proc.stdout

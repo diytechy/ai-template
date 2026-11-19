@@ -2,8 +2,8 @@
 
 The conversion's whole claim is that it is LOSSLESS, so the tests that matter
 are the ones proving the loss detector can actually fail. A round-trip check
-that cannot report a dropped cell is worth nothing, and a green from it would
-be exactly the "a green never hides a skipped check" failure SN-008 forbids —
+that cannot report a dropped cell is worth nothing, and a pass from it would
+be exactly the "a pass never hides a skipped check" failure SN-008 forbids —
 so every corruption class is driven here, not just the happy path.
 
 Implements: TC-159
@@ -272,7 +272,7 @@ def test_neither_new_registry_survives_under_its_old_carrier():
     """The house rule, asserted on the TREE rather than on a fixture: the
     conversion is only finished when the CSV is GONE. Both homes at once is a
     hard refusal (`spine_carrier.resolve`), so a lingering source file would
-    red every reader — this catches it in one place instead."""
+    fail every reader — this catches it in one place instead."""
     for stale in (
         "docs/requirements/interfaces.csv",
         "docs/requirements/components.csv",
@@ -294,7 +294,7 @@ SN_MD = (
     "| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance |\n"
     "|---|---|---|---|---|\n"
     "| SN-001 | Add two numbers. | Demo. | M | add(1,2) is 3. |\n\n"
-    "## Draft needs (unapproved)\n\n"
+    "## Draft needs (unaccepted)\n\n"
     "| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance |\n"
     "|---|---|---|---|---|\n"
     "| SN-002 | Subtract. | Demo. | S | tbd |\n\n"
@@ -335,9 +335,9 @@ def test_sn_edge_rows_keep_their_native_fields(tmp_path):
     assert not any("kind" in row for row in parsed.values())
     assert set(parsed["SN-003"]) == {"status", "lifecycle", "scenario", "expected"}
     assert {rid: row["status"] for rid, row in parsed.items()} == {
-        "SN-001": "Approved",
+        "SN-001": "Accepted",
         "SN-002": "Drafted",
-        "SN-003": "Approved",
+        "SN-003": "Accepted",
     }
 
 
@@ -449,7 +449,7 @@ def test_cell_whitespace_is_CONTENT_and_survives_the_conversion(tmp_path):
         tmp_path,
         **{
             "docs/requirements/system-requirements.csv": (
-                'SR-ID,Title,Requirement,Status\nSR-001,T,"{}",Approved\n'.format(
+                'SR-ID,Title,Requirement,Status\nSR-001,T,"{}",Accepted\n'.format(
                     padded
                 )
             )
@@ -470,7 +470,7 @@ def test_cell_whitespace_is_CONTENT_and_survives_the_conversion(tmp_path):
         tmp_path / "b",
         **{
             "docs/requirements/system-requirements.csv": (
-                'SR-ID,Title,Requirement,Status\nSR-001,T,"   ",Approved\n'
+                'SR-ID,Title,Requirement,Status\nSR-001,T,"   ",Accepted\n'
             )
         },
     )
@@ -520,13 +520,13 @@ def test_the_pack_recipe_run_verbatim_leaves_the_registries_TRACKED(tmp_path):
                 "| SN-001 | a need | matters | M | works |\n"
             ),
             "docs/requirements/system-requirements.csv": (
-                "SR-ID,Title,SN-Refs,Status\nSR-001,Adder,SN-001,Approved\n"
+                "SR-ID,Title,SN-Refs,Status\nSR-001,Adder,SN-001,Accepted\n"
             ),
             "docs/requirements/low-level-requirements.csv": (
-                "LLR-ID,SR-Refs,Title,Status\nLLR-001,SR-001,Core,Approved\n"
+                "LLR-ID,SR-Refs,Title,Status\nLLR-001,SR-001,Core,Accepted\n"
             ),
             "docs/test/test-cases.csv": (
-                "TC-ID,Verifies,Method,Status\nTC-001,SR-001;LLR-001,run,Approved\n"
+                "TC-ID,Verifies,Method,Status\nTC-001,SR-001;LLR-001,run,Accepted\n"
             ),
         },
     )

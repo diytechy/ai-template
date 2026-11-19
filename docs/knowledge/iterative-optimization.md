@@ -84,7 +84,7 @@ For a small WI, a useful default is a diverse seed round followed by two
 promotion rounds, with a predeclared minimum effect size and patience of two
 rounds. This is a starting heuristic, not a universal constant. `inf` permits
 continued work but must not erase success, plateau, stability, or invalid-search
-stops; `block` means budget exhaustion requires the declared human act. Record
+stops; `block` means budget exhaustion requires the declared operator act. Record
 best-so-far, diversity/archive coverage, evaluation count/cost, and the stop
 reason. More rounds are not progress when the measurement cannot distinguish
 them.

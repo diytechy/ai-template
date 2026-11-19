@@ -130,7 +130,7 @@ def test_a_complete_assumption_row_passes(scaffold):
 
 def test_each_defect_fails_the_strict_run_naming_the_row_and_the_cell(scaffold):
     """One scaffold, one defect at a time: each run's registry differs from the
-    complete row by exactly the planted defect, so each red is that defect's."""
+    complete row by exactly the planted defect, so each failure is that defect's."""
     _project(scaffold)
     record_ids(scaffold)
     registry = scaffold / REGISTRY_REL

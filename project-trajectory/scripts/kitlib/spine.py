@@ -3,7 +3,7 @@
 THE PAIR THAT HAD TWO HOMES (WI-448 slice 3; census 2026-08-12, `repo-lock.md`
 §8.2). `trace.py` ENFORCES the spine and `spine_rules.py` DERIVES its stage from
 the same rows, so every question either one asks of a single cell was asked
-twice: what `Drafted`/`Approved`/`Founded` mean, which `Verification` methods
+twice: what `Drafted`/`Accepted`/`Founded` mean, which `VerificationMethod` methods
 decompose to a TC but no LLR, what integer a free-form `Phase` cell parses to,
 which `SN-###` tokens a needs registry mentions, and which of them the SRs cite.
 Nine duplicated function bodies, held equal by nine `tests/test_rule_sync.py`
@@ -11,8 +11,8 @@ pins, because the retired F5 rule licensed the duplication and D-7 could only
 CONTAIN the drift rather than remove it.
 
 Those questions are POLICY, not plumbing, and a policy disagreement between
-those two modules is a false green or a false red AT A GATE — the exact failure
-class the kit exists to prevent (repo-review-2026-07-12b M1 -> WI-099). Owner
+those two modules is a false pass or a false failure AT A GATE — the exact failure
+class the kit exists to prevent (repo-review-2026-07-12b M1 -> WI-099). Operator
 ruling D-8 (`OI-16`) replaced F5: the rule lives here, once, and both modules
 import it under their existing local names, so no call site moved.
 
@@ -84,7 +84,7 @@ __all__ = [
     "registry_row_hint",
     "is_example",
     "is_drafted",
-    "is_approved",
+    "is_accepted",
     "is_founded",
     "STATUS_VALUES",
     "llr_exempt",
@@ -115,7 +115,7 @@ __all__ = [
     "toml_fields",
 ]
 
-# SR Verification methods with no code to decompose, so they need a TC but no
+# SR verification methods with no code to decompose, so they need a TC but no
 # LLR: the orphan rule exempts them and the LLReqs rung does not hold open for
 # them. Critique is NOT here — its artifact is produced by code, only its
 # acceptance is subjective.
@@ -127,7 +127,7 @@ __all__ = [
 # spec-folder extraction found. Immutable is the right answer for a closed
 # vocabulary a shared kernel hands out: a caller that mutated the `set` copy
 # would have moved the gate for every other reader in the process.
-LLR_EXEMPT = frozenset({"Analysis", "Inspection", "Attest"})
+LLR_EXEMPT = frozenset({"Analysis", "Inspection", "Vouch"})
 
 
 def csv_body(text):
@@ -257,28 +257,28 @@ def split_pred_edges(value):
     return hard_wi, hard_oi, soft
 
 
-# The work-row statuses whose `needs` hold a pending open item on the owner's
+# The work-row statuses whose `needs` hold a pending open item on the operator's
 # queue: a queued row, and a claimed row at a step its Done-when names.
 _CITER_STATUSES = frozenset({"queued", "active"})
 
 
 def open_item_queue(work_rows, oi_rows):
-    """THE ONE QUEUE PROJECTION of the owner's pending decisions (WI-790): which
+    """THE ONE QUEUE PROJECTION of the operator's pending decisions (WI-790): which
     pending open items a QUEUED or CLAIMED work item cites in its `needs`, and
     which no such row cites.
 
     Returns `{"cards": [(oi_row, [citing ids])], "uncited": [OI ids],
     "held": {WI id: [OI ids]}}`, every list in id order. `cards` is what the
-    owner surface renders and counts, `held` is the status snapshot's Blocked
-    list, and `uncited` is the integrity finding and the owner surface's notice:
+    operator surface renders and counts, `held` is the status snapshot's Blocked
+    list, and `uncited` is the integrity finding and the operator surface's notice:
     a pending decision nothing on the queue cites is invisible to the queue.
     One function feeds all of them, so the page, the snapshot and the checker
-    cannot disagree about what the owner owes.
+    cannot disagree about what the operator owes.
 
     `work_rows` are registry rows (`WI-ID`, `Status`, `Predecessors`) and
     `oi_rows` open-item rows (`OI-ID`, `Status`); `-000` example rows on either
     side are inert. A row outside `_CITER_STATUSES` (drafted, deferred or closed)
-    surfaces nothing: the decision reaches the owner through the queue.
+    surfaces nothing: the decision reaches the operator through the queue.
 
     Implements: SR-148, LLR-299
     """
@@ -300,9 +300,9 @@ def open_items_at(oi_rows, status):
     """`[(OI id, row)]` for every real (non-example) open item whose status is
     `status` (lower case), in row order, a duplicated id once per row.
 
-    THE SHARED STAGE of every open-items reader that filters by status (WI-821,
-    the A->B->C / A->B->D shape PROCESS.md §3 names): the owner queue reads the
-    `pending` items here, `check_trajectory.approval_brief_findings` the
+    THE SHARED STEP of every open-items reader that filters by status (WI-821,
+    the A->B->C / A->B->D shape PROCESS.md §3 names): the operator queue reads the
+    `pending` items here, `check_trajectory.acceptance_brief_findings` the
     `pending` briefs and `trace.ruled_open_item_texts` the `ruled` prose. Each
     had carried its own skip-and-filter loop. A row whose id is not `OI-###`
     shaped, or is the `-000` example, is never returned.
@@ -310,7 +310,7 @@ def open_items_at(oi_rows, status):
     A SEQUENCE, not a map: the carrier keeps two rows sharing an id, and the
     brief lint reads each of them, as its own loop did. A reader that wants a
     by-id map builds it with `dict(...)`, so the last row wins there exactly as
-    it did in the owner queue's and the ruled-prose reader's own loops.
+    it did in the operator queue's and the ruled-prose reader's own loops.
 
     Implements: SR-148, LLR-299
     """
@@ -353,7 +353,7 @@ def _id_number(rid):
 # endpoint written with the full repo path
 # (`project-trajectory/scripts/check.py`), an LLR `Module` cell and an arch-map
 # node name (`scripts/check`) all collapse to one key.
-MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
+MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd", ".gd")
 # The file types `--backlink-coverage` reads (OI-42's declared extension list),
 # and the types a test file is (`is_test_file`): `MODULE_EXTS` — the kit's
 # existing answer to "what is a source module" — extended with the families
@@ -406,7 +406,7 @@ def is_test_file(rel):
     """Whether `rel`, a path relative to the declared tests root, is a test
     file: no part of it is hidden (`hidden_rel`), and its suffix, in any case,
     is one of `BACKLINK_EXTS`. THE ONE HOME OF THAT DOMAIN: the test-file tag
-    reader, and so the review set, reads exactly these files, and the red mark
+    reader, and so the review set, reads exactly these files, and the expected-failure marker
     is counted in exactly these, so a declaration or a document under a tests
     root of `.` is never a test file.
 
@@ -521,7 +521,7 @@ def clip_line(text, width):
     """`text` as ONE line of at most `width` characters: whitespace collapsed,
     and an over-long line cut to `width - 1` characters plus `…`.
 
-    THE SHARED STAGE of the kit's one-line clips (WI-821): `hats._clip`,
+    THE SHARED STEP of the kit's one-line clips (WI-821): `hats._clip`,
     `intake._clip` and `check_trajectory._clip_title` each carried this body.
     It takes text; what a missing cell reads as (`""` or `"None"`) stays each
     caller's own choice, because the copies differed there and a brief's
@@ -540,15 +540,15 @@ def is_example(rid):
 
 # THE SPINE'S CLOSED STATUS VOCABULARY — the three words the predicates below
 # read, and the one ladder every tier's `Status` is held to (D-9's Drafted ->
-# Approved -> Founded; its history is recorded where `trace.py` binds it). Its
+# Accepted -> Founded; its history is recorded where `trace.py` binds it). Its
 # home is here rather than in the checker so a pure sibling of the checker can
 # hold a tier to it without importing the checker: `frame_rules` holds the
 # stakeholder list to it.
-STATUS_VALUES = frozenset({"Drafted", "Approved", "Founded"})
+STATUS_VALUES = frozenset({"Drafted", "Accepted", "Founded"})
 
 
 def is_drafted(row):
-    """A row in the pre-approval `Drafted` state.
+    """A row in the pre-acceptance `Drafted` state.
 
     Exempt from the child-completeness orphan rules (a Drafted SR needs no
     LLR/TC) and from the `--require-verified` criterion, so a requirement can
@@ -556,7 +556,7 @@ def is_drafted(row):
     OPEN on the derivation side, which is the same fact seen from the other end.
 
     `Status` is a CLOSED vocabulary since D-9 step 1 and reached the ruled ladder
-    at steps 7/8: `{Drafted, Approved, Founded}`. Matched case-insensitively on
+    at steps 7/8: `{Drafted, Accepted, Founded}`. Matched case-insensitively on
     the stripped cell — the one Status-casing rule (process.md §4) — which all
     three predicates here share.
 
@@ -567,13 +567,13 @@ def is_drafted(row):
     return (row.get("Status") or "").strip().lower() == "drafted"
 
 
-def is_approved(row):
-    """The `Approved` state: the row's TEXT is blessed by a human.
+def is_accepted(row):
+    """The `Accepted` state: the row's TEXT is blessed by an operator.
 
     RENAMED FROM `is_verified` AT D-9 STEP 5, and the rename carries a RULING.
-    `Verified` made TWO claims at once — the text is approved AND the evidence
+    `Verified` made TWO claims at once — the text is accepted AND the evidence
     passed — and the second was a hand-set cell asserting a test run nobody
-    re-ran. `Approved` says only that the text is blessed; whether the tests
+    re-ran. `Accepted` says only that the text is blessed; whether the tests
     pass is the harness's answer (`kitlib.evidence`). `Planned` folded into this
     same value at the same act (OI-30 D1).
 
@@ -581,7 +581,7 @@ def is_approved(row):
       Inputs:  row: a registry row mapping
       Outputs: bool
     """
-    return (row.get("Status") or "").strip().lower() == "approved"
+    return (row.get("Status") or "").strip().lower() == "accepted"
 
 
 def is_founded(row):
@@ -589,7 +589,7 @@ def is_founded(row):
 
     Armed for the spine at D-9 step 8 the way it armed for CMP at the registry
     status unification — the word becomes legal, no live cell moves to it. It
-    reads ABOVE `Approved`, so arming it can never LOWER a derived reading. The
+    reads ABOVE `Accepted`, so arming it can never LOWER a derived reading. The
     DISCHARGE is computed per tier elsewhere; this reads the cell, like its two
     siblings.
 
@@ -600,10 +600,10 @@ def is_founded(row):
     return (row.get("Status") or "").strip().lower() == "founded"
 
 
-def claims_approval(row):
-    """True when a row's `Status` claims approval or above: `Approved`, or the
+def claims_acceptance(row):
+    """True when a row's `Status` claims acceptance or above: `Accepted`, or the
     computed `Founded` above it. A missing `Status`, or a word outside the
-    vocabulary, claims nothing. The one home of the pair the approval-act
+    vocabulary, claims nothing. The one home of the pair the acceptance-act
     readers and the parent-first rule both ask.
 
     Implements: SR-245, LLR-357
@@ -612,22 +612,22 @@ def claims_approval(row):
       Inputs:  row: a registry row mapping
       Outputs: bool
     """
-    return is_approved(row) or is_founded(row)
+    return is_accepted(row) or is_founded(row)
 
 
 def llr_exempt(row):
-    """SR `Verification` method in `LLR_EXEMPT`, matched on the STRIPPED cell.
+    """SR `VerificationMethod` method in `LLR_EXEMPT`, matched on the STRIPPED cell.
 
     The stripping is load-bearing and was once a live divergence: review 017
     caught the two former copies disagreeing on a whitespace-padded valid method
-    (one stripped, one did not), which is a false green on one surface and a
-    false red on the other for one registry state.
+    (one stripped, one did not), which is a false pass on one surface and a
+    false failure on the other for one registry state.
 
     Contract:
       Inputs:  row: an SR row mapping
       Outputs: bool
     """
-    return (row.get("Verification") or "").strip() in LLR_EXEMPT
+    return (row.get("VerificationMethod") or "").strip() in LLR_EXEMPT
 
 
 def phase_num(row):
@@ -650,7 +650,7 @@ def sn_all_ids(text, carrier=None):
 
     A TOKEN scrape, so a prose mention inside a need counts exactly like a table
     row — the sharp edge `registry-machinery-reference` §2.1 records (an
-    approved, uncited prose mention caps the derived stage through the coverage
+    accepted, uncited prose mention caps the derived stage through the coverage
     rung). `-000` placeholders excluded. This scrape decides which ids BOTH the
     gate derivation and the itemized orphan listing run their rules over, which
     is why it may have only one definition.
@@ -658,7 +658,7 @@ def sn_all_ids(text, carrier=None):
     THE NEED TABLES ONLY, under the TOML carrier. The needs file also carries
     the stakeholder list (`[stakeholder.STK-##]`), whose descriptions may name
     the needs a stakeholder owns; scraping the whole file would turn each such
-    mention into a need of its own, which then reads as approved and uncited
+    mention into a need of its own, which then reads as accepted and uncited
     and caps the stage. So the scrape reads the `[need.*]` tables' ids and
     cells and nothing else, and an id named only in a comment is not a need.
     The legacy markdown carrier, which has no stakeholder list, keeps the
@@ -820,9 +820,9 @@ def root_prefix(root):
 
 def declared_roots(profile):
     """`(src, tests)`: the source and test roots the parsed `docs/stack.ini`
-    `profile` declares under `[paths]`, each defaulting as a bar's command
+    `profile` declares under `[paths]`, each defaulting as a check run's command
     reads it (`src`, `tests`) when absent or blank. The one home of that
-    reading, so the review set and the red-mark check resolve one test root.
+    reading, so the review set and the expected-failure marker check resolve one test root.
 
     Implements: SR-156, LLR-368
     """
@@ -920,7 +920,7 @@ def review_scope(srs, llrs, tcs, tags, test_root, exists):
 
 
 def tier_findings(tcs, tier_of):
-    """`(errors, advisories)` for the approved test cases whose `Tier` cell
+    """`(errors, advisories)` for the accepted test cases whose `Tier` cell
     disagrees with the tier their evidence runs in.
 
     WHICH TIER A TEST RUNS IN IS THE HARNESS'S ANSWER, so the rule takes it as
@@ -933,7 +933,7 @@ def tier_findings(tcs, tier_of):
     none of whose evidence is slow is an advisory: either it runs per commit
     after all, or it names no test the harness runs (a document, a workflow),
     and the full tier runs everything, so the cell understates where its
-    evidence runs and is never false. A row below approval is not judged; its
+    evidence runs and is never false. A row below acceptance is not judged; its
     tier is a proposal.
 
     Implements: SR-157, LLR-260
@@ -946,7 +946,7 @@ def tier_findings(tcs, tier_of):
     """
     errors, advisories = [], []
     for r in tcs:
-        if not is_approved(r):
+        if not is_accepted(r):
             continue
         tier = (r.get("Tier") or "").strip()
         paths = sorted({p for p, _node in evidence_items(r.get("Evidence"))})
@@ -979,8 +979,8 @@ def missing_cell_findings(tiers):
     AN ABSENT CELL WAS THE ONE SHAPE THE VOCABULARY CHECKS COULD NOT SEE. They
     judge a value that is present, so a row authored with no `status` passed
     every one of them while reading, to each surface that asks what it owes, as
-    neither `Drafted` nor approved: no first-approval arm and no drift arm
-    fires on it, and the approval brief omitted it. A row with no `phase` in a
+    neither `Drafted` nor accepted: no first-acceptance arm and no drift arm
+    fires on it, and the acceptance brief omitted it. A row with no `phase` in a
     phased spine falls outside every `--phase` scope the same silent way. Both
     are wrong at any stage, so both are integrity-class. The phase half arms as
     the numeric-phase rule does, on the first phased row, so an unphased
@@ -1008,7 +1008,7 @@ def missing_cell_findings(tiers):
         if not (r.get("Status") or "").strip():
             out.append(
                 "{} {} has no Status cell — a row stating no maturity is neither "
-                "Drafted nor approved to every reader that asks what it owes; "
+                "Drafted nor accepted to every reader that asks what it owes; "
                 'give it status = "Drafted"'.format(label, rid)
             )
         if phased and label in PHASED_TIERS and not (r.get("Phase") or "").strip():
@@ -1020,7 +1020,7 @@ def missing_cell_findings(tiers):
     return out
 
 
-# THE PARENT-FIRST RULE: a spine row is approved only after the rows
+# THE PARENT-FIRST RULE: a spine row is accepted only after the rows
 # it hangs from are. Each child tier, the cell naming its parents, and the
 # tiers a parent is read from: an SR's needs, an LLR's SRs, and a TC's SRs and
 # LLRs. Any other id a cell cites (an IF, B or DA row, or an id no row
@@ -1054,23 +1054,23 @@ def _declared_rows(tiers):
     return out
 
 
-def _unapproved_parents(declared, row, column, parent_tiers):
+def _unaccepted_parents(declared, row, column, parent_tiers):
     """The `(id, row)` of each declared parent `row` cites in `column` that
-    does not claim approval, in citation order, once each.
+    does not claim acceptance, in citation order, once each.
 
     Implements: SR-245, LLR-357"""
     for ref in dict.fromkeys(refs(row.get(column))):
         for label in parent_tiers:
             parent = declared.get(label, {}).get(ref)
-            if parent is not None and not claims_approval(parent):
+            if parent is not None and not claims_acceptance(parent):
                 yield ref, parent
 
 
 def parent_first_findings(tiers):
-    """One entry `(child, child status, parent, parent status)` per approved
-    child (`claims_approval`: `Approved` or `Founded`) citing a declared parent
-    that is not approved, over `PARENT_EDGES`. A parent with no `Status`, or a
-    word outside the vocabulary, is not approved. Statuses are the stripped
+    """One entry `(child, child status, parent, parent status)` per accepted
+    child (`claims_acceptance`: `Accepted` or `Founded`) citing a declared parent
+    that is not accepted, over `PARENT_EDGES`. A parent with no `Status`, or a
+    word outside the vocabulary, is not accepted. Statuses are the stripped
     cells, "" for a missing one. Pure: the standing finding and the commit
     judgement both read it.
 
@@ -1087,11 +1087,11 @@ def parent_first_findings(tiers):
     out = []
     for label, (column, parent_tiers) in PARENT_EDGES.items():
         for rid, row in declared.get(label, {}).items():
-            if not claims_approval(row):
+            if not claims_acceptance(row):
                 continue
             out += [
                 (rid, _status_cell(row), ref, _status_cell(parent))
-                for ref, parent in _unapproved_parents(
+                for ref, parent in _unaccepted_parents(
                     declared, row, column, parent_tiers
                 )
             ]
@@ -1106,8 +1106,8 @@ def parent_first_line(entry):
     """
     child, child_status, parent, parent_status = entry
     return (
-        "{} ({}) is approved under {} ({}), which is not: approve {} in its own "
-        "approval act, or return {} to Drafted".format(
+        "{} ({}) is accepted under {} ({}), which is not: accept {} in its own "
+        "acceptance act, or return {} to Drafted".format(
             child, child_status, parent, parent_status or "no status", parent, child
         )
     )
@@ -1158,7 +1158,7 @@ SPINE_TIER_KEYS = {
     # the need is, resolved against the same file's `[stakeholder.STK-##]`
     # list; `source` (SR-190) points at the document the need was drawn from,
     # as `path#anchor` targets. Both are optional POINTERS: the relation lives
-    # on the need, and neither is part of the need's approved text.
+    # on the need, and neither is part of the need's accepted text.
     "SN-ID": (
         "status",
         "tags",
@@ -1185,7 +1185,7 @@ SPINE_TIER_KEYS = {
         "acceptance_criteria",
         "permutations",
         "priority",
-        "verification",
+        "verification_method",
         "status",
         "phase",
         "aspect",
@@ -1308,7 +1308,7 @@ OFFSPINE_KEYS = {
         # OPTIONAL, and its EMPTINESS is the ordinary answer: "this seam is
         # verified in its own right". Filled, it names the parent whose tests
         # cover a low-level seam — a `TC-###` or an `LLR-###` — which is the
-        # position the `Verification` vocabulary cannot state (OI-61's
+        # position the `VerificationMethod` vocabulary cannot state (OI-61's
         # sub-question, sanctioned 2026-08-23). Warn-first that it resolves.
         "verified_by",
         "carried_by",
@@ -1326,6 +1326,11 @@ OFFSPINE_KEYS = {
         "component",
         "notes",
     ),
+    # The derivation record (SR-165, WI-999): eight flat cells, since the
+    # carrier refuses a nested table. One row per partition holds the record
+    # (`candidates` .. `override`, the last optional); every other row of the
+    # partition carries only `derivation`, the id of the row holding it. Its one
+    # reader is `trajectory_arch.component_findings`.
     "CMP-ID": (
         "name",
         "category",
@@ -1334,6 +1339,14 @@ OFFSPINE_KEYS = {
         "standing",
         "superseded_by",
         "part_of",
+        "candidates",
+        "objective",
+        "constraints",
+        "scores",
+        "selected",
+        "ruling",
+        "override",
+        "derivation",
         "notes",
     ),
     # WI-442 — the depth-0 frame's three tiers, all on `external.toml`. Each
@@ -1369,7 +1382,7 @@ OFFSPINE_KEYS = {
     # outcome lands (`effect_at`, crossing ids), what it assumes, when it holds,
     # the obstacle under which it fails and what would show it false; `status`
     # is the spine's maturity and `standing` its validity, active or falsified,
-    # because an approved assumption can later be shown false. `realized_by`
+    # because an accepted assumption can later be shown false. `realized_by`
     # names the one surrogate a fidelity assumption is about, `obstacle_hats`
     # the perspectives its obstacle came from. A surrogate is a stand-in for
     # outside parties in tests, and `emulates` names them (entity ids). Neither
@@ -1421,7 +1434,7 @@ FORM_VALUES = ("interface", "assumption", "cross-cutting")
 # `sampled` result was taken over a sample of the population the assumption
 # speaks about, and a `monitored` one is read continuously in operation. Each
 # says how the case looks, never how well the assumption holds: an assumption
-# carries no evidence level (owner ruling 2026-10-02). And
+# carries no evidence level (operator ruling 2026-10-02). And
 # THE LIFETIME FLOOR, in whole days: a judgment the harness cannot rerun is
 # trusted only for a declared time, and a lifetime under a week would demand it
 # more often than it can honestly be taken. The one judge of both is

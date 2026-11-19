@@ -62,8 +62,8 @@ next tick unless something remembers. All three are read off typed cells:
      brief (as open rows, and as `{prior}`), because a cluster formed for other
      reasons may legitimately contain one; what they never do is SEED a cluster.
      Re-absorbing one is refused outright at the mint (`reabsorption_refusal`),
-     which is the RETURN-TO-DRAFT-that-pages-the-owner the plan asks for: the
-     judgement to overturn is the earlier consolidation's, and that is a human's
+     which is the RETURN-TO-DRAFT-that-pages-the-operator the plan asks for: the
+     judgement to overturn is the earlier consolidation's, and that is an operator's
      call, not a second machine mint.
 
 ONE ROW PER CENSUS, over the UNION of every candidate cluster. Two disjoint
@@ -155,7 +155,7 @@ RESTRUCTURED = "restructured"
 #: The `SafetyClass` every judgement row carries, whatever its brief.
 JUDGEMENT = "adjudication"
 #: The `{prior}` marker on an absorbed row no judgement enacted. The brief tells
-#: the judge that overturning an earlier consolidation pages the owner, which is
+#: the judge that overturning an earlier consolidation pages the operator, which is
 #: true of a judged absorption and false of a hand commit, so each absorbed row
 #: says which it was.
 # Implements: SR-220, LLR-210
@@ -717,7 +717,7 @@ def reabsorption_refusal(rows, absorbed, bodies):
 
     Overturning a consolidation is a RETURN-TO-DRAFT of THAT judgement (plan
     §1.3), and this refusal is what makes it one: the mint stops, the run pages
-    the owner, and the earlier verdict is re-opened by a human rather than
+    the operator, and the earlier verdict is re-opened by an operator rather than
     silently replaced by a second machine mint. `intake._supersedes_refusal`
     covers the adjacent case — absorbing a row already ABSORBED — which is a
     lineage chain rather than an overturned judgement."""
@@ -727,7 +727,7 @@ def reabsorption_refusal(rows, absorbed, bodies):
         return (
             "the draft absorbs {} - {} minted by an earlier consolidation. "
             "Re-absorbing one overturns that judgement, which is a "
-            "RETURN-TO-DRAFT for the owner to rule, never a second mint; "
+            "RETURN-TO-DRAFT for the operator to rule, never a second mint; "
             "nothing minted".format(";".join(hit), "a row" if len(hit) == 1 else "rows")
         )
     return None
@@ -870,7 +870,7 @@ def _context(ids, findings, cell):
 #: adjudication row's OWN spec. Not in the verdict file, for two reasons:
 #: `handback.close_adjudication` is handed `(root, branch)` and nothing else, so
 #: it reads the lane's tree rather than a path only `agent_loop` knows; and an
-#: outcome recovered from prose is the `NEEDS-HUMAN` fold (WI-417).
+#: outcome recovered from prose is the `NEEDS-OPERATOR` fold (WI-417).
 VERDICT_SECTION = "## Consolidation"
 #: The enum, lower-cased — the same four alternatives as
 #: `adjudicate_brief.VERDICT_GRAMMAR["consolidate"]`, which is where the session
@@ -1186,7 +1186,7 @@ def close_refusal(root, record, absorbed, rows, where, *, scope, drafts, recorde
     3. **Every row this verdict touches is inside the row's `Adjudicates`
        scope.** The scope cell was decorative on this path: a draft superseding
        a row the census never clustered closed, merged and archived it. The
-       first-approval sibling has enforced exactly this bound since WI-572
+       first-acceptance sibling has enforced exactly this bound since WI-572
        (`is OUTSIDE `Adjudicates` scope`), and for the same reason — a live
        re-derivation with no scope to intersect asks a wider question than the
        mint asked.
@@ -1341,7 +1341,7 @@ def restructured_text(text, successor):
     `partial` follows, for the reason R-F's carve-out states: the successor's
     lineage is worth nothing if the thread it continues has already been cut.
     The only edit is the Deliverable, which is exactly one line, before
-    `## Context` (a Deliverable placed after it parses as EMPTY and reds R-A)."""
+    `## Context` (a Deliverable placed after it parses as EMPTY and fails R-A)."""
     lines = text.split("\n")
     close = _fence_close(lines)
     if close is None:

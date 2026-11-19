@@ -15,7 +15,7 @@ kit's own toolchain, which every adopter runs whatever its stack. Any other
 `.py` path is still reported.
 
 The scaffold half (a non-Python profile passing the strict registry checks) is
-tests/test_profile.py::test_every_profile_permutation_scaffolds_green.
+tests/test_profile.py::test_every_profile_permutation_scaffolds_and_passes.
 
 Implements: TC-165
 """

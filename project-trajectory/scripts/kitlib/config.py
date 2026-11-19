@@ -48,6 +48,7 @@ __all__ = [
     "assumption_gate_enabled",
     "first_declared_line",
     "MISPLACED_PRIVACY_READING",
+    "parse_stack_ini",
     "policy_declaration",
     "process_check",
     "process_check_text",
@@ -55,11 +56,10 @@ __all__ = [
     "read_declared_lower",
     "read_stack_ini",
     "read_toml_text",
-    "red_rounds_max",
+    "commit_check_failure_cap",
     "reviewer_dials",
     "utf8_console",
     "step_paths",
-    "RETIRED_STAGE_ALIASES",
     "STACK_INI",
     "StackIniError",
     "step_threshold",
@@ -99,13 +99,27 @@ def read_stack_ini(path, *, fold_keys=True):
     path = Path(path)
     if not path.exists():
         return None
+    try:
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError as exc:
+        raise StackIniError(str(exc)) from exc
+    return parse_stack_ini(text, source=str(path), fold_keys=fold_keys)
+
+
+def parse_stack_ini(text, *, source="<string>", fold_keys=True):
+    """`read_stack_ini`'s parse of `docs/stack.ini` text already in hand, under
+    the same options; a parse error raises `StackIniError`. For the vocabulary
+    migrator, which proves its rewrite of the file by parsing the rewritten
+    text before it writes it.
+
+    Implements: SR-007
+    """
     cp = configparser.ConfigParser(interpolation=None)
     if not fold_keys:
         cp.optionxform = str
     try:
-        text = path.read_text(encoding="utf-8-sig", errors="replace")
-        cp.read_string(text, source=str(path))
-    except (configparser.Error, OSError) as exc:
+        cp.read_string(text, source=source)
+    except configparser.Error as exc:
         raise StackIniError(str(exc)) from exc
     return cp
 
@@ -321,9 +335,13 @@ def reviewer_dials(root):
     return pct, FINAL_PERSISTED if persisted else FINAL_FRESH
 
 
-# `[build] red_rounds_max`'s shipped value: read only for an absent `[build]`
-# table or an absent key, never for a value this reader cannot use.
-RED_ROUNDS_MAX_DEFAULT = 3
+# The commit-check failure cap's key, `[build]
+# stop_lane_after_consecutive_commit_check_failures`, and its shipped value:
+# read only for an absent `[build]` table or an absent key, never for a value
+# this reader cannot use. The key's earlier name is refused, never read.
+FAILURE_CAP_KEY = "stop_lane_after_consecutive_commit_check_failures"
+FAILURE_CAP_RETIRED_KEY = "red_rounds_max"
+FAILURE_CAP_DEFAULT = 3
 _TOML_HEADER_RE = re.compile(r"^\s*\[\[?\s*([A-Za-z0-9_-]+)\s*\]\]?\s*(#.*)?$")
 
 
@@ -349,17 +367,21 @@ def _process_toml_at(text, section, key):
     return "docs/process.toml"
 
 
-def red_rounds_max(root):
-    """`(maximum, None)` for `<root>/docs/process.toml`'s
-    `[build] red_rounds_max`, or `(None, refusal)`. THE ONE READER of the key:
+def commit_check_failure_cap(root):
+    """`(maximum, None)` for `<root>/docs/process.toml`'s `[build]
+    stop_lane_after_consecutive_commit_check_failures`, the number of
+    consecutive failed commit-check rounds at which a lane stops, or
+    `(None, refusal)`. THE ONE READER of the key:
     the worker's preflight and the dispatcher's pre-claim rung both call it,
     so a setting one of them refuses never starts a session through the other.
 
     An absent `[build]` table or key reads the shipped 3. Everything else this
     reader cannot use is refused, naming the file and the cause: an absent,
     unreadable or unparseable file, a `build` that is not a table (naming its
-    line), and a value that is not an int, is a bool, or is below 1 (naming
-    its line and the key). Never read as off: an unbounded cap is the
+    line), a value that is not an int, is a bool, or is below 1 (naming
+    its line and the key), and the key's earlier name, `red_rounds_max`,
+    still declared: a renamed dial read as absent would silently restore
+    the shipped value. Never read as off: an unbounded cap is the
     fail-open side. tomllib reports no position for a valid key, so the line
     is found by scanning the text.
 
@@ -377,15 +399,25 @@ def red_rounds_max(root):
         return None, "{}: `build` is a {}, not a table".format(
             _process_toml_at(text, None, "build"), type(table).__name__
         )
-    value = table.get("red_rounds_max", RED_ROUNDS_MAX_DEFAULT)
+    if FAILURE_CAP_RETIRED_KEY in table:
+        return None, (
+            "{}: [build] {} was renamed {}; rename the key (the old name is "
+            "refused, never read)".format(
+                _process_toml_at(text, "build", FAILURE_CAP_RETIRED_KEY),
+                FAILURE_CAP_RETIRED_KEY,
+                FAILURE_CAP_KEY,
+            )
+        )
+    value = table.get(FAILURE_CAP_KEY, FAILURE_CAP_DEFAULT)
     if type(value) is int and value >= 1:
         return value, None
     return None, (
-        "{}: [build] red_rounds_max = {!r} is refused; it must be an integer "
-        "of at least 1 (an absent key reads {})".format(
-            _process_toml_at(text, "build", "red_rounds_max"),
+        "{}: [build] {} = {!r} is refused; it must be an integer of at least "
+        "1 (an absent key reads {})".format(
+            _process_toml_at(text, "build", FAILURE_CAP_KEY),
+            FAILURE_CAP_KEY,
             value,
-            RED_ROUNDS_MAX_DEFAULT,
+            FAILURE_CAP_DEFAULT,
         )
     )
 
@@ -508,100 +540,34 @@ def step_paths(profile):
     }
 
 
-# THE LEGACY `gates =` TRANSLATION, and it preserves an adopter's effective
-# behavior rather than the tag's face value (WI-498 slice 2). A `gates =` list
-# named the BARS a step ran at, and the bar was a MIN over every in-scope row:
-# `DevStg-Reqs` is the floor every repo sits at, while `DevStg-Tests` was reached
-# only by a spine already fully decomposed and TC'd — which is the DevStg-Impl
-# RUNG — and `DevStg-Impl` was never reached at all under the OI-30 D2 ceiling.
-# So the rung that reproduces each listed bar under an at-or-above rule is:
-RETIRED_STAGE_ALIASES = {  # check_vocab: allow
-    # The Reqs bar IS the floor every repo sits at.
-    "G1": _kitladder.STAGE_REQS,  # check_vocab: allow
-    # The Tests bar was reached ONLY by a spine already fully decomposed and
-    # TC'd, which on the ladder is the DevStg-Impl RUNG — three above the word
-    # it shares with the bar.
-    "G2": _kitladder.STAGE_IMPL,  # check_vocab: allow
-    "G3": _kitladder.STAGE_IMPL,  # check_vocab: allow
-    # The retired bar prefix (2026-08-18): its release alias resolves to
-    # `DevStg-Impl`, NOT to `DevStg-Release`: that bar never certified the
-    # Release rung, and the alias carries the correction.
-    "DevBar-Reqs": _kitladder.STAGE_REQS,  # check_vocab: allow
-    "DevBar-Tests": _kitladder.STAGE_IMPL,  # check_vocab: allow
-    "DevBar-Release": _kitladder.STAGE_IMPL,  # check_vocab: allow
-}
-
-_LEGACY_BAR_THRESHOLD = {
-    _kitladder.STAGE_REQS: _kitladder.STAGE_NEEDS,
-    _kitladder.STAGE_TESTS: _kitladder.STAGE_IMPL,
-    _kitladder.STAGE_IMPL: _kitladder.STAGE_IMPL,
-}
-
-# Sections already warned about, so the notice is ONCE PER RUN as promised and
-# not once per `steps()` call — the plan is built two or three times in a single
-# invocation (the lane map resolves at ALL; `--list` and the run each rebuild),
-# and a migration notice repeated per rebuild reads as a malfunction.
-_LEGACY_GATES_WARNED = set()
-
-
 def step_threshold(profile, section):
     """The rung a declared `[step:<name>]` becomes relevant at.
 
     `from-stage = <rung>` is the declared spelling: any of the eight ladder rungs,
-    and the step runs whenever the repo is AT OR ABOVE it. Default `DevStg-Impl`,
-    unchanged in value from the retired `gates =` default — a project-specific
-    gate grades a built thing.
+    and the step runs whenever the repo is AT OR ABOVE it. Default `DevStg-Impl`
+    — a project-specific gate grades a built thing.
 
-    `gates = <space/comma list>` IS ACCEPTED AND TRANSLATED, with one stderr line
-    per run. It is the retired membership spelling, and unlike the `--stage` CLI
-    aliases the FILE can be named here, so the notice says which section to fix
-    rather than leaving an adopter to guess. The lowest listed bar picks the rung
-    (`_LEGACY_BAR_THRESHOLD`); the retired `G1|G2|G3` tags translate first,  check_vocab: allow
-    exactly as they always did. Both spellings at once is an authoring error and
-    fails LOUDLY, like every other profile error — silently preferring one would
-    make a step's real threshold unreadable from the file.
+    `gates = <list>`, the retired membership spelling, is REFUSED, never read
+    (D11), and fails LOUDLY like every other profile error. Read as absent it
+    would silently move a step whose list named the requirements stage from
+    `DevStg-Needs` to the default. The refusal names the section and the fix:
+    the vocabulary migrator rewrites the list as the one stage it meant.
 
     Implements: SR-006, LLR-291
     """
-    has_new = profile.has_option(section, "from-stage")
-    has_old = profile.has_option(section, "gates")
-    if has_new and has_old:
+    if profile.has_option(section, "gates"):
         sys.exit(
-            "check: docs/stack.ini [{}] declares both `from-stage` and the "
-            "retired `gates` — keep `from-stage` and delete `gates`".format(section)
+            "check: docs/stack.ini [{}] declares the retired `gates` list; run "
+            "`python scripts/migrate_vocabulary.py`, which rewrites it as the "
+            "`from-stage` it meant, or declare `from-stage` by hand".format(section)
         )
-    if has_new:
-        value = profile.get(section, "from-stage").strip()
-        if value not in _kitladder.LADDER_RUNGS:
-            sys.exit(
-                "check: docs/stack.ini [{}] from-stage is {!r}; expected one of "
-                "{}".format(section, value, "|".join(_kitladder.STAGE_ORDER))
-            )
-        return value
-    if not has_old:
+    if not profile.has_option(section, "from-stage"):
         return _kitladder.STAGE_IMPL
-    bars = []
-    for tok in profile.get(section, "gates").replace(",", " ").split():
-        tok = RETIRED_STAGE_ALIASES.get(tok, tok)
-        if tok not in _LEGACY_BAR_THRESHOLD:
-            sys.exit(
-                "check: docs/stack.ini [{}] gates has {!r}; expected a "
-                "space/comma list of {}".format(
-                    section, tok, "|".join(_LEGACY_BAR_THRESHOLD)
-                )
+    value = profile.get(section, "from-stage").strip()
+    if value not in _kitladder.LADDER_RUNGS:
+        sys.exit(
+            "check: docs/stack.ini [{}] from-stage is {!r}; expected one of {}".format(
+                section, value, "|".join(_kitladder.STAGE_ORDER)
             )
-        bars.append(tok)
-    if not bars:
-        return _kitladder.STAGE_IMPL
-    threshold = min((_LEGACY_BAR_THRESHOLD[b] for b in bars), key=_kitladder.stage_ord)
-    if section not in _LEGACY_GATES_WARNED:
-        _LEGACY_GATES_WARNED.add(section)
-        print(
-            "check: docs/stack.ini [{}] uses the RETIRED `gates =` membership "
-            "list — reading it as `from-stage = {}`. Selection is now AT OR "
-            "ABOVE one rung (OI-51); update the section to say so.".format(
-                section, threshold
-            ),
-            file=sys.stderr,
         )
-    return threshold
+    return value

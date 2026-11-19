@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """review_set.py - a lane's review test set, derived from its row (WI-995).
 
-A review bar's named tests come from the spine, never from whoever asks for the
-attestation. The row's SRs reach their LLRs, both reach their test cases, and
+The commit checks' named tests come from the spine, never from whoever asks for the
+record. The row's SRs reach their LLRs, both reach their test cases, and
 the test-file tags reach the files: `derive` reads those inputs from one lane
-and `kitlib.spine.review_scope` walks them. `integrate.attest`, the loop's draw
+and `kitlib.spine.review_scope` walks them. `integrate.record_checks`, the loop's draw
 and the review render all call `derive`, so a record, a draw and a brief cannot
 disagree about what a row's set is. The answer is the set or one named refusal,
-and the set never widens to the whole bar: an empty set runs the review bar
-alone, and the floor (`[bars] review`, the landing bar) stays as it is.
+and the set never widens to the whole checks: an empty set runs the commit checks
+alone, and the floor (`[required-checks] commit`, the landing checks) stays as it is.
 
 WHAT IS READ FROM WHERE. The claim listing and the row's text come from git
 (HEAD, the merge base, the index), the changed paths from the index against the
 merge base, and the registries, `docs/stack.ini` and the tags from the lane
-checkout. `attest` has already refused a worktree that differs from the index,
+checkout. `record-checks` has already refused a worktree that differs from the index,
 so there the two agree; at the render and the draw a working-tree edit can only
 change the derived list, and the record's digest then refuses it.
 
@@ -23,7 +23,7 @@ in docs/requirements/interfaces.toml).
 Contract IF-309: `derive(lane, branch)` answers `(ReviewSet, None)` or `(None,
     refusal)` and never raises for a bad input: a refusal is a value, opening
     with its kind (`names no SR`, `malformed`, `empty`, `partial`), so the loop
-    can route it as a red. `ReviewSet` supplies `files` (the sorted test paths,
+    can route it as a failure. `ReviewSet` supplies `files` (the sorted test paths,
     the list a record digests), `listed` (evidence beside the set, never run),
     `gaps` (reported on a row touching no code), `code_touching`, and the
     printed `lines()` and `notes()`. Requestors do not interpret the derivation
@@ -163,7 +163,7 @@ def _changed(lane, base):
 
 def _roots(lane):
     """`(src, tests)` as `docs/stack.ini` `[paths]` declares them, with the
-    defaults a bar's command reads.
+    defaults a check run's command reads.
 
     Implements: SR-241, LLR-367
     """
@@ -179,7 +179,7 @@ def _roots(lane):
 def _registry(lane, rel, id_col):
     """The live rows of the registry at `rel`. An absent registry refuses, and
     the carrier's `SystemExit` becomes a refusal, so an unparseable registry
-    takes the loop's red route instead of ending it.
+    takes the loop's failure route instead of ending it.
 
     Implements: SR-241, LLR-367
     """

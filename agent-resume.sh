@@ -30,14 +30,14 @@ AGENT_CMD="claude -p --model {model} --output-format stream-json --verbose --dan
 # model-map) — agent_loop reads them there, so a dial change edits one file, not
 # this value in three launchers. These slots stay as the env-override tier
 # (precedence: CLI flag > this env slot > docs/stack.ini > built-in default);
-# leaving them empty lets the declared home win. Owner dial 2026-07-22 (Opus at
+# leaving them empty lets the declared home win. Operator dial 2026-07-22 (Opus at
 # both strong and medium) lives in stack.ini now.
 AGENT_MODEL=""
 AGENT_MODEL_MAP=""
 # Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|quick).
 # Empty = the engine's built-in defaults (PLAN / DESIGN-CHECK / CRITIQUE strong,
 # BUILD / REVIEW-A / REVIEW-B medium; a worker still pins BUILD up to its WI
-# row's BuildTier). EMPTY per the owner directive 2026-07-19: builds are
+# row's BuildTier). EMPTY per the operator directive 2026-07-19: builds are
 # Anthropic-led per tier again — Fable takes strong-row BUILDs, Opus takes
 # medium — retiring the WI-160 Sol pin (2026-07-14b, which had superseded the
 # WI-121 medium relax; both stand in history if this is reverted). Keep
@@ -141,7 +141,7 @@ fi
 # nearly every trunk merge touches project-trajectory/scripts/) and it drained
 # to a safe boundary with the assignment preserved in the tree. A fresh process
 # reconstructs everything from git, so the launcher relaunches it instead of
-# handing the walk-away run back to a human; 50 bounds a pathological loop.
+# handing the walk-away run back to an operator; 50 bounds a pathological loop.
 # The engine still `exec`s — in a subshell, so this launcher survives to
 # relaunch it. Keep agent-resume.cmd in sync (its :again loop).
 engine() {

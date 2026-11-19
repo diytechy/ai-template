@@ -52,7 +52,7 @@ decided = "A brief class outside [adjudicator] retain_for (first-approval, conso
 alternative = "Add first-approval to retain_for, since the coordinator's in-lane adjudications are amendment and first-approval."
 reversal_cost = "One list in docs/process.toml."
 why_not_escalated = "retain_for is a declared owner dial; WI-802 retires it in favour of per-family terms, so widening it here would be a policy change the spec does not ask for. Running unretained by declared policy is not a fallback: the keep never applied."
-owner = "overruled"
+operator = "overruled"
 review = "Owner, 2026-10-05: widen this repo's [adjudicator] retain_for to include first-approval, so the coordinator's in-lane first approvals use the retained session too (WI-835's purpose). WI-835's Done-when gains the line, citing docs/decisions/wi-835.toml#D-007."
 
 [decision.D-008]
@@ -60,7 +60,7 @@ decided = "The entry point records through session_service.call: the session log
 alternative = "Write the log without committing it, leaving the coordinator to commit it."
 reversal_cost = "A flag on the record step, which the Done-when's one writer argues against."
 why_not_escalated = "The Done-when says the entry point writes the session log, and session_service.record is the one writer, which commits by design (WI-137: a log never rides the next work commit)."
-owner = "confirmed"
+operator = "confirmed"
 review = ""
 
 [decision.D-009]

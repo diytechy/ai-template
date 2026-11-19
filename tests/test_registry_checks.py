@@ -1,5 +1,5 @@
 """trace.py integrity / placeholder / schema checks and their harness wiring
-(template-review findings F3 'placeholders → false green' and F4 'data quality').
+(template-review findings F3 'placeholders → false pass' and F4 'data quality').
 
 Implements: TC-002, TC-003
 """
@@ -17,13 +17,13 @@ def report_of(root):
 
 # --- Integrity: duplicate / malformed ids (always on; fail under --strict) -----
 
-DUP_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Approved
-SR-001,Duplicate,SN-001,"The system shall add again.","r.","dup",,M,Test,Approved
+DUP_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Accepted
+SR-001,Duplicate,SN-001,"The system shall add again.","r.","dup",,M,Test,Accepted
 """
 
-MALFORMED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-XX,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Approved
+MALFORMED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-XX,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Accepted
 """
 
 
@@ -50,17 +50,17 @@ def test_malformed_id_fails_strict(scaffold):
 # DevStg-Impl --strict-schema. Structure is integrity-class: wrong at any stage.
 
 # Permutations cell `set{a,b}` unquoted -> 11 parsed columns vs the 10-col header.
-UNQUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",set{a,b},M,Test,Approved
+UNQUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",set{a,b},M,Test,Accepted
 """
 
-# Same row properly quoted -> exactly 10 columns; the control must stay green.
-QUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3","set{a,b}",M,Test,Approved
+# Same row properly quoted -> exactly 10 columns; the control must keep passing.
+QUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3","set{a,b}",M,Test,Accepted
 """
 
 # A short row (trailing cells lost, e.g. a hand-edit that ate the Status cell).
-SHORT_ROW_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SHORT_ROW_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
 SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M
 """
 
@@ -85,7 +85,7 @@ def test_unquoted_comma_fails_strict_too(scaffold):
     assert proc.returncode == 1, proc.stdout + proc.stderr
 
 
-def test_quoted_comma_control_stays_green(scaffold):
+def test_quoted_comma_control_passes(scaffold):
     make_minimal_project(scaffold)
     sr_path(scaffold).write_text(QUOTED_COMMA_SRS, encoding="utf-8")
     proc = run_py(["scripts/trace.py", "--strict", "--strict-integrity"], cwd=scaffold)
@@ -168,26 +168,26 @@ def test_harness_runs_registry_integrity_at_g1(scaffold):
 # tiers, but it must not contradict the SR<->LLR link the LLR's SR-Refs records.
 # Wrong at any stage -> integrity class (fails --strict-integrity).
 
-_TWO_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Approved
-SR-002,Subtraction,SN-001,"The system shall subtract.","r.","sub(3,1) == 2",,M,Test,Approved
+_TWO_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,VerificationMethod,Status
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Accepted
+SR-002,Subtraction,SN-001,"The system shall subtract.","r.","sub(3,1) == 2",,M,Test,Accepted
 """
 
 _TWO_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Pure adder,src/demo,add,"two numbers -> sum",(see TC),Approved
-LLR-002,SR-002,Pure subtractor,src/demo,sub,"two numbers -> difference",(see TC),Approved
+LLR-001,SR-001,Pure adder,src/demo,add,"two numbers -> sum",(see TC),Accepted
+LLR-002,SR-002,Pure subtractor,src/demo,sub,"two numbers -> difference",(see TC),Accepted
 """
 
 # TC-002 cites SR-002 next to LLR-001, but LLR-001 decomposes SR-001 -> incoherent.
 INCOHERENT_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
-TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Approved
-TC-002,SR-002;LLR-001,Unit,call sub,Smoke,"a=3; b=1","Satisfies SR-002 AcceptanceCriteria",Yes,Approved
+TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Accepted
+TC-002,SR-002;LLR-001,Unit,call sub,Smoke,"a=3; b=1","Satisfies SR-002 AcceptanceCriteria",Yes,Accepted
 """
 
 # Same chain, every LLR paired with its own SR -> coherent.
 COHERENT_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
-TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Approved
-TC-002,SR-002;LLR-002,Unit,call sub,Smoke,"a=3; b=1","Satisfies SR-002 AcceptanceCriteria",Yes,Approved
+TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Accepted
+TC-002,SR-002;LLR-002,Unit,call sub,Smoke,"a=3; b=1","Satisfies SR-002 AcceptanceCriteria",Yes,Accepted
 """
 
 
@@ -215,7 +215,7 @@ def test_incoherent_sr_llr_pair_fails_strict_too(scaffold):
     assert proc.returncode == 1, proc.stdout + proc.stderr
 
 
-def test_coherent_sr_llr_pairs_stay_green(scaffold):
+def test_coherent_sr_llr_pairs_pass(scaffold):
     make_minimal_project(scaffold)
     _write_chain(scaffold, _TWO_SRS, _TWO_LLRS, COHERENT_TCS)
     proc = run_py(["scripts/trace.py", "--strict", "--strict-integrity"], cwd=scaffold)
@@ -263,7 +263,7 @@ def test_triangle_findings_unit_multi_parent_and_empty_parent():
     )
 
 
-# --- Placeholders: a fresh scaffold is green by default, fails opt-in ----------
+# --- Placeholders: a fresh scaffold passes by default, fails opt-in ----------
 
 
 def test_fresh_scaffold_ignores_placeholders_by_default(scaffold):
@@ -278,6 +278,19 @@ def test_no_placeholders_flags_template_rows(scaffold):
     assert "placeholder row SR-000 still present" in report_of(scaffold)
 
 
+def test_no_placeholders_reads_need_rows_never_a_comment_quoting_one(scaffold):
+    # The needs template's header comment quotes `[need.SN-000]`: a mention,
+    # not a row. Only the example table itself is a leftover placeholder.
+    needs = scaffold / "docs" / "requirements" / "stakeholder-needs.toml"
+    comment = '# An example need reads `[need.SN-000]`.\n\n[need.SN-001]\nneed = "x"\n'
+    needs.write_text(comment, encoding="utf-8")
+    run_py(["scripts/trace.py", "--no-placeholders"], cwd=scaffold)
+    assert "SN placeholder" not in report_of(scaffold)
+    needs.write_text(comment + '\n[need.SN-000]\nneed = "example"\n', encoding="utf-8")
+    run_py(["scripts/trace.py", "--no-placeholders"], cwd=scaffold)
+    assert "SN placeholder SN-000 still present" in report_of(scaffold)
+
+
 def test_harness_g2_fails_on_unfilled_scaffold(scaffold):
     # The key F3 behavior: you cannot claim DevStg-Tests with placeholder-only registries.
     proc = run_py(["scripts/check.py", "--gate", "DevStg-Tests"], cwd=scaffold)
@@ -290,7 +303,7 @@ def test_check_flows_no_placeholders_flags_cited_000(scaffold):
     proc = run_py(["scripts/check_flows.py", "--no-placeholders"], cwd=scaffold)
     assert proc.returncode == 1
     assert "placeholder id still cited" in proc.stdout
-    # Without the flag the same scaffold is green (placeholders ignored).
+    # Without the flag the same scaffold passes (placeholders ignored).
     proc = run_py(["scripts/check_flows.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
@@ -317,22 +330,22 @@ def test_strict_schema_flags_bad_enum(scaffold):
     csv = sr_path(scaffold)
     csv.write_text(
         csv.read_text(encoding="utf-8").replace(
-            ",M,Test,Approved", ",M,Testing,Approved"
+            ",M,Test,Accepted", ",M,Testing,Accepted"
         ),
         encoding="utf-8",
     )
     proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 1
-    assert "has Verification='Testing'" in report_of(scaffold)
+    assert "has VerificationMethod='Testing'" in report_of(scaffold)
 
 
 def test_strict_schema_leaves_priority_and_status_open(scaffold):
     # The method does not close the Priority/Status vocabularies (process.md §4):
-    # Priority=S and Status=Approved must NOT be schema findings.
+    # Priority=S and Status=Accepted must NOT be schema findings.
     make_minimal_project(scaffold)
     csv = sr_path(scaffold)
     csv.write_text(
-        csv.read_text(encoding="utf-8").replace(",M,Test,Approved", ",S,Test,Approved"),
+        csv.read_text(encoding="utf-8").replace(",M,Test,Accepted", ",S,Test,Accepted"),
         encoding="utf-8",
     )
     proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
@@ -344,9 +357,9 @@ def tc_path(root):
 
 
 def test_strict_schema_requires_evidence_on_automated_yes(scaffold):
-    # Thread 51 (owner-ruled 2026-07-09): a TC claiming Automated=Yes with no
-    # cited Evidence is a soft false-green -> a --strict-schema (DevStg-Impl) finding.
-    # Plain --strict stays green (the chain is structurally fine).
+    # Thread 51 (operator-ruled 2026-07-09): a TC claiming Automated=Yes with no
+    # cited Evidence is a soft false-pass -> a --strict-schema (DevStg-Impl) finding.
+    # Plain --strict keeps passing (the chain is structurally fine).
     make_minimal_project(scaffold)
     csv = tc_path(scaffold)
     csv.write_text(
@@ -385,7 +398,7 @@ def test_strict_schema_flags_legacy_tc_header_without_evidence(scaffold):
     tc_path(scaffold).write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status\n"
         'TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2",'
-        '"Satisfies SR-001 AcceptanceCriteria",Yes,Approved\n',
+        '"Satisfies SR-001 AcceptanceCriteria",Yes,Accepted\n',
         encoding="utf-8",
     )
     assert run_py(["scripts/trace.py", "--strict"], cwd=scaffold).returncode == 0

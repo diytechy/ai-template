@@ -1,9 +1,9 @@
-"""The merge slot's mint files the owner's held act as an open item (TC-147).
+"""The merge slot's mint files the operator's held act as an open item (TC-147).
 
-A sitting that rules MEANING on a row the approval dial holds cannot end in a
-lane: the lane lands the text, and the act is the owner's on trunk. So the mint
+A sitting that rules MEANING on a row the acceptance dial holds cannot end in a
+lane: the lane lands the text, and the act is the operator's on trunk. So the mint
 at that landing (`intake.intake_after_merge`, and `intake.py sweep` replaying
-it) files one queued owner row per registry and one pending open item naming the
+it) files one queued operator row per registry and one pending open item naming the
 rows, their verdicts and the act's command, the row's `needs` citing the item, in
 its one commit, and those rows leave the landing's amendment row (LLR-153,
 LLR-364). The act copies a whole registry, so the grouping is the registry's, and
@@ -75,7 +75,7 @@ HOLDS_NEEDS = kit_ladder.STAGE_NEEDS
 
 NEED = (
     "[need.SN-001]\n"
-    'status = "Approved"\n'
+    'status = "Accepted"\n'
     'need = "{}"\n'
     'why = "It is the point."\n'
     'priority = "M"\n'
@@ -95,7 +95,7 @@ def _held_repo(tmp_path, dial=HOLDS_SRS, extra="", llrs="", needs=""):
     (root / OPEN_ITEMS).write_bytes(b"# The open items.\n")
     if needs:
         (root / SN_REL).write_bytes(needs.encode("utf-8"))
-    set_process_key(root, "attestation", "human_approval_through", dial)
+    set_process_key(root, "authority", "operator_accepts_through", dial)
     SNAP.copy_live(root, seed=True)
     return root, _commit(root, "the dial, the registry and the first signing")
 
@@ -117,9 +117,9 @@ def _amendment_part(rulings):
 def _combined_part(rulings):
     """The same rulings as the amendment section of a combined sitting."""
     return (
-        "## amendment\n\n{}\n## first-approval\n\n- [APPROVE] LLR-009 -> judged\n\n"
-        "OUTCOME: APPROVE rows=1\n\n"
-        "SITTING: JUDGED kinds=amendment;first-approval\n".format(
+        "## amendment\n\n{}\n## first-acceptance\n\n- [ACCEPT] LLR-009 -> judged\n\n"
+        "OUTCOME: ACCEPT rows=1\n\n"
+        "SITTING: JUDGED kinds=amendment;first-acceptance\n".format(
             _amendment_part(rulings)
         )
     )
@@ -140,7 +140,7 @@ def _judged(root, rids):
     return adjudicate_brief.requested_identities(lines)
 
 
-def _sit(root, rulings, rel=VERDICT, outcome="accepted", identities=None):
+def _sit(root, rulings, rel=VERDICT, outcome="recorded", identities=None):
     """A single-kind amendment verdict and its binding recording `outcome`,
     bound to `identities`, by default the rows' live text."""
     path = _write_verdict(root, rel, _amendment_part(rulings))
@@ -152,7 +152,7 @@ def _sit(root, rulings, rel=VERDICT, outcome="accepted", identities=None):
 
 def _landed(tmp_path, tag, **repo):
     """The landing the arm reads: the range amends SR-001 and carries a sitting
-    ruling it `tag`, and nothing re-attests it. `(root, before, after)`."""
+    ruling it `tag`, and nothing re-accepts it. `(root, before, after)`."""
     root, before = _held_repo(tmp_path, **repo)
     _write_srs(root, requirement=AMENDED)
     _sit(root, {"SR-001": tag})
@@ -168,7 +168,7 @@ def _items(root):
     return tomllib.loads(text).get("open_item", {})
 
 
-def _owner_rows(root):
+def _operator_rows(root):
     """`[(relpath, frontmatter)]` of the queued rows citing an open item, the
     only rows in these repositories that do."""
     specs = sorted((root / "docs/work/queued").glob("*.md"))
@@ -179,9 +179,9 @@ def _owner_rows(root):
     return [(rel, meta) for rel, meta in rows if meta.get("needs")]
 
 
-def _one_owner_row(root):
+def _one_operator_row(root):
     """The one owner row and the one item: `(relpath, frontmatter, id, cells)`."""
-    rows, items = _owner_rows(root), _items(root)
+    rows, items = _operator_rows(root), _items(root)
     assert len(rows) == 1, rows
     assert len(items) == 1, items
     (oi, cells) = next(iter(items.items()))
@@ -208,7 +208,7 @@ def _assert_the_act_anchors(root, command, *rids):
     """`command` exits 0 and leaves `rids` equal to their copies."""
     proc = _run_act(root, command)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    head = _commit(root, "the owner's act")
+    head = _commit(root, "the operator's act")
     assert acceptance_record.unanchored_rows(
         root, head, rids, intake.ROUTED_TRACED_CELLS
     ) == ({}, None)
@@ -218,16 +218,16 @@ def _last_act(root):
     return acceptance_record._ledger_acts(root, "HEAD")[-1]
 
 
-def _assert_no_owner_row(root):
-    assert _owner_rows(root) == []
+def _assert_no_operator_row(root):
+    assert _operator_rows(root) == []
     assert _items(root) == {}
 
 
 def _assert_stays_on_the_amendment_row(root, minted, refusal):
-    """The act route is unchanged: no owner row, and SR-001 is an ordinary
+    """The act route is unchanged: no operator row, and SR-001 is an ordinary
     amendment record."""
     assert refusal is None, refusal
-    _assert_no_owner_row(root)
+    _assert_no_operator_row(root)
     assert [row["adjudicates"] for row in _amendment_rows(root, minted)] == [["SR-001"]]
 
 
@@ -238,19 +238,19 @@ def _mint(root, before, after):
 # --- the one minting state -------------------------------------------------------
 
 
-def test_a_held_meaning_verdict_mints_one_owner_row_and_one_pending_item(tmp_path):
+def test_a_held_meaning_verdict_mints_one_operator_row_and_one_pending_item(tmp_path):
     root, before, after = _landed(tmp_path, "MEANING")
     minted, refusal = _mint(root, before, after)
     assert refusal is None, refusal
-    rel, meta, oi, cells = _one_owner_row(root)
+    rel, meta, oi, cells = _one_operator_row(root)
     assert [path for _wid, path in minted] == [rel]
     assert cells["status"] == "pending"
     # The item names the rows, the verdict and the act's command.
     brief = _brief(cells)
     assert "SR-001" in brief and VERDICT in brief
     assert "intake.py snapshot" in brief
-    assert '--approves "{}=<record>"'.format(SR_REL) in brief
-    assert "--reattests SR-001" in brief
+    assert '--accepts "{}=<record>"'.format(SR_REL) in brief
+    assert "--reaccepts SR-001" in brief
     assert "--verdict" not in brief
     # The row is the item's placeholder, titled from its rows and verdict.
     assert meta["needs"] == [oi]
@@ -272,15 +272,15 @@ def test_each_registry_files_its_own_row_and_item(tmp_path):
     after = _commit(root, "amend both rows and sit them")
     _minted, refusal = _mint(root, before, after)
     assert refusal is None, refusal
-    rows, items = _owner_rows(root), _items(root)
+    rows, items = _operator_rows(root), _items(root)
     assert len(rows) == 2 and len(items) == 2, (rows, items)
     assert sorted(oi for _rel, meta in rows for oi in meta["needs"]) == sorted(items)
     commands = sorted(_command(cells) for cells in items.values())
     for command, rid, rel in zip(
         commands, ("SN-001", "SR-001"), (SN_REL, SR_REL), strict=True
     ):
-        assert '--approves "{}=<record>"'.format(rel) in command
-        assert command.endswith("--reattests " + rid)
+        assert '--accepts "{}=<record>"'.format(rel) in command
+        assert command.endswith("--reaccepts " + rid)
         _assert_the_act_anchors(root, command, rid)
 
 
@@ -295,25 +295,25 @@ def test_a_blessed_meaning_on_a_held_rung_mints_the_same(tmp_path, shape):
         _sit(root, rulings)
     else:
         path = _write_verdict(root, VERDICT, _combined_part(rulings))
-        kinds = ("amendment", "first-approval")
+        kinds = ("amendment", "first-acceptance")
         ksitting.write_binding(
             str(path),
             ksitting.SITTING,
             kinds,
-            "accepted",
+            "recorded",
             identities=_judged(root, rulings),
         )
     after = _commit(root, "amend SR-001 and sit it")
     minted, refusal = _mint(root, before, after)
     assert refusal is None, refusal
-    _rel, meta, oi, cells = _one_owner_row(root)
+    _rel, meta, oi, cells = _one_operator_row(root)
     assert meta["needs"] == [oi]
     assert "SR-001" in _brief(cells) and VERDICT in _brief(cells)
     assert _amendment_rows(root, minted) == []
 
 
 def test_a_held_row_leaves_the_amendment_row_beside_a_released_one(tmp_path):
-    """LLR-364: the owner row carries the held record out of the amendment row,
+    """LLR-364: the operator row carries the held record out of the amendment row,
     and the released row ruled the same stays on it."""
     root, before = _held_repo(tmp_path, llrs=_llr001(LLR_ORIGINAL))
     _write_srs(root, requirement=AMENDED)
@@ -325,7 +325,7 @@ def test_a_held_row_leaves_the_amendment_row_beside_a_released_one(tmp_path):
     assert [row["adjudicates"] for row in _amendment_rows(root, minted)] == [
         ["LLR-001"]
     ]
-    _rel, _meta, _oi, cells = _one_owner_row(root)
+    _rel, _meta, _oi, cells = _one_operator_row(root)
     assert "SR-001" in _brief(cells) and "LLR-001" not in _brief(cells)
 
 
@@ -349,10 +349,10 @@ def test_the_hold_is_read_per_registry_not_from_the_stage(tmp_path):
     after = _commit(root, "amend both rows and sit them")
     # The premise: the stage's answer is the wrong one for the SN row.
     assert ac.spine_stage_of(root) == kit_ladder.STAGE_TESTS
-    assert not ac.human_holds(root / "docs", ac.spine_stage_of(root))
+    assert not ac.operator_holds(root / "docs", ac.spine_stage_of(root))
     minted, refusal = _mint(root, before, after)
     assert refusal is None, refusal
-    _rel, _meta, _oi, cells = _one_owner_row(root)
+    _rel, _meta, _oi, cells = _one_operator_row(root)
     assert "SN-001" in _brief(cells) and "SR-001" not in _brief(cells)
     assert [row["adjudicates"] for row in _amendment_rows(root, minted)] == [["SR-001"]]
 
@@ -369,7 +369,7 @@ def test_a_row_with_no_amendment_record_in_the_range_still_mints(tmp_path):
     assert acceptance_record.staged_spine_amendments(root, before, after) == []
     minted, refusal = _mint(root, before, after)
     assert refusal is None, refusal
-    _rel, _meta, _oi, cells = _one_owner_row(root)
+    _rel, _meta, _oi, cells = _one_operator_row(root)
     assert "SR-001" in _brief(cells)
     assert _amendment_rows(root, minted) == []
 
@@ -378,26 +378,26 @@ def test_a_row_with_no_amendment_record_in_the_range_still_mints(tmp_path):
     "first, second, deciding",
     [
         pytest.param(
-            ("MEANING", "accepted"),
-            ("CLARITY", "accepted"),
+            ("MEANING", "recorded"),
+            ("CLARITY", "recorded"),
             None,
             id="meaning-then-clarity",
         ),
         pytest.param(
-            ("CLARITY", "accepted"),
-            ("MEANING", "accepted"),
+            ("CLARITY", "recorded"),
+            ("MEANING", "recorded"),
             LATER_VERDICT,
             id="clarity-then-meaning",
         ),
         pytest.param(
-            ("MEANING", "accepted"),
+            ("MEANING", "recorded"),
             ("CLARITY", "failed"),
             VERDICT,
             id="meaning-then-failed",
         ),
     ],
 )
-def test_the_latest_accepted_verdict_decides_a_row_sat_twice(
+def test_the_latest_recorded_verdict_decides_a_row_sat_twice(
     tmp_path, first, second, deciding
 ):
     """Each sitting's `(ruling, outcome)`, and the verdict that decides the row
@@ -415,7 +415,7 @@ def test_the_latest_accepted_verdict_decides_a_row_sat_twice(
         _assert_stays_on_the_amendment_row(root, minted, refusal)
         return
     assert refusal is None, refusal
-    _rel, _meta, _oi, cells = _one_owner_row(root)
+    _rel, _meta, _oi, cells = _one_operator_row(root)
     assert deciding in _brief(cells)
     assert _amendment_rows(root, minted) == []
 
@@ -431,19 +431,19 @@ def test_two_verdicts_on_one_registry_file_one_item_whose_command_runs(tmp_path)
     after = _commit(root, "amend both rows and sit each")
     _minted, refusal = _mint(root, before, after)
     assert refusal is None, refusal
-    _rel, meta, oi, cells = _one_owner_row(root)
+    _rel, meta, oi, cells = _one_operator_row(root)
     assert meta["needs"] == [oi]
     assert VERDICT in _brief(cells) and LATER_VERDICT in _brief(cells)
     command = _command(cells)
-    assert "--reattests SR-001,SR-002" in command
+    assert "--reaccepts SR-001,SR-002" in command
     assert "--verdict" not in command
     _assert_the_act_anchors(root, command, "SR-001", "SR-002")
     assert "verdict" not in _last_act(root)
 
 
-def test_the_owner_act_is_never_listed_as_a_sessions_own(tmp_path):
+def test_the_operator_act_is_never_listed_as_a_sessions_own(tmp_path):
     """One verdict covers every row and the item's prose names it, but the act
-    is the owner's: a verdict in the ledger would list it on the owner page as
+    is the operator's: a verdict in the ledger would list it on the operator page as
     a session's CLARITY act, on a verdict that ruled MEANING."""
     root, before = _held_repo(tmp_path, extra=_sr002(SR2_ORIGINAL))
     _write_srs(root, requirement=AMENDED, extra=_sr002(SR2_AMENDED))
@@ -451,10 +451,10 @@ def test_the_owner_act_is_never_listed_as_a_sessions_own(tmp_path):
     after = _commit(root, "amend both rows and sit them")
     _minted, refusal = _mint(root, before, after)
     assert refusal is None, refusal
-    _rel, _meta, _oi, cells = _one_owner_row(root)
+    _rel, _meta, _oi, cells = _one_operator_row(root)
     assert VERDICT in _brief(cells)
     command = _command(cells)
-    assert command.endswith("--reattests SR-001,SR-002")
+    assert command.endswith("--reaccepts SR-001,SR-002")
     _assert_the_act_anchors(root, command, "SR-001", "SR-002")
     assert "verdict" not in _last_act(root)
     audit = gen_open_items.render(root).split('class="verdict-audit"')[1]
@@ -462,7 +462,7 @@ def test_the_owner_act_is_never_listed_as_a_sessions_own(tmp_path):
 
 
 def test_two_landings_widen_the_act_as_the_item_states(tmp_path):
-    """A second landing's row waits in the same registry when the owner acts:
+    """A second landing's row waits in the same registry when the operator acts:
     each item's own command is refused by name, and the act option (a) states,
     naming the other row, exits 0."""
     root, first = _held_repo(tmp_path, extra=_sr002(SR2_ORIGINAL))
@@ -496,25 +496,25 @@ def test_a_replay_mints_no_second_item(tmp_path):
     root, before, after = _landed(tmp_path, "MEANING")
     proc, _head, _new = _sweep(root, before, after)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    rel, _meta, oi, _cells = _one_owner_row(root)
+    rel, _meta, oi, _cells = _one_operator_row(root)
     proc, head, new_head = _sweep(root, before, after)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "nothing to mint." in proc.stdout, proc.stdout
     assert new_head == head
-    # The owner rules the item and the row closes.
+    # The operator rules the item and the row closes.
     registry = root / OPEN_ITEMS
     text = registry.read_bytes().replace(b'status = "pending"', b'status = "ruled"')
     registry.write_bytes(text)
     closed = root / "docs/archive/work/complete" / rel.rsplit("/", 1)[-1]
     closed.parent.mkdir(parents=True, exist_ok=True)
     (root / rel).rename(closed)
-    _commit(root, "the ruling closes the owner row")
+    _commit(root, "the ruling closes the operator row")
     proc, head, new_head = _sweep(root, before, after)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "nothing to mint." in proc.stdout, proc.stdout
     assert new_head == head
     assert list(_items(root)) == [oi]
-    assert _owner_rows(root) == []
+    assert _operator_rows(root) == []
 
 
 def test_a_non_toml_registry_refuses_and_the_merge_stands(tmp_path):
@@ -542,7 +542,7 @@ def test_a_non_toml_registry_refuses_and_the_merge_stands(tmp_path):
     _commit(root, "the carrier converted, the old file removed with it")
     proc, _head, _new = _sweep(root, before, after)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "SR-001" in _brief(_one_owner_row(root)[3])
+    assert "SR-001" in _brief(_one_operator_row(root)[3])
 
 
 def test_a_minted_item_passes_the_strict_checks(tmp_path):
@@ -552,14 +552,14 @@ def test_a_minted_item_passes_the_strict_checks(tmp_path):
     root, before, after = _landed(tmp_path, "MEANING")
     _minted, refusal = _mint(root, before, after)
     assert refusal is None, refusal
-    rel, _meta, oi, _cells = _one_owner_row(root)
+    rel, _meta, oi, _cells = _one_operator_row(root)
     wid = rel.rsplit("/", 1)[-1][: len("WI-001")]
     rows = ct.read_registry_rows(root / ct.WI_CSV)
     wis = ct.load_wis(rows)[0]
     assert ct.uncited_open_item_findings(root, rows) == []
     assert ct.open_item_specref_findings(root, wis) == []
     assert ct.validate(wis, set(), ct.load_known_ois(root)) == []
-    assert ct.approval_brief_findings(root) == []
+    assert ct.acceptance_brief_findings(root) == []
     records = sched.evaluate(sched._load(root), oi_status=sched.load_oi_status(root))
     held = {r["id"]: r for r in records}[wid]
     assert held["disposition"] == "blocked"
@@ -586,7 +586,7 @@ def test_a_copy_that_cannot_be_read_is_the_refusal(tmp_path):
     assert minted == [], minted
     assert COPY_REL in refusal and "the merge stands" in refusal, refusal
     assert "intake.py sweep --before {} --after {}".format(before, after) in refusal
-    _assert_no_owner_row(root)
+    _assert_no_operator_row(root)
 
 
 def test_a_retired_row_has_no_text_to_differ_and_still_mints(tmp_path):
@@ -600,7 +600,7 @@ def test_a_retired_row_has_no_text_to_differ_and_still_mints(tmp_path):
     after = _commit(root, "retire SR-002 and sit it")
     _minted, refusal = _mint(root, before, after)
     assert refusal is None, refusal
-    _rel, _meta, _oi, cells = _one_owner_row(root)
+    _rel, _meta, _oi, cells = _one_operator_row(root)
     proc = _run_act(root, _command(cells))
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
@@ -628,7 +628,7 @@ def test_a_row_off_its_bound_text_stays_on_the_amendment_row(tmp_path, state):
 
 
 def test_a_bound_row_mints_beside_one_edited_after_the_sitting(tmp_path):
-    """The read is per row: the row still at its bound text is the owner's, and
+    """The read is per row: the row still at its bound text is the operator's, and
     the one edited after the sitting goes back to be sat."""
     root, before = _held_repo(tmp_path, extra=_sr002(SR2_ORIGINAL))
     _write_srs(root, requirement=AMENDED, extra=_sr002(SR2_AMENDED))
@@ -637,7 +637,7 @@ def test_a_bound_row_mints_beside_one_edited_after_the_sitting(tmp_path):
     after = _commit(root, "amend both, sit them, and edit one")
     minted, refusal = _mint(root, before, after)
     assert refusal is None, refusal
-    _rel, _meta, _oi, cells = _one_owner_row(root)
+    _rel, _meta, _oi, cells = _one_operator_row(root)
     assert "SR-001" in _brief(cells) and "SR-002" not in _brief(cells)
     assert [row["adjudicates"] for row in _amendment_rows(root, minted)] == [["SR-002"]]
 
@@ -645,7 +645,7 @@ def test_a_bound_row_mints_beside_one_edited_after_the_sitting(tmp_path):
 def test_the_same_ruling_on_a_row_equal_to_its_copy_mints_nothing(tmp_path):
     """IF-091: the lane sat the row and its act copied the text, so at the
     landing the row equals its copy and no act is owed. Witness: an arm that
-    skips the copy comparison mints an owner row here."""
+    skips the copy comparison mints an operator row here."""
     root, before = _held_repo(tmp_path)
     _write_srs(root, requirement=AMENDED)
     _sit(root, {"SR-001": "MEANING+BLESS"})
@@ -654,7 +654,7 @@ def test_the_same_ruling_on_a_row_equal_to_its_copy_mints_nothing(tmp_path):
     minted, refusal = _mint(root, before, after)
     assert refusal is None, refusal
     assert minted == [], minted
-    _assert_no_owner_row(root)
+    _assert_no_operator_row(root)
     assert _git(root, "rev-parse", "HEAD") == after
 
 
@@ -665,7 +665,7 @@ def test_the_same_ruling_on_a_row_equal_to_its_copy_mints_nothing(tmp_path):
         pytest.param(HOLDS_NEEDS, "MEANING", id="meaning-on-a-released-rung"),
     ],
 )
-def test_clarity_or_a_released_rung_mints_no_owner_row(tmp_path, dial, tag):
+def test_clarity_or_a_released_rung_mints_no_operator_row(tmp_path, dial, tag):
     """The act route is unchanged for both. Witness: an arm that ignores the
     ruling mints on the first case, and one that ignores the dial on the
     second."""
@@ -675,9 +675,9 @@ def test_clarity_or_a_released_rung_mints_no_owner_row(tmp_path, dial, tag):
 
 
 @pytest.mark.parametrize("state", ["no-binding", "pending", "failed", "invalid"])
-def test_an_unaccepted_verdict_leaves_the_row_on_the_amendment_row(tmp_path, state):
+def test_an_unrecorded_verdict_leaves_the_row_on_the_amendment_row(tmp_path, state):
     """An unsettled row is sat again. Witness: an arm that reads the verdict's
-    text without `accepted_at` finds the MEANING row in the pending, failed and
+    text without `recorded_at` finds the MEANING row in the pending, failed and
     invalid cases, and one that walks the verdict files rather than their
     bindings finds it in the no-binding case too."""
     root, before = _held_repo(tmp_path)

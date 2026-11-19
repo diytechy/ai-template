@@ -41,7 +41,7 @@ def test_adjudicate_is_a_weightable_phase():
 
 def test_adjudicate_defaults_strong():
     # It judges, and the cost of a wrong judgement here is a wrong
-    # approval. Same tier as the other two judging phases.
+    # acceptance. Same tier as the other two judging phases.
     assert loop.DEFAULT_PHASE_TIER["ADJUDICATE"] == "strong"
     assert loop.phase_tier("ADJUDICATE", {}) == "strong"
 
@@ -76,7 +76,7 @@ def test_an_adjudicator_never_shares_the_judged_party_s_family():
 
 def test_the_row_s_measured_tier_pins_the_adjudication_draw():
     # `intake.tier_signal` estimates the tier from MEASURED breadth (rows
-    # touched, gate moved, how many requirements a red TC's contradiction
+    # touched, gate moved, how many requirements an evidence gap's contradiction
     # spans). A measured estimate beats a phase default, so the pin applies —
     # but the pin is the ONLY thing that lowers it.
     st = _state(last_impl_family="ANTHROPIC")
@@ -104,7 +104,7 @@ def test_the_implementer_s_escalation_overrides_do_NOT_reach_an_adjudicator():
 
 
 def test_an_adjudication_commit_never_triggers_a_review_round():
-    # Its lane runs no product bar (`integrate.refresh`'s no-bar arm) because
+    # Its lane runs no product checks (`integrate.refresh`'s no-checks arm) because
     # its outputs are Status cells and the work registry. A review round over
     # it would be a fresh-context reviewer asked to judge a judgement with no
     # product diff to judge.
@@ -239,13 +239,13 @@ def test_the_act_brief_is_a_shipped_prompt_with_strict_slots():
         "verdict",
         "wi",
         "amendment_act",
-        "approval_act",
+        "acceptance_act",
         "registries",
-        "approves_rows",
+        "accepts_rows",
     }
     values = dict.fromkeys(prompts.slots(text), "x")
     assert not prompts.slots(prompts.fill(key, text, values))
-    del values["approval_act"]
+    del values["acceptance_act"]
     with pytest.raises(prompts.PromptError):
         prompts.fill(key, text, values)
 
@@ -272,7 +272,7 @@ def test_a_template_edit_moves_its_digest_and_so_the_catalogue():
 
 
 # --- WI-882: the composed question home is a catalogued source ------------------
-# The first-approval and amendment briefs compose `prompts/spine-questions.md`
+# The first-acceptance and amendment briefs compose `prompts/spine-questions.md`
 # into their `{questions}` slot at render time, so that home is a source of a
 # launched brief's static instruction text exactly as a template is. These
 # drive the real generator over a real copy of the shipped prompts directory;

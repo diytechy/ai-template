@@ -1,6 +1,6 @@
 ---
 name: evidence-hash-integrity
-description: Use when any verdict, approval, or benchmark is pinned to a content hash — build the hash from an explicit manifest covering everything that produced the output (including the code), prove clean-state reproducibility, and re-pin with an exact logged mapping when the identity must move.
+description: Use when any verdict, acceptance, or benchmark is pinned to a content hash — build the hash from an explicit manifest covering everything that produced the output (including the code), prove clean-state reproducibility, and re-pin with an exact logged mapping when the identity must move.
 stacks: [python, any]
 domains: [any]
 phases: [dev, gate, release]

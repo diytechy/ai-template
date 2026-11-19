@@ -31,14 +31,14 @@ REM off). WI-274: the VALUES now live ONCE in docs/stack.ini [agent-loop] (model
 REM / model-map) - agent_loop reads them there, so a dial change edits one file,
 REM not this value in three launchers. These slots stay the env-override tier
 REM (precedence: CLI flag ^> this env slot ^> docs/stack.ini ^> built-in
-REM default); left empty so the declared home wins. Owner dial 2026-07-22 (Opus
+REM default); left empty so the declared home wins. Operator dial 2026-07-22 (Opus
 REM at both strong and medium) lives in stack.ini now.
 set "AGENT_MODEL="
 set "AGENT_MODEL_MAP="
 REM Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|quick).
 REM Empty = the engine's built-in defaults (PLAN / DESIGN-CHECK / CRITIQUE
 REM strong, BUILD / REVIEW-A / REVIEW-B medium; a worker still pins BUILD up
-REM to its WI row's BuildTier). EMPTY per the owner directive 2026-07-19:
+REM to its WI row's BuildTier). EMPTY per the operator directive 2026-07-19:
 REM builds are Anthropic-led per tier again - Fable takes strong-row BUILDs,
 REM Opus takes medium - retiring the WI-160 Sol pin (2026-07-14b; that
 REM directive stands in history if this one is reverted). Keep agent-resume.sh
@@ -134,7 +134,7 @@ REM Exit 11 = RESTART: the coordinator's own Python moved under it (in this
 REM repo nearly every trunk merge touches project-trajectory\scripts\) and it
 REM drained to a safe boundary with the assignment preserved in the tree. A
 REM fresh process reconstructs everything from git, so the launcher relaunches
-REM it instead of handing the walk-away run back to a human; 50 bounds a
+REM it instead of handing the walk-away run back to an operator; 50 bounds a
 REM pathological loop. Keep agent-resume.sh in sync (its while loop).
 set "RELAUNCHES=0"
 :again

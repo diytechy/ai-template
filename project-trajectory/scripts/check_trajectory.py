@@ -67,14 +67,14 @@ that cannot accrete prose and the successor freshness check applies. IMPLEMENTED
 since WI-234 — `status_forward_only_findings` below, and the stand-down is scoped
 to the marked block, not the whole file. `--staged` adds the warn-first **no-validation-delta** checks: the
 follow-up-on-a-done-SR ratchet, the **critique-loop ratchet** (WI-068) — a WI
-closing on a `Verification=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
+closing on a `VerificationMethod=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
 tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor) — and
-the **amend-without-flip** warn (WI-316): a staged diff changing the **approved**
-cells of an `Approved` spine row without re-blessing it in the same commit
+the **amend-without-flip** warn (WI-316): a staged diff changing the **accepted**
+cells of an `Accepted` spine row without re-blessing it in the same commit
 (process.md §7), the write-time discipline commit-message prose never had.
-*Approved*, not every cell — the §A5.1 cell split (owner ruling 2026-07-31;
-WI-380) rules traceability **traced, not approved**, so a `Module`/`CodeSymbol`/
+*Accepted*, not every cell — the §A5.1 cell split (operator ruling 2026-07-31;
+WI-380) rules traceability **traced, not accepted**, so a `Module`/`CodeSymbol`/
 `TestRefs`/`SN-Refs`/`Verifies` pointer following code that moved does **not**
 arm the marker. The traced half is not discarded: it is carried structurally by
 `staged_spine_amendments`, which returns both halves per amended row.
@@ -84,7 +84,7 @@ arm the marker. The traced half is not discarded: it is carried structurally by
 trajectory_check` reads `false` (or, for the SN-028 migration window, the
 legacy `docs/trajectory-check` reads the one word `off`); and an *absent* or *placeholder-only* registry (nothing but
 the inert `WI-000` example row) passes vacuously. So a fresh scaffold and a repo
-that never adopts the layer both stay green for free — WI is an off-spine
+that never adopts the layer both keep passing for free — WI is an off-spine
 optional registry, like procurement / assets, whose placeholder never blocks a
 gate (`trace.py` does not read WI ids at all).
 
@@ -137,7 +137,7 @@ tag on an LLR row joins its `Module` → `CMP-###`; nesting via the CMP registry
 modules — or no arch-map inventory — passes trivially (the bound, not the
 registry, is the rule), so a small or non-adopting repo is never broken.
 
-**Knowledge⇒component coupling** (WI-153; research-knowledge.md §3a, owner-ruled
+**Knowledge⇒component coupling** (WI-153; research-knowledge.md §3a, operator-ruled
 2026-07-14). The same finding is *armed independent of the bound* once
 `docs/knowledge/` holds a real pack: an uncontained arch-map module is then a
 finding even below the 10-item bound, because a knowledge pack ties the *what* to
@@ -219,7 +219,7 @@ from pathlib import Path
 from kitlib.config import utf8_console as _utf8_console
 from observation_cadence import observation_rubric_findings
 
-# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# THE SHIPPED SHARED-HELPER PACKAGE (operator ruling D-8, `OI-16`, executed
 # WI-448): one home for behaviours this module used to spell out itself — the
 # declared-policy line reader and the `docs/work/` spec-folder registry reader.
 # It replaces the F5 rule, which had licensed those copies unbounded and left
@@ -262,7 +262,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # comparison and the snapshot mirror, which used to live in this file. Required,
 # not optional like `gen_arch_map` below: its findings join the failure set at
 # `main`'s aggregation, so a copy of this checker without it would silently stop
-# reporting that attested text had drifted, which is the opposite of a vacuity.
+# reporting that accepted text had drifted, which is the opposite of a vacuity.
 # `bootstrap.MAPPING` carries it, so a scaffold gets both or neither. The
 # held-status readers the history check reads (`held_status`, IF-196) moved out
 # of it whole; they import it one way and ride the same guard and MAPPING.
@@ -324,6 +324,7 @@ interface_findings = _trajectory_arch.interface_findings
 _owner_exact_findings = _trajectory_arch._owner_exact_findings
 _declaration_sites = _trajectory_arch._declaration_sites
 contract_body_findings = _trajectory_arch.contract_body_findings
+unchecked_contract_rows = _trajectory_arch.unchecked_contract_rows
 _external_body_findings = _trajectory_arch._external_body_findings
 _stray_declaration_findings = _trajectory_arch._stray_declaration_findings
 _parse_if_tc_allow_full = _trajectory_arch._parse_if_tc_allow_full
@@ -428,7 +429,7 @@ _TERMINAL_DELIVERABLE_REASON = {
 }
 
 # Backlog-staleness (WI-205) applies to genuinely-in-flight WIs: the open set
-# minus `deferred` and `draft` (both re-enter via an owner look — an un-defer, or
+# minus `deferred` and `draft` (both re-enter via an operator look — an un-defer, or
 # the thinking finishing — which is itself the driven review, so both are
 # EXEMPT), plus `blocked` (a WI parked on an external
 # dependency is still live work whose cited requirements can drift under it).
@@ -443,7 +444,7 @@ BACKLOG_STALE_STATUSES = ("queued", "active", "blocked")
 # ever failing a gate or asking anyone to reword what is already filed — ten of
 # the eleven live (open) titles measured at this WI's filing were multi-sentence
 # program narratives, so a validation-only fix would have forced a mass reword
-# of owner-authored text. Set a shade under the dashboard's own bound so the
+# of operator-authored text. Set a shade under the dashboard's own bound so the
 # advisory fires before a reader ever meets the clipped render.
 _TITLE_CONCISE_MAX = 120
 
@@ -522,7 +523,7 @@ def read_rows(path):
 # STATUS encoded as the DIRECTORY (docs/concurrency-restructure.md §2.1). The
 # 270-line reader that used to sit here VERBATIM, and identically in the other
 # two of schedule.py, check_trajectory.py and agent_common.py, now lives once in
-# `kitlib/registry.py`: owner ruling D-8 (`OI-16`, inversion confirmed
+# `kitlib/registry.py`: operator ruling D-8 (`OI-16`, inversion confirmed
 # 2026-08-13) retired the F5 no-shared-module rule that had licensed the copies.
 #
 # RE-EXPORTED under the names this module has always carried, so no call site
@@ -944,10 +945,10 @@ def load_known_ois(root):
 
 def uncited_open_item_findings(root, wi_rows):
     """Each pending open item NO queued or claimed work item cites in its
-    `needs` (WI-790): the queue is the only route a decision reaches the owner
+    `needs` (WI-790): the queue is the only route a decision reaches the operator
     by, so such an item is invisible, and it is an ERROR whatever the gate.
     Read off the one queue projection (`kitlib.spine.open_item_queue`) the
-    owner surface and the status snapshot also read. Vacuous without an
+    operator surface and the status snapshot also read. Vacuous without an
     open-items registry.
 
     Implements: SR-148, LLR-299
@@ -958,7 +959,7 @@ def uncited_open_item_findings(root, wi_rows):
     queue = _kitspine.open_item_queue(wi_rows, spine_carrier.load(path, "OI-ID"))
     return [
         "{}: pending, but no queued or claimed work item cites it in `needs`, "
-        "so the decision never reaches the owner's queue — cite it from the row "
+        "so the decision never reaches the operator's queue — cite it from the row "
         "it holds, or file a queued placeholder row (WI-790)".format(oid)
         for oid in queue["uncited"]
     ]
@@ -1056,7 +1057,7 @@ def _registry_ref_findings(w, anchor, states):
 # in both rows — which is precisely the trap the stage/bar spelling overlap sets:
 #
 #   `[p]-[reqs]` / `[p]-[g1]`  requirement structuring: the phase's SRs are  check_vocab: allow
-#                              authored AND approved. `spine_stage` clears its
+#                              authored AND accepted. `spine_stage` clears its
 #                              `any(is_drafted(sr))` test from there on, so what
 #                              the phase then stands at is DevStg-LLReqs — NOT
 #                              DevStg-Reqs, which is the rung it has just LEFT.
@@ -1115,7 +1116,7 @@ def phase_stages(root):
     visible on the live reading even though it no longer moves the effective one.)
 
     THE IMPORT IS LAZY AND DEGRADES TO VACUOUS. This module runs in the shipped
-    pre-commit hook, and the `approval-fresh` lesson (130-REVIEW-A) is that a hook
+    pre-commit hook, and the `acceptance-fresh` lesson (130-REVIEW-A) is that a hook
     which hard-requires a sibling an adopter's tree may not have blocks every
     commit. A fixture that copies `check_trajectory.py` alone therefore loses the
     drop half only — the same vacuity an absent `docs/gate` produced before."""
@@ -1263,7 +1264,7 @@ def phase_findings(root, wis):
 # bootstrap.py MAPPING, so they always ship and re-sync together.
 #
 # The import is LAZY and degrades to None rather than raising: this module runs in
-# the SHIPPED pre-commit hook, and the `approval-fresh` lesson (130-REVIEW-A) is that
+# the SHIPPED pre-commit hook, and the `acceptance-fresh` lesson (130-REVIEW-A) is that
 # a hook which hard-requires a file an adopter's tree may not have blocks every
 # commit. Missing check_docs therefore costs the anchor half only — the path half
 # is unchanged. Vacuity here is a real risk, so it is pinned by a test that drives
@@ -1438,7 +1439,7 @@ def _restructured_lineage_findings(w, lineage, statuses):
 
     Liveness is otherwise deliberately "is a registry row", not "is still open":
     a successor that later closes `done` (or `cancelled`, or `partial`) must not
-    turn its predecessor's archived record into a red. `restructured` is the one
+    make its predecessor's archived record fail. `restructured` is the one
     terminal that is excluded, because it is the one that redirects again.
     """
     text = w["deliverable"].strip()
@@ -1522,10 +1523,10 @@ def ssot_findings(wis, root):
         # unsatisfiable by construction, because SR-144's whole point is that
         # an early close leaves the spec's DEFINITION byte-identical ("scope
         # definitions never change; only whether they were fully delivered").
-        # A rule no honest close can satisfy is not a rule; it is a red at
+        # A rule no honest close can satisfy is not a rule; it is a failure at
         # every run, and in the loop it is worse than that — the dispatcher's
-        # refresh reds, `_refresh_failed` quarantines the lane's work, the
-        # retry reds again (the spec move is bookkeeping and exempt from the
+        # refresh fails, `_refresh_failed` quarantines the lane's work, the
+        # retry fails again (the spec move is bookkeeping and exempt from the
         # revert) and the run dies. Driven at review.
         if st in TERMINAL_STATUSES and not w["deliverable"] and st != "partial":
             reason = _TERMINAL_DELIVERABLE_REASON[st]
@@ -1579,7 +1580,7 @@ _TITLE_STOPWORDS = frozenset(
 )
 # Jaccard over title token SETS. 0.8 is deliberately high: this rung's job is to
 # catch the same job minted twice (near-identical wording), not to editorialize
-# about two rows in the same area. A lower bar turns a useful warn into noise
+# about two rows in the same area. A lower threshold turns a useful warn into noise
 # that gets ignored, which is worse than not having it.
 _TITLE_SIMILARITY = 0.8
 
@@ -1694,7 +1695,7 @@ def spec_lifecycle_findings(root, wis):
     SpecRefs before the rule existed. Two findings, both message-only (the
     caller tags `R-F` and owns the warn-plain / error-under-`--strict`
     promotion, the R-E warn tier — so a rotting spec surface cannot reach a
-    green DevStg-Tests/DevStg-Impl gate while a plain commit stays warn-first):
+    passing DevStg-Tests/DevStg-Impl gate while a plain commit stays warn-first):
 
       - a **terminal** WI (`done` or `cancelled`, WI-267) whose `SpecRef` is still
         set — the terminal transition clears it (the Deliverable + log carry the
@@ -1761,7 +1762,7 @@ def spec_lifecycle_findings(root, wis):
 
 
 # --- WI-352: the completion reconciler ----------------------------------------
-# A WI's `Status` is an ATTESTATION, and the owner ruled 2026-07-28 that it stays
+# A WI's `Status` is a CLAIM, and the operator ruled 2026-07-28 that it stays
 # one rather than becoming derived: the evidence a deriver would read is the `WI:`
 # commit trailer, but a trailer means "a commit CLAIMS this WI", not "the work is
 # right" (WI-336's code landed while its row correctly stayed `queued`, because a
@@ -1884,8 +1885,8 @@ def completion_reconciliation_findings(root, wis):
         ticked Done-when box and none left unticked. The WI-328 shape: six boxes
         ticked across six commits on 2026-07-27, the row still `queued` a day
         later, and because it was `SafetyClass=spine` the scheduler serialized the
-        whole project behind finished work while the session told the owner a
-        shipped migration was awaiting approval.
+        whole project behind finished work while the session told the operator a
+        shipped migration was awaiting acceptance.
       - **spec-says-unfinished** — a `done` row whose own **live** spec still has
         unticked boxes and which no open WI cites (the same "no open citer" test
         R-F uses to decide when a spec may be archived).
@@ -1894,7 +1895,7 @@ def completion_reconciliation_findings(root, wis):
 
     **Why the done side is scoped to LIVE specs**, measured rather than assumed:
     run over the archive it produced **40** findings (36 with no box ticked at
-    all, 4 partly ticked) and neither class was actionable. Some are a self-referential terminal box (`Commit bar green; row
+    all, 4 partly ticked) and neither class was actionable. Some are a self-referential terminal box (`Commit checks green; row
     done, spec archived` — untickable at the moment you would tick it); the rest
     are closes that never ticked. For a WI closed weeks ago, whose Deliverable and
     log entry carry the record, the only available action is cosmetic — and a
@@ -1951,7 +1952,7 @@ def completion_reconciliation_findings(root, wis):
                         "trailer-claims-it",
                         "{}: status={} but a commit reachable from HEAD carries a "
                         "`WI: {}` trailer — a trailer CLAIMS the WI, it does not "
-                        "attest the work, so this is a prompt to reconcile, never "
+                        "show the work is done, so this is a prompt to reconcile, never "
                         "a reason to close".format(w["id"], w["status"], w["id"]),
                     )
                 )
@@ -1962,11 +1963,11 @@ def tier_completion_findings(findings):
     """Split reconciler findings into `(warn_only, gated)`.
 
     The tier is a property of the SIGNAL, so it is decided here beside the
-    signals rather than as another branch in `main()`. Spec evidence is an
-    attestation, so a row disagreeing with its own ticked boxes is a
+    signals rather than as another branch in `main()`. Spec evidence is a
+    claim, so a row disagreeing with its own ticked boxes is a
     contradiction between two homes for one fact and belongs at the gate. A `WI:`
     trailer is not: it means "a commit CLAIMS this WI", which is the very
-    argument the owner's 2026-07-28 ruling uses to keep Status declared — so it
+    argument the operator's 2026-07-28 ruling uses to keep Status declared — so it
     warns and never joins the exit code.
 
     DEVIATION from the WI row, which asked for the whole reconciler at the
@@ -2111,7 +2112,7 @@ def dead_dependency_findings(wis):
     integrate `done`, so an open successor whose hard edge points at it can
     NEVER become ready. The conservative decision (WI-267 design-decision 3) is
     to SURFACE the dead edge rather than let a terminal predecessor silently
-    "satisfy" the dependency the way `done` does: the owner must re-home the
+    "satisfy" the dependency the way `done` does: the operator must re-home the
     successor's edge (an OI-70/OI-73 close now REPLACES inbound edges at the
     mint, and a consolidation close re-points them the same way, so a strand
     minted through either path never reaches here) or cancel it too. The scheduler already refuses to
@@ -2257,7 +2258,7 @@ def _path_commit_time(root, rel_path, row_history=False):
 
     A commit that moves AND edits the spec answers 1000 as well — git scores it
     `R<similarity>`, and `--diff-filter=AM` drops it like any other rename. That
-    is the accepted blind spot (WI-362, owner ruling 2026-07-29: name it, do not
+    is the accepted blind spot (WI-362, operator ruling 2026-07-29: name it, do not
     build rename detection): re-affirmation must be a content edit at the SAME
     path, because a Title edit renames the spec file. Only a rewrite large enough
     to defeat rename detection reads as `A` and re-dates, so the re-dating of a
@@ -2399,7 +2400,7 @@ def knowledge_pack_findings(root, wis):
 def backlog_staleness_findings(root, wis):
     """WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance).
 
-    Approving amended SN/SR/LLR/TC content never touches the open WI rows that
+    Accepting amended SN/SR/LLR/TC content never touches the open WI rows that
     cite it, so an incomplete backlog can silently drift out of sync with the
     requirement state it was filed against. For each open WI (queued/active/
     blocked — `deferred` and `done` are exempt) this compares when its registry
@@ -2419,28 +2420,28 @@ def backlog_staleness_findings(root, wis):
     rename whatever else the commit did. Since the Title drives the spec
     FILENAME, re-titling a WI renames its file and does NOT clear the warn: a
     genuine re-affirmation carried by a Title edit reads as no re-affirmation at
-    all. That is the accepted blind spot of the trade (WI-362, owner ruling
+    all. That is the accepted blind spot of the trade (WI-362, operator ruling
     2026-07-29: state it in the warn, do not build rename detection) — pinned by
     tests/test_wi_folder_loaders.py so changing it has to be deliberate.
 
     THE SOURCE CLOCK IS LINE-GRANULAR, WHICH THE CELL-CLASS SPLIT IS NOT, and
     that is a second stated limitation rather than a bug to be quietly widened.
     `_blame_row_times` takes the NEWEST commit over a row's lines; a `git blame`
-    line time cannot tell an approved cell from a traced one, so writing an
+    line time cannot tell an accepted cell from a traced one, so writing an
     INFORMATIVE cell re-dates the row and warns every WI that cites it.
     MEASURED (WI-484 phase 2, 2026-08-22): the `hat_refs` backfill wrote 55 SR
     cells and raised seven such warns; at phase 5 one survived — `SR-163`, whose
     newest line is its `hat_refs = [...]`. Two fixes were examined and NEITHER
     is small (recorded so the next reader does not re-derive them):
-    line-attribution of the blame to approved-class keys needs a quote-state
+    line-attribution of the blame to accepted-class keys needs a quote-state
     parser for multi-line TOML values AND would silence a re-pointed
     `SN-Refs`/`Boundary-Refs`, which is traced but scope-BEARING — the exact
     change a citing WI most needs to re-validate against; and recomputing the
     clock through `split_changed_cells` over a rev range is exact but replaces
     this check's bounded cost (≤2 blames) with git work per open WI and
-    inherits the amendment scan's approved-only population. Which traced cells
+    inherits the amendment scan's accepted-only population. Which traced cells
     are staleness-bearing is a new classification, i.e. a ruling, not a patch.
-    Stated here on the WI-362 precedent (owner ruling 2026-07-29: name the blind
+    Stated here on the WI-362 precedent (operator ruling 2026-07-29: name the blind
     spot, do not build the detection).
 
     NEVER joins the exit code — not even under `--strict` (a warn-tier checker
@@ -2562,7 +2563,7 @@ def holdbyrename_findings(root):
     """A `docs/work/active/<branch>/` claim directory with NO matching git
     branch ref — the exact signature of a HOLD-BY-RENAME, which OI-70 BANS: a
     lane that must stop CLOSES PARTIAL (the only sanctioned stop, save a planned
-    owner-held step, process.md §5 "Open items"), it is never
+    operator-held step, process.md §5 "Open items"), it is never
     parked by renaming its ref (`git branch -m ... -HELD`) while its claim stays
     on trunk. That mismatch is also the phantom head the scheduler/dispatcher
     disagree over: the row reads `ready` off the claim while the dispatcher
@@ -2577,7 +2578,7 @@ def holdbyrename_findings(root):
     resolves by closing the lane (never by deleting the claim copy on trunk,
     which the trunk floor holds and no blessing releases).
 
-    WARN at the commit bar, ERROR under `--strict` (the DevStg-Impl gate) — the
+    WARN at the commit checks, ERROR under `--strict` (the DevStg-Impl gate) — the
     warn-plain / error-under-strict tier the rest of this module's promotable
     findings ride (no new branch in `main`). Degrades silently off-git (a
     checkout with no history has no refs to match), the module's warn-tier
@@ -2772,7 +2773,7 @@ def staged_findings(root):
     directories, so both maps come from name listings (`--name-status` staged,
     `ls-tree` at HEAD) and never from parsing a row.
 
-    Known false-positive, accepted at the WI-271 retirement (owner ruling
+    Known false-positive, accepted at the WI-271 retirement (operator ruling
     2026-07-29): a follow-up WI whose chain change landed in its BUILD commit
     warns on its bookkeeping-only close commit — a moment's investigation, the
     lesser evil against a missed paper-close. Un-defer trigger: reopen (fresh
@@ -2829,11 +2830,11 @@ SPINE_CSVS = acceptance_record.SPINE_CSVS
 SPINE_TABLE = acceptance_record.SPINE_TABLE
 SPINE_COLUMN = acceptance_record.SPINE_COLUMN
 SPINE_TRACED_CELLS = acceptance_record.SPINE_TRACED_CELLS
-SPINE_APPROVED_CELLS = acceptance_record.SPINE_APPROVED_CELLS
+SPINE_ACCEPTED_CELLS = acceptance_record.SPINE_ACCEPTED_CELLS
 HAT_REFS_CELL = acceptance_record.HAT_REFS_CELL
 SNAPSHOT_DIR = acceptance_record.SNAPSHOT_DIR
 SNAPSHOT_README = acceptance_record.SNAPSHOT_README
-_APPROVED_TEXT = acceptance_record._APPROVED_TEXT
+_ACCEPTED_TEXT = acceptance_record._ACCEPTED_TEXT
 _spine_stem = acceptance_record._spine_stem
 _spine_carriers = acceptance_record._spine_carriers
 _spine_rows_at = acceptance_record._spine_rows_at
@@ -2850,7 +2851,7 @@ staged_snapshot_findings = acceptance_record.staged_snapshot_findings
 committed_snapshot_findings = acceptance_record.committed_snapshot_findings
 
 
-# The critique-loop ratchet (WI-068). A `Verification=Critique` SR and its latest
+# The critique-loop ratchet (WI-068). A `VerificationMethod=Critique` SR and its latest
 # CRITIQUE verdict file (`docs/reviews/*-CRITIQUE.md`, the S8 verdict format), in
 # BOTH naming generations — serial `NNN-CRITIQUE.md` and the branch-scoped
 # `WI-<n>-CRITIQUE.md` replacing it (concurrency-restructure §5.4, and
@@ -2871,11 +2872,11 @@ OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
 # Kept a SEPARATE pattern from PHASE_ANCHOR_RE because that one is anchored to the
 # start of a Title and this one matches mid-cell; the accepted TOKEN SET is the
 # same, and is held equal to it by a test rather than by this comment.
-APPROVAL_ANCHOR_RE = re.compile(
+ACCEPTANCE_ANCHOR_RE = re.compile(
     r"\[[^\]\[]+\]-\[(?:g[12]|reqs|tests|DevStg-[A-Za-z]+)\]", re.IGNORECASE
 )
-# The brief satisfies the rule only by naming an approval/hierarchy VIEW — a
-# bare `trace.py --approve` command mention no longer counts (WI-146 REVIEW-A): a
+# The brief satisfies the rule only by naming an acceptance/hierarchy VIEW — a
+# bare `trace.py --accept` command mention no longer counts (WI-146 REVIEW-A): a
 # command can be unexecuted or wrong-scope, so it is not proof the generated view
 # exists and is carried in the brief. WI-322 moved briefs from markdown sections
 # to registry ROWS, so the proof is a path/link token in the cell rather than a
@@ -2883,24 +2884,24 @@ APPROVAL_ANCHOR_RE = re.compile(
 # `ratif` stays in the token set deliberately (WI-499): the generated view still
 # lives under `docs/ratify/` — the directory kept its name as a record home even
 # though the retired-vocabulary rename covers everything else — so a real link
-# still reads `docs/ratify/CURRENT.md` / `docs/ratify/<date>-*.md`. `approv` is
+# still reads `docs/ratify/CURRENT.md` / `docs/ratify/<date>-*.md`. `accept` is
 # matched too, for a link authored against the word the kit uses everywhere else.
-APPROVAL_VIEW_RE = re.compile(
-    r"(?:ratif|approv|hierarch)\w*[^\s]*\.(?:md|html|csv)|\]\([^)]*(?:ratif|approv|hierarch)[^)]*\)",
+ACCEPTANCE_VIEW_RE = re.compile(
+    r"(?:ratif|accept|hierarch)\w*[^\s]*\.(?:md|html|csv)|\]\([^)]*(?:ratif|accept|hierarch)[^)]*\)",
     re.IGNORECASE,
 )
 
 
-def approval_brief_findings(root):
+def acceptance_brief_findings(root):
     """Warn-first brief lint (WI-146b): an open-items row whose decision is a
-    phase-anchor approval should point at the batch-scoped approval
-    hierarchy view (`trace.py --approve <phase>`) instead of hand-copying registry
+    phase-anchor acceptance should point at the batch-scoped acceptance
+    hierarchy view (`trace.py --accept <phase>`) instead of hand-copying registry
     rows. WARN only — never a gate fail (the house stance for prose surfaces,
     WI-129/132).
 
     Reads `docs/requirements/open-items.toml` since WI-322 retired the markdown
     surface; the brief text is the row's prose cells. Vacuous when the registry
-    is absent or carries no approval brief, so a repo without the surface
+    is absent or carries no acceptance brief, so a repo without the surface
     pays nothing."""
     path = root / OPEN_ITEMS_REL
     if spine_carrier.resolve(path) is None:
@@ -2912,24 +2913,24 @@ def approval_brief_findings(root):
             (row.get(k) or "")
             for k in ("OneLine", "Decision", "BlastRadius", "Options", "Recommendation")
         )
-        # `approv` (not `ratif`, WI-499): live prose no longer uses the retired
-        # spelling, so a freshly-authored row's own text is the "this decision
-        # is about a human approval" signal now.
-        is_approval = APPROVAL_ANCHOR_RE.search(body) and re.search(
-            r"approv", body, re.IGNORECASE
+        # `accept` (not `ratif`, WI-499, nor `approv`, 2026-11-16): live prose
+        # no longer uses a retired spelling, so a freshly-authored row's own
+        # text is the "this decision is about an operator acceptance" signal.
+        is_acceptance = ACCEPTANCE_ANCHOR_RE.search(body) and re.search(
+            r"accept", body, re.IGNORECASE
         )
-        if not is_approval or APPROVAL_VIEW_RE.search(body):
+        if not is_acceptance or ACCEPTANCE_VIEW_RE.search(body):
             continue
         out.append(
-            "{}: a phase-anchor approval brief should name the batch-scoped "
-            "hierarchy view (generate it with `trace.py --approve <phase>`) instead "
+            "{}: a phase-anchor acceptance brief should name the batch-scoped "
+            "hierarchy view (generate it with `trace.py --accept <phase>`) instead "
             "of hand-copying registry rows ({})".format(oid, OPEN_ITEMS_REL)
         )
     return out
 
 
 def _load_critique_srs(root):
-    """SR ids whose Verification is `Critique` (system-requirements.toml). Empty
+    """SR ids whose verification method is `Critique` (system-requirements.toml). Empty
     makes the critique ratchet vacuous — a repo with no perceptual SR pays
     nothing."""
     out = set()
@@ -2938,7 +2939,7 @@ def _load_critique_srs(root):
         if (
             sid
             and not sid.endswith("-000")
-            and (r.get("Verification") or "").strip() == "Critique"
+            and (r.get("VerificationMethod") or "").strip() == "Critique"
         ):
             out.add(sid)
     return out
@@ -2965,7 +2966,7 @@ def _latest_critique_verdict(root):
 def critique_ratchet_findings(root):
     """The lax-TC ratchet for the critique loop (WI-068; warn-first, the same
     no-validation-delta idea as `staged_findings`). When a staged commit **closes**
-    a WI whose `SR-Refs` include a `Verification=Critique` SR, the latest CRITIQUE
+    a WI whose `SR-Refs` include a `VerificationMethod=Critique` SR, the latest CRITIQUE
     verdict is CHANGES-REQUESTED with findings, yet the staged set touches **neither**
     the TC registry, the tests dir, **nor** a `docs/rubrics/` file, the fix landed in
     the artifact but not the validation chain — so the same 'shipped it because
@@ -3007,7 +3008,7 @@ def critique_ratchet_findings(root):
     ]
 
 
-# The render surface a perceptual (Verification=Critique) SR is judged against —
+# The render surface a perceptual (VerificationMethod=Critique) SR is judged against —
 # WI-243. The dashboard facade and its direct render inputs (located beside this
 # checker so the paths resolve under `--root` in this repo and a downstream
 # scaffold alike) plus the optional meta-only render recipe. A change to any
@@ -3085,7 +3086,7 @@ def _critique_git_times(root, names):
     the log walks newest-first, so the FIRST sighting of a path is its last-touched
     time — what `_path_commit_time` answers per path. {} on any git failure, the
     silent degrade every git call here makes. Batched rather than one
-    `_path_commit_time` per file because this runs at the commit bar and the
+    `_path_commit_time` per file because this runs at the commit checks and the
     reviews dir only grows: 20 critiques cost ~1.3s in per-path subprocesses
     here, ~0.1s as one call, whatever the count."""
     out = _git(root, ["log", "--format=%ct", "--name-only", "--", REVIEWS_DIR])
@@ -3152,20 +3153,20 @@ def _latest_critique_file(root):
 
 def critique_staleness_findings(root):
     """The perceptual re-fire finding (WI-243; git-time staleness like
-    `backlog_staleness_findings`). A `Verification=Critique` SR is judged by a
+    `backlog_staleness_findings`). A `VerificationMethod=Critique` SR is judged by a
     human/critic look recorded in `docs/reviews/*-CRITIQUE.md`, and that verdict
     never re-fires on its own — so once the dashboard *render surface* changes,
-    the approval stamp is judging an older render. When a declared render-surface
+    the acceptance stamp is judging an older render. When a declared render-surface
     path last changed STRICTLY AFTER the latest CRITIQUE evidence, flag that the perceptual
     gate is stale and the dashboard critique should be re-run against the current
     render. Returns finding strings ([] when not applicable).
 
-    TIERED severity (set by the caller): WARN at the commit bar, ERROR under
-    `--strict` (the DevStg-Impl gate) — fail-closed per the owner's 2026-07-20 ruling, a
-    stale render surface cannot reach a green gate; main() routes it through the
+    TIERED severity (set by the caller): WARN at the commit checks, ERROR under
+    `--strict` (the DevStg-Impl gate) — fail-closed per the operator's 2026-07-20 ruling, a
+    stale render surface cannot reach a passing gate; main() routes it through the
     strict-promotable findings loop (the R-E warn tier). Silent off-git
     and vacuous when the repo declares no perceptual SR (so a downstream repo
-    without a `Verification=Critique` SR — none ship — pays nothing at either
+    without a `VerificationMethod=Critique` SR — none ship — pays nothing at either
     tier), carries no CRITIQUE evidence, or exposes no locatable render surface.
     Bounded cost: one `git log -1` for the evidence plus one per declared
     render-surface path. By construction (git-time, not a render diff) it fires
@@ -3194,7 +3195,7 @@ def critique_staleness_findings(root):
     if not newer:
         return []
     return [
-        "{} (Verification=Critique) last judged by {} but the dashboard render "
+        "{} (VerificationMethod=Critique) last judged by {} but the dashboard render "
         "surface changed after it ({}) — re-run the dashboard critique against the "
         "current render (the shoot.mjs matrix) and record a fresh "
         "docs/reviews/*-CRITIQUE.md".format(
@@ -3203,14 +3204,14 @@ def critique_staleness_findings(root):
     ]
 
 
-# --- A loop commit that changed a human-held status (SR-210) -----------------
-# A changed status on a held rung is supposed to mean a human judged. The one
+# --- A loop commit that changed an operator-held status (SR-210) -----------------
+# A changed status on a held rung is supposed to mean an operator judged. The one
 # observation that would show otherwise is such a change arriving in a commit
 # the LOOP made, and the provenance floor makes every loop commit say so (its
 # `Loop-Session` trailer). So the committed history can falsify the premise
 # rather than the harness trusting it: each loop commit that moved a status
 # its own tree's dial held is one advisory line. Advisory, never the exit code:
-# the change has already landed, and what it asks for is a human's look.
+# the change has already landed, and what it asks for is an operator's look.
 POLICY_REL = "docs/process.toml"
 
 
@@ -3257,7 +3258,7 @@ def loop_held_status_findings(root):
         for line in held_status.held_status_lines(dial, moves):
             out.append(
                 "loop commit {} ({!r}, Loop-Session {}) moved {}, a rung its own "
-                "approval level ({}) holds for a human".format(
+                "acceptance level ({}) holds for an operator".format(
                     sha[:10], subject, session, line, dial
                 )
             )
@@ -3300,7 +3301,7 @@ def main():
     # warns, in the order they print (the count is deliberately not stated — it
     # went stale twice): the follow-up-on-a-done-SR ratchet, the critique-loop
     # ratchet (a WI closing under a CHANGES-REQUESTED critique without hardening
-    # the chain), the WI-316 amend-without-flip warn (attested spine prose
+    # the chain), the WI-316 amend-without-flip warn (accepted spine prose
     # changed without a fresh blessing) and its WI-484 Hat-Refs arm (the
     # substance moved, the perspective record did not), the mirror invariant
     # below, and the WI-352 close-time
@@ -3319,7 +3320,7 @@ def main():
             # neighbour check.
             + staged_hat_refs_findings(root)
             # The MIRROR INVARIANT (snapshot design §F3): a commit that touches
-            # the `last_approved` snapshot must leave every touched file
+            # the `last_accepted` snapshot must leave every touched file
             # byte-identical to its live counterpart. This is the replacement
             # for the co-mutation guard D-1's anchor half would have needed —
             # and it is a stronger rule, because it makes "the only way to write
@@ -3347,9 +3348,12 @@ def main():
     # PROMOTABLE half of seam-TC coverage is `if_tc_coverage_findings`, below,
     # deliberately kept out of this loop.
     # ...and the loop-commit held-status report (SR-210) rides it too: the
-    # change has already landed, so it asks for a human's look, never a red.
+    # change has already landed, so it asks for an operator's look, never a failure.
+    # ...and the count of IF rows the definition gate below passed unjudged
+    # rides it too: it names a vacuous pass, and changes no verdict.
     for w in (
         interface_findings(root)
+        + unchecked_contract_rows(root)
         + cross_component_advisories(root)
         + if_tc_allow_hygiene_findings(root)
         + codesymbol_crosscheck_findings(root)
@@ -3360,10 +3364,10 @@ def main():
     ):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
-    # Approval-brief hierarchy-view lint (WI-146b) — warn-first prose-surface
-    # check: a `[phase]-[g1|g2]` approval brief should link the generated
-    # batch-scoped hierarchy view. Vacuous without an approval brief.
-    for w in approval_brief_findings(root):
+    # Acceptance-brief hierarchy-view lint (WI-146b) — warn-first prose-surface
+    # check: a `[phase]-[g1|g2]` acceptance brief should link the generated
+    # batch-scoped hierarchy view. Vacuous without an acceptance brief.
+    for w in acceptance_brief_findings(root):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     # How-SW top-view right-sizing (WI-073/FB5) — WARN plain, ERROR under --strict
@@ -3486,13 +3490,13 @@ def main():
     # WON'T-BUILD) predecessor it can never see satisfied. WARN plain, ERROR under
     # --strict — same warn-tier as R-E (no new branch in main).
     findings.extend(("dead-dep", False, msg) for msg in dead_dependency_findings(wis))
-    # Perceptual re-fire (WI-243) — a Verification=Critique SR whose latest CRITIQUE
+    # Perceptual re-fire (WI-243) — a VerificationMethod=Critique SR whose latest CRITIQUE
     # evidence predates a dashboard render-surface change is judging an older render.
-    # WARN at the commit bar; **fail-closed under --strict** (the DevStg-Impl gate) per the
-    # owner's 2026-07-20 ruling — a stale render surface cannot reach a green gate.
+    # WARN at the commit checks; **fail-closed under --strict** (the DevStg-Impl gate) per the
+    # operator's 2026-07-20 ruling — a stale render surface cannot reach a passing gate.
     # hard=False rides the same warn-plain / error-under-strict tier as R-E,
     # so main() gains no branch. Vacuous when no perceptual SR / evidence / render
-    # surface (a downstream repo without a Verification=Critique SR — none ship —
+    # surface (a downstream repo without a VerificationMethod=Critique SR — none ship —
     # pays nothing), silent off-git, and opt-out via [checks] trajectory_check.
     findings.extend(
         ("perceptual-stale", False, msg) for msg in critique_staleness_findings(root)
@@ -3513,14 +3517,14 @@ def main():
     # --strict, the same warn tier as R-E/R-F, EXCEPT the trailer signal.
     #
     # DEVIATION from the WI row, which asked for the whole reconciler at that
-    # tier, taken on the row's OWN argument: it rules that Status stays an
-    # attestation precisely because a trailer means "a commit claims this WI",
+    # tier, taken on the row's OWN argument: it rules that Status stays a
+    # claim precisely because a trailer means "a commit claims this WI",
     # not "the work is right", and cites WI-336 — code landed, row correctly left
     # `queued`, a review having refuted three of its claims. Under an
     # error-under-strict trailer rule that legitimate state blocks the DevStg-Impl gate
     # for as long as the rework takes, and the only ways out are to close the row
     # falsely or to carry an untracked exception. Spec evidence is different in
-    # kind: a ticked box IS an attestation, so its disagreement with the row is a
+    # kind: a ticked box IS a claim, so its disagreement with the row is a
     # contradiction between two homes for one fact and belongs at the gate.
     warn_only, gated = tier_completion_findings(
         completion_reconciliation_findings(root, wis)
