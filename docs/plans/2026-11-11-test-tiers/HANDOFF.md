@@ -2561,11 +2561,12 @@ migrator's rows once it is complete). Nothing blocks the runbook now.
 
 | | Blocks | Until then |
 |---|---|---|
-| §4.5.2 to §4.5.7 | those renames, in §10.7 item 1 | skipped; nothing else depends on them |
-| D18's act itself: the operator accepts SR-247, LLR-369, TC-427 and IF-312, and re-accepts the sixteen amended rows (§12.6, 2026-11-17) | the live stage returning to `DevStg-Impl` | the four rows stay `Drafted`; never run `migrate_vocabulary.py` without `--check` |
-| Fold SR-015 into SR-157 (§12.6, 2026-11-18) | nothing | SR-015, LLR-015 and TC-015 stay as they are |
-| A work item for the unstated premises of SR-033, SR-223 and SR-225 (§12.6, 2026-11-18) | nothing; the assumption gate is off here | unfiled |
+| D18's act itself: the operator accepts SR-247, LLR-369, TC-427 and IF-312, and re-accepts the sixteen amended rows (§12.6, 2026-11-17) and the SR-015 fold's three (SR-157, LLR-005, TC-005; §12.6, 2026-11-18). All but IF-312 are on `docs/open-items.html` §2, eleven chain cards | the live stage returning to `DevStg-Impl` | the four rows stay `Drafted`; never run `migrate_vocabulary.py` without `--check` |
 | §7, the order for reaching other repositories | nothing in this runbook | |
+
+§4.5.2 to §4.5.7 were ruled and done on 2026-11-16 (§12.2, §9.11). The SR-015
+fold was ruled and applied on 2026-11-18, and the premises of SR-033, SR-223
+and SR-225 were filed as WI-1008 (§12.6).
 
 **Needs no answer unless the operator disagrees:** the reading of "operator
 time" in §9.1.
@@ -3123,3 +3124,33 @@ list is fixed unless §12.6 says so.
     need implies none of these: 23 of 31 needs have more than one
     requirement, and 18 are served both by a waived row and by a row
     citing an assumption.
+- **2026-11-18, the operator's rulings on the joint read, applied.** On
+  `maint/vocabulary`:
+  - `a02818e68`, **SR-015 folded into SR-157.** `retire.py` retired SR-015
+    (successor SR-157), LLR-015 (LLR-005) and TC-015 (TC-005), each with its
+    record under `docs/log.d/retired/`. TC-015 was retired rather than
+    re-pointed: TC-005's method already names the PB back-link findings, so
+    it took TC-015's evidence, `tests/test_perf_budgets.py`, and the file's
+    `Implements:` tag. SR-157's rationale and LLR-005's detail drop the
+    "deliberate pair" sentence naming SR-015. Three references in code
+    follow: `trace.analyze`'s tag, the PB template's entry in
+    `kitlib/bootstrap_manifest.py` (now SR-157) and one docstring example in
+    `acceptance_record.py`. `components.derived.toml` regenerated; it was
+    also stale from SR-247 and IF-312. The four lints are clean; 15 touched
+    and standing modules, 262 passed, 1 skipped.
+  - `7734ee09a`, **WI-1008** (SR-033, SR-223 and SR-225 each cite an
+    assumption or carry a waiver for the premise no row states) and
+    **WI-1009** (the operator: the "Decisions to review" section, 1,144
+    cards, is too much for `docs/open-items.html`; SR-225's listing moves to
+    a surface of its own, recommended `docs/decisions.html` with a count
+    line, chosen at the scope critique). Both queued, both `spine`.
+  - `b8a51b74d`, the page regenerated. **The act now takes three more
+    re-accepts: SR-157, LLR-005 and TC-005**, on SR-157's card. The
+    retirements have no card of their own: `reaccept_model` builds a card
+    only for an SR that still exists, so a deleted SR's chain reaches the
+    page only through the text it leaves behind (SR-157's struck sentence).
+    The records and `a02818e68`'s diff hold the three rows. Copying the three
+    spine registries at the act drops them from the record.
+  - **The delegated decisions already have a home:** each run's record,
+    `docs/decisions/<run>.toml` (132 files, 1,194 entries). The page only
+    renders them through `pending.decisions_to_review`.
