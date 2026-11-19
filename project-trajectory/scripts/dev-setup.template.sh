@@ -173,7 +173,9 @@ offer_gh() {
     return 0
   fi
   printf '  Install the GitHub CLI (optional) via "%s"? [y/N] ' "$GH_INSTALL"
-  read -r ans || ans=""
+  # IFS= keeps a leading blank, so " y" does not begin with y and installs
+  # nothing, as PowerShell's anchored match reads it.
+  IFS= read -r ans || ans=""
   case "$ans" in
     [Yy]*)
       # Unquoted on purpose: $GH_INSTALL is a multi-word command to be word-split.

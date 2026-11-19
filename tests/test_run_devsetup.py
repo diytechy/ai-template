@@ -2152,13 +2152,20 @@ def test_the_check_reports_gh_as_optional_with_its_install_and_sign_in(
 @pytest.mark.parametrize("tool", list(GH_TOOLS))
 def test_install_offers_gh_and_runs_it_only_on_a_yes(tmp_path, tool):
     """This repository's --install, on each platform's package manager: a yes
-    runs it once with the install's arguments; a no, an empty line and closed
-    input run nothing. The exit status is 0 each time.
+    runs it once with the install's arguments; a no, an empty line, closed
+    input and a y after a leading space (an answer that does not begin with
+    y) run nothing. The exit status is 0 each time.
 
     Implements: TC-434
     """
     platform, installs = GH_TOOLS[tool]
-    answers = {"yes": "n\ny\n", "no": "n\nn\n", "empty": "n\n\n", "closed": None}
+    answers = {
+        "yes": "n\ny\n",
+        "no": "n\nn\n",
+        "empty": "n\n\n",
+        "closed": None,
+        "leading-space": "n\n y\n",
+    }
     for answer, stdin in answers.items():
         where = tmp_path / answer
         proc = _gh_sh(
@@ -2230,12 +2237,18 @@ def test_at_a_terminal_the_templates_install_tier_installs_gh_only_on_a_yes(
     tmp_path,
 ):
     """The template's --baseline at a terminal: the offer is asked, a yes runs
-    the package manager once with the install's arguments, a no runs nothing.
+    the package manager once with the install's arguments, a no and a y after
+    a leading space run nothing.
 
     Implements: TC-434
     """
-    for answer, installs in ((b"n\n", ""), (b"y\n", "install gh")):
-        where = tmp_path / answer.decode().strip()
+    answers = (
+        ("no", b"n\n", ""),
+        ("leading-space", b" y\n", ""),
+        ("yes", b"y\n", "install gh"),
+    )
+    for name, answer, installs in answers:
+        where = tmp_path / name
         root = _gh_tree(where, "template", "dev-setup.sh")
         path = _gh_stand_ins(where, "Darwin", tools=["brew"])
         code, out = _at_a_terminal(root, ["--baseline"], answer + b"n\n" * 20, path)
@@ -2333,18 +2346,34 @@ def test_the_powershell_check_reports_gh_as_optional_with_winget_and_sign_in(
 @pytest.mark.skipif(not WINDOWS, reason="the PowerShell dev-setup on Windows")
 @pytest.mark.parametrize(
     "arm",
-    ["yes", "no", "empty", "closed", "no winget", "failed install", "present"],
+    [
+        "yes",
+        "no",
+        "empty",
+        "closed",
+        "leading-space",
+        "no winget",
+        "failed install",
+        "present",
+    ],
 )
 def test_powershell_install_offers_gh_and_runs_winget_only_on_a_yes(tmp_path, arm):
     """This repository's -Install: a yes runs winget once with the install's
-    arguments; a no, an empty line and closed input run nothing; with no
+    arguments; a no, an empty line, closed input and a y after a leading
+    space run nothing; with no
     winget the manual command is printed and nothing asked; a failed winget
     is followed by a warning and the manual command; a present gh is not
     offered. The exit status is 0 each time.
 
     Implements: TC-434
     """
-    stdin = {"yes": "n\ny\n", "no": "n\nn\n", "empty": "n\n\n", "closed": None}
+    stdin = {
+        "yes": "n\ny\n",
+        "no": "n\nn\n",
+        "empty": "n\n\n",
+        "closed": None,
+        "leading-space": "n\n y\n",
+    }
     winget = {"no winget": None, "failed install": "fails"}.get(arm, "ok")
     proc = _gh_ps1(
         tmp_path,
@@ -2367,7 +2396,7 @@ def test_powershell_install_offers_gh_and_runs_winget_only_on_a_yes(tmp_path, ar
     assert offered == (arm != "present"), out
     if arm == "yes":
         assert "[ok] gh installed" in out, out
-    elif arm in ("no", "empty", "closed"):
+    elif arm in ("no", "empty", "closed", "leading-space"):
         assert "Skipped gh" in out, out
     elif arm == "no winget":
         skip = [x for x in out.splitlines() if "[skip] gh" in x]
