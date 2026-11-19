@@ -94,6 +94,7 @@ __all__ = [
     "evidence_items",
     "resolve_modules",
     "module_tests",
+    "module_components",
     "root_prefix",
     "declared_roots",
     "llrs_under",
@@ -920,6 +921,47 @@ def module_tests(llrs, tcs, module, test_root="tests"):
             if path.startswith(prefix)
         }
     )
+
+
+def module_components(llrs):
+    """`{normalized module key: {CMP ids}}` from the design rows' `Component`
+    tags joined on `LLR.Module`: the membership rule, a module belongs to the
+    component(s) its design rows are tagged with.
+
+    THE JOIN'S ONE HOME (WI-1005). `gen_components` and `trajectory_arch` each
+    held a copy, and the copies disagreed on three inputs. Each now has the
+    narrower answer, the checker's: a `-000` example row and a row whose id does
+    not start with `LLR-` make no membership, and a `Component` token that does
+    not start with `CMP-` is dropped. A placeholder, or a token that cannot name
+    a component, must not make a membership the gate-bearing rules read. A
+    registry `trace.py --strict` passes holds none of the three, apart from
+    example rows.
+
+    `Module` is a joined list, split here like every other reader of the cell
+    (WI-429), and each part goes through `norm_module`, so the two spellings a
+    seam and a design row use meet on one key. The tags are not filtered
+    against the component registry: each caller intersects with the ids it
+    declares, and a tag naming no row is `trace.py`'s finding.
+
+    Implements: SR-159, LLR-373
+
+    Contract:
+      Inputs:  llrs: iterable of LLR row mappings, as the carrier loads them
+      Outputs: dict[str, set[str]] — each module key with a kept tag
+    """
+    out = {}
+    for row in llrs:
+        lid = (row.get("LLR-ID") or "").strip()
+        if not lid.startswith("LLR-") or is_example(lid):
+            continue
+        tags = {t for t in refs(row.get("Component")) if t.startswith("CMP-")}
+        if not tags:
+            continue
+        for part in refs(row.get("Module")):
+            key = norm_module(part)
+            if key:
+                out.setdefault(key, set()).update(tags)
+    return out
 
 
 def root_prefix(root):

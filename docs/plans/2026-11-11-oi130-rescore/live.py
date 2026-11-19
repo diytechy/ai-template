@@ -9,7 +9,7 @@ sys.path.insert(0, str(root / "project-trajectory/scripts"))
 import trajectory_arch as ta
 
 names, contracts, imports = ta.arch_inventory(root)
-raw = ta.module_components(root)
+raw = ta._kitspine.module_components(ta.spine_carrier.load(root / ta.LLR_CSV, "LLR-ID"))  # one home since WI-1005
 kernel = ta.read_kernel_modules(root)
 inv = {}
 for m in names:

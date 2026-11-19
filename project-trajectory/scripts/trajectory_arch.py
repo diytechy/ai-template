@@ -1240,37 +1240,6 @@ def _cmp_roots(cmps):
     return roots
 
 
-def module_components(root):
-    """`{normalized module key: set(real-looking CMP ids)}` from the LLR
-    `Component` tags joined on `LLR.Module` — the AXES membership rule (a module
-    belongs to the CMP(s) its LLRs are tagged with). Empty when the LLR registry
-    has no `Component` column (legacy) or no tags, so it costs a non-adopter
-    nothing. The tag set is left unfiltered against the CMP registry here; the
-    caller intersects with the real ids (a phantom tag is trace.py's finding)."""
-    out = {}
-    for r in spine_carrier.load(root / LLR_CSV, "LLR-ID"):
-        lid = (r.get("LLR-ID") or "").strip()
-        if not lid.startswith("LLR-") or lid.endswith("-000"):
-            continue
-        tags = {t for t in _split_refs(r.get("Component", "")) if t.startswith("CMP-")}
-        if not tags:
-            continue
-        # `Module` is a `;`-JOINED LIST, and this reader has to split it (WI-429).
-        # It did not, and the bug is the D-6 failure mode exactly: an unsplit
-        # `a.py;b.py` normalized to one nonsense key, so a row spanning two
-        # modules tagged NEITHER of them — silently, because a membership map
-        # that is missing an entry reads identically to a module nobody tagged.
-        # The kit's other readers of this cell (`check_doc_refs.SPINE_CELLS`,
-        # trace's back-link resolution) already split it; this one had not
-        # learned the shape, and 2 live rows were losing their tags before the
-        # WI-429 repair widened the same cells to 13.
-        for part in _split_refs(r.get("Module", "")):
-            key = _norm_module(part)
-            if key:
-                out.setdefault(key, set()).update(tags)
-    return out
-
-
 def component_top_view(root):
     """The How-SW containment derivation (WI-073), shared by the right-sizing
     rule and the dashboard render so the item count and the picture never
@@ -1306,7 +1275,7 @@ def component_top_view(root):
     for cid in children_of:
         children_of[cid] = sorted(children_of[cid])
 
-    raw = module_components(root)
+    raw = _kitspine.module_components(spine_carrier.load(root / LLR_CSV, "LLR-ID"))
     module_cmps, module_roots = {}, {}
     top_roots, uncontained = set(), []
     for n in sorted(inventory):
@@ -1536,7 +1505,7 @@ def _classifiable_edges(root):
     cmp_ids = {c["id"] for c in load_cmps(spine_carrier.load(root / CMP_CSV, "CMP-ID"))}
     if not cmp_ids:
         return
-    raw = module_components(root)
+    raw = _kitspine.module_components(spine_carrier.load(root / LLR_CSV, "LLR-ID"))
     membership = {n: tags & cmp_ids for n, tags in raw.items()}
     # A bare imported stem (`agent_route`) resolves against the inventory's
     # normalized module names (`scripts/agent_route`) by unique-stem match —
@@ -2090,7 +2059,6 @@ __all__ = (
     "tc_tag_findings",
     "load_cmps",
     "_cmp_roots",
-    "module_components",
     "component_top_view",
     "knowledge_packs",
     "_stack_ini_get",

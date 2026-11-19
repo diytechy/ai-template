@@ -345,7 +345,6 @@ codesymbol_crosscheck_findings = _trajectory_arch.codesymbol_crosscheck_findings
 tc_tag_findings = _trajectory_arch.tc_tag_findings
 load_cmps = _trajectory_arch.load_cmps
 _cmp_roots = _trajectory_arch._cmp_roots
-module_components = _trajectory_arch.module_components
 component_top_view = _trajectory_arch.component_top_view
 knowledge_packs = _trajectory_arch.knowledge_packs
 _stack_ini_get = _trajectory_arch._stack_ini_get
