@@ -18,6 +18,11 @@ shipped `project-trajectory/scripts/dev-setup.template.{sh,ps1}`; the
 `.cmd`/`.command` launchers hand their arguments on and are unchanged. Built
 on the maintenance branch `maint/wi-1011`. By commit:
 
+- `85dd1c7ab` (review, Sol): both gh consent reads are `IFS= read -r`, so an
+  answer with a leading blank (` y`) no longer installs; a leading-blank arm
+  joins the `--install`, `-Install` and pseudo-terminal `--baseline` tests
+  (now 32 cases). The plan and the log fragment took Argon's wording fixes in
+  the commit after it.
 - `376edbd80`: the tests' stand-in builder takes an exit status and a list of
   present commands instead of two boolean flags (the readability report's
   flag-axis reading back to 0).

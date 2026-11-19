@@ -17,13 +17,20 @@ the operator's direction, with the commit hooks on.
 - **Offer:** the install operations only (`-Install`/`--install` here; the
   template's baseline and full tiers), through a package manager already on
   the machine, run only on a yes. Here the answer is read as the agent-CLI
-  offers read it; the template asks at an interactive terminal only. No
-  package manager prints the manual command; a failed install warns; no arm
-  changes an exit status. The bare run reports the line and never offers it.
+  offers read it; the template asks at an interactive terminal only. Only an
+  answer beginning `y` or `Y` installs, so ` y` with a leading blank does not.
+  With no package manager it prints the manual command; a failed install
+  warns; no arm changes an exit status. The bare run reports the line and
+  never offers it.
 - **Rows:** LLR-372, TC-433, TC-434, all Drafted, under SR-032.
-- **Tests:** 11 tests (31 cases) in `tests/test_run_devsetup.py`, each on a
+- **Tests:** 11 tests (32 cases) in `tests/test_run_devsetup.py`, each on a
   PATH of stand-ins only, so a host's `gh` never shows through and nothing is
-  installed. On Windows 28 pass and the 3 pseudo-terminal cases skip; under
+  installed. On Windows 29 pass and the 3 pseudo-terminal cases skip; under
   WSL Ubuntu the 18 POSIX cases pass.
+- **Review fixes:** Sol found that `read -r` stripped a leading blank, so
+  ` y` installed; both gh reads are now `IFS= read -r`, with a regression in
+  each family. The other consent reads in the `.sh` scripts share the
+  stripping and are unchanged. Argon's wording fixes went to this fragment
+  and the plan.
 - **RESYNC:** one entry; nothing forced, since dev-setup is the adopter's
   after scaffold.

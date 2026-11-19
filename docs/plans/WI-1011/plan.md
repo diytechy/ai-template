@@ -38,7 +38,7 @@ Every hint ends with the sign-in step, `gh auth login`.
 | `gh` already on PATH | no offer; the report reads `[ok]` |
 | no package manager from the table | no prompt; `[skip]` with the manual command |
 | an answer beginning `y`/`Y` | the install command runs once |
-| `n`, any other answer, an empty line, closed input | nothing runs; the skip line names the manual command |
+| `n`, any other answer (` y`, with its leading blank, included), an empty line, closed input | nothing runs; the skip line names the manual command |
 | the install command fails | `[warn]` with the manual command |
 | any of the above | the operation's exit status is unchanged |
 
@@ -76,24 +76,29 @@ TC-433, the report:
 1. This repository's `dev-setup.sh --check` under Darwin, Linux and Git Bash:
    missing names the platform's command and `gh auth login`, marked optional;
    present reads `[ok]`; exit 0.
-2. The template's `dev-setup.sh --check` under Darwin and Linux: the same, and
-   the missing count is the same with and without `gh`.
-3. Both `.ps1` checks on Windows: present and missing, winget's command and
-   `gh auth login`; the template's count is unchanged.
+2. The shipped template's `dev-setup.template.sh --check` (copied into a
+   scratch tree) under Darwin, Linux and Git Bash: the same, and the missing
+   count is the same with and without `gh`.
+3. This repository's `dev-setup.ps1 -Check` and the template's
+   `dev-setup.template.ps1 -Check` on Windows: present and missing, winget's
+   command and `gh auth login`; the template's count is unchanged.
 
 TC-434, the offer:
 
 4. This repository's `dev-setup.sh --install`, per platform and package
    manager (brew on Darwin, apt-get and dnf on Linux, winget under Git Bash):
-   `y` runs the stand-in with the install arguments; `n` and closed input run
-   nothing; exit 0 each time.
-5. The same with no package manager (the `[skip]` line, no prompt) and with a
-   failing one (`[warn]`), exit 0.
-6. This repository's `dev-setup.ps1 -Install` on Windows: `y`, `n`, closed
-   input, no winget, failing winget.
-7. The template's install tier with piped input on both families: nothing is
-   offered or run ("non-interactive"), exit 0. At a pseudo-terminal (POSIX)
-   and at a real console (Windows): `y` installs, `n` does not.
-8. The bare run's readiness operation (`--for-run` / `-ForRun`) at a terminal
-   with `gh` missing and a package manager present: the `gh` line is reported,
-   no `gh` offer is made.
+   `y` runs the stand-in with the install arguments; `n`, an empty line,
+   closed input and ` y` (a leading blank) run nothing; exit 0 each time.
+5. The same with no package manager (the `[skip]` line, no prompt), with a
+   failing one (`[warn]`) and with `gh` present (no offer), exit 0.
+6. This repository's `dev-setup.ps1 -Install` on Windows: `y`, `n`, an empty
+   line, closed input, ` y`, no winget, failing winget, `gh` present.
+7. The template's install tier, `dev-setup.template.sh --baseline` and
+   `dev-setup.template.ps1 -Baseline`, with piped (and, for `.sh`, closed)
+   input: nothing is offered or run ("non-interactive"), exit 0. At a
+   pseudo-terminal (POSIX, `.sh`): `y` installs, `n` and ` y` do not. At a
+   real console (Windows, `.ps1`): `y` installs, `n` does not.
+8. The bare run's readiness operation (`--for-run` / `-ForRun`), both
+   families, at a pseudo-terminal (POSIX, `.sh`) or a real console (Windows,
+   `.ps1`), answering yes throughout, with `gh` missing and a package manager
+   present: the `gh` line is reported, no `gh` offer is made.
