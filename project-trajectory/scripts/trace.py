@@ -2135,8 +2135,10 @@ def schema_findings(label, rows):
         if label == "TC" and not verifies and _tc_verifies_required(r):
             out.append(f"TC {rid} has empty required field Verifies")
         # A TC claiming Automated=Yes must
-        # cite its Evidence (pytest node / path / procedure link) — a
+        # cite its Evidence (the test whose `Implements:` line declares it) — a
         # claimed-automated test with no cited location is a soft false-pass.
+        # A procedure a person carries out is Automated=No, which check_trajectory
+        # does not hold to a declaring test.
         # Conditional on the claim, so it can't live in REQUIRED_FIELDS; a
         # legacy CSV without the column reads as empty and is flagged the same
         # way (the ADOPTING §6 migration adds the column).
@@ -2144,8 +2146,8 @@ def schema_findings(label, rows):
             if not (r.get("Evidence") or "").strip():
                 out.append(
                     f"TC {rid} is Automated=Yes but cites no Evidence "
-                    "(name the test: a pytest node, script path, or "
-                    "procedure-doc link)"
+                    "(name the test whose Implements: line declares it, or "
+                    "set Automated=No for a procedure a person carries out)"
                 )
     return out
 

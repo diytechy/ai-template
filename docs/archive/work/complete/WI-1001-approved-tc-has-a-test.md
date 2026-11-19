@@ -3,13 +3,62 @@ id = "WI-1001"
 title = "An approved automated test case with no tagged test is a strict finding, so an approved chain cannot stand undelivered with every bar green"
 workstream = "process"
 sr_refs = ["SR-157"]
-specref = "docs/specs/WI-1001.md"
+specref = ""
 needs = ["WI-997", "WI-1000", "WI-999"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 +++
+
+## Deliverable
+
+`trajectory_arch.tc_tag_findings` names each `Accepted` or `Founded` test case
+whose `automated` cell reads `Yes` and that no test-file tag declares, as
+`<TC>: no test declares it`: a WARN, and an ERROR under `--strict`, on the
+WI-997 tag findings' own gating, with no new state, dial or allowance. The rule
+is `_undeclared_case_findings`, called once on the rows, the tag map and the
+refused set `tc_tag_findings` already holds, so there is no second reader. The
+repository lands at 0 tag findings with no exception: 373 accepted automated
+cases, each tagged. TC-165 and TC-166 were already declared by WI-1000 and
+WI-999; the one case the rule named was TC-035.
+
+- **Plan** (e2bc36906): [`docs/plans/WI-1001/plan.md`](../../../plans/WI-1001/plan.md).
+- **Regressions** (f3ea686d9): thirteen tests (24 cases) in
+  `tests/test_trajectory_arch.py`, red for the right reason before the code
+  (16 cases, each for the missing finding line). TC-428 pins each row of the
+  ruling's table; TC-429 the sequence, the bootstrapped scaffold included. The
+  untagged half of `test_a_note_only_cell_has_no_part_and_a_tag_on_it_is_a_finding`
+  now asserts its equality reading rather than a clean exit, since that case is
+  this row's finding.
+- **Code** (f886736d8): the helper and its call; the IF-263 contract body names
+  the new output, and `docs/interface-reference.md` is regenerated from it.
+  `trajectory_arch.py` grew 1132 -> 1145 SLOC, its ratchet pin re-stamped.
+- **Registry rows** (3c1279968): TC-035 `automated` `Yes` -> `No` (traced);
+  TC-428 and TC-429 new, `Drafted`, verifying SR-157 and IF-263; IF-263's
+  `data` names the finding (a `Drafted` row); the id watermark at TC 429.
+- **Text and RESYNC** (cdbf1c6fa): `PROCESS.md` §3, the test-file tag paragraph
+  of `docs/registry-machinery-reference.md`, `check_trajectory.py`'s module
+  docstring and `trace.py`'s `Automated=Yes` message; the RESYNC entry "An
+  accepted automated test case needs a test declaring it", a forced migration.
+- **Review fixes** (the commit after this close-out): `PROCESS.md` §3 names
+  both statuses the rule holds, `Accepted` and `Founded`, and the RESYNC
+  entry's adopter-merged files name both remedies, a test case's `evidence`
+  naming the newly tagged test and the test files that gain a tag. `PROCESS.md`
+  grew +217 bytes in all, re-stamped in `byte-budget-guard`.
+
+Left undone:
+
+- **The review bar.** Built on the maintenance branch `maint/wi-1001`, outside
+  the lane workflow: no claim and no lane review rounds. The parent session
+  reviews the diff and merges it.
+- **TC-035's observation cells.** As an `automated = "No"` case it now reads as
+  an observation case, and `trace.py` gives two warn-only advisories (no
+  `inputs`, no `max_age`). Those are accepted cells, so declaring them owes a
+  sitting; the Done-when asks only for the traced cell.
+- **No LLR states the rule.** TC-428 and TC-429 verify SR-157 directly, whose
+  acceptance takes a rule added at its declaration site into its scope. Whether
+  LLR-366 is amended, or an LLR minted, is the operator's call.
 
 ## Context
 
@@ -39,35 +88,37 @@ added.
 
 ## Done-when
 
-- [ ] An Approved TC with `automated = "Yes"` and no test declaring it is a
+- [x] An Approved TC with `automated = "Yes"` and no test declaring it is a
       WARN, and an ERROR under `--strict`, reading `<TC>: no test declares
       it`, by the ruling in `## Trust`.
-- [ ] Severity follows the sequence in `## Trust`, reusing the WI-997
+- [x] Severity follows the sequence in `## Trust`, reusing the WI-997
       finding's gating: no new state, dial or allowance.
-- [ ] TC-035's `automated` cell reads `No`. It is the Analysis case over
+- [x] TC-035's `automated` cell reads `No`. It is the Analysis case over
       SR-114, its method is reading the CI matrix result, and no test can
       declare it. `automated` is a traced cell, so this owes no sitting.
-- [ ] It lands green on trunk: 0 findings, with no exception. TC-165 and
+- [x] It lands green on trunk: 0 findings, with no exception. TC-165 and
       TC-166 each have a declared test or have retired, through WI-1000 and
       WI-999.
-- [ ] The text that reads otherwise changes with it: `PROCESS.md` §3, the
+- [x] The text that reads otherwise changes with it: `PROCESS.md` §3, the
       test-file tag paragraph of `docs/registry-machinery-reference.md`, the
       module docstring of `check_trajectory.py`, and `trace.py`'s
       `Automated=Yes` schema message, which offers a script path or a
       procedure link.
-- [ ] Regressions name each arm. Temporal arms: a Drafted case holding the
+- [x] Regressions name each arm. Temporal arms: a Drafted case holding the
       `(owed by the tests commit)` note reads no finding; a case tagged while
       Drafted stays clean when it flips to Approved; an Approved case with no
       tag warns in a plain run and errors under `--strict`; and in a
       bootstrapped scaffold the same case warns and exits 0 at `DevStg-Tests`,
       fails at `DevStg-Impl`, and is clean once tagged. Input arms: each row
       of the ruling's table in `## Trust`.
-- [ ] RESYNC entry. The finding reaches adopters through the kit-owned
+- [x] RESYNC entry. The finding reaches adopters through the kit-owned
       `scripts/trajectory_arch.py`, so the entry is owed and is a forced
       migration, past the earlier entry's "no second one follows". It states
       the sequence in `## Trust`, and what to do with each case the finding
       names: tag a test, or set `automated = "No"` on a human procedure.
-- [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
+- [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B). Open: on
+      this maintenance branch the review is the parent session's, which
+      runs after the build.
 
 ## Trust
 

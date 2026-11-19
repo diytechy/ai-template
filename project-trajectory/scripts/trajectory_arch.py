@@ -13,9 +13,10 @@ of record in docs/requirements/interfaces.toml).
 Contract IF-263: ``check_trajectory`` imports and re-exports this module's
 architecture rule surface. Inputs are a repository root, the spine/config
 files beneath it and, for `tc_tag_findings`, the test files under the declared
-tests root, whose tags it holds equal to the TC rows' `Evidence` cells; outputs
-are normalized inventories or finding strings. The module performs no writes and
-exposes no command-line entry point.
+tests root, whose tags it holds equal to the TC rows' `Evidence` cells and
+requires of each accepted automated TC; outputs are normalized inventories or
+finding strings. The module performs no writes and exposes no command-line entry
+point.
 """
 
 import ast
@@ -1126,11 +1127,37 @@ def _tag_evidence_findings(rows, tags, refused, tests_dir):
     return ["{}: {}: {}".format(tc, kind, n) for tc, n, kind in sorted(found)]
 
 
+def _undeclared_case_findings(rows, tags, refused):
+    """`<TC>: no test declares it` for each accepted or founded case whose
+    `Automated` cell reads `yes`, stripped and case-folded as `trace.py` reads
+    it, that no tag in `tags` names, sorted by TC.
+
+    The cell decides nothing else: a note, no cell, a part outside the tests
+    root and a path the tree lacks all read the same. A case with an `Evidence`
+    part in a file `refused` as unreadable adds nothing, since that file's
+    refusal is already a finding. It reads declarations only, so a tagged test
+    still failing is clean here. It stays when the equality check retires.
+
+    Implements: SR-157"""
+    found = []
+    for row in rows:
+        tc = (row.get("TC-ID") or "").strip()
+        owed = _kitspine.is_accepted(row) or _kitspine.is_founded(row)
+        owed = owed and (row.get("Automated") or "").strip().casefold() == "yes"
+        if not owed or tags.get(tc):
+            continue
+        parts = _kitspine.evidence_items(row.get("Evidence"))
+        if not any(path in refused for path, _node in parts):
+            found.append(tc)
+    return ["{}: no test declares it".format(tc) for tc in sorted(found)]
+
+
 def tc_tag_findings(root, tests_dir):
     """Each refused test-file tag under `tests_dir`, the declared tests root, as
     a `<file>:<line>: <shape>: <detail>` string, then each difference between the
-    tags and the `Evidence` cells (`_tag_evidence_findings`). `check_trajectory`
-    owns the declared-root read, so the value is handed in.
+    tags and the `Evidence` cells (`_tag_evidence_findings`), then each accepted
+    automated case no tag declares (`_undeclared_case_findings`).
+    `check_trajectory` owns the declared-root read, so the value is handed in.
 
     `[]` (vacuous) with no TC registry, and with no tests root, which
     `read_test_tags` walks as no files and the comparison must not read as every
@@ -1138,7 +1165,8 @@ def tc_tag_findings(root, tests_dir):
     reads test files, not the source surface. A registry holding only `-000` rows
     is not vacuous either, so every tag there is unknown. No `hasattr` guard,
     unlike this module's other `gen_arch_map` reads: a stale sibling must fail
-    loudly, since "no tags" is the reading this rule refuses.
+    loudly, since "no tags" is the reading this rule refuses. A placeholder row is
+    not loaded, so it owes no declaration.
 
     Implements: SR-157, LLR-365, LLR-366"""
     if gen_arch_map is None or spine_carrier.resolve(root / TC_CSV) is None:
@@ -1153,6 +1181,7 @@ def tc_tag_findings(root, tests_dir):
     if (root / tests_dir).is_dir():
         refused = {f["file"] for f in findings if f["shape"] == "unreadable"}
         lines += _tag_evidence_findings(rows, tags, refused, tests_dir)
+        lines += _undeclared_case_findings(rows, tags, refused)
     return lines
 
 
