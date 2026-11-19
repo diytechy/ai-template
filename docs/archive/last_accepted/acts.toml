@@ -1122,3 +1122,10 @@ date = "2026-11-16"
 accepted = []
 reaccepted = ["CMP-006", "CMP-007", "CMP-008", "CMP-009"]
 copied = ["docs/requirements/components.toml"]
+
+[[act]]
+seq = 183
+date = "2026-11-18"
+accepted = ["IF-312", "LLR-369", "SR-247", "TC-427"]
+reaccepted = ["LLR-005", "LLR-015", "LLR-038", "LLR-155", "LLR-156", "LLR-172", "LLR-227", "LLR-242", "LLR-246", "SR-015", "SR-139", "SR-157", "SR-195", "SR-205", "TC-005", "TC-015", "TC-150", "TC-151", "TC-152", "TC-166", "TC-223", "TC-241"]
+copied = ["docs/requirements/interfaces.toml", "docs/requirements/low-level-requirements.toml", "docs/requirements/system-requirements.toml", "docs/test/test-cases.toml"]

@@ -2828,6 +2828,6 @@ requestors = ["scripts/check_vocab"]
 channel = "call"
 data = "spellings_owed(root) -> one line per value stored in an earlier spelling and per file that cannot be rewritten safely, the record's copies left out; writes nothing"
 version = "v1"
-status = "Drafted"
+status = "Accepted"
 component = "CMP-006"
 notes = "The requestor reports each line unchanged as a finding at its own severity and adds the fix, running the migrator."
