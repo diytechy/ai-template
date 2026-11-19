@@ -2562,7 +2562,9 @@ migrator's rows once it is complete). Nothing blocks the runbook now.
 | | Blocks | Until then |
 |---|---|---|
 | §4.5.2 to §4.5.7 | those renames, in §10.7 item 1 | skipped; nothing else depends on them |
-| D18's act itself: the operator reads and accepts SR-247, LLR-369, TC-427 | the live stage returning to `DevStg-Impl` | the rows stay `Drafted` until the migrator is complete |
+| D18's act itself: the operator accepts SR-247, LLR-369, TC-427 and IF-312, and re-accepts the sixteen amended rows (§12.6, 2026-11-17) | the live stage returning to `DevStg-Impl` | the four rows stay `Drafted`; never run `migrate_vocabulary.py` without `--check` |
+| Fold SR-015 into SR-157 (§12.6, 2026-11-18) | nothing | SR-015, LLR-015 and TC-015 stay as they are |
+| A work item for the unstated premises of SR-033, SR-223 and SR-225 (§12.6, 2026-11-18) | nothing; the assumption gate is off here | unfiled |
 | §7, the order for reaching other repositories | nothing in this runbook | |
 
 **Needs no answer unless the operator disagrees:** the reading of "operator
@@ -3067,7 +3069,8 @@ list is fixed unless §12.6 says so.
   migrator; SR-205's title already read as drafted. The four lints are
   clean; 30 modules, 1,192 passed, 2 skipped; the open-items view lists 10
   SR chains owing a re-accept, 24 row changes.
-  - **The act (the operator's):** flip SR-247, LLR-369 and TC-427 to
+  - **The act (the operator's):** flip SR-247, LLR-369, TC-427 and IF-312
+    (the detector's interface; the operator said yes to including it) to
     `Accepted` and, in the same commit, `intake.py snapshot --accepts ...
     --reaccepts` the sixteen amended rows (SR-139, SR-195, SR-205, LLR-038,
     LLR-155, LLR-156, LLR-172, LLR-227, LLR-242, LLR-246, TC-150, TC-151,
@@ -3075,3 +3078,48 @@ list is fixed unless §12.6 says so.
     `migrate_vocabulary.py` without `--check`: its record step would write
     the copies without the act. Then the unfiltered suite once, then item 9
     (§6).
+- **2026-11-18, the joint requirements read for orientation; nothing
+  changed.** The operator asked what a joint requirement is and how this
+  repository uses them. Its eight (SR-015, SR-033, SR-111, SR-174, SR-177,
+  SR-223, SR-225, SR-235) were each set beside their siblings' arguments.
+  The read is judgement, not a check:
+  - **Covered by a sibling's argument:** SR-015 (SR-157's waiver; see
+    below), SR-111 (DA-014: adopters read the re-sync entries for the
+    range the stamp shows), SR-174 (DA-013: work reaches the trunk only
+    through the gated path), SR-235 (DA-007: an independent reviewer adds
+    evidence). SR-177 is nearly coincident itself: it is a report straight
+    to the reader, and DA-006 backs the telemetry it reads.
+  - **Resting on a premise no row states:** SR-033 (the person releasing
+    works through the checklist), SR-223 (a model follows the guardrails
+    vendored for it), SR-225 (a delegated run discloses its decisions
+    truthfully and the operator reads what is listed; DA-003 is about the
+    operator's own acceptances). Each needs its own assumption, or a
+    waiver arguing none is needed: authoring on accepted rows, so a work
+    item, not part of the act. No check can tell whether a sibling's
+    argument fits the joint row's part, so the gate's joint skip
+    (`8a2e5c686`) stays as built.
+  - **SR-015 duplicates part of SR-157 (the operator's question; not
+    ruled).** SR-015 says the PB registry keeps every row's Refs
+    resolvable, but nothing keeps it except SR-157's checker, which is
+    why it had to be marked joint. The check is described three times:
+    LLR-015 under SR-015, and LLR-005 and LLR-201
+    (`budget_backlink_findings`) under SR-157. SR-157's rationale already
+    says its rule inventory is what the rows below it decompose; the
+    rows' own justification, "deliberate pair (census F6)", invariant
+    against checker, separates two things only the checker delivers.
+    Recommended: fold SR-015 into SR-157 (retire SR-015 and LLR-015;
+    re-point TC-015, which verifies both, to SR-157 and LLR-005, or retire
+    it if TC-197 already covers the check). These are accepted rows, so
+    it waits on a ruling (§11). The other joint rows were not put to this
+    test.
+  - **Why `coincident` exists (the operator asked).** SR-193's rationale:
+    an empty `da_refs` asserts nothing, so a row citing no assumption
+    cannot be read as one that needs none; the waiver records the
+    judgement that the system's own behaviour is the outcome. It answers
+    a different question from the other two links. LLRs say how a
+    requirement is built. `delivered_with` names the other requirements
+    it needs. Assumptions, or the waiver, say what must be true outside
+    the system for meeting the requirement to meet the need. Sharing a
+    need implies none of these: 23 of 31 needs have more than one
+    requirement, and 18 are served both by a waived row and by a row
+    citing an assumption.
