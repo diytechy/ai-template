@@ -2,9 +2,9 @@
 
 Ruling an open item takes it off the operator's page, so what the ruling asked
 for lives on only where something names the item. A `ruled` item is covered
-when a work item in an open or complete directory names it, when another open
-item names it and is `pending` (or `ruled` and itself covered), or when its
-`follow_up` cell is set. `gen_open_items.py --ruled-cover` reports every other
+when a work item in an open or complete directory names it, when a later open
+item (one with a higher number) names it and is `pending`, or `ruled` and itself
+covered, or when its `follow_up` cell is set. `gen_open_items.py --ruled-cover` reports every other
 ruled item, warn-only, and `run.cmd audit` runs it ahead of the smoke budget.
 
 Every case here builds a temporary repository and reads it in-process.
@@ -124,6 +124,29 @@ def test_a_ruled_citer_that_is_not_covered_hands_nothing_on(tmp_path):
     assert _reported(tmp_path) == ["OI-5", "OI-6"]
 
 
+def test_an_earlier_pending_item_covers_nothing(tmp_path):
+    _registry(
+        tmp_path,
+        [
+            ("OI-5", "pending", {"decision": "OI-6 will follow this."}),
+            ("OI-6", "ruled", {}),
+        ],
+    )
+    assert _reported(tmp_path) == ["OI-6"]
+
+
+def test_an_earlier_covered_ruled_item_hands_nothing_on(tmp_path):
+    _registry(
+        tmp_path,
+        [
+            ("OI-5", "ruled", {"decision": "OI-6 will follow this."}),
+            ("OI-6", "ruled", {}),
+        ],
+    )
+    _work(tmp_path, "WI-1", "OI-5 ruled 2026-01-02: done.")
+    assert _reported(tmp_path) == ["OI-6"]
+
+
 def test_a_cycle_of_ruled_items_with_no_row_is_reported(tmp_path):
     _registry(
         tmp_path,
@@ -133,8 +156,10 @@ def test_a_cycle_of_ruled_items_with_no_row_is_reported(tmp_path):
         ],
     )
     assert _reported(tmp_path) == ["OI-5", "OI-6"]
-    # One covered member covers the whole cycle.
-    _work(tmp_path, "WI-1", "OI-6 ruled 2026-01-02: done.")
+    # Cover runs from the later item to the earlier one, never back.
+    _work(tmp_path, "WI-1", "OI-5 ruled 2026-01-02: done.")
+    assert _reported(tmp_path) == ["OI-6"]
+    _work(tmp_path, "WI-2", "OI-6 ruled 2026-01-02: done.")
     assert _reported(tmp_path) == []
 
 
@@ -151,7 +176,11 @@ def test_a_follow_up_cell_covers_the_item_and_a_blank_one_does_not(tmp_path):
 
 def test_the_token_reads_a_whole_number(tmp_path):
     _registry(tmp_path, [("OI-35", "ruled", {}), ("OI-36", "ruled", {})])
-    _work(tmp_path, "WI-1", "OI-350, XOI-35 and oi-35 are not it; OI-036 is OI-36.")
+    _work(
+        tmp_path,
+        "WI-1",
+        "OI-350, OI-35abc, OI-35_x, XOI-35 and oi-35 are not it; OI-036 is OI-36.",
+    )
     assert _reported(tmp_path) == ["OI-35"]
 
 
@@ -160,11 +189,13 @@ def test_the_historical_cell_and_a_self_mention_cover_nothing(tmp_path):
         tmp_path,
         [
             ("OI-5", "ruled", {"decision": "OI-5 is ruled."}),
-            ("OI-6", "pending", {"wi_refs": ["WI-1", "OI-7"]}),
-            ("OI-7", "ruled", {}),
+            ("OI-6", "ruled", {}),
+            ("OI-7", "pending", {"wi_refs": ["WI-1", "OI-6"]}),
         ],
     )
-    assert _reported(tmp_path) == ["OI-5", "OI-7"]
+    # OI-7 is later than OI-6 and pending: only its cell's being historical
+    # keeps it from covering OI-6.
+    assert _reported(tmp_path) == ["OI-5", "OI-6"]
 
 
 def test_an_example_row_is_never_judged_and_its_work_item_covers_nothing(tmp_path):
@@ -198,8 +229,8 @@ def test_a_status_is_read_trimmed_and_in_lower_case(tmp_path):
         tmp_path,
         [
             ("OI-5", " Ruled ", {}),
-            ("OI-6", "PENDING", {"decision": "Continues OI-7."}),
-            ("OI-7", "ruled", {}),
+            ("OI-6", "ruled", {}),
+            ("OI-7", "PENDING", {"decision": "Continues OI-6."}),
         ],
     )
     assert _reported(tmp_path) == ["OI-5"]

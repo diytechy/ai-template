@@ -11184,8 +11184,8 @@ it: `scripts/gen_open_items.py --ruled-cover` prints one WARN line for each
 
 - a work item in an open directory (draft, queued, active, deferred) or in
   `complete/` whose text names it;
-- another open item that names it and is `pending`, or is `ruled` and itself
-  carried;
+- a later open item (one with a higher number) that names it and is
+  `pending`, or is `ruled` and itself carried;
 - a `follow_up` cell saying what carried the ruling out (a commit, a log
   entry), or `none — <why>` where the ruling asked for no change.
 

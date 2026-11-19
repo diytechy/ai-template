@@ -356,10 +356,10 @@ def _id_number(rid):
 # --- the ruled side: is a ruling's action planned, done or handed on? (WI-1006)
 #
 # An open-item id as text names it: `OI-` and a number, leading zeros ignored,
-# with no letter, digit or underscore before it and no digit after it, the
-# boundary `trace._ruling_names` uses. `OI-035` names OI-35; `OI-350`, `XOI-35`
-# and the lower-case log anchor `oi-35` do not.
-OPEN_ITEM_TOKEN = re.compile(r"(?<![A-Za-z0-9_])OI-0*(\d+)(?![0-9])")
+# with no letter, digit or underscore on either side. `OI-035` names OI-35;
+# `OI-350`, `OI-35abc`, `OI-35_x`, `XOI-35` and the lower-case log anchor
+# `oi-35` do not.
+OPEN_ITEM_TOKEN = re.compile(r"(?<![A-Za-z0-9_])OI-0*(\d+)(?![A-Za-z0-9_])")
 
 # The work-item statuses (the registry's names for the status directories)
 # whose text covers a ruled item: every open state, and `done` (`complete/`).
@@ -381,23 +381,23 @@ def open_item_numbers(text):
 
 def ruled_uncovered(oi_rows, named):
     """`[(OI id, row)]`, in id order, for each real `ruled` open item whose
-    action nothing carries: no work item names it, no other open item that is
-    `pending` (or `ruled` and itself covered) names it, and its `follow_up`
-    cell is blank or absent.
+    action nothing carries: no work item names it, no LATER open item (one
+    with a higher number) that is `pending`, or `ruled` and itself covered,
+    names it, and its `follow_up` cell is blank or absent.
 
     `oi_rows` are open-item rows (`OI-ID`, `Status`, the other cells) and
     `named` maps an item NUMBER to the statuses of the work items whose text
     names it; a status in `COVERING_STATUSES` covers. Statuses are read
     trimmed and in lower case, as `open_items_at` reads them; a `-000` example
     is never judged and never cites, a duplicated id is read once, the last
-    row winning, and an item naming itself does not cover itself. Coverage
-    spreads from each covered ruled item to every ruled item it names, so a
-    cycle with no covered member stays uncovered with no recursion.
+    row winning. Only an earlier item can be handed on, so an item never
+    covers itself or a later one. Coverage spreads from each covered ruled
+    item to every earlier ruled item it names, with no recursion.
 
     Implements: SR-148, LLR-370
     """
     items = _open_item_states(oi_rows)
-    names = {oid: _named_items(oid, row) for oid, (_s, row) in items.items()}
+    names = {oid: _earlier_items(oid, row) for oid, (_s, row) in items.items()}
     covered = _covered_ruled(items, names, named)
     return [
         (oid, row)
@@ -420,22 +420,26 @@ def _open_item_states(oi_rows):
     return out
 
 
-def _named_items(oid, row):
-    """The item numbers a row's cells name, but for its id, the historical
-    `wi_refs` cell and the row's own number.
+def _earlier_items(oid, row):
+    """The numbers of the EARLIER items a row's cells name: those below the
+    row's own number, read from every cell but its id and the historical
+    `wi_refs`. A follow-up is filed after the item it continues, so only an
+    earlier item can be handed on to this one.
 
     Implements: SR-148, LLR-370
     """
     text = "\n".join(
         str(value) for col, value in row.items() if col not in _UNCITING_CELLS
     )
-    return open_item_numbers(text) - {_id_number(oid)}
+    own = _id_number(oid)
+    return {number for number in open_item_numbers(text) if number < own}
 
 
 def _covered_ruled(items, names, named):
     """The numbers of the covered ruled items: those a covering work item names,
-    those with a `follow_up` cell, those a pending item names, and then each
-    ruled item a covered ruled item names, until nothing changes.
+    those with a `follow_up` cell, those a later pending item names, and then
+    each earlier ruled item a covered ruled item names, until nothing changes.
+    `names` holds only earlier items, so both arms read "later" from it.
 
     Implements: SR-148, LLR-370
     """

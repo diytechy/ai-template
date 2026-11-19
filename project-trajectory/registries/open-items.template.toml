@@ -18,10 +18,10 @@
 #
 # WHAT A RULING ASKED FOR STAYS FINDABLE. Ruling an item takes it off
 # docs/open-items.html, so its action must live where a reader can find it:
-# a work item, open or complete, whose text names the item; or another open
-# item that names it and is `pending`, or `ruled` and itself carried. A
-# follow-up item names the item it continues, so that link is read rather
-# than guessed. Where neither exists, because the ruling was carried out in
+# a work item, open or complete, whose text names the item; or a later open
+# item (one with a higher number) that names it and is `pending`, or `ruled`
+# and itself carried. A follow-up item names the item it continues, so that
+# link is read rather than guessed. Where neither exists, because the ruling was carried out in
 # its own commit or asked for no change, the optional `follow_up` cell says
 # so: what carried the ruling out (a commit, a log entry), or `none — <why>`.
 # `scripts/gen_open_items.py --ruled-cover` reports, warn-only, each `ruled`
@@ -125,4 +125,4 @@ recommendation = """Name the option in the FIRST sentence, then at most three bu
 - the sequencing: what this must precede or follow, and why."""
 ruled_date = """the date the ruling landed (ISO), set together with status leaving `pending` — absent while the item is open."""
 ruling_ref = """where the ruling is recorded — the docs/log.md Decisions anchor, or the design doc section that carries it. Absent while the item is open."""
-follow_up = """set on a ruled item only when no work item and no other open item carries what the ruling asked for: what carried it out (a commit, a log entry), or `none — <why>` when the ruling asked for no change. Absent otherwise, and absent while the item is open."""
+follow_up = """set on a ruled item only when no work item and no later open item carries what the ruling asked for: what carried it out (a commit, a log entry), or `none — <why>` when the ruling asked for no change. Absent otherwise, and absent while the item is open."""

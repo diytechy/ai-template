@@ -66,7 +66,7 @@ advisory region retired (concurrency-restructure Phase 5), so it holds in any
 clone.
 
 The ruled side (WI-1006): `--ruled-cover` renders nothing. It prints one WARN
-line per `ruled` item whose action no work item, other open item or
+line per `ruled` item whose action no work item, later open item or
 `follow_up` cell carries (`pending.ruled_cover_lines`), and exits 0 whatever it
 finds. A ruling takes its item off this page, so this is where what fell off
 is told.
@@ -1610,7 +1610,7 @@ def main(argv=None):
     ap.add_argument(
         "--ruled-cover",
         action="store_true",
-        help="report, warn-only, each ruled open item that no work item, other "
+        help="report, warn-only, each ruled open item that no work item, later "
         "open item or `follow_up` cell carries, and exit 0; renders nothing",
     )
     args = ap.parse_args(argv)

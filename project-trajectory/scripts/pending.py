@@ -330,7 +330,7 @@ def ruled_cover(root):
     """`[(OI id, row)]` for each `ruled` open item whose action nothing carries
     (WI-1006): the other half of the decision record the queue projection above
     reads. A ruling takes its item off the operator's page, so what it asked for
-    lives on only where a work item, another open item or the item's own
+    lives on only where a work item, a later open item or the item's own
     `follow_up` cell names it; `kitlib.spine.ruled_uncovered` owns that rule.
 
     None when the repo carries no open-items registry (vacuous); an unreadable
@@ -362,7 +362,7 @@ def ruled_cover_lines(root):
             )
         ]
     lines = [
-        "gen_open_items: WARN - {} ({}): ruled, and no work item, other open "
+        "gen_open_items: WARN - {} ({}): ruled, and no work item, later open "
         "item or `follow_up` cell carries what the ruling asked for — cite it "
         "from the row that does, or set `follow_up` to what carried it out or "
         "`none — <why>`".format(oid, (row.get("Title") or "").strip())

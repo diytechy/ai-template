@@ -440,7 +440,7 @@ Contracts (interfaces): IF-074
 | `--root` | repo root (default: cwd) |
 | `--out` |  |
 | `--check` | exit 1 when the file is stale, writing nothing (the freshness gate; a pure function of the committed tree) |
-| `--ruled-cover` | report, warn-only, each ruled open item that no work item, other open item or `follow_up` cell carries, and exit 0; renders nothing |
+| `--ruled-cover` | report, warn-only, each ruled open item that no work item, later open item or `follow_up` cell carries, and exit 0; renders nothing |
 
 ### `scripts/gen_prompt_catalog`
 _Generate the shipped prompt catalogue — `project-trajectory/prompts/CATALOG.md`._
