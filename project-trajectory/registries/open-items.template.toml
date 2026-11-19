@@ -16,6 +16,15 @@
 # claimed work item cites into the generated docs/open-items.html the operator
 # actually reads.
 #
+# A REPOSITORY CARRYING ONLY THE LIGHT SPINE (its stakeholder needs and this
+# registry, with no work-item registry) has no work item to record that what
+# a ruling asked for was done. There an item may move on from `ruled` to
+# `implemented` once that work is done, so the registry still says which
+# items are closed. A repository on the full spine records completion on its
+# work items and never uses the value. The kit's readers treat every status
+# other than `pending` as settled, so `implemented` changes nothing they do;
+# the placeholder rule below still assumes a work-item registry.
+#
 # WORK ITEMS POINT TO OPEN ITEMS, NEVER THE REVERSE. What an item is, and when
 # one is filed, is process.md §5, "Open items". The held work item
 # cites it in its own `needs` (`needs = ["OI-7"]`) and reads
