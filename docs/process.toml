@@ -277,13 +277,15 @@ subagent_gate = "off"
 # not a STRUCTURE change) and carries the full reasoning.
 backlink_coverage_min = 50
 # The test-first order's declared start (SR-217; the shipped template's comment
-# on this key is the canonical doc). This repo declares the PARENT of the
-# phase-6 acceptance act (cbb6649f, WI-642), so that act is the first commit after
-# the start: the assumption tier's chains it accepted count as accepted after
-# the start, and are judged by the rule they include. Requirements accepted
-# before it predate the rule and are not judged; read whole, the history
-# reports requirements whose code predates the rule.
-test_first_since = "f537fc531dd37b372259ba84f8836a290d1efddb"
+# on this key is the canonical doc). This repo declares the merge that brought
+# the vocabulary cut onto trunk (f6dd5b87a, 2026-11-19; operator ruling of
+# 2026-11-16, HANDOFF section 12.2). Before the cut the record held its
+# acceptances under the earlier spelling, which the current reader does not
+# read, so a requirement accepted before it cannot be dated and would warn
+# forever; from this start on, every acceptance is judged. The previous start,
+# f537fc531d (the parent of the phase-6 acceptance act), judged 63
+# requirements, all clean, before the cut.
+test_first_since = "f6dd5b87a182a3b8fc555796ce845221227d6c64"
 # The assumption gate, OFF here: enabling it is this repository's own act,
 # taken once its requirements' assumptions are accepted (the shipped
 # template's comment on this key is the canonical doc).
