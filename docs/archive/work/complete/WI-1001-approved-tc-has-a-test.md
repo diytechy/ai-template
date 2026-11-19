@@ -41,7 +41,11 @@ WI-999; the one case the rule named was TC-035.
   of `docs/registry-machinery-reference.md`, `check_trajectory.py`'s module
   docstring and `trace.py`'s `Automated=Yes` message; the RESYNC entry "An
   accepted automated test case needs a test declaring it", a forced migration.
-  `PROCESS.md` +202 bytes, re-stamped in `byte-budget-guard`.
+- **Review fixes** (the commit after this close-out): `PROCESS.md` §3 names
+  both statuses the rule holds, `Accepted` and `Founded`, and the RESYNC
+  entry's adopter-merged files name both remedies, a test case's `evidence`
+  naming the newly tagged test and the test files that gain a tag. `PROCESS.md`
+  grew +217 bytes in all, re-stamped in `byte-budget-guard`.
 
 Left undone:
 

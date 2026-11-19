@@ -27,6 +27,10 @@ no lane review rounds, commit hooks on. The parent session reviews and merges.
   `check_trajectory.py`'s docstring, `trace.py`'s `Automated=Yes` message, and
   a forced-migration RESYNC entry anchored at `b696b6c36`.
 - **Sizes.** `trajectory_arch.py` 1132 -> 1145 SLOC, pin re-stamped.
-  `PROCESS.md` 100,773 -> 100,975 bytes (+202), re-stamped in
-  `byte-budget-guard`; its row had read 100,417 since 2026-11-07, so +356
-  bytes had landed unflagged before this change.
+  `PROCESS.md` 100,773 -> 100,990 bytes (+217, after the review fixes),
+  re-stamped in `byte-budget-guard`; its row had read 100,417 since
+  2026-11-07, so +356 bytes had landed unflagged before this change.
+- **Review fixes.** The prose review found two: `PROCESS.md` §3 said
+  "accepted" where the rule holds `Accepted` and `Founded`, and the RESYNC
+  entry's adopter-merged files named only the `automated = "No"` remedy. Both
+  now name each.

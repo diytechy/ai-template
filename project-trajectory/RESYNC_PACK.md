@@ -11239,8 +11239,10 @@ whole check off. No setting and no schema changes.
 
 **Regenerated files:** `docs/process.md`.
 
-**Adopter-merged files:** `docs/test/test-cases.toml`, where a procedure
-case's `automated` cell becomes `No`.
+**Adopter-merged files:** `docs/test/test-cases.toml`, where a case's
+`evidence` names the newly tagged test or a procedure case's `automated` cell
+becomes `No`; and the test files under `[paths] tests` that gain an
+`Implements:` tag.
 
 ## 5. Promotion: when this pack stops being prose
 
