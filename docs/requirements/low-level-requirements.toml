@@ -514,7 +514,7 @@ phase = 1
 sr_refs = ["SR-159"]
 title = "Bounded software top view"
 module = "project-trajectory/scripts/trajectory_arch.py"
-code_symbol = "component_top_view/component_findings/module_components/load_cmps/_cmp_roots"
+code_symbol = "component_top_view/component_findings/load_cmps/_cmp_roots"
 detail = "Derives component roots and uncontained modules; enforces TOP_VIEW_MAX — 10 uncontained top-level modules — with nesting, opt-out ([checks] components_check = false), and vacuity rules. An oversized uncontained view warns plain and fails --strict; valid containment clears it, and nested components count only at their top-level roots."
 test_refs = "(see TC-049)"
 status = "Accepted"
@@ -2114,7 +2114,7 @@ sr_refs = ["SR-070"]
 hat_refs = ["MAINTAINER"]
 title = "Component-view generator and coverage placement"
 module = "project-trajectory/scripts/gen_components.py"
-code_symbol = "build/render/seam_placement/module_components"
+code_symbol = "build/render/seam_placement"
 detail = """gen_components.py derives the component view from four registries: components.toml declares components, low-level-requirements.toml provides Component membership, system-requirements.toml is reached through that membership, and interfaces.toml provides seams. It writes docs/requirements/components.derived.toml; docs/stack.ini [generated] declares kind components, check.py freshness-gates component-view, trunk_step --regen regenerates it on trunk, and the file carries the generated-but-live staleness header. For each component it emits member design rows, their decomposed requirements, perspectives from trace.effective_hats over members, modules, and seams split into internal and boundary by the components layer rule. A requirement with no component appears once in the counted unplaced table; registries cannot distinguish missing decomposition from an all-component constraint, and that judgement has no place in shipped machinery. A requirement in several components appears in each and in each component's sr_shared_refs, so the view never implies exclusive ownership. A seam is placed from its Component tag unioned with components resolved from endpoints through trace_text.norm_module; an unresolved seam stays in the unplaced table rather than being dropped. NO ACCEPTANCE CELL APPEARS, EVER: the hand file declares the component and holds its maturity, while this file describes it. With no real CMP row and no view on disk, the generator exits 0 and writes nothing. NOT DISCHARGED: the view has no INTERNALS, so mechanism remains in the named design rows; freshness compares the artifact with its regeneration, never asking whether the source rows were right, which remains the amend-without-flip guard's residue."""
 rationale = """The column this replaces promised a prose home the kit never created and no script ever read, which is the weakest form a design record can take: its staleness was undetectable by construction, so nothing could ever report it wrong. A derived view inherits every check the spine already carries - the rows it joins have to be correct for the gate to pass at all - and it is stale-DETECTABLE by the same --check mechanism the other nine generated artifacts use. The cost is real and is accepted rather than hidden: a requirement list says what a component is obliged to do and nothing about how its parts fit, so the artifact that stays true is bought at the price of the artifact that showed mechanism. The coverage edges are answered in the emitted file rather than in the generator's head because a view that silently drops rows is indistinguishable from one with a bug, and the distinction between the two is the only thing that makes a derived artifact worth reading."""
 test_refs = "TC-195"
@@ -3848,4 +3848,16 @@ rationale = """A ruling takes its item off the operator's page, and the ruling s
 test_refs = "TC-430; TC-431"
 status = "Drafted"
 component = "CMP-009"
+phase = 6
+
+[design.LLR-373]
+sr_refs = ["SR-159", "SR-169"]
+title = "The module-to-component join has one home, which the component view and the architecture checks both read"
+module = "project-trajectory/scripts/kitlib/spine.py"
+code_symbol = "module_components"
+detail = """module_components in kitlib/spine.py joins the design rows its caller passes in and does not read a file itself. It skips a row whose id is a -000 example or does not start with LLR-. From a kept row it takes the Component tokens that start with CMP-, drops the rest, splits the Module cell with refs, normalizes the parts with norm_module, and adds those tokens to the map under the non-empty keys. The tags are not filtered against the component registry: the callers intersect them with the ids they declare. gen_components places seams by the map; trajectory_arch's How-SW top view, which the right-sizing rule and the containment render share, and its cross-component scan read membership from it. Neither module holds a join of its own."""
+rationale = """The join had two copies, in gen_components and in trajectory_arch, and they disagreed on three inputs: a -000 example row, an id not starting LLR- and a token not starting CMP-. On a registry that trace.py --strict passes they agreed, so the disagreement stayed invisible until a registry broke, which is when two answers to one question cost the most. The checker's narrower answer is kept: a placeholder row, or a token that cannot name a component, should not make a membership that the gate-bearing containment and cross-component rules read, and no caller wanted the wider answer, since each intersects the map with its declared ids."""
+test_refs = "TC-435"
+status = "Drafted"
+component = "CMP-006"
 phase = 6
