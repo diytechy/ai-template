@@ -2004,3 +2004,437 @@ def test_this_repos_run_shows_its_menu_after_the_check():
     assert "runtime (python" in out  # the check ran first ...
     assert out.index("runtime (python") < out.index("smoke")  # ... then the menu
     assert "trajectory" in out and "dashboard" in out
+
+
+# --- the GitHub CLI: reported, and offered on consent, as an optional tool ------
+# WI-1011. Every run below gets a PATH of stand-ins only, so a gh installed on
+# the host can never read as present and nothing is really installed: `uname`
+# printing the platform, this interpreter as python3/python where the
+# operation needs a runtime, the shell tools dev-setup.sh runs (each handing
+# off to the real one), `gh` when present, and package-manager stand-ins that
+# record their arguments.
+
+GH_SH = {
+    "root": ROOT / "scripts" / "dev-setup.sh",
+    "template": SCRIPTS / "dev-setup.template.sh",
+}
+GH_PS1 = {
+    "root": ROOT / "scripts" / "dev-setup.ps1",
+    "template": SCRIPTS / "dev-setup.template.ps1",
+}
+# What each platform's `uname` prints, and the manual route its report names.
+GH_HINTS = {
+    "Darwin": "brew install gh",
+    "Linux": "GitHub's apt repository",
+    "MINGW64_NT-10.0": "winget install --id GitHub.cli",
+}
+# Each package manager the POSIX dev-setup offers through: (the platform it
+# is offered on, the arguments its install hands it).
+GH_TOOLS = {
+    "brew": ("Darwin", "install gh"),
+    "apt-get": ("Linux", "install gh"),
+    "dnf": ("Linux", "install gh"),
+    "winget": ("MINGW64_NT-10.0", "install --id GitHub.cli"),
+}
+# The question each install operation asks, and the line this repository's
+# offer prints before it (Read-Host shows no question on redirected input).
+GH_ASKED = "Install the GitHub CLI"
+GH_OFFERED = "Optional: the GitHub CLI"
+
+
+def _shell_tools():
+    """The shell's own paths to the tools dev-setup.sh runs that are not
+    stood in for: dirname, sed and head."""
+    proc = subprocess.run(
+        [_sh(), "-c", "for t in dirname sed head; do command -v $t; done"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    found = proc.stdout.split()
+    assert len(found) == 3, proc.stdout + proc.stderr
+    return found
+
+
+def _gh_stand_ins(tmp_path, platform, tools=(), gh=False, fails=False):
+    """A PATH holding only stand-ins (see above), for the POSIX dev-setup.
+    Each package manager in `tools` appends its arguments to
+    `<tmp_path>/<tool>.log` and exits 1 when `fails`; `sudo` runs its
+    arguments."""
+    stand_ins = tmp_path / "stand-ins"
+    stand_ins.mkdir(parents=True)
+
+    def stand_in(name, body):
+        path = stand_ins / name
+        path.write_text("#!/bin/sh\n" + body + "\n", encoding="utf-8", newline="\n")
+        path.chmod(0o755)
+
+    stand_in("uname", "echo " + platform)
+    for name, real in zip(("dirname", "sed", "head"), _shell_tools()):
+        stand_in(name, 'exec {} "$@"'.format(real))
+    for name in ("python3", "python"):
+        stand_in(name, 'exec "{}" "$@"'.format(Path(sys.executable).as_posix()))
+    if gh:
+        stand_in("gh", "exit 0")
+    for tool in tools:
+        log = (tmp_path / (tool + ".log")).as_posix()
+        stand_in(tool, "echo \"$*\" >> '{}'\nexit {}".format(log, int(fails)))
+    stand_in("sudo", 'exec "$@"')
+    return str(stand_ins)
+
+
+def _gh_tree(tmp_path, family, name):
+    """A scratch tree holding one family's dev-setup at scripts/<name>;
+    returns its root."""
+    root = tmp_path / "repo"
+    (root / "scripts").mkdir(parents=True)
+    source = GH_SH[family] if name.endswith(".sh") else GH_PS1[family]
+    shutil.copyfile(source, root / "scripts" / name)
+    return root
+
+
+def _gh_sh(tmp_path, family, args, stdin=None, **stand_ins):
+    """One family's dev-setup.sh run with `args` on a stand-in PATH, its
+    input `stdin` (None: closed). Returns the completed process."""
+    root = _gh_tree(tmp_path, family, "dev-setup.sh")
+    platform = stand_ins.pop("platform", "Linux")
+    path = _gh_stand_ins(tmp_path, platform, **stand_ins)
+    return subprocess.run(
+        [_sh(), "scripts/dev-setup.sh", *args],
+        cwd=str(root),
+        input=stdin,
+        stdin=None if stdin is not None else subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        env=_devsetup_env(PATH=path),
+        timeout=180,
+    )
+
+
+def _gh_line(out):
+    """The report's one GitHub CLI line, stripped."""
+    lines = [x.strip() for x in out.splitlines() if "GitHub CLI gh (optional" in x]
+    assert len(lines) == 1, out
+    return lines[0]
+
+
+def _gh_log(tmp_path, tool):
+    path = tmp_path / (tool + ".log")
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
+@pytest.mark.parametrize("platform", list(GH_HINTS))
+@pytest.mark.parametrize("family", ["root", "template"])
+def test_the_check_reports_gh_as_optional_with_its_install_and_sign_in(
+    tmp_path, family, platform
+):
+    """Each POSIX standalone check, under each platform it names, reports gh
+    present or missing, marked optional; missing names the platform's
+    install and `gh auth login`. The check exits 0 either way, and the
+    template does not count a missing gh among its missing components.
+
+    Implements: TC-433
+    """
+    missing = _gh_sh(tmp_path / "missing", family, ["--check"], platform=platform)
+    present = _gh_sh(
+        tmp_path / "present", family, ["--check"], platform=platform, gh=True
+    )
+    for proc in (missing, present):
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+    line = _gh_line(missing.stdout)
+    assert line.startswith("[missing]"), line
+    assert GH_HINTS[platform] in line and "gh auth login" in line, line
+    assert _gh_line(present.stdout).startswith("[ok]"), present.stdout
+    if family == "template":
+        assert _missing_count(missing.stdout) == _missing_count(present.stdout)
+
+
+@pytest.mark.parametrize("tool", list(GH_TOOLS))
+def test_install_offers_gh_and_runs_it_only_on_a_yes(tmp_path, tool):
+    """This repository's --install, on each platform's package manager: a yes
+    runs it once with the install's arguments; a no, an empty line and closed
+    input run nothing. The exit status is 0 each time.
+
+    Implements: TC-434
+    """
+    platform, installs = GH_TOOLS[tool]
+    answers = {"yes": "n\ny\n", "no": "n\nn\n", "empty": "n\n\n", "closed": None}
+    for answer, stdin in answers.items():
+        where = tmp_path / answer
+        proc = _gh_sh(
+            where, "root", ["--install"], stdin, platform=platform, tools=[tool]
+        )
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+        assert GH_ASKED in proc.stdout and "[y/N]" in proc.stdout, proc.stdout
+        ran = _gh_log(where, tool)
+        if answer == "yes":
+            assert ran.split() == installs.split(), ran
+            assert "[ok] gh installed" in proc.stdout, proc.stdout
+        else:
+            assert ran == "", (answer, ran)
+            assert "Skipped gh" in proc.stdout, proc.stdout
+
+
+@pytest.mark.parametrize("arm", ["no package manager", "failed install", "present"])
+def test_install_without_a_package_manager_or_with_a_failure_never_fails(tmp_path, arm):
+    """This repository's --install with no package manager for gh prints the
+    manual command and asks nothing; with one that fails, the yes is followed
+    by a warning and the manual command; with gh present, nothing about gh is
+    offered. The exit status is 0 each time.
+
+    Implements: TC-434
+    """
+    tools = [] if arm == "no package manager" else ["brew"]
+    proc = _gh_sh(
+        tmp_path,
+        "root",
+        ["--install"],
+        "n\ny\n",
+        platform="Darwin",
+        tools=tools,
+        fails=arm == "failed install",
+        gh=arm == "present",
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    out = proc.stdout
+    if arm == "no package manager":
+        assert GH_ASKED not in out, out
+        assert "[skip] gh" in out and "brew install gh" in out, out
+        assert "gh auth login" in out, out
+    elif arm == "failed install":
+        assert _gh_log(tmp_path, "brew").split() == ["install", "gh"]
+        warning = [x for x in out.splitlines() if "[warn]" in x and "install gh" in x]
+        assert len(warning) == 1 and "brew install gh" in warning[0], out
+    else:
+        assert GH_ASKED not in out and _gh_log(tmp_path, "brew") == "", out
+
+
+@pytest.mark.parametrize("stdin", ["y\n" * 5, None])
+def test_the_templates_install_tier_offers_gh_only_at_a_terminal(tmp_path, stdin):
+    """The template's --baseline with piped or closed input: gh is named as
+    skipped (non-interactive), nothing runs, and the exit status is 0.
+
+    Implements: TC-434
+    """
+    proc = _gh_sh(
+        tmp_path, "template", ["--baseline"], stdin, platform="Darwin", tools=["brew"]
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "non-interactive; skipping install (brew install gh)" in proc.stdout
+    assert GH_ASKED not in proc.stdout
+    assert _gh_log(tmp_path, "brew") == ""
+
+
+@pytest.mark.skipif(WINDOWS, reason="a consent prompt needs a pseudo-terminal")
+def test_at_a_terminal_the_templates_install_tier_installs_gh_only_on_a_yes(
+    tmp_path,
+):
+    """The template's --baseline at a terminal: the offer is asked, a yes runs
+    the package manager once with the install's arguments, a no runs nothing.
+
+    Implements: TC-434
+    """
+    for answer, installs in ((b"n\n", ""), (b"y\n", "install gh")):
+        where = tmp_path / answer.decode().strip()
+        root = _gh_tree(where, "template", "dev-setup.sh")
+        path = _gh_stand_ins(where, "Darwin", tools=["brew"])
+        code, out = _at_a_terminal(root, ["--baseline"], answer + b"n\n" * 20, path)
+        assert code == 0, out
+        assert GH_ASKED in out, out
+        assert _gh_log(where, "brew").strip() == installs, out
+
+
+@pytest.mark.skipif(WINDOWS, reason="a consent prompt needs a pseudo-terminal")
+@pytest.mark.parametrize("family", ["root", "template"])
+def test_at_a_terminal_the_bare_runs_check_reports_gh_and_never_offers_it(
+    tmp_path, family
+):
+    """The readiness operation (--for-run) at a terminal, every answer yes:
+    gh is reported missing and never offered, and nothing runs.
+
+    Implements: TC-434
+    """
+    root = _gh_tree(tmp_path, family, "dev-setup.sh")
+    path = _gh_stand_ins(tmp_path, "Linux", tools=["apt-get"])
+    code, out = _at_a_terminal(
+        root, ["--for-run", "--python", sys.executable], b"y\n" * 20, path
+    )
+    assert code == 0, out
+    assert _gh_line(out).startswith("[missing]"), out
+    assert GH_ASKED not in out and _gh_log(tmp_path, "apt-get") == "", out
+
+
+# The Windows families: winget is the one package manager offered through.
+
+
+def _gh_win_path(tmp_path, gh=False, winget=None):
+    """A PATH of this interpreter's directory and the Windows system
+    directories (no Git, no gh, no winget), behind a directory holding a `gh`
+    stand-in when `gh` and a winget stand-in when `winget` ("ok" or "fails")
+    that appends its arguments to <tmp_path>/winget.log."""
+    stand_ins = tmp_path / "stand-ins"
+    stand_ins.mkdir(parents=True)
+    if gh:
+        (stand_ins / "gh.cmd").write_text("@exit /b 0\r\n", encoding="utf-8")
+    if winget:
+        (stand_ins / "winget.cmd").write_text(
+            '@echo %*>>"{}"\r\n@exit /b {}\r\n'.format(
+                tmp_path / "winget.log", int(winget == "fails")
+            ),
+            encoding="utf-8",
+        )
+    path = str(stand_ins) + os.pathsep + _path_without_git()
+    assert shutil.which("gh", path=_path_without_git()) is None
+    assert shutil.which("winget", path=_path_without_git()) is None
+    return path
+
+
+def _gh_ps1(tmp_path, family, args, stdin=None, **stand_ins):
+    """One family's dev-setup.ps1 run with `args` on a stand-in PATH, its
+    input `stdin` (None: closed). Returns the completed process."""
+    root = _gh_tree(tmp_path, family, "dev-setup.ps1")
+    argv = [_powershell(), "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]
+    return subprocess.run(
+        argv + ["scripts/dev-setup.ps1", *args],
+        cwd=str(root),
+        input=stdin,
+        stdin=None if stdin is not None else subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        env=_devsetup_env(PATH=_gh_win_path(tmp_path, **stand_ins)),
+        timeout=180,
+    )
+
+
+@pytest.mark.skipif(not WINDOWS, reason="the PowerShell dev-setup on Windows")
+@pytest.mark.parametrize("family", ["root", "template"])
+def test_the_powershell_check_reports_gh_as_optional_with_winget_and_sign_in(
+    tmp_path, family
+):
+    """Each Windows standalone check reports gh present or missing, marked
+    optional; missing names winget's install and `gh auth login`. It exits 0
+    either way, and the template does not count a missing gh.
+
+    Implements: TC-433
+    """
+    missing = _gh_ps1(tmp_path / "missing", family, ["-Check"])
+    present = _gh_ps1(tmp_path / "present", family, ["-Check"], gh=True)
+    for proc in (missing, present):
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+    line = _gh_line(missing.stdout)
+    assert line.startswith("[missing]"), line
+    assert "winget install --id GitHub.cli" in line, line
+    assert "gh auth login" in line, line
+    assert _gh_line(present.stdout).startswith("[ok]"), present.stdout
+    if family == "template":
+        assert _missing_count(missing.stdout) == _missing_count(present.stdout)
+
+
+@pytest.mark.skipif(not WINDOWS, reason="the PowerShell dev-setup on Windows")
+@pytest.mark.parametrize(
+    "arm",
+    ["yes", "no", "empty", "closed", "no winget", "failed install", "present"],
+)
+def test_powershell_install_offers_gh_and_runs_winget_only_on_a_yes(tmp_path, arm):
+    """This repository's -Install: a yes runs winget once with the install's
+    arguments; a no, an empty line and closed input run nothing; with no
+    winget the manual command is printed and nothing asked; a failed winget
+    is followed by a warning and the manual command; a present gh is not
+    offered. The exit status is 0 each time.
+
+    Implements: TC-434
+    """
+    stdin = {"yes": "n\ny\n", "no": "n\nn\n", "empty": "n\n\n", "closed": None}
+    winget = {"no winget": None, "failed install": "fails"}.get(arm, "ok")
+    proc = _gh_ps1(
+        tmp_path,
+        "root",
+        ["-Install"],
+        stdin.get(arm, "n\ny\n"),
+        winget=winget,
+        gh=arm == "present",
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    out = proc.stdout
+    ran = _gh_log(tmp_path, "winget")
+    if arm in ("yes", "failed install"):
+        assert ran.split() == ["install", "--id", "GitHub.cli"], ran
+    else:
+        assert ran == "", ran
+    # Read-Host shows no question on redirected input, so the arms are read
+    # from what each prints after it.
+    offered = GH_OFFERED in out
+    assert offered == (arm != "present"), out
+    if arm == "yes":
+        assert "[ok] gh installed" in out, out
+    elif arm in ("no", "empty", "closed"):
+        assert "Skipped gh" in out, out
+    elif arm == "no winget":
+        skip = [x for x in out.splitlines() if "[skip] gh" in x]
+        assert len(skip) == 1 and "winget install --id GitHub.cli" in skip[0], out
+    elif arm == "failed install":
+        warning = [x for x in out.splitlines() if "[warn]" in x and "install gh" in x]
+        assert len(warning) == 1 and "GitHub.cli" in warning[0], out
+
+
+@pytest.mark.skipif(not WINDOWS, reason="the PowerShell dev-setup on Windows")
+def test_the_powershell_templates_install_tier_offers_gh_only_at_a_console(
+    tmp_path,
+):
+    """The template's -Baseline with piped input: gh is named as skipped
+    (non-interactive), winget never runs, and the exit status is 0.
+
+    Implements: TC-434
+    """
+    proc = _gh_ps1(tmp_path, "template", ["-Baseline"], "y\n" * 5, winget="ok")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "non-interactive; skipping install (winget install --id GitHub.cli)" in (
+        proc.stdout
+    )
+    assert GH_ASKED not in proc.stdout
+    assert _gh_log(tmp_path, "winget") == ""
+
+
+@pytest.mark.skipif(not WINDOWS, reason="a real Windows console")
+def test_at_a_windows_console_the_templates_install_tier_installs_gh_on_a_yes(
+    tmp_path,
+):
+    """The template's -Baseline at a real console: the offer is asked, a yes
+    runs winget once with the install's arguments, a no runs nothing.
+
+    Implements: TC-434
+    """
+    for answer, installs in (("n", ""), ("y", "install --id GitHub.cli")):
+        where = tmp_path / answer
+        root = _gh_tree(where, "template", "dev-setup.ps1")
+        path = _gh_win_path(where, winget="ok")
+        code, out = _at_a_console(
+            root / "scripts" / "dev-setup.ps1",
+            ["-Baseline"],
+            answer + "\r" + "n\r" * 20,
+            path,
+            where,
+        )
+        assert code == 0, out
+        assert _gh_log(where, "winget").strip() == installs, out
+        assert ("skipped GitHub CLI" in out) == (answer == "n"), out
+
+
+@pytest.mark.skipif(not WINDOWS, reason="a real Windows console")
+@pytest.mark.parametrize("family", ["root", "template"])
+def test_at_a_windows_console_the_bare_runs_check_never_offers_gh(tmp_path, family):
+    """The readiness operation (-ForRun) at a real console, every answer yes:
+    gh is reported missing and never offered, and winget never runs.
+
+    Implements: TC-434
+    """
+    root = _gh_tree(tmp_path, family, "dev-setup.ps1")
+    path = _gh_win_path(tmp_path, winget="ok")
+    args = ["-ForRun", "-Python", "'{}'".format(sys.executable)]
+    code, out = _at_a_console(
+        root / "scripts" / "dev-setup.ps1", args, "y\r" * 20, path, tmp_path
+    )
+    assert code == 0, out
+    assert _gh_line(out).startswith("[missing]"), out
+    assert _gh_log(tmp_path, "winget") == "", out
+    assert GH_OFFERED not in out and "GitHub CLI (optional)" not in out, out

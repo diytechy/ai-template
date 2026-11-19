@@ -3825,3 +3825,15 @@ test_refs = "TC-427"
 status = "Accepted"
 component = "CMP-006"
 phase = 6
+
+[design.LLR-372]
+sr_refs = ["SR-032"]
+title = "Developer setup reports the GitHub CLI and offers it consent-first, as an optional tool"
+module = "scripts/dev-setup.sh;scripts/dev-setup.ps1;project-trajectory/scripts/dev-setup.template.sh;project-trajectory/scripts/dev-setup.template.ps1"
+code_symbol = "report/offer_gh;Report/Offer-Gh;OfferGh"
+detail = "Every developer-setup report, this repository's and the shipped template's on both script families, carries one GitHub CLI line marked optional: present when gh is on the PATH; otherwise missing, naming the platform's install command (winget install --id GitHub.cli on Windows, Git Bash included; brew install gh on macOS; the distribution's gh package or GitHub's apt repository on any other platform) and the sign-in step gh auth login. A missing gh is not counted among the template's missing components and never changes an operation's exit status. The install operation (this repository's -Install and --install; the template's baseline and full tiers) offers a missing gh through a package manager already on the machine: winget on Windows; Homebrew on macOS; apt-get, then dnf, then Homebrew on any other platform. It runs that install once, and only after an answer beginning y or Y; any other answer, an empty line or closed input runs nothing. This repository's offer reads its answer as its agent-CLI offers do; the template's asks only at an interactive terminal and otherwise names the install it skipped. With no such package manager the operation asks nothing and prints the manual command; a failed install prints a warning naming the manual command. The bare run's readiness operation reports the line and offers nothing for it."
+rationale = "Without gh a session cannot read a pushed branch's CI state, but nothing in setup depends on it, so it is offered, never required, and only through a package manager the developer already trusts."
+test_refs = "TC-433; TC-434"
+status = "Drafted"
+component = "CMP-009"
+phase = 6

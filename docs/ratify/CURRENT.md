@@ -604,4 +604,58 @@ record runs through the live registry first.
 - DA-010 — A vision model judging the rendered state view against its written rubric reaches the verdict a human reviewer reading the same render would.
 
 
-_No spine row differs from its `docs/archive/last_accepted` copy, and no row awaits a first acceptance._
+
+_No chain on a rung the operator-acceptance dial holds owes an act; every chain in this brief waits for automated adjudication._
+
+## Waiting for automated adjudication
+
+_Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
+
+<details>
+<summary>Waiting for automated adjudication — 1 chain(s): SR-032</summary>
+
+## SR-032 — Onboarding and dev-setup scaffold
+
+> **Requirement.** The onboarding and dev-setup templates shall scaffold and run to a passing developer setup.
+
+> **Rationale.** Realizes SN-001 — a new contributor who cannot reach a working setup from the repo alone is blocked on whoever set it up last, and onboarding prose that is never executed drifts from the commands that work. A README checklist was rejected: nothing fails when it goes stale.
+
+
+### LLR LLR-372 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-372
+- **SR-Refs**: SR-032
+- **Title**: Developer setup reports the GitHub CLI and offers it consent-first, as an optional tool
+- **Module**: scripts/dev-setup.sh;scripts/dev-setup.ps1;project-trajectory/scripts/dev-setup.template.sh;project-trajectory/scripts/dev-setup.template.ps1
+- **CodeSymbol**: report/offer_gh;Report/Offer-Gh;OfferGh
+- **Detail**: Every developer-setup report, this repository's and the shipped template's on both script families, carries one GitHub CLI line marked optional: present when gh is on the PATH; otherwise missing, naming the platform's install command (winget install --id GitHub.cli on Windows, Git Bash included; brew install gh on macOS; the distribution's gh package or GitHub's apt repository on any other platform) and the sign-in step gh auth login. A missing gh is not counted among the template's missing components and never changes an operation's exit status. The install operation (this repository's -Install and --install; the template's baseline and full tiers) offers a missing gh through a package manager already on the machine: winget on Windows; Homebrew on macOS; apt-get, then dnf, then Homebrew on any other platform. It runs that install once, and only after an answer beginning y or Y; any other answer, an empty line or closed input runs nothing. This repository's offer reads its answer as its agent-CLI offers do; the template's asks only at an interactive terminal and otherwise names the install it skipped. With no such package manager the operation asks nothing and prints the manual command; a failed install prints a warning naming the manual command. The bare run's readiness operation reports the line and offers nothing for it.
+- **Rationale**: Without gh a session cannot read a pushed branch's CI state, but nothing in setup depends on it, so it is offered, never required, and only through a package manager the developer already trusts.
+- **TestRefs**: TC-433; TC-434
+- **Status**: Drafted
+- **Component**: CMP-009
+- **Phase**: 6
+
+### TC TC-433 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-433
+- **Verifies**: SR-032;LLR-372
+- **Level**: Integration
+- **Method**: On a PATH of stand-ins only, run each developer setup's standalone check, this repository's and the shipped template's on both script families, with and without a gh stand-in; run the POSIX ones under each platform name they distinguish.
+- **Tier**: Full
+- **Expected**: The check reports gh present or missing, marked optional; missing names the platform's install command and gh auth login; the check exits 0 either way, and the template's missing count is the same with and without gh.
+- **Automated**: Yes
+- **Evidence**: tests/test_run_devsetup.py::test_the_check_reports_gh_as_optional_with_its_install_and_sign_in; tests/test_run_devsetup.py::test_the_powershell_check_reports_gh_as_optional_with_winget_and_sign_in
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-434 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-434
+- **Verifies**: SR-032;LLR-372
+- **Level**: Integration
+- **Method**: On a PATH of stand-ins only, with package-manager stand-ins that record their arguments and nothing really installed, run this repository's install operation on each platform's package manager answering yes, no, an empty line and with closed input, then with no package manager, a failing one and gh present; run the template's install tier with piped input and, at a terminal or a real console, answering yes and no; run the bare run's readiness operation at a terminal answering yes throughout.
+- **Tier**: Full
+- **Expected**: Only a yes runs the package manager, once, with the platform's install arguments; a no, an empty line, closed input or the template's non-interactive run runs nothing; with no package manager nothing is asked and the manual command is printed; a failed install prints a warning naming it; a present gh is not offered; the readiness operation reports gh and never offers it; every run exits 0.
+- **Automated**: Yes
+- **Evidence**: tests/test_run_devsetup.py::test_install_offers_gh_and_runs_it_only_on_a_yes; tests/test_run_devsetup.py::test_install_without_a_package_manager_or_with_a_failure_never_fails; tests/test_run_devsetup.py::test_the_templates_install_tier_offers_gh_only_at_a_terminal; tests/test_run_devsetup.py::test_at_a_terminal_the_templates_install_tier_installs_gh_only_on_a_yes; tests/test_run_devsetup.py::test_at_a_terminal_the_bare_runs_check_reports_gh_and_never_offers_it; tests/test_run_devsetup.py::test_powershell_install_offers_gh_and_runs_winget_only_on_a_yes; tests/test_run_devsetup.py::test_the_powershell_templates_install_tier_offers_gh_only_at_a_console; tests/test_run_devsetup.py::test_at_a_windows_console_the_templates_install_tier_installs_gh_on_a_yes; tests/test_run_devsetup.py::test_at_a_windows_console_the_bare_runs_check_never_offers_gh
+- **Status**: Drafted
+- **Phase**: 6
+
+</details>
