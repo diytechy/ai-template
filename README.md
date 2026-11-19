@@ -440,7 +440,8 @@ This repo's ways in, what each is for and what it checks:
 - **`scripts/dev-setup.*`** sets up the developer environment: the runtime,
   the dev tools, the agent CLIs and the pre-commit floor (the privacy and
   secrets checks declared in [`docs/process.toml`](docs/process.toml)), and
-  reports the retained adjudicator's sign-in while retention is on. The
+  reports the retained adjudicator's sign-in while retention is on. It also
+  offers the GitHub CLI, `gh`, which is optional. The
   coordinator's Claude Code hooks are already on here, tracked in
   `.claude/settings.json`; a scaffolded repo gets them inert and dev-setup
   offers to switch them on, in its machine-local
