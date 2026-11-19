@@ -11172,6 +11172,46 @@ overrides and `docs/stack.ini` (by hand, if they name a renamed key;
 `docs/stack.ini` is rewritten by the migrator where a `[step:*]` holds
 `gates =`).
 
+### dev-setup reports the GitHub CLI and offers it, as an optional tool [since b696b6c36]
+
+*(Anchored at the preceding commit: the change lands after it.)*
+
+**What changed.** `scripts/dev-setup.template.sh` and
+`scripts/dev-setup.template.ps1` report the GitHub CLI, `gh`, on one line
+marked optional: `[ok]`, or `[missing]` with the platform's install command
+(`winget install --id GitHub.cli` on Windows, Git Bash included; `brew install
+gh` on macOS; the distribution's `gh` package or GitHub's apt repository on
+Linux) and the sign-in step, `gh auth login`. A missing `gh` is left out of
+the "component(s) missing" total and never changes an exit status.
+
+- **The offer.** The install tiers (`--baseline`/`-Baseline` and
+  `--full`/`-Full`) offer `gh` at an interactive terminal only, through a
+  package manager already on the machine: winget on Windows; Homebrew on
+  macOS; apt-get, then dnf, then Homebrew on Linux. Only an answer beginning
+  `y` or `Y` runs it. With no such package manager they print the manual
+  command and ask nothing, and a failed install prints a warning. Nothing is
+  downloaded or piped into a shell.
+- **The bare run** (`--for-run`/`-ForRun`) reports the line and offers
+  nothing for it.
+- **`report` / `Report`** take an optional fourth argument (`optional` in
+  `.sh`, `-Optional` in `.ps1`) that leaves an item out of the missing count.
+
+The `.cmd` and `.command` launchers are unchanged.
+
+**What to do.** Nothing is forced. dev-setup is copied once at scaffold and
+not re-synced, so a repository scaffolded earlier keeps its own copy and
+reports nothing about `gh`. To take the offer, copy the template's `GitHub
+CLI` block, its report line and `offer_gh` (or `$GhInstall`, `$GhHint`, its
+report line and `OfferGh`), with the `report`/`Report` change, into your
+dev-setup, or re-copy the template and re-apply your EDIT block. A project
+that is not on GitHub can leave it out.
+
+**Kit-owned files — overwrite:** none; dev-setup is the adopter's after
+scaffold.
+
+**Adopter-merged files:** `scripts/dev-setup.sh` and `scripts/dev-setup.ps1`,
+by hand, only if you want the offer.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

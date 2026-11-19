@@ -2415,7 +2415,10 @@ def test_at_a_windows_console_the_templates_install_tier_installs_gh_on_a_yes(
             path,
             where,
         )
-        assert code == 0, out
+        # The console runs the script with `&`, so its code is the last native
+        # command's whenever the script ends without `exit`, as this tier does
+        # (under -File it is 0, as the piped test above shows): read the end.
+        assert "Done. Workstation ready" in out, (code, out)
         assert _gh_log(where, "winget").strip() == installs, out
         assert ("skipped GitHub CLI" in out) == (answer == "n"), out
 

@@ -29,8 +29,9 @@
 #             both are deferrable for someone driving sessions with their own
 #             tools or an IDE extension. With no 3.11+ runtime it first offers
 #             one (uv or winget, when present) and searches again, as
-#             dev-setup.sh --install does (WI-880); last it offers the
-#             coordinator hooks' machine-local opt-in.
+#             dev-setup.sh --install does (WI-880); then it offers the
+#             coordinator hooks' machine-local opt-in, and last the optional
+#             GitHub CLI, gh, through winget (WI-1011).
 #
 # Linux/macOS contributors: use scripts/dev-setup.sh.
 param([switch]$Check, [switch]$Install, [switch]$ForRun, [string]$Python = "")
@@ -161,6 +162,11 @@ try {
         "npm install -g @anthropic-ai/claude-code; then run claude once to sign in"
     Report "codex CLI (the OPENAI-* rows in docs/agents.csv)" (Have "codex") `
         "npm install -g @openai/codex; then: codex login"
+    # The GitHub CLI (WI-1011): optional. It reads a pushed branch's CI state
+    # and nothing here needs it; -Install offers it through winget (Offer-Gh).
+    $GhInstall = "winget install --id GitHub.cli"
+    $GhHint = "$GhInstall (or the installer from https://cli.github.com); then sign in: gh auth login"
+    Report "GitHub CLI gh (optional: a pushed branch's CI state)" (Have "gh") $GhHint
     Report "offline Mermaid renderer" ((Have "code") -or (Have "mmdc") -or (Have "npx")) `
         "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
     # Optional, dev-only (WI-189): the dashboard render-critique loop. NOT
@@ -356,6 +362,34 @@ try {
         }
     }
 
+    # The GitHub CLI offer (WI-1011): Offer-Cli's pattern, one consented [y/N]
+    # through winget already on this machine; any answer but y/Y, an empty
+    # line or closed input runs nothing. Optional, so no arm fails setup.
+    # winget puts gh on PATH for new consoles only, so its exit code is read.
+    function Offer-Gh {
+        if (Have "gh") { return }
+        Write-Host ""
+        Write-Host "Optional: the GitHub CLI (gh) reads a pushed branch's CI state."
+        if (-not (Have "winget")) {
+            Write-Host "  [skip] gh - winget not found; install it your own way: $GhHint"
+            return
+        }
+        $a = Read-Host "Install the GitHub CLI now ($GhInstall)? [y/N]"
+        if ($a -match '^[Yy]') {
+            try {
+                & winget install --id GitHub.cli
+                $installed = ($LASTEXITCODE -eq 0)
+            } catch { $installed = $false }
+            if ($installed) {
+                Write-Host "  [ok] gh installed - open a new console to find it, then sign in: gh auth login"
+            } else {
+                Write-Host "  [warn] winget could not install gh - install it your own way: $GhHint"
+            }
+        } else {
+            Write-Host "  Skipped gh - it is optional; install it later with: $GhHint"
+        }
+    }
+
     # The runtime offer (round 032 F1): dev-setup.sh's offer_python on Windows.
     # One consented install of a 3.11+ runtime, only through a provisioner the
     # developer already has (uv, else winget: the two the runtime hint names),
@@ -406,7 +440,7 @@ try {
             Write-Host "skipping is fine with your own tools / an IDE extension."
             Write-Host ""
         }
-        Write-Host "To install the Python dev tools into .\.venv (and be offered the agent CLIs): scripts\dev-setup.ps1 -Install"
+        Write-Host "To install the Python dev tools into .\.venv (and be offered the agent CLIs and the optional GitHub CLI): scripts\dev-setup.ps1 -Install"
         return
     }
 
@@ -509,6 +543,7 @@ try {
         Write-Host "Skipping is fine if you drive sessions with your own tools or an IDE"
         Write-Host "extension; then trim docs/agents-enabled to the rows whose CLIs you keep."
     }
+    Offer-Gh
 }
 finally {
     Pop-Location
