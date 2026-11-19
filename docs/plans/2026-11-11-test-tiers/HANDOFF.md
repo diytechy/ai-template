@@ -2636,7 +2636,9 @@ the hold above.
 | B6, CI | `gh` installed on this workstation (2.105.0); `gh auth login` is the operator's. dev-setup offers it as an optional tool: WI-1011 |
 | Light-spine repositories | An open item there may move from `ruled` to `implemented`, since no work item records the work done. A comment in the shipped open-items template only; no mechanism or test here changes. The variant those repositories adopt is WI-1012, a follow-up |
 | Downstream (§7) | Yes: the second migrator pass over the 13 converted repositories, PictureSorter's CI line, then HomeHub |
-| Reviews | Prose and spine requirement text: Gemini Carbon at low effort. Code: Sol (`gpt-6.1-sol`) at low effort. Carbon is offered only as `opencode/gemini-4-carbon` (OpenCode Zen), which refused for lack of credits on 2026-11-19; the Go plan covers `opencode-go/*`, whose Gemini is `gemini-4-argon`. Asked |
+| FileBackup | **Held (option (c)):** no migrator run until its conversion is merged; the operator will come back to it |
+| The queue | **Proceed with the available queued work items** once trunk is merged |
+| Reviews | Prose and spine requirement text: Gemini Carbon at low effort, then **Argon** (`opencode-go/gemini-4-argon`, low) when Carbon proved unavailable. Code: Sol (`gpt-6.1-sol`) at low effort. Carbon is offered only as `opencode/gemini-4-carbon` (OpenCode Zen), which refused for lack of credits on 2026-11-19; the Go plan covers `opencode-go/*`, whose Gemini is `gemini-4-argon`. Asked |
 
 ### §12.3 Why a test run crashed the machine, and how to run one safely
 
@@ -3199,3 +3201,48 @@ list is fixed unless §12.6 says so.
   offers `gh`) and WI-1012 (the light-spine variant). The lints are clean;
   `test_dogfood_sync`, `test_profile` and `test_check_docs` pass. Next: the
   unfiltered suite, the regenerated views, then the trunk merge.
+- **2026-11-19, reviews.** Sol (`gpt-6.1-sol`, low) on the day's code diff
+  (the fold's four reference lines): no findings. Gemini Argon
+  (`opencode-go/gemini-4-argon`, low; the operator chose it over Carbon,
+  which needs OpenCode Zen credits) on the day's prose: three findings, all
+  applied in `87a334b0f`.
+- **2026-11-19, CI (B6), read with `gh` for the first time.** Every run since
+  at least 2026-11-05 fails, on every branch. The run on the pushed
+  `maint/vocabulary` (44467646336): `test (ubuntu-latest, 3.11)` ran the whole
+  suite in 19 min, 18 failed and 8,060 passed, and its failure cancelled the
+  other five matrix jobs. The failures are the runner's environment, not the
+  branch: no git identity (`git commit-tree failed`, "Committer identity
+  unknown": five `test_id_carrier_git` tests and one `test_trunk_step`),
+  `run.sh` without its execute bit (two `test_run_devsetup` cases; WI-910's
+  subject), the session service refusing a checkout without commit hooks
+  (four `test_session_adapters` tests), and two `test_accounts` cases that do
+  not raise there. `smoke-budget` fails the same way (6 of 3,615). B6 owns
+  the fix: set a git identity and the hooks in the workflow, or make those
+  tests set their own, then run the iterate checks on push and the matrix
+  nightly, with `fail-fast: false`.
+- **2026-11-19, downstream: the second migrator pass (§7).** `migrate_vocabulary
+  --check` over the 13 conversion worktrees (`C:\Projects\<Repo>-wt-spine`,
+  branch `spine/kit-conversion-2026-11-12`). Applied and committed with the
+  hook bypassed (the operator's 2026-11-12 permission for those branches) in
+  six: Finance-Auditor, gilbert, NagLight, NotHomeWrecker, PictureSorter,
+  Pictures2VideoSlideShow. Each diff is `Approved` -> `Accepted`, `gates =` ->
+  `from-stage =` and, in gilbert, the scratchpad's file name; a re-check owes
+  nothing. Six owed nothing: BandWars, MinecraftKeeper, MiniPC-Deployer,
+  OfficeWallNaglight, EntertainmentPC, OtterTube (four of them are still
+  paused partway through the conversion). **FileBackup is held:** it carries
+  an acceptance record, and the migrator's record step would absorb 547
+  cells into it. 242 are the `verification` -> `verification_method` rename;
+  the rest are the conversion's own text changes to accepted rows (51
+  `requirement`, 80 `acceptance_criteria`, 27 `rationale`, 20 `need` and
+  more), which a run would accept without FileBackup's operator reading
+  them. PictureSorter's CI line `--gate G3` changes when the kit's scripts are
+  copied into that repository, not before: its CI still runs the old scripts.
+  The operator chose to hold FileBackup (§12.2).
+- **2026-11-19, the unfiltered suite on `41f56f791`:** 1 failed, 8,119
+  passed, 29 skipped, in 35 min 54 s (8 workers; slower than the 27 min of
+  2026-11-16, with another project's process busy on the box). The failure
+  was this session's: the rewritten resume text quoted a retired stage tag,
+  which `check_vocab --strict` refuses (`test_stage_ladder`). Reworded in
+  `381d68548` on `maint/vocabulary`, and the test passes.
+  Gotcha: hand-authored `docs/status.md` must name no retired tag and no id
+  a later claim needs (`integrate._status_prose_refusal`).
