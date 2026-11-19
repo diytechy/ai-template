@@ -65,6 +65,12 @@ pure function of the committed tree since the dispatcher-era machine-local
 advisory region retired (concurrency-restructure Phase 5), so it holds in any
 clone.
 
+The ruled side (WI-1006): `--ruled-cover` renders nothing. It prints one WARN
+line per `ruled` item whose action no work item, later open item or
+`follow_up` cell carries (`pending.ruled_cover_lines`), and exits 0 whatever it
+finds. A ruling takes its item off this page, so this is where what fell off
+is told.
+
 Stdlib only, cross-platform, deterministic (sorted inputs, no clocks) so the
 gated compare is byte-stable.
 
@@ -1601,8 +1607,17 @@ def main(argv=None):
         help="exit 1 when the file is stale, writing nothing (the freshness gate; "
         "a pure function of the committed tree)",
     )
+    ap.add_argument(
+        "--ruled-cover",
+        action="store_true",
+        help="report, warn-only, each ruled open item that no work item, later "
+        "open item or `follow_up` cell carries, and exit 0; renders nothing",
+    )
     args = ap.parse_args(argv)
     root = Path(args.root).resolve()
+    if args.ruled_cover:
+        print("\n".join(pending.ruled_cover_lines(root)))
+        return 0
     out = Path(args.out) if args.out else root / OUT_REL
     # Vacuous for a repo that carries neither the registry nor the view: the
     # surface is opt-in, exactly like the markdown block it replaces, so a

@@ -11284,6 +11284,46 @@ scaffold.
 **Adopter-merged files:** `scripts/dev-setup.sh` and `scripts/dev-setup.ps1`,
 by hand, only if you want the offer.
 
+### A ruled open item's action is planned, done or handed on, and a report names the ones it is not [since b696b6c36]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** Ruling an open item takes it off `docs/open-items.html`, so
+what the ruling asked for lives on only where something names the item. The
+open-items registry gains an optional cell, `follow_up`, and a report reads
+it: `scripts/gen_open_items.py --ruled-cover` prints one WARN line for each
+`ruled` item that has none of these:
+
+- a work item in an open directory (draft, queued, active, deferred) or in
+  `complete/` whose text names it;
+- a later open item (one with a higher number) that names it and is
+  `pending`, or is `ruled` and itself carried;
+- a `follow_up` cell saying what carried the ruling out (a commit, a log
+  entry), or `none — <why>` where the ruling asked for no change.
+
+The report is warn-only: it exits 0 whatever it finds, and renders nothing.
+It stops, as every open-items reader stops, on a registry that does not
+parse, and it is vacuous without one. The template's header documents the
+cell and asks a follow-up item to name the item it continues, and its `-000`
+row shows the cell. A light-spine repository's `implemented` items are not
+judged.
+
+**What to do (no forced migration).** Overwrite the kit-owned files below.
+Nothing runs the report unless you ask for it: to run it, add a line to your
+`docs/stack.ini` `[run]` section, such as
+`audit = python scripts/gen_open_items.py --ruled-cover`. Then add a
+`follow_up` cell to any ruled item it names whose ruling truly needs no
+further work, or cite the item from the row that carries it. A registry that
+never sets the cell reads exactly as before.
+
+**Kit-owned files — overwrite:** `scripts/gen_open_items.py`,
+`scripts/pending.py`, `scripts/kitlib/spine.py`, `scripts/spine_carrier.py`,
+`scripts/migrate_carrier.py`, `registries/open-items.template.toml`.
+
+**Adopter-merged files:** `docs/requirements/open-items.toml` (optional: copy
+the template's header paragraph and the `-000` row's `follow_up` line) and
+`docs/stack.ini` (optional: the `[run]` line above).
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

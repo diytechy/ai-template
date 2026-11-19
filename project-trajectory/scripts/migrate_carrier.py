@@ -228,6 +228,7 @@ KEY = {
     "WI-Refs": "wi_refs",
     "RuledDate": "ruled_date",
     "RulingRef": "ruling_ref",
+    "FollowUp": "follow_up",
     # agents:
     "Family": "family",
     "Model": "model",

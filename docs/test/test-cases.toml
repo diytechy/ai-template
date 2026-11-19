@@ -4295,3 +4295,25 @@ automated = "Yes"
 evidence = "tests/test_run_devsetup.py::test_install_offers_gh_and_runs_it_only_on_a_yes; tests/test_run_devsetup.py::test_install_without_a_package_manager_or_with_a_failure_never_fails; tests/test_run_devsetup.py::test_the_templates_install_tier_offers_gh_only_at_a_terminal; tests/test_run_devsetup.py::test_at_a_terminal_the_templates_install_tier_installs_gh_only_on_a_yes; tests/test_run_devsetup.py::test_at_a_terminal_the_bare_runs_check_reports_gh_and_never_offers_it; tests/test_run_devsetup.py::test_powershell_install_offers_gh_and_runs_winget_only_on_a_yes; tests/test_run_devsetup.py::test_the_powershell_templates_install_tier_offers_gh_only_at_a_console; tests/test_run_devsetup.py::test_at_a_windows_console_the_templates_install_tier_installs_gh_on_a_yes; tests/test_run_devsetup.py::test_at_a_windows_console_the_bare_runs_check_never_offers_gh"
 status = "Drafted"
 phase = 6
+
+[test.TC-430]
+verifies = ["SR-148", "LLR-370", "IF-073"]
+level = "Integration"
+method = """Build temporary repositories, each with an open-items registry and work items, and read which ruled items the report names. A work item naming the item under draft, queued, active, deferred or complete, in either work root, covers it; one under cancelled, partial or restructured, or under a directory that is not a status, does not. A later pending item naming it covers it, and so does a later ruled item naming it that a work item covers, while a ruled citer that is not covered hands nothing on, and an earlier pending item or an earlier covered ruled item covers nothing. Two ruled items naming each other with no work item are both reported; once a work item covers the earlier one the later is still reported, and once one covers the later both are covered. A follow_up cell covers its item, and a cell of spaces does not. An id with a letter, digit or underscore on either side, or a lower-case prefix, names no item, while leading zeros are ignored. The historical wi_refs cell and an item naming itself cover nothing. A -000 open item is never judged and covers nothing, and a -000 work item covers nothing. An implemented citer covers nothing and is not judged itself. A status is read trimmed and in lower case."""
+tier = "Smoke"
+expected = "Exactly the ruled items no covering work item, covering open item or follow_up cell carries are reported, in id order."
+automated = "Yes"
+evidence = "tests/test_ruled_open_item_cover.py"
+status = "Drafted"
+phase = 6
+
+[test.TC-431]
+verifies = ["SR-148", "LLR-370", "IF-073", "IF-049"]
+level = "Integration"
+method = """Run gen_open_items --ruled-cover in-process over temporary repositories: with no open-items registry it says the run is vacuous and returns 0; over a registry that does not parse it stops with the carrier's refusal; over a registry with one uncovered ruled item it prints one WARN line naming the item and its title and the follow_up remedy, then a count of 1, and returns 0; over a covered registry it prints no WARN line and a count of 0. Read docs/stack.ini's [run] audit line: its first step runs the report and nothing else, and the smoke budget step in enforce mode follows it. Parse the shipped open-items template and this repository's registry: each -000 row sets follow_up, and the template's header names the cell and the report."""
+tier = "Smoke"
+expected = "The report is warn-only and exits 0 on a finding, the audit runs it ahead of the budget step, and both registries' example rows show the follow_up cell."
+automated = "Yes"
+evidence = "tests/test_ruled_open_item_cover.py"
+status = "Drafted"
+phase = 6

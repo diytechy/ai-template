@@ -18,7 +18,7 @@ _Acceptance provenance: the last commit to move a `Status` cell in a snapshotted
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1001.
+- `docs/requirements/interfaces.toml` — 2 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1001.
 
 ## Assumptions and surrogates owing an acceptance
 
@@ -618,7 +618,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 2 chain(s): SR-032, SR-157</summary>
+<summary>Waiting for automated adjudication — 3 chain(s): SR-032, SR-148, SR-157</summary>
 
 ## SR-032 — Onboarding and dev-setup scaffold
 
@@ -661,6 +661,50 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: Only a yes runs the package manager, once, with the platform's install arguments; a no, an empty line, closed input or the template's non-interactive run runs nothing; with no package manager nothing is asked and the manual command is printed; a failed install prints a warning naming it; a present gh is not offered; the readiness operation reports gh and never offers it; every run exits 0.
 - **Automated**: Yes
 - **Evidence**: tests/test_run_devsetup.py::test_install_offers_gh_and_runs_it_only_on_a_yes; tests/test_run_devsetup.py::test_install_without_a_package_manager_or_with_a_failure_never_fails; tests/test_run_devsetup.py::test_the_templates_install_tier_offers_gh_only_at_a_terminal; tests/test_run_devsetup.py::test_at_a_terminal_the_templates_install_tier_installs_gh_only_on_a_yes; tests/test_run_devsetup.py::test_at_a_terminal_the_bare_runs_check_reports_gh_and_never_offers_it; tests/test_run_devsetup.py::test_powershell_install_offers_gh_and_runs_winget_only_on_a_yes; tests/test_run_devsetup.py::test_the_powershell_templates_install_tier_offers_gh_only_at_a_console; tests/test_run_devsetup.py::test_at_a_windows_console_the_templates_install_tier_installs_gh_on_a_yes; tests/test_run_devsetup.py::test_at_a_windows_console_the_bare_runs_check_never_offers_gh
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-148 — Autonomous loop work selection: what it derives from, and in what order
+
+> **Requirement.** The delivered loop content shall select exactly one work item for each assignment an unattended run admits from the repository's tracked registries and git history alone, in this order: ready adjudication rows first, as a stable partition applied at admission rather than by renumbering the ruled rank table; then unresolved handback records; then the earliest incomplete spine tier in SN-to-SR-to-LLR-to-TC order; then implementation work after test-case layout is complete — with the eligible set and its order deterministic, an item whose declared safety, policy or plan-mode inputs are missing, undeclared or contradictory failing closed for that item alone, operator holds applied only from the declared acceptance level, nothing admitted past an operator-held stop, no prose surface and no predefined track in the derivation, no hand-curated next-work or run-phase pointer surface shipped for any live instruction or executable surface to read, write, validate, generate or link, and the status surface a session reads generated and freshness-gated rather than hand-copied.
+
+> **Rationale.** Without one precedence rule, the same repository can resume into implementation while returned obligations or prerequisite requirement tiers remain unresolved. That produces work against stale intent and makes repeated resumes select different next actions. A recorded selection class, source record and hold decision provide replayable evidence of the choice. ONE SR PER (need, property): the loop's work-selection invariant — what the next work derives from, in what order, and that no hand-curated pointer surface participates in it — is stated here and nowhere else, so no second row can drift from it. An explicit three-way partition was rejected: the partition already existed textually and still produced duplicated acceptance. The no-pointer obligation is stated for a migrated repository as well as a fresh scaffold, and the migrated half is the one that matters most: a fresh scaffold never had the files to keep, while an upgraded repository can retain the retired authority files and still pass. Fan-out re-stamp: this row states one decision — what an unattended run's next work derives from and in what order — and its children are the successive stages of that one selection, not separable contracts; the width is the deliberate consolidation of three rows that stated the same invariant into one, so re-splitting to satisfy the bound would restore the duplication the consolidation removed.
+
+
+### LLR LLR-370 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-370
+- **SR-Refs**: SR-148
+- **Title**: A ruled open item's action is planned, done or handed on
+- **Module**: project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/pending.py;project-trajectory/scripts/gen_open_items.py
+- **CodeSymbol**: OPEN_ITEM_TOKEN/COVERING_STATUSES/open_item_numbers/ruled_uncovered/_open_item_states/_earlier_items/_covered_ruled/ruled_cover/ruled_cover_lines/work_item_naming/main
+- **Detail**: kitlib/spine.py holds the rule. OPEN_ITEM_TOKEN matches OI- and a run of digits with no letter, digit or underscore on either side, and open_item_numbers reads the item numbers a text names, leading zeros ignored. ruled_uncovered takes the open-item rows and a map from item number to the statuses of the work items whose text names it, and returns, in id order, each real ruled item that is not covered. _open_item_states reads each real item's status trimmed and in lower case, skipping a -000 example and keeping the last row of a duplicated id. _earlier_items reads the numbers a row's cells name that are lower than the row's own, from every cell but its id and the historical wi_refs cell, so an item is handed on only to a later item, one with a higher number. _covered_ruled first covers each ruled item that a work item with a status in COVERING_STATUSES names (draft, queued, active and deferred, and done for complete/), each whose follow_up cell is not blank after trimming, and each that a later pending item names; it then covers each earlier ruled item that a covered ruled item names, until nothing changes, so of two ruled items naming each other only the earlier is covered through the later. Any other status neither is judged nor covers. pending.py does the read: ruled_cover returns None when the repository carries no open-items registry, and otherwise loads it through the carrier, which stops on a registry that does not parse, and applies the rule to work_item_naming. work_i… [496 more chars — read the registry row]
+- **Rationale**: A ruling takes its item off the operator's page, and the ruling sync judges only the ruling commit, so a ruling no row cites, or one whose follow-on work was filed as another open item, was never judged again. The ruling commit drops the item from a citing row's needs, so the text the ruling sync asks that row's Done-when to write is the link that survives, and the rule reads text rather than edges. A follow_up cell records a ruling carried out in its own commit, or one that asked for no change, so a report can be clean without inventing work. The report is warn-only because a mention is an upper bound on cover: whether the naming row did what the ruling asked stays a reviewer's question.
+- **TestRefs**: TC-430; TC-431
+- **Status**: Drafted
+- **Component**: CMP-009
+- **Phase**: 6
+
+### TC TC-430 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-430
+- **Verifies**: SR-148;LLR-370;IF-073
+- **Level**: Integration
+- **Method**: Build temporary repositories, each with an open-items registry and work items, and read which ruled items the report names. A work item naming the item under draft, queued, active, deferred or complete, in either work root, covers it; one under cancelled, partial or restructured, or under a directory that is not a status, does not. A later pending item naming it covers it, and so does a later ruled item naming it that a work item covers, while a ruled citer that is not covered hands nothing on, and an earlier pending item or an earlier covered ruled item covers nothing. Two ruled items naming each other with no work item are both reported; once a work item covers the earlier one the later is still reported, and once one covers the later both are covered. A follow_up cell covers its item, and a cell of spaces does not. An id with a letter, digit or underscore on either side, or a lower-case prefix, names no item, while leading zeros are ignored. The historical wi_refs cell and an item naming itself cover nothing. A -000 open item is never judged and covers nothing, and a -000 work item covers nothing. An implemented citer covers nothing and is not judged itself. A status is read trimmed and in lower case.
+- **Tier**: Smoke
+- **Expected**: Exactly the ruled items no covering work item, covering open item or follow_up cell carries are reported, in id order.
+- **Automated**: Yes
+- **Evidence**: tests/test_ruled_open_item_cover.py
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-431 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-431
+- **Verifies**: SR-148;LLR-370;IF-073;IF-049
+- **Level**: Integration
+- **Method**: Run gen_open_items --ruled-cover in-process over temporary repositories: with no open-items registry it says the run is vacuous and returns 0; over a registry that does not parse it stops with the carrier's refusal; over a registry with one uncovered ruled item it prints one WARN line naming the item and its title and the follow_up remedy, then a count of 1, and returns 0; over a covered registry it prints no WARN line and a count of 0. Read docs/stack.ini's [run] audit line: its first step runs the report and nothing else, and the smoke budget step in enforce mode follows it. Parse the shipped open-items template and this repository's registry: each -000 row sets follow_up, and the template's header names the cell and the report.
+- **Tier**: Smoke
+- **Expected**: The report is warn-only and exits 0 on a finding, the audit runs it ahead of the budget step, and both registries' example rows show the follow_up cell.
+- **Automated**: Yes
+- **Evidence**: tests/test_ruled_open_item_cover.py
 - **Status**: Drafted
 - **Phase**: 6
 

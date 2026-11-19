@@ -1034,12 +1034,12 @@ notes = """Built and consumed together. The endpoints are the OTHER readers of t
 owner = "docs/requirements/open-items.toml"
 consumers = ["scripts/gen_open_items", "external:downstream adopter"]
 channel = "file"
-data = """status: pending | ruled; queued or claimed work-item needs edges cite pending items"""
+data = """status: pending | ruled; queued or claimed work-item needs edges cite pending items; optional follow_up on a ruled item"""
 version = "v2"
 status = "Drafted"
 interface_to_external = "B-05"
 coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
-notes = """A pending item has at least one queued or claimed work-item citer. A ruling updates every citing row in the same commit: its Done-when adds a criterion citing the item, or, on a claimed citer whose Done-when already names the step, the ruling ticks that item and adds no evidence there; its SpecRef must name a real specification once every item it cites is non-pending, and any other changed field is synchronized. The queued citer is the item's placeholder; a claimed citer holds a step its Done-when names; wi_refs is historical metadata. Published contract, not a single consumer: kit scripts parse the registry and downstream adopters author decisions."""
+notes = """A pending item has at least one queued or claimed work-item citer. A ruling updates every citing row in the same commit: its Done-when adds a criterion citing the item, or, on a claimed citer whose Done-when already names the step, the ruling ticks that item and adds no evidence there; its SpecRef must name a real specification once every item it cites is non-pending, and any other changed field is synchronized. The queued citer is the item's placeholder; a claimed citer holds a step its Done-when names; wi_refs is historical metadata. A ruled item is carried when a work item in an open or complete directory names it in its text, when a later open item (a higher number) that is pending, or ruled and itself carried, names it, or when its follow_up cell is set; gen_open_items --ruled-cover reports each other ruled item, warn-only. Published contract, not a single consumer: kit scripts parse the registry and downstream adopters author decisions."""
 
 [interface.IF-074]
 owner = "scripts/gen_open_items"
