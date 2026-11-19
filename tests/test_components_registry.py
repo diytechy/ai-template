@@ -12,6 +12,8 @@ those to real pack files as a warn-only advisory (a missing pack never gates),
 and leaves skill names and URLs in the same cell alone.
 """
 
+import pytest
+
 from conftest import make_minimal_project, run_py, record_ids
 
 CMP_HEADER = "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,Notes\n"
@@ -270,7 +272,23 @@ def test_if_component_tag_resolving_passes(scaffold):
     assert "component-findings=0" in proc.stdout
 
 
-# --- the `;`-joined Module cell in the membership join (WI-429) ---------------
+# --- the module -> component join, one home (WI-429, WI-1005) ----------------
+
+
+def _join(tmp_path, llrs):
+    """`kitlib.spine.module_components`, the join's one home, over the rows the
+    carrier loads from the LLR registry text `llrs`: the route `trajectory_arch`
+    takes, examples kept by the loader so the join's own rule is what drops
+    them."""
+    from conftest import load_script
+
+    from kitlib import spine
+
+    reg = tmp_path / "docs" / "requirements"
+    reg.mkdir(parents=True)
+    path = reg / "low-level-requirements.toml"
+    path.write_text(llrs, encoding="utf-8")
+    return spine.module_components(load_script("spine_carrier").load(path, "LLR-ID"))
 
 
 def test_module_components_splits_a_joined_module_cell(tmp_path):
@@ -279,23 +297,54 @@ def test_module_components_splits_a_joined_module_cell(tmp_path):
     key, so a row spanning two modules tagged NEITHER — silently, because a
     membership map missing an entry is indistinguishable from a module nobody
     tagged. Found when the WI-429 repair widened 2 such cells to 13 and dropped
-    `scripts/traj_parse` out of every component."""
-    from conftest import load_script
+    `scripts/traj_parse` out of every component.
 
-    ct = load_script("check_trajectory")
-    reg = tmp_path / "docs" / "requirements"
-    reg.mkdir(parents=True)
-    (reg / "low-level-requirements.toml").write_text(
+    Implements: TC-435"""
+    mapping = _join(
+        tmp_path,
         "[design.LLR-001]\n"
         'module = "project-trajectory/scripts/a.py;project-trajectory/scripts/b.py"\n'
         'component = "CMP-001"\n'
         "\n[design.LLR-002]\n"
         'module = "project-trajectory/scripts/c.py"\n'
         'component = "CMP-002;CMP-003"\n',
-        encoding="utf-8",
     )
-    mapping = ct.module_components(tmp_path)
     assert mapping["scripts/a"] == {"CMP-001"}, "the first half must be tagged"
     assert mapping["scripts/b"] == {"CMP-001"}, "and so must the second"
     assert not [k for k in mapping if ";" in k], "no joined key may survive"
     assert mapping["scripts/c"] == {"CMP-002", "CMP-003"}, "tags still multi-valued"
+
+
+@pytest.mark.parametrize(
+    "rid, component, expected",
+    [
+        ("LLR-000", "CMP-001", None),
+        ("DES-001", "CMP-001", None),
+        ("LLR-002", "cmp-001;none;CMP-002", {"CMP-002"}),
+    ],
+    ids=["example-row-skipped", "non-LLR-id-skipped", "non-CMP-token-dropped"],
+)
+def test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed(
+    tmp_path, rid, component, expected
+):
+    """The three inputs on which `gen_components`' copy of the join and
+    `trajectory_arch`'s disagreed, each held to the answer the one home kept
+    (WI-1005): `trajectory_arch`'s. A `-000` example row and a row whose id does
+    not start with `LLR-` make no membership, and a `Component` token that does
+    not start with `CMP-` is dropped. The control row shows what stays: a
+    well-formed tag naming no component row is kept, since each caller
+    intersects with the ids it declares and the dangling tag is `trace.py`'s
+    finding.
+
+    Implements: TC-435"""
+    mapping = _join(
+        tmp_path,
+        "[design.LLR-001]\n"
+        'module = "project-trajectory/scripts/kept.py"\n'
+        'component = "CMP-001;CMP-404"\n'
+        "\n[design.{}]\n"
+        'module = "project-trajectory/scripts/x.py"\n'
+        'component = "{}"\n'.format(rid, component),
+    )
+    assert mapping.get("scripts/x") == expected
+    assert mapping["scripts/kept"] == {"CMP-001", "CMP-404"}

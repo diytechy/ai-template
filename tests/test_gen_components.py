@@ -203,6 +203,28 @@ def test_an_untagged_seam_is_placed_by_its_ENDPOINTS(repo):
     assert placed == {"IF-001", "IF-002"}
 
 
+def test_seam_placement_reads_membership_from_the_one_join(repo, monkeypatch):
+    """The generator holds no join of its own (WI-1005): `build` asks
+    `kitlib.spine.module_components` for the module -> component map, once,
+    over the design rows it loaded, and places seams by whatever that answers.
+    Stubbed to answer nothing, the two seams placed by their endpoints alone
+    fall to `[unplaced]`, so the answer is read, not merely requested.
+
+    Implements: TC-435"""
+    gen = load_script(GEN)
+    assert not hasattr(gen, "module_components"), "the generator's copy is deleted"
+    asked = []
+
+    def nothing(llrs):
+        asked.append([r["LLR-ID"] for r in llrs])
+        return {}
+
+    monkeypatch.setattr(gen._kitspine, "module_components", nothing)
+    _, unplaced = gen.build(*gen._load(repo))
+    assert asked == [["LLR-001", "LLR-002"]]
+    assert unplaced["seam_refs"] == ["IF-001", "IF-002", "IF-003"]
+
+
 def test_an_unplaceable_seam_is_REPORTED_not_silently_excluded(repo):
     """Implements: TC-195"""
     # IF-003 is external at both ends: no tag, no resolvable module. It cannot
