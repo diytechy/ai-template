@@ -19,7 +19,7 @@
 [derived]
 components = 4
 design_rows = 334
-seam_rows = 258
+seam_rows = 259
 requirements_placed = 133
 requirements_unplaced = 5
 seams_unplaced = 0
@@ -27,7 +27,6 @@ seams_unplaced = 0
 [component_view.CMP-006]
 name = "W1 Registry & conformance"
 sr_refs = [
-  "SR-015",
   "SR-017",
   "SR-049",
   "SR-070",
@@ -80,6 +79,7 @@ sr_refs = [
   "SR-228",
   "SR-236",
   "SR-245",
+  "SR-247",
 ]
 sr_shared_refs = [
   "SR-017",
@@ -103,7 +103,6 @@ llr_refs = [
   "LLR-003",
   "LLR-004",
   "LLR-005",
-  "LLR-015",
   "LLR-023",
   "LLR-034",
   "LLR-041",
@@ -200,6 +199,7 @@ llr_refs = [
   "LLR-362",
   "LLR-365",
   "LLR-366",
+  "LLR-369",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -257,6 +257,7 @@ modules = [
   "project-trajectory/scripts/kitlib/stage.py",
   "project-trajectory/scripts/kitlib/verdict.py",
   "project-trajectory/scripts/migrate_carrier.py",
+  "project-trajectory/scripts/migrate_vocabulary.py",
   "project-trajectory/scripts/plan_coverage.py",
   "project-trajectory/scripts/record_observation.py",
   "project-trajectory/scripts/retire.py",
@@ -431,6 +432,7 @@ seam_boundary_refs = [
   "IF-309",
   "IF-310",
   "IF-311",
+  "IF-312",
 ]
 
 [component_view.CMP-007]
@@ -635,6 +637,7 @@ seam_boundary_refs = [
   "IF-287",
   "IF-295",
   "IF-304",
+  "IF-312",
 ]
 
 [component_view.CMP-008]
@@ -889,10 +892,10 @@ modules = [
   "project-trajectory/scripts/kitlib/decisions.py",
   "project-trajectory/scripts/kitlib/dispute.py",
   "project-trajectory/scripts/kitlib/done_when.py",
+  "project-trajectory/scripts/kitlib/expected_failure.py",
   "project-trajectory/scripts/kitlib/git.py",
   "project-trajectory/scripts/kitlib/plan_pass.py",
   "project-trajectory/scripts/kitlib/provenance.py",
-  "project-trajectory/scripts/kitlib/expected_failure.py",
   "project-trajectory/scripts/kitlib/registry.py",
   "project-trajectory/scripts/kitlib/shell_line.py",
   "project-trajectory/scripts/kitlib/sitting.py",

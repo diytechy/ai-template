@@ -232,7 +232,7 @@ MAPPING = [
     (
         "registries/performance-budgets.template.csv",
         "docs/requirements/performance-budgets.csv",
-        "SR-015",
+        "SR-157",
     ),
     (
         "registries/procurement.template.csv",

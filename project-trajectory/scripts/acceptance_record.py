@@ -1703,7 +1703,7 @@ def staged_hat_refs_findings(root):
     next rung, on evidence.
 
     AN EMPTY `Hat-Refs` CELL STILL FIRES. A cell that was never filled and a
-    cell deliberately left empty (`SR-015`, `SR-040` — both argued and correct)
+    cell deliberately left empty (`SR-040`, argued and correct)
     are indistinguishable to a reader, and the guard's question is whether the
     set was RE-EXAMINED, which an unchanged empty cell does not answer.
 

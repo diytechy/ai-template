@@ -5698,7 +5698,7 @@ def analyze(reg, args):
     POLICY: the four flags (`AnalysisFlags`), the phase scope, and the reasons a
     finding class rides one pipe rather than another.
 
-    Implements: SR-157, SR-015, LLR-015
+    Implements: SR-157
     """
     flags = AnalysisFlags.of(args)
     srs, llrs, tcs = reg.srs, reg.llrs, reg.tcs

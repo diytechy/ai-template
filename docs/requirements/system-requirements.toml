@@ -68,20 +68,6 @@ status = "Accepted"
 phase = 1
 coincident = """The need asks that a re-sync onto an existing repository never clobber the repository's own files; a re-run that leaves every existing file byte-unchanged, replacing one only when an overwrite is explicitly requested, is that clause delivered by the generator itself, with no party between the re-run and the files it leaves alone."""
 
-[requirement.SR-015]
-title = "Performance-budget back-links"
-sn_refs = ["SN-002"]
-boundary_refs = ["B-09"]
-requirement = "The delivered performance-budgets registry (PB-###) shall keep every row's Refs resolvable to a real SR/LLR/Module."
-rationale = "Realizes SN-002 — a budget row that cannot be traced to a requirement, design item or module cannot demonstrate what it constrains, so the off-spine budget rows stay traceable to the spine. Deliberate pair: this row states the delivered data invariant; the checker that polices it is the harness's, decomposing under SR-157 — an on-purpose split, not an echo. SN-002 is the only basis: hat.PERFORMANCE's failure class is a speed or size risk left unassessed, or a budget with no measurement behind it, which says nothing about whether a trace reference resolves."
-acceptance_criteria = "A PB row with an unresolvable or empty Refs is a finding; a resolvable one passes."
-priority = "S"
-verification_method = "Test"
-status = "Accepted"
-phase = 1
-aspect = "perf"
-delivered_with = ["SR-157"]
-
 [requirement.SR-017]
 title = "Always-on secrets floor"
 sn_refs = ["SN-009"]
@@ -752,7 +738,7 @@ sn_refs = ["SN-002", "SN-012", "SN-025"]
 boundary_refs = ["B-09"]
 hat_refs = ["FIRST-RUN-ADOPTER", "TEST-ENGINEER"]
 requirement = """The delivered harness shall report every declared spine and work-registry rule violation — broken joins, integrity and schema faults, leftover placeholders, requirement-form findings and work-item coherence contradictions — naming the at-fault row and cell, gating the declared failure set at the declared gate while advisory classes never change the exit code."""
-rationale = """Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Deliberate pair (census F6): the PB-format invariant itself is SR-015's; this row's decomposition carries the checker. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought."""
+rationale = """Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought."""
 acceptance_criteria = "Each declared registry rule violation is reported with row-level attribution; the declared strict set exits nonzero at its gate and advisory classes never join the exit code; absent or placeholder-only optional registries and declared opt-outs are vacuous; the declared verification vocabulary (including Critique) is accepted and an unknown value fails. The declaration this is read against is the rule inventory the delivered checkers themselves publish — the id shapes, the required cells and the closed vocabularies (with the interface and component entries advisory by their own recorded ruling), the strict flag families and their stated exit contracts, the gating form and provenance findings beside the never-gating paraphrase and acceptance advisories, and the work-item coherence rules with their declared opt-out — each recorded at its declaration site, not restated here. A rule added at one of those sites is in this row's scope by default: an unreported one is a finding against this row, not an amendment to it."
 priority = "M"
 verification_method = "Test"

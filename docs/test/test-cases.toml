@@ -51,7 +51,7 @@ method = """Run the off-spine registry suites; PB and current REPO/legacy MOD ba
 tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-005 (parent SR-157)"
 automated = "Yes"
-evidence = "tests/test_modules_registry.py;tests/test_procurement.py;tests/test_assets.py"
+evidence = "tests/test_modules_registry.py;tests/test_procurement.py;tests/test_assets.py;tests/test_perf_budgets.py"
 status = "Accepted"
 phase = 1
 
@@ -151,17 +151,6 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-014, under both its parents: SR-167's perf-budget breach verdict (the absolute and regression arms this case drives) and SR-006's harness step plan that runs it, including the stage the step is wired at"
 automated = "Yes"
 evidence = "tests/test_check_perf.py; tests/test_check_perf.py::test_harness_runs_perf_at_g3"
-status = "Accepted"
-phase = 1
-
-[test.TC-015]
-verifies = ["SR-015", "LLR-015"]
-level = "Integration"
-method = "Run the perf-budgets suite; an unresolvable or empty PB Refs is a finding."
-tier = "Full"
-expected = "Satisfies SR-015 AcceptanceCriteria"
-automated = "Yes"
-evidence = "tests/test_perf_budgets.py"
 status = "Accepted"
 phase = 1
 

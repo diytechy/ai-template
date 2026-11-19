@@ -50,7 +50,7 @@ sr_refs = ["SR-157"]
 title = "Off-spine integrity + back-links"
 module = "project-trajectory/scripts/trace.py"
 code_symbol = "integrity_findings/module_findings"
-detail = "Integrity-checks the PB/REPO/PART/ASSET ids plus legacy MOD compatibility and resolves REPO/MOD DelegatedSRs against the SR set; -000 example rows ignored. Resolves each PB row's Refs to a real SR/LLR/Module id — an unresolvable or empty Refs is a finding; this is the CHECKER half of the deliberate pair with SR-015's delivered-data invariant, an on-purpose split, not an echo. An unused optional registry never blocks: absent registries are vacuous."
+detail = "Integrity-checks the PB/REPO/PART/ASSET ids plus legacy MOD compatibility and resolves REPO/MOD DelegatedSRs against the SR set; -000 example rows ignored. Resolves each PB row's Refs to a real SR/LLR/Module id — an unresolvable or empty Refs is a finding. An unused optional registry never blocks: absent registries are vacuous."
 test_refs = "(see TC-005)"
 status = "Accepted"
 component = "CMP-006"
@@ -153,17 +153,6 @@ detail = """Compares measured metrics (docs/test/perf-metrics.json) to declared 
 test_refs = "(see TC-014)"
 status = "Accepted"
 component = "CMP-007"
-phase = 1
-
-[design.LLR-015]
-sr_refs = ["SR-015"]
-title = "PB back-link resolution"
-module = "project-trajectory/scripts/trace.py"
-code_symbol = "analyze"
-detail = """Resolves each PB row's Refs to a real SR/LLR/Module id; an empty or unresolvable Refs is a finding."""
-test_refs = "(see TC-015)"
-status = "Accepted"
-component = "CMP-006"
 phase = 1
 
 [design.LLR-016]
