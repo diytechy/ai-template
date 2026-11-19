@@ -4,8 +4,9 @@ verbatim from tests/test_trajectory.py by behavior boundary).
 Interface-connectivity coverage (WI-056), the How-SW top-view right-sizing
 bound (WI-073/FB5), knowledge⇒component coupling (WI-153), cross-CMP edges
 without a declared IF (WI-064), specs
-acting on declared interface boundaries (WI-191), and the component
-partition's derivation record (WI-999).
+acting on declared interface boundaries (WI-191), the component
+partition's derivation record (WI-999), and an accepted automated test case
+no test declares (WI-1001).
 
 check_vocab: allow-file — THE ANCHOR FIXTURES MUST AUTHOR THE RETIRED SPELLING.
 `check_trajectory` TRANSLATES `[p]-[g1]`/`[p]-[reqs]` on read and never rewrites
@@ -2579,7 +2580,9 @@ def test_a_note_only_cell_has_no_part_and_a_tag_on_it_is_a_finding(tmp_path):
     note = "(owed by WI-900)"
     _write_equality_tree(tmp_path, note, UNTAGGED_TEST)
     untagged = run_traj(tmp_path, "--strict")
-    assert untagged.returncode == 0, untagged.stdout + untagged.stderr
+    # The case is accepted and automated, so its missing test is WI-1001's
+    # finding; the equality rule this test pins reads nothing.
+    assert _equality_findings(untagged, "ERROR") == [], untagged.stderr
 
     _write_equality_tree(tmp_path, note, TAG_CLEAN_FILE)
     tagged = run_traj(tmp_path, "--strict")
@@ -2587,6 +2590,303 @@ def test_a_note_only_cell_has_no_part_and_a_tag_on_it_is_a_finding(tmp_path):
         tagged.stderr
     )
     assert tagged.returncode == 1, tagged.stdout + tagged.stderr
+
+
+# --- WI-1001: an accepted automated case has a test declaring it --------------
+# A finding prints as `<level> - <TC>: no test declares it`. Each comparison is
+# of the whole list of them, so their number and order are pinned too. TC-428
+# pins the ruling's input table, TC-429 the sequence a case walks.
+
+OWED_NOTE = "(owed by the tests commit)"
+TAG_MALFORMED_FILE = '"""Module text.\n\nImplements: TC-001, SR-002\n"""\n'
+
+
+def _undeclared(proc, level):
+    """`proc`'s `no test declares it` findings at `level` in print order, prefix
+    dropped."""
+    prefix = "check_trajectory: {} - ".format(level)
+    return [
+        line[len(prefix) :]
+        for line in proc.stderr.splitlines()
+        if line.startswith(prefix) and line.endswith(": no test declares it")
+    ]
+
+
+def _no_test(tc="TC-001"):
+    """The finding for an accepted automated case no test declares."""
+    return "{}: no test declares it".format(tc)
+
+
+def _case_row(tc="TC-001", status="Accepted", automated="Yes", evidence=OWED_NOTE):
+    """One TOML test-case row; `None` leaves a cell's key out."""
+    cells = ['verifies = ["SR-001"]', 'level = "Unit"', 'method = "m"']
+    cells += ['tier = "Full"', 'expected = "e"']
+    if automated is not None:
+        cells.append('automated = "{}"'.format(automated))
+    if evidence is not None:
+        cells.append('evidence = "{}"'.format(evidence))
+    cells.append('status = "{}"'.format(status))
+    return "[test.{}]\n{}\n\n".format(tc, "\n".join(cells))
+
+
+def _write_case_tree(root, rows, text=UNTAGGED_TEST, rel=TAGGED_FILE):
+    """The TOML registry holding `rows`, and the one test file `text`."""
+    path = root / "docs" / "test" / "test-cases.toml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("".join(rows), encoding="utf-8")
+    _write_test_file(root, rel, text)
+
+
+def test_the_undeclared_rule_is_vacuous_with_no_tests_root_or_no_registry(tmp_path):
+    """Implements: TC-428"""
+    _write_test_file(tmp_path, TAGGED_FILE, UNTAGGED_TEST)
+    no_registry = run_traj(tmp_path, "--strict")
+    assert _undeclared(no_registry, "ERROR") == [], no_registry.stderr
+    assert no_registry.returncode == 0, no_registry.stdout + no_registry.stderr
+
+    _write_case_tree(tmp_path, [_case_row()])
+    paired = run_traj(tmp_path, "--strict")
+    assert _undeclared(paired, "ERROR") == [_no_test()], paired.stderr
+    assert paired.returncode == 1, paired.stdout + paired.stderr
+
+    shutil.rmtree(tmp_path / "tests")
+    no_tests = run_traj(tmp_path, "--strict")
+    assert _undeclared(no_tests, "ERROR") == [], no_tests.stderr
+    assert no_tests.returncode == 0, no_tests.stdout + no_tests.stderr
+
+
+def test_an_unparseable_registry_stops_the_run_before_the_undeclared_rule(tmp_path):
+    """Implements: TC-428"""
+    _write_test_file(tmp_path, TAGGED_FILE, UNTAGGED_TEST)
+    registry = tmp_path / "docs" / "test" / "test-cases.toml"
+    registry.parent.mkdir(parents=True)
+    registry.write_text("[test.TC-001\nverifies = [", encoding="utf-8")
+    for extra in ([], ["--strict"]):
+        proc = run_traj(tmp_path, *extra)
+        assert "spine_carrier:" in proc.stderr, proc.stderr
+        assert "does not parse as TOML" in proc.stderr, proc.stderr
+        assert "no test declares it" not in proc.stderr, proc.stderr
+        assert proc.returncode == 1, proc.stdout + proc.stderr
+
+
+def test_a_placeholder_row_owes_no_declaration(tmp_path):
+    """Implements: TC-428"""
+    _write_case_tree(tmp_path, [_case_row("TC-000")])
+    placeholder_only = run_traj(tmp_path, "--strict")
+    assert _undeclared(placeholder_only, "ERROR") == [], placeholder_only.stderr
+    assert placeholder_only.returncode == 0, (
+        placeholder_only.stdout + placeholder_only.stderr
+    )
+
+    _write_case_tree(tmp_path, [_case_row("TC-000"), _case_row()])
+    beside = run_traj(tmp_path, "--strict")
+    assert _undeclared(beside, "ERROR") == [_no_test()], beside.stderr
+
+
+def test_a_drafted_case_owes_no_declaration_and_its_parts_are_still_held(tmp_path):
+    """Implements: TC-428"""
+    _write_case_tree(tmp_path, [_case_row(status="Drafted")])
+    noted = run_traj(tmp_path, "--strict")
+    assert _undeclared(noted, "ERROR") == [], noted.stderr
+    assert noted.returncode == 0, noted.stdout + noted.stderr
+
+    _write_case_tree(tmp_path, [_case_row(status="Drafted", evidence=TAGGED_NODE)])
+    parted = run_traj(tmp_path, "--strict")
+    assert _undeclared(parted, "ERROR") == [], parted.stderr
+    assert _equality_findings(parted, "ERROR") == [_no_tag(TAGGED_NODE)], parted.stderr
+    assert parted.returncode == 1, parted.stdout + parted.stderr
+
+
+@pytest.mark.parametrize(
+    "automated, carrier",
+    [("No", "toml"), ("Sometimes", "toml"), (None, "toml"), ("", "csv")],
+    ids=["no", "another-word", "absent-column", "blank"],
+)
+def test_a_case_not_automated_owes_no_declaration(tmp_path, automated, carrier):
+    """Implements: TC-428"""
+    if carrier == "toml":
+        _write_case_tree(tmp_path, [_case_row(automated=automated)])
+    else:
+        # The TOML carrier refuses an explicit empty cell, so a blank one is the
+        # legacy CSV carrier's.
+        path = tmp_path / "docs" / "test" / "test-cases.csv"
+        path.parent.mkdir(parents=True)
+        path.write_text(
+            "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
+            "Evidence,Status\nTC-001,SR-001,Unit,m,Full,,e,,{},Accepted\n".format(
+                OWED_NOTE
+            ),
+            encoding="utf-8",
+        )
+        _write_test_file(tmp_path, TAGGED_FILE, UNTAGGED_TEST)
+    proc = run_traj(tmp_path, "--strict")
+    assert _undeclared(proc, "ERROR") == [], proc.stderr
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+@pytest.mark.parametrize(
+    "status, automated",
+    [("Accepted", "Yes"), ("Founded", "Yes"), ("Accepted", " YES ")],
+    ids=["accepted", "founded", "padded-upper-case"],
+)
+def test_an_eligible_case_is_clean_when_tagged_and_named_when_not(
+    tmp_path, status, automated
+):
+    """Implements: TC-428"""
+    row = _case_row(status=status, automated=automated, evidence=TAGGED_NODE)
+    _write_case_tree(tmp_path, [row], TAGGED_TEST)
+    tagged = run_traj(tmp_path, "--strict")
+    assert _undeclared(tagged, "ERROR") == [], tagged.stderr
+    assert tagged.returncode == 0, tagged.stdout + tagged.stderr
+
+    _write_case_tree(tmp_path, [_case_row(status=status, automated=automated)])
+    untagged = run_traj(tmp_path, "--strict")
+    assert _undeclared(untagged, "ERROR") == [_no_test()], untagged.stderr
+    assert untagged.returncode == 1, untagged.stdout + untagged.stderr
+
+
+def test_a_part_in_an_unreadable_file_adds_no_undeclared_finding(tmp_path):
+    """Implements: TC-428"""
+    # Adequacy witness: a rule blind to the refused set reads both rows below
+    # as undeclared, and this test fails in both phases.
+    broken = "tests/test_broken.py"
+    _write_case_tree(tmp_path, [_case_row(evidence=broken + "::test_x")])
+    _write_test_file(tmp_path, broken, "def broken(:\n")
+    alone = run_traj(tmp_path, "--strict")
+    assert len(_tag_finding(alone, "ERROR", broken, 1, "unreadable")) == 1, alone.stderr
+    assert _undeclared(alone, "ERROR") == [], alone.stderr
+    assert alone.returncode == 1, alone.stdout + alone.stderr
+
+    cell = "{}::test_x; {}".format(broken, TAGGED_NODE)
+    _write_case_tree(tmp_path, [_case_row(evidence=cell)])
+    beside = run_traj(tmp_path, "--strict")
+    assert _undeclared(beside, "ERROR") == [], beside.stderr
+    assert _equality_findings(beside, "ERROR") == [_no_tag(TAGGED_NODE)], beside.stderr
+
+
+@pytest.mark.parametrize(
+    "evidence, untagged_parts",
+    [
+        (OWED_NOTE, []),
+        (None, []),
+        (TAGGED_FILE, [TAGGED_FILE]),
+        ("docs/notes.md#anchor", []),
+        ("tests/test_missing.py::test_x", ["tests/test_missing.py::test_x"]),
+    ],
+    ids=["note", "no-cell", "whole-file", "outside-the-root", "absent-path"],
+)
+def test_an_eligible_untagged_case_is_named_whatever_its_cell_holds(
+    tmp_path, evidence, untagged_parts
+):
+    """Implements: TC-428"""
+    _write_case_tree(tmp_path, [_case_row(evidence=evidence)])
+    proc = run_traj(tmp_path, "--strict")
+    assert _undeclared(proc, "ERROR") == [_no_test()], proc.stderr
+    expected = [_no_tag(part) for part in untagged_parts]
+    assert _equality_findings(proc, "ERROR") == expected, proc.stderr
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+
+
+@pytest.mark.parametrize(
+    "text, shape",
+    [(TAG_MISPLACED_FILE, "misplaced"), (TAG_MALFORMED_FILE, "malformed")],
+    ids=["misplaced", "malformed"],
+)
+def test_a_refused_tag_declares_nothing(tmp_path, text, shape):
+    """Implements: TC-428"""
+    _write_case_tree(tmp_path, [_case_row(evidence=TAGGED_FILE)], text)
+    only = run_traj(tmp_path, "--strict")
+    assert len(_tag_finding(only, "ERROR", TAGGED_FILE, 3, shape)) == 1, only.stderr
+    assert _undeclared(only, "ERROR") == [_no_test()], only.stderr
+    assert only.returncode == 1, only.stdout + only.stderr
+
+    _write_case_tree(tmp_path, [_case_row(evidence=TAGGED_NODE)], text + TAGGED_TEST)
+    beside = run_traj(tmp_path, "--strict")
+    assert len(_tag_finding(beside, "ERROR", TAGGED_FILE, 3, shape)) == 1, beside.stderr
+    assert _undeclared(beside, "ERROR") == [], beside.stderr
+
+
+def test_one_tag_clears_the_part_and_the_declaration_findings(tmp_path):
+    """Implements: TC-428"""
+    _write_case_tree(tmp_path, [_case_row(evidence=TAGGED_NODE)])
+    untagged = run_traj(tmp_path, "--strict")
+    assert _equality_findings(untagged, "ERROR") == [_no_tag(TAGGED_NODE)], (
+        untagged.stderr
+    )
+    assert _undeclared(untagged, "ERROR") == [_no_test()], untagged.stderr
+
+    _write_case_tree(tmp_path, [_case_row(evidence=TAGGED_NODE)], TAGGED_TEST)
+    tagged = run_traj(tmp_path, "--strict")
+    assert _equality_findings(tagged, "ERROR") == [], tagged.stderr
+    assert _undeclared(tagged, "ERROR") == [], tagged.stderr
+    assert tagged.returncode == 0, tagged.stdout + tagged.stderr
+
+
+def test_a_lanes_order_never_meets_the_undeclared_finding(tmp_path):
+    """Implements: TC-429"""
+    _write_case_tree(tmp_path, [_case_row(status="Drafted")])
+    intent = run_traj(tmp_path, "--strict")
+    assert _undeclared(intent, "ERROR") == [], intent.stderr
+    assert intent.returncode == 0, intent.stdout + intent.stderr
+
+    drafted = _case_row(status="Drafted", evidence=TAGGED_NODE)
+    _write_case_tree(tmp_path, [drafted], TAGGED_TEST)
+    tests_commit = run_traj(tmp_path, "--strict")
+    assert tests_commit.returncode == 0, tests_commit.stdout + tests_commit.stderr
+
+    _write_case_tree(tmp_path, [_case_row(evidence=TAGGED_NODE)], TAGGED_TEST)
+    act = run_traj(tmp_path, "--strict")
+    assert _undeclared(act, "ERROR") == [], act.stderr
+    assert act.returncode == 0, act.stdout + act.stderr
+
+
+@pytest.mark.parametrize(
+    "work_items", [False, True], ids=["no-work-items", "with-work-items"]
+)
+def test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict(
+    tmp_path, work_items
+):
+    """Implements: TC-429"""
+    if work_items:
+        write_wis(tmp_path, "WI-001,A,scripts,,,done,Shipped it.\n")
+    _write_case_tree(tmp_path, [_case_row()])
+    plain = run_traj(tmp_path)
+    assert _undeclared(plain, "WARN") == [_no_test()], plain.stderr
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert _undeclared(strict, "ERROR") == [_no_test()], strict.stderr
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+
+    _write_case_tree(tmp_path, [_case_row(evidence=TAGGED_NODE)], TAGGED_TEST)
+    tagged = run_traj(tmp_path, "--strict")
+    assert tagged.returncode == 0, tagged.stdout + tagged.stderr
+
+
+def test_the_undeclared_finding_on_a_bootstrapped_scaffold(scaffold):
+    """Implements: TC-429"""
+    registry = scaffold / "docs" / "test" / "test-cases.toml"
+    template = registry.read_text(encoding="utf-8") + "\n"
+
+    def trajectory_at(stage):
+        return run_py(
+            ["scripts/check.py", "--stage", stage, "--run-steps", "trajectory"],
+            cwd=scaffold,
+        )
+
+    registry.write_text(template + _case_row(), encoding="utf-8")
+    _write_test_file(scaffold, TAGGED_FILE, UNTAGGED_TEST)
+    below = trajectory_at("DevStg-Tests")
+    assert below.returncode == 0, below.stdout + below.stderr
+    assert _no_test() in below.stdout + below.stderr
+    at_rung = trajectory_at("DevStg-Impl")
+    assert at_rung.returncode != 0, at_rung.stdout + at_rung.stderr
+    assert "=== trajectory" in at_rung.stdout, at_rung.stdout
+    assert "ERROR - " + _no_test() in at_rung.stdout + at_rung.stderr
+
+    registry.write_text(template + _case_row(evidence=TAGGED_NODE), encoding="utf-8")
+    _write_test_file(scaffold, TAGGED_FILE, TAGGED_TEST)
+    tagged = trajectory_at("DevStg-Impl")
+    assert tagged.returncode == 0, tagged.stdout + tagged.stderr
 
 
 # --- SR-165 / WI-999: the partition's derivation record (TC-166) --------------
