@@ -3,12 +3,48 @@ id = "WI-1011"
 title = "dev-setup reports the GitHub CLI and offers to install it, as an optional tool"
 workstream = "scripts"
 sr_refs = ["SR-032"]
-specref = "docs/plans/2026-11-11-test-tiers/HANDOFF.md#126-progress-log"
+specref = ""
 buildtier = "quick"
 safety_class = "ordinary"
 planmode = "single"
 priority = 3
 +++
+
+## Deliverable
+
+dev-setup reports the GitHub CLI, `gh`, as an optional tool and offers it
+consent-first, in this repository's `scripts/dev-setup.{sh,ps1}` and the
+shipped `project-trajectory/scripts/dev-setup.template.{sh,ps1}`; the
+`.cmd`/`.command` launchers hand their arguments on and are unchanged. Built
+on the maintenance branch `maint/wi-1011`. By commit:
+
+- `376edbd80`: the tests' stand-in builder takes an exit status and a list of
+  present commands instead of two boolean flags (the readability report's
+  flag-axis reading back to 0).
+- `9ef7e138c`: `README.md` names the optional GitHub CLI among what
+  dev-setup offers.
+- `cfcc68d15`: the report line (marked optional, the platform's install
+  command and `gh auth login`; the template's count leaves it out through a
+  new optional argument to `report`/`Report`), the offer (`offer_gh`,
+  `Offer-Gh`, `OfferGh`) from the install operations only, through winget,
+  Homebrew, apt-get or dnf already on the machine, and the RESYNC entry
+  (nothing forced).
+- `71c7d9893`: LLR-372, TC-433 and TC-434 (Drafted) and 11 tests (31 cases)
+  in `tests/test_run_devsetup.py`, every one on a PATH of stand-ins only; red
+  at that commit.
+- `415952047`: the plan, `docs/plans/WI-1011/plan.md`.
+- `7358b47b7`: the critique dispositions and `planmode = "single"`.
+
+Left undone: nothing in the Done-when. The three pseudo-terminal cases run
+on POSIX only and skip on Windows; they were run under WSL Ubuntu (Python
+3.12, dash as `sh`) and passed, as did this row's other POSIX cases. The
+manual confirmation was made: `scripts\dev-setup.ps1 -Check` with
+`C:\Program Files\GitHub CLI` on PATH reads `[ok]` for `gh` 2.105.0. Out of
+scope, not done: the `gh` row in
+`docs/dependencies.md` still reads "Forge-mode backend only"; dev-setup now
+offers `gh` without depending on it, so the row may want a note. The
+specref (`docs/plans/2026-11-11-test-tiers/HANDOFF.md`, §12.6) is cleared at
+close, as a terminal row's is.
 
 ## Context
 
@@ -40,14 +76,14 @@ changes its exit status.
 
 ## Done-when
 
-- [ ] Each dev-setup's standalone check (`-Check`; `--check` on POSIX), this
+- [x] Each dev-setup's standalone check (`-Check`; `--check` on POSIX), this
       repository's and the shipped template's, reports `gh` as present or
       missing, marked optional, with the install command for the platform
       (`winget install --id GitHub.cli` on Windows; `brew install gh` on macOS;
       the distribution's package or GitHub's apt repository on Linux) and the
       sign-in step, `gh auth login`. A missing `gh` is not counted among the
       template's missing components, and the check still exits 0.
-- [ ] `-Install` (`--install` on POSIX) offers to install it through the
+- [x] `-Install` (`--install` on POSIX) offers to install it through the
       platform's package manager when one is on the machine (winget on
       Windows; Homebrew on macOS; apt-get, dnf or Homebrew on Linux), and
       installs it only on consent: an answer beginning `y` or `Y` installs;
@@ -56,11 +92,11 @@ changes its exit status.
       manual command and offers nothing; a failed install prints a warning
       and the manual command. A missing `gh` never fails setup: the
       operation's exit status is the one it has without the `gh` step.
-- [ ] The shipped dev-setup templates make the same report and offer, from
+- [x] The shipped dev-setup templates make the same report and offer, from
       their install tiers (`-Baseline`/`--baseline` and `-Full`/`--full`) and
       at an interactive terminal only, as their other installs are; a RESYNC
       entry covers the shipped change.
-- [ ] Tests on a stubbed PATH, with stand-ins for `gh` and each package
+- [x] Tests on a stubbed PATH, with stand-ins for `gh` and each package
       manager and with nothing really installed, verify both families' present
       and missing reports, each platform's install command, and the consent,
       decline, closed-input, no-package-manager and failed-install arms; the
