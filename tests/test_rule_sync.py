@@ -1094,11 +1094,11 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         # tags landed, never because the minimum came down; docs/process.toml's own
         # comment and docs/log.d/2026-08-20-program-grind.md carry the figure.
         "backlink_coverage_min": 50,
-        # WI-640 (SR-217): this repo's history predates the rule and reaches
-        # back before the TOML registries, so it declares the start at the
-        # PARENT of the phase-6 acceptance act (cbb6649f): the chains that act
-        # accepted are the first judged by the rule they include.
-        "test_first_since": "f537fc531dd37b372259ba84f8836a290d1efddb",
+        # WI-640 (SR-217): this repo's history predates the rule. Since
+        # 2026-11-19 it declares the start at the merge that brought the
+        # vocabulary cut onto trunk (operator ruling 2026-11-16): acceptances
+        # before the cut are under a spelling the current reader does not read.
+        "test_first_since": "f6dd5b87a182a3b8fc555796ce845221227d6c64",
     }
     assert live["checks"] == {**checks, **OPERATOR_DIALS}
     # AND THE README'S DIAL TABLE, whose third column is this repo's own value
