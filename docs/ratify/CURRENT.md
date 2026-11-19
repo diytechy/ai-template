@@ -14,6 +14,12 @@ _Baseline: `docs/requirements/components.toml` copied 2026-11-16 (2bee2b551)._
 
 _Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 9b377be1e (2026-11-18) — the record's maturity cells have not moved since._
 
+## Off-spine census
+
+_Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
+
+- `docs/requirements/interfaces.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): none cited.
+
 ## Assumptions and surrogates owing an acceptance
 
 ### DA-001 — Drafted, never accepted
@@ -604,4 +610,45 @@ record runs through the live registry first.
 - DA-010 — A vision model judging the rendered state view against its written rubric reaches the verdict a human reviewer reading the same render would.
 
 
-_No spine row differs from its `docs/archive/last_accepted` copy, and no row awaits a first acceptance._
+
+_No chain on a rung the operator-acceptance dial holds owes an act; every chain in this brief waits for automated adjudication._
+
+## Waiting for automated adjudication
+
+_Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
+
+<details>
+<summary>Waiting for automated adjudication — 1 chain(s): SR-157</summary>
+
+## SR-157 — Spine and work-registry rules fail the harness verdict
+
+> **Requirement.** The delivered harness shall report every declared spine and work-registry rule violation — broken joins, integrity and schema faults, leftover placeholders, requirement-form findings and work-item coherence contradictions — naming the at-fault row and cell, gating the declared failure set at the declared gate while advisory classes never change the exit code.
+
+> **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
+
+
+### TC TC-428 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-428
+- **Verifies**: SR-157;IF-263
+- **Level**: Integration
+- **Method**: Run the trajectory check over registries and test trees covering each input state of the undeclared-case rule: no registry, no tests root and a registry that does not parse; a placeholder row; a Drafted case holding a note and holding an untagged part; an automated cell reading No, another word, absent and blank; an Accepted and a Founded case, and one whose automated cell is padded and upper-case, each tagged and untagged; a case whose part is in an unreadable file, alone and beside a readable part; an untagged case holding a note, no cell, a whole-file part, a part outside the tests root and an absent path; a misplaced and a malformed tag, alone and beside a valid one; and an untagged part, then tagged.
+- **Tier**: Full
+- **Expected**: Absent inputs are vacuous and an unparseable registry stops the run in the carrier with no such finding; a placeholder row, a Drafted case and a case not automated owe no declaration, while a Drafted case's parts are still held equal; an eligible tagged case is clean; a part in an unreadable file adds only that file's finding; every other eligible untagged case reads that no test declares it, whatever its cell holds; a refused tag declares nothing; and one tag clears both the part's finding and the case's.
+- **Automated**: Yes
+- **Evidence**: tests/test_trajectory_arch.py::test_the_undeclared_rule_is_vacuous_with_no_tests_root_or_no_registry; tests/test_trajectory_arch.py::test_an_unparseable_registry_stops_the_run_before_the_undeclared_rule; tests/test_trajectory_arch.py::test_a_placeholder_row_owes_no_declaration; tests/test_trajectory_arch.py::test_a_drafted_case_owes_no_declaration_and_its_parts_are_still_held; tests/test_trajectory_arch.py::test_a_case_not_automated_owes_no_declaration; tests/test_trajectory_arch.py::test_an_eligible_case_is_clean_when_tagged_and_named_when_not; tests/test_trajectory_arch.py::test_a_part_in_an_unreadable_file_adds_no_undeclared_finding; tests/test_trajectory_arch.py::test_an_eligible_untagged_case_is_named_whatever_its_cell_holds; tests/test_trajectory_arch.py::test_a_refused_tag_declares_nothing; tests/test_trajectory_arch.py::test_one_tag_clears_the_part_and_the_declaration_findings
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-429 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-429
+- **Verifies**: SR-157;IF-263
+- **Level**: Integration
+- **Method**: Walk one test case through a lane's order, Drafted holding a note, then Drafted and tagged, then Accepted and tagged; then out of order, Accepted before its tag, in plain and strict runs with and without work items, and once tagged; then run the same untagged Accepted case in a bootstrapped scaffold below and at the implementation rung, and once tagged.
+- **Tier**: Full
+- **Expected**: A lane's order reads no finding at any step; an Accepted case with no tag warns with exit 0 in a plain run and errors with exit 1 under strict checking until it is tagged; and a newly created project warns and exits 0 at DevStg-Tests, fails at DevStg-Impl, and is clean once the case is tagged.
+- **Automated**: Yes
+- **Evidence**: tests/test_trajectory_arch.py::test_a_lanes_order_never_meets_the_undeclared_finding; tests/test_trajectory_arch.py::test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict; tests/test_trajectory_arch.py::test_the_undeclared_finding_on_a_bootstrapped_scaffold
+- **Status**: Drafted
+- **Phase**: 6
+
+</details>
