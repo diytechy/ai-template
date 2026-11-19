@@ -87,3 +87,10 @@ TC-431, the report and the audit:
 - the audit runs the report ahead of the budget step;
 - the template's `-000` row and this repository's `-000` row set
   `follow_up`.
+
+## After review
+
+The review of 2026-11-19 held rule 2 to "a later open item": only an item
+with a higher number covers (`691ebc859`). Step 1's spread therefore runs from
+later items to earlier ones only, and the token's trailing boundary rejects a
+letter, digit or underscore as its leading one does.

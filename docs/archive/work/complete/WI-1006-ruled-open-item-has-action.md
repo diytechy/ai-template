@@ -13,7 +13,7 @@ planmode = "single"
 ## Deliverable
 
 `gen_open_items.py --ruled-cover` reports, warn-only, each `ruled` open item
-whose action no work item, other open item or `follow_up` cell carries, and
+whose action no work item, later open item or `follow_up` cell carries, and
 `run.cmd audit` runs it ahead of the smoke budget. Built on the maintenance
 branch `maint/wi-1006`, cut from `b696b6c36`, outside the lane workflow. The
 spec of record is archived as `docs/archive/specs/WI-1006.2026-11-19.md`.
@@ -37,6 +37,22 @@ spec of record is archived as `docs/archive/specs/WI-1006.2026-11-19.md`.
 - **The four items** (`c14c78489`): `follow_up` cells on OI-35, OI-89 and
   OI-90, each citing the commit, work item or record that carried its
   ruling out.
+- **Review fixes** (`691ebc859`), from the review of the branch (Sol on the
+  code, Argon on the prose):
+  - only a later open item, one with a higher number, covers, whether it is
+    pending or ruled and covered. `_earlier_items` replaces `_named_items`;
+  - the token's trailing boundary now matches its leading one, so `OI-35abc`
+    and `OI-35_x` name nothing;
+  - LLR-370's `code_symbol` names `main`, and its detail says "done for
+    `complete/`";
+  - the rule's wording follows: "a later open item" in the spec of record,
+    the template, the registry header, IF-073, LLR-370, TC-430, the RESYNC
+    entry, the report and the audit description;
+  - two new regressions: an earlier pending item and an earlier covered
+    ruled item each cover nothing.
+- **OI-80** (`ebecad203`): the later-only rule reports it, because the only
+  item naming it is the earlier OI-72. Its ruling commit `525b2503c` carried
+  the ruling out, and its new `follow_up` cell cites that commit.
 
 **Measured at close.** Over this repository's 116 ruled items the report
 finds 0. With this row's own file set aside it finds 1, OI-79.
@@ -80,10 +96,11 @@ IF-073's registry contract carries it.
 - [ ] The four ruled items it reports at filing (OI-35, OI-79, OI-89, OI-90)
       each gain a `follow_up` cell or a citing row, so it lands with 0
       findings.
-      Open: OI-35, OI-89 and OI-90 carry cells citing their evidence, and the
-      report lands with 0 findings. OI-79's ruled act, deleting a remote ref,
-      is not done, so it has no cell, and only this row's own text covers it
-      (see the Deliverable).
+      Open: OI-35, OI-89 and OI-90 carry cells citing their evidence, and so
+      does OI-80, which the later-only rule added at review. The report lands
+      with 0 findings. OI-79's ruled act, deleting a remote ref, is not done,
+      so it has no cell, and only this row's own text covers it (see the
+      Deliverable).
 - [x] Regressions name each arm: covered by a draft, queued, active, deferred
       or complete row; not covered by a cancelled, partial or restructured
       row; handed to a pending item; handed through a ruled item
@@ -121,6 +138,9 @@ two MAJORs and one MINOR. All three are adopted, and none grows the row.
   `-000` rows, an item naming itself, the statuses, and when `follow_up`
   counts as set.
 
-One reading is settled here as well. Done-when item 1 says "a later open
-item", but the rule it defers to says "another open item" and compares no
-dates. That is why item 5 can ask for a cycle.
+One reading was settled here and then reversed at review. Here, "a later
+open item" in Done-when item 1 had been read as "another open item" with no
+dates compared. The review of 2026-11-19 held the Done-when to its word: only a
+later item, one with a higher number, covers (`691ebc859`). Two ruled items
+can still name each other, so item 5's cycle stays a case. Cover then runs
+from the later item to the earlier one only.

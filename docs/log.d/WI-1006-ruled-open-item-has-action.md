@@ -1,4 +1,4 @@
-## 2026-11-19 — WI-1006: run.cmd audit reports each ruled open item whose action no work item, other open item or follow_up cell carries
+## 2026-11-19 — WI-1006: run.cmd audit reports each ruled open item whose action no work item, later open item or follow_up cell carries
 
 Deferred open items: none.
 
@@ -15,10 +15,11 @@ through the hooks.
   a blank `follow_up` cell.
 - **The check.** The rule lives in `kitlib/spine.py` (`ruled_uncovered`), the
   read and its lines in `pending.py`, and the flag in `gen_open_items.py`
-  (`--ruled-cover`, exit 0 whatever it finds). Coverage spreads from each
-  covered ruled item to the ruled items it names, so a cycle with no covered
-  member stays reported. The report text sits in `pending.py`, which keeps
-  `gen_open_items.py` under the module-size threshold.
+  (`--ruled-cover`, exit 0 whatever it finds). Only a later open item, one
+  with a higher number, covers. Coverage spreads from each covered ruled
+  item to the earlier ruled items it names. The report text sits in
+  `pending.py`, which keeps `gen_open_items.py` under the module-size
+  threshold.
 - **The schema.** `follow_up` is optional. The open-items template documents
   it beside the light-spine paragraph. One sentence of that paragraph was
   amended, because the report judges only `ruled` items and so tells
@@ -37,5 +38,15 @@ through the hooks.
   OI-79 did not. Its ruled act, deleting the `-HELD-` remote ref, is the
   operator's push, and the fetch of 2026-11-19 still lists that ref. So
   nothing carries it, and only this row's own Done-when text covers it.
+- **Review** (Sol on the code, Argon on the prose), four findings, all fixed:
+  - only a later open item covers (the earlier draft let any other item
+    cover);
+  - the token rejects a letter, digit or underscore after the number too;
+  - LLR-370 names `main`;
+  - its detail says "done for `complete/`".
+
+  The later-only rule then reported OI-80, which only the earlier OI-72
+  names. Its ruling commit `525b2503c` carried it out, and a cell now cites
+  that commit.
 - **Measured at close:** the report finds 0 of 116 ruled items, and 1
   (OI-79) with this row set aside.
