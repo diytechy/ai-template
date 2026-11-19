@@ -70,9 +70,7 @@ def _reported(root):
         ("docs/work", "complete"),
     ],
 )
-def test_a_row_in_an_open_or_complete_directory_covers_the_item(
-    tmp_path, base, where
-):
+def test_a_row_in_an_open_or_complete_directory_covers_the_item(tmp_path, base, where):
     _registry(tmp_path, [("OI-5", "ruled", {}), ("OI-6", "ruled", {})])
     _work(tmp_path, "WI-1", "OI-5 ruled 2026-01-02: done.", where, base)
     assert _reported(tmp_path) == ["OI-6"]
@@ -87,9 +85,7 @@ def test_a_row_in_an_open_or_complete_directory_covers_the_item(
         ("docs/work", "handback"),
     ],
 )
-def test_a_cancelled_partial_or_restructured_row_covers_nothing(
-    tmp_path, base, where
-):
+def test_a_cancelled_partial_or_restructured_row_covers_nothing(tmp_path, base, where):
     # `handback` is not a status directory, so a file there is no work item.
     _registry(tmp_path, [("OI-5", "ruled", {})])
     _work(tmp_path, "WI-1", "OI-5 ruled 2026-01-02: done.", where, base)

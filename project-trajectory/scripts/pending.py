@@ -326,6 +326,76 @@ def open_item_queue(root):
     )
 
 
+def ruled_cover(root):
+    """`[(OI id, row)]` for each `ruled` open item whose action nothing carries
+    (WI-1006): the other half of the decision record the queue projection above
+    reads. A ruling takes its item off the operator's page, so what it asked for
+    lives on only where a work item, another open item or the item's own
+    `follow_up` cell names it; `kitlib.spine.ruled_uncovered` owns that rule.
+
+    None when the repo carries no open-items registry (vacuous); an unreadable
+    one raises through the carrier, never reads as covered.
+
+    Implements: SR-148, LLR-370
+    """
+    path = Path(root) / OPEN_ITEMS_REL
+    if ct.spine_carrier.resolve(path) is None:
+        return None
+    rows = ct.spine_carrier.load(path, "OI-ID")
+    return _kitspine.ruled_uncovered(rows, work_item_naming(root))
+
+
+def ruled_cover_lines(root):
+    """The lines `gen_open_items.py --ruled-cover` prints: one WARN line per
+    `ruled_cover` finding, naming the item and its title, then the count; or
+    one vacuous line when there is no registry. WARN-ONLY by construction: the
+    caller exits 0 whatever these say, so a run menu line keeps the exit code of
+    the steps beside it.
+
+    Implements: SR-148, LLR-370
+    """
+    findings = ruled_cover(root)
+    if findings is None:
+        return [
+            "gen_open_items: no {} — no ruled item to judge (vacuous).".format(
+                OPEN_ITEMS_REL
+            )
+        ]
+    lines = [
+        "gen_open_items: WARN - {} ({}): ruled, and no work item, other open "
+        "item or `follow_up` cell carries what the ruling asked for — cite it "
+        "from the row that does, or set `follow_up` to what carried it out or "
+        "`none — <why>`".format(oid, (row.get("Title") or "").strip())
+        for oid, row in findings
+    ]
+    return lines + [
+        "gen_open_items: ruled-item cover: {} finding(s), warn-only (a finding "
+        "never changes the exit code).".format(len(findings))
+    ]
+
+
+def work_item_naming(root):
+    """`{OI number: {work-item status}}`: for each open item a work item's text
+    names, the statuses of the work items naming it. Read over both work roots
+    through the registry reader: the whole file of each `WI-*.md` under a status
+    directory, its status the directory's, a file under any other directory and
+    the `-000` example skipped.
+
+    Implements: SR-148, LLR-370
+    """
+    named = {}
+    for base in _kitregistry.spec_roots(Path(root) / WORK_REL):
+        for path in _kitregistry.spec_files(base):
+            state = _kitregistry.SPEC_STATUS_DIRS.get(path.relative_to(base).parts[0])
+            wid = "-".join(path.name.split("-")[:2])
+            if state is None or _kitspine.is_example(wid):
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+            for number in _kitspine.open_item_numbers(text):
+                named.setdefault(number, set()).add(state)
+    return named
+
+
 def decisions_to_review(root):
     """`(entries, overruled, findings, confirmed)` over every delegated-decisions
     record under `docs/decisions/`: the entries not yet seen and the entries

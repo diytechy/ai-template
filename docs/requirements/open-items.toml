@@ -30,9 +30,15 @@
 #     untouched is refused. A claimed citer's Done-when already names the
 #     step: the ruling commit ticks that item and adds no evidence there.
 #     A ruled row is history, and the Decisions log is
-#     its record. `-000` example rows are dropped, and an absent registry
-#     renders an empty queue rather than failing, so a repo carrying no
-#     decisions still has the surface.
+#     its record. What a ruling asked for stays findable: a ruled item is
+#     carried when a work item in an open or complete directory names it in
+#     its text, when another open item names it and is `pending` (or `ruled`
+#     and itself carried), or when its optional `follow_up` cell says what
+#     carried the ruling out, or `none — <why>`. A follow-up item names the
+#     item it continues. `gen_open_items.py --ruled-cover` reports each ruled
+#     item none of these carries, warn-only. `-000` example rows are dropped,
+#     and an absent registry renders an empty queue rather than failing, so a
+#     repo carrying no decisions still has the surface.
 #
 [open_item.OI-000]
 title = "Example row - the shape of an owner decision brief"
@@ -43,6 +49,7 @@ decision = """What is being decided, who raised it and when, and any context a r
 blast_radius = """What breaks or changes if this is ruled either way - the honest cost, not the optimistic one."""
 options = """Option (a) ... · Option (b) ... · Option (c) ... - each with its FOR and AGAINST, separated by the middot the other registries use for lists-in-cells."""
 recommendation = "The driver's recommendation and WHY, in the same voice a reviewer would argue it."
+follow_up = """set on a ruled item only when no work item and no other open item carries what the ruling asked for: what carried it out (a commit, a log entry), or `none — <why>` when the ruling asked for no change. Absent otherwise, and absent while the item is open."""
 
 [open_item.OI-7]
 title = "WI-123: review-cadence dial"

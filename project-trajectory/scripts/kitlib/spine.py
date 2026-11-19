@@ -106,6 +106,10 @@ __all__ = [
     "REGISTRY_KEYS",
     "split_pred_edges",
     "open_item_queue",
+    "OPEN_ITEM_TOKEN",
+    "COVERING_STATUSES",
+    "open_item_numbers",
+    "ruled_uncovered",
     "SYSTEM_VALUES",
     "FORM_VALUES",
     "SAMPLING_VALUES",
@@ -347,6 +351,112 @@ def _id_number(rid):
     """`OI-98` -> 98: the numeric order ids are read in, never the lexical one."""
     tail = rid.rsplit("-", 1)[-1]
     return int(tail) if tail.isdigit() else 0
+
+
+# --- the ruled side: is a ruling's action planned, done or handed on? (WI-1006)
+#
+# An open-item id as text names it: `OI-` and a number, leading zeros ignored,
+# with no letter, digit or underscore before it and no digit after it, the
+# boundary `trace._ruling_names` uses. `OI-035` names OI-35; `OI-350`, `XOI-35`
+# and the lower-case log anchor `oi-35` do not.
+OPEN_ITEM_TOKEN = re.compile(r"(?<![A-Za-z0-9_])OI-0*(\d+)(?![0-9])")
+
+# The work-item statuses (the registry's names for the status directories)
+# whose text covers a ruled item: every open state, and `done` (`complete/`).
+# A cancelled, partial or restructured row carried nothing out.
+COVERING_STATUSES = frozenset({"draft", "queued", "active", "deferred", "done"})
+
+# The open-item cells that never name another item: the id, and the historical
+# `wi_refs` (HISTORICAL_KEYS), which no reader derives a relationship from.
+_UNCITING_CELLS = frozenset({"OI-ID", "WI-Refs"})
+
+
+def open_item_numbers(text):
+    """The set of open-item numbers `text` names (`OPEN_ITEM_TOKEN`).
+
+    Implements: SR-148, LLR-370
+    """
+    return {int(number) for number in OPEN_ITEM_TOKEN.findall(text or "")}
+
+
+def ruled_uncovered(oi_rows, named):
+    """`[(OI id, row)]`, in id order, for each real `ruled` open item whose
+    action nothing carries: no work item names it, no other open item that is
+    `pending` (or `ruled` and itself covered) names it, and its `follow_up`
+    cell is blank or absent.
+
+    `oi_rows` are open-item rows (`OI-ID`, `Status`, the other cells) and
+    `named` maps an item NUMBER to the statuses of the work items whose text
+    names it; a status in `COVERING_STATUSES` covers. Statuses are read
+    trimmed and in lower case, as `open_items_at` reads them; a `-000` example
+    is never judged and never cites, a duplicated id is read once, the last
+    row winning, and an item naming itself does not cover itself. Coverage
+    spreads from each covered ruled item to every ruled item it names, so a
+    cycle with no covered member stays uncovered with no recursion.
+
+    Implements: SR-148, LLR-370
+    """
+    items = _open_item_states(oi_rows)
+    names = {oid: _named_items(oid, row) for oid, (_s, row) in items.items()}
+    covered = _covered_ruled(items, names, named)
+    return [
+        (oid, row)
+        for oid, (state, row) in sorted(items.items(), key=lambda i: _id_number(i[0]))
+        if state == "ruled" and _id_number(oid) not in covered
+    ]
+
+
+def _open_item_states(oi_rows):
+    """`{OI id: (status, row)}` for every real open item, status trimmed and in
+    lower case, the last row winning for a duplicated id.
+
+    Implements: SR-148, LLR-370
+    """
+    out = {}
+    for row in oi_rows:
+        oid = (row.get("OI-ID") or "").strip()
+        if oid.startswith("OI-") and not is_example(oid):
+            out[oid] = ((row.get("Status") or "").strip().lower(), row)
+    return out
+
+
+def _named_items(oid, row):
+    """The item numbers a row's cells name, but for its id, the historical
+    `wi_refs` cell and the row's own number.
+
+    Implements: SR-148, LLR-370
+    """
+    text = "\n".join(
+        str(value) for col, value in row.items() if col not in _UNCITING_CELLS
+    )
+    return open_item_numbers(text) - {_id_number(oid)}
+
+
+def _covered_ruled(items, names, named):
+    """The numbers of the covered ruled items: those a covering work item names,
+    those with a `follow_up` cell, those a pending item names, and then each
+    ruled item a covered ruled item names, until nothing changes.
+
+    Implements: SR-148, LLR-370
+    """
+    ruled = {
+        _id_number(oid): oid for oid, (state, _r) in items.items() if state == "ruled"
+    }
+    covered = {
+        number
+        for number, oid in ruled.items()
+        if (items[oid][1].get("FollowUp") or "").strip()
+        or COVERING_STATUSES & set(named.get(number, ()))
+    }
+    for oid, (state, _row) in items.items():
+        if state == "pending":
+            covered |= names[oid] & ruled.keys()
+    frontier = list(covered)
+    while frontier:
+        handed = names[ruled[frontier.pop()]] & (ruled.keys() - covered)
+        covered |= handed
+        frontier += handed
+    return covered
 
 
 # Source-file extensions stripped when normalizing a module path, so an IF
@@ -1266,6 +1376,9 @@ OFFSPINE_KEYS = {
         "wi_refs",
         "ruled_date",
         "ruling_ref",
+        # WI-1006: on a ruled item no work item or later open item carries,
+        # what carried the ruling out, or `none — <why>`.
+        "follow_up",
     ),
     "Id": (
         "family",

@@ -406,6 +406,7 @@ OFFSPINE_COLUMN = {
     "wi_refs": "WI-Refs",
     "ruled_date": "RuledDate",
     "ruling_ref": "RulingRef",
+    "follow_up": "FollowUp",
     # agents (the model routing registry)
     "family": "Family",
     "model": "Model",

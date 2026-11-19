@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 334
+design_rows = 335
 seam_rows = 259
 requirements_placed = 133
 requirements_unplaced = 5
@@ -695,6 +695,7 @@ sr_refs = [
 sr_shared_refs = [
   "SR-139",
   "SR-146",
+  "SR-148",
   "SR-155",
   "SR-161",
   "SR-170",
@@ -1164,6 +1165,7 @@ sr_refs = [
   "SR-113",
   "SR-138",
   "SR-146",
+  "SR-148",
   "SR-160",
   "SR-163",
   "SR-168",
@@ -1177,6 +1179,7 @@ sr_shared_refs = [
   "SR-049",
   "SR-070",
   "SR-146",
+  "SR-148",
   "SR-163",
   "SR-170",
   "SR-226",
@@ -1252,6 +1255,7 @@ llr_refs = [
   "LLR-321",
   "LLR-322",
   "LLR-326",
+  "LLR-370",
 ]
 hat_refs = [
   "ACCESSIBILITY",
@@ -1263,6 +1267,7 @@ hat_refs = [
   "PERFORMANCE",
   "SECURITY",
   "TEST-ENGINEER",
+  "UNATTENDED-OPS",
   "UX-DESIGNER",
   "UX-ENGINEER",
 ]
@@ -1288,6 +1293,7 @@ modules = [
   "project-trajectory/scripts/gen_verdict_rollup.py",
   "project-trajectory/scripts/kitlib/bootstrap_manifest.py",
   "project-trajectory/scripts/kitlib/guard_hooks.py",
+  "project-trajectory/scripts/kitlib/spine.py",
   "project-trajectory/scripts/onboard.template.sh",
   "project-trajectory/scripts/pending.py",
   "project-trajectory/scripts/rendering/__init__.py",
