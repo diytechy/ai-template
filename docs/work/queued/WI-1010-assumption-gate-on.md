@@ -41,8 +41,9 @@ only. `docs/status.md` already records the missing view. The Markdown brief
 ## Done-when
 
 - [ ] Each of the 21 requirements cites an assumption that carries it to its
-      needs, or records a `coincident` waiver. Each of SR-229 to SR-235 has
-      its crossings and boundary interfaces bridged or waived. A new
+      needs, or records a `coincident` waiver. SR-229, SR-230, SR-231,
+      SR-232, SR-234 and SR-235 each have their crossings and boundary
+      interfaces bridged or waived. A new
       assumption row is `Drafted`.
 - [ ] The assumptions and surrogates owing an acceptance are shown where the
       operator rules. Recommended: `docs/open-items.html` §2 renders them, as

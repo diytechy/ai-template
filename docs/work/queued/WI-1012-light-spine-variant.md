@@ -47,5 +47,7 @@ decides whether it is a bootstrap profile, a documented subset in
       missing placeholder rows as errors.
 - [ ] Whether IF-073 should name `implemented` is put to the operator, since
       it changes an accepted contract.
+- [ ] The open-items template's light-spine comment, which today says the
+      variant does not exist yet, describes the variant as built.
 - [ ] HomeHub, or a scratch copy of it, adopts the variant and its checks
       pass.

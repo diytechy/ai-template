@@ -22,8 +22,10 @@
 # `implemented` once that work is done, so the registry still says which
 # items are closed. A repository on the full spine records completion on its
 # work items and never uses the value. The kit's readers treat every status
-# other than `pending` as settled, so `implemented` changes nothing they do;
-# the placeholder rule below still assumes a work-item registry.
+# other than `pending` as settled, so `implemented` changes nothing they do.
+# The kit does not yet ship a light-spine variant: the placeholder rule below
+# still assumes a work-item registry, so its checks report each pending item
+# in such a repository as an error.
 #
 # WORK ITEMS POINT TO OPEN ITEMS, NEVER THE REVERSE. What an item is, and when
 # one is filed, is process.md §5, "Open items". The held work item

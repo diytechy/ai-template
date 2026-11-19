@@ -12,7 +12,8 @@ priority = 3
 ## Context
 
 Filed by hand on 2026-11-19 at the operator's direction: the GitHub CLI
-should be "an optional package that comes with the setup.cmd". Without `gh`, a
+should be "an optional package that comes with the setup.cmd", which in this
+repository is `scripts/dev-setup.cmd`. Without `gh`, a
 session cannot read the CI state of a pushed branch (HANDOFF §6, B6: the
 Actions history could not be checked). It was installed on this workstation
 by hand the same day (`winget install --id GitHub.cli`, 2.105.0); `gh auth
