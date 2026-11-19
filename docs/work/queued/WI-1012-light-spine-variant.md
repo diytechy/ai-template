@@ -32,7 +32,16 @@ in several places:
 - IF-073, the open-items contract, says `status` is `pending` or `ruled`.
 
 So a light-spine repository needs a variant it can adopt, not just the
-full templates with parts deleted. This item scopes that variant. It is a
+full templates with parts deleted.
+
+WI-1006's report, which names each ruled item with no action planned, done or
+handed on, bears on the variant too. It treats an item as covered when any
+work item's text names it, and any later open item's text. A mention in
+passing counts: on 2026-11-19 OI-79 read as covered only because WI-1006's
+own spec names it, although its ruling (delete a remote ref) had not been
+carried out. The variant has no work items, so its cover can only be a
+`follow_up` cell, an `implemented` status or a later item. Whether the full
+spine's rule should also need more than a mention is for this row's critique. This item scopes that variant. It is a
 follow-up and depends on what HomeHub's adoption shows; the scope critique
 decides whether it is a bootstrap profile, a documented subset in
 `ADOPTING.md`, or both.
