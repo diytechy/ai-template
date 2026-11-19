@@ -2636,7 +2636,9 @@ the hold above.
 | B6, CI | `gh` installed on this workstation (2.105.0); `gh auth login` is the operator's. dev-setup offers it as an optional tool: WI-1011 |
 | Light-spine repositories | An open item there may move from `ruled` to `implemented`, since no work item records the work done. A comment in the shipped open-items template only; no mechanism or test here changes. The variant those repositories adopt is WI-1012, a follow-up |
 | Downstream (§7) | Yes: the second migrator pass over the 13 converted repositories, PictureSorter's CI line, then HomeHub |
-| Reviews | Prose and spine requirement text: Gemini Carbon at low effort. Code: Sol (`gpt-6.1-sol`) at low effort. Carbon is offered only as `opencode/gemini-4-carbon` (OpenCode Zen), which refused for lack of credits on 2026-11-19; the Go plan covers `opencode-go/*`, whose Gemini is `gemini-4-argon`. Asked |
+| FileBackup | **Held (option (c)):** no migrator run until its conversion is merged; the operator will come back to it |
+| The queue | **Proceed with the available queued work items** once trunk is merged |
+| Reviews | Prose and spine requirement text: Gemini Carbon at low effort, then **Argon** (`opencode-go/gemini-4-argon`, low) when Carbon proved unavailable. Code: Sol (`gpt-6.1-sol`) at low effort. Carbon is offered only as `opencode/gemini-4-carbon` (OpenCode Zen), which refused for lack of credits on 2026-11-19; the Go plan covers `opencode-go/*`, whose Gemini is `gemini-4-argon`. Asked |
 
 ### §12.3 Why a test run crashed the machine, and how to run one safely
 
@@ -3235,3 +3237,12 @@ list is fixed unless §12.6 says so.
   more), which a run would accept without FileBackup's operator reading
   them. PictureSorter's CI line `--gate G3` changes when the kit's scripts are
   copied into that repository, not before: its CI still runs the old scripts.
+  The operator chose to hold FileBackup (§12.2).
+- **2026-11-19, the unfiltered suite on `41f56f791`:** 1 failed, 8,119
+  passed, 29 skipped, in 35 min 54 s (8 workers; slower than the 27 min of
+  2026-11-16, with another project's process busy on the box). The failure
+  was this session's: the rewritten resume text quoted a retired stage tag,
+  which `check_vocab --strict` refuses (`test_stage_ladder`). Reworded in
+  `381d68548` on `maint/vocabulary`, and the test passes.
+  Gotcha: hand-authored `docs/status.md` must name no retired tag and no id
+  a later claim needs (`integrate._status_prose_refusal`).
