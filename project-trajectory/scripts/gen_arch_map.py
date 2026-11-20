@@ -140,9 +140,11 @@ Contract IF-131: the ARCH-INVENTORY and seam-declaration grammar the spine check
     `contracts_grammar_findings`, `file_contracts`, `file_grammar_findings`,
     `owner_files` and `ContractsGrammarError` hand them the `Contracts:` marker
     and `Contract IF-###:` body grammar. `resolve_import(token, importer,
-    modules)` names the one module an inventory import token reaches from its
-    importer, or None for a token that names no module, names several, or
-    climbs past the top. Every entry point is optional at the
+    modules, packages)` names the one module an inventory import token reaches
+    from its importer, or None for a token that names no module, names
+    several, or climbs past the top; `package_paths(src_roots)` gives the
+    `packages` it reads, the module paths whose file is an `__init__.py`. Every
+    entry point is optional at the
     call site: an absent or older copy of this module degrades those rules to
     silence rather than breaking a run that also serves the pre-commit hook.
     `read_test_tags(root, tests_dir, live_tcs)` is the one exception. It hands
@@ -1514,15 +1516,16 @@ def collect_parse_errors(src_roots):
     return errs
 
 
-def resolve_import(token, importer, modules):
+def resolve_import(token, importer, modules, packages):
     """The one module in `modules` that the import `token` names from
     `importer`, or None.
 
     THE ONE RESOLUTION OF `internal_imports`' TOKENS. The dependency diagram
     and the cross-component seam rule (`trajectory_arch._classifiable_edges`)
     both call it, so the picture and the check cannot disagree about where an
-    import goes. `importer` and `modules` are module paths in the map's
-    grammar (`scripts/kitlib/spine`).
+    import goes. `importer`, `modules` and `packages` are module paths in the
+    map's grammar (`scripts/kitlib/spine`); `packages` holds those whose file
+    is a package's `__init__.py` (`package_paths`).
 
     An absolute token (`helper`, `kitlib.spine`, `kitlib.spine.helper`) tries
     its dotted prefixes longest first, each as a path, against the modules equal
@@ -1530,10 +1533,10 @@ def resolve_import(token, importer, modules):
     two matches are ambiguous. So a one-segment token is a unique-stem match,
     and a name imported from a module lands on that module even when it shares
     another module's stem. A relative token (`.spine`, `..`) starts from the
-    importer's package: the importer itself when a module sits under its path
-    (a package's `__init__` carries the package's path), else its parent. Each
-    dot past the first climbs one level, and the match is exact, the tail
-    trimmed back down to the package.
+    importer's package: the importer itself when its file is a package's
+    `__init__.py`, which the file alone decides, else its parent. Each dot past
+    the first climbs one level, and the match is exact, the tail trimmed back
+    down to the package.
 
     None for an unknown or ambiguous token and for a climb past the top: the
     caller skips the import rather than guessing.
@@ -1541,7 +1544,7 @@ def resolve_import(token, importer, modules):
     Implements: SR-159, LLR-374
     """
     if token.startswith("."):
-        return _resolve_relative(token, importer, modules)
+        return _resolve_relative(token, importer, modules, importer in packages)
     parts = token.split(".")
     while parts:
         cand = "/".join(parts)
@@ -1552,12 +1555,12 @@ def resolve_import(token, importer, modules):
     return None
 
 
-def _resolve_relative(token, importer, modules):
+def _resolve_relative(token, importer, modules, is_package):
     """`resolve_import`'s relative arm: anchor, climb, then exact matches."""
     tail = token.lstrip(".")
     climb = len(token) - len(tail) - 1
     package = importer.split("/")
-    if not any(m.startswith(importer + "/") for m in modules):
+    if not is_package:
         package = package[:-1]
     if climb >= len(package):
         return None
@@ -1569,6 +1572,20 @@ def _resolve_relative(token, importer, modules):
             return cand
         parts = parts[:-1]
     return None
+
+
+def package_paths(src_roots):
+    """The module paths, in the map's grammar, whose file is a package's
+    `__init__.py`: the packages a relative import written in one starts from.
+    Read from the files themselves, so an `__init__.py` with nothing under it
+    still counts, and an empty one too.
+
+    Implements: SR-159, LLR-374
+    """
+    return {
+        path.parent.relative_to(base).as_posix()
+        for _root, base, path in _walk_roots(src_roots, "__init__.py")
+    }
 
 
 def _seam_edges(if_rows, known_norm):
@@ -1619,6 +1636,7 @@ def build_dependency_diagram(src_roots, if_rows=None):
         )
         mods.append((rel, summary, imports))
     known = [m[0] for m in mods]
+    packages = package_paths(src_roots)
 
     def node_id(rel):
         # Mermaid ids must avoid '/'-style separators and reserved words
@@ -1635,7 +1653,7 @@ def build_dependency_diagram(src_roots, if_rows=None):
     edges = set()
     for rel, _summary, imports in mods:
         for imp in imports:
-            target = resolve_import(imp, rel, known)
+            target = resolve_import(imp, rel, known, packages)
             if target and target != rel:
                 edges.add((node_id(rel), node_id(target)))
     for src_id, dst_id in sorted(edges):

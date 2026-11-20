@@ -11376,10 +11376,13 @@ dependency diagram, and the diagram's private `_resolve_import` is gone:
 - an absolute import tries its dotted prefixes longest first, so
   `from pkg.mod import name` lands on `pkg/mod`; a single segment is the old
   unique-stem match;
-- a relative import resolves from the importer's package (a package's
-  `__init__.py` is its own package), one level up per extra dot;
-- a name that matches several modules, matches none, or climbs past the top
-  is skipped, and so is a module importing its own package.
+- a relative import resolves from the importer's package, one level up per
+  extra dot. A package's `__init__.py` is its own package, which
+  `gen_arch_map.package_paths` reads from the `__init__.py` files themselves;
+- the resolver returns nothing for a name that matches several modules,
+  matches none, or climbs past the top, and the seam rule skips that import.
+  The seam rule also skips an import that resolves to the importing module
+  itself.
 
 The diagram changes in two places only: a name several modules end in draws
 no arrow where it drew the first one's, and a relative import in a package's
@@ -11394,7 +11397,8 @@ reasoned line to `docs/kernel-modules-allow`. Overwrite the two files
 together: the new `trajectory_arch.py` with an older `gen_arch_map.py` leaves
 the cross-component rule silent. A local script that called
 `gen_arch_map._resolve_import(imp, importer_rel, known)` calls
-`gen_arch_map.resolve_import(token, importer, modules)`.
+`gen_arch_map.resolve_import(token, importer, modules,
+gen_arch_map.package_paths(src_roots))`.
 
 The two `kitlib` modules below change in their docstrings only: they state
 this repository's interface rows IF-314 and IF-315. Your source scan root is
