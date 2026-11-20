@@ -18,7 +18,7 @@ _Acceptance provenance: the last commit to move a `Status` cell in a snapshotted
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 6 changed, 2 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1006.
+- `docs/requirements/interfaces.toml` — 6 changed, 2 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1006, WI-1009.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1003.
 
 ## Assumptions and surrogates owing an acceptance

@@ -3,12 +3,79 @@ id = "WI-1009"
 title = "docs/open-items.html stops listing delegated decisions one by one; the operator reads them in their record files"
 workstream = "process"
 sr_refs = ["SR-225", "SR-049"]
-specref = "docs/plans/2026-11-11-test-tiers/HANDOFF.md#126-progress-log"
+specref = ""
 buildtier = "medium"
 safety_class = "spine"
 priority = 3
 planmode = "single"
 +++
+
+## Deliverable
+
+`docs/open-items.html` lists no delegated decision. The operator reads them
+in their record files, `docs/decisions/<run>.toml`, where an entry with no
+`operator` key is not yet seen (the operator's ruling (c), 2026-11-19). The
+page went from 2,001,004 bytes to 77,757. Built on the maintenance branch
+`maint/wi-1009`, cut from `refactor_again` at `6a78f63a7`, outside the lane
+workflow. The spec of record was the 2026-11-18 progress log in
+`docs/plans/2026-11-11-test-tiers/HANDOFF.md` §12.6; the row's SpecRef cell
+was cleared at close, as R-F asks of a terminal row.
+
+- **The critique's dispositions** (`26c3bf808`): S1 settled by the
+  operator's ruling (c), quoted in the Context; S3, S4, S5, B1 and B4
+  adopted in that light. `planmode = "single"`.
+- **The plan** (`08bcbe22b`): `docs/plans/WI-1009/plan.md`.
+- **Tests first** (`9e127326c`): `tests/test_decisions_to_review.py`
+  rewritten and `tests/test_open_item_queue.py`'s section-order test re-aimed.
+  23 cases failed before the code, each for the missing read
+  (`pending.decision_records`), the fourth section, the old status line or
+  the old template header. The tests that existed only to render the section
+  are cut: the overruled heading, its citing work items, the confirmed-count
+  notice and the page's ordering (ruling B5).
+- **The code** (`550369d99`):
+  - `gen_open_items.py` loses section 4 with `_DECISION_FIELDS`,
+    `_decision_card`, `_citing_field`, `OVERRULED_HEADING` and
+    `decisions_block`. `record_findings_block` keeps the one part that was a
+    check: each record's format findings, by file and entry, in a notice
+    closing section 3, shown only when a record carries one. Nothing else
+    reports them across all records whatever the dial: the merge slot reads
+    only a closing lane's own record, and only under a recording dial. No
+    CSS rule was the section's alone.
+  - `pending.py`: `decisions_to_review` and `citing_rows` give way to
+    `decision_records(root)`, which returns `(unseen count, findings)`.
+  - `traj_status.py`: the status line reads `Delegated decisions not yet
+    seen: N — docs/decisions/`, linking the directory, not the removed
+    anchor. Kept rather than dropped, because across 132 files nothing else
+    says how many entries are still unseen; that is the backlog DA-020's
+    obstacle names, and TC-293 checks the count.
+  - `kitlib/decisions.py`: its docstring only.
+  - The shipped template's header and `PROCESS_OPTIONS.md` (-35 bytes) send
+    the operator to the record files. The RESYNC entry forces nothing and
+    migrates nothing.
+- **The rows** (`23c951229`): SR-225 amended (its requirement, its
+  acceptance criteria and one rationale sentence). LLR-118, LLR-283, TC-123
+  and TC-293 amended to match, with LLR-283's `code_symbol` following the
+  code. All five keep `Accepted` and now drift on the page for the operator's
+  re-accept: 7 SR chains owe one, up from 5 (SR-225's and SR-049's are the
+  new ones). IF-074 and IF-164 (Drafted) have new data cells. No id minted.
+- **The close** (this commit): the page regenerated after the rows' commit,
+  whose off-spine census now names WI-1009 among the rulings that touched
+  `interfaces.toml`.
+
+**DA-020 is unchanged.** "The operator reads each entry listed as not yet
+seen" still holds under (c): the record lists every entry, and one with no
+verdict reads as not yet seen there.
+
+**Left undone, and why.**
+
+- **`kitlib.decisions.review_queue` still orders its lists and returns the
+  overruled list and the confirmed count**, which nothing renders now. Only
+  its unseen list is read. Cutting the rest changes IF-256's stated call
+  contract, and WI-1004 is working in that file in parallel, so it was left.
+- **The October backlog** (1,141 entries not yet seen) is the operator's to
+  mark or read, as the Context says; not this row.
+- **No review rounds.** On this maintenance branch the parent session reviews
+  the diff.
 
 ## Context
 
@@ -94,28 +161,28 @@ only.
 
 ## Done-when
 
-- [ ] `docs/open-items.html` renders no "Decisions to review" section and no
+- [x] `docs/open-items.html` renders no "Decisions to review" section and no
       card for a delegated-decisions entry; its sections run 1 to 3. The code
       and tests that existed only to render the section are removed.
-- [ ] Each record's format findings are still reported, by file and entry, in
+- [x] Each record's format findings are still reported, by file and entry, in
       a notice closing section 3 of `docs/open-items.html`, shown only when a
       record carries one. The overrule sync's refusal and the close refusal
       under a recording dial are unchanged.
-- [ ] `docs/status.md`'s line no longer links the removed anchor. It is one
+- [x] `docs/status.md`'s line no longer links the removed anchor. It is one
       plain count of the entries not yet seen, linking `docs/decisions/`, and
       appears only when that directory exists.
-- [ ] SR-225 is amended to the ruling: the record files are where the operator
+- [x] SR-225 is amended to the ruling: the record files are where the operator
       reads the entries, an entry with no verdict is not yet seen, and every
       check it promised stays. IF-074 (its row and the `Contract IF-074:`
       block), LLR-118, LLR-283, TC-123 and TC-293 are amended to match, and
       IF-164's data names the new line. The shipped template header and
       `PROCESS_OPTIONS.md` say the operator reads not-yet-seen entries in the
       record files, and a RESYNC entry covers the shipped change.
-- [ ] The amended `Accepted` rows (SR-225, LLR-118, LLR-283, TC-123, TC-293)
+- [x] The amended `Accepted` rows (SR-225, LLR-118, LLR-283, TC-123, TC-293)
       keep `status = "Accepted"` with their amended text, so they show as
       drifted on `docs/open-items.html` for the operator's re-accept. This
       row completes without that act; the build takes no operator act.
-- [ ] `gen_open_items.py --check`, `trace.py --strict`,
+- [x] `gen_open_items.py --check`, `trace.py --strict`,
       `check_trajectory.py --strict` and the touched test modules pass.
 
 ## Critique dispositions
