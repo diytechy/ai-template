@@ -4339,3 +4339,14 @@ automated = "Yes"
 evidence = "tests/test_seam_import_forms.py"
 status = "Drafted"
 phase = 6
+
+[test.TC-438]
+verifies = ["SR-147", "LLR-382"]
+level = "Unit"
+method = "Drive kitlib.spine.value_to_cell over None, a plain string, a string holding a semicolon, an empty list, a list of strings, a list holding an integer, and an integer. Round-trip a semicolon-joined ref cell through migrate_carrier.cell_to_value and back. Run migrate_carrier.compare over a converted row that dropped a key, and read a ref array through spine_carrier.rows_from_toml. Look for a value_to_cell on migrate_carrier and on spine_carrier."
+tier = "Smoke"
+expected = "None reads as the empty cell; a list joins on semicolons with each element as text; anything else is its text. The ref cell round-trips to its original text. compare reports the dropped key as changing to the empty cell, and the reader joins the array on semicolons. Neither module defines a value_to_cell."
+automated = "Yes"
+evidence = "tests/test_rule_sync.py::test_the_carrier_value_cell_has_one_home_and_reads_none_as_empty"
+status = "Drafted"
+phase = 6

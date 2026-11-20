@@ -3873,3 +3873,15 @@ test_refs = "TC-436"
 status = "Drafted"
 component = "CMP-006"
 phase = 6
+
+[design.LLR-382]
+sr_refs = ["SR-147"]
+title = "A TOML value has one cell text, which the carrier's reader and the migration's round-trip check both write"
+module = "project-trajectory/scripts/kitlib/spine.py"
+code_symbol = "value_to_cell"
+detail = """value_to_cell in kitlib/spine.py turns one TOML value into the cell text the CSV carrier held. None, the value of an absent key, is the empty cell. A list joins its elements on ; with each element written as text. Any other value is written as text. spine_carrier's rows_from_toml and its need reader write every cell through it, and migrate_carrier's compare re-derives each converted cell through it. Neither module holds a copy."""
+rationale = """The two copies disagreed on None: the migration's wrote an empty cell and the reader's wrote the text None. TOML has no null, so only the migration meets None, for every absent key, and every consumer reads an absent cell as empty. The empty cell is kept."""
+test_refs = "TC-438"
+status = "Drafted"
+component = "CMP-006"
+phase = 6

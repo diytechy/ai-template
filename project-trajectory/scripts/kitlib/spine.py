@@ -79,6 +79,7 @@ __all__ = [
     "csv_rows",
     "norm_module",
     "refs",
+    "value_to_cell",
     "clip_line",
     "open_items_at",
     "registry_row_hint",
@@ -209,6 +210,27 @@ def refs(value):
     same splitting defect class as the SN-001/SN-002 orphan bug OI-12 records.
     A pin repaired that copy; this module retires the copies instead."""
     return [t for t in re.split(r"[;,\s]+", (value or "").strip()) if t]
+
+
+def value_to_cell(value):
+    """One TOML value as the cell text the CSV carrier held: a ref array joins
+    on `;` (the separator the registries use, 271 of 271 at the cutover), each
+    element `str()`ed; `None`, the value of an absent key, is the empty cell;
+    anything else is `str()`.
+
+    TWO COPIES BEFORE WI-1004, and they disagreed on `None`:
+    `migrate_carrier.value_to_cell` (the migration's round-trip self-check)
+    wrote `''` and `spine_carrier.value_to_cell` (the carrier's reader) wrote
+    `'None'`. TOML has no null, so the reader never meets `None`; the
+    migration meets it for every absent key, and every consumer reads an
+    absent cell as empty. The empty cell is kept.
+
+    Implements: SR-147, LLR-382"""
+    if value is None:
+        return ""
+    if isinstance(value, list):
+        return ";".join(str(v) for v in value)
+    return str(value)
 
 
 def registry_row_hint(ids, frag):
@@ -572,7 +594,7 @@ def seam_endpoints(cell):
 
     An endpoint may legitimately contain a space (`external:downstream
     adopter`) or a comma, so `;` is the only separator — and a `Consumers` cell
-    is a LIST in the carrier, joined on `;` by `spine_carrier.value_to_cell`,
+    is a LIST in the carrier, joined on `;` by `value_to_cell` above,
     so the same split reads it back. It is the carrier's ONE list-cell split:
     `frame_rules` reads a need's pointer cells (`stakeholder_refs`, `source`)
     through it too, under its local name `_entries` (WI-821)."""

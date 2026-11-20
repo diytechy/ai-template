@@ -565,24 +565,17 @@ def raw_id_findings(rel, table, raw, text):
     ]
 
 
-def value_to_cell(col, value):
-    """The inverse of `cell_to_value`, for the round-trip check.
-
-    A ref array re-joins on `;` — the separator the registry ACTUALLY USES, not
-    a prettier one. Measured over this repo's own spine at the cutover: 271 of
-    271 multi-ref cells wrote `A;B`, none wrote `A; B`. Joining on `"; "`
-    therefore rewrote every one of them, which put ~40 spurious "cell changed"
-    entries into the re-acceptance brief the operator is about to work — the
-    carrier migration manufacturing amendments in the one view that must show
-    only real ones. The separator is not the meaning (`_cells_differ` compares
-    token lists either way), which is exactly why the conversion has no licence
-    to change it."""
-    if value is None:
-        return ""
-    if isinstance(value, list):
-        return ";".join(str(v) for v in value)
-    return str(value)
-
+# The inverse of `cell_to_value`, for the round-trip check, is
+# `kitlib.spine.value_to_cell` (WI-1004: the carrier's reader held a second
+# copy that wrote `'None'` for an absent key). A ref array re-joins on `;` —
+# the separator the registry ACTUALLY USES, not a prettier one. Measured over
+# this repo's own spine at the cutover: 271 of 271 multi-ref cells wrote
+# `A;B`, none wrote `A; B`. Joining on `"; "` therefore rewrote every one of
+# them, which put ~40 spurious "cell changed" entries into the re-acceptance
+# brief the operator is about to work — the carrier migration manufacturing
+# amendments in the one view that must show only real ones. The separator is
+# not the meaning (`_cells_differ` compares token lists either way), which is
+# exactly why the conversion has no licence to change it.
 
 REF_KEYS = {KEY[c] for c in REF_COLS}
 
@@ -646,7 +639,7 @@ def compare(rel, table, expected, text):
             findings.append("{}: {} missing after conversion".format(rel, rid))
             continue
         for key, before in cells.items():
-            after = value_to_cell(key, got[rid].get(key))
+            after = _kitspine.value_to_cell(got[rid].get(key))
             if _cells_differ(key, before, after):
                 findings.append(
                     "{} {}.{}: {!r} -> {!r}".format(

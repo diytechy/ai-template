@@ -587,20 +587,6 @@ def names_carrier(rel_path, registry, suffixes=CARRIERS):
     return normalized in carriers(canonical, suffixes)
 
 
-def value_to_cell(value):
-    """One TOML value as the cell text the CSV carrier held.
-
-    The inverse of `migrate_carrier.cell_to_value`, and deliberately the same
-    rules its `value_to_cell` writes by: a ref array re-joins on `;` — the
-    separator the registries actually use, measured 271 of 271 at the cutover —
-    and an int stringifies. A row read here is therefore cell-for-cell what the
-    CSV row was, which is what lets every consumer stay unchanged and what lets
-    the amendment guard's silence across the cutover mean something."""
-    if isinstance(value, list):
-        return ";".join(str(v) for v in value)
-    return str(value)
-
-
 def rows_from_toml(text, id_col):
     """`{id: row}` under today's column names, or None when `text` does not
     parse.
@@ -624,7 +610,7 @@ def rows_from_toml(text, id_col):
     for rid, cells in (tables.get(REGISTRY_TABLE[id_col]) or {}).items():
         row = {id_col: rid}
         for key, value in cells.items():
-            row[REGISTRY_COLUMN.get(key, key)] = value_to_cell(value)
+            row[REGISTRY_COLUMN.get(key, key)] = _kitspine.value_to_cell(value)
         out[rid] = row
     return out
 
@@ -1021,7 +1007,7 @@ def needs_from_toml(text):
     out = []
     for rid, cells in (tables.get(NEED_TABLE) or {}).items():
         need = {"id": rid}
-        need.update({k: value_to_cell(v) for k, v in cells.items()})
+        need.update({k: _kitspine.value_to_cell(v) for k, v in cells.items()})
         out.append(need)
     return out
 

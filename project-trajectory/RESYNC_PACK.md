@@ -11410,6 +11410,27 @@ your own `src`, so they declare nothing to your checks.
 
 **Adopter-merged files:** none.
 
+### A TOML value's cell text has one home, in kitlib.spine [since 426f88f60]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `spine_carrier.value_to_cell(value)` (the carrier's
+reader) and `migrate_carrier.value_to_cell(col, value)` (the migration's
+round-trip check) are deleted. The one home is
+`kitlib.spine.value_to_cell(value)`. The copies disagreed on `None`: the
+reader wrote `'None'`, the migration `''`. The home writes `''`. TOML has no
+null, so the reader never met `None`, and every output is unchanged.
+
+**What to do.** Nothing is forced. Overwrite the three files together: the
+two scripts call `kitlib.spine.value_to_cell`, which an older
+`kitlib/spine.py` lacks. A local script that called either deleted function
+calls `kitlib.spine.value_to_cell(value)`.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/spine.py`,
+`scripts/spine_carrier.py`, `scripts/migrate_carrier.py`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

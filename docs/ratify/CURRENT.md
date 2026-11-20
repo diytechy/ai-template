@@ -701,7 +701,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 5 chain(s): SR-032, SR-148, SR-157, SR-159, SR-169</summary>
+<summary>Waiting for automated adjudication — 6 chain(s): SR-032, SR-147, SR-148, SR-157, SR-159, SR-169</summary>
 
 ## SR-032 — Onboarding and dev-setup scaffold
 
@@ -744,6 +744,38 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: Only a yes runs the package manager, once, with the platform's install arguments; a no, an empty line, closed input or the template's non-interactive run runs nothing; with no package manager nothing is asked and the manual command is printed; a failed install prints a warning naming it; a present gh is not offered; the readiness operation reports gh and never offers it; every run exits 0.
 - **Automated**: Yes
 - **Evidence**: tests/test_run_devsetup.py::test_install_offers_gh_and_runs_it_only_on_a_yes; tests/test_run_devsetup.py::test_install_without_a_package_manager_or_with_a_failure_never_fails; tests/test_run_devsetup.py::test_the_templates_install_tier_offers_gh_only_at_a_terminal; tests/test_run_devsetup.py::test_at_a_terminal_the_templates_install_tier_installs_gh_only_on_a_yes; tests/test_run_devsetup.py::test_at_a_terminal_the_bare_runs_check_reports_gh_and_never_offers_it; tests/test_run_devsetup.py::test_powershell_install_offers_gh_and_runs_winget_only_on_a_yes; tests/test_run_devsetup.py::test_the_powershell_templates_install_tier_offers_gh_only_at_a_console; tests/test_run_devsetup.py::test_at_a_windows_console_the_templates_install_tier_installs_gh_on_a_yes; tests/test_run_devsetup.py::test_at_a_windows_console_the_bare_runs_check_never_offers_gh
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-147 — One machine-parseable carrier for the requirement spine
+
+> **Requirement.** The delivered harness shall hold every spine tier in one machine-parseable representation, reached by a migration proven cell-for-cell over the live registries before the new representation becomes authoritative.
+
+> **Rationale.** THE ROW STATES ONE OBLIGATION, and the migration history - the two prior carriers and the cutover - is no part of it: normative history and a merged decision have no place at the requirement tier, and a rationale is where that account may live. The two-carrier split has no recorded rationale and costs on both sides. Reading 32 need rows takes ~166 code lines across 14 functions in 8 modules - six bespoke scanners, two of them F5 twins pinned by nothing but a docstring, which have already drifted once and rendered a phantom root in the dashboard - while reading all 436 SR+LLR+TC rows takes csv.DictReader. CSV also cannot represent the cells that actually exist: five hold a literal pipe, 552 hold commas, the longest is 1,553 characters, and an embedded newline has no representation at all. A structured carrier turns three integrity rules into properties of the parse - a duplicate id becomes a decode error, a ref list becomes a typed array (retiring the split-on-whitespace rule that read `and` as an orphan), and an empty cell becomes an absent key, so `unset` and `set to empty` stop being the same value. The converter is the migration's evidence, not its convenience: SR-129's 140-cell lesson is that an unproven representation change is exactly where a registry silently loses cells. ONE ROW because the single-carrier claim and its converter-proof are one contract — the converter is the migration's evidence — and the converter's mechanics already decompose to this row's LLR chain;… [330 more chars — read the registry row]
+
+
+### LLR LLR-382 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-382
+- **SR-Refs**: SR-147
+- **Title**: A TOML value has one cell text, which the carrier's reader and the migration's round-trip check both write
+- **Module**: project-trajectory/scripts/kitlib/spine.py
+- **CodeSymbol**: value_to_cell
+- **Detail**: value_to_cell in kitlib/spine.py turns one TOML value into the cell text the CSV carrier held. None, the value of an absent key, is the empty cell. A list joins its elements on ; with each element written as text. Any other value is written as text. spine_carrier's rows_from_toml and its need reader write every cell through it, and migrate_carrier's compare re-derives each converted cell through it. Neither module holds a copy.
+- **Rationale**: The two copies disagreed on None: the migration's wrote an empty cell and the reader's wrote the text None. TOML has no null, so only the migration meets None, for every absent key, and every consumer reads an absent cell as empty. The empty cell is kept.
+- **TestRefs**: TC-438
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-438 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-438
+- **Verifies**: SR-147;LLR-382
+- **Level**: Unit
+- **Method**: Drive kitlib.spine.value_to_cell over None, a plain string, a string holding a semicolon, an empty list, a list of strings, a list holding an integer, and an integer. Round-trip a semicolon-joined ref cell through migrate_carrier.cell_to_value and back. Run migrate_carrier.compare over a converted row that dropped a key, and read a ref array through spine_carrier.rows_from_toml. Look for a value_to_cell on migrate_carrier and on spine_carrier.
+- **Tier**: Smoke
+- **Expected**: None reads as the empty cell; a list joins on semicolons with each element as text; anything else is its text. The ref cell round-trips to its original text. compare reports the dropped key as changing to the empty cell, and the reader joins the array on semicolons. Neither module defines a value_to_cell.
+- **Automated**: Yes
+- **Evidence**: tests/test_rule_sync.py::test_the_carrier_value_cell_has_one_home_and_reads_none_as_empty
 - **Status**: Drafted
 - **Phase**: 6
 
