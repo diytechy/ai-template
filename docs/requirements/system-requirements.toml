@@ -1722,7 +1722,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 form = "interface"
-coincident = """The need asks for unattended progress whose evidence a later reader can attribute. An adjudication that runs only from a claimed lane, and that counts as success only a verdict its own call wrote at the path it reserved before its deadline, makes the judgement the lane's and the call's, whatever else the runner wrote or left behind; and an act taken only as an accepted, committed verdict authorizes cannot stand in for that judgement. The row relies on nothing the runner does: it refuses what it cannot attribute. Whether the verdict judged well is the judging session's own premise, not this row's."""
+coincident = """The need asks for unattended progress whose evidence a later reader can attribute. An adjudication that runs only from a claimed lane, and that counts as success only a verdict its own call wrote at the path it reserved before its deadline, makes the judgement the lane's and the call's, whatever else the runner wrote or left behind; and an act is taken only as an accepted, committed verdict authorizes it, so later work cannot stand in for that judgement. The row relies on nothing the runner does: it refuses what it cannot attribute. Whether the verdict judged well is the judging session's own premise, not this row's."""
 
 [requirement.SR-228]
 title = "Held-rung CLARITY re-acceptance"

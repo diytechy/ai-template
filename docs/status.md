@@ -38,8 +38,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
      exercised, and architectural changes that keep the code clean and
      modular are in scope. B8's overnight launcher goes.
   2. **The queue:** the ready frontier below. Every queued row owes its scope
-     critique before a claim. The row that turns the assumption gate on
-     comes last: its four steps report 91 findings today.
+     critique before a claim. The assumption gate waits on the operator's
+     act: every finding its four steps report is now an assumption or a
+     surrogate owing its first acceptance, shown on `open-items.html`; the
+     flip to `assumption_gate = true` follows the act.
   3. **Downstream (HANDOFF §7):** the second migrator pass is done where it
      was safe (HANDOFF §12.6, 2026-11-19). Left: FileBackup, held by the
      operator until its conversion is merged; the four conversions paused
@@ -164,15 +166,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   legacy-shaped entry from an un-re-synced writer can land through the
   slot's merge unjudged; LLR-361 states the commit rule twice and "relative
   to each parent" is ambiguous; from the open-items page's needs section
-  (wi-987 D-001, D-005): IF-074's data cell is 177 characters, over the
-  160 advisory; LLR-118 (the page's own LLR) still lists section 2 as SR
-  chains only, and TC-123's evidence holds a needs assertion its method
-  does not state; the counts test could also pin the SR-chain count; the
+  (wi-987 D-001, D-005): TC-123's evidence holds a needs assertion its
+  method does not state; the counts test could also pin the SR-chain count; the
   Markdown approval brief clips first-approval need cells at 1,500
   characters, as the page no longer does; `pending.py` projects owing SR
   rows only and never owing needs (the page's section 3 and dispatch's
-  exit count); an owner-page view of owing assumptions and surrogates is
-  not built; from the findings-file
+  exit count); from the findings-file
   binding row's gate (wi-878 D-008): TC-069 moved from Smoke to Full,
   which the tier rule does not require while it cites smoke-tier
   evidence, so its per-commit evidence join is forgone (restore Smoke at
