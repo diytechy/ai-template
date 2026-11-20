@@ -127,6 +127,7 @@ import prompts
 import rejudge
 import spine_carrier
 from kitlib import dispute as kdispute
+from kitlib import spine as _kitspine
 from kitlib import done_when as kdone
 from kitlib import sitting as ksitting
 
@@ -1091,12 +1092,12 @@ def _cited_spine(root, scope, by_id):
     srs = set()
     for wid in scope:
         cell = (by_id.get(wid) or {}).get("SR-Refs") or ""
-        srs |= {tok.strip() for tok in cell.split(";") if tok.strip()}
+        srs |= set(_kitspine.refs(cell))
     wanted = set(srs)
     for llr in spine_carrier.load(
         Path(root) / "docs/requirements/low-level-requirements.toml", "LLR-ID"
     ):
-        owned = {tok.strip() for tok in (llr.get("SR-Refs") or "").split(";")}
+        owned = set(_kitspine.refs(llr.get("SR-Refs")))
         if srs & owned and (llr.get("LLR-ID") or "").strip():
             wanted.add(llr["LLR-ID"].strip())
     return wanted

@@ -12,13 +12,13 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-11-18 (9b377be1e)._
 _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-16 (2bee2b551)._
 
-_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 24e9ae0d7 (2026-11-19) — the record's maturity cells have not moved since._
+_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 0aabe35c0 (2026-11-19) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 5 changed, 2 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1006.
+- `docs/requirements/interfaces.toml` — 5 changed, 2 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1004, WI-1006.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1003.
 
 ## Assumptions and surrogates owing an acceptance
@@ -701,7 +701,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 8 chain(s): SR-032, SR-049, SR-147, SR-148, SR-157, SR-159, SR-169, SR-189</summary>
+<summary>Waiting for automated adjudication — 9 chain(s): SR-032, SR-049, SR-147, SR-148, SR-157, SR-159, SR-169, SR-189, SR-220</summary>
 
 ## SR-032 — Onboarding and dev-setup scaffold
 
@@ -1035,6 +1035,30 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: Both checkers read exactly the two real needs: neither the comment's id, nor the stakeholder description's id, nor the -000 example counts, and check_docs' set equals sn_all_ids over the same text; its Must/Should floor is the one Must need. Over the live registry, the carrier's need ids less the example equal sn_all_ids, and the two draft readers agree.
 - **Automated**: Yes
 - **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_readme_inventory_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_policy_one_home.py::test_the_flow_check_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_rule_sync.py::test_the_need_reader_agrees_with_the_sn_universe_on_the_toml_needs_file
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-220 — Overlapping queued work is consolidated through one judgement per queue state
+
+> **Requirement.** While the queued work items include a set that overlaps, the delivered loop content shall hand that set to a single judgement, at most once for any one state of the queued work items and never while another judgement is in progress, queued over an item of the set, or queued to run before it, whose outcome takes effect only as a recorded restructuring in which each absorbed item is closed in a terminal state naming its one successor, its scope text unchanged.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-025 asks that no human curate what comes next; its acceptance states only that the next work derives from the tracked work-item graph, which a stranger reading it would derive as work selection alone. This row states what that promise needs once the loop also mints work: rows minted one finding at a time overlap, and without this row either a human merges them, which is the curation the need rules out, or the loop builds the same job more than once. Two lenses shape it. UNATTENDED-OPS: an overlap is a standing state, so a judgement fired on it re-asks the same question on every idle tick unless the judged state is remembered past the judging row's close, an unbounded retry that pages nobody. PERFORMANCE: each judgement is a strong-tier session, so asking once per queue state is the operating-cost bound rather than an optimisation. The restructuring is recorded rather than done by deletion so that an absorbed item's scope and its successor stay readable after the act. Fed back to the need: SN-025's acceptance could name the loop keeping its own queue free of duplicated work; until it does, this row is derived and says so. Choosing the next work stays SR-148's, and reporting an overlap as a warning stays SR-157's.
+
+
+### LLR LLR-210
+- **TestRefs**
+  - before: TC-208
+  - after: TC-208; TC-442
+
+### TC TC-442 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-442
+- **Verifies**: SR-220;LLR-210
+- **Level**: Unit
+- **Method**: Read a battery of Predecessors cells through consolidate's commissioning-source reader and through kitlib.spine.split_pred_edges: one open item; a work item and an open item joined by a semicolon, by a comma and by whitespace; several open items under mixed separators; an open item marked soft; a token that starts like an open item and carries a letter after its number; soft and hard work items only; an empty cell. Then read comma- and whitespace-separated ref cells through every ref-cell read in consolidate (the absorbed set, the queue model, the module signal and its design-row join), intake's owning-SR hint and the adjudication brief's cited spine, and compare agent_common's ref split with kitlib.spine.refs.
+- **Tier**: Smoke
+- **Expected**: For every cell the commissioning reader's open items equal split_pred_edges' open-item edges: a comma or whitespace separator still yields the edge, the soft marker is ignored, and the lettered token is no open-item edge. Each ref-cell read splits a comma- or whitespace-separated cell into its ids, and agent_common's ref split is kitlib.spine.refs itself.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_consolidate_finds_every_open_item_edge_split_pred_edges_finds; tests/test_policy_one_home.py::test_every_ref_cell_read_splits_through_the_one_home
 - **Status**: Drafted
 - **Phase**: 6
 

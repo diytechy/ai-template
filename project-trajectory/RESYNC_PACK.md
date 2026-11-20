@@ -11504,6 +11504,37 @@ the need to the registry, or cite the need that is meant.
 
 **Adopter-merged files:** none.
 
+### Every ref-cell read splits through kitlib.spine.refs [since 426f88f60]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `kitlib.spine.refs` splits a ref cell on `;`, `,` or
+whitespace, and `split_pred_edges` partitions a `Predecessors` cell over it.
+The scheduler, the validator and the dashboard already read cells that way.
+`consolidate`, `adjudicate_brief` and `intake` split their ref cells on `;`
+only, so a hand-written `SR-1, SR-2` read as one token naming nothing. They
+now call the home:
+
+- `consolidate`'s commissioning sources read their open-item edges from
+  `split_pred_edges`, so an edge separated by a comma or a space is found, and
+  a token such as `OI-5x` is no longer counted as an open item;
+- `consolidate`'s absorbed set (`Supersedes`), queue model, module signal and
+  design-row join, `adjudicate_brief`'s cited spine and `intake`'s owning-SR
+  hint read `SR-Refs` and `Supersedes` cells through `refs`;
+- `agent_common._refs` is `kitlib.spine.refs`, not a copy of its body.
+
+All of these are advisory signals: the consolidation clusters, the
+adjudication brief's spine context and intake's hint. A cell joined on `;`,
+as every kit writer joins one, reads as before.
+
+**What to do.** Nothing is forced. Overwrite the four files together.
+
+**Kit-owned files — overwrite:** `scripts/consolidate.py`,
+`scripts/adjudicate_brief.py`, `scripts/intake.py`,
+`scripts/agent_common.py`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

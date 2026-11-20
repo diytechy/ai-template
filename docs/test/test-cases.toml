@@ -4383,3 +4383,14 @@ automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_readme_inventory_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_policy_one_home.py::test_the_flow_check_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_rule_sync.py::test_the_need_reader_agrees_with_the_sn_universe_on_the_toml_needs_file"
 status = "Drafted"
 phase = 6
+
+[test.TC-442]
+verifies = ["SR-220", "LLR-210"]
+level = "Unit"
+method = "Read a battery of Predecessors cells through consolidate's commissioning-source reader and through kitlib.spine.split_pred_edges: one open item; a work item and an open item joined by a semicolon, by a comma and by whitespace; several open items under mixed separators; an open item marked soft; a token that starts like an open item and carries a letter after its number; soft and hard work items only; an empty cell. Then read comma- and whitespace-separated ref cells through every ref-cell read in consolidate (the absorbed set, the queue model, the module signal and its design-row join), intake's owning-SR hint and the adjudication brief's cited spine, and compare agent_common's ref split with kitlib.spine.refs."
+tier = "Smoke"
+expected = "For every cell the commissioning reader's open items equal split_pred_edges' open-item edges: a comma or whitespace separator still yields the edge, the soft marker is ignored, and the lettered token is no open-item edge. Each ref-cell read splits a comma- or whitespace-separated cell into its ids, and agent_common's ref split is kitlib.spine.refs itself."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_consolidate_finds_every_open_item_edge_split_pred_edges_finds; tests/test_policy_one_home.py::test_every_ref_cell_read_splits_through_the_one_home"
+status = "Drafted"
+phase = 6

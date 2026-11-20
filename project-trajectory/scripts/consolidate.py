@@ -101,7 +101,7 @@ import schedule
 import spec_move
 import spine_carrier
 from kitlib import registry as kitregistry
-from kitlib.spine import is_example
+from kitlib.spine import is_example, refs, split_pred_edges
 
 WORK = "docs/work"
 #: Terminal history's home since WI-504 — the archive half of the one registry
@@ -293,7 +293,7 @@ def consolidations(rows):
 
 
 def _superseded(row):
-    return {tok.strip() for tok in _cell(row, "Supersedes").split(";") if tok.strip()}
+    return set(refs(_cell(row, "Supersedes")))
 
 
 def enacted_absorbs(rows, bodies):
@@ -447,12 +447,11 @@ def _commissioning_docs(row):
 
     Implements: SR-220, LLR-210
     """
-    ois = set()
-    for token in _cell(row, "Predecessors").split(";"):
-        token = token.strip().lstrip("~")
-        if token.startswith("OI-"):
-            ois.add(token)
-    return _cell(row, "SpecRef").strip(), ois
+    # The open-item edges `split_pred_edges` reads, the scheduler's own
+    # partition of the cell (WI-1004: a `;`-only split here missed an edge
+    # separated by a comma or a space, and counted `OI-5x` as one).
+    _hard_wi, ois, _soft = split_pred_edges(_cell(row, "Predecessors"))
+    return _cell(row, "SpecRef").strip(), set(ois)
 
 
 def _shared_commission(a, b):
@@ -517,7 +516,7 @@ def touched_modules(root, row, llrs=None, body=""):
     that only fired when two rows spelled a path the same way would fire on
     almost nothing."""
     llrs = _llr_rows(root) if llrs is None else llrs
-    srs = {tok.strip() for tok in _cell(row, "SR-Refs").split(";") if tok.strip()}
+    srs = set(refs(_cell(row, "SR-Refs")))
     named = _MODULE_RE.findall(_cell(row, "Title") + " " + (body or ""))
     return _llr_modules(srs, llrs) | {Path(name).name for name in named}
 
@@ -527,7 +526,7 @@ def _llr_modules(srs, llrs):
     return {
         Path(mod.strip()).name
         for llr in llrs
-        if srs & {tok.strip() for tok in (llr.get("SR-Refs") or "").split(";")}
+        if srs & set(refs(llr.get("SR-Refs")))
         for mod in (llr.get("Module") or "").split(";")
         if mod.strip()
     }
@@ -548,9 +547,7 @@ def _model(rows):
             "id": _cell(r, "WI-ID"),
             "title": _cell(r, "Title"),
             "status": _cell(r, "Status"),
-            "srs": [
-                tok.strip() for tok in _cell(r, "SR-Refs").split(";") if tok.strip()
-            ],
+            "srs": refs(_cell(r, "SR-Refs")),
             "specref": _cell(r, "SpecRef"),
         }
         for r in rows

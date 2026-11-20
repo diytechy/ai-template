@@ -9,7 +9,7 @@ check that no former holder still carries a copy. The kept answers and their
 reasons are the spec's (`WI-1004`, "The eleven, in landing order"). B3's and
 B5's pins repair the vacuous ones in `tests/test_rule_sync.py` and live there.
 
-Implements: TC-439, TC-440, TC-441
+Implements: TC-439, TC-440, TC-441, TC-442
 """
 
 import tomllib
@@ -20,6 +20,10 @@ migrate_carrier = load_script("migrate_carrier")
 wi_convert = load_script("wi_convert")
 check_docs = load_script("check_docs")
 check_flows = load_script("check_flows")
+consolidate = load_script("consolidate")
+adjudicate_brief = load_script("adjudicate_brief")
+intake = load_script("intake")
+agent_common = load_script("agent_common")
 
 import kitlib.decisions as kitlib_decisions  # noqa: E402  (after load_script)
 import kitlib.registry as kitlib_registry  # noqa: E402
@@ -188,3 +192,62 @@ def test_the_flow_check_reads_the_one_sn_universe_on_a_toml_needs_file(tmp_path)
     # Neither the comment's nor the description's id is a need, and the
     # template's -000 placeholder is not counted either.
     assert known["SN"] == {"SN-001", "SN-002"}
+
+
+# --- 5. B10 the ref split ----------------------------------------------------------
+# `kitlib.spine.refs` splits a ref cell on `;`, `,` or whitespace, and
+# `split_pred_edges` partitions a `Predecessors` cell over it: the reading the
+# scheduler, the validator and the dashboard take. `consolidate`,
+# `adjudicate_brief` and `intake` split their ref cells on `;` only, so a
+# hand-written `SR-1, SR-2` read as one token naming nothing, and
+# `consolidate._commissioning_docs` missed open-item edges and counted `OI-5x`
+# as one. `agent_common._refs` was an agreeing copy. Kept: the home's reading.
+
+PREDECESSOR_CELLS = (
+    "OI-5",
+    "WI-1;OI-5",
+    "WI-1, OI-5",  # disputed: a comma
+    "WI-1 OI-5",  # disputed: whitespace
+    "OI-5;OI-6, OI-8\tOI-9",
+    "~OI-7",  # a soft marker on an open item is ignored: OI edges are hard
+    "OI-5x",  # disputed: not an open-item token, a hard work-item token
+    "~WI-2;WI-3",
+    "",
+)
+
+
+def test_consolidate_finds_every_open_item_edge_split_pred_edges_finds():
+    """Implements: TC-442"""
+    for cell in PREDECESSOR_CELLS:
+        _spec, ois = consolidate._commissioning_docs(
+            {"Predecessors": cell, "SpecRef": "docs/x.md"}
+        )
+        assert ois == set(kitlib_spine.split_pred_edges(cell)[1]), cell
+
+
+def test_every_ref_cell_read_splits_through_the_one_home(tmp_path):
+    """Implements: TC-442"""
+    assert agent_common._refs is kitlib_spine.refs
+    pair = "SR-1, SR-2"  # the disputed input: a comma-separated ref cell
+    assert consolidate._superseded({"Supersedes": "WI-1 WI-2"}) == {"WI-1", "WI-2"}
+    model = consolidate._model([{"WI-ID": "WI-9", "SR-Refs": pair}])
+    assert model[0]["srs"] == ["SR-1", "SR-2"]
+    llrs = [{"LLR-ID": "LLR-1", "SR-Refs": "SR-2 SR-3", "Module": "a/one.py"}]
+    assert consolidate._llr_modules({"SR-3"}, llrs) == {"one.py"}
+    assert consolidate.touched_modules(
+        tmp_path, {"SR-Refs": "SR-9, SR-3"}, llrs=llrs
+    ) == {"one.py"}
+    assert intake._owning_srs(
+        [{"id": "LLR-1", "routed": {"SR-Refs": ("SR-1, SR-2", "SR-4")}}]
+    ) == ["SR-1", "SR-2"]
+
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (req / "low-level-requirements.toml").write_text(
+        '[design.LLR-1]\nsr_refs = "SR-2, SR-3"\nmodule = "a/one.py"\n',
+        encoding="utf-8",
+    )
+    wanted = adjudicate_brief._cited_spine(
+        tmp_path, ["WI-9"], {"WI-9": {"SR-Refs": pair}}
+    )
+    assert wanted == {"SR-1", "SR-2", "LLR-1"}

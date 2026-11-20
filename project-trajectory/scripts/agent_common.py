@@ -972,9 +972,6 @@ def parse_map(spec):
     return mapping
 
 
-_SPLIT_RE = re.compile(r"[;,\s]+")
-
-
 def _read_csv_rows(path):
     """CSV rows of `path` as dicts, or [] (absent/unreadable). utf-8-sig so an
     Excel-written BOM can't rename the first header key (a BOM'd
@@ -991,8 +988,8 @@ def _read_csv_rows(path):
     return _kitspine.csv_rows(text)
 
 
-def _refs(cell):
-    return [t for t in _SPLIT_RE.split((cell or "").strip()) if t]
+# The ref split's one home (WI-1004: this was an agreeing copy of its body).
+_refs = _kitspine.refs
 
 
 def git(root, *args):
