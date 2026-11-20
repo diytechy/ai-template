@@ -3,12 +3,109 @@ id = "WI-1003"
 title = "The seam check resolves dotted and relative imports, so edges into kitlib/* and rendering/* are checked"
 workstream = "process"
 sr_refs = ["SR-159"]
-specref = "docs/plans/2026-11-11-oi130-rescore/README.md#defects-in-the-live-partition"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
 planmode = "single"
 +++
+
+## Deliverable
+
+`gen_arch_map.resolve_import(token, importer, modules)` is now the one
+resolution of the import tokens `internal_imports` writes. The cross-component
+seam rule (`trajectory_arch._classifiable_edges`) and the dependency diagram
+both call it, and the diagram's `_resolve_import` is deleted. The rule now
+sees dotted and relative imports, so edges into `kitlib/*` and `rendering/*`
+are checked. On this tree the fix surfaced 7 cross-component findings, and all
+7 are declared here. It also surfaced 55 multi-membership advisories, and the
+`kitlib/spine.py` kernel entry clears 41 of them. `trace.py --strict` and
+`check_trajectory.py --strict` both exit 0, with 0 cross-component findings and
+37 advisories (25 at the base). The spec of record is defect 2 under "Defects
+in the live partition" in
+[`docs/plans/2026-11-11-oi130-rescore/README.md`](../../../plans/2026-11-11-oi130-rescore/README.md).
+The row's SpecRef cell was cleared at close, as R-F asks of a terminal row.
+
+- **Critique dispositions** (`10204665b`): S3, S4, S5 and B2 adopted. The
+  form space is closed with its default and bound, `planmode = "single"`, the
+  Context states the delta, and the deferral escape is gone.
+- **Plan** (`f7d63dce2`): `docs/plans/WI-1003/plan.md`.
+- **Regressions** (`e130ed393`), `tests/test_seam_import_forms.py`. Red
+  before the code in 11 of 16 cases: the nine dotted, aliased, from-import
+  and relative forms reported no finding, the diagram drew no arrow for a
+  relative import in a package's `__init__.py`, and an older `gen_arch_map`
+  without the resolver did not silence the rule. The bare stem, the two
+  ambiguous names, the unknown name and the relative climb past the top were
+  green, which is the point: they pin today's answer.
+- **Code** (`62646a03f`):
+  - The resolver: `resolve_import` and its relative arm, `_resolve_relative`.
+  - The rule's call to it. The rule is silent without the resolver, as
+    IF-131 promises for every entry point, and skips an edge from a module
+    to itself.
+  - The diagram's call to it. Both resolvers draw the same 557 arrows over
+    this repository.
+  - A 17th case, a module importing its own package, which pins the self-edge
+    guard and fails with the guard removed.
+  - A per-test reset of the rule's scan cache. The rule caches its scan per
+    root path for the process, and `tmp_path_retention_policy = failed` hands
+    a passed test's directory name to the next test. Without the reset, the
+    first red run's later cases read an earlier case's scan.
+  - Ratchets: `gen_arch_map.py` 1581 to 1593 SLOC (a reviewed bump: the
+    resolver's behaviour) and `trajectory_arch.py` 1130 to 1124 (re-stamped
+    down). `_classifiable_edges`' complexity-baseline row is deleted.
+  - RESYNC entry "The seam check resolves dotted and relative imports".
+- **Declarations and rows** (`34c5994c3`):
+  - The 7 findings: `check_privacy` and `agent_common` to
+    `kitlib/secret_classes` by IF-314 (new); `coordinator_guard` and
+    `kitlib/guard_hooks` to `kitlib/observation` by IF-315 (new,
+    `write_atomic`); `rejudge` to `kitlib/observation` by IF-214, which gains
+    the consumer; and `check_perf` and `check_test_first` to `kitlib/spine` by
+    a `docs/kernel-modules-allow` entry. `spine.py` is imported by 43 modules
+    across all four components, and CMP-006's accepted note already placed it
+    on the kernel surface.
+  - Each new row's contract body is in its owner's docstring. TC-201 and
+    TC-229, which already drive those surfaces, cite IF-314 and IF-315 (a
+    traced `verifies` cell).
+  - IF-131 gains `resolve_import` and its real requestor, `trajectory_arch`.
+    That covers the one pre-existing advisory into `gen_arch_map`.
+  - LLR-374 and TC-436 are new and `Drafted`.
+  - CMP-006's note is rewritten to what the check sees. It is an amendment,
+    so the row stays `Accepted` and waits on the operator's re-accept.
+  - Watermarks: IF 315, LLR 374, TC 436.
+  - The component view gains LLR-374 on CMP-006 and the three seams on the
+    components of their endpoints. `design_rows` goes from 337 to 338 and
+    `seam_rows` from 259 to 261.
+
+Departures from the plan: `code_symbol` also names `_resolve_relative`; IF-131
+also gains a requestor; the skipped cases assert that no edge is classified
+rather than that no finding is reported; and the self-import case and the
+cache reset were added.
+
+Left undone:
+
+- **The review bar.** Built on the maintenance branch `maint/wi-1003`,
+  outside the lane workflow: no claim and no lane review rounds. The parent
+  session reviews the diff and merges it.
+- **The advisory tier.** Of the 37 advisories, 13 are edges this fix
+  surfaced into a module that carries several components' tags:
+  - `acceptance_record` to `kitlib/done_when`;
+  - `agent_policy` and `held_status` to `kitlib/authority`;
+  - `id_carrier` to `kitlib/provenance`;
+  - `coordinator_guard` to `kitlib/shell_line`;
+  - `integrate` to `kitlib/expected_failure`;
+  - `integrate` and `kitlib/verdict` to `kitlib/station`;
+  - `agent_brief`, `plan_gate`, `session_keep`, `kitlib/sitting` and
+    `kitlib/expected_failure` to `kitlib/verdict`.
+
+  The other 24 predate it. As the second Done-when item says, these are the
+  record's defect 1 (membership drift). No queued row names that defect at this
+  base.
+- **A side effect of the rule's pairing.** `_declared_seam_pairs` pairs every
+  endpoint of a row with every other, so IF-315's two requestors also cover
+  `coordinator_guard` to `kitlib/guard_hooks`. That edge uses a different
+  call surface (`hooks_state`, `consent_install`), and the check now treats
+  it as declared.
+- **TC-437** was allotted and not minted.
 
 ## Context
 
@@ -59,7 +156,7 @@ cell and its `Contract IF-131:` body. The interface reference and
 
 ## Done-when
 
-- [ ] A dotted import (`import kitlib.spine`, `from kitlib import spine`,
+- [x] A dotted import (`import kitlib.spine`, `from kitlib import spine`,
       `from kitlib.spine import x`) and a relative import inside a package
       resolve to their inventory module, and the cross-component rule
       classifies the edge. A bare stem resolves as today; an unknown or
@@ -93,7 +190,7 @@ cell and its `Contract IF-131:` body. The interface reference and
         (`gen_arch_map` emits no token for it), `importlib` or `__import__`
         calls, `sys.path` changes, and a name that reaches a module only
         through an alias assigned at run time. None of these is an edge.
-- [ ] Each edge this makes visible to the cross-component finding tier (its
+- [x] Each edge this makes visible to the cross-component finding tier (its
       endpoints' component sets disjoint, the edges the record counts under
       defect 2) is declared in this row and none is deferred: by an interface
       row (a new row is `Drafted`), or, for a destination imported from every
@@ -107,8 +204,8 @@ cell and its `Contract IF-131:` body. The interface reference and
       The resolver, the declarations and the CMP-006 note land together, and
       the row lands with `trace.py --strict` and `check_trajectory.py
       --strict` clean.
-- [ ] CMP-006's note matches what the check now sees.
-- [ ] Regressions name each import form above, and the unchanged bare-stem,
+- [x] CMP-006's note matches what the check now sees.
+- [x] Regressions name each import form above, and the unchanged bare-stem,
       unknown and ambiguous cases.
 
 ## Critique dispositions
