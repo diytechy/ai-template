@@ -1521,7 +1521,7 @@ def resolve_import(token, importer, modules, packages):
     `importer`, or None.
 
     THE ONE RESOLUTION OF `internal_imports`' TOKENS. The dependency diagram
-    and the cross-component seam rule (`trajectory_arch._classifiable_edges`)
+    and the cross-component seam rule (`arch_seams._classifiable_edges`)
     both call it, so the picture and the check cannot disagree about where an
     import goes. `importer`, `modules` and `packages` are module paths in the
     map's grammar (`scripts/kitlib/spine`); `packages` holds those whose file

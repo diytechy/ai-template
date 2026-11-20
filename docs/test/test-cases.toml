@@ -513,7 +513,7 @@ status = "Accepted"
 phase = 1
 
 [test.TC-049]
-verifies = ["SR-159", "LLR-049"]
+verifies = ["SR-159", "LLR-049", "IF-320"]
 level = "Integration"
 method = "Run TOP_VIEW_MAX, containment, nesting, opt-out, and vacuity cases."
 tier = "Full"
@@ -642,7 +642,7 @@ status = "Accepted"
 phase = 4
 
 [test.TC-067]
-verifies = ["SR-159", "LLR-067"]
+verifies = ["SR-159", "LLR-067", "IF-319"]
 level = "Integration"
 method = "Run the cross-component import coverage matrix, including the declared shared-kernel exemption: an edge into a declared kernel module is silent (finding and advisory both), the exemption is one-directional (declaring the SOURCE does not exempt it), an undeclared module or an absent allow-file still fires (fail-safe default), and a malformed allow-file entry (no reason) grants no exemption while being reported and sharing the components_check opt-out."
 tier = "Full"
@@ -785,13 +785,13 @@ status = "Accepted"
 phase = 1
 
 [test.TC-080]
-verifies = ["SR-159", "LLR-042", "IF-263"]
+verifies = ["SR-159", "LLR-042", "IF-263", "IF-316", "IF-317"]
 level = "Integration"
 method = """Run endpoint/direction, source-sink, Active-citation, Contracts, opt-out, and strict non-gating coverage cases."""
 tier = "Full"
 expected = """Every declared coverage gap warns without failing and each suppression/vacuity case stays silent."""
 automated = "Yes"
-evidence = """tests/test_trajectory_arch.py::test_architecture_rules_are_reexported_from_their_behavior_module; tests/test_trajectory_arch.py::test_interface_coverage_warns; tests/test_trajectory_arch.py::test_uncovered_direction_warns; tests/test_trajectory_arch.py::test_source_sink_marker_suppresses_direction_warn; tests/test_trajectory_arch.py::test_seam_tc_citation_warn; tests/test_trajectory_arch.py::test_contracts_docstring_citation_warns; tests/test_trajectory_arch.py::test_interface_warns_never_fail_strict; tests/test_trajectory_arch.py::test_interface_check_off_silences"""
+evidence = """tests/test_trajectory_arch.py::test_architecture_rules_are_reexported_from_their_behavior_module; tests/test_trajectory_arch.py::test_the_composer_exposes_every_public_name_of_the_modules_it_composes; tests/test_trajectory_arch.py::test_every_name_a_caller_reads_through_the_composer_resolves; tests/test_trajectory_arch.py::test_interface_coverage_warns; tests/test_trajectory_arch.py::test_uncovered_direction_warns; tests/test_trajectory_arch.py::test_source_sink_marker_suppresses_direction_warn; tests/test_trajectory_arch.py::test_seam_tc_citation_warn; tests/test_trajectory_arch.py::test_contracts_docstring_citation_warns; tests/test_trajectory_arch.py::test_interface_warns_never_fail_strict; tests/test_trajectory_arch.py::test_interface_check_off_silences"""
 status = "Accepted"
 phase = 1
 
@@ -1588,7 +1588,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-409]
-verifies = ["SR-157", "LLR-365", "IF-131", "IF-263"]
+verifies = ["SR-157", "LLR-365", "IF-131", "IF-263", "IF-318"]
 level = "Integration"
 method = "Run the trajectory check over tagged test trees in plain and strict modes, absent tests-root and registry cases, a nested tests root, and a bootstrapped scaffold before and at the implementation rung."
 tier = "Full"
@@ -1599,7 +1599,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-410]
-verifies = ["SR-157", "LLR-366", "IF-263"]
+verifies = ["SR-157", "LLR-366", "IF-263", "IF-318"]
 level = "Integration"
 method = "Exercise evidence that lacks a declaration and a declaration that lacks evidence in plain and strict modes; exercise a Drafted test case; and run the equality check in a bootstrapped scaffold below and at the implementation rung."
 tier = "Full"
@@ -1786,7 +1786,7 @@ status = "Accepted"
 phase = 1
 
 [test.TC-166]
-verifies = ["SR-165", "LLR-172"]
+verifies = ["SR-165", "LLR-172", "IF-320"]
 level = "Integration"
 method = """Run trajectory_arch's component pass (derivation_record_findings, through component_findings as check_trajectory.py runs it) over fixture component registries: (a) a complete derivation record passes silently; (b) a record omitting each element in turn (candidate partitions, objective, constraints, any candidate's score, the selected partition, the operator ruling) is reported once per omission, naming the row and the missing element; (c) each malformed record cell, and each malformed `derivation` citation, is reported; (d) an absent record is reported once, on the row its citers name; (e) a record whose recorded ranking does not recompute from its own objective, constraints and scores is reported, and the recompute runs only on a complete, well-formed record; (f) a selected partition the recorded scores do not rank first is reported, and the SAME record with an override naming that choice is silent; (g) a finding warns plain and fails under --strict; (h) a project declaring no components, and the shipped example -000 rows, are vacuous."""
 tier = "Full"

@@ -19,7 +19,7 @@
 [derived]
 components = 4
 design_rows = 338
-seam_rows = 261
+seam_rows = 266
 requirements_placed = 133
 requirements_unplaced = 5
 seams_unplaced = 0
@@ -232,6 +232,11 @@ modules = [
   "project-trajectory/scripts/acceptance_record.py",
   "project-trajectory/scripts/adjudicate_brief.py",
   "project-trajectory/scripts/amendment_brief.py",
+  "project-trajectory/scripts/arch_components.py",
+  "project-trajectory/scripts/arch_inputs.py",
+  "project-trajectory/scripts/arch_interfaces.py",
+  "project-trajectory/scripts/arch_seams.py",
+  "project-trajectory/scripts/arch_tags.py",
   "project-trajectory/scripts/assumption_rules.py",
   "project-trajectory/scripts/baseline_snapshot.py",
   "project-trajectory/scripts/census.py",
@@ -322,6 +327,11 @@ seam_internal_refs = [
   "IF-257",
   "IF-263",
   "IF-308",
+  "IF-316",
+  "IF-317",
+  "IF-318",
+  "IF-319",
+  "IF-320",
 ]
 seam_boundary_refs = [
   "IF-002",
