@@ -4449,3 +4449,14 @@ automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_declared_absences_file_is_read_one_way_by_both_readers; tests/test_policy_one_home.py::test_every_declared_file_reader_strips_the_mark_and_refuses_a_hyphen"
 status = "Drafted"
 phase = 6
+
+[test.TC-448]
+verifies = ["SR-049", "SR-178", "LLR-118", "LLR-271"]
+level = "Unit"
+method = "Over a plain file tree holding an assumptions registry (two Drafted assumptions, one of them a fidelity assumption on a Drafted surrogate, a lone Drafted surrogate named only by an Accepted assumption, and a requirement relying on the first), render the open-items page in process. Render it again with one Drafted assumption's holds-when cell longer than the page's clip, and again after recording the registries' copies and moving a word of the Accepted assumption's text. Compare the page's assumption cards with the rows of trace.assumption_owing_model and with the headings of the brief's assumption section."
+tier = "Smoke"
+expected = "Each Drafted assumption and surrogate has a card, in the model's order, and the unmoved Accepted assumption has none. A first-acceptance card shows every cell whole, the long one to its end, with no diff marks; an assumption's card names each requirement relying on it with its title and text, and a surrogate's card names the assumptions naming it. The moved Accepted assumption has a card marked DRIFTED with the moved words before and after, and the header's drifted count includes it. The page's cards, the model's rows and the brief's headings name the same rows in the same order, the header counts them, and section 2 does not print its empty message."
+automated = "Yes"
+evidence = "tests/test_open_items_assumptions.py; tests/test_open_items_assumptions.py::test_each_row_owing_a_first_acceptance_has_its_card_with_its_cells_whole; tests/test_open_items_assumptions.py::test_an_accepted_assumption_whose_text_moved_shows_it_before_and_after; tests/test_open_items_assumptions.py::test_the_page_renders_the_briefs_model_and_counts_it"
+status = "Drafted"
+phase = 6

@@ -701,7 +701,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 15 chain(s): SR-006, SR-032, SR-049, SR-146, SR-147, SR-148, SR-156, SR-157, SR-158, SR-159, SR-166, SR-169, SR-189, SR-220, SR-225</summary>
+<summary>Waiting for automated adjudication — 16 chain(s): SR-006, SR-032, SR-049, SR-146, SR-147, SR-148, SR-156, SR-157, SR-158, SR-159, SR-166, SR-169, SR-178, SR-189, SR-220, SR-225</summary>
 
 ## SR-006 — Gate/tier harness enforces required steps
 
@@ -810,6 +810,18 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module.
 - **Automated**: Yes
 - **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-448 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-448
+- **Verifies**: SR-049;SR-178;LLR-118;LLR-271
+- **Level**: Unit
+- **Method**: Over a plain file tree holding an assumptions registry (two Drafted assumptions, one of them a fidelity assumption on a Drafted surrogate, a lone Drafted surrogate named only by an Accepted assumption, and a requirement relying on the first), render the open-items page in process. Render it again with one Drafted assumption's holds-when cell longer than the page's clip, and again after recording the registries' copies and moving a word of the Accepted assumption's text. Compare the page's assumption cards with the rows of trace.assumption_owing_model and with the headings of the brief's assumption section.
+- **Tier**: Smoke
+- **Expected**: Each Drafted assumption and surrogate has a card, in the model's order, and the unmoved Accepted assumption has none. A first-acceptance card shows every cell whole, the long one to its end, with no diff marks; an assumption's card names each requirement relying on it with its title and text, and a surrogate's card names the assumptions naming it. The moved Accepted assumption has a card marked DRIFTED with the moved words before and after, and the header's drifted count includes it. The page's cards, the model's rows and the brief's headings name the same rows in the same order, the header counts them, and section 2 does not print its empty message.
+- **Automated**: Yes
+- **Evidence**: tests/test_open_items_assumptions.py; tests/test_open_items_assumptions.py::test_each_row_owing_a_first_acceptance_has_its_card_with_its_cells_whole; tests/test_open_items_assumptions.py::test_an_accepted_assumption_whose_text_moved_shows_it_before_and_after; tests/test_open_items_assumptions.py::test_the_page_renders_the_briefs_model_and_counts_it
 - **Status**: Drafted
 - **Phase**: 6
 
@@ -1262,6 +1274,30 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced.
 - **Automated**: Yes
 - **Evidence**: tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-178 — Text that has moved away from its acceptance record is reported
+
+> **Requirement.** The kit shall report any recorded artifact whose text has moved away from the
+copy recording its acceptance - stakeholder needs included - regardless of any
+Status movement.
+
+> **Rationale.** THE DRIFT half, separable from SR-140 in the direction that matters: a record that exists and rides its acceptance commit, with nothing ever comparing live text against it, satisfies SR-140 completely and leaves every later amendment invisible. That is not a hypothetical - it is precisely the failure the git-history derivation had, and the reason a baseline on disk was owed at all.
+REGARDLESS OF STATUS MOVEMENT is the load-bearing clause, not a qualifier. The amendment machinery watches the Status flip, and the sanctioned staged-amendment path deliberately does not flip - so a rule keyed off the flip returns nothing on exactly the rows a sitting exists to judge. Reporting against the recorded copy is the only reading that survives that, because the copy is a baseline OUTSIDE the live file and a walk over the live file can never be one.
+THE STAKEHOLDER-NEED RIDER is in the normative text rather than left to the acceptance because the need tier is the one a sitting most wants to hold and the one the amendment-watching rules were last to reach: each rule walks the tiers it is given, so without the clause the need tier is left off the walk and no rule reaches it. Needs are compared row by row under the same accepted and traced split as every other tier.
+WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-without-flip guard: the id column and the Status cell are excluded STRUCTURALLY (the id is the join key rather than content, and folding Status in woul… [233 more chars — read the registry row]
+
+
+### TC TC-448 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-448
+- **Verifies**: SR-049;SR-178;LLR-118;LLR-271
+- **Level**: Unit
+- **Method**: Over a plain file tree holding an assumptions registry (two Drafted assumptions, one of them a fidelity assumption on a Drafted surrogate, a lone Drafted surrogate named only by an Accepted assumption, and a requirement relying on the first), render the open-items page in process. Render it again with one Drafted assumption's holds-when cell longer than the page's clip, and again after recording the registries' copies and moving a word of the Accepted assumption's text. Compare the page's assumption cards with the rows of trace.assumption_owing_model and with the headings of the brief's assumption section.
+- **Tier**: Smoke
+- **Expected**: Each Drafted assumption and surrogate has a card, in the model's order, and the unmoved Accepted assumption has none. A first-acceptance card shows every cell whole, the long one to its end, with no diff marks; an assumption's card names each requirement relying on it with its title and text, and a surrogate's card names the assumptions naming it. The moved Accepted assumption has a card marked DRIFTED with the moved words before and after, and the header's drifted count includes it. The page's cards, the model's rows and the brief's headings name the same rows in the same order, the header counts them, and section 2 does not print its empty message.
+- **Automated**: Yes
+- **Evidence**: tests/test_open_items_assumptions.py; tests/test_open_items_assumptions.py::test_each_row_owing_a_first_acceptance_has_its_card_with_its_cells_whole; tests/test_open_items_assumptions.py::test_an_accepted_assumption_whose_text_moved_shows_it_before_and_after; tests/test_open_items_assumptions.py::test_the_page_renders_the_briefs_model_and_counts_it
 - **Status**: Drafted
 - **Phase**: 6
 
