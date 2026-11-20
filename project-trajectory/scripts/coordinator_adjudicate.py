@@ -24,8 +24,8 @@ tests to its adjudicate kind, and it must carry the `act` command with them.
 
 Stdlib only, Python 3.11+, Windows/POSIX.
 
-Contracts: IF-283, IF-284, IF-285 — the interface seams this module declares
-(process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-283, IF-284, IF-285, IF-321 — the interface seams this module
+declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-283: the coordinator's adjudication command line, its arguments.
     `adjudicate --brief-file F --brief CLASS --wi WI-N --verdict PATH
@@ -102,6 +102,15 @@ Contract IF-285: the command's stdout readings. `adjudicate` prints the
     is printed, not refused; a login account reading missing adds the
     command that provisions it), `signin [-] ambient: ambient` for an
     unqualified entry, or `signin [-] unresolved: unknown (<why>)`.
+
+Contract IF-321: the verdict an adjudicator writes for `adjudicate`, the file
+    its session fills from outside the kit. Its path is PATH, which
+    `adjudicate` creates empty and exclusively before the launch, so no other
+    call can claim it. It is read only after a call that exits 0 within its
+    deadline and reports no error result: it is then the verdict, judged
+    under the brief class's grammar, and a reservation still empty is a
+    missing verdict. After any other call it is not read. A launched call
+    leaves the file, written or empty, for inspection.
 
 Run with Python 3.11+:  python scripts/coordinator_adjudicate.py adjudicate \\
     --brief-file out/brief.md --brief amendment --wi WI-123 \\

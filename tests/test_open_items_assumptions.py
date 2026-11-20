@@ -54,7 +54,10 @@ def test_each_row_owing_a_first_acceptance_has_its_card_with_its_cells_whole(
     to its end, past the clip the page's context blocks use; the requirements
     relying on an assumption are named with their text, and a surrogate's card
     names the assumptions naming it. An accepted row that has not moved owes
-    nothing and has no card."""
+    nothing and has no card.
+
+    Implements: TC-448
+    """
     long_holds = (
         "the operator is at the console " * (TRACE.CELL_TRUNCATE_LIMIT // 30 + 20)
         + "END-OF-HOLDS"
@@ -100,7 +103,10 @@ def test_an_accepted_assumption_whose_text_moved_shows_it_before_and_after(
 ):
     """An accepted assumption whose accepted cell moved after its copy was
     recorded owes a re-accept: its card is marked DRIFTED and shows the moved
-    words both ways, and the header's drifted count takes it in."""
+    words both ways, and the header's drifted count takes it in.
+
+    Implements: TC-448
+    """
     _assumption_tree(tmp_path)
     SNAP.copy_live(tmp_path, seed=True)
     path = tmp_path / ASSUMPTIONS_REL
@@ -124,7 +130,10 @@ def test_the_page_renders_the_briefs_model_and_counts_it(tmp_path):
     """One home for what is owed: the page's cards are the rows of the model
     the acceptance brief renders, in its order, the brief's own headings name
     the same rows, and the header counts them. With only assumptions owing,
-    section 2 does not say that nothing is owed."""
+    section 2 does not say that nothing is owed.
+
+    Implements: TC-448
+    """
     _assumption_tree(tmp_path)
     assert hasattr(TRACE, "assumption_owing_model"), "no shared owing model"
     reg = TRACE.load_registries(tmp_path / "docs")

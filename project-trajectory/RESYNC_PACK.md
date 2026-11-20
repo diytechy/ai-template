@@ -11837,6 +11837,27 @@ repository with no assumptions registry renders as before.
 
 **Adopter-merged files:** none.
 
+### The adjudicator's verdict file and the dispute verdict are declared seams [since 1cb2e8680]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** Docstrings only. `coordinator_adjudicate.py` and
+`kitlib/dispute.py` each state one more contract: the verdict an
+adjudicator writes at the path `adjudicate` reserved, read only after a call
+that succeeded within its deadline, and the dispute verdict's `RULING:`
+grammar as the surface the adjudicator writes into. They are this
+repository's interface rows IF-321 and IF-322, each realizing the model
+runner crossing. No behaviour changes.
+
+**What to do.** Nothing is forced. Overwrite the files below. Your source
+scan root is your own `src`, so the two blocks declare nothing to your
+checks.
+
+**Kit-owned files — overwrite:** `scripts/coordinator_adjudicate.py`,
+`scripts/kitlib/dispute.py` (docstrings only).
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

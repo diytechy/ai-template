@@ -10,8 +10,8 @@ Both shapes have one home, here, below the routes that use them: the
 coordinator's adjudication entry point today, the loop's in-lane sitting
 (WI-811) later. Pure functions over text.
 
-Contracts: IF-290 — the seam this module declares (process.md §8; row of record
-in docs/requirements/interfaces.toml).
+Contracts: IF-290, IF-322 — the seams this module declares (process.md §8; rows
+of record in docs/requirements/interfaces.toml).
 
 Contract IF-290: the dispute grammar `adjudicate_brief` calls. Text in,
     values or a refusal out: no file read, no git, no process. `read_findings(
@@ -28,6 +28,15 @@ Contract IF-290: the dispute grammar `adjudicate_brief` calls. Text in,
     requested, where)` returns `({id: (ruling, reason class or None, reason)},
     None)` for a verdict ruling every requested finding exactly once and
     nothing else, else `(None, why)`.
+
+Contract IF-322: the dispute verdict an adjudicator writes, the surface its
+    session fills from outside the kit. One `RULING:` line per finding id
+    the brief requested, each on its own physical line, and no other
+    `RULING:` line: FIX, SUCCESSOR or ESCALATE with its reason on the same
+    line, or DISMISS with one reason class (out-of-scope, refuted or
+    not-worth-cost) and its reason. A verdict that misses, repeats or adds a
+    ruling, or holds one outside that set, is refused whole by `parse`, and
+    no ruling is defaulted. THE VERDICT below spells the lines.
 
 THE FINDINGS FILE (TOML, every key required, no other key accepted):
 

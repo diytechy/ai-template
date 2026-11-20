@@ -1120,7 +1120,7 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
-bridged_by = ["DA-013"]
+bridged_by = ["DA-013", "DA-021", "DA-022"]
 
 [interface.IF-154]
 owner = "scripts/integrate"
@@ -2520,8 +2520,9 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 rationale = "The hook caller needs one response shape so a latch instruction reaches the coordinator without turning a hook response into a tool refusal."
-
-notes = """No tie-back: the hook invocation and response are Claude Code's own process protocol; the locked frame declares no crossing for this local tool exchange."""
+interface_to_external = "B-04"
+bridged_by = ["DA-021"]
+notes = """Tied to B-04: a hook response that denies a tool call or injects the guard's instruction is a guardrail verdict this system emits during a session, which B-04 carries, as the subagent gate's response rows (IF-020, IF-169) are. Its input, the hook event (IF-274), stays untied: the frame declares no inbound crossing for the agent CLI's call into a local tool."""
 
 [interface.IF-277]
 owner = "external:agent CLI"
@@ -2677,7 +2678,9 @@ data = "0 brief written, or review, critique, dispute findings or pass record fi
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = "No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."
+interface_to_external = "B-05"
+coincident = """Its reading is the outcome: 0 means the brief was written or the review, critique, dispute findings or pass record filed, and 2 that the request was refused with nothing written; the launcher acts on the code as returned."""
+notes = "Tied to B-05: the command's result codes are a delivered script's contract, as integrate's are (IF-080), and B-05 carries the delivered scripts' contracts. Its command line (IF-288) stays untied: the frame declares no inbound crossing for a session's invocation."
 
 [interface.IF-291]
 rationale = "Every pause consumer needs one boundary interpretation, because separate parsing would disagree over wrapping weekdays, end instants or the interval whose end resets retained work."
@@ -2899,3 +2902,27 @@ data = "component_top_view, knowledge_packs, TOP_VIEW_MAX, derivation_record_fin
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
+
+[interface.IF-321]
+owner = "scripts/coordinator_adjudicate"
+requestors = ["external:agent CLI"]
+channel = "file"
+data = "the verdict at the PATH adjudicate reserved, empty and exclusive, before launch; read only after a call that exits 0 within its deadline"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+interface_from_external = "B-10"
+coincident = """Its reading is the outcome: what the coordinator acts on is a verdict this call wrote at the path it reserved before its deadline, or a failed call, never another call's leftover or a late write."""
+rationale = """A coordinator adjudication counts as success only a verdict its own call wrote, so the file the adjudicator writes back is a surface of its own: the entry point reserves it before launch and reads it only after a successful call. Reading a caller-supplied path or a shared record instead would leave the verdict's author and time ambiguous."""
+
+[interface.IF-322]
+owner = "scripts/kitlib/dispute"
+requestors = ["external:agent CLI"]
+channel = "file"
+data = "dispute verdict: one RULING line per requested id, FIX | SUCCESSOR | DISMISS <out-of-scope|refuted|not-worth-cost> | ESCALATE, with its reason"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+interface_from_external = "B-10"
+coincident = """Its reading is the outcome: a verdict that rules every requested finding exactly once, from the declared rulings and with a reason, is the ruling the dispute ends on; anything else is refused whole, and no ruling is defaulted."""
+rationale = """An adjudicator answering a dispute writes its verdict in a grammar the kit defines, and the dispute's bound rests on reading that grammar strictly. Declaring the surface the adjudicator writes into keeps the grammar the brief asks for and the one validation reads as one."""
