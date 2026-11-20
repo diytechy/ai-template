@@ -30,9 +30,16 @@ no lane review rounds, commit hooks on. The parent session reviews and merges.
   before and 79 after, the three new ones being "relies on assumption DA-0NN,
   which is not accepted (Status Drafted)". `crossing-allocation` 9 before and
   9 after, none of them these rows.
-- **For the operator.** DA-020's second falsifier is already observed here:
-  `coordinator-2026-10-04`'s 13 entries have no verdict, while an entry of
-  `coordinator-2026-11-05` was confirmed on 2026-11-05. Across all records,
-  52 of 1,194 entries have a verdict. DA-018 and DA-019 have nothing to
+- **The review.** Gemini Argon read the rows and asked for two falsifier
+  fixes, both applied. DA-018's falsifier also catches a budget item ticked
+  with no measurement of the release. DA-020's gains an arm for the case where
+  the operator reads nothing: an entry still listed as not yet seen after
+  later integrated work has built on the call it records, as git history
+  shows.
+- **For the operator.** Both of DA-020's reading arms are already observed
+  here. `coordinator-2026-10-04`'s 13 entries have no verdict, while an entry
+  of `coordinator-2026-11-05` was confirmed on 2026-11-05. One of the 13,
+  D-003, is the call to keep the WI-788 lane open, and the lane landed on it
+  the same day. Across all records, 52 of 1,194 entries have a verdict. DA-018 and DA-019 have nothing to
   observe in this repository yet: it has made no release, and it vendors no
   guardrails payload.

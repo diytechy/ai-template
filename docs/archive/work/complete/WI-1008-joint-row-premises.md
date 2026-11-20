@@ -53,6 +53,14 @@ row's SpecRef cell was cleared at close, as R-F asks of a terminal row.
   three rows silently. `crossing-allocation` reported 9 before and 9 after,
   none of them these rows: none of the three declares `form = "interface"`,
   so that step does not judge them.
+- **Review fixes** (3ee9864de), from Gemini Argon's review of the rows. Each
+  falsifier now covers its obstacle's every failure. DA-018's also catches a
+  budget item ticked when no measurement of that budget exists for the
+  release. DA-020's gains an arm for the backlog case, where the operator
+  reads nothing at all: an entry still listed as not yet seen after later
+  work has built on the call it records, which git history shows as a later
+  integrated commit that changes what the call changed or carries out what
+  it decided. The gate's counts are unchanged.
 
 Left for the operator, and why:
 
@@ -60,10 +68,13 @@ Left for the operator, and why:
   WI-1010 plans the same act for the other assumptions. Until WI-1010 renders
   assumptions on `docs/open-items.html`, they are read in
   `docs/ratify/CURRENT.md` or with `trace.py --accept DA-018,DA-019,DA-020`.
-- **DA-020's second falsifier is observed in this repository already.** The
-  13 entries in `docs/decisions/coordinator-2026-10-04.toml` have no verdict,
-  while the operator confirmed an entry of
+- **Both of DA-020's reading arms are observed in this repository already.**
+  The 13 entries in `docs/decisions/coordinator-2026-10-04.toml` have no
+  verdict, while the operator confirmed an entry of
   `docs/decisions/coordinator-2026-11-05.toml` on 2026-11-05 (`cffb626c5`).
+  One of those 13, D-003, records the call to keep the WI-788 lane open at
+  its checkpoint (`9c9e83b7e`). The lane then landed on that call
+  (`2e7cd53f9`, the same day), and the entry is still listed as not yet seen.
   Across all records, 52 of 1,194 entries carry a verdict. The falsifier was
   not narrowed to miss this: it is what the premise says. Whether the October
   backlog is marked seen in bulk is the separate question WI-1009 leaves to
