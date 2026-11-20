@@ -233,6 +233,7 @@ priority = "S"
 verification_method = "Test"
 status = "Accepted"
 phase = 1
+da_refs = ["DA-018"]
 delivered_with = ["SR-006", "SR-049"]
 
 [requirement.SR-034]
@@ -1632,6 +1633,7 @@ priority = "C"
 verification_method = "Test"
 status = "Accepted"
 phase = 6
+da_refs = ["DA-019"]
 delivered_with = ["SR-154", "SR-175"]
 
 [requirement.SR-224]
@@ -1659,6 +1661,7 @@ priority = "S"
 verification_method = "Test"
 status = "Accepted"
 phase = 6
+da_refs = ["DA-020"]
 delivered_with = ["SR-139", "SR-140"]
 
 [requirement.SR-226]

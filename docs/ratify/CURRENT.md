@@ -553,6 +553,88 @@ record runs through the live registry first.
 
 **Falsifier.** A supported runner accepts a retained session id in its documented resume form but the resulting adjudication does not continue that session's transcript.
 
+### DA-018 — Drafted, never accepted
+
+**Relied on by.**
+
+- SR-033 — Release checklist generation: The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate and differentiable assumption confirmations.
+
+**Serving.**
+
+- SN-004 — A team advances only through explicit acceptance gates (DevStg-Reqs→DevStg-Tests→DevStg-Impl→…), and a gate passes only when its mechanical standard is met.
+- SN-043 — Scope: template (adopters + this repo). A reviewer can see, for each stakeholder outcome, what its delivery relies on beyond the system's own checked behavior, and whether any of those premises has been shown false.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Person)
+
+**Cells.**
+
+- **Assumption**: The person releasing works through the generated release checklist before the release ships: they confirm, from a measurement of that release, that each warn-tier budget it lists is within its allocation, and they check whether the falsifier of each assumption it lists has been observed, so a ticked item records a check that was made.
+- **HoldsWhen**: The checklist is regenerated for the release being made, a measurement of each listed budget on that release is at hand, and the ticked copy is kept as the release's record.
+- **Obstacle**: The checklist is ticked without the checks behind it, or not worked at all: a budget item is ticked with no measurement of the release, or an assumption item with no check for its falsifier. A budget over its allocation, or an assumption already shown false, then ships unread, and no gate fails for either.
+- **ObstacleHats**: TEST-ENGINEER;PERFORMANCE
+- **Status**: Drafted
+- **Standing**: active
+
+**Can be falsified by.** no test case
+
+**Falsifier.** A release whose kept checklist ticks a budget item while that release's measurement of the budget is outside its allocation, or ticks an assumption item while an observation recorded before the release shows that assumption false; or a release with no ticked checklist kept for it.
+
+### DA-019 — Drafted, never accepted
+
+**Relied on by.**
+
+- SR-223 — A guarded session receives the guardrails payload vendored for its model: Where a repository vendors a guardrails payload for a model-name substring, the delivered loop content shall inject that payload, in place of the default guardrails core, into a guarded session whose model name contains that substring.
+
+**Serving.**
+
+- SN-026 — The operator can configure several LLM families — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Person)
+
+**Cells.**
+
+- **Assumption**: A model in a guarded session acts on the guardrails payload chosen for it: where the payload says how to plan, check or route the work, the session's work follows it, and so the work the operator reads back from a session on that model was done under the posture the repository wrote for that model.
+- **HoldsWhen**: The payload was written for, and tried on, the model it is chosen for, at a model version that still reads it as it did then; and nothing else the session is told, in its brief or in the repository's instruction files, contradicts the payload.
+- **Obstacle**: The model reads the payload and does not act on it, or acts on only part of it, because the payload was written for another model, the model behind the same name has changed, or the brief or an instruction file tells it otherwise. The payload is still injected and the session log still records the session as guarded, so the repository believes a posture is in force that no session keeps.
+- **ObstacleHats**: UNATTENDED-OPS
+- **Status**: Drafted
+- **Standing**: active
+
+**Can be falsified by.** no test case
+
+**Falsifier.** A session whose log records it as guarded, and whose transcript or lane commits go against an instruction in the payload chosen for its model: for example, code committed before a plan the payload requires, or work reported done without a check the payload requires.
+
+### DA-020 — Drafted, never accepted
+
+**Relied on by.**
+
+- SR-225 — A delegated run closes with a record of the calls it made, where the declared dial asks for one: The delivered loop content shall keep the operator's verdict on each delegated decision coupled to the work that acts on it and each delegated run to its record: whatever the declared decision-recording dial, reporting without refusing a record entry that omits a required disclosure field or leaves one blank, listing each entry the operator has not yet seen and each overruled entry with the open work that carries it, and refusing an overrule unless its transition change files or amends open work that cites the entry; and, where that dial asks for a record, refusing to integrate a closing lane whose record is absent, naming where it belongs.
+
+**Serving.**
+
+- SN-029 — An autonomous run gets as far as it honestly can. Once triggered, the coordinator stops for an operator judgement only when the declared acceptance level reserves that tier for an operator, when a round cannot converge on its own, or when requirement/test documentation is introduced or amended such that the gate drops below what automation is permitted to accept. On every tier released to automation, an acceptance still happens as a review from a declared perspective against the row's actual evidence, and leaves a record naming who or what accepted it — releasing a tier means the review is delegated, never skipped.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Person)
+
+**Cells.**
+
+- **Assumption**: A delegated run's decisions record lists every call the run was told to record, each described as the run's work shows it, and the operator reads each entry listed as not yet seen and confirms or overrules it, so a call made on the operator's behalf reaches the operator.
+- **HoldsWhen**: The session writes its record at its close, from the work it did, under the instruction it is handed that names which calls to record; and runs add entries no faster than the operator reads them, the operator reading the listed entries at each sitting.
+- **Obstacle**: A run leaves a call out of its record, or describes it as smaller or safer than its work shows; or entries pile up faster than the operator reads them, the backlog is skimmed or left, and a call the operator would have overruled stands unread while later work builds on it.
+- **ObstacleHats**: UNATTENDED-OPS
+- **Status**: Drafted
+- **Standing**: active
+
+**Can be falsified by.** no test case
+
+**Falsifier.** A call that a delegated run's diff or session log shows plainly and that its record leaves out or misdescribes; or an entry left listed as not yet seen while the operator confirms or overrules entries recorded after it.
+
 ### SUR-001 — Drafted, never accepted
 
 **Name.** Scripted model runner
