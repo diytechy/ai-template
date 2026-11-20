@@ -3946,3 +3946,15 @@ test_refs = "TC-446"
 status = "Drafted"
 component = "CMP-006"
 phase = 6
+
+[design.LLR-387]
+sr_refs = ["SR-158"]
+title = "A declared file's lines have one walk, and the declared-absences file one reading, which every reader of either calls"
+module = "project-trajectory/scripts/kitlib/config.py"
+code_symbol = "declared_entries/declared_absences/DECLARED_SEP"
+detail = """declared_entries in kitlib/config.py reads a key-and-reason declared file: it decodes UTF-8 with a byte-order mark stripped and an undecodable byte replaced, splits on newlines, passes over blank lines and # comments, returns each line carrying the separator (an em dash with a space each side, DECLARED_SEP) as its line number, stripped key, stripped reason and text, and returns every other line as unparsed with its number. An absent file yields nothing. declared_absences reads the declared-absences file through it, with a trailing / stripped from each path. check_need_form's need-form allow list, trace's provenance allow list and trajectory_arch's kernel-modules allow list each keep only their own key rule over declared_entries; check_doc_refs' read_declared_absences and trace's declared-absence reader both call declared_absences. None of them walks a file of its own."""
+rationale = """Five walks disagreed. Two read a byte-order mark into the first key, hiding the first entry, and of those one raised on an undecodable byte while the other read no entry at all. On the declared-absences file, which both read, one also took a hyphen separator and the other an unspaced em dash, so they disagreed on what it declares. Kept: the mark stripped, the byte replaced, and the spaced em dash only, which every such file's header and the file's interface row state; the stricter."""
+test_refs = "TC-447"
+status = "Drafted"
+component = "CMP-006"
+phase = 6

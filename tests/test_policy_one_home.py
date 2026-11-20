@@ -9,7 +9,7 @@ check that no former holder still carries a copy. The kept answers and their
 reasons are the spec's (`WI-1004`, "The eleven, in landing order"). B3's and
 B5's pins repair the vacuous ones in `tests/test_rule_sync.py` and live there.
 
-Implements: TC-439, TC-440, TC-441, TC-442, TC-443, TC-444, TC-445, TC-446
+Implements: TC-439, TC-440, TC-441, TC-442, TC-443, TC-444, TC-445, TC-446, TC-447
 """
 
 import tomllib
@@ -30,6 +30,10 @@ handback = load_script("handback")
 agent_policy = load_script("agent_policy")
 check = load_script("check")
 agent_session = load_script("agent_session")
+check_doc_refs = load_script("check_doc_refs")
+check_need_form = load_script("check_need_form")
+trace = load_script("trace")
+trajectory_arch = load_script("trajectory_arch")
 
 import kitlib.config as kitlib_config  # noqa: E402  (after load_script)
 import kitlib.decisions as kitlib_decisions  # noqa: E402
@@ -490,3 +494,81 @@ def test_a_command_template_has_one_tokenizer():
         "a b",
     ]
     assert kitlib_config.split_cmd("claude -p # x") == ["claude", "-p", "#", "x"]
+
+
+# --- 10. rolling review §13.16: the declared-file grammar ---------------------------
+# Five readers walked `<key> — <reason>` files line by line:
+# `check_need_form.read_need_form_allow`, `trace.read_provenance_allow`,
+# `trajectory_arch._parse_kernel_allow`, and the two readers of
+# `docs/declared-absences`, `check_doc_refs.read_declared_absences` and
+# `trace._declared_absences`. The last two read a byte-order mark into the
+# first key; `check_doc_refs` raised on an undecodable byte, where `trace` read
+# no entry at all; and on the one file they share, `check_doc_refs` also took a
+# hyphen separator and `trace` an em dash with no spaces. Kept: the mark
+# stripped, the byte replaced, and ` — ` (the file's header, IF-072's data
+# cell and the other files' grammar) the only separator.
+
+_DECLARED = (
+    "﻿{first} — the first entry\n"
+    "# a comment declares nothing\n"
+    "{second} - a hyphen separator\n"
+    "{third}—an em dash with no spaces\n"
+)
+
+
+def _declared_file(path, first, second, third, tail=b""):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = _DECLARED.format(first=first, second=second, third=third)
+    path.write_bytes(text.encode("utf-8") + tail)
+
+
+def test_the_declared_absences_file_is_read_one_way_by_both_readers(tmp_path):
+    """Implements: TC-447"""
+    path = tmp_path / "docs" / "declared-absences"
+    _declared_file(
+        path,
+        "docs/first",
+        "docs/hyphen",
+        "docs/tight",
+        b"docs/dir/ \xe2\x80\x94 a trailing slash\ndocs/b\xffd \xe2\x80\x94 a bad byte\n",
+    )
+    declared, unparsed = check_doc_refs.read_declared_absences(path)
+    assert declared == {
+        "docs/first": "the first entry",  # disputed: the mark hid it
+        "docs/dir": "a trailing slash",
+        "docs/b�d": "a bad byte",  # disputed: check_doc_refs raised
+    }
+    assert [n for n, _line in unparsed] == [3, 4]  # disputed: hyphen, no spaces
+    assert trace._declared_absences(tmp_path) == frozenset(declared)
+
+
+def test_every_declared_file_reader_strips_the_mark_and_refuses_a_hyphen(tmp_path):
+    """Implements: TC-447"""
+    _declared_file(tmp_path / check_need_form.ALLOW, "first-token", "hyphen", "tight")
+    tokens, unparsed = check_need_form.read_need_form_allow(tmp_path)
+    assert tokens == {"first-token"}
+    assert [n for n, _line in unparsed] == [3, 4]
+
+    _declared_file(
+        tmp_path / trace.PROVENANCE_ALLOW,
+        "SR-001 Title first",
+        "SR-002 Title hyphen",
+        "SR-003 Title tight",
+    )
+    entries, unparsed = trace.read_provenance_allow(tmp_path)
+    assert [(e["line"], e["rid"], e["token"]) for e in entries] == [
+        (1, "SR-001", "first")
+    ]
+    assert [n for n, _line in unparsed] == [3, 4]
+
+    _declared_file(
+        tmp_path / trajectory_arch.KERNEL_ALLOW,
+        "project-trajectory/scripts/kitlib/first.py",
+        "project-trajectory/scripts/kitlib/hyphen.py",
+        "project-trajectory/scripts/kitlib/tight.py",
+    )
+    entries, unparsed = trajectory_arch._parse_kernel_allow(tmp_path)
+    assert entries == [("scripts/kitlib/first", "the first entry", 1)]
+    assert [n for n, _line in unparsed] == [3, 4]
+
+    assert kitlib_config.declared_entries(tmp_path / "absent") == ([], [])

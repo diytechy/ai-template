@@ -12,13 +12,13 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-11-18 (9b377be1e)._
 _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-16 (2bee2b551)._
 
-_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 4a4e66432 (2026-11-19) — the record's maturity cells have not moved since._
+_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is c81c86f14 (2026-11-19) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 5 changed, 2 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1004, WI-1006.
+- `docs/requirements/interfaces.toml` — 6 changed, 2 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1004, WI-1006.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1003.
 
 ## Assumptions and surrogates owing an acceptance
@@ -701,7 +701,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 13 chain(s): SR-006, SR-032, SR-049, SR-146, SR-147, SR-148, SR-156, SR-157, SR-159, SR-166, SR-169, SR-189, SR-220</summary>
+<summary>Waiting for automated adjudication — 14 chain(s): SR-006, SR-032, SR-049, SR-146, SR-147, SR-148, SR-156, SR-157, SR-158, SR-159, SR-166, SR-169, SR-189, SR-220</summary>
 
 ## SR-006 — Gate/tier harness enforces required steps
 
@@ -1043,6 +1043,38 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: X2-5 reads 5, the lettered id 0, OI-35abc 0, the zero-padded id its number, OI-98 98, D-001 1, and the dash-ended id and the empty string 0. None of the three modules defines its own reader, and kitlib.spine has no private copy. Both readers order the folder with the lettered spec first, then 3, then 20.
 - **Automated**: Yes
 - **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_an_id_number_is_the_digits_after_the_last_dash; tests/test_policy_one_home.py::test_both_spec_folder_orderings_read_the_one_id_number
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-158 — Documentation drift fails or warns per its declared tier
+
+> **Requirement.** The delivered harness shall report a documentation surface that has drifted from what it claims — a broken intra-repo link, a missing vision declaration, a reference to an absent path or symbol, a stale generated doc, or a declared figure without its provenance — at the declared warn-or-gate severity for each class.
+
+> **Rationale.** Realizes SN-010 (navigable, honest documentation) and SN-008 (a pass never hides a stale claim). One row because the delivered contract is one honesty verdict over the documentation surfaces; the individual checkers and their carve-outs are component details.
+
+
+### LLR LLR-387 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-387
+- **SR-Refs**: SR-158
+- **Title**: A declared file's lines have one walk, and the declared-absences file one reading, which every reader of either calls
+- **Module**: project-trajectory/scripts/kitlib/config.py
+- **CodeSymbol**: declared_entries/declared_absences/DECLARED_SEP
+- **Detail**: declared_entries in kitlib/config.py reads a key-and-reason declared file: it decodes UTF-8 with a byte-order mark stripped and an undecodable byte replaced, splits on newlines, passes over blank lines and # comments, returns each line carrying the separator (an em dash with a space each side, DECLARED_SEP) as its line number, stripped key, stripped reason and text, and returns every other line as unparsed with its number. An absent file yields nothing. declared_absences reads the declared-absences file through it, with a trailing / stripped from each path. check_need_form's need-form allow list, trace's provenance allow list and trajectory_arch's kernel-modules allow list each keep only their own key rule over declared_entries; check_doc_refs' read_declared_absences and trace's declared-absence reader both call declared_absences. None of them walks a file of its own.
+- **Rationale**: Five walks disagreed. Two read a byte-order mark into the first key, hiding the first entry, and of those one raised on an undecodable byte while the other read no entry at all. On the declared-absences file, which both read, one also took a hyphen separator and the other an unspaced em dash, so they disagreed on what it declares. Kept: the mark stripped, the byte replaced, and the spaced em dash only, which every such file's header and the file's interface row state; the stricter.
+- **TestRefs**: TC-447
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-447 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-447
+- **Verifies**: SR-158;LLR-387
+- **Level**: Unit
+- **Method**: Write a declared-absences file that starts with a byte-order mark and holds, in order: an entry, a comment, an entry separated by a spaced hyphen, an entry separated by an unspaced em dash, an entry whose path ends in a slash, and an entry whose path holds an undecodable byte. Read it through check_doc_refs.read_declared_absences and through trace's declared-absence reader. Then write the need-form, provenance and kernel-modules allow lists, each starting with a byte-order mark and holding a well-formed entry, a comment, a hyphen-separated entry and an unspaced one, and read each through its own reader. Read an absent file through kitlib.config.declared_entries.
+- **Tier**: Smoke
+- **Expected**: Both declared-absence readers declare the same paths: the first entry, the slash-ended path without its slash, and the path with the undecodable byte replaced; the hyphen and unspaced lines are reported unparsed, by line number. Each allow-list reader reads its first entry and reports the hyphen and unspaced lines unparsed. The absent file yields nothing.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_declared_absences_file_is_read_one_way_by_both_readers; tests/test_policy_one_home.py::test_every_declared_file_reader_strips_the_mark_and_refuses_a_hyphen
 - **Status**: Drafted
 - **Phase**: 6
 

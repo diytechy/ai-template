@@ -1028,7 +1028,7 @@ channel = "file"
 data = "one line: path then em dash then reason"
 version = "v1"
 status = "Drafted"
-notes = """Built and consumed together. The endpoints are the OTHER readers of the declared-absence grammar: trace (_declared_absences) and tests/test_dogfood_sync.py, which loads the file as its SCAFFOLD_OMISSIONS declaration through this row's own loader. check_vocab is NOT one: it carries the filename in a byte-scan inclusion set (TEXT_NAMES) and never parses the `<path> - <reason>` grammar this contract defines. check_need_form.py compares prose only, not a read."""
+notes = """Built and consumed together. Every reader parses the file through kitlib.config.declared_absences, its one reading: check_doc_refs (read_declared_absences, which gen_arch_map also calls), trace (_declared_absences) and tests/test_dogfood_sync.py, which loads the file as its SCAFFOLD_OMISSIONS declaration through check_doc_refs' loader. check_vocab is NOT one: it carries the filename in a byte-scan inclusion set (TEXT_NAMES) and never parses the `<path> — <reason>` grammar this contract defines. check_need_form.py compares prose only, not a read."""
 
 [interface.IF-073]
 owner = "docs/requirements/open-items.toml"

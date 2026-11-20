@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 344
+design_rows = 345
 seam_rows = 261
 requirements_placed = 133
 requirements_unplaced = 5
@@ -40,6 +40,7 @@ sr_refs = [
   "SR-155",
   "SR-156",
   "SR-157",
+  "SR-158",
   "SR-159",
   "SR-161",
   "SR-162",
@@ -95,6 +96,7 @@ sr_shared_refs = [
   "SR-152",
   "SR-155",
   "SR-156",
+  "SR-158",
   "SR-161",
   "SR-163",
   "SR-169",
@@ -215,6 +217,7 @@ llr_refs = [
   "LLR-384",
   "LLR-385",
   "LLR-386",
+  "LLR-387",
   "LLR-388",
 ]
 hat_refs = [
@@ -485,6 +488,7 @@ sr_shared_refs = [
   "SR-006",
   "SR-017",
   "SR-152",
+  "SR-158",
   "SR-170",
 ]
 llr_refs = [

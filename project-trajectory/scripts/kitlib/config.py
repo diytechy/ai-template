@@ -62,6 +62,9 @@ __all__ = [
     "reviewer_dials",
     "utf8_console",
     "split_cmd",
+    "DECLARED_SEP",
+    "declared_entries",
+    "declared_absences",
     "step_paths",
     "STACK_INI",
     "StackIniError",
@@ -559,6 +562,59 @@ def split_cmd(template):
     lex.escape = ""
     lex.commenters = ""
     return list(lex)
+
+
+# The separator of a `<key> — <reason>` declared file: an em dash with a space
+# each side, as every such file's header, and IF-072's data cell for
+# `docs/declared-absences`, state it.
+DECLARED_SEP = " — "
+
+
+def declared_entries(path):
+    """`(entries, unparsed)` of a `<key> — <reason>` declared file: `entries`
+    is `[(lineno, key, reason, line)]` for each line carrying `DECLARED_SEP`,
+    key and reason stripped; `unparsed` is `[(lineno, line)]` for each other
+    line that is neither blank nor a `#` comment. `([], [])` when the file is
+    absent. Read `utf-8-sig` with replacement, split on `\\n`.
+
+    THE ONE WALK (WI-1004, rolling review §13.16). Five readers each walked
+    their file: `check_need_form`, `trace` (twice), `trajectory_arch` and
+    `check_doc_refs`. Two of them read a byte-order mark into the first key,
+    hiding the first entry, and one raised on an undecodable byte where
+    another read no entry at all; the two readers of `docs/declared-absences`
+    also disagreed on its separator (`check_doc_refs` took ` - ` as well,
+    `trace` an unspaced em dash). Kept: the mark stripped, the byte replaced,
+    and the spaced em dash the only separator. Each reader keeps only what
+    its own file's key means.
+
+    Implements: SR-158, LLR-387"""
+    path = Path(path)
+    if not path.is_file():
+        return [], []
+    entries, unparsed = [], []
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    for lineno, raw in enumerate(text.split("\n"), start=1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if DECLARED_SEP not in line:
+            unparsed.append((lineno, line))
+            continue
+        key, reason = line.split(DECLARED_SEP, 1)
+        entries.append((lineno, key.strip(), reason.strip(), line))
+    return entries, unparsed
+
+
+def declared_absences(path):
+    """`({path: reason}, unparsed)` for a declared-absences file
+    (`docs/declared-absences`): `declared_entries` with each key's trailing
+    `/` stripped, so `dir/` declares `dir`. The one reading of the file, which
+    `check_doc_refs` (and through it `gen_arch_map` and the dogfood test) and
+    `trace` both call.
+
+    Implements: SR-158, LLR-387"""
+    entries, unparsed = declared_entries(path)
+    return {key.rstrip("/"): reason for _n, key, reason, _l in entries}, unparsed
 
 
 def utf8_console():

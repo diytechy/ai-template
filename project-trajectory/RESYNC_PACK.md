@@ -11655,6 +11655,41 @@ imported `agent_session.split_cmd` keeps working.
 
 **Adopter-merged files:** none.
 
+### Declared files have one line walk, and declared-absences one reading [since 426f88f60]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** Five readers walked `<key> — <reason>` files line by line:
+`check_need_form` (`docs/need-form-allow`), `trace` (`docs/provenance-allow`
+and `docs/declared-absences`), `trajectory_arch`
+(`docs/kernel-modules-allow`) and `check_doc_refs` (`docs/declared-absences`).
+The one walk is now `kitlib.config.declared_entries`, and the one reading of
+`docs/declared-absences` is `kitlib.config.declared_absences`, which both of
+that file's readers call. Each reader keeps only what its own key means.
+Where the walks disagreed:
+
+- a file saved with a byte-order mark: `check_doc_refs` and `trace` read the
+  mark into the first path, so the first declared absence did not count. It
+  counts now;
+- an undecodable byte: `check_doc_refs` raised, and `trace` read no entry at
+  all. The byte is replaced now, as the other readers did;
+- in `docs/declared-absences`, `path - reason` (a hyphen) was honoured by
+  `check_doc_refs` and not by `trace`, and `path—reason` (no spaces) by
+  `trace` and not by `check_doc_refs`. Neither is honoured now: the separator
+  is ` — `, an em dash with a space each side, as the file's header states.
+  Such a line is reported as unparsed and declares nothing.
+
+**What to do.** Run `check_doc_refs.py` after the overwrite. If it reports a
+`docs/declared-absences` line as unparsed, rewrite its separator as ` — `.
+Overwrite the five files together: the four scripts need the new
+`kitlib/config.py`.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/config.py`,
+`scripts/check_doc_refs.py`, `scripts/trace.py`, `scripts/check_need_form.py`,
+`scripts/trajectory_arch.py`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

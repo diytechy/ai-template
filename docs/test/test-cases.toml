@@ -4438,3 +4438,14 @@ automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_a_command_template_has_one_tokenizer"
 status = "Drafted"
 phase = 6
+
+[test.TC-447]
+verifies = ["SR-158", "LLR-387"]
+level = "Unit"
+method = "Write a declared-absences file that starts with a byte-order mark and holds, in order: an entry, a comment, an entry separated by a spaced hyphen, an entry separated by an unspaced em dash, an entry whose path ends in a slash, and an entry whose path holds an undecodable byte. Read it through check_doc_refs.read_declared_absences and through trace's declared-absence reader. Then write the need-form, provenance and kernel-modules allow lists, each starting with a byte-order mark and holding a well-formed entry, a comment, a hyphen-separated entry and an unspaced one, and read each through its own reader. Read an absent file through kitlib.config.declared_entries."
+tier = "Smoke"
+expected = "Both declared-absence readers declare the same paths: the first entry, the slash-ended path without its slash, and the path with the undecodable byte replaced; the hyphen and unspaced lines are reported unparsed, by line number. Each allow-list reader reads its first entry and reports the hyphen and unspaced lines unparsed. The absent file yields nothing."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_declared_absences_file_is_read_one_way_by_both_readers; tests/test_policy_one_home.py::test_every_declared_file_reader_strips_the_mark_and_refuses_a_hyphen"
+status = "Drafted"
+phase = 6

@@ -100,6 +100,7 @@ import re
 import sys
 from pathlib import Path
 
+from kitlib import config as _kitconfig
 from kitlib.config import STACK_INI, StackIniError, read_stack_ini
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
@@ -330,34 +331,22 @@ def read_declared_absences(path):
     separate, unchanged-return wrapper below since `tests/test_dogfood_sync.py`
     reads it as a plain dict); `unparsed` is `[(lineno, line)]` for every
     DECLARING line the grammar could not read — not blank, not a `#`-comment,
-    and carrying neither of the two accepted separators — so a malformed
-    entry is reported rather than silently read as an empty file
-    (`declared_absences_parse_findings`).
+    and carrying no separator — so a malformed entry is reported rather than
+    silently read as an empty file (`declared_absences_parse_findings`).
 
-    Grammar unchanged: one non-blank, non-`#`-comment line per entry, `<path>
-    <sep> <reason>` with `<sep>` an em dash or hyphen, space-padded either
-    side (` — ` or ` - `) — the two separators this file alone accepts — and
-    a `LIFECYCLE:`-prefixed reason marks a path whose presence is a legal
-    state (WI-369). Fail-soft in the LOUD direction, the same rule: a line
-    with neither separator DECLARES NOTHING and is dropped, counted as
-    unparsed rather than silently read as "no exception at all"."""
-    if path is None or not path.is_file():
+    Grammar: one non-blank, non-`#`-comment line per entry, `<path> — <reason>`
+    (an em dash with a space each side, as the file's header states), a
+    trailing `/` on the path stripped; a `LIFECYCLE:`-prefixed reason marks a
+    path whose presence is a legal state (WI-369). Fail-soft in the LOUD
+    direction, the same rule: a line with no separator DECLARES NOTHING and is
+    dropped, counted as unparsed rather than silently read as "no exception at
+    all". THE FILE'S ONE READING is `kitlib.config.declared_absences`, which
+    `trace` reads too (WI-1004): this reader also took a hyphen separator and
+    read a byte-order mark into the first path, and `trace` took an unspaced
+    em dash, so the two disagreed on what the file declares."""
+    if path is None:
         return {}, []
-    out, unparsed = {}, []
-    for lineno, raw in enumerate(
-        path.read_text(encoding="utf-8").splitlines(), start=1
-    ):
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        for sep in (" — ", " - "):
-            if sep in line:
-                p, reason = line.split(sep, 1)
-                out[p.strip().rstrip("/")] = reason.strip()
-                break
-        else:
-            unparsed.append((lineno, line))
-    return out, unparsed
+    return _kitconfig.declared_absences(path)
 
 
 def load_declared_absences(path):
