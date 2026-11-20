@@ -9,7 +9,7 @@ check that no former holder still carries a copy. The kept answers and their
 reasons are the spec's (`WI-1004`, "The eleven, in landing order"). B3's and
 B5's pins repair the vacuous ones in `tests/test_rule_sync.py` and live there.
 
-Implements: TC-439, TC-440
+Implements: TC-439, TC-440, TC-441
 """
 
 import tomllib
@@ -18,6 +18,8 @@ from conftest import load_script
 
 migrate_carrier = load_script("migrate_carrier")
 wi_convert = load_script("wi_convert")
+check_docs = load_script("check_docs")
+check_flows = load_script("check_flows")
 
 import kitlib.decisions as kitlib_decisions  # noqa: E402  (after load_script)
 import kitlib.registry as kitlib_registry  # noqa: E402
@@ -125,3 +127,64 @@ def test_both_spec_folder_orderings_read_the_one_id_number(tmp_path):
     expected = ["WI-12a", "WI-3", "WI-20"]  # WI-12a reads 0, so it sorts first
     assert [r["WI-ID"] for r in kitlib_registry.read_spec_rows(work)] == expected
     assert [row["WI-ID"] for row, _o, _r in wi_convert.read_specs(work)] == expected
+
+
+# --- 4. B5 the SN-id universe ------------------------------------------------------
+# `check_docs._registry_needs` (the README inventory's existence set) and
+# `check_flows.load_ids` (the ids a runtime flow may cite) each scraped every
+# `SN-###` token out of the whole needs file; `kitlib.spine.sn_all_ids` reads
+# the need tables only under TOML and drops `-000`. On a TOML needs file the
+# scrapes counted an id written only in a comment or a stakeholder description
+# as a need, and `check_flows` counted `SN-000`. Kept: the home's answer, the
+# rule SR-189 states and the gate derivation already reads.
+
+NEEDS_TOML = """# SN-098 is named in a comment and is no need.
+[need.SN-000]
+status = "Accepted"
+need = "The template's example need."
+priority = "M"
+
+[need.SN-001]
+status = "Accepted"
+need = "A real need, which cites SN-002 in its own text."
+priority = "M"
+
+[need.SN-002]
+status = "Accepted"
+need = "A second real need."
+priority = "C"
+
+[stakeholder.STK-01]
+name = "Operator"
+description = "Owns SN-099, which no need table declares."
+status = "Accepted"
+"""
+
+
+def _needs_repo(tmp_path):
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    path = req / "stakeholder-needs.toml"
+    path.write_text(NEEDS_TOML, encoding="utf-8")
+    return path
+
+
+def test_the_readme_inventory_reads_the_one_sn_universe_on_a_toml_needs_file(
+    tmp_path,
+):
+    """Implements: TC-441"""
+    path = _needs_repo(tmp_path)
+    all_ids, must_should = check_docs._registry_needs(path)
+    # The comment's SN-098 and the stakeholder description's SN-099 are no need.
+    assert all_ids == {"SN-001", "SN-002"}
+    assert all_ids == kitlib_spine.sn_all_ids(path.read_text(encoding="utf-8"), ".toml")
+    assert must_should == {"SN-001"}
+
+
+def test_the_flow_check_reads_the_one_sn_universe_on_a_toml_needs_file(tmp_path):
+    """Implements: TC-441"""
+    _needs_repo(tmp_path)
+    known = check_flows.load_ids(tmp_path / "docs")
+    # Neither the comment's nor the description's id is a need, and the
+    # template's -000 placeholder is not counted either.
+    assert known["SN"] == {"SN-001", "SN-002"}

@@ -50,6 +50,7 @@ from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
+from kitlib import spine as _kitspine
 from kitlib.config import utf8_console as _utf8_console
 
 # Sibling: the spine's registry CARRIER — the one home for
@@ -87,16 +88,20 @@ def load_ids(docs):
         "TC": spine_col(docs / "test" / "test-cases.toml", "TC-ID"),
         "SN": set(),
     }
-    # The need tier resolves through the carrier too. The id
-    # SCRAPE itself is carrier-blind — `SN-001` is the token under a markdown
-    # row and under `[need.SN-001]` alike — but an existence test on one suffix
-    # is not: it would report an EMPTY known-SN set for a repo still on
-    # markdown, and every `SN-###` a runtime flow cites would read as unknown.
+    # The need tier resolves through the carrier too: an existence test on one
+    # suffix would report an EMPTY known-SN set for a repo still on markdown,
+    # and every `SN-###` a runtime flow cites would read as unknown. The ids
+    # are the one SN-id universe, `kitlib.spine.sn_all_ids`, with the carrier
+    # from the file's suffix (WI-1004: a whole-file scrape here also counted an
+    # id named only in a TOML comment or stakeholder description, and `SN-000`,
+    # which a cited `-000` id never reached anyway).
     sn_md = spine_carrier.resolve(
         docs / "requirements" / "stakeholder-needs.toml", spine_carrier.NEED_CARRIERS
     )
     if sn_md is not None:
-        known["SN"] = set(re.findall(r"\bSN-\d+\b", sn_md.read_text(encoding="utf-8")))
+        known["SN"] = _kitspine.sn_all_ids(
+            sn_md.read_text(encoding="utf-8-sig"), sn_md.suffix
+        )
     return known
 
 

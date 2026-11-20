@@ -776,23 +776,25 @@ def test_every_live_spine_column_round_trips_through_the_carrier_vocabulary():
     assert checked > 20, checked
 
 
-def test_the_need_reader_agrees_with_both_heading_scrapers():
+def test_the_need_reader_agrees_with_the_sn_universe_on_the_toml_needs_file():
+    """Implements: TC-441"""
     # The SN tier's id universe and draft set were SIX bespoke scanners over
-    # markdown, two of them F5 twins. spine_carrier now reads the tier through
-    # the carrier; before it replaces them it has to answer identically over the
-    # live registry, or the migration would move the gate.
-    md = ROOT / "docs/requirements/stakeholder-needs.md"
-    if not md.is_file():
-        return  # post-cutover: the twins are gone and this pin retires with them
+    # markdown, two of them F5 twins. spine_carrier reads the tier through the
+    # carrier, and has to answer identically to the one universe over the live
+    # registry, or the readers would move the gate.
     #
-    # The `TRACE.x == GATE.x` halves went at WI-448 slice 3 with the copies —
-    # both names resolve to the one home now, so the only agreement still worth
-    # asserting is the carrier's reader against the scrape it replaces.
-    text = md.read_text(encoding="utf-8")
-    needs = SPINE.load_needs(md)
-    assert SPINE.need_ids(needs) == KITSPINE.sn_all_ids(text)
-    assert SPINE.draft_need_ids(needs) == SPINE.draft_ids_from_text(text, ".md")
-    assert needs, "the fixture read no needs — the agreement would be vacuous"
+    # THIS PIN USED TO CHECK NOTHING (WI-1004): it read only
+    # `stakeholder-needs.md` and returned early once the registry was TOML, so
+    # it passed over a file it never opened. It now reads the file the carrier
+    # actually resolves, with the carrier from its suffix.
+    path = ROOT / "docs/requirements/stakeholder-needs.toml"
+    assert path.is_file(), "the live needs registry moved — re-aim this pin"
+    text = path.read_text(encoding="utf-8")
+    needs = SPINE.load_needs(path)
+    assert needs, "the registry read no needs — the agreement would be vacuous"
+    real = {i for i in SPINE.need_ids(needs) if not KITSPINE.is_example(i)}
+    assert real == KITSPINE.sn_all_ids(text, path.suffix)
+    assert SPINE.draft_need_ids(needs) == SPINE.draft_ids_from_text(text, ".toml")
 
 
 def test_the_edge_case_fold_is_not_titled_by_its_lifecycle_phase():

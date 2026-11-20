@@ -118,6 +118,7 @@ from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
+from kitlib import spine as _kitspine
 from kitlib.config import utf8_console as _utf8_console
 
 # Sibling: the spine's registry CARRIER.
@@ -567,18 +568,20 @@ def check_vision(docs, root):
 
 
 def _registry_needs(path):
-    """(all real SN ids, Must/Should SN ids) scraped from the SN markdown registry.
+    """(all real SN ids, Must/Should SN ids) read from the SN registry.
 
-    Existence uses the same whole-file `SN-\\d+` scrape as trace.py; the
-    Must/Should floor reads the Priority column of whichever table declares one
-    (the core-needs table), so edge-case/Could rows don't force README bullets.
-    A registry with no Priority column yields an empty floor (existence still
-    checked) rather than a spurious finding.
+    Existence is `kitlib.spine.sn_all_ids`, the one SN-id universe trace.py's
+    gate derivation reads, with the carrier taken from the file's suffix; the
+    Must/Should floor reads each need's Priority, so edge-case/Could rows
+    don't force README bullets. A registry with no Priority yields an empty
+    floor (existence still checked) rather than a spurious finding.
     """
     text = path.read_text(encoding="utf-8-sig", errors="replace")
-    # EXISTENCE stays the whole-file scrape, byte-for-byte the rule trace.py
-    # uses — a prose mention counts, and that is deliberate on both sides.
-    all_ids = {s for s in SN_ID_RE.findall(text) if not _is_sn_example(s)}
+    # EXISTENCE is the one SN-id universe (WI-1004). This was a whole-file
+    # scrape, which on a TOML needs file also counted an id written only in a
+    # comment or a stakeholder description; the home reads the need tables
+    # only there, and keeps the whole-text scrape under markdown.
+    all_ids = _kitspine.sn_all_ids(text, path.suffix)
     # The Must/Should FLOOR now reads each need's own fields through the
     # carrier, replacing a table walk that discovered a `Priority`
     # column by header text and tracked draft-ness by heading. Both of those

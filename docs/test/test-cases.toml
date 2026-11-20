@@ -4372,3 +4372,14 @@ automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_an_id_number_is_the_digits_after_the_last_dash; tests/test_policy_one_home.py::test_both_spec_folder_orderings_read_the_one_id_number"
 status = "Drafted"
 phase = 6
+
+[test.TC-441]
+verifies = ["SR-189", "LLR-215"]
+level = "Unit"
+method = "Write a TOML needs file holding the -000 example need, two real needs (one citing the other in its text), a comment naming an id no need table declares, and a stakeholder whose description names another such id. Read it through check_docs' README-inventory reader and through check_flows' known-id loader. Separately, read the live needs registry through spine_carrier.load_needs and kitlib.spine.sn_all_ids with the carrier from its suffix."
+tier = "Smoke"
+expected = "Both checkers read exactly the two real needs: neither the comment's id, nor the stakeholder description's id, nor the -000 example counts, and check_docs' set equals sn_all_ids over the same text; its Must/Should floor is the one Must need. Over the live registry, the carrier's need ids less the example equal sn_all_ids, and the two draft readers agree."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_readme_inventory_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_policy_one_home.py::test_the_flow_check_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_rule_sync.py::test_the_need_reader_agrees_with_the_sn_universe_on_the_toml_needs_file"
+status = "Drafted"
+phase = 6

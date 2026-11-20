@@ -11477,6 +11477,33 @@ script that called `kitlib.registry.spec_id_number(wid)` calls
 
 **Adopter-merged files:** none.
 
+### check_docs and check_flows read the one SN-id universe [since 426f88f60]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The README inventory in `check_docs` (which SN ids exist)
+and `check_flows` (which SN ids a runtime flow may cite) each scraped every
+`SN-###` token out of the whole needs file. Both now read
+`kitlib.spine.sn_all_ids`, the universe `trace.py` already reads, with the
+carrier taken from the file's suffix. Under the TOML needs file that reads the
+`[need.*]` tables only. Under the markdown carrier nothing changes. Two inputs
+change, both under TOML:
+
+- an SN id written only in a comment or in a stakeholder's description is no
+  longer a need, so a README or a runtime flow citing it now fails
+  `check_docs` or `check_flows`;
+- `check_flows` no longer counts `SN-000` as known. It skipped a cited `-000`
+  id before the lookup, so no output changes for it.
+
+**What to do.** Run `check_docs.py` and `check_flows.py` after the overwrite.
+If one now reports an SN id as absent or unknown, that id names no need: add
+the need to the registry, or cite the need that is meant.
+
+**Kit-owned files — overwrite:** `scripts/check_docs.py`,
+`scripts/check_flows.py`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

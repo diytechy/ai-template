@@ -12,13 +12,13 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-11-18 (9b377be1e)._
 _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-16 (2bee2b551)._
 
-_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 956377922 (2026-11-19) — the record's maturity cells have not moved since._
+_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 24e9ae0d7 (2026-11-19) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 4 changed, 2 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1006.
+- `docs/requirements/interfaces.toml` — 5 changed, 2 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1006.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1003.
 
 ## Assumptions and surrogates owing an acceptance
@@ -701,7 +701,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 7 chain(s): SR-032, SR-049, SR-147, SR-148, SR-157, SR-159, SR-169</summary>
+<summary>Waiting for automated adjudication — 8 chain(s): SR-032, SR-049, SR-147, SR-148, SR-157, SR-159, SR-169, SR-189</summary>
 
 ## SR-032 — Onboarding and dev-setup scaffold
 
@@ -1011,6 +1011,30 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced.
 - **Automated**: Yes
 - **Evidence**: tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-189 — Each need resolves to the declared stakeholders whose outcome it is
+
+> **Requirement.** The delivered harness shall resolve each stakeholder need's stakeholder references against the declared stakeholder list, and each stakeholder's party against the declared frame, reporting a need that names no stakeholder.
+
+> **Rationale.** A need with no named owner has nobody who can confirm it is still wanted, and a stakeholder's party is what lets the need's outcome be placed on the frame. The link lives on the need, pointing at the stakeholder, so the relation has one home; a short list beside the needs keeps the stakeholders where the rows citing them already are, rather than in a registry of their own. A stakeholder is not a review perspective: a stakeholder owns an outcome, while a perspective owns a question put to each decomposition, so no perspective becomes a stakeholder row.
+
+
+### LLR LLR-215
+- **TestRefs**
+  - before: (empty)
+  - after: TC-441
+
+### TC TC-441 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-441
+- **Verifies**: SR-189;LLR-215
+- **Level**: Unit
+- **Method**: Write a TOML needs file holding the -000 example need, two real needs (one citing the other in its text), a comment naming an id no need table declares, and a stakeholder whose description names another such id. Read it through check_docs' README-inventory reader and through check_flows' known-id loader. Separately, read the live needs registry through spine_carrier.load_needs and kitlib.spine.sn_all_ids with the carrier from its suffix.
+- **Tier**: Smoke
+- **Expected**: Both checkers read exactly the two real needs: neither the comment's id, nor the stakeholder description's id, nor the -000 example counts, and check_docs' set equals sn_all_ids over the same text; its Must/Should floor is the one Must need. Over the live registry, the carrier's need ids less the example equal sn_all_ids, and the two draft readers agree.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_readme_inventory_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_policy_one_home.py::test_the_flow_check_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_rule_sync.py::test_the_need_reader_agrees_with_the_sn_universe_on_the_toml_needs_file
 - **Status**: Drafted
 - **Phase**: 6
 

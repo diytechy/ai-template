@@ -2338,6 +2338,7 @@ title = "The stakeholder tier and the need's stakeholder references: schema, car
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/trace.py;project-trajectory/registries/stakeholder-needs.template.toml"
 code_symbol = """OFFSPINE_TABLE/OFFSPINE_KEYS/SPINE_TIER_KEYS/HISTORICAL_KEYS/sn_all_ids/_offspine_ids"""
 detail = "spine_carrier.OFFSPINE_TABLE gains \"STK-ID\": \"stakeholder\" and kitlib/spine.OFFSPINE_KEYS[\"STK-ID\"] = (name, description, party, status); the need tier's SPINE_TIER_KEYS[\"SN-ID\"] gains stakeholder_refs, mapped to Stakeholder-Refs and listed in migrate_carrier.REF_COLS, with party mapped to Party. The template ships an STK-000 row and an SN-000 row citing it. The STK space joins trace.WATERMARK_SPACES and _offspine_ids, with lines in the live watermark and its template, and the dogfood registry list gains the stakeholder table on the needs path with its floor. sn_all_ids scrapes need ids from the need tables only, so a need id quoted in a stakeholder's prose never joins the need universe."
+test_refs = "TC-441"
 status = "Accepted"
 component = "CMP-006"
 phase = 6
