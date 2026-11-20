@@ -300,7 +300,7 @@ def pending_block(root):
     return "{}\n\n{}".format(PENDING_LEAD, body)
 
 
-# --- the operator's decision queue and the decisions to review (WI-790) -----------
+# --- the operator's decision queue (WI-790); the delegated-decisions records -------
 OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
 WORK_REL = "docs/work"
 DECISIONS_REL = _kitdecisions.DECISIONS_DIR
@@ -396,59 +396,29 @@ def work_item_naming(root):
     return named
 
 
-def decisions_to_review(root):
-    """`(entries, overruled, findings, confirmed)` over every delegated-decisions
-    record under `docs/decisions/`: the entries not yet seen and the entries
-    overruled, each the `kitlib.decisions.review_queue` dict plus its `file`
-    (repo-relative), every record's high-risk entries first, then by file and
-    id, an overruled entry also carrying `citing`, the `(WI id, state folder)`
-    of every work item whose spec cites it (`citing_rows`); each record's
-    format findings, prefixed by its file; and how many entries are confirmed.
-    `None` for `entries` when the directory is absent: a repo that never
-    records decisions has nothing to review, which is not the same claim as
-    having confirmed everything.
+def decision_records(root):
+    """`(unseen, findings)` over every delegated-decisions record under
+    `docs/decisions/`: how many entries carry no verdict (an absent or
+    unrecognized `operator`, or the retired key, as
+    `kitlib.decisions.review_queue` reads it; a `-000` entry never counts),
+    and each record's format findings, prefixed by its file. The records
+    are where the operator reads the entries (SR-225, the operator's ruling of
+    2026-11-19), so this lists none of them: it counts what is still unseen and
+    reports what is malformed, whatever the dial. `None` for `unseen` when the
+    directory is absent: a repo that never records decisions has nothing
+    unseen, which is not the same claim as having seen everything.
 
     Implements: SR-225, LLR-283
     """
     folder = Path(root) / DECISIONS_REL
     if not folder.is_dir():
-        return None, [], [], 0
-    entries, overruled, findings, confirmed = [], [], [], 0
+        return None, []
+    unseen, findings = 0, []
     for path in sorted(folder.glob("*.toml")):
         rel = "{}/{}".format(DECISIONS_REL, path.name)
         text = path.read_text(encoding="utf-8")
-        unseen, over, count = _kitdecisions.review_queue(text)
-        confirmed += count
-        entries += [dict(e, file=rel) for e in unseen]
-        overruled += [dict(e, file=rel) for e in over]
+        unseen += len(_kitdecisions.review_queue(text)[0])
         findings += [
             "{}: {}".format(rel, f) for f in _kitdecisions.record_findings(text)
         ]
-    if overruled:
-        cited = citing_rows(root)
-        for e in overruled:
-            e["citing"] = cited.get(_kitdecisions.citation(e["file"], e["id"]), [])
-    for listed in (entries, overruled):
-        listed.sort(key=lambda e: (not e["high_risk"], e["file"]))
-    return entries, overruled, findings, confirmed
-
-
-def citing_rows(root):
-    """`{citation token: [(WI id, state folder), ...]}` over every work item
-    spec, open or archived: the state folder is the spec's directory under
-    `docs/work/` or `docs/archive/work/` (`queued`, `active`, `complete`...).
-    A `-000` example cites nothing.
-
-    Implements: SR-225, LLR-283
-    """
-    out = {}
-    for base in (Path(root) / WORK_REL, Path(root) / "docs/archive/work"):
-        for path in sorted(base.rglob("WI-*.md")) if base.is_dir() else ():
-            wid = "-".join(path.name.split("-")[:2])
-            if wid.endswith("-000"):
-                continue
-            state = path.relative_to(base).parts[0]
-            text = path.read_text(encoding="utf-8")
-            for token in sorted(_kitdecisions.citations(text)):
-                out.setdefault(token, []).append((wid, state))
-    return out
+    return unseen, findings
