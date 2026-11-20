@@ -4402,7 +4402,7 @@ method = "Parse a well-formed spec with an integer priority through kitlib.regis
 tier = "Smoke"
 expected = "The well-formed spec reads the same through both, the integer priority as its digits. Each malformed input is refused by both, the registry with a ValueError and the converter with a ConvertError, each naming the same fault; so is each list element carrying a semicolon, for every list key, while the same references as two elements are read into the cell. wi_convert carries none of the former helpers. read_spec_rows returns only the well-formed row and reports the other file once, naming it and the title fault."
 automated = "Yes"
-evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_converter_parses_a_spec_through_the_one_parser; tests/test_policy_one_home.py::test_a_spec_with_a_non_string_title_is_reported_and_skipped; tests/test_policy_one_home.py::test_a_list_element_carrying_the_cell_join_is_refused"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_converter_parses_a_spec_through_the_one_parser; tests/test_policy_one_home.py::test_a_spec_with_a_non_string_title_is_reported_and_skipped; tests/test_policy_one_home.py::test_a_list_element_carrying_the_cell_join_is_refused; tests/test_policy_one_home.py::test_the_schedule_keys_keep_their_list_and_integer_spellings"
 status = "Drafted"
 phase = 6
 

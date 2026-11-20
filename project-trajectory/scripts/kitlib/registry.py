@@ -175,11 +175,13 @@ SPEC_LISTS = (
 # those columns are lists in every row, and a `SPEC_LISTS` `supersedes` would
 # make `wi_convert` re-emit a one-id cell as a one-element list, changing every
 # existing spec file's bytes for nothing.
-LIST_TOLERANT_SCALARS = frozenset({"supersedes"})
-# The scalar whose frontmatter value may be a TOML INTEGER, read as its digits:
-# the intake mint writes `priority = 4`. Every other scalar must be text
-# (`scalar_cell`).
-INT_TOLERANT_SCALARS = frozenset({"priority"})
+LIST_TOLERANT_SCALARS = frozenset({"supersedes", "exclusive"})
+# `exclusive`, the readiness format's set of mutex keys (IF-054), reads the same
+# way: a list joins into the cell `schedule.load_wis` splits.
+# The scalars whose frontmatter value may be a TOML INTEGER, read as its digits:
+# the intake mint writes `priority = 4`, and `est_tokens` and `critique_budget`
+# are numbers by nature. Every other scalar must be text (`scalar_cell`).
+INT_TOLERANT_SCALARS = frozenset({"priority", "est_tokens", "critique_budget"})
 # Directory -> Status. The directory is the WHOLE statement (WI-384): every
 # state owns a folder — including BOTH terminals, `complete/` for work that
 # shipped and `cancelled/` for work that never will — so nothing in the

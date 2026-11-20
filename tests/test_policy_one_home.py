@@ -348,6 +348,37 @@ def test_a_list_element_carrying_the_cell_join_is_refused(key):
     assert "SR-1;SR-2" in row.values()
 
 
+def test_the_schedule_keys_keep_their_list_and_integer_spellings():
+    """The readiness format (IF-054) offers `exclusive` (a set of mutex keys)
+    and `est_tokens` (a number) beside `priority`. Before WI-1004 both read
+    through `str()`; its stricter parse refused them as non-text, which
+    emptied the scheduler's registry for any spec carrying one (the
+    unfiltered suite's open-item readiness fixtures). Kept: `exclusive` reads
+    like `supersedes` (a list joins into the cell, a bare string as before)
+    and `est_tokens` and `critique_budget` like `priority` (an integer as its
+    digits). A `;` inside an `exclusive` element is still refused.
+
+    Implements: TC-443"""
+    text = (
+        '+++\nid = "WI-7"\ntitle = "t"\nexclusive = ["shared", "dial"]\n'
+        "est_tokens = 5000\ncritique_budget = 3\n+++\n"
+    )
+    for parse in (kitlib_registry.parse_spec_row, wi_convert.parse_spec):
+        row, _order = parse(text, "queued/WI-7-x.md")
+        assert (row["Exclusive"], row["EstTokens"], row["CritiqueBudget"]) == (
+            "shared;dial",
+            "5000",
+            "3",
+        )
+    bare = text.replace('["shared", "dial"]', '"shared"')
+    row, _order = kitlib_registry.parse_spec_row(bare, "queued/WI-7-x.md")
+    assert row["Exclusive"] == "shared"
+    joined = text.replace('["shared", "dial"]', '["shared;dial"]')
+    with pytest.raises(ValueError) as reg:
+        kitlib_registry.parse_spec_row(joined, "queued/WI-7-x.md")
+    assert "`exclusive` element 'shared;dial' carries `;`" in str(reg.value)
+
+
 def test_a_spec_with_a_non_string_title_is_reported_and_skipped(tmp_path):
     """Implements: TC-443"""
     work = tmp_path / "docs" / "work"

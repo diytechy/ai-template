@@ -102,7 +102,14 @@ DASHBOARD = REPO_ROOT / "PROJECT_STATE.html"
 # day of new rows, closed rows' Deliverables and amended spine cells, with no
 # step that would mark a rendering change. Restamped to ~15% headroom, as the
 # earlier stamps prescribe; the reason is in the 2026-10-10 coordinator log.
-MAX_BYTES = 4_000_000
+# 4,000,000 -> 4,630,000, 2026-11-20 (maintenance, the queue's batch 3). The
+# dashboard measured 3,986,795 at 426f88f60, 3,998,980 after WI-1009 and
+# WI-1007 (96689d3be) and 4,022,338 after WI-1004 (1cb2e8680): the rows those
+# items added (LLR-382..388, TC-438..447, IF-316..320) and their closed specs'
+# Deliverables, with no rendering change. WI-1009 removed the decisions section
+# from docs/open-items.html, not from this page. Restamped to ~15% headroom;
+# the reason is in docs/plans/2026-11-11-test-tiers/HANDOFF.md §12.6.
+MAX_BYTES = 4_630_000
 
 
 def test_dashboard_stays_within_its_size_budget():

@@ -11796,6 +11796,25 @@ seam check's `_SCAN_CACHE` and its `gen_arch_map` are `arch_seams`' own.
 
 **Adopter-merged files:** none.
 
+### A spec's `exclusive` list and its integer `est_tokens` and `critique_budget` read again [since 1cb2e8680]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The entry "A spec file has one parse, and it refuses a value
+that is not text" made the spec parse refuse every non-text front-matter value
+but `priority`. That refused two readiness keys the work-item format offers:
+`exclusive`, the set of mutex keys, written as a TOML list, and `est_tokens`
+(and `critique_budget`), written as numbers. A spec carrying either dropped out
+of the registry. `exclusive` now reads like `supersedes` (a list joins into one
+cell, a bare string as before; an element carrying `;` is still refused), and
+`est_tokens` and `critique_budget` like `priority` (an integer as its digits).
+
+**What to do.** Nothing is forced. Take this with the entry above it: a
+repository that took that entry and has a spec with an `exclusive` list or an
+integer `est_tokens` gets those rows back in its registry.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/registry.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
