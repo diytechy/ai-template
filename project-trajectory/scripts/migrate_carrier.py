@@ -855,16 +855,14 @@ _ID_OWNER_RE = re.compile(r'^owner = "((?:SR|LLR)-\d+)"$')
 _KEY_RE = re.compile(r"^([a-z_]+)\s*=\s*(.*)$")
 
 
-def _short_module(module):
-    m = module.strip().replace("\\", "/")
-    if m.startswith("project-trajectory/"):
-        m = m[len("project-trajectory/") :]
-    return m[:-3] if m.endswith(".py") else m
-
-
 def _llr_single_modules(root):
     """`{LLR-###: module}` for the design rows naming exactly ONE module — the
-    only ones an id-typed owner can be folded through without guessing."""
+    only ones an id-typed owner can be folded through without guessing.
+
+    The module is keyed by `kitlib.spine.norm_module`, the key the endpoint
+    check compares an owner through (WI-1004: a private `_short_module` here
+    stripped only `.py`, so `pkg/__init__.py` and `hooks/x.sh` folded to owners
+    the check could not resolve)."""
     path = root / LLR_REL
     if not path.is_file():
         return {}
@@ -878,7 +876,7 @@ def _llr_single_modules(root):
             if m.strip()
         ]
         if len(mods) == 1:
-            out[rid] = _short_module(mods[0])
+            out[rid] = _kitspine.norm_module(mods[0])
     return out
 
 

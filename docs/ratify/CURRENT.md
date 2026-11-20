@@ -12,7 +12,7 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-11-18 (9b377be1e)._
 _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-16 (2bee2b551)._
 
-_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 34c5994c3 (2026-11-19) — the record's maturity cells have not moved since._
+_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 47438070f (2026-11-19) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
@@ -701,7 +701,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 6 chain(s): SR-032, SR-147, SR-148, SR-157, SR-159, SR-169</summary>
+<summary>Waiting for automated adjudication — 7 chain(s): SR-032, SR-049, SR-147, SR-148, SR-157, SR-159, SR-169</summary>
 
 ## SR-032 — Onboarding and dev-setup scaffold
 
@@ -744,6 +744,30 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: Only a yes runs the package manager, once, with the platform's install arguments; a no, an empty line, closed input or the template's non-interactive run runs nothing; with no package manager nothing is asked and the manual command is printed; a failed install prints a warning naming it; a present gh is not offered; the readiness operation reports gh and never offers it; every run exits 0.
 - **Automated**: Yes
 - **Evidence**: tests/test_run_devsetup.py::test_install_offers_gh_and_runs_it_only_on_a_yes; tests/test_run_devsetup.py::test_install_without_a_package_manager_or_with_a_failure_never_fails; tests/test_run_devsetup.py::test_the_templates_install_tier_offers_gh_only_at_a_terminal; tests/test_run_devsetup.py::test_at_a_terminal_the_templates_install_tier_installs_gh_only_on_a_yes; tests/test_run_devsetup.py::test_at_a_terminal_the_bare_runs_check_reports_gh_and_never_offers_it; tests/test_run_devsetup.py::test_powershell_install_offers_gh_and_runs_winget_only_on_a_yes; tests/test_run_devsetup.py::test_the_powershell_templates_install_tier_offers_gh_only_at_a_console; tests/test_run_devsetup.py::test_at_a_windows_console_the_templates_install_tier_installs_gh_on_a_yes; tests/test_run_devsetup.py::test_at_a_windows_console_the_bare_runs_check_never_offers_gh
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-049 — Derived stage from artifact states
+
+> **Requirement.** The delivered harness shall derive the stage the project is currently at from the spine artifact states alone, caching it as a derived value — never accepting a hand-set one — with a post-acceptance amendment dropping the derived stage exactly as a newly introduced draft does, and the pending-amendment count carried beside the draft count so the pending state never hides.
+
+> **Rationale.** SSOT applied to the gate itself: a hand-set marker can be bumped without the work; deriving it makes gate advancement mechanical (SN-004) and un-gameable (SN-008). The hybrid cache keeps the value readable on checkout; --check guards rot. SN-029 is a parent because this row's shall is the only place in the SR layer stating that an amended requirement drops the derived stage exactly as a newly introduced one does — SR-139 states which tiers are held, SR-140 what an acceptance record contains, and SR-148 loop selection, none of them the drop clause.
+
+
+### LLR LLR-197
+- **TestRefs**
+  - before: TC-193
+  - after: TC-193; TC-439
+
+### TC TC-439 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-439
+- **Verifies**: SR-157;LLR-197
+- **Level**: Integration
+- **Method**: Write an old-shape interface registry whose rows each name an id-typed owner with no provider, beside a design registry whose owning rows each name one module: a package's __init__.py, a shell hook, and a plain Python module. Run migrate_carrier's IF-shape migration with writing on and read each rewritten owner. Look for a _short_module on migrate_carrier.
+- **Tier**: Smoke
+- **Expected**: Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key
 - **Status**: Drafted
 - **Phase**: 6
 
@@ -830,6 +854,11 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 > **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
 
 
+### LLR LLR-197
+- **TestRefs**
+  - before: TC-193
+  - after: TC-193; TC-439
+
 ### TC TC-428 — ADDED since the snapshot, Drafted — never accepted
 - **TC-ID**: TC-428
 - **Verifies**: SR-157;IF-263
@@ -851,6 +880,18 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: A lane's order reads no finding at any step; an Accepted case with no tag warns with exit 0 in a plain run and errors with exit 1 under strict checking until it is tagged; and a newly created project warns and exits 0 at DevStg-Tests, fails at DevStg-Impl, and is clean once the case is tagged.
 - **Automated**: Yes
 - **Evidence**: tests/test_trajectory_arch.py::test_a_lanes_order_never_meets_the_undeclared_finding; tests/test_trajectory_arch.py::test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict; tests/test_trajectory_arch.py::test_the_undeclared_finding_on_a_bootstrapped_scaffold
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-439 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-439
+- **Verifies**: SR-157;LLR-197
+- **Level**: Integration
+- **Method**: Write an old-shape interface registry whose rows each name an id-typed owner with no provider, beside a design registry whose owning rows each name one module: a package's __init__.py, a shell hook, and a plain Python module. Run migrate_carrier's IF-shape migration with writing on and read each rewritten owner. Look for a _short_module on migrate_carrier.
+- **Tier**: Smoke
+- **Expected**: Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key
 - **Status**: Drafted
 - **Phase**: 6
 

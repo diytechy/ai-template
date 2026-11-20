@@ -4350,3 +4350,14 @@ automated = "Yes"
 evidence = "tests/test_rule_sync.py::test_the_carrier_value_cell_has_one_home_and_reads_none_as_empty"
 status = "Drafted"
 phase = 6
+
+[test.TC-439]
+verifies = ["SR-157", "LLR-197"]
+level = "Integration"
+method = "Write an old-shape interface registry whose rows each name an id-typed owner with no provider, beside a design registry whose owning rows each name one module: a package's __init__.py, a shell hook, and a plain Python module. Run migrate_carrier's IF-shape migration with writing on and read each rewritten owner. Look for a _short_module on migrate_carrier."
+tier = "Smoke"
+expected = "Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key"
+status = "Drafted"
+phase = 6

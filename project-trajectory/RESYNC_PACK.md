@@ -11431,6 +11431,27 @@ calls `kitlib.spine.value_to_cell(value)`.
 
 **Adopter-merged files:** none.
 
+### The IF-shape migration folds an owner through the one module key [since 426f88f60]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `migrate_carrier --if-shape` folds an id-typed interface
+owner through its design row's one module. It keyed that module with a
+private `_short_module`, which stripped only a `.py` suffix. It now uses
+`kitlib.spine.norm_module`, the key the endpoint check compares an owner
+through, and `_short_module` is deleted. Two inputs change: a module
+`.../pkg/__init__.py` folds to `scripts/pkg`, not `scripts/pkg/__init__`, and
+a non-Python module such as `hooks/x.sh` folds to `hooks/x`, not
+`hooks/x.sh`. Every other owner folds as before.
+
+**What to do.** Nothing is forced. If you already ran the IF-shape migration,
+an owner it wrote in one of the two old spellings is reported by the endpoint
+check as naming no module; rewrite it to the new spelling.
+
+**Kit-owned files — overwrite:** `scripts/migrate_carrier.py`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
