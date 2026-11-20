@@ -4,12 +4,103 @@ title = "This repository turns its assumption gate on, once its four steps repor
 workstream = "requirements"
 sr_refs = ["SR-205", "SR-212", "SR-206"]
 needs = ["~WI-1008"]
-specref = "docs/plans/2026-11-11-test-tiers/HANDOFF.md#126-progress-log"
+specref = ""
 buildtier = "medium"
 safety_class = "spine"
 priority = 3
 planmode = "single"
 +++
+
+## Deliverable
+
+Built on the maintenance branch `maint/wi-1010`, cut from `refactor_again` at
+`1cb2e8680`. Both deliverables landed, in the stated order. The operator's
+act and the flip follow the lane (below). The spec of record was
+`docs/plans/2026-11-11-test-tiers/HANDOFF.md` §12.6; the row's SpecRef cell
+was cleared at close.
+
+- **Critique dispositions** (`1ee58e149`): all five findings adopted. The
+  Done-when holds only the page and the arguments; the act and the flip are
+  "After this row".
+- **Plan** (`d69175149`): `docs/plans/WI-1010/plan.md`.
+- **Tests first** (`e0a159097`): `tests/test_open_items_assumptions.py`,
+  three tests under the declared strict expected-failure marker, each seen
+  failing at an assertion (no card; no card for DA-003; no shared model).
+  TC-448, `Drafted`.
+- **The page** (`5f097b2dd`): `trace.assumption_owing_model` is the one model
+  of the assumptions and surrogates owing an acceptance; the brief's section
+  is rebuilt on it, its text unchanged, and `gen_open_items` renders it as
+  section 2's last block (`_assumption_cards`, with the need card's body
+  shared as `_owing_card`, closed by `_relied_on`). The header counts the
+  rows and its drifted count takes in a drifted one. **Size:**
+  `gen_open_items.py` measured 938 code lines by the ratchet's own
+  `module_sloc` (the brief's 996 did not reproduce) and 970 after, under the
+  1000 threshold, so it needs no baseline entry; the rendering went there
+  because 62 lines of headroom held it, and the model went to `trace.py`
+  beside `assumptions_owing`, whose exact pin is re-stamped 3836 -> 3844.
+  IF-074 (data, coincident, contract), IF-075 (data, contract), LLR-118 and
+  LLR-271 (amended, `Accepted`, drifting for re-accept) say it. The page
+  now carries 32 assumption and surrogate cards.
+- **The arguments** (`bcbc538e6`, wording fixes `94dabd142`): the table
+  below. The new rows, DA-021 to DA-028 and SUR-004, are in
+  `docs/requirements/assumptions.toml`, each `Drafted` and `active`; the log
+  fragment gives each one's claim in a line.
+
+| Requirement | Argument |
+|---|---|
+| SR-024 | coincident: the case set expanded from the declared inputs is the coverage the reviewer reads |
+| SR-129 | coincident: a cell-exact conversion leaves the registry the derivation reads as it was |
+| SR-224 | DA-025 (new): an agent chooses a skill by its description |
+| SR-226 | coincident: the record found by the retired id is what the reader finds |
+| SR-228 | DA-026 (new): a CLARITY ruling rules as the operator would |
+| SR-229 | DA-021, DA-022 (new, B-09) and DA-023 (new fidelity on SUR-004, B-10); IF-080 bridged by DA-021, DA-022; IF-275 tied to B-04 |
+| SR-230 | DA-021 and DA-023; reached by IF-275 (B-04, bridged by DA-021) |
+| SR-231 | coincident: success is only a verdict this call wrote, at its reserved path, in time; reached by IF-321 (new, from B-10) |
+| SR-232 | coincident: a combined sitting is refused whole unless every requested kind is judged; reached by IF-321 |
+| SR-233 | DA-027 (new): the normal working environment; DA-028 (new): judging sessions apply the review directions |
+| SR-234 | coincident: a verdict is accepted only when it rules every requested finding once; reached by IF-322 (new, from B-10) |
+| SR-235 | joint as before, now also DA-007; crossing re-pointed B-05 -> B-09; reached by IF-289 (tied to B-05) |
+| SR-236 | coincident: no finding is dropped, renumbered or replaced before rework |
+| SR-237 | DA-021 and DA-024 (new): the coordinating session acts on its instructions |
+| SR-238 | coincident: the coordinator checks the process tree ended before it continues |
+| SR-241 | coincident: no review starts over a tree known to fail its checks |
+| SR-242 | coincident: the capped lane's partial close is the outcome the operator reads |
+| SR-243 | DA-016 (existing) and DA-024 |
+| SR-244 | DA-022 and DA-024 |
+| SR-245 | coincident: the parent-first finding is the check's verdict |
+| SR-246 | DA-004 (existing, staged arm) and DA-013 (existing, lane arm) |
+| SR-247 | DA-014 (existing): the adopter upgrades by the documented route, which runs the migrator |
+
+**The four steps** (gate off, so advisories), base `1cb2e8680` -> tip:
+
+| Step | Before | After |
+|---|---|---|
+| `assumption-gate` | 79: 49 on a `Drafted` assumption, 9 on a `Drafted` surrogate, 21 citing nothing | 79: 68 on a `Drafted` assumption, 11 on a `Drafted` surrogate, 0 citing nothing |
+| `crossing-allocation` | 9 | 0 |
+| `interface-allocation` | 6 | 0 |
+| `assumption-evidence` | 0 | 0 |
+
+Every line left is a requirement relying on an assumption (DA-001 to
+DA-028) or a surrogate (SUR-001 to SUR-004) that is `Drafted`, which the
+operator's acceptance clears. No reach finding appears.
+
+Left for the operator, and why:
+
+- **The act.** Accepting DA-001 to DA-028 and SUR-001 to SUR-004, and
+  re-accepting the amended rows: the eleven requirements given a waiver
+  (`coincident` is accepted text, SR-193) and LLR-118 and LLR-271. All are
+  on `docs/open-items.html` §2.
+- **The flip**, after the act: `[checks] assumption_gate = true` in
+  `docs/process.toml` with its comment dated, and `check.py` passing with it
+  on. One line; no row is filed for it.
+- **Judgements the operator may overrule.** SR-235's crossing re-point (a
+  traced cell that routes to adjudication) in place of a waiver its joint
+  argument would contradict; IF-275 and IF-289 tied back against their
+  former "No tie-back" notes, on the frame's own B-04 and B-05 text; DA-020's
+  falsifier is still met by the October decisions backlog (WI-1008).
+- **Not changed:** `form` on any row (each of the six is met at an
+  interface); IF-281, IF-284, IF-285 and IF-288 stay untied, as nothing this
+  row closes needed them.
 
 ## Context
 
@@ -97,7 +188,7 @@ realization, so it moves with them.
 This lane delivers two things, in this order, and stops before the
 operator's act.
 
-- [ ] **The page shows what the operator must accept.** `docs/open-items.html`
+- [x] **The page shows what the operator must accept.** `docs/open-items.html`
       §2 renders every assumption and surrogate owing an acceptance (`Drafted`,
       Status-less, or accepted and drifted from `docs/archive/last_accepted/`),
       each row's cells whole or, for a drifted one, before and after, with the
@@ -107,7 +198,7 @@ operator's act.
       drifted card and the page's agreement with the brief, and were seen to
       fail first. IF-074 (row and contract), IF-075, LLR-118 and LLR-271 say
       it. `gen_open_items.py` stays under the module size threshold.
-- [ ] **Every finding left is one the operator's acceptance clears.** Each of
+- [x] **Every finding left is one the operator's acceptance clears.** Each of
       the 21 requirements cites an assumption that carries it to its needs,
       or records a `coincident` waiver. The nine crossing findings and six
       interface findings in the table above are closed as it says. Each new
@@ -118,7 +209,7 @@ operator's act.
       requirement relying on a `Drafted` assumption or on a fidelity
       assumption whose surrogate is `Drafted`. The before and after counts
       per step and per kind are in the Deliverable.
-- [ ] `trace.py --strict`, `check_trajectory.py --strict`,
+- [x] `trace.py --strict`, `check_trajectory.py --strict`,
       `gen_open_items.py --check` and the touched test modules pass.
 
 ### After this row (not this lane's)
