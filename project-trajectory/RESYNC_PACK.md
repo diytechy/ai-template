@@ -11410,6 +11410,58 @@ your own `src`, so they declare nothing to your checks.
 
 **Adopter-merged files:** none.
 
+### The delegated decisions leave open-items.html; the operator reads them in their records [since 6a78f63a7]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `docs/open-items.html` has no "Decisions to review" section
+any more. It used to draw a card for every entry under `docs/decisions/` with
+no `operator` verdict, then every overruled entry with the work items citing
+it. With many delegated runs, those cards crowded out the pending decisions
+and the acceptance act. The operator now reads the entries in the record
+files themselves, `docs/decisions/<run>.toml`. An entry with no `operator`
+key is not yet seen, and a record's top-level `high_risk` list names the
+entries to read first. What stays:
+
+- each record's format findings are still reported, whatever the dial: a
+  missing, non-text or blank required field, an unknown verdict value, the
+  retired `reviewed` key, a blank `review` on an overrule, a malformed or
+  dangling hoist, and a record that does not parse. They now sit in a notice
+  that closes section 3 of `docs/open-items.html`, shown only when a record
+  carries one;
+- the overrule sync (the commit that sets `overruled` files or amends open
+  work citing the entry) and the close refusal under a recording dial do not
+  change;
+- `docs/status.md`'s line reads `Delegated decisions not yet seen: N —
+  docs/decisions/` and links that directory, where it linked
+  `open-items.html#decisions-to-review`.
+
+`pending.decisions_to_review` and `pending.citing_rows` are gone, and
+`pending.decision_records(root)` returns `(unseen count, findings)`.
+`gen_open_items.decisions_block`, `_decision_card`, `_citing_field` and
+`OVERRULED_HEADING` are gone. The template's header and the process options'
+"Delegated decisions record" layer say where the operator reads.
+
+**What to do.** Nothing is forced and nothing migrates: a record keeps its
+format. Overwrite the files below, then regenerate `docs/open-items.html` and
+`docs/status.md`; their freshness steps refuse until you do. A script of your
+own that called `pending.decisions_to_review(root)` calls
+`pending.decision_records(root)`. Nothing returns the ordered list or the
+citing work items any more: read the record, and find an overrule's work by
+its citation, `docs/decisions/<run>.toml#D-NNN`. A link of yours to
+`open-items.html#decisions-to-review` now points at no anchor. Your
+`docs/decisions/run-000-example.toml` keeps the template's old header
+comment until you copy the new one over it; it is the example and is never
+judged.
+
+**Kit-owned files — overwrite:** `scripts/gen_open_items.py`,
+`scripts/pending.py`, `scripts/traj_status.py`, `scripts/kitlib/decisions.py`
+(docstring only), `decisions.template.toml`, `PROCESS_OPTIONS.md`.
+
+**Regenerated files:** `docs/open-items.html`, `docs/status.md`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -62,7 +62,7 @@ from traj_parse import cmp_rows, spine_stats
 # blockref vocabulary at WI-553/OI-70 — its queued-row source had zero producers.)
 from pending import (  # noqa: F401
     PAUSE_MALFORMED,
-    decisions_to_review,
+    decision_records,
     open_item_queue,
     pause_pending as _pause_pending,
     pending_block,
@@ -182,11 +182,11 @@ def _open_item_lines(root, queue):
     """The snapshot's open-items block: one bullet per decision a queued or
     claimed row cites, naming the rows it holds; the uncited pending items,
     which no such row surfaces (a `check_trajectory` ERROR); and the count of
-    delegated decisions left to review, linked to the operator surface's section.
-    Empty when there is nothing to say."""
+    delegated decisions not yet seen, linked to the records the operator reads
+    them in (WI-1009). Empty when there is nothing to say."""
     ois = _open_item_oneliners(root, queue)
-    entries = decisions_to_review(root)[0]
-    if not ois and not queue["uncited"] and entries is None:
+    unseen = decision_records(root)[0]
+    if not ois and not queue["uncited"] and unseen is None:
         return []
     lines = []
     if ois or queue["uncited"]:
@@ -214,12 +214,10 @@ def _open_item_lines(root, queue):
             "  - _Uncited — pending, but no queued or claimed work item cites it, "
             "so the queue cannot surface it:_ {}".format(", ".join(queue["uncited"]))
         )
-    if entries is not None:
+    if unseen is not None:
         lines.append(
-            "- **Decisions to review:** {} — "
-            "[open-items.html](open-items.html#decisions-to-review)".format(
-                len(entries)
-            )
+            "- **Delegated decisions not yet seen:** {} — "
+            "[docs/decisions/](decisions/)".format(unseen)
         )
     return lines
 

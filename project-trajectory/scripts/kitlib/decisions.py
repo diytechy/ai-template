@@ -33,9 +33,9 @@ read: an entry still carrying it reads as not yet seen, whatever `operator` says
 The migrator (`migrate_text`, run by `migrate_decisions.py`) rewrites it, and
 no reader keeps a legacy path. An
 overrule states the direction instead in the `review` note, so an overruled
-entry with a blank note is a finding. The generated operator surface lists every
-entry not yet seen under "Decisions to review" and every overruled entry
-under its own heading beside the work item citing it (`review_queue`).
+entry with a blank note is a finding. The operator reads the entries in the
+record itself, no page listing them (WI-1009); `review_queue` reads which are
+not yet seen and which overruled, and the status snapshot counts the first.
 
 An overrule is coupled to work at the COMMIT, the way a ruled open item is
 coupled to its citing row (OI-102 Q3): the commit that sets an entry

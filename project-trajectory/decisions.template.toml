@@ -23,9 +23,9 @@
 #                      states the direction instead here.
 # AND ONE KEY THE OPERATOR SETS (the writer never does):
 #   operator           absent until the operator has read the entry: the entry
-#                      is NOT YET SEEN and is listed under "Decisions to
-#                      review" at the bottom of docs/open-items.html,
-#                      high-risk first. The operator then sets, in place,
+#                      is NOT YET SEEN. The operator reads not-yet-seen
+#                      entries in the record files themselves, this file's
+#                      high_risk entries first, and then sets, in place,
 #                        operator = "confirmed"   the direction stands, or
 #                        operator = "overruled"   it does not; the `review` note
 #                                              says what instead, and the SAME
