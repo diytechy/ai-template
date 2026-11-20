@@ -693,14 +693,13 @@ def read_specs(work_dir):
         )
         parsed.append((row, order, relpath))
     parsed.sort(
-        key=lambda item: (item[1] is None, item[1] or 0, _id_number(item[0]["WI-ID"]))
+        key=lambda item: (
+            item[1] is None,
+            item[1] or 0,
+            _kitspine.id_number(item[0]["WI-ID"]),
+        )
     )
     return parsed
-
-
-def _id_number(wi_id):
-    match = re.search(r"\d+", wi_id or "")
-    return int(match.group()) if match else 0
 
 
 def to_csv(work_dir, out_path):

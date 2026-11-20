@@ -9,7 +9,7 @@ check that no former holder still carries a copy. The kept answers and their
 reasons are the spec's (`WI-1004`, "The eleven, in landing order"). B3's and
 B5's pins repair the vacuous ones in `tests/test_rule_sync.py` and live there.
 
-Implements: TC-439
+Implements: TC-439, TC-440
 """
 
 import tomllib
@@ -17,6 +17,11 @@ import tomllib
 from conftest import load_script
 
 migrate_carrier = load_script("migrate_carrier")
+wi_convert = load_script("wi_convert")
+
+import kitlib.decisions as kitlib_decisions  # noqa: E402  (after load_script)
+import kitlib.registry as kitlib_registry  # noqa: E402
+import kitlib.spine as kitlib_spine  # noqa: E402
 
 
 # --- 2. B12 the module key -----------------------------------------------------
@@ -67,3 +72,56 @@ def test_the_if_shape_migration_folds_an_owner_through_the_one_module_key(tmp_pa
         "IF-2": "hooks/pre-commit",
         "IF-3": "scripts/plain",
     }
+
+
+# --- 3. the id number read from an id --------------------------------------------
+# `kitlib.spine._id_number` and `kitlib.decisions._id_number` read the digits
+# after the last dash (0 when that tail is not all digits);
+# `kitlib.registry.spec_id_number` and `wi_convert._id_number` read the first
+# run of digits. Every id a supported route mints reads the same either way.
+# Kept: the digits after the last dash, which the open-item coverage rule
+# matches covered numbers through; the other answer reads `OI-35abc` as OI-35.
+
+
+def test_an_id_number_is_the_digits_after_the_last_dash():
+    """Implements: TC-440"""
+    for absent in (
+        (kitlib_registry, "spec_id_number"),
+        (kitlib_decisions, "_id_number"),
+        (kitlib_spine, "_id_number"),
+        (wi_convert, "_id_number"),
+    ):
+        assert not hasattr(*absent), absent
+    cases = {
+        "X2-5": 5,  # disputed: the first digit run read 2
+        "WI-12a": 0,  # disputed: the first digit run read 12
+        "OI-35abc": 0,
+        "WI-0012": 12,
+        "OI-98": 98,
+        "D-001": 1,
+        "WI-": 0,
+        "": 0,
+    }
+    for rid, number in cases.items():
+        assert kitlib_spine.id_number(rid) == number, rid
+
+
+def _spec(work, folder, wid, extra=""):
+    path = work / folder / "{}-x.md".format(wid)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        '+++\nid = "{}"\ntitle = "t"\n{}+++\n'.format(wid, extra),
+        encoding="utf-8",
+        newline="\n",  # the converter reads newline="", as a checkout holds it
+    )
+    return path
+
+
+def test_both_spec_folder_orderings_read_the_one_id_number(tmp_path):
+    """Implements: TC-440"""
+    work = tmp_path / "docs" / "work"
+    for wid in ("WI-3", "WI-12a", "WI-20"):
+        _spec(work, "queued", wid)
+    expected = ["WI-12a", "WI-3", "WI-20"]  # WI-12a reads 0, so it sorts first
+    assert [r["WI-ID"] for r in kitlib_registry.read_spec_rows(work)] == expected
+    assert [row["WI-ID"] for row, _o, _r in wi_convert.read_specs(work)] == expected

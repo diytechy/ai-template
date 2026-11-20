@@ -3885,3 +3885,15 @@ test_refs = "TC-438"
 status = "Drafted"
 component = "CMP-006"
 phase = 6
+
+[design.LLR-383]
+sr_refs = ["SR-157"]
+title = "An id's number has one reading, the digits after its last dash, which every ordering and match by number takes"
+module = "project-trajectory/scripts/kitlib/spine.py"
+code_symbol = "id_number"
+detail = """id_number in kitlib/spine.py reads the number of an id as the digits after its last dash, and 0 when that tail is not all digits: OI-98 reads 98, D-0012 reads 12, X2-5 reads 5 and D-12a reads 0. The open-item queue and coverage rules in kitlib/spine.py, the decisions record's review queue and overrule listing in kitlib/decisions.py, the spec folder's registry order in kitlib/registry.py's read_spec_rows, and wi_convert's read_specs all read an id's number through it. None of those modules holds a copy."""
+rationale = """Four copies gave two answers: two read the tail after the last dash and two the first run of digits, so X2-5 read 2 and D-12a read 12 in the second pair. Every id a supported route mints reads the same either way. The tail is kept because the open-item coverage rule matches covered numbers through it, and the first digit run would read OI-35abc as OI-35."""
+test_refs = "TC-440"
+status = "Drafted"
+component = "CMP-006"
+phase = 6

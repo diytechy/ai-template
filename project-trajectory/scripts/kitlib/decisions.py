@@ -121,6 +121,8 @@ Contract IF-256: the delegated-decisions record, as a CALL. `MODES` is the
 import re
 import tomllib
 
+from .spine import id_number
+
 # Where the records live, repo-relative.
 # Implements: SR-225, LLR-283
 DECISIONS_DIR = "docs/decisions"
@@ -362,7 +364,7 @@ def review_queue(text):
         }
         (overruled if state == OVERRULED else unseen).append(shown)
     for listed in (unseen, overruled):
-        listed.sort(key=lambda e: (not e["high_risk"], _id_number(e["id"])))
+        listed.sort(key=lambda e: (not e["high_risk"], id_number(e["id"])))
     return unseen, overruled, confirmed
 
 
@@ -410,7 +412,7 @@ def newly_overruled(before, after):
     except tomllib.TOMLDecodeError as exc:
         raise ValueError("does not parse as TOML ({})".format(exc))
     was, _hoisted = _parsed(before)
-    return sorted(_overruled_ids(now) - _overruled_ids(was), key=_id_number)
+    return sorted(_overruled_ids(now) - _overruled_ids(was), key=id_number)
 
 
 # --- THE OVERRULE SYNC: an overrule files or amends its work (WI-818) --------
@@ -718,11 +720,6 @@ def migrate_text(text):
         if RETIRED_KEY in entry and _verdict_action(entry) == "keep"
     ]
     return _checked("".join(out), _expected_parse(data, entries)), left
-
-
-def _id_number(entry_id):
-    tail = str(entry_id).rsplit("-", 1)[-1]
-    return int(tail) if tail.isdigit() else 0
 
 
 def owed(mode, outcomes):

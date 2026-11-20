@@ -11452,6 +11452,31 @@ check as naming no module; rewrite it to the new spelling.
 
 **Adopter-merged files:** none.
 
+### An id's number has one reading, in kitlib.spine [since 426f88f60]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The number read from an id (for ordering and for matching
+by number) had four copies in two answers. `kitlib.registry.spec_id_number`
+and `wi_convert`'s private reader took the first run of digits;
+`kitlib.decisions` and `kitlib.spine` took the digits after the last dash.
+All four are replaced by `kitlib.spine.id_number`, which takes the digits
+after the last dash, and 0 when that tail is not all digits. Every id a kit
+route mints (`WI-###`, `OI-###`, `D-###`) reads the same as before. Only a
+malformed id moves: `WI-12a` now reads 0, so it sorts before the numbered
+rows in `read_spec_rows` and `wi_convert --to-csv`.
+
+**What to do.** Nothing is forced. Overwrite the four files together: the
+three that read through the home need the new `kitlib/spine.py`. A local
+script that called `kitlib.registry.spec_id_number(wid)` calls
+`kitlib.spine.id_number(wid)`.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/spine.py`,
+`scripts/kitlib/registry.py`, `scripts/kitlib/decisions.py`,
+`scripts/wi_convert.py`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -4358,6 +4358,17 @@ method = "Write an old-shape interface registry whose rows each name an id-typed
 tier = "Smoke"
 expected = "Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module."
 automated = "Yes"
-evidence = "tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key"
+status = "Drafted"
+phase = 6
+
+[test.TC-440]
+verifies = ["SR-157", "LLR-383"]
+level = "Unit"
+method = "Read kitlib.spine.id_number over X2-5, an id whose number carries a letter, OI-35abc, an id whose number has leading zeros, OI-98, D-001, an id ending in its dash, and the empty string. Look for an id-number reader on kitlib.registry, kitlib.decisions and wi_convert, and for the old private name on kitlib.spine. Then write three queued specs carrying no order key, numbered 3, 12 with a letter after it, and 20, and read the folder through kitlib.registry.read_spec_rows and through wi_convert.read_specs."
+tier = "Smoke"
+expected = "X2-5 reads 5, the lettered id 0, OI-35abc 0, the zero-padded id its number, OI-98 98, D-001 1, and the dash-ended id and the empty string 0. None of the three modules defines its own reader, and kitlib.spine has no private copy. Both readers order the folder with the lettered spec first, then 3, then 20."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_an_id_number_is_the_digits_after_the_last_dash; tests/test_policy_one_home.py::test_both_spec_folder_orderings_read_the_one_id_number"
 status = "Drafted"
 phase = 6

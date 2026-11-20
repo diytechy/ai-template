@@ -43,6 +43,8 @@ from conftest import ROOT, load_script
 # gone rather than kept working "just in case".
 wi_convert = load_script("wi_convert")
 
+import kitlib.spine as kitlib_spine  # noqa: E402  (after load_script)
+
 REGISTRY = ROOT / "docs" / "requirements" / "work-items.csv"
 WORK = ROOT / "docs" / "work"
 # The folder home is TWO trees since WI-504 — the active workspace and the
@@ -547,7 +549,7 @@ def test_row_order_survives_a_registry_that_is_not_id_sorted(tmp_path, live_csv)
     # And the premise: the REAL registry is out of id order, so this matters.
     # (Post-flip the `order` frontmatter keys carry that original order into
     # the rebuilt CSV, so the premise stays checkable in either home.)
-    ids = [wi_convert._id_number(r["WI-ID"]) for r in _registry_rows(live_csv)]
+    ids = [kitlib_spine.id_number(r["WI-ID"]) for r in _registry_rows(live_csv)]
     assert ids != sorted(ids), "the registry is id-sorted now — re-derive `order`"
 
 

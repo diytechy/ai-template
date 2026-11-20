@@ -12,7 +12,7 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-11-18 (9b377be1e)._
 _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-16 (2bee2b551)._
 
-_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 47438070f (2026-11-19) — the record's maturity cells have not moved since._
+_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 956377922 (2026-11-19) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
@@ -767,7 +767,7 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Tier**: Smoke
 - **Expected**: Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module.
 - **Automated**: Yes
-- **Evidence**: tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key
 - **Status**: Drafted
 - **Phase**: 6
 
@@ -859,6 +859,19 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
   - before: TC-193
   - after: TC-193; TC-439
 
+### LLR LLR-383 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-383
+- **SR-Refs**: SR-157
+- **Title**: An id's number has one reading, the digits after its last dash, which every ordering and match by number takes
+- **Module**: project-trajectory/scripts/kitlib/spine.py
+- **CodeSymbol**: id_number
+- **Detail**: id_number in kitlib/spine.py reads the number of an id as the digits after its last dash, and 0 when that tail is not all digits: OI-98 reads 98, D-0012 reads 12, X2-5 reads 5 and D-12a reads 0. The open-item queue and coverage rules in kitlib/spine.py, the decisions record's review queue and overrule listing in kitlib/decisions.py, the spec folder's registry order in kitlib/registry.py's read_spec_rows, and wi_convert's read_specs all read an id's number through it. None of those modules holds a copy.
+- **Rationale**: Four copies gave two answers: two read the tail after the last dash and two the first run of digits, so X2-5 read 2 and D-12a read 12 in the second pair. Every id a supported route mints reads the same either way. The tail is kept because the open-item coverage rule matches covered numbers through it, and the first digit run would read OI-35abc as OI-35.
+- **TestRefs**: TC-440
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
 ### TC TC-428 — ADDED since the snapshot, Drafted — never accepted
 - **TC-ID**: TC-428
 - **Verifies**: SR-157;IF-263
@@ -891,7 +904,19 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Tier**: Smoke
 - **Expected**: Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module.
 - **Automated**: Yes
-- **Evidence**: tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-440 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-440
+- **Verifies**: SR-157;LLR-383
+- **Level**: Unit
+- **Method**: Read kitlib.spine.id_number over X2-5, an id whose number carries a letter, OI-35abc, an id whose number has leading zeros, OI-98, D-001, an id ending in its dash, and the empty string. Look for an id-number reader on kitlib.registry, kitlib.decisions and wi_convert, and for the old private name on kitlib.spine. Then write three queued specs carrying no order key, numbered 3, 12 with a letter after it, and 20, and read the folder through kitlib.registry.read_spec_rows and through wi_convert.read_specs.
+- **Tier**: Smoke
+- **Expected**: X2-5 reads 5, the lettered id 0, OI-35abc 0, the zero-padded id its number, OI-98 98, D-001 1, and the dash-ended id and the empty string 0. None of the three modules defines its own reader, and kitlib.spine has no private copy. Both readers order the folder with the lettered spec first, then 3, then 20.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_an_id_number_is_the_digits_after_the_last_dash; tests/test_policy_one_home.py::test_both_spec_folder_orderings_read_the_one_id_number
 - **Status**: Drafted
 - **Phase**: 6
 

@@ -107,6 +107,7 @@ __all__ = [
     "HISTORICAL_KEYS",
     "REGISTRY_KEYS",
     "split_pred_edges",
+    "id_number",
     "open_item_queue",
     "OPEN_ITEM_TOKEN",
     "COVERING_STATUSES",
@@ -312,10 +313,10 @@ def open_item_queue(work_rows, oi_rows):
     pending = dict(open_items_at(oi_rows, "pending"))
     held = _held_rows(work_rows, pending)
     citers = {}
-    for wid in sorted(held, key=_id_number):
+    for wid in sorted(held, key=id_number):
         for oid in held[wid]:
             citers.setdefault(oid, []).append(wid)
-    order = sorted(pending, key=_id_number)
+    order = sorted(pending, key=id_number)
     return {
         "cards": [(pending[o], citers[o]) for o in order if o in citers],
         "uncited": [o for o in order if o not in citers],
@@ -366,13 +367,24 @@ def _held_rows(work_rows, pending):
             o for o in split_pred_edges(row.get("Predecessors"))[1] if o in pending
         }
         if cited:
-            held[wid] = sorted(cited, key=_id_number)
+            held[wid] = sorted(cited, key=id_number)
     return held
 
 
-def _id_number(rid):
-    """`OI-98` -> 98: the numeric order ids are read in, never the lexical one."""
-    tail = rid.rsplit("-", 1)[-1]
+def id_number(rid):
+    """`OI-98` -> 98: the numeric order ids are read in, never the lexical one.
+    The digits after the last dash; 0 when that tail is not all digits.
+
+    FOUR COPIES BEFORE WI-1004, in two answers: this one and
+    `kitlib.decisions._id_number` read the tail after the last dash;
+    `kitlib.registry.spec_id_number` and `wi_convert._id_number` read the first
+    run of digits, so `X2-5` read 2 and `WI-12a` read 12 there and 5 and 0
+    here. Every id a supported route mints reads the same either way. The
+    tail is kept: the open-item coverage rule below matches covered numbers
+    through it, and the first digit run would read `OI-35abc` as OI-35.
+
+    Implements: SR-157, LLR-383"""
+    tail = str(rid).rsplit("-", 1)[-1]
     return int(tail) if tail.isdigit() else 0
 
 
@@ -424,8 +436,8 @@ def ruled_uncovered(oi_rows, named):
     covered = _covered_ruled(items, names, named)
     return [
         (oid, row)
-        for oid, (state, row) in sorted(items.items(), key=lambda i: _id_number(i[0]))
-        if state == "ruled" and _id_number(oid) not in covered
+        for oid, (state, row) in sorted(items.items(), key=lambda i: id_number(i[0]))
+        if state == "ruled" and id_number(oid) not in covered
     ]
 
 
@@ -454,7 +466,7 @@ def _earlier_items(oid, row):
     text = "\n".join(
         str(value) for col, value in row.items() if col not in _UNCITING_CELLS
     )
-    own = _id_number(oid)
+    own = id_number(oid)
     return {number for number in open_item_numbers(text) if number < own}
 
 
@@ -467,7 +479,7 @@ def _covered_ruled(items, names, named):
     Implements: SR-148, LLR-370
     """
     ruled = {
-        _id_number(oid): oid for oid, (state, _r) in items.items() if state == "ruled"
+        id_number(oid): oid for oid, (state, _r) in items.items() if state == "ruled"
     }
     covered = {
         number

@@ -30,6 +30,7 @@ import tomllib
 from pathlib import Path
 
 from . import git as _kitgit
+from . import spine as _kitspine
 
 __all__ = [
     "plan_table_rows",
@@ -59,7 +60,6 @@ __all__ = [
     "parse_spec_deliverable",
     "parse_spec_row",
     "read_spec_rows",
-    "spec_id_number",
     "shared_spec",
 ]
 
@@ -527,15 +527,10 @@ def read_spec_rows(work_dir, on_error=None):
                     on_error(str(exc))
                 continue
             parsed.append(
-                (order is None, order or 0, spec_id_number(row["WI-ID"]), row)
+                (order is None, order or 0, _kitspine.id_number(row["WI-ID"]), row)
             )
     parsed.sort(key=lambda item: item[:3])
     return [item[-1] for item in parsed]
-
-
-def spec_id_number(wid):
-    match = re.search(r"\d+", wid or "")
-    return int(match.group()) if match else 0
 
 
 def shared_spec(ref_a, ref_b):
