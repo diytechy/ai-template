@@ -132,6 +132,12 @@ RESOLVED = [
         "from . import spine",
         "scripts/kitlib/spine",
     ),
+    (
+        "relative, in a package's __init__ with nothing inventoried under it",
+        "kitlib/leaf/__init__.py",
+        "from .. import spine",
+        "scripts/kitlib/spine",
+    ),
     ("bare stem, as today", "user.py", "import helper", "scripts/helper"),
 ]
 
@@ -140,7 +146,11 @@ SKIPPED = [
     ("dotted, ambiguous", "user.py", "import pkg.util"),
     ("unknown: scanned, not in the inventory", "user.py", "import blank"),
     ("relative, climbing past the top", "kitlib/user.py", "from ... import spine"),
-    ("relative, naming its own package", "kitlib/__init__.py", "from . import VERSION"),
+    (
+        "relative, resolving to the importer itself",
+        "kitlib/__init__.py",
+        "from . import VERSION",
+    ),
 ]
 
 
@@ -165,8 +175,9 @@ def test_an_import_form_reaches_the_cross_component_rule_as_its_module(
 )
 def test_an_unknown_or_ambiguous_import_is_skipped(tmp_path, importer, statement):
     # Skipped before classification: the importer yields no edge at all, so
-    # neither tier can report one (a module importing its own package is no
-    # edge either).
+    # neither tier can report one. The last case resolves (a package's
+    # __init__.py naming its own package) and the rule skips it as an edge
+    # from the importing module to itself.
     src = _tree(tmp_path, importer, statement)
     edges = list(trajectory_arch._classifiable_edges(tmp_path))
     assert not [e for e in edges if e[0] == src], edges
@@ -184,7 +195,8 @@ def test_an_older_generator_without_the_resolver_leaves_the_rule_silent(
 
 def test_the_dependency_diagram_resolves_through_the_same_resolver(tmp_path):
     # The arrow the diagram's own resolver missed: a relative import written in
-    # a package's __init__.py.
-    _tree(tmp_path, "kitlib/__init__.py", "from . import spine")
+    # a package's __init__.py, here one with no module under it, so only the
+    # file itself says it is a package.
+    _tree(tmp_path, "kitlib/leaf/__init__.py", "from .. import spine")
     out = gen_arch_map.build_dependency_diagram([str(tmp_path / "scripts")])
-    assert "    m_scripts_kitlib --> m_scripts_kitlib_spine\n" in out
+    assert "    m_scripts_kitlib_leaf --> m_scripts_kitlib_spine\n" in out
