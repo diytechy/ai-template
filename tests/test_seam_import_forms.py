@@ -26,6 +26,16 @@ gen_arch_map = load_script("gen_arch_map")
 SPINE = (
     '"""Spine."""\n\n\ndef go():\n    """Go."""\n\n\ndef helper():\n    """Help."""\n'
 )
+
+
+@pytest.fixture(autouse=True)
+def _fresh_scan(monkeypatch):
+    """The rule caches its scan per root path for the process's lifetime, and
+    pytest hands a passed test's directory name to the next test, so each
+    case starts from an empty cache."""
+    monkeypatch.setattr(trajectory_arch, "_SCAN_CACHE", {})
+
+
 # The fixture tree under the scan root `scripts`. `kitlib/deep/__init__.py` and
 # `blank.py` are empty, so the walk sees their names but the inventory skips them.
 TREE = {
@@ -130,6 +140,7 @@ SKIPPED = [
     ("dotted, ambiguous", "user.py", "import pkg.util"),
     ("unknown: scanned, not in the inventory", "user.py", "import blank"),
     ("relative, climbing past the top", "kitlib/user.py", "from ... import spine"),
+    ("relative, naming its own package", "kitlib/__init__.py", "from . import VERSION"),
 ]
 
 
@@ -155,9 +166,12 @@ def test_an_import_form_reaches_the_cross_component_rule_as_its_module(
 )
 def test_an_unknown_or_ambiguous_import_is_skipped(tmp_path, importer, statement):
     """Implements: TC-436"""
+    # Skipped before classification: the importer yields no edge at all, so
+    # neither tier can report one (a module importing its own package is no
+    # edge either).
     src = _tree(tmp_path, importer, statement)
-    findings = trajectory_arch.cross_component_findings(tmp_path)
-    assert not [f for f in findings if "import {} (".format(src) in f], findings
+    edges = list(trajectory_arch._classifiable_edges(tmp_path))
+    assert not [e for e in edges if e[0] == src], edges
 
 
 def test_an_older_generator_without_the_resolver_leaves_the_rule_silent(

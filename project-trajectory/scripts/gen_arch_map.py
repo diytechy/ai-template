@@ -139,7 +139,10 @@ Contract IF-131: the ARCH-INVENTORY and seam-declaration grammar the spine check
     cross-component rules the live source AST, and
     `contracts_grammar_findings`, `file_contracts`, `file_grammar_findings`,
     `owner_files` and `ContractsGrammarError` hand them the `Contracts:` marker
-    and `Contract IF-###:` body grammar. Every entry point is optional at the
+    and `Contract IF-###:` body grammar. `resolve_import(token, importer,
+    modules)` names the one module an inventory import token reaches from its
+    importer, or None for a token that names no module, names several, or
+    climbs past the top. Every entry point is optional at the
     call site: an absent or older copy of this module degrades those rules to
     silence rather than breaking a run that also serves the pre-commit hook.
     `read_test_tags(root, tests_dir, live_tcs)` is the one exception. It hands
@@ -826,7 +829,8 @@ def internal_imports(tree, internal_names):
     `from pkg import mod` is recorded as `pkg.mod` when `mod` names a scanned
     module — the real dependency is the submodule, not the package — except
     when the imported name shadows the module it comes from (`from .util
-    import util`), where the module itself is the right target."""
+    import util`), where the module itself is the right target. Each token
+    keeps the form it was written in; `resolve_import` is its one reader."""
     found = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
@@ -1097,9 +1101,9 @@ def build_map(src_roots):
         if summary:
             sections.append("_{}_".format(_md_safe(summary)))
         if imports:
-            # check_trajectory.arch_inventory parses this line (backticked bare
-            # stems) as the cross-CMP rule's edge source (WI-064) — keep the
-            # grammar in sync with that parser.
+            # The tokens as `internal_imports` wrote them: bare, dotted or
+            # relative. The cross-CMP rule reads the same tokens through
+            # `scan_inventory` and resolves them with `resolve_import`.
             sections.append(
                 "Imports (internal): {}".format(
                     ", ".join("`{}`".format(i) for i in imports)
@@ -1510,25 +1514,59 @@ def collect_parse_errors(src_roots):
     return errs
 
 
-def _resolve_import(imp, importer_rel, known):
-    """Map an import string from internal_imports() to a scanned module's rel
-    path; None if it doesn't resolve. Falls back to progressively shorter
-    prefixes (`pkg.sub.name` -> `pkg.sub` -> `pkg`) so a symbol that merely
-    looks like a module still lands on its containing module. Best-effort,
-    same caveat as the map."""
-    if imp.startswith("."):
-        level = len(imp) - len(imp.lstrip("."))
-        # Drop the importer's own name, then one more segment per extra dot.
-        base = importer_rel.split("/")[:-level]
-        tail = imp.lstrip(".")
-        parts = base + (tail.split(".") if tail else [])
-    else:
-        parts = imp.split(".")
+def resolve_import(token, importer, modules):
+    """The one module in `modules` that the import `token` names from
+    `importer`, or None.
+
+    THE ONE RESOLUTION OF `internal_imports`' TOKENS. The dependency diagram
+    and the cross-component seam rule (`trajectory_arch._classifiable_edges`)
+    both call it, so the picture and the check cannot disagree about where an
+    import goes. `importer` and `modules` are module paths in the map's
+    grammar (`scripts/kitlib/spine`).
+
+    An absolute token (`helper`, `kitlib.spine`, `kitlib.spine.helper`) tries
+    its dotted prefixes longest first, each as a path, against the modules equal
+    to it or ending in `/` plus it. The first prefix that matches decides, and
+    two matches are ambiguous. So a one-segment token is a unique-stem match,
+    and a name imported from a module lands on that module even when it shares
+    another module's stem. A relative token (`.spine`, `..`) starts from the
+    importer's package: the importer itself when a module sits under its path
+    (a package's `__init__` carries the package's path), else its parent. Each
+    dot past the first climbs one level, and the match is exact, the tail
+    trimmed back down to the package.
+
+    None for an unknown or ambiguous token and for a climb past the top: the
+    caller skips the import rather than guessing.
+
+    Implements: SR-159, LLR-374
+    """
+    if token.startswith("."):
+        return _resolve_relative(token, importer, modules)
+    parts = token.split(".")
     while parts:
         cand = "/".join(parts)
-        for k in known:
-            if k == cand or k.endswith("/" + cand):
-                return k
+        hits = {m for m in modules if m == cand or m.endswith("/" + cand)}
+        if hits:
+            return hits.pop() if len(hits) == 1 else None
+        parts = parts[:-1]
+    return None
+
+
+def _resolve_relative(token, importer, modules):
+    """`resolve_import`'s relative arm: anchor, climb, then exact matches."""
+    tail = token.lstrip(".")
+    climb = len(token) - len(tail) - 1
+    package = importer.split("/")
+    if not any(m.startswith(importer + "/") for m in modules):
+        package = package[:-1]
+    if climb >= len(package):
+        return None
+    base = package[: len(package) - climb]
+    parts = base + [p for p in tail.split(".") if p]
+    while len(parts) >= len(base):
+        cand = "/".join(parts)
+        if cand in modules:
+            return cand
         parts = parts[:-1]
     return None
 
@@ -1597,7 +1635,7 @@ def build_dependency_diagram(src_roots, if_rows=None):
     edges = set()
     for rel, _summary, imports in mods:
         for imp in imports:
-            target = _resolve_import(imp, rel, known)
+            target = resolve_import(imp, rel, known)
             if target and target != rel:
                 edges.add((node_id(rel), node_id(target)))
     for src_id, dst_id in sorted(edges):
