@@ -2639,6 +2639,8 @@ the hold above.
 | FileBackup | **Held (option (c)):** no migrator run until its conversion is merged; the operator will come back to it |
 | The queue | **Proceed with the available queued work items** once trunk is merged |
 | How the queue is built | **As maintenance branches (option 3).** The operator, 2026-11-19: "Since it is touching the underlying mechanisms I think it will have to be built as maintenance branches." No claim and no coordinator lease (a claim refuses without the lease while `[coordinator] context_guard_pct` is on). Each row on `maint/wi-NNNN` in a worktree under `D:\`, commits with the hooks ON (the bypass was granted for `maint/vocabulary` only), reviewed by Sol (code) and Argon (prose), merged into `refactor_again` by hand, the unfiltered suite once per batch |
+| WI-1009, where the decisions are read | **Option (c): the record files are the listing.** The operator: "I thought there was already a decisions.toml file? ... I think that would be the preferable location. No html / more formally generated report needs to be here." The section leaves `docs/open-items.html` with the code only it used; SR-225 is amended to match (re-accept owed) |
+| WI-1004, eleven policy duplicates | **One work item, walked in series** (the operator had no strong preference; "it could still be walked in series as a single work item, but agreed if it's separate behavior it can be broken up"). The spec names each behaviour, its landing order and its kept answer before the code; one commit per behaviour |
 | Reviews | Prose and spine requirement text: Gemini Carbon at low effort, then **Argon** (`opencode-go/gemini-4-argon`, low) when Carbon proved unavailable. Code: Sol (`gpt-6.1-sol`) at low effort. Carbon is offered only as `opencode/gemini-4-carbon` (OpenCode Zen), which refused for lack of credits on 2026-11-19; the Go plan covers `opencode-go/*`, whose Gemini is `gemini-4-argon`. Asked |
 
 ### §12.3 Why a test run crashed the machine, and how to run one safely
@@ -3260,3 +3262,16 @@ list is fixed unless §12.6 says so.
   three edit `trajectory_arch.py`: WI-1005, then WI-1003, then WI-1007. The
   three merged worktrees (fix-a, fix-b, wi999) were removed; their branches
   stay.
+- **2026-11-19, batch 2.** Merged into `refactor_again`: WI-1005 (`121473dec`), WI-1008
+  (`a5fe7b062`) and WI-1003 (`af1dec169`), each reviewed by Sol (code) and
+  Argon (prose) and its findings fixed on its branch; views `6a78f63a7`. The
+  unfiltered suite on `6a78f63a7`: **8,225 passed, 31 skipped, none failed**
+  (52 min 52 s, builders running beside it). Batch 1's run on `10bb4122e`
+  had one failure, a pinned line number WI-1006 moved (`cc68ecf98`). Building:
+  WI-1007 (the `trajectory_arch.py` split) and WI-1009 (option (c)); WI-1004
+  next. For the operator: OI-79's remote-ref delete; the act over the new
+  Drafted rows (TC-428..436, LLR-370..374, DA-018..020, IF-314..315) and the
+  re-accepts (CMP-006, SR-225 after WI-1009); DA-020's falsifier is met by
+  the unread October decisions backlog, so its standing at the act is a
+  ruling. Argon on `opencode-go` twice ran 20 minutes with no output on an
+  attached file; the same rows inline returned in minutes.
