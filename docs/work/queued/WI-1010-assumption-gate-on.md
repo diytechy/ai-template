@@ -8,6 +8,7 @@ specref = "docs/plans/2026-11-11-test-tiers/HANDOFF.md#126-progress-log"
 buildtier = "medium"
 safety_class = "spine"
 priority = 3
+planmode = "single"
 +++
 
 ## Context
@@ -33,24 +34,136 @@ SR-033, SR-223 and SR-225 are not in the list, because the gate's joint skip
 passes them. WI-1008 writes their premises anyway. Doing it first means one
 acceptance act covers every new assumption, hence the soft edge.
 
+At this row's base (`1cb2e8680`, trunk after WI-1008), the steps report 94:
+`assumption-gate` 79 (49 lines on a `Drafted` assumption, DA-018 to DA-020
+now among them, 9 on a `Drafted` surrogate, and the same 21 citing nothing),
+`crossing-allocation` 9, `interface-allocation` 6 and `assumption-evidence` 0.
+
 The operator rules on `docs/open-items.html`, and it does not show
 assumptions or surrogates: its §2 renders SR chains and stakeholder needs
 only. `docs/status.md` already records the missing view. The Markdown brief
 (`trace.py --accept modified`) renders them, as SR-203 asks.
 
+### The delta
+
+**The page (built first).** `docs/open-items.html` §2 gains a block for the
+assumptions and surrogates owing an acceptance, after the stakeholder needs.
+The rows are the ones the acceptance brief's assumption section renders:
+`trace.py` gains `assumption_owing_model`, the brief's section is rebuilt on
+it, and `gen_open_items.py` renders the same model as HTML. There is one home
+for what is owed, and the page holds no second opinion. Each card shows a
+`Drafted` or Status-less row's cells whole, or a drifted row's moved cells
+before and after, then the requirements relying on the assumption (for a
+surrogate, the assumptions naming it). The seam is the existing one from
+`scripts/gen_open_items` (CMP-009) to `scripts/trace` (CMP-006), IF-075, which
+gains the new function in its data and contract. No new seam reads
+`assumptions.toml` from the page: `trace` reads it, as it does for the brief.
+IF-074's data and its `Contract IF-074:` block name the new block, and
+LLR-118 and LLR-271 are amended to say it. Both are `Accepted`, so they stay
+`Accepted` and drift for the operator's re-accept.
+
+**The arguments (built second).** Registry rows, plus two contract blocks in
+code docstrings. Each of the 21 requirements gets either `da_refs` citing an
+assumption that carries it to its needs, an existing one where it truly
+fits, or a `coincident` waiver that argues its own behaviour is the outcome.
+`da_refs` is traced, so citing re-opens no acceptance. `coincident` is
+accepted text (SR-193), so a waiver makes its `Accepted` requirement drift
+for the operator's re-accept. New assumptions take DA-021 onward and are
+`Drafted`. A claim about the model runner lands on B-09, where the operator
+reads the work back, as DA-006, DA-016 and DA-017 do. B-10 belongs to the
+model provider, no stakeholder's party, so only a fidelity assumption (one
+whose surrogate emulates the provider) can land there without a reach
+finding. B-05, the delivered package, is never a landing.
+
+The interface-form rows, named exactly (S3):
+
+| Row | Crossing findings | Interface finding | How each is closed |
+|---|---|---|---|
+| SR-229 | B-09, B-10 | reached by IF-080, bridged by none it cites | cites assumptions landing on B-09 and a fidelity assumption landing on B-10; IF-080's `bridged_by` (traced) gains the agent-CLI assumptions its claim reading rests on |
+| SR-230 | B-09, B-10 | reached by none | the same assumptions as SR-229 for its crossings; IF-275, the coordinator guard's hook response, gains its tie-back to B-04 (a guardrail verdict during a session, which B-04 carries) and is bridged by the agent-CLI hook assumption |
+| SR-231 | B-10 | reached by none | a `coincident` waiver; a new row IF-321, the verdict file the adjudicator writes at the path the entry point reserved, ties back from B-10 |
+| SR-232 | B-10 | reached by none | a `coincident` waiver; IF-321 reaches it through LLR-310's module |
+| SR-234 | B-09, B-10 | reached by none | a `coincident` waiver; a new row IF-322, the dispute verdict the adjudicator writes in `kitlib.dispute`'s grammar, ties back from B-10 |
+| SR-235 | B-05 | reached by none | joint already; keeps its siblings and cites the independent-review assumption DA-007; its crossing is re-pointed from B-05 to B-09, where the review record is read (both cells traced); IF-289, the review command's result codes, gains its tie-back to B-05, as the result codes of `integrate` (IF-080) carry |
+
+No `form` changes: each of the six is met at an interface. Every IF row is
+`Drafted`, so tying one back or minting one re-opens no acceptance. A new row
+states its contract beside its owner's code, as every row does. The live frame
+test (`tests/test_frame_context.py`) pins the untied rows and B-10's empty
+realization, so it moves with them.
+
 ## Done-when
 
-- [ ] Each of the 21 requirements cites an assumption that carries it to its
-      needs, or records a `coincident` waiver. SR-229, SR-230, SR-231,
-      SR-232, SR-234 and SR-235 each have their crossings and boundary
-      interfaces bridged or waived. A new
-      assumption row is `Drafted`.
-- [ ] The assumptions and surrogates owing an acceptance are shown where the
-      operator rules. Recommended: `docs/open-items.html` §2 renders them, as
-      the brief does, so the operator reads one page. The alternative is to
-      point the operator at the regenerated brief.
-- [ ] The operator's act accepts the assumptions and surrogates and
-      re-accepts the amended requirements. That act is the operator's.
-- [ ] All four `check_assumption_gate.py` steps report 0 findings. Then
-      `[checks] assumption_gate = true` in `docs/process.toml`, with its
-      comment saying when it was turned on, and `check.py` passes with it on.
+This lane delivers two things, in this order, and stops before the
+operator's act.
+
+- [ ] **The page shows what the operator must accept.** `docs/open-items.html`
+      §2 renders every assumption and surrogate owing an acceptance (`Drafted`,
+      Status-less, or accepted and drifted from `docs/archive/last_accepted/`),
+      each row's cells whole or, for a drifted one, before and after, with the
+      requirements relying on it. The rows come from the model the
+      `trace.py --accept modified` brief renders, so the two cannot disagree.
+      The header counts them. Regression tests pin a first-acceptance card, a
+      drifted card and the page's agreement with the brief, and were seen to
+      fail first. IF-074 (row and contract), IF-075, LLR-118 and LLR-271 say
+      it. `gen_open_items.py` stays under the module size threshold.
+- [ ] **Every finding left is one the operator's acceptance clears.** Each of
+      the 21 requirements cites an assumption that carries it to its needs,
+      or records a `coincident` waiver. The nine crossing findings and six
+      interface findings in the table above are closed as it says. Each new
+      assumption and surrogate states where it lands, when it holds, its
+      obstacle and a falsifier someone can observe, and is `Drafted`. After
+      the work, `crossing-allocation` and `interface-allocation` report 0,
+      `assumption-evidence` reports 0, and every `assumption-gate` line is a
+      requirement relying on a `Drafted` assumption or on a fidelity
+      assumption whose surrogate is `Drafted`. The before and after counts
+      per step and per kind are in the Deliverable.
+- [ ] `trace.py --strict`, `check_trajectory.py --strict`,
+      `gen_open_items.py --check` and the touched test modules pass.
+
+### After this row (not this lane's)
+
+1. **The operator's act.** The operator reads §2 of `docs/open-items.html`,
+   accepts the assumptions and surrogates, and re-accepts the requirements
+   and design rows this row amended. That act is the operator's alone.
+2. **The flip, one line.** Once all four steps report 0, the operator or a
+   later session sets `[checks] assumption_gate = true` in
+   `docs/process.toml`, with its comment saying when it was turned on, and
+   checks that `check.py` passes with it on. No row is filed for it: it is a
+   one-line change that follows the act.
+
+## Critique dispositions
+
+Round 1 (Gemini Argon, 2026-11-19,
+`docs/reviews/2026-11-19-scope-critiques/WI-1010.md`): CHANGES-REQUESTED, four
+MAJORs and one MINOR. All five are adopted. None grows the row: the act and
+the flip leave the lane rather than being added to it.
+
+- **B4, the operator's act mixed with build work: adopted.** The Done-when
+  now holds only what this lane builds: the page and the arguments. The
+  operator's act and the flip to `assumption_gate = true` are stated under
+  "After this row" as what follows the lane. The flip is a one-line change
+  the operator or a later session makes after the act, and no row is filed
+  for it. The lane closes complete when its two deliverables land, not
+  partial: nothing in its Done-when waits on the operator.
+- **S1, three landable deliverables with no order: adopted, kept whole.** The
+  third (the act and the flip) left the lane under B4. The other two stay one
+  row, in a stated order: the page first, then the arguments. The page comes
+  first because the operator must read the arguments' new rows on it before
+  accepting them. The two land on one branch, and one act judges everything
+  the arguments add.
+- **S4, `planmode`: adopted as `planmode = "single"`.** The page is a code
+  change to `gen_open_items.py` and `trace.py` with an IF-074 contract change,
+  so a short plan precedes the code (`docs/plans/WI-1010/plan.md`). The
+  Done-when's second bullet chooses: the page renders the rows, and the
+  regenerated brief is not offered as the alternative.
+- **S5, the architectural delta: adopted.** "The delta" above states it. The
+  page adds no cross-component seam: it calls `trace` through IF-075, which
+  already declares that seam. The arguments add two IF rows (IF-321, IF-322),
+  give tie-backs to two existing rows (IF-275 to B-04, IF-289 to B-05) and
+  widen one `bridged_by` (IF-080). No requirement changes `form`.
+- **S3, which crossings and interfaces: adopted.** The table in "The delta"
+  names each row's crossings (B-05, B-09, B-10) and each interface row that
+  closes its interface finding (IF-080, IF-275, IF-289, IF-321, IF-322). SR-235
+  is in the set although the assumption gate's joint skip passes it, because
+  the crossing and interface steps judge it.
