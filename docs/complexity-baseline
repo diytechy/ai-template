@@ -153,7 +153,6 @@ project-trajectory/scripts/trace_text.py	provenance_tokens	19	18
 project-trajectory/scripts/traj_parse.py	_okf_nodes	39	49
 project-trajectory/scripts/traj_parse.py	frame_context	19	82
 project-trajectory/scripts/traj_parse.py	runtime_flows	22	26
-project-trajectory/scripts/trajectory_arch.py	_classifiable_edges	16	27
 project-trajectory/scripts/trajectory_arch.py	_cross_component_scan	19	41
 project-trajectory/scripts/trajectory_arch.py	codesymbol_crosscheck_findings	29	43
 project-trajectory/scripts/trajectory_arch.py	contract_body_findings	22	40

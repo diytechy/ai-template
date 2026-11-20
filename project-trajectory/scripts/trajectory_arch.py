@@ -1494,39 +1494,47 @@ def _classifiable_edges(root):
     the cross-CMP rules can classify — both endpoints normalized, both carrying
     at least one REAL CMP membership.
 
-    The vacuity guards live here, so every caller inherits them: no arch-map
-    `Imports (internal):` lines, no real CMP rows, an endpoint with no
-    `Component`-tag membership (coverage is the containment rule's job, not
-    this one's), or an import stem that resolves to no/multiple inventory
-    modules."""
+    The vacuity guards live here, so every caller inherits them: no internal
+    imports, no real CMP rows, an endpoint with no `Component`-tag membership
+    (coverage is the containment rule's job, not this one's), an import that
+    resolves to no inventory module, to several, or to the importing module
+    itself, and a `gen_arch_map` too old to resolve one (IF-131: every entry
+    point is optional at the call site, and a missing one silences the rule).
+
+    Each import is the token `gen_arch_map.internal_imports` wrote, bare
+    (`agent_route`), dotted (`kitlib.spine`) or relative (`.registry`), and
+    `gen_arch_map.resolve_import` is its one resolution, the one the
+    dependency diagram draws by. Whether an importer is a package, which a
+    relative import starts from, is read from its file through
+    `gen_arch_map.package_paths`, not guessed from the modules under it. Looking the whole token up by its last path
+    segment, as this rule once did, missed every dotted and relative import,
+    so no edge into a package was ever checked.
+
+    Implements: SR-159, LLR-374
+    """
     names, _contracts, imports = arch_inventory(root)
-    if not imports:
+    resolve = getattr(gen_arch_map, "resolve_import", None)
+    package_paths = getattr(gen_arch_map, "package_paths", None)
+    if not imports or resolve is None or package_paths is None:
         return
     cmp_ids = {c["id"] for c in load_cmps(spine_carrier.load(root / CMP_CSV, "CMP-ID"))}
     if not cmp_ids:
         return
     raw = _kitspine.module_components(spine_carrier.load(root / LLR_CSV, "LLR-ID"))
     membership = {n: tags & cmp_ids for n, tags in raw.items()}
-    # A bare imported stem (`agent_route`) resolves against the inventory's
-    # normalized module names (`scripts/agent_route`) by unique-stem match —
-    # the same resolution gen_arch_map applied when it emitted the line.
-    by_stem = {}
-    for m in names:
-        n = _norm_module(m)
-        if n:
-            by_stem.setdefault(n.rsplit("/", 1)[-1], set()).add(n)
+    modules = {_norm_module(m) for m in names} - {""}
+    src, _mode = _arch_scan_profile(root)
+    scan_dir = root / src.strip().replace("\\", "/").rstrip("/")
+    packages = {_norm_module(p) for p in package_paths([scan_dir])}
     for src in sorted(imports):
         src_n = _norm_module(src)
         src_cmps = membership.get(src_n, set())
         if not src_cmps:
             continue
-        for stem in sorted(imports[src]):
-            targets = by_stem.get(stem, set())
-            if len(targets) != 1:
-                continue  # unknown/ambiguous stem — not this rule's finding
-            dst_n = next(iter(targets))
+        for token in sorted(imports[src]):
+            dst_n = resolve(token, src_n, modules, packages)
             dst_cmps = membership.get(dst_n, set())
-            if dst_cmps:
+            if dst_cmps and dst_n != src_n:
                 yield src_n, dst_n, src_cmps, dst_cmps
 
 

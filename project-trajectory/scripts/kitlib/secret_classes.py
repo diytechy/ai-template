@@ -49,6 +49,21 @@ this table, so no LLR `code_symbol` cell and no call site changes shape.
 Pure data — `re` and `typing` only, no sibling import — so it is safe for
 `bootstrap.py` to import (the package's one asserted rule) without dragging a
 checker into the scaffolder.
+
+Contracts: IF-314 — the seam this module declares (process.md §8; row of record
+in docs/requirements/interfaces.toml).
+
+Contract IF-314: the credential class table, as data its two readers derive
+    their patterns from. `SECRET_CLASSES` is a tuple of `SecretClass` entries,
+    each a `name`, a `scan_pattern` the commit floor matches and a
+    `redact_pattern` the transcript redactor matches, either a compiled pattern
+    or None for a class that side deliberately leaves alone. The redact pattern
+    may be looser than the scan pattern, never tighter.
+    `SECRET_CLASSES_BY_NAME` is a read-only mapping from each name to its
+    entry. `check_privacy` builds `KEY_RE` and `TOKEN_RES` from the scan side
+    and `agent_common` builds `_SECRET_RES` from the redact side, so a class
+    added or dropped here reaches both. Importing the module reads no file and
+    imports no sibling.
 """
 
 from __future__ import annotations
