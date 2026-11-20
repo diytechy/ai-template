@@ -529,6 +529,13 @@ MAPPING = [
     ("scripts/check_need_form.py", "scripts/check_need_form.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
     ("scripts/trajectory_arch.py", "scripts/trajectory_arch.py"),
+    # The architecture rule modules `trajectory_arch` composes and imports
+    # unguarded (WI-1007), so each ships with it.
+    ("scripts/arch_inputs.py", "scripts/arch_inputs.py"),
+    ("scripts/arch_interfaces.py", "scripts/arch_interfaces.py"),
+    ("scripts/arch_tags.py", "scripts/arch_tags.py"),
+    ("scripts/arch_seams.py", "scripts/arch_seams.py"),
+    ("scripts/arch_components.py", "scripts/arch_components.py"),
     # The `last_accepted` snapshot reader/writer (operator directive 2026-08-15).
     # Shipped because it is a SIBLING IMPORT of `intake.py` — the adjudication
     # flip copies the registries in the same act — and because `trace.py` reads

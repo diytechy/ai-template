@@ -1489,7 +1489,7 @@ OFFSPINE_KEYS = {
     # carrier refuses a nested table. One row per partition holds the record
     # (`candidates` .. `override`, the last optional); every other row of the
     # partition carries only `derivation`, the id of the row holding it. Its one
-    # reader is `trajectory_arch.component_findings`.
+    # reader is `arch_components.component_findings`.
     "CMP-ID": (
         "name",
         "category",

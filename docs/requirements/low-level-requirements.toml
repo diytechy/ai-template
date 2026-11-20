@@ -435,7 +435,7 @@ phase = 1
 [design.LLR-042]
 sr_refs = ["SR-159"]
 title = "Architecture-connectivity coverage warns"
-module = "project-trajectory/scripts/trajectory_arch.py"
+module = "project-trajectory/scripts/arch_interfaces.py;project-trajectory/scripts/arch_inputs.py"
 code_symbol = "interface_findings/arch_inventory"
 detail = "Emits opt-out warn-first findings for missing endpoints/directions, uncited Active seams, and dangling Contracts citations without changing exit status. A source/sink note suppresses its declared direction case; the opt-out home is docs/process.toml [checks] interfaces_check = false; a small or absent inventory is vacuous."
 test_refs = "(see TC-080)"
@@ -513,7 +513,7 @@ phase = 1
 [design.LLR-049]
 sr_refs = ["SR-159"]
 title = "Bounded software top view"
-module = "project-trajectory/scripts/trajectory_arch.py"
+module = "project-trajectory/scripts/arch_components.py;project-trajectory/scripts/arch_inputs.py"
 code_symbol = "component_top_view/component_findings/load_cmps/_cmp_roots"
 detail = "Derives component roots and uncontained modules; enforces TOP_VIEW_MAX — 10 uncontained top-level modules — with nesting, opt-out ([checks] components_check = false), and vacuity rules. An oversized uncontained view warns plain and fails --strict; valid containment clears it, and nested components count only at their top-level roots."
 test_refs = "(see TC-049)"
@@ -636,7 +636,7 @@ phase = 4
 [design.LLR-067]
 sr_refs = ["SR-159"]
 title = "Cross-component import coverage"
-module = "project-trajectory/scripts/trajectory_arch.py"
+module = "project-trajectory/scripts/arch_seams.py;project-trajectory/scripts/arch_inputs.py"
 code_symbol = "cross_component_findings/arch_inventory"
 detail = "Joins imports, component membership, and declared seams; reports uncovered cross-component edges with strict/plain and vacuity rules. Uncovered mapped edges warn plain and fail --strict; a covering seam (in either direction), an intra-component or unmapped edge, absent imports, the opt-out, and an edge whose destination is a declared shared-kernel module (docs/kernel-modules-allow, checked before the seam/overlap split) each stay silent. The module inventory joined against is scanned LIVE from the source tree under [paths] src (gen_arch_map.scan_inventory), never parsed back out of a committed map, so the join cannot read a stale inventory."
 test_refs = "(see TC-067)"
@@ -1548,7 +1548,7 @@ phase = 6
 [design.LLR-365]
 sr_refs = ["SR-157"]
 title = "Test-file declarations of their test cases"
-module = "project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/trajectory_arch.py"
+module = "project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/arch_tags.py"
 code_symbol = "read_test_tags/tc_tag_findings"
 detail = "A test-file back-link declaration names test cases, and each named id must be a live test case. In a Python test file, declarations in the module docstring and in a test's docstring are read; in another supported test-file type, declarations are read at file level. A byte-order mark at the start of a file does not change its reading. The two Python levels union. A test repeating its module's test case is no finding. That reading judges the declarations alone: their equality with the Evidence cell is a separate rule. A non-docstring string literal, a backtick-quoted token and an unsupported test-file type make no declaration. A declaration outside a read position, including a pytest-fixture docstring, is refused as misplaced. The following are refused as malformed: a declaration whose list is not test-case ids only; a read-position line whose token follows prose and names a test case; and a next line that continues a valid list. The after-prose refusal directs the declaration to the start of its own line. An id absent from the live test-case registry, including an example or retired id, is refused as unknown; a Drafted test case is live. A test file that cannot be decoded or parsed is refused as unreadable. Every live id in a valid declaration maps to its test node. Each refusal names the repository-relative file, line and shape. Reading test files does not change source-file declaration reading. An absent tests root, or an absent test-case registry, makes the check vacuous. Findings warn without strict checking and error under strict checking; they gate from DevStg-Impl and remain warnings below that rung, including in a newly created project. The contract covers test files, test-case registries and declared tests roots produced by supported workflows; non-Python fixture text, non-default test-collection patterns, hand-chosen test-case aliases and tests roots reached through a symlink are outside it."
 rationale = "A tag that is silently misplaced, malformed, dangling or unreadable can make a test case appear absent without an attributable finding. Keeping the declaration grammar separate from source-file reading prevents this added input from changing established source analysis."
@@ -1560,7 +1560,7 @@ phase = 6
 [design.LLR-366]
 sr_refs = ["SR-157"]
 title = "Test-case evidence and test-file declarations agree"
-module = "project-trajectory/scripts/trajectory_arch.py"
+module = "project-trajectory/scripts/arch_tags.py"
 code_symbol = "tc_tag_findings/_tag_evidence_findings"
 detail = "For each live test case, including a Drafted case, the declarations in test files under the declared tests root equal the parts of its Evidence cell. The cell is read as its other readers read it, so separator choice changes nothing and a parenthetical note supplies no part. A part is its file, or its file and test with a class retained and a parametrized case removed. A file part binds only to a file-level declaration and a test part only to that test's declaration, so a test part in a file read at file level is two differences. A test's declaration repeating its file's declaration is still a declaration, so its cell names that test as well. A part outside the tests root is outside the rule. A tests root of `.` holds every part in the repository. An uncovered part is reported as evidence without a tag, and an unreferenced declaration as tag without evidence; each names the test case and node. A file refused as unreadable adds no finding here, and an absent tests root or test-case registry makes the check vacuous. Findings warn without strict checking and error under strict checking; they gate from DevStg-Impl and remain warnings below that rung, including in a newly created project. The contract covers live test cases, their Evidence cells, declarations in files under the declared tests root, and supported workflows; evidence outside that root, a parenthetical note, and a file refused as unreadable are outside it."
 rationale = "A declaration can be live yet omit a case's evidence, or name a case whose evidence does not reach it, leaving the trace between test case and test file inconsistent without an attributable finding. The existing cell reader and declaration reader already define the shared terms, so this contract compares their results rather than creating another interpretation."
@@ -1787,7 +1787,7 @@ phase = 1
 [design.LLR-172]
 sr_refs = ["SR-165"]
 title = "Component derivation record: element completeness + the ranking recompute"
-module = "project-trajectory/scripts/trajectory_arch.py"
+module = "project-trajectory/scripts/arch_components.py"
 code_symbol = "component_findings/derivation_record_findings"
 detail = """Extends the existing component pass (trajectory_arch.component_findings, run by check_trajectory.py), the one home that already reads docs/requirements/components.toml and already emits CMP findings, with the derivation-record rules SR-165 states, rather than adding a second reader of the same registry. derivation_record_findings: each live CMP row either holds the record (candidates, objective, constraints, a score per candidate, the selected partition and the operator ruling) or cites, with `derivation`, the one live row that holds it. An absent record, a missing element (one finding naming the row and the element) and a malformed cell are each reported, and a finding against a held record is reported once, on the holding row, naming the rows that cite it. Two derived rules run only on a complete, well-formed record, because presence alone is satisfiable by a record that says nothing: (1) THE RANKING RECOMPUTES: a feasible candidate ranks above every infeasible one, then by score in the objective's direction, and an order the recompute contradicts is a finding, which makes the record falsifiable without a reviewer re-running a model session; (2) A SELECTION THE SCORES DO NOT RANK FIRST is a finding unless the record carries an override naming that choice, and an override where the selection does rank first is also a finding. Findings warn plain and fail under --strict; `[checks] components_check = false` turns the pass off. Vacuous on a project declaring no components and on the example -000 rows. CMP-006 holds this repository's record and CMP-007 to CMP-009 cite it."""
 rationale = """The check belongs where component_findings already is for the reason the census keeps applying: a second module reading components.toml would be a second answer to "is this partition recorded", and the two would drift. The recompute is the load-bearing half — an element-presence check passes on a record whose scores contradict its own conclusion, which is the exact failure SN-040 exists to catch (the next reviser cannot tell load-bearing boundaries from accidents). The override arm is what stops the recompute rule from forbidding operator judgement: the requirement is that a departure from the scores is RECORDED, never that it is disallowed."""
@@ -3865,9 +3865,9 @@ phase = 6
 [design.LLR-374]
 sr_refs = ["SR-159"]
 title = "An internal import reaches the cross-component rule as the one module it names, or is skipped"
-module = "project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/trajectory_arch.py"
+module = "project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/arch_seams.py"
 code_symbol = "resolve_import/_resolve_relative/package_paths/_classifiable_edges"
-detail = """resolve_import in gen_arch_map.py takes one token internal_imports wrote, the importer's module path, the inventory's module paths and the paths package_paths reads from the __init__.py files, and returns one module or None. An absolute token tries its dotted prefixes longest first, each as a path, against the modules equal to it or ending in / plus it; the first prefix that matches decides, and two matches return None, so a one-segment token is the unique-stem match. A relative token starts from the importer's package, which is the importer itself when its file is a package's __init__.py and its parent otherwise, climbs one level for each dot past the first, returns None for a climb past the top, and matches exactly, trimming its tail back to the package. _classifiable_edges in trajectory_arch.py resolves every token of the live inventory through it and skips an import that resolves to None or to the importing module itself; a gen_arch_map without resolve_import or package_paths leaves the rule silent. The dependency diagram draws its arrows through the same function."""
+detail = """resolve_import in gen_arch_map.py takes one token internal_imports wrote, the importer's module path, the inventory's module paths and the paths package_paths reads from the __init__.py files, and returns one module or None. An absolute token tries its dotted prefixes longest first, each as a path, against the modules equal to it or ending in / plus it; the first prefix that matches decides, and two matches return None, so a one-segment token is the unique-stem match. A relative token starts from the importer's package, which is the importer itself when its file is a package's __init__.py and its parent otherwise, climbs one level for each dot past the first, returns None for a climb past the top, and matches exactly, trimming its tail back to the package. _classifiable_edges in arch_seams.py resolves every token of the live inventory through it and skips an import that resolves to None or to the importing module itself; a gen_arch_map without resolve_import or package_paths leaves the rule silent. The dependency diagram draws its arrows through the same function."""
 rationale = """The rule looked each token up by its last path segment, so every dotted and relative import missed and no edge into a package was ever checked, while the dependency diagram kept a resolver of its own that took the first of several matches. One resolver, in the module that writes the tokens, keeps the check and the picture on one answer. A token that names nothing, or names several modules, is skipped rather than guessed, since a guessed edge would be a finding against a seam that does not exist."""
 test_refs = "TC-436"
 status = "Drafted"

@@ -7,9 +7,10 @@ from pathlib import Path
 root = Path(".").resolve()
 sys.path.insert(0, str(root / "project-trajectory/scripts"))
 import trajectory_arch as ta
+from kitlib import spine as kitspine
 
 names, contracts, imports = ta.arch_inventory(root)
-raw = ta._kitspine.module_components(ta.spine_carrier.load(root / ta.LLR_CSV, "LLR-ID"))  # one home since WI-1005
+raw = kitspine.module_components(ta.spine_carrier.load(root / ta.LLR_CSV, "LLR-ID"))  # one home since WI-1005
 kernel = ta.read_kernel_modules(root)
 inv = {}
 for m in names:

@@ -18,7 +18,7 @@ _Acceptance provenance: the last commit to move a `Status` cell in a snapshotted
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 4 changed, 2 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1006.
+- `docs/requirements/interfaces.toml` — 4 changed, 7 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1006.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1003.
 
 ## Assumptions and surrogates owing an acceptance
@@ -798,6 +798,26 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 > **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
 
 
+### LLR LLR-365
+- **Module**
+  - before: project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/trajectory_arch.py
+  - after: project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/arch_tags.py
+
+### LLR LLR-366
+- **Module**
+  - before: project-trajectory/scripts/trajectory_arch.py
+  - after: project-trajectory/scripts/arch_tags.py
+
+### TC TC-409
+- **Verifies**
+  - before: SR-157;LLR-365;IF-131;IF-263
+  - after: SR-157;LLR-365;IF-131;IF-263;IF-318
+
+### TC TC-410
+- **Verifies**
+  - before: SR-157;LLR-366;IF-263
+  - after: SR-157;LLR-366;IF-263;IF-318
+
 ### TC TC-428 — ADDED since the snapshot, Drafted — never accepted
 - **TC-ID**: TC-428
 - **Verifies**: SR-157;IF-263
@@ -829,10 +849,23 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 > **Rationale.** Realizes SN-023 (the parts' connections are as much of the truth as the requirement tree, checked mechanically warn-first — the need's own words), SN-002 (interface rows stay resolvable) and SN-012 (opt-out and vacuity keep the layer free for non-users). One row: the delivered contract is one connectivity verdict; the checkers below it are its decomposition.
 
 
+### LLR LLR-042
+- **Module**
+  - before: project-trajectory/scripts/trajectory_arch.py
+  - after: project-trajectory/scripts/arch_interfaces.py;project-trajectory/scripts/arch_inputs.py
+
 ### LLR LLR-049
 - **CodeSymbol**
   - before: component_top_view/component_findings/module_components/load_cmps/_cmp_roots
   - after: component_top_view/component_findings/load_cmps/_cmp_roots
+- **Module**
+  - before: project-trajectory/scripts/trajectory_arch.py
+  - after: project-trajectory/scripts/arch_components.py;project-trajectory/scripts/arch_inputs.py
+
+### LLR LLR-067
+- **Module**
+  - before: project-trajectory/scripts/trajectory_arch.py
+  - after: project-trajectory/scripts/arch_seams.py;project-trajectory/scripts/arch_inputs.py
 
 ### LLR LLR-373 — ADDED since the snapshot, Drafted — never accepted
 - **LLR-ID**: LLR-373
@@ -851,14 +884,29 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **LLR-ID**: LLR-374
 - **SR-Refs**: SR-159
 - **Title**: An internal import reaches the cross-component rule as the one module it names, or is skipped
-- **Module**: project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/trajectory_arch.py
+- **Module**: project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/arch_seams.py
 - **CodeSymbol**: resolve_import/_resolve_relative/package_paths/_classifiable_edges
-- **Detail**: resolve_import in gen_arch_map.py takes one token internal_imports wrote, the importer's module path, the inventory's module paths and the paths package_paths reads from the __init__.py files, and returns one module or None. An absolute token tries its dotted prefixes longest first, each as a path, against the modules equal to it or ending in / plus it; the first prefix that matches decides, and two matches return None, so a one-segment token is the unique-stem match. A relative token starts from the importer's package, which is the importer itself when its file is a package's __init__.py and its parent otherwise, climbs one level for each dot past the first, returns None for a climb past the top, and matches exactly, trimming its tail back to the package. _classifiable_edges in trajectory_arch.py resolves every token of the live inventory through it and skips an import that resolves to None or to the importing module itself; a gen_arch_map without resolve_import or package_paths leaves the rule silent. The dependency diagram draws its arrows through the same function.
+- **Detail**: resolve_import in gen_arch_map.py takes one token internal_imports wrote, the importer's module path, the inventory's module paths and the paths package_paths reads from the __init__.py files, and returns one module or None. An absolute token tries its dotted prefixes longest first, each as a path, against the modules equal to it or ending in / plus it; the first prefix that matches decides, and two matches return None, so a one-segment token is the unique-stem match. A relative token starts from the importer's package, which is the importer itself when its file is a package's __init__.py and its parent otherwise, climbs one level for each dot past the first, returns None for a climb past the top, and matches exactly, trimming its tail back to the package. _classifiable_edges in arch_seams.py resolves every token of the live inventory through it and skips an import that resolves to None or to the importing module itself; a gen_arch_map without resolve_import or package_paths leaves the rule silent. The dependency diagram draws its arrows through the same function.
 - **Rationale**: The rule looked each token up by its last path segment, so every dotted and relative import missed and no edge into a package was ever checked, while the dependency diagram kept a resolver of its own that took the first of several matches. One resolver, in the module that writes the tokens, keeps the check and the picture on one answer. A token that names nothing, or names several modules, is skipped rather than guessed, since a guessed edge would be a finding against a seam that does not exist.
 - **TestRefs**: TC-436
 - **Status**: Drafted
 - **Component**: CMP-006
 - **Phase**: 6
+
+### TC TC-049
+- **Verifies**
+  - before: SR-159;LLR-049
+  - after: SR-159;LLR-049;IF-320
+
+### TC TC-067
+- **Verifies**
+  - before: SR-159;LLR-067
+  - after: SR-159;LLR-067;IF-319
+
+### TC TC-080
+- **Verifies**
+  - before: SR-159;LLR-042;IF-263
+  - after: SR-159;LLR-042;IF-263;IF-316;IF-317
 
 ### TC TC-435 — ADDED since the snapshot, Drafted — never accepted
 - **TC-ID**: TC-435

@@ -43,16 +43,15 @@ trajectory_arch = load_script("trajectory_arch")
 
 def test_architecture_rules_are_reexported_from_their_behavior_module():
     """Implements: TC-080"""
-    trajectory_arch = load_script("trajectory_arch")
-    for name in (
-        "interface_findings",
-        "component_findings",
-        "cross_component_findings",
-        "spec_interface_findings",
+    for name, home in (
+        ("interface_findings", "arch_interfaces"),
+        ("component_findings", "arch_components"),
+        ("cross_component_findings", "arch_seams"),
+        ("spec_interface_findings", "trajectory_arch"),
     ):
         facade = getattr(check_trajectory, name)
-        behavior = getattr(trajectory_arch, name)
-        assert facade.__module__ == "trajectory_arch"
+        behavior = getattr(load_script(home), name)
+        assert facade.__module__ == home
         assert facade.__code__.co_code == behavior.__code__.co_code
 
 

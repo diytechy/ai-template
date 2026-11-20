@@ -20,7 +20,7 @@ import pytest
 
 from conftest import load_script
 
-trajectory_arch = load_script("trajectory_arch")
+arch_seams = load_script("arch_seams")
 gen_arch_map = load_script("gen_arch_map")
 
 SPINE = (
@@ -33,7 +33,7 @@ def _fresh_scan(monkeypatch):
     """The rule caches its scan per root path for the process's lifetime, and
     pytest hands a passed test's directory name to the next test, so each
     case starts from an empty cache."""
-    monkeypatch.setattr(trajectory_arch, "_SCAN_CACHE", {})
+    monkeypatch.setattr(arch_seams, "_SCAN_CACHE", {})
 
 
 # The fixture tree under the scan root `scripts`. `kitlib/deep/__init__.py` and
@@ -163,7 +163,7 @@ def test_an_import_form_reaches_the_cross_component_rule_as_its_module(
     tmp_path, importer, statement, target
 ):
     src = _tree(tmp_path, importer, statement)
-    findings = trajectory_arch.cross_component_findings(tmp_path)
+    findings = arch_seams.cross_component_findings(tmp_path)
     edge = "cross-component import {} (CMP-001) -> {} (CMP-002)".format(src, target)
     assert [f for f in findings if f.startswith(edge)], findings
 
@@ -179,7 +179,7 @@ def test_an_unknown_or_ambiguous_import_is_skipped(tmp_path, importer, statement
     # __init__.py naming its own package) and the rule skips it as an edge
     # from the importing module to itself.
     src = _tree(tmp_path, importer, statement)
-    edges = list(trajectory_arch._classifiable_edges(tmp_path))
+    edges = list(arch_seams._classifiable_edges(tmp_path))
     assert not [e for e in edges if e[0] == src], edges
 
 
@@ -189,8 +189,8 @@ def test_an_older_generator_without_the_resolver_leaves_the_rule_silent(
     # IF-131: every gen_arch_map entry point is optional at the call site.
     _tree(tmp_path, "user.py", "import helper")
     older = types.SimpleNamespace(scan_inventory=gen_arch_map.scan_inventory)
-    monkeypatch.setattr(trajectory_arch, "gen_arch_map", older)
-    assert trajectory_arch.cross_component_findings(tmp_path) == []
+    monkeypatch.setattr(arch_seams, "gen_arch_map", older)
+    assert arch_seams.cross_component_findings(tmp_path) == []
 
 
 def test_the_dependency_diagram_resolves_through_the_same_resolver(tmp_path):
