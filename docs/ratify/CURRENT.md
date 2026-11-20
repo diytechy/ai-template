@@ -18,7 +18,7 @@ _Acceptance provenance: the last commit to move a `Status` cell in a snapshotted
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 8 changed, 7 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1004, WI-1006, WI-1007, WI-1009.
+- `docs/requirements/interfaces.toml` — 12 changed, 9 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1004, WI-1006, WI-1007, WI-1009.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1003.
 
 ## Assumptions and surrogates owing an acceptance
@@ -129,12 +129,14 @@ record runs through the live registry first.
 - SR-020 — Pre-push hook outgoing scan: The pre-push hook shall scan the outgoing commit range and block a push that publishes a secret or (under privacy-check) a private identity.
 - SR-209 — Every commit the loop makes carries a checked provenance trailer: When a commit is made from a process the unattended loop started, or is merged in a lane the loop owns from the point the loop took that lane over, the delivered commit floor shall refuse it unless it carries a valid provenance trailer naming the loop and its session.
 - SR-240 — Commit-floor activation before agent routes: Where a checkout's commit floor is inactive, the delivered agent routes shall refuse to start and name the applicable repair that activates the floor.
+- SR-246 — A moved inconsistent acceptance relationship is refused at commit admission: The delivered governance capability shall refuse a staged tree or lane commit that leaves an Accepted or Founded child under a declared parent without either status when the child or parent status moved against any comparison parent, stating the parent-first relationship and prefixing the refusal with the staged-tree or abbreviated-commit identity; compare a staged tree with its current parent and the merge parent and a lane commit with every commit parent; treat an unreadable difference or current-side registry as a refusal, an unreadable or unparseable comparison-side registry as moving every status, and an absent comparison-side registry as no rows that make every current-side status moved; and leave a simultaneous parent-and-child acceptance, a true first commit, a tree that changes no spine registry, an absent current-side registry that supplies no child-parent relationship, and a commit that moved neither relevant status unrefused.
 
 **Serving.**
 
 - SN-009 — A team is protected from publishing a secret or private identity: in a repository that adopts this process, it is caught before it publishes, without extra setup.
 - SN-005 — AI agents and humans work from the same playbook, and the process is enforced agent-neutrally — by git hooks + CI — not by trusting whichever agent showed up.
 - SN-029 — An autonomous run gets as far as it honestly can. Once triggered, the coordinator stops for an operator judgement only when the declared acceptance level reserves that tier for an operator, when a round cannot converge on its own, or when requirement/test documentation is introduced or amended such that the gate drops below what automation is permitted to accept. On every tier released to automation, an acceptance still happens as a review from a declared perspective against the row's actual evidence, and leaves a record naming who or what accepted it — releasing a tier means the review is delegated, never skipped.
+- SN-002 — A reviewer can trust the chain from need to requirement to design to test because it is mechanically verified, not manually asserted: every requirement links to a need and a test before a gate.
 
 **Lands on.**
 
@@ -227,6 +229,7 @@ record runs through the live registry first.
 - SR-154 — Independent review routed across families: The delivered loop content shall obtain, when unattended work reaches integration, each review or critique verdict the declared policy requires from a session that did not author the work — resolved per in-process phase and tier from the delivered agent registry's declared (family x model x tier) rows and only while the declared consent surface that turns managed selection on is present, drawn from a different model family wherever one is configured, degrading only to the documented same-family mode — with every selection logged before launch and a non-converging rework loop escalated through the declared acceptance level, and, where a claimed work item is marked for an in-lane single plan, refuse build output at its making or landing until a pass record binds its plan and Done-when.
 - SR-155 — Contested planning rounds for marked work: Where work is declared as contested planning, the delivered loop content shall produce the selected decomposition through a bounded round of two independently authored rival plans — cross-critiqued, mechanically coverage-compared and arbitrated by fresh sessions — committing the selected outcome atomically as registry-valid queued rows and surfacing a non-converging round through the declared acceptance level, never falling back to a single uncontested plan silently.
 - SR-184 — Critique acceptance records intent-derived rubric anchors: Where a delivered capability requires Critique acceptance, the delivered acceptance record shall identify a fresh reviewer session that did not author the artifact, apply a written rubric derived from the applicable SN/SR intent, and record each verdict and finding against numbered rubric-anchor ids.
+- SR-235 — Attended independent review verdicts are recorded or refused: When an attended launcher submits an independent review verdict for a work item's lane, the delivered review content shall record a verdict bound to the reviewed commit in the review-round record form the delivered verdict reporting reads, or refuse a malformed or unbound verdict without a record.
 
 **Serving.**
 
@@ -416,6 +419,7 @@ record runs through the live registry first.
 
 - SR-156 — Bounded lanes narrowing to one gated landing: The delivered loop content shall run exactly one work item per lane on bounded, mutually isolated lanes and narrow every lane back to the integration branch through one serial, fail-closed seam that runs the declared checks on the composed tree — parking a failing candidate and stopping the queue loudly, draining claiming to a clean merged stop under a declared pause, and reconstructing claim and queue state from version-control history alone at any crash boundary, never a half-integrated authoritative state.
 - SR-170 — Shared authority surfaces are the serial actor's alone: The delivered loop content shall write the shared records it derives - the compiled activity log and the generated project-state artifacts - only from the serial merge step and only against the merged tree, never from a parallel work branch.
+- SR-246 — A moved inconsistent acceptance relationship is refused at commit admission: The delivered governance capability shall refuse a staged tree or lane commit that leaves an Accepted or Founded child under a declared parent without either status when the child or parent status moved against any comparison parent, stating the parent-first relationship and prefixing the refusal with the staged-tree or abbreviated-commit identity; compare a staged tree with its current parent and the merge parent and a lane commit with every commit parent; treat an unreadable difference or current-side registry as a refusal, an unreadable or unparseable comparison-side registry as moving every status, and an absent comparison-side registry as no rows that make every current-side status moved; and leave a simultaneous parent-and-child acceptance, a true first commit, a tree that changes no spine registry, an absent current-side registry that supplies no child-parent relationship, and a commit that moved neither relevant status unrefused.
 
 **Serving.**
 
@@ -423,6 +427,8 @@ record runs through the live registry first.
 - SN-008 — A reader can believe a pass verdict: gates are honest, and a pass verdict never hides a skipped check, a stub, or an unmet declared criterion.
 - SN-025 — With no human curating what comes next, a configured LLM agent implements toward the vision — fully autonomously where enabled — deriving its own next work from the repository's tracked state. (The launcher that starts it is SN-034's obligation; this need is the self-direction.)
 - SN-010 — A reader can navigate the documentation and trust it: navigable and honest — links resolve, the vision is declared once, and generated views cannot silently rot.
+- SN-002 — A reviewer can trust the chain from need to requirement to design to test because it is mechanically verified, not manually asserted: every requirement links to a need and a test before a gate.
+- SN-029 — An autonomous run gets as far as it honestly can. Once triggered, the coordinator stops for an operator judgement only when the declared acceptance level reserves that tier for an operator, when a round cannot converge on its own, or when requirement/test documentation is introduced or amended such that the gate drops below what automation is permitted to accept. On every tier released to automation, an acceptance still happens as a review from a declared perspective against the row's actual evidence, and leaves a record naming who or what accepted it — releasing a tier means the review is delegated, never skipped.
 
 **Lands on.**
 
@@ -447,6 +453,7 @@ record runs through the live registry first.
 
 - SR-036 — Deliberate re-sync integration: A re-sync of an existing adoption shall integrate relevant kit updates without clobbering the adopter's filled-in files, per the documented re-sync procedure — take kit-owned scripts/hooks wholesale, regenerate generated docs, and preserve filled-in registries/config.
 - SR-138 — Legacy config converts automatically and totally: The delivered scaffold generator's documented migration pass — run by both scaffolding and the documented re-sync — shall fold every legacy one-word policy file into the single policy declaration home and delete it, never deleting a file whose value it did not manage to write.
+- SR-247 — An earlier kit's stored values reach the current vocabulary through a migrator: The delivered kit shall provide a migrator that rewrites, in place, the stored values an earlier kit vocabulary spelled differently and a current script still reads, and that changes nothing else in a file it rewrites.
 
 **Serving.**
 
@@ -504,6 +511,7 @@ record runs through the live registry first.
 **Relied on by.**
 
 - SR-222 — Every model session is recorded in one usage record, whichever provider CLI serves it: The delivered loop content shall record every model session it launches, whichever provider command-line runner serves it, in one usage record: token usage under a published usage vocabulary pinned to a named revision, input counted inclusive of cached input, fresh input derived by one formula, the runner's raw usage kept verbatim, the route's provider filled from its roster row for every routed call, the runner named, the vocabulary's gen_ai.provider.name holding the runner's default provider for claude and codex and empty for any other runner, with runner reconfiguration to another provider not detected, and the context occupancy of the session's latest request kept apart from its billed tokens; for a runner other than claude, codex and opencode, the runner name is left empty, and so is every count or raw usage the loop cannot read from the runner's output.
+- SR-243 — Coordinator calls record sessions without committing outside claimed work: When the coordinator's tooling launches a model session, the delivered coordinator call capability shall record the session in the usage record, record its log without committing to the shared line of development when it starts outside claimed work, refuse an unsafe resumed authoring carrier before launch, judge the call's changes against its starting state, and provide the sole Sol or Terra launch route.
 
 **Serving.**
 
@@ -636,6 +644,233 @@ record runs through the live registry first.
 
 **Falsifier.** A call that a delegated run's diff or session log shows plainly and that its record leaves out or misdescribes; or an entry left listed as not yet seen while the operator confirms or overrules entries recorded after it; or an entry still listed as not yet seen after later work has built on the call it records, which git history shows as a later integrated commit that changes what the call changed or carries out what it decided.
 
+### DA-021 — Drafted, never accepted
+
+**Relied on by.**
+
+- SR-229 — Coordinator claim admission respects a blackout pause: Where a blackout window is armed, the delivered work-item admission shall refuse a new claim inside that window on every route at any context-guard dial; outside a blackout window, where the declared coordinator context guard is enabled, it admits a coordinator claim only from the current lease holder while that holder's context drain is not latched, the drain latching once the holder's context occupancy reaches the declared threshold and holding across compaction and resume until the operator records a clear or a release, the holder records a hand-back naming its handoff, or a relaunched successor takes the lease.
+- SR-230 — Coordinator successor at session exit outside a blackout pause: Where the declared coordinator context guard is enabled, when the coordinator lease holder that has requested a relaunch from its handoff ends its session outside an armed blackout window, the delivered coordination support shall start exactly one successor session from that handoff; inside the window it cancels the pending request and leave resumption to the operator.
+- SR-237 — Blackout pauses new model work and resumes it after the window: When a declared blackout window is armed, the delivered coordination and unattended operation shall pause new model work until the window ends, preserving each claimed lane at its committed pause point and starting no model work inside the window except an adjudication needed to bring an active lane to that point, then resume eligible work after the window without retaining a session whose prior use predates that window's end.
+
+**Serving.**
+
+- SN-027 — A team gets more than one piece of ready work moving at once: ready work fans out across bounded parallel lanes, while mutation of the integration branch stays serialized and gated.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Person)
+
+**Cells.**
+
+- **Assumption**: The agent CLI that runs a coordinator session keeps its documented hook contract: it runs the hooks the repository configures at each event it documents, handing each hook that event's documented fields; it holds back a tool call a hook denies and adds a hook's injected text to the session; and it exports the session's id to the commands its tools run. So the coordinator guard sees each start, compaction, tool call and end of the session it guards, and the refusal or instruction it returns takes effect in that session.
+- **HoldsWhen**: Claude Code at a version whose hook events and payload fields the guard was built and tested against, with the repository's coordinator hooks installed and on, and no user or managed setting that turns hooks off for the session.
+- **Obstacle**: A CLI update renames an event or a field, stops running hooks for some sessions, or lets a denied tool call run; or a setting outside the repository turns the hooks off. The guard then keeps a lease, a drain latch or a relaunch request for a session whose events it no longer receives, and a blackout denial or a close-down instruction never reaches the session.
+- **ObstacleHats**: UNATTENDED-OPS;INTEGRITY-RECOVERABILITY
+- **Status**: Drafted
+- **Standing**: active
+
+**Can be falsified by.** no test case
+
+**Falsifier.** A coordinator session, on a supported CLI version with the hooks installed and on, in which a configured hook did not run at an event the CLI documents, a tool call a hook denied ran anyway, or the session id exported to a tool's command differs from the one in the hook payloads and the transcript.
+
+### DA-022 — Drafted, never accepted
+
+**Relied on by.**
+
+- SR-229 — Coordinator claim admission respects a blackout pause: Where a blackout window is armed, the delivered work-item admission shall refuse a new claim inside that window on every route at any context-guard dial; outside a blackout window, where the declared coordinator context guard is enabled, it admits a coordinator claim only from the current lease holder while that holder's context drain is not latched, the drain latching once the holder's context occupancy reaches the declared threshold and holding across compaction and resume until the operator records a clear or a release, the holder records a hand-back naming its handoff, or a relaunched successor takes the lease.
+- SR-244 — Transcript-derived usage records include coordinated nested agents: The delivered coordination capability shall record once each transcript-bearing model session that coordination completion ingests for coordinated work, including every session an agent spawns at any nesting depth, with its identity and transcript-derived usage; record no already-recorded message, duplicate no service record, grant its record no gate authority, include no transcript text, refuse an unknown source shape, and direct completion to ingest the current session and a named prior-session tail.
+
+**Serving.**
+
+- SN-027 — A team gets more than one piece of ready work moving at once: ready work fans out across bounded parallel lanes, while mutation of the integration branch stays serialized and gated.
+- SN-026 — The operator can configure several LLM families — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Person)
+
+**Cells.**
+
+- **Assumption**: The agent CLI writes each session's transcript as the session ran: each completed model response with the usage of the request that produced it, a compaction as a boundary record, a resumed session appended to the transcript it continues, and each agent the session spawns in a transcript of its own. So the context occupancy and the token usage the kit reads from transcripts are the session's own, each response counted once.
+- **HoldsWhen**: Claude Code at a version whose transcript record shapes the kit's readers accept, writing to its default home, with the transcripts left in place until the kit has read them.
+- **Obstacle**: A CLI update changes what a usage field counts (cached input folded into fresh input, a spawned agent's usage moved into its parent's), rewrites earlier records on resume, or stops writing a spawned agent's transcript, in a shape the readers still accept. The drain latch then fires late or not at all, and the usage record under- or over-counts, with no refusal to show it.
+- **ObstacleHats**: PERFORMANCE;UNATTENDED-OPS
+- **Status**: Drafted
+- **Standing**: active
+
+**Can be falsified by.** no test case
+
+**Falsifier.** A transcript from a supported CLI version from which the kit reads a context occupancy that differs from the context the CLI itself reports for the session at the same point; a transcript that repeats a completed response after a resume; or a spawned agent whose work appears in no transcript of its own.
+
+### DA-023 — Drafted, never accepted
+
+**Relied on by.**
+
+- SR-229 — Coordinator claim admission respects a blackout pause: Where a blackout window is armed, the delivered work-item admission shall refuse a new claim inside that window on every route at any context-guard dial; outside a blackout window, where the declared coordinator context guard is enabled, it admits a coordinator claim only from the current lease holder while that holder's context drain is not latched, the drain latching once the holder's context occupancy reaches the declared threshold and holding across compaction and resume until the operator records a clear or a release, the holder records a hand-back naming its handoff, or a relaunched successor takes the lease.
+- SR-230 — Coordinator successor at session exit outside a blackout pause: Where the declared coordinator context guard is enabled, when the coordinator lease holder that has requested a relaunch from its handoff ends its session outside an armed blackout window, the delivered coordination support shall start exactly one successor session from that handoff; inside the window it cancels the pending request and leave resumption to the operator.
+
+**Serving.**
+
+- SN-027 — A team gets more than one piece of ready work moving at once: ready work fans out across bounded parallel lanes, while mutation of the integration branch stays serialized and gated.
+
+**Lands on.**
+
+- B-10 — EXT-005 (Model provider API(s) / CLI(s))
+
+**Cells.**
+
+- **Assumption**: The recorded and built Claude Code session records the coordinator guard's tests run on carry what the agent CLI writes and sends at the supported versions: the same transcript record types, fields and usage numbers, the same compaction boundary and preserved-message markers, the same hook event names and payload fields, and the same arguments a relaunch launcher hands the claude command. They reproduce no judgement of the session's, so nothing about what a coordinator decides is evidenced by a test run against them.
+- **HoldsWhen**: The supported Claude Code versions are those whose transcript records and hook payloads match the fixtures: the recording of 2.1.289 and the transcripts built to the record shapes of 2.1.285. A CLI update that changes either is followed by new fixtures before the guard's tests are relied on.
+- **Obstacle**: A CLI update changes a record shape, a usage field or a hook payload that the fixtures do not carry, and the guard's tests go on passing over shapes the CLI no longer writes.
+- **ObstacleHats**: TEST-ENGINEER
+- **Status**: Drafted
+- **Standing**: active
+
+**Can be falsified by.** no test case
+
+**Falsifier.** A transcript record or hook payload from a supported Claude Code version that the guard reads differently from the fixture standing for it: an occupancy, a compaction boundary, an event or a session id the guard finds in the fixture but not at the same point of a live session.
+
+**Surrogate.** SUR-004 — Recorded coordinator session records, emulating EXT-005 (Model provider API(s) / CLI(s))
+
+### DA-024 — Drafted, never accepted
+
+**Relied on by.**
+
+- SR-237 — Blackout pauses new model work and resumes it after the window: When a declared blackout window is armed, the delivered coordination and unattended operation shall pause new model work until the window ends, preserving each claimed lane at its committed pause point and starting no model work inside the window except an adjudication needed to bring an active lane to that point, then resume eligible work after the window without retaining a session whose prior use predates that window's end.
+- SR-243 — Coordinator calls record sessions without committing outside claimed work: When the coordinator's tooling launches a model session, the delivered coordinator call capability shall record the session in the usage record, record its log without committing to the shared line of development when it starts outside claimed work, refuse an unsafe resumed authoring carrier before launch, judge the call's changes against its starting state, and provide the sole Sol or Terra launch route.
+- SR-244 — Transcript-derived usage records include coordinated nested agents: The delivered coordination capability shall record once each transcript-bearing model session that coordination completion ingests for coordinated work, including every session an agent spawns at any nesting depth, with its identity and transcript-derived usage; record no already-recorded message, duplicate no service record, grant its record no gate authority, include no transcript text, refuse an unknown source shape, and direct completion to ingest the current session and a named prior-session tail.
+
+**Serving.**
+
+- SN-027 — A team gets more than one piece of ready work moving at once: ready work fans out across bounded parallel lanes, while mutation of the integration branch stays serialized and gated.
+- SN-026 — The operator can configure several LLM families — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Person)
+
+**Cells.**
+
+- **Assumption**: A coordinating session acts on the coordination instructions the kit publishes for it and injects into it: it starts Sol and Terra sessions only through the coordinator-call route, records its usage at its close-out and at the end of a headless leg, and, once told the blackout close-down or the context drain, brings each open lane to its pause point, writes its handoff and ends instead of starting new work. So the sessions and the pauses the operator reads back are the ones coordination actually ran.
+- **HoldsWhen**: The coordinating model reads the shipped coordination skill and the text the guard's hooks inject, at a model version that still follows them, and nothing in its brief or in the repository's instruction files tells it otherwise.
+- **Obstacle**: The model starts a session another way (a model CLI run straight from its shell), skips the usage recording, or keeps working after the close-down or the drain instruction, because the instruction was lost to compaction, contradicted by its brief, or not followed. The usage record then misses sessions, and a blackout or a drain the repository declared is not kept.
+- **ObstacleHats**: UNATTENDED-OPS
+- **Status**: Drafted
+- **Standing**: active
+
+**Can be falsified by.** no test case
+
+**Falsifier.** A coordinated work item whose records or transcripts show a Sol or Terra session with no coordinator-call record; a coordinator session that ended without its transcript recorded in the usage record; or a coordinator transcript that claims new work, or starts a model session other than a lane's wrap-up adjudication, after the blackout close-down or the drain instruction was injected into it.
+
+### DA-025 — Drafted, never accepted
+
+**Relied on by.**
+
+- SR-224 — A skill whose description cannot say when to use it fails the skills-index check: The kit shall hold every skill description to the declared description floor: the descriptions it ships are at or above it, and its skills-index check fails, naming the skill, on any description shorter than it.
+
+**Serving.**
+
+- SN-005 — AI agents and humans work from the same playbook, and the process is enforced agent-neutrally — by git hooks + CI — not by trusting whichever agent showed up.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Person)
+
+**Cells.**
+
+- **Assumption**: An agent working in a repository decides whether to load a skill from the skill's description alone, and loads it for the work its description names. So a shipped skill whose description says when to use it is used where it was written to be used, and one whose description cannot say so is not used at all.
+- **HoldsWhen**: The agent CLI lists the installed skills to the model by name and description only, as the supported CLIs document.
+- **Obstacle**: The CLI or the model picks skills by something other than the description (the name alone, an undocumented ranking, the skill's whole body), or loads none unless told to. Shipped guidance then goes unread by the agent it was written for, and nothing in the kit reports it.
+- **ObstacleHats**: FIRST-RUN-ADOPTER
+- **Status**: Drafted
+- **Standing**: active
+
+**Can be falsified by.** no test case
+
+**Falsifier.** A session on a supported CLI whose task matches a shipped skill's stated trigger and that does not load the skill, or that loads a skill for work its description does not name.
+
+### DA-026 — Drafted, never accepted
+
+**Relied on by.**
+
+- SR-228 — Held-rung CLARITY re-acceptance: Where the declared acceptance level holds a tier for an operator, the delivered loop shall permit an independent adjudication to re-accept an accepted amended row only when its verdict rules that amendment CLARITY.
+
+**Serving.**
+
+- SN-029 — An autonomous run gets as far as it honestly can. Once triggered, the coordinator stops for an operator judgement only when the declared acceptance level reserves that tier for an operator, when a round cannot converge on its own, or when requirement/test documentation is introduced or amended such that the gate drops below what automation is permitted to accept. On every tier released to automation, an acceptance still happens as a review from a declared perspective against the row's actual evidence, and leaves a record naming who or what accepted it — releasing a tier means the review is delegated, never skipped.
+
+**Lands on.**
+
+- B-02 — EXT-006 (Person)
+
+**Cells.**
+
+- **Assumption**: An independent adjudication that rules an amendment to an accepted row CLARITY rules as the operator would: the operator, reading the row's accepted text beside the amended text, agrees that the amendment leaves what the row requires, permits and excludes unchanged. So carrying the operator's acceptance onto the amended text carries it onto what they accepted.
+- **HoldsWhen**: The adjudicating session did not write the amendment, is handed the accepted and the amended text whole with the amendment rubric, and its verdict is recorded where the open-items page's audit list shows the act it authorized.
+- **Obstacle**: The adjudicator reads a narrowed, widened or reworded obligation as a clearer statement of the same one, and the operator's acceptance is carried onto text they would not have accepted, with only the audit list to show it.
+- **ObstacleHats**: SECURITY
+- **Status**: Drafted
+- **Standing**: active
+
+**Can be falsified by.** no test case
+
+**Falsifier.** An act in the open-items page's audit list, re-accepted on a CLARITY verdict, whose amendment the operator, on reading it, finds changed what the row requires, permits or excludes.
+
+### DA-027 — Drafted, never accepted
+
+**Relied on by.**
+
+- SR-233 — Review threat model: The delivered review process shall limit findings to defects reachable in a normal working environment.
+
+**Serving.**
+
+- SN-006 — An agent can run unattended and resume from repository text alone. Such a run never waits for interactive input, and reports its failures clearly. It also stays safe: declared limits bound the workers it may set running and the actions it takes that cannot be undone, and only an override an operator provides — never one the model can set — may relax those limits. That safety is supervision rather than an absolute: the layer's first obligation is to move forward as far as it can, and it surfaces to an operator when it cannot proceed — so a fault in the machinery that carries a limit degrades to a recorded condition, not to a stopped run.
+
+**Lands on.**
+
+- B-01 — EXT-001 (Development session)
+- B-09 — EXT-006 (Person)
+
+**Cells.**
+
+- **Assumption**: The kit runs in the normal working environment its review threat model names: hosts whose integrity is not compromised, worked through the supported workflows and routes, where a forbidden hand act (rewinding the trunk branch, skipping or turning off a hook, hand-editing generated or ruled state) is never an ordinary step: one is taken only as a person's deliberate departure from those workflows. So a defect whose reproduction needs a compromised or contrived host, or a forbidden hand act, is not one the operator or an adopter meets in ordinary use, and dismissing it leaves them exposed to nothing they meet in it.
+- **HoldsWhen**: The repository is worked through the supported workflows and the kit's own routes, on hosts its users control, and no tool or common setup takes a forbidden hand act as an ordinary step.
+- **Obstacle**: An ordinary step on a supported path produces the state a dismissed finding needed (a tool that rewrites history, a hook a common setup turns off, a generated file an editor saves over), so a defect the review ruled contrived reaches users in ordinary use.
+- **ObstacleHats**: UNATTENDED-OPS;SECURITY
+- **Status**: Drafted
+- **Standing**: active
+
+**Can be falsified by.** no test case
+
+**Falsifier.** A defect met in ordinary use, on a supported host and through a supported workflow or route with no forbidden hand act, whose reproduction a review dismissed or graded down as needing a compromised or contrived host.
+
+### DA-028 — Drafted, never accepted
+
+**Relied on by.**
+
+- SR-233 — Review threat model: The delivered review process shall limit findings to defects reachable in a normal working environment.
+
+**Serving.**
+
+- SN-006 — An agent can run unattended and resume from repository text alone. Such a run never waits for interactive input, and reports its failures clearly. It also stays safe: declared limits bound the workers it may set running and the actions it takes that cannot be undone, and only an override an operator provides — never one the model can set — may relax those limits. That safety is supervision rather than an absolute: the layer's first obligation is to move forward as far as it can, and it surfaces to an operator when it cannot proceed — so a fault in the machinery that carries a limit degrades to a recorded condition, not to a stopped run.
+
+**Lands on.**
+
+- B-09 — EXT-006 (Person)
+
+**Cells.**
+
+- **Assumption**: A session that judges review findings, whether a reviewer, a critic, a coordinator ruling on a verdict or an adjudicator, applies the written review directions it is handed: it grades each finding by a scenario a supported workflow or route reaches, dismisses in one recorded line a finding whose reproduction needs a compromised or contrived host instead of asking for code, and re-grades a BLOCKER or MAJOR the directions do not support. So a review ends on the findings that matter rather than reworking contrived ones round after round.
+- **HoldsWhen**: The session receives the shipped review directions and the threat model they cite, at a model version that still follows them, and nothing in its brief tells it otherwise.
+- **Obstacle**: A session grades by its own sense of risk, keeps a contrived scenario at BLOCKER or MAJOR, or asks for a code change to answer one, and the lane reworks the same out-of-scope finding until its round budget runs out.
+- **ObstacleHats**: UNATTENDED-OPS
+- **Status**: Drafted
+- **Standing**: active
+
+**Can be falsified by.** no test case
+
+**Falsifier.** A recorded verdict or ruling that goes against the directions it was handed: a finding that needs a compromised or contrived host left at BLOCKER or MAJOR, or answered with a code change; or a fail-open path a supported workflow reaches dismissed as contrived.
+
 ### SUR-001 — Drafted, never accepted
 
 **Name.** Scripted model runner
@@ -693,6 +928,25 @@ record runs through the live registry first.
 - DA-010 — A vision model judging the rendered state view against its written rubric reaches the verdict a human reviewer reading the same render would.
 
 
+### SUR-004 — Drafted, never accepted
+
+**Name.** Recorded coordinator session records
+
+**Emulates.**
+
+- EXT-005 (Model provider API(s) / CLI(s))
+
+**Description.** Claude Code session records the coordinator guard's tests read in place of a live agent CLI: a sanitized recording of a real Claude Code 2.1.289 session through a manual compaction (tests/fixtures/coordinator_guard/compaction-manual-2.1.289.jsonl), transcripts built in the record shapes of Claude Code 2.1.285, hook-event payloads written to the documented fields, and a stubbed claude command the relaunch launchers start. Carried by tests/test_coordinator_guard.py and tests/test_coordinator_guard_e2e.py.
+
+**Cells.**
+
+- **Status**: Drafted
+
+**Named by.**
+
+- DA-023 — The recorded and built Claude Code session records the coordinator guard's tests run on carry what the agent CLI writes and sends at the supported versions: the same transcript record types, fields and usage numbers, the same compaction boundary and preserved-message markers, the same hook event names and payload fields, and the same arguments a relaunch launcher hands the claude command. They reproduce no judgement of the session's, so nothing about what a coordinator decides is evidenced by a test run against them.
+
+
 
 _No chain on a rung the operator-acceptance dial holds owes an act; every chain in this brief waits for automated adjudication._
 
@@ -701,7 +955,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 15 chain(s): SR-006, SR-032, SR-049, SR-146, SR-147, SR-148, SR-156, SR-157, SR-158, SR-159, SR-166, SR-169, SR-189, SR-220, SR-225</summary>
+<summary>Waiting for automated adjudication — 27 chain(s): SR-006, SR-024, SR-032, SR-049, SR-129, SR-146, SR-147, SR-148, SR-156, SR-157, SR-158, SR-159, SR-166, SR-169, SR-178, SR-189, SR-220, SR-225, SR-226, SR-231, SR-232, SR-234, SR-236, SR-238, SR-241, SR-242, SR-245</summary>
 
 ## SR-006 — Gate/tier harness enforces required steps
 
@@ -734,6 +988,18 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_a_command_template_has_one_tokenizer
 - **Status**: Drafted
 - **Phase**: 6
+
+## SR-024 — Permutation case generation
+
+> **Requirement.** The delivered permutation-case generator shall expand a Permutations spec into concrete dimensional cases.
+
+> **Rationale.** Realizes SN-002 — dimensional coverage is generated from the SR's declared inputs, not hand-listed. Systematic expansion reduces the risk that a dimensional combination is omitted, which is the charter's coverage half. Generation does NOT answer the charter's second half: showing that an enforcer fails when it should is demonstrated by negative or planted-failure tests, and a hand-listed negative case can demonstrate it. Those negative tests remain a separate obligation, not this row's.
+
+
+### SR SR-024
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for a chain a reviewer can trust because a machine checks it rather than a person asserting it. A requirement's dimensional cases expanded by rule from the inputs it declares, rather than listed by hand, are that check for its coverage: the case set the reviewer reads is the expansion itself, with nothing between the grammar and the cases it yields. Whether the declared dimensions are the right ones is the requirement's own text, judged at its acceptance; showing that an enforcer fails when it should is the negative tests' work, as the rationale says.
 
 ## SR-032 — Onboarding and dev-setup scaffold
 
@@ -787,9 +1053,14 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 
 
 ### LLR LLR-118
+_accepted — re-acceptance owed_
 - **Detail**
   - before: The rendered half of the acceptance regime under SR-049. The page renders, in this order: the pending open items that queued or claimed work items cite in their needs, as decision briefs beside the queued or claimed rows citing them, preceded by an integrity notice naming and linking the pending items that no queued or claimed row cites, the page claiming an empty queue only when there is neither; every SR whose chain holds a row owing a first acceptance or drifted from the accepted snapshot, with the chain's per-cell before/after, a section with no changed cell stating that no cell differs from the accepted snapshot and never reading as nothing changed; the audit list of every act-ledger entry naming a verdict, newest first, or None recorded; the pending owner actions; and, last, the Decisions to review section. It owns no second opinion: the queue is pending.open_item_queue, the acceptance model trace.reaccept_model, the pointers pending.pending_block and the decisions pending.decisions_to_review, imported rather than re-derived, so where this view and the trace.py --accept brief disagree, this view is the defect. NOT claimed: that the rendered page is legible or well-composed.
-  - after: The rendered half of the acceptance regime under SR-049. The page renders, in this order: the pending open items that queued or claimed work items cite in their needs, as decision briefs beside the queued or claimed rows citing them, preceded by an integrity notice naming and linking the pending items that no queued or claimed row cites, the page claiming an empty queue only when there is neither; every SR whose chain holds a row owing a first acceptance or drifted from the accepted snapshot, with the chain's per-cell before/after, a section with no changed cell stating that no cell differs from the accepted snapshot and never reading as nothing changed; the audit list of every act-ledger entry naming a verdict, newest first, or None recorded; and, last, the pending owner actions, closed by the delegated-decisions records' format findings when a record carries one, a notice LLR-283 states and gen_open_items.record_findings_block renders, the page listing no delegated-decisions entry. It owns no second opinion: the queue is pending.open_item_queue, the acceptance model trace.reaccept_model, the pointers pending.pending_block and the record findings pending.decision_records, imported rather than re-derived, so where this view and the trace.py --accept brief disagree, this view is the defect. NOT claimed: that the rendered page is legible or well-composed.
+  - after: The rendered half of the acceptance regime under SR-049. The page renders, in this order: the pending open items that queued or claimed work items cite in their needs, as decision briefs beside the queued or claimed rows citing them, preceded by an integrity notice naming and linking the pending items that no queued or claimed row cites, the page claiming an empty queue only when there is neither; every SR whose chain holds a row owing a first acceptance or drifted from the accepted snapshot, with the chain's per-cell before/after, a section with no changed cell stating that no cell differs from the accepted snapshot and never reading as nothing changed; every stakeholder need and stakeholder owing an act, as LLR-271 states; every assumption and surrogate owing a first acceptance or drifted from the accepted snapshot, the rows the acceptance brief's assumption section renders, each with its cells whole or its moved cells before and after, followed by the requirements relying on it with their title and text, or for a surrogate the assumptions naming it, the header counting them; the audit list of every act-ledger entry naming a verdict, newest first, or None recorded; and, last, the pending owner actions, closed by the delegated-decisions records' format findings when a record carries one, a notice LLR-283 states and gen_open_items.record_findings_block renders, the page listing no delegated-decisions entry. It owns no second opinion: the queue is pending.open_item_queue, the acceptance model trace.reaccept_model, the owing needs baseline_snapshot.needs_owing, the owing assumptions and surrogates trace.assumption_owing_model, the pointers pending.pending_block and the record findings pending.decision_records, imported rather than re-derived, so where this view and the trace.py --accept brief disagree, this view is the defect. NOT claimed: that the rendered page is legible or well-composed.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: render/_brief_cards/_brief_card/_uncited_notice/_acceptance_cards/verdict_reaccept_block/word_diff
+  - after: render/_brief_cards/_brief_card/_uncited_notice/_acceptance_cards/_assumption_cards/_relied_on/verdict_reaccept_block/word_diff
 
 ### LLR LLR-197
 - **TestRefs**
@@ -812,6 +1083,30 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key
 - **Status**: Drafted
 - **Phase**: 6
+
+### TC TC-448 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-448
+- **Verifies**: SR-049;SR-178;LLR-118;LLR-271
+- **Level**: Unit
+- **Method**: Over a plain file tree holding an assumptions registry (two Drafted assumptions, one of them a fidelity assumption on a Drafted surrogate, a lone Drafted surrogate named only by an Accepted assumption, and a requirement relying on the first), render the open-items page in process. Render it again with one Drafted assumption's holds-when cell longer than the page's clip, and again after recording the registries' copies and moving a word of the Accepted assumption's text. Compare the page's assumption cards with the rows of trace.assumption_owing_model and with the headings of the brief's assumption section.
+- **Tier**: Smoke
+- **Expected**: Each Drafted assumption and surrogate has a card, in the model's order, and the unmoved Accepted assumption has none. A first-acceptance card shows every cell whole, the long one to its end, with no diff marks; an assumption's card names each requirement relying on it with its title and text, and a surrogate's card names the assumptions naming it. The moved Accepted assumption has a card marked DRIFTED with the moved words before and after, and the header's drifted count includes it. The page's cards, the model's rows and the brief's headings name the same rows in the same order, the header counts them, and section 2 does not print its empty message.
+- **Automated**: Yes
+- **Evidence**: tests/test_open_items_assumptions.py; tests/test_open_items_assumptions.py::test_each_row_owing_a_first_acceptance_has_its_card_with_its_cells_whole; tests/test_open_items_assumptions.py::test_an_accepted_assumption_whose_text_moved_shows_it_before_and_after; tests/test_open_items_assumptions.py::test_the_page_renders_the_briefs_model_and_counts_it
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-129 — Registry representation migration
+
+> **Requirement.** The delivered harness shall convert the work-item registry between its current and legacy representations without losing or altering any cell, refusing a conversion whose declared inputs it cannot vouch for and any conversion attempted while either representation is in use.
+
+> **Rationale.** WHAT THE ROW STATES IS THE CAPABILITY. The spec folder layout (status = directory, TOML frontmatter, Deliverable in the body), the retired flat CSV and the drained-stop mechanics are implementation and history, which the requirement tier does not carry: layout and claim detection belong to LLR-136, and the current-and-legacy carriers to that design row's cells as current-carrier evidence. The 140-cell lesson: an unproven representation change is where a registry silently loses cells. The converter is the migration path every adopter of the folder home takes, and the single spec writer the filing seam reuses (concurrency-restructure spec, Phase 2). A converter is the check on a representation change, and the charter's second half — can it be shown to fail when it should — is exactly what a cell-exact round-trip over the live registry provides; the 140-cell lesson in this row's own rationale is that failure class already observed once.
+
+
+### SR SR-129
+- **Coincident**
+  - before: (empty)
+  - after: The need asks that an agent derive its next work from the tracked work-item registry. A conversion that keeps every cell, proven by a cell-exact round trip over the populated registry, and that refuses a status it cannot place and any conversion while a claim is in flight, leaves the registry the derivation reads exactly as it was, in whichever representation it is kept. Nothing stands between the converter and the files it writes.
 
 ## SR-146 — Prompts are reviewable files with a per-session audit trail
 
@@ -1265,6 +1560,40 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Status**: Drafted
 - **Phase**: 6
 
+## SR-178 — Text that has moved away from its acceptance record is reported
+
+> **Requirement.** The kit shall report any recorded artifact whose text has moved away from the
+copy recording its acceptance - stakeholder needs included - regardless of any
+Status movement.
+
+> **Rationale.** THE DRIFT half, separable from SR-140 in the direction that matters: a record that exists and rides its acceptance commit, with nothing ever comparing live text against it, satisfies SR-140 completely and leaves every later amendment invisible. That is not a hypothetical - it is precisely the failure the git-history derivation had, and the reason a baseline on disk was owed at all.
+REGARDLESS OF STATUS MOVEMENT is the load-bearing clause, not a qualifier. The amendment machinery watches the Status flip, and the sanctioned staged-amendment path deliberately does not flip - so a rule keyed off the flip returns nothing on exactly the rows a sitting exists to judge. Reporting against the recorded copy is the only reading that survives that, because the copy is a baseline OUTSIDE the live file and a walk over the live file can never be one.
+THE STAKEHOLDER-NEED RIDER is in the normative text rather than left to the acceptance because the need tier is the one a sitting most wants to hold and the one the amendment-watching rules were last to reach: each rule walks the tiers it is given, so without the clause the need tier is left off the walk and no rule reaches it. Needs are compared row by row under the same accepted and traced split as every other tier.
+WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-without-flip guard: the id column and the Status cell are excluded STRUCTURALLY (the id is the join key rather than content, and folding Status in woul… [233 more chars — read the registry row]
+
+
+### LLR LLR-271
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: baseline_snapshot.NEED_TIERS names the needs file's need tier (SN-ID) and stakeholder tier (STK-ID), and SNAPSHOT_TIERS lists both, so every compared-tier reader walks them; load_all reads both off the record under the same column names as the live rows, so is_drifted asks drift of a need or a stakeholder exactly as of any other row. owing_rows(rel, id_col, rows, snapshot_rows) returns (id, why, cells, row) for each row owing an act - a Drafted row, a row with no Status cell, and a row claiming acceptance whose accepted cells moved from its recorded copy, with those cells' before and after - and is the one owing rule, which the assumption section reads as well. needs_owing runs it over NEED_TIERS. trace.need_brief_lines renders a section of the re-acceptance brief, outside any block the acceptance dial collapses, with one block per owing row: a drifted row's moved cells before and after, any other row's cells in full; nothing when none owes, and the brief's freshness window stays open while one does. _accepted_by_act counts NEED_TIERS among the compared tiers, so an act carrying a need or a stakeholder into acceptance names it in the act ledger. The refresh refusal holds an act copying the needs registry while a need or stakeholder drifted unread, and --reaccepts naming it re-anchors it (LLR-245); the unanchored rule reports an accepted one absent from its copy or recorded below acceptance (LLR-173). tier_owing is the generic form of needs_owing: it applies owing_rows to an explicit ordered set of tiers for readers, including the amendment brief's need, assumption and surrogate rows. The operator's open-items page lists the same owing need and stakeholder rows as the re-acceptance brief: a drifted row has its moved cells before and after, and a first-acceptance row has its cells in full.
+  - after: baseline_snapshot.NEED_TIERS names the needs file's need tier (SN-ID) and stakeholder tier (STK-ID), and SNAPSHOT_TIERS lists both, so every compared-tier reader walks them; load_all reads both off the record under the same column names as the live rows, so is_drifted asks drift of a need or a stakeholder exactly as of any other row. owing_rows(rel, id_col, rows, snapshot_rows) returns (id, why, cells, row) for each row owing an act - a Drafted row, a row with no Status cell, and a row claiming acceptance whose accepted cells moved from its recorded copy, with those cells' before and after - and is the one owing rule, which the assumption section reads as well. needs_owing runs it over NEED_TIERS. trace.need_brief_lines renders a section of the re-acceptance brief, outside any block the acceptance dial collapses, with one block per owing row: a drifted row's moved cells before and after, any other row's cells in full; nothing when none owes, and the brief's freshness window stays open while one does. _accepted_by_act counts NEED_TIERS among the compared tiers, so an act carrying a need or a stakeholder into acceptance names it in the act ledger. The refresh refusal holds an act copying the needs registry while a need or stakeholder drifted unread, and --reaccepts naming it re-anchors it (LLR-245); the unanchored rule reports an accepted one absent from its copy or recorded below acceptance (LLR-173). tier_owing is the generic form of needs_owing: it applies owing_rows to an explicit ordered set of tiers for readers, including the amendment brief's need, assumption and surrogate rows. The operator's open-items page lists the same owing need and stakeholder rows as the re-acceptance brief, and the same owing assumption and surrogate rows as the brief's assumption section, read from the one model trace.assumption_owing_model that section renders: a drifted row has its moved cells before and after, and a first-acceptance row has its cells in full.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: NEED_TIERS/load_all/owing_rows/needs_owing/tier_owing/removed_rows/_accepted_by_act/need_brief_lines/_need_cards
+  - after: NEED_TIERS/load_all/owing_rows/needs_owing/tier_owing/removed_rows/_accepted_by_act/need_brief_lines/_need_cards/_owing_card
+
+### TC TC-448 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-448
+- **Verifies**: SR-049;SR-178;LLR-118;LLR-271
+- **Level**: Unit
+- **Method**: Over a plain file tree holding an assumptions registry (two Drafted assumptions, one of them a fidelity assumption on a Drafted surrogate, a lone Drafted surrogate named only by an Accepted assumption, and a requirement relying on the first), render the open-items page in process. Render it again with one Drafted assumption's holds-when cell longer than the page's clip, and again after recording the registries' copies and moving a word of the Accepted assumption's text. Compare the page's assumption cards with the rows of trace.assumption_owing_model and with the headings of the brief's assumption section.
+- **Tier**: Smoke
+- **Expected**: Each Drafted assumption and surrogate has a card, in the model's order, and the unmoved Accepted assumption has none. A first-acceptance card shows every cell whole, the long one to its end, with no diff marks; an assumption's card names each requirement relying on it with its title and text, and a surrogate's card names the assumptions naming it. The moved Accepted assumption has a card marked DRIFTED with the moved words before and after, and the header's drifted count includes it. The page's cards, the model's rows and the brief's headings name the same rows in the same order, the header counts them, and section 2 does not print its empty message.
+- **Automated**: Yes
+- **Evidence**: tests/test_open_items_assumptions.py; tests/test_open_items_assumptions.py::test_each_row_owing_a_first_acceptance_has_its_card_with_its_cells_whole; tests/test_open_items_assumptions.py::test_an_accepted_assumption_whose_text_moved_shows_it_before_and_after; tests/test_open_items_assumptions.py::test_the_page_renders_the_briefs_model_and_counts_it
+- **Status**: Drafted
+- **Phase**: 6
+
 ## SR-189 — Each need resolves to the declared stakeholders whose outcome it is
 
 > **Requirement.** The delivered harness shall resolve each stakeholder need's stakeholder references against the declared stakeholder list, and each stakeholder's party against the declared frame, reporting a need that names no stakeholder.
@@ -1378,5 +1707,123 @@ _traced — routes to adjudication_
 - **Method**
   - before: The kitlib.decisions call surface over record texts planted in memory, clause by clause, and the operator surface over records planted on disk. (a) SOUND: a record with complete entries, one hoisted, and a record with no entries and an empty hoist yield no finding. (b) EACH REQUIRED KEY: its absence yields one finding per entry naming the entry and the key; a number, a boolean, a list and a table in it each yield exactly the not-text finding; an empty, a spaces-only and a whitespace-only value yield exactly the blank finding for the first four keys and nothing for review. (c) SHAPE: an entry that is not a table, a decision key that is not a table, an entry id outside D-<digits> and an unparseable text each yield one finding. (d) THE HOIST: a hoist that is a string, a list holding a number, a mixed list or a table, a missing hoist, and a hoisted id the record lacks each yield one finding. (e) EXTRA KEYS on an entry yield none. (f) NEVER RAISES: hostile texts each return a list of strings. (g) INERT: a half-filled -000 entry, hoisted, yields none, and the shipped template yields none, lists nothing for review and carries the -000 example with every required key and an empty review without an operator value. (h) THE PATH AND THE OBLIGATION: a run's path is one file under the records directory with a / becoming -, and owed holds under record and escalate-first for a complete, a cancelled, a partial and a mixed close, and not under off or for no outcomes. (i) THE NOTE: session_note is empty under off, names the path, every required key, the hoist, owner = confirmed and owner unset under record, and adds a sentence under escalate-first; session_body appends it to a build session's body and to an adjudication session's body under record and to neither under off, and reviewer_prompt's brief does not carry it under record. (j) THE OPERATOR VERDICT: confirmed is hidden; absent is not yet seen; overruled is shown under its own heading with citing work or a no-citer notice; each unknown owner value, including a non-string value, is a finding and is not yet seen; the retired reviewed key is a finding and its entry reads as not yet seen whatever owner value accompanies it; and an overruled entry with a blank review note is a finding. (k) THE QUEUE: the operator surface lists unseen entries with their file, id and disclosure fields, the hoisted entries of every record first and never a -000 entry; a malformed hoist is shown as a finding beside the entries rather than raising; when no unseen entry remains the section says so with the confirmed count, the status snapshot counts unseen entries only, and with no records directory the section says no record exists.
   - after: The kitlib.decisions call surface over record texts planted in memory, clause by clause, and the operator surface over records planted on disk. (a) SOUND: a record with complete entries, one hoisted, and a record with no entries and an empty hoist yield no finding. (b) EACH REQUIRED KEY: its absence yields one finding per entry naming the entry and the key; a number, a boolean, a list and a table in it each yield exactly the not-text finding; an empty, a spaces-only and a whitespace-only value yield exactly the blank finding for the first four keys and nothing for review. (c) SHAPE: an entry that is not a table, a decision key that is not a table, an entry id outside D-<digits> and an unparseable text each yield one finding. (d) THE HOIST: a hoist that is a string, a list holding a number, a mixed list or a table, a missing hoist, and a hoisted id the record lacks each yield one finding. (e) EXTRA KEYS on an entry yield none. (f) NEVER RAISES: hostile texts each return a list of strings. (g) INERT: a half-filled -000 entry, hoisted, yields none, and the shipped template yields none, lists nothing for review, carries the -000 example with every required key and an empty review without an operator value, and its header sends the operator to the record files rather than to a page section. (h) THE PATH AND THE OBLIGATION: a run's path is one file under the records directory with a / becoming -, and owed holds under record and escalate-first for a complete, a cancelled, a partial and a mixed close, and not under off or for no outcomes. (i) THE NOTE: session_note is empty under off, names the path, every required key, the hoist, operator = confirmed and operator unset under record, and adds a sentence under escalate-first; session_body appends it to a build session's body and to an adjudication session's body under record and to neither under off, and reviewer_prompt's brief does not carry it under record. (j) THE OPERATOR VERDICT: confirmed is not counted as unseen; absent is not yet seen; overruled is not counted as unseen; each unknown operator value, including a non-string value, is a finding and is not yet seen; the retired reviewed key is a finding and its entry reads as not yet seen whatever operator value accompanies it; and an overruled entry with a blank review note is a finding. (k) THE RECORDS ARE THE LISTING: the operator surface has no Decisions to review section and lists no entry, even with unseen, hoisted and overruled entries on disk; each record's findings, a malformed hoist and an unparseable record included, close its pending operator actions by file and entry without raising, and nothing about the records shows when they are sound or absent; the status snapshot counts unseen entries only across the records, never a -000 entry, and links the records directory, with no count when that directory is absent; review_queue lists the hoisted entries first, then by id.
+
+## SR-226 — A retired spine row leaves one record of its own, found by its id
+
+> **Requirement.** When a spine row is retired, the delivered harness shall leave one record found by the retired id, written in the same change that deletes the row, naming the id, the date, the successor if any and the reason, and kept in view by two reports that warn without failing, one naming any record changed after it landed and one naming any spent id retired since the record began that has no record.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-010 asks that a reader can navigate the documentation and trust it, with references that resolve; it does not name what a reader finds when a reference names a row that no longer exists, so this obligation arrives through the maintainer lens rather than through the need's text. Retiring a row deletes it, so the registries state only what is, and ids are never reused, so a reference to a spent id stays unambiguous; but a reader who meets one in a commit message, a log entry or an archived document learns neither why it went nor what replaced it. The id watermark holds only high-water marks, a shallow or squashed history holds nothing, and a forwarding map written into the activity log is prose no tool can read, so the reason lives only in the session that retired the row: the failure that lens listens for. One small record per id, written with the deletion, answers that lookup and nothing else; it is for looking up the id in hand, not for browsing the set. A file per id rather than a registry keeps the lookup a path instead of a search, and keeps the write conflict-free across parallel branches, since no two branches retire one id. The record does not carry the commit that deleted the row, because a commit cannot contain its own hash; history supplies it wherever history exists, and a reader without it is told the commit is unknown rather than given a wrong one. Both reports warn rather than fail: a missing or edited record loses a re… [363 more chars — read the registry row]
+
+
+### SR SR-226
+- **Coincident**
+  - before: (empty)
+  - after: The need asks that a reader can follow a reference and trust what it finds. A record found by the retired id, written in the change that deletes the row and naming its date, its successor and the reason, is what that reader finds, and the two reports name a record changed after it landed and a spent id with no record. Nothing stands between the record and the reader who looks the id up. Whether the named successor and reason are the right ones is judged when the change that retires the row is reviewed, not by this row.
+
+## SR-231 — Coordinator adjudication enters from a claimed lane and accepts only its current verdict
+
+> **Requirement.** The delivered coordinator adjudication entry point shall, regardless of the declared adjudicator retention dial, run only from a claimed lane worktree and read success only from a verdict that its own call wrote within that call's deadline. From a claimed lane, it takes only an act an accepted current verdict authorizes. The verdict, reservation, and deadline obligations stated first apply to the judging turn; the act turn's success is the completion contract stated in the acceptance criteria.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-025 asks that a configured agent progress without a human curating what comes next; it does not state the entry boundary for an adjudication the coordinator starts, so this obligation arrives through two lenses. The unattended-operations lens listens for a run whose telemetry lands on trunk instead of the claimed work it judges, leaving a later reader unable to recover its work item context. The integrity lens listens for stale evidence being accepted as this call's success: a verdict left by an earlier or overdue call can make an unsuccessful current call look valid. A lane-local call that owns a fresh verdict reservation was chosen over trusting a caller-supplied path or a shared trunk record, because both leave the evidence's author and time ambiguous. Fed back to the need: SN-025's acceptance could name attributable, current adjudication evidence as part of unattended progress; until it does, this row is derived and says so. An act is authorized only by an accepted, committed verdict, so it cannot substitute later work for the judgement that authorized it.
+
+
+### SR SR-231
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for unattended progress whose evidence a later reader can attribute. An adjudication that runs only from a claimed lane, and that counts as success only a verdict its own call wrote at the path it reserved before its deadline, makes the judgement the lane's and the call's, whatever else the runner wrote or left behind; and an act is taken only as an accepted, committed verdict authorizes it, so later work cannot stand in for that judgement. The row relies on nothing the runner does: it refuses what it cannot attribute. Whether the verdict judged well is the judging session's own premise, not this row's.
+
+### TC TC-321
+- **Verifies**
+  - before: SR-227;SR-231;LLR-306;IF-283;IF-284;IF-285;SR-209
+  - after: SR-227;SR-231;LLR-306;IF-283;IF-284;IF-285;SR-209;IF-321
+
+## SR-232 — Combined adjudication preserves each requested judgement
+
+> **Requirement.** Where one lane checkpoint requests several declared adjudication kinds, the delivered adjudication content shall present and validate one sitting that preserves each kind's own scope, evidence and decision grammar.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-025 asks for unattended progress but does not require one sitting to carry several judgements. The unattended-operations lens catches a passing checkpoint where a requested kind was never judged; the integrity-recoverability lens catches a partial write where one kind acts while another section refuses.  A composed sitting was chosen so each judgement remains independently checkable while sharing its checkpoint. Fed back to the need: SN-025's acceptance could name bounded, attributable checkpoint adjudication; until it does, this row is derived and says so.
+
+
+### SR SR-232
+- **Coincident**
+  - before: (empty)
+  - after: The need asks for unattended progress that loses no judgement it asked for. A combined sitting that names exactly the kinds bound at its reservation, gives each its own scoped section in its own grammar, and is refused whole when a section is missing, extra, repeated or invalid, acting on no kind's scope, is that outcome: no checkpoint passes with a requested kind unjudged, and no kind acts beside another's refusal. Whether each section judged well is the judging session's own premise, not this row's.
+
+## SR-234 — Contested or repeated review findings receive a bounded adjudication
+
+> **Requirement.** Where a review finding is contested by the builder or coordinator, or recurs for a third review round, the delivered adjudication content shall preserve each requested finding, the position held on it and its relevant change scope, accept only a verdict that rules every requested finding exactly once as a fix, a successor row, a reasoned dismissal in a declared class, or an escalation to the operator, and direct the dispute sitting to rule out a successor row for a fail-open, data-loss, or Done-when-gap finding.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-006 asks an unattended run to report failures clearly and surface to an operator when it cannot proceed, but it does not state who ends a contested or repeated review finding. The unattended-operations lens listens for an unbounded review loop in which the coordinator sends the same finding back to the builder without a bounded, attributable decision. A complete adjudication was chosen so an independent call can settle each requested finding without silently adding, dropping or defaulting one. Fed back to the need: SN-006's acceptance could state that contested review findings receive a bounded ruling; until it does, this row is derived and says so.
+
+
+### SR SR-234
+- **Coincident**
+  - before: (empty)
+  - after: The need asks that an unattended run report its failures clearly and surface to an operator when it cannot go on, rather than loop. A contested or recurring finding sent to one sitting that carries each finding and the position held on it verbatim, and whose verdict is accepted only when it rules every requested finding exactly once, from the declared rulings and with its reason, ends the dispute in a bounded ruling the lane can attribute, or in an escalation to the operator. The directions against deferring a fail-open, data-loss or Done-when-gap finding are shipped text, and recording them beside the verdict makes the standard asked of the sitting visible to the operator; whether the sitting heeds them is outside this row's check.
+
+### TC TC-334
+- **Verifies**
+  - before: SR-234;LLR-314;LLR-315;IF-290
+  - after: SR-234;LLR-314;LLR-315;IF-290;IF-322
+
+## SR-236 — Rework plans cover reviewed findings
+
+> **Requirement.** When a reviewed change requires rework, the delivered review workflow shall dispatch that rework only after its plan covers, or excludes with a reason, every finding of the review it answers as a clause in the order written; an exclusion based on a dispute ruling resolves a finding only when an accepted dismissal or successor ruling ruled that same finding.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-024 requires an independent critical eye to drive rework, but does not say how a rework plan preserves every finding that eye raised. The unattended-operations lens listens for a pass because nothing looked: dispatching from a plan that omits, renumbers or substitutes a finding lets the change appear answered while the reviewer's concern received no response. Treating every reasoned exclusion as a resolution was rejected because a disputed finding remains open unless its accepted dismissal or successor ruling decided that very finding; keeping each finding as an ordered clause makes the plan and review commensurable. Fed back to the need: SN-024's acceptance could state that rework answers every review finding.
+
+
+### SR SR-236
+- **Coincident**
+  - before: (empty)
+  - after: The need asks that an independent critical eye drive the rework. A rework dispatched only after its plan answers every finding of the review it follows, one ordered clause per finding, by an item that covers it or by a reason, with an exclusion that cites a dispute accepted only when an accepted dismissal or successor ruling decided that same finding, is that outcome: no finding the reviewer raised is dropped, renumbered or replaced before the rework starts. Whether the covering item fixes the finding is the next review round's judgement, not this row's.
+
+## SR-238 — A deadline or interruption ends the session process tree
+
+> **Requirement.** When a declared deadline or coordinator interruption ends a session, the delivered coordinator shall end every process in the session process group on POSIX or session job on Windows.
+
+> **Rationale.** A descendant can outlive the direct session child and keep editing the worktree handed to the next session. Ending only the direct child was rejected because it leaves that concurrent writer outside the coordinator's supervision. The bounded guarantee excludes a descendant that leaves the session process group and a process another service starts outside the session job: neither is ended, and the kill does not report it. A POSIX zombie under a PID 1 that never reaps keeps the group nonempty, so the kill raises after the bound. A descendant that denies the kill access to wait on it also makes the kill raise, rather than letting the coordinator continue without knowing whether it ended. Stopping is the need's cannot-proceed case, not a supervision fault: continuing would hand the worktree to the next session beside a writer that may still be live, and nothing can proceed safely past that. Two windows lie outside the guarantee, each sub-second and on no supported workflow's ordinary path: an interruption while the session is still being launched, before the coordinator supervises it, which can leave a running child; and a process that joins the session job while the kill takes its member list, which is terminated with the job but can still be ending, for milliseconds, when the coordinator continues.
+
+
+### SR SR-238
+- **Coincident**
+  - before: (empty)
+  - after: The need asks that unattended work stay inside its declared limits and stop when it cannot proceed safely. Ending every process in the session's process group or job at a deadline or an interruption, confirming they ended before the coordinator continues, and stopping with an error naming any survivor after 10 s, is that limit as the next session finds it: no writer that stays in the coordinator's process group or job is left beside the worktree it hands on. The row checks the ending itself rather than trusting the platform to have done it; a process that leaves the group or job is outside its claim, as the rationale states.
+
+## SR-241 — Review briefs render only over a matching verified passed-checks record
+
+> **Requirement.** When an attended launcher requests a review brief for a lane commit, the delivered review content shall render it only when that commit, or a commit beneath it from which only record changes or no changes separate it, carries a verified record that the declared commit checks and the test set derived from the work item's requirements passed on its tree; otherwise it refuses without a brief and names the cause and the step that makes the record.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-004 and SN-008 require trustworthy gate outcomes, but do not say that a metered independent-review session must be withheld when its requested tree is already known not to meet its declared commit checks. The performance lens listens for operating cost left unassessed: a review over such a tree spends the scarce review session on a failure the process can name before dispatch, while a record-only change must not require the same checks again. Trusting the verified record was chosen over running the checks during rendering because rendering then stays a bounded reader of a prior result rather than a second executor with a potentially different result. The coordinator and unattended review routes decompose this shared boundary separately. Fed back to the needs: their acceptance could state that a review begins only from a verified commit-check result.
+
+
+### SR SR-241
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for gate outcomes a reader can trust and a pass that hides no unmet check. Rendering a review brief only over a commit that carries, or sits above only record changes from, a verified record that its declared commit checks and its derived test set passed, and otherwise refusing with the cause and the step that makes the record, is that outcome at the moment a review is asked for: no review starts over a tree the process already knows has not met its checks. The record is the kit's own, read and not re-run; whether those checks are enough is their own requirements' claim.
+
+## SR-242 — A capped sequence of failing checks closes partial
+
+> **Requirement.** When an unattended lane reaches its declared maximum number of consecutive failing commit-check rounds, the delivered dispatcher shall close the lane partial and report that cap outcome separately.
+
+> **Rationale.** A DERIVED requirement through the PERFORMANCE lens: SN-004 and SN-008 require trustworthy, fail-closed outcomes, but leave an unattended lane free to spend unbounded rounds on a known failing condition. A declared finite cap was selected over an implicit iteration limit because the outcome must remain attributable to repeated commit-check failure and recoverable from committed evidence. Fed back to the needs: their acceptance could state that a failing commit-check rebuild sequence ends in a partial close at its declared cap rather than consuming unbounded review rounds or escalating through the acceptance level.
+
+
+### SR SR-242
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for gates that pass only on their standard and outcomes that hide nothing. A lane that keeps failing its commit checks, closed partial at the declared cap with the count, the maximum and the last result named, and told apart from a stall, a crash or a completion, is that outcome as the operator reads it: no pass is claimed, and the failure stops spending rounds. Nothing stands between the dispatcher's close and the record the operator reads.
+
+## SR-245 — Standing accepted-child cases are parent-first integrity findings
+
+> **Requirement.** The delivered governance capability shall report every standing case in which an SR with Accepted or Founded status cites a declared SN parent, an LLR with either status cites a declared SR parent, or a TC with either status cites a declared SR or LLR parent that lacks either status as one parent-first integrity finding that names the child and parent with both statuses, reads a missing status as no status, directs acceptance of the parent or return of the child to Drafted, and causes strict integrity to fail; treat only Accepted or Founded, regardless of letter case, as accepted and an out-of-vocabulary status as unaccepted; exclude IF, B, DA, undeclared, and -000 references from this judgement; and replace the former non-failing advisory for an Accepted TC citing a Drafted LLR with that integrity finding.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-002 requires mechanically verified traceability and SN-029 requires each acceptance to remain a review against the row's evidence, but neither states how a standing child acceptance must agree with its parent's acceptance. The consistency lens listens for related contracts that disagree: an accepted child beneath an unaccepted parent asserts a completed chain while its parent asserts the opposite. A standing integrity finding was selected over relying on a reader to compare four registries, because the acceptance vocabulary needs one visible meaning at the integrity boundary. Fed back to the needs: their acceptance could state that an accepted trace chain contains no child whose cited parent remains unaccepted.
+
+
+### SR SR-245
+- **Coincident**
+  - before: (empty)
+  - after: The needs ask for a chain a machine checks and acceptances that stay reviews of the row's evidence. Each accepted child standing under a parent that is not accepted, reported as one parent-first finding naming both rows and their statuses and failing strict integrity, is that check's verdict as the reviewer reads it, with nothing between the rule and the report.
 
 </details>

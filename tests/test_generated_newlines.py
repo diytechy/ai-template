@@ -283,8 +283,11 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # added the `--ruled-cover` report's argument and help above the site
     # (2026-11-19, maintenance branch). 1687 -> 1607 when WI-1009 took the
     # "Decisions to review" section and its card helpers off the page, all
-    # above the site (2026-11-19, maintenance branch).
-    assert sites == [("gen_open_items.py", 1607)], sites
+    # above the site (2026-11-19, maintenance branch). 1607 -> 1670 when
+    # WI-1010 added the assumption cards (`_owing_card`, `_relied_on`,
+    # `_assumption_cards`) and their docstring clauses, all above the site
+    # (2026-11-20, maintenance branch).
+    assert sites == [("gen_open_items.py", 1670)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still

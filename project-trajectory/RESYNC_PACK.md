@@ -11815,6 +11815,68 @@ integer `est_tokens` gets those rows back in its registry.
 
 **Kit-owned files — overwrite:** `scripts/kitlib/registry.py`.
 
+### The open-items page lists the assumptions and surrogates owing an acceptance [since 1cb2e8680]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** Section 2 of `docs/open-items.html` showed SR chains and
+stakeholder needs only, so an assumption or surrogate owing an acceptance
+reached the Markdown brief (`trace.py --accept modified`) but not the page
+the operator rules on. The section now closes with "Assumptions and
+surrogates owing an acceptance": one card per row the brief's assumption
+section renders, in its order.
+
+- **One model.** `trace.assumption_owing_model(root, srs, tcs, ids=None)`
+  returns each assumption and surrogate owing an acceptance (`Drafted`,
+  Status-less, or accepted with its accepted cells moved from its recorded
+  copy) as `(id, why, moved cells, chain)`. The brief's section
+  (`assumption_brief_lines`) and the page both render it, so they cannot
+  disagree. The brief's text does not change.
+- **Cards.** A first-acceptance row shows every cell whole; a drifted row
+  shows its moved cells before and after, and the rest of the row as
+  collapsed context. An assumption's card closes with the requirements
+  relying on it, each with its title and text; a surrogate's with the
+  assumptions naming it. A need's card and an assumption's are drawn by the
+  same function, `gen_open_items._owing_card`.
+- **Counts and the empty message.** The header counts the assumptions and
+  surrogates owing beside the SR chains and the needs, and its drifted count
+  includes a drifted one. The empty message prints only when none of the
+  three owes, and names the assumptions registry as checked.
+
+**What to do.** Nothing is forced and nothing migrates. Overwrite the files
+below together, then regenerate `docs/open-items.html`: if any assumption or
+surrogate owes an acceptance in your repository, it gains a card, and
+`--check` reads the committed page as stale until you regenerate. A
+repository with no assumptions registry renders as before.
+
+**Kit-owned files — overwrite:** `scripts/gen_open_items.py`,
+`scripts/trace.py`.
+
+**Regenerated files:** `docs/open-items.html`.
+
+**Adopter-merged files:** none.
+
+### The adjudicator's verdict file and the dispute verdict are declared seams [since 1cb2e8680]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** Docstrings only. `coordinator_adjudicate.py` and
+`kitlib/dispute.py` each state one more contract: the verdict an
+adjudicator writes at the path `adjudicate` reserved, read only after a call
+that succeeded within its deadline, and the dispute verdict's `RULING:`
+grammar as the surface the adjudicator writes into. They are this
+repository's interface rows IF-321 and IF-322, each realizing the model
+runner crossing. No behaviour changes.
+
+**What to do.** Nothing is forced. Overwrite the files below. Your source
+scan root is your own `src`, so the two blocks declare nothing to your
+checks.
+
+**Kit-owned files — overwrite:** `scripts/coordinator_adjudicate.py`,
+`scripts/kitlib/dispute.py` (docstrings only).
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

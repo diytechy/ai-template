@@ -107,7 +107,14 @@ Contract IF-075: `reaccept_model(root, srs, llrs, tcs, snapshot=...)`, reached
     first-acceptance arm alone. An EMPTY model is a real answer, not a failure —
     no row differing from its snapshot copy and none awaiting a first acceptance
     means there is nothing to judge — and the caller is handed that emptiness
-    to refuse on instead of a fabricated brief.
+    to refuse on instead of a fabricated brief. Its sibling for the
+    assumptions registry is `assumption_owing_model(root, srs, tcs)`: each
+    assumption and surrogate owing an acceptance — `Drafted`, Status-less, or
+    accepted with its accepted cells moved from their recorded copy — as
+    `(id, why, moved cells, chain)`, the chain being
+    `assumption_rules.assumption_chain`'s, in assumption-then-surrogate order;
+    the brief's assumption section and the open-items page render the same
+    rows, and an empty list is again a real answer.
 Contract IF-089: `load_registries(docs)` then `analyze(reg, AnalysisFlags(...))`
     — the single orphan/status engine offered as a library call.
     `load_registries` loads and analyses nothing; `analyze` is pure over the
@@ -4634,18 +4641,20 @@ def _surrogate_lines(chain):
     )
 
 
-def assumption_brief_lines(root, srs, tcs, ids=None):
-    """The acceptance brief's section for assumptions and surrogates (SR-203):
-    one `###` block per row owing an acceptance (`assumptions_owing`), or per row
-    `ids` names, each built from `assumption_rules.assumption_chain`. `[]` when
-    none is owed, so a brief for a batch without one is unchanged. A named id
-    the registry does not declare REFUSES the run, as an unmatched scope does.
+def assumption_owing_model(root, srs, tcs, ids=None):
+    """`[(id, why, moved cells, chain)]`: each assumption and surrogate owing an
+    acceptance (`assumptions_owing`), or each row `ids` names, with the chain
+    `assumption_rules.assumption_chain` builds for it. THE ONE MODEL of the
+    assumptions owed: the brief's section below and the operator's open-items
+    page both render it, so the two cannot disagree about what is owed (WI-1010).
+    `[]` when none is owed. A named id the registry does not declare REFUSES the
+    run, as an unmatched scope does.
 
-    Implements: SR-203, LLR-240"""
+    Implements: SR-203, SR-178, LLR-240, LLR-271"""
     das, surs = _assumption_rows(root)
     if not das and not surs:
-        owing = []
-    elif ids is None:
+        return []
+    if ids is None:
         owing = assumptions_owing(root, das, surs)
     else:
         owing = [(rid, "", []) for rid in ids]
@@ -4657,12 +4666,7 @@ def assumption_brief_lines(root, srs, tcs, ids=None):
         for c in ("EXT-ID", "B-ID")
     )
     reg["needs"] = spine_carrier.needs_for_root(Path(root))
-    lines = [
-        "## Assumptions and surrogates {}".format(
-            "owing an acceptance" if ids is None else "named in the scope"
-        ),
-        "",
-    ]
+    model = []
     for rid, why, cells in owing:
         chain = assumption_chain(rid, reg)
         if chain is None:
@@ -4670,6 +4674,27 @@ def assumption_brief_lines(root, srs, tcs, ids=None):
                 "trace: --accept names {}, which the assumptions registry does "
                 "not declare — refusing to emit a brief without it".format(rid)
             )
+        model.append((rid, why, cells, chain))
+    return model
+
+
+def assumption_brief_lines(root, srs, tcs, ids=None):
+    """The acceptance brief's section for assumptions and surrogates (SR-203):
+    one `###` block per row of `assumption_owing_model`, the rows owing an
+    acceptance or the rows `ids` names. `[]` when none is owed, so a brief for
+    a batch without one is unchanged.
+
+    Implements: SR-203, LLR-240"""
+    model = assumption_owing_model(root, srs, tcs, ids)
+    if not model:
+        return []
+    lines = [
+        "## Assumptions and surrogates {}".format(
+            "owing an acceptance" if ids is None else "named in the scope"
+        ),
+        "",
+    ]
+    for rid, why, cells, chain in model:
         lines += ["### {}{}".format(rid, " — " + why if why else ""), ""]
         if cells:
             lines += _cell_diff_lines(cells, frozenset(c[0] for c in cells)) + [""]

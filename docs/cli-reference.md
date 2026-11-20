@@ -316,7 +316,7 @@ _Retired-vocabulary check: keep the retired `G*` gate tags, and the retired_
 
 ### `scripts/coordinator_adjudicate`
 _The coordinator's adjudication entry point: one retained session, the loop's._
-Contracts (interfaces): IF-283, IF-284, IF-285
+Contracts (interfaces): IF-283, IF-284, IF-285, IF-321
 
 | Option | Help |
 |---|---|

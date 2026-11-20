@@ -104,12 +104,16 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     ]
     assert len(frame["relationships"]) == 1
     by_id = {c["id"]: c for c in frame["crossings"]}
-    # B-02 stays unrealized by design. B-09, B-10 and B-11 are unrealized today
-    # and pinned so: the C1 package's §7 defers re-tying IF-041 to B-10 and the
-    # dashboard's own IF row, so a later re-tie moves this pin deliberately.
+    # B-02 stays unrealized by design. B-09 and B-11 are unrealized today and
+    # pinned so: the C1 package's §7 defers the dashboard's own IF row, so a
+    # later re-tie moves this pin deliberately. B-10 moved so (WI-1010): the
+    # two verdicts an adjudicator writes back, at the path the coordinator's
+    # entry point reserved (IF-321) and in the dispute grammar (IF-322), each
+    # come in across it. IF-041, the runner's invocation, is still untied.
     assert by_id["B-02"]["realized_by"] == []
-    for crossing in ("B-09", "B-10", "B-11"):
+    for crossing in ("B-09", "B-11"):
         assert by_id[crossing]["realized_by"] == [], crossing
+    assert by_id["B-10"]["realized_by"] == [("IF-321", "in"), ("IF-322", "in")]
     # the two rows slice 2 gave a facing, and the largest bundle in the frame
     assert {"IF-080", "IF-081"} <= {i for i, _side in by_id["B-05"]["realized_by"]}
     # OI-67 slice 4 added four: the agent CLI's stdin arm and the three argv
@@ -138,7 +142,11 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     # them, run from the coordinator's session as well: its arguments (IF-288)
     # and exit codes (IF-289). So did the usage ingest's command line
     # (IF-305), run from the coordinator's session too, with its stdout
-    # readings (IF-306) and exit codes (IF-307).
+    # readings (IF-306) and exit codes (IF-307). WI-1010 tied two of them
+    # back: the guard's hook response (IF-275) to B-04, a guardrail verdict
+    # during a session as the subagent gate's response is, and the review
+    # render's exit codes (IF-289) to B-05, a delivered script's result
+    # contract as integrate's is.
     assert [u["id"] for u in frame["untied"]] == [
         "IF-032",
         "IF-036",
@@ -158,7 +166,6 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
         "IF-257",
         "IF-258",
         "IF-274",
-        "IF-275",
         "IF-277",
         "IF-280",
         "IF-281",
@@ -166,7 +173,6 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
         "IF-284",
         "IF-285",
         "IF-288",
-        "IF-289",
         "IF-305",
         "IF-306",
         "IF-307",

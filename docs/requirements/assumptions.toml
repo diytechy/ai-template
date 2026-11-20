@@ -229,6 +229,87 @@ obstacle_hats = ["UNATTENDED-OPS"]
 status = "Drafted"
 standing = "active"
 
+[assumption.DA-021]
+effect_at = ["B-09"]
+assumption = """The agent CLI that runs a coordinator session keeps its documented hook contract: it runs the hooks the repository configures at each event it documents, handing each hook that event's documented fields; it holds back a tool call a hook denies and adds a hook's injected text to the session; and it exports the session's id to the commands its tools run. So the coordinator guard sees each start, compaction, tool call and end of the session it guards, and the refusal or instruction it returns takes effect in that session."""
+holds_when = """Claude Code at a version whose hook events and payload fields the guard was built and tested against, with the repository's coordinator hooks installed and on, and no user or managed setting that turns hooks off for the session."""
+obstacle = """A CLI update renames an event or a field, stops running hooks for some sessions, or lets a denied tool call run; or a setting outside the repository turns the hooks off. The guard then keeps a lease, a drain latch or a relaunch request for a session whose events it no longer receives, and a blackout denial or a close-down instruction never reaches the session."""
+falsifier = """A coordinator session, on a supported CLI version with the hooks installed and on, in which a configured hook did not run at an event the CLI documents, a tool call a hook denied ran anyway, or the session id exported to a tool's command differs from the one in the hook payloads and the transcript."""
+obstacle_hats = ["UNATTENDED-OPS", "INTEGRITY-RECOVERABILITY"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-022]
+effect_at = ["B-09"]
+assumption = """The agent CLI writes each session's transcript as the session ran: each completed model response with the usage of the request that produced it, a compaction as a boundary record, a resumed session appended to the transcript it continues, and each agent the session spawns in a transcript of its own. So the context occupancy and the token usage the kit reads from transcripts are the session's own, each response counted once."""
+holds_when = """Claude Code at a version whose transcript record shapes the kit's readers accept, writing to its default home, with the transcripts left in place until the kit has read them."""
+obstacle = """A CLI update changes what a usage field counts (cached input folded into fresh input, a spawned agent's usage moved into its parent's), rewrites earlier records on resume, or stops writing a spawned agent's transcript, in a shape the readers still accept. The drain latch then fires late or not at all, and the usage record under- or over-counts, with no refusal to show it."""
+falsifier = """A transcript from a supported CLI version from which the kit reads a context occupancy that differs from the context the CLI itself reports for the session at the same point; a transcript that repeats a completed response after a resume; or a spawned agent whose work appears in no transcript of its own."""
+obstacle_hats = ["PERFORMANCE", "UNATTENDED-OPS"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-023]
+effect_at = ["B-10"]
+realized_by = "SUR-004"
+assumption = """The recorded and built Claude Code session records the coordinator guard's tests run on carry what the agent CLI writes and sends at the supported versions: the same transcript record types, fields and usage numbers, the same compaction boundary and preserved-message markers, the same hook event names and payload fields, and the same arguments a relaunch launcher hands the claude command. They reproduce no judgement of the session's, so nothing about what a coordinator decides is evidenced by a test run against them."""
+holds_when = """The supported Claude Code versions are those whose transcript records and hook payloads match the fixtures: the recording of 2.1.289 and the transcripts built to the record shapes of 2.1.285. A CLI update that changes either is followed by new fixtures before the guard's tests are relied on."""
+obstacle = """A CLI update changes a record shape, a usage field or a hook payload that the fixtures do not carry, and the guard's tests go on passing over shapes the CLI no longer writes."""
+falsifier = """A transcript record or hook payload from a supported Claude Code version that the guard reads differently from the fixture standing for it: an occupancy, a compaction boundary, an event or a session id the guard finds in the fixture but not at the same point of a live session."""
+obstacle_hats = ["TEST-ENGINEER"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-024]
+effect_at = ["B-09"]
+assumption = """A coordinating session acts on the coordination instructions the kit publishes for it and injects into it: it starts Sol and Terra sessions only through the coordinator-call route, records its usage at its close-out and at the end of a headless leg, and, once told the blackout close-down or the context drain, brings each open lane to its pause point, writes its handoff and ends instead of starting new work. So the sessions and the pauses the operator reads back are the ones coordination actually ran."""
+holds_when = """The coordinating model reads the shipped coordination skill and the text the guard's hooks inject, at a model version that still follows them, and nothing in its brief or in the repository's instruction files tells it otherwise."""
+obstacle = """The model starts a session another way (a model CLI run straight from its shell), skips the usage recording, or keeps working after the close-down or the drain instruction, because the instruction was lost to compaction, contradicted by its brief, or not followed. The usage record then misses sessions, and a blackout or a drain the repository declared is not kept."""
+falsifier = """A coordinated work item whose records or transcripts show a Sol or Terra session with no coordinator-call record; a coordinator session that ended without its transcript recorded in the usage record; or a coordinator transcript that claims new work, or starts a model session other than a lane's wrap-up adjudication, after the blackout close-down or the drain instruction was injected into it."""
+obstacle_hats = ["UNATTENDED-OPS"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-025]
+effect_at = ["B-09"]
+assumption = """An agent working in a repository decides whether to load a skill from the skill's description alone, and loads it for the work its description names. So a shipped skill whose description says when to use it is used where it was written to be used, and one whose description cannot say so is not used at all."""
+holds_when = """The agent CLI lists the installed skills to the model by name and description only, as the supported CLIs document."""
+obstacle = """The CLI or the model picks skills by something other than the description (the name alone, an undocumented ranking, the skill's whole body), or loads none unless told to. Shipped guidance then goes unread by the agent it was written for, and nothing in the kit reports it."""
+falsifier = """A session on a supported CLI whose task matches a shipped skill's stated trigger and that does not load the skill, or that loads a skill for work its description does not name."""
+obstacle_hats = ["FIRST-RUN-ADOPTER"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-026]
+effect_at = ["B-02"]
+assumption = """An independent adjudication that rules an amendment to an accepted row CLARITY rules as the operator would: the operator, reading the row's accepted text beside the amended text, agrees that the amendment leaves what the row requires, permits and excludes unchanged. So carrying the operator's acceptance onto the amended text carries it onto what they accepted."""
+holds_when = """The adjudicating session did not write the amendment, is handed the accepted and the amended text whole with the amendment rubric, and its verdict is recorded where the open-items page's audit list shows the act it authorized."""
+obstacle = """The adjudicator reads a narrowed, widened or reworded obligation as a clearer statement of the same one, and the operator's acceptance is carried onto text they would not have accepted, with only the audit list to show it."""
+falsifier = """An act in the open-items page's audit list, re-accepted on a CLARITY verdict, whose amendment the operator, on reading it, finds changed what the row requires, permits or excludes."""
+obstacle_hats = ["SECURITY"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-027]
+effect_at = ["B-01", "B-09"]
+assumption = """The kit runs in the normal working environment its review threat model names: hosts whose integrity is not compromised, worked through the supported workflows and routes, where a forbidden hand act (rewinding the trunk branch, skipping or turning off a hook, hand-editing generated or ruled state) is never an ordinary step: one is taken only as a person's deliberate departure from those workflows. So a defect whose reproduction needs a compromised or contrived host, or a forbidden hand act, is not one the operator or an adopter meets in ordinary use, and dismissing it leaves them exposed to nothing they meet in it."""
+holds_when = """The repository is worked through the supported workflows and the kit's own routes, on hosts its users control, and no tool or common setup takes a forbidden hand act as an ordinary step."""
+obstacle = """An ordinary step on a supported path produces the state a dismissed finding needed (a tool that rewrites history, a hook a common setup turns off, a generated file an editor saves over), so a defect the review ruled contrived reaches users in ordinary use."""
+falsifier = """A defect met in ordinary use, on a supported host and through a supported workflow or route with no forbidden hand act, whose reproduction a review dismissed or graded down as needing a compromised or contrived host."""
+obstacle_hats = ["UNATTENDED-OPS", "SECURITY"]
+status = "Drafted"
+standing = "active"
+
+[assumption.DA-028]
+effect_at = ["B-09"]
+assumption = """A session that judges review findings, whether a reviewer, a critic, a coordinator ruling on a verdict or an adjudicator, applies the written review directions it is handed: it grades each finding by a scenario a supported workflow or route reaches, dismisses in one recorded line a finding whose reproduction needs a compromised or contrived host instead of asking for code, and re-grades a BLOCKER or MAJOR the directions do not support. So a review ends on the findings that matter rather than reworking contrived ones round after round."""
+holds_when = """The session receives the shipped review directions and the threat model they cite, at a model version that still follows them, and nothing in its brief tells it otherwise."""
+obstacle = """A session grades by its own sense of risk, keeps a contrived scenario at BLOCKER or MAJOR, or asks for a code change to answer one, and the lane reworks the same out-of-scope finding until its round budget runs out."""
+falsifier = """A recorded verdict or ruling that goes against the directions it was handed: a finding that needs a compromised or contrived host left at BLOCKER or MAJOR, or answered with a code change; or a fail-open path a supported workflow reaches dismissed as contrived."""
+obstacle_hats = ["UNATTENDED-OPS"]
+status = "Drafted"
+standing = "active"
+
 [surrogate.SUR-001]
 name = "Scripted model runner"
 emulates = ["EXT-005"]
@@ -245,4 +326,10 @@ status = "Drafted"
 name = "Render critic"
 emulates = ["EXT-006"]
 description = """The render-dashboard-critique skill with an image-capable model: it screenshots the state view across the declared width, theme and tab matrix and judges the renders against the written rubric, standing in for the human reader of the view."""
+status = "Drafted"
+
+[surrogate.SUR-004]
+name = "Recorded coordinator session records"
+emulates = ["EXT-005"]
+description = """Claude Code session records the coordinator guard's tests read in place of a live agent CLI: a sanitized recording of a real Claude Code 2.1.289 session through a manual compaction (tests/fixtures/coordinator_guard/compaction-manual-2.1.289.jsonl), transcripts built in the record shapes of Claude Code 2.1.285, hook-event payloads written to the documented fields, and a stubbed claude command the relaunch launchers start. Carried by tests/test_coordinator_guard.py and tests/test_coordinator_guard_e2e.py."""
 status = "Drafted"

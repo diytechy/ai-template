@@ -29,7 +29,11 @@ WHAT IT RENDERS, in the order an operator needs it:
      comparison as the whole detector), with its whole chain; then every
      stakeholder need and stakeholder `baseline_snapshot.needs_owing` reports,
      a drifted one with its moved cells before and after, a first-acceptance one
-     with its cells whole and unclipped. Each SR chain card shows:
+     with its cells whole and unclipped; then every assumption and surrogate
+     `trace.assumption_owing_model` reports (WI-1010), the rows the brief's
+     assumption section renders, shown the same way and closed by the
+     requirements relying on each (a surrogate's, the assumptions naming it).
+     Each SR chain card shows:
      per-cell before/after, unchanged runs collapsible, additions and deletions
      marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION. An empty
      section reads as *check the baseline*, never as *nothing changed* — the
@@ -55,8 +59,10 @@ in a record is told here, since nothing else reports one whatever the dial.
 
 ANTI-DUPLICATION, deliberately: the git archaeology and the cell comparison live
 in `trace.reaccept_model`, the needs owing an act in
-`baseline_snapshot.needs_owing` (the detector the brief reads too), and the
-pending projection in `pending.pending_block`. This module imports them and
+`baseline_snapshot.needs_owing` (the detector the brief reads too), the
+assumptions and surrogates owing one in `trace.assumption_owing_model` (the
+model the brief's assumption section renders), and the pending projection in
+`pending.pending_block`. This module imports them and
 RENDERS. It owns no
 second opinion about what is pending or what changed — if this view and the
 `--accept` brief ever disagree, the brief is authoritative and this is the bug.
@@ -87,8 +93,12 @@ Contract IF-074: the generated operator decision surface at `docs/open-items.htm
     in place of any empty-queue claim; an acceptance
     and re-acceptance section listing every SR that owes a first acceptance or
     whose chain has drifted from the accepted snapshot, and every stakeholder
-    need and stakeholder owing an acceptance or a re-accept, with the whole chain's
-    (or the need's moved cells') per-cell before/after, unchanged runs collapsible, additions and deletions
+    need and stakeholder owing an acceptance or a re-accept, and every
+    assumption and surrogate owing one — the rows the brief's assumption
+    section renders, each closed by the requirements relying on it, or for a
+    surrogate the assumptions naming it — with the whole chain's
+    (or the need's or assumption's moved cells') per-cell before/after, a
+    first-acceptance row's cells whole, unchanged runs collapsible, additions and deletions
     marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION so an empty
     section reads as *check the baseline* and never as *nothing changed*,
     closed by the audit list of every act-ledger entry that names a verdict
@@ -101,7 +111,8 @@ Contract IF-074: the generated operator decision surface at `docs/open-items.htm
     opinion: the queue comes from `pending.open_item_queue`, the record
     findings from `pending.decision_records`, the archaeology and cell comparison from
     `trace.reaccept_model`, the owing needs from
-    `baseline_snapshot.needs_owing` and the pointers from `pending.pending_block`, so
+    `baseline_snapshot.needs_owing`, the owing assumptions and surrogates from
+    `trace.assumption_owing_model` and the pointers from `pending.pending_block`, so
     where this view and the
     `trace.py --accept` brief disagree the brief is authoritative and this is
     the bug. `--check` byte-compares the regenerated document against the
@@ -766,8 +777,9 @@ _KIND_LABELS = {
 
 
 def _nothing_owed():
-    """Section 2's empty message: printed only when no SR chain and no need
-    or stakeholder owes an act, and saying what was checked for each."""
+    """Section 2's empty message: printed only when no SR chain, no need or
+    stakeholder and no assumption or surrogate owes an act, and saying what
+    was checked for each."""
     return (
         '<p class="empty">No <code>Drafted</code> <strong>SR</strong>, '
         "<strong>LLR</strong>, or <strong>TC</strong> anywhere in the "
@@ -783,54 +795,99 @@ def _nothing_owed():
         "DIRECTLY (the OI-61-sitting widening: it used to be checked on "
         "the SR row alone, `docs/log.d/2026-08-23-oi61-rule-and-spine-"
         "approval.md`), not only through drift. "
-        "And no stakeholder need or stakeholder in <code>{}</code> is "
-        "<code>Drafted</code>, lacks a <code>Status</code> cell, or has drifted "
-        "from its recorded copy (<code>baseline_snapshot.needs_owing</code>)."
-        "</p>".format(esc(baseline_snapshot.NEED_TIERS[0][0]))
+        "And no stakeholder need or stakeholder in <code>{}</code>, and no "
+        "assumption or surrogate in <code>{}</code>, is <code>Drafted</code>, "
+        "lacks a <code>Status</code> cell, or has drifted from its recorded copy "
+        "(<code>baseline_snapshot.needs_owing</code>, "
+        "<code>trace.assumption_owing_model</code>).</p>".format(
+            esc(baseline_snapshot.NEED_TIERS[0][0]), esc(tr.ASSUMPTIONS_REL)
+        )
+    )
+
+
+def _owing_card(rid, why, cells, row, after=""):
+    """One card for a row owing an act, the reason verbatim on its pill: a
+    drifted row's moved cells before and after, the rest of the row as
+    collapsed context; any other row whole and UNCLIPPED, since a first
+    acceptance rules on every cell of it and a clipped cell would ask the
+    operator to sign text they were not shown. `after` closes the card.
+    Shared by the need cards and the assumption cards, so both read alike.
+
+    Implements: SR-178, LLR-271"""
+    if cells:
+        body = _cell_diff_html(cells) + _context_block(
+            row,
+            skip={name for name, _, _ in cells},
+            heading="the rest of this row — unchanged since the snapshot",
+        )
+    else:
+        body = _full_cells_html((k, (v or "").strip()) for k, v in row.items())
+    return (
+        '<article class="card" id="{i}"><h3><span class="rid">{r}</span>'
+        '<span class="pill{cls}">{w}</span></h3>{b}{a}</article>'.format(
+            i=esc(rid + "-accept"),
+            r=esc(rid),
+            cls="" if cells else " accept",
+            w=esc(why),
+            b=body,
+            a=after,
+        )
     )
 
 
 def _need_cards(owing):
     """One card per stakeholder need or stakeholder owing an act, as
     `baseline_snapshot.needs_owing` reports it, in its order, under the
-    acceptance brief's own heading; `""` when none owes.
-
-    The page holds no second opinion of what owes: each row the detector
-    returns is shown with its reason verbatim. A drifted row shows its moved
-    cells before and after, the rest of the row as collapsed context. Any
-    other row is shown whole and UNCLIPPED: a first acceptance rules on every
-    cell of it, and a clipped cell would ask the operator to sign text they were
-    not shown.
+    acceptance brief's own heading; `""` when none owes. The page holds no
+    second opinion of what owes: each row the detector returns is shown.
 
     Implements: SR-178, LLR-271"""
     if not owing:
         return ""
-    cards = []
-    for rid, why, cells, row in owing:
-        if cells:
-            body = _cell_diff_html(cells) + _context_block(
-                row,
-                skip={name for name, _, _ in cells},
-                heading="the rest of this row — unchanged since the snapshot",
-            )
-        else:
-            body = _full_cells_html((k, (v or "").strip()) for k, v in row.items())
-        cards.append(
-            '<article class="card" id="{i}"><h3><span class="rid">{r}</span>'
-            '<span class="pill{cls}">{w}</span></h3>{b}</article>'.format(
-                i=esc(rid + "-accept"),
-                r=esc(rid),
-                cls="" if cells else " accept",
-                w=esc(why),
-                b=body,
-            )
-        )
     return (
         "<h3>Stakeholder needs and stakeholders owing an act</h3>"
         '<p class="sub">Re-anchor a drifted row with <code>intake.py snapshot '
         "--reaccepts &lt;ROW-ID&gt;</code> once its moved cells are read; a "
         "<code>Drafted</code> or Status-less row owes its first acceptance.</p>"
-        + "".join(cards)
+        + "".join(_owing_card(*o) for o in owing)
+    )
+
+
+def _relied_on(chain):
+    """What an assumption card closes with: each requirement relying on the
+    assumption, with its title and text; for a surrogate, each assumption
+    naming it, with its text — the chain the brief's own section leads with."""
+    if chain["kind"] == "surrogate":
+        label = "Named by"
+        items = ["{} — {}".format(d, text) for d, text in chain["named_by"]]
+    else:
+        label = "Relied on by"
+        items = ["{} — {}: {}".format(*c) for c in chain["citing"]]
+    return '<div class="cellname">{}</div><div class="diff">{}</div>'.format(
+        label, "<br>".join(esc(i) for i in items) or "(none)"
+    )
+
+
+def _assumption_cards(model):
+    """One card per assumption and surrogate owing an acceptance, as
+    `trace.assumption_owing_model` returns them, in its order — the rows the
+    acceptance brief's assumption section renders, under its own heading;
+    `""` when none owes. Each card is `_owing_card`'s, closed by the
+    requirements relying on the row (`_relied_on`).
+
+    Implements: SR-049, SR-178, LLR-118, LLR-271"""
+    if not model:
+        return ""
+    return (
+        "<h3>Assumptions and surrogates owing an acceptance</h3>"
+        '<p class="sub">Read each claim with the requirements relying on it; a '
+        "fidelity assumption and its surrogate are judged together. A drifted "
+        "row is re-anchored with <code>intake.py snapshot --reaccepts "
+        "&lt;ROW-ID&gt;</code> once its moved cells are read.</p>"
+        + "".join(
+            _owing_card(rid, why, cells, chain["row"], _relied_on(chain))
+            for rid, why, cells, chain in model
+        )
     )
 
 
@@ -1033,6 +1090,8 @@ def render(root):
     model = tr.reaccept_model(root, reg.srs, reg.llrs, reg.tcs)
     # The needs file's two tiers, from the one detector the brief reads.
     owing = baseline_snapshot.needs_owing(root)
+    # The assumptions registry's two tiers, from the brief's own model.
+    assumed = tr.assumption_owing_model(root, reg.srs, reg.tcs)
     offspine_rows = tr.offspine_census_rows(root)
     queue = pending.open_item_queue(root)
     pure = pending_block_text(root)
@@ -1044,12 +1103,13 @@ def render(root):
         "pending": len(queue["cards"]),
         "accept": len(model),
         "needs": len(owing),
+        "assumed": len(assumed),
         "rows": sum(len(e["rows"]) for e in model),
         # The drifted count is the one number that cannot be read off a Status
         # cell: a row whose text moved away from what was accepted, while its
         # own Status still claims acceptance.
         "drifted": sum(1 for e in model if not e["no_baseline_reason"])
-        + sum(1 for o in owing if o[2]),
+        + sum(1 for o in [*owing, *assumed] if o[2]),
         "baseline": (
             "<code>{}</code>, each registry's copy named by the commit that "
             "last wrote it:<ul>{}</ul>".format(
@@ -1082,13 +1142,15 @@ def render(root):
         '<p class="eyebrow">generated — do not hand-edit · '
         "<code>python project-trajectory/scripts/gen_open_items.py</code></p>\n"
         "<h1>Open items — operator decision surface</h1>\n"
-        '<p class="sub">{pending} pending decision(s) · {accept} SR chain(s) and '
-        "{needs} stakeholder need(s) or stakeholder(s) owing an acceptance or a "
+        '<p class="sub">{pending} pending decision(s) · {accept} SR chain(s), '
+        "{needs} stakeholder need(s) or stakeholder(s) and {assumed} "
+        "assumption(s) or surrogate(s) owing an acceptance or a "
         "re-accept, across {rows} chain row change(s); "
         "{drifted} row(s) drifted from the accepted snapshot. Briefs are rows "
         "in <code>{registry}</code>; the acceptance depth is "
-        "computed by <code>trace.reaccept_model</code> and "
-        "<code>baseline_snapshot.needs_owing</code>, the same code behind "
+        "computed by <code>trace.reaccept_model</code>, "
+        "<code>baseline_snapshot.needs_owing</code> and "
+        "<code>trace.assumption_owing_model</code>, the same code behind "
         "<code>trace.py --accept</code>. If the two ever disagree, the brief is "
         "authoritative and this view is the bug.</p>\n"
         '<div class="baseline">Baseline: {baseline}</div>\n'
@@ -1123,6 +1185,7 @@ def render(root):
                 model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
             )
             + _need_cards(owing)
+            + _assumption_cards(assumed)
         )
         or _nothing_owed(),
         audit=verdict_reaccept_block(_ledger_entries(root)),
