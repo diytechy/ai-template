@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 343
+design_rows = 344
 seam_rows = 261
 requirements_placed = 133
 requirements_unplaced = 5
@@ -27,6 +27,7 @@ seams_unplaced = 0
 [component_view.CMP-006]
 name = "W1 Registry & conformance"
 sr_refs = [
+  "SR-006",
   "SR-017",
   "SR-049",
   "SR-070",
@@ -85,6 +86,7 @@ sr_refs = [
   "SR-247",
 ]
 sr_shared_refs = [
+  "SR-006",
   "SR-017",
   "SR-049",
   "SR-070",
@@ -212,6 +214,7 @@ llr_refs = [
   "LLR-383",
   "LLR-384",
   "LLR-385",
+  "LLR-386",
   "LLR-388",
 ]
 hat_refs = [
@@ -479,6 +482,7 @@ sr_refs = [
   "SR-217",
 ]
 sr_shared_refs = [
+  "SR-006",
   "SR-017",
   "SR-152",
   "SR-170",

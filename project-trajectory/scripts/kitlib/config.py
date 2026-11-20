@@ -37,7 +37,9 @@ copies can no longer disagree, so drift is UNREPRESENTABLE rather than detected.
 """
 
 import configparser
+import json
 import re
+import shlex
 import sys
 import tomllib
 
@@ -59,6 +61,7 @@ __all__ = [
     "commit_check_failure_cap",
     "reviewer_dials",
     "utf8_console",
+    "split_cmd",
     "step_paths",
     "STACK_INI",
     "StackIniError",
@@ -499,6 +502,63 @@ def read_declared_lower(path):
       Outputs: str — the declared token, lowercased; `""` if undeclared
     """
     return (first_declared_line(path) or "").lower()
+
+
+def split_cmd(template):
+    """Split a command template into tokens.
+
+    TWO ACCEPTED FORMS, and the second exists because the first cannot be made
+    unambiguous. A `CmdTemplate` may be:
+
+      a JSON ARRAY   `["claude", "-p", "--model", "{model}"]` — the tokens are
+                     the tokens, full stop. No quoting rules, no shell grammar,
+                     nothing for a Windows path or an embedded quote to trip
+                     over. This is the form to declare a NEW route in
+                     (plan §11.7).
+      a SHELL STRING `claude -p --model {model}` — the historical form, split
+                     quote-aware with backslash escaping DISABLED so Windows
+                     paths survive (shlex's posix escape rules would eat
+                     drive-letter separators). Every shipped row and every
+                     existing adopter registry uses it, so it is read exactly
+                     as before.
+
+    The array form is recognised only when the value parses as a JSON list;
+    anything else — including a string that merely starts with a bracket —
+    falls through to the shell split, so no existing template can change
+    meaning. A JSON array holding a NON-STRING token raises rather than being
+    stringified into a command nobody wrote: a registry is config a human
+    edits, and a silent coercion there is a launch that does not match its
+    declaration.
+
+    THE ONE TOKENIZER (WI-1004, rolling review §13.22). It lived in
+    `agent_session`, and `check.py` kept a second copy for every `stack.ini`
+    step command that left shlex's comment character on: an unquoted `#`
+    dropped itself and every token after it there, so `check.py` ran a shorter
+    command than the one declared and than the one the loop runs, and a JSON
+    array was split as shell words. A `stack.ini` value reaches here whole
+    (`configparser` strips no inline comment), so `#` is a word. It lives in
+    this package because `check.py` must stay runnable on `kitlib` alone.
+
+    Implements: SR-146, LLR-386"""
+    text = (template or "").strip()
+    if text.startswith("["):
+        try:
+            parsed = json.loads(text)
+        except ValueError:
+            parsed = None
+        if isinstance(parsed, list):
+            bad = [tok for tok in parsed if not isinstance(tok, str)]
+            if bad:
+                raise ValueError(
+                    "CmdTemplate is a JSON array but holds a non-string token "
+                    "{!r} — argv tokens are strings".format(bad[0])
+                )
+            return list(parsed)
+    lex = shlex.shlex(template, posix=True)
+    lex.whitespace_split = True
+    lex.escape = ""
+    lex.commenters = ""
+    return list(lex)
 
 
 def utf8_console():

@@ -154,7 +154,6 @@ Contract IF-197: the loop provenance floor a commit-msg hook consumes as an
 import argparse
 import importlib.util
 import os
-import shlex
 import shutil
 import subprocess
 import sys
@@ -167,6 +166,7 @@ from kitlib.config import (
     STACK_INI,
     StackIniError,
     read_stack_ini,
+    split_cmd,
     step_paths,
     step_threshold as _step_threshold,
 )
@@ -342,25 +342,15 @@ def _pget(profile, section, option, fallback):
     return profile.get(section, option) if _has(profile, section, option) else fallback
 
 
-def _split_template(template):
-    """Whitespace-split a command template WITHOUT posix backslash-escaping, so a
-    Windows path value in a stack.ini command (`.venv\\Scripts\\eslint`) keeps
-    its separators — a bare shlex.split (posix escaping) would eat them to
-    `.venvScriptseslint`. Same tokenizer agent_loop.split_cmd uses; kept a small
-    duplicated helper per the F5 rule."""
-    lex = shlex.shlex(template, posix=True)
-    lex.whitespace_split = True
-    lex.escape = ""
-    return list(lex)
-
-
 def _expand(template, subs):
     """Split a command TEMPLATE into argv, THEN substitute {py}/{src}/{tests}/
     {coverage}/{tier} per token. Splitting first keeps a Windows interpreter path
     (spaces, backslashes) intact — substituting into the raw string and then
-    splitting would mangle it."""
+    splitting would mangle it. The split is the kit's one command tokenizer,
+    `kitlib.config.split_cmd`: no posix backslash-escaping, so a Windows path
+    (`.venv\\Scripts\\eslint`) keeps its separators, and `#` is a word."""
     argv = []
-    for tok in _split_template(template):
+    for tok in split_cmd(template):
         for key, val in subs.items():
             tok = tok.replace("{" + key + "}", val)
         argv.append(tok)

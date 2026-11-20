@@ -1682,7 +1682,7 @@ phase = 5
 sr_refs = ["SR-146"]
 title = "Argv arrays, and the adjudicator as a routed phase"
 module = "project-trajectory/scripts/agent_session.py"
-code_symbol = "substitute/split_cmd/build_argv"
+code_symbol = "substitute/build_argv"
 detail = """`split_cmd` recognises a JSON array ONLY when the value parses as a list, so no existing template can change meaning; a non-string token raises rather than being stringified. The prompt-transport decision reads the resulting TOKENS, so it is identical for both forms. Alongside it, `ADJUDICATE` joins `agent_route.WEIGHT_PHASES` and `agent_loop.DEFAULT_PHASE_TIER` with its own `route_intent` arm: cross-family like the reviewers, tier pinned by the row's measured estimate, and deliberately deaf to the implementer's escalation overrides."""
 rationale = """A silent coercion in a registry is a launch that does not match its declaration. And an adjudicator inheriting the implementer's escalation would silently re-tier a judgement because a different row's build went badly."""
 test_refs = "TC-157"
@@ -3931,6 +3931,18 @@ code_symbol = "governing_spec/_governing_rank"
 detail = """governing_spec in kitlib/registry.py names the one copy that governs among the repo-relative paths of one work item's spec in one tree, or None when there are none. Its key: a copy in a terminal folder (complete, partial, cancelled, restructured) before a claimed copy under active/ before any other; then a copy under docs/archive/work before one under docs/work, before one in neither; then the path. agent_policy's authoritative_spec is this function, which the merge slot's verdict-owed check, the worker brief and review_brief call; kitlib/done_when.py's copy reader, behind spec_at and the claim-copy read, chooses among the copies it lists with it. adoption_record refuses when several specs carry one id and does not ask it."""
 rationale = """Two precedences picked different copies of one spec: the merge-slot side took the active copy beside a closed one under docs/work, while the Done-when side took the closed one; the Done-when side took the legacy docs/work copy over the archive's and the later of two terminal folders. One key is kept: the closed copy, which the merge-slot side's own reason names; the archive, where the close route writes; then the path, the answer a reader can predict. No kit route writes two copies."""
 test_refs = "TC-445"
+status = "Drafted"
+component = "CMP-006"
+phase = 6
+
+[design.LLR-386]
+sr_refs = ["SR-146", "SR-006"]
+title = "A command template has one tokenizer, which the harness's step commands and the agent launch both read"
+module = "project-trajectory/scripts/kitlib/config.py"
+code_symbol = "split_cmd"
+detail = """split_cmd in kitlib/config.py splits a command template into its tokens. A value that parses as a JSON list is its tokens, and a non-string element raises. Anything else is split quote-aware, with backslash escaping off, so a Windows path keeps its separators, and with no comment character, so a # is a word. check.py's _expand splits every stack.ini step command through it before substituting the placeholders; agent_session binds it under its own name for agent command templates and the product test command. Neither module holds a tokenizer of its own."""
+rationale = """The two copies disagreed on two inputs: an unquoted # dropped itself and every token after it in the harness's copy, which left shlex's comment character on, and a JSON array was split as shell words there. A stack.ini value reaches the tokenizer whole, since configparser strips no inline comment, so the harness ran a shorter command than the one declared and the one the loop runs. The agent side's answer is kept on both. The home sits in kitlib because check.py must stay runnable on kitlib alone."""
+test_refs = "TC-446"
 status = "Drafted"
 component = "CMP-006"
 phase = 6

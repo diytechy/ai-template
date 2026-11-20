@@ -4427,3 +4427,14 @@ automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_one_key_says_which_copy_of_a_spec_governs; tests/test_policy_one_home.py::test_the_done_when_hold_reads_the_governing_copy"
 status = "Drafted"
 phase = 6
+
+[test.TC-446]
+verifies = ["SR-146", "SR-006", "LLR-386"]
+level = "Unit"
+method = "Expand, through check.py's step-command expansion with an interpreter placeholder, a command whose tokens include an unquoted # followed by two words; a JSON array holding the placeholder; and a command holding a Windows path with backslashes and a quoted argument with a space. Split a template holding a # through kitlib.config.split_cmd. Compare agent_session's tokenizer with kitlib.config.split_cmd, and look for check.py's former tokenizer."
+tier = "Smoke"
+expected = "The # and the words after it stay tokens; the JSON array expands to its elements with the placeholder substituted; the Windows path keeps its backslashes and the quoted argument its space; split_cmd keeps the #. agent_session's tokenizer is kitlib.config.split_cmd itself, and check.py has none of its own."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_a_command_template_has_one_tokenizer"
+status = "Drafted"
+phase = 6

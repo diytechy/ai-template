@@ -12,7 +12,7 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-11-18 (9b377be1e)._
 _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-16 (2bee2b551)._
 
-_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 07fc4f676 (2026-11-19) — the record's maturity cells have not moved since._
+_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 4a4e66432 (2026-11-19) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
@@ -701,7 +701,39 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 11 chain(s): SR-032, SR-049, SR-147, SR-148, SR-156, SR-157, SR-159, SR-166, SR-169, SR-189, SR-220</summary>
+<summary>Waiting for automated adjudication — 13 chain(s): SR-006, SR-032, SR-049, SR-146, SR-147, SR-148, SR-156, SR-157, SR-159, SR-166, SR-169, SR-189, SR-220</summary>
+
+## SR-006 — Gate/tier harness enforces required steps
+
+> **Requirement.** The delivered harness shall run the required steps of the gate that must next be passed (the strictness selector cached in docs/stage) and fail that gate when a required tool is missing, reporting SKIP(missing) rather than silently passing — and, on a claimed work branch (one whose history holds a docs/work/active/<branch>/ claim), SKIP its generated-artifact freshness steps with a stated trunk-lane reason, generated artifacts being trunk-only, while every non-freshness step still runs.
+
+> **Rationale.** Realizes SN-004 (gates enforce their stage's checks), SN-008 (no false pass) and the dissolved edge expectation that a missing tool fails, never skips. A sanctioned SKIP class of this harness's own step plan is not a second crossing observable, it is the same one qualified. The skip is not a weakening: a work branch cannot commit generated artifacts at all (concurrency-restructure §5.2), so demanding their freshness there would force the very conflict the rule deletes; the skip is reported, never silent, and any signal ambiguity resolves toward the full trunk checks.
+
+
+### LLR LLR-386 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-386
+- **SR-Refs**: SR-146;SR-006
+- **Title**: A command template has one tokenizer, which the harness's step commands and the agent launch both read
+- **Module**: project-trajectory/scripts/kitlib/config.py
+- **CodeSymbol**: split_cmd
+- **Detail**: split_cmd in kitlib/config.py splits a command template into its tokens. A value that parses as a JSON list is its tokens, and a non-string element raises. Anything else is split quote-aware, with backslash escaping off, so a Windows path keeps its separators, and with no comment character, so a # is a word. check.py's _expand splits every stack.ini step command through it before substituting the placeholders; agent_session binds it under its own name for agent command templates and the product test command. Neither module holds a tokenizer of its own.
+- **Rationale**: The two copies disagreed on two inputs: an unquoted # dropped itself and every token after it in the harness's copy, which left shlex's comment character on, and a JSON array was split as shell words there. A stack.ini value reaches the tokenizer whole, since configparser strips no inline comment, so the harness ran a shorter command than the one declared and the one the loop runs. The agent side's answer is kept on both. The home sits in kitlib because check.py must stay runnable on kitlib alone.
+- **TestRefs**: TC-446
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-446 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-446
+- **Verifies**: SR-146;SR-006;LLR-386
+- **Level**: Unit
+- **Method**: Expand, through check.py's step-command expansion with an interpreter placeholder, a command whose tokens include an unquoted # followed by two words; a JSON array holding the placeholder; and a command holding a Windows path with backslashes and a quoted argument with a space. Split a template holding a # through kitlib.config.split_cmd. Compare agent_session's tokenizer with kitlib.config.split_cmd, and look for check.py's former tokenizer.
+- **Tier**: Smoke
+- **Expected**: The # and the words after it stay tokens; the JSON array expands to its elements with the placeholder substituted; the Windows path keeps its backslashes and the quoted argument its space; split_cmd keeps the #. agent_session's tokenizer is kitlib.config.split_cmd itself, and check.py has none of its own.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_a_command_template_has_one_tokenizer
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-032 — Onboarding and dev-setup scaffold
 
@@ -768,6 +800,43 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module.
 - **Automated**: Yes
 - **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-146 — Prompts are reviewable files with a per-session audit trail
+
+> **Requirement.** Every prompt the delivered loop launches or an attended launcher renders as a review or critique brief shall be a shipped, reviewable file with strictly filled slots — listed by digest in a freshness-gated generated catalogue, each loop session recording which template it used and the fingerprint of what it rendered to.
+
+> **Rationale.** Prose steers the sessions this loop launches and had been reviewable only by reading Python source, which makes the process trusted rather than inspectable. The audit trail is the part that makes the move useful rather than cosmetic: without a per-session digest, "which instruction did this session see" stays an inference. (The argv-vs-shell-string transport decision is design, and lives one tier down in LLR-163.) C-SEC-5 requires that content composed for dispatch to an external model runner carry a DECLARED inclusion rule rather than an implicit one — a prompt assembled inside source is an unreviewed egress path no write-side gate covers, and shipping it as a reviewable file with a digest is what makes that rule readable.
+
+
+### LLR LLR-163
+- **CodeSymbol**
+  - before: substitute/split_cmd/build_argv
+  - after: substitute/build_argv
+
+### LLR LLR-386 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-386
+- **SR-Refs**: SR-146;SR-006
+- **Title**: A command template has one tokenizer, which the harness's step commands and the agent launch both read
+- **Module**: project-trajectory/scripts/kitlib/config.py
+- **CodeSymbol**: split_cmd
+- **Detail**: split_cmd in kitlib/config.py splits a command template into its tokens. A value that parses as a JSON list is its tokens, and a non-string element raises. Anything else is split quote-aware, with backslash escaping off, so a Windows path keeps its separators, and with no comment character, so a # is a word. check.py's _expand splits every stack.ini step command through it before substituting the placeholders; agent_session binds it under its own name for agent command templates and the product test command. Neither module holds a tokenizer of its own.
+- **Rationale**: The two copies disagreed on two inputs: an unquoted # dropped itself and every token after it in the harness's copy, which left shlex's comment character on, and a JSON array was split as shell words there. A stack.ini value reaches the tokenizer whole, since configparser strips no inline comment, so the harness ran a shorter command than the one declared and the one the loop runs. The agent side's answer is kept on both. The home sits in kitlib because check.py must stay runnable on kitlib alone.
+- **TestRefs**: TC-446
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-446 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-446
+- **Verifies**: SR-146;SR-006;LLR-386
+- **Level**: Unit
+- **Method**: Expand, through check.py's step-command expansion with an interpreter placeholder, a command whose tokens include an unquoted # followed by two words; a JSON array holding the placeholder; and a command holding a Windows path with backslashes and a quoted argument with a space. Split a template holding a # through kitlib.config.split_cmd. Compare agent_session's tokenizer with kitlib.config.split_cmd, and look for check.py's former tokenizer.
+- **Tier**: Smoke
+- **Expected**: The # and the words after it stay tokens; the JSON array expands to its elements with the placeholder substituted; the Windows path keeps its backslashes and the quoted argument its space; split_cmd keeps the #. agent_session's tokenizer is kitlib.config.split_cmd itself, and check.py has none of its own.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_a_command_template_has_one_tokenizer
 - **Status**: Drafted
 - **Phase**: 6
 

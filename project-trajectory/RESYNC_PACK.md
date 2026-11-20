@@ -11627,6 +11627,34 @@ Three inputs change, none of which a kit route writes:
 
 **Adopter-merged files:** none.
 
+### A command template has one tokenizer, in kitlib.config [since 426f88f60]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `check.py` split every `docs/stack.ini` step command with a
+private `_split_template`, beside `agent_session.split_cmd`, which reads agent
+command templates and the product test command. Only the second turned off
+shlex's comment character and read a JSON array. The one tokenizer is now
+`kitlib.config.split_cmd` (moved out of `agent_session`, which imports it
+under the same name), and `check.py` calls it. `configparser` strips no
+inline comment from a `stack.ini` value, so two step commands change:
+
+- a command with an unquoted `#` token runs whole. `check.py` used to drop the
+  `#` and every token after it, so it ran a shorter command than the one
+  declared and the one the loop runs;
+- a command written as a JSON array runs as its elements.
+
+**What to do.** If a `docs/stack.ini` step command carries a bare `#` meant as
+a comment, move the comment to its own line: the `#` and the words after it
+now reach the command. Overwrite the three files together: `check.py` and
+`agent_session.py` need the new `kitlib/config.py`. A local script that
+imported `agent_session.split_cmd` keeps working.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/config.py`,
+`scripts/check.py`, `scripts/agent_session.py`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -9,7 +9,7 @@ check that no former holder still carries a copy. The kept answers and their
 reasons are the spec's (`WI-1004`, "The eleven, in landing order"). B3's and
 B5's pins repair the vacuous ones in `tests/test_rule_sync.py` and live there.
 
-Implements: TC-439, TC-440, TC-441, TC-442, TC-443, TC-444, TC-445
+Implements: TC-439, TC-440, TC-441, TC-442, TC-443, TC-444, TC-445, TC-446
 """
 
 import tomllib
@@ -28,8 +28,11 @@ agent_common = load_script("agent_common")
 integrate = load_script("integrate")
 handback = load_script("handback")
 agent_policy = load_script("agent_policy")
+check = load_script("check")
+agent_session = load_script("agent_session")
 
-import kitlib.decisions as kitlib_decisions  # noqa: E402  (after load_script)
+import kitlib.config as kitlib_config  # noqa: E402  (after load_script)
+import kitlib.decisions as kitlib_decisions  # noqa: E402
 import kitlib.done_when as kitlib_done_when  # noqa: E402
 import kitlib.registry as kitlib_registry  # noqa: E402
 import kitlib.spine as kitlib_spine  # noqa: E402
@@ -446,3 +449,44 @@ def test_the_done_when_hold_reads_the_governing_copy(tmp_path):
         assert (found, text, why) == (governing, governing + "\n", None), paths
         git("rm", "-q", "-r", "docs")
         git("commit", "-q", "-m", "clear")
+
+
+# --- 9. rolling review §13.22: the command tokenizer -------------------------------
+# `check._split_template` (every `docs/stack.ini` step command) and
+# `agent_session.split_cmd` (agent command templates, the product test command)
+# tokenized one grammar. Only the second cleared shlex's comment character, so
+# `check.py` dropped an unquoted `#` and every token after it, a shorter command
+# than the one declared and than the one the loop runs; and only the second
+# read a JSON array. Kept: `split_cmd`'s answer on both, from `kitlib.config`,
+# which `check.py` may import (it stays runnable on `kitlib` alone).
+
+
+def test_a_command_template_has_one_tokenizer():
+    """Implements: TC-446"""
+    assert not hasattr(check, "_split_template")
+    assert agent_session.split_cmd is kitlib_config.split_cmd
+    subs = {"py": "python3"}
+    # The disputed input: an unquoted `#` token is a word, not a comment.
+    assert check._expand("{py} -m pytest -q # fast tier", subs) == [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "#",
+        "fast",
+        "tier",
+    ]
+    # The disputed input: a JSON array is read as its tokens.
+    assert check._expand('["{py}", "-c", "print(1)"]', subs) == [
+        "python3",
+        "-c",
+        "print(1)",
+    ]
+    # Both agreed, and still do: a Windows path keeps its separators and a
+    # quoted argument keeps its space.
+    assert check._expand('{py} .venv\\Scripts\\eslint "a b"', subs) == [
+        "python3",
+        ".venv\\Scripts\\eslint",
+        "a b",
+    ]
+    assert kitlib_config.split_cmd("claude -p # x") == ["claude", "-p", "#", "x"]
