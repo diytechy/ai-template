@@ -3922,3 +3922,15 @@ test_refs = "TC-444"
 status = "Drafted"
 component = "CMP-006"
 phase = 6
+
+[design.LLR-385]
+sr_refs = ["SR-156"]
+title = "Which copy of a work item's spec governs is one key, which the merge slot's verdict check and the Done-when hold both read"
+module = "project-trajectory/scripts/kitlib/registry.py"
+code_symbol = "governing_spec/_governing_rank"
+detail = """governing_spec in kitlib/registry.py names the one copy that governs among the repo-relative paths of one work item's spec in one tree, or None when there are none. Its key: a copy in a terminal folder (complete, partial, cancelled, restructured) before a claimed copy under active/ before any other; then a copy under docs/archive/work before one under docs/work, before one in neither; then the path. agent_policy's authoritative_spec is this function, which the merge slot's verdict-owed check, the worker brief and review_brief call; kitlib/done_when.py's copy reader, behind spec_at and the claim-copy read, chooses among the copies it lists with it. adoption_record refuses when several specs carry one id and does not ask it."""
+rationale = """Two precedences picked different copies of one spec: the merge-slot side took the active copy beside a closed one under docs/work, while the Done-when side took the closed one; the Done-when side took the legacy docs/work copy over the archive's and the later of two terminal folders. One key is kept: the closed copy, which the merge-slot side's own reason names; the archive, where the close route writes; then the path, the answer a reader can predict. No kit route writes two copies."""
+test_refs = "TC-445"
+status = "Drafted"
+component = "CMP-006"
+phase = 6

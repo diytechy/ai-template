@@ -12,7 +12,7 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-11-18 (9b377be1e)._
 _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-16 (2bee2b551)._
 
-_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is eab83e5cd (2026-11-19) — the record's maturity cells have not moved since._
+_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 07fc4f676 (2026-11-19) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
@@ -867,6 +867,19 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Component**: CMP-006
 - **Phase**: 6
 
+### LLR LLR-385 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-385
+- **SR-Refs**: SR-156
+- **Title**: Which copy of a work item's spec governs is one key, which the merge slot's verdict check and the Done-when hold both read
+- **Module**: project-trajectory/scripts/kitlib/registry.py
+- **CodeSymbol**: governing_spec/_governing_rank
+- **Detail**: governing_spec in kitlib/registry.py names the one copy that governs among the repo-relative paths of one work item's spec in one tree, or None when there are none. Its key: a copy in a terminal folder (complete, partial, cancelled, restructured) before a claimed copy under active/ before any other; then a copy under docs/archive/work before one under docs/work, before one in neither; then the path. agent_policy's authoritative_spec is this function, which the merge slot's verdict-owed check, the worker brief and review_brief call; kitlib/done_when.py's copy reader, behind spec_at and the claim-copy read, chooses among the copies it lists with it. adoption_record refuses when several specs carry one id and does not ask it.
+- **Rationale**: Two precedences picked different copies of one spec: the merge-slot side took the active copy beside a closed one under docs/work, while the Done-when side took the closed one; the Done-when side took the legacy docs/work copy over the archive's and the later of two terminal folders. One key is kept: the closed copy, which the merge-slot side's own reason names; the archive, where the close route writes; then the path, the answer a reader can predict. No kit route writes two copies.
+- **TestRefs**: TC-445
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
 ### TC TC-444 — ADDED since the snapshot, Drafted — never accepted
 - **TC-ID**: TC-444
 - **Verifies**: SR-156;SR-220;LLR-384
@@ -876,6 +889,18 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: The doubled id raises a ValueError naming the count; an unqueued id and a missing folder answer None; a single queued spec is returned. The claim, the handback write and the close each refuse the doubled id with that reason and plan nothing, and the queued folder is unchanged; each refuses the unqueued id in its own words. handback has no lookup of its own.
 - **Automated**: Yes
 - **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_queued_spec_lookup_refuses_two_specs_of_one_id; tests/test_policy_one_home.py::test_every_act_on_a_queued_spec_refuses_two_of_one_id
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-445 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-445
+- **Verifies**: SR-156;LLR-385
+- **Level**: Integration
+- **Method**: Hand kitlib.registry.governing_spec and agent_policy.authoritative_spec, in both orders, each pair of copies of one spec: a closed copy in the archive and in the legacy docs/work home; a claimed copy and a closed copy under docs/work; a complete and a partial copy in the archive; a claimed copy and an archived closed one; a queued and a claimed copy; and no copy. Then commit each of the first four pairs in turn to a git repository and read the spec at HEAD through kitlib.done_when.spec_at for the claiming lane. Look for the former rank on agent_policy.
+- **Tier**: Smoke
+- **Expected**: Both functions name, in either order: the archive's copy over the legacy one, the closed copy over the claim, the complete copy over the partial one by path, the archived copy over the claim, and the claimed copy over the queued one; None for no copy. spec_at reads the same copy, its text and no reason for each committed pair. agent_policy carries no rank of its own.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_one_key_says_which_copy_of_a_spec_governs; tests/test_policy_one_home.py::test_the_done_when_hold_reads_the_governing_copy
 - **Status**: Drafted
 - **Phase**: 6
 

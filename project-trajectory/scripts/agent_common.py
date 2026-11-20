@@ -153,7 +153,6 @@ DECISION_RECORDING_MODES = agent_policy.DECISION_RECORDING_MODES
 decision_recording = agent_policy.decision_recording
 adjudication_review_owed = agent_policy.adjudication_review_owed
 SPEC_HOMES = agent_policy.SPEC_HOMES
-_spec_home_rank = agent_policy._spec_home_rank
 authoritative_spec = agent_policy.authoritative_spec
 keep_nondependent = agent_policy.keep_nondependent
 spine_stage_of = agent_policy.spine_stage_of

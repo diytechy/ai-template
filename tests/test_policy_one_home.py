@@ -9,7 +9,7 @@ check that no former holder still carries a copy. The kept answers and their
 reasons are the spec's (`WI-1004`, "The eleven, in landing order"). B3's and
 B5's pins repair the vacuous ones in `tests/test_rule_sync.py` and live there.
 
-Implements: TC-439, TC-440, TC-441, TC-442, TC-443, TC-444
+Implements: TC-439, TC-440, TC-441, TC-442, TC-443, TC-444, TC-445
 """
 
 import tomllib
@@ -27,8 +27,10 @@ intake = load_script("intake")
 agent_common = load_script("agent_common")
 integrate = load_script("integrate")
 handback = load_script("handback")
+agent_policy = load_script("agent_policy")
 
 import kitlib.decisions as kitlib_decisions  # noqa: E402  (after load_script)
+import kitlib.done_when as kitlib_done_when  # noqa: E402
 import kitlib.registry as kitlib_registry  # noqa: E402
 import kitlib.spine as kitlib_spine  # noqa: E402
 
@@ -387,3 +389,60 @@ def test_every_act_on_a_queued_spec_refuses_two_of_one_id(tmp_path):
     assert "is not a queued spec on this lane" in refusal
     _plan, refusal = consolidate._archive_plan(tmp_path, [("WI-500", ["WI-402"])])
     assert "no longer a queued spec" in refusal
+
+
+# --- 8. rolling review §13.13: which copy of a spec governs ---------------------------
+# `agent_policy.authoritative_spec` ranked `docs/archive/work` before
+# `docs/work`, then sorted by path; `kitlib.done_when.spec_at` took the copy in
+# the last of `active/<branch>`, `archive/complete`, `work/complete`,
+# `archive/partial`, `work/partial`, `archive/cancelled`, `work/cancelled`.
+# Kept, one key: a terminal copy before an active one, the archive before the
+# legacy `docs/work` home, then the path. `adoption_record`'s refusal on several
+# copies is a strict check and is not a precedence; it stays.
+
+ARCHIVED = "docs/archive/work/complete/WI-1-a.md"
+LEGACY = "docs/work/complete/WI-1-a.md"
+ACTIVE = "docs/work/active/lane-1/WI-1-a.md"
+PARTIAL = "docs/archive/work/partial/WI-1-a.md"
+GOVERNING = (
+    ([LEGACY, ARCHIVED], ARCHIVED),  # disputed: spec_at took the legacy copy
+    ([ACTIVE, LEGACY], LEGACY),  # disputed: the path tie-break took the active one
+    ([PARTIAL, ARCHIVED], ARCHIVED),  # disputed: spec_at took the later folder
+    ([ACTIVE, ARCHIVED], ARCHIVED),  # both agreed: a closed copy over the claim
+    (["docs/work/queued/WI-1-a.md", ACTIVE], ACTIVE),
+)
+
+
+def test_one_key_says_which_copy_of_a_spec_governs():
+    """Implements: TC-445"""
+    assert not hasattr(agent_policy, "_spec_home_rank")
+    for paths, governing in GOVERNING:
+        for order in (paths, paths[::-1]):
+            assert kitlib_registry.governing_spec(order) == governing, order
+            assert agent_policy.authoritative_spec(order) == governing, order
+    assert kitlib_registry.governing_spec([]) is None
+
+
+def test_the_done_when_hold_reads_the_governing_copy(tmp_path):
+    """Implements: TC-445"""
+    import subprocess
+
+    def git(*args):
+        subprocess.run(
+            ["git", "-C", str(tmp_path), *args], check=True, capture_output=True
+        )
+
+    git("init", "-q")
+    git("config", "user.email", "t@example.com")
+    git("config", "user.name", "T")
+    for paths, governing in GOVERNING[:4]:
+        for rel in paths:
+            path = tmp_path / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(rel + "\n", encoding="utf-8", newline="\n")
+        git("add", "-A")
+        git("commit", "-q", "-m", "copies")
+        found, text, why = kitlib_done_when.spec_at(tmp_path, "HEAD", "lane-1", "WI-1")
+        assert (found, text, why) == (governing, governing + "\n", None), paths
+        git("rm", "-q", "-r", "docs")
+        git("commit", "-q", "-m", "clear")

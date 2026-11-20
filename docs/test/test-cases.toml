@@ -4416,3 +4416,14 @@ automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_queued_spec_lookup_refuses_two_specs_of_one_id; tests/test_policy_one_home.py::test_every_act_on_a_queued_spec_refuses_two_of_one_id"
 status = "Drafted"
 phase = 6
+
+[test.TC-445]
+verifies = ["SR-156", "LLR-385"]
+level = "Integration"
+method = "Hand kitlib.registry.governing_spec and agent_policy.authoritative_spec, in both orders, each pair of copies of one spec: a closed copy in the archive and in the legacy docs/work home; a claimed copy and a closed copy under docs/work; a complete and a partial copy in the archive; a claimed copy and an archived closed one; a queued and a claimed copy; and no copy. Then commit each of the first four pairs in turn to a git repository and read the spec at HEAD through kitlib.done_when.spec_at for the claiming lane. Look for the former rank on agent_policy."
+tier = "Smoke"
+expected = "Both functions name, in either order: the archive's copy over the legacy one, the closed copy over the claim, the complete copy over the partial one by path, the archived copy over the claim, and the claimed copy over the queued one; None for no copy. spec_at reads the same copy, its text and no reason for each committed pair. agent_policy carries no rank of its own."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_one_key_says_which_copy_of_a_spec_governs; tests/test_policy_one_home.py::test_the_done_when_hold_reads_the_governing_copy"
+status = "Drafted"
+phase = 6

@@ -55,6 +55,9 @@ __all__ = [
     "spec_roots",
     "spec_files",
     "queued_spec",
+    "governing_spec",
+    "GOVERNING_HOMES",
+    "TERMINAL_FOLDERS",
     "WORK_SPEC_ROOTS",
     "tree_spec_paths",
     "parse_spec_frontmatter",
@@ -365,6 +368,46 @@ def spec_files(work_dir):
     knows which one tree it means (a branch's own claimed set, a status-dir
     census) still wants undiluted."""
     return sorted(_spec_files_under(work_dir))
+
+
+# The two spec homes, the archive first (`spec_move` closes into it;
+# `docs/work/<state>/` is the legacy home), and the folders whose copy is the
+# terminal one. `governing_spec` ranks a candidate by them.
+GOVERNING_HOMES = ("docs/archive/work", "docs/work")
+TERMINAL_FOLDERS = ("complete", "partial", "cancelled", "restructured")
+
+
+def _governing_rank(path):
+    """`(tier, home, path)`: tier 0 for a copy in a terminal folder, 1 for a
+    claimed copy under `active/`, 2 for any other; home 0 for the archive, 1
+    for `docs/work`, 2 outside both."""
+    for home, root in enumerate(GOVERNING_HOMES):
+        if path.startswith(root + "/"):
+            folder = path[len(root) + 1 :].split("/", 1)[0]
+            if folder in TERMINAL_FOLDERS:
+                return (0, home, path)
+            return (1 if folder == "active" else 2, home, path)
+    return (2, len(GOVERNING_HOMES), path)
+
+
+def governing_spec(paths):
+    """The one repo-relative spec path that governs among `paths` (copies of
+    one work item's spec in one tree), or None when there are none.
+
+    ONE KEY (WI-1004, rolling review §13.13): a copy in a terminal folder
+    before a claimed copy under `active/` before any other; then the archive
+    before `docs/work`; then the path. `agent_policy.authoritative_spec` (the
+    merge slot's verdict-owed check, the worker brief, `review_brief`) is this
+    function, and `kitlib.done_when.spec_at` (the Done-when hold) chooses among
+    its hits with it. The two used to disagree: the first took the active copy
+    beside a closed one under `docs/work`, the second took the legacy
+    `docs/work/<state>` copy over the archive's and the later of two terminal
+    folders. No kit route writes two copies; `adoption_record` refuses on
+    several and does not ask this.
+
+    Implements: SR-156, LLR-385"""
+    ranked = sorted((str(p).replace("\\", "/") for p in paths), key=_governing_rank)
+    return ranked[0] if ranked else None
 
 
 def queued_spec(work_dir, wi_id):

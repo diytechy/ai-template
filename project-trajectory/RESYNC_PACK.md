@@ -11593,6 +11593,40 @@ the three scripts call `kitlib.registry.queued_spec`, which an older
 
 **Adopter-merged files:** none.
 
+### Which copy of a spec governs is one key, in kitlib.registry [since 426f88f60]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** Two precedences chose among copies of one work item's spec
+in one tree. `agent_policy.authoritative_spec` (the merge slot's verdict-owed
+check, the worker brief, `review_brief`) ranked the archive before `docs/work`
+and then sorted by path. `kitlib.done_when.spec_at` (the Done-when hold) took
+the copy in the last of a fixed folder list. The one home is
+`kitlib.registry.governing_spec(paths)`: a copy in a terminal folder before a
+claimed copy under `active/` before any other; then `docs/archive/work`
+before `docs/work`; then the path. `authoritative_spec` is that function,
+`spec_at` chooses with it, and `agent_policy._spec_home_rank` is deleted.
+Three inputs change, none of which a kit route writes:
+
+- a claimed copy beside a closed copy under `docs/work`: the merge slot now
+  reads the closed copy, as the Done-when hold did;
+- the same closed copy in the archive and in `docs/work`: the Done-when hold
+  now reads the archive's, as the merge slot did;
+- two terminal copies (`complete` and `partial`): both read the first by path.
+
+`adoption_record` still refuses when several specs carry one id.
+
+**What to do.** Nothing is forced. Overwrite the files together:
+`agent_policy.py` and `kitlib/done_when.py` need the new
+`kitlib/registry.py`. A local script that called
+`agent_policy._spec_home_rank` sorts with `kitlib.registry.governing_spec`.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/registry.py`,
+`scripts/kitlib/done_when.py`, `scripts/agent_policy.py`,
+`scripts/agent_common.py`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
