@@ -579,7 +579,7 @@ record runs through the live registry first.
 
 **Can be falsified by.** no test case
 
-**Falsifier.** A release whose kept checklist ticks a budget item while that release's measurement of the budget is outside its allocation, or ticks an assumption item while an observation recorded before the release shows that assumption false; or a release with no ticked checklist kept for it.
+**Falsifier.** A release whose kept checklist ticks a budget item when no measurement of that budget exists for the release, or when the release's measurement is outside its allocation, or ticks an assumption item while an observation recorded before the release shows that assumption false; or a release with no ticked checklist kept for it.
 
 ### DA-019 — Drafted, never accepted
 
@@ -633,7 +633,7 @@ record runs through the live registry first.
 
 **Can be falsified by.** no test case
 
-**Falsifier.** A call that a delegated run's diff or session log shows plainly and that its record leaves out or misdescribes; or an entry left listed as not yet seen while the operator confirms or overrules entries recorded after it.
+**Falsifier.** A call that a delegated run's diff or session log shows plainly and that its record leaves out or misdescribes; or an entry left listed as not yet seen while the operator confirms or overrules entries recorded after it; or an entry still listed as not yet seen after later work has built on the call it records, which git history shows as a later integrated commit that changes what the call changed or carries out what it decided.
 
 ### SUR-001 — Drafted, never accepted
 
