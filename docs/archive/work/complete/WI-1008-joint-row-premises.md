@@ -3,12 +3,78 @@ id = "WI-1008"
 title = "SR-033, SR-223 and SR-225 each state the premise their argument rests on, as an assumption or a waiver"
 workstream = "requirements"
 sr_refs = ["SR-033", "SR-223", "SR-225"]
-specref = "docs/plans/2026-11-11-test-tiers/HANDOFF.md#126-progress-log"
+specref = ""
 buildtier = "medium"
 safety_class = "spine"
 priority = 3
 planmode = "none"
 +++
+
+## Deliverable
+
+Each of the three joint requirements now cites an assumption of its own. All
+three take the assumption route; none takes a `coincident` waiver. A waiver
+would claim that the requirement's own output is the outcome, and for each of
+the three the outcome depends on something a person or a model does after the
+system has done its part. The spec of record is the 2026-11-18 joint
+requirements read in `docs/plans/2026-11-11-test-tiers/HANDOFF.md` §12.6. The
+row's SpecRef cell was cleared at close, as R-F asks of a terminal row.
+
+| Requirement | Assumption | The premise | Lands on |
+|---|---|---|---|
+| SR-033 | DA-018 | the person releasing works through the checklist: each listed budget checked against a measurement of the release, each listed assumption checked for its falsifier | B-09 |
+| SR-223 | DA-019 | a model in a guarded session acts on the guardrails payload chosen for it | B-09 |
+| SR-225 | DA-020 | a delegated run's record lists every call it was told to record, as its work shows it, and the operator reads each entry listed as not yet seen | B-09 |
+
+- **Critique dispositions** (9bfdb8bc1): S4, S5, S1 and S6 adopted.
+  `planmode = "none"`. The Context states the delta, and the second Done-when
+  item names where assumptions are shown today. The finding behind that:
+  `docs/open-items.html` renders no assumption, and a change to `da_refs`
+  alone leaves the page byte-identical, because the cell is traced.
+- **Registry rows** (d5ac10fea): DA-018, DA-019 and DA-020, new and
+  `Drafted`, standing `active`, each with `effect_at`, `assumption`,
+  `holds_when`, `obstacle`, `falsifier` and `obstacle_hats`. SR-033, SR-223
+  and SR-225 each gain one `da_refs` cell, a traced pointer, and keep
+  `Accepted`. They owe no re-accept (SR-193) and the page does not list them.
+  Watermark DA 20. The regenerated views carry the change: `docs/stage`
+  counts 33 drafts, not 30, the stage itself unmoved, and the acceptance brief
+  `docs/ratify/CURRENT.md` lists the three assumptions as "Drafted, never
+  accepted". `PROJECT_STATE.html` shows each one under the needs it serves.
+- **Where they land.** All three land on B-09, the operator's read crossing,
+  as DA-006, DA-007 and DA-015 do for the model's and the loop's work.
+  SR-223's own crossing, B-05, is never a landing. B-10 belongs to the model
+  provider, which is no stakeholder's party. So `effect_at = ["B-09"]` is the
+  one landing that reaches every served need (SN-004, SN-026, SN-029,
+  SN-043), and the reach check reports nothing for them.
+- **The gate's steps** (off here, so advisories). `assumption-gate` reported
+  76 findings before and 79 after. The three new lines are "SR-033 relies on
+  assumption DA-018, which is not accepted (Status Drafted)" and the same for
+  SR-223 with DA-019 and SR-225 with DA-020. Before, the joint skip passed the
+  three rows silently. `crossing-allocation` reported 9 before and 9 after,
+  none of them these rows: none of the three declares `form = "interface"`,
+  so that step does not judge them.
+
+Left for the operator, and why:
+
+- **The act.** Accepting DA-018 to DA-020 is the operator's act, and
+  WI-1010 plans the same act for the other assumptions. Until WI-1010 renders
+  assumptions on `docs/open-items.html`, they are read in
+  `docs/ratify/CURRENT.md` or with `trace.py --accept DA-018,DA-019,DA-020`.
+- **DA-020's second falsifier is observed in this repository already.** The
+  13 entries in `docs/decisions/coordinator-2026-10-04.toml` have no verdict,
+  while the operator confirmed an entry of
+  `docs/decisions/coordinator-2026-11-05.toml` on 2026-11-05 (`cffb626c5`).
+  Across all records, 52 of 1,194 entries carry a verdict. The falsifier was
+  not narrowed to miss this: it is what the premise says. Whether the October
+  backlog is marked seen in bulk is the separate question WI-1009 leaves to
+  the operator. Until then, accepting DA-020 as `active` would accept a
+  premise this repository's own records contradict.
+- **DA-019 and DA-018 have nothing to observe here yet.** This repository
+  vendors no guardrails payload (`[policies] guardrails = "off"`), and it has
+  made no release, so no ticked checklist exists. Their falsifiers can be
+  observed only in a repository that does either.
+- **`form` is still undeclared** on all three requirements, as before. It is
+  an accepted cell, which this row was not asked to change.
 
 ## Context
 
@@ -58,19 +124,19 @@ assumptions, which is why it is ordered after this row.
 
 ## Done-when
 
-- [ ] SR-033, SR-223 and SR-225 each cite an assumption in `da_refs` that
+- [x] SR-033, SR-223 and SR-225 each cite an assumption in `da_refs` that
       states the premise in the table above, or carry a `coincident` waiver
       that argues why none is needed. Each new assumption row states where it
       takes effect, when it holds, its obstacle and a falsifier, and is
       `Drafted`.
-- [ ] The new assumptions are shown for the operator's first acceptance where
+- [x] The new assumptions are shown for the operator's first acceptance where
       assumptions are rendered today: `trace.py --accept DA-018,DA-019,DA-020`
       (or `--accept assumptions`). `docs/open-items.html` renders no
       assumption until WI-1010 adds them. If a requirement takes a
       `coincident` waiver instead, that cell is accepted text: the row then
       shows as drift on `docs/open-items.html` for the operator's re-accept.
       Their text lands; the act is the operator's.
-- [ ] `trace.py --strict` and `check_trajectory.py --strict` are clean.
+- [x] `trace.py --strict` and `check_trajectory.py --strict` are clean.
 
 ## Critique dispositions
 
