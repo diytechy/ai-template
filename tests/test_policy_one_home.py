@@ -9,7 +9,7 @@ check that no former holder still carries a copy. The kept answers and their
 reasons are the spec's (`WI-1004`, "The eleven, in landing order"). B3's and
 B5's pins repair the vacuous ones in `tests/test_rule_sync.py` and live there.
 
-Implements: TC-439, TC-440, TC-441, TC-442, TC-443
+Implements: TC-439, TC-440, TC-441, TC-442, TC-443, TC-444
 """
 
 import tomllib
@@ -25,6 +25,8 @@ consolidate = load_script("consolidate")
 adjudicate_brief = load_script("adjudicate_brief")
 intake = load_script("intake")
 agent_common = load_script("agent_common")
+integrate = load_script("integrate")
+handback = load_script("handback")
 
 import kitlib.decisions as kitlib_decisions  # noqa: E402  (after load_script)
 import kitlib.registry as kitlib_registry  # noqa: E402
@@ -325,3 +327,63 @@ def test_a_spec_with_a_non_string_title_is_reported_and_skipped(tmp_path):
     assert [r["WI-ID"] for r in rows] == ["WI-8"]
     assert len(errors) == 1 and "WI-7-x.md" in errors[0], errors
     assert "`title` must be a string" in errors[0]
+
+
+# --- 7. the queued-spec lookup ------------------------------------------------------
+# `integrate._queued_spec` (claim), `handback._queued_spec` (the edge and return
+# writes) and the inline glob in `consolidate._archive_plan` (the consolidation
+# close) each found an id's queued spec. Given two queued specs carrying one id,
+# the claim refused while handback and the close acted on the first. Kept:
+# refused, everywhere: each caller writes or moves the file, and acting on one
+# copy leaves the other standing as a live queued row of the same id. None
+# matching: every caller refused already, each in its own words.
+
+
+def _two_queued(tmp_path, wid="WI-401"):
+    work = tmp_path / "docs" / "work"
+    first = _spec(work, "queued", wid)
+    second = first.with_name("{}-y.md".format(wid))
+    second.write_bytes(first.read_bytes())
+    return work
+
+
+def test_the_queued_spec_lookup_refuses_two_specs_of_one_id(tmp_path):
+    """Implements: TC-444"""
+    assert not hasattr(handback, "_queued_spec")
+    work = _two_queued(tmp_path)
+    with pytest.raises(ValueError) as exc:
+        kitlib_registry.queued_spec(work, "WI-401")
+    assert "2 queued specs carry WI-401" in str(exc.value)
+    assert kitlib_registry.queued_spec(work, "WI-402") is None
+    (work / "queued" / "WI-401-y.md").unlink()
+    assert kitlib_registry.queued_spec(work, "WI-401").name == "WI-401-x.md"
+    assert kitlib_registry.queued_spec(tmp_path / "absent", "WI-401") is None
+
+
+def test_every_act_on_a_queued_spec_refuses_two_of_one_id(tmp_path):
+    """Implements: TC-444"""
+    _two_queued(tmp_path)
+    before = sorted(p.name for p in (tmp_path / "docs/work/queued").iterdir())
+    # The claim (it already refused; the wording is now the home's).
+    with pytest.raises(ValueError) as exc:
+        integrate._queued_spec(tmp_path, "WI-401")
+    assert "2 queued specs carry WI-401" in str(exc.value)
+    # A handback edge write: refused, nothing planned.
+    plan, refusal = handback._enact_plan(
+        tmp_path, {"edges": [("WI-401", "WI-399")], "returns": [], "finding": ""}
+    )
+    assert plan == [] and "2 queued specs carry WI-401" in refusal, refusal
+    # The consolidation close archiving an absorbed row: refused, nothing planned.
+    plan, refusal = consolidate._archive_plan(tmp_path, [("WI-500", ["WI-401"])])
+    assert plan == [] and "2 queued specs carry WI-401" in refusal, refusal
+    after = sorted(p.name for p in (tmp_path / "docs/work/queued").iterdir())
+    assert before == after
+    # None matching: each still refuses in its own words.
+    with pytest.raises(ValueError):
+        integrate._queued_spec(tmp_path, "WI-402")
+    _plan, refusal = handback._enact_plan(
+        tmp_path, {"edges": [("WI-402", "WI-399")], "returns": [], "finding": ""}
+    )
+    assert "is not a queued spec on this lane" in refusal
+    _plan, refusal = consolidate._archive_plan(tmp_path, [("WI-500", ["WI-402"])])
+    assert "no longer a queued spec" in refusal

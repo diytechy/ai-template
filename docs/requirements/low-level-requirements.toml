@@ -3910,3 +3910,15 @@ test_refs = "TC-443"
 status = "Drafted"
 component = "CMP-006"
 phase = 6
+
+[design.LLR-384]
+sr_refs = ["SR-156", "SR-220"]
+title = "An id's queued spec has one lookup, which refuses when several queued specs carry the id"
+module = "project-trajectory/scripts/kitlib/registry.py"
+code_symbol = "queued_spec"
+detail = """queued_spec in kitlib/registry.py returns the one queued spec of an id under a work folder (a queued file named for the id), None when none is queued, and raises a ValueError naming the count and the files when several are. integrate's claim and its Done-when notice, handback's edge and return writes, and the consolidation close's archive plan all find the spec through it; each refuses when none is queued, in its own words, and refuses with the lookup's reason when several are, writing nothing. None of the three holds a lookup of its own."""
+rationale = """The three lookups disagreed on two queued specs of one id: the claim refused, while handback and the consolidation close acted on the first. Every caller writes or moves the file, and acting on one copy leaves the other standing as a live queued row of the same id, so the refusal is kept."""
+test_refs = "TC-444"
+status = "Drafted"
+component = "CMP-006"
+phase = 6

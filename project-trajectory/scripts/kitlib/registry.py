@@ -54,6 +54,7 @@ __all__ = [
     "spec_archive_dir",
     "spec_roots",
     "spec_files",
+    "queued_spec",
     "WORK_SPEC_ROOTS",
     "tree_spec_paths",
     "parse_spec_frontmatter",
@@ -364,6 +365,30 @@ def spec_files(work_dir):
     knows which one tree it means (a branch's own claimed set, a status-dir
     census) still wants undiluted."""
     return sorted(_spec_files_under(work_dir))
+
+
+def queued_spec(work_dir, wi_id):
+    """The one QUEUED spec of `wi_id` under `work_dir` (`queued/<id>-*.md`), or
+    None when none is queued; a ValueError naming the count when several are.
+
+    THE ONE LOOKUP (WI-1004). The claim, handback's edge and return writes and
+    the consolidation close each globbed for it, and on two queued specs of one
+    id the claim refused while the other two acted on the first. Every caller
+    writes or moves the file, and acting on one copy leaves the other standing
+    as a live queued row of the same id, so several refuse. None is the
+    caller's to word: each refuses it in its own terms.
+
+    Implements: SR-156, LLR-384"""
+    queued = Path(work_dir) / "queued"
+    hits = sorted(queued.glob(wi_id + "-*.md")) if queued.is_dir() else []
+    if len(hits) > 1:
+        raise ValueError(
+            "{} queued specs carry {} ({}) - exactly one is needed; remove or "
+            "renumber the copy that is not the row".format(
+                len(hits), wi_id, ", ".join(p.name for p in hits)
+            )
+        )
+    return hits[0] if hits else None
 
 
 def parse_spec_frontmatter(text, relpath):

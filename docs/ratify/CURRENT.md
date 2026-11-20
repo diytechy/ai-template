@@ -12,7 +12,7 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-11-18 (9b377be1e)._
 _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-16 (2bee2b551)._
 
-_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 35336c150 (2026-11-19) — the record's maturity cells have not moved since._
+_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is eab83e5cd (2026-11-19) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
@@ -701,7 +701,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 10 chain(s): SR-032, SR-049, SR-147, SR-148, SR-157, SR-159, SR-166, SR-169, SR-189, SR-220</summary>
+<summary>Waiting for automated adjudication — 11 chain(s): SR-032, SR-049, SR-147, SR-148, SR-156, SR-157, SR-159, SR-166, SR-169, SR-189, SR-220</summary>
 
 ## SR-032 — Onboarding and dev-setup scaffold
 
@@ -844,6 +844,38 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: The report is warn-only and exits 0 on a finding, the audit runs it ahead of the budget step, and both registries' example rows show the follow_up cell.
 - **Automated**: Yes
 - **Evidence**: tests/test_ruled_open_item_cover.py
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-156 — Bounded lanes narrowing to one gated landing
+
+> **Requirement.** The delivered loop content shall run exactly one work item per lane on bounded, mutually isolated lanes and narrow every lane back to the integration branch through one serial, fail-closed seam that runs the declared checks on the composed tree — parking a failing candidate and stopping the queue loudly, draining claiming to a clean merged stop under a declared pause, and reconstructing claim and queue state from version-control history alone at any crash boundary, never a half-integrated authoritative state.
+
+> **Rationale.** Realizes SN-027 WHOLE — ready work fans out across bounded parallel lanes and that fan-out narrows to one serialized gated seam before anything lands, in the need's own words — with SN-008 (the seam is fail-closed) and SN-025 (recovery from version-control history alone). ONE DECISION PER ROW: "serial integration is one delivered contract" is sound for the SEAM, but lane execution, claim authority and the trunk-side mint of work-item identity are not the seam, and a row stating the seam alone leaves SN-027's FIRST half — bounded lanes, isolated working trees, a worker ceiling — stated nowhere. This row therefore states the whole lane LIFECYCLE (claim, run isolated, close, land), which is what closes that hole; the trunk-only authority contract sheds to SR-170. The two fail independently: a perfectly serialized landing that lets a lane commit a regenerated artifact satisfies this row and not that one. Terminal close is SR-144's and is not restated here — one SR per (need, property), and both rows sit under SN-027 — so what this row carries of it is only that a terminal branch still lands through the one serial seam.
+
+
+### LLR LLR-384 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-384
+- **SR-Refs**: SR-156;SR-220
+- **Title**: An id's queued spec has one lookup, which refuses when several queued specs carry the id
+- **Module**: project-trajectory/scripts/kitlib/registry.py
+- **CodeSymbol**: queued_spec
+- **Detail**: queued_spec in kitlib/registry.py returns the one queued spec of an id under a work folder (a queued file named for the id), None when none is queued, and raises a ValueError naming the count and the files when several are. integrate's claim and its Done-when notice, handback's edge and return writes, and the consolidation close's archive plan all find the spec through it; each refuses when none is queued, in its own words, and refuses with the lookup's reason when several are, writing nothing. None of the three holds a lookup of its own.
+- **Rationale**: The three lookups disagreed on two queued specs of one id: the claim refused, while handback and the consolidation close acted on the first. Every caller writes or moves the file, and acting on one copy leaves the other standing as a live queued row of the same id, so the refusal is kept.
+- **TestRefs**: TC-444
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-444 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-444
+- **Verifies**: SR-156;SR-220;LLR-384
+- **Level**: Integration
+- **Method**: Write a work folder holding two queued specs that carry one id. Look the id up through kitlib.registry.queued_spec, and look up an id nothing queues, one queued spec, and a missing folder. Then drive the claim's lookup, a handback edge write and the consolidation close's archive plan at the doubled id and at an unqueued id, listing the queued folder before and after. Look for a lookup of handback's own.
+- **Tier**: Smoke
+- **Expected**: The doubled id raises a ValueError naming the count; an unqueued id and a missing folder answer None; a single queued spec is returned. The claim, the handback write and the close each refuse the doubled id with that reason and plan nothing, and the queued folder is unchanged; each refuses the unqueued id in its own words. handback has no lookup of its own.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_queued_spec_lookup_refuses_two_specs_of_one_id; tests/test_policy_one_home.py::test_every_act_on_a_queued_spec_refuses_two_of_one_id
 - **Status**: Drafted
 - **Phase**: 6
 
@@ -1082,6 +1114,19 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
   - before: TC-208
   - after: TC-208; TC-442
 
+### LLR LLR-384 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-384
+- **SR-Refs**: SR-156;SR-220
+- **Title**: An id's queued spec has one lookup, which refuses when several queued specs carry the id
+- **Module**: project-trajectory/scripts/kitlib/registry.py
+- **CodeSymbol**: queued_spec
+- **Detail**: queued_spec in kitlib/registry.py returns the one queued spec of an id under a work folder (a queued file named for the id), None when none is queued, and raises a ValueError naming the count and the files when several are. integrate's claim and its Done-when notice, handback's edge and return writes, and the consolidation close's archive plan all find the spec through it; each refuses when none is queued, in its own words, and refuses with the lookup's reason when several are, writing nothing. None of the three holds a lookup of its own.
+- **Rationale**: The three lookups disagreed on two queued specs of one id: the claim refused, while handback and the consolidation close acted on the first. Every caller writes or moves the file, and acting on one copy leaves the other standing as a live queued row of the same id, so the refusal is kept.
+- **TestRefs**: TC-444
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
 ### TC TC-442 — ADDED since the snapshot, Drafted — never accepted
 - **TC-ID**: TC-442
 - **Verifies**: SR-220;LLR-210
@@ -1091,6 +1136,18 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: For every cell the commissioning reader's open items equal split_pred_edges' open-item edges: a comma or whitespace separator still yields the edge, the soft marker is ignored, and the lettered token is no open-item edge. Each ref-cell read splits a comma- or whitespace-separated cell into its ids, and agent_common's ref split is kitlib.spine.refs itself.
 - **Automated**: Yes
 - **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_consolidate_finds_every_open_item_edge_split_pred_edges_finds; tests/test_policy_one_home.py::test_every_ref_cell_read_splits_through_the_one_home
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-444 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-444
+- **Verifies**: SR-156;SR-220;LLR-384
+- **Level**: Integration
+- **Method**: Write a work folder holding two queued specs that carry one id. Look the id up through kitlib.registry.queued_spec, and look up an id nothing queues, one queued spec, and a missing folder. Then drive the claim's lookup, a handback edge write and the consolidation close's archive plan at the doubled id and at an unqueued id, listing the queued folder before and after. Look for a lookup of handback's own.
+- **Tier**: Smoke
+- **Expected**: The doubled id raises a ValueError naming the count; an unqueued id and a missing folder answer None; a single queued spec is returned. The claim, the handback write and the close each refuse the doubled id with that reason and plan nothing, and the queued folder is unchanged; each refuses the unqueued id in its own words. handback has no lookup of its own.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_queued_spec_lookup_refuses_two_specs_of_one_id; tests/test_policy_one_home.py::test_every_act_on_a_queued_spec_refuses_two_of_one_id
 - **Status**: Drafted
 - **Phase**: 6
 

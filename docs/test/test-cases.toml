@@ -4405,3 +4405,14 @@ automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_converter_parses_a_spec_through_the_one_parser; tests/test_policy_one_home.py::test_a_spec_with_a_non_string_title_is_reported_and_skipped"
 status = "Drafted"
 phase = 6
+
+[test.TC-444]
+verifies = ["SR-156", "SR-220", "LLR-384"]
+level = "Integration"
+method = "Write a work folder holding two queued specs that carry one id. Look the id up through kitlib.registry.queued_spec, and look up an id nothing queues, one queued spec, and a missing folder. Then drive the claim's lookup, a handback edge write and the consolidation close's archive plan at the doubled id and at an unqueued id, listing the queued folder before and after. Look for a lookup of handback's own."
+tier = "Smoke"
+expected = "The doubled id raises a ValueError naming the count; an unqueued id and a missing folder answer None; a single queued spec is returned. The claim, the handback write and the close each refuse the doubled id with that reason and plan nothing, and the queued folder is unchanged; each refuses the unqueued id in its own words. handback has no lookup of its own."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_queued_spec_lookup_refuses_two_specs_of_one_id; tests/test_policy_one_home.py::test_every_act_on_a_queued_spec_refuses_two_of_one_id"
+status = "Drafted"
+phase = 6

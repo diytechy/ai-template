@@ -11568,6 +11568,31 @@ front matter (`title = "5"`).
 
 **Adopter-merged files:** none.
 
+### An id's queued spec has one lookup, which refuses two of one id [since 426f88f60]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The claim (`integrate`), handback's edge and return writes
+(`handback`) and the consolidation close (`consolidate`) each globbed
+`docs/work/queued/` for an id's spec. On two queued specs carrying one id the
+claim refused, while handback and the close acted on the first and left the
+second standing as a live queued row of the same id. All three now call
+`kitlib.registry.queued_spec(work_dir, wi_id)`, which returns the one spec,
+None when none is queued, and refuses when several are. Handback and the
+close now refuse that input too, writing nothing, with a reason naming the
+files. When no spec is queued each still refuses as before, in its own words.
+
+**What to do.** Nothing is forced. If a handback or a consolidation close now
+refuses because two queued specs carry one id, remove or renumber the copy
+that is not the row, and run it again. Overwrite the four files together:
+the three scripts call `kitlib.registry.queued_spec`, which an older
+`kitlib/registry.py` lacks.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/registry.py`,
+`scripts/integrate.py`, `scripts/handback.py`, `scripts/consolidate.py`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

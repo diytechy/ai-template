@@ -1522,12 +1522,16 @@ def _archive_plan(root, minted):
     readable, and its frontmatter fence parses so the Deliverable can be
     rewritten. `minted` is `intake._mint`'s `[(wi_id, [absorbed ids])]` — the
     whole verdict, resolved at once, for the same reason the edge re-point is."""
-    queued = Path(root) / WORK / "queued"
     plan = []
     for successor, absorbed in minted:
         for dead_id in absorbed:
-            hits = sorted(queued.glob(dead_id + "-*.md")) if queued.is_dir() else []
-            if not hits:
+            try:
+                spec = kitregistry.queued_spec(Path(root) / WORK, dead_id)
+            except ValueError as exc:
+                return [], "the consolidation close cannot archive {}: {}".format(
+                    dead_id, exc
+                )
+            if spec is None:
                 return [], (
                     "the consolidation close cannot archive {}: it is no longer "
                     "a queued spec (claimed or moved between the close and this "
@@ -1536,23 +1540,23 @@ def _archive_plan(root, minted):
                     "absorb".format(dead_id, successor)
                 )
             try:
-                text = hits[0].read_text(encoding="utf-8")
+                text = spec.read_text(encoding="utf-8")
             except (OSError, UnicodeDecodeError) as exc:
                 return [], "the consolidation close cannot read {}: {}".format(
-                    hits[0].name, exc
+                    spec.name, exc
                 )
             new_text = restructured_text(text, successor)
             if new_text is None:
                 return [], (
                     "the consolidation close cannot rewrite {}: it carries no "
-                    "closed `+++` frontmatter fence".format(hits[0].name)
+                    "closed `+++` frontmatter fence".format(spec.name)
                 )
             plan.append(
                 (
                     successor,
                     dead_id,
-                    "{}/queued/{}".format(WORK, hits[0].name),
-                    "{}/restructured/{}".format(ARCHIVE_WORK, hits[0].name),
+                    "{}/queued/{}".format(WORK, spec.name),
+                    "{}/restructured/{}".format(ARCHIVE_WORK, spec.name),
                     new_text,
                 )
             )
