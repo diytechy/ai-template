@@ -12,16 +12,29 @@ planmode = "single"
 
 ## Deliverable
 
-`gen_arch_map.resolve_import(token, importer, modules)` is now the one
-resolution of the import tokens `internal_imports` writes. The cross-component
-seam rule (`trajectory_arch._classifiable_edges`) and the dependency diagram
-both call it, and the diagram's `_resolve_import` is deleted. The rule now
-sees dotted and relative imports, so edges into `kitlib/*` and `rendering/*`
-are checked. On this tree the fix surfaced 7 cross-component findings, and all
-7 are declared here. It also surfaced 55 multi-membership advisories, and the
-`kitlib/spine.py` kernel entry clears 41 of them. `trace.py --strict` and
-`check_trajectory.py --strict` both exit 0, with 0 cross-component findings and
-37 advisories (25 at the base). The spec of record is defect 2 under "Defects
+`gen_arch_map.resolve_import(token, importer, modules, packages)` is now
+the one resolution of the import tokens `internal_imports` writes. Whether an
+importer is a package is read from its file through
+`gen_arch_map.package_paths`. The cross-component seam rule
+(`trajectory_arch._classifiable_edges`) and the dependency diagram both call
+it, and the diagram's `_resolve_import` is deleted. The rule now sees dotted
+and relative imports, so edges into `kitlib/*` and `rendering/*` are checked.
+
+The account, measured on the final tree against the base `121473dec`:
+
+- **At the base:** 0 cross-component findings and 25 advisories.
+- **The resolver alone** (base registries): 7 findings and 80 advisories. The
+  80 are the 25 base advisories plus 55 newly surfaced ones.
+- **What this row cleared:** all 7 findings are declared here. Of the 55
+  surfaced advisories, 42 are cleared: 41 into `kitlib/spine` by its kernel
+  entry, and `coordinator_guard` to `kitlib/guard_hooks` as a side effect of
+  IF-315's endpoint pairing (below). Of the 25 base advisories, 1 is cleared:
+  `trajectory_arch` to `gen_arch_map`, now under IF-131.
+- **Final:** 0 findings and 37 advisories, which is 24 of the base 25 plus 13
+  of the 55 surfaced. `trace.py --strict` and `check_trajectory.py --strict`
+  both exit 0.
+
+The spec of record is defect 2 under "Defects
 in the live partition" in
 [`docs/plans/2026-11-11-oi130-rescore/README.md`](../../../plans/2026-11-11-oi130-rescore/README.md).
 The row's SpecRef cell was cleared at close, as R-F asks of a terminal row.
@@ -40,12 +53,14 @@ The row's SpecRef cell was cleared at close, as R-F asks of a terminal row.
 - **Code** (`62646a03f`):
   - The resolver: `resolve_import` and its relative arm, `_resolve_relative`.
   - The rule's call to it. The rule is silent without the resolver, as
-    IF-131 promises for every entry point, and skips an edge from a module
-    to itself.
+    IF-131 promises for every entry point. It also skips an import that
+    resolves to the importing module itself, as a relative import in a
+    package's `__init__.py` naming its own package does.
   - The diagram's call to it. Both resolvers draw the same 557 arrows over
     this repository.
-  - A 17th case, a module importing its own package, which pins the self-edge
-    guard and fails with the guard removed.
+  - A 17th case, a relative import in a package's `__init__.py` that
+    resolves to the importing module itself. It pins the rule's self-edge skip
+    and fails with the skip removed.
   - A per-test reset of the rule's scan cache. The rule caches its scan per
     root path for the process, and `tmp_path_retention_policy = failed` hands
     a passed test's directory name to the next test. Without the reset, the
@@ -75,18 +90,41 @@ The row's SpecRef cell was cleared at close, as R-F asks of a terminal row.
   - The component view gains LLR-374 on CMP-006 and the three seams on the
     components of their endpoints. `design_rows` goes from 337 to 338 and
     `seam_rows` from 259 to 261.
+- **Review fixes:**
+  - Sol's finding. The relative arm decided package-ness from the inventory
+    holding a module under the importer's path, so a package's `__init__.py`
+    with nothing inventoried under it climbed one level too far.
+    - `9899b4844` adds the regression, red before the fix: the rule matrix
+      gains `kitlib/leaf/__init__.py` with `from .. import spine`, and the
+      diagram test moves to that package.
+    - `275be065f` reads package-ness from the files. `package_paths` gives the
+      module paths whose file is an `__init__.py`, and `resolve_import` takes
+      them. Over this repository the diagram's 557 arrows and the rule's
+      counts are unchanged, since no `__init__.py` here makes a relative
+      import. The ratchets end at `gen_arch_map.py` 1599 SLOC and
+      `trajectory_arch.py` 1128.
+  - Argon's two prose findings, fixed in the commit after those: the advisory
+    account above, stated once and the same in the plan and the log fragment;
+    and the self-edge skip, worded as the seam rule's skip of an import that
+    resolves to the importing module itself, in the RESYNC entry, LLR-374 and
+    TC-436.
 
-Departures from the plan: `code_symbol` also names `_resolve_relative`; IF-131
-also gains a requestor; the skipped cases assert that no edge is classified
-rather than that no finding is reported; and the self-import case and the
-cache reset were added.
+Departures from the plan:
+
+- `code_symbol` also names `_resolve_relative` and `package_paths`.
+- IF-131 also gains a requestor.
+- The skipped cases assert that no edge is classified, rather than that no
+  finding is reported.
+- The self-edge case and the cache reset were added.
+- Package-ness is read from the files, not from the inventory as the plan
+  said.
 
 Left undone:
 
 - **The review bar.** Built on the maintenance branch `maint/wi-1003`,
   outside the lane workflow: no claim and no lane review rounds. The parent
   session reviews the diff and merges it.
-- **The advisory tier.** Of the 37 advisories, 13 are edges this fix
+- **The advisory tier.** Of the 37 final advisories, 13 are edges this fix
   surfaced into a module that carries several components' tags:
   - `acceptance_record` to `kitlib/done_when`;
   - `agent_policy` and `held_status` to `kitlib/authority`;
@@ -97,7 +135,8 @@ Left undone:
   - `agent_brief`, `plan_gate`, `session_keep`, `kitlib/sitting` and
     `kitlib/expected_failure` to `kitlib/verdict`.
 
-  The other 24 predate it. As the second Done-when item says, these are the
+  The other 24 predate it (the base's 25, less the one IF-131 now covers).
+  As the second Done-when item says, these are the
   record's defect 1 (membership drift). No queued row names that defect at this
   base.
 - **A side effect of the rule's pairing.** `_declared_seam_pairs` pairs every
@@ -150,8 +189,8 @@ end in the same path and resolves a relative import written in a package's
 two-homes defect the re-score records as defect 3, so the diagram calls the
 new one and `_resolve_import` is deleted. The call adds no import edge:
 `trajectory_arch` imports `gen_arch_map` today. IF-131 (the call surface the
-spine checks read from `gen_arch_map`) gains `resolve_import` in its `data`
-cell and its `Contract IF-131:` body. The interface reference and
+spine checks read from `gen_arch_map`) gains `resolve_import`, and
+`package_paths` beside it, in its `data` cell and its `Contract IF-131:` body. The interface reference and
 `components.derived.toml` regenerate from the changed registry rows.
 
 ## Done-when
@@ -180,8 +219,8 @@ cell and its `Contract IF-131:` body. The interface reference and
         `from traj_parse import schedule` (a function that shares a module's
         stem) lands on `traj_parse`, not on `schedule`.
       - **Relative token:** the importer's package is the importer itself
-        when it is a package (an inventory module sits under its path), and
-        its parent otherwise. Each dot past the first climbs one more level,
+        when its file is a package's `__init__.py`, which the file decides,
+        and its parent otherwise. Each dot past the first climbs one more level,
         and a climb past the scan root's top is skipped. The target is the
         package path plus the token's segments, matched exactly (no suffix
         match), dropping trailing segments down to the package itself. No
@@ -233,8 +272,9 @@ MAJORs.
   interface row, plus the registries.
 - **S5, the architectural delta: adopted.** Stated in the Context. The
   `imports` value domain and the record shape do not change, so IF-028 and
-  IF-132 are untouched. IF-131's surface gains `resolve_import`. The dotted
-  name is lost in `_classifiable_edges`, not in `gen_arch_map`'s import lines.
+  IF-132 are untouched. IF-131's surface gains `resolve_import` (and, after
+  review, `package_paths`). The dotted name is lost in `_classifiable_edges`,
+  not in `gen_arch_map`'s import lines.
   The interface reference and `components.derived.toml` regenerate. Measured
   at base `121473dec`, the fix surfaces 7 finding-tier edges (the record
   counted 10 on its 2026-11-11 tree): `agent_common` and `check_privacy` to

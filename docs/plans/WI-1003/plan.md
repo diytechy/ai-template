@@ -20,6 +20,12 @@ measured were taken at the base by a scratch script over `arch_inventory`.
      is None. Then exact matches of the package plus the tail, trimming the
      tail down to the package itself.
 
+     *Corrected at review:* guessing package-ness from the modules under the
+     importer misses a package's `__init__.py` with nothing inventoried under
+     it. The built rule reads it from the files: `package_paths(src_roots)`
+     gives the module paths whose file is an `__init__.py`, and
+     `resolve_import` takes them as a fourth argument.
+
    The diagram's `_resolve_import` is deleted and `build_dependency_diagram`
    calls `resolve_import`. The diagram changes in two places only, both in the
    direction of the seam check: several modules ending in the same path now
@@ -62,9 +68,14 @@ traced `verifies` cell: TC-201 (drives `check_privacy` and `agent_common`
 against the shared table) cites IF-314, and TC-229 (drives `write_atomic`'s
 bounded retries) cites IF-315.
 
-The advisory tier, measured: the fix surfaces 55 multi-membership advisories,
-and the `spine.py` kernel entry clears 41 of them, leaving 14. They are
-reported and not declared (the spec's second Done-when item).
+The advisory tier, measured: the fix surfaces 55 multi-membership advisories
+beside the base's 25, and the `spine.py` kernel entry clears 41 of them.
+*Corrected after the build, re-measured on the final tree:* IF-315's endpoint
+pairing also covers `coordinator_guard` to `kitlib/guard_hooks`, so 42 of the
+55 are cleared and 13 remain. IF-131's new requestor covers one of the 25 base
+advisories (`trajectory_arch` to `gen_arch_map`), so 24 remain. That gives 37
+in all. The 13 are reported and not declared (the spec's second Done-when
+item).
 
 ## Registry rows
 

@@ -22,17 +22,22 @@ no lane review rounds, commit hooks on. The parent session reviews and merges.
 - **The resolver.** `gen_arch_map.resolve_import` tries an absolute token's
   dotted prefixes longest first, as paths matched exactly or by suffix. The
   first prefix that matches decides, and two matches are ambiguous. A relative
-  token starts from the importer's package, where a package's `__init__` is
-  its own package. It climbs one level per extra dot and matches exactly. The
+  token starts from the importer's package, where a package's `__init__.py` is
+  its own package, which `package_paths` reads from the files (at review: it
+  had been guessed from the modules under the importer, which missed a
+  package with nothing inventoried under it). It climbs one level per extra
+  dot and matches exactly. The
   dependency diagram's `_resolve_import`, which took the first of several
   matches and anchored an `__init__`'s relative import one level too high, is
   deleted, and the diagram calls the one resolver. Over this repository both
   draw the same 557 arrows.
-- **The rule.** `_classifiable_edges` resolves through it and skips an edge
-  from a module to itself. With a `gen_arch_map` that lacks the resolver, the
-  rule is silent (IF-131's optional entry points).
+- **The rule.** `_classifiable_edges` resolves through it and skips an
+  import that resolves to the importing module itself. With a `gen_arch_map`
+  that lacks the resolver, the rule is silent (IF-131's optional entry
+  points).
 - **What it surfaced.** At the base the rule reported 0 findings and 25
-  advisories. With the resolver it reports 7 findings and 80 advisories.
+  advisories. With the resolver and the base registries it reports 7 findings
+  and 80 advisories: the base's 25 plus 55 surfaced.
 - **The declarations.**
   - IF-314 (new) covers `kitlib/secret_classes` for `check_privacy` and
     `agent_common`.
@@ -42,17 +47,23 @@ no lane review rounds, commit hooks on. The parent session reviews and merges.
   - `kitlib/spine.py` joins `docs/kernel-modules-allow`. It is imported by 43
     modules across all four components, and CMP-006's accepted note already
     placed it there.
-  - IF-131 gains `resolve_import` and its real requestor, `trajectory_arch`.
+  - IF-131 gains `resolve_import`, `package_paths` and its real requestor,
+    `trajectory_arch`.
 
-  After them: 0 findings and 37 advisories. 13 of the 37 are edges the fix
-  surfaced into modules that carry several components' tags. Those belong to
-  the record's defect 1, not to a seam row.
+  After them: 0 findings and 37 advisories. Of the 55 surfaced advisories,
+  42 are cleared: 41 into `kitlib/spine` by the kernel entry, and
+  `coordinator_guard` to `kitlib/guard_hooks` by IF-315's endpoint pairing.
+  Of the base's 25, 1 is cleared (`trajectory_arch` to `gen_arch_map`, by
+  IF-131). So the 37 are 24 base advisories and 13 surfaced ones. The 13 are
+  edges into modules that carry several components' tags. They belong to the
+  record's defect 1, not to a seam row.
 - **Rows.** IF-314, IF-315, LLR-374 and TC-436 are new and `Drafted`. TC-201
   and TC-229 cite the two new seams (traced `verifies`). CMP-006's note is
   amended to what the check sees and stays `Accepted`, waiting on the
   operator's re-accept. TC-437 was not needed.
-- **Sizes.** `gen_arch_map.py` 1581 to 1593 SLOC (a reviewed bump: the
-  resolver) and `trajectory_arch.py` 1130 to 1124 (re-stamped down).
+- **Sizes.** `gen_arch_map.py` 1581 to 1599 SLOC (a reviewed bump: the
+  resolver and `package_paths`) and `trajectory_arch.py` 1130 to 1128
+  (re-stamped down).
   `_classifiable_edges` leaves the complexity baseline.
 - **RESYNC.** "The seam check resolves dotted and relative imports",
   anchored at `121473dec`. An adopter with packages may see new findings
