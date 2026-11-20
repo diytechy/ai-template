@@ -159,12 +159,14 @@ def test_the_projection_reads_the_queue_not_a_historical_pointer(tmp_path):
     assert queue["cards"] == [] and queue["uncited"] == ["OI-5"]
 
 
-def test_decisions_to_review_is_the_pages_last_section(tmp_path):
-    # LLR-118: the operator surface's sections run in a fixed order, and
-    # Decisions to review is the last of them.
+def test_the_pages_sections_run_one_to_three(tmp_path):
+    # LLR-118: the operator surface's sections run in a fixed order, the
+    # pending operator actions last. WI-1009 took "Decisions to review" off
+    # the page: the operator reads the delegated decisions in their records.
     page = gen.render(tmp_path)
     eyebrows = re.findall(
         r'<section class="band"[^>]*><p class="eyebrow">([^<]+)</p>', page
     )
-    assert [e.split(" · ", 1)[0] for e in eyebrows] == ["1", "2", "3", "4"]
-    assert eyebrows[-1] == "4 · Decisions to review"
+    assert [e.split(" · ", 1)[0] for e in eyebrows] == ["1", "2", "3"]
+    assert eyebrows[-1].startswith("3 · Pending operator actions")
+    assert "decisions-to-review" not in page
