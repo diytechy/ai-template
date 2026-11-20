@@ -101,6 +101,12 @@ Left for the operator, and why:
 - **Not changed:** `form` on any row (each of the six is met at an
   interface); IF-281, IF-284, IF-285 and IF-288 stay untied, as nothing this
   row closes needed them.
+- **Review (2026-11-20, `e48a1c01c`).** Sol on the code: no findings.
+  Argon on the prose, seven findings, all applied: DA-023 names both fixture
+  versions; DA-025 no longer leans on the kit's description floor; DA-027's
+  holds_when no longer allows the hand act its assumption rules out;
+  SR-226's, SR-234's and SR-238's waivers are bounded to what each row
+  checks; IF-074's data names the uncited items and record findings again.
 
 ## Context
 

@@ -57,3 +57,9 @@ follows the act as a one-line change, with no row filed for it.
 - **For the operator:** the act over DA-001 to DA-028 and SUR-001 to SUR-004,
   and the re-accepts of the eleven waived requirements, LLR-118 and LLR-271,
   all on `docs/open-items.html` §2; then the flip.
+- **Review (2026-11-20, `e48a1c01c`).** Sol on the code: no findings.
+  Argon on the prose, seven findings, all applied: DA-023 names both fixture
+  versions; DA-025 no longer leans on the kit's description floor; DA-027's
+  holds_when no longer allows the hand act its assumption rules out;
+  SR-226's, SR-234's and SR-238's waivers are bounded to what each row
+  checks; IF-074's data names the uncited items and record findings again.
