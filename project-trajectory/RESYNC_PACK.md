@@ -11535,6 +11535,39 @@ as every kit writer joins one, reads as before.
 
 **Adopter-merged files:** none.
 
+### A spec file has one parse, and it refuses a value that is not text [since 426f88f60]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `wi_convert.parse_spec` carried its own fence split, body
+parse, status lookup and scalar rules, beside `kitlib.registry.parse_spec_row`,
+which every registry reader calls. The two disagreed on three inputs. The
+converter now refuses a spec under `active/` (its own precondition) and
+otherwise calls `parse_spec_row`; `split_spec`, `parse_deliverable`,
+`status_from_location` and the scalar checks are deleted. The stricter answer
+is kept on each input:
+
+- a value that is not text where a cell is owed (`title = 5`, a list key
+  holding a number, a `supersedes` list holding a number) is refused.
+  `priority` may still be an integer. The registry used to write such a value
+  as its text, so `check_trajectory` now names such a spec as malformed and
+  the scheduler skips it;
+- a spec whose filename does not carry its id is refused by
+  `wi_convert --to-csv`, as the registry already refused it;
+- an `adjudicates` value with a `;` inside a token, or given as a bare string,
+  is refused by `wi_convert --to-csv`, as the registry already refused it.
+
+No kit route writes any of these.
+
+**What to do.** Run `check_trajectory.py` after the overwrite. If it names a
+spec as malformed because a value is not text, quote the value in the spec's
+front matter (`title = "5"`).
+
+**Kit-owned files — overwrite:** `scripts/kitlib/registry.py`,
+`scripts/wi_convert.py`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -3898,3 +3898,15 @@ test_refs = "TC-440"
 status = "Drafted"
 component = "CMP-006"
 phase = 6
+
+[design.LLR-388]
+sr_refs = ["SR-166"]
+title = "A spec file has one parse, which every registry reader and the converter call and which refuses a value that is not text"
+module = "project-trajectory/scripts/kitlib/registry.py"
+code_symbol = "parse_spec_row/scalar_cell/spec_text"
+detail = """parse_spec_row in kitlib/registry.py reads one spec file into its registry row. It refuses, naming the file, an id the filename does not carry, an adjudicates value adjudicates_tokens refuses, and a value that is not text where a cell is owed: scalar_cell takes a scalar as text, a priority also as an integer, and a supersedes list as text elements joined on ;, and spec_text holds each element of a list key to text. read_spec_rows reports such a spec through its error sink and skips it. wi_convert's parse_spec refuses a spec under active/ (a conversion runs only when no claim is in flight), then calls parse_spec_row and raises its refusal as a ConvertError naming the file as the caller knows it; the converter holds no fence split, body parse, status lookup or scalar rule of its own."""
+rationale = """The converter and the registry each parsed a spec and disagreed on three inputs: a non-string title the registry wrote as its text and the converter refused; an id the filename does not carry, and an adjudicates value with a ; in a token or given as a bare string, which the registry refused and the converter accepted. The stricter answer is kept on each: no supported route writes any of them and no spec on the tree carried one."""
+test_refs = "TC-443"
+status = "Drafted"
+component = "CMP-006"
+phase = 6

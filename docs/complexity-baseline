@@ -158,7 +158,6 @@ project-trajectory/scripts/trajectory_arch.py	codesymbol_crosscheck_findings	29	
 project-trajectory/scripts/trajectory_arch.py	contract_body_findings	22	40
 project-trajectory/scripts/trajectory_arch.py	if_tc_allow_hygiene_findings	27	54
 project-trajectory/scripts/trajectory_arch.py	interface_findings	37	89
-project-trajectory/scripts/wi_convert.py	parse_spec	19	35
 tests/test_bootstrap.py	test_every_sibling_imported_module_is_shipped_by_mapping	33	52
 tests/test_dependency_ledger.py	undeclared_imports	19	21
 tests/test_gen_cases.py	_example_status_cells	24	15

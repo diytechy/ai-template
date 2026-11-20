@@ -9,11 +9,12 @@ check that no former holder still carries a copy. The kept answers and their
 reasons are the spec's (`WI-1004`, "The eleven, in landing order"). B3's and
 B5's pins repair the vacuous ones in `tests/test_rule_sync.py` and live there.
 
-Implements: TC-439, TC-440, TC-441, TC-442
+Implements: TC-439, TC-440, TC-441, TC-442, TC-443
 """
 
 import tomllib
 
+import pytest
 from conftest import load_script
 
 migrate_carrier = load_script("migrate_carrier")
@@ -251,3 +252,76 @@ def test_every_ref_cell_read_splits_through_the_one_home(tmp_path):
         tmp_path, ["WI-9"], {"WI-9": {"SR-Refs": pair}}
     )
     assert wanted == {"SR-1", "SR-2", "LLR-1"}
+
+
+# --- 6. B8b the spec parse ----------------------------------------------------------
+# `kitlib.registry.parse_spec_row` (every registry reader) and
+# `wi_convert.parse_spec` (the converter) each parsed a spec file. The registry
+# wrote a non-string scalar as its text and refused an id its filename does not
+# carry and an `adjudicates` value its one parser refuses; the converter refused
+# the first and accepted the other two. Kept: refused, all three. The converter
+# keeps only its own precondition, the `active/` refusal, and calls the home.
+
+SPEC_REFUSALS = {
+    "title = 5": (
+        '+++\nid = "WI-7"\ntitle = 5\n+++\n',
+        "queued/WI-7-x.md",
+        "`title` must be a string",
+    ),
+    "a non-string list element": (
+        '+++\nid = "WI-7"\nsr_refs = [5]\n+++\n',
+        "queued/WI-7-x.md",
+        "`sr_refs` must be a string",
+    ),
+    "a non-string supersedes element": (
+        '+++\nid = "WI-7"\nsupersedes = [5]\n+++\n',
+        "queued/WI-7-x.md",
+        "`supersedes` must be a string",
+    ),
+    "an id the filename does not carry": (
+        '+++\nid = "WI-7"\ntitle = "t"\n+++\n',
+        "queued/WI-8-x.md",
+        "filename does not carry its own id",
+    ),
+    'adjudicates = ["a;b"]': (
+        '+++\nid = "WI-7"\nadjudicates = ["a;b"]\n+++\n',
+        "queued/WI-7-x.md",
+        "`adjudicates` is",
+    ),
+    'adjudicates = "a"': (
+        '+++\nid = "WI-7"\nadjudicates = "a"\n+++\n',
+        "queued/WI-7-x.md",
+        "`adjudicates` is",
+    ),
+}
+
+
+def test_the_converter_parses_a_spec_through_the_one_parser():
+    """Implements: TC-443"""
+    for name in ("split_spec", "parse_deliverable", "status_from_location", "_text"):
+        assert not hasattr(wi_convert, name), name
+    # The control: an integer priority is the one non-string scalar both read.
+    good = '+++\nid = "WI-7"\ntitle = "t"\npriority = 4\n+++\n'
+    for parse in (kitlib_registry.parse_spec_row, wi_convert.parse_spec):
+        row, _order = parse(good, "queued/WI-7-x.md")
+        assert (row["Title"], row["Priority"]) == ("t", "4")
+    for label, (text, rel, words) in SPEC_REFUSALS.items():
+        with pytest.raises(ValueError) as reg:
+            kitlib_registry.parse_spec_row(text, rel)
+        assert words in str(reg.value), label
+        with pytest.raises(wi_convert.ConvertError) as conv:
+            wi_convert.parse_spec(text, rel)
+        assert words in str(conv.value), label
+
+
+def test_a_spec_with_a_non_string_title_is_reported_and_skipped(tmp_path):
+    """Implements: TC-443"""
+    work = tmp_path / "docs" / "work"
+    _spec(work, "queued", "WI-8")
+    bad = work / "queued" / "WI-7-x.md"
+    bad.write_text('+++\nid = "WI-7"\ntitle = 5\n+++\n', encoding="utf-8")
+    errors = []
+    rows = kitlib_registry.read_spec_rows(work, on_error=errors.append)
+    assert [r["WI-ID"] for r in rows] == ["WI-8"]
+    assert len(errors) == 1 and "WI-7-x.md" in errors[0], errors
+    assert "`title` must be a string" in errors[0]

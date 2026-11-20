@@ -4394,3 +4394,14 @@ automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_consolidate_finds_every_open_item_edge_split_pred_edges_finds; tests/test_policy_one_home.py::test_every_ref_cell_read_splits_through_the_one_home"
 status = "Drafted"
 phase = 6
+
+[test.TC-443]
+verifies = ["SR-166", "LLR-388"]
+level = "Unit"
+method = "Parse a well-formed spec with an integer priority through kitlib.registry.parse_spec_row and through wi_convert.parse_spec. Then parse through both, in turn: a title given as an integer, a list key holding an integer, a supersedes list holding an integer, an id its filename does not carry, an adjudicates list with a semicolon inside a token, and an adjudicates value given as a bare string. Look for the converter's former parse helpers on wi_convert. Separately, read a spec folder holding one well-formed queued spec and one whose title is an integer through read_spec_rows with an error sink."
+tier = "Smoke"
+expected = "The well-formed spec reads the same through both, the integer priority as its digits. Each malformed input is refused by both, the registry with a ValueError and the converter with a ConvertError, each naming the same fault. wi_convert carries none of the former helpers. read_spec_rows returns only the well-formed row and reports the other file once, naming it and the title fault."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_converter_parses_a_spec_through_the_one_parser; tests/test_policy_one_home.py::test_a_spec_with_a_non_string_title_is_reported_and_skipped"
+status = "Drafted"
+phase = 6

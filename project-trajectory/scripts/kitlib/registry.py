@@ -39,6 +39,8 @@ __all__ = [
     "SPEC_LISTS",
     "LIST_TOLERANT_SCALARS",
     "scalar_cell",
+    "spec_text",
+    "INT_TOLERANT_SCALARS",
     "adjudicates_tokens",
     "SPEC_STATUS_DIRS",
     "SPEC_FENCE",
@@ -169,6 +171,10 @@ SPEC_LISTS = (
 # make `wi_convert` re-emit a one-id cell as a one-element list, changing every
 # existing spec file's bytes for nothing.
 LIST_TOLERANT_SCALARS = frozenset({"supersedes"})
+# The scalar whose frontmatter value may be a TOML INTEGER, read as its digits:
+# the intake mint writes `priority = 4`. Every other scalar must be text
+# (`scalar_cell`).
+INT_TOLERANT_SCALARS = frozenset({"priority"})
 # Directory -> Status. The directory is the WHOLE statement (WI-384): every
 # state owns a folder — including BOTH terminals, `complete/` for work that
 # shipped and `cancelled/` for work that never will — so nothing in the
@@ -436,17 +442,38 @@ def parse_spec_deliverable(relpath, body):
     return body[len(SPEC_DELIVERABLE) : -1]
 
 
-def scalar_cell(key, value):
-    """One frontmatter SCALAR as its registry cell.
+def spec_text(value, key, relpath):
+    """A frontmatter value that must be TEXT, returned as it is, or a
+    ValueError naming the file and the key.
+
+    Implements: SR-166, LLR-388"""
+    if isinstance(value, str):
+        return value
+    raise ValueError("{}: `{}` must be a string, got {!r}".format(relpath, key, value))
+
+
+def scalar_cell(key, value, relpath):
+    """One frontmatter SCALAR as its registry cell, or a ValueError naming
+    `relpath` for a value that is not text.
 
     A `LIST_TOLERANT_SCALARS` key written as a TOML list reads as the `;`-joined
     cell — the same join `SPEC_LISTS` columns take — so the two spellings of
     `supersedes` (one id as a bare string, several as a list) produce one cell
-    shape and every reader downstream sees `;`-joined ids or nothing. Any other
-    value is `str()`, exactly as it always was."""
+    shape and every reader downstream sees `;`-joined ids or nothing. An
+    `INT_TOLERANT_SCALARS` key may be an integer, written as its digits. Any
+    other value must be text, and so must each element of a tolerated list.
+
+    REFUSED, NOT STRINGIFIED, SINCE WI-1004. This parse and `wi_convert`'s
+    disagreed: `title = 5` read as the cell `5` here and was refused there. No
+    supported route writes one and no spec carried one, so the stricter answer
+    is kept, and a reader handed such a spec reports it as malformed.
+
+    Implements: SR-166, LLR-388"""
+    if key in INT_TOLERANT_SCALARS and isinstance(value, int):
+        return str(value)
     if key in LIST_TOLERANT_SCALARS and isinstance(value, (list, tuple)):
-        return ";".join(str(v) for v in value)
-    return str(value)
+        return ";".join(spec_text(v, key, relpath) for v in value)
+    return spec_text(value, key, relpath)
 
 
 def adjudicates_tokens(data, where):
@@ -477,8 +504,14 @@ def parse_spec_row(text, relpath):
     """`(row, order)` for one spec file — a 19-key row shaped exactly like the
     CSV's. Raises ValueError NAMING the file on any malformation: invalid TOML, a
     missing or non-string `id`, an id the filename disagrees with, a directory
-    that is not a status, a scope cell `adjudicates_tokens` refuses, or a body
-    that is not the single `## Deliverable` section this format owns."""
+    that is not a status, a value that is not text where a cell is owed
+    (`scalar_cell`), a scope cell `adjudicates_tokens` refuses, or a body that
+    is not the single `## Deliverable` section this format owns.
+
+    THE ONE SPEC PARSE (WI-1004): `wi_convert.parse_spec` calls it, so the
+    converter and every registry reader refuse and accept the same files.
+
+    Implements: SR-166, LLR-388"""
     data, body = parse_spec_frontmatter(text, relpath)
     row = dict.fromkeys(WI_COLUMNS, "")
     row["WI-ID"] = parse_spec_id(relpath, data)
@@ -486,12 +519,12 @@ def parse_spec_row(text, relpath):
     row["Deliverable"] = parse_spec_deliverable(relpath, body)
     for column, key in SPEC_SCALARS:
         if key in data:
-            row[column] = scalar_cell(key, data[key])
+            row[column] = scalar_cell(key, data[key], relpath)
     for column, key in SPEC_LISTS:
         if key == "adjudicates":
             row[column] = ";".join(adjudicates_tokens(data, relpath))
         elif key in data:
-            row[column] = ";".join(str(v) for v in data[key])
+            row[column] = ";".join(spec_text(v, key, relpath) for v in data[key])
     order = data.get("order")
     return row, order if isinstance(order, int) else None
 

@@ -12,7 +12,7 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-11-18 (9b377be1e)._
 _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-16 (2bee2b551)._
 
-_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 0aabe35c0 (2026-11-19) — the record's maturity cells have not moved since._
+_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 35336c150 (2026-11-19) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
@@ -701,7 +701,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 9 chain(s): SR-032, SR-049, SR-147, SR-148, SR-157, SR-159, SR-169, SR-189, SR-220</summary>
+<summary>Waiting for automated adjudication — 10 chain(s): SR-032, SR-049, SR-147, SR-148, SR-157, SR-159, SR-166, SR-169, SR-189, SR-220</summary>
 
 ## SR-032 — Onboarding and dev-setup scaffold
 
@@ -979,6 +979,38 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: Each resolved form reports the cross-component finding naming its importer and the module the import names, the stem-sharing name landing on the module it is imported from and the bare stem resolving as before; the skipped forms yield no classified edge from their importer; the generator without the resolver leaves the rule silent; the diagram draws the arrow from that package to the module its import names.
 - **Automated**: Yes
 - **Evidence**: tests/test_seam_import_forms.py
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-166 — The delivered package materializes where its manifest declares it will
+
+> **Requirement.** The delivered package shall be consumable at its own declared shipped-file manifest — every file the manifest names materialized at its declared destination in a fresh scaffold, and this repository's own instance carrying the structure of the template it ships — with a declared destination a fresh scaffold does not carry, and a structural divergence between the shipped template and this repository's instance, each failing rather than degrading the delivered package silently.
+
+> **Rationale.** Realizes SN-001 (an adopting team gets a working, gated, requirement-traced process without hand-building the tooling — which presupposes that what arrives is whole) and SN-007 (the kit is held to the standard it ships). The observable is B-05's own artifact-shaped one: the package exists, is complete, and is consumable at the manifest it declares. Verification evidence is named rather than owed: tests/test_bootstrap.py drives bootstrap.py's MAPPING against the file lists a fresh scaffold must carry, and tests/test_dogfood_sync.py pins this repository's own instance against the template it ships, so the manifest cannot declare one thing and the package deliver another. Deliberately distinct from its two neighbours: SR-163 asks why each shipped file EXISTS (SN-038, purpose coverage), SR-010 asks whether the generated scaffold PASSES, and this row asks whether what was promised ARRIVES WHERE IT WAS PROMISED. DELIBERATELY NARROW: manifest PRESENCE — a named source the package does not carry, and a shipped file the manifest does not name — is SR-163's alone, reported under its configurable warn-versus-gate policy, because two rows prescribing different outcomes for one observable is a contradiction an implementer can only resolve by violating one of them. What is left is what SR-163 does not ask: not whether a file is accounted for, but whether it LANDS — at its declared destination in a fresh scaffold, and in this repository's own instance of the template it ships.
+
+
+### LLR LLR-388 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-388
+- **SR-Refs**: SR-166
+- **Title**: A spec file has one parse, which every registry reader and the converter call and which refuses a value that is not text
+- **Module**: project-trajectory/scripts/kitlib/registry.py
+- **CodeSymbol**: parse_spec_row/scalar_cell/spec_text
+- **Detail**: parse_spec_row in kitlib/registry.py reads one spec file into its registry row. It refuses, naming the file, an id the filename does not carry, an adjudicates value adjudicates_tokens refuses, and a value that is not text where a cell is owed: scalar_cell takes a scalar as text, a priority also as an integer, and a supersedes list as text elements joined on ;, and spec_text holds each element of a list key to text. read_spec_rows reports such a spec through its error sink and skips it. wi_convert's parse_spec refuses a spec under active/ (a conversion runs only when no claim is in flight), then calls parse_spec_row and raises its refusal as a ConvertError naming the file as the caller knows it; the converter holds no fence split, body parse, status lookup or scalar rule of its own.
+- **Rationale**: The converter and the registry each parsed a spec and disagreed on three inputs: a non-string title the registry wrote as its text and the converter refused; an id the filename does not carry, and an adjudicates value with a ; in a token or given as a bare string, which the registry refused and the converter accepted. The stricter answer is kept on each: no supported route writes any of them and no spec on the tree carried one.
+- **TestRefs**: TC-443
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-443 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-443
+- **Verifies**: SR-166;LLR-388
+- **Level**: Unit
+- **Method**: Parse a well-formed spec with an integer priority through kitlib.registry.parse_spec_row and through wi_convert.parse_spec. Then parse through both, in turn: a title given as an integer, a list key holding an integer, a supersedes list holding an integer, an id its filename does not carry, an adjudicates list with a semicolon inside a token, and an adjudicates value given as a bare string. Look for the converter's former parse helpers on wi_convert. Separately, read a spec folder holding one well-formed queued spec and one whose title is an integer through read_spec_rows with an error sink.
+- **Tier**: Smoke
+- **Expected**: The well-formed spec reads the same through both, the integer priority as its digits. Each malformed input is refused by both, the registry with a ValueError and the converter with a ConvertError, each naming the same fault. wi_convert carries none of the former helpers. read_spec_rows returns only the well-formed row and reports the other file once, naming it and the title fault.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_converter_parses_a_spec_through_the_one_parser; tests/test_policy_one_home.py::test_a_spec_with_a_non_string_title_is_reported_and_skipped
 - **Status**: Drafted
 - **Phase**: 6
 

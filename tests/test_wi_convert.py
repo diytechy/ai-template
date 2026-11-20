@@ -43,7 +43,8 @@ from conftest import ROOT, load_script
 # gone rather than kept working "just in case".
 wi_convert = load_script("wi_convert")
 
-import kitlib.spine as kitlib_spine  # noqa: E402  (after load_script)
+import kitlib.registry as kitlib_registry  # noqa: E402  (after load_script)
+import kitlib.spine as kitlib_spine  # noqa: E402
 
 REGISTRY = ROOT / "docs" / "requirements" / "work-items.csv"
 WORK = ROOT / "docs" / "work"
@@ -532,11 +533,13 @@ def test_the_checks_stage_cell_round_trips_and_a_context_body_is_read_past(tmp_p
     back = _round_trip(tmp_path, rows)
     assert back[0]["ChecksStage"] == "DevStg-Tests"
     assert _cell_mismatches(rows, back) == []
-    # A minted, context-only body parses with an empty Deliverable...
-    assert wi_convert.parse_deliverable("\n## Context\n\n- advisory joins\n", "w") == ""
+    # A minted, context-only body parses with an empty Deliverable, through the
+    # one spec parse the converter calls (WI-1004)...
+    context_only = "\n## Context\n\n- advisory joins\n"
+    assert kitlib_registry.parse_spec_deliverable("w", context_only) == ""
     # ...and a closed row's Deliverable survives with the Context clipped off.
     body = "\n## Deliverable\n\nshipped\n\n## Context\n\n- joins, kept\n"
-    assert wi_convert.parse_deliverable(body, "w") == "shipped"
+    assert kitlib_registry.parse_spec_deliverable("w", body) == "shipped"
 
 
 def test_row_order_survives_a_registry_that_is_not_id_sorted(tmp_path, live_csv):
