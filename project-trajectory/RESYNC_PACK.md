@@ -11396,8 +11396,13 @@ the cross-component rule silent. A local script that called
 `gen_arch_map._resolve_import(imp, importer_rel, known)` calls
 `gen_arch_map.resolve_import(token, importer, modules)`.
 
+The two `kitlib` modules below change in their docstrings only: they state
+this repository's interface rows IF-314 and IF-315. Your source scan root is
+your own `src`, so they declare nothing to your checks.
+
 **Kit-owned files — overwrite:** `scripts/gen_arch_map.py`,
-`scripts/trajectory_arch.py`.
+`scripts/trajectory_arch.py`, `scripts/kitlib/secret_classes.py`,
+`scripts/kitlib/observation.py`.
 
 **Adopter-merged files:** none.
 

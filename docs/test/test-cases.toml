@@ -2171,7 +2171,7 @@ status = "Accepted"
 phase = 5
 
 [test.TC-201]
-verifies = ["SR-017", "SR-176", "LLR-205"]
+verifies = ["SR-017", "SR-176", "LLR-205", "IF-314"]
 level = "Integration"
 method = """Drives check_privacy.py's Scanner (secrets floor) and agent_common.py's redact_secrets against a shared sample set, three ways. FIRST, a five-sample decision table: a PEM private-key block is caught by both the floor and the redactor, while a Bearer token, a short GitHub token and a short API key are caught by the redactor alone, the three DELIBERATE threshold asymmetries kitlib.secret_classes.SECRET_CLASSES declares per class rather than leaving as a side effect of two literals. SECOND, one canonical positive sample per declared class, proving each side's claimed pattern reaches its consumer (TOKEN_RES/KEY_RE and _SECRET_RES are comprehensions over the shared table, not hand copies, so a class dropped from a consumer's derivation fails even where the table looks right). THIRD, a frozen, independent pattern record per module, compared by matching behavior (not string equality, since one class's two spellings differ only in a character-class member order proven immaterial) over threshold-straddling probes per class, so no class is caught less than that record catches."""
 tier = "Full"
@@ -2508,7 +2508,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-229]
-verifies = ["SR-199", "LLR-234", "IF-214"]
+verifies = ["SR-199", "LLR-234", "IF-214", "IF-315"]
 level = "Unit"
 method = "The record module exercised in a temporary directory. A record with every field round-trips; a record missing any one field, or cut off mid-file, parses to nothing; an outcome outside pass and fail, an observed_at or expires not in the canonical UTC form, an expiry earlier than the observation, and an empty or whitespace provenance each parse to nothing; a leading-dot file is never read; latest returns the newest by observation time; an empty judged digest is valid. write_atomic is driven with the replace step failing twice with a permission error and then succeeding, and with it failing every time, which raises after the bounded retries and leaves no partial record readable."
 tier = "Smoke"
@@ -4326,5 +4326,16 @@ tier = "Smoke"
 expected = "Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced."
 automated = "Yes"
 evidence = "tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join"
+status = "Drafted"
+phase = 6
+
+[test.TC-436]
+verifies = ["SR-159", "LLR-374"]
+level = "Integration"
+method = "Build one source tree under a declared scan root: a package with a sibling module and a nested package, a top-level module, two modules ending in the same package path, and an empty module. Tag one importer into one component and every other module into another, and run the cross-component rule in process for each import form in turn: import of a dotted path, the same with an alias, from a package a submodule, from a module a symbol, from a module a name sharing another module's stem, the three relative shapes (a sibling module, the package itself, two levels up), a relative import in the package's own __init__.py, and a bare stem. Then read which edges the rule classifies for an ambiguous bare stem, an ambiguous dotted path, a scanned module absent from the inventory, a relative climb past the top, and a module importing its own package. Run the rule once more with a generator lacking the resolver, and draw the dependency diagram for the __init__.py relative import."
+tier = "Smoke"
+expected = "Each resolved form reports the cross-component finding naming its importer and the module the import names, the stem-sharing name landing on the module it is imported from and the bare stem resolving as before; the skipped forms yield no classified edge from their importer; the generator without the resolver leaves the rule silent; the diagram draws the arrow from the package to its submodule."
+automated = "Yes"
+evidence = "tests/test_seam_import_forms.py"
 status = "Drafted"
 phase = 6

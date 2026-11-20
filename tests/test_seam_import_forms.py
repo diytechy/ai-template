@@ -152,7 +152,6 @@ SKIPPED = [
 def test_an_import_form_reaches_the_cross_component_rule_as_its_module(
     tmp_path, importer, statement, target
 ):
-    """Implements: TC-436"""
     src = _tree(tmp_path, importer, statement)
     findings = trajectory_arch.cross_component_findings(tmp_path)
     edge = "cross-component import {} (CMP-001) -> {} (CMP-002)".format(src, target)
@@ -165,7 +164,6 @@ def test_an_import_form_reaches_the_cross_component_rule_as_its_module(
     ids=[case[0] for case in SKIPPED],
 )
 def test_an_unknown_or_ambiguous_import_is_skipped(tmp_path, importer, statement):
-    """Implements: TC-436"""
     # Skipped before classification: the importer yields no edge at all, so
     # neither tier can report one (a module importing its own package is no
     # edge either).
@@ -177,7 +175,6 @@ def test_an_unknown_or_ambiguous_import_is_skipped(tmp_path, importer, statement
 def test_an_older_generator_without_the_resolver_leaves_the_rule_silent(
     tmp_path, monkeypatch
 ):
-    """Implements: TC-436"""
     # IF-131: every gen_arch_map entry point is optional at the call site.
     _tree(tmp_path, "user.py", "import helper")
     older = types.SimpleNamespace(scan_inventory=gen_arch_map.scan_inventory)
@@ -186,7 +183,6 @@ def test_an_older_generator_without_the_resolver_leaves_the_rule_silent(
 
 
 def test_the_dependency_diagram_resolves_through_the_same_resolver(tmp_path):
-    """Implements: TC-436"""
     # The arrow the diagram's own resolver missed: a relative import written in
     # a package's __init__.py.
     _tree(tmp_path, "kitlib/__init__.py", "from . import spine")

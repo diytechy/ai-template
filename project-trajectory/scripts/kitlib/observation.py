@@ -41,14 +41,15 @@ A kitlib module, in the pattern of `evidence.py`: it imports no sibling script,
 only the package's own TOML string emitter, so the writer and the checker read
 one format.
 
-Contracts: IF-214 — the seam this module declares (process.md §8; row of record
-in docs/requirements/interfaces.toml).
+Contracts: IF-214, IF-315 — the seams this module declares (process.md §8; rows
+of record in docs/requirements/interfaces.toml).
 
 Contract IF-214: the observation record, as a file and as a call.
     One TOML file per result under `OBSERVATIONS_DIR`, named
     `record_name(tc, observed_at)`, holding exactly the `FIELDS` as strings:
     `tc`, `outcome` (one of `OUTCOMES`), `observed_at` and `expires` (the
-    canonical `YYYY-MM-DDTHH:MM:SSZ`, `expires` not earlier), `provenance`
+    canonical `YYYY-MM-DDTHH:MM:SSZ`, `expires` not earlier, which
+    `parse_utc(text)` reads to an aware datetime or None), `provenance`
     (non-blank) and `judged` (the inputs digest, `""` for a case declaring no
     inputs). `render(record)` writes one and `write_atomic(path, text)` puts
     it in place; `problem(text, name=None)` names why a text is not a record,
@@ -59,6 +60,16 @@ Contract IF-214: the observation record, as a file and as a call.
     those files whose names are their own, each carrying its `file` name, and `latest(records, tc)` the
     newest by `observed_at`. No reader raises on a bad file; an absent
     directory reads as no records.
+
+Contract IF-315: the atomic write, as a call any writer may make whose file
+    another process can read at any moment. `write_atomic(path, text)` writes
+    `text` as UTF-8 with LF line ends to a leading-dot name beside `path`,
+    flushes it to disk and moves it into place with one replace, so a reader
+    sees the old file or the new one and never part of either. A replace
+    refused with PermissionError (Windows, while another process holds the
+    target) is retried a bounded number of times and then raised. The
+    temporary file is removed whenever the write fails. The caller's file
+    need not be an observation record.
 """
 
 import datetime

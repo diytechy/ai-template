@@ -18,7 +18,8 @@ _Acceptance provenance: the last commit to move a `Status` cell in a snapshotted
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 2 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1006.
+- `docs/requirements/interfaces.toml` — 4 changed, 2 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1006.
+- `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): none cited.
 
 ## Assumptions and surrogates owing an acceptance
 
@@ -764,6 +765,19 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Component**: CMP-006
 - **Phase**: 6
 
+### LLR LLR-374 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-374
+- **SR-Refs**: SR-159
+- **Title**: An internal import reaches the cross-component rule as the one module it names, or is skipped
+- **Module**: project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/trajectory_arch.py
+- **CodeSymbol**: resolve_import/_resolve_relative/_classifiable_edges
+- **Detail**: resolve_import in gen_arch_map.py takes one token internal_imports wrote, the importer's module path and the inventory's module paths, and returns one module or None. An absolute token tries its dotted prefixes longest first, each as a path, against the modules equal to it or ending in / plus it; the first prefix that matches decides, and two matches return None, so a one-segment token is the unique-stem match. A relative token starts from the importer's package, which is the importer itself when a module sits under its path and its parent otherwise, climbs one level for each dot past the first, returns None for a climb past the top, and matches exactly, trimming its tail back to the package. _classifiable_edges in trajectory_arch.py resolves every token of the live inventory through it and skips None and an edge from a module to itself; a gen_arch_map without resolve_import leaves the rule silent. The dependency diagram draws its arrows through the same function.
+- **Rationale**: The rule looked each token up by its last path segment, so every dotted and relative import missed and no edge into a package was ever checked, while the dependency diagram kept a resolver of its own that took the first of several matches. One resolver, in the module that writes the tokens, keeps the check and the picture on one answer. A token that names nothing, or names several modules, is skipped rather than guessed, since a guessed edge would be a finding against a seam that does not exist.
+- **TestRefs**: TC-436
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
 ### TC TC-435 — ADDED since the snapshot, Drafted — never accepted
 - **TC-ID**: TC-435
 - **Verifies**: SR-159;LLR-373
@@ -773,6 +787,18 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced.
 - **Automated**: Yes
 - **Evidence**: tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-436 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-436
+- **Verifies**: SR-159;LLR-374
+- **Level**: Integration
+- **Method**: Build one source tree under a declared scan root: a package with a sibling module and a nested package, a top-level module, two modules ending in the same package path, and an empty module. Tag one importer into one component and every other module into another, and run the cross-component rule in process for each import form in turn: import of a dotted path, the same with an alias, from a package a submodule, from a module a symbol, from a module a name sharing another module's stem, the three relative shapes (a sibling module, the package itself, two levels up), a relative import in the package's own __init__.py, and a bare stem. Then read which edges the rule classifies for an ambiguous bare stem, an ambiguous dotted path, a scanned module absent from the inventory, a relative climb past the top, and a module importing its own package. Run the rule once more with a generator lacking the resolver, and draw the dependency diagram for the __init__.py relative import.
+- **Tier**: Smoke
+- **Expected**: Each resolved form reports the cross-component finding naming its importer and the module the import names, the stem-sharing name landing on the module it is imported from and the bare stem resolving as before; the skipped forms yield no classified edge from their importer; the generator without the resolver leaves the rule silent; the diagram draws the arrow from the package to its submodule.
+- **Automated**: Yes
+- **Evidence**: tests/test_seam_import_forms.py
 - **Status**: Drafted
 - **Phase**: 6
 

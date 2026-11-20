@@ -18,8 +18,8 @@
 
 [derived]
 components = 4
-design_rows = 337
-seam_rows = 259
+design_rows = 338
+seam_rows = 261
 requirements_placed = 133
 requirements_unplaced = 5
 seams_unplaced = 0
@@ -203,6 +203,7 @@ llr_refs = [
   "LLR-366",
   "LLR-369",
   "LLR-373",
+  "LLR-374",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -437,6 +438,8 @@ seam_boundary_refs = [
   "IF-310",
   "IF-311",
   "IF-312",
+  "IF-314",
+  "IF-315",
 ]
 
 [component_view.CMP-007]
@@ -642,6 +645,7 @@ seam_boundary_refs = [
   "IF-295",
   "IF-304",
   "IF-312",
+  "IF-314",
 ]
 
 [component_view.CMP-008]
@@ -1112,6 +1116,7 @@ seam_boundary_refs = [
   "IF-200",
   "IF-201",
   "IF-208",
+  "IF-214",
   "IF-215",
   "IF-216",
   "IF-220",
@@ -1146,6 +1151,8 @@ seam_boundary_refs = [
   "IF-307",
   "IF-310",
   "IF-311",
+  "IF-314",
+  "IF-315",
 ]
 
 [component_view.CMP-009]
@@ -1415,6 +1422,7 @@ seam_boundary_refs = [
   "IF-296",
   "IF-297",
   "IF-310",
+  "IF-315",
 ]
 
 [unplaced]
