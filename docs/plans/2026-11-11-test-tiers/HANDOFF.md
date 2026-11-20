@@ -3275,3 +3275,21 @@ list is fixed unless §12.6 says so.
   the unread October decisions backlog, so its standing at the act is a
   ruling. Argon on `opencode-go` twice ran 20 minutes with no output on an
   attached file; the same rows inline returned in minutes.
+- **2026-11-20, batch 3.** Merged: WI-1009 (`92bf34afe`; the decisions leave
+  `docs/open-items.html`, 2.0 MB to 115 KB; SR-225, LLR-118, LLR-283, TC-123,
+  TC-293 amended, re-accept owed), WI-1007 (`6e0e4e660`; `trajectory_arch.py`
+  a 203-line composer over `arch_inputs`, `arch_interfaces`, `arch_tags`,
+  `arch_seams` and `arch_components`, behaviour unchanged by a before/after
+  diff of `check_trajectory --strict`) and WI-1004 (`4662da736`; ten policy
+  behaviours one home each, rolling review §13.14 dropped as not a disagreeing
+  duplicate). Each was reviewed by Sol and Argon and its findings fixed on its
+  branch (WI-1007: a missing re-export; WI-1004: the `;` refusal on every list
+  key). Suites: on `96689d3be` (WI-1009, WI-1007) 8,229 passed, none failed;
+  on `1cb2e8680` (WI-1004) 8 failed: seven `test_open_item_readiness`
+  fixtures emptied because WI-1004's parse refused `exclusive = [...]` and
+  integer `est_tokens`, and the dashboard over its size budget. Fixed in
+  `2bb3a1701` (`exclusive` list-tolerant, `est_tokens`/`critique_budget`
+  integer-tolerant, a TC-443 pin, a RESYNC entry; Sol: no findings; the
+  budget re-stamped 4.0 MB to 4.63 MB for the new rows). The builders now run
+  every test module importing a changed module. WI-1010 is building up to the
+  operator's act. The merged worktrees on D: are removed.
