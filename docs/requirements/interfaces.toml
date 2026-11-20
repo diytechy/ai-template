@@ -1028,7 +1028,7 @@ channel = "file"
 data = "one line: path then em dash then reason"
 version = "v1"
 status = "Drafted"
-notes = """Built and consumed together. The endpoints are the OTHER readers of the declared-absence grammar: trace (_declared_absences) and tests/test_dogfood_sync.py, which loads the file as its SCAFFOLD_OMISSIONS declaration through this row's own loader. check_vocab is NOT one: it carries the filename in a byte-scan inclusion set (TEXT_NAMES) and never parses the `<path> - <reason>` grammar this contract defines. check_need_form.py compares prose only, not a read."""
+notes = """Built and consumed together. Every reader parses the file through kitlib.config.declared_absences, its one reading: check_doc_refs (read_declared_absences, which gen_arch_map also calls), trace (_declared_absences) and tests/test_dogfood_sync.py, which loads the file as its SCAFFOLD_OMISSIONS declaration through check_doc_refs' loader. check_vocab is NOT one: it carries the filename in a byte-scan inclusion set (TEXT_NAMES) and never parses the `<path> — <reason>` grammar this contract defines. check_need_form.py compares prose only, not a read."""
 
 [interface.IF-073]
 owner = "docs/requirements/open-items.toml"
@@ -1512,7 +1512,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-007"
-notes = """cross-component crossing declared per the architecture rule. Existence checking stays this module's own whole-file scrape, byte-for-byte the rule trace.py uses — only the Must/Should floor moved to the carrier."""
+notes = """cross-component crossing declared per the architecture rule. Existence checking is kitlib.spine.sn_all_ids, the one SN-id universe trace.py reads, with the carrier from the file's suffix; the Must/Should floor reads the carrier."""
 
 [interface.IF-113]
 rationale = """The loader's both-ways strictness is load-bearing here rather than merely tidy: a judge's brief whose evidence section is thin reads as an investigation that was run and found nothing, so there is deliberately no partially-filled path across this seam."""

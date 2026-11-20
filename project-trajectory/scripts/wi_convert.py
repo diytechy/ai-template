@@ -102,7 +102,6 @@ import csv
 import re
 import sys
 import tempfile
-import tomllib
 from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
@@ -224,8 +223,6 @@ STATUS_DIRS = {
     # another id, with its scope text byte-identical and a one-line Deliverable.
     "restructured": "restructured",
 }
-# The inverse, built from the one table so the two directions cannot disagree.
-DIR_STATUSES = {directory: status for status, directory in STATUS_DIRS.items()}
 
 # Columns carried verbatim as single-valued frontmatter keys.
 SCALAR_FIELDS = (
@@ -272,18 +269,8 @@ _INT_KEYS = dict(INT_FIELDS)
 SEP = ";"
 FENCE = "+++"
 DELIVERABLE_PREFIX = "\n## Deliverable\n\n"
-# The body's OTHER section (WI-387): a returned WI carries a `## Handback` note
-# after the Deliverable's place. It maps to no CSV column, so this converter
-# READS past it and does not reproduce it — `--to-csv` on a folder holding a
-# returned spec must not refuse, and `--to-specs` starts from a CSV that never
-# had one. (`--verify` round-trips CSV -> specs -> CSV, so it never sees one.)
-HANDBACK_PREFIX = "\n## Handback\n"
-# The body's THIRD section (WI-388): the advisory `## Context` block the intake
-# mint writes into every minted row (pure registry joins). It maps to no CSV
-# column, so this converter READS past it exactly like the Handback note —
-# `--to-csv` must not refuse a minted spec, and `--to-specs` starts from a CSV
-# that never had one.
-CONTEXT_PREFIX = "\n## Context\n"
+# The body's `## Handback` and `## Context` sections map to no CSV column; the
+# one spec parse (`kitlib.registry.parse_spec_row`) reads past both.
 # Slug source width: enough of a title to be recognizable in a directory
 # listing, short enough to keep paths sane. This slug becomes a git branch
 # name (dispatch._branch_for) that a lane worktree checks out INSIDE the
@@ -416,134 +403,42 @@ def render_spec(row, order=None):
     return "{}/{}".format(status_dir(row), spec_filename(row)), text
 
 
-def split_spec(text, where):
-    """`(frontmatter_text, body_text)` from a spec file's raw text.
-
-    Split on bare `\\n` because the caller reads with `newline=""` (no universal
-    -newline translation): a `\\r` that was genuinely IN the data survives to be
-    compared, instead of being silently rewritten on the way in.
-    """
-    lines = text.split("\n")
-    if not lines or lines[0] != FENCE:
-        raise ConvertError(
-            "{}: does not start with a {} frontmatter fence".format(where, FENCE)
-        )
-    try:
-        close = lines.index(FENCE, 1)
-    except ValueError:
-        raise ConvertError(
-            "{}: frontmatter fence is never closed".format(where)
-        ) from None
-    return "\n".join(lines[1:close]) + "\n", "\n".join(lines[close + 1 :])
-
-
-def parse_deliverable(body, where):
-    """The verbatim Deliverable cell from a spec body (empty when absent).
-    The `## Handback` and `## Context` sections are read past, not carried —
-    neither maps to a CSV column."""
-    if body == "":
-        return ""
-    body = body.partition(HANDBACK_PREFIX)[0]
-    body = body.partition(CONTEXT_PREFIX)[0]
-    if body == "":
-        return ""
-    if not body.startswith(DELIVERABLE_PREFIX) or not body.endswith("\n"):
-        raise ConvertError(
-            "{}: body is neither empty nor a single `## Deliverable` "
-            "section — this converter owns the whole body shape".format(where)
-        )
-    return body[len(DELIVERABLE_PREFIX) : -1]
-
-
-def status_from_location(directory, where):
-    """The Status a spec's location encodes — the inverse of `status_dir`.
-
-    A plain table lookup since WI-384: one directory per state means the
-    location IS the status, with nothing in the frontmatter to cross-check it
-    against and so no way for the two to disagree. The only refusal left is a
-    directory nobody declared.
-    """
-    status = DIR_STATUSES.get(directory)
-    if status is None:
-        raise ConvertError(
-            "{}: directory {!r} is not a status — the spec form knows only {}".format(
-                where, directory, ", ".join(sorted(DIR_STATUSES))
-            )
-        )
-    return status
-
-
 def parse_spec(text, relpath, where=None):
-    """`(row, order)` reconstructed from one spec file.
+    """`(row, order)` reconstructed from one spec file, through the registry's
+    one spec parse, `kitlib.registry.parse_spec_row`; a refusal is a
+    `ConvertError` naming `where` (the file as the caller knows it).
 
     `relpath` supplies the Status, and supplies the whole of it: location is the
     state, with no frontmatter key duplicating it (WI-384).
+
+    ONE PARSE SINCE WI-1004. This module carried its own fence split, body
+    parse, status lookup and scalar rules, and they disagreed with the
+    registry's: a non-string scalar was refused here and written as its text
+    there, while an id its filename does not carry and an `adjudicates` value
+    the one parser refuses were accepted here and refused there. The stricter
+    answer is kept in each case, so the converter now refuses all three.
     """
     where = where or relpath
-    frontmatter, body = split_spec(text, where)
-    try:
-        data = tomllib.loads(frontmatter)
-    except tomllib.TOMLDecodeError as exc:
-        raise ConvertError(
-            "{}: frontmatter is not valid TOML — {}".format(where, exc)
-        ) from None
-
-    row = {column: "" for column in COLUMNS}
-    row["WI-ID"] = _text(data.get("id"), "id", where)
     # Status is the FIRST path component (the loaders' rule — active/<branch>/
     # sits one level deeper, so the parent dir is the branch, not the status).
     # An in-flight claim is not convertible content: a conversion is a
     # drained-stop operation (concurrency-restructure §3.2) — the branch either
-    # integrates or parks first. Refused BY NAME, never coerced.
+    # integrates or parks first. Refused BY NAME, never coerced. This is the
+    # converter's own precondition, not a rule of the spec format.
     parts = Path(relpath).parts
-    top = parts[0] if len(parts) > 1 else ""
-    if top == "active":
+    if len(parts) > 1 and parts[0] == "active":
         raise ConvertError(
             "{}: an in-flight claim (active/{}) — conversion is a drained-stop "
             "operation (concurrency-restructure §3.2): integrate or park the "
             "branch, then convert".format(where, parts[1] if len(parts) > 2 else "?")
         )
-    row["Status"] = status_from_location(top, where)
-    row["Deliverable"] = parse_deliverable(body, where)
-    for column, key in SCALAR_FIELDS:
-        if key in data:
-            row[column] = _scalar(data[key], key, where)
-    for column, key in LIST_FIELDS:
-        if key in data:
-            row[column] = SEP.join(_text(v, key, where) for v in data[key])
-    for column, key in INT_FIELDS:
-        if key in data:
-            value = data[key]
-            row[column] = (
-                str(value) if isinstance(value, int) else _text(value, key, where)
-            )
-    order = data.get("order")
-    return row, order if isinstance(order, int) else None
-
-
-def _scalar(value, key, where):
-    """One scalar frontmatter key as its cell, refusing a non-string — EXCEPT a
-    `LIST_TOLERANT_SCALARS` key written as a TOML list, which joins on `;` the
-    way a list column does.
-
-    `supersedes` is that one key (the 2026-09-02 restructure plan §1.5): a
-    consolidation absorbs several rows into one successor, so its lineage names
-    several ids. The elements are still `_text`-checked one by one, so a list of
-    non-strings is refused with the same message a bare non-string gets — the
-    tolerance is for the SHAPE, never for the type inside it. The write side is
-    unchanged: the cell is `;`-joined text and re-emits as a bare string, so a
-    one-id row's spec file stays byte-identical."""
-    if key in _kitregistry.LIST_TOLERANT_SCALARS and isinstance(value, (list, tuple)):
-        return SEP.join(_text(v, key, where) for v in value)
-    return _text(value, key, where)
-
-
-def _text(value, key, where):
-    if not isinstance(value, str):
-        raise ConvertError(
-            "{}: `{}` must be a string, got {!r}".format(where, key, value)
-        )
-    return value
+    try:
+        return _kitregistry.parse_spec_row(text, relpath)
+    except ValueError as exc:
+        message = str(exc)
+        if message.startswith(relpath + ":"):
+            message = where + message[len(relpath) :]
+        raise ConvertError(message) from None
 
 
 # --- the two homes: which one a WRITER must file into -------------------------
@@ -693,14 +588,13 @@ def read_specs(work_dir):
         )
         parsed.append((row, order, relpath))
     parsed.sort(
-        key=lambda item: (item[1] is None, item[1] or 0, _id_number(item[0]["WI-ID"]))
+        key=lambda item: (
+            item[1] is None,
+            item[1] or 0,
+            _kitspine.id_number(item[0]["WI-ID"]),
+        )
     )
     return parsed
-
-
-def _id_number(wi_id):
-    match = re.search(r"\d+", wi_id or "")
-    return int(match.group()) if match else 0
 
 
 def to_csv(work_dir, out_path):

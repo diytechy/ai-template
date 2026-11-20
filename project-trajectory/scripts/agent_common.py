@@ -153,7 +153,6 @@ DECISION_RECORDING_MODES = agent_policy.DECISION_RECORDING_MODES
 decision_recording = agent_policy.decision_recording
 adjudication_review_owed = agent_policy.adjudication_review_owed
 SPEC_HOMES = agent_policy.SPEC_HOMES
-_spec_home_rank = agent_policy._spec_home_rank
 authoritative_spec = agent_policy.authoritative_spec
 keep_nondependent = agent_policy.keep_nondependent
 spine_stage_of = agent_policy.spine_stage_of
@@ -972,9 +971,6 @@ def parse_map(spec):
     return mapping
 
 
-_SPLIT_RE = re.compile(r"[;,\s]+")
-
-
 def _read_csv_rows(path):
     """CSV rows of `path` as dicts, or [] (absent/unreadable). utf-8-sig so an
     Excel-written BOM can't rename the first header key (a BOM'd
@@ -991,8 +987,8 @@ def _read_csv_rows(path):
     return _kitspine.csv_rows(text)
 
 
-def _refs(cell):
-    return [t for t in _SPLIT_RE.split((cell or "").strip()) if t]
+# The ref split's one home (WI-1004: this was an agreeing copy of its body).
+_refs = _kitspine.refs
 
 
 def git(root, *args):

@@ -104,7 +104,7 @@ import tomllib
 from . import decisions as kdecisions
 from . import sitting as _kitsitting
 from .git import git_bytes, git_out, git_paths
-from .registry import done_when_section
+from .registry import done_when_section, governing_spec
 
 __all__ = [
     "items",
@@ -249,8 +249,8 @@ def claim_copy(root, rev, branch, wi_id):
 
 def _copy_at(root, rev, folders, wi_id):
     """THE ONE SHAPE both sides of a Done-when comparison are read in (WI-841
-    round 7): `(path, text, None)` for `wi_id`'s spec in the last of `folders`
-    holding one at `rev` (None: the index); `(None, None, None)` when `rev`
+    round 7): `(path, text, None)` for the copy of `wi_id`'s spec in `folders`
+    that `kitlib.registry.governing_spec` names, at `rev` (None: the index); `(None, None, None)` when `rev`
     reads and none of `folders` holds it (ABSENT); `(None, None, why)` when
     the listing or the copy cannot be read (UNREADABLE), never read as absent.
     The listing is read losslessly (`git_paths`, WI-921): a plain listing
@@ -269,14 +269,16 @@ def _copy_at(root, rev, folders, wi_id):
         at = "the index" if rev is None else str(rev)[:10]
         return None, None, "{} cannot be read at {}".format(", ".join(folders), at)
     hits = [
-        (folders.index(path.rpartition("/")[0]), path)
+        path
         for path in listing
         if path.rpartition("/")[0] in folders
         and path.rpartition("/")[2].startswith(wi_id + "-")
     ]
     if not hits:
         return None, None, None
-    path = max(hits)[1]
+    # Which copy governs is `kitlib.registry.governing_spec`'s (WI-1004): a
+    # terminal copy over the claim, the archive over `docs/work`, then the path.
+    path = governing_spec(hits)
     text = _show(root, rev, path)
     return path, text, None if text is not None else "{} cannot be read".format(path)
 

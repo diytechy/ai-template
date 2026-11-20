@@ -37,7 +37,9 @@ copies can no longer disagree, so drift is UNREPRESENTABLE rather than detected.
 """
 
 import configparser
+import json
 import re
+import shlex
 import sys
 import tomllib
 
@@ -59,6 +61,10 @@ __all__ = [
     "commit_check_failure_cap",
     "reviewer_dials",
     "utf8_console",
+    "split_cmd",
+    "DECLARED_SEP",
+    "declared_entries",
+    "declared_absences",
     "step_paths",
     "STACK_INI",
     "StackIniError",
@@ -499,6 +505,116 @@ def read_declared_lower(path):
       Outputs: str — the declared token, lowercased; `""` if undeclared
     """
     return (first_declared_line(path) or "").lower()
+
+
+def split_cmd(template):
+    """Split a command template into tokens.
+
+    TWO ACCEPTED FORMS, and the second exists because the first cannot be made
+    unambiguous. A `CmdTemplate` may be:
+
+      a JSON ARRAY   `["claude", "-p", "--model", "{model}"]` — the tokens are
+                     the tokens, full stop. No quoting rules, no shell grammar,
+                     nothing for a Windows path or an embedded quote to trip
+                     over. This is the form to declare a NEW route in
+                     (plan §11.7).
+      a SHELL STRING `claude -p --model {model}` — the historical form, split
+                     quote-aware with backslash escaping DISABLED so Windows
+                     paths survive (shlex's posix escape rules would eat
+                     drive-letter separators). Every shipped row and every
+                     existing adopter registry uses it, so it is read exactly
+                     as before.
+
+    The array form is recognised only when the value parses as a JSON list;
+    anything else — including a string that merely starts with a bracket —
+    falls through to the shell split, so no existing template can change
+    meaning. A JSON array holding a NON-STRING token raises rather than being
+    stringified into a command nobody wrote: a registry is config a human
+    edits, and a silent coercion there is a launch that does not match its
+    declaration.
+
+    THE ONE TOKENIZER (WI-1004, rolling review §13.22). It lived in
+    `agent_session`, and `check.py` kept a second copy for every `stack.ini`
+    step command that left shlex's comment character on: an unquoted `#`
+    dropped itself and every token after it there, so `check.py` ran a shorter
+    command than the one declared and than the one the loop runs, and a JSON
+    array was split as shell words. A `stack.ini` value reaches here whole
+    (`configparser` strips no inline comment), so `#` is a word. It lives in
+    this package because `check.py` must stay runnable on `kitlib` alone.
+
+    Implements: SR-146, LLR-386"""
+    text = (template or "").strip()
+    if text.startswith("["):
+        try:
+            parsed = json.loads(text)
+        except ValueError:
+            parsed = None
+        if isinstance(parsed, list):
+            bad = [tok for tok in parsed if not isinstance(tok, str)]
+            if bad:
+                raise ValueError(
+                    "CmdTemplate is a JSON array but holds a non-string token "
+                    "{!r} — argv tokens are strings".format(bad[0])
+                )
+            return list(parsed)
+    lex = shlex.shlex(template, posix=True)
+    lex.whitespace_split = True
+    lex.escape = ""
+    lex.commenters = ""
+    return list(lex)
+
+
+# The separator of a `<key> — <reason>` declared file: an em dash with a space
+# each side, as every such file's header, and IF-072's data cell for
+# `docs/declared-absences`, state it.
+DECLARED_SEP = " — "
+
+
+def declared_entries(path):
+    """`(entries, unparsed)` of a `<key> — <reason>` declared file: `entries`
+    is `[(lineno, key, reason, line)]` for each line carrying `DECLARED_SEP`,
+    key and reason stripped; `unparsed` is `[(lineno, line)]` for each other
+    line that is neither blank nor a `#` comment. `([], [])` when the file is
+    absent. Read `utf-8-sig` with replacement, split on `\\n`.
+
+    THE ONE WALK (WI-1004, rolling review §13.16). Five readers each walked
+    their file: `check_need_form`, `trace` (twice), `trajectory_arch` and
+    `check_doc_refs`. Two of them read a byte-order mark into the first key,
+    hiding the first entry, and one raised on an undecodable byte where
+    another read no entry at all; the two readers of `docs/declared-absences`
+    also disagreed on its separator (`check_doc_refs` took ` - ` as well,
+    `trace` an unspaced em dash). Kept: the mark stripped, the byte replaced,
+    and the spaced em dash the only separator. Each reader keeps only what
+    its own file's key means.
+
+    Implements: SR-158, LLR-387"""
+    path = Path(path)
+    if not path.is_file():
+        return [], []
+    entries, unparsed = [], []
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    for lineno, raw in enumerate(text.split("\n"), start=1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if DECLARED_SEP not in line:
+            unparsed.append((lineno, line))
+            continue
+        key, reason = line.split(DECLARED_SEP, 1)
+        entries.append((lineno, key.strip(), reason.strip(), line))
+    return entries, unparsed
+
+
+def declared_absences(path):
+    """`({path: reason}, unparsed)` for a declared-absences file
+    (`docs/declared-absences`): `declared_entries` with each key's trailing
+    `/` stripped, so `dir/` declares `dir`. The one reading of the file, which
+    `check_doc_refs` (and through it `gen_arch_map` and the dogfood test) and
+    `trace` both call.
+
+    Implements: SR-158, LLR-387"""
+    entries, unparsed = declared_entries(path)
+    return {key.rstrip("/"): reason for _n, key, reason, _l in entries}, unparsed
 
 
 def utf8_console():

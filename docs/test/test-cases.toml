@@ -4339,3 +4339,113 @@ automated = "Yes"
 evidence = "tests/test_seam_import_forms.py"
 status = "Drafted"
 phase = 6
+
+[test.TC-438]
+verifies = ["SR-147", "LLR-382"]
+level = "Unit"
+method = "Drive kitlib.spine.value_to_cell over None, a plain string, a string holding a semicolon, an empty list, a list of strings, a list holding an integer, and an integer. Round-trip a semicolon-joined ref cell through migrate_carrier.cell_to_value and back. Run migrate_carrier.compare over a converted row that dropped a key, and read a ref array through spine_carrier.rows_from_toml. Look for a value_to_cell on migrate_carrier and on spine_carrier."
+tier = "Smoke"
+expected = "None reads as the empty cell; a list joins on semicolons with each element as text; anything else is its text. The ref cell round-trips to its original text. compare reports the dropped key as changing to the empty cell, and the reader joins the array on semicolons. Neither module defines a value_to_cell."
+automated = "Yes"
+evidence = "tests/test_rule_sync.py::test_the_carrier_value_cell_has_one_home_and_reads_none_as_empty"
+status = "Drafted"
+phase = 6
+
+[test.TC-439]
+verifies = ["SR-157", "LLR-197"]
+level = "Integration"
+method = "Write an old-shape interface registry whose rows each name an id-typed owner with no provider, beside a design registry whose owning rows each name one module: a package's __init__.py, a shell hook, and a plain Python module. Run migrate_carrier's IF-shape migration with writing on and read each rewritten owner. Look for a _short_module on migrate_carrier."
+tier = "Smoke"
+expected = "Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key"
+status = "Drafted"
+phase = 6
+
+[test.TC-440]
+verifies = ["SR-157", "LLR-383"]
+level = "Unit"
+method = "Read kitlib.spine.id_number over X2-5, an id whose number carries a letter, OI-35abc, an id whose number has leading zeros, OI-98, D-001, an id ending in its dash, and the empty string. Look for an id-number reader on kitlib.registry, kitlib.decisions and wi_convert, and for the old private name on kitlib.spine. Then write three queued specs carrying no order key, numbered 3, 12 with a letter after it, and 20, and read the folder through kitlib.registry.read_spec_rows and through wi_convert.read_specs."
+tier = "Smoke"
+expected = "X2-5 reads 5, the lettered id 0, OI-35abc 0, the zero-padded id its number, OI-98 98, D-001 1, and the dash-ended id and the empty string 0. None of the three modules defines its own reader, and kitlib.spine has no private copy. Both readers order the folder with the lettered spec first, then 3, then 20."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_an_id_number_is_the_digits_after_the_last_dash; tests/test_policy_one_home.py::test_both_spec_folder_orderings_read_the_one_id_number"
+status = "Drafted"
+phase = 6
+
+[test.TC-441]
+verifies = ["SR-189", "LLR-215"]
+level = "Unit"
+method = "Write a TOML needs file holding the -000 example need, two real needs (one citing the other in its text), a comment naming an id no need table declares, and a stakeholder whose description names another such id. Read it through check_docs' README-inventory reader and through check_flows' known-id loader. Separately, read the live needs registry through spine_carrier.load_needs and kitlib.spine.sn_all_ids with the carrier from its suffix."
+tier = "Smoke"
+expected = "Both checkers read exactly the two real needs: neither the comment's id, nor the stakeholder description's id, nor the -000 example counts, and check_docs' set equals sn_all_ids over the same text; its Must/Should floor is the one Must need. Over the live registry, the carrier's need ids less the example equal sn_all_ids, and the two draft readers agree."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_readme_inventory_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_policy_one_home.py::test_the_flow_check_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_rule_sync.py::test_the_need_reader_agrees_with_the_sn_universe_on_the_toml_needs_file"
+status = "Drafted"
+phase = 6
+
+[test.TC-442]
+verifies = ["SR-220", "LLR-210"]
+level = "Unit"
+method = "Read a battery of Predecessors cells through consolidate's commissioning-source reader and through kitlib.spine.split_pred_edges: one open item; a work item and an open item joined by a semicolon, by a comma and by whitespace; several open items under mixed separators; an open item marked soft; a token that starts like an open item and carries a letter after its number; soft and hard work items only; an empty cell. Then read comma- and whitespace-separated ref cells through every ref-cell read in consolidate (the absorbed set, the queue model, the module signal and its design-row join), intake's owning-SR hint and the adjudication brief's cited spine, and compare agent_common's ref split with kitlib.spine.refs."
+tier = "Smoke"
+expected = "For every cell the commissioning reader's open items equal split_pred_edges' open-item edges: a comma or whitespace separator still yields the edge, the soft marker is ignored, and the lettered token is no open-item edge. Each ref-cell read splits a comma- or whitespace-separated cell into its ids, and agent_common's ref split is kitlib.spine.refs itself."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_consolidate_finds_every_open_item_edge_split_pred_edges_finds; tests/test_policy_one_home.py::test_every_ref_cell_read_splits_through_the_one_home"
+status = "Drafted"
+phase = 6
+
+[test.TC-443]
+verifies = ["SR-166", "LLR-388"]
+level = "Unit"
+method = "Parse a well-formed spec with an integer priority through kitlib.registry.parse_spec_row and through wi_convert.parse_spec. Then parse through both, in turn: a title given as an integer, a list key holding an integer, a supersedes list holding an integer, an id its filename does not carry, an adjudicates list with a semicolon inside a token, and an adjudicates value given as a bare string. For each of sr_refs, needs, adopted, authoring_tags and supersedes, parse through both a list whose one element carries a semicolon, and the same references written as two elements. Look for the converter's former parse helpers on wi_convert. Separately, read a spec folder holding one well-formed queued spec and one whose title is an integer through read_spec_rows with an error sink."
+tier = "Smoke"
+expected = "The well-formed spec reads the same through both, the integer priority as its digits. Each malformed input is refused by both, the registry with a ValueError and the converter with a ConvertError, each naming the same fault; so is each list element carrying a semicolon, for every list key, while the same references as two elements are read into the cell. wi_convert carries none of the former helpers. read_spec_rows returns only the well-formed row and reports the other file once, naming it and the title fault."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_converter_parses_a_spec_through_the_one_parser; tests/test_policy_one_home.py::test_a_spec_with_a_non_string_title_is_reported_and_skipped; tests/test_policy_one_home.py::test_a_list_element_carrying_the_cell_join_is_refused"
+status = "Drafted"
+phase = 6
+
+[test.TC-444]
+verifies = ["SR-156", "SR-220", "LLR-384"]
+level = "Integration"
+method = "Write a work folder holding two queued specs that carry one id. Look the id up through kitlib.registry.queued_spec, and look up an id nothing queues, one queued spec, and a missing folder. Then drive the claim's lookup, a handback edge write and the consolidation close's archive plan at the doubled id and at an unqueued id, listing the queued folder before and after. Look for a lookup of handback's own."
+tier = "Smoke"
+expected = "The doubled id raises a ValueError naming the count; an unqueued id and a missing folder answer None; a single queued spec is returned. The claim, the handback write and the close each refuse the doubled id with that reason and plan nothing, and the queued folder is unchanged; each refuses the unqueued id in its own words. handback has no lookup of its own."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_queued_spec_lookup_refuses_two_specs_of_one_id; tests/test_policy_one_home.py::test_every_act_on_a_queued_spec_refuses_two_of_one_id"
+status = "Drafted"
+phase = 6
+
+[test.TC-445]
+verifies = ["SR-156", "LLR-385"]
+level = "Integration"
+method = "Hand kitlib.registry.governing_spec and agent_policy.authoritative_spec, in both orders, each pair of copies of one spec: a closed copy in the archive and in the legacy docs/work home; a claimed copy and a closed copy under docs/work; a complete and a partial copy in the archive; a claimed copy and an archived closed one; a queued and a claimed copy; and no copy. Then commit each of the first four pairs in turn to a git repository and read the spec at HEAD through kitlib.done_when.spec_at for the claiming lane. Look for the former rank on agent_policy."
+tier = "Smoke"
+expected = "Both functions name, in either order: the archive's copy over the legacy one, the closed copy over the claim, the complete copy over the partial one by path, the archived copy over the claim, and the claimed copy over the queued one; None for no copy. spec_at reads the same copy, its text and no reason for each committed pair. agent_policy carries no rank of its own."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_one_key_says_which_copy_of_a_spec_governs; tests/test_policy_one_home.py::test_the_done_when_hold_reads_the_governing_copy"
+status = "Drafted"
+phase = 6
+
+[test.TC-446]
+verifies = ["SR-146", "SR-006", "LLR-386"]
+level = "Unit"
+method = "Expand, through check.py's step-command expansion with an interpreter placeholder, a command whose tokens include an unquoted # followed by two words; a JSON array holding the placeholder; and a command holding a Windows path with backslashes and a quoted argument with a space. Split a template holding a # through kitlib.config.split_cmd. Compare agent_session's tokenizer with kitlib.config.split_cmd, and look for check.py's former tokenizer."
+tier = "Smoke"
+expected = "The # and the words after it stay tokens; the JSON array expands to its elements with the placeholder substituted; the Windows path keeps its backslashes and the quoted argument its space; split_cmd keeps the #. agent_session's tokenizer is kitlib.config.split_cmd itself, and check.py has none of its own."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_a_command_template_has_one_tokenizer"
+status = "Drafted"
+phase = 6
+
+[test.TC-447]
+verifies = ["SR-158", "LLR-387"]
+level = "Unit"
+method = "Write a declared-absences file that starts with a byte-order mark and holds, in order: an entry, a comment, an entry separated by a spaced hyphen, an entry separated by an unspaced em dash, an entry whose path ends in a slash, and an entry whose path holds an undecodable byte. Read it through check_doc_refs.read_declared_absences and through trace's declared-absence reader. Then write the need-form, provenance and kernel-modules allow lists, each starting with a byte-order mark and holding a well-formed entry, a comment, a hyphen-separated entry and an unspaced one, and read each through its own reader. Read an absent file through kitlib.config.declared_entries."
+tier = "Smoke"
+expected = "Both declared-absence readers declare the same paths: the first entry, the slash-ended path without its slash, and the path with the undecodable byte replaced; the hyphen and unspaced lines are reported unparsed, by line number. Each allow-list reader reads its first entry and reports the hyphen and unspaced lines unparsed. The absent file yields nothing."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_declared_absences_file_is_read_one_way_by_both_readers; tests/test_policy_one_home.py::test_every_declared_file_reader_strips_the_mark_and_refuses_a_hyphen"
+status = "Drafted"
+phase = 6

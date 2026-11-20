@@ -100,6 +100,7 @@ from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
+from kitlib import config as _kitconfig
 from kitlib.config import utf8_console as _utf8_console
 
 # Sibling: the spine's registry CARRIER (the check_docs.py idiom) — the needs
@@ -118,7 +119,7 @@ ALLOW = "docs/need-form-allow"
 # The entry separator the exception list requires — an em-dash with spaces, the
 # same separator docs/declared-absences uses. Requiring it is what makes every
 # entry carry its reviewed reason.
-ALLOW_SEP = " — "
+ALLOW_SEP = _kitconfig.DECLARED_SEP  # the one declared-file separator (WI-1004)
 
 # The three token classes, each labelled with SN-033's own vocabulary so a
 # finding names the class the acceptance names. Order matters only for which
@@ -209,23 +210,8 @@ def read_need_form_allow(root):
     direction, the same rule: a line with no separator declares nothing and
     is dropped, counted as unparsed rather than silently read as "no
     exception at all"."""
-    path = Path(root) / ALLOW
-    if not path.is_file():
-        return set(), []
-    out, unparsed = set(), []
-    for lineno, raw in enumerate(
-        path.read_text(encoding="utf-8-sig", errors="replace").split("\n"), start=1
-    ):
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        if ALLOW_SEP not in line:
-            unparsed.append((lineno, line))
-            continue
-        token = line.split(ALLOW_SEP, 1)[0].strip()
-        if token:
-            out.add(token)
-    return out, unparsed
+    entries, unparsed = _kitconfig.declared_entries(Path(root) / ALLOW)
+    return {key for _n, key, _r, _l in entries if key}, unparsed
 
 
 def load_allow(root):

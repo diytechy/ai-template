@@ -818,7 +818,7 @@ def _owning_srs(records):
             srs.add(rec["id"])
         change = rec["routed"].get("SR-Refs")
         if change:
-            srs.update(tok.strip() for tok in change[0].split(";") if tok.strip())
+            srs.update(_spine.refs(change[0]))
     return sorted(srs)[:8]
 
 

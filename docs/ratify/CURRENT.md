@@ -18,7 +18,7 @@ _Acceptance provenance: the last commit to move a `Status` cell in a snapshotted
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 6 changed, 7 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1006, WI-1007, WI-1009.
+- `docs/requirements/interfaces.toml` — 8 changed, 7 added, 0 removed since the snapshot; ruling(s): WI-1001, WI-1003, WI-1006, WI-1007, WI-1009.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1003.
 
 ## Assumptions and surrogates owing an acceptance
@@ -701,7 +701,39 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 7 chain(s): SR-032, SR-049, SR-148, SR-157, SR-159, SR-169, SR-225</summary>
+<summary>Waiting for automated adjudication — 15 chain(s): SR-006, SR-032, SR-049, SR-146, SR-147, SR-148, SR-156, SR-157, SR-158, SR-159, SR-166, SR-169, SR-189, SR-220, SR-225</summary>
+
+## SR-006 — Gate/tier harness enforces required steps
+
+> **Requirement.** The delivered harness shall run the required steps of the gate that must next be passed (the strictness selector cached in docs/stage) and fail that gate when a required tool is missing, reporting SKIP(missing) rather than silently passing — and, on a claimed work branch (one whose history holds a docs/work/active/<branch>/ claim), SKIP its generated-artifact freshness steps with a stated trunk-lane reason, generated artifacts being trunk-only, while every non-freshness step still runs.
+
+> **Rationale.** Realizes SN-004 (gates enforce their stage's checks), SN-008 (no false pass) and the dissolved edge expectation that a missing tool fails, never skips. A sanctioned SKIP class of this harness's own step plan is not a second crossing observable, it is the same one qualified. The skip is not a weakening: a work branch cannot commit generated artifacts at all (concurrency-restructure §5.2), so demanding their freshness there would force the very conflict the rule deletes; the skip is reported, never silent, and any signal ambiguity resolves toward the full trunk checks.
+
+
+### LLR LLR-386 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-386
+- **SR-Refs**: SR-146;SR-006
+- **Title**: A command template has one tokenizer, which the harness's step commands and the agent launch both read
+- **Module**: project-trajectory/scripts/kitlib/config.py
+- **CodeSymbol**: split_cmd
+- **Detail**: split_cmd in kitlib/config.py splits a command template into its tokens. A value that parses as a JSON list is its tokens, and a non-string element raises. Anything else is split quote-aware, with backslash escaping off, so a Windows path keeps its separators, and with no comment character, so a # is a word. check.py's _expand splits every stack.ini step command through it before substituting the placeholders; agent_session binds it under its own name for agent command templates and the product test command. Neither module holds a tokenizer of its own.
+- **Rationale**: The two copies disagreed on two inputs: an unquoted # dropped itself and every token after it in the harness's copy, which left shlex's comment character on, and a JSON array was split as shell words there. A stack.ini value reaches the tokenizer whole, since configparser strips no inline comment, so the harness ran a shorter command than the one declared and the one the loop runs. The agent side's answer is kept on both. The home sits in kitlib because check.py must stay runnable on kitlib alone.
+- **TestRefs**: TC-446
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-446 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-446
+- **Verifies**: SR-146;SR-006;LLR-386
+- **Level**: Unit
+- **Method**: Expand, through check.py's step-command expansion with an interpreter placeholder, a command whose tokens include an unquoted # followed by two words; a JSON array holding the placeholder; and a command holding a Windows path with backslashes and a quoted argument with a space. Split a template holding a # through kitlib.config.split_cmd. Compare agent_session's tokenizer with kitlib.config.split_cmd, and look for check.py's former tokenizer.
+- **Tier**: Smoke
+- **Expected**: The # and the words after it stay tokens; the JSON array expands to its elements with the placeholder substituted; the Windows path keeps its backslashes and the quoted argument its space; split_cmd keeps the #. agent_session's tokenizer is kitlib.config.split_cmd itself, and check.py has none of its own.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_a_command_template_has_one_tokenizer
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-032 — Onboarding and dev-setup scaffold
 
@@ -759,10 +791,96 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
   - before: The rendered half of the acceptance regime under SR-049. The page renders, in this order: the pending open items that queued or claimed work items cite in their needs, as decision briefs beside the queued or claimed rows citing them, preceded by an integrity notice naming and linking the pending items that no queued or claimed row cites, the page claiming an empty queue only when there is neither; every SR whose chain holds a row owing a first acceptance or drifted from the accepted snapshot, with the chain's per-cell before/after, a section with no changed cell stating that no cell differs from the accepted snapshot and never reading as nothing changed; the audit list of every act-ledger entry naming a verdict, newest first, or None recorded; the pending owner actions; and, last, the Decisions to review section. It owns no second opinion: the queue is pending.open_item_queue, the acceptance model trace.reaccept_model, the pointers pending.pending_block and the decisions pending.decisions_to_review, imported rather than re-derived, so where this view and the trace.py --accept brief disagree, this view is the defect. NOT claimed: that the rendered page is legible or well-composed.
   - after: The rendered half of the acceptance regime under SR-049. The page renders, in this order: the pending open items that queued or claimed work items cite in their needs, as decision briefs beside the queued or claimed rows citing them, preceded by an integrity notice naming and linking the pending items that no queued or claimed row cites, the page claiming an empty queue only when there is neither; every SR whose chain holds a row owing a first acceptance or drifted from the accepted snapshot, with the chain's per-cell before/after, a section with no changed cell stating that no cell differs from the accepted snapshot and never reading as nothing changed; the audit list of every act-ledger entry naming a verdict, newest first, or None recorded; and, last, the pending owner actions, closed by the delegated-decisions records' format findings when a record carries one, a notice LLR-283 states and gen_open_items.record_findings_block renders, the page listing no delegated-decisions entry. It owns no second opinion: the queue is pending.open_item_queue, the acceptance model trace.reaccept_model, the pointers pending.pending_block and the record findings pending.decision_records, imported rather than re-derived, so where this view and the trace.py --accept brief disagree, this view is the defect. NOT claimed: that the rendered page is legible or well-composed.
 
+### LLR LLR-197
+- **TestRefs**
+  - before: TC-193
+  - after: TC-193; TC-439
+
 ### TC TC-123
 - **Method**
   - before: Drive gen_open_items over temp repos: assert a pending registry row a queued or claimed work item cites renders as a brief beside the rows citing it and a RULED row does not; that a pending row no queued or claimed work item cites is not a card but is named in an integrity notice linking its registry record, and that the page claims an empty queue only when neither a card nor a notice remains; that the status snapshot's open-items and Blocked lists name the same cited and uncited items as the page, including a claimed citer's card and Blocked line; that Drafted spine rows and accepted rows drifted from the accepted snapshot both surface (acceptance owed vs re-accept owed) while an undrifted Accepted row does not; that a section with no changed cells says what is true — no cell differs from the accepted snapshot, the row's own Status asking for an operator — and never CHECK THE BASELINE nor nothing-changed; that --check bites on drift as a plain regenerate-and-compare, with no baseline stamp left in the view to re-read; that the whole thing is vacuous with neither registry nor view; that registry prose is HTML-escaped; that the word diff marks only what moved and the percentage counts words not whitespace; that the theme tokens equal the dashboard's emitted values (a drift guard, not an extraction); and that Decisions to review is the page's last section. It also drives verdict_reaccept_block: every act-ledger entry naming a verdict is listed newest first with its re-accepted rows and its verdict file, an entry naming none is left out, a ledger with no such entry reads None recorded, and the rendered page carries the list.
   - after: Drive gen_open_items over temp repos: assert a pending registry row a queued or claimed work item cites renders as a brief beside the rows citing it and a RULED row does not; that a pending row no queued or claimed work item cites is not a card but is named in an integrity notice linking its registry record, and that the page claims an empty queue only when neither a card nor a notice remains; that the status snapshot's open-items and Blocked lists name the same cited and uncited items as the page, including a claimed citer's card and Blocked line; that Drafted spine rows and accepted rows drifted from the accepted snapshot both surface (acceptance owed vs re-accept owed) while an undrifted Accepted row does not; that a section with no changed cells says what is true — no cell differs from the accepted snapshot, the row's own Status asking for an operator — and never CHECK THE BASELINE nor nothing-changed; that --check bites on drift as a plain regenerate-and-compare, with no baseline stamp left in the view to re-read; that the whole thing is vacuous with neither registry nor view; that registry prose is HTML-escaped; that the word diff marks only what moved and the percentage counts words not whitespace; that the theme tokens equal the dashboard's emitted values (a drift guard, not an extraction); and that the page's sections run in order with the pending operator actions last and no Decisions to review section. It also drives verdict_reaccept_block: every act-ledger entry naming a verdict is listed newest first with its re-accepted rows and its verdict file, an entry naming none is left out, a ledger with no such entry reads None recorded, and the rendered page carries the list.
+
+### TC TC-439 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-439
+- **Verifies**: SR-157;LLR-197
+- **Level**: Integration
+- **Method**: Write an old-shape interface registry whose rows each name an id-typed owner with no provider, beside a design registry whose owning rows each name one module: a package's __init__.py, a shell hook, and a plain Python module. Run migrate_carrier's IF-shape migration with writing on and read each rewritten owner. Look for a _short_module on migrate_carrier.
+- **Tier**: Smoke
+- **Expected**: Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-146 — Prompts are reviewable files with a per-session audit trail
+
+> **Requirement.** Every prompt the delivered loop launches or an attended launcher renders as a review or critique brief shall be a shipped, reviewable file with strictly filled slots — listed by digest in a freshness-gated generated catalogue, each loop session recording which template it used and the fingerprint of what it rendered to.
+
+> **Rationale.** Prose steers the sessions this loop launches and had been reviewable only by reading Python source, which makes the process trusted rather than inspectable. The audit trail is the part that makes the move useful rather than cosmetic: without a per-session digest, "which instruction did this session see" stays an inference. (The argv-vs-shell-string transport decision is design, and lives one tier down in LLR-163.) C-SEC-5 requires that content composed for dispatch to an external model runner carry a DECLARED inclusion rule rather than an implicit one — a prompt assembled inside source is an unreviewed egress path no write-side gate covers, and shipping it as a reviewable file with a digest is what makes that rule readable.
+
+
+### LLR LLR-163
+- **CodeSymbol**
+  - before: substitute/split_cmd/build_argv
+  - after: substitute/build_argv
+
+### LLR LLR-386 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-386
+- **SR-Refs**: SR-146;SR-006
+- **Title**: A command template has one tokenizer, which the harness's step commands and the agent launch both read
+- **Module**: project-trajectory/scripts/kitlib/config.py
+- **CodeSymbol**: split_cmd
+- **Detail**: split_cmd in kitlib/config.py splits a command template into its tokens. A value that parses as a JSON list is its tokens, and a non-string element raises. Anything else is split quote-aware, with backslash escaping off, so a Windows path keeps its separators, and with no comment character, so a # is a word. check.py's _expand splits every stack.ini step command through it before substituting the placeholders; agent_session binds it under its own name for agent command templates and the product test command. Neither module holds a tokenizer of its own.
+- **Rationale**: The two copies disagreed on two inputs: an unquoted # dropped itself and every token after it in the harness's copy, which left shlex's comment character on, and a JSON array was split as shell words there. A stack.ini value reaches the tokenizer whole, since configparser strips no inline comment, so the harness ran a shorter command than the one declared and the one the loop runs. The agent side's answer is kept on both. The home sits in kitlib because check.py must stay runnable on kitlib alone.
+- **TestRefs**: TC-446
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-446 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-446
+- **Verifies**: SR-146;SR-006;LLR-386
+- **Level**: Unit
+- **Method**: Expand, through check.py's step-command expansion with an interpreter placeholder, a command whose tokens include an unquoted # followed by two words; a JSON array holding the placeholder; and a command holding a Windows path with backslashes and a quoted argument with a space. Split a template holding a # through kitlib.config.split_cmd. Compare agent_session's tokenizer with kitlib.config.split_cmd, and look for check.py's former tokenizer.
+- **Tier**: Smoke
+- **Expected**: The # and the words after it stay tokens; the JSON array expands to its elements with the placeholder substituted; the Windows path keeps its backslashes and the quoted argument its space; split_cmd keeps the #. agent_session's tokenizer is kitlib.config.split_cmd itself, and check.py has none of its own.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_a_command_template_has_one_tokenizer
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-147 — One machine-parseable carrier for the requirement spine
+
+> **Requirement.** The delivered harness shall hold every spine tier in one machine-parseable representation, reached by a migration proven cell-for-cell over the live registries before the new representation becomes authoritative.
+
+> **Rationale.** THE ROW STATES ONE OBLIGATION, and the migration history - the two prior carriers and the cutover - is no part of it: normative history and a merged decision have no place at the requirement tier, and a rationale is where that account may live. The two-carrier split has no recorded rationale and costs on both sides. Reading 32 need rows takes ~166 code lines across 14 functions in 8 modules - six bespoke scanners, two of them F5 twins pinned by nothing but a docstring, which have already drifted once and rendered a phantom root in the dashboard - while reading all 436 SR+LLR+TC rows takes csv.DictReader. CSV also cannot represent the cells that actually exist: five hold a literal pipe, 552 hold commas, the longest is 1,553 characters, and an embedded newline has no representation at all. A structured carrier turns three integrity rules into properties of the parse - a duplicate id becomes a decode error, a ref list becomes a typed array (retiring the split-on-whitespace rule that read `and` as an orphan), and an empty cell becomes an absent key, so `unset` and `set to empty` stop being the same value. The converter is the migration's evidence, not its convenience: SR-129's 140-cell lesson is that an unproven representation change is exactly where a registry silently loses cells. ONE ROW because the single-carrier claim and its converter-proof are one contract — the converter is the migration's evidence — and the converter's mechanics already decompose to this row's LLR chain;… [330 more chars — read the registry row]
+
+
+### LLR LLR-382 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-382
+- **SR-Refs**: SR-147
+- **Title**: A TOML value has one cell text, which the carrier's reader and the migration's round-trip check both write
+- **Module**: project-trajectory/scripts/kitlib/spine.py
+- **CodeSymbol**: value_to_cell
+- **Detail**: value_to_cell in kitlib/spine.py turns one TOML value into the cell text the CSV carrier held. None, the value of an absent key, is the empty cell. A list joins its elements on ; with each element written as text. Any other value is written as text. spine_carrier's rows_from_toml and its need reader write every cell through it, and migrate_carrier's compare re-derives each converted cell through it. Neither module holds a copy.
+- **Rationale**: The two copies disagreed on None: the migration's wrote an empty cell and the reader's wrote the text None. TOML has no null, so only the migration meets None, for every absent key, and every consumer reads an absent cell as empty. The empty cell is kept.
+- **TestRefs**: TC-438
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-438 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-438
+- **Verifies**: SR-147;LLR-382
+- **Level**: Unit
+- **Method**: Drive kitlib.spine.value_to_cell over None, a plain string, a string holding a semicolon, an empty list, a list of strings, a list holding an integer, and an integer. Round-trip a semicolon-joined ref cell through migrate_carrier.cell_to_value and back. Run migrate_carrier.compare over a converted row that dropped a key, and read a ref array through spine_carrier.rows_from_toml. Look for a value_to_cell on migrate_carrier and on spine_carrier.
+- **Tier**: Smoke
+- **Expected**: None reads as the empty cell; a list joins on semicolons with each element as text; anything else is its text. The ref cell round-trips to its original text. compare reports the dropped key as changing to the empty cell, and the reader joins the array on semicolons. Neither module defines a value_to_cell.
+- **Automated**: Yes
+- **Evidence**: tests/test_rule_sync.py::test_the_carrier_value_cell_has_one_home_and_reads_none_as_empty
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-148 — Autonomous loop work selection: what it derives from, and in what order
 
@@ -808,12 +926,74 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Status**: Drafted
 - **Phase**: 6
 
+## SR-156 — Bounded lanes narrowing to one gated landing
+
+> **Requirement.** The delivered loop content shall run exactly one work item per lane on bounded, mutually isolated lanes and narrow every lane back to the integration branch through one serial, fail-closed seam that runs the declared checks on the composed tree — parking a failing candidate and stopping the queue loudly, draining claiming to a clean merged stop under a declared pause, and reconstructing claim and queue state from version-control history alone at any crash boundary, never a half-integrated authoritative state.
+
+> **Rationale.** Realizes SN-027 WHOLE — ready work fans out across bounded parallel lanes and that fan-out narrows to one serialized gated seam before anything lands, in the need's own words — with SN-008 (the seam is fail-closed) and SN-025 (recovery from version-control history alone). ONE DECISION PER ROW: "serial integration is one delivered contract" is sound for the SEAM, but lane execution, claim authority and the trunk-side mint of work-item identity are not the seam, and a row stating the seam alone leaves SN-027's FIRST half — bounded lanes, isolated working trees, a worker ceiling — stated nowhere. This row therefore states the whole lane LIFECYCLE (claim, run isolated, close, land), which is what closes that hole; the trunk-only authority contract sheds to SR-170. The two fail independently: a perfectly serialized landing that lets a lane commit a regenerated artifact satisfies this row and not that one. Terminal close is SR-144's and is not restated here — one SR per (need, property), and both rows sit under SN-027 — so what this row carries of it is only that a terminal branch still lands through the one serial seam.
+
+
+### LLR LLR-384 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-384
+- **SR-Refs**: SR-156;SR-220
+- **Title**: An id's queued spec has one lookup, which refuses when several queued specs carry the id
+- **Module**: project-trajectory/scripts/kitlib/registry.py
+- **CodeSymbol**: queued_spec
+- **Detail**: queued_spec in kitlib/registry.py returns the one queued spec of an id under a work folder (a queued file named for the id), None when none is queued, and raises a ValueError naming the count and the files when several are. integrate's claim and its Done-when notice, handback's edge and return writes, and the consolidation close's archive plan all find the spec through it; each refuses when none is queued, in its own words, and refuses with the lookup's reason when several are, writing nothing. None of the three holds a lookup of its own.
+- **Rationale**: The three lookups disagreed on two queued specs of one id: the claim refused, while handback and the consolidation close acted on the first. Every caller writes or moves the file, and acting on one copy leaves the other standing as a live queued row of the same id, so the refusal is kept.
+- **TestRefs**: TC-444
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### LLR LLR-385 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-385
+- **SR-Refs**: SR-156
+- **Title**: Which copy of a work item's spec governs is one key, which the merge slot's verdict check and the Done-when hold both read
+- **Module**: project-trajectory/scripts/kitlib/registry.py
+- **CodeSymbol**: governing_spec/_governing_rank
+- **Detail**: governing_spec in kitlib/registry.py names the one copy that governs among the repo-relative paths of one work item's spec in one tree, or None when there are none. Its key: a copy in a terminal folder (complete, partial, cancelled, restructured) before a claimed copy under active/ before any other; then a copy under docs/archive/work before one under docs/work, before one in neither; then the path. agent_policy's authoritative_spec is this function, which the merge slot's verdict-owed check, the worker brief and review_brief call; kitlib/done_when.py's copy reader, behind spec_at and the claim-copy read, chooses among the copies it lists with it. adoption_record refuses when several specs carry one id and does not ask it.
+- **Rationale**: Two precedences picked different copies of one spec: the merge-slot side took the active copy beside a closed one under docs/work, while the Done-when side took the closed one; the Done-when side took the legacy docs/work copy over the archive's and the later of two terminal folders. One key is kept: the closed copy, which the merge-slot side's own reason names; the archive, where the close route writes; then the path, the answer a reader can predict. No kit route writes two copies.
+- **TestRefs**: TC-445
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-444 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-444
+- **Verifies**: SR-156;SR-220;LLR-384
+- **Level**: Integration
+- **Method**: Write a work folder holding two queued specs that carry one id. Look the id up through kitlib.registry.queued_spec, and look up an id nothing queues, one queued spec, and a missing folder. Then drive the claim's lookup, a handback edge write and the consolidation close's archive plan at the doubled id and at an unqueued id, listing the queued folder before and after. Look for a lookup of handback's own.
+- **Tier**: Smoke
+- **Expected**: The doubled id raises a ValueError naming the count; an unqueued id and a missing folder answer None; a single queued spec is returned. The claim, the handback write and the close each refuse the doubled id with that reason and plan nothing, and the queued folder is unchanged; each refuses the unqueued id in its own words. handback has no lookup of its own.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_queued_spec_lookup_refuses_two_specs_of_one_id; tests/test_policy_one_home.py::test_every_act_on_a_queued_spec_refuses_two_of_one_id
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-445 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-445
+- **Verifies**: SR-156;LLR-385
+- **Level**: Integration
+- **Method**: Hand kitlib.registry.governing_spec and agent_policy.authoritative_spec, in both orders, each pair of copies of one spec: a closed copy in the archive and in the legacy docs/work home; a claimed copy and a closed copy under docs/work; a complete and a partial copy in the archive; a claimed copy and an archived closed one; a queued and a claimed copy; and no copy. Then commit each of the first four pairs in turn to a git repository and read the spec at HEAD through kitlib.done_when.spec_at for the claiming lane. Look for the former rank on agent_policy.
+- **Tier**: Smoke
+- **Expected**: Both functions name, in either order: the archive's copy over the legacy one, the closed copy over the claim, the complete copy over the partial one by path, the archived copy over the claim, and the claimed copy over the queued one; None for no copy. spec_at reads the same copy, its text and no reason for each committed pair. agent_policy carries no rank of its own.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_one_key_says_which_copy_of_a_spec_governs; tests/test_policy_one_home.py::test_the_done_when_hold_reads_the_governing_copy
+- **Status**: Drafted
+- **Phase**: 6
+
 ## SR-157 — Spine and work-registry rules fail the harness verdict
 
 > **Requirement.** The delivered harness shall report every declared spine and work-registry rule violation — broken joins, integrity and schema faults, leftover placeholders, requirement-form findings and work-item coherence contradictions — naming the at-fault row and cell, gating the declared failure set at the declared gate while advisory classes never change the exit code.
 
 > **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
 
+
+### LLR LLR-197
+- **TestRefs**
+  - before: TC-193
+  - after: TC-193; TC-439
 
 ### LLR LLR-365
 - **Module**
@@ -824,6 +1004,19 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Module**
   - before: project-trajectory/scripts/trajectory_arch.py
   - after: project-trajectory/scripts/arch_tags.py
+
+### LLR LLR-383 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-383
+- **SR-Refs**: SR-157
+- **Title**: An id's number has one reading, the digits after its last dash, which every ordering and match by number takes
+- **Module**: project-trajectory/scripts/kitlib/spine.py
+- **CodeSymbol**: id_number
+- **Detail**: id_number in kitlib/spine.py reads the number of an id as the digits after its last dash, and 0 when that tail is not all digits: OI-98 reads 98, D-0012 reads 12, X2-5 reads 5 and D-12a reads 0. The open-item queue and coverage rules in kitlib/spine.py, the decisions record's review queue and overrule listing in kitlib/decisions.py, the spec folder's registry order in kitlib/registry.py's read_spec_rows, and wi_convert's read_specs all read an id's number through it. None of those modules holds a copy.
+- **Rationale**: Four copies gave two answers: two read the tail after the last dash and two the first run of digits, so X2-5 read 2 and D-12a read 12 in the second pair. Every id a supported route mints reads the same either way. The tail is kept because the open-item coverage rule matches covered numbers through it, and the first digit run would read OI-35abc as OI-35.
+- **TestRefs**: TC-440
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
 
 ### TC TC-409
 - **Verifies**
@@ -856,6 +1049,62 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: A lane's order reads no finding at any step; an Accepted case with no tag warns with exit 0 in a plain run and errors with exit 1 under strict checking until it is tagged; and a newly created project warns and exits 0 at DevStg-Tests, fails at DevStg-Impl, and is clean once the case is tagged.
 - **Automated**: Yes
 - **Evidence**: tests/test_trajectory_arch.py::test_a_lanes_order_never_meets_the_undeclared_finding; tests/test_trajectory_arch.py::test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict; tests/test_trajectory_arch.py::test_the_undeclared_finding_on_a_bootstrapped_scaffold
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-439 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-439
+- **Verifies**: SR-157;LLR-197
+- **Level**: Integration
+- **Method**: Write an old-shape interface registry whose rows each name an id-typed owner with no provider, beside a design registry whose owning rows each name one module: a package's __init__.py, a shell hook, and a plain Python module. Run migrate_carrier's IF-shape migration with writing on and read each rewritten owner. Look for a _short_module on migrate_carrier.
+- **Tier**: Smoke
+- **Expected**: Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-440 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-440
+- **Verifies**: SR-157;LLR-383
+- **Level**: Unit
+- **Method**: Read kitlib.spine.id_number over X2-5, an id whose number carries a letter, OI-35abc, an id whose number has leading zeros, OI-98, D-001, an id ending in its dash, and the empty string. Look for an id-number reader on kitlib.registry, kitlib.decisions and wi_convert, and for the old private name on kitlib.spine. Then write three queued specs carrying no order key, numbered 3, 12 with a letter after it, and 20, and read the folder through kitlib.registry.read_spec_rows and through wi_convert.read_specs.
+- **Tier**: Smoke
+- **Expected**: X2-5 reads 5, the lettered id 0, OI-35abc 0, the zero-padded id its number, OI-98 98, D-001 1, and the dash-ended id and the empty string 0. None of the three modules defines its own reader, and kitlib.spine has no private copy. Both readers order the folder with the lettered spec first, then 3, then 20.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_an_id_number_is_the_digits_after_the_last_dash; tests/test_policy_one_home.py::test_both_spec_folder_orderings_read_the_one_id_number
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-158 — Documentation drift fails or warns per its declared tier
+
+> **Requirement.** The delivered harness shall report a documentation surface that has drifted from what it claims — a broken intra-repo link, a missing vision declaration, a reference to an absent path or symbol, a stale generated doc, or a declared figure without its provenance — at the declared warn-or-gate severity for each class.
+
+> **Rationale.** Realizes SN-010 (navigable, honest documentation) and SN-008 (a pass never hides a stale claim). One row because the delivered contract is one honesty verdict over the documentation surfaces; the individual checkers and their carve-outs are component details.
+
+
+### LLR LLR-387 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-387
+- **SR-Refs**: SR-158
+- **Title**: A declared file's lines have one walk, and the declared-absences file one reading, which every reader of either calls
+- **Module**: project-trajectory/scripts/kitlib/config.py
+- **CodeSymbol**: declared_entries/declared_absences/DECLARED_SEP
+- **Detail**: declared_entries in kitlib/config.py reads a key-and-reason declared file: it decodes UTF-8 with a byte-order mark stripped and an undecodable byte replaced, splits on newlines, passes over blank lines and # comments, returns each line carrying the separator (an em dash with a space each side, DECLARED_SEP) as its line number, stripped key, stripped reason and text, and returns every other line as unparsed with its number. An absent file yields nothing. declared_absences reads the declared-absences file through it, with a trailing / stripped from each path. check_need_form's need-form allow list, trace's provenance allow list and arch_seams' kernel-modules allow list (re-exported by trajectory_arch) each keep only their own key rule over declared_entries; check_doc_refs' read_declared_absences and trace's declared-absence reader both call declared_absences. None of them walks a file of its own.
+- **Rationale**: Five walks disagreed. Two read a byte-order mark into the first key, hiding the first entry, and of those one raised on an undecodable byte while the other read no entry at all. On the declared-absences file, which both read, one also took a hyphen separator and the other an unspaced em dash, so they disagreed on what it declares. Kept: the mark stripped, the byte replaced, and the spaced em dash only, which every such file's header and the file's interface row state; the stricter.
+- **TestRefs**: TC-447
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-447 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-447
+- **Verifies**: SR-158;LLR-387
+- **Level**: Unit
+- **Method**: Write a declared-absences file that starts with a byte-order mark and holds, in order: an entry, a comment, an entry separated by a spaced hyphen, an entry separated by an unspaced em dash, an entry whose path ends in a slash, and an entry whose path holds an undecodable byte. Read it through check_doc_refs.read_declared_absences and through trace's declared-absence reader. Then write the need-form, provenance and kernel-modules allow lists, each starting with a byte-order mark and holding a well-formed entry, a comment, a hyphen-separated entry and an unspaced one, and read each through its own reader. Read an absent file through kitlib.config.declared_entries.
+- **Tier**: Smoke
+- **Expected**: Both declared-absence readers declare the same paths: the first entry, the slash-ended path without its slash, and the path with the undecodable byte replaced; the hyphen and unspaced lines are reported unparsed, by line number. Each allow-list reader reads its first entry and reports the hyphen and unspaced lines unparsed. The absent file yields nothing.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_declared_absences_file_is_read_one_way_by_both_readers; tests/test_policy_one_home.py::test_every_declared_file_reader_strips_the_mark_and_refuses_a_hyphen
 - **Status**: Drafted
 - **Phase**: 6
 
@@ -952,6 +1201,38 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Status**: Drafted
 - **Phase**: 6
 
+## SR-166 — The delivered package materializes where its manifest declares it will
+
+> **Requirement.** The delivered package shall be consumable at its own declared shipped-file manifest — every file the manifest names materialized at its declared destination in a fresh scaffold, and this repository's own instance carrying the structure of the template it ships — with a declared destination a fresh scaffold does not carry, and a structural divergence between the shipped template and this repository's instance, each failing rather than degrading the delivered package silently.
+
+> **Rationale.** Realizes SN-001 (an adopting team gets a working, gated, requirement-traced process without hand-building the tooling — which presupposes that what arrives is whole) and SN-007 (the kit is held to the standard it ships). The observable is B-05's own artifact-shaped one: the package exists, is complete, and is consumable at the manifest it declares. Verification evidence is named rather than owed: tests/test_bootstrap.py drives bootstrap.py's MAPPING against the file lists a fresh scaffold must carry, and tests/test_dogfood_sync.py pins this repository's own instance against the template it ships, so the manifest cannot declare one thing and the package deliver another. Deliberately distinct from its two neighbours: SR-163 asks why each shipped file EXISTS (SN-038, purpose coverage), SR-010 asks whether the generated scaffold PASSES, and this row asks whether what was promised ARRIVES WHERE IT WAS PROMISED. DELIBERATELY NARROW: manifest PRESENCE — a named source the package does not carry, and a shipped file the manifest does not name — is SR-163's alone, reported under its configurable warn-versus-gate policy, because two rows prescribing different outcomes for one observable is a contradiction an implementer can only resolve by violating one of them. What is left is what SR-163 does not ask: not whether a file is accounted for, but whether it LANDS — at its declared destination in a fresh scaffold, and in this repository's own instance of the template it ships.
+
+
+### LLR LLR-388 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-388
+- **SR-Refs**: SR-166
+- **Title**: A spec file has one parse, which every registry reader and the converter call and which refuses a value that is not text
+- **Module**: project-trajectory/scripts/kitlib/registry.py
+- **CodeSymbol**: parse_spec_row/scalar_cell/spec_text/spec_list_element
+- **Detail**: parse_spec_row in kitlib/registry.py reads one spec file into its registry row. It refuses, naming the file, an id the filename does not carry, an adjudicates value adjudicates_tokens refuses, and a value that is not text where a cell is owed: scalar_cell takes a scalar as text, a priority also as an integer, and a supersedes list as elements joined on ;, and spec_list_element holds each element of a list key to text carrying no ;, so one element never reads downstream as two references. read_spec_rows reports such a spec through its error sink and skips it. wi_convert's parse_spec refuses a spec under active/ (a conversion runs only when no claim is in flight), then calls parse_spec_row and raises its refusal as a ConvertError naming the file as the caller knows it; the converter holds no fence split, body parse, status lookup or scalar rule of its own.
+- **Rationale**: The converter and the registry each parsed a spec and disagreed on three inputs: a non-string title the registry wrote as its text and the converter refused; an id the filename does not carry, and an adjudicates value with a ; in a token or given as a bare string, which the registry refused and the converter accepted. An element carrying ; in any other list key was joined by both into two references, where the adjudicates list refused it. The stricter answer is kept on each: no supported route writes any of them and no spec on the tree carried one.
+- **TestRefs**: TC-443
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-443 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-443
+- **Verifies**: SR-166;LLR-388
+- **Level**: Unit
+- **Method**: Parse a well-formed spec with an integer priority through kitlib.registry.parse_spec_row and through wi_convert.parse_spec. Then parse through both, in turn: a title given as an integer, a list key holding an integer, a supersedes list holding an integer, an id its filename does not carry, an adjudicates list with a semicolon inside a token, and an adjudicates value given as a bare string. For each of sr_refs, needs, adopted, authoring_tags and supersedes, parse through both a list whose one element carries a semicolon, and the same references written as two elements. Look for the converter's former parse helpers on wi_convert. Separately, read a spec folder holding one well-formed queued spec and one whose title is an integer through read_spec_rows with an error sink.
+- **Tier**: Smoke
+- **Expected**: The well-formed spec reads the same through both, the integer priority as its digits. Each malformed input is refused by both, the registry with a ValueError and the converter with a ConvertError, each naming the same fault; so is each list element carrying a semicolon, for every list key, while the same references as two elements are read into the cell. wi_convert carries none of the former helpers. read_spec_rows returns only the well-formed row and reports the other file once, naming it and the title fault.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_converter_parses_a_spec_through_the_one_parser; tests/test_policy_one_home.py::test_a_spec_with_a_non_string_title_is_reported_and_skipped; tests/test_policy_one_home.py::test_a_list_element_carrying_the_cell_join_is_refused
+- **Status**: Drafted
+- **Phase**: 6
+
 ## SR-169 — The state view shows how the parts connect
 
 > **Requirement.** The delivered generator set shall render the adopted repository's declared components and the interfaces between them as a navigable graph — showing which components sit inside which at more than one level, drawing an interface whose endpoint lies inside an unopened container to that container's edge, and showing a stated "no interfaces declared" view rather than an empty one when the repository carries the component and interface registries but declares no interface in them (a repository carrying no such registry at all omits the view under SR-070, not under this row).
@@ -981,6 +1262,79 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Expected**: Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced.
 - **Automated**: Yes
 - **Evidence**: tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-189 — Each need resolves to the declared stakeholders whose outcome it is
+
+> **Requirement.** The delivered harness shall resolve each stakeholder need's stakeholder references against the declared stakeholder list, and each stakeholder's party against the declared frame, reporting a need that names no stakeholder.
+
+> **Rationale.** A need with no named owner has nobody who can confirm it is still wanted, and a stakeholder's party is what lets the need's outcome be placed on the frame. The link lives on the need, pointing at the stakeholder, so the relation has one home; a short list beside the needs keeps the stakeholders where the rows citing them already are, rather than in a registry of their own. A stakeholder is not a review perspective: a stakeholder owns an outcome, while a perspective owns a question put to each decomposition, so no perspective becomes a stakeholder row.
+
+
+### LLR LLR-215
+- **TestRefs**
+  - before: (empty)
+  - after: TC-441
+
+### TC TC-441 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-441
+- **Verifies**: SR-189;LLR-215
+- **Level**: Unit
+- **Method**: Write a TOML needs file holding the -000 example need, two real needs (one citing the other in its text), a comment naming an id no need table declares, and a stakeholder whose description names another such id. Read it through check_docs' README-inventory reader and through check_flows' known-id loader. Separately, read the live needs registry through spine_carrier.load_needs and kitlib.spine.sn_all_ids with the carrier from its suffix.
+- **Tier**: Smoke
+- **Expected**: Both checkers read exactly the two real needs: neither the comment's id, nor the stakeholder description's id, nor the -000 example counts, and check_docs' set equals sn_all_ids over the same text; its Must/Should floor is the one Must need. Over the live registry, the carrier's need ids less the example equal sn_all_ids, and the two draft readers agree.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_readme_inventory_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_policy_one_home.py::test_the_flow_check_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_rule_sync.py::test_the_need_reader_agrees_with_the_sn_universe_on_the_toml_needs_file
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-220 — Overlapping queued work is consolidated through one judgement per queue state
+
+> **Requirement.** While the queued work items include a set that overlaps, the delivered loop content shall hand that set to a single judgement, at most once for any one state of the queued work items and never while another judgement is in progress, queued over an item of the set, or queued to run before it, whose outcome takes effect only as a recorded restructuring in which each absorbed item is closed in a terminal state naming its one successor, its scope text unchanged.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-025 asks that no human curate what comes next; its acceptance states only that the next work derives from the tracked work-item graph, which a stranger reading it would derive as work selection alone. This row states what that promise needs once the loop also mints work: rows minted one finding at a time overlap, and without this row either a human merges them, which is the curation the need rules out, or the loop builds the same job more than once. Two lenses shape it. UNATTENDED-OPS: an overlap is a standing state, so a judgement fired on it re-asks the same question on every idle tick unless the judged state is remembered past the judging row's close, an unbounded retry that pages nobody. PERFORMANCE: each judgement is a strong-tier session, so asking once per queue state is the operating-cost bound rather than an optimisation. The restructuring is recorded rather than done by deletion so that an absorbed item's scope and its successor stay readable after the act. Fed back to the need: SN-025's acceptance could name the loop keeping its own queue free of duplicated work; until it does, this row is derived and says so. Choosing the next work stays SR-148's, and reporting an overlap as a warning stays SR-157's.
+
+
+### LLR LLR-210
+- **TestRefs**
+  - before: TC-208
+  - after: TC-208; TC-442
+
+### LLR LLR-384 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-384
+- **SR-Refs**: SR-156;SR-220
+- **Title**: An id's queued spec has one lookup, which refuses when several queued specs carry the id
+- **Module**: project-trajectory/scripts/kitlib/registry.py
+- **CodeSymbol**: queued_spec
+- **Detail**: queued_spec in kitlib/registry.py returns the one queued spec of an id under a work folder (a queued file named for the id), None when none is queued, and raises a ValueError naming the count and the files when several are. integrate's claim and its Done-when notice, handback's edge and return writes, and the consolidation close's archive plan all find the spec through it; each refuses when none is queued, in its own words, and refuses with the lookup's reason when several are, writing nothing. None of the three holds a lookup of its own.
+- **Rationale**: The three lookups disagreed on two queued specs of one id: the claim refused, while handback and the consolidation close acted on the first. Every caller writes or moves the file, and acting on one copy leaves the other standing as a live queued row of the same id, so the refusal is kept.
+- **TestRefs**: TC-444
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-442 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-442
+- **Verifies**: SR-220;LLR-210
+- **Level**: Unit
+- **Method**: Read a battery of Predecessors cells through consolidate's commissioning-source reader and through kitlib.spine.split_pred_edges: one open item; a work item and an open item joined by a semicolon, by a comma and by whitespace; several open items under mixed separators; an open item marked soft; a token that starts like an open item and carries a letter after its number; soft and hard work items only; an empty cell. Then read comma- and whitespace-separated ref cells through every ref-cell read in consolidate (the absorbed set, the queue model, the module signal and its design-row join), intake's owning-SR hint and the adjudication brief's cited spine, and compare agent_common's ref split with kitlib.spine.refs.
+- **Tier**: Smoke
+- **Expected**: For every cell the commissioning reader's open items equal split_pred_edges' open-item edges: a comma or whitespace separator still yields the edge, the soft marker is ignored, and the lettered token is no open-item edge. Each ref-cell read splits a comma- or whitespace-separated cell into its ids, and agent_common's ref split is kitlib.spine.refs itself.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_consolidate_finds_every_open_item_edge_split_pred_edges_finds; tests/test_policy_one_home.py::test_every_ref_cell_read_splits_through_the_one_home
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-444 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-444
+- **Verifies**: SR-156;SR-220;LLR-384
+- **Level**: Integration
+- **Method**: Write a work folder holding two queued specs that carry one id. Look the id up through kitlib.registry.queued_spec, and look up an id nothing queues, one queued spec, and a missing folder. Then drive the claim's lookup, a handback edge write and the consolidation close's archive plan at the doubled id and at an unqueued id, listing the queued folder before and after. Look for a lookup of handback's own.
+- **Tier**: Smoke
+- **Expected**: The doubled id raises a ValueError naming the count; an unqueued id and a missing folder answer None; a single queued spec is returned. The claim, the handback write and the close each refuse the doubled id with that reason and plan nothing, and the queued folder is unchanged; each refuses the unqueued id in its own words. handback has no lookup of its own.
+- **Automated**: Yes
+- **Evidence**: tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_queued_spec_lookup_refuses_two_specs_of_one_id; tests/test_policy_one_home.py::test_every_act_on_a_queued_spec_refuses_two_of_one_id
 - **Status**: Drafted
 - **Phase**: 6
 

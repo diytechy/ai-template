@@ -213,6 +213,7 @@ from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
+from kitlib import config as _kitconfig
 from kitlib.config import assumption_gate_enabled, read_stack_ini
 from kitlib.config import utf8_console as _utf8_console
 
@@ -2777,7 +2778,7 @@ IF_REASON_CELLS = ("Notes", "Rationale")
 # key is `<ROW-ID> <Cell> <token>` — THREE fields, and the third is what makes
 # the entry mean anything (see `load_provenance_allow`).
 PROVENANCE_ALLOW = "docs/provenance-allow"
-PROVENANCE_ALLOW_SEP = " — "
+PROVENANCE_ALLOW_SEP = _kitconfig.DECLARED_SEP  # the one declared-file separator
 
 # An `OI-###` id, anchored: the allow-file field is a WHOLE token in first
 # position, never a substring somewhere in the prose (see `parse_provenance_allow`).
@@ -2863,19 +2864,9 @@ def read_provenance_allow(root):
     The counting rule is deliberately the CHEAP one — non-blank, non-comment — so
     it cannot itself be evaded by a subtler malformation: anything a human would
     read as an entry counts as one, and the parser must agree or say so."""
-    path = Path(root) / PROVENANCE_ALLOW
-    if not path.is_file():
-        return [], []
-    out, unparsed = [], []
-    text = path.read_text(encoding="utf-8-sig", errors="replace")
-    for lineno, raw in enumerate(text.split("\n"), start=1):
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        if PROVENANCE_ALLOW_SEP not in line:
-            unparsed.append((lineno, line))
-            continue
-        head, reason = line.split(PROVENANCE_ALLOW_SEP, 1)
+    entries, unparsed = _kitconfig.declared_entries(Path(root) / PROVENANCE_ALLOW)
+    out = []
+    for lineno, head, reason, line in entries:
         key = head.split()
         if len(key) < 3:
             unparsed.append((lineno, line))
@@ -2888,10 +2879,10 @@ def read_provenance_allow(root):
                 "cell": key[1],
                 "token": " ".join(key[2:]),
                 "oi": first if OI_ID_RE.match(first) else None,
-                "reason": reason.strip(),
+                "reason": reason,
             }
         )
-    return out, unparsed
+    return out, sorted(unparsed)
 
 
 def provenance_allow_parse_findings(root):
@@ -3242,22 +3233,13 @@ def _declared_absences(root):
 
     Fail-soft in the quiet direction (no file -> no declarations), because that
     is the state of every repo that has never needed one."""
-    try:
-        text = (root / "docs" / "declared-absences").read_text(encoding="utf-8")
-    except (OSError, ValueError, UnicodeDecodeError):
-        return frozenset()
-    out = set()
-    for line in text.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        # `<path> — <reason>`, the em-dash separator the file's own header
-        # declares; a line with no separator is a path with no reason and is
-        # deliberately NOT honoured (the file requires the reason).
-        path, sep, _reason = line.partition("—")
-        if sep:
-            out.add(path.strip())
-    return frozenset(out)
+    # The file's one reading, `kitlib.config.declared_absences` (WI-1004): the
+    # spaced em dash its header declares, a trailing `/` stripped. A line with
+    # no separator is a path with no reason and is deliberately NOT honoured.
+    declared, _unparsed = _kitconfig.declared_absences(
+        root / "docs" / "declared-absences"
+    )
+    return frozenset(declared)
 
 
 def _resolves_in_tree(root, endpoint):

@@ -95,6 +95,7 @@ import integrate
 import spec_move
 from kitlib import adoption as kadoption
 from kitlib import provenance as _kitprovenance
+from kitlib import registry as kregistry
 from kitlib import spine as kspine
 from kitlib import station
 
@@ -754,14 +755,6 @@ def _machine_line_refusal(root, wt, branch, record, absorbed, where):
     return consolidate.reconcile_refusal(parsed, record, absorbed, where)
 
 
-def _queued_spec(wt, wi_id):
-    """`(path, relpath)` of one QUEUED spec on the lane, or `(None, None)`."""
-    queued = wt / integrate.WORK / "queued"
-    for path in sorted(queued.glob(wi_id + "-*.md")) if queued.is_dir() else []:
-        return path, "{}/queued/{}".format(integrate.WORK, path.name)
-    return None, None
-
-
 def _enact_plan(wt, record):
     """`([(kind, path, rel, steps, dest, wid)], None)` - every write this
     verdict owes, resolved and validated - or `([], refusal)` naming the first
@@ -797,12 +790,16 @@ def _enact_plan(wt, record):
         for wid in record["returns"]
     ]
     for wid, step, state, blocker in targets:
-        path, rel = _queued_spec(wt, wid)
         what = (
             "add the {} -> {} edge".format(wid, blocker)
             if state is None
             else "return {} to draft".format(wid)
         )
+        try:
+            path = kregistry.queued_spec(wt / integrate.WORK, wid)
+        except ValueError as exc:
+            return [], "cannot {}: {}; nothing written".format(what, exc)
+        rel = "{}/queued/{}".format(integrate.WORK, path.name) if path else None
         if path is None:
             return [], (
                 "cannot {}: {} is not a queued spec on this lane; nothing "

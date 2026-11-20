@@ -32,6 +32,7 @@ try:
     from kitlib import git as _kitgit
     from kitlib import ladder as _kitladder
     from kitlib import provenance as _kitprovenance
+    from kitlib import registry as _kitregistry
     from kitlib import stage as _kitstage
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -41,6 +42,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     from kitlib import git as _kitgit
     from kitlib import ladder as _kitladder
     from kitlib import provenance as _kitprovenance
+    from kitlib import registry as _kitregistry
     from kitlib import stage as _kitstage
 
 import held_status
@@ -883,34 +885,18 @@ def adjudication_review_owed(docs, brief, drafts):
 SPEC_HOMES = ("docs/archive/work", "docs/work")
 
 
-def _spec_home_rank(path):
-    """`(home precedence, path)` — the key `authoritative_spec` sorts on."""
-    for rank, home in enumerate(SPEC_HOMES):
-        if path.startswith(home + "/"):
-            return (rank, path)
-    return (len(SPEC_HOMES), path)
-
-
-def authoritative_spec(paths):
-    """The one repo-relative spec path that governs among `paths`, or None.
-
-    ONE OWNING BOUNDARY for "which copy of this branch's spec answers for it",
-    because that answer decides a review round. `agent_loop.dispositions_drafted`
-    (does this judgement owe a round?) and `integrate._verdict_owed` (does this
-    merge demand one?) read the same `## Dispositions` block through the same
-    dial — and each used to walk the homes in its OWN order, the loop
-    `docs/work` first and the gate `docs/archive/work` first. A branch
-    momentarily carrying the spec in BOTH homes therefore handed the scheduler
-    and the gate DIFFERENT drafts: the exact come-apart the shared dial exists
-    to prevent, re-entered through the dial's input rather than through the dial.
-
-    The callers legitimately differ in where they read from — the loop globs its
-    own working tree, the gate asks `git show` against a branch it has not
-    checked out — so what is shared here is the PRECEDENCE and not the read.
-    Each caller hands over the candidates it found, in any order, and gets back
-    the one the other would also have chosen."""
-    ranked = sorted((str(p).replace("\\", "/") for p in paths), key=_spec_home_rank)
-    return ranked[0] if ranked else None
+# THE PRECEDENCE among the copies a caller found: ONE OWNING BOUNDARY for
+# "which copy of this branch's spec answers for it", because that answer
+# decides a review round. `agent_loop.dispositions_drafted` (does this judgement
+# owe a round?) and `integrate._verdict_owed` (does this merge demand one?) read
+# the same `## Dispositions` block through the same dial, and each used to walk
+# the homes in its OWN order. The callers legitimately differ in where they
+# read from — the loop globs its own working tree, the gate asks `git show`
+# against a branch it has not checked out — so what is shared is the
+# PRECEDENCE and not the read. Its one home is `kitlib.registry.governing_spec`
+# (WI-1004), which `kitlib.done_when.spec_at` also chooses with: a terminal
+# copy before the claim, the archive before `docs/work`, then the path.
+authoritative_spec = _kitregistry.governing_spec
 
 
 def keep_nondependent(docs):
@@ -1222,7 +1208,6 @@ __all__ = (
     "decision_recording",
     "adjudication_review_owed",
     "SPEC_HOMES",
-    "_spec_home_rank",
     "authoritative_spec",
     "keep_nondependent",
     "spine_stage_of",

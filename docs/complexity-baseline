@@ -158,7 +158,6 @@ project-trajectory/scripts/trace_text.py	provenance_tokens	19	18
 project-trajectory/scripts/traj_parse.py	_okf_nodes	39	49
 project-trajectory/scripts/traj_parse.py	frame_context	19	82
 project-trajectory/scripts/traj_parse.py	runtime_flows	22	26
-project-trajectory/scripts/wi_convert.py	parse_spec	19	35
 tests/test_bootstrap.py	test_every_sibling_imported_module_is_shipped_by_mapping	33	52
 tests/test_dependency_ledger.py	undeclared_imports	19	21
 tests/test_gen_cases.py	_example_status_cells	24	15

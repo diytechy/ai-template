@@ -293,14 +293,14 @@ def _spec_frontmatter(path):
 
 
 def _queued_spec(root, wi_id):
-    hits = sorted((root / WORK / "queued").glob(wi_id + "-*.md"))
-    if len(hits) != 1:
+    """The one queued spec of `wi_id`, through the one lookup
+    (`kitlib.registry.queued_spec`); a ValueError when none or several."""
+    spec = kregistry.queued_spec(root / WORK, wi_id)
+    if spec is None:
         raise ValueError(
-            "{} queued spec(s) match {} - claim needs exactly one".format(
-                len(hits), wi_id
-            )
+            "0 queued spec(s) match {} - claim needs exactly one".format(wi_id)
         )
-    return hits[0]
+    return spec
 
 
 # The R-D id-token shape and the generated-block split, matched HERE rather than

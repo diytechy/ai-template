@@ -79,6 +79,7 @@ __all__ = [
     "csv_rows",
     "norm_module",
     "refs",
+    "value_to_cell",
     "clip_line",
     "open_items_at",
     "registry_row_hint",
@@ -106,6 +107,7 @@ __all__ = [
     "HISTORICAL_KEYS",
     "REGISTRY_KEYS",
     "split_pred_edges",
+    "id_number",
     "open_item_queue",
     "OPEN_ITEM_TOKEN",
     "COVERING_STATUSES",
@@ -211,6 +213,27 @@ def refs(value):
     return [t for t in re.split(r"[;,\s]+", (value or "").strip()) if t]
 
 
+def value_to_cell(value):
+    """One TOML value as the cell text the CSV carrier held: a ref array joins
+    on `;` (the separator the registries use, 271 of 271 at the cutover), each
+    element `str()`ed; `None`, the value of an absent key, is the empty cell;
+    anything else is `str()`.
+
+    TWO COPIES BEFORE WI-1004, and they disagreed on `None`:
+    `migrate_carrier.value_to_cell` (the migration's round-trip self-check)
+    wrote `''` and `spine_carrier.value_to_cell` (the carrier's reader) wrote
+    `'None'`. TOML has no null, so the reader never meets `None`; the
+    migration meets it for every absent key, and every consumer reads an
+    absent cell as empty. The empty cell is kept.
+
+    Implements: SR-147, LLR-382"""
+    if value is None:
+        return ""
+    if isinstance(value, list):
+        return ";".join(str(v) for v in value)
+    return str(value)
+
+
 def registry_row_hint(ids, frag):
     """Why `frag` names no row of a carrier exposing `ids`: the table-path
     spelling (`need.SN-1`) gets its bare id back; anything else is unknown."""
@@ -290,10 +313,10 @@ def open_item_queue(work_rows, oi_rows):
     pending = dict(open_items_at(oi_rows, "pending"))
     held = _held_rows(work_rows, pending)
     citers = {}
-    for wid in sorted(held, key=_id_number):
+    for wid in sorted(held, key=id_number):
         for oid in held[wid]:
             citers.setdefault(oid, []).append(wid)
-    order = sorted(pending, key=_id_number)
+    order = sorted(pending, key=id_number)
     return {
         "cards": [(pending[o], citers[o]) for o in order if o in citers],
         "uncited": [o for o in order if o not in citers],
@@ -344,13 +367,24 @@ def _held_rows(work_rows, pending):
             o for o in split_pred_edges(row.get("Predecessors"))[1] if o in pending
         }
         if cited:
-            held[wid] = sorted(cited, key=_id_number)
+            held[wid] = sorted(cited, key=id_number)
     return held
 
 
-def _id_number(rid):
-    """`OI-98` -> 98: the numeric order ids are read in, never the lexical one."""
-    tail = rid.rsplit("-", 1)[-1]
+def id_number(rid):
+    """`OI-98` -> 98: the numeric order ids are read in, never the lexical one.
+    The digits after the last dash; 0 when that tail is not all digits.
+
+    FOUR COPIES BEFORE WI-1004, in two answers: this one and
+    `kitlib.decisions._id_number` read the tail after the last dash;
+    `kitlib.registry.spec_id_number` and `wi_convert._id_number` read the first
+    run of digits, so `X2-5` read 2 and `WI-12a` read 12 there and 5 and 0
+    here. Every id a supported route mints reads the same either way. The
+    tail is kept: the open-item coverage rule below matches covered numbers
+    through it, and the first digit run would read `OI-35abc` as OI-35.
+
+    Implements: SR-157, LLR-383"""
+    tail = str(rid).rsplit("-", 1)[-1]
     return int(tail) if tail.isdigit() else 0
 
 
@@ -402,8 +436,8 @@ def ruled_uncovered(oi_rows, named):
     covered = _covered_ruled(items, names, named)
     return [
         (oid, row)
-        for oid, (state, row) in sorted(items.items(), key=lambda i: _id_number(i[0]))
-        if state == "ruled" and _id_number(oid) not in covered
+        for oid, (state, row) in sorted(items.items(), key=lambda i: id_number(i[0]))
+        if state == "ruled" and id_number(oid) not in covered
     ]
 
 
@@ -432,7 +466,7 @@ def _earlier_items(oid, row):
     text = "\n".join(
         str(value) for col, value in row.items() if col not in _UNCITING_CELLS
     )
-    own = _id_number(oid)
+    own = id_number(oid)
     return {number for number in open_item_numbers(text) if number < own}
 
 
@@ -445,7 +479,7 @@ def _covered_ruled(items, names, named):
     Implements: SR-148, LLR-370
     """
     ruled = {
-        _id_number(oid): oid for oid, (state, _r) in items.items() if state == "ruled"
+        id_number(oid): oid for oid, (state, _r) in items.items() if state == "ruled"
     }
     covered = {
         number
@@ -572,7 +606,7 @@ def seam_endpoints(cell):
 
     An endpoint may legitimately contain a space (`external:downstream
     adopter`) or a comma, so `;` is the only separator — and a `Consumers` cell
-    is a LIST in the carrier, joined on `;` by `spine_carrier.value_to_cell`,
+    is a LIST in the carrier, joined on `;` by `value_to_cell` above,
     so the same split reads it back. It is the carrier's ONE list-cell split:
     `frame_rules` reads a need's pointer cells (`stakeholder_refs`, `source`)
     through it too, under its local name `_entries` (WI-821)."""

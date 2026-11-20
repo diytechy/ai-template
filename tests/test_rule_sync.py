@@ -776,23 +776,25 @@ def test_every_live_spine_column_round_trips_through_the_carrier_vocabulary():
     assert checked > 20, checked
 
 
-def test_the_need_reader_agrees_with_both_heading_scrapers():
+def test_the_need_reader_agrees_with_the_sn_universe_on_the_toml_needs_file():
+    """Implements: TC-441"""
     # The SN tier's id universe and draft set were SIX bespoke scanners over
-    # markdown, two of them F5 twins. spine_carrier now reads the tier through
-    # the carrier; before it replaces them it has to answer identically over the
-    # live registry, or the migration would move the gate.
-    md = ROOT / "docs/requirements/stakeholder-needs.md"
-    if not md.is_file():
-        return  # post-cutover: the twins are gone and this pin retires with them
+    # markdown, two of them F5 twins. spine_carrier reads the tier through the
+    # carrier, and has to answer identically to the one universe over the live
+    # registry, or the readers would move the gate.
     #
-    # The `TRACE.x == GATE.x` halves went at WI-448 slice 3 with the copies —
-    # both names resolve to the one home now, so the only agreement still worth
-    # asserting is the carrier's reader against the scrape it replaces.
-    text = md.read_text(encoding="utf-8")
-    needs = SPINE.load_needs(md)
-    assert SPINE.need_ids(needs) == KITSPINE.sn_all_ids(text)
-    assert SPINE.draft_need_ids(needs) == SPINE.draft_ids_from_text(text, ".md")
-    assert needs, "the fixture read no needs — the agreement would be vacuous"
+    # THIS PIN USED TO CHECK NOTHING (WI-1004): it read only
+    # `stakeholder-needs.md` and returned early once the registry was TOML, so
+    # it passed over a file it never opened. It now reads the file the carrier
+    # actually resolves, with the carrier from its suffix.
+    path = ROOT / "docs/requirements/stakeholder-needs.toml"
+    assert path.is_file(), "the live needs registry moved — re-aim this pin"
+    text = path.read_text(encoding="utf-8")
+    needs = SPINE.load_needs(path)
+    assert needs, "the registry read no needs — the agreement would be vacuous"
+    real = {i for i in SPINE.need_ids(needs) if not KITSPINE.is_example(i)}
+    assert real == KITSPINE.sn_all_ids(text, path.suffix)
+    assert SPINE.draft_need_ids(needs) == SPINE.draft_ids_from_text(text, ".toml")
 
 
 def test_the_edge_case_fold_is_not_titled_by_its_lifecycle_phase():
@@ -1283,41 +1285,52 @@ def test_the_subagent_copy_diverges_only_where_its_docstring_now_says(tmp_path):
     assert SUBAGENT.decide("Task", SUBAGENT.read_declared(missing), "")[0] == "allow"
 
 
-# --- the carrier value round trip (repo-lock.md §8.2, 2026-08-12 census) -------
-# migrate_carrier.value_to_cell is the migration's own round-trip self-check —
-# `compare()` re-derives a cell from the just-written TOML value and diffs it
-# against the original CSV cell. spine_carrier.value_to_cell is the READER
-# every production consumer of the TOML carrier goes through (`rows_from_toml`,
-# hence `spine_carrier.load`). Both docstrings claim to be `cell_to_value`'s
-# inverse, and spine_carrier's explicitly claims to match "deliberately the
-# same rules" migrate_carrier's writes by — but nothing compared them. The
-# census found a real drift: the reader stringifies each list element
-# (`";".join(str(v) for v in value)`), the writer joined raw
-# (`";".join(value)`), which raises TypeError the moment a ref array holds a
-# non-str element. Fixed here (one line, migrate_carrier.py) so the pin below
-# passes honestly rather than pinning the crash as a "divergence".
-def test_the_carrier_value_writer_and_reader_are_the_exact_inverse():
+# --- the carrier value cell: WERE COPIES, now ONE HOME (WI-1004) -------------
+# migrate_carrier.value_to_cell was the migration's round-trip self-check
+# (`compare()` re-derives a cell from the just-written TOML value and diffs it
+# against the original CSV cell); spine_carrier.value_to_cell was the READER
+# every consumer of the TOML carrier goes through (`rows_from_toml`). The
+# equality pin that stood here held them equal on five values and had no `None`
+# case, which is where they disagreed: `''` against `'None'`. TOML has no null,
+# so the reader never meets `None`; the migration meets it for every absent key.
+# Both are deleted and `kitlib.spine.value_to_cell` is the one home, keeping
+# `''` (WI-1004). What is pinned now is the value battery, `None` included, and
+# that neither former holder keeps a copy.
+def test_the_carrier_value_cell_has_one_home_and_reads_none_as_empty():
+    """Implements: TC-438"""
+    assert not hasattr(MIGRATE, "value_to_cell")
+    assert not hasattr(SPINE, "value_to_cell")
     cases = [
-        "plain string",
-        "a;b;c",  # a string that merely CONTAINS the ref separator
-        [],
-        ["a", "b", "c"],
-        ["a", 2, "c"],  # a ref array with a non-str element — the crash case
+        (None, ""),  # an absent key: the disputed input, kept as the empty cell
+        ("plain string", "plain string"),
+        ("a;b;c", "a;b;c"),  # a string that merely CONTAINS the ref separator
+        ([], ""),
+        (["a", "b", "c"], "a;b;c"),
+        (["a", 2, "c"], "a;2;c"),  # a ref array with a non-str element
+        (5, "5"),
     ]
-    for value in cases:
-        assert MIGRATE.value_to_cell("SN-Refs", value) == SPINE.value_to_cell(value), (
-            value
-        )
+    for value, cell in cases:
+        assert KITSPINE.value_to_cell(value) == cell, value
 
-    # And the concrete round trip both docstrings describe: a CSV ref cell,
-    # converted to a value by cell_to_value, converted back by each
-    # value_to_cell, recovers the ORIGINAL cell text — semicolon-joined,
-    # exactly as the live registries write it (WI-431's measured 271-of-271).
+    # The concrete round trip both former docstrings described: a CSV ref cell,
+    # converted to a value by cell_to_value and back by the one home, recovers
+    # the ORIGINAL cell text, semicolon-joined as the live registries write it.
     original = "a;b;c"
     value = MIGRATE.cell_to_value("SN-Refs", original)
     assert value == ["a", "b", "c"]
-    assert MIGRATE.value_to_cell("SN-Refs", value) == original
-    assert SPINE.value_to_cell(value) == original
+    assert KITSPINE.value_to_cell(value) == original
+
+    # Both former callers read through the home. The migration's self-check
+    # reports a dropped key as the empty cell it is, not as the text 'None'...
+    findings = MIGRATE.compare(
+        "x.toml", "need", {"SN-001": {"Title": "kept"}}, "[need.SN-001]\n"
+    )
+    assert findings == ["x.toml SN-001.Title: 'kept' -> ''"], findings
+    # ...and the reader joins a ref array exactly as the migration wrote it.
+    rows = SPINE.rows_from_toml(
+        '[requirement.SR-001]\nsn_refs = ["SN-001", "SN-002"]\n', "SR-ID"
+    )
+    assert rows["SR-001"]["SN-Refs"] == "SN-001;SN-002"
 
 
 # --- is_example / the ref split / the module key: WERE COPIES, now ONE HOME ----

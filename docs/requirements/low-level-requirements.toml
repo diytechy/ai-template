@@ -1682,7 +1682,7 @@ phase = 5
 sr_refs = ["SR-146"]
 title = "Argv arrays, and the adjudicator as a routed phase"
 module = "project-trajectory/scripts/agent_session.py"
-code_symbol = "substitute/split_cmd/build_argv"
+code_symbol = "substitute/build_argv"
 detail = """`split_cmd` recognises a JSON array ONLY when the value parses as a list, so no existing template can change meaning; a non-string token raises rather than being stringified. The prompt-transport decision reads the resulting TOKENS, so it is identical for both forms. Alongside it, `ADJUDICATE` joins `agent_route.WEIGHT_PHASES` and `agent_loop.DEFAULT_PHASE_TIER` with its own `route_intent` arm: cross-family like the reviewers, tier pinned by the row's measured estimate, and deliberately deaf to the implementer's escalation overrides."""
 rationale = """A silent coercion in a registry is a launch that does not match its declaration. And an adjudicator inheriting the implementer's escalation would silently re-tier a judgement because a different row's build went badly."""
 test_refs = "TC-157"
@@ -2104,7 +2104,7 @@ module = "project-trajectory/scripts/kitlib/spine.py"
 code_symbol = "LLR_EXEMPT/is_drafted/is_accepted/is_founded/llr_exempt/phase_num/sn_all_ids/sn_cited_ids/refs/is_example/load_csv/norm_module/MODULE_EXTS/REGISTRY_KEYS/toml_value/toml_fields/clip_line"
 detail = """What one registry row's cells MEAN, stated once below every reader: the three Status predicates of the closed {Drafted, Accepted, Founded} vocabulary (each matching case-insensitively on the stripped cell, the one Status-casing rule), the LLR-exemption set and its predicate (matched on the STRIPPED cell, which is the direction review 017 caught the two copies disagreeing on), the digit extraction a free-form Phase cell parses through, the whole-text SN id scrape and the SN-Refs citation set the coverage rung and the orphan listing must read identically, plus the ref split, the -000 placeholder test and the registry CSV loader those rules are written on. The module imports only csv and re and no sibling of scripts/, which is the package rule that keeps the scaffolder's import graph small. sn_draft_ids is DELIBERATELY NOT HERE and the omission is part of the design: it was the tenth duplicate of the same pair, but its body is a delegation to spine_carrier, which this package may not import, so both former holders bind that sibling function directly under the same local name and the wrapper disappears rather than relocating. TWO ROW-WHOLE STATEMENTS OF THE SAME KIND ALSO LIVE HERE, and they arrived by a different route from everything above: neither was DUPLICATED by accident, both had exactly one home, and both had a reader that home could not serve. The per-tier SCHEMA OF RECORD (`REGISTRY_KEYS` and its two halves) came down from `spine_carrier.py` and the TOML value/line emitter (`toml_string`/`toml_value`/`toml_fields`) came down from `wi_convert.py`; both former holders now bind them, so every consumer is unmoved. The reader is `bootstrap.py`, which may import this package and NO other sibling: while those two lived in peer modules the scaffolder could only RESTATE them - its own key names for the open-items tier and its own, less careful, TOML scalar - as DECLARED duplicates with test_rule_sync pins holding the restatements equal. Both pins are now deleted, because both copies are. The emitter move also settled a real disagreement the pins were blind to, the same shape as the LLR_EXEMPT type: bootstrap's copy escaped the backslash and the quote only, so a cell carrying a control character emitted a basic string tomllib then REFUSES to read back - a scaffolder writing a file it cannot parse. NOT CLAIMED: that these are the only shared row rules - is_example still has a third home in gen_release_checklist.py, pinned by test_rule_sync rather than consolidated."""
 rationale = """trace.py ENFORCES the spine and spine_rules.py DERIVES its stage from the same rows, so every question either asked of a single cell was asked twice: nine duplicated function bodies held equal by nine tests/test_rule_sync.py equality pins. That is POLICY duplication, not plumbing, and a disagreement between those two modules is a false pass or a false failure AT A GATE - the exact failure class an adversarial review caught in the wild, the LLR-exemption copies differing on a whitespace-padded method. Under the retired F5 rule a pin was the most a test could do: it could CONTAIN the drift and never remove it. The standing rule that replaced F5 is why the rules move to one home and the pins retire - drift made unrepresentable rather than detected, the declared-line precedent applied to the pair the census scored highest. The extraction also settled a divergence every one of those batteries was structurally blind to: LLR_EXEMPT was a tuple in one copy and a set in the other, and the pin compared set(a) == set(b), so the type never entered the assertion; the one home is a frozenset, because a mutable closed vocabulary handed out by a shared kernel can be moved by any caller for every other reader in the process. Its OWN module rather than kitlib/registry.py: that module is the docs/work/ spec-folder reader - a different registry, a different carrier, a different consumer set - and folding the two together would have grown the package's largest module into exactly the generic bucket the package's own declared shape constraint (H-09) forbids. The component tag is single for LLR-184's reason: the readers straddle nothing today (every consumer is CMP-006), so no kernel declaration is warranted yet, and the multi-membership advisory keeps surfacing the module if that changes."""
-test_refs = "TC-193"
+test_refs = "TC-193; TC-439"
 status = "Accepted"
 component = "CMP-006"
 phase = 5
@@ -2250,7 +2250,7 @@ module = "project-trajectory/scripts/consolidate.py"
 code_symbol = "census_draft/queue_digest/queued_work/spine_digest/clusters/enacted_absorbs/judged_absorbed/consolidation_successors/prior_absorbs/prior_line/HAND_LABEL/parse_verdict/close_refusal/archive_absorbed/_commissioning_docs/_shared_commission"
 detail = """The queue-overlap pre-filter's judgement half, as a producer of one adjudication row rather than a warn. `clusters` selects the candidate set from `check_trajectory.queue_conflict_pairs` — the same three signals reported at PAIR grain so a caller reads edges instead of parsing warn sentences — widened by two signals the pair producer cannot carry: rows commissioned by one open-item edge, and rows whose SR-Refs reach the same design-row `Module` or whose own body names the same source file. A pair's commissioning finding names every open-item edge the two rows share and the spec of record they share, if any. Two specrefs name one spec of record under the shared-spec rule the validator reads (`kitlib.registry.shared_spec`): two sections of one document are two specs, and a specref with no section covers the whole document. That rule is also the pair producer's shared-SpecRef signal, so a shared spec of record adds its name to the finding and selects no pair the pair producer does not already select. The population is the queued work rows (`queued_work`): a judgement row is never a candidate, and the `-000` example row is never one either. `census_draft` returns the row that cluster would mint, carrying its scope in the typed `Adjudicates` cell and its recursion guard in the typed `Digests` cell (a queue sha over the sorted id/title/needs/safety_class of the queued work rows, and a spine sha over the three spine registries). Three refusals, all over typed cells and recorded verdicts: none while a judgement is active, while another consolidation row is queued, while a queued judgement's `Adjudicates` names a row of the candidate set, or while a queued judgement sorts at or before the row this census would mint in `schedule.evaluate`'s own order (the would-be row at its priority, with an id above every id on file), each naming that judgement, and a queued judgement that does neither refuses nothing; none for a queue sha a consolidation row already carries in ANY status, terminal included; and a row an earlier consolidation judgement minted neither seeds a cluster nor may be re-absorbed. That row is read from the judgement that ENACTED the absorption (`enacted_absorbs`): a `done` consolidation row whose own spec records a `## Consolidation` outcome of `consolidate` (`parse_verdict`) and whose `## Dispositions` draft supersedes a `restructured` row (`absorbed_ids`); its successor is the row whose `Supersedes` names that row. A consolidation row that queued, edged or returned its rows, one cancelled, or one whose scope alone names them enacted nothing, and a hand consolidation leaves no such row, so neither makes a successor: the host seeds clusters and may be absorbed. The brief's prior-consolidation lines read every absorption from the successors' `Supersedes` (`prior_absorbs`), keeping an absorption after its successor is itself absorbed, and mark each absorbed row as judged, naming the judging row, or by hand (`prior_line`, `HAND_LABEL`), so a mixed absorption is marked row by row. `parse_verdict` and `close_refusal` read the verdict's typed outcome block and refuse by name for any row it moves that is not queued; `restructured_text`, `returned_text` and `edged_text` are the pure transforms the two call sites write back, and `archive_absorbed` performs the absorbed rows' move to the fourth terminal folder at the mint, where the successor's id exists. The queue-with-edge transform gives a waiter whose frontmatter carries no `needs` line one holding just the blocker, inserted at the top of the frontmatter, ahead of any table, with the rest of the specification byte-identical. A row with a `needs` line is extended as before, idempotently: a row already waiting on the blocker, hard or soft, comes back unchanged; a specification whose frontmatter fence cannot be found, whose frontmatter does not parse, or whose `needs` list is not on one line is refused."""
 rationale = """A census fires on a STATE rather than an event, so it re-asks its question on every idle tick unless something remembers — and each ask is a strong-tier judge session, which makes the memory the load-bearing part of the design rather than an optimisation. The memory is a registry cell and not a runtime one so that it survives the judging row going terminal: an active-only guard reads "nobody has judged this" the moment the consolidation closes, and mints the identical row forever. The module is separate from the mint for two reasons that point the same way: the decision half is testable with no repository at all, and the one allocator of a work-item id must stay the one allocator, so the arrow between the two modules runs one way and the effect lives with the allocator."""
-test_refs = "TC-208"
+test_refs = "TC-208; TC-442"
 status = "Accepted"
 component = "CMP-008"
 phase = 5
@@ -2338,6 +2338,7 @@ title = "The stakeholder tier and the need's stakeholder references: schema, car
 module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/trace.py;project-trajectory/registries/stakeholder-needs.template.toml"
 code_symbol = """OFFSPINE_TABLE/OFFSPINE_KEYS/SPINE_TIER_KEYS/HISTORICAL_KEYS/sn_all_ids/_offspine_ids"""
 detail = "spine_carrier.OFFSPINE_TABLE gains \"STK-ID\": \"stakeholder\" and kitlib/spine.OFFSPINE_KEYS[\"STK-ID\"] = (name, description, party, status); the need tier's SPINE_TIER_KEYS[\"SN-ID\"] gains stakeholder_refs, mapped to Stakeholder-Refs and listed in migrate_carrier.REF_COLS, with party mapped to Party. The template ships an STK-000 row and an SN-000 row citing it. The STK space joins trace.WATERMARK_SPACES and _offspine_ids, with lines in the live watermark and its template, and the dogfood registry list gains the stakeholder table on the needs path with its floor. sn_all_ids scrapes need ids from the need tables only, so a need id quoted in a stakeholder's prose never joins the need universe."
+test_refs = "TC-441"
 status = "Accepted"
 component = "CMP-006"
 phase = 6
@@ -3870,6 +3871,90 @@ code_symbol = "resolve_import/_resolve_relative/package_paths/_classifiable_edge
 detail = """resolve_import in gen_arch_map.py takes one token internal_imports wrote, the importer's module path, the inventory's module paths and the paths package_paths reads from the __init__.py files, and returns one module or None. An absolute token tries its dotted prefixes longest first, each as a path, against the modules equal to it or ending in / plus it; the first prefix that matches decides, and two matches return None, so a one-segment token is the unique-stem match. A relative token starts from the importer's package, which is the importer itself when its file is a package's __init__.py and its parent otherwise, climbs one level for each dot past the first, returns None for a climb past the top, and matches exactly, trimming its tail back to the package. _classifiable_edges in arch_seams.py resolves every token of the live inventory through it and skips an import that resolves to None or to the importing module itself; a gen_arch_map without resolve_import or package_paths leaves the rule silent. The dependency diagram draws its arrows through the same function."""
 rationale = """The rule looked each token up by its last path segment, so every dotted and relative import missed and no edge into a package was ever checked, while the dependency diagram kept a resolver of its own that took the first of several matches. One resolver, in the module that writes the tokens, keeps the check and the picture on one answer. A token that names nothing, or names several modules, is skipped rather than guessed, since a guessed edge would be a finding against a seam that does not exist."""
 test_refs = "TC-436"
+status = "Drafted"
+component = "CMP-006"
+phase = 6
+
+[design.LLR-382]
+sr_refs = ["SR-147"]
+title = "A TOML value has one cell text, which the carrier's reader and the migration's round-trip check both write"
+module = "project-trajectory/scripts/kitlib/spine.py"
+code_symbol = "value_to_cell"
+detail = """value_to_cell in kitlib/spine.py turns one TOML value into the cell text the CSV carrier held. None, the value of an absent key, is the empty cell. A list joins its elements on ; with each element written as text. Any other value is written as text. spine_carrier's rows_from_toml and its need reader write every cell through it, and migrate_carrier's compare re-derives each converted cell through it. Neither module holds a copy."""
+rationale = """The two copies disagreed on None: the migration's wrote an empty cell and the reader's wrote the text None. TOML has no null, so only the migration meets None, for every absent key, and every consumer reads an absent cell as empty. The empty cell is kept."""
+test_refs = "TC-438"
+status = "Drafted"
+component = "CMP-006"
+phase = 6
+
+[design.LLR-383]
+sr_refs = ["SR-157"]
+title = "An id's number has one reading, the digits after its last dash, which every ordering and match by number takes"
+module = "project-trajectory/scripts/kitlib/spine.py"
+code_symbol = "id_number"
+detail = """id_number in kitlib/spine.py reads the number of an id as the digits after its last dash, and 0 when that tail is not all digits: OI-98 reads 98, D-0012 reads 12, X2-5 reads 5 and D-12a reads 0. The open-item queue and coverage rules in kitlib/spine.py, the decisions record's review queue and overrule listing in kitlib/decisions.py, the spec folder's registry order in kitlib/registry.py's read_spec_rows, and wi_convert's read_specs all read an id's number through it. None of those modules holds a copy."""
+rationale = """Four copies gave two answers: two read the tail after the last dash and two the first run of digits, so X2-5 read 2 and D-12a read 12 in the second pair. Every id a supported route mints reads the same either way. The tail is kept because the open-item coverage rule matches covered numbers through it, and the first digit run would read OI-35abc as OI-35."""
+test_refs = "TC-440"
+status = "Drafted"
+component = "CMP-006"
+phase = 6
+
+[design.LLR-388]
+sr_refs = ["SR-166"]
+title = "A spec file has one parse, which every registry reader and the converter call and which refuses a value that is not text"
+module = "project-trajectory/scripts/kitlib/registry.py"
+code_symbol = "parse_spec_row/scalar_cell/spec_text/spec_list_element"
+detail = """parse_spec_row in kitlib/registry.py reads one spec file into its registry row. It refuses, naming the file, an id the filename does not carry, an adjudicates value adjudicates_tokens refuses, and a value that is not text where a cell is owed: scalar_cell takes a scalar as text, a priority also as an integer, and a supersedes list as elements joined on ;, and spec_list_element holds each element of a list key to text carrying no ;, so one element never reads downstream as two references. read_spec_rows reports such a spec through its error sink and skips it. wi_convert's parse_spec refuses a spec under active/ (a conversion runs only when no claim is in flight), then calls parse_spec_row and raises its refusal as a ConvertError naming the file as the caller knows it; the converter holds no fence split, body parse, status lookup or scalar rule of its own."""
+rationale = """The converter and the registry each parsed a spec and disagreed on three inputs: a non-string title the registry wrote as its text and the converter refused; an id the filename does not carry, and an adjudicates value with a ; in a token or given as a bare string, which the registry refused and the converter accepted. An element carrying ; in any other list key was joined by both into two references, where the adjudicates list refused it. The stricter answer is kept on each: no supported route writes any of them and no spec on the tree carried one."""
+test_refs = "TC-443"
+status = "Drafted"
+component = "CMP-006"
+phase = 6
+
+[design.LLR-384]
+sr_refs = ["SR-156", "SR-220"]
+title = "An id's queued spec has one lookup, which refuses when several queued specs carry the id"
+module = "project-trajectory/scripts/kitlib/registry.py"
+code_symbol = "queued_spec"
+detail = """queued_spec in kitlib/registry.py returns the one queued spec of an id under a work folder (a queued file named for the id), None when none is queued, and raises a ValueError naming the count and the files when several are. integrate's claim and its Done-when notice, handback's edge and return writes, and the consolidation close's archive plan all find the spec through it; each refuses when none is queued, in its own words, and refuses with the lookup's reason when several are, writing nothing. None of the three holds a lookup of its own."""
+rationale = """The three lookups disagreed on two queued specs of one id: the claim refused, while handback and the consolidation close acted on the first. Every caller writes or moves the file, and acting on one copy leaves the other standing as a live queued row of the same id, so the refusal is kept."""
+test_refs = "TC-444"
+status = "Drafted"
+component = "CMP-006"
+phase = 6
+
+[design.LLR-385]
+sr_refs = ["SR-156"]
+title = "Which copy of a work item's spec governs is one key, which the merge slot's verdict check and the Done-when hold both read"
+module = "project-trajectory/scripts/kitlib/registry.py"
+code_symbol = "governing_spec/_governing_rank"
+detail = """governing_spec in kitlib/registry.py names the one copy that governs among the repo-relative paths of one work item's spec in one tree, or None when there are none. Its key: a copy in a terminal folder (complete, partial, cancelled, restructured) before a claimed copy under active/ before any other; then a copy under docs/archive/work before one under docs/work, before one in neither; then the path. agent_policy's authoritative_spec is this function, which the merge slot's verdict-owed check, the worker brief and review_brief call; kitlib/done_when.py's copy reader, behind spec_at and the claim-copy read, chooses among the copies it lists with it. adoption_record refuses when several specs carry one id and does not ask it."""
+rationale = """Two precedences picked different copies of one spec: the merge-slot side took the active copy beside a closed one under docs/work, while the Done-when side took the closed one; the Done-when side took the legacy docs/work copy over the archive's and the later of two terminal folders. One key is kept: the closed copy, which the merge-slot side's own reason names; the archive, where the close route writes; then the path, the answer a reader can predict. No kit route writes two copies."""
+test_refs = "TC-445"
+status = "Drafted"
+component = "CMP-006"
+phase = 6
+
+[design.LLR-386]
+sr_refs = ["SR-146", "SR-006"]
+title = "A command template has one tokenizer, which the harness's step commands and the agent launch both read"
+module = "project-trajectory/scripts/kitlib/config.py"
+code_symbol = "split_cmd"
+detail = """split_cmd in kitlib/config.py splits a command template into its tokens. A value that parses as a JSON list is its tokens, and a non-string element raises. Anything else is split quote-aware, with backslash escaping off, so a Windows path keeps its separators, and with no comment character, so a # is a word. check.py's _expand splits every stack.ini step command through it before substituting the placeholders; agent_session binds it under its own name for agent command templates and the product test command. Neither module holds a tokenizer of its own."""
+rationale = """The two copies disagreed on two inputs: an unquoted # dropped itself and every token after it in the harness's copy, which left shlex's comment character on, and a JSON array was split as shell words there. A stack.ini value reaches the tokenizer whole, since configparser strips no inline comment, so the harness ran a shorter command than the one declared and the one the loop runs. The agent side's answer is kept on both. The home sits in kitlib because check.py must stay runnable on kitlib alone."""
+test_refs = "TC-446"
+status = "Drafted"
+component = "CMP-006"
+phase = 6
+
+[design.LLR-387]
+sr_refs = ["SR-158"]
+title = "A declared file's lines have one walk, and the declared-absences file one reading, which every reader of either calls"
+module = "project-trajectory/scripts/kitlib/config.py"
+code_symbol = "declared_entries/declared_absences/DECLARED_SEP"
+detail = """declared_entries in kitlib/config.py reads a key-and-reason declared file: it decodes UTF-8 with a byte-order mark stripped and an undecodable byte replaced, splits on newlines, passes over blank lines and # comments, returns each line carrying the separator (an em dash with a space each side, DECLARED_SEP) as its line number, stripped key, stripped reason and text, and returns every other line as unparsed with its number. An absent file yields nothing. declared_absences reads the declared-absences file through it, with a trailing / stripped from each path. check_need_form's need-form allow list, trace's provenance allow list and arch_seams' kernel-modules allow list (re-exported by trajectory_arch) each keep only their own key rule over declared_entries; check_doc_refs' read_declared_absences and trace's declared-absence reader both call declared_absences. None of them walks a file of its own."""
+rationale = """Five walks disagreed. Two read a byte-order mark into the first key, hiding the first entry, and of those one raised on an undecodable byte while the other read no entry at all. On the declared-absences file, which both read, one also took a hyphen separator and the other an unspaced em dash, so they disagreed on what it declares. Kept: the mark stripped, the byte replaced, and the spaced em dash only, which every such file's header and the file's interface row state; the stricter."""
+test_refs = "TC-447"
 status = "Drafted"
 component = "CMP-006"
 phase = 6

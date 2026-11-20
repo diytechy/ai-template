@@ -11410,6 +11410,292 @@ your own `src`, so they declare nothing to your checks.
 
 **Adopter-merged files:** none.
 
+### A TOML value's cell text has one home, in kitlib.spine [since 96689d3be]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `spine_carrier.value_to_cell(value)` (the carrier's
+reader) and `migrate_carrier.value_to_cell(col, value)` (the migration's
+round-trip check) are deleted. The one home is
+`kitlib.spine.value_to_cell(value)`. The copies disagreed on `None`: the
+reader wrote `'None'`, the migration `''`. The home writes `''`. TOML has no
+null, so the reader never met `None`, and every output is unchanged.
+
+**What to do.** Nothing is forced. Overwrite the three files together: the
+two scripts call `kitlib.spine.value_to_cell`, which an older
+`kitlib/spine.py` lacks. A local script that called either deleted function
+calls `kitlib.spine.value_to_cell(value)`.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/spine.py`,
+`scripts/spine_carrier.py`, `scripts/migrate_carrier.py`.
+
+**Adopter-merged files:** none.
+
+### The IF-shape migration folds an owner through the one module key [since 96689d3be]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `migrate_carrier --if-shape` folds an id-typed interface
+owner through its design row's one module. It keyed that module with a
+private `_short_module`, which stripped only a `.py` suffix. It now uses
+`kitlib.spine.norm_module`, the key the endpoint check compares an owner
+through, and `_short_module` is deleted. Two inputs change: a module
+`.../pkg/__init__.py` folds to `scripts/pkg`, not `scripts/pkg/__init__`, and
+a non-Python module such as `hooks/x.sh` folds to `hooks/x`, not
+`hooks/x.sh`. Every other owner folds as before.
+
+**What to do.** Nothing is forced. If you already ran the IF-shape migration,
+an owner it wrote in one of the two old spellings is reported by the endpoint
+check as naming no module; rewrite it to the new spelling.
+
+**Kit-owned files — overwrite:** `scripts/migrate_carrier.py`.
+
+**Adopter-merged files:** none.
+
+### An id's number has one reading, in kitlib.spine [since 96689d3be]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The number read from an id (for ordering and for matching
+by number) had four copies in two answers. `kitlib.registry.spec_id_number`
+and `wi_convert`'s private reader took the first run of digits;
+`kitlib.decisions` and `kitlib.spine` took the digits after the last dash.
+All four are replaced by `kitlib.spine.id_number`, which takes the digits
+after the last dash, and 0 when that tail is not all digits. Every id a kit
+route mints (`WI-###`, `OI-###`, `D-###`) reads the same as before. Only a
+malformed id moves: `WI-12a` now reads 0, so it sorts before the numbered
+rows in `read_spec_rows` and `wi_convert --to-csv`.
+
+**What to do.** Nothing is forced. Overwrite the four files together: the
+three that read through the home need the new `kitlib/spine.py`. A local
+script that called `kitlib.registry.spec_id_number(wid)` calls
+`kitlib.spine.id_number(wid)`.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/spine.py`,
+`scripts/kitlib/registry.py`, `scripts/kitlib/decisions.py`,
+`scripts/wi_convert.py`.
+
+**Adopter-merged files:** none.
+
+### check_docs and check_flows read the one SN-id universe [since 96689d3be]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The README inventory in `check_docs` (which SN ids exist)
+and `check_flows` (which SN ids a runtime flow may cite) each scraped every
+`SN-###` token out of the whole needs file. Both now read
+`kitlib.spine.sn_all_ids`, the universe `trace.py` already reads, with the
+carrier taken from the file's suffix. Under the TOML needs file that reads the
+`[need.*]` tables only. Under the markdown carrier nothing changes. Two inputs
+change, both under TOML:
+
+- an SN id written only in a comment or in a stakeholder's description is no
+  longer a need, so a README or a runtime flow citing it now fails
+  `check_docs` or `check_flows`;
+- `check_flows` no longer counts `SN-000` as known. It skipped a cited `-000`
+  id before the lookup, so no output changes for it.
+
+**What to do.** Run `check_docs.py` and `check_flows.py` after the overwrite.
+If one now reports an SN id as absent or unknown, that id names no need: add
+the need to the registry, or cite the need that is meant.
+
+**Kit-owned files — overwrite:** `scripts/check_docs.py`,
+`scripts/check_flows.py`.
+
+**Adopter-merged files:** none.
+
+### Every ref-cell read splits through kitlib.spine.refs [since 96689d3be]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `kitlib.spine.refs` splits a ref cell on `;`, `,` or
+whitespace, and `split_pred_edges` partitions a `Predecessors` cell over it.
+The scheduler, the validator and the dashboard already read cells that way.
+`consolidate`, `adjudicate_brief` and `intake` split their ref cells on `;`
+only, so a hand-written `SR-1, SR-2` read as one token naming nothing. They
+now call the home:
+
+- `consolidate`'s commissioning sources read their open-item edges from
+  `split_pred_edges`, so an edge separated by a comma or a space is found, and
+  a token such as `OI-5x` is no longer counted as an open item;
+- `consolidate`'s absorbed set (`Supersedes`), queue model, module signal and
+  design-row join, `adjudicate_brief`'s cited spine and `intake`'s owning-SR
+  hint read `SR-Refs` and `Supersedes` cells through `refs`;
+- `agent_common._refs` is `kitlib.spine.refs`, not a copy of its body.
+
+All of these are advisory signals: the consolidation clusters, the
+adjudication brief's spine context and intake's hint. A cell joined on `;`,
+as every kit writer joins one, reads as before.
+
+**What to do.** Nothing is forced. Overwrite the four files together.
+
+**Kit-owned files — overwrite:** `scripts/consolidate.py`,
+`scripts/adjudicate_brief.py`, `scripts/intake.py`,
+`scripts/agent_common.py`.
+
+**Adopter-merged files:** none.
+
+### A spec file has one parse, and it refuses a value that is not text [since 96689d3be]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `wi_convert.parse_spec` carried its own fence split, body
+parse, status lookup and scalar rules, beside `kitlib.registry.parse_spec_row`,
+which every registry reader calls. The two disagreed on three inputs. The
+converter now refuses a spec under `active/` (its own precondition) and
+otherwise calls `parse_spec_row`; `split_spec`, `parse_deliverable`,
+`status_from_location` and the scalar checks are deleted. The stricter answer
+is kept on each input:
+
+- a value that is not text where a cell is owed (`title = 5`, a list key
+  holding a number, a `supersedes` list holding a number) is refused.
+  `priority` may still be an integer. The registry used to write such a value
+  as its text, so `check_trajectory` now names such a spec as malformed and
+  the scheduler skips it;
+- a spec whose filename does not carry its id is refused by
+  `wi_convert --to-csv`, as the registry already refused it;
+- an `adjudicates` value with a `;` inside a token, or given as a bare string,
+  is refused by `wi_convert --to-csv`, as the registry already refused it;
+- an element carrying `;` in any other list key (`sr_refs = ["SR-1;SR-2"]`,
+  and likewise `needs`, `adopted`, `authoring_tags`, a list-form
+  `supersedes`) is refused by both. Both used to join it into the cell, so one
+  element read downstream as two references. A bare-string
+  `supersedes = "WI-1;WI-2"` still reads as before.
+
+No kit route writes any of these.
+
+**What to do.** Run `check_trajectory.py` after the overwrite. If it names a
+spec as malformed because a value is not text, quote the value in the spec's
+front matter (`title = "5"`). If it names a list element carrying `;`, write
+one element per reference (`sr_refs = ["SR-1", "SR-2"]`).
+
+**Kit-owned files — overwrite:** `scripts/kitlib/registry.py`,
+`scripts/wi_convert.py`.
+
+**Adopter-merged files:** none.
+
+### An id's queued spec has one lookup, which refuses two of one id [since 96689d3be]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The claim (`integrate`), handback's edge and return writes
+(`handback`) and the consolidation close (`consolidate`) each globbed
+`docs/work/queued/` for an id's spec. On two queued specs carrying one id the
+claim refused, while handback and the close acted on the first and left the
+second standing as a live queued row of the same id. All three now call
+`kitlib.registry.queued_spec(work_dir, wi_id)`, which returns the one spec,
+None when none is queued, and refuses when several are. Handback and the
+close now refuse that input too, writing nothing, with a reason naming the
+files. When no spec is queued each still refuses as before, in its own words.
+
+**What to do.** Nothing is forced. If a handback or a consolidation close now
+refuses because two queued specs carry one id, remove or renumber the copy
+that is not the row, and run it again. Overwrite the four files together:
+the three scripts call `kitlib.registry.queued_spec`, which an older
+`kitlib/registry.py` lacks.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/registry.py`,
+`scripts/integrate.py`, `scripts/handback.py`, `scripts/consolidate.py`.
+
+**Adopter-merged files:** none.
+
+### Which copy of a spec governs is one key, in kitlib.registry [since 96689d3be]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** Two precedences chose among copies of one work item's spec
+in one tree. `agent_policy.authoritative_spec` (the merge slot's verdict-owed
+check, the worker brief, `review_brief`) ranked the archive before `docs/work`
+and then sorted by path. `kitlib.done_when.spec_at` (the Done-when hold) took
+the copy in the last of a fixed folder list. The one home is
+`kitlib.registry.governing_spec(paths)`: a copy in a terminal folder before a
+claimed copy under `active/` before any other; then `docs/archive/work`
+before `docs/work`; then the path. `authoritative_spec` is that function,
+`spec_at` chooses with it, and `agent_policy._spec_home_rank` is deleted.
+Three inputs change, none of which a kit route writes:
+
+- a claimed copy beside a closed copy under `docs/work`: the merge slot now
+  reads the closed copy, as the Done-when hold did;
+- the same closed copy in the archive and in `docs/work`: the Done-when hold
+  now reads the archive's, as the merge slot did;
+- two terminal copies (`complete` and `partial`): both read the first by path.
+
+`adoption_record` still refuses when several specs carry one id.
+
+**What to do.** Nothing is forced. Overwrite the files together:
+`agent_policy.py` and `kitlib/done_when.py` need the new
+`kitlib/registry.py`. A local script that called
+`agent_policy._spec_home_rank` sorts with `kitlib.registry.governing_spec`.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/registry.py`,
+`scripts/kitlib/done_when.py`, `scripts/agent_policy.py`,
+`scripts/agent_common.py`.
+
+**Adopter-merged files:** none.
+
+### A command template has one tokenizer, in kitlib.config [since 96689d3be]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `check.py` split every `docs/stack.ini` step command with a
+private `_split_template`, beside `agent_session.split_cmd`, which reads agent
+command templates and the product test command. Only the second turned off
+shlex's comment character and read a JSON array. The one tokenizer is now
+`kitlib.config.split_cmd` (moved out of `agent_session`, which imports it
+under the same name), and `check.py` calls it. `configparser` strips no
+inline comment from a `stack.ini` value, so two step commands change:
+
+- a command with an unquoted `#` token runs whole. `check.py` used to drop the
+  `#` and every token after it, so it ran a shorter command than the one
+  declared and the one the loop runs;
+- a command written as a JSON array runs as its elements.
+
+**What to do.** If a `docs/stack.ini` step command carries a bare `#` meant as
+a comment, move the comment to its own line: the `#` and the words after it
+now reach the command. Overwrite the three files together: `check.py` and
+`agent_session.py` need the new `kitlib/config.py`. A local script that
+imported `agent_session.split_cmd` keeps working.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/config.py`,
+`scripts/check.py`, `scripts/agent_session.py`.
+
+**Adopter-merged files:** none.
+
+### Declared files have one line walk, and declared-absences one reading [since 96689d3be]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** Five readers walked `<key> — <reason>` files line by line:
+`check_need_form` (`docs/need-form-allow`), `trace` (`docs/provenance-allow`
+and `docs/declared-absences`), `trajectory_arch`
+(`docs/kernel-modules-allow`) and `check_doc_refs` (`docs/declared-absences`).
+The one walk is now `kitlib.config.declared_entries`, and the one reading of
+`docs/declared-absences` is `kitlib.config.declared_absences`, which both of
+that file's readers call. Each reader keeps only what its own key means.
+Where the walks disagreed:
+
+- a file saved with a byte-order mark: `check_doc_refs` and `trace` read the
+  mark into the first path, so the first declared absence did not count. It
+  counts now;
+- an undecodable byte: `check_doc_refs` raised, and `trace` read no entry at
+  all. The byte is replaced now, as the other readers did;
+- in `docs/declared-absences`, `path - reason` (a hyphen) was honoured by
+  `check_doc_refs` and not by `trace`, and `path—reason` (no spaces) by
+  `trace` and not by `check_doc_refs`. Neither is honoured now: the separator
+  is ` — `, an em dash with a space each side, as the file's header states.
+  Such a line is reported as unparsed and declares nothing.
+
+**What to do.** Run `check_doc_refs.py` after the overwrite. If it reports a
+`docs/declared-absences` line as unparsed, rewrite its separator as ` — `.
+Overwrite the five files together: the four scripts need the new
+`kitlib/config.py`.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/config.py`,
+`scripts/check_doc_refs.py`, `scripts/trace.py`, `scripts/check_need_form.py`,
+`scripts/arch_seams.py`.
+
+**Adopter-merged files:** none.
+
 ### The delegated decisions leave open-items.html; the operator reads them in their records [since 6a78f63a7]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*

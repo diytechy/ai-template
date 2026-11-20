@@ -32,9 +32,11 @@ import sys
 from pathlib import Path
 
 try:
+    from kitlib import config as _kitconfig
     from kitlib import spine as _kitspine
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import config as _kitconfig
     from kitlib import spine as _kitspine
 
 import spine_carrier
@@ -67,7 +69,7 @@ except ImportError:
 # a per-entry recorded REASON is the point, and `docs/process.toml` carries
 # dials, not reasoned prose.
 KERNEL_ALLOW = "docs/kernel-modules-allow"
-KERNEL_ALLOW_SEP = " — "
+KERNEL_ALLOW_SEP = _kitconfig.DECLARED_SEP  # the one declared-file separator
 
 
 def _declared_seam_pairs(root):
@@ -133,26 +135,15 @@ def _parse_kernel_allow(root):
     or an empty module or reason on either side of it, DECLARES NOTHING — it
     is dropped (fail-safe: absence of a valid declaration grants no
     exemption) and counted as unparsed."""
-    path = Path(root) / KERNEL_ALLOW
-    if not path.is_file():
-        return [], []
-    out, unparsed = [], []
-    text = path.read_text(encoding="utf-8-sig", errors="replace")
-    for lineno, raw in enumerate(text.split("\n"), start=1):
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        if KERNEL_ALLOW_SEP not in line:
-            unparsed.append((lineno, line))
-            continue
-        head, reason = line.split(KERNEL_ALLOW_SEP, 1)
-        module = _norm_module(head.strip())
-        reason = reason.strip()
+    entries, unparsed = _kitconfig.declared_entries(Path(root) / KERNEL_ALLOW)
+    out = []
+    for lineno, head, reason, line in entries:
+        module = _norm_module(head)
         if not module or not reason:
             unparsed.append((lineno, line))
             continue
         out.append((module, reason, lineno))
-    return out, unparsed
+    return out, sorted(unparsed)
 
 
 def read_kernel_modules(root):
