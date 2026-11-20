@@ -720,7 +720,7 @@ record runs through the live registry first.
 **Cells.**
 
 - **Assumption**: The recorded and built Claude Code session records the coordinator guard's tests run on carry what the agent CLI writes and sends at the supported versions: the same transcript record types, fields and usage numbers, the same compaction boundary and preserved-message markers, the same hook event names and payload fields, and the same arguments a relaunch launcher hands the claude command. They reproduce no judgement of the session's, so nothing about what a coordinator decides is evidenced by a test run against them.
-- **HoldsWhen**: The supported Claude Code version is the one the recording was taken from, or one whose transcript records and hook payloads match it; a CLI update that changes either is followed by a new recording before the guard's tests are relied on.
+- **HoldsWhen**: The supported Claude Code versions are those whose transcript records and hook payloads match the fixtures: the recording of 2.1.289 and the transcripts built to the record shapes of 2.1.285. A CLI update that changes either is followed by new fixtures before the guard's tests are relied on.
 - **Obstacle**: A CLI update changes a record shape, a usage field or a hook payload that the fixtures do not carry, and the guard's tests go on passing over shapes the CLI no longer writes.
 - **ObstacleHats**: TEST-ENGINEER
 - **Status**: Drafted
@@ -779,15 +779,15 @@ record runs through the live registry first.
 **Cells.**
 
 - **Assumption**: An agent working in a repository decides whether to load a skill from the skill's description alone, and loads it for the work its description names. So a shipped skill whose description says when to use it is used where it was written to be used, and one whose description cannot say so is not used at all.
-- **HoldsWhen**: The agent CLI lists the installed skills to the model by name and description, as the supported CLIs document, and a description at or above the declared floor states a trigger and what the skill does.
-- **Obstacle**: The CLI or the model picks skills by something other than the description (the name alone, an undocumented ranking, the skill's whole body), or loads none unless told to; or a description clears the floor with words that name no situation. Shipped guidance then goes unread by the agent it was written for, and the floor reports nothing.
+- **HoldsWhen**: The agent CLI lists the installed skills to the model by name and description only, as the supported CLIs document.
+- **Obstacle**: The CLI or the model picks skills by something other than the description (the name alone, an undocumented ranking, the skill's whole body), or loads none unless told to. Shipped guidance then goes unread by the agent it was written for, and nothing in the kit reports it.
 - **ObstacleHats**: FIRST-RUN-ADOPTER
 - **Status**: Drafted
 - **Standing**: active
 
 **Can be falsified by.** no test case
 
-**Falsifier.** A session on a supported CLI whose task matches a shipped skill's stated trigger and that does not load the skill, or that loads a skill for work its description does not name; or a shipped description at or above the floor from which a reader cannot tell when to use the skill.
+**Falsifier.** A session on a supported CLI whose task matches a shipped skill's stated trigger and that does not load the skill, or that loads a skill for work its description does not name.
 
 ### DA-026 — Drafted, never accepted
 
@@ -833,8 +833,8 @@ record runs through the live registry first.
 
 **Cells.**
 
-- **Assumption**: The kit runs in the normal working environment its review threat model names: hosts whose integrity is not compromised, the supported workflows and routes, and no forbidden hand act (rewinding the trunk branch, skipping or turning off a hook, hand-editing generated or ruled state). So a defect whose reproduction needs a compromised or contrived host is not one the operator or an adopter meets in use, and dismissing it leaves them exposed to nothing they meet.
-- **HoldsWhen**: The repository is worked through the supported workflows and the kit's own routes, on hosts its users control, and a forbidden hand act, where one is taken, is a person's deliberate act rather than an ordinary step.
+- **Assumption**: The kit runs in the normal working environment its review threat model names: hosts whose integrity is not compromised, worked through the supported workflows and routes, where a forbidden hand act (rewinding the trunk branch, skipping or turning off a hook, hand-editing generated or ruled state) is never an ordinary step: one is taken only as a person's deliberate departure from those workflows. So a defect whose reproduction needs a compromised or contrived host, or a forbidden hand act, is not one the operator or an adopter meets in ordinary use, and dismissing it leaves them exposed to nothing they meet in it.
+- **HoldsWhen**: The repository is worked through the supported workflows and the kit's own routes, on hosts its users control, and no tool or common setup takes a forbidden hand act as an ordinary step.
 - **Obstacle**: An ordinary step on a supported path produces the state a dismissed finding needed (a tool that rewrites history, a hook a common setup turns off, a generated file an editor saves over), so a defect the review ruled contrived reaches users in ordinary use.
 - **ObstacleHats**: UNATTENDED-OPS;SECURITY
 - **Status**: Drafted
@@ -1718,7 +1718,7 @@ _traced — routes to adjudication_
 ### SR SR-226
 - **Coincident**
   - before: (empty)
-  - after: The need asks that a reader can follow a reference and trust what it finds. A record found by the retired id, written in the change that deletes the row and naming its date, its successor and the reason, is what that reader finds, and the two reports name a record changed after it landed and a spent id with no record. Nothing stands between the record and the reader who looks the id up.
+  - after: The need asks that a reader can follow a reference and trust what it finds. A record found by the retired id, written in the change that deletes the row and naming its date, its successor and the reason, is what that reader finds, and the two reports name a record changed after it landed and a spent id with no record. Nothing stands between the record and the reader who looks the id up. Whether the named successor and reason are the right ones is judged when the change that retires the row is reviewed, not by this row.
 
 ## SR-231 — Coordinator adjudication enters from a claimed lane and accepts only its current verdict
 
@@ -1759,7 +1759,7 @@ _traced — routes to adjudication_
 ### SR SR-234
 - **Coincident**
   - before: (empty)
-  - after: The need asks that an unattended run report its failures clearly and surface to an operator when it cannot go on, rather than loop. A contested or recurring finding sent to one sitting that carries each finding and the position held on it verbatim, and whose verdict is accepted only when it rules every requested finding exactly once, from the declared rulings and with its reason, ends the dispute in a bounded ruling the lane can attribute, or in an escalation to the operator. The directions against deferring a fail-open, data-loss or Done-when-gap finding are shipped text, recorded beside the verdict; that a sitting heeds them is the judging session's own premise, not this row's.
+  - after: The need asks that an unattended run report its failures clearly and surface to an operator when it cannot go on, rather than loop. A contested or recurring finding sent to one sitting that carries each finding and the position held on it verbatim, and whose verdict is accepted only when it rules every requested finding exactly once, from the declared rulings and with its reason, ends the dispute in a bounded ruling the lane can attribute, or in an escalation to the operator. The directions against deferring a fail-open, data-loss or Done-when-gap finding are shipped text, and recording them beside the verdict makes the standard asked of the sitting visible to the operator; whether the sitting heeds them is outside this row's check.
 
 ### TC TC-334
 - **Verifies**
@@ -1788,7 +1788,7 @@ _traced — routes to adjudication_
 ### SR SR-238
 - **Coincident**
   - before: (empty)
-  - after: The need asks that unattended work stay inside its declared limits and stop when it cannot proceed safely. Ending every process in the session's process group or job at a deadline or an interruption, confirming they ended before the coordinator continues, and stopping with an error naming any survivor after 10 s, is that limit as the next session finds it: no writer the coordinator supervised is left beside the worktree it hands on. The row checks the ending itself rather than trusting the platform to have done it, and a process that leaves the group or job is outside its claim, as the rationale states.
+  - after: The need asks that unattended work stay inside its declared limits and stop when it cannot proceed safely. Ending every process in the session's process group or job at a deadline or an interruption, confirming they ended before the coordinator continues, and stopping with an error naming any survivor after 10 s, is that limit as the next session finds it: no writer that stays in the coordinator's process group or job is left beside the worktree it hands on. The row checks the ending itself rather than trusting the platform to have done it; a process that leaves the group or job is outside its claim, as the rationale states.
 
 ## SR-241 — Review briefs render only over a matching verified passed-checks record
 

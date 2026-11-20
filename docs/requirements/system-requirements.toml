@@ -1679,7 +1679,7 @@ priority = "S"
 verification_method = "Test"
 status = "Accepted"
 phase = 6
-coincident = """The need asks that a reader can follow a reference and trust what it finds. A record found by the retired id, written in the change that deletes the row and naming its date, its successor and the reason, is what that reader finds, and the two reports name a record changed after it landed and a spent id with no record. Nothing stands between the record and the reader who looks the id up."""
+coincident = """The need asks that a reader can follow a reference and trust what it finds. A record found by the retired id, written in the change that deletes the row and naming its date, its successor and the reason, is what that reader finds, and the two reports name a record changed after it landed and a spent id with no record. Nothing stands between the record and the reader who looks the id up. Whether the named successor and reason are the right ones is judged when the change that retires the row is reviewed, not by this row."""
 
 [requirement.SR-222]
 title = "Every model session is recorded in one usage record, whichever provider CLI serves it"
@@ -1815,7 +1815,7 @@ status = "Accepted"
 phase = 6
 aspect = "process"
 form = "interface"
-coincident = """The need asks that an unattended run report its failures clearly and surface to an operator when it cannot go on, rather than loop. A contested or recurring finding sent to one sitting that carries each finding and the position held on it verbatim, and whose verdict is accepted only when it rules every requested finding exactly once, from the declared rulings and with its reason, ends the dispute in a bounded ruling the lane can attribute, or in an escalation to the operator. The directions against deferring a fail-open, data-loss or Done-when-gap finding are shipped text, recorded beside the verdict; that a sitting heeds them is the judging session's own premise, not this row's."""
+coincident = """The need asks that an unattended run report its failures clearly and surface to an operator when it cannot go on, rather than loop. A contested or recurring finding sent to one sitting that carries each finding and the position held on it verbatim, and whose verdict is accepted only when it rules every requested finding exactly once, from the declared rulings and with its reason, ends the dispute in a bounded ruling the lane can attribute, or in an escalation to the operator. The directions against deferring a fail-open, data-loss or Done-when-gap finding are shipped text, and recording them beside the verdict makes the standard asked of the sitting visible to the operator; whether the sitting heeds them is outside this row's check."""
 
 [requirement.SR-235]
 title = "Attended independent review verdicts are recorded or refused"
@@ -1874,7 +1874,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 form = "cross-cutting"
-coincident = """The need asks that unattended work stay inside its declared limits and stop when it cannot proceed safely. Ending every process in the session's process group or job at a deadline or an interruption, confirming they ended before the coordinator continues, and stopping with an error naming any survivor after 10 s, is that limit as the next session finds it: no writer the coordinator supervised is left beside the worktree it hands on. The row checks the ending itself rather than trusting the platform to have done it, and a process that leaves the group or job is outside its claim, as the rationale states."""
+coincident = """The need asks that unattended work stay inside its declared limits and stop when it cannot proceed safely. Ending every process in the session's process group or job at a deadline or an interruption, confirming they ended before the coordinator continues, and stopping with an error naming any survivor after 10 s, is that limit as the next session finds it: no writer that stays in the coordinator's process group or job is left beside the worktree it hands on. The row checks the ending itself rather than trusting the platform to have done it; a process that leaves the group or job is outside its claim, as the rationale states."""
 
 [requirement.SR-239]
 title = "Where the reviewer retention dial is on, loop review routes retain only their scoped reviewer sessions"

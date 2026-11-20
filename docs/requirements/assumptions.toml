@@ -253,7 +253,7 @@ standing = "active"
 effect_at = ["B-10"]
 realized_by = "SUR-004"
 assumption = """The recorded and built Claude Code session records the coordinator guard's tests run on carry what the agent CLI writes and sends at the supported versions: the same transcript record types, fields and usage numbers, the same compaction boundary and preserved-message markers, the same hook event names and payload fields, and the same arguments a relaunch launcher hands the claude command. They reproduce no judgement of the session's, so nothing about what a coordinator decides is evidenced by a test run against them."""
-holds_when = """The supported Claude Code version is the one the recording was taken from, or one whose transcript records and hook payloads match it; a CLI update that changes either is followed by a new recording before the guard's tests are relied on."""
+holds_when = """The supported Claude Code versions are those whose transcript records and hook payloads match the fixtures: the recording of 2.1.289 and the transcripts built to the record shapes of 2.1.285. A CLI update that changes either is followed by new fixtures before the guard's tests are relied on."""
 obstacle = """A CLI update changes a record shape, a usage field or a hook payload that the fixtures do not carry, and the guard's tests go on passing over shapes the CLI no longer writes."""
 falsifier = """A transcript record or hook payload from a supported Claude Code version that the guard reads differently from the fixture standing for it: an occupancy, a compaction boundary, an event or a session id the guard finds in the fixture but not at the same point of a live session."""
 obstacle_hats = ["TEST-ENGINEER"]
@@ -273,9 +273,9 @@ standing = "active"
 [assumption.DA-025]
 effect_at = ["B-09"]
 assumption = """An agent working in a repository decides whether to load a skill from the skill's description alone, and loads it for the work its description names. So a shipped skill whose description says when to use it is used where it was written to be used, and one whose description cannot say so is not used at all."""
-holds_when = """The agent CLI lists the installed skills to the model by name and description, as the supported CLIs document, and a description at or above the declared floor states a trigger and what the skill does."""
-obstacle = """The CLI or the model picks skills by something other than the description (the name alone, an undocumented ranking, the skill's whole body), or loads none unless told to; or a description clears the floor with words that name no situation. Shipped guidance then goes unread by the agent it was written for, and the floor reports nothing."""
-falsifier = """A session on a supported CLI whose task matches a shipped skill's stated trigger and that does not load the skill, or that loads a skill for work its description does not name; or a shipped description at or above the floor from which a reader cannot tell when to use the skill."""
+holds_when = """The agent CLI lists the installed skills to the model by name and description only, as the supported CLIs document."""
+obstacle = """The CLI or the model picks skills by something other than the description (the name alone, an undocumented ranking, the skill's whole body), or loads none unless told to. Shipped guidance then goes unread by the agent it was written for, and nothing in the kit reports it."""
+falsifier = """A session on a supported CLI whose task matches a shipped skill's stated trigger and that does not load the skill, or that loads a skill for work its description does not name."""
 obstacle_hats = ["FIRST-RUN-ADOPTER"]
 status = "Drafted"
 standing = "active"
@@ -292,8 +292,8 @@ standing = "active"
 
 [assumption.DA-027]
 effect_at = ["B-01", "B-09"]
-assumption = """The kit runs in the normal working environment its review threat model names: hosts whose integrity is not compromised, the supported workflows and routes, and no forbidden hand act (rewinding the trunk branch, skipping or turning off a hook, hand-editing generated or ruled state). So a defect whose reproduction needs a compromised or contrived host is not one the operator or an adopter meets in use, and dismissing it leaves them exposed to nothing they meet."""
-holds_when = """The repository is worked through the supported workflows and the kit's own routes, on hosts its users control, and a forbidden hand act, where one is taken, is a person's deliberate act rather than an ordinary step."""
+assumption = """The kit runs in the normal working environment its review threat model names: hosts whose integrity is not compromised, worked through the supported workflows and routes, where a forbidden hand act (rewinding the trunk branch, skipping or turning off a hook, hand-editing generated or ruled state) is never an ordinary step: one is taken only as a person's deliberate departure from those workflows. So a defect whose reproduction needs a compromised or contrived host, or a forbidden hand act, is not one the operator or an adopter meets in ordinary use, and dismissing it leaves them exposed to nothing they meet in it."""
+holds_when = """The repository is worked through the supported workflows and the kit's own routes, on hosts its users control, and no tool or common setup takes a forbidden hand act as an ordinary step."""
 obstacle = """An ordinary step on a supported path produces the state a dismissed finding needed (a tool that rewrites history, a hook a common setup turns off, a generated file an editor saves over), so a defect the review ruled contrived reaches users in ordinary use."""
 falsifier = """A defect met in ordinary use, on a supported host and through a supported workflow or route with no forbidden hand act, whose reproduction a review dismissed or graded down as needing a compromised or contrived host."""
 obstacle_hats = ["UNATTENDED-OPS", "SECURITY"]
