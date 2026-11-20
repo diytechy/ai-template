@@ -46,18 +46,52 @@ terminal row.
     `_SCAN_CACHE`, which `trajectory_arch` and `check_trajectory` bind.
   - `arch_components.py` (241): the How-SW top view, the component
     derivation record and `component_findings`.
-  - `trajectory_arch.py` (201): IF-263's composer under the same `__all__`,
-    and the spec-boundary rule. `check_trajectory.py` does not change, so
-    every public name its callers import still resolves.
+  - `trajectory_arch.py` (203 after the review fix below): IF-263's composer
+    under the same `__all__`, and the spec-boundary rule.
+    `check_trajectory.py` does not change, so every public name its callers
+    import still resolves.
 - **Behaviour unchanged.** `check_trajectory.py --strict` printed 273 lines
   at the base and prints 272 after; the one line gone is this row's own
   SpecRef-staleness warning, which the dispositions commit cleared by
   editing the spec. The base's scripts, run with `--root` against the final
   tree, print output byte-identical to the final scripts'. The existing tests
-  pass with only their imports changed: `tests/test_seam_import_forms.py`
-  loads `arch_seams` (whose module globals it patches), and TC-080's
-  re-export pin loads each rule's new home and names it as the facade's
-  `__module__`.
+  pass. The Done-when asked that only their imports change; what changed
+  beyond that is exactly this:
+  - `tests/test_seam_import_forms.py` loads `arch_seams` in place of
+    `trajectory_arch` (the variable renamed on six lines), so its two
+    `monkeypatch.setattr` calls patch `arch_seams`' `_SCAN_CACHE` and
+    `gen_arch_map`, where the rule now lives.
+  - TC-080's re-export pin
+    (`test_architecture_rules_are_reexported_from_their_behavior_module`)
+    asserted `facade.__module__ == "trajectory_arch"` for four rules; it now
+    loads each rule's home and asserts that name, so the expected value
+    changed for three of the four (`arch_interfaces`, `arch_components`,
+    `arch_seams`; the spec rule stays `trajectory_arch`).
+  - The ratchet tests change their baseline data: the size ratchet deletes
+    the `trajectory_arch.py` entry, and the complexity ratchet re-keys three
+    entries.
+  - Outside the tests, the OI-130 re-score's `live.py` reached
+    `kitlib.spine` through `trajectory_arch`'s private alias `_kitspine`, and
+    now imports `kitlib.spine` itself.
+- **Review fixes** (`ecdab9fce`). Sol found `derivation_record_findings`, a
+  public name the base module held outside its `__all__`, missing from the
+  composer; it is re-exported and joins `__all__`. A comparison of the base
+  module's `dir()` (imported from `af1dec169`) with the composer's leaves 19
+  names not re-exported, on purpose: 15 private helpers outside the base's
+  `__all__` (the derivation record's and the test-file tag rule's) that no
+  caller in `scripts/`, the repository's tools or `tests/` reads, and the 4
+  module names it imported (`ast`, `gen_arch_map`, `_kitspine`,
+  `_kitconfig`), since a patch of `trajectory_arch.gen_arch_map` that
+  silently changed nothing would be worse than one that fails. Two
+  regressions join TC-080's evidence: every public name a composed module
+  defines, and every `__all__` name, resolves on the composer (it failed on
+  `derivation_record_findings` first); and every name a caller reads through
+  `trajectory_arch` resolves. Argon found IF-319's and IF-320's `data` cells
+  short of what their modules offer; all five new rows now name it within
+  the 160-character ceiling, IF-319 naming `_classifiable_edges`,
+  `_cross_component_scan` and `_SCAN_CACHE`, IF-320
+  `derivation_record_findings` and `_cmp_roots`. The plan and the RESYNC
+  entry say the same.
 - **Rows** (all in `dabeb255f`). IF-316 to IF-320 are new and `Drafted`, one
   per module, each declared on its owner's `Contracts:` line with a
   `Contract IF-###:` body, and each cited by an existing test case through a

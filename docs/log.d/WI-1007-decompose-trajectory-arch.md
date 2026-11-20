@@ -30,7 +30,7 @@ no lane review rounds, commit hooks on. The parent session reviews and merges.
   `arch_tags.py` (133): the CodeSymbol crosscheck and the test-file tag rule.
   `arch_seams.py` (156): the cross-component seam check, the kernel allowlist
   and `_SCAN_CACHE`. `arch_components.py` (241): the top view, the derivation
-  record and `component_findings`. `trajectory_arch.py` (1128 to 201) is
+  record and `component_findings`. `trajectory_arch.py` (1128 to 203) is
   IF-263's composer, re-exporting the same `__all__`, and keeps the
   spec-boundary rule, whose design row (LLR-068) keeps it in CMP-006.
   `check_trajectory.py` does not change, and the process keeps one scan
@@ -48,11 +48,23 @@ no lane review rounds, commit hooks on. The parent session reviews and merges.
   IF-320 (traced `verifies`). LLR-042, LLR-049, LLR-067, LLR-172, LLR-365,
   LLR-366 and LLR-374 name the moved symbols' new modules (traced `module`);
   LLR-374's `Drafted` detail names `arch_seams.py`. Watermark IF 320.
-- **Tests.** Only imports changed: `tests/test_seam_import_forms.py` loads
-  `arch_seams`, whose `_SCAN_CACHE` and `gen_arch_map` it patches, and TC-080's
-  re-export pin loads each rule's new home and names it. The size ratchet's
-  `trajectory_arch.py` entry retires; the complexity entries re-key without a
-  re-stamp. The bootstrap manifest ships the five modules.
+- **Tests.** The existing tests pass, and more than their imports changed:
+  `tests/test_seam_import_forms.py` loads `arch_seams` and patches its
+  `_SCAN_CACHE` and `gen_arch_map`; TC-080's re-export pin expected
+  `__module__ == "trajectory_arch"` for four rules and now expects each
+  rule's home, a different value for three of them; the size ratchet's
+  `trajectory_arch.py` entry retires and three complexity entries re-key
+  without a re-stamp. The bootstrap manifest ships the five modules.
+- **Review fixes** (Sol on code, Argon on prose). The composer had dropped
+  `derivation_record_findings`, a public name the base module held outside
+  its `__all__`; it is re-exported. Of the base module's other names, 15
+  private helpers no caller reads and 4 imported module names are left off
+  on purpose (a patch of `trajectory_arch.gen_arch_map` should fail, not
+  silently change nothing). Two TC-080 regressions now pin the composer's
+  surface: every public name of a composed module resolves on it, and every
+  name a caller reads through it resolves. IF-316 to IF-320's `data` cells
+  name what each module offers, the privates the composer re-exports
+  included.
 - **RESYNC.** "The architecture rules move out of trajectory_arch into five
   modules beneath it", anchored at `af1dec169`: nothing forced, overwrite
   together.
