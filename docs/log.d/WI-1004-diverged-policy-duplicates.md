@@ -35,6 +35,13 @@ no lane review rounds, commit hooks on. The parent session reviews and merges.
   `_parse_kernel_allow`'s loop and the `KERNEL_ALLOW_SEP` binding, and its
   size-ratchet entry was re-stamped 1128 to 1117. `check_trajectory.py`,
   `gen_open_items.py`, `pending.py` and `traj_status.py` were not touched.
+- **At review (Sol).** A list element carrying `;` was refused only for
+  `adjudicates`; for `sr_refs`, `needs`, `adopted`, `authoring_tags` and a
+  list-form `supersedes` both parses joined it into the cell, one element read
+  as two references. The stricter answer now holds for every list key
+  (`kitlib.registry.spec_list_element`), pinned per key. No spec on
+  `docs/work` or `docs/archive/work` writes one, so no key kept the old
+  reading.
 - **The census.** `[dupes-census]` reads 2/2/32 before and after: the deleted
   copies' bodies differed from their homes', which the body census does not
   count. The OI-130 re-score's `policy.json` drops each folded copy, as its

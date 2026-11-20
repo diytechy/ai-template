@@ -29,7 +29,7 @@ The row's SpecRef cell was cleared at close, as R-F asks of a terminal row.
 | 3 | Id number | `kitlib.spine.id_number` | `kitlib.decisions._id_number`, `kitlib.registry.spec_id_number`, `wi_convert._id_number` | `X2-5`: 5; `WI-12a`: 0 (digits after the last dash) | `test_policy_one_home.py` (TC-440) | `24e9ae0d7` |
 | 4 | B5 SN-id universe | `kitlib.spine.sn_all_ids` | the whole-file scrapes in `check_docs._registry_needs` and `check_flows.load_ids` | an id only in a TOML comment or stakeholder description: no need; `SN-000`: excluded | `test_policy_one_home.py`, `test_rule_sync.py` (TC-441) | `0aabe35c0` |
 | 5 | B10 ref split | `kitlib.spine.refs`, `split_pred_edges` | the `;`-only splits in `consolidate` (five), `adjudicate_brief._cited_spine` (two), `intake._owning_srs`; `agent_common._refs`'s body | `,`- or space-separated cell: its ids; `OI-5x`: no open-item edge | `test_policy_one_home.py` (TC-442) | `35336c150` |
-| 6 | B8b spec parse | `kitlib.registry.parse_spec_row` | `wi_convert`'s `split_spec`, `parse_deliverable`, `status_from_location`, `_scalar`, `_text` | `title = 5` (any non-text value but an integer `priority`): refused; id the filename does not carry: refused; `adjudicates = ["a;b"]` or `"a"`: refused | `test_policy_one_home.py` (TC-443) | `eab83e5cd` |
+| 6 | B8b spec parse | `kitlib.registry.parse_spec_row` | `wi_convert`'s `split_spec`, `parse_deliverable`, `status_from_location`, `_scalar`, `_text` | `title = 5` (any non-text value but an integer `priority`): refused; id the filename does not carry: refused; `adjudicates = ["a;b"]` or `"a"`: refused; `["a;b"]` in any other list key: refused | `test_policy_one_home.py` (TC-443) | `eab83e5cd`, review fix below |
 | 7 | Queued-spec lookup | `kitlib.registry.queued_spec` | `handback._queued_spec`, `consolidate._archive_plan`'s glob, `integrate._queued_spec`'s glob | two queued specs of one id: refused (none: refused, in each caller's words) | `test_policy_one_home.py` (TC-444) | `07fc4f676` |
 | 8 | §13.13 spec precedence | `kitlib.registry.governing_spec` | `agent_policy._spec_home_rank` (and `agent_common`'s re-export), `done_when._copy_at`'s folder-index choice | archive and legacy `docs/work` copy: the archive's; active beside closed: the closed; two terminal copies, or two in one folder: the first by path | `test_policy_one_home.py` (TC-445) | `4a4e66432` |
 | 9 | §13.22 command tokenizer | `kitlib.config.split_cmd` (moved from `agent_session`, which imports it) | `check._split_template` | unquoted `#`: a word; JSON array: its elements | `test_policy_one_home.py` (TC-446) | `c81c86f14` |
@@ -42,9 +42,10 @@ The row's SpecRef cell was cleared at close, as R-F asks of a terminal row.
 - `check_docs`' README inventory and `check_flows` fail a citation of an SN
   id that exists only in a TOML comment or a stakeholder description (B5).
 - `check_trajectory` names a spec whose front matter holds a non-text value
-  (`title = 5`) as malformed, and the scheduler skips it; `wi_convert
-  --to-csv` refuses a spec whose filename does not carry its id, or whose
-  `adjudicates` value the registry refuses (B8b).
+  (`title = 5`), or a list element carrying `;` (`sr_refs = ["SR-1;SR-2"]`),
+  as malformed, and the scheduler skips it; `wi_convert --to-csv` refuses
+  those, a spec whose filename does not carry its id, and an `adjudicates`
+  value the registry refuses (B8b).
 - Handback's edge and return writes and the consolidation close refuse, and
   write nothing, on two queued specs of one id (queued-spec lookup).
 - `check.py` runs a `stack.ini` step command carrying a bare `#` whole, and a
@@ -68,6 +69,13 @@ case (TC-438), and the `need_ids` pin reads the live TOML needs file (TC-441).
 `split_pred_edges`' open-item edges over a nine-cell battery (TC-442).
 **`[dupes-census]`** reads 2/2/32 before and after: every deleted copy had a
 body unlike its home's, which the census does not count, so no re-stamp.
+
+**At review** (Sol): a list element carrying `;` was refused only for
+`adjudicates` and flattened into two references for every other list key.
+The stricter answer now holds for every list key the parse reads
+(`kitlib.registry.spec_list_element`), pinned per key by
+`test_a_list_element_carrying_the_cell_join_is_refused`; no spec on the tree
+wrote one.
 
 **Rows.** New and Drafted: LLR-382 to LLR-388 and TC-438 to TC-447.
 Traced cells changed on Accepted rows: LLR-197 `test_refs` gains TC-439,
@@ -271,13 +279,23 @@ on each. "Adopter-visible" names what a shipped script's output changes.
 - **`adjudicates = ["a;b"]`, or `adjudicates = "a"`:** the home refused
   (`adjudicates_tokens`, the one parser of that value); the converter joined
   it. **Kept: refused.**
+- **`["a;b"]` in any other list key (`sr_refs`, `needs`, `adopted`,
+  `authoring_tags`, a list-form `supersedes`)**, a disagreement with the
+  `adjudicates` rule inside the home itself: both parses joined the element
+  into the cell, so one element read downstream as two references. **Kept:
+  refused, for every list key** (added at review): it is the answer
+  `adjudicates` already had, the stricter, and no spec on this tree writes one
+  (measured over `docs/work` and `docs/archive/work`). A bare-string
+  `supersedes = "WI-1;WI-2"` is unchanged: it is the converter's own written
+  form of a several-id cell.
 - **A bare string in a list key (`sr_refs = "SR-1"`)**: both read it
   character by character; they agree, so it is not this row's (reported as
   found).
 - **Adopter-visible:** `check_trajectory` names a spec carrying a non-string
   title as malformed, and the scheduler skips it, where it read `'5'`;
   `wi_convert --to-csv` refuses a spec whose filename does not carry its id,
-  or whose `adjudicates` value the registry refuses. RESYNC entry.
+  or whose `adjudicates` value the registry refuses; and both refuse a list
+  element carrying `;`. RESYNC entry.
 
 ### 7. Queued-spec lookup (SR-156, via LLR-151; SR-220, via LLR-312 and LLR-210)
 

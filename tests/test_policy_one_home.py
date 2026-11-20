@@ -272,6 +272,10 @@ def test_every_ref_cell_read_splits_through_the_one_home(tmp_path):
 # carry and an `adjudicates` value its one parser refuses; the converter refused
 # the first and accepted the other two. Kept: refused, all three. The converter
 # keeps only its own precondition, the `active/` refusal, and calls the home.
+# A list element carrying `;` (`["a;b"]`) was refused only for `adjudicates`,
+# and flattened into two references for every other list key. Kept: refused
+# for every list the parse reads, one case per key below; no spec on the tree
+# writes one.
 
 SPEC_REFUSALS = {
     "title = 5": (
@@ -323,6 +327,25 @@ def test_the_converter_parses_a_spec_through_the_one_parser():
         with pytest.raises(wi_convert.ConvertError) as conv:
             wi_convert.parse_spec(text, rel)
         assert words in str(conv.value), label
+
+
+@pytest.mark.parametrize(
+    "key", ("sr_refs", "needs", "adopted", "authoring_tags", "supersedes")
+)
+def test_a_list_element_carrying_the_cell_join_is_refused(key):
+    """Implements: TC-443"""
+    text = '+++\nid = "WI-7"\n{} = ["SR-1;SR-2"]\n+++\n'.format(key)
+    words = "`{}` element 'SR-1;SR-2' carries `;`".format(key)
+    with pytest.raises(ValueError) as reg:
+        kitlib_registry.parse_spec_row(text, "queued/WI-7-x.md")
+    assert words in str(reg.value)
+    with pytest.raises(wi_convert.ConvertError) as conv:
+        wi_convert.parse_spec(text, "queued/WI-7-x.md")
+    assert words in str(conv.value)
+    # The control: the same references written one element each are read.
+    good = text.replace('"SR-1;SR-2"', '"SR-1", "SR-2"')
+    row, _order = kitlib_registry.parse_spec_row(good, "queued/WI-7-x.md")
+    assert "SR-1;SR-2" in row.values()
 
 
 def test_a_spec_with_a_non_string_title_is_reported_and_skipped(tmp_path):

@@ -40,6 +40,7 @@ __all__ = [
     "LIST_TOLERANT_SCALARS",
     "scalar_cell",
     "spec_text",
+    "spec_list_element",
     "INT_TOLERANT_SCALARS",
     "adjudicates_tokens",
     "SPEC_STATUS_DIRS",
@@ -520,6 +521,26 @@ def spec_text(value, key, relpath):
     raise ValueError("{}: `{}` must be a string, got {!r}".format(relpath, key, value))
 
 
+def spec_list_element(value, key, relpath):
+    """One element of a frontmatter LIST, as text carrying no `;`, or a
+    ValueError naming the file and the key.
+
+    A list's elements are joined on `;` into the registry cell, so an element
+    that itself carries one (`sr_refs = ["SR-1;SR-2"]`) would read downstream
+    as two references where the file wrote one. Refused, never split: the
+    rule `adjudicates_tokens` already held for its own list, now held for
+    every list the spec parse reads (WI-1004).
+
+    Implements: SR-166, LLR-388"""
+    text = spec_text(value, key, relpath)
+    if ";" in text:
+        raise ValueError(
+            "{}: `{}` element {!r} carries `;`, the cell's own join - write one "
+            "list element per reference".format(relpath, key, text)
+        )
+    return text
+
+
 def scalar_cell(key, value, relpath):
     """One frontmatter SCALAR as its registry cell, or a ValueError naming
     `relpath` for a value that is not text.
@@ -529,7 +550,8 @@ def scalar_cell(key, value, relpath):
     `supersedes` (one id as a bare string, several as a list) produce one cell
     shape and every reader downstream sees `;`-joined ids or nothing. An
     `INT_TOLERANT_SCALARS` key may be an integer, written as its digits. Any
-    other value must be text, and so must each element of a tolerated list.
+    other value must be text, and each element of a tolerated list must be
+    text carrying no `;` (`spec_list_element`).
 
     REFUSED, NOT STRINGIFIED, SINCE WI-1004. This parse and `wi_convert`'s
     disagreed: `title = 5` read as the cell `5` here and was refused there. No
@@ -540,7 +562,7 @@ def scalar_cell(key, value, relpath):
     if key in INT_TOLERANT_SCALARS and isinstance(value, int):
         return str(value)
     if key in LIST_TOLERANT_SCALARS and isinstance(value, (list, tuple)):
-        return ";".join(spec_text(v, key, relpath) for v in value)
+        return ";".join(spec_list_element(v, key, relpath) for v in value)
     return spec_text(value, key, relpath)
 
 
@@ -592,7 +614,9 @@ def parse_spec_row(text, relpath):
         if key == "adjudicates":
             row[column] = ";".join(adjudicates_tokens(data, relpath))
         elif key in data:
-            row[column] = ";".join(spec_text(v, key, relpath) for v in data[key])
+            row[column] = ";".join(
+                spec_list_element(v, key, relpath) for v in data[key]
+            )
     order = data.get("order")
     return row, order if isinstance(order, int) else None
 

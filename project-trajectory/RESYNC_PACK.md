@@ -11555,13 +11555,19 @@ is kept on each input:
 - a spec whose filename does not carry its id is refused by
   `wi_convert --to-csv`, as the registry already refused it;
 - an `adjudicates` value with a `;` inside a token, or given as a bare string,
-  is refused by `wi_convert --to-csv`, as the registry already refused it.
+  is refused by `wi_convert --to-csv`, as the registry already refused it;
+- an element carrying `;` in any other list key (`sr_refs = ["SR-1;SR-2"]`,
+  and likewise `needs`, `adopted`, `authoring_tags`, a list-form
+  `supersedes`) is refused by both. Both used to join it into the cell, so one
+  element read downstream as two references. A bare-string
+  `supersedes = "WI-1;WI-2"` still reads as before.
 
 No kit route writes any of these.
 
 **What to do.** Run `check_trajectory.py` after the overwrite. If it names a
 spec as malformed because a value is not text, quote the value in the spec's
-front matter (`title = "5"`).
+front matter (`title = "5"`). If it names a list element carrying `;`, write
+one element per reference (`sr_refs = ["SR-1", "SR-2"]`).
 
 **Kit-owned files — overwrite:** `scripts/kitlib/registry.py`,
 `scripts/wi_convert.py`.
