@@ -3,12 +3,80 @@ id = "WI-1004"
 title = "The policy duplicates the OI-130 re-score found disagreeing each get one home, with the disputed inputs pinned"
 workstream = "process"
 sr_refs = ["SR-147", "SR-157", "SR-189", "SR-220", "SR-166", "SR-156", "SR-146", "SR-158"]
-specref = "docs/plans/2026-11-11-oi130-rescore/README.md#one-home-per-behaviour-still-a-code-obligation"
+specref = ""
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 4
 planmode = "single"
 +++
+
+## Deliverable
+
+Ten of the eleven behaviours now have one home, which every former copy
+calls; the copies are deleted. The eleventh, rolling review §13.14, is not a
+disagreeing duplicate on today's tree and left scope at the dispositions (its
+entry below). Built on the maintenance branch `maint/wi-1004` from
+`426f88f60`, one commit per behaviour in the spec's order, each with its
+pinning tests, rows and RESYNC entry. The spec of record is "One home per
+behaviour" in
+[`docs/plans/2026-11-11-oi130-rescore/README.md`](../../../plans/2026-11-11-oi130-rescore/README.md).
+The row's SpecRef cell was cleared at close, as R-F asks of a terminal row.
+
+| # | Behaviour | Home | Copies deleted | Kept answer on each disputed input | Test (TC) | Commit |
+|---|---|---|---|---|---|---|
+| 1 | B3 value to cell | `kitlib.spine.value_to_cell` | `migrate_carrier.value_to_cell`, `spine_carrier.value_to_cell` | `None`: the empty cell | `test_rule_sync.py::test_the_carrier_value_cell_has_one_home_and_reads_none_as_empty` (TC-438) | `47438070f` |
+| 2 | B12 module key | `kitlib.spine.norm_module` | `migrate_carrier._short_module` | `pkg/__init__.py`: `pkg`; `hooks/x.sh`: `hooks/x` | `test_policy_one_home.py` (TC-439) | `956377922` |
+| 3 | Id number | `kitlib.spine.id_number` | `kitlib.decisions._id_number`, `kitlib.registry.spec_id_number`, `wi_convert._id_number` | `X2-5`: 5; `WI-12a`: 0 (digits after the last dash) | `test_policy_one_home.py` (TC-440) | `24e9ae0d7` |
+| 4 | B5 SN-id universe | `kitlib.spine.sn_all_ids` | the whole-file scrapes in `check_docs._registry_needs` and `check_flows.load_ids` | an id only in a TOML comment or stakeholder description: no need; `SN-000`: excluded | `test_policy_one_home.py`, `test_rule_sync.py` (TC-441) | `0aabe35c0` |
+| 5 | B10 ref split | `kitlib.spine.refs`, `split_pred_edges` | the `;`-only splits in `consolidate` (five), `adjudicate_brief._cited_spine` (two), `intake._owning_srs`; `agent_common._refs`'s body | `,`- or space-separated cell: its ids; `OI-5x`: no open-item edge | `test_policy_one_home.py` (TC-442) | `35336c150` |
+| 6 | B8b spec parse | `kitlib.registry.parse_spec_row` | `wi_convert`'s `split_spec`, `parse_deliverable`, `status_from_location`, `_scalar`, `_text` | `title = 5` (any non-text value but an integer `priority`): refused; id the filename does not carry: refused; `adjudicates = ["a;b"]` or `"a"`: refused | `test_policy_one_home.py` (TC-443) | `eab83e5cd` |
+| 7 | Queued-spec lookup | `kitlib.registry.queued_spec` | `handback._queued_spec`, `consolidate._archive_plan`'s glob, `integrate._queued_spec`'s glob | two queued specs of one id: refused (none: refused, in each caller's words) | `test_policy_one_home.py` (TC-444) | `07fc4f676` |
+| 8 | §13.13 spec precedence | `kitlib.registry.governing_spec` | `agent_policy._spec_home_rank` (and `agent_common`'s re-export), `done_when._copy_at`'s folder-index choice | archive and legacy `docs/work` copy: the archive's; active beside closed: the closed; two terminal copies, or two in one folder: the first by path | `test_policy_one_home.py` (TC-445) | `4a4e66432` |
+| 9 | §13.22 command tokenizer | `kitlib.config.split_cmd` (moved from `agent_session`, which imports it) | `check._split_template` | unquoted `#`: a word; JSON array: its elements | `test_policy_one_home.py` (TC-446) | `c81c86f14` |
+| 10 | §13.16 declared-file grammar | `kitlib.config.declared_entries`, `declared_absences` | the walks in `check_need_form.read_need_form_allow`, `trace.read_provenance_allow`, `trace._declared_absences`, `trajectory_arch._parse_kernel_allow`, `check_doc_refs.read_declared_absences` | byte-order mark: stripped; undecodable byte: replaced; `path - reason` and `path—reason`: unparsed (the spaced em dash only); `dir/`: `dir` | `test_policy_one_home.py` (TC-447) | `4e0bcf9e0` |
+| 11 | §13.14 freshness arm | none: out of scope | none | the four arms agree on every verdict; the missing-output postures are deliberate per generator, and the STALE line's stream decides nothing | none | `b09b33fed` |
+
+**What an adopter sees change** (each named in its RESYNC entry, all anchored
+`[since 426f88f60]`):
+
+- `check_docs`' README inventory and `check_flows` fail a citation of an SN
+  id that exists only in a TOML comment or a stakeholder description (B5).
+- `check_trajectory` names a spec whose front matter holds a non-text value
+  (`title = 5`) as malformed, and the scheduler skips it; `wi_convert
+  --to-csv` refuses a spec whose filename does not carry its id, or whose
+  `adjudicates` value the registry refuses (B8b).
+- Handback's edge and return writes and the consolidation close refuse, and
+  write nothing, on two queued specs of one id (queued-spec lookup).
+- `check.py` runs a `stack.ini` step command carrying a bare `#` whole, and a
+  JSON-array command as its elements (§13.22).
+- A hyphen-separated or unspaced line in `docs/declared-absences` is reported
+  unparsed and declares nothing; a BOM'd file's first entry counts (§13.16).
+- `migrate_carrier --if-shape` folds an owner on `__init__.py` or a non-`.py`
+  module to its normalized key (B12); malformed ids sort differently (id
+  number); `consolidate`, `adjudicate_brief` and `intake` widen three
+  advisory signals (B10). B3 and §13.13 change no output on any input a kit
+  route writes.
+
+**Dispositions and plan.** `b09b33fed`: the critique's two BLOCKERs and
+three MAJORs adopted (S1 by the operator's 2026-11-19 ruling: one row, walked
+in series), with copies, home, SR and kept answer per input stated before any
+code, and a Trust and an architectural-delta section. `40a74a817`: the plan.
+
+**The two vacuous pins** are repaired: the `value_to_cell` pin has the `None`
+case (TC-438), and the `need_ids` pin reads the live TOML needs file (TC-441).
+**B10's Done-when:** `consolidate._commissioning_docs` returns exactly
+`split_pred_edges`' open-item edges over a nine-cell battery (TC-442).
+**`[dupes-census]`** reads 2/2/32 before and after: every deleted copy had a
+body unlike its home's, which the census does not count, so no re-stamp.
+
+**Rows.** New and Drafted: LLR-382 to LLR-388 and TC-438 to TC-447.
+Traced cells changed on Accepted rows: LLR-197 `test_refs` gains TC-439,
+LLR-215 gains `test_refs` TC-441, LLR-210 `test_refs` gains TC-442, LLR-163
+`code_symbol` drops `split_cmd`. Drafted interface rows IF-112 and IF-072
+have their notes corrected. Module sizes re-stamped down: `agent_common.py`
+1093 to 1090, `integrate.py` 1795 to 1793, `check.py` 1344 to 1339,
+`trace.py` 3854 to 3836, `trajectory_arch.py` 1128 to 1117. The complexity
+baseline drops `wi_convert.parse_spec`'s row.
 
 ## Context
 
@@ -368,17 +436,17 @@ authority over a hold, an act or a gate:
 
 ## Done-when
 
-- [ ] Each of the 11 has one implementation that every former copy calls, and
+- [x] Each of the 11 has one implementation that every former copy calls, and
       the copies are deleted; or, for §13.14, the spec says why it is not a
       disagreeing duplicate on today's tree. One commit per behaviour, in the
       order above, each with its pinning test.
-- [ ] Where copies disagreed, the kept answer is the one stated above for each
+- [x] Where copies disagreed, the kept answer is the one stated above for each
       input, pinned by a test naming that input. A choice that changes what an
       adopter sees is named in the Deliverable, with a RESYNC entry where a
       shipped script's output changes.
-- [ ] The two pins that check nothing are repaired: `value_to_cell` gains the
+- [x] The two pins that check nothing are repaired: `value_to_cell` gains the
       `None` case, and the `need_ids` pin runs on a TOML needs file.
-- [ ] `consolidate` finds every OI edge `split_pred_edges` finds (B10).
-- [ ] The `[dupes-census]` baseline is re-stamped downward if the count drops.
-- [ ] The new design and test-case rows are Drafted, and the component view
+- [x] `consolidate` finds every OI edge `split_pred_edges` finds (B10).
+- [x] The `[dupes-census]` baseline is re-stamped downward if the count drops.
+- [x] The new design and test-case rows are Drafted, and the component view
       and the other generated views are regenerated for them.
