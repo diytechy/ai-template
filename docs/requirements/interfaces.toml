@@ -716,7 +716,7 @@ status = "Drafted"
 owner = "scripts/traj_status"
 consumers = ["scripts/agent_common", "external:downstream adopter"]
 channel = "file"
-data = """docs/status.md generated block: stage, spine counts, ready frontier, cited items and held rows, uncited items, review count, Blocked list"""
+data = """docs/status.md generated block: stage, spine counts, ready frontier, cited items and held rows, uncited items, unseen-decisions count, Blocked list"""
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -1045,7 +1045,7 @@ notes = """A pending item has at least one queued or claimed work-item citer. A 
 owner = "scripts/gen_open_items"
 consumers = ["external:downstream adopter"]
 channel = "file"
-data = """docs/open-items.html — pending items a queued or claimed row cites, uncited items, acceptance/re-accept chains and owing needs and stakeholders, verdict audit, operator actions; Decisions to review last"""
+data = """docs/open-items.html — pending items a queued or claimed row cites, uncited items, acceptance/re-accept chains and owing needs and stakeholders, verdict audit, operator actions, record findings"""
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -1670,7 +1670,7 @@ notes = "The digest uses the same accepted-cell classification as split_changed_
 [interface.IF-131]
 rationale = """The rules read the live source AST instead of parsing the retired docs/architecture.md MODULE MAP block back. One walk, one grammar: the module keys and import names are exactly what the map rendered, so every downstream join (import resolution, CMP membership) is unchanged."""
 owner = "scripts/gen_arch_map"
-requestors = ["scripts/check_trajectory", "scripts/trajectory_arch"]
+requestors = ["scripts/check_trajectory", "scripts/arch_inputs", "scripts/arch_interfaces", "scripts/arch_tags", "scripts/arch_seams"]
 channel = "call"
 data = "scan_inventory, resolve_import, package_paths, read_test_tags and the contract-header grammar readers; see Contract IF-131 in the owner module"
 version = "v1"
@@ -2853,3 +2853,49 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """The record writer's own call to write_atomic is part of IF-214. These requestors write no observation record: the write lives in the record module because the record needed it first."""
+
+[interface.IF-316]
+rationale = """Every architecture rule reads the registry rows, the opt-out dials, the scan profile and the source inventory through one module, so no two rules read one input two ways and no rule keeps a loader of its own."""
+owner = "scripts/arch_inputs"
+requestors = ["scripts/trajectory_arch", "scripts/arch_interfaces", "scripts/arch_tags", "scripts/arch_seams", "scripts/arch_components"]
+channel = "call"
+data = "registry paths, IF_ID_RE, CMP_ID_RE, both opt-out dials, load_ifs, load_seams, load_cmps, arch_inventory, and private helpers incl. _arch_scan_profile"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-317]
+owner = "scripts/arch_interfaces"
+requestors = ["scripts/trajectory_arch"]
+channel = "call"
+data = "interface_findings, contract_body_findings, unchecked_contract_rows, the seam-TC allowlist readers and rules, and private helpers trajectory_arch re-exports"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-318]
+owner = "scripts/arch_tags"
+requestors = ["scripts/trajectory_arch"]
+channel = "call"
+data = "codesymbol_crosscheck_findings and tc_tag_findings -> finding strings, and the private helpers trajectory_arch re-exports"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-319]
+owner = "scripts/arch_seams"
+requestors = ["scripts/trajectory_arch", "scripts/arch_components"]
+channel = "call"
+data = "cross_component_findings, cross_component_advisories, read_kernel_modules, kernel_allow_parse_findings, _classifiable_edges, _cross_component_scan, _SCAN_CACHE"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-320]
+owner = "scripts/arch_components"
+requestors = ["scripts/trajectory_arch"]
+channel = "call"
+data = "component_top_view, knowledge_packs, TOP_VIEW_MAX, derivation_record_findings, component_findings, and the private _cmp_roots trajectory_arch re-exports"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"

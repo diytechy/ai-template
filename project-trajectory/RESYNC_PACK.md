@@ -11410,7 +11410,7 @@ your own `src`, so they declare nothing to your checks.
 
 **Adopter-merged files:** none.
 
-### A TOML value's cell text has one home, in kitlib.spine [since 426f88f60]
+### A TOML value's cell text has one home, in kitlib.spine [since 96689d3be]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*
 
@@ -11431,7 +11431,7 @@ calls `kitlib.spine.value_to_cell(value)`.
 
 **Adopter-merged files:** none.
 
-### The IF-shape migration folds an owner through the one module key [since 426f88f60]
+### The IF-shape migration folds an owner through the one module key [since 96689d3be]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*
 
@@ -11452,7 +11452,7 @@ check as naming no module; rewrite it to the new spelling.
 
 **Adopter-merged files:** none.
 
-### An id's number has one reading, in kitlib.spine [since 426f88f60]
+### An id's number has one reading, in kitlib.spine [since 96689d3be]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*
 
@@ -11477,7 +11477,7 @@ script that called `kitlib.registry.spec_id_number(wid)` calls
 
 **Adopter-merged files:** none.
 
-### check_docs and check_flows read the one SN-id universe [since 426f88f60]
+### check_docs and check_flows read the one SN-id universe [since 96689d3be]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*
 
@@ -11504,7 +11504,7 @@ the need to the registry, or cite the need that is meant.
 
 **Adopter-merged files:** none.
 
-### Every ref-cell read splits through kitlib.spine.refs [since 426f88f60]
+### Every ref-cell read splits through kitlib.spine.refs [since 96689d3be]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*
 
@@ -11535,7 +11535,7 @@ as every kit writer joins one, reads as before.
 
 **Adopter-merged files:** none.
 
-### A spec file has one parse, and it refuses a value that is not text [since 426f88f60]
+### A spec file has one parse, and it refuses a value that is not text [since 96689d3be]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*
 
@@ -11574,7 +11574,7 @@ one element per reference (`sr_refs = ["SR-1", "SR-2"]`).
 
 **Adopter-merged files:** none.
 
-### An id's queued spec has one lookup, which refuses two of one id [since 426f88f60]
+### An id's queued spec has one lookup, which refuses two of one id [since 96689d3be]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*
 
@@ -11599,7 +11599,7 @@ the three scripts call `kitlib.registry.queued_spec`, which an older
 
 **Adopter-merged files:** none.
 
-### Which copy of a spec governs is one key, in kitlib.registry [since 426f88f60]
+### Which copy of a spec governs is one key, in kitlib.registry [since 96689d3be]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*
 
@@ -11633,7 +11633,7 @@ Three inputs change, none of which a kit route writes:
 
 **Adopter-merged files:** none.
 
-### A command template has one tokenizer, in kitlib.config [since 426f88f60]
+### A command template has one tokenizer, in kitlib.config [since 96689d3be]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*
 
@@ -11661,7 +11661,7 @@ imported `agent_session.split_cmd` keeps working.
 
 **Adopter-merged files:** none.
 
-### Declared files have one line walk, and declared-absences one reading [since 426f88f60]
+### Declared files have one line walk, and declared-absences one reading [since 96689d3be]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*
 
@@ -11692,7 +11692,107 @@ Overwrite the five files together: the four scripts need the new
 
 **Kit-owned files — overwrite:** `scripts/kitlib/config.py`,
 `scripts/check_doc_refs.py`, `scripts/trace.py`, `scripts/check_need_form.py`,
-`scripts/trajectory_arch.py`.
+`scripts/arch_seams.py`.
+
+**Adopter-merged files:** none.
+
+### The delegated decisions leave open-items.html; the operator reads them in their records [since 6a78f63a7]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `docs/open-items.html` has no "Decisions to review" section
+any more. It used to draw a card for every entry under `docs/decisions/` with
+no `operator` verdict, then every overruled entry with the work items citing
+it. With many delegated runs, those cards crowded out the pending decisions
+and the acceptance act. The operator now reads the entries in the record
+files themselves, `docs/decisions/<run>.toml`. An entry with no `operator`
+key is not yet seen, and a record's top-level `high_risk` list names the
+entries to read first. What stays:
+
+- each record's format findings are still reported, whatever the dial: a
+  missing, non-text or blank required field, an unknown verdict value, the
+  retired `reviewed` key, a blank `review` on an overrule, a malformed or
+  dangling hoist, and a record that does not parse. They now sit in a notice
+  that closes section 3 of `docs/open-items.html`, shown only when a record
+  carries one;
+- the overrule sync (the commit that sets `overruled` files or amends open
+  work citing the entry) and the close refusal under a recording dial do not
+  change;
+- `docs/status.md`'s line reads `Delegated decisions not yet seen: N —
+  docs/decisions/` and links that directory, where it linked
+  `open-items.html#decisions-to-review`.
+
+`pending.decisions_to_review` and `pending.citing_rows` are gone, and
+`pending.decision_records(root)` returns `(unseen count, findings)`.
+`gen_open_items.decisions_block`, `_decision_card`, `_citing_field` and
+`OVERRULED_HEADING` are gone. The template's header and the process options'
+"Delegated decisions record" layer say where the operator reads.
+
+**What to do.** Nothing is forced and nothing migrates: a record keeps its
+format. Overwrite the files below, then regenerate `docs/open-items.html` and
+`docs/status.md`; their freshness steps refuse until you do. A script of your
+own that called `pending.decisions_to_review(root)` calls
+`pending.decision_records(root)`. Nothing returns the ordered list or the
+citing work items any more: read the record, and find an overrule's work by
+its citation, `docs/decisions/<run>.toml#D-NNN`. A link of yours to
+`open-items.html#decisions-to-review` now points at no anchor. Your
+`docs/decisions/run-000-example.toml` keeps the template's old header
+comment until you copy the new one over it; it is the example and is never
+judged.
+
+**Kit-owned files — overwrite:** `scripts/gen_open_items.py`,
+`scripts/pending.py`, `scripts/traj_status.py`, `scripts/kitlib/decisions.py`
+(docstring only), `decisions.template.toml`, `PROCESS_OPTIONS.md`.
+
+**Regenerated files:** `docs/open-items.html`, `docs/status.md`.
+
+**Adopter-merged files:** none.
+
+### The architecture rules move out of trajectory_arch into five modules beneath it [since af1dec169]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `trajectory_arch.py` held every architecture rule
+`check_trajectory` runs, and it had passed the module-size line. Its checks
+moved, unchanged, into five new modules beneath it:
+
+- `arch_inputs.py`: the registry paths, the `interfaces_check` and
+  `components_check` dials, the interface and component row loaders, the
+  declared arch-map scan profile and the source inventory;
+- `arch_interfaces.py`: interface connectivity, contract bodies, and seam-TC
+  coverage with its allowlist;
+- `arch_tags.py`: the CodeSymbol crosscheck and the test-file tag rule;
+- `arch_seams.py`: the cross-component seam check and the kernel allowlist;
+- `arch_components.py`: the How-SW top view, the derivation record and
+  `component_findings`.
+
+`trajectory_arch.py` imports them, re-exports every public name it held
+before (its `__all__`, and `derivation_record_findings`), and keeps the spec
+interface-section rule. `check_trajectory.py` does not change, and every name
+it re-exports still resolves. What `trajectory_arch` no longer carries: the
+private helpers of the derivation record (`_cell`, `_entries`,
+`_record_findings` and their kin) and of the test-file tag rule
+(`_tag_evidence_findings`, `_undeclared_case_findings`), which live only in
+`arch_components` and `arch_tags`, and the module names it imported
+(`ast`, `gen_arch_map`, `_kitspine`, `_kitconfig`). Each new module's
+docstring declares one of this repository's interface rows, IF-316 to IF-320.
+Your source scan root is your own `src`, so they declare nothing to your
+checks.
+
+**What to do.** Nothing is forced. Overwrite the kit-owned files below
+together: the new `trajectory_arch.py` imports the five new modules
+unguarded, so a copy without them cannot run `check_trajectory`. A local
+script that imports a public rule from `trajectory_arch` or
+`check_trajectory` keeps working. One that reads a private helper listed
+above reads it from its new module. One that patches a module global to
+change a rule's behaviour patches the module that now holds the rule: the
+seam check's `_SCAN_CACHE` and its `gen_arch_map` are `arch_seams`' own.
+
+**Kit-owned files — overwrite:** `scripts/trajectory_arch.py`,
+`scripts/arch_inputs.py`, `scripts/arch_interfaces.py`, `scripts/arch_tags.py`,
+`scripts/arch_seams.py`, `scripts/arch_components.py`,
+`scripts/kitlib/bootstrap_manifest.py`, and `scripts/gen_arch_map.py` and
+`scripts/kitlib/spine.py` (one comment each).
 
 **Adopter-merged files:** none.
 

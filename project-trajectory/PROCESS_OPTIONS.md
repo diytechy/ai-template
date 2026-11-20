@@ -1278,10 +1278,10 @@ handed the operator's authority for a run. Governed by `docs/process.toml`
 in the format of `decisions.template.toml`: a top-level `high_risk` list naming
 the entries the owner should read first, then one `[decision.D-<n>]` table per
 call carrying `decided`, `alternative`, `reversal_cost`, `why_not_escalated`
-and `review = ""`. The operator rules **in place**: `operator = "confirmed"` or
-`"overruled"`; absent is not yet seen, listed on the operator surface's
-"Decisions to review". The fields are required because a prose list of calls
-loses them as soon as nothing reads them.
+and `review = ""`. The operator reads the record and rules **in place**:
+`operator = "confirmed"` or `"overruled"`; absent is not yet seen. The fields
+are required because a prose list of calls loses them as soon as nothing
+reads them.
 
 **The record is not an exit.** It tells the operator about calls already made.
 Work still routes only through the process's exits — a successor work item, an

@@ -32,9 +32,12 @@ no lane review rounds, commit hooks on. The parent session reviews and merges.
   plumbing, not a disagreeing policy duplicate.
 - **Files other builders hold.** `kitlib/decisions.py` (WI-1009) changed by an
   import and two call sites. `trajectory_arch.py` (WI-1007) changed in
-  `_parse_kernel_allow`'s loop and the `KERNEL_ALLOW_SEP` binding, and its
-  size-ratchet entry was re-stamped 1128 to 1117. `check_trajectory.py`,
-  `gen_open_items.py`, `pending.py` and `traj_status.py` were not touched.
+  `_parse_kernel_allow`'s loop and the `KERNEL_ALLOW_SEP` binding. After
+  trunk (`96689d3be`) was merged in, that edit lives in `arch_seams.py`,
+  where WI-1007 moved the function, and the composer is trunk's unchanged;
+  WI-1009's `kitlib/decisions.py` change merged beside this row's without
+  conflict. `check_trajectory.py`, `gen_open_items.py`, `pending.py` and
+  `traj_status.py` were not touched.
 - **At review (Sol).** A list element carrying `;` was refused only for
   `adjudicates`; for `sr_refs`, `needs`, `adopted`, `authoring_tags` and a
   list-form `supersedes` both parses joined it into the cell, one element read

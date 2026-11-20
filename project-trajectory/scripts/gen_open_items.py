@@ -44,13 +44,14 @@ WHAT IT RENDERS, in the order an operator needs it:
      rung, the operator's signature carried onto amended text (OI-100, WI-791).
   3. PENDING OPERATOR ACTIONS — the pointer projection `pending.py` already
      derives (blocked rows, the spine pointers, the tracked pause), reused
-     verbatim rather than recomputed.
-  4. DECISIONS TO REVIEW — every delegated-decisions entry under
-     `docs/decisions/` the operator has not yet seen (no `operator` verdict;
-     `pending.decisions_to_review`), the high-risk entries first, each with
-     its disclosure fields and a link to its record, or the count confirmed
-     when none is left; then every overruled entry under its own heading,
-     beside the work item citing it (WI-818).
+     verbatim rather than recomputed; closed, when a delegated-decisions
+     record under `docs/decisions/` carries a format finding, by a notice
+     naming each finding's file and entry (`pending.decision_records`).
+
+The delegated decisions themselves are not listed (WI-1009, the operator's
+ruling of 2026-11-19): the operator reads them in their records, one file per
+run, where an entry with no `operator` verdict is not yet seen. Only a defect
+in a record is told here, since nothing else reports one whatever the dial.
 
 ANTI-DUPLICATION, deliberately: the git archaeology and the cell comparison live
 in `trace.reaccept_model`, the needs owing an act in
@@ -92,14 +93,13 @@ Contract IF-074: the generated operator decision surface at `docs/open-items.htm
     section reads as *check the baseline* and never as *nothing changed*,
     closed by the audit list of every act-ledger entry that names a verdict
     (newest first, its rows and its verdict file; "None recorded." when there
-    is none); the pending-operator-actions pointer projection; and, last,
-    "Decisions to review": every delegated-decisions entry the operator has not
-    yet seen, high-risk first, with its file, id, disclosure fields and a link
-    to its record, `-000` entries never shown, and the confirmed count when
-    none is left, then every overruled entry under its own heading with the
-    work items citing it. It renders and owns no second
-    opinion: the queue comes from `pending.open_item_queue`, the decisions from
-    `pending.decisions_to_review`, the archaeology and cell comparison from
+    is none); and, last, the pending-operator-actions pointer projection,
+    closed by a notice naming each format finding of a delegated-decisions
+    record by its file and entry when a record carries one. It lists no
+    delegated-decisions entry: the operator reads those in their records.
+    It renders and owns no second
+    opinion: the queue comes from `pending.open_item_queue`, the record
+    findings from `pending.decision_records`, the archaeology and cell comparison from
     `trace.reaccept_model`, the owing needs from
     `baseline_snapshot.needs_owing` and the pointers from `pending.pending_block`, so
     where this view and the
@@ -1103,9 +1103,7 @@ def render(root):
         '<section class="band"><p class="eyebrow">2 · Acceptance &amp; '
         "re-acceptance</p>{acceptances}{audit}</section>\n"
         '<section class="band"><p class="eyebrow">3 · Pending operator actions '
-        "(derived)</p>{pointers}</section>\n"
-        '<section class="band" id="decisions-to-review"><p class="eyebrow">'
-        "4 · Decisions to review</p>{decisions}</section>\n"
+        "(derived)</p>{pointers}{findings}</section>\n"
         "<footer>Source: <code>{registry}</code> + the spine "
         "registries. Rule a decision by appending to <code>docs/log.md</code>'s "
         "Decisions log and setting the row's <code>Status</code>; bless an amendment "
@@ -1119,7 +1117,7 @@ def render(root):
         css=CSS,
         js=JS,
         briefs=_brief_cards(queue, live_registry_rel(root).split("docs/", 1)[-1]),
-        decisions=decisions_block(*pending.decisions_to_review(root)),
+        findings=record_findings_block(pending.decision_records(root)[1]),
         acceptances=(
             _acceptance_cards(
                 model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
@@ -1138,101 +1136,23 @@ def render(root):
     )
 
 
-_DECISION_FIELDS = (
-    ("decided", "Decided"),
-    ("alternative", "Alternative passed over"),
-    ("reversal_cost", "Reversal cost"),
-    ("why_not_escalated", "Why not escalated"),
-    ("review", "Operator note"),
-)
-
-
-def _decision_card(entry):
-    """One delegated decision: its record and id, a high-risk pill when the run
-    hoisted it, an unrecognized `operator` value shown as it stands, its
-    disclosure fields and, for an overruled entry, the work items citing it.
+def record_findings_block(findings):
+    """The notice closing section 3: each delegated-decisions record's format
+    findings, as `pending.decision_records` names them by file and entry, or
+    `""` when no record carries one. The entries themselves are read in their
+    records (SR-225), so only a defect in one is told here.
 
     Implements: SR-225, LLR-283
     """
-    fields = "".join(
-        '<div class="field"><span class="k">{}</span><div class="v">{}</div>'
-        "</div>".format(esc(label), md_block(str(entry["fields"].get(key))))
-        for key, label in _DECISION_FIELDS
-        if str(entry["fields"].get(key) or "").strip()
-    )
-    flag = '<span class="pill accept">high risk</span>' if entry["high_risk"] else ""
-    if entry["operator"] is not None and "citing" not in entry:
-        flag += '<span class="pill">operator = {}</span>'.format(
-            esc(repr(entry["operator"]))
-        )
-    if "citing" in entry:
-        fields += _citing_field(entry["citing"])
+    if not findings:
+        return ""
     return (
-        '<article class="card"><h3><span class="rid">{i}</span>{f}'
-        '<a href="{h}"><code>{p}</code></a></h3>{b}</article>'.format(
-            i=esc(entry["id"]),
-            f=flag,
-            h=esc(entry["file"].split("docs/", 1)[-1]),
-            p=esc(entry["file"]),
-            b=fields,
+        '<p class="empty notice">Delegated-decisions record findings (an '
+        "unrecognized <code>operator</code> value reads as not yet seen):</p>"
+        '<ul class="pointers">{}</ul>'.format(
+            "".join("<li>{}</li>".format(esc(f)) for f in findings)
         )
     )
-
-
-def _citing_field(citing):
-    """The "Acted on by" field of an overruled entry: each citing work item
-    and its state folder, or a notice that no work item cites it.
-
-    Implements: SR-225, LLR-283
-    """
-    value = (
-        ", ".join("{} ({})".format(esc(w), esc(state)) for w, state in citing)
-        if citing
-        else "no work item cites this entry"
-    )
-    return (
-        '<div class="field"><span class="k">Acted on by</span>'
-        '<div class="v">{}</div></div>'.format(value)
-    )
-
-
-# The heading the overruled entries sit under, inside section 4: an overrule
-# leaves the to-review queue but never the page.
-OVERRULED_HEADING = '<p class="eyebrow">Overruled — acted on by work</p>'
-
-
-def decisions_block(entries, overruled, findings, confirmed):
-    """Section 4, "Decisions to review": every entry not yet seen, as
-    `pending.decisions_to_review` orders them (high-risk first), or the count
-    confirmed when none is left; then, under their own heading, every
-    overruled entry beside the work items citing it; then each record's
-    format findings.
-
-    Implements: SR-225, LLR-283
-    """
-    if entries is None:
-        return (
-            '<p class="empty">No delegated-decisions record under '
-            "<code>docs/decisions/</code>.</p>"
-        )
-    body = "".join(_decision_card(e) for e in entries)
-    if not entries:
-        body = (
-            '<p class="empty">Nothing left to review — {} entr{} confirmed.</p>'.format(
-                confirmed, "y" if confirmed == 1 else "ies"
-            )
-        )
-    if overruled:
-        body += OVERRULED_HEADING + "".join(_decision_card(e) for e in overruled)
-    if findings:
-        body += (
-            '<p class="empty notice">Format findings (an unrecognized '
-            "<code>operator</code> value reads as not yet seen):</p>"
-            '<ul class="pointers">{}</ul>'.format(
-                "".join("<li>{}</li>".format(esc(f)) for f in findings)
-            )
-        )
-    return body
 
 
 def pending_block_text(root):

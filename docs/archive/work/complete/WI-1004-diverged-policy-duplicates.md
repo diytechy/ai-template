@@ -37,7 +37,7 @@ The row's SpecRef cell was cleared at close, as R-F asks of a terminal row.
 | 11 | §13.14 freshness arm | none: out of scope | none | the four arms agree on every verdict; the missing-output postures are deliberate per generator, and the STALE line's stream decides nothing | none | `b09b33fed` |
 
 **What an adopter sees change** (each named in its RESYNC entry, all anchored
-`[since 426f88f60]`):
+`[since 96689d3be]`, the trunk merged in at review):
 
 - `check_docs`' README inventory and `check_flows` fail a citation of an SN
   id that exists only in a TOML comment or a stakeholder description (B5).
@@ -75,7 +75,13 @@ body unlike its home's, which the census does not count, so no re-stamp.
 The stricter answer now holds for every list key the parse reads
 (`kitlib.registry.spec_list_element`), pinned per key by
 `test_a_list_element_carrying_the_cell_join_is_refused`; no spec on the tree
-wrote one.
+wrote one. Then trunk (`96689d3be`, carrying WI-1007 and WI-1009) was merged
+in. WI-1007 moved `trajectory_arch._parse_kernel_allow` and
+`KERNEL_ALLOW_SEP` to `arch_seams.py` byte for byte, so the §13.16 edit
+(the loop through `declared_entries` and the separator binding) now lands
+there; the composer still re-exports both. WI-1009's change to
+`kitlib/decisions.py` merged beside this row's import of `id_number`
+without conflict.
 
 **Rows.** New and Drafted: LLR-382 to LLR-388 and TC-438 to TC-447.
 Traced cells changed on Accepted rows: LLR-197 `test_refs` gains TC-439,
@@ -83,8 +89,10 @@ LLR-215 gains `test_refs` TC-441, LLR-210 `test_refs` gains TC-442, LLR-163
 `code_symbol` drops `split_cmd`. Drafted interface rows IF-112 and IF-072
 have their notes corrected. Module sizes re-stamped down: `agent_common.py`
 1093 to 1090, `integrate.py` 1795 to 1793, `check.py` 1344 to 1339,
-`trace.py` 3854 to 3836, `trajectory_arch.py` 1128 to 1117. The complexity
-baseline drops `wi_convert.parse_spec`'s row.
+`trace.py` 3854 to 3836. The `trajectory_arch.py` re-stamp (1128 to 1117)
+gave way at the merge to WI-1007's retirement of that entry; `arch_seams.py`,
+where the edit now lands, is under the size threshold and has no entry. The
+complexity baseline drops `wi_convert.parse_spec`'s row.
 
 ## Context
 
