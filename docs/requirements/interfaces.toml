@@ -1045,18 +1045,18 @@ notes = """A pending item has at least one queued or claimed work-item citer. A 
 owner = "scripts/gen_open_items"
 consumers = ["external:downstream adopter"]
 channel = "file"
-data = """docs/open-items.html — pending items a queued or claimed row cites, uncited items, acceptance/re-accept chains and owing needs and stakeholders, verdict audit, operator actions, record findings"""
+data = """docs/open-items.html — pending items, rows owing an act (SR chains, needs, stakeholders, assumptions, surrogates), verdict audit, operator actions"""
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
-coincident = """The page lists the pending decisions and the re-acceptance chains for the operator to rule on; showing them is the page's whole promise, and the ruling is the authority crossing's own."""
+coincident = """The page lists the pending decisions and the rows owing an acceptance or a re-accept for the operator to rule on; showing them is the page's whole promise, and the ruling is the authority crossing's own."""
 
 [interface.IF-075]
 rationale = """Split out of reaccept_lines rather than reimplemented, because a second copy of the baseline derivation in a second module is the paraphrase-not-decompose failure this kit exists to prevent. The cross-component import (Generators -> Traceability core) is declared here rather than retagged: the model belongs with the registries it reads, and the renderer belongs with the generators."""
 owner = "scripts/trace"
 requestors = ["scripts/gen_open_items", "scripts/adjudicate_brief", "scripts/amendment_brief"]
 channel = "call"
-data = "reaccept_model entries: chain rows, changed cells, baseline rev and date, and each spine registry's own copy stamp; an empty model is a valid answer"
+data = "reaccept_model entries (chain rows, changed cells, baseline, copy stamps); assumption_owing_model rows (id, why, moved cells, chain); an empty model is valid"
 version = "v1"
 status = "Drafted"
 

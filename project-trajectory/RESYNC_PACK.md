@@ -11796,6 +11796,47 @@ seam check's `_SCAN_CACHE` and its `gen_arch_map` are `arch_seams`' own.
 
 **Adopter-merged files:** none.
 
+### The open-items page lists the assumptions and surrogates owing an acceptance [since 1cb2e8680]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** Section 2 of `docs/open-items.html` showed SR chains and
+stakeholder needs only, so an assumption or surrogate owing an acceptance
+reached the Markdown brief (`trace.py --accept modified`) but not the page
+the operator rules on. The section now closes with "Assumptions and
+surrogates owing an acceptance": one card per row the brief's assumption
+section renders, in its order.
+
+- **One model.** `trace.assumption_owing_model(root, srs, tcs, ids=None)`
+  returns each assumption and surrogate owing an acceptance (`Drafted`,
+  Status-less, or accepted with its accepted cells moved from its recorded
+  copy) as `(id, why, moved cells, chain)`. The brief's section
+  (`assumption_brief_lines`) and the page both render it, so they cannot
+  disagree. The brief's text does not change.
+- **Cards.** A first-acceptance row shows every cell whole; a drifted row
+  shows its moved cells before and after, and the rest of the row as
+  collapsed context. An assumption's card closes with the requirements
+  relying on it, each with its title and text; a surrogate's with the
+  assumptions naming it. A need's card and an assumption's are drawn by the
+  same function, `gen_open_items._owing_card`.
+- **Counts and the empty message.** The header counts the assumptions and
+  surrogates owing beside the SR chains and the needs, and its drifted count
+  includes a drifted one. The empty message prints only when none of the
+  three owes, and names the assumptions registry as checked.
+
+**What to do.** Nothing is forced and nothing migrates. Overwrite the files
+below together, then regenerate `docs/open-items.html`: if any assumption or
+surrogate owes an acceptance in your repository, it gains a card, and
+`--check` reads the committed page as stale until you regenerate. A
+repository with no assumptions registry renders as before.
+
+**Kit-owned files — overwrite:** `scripts/gen_open_items.py`,
+`scripts/trace.py`.
+
+**Regenerated files:** `docs/open-items.html`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -47,7 +47,6 @@ def _card(page, rid):
     return found.group(0)
 
 
-@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 def test_each_row_owing_a_first_acceptance_has_its_card_with_its_cells_whole(
     tmp_path,
 ):
@@ -96,7 +95,6 @@ def test_each_row_owing_a_first_acceptance_has_its_card_with_its_cells_whole(
     assert "DA-003-accept" not in page
 
 
-@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 def test_an_accepted_assumption_whose_text_moved_shows_it_before_and_after(
     tmp_path,
 ):
@@ -122,7 +120,6 @@ def test_an_accepted_assumption_whose_text_moved_shows_it_before_and_after(
     assert "1 row(s) drifted" in page
 
 
-@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 def test_the_page_renders_the_briefs_model_and_counts_it(tmp_path):
     """One home for what is owed: the page's cards are the rows of the model
     the acceptance brief renders, in its order, the brief's own headings name
