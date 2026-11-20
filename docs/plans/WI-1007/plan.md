@@ -50,6 +50,15 @@ each module are new. Section comments move with the code they head.
 | `arch_components.py` (new) | the How-SW top view (`TOP_VIEW_MAX`, `_cmp_roots`, `component_top_view`, `knowledge_packs`), the component derivation record, and `component_findings`, which composes them with the seam check | 240 | LLR-049, LLR-172 |
 | `trajectory_arch.py` | IF-263's composer: it imports the five modules' names and re-exports them under the same `__all__`, and keeps the spec-boundary rule (`spec_interface_findings` and its helpers) | 220 | LLR-068 |
 
+*Corrected at review:* the base module also exposed one public name outside
+its `__all__`, `derivation_record_findings`, and the first build left it off
+the composer. It is re-exported and joins `__all__`. The base's private
+helpers outside `__all__` (the derivation record's and the test-file tag
+rule's) and its imported module names are not re-exported: no caller in
+`scripts/`, the repository's tools or `tests/` reads them, and a patch of
+`trajectory_arch.gen_arch_map` that silently changed nothing would be worse
+than one that fails.
+
 Import direction, all acyclic and all inside CMP-006: `arch_inputs` imports
 `kitlib`, `spine_carrier` and `gen_arch_map`; `arch_interfaces`, `arch_tags`
 and `arch_seams` import `arch_inputs`; `arch_components` imports
@@ -97,12 +106,28 @@ before/after comparison and the existing tests:
 - `check_trajectory.py --strict` on this repository, captured at the base and
   after the change, diffed; and the base's scripts run against the final tree
   (`--root`) beside the final scripts, which must print identical output.
-- The existing tests, with only their imports changed:
-  `tests/test_seam_import_forms.py` loads `arch_seams` (it patches that
-  module's `_SCAN_CACHE` and `gen_arch_map`), and
-  `tests/test_trajectory_arch.py::test_architecture_rules_are_reexported_from_their_behavior_module`
-  (TC-080) loads each rule's new home and asserts the facade's `__module__`
-  names it.
+- The existing tests pass. *Corrected at review:* what changes in them is
+  more than their imports, and is exactly this:
+  - `tests/test_seam_import_forms.py` loads `arch_seams` in place of
+    `trajectory_arch`, so the variable is renamed on its six lines, and its
+    two `monkeypatch.setattr` calls now patch `arch_seams`' `_SCAN_CACHE`
+    and `gen_arch_map`, the module that holds the rule.
+  - `tests/test_trajectory_arch.py::test_architecture_rules_are_reexported_from_their_behavior_module`
+    (TC-080) asserted `facade.__module__ == "trajectory_arch"` for four
+    rules. It now pairs each rule with its home (`arch_interfaces`,
+    `arch_components`, `arch_seams`, and `trajectory_arch` for the spec
+    rule), loads that home, and asserts the home's name: the expected value
+    changed for three of the four.
+  - The ratchet tests change their baseline data, not their logic:
+    `tests/test_module_size_ratchet.py` deletes the `trajectory_arch.py`
+    entry, and `tests/test_complexity_ratchet.py` re-keys three entries.
+  - Two regressions are added under TC-080: the composer exposes every public
+    name of the modules it composes, and every name a caller reads through it
+    resolves.
+  - Outside the tests, the OI-130 re-score's
+    `docs/plans/2026-11-11-oi130-rescore/live.py` reached `kitlib.spine`
+    through `trajectory_arch`'s private alias `_kitspine`; it now imports
+    `kitlib.spine` itself.
 - The ratchets: `tests/test_module_size_ratchet.py` deletes the
   `trajectory_arch.py` entry (now under the threshold) and needs none for the
   new modules; `tests/test_complexity_ratchet.py` and

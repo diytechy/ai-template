@@ -11428,9 +11428,15 @@ moved, unchanged, into five new modules beneath it:
 - `arch_components.py`: the How-SW top view, the derivation record and
   `component_findings`.
 
-`trajectory_arch.py` imports them, re-exports every name it exported before,
-and keeps the spec interface-section rule. `check_trajectory.py` does not
-change, and every name it re-exports still resolves. Each new module's
+`trajectory_arch.py` imports them, re-exports every public name it held
+before (its `__all__`, and `derivation_record_findings`), and keeps the spec
+interface-section rule. `check_trajectory.py` does not change, and every name
+it re-exports still resolves. What `trajectory_arch` no longer carries: the
+private helpers of the derivation record (`_cell`, `_entries`,
+`_record_findings` and their kin) and of the test-file tag rule
+(`_tag_evidence_findings`, `_undeclared_case_findings`), which live only in
+`arch_components` and `arch_tags`, and the module names it imported
+(`ast`, `gen_arch_map`, `_kitspine`, `_kitconfig`). Each new module's
 docstring declares one of this repository's interface rows, IF-316 to IF-320.
 Your source scan root is your own `src`, so they declare nothing to your
 checks.
@@ -11438,10 +11444,11 @@ checks.
 **What to do.** Nothing is forced. Overwrite the kit-owned files below
 together: the new `trajectory_arch.py` imports the five new modules
 unguarded, so a copy without them cannot run `check_trajectory`. A local
-script that imports a rule from `trajectory_arch` or `check_trajectory`
-keeps working. One that patches a module global to change a rule's
-behaviour patches the module that now holds the rule: the seam check's
-`_SCAN_CACHE` and its `gen_arch_map` are `arch_seams`' own.
+script that imports a public rule from `trajectory_arch` or
+`check_trajectory` keeps working. One that reads a private helper listed
+above reads it from its new module. One that patches a module global to
+change a rule's behaviour patches the module that now holds the rule: the
+seam check's `_SCAN_CACHE` and its `gen_arch_map` are `arch_seams`' own.
 
 **Kit-owned files — overwrite:** `scripts/trajectory_arch.py`,
 `scripts/arch_inputs.py`, `scripts/arch_interfaces.py`, `scripts/arch_tags.py`,

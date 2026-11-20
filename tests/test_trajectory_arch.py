@@ -16,6 +16,7 @@ every occurrence here is one fixture class with one reason, and a marker per lin
 would say the same thing 25 times while hiding whether a NEW one had appeared.
 """
 
+import ast
 import csv
 import re
 import shutil
@@ -53,6 +54,114 @@ def test_architecture_rules_are_reexported_from_their_behavior_module():
         behavior = getattr(load_script(home), name)
         assert facade.__module__ == home
         assert facade.__code__.co_code == behavior.__code__.co_code
+
+
+# The modules `trajectory_arch` composes (WI-1007): the rules it held moved into
+# them, and it re-exports their surface to `check_trajectory` (IF-263).
+COMPOSED = (
+    "arch_inputs",
+    "arch_interfaces",
+    "arch_tags",
+    "arch_seams",
+    "arch_components",
+)
+
+
+def _defined_names(path):
+    """The top-level names a module defines: its defs, classes and assignments."""
+    names = set()
+    for node in ast.parse(path.read_text(encoding="utf-8")).body:
+        if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+            names.add(node.name)
+        elif isinstance(node, ast.Assign):
+            names.update(t.id for t in node.targets if isinstance(t, ast.Name))
+    return names
+
+
+def test_the_composer_exposes_every_public_name_of_the_modules_it_composes():
+    """Each public name a composed module defines, and each name the composer's
+    `__all__` lists, resolves on `trajectory_arch`. The split moved
+    `derivation_record_findings`, a public name of the module before it, and
+    left it off the composer, which no caller happened to read.
+
+    Implements: TC-080"""
+    composer = load_script("trajectory_arch")
+    missing = [
+        "{}.{}".format(module, name)
+        for module in COMPOSED
+        for name in sorted(_defined_names(SCRIPTS / (module + ".py")))
+        if not name.startswith("_") and not hasattr(composer, name)
+    ]
+    missing += [name for name in composer.__all__ if not hasattr(composer, name)]
+    assert missing == []
+
+
+def _loads_composer(node):
+    """True for a `load_script("trajectory_arch")`-shaped call."""
+    return (
+        isinstance(node, ast.Call)
+        and bool(node.args)
+        and isinstance(node.args[0], ast.Constant)
+        and node.args[0].value == "trajectory_arch"
+    )
+
+
+def _composer_binding(node):
+    """`(aliases, names)` that one statement binds from `trajectory_arch`."""
+    if isinstance(node, ast.Import):
+        return {
+            a.asname or a.name for a in node.names if a.name == "trajectory_arch"
+        }, set()
+    if isinstance(node, ast.ImportFrom) and node.module == "trajectory_arch":
+        return set(), {a.name for a in node.names}
+    if isinstance(node, ast.Assign) and _loads_composer(node.value):
+        return {t.id for t in node.targets if isinstance(t, ast.Name)}, set()
+    return set(), set()
+
+
+def _composer_names(tree):
+    """`(aliases, names)`: the names a module binds to `trajectory_arch`, by
+    an import or by loading it, and the names it imports from it."""
+    aliases, names = set(), set()
+    for node in ast.walk(tree):
+        bound, imported = _composer_binding(node)
+        aliases |= bound
+        names |= imported
+    return aliases, names
+
+
+def _composer_reads(tree):
+    """Every name a module reads through `trajectory_arch`."""
+    aliases, names = _composer_names(tree)
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Attribute):
+            continue
+        value = node.value
+        if _loads_composer(value) or (
+            isinstance(value, ast.Name) and value.id in aliases
+        ):
+            names.add(node.attr)
+    return names
+
+
+def test_every_name_a_caller_reads_through_the_composer_resolves():
+    """A kit script, a repository tool or a test that imports a name from
+    `trajectory_arch`, or reads one off it, finds it there.
+
+    Implements: TC-080"""
+    composer = load_script("trajectory_arch")
+    unresolved = []
+    for tree_root in (SCRIPTS, ROOT / "scripts", ROOT / "tests"):
+        for path in sorted(tree_root.rglob("*.py")):
+            if "__pycache__" in path.parts:
+                continue
+            reads = _composer_reads(ast.parse(path.read_text(encoding="utf-8")))
+            unresolved += [
+                "{}: {}".format(path.relative_to(ROOT).as_posix(), name)
+                for name in sorted(reads)
+                if not hasattr(composer, name)
+            ]
+    assert unresolved == []
 
 
 # The registry-fixture writers below are copied from tests/test_trajectory.py

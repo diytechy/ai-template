@@ -106,6 +106,7 @@ from arch_components import (
     _cmp_roots,
     component_findings,
     component_top_view,
+    derivation_record_findings,
     knowledge_packs,
 )
 
@@ -271,6 +272,7 @@ __all__ = (
     "_cross_component_scan",
     "cross_component_findings",
     "cross_component_advisories",
+    "derivation_record_findings",
     "component_findings",
     "_IF_TOKEN_RE",
     "_INTERFACES_HEADING_RE",

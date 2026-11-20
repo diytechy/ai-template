@@ -904,6 +904,9 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
   - after: SR-159;LLR-067;IF-319
 
 ### TC TC-080
+- **Evidence**
+  - before: tests/test_trajectory_arch.py::test_architecture_rules_are_reexported_from_their_behavior_module; tests/test_trajectory_arch.py::test_interface_coverage_warns; tests/test_trajectory_arch.py::test_uncovered_direction_warns; tests/test_trajectory_arch.py::test_source_sink_marker_suppresses_direction_warn; tests/test_trajectory_arch.py::test_seam_tc_citation_warn; tests/test_trajectory_arch.py::test_contracts_docstring_citation_warns; tests/test_trajectory_arch.py::test_interface_warns_never_fail_strict; tests/test_trajectory_arch.py::test_interface_check_off_silences
+  - after: tests/test_trajectory_arch.py::test_architecture_rules_are_reexported_from_their_behavior_module; tests/test_trajectory_arch.py::test_the_composer_exposes_every_public_name_of_the_modules_it_composes; tests/test_trajectory_arch.py::test_every_name_a_caller_reads_through_the_composer_resolves; tests/test_trajectory_arch.py::test_interface_coverage_warns; tests/test_trajectory_arch.py::test_uncovered_direction_warns; tests/test_trajectory_arch.py::test_source_sink_marker_suppresses_direction_warn; tests/test_trajectory_arch.py::test_seam_tc_citation_warn; tests/test_trajectory_arch.py::test_contracts_docstring_citation_warns; tests/test_trajectory_arch.py::test_interface_warns_never_fail_strict; tests/test_trajectory_arch.py::test_interface_check_off_silences
 - **Verifies**
   - before: SR-159;LLR-042;IF-263
   - after: SR-159;LLR-042;IF-263;IF-316;IF-317
