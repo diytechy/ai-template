@@ -8,6 +8,7 @@ specref = "docs/archive/work/complete/WI-940-cpu-time-smoke-budget.md"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 2
+planmode = "single"
 +++
 
 ## Context
@@ -43,7 +44,9 @@ cannot be judged. S2: no file gains authority; the budget step stays
 warn-only at the commit. S3: the candidate set is closed: the smoke tier's
 modules ranked by their measured CPU, taken heaviest first; a module with no
 in-process pin for its family is not moved, and the gap is named in the
-Deliverable. S4: `planmode = "none"`; the measurement decides the moves. S5:
+Deliverable. S4: `planmode = "single"`: the moves are an empirical selection
+over the measured modules and their pins, so the plan records the readings
+and the chosen set before any move. S5:
 no change to any script or its behaviour; only test-tier membership. S6:
 nothing waits.
 
@@ -51,9 +54,15 @@ nothing waits.
 
 - [ ] The budget step's own reading (`check_smoke_budget.py --mode warn`)
       is taken three times on a quiet box (no other test run, no reviewer
-      sessions launched), and per-module CPU is ranked from one
-      `pytest -m smoke --durations=0` run; both are quoted in the
-      Deliverable.
+      sessions launched), and quoted in the Deliverable.
+- [ ] Per-module CPU is measured, not inferred from elapsed time: one
+      `pytest -m smoke --durations=0` run shortlists the 30 modules with
+      the largest summed durations, and each shortlisted module is then run
+      alone (`pytest -m smoke -p no:xdist <module>`) under the budget step's
+      own process-tree meter (on Windows the job object of `kitlib.winjob`,
+      descendants and exited processes included; elsewhere
+      `getrusage(RUSAGE_CHILDREN)`). The ranking is by that CPU reading,
+      quoted per module in the plan.
 - [ ] If the quiet readings are under `cpu-seconds`, the Deliverable says
       the breach was load, and nothing moves. Otherwise the heaviest
       modules move to `SLOW_MODULES`, each with its family's in-process pin
