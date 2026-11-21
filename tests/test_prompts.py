@@ -207,10 +207,13 @@ def test_the_reviewer_brief_links_the_review_threat_model_and_restates_nothing()
         "dismissed in one recorded line",
         "by whoever rules the finding",
         "in the response to the review verdict",
-        "delegated-decisions record too, when the run keeps one",
         "never answered with code",
     ):
         assert clause in paragraph, clause
+    # WI-1013: a dismissal selects no design, so the decisions record's
+    # routing table does not record it and this paragraph no longer sends it
+    # there.
+    assert "delegated-decisions record" not in paragraph
     for key in FINDING_JUDGING_BRIEFS:
         assert '§6 "Review threat model"' in pr.load(key), key
     examples = (
@@ -294,6 +297,44 @@ def test_the_coordinator_skill_gates_the_confirming_round_by_reachability():
         assert clause in flat, clause
 
 
+def test_the_coordinator_skill_sends_the_runs_conduct_to_its_commits():
+    # WI-1013: the coordinator records a call in a decisions record only when
+    # the routing table's one home routes it there. A dismissal, a re-grade, a
+    # dispute ruling, the convergence map, a reviewer stand-in, a failed check
+    # round and a lane keeping an older order are the run's conduct: they go
+    # to its commits and log fragment, and the convergence map and a finding's
+    # outcome to a commit message, which a convergence reviewer does not read.
+    cycle = KIT / "skills" / "coordinator-cycle"
+    skill = " ".join(
+        word
+        for name in ("SKILL.md", "references/recipes.md")
+        for word in (cycle / name).read_text(encoding="utf-8").split()
+    )
+    for clause in (
+        "only when the routing table in `project-trajectory/PROCESS_OPTIONS.md`, "
+        '"Delegated decisions record", routes it there',
+        "Record the map in a commit message on the lane (an empty commit will "
+        "do), which a convergence reviewer does not read.",
+        "in one recorded line, in the response to the review",
+    ):
+        assert clause in skill, clause
+    for gone in (
+        "in the lane's `docs/decisions/<branch>.toml`, and never answer it",
+        "Record each ruling in the lane's decisions record",
+        "Record the map in the lane's decisions",
+        "as a failed round in the lane's decisions record",
+        "record that as a decision in its decisions record",
+        "in the lane's decisions record and under the new handoff",
+        "record the same-family relaxation in the decisions record",
+        "recorded as a substitution in the lane's decisions",
+        "Record the stand-in in the lane's decisions",
+        "Re-grade it in the lane's decisions",
+        "Record the substitution in every lane's decisions record",
+        "Record calls not already settled by the spec or a ruled item",
+    ):
+        assert gone not in skill, gone
+
+
 def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
     # WI-955: Terra's change set, TC rows included, precedes build round 1,
     # whose first deliverable is the tests under one evidence class each; the
@@ -317,8 +358,8 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
         "catch, written in the test itself (its docstring or a comment)",
         "The intent set, committed before build round 1, already names it",
         "the independently checkable evidence its declared method names",
-        "A test that fits none is named, with its disposition, in the lane's "
-        "decisions record before the code commit.",
+        "A test that fits none is named, with its disposition, in the "
+        "tests-first commit and the log fragment",
         # WI-996: the order runs through `record-checks`, which judges the mark
         # `[product] expected_failure_marker` declares, and the refresh refuses
         # a landing mark.
@@ -332,12 +373,14 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
         "A refresh or a hand landing (recipes §3) refused for a mark ends in "
         "the code commit or a quarantine.",
         "A test the checks skip takes no mark, because a skip is never evidence: "
-        "it is named, with its disposition, in the lane's decisions record.",
+        "it is named, with its disposition, in its commit and the log fragment",
     ):
         assert clause in skill, clause
     for gone in (
         "after the first build",
         "owes no intent turn",
+        "in the lane's decisions record before the code commit",
+        "it is named, with its disposition, in the lane's decisions record.",
         "wi-918 D-002",
         "The builder builds the first round",
         "was drafted at intent, no round proposed row text",
