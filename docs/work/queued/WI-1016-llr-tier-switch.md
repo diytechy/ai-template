@@ -50,12 +50,15 @@ registry, the DevStg-Arch rung, the cross-component rule and the component
 views decompose the implementation, so they drop out with the LLRs. The
 depth-0 frame (`external.toml`: outside parties, boundary crossings,
 outside relationships) decomposes the system boundary, not the
-implementation, and stays, with the assumption tier that lands on it. Under
+implementation, and stays, with the assumption tier that lands on it. **A surviving interface carries no owner (operator, 2026-11-21).** Under
 the review-churn plan's variant F
 (`docs/plans/2026-10-11-review-churn/pointer-rules.md`, ruled, not built) an
-interface's owner is a component id, so an interface that survives with the
-tier off needs an owner that is not a component: today's file path, or an
-`external:` party.
+interface's owner is a component id. With the layer off the interface is
+itself part of the problem's breakdown and is owned there, so the owner is
+omitted rather than replaced, the way F already derives an LLR's placement
+instead of writing it down. Its anchor is the SR that constrains it, or the
+boundary crossing it realizes; that check stays on. Its contract stays on
+the row as the form in its `data` cell, with no hand-over into code.
 
 Related: WI-1012 (the light spine: needs and open items, no work-item
 registry) sits further down the same axis; the critique decides whether one
@@ -73,8 +76,9 @@ builds after it or with it.
       unchanged.
 - [ ] With the tier off, the component registry, the DevStg-Arch rung, the
       cross-component rule and the component views are off too, while the
-      depth-0 frame and the assumption tier stay. Each surviving interface
-      keeps an owner that is not a component.
+      depth-0 frame and the assumption tier stay. A surviving interface
+      omits its owner, is anchored by the SR that constrains it or the
+      crossing it realizes, and keeps its contract on the row.
 - [ ] Switching off with LLR rows present, and back on, is defined: what
       happens to the rows, their acceptances and the code tags.
 - [ ] SR-186's amendment and the setting's own SR are drafted for the
