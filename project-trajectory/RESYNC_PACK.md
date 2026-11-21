@@ -11912,7 +11912,8 @@ none of it: the spine-authoring skill's "keep IDs where meaning remains" now
 says what to do where it does not, its in-lane reference has a lane's change
 set include each LLR the design re-cuts, the spine questions' §3 routes an
 unsuitable mechanism or division of the design to §5, and the worker and
-reviewer briefs ask about a design bent to fit a row as well as a workaround.
+reviewer briefs send an LLR that no longer suits the design, and any
+workaround kept for one, to §5.
 
 **What to do.** Nothing is forced and nothing migrates: no setting, schema
 or row changes. A brief or procedure of your own that restated the old

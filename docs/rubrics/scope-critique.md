@@ -74,9 +74,8 @@ step checks a construction, and a deletion constructs none (owner,
 state, add a value to a domain, make an output depend on a new input, or cross
 a new boundary? Within the row's scope, the spec carries the change. Beyond
 it, a refactor row is filed on trunk before the claim. Where the change
-re-cuts the design, the spec names the LLRs it splits, merges, moves or
-retires (PROCESS.md §5's design replacement), not code fitted under the rows
-that exist. Judge the answer
+re-cuts the design, the spec names each LLR it re-cuts (PROCESS.md §5's
+design replacement). Judge the answer
 against [architecture-decomposition](architecture-decomposition.md); the
 `architecture-decomposition` skill is the author's procedure for it.
 

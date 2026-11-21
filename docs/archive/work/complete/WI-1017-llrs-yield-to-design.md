@@ -137,17 +137,18 @@ here:
 4. **The builder tagged new code by file** (accretion; B10's stop). The
    builder agent tags a new function with the LLR whose stated behavior it
    implements (that LLR's `module` naming the file), and reports a row that no
-   longer fits the design with the re-cut §5 calls for, never fitting the
-   design to it; rubric K3 follows.
+   longer fits the design with the change §5's design replacement calls for;
+   rubric K3 follows.
 
-The readers point at the statement and restate none of it (Done-when 4):
+The readers point at the statement and restate none of it (Done-when 4).
+Each keeps its own instruction and a pointer at §5's design replacement:
 
-| Reader | Where it lives |
-|---|---|
-| The spine-authoring skill | `project-trajectory/skills/spine-authoring/SKILL.md` and `references/in-lane.md`, with their `.claude/skills/` and `.agents/skills/` copies; its question home `project-trajectory/prompts/spine-questions.md` §3, which `adjudicate_brief.py` composes into every LLR sitting |
-| The builder's instructions | `project-trajectory/prompts/worker.template.md` (the shipped worker brief) and `.claude/agents/kit-builder.md` (this repository's builder agent) |
-| The reviewer prompts | `project-trajectory/prompts/reviewer.template.md` (the shipped reviewer brief; it dropped the sentence restating §5's preservation clauses) and `docs/rubrics/kit-change-review.md` K3 (the rubric `review_brief.py review --rubric` appends here) |
-| The scope-critique prompt | `docs/rubrics/scope-critique.md` S5, rendered by `review_brief.py critique` into `prompts/critique.template.md`: a change that re-cuts the design names the LLRs it splits, merges, moves or retires |
+| Reader | Where it lives | Its own instruction |
+|---|---|---|
+| The spine-authoring skill | `project-trajectory/skills/spine-authoring/SKILL.md` and `references/in-lane.md`, with their `.claude/skills/` and `.agents/skills/` copies; its question home `project-trajectory/prompts/spine-questions.md` §3, which `adjudicate_brief.py` composes into every LLR sitting | Where meaning does not remain, mint and retire as §4 and §5 say; a lane's change set includes each LLR the design re-cuts; §3 lists what an adjudicator compares |
+| The builder's instructions | `project-trajectory/prompts/worker.template.md` (the shipped worker brief) and `.claude/agents/kit-builder.md` (this repository's builder agent) | The worker follows §5 where an LLR no longer suits the design, within its assignment; the builder agent reports such a row with the change §5 calls for, and tags new code by the behavior it implements |
+| The reviewer prompts | `project-trajectory/prompts/reviewer.template.md` (the shipped reviewer brief) and `docs/rubrics/kit-change-review.md` K3 (the rubric `review_brief.py review --rubric` appends here) | The reviewer judges such a row, and any workaround kept for one, by §5; K3 judges a row the design no longer fits by §5 |
+| The scope-critique prompt | `docs/rubrics/scope-critique.md` S5, rendered by `review_brief.py critique` into `prompts/critique.template.md` | A spec whose change re-cuts the design names each LLR it re-cuts |
 
 Done-when 5: nothing in these homes now rewards keeping an unsuitable LLR to
 avoid an acceptance act. The statement makes it a finding, the chart offers
@@ -191,6 +192,8 @@ as outside this row's homes.)
 
 - The pin, `tests/test_prompts.py::test_the_design_replacement_rule_has_one_home_and_every_reader_points_at_it`:
   red on the base text (the statement absent from PROCESS.md), green after.
+  A reader fails it by sharing any five-word run with §5's statement, by
+  speaking of bending the design to a row, or by listing the re-cut's verbs.
   It rides the module's file-level tag (D-002: no spine row minted; LLR-396
   to LLR-398, TC-460 to TC-463 and IF-327 to IF-328 unused).
 - The modules the change reaches, at `-n 2`: `test_prompts`,
@@ -217,8 +220,8 @@ as outside this row's homes.)
 - `project-trajectory/skills/spine-authoring/SKILL.md` 19,630 -> 19,744
   (+114, uncapped); `references/in-lane.md` 5,135 -> 5,212 (+77).
 - `project-trajectory/prompts/spine-questions.md` 21,623 -> 21,532 (-91);
-  `reviewer.template.md` 12,058 -> 11,927 (-131); `worker.template.md`
-  8,901 -> 8,935 (+34).
+  `reviewer.template.md` 12,058 -> 11,900 (-158); `worker.template.md`
+  8,901 -> 8,885 (-16).
 - `AGENTS.template.md` (9,964), `CLAUDE.md` (8,052) and `PROCESS_OPTIONS.md`
   untouched.
 

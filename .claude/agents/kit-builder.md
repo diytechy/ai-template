@@ -24,7 +24,7 @@ Standing rules, in addition to the prompt:
   - Never edit an accepted row's cells beyond the grant, and never flip a Status.
     If an accepted row is wrong, impossible as written, or no longer fits the
     design, stop that part and report it with the change `PROCESS.md` §5's
-    design replacement calls for; never bend the design to fit the row.
+    design replacement calls for.
   - Search for an existing home before creating a file or function, and
     name the nearest existing home you considered in your final message
     (`PROCESS.md` §3, "Consolidate, don't duplicate").

@@ -1070,17 +1070,30 @@ def test_the_arch_section_points_at_the_rubric_and_restates_nothing():
 
 
 DESIGN_RULE = "an llr records the current design, not a commitment"
+# A reader restates the rule when it speaks of bending the design to a row, or
+# lists the re-cut's verbs, in whatever words; a copied phrase is caught by the
+# five-word runs it shares with the statement.
+BENT_DESIGN = re.compile(
+    r"\bben(?:d|ds|ding|t)\b\W+(?:\w+\W+){0,2}?design\b|\bdesign\W+bent\b"
+)
+RECUT_VERBS = re.compile(r"\bsplit\w*\W+merg", re.IGNORECASE)
 
 
 def _flat(path):
     return " ".join(path.read_text(encoding="utf-8").split())
 
 
+def _runs(text, size=5):
+    words = re.findall(r"[\w§'-]+", text.lower().replace("`", ""))
+    return {" ".join(words[i : i + size]) for i in range(len(words) - size + 1)}
+
+
 def test_the_design_replacement_rule_has_one_home_and_every_reader_points_at_it():
     """WI-1017: PROCESS.md §5's change intake says once that an LLR yields to a
     sustainable design, and its chart routes a re-cut from a violated row and
     from a new scope's solution. Every reader names §5's design replacement
-    and copies none of it.
+    and restates none of it: no five-word run of the statement, no talk of
+    bending the design to a row, no list of the re-cut's verbs.
 
     Adequacy: a second copy of the opening sentence would be a second home; a
     reader with no pointer leaves its author fitting code under the rows that
@@ -1120,11 +1133,19 @@ def test_the_design_replacement_rule_has_one_home_and_every_reader_points_at_it(
         ROOT / "docs" / "rubrics" / "kit-change-review.md",
         ROOT / "docs" / "rubrics" / "scope-critique.md",
     ]
+    statement = intake[
+        intake.index("- **Design replacement**") : intake.index("- **Requirement gap**")
+    ]
+    restated = []
     for path in readers:
         text = _flat(path)
         assert "§5" in text and "design replacement" in text, path
-        assert DESIGN_RULE not in text.lower(), path
         assert "LLR whose `module` is that file" not in text, path
+        shared = sorted(_runs(statement) & _runs(text))
+        bent = BENT_DESIGN.findall(text) + RECUT_VERBS.findall(text)
+        if shared or bent or DESIGN_RULE in text.lower():
+            restated.append((path.name, shared[:3], bent))
+    assert restated == [], restated
     assert "Keep IDs where meaning remains; where it does not," in _flat(
         skill / "SKILL.md"
     )

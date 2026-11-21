@@ -30,9 +30,8 @@ approved text, names included, until it is amended through its authority.
 **K3 — Back-links and approved rows.** Each `Implements:` tag names the LLR
 whose stated behavior the function implements, that LLR's `module` names the
 file, and the function appears in its `code_symbol`. An approved row changes
-only where the spec grants it, and no Status flips. A row the design no longer
-fits is re-cut under PROCESS.md §5's design replacement, never kept by bending
-the design to it.
+only where the spec grants it, and no Status flips. Judge a row the design no
+longer fits by PROCESS.md §5's design replacement.
 
 **B1 — A finding stated as a guess.** Report a finding as a claim confirmed by
 reading or running the code, never as a guess.

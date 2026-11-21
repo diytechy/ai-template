@@ -83,6 +83,12 @@ The statement has one home. Every other reader points at it.
 | `docs/rubrics/scope-critique.md` S5 (the scope critique's rubric, rendered by `review_brief.py critique`) | After the delta question: where the change re-cuts the design, the spec names the LLRs it splits, merges, moves or retires (§5, design replacement). |
 | `project-trajectory/RESYNC_PACK.md` §4 | One entry `[since 0d67302bd]`: the shipped files to overwrite (PROCESS.md, the skill and its reference, the three prompts) and the catalogue to regenerate. |
 
+*Corrected at review (Sol, round 1):* the worker and reviewer briefs, the
+builder agent, K3 and S5 each keep their own instruction and the §5 pointer,
+and none restates the rule: no talk of bending the design to a row, no list
+of the re-cut's verbs. The pin fails a reader that does either, or that
+shares any five-word run with the statement.
+
 ### The statement (PROCESS.md §5)
 
 > **Design replacement** — an LLR records the current design, not a

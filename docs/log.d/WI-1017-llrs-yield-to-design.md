@@ -52,6 +52,6 @@ Deliverable (`../archive/work/complete/WI-1017-llrs-yield-to-design.md`).
   re-stamped); `byte-budget-guard/SKILL.md` 4,613 -> 4,610 (cap 5,000);
   `spine-authoring/SKILL.md` 19,630 -> 19,744; `in-lane.md` 5,135 -> 5,212;
   `spine-questions.md` 21,623 -> 21,532; `reviewer.template.md`
-  12,058 -> 11,927; `worker.template.md` 8,901 -> 8,935. `AGENTS.template.md`,
+  12,058 -> 11,900; `worker.template.md` 8,901 -> 8,885. `AGENTS.template.md`,
   `CLAUDE.md` and `PROCESS_OPTIONS.md` untouched.
 - **RESYNC:** one entry `[since 0d67302bd]`; nothing forced.
