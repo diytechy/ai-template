@@ -6,6 +6,7 @@ sr_refs = ["SR-186", "SR-157", "SR-049", "SR-159"]
 specref = "docs/plans/2026-11-11-test-tiers/HANDOFF.md#126-progress-log"
 buildtier = "strong"
 safety_class = "ordinary"
+needs = ["WI-1021", "WI-1023"]
 priority = 2
 +++
 

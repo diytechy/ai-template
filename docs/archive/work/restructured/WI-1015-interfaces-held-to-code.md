@@ -9,6 +9,10 @@ safety_class = "ordinary"
 priority = 2
 +++
 
+## Deliverable
+
+Restructured into WI-1022, WI-1024.
+
 ## Context
 
 Filed by hand on 2026-11-21 at the operator's direction. The operator wants

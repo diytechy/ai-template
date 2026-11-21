@@ -6,6 +6,7 @@ sr_refs = ["SR-186"]
 specref = "docs/archive/work/complete/WI-1017-llrs-yield-to-design.md"
 buildtier = "medium"
 safety_class = "ordinary"
+needs = ["WI-1028"]
 priority = 3
 +++
 

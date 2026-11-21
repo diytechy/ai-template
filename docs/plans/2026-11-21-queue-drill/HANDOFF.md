@@ -36,8 +36,9 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
 
 | Item | What | Wave | Notes |
 |---|---|---|---|
-| WI-1019 | An LLR states WI-1001's untagged-TC rule | B, now | Critique round 1: Argon in (two findings), Sol owed; no code |
-| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6) | F, after the N6 stop | Being filed on trunk; each critiqued by Sol and Argon; built in the order §3.3 N6 sketches, landing one at a time (plan revision 37) |
+| WI-1019 | An LLR states WI-1001's untagged-TC rule | B, now | Critiqued (Sol and Argon), building in `D:/ai-template-wt-wi1019`; mints LLR-395 and tags the code; the TC re-point moved to WI-1038 (the parent-first rule refuses an accepted TC under a drafted LLR) |
+| WI-1038 | TC-428 and TC-429 verify LLR-395 once accepted | After LLR-395's acceptance | Filed from WI-1019's build; claimable only once adjudication accepts LLR-395 |
+| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6) | F, after the N6 stop | Filed; each critiqued by Sol and Argon. Landing order: 1021, 1022, 1023, then 1024 and 1027, 1025, then 1026, 1028 and 1030, then 1029; built side by side where `needs` allows, landing one at a time (plan revision 37) |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
 | WI-1031 to WI-1037 | The rest of phase 3, and the skill naming the author role | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2, N5) |
@@ -404,8 +405,10 @@ Marks at hand-off (`docs/id-watermark`): SR 247, LLR 394, TC 456, IF 325,
 DA 28, SUR 4, CMP 9, WI 1020. Wave A minted LLR-393, LLR-394, TC-455, TC-456
 and IF-325 (WI-1014); the rest of its ranges went unused and are free.
 
-WI ids filed on trunk by §3.3: WI-1021 to WI-1030 (F-1 to F-10) and
-WI-1031 to WI-1037 (the rest of phase 3, and the author-role row).
+WI ids filed on trunk by §3.3: WI-1021 to WI-1030 (F-1 to F-10),
+WI-1031 to WI-1037 (the rest of phase 3, and the author-role row) and
+WI-1038 (WI-1019's follow-up). F-3 (WI-1023) mints a successor SR for
+SR-180's discharge rule, so its launch range includes one SR.
 
 | Branch | LLR | TC | IF |
 |---|---|---|---|
@@ -482,3 +485,13 @@ Append one line per step taken: the item, what happened, the commit.
   round it raised (§3.3). Argon by file reference tested: a trivial prompt in
   11 s, a 26 KB file in 18 s, WI-1019's scope critique in 37 s
   (CHANGES-REQUESTED, two findings). §2, §6 and §8 updated to match.
+  `9b8ad0e04`.
+- 2026-11-21: WI-1019's critique by Sol and Argon recorded and applied (the
+  critics split; the coordinator took Argon's new row over amending
+  LLR-366), `d849667f1`. Its builder stopped at the parent-first rule (an
+  accepted TC may not verify a drafted LLR); ruled: land LLR-395 and its code
+  tag, file the re-point as WI-1038.
+- 2026-11-21: filed WI-1021 to WI-1038 (F-1 to F-10 drafted by one session,
+  the rest by another, both into the scratchpad first); WI-1015
+  restructured into WI-1022 and WI-1024; WI-1020 cancelled; WI-1016 now
+  needs WI-1021 and WI-1023, WI-1018 needs WI-1028.
