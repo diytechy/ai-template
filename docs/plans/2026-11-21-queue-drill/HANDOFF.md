@@ -44,11 +44,13 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37) |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
-| WI-1036, WI-1037 | The history-reader audit; the skill names roles, not models | Beside F-1 (§3.4 S3) | Critiqued (WI-1036: Argon's two findings applied; WI-1037: both approve) |
+| WI-1037 | The skill names roles, not models | Beside F-1 (§3.4 S3) | Built; review round 1: Argon APPROVE, Sol one MINOR (model labels lost on four observations), being fixed |
+| WI-1040 to WI-1043 | WI-1036's findings: the last-act date and the test-first order read from the act ledger, an unanchored risk said so, two dead history helpers removed | Filed, not drilled | Owe a scope critique; WI-1041 amends LLR-239, WI-1042 amends LLR-257 |
 | WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); owes its critique |
 | WI-1031 to WI-1035 | The rest of phase 3 | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2); WI-1035 carries §3.4 S4's answer |
 
-Done in wave A: WI-1013, WI-1014 and WI-1017; in wave B: WI-1019 (§10).
+Done in wave A: WI-1013, WI-1014 and WI-1017; in wave B: WI-1019; beside
+F-1: WI-1036 (§10).
 Closed by §3.3:
 WI-1015 restructured into F's rows (N1), WI-1020 cancelled (N5).
 
@@ -590,3 +592,11 @@ Append one line per step taken: the item, what happened, the commit.
   skipped` in 32:59, no failure. WI-1036 and WI-1037 critiqued (Sol
   approved both; Argon approved WI-1037 and raised two findings on WI-1036,
   both applied).
+- 2026-11-21: F-1 (WI-1021), WI-1036 and WI-1037 building in D: worktrees.
+  WI-1039 critiqued by Sol alone (two findings, applied; Argon timed out),
+  `d1c56e986`. WI-1036 built (69 history calls in 25 files, 4 recompute a
+  past decision); review: Sol APPROVE, Argon timed out inside opencode's
+  start-up (its log stops at `init`, before any model call); merged
+  `a0ca15d3f`. Its findings filed as WI-1040 to WI-1043; the coordinator
+  ruled the two `check_test_first` calls one row and the two re-run checks
+  class (b).
