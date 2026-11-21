@@ -5,12 +5,11 @@ Read this file first; it is the resume point. The longer history is
 `docs/plans/2026-11-11-test-tiers/HANDOFF.md` §12.6, and nothing there needs
 reading before starting.
 
-**Where the drill stopped.** Wave A is built, reviewed and merged, and the
-suite after it has run (§1). The drill stopped at §3's first stop: variant F
-before WI-1015 builds. §3.1 holds the questions, each with a recommendation
-and a blank for the operator's answer. A resuming session reads the answers,
-applies them (§3.1 says what each answer sets in motion), and continues from
-§4 with wave B.
+**Where the drill stands.** Wave A is built, reviewed and merged, and the
+suite after it has run (§1). The operator answered §3.1 and the second round
+it raised (§3.3): variant F is built first. The drill now files F's rows on
+trunk (§2), critiques each, and stops once for the operator to see the cut
+before any F builder starts; WI-1019 builds beside that filing.
 
 **The job:** take each drillable work item through scope critique, build,
 review and merge into `refactor_again`, running items in parallel worktrees
@@ -37,13 +36,14 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
 
 | Item | What | Wave | Notes |
 |---|---|---|---|
-| WI-1015 | The code is held to its interface and LLR rows | B | Critiqued (round 1, six findings, not yet dispositioned); waits on §3.1 Q1 to Q3; amends LLR-067 |
-| WI-1016 | A repository can switch off the implementation layer | C | After WI-1015 (same checks); not yet critiqued, since its shape follows Q1; reverses SR-186, so its amendment is drafted for the operator |
-| WI-1019 | An LLR states WI-1001's untagged-TC rule | B, beside WI-1015 | New from WI-1017's sample; not yet critiqued; touches LLR-366 or a new LLR under SR-157 and TC-428/429, no code |
-| WI-1020 | The add-only amendment recipe names the re-cut | B, beside WI-1015 | New; one case behind it, so §3.1 Q6 asks whether to keep it; the coordinator-cycle recipe only |
-| WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | D, after WI-1015 | New; WI-1015 (or variant F) may clear B1, B7 and B9 of its set first |
+| WI-1019 | An LLR states WI-1001's untagged-TC rule | B, now | Critique round 1: Argon in (two findings), Sol owed; no code |
+| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6) | F, after the N6 stop | Being filed on trunk; each critiqued by Sol and Argon; built in the order §3.3 N6 sketches, landing one at a time (plan revision 37) |
+| WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
+| WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
+| WI-1031 to WI-1037 | The rest of phase 3, and the skill naming the author role | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2, N5) |
 
-Done in wave A: WI-1013, WI-1014 and WI-1017 (§10).
+Done in wave A: WI-1013, WI-1014 and WI-1017 (§10). Closed by §3.3:
+WI-1015 restructured into F's rows (N1), WI-1020 cancelled (N5).
 
 Not drillable: WI-827 (the operator's signature on SN-029's amendment),
 WI-998 (waits for a decomposition round to supply its sample), WI-1012 (waits
@@ -100,7 +100,7 @@ Done-when item against F:
 F's build has no rows yet, and items 1, 2 and 6 state rules F keeps, so only
 their cell bindings move in F's migration.
 
-**Answer:**
+**Answer:** Option (a), focus on transition to F first.
 
 **Q2. If (b): how the overlap closes (item 2).**
 - Re-tag: each of the 32 modules gets one component, by editing LLR
@@ -113,7 +113,7 @@ their cell bindings move in F's migration.
 *Recommendation: re-tag.* F has already ruled one component per file, and
 re-tagging answers the question F's migration will ask.
 
-**Answer:**
+**Answer:** Not applicable, option (Q1(a) was selected)
 
 **Q3. WI-1015's other findings.** The coordinator's proposed dispositions,
 applied on resume unless overruled here:
@@ -133,7 +133,7 @@ applied on resume unless overruled here:
   Under (a), F's typed forms carry their own grammar.
 - S4: `planmode = "single"`.
 
-**Answer:**
+**Answer:** What are the questions here?
 
 **Q4. WI-1013's reconciliation: confirm or overrule.** Review found that
 PROCESS.md §6 and the `coordinator-cycle` skill still sent the conduct of a
@@ -152,7 +152,7 @@ reverting those lines and the three amendments.
 
 *Recommendation: confirm.*
 
-**Answer:**
+**Answer:** Confirm
 
 **Q5. The acts owed (none taken).** The drift and drafts wave A left,
 `docs/ratify/CURRENT.md` (text committed before any act):
@@ -167,7 +167,7 @@ is an accepted SR whose acceptance criteria changed to follow your
 2026-11-20 rule. Do you want to take SR-233's chain yourself, or leave all
 three to an adjudication sitting?
 
-**Answer:**
+**Answer:** Leave all three to adjudication, for reference I have spot checked SR-233 and the spirit of the requirement is acceptable.
 
 **Q6. WI-1020: keep or cancel?** The coordinator's recipe "Brief Terra to
 amend an accepted row by addition" only ever appends text to an accepted
@@ -182,7 +182,7 @@ sentence after add-only amendments.
 *Recommendation: keep it at P4.* It changes one recipe's text, and §5 now
 states the re-cut it would point at.
 
-**Answer:**
+**Answer:** This probably needs more discussion.  The targetting LLM to run prose through and spine authoring would just be configurable, I wouldn't expect a skill to be touched.
 
 **Q7. Argon.** Gemini Argon timed out at 900 seconds on every run of this
 sitting that got as far as reviewing: the scope critiques of WI-1013 and
@@ -192,7 +192,7 @@ wave-A critique and review was Sol alone. Keep trying it once per
 item (a timeout costs 15 minutes, in the background), or drop it from the
 drill until opencode-go works?
 
-**Answer:**
+**Answer:** Instead of passing via std-in (my interpretation), can we save it to a file and just ask opencode-go argon to reference that file as a prompt?  Would that help?
 
 ### 3.2 Standing stop rules
 
@@ -206,6 +206,56 @@ drill until opencode-go works?
   spec's Context ("operator, 2026-11-2x"), HANDOFF §12.2 of the test-tiers
   plan, and the review-churn plan.
 - **Anything irreversible or outward:** a push, deleting a ref, a release.
+
+### 3.3 The second round, raised by Q1(a) (answered 2026-11-21)
+
+The coordinator's clarifications: Q3 lapses under (a) (WI-1015 is re-cut
+onto F, and F's rows get their own critiques). Q6's row changes the method
+of one recipe line, not the model; the model is already a roster setting
+(`codex_call.py AUTHOR` reads `OPENAI-TERRA`, `--route` picks another), but
+the coordinator-cycle skill names "Terra" where it means the author role.
+Q7: the prompts went in as one command-line argument, not stdin; a prompt
+file read by reference was never tried, and works (§6).
+
+- **N1. WI-1015 under (a).** Items 3 to 5 retire with F's cells, item 2
+  dissolves with the `Component:` headers, item 6 is F's every-IF-reached
+  rule and item 1 belongs with F's `call`-row work. *Answer:* fold items 1
+  and 6 into those F rows; WI-1015 is restructured into them.
+- **N2. F only, or all of phase 3?** *Answer (operator):* "There is no reason
+  the resync needs to be in a single entry. You can focus on building F only,
+  but do the other items still have work items in the queue so they aren't
+  lost?" They had none: item 10 steps 3 to 6, item 4's `[review]` section
+  and item 2's history-reader audit are filed as WI-1031 to WI-1036, not
+  drilled. The authority vocabulary's renames are not filed: the 2026-11
+  vocabulary work already renamed those settings (`operator_accepts_through`,
+  `push = "operator"`), superseding the plan's spelling. F ships its own
+  RESYNC entry.
+- **N3. One component per file.** 34 files have LLRs tagged in more than one
+  component today. *Answer (operator):* "I would still expect a file is
+  generally ascribed to a single component except for cases like reuse /
+  configuration." The nuance: the overlap comes from tagging each LLR, not
+  the file; most files have a clear majority (`trace.py` 25 to 1), and under
+  F a minority LLR is placed through the interface it constrains. Reuse
+  keeps one owner: a shared-kernel file (`docs/kernel-modules-allow`) is
+  owned by CMP-006 and imported across components without a seam.
+  Configuration keeps one owner: other components read it through a `file`
+  interface. The real calls are the near-even splits (`check.py`,
+  `acceptance_record.py`, and five files at 1 to 1); a file doing two
+  components' work is evidence about the partition (OI-14), filed, not split
+  inline. F-1 proposes the table, review checks it, and the operator rules
+  before F-1 merges.
+- **N4. The acts F creates.** *Answer:* as recommended: the batch act
+  ("trace cells removed, requirement text unchanged") is the operator's
+  ruling, recorded once; every other act goes to adjudication, and the drill
+  lists what is owed. A sitting after F-8's text migration.
+- **N5. WI-1020.** *Answer:* cancel it; F-8 states its own amendment rule
+  (it rewrites accepted text in place to remove code names, which the
+  add-only recipe forbids); file a row for the skill to name the author role,
+  not a model (WI-1037).
+- **N6. One stop after filing.** *Answer:* yes. F's rows are filed and
+  critiqued on trunk, then the drill stops for the operator to see the cut.
+- **N7. WI-1018 after F-8, WI-1016 after F.** Left blank; the recommendation
+  stands.
 
 ## 4. One work item, start to finish
 
@@ -304,18 +354,20 @@ Run the commands from the repository root with
 - **Sol (code, and prose alongside Argon):** from `<scratch>`, not the repo:
   `codex exec -c model_reasoning_effort=low --model gpt-6.1-sol --skip-git-repo-check -o <scratch>/sol-NNNN.md - < <scratch>/rev-NNNN.txt`.
   Several Sol runs may go at once.
-- **Argon (prose):** from `<scratch>`:
-  `timeout 900 opencode run -m opencode-go/gemini-4-argon --variant low -- "$(cat <scratch>/part.txt)"`.
-  Put the text inline, under about 31,000 characters (split a longer diff
-  into parts): Windows' 32,767-character command line refuses a longer
-  argument at once ("Argument list too long"). Argon run from `<scratch>`
-  cannot read the repository (opencode refuses each outside read and returns
-  nothing), so inline the spec, its specref and the registry rows too. Never
-  attach with `-f`: it has stalled for 20 minutes. One opencode run at a
-  time: two at once fail with "database is locked". **If Argon times out,
-  skip it** (operator, 2026-11-21): it stalled twice on this hand-off's own
-  review, inline, at 13 KB. Note in the review record that Sol reviewed
-  alone; do not retry it in a loop.
+- **Argon (prose), by file reference (operator's idea, 2026-11-21):** write
+  one self-contained bundle into `<scratch>`: a first line saying it cannot
+  read the repository and must make no tool call but reading this file, then
+  the brief, the spec, its specref and the registry rows it names, or the
+  diff. Run from `<scratch>`:
+  `timeout 900 opencode run -m opencode-go/gemini-4-argon --variant low -- "Read the file bundle-NNNN.md in the current directory and carry out the review it contains. It is self-contained: make no tool call other than reading that one file. Give your verdict as your final message."`.
+  WI-1019's scope critique (a 23 KB bundle) returned in 37 seconds. No
+  31,000-character cap applies: only the one-line prompt is on the command
+  line. Argon run from `<scratch>` cannot read the repository (opencode
+  refuses each outside read), and briefs that told it to may be what stalled
+  the earlier runs. Never attach with `-f`: it has stalled for 20 minutes.
+  One opencode run at a time: two at once fail with "database is locked".
+  **If Argon times out, skip it** (operator, 2026-11-21); note in the review
+  record that Sol reviewed alone, and do not retry it in a loop.
 - Tell each reviewer to answer from the brief and diff, and to cap its tool
   calls; a reviewer handed the whole repository reads for half an hour.
 
@@ -352,19 +404,15 @@ Marks at hand-off (`docs/id-watermark`): SR 247, LLR 394, TC 456, IF 325,
 DA 28, SUR 4, CMP 9, WI 1020. Wave A minted LLR-393, LLR-394, TC-455, TC-456
 and IF-325 (WI-1014); the rest of its ranges went unused and are free.
 
-If WI-1019 or WI-1020 runs beside WI-1015, each branch mints only from its
-own ranges; proposed:
+WI ids filed on trunk by §3.3: WI-1021 to WI-1030 (F-1 to F-10) and
+WI-1031 to WI-1037 (the rest of phase 3, and the author-role row).
 
 | Branch | LLR | TC | IF |
 |---|---|---|---|
-| WI-1015 | 395–399 | 457–464 | 326–330 |
-| WI-1019 | 400 | 465–466 | none |
-| WI-1020 | none | none | none |
+| WI-1019 | 395 | 457–458 | none |
 
-A row split from WI-1015 on trunk (§3.1 Q3) takes the next WI and its
-ranges are set when it is filed. No SR, DA or SUR is expected; a builder
-that needs one stops and asks. Wave C runs alone and mints from trunk's
-marks at its start.
+F's ranges are set when its builders launch, after the N6 stop. No SR, DA
+or SUR is expected; a builder that needs one stops and asks.
 
 ## 9. Gotchas
 
@@ -430,3 +478,7 @@ Append one line per step taken: the item, what happened, the commit.
   retires items 3 and 4 rather than moving them, item 4's default stated,
   Q6 made self-contained, Q4's destinations exact, §1's clean-tree claim
   qualified).
+- 2026-11-21: the operator answered §3.1 (Q1 (a): F first) and the second
+  round it raised (§3.3). Argon by file reference tested: a trivial prompt in
+  11 s, a 26 KB file in 18 s, WI-1019's scope critique in 37 s
+  (CHANGES-REQUESTED, two findings). §2, §6 and §8 updated to match.
