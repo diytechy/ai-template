@@ -31,17 +31,30 @@ reconstruct the chain.
 
 | Role | Who | Session |
 |---|---|---|
-| Build | the `kit-builder` agent (Claude Opus, medium) | one per round; leaves its change uncommitted |
-| Spine author | GPT Terra (`gpt-5.6-terra`, medium) | **one retained session per lane**, resumed each turn |
-| Code review, REVIEW-A | Codex 6.1 Sol (`gpt-6.1-sol`, medium) | **fresh per review**, beside REVIEW-B |
-| Code review, REVIEW-B | another family or model than REVIEW-A: a Claude Opus (high) stand-in sub-agent until WI-815's Gemini route has one verified launch | **fresh per review**, given only its brief's path |
-| Scope and plan critique | Codex 6.1 Sol (`gpt-6.1-sol`, medium) | **fresh per critique**, one critic |
-| Adjudication | a retained Claude Opus home, via `coordinator_adjudicate.py` from the lane | the entry point retains it; never a subagent |
+| Build: the builder | the `kit-builder` agent | one per round; leaves its change uncommitted |
+| Spine author: the author | the `AUTHOR` route, through `codex_call.py` | **one retained session per lane**, resumed each turn |
+| Code review, REVIEW-A: a code reviewer | the `REVIEW-A` route, through `codex_call.py` | **fresh per review**, beside REVIEW-B |
+| Code review, REVIEW-B: a code reviewer | another family or model than REVIEW-A's route: a stand-in sub-agent until WI-815's route has one verified launch | **fresh per review**, given only its brief's path |
+| Scope and plan critique: the critic | the `CRITIQUE` route, through `codex_call.py` | **fresh per critique**, one critic |
+| Adjudication: the adjudicator | a retained home on the adjudicator's route, via `coordinator_adjudicate.py` from the lane | the entry point retains it; never a subagent |
 
-Every Sol and Terra call runs through `scripts/coordinator/codex_call.py`
-(recipes §1, "A Codex call"), which records it through the session service:
+Which model and effort fill a role is a setting, never this skill's text:
 
-- inside the blackout window, a Sol or Terra call is refused before launch
+- A role's route is the enabled roster row it resolves to: `ROLE_ROUTES` in
+  `scripts/coordinator/codex_call.py` maps `AUTHOR`, `REVIEW-A` and
+  `CRITIQUE` to a `docs/agents.toml` row that `docs/agents-enabled` lists,
+  and `coordinator_adjudicate.py`'s default entry names the adjudicator's;
+  `--route` names another enabled entry. The row gives the model, and a
+  `codex_call.py` call's effort is its `--effort`.
+- The builder's model and effort are its definition's,
+  `.claude/agents/kit-builder.md`. The REVIEW-B stand-in's are the
+  operator's ruling, coordinator-2026-10-16 D-008.
+
+Every author, critic and REVIEW-A call runs through
+`scripts/coordinator/codex_call.py` (recipes §1, "A `codex_call.py` call"),
+which records it through the session service:
+
+- inside the blackout window, a `codex_call.py` call is refused before launch
   (exit 2), as every non-adjudication call is;
 - exit 3 is an edit, exit 4 a log left uncommitted or unspooled, exit 5 a
   change check that could not run;
@@ -49,9 +62,10 @@ Every Sol and Terra call runs through `scripts/coordinator/codex_call.py`
   primary checkout, the detached critique checkout) spools its log and
   commits nothing.
 
-Keep judgement independent: Terra authors and Opus judges, Opus builds and
-the full-lane reviewers review, none of them the builder's session. The
-adjudicator never drafts the text it judges. Its ruling on a dispute is final.
+Keep judgement independent: the author writes the rows and the adjudicator
+judges them, the builder builds and the full-lane reviewers review, none of
+them the builder's session. The adjudicator never drafts the text it judges.
+Its ruling on a dispute is final.
 
 The review shape follows the review-churn plan's operator rulings of 2026-10-11
 (`docs/plans/2026-10-11-review-churn/README.md`, "Operator rulings, 2026-10-11"),
@@ -62,18 +76,19 @@ and 33):
   parallel, each from its own `review_brief.py review --scope full` render
   with its own `--scratch`, so each has its own verdict path and its own
   `--basetemp`.
-- A Claude REVIEW-B is recorded as a substitution in the round's commit
-  and the lane's log fragment each time it stands in (ruling 7). The operator chose Claude Opus at high for
-  the slot when the program's three-reviewer trial ended (revision 37's
-  trial; coordinator-2026-10-16 D-008): it caught what Sol missed, while the
-  second stand-in's unique catches never changed a round.
+- A stand-in REVIEW-B is recorded as a substitution in the round's commit
+  and the lane's log fragment each time it stands in (ruling 7). The operator
+  chose the slot's stand-in when the program's three-reviewer trial ended
+  (revision 37's trial; coordinator-2026-10-16 D-008): it caught what
+  REVIEW-A missed, while the second stand-in's unique catches never changed
+  a round.
 
 ## 1. Before the claim: settle scope and trust where the row is born
 
 Settle scope when filing a row or minting a successor, disposition or split;
 do not add a lane-size tripwire to an existing row. Before the claim, render
 the scope critique with `review_brief.py critique` over the spec and
-`docs/rubrics/scope-critique.md` (recipes §1), and send it to a fresh Sol
+`docs/rubrics/scope-critique.md` (recipes §1), and send it to a fresh critic
 session. The rubric's anchors carry coverage (S3), the planning need (S4),
 the architectural delta (S5) and dependencies (S6); the brief names the
 registries they are judged against. Two of its questions shape the spec most:
@@ -135,14 +150,14 @@ first; the plan-gate hook step and the merge slot refuse any build commit
 until a pass record under `docs/plans/<WI>/` binds its plan and Done-when.
 The commands are in recipes §1, "Single plan".
 
-1. Render the planner's brief and launch a fresh Claude Opus sub-agent given
+1. Render the planner's brief and launch a fresh planner sub-agent given
    only its path. It writes only its plan, under the scratch root; commit it
    verbatim as `docs/plans/<WI>/plan.md`.
 2. Gate it with the coverage step; a failing plan is never critiqued.
    `DELTA: beyond` is never critiqued either: close the lane partial, and
    the disposition adjudicator drafts the refactor successor.
-3. A fresh Codex Sol critique, another family than the planner, at medium,
-   from the lane. File its verdict and commit that record alone.
+3. A fresh critique by the critic, another family than the planner, from
+   the lane. File its verdict and commit that record alone.
 4. An APPROVE, or a CHANGES-REQUESTED whose findings are all MINOR: write the
    pass record and commit it alone. Any other: one revision, from the
    revision brief; it must pass the coverage step over the first critique's
@@ -182,16 +197,16 @@ Done-when change are owed; traced-only updates owe no sitting.
 Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
 "DevStg-Impl — Implementation (test-first)").
 
-1. Dispatch Terra once to author the **whole change set**, TC rows included,
-   before build round 1 (for a `single` row, after its pass record), from
-   the anchor down, plus the arms map (`spine-authoring`,
+1. Dispatch the spine author once to write the **whole change set**, TC rows
+   included, before build round 1 (for a `single` row, after its pass
+   record), from the anchor down, plus the arms map (`spine-authoring`,
    `references/in-lane.md`). Keep new spine rows `Drafted` and existing
    statuses unchanged; interface rows have no acceptance status. Verify and
    commit the set without a sitting yet. These rows give the builder the
    tests to write and reviewers the obligations the code is meant to meet.
    A TC row's `Evidence` cell follows `references/in-lane.md`, "Author it
    before the build". Fill the prompt's `HATS` slot as
-   `references/recipes.md`, "Terra, first turn", defines it.
+   `references/recipes.md`, "The author, first turn", defines it.
 2. Build round 1's first deliverable is the tests, committed alone before
    the code through `integrate.py record-checks` (recipes §6), with their tags and
    `Evidence` parts by that same rule, each under one evidence class (plan
@@ -350,13 +365,13 @@ this hold (`project-trajectory/PROCESS.md` §4).
 
 ### Checkpoint: when a counted round has no BLOCKER or MAJOR
 
-1. **Terra, resumed, reconciles the whole set** against the settled code: the
-   accumulated spine change list plus the arms map. Verify, regenerate and
-   commit the reconciled text before composing the sitting. When the set
-   was reconciled at an earlier checkpoint and since then no round proposed
-   row text and no code moved, omit the turn and record why, after checking
-   mechanically that each changed accepted cell keeps its accepted text
-   (WI-914, WI-923). Fill the turn's `HATS` slot as at intent.
+1. **The author, resumed, reconciles the whole set** against the settled
+   code: the accumulated spine change list plus the arms map. Verify,
+   regenerate and commit the reconciled text before composing the sitting.
+   When the set was reconciled at an earlier checkpoint and since then no
+   round proposed row text and no code moved, omit the turn and record why,
+   after checking mechanically that each changed accepted cell keeps its
+   accepted text (WI-914, WI-923). Fill the turn's `HATS` slot as at intent.
 2. **The closure check passes** before the sitting (`spine-authoring`,
    `references/in-lane.md`: parents, the arms, TC-to-LLR-and-SR, interface
    citations, the strict integrity checks).
@@ -367,7 +382,7 @@ this hold (`project-trajectory/PROCESS.md` §4).
    Carry retired rows into scope explicitly. A parent's return carries its
    children; have
    the verdict distinguish children returned only for their chain. Route returns:
-   - spine text goes to Terra;
+   - spine text goes to the author;
    - code goes to the builder;
    - a byte-exact one-assertion fix you may apply yourself, openly and
      recorded.
@@ -548,8 +563,9 @@ question only when evidence shows substantial work to build it, and the open
 item then states that evidence (operator, 2026-11-08, OI-129).
 
 When no row can move without the operator, the leg closes out with the
-`Overnight: stop` line in the new handoff. A Codex limit is answered with a
-`Resume-not-before:` line, as the launcher reads it.
+`Overnight: stop` line in the new handoff. A usage limit on a
+`codex_call.py` route is answered with a `Resume-not-before:` line, as the
+launcher reads it.
 
 **The lane-mode rule** (D-015). A lane that a headless leg marked lands
 headless: by its claim, or by a commit one of the loop's own writers made in
@@ -609,10 +625,11 @@ Operator-reserved acts and standing prohibitions:
 - Leave `docs/work/pause` deleted.
 - Read `OPERATOR_SCRATCHPAD.md` or the adjudicator's token file. Keep only the
   token file's path.
-- Self-review, or adjudicate through a subagent. If Codex is rate-limited,
-  wait for its reset. After Codex has been unavailable for more than two hours,
-  fill the REVIEW-A slot with a fresh independent Claude reviewer and record
-  the same-family relaxation in the round's commit and the log fragment.
+- Self-review, or adjudicate through a subagent. If REVIEW-A's route is
+  rate-limited, wait for its reset. After it has been unavailable for more
+  than two hours, fill the REVIEW-A slot with a fresh independent sub-agent
+  reviewer, of the builder's family, and record the same-family relaxation in
+  the round's commit and the log fragment.
 - Skip a hook, or add a fallback, degenerate or legacy path. Fix the single
   point of failure instead.
 - Change `~/.claude` settings, or install software the handoff does not name.

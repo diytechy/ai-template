@@ -27,8 +27,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 
 - **Builder:** the Agent tool with `subagent_type: "kit-builder"`, given the
   lane path and the build prompt. If the type is not listed, use
-  `general-purpose` with `model: "opus"` and have it read
-  `.claude/agents/kit-builder.md`.
+  `general-purpose` with the `model` that `.claude/agents/kit-builder.md`
+  declares, and have it read that file.
   Override that file's old scratch recipe with the dated root in §7. Grant
   trace-cell upkeep only during iteration; require the spine change list,
   the coverage plan before fixes and the stop-and-file rule for consolidation
@@ -78,28 +78,30 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   together, never bridge them with a default (wi-918 D-001). A blank line ends a `Contract IF-NNN:` body for the
   interface reference, so text added to a contract continues the body
   without one (wi-922 D-003).
-- **A Codex call (Sol or Terra)** runs through one entry point, from any
-  directory:
+- **A `codex_call.py` call (the author, the critic, REVIEW-A)** runs through
+  one entry point, from any directory:
   `"$PY" "$TOOLS/codex_call.py" <role> --root <dir> --prompt-file <prompt> --out <out> [--effort medium] [--wi WI-NNN] [--resume] [--route <entry>]`.
-  The role is `REVIEW-A` (a Sol review), `CRITIQUE` (a Sol scope or plan
-  critique) or `AUTHOR` (a Terra turn, which names its `--wi`). The role's
-  enabled roster row (`OPENAI-SOL`, `OPENAI-TERRA`; `--route` names another
-  enabled entry) gives the model and route; the launch is the entry
-  point's own: workspace-write, unelevated, the review scratch root
-  (`$REPO.wt/review-tmp`, derived from `--root`) writable, the effort, and
-  the prompt on stdin. It writes the final text to `--out`, then prints the
-  log's path and state and the exit code.
-  - Inside the blackout window, a Sol or Terra call is refused before
+  The role is `REVIEW-A` (a code review), `CRITIQUE` (a scope or plan
+  critique) or `AUTHOR` (a spine author's turn, which names its `--wi`). The
+  role's route, the enabled roster row it resolves to (`ROLE_ROUTES` in the
+  script, read against `docs/agents.toml` and `docs/agents-enabled`;
+  `--route` names another enabled entry), gives the model; the launch is
+  the entry point's own: workspace-write, unelevated, the review scratch
+  root (`$REPO.wt/review-tmp`, derived from `--root`) writable, the
+  `--effort`, and the prompt on stdin. It writes the final text to `--out`,
+  then prints the log's path and state and the exit code.
+  - Inside the blackout window, a `codex_call.py` call is refused before
     launch (exit 2), as every non-adjudication call is. Exit 2 also
     refuses an unknown role, an unreadable prompt, a route that cannot be
     used, commit hooks off, a bad resume carrier and an `AUTHOR` turn
     whose `--wi` the lane does not hold claimed; nothing is launched.
   - The change check reads `--root`'s HEAD and uncommitted paths (content
     and index state, so a staged or unstaged path counts) before and
-    after the call. Exit 3 is an edit, its paths printed: for Sol any
-    change but another call's session-log commit; for Terra only a HEAD
-    move that such a commit does not account for (its uncommitted edits
-    are its output). Nothing is reverted and the log is still recorded.
+    after the call. Exit 3 is an edit, its paths printed: for a
+    `REVIEW-A` or `CRITIQUE` call any change but another call's session-log
+    commit; for an `AUTHOR` turn only a HEAD move that such a commit does
+    not account for (its uncommitted edits are its output). Nothing is
+    reverted and the log is still recorded.
   - Exit 4 is a log left uncommitted, or a spool that could not be
     written, the log and the refusal named: commit the log before the next
     call in that lane. Exit 5 is a check that could not run (git could not
@@ -112,14 +114,15 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     the detached critique checkout) spools its log under the primary
     checkout's `out/sessions/spool/` and commits nothing; the spool's
     harvest is WI-800's.
-- **Terra, first turn:**
+- **The author, first turn:**
   `"$PY" "$TOOLS/codex_call.py" AUTHOR --root <lane> --wi WI-NNN --prompt-file <prompt> --out <out>`.
-  - Terra's first turn is the intent turn, TC rows included, before build
-    round 1; a `single` row takes it after its pass record (SKILL §3,
+  - The author's first turn is the intent turn, TC rows included, before
+    build round 1; a `single` row takes it after its pass record (SKILL §3,
     "Intent").
-  - Terra's own pytest check has failed on a basetemp lock at every turn
-    (wi-956 D-001, D-007): run its spine tests yourself with the checks, and
-    normalize its CRLF writes to LF before the commit.
+  - The author's own pytest check has failed on a basetemp lock at every
+    turn (observed with Terra, wi-956 D-001, D-007): run its spine tests
+    yourself with the checks, and normalize its CRLF writes to LF before the
+    commit.
   - Fill `"$TOOLS/terra-spine-prompt.template.md"` with `mkprompt.py`, then add
     the intent or checkpoint instructions from the skill. Its default brief
     does not request a whole subtree or arms map. At the intent turn fill
@@ -148,7 +151,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     days later found a noted id only in `~/.codex/sessions/<date>/`, by
     its `cwd` and model (wi-798, 2026-10-20).
   - A single plan that orders its record step after its tests (WI-962's
-    P5 after P1) still meets Terra first: the intent turn takes that
+    P5 after P1) still meets the author first: the intent turn takes that
     step's registry rows, and the builder keeps its non-registry parts
     (flows, prose outside the registries, contract bodies) and the
     RESYNC entry (wi-962 D-001).
@@ -165,18 +168,18 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     strict lints and pytest under load. Check the final message against
     the plan's row list before committing, tell a resumed turn to skip
     the lints and pytest, and run them yourself (wi-977 D-002).
-- **Terra, resumed:**
+- **The author, resumed:**
   `"$PY" "$TOOLS/codex_call.py" AUTHOR --resume --root <lane> --wi WI-NNN --prompt-file <prompt> --out <out>`.
-  It continues the thread of the lane's newest Terra log committed at
-  HEAD (bound to one of the lane's work items and the Terra route). A
+  It continues the thread of the lane's newest `AUTHOR` log committed at
+  HEAD (bound to one of the lane's work items and the author's route). A
   missing, damaged, foreign or conflicting log, or an uncommitted newer
   one, refuses the turn before launch, naming the log and the cause; it
   never starts a fresh thread in its place. Commit the named log, or run
   a first turn without `--resume`.
   - A checkpoint reconcile over many accepted rows can lose text in four
-    ways. All four cost wi-977 a returned sitting, then a re-sit, then a
-    gate MAJOR (wi-977 D-019 to D-024).
-    - **Compression.** Terra summarizes long cells into pointers such as
+    ways (observed with Terra). All four cost wi-977 a returned sitting,
+    then a re-sit, then a gate MAJOR (wi-977 D-019 to D-024).
+    - **Compression.** The author summarizes long cells into pointers such as
       "retain their stated assertions". A pointer-word scan missed the
       "stated" form.
     - **Copying instead of editing.** Told to start from the source, it
@@ -248,32 +251,35 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      check counts your own edit too (WI-911, 2026-10-15). The launch uses workspace-write, because a read-only
      sandbox could not run Python, and its change check reads HEAD and
      status before and after; the call's log commits in the lane.
-     Launch the Claude REVIEW-B as a sub-agent given only its brief's path
+     Launch the stand-in REVIEW-B as a sub-agent given only its brief's path
      plus the lane worktree and the interpreter, which the brief does not
      name, and ask for a two-line reply (the verdict path and its VERDICT
-     line). Pass the Agent tool's `model: "opus"` and `effort: "high"`: a
-     prompt saying "work at high effort" does not set it (2026-10-16c).
+     line). Pass the Agent tool's `model` and `effort` as the operator's
+     ruling sets them (coordinator-2026-10-16 D-008): a prompt saying "work
+     at high effort" does not set it (2026-10-16c).
      Record the stand-in in the round's commit and the log fragment.
      Create each reviewer's
-     scratch directory before the launch: Sol's first pytest run failed on
-     a missing basetemp parent (2026-10-18c). A Claude reviewer that
-     backgrounds its own pytest can lose the completion notice and stop
-     with no verdict: look for its process (its scratch path in the
-     command line), then resume that reviewer with SendMessage, never a
+     scratch directory before the launch: REVIEW-A's first pytest run failed
+     on a missing basetemp parent (observed with Sol, 2026-10-18c). A
+     sub-agent reviewer that backgrounds its own pytest can lose the
+     completion notice and stop with no verdict: look for its process (its
+     scratch path in the command line), then resume that reviewer with
+     SendMessage, never a
      fresh one (WI-921's gate, 2026-10-15g). One that handed its test run to
      a background sub-agent returned "waiting" with no verdict, in a
-     headless leg. Tell every Claude reviewer to run its tests itself in
+     headless leg. Tell every sub-agent reviewer to run its tests itself in
      the foreground. If one still returns early, resume it with SendMessage,
      ask for a `.done` marker after its verdict, and poll for that marker in
-     one foreground Python loop (wi-977 D-023). A Sol launch whose sandboxed
-     shell never returns runs no command and writes no verdict (its
-     output says the review was blocked): probe the same entry point with a
-     one-command prompt (`git rev-parse HEAD`), then relaunch fresh on
-     the same brief, and file nothing from the failed one (wi-946
-     D-012). A Sol call that fails mid-review (exit 1, "Selected model
-     is at capacity") still commits its log, so HEAD has passed the
-     brief's pinned sha and a relaunch on that brief stops at the
-     reviewer's checkout identity check, filing nothing: re-render that
+     one foreground Python loop (wi-977 D-023). A REVIEW-A launch whose
+     sandboxed shell never returns runs no command and writes no verdict (its
+     output says the review was blocked; observed with Sol): probe the same
+     entry point with a one-command prompt (`git rev-parse HEAD`), then
+     relaunch fresh on the same brief, and file nothing from the failed one
+     (wi-946 D-012). A REVIEW-A call that fails mid-review (exit 1,
+     "Selected model is at capacity"; observed with Sol) still commits its
+     log, so HEAD has passed the brief's pinned sha and a relaunch on that
+     brief stops at the reviewer's checkout identity check, filing nothing:
+     re-render that
      reviewer's brief at the record-only tip (the render finds the
      record beneath it) and relaunch; the other reviewer's verdict
      at the earlier sha stands, since the range between holds only call
@@ -299,10 +305,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     and act (wi-931 D-006, D-008). So is a gate finding that an accepted
     sitting's act is still owed: the act turn follows the gate (wi-942
     D-005).
-  - With Codex capacity short, run two lanes' REVIEW-A sessions one at a
-    time, so a usage limit takes out at most one review.
-  - When the two reviewers run one after the other (a Claude REVIEW-A
-    while Codex is out), move the first one's filed round file outside
+  - With REVIEW-A's route short of capacity, run two lanes' REVIEW-A
+    sessions one at a time, so a usage limit takes out at most one review.
+  - When the two reviewers run one after the other (a sub-agent REVIEW-A
+    while its route is out), move the first one's filed round file outside
     the lane until the second has written its verdict, then put it back
     and file the second (wi-966 D-007).
   - The render's pytest line is the list the tip's checks were recorded with,
@@ -314,8 +320,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     round's two reviewer runs.
 - **Scope critique:** render
   `"$PY" "$SCRIPTS/review_brief.py" critique --wi WI-NNN --rubric docs/rubrics/scope-critique.md --scratch <dated root> --out <brief>`,
-  add the skill's two scope and trust questions, and send it to a fresh Sol
-  session:
+  add the skill's two scope and trust questions, and send it to a fresh
+  critic session:
   `"$PY" "$TOOLS/codex_call.py" CRITIQUE --root "$REPO.wt/trunk-tmp" --prompt-file <brief> --out <out>`.
   Record the answer before the claim. In an attended session, put
   the spec's filing calls to the operator first and record them under
@@ -377,15 +383,15 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   commits alone: the hook's plan-gate step refuses a pass record committed
   with the critique it cites.
   1. Brief: `"$PY" "$SCRIPTS/review_brief.py" plan --wi WI-NNN --scratch <dated root> --out <brief>`;
-     launch a fresh Opus sub-agent (Agent tool, `model: "opus"`) given only
-     the brief's path. It writes `<dated root>/WI-NNN-plan.md`; copy it
-     verbatim to `docs/plans/WI-NNN/plan.md` and commit it alone. Launch it
+     launch a fresh planner sub-agent (Agent tool, with the `model` that
+     `.claude/agents/kit-builder.md` declares) given only the brief's path.
+     It writes `<dated root>/WI-NNN-plan.md`; copy it verbatim to `docs/plans/WI-NNN/plan.md` and commit it alone. Launch it
      as `general-purpose`, never the `Plan` type, which has no write tool:
      two `Plan` planners returned their plans inline, and the coordinator
      had to place them de-indented by hand (leg 28, wi-987 D-001).
      Tell the planner a TC states only what its rows state, so its plan
      says which row states each new behaviour: a plan reading "no text is
-     added" to an LLR cost wi-982 a stopped Terra turn and a returned
+     added" to an LLR cost wi-982 a stopped author turn and a returned
      sitting (wi-982 D-004), and the plan briefed this way met one sitting
      (wi-983). A headless planner's stop report goes to the row's own
      stop clause first: confirm the finding yourself, and never amend the
@@ -409,8 +415,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   record, owing a fresh critique (wi-979 D-001).
   4. File: `"$PY" "$SCRIPTS/review_brief.py" plan-file --wi WI-NNN --critique <verdict> --sha <plan commit>`
      writes `docs/plans/WI-NNN/critique-<n>.md`; commit it alone. The
-     critic may file it first: Sol ran `plan-file` in the lane and tried to
-     commit (WI-911, 2026-10-15; the entry point exits 3). Move its copy
+     critic may file it first: it ran `plan-file` in the lane and tried to
+     commit (observed with Sol, WI-911, 2026-10-15; the entry point exits
+     3). Move its copy
      aside, file the verdict yourself, and compare the two. Never rebase
      the lane between a critique's verdict and its filing: filing needs
      the reviewed commit to be an ancestor of HEAD, so a rebase orphans it
@@ -829,7 +836,7 @@ commit of its own, move it to trunk's tip
   carrier (a reservation taken after the fold): fold again. It also refuses
   an id the lane adds outside its own carrier records: reset the squash and
   reserve and renumber in the lane.
-  Run `git status` in the primary checkout first: a Claude reviewer's
+  Run `git status` in the primary checkout first: a sub-agent reviewer's
   probe once left a stray file at its root through a redirect from its
   default working directory (wi-798, 2026-10-20). Then read
   `git branch --show-current` against `docs/process.toml`'s `trunk`: the
@@ -1068,14 +1075,16 @@ lane commit being replayed.
   record checks for the rebased tip (`integrate.py record-checks` with nothing staged makes
   an empty record-checks commit) before its round.
 
-## 5. Spine-cell edits (brief Terra with these)
+## 5. Spine-cell edits (brief the author with these)
 
-- Delete the lane's `<lane>-terra` basetemp before each Terra turn: an
-  interrupted run left it locked, and Terra's pytest could not start
-  (WinError 183; WI-922, 2026-10-16c). Re-run its checks yourself.
-- Write UTF-8 only, with LF line endings. Terra has left CRLF and cp1252
-  dashes; normalize before any snapshot. On 2026-10-10 every Terra turn
-  rewrote whole registries CRLF: count `
+- Delete the lane's `<lane>-terra` basetemp before each author turn: an
+  interrupted run left it locked, and the author's pytest could not start
+  (observed with Terra, WinError 183; WI-922, 2026-10-16c). Re-run its
+  checks yourself.
+- Write UTF-8 only, with LF line endings. The author has left CRLF and
+  cp1252 dashes (observed with Terra); normalize before any snapshot. On
+  2026-10-10 every author turn (observed with Terra) rewrote whole
+  registries CRLF: count `
 ` in each touched file and
   normalize before every commit.
   Count CR bytes with Python (`open(p, "rb").read().count(b"
@@ -1086,7 +1095,7 @@ lane commit being replayed.
 - Re-read every whole cell a splice touches. Spliced sentences have come back
   without a verb, and a deletion the spec dictates has left a list without
   its "and"; repair it in the same retained session and record it (wi-930
-  D-002). To compare a Terra copy with a spec block, strip the spec's `> `
+  D-002). To compare the author's copy with a spec block, strip the spec's `> `
   blockquote markers first (WI-928, 2026-10-16d).
 - If `apply_patch` cannot match a long one-line cell, use a guarded Python replace:
   - read and write with `newline=""`, through `open()`: Python 3.11's
@@ -1123,10 +1132,11 @@ lane commit being replayed.
 - When a move makes an accepted cell's module-qualified name false, drop
   the qualifier and keep the accepted symbol: a swapped qualifier adds a
   name to row text, which a sitting returns (wi-976 sitting 015).
-- Terra has dropped an existing `code_symbol` entry as "nonexistent". Grep
-  every symbol it removes before committing.
-- On a large change set (WI-834: about 30 cells) one Terra turn applies three
-  to five cells, then ends saying the rest "did not apply". Resume the same
+- The author has dropped an existing `code_symbol` entry as "nonexistent"
+  (observed with Terra). Grep every symbol it removes before committing.
+- On a large change set (WI-834: about 30 cells) one author turn (observed
+  with Terra) applies three to five cells, then ends saying the rest "did
+  not apply". Resume the same
   session per batch, naming the remaining cells, one cell per script; match a
   long cell on its `key = ` line inside the row's table block. Verify the
   change-list path in the prompt before launching: a stale path wastes a turn.
@@ -1136,17 +1146,19 @@ lane commit being replayed.
 - The local Codex sandbox has failed shallow-clone tests and `git worktree add`,
   and hit Windows locks at `-n 2`. Ask for `-n 0`; confirm those failures with
   decisive tests outside that sandbox before treating them as code defects.
-- Name the sentences a lane added and no sitting accepted: Terra may
-  rewrite those. Told only to amend by addition, it appended a corrective
-  sentence after a lane-added one it contradicted, which the coordinator
-  removed before the sitting (WI-921 LLR-309, 2026-10-15). A term one row
+- Name the sentences a lane added and no sitting accepted: the author may
+  rewrite those. Told only to amend by addition, it (observed with Terra)
+  appended a corrective sentence after a lane-added one it contradicted,
+  which the coordinator removed before the sitting (WI-921 LLR-309,
+  2026-10-15). A term one row
   defines is defined again, or cited by name, in a sibling row that uses
   it: the sitting returned LLR-309 for an "elsewhere" only LLR-307 defines.
-- Brief Terra to amend an accepted row by addition: keep the accepted cell
-  verbatim, function names included (item 5's schema lane migrates them),
-  and append the new text in contract voice. Told only to restate the
-  builder's function names, it rewrote LLR-313's whole Detail and TC-333's
-  Expected and dropped accepted obligations (WI-913, 2026-10-14).
+- Brief the author to amend an accepted row by addition: keep the accepted
+  cell verbatim, function names included (item 5's schema lane migrates
+  them), and append the new text in contract voice. Told only to restate the
+  builder's function names, it (observed with Terra) rewrote LLR-313's
+  whole Detail and TC-333's Expected and dropped accepted obligations
+  (WI-913, 2026-10-14).
 - Check that every spine item the Done-when names moved its cell at
   intent, by diffing the cell against the lane's trunk base: an intent
   turn reported SR-019's acceptance amended and never applied it, which
@@ -1156,20 +1168,22 @@ lane commit being replayed.
   verbatim (old within new, read with `tomllib`; judge a tier or list
   cell by hand). Compare with the row at the lane's trunk base,
   sentence by sentence, not with HEAD: a lane-added sentence may be
-  rewritten, an accepted one may not (wi-925 D-009). Terra follows a
-  plan's literal text: it dropped from an IF data cell a function the
-  owner still serves to a requestor, and restated in an accepted row a
+  rewritten, an accepted one may not (wi-925 D-009). The author follows a
+  plan's literal text (observed with Terra): it dropped from an IF data
+  cell a function the owner still serves to a requestor, and restated in an accepted row a
   sentence its new row already states. Check each changed IF data
   cell against its requestors' calls, and each new sentence for a
-  second home (wi-925 D-006). Terra reworded two accepted phrases in SR-233 while
+  second home (wi-925 D-006). The author (observed with Terra) reworded two
+  accepted phrases in SR-233 while
   reporting every accepted text kept: restore the accepted bytes by a
   guarded replace, keep its addition, and record it (wi-911 D-007,
   2026-10-15).
 - An interface row names no file in any cell; a "No tie-back" note belongs
   only to a row with an `external:` party. Until item 11's migration, its
   `owner`, `consumers` and `requestors` hold `scripts/<module>` ids (IF-286's
-  form): brief that form, or Terra strips the prefix (wi-926 D-003). Terra's
-  template edits registries only, so an intent turn whose plan edits
+  form): brief that form, or the author strips the prefix (observed with
+  Terra, wi-926 D-003). The author's brief template edits registries only,
+  so an intent turn whose plan edits
   `docs/runtime-flows.md` says so in its addendum, and a new IF's
   `Contract IF-NNN:` body is added in the code by the builder or you before
   the commit (wi-926 D-002).
@@ -1190,17 +1204,18 @@ lane commit being replayed.
   (TC-205's rule): a TC citing any test in `SLOW_MODULES` is `Full`.
   Check each new TC against `conftest.SLOW_MODULES` before its sitting
   (wi-960 D-013).
-- After every Terra turn, diff the registries row by row against the
+- After every author turn, diff the registries row by row against the
   last commit and compare the changed rows with the set the turn was
   given: a checkpoint turn narrowed two accepted evidence cells outside
   the set from a module to named nodes, which the accepted-sentence
   check passes, and its report named one under another id. Restore any
   row outside the set by a guarded replace (wi-960 D-012).
 - An LLR detail carries no `shall`: the one-`shall` rule is the SR's.
-  Told "one `shall`", Terra wrote it into two LLR details, and
+  Told "one `shall`", the author (observed with Terra) wrote it into two
+  LLR details, and
   `trace.py --strict` passed them; grep each new LLR detail for it
   before the sitting and rewrite it in contract voice (wi-850 D-009).
-- A builder's test stage and a Terra turn may run at once on disjoint
+- A builder's test stage and an author turn may run at once on disjoint
   files: the builder writes the tests and lists each node with its TC,
   never touching a registry, and the coordinator adds the nodes to the
   TC evidence by a guarded replace after both return (wi-850 D-010).
@@ -1209,10 +1224,10 @@ lane commit being replayed.
   clause to the TC clause and the test that verify it, and lists the gaps.
   At a tip two counted rounds had approved it found 25: arms no test
   exercised (a builder stage pins them with characterization tests, no
-  code change) and arms no citing TC stated (Terra's next turn). Resume
+  code change) and arms no citing TC stated (the author's next turn). Resume
   the same sub-agent to re-draw it after the fixes, and append the map to
   the brief (wi-961 D-011 to D-013).
-- After a Terra turn rewrites TC rows, check each LLR's `test_refs`
+- After an author turn rewrites TC rows, check each LLR's `test_refs`
   against the TCs whose `verifies` cite it, and each clause it dropped
   against the evidence that still tests it: an arms turn listed a TC in
   an LLR's `test_refs` without the forward link, and dropped a clause
@@ -1380,31 +1395,33 @@ lane commit being replayed.
   script; wi-911 D-008, 2026-10-15). Since WI-911 landed (2026-10-16) the
   template and the rubric carry what the interim addenda did; append none.
 - **Model not offered on the signed-in account:** `400 ... not supported
-  when using Codex with a ChatGPT account` from a current CLI (2026-10-10:
-  0.162.x refused `gpt-6.1-sol`) means the account, not the CLI version.
+  when using Codex with a ChatGPT account` from a current CLI (observed
+  with Sol, 2026-10-10: CLI 0.162.x refused it) means the account, not the
+  CLI version.
   Read the offered models from `~/.codex/models_cache.json` (`models[].slug`,
   read as UTF-8), then probe with a one-word `CRITIQUE` call from the
   detached checkout
   (`"$PY" "$TOOLS/codex_call.py" CRITIQUE --root "$REPO.wt/trunk-tmp" --prompt-file <one-word prompt> --out <out>`;
   its log spools): the cache listed it and it worked again on 2026-10-10
   at 22:40 local (leg 02). While it is not offered, review through the
-  same entry point with `--route <the enabled Luna row>` at
-  `--effort high` (coordinator-2026-10-10 D-017, pending the operator); the
-  model is that row's. Record the substitution in each lane's round commit
-  and log fragment.
-- **Codex usage limit:** wait for the reset the CLI error names. Retain
-  Terra; observed session counts are not a quota.
-  A reset days away (2026-10-26: a week) stops every Terra turn, which
-  has no stand-in. Probe again after two hours (a one-word `CRITIQUE`
-  call); then a Claude reviewer may fill REVIEW-A, but each lane whose
-  next step is Terra's stops at a committed safe point, and the leg
-  closes out with a `Resume-not-before:` line at the reset
+  same entry point with `--route` naming the enabled roster row of the
+  model coordinator-2026-10-10 D-017 chose, at the `--effort` it chose
+  (pending the operator); the model is that row's. Record the substitution
+  in each lane's round commit and log fragment.
+- **A usage limit on a `codex_call.py` route:** wait for the reset the CLI
+  error names. Retain the author's session; observed session counts are
+  not a quota.
+  A reset days away (2026-10-26: a week) stops every author turn on that
+  route, which has no stand-in. Probe again after two hours (a one-word
+  `CRITIQUE` call); then a sub-agent reviewer may fill REVIEW-A, but each
+  lane whose next step is the author's stops at a committed safe point, and
+  the leg closes out with a `Resume-not-before:` line at the reset
   (coordinator-2026-10-26 D-004).
-  Every Codex call runs through the `codex` CLI on `PATH`; the operator switches
-  accounts with `codex logout` and `codex login`.
-- **Background or foreground.** In an attended session, start each Codex call
-  as its own background command; one started in a detached subshell sends no
-  notification. A headless leg (`claude -p`, the overnight launcher
+  Every `codex_call.py` call runs through the `codex` CLI on `PATH`; the
+  operator switches accounts with `codex logout` and `codex login`.
+- **Background or foreground.** In an attended session, start each
+  `codex_call.py` call as its own background command; one started in a
+  detached subshell sends no notification. A headless leg (`claude -p`, the overnight launcher
   `"$TOOLS/overnight_legs.py"`) kills its background tasks when it exits, so
   it runs everything in the foreground under the raised shell cap. The
   headless procedure is SKILL §7.
@@ -1479,9 +1496,9 @@ lane commit being replayed.
   worktree: re-derive there (`derive_stage.py`) and re-run the test
   before treating it as a defect (wi-921 D-020).
 - **Test jobs while the operator's applications load the box:** when the
-  operator asks, run every local test job (checks, the full suite, Codex
-  launches, the Claude reviewers' pytest) at below-normal priority
-  through a stdlib wrapper
+  operator asks, run every local test job (checks, the full suite,
+  `codex_call.py` launches, the sub-agent reviewers' pytest) at
+  below-normal priority through a stdlib wrapper
   (`subprocess.call(cmd, creationflags=subprocess.BELOW_NORMAL_PRIORITY_CLASS)`;
   Windows children inherit the class), naming Git Bash by its full path
   (`C:/Program Files/Git/usr/bin/bash.exe`), since Windows resolves a
@@ -1545,7 +1562,7 @@ lane commit being replayed.
   it (wi-994, leg 32).
 
 - Tool calls in one message run one after the other, an Agent call included:
-  a planner's 54 minutes passed before the two Sol critiques beside it began
+  a planner's 54 minutes passed before the two critiques beside it began
   (leg 34). Real overlap needs one script that starts its children and waits.
 - A landed lane's deleted branch fails the next record-checks run of an open lane whose
   base still holds that claim folder (hold-by-rename). Rebase the open lane
@@ -1560,7 +1577,7 @@ lane commit being replayed.
   flag; `file` from the lane is unchanged (wi-995, leg 35).
 - Chain a guarded script to its `git add` and commit with `&&`. A script that
   stopped on its guard left a commit whose message named edits it never made,
-  and a resumed Terra was told they were applied (wi-993 D-006, wi-995 D-004).
+  and a resumed author was told they were applied (wi-993 D-006, wi-995 D-004).
   A backslash escape in a heredoc's Python reached the file as a real newline:
   match on text holding no escape, or write the script with the file tool.
   A TOML decision appended through a quoted heredoc lost one backslash of
@@ -1629,16 +1646,17 @@ lane commit being replayed.
     directory junction (PowerShell `New-Item -ItemType Junction`), never
     a new install, and never another project's: an empty primary install
     is an open item (OI-128);
-  - a Claude sub-agent may render, tile, brief, launch the six
-    judges (`codex exec -m gpt-6-luna -c model_reasoning_effort=high -s
+  - a sub-agent may render, tile, brief, launch the six judges
+    (`codex exec -m <model> -c model_reasoning_effort=<effort> -s
     read-only`, each verdict captured with `-o`, all six children of
-    one foreground command that waits) and compile the record; it
+    one foreground command that waits; observed with Luna at high effort
+    in WI-920) and compile the record; it
     judges nothing, and the adjudicator checks the sitting from its raw
     material (WI-920). On 2026-10-25 no judge could run a shell command
     in its sandbox, so every brief carries the rubric and the intent
     verbatim and never relies on a judge reading the repository.
 - **An Inspection TC's re-judge** (TC-211, wi-976 D-026, D-027): a fresh
-  Codex Sol session through `codex_call.py CRITIQUE` from the lane (the
+  critic session through `codex_call.py CRITIQUE` from the lane (the
   entry point has no inspection role), its brief naming the TC row, its
   procedure, its sample from the TC's `inputs` and the chain evidence,
   writing one record to scratch; place it as
