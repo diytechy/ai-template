@@ -1,6 +1,6 @@
 +++
 id = "WI-1016"
-title = "A repository can switch off the LLR tier and the code-level interfaces that go with it"
+title = "A repository can switch off the implementation layer: LLRs, components and the code-level interfaces"
 workstream = "process"
 sr_refs = ["SR-186", "SR-157", "SR-049", "SR-159"]
 specref = "docs/plans/2026-11-11-test-tiers/HANDOFF.md#126-progress-log"
@@ -45,11 +45,17 @@ modules. A row that realizes a boundary crossing, or whose channel is a
 file, CLI, exit code, stdout, env, git or bytes surface, stays. The scope
 critique confirms the cut.
 
-The ruled target changes the hardest of these. Under the review-churn
-plan's variant F (`docs/plans/2026-10-11-review-churn/pointer-rules.md`,
-ruled, not built), each code file declares its component and an LLR names
-no code, so component membership no longer comes from LLR tags. Built on F,
-switching the tier off leaves components and interfaces working.
+**Components go with the tier (operator, 2026-11-21).** The component
+registry, the DevStg-Arch rung, the cross-component rule and the component
+views decompose the implementation, so they drop out with the LLRs. The
+depth-0 frame (`external.toml`: outside parties, boundary crossings,
+outside relationships) decomposes the system boundary, not the
+implementation, and stays, with the assumption tier that lands on it. Under
+the review-churn plan's variant F
+(`docs/plans/2026-10-11-review-churn/pointer-rules.md`, ruled, not built) an
+interface's owner is a component id, so an interface that survives with the
+tier off needs an owner that is not a component: today's file path, or an
+`external:` party.
 
 Related: WI-1012 (the light spine: needs and open items, no work-item
 registry) sits further down the same axis; the critique decides whether one
@@ -65,9 +71,10 @@ builds after it or with it.
       and the review test set read SR tags; the code-level call seams are not
       required. Every other interface, the frame and the assumption tier are
       unchanged.
-- [ ] Component membership has a source that does not need LLRs, or the
-      architecture rung and the cross-component rule are declared off with
-      the tier. The critique picks.
+- [ ] With the tier off, the component registry, the DevStg-Arch rung, the
+      cross-component rule and the component views are off too, while the
+      depth-0 frame and the assumption tier stay. Each surviving interface
+      keeps an owner that is not a component.
 - [ ] Switching off with LLR rows present, and back on, is defined: what
       happens to the rows, their acceptances and the code tags.
 - [ ] SR-186's amendment and the setting's own SR are drafted for the
