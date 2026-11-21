@@ -12016,6 +12016,21 @@ design-replacement wording points at `process.md` §5 instead.
 
 **Adopter-merged files:** none.
 
+### The undeclared-case rule's code tag names the design row stating it [since d849667f1]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The rule that an accepted or founded automated test case no
+test file declares is a finding now has a design row of the kit's own, and the
+`Implements:` tag of the function in `scripts/arch_tags.py` that applies it
+names that row beside the requirement it already named. Only the docstring
+moved: the findings, their severity and the files the check reads are
+unchanged.
+
+**What to do.** Nothing is forced.
+
+**Kit-owned files — overwrite:** `scripts/arch_tags.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
