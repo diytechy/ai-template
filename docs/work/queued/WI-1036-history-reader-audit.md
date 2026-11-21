@@ -49,7 +49,16 @@ Settled here:
 
 ## Done-when
 
-- [ ] The note lists every history call in the kit's scripts at the lane's
-      base, recounted, with its class and one line of reason.
+- [ ] The note, `docs/reviews/2026-11-history-readers/README.md`, lists
+      every history call at the lane's base, recounted, with its class and
+      one line of reason. A history call is, closed: a `git` invocation
+      whose subcommand is `log`, `rev-list`, `blame`, `reflog`,
+      `merge-base`, `describe` or `name-rev`, or any invocation carrying
+      `--first-parent` or a revision range (`A..B`, `A...B`), made by a
+      file under `project-trajectory/scripts/` (the kit's shipped scripts;
+      tests, root `scripts/` and hooks are out). `git show` and `git diff`
+      at a named revision read one state, not history, and are counted only
+      when they take a range.
 - [ ] Each class (c) site is named with the decision it recomputes and the
-      record that should carry it. The rows are filed on trunk at landing.
+      record that should carry it. The lane files no row; the coordinator
+      files one queued row per site on trunk after the merge.

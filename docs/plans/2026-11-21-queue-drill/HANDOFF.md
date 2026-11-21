@@ -44,7 +44,9 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37) |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
-| WI-1031 to WI-1037 | The rest of phase 3, and the skill naming the author role | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2, N5) |
+| WI-1036, WI-1037 | The history-reader audit; the skill names roles, not models | Beside F-1 (§3.4 S3) | Critiqued (WI-1036: Argon's two findings applied; WI-1037: both approve) |
+| WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); owes its critique |
+| WI-1031 to WI-1035 | The rest of phase 3 | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2); WI-1035 carries §3.4 S4's answer |
 
 Done in wave A: WI-1013, WI-1014 and WI-1017; in wave B: WI-1019 (§10).
 Closed by §3.3:
@@ -283,21 +285,21 @@ coordinator's dispositions is in `docs/reviews/2026-11-21-scope-critiques/`.
 **S1. Approve the cut and its order?** *Recommendation:* approve. F lands
 one row at a time; F-1 starts alone, since every other row needs it.
 
-**Answer:**
+**Answer:** Approve
 
 **S2. WI-1023 mints one SR.** The plan retires SR-180's chain and states its
 discharge rule again under new ids, so F-3 needs one SR beside its LLRs and
 TCs, against §8's "no SR expected". *Recommendation:* allow one SR in
 WI-1023's range.
 
-**Answer:**
+**Answer:** Yes that's fine
 
 **S3. Work beside F-1.** Only WI-1021 can build at first. WI-1036 (audit
 the scripts that read git history; research, no code) and WI-1037 (the
 skill names roles, not models; text) share no file with F-1. *Recommendation:*
 critique both and build them beside F-1.
 
-**Answer:**
+**Answer:** Yes that's fine
 
 **S4. WI-1035's two questions, for when it comes up (not blocking).** This
 repo has `review_rounds = 1` while the coordinator runs two reviewers; the
@@ -305,7 +307,24 @@ draft keeps 1 as `full_reviewers` and leaves a change to you. And WI-802, a
 draft row, also proposes a `[review]` section for a different purpose; the
 spec says whichever lands second renames.
 
-**Answer:**
+**Answer:** I don't have a strong opinion on either of the questions implied here, is there any historical evidence pushing one way or the other?
+
+*The coordinator's finding (2026-11-21), applied to WI-1035:* the history
+settles both. (a) The operator ruled `full_reviewers = 2` (review-churn
+plan, item 4, confirmed in revision 35), and this drill already runs two
+reviewers; `review_rounds = 1` predates that ruling and only the managed
+loop reads it. This repo takes 2; an adopter keeps its own value. (b) WI-802
+configures its session family under `[sessions.review]`, a different table
+from `[review]`, so no rename is owed.
+
+**The suite during F (operator, 2026-11-21).** The operator asked why the
+suite runs so long at each landing; it runs once per batch (the 2026-11-19
+option 3), measured 26 to 35 minutes, while the per-commit bar is the smoke
+tier. Agreed for F: each landing runs the smoke tier on the merged trunk;
+the unfiltered suite runs after WI-1023 (F-3, the widest change) and when F
+closes, or sooner when a smoke red points wider. The smoke tier has grown
+past its CPU budget (WI-1019's run: 1,014.6 CPU seconds against 540; 351 s
+wall against about 55 s when stamped), so a re-tier row is filed: WI-1039.
 
 ## 4. One work item, start to finish
 
@@ -358,7 +377,10 @@ Run the commands from the repository root with
    further review; any other change made after the review gets a narrow
    re-review (`--scope narrow --findings <round file>`) before the merge.
 5. **Merge** (§7), one branch at a time, never while the suite runs.
-6. **After each wave:** the unfiltered suite, fixes for anything red, a
+6. **After each wave:** the unfiltered suite (during F, only at the
+   checkpoints §3.4 names; each other landing runs the smoke tier,
+   `.venv/Scripts/python.exe project-trajectory/scripts/run_menu.py smoke`,
+   on the merged trunk), fixes for anything red, a
    progress line in §10, and the merged worktrees removed. Unlink the venv
    junction first, `cmd /c rmdir D:\ai-template-wt-wiNNNN\.venv` (that
    removes the link only), or the recursive delete can follow it into
@@ -441,7 +463,7 @@ Run the commands from the repository root with
    minutes is stalled: look for a process waiting on input.
 6. The unfiltered suite:
    `env -u PYTEST_DEBUG_TEMPROOT .venv/Scripts/python.exe -m pytest -q -n auto`,
-   35 to 60 minutes, on a clean trunk. Run it in the background. Until it
+   measured 26 to 35 minutes, on a clean trunk. Run it in the background. Until it
    finishes, make no trunk commit, merge or regeneration and create no
    worktree; builders already in their D: worktrees keep working. Record the
    commit it ran on and its summary line in §10. Fix or triage every failure
@@ -462,9 +484,13 @@ SR-180's discharge rule, so its launch range includes one SR.
 | Branch | LLR | TC | IF |
 |---|---|---|---|
 | WI-1019 | 395 | 457–458 | none |
+| WI-1021 (F-1) | 396–400 | 457–464 | 326–328 |
+| WI-1036, WI-1037 | none | none | none |
 
-F's ranges are set when its builders launch, after the N6 stop. No SR, DA
-or SUR is expected; a builder that needs one stops and asks.
+WI-1019 used LLR-395 only; its TC range went unused and passes to WI-1021.
+The other F rows' ranges are set as each launches; WI-1023's includes one
+SR (§3.4 S2). No other SR, DA or SUR is expected; a builder that needs one
+stops and asks.
 
 ## 9. Gotchas
 
@@ -557,3 +583,10 @@ Append one line per step taken: the item, what happened, the commit.
   it wrote anything, and rerun from the scratchpad). Merged `da78f85ee`,
   regen `d19ab3efe`; worktree and branch removed. Stopped at §3.4 for the
   operator; the suite after wave B runs during the stop.
+- 2026-11-21: the operator answered §3.4 (S1 approve, S2 one SR for
+  WI-1023, S3 WI-1036 and WI-1037 beside F-1; S4 settled from the history)
+  and agreed the suite schedule for F; WI-1039 filed for the smoke tier's
+  budget breach. Suite after wave B on `224ff2c68`: `8264 passed, 31
+  skipped` in 32:59, no failure. WI-1036 and WI-1037 critiqued (Sol
+  approved both; Argon approved WI-1037 and raised two findings on WI-1036,
+  both applied).

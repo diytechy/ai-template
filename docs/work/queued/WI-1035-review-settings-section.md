@@ -44,12 +44,15 @@ Settled here:
   is not added here.
 - **`[reviewer]` stays as it is:** WI-887's session-retention dials, a
   different concern. The template header names the split. The draft row
-  WI-802 uses "[review]" for a session family; whichever lands second
-  reconciles the name.
-- **`review_rounds` migrates into `full_reviewers`,** keeping its value,
-  since a re-sync never overwrites a value (item 10's ruling). The template
-  ships the ruled 2. This repo keeps its 1 until the operator changes it by
-  a reviewed commit.
+  WI-802 names a session family "review", configured under
+  `[sessions.review]`: a different table, so no rename is owed (checked
+  2026-11-21, queue-drill HANDOFF §3.4 S4).
+- **`review_rounds` migrates into `full_reviewers`,** keeping an adopter's
+  value, since a re-sync never overwrites a value (item 10's ruling). The
+  template ships the ruled 2. This repo takes 2 as well: the operator ruled
+  `full_reviewers = 2` (review-churn plan, item 4, confirmed in revision
+  35), and its coordinator already runs two reviewers; the 1 predates the
+  ruling (queue-drill HANDOFF §3.4 S4).
 - **Both routes read the section:** the managed loop in place of
   `review_rounds`, and the coordinator cycle through `review_brief.py`,
   which renders the round count and the convergence stance from it.
