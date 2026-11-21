@@ -369,7 +369,7 @@ level = "Analysis"
 method = "Analyze the CI matrix result across Linux/Windows/macOS x Python 3.11/latest."
 tier = "Full"
 expected = "Satisfies SR-035 and SR-114 AcceptanceCriteria"
-automated = "Yes"
+automated = "No"
 evidence = ".github/workflows/test.yml"
 status = "Accepted"
 phase = 1
@@ -513,7 +513,7 @@ status = "Accepted"
 phase = 1
 
 [test.TC-049]
-verifies = ["SR-159", "LLR-049"]
+verifies = ["SR-159", "LLR-049", "IF-320"]
 level = "Integration"
 method = "Run TOP_VIEW_MAX, containment, nesting, opt-out, and vacuity cases."
 tier = "Full"
@@ -642,7 +642,7 @@ status = "Accepted"
 phase = 4
 
 [test.TC-067]
-verifies = ["SR-159", "LLR-067"]
+verifies = ["SR-159", "LLR-067", "IF-319"]
 level = "Integration"
 method = "Run the cross-component import coverage matrix, including the declared shared-kernel exemption: an edge into a declared kernel module is silent (finding and advisory both), the exemption is one-directional (declaring the SOURCE does not exempt it), an undeclared module or an absent allow-file still fires (fail-safe default), and a malformed allow-file entry (no reason) grants no exemption while being reported and sharing the components_check opt-out."
 tier = "Full"
@@ -785,13 +785,13 @@ status = "Accepted"
 phase = 1
 
 [test.TC-080]
-verifies = ["SR-159", "LLR-042", "IF-263"]
+verifies = ["SR-159", "LLR-042", "IF-263", "IF-316", "IF-317"]
 level = "Integration"
 method = """Run endpoint/direction, source-sink, Active-citation, Contracts, opt-out, and strict non-gating coverage cases."""
 tier = "Full"
 expected = """Every declared coverage gap warns without failing and each suppression/vacuity case stays silent."""
 automated = "Yes"
-evidence = """tests/test_trajectory_arch.py::test_architecture_rules_are_reexported_from_their_behavior_module; tests/test_trajectory_arch.py::test_interface_coverage_warns; tests/test_trajectory_arch.py::test_uncovered_direction_warns; tests/test_trajectory_arch.py::test_source_sink_marker_suppresses_direction_warn; tests/test_trajectory_arch.py::test_seam_tc_citation_warn; tests/test_trajectory_arch.py::test_contracts_docstring_citation_warns; tests/test_trajectory_arch.py::test_interface_warns_never_fail_strict; tests/test_trajectory_arch.py::test_interface_check_off_silences"""
+evidence = """tests/test_trajectory_arch.py::test_architecture_rules_are_reexported_from_their_behavior_module; tests/test_trajectory_arch.py::test_the_composer_exposes_every_public_name_of_the_modules_it_composes; tests/test_trajectory_arch.py::test_every_name_a_caller_reads_through_the_composer_resolves; tests/test_trajectory_arch.py::test_interface_coverage_warns; tests/test_trajectory_arch.py::test_uncovered_direction_warns; tests/test_trajectory_arch.py::test_source_sink_marker_suppresses_direction_warn; tests/test_trajectory_arch.py::test_seam_tc_citation_warn; tests/test_trajectory_arch.py::test_contracts_docstring_citation_warns; tests/test_trajectory_arch.py::test_interface_warns_never_fail_strict; tests/test_trajectory_arch.py::test_interface_check_off_silences"""
 status = "Accepted"
 phase = 1
 
@@ -1191,7 +1191,7 @@ phase = 3
 [test.TC-123]
 verifies = ["SR-049", "LLR-118"]
 level = "Unit"
-method = """Drive gen_open_items over temp repos: assert a pending registry row a queued or claimed work item cites renders as a brief beside the rows citing it and a RULED row does not; that a pending row no queued or claimed work item cites is not a card but is named in an integrity notice linking its registry record, and that the page claims an empty queue only when neither a card nor a notice remains; that the status snapshot's open-items and Blocked lists name the same cited and uncited items as the page, including a claimed citer's card and Blocked line; that Drafted spine rows and accepted rows drifted from the accepted snapshot both surface (acceptance owed vs re-accept owed) while an undrifted Accepted row does not; that a section with no changed cells says what is true — no cell differs from the accepted snapshot, the row's own Status asking for an operator — and never CHECK THE BASELINE nor nothing-changed; that --check bites on drift as a plain regenerate-and-compare, with no baseline stamp left in the view to re-read; that the whole thing is vacuous with neither registry nor view; that registry prose is HTML-escaped; that the word diff marks only what moved and the percentage counts words not whitespace; that the theme tokens equal the dashboard's emitted values (a drift guard, not an extraction); and that Decisions to review is the page's last section. It also drives verdict_reaccept_block: every act-ledger entry naming a verdict is listed newest first with its re-accepted rows and its verdict file, an entry naming none is left out, a ledger with no such entry reads None recorded, and the rendered page carries the list."""
+method = """Drive gen_open_items over temp repos: assert a pending registry row a queued or claimed work item cites renders as a brief beside the rows citing it and a RULED row does not; that a pending row no queued or claimed work item cites is not a card but is named in an integrity notice linking its registry record, and that the page claims an empty queue only when neither a card nor a notice remains; that the status snapshot's open-items and Blocked lists name the same cited and uncited items as the page, including a claimed citer's card and Blocked line; that Drafted spine rows and accepted rows drifted from the accepted snapshot both surface (acceptance owed vs re-accept owed) while an undrifted Accepted row does not; that a section with no changed cells says what is true — no cell differs from the accepted snapshot, the row's own Status asking for an operator — and never CHECK THE BASELINE nor nothing-changed; that --check bites on drift as a plain regenerate-and-compare, with no baseline stamp left in the view to re-read; that the whole thing is vacuous with neither registry nor view; that registry prose is HTML-escaped; that the word diff marks only what moved and the percentage counts words not whitespace; that the theme tokens equal the dashboard's emitted values (a drift guard, not an extraction); and that the page's sections run in order with the pending operator actions last and no Decisions to review section. It also drives verdict_reaccept_block: every act-ledger entry naming a verdict is listed newest first with its re-accepted rows and its verdict file, an entry naming none is left out, a ledger with no such entry reads None recorded, and the rendered page carries the list."""
 tier = "Full"
 parameters = "tests/test_gen_open_items.py (temp repos; one git-backed fixture for the baseline paths)"
 expected = """Every assertion holds, each with its negative half."""
@@ -1588,7 +1588,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-409]
-verifies = ["SR-157", "LLR-365", "IF-131", "IF-263"]
+verifies = ["SR-157", "LLR-365", "IF-131", "IF-263", "IF-318"]
 level = "Integration"
 method = "Run the trajectory check over tagged test trees in plain and strict modes, absent tests-root and registry cases, a nested tests root, and a bootstrapped scaffold before and at the implementation rung."
 tier = "Full"
@@ -1599,7 +1599,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-410]
-verifies = ["SR-157", "LLR-366", "IF-263"]
+verifies = ["SR-157", "LLR-366", "IF-263", "IF-318"]
 level = "Integration"
 method = "Exercise evidence that lacks a declaration and a declaration that lacks evidence in plain and strict modes; exercise a Drafted test case; and run the equality check in a bootstrapped scaffold below and at the implementation rung."
 tier = "Full"
@@ -1786,7 +1786,7 @@ status = "Accepted"
 phase = 1
 
 [test.TC-166]
-verifies = ["SR-165", "LLR-172"]
+verifies = ["SR-165", "LLR-172", "IF-320"]
 level = "Integration"
 method = """Run trajectory_arch's component pass (derivation_record_findings, through component_findings as check_trajectory.py runs it) over fixture component registries: (a) a complete derivation record passes silently; (b) a record omitting each element in turn (candidate partitions, objective, constraints, any candidate's score, the selected partition, the operator ruling) is reported once per omission, naming the row and the missing element; (c) each malformed record cell, and each malformed `derivation` citation, is reported; (d) an absent record is reported once, on the row its citers name; (e) a record whose recorded ranking does not recompute from its own objective, constraints and scores is reported, and the recompute runs only on a complete, well-formed record; (f) a selected partition the recorded scores do not rank first is reported, and the SAME record with an override naming that choice is silent; (g) a finding warns plain and fails under --strict; (h) a project declaring no components, and the shipped example -000 rows, are vacuous."""
 tier = "Full"
@@ -2171,7 +2171,7 @@ status = "Accepted"
 phase = 5
 
 [test.TC-201]
-verifies = ["SR-017", "SR-176", "LLR-205"]
+verifies = ["SR-017", "SR-176", "LLR-205", "IF-314"]
 level = "Integration"
 method = """Drives check_privacy.py's Scanner (secrets floor) and agent_common.py's redact_secrets against a shared sample set, three ways. FIRST, a five-sample decision table: a PEM private-key block is caught by both the floor and the redactor, while a Bearer token, a short GitHub token and a short API key are caught by the redactor alone, the three DELIBERATE threshold asymmetries kitlib.secret_classes.SECRET_CLASSES declares per class rather than leaving as a side effect of two literals. SECOND, one canonical positive sample per declared class, proving each side's claimed pattern reaches its consumer (TOKEN_RES/KEY_RE and _SECRET_RES are comprehensions over the shared table, not hand copies, so a class dropped from a consumer's derivation fails even where the table looks right). THIRD, a frozen, independent pattern record per module, compared by matching behavior (not string equality, since one class's two spellings differ only in a character-class member order proven immaterial) over threshold-straddling probes per class, so no class is caught less than that record catches."""
 tier = "Full"
@@ -2508,7 +2508,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-229]
-verifies = ["SR-199", "LLR-234", "IF-214"]
+verifies = ["SR-199", "LLR-234", "IF-214", "IF-315"]
 level = "Unit"
 method = "The record module exercised in a temporary directory. A record with every field round-trips; a record missing any one field, or cut off mid-file, parses to nothing; an outcome outside pass and fail, an observed_at or expires not in the canonical UTC form, an expiry earlier than the observation, and an empty or whitespace provenance each parse to nothing; a leading-dot file is never read; latest returns the newest by observation time; an empty judged digest is valid. write_atomic is driven with the replace step failing twice with a permission error and then succeeding, and with it failing every time, which raises after the bounded retries and leaves no partial record readable."
 tier = "Smoke"
@@ -3048,9 +3048,9 @@ phase = 6
 [test.TC-293]
 verifies = ["SR-225", "LLR-283", "IF-256"]
 level = "Unit"
-method = "The kitlib.decisions call surface over record texts planted in memory, clause by clause, and the operator surface over records planted on disk. (a) SOUND: a record with complete entries, one hoisted, and a record with no entries and an empty hoist yield no finding. (b) EACH REQUIRED KEY: its absence yields one finding per entry naming the entry and the key; a number, a boolean, a list and a table in it each yield exactly the not-text finding; an empty, a spaces-only and a whitespace-only value yield exactly the blank finding for the first four keys and nothing for review. (c) SHAPE: an entry that is not a table, a decision key that is not a table, an entry id outside D-<digits> and an unparseable text each yield one finding. (d) THE HOIST: a hoist that is a string, a list holding a number, a mixed list or a table, a missing hoist, and a hoisted id the record lacks each yield one finding. (e) EXTRA KEYS on an entry yield none. (f) NEVER RAISES: hostile texts each return a list of strings. (g) INERT: a half-filled -000 entry, hoisted, yields none, and the shipped template yields none, lists nothing for review and carries the -000 example with every required key and an empty review without an operator value. (h) THE PATH AND THE OBLIGATION: a run's path is one file under the records directory with a / becoming -, and owed holds under record and escalate-first for a complete, a cancelled, a partial and a mixed close, and not under off or for no outcomes. (i) THE NOTE: session_note is empty under off, names the path, every required key, the hoist, owner = confirmed and owner unset under record, and adds a sentence under escalate-first; session_body appends it to a build session's body and to an adjudication session's body under record and to neither under off, and reviewer_prompt's brief does not carry it under record. (j) THE OPERATOR VERDICT: confirmed is hidden; absent is not yet seen; overruled is shown under its own heading with citing work or a no-citer notice; each unknown owner value, including a non-string value, is a finding and is not yet seen; the retired reviewed key is a finding and its entry reads as not yet seen whatever owner value accompanies it; and an overruled entry with a blank review note is a finding. (k) THE QUEUE: the operator surface lists unseen entries with their file, id and disclosure fields, the hoisted entries of every record first and never a -000 entry; a malformed hoist is shown as a finding beside the entries rather than raising; when no unseen entry remains the section says so with the confirmed count, the status snapshot counts unseen entries only, and with no records directory the section says no record exists."
+method = "The kitlib.decisions call surface over record texts planted in memory, clause by clause, and the operator surface over records planted on disk. (a) SOUND: a record with complete entries, one hoisted, and a record with no entries and an empty hoist yield no finding. (b) EACH REQUIRED KEY: its absence yields one finding per entry naming the entry and the key; a number, a boolean, a list and a table in it each yield exactly the not-text finding; an empty, a spaces-only and a whitespace-only value yield exactly the blank finding for the first four keys and nothing for review. (c) SHAPE: an entry that is not a table, a decision key that is not a table, an entry id outside D-<digits> and an unparseable text each yield one finding. (d) THE HOIST: a hoist that is a string, a list holding a number, a mixed list or a table, a missing hoist, and a hoisted id the record lacks each yield one finding. (e) EXTRA KEYS on an entry yield none. (f) NEVER RAISES: hostile texts each return a list of strings. (g) INERT: a half-filled -000 entry, hoisted, yields none, and the shipped template yields none, lists nothing for review, carries the -000 example with every required key and an empty review without an operator value, and its header sends the operator to the record files rather than to a page section. (h) THE PATH AND THE OBLIGATION: a run's path is one file under the records directory with a / becoming -, and owed holds under record and escalate-first for a complete, a cancelled, a partial and a mixed close, and not under off or for no outcomes. (i) THE NOTE: session_note is empty under off, names the path, every required key, the hoist, operator = confirmed and operator unset under record, and adds a sentence under escalate-first; session_body appends it to a build session's body and to an adjudication session's body under record and to neither under off, and reviewer_prompt's brief does not carry it under record. (j) THE OPERATOR VERDICT: confirmed is not counted as unseen; absent is not yet seen; overruled is not counted as unseen; each unknown operator value, including a non-string value, is a finding and is not yet seen; the retired reviewed key is a finding and its entry reads as not yet seen whatever operator value accompanies it; and an overruled entry with a blank review note is a finding. (k) THE RECORDS ARE THE LISTING: the operator surface has no Decisions to review section and lists no entry, even with unseen, hoisted and overruled entries on disk; each record's findings, a malformed hoist and an unparseable record included, close its pending operator actions by file and entry without raising, and nothing about the records shows when they are sound or absent; the status snapshot counts unseen entries only across the records, never a -000 entry, and links the records directory, with no count when that directory is absent; review_queue lists the hoisted entries first, then by id."
 tier = "Smoke"
-expected = "Satisfies SR-225 AcceptanceCriteria: each shape, required-key, operator-verdict and hoist defect is reported by entry, extra keys are not judged, the findings never raise, a -000 entry is never judged or listed, every close owes a record under a recording dial, a build or adjudication session is told its record's path and owner vocabulary while a review session is not, and the operator surface lists exactly the unseen and overruled entries"
+expected = "Satisfies SR-225 AcceptanceCriteria: each shape, required-key, operator-verdict and hoist defect is reported by entry, extra keys are not judged, the findings never raise, a -000 entry is never judged or listed, every close owes a record under a recording dial, a build or adjudication session is told its record's path and operator vocabulary while a review session is not, and no generated surface lists an entry: the operator reads the records, the operator surface reports their findings and the status snapshot counts the unseen"
 automated = "Yes"
 evidence = """tests/test_decision_record.py; tests/test_decisions_to_review.py::test_a_malformed_hoist_is_shown_as_a_finding_not_a_crash; tests/test_decisions_to_review.py"""
 status = "Accepted"
@@ -3391,7 +3391,7 @@ phase = 6
 
 
 [test.TC-321]
-verifies = ["SR-227", "SR-231", "LLR-306", "IF-283", "IF-284", "IF-285", "SR-209"]
+verifies = ["SR-227", "SR-231", "LLR-306", "IF-283", "IF-284", "IF-285", "SR-209", "IF-321"]
 level = "Unit"
 method = "Run test_a_second_coordinator_adjudication_resumes_the_first, test_the_coordinator_route_writes_one_session_log_per_call, test_a_session_at_the_dial_drains_and_retires_at_the_next_clear_point, test_an_unknown_route_or_one_off_the_enable_list_is_refused, test_a_missing_or_malformed_verdict_is_reported_and_fails, test_a_failed_call_reusing_a_verdict_path_does_not_return_success, test_a_nonzero_exit_or_a_timeout_fails_whatever_file_exists, test_an_undecodable_brief_is_refused_with_the_usage_exit, test_two_calls_naming_one_verdict_path_never_share_its_verdict, test_a_call_whose_session_writes_into_its_reservation_succeeds, test_a_call_refused_before_launch_releases_its_reservation, test_a_verdict_path_that_cannot_be_reserved_is_refused, test_a_verdict_path_under_a_missing_directory_is_reserved_and_launches, test_a_primary_checkout_root_is_refused_before_launch, test_a_worktree_whose_branch_holds_no_claim_is_refused, test_a_root_outside_any_repository_is_refused, and test_the_shipped_entry_point_defaults_to_the_strong_anthropic_route. Assert a second coordinator-route adjudication resumes the session its first call recorded, and a session at the dial drains and retires at the next clear point. Assert IF-284 outcomes: 0 only for a valid verdict written by a successful in-deadline call; 1 for a failed or timed-out call or a missing or invalid verdict; 2 for a root that is not a claimed lane, an unusable route, a brief file that cannot be read or decoded, or a verdict path that exists or cannot be reserved; and 7 for a retained sign-in refusal. Assert IF-283's default route and the exclusive reservation, including missing-parent creation and release on the sign-in refusal. Assert that a blackout refusal is reported, releases its verdict reservation, and does not wait or launch. test_coordinator_act.py drives the act turn from a lane over a stub adjudicator that takes, or stops short of, the delivered act: each pre-launch input refuses with exit 2 without launch or change; retained and fresh turns receive byte-identical briefs and take the same act; a combined act takes amendment first; an owed act or changed verdict record exits 1; an uncommitted flip is refused dirty then can be discarded and rerun; an interrupted combined act reruns only first acceptance; the act writes no binding; and the loop marker appends provenance to every launched prompt while its absence leaves the composed brief byte-exact."
 tier = "Full"
@@ -3501,7 +3501,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-334]
-verifies = ["SR-234", "LLR-314", "LLR-315", "IF-290"]
+verifies = ["SR-234", "LLR-314", "LLR-315", "IF-290", "IF-322"]
 level = "Integration"
 method = "Run the dispute tests that compose a brief carrying every finding, held position, range fact and review-scope link; refuse malformed findings input, including a finding with an extra key and one missing any of id, held_by, finding, or position, each by name without a brief; parse a complete verdict; refuse malformed, incomplete, duplicated, unrequested, or unbound verdicts; prove a recorded dispute verdict authorizes no acceptance act; and prove the class is routed through its shipped template. Run the coordinator-entry tests that accept the dispute class, bind every requested finding, reject an unruled finding, and refuse a dispute brief naming no findings before launch. Parse a SUCCESSOR ruling, refuse a SUCCESSOR without a reason and an unknown ruling, and bind an accepted SUCCESSOR verdict at the coordinator entry point. Compose a dispute brief that names its findings file on a line the dispute grammar reads back."
 tier = "Full"
@@ -4249,5 +4249,214 @@ tier = "Smoke"
 expected = "Satisfies SR-247 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_migrate_vocabulary.py::test_a_binding_whose_outcome_reads_accepted_is_rewritten_to_recorded; tests/test_migrate_vocabulary.py::test_a_binding_keeps_its_line_endings_and_every_other_line; tests/test_migrate_vocabulary.py::test_only_the_outcome_line_of_a_binding_moves; tests/test_migrate_vocabulary.py::test_a_toml_registry_gets_the_field_renamed_and_the_method_respelled; tests/test_migrate_vocabulary.py::test_a_toml_registry_keeps_every_byte_outside_the_values_it_moves; tests/test_migrate_vocabulary.py::test_a_look_alike_line_inside_a_cell_is_never_rewritten; tests/test_migrate_vocabulary.py::test_an_untouchable_registry_is_named_and_fails_the_run; tests/test_migrate_vocabulary.py::test_the_method_moves_only_in_its_own_field; tests/test_migrate_vocabulary.py::test_a_padded_method_is_matched_as_the_readers_match_it; tests/test_migrate_vocabulary.py::test_a_csv_registry_gets_the_header_renamed_and_the_method_respelled; tests/test_migrate_vocabulary.py::test_a_quoted_header_cell_and_a_byte_order_mark_are_kept; tests/test_migrate_vocabulary.py::test_a_csv_registrys_comment_preamble_is_kept_and_the_row_after_it_renamed; tests/test_migrate_vocabulary.py::test_the_policy_files_table_and_dial_key_are_renamed_in_place; tests/test_migrate_vocabulary.py::test_a_policy_file_declaring_both_spellings_is_named_and_left; tests/test_migrate_vocabulary.py::test_the_push_authoritys_earlier_default_is_respelled_in_place; tests/test_migrate_vocabulary.py::test_the_adjudicators_retained_brief_kinds_are_respelled_in_place; tests/test_migrate_vocabulary.py::test_the_retained_evidence_gap_kind_is_respelled_beside_the_others; tests/test_migrate_vocabulary.py::test_a_dial_the_line_edit_cannot_reach_is_refused_not_guessed; tests/test_migrate_vocabulary.py::test_a_policy_file_in_the_current_vocabulary_is_untouched; tests/test_migrate_vocabulary.py::test_the_dials_earliest_key_and_retired_integer_are_respelled_in_place; tests/test_migrate_vocabulary.py::test_a_dial_holding_no_retired_integer_keeps_its_value; tests/test_migrate_vocabulary.py::test_the_failure_caps_earlier_key_is_renamed_in_place; tests/test_migrate_vocabulary.py::test_a_dial_under_two_earlier_keys_is_named_and_left; tests/test_migrate_vocabulary.py::test_a_decisions_records_verdict_key_is_renamed_in_each_entry; tests/test_migrate_vocabulary.py::test_a_decisions_record_the_line_edit_cannot_prove_is_named_and_left; tests/test_migrate_vocabulary.py::test_a_work_items_stage_key_is_renamed_in_its_front_matter_and_drafted_rows; tests/test_migrate_vocabulary.py::test_a_work_item_the_line_edit_cannot_prove_is_named_and_left; tests/test_migrate_vocabulary.py::test_a_work_item_that_is_not_utf8_is_named_and_left; tests/test_migrate_vocabulary.py::test_a_steps_list_of_stages_becomes_the_one_stage_it_meant; tests/test_migrate_vocabulary.py::test_a_stack_profile_the_rewrite_cannot_prove_is_named_and_left; tests/test_migrate_vocabulary.py::test_a_stack_profile_that_is_not_utf8_is_named_and_left; tests/test_migrate_vocabulary.py::test_the_scratchpad_is_renamed_to_its_current_name_with_every_byte_kept; tests/test_migrate_vocabulary.py::test_a_scratchpad_under_both_names_is_named_and_neither_is_touched; tests/test_migrate_vocabulary.py::test_the_acceptance_records_copy_of_a_registry_moves_with_it; tests/test_migrate_vocabulary.py::test_a_rows_earlier_status_is_respelled_in_both_carriers; tests/test_migrate_vocabulary.py::test_the_acceptance_record_moves_rekeys_and_absorbs_naming_each_cell; tests/test_migrate_vocabulary.py::test_a_record_under_both_names_is_named_and_neither_is_touched; tests/test_migrate_vocabulary.py::test_a_ledger_the_line_edit_cannot_prove_leaves_the_record_untouched; tests/test_migrate_vocabulary.py::test_spellings_owed_names_what_check_names_less_the_records_copies; tests/test_migrate_vocabulary.py::test_a_record_copy_that_differs_from_live_is_owed_by_a_run_but_not_a_spelling; tests/test_migrate_vocabulary.py::test_check_vocab_reports_what_the_migrator_owes_until_it_has_run; tests/test_migrate_vocabulary.py::test_links_into_the_record_follow_it_and_every_other_word_stays; tests/test_migrate_vocabulary.py::test_links_owed_are_reported_under_check_and_a_page_not_utf8_is_named; tests/test_migrate_vocabulary.py::test_a_file_that_is_not_a_registry_is_left_alone; tests/test_migrate_vocabulary.py::test_check_reports_what_is_owed_and_writes_nothing_and_a_second_run_is_clean; tests/test_migrate_vocabulary.py::test_a_repository_with_nothing_to_migrate_is_clean"
+status = "Accepted"
+phase = 6
+
+[test.TC-428]
+verifies = ["SR-157", "IF-263"]
+level = "Integration"
+method = "Run the trajectory check over registries and test trees covering each input state of the undeclared-case rule: no registry, no tests root and a registry that does not parse; a placeholder row; a Drafted case holding a note and holding an untagged part; an automated cell reading No, another word, absent and blank; an Accepted and a Founded case, and one whose automated cell is padded and upper-case, each tagged and untagged; a case whose part is in an unreadable file, alone and beside a readable part; an untagged case holding a note, no cell, a whole-file part, a part outside the tests root and an absent path; a misplaced and a malformed tag, alone and beside a valid one; and an untagged part, then tagged."
+tier = "Full"
+expected = "Absent inputs are vacuous and an unparseable registry stops the run in the carrier with no such finding; a placeholder row, a Drafted case and a case not automated owe no declaration, while a Drafted case's parts are still held equal; an eligible tagged case is clean; a part in an unreadable file adds only that file's finding; every other eligible untagged case reads that no test declares it, whatever its cell holds; a refused tag declares nothing; and one tag clears both the part's finding and the case's."
+automated = "Yes"
+evidence = "tests/test_trajectory_arch.py::test_the_undeclared_rule_is_vacuous_with_no_tests_root_or_no_registry; tests/test_trajectory_arch.py::test_an_unparseable_registry_stops_the_run_before_the_undeclared_rule; tests/test_trajectory_arch.py::test_a_placeholder_row_owes_no_declaration; tests/test_trajectory_arch.py::test_a_drafted_case_owes_no_declaration_and_its_parts_are_still_held; tests/test_trajectory_arch.py::test_a_case_not_automated_owes_no_declaration; tests/test_trajectory_arch.py::test_an_eligible_case_is_clean_when_tagged_and_named_when_not; tests/test_trajectory_arch.py::test_a_part_in_an_unreadable_file_adds_no_undeclared_finding; tests/test_trajectory_arch.py::test_an_eligible_untagged_case_is_named_whatever_its_cell_holds; tests/test_trajectory_arch.py::test_a_refused_tag_declares_nothing; tests/test_trajectory_arch.py::test_one_tag_clears_the_part_and_the_declaration_findings"
+status = "Accepted"
+phase = 6
+
+[test.TC-429]
+verifies = ["SR-157", "IF-263"]
+level = "Integration"
+method = "Walk one test case through a lane's order, Drafted holding a note, then Drafted and tagged, then Accepted and tagged; then out of order, Accepted before its tag, in plain and strict runs with and without work items, and once tagged; then run the same untagged Accepted case in a bootstrapped scaffold below and at the implementation rung, and once tagged."
+tier = "Full"
+expected = "A lane's order reads no finding at any step; an Accepted case with no tag warns with exit 0 in a plain run and errors with exit 1 under strict checking until it is tagged; and a newly created project warns and exits 0 at DevStg-Tests, fails at DevStg-Impl, and is clean once the case is tagged."
+automated = "Yes"
+evidence = "tests/test_trajectory_arch.py::test_a_lanes_order_never_meets_the_undeclared_finding; tests/test_trajectory_arch.py::test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict; tests/test_trajectory_arch.py::test_the_undeclared_finding_on_a_bootstrapped_scaffold"
+status = "Accepted"
+phase = 6
+
+[test.TC-433]
+verifies = ["SR-032", "LLR-372"]
+level = "Integration"
+method = "On a PATH of stand-ins only, run each developer setup's standalone check, this repository's and the shipped template's on both script families, with and without a gh stand-in; run the POSIX ones under each platform name they distinguish."
+tier = "Full"
+expected = "The check reports gh present or missing, marked optional; missing names the platform's install command and gh auth login; the check exits 0 either way, and the template's missing count is the same with and without gh."
+automated = "Yes"
+evidence = "tests/test_run_devsetup.py::test_the_check_reports_gh_as_optional_with_its_install_and_sign_in; tests/test_run_devsetup.py::test_the_powershell_check_reports_gh_as_optional_with_winget_and_sign_in"
+status = "Accepted"
+phase = 6
+
+[test.TC-434]
+verifies = ["SR-032", "LLR-372"]
+level = "Integration"
+method = "On a PATH of stand-ins only, with package-manager stand-ins that record their arguments and nothing really installed, run this repository's install operation on each platform's package manager answering yes, no, an empty line and with closed input, then with no package manager, a failing one and gh present; run the template's install tier with piped input and, at a terminal or a real console, answering yes and no; run the bare run's readiness operation at a terminal answering yes throughout."
+tier = "Full"
+expected = "Only a yes runs the package manager, once, with the platform's install arguments; a no, an empty line, closed input or the template's non-interactive run runs nothing; with no package manager nothing is asked and the manual command is printed; a failed install prints a warning naming it; a present gh is not offered; the readiness operation reports gh and never offers it; every run exits 0."
+automated = "Yes"
+evidence = "tests/test_run_devsetup.py::test_install_offers_gh_and_runs_it_only_on_a_yes; tests/test_run_devsetup.py::test_install_without_a_package_manager_or_with_a_failure_never_fails; tests/test_run_devsetup.py::test_the_templates_install_tier_offers_gh_only_at_a_terminal; tests/test_run_devsetup.py::test_at_a_terminal_the_templates_install_tier_installs_gh_only_on_a_yes; tests/test_run_devsetup.py::test_at_a_terminal_the_bare_runs_check_reports_gh_and_never_offers_it; tests/test_run_devsetup.py::test_powershell_install_offers_gh_and_runs_winget_only_on_a_yes; tests/test_run_devsetup.py::test_the_powershell_templates_install_tier_offers_gh_only_at_a_console; tests/test_run_devsetup.py::test_at_a_windows_console_the_templates_install_tier_installs_gh_on_a_yes; tests/test_run_devsetup.py::test_at_a_windows_console_the_bare_runs_check_never_offers_gh"
+status = "Accepted"
+phase = 6
+
+[test.TC-430]
+verifies = ["SR-148", "LLR-370", "IF-073"]
+level = "Integration"
+method = """Build temporary repositories, each with an open-items registry and work items, and read which ruled items the report names. A work item naming the item under draft, queued, active, deferred or complete, in either work root, covers it; one under cancelled, partial or restructured, or under a directory that is not a status, does not. A later pending item naming it covers it, and so does a later ruled item naming it that a work item covers, while a ruled citer that is not covered hands nothing on, and an earlier pending item or an earlier covered ruled item covers nothing. Two ruled items naming each other with no work item are both reported; once a work item covers the earlier one the later is still reported, and once one covers the later both are covered. A follow_up cell covers its item, and a cell of spaces does not. An id with a letter, digit or underscore on either side, or a lower-case prefix, names no item, while leading zeros are ignored. The historical wi_refs cell and an item naming itself cover nothing. A -000 open item is never judged and covers nothing, and a -000 work item covers nothing. An implemented citer covers nothing and is not judged itself. A status is read trimmed and in lower case."""
+tier = "Smoke"
+expected = "Exactly the ruled items no covering work item, covering open item or follow_up cell carries are reported, in id order."
+automated = "Yes"
+evidence = "tests/test_ruled_open_item_cover.py"
+status = "Accepted"
+phase = 6
+
+[test.TC-431]
+verifies = ["SR-148", "LLR-370", "IF-073", "IF-049"]
+level = "Integration"
+method = """Run gen_open_items --ruled-cover in-process over temporary repositories: with no open-items registry it says the run is vacuous and returns 0; over a registry that does not parse it stops with the carrier's refusal; over a registry with one uncovered ruled item it prints one WARN line naming the item and its title and the follow_up remedy, then a count of 1, and returns 0; over a covered registry it prints no WARN line and a count of 0. Read docs/stack.ini's [run] audit line: its first step runs the report and nothing else, and the smoke budget step in enforce mode follows it. Parse the shipped open-items template and this repository's registry: each -000 row sets follow_up, and the template's header names the cell and the report."""
+tier = "Smoke"
+expected = "The report is warn-only and exits 0 on a finding, the audit runs it ahead of the budget step, and both registries' example rows show the follow_up cell."
+automated = "Yes"
+evidence = "tests/test_ruled_open_item_cover.py"
+status = "Accepted"
+phase = 6
+
+[test.TC-435]
+verifies = ["SR-159", "LLR-373"]
+level = "Unit"
+method = "Load a design registry through the carrier and join it with kitlib.spine.module_components: a row whose Module cell joins two modules and a row tagged into two components; then, beside a control row carrying a well-formed tag that names no component row, in turn a -000 example row, a row whose id does not start with LLR-, and a row mixing a lower-case and a bare token with a CMP- one. Separately, stub the join under gen_components' build over a two-component spine, and read which design rows it is handed and where the seams land."
+tier = "Smoke"
+expected = "Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced."
+automated = "Yes"
+evidence = "tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join"
+status = "Accepted"
+phase = 6
+
+[test.TC-436]
+verifies = ["SR-159", "LLR-374"]
+level = "Integration"
+method = "Build one source tree under a declared scan root: a package with a sibling module and a nested package, a top-level module, two modules ending in the same package path, and an empty module. Tag one importer into one component and every other module into another, and run the cross-component rule in process for each import form in turn: import of a dotted path, the same with an alias, from a package a submodule, from a module a symbol, from a module a name sharing another module's stem, the three relative shapes (a sibling module, the package itself, two levels up), a relative import in the package's own __init__.py, a relative import in the __init__.py of a package with no module under it, and a bare stem. Then read which edges the rule classifies for an ambiguous bare stem, an ambiguous dotted path, a scanned module absent from the inventory, a relative climb past the top, and a relative import in a package's __init__.py that resolves to the importing module itself. Run the rule once more with a generator lacking the resolver, and draw the dependency diagram for the relative import in the __init__.py of the package with no module under it."
+tier = "Smoke"
+expected = "Each resolved form reports the cross-component finding naming its importer and the module the import names, the stem-sharing name landing on the module it is imported from and the bare stem resolving as before; the skipped forms yield no classified edge from their importer; the generator without the resolver leaves the rule silent; the diagram draws the arrow from that package to the module its import names."
+automated = "Yes"
+evidence = "tests/test_seam_import_forms.py"
+status = "Accepted"
+phase = 6
+
+[test.TC-438]
+verifies = ["SR-147", "LLR-382"]
+level = "Unit"
+method = "Drive kitlib.spine.value_to_cell over None, a plain string, a string holding a semicolon, an empty list, a list of strings, a list holding an integer, and an integer. Round-trip a semicolon-joined ref cell through migrate_carrier.cell_to_value and back. Run migrate_carrier.compare over a converted row that dropped a key, and read a ref array through spine_carrier.rows_from_toml. Look for a value_to_cell on migrate_carrier and on spine_carrier."
+tier = "Smoke"
+expected = "None reads as the empty cell; a list joins on semicolons with each element as text; anything else is its text. The ref cell round-trips to its original text. compare reports the dropped key as changing to the empty cell, and the reader joins the array on semicolons. Neither module defines a value_to_cell."
+automated = "Yes"
+evidence = "tests/test_rule_sync.py::test_the_carrier_value_cell_has_one_home_and_reads_none_as_empty"
+status = "Accepted"
+phase = 6
+
+[test.TC-439]
+verifies = ["SR-157", "LLR-197"]
+level = "Integration"
+method = "Write an old-shape interface registry whose rows each name an id-typed owner with no provider, beside a design registry whose owning rows each name one module: a package's __init__.py, a shell hook, and a plain Python module. Run migrate_carrier's IF-shape migration with writing on and read each rewritten owner. Look for a _short_module on migrate_carrier."
+tier = "Smoke"
+expected = "Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key"
+status = "Accepted"
+phase = 6
+
+[test.TC-440]
+verifies = ["SR-157", "LLR-383"]
+level = "Unit"
+method = "Read kitlib.spine.id_number over X2-5, an id whose number carries a letter, OI-35abc, an id whose number has leading zeros, OI-98, D-001, an id ending in its dash, and the empty string. Look for an id-number reader on kitlib.registry, kitlib.decisions and wi_convert, and for the old private name on kitlib.spine. Then write three queued specs carrying no order key, numbered 3, 12 with a letter after it, and 20, and read the folder through kitlib.registry.read_spec_rows and through wi_convert.read_specs."
+tier = "Smoke"
+expected = "X2-5 reads 5, the lettered id 0, OI-35abc 0, the zero-padded id its number, OI-98 98, D-001 1, and the dash-ended id and the empty string 0. None of the three modules defines its own reader, and kitlib.spine has no private copy. Both readers order the folder with the lettered spec first, then 3, then 20."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_an_id_number_is_the_digits_after_the_last_dash; tests/test_policy_one_home.py::test_both_spec_folder_orderings_read_the_one_id_number"
+status = "Accepted"
+phase = 6
+
+[test.TC-441]
+verifies = ["SR-189", "LLR-215"]
+level = "Unit"
+method = "Write a TOML needs file holding the -000 example need, two real needs (one citing the other in its text), a comment naming an id no need table declares, and a stakeholder whose description names another such id. Read it through check_docs' README-inventory reader and through check_flows' known-id loader. Separately, read the live needs registry through spine_carrier.load_needs and kitlib.spine.sn_all_ids with the carrier from its suffix."
+tier = "Smoke"
+expected = "Both checkers read exactly the two real needs: neither the comment's id, nor the stakeholder description's id, nor the -000 example counts, and check_docs' set equals sn_all_ids over the same text; its Must/Should floor is the one Must need. Over the live registry, the carrier's need ids less the example equal sn_all_ids, and the two draft readers agree."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_readme_inventory_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_policy_one_home.py::test_the_flow_check_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_rule_sync.py::test_the_need_reader_agrees_with_the_sn_universe_on_the_toml_needs_file"
+status = "Accepted"
+phase = 6
+
+[test.TC-442]
+verifies = ["SR-220", "LLR-210"]
+level = "Unit"
+method = "Read a battery of Predecessors cells through consolidate's commissioning-source reader and through kitlib.spine.split_pred_edges: one open item; a work item and an open item joined by a semicolon, by a comma and by whitespace; several open items under mixed separators; an open item marked soft; a token that starts like an open item and carries a letter after its number; soft and hard work items only; an empty cell. Then read comma- and whitespace-separated ref cells through every ref-cell read in consolidate (the absorbed set, the queue model, the module signal and its design-row join), intake's owning-SR hint and the adjudication brief's cited spine, and compare agent_common's ref split with kitlib.spine.refs."
+tier = "Smoke"
+expected = "For every cell the commissioning reader's open items equal split_pred_edges' open-item edges: a comma or whitespace separator still yields the edge, the soft marker is ignored, and the lettered token is no open-item edge. Each ref-cell read splits a comma- or whitespace-separated cell into its ids, and agent_common's ref split is kitlib.spine.refs itself."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_consolidate_finds_every_open_item_edge_split_pred_edges_finds; tests/test_policy_one_home.py::test_every_ref_cell_read_splits_through_the_one_home"
+status = "Accepted"
+phase = 6
+
+[test.TC-443]
+verifies = ["SR-166", "LLR-388"]
+level = "Unit"
+method = "Parse a well-formed spec with an integer priority through kitlib.registry.parse_spec_row and through wi_convert.parse_spec. Then parse through both, in turn: a title given as an integer, a list key holding an integer, a supersedes list holding an integer, an id its filename does not carry, an adjudicates list with a semicolon inside a token, and an adjudicates value given as a bare string. For each of sr_refs, needs, adopted, authoring_tags and supersedes, parse through both a list whose one element carries a semicolon, and the same references written as two elements. Look for the converter's former parse helpers on wi_convert. Separately, read a spec folder holding one well-formed queued spec and one whose title is an integer through read_spec_rows with an error sink."
+tier = "Smoke"
+expected = "The well-formed spec reads the same through both, the integer priority as its digits. Each malformed input is refused by both, the registry with a ValueError and the converter with a ConvertError, each naming the same fault; so is each list element carrying a semicolon, for every list key, while the same references as two elements are read into the cell. wi_convert carries none of the former helpers. read_spec_rows returns only the well-formed row and reports the other file once, naming it and the title fault."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_converter_parses_a_spec_through_the_one_parser; tests/test_policy_one_home.py::test_a_spec_with_a_non_string_title_is_reported_and_skipped; tests/test_policy_one_home.py::test_a_list_element_carrying_the_cell_join_is_refused; tests/test_policy_one_home.py::test_the_schedule_keys_keep_their_list_and_integer_spellings"
+status = "Accepted"
+phase = 6
+
+[test.TC-444]
+verifies = ["SR-156", "SR-220", "LLR-384"]
+level = "Integration"
+method = "Write a work folder holding two queued specs that carry one id. Look the id up through kitlib.registry.queued_spec, and look up an id nothing queues, one queued spec, and a missing folder. Then drive the claim's lookup, a handback edge write and the consolidation close's archive plan at the doubled id and at an unqueued id, listing the queued folder before and after. Look for a lookup of handback's own."
+tier = "Smoke"
+expected = "The doubled id raises a ValueError naming the count; an unqueued id and a missing folder answer None; a single queued spec is returned. The claim, the handback write and the close each refuse the doubled id with that reason and plan nothing, and the queued folder is unchanged; each refuses the unqueued id in its own words. handback has no lookup of its own."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_queued_spec_lookup_refuses_two_specs_of_one_id; tests/test_policy_one_home.py::test_every_act_on_a_queued_spec_refuses_two_of_one_id"
+status = "Accepted"
+phase = 6
+
+[test.TC-445]
+verifies = ["SR-156", "LLR-385"]
+level = "Integration"
+method = "Hand kitlib.registry.governing_spec and agent_policy.authoritative_spec, in both orders, each pair of copies of one spec: a closed copy in the archive and in the legacy docs/work home; a claimed copy and a closed copy under docs/work; a complete and a partial copy in the archive; a claimed copy and an archived closed one; a queued and a claimed copy; and no copy. Then commit each of the first four pairs in turn to a git repository and read the spec at HEAD through kitlib.done_when.spec_at for the claiming lane. Look for the former rank on agent_policy."
+tier = "Smoke"
+expected = "Both functions name, in either order: the archive's copy over the legacy one, the closed copy over the claim, the complete copy over the partial one by path, the archived copy over the claim, and the claimed copy over the queued one; None for no copy. spec_at reads the same copy, its text and no reason for each committed pair. agent_policy carries no rank of its own."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_one_key_says_which_copy_of_a_spec_governs; tests/test_policy_one_home.py::test_the_done_when_hold_reads_the_governing_copy"
+status = "Accepted"
+phase = 6
+
+[test.TC-446]
+verifies = ["SR-146", "SR-006", "LLR-386"]
+level = "Unit"
+method = "Expand, through check.py's step-command expansion with an interpreter placeholder, a command whose tokens include an unquoted # followed by two words; a JSON array holding the placeholder; and a command holding a Windows path with backslashes and a quoted argument with a space. Split a template holding a # through kitlib.config.split_cmd. Compare agent_session's tokenizer with kitlib.config.split_cmd, and look for check.py's former tokenizer."
+tier = "Smoke"
+expected = "The # and the words after it stay tokens; the JSON array expands to its elements with the placeholder substituted; the Windows path keeps its backslashes and the quoted argument its space; split_cmd keeps the #. agent_session's tokenizer is kitlib.config.split_cmd itself, and check.py has none of its own."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_a_command_template_has_one_tokenizer"
+status = "Accepted"
+phase = 6
+
+[test.TC-447]
+verifies = ["SR-158", "LLR-387"]
+level = "Unit"
+method = "Write a declared-absences file that starts with a byte-order mark and holds, in order: an entry, a comment, an entry separated by a spaced hyphen, an entry separated by an unspaced em dash, an entry whose path ends in a slash, and an entry whose path holds an undecodable byte. Read it through check_doc_refs.read_declared_absences and through trace's declared-absence reader. Then write the need-form, provenance and kernel-modules allow lists, each starting with a byte-order mark and holding a well-formed entry, a comment, a hyphen-separated entry and an unspaced one, and read each through its own reader. Read an absent file through kitlib.config.declared_entries."
+tier = "Smoke"
+expected = "Both declared-absence readers declare the same paths: the first entry, the slash-ended path without its slash, and the path with the undecodable byte replaced; the hyphen and unspaced lines are reported unparsed, by line number. Each allow-list reader reads its first entry and reports the hyphen and unspaced lines unparsed. The absent file yields nothing."
+automated = "Yes"
+evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_declared_absences_file_is_read_one_way_by_both_readers; tests/test_policy_one_home.py::test_every_declared_file_reader_strips_the_mark_and_refuses_a_hyphen"
+status = "Accepted"
+phase = 6
+
+[test.TC-448]
+verifies = ["SR-049", "SR-178", "LLR-118", "LLR-271"]
+level = "Unit"
+method = "Over a plain file tree holding an assumptions registry (two Drafted assumptions, one of them a fidelity assumption on a Drafted surrogate, a lone Drafted surrogate named only by an Accepted assumption, and a requirement relying on the first), render the open-items page in process. Render it again with one Drafted assumption's holds-when cell longer than the page's clip, and again after recording the registries' copies and moving a word of the Accepted assumption's text. Compare the page's assumption cards with the rows of trace.assumption_owing_model and with the headings of the brief's assumption section."
+tier = "Smoke"
+expected = "Each Drafted assumption and surrogate has a card, in the model's order, and the unmoved Accepted assumption has none. A first-acceptance card shows every cell whole, the long one to its end, with no diff marks; an assumption's card names each requirement relying on it with its title and text, and a surrogate's card names the assumptions naming it. The moved Accepted assumption has a card marked DRIFTED with the moved words before and after, and the header's drifted count includes it. The page's cards, the model's rows and the brief's headings name the same rows in the same order, the header counts them, and section 2 does not print its empty message."
+automated = "Yes"
+evidence = "tests/test_open_items_assumptions.py; tests/test_open_items_assumptions.py::test_each_row_owing_a_first_acceptance_has_its_card_with_its_cells_whole; tests/test_open_items_assumptions.py::test_an_accepted_assumption_whose_text_moved_shows_it_before_and_after; tests/test_open_items_assumptions.py::test_the_page_renders_the_briefs_model_and_counts_it"
 status = "Accepted"
 phase = 6

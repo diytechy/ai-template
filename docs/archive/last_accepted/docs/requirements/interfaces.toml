@@ -716,7 +716,7 @@ status = "Drafted"
 owner = "scripts/traj_status"
 consumers = ["scripts/agent_common", "external:downstream adopter"]
 channel = "file"
-data = """docs/status.md generated block: stage, spine counts, ready frontier, cited items and held rows, uncited items, review count, Blocked list"""
+data = """docs/status.md generated block: stage, spine counts, ready frontier, cited items and held rows, uncited items, unseen-decisions count, Blocked list"""
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -1028,35 +1028,35 @@ channel = "file"
 data = "one line: path then em dash then reason"
 version = "v1"
 status = "Drafted"
-notes = """Built and consumed together. The endpoints are the OTHER readers of the declared-absence grammar: trace (_declared_absences) and tests/test_dogfood_sync.py, which loads the file as its SCAFFOLD_OMISSIONS declaration through this row's own loader. check_vocab is NOT one: it carries the filename in a byte-scan inclusion set (TEXT_NAMES) and never parses the `<path> - <reason>` grammar this contract defines. check_need_form.py compares prose only, not a read."""
+notes = """Built and consumed together. Every reader parses the file through kitlib.config.declared_absences, its one reading: check_doc_refs (read_declared_absences, which gen_arch_map also calls), trace (_declared_absences) and tests/test_dogfood_sync.py, which loads the file as its SCAFFOLD_OMISSIONS declaration through check_doc_refs' loader. check_vocab is NOT one: it carries the filename in a byte-scan inclusion set (TEXT_NAMES) and never parses the `<path> — <reason>` grammar this contract defines. check_need_form.py compares prose only, not a read."""
 
 [interface.IF-073]
 owner = "docs/requirements/open-items.toml"
 consumers = ["scripts/gen_open_items", "external:downstream adopter"]
 channel = "file"
-data = """status: pending | ruled; queued or claimed work-item needs edges cite pending items"""
+data = """status: pending | ruled; queued or claimed work-item needs edges cite pending items; optional follow_up on a ruled item"""
 version = "v2"
 status = "Drafted"
 interface_to_external = "B-05"
 coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
-notes = """A pending item has at least one queued or claimed work-item citer. A ruling updates every citing row in the same commit: its Done-when adds a criterion citing the item, or, on a claimed citer whose Done-when already names the step, the ruling ticks that item and adds no evidence there; its SpecRef must name a real specification once every item it cites is non-pending, and any other changed field is synchronized. The queued citer is the item's placeholder; a claimed citer holds a step its Done-when names; wi_refs is historical metadata. Published contract, not a single consumer: kit scripts parse the registry and downstream adopters author decisions."""
+notes = """A pending item has at least one queued or claimed work-item citer. A ruling updates every citing row in the same commit: its Done-when adds a criterion citing the item, or, on a claimed citer whose Done-when already names the step, the ruling ticks that item and adds no evidence there; its SpecRef must name a real specification once every item it cites is non-pending, and any other changed field is synchronized. The queued citer is the item's placeholder; a claimed citer holds a step its Done-when names; wi_refs is historical metadata. A ruled item is carried when a work item in an open or complete directory names it in its text, when a later open item (a higher number) that is pending, or ruled and itself carried, names it, or when its follow_up cell is set; gen_open_items --ruled-cover reports each other ruled item, warn-only. Published contract, not a single consumer: kit scripts parse the registry and downstream adopters author decisions."""
 
 [interface.IF-074]
 owner = "scripts/gen_open_items"
 consumers = ["external:downstream adopter"]
 channel = "file"
-data = """docs/open-items.html — pending items a queued or claimed row cites, uncited items, acceptance/re-accept chains and owing needs and stakeholders, verdict audit, operator actions; Decisions to review last"""
+data = """docs/open-items.html — pending and uncited items, rows owing an act (SR chains, needs, stakeholders, DA, SUR), verdict audit, operator actions, record findings"""
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
-coincident = """The page lists the pending decisions and the re-acceptance chains for the operator to rule on; showing them is the page's whole promise, and the ruling is the authority crossing's own."""
+coincident = """The page lists the pending decisions and the rows owing an acceptance or a re-accept for the operator to rule on; showing them is the page's whole promise, and the ruling is the authority crossing's own."""
 
 [interface.IF-075]
 rationale = """Split out of reaccept_lines rather than reimplemented, because a second copy of the baseline derivation in a second module is the paraphrase-not-decompose failure this kit exists to prevent. The cross-component import (Generators -> Traceability core) is declared here rather than retagged: the model belongs with the registries it reads, and the renderer belongs with the generators."""
 owner = "scripts/trace"
 requestors = ["scripts/gen_open_items", "scripts/adjudicate_brief", "scripts/amendment_brief"]
 channel = "call"
-data = "reaccept_model entries: chain rows, changed cells, baseline rev and date, and each spine registry's own copy stamp; an empty model is a valid answer"
+data = "reaccept_model entries (chain rows, changed cells, baseline, copy stamps); assumption_owing_model rows (id, why, moved cells, chain); an empty model is valid"
 version = "v1"
 status = "Drafted"
 
@@ -1120,7 +1120,7 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
-bridged_by = ["DA-013"]
+bridged_by = ["DA-013", "DA-021", "DA-022"]
 
 [interface.IF-154]
 owner = "scripts/integrate"
@@ -1512,7 +1512,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-007"
-notes = """cross-component crossing declared per the architecture rule. Existence checking stays this module's own whole-file scrape, byte-for-byte the rule trace.py uses — only the Must/Should floor moved to the carrier."""
+notes = """cross-component crossing declared per the architecture rule. Existence checking is kitlib.spine.sn_all_ids, the one SN-id universe trace.py reads, with the carrier from the file's suffix; the Must/Should floor reads the carrier."""
 
 [interface.IF-113]
 rationale = """The loader's both-ways strictness is load-bearing here rather than merely tidy: a judge's brief whose evidence section is thin reads as an investigation that was run and found nothing, so there is deliberately no partially-filled path across this seam."""
@@ -1668,11 +1668,11 @@ status = "Drafted"
 notes = "The digest uses the same accepted-cell classification as split_changed_cells, so a carrier representation and an absent versus empty cell do not change it."
 
 [interface.IF-131]
-rationale = """The rules read the live source AST instead of parsing the retired docs/architecture.md MODULE MAP block back. One walk, one grammar: the module keys and import names are exactly what the map rendered, so every downstream join (stem resolution, CMP membership) is unchanged."""
+rationale = """The rules read the live source AST instead of parsing the retired docs/architecture.md MODULE MAP block back. One walk, one grammar: the module keys and import names are exactly what the map rendered, so every downstream join (import resolution, CMP membership) is unchanged."""
 owner = "scripts/gen_arch_map"
-requestors = ["scripts/check_trajectory"]
+requestors = ["scripts/check_trajectory", "scripts/arch_inputs", "scripts/arch_interfaces", "scripts/arch_tags", "scripts/arch_seams"]
 channel = "call"
-data = "scan_inventory, contracts_grammar_findings, file_contracts, file_grammar_findings, owner_files, ContractsGrammarError, read_test_tags"
+data = "scan_inventory, resolve_import, package_paths, read_test_tags and the contract-header grammar readers; see Contract IF-131 in the owner module"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -2014,7 +2014,7 @@ notes = """source - assumption_rules consumes nothing but the row vocabulary it 
 [interface.IF-214]
 rationale = """An observation result is kept apart from its test case, one file per result, so recording a sample never edits an accepted row; one shipped module owns the file's format, its strict reader and its atomic write, and the writer and the checker both go through it, so neither can read half a record as a result or disagree with the other about what a record is."""
 owner = "scripts/kitlib/observation"
-consumers = ["scripts/record_observation", "scripts/assumption_rules", "scripts/baseline_snapshot", "scripts/kitlib/evidence"]
+consumers = ["scripts/record_observation", "scripts/assumption_rules", "scripts/baseline_snapshot", "scripts/kitlib/evidence", "scripts/rejudge"]
 channel = "file"
 data = "one TOML record per result: tc, outcome pass | fail, observed_at and expires in canonical UTC, provenance, judged inputs digest"
 version = "v1"
@@ -2403,7 +2403,7 @@ component = "CMP-009"
 owner = "scripts/trajectory_arch"
 requestors = ["scripts/check_trajectory"]
 channel = "call"
-data = "architecture inventories and findings for seams, contracts, components, code symbols, spec boundaries, test-file tags, and tag/evidence equality"
+data = "architecture inventories and findings: seams, contracts, components, code symbols, spec boundaries, test-file tags, tag/evidence equality, and undeclared cases"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -2520,8 +2520,9 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 rationale = "The hook caller needs one response shape so a latch instruction reaches the coordinator without turning a hook response into a tool refusal."
-
-notes = """No tie-back: the hook invocation and response are Claude Code's own process protocol; the locked frame declares no crossing for this local tool exchange."""
+interface_to_external = "B-04"
+bridged_by = ["DA-021"]
+notes = """Tied to B-04: a hook response that denies a tool call or injects the guard's instruction is a guardrail verdict this system emits during a session, which B-04 carries, as the subagent gate's response rows (IF-020, IF-169) are. Its input, the hook event (IF-274), stays untied: the frame declares no inbound crossing for the agent CLI's call into a local tool."""
 
 [interface.IF-277]
 owner = "external:agent CLI"
@@ -2677,7 +2678,9 @@ data = "0 brief written, or review, critique, dispute findings or pass record fi
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = "No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."
+interface_to_external = "B-05"
+coincident = """Its reading is the outcome: 0 means the brief was written or the review, critique, dispute findings or pass record filed, and 2 that the request was refused with nothing written; the launcher acts on the code as returned."""
+notes = "Tied to B-05: the command's result codes are a delivered script's contract, as integrate's are (IF-080), and B-05 carries the delivered scripts' contracts. Its command line (IF-288) stays untied: the frame declares no inbound crossing for a session's invocation."
 
 [interface.IF-291]
 rationale = "Every pause consumer needs one boundary interpretation, because separate parsing would disagree over wrapping weekdays, end instants or the interval whose end resets retained work."
@@ -2831,3 +2834,95 @@ version = "v1"
 status = "Accepted"
 component = "CMP-006"
 notes = "The requestor reports each line unchanged as a finding at its own severity and adds the fix, running the migrator."
+
+[interface.IF-314]
+rationale = """A credential class is one decision with two sides, whether the commit floor scans for it and whether the transcript redactor removes it. Both sides derive their patterns from one table, so a class added or dropped reaches both or neither, and a secret the floor refuses can no longer pass the redactor because two hand copies drifted."""
+owner = "scripts/kitlib/secret_classes"
+requestors = ["scripts/check_privacy", "scripts/agent_common"]
+channel = "call"
+data = "SECRET_CLASSES: SecretClass(name, scan_pattern, redact_pattern) per credential class; SECRET_CLASSES_BY_NAME"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """source - pure data over re and typing with no sibling import, so the scaffolder may import it too. The requestors keep their public names (KEY_RE, TOKEN_RES, _SECRET_RES) as views built from the table."""
+
+[interface.IF-315]
+rationale = """A file another process may read at any moment needs a write that is all or nothing, with a bounded retry while Windows holds the target. The observation record already owns that write, so the coordinator's lease and request files and the guard's settings file take it rather than keeping a second copy that could lose the retry."""
+owner = "scripts/kitlib/observation"
+requestors = ["scripts/coordinator_guard", "scripts/kitlib/guard_hooks"]
+channel = "call"
+data = "write_atomic(path, text): a dot-named temporary beside the target, one replace, a refused replace retried a bounded number of times, then raised"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """The record writer's own call to write_atomic is part of IF-214. These requestors write no observation record: the write lives in the record module because the record needed it first."""
+
+[interface.IF-316]
+rationale = """Every architecture rule reads the registry rows, the opt-out dials, the scan profile and the source inventory through one module, so no two rules read one input two ways and no rule keeps a loader of its own."""
+owner = "scripts/arch_inputs"
+requestors = ["scripts/trajectory_arch", "scripts/arch_interfaces", "scripts/arch_tags", "scripts/arch_seams", "scripts/arch_components"]
+channel = "call"
+data = "registry paths, IF_ID_RE, CMP_ID_RE, both opt-out dials, load_ifs, load_seams, load_cmps, arch_inventory, and private helpers incl. _arch_scan_profile"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-317]
+owner = "scripts/arch_interfaces"
+requestors = ["scripts/trajectory_arch"]
+channel = "call"
+data = "interface_findings, contract_body_findings, unchecked_contract_rows, the seam-TC allowlist readers and rules, and private helpers trajectory_arch re-exports"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-318]
+owner = "scripts/arch_tags"
+requestors = ["scripts/trajectory_arch"]
+channel = "call"
+data = "codesymbol_crosscheck_findings and tc_tag_findings -> finding strings, and the private helpers trajectory_arch re-exports"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-319]
+owner = "scripts/arch_seams"
+requestors = ["scripts/trajectory_arch", "scripts/arch_components"]
+channel = "call"
+data = "cross_component_findings, cross_component_advisories, read_kernel_modules, kernel_allow_parse_findings, _classifiable_edges, _cross_component_scan, _SCAN_CACHE"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-320]
+owner = "scripts/arch_components"
+requestors = ["scripts/trajectory_arch"]
+channel = "call"
+data = "component_top_view, knowledge_packs, TOP_VIEW_MAX, derivation_record_findings, component_findings, and the private _cmp_roots trajectory_arch re-exports"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
+[interface.IF-321]
+owner = "scripts/coordinator_adjudicate"
+requestors = ["external:agent CLI"]
+channel = "file"
+data = "the verdict at the PATH adjudicate reserved, empty and exclusive, before launch; read only after a call that exits 0 within its deadline"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+interface_from_external = "B-10"
+coincident = """Its reading is the outcome: what the coordinator acts on is a verdict this call wrote at the path it reserved before its deadline, or a failed call, never another call's leftover or a late write."""
+rationale = """A coordinator adjudication counts as success only a verdict its own call wrote, so the file the adjudicator writes back is a surface of its own: the entry point reserves it before launch and reads it only after a successful call. Reading a caller-supplied path or a shared record instead would leave the verdict's author and time ambiguous."""
+
+[interface.IF-322]
+owner = "scripts/kitlib/dispute"
+requestors = ["external:agent CLI"]
+channel = "file"
+data = "dispute verdict: one RULING line per requested id, FIX | SUCCESSOR | DISMISS <out-of-scope|refuted|not-worth-cost> | ESCALATE, with its reason"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+interface_from_external = "B-10"
+coincident = """Its reading is the outcome: a verdict that rules every requested finding exactly once, from the declared rulings and with a reason, is the ruling the dispute ends on; anything else is refused whole, and no ruling is defaulted."""
+rationale = """An adjudicator answering a dispute writes its verdict in a grammar the kit defines, and the dispute's bound rests on reading that grammar strictly. Declaring the surface the adjudicator writes into keeps the grammar the brief asks for and the one validation reads as one."""

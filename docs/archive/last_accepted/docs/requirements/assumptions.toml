@@ -1,0 +1,334 @@
+# docs/requirements/assumptions.toml — THE CLAIMS ABOUT THE WORLD this kit's
+# requirements rely on, and the stand-ins that answer for outside parties in its
+# tests. The shipped blank form, with every cell explained, is
+# project-trajectory/registries/assumptions.template.toml.
+#
+# TWO ROW KINDS, ONE FILE:
+#
+#   [assumption.DA-###]   a domain assumption a requirement's argument relies on
+#   [surrogate.SUR-###]   a stand-in for outside parties in tests, named by the
+#                         assumption stating its fidelity
+#
+# EACH ROW IS A DERIVED CLAIM, not a transcription: nothing wrote these premises
+# down before, so a new row enters `Drafted` and waits for its own reviewed
+# acceptance act, where an assumption and the surrogate its fidelity names are
+# judged together. The requirement classification, form and interface-bridging
+# reports read every row; the assumption gate counts only accepted, active
+# assumptions, and fails on them only while `[checks] assumption_gate` is on.
+#
+# WHERE THEY LAND. An assumption's outcome lands where a person meets the kit in
+# use: the person's own crossings (B-02 authority, B-09 read) or the
+# development session's, which mediates for that person (B-01 writes, B-04
+# verdicts). A fidelity assumption lands on a crossing of the party its
+# surrogate emulates instead. The delivered package's crossing, B-05, is never a
+# landing: no stakeholder meets the kit there.
+#
+# The record of what was accepted (`docs/archive/last_accepted/`) holds a copy
+# of this file from the acceptance act that accepted its first rows.
+
+[assumption.DA-001]
+effect_at = ["B-09"]
+assumption = """A spine the strict traceability check passes with zero orphans is one a reviewer can rely on: each traced row says something a reviewer would act on, and its links are the ones a reviewer would draw."""
+holds_when = """Rows are authored and adjudicated under the spine-authoring question list, and the reviewer reads the generated views rather than the raw registries."""
+obstacle = """Every row resolves and every row says nothing: an orphan-free spine whose rows are vacuous, or whose links were drawn to satisfy the check rather than the argument."""
+falsifier = """A reviewer new to the spine, sampling traced rows through the generated views, finds a row that says nothing they would rely on, or a link they would not have drawn."""
+obstacle_hats = ["TEST-ENGINEER"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-002]
+effect_at = ["B-01", "B-09"]
+assumption = """A scaffold whose harness passes straight after generation is one an adopting team can work in: it can write its first registry rows and advance through its first gate without reading the kit's source."""
+holds_when = """The team's stack is one of the shipped profiles, and the team reads the adoption guide before first use."""
+obstacle = """A team scaffolds a repository that passes, never fills a registry, and operates a spine that resolves and says nothing, because the step from the passing scaffold to a first real row needs knowledge only the kit's source holds."""
+falsifier = """A first-time team, given a shipped profile and the adoption guide, fails to reach a first filled registry without reading the kit's source."""
+obstacle_hats = ["FIRST-RUN-ADOPTER"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-003]
+effect_at = ["B-02"]
+assumption = """A changed Status cell on a rung the declared acceptance level holds for an operator means an operator actually exercised the judgement that Status asserts."""
+holds_when = """The row's rung is at or below the rung the declared acceptance level holds for an operator, and the change is committed by a person rather than by an unattended run."""
+obstacle = """A Status change on an operator-held rung arrives in a commit an unattended run authored, or a person flips the cell without reading the row it accepts."""
+falsifier = """A commit carrying the loop's provenance trailer that changes a Status cell on an operator-held rung."""
+obstacle_hats = ["SECURITY"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-004]
+effect_at = ["B-01"]
+assumption = """A write the local hook floor admitted was checked: the floor was not bypassed, or a re-run of the same checks away from the session agrees with it."""
+holds_when = """Commits and pushes are made through the installed hooks rather than with them skipped, or a re-run of the declared checks away from the session is in place for each change that reaches a shared branch."""
+obstacle = """A commit or push made with the hooks skipped (a --no-verify commit or push, or a checkout where the hooks were never installed) admits an unchecked write, and nothing re-runs the checks before it is shared."""
+falsifier = """A pushed commit carrying a secret-class match the hook would have refused, or a merged commit whose re-run checks fail while its local hooks reported a pass."""
+obstacle_hats = ["SECURITY"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-005]
+effect_at = ["B-09"]
+assumption = """Where hosted CI is configured, the runner honours the shipped workflow: each declared trigger runs the documented harness entry point at the tier the declared moment-to-tier table assigns, across the declared OS and Python matrix, and the job's verdict is the harness's own exit."""
+holds_when = """The repository's workflow is the shipped reference workflow, unedited, and the hosted runner executes workflow files as its provider documents them."""
+obstacle = """The runner, a provider default or an edited copy suppresses a declared run or a step (a disabled schedule, a path filter, a skipped job, a continue-on-error), and a change is shared behind a verdict no checks produced."""
+falsifier = """A declared trigger with no hosted run, or a hosted job reported passing whose step log lacks the harness invocation at its declared tier."""
+obstacle_hats = ["UNATTENDED-OPS"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-006]
+effect_at = ["B-09"]
+assumption = """The model runner follows the runner contract: it reads its prompt from stdin, exits with the documented codes, ends rather than waits when it needs input it cannot have, and leaves its work as commits in its own lane, so the work the operator reads back is the work the loop asked for."""
+holds_when = """A runner and model listed in the declared agent registry, at the command-line version the loop was tested against."""
+obstacle = """A runner update changes its exit codes, its commit behaviour or what it does on a closed stdin, and every loop requirement relying on the contract loses its premise at once."""
+falsifier = """A routed session whose exit code, stdin behaviour or commit shape falls outside the documented runner contract."""
+obstacle_hats = ["UNATTENDED-OPS"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-007]
+effect_at = ["B-09"]
+assumption = """A review or critique session that did not author the work, drawn from a different model family where one is configured, finds defects the authoring session was blind to, so its verdict adds evidence the author's own could not."""
+holds_when = """At least two model families are configured and routable, the reviewer receives the written rubric or the requirement text rather than the author's self-assessment, and the reviewing family is not the authoring one."""
+obstacle = """Families trained alike share the same blind spots, or the brief carries the author's framing into the review, and the second opinion agrees for the wrong reasons."""
+falsifier = """A defect found after acceptance that the independent reviewer's recorded verdict passed, and that a person or a later reviewer finds plainly visible in the reviewed artifact."""
+obstacle_hats = ["TEST-ENGINEER"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-008]
+effect_at = ["B-10"]
+realized_by = "SUR-001"
+assumption = """The scripted runner reproduces a real runner's argv and stdin handling, exit codes and commit effects; it reproduces no judgement, so nothing about the quality of a model's work is evidenced by a test run against it."""
+holds_when = """Loop tests that assert protocol behaviour (what is sent, what code comes back, what lands as a commit), never the content a model would produce."""
+obstacle = """A real runner behaviour the script does not model (a partial write, streamed output, a timeout, an interactive prompt) that the loop depends on."""
+falsifier = """A loop defect seen with a real runner that the scripted runner cannot reproduce."""
+obstacle_hats = ["TEST-ENGINEER"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-009]
+effect_at = ["B-01", "B-04"]
+realized_by = "SUR-002"
+assumption = """A scaffold generated into a temporary directory behaves like a fresh adopter repository for the writes the suite makes into it and the verdicts it reads back."""
+holds_when = """The same shipped profile, a clean supported Python and git on the path, with no hooks, attributes or configuration inherited from the machine running the suite."""
+obstacle = """An adopter environment property the temporary directory lacks (hooks already installed, line-ending conversion, a monorepo layout, a path with spaces) changes a verdict the suite saw pass."""
+falsifier = """An adopter-reported scaffold failure that the suite's scaffold fixture passes."""
+obstacle_hats = ["CROSS-PLATFORM"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-010]
+effect_at = ["B-09"]
+realized_by = "SUR-003"
+assumption = """A vision model judging the rendered state view against its written rubric reaches the verdict a human reviewer reading the same render would."""
+holds_when = """An image-capable model; the rubric carries its accumulated anchors; a static render at a declared width, theme and tab."""
+obstacle = """A model revision shifts judgement silently, or the rubric overfits to anchors accumulated under one model's eye."""
+falsifier = """A periodic human reading of the same renders that disagrees with the critic's recorded verdict."""
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-011]
+effect_at = ["B-09"]
+assumption = """What a random sample of the code's parts shows about its readability holds for the parts the sample did not reach: where each reader new to a sampled part can say what it does and why it exists, from its code and the records linked to it and without asking its author, a reader new to any other part can too."""
+holds_when = """Parts are drawn at random from the whole source the project's readability and structure measures cover, never chosen by their authors; the parts share the project's conventions and carry back-links to the requirement and design rows that say why they exist; each reader has not worked on the part and reads its records through the generated views."""
+obstacle = """The sample misses the parts that are hard to read (a legacy module, a hand-tuned path, a part whose reason lives only in its author's head), and a clean sample stands for code it does not represent."""
+falsifier = """A reader new to a sampled part cannot say what it does or why it exists from its code and linked records; or a part outside an earlier clean sample is found that no new reader can explain."""
+obstacle_hats = ["MAINTAINER"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-012]
+effect_at = ["B-04", "B-09"]
+assumption = """A supported platform, and a Python release of 3.11 or later that the declared test matrix did not sample, run the kit's scripts and root launchers as the sampled ones do."""
+holds_when = """A CPython release of 3.11 or later with its standard library intact, on Linux, Windows or macOS, and a test matrix that samples the oldest supported release and the latest one."""
+obstacle = """A later interpreter release changes or removes a standard-library behaviour a kit script relies on, or a platform changes how a shell or launcher starts a script, and a check crashes or gives a different verdict on the adopter's machine."""
+falsifier = """A kit script or root launcher failing, or giving a different verdict, on a supported platform and interpreter release the test matrix did not sample."""
+obstacle_hats = ["CROSS-PLATFORM"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-013]
+effect_at = ["B-01"]
+assumption = """Work reaches the integration branch only through the gated path: a loop lane through the serial integrator that runs the declared checks on the composed tree, and a person's change through the hook floor and the declared checks."""
+holds_when = """No one hand-merges a loop lane or pushes to the integration branch around the merge slot; where someone does, the merge-slot sweep is run after it."""
+obstacle = """A person hand-merges a loop lane or pushes straight to the integration branch, and a composed tree that never ran the declared checks becomes the state every later lane builds on."""
+falsifier = """An integration-branch commit whose tree fails the declared checks, or a merged lane with no merge-slot intake record."""
+obstacle_hats = ["INTEGRITY-RECOVERABILITY"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-014]
+effect_at = ["B-01", "B-04"]
+assumption = """An adopter moves to a newer kit through the scaffold's re-run or the documented re-sync procedure, which run the kit's migration pass and preserve the adopter's own files, rather than by copying kit files over by hand."""
+holds_when = """The adopter follows the documented upgrade route and reads its re-sync entries for the range it crosses."""
+obstacle = """An adopter hand-copies a newer kit over an old checkout, the migration pass never runs, and the first run meets the legacy-file refusal, or a filled-in file is lost, with nothing explaining why."""
+falsifier = """An adopter report of the legacy-file refusal, or of a clobbered filled-in file, after an upgrade that bypassed the documented route."""
+obstacle_hats = ["FIRST-RUN-ADOPTER"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-015]
+effect_at = ["B-09"]
+assumption = """A fresh model session asked to judge whether queued work items overlap, from a brief the loop composed from the registries, judges as the operator would: the items it merges overlap, and the successor it names carries their scope."""
+holds_when = """A runner and model at a strong tier listed in the declared agent registry; the brief carries each item's full scope text; the operator reads the recorded restructuring where the queue is shown."""
+obstacle = """The session merges items that do not overlap, or names a successor that drops part of an absorbed scope, and no one reads the recorded restructuring."""
+falsifier = """An operator reversing a recorded consolidation, or re-filing scope an absorbed item carried."""
+obstacle_hats = ["PRODUCT-FITNESS"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-016]
+effect_at = ["B-09"]
+assumption = """A claude runner serves Anthropic and a codex runner serves OpenAI unless its route or runner configuration redirects it to another provider."""
+holds_when = """The routed runner uses its default provider configuration, with no provider override in the route or the runner's own configuration."""
+obstacle = """A route or runner configuration redirects the call to another provider while the usage record continues to name the runner's default provider."""
+falsifier = """A routed claude or codex call made with no provider override is served by a provider other than the runner's named default."""
+obstacle_hats = ["PERFORMANCE"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-017]
+effect_at = ["B-09"]
+assumption = """A supported model runner's documented resume form continues the session named by its session id, preserving the transcript that the retained adjudication is meant to reuse."""
+holds_when = """The session still exists at the provider and the runner version is one whose mint and resume forms the kit supports."""
+obstacle = """The provider expires or replaces the session, or a runner update changes resume semantics, and a call presented as resumed starts from a different transcript."""
+falsifier = """A supported runner accepts a retained session id in its documented resume form but the resulting adjudication does not continue that session's transcript."""
+obstacle_hats = ["INTEGRITY-RECOVERABILITY"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-018]
+effect_at = ["B-09"]
+assumption = """The person releasing works through the generated release checklist before the release ships: they confirm, from a measurement of that release, that each warn-tier budget it lists is within its allocation, and they check whether the falsifier of each assumption it lists has been observed, so a ticked item records a check that was made."""
+holds_when = """The checklist is regenerated for the release being made, a measurement of each listed budget on that release is at hand, and the ticked copy is kept as the release's record."""
+obstacle = """The checklist is ticked without the checks behind it, or not worked at all: a budget item is ticked with no measurement of the release, or an assumption item with no check for its falsifier. A budget over its allocation, or an assumption already shown false, then ships unread, and no gate fails for either."""
+falsifier = """A release whose kept checklist ticks a budget item when no measurement of that budget exists for the release, or when the release's measurement is outside its allocation, or ticks an assumption item while an observation recorded before the release shows that assumption false; or a release with no ticked checklist kept for it."""
+obstacle_hats = ["TEST-ENGINEER", "PERFORMANCE"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-019]
+effect_at = ["B-09"]
+assumption = """A model in a guarded session acts on the guardrails payload chosen for it: where the payload says how to plan, check or route the work, the session's work follows it, and so the work the operator reads back from a session on that model was done under the posture the repository wrote for that model."""
+holds_when = """The payload was written for, and tried on, the model it is chosen for, at a model version that still reads it as it did then; and nothing else the session is told, in its brief or in the repository's instruction files, contradicts the payload."""
+obstacle = """The model reads the payload and does not act on it, or acts on only part of it, because the payload was written for another model, the model behind the same name has changed, or the brief or an instruction file tells it otherwise. The payload is still injected and the session log still records the session as guarded, so the repository believes a posture is in force that no session keeps."""
+falsifier = """A session whose log records it as guarded, and whose transcript or lane commits go against an instruction in the payload chosen for its model: for example, code committed before a plan the payload requires, or work reported done without a check the payload requires."""
+obstacle_hats = ["UNATTENDED-OPS"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-020]
+effect_at = ["B-09"]
+assumption = """A delegated run's decisions record lists every call the run was told to record, each described as the run's work shows it, and the operator reads each entry listed as not yet seen and confirms or overrules it, so a call made on the operator's behalf reaches the operator."""
+holds_when = """The session writes its record at its close, from the work it did, under the instruction it is handed that names which calls to record; and runs add entries no faster than the operator reads them, the operator reading the listed entries at each sitting."""
+obstacle = """A run leaves a call out of its record, or describes it as smaller or safer than its work shows; or entries pile up faster than the operator reads them, the backlog is skimmed or left, and a call the operator would have overruled stands unread while later work builds on it."""
+falsifier = """A call that a delegated run's diff or session log shows plainly and that its record leaves out or misdescribes; or an entry left listed as not yet seen while the operator confirms or overrules entries recorded after it; or an entry still listed as not yet seen after later work has built on the call it records, which git history shows as a later integrated commit that changes what the call changed or carries out what it decided."""
+obstacle_hats = ["UNATTENDED-OPS"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-021]
+effect_at = ["B-09"]
+assumption = """The agent CLI that runs a coordinator session keeps its documented hook contract: it runs the hooks the repository configures at each event it documents, handing each hook that event's documented fields; it holds back a tool call a hook denies and adds a hook's injected text to the session; and it exports the session's id to the commands its tools run. So the coordinator guard sees each start, compaction, tool call and end of the session it guards, and the refusal or instruction it returns takes effect in that session."""
+holds_when = """Claude Code at a version whose hook events and payload fields the guard was built and tested against, with the repository's coordinator hooks installed and on, and no user or managed setting that turns hooks off for the session."""
+obstacle = """A CLI update renames an event or a field, stops running hooks for some sessions, or lets a denied tool call run; or a setting outside the repository turns the hooks off. The guard then keeps a lease, a drain latch or a relaunch request for a session whose events it no longer receives, and a blackout denial or a close-down instruction never reaches the session."""
+falsifier = """A coordinator session, on a supported CLI version with the hooks installed and on, in which a configured hook did not run at an event the CLI documents, a tool call a hook denied ran anyway, or the session id exported to a tool's command differs from the one in the hook payloads and the transcript."""
+obstacle_hats = ["UNATTENDED-OPS", "INTEGRITY-RECOVERABILITY"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-022]
+effect_at = ["B-09"]
+assumption = """The agent CLI writes each session's transcript as the session ran: each completed model response with the usage of the request that produced it, a compaction as a boundary record, a resumed session appended to the transcript it continues, and each agent the session spawns in a transcript of its own. So the context occupancy and the token usage the kit reads from transcripts are the session's own, each response counted once."""
+holds_when = """Claude Code at a version whose transcript record shapes the kit's readers accept, writing to its default home, with the transcripts left in place until the kit has read them."""
+obstacle = """A CLI update changes what a usage field counts (cached input folded into fresh input, a spawned agent's usage moved into its parent's), rewrites earlier records on resume, or stops writing a spawned agent's transcript, in a shape the readers still accept. The drain latch then fires late or not at all, and the usage record under- or over-counts, with no refusal to show it."""
+falsifier = """A transcript from a supported CLI version from which the kit reads a context occupancy that differs from the context the CLI itself reports for the session at the same point; a transcript that repeats a completed response after a resume; or a spawned agent whose work appears in no transcript of its own."""
+obstacle_hats = ["PERFORMANCE", "UNATTENDED-OPS"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-023]
+effect_at = ["B-10"]
+realized_by = "SUR-004"
+assumption = """The recorded and built Claude Code session records the coordinator guard's tests run on carry what the agent CLI writes and sends at the supported versions: the same transcript record types, fields and usage numbers, the same compaction boundary and preserved-message markers, the same hook event names and payload fields, and the same arguments a relaunch launcher hands the claude command. They reproduce no judgement of the session's, so nothing about what a coordinator decides is evidenced by a test run against them."""
+holds_when = """The supported Claude Code versions are those whose transcript records and hook payloads match the fixtures: the recording of 2.1.289 and the transcripts built to the record shapes of 2.1.285. A CLI update that changes either is followed by new fixtures before the guard's tests are relied on."""
+obstacle = """A CLI update changes a record shape, a usage field or a hook payload that the fixtures do not carry, and the guard's tests go on passing over shapes the CLI no longer writes."""
+falsifier = """A transcript record or hook payload from a supported Claude Code version that the guard reads differently from the fixture standing for it: an occupancy, a compaction boundary, an event or a session id the guard finds in the fixture but not at the same point of a live session."""
+obstacle_hats = ["TEST-ENGINEER"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-024]
+effect_at = ["B-09"]
+assumption = """A coordinating session acts on the coordination instructions the kit publishes for it and injects into it: it starts Sol and Terra sessions only through the coordinator-call route, records its usage at its close-out and at the end of a headless leg, and, once told the blackout close-down or the context drain, brings each open lane to its pause point, writes its handoff and ends instead of starting new work. So the sessions and the pauses the operator reads back are the ones coordination actually ran."""
+holds_when = """The coordinating model reads the shipped coordination skill and the text the guard's hooks inject, at a model version that still follows them, and nothing in its brief or in the repository's instruction files tells it otherwise."""
+obstacle = """The model starts a session another way (a model CLI run straight from its shell), skips the usage recording, or keeps working after the close-down or the drain instruction, because the instruction was lost to compaction, contradicted by its brief, or not followed. The usage record then misses sessions, and a blackout or a drain the repository declared is not kept."""
+falsifier = """A coordinated work item whose records or transcripts show a Sol or Terra session with no coordinator-call record; a coordinator session that ended without its transcript recorded in the usage record; or a coordinator transcript that claims new work, or starts a model session other than a lane's wrap-up adjudication, after the blackout close-down or the drain instruction was injected into it."""
+obstacle_hats = ["UNATTENDED-OPS"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-025]
+effect_at = ["B-09"]
+assumption = """An agent working in a repository decides whether to load a skill from the skill's description alone, and loads it for the work its description names. So a shipped skill whose description says when to use it is used where it was written to be used, and one whose description cannot say so is not used at all."""
+holds_when = """The agent CLI lists the installed skills to the model by name and description only, as the supported CLIs document."""
+obstacle = """The CLI or the model picks skills by something other than the description (the name alone, an undocumented ranking, the skill's whole body), or loads none unless told to. Shipped guidance then goes unread by the agent it was written for, and nothing in the kit reports it."""
+falsifier = """A session on a supported CLI whose task matches a shipped skill's stated trigger and that does not load the skill, or that loads a skill for work its description does not name."""
+obstacle_hats = ["FIRST-RUN-ADOPTER"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-026]
+effect_at = ["B-02"]
+assumption = """An independent adjudication that rules an amendment to an accepted row CLARITY rules as the operator would: the operator, reading the row's accepted text beside the amended text, agrees that the amendment leaves what the row requires, permits and excludes unchanged. So carrying the operator's acceptance onto the amended text carries it onto what they accepted."""
+holds_when = """The adjudicating session did not write the amendment, is handed the accepted and the amended text whole with the amendment rubric, and its verdict is recorded where the open-items page's audit list shows the act it authorized."""
+obstacle = """The adjudicator reads a narrowed, widened or reworded obligation as a clearer statement of the same one, and the operator's acceptance is carried onto text they would not have accepted, with only the audit list to show it."""
+falsifier = """An act in the open-items page's audit list, re-accepted on a CLARITY verdict, whose amendment the operator, on reading it, finds changed what the row requires, permits or excludes."""
+obstacle_hats = ["SECURITY"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-027]
+effect_at = ["B-01", "B-09"]
+assumption = """The kit runs in the normal working environment its review threat model names: hosts whose integrity is not compromised, worked through the supported workflows and routes, where a forbidden hand act (rewinding the trunk branch, skipping or turning off a hook, hand-editing generated or ruled state) is never an ordinary step: one is taken only as a person's deliberate departure from those workflows. So a defect whose reproduction needs a compromised or contrived host, or a forbidden hand act, is not one the operator or an adopter meets in ordinary use, and dismissing it leaves them exposed to nothing they meet in it."""
+holds_when = """The repository is worked through the supported workflows and the kit's own routes, on hosts its users control, and no tool or common setup takes a forbidden hand act as an ordinary step."""
+obstacle = """An ordinary step on a supported path produces the state a dismissed finding needed (a tool that rewrites history, a hook a common setup turns off, a generated file an editor saves over), so a defect the review ruled contrived reaches users in ordinary use."""
+falsifier = """A defect met in ordinary use, on a supported host and through a supported workflow or route with no forbidden hand act, whose reproduction a review dismissed or graded down as needing a compromised or contrived host."""
+obstacle_hats = ["UNATTENDED-OPS", "SECURITY"]
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-028]
+effect_at = ["B-09"]
+assumption = """A session that judges review findings, whether a reviewer, a critic, a coordinator ruling on a verdict or an adjudicator, applies the written review directions it is handed: it grades each finding by a scenario a supported workflow or route reaches, dismisses in one recorded line a finding whose reproduction needs a compromised or contrived host instead of asking for code, and re-grades a BLOCKER or MAJOR the directions do not support. So a review ends on the findings that matter rather than reworking contrived ones round after round."""
+holds_when = """The session receives the shipped review directions and the threat model they cite, at a model version that still follows them, and nothing in its brief tells it otherwise."""
+obstacle = """A session grades by its own sense of risk, keeps a contrived scenario at BLOCKER or MAJOR, or asks for a code change to answer one, and the lane reworks the same out-of-scope finding until its round budget runs out."""
+falsifier = """A recorded verdict or ruling that goes against the directions it was handed: a finding that needs a compromised or contrived host left at BLOCKER or MAJOR, or answered with a code change; or a fail-open path a supported workflow reaches dismissed as contrived."""
+obstacle_hats = ["UNATTENDED-OPS"]
+status = "Accepted"
+standing = "active"
+
+[surrogate.SUR-001]
+name = "Scripted model runner"
+emulates = ["EXT-005"]
+description = """A scripted stand-in the loop tests launch in place of a model runner's command line: it answers the runner contract (prompt on stdin, an exit code, commits in its lane) from a per-test action script, so the loop's protocol is tested with no model called. Carried by the FAKE_AGENT harness in tests/test_agent_loop.py."""
+status = "Accepted"
+
+[surrogate.SUR-002]
+name = "Scaffold surrogate"
+emulates = ["EXT-001"]
+description = """A fresh scaffold bootstrapped into a temporary directory and driven by running the kit's actual commands, as a development session in an adopter's repository would. Carried by the suite's scaffold fixture in tests/conftest.py."""
+status = "Accepted"
+
+[surrogate.SUR-003]
+name = "Render critic"
+emulates = ["EXT-006"]
+description = """The render-dashboard-critique skill with an image-capable model: it screenshots the state view across the declared width, theme and tab matrix and judges the renders against the written rubric, standing in for the human reader of the view."""
+status = "Accepted"
+
+[surrogate.SUR-004]
+name = "Recorded coordinator session records"
+emulates = ["EXT-005"]
+description = """Claude Code session records the coordinator guard's tests read in place of a live agent CLI: a sanitized recording of a real Claude Code 2.1.289 session through a manual compaction (tests/fixtures/coordinator_guard/compaction-manual-2.1.289.jsonl), transcripts built in the record shapes of Claude Code 2.1.285, hook-event payloads written to the documented fields, and a stubbed claude command the relaunch launchers start. Carried by tests/test_coordinator_guard.py and tests/test_coordinator_guard_e2e.py."""
+status = "Accepted"

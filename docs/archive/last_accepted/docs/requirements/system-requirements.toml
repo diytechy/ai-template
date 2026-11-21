@@ -150,6 +150,7 @@ priority = "S"
 verification_method = "Test"
 status = "Accepted"
 phase = 1
+coincident = """The need asks for a chain a reviewer can trust because a machine checks it rather than a person asserting it. A requirement's dimensional cases expanded by rule from the inputs it declares, rather than listed by hand, are that check for its coverage: the case set the reviewer reads is the expansion itself, with nothing between the grammar and the cases it yields. Whether the declared dimensions are the right ones is the requirement's own text, judged at its acceptance; showing that an enforcer fails when it should is the negative tests' work, as the rationale says."""
 
 [requirement.SR-026]
 title = "Coordinator resumes headless"
@@ -233,6 +234,7 @@ priority = "S"
 verification_method = "Test"
 status = "Accepted"
 phase = 1
+da_refs = ["DA-018"]
 delivered_with = ["SR-006", "SR-049"]
 
 [requirement.SR-034]
@@ -465,6 +467,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 4
 aspect = "trajectory"
+coincident = """The need asks that an agent derive its next work from the tracked work-item registry. A conversion that keeps every cell, proven by a cell-exact round trip over the populated registry, and that refuses a status it cannot place and any conversion while a claim is in flight, leaves the registry the derivation reads exactly as it was, in whichever representation it is kept. Nothing stands between the converter and the files it writes."""
 
 [requirement.SR-137]
 title = "One policy home with conflict and validity refusal"
@@ -1632,6 +1635,7 @@ priority = "C"
 verification_method = "Test"
 status = "Accepted"
 phase = 6
+da_refs = ["DA-019"]
 delivered_with = ["SR-154", "SR-175"]
 
 [requirement.SR-224]
@@ -1646,19 +1650,21 @@ priority = "C"
 verification_method = "Test"
 status = "Accepted"
 phase = 6
+da_refs = ["DA-025"]
 
 [requirement.SR-225]
 title = "A delegated run closes with a record of the calls it made, where the declared dial asks for one"
 sn_refs = ["SN-029"]
 boundary_refs = ["B-09", "B-10"]
 hat_refs = ["UNATTENDED-OPS"]
-requirement = "The delivered loop content shall keep the operator's verdict on each delegated decision coupled to the work that acts on it and each delegated run to its record: whatever the declared decision-recording dial, reporting without refusing a record entry that omits a required disclosure field or leaves one blank, listing each entry the operator has not yet seen and each overruled entry with the open work that carries it, and refusing an overrule unless its transition change files or amends open work that cites the entry; and, where that dial asks for a record, refusing to integrate a closing lane whose record is absent, naming where it belongs."
-rationale = "A DERIVED requirement, and labelled so. SN-029 asks that a run released to automation get as far as it honestly can, and that an acceptance it makes on a released tier leave a record naming who made it; it does not name the other calls a delegated run makes on the operator's behalf, the ones too settled to hold the run for and not settled enough to be history, so this obligation arrives through the unattended-operations lens rather than through the need's text. A call nobody is told about is the failure that lens listens for: it pages nobody, and a run that seems to pass does so partly because nothing looked at what it chose. Required fields and a close refusal make that record durable rather than an instruction that can be omitted. The obligation is keyed to a dial because how much of the operator's reading a run may claim is the operator's to set; it ships off, so a repository owes nothing until its owner asks. Every close owes the record, a partial close included, because every delegated run closes with one; a lane the machinery closed with no session present is refused too, and that refusal is a hold for a person to write the record rather than a strand. A malformed entry is reported rather than refused, because the record is there and readable and a refusal would hold finished work for a reporting defect. A decision is an already selected direction, so the operator either confirms it or overrules it; acceptance would falsely imply a new selection. A closed verdict makes that answer visible without inferring it from a free-text note, and an unknown value is shown rather than allowed to hide a call. An overrule that is not coupled to changed open work leaves the selected direction and its execution apart; coupling them in the transition change keeps both readable without a history walk or a marker convention. Who sets the verdict remains a convention, because the record cannot confer authority on its writer. A value of the dial outside its alphabet is judged before the record is read, since the reader keeps the obligation for such a value and would otherwise report a missing record in place of the real fault. The record is never a route for work: a call that is the operator's to make, or an act that cannot be undone, still reaches the operator through the process's exits, at every dial setting. Fed back to the need: SN-029's acceptance could name a record of the delegated calls a run made beside the record of its acceptances; until it does, this row is derived and says so."
-acceptance_criteria = "With the dial off or undeclared, a closing lane owes no newly written delegated-run record and the close does not read one to decide whether that record is owed; with the dial at record or escalate-first, a lane whose work closed complete, cancelled or partial without its record at its run's path is refused, the refusal naming that path, and one carrying its record passes this check. Whatever the dial, in a present record an entry that is not a table, an entry lacking what was decided, the alternative passed over, the reversal cost, why it was not escalated or the review cell, or carrying one that is not text, or leaving one of the first four blank, a hoist that is absent or not a list of entry ids, and a hoist naming an entry the record lacks, are each reported naming the entry and none refuses; an optional owner value is confirmed or overruled, absent means not yet seen, and any other value or a retired reviewed key is reported and reads as not yet seen whatever owner value accompanies it; an overruled entry with a blank review note is reported; the operator's surface lists unseen entries with hoisted entries first and, under its own heading, overruled entries with every citing work item or the notice that none cites it, and states the confirmed count when no unseen entry is left; an entry numbered -000 is never judged or listed. The records under docs/decisions have their retired reviewed keys migrated to the operator vocabulary without altering string contents, preserving an unknown retired value for a person to resolve and refusing a rewrite whose result would change more than verdict keys. Whatever the dial, a commit whose resulting tree carries a touched decisions record that does not parse is refused at staged and merge admission, naming the record and parse error; a commit that newly overrules an entry is likewise refused unless the same diff adds or changes a queued or active work specification whose new text cites docs/decisions/<run>.toml#D-NNN, while an untouched or archived specification and a token with following digits do not satisfy it. A value of the dial outside its three, compared trimmed and case-folded, is refused where the policy file is checked, and at the close it is refused as configuration before the record is read; a session handed a lane to build or to adjudicate under a recording dial is told the path its record belongs at, the operator vocabulary and that it leaves owner unset, and a review session is not."
+requirement = "The delivered loop content shall keep the operator's verdict on each delegated decision coupled to the work that acts on it and each delegated run to its record: whatever the declared decision-recording dial, reporting without refusing a record entry that omits a required disclosure field or leaves one blank, treating each run's record as the listing the operator reads, in which an entry with no verdict is not yet seen, and refusing an overrule unless its transition change files or amends open work that cites the entry; and, where that dial asks for a record, refusing to integrate a closing lane whose record is absent, naming where it belongs."
+rationale = "A DERIVED requirement, and labelled so. SN-029 asks that a run released to automation get as far as it honestly can, and that an acceptance it makes on a released tier leave a record naming who made it; it does not name the other calls a delegated run makes on the operator's behalf, the ones too settled to hold the run for and not settled enough to be history, so this obligation arrives through the unattended-operations lens rather than through the need's text. A call nobody is told about is the failure that lens listens for: it pages nobody, and a run that seems to pass does so partly because nothing looked at what it chose. Required fields and a close refusal make that record durable rather than an instruction that can be omitted. The obligation is keyed to a dial because how much of the operator's reading a run may claim is the operator's to set; it ships off, so a repository owes nothing until its owner asks. Every close owes the record, a partial close included, because every delegated run closes with one; a lane the machinery closed with no session present is refused too, and that refusal is a hold for a person to write the record rather than a strand. A malformed entry is reported rather than refused, because the record is there and readable and a refusal would hold finished work for a reporting defect. A decision is an already selected direction, so the operator either confirms it or overrules it; acceptance would falsely imply a new selection. A closed verdict makes that answer visible without inferring it from a free-text note, and an unknown value is shown rather than allowed to hide a call. The record is itself the listing the operator reads, rather than a generated page copying its entries: a run's record is already one readable file, and a page carrying every unseen entry crowded out the decisions and acceptances the operator surface exists for. An overrule that is not coupled to changed open work leaves the selected direction and its execution apart; coupling them in the transition change keeps both readable without a history walk or a marker convention. Who sets the verdict remains a convention, because the record cannot confer authority on its writer. A value of the dial outside its alphabet is judged before the record is read, since the reader keeps the obligation for such a value and would otherwise report a missing record in place of the real fault. The record is never a route for work: a call that is the operator's to make, or an act that cannot be undone, still reaches the operator through the process's exits, at every dial setting. Fed back to the need: SN-029's acceptance could name a record of the delegated calls a run made beside the record of its acceptances; until it does, this row is derived and says so."
+acceptance_criteria = "With the dial off or undeclared, a closing lane owes no newly written delegated-run record and the close does not read one to decide whether that record is owed; with the dial at record or escalate-first, a lane whose work closed complete, cancelled or partial without its record at its run's path is refused, the refusal naming that path, and one carrying its record passes this check. Whatever the dial, in a present record an entry that is not a table, an entry lacking what was decided, the alternative passed over, the reversal cost, why it was not escalated or the review cell, or carrying one that is not text, or leaving one of the first four blank, a hoist that is absent or not a list of entry ids, and a hoist naming an entry the record lacks, are each reported naming the entry and none refuses; an optional operator value is confirmed or overruled, absent means not yet seen, and any other value or a retired reviewed key is reported and reads as not yet seen whatever operator value accompanies it; an overruled entry with a blank review note is reported; the operator reads the entries in the run's record itself, where the hoist names those to read first, and no generated surface lists them; an entry numbered -000 is never judged or counted as not yet seen. The records under docs/decisions have their retired reviewed keys migrated to the operator vocabulary without altering string contents, preserving an unknown retired value for a person to resolve and refusing a rewrite whose result would change more than verdict keys. Whatever the dial, a commit whose resulting tree carries a touched decisions record that does not parse is refused at staged and merge admission, naming the record and parse error; a commit that newly overrules an entry is likewise refused unless the same diff adds or changes a queued or active work specification whose new text cites docs/decisions/<run>.toml#D-NNN, while an untouched or archived specification and a token with following digits do not satisfy it. A value of the dial outside its three, compared trimmed and case-folded, is refused where the policy file is checked, and at the close it is refused as configuration before the record is read; a session handed a lane to build or to adjudicate under a recording dial is told the path its record belongs at, the operator vocabulary and that it leaves operator unset, and a review session is not."
 priority = "S"
 verification_method = "Test"
 status = "Accepted"
 phase = 6
+da_refs = ["DA-020"]
 delivered_with = ["SR-139", "SR-140"]
 
 [requirement.SR-226]
@@ -1673,6 +1679,7 @@ priority = "S"
 verification_method = "Test"
 status = "Accepted"
 phase = 6
+coincident = """The need asks that a reader can follow a reference and trust what it finds. A record found by the retired id, written in the change that deletes the row and naming its date, its successor and the reason, is what that reader finds, and the two reports name a record changed after it landed and a spent id with no record. Nothing stands between the record and the reader who looks the id up. Whether the named successor and reason are the right ones is judged when the change that retires the row is reviewed, not by this row."""
 
 [requirement.SR-222]
 title = "Every model session is recorded in one usage record, whichever provider CLI serves it"
@@ -1715,6 +1722,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 form = "interface"
+coincident = """The need asks for unattended progress whose evidence a later reader can attribute. An adjudication that runs only from a claimed lane, and that counts as success only a verdict its own call wrote at the path it reserved before its deadline, makes the judgement the lane's and the call's, whatever else the runner wrote or left behind; and an act is taken only as an accepted, committed verdict authorizes it, so later work cannot stand in for that judgement. The row relies on nothing the runner does: it refuses what it cannot attribute. Whether the verdict judged well is the judging session's own premise, not this row's."""
 
 [requirement.SR-228]
 title = "Held-rung CLARITY re-acceptance"
@@ -1730,6 +1738,7 @@ status = "Accepted"
 phase = 6
 aspect = "process"
 
+da_refs = ["DA-026"]
 
 [requirement.SR-229]
 title = "Coordinator claim admission respects a blackout pause"
@@ -1744,6 +1753,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 form = "interface"
+da_refs = ["DA-021", "DA-022", "DA-023"]
 
 [requirement.SR-230]
 title = "Coordinator successor at session exit outside a blackout pause"
@@ -1758,6 +1768,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 form = "interface"
+da_refs = ["DA-021", "DA-023"]
 
 [requirement.SR-232]
 title = "Combined adjudication preserves each requested judgement"
@@ -1772,6 +1783,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 form = "interface"
+coincident = """The need asks for unattended progress that loses no judgement it asked for. A combined sitting that names exactly the kinds bound at its reservation, gives each its own scoped section in its own grammar, and is refused whole when a section is missing, extra, repeated or invalid, acting on no kind's scope, is that outcome: no checkpoint passes with a requested kind unjudged, and no kind acts beside another's refusal. Whether each section judged well is the judging session's own premise, not this row's."""
 
 [requirement.SR-233]
 title = "Review threat model"
@@ -1787,6 +1799,7 @@ status = "Accepted"
 phase = 6
 aspect = "process"
 form = "cross-cutting"
+da_refs = ["DA-027", "DA-028"]
 
 [requirement.SR-234]
 title = "Contested or repeated review findings receive a bounded adjudication"
@@ -1802,11 +1815,12 @@ status = "Accepted"
 phase = 6
 aspect = "process"
 form = "interface"
+coincident = """The need asks that an unattended run report its failures clearly and surface to an operator when it cannot go on, rather than loop. A contested or recurring finding sent to one sitting that carries each finding and the position held on it verbatim, and whose verdict is accepted only when it rules every requested finding exactly once, from the declared rulings and with its reason, ends the dispute in a bounded ruling the lane can attribute, or in an escalation to the operator. The directions against deferring a fail-open, data-loss or Done-when-gap finding are shipped text, and recording them beside the verdict makes the standard asked of the sitting visible to the operator; whether the sitting heeds them is outside this row's check."""
 
 [requirement.SR-235]
 title = "Attended independent review verdicts are recorded or refused"
 sn_refs = ["SN-024"]
-boundary_refs = ["B-05"]
+boundary_refs = ["B-09"]
 hat_refs = ["INTEGRITY-RECOVERABILITY"]
 requirement = "When an attended launcher submits an independent review verdict for a work item's lane, the delivered review content shall record a verdict bound to the reviewed commit in the review-round record form the delivered verdict reporting reads, or refuse a malformed or unbound verdict without a record."
 rationale = "A DERIVED requirement, and labelled so. SN-024 requires an independent critical eye and assigns the attended reviewer to the operator, but does not require that verdict to survive as review history. The integrity-and-recoverability lens listens for a durable artifact updated without an all-or-nothing guarantee: accepting an unbound or malformed verdict can associate the wrong judgement with a lane, while dropping a recorded verdict leaves the next reader with no record of the independent review. A validated record-or-refusal boundary was chosen over treating submitted text as history because the latter cannot distinguish a verdict for the reviewed commit from unrelated text. Fed back to the need: SN-024's acceptance could name a durable attended-review record; until it does, this row is derived and says so."
@@ -1817,6 +1831,7 @@ status = "Accepted"
 phase = 6
 delivered_with = ["SR-154", "SR-184"]
 form = "interface"
+da_refs = ["DA-007"]
 
 [requirement.SR-236]
 title = "Rework plans cover reviewed findings"
@@ -1830,6 +1845,7 @@ priority = "S"
 verification_method = "Test"
 status = "Accepted"
 phase = 4
+coincident = """The need asks that an independent critical eye drive the rework. A rework dispatched only after its plan answers every finding of the review it follows, one ordered clause per finding, by an item that covers it or by a reason, with an exclusion that cites a dispute accepted only when an accepted dismissal or successor ruling decided that same finding, is that outcome: no finding the reviewer raised is dropped, renumbered or replaced before the rework starts. Whether the covering item fixes the finding is the next review round's judgement, not this row's."""
 
 [requirement.SR-237]
 title = "Blackout pauses new model work and resumes it after the window"
@@ -1843,6 +1859,7 @@ priority = "S"
 verification_method = "Test"
 status = "Accepted"
 phase = 6
+da_refs = ["DA-021", "DA-024"]
 
 [requirement.SR-238]
 title = "A deadline or interruption ends the session process tree"
@@ -1857,6 +1874,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 form = "cross-cutting"
+coincident = """The need asks that unattended work stay inside its declared limits and stop when it cannot proceed safely. Ending every process in the session's process group or job at a deadline or an interruption, confirming they ended before the coordinator continues, and stopping with an error naming any survivor after 10 s, is that limit as the next session finds it: no writer that stays in the coordinator's process group or job is left beside the worktree it hands on. The row checks the ending itself rather than trusting the platform to have done it; a process that leaves the group or job is outside its claim, as the rationale states."""
 
 [requirement.SR-239]
 title = "Where the reviewer retention dial is on, loop review routes retain only their scoped reviewer sessions"
@@ -1902,6 +1920,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 aspect = "process"
+coincident = """The needs ask for gate outcomes a reader can trust and a pass that hides no unmet check. Rendering a review brief only over a commit that carries, or sits above only record changes from, a verified record that its declared commit checks and its derived test set passed, and otherwise refusing with the cause and the step that makes the record, is that outcome at the moment a review is asked for: no review starts over a tree the process already knows has not met its checks. The record is the kit's own, read and not re-run; whether those checks are enough is their own requirements' claim."""
 
 [requirement.SR-242]
 title = "A capped sequence of failing checks closes partial"
@@ -1916,6 +1935,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 aspect = "process"
+coincident = """The needs ask for gates that pass only on their standard and outcomes that hide nothing. A lane that keeps failing its commit checks, closed partial at the declared cap with the count, the maximum and the last result named, and told apart from a stall, a crash or a completion, is that outcome as the operator reads it: no pass is claimed, and the failure stops spending rounds. Nothing stands between the dispatcher's close and the record the operator reads."""
 
 [requirement.SR-243]
 title = "Coordinator calls record sessions without committing outside claimed work"
@@ -1930,6 +1950,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 aspect = "process"
+da_refs = ["DA-016", "DA-024"]
 
 [requirement.SR-244]
 title = "Transcript-derived usage records include coordinated nested agents"
@@ -1943,6 +1964,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 aspect = "performance"
+da_refs = ["DA-022", "DA-024"]
 
 [requirement.SR-245]
 title = "Standing accepted-child cases are parent-first integrity findings"
@@ -1957,6 +1979,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 aspect = "process"
+coincident = """The needs ask for a chain a machine checks and acceptances that stay reviews of the row's evidence. Each accepted child standing under a parent that is not accepted, reported as one parent-first finding naming both rows and their statuses and failing strict integrity, is that check's verdict as the reviewer reads it, with nothing between the rule and the report."""
 
 [requirement.SR-246]
 title = "A moved inconsistent acceptance relationship is refused at commit admission"
@@ -1971,6 +1994,7 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 aspect = "process"
+da_refs = ["DA-004", "DA-013"]
 
 [requirement.SR-247]
 title = "An earlier kit's stored values reach the current vocabulary through a migrator"
@@ -1985,3 +2009,4 @@ verification_method = "Test"
 status = "Accepted"
 phase = 6
 aspect = "process"
+da_refs = ["DA-014"]

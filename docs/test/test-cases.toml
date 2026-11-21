@@ -4260,7 +4260,7 @@ tier = "Full"
 expected = "Absent inputs are vacuous and an unparseable registry stops the run in the carrier with no such finding; a placeholder row, a Drafted case and a case not automated owe no declaration, while a Drafted case's parts are still held equal; an eligible tagged case is clean; a part in an unreadable file adds only that file's finding; every other eligible untagged case reads that no test declares it, whatever its cell holds; a refused tag declares nothing; and one tag clears both the part's finding and the case's."
 automated = "Yes"
 evidence = "tests/test_trajectory_arch.py::test_the_undeclared_rule_is_vacuous_with_no_tests_root_or_no_registry; tests/test_trajectory_arch.py::test_an_unparseable_registry_stops_the_run_before_the_undeclared_rule; tests/test_trajectory_arch.py::test_a_placeholder_row_owes_no_declaration; tests/test_trajectory_arch.py::test_a_drafted_case_owes_no_declaration_and_its_parts_are_still_held; tests/test_trajectory_arch.py::test_a_case_not_automated_owes_no_declaration; tests/test_trajectory_arch.py::test_an_eligible_case_is_clean_when_tagged_and_named_when_not; tests/test_trajectory_arch.py::test_a_part_in_an_unreadable_file_adds_no_undeclared_finding; tests/test_trajectory_arch.py::test_an_eligible_untagged_case_is_named_whatever_its_cell_holds; tests/test_trajectory_arch.py::test_a_refused_tag_declares_nothing; tests/test_trajectory_arch.py::test_one_tag_clears_the_part_and_the_declaration_findings"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-429]
@@ -4271,7 +4271,7 @@ tier = "Full"
 expected = "A lane's order reads no finding at any step; an Accepted case with no tag warns with exit 0 in a plain run and errors with exit 1 under strict checking until it is tagged; and a newly created project warns and exits 0 at DevStg-Tests, fails at DevStg-Impl, and is clean once the case is tagged."
 automated = "Yes"
 evidence = "tests/test_trajectory_arch.py::test_a_lanes_order_never_meets_the_undeclared_finding; tests/test_trajectory_arch.py::test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict; tests/test_trajectory_arch.py::test_the_undeclared_finding_on_a_bootstrapped_scaffold"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-433]
@@ -4282,7 +4282,7 @@ tier = "Full"
 expected = "The check reports gh present or missing, marked optional; missing names the platform's install command and gh auth login; the check exits 0 either way, and the template's missing count is the same with and without gh."
 automated = "Yes"
 evidence = "tests/test_run_devsetup.py::test_the_check_reports_gh_as_optional_with_its_install_and_sign_in; tests/test_run_devsetup.py::test_the_powershell_check_reports_gh_as_optional_with_winget_and_sign_in"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-434]
@@ -4293,7 +4293,7 @@ tier = "Full"
 expected = "Only a yes runs the package manager, once, with the platform's install arguments; a no, an empty line, closed input or the template's non-interactive run runs nothing; with no package manager nothing is asked and the manual command is printed; a failed install prints a warning naming it; a present gh is not offered; the readiness operation reports gh and never offers it; every run exits 0."
 automated = "Yes"
 evidence = "tests/test_run_devsetup.py::test_install_offers_gh_and_runs_it_only_on_a_yes; tests/test_run_devsetup.py::test_install_without_a_package_manager_or_with_a_failure_never_fails; tests/test_run_devsetup.py::test_the_templates_install_tier_offers_gh_only_at_a_terminal; tests/test_run_devsetup.py::test_at_a_terminal_the_templates_install_tier_installs_gh_only_on_a_yes; tests/test_run_devsetup.py::test_at_a_terminal_the_bare_runs_check_reports_gh_and_never_offers_it; tests/test_run_devsetup.py::test_powershell_install_offers_gh_and_runs_winget_only_on_a_yes; tests/test_run_devsetup.py::test_the_powershell_templates_install_tier_offers_gh_only_at_a_console; tests/test_run_devsetup.py::test_at_a_windows_console_the_templates_install_tier_installs_gh_on_a_yes; tests/test_run_devsetup.py::test_at_a_windows_console_the_bare_runs_check_never_offers_gh"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-430]
@@ -4304,7 +4304,7 @@ tier = "Smoke"
 expected = "Exactly the ruled items no covering work item, covering open item or follow_up cell carries are reported, in id order."
 automated = "Yes"
 evidence = "tests/test_ruled_open_item_cover.py"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-431]
@@ -4315,7 +4315,7 @@ tier = "Smoke"
 expected = "The report is warn-only and exits 0 on a finding, the audit runs it ahead of the budget step, and both registries' example rows show the follow_up cell."
 automated = "Yes"
 evidence = "tests/test_ruled_open_item_cover.py"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-435]
@@ -4326,7 +4326,7 @@ tier = "Smoke"
 expected = "Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced."
 automated = "Yes"
 evidence = "tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-436]
@@ -4337,7 +4337,7 @@ tier = "Smoke"
 expected = "Each resolved form reports the cross-component finding naming its importer and the module the import names, the stem-sharing name landing on the module it is imported from and the bare stem resolving as before; the skipped forms yield no classified edge from their importer; the generator without the resolver leaves the rule silent; the diagram draws the arrow from that package to the module its import names."
 automated = "Yes"
 evidence = "tests/test_seam_import_forms.py"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-438]
@@ -4348,7 +4348,7 @@ tier = "Smoke"
 expected = "None reads as the empty cell; a list joins on semicolons with each element as text; anything else is its text. The ref cell round-trips to its original text. compare reports the dropped key as changing to the empty cell, and the reader joins the array on semicolons. Neither module defines a value_to_cell."
 automated = "Yes"
 evidence = "tests/test_rule_sync.py::test_the_carrier_value_cell_has_one_home_and_reads_none_as_empty"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-439]
@@ -4359,7 +4359,7 @@ tier = "Smoke"
 expected = "Each owner is folded through kitlib.spine.norm_module: the package's __init__.py folds to the package path, the shell hook to its path without the extension, the Python module to its path without .py. migrate_carrier defines no _short_module."
 automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_if_shape_migration_folds_an_owner_through_the_one_module_key"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-440]
@@ -4370,7 +4370,7 @@ tier = "Smoke"
 expected = "X2-5 reads 5, the lettered id 0, OI-35abc 0, the zero-padded id its number, OI-98 98, D-001 1, and the dash-ended id and the empty string 0. None of the three modules defines its own reader, and kitlib.spine has no private copy. Both readers order the folder with the lettered spec first, then 3, then 20."
 automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_an_id_number_is_the_digits_after_the_last_dash; tests/test_policy_one_home.py::test_both_spec_folder_orderings_read_the_one_id_number"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-441]
@@ -4381,7 +4381,7 @@ tier = "Smoke"
 expected = "Both checkers read exactly the two real needs: neither the comment's id, nor the stakeholder description's id, nor the -000 example counts, and check_docs' set equals sn_all_ids over the same text; its Must/Should floor is the one Must need. Over the live registry, the carrier's need ids less the example equal sn_all_ids, and the two draft readers agree."
 automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_readme_inventory_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_policy_one_home.py::test_the_flow_check_reads_the_one_sn_universe_on_a_toml_needs_file; tests/test_rule_sync.py::test_the_need_reader_agrees_with_the_sn_universe_on_the_toml_needs_file"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-442]
@@ -4392,7 +4392,7 @@ tier = "Smoke"
 expected = "For every cell the commissioning reader's open items equal split_pred_edges' open-item edges: a comma or whitespace separator still yields the edge, the soft marker is ignored, and the lettered token is no open-item edge. Each ref-cell read splits a comma- or whitespace-separated cell into its ids, and agent_common's ref split is kitlib.spine.refs itself."
 automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_consolidate_finds_every_open_item_edge_split_pred_edges_finds; tests/test_policy_one_home.py::test_every_ref_cell_read_splits_through_the_one_home"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-443]
@@ -4403,7 +4403,7 @@ tier = "Smoke"
 expected = "The well-formed spec reads the same through both, the integer priority as its digits. Each malformed input is refused by both, the registry with a ValueError and the converter with a ConvertError, each naming the same fault; so is each list element carrying a semicolon, for every list key, while the same references as two elements are read into the cell. wi_convert carries none of the former helpers. read_spec_rows returns only the well-formed row and reports the other file once, naming it and the title fault."
 automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_converter_parses_a_spec_through_the_one_parser; tests/test_policy_one_home.py::test_a_spec_with_a_non_string_title_is_reported_and_skipped; tests/test_policy_one_home.py::test_a_list_element_carrying_the_cell_join_is_refused; tests/test_policy_one_home.py::test_the_schedule_keys_keep_their_list_and_integer_spellings"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-444]
@@ -4414,7 +4414,7 @@ tier = "Smoke"
 expected = "The doubled id raises a ValueError naming the count; an unqueued id and a missing folder answer None; a single queued spec is returned. The claim, the handback write and the close each refuse the doubled id with that reason and plan nothing, and the queued folder is unchanged; each refuses the unqueued id in its own words. handback has no lookup of its own."
 automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_queued_spec_lookup_refuses_two_specs_of_one_id; tests/test_policy_one_home.py::test_every_act_on_a_queued_spec_refuses_two_of_one_id"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-445]
@@ -4425,7 +4425,7 @@ tier = "Smoke"
 expected = "Both functions name, in either order: the archive's copy over the legacy one, the closed copy over the claim, the complete copy over the partial one by path, the archived copy over the claim, and the claimed copy over the queued one; None for no copy. spec_at reads the same copy, its text and no reason for each committed pair. agent_policy carries no rank of its own."
 automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_one_key_says_which_copy_of_a_spec_governs; tests/test_policy_one_home.py::test_the_done_when_hold_reads_the_governing_copy"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-446]
@@ -4436,7 +4436,7 @@ tier = "Smoke"
 expected = "The # and the words after it stay tokens; the JSON array expands to its elements with the placeholder substituted; the Windows path keeps its backslashes and the quoted argument its space; split_cmd keeps the #. agent_session's tokenizer is kitlib.config.split_cmd itself, and check.py has none of its own."
 automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_a_command_template_has_one_tokenizer"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-447]
@@ -4447,7 +4447,7 @@ tier = "Smoke"
 expected = "Both declared-absence readers declare the same paths: the first entry, the slash-ended path without its slash, and the path with the undecodable byte replaced; the hyphen and unspaced lines are reported unparsed, by line number. Each allow-list reader reads its first entry and reports the hyphen and unspaced lines unparsed. The absent file yields nothing."
 automated = "Yes"
 evidence = "tests/test_policy_one_home.py; tests/test_policy_one_home.py::test_the_declared_absences_file_is_read_one_way_by_both_readers; tests/test_policy_one_home.py::test_every_declared_file_reader_strips_the_mark_and_refuses_a_hyphen"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-448]
@@ -4458,5 +4458,5 @@ tier = "Smoke"
 expected = "Each Drafted assumption and surrogate has a card, in the model's order, and the unmoved Accepted assumption has none. A first-acceptance card shows every cell whole, the long one to its end, with no diff marks; an assumption's card names each requirement relying on it with its title and text, and a surrogate's card names the assumptions naming it. The moved Accepted assumption has a card marked DRIFTED with the moved words before and after, and the header's drifted count includes it. The page's cards, the model's rows and the brief's headings name the same rows in the same order, the header counts them, and section 2 does not print its empty message."
 automated = "Yes"
 evidence = "tests/test_open_items_assumptions.py; tests/test_open_items_assumptions.py::test_each_row_owing_a_first_acceptance_has_its_card_with_its_cells_whole; tests/test_open_items_assumptions.py::test_an_accepted_assumption_whose_text_moved_shows_it_before_and_after; tests/test_open_items_assumptions.py::test_the_page_renders_the_briefs_model_and_counts_it"
-status = "Drafted"
+status = "Accepted"
 phase = 6

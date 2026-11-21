@@ -3835,7 +3835,7 @@ code_symbol = "report/offer_gh;Report/Offer-Gh;OfferGh"
 detail = "Every developer-setup report, this repository's and the shipped template's on both script families, carries one GitHub CLI line marked optional: present when gh is on the PATH; otherwise missing, naming the platform's install command (winget install --id GitHub.cli on Windows, Git Bash included; brew install gh on macOS; the distribution's gh package or GitHub's apt repository on any other platform) and the sign-in step gh auth login. A missing gh is not counted among the template's missing components and never changes an operation's exit status. The install operation (this repository's -Install and --install; the template's baseline and full tiers) offers a missing gh through a package manager already on the machine: winget on Windows; Homebrew on macOS; apt-get, then dnf, then Homebrew on any other platform. It runs that install once, and only after an answer beginning y or Y; any other answer, an empty line or closed input runs nothing. This repository's offer reads its answer as its agent-CLI offers do; the template's asks only at an interactive terminal and otherwise names the install it skipped. With no such package manager the operation asks nothing and prints the manual command; a failed install prints a warning naming the manual command. The bare run's readiness operation reports the line and offers nothing for it."
 rationale = "Without gh a session cannot read a pushed branch's CI state, but nothing in setup depends on it, so it is offered, never required, and only through a package manager the developer already trusts."
 test_refs = "TC-433; TC-434"
-status = "Drafted"
+status = "Accepted"
 component = "CMP-009"
 phase = 6
 
@@ -3847,7 +3847,7 @@ code_symbol = "OPEN_ITEM_TOKEN/COVERING_STATUSES/open_item_numbers/ruled_uncover
 detail = """kitlib/spine.py holds the rule. OPEN_ITEM_TOKEN matches OI- and a run of digits with no letter, digit or underscore on either side, and open_item_numbers reads the item numbers a text names, leading zeros ignored. ruled_uncovered takes the open-item rows and a map from item number to the statuses of the work items whose text names it, and returns, in id order, each real ruled item that is not covered. _open_item_states reads each real item's status trimmed and in lower case, skipping a -000 example and keeping the last row of a duplicated id. _earlier_items reads the numbers a row's cells name that are lower than the row's own, from every cell but its id and the historical wi_refs cell, so an item is handed on only to a later item, one with a higher number. _covered_ruled first covers each ruled item that a work item with a status in COVERING_STATUSES names (draft, queued, active and deferred, and done for complete/), each whose follow_up cell is not blank after trimming, and each that a later pending item names; it then covers each earlier ruled item that a covered ruled item names, until nothing changes, so of two ruled items naming each other only the earlier is covered through the later. Any other status neither is judged nor covers. pending.py does the read: ruled_cover returns None when the repository carries no open-items registry, and otherwise loads it through the carrier, which stops on a registry that does not parse, and applies the rule to work_item_naming. work_item_naming reads the whole file of each WI-*.md under a status directory of docs/work and docs/archive/work through the registry reader, its status the directory's, skipping a file under any other directory and the -000 example. ruled_cover_lines renders the report: one WARN line per finding naming the item and its title, then the count, or one vacuous line with no registry. gen_open_items.py's main, given --ruled-cover, prints those lines and returns 0 whatever they say; it renders nothing."""
 rationale = """A ruling takes its item off the operator's page, and the ruling sync judges only the ruling commit, so a ruling no row cites, or one whose follow-on work was filed as another open item, was never judged again. The ruling commit drops the item from a citing row's needs, so the text the ruling sync asks that row's Done-when to write is the link that survives, and the rule reads text rather than edges. A follow_up cell records a ruling carried out in its own commit, or one that asked for no change, so a report can be clean without inventing work. The report is warn-only because a mention is an upper bound on cover: whether the naming row did what the ruling asked stays a reviewer's question."""
 test_refs = "TC-430; TC-431"
-status = "Drafted"
+status = "Accepted"
 component = "CMP-009"
 phase = 6
 
@@ -3859,7 +3859,7 @@ code_symbol = "module_components"
 detail = """module_components in kitlib/spine.py joins the design rows its caller passes in and does not read a file itself. It skips a row whose id is a -000 example or does not start with LLR-. From a kept row it takes the Component tokens that start with CMP-, drops the rest, splits the Module cell with refs, normalizes the parts with norm_module, and adds those tokens to the map under the non-empty keys. The tags are not filtered against the component registry: the callers intersect them with the ids they declare. gen_components places seams by the map; trajectory_arch's How-SW top view, which the right-sizing rule and the containment render share, and its cross-component scan read membership from it. Neither module holds a join of its own."""
 rationale = """The join had two copies, in gen_components and in trajectory_arch, and they disagreed on three inputs: a -000 example row, an id not starting LLR- and a token not starting CMP-. On a registry that trace.py --strict passes they agreed, so the disagreement stayed invisible until a registry broke, which is when two answers to one question cost the most. The checker's narrower answer is kept: a placeholder row, or a token that cannot name a component, should not make a membership that the gate-bearing containment and cross-component rules read, and no caller wanted the wider answer, since each intersects the map with its declared ids."""
 test_refs = "TC-435"
-status = "Drafted"
+status = "Accepted"
 component = "CMP-006"
 phase = 6
 
@@ -3871,7 +3871,7 @@ code_symbol = "resolve_import/_resolve_relative/package_paths/_classifiable_edge
 detail = """resolve_import in gen_arch_map.py takes one token internal_imports wrote, the importer's module path, the inventory's module paths and the paths package_paths reads from the __init__.py files, and returns one module or None. An absolute token tries its dotted prefixes longest first, each as a path, against the modules equal to it or ending in / plus it; the first prefix that matches decides, and two matches return None, so a one-segment token is the unique-stem match. A relative token starts from the importer's package, which is the importer itself when its file is a package's __init__.py and its parent otherwise, climbs one level for each dot past the first, returns None for a climb past the top, and matches exactly, trimming its tail back to the package. _classifiable_edges in arch_seams.py resolves every token of the live inventory through it and skips an import that resolves to None or to the importing module itself; a gen_arch_map without resolve_import or package_paths leaves the rule silent. The dependency diagram draws its arrows through the same function."""
 rationale = """The rule looked each token up by its last path segment, so every dotted and relative import missed and no edge into a package was ever checked, while the dependency diagram kept a resolver of its own that took the first of several matches. One resolver, in the module that writes the tokens, keeps the check and the picture on one answer. A token that names nothing, or names several modules, is skipped rather than guessed, since a guessed edge would be a finding against a seam that does not exist."""
 test_refs = "TC-436"
-status = "Drafted"
+status = "Accepted"
 component = "CMP-006"
 phase = 6
 
@@ -3883,7 +3883,7 @@ code_symbol = "value_to_cell"
 detail = """value_to_cell in kitlib/spine.py turns one TOML value into the cell text the CSV carrier held. None, the value of an absent key, is the empty cell. A list joins its elements on ; with each element written as text. Any other value is written as text. spine_carrier's rows_from_toml and its need reader write every cell through it, and migrate_carrier's compare re-derives each converted cell through it. Neither module holds a copy."""
 rationale = """The two copies disagreed on None: the migration's wrote an empty cell and the reader's wrote the text None. TOML has no null, so only the migration meets None, for every absent key, and every consumer reads an absent cell as empty. The empty cell is kept."""
 test_refs = "TC-438"
-status = "Drafted"
+status = "Accepted"
 component = "CMP-006"
 phase = 6
 
@@ -3895,7 +3895,7 @@ code_symbol = "id_number"
 detail = """id_number in kitlib/spine.py reads the number of an id as the digits after its last dash, and 0 when that tail is not all digits: OI-98 reads 98, D-0012 reads 12, X2-5 reads 5 and D-12a reads 0. The open-item queue and coverage rules in kitlib/spine.py, the decisions record's review queue and overrule listing in kitlib/decisions.py, the spec folder's registry order in kitlib/registry.py's read_spec_rows, and wi_convert's read_specs all read an id's number through it. None of those modules holds a copy."""
 rationale = """Four copies gave two answers: two read the tail after the last dash and two the first run of digits, so X2-5 read 2 and D-12a read 12 in the second pair. Every id a supported route mints reads the same either way. The tail is kept because the open-item coverage rule matches covered numbers through it, and the first digit run would read OI-35abc as OI-35."""
 test_refs = "TC-440"
-status = "Drafted"
+status = "Accepted"
 component = "CMP-006"
 phase = 6
 
@@ -3907,7 +3907,7 @@ code_symbol = "parse_spec_row/scalar_cell/spec_text/spec_list_element"
 detail = """parse_spec_row in kitlib/registry.py reads one spec file into its registry row. It refuses, naming the file, an id the filename does not carry, an adjudicates value adjudicates_tokens refuses, and a value that is not text where a cell is owed: scalar_cell takes a scalar as text, a priority also as an integer, and a supersedes list as elements joined on ;, and spec_list_element holds each element of a list key to text carrying no ;, so one element never reads downstream as two references. read_spec_rows reports such a spec through its error sink and skips it. wi_convert's parse_spec refuses a spec under active/ (a conversion runs only when no claim is in flight), then calls parse_spec_row and raises its refusal as a ConvertError naming the file as the caller knows it; the converter holds no fence split, body parse, status lookup or scalar rule of its own."""
 rationale = """The converter and the registry each parsed a spec and disagreed on three inputs: a non-string title the registry wrote as its text and the converter refused; an id the filename does not carry, and an adjudicates value with a ; in a token or given as a bare string, which the registry refused and the converter accepted. An element carrying ; in any other list key was joined by both into two references, where the adjudicates list refused it. The stricter answer is kept on each: no supported route writes any of them and no spec on the tree carried one."""
 test_refs = "TC-443"
-status = "Drafted"
+status = "Accepted"
 component = "CMP-006"
 phase = 6
 
@@ -3919,7 +3919,7 @@ code_symbol = "queued_spec"
 detail = """queued_spec in kitlib/registry.py returns the one queued spec of an id under a work folder (a queued file named for the id), None when none is queued, and raises a ValueError naming the count and the files when several are. integrate's claim and its Done-when notice, handback's edge and return writes, and the consolidation close's archive plan all find the spec through it; each refuses when none is queued, in its own words, and refuses with the lookup's reason when several are, writing nothing. None of the three holds a lookup of its own."""
 rationale = """The three lookups disagreed on two queued specs of one id: the claim refused, while handback and the consolidation close acted on the first. Every caller writes or moves the file, and acting on one copy leaves the other standing as a live queued row of the same id, so the refusal is kept."""
 test_refs = "TC-444"
-status = "Drafted"
+status = "Accepted"
 component = "CMP-006"
 phase = 6
 
@@ -3931,7 +3931,7 @@ code_symbol = "governing_spec/_governing_rank"
 detail = """governing_spec in kitlib/registry.py names the one copy that governs among the repo-relative paths of one work item's spec in one tree, or None when there are none. Its key: a copy in a terminal folder (complete, partial, cancelled, restructured) before a claimed copy under active/ before any other; then a copy under docs/archive/work before one under docs/work, before one in neither; then the path. agent_policy's authoritative_spec is this function, which the merge slot's verdict-owed check, the worker brief and review_brief call; kitlib/done_when.py's copy reader, behind spec_at and the claim-copy read, chooses among the copies it lists with it. adoption_record refuses when several specs carry one id and does not ask it."""
 rationale = """Two precedences picked different copies of one spec: the merge-slot side took the active copy beside a closed one under docs/work, while the Done-when side took the closed one; the Done-when side took the legacy docs/work copy over the archive's and the later of two terminal folders. One key is kept: the closed copy, which the merge-slot side's own reason names; the archive, where the close route writes; then the path, the answer a reader can predict. No kit route writes two copies."""
 test_refs = "TC-445"
-status = "Drafted"
+status = "Accepted"
 component = "CMP-006"
 phase = 6
 
@@ -3943,7 +3943,7 @@ code_symbol = "split_cmd"
 detail = """split_cmd in kitlib/config.py splits a command template into its tokens. A value that parses as a JSON list is its tokens, and a non-string element raises. Anything else is split quote-aware, with backslash escaping off, so a Windows path keeps its separators, and with no comment character, so a # is a word. check.py's _expand splits every stack.ini step command through it before substituting the placeholders; agent_session binds it under its own name for agent command templates and the product test command. Neither module holds a tokenizer of its own."""
 rationale = """The two copies disagreed on two inputs: an unquoted # dropped itself and every token after it in the harness's copy, which left shlex's comment character on, and a JSON array was split as shell words there. A stack.ini value reaches the tokenizer whole, since configparser strips no inline comment, so the harness ran a shorter command than the one declared and the one the loop runs. The agent side's answer is kept on both. The home sits in kitlib because check.py must stay runnable on kitlib alone."""
 test_refs = "TC-446"
-status = "Drafted"
+status = "Accepted"
 component = "CMP-006"
 phase = 6
 
@@ -3955,6 +3955,6 @@ code_symbol = "declared_entries/declared_absences/DECLARED_SEP"
 detail = """declared_entries in kitlib/config.py reads a key-and-reason declared file: it decodes UTF-8 with a byte-order mark stripped and an undecodable byte replaced, splits on newlines, passes over blank lines and # comments, returns each line carrying the separator (an em dash with a space each side, DECLARED_SEP) as its line number, stripped key, stripped reason and text, and returns every other line as unparsed with its number. An absent file yields nothing. declared_absences reads the declared-absences file through it, with a trailing / stripped from each path. check_need_form's need-form allow list, trace's provenance allow list and arch_seams' kernel-modules allow list (re-exported by trajectory_arch) each keep only their own key rule over declared_entries; check_doc_refs' read_declared_absences and trace's declared-absence reader both call declared_absences. None of them walks a file of its own."""
 rationale = """Five walks disagreed. Two read a byte-order mark into the first key, hiding the first entry, and of those one raised on an undecodable byte while the other read no entry at all. On the declared-absences file, which both read, one also took a hyphen separator and the other an unspaced em dash, so they disagreed on what it declares. Kept: the mark stripped, the byte replaced, and the spaced em dash only, which every such file's header and the file's interface row state; the stricter."""
 test_refs = "TC-447"
-status = "Drafted"
+status = "Accepted"
 component = "CMP-006"
 phase = 6
