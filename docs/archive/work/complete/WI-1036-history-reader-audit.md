@@ -74,6 +74,16 @@ new, 20,496 bytes.
 **Acts owed.** None by this row. A row the coordinator files against
 LLR-239 or LLR-257 amends an Accepted LLR and will owe its own act.
 
+**Review (2026-11-21, round 1, over `1aa6c439a..c49af216d`):** the
+coordinator's hand-built brief (the kit-change rubric, the spec at the tip,
+the diff with the generated views excluded), asking for spot-checks of the
+call sites and a recount. OpenAI Sol (low): APPROVE, no findings. Gemini
+Argon (low), by file reference, timed out at 900 seconds inside opencode's
+own start-up (its log stops at `init`, before any model call), so Sol
+reviewed alone (queue-drill HANDOFF §6). The coordinator's rulings on the
+builder's two questions: the two `check_test_first.py` calls take one row,
+since they serve one decision; the two re-run checks stay in class (b).
+
 ## Context
 
 Filed on trunk on 2026-11-21 so the review-churn plan's phase 3 is not lost

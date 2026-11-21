@@ -30,3 +30,5 @@ commit hooks on. No code changed. The record is in the row's Deliverable
   `run_menu.py smoke` was not run (no code changed).
 - **Byte deltas:** no budgeted file touched; the note is new (20,496 bytes).
 - **Acts owed:** none by this row.
+- **Review:** round 1 over `1aa6c439a..c49af216d`: Sol (low) APPROVE, no
+  findings; Argon timed out in opencode's start-up, so Sol reviewed alone.
