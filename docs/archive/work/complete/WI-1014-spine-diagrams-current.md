@@ -28,6 +28,8 @@ fixed in `387df72ce`:
   `INTERFACES.template.md`, since PROCESS.md §8 states neither cell.
 - TC-455's `expected` restated LLR-393's rules: it now cites LLR-393's
   detail, and `method` keeps the procedure.
+- Also fixed: the interfaces row's backing claim, which named an SR and a
+  contract test, now follows §8 (`c37cef6bc`).
 
 **Against the Done-when:**
 
