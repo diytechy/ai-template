@@ -3293,3 +3293,32 @@ list is fixed unless §12.6 says so.
   budget re-stamped 4.0 MB to 4.63 MB for the new rows). The builders now run
   every test module importing a changed module. WI-1010 is building up to the
   operator's act. The merged worktrees on D: are removed.
+- **2026-11-20, WI-1010 and the end of the buildable queue.** WI-1010 built
+  up to the operator's act: `docs/open-items.html` §2 renders the
+  assumptions and surrogates owing an acceptance from
+  `trace.assumption_owing_model` (the brief's own model), and the 21
+  requirements that cited nothing now cite an assumption (DA-021..DA-028,
+  SUR-004 new) or carry a `coincident` waiver (11, which owe a re-accept:
+  `coincident` is accepted text). Gate steps 79 / 9 / 6 / 0 -> 79 / 0 / 0 / 0,
+  every line left a Drafted row the act clears. The session was interrupted
+  during the review; Sol: no findings; Argon (split, inline, after two
+  stalls on an attached file and a "database is locked" from two concurrent
+  runs): seven findings, applied by this session (`e48a1c01c`). Merged
+  `100a672df`, views `979e128c5`. Unfiltered suite on `979e128c5`: 1 failed,
+  8,253 passed, 31 skipped (60 min): `test_dispatch`'s end-to-end drive, a
+  latent race in `check_vocab.scan` (rglob over a directory another check step
+  removed), fixed in `28ad912db` (os.walk; same 941 files and findings; Sol's
+  two findings applied).
+- **State for whoever resumes (2026-11-20).** The buildable queue is done:
+  WI-1001, 1003 to 1011 merged. Left: WI-1012 (waits on HomeHub), WI-998
+  (waits for a decomposition round's sample), and the six rows held by
+  OI-98, OI-105, OI-106/121, OI-122, OI-123, OI-124. **For the operator:**
+  (1) the acceptance act on `docs/open-items.html` §2: the new Drafted rows
+  (DA-018..DA-028, SUR-004, LLR-370..388, TC-428..448, IF-314..322), the
+  assumptions and surrogates already Drafted (DA-001..017, SUR-001..003),
+  DA-020's standing (its falsifier is met by the unread October decisions
+  backlog), and the re-accepts (CMP-006, SR-225, LLR-118, LLR-271, LLR-283,
+  TC-123, TC-293, the eleven waived SRs); then `[checks] assumption_gate =
+  true`; (2) OI-79: delete `origin/wi508-architectural-remap-HELD-for-owner-verdict`
+  (its commits are in trunk); (3) push `refactor_again`. The §6 functional
+  changes (B1 first) are not yet rows.
