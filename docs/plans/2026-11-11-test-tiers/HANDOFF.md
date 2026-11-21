@@ -3359,3 +3359,20 @@ list is fixed unless §12.6 says so.
   though the frame, the assumption tier and the stakeholder tier hold those
   rungs. The operator is weighing how much design the spine should carry
   (LLRs pin Module and CodeSymbol) before the diagrams are redrawn.
+- **2026-11-21, the code against the spine; four rows filed.** The operator
+  asked whether the code keeps the design LLRs and interfaces state. A
+  measurement of the tree (`docs/reviews/2026-11-21-code-vs-interfaces/`):
+  LLR pins mostly hold (274 of 345 tagged; 7 named symbols gone, 3 moved);
+  the interface layer is loosely held. The cross-component rule (LLR-067)
+  already scopes which seams need a row (the operator caught this; the
+  first proposal re-invented it), but any row naming both modules counts as
+  cover and 32 multi-tagged modules silence 63 edges; nothing compares
+  declared requestors (15 stale), data-cell signatures (~9 of 101) or LLR
+  symbols with the code; 125 of 268 interface rows have no test case. Filed:
+  WI-1014 (the two spine diagrams, `a425ad9ba`), WI-1015 (the code held to
+  its interface and LLR rows, `be0924497`), WI-1016 (a setting that turns
+  the LLR tier and its code-level call seams off; reverses SR-186's "never
+  omit a required tier", so its amendment is the operator's) and WI-1017
+  (guidance that an LLR yields to a sustainable design; checks recent lanes
+  first), `817d8c170`. A current map of the links:
+  https://claude.ai/artifact/EHKccLzXQGbH96t2TjFinH (the operator's, private).
