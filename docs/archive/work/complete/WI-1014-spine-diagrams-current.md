@@ -16,7 +16,18 @@ Both spine diagrams now draw today's tiers and stage ladder: the README's
 registry map from the current templates, and the dashboard's Process-tab
 panel 1 from the ladder and the stage derivation's own table. Built on the
 maintenance branch `maint/wi-1014`, cut from `refactor_again` at `0d67302bd`.
-Review: pending (the coordinator).
+
+Review: OpenAI Sol (low) reviewed the whole branch alone; Gemini Argon was
+not run (it timed out at 900 seconds on every run in this sitting and is
+skipped, per the operator's 2026-11-21 ruling). Two MINOR findings, both
+fixed in `387df72ce`:
+
+- `README.md`, the interfaces row named only `bridged_by` for a boundary
+  row: it now names `coincident` beside it (the reading is the outcome) and
+  links their rules to the interfaces template's header and
+  `INTERFACES.template.md`, since PROCESS.md §8 states neither cell.
+- TC-455's `expected` restated LLR-393's rules: it now cites LLR-393's
+  detail, and `method` keeps the procedure.
 
 **Against the Done-when:**
 
@@ -65,7 +76,7 @@ LLR-393, LLR-394, TC-455, TC-456 and IF-325 (all Drafted, under SR-168) with
 the tests, red at that commit (8 failed); `6c6aeb83a` the code
 (`spine_rules.RUNG_TIERS`, `traj_parse.rung_tiers`,
 `traj_panels._lifecycle_rows`, `process_panel` without its unused `stats`
-argument), the RESYNC entry and the decisions record.
+argument), the RESYNC entry and the decisions record. `387df72ce` the review fixes.
 
 **Tests.** Every module importing `spine_rules`, `traj_parse`,
 `traj_panels` or `gen_trajectory`, with `test_import_layers`,
@@ -73,6 +84,10 @@ argument), the RESYNC entry and the decisions record.
 (39 modules), on `6c6aeb83a`:
 <!-- fig: cmd=".venv/Scripts/python.exe -m pytest -q -p no:cacheprovider -n auto tests/<each of the 39 modules the log entry lists>.py" rev=6c6aeb83a -->
 `1213 passed, 1 skipped in 300.99s`.
+After the review fixes, the 21 modules reading the changed files (listed in
+the log entry), on `387df72ce`:
+<!-- fig: cmd=".venv/Scripts/python.exe -m pytest -q -p no:cacheprovider -n auto tests/<each of the 21 modules the log entry lists>.py" rev=387df72ce -->
+`671 passed, 2 skipped, 18 warnings in 187.83s`.
 
 **Amendments for the operator:** none. LLR-051 and TC-051 (Accepted) already
 say the panel is drawn from the live registries and `docs/stage` with

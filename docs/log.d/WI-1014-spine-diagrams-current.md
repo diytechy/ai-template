@@ -5,7 +5,7 @@ spine's design depth behind the map's `LLR-### design` label, is the subject
 the operator is weighing, not an open item this row raises.
 
 Built on the maintenance branch `maint/wi-1014`, cut from `refactor_again` at
-`0d67302bd`, with the commit hooks on. Review: pending (the coordinator).
+`0d67302bd`, with the commit hooks on.
 
 - **Plan** (`7dbc2d1de`, `docs/plans/WI-1014/plan.md`): the S5 answer. Panel
   1 stops holding a list: its rungs come from `kitlib.ladder.STAGE_ORDER`,
@@ -61,5 +61,18 @@ Built on the maintenance branch `maint/wi-1014`, cut from `refactor_again` at
 - **Deviations from the plan:** the panel's rows moved into
   `_lifecycle_rows` (the complexity ratchet), and LLR-394's `code_symbol`
   names it. No byte-budgeted file changed.
+- **Review:** OpenAI Sol (low) reviewed the whole branch alone; Gemini
+  Argon was not run (it timed out at 900 seconds on every run in this
+  sitting and is skipped, per the operator's 2026-11-21 ruling). Two MINOR
+  findings, both fixed in `387df72ce`: the README's interfaces row now
+  names `coincident` beside `bridged_by` for a boundary row and links their
+  rules to the interfaces template and `INTERFACES.template.md` (PROCESS.md
+  §8 states neither); TC-455's `expected` cites LLR-393's detail instead
+  of restating it, and its `method` keeps the procedure. The tests reading
+  those files (the trace family, `test_evidence_join`, the doc, figure,
+  rule-sync, dogfood and watermark checks, `test_spine_rules`), on the
+  fix's tree:
+  <!-- fig: cmd=".venv/Scripts/python.exe -m pytest -q -p no:cacheprovider -n auto tests/test_trace.py tests/test_trace_rules.py tests/test_trace_coherence.py tests/test_trace_interfaces.py tests/test_trace_golden.py tests/test_trace_briefs.py tests/test_trace_hats.py tests/test_trace_hats_driven.py tests/test_evidence_join.py tests/test_check_docs.py tests/test_check_doc_refs.py tests/test_check_figures.py tests/test_check_figures_rules.py tests/test_rule_sync.py tests/test_status_vocabulary_contract.py tests/test_dogfood_sync.py tests/test_spine_rules.py tests/test_check_test_first.py tests/test_plan_coverage.py tests/test_cell_classes.py tests/test_id_watermark.py" rev=387df72ce -->
+  `671 passed, 2 skipped, 18 warnings in 187.83s`.
 - **Out of scope, noticed:** LLR-051's detail still names "(2) the
   resume-loop panel", which the station cycle replaced earlier.
