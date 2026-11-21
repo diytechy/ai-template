@@ -38,3 +38,5 @@ commit hooks on. The record is in the row's Deliverable
   No budgeted file was touched.
 - **Acts owed:** LLR-395's first acceptance; then WI-1038's re-point and
   its drift on TC-428 and TC-429.
+- **Review:** round 1 over `d849667f1..9fe88b282`, Sol (low) on the whole
+  diff and Argon (low) by file reference: both APPROVE, no findings.

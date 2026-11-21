@@ -105,8 +105,12 @@ releases them):
   SR-157, IF-263 kept) and its drift on those accepted rows. Both belong to
   WI-1038, after that acceptance.
 
-Left undone: the review bar. The branch is a maintenance branch outside the
-lane workflow, so the coordinator reviews the diff and merges it.
+**Review (2026-11-21, round 1, over `d849667f1..9fe88b282`):** the
+coordinator's hand-built brief (the kit-change rubric, the spec at the tip,
+the diff with the generated views excluded). OpenAI Sol (low) read the whole
+diff and the code at the tip: APPROVE, no findings. Gemini Argon (low) read
+the same brief by file reference, with the implementing functions and the
+rows it names copied in: APPROVE, no findings. Nothing to fix.
 
 ## Context
 
