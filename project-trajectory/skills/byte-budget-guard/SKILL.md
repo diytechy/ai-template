@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,964 | 2026-11-16 | -35: the vocabulary migration's close (stage, checks, pass and fail), re-stamped to the measured size |
 | `CLAUDE.md` | **8,500** | 8,052 | 2026-11-16 | +15: the vocabulary migration's close (stage, checks, pass and fail), re-stamped to the measured size |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,613 | 2026-11-19 | Restamps the PROCESS.md row below |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,632 | 2026-11-21 | Restamps the PROCESS_OPTIONS.md row below |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -46,7 +46,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 100,990 | 2026-11-19 | **+217** WI-1001: §3 says an Accepted or Founded automated TC no tag names is a finding, and a procedure is `Automated=No` |
-| `project-trajectory/PROCESS_OPTIONS.md` | 199,541 | 2026-11-06 | **+63** WI-993: a stopped lane's one exception points at process.md §5 |
+| `project-trajectory/PROCESS_OPTIONS.md` | 202,180 | 2026-11-21 | **+742** WI-1013: the decisions routing names what it keeps and what it leaves out |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

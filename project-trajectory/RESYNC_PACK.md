@@ -11894,6 +11894,47 @@ findings, are unchanged.
 
 **Kit-owned files — overwrite:** `scripts/check_vocab.py`.
 
+### A delegated run records only scope readings and design choices no spine row states [since 0d67302bd]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The routing table in process-options.md "Delegated
+decisions record" sent every call that touched a registry, the spine or a
+kit-owned file to the run's record, so most entries restated a requirement
+row or told how the run was conducted. The table now covers the calls a
+build or adjudication session makes under a recording dial, and leaves out:
+
+- a choice a spine row states, whether the run wrote the row, amended it or
+  found it standing: the row is its record;
+- the conduct of the run: who reviewed and in which round, commit grouping
+  or order, a re-stamp whose own ledger carries its reason, working around a
+  tool or environment failure. The commit and the log fragment carry it. A
+  review finding's outcome routes by what it changes, so one that selects a
+  design no spine row states is still recorded.
+
+What is left to record is a reading of scope and a design choice no spine
+row states. Any other call stays out unless the confidence ratchet promotes
+it: low confidence or a reviewer's dissent still moves a call to the record
+or to an exit. `decisions.template.toml`'s header says the same.
+`kitlib.decisions.session_note`, the instruction the loop appends to a build
+or adjudication session's body under `record` or `escalate-first`, now names
+the table's home and the two kinds of call left to record, in place of the
+registry, spine or kit-file route; its signature is unchanged. The record's
+format, the close refusal and the overrule sync do not change.
+
+**What to do.** Nothing is forced and nothing migrates: every record you
+have stays valid as written, including entries the new routing would leave
+out, and nothing asks you to prune them. Overwrite the files below. If you
+adjusted the routing table in your own `docs/process-options.md`, carry your
+adjustment into the new table. Your `docs/decisions/run-000-example.toml`
+keeps the template's old header comment until you copy the new one over it;
+it is the example and is never judged.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/decisions.py`,
+`decisions.template.toml`, `PROCESS_OPTIONS.md`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

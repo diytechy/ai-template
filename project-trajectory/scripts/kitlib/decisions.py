@@ -759,7 +759,9 @@ def missing_record_refusal(mode, run):
 def session_note(mode, run):
     """The instruction a delegated session is handed under a recording dial, or
     `""` under `off`. It names the exact path, so the session is told where its
-    record belongs rather than asked to derive it.
+    record belongs rather than asked to derive it, and it names the routing
+    table's one home and the two kinds of call that table leaves to record
+    rather than copying the table's routes, so the two cannot drift apart.
 
     Implements: SR-225, LLR-283
     """
@@ -768,10 +770,12 @@ def session_note(mode, run):
     note = (
         "\n\nDECISIONS RECORD (docs/process.toml [authority] "
         'decision_recording = "{mode}"): this run owes one record of the calls '
-        "it made on the operator's behalf, at {path} — the format and the routing "
-        'rules are the process options\' "Delegated decisions record" layer. '
-        "Write one [decision.D-<n>] table per call that touched a registry, the "
-        "spine or a kit file, or that you are unsure of, each carrying "
+        "it made on the operator's behalf, at {path}. Its format and its routing "
+        "table, the one home for which calls go in it, are process-options.md "
+        '"Delegated decisions record": read the table there. It leaves two '
+        "kinds of call to record: a reading of scope, and a design choice no "
+        "spine row states. Write one [decision.D-<n>] table per call of either "
+        "kind, or that you are unsure of, each carrying "
         "{keys} (leave review empty and set no operator key — the operator "
         'confirms or overrules each entry in place: operator = "confirmed" or '
         '"overruled"), and a top-level '

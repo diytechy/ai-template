@@ -1289,13 +1289,21 @@ open item the operator rules, a Blocked item — and a call that is the operator
 make goes there, never only into the record.
 
 **Route on the action, never on confidence.** The initial table, which the
-operator may adjust:
+operator may adjust, covers the calls a build or adjudication session makes
+under a recording dial through the kit's routes:
 
 | The action | Route |
 |---|---|
 | irreversible or external (a push, deleting reviewed text, a purchase), a ruled open item, the acceptance dial | the exits — never decided under delegation |
-| touches a registry, the spine or a kit-owned file | decide, and record it (at minimum) |
+| a reading of scope (how far the spec, a Done-when item or a requirement reaches), or a design choice no spine row states | decide, and record it |
+| a choice a spine row states, whether the run wrote, amended or found the row | decide; the row is its record |
+| the conduct of the run: who reviewed and in which round, commit grouping or order, a re-stamp whose own ledger carries its reason, working around a tool or environment failure | decide; the commit and the log fragment carry it |
 | scratch work, regenerating a generated file | decide silently |
+
+A review finding's outcome routes by what it changes: one that selects a
+design no spine row states is recorded. A call no row names is not
+recorded unless it is one of the two kinds the record keeps, or the
+ratchet below promotes it.
 
 Under `escalate-first`, a call that could go either way takes the exits:
 delegate less, ask more. **The confidence ratchet is one-way:** low confidence,
