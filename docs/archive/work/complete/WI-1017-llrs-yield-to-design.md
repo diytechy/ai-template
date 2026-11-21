@@ -28,7 +28,8 @@ as a terminal row's is.
 **Review.** Sol (`gpt-6.1-sol`, low) reviewed the whole branch alone; Gemini
 Argon was not run, since it timed out at 900 seconds on every run in this
 sitting and is skipped (operator, 2026-11-21). CHANGES-REQUESTED, two
-findings, both fixed:
+findings, both fixed; review round 2 (Sol, low, narrow over
+`3fbd1076c..1edfc1fe7`) APPROVE, no findings:
 
 - [MAJOR] The Deliverable left the causes outside the guidance named and not
   filed. Work ids are minted on trunk, so rows 1 to 3 are filed there at the
